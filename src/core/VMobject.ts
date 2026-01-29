@@ -14,6 +14,7 @@ import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { Mobject, Vector3Tuple } from './Mobject';
+import { bezierRemap, pointsToNullArray } from '../utils/bezierUtils';
 
 /**
  * 2D Point interface for backward compatibility
@@ -264,18 +265,49 @@ export class VMobject extends Mobject {
 
   /**
    * Align points between this VMobject and a target so they have the same count.
-   * This is necessary for smooth morphing animations.
+   * Uses Bezier-aware subdivision (De Casteljau) to preserve curve structure.
+   * Falls back to linear interpolation for non-Bezier point arrays (<4 points).
    * @param target - The target VMobject to align with
    */
   alignPoints(target: VMobject): void {
-    const thisCount = this._points2D.length;
-    const targetCount = target._points2D.length;
+    const thisCount = this._points3D.length;
+    const targetCount = target._points3D.length;
 
     if (thisCount === targetCount) return;
 
-    const maxCount = Math.max(thisCount, targetCount);
+    const thisNumCurves = thisCount >= 4 ? Math.floor((thisCount - 1) / 3) : 0;
+    const targetNumCurves = targetCount >= 4 ? Math.floor((targetCount - 1) / 3) : 0;
 
-    // Interpolate points to match counts
+    // Handle empty VMobjects: pad with null points
+    if (thisCount === 0 && targetCount > 0) {
+      this._points3D = pointsToNullArray(targetCount);
+      this._points2D = this._points3D.map(p => ({ x: p[0], y: p[1] }));
+      return;
+    }
+    if (targetCount === 0 && thisCount > 0) {
+      target._points3D = pointsToNullArray(thisCount);
+      target._points2D = target._points3D.map(p => ({ x: p[0], y: p[1] }));
+      return;
+    }
+
+    // Both have valid Bezier curves — use De Casteljau subdivision
+    if (thisNumCurves > 0 && targetNumCurves > 0 && thisNumCurves !== targetNumCurves) {
+      const maxCurves = Math.max(thisNumCurves, targetNumCurves);
+
+      if (thisNumCurves < maxCurves) {
+        this._points3D = bezierRemap(this._points3D, maxCurves);
+        this._points2D = this._points3D.map(p => ({ x: p[0], y: p[1] }));
+      }
+      if (targetNumCurves < maxCurves) {
+        target._points3D = bezierRemap(target._points3D, maxCurves);
+        target._points2D = target._points3D.map(p => ({ x: p[0], y: p[1] }));
+      }
+      return;
+    }
+
+    // Fallback: non-Bezier point arrays or matching curve count but different
+    // point counts — use linear resampling
+    const maxCount = Math.max(thisCount, targetCount);
     if (thisCount < maxCount) {
       this._points2D = this._interpolatePointList2D(this._points2D, maxCount);
       this._points3D = this._interpolatePointList3D(this._points3D, maxCount);

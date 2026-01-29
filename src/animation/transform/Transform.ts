@@ -30,6 +30,13 @@ export class Transform extends Animation {
   /** Copy of the target points after alignment (point morphing mode) */
   private _targetPoints: number[][] = [];
 
+  /** Per-submobject start/target points for family-level interpolation */
+  private _startSubmobjectPoints: number[][][] = [];
+  private _targetSubmobjectPoints: number[][][] = [];
+
+  /** References to submobject VMobjects in the source family (excluding root) */
+  private _submobjectRefs: VMobject[] = [];
+
   /** Starting style values */
   private _startOpacity: number = 1;
   private _targetOpacity: number = 1;
@@ -71,6 +78,10 @@ export class Transform extends Animation {
       const startCopy = vmobject.copy() as VMobject;
       const targetCopy = vtarget.copy() as VMobject;
 
+      // Align submobject hierarchy before point alignment
+      this._alignDataAndFamily(startCopy, targetCopy);
+
+      // Align root-level points
       startCopy.alignPoints(targetCopy);
 
       this._startPoints = startCopy.getPoints();
@@ -84,6 +95,35 @@ export class Transform extends Animation {
       this._targetStrokeWidth = vtarget.strokeWidth;
 
       vmobject.setPoints(this._startPoints);
+
+      // Store per-submobject aligned points
+      this._submobjectRefs = [];
+      this._startSubmobjectPoints = [];
+      this._targetSubmobjectPoints = [];
+      const startChildren = startCopy.children as VMobject[];
+      const targetChildren = targetCopy.children as VMobject[];
+      const sourceChildren = vmobject.children as VMobject[];
+      for (let i = 0; i < startChildren.length; i++) {
+        if (startChildren[i] instanceof VMobject && targetChildren[i] instanceof VMobject) {
+          const sc = startChildren[i];
+          const tc = targetChildren[i];
+          sc.alignPoints(tc);
+          this._startSubmobjectPoints.push(sc.getPoints());
+          this._targetSubmobjectPoints.push(tc.getPoints());
+          // Ensure source mobject has enough children
+          if (i < sourceChildren.length && sourceChildren[i] instanceof VMobject) {
+            this._submobjectRefs.push(sourceChildren[i]);
+            sourceChildren[i].setPoints(sc.getPoints());
+          } else {
+            // Pad source with empty VMobject child
+            const pad = new VMobject();
+            pad.setPoints(sc.getPoints());
+            pad.setOpacity(0);
+            vmobject.add(pad);
+            this._submobjectRefs.push(pad);
+          }
+        }
+      }
     } else {
       // Cross-fade for non-VMobject transforms (e.g., Text → MathTex)
       this._useCrossFade = true;
@@ -133,6 +173,18 @@ export class Transform extends Animation {
 
     vmobject.strokeWidth =
       this._startStrokeWidth + (this._targetStrokeWidth - this._startStrokeWidth) * alpha;
+
+    // Interpolate submobject points
+    for (let s = 0; s < this._submobjectRefs.length; s++) {
+      const sub = this._submobjectRefs[s];
+      const startPts = this._startSubmobjectPoints[s];
+      const targetPts = this._targetSubmobjectPoints[s];
+      const pts: number[][] = [];
+      for (let i = 0; i < startPts.length; i++) {
+        pts.push(lerpPoint(startPts[i], targetPts[i], alpha));
+      }
+      sub.setPoints(pts);
+    }
   }
 
   /**
@@ -175,7 +227,46 @@ export class Transform extends Animation {
     vmobject.strokeWidth = this._targetStrokeWidth;
     vmobject.color = this.target.color;
 
+    // Set final submobject points
+    for (let s = 0; s < this._submobjectRefs.length; s++) {
+      this._submobjectRefs[s].setPoints(this._targetSubmobjectPoints[s]);
+    }
+
     super.finish();
+  }
+
+  /**
+   * Align submobject hierarchies between start and target copies.
+   * Pads the one with fewer children with empty VMobjects so both have
+   * the same number of children for pairwise interpolation.
+   */
+  private _alignDataAndFamily(start: VMobject, target: VMobject): void {
+    const startCount = start.children.length;
+    const targetCount = target.children.length;
+    const maxCount = Math.max(startCount, targetCount);
+
+    // Pad start with empty VMobjects
+    while (start.children.length < maxCount) {
+      const empty = new VMobject();
+      empty.setOpacity(0);
+      start.add(empty);
+    }
+
+    // Pad target with empty VMobjects
+    while (target.children.length < maxCount) {
+      const empty = new VMobject();
+      empty.setOpacity(0);
+      target.add(empty);
+    }
+
+    // Recursively align each pair of children
+    for (let i = 0; i < maxCount; i++) {
+      const sc = start.children[i];
+      const tc = target.children[i];
+      if (sc instanceof VMobject && tc instanceof VMobject) {
+        this._alignDataAndFamily(sc, tc);
+      }
+    }
   }
 }
 
