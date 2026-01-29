@@ -55,10 +55,12 @@
       Scene,
       Create, FadeIn, FadeOut, Write, Transform, LaggedStart,
       ApplyPointwiseFunction,
-      Tex, MathTex, NumberPlane, VGroup,
+      Text, MathTex, NumberPlane, VGroup,
       UP, DOWN, UL,
       BLACK, WHITE
     } from '../src/index.ts';
+
+    const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
 
     const container = document.getElementById('container');
     const status = document.getElementById('status');
@@ -84,9 +86,9 @@
       try {
         // Part 1: Title and equation (Write title, FadeIn equation from below)
         log('Part 1: Title and equation...');
-        const title = new Tex({ latex: "This is some \\LaTeX" });
+        const title = new Text({ text: "This is some LaTeX", fontSize: 48, color: WHITE, fontUrl: FONT_URL });
         const basel = new MathTex({ latex: "\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}" });
-        await title.waitForRender?.();
+        await title.loadGlyphs();
         await basel.waitForRender?.();
 
         new VGroup(title, basel).arrange(DOWN);
@@ -95,8 +97,8 @@
 
         // Part 2: Transform title to UL corner, fade out equation downward
         log('Part 2: Transform title...');
-        const transformTitle = new Tex({ latex: "That was a transform" });
-        await transformTitle.waitForRender?.();
+        const transformTitle = new Text({ text: "That was a transform", fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+        await transformTitle.loadGlyphs();
         transformTitle.toCorner(UL);
         await scene.play(
           new Transform(title, transformTitle),
@@ -107,8 +109,8 @@
         // Part 3: Number plane grid with title
         log('Part 3: Number plane grid...');
         const grid = new NumberPlane();
-        const gridTitle = new Tex({ latex: "This is a grid", fontSize: 72 });
-        await gridTitle.waitForRender?.();
+        const gridTitle = new Text({ text: "This is a grid", fontSize: 72, color: WHITE, fontUrl: FONT_URL });
+        await gridTitle.loadGlyphs();
         gridTitle.moveTo(transformTitle);
 
         scene.add(grid, gridTitle);
@@ -121,8 +123,8 @@
 
         // Part 4: Non-linear grid transform (sin warp)
         log('Part 4: Non-linear grid transform...');
-        const gridTransformTitle = new Tex({ latex: "That was a non-linear function \\\\ applied to the grid" });
-        await gridTransformTitle.waitForRender?.();
+        const gridTransformTitle = new Text({ text: "That was a non-linear function\napplied to the grid", fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+        await gridTransformTitle.loadGlyphs();
         gridTransformTitle.moveTo(gridTitle, UL);
         grid.prepareForNonlinearTransform();
         await scene.play(
