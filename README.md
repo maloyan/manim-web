@@ -2,6 +2,15 @@
 
 A TypeScript port of [Manim](https://github.com/3b1b/manim) (Mathematical Animation Engine) for the browser. Built on Three.js and WebGL, it brings Manim's declarative animation API to the web with no server-side rendering required.
 
+<p align="center">
+  <img src="assets/demo_square_to_circle.png" width="400" alt="Square to Circle">
+  <img src="assets/demo_function_graph.png" width="400" alt="Function Graph">
+</p>
+<p align="center">
+  <img src="assets/demo_math_equations.png" width="400" alt="Math Equations">
+  <img src="assets/demo_text.png" width="400" alt="Text Animation">
+</p>
+
 ## Features
 
 - **Geometry** — Circle, Rectangle, Polygon, Arrow, Arc, Dot, Line, DashedLine, CubicBezier, Star, Brace, and more
@@ -18,39 +27,52 @@ A TypeScript port of [Manim](https://github.com/3b1b/manim) (Mathematical Animat
 ## Quick Start
 
 ```bash
+git clone https://github.com/maloyan/manim-js.git
+cd manim-js
 npm install
 npm run dev
 ```
 
-Open `http://localhost:5173/examples/manim_examples.html` to see demo animations.
-
 ## Usage
 
 ```typescript
-import { Scene, Circle, FadeIn, PINK } from 'manim-js';
+import { Scene, Circle, Square, Create, Transform, FadeOut } from 'manim-js';
 
-async function demo(scene: Scene) {
-  const circle = new Circle();
-  circle.setFill(PINK, { opacity: 0.5 });
-  await scene.play(new FadeIn(circle));
+async function squareToCircle(scene: Scene) {
+  const square = new Square({ sideLength: 3 });
+  const circle = new Circle({ radius: 1.5 });
+
+  await scene.play(new Create(square));
+  await scene.play(new Transform(square, circle));
+  await scene.play(new FadeOut(square));
 }
 ```
 
 ### Axes and Function Graphs
 
 ```typescript
-import { Scene, Axes, BLUE } from 'manim-js';
+import { Scene, Axes, FunctionGraph, MathTex, Create, FadeIn, BLUE, WHITE } from 'manim-js';
 
 async function graphDemo(scene: Scene) {
   const axes = new Axes({
     xRange: [-3, 3, 1],
-    yRange: [-2, 2, 1],
+    yRange: [-5, 5, 1],
     xLength: 8,
     yLength: 6,
+    tips: true,
   });
-  const graph = axes.getGraph((x) => x ** 2, { color: BLUE });
-  await scene.play(new Create(axes));
-  await scene.play(new Create(graph));
+
+  const graph = new FunctionGraph({
+    func: (x) => x * x,
+    xRange: [-2.2, 2.2],
+    color: WHITE,
+    axes,
+  });
+
+  const label = new MathTex({ latex: 'x^2', fontSize: 32 });
+  label.shift([4.5, 2, 0]);
+
+  await scene.play(new Create(axes), new Create(graph), new FadeIn(label));
 }
 ```
 
@@ -61,7 +83,7 @@ import { Scene, MathTex, Write } from 'manim-js';
 
 async function equationDemo(scene: Scene) {
   const equation = new MathTex({
-    latex: 'E = mc^2',
+    latex: 'd(p, q) = \\sqrt{\\sum_{i=1}^n (q_i - p_i)^2}',
     fontSize: 48,
   });
   await scene.play(new Write(equation));
