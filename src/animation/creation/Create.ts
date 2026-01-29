@@ -357,8 +357,6 @@ export interface WriteOptions extends AnimationOptions {
   reverse?: boolean;
   /** Remove after animation, default false */
   remover?: boolean;
-  /** Ratio of animation time spent on stroke drawing vs cross-fade (default 0.7 = 70% stroke, 30% crossfade) */
-  strokeRatio?: number;
 }
 
 /**
@@ -375,7 +373,6 @@ export class Write extends Animation {
   protected readonly lagRatio: number;
   private _reverse: boolean;
   private _remover: boolean;
-  private _strokeRatio: number;
   private _originalOpacity: number = 1;
 
   // Rendering mode flags (mutually exclusive)
@@ -396,7 +393,6 @@ export class Write extends Animation {
     this.lagRatio = options.lagRatio ?? 0.05;
     this._reverse = options.reverse ?? false;
     this._remover = options.remover ?? false;
-    this._strokeRatio = options.strokeRatio ?? 0.7;
   }
 
   private _hasLine2Children(): boolean {
@@ -476,16 +472,13 @@ export class Write extends Animation {
       this._textMesh = (this.mobject as any).getTextureMesh() as THREE.Mesh | null;
     }
     if (this._textMesh) {
-      this._textMesh.visible = false;
+      this._textMesh.removeFromParent();
     }
 
     // Attach glyph group's Three.js object to the Text's Three.js parent
     const textThreeObj = this.mobject.getThreeObject();
     this._parentThreeObj = textThreeObj;
     const glyphThreeObj = glyphGroup.getThreeObject();
-
-    // Position glyph group to align with Text — copy world transform
-    // The glyphs are built in pixel-world space matching the Text's coordinate system
     this._parentThreeObj.add(glyphThreeObj);
 
     // Set up dash reveal for each glyph child's Line2 children
@@ -551,67 +544,28 @@ export class Write extends Animation {
     const glyphGroup = this._glyphGroup!;
     const children = glyphGroup.children;
     const numChildren = children.length;
-    const strokeRatio = this._strokeRatio;
 
-    if (alpha <= strokeRatio) {
-      // Phase 1: Progressive dash-reveal across all glyph children
-      const strokeAlpha = alpha / strokeRatio; // normalize to 0-1
+    // Use the full animation for stroke drawing (no cross-fade phase —
+    // instant swap to texture happens in finish())
+    for (let i = 0; i < numChildren; i++) {
+      // Compute per-character alpha with stagger
+      const charStart = (i / numChildren) * (1 - this.lagRatio);
+      const charEnd = charStart + this.lagRatio + (1 - this.lagRatio) / numChildren;
+      const charAlpha = Math.max(0, Math.min(1, (alpha - charStart) / (charEnd - charStart)));
 
-      for (let i = 0; i < numChildren; i++) {
-        // Compute per-character alpha with stagger
-        const charStart = (i / numChildren) * (1 - this.lagRatio);
-        const charEnd = charStart + this.lagRatio + (1 - this.lagRatio) / numChildren;
-        const charAlpha = Math.max(0, Math.min(1, (strokeAlpha - charStart) / (charEnd - charStart)));
+      const totalLen = this._glyphTotalLengths[i] || 1;
+      const child = children[i];
+      const childThreeObj = child.getThreeObject();
 
-        const totalLen = this._glyphTotalLengths[i] || 1;
-        const child = children[i];
-        const childThreeObj = child.getThreeObject();
-
-        childThreeObj.traverse((obj) => {
-          if (obj instanceof Line2) {
-            const material = obj.material as LineMaterial;
-            const visibleLength = charAlpha * totalLen;
-            material.dashSize = visibleLength;
-            material.gapSize = totalLen - visibleLength + 0.0001;
-            material.needsUpdate = true;
-          }
-        });
-      }
-
-      // Ensure texture mesh stays hidden during stroke phase
-      if (this._textMesh) {
-        this._textMesh.visible = false;
-      }
-    } else {
-      // Phase 2: Cross-fade — strokes fully visible, fade in texture, fade out strokes
-      const fadeAlpha = (alpha - strokeRatio) / (1 - strokeRatio); // normalize to 0-1
-
-      // Ensure all glyph strokes are fully revealed
-      for (let i = 0; i < numChildren; i++) {
-        const totalLen = this._glyphTotalLengths[i] || 1;
-        const child = children[i];
-        const childThreeObj = child.getThreeObject();
-
-        childThreeObj.traverse((obj) => {
-          if (obj instanceof Line2) {
-            const material = obj.material as LineMaterial;
-            material.dashSize = totalLen;
-            material.gapSize = 0.0001;
-            // Fade out stroke opacity
-            material.opacity = 1 - fadeAlpha;
-            material.needsUpdate = true;
-          }
-        });
-      }
-
-      // Fade in the texture mesh
-      if (this._textMesh) {
-        this._textMesh.visible = true;
-        const material = this._textMesh.material as THREE.MeshBasicMaterial;
-        if (material) {
-          material.opacity = this._originalOpacity * fadeAlpha;
+      childThreeObj.traverse((obj) => {
+        if (obj instanceof Line2) {
+          const material = obj.material as LineMaterial;
+          const visibleLength = charAlpha * totalLen;
+          material.dashSize = visibleLength;
+          material.gapSize = totalLen - visibleLength + 0.0001;
+          material.needsUpdate = true;
         }
-      }
+      });
     }
   }
 
@@ -661,12 +615,15 @@ export class Write extends Animation {
     if (this._remover) {
       // Unwrite: hide everything
       if (this._textMesh) {
-        this._textMesh.visible = false;
+        this._textMesh.removeFromParent();
       }
       this.mobject.setOpacity(0);
     } else {
       // Write complete: show texture, hide glyphs
       if (this._textMesh) {
+        if (!this._textMesh.parent && this._parentThreeObj) {
+          this._parentThreeObj.add(this._textMesh);
+        }
         this._textMesh.visible = true;
         const material = this._textMesh.material as THREE.MeshBasicMaterial;
         if (material) {

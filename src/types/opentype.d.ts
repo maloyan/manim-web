@@ -18,6 +18,8 @@ declare module 'opentype.js' {
 
   export interface Font {
     unitsPerEm: number;
+    ascender: number;
+    descender: number;
     charToGlyph(char: string): Glyph;
     getKerningValue(left: Glyph, right: Glyph): number;
   }

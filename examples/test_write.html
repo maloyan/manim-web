@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Write Animation Test</title>
+  <style>
+    * { margin: 0; padding: 0; }
+    body { background: #111; display: flex; flex-direction: column; align-items: center; padding: 20px; color: #fff; font-family: sans-serif; }
+    h1 { margin-bottom: 10px; }
+    #container { border: 2px solid #333; border-radius: 8px; overflow: hidden; }
+    #status { margin-top: 10px; color: #888; }
+  </style>
+</head>
+<body>
+  <h1>Write Animation Test</h1>
+  <div id="container"></div>
+  <div id="status">Loading...</div>
+
+  <script type="module">
+    import { Scene, Text, Write, Create, Circle, BLACK, WHITE } from '../src/index.ts';
+
+    const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
+    const container = document.getElementById('container');
+    const status = document.getElementById('status');
+
+    const scene = new Scene(container, { width: 800, height: 450, backgroundColor: BLACK });
+
+    async function run() {
+      status.textContent = 'Loading glyphs...';
+      const text = new Text({ text: 'This is some LaTeX', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+      await text.loadGlyphs();
+      scene.add(text);
+      status.textContent = 'Playing Write (5s)...';
+      await scene.play(new Write(text, { duration: 5 }));
+      status.textContent = 'Done!';
+    }
+
+    run().catch(err => {
+      status.textContent = 'Error: ' + err.message;
+      console.error(err);
+    });
+  </script>
+</body>
+</html>

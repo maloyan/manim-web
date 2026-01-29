@@ -70,6 +70,30 @@ export class TextGlyphGroup extends VGroup {
     const font = await opentype.load(this._fontUrl);
 
     const scale = this._fontSize / font.unitsPerEm;
+
+    // First pass: compute total advance width for centering
+    let totalAdvance = 0;
+    for (let i = 0; i < this._text.length; i++) {
+      const char = this._text[i];
+      const glyph = font.charToGlyph(char);
+      if (i > 0) {
+        const prevGlyph = font.charToGlyph(this._text[i - 1]);
+        totalAdvance += font.getKerningValue(prevGlyph, glyph) * scale;
+      }
+      totalAdvance += (glyph.advanceWidth ?? (char === ' ' ? this._fontSize * 0.25 : this._fontSize * 0.5)) * scale;
+    }
+
+    // Centering offsets in pixels
+    const centerOffsetX = -totalAdvance / 2;
+
+    // Vertical centering: font ascender/descender are in font units
+    // After Y-flip in GlyphVMobject, ascent is positive Y, descent is negative Y
+    // Center the vertical midpoint at Y=0
+    const ascenderPx = font.ascender * scale;
+    const descenderPx = font.descender * scale; // negative
+    const centerOffsetY = (ascenderPx + descenderPx) / 2;
+
+    // Second pass: create glyphs with centered coordinates
     let xCursor = 0; // in pixels
 
     for (let i = 0; i < this._text.length; i++) {
@@ -100,8 +124,8 @@ export class TextGlyphGroup extends VGroup {
         glyph,
         font,
         fontSize: this._fontSize,
-        xOffset: xCursor,
-        yOffset: 0,
+        xOffset: xCursor + centerOffsetX,
+        yOffset: centerOffsetY,
         color: this._color,
         strokeWidth: this._glyphStrokeWidth,
       });
