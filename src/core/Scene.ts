@@ -44,6 +44,7 @@ export class Scene {
   private _isPlaying: boolean = false;
   private _currentTime: number = 0;
   private _animationFrameId: number | null = null;
+  private _backgroundTimerId: ReturnType<typeof setInterval> | null = null;
   private _lastFrameTime: number = 0;
   private _playPromiseResolve: (() => void) | null = null;
 
@@ -278,10 +279,17 @@ export class Scene {
     // Start render loop if not already running
     this._startRenderLoop();
 
-    // Return a promise that resolves when animations complete
-    return new Promise<void>((resolve) => {
+    // Wait for all animations to finish
+    await new Promise<void>((resolve) => {
       this._playPromiseResolve = resolve;
     });
+
+    // Remove mobjects whose animations have remover=true (e.g. FadeOut)
+    for (const animation of allAnimations) {
+      if (animation.remover) {
+        this.remove(animation.mobject);
+      }
+    }
   }
 
   /**
@@ -453,7 +461,27 @@ export class Scene {
   }
 
   /**
+   * Check if the timeline is finished and resolve the play promise.
+   * Shared by both the rAF loop and the background timer.
+   */
+  private _checkFinished(): void {
+    if (this._timeline && this._timeline.isFinished()) {
+      this._isPlaying = false;
+      this._stopRenderLoop();
+
+      // Resolve play promise
+      if (this._playPromiseResolve) {
+        this._playPromiseResolve();
+        this._playPromiseResolve = null;
+      }
+    }
+  }
+
+  /**
    * Start the animation render loop with frame rate control.
+   * Uses requestAnimationFrame for smooth foreground rendering,
+   * plus a setInterval fallback so the timeline still advances
+   * when the tab is in the background (rAF is suspended).
    */
   private _startRenderLoop(): void {
     if (this._animationFrameId !== null) return;
@@ -494,22 +522,36 @@ export class Scene {
       this._render();
 
       // Check if finished
-      if (this._timeline && this._timeline.isFinished()) {
-        this._isPlaying = false;
-        if (this._animationFrameId !== null) {
-          cancelAnimationFrame(this._animationFrameId);
-          this._animationFrameId = null;
-        }
-
-        // Resolve play promise
-        if (this._playPromiseResolve) {
-          this._playPromiseResolve();
-          this._playPromiseResolve = null;
-        }
-      }
+      this._checkFinished();
     };
 
     this._animationFrameId = requestAnimationFrame(loop);
+
+    // Background-tab fallback: setInterval is throttled to ~1Hz in
+    // background tabs but NOT suspended like rAF. This ensures the
+    // timeline advances and animations complete even when the tab
+    // isn't visible (e.g., during automated testing).
+    if (this._backgroundTimerId === null) {
+      this._backgroundTimerId = setInterval(() => {
+        if (!this._isPlaying || !this._timeline) {
+          return;
+        }
+        const now = performance.now();
+        const elapsed = now - this._lastFrameTime;
+        // Only intervene when rAF hasn't fired for >200ms (i.e., tab is backgrounded)
+        if (elapsed > 200) {
+          const dt = elapsed / 1000;
+          this._lastFrameTime = now;
+          this._timeline.update(dt);
+          this._currentTime = this._timeline.getCurrentTime();
+          for (const mobject of this._mobjects) {
+            mobject.update(dt);
+          }
+          this._render();
+          this._checkFinished();
+        }
+      }, 100);
+    }
   }
 
   /**
@@ -519,6 +561,10 @@ export class Scene {
     if (this._animationFrameId !== null) {
       cancelAnimationFrame(this._animationFrameId);
       this._animationFrameId = null;
+    }
+    if (this._backgroundTimerId !== null) {
+      clearInterval(this._backgroundTimerId);
+      this._backgroundTimerId = null;
     }
   }
 

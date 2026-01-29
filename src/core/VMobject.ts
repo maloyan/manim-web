@@ -80,6 +80,12 @@ export class VMobject extends Mobject {
   /** Whether geometry needs rebuild (separate from material dirty) */
   protected _geometryDirty: boolean = true;
 
+  /** Cached Line2 for in-place geometry updates (avoids dispose/recreate) */
+  private _cachedLine2: Line2 | null = null;
+
+  /** Cached fill mesh for in-place geometry updates */
+  private _cachedFillMesh: THREE.Mesh | null = null;
+
   /** Renderer resolution for LineMaterial (set by Scene) */
   static _rendererWidth: number = 800;
   static _rendererHeight: number = 450;
@@ -122,7 +128,9 @@ export class VMobject extends Mobject {
     }
     this._visiblePointCount = null;
     this._geometryDirty = true;
-    this._markDirty();
+    // Propagate dirty upward so parent containers (e.g. Group holding grid
+    // lines) are traversed by _syncToThree and children's geometry rebuilds.
+    this._markDirtyUpward();
     return this;
   }
 
@@ -454,25 +462,24 @@ export class VMobject extends Mobject {
   }
 
   /**
-   * Update the geometry within the Three.js group
+   * Update the geometry within the Three.js group.
+   * Reuses existing Line2 / Mesh objects when possible to avoid expensive
+   * dispose-and-recreate cycles during per-frame animation updates.
    */
   protected _updateGeometry(group: THREE.Group): void {
-    // Clear existing children and dispose their geometries
-    while (group.children.length > 0) {
-      const child = group.children[0];
-      group.remove(child);
-      if (child instanceof THREE.Mesh || child instanceof THREE.Line || child instanceof Line2) {
-        (child as THREE.Mesh | THREE.Line | Line2).geometry?.dispose();
-      }
+    const points3D = this.getVisiblePoints3D();
+    if (points3D.length < 2) {
+      // Clear everything
+      this._disposeGroupChildren(group);
+      this._cachedLine2 = null;
+      this._cachedFillMesh = null;
+      return;
     }
 
-    const points3D = this.getVisiblePoints3D();
-    if (points3D.length < 2) return;
-
     // Convert Bezier points to sampled path for rendering
-    const sampledPoints = this._sampleBezierPath(points3D, 16); // 16 samples per segment for smooth curves
+    const sampledPoints = this._sampleBezierPath(points3D, 16);
 
-    // Create Line2 for thick strokes
+    // --- Stroke (Line2) ---
     // Note: always create geometry even at opacity 0 — visibility is controlled by the material.
     // Otherwise, if geometry is first built while opacity=0 (e.g. during Create animation begin()),
     // the Line2 is never created and _geometryDirty is consumed, so it never gets a chance to rebuild.
@@ -482,33 +489,74 @@ export class VMobject extends Mobject {
         positions.push(pt[0], pt[1], pt[2]);
       }
 
-      const geometry = new LineGeometry();
-      geometry.setPositions(positions);
-
-      const line = new Line2(geometry, this._strokeMaterial!);
-      line.computeLineDistances();
-      // Line2 bounding sphere computation is unreliable with parent transforms
-      // (negative scale, rotation), so disable frustum culling to ensure visibility
-      line.frustumCulled = false;
-      group.add(line);
+      if (this._cachedLine2) {
+        // Reuse existing Line2: just swap geometry
+        this._cachedLine2.geometry.dispose();
+        const geometry = new LineGeometry();
+        geometry.setPositions(positions);
+        this._cachedLine2.geometry = geometry;
+        this._cachedLine2.computeLineDistances();
+      } else {
+        const geometry = new LineGeometry();
+        geometry.setPositions(positions);
+        const line = new Line2(geometry, this._strokeMaterial!);
+        line.computeLineDistances();
+        // Line2 bounding sphere computation is unreliable with parent transforms
+        // (negative scale, rotation), so disable frustum culling to ensure visibility
+        line.frustumCulled = false;
+        group.add(line);
+        this._cachedLine2 = line;
+      }
+    } else if (this._cachedLine2) {
+      // No longer need stroke — remove it
+      this._cachedLine2.geometry.dispose();
+      group.remove(this._cachedLine2);
+      this._cachedLine2 = null;
     }
 
-    // Create fill mesh if fillOpacity > 0
+    // --- Fill mesh ---
     if (this.fillOpacity > 0 && points3D.length >= 4) {
       const shape = this._pointsToShape();
       if (shape) {
-        const fillGeometry = new THREE.ShapeGeometry(shape);
-        const fillMesh = new THREE.Mesh(fillGeometry, this._fillMaterial!);
-        fillMesh.position.z = -0.001; // Slightly behind stroke
-        group.add(fillMesh);
+        if (this._cachedFillMesh) {
+          // Reuse existing mesh: swap geometry
+          this._cachedFillMesh.geometry.dispose();
+          this._cachedFillMesh.geometry = new THREE.ShapeGeometry(shape);
+        } else {
+          const fillGeometry = new THREE.ShapeGeometry(shape);
+          const fillMesh = new THREE.Mesh(fillGeometry, this._fillMaterial!);
+          fillMesh.position.z = -0.001; // Slightly behind stroke
+          group.add(fillMesh);
+          this._cachedFillMesh = fillMesh;
+        }
+      }
+    } else if (this._cachedFillMesh) {
+      this._cachedFillMesh.geometry.dispose();
+      group.remove(this._cachedFillMesh);
+      this._cachedFillMesh = null;
+    }
+  }
+
+  /**
+   * Dispose and remove all children from a Three.js group
+   */
+  private _disposeGroupChildren(group: THREE.Group): void {
+    while (group.children.length > 0) {
+      const child = group.children[0];
+      group.remove(child);
+      if (child instanceof THREE.Mesh || child instanceof THREE.Line || child instanceof Line2) {
+        (child as THREE.Mesh | THREE.Line | Line2).geometry?.dispose();
       }
     }
   }
 
   /**
-   * Sample Bezier curves for smooth rendering
+   * Sample Bezier curves for smooth rendering.
+   * Uses adaptive sampling: nearly-linear segments (from prepareForNonlinearTransform)
+   * use only their endpoints, avoiding expensive per-sample Bezier evaluation.
+   *
    * @param points - Bezier control points
-   * @param samplesPerSegment - Number of samples per Bezier segment
+   * @param samplesPerSegment - Number of samples per curved Bezier segment
    * @returns Sampled points along the path
    */
   private _sampleBezierPath(points: number[][], samplesPerSegment: number = 4): number[][] {
@@ -522,8 +570,13 @@ export class VMobject extends Mobject {
       const p2 = points[i + 2];
       const p3 = points[i + 3];
 
-      for (let t = 0; t <= samplesPerSegment; t++) {
-        const u = t / samplesPerSegment;
+      // Adaptive: if handles are close to the chord line, the segment is
+      // nearly linear (common after prepareForNonlinearTransform). Use just
+      // the endpoints to avoid unnecessary Bezier evaluation.
+      const samples = VMobject._isNearlyLinear(p0, p1, p2, p3) ? 1 : samplesPerSegment;
+
+      for (let t = 0; t <= samples; t++) {
+        const u = t / samples;
         const pt = this._evalCubicBezier(p0, p1, p2, p3, u);
         // Avoid duplicate points
         if (t === 0 || result.length === 0 ||
@@ -540,6 +593,25 @@ export class VMobject extends Mobject {
     }
 
     return result;
+  }
+
+  /**
+   * Check if a cubic Bezier segment is nearly linear by measuring the maximum
+   * distance from handles to the chord (p0 → p3).
+   */
+  private static _isNearlyLinear(p0: number[], p1: number[], p2: number[], p3: number[]): boolean {
+    const dx = p3[0] - p0[0];
+    const dy = p3[1] - p0[1];
+    const len2 = dx * dx + dy * dy;
+    if (len2 < 1e-10) return true; // degenerate segment
+
+    const invLen = 1 / Math.sqrt(len2);
+    // Perpendicular distance from p1 to chord
+    const d1 = Math.abs((p1[0] - p0[0]) * (-dy) + (p1[1] - p0[1]) * dx) * invLen;
+    // Perpendicular distance from p2 to chord
+    const d2 = Math.abs((p2[0] - p0[0]) * (-dy) + (p2[1] - p0[1]) * dx) * invLen;
+
+    return Math.max(d1, d2) < 0.01; // < 0.01 world-units off the chord
   }
 
   /**
@@ -632,6 +704,8 @@ export class VMobject extends Mobject {
   override dispose(): void {
     this._strokeMaterial?.dispose();
     this._fillMaterial?.dispose();
+    this._cachedLine2 = null;
+    this._cachedFillMesh = null;
     super.dispose();
   }
 }

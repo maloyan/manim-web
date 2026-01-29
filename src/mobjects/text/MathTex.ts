@@ -220,22 +220,29 @@ export class MathTex extends Mobject {
       // Force style recalculation so browser discovers @font-face rules
       void container.offsetHeight;
 
-      // Wait a frame for CSS processing and font discovery
-      await new Promise<void>(r => requestAnimationFrame(() => r()));
+      // Wait a tick for CSS processing and font discovery.
+      // NOTE: use setTimeout instead of requestAnimationFrame — rAF is
+      // suspended in background tabs, causing waitForRender() to hang.
+      await new Promise<void>(r => setTimeout(r, 0));
 
-      // Explicitly request common KaTeX fonts (triggers download if not cached)
+      // Explicitly request common KaTeX fonts (triggers download if not cached).
+      // Race against a timeout to avoid hanging if fonts can't load.
       const fs = `${this._fontSize}px`;
-      await Promise.all([
-        document.fonts.load(`${fs} KaTeX_Main`),
-        document.fonts.load(`italic ${fs} KaTeX_Math`),
-        document.fonts.load(`bold ${fs} KaTeX_Main`),
-        document.fonts.load(`${fs} KaTeX_Size1`),
-        document.fonts.load(`${fs} KaTeX_Size2`),
-        document.fonts.load(`${fs} KaTeX_AMS`),
-      ].map(p => p.catch(() => {})));
+      const fontTimeout = new Promise<void>(r => setTimeout(r, 5000));
+      await Promise.race([
+        Promise.all([
+          document.fonts.load(`${fs} KaTeX_Main`),
+          document.fonts.load(`italic ${fs} KaTeX_Math`),
+          document.fonts.load(`bold ${fs} KaTeX_Main`),
+          document.fonts.load(`${fs} KaTeX_Size1`),
+          document.fonts.load(`${fs} KaTeX_Size2`),
+          document.fonts.load(`${fs} KaTeX_AMS`),
+        ].map(p => p.catch(() => {}))),
+        fontTimeout,
+      ]);
 
-      // Wait for all fonts to finish loading
-      await document.fonts.ready;
+      // Wait for all fonts to finish loading (with timeout)
+      await Promise.race([document.fonts.ready, fontTimeout]);
 
       // Measure the rendered content
       const containerRect = container.getBoundingClientRect();

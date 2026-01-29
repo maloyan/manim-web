@@ -6,11 +6,11 @@ import { Line } from '../geometry';
  * Style configuration for background grid lines
  */
 export interface BackgroundLineStyle {
-  /** Stroke color for grid lines. Default: '#555555' */
+  /** Stroke color for grid lines. Default: '#29ABCA' (BLUE_D) */
   color?: string;
-  /** Stroke width for grid lines. Default: 1 */
+  /** Stroke width for grid lines. Default: 2 */
   strokeWidth?: number;
-  /** Opacity for grid lines. Default: 0.5 */
+  /** Opacity for grid lines. Default: 1 */
   opacity?: number;
 }
 
@@ -63,13 +63,27 @@ export class NumberPlane extends Axes {
       ...axesOptions
     } = options;
 
+    // NumberPlane defaults: fill the full frame (matching Python manim)
+    // Camera2D standard frame is 14 wide × 8 tall
+    if (axesOptions.xRange === undefined) axesOptions.xRange = [-7, 7, 1];
+    if (axesOptions.yRange === undefined) axesOptions.yRange = [-4, 4, 1];
+    if (axesOptions.xLength === undefined) axesOptions.xLength = 14;
+    if (axesOptions.yLength === undefined) axesOptions.yLength = 8;
+
+    // NumberPlane defaults: no tips, no ticks (matching Python manim)
+    if (axesOptions.tips === undefined) axesOptions.tips = false;
+    if (!axesOptions.axisConfig) axesOptions.axisConfig = {};
+    if (axesOptions.axisConfig.includeTicks === undefined) {
+      axesOptions.axisConfig.includeTicks = false;
+    }
+
     super(axesOptions);
 
     this._includeBackgroundLines = includeBackgroundLines;
     this._backgroundLineStyle = {
-      color: '#555555',
-      strokeWidth: 1,
-      opacity: 0.5,
+      color: '#29ABCA',
+      strokeWidth: 2,
+      opacity: 1,
       ...backgroundLineStyle,
     };
     this._fadingFactor = fadingFactor;

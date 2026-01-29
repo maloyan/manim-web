@@ -318,6 +318,7 @@ export {
   type AddTextLetterByLetterOptions,
 } from './animation/creation';
 export { Transform, transform, ReplacementTransform, replacementTransform, MoveToTarget, moveToTarget } from './animation/transform';
+export { ApplyPointwiseFunction, applyPointwiseFunction } from './animation/transform';
 
 // Movement animations
 export {

@@ -181,12 +181,30 @@ export abstract class Mobject {
   }
 
   /**
-   * Move the mobject to an absolute position
-   * @param point - Target position [x, y, z]
+   * Move the mobject to an absolute position, or align with another Mobject.
+   * @param target - Target position [x, y, z] or Mobject to align with
+   * @param alignedEdge - Optional edge direction to align (e.g., UL aligns upper-left edges)
    * @returns this for chaining
    */
-  moveTo(point: Vector3Tuple): this {
-    this.position.set(point[0], point[1], point[2]);
+  moveTo(target: Vector3Tuple | Mobject, alignedEdge?: Vector3Tuple): this {
+    if (Array.isArray(target)) {
+      // Simple point-based move
+      this.position.set(target[0], target[1], target[2]);
+      this._markDirty();
+      return this;
+    }
+    // Mobject target: align edges or centers
+    if (alignedEdge) {
+      const targetEdge = target._getEdgeInDirection(alignedEdge);
+      const thisEdge = this._getEdgeInDirection(alignedEdge);
+      return this.shift([
+        targetEdge[0] - thisEdge[0],
+        targetEdge[1] - thisEdge[1],
+        targetEdge[2] - thisEdge[2]
+      ]);
+    }
+    const targetCenter = target.getCenter();
+    this.position.set(targetCenter[0], targetCenter[1], targetCenter[2]);
     this._markDirty();
     return this;
   }
@@ -604,9 +622,14 @@ export abstract class Mobject {
     // Assuming standard Manim frame: 14 wide, 8 tall
     const frameWidth = 14;
     const frameHeight = 8;
+    const bbox = this._getBoundingBox();
 
-    const targetX = direction[0] !== 0 ? direction[0] * (frameWidth / 2 - buff) : this.position.x;
-    const targetY = direction[1] !== 0 ? direction[1] * (frameHeight / 2 - buff) : this.position.y;
+    const targetX = direction[0] !== 0
+      ? direction[0] * (frameWidth / 2 - buff - bbox.width / 2)
+      : this.position.x;
+    const targetY = direction[1] !== 0
+      ? direction[1] * (frameHeight / 2 - buff - bbox.height / 2)
+      : this.position.y;
 
     return this.moveTo([targetX, targetY, this.position.z]);
   }
@@ -662,6 +685,19 @@ export abstract class Mobject {
    */
   _markDirty(): void {
     this._dirty = true;
+  }
+
+  /**
+   * Mark this mobject and all ancestors as needing sync.
+   * Use when a deep child's geometry changes and the parent tree must re-traverse.
+   * Short-circuits if this node is already dirty (ancestors must be dirty too).
+   */
+  _markDirtyUpward(): void {
+    if (this._dirty) return; // already dirty → parents are too
+    this._dirty = true;
+    if (this.parent) {
+      this.parent._markDirtyUpward();
+    }
   }
 
   /**
@@ -777,6 +813,65 @@ export abstract class Mobject {
   }
 
   /**
+   * Apply a point-wise function to every VMobject descendant's control points.
+   * Uses duck-type check for getPoints/setPoints to avoid circular imports.
+   * @param fn - Function mapping [x, y, z] to [x', y', z']
+   * @returns this for chaining
+   */
+  applyFunction(fn: (point: number[]) => number[]): this {
+    for (const mob of this.getFamily()) {
+      const asAny = mob as unknown as { getPoints?: () => number[][]; setPoints?: (pts: number[][]) => void };
+      if (typeof asAny.getPoints === 'function' && typeof asAny.setPoints === 'function') {
+        const pts = asAny.getPoints();
+        if (pts.length > 0) {
+          asAny.setPoints(pts.map(p => fn([...p])));
+        }
+      }
+    }
+    return this;
+  }
+
+  /**
+   * Subdivide every VMobject descendant's cubic Bezier curves so that non-linear
+   * transforms produce smooth results. Each cubic segment is split into n sub-segments
+   * via de Casteljau evaluation.
+   * @param numPieces - Number of sub-segments per original cubic segment (default 50)
+   * @returns this for chaining
+   */
+  prepareForNonlinearTransform(numPieces: number = 50): this {
+    for (const mob of this.getFamily()) {
+      const asAny = mob as unknown as { getPoints?: () => number[][]; setPoints?: (pts: number[][]) => void };
+      if (typeof asAny.getPoints === 'function' && typeof asAny.setPoints === 'function') {
+        const pts = asAny.getPoints();
+        if (pts.length < 4) continue;
+        const newPoints: number[][] = [];
+        // Process each cubic Bezier segment (groups of 4 points: anchor, handle, handle, anchor)
+        for (let i = 0; i + 3 < pts.length; i += 3) {
+          const p0 = pts[i], p1 = pts[i + 1], p2 = pts[i + 2], p3 = pts[i + 3];
+          for (let j = 0; j < numPieces; j++) {
+            const tStart = j / numPieces;
+            const tEnd = (j + 1) / numPieces;
+            // Evaluate de Casteljau at tStart and tEnd for sub-curve anchors
+            const start = _evalBezier(p0, p1, p2, p3, tStart);
+            const end = _evalBezier(p0, p1, p2, p3, tEnd);
+            // Approximate sub-curve handles by evaluating at 1/3 and 2/3 within sub-interval
+            const t1 = tStart + (tEnd - tStart) / 3;
+            const t2 = tStart + 2 * (tEnd - tStart) / 3;
+            const h1 = _evalBezier(p0, p1, p2, p3, t1);
+            const h2 = _evalBezier(p0, p1, p2, p3, t2);
+            if (j === 0 && i === 0) {
+              newPoints.push(start);
+            }
+            newPoints.push(h1, h2, end);
+          }
+        }
+        asAny.setPoints(newPoints);
+      }
+    }
+    return this;
+  }
+
+  /**
    * Clean up Three.js resources.
    */
   dispose(): void {
@@ -798,6 +893,24 @@ export abstract class Mobject {
       });
     }
   }
+}
+
+/**
+ * Evaluate a cubic Bezier curve at parameter t using de Casteljau's algorithm.
+ */
+function _evalBezier(p0: number[], p1: number[], p2: number[], p3: number[], t: number): number[] {
+  const s = 1 - t;
+  const result: number[] = [];
+  for (let k = 0; k < p0.length; k++) {
+    // B(t) = (1-t)^3 * P0 + 3(1-t)^2*t * P1 + 3(1-t)*t^2 * P2 + t^3 * P3
+    result.push(
+      s * s * s * p0[k] +
+      3 * s * s * t * p1[k] +
+      3 * s * t * t * p2[k] +
+      t * t * t * p3[k]
+    );
+  }
+  return result;
 }
 
 export default Mobject;

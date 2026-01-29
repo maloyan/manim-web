@@ -13,6 +13,8 @@ export interface AnimationOptions {
   duration?: number;
   /** Rate function controlling the animation's pacing (default: smooth) */
   rateFunc?: RateFunction;
+  /** Shift direction for fade animations */
+  shift?: [number, number, number];
 }
 
 export abstract class Animation {
@@ -33,6 +35,12 @@ export abstract class Animation {
 
   /** Track if begin() has been called */
   protected _hasBegun: boolean = false;
+
+  /**
+   * If true, the scene will remove this mobject after the animation finishes.
+   * Used by FadeOut (like Python manim's remover=True).
+   */
+  remover: boolean = false;
 
   constructor(mobject: Mobject, options: AnimationOptions = {}) {
     this.mobject = mobject;

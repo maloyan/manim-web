@@ -34,7 +34,11 @@ export type TexOptions = MathTexOptions;
  */
 export class Tex extends MathTex {
   constructor(options: TexOptions) {
-    super(options);
+    // Wrap in \text{...} for text-mode rendering (upright serif, proper word spacing)
+    // Split on \\ to handle line breaks, wrap each segment separately
+    const parts = options.latex.split('\\\\');
+    const wrapped = parts.map(p => `\\text{${p.trim()}}`).join(' \\\\ ');
+    super({ ...options, latex: wrapped });
   }
 
   /**

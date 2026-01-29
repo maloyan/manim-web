@@ -97,3 +97,9 @@ export {
   transformMatchingTex,
   type TransformMatchingTexOptions,
 } from './TransformMatching';
+
+export {
+  ApplyPointwiseFunction,
+  applyPointwiseFunction,
+  type ApplyPointwiseFunctionOptions,
+} from './ApplyPointwiseFunction';

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpeningManim — py2ts Test</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f0f23;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      font-family: system-ui, sans-serif;
+      color: #fff;
+    }
+    h1 { margin-bottom: 20px; color: #e94560; }
+    #container {
+      border: 2px solid #333;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .buttons {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 12px 24px;
+      background: #e94560;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    button:hover { background: #ff6b6b; }
+    button:disabled { background: #666; cursor: not-allowed; }
+    #status { margin-top: 10px; color: #888; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <h1>OpeningManim — py2ts Conversion Test</h1>
+  <div id="container"></div>
+  <div class="buttons">
+    <button id="playBtn">Play Full Scene</button>
+  </div>
+  <div id="status"></div>
+
+  <script type="module">
+    import {
+      Scene,
+      Create, FadeIn, FadeOut, Write, Transform, LaggedStart,
+      ApplyPointwiseFunction,
+      Tex, MathTex, NumberPlane, VGroup,
+      UP, DOWN, UL,
+      BLACK, WHITE
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const status = document.getElementById('status');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK
+    });
+
+    let isAnimating = false;
+
+    function log(msg) {
+      status.textContent = msg;
+      console.log('[OpeningManim]', msg);
+    }
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      document.getElementById('playBtn').disabled = true;
+      scene.clear();
+
+      try {
+        // Part 1: Title and equation (Write title, FadeIn equation from below)
+        log('Part 1: Title and equation...');
+        const title = new Tex({ latex: "This is some \\LaTeX" });
+        const basel = new MathTex({ latex: "\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}" });
+        await title.waitForRender?.();
+        await basel.waitForRender?.();
+
+        new VGroup(title, basel).arrange(DOWN);
+        await scene.play(new Write(title), new FadeIn(basel, { shift: DOWN }));
+        await scene.wait(1);
+
+        // Part 2: Transform title to UL corner, fade out equation downward
+        log('Part 2: Transform title...');
+        const transformTitle = new Tex({ latex: "That was a transform" });
+        await transformTitle.waitForRender?.();
+        transformTitle.toCorner(UL);
+        await scene.play(
+          new Transform(title, transformTitle),
+          new FadeOut(basel, { shift: DOWN })
+        );
+        await scene.wait(1);
+
+        // Part 3: Number plane grid with title
+        log('Part 3: Number plane grid...');
+        const grid = new NumberPlane();
+        const gridTitle = new Tex({ latex: "This is a grid", fontSize: 72 });
+        await gridTitle.waitForRender?.();
+        gridTitle.moveTo(transformTitle);
+
+        scene.add(grid, gridTitle);
+        await scene.play(
+          new FadeOut(title),
+          new FadeIn(gridTitle, { shift: UP }),
+          new Create(grid, { duration: 3, lagRatio: 0.1 })
+        );
+        await scene.wait(1);
+
+        // Part 4: Non-linear grid transform (sin warp)
+        log('Part 4: Non-linear grid transform...');
+        const gridTransformTitle = new Tex({ latex: "That was a non-linear function \\\\ applied to the grid" });
+        await gridTransformTitle.waitForRender?.();
+        gridTransformTitle.moveTo(gridTitle, UL);
+        grid.prepareForNonlinearTransform();
+        await scene.play(
+          new ApplyPointwiseFunction(grid, (p) => {
+            return [
+              p[0] + Math.sin(p[1]),
+              p[1] + Math.sin(p[0]),
+              p[2]
+            ];
+          }, { duration: 3 })
+        );
+        await scene.wait(1);
+
+        // Part 5: Transform grid title to explain what happened
+        log('Part 5: Grid transform title...');
+        await scene.play(new Transform(gridTitle, gridTransformTitle));
+        await scene.wait(1);
+
+        log('Done!');
+      } catch (err) {
+        log('Error: ' + err.message);
+        console.error(err);
+      }
+
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+    });
+
+    // Auto-play on load
+    document.getElementById('playBtn').click();
+  </script>
+</body>
+</html>

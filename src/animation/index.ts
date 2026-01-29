@@ -122,6 +122,10 @@ export {
   FadeToColor,
   fadeToColor,
   type FadeToColorOptions,
+  // ApplyPointwiseFunction (for Groups)
+  ApplyPointwiseFunction,
+  applyPointwiseFunction,
+  type ApplyPointwiseFunctionOptions,
 } from './transform';
 
 // Movement animations

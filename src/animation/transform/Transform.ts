@@ -4,6 +4,7 @@
  * For non-VMobjects (e.g., MathTex): falls back to opacity cross-fade.
  */
 
+import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
@@ -142,6 +143,27 @@ export class Transform extends Animation {
       this.mobject.setOpacity(0);
       this.target.setOpacity(this._crossFadeTargetOpacity);
       this.target._syncToThree();
+
+      // Reparent target Three.js object under source so that if the source
+      // is later removed from the scene (e.g. via FadeOut), the cross-fade
+      // target is cleaned up along with it.
+      const sourceObj = this.mobject.getThreeObject();
+      const targetObj = this.target.getThreeObject();
+      const srcWorld = new THREE.Vector3();
+      sourceObj.getWorldPosition(srcWorld);
+      const tgtWorld = new THREE.Vector3();
+      targetObj.getWorldPosition(tgtWorld);
+      if (targetObj.parent) {
+        targetObj.parent.remove(targetObj);
+      }
+      (sourceObj as THREE.Group).add(targetObj);
+      // Adjust local position so target keeps its world position
+      targetObj.position.set(
+        tgtWorld.x - srcWorld.x,
+        tgtWorld.y - srcWorld.y,
+        tgtWorld.z - srcWorld.z
+      );
+
       super.finish();
       return;
     }

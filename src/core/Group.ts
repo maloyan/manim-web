@@ -120,16 +120,30 @@ export class Group extends Mobject {
   }
 
   /**
-   * Move the group center to the given point.
-   * @param point - Target position [x, y, z]
+   * Move the group center to the given point, or align with another Mobject.
+   * @param target - Target position [x, y, z] or Mobject to align with
+   * @param alignedEdge - Optional edge direction to align (e.g., UL aligns upper-left edges)
    * @returns this for chaining
    */
-  override moveTo(point: Vector3Tuple): this {
+  override moveTo(target: Vector3Tuple | Mobject, alignedEdge?: Vector3Tuple): this {
+    if (!Array.isArray(target)) {
+      if (alignedEdge) {
+        const targetEdge = target._getEdgeInDirection(alignedEdge);
+        const thisEdge = this._getEdgeInDirection(alignedEdge);
+        return this.shift([
+          targetEdge[0] - thisEdge[0],
+          targetEdge[1] - thisEdge[1],
+          targetEdge[2] - thisEdge[2]
+        ]);
+      }
+      const targetCenter = target.getCenter();
+      return this.moveTo(targetCenter);
+    }
     const currentCenter = this.getCenter();
     const delta: Vector3Tuple = [
-      point[0] - currentCenter[0],
-      point[1] - currentCenter[1],
-      point[2] - currentCenter[2]
+      target[0] - currentCenter[0],
+      target[1] - currentCenter[1],
+      target[2] - currentCenter[2]
     ];
     return this.shift(delta);
   }
