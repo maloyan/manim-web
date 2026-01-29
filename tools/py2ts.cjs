@@ -602,9 +602,9 @@ function convertLine(rawLine, tracking, declaredVars) {
   line = line.replace(/f'([^']*?)'/g, (_, inner) =>
     '`' + inner.replace(/\{([^}]+)\}/g, '${$1}') + '`');
 
-  // Raw strings
-  line = line.replace(/r"([^"]*?)"/g, '"$1"');
-  line = line.replace(/r'([^']*?)'/g, "'$1'");
+  // Raw strings — escape backslashes since JS doesn't have raw strings
+  line = line.replace(/r"([^"]*?)"/g, (_, inner) => '"' + inner.replace(/\\/g, '\\\\') + '"');
+  line = line.replace(/r'([^']*?)'/g, (_, inner) => "'" + inner.replace(/\\/g, '\\\\') + "'");
 
   // Track colors and directions
   for (const c of Object.keys(COLOR_MAP)) {
