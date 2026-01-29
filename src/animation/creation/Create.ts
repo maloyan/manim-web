@@ -4,11 +4,13 @@
  * similar to how Manim's Create animation works.
  */
 
+import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import type { TextGlyphGroup } from '../../mobjects/text/TextGlyphGroup';
 
 export class Create extends Animation {
   /** Total path length for dash-based reveal */
@@ -355,28 +357,46 @@ export interface WriteOptions extends AnimationOptions {
   reverse?: boolean;
   /** Remove after animation, default false */
   remover?: boolean;
+  /** Ratio of animation time spent on stroke drawing vs cross-fade (default 0.7 = 70% stroke, 30% crossfade) */
+  strokeRatio?: number;
 }
 
 /**
  * Write animation specifically for Text and MathTex mobjects.
  * Reveals text character by character with a pen-stroke effect.
- * Uses dash-based path tracing for VMobjects.
+ *
+ * Rendering paths:
+ * 1. Glyph stroke mode — Text with loaded glyph group (via loadGlyphs()) gets stroke-draw
+ *    of each character's outline, then cross-fades to the Canvas 2D texture.
+ * 2. Dash-based reveal — for VMobjects that already have Line2 children.
+ * 3. Opacity fallback.
  */
 export class Write extends Animation {
-  /** Stagger ratio for future character-by-character implementation */
   protected readonly lagRatio: number;
   private _reverse: boolean;
   private _remover: boolean;
+  private _strokeRatio: number;
   private _originalOpacity: number = 1;
+
+  // Rendering mode flags (mutually exclusive)
+  private _useGlyphStroke: boolean = false;
   private _useDashReveal: boolean = false;
-  private _useRevealProgress: boolean = false;
+
+  // Dash reveal state
   private _totalLength: number = 0;
+
+  // Glyph stroke state
+  private _glyphGroup: TextGlyphGroup | null = null;
+  private _textMesh: THREE.Mesh | null = null;
+  private _glyphTotalLengths: number[] = [];
+  private _parentThreeObj: THREE.Object3D | null = null;
 
   constructor(mobject: Mobject, options: WriteOptions = {}) {
     super(mobject, { duration: options.duration ?? 1, ...options });
     this.lagRatio = options.lagRatio ?? 0.05;
     this._reverse = options.reverse ?? false;
     this._remover = options.remover ?? false;
+    this._strokeRatio = options.strokeRatio ?? 0.7;
   }
 
   private _hasLine2Children(): boolean {
@@ -390,13 +410,25 @@ export class Write extends Animation {
   override begin(): void {
     super.begin();
     this._originalOpacity = this.mobject.opacity;
+
+    // Priority 1: Check for glyph stroke mode
+    if (
+      'getGlyphGroup' in this.mobject &&
+      typeof (this.mobject as any).getGlyphGroup === 'function'
+    ) {
+      const glyphGroup = (this.mobject as any).getGlyphGroup() as TextGlyphGroup | null;
+      if (glyphGroup && glyphGroup.length > 0) {
+        this._useGlyphStroke = true;
+        this._glyphGroup = glyphGroup;
+        this._beginGlyphStroke();
+        return;
+      }
+    }
+
+    // Priority 2: Dash reveal for VMobjects with Line2
     this._useDashReveal = (this.mobject instanceof VMobject) && this._hasLine2Children();
-    this._useRevealProgress =
-      'setRevealProgress' in this.mobject &&
-      typeof (this.mobject as any).setRevealProgress === 'function';
 
     if (this._useDashReveal) {
-      // Set up dash-based reveal for VMobjects with Line2 geometry
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
@@ -414,7 +446,6 @@ export class Write extends Animation {
             this._totalLength = 1;
           }
 
-          // Start based on direction
           if (this._reverse) {
             material.dashSize = this._totalLength;
             material.gapSize = 0;
@@ -425,19 +456,77 @@ export class Write extends Animation {
           material.needsUpdate = true;
         }
       });
-    } else if (this._useRevealProgress) {
-      // Use progressive left-to-right reveal for Text/MathTex
-      (this.mobject as any).setRevealProgress(this._reverse ? 1 : 0);
     } else {
-      // Fallback: opacity
       this.mobject.setOpacity(this._reverse ? this._originalOpacity : 0);
     }
   }
 
-  interpolate(alpha: number): void {
-    let effectiveAlpha = this._reverse ? 1 - alpha : alpha;
+  /**
+   * Set up glyph-stroke mode: hide the texture mesh, attach the glyph group
+   * to the Text's Three.js parent, and prepare dash reveal for each glyph child.
+   */
+  private _beginGlyphStroke(): void {
+    const glyphGroup = this._glyphGroup!;
 
-    if (this._useDashReveal) {
+    // Hide the Text's texture mesh
+    if (
+      'getTextureMesh' in this.mobject &&
+      typeof (this.mobject as any).getTextureMesh === 'function'
+    ) {
+      this._textMesh = (this.mobject as any).getTextureMesh() as THREE.Mesh | null;
+    }
+    if (this._textMesh) {
+      this._textMesh.visible = false;
+    }
+
+    // Attach glyph group's Three.js object to the Text's Three.js parent
+    const textThreeObj = this.mobject.getThreeObject();
+    this._parentThreeObj = textThreeObj;
+    const glyphThreeObj = glyphGroup.getThreeObject();
+
+    // Position glyph group to align with Text — copy world transform
+    // The glyphs are built in pixel-world space matching the Text's coordinate system
+    this._parentThreeObj.add(glyphThreeObj);
+
+    // Set up dash reveal for each glyph child's Line2 children
+    this._glyphTotalLengths = [];
+    const children = glyphGroup.children;
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      const childThreeObj = child.getThreeObject();
+      let totalLen = 1;
+
+      childThreeObj.traverse((obj) => {
+        if (obj instanceof Line2) {
+          const material = obj.material as LineMaterial;
+          material.dashed = true;
+          material.dashScale = 1;
+
+          obj.computeLineDistances();
+          const geom = obj.geometry as any;
+          const distEnd = geom.attributes.instanceDistanceEnd;
+          if (distEnd && distEnd.count > 0) {
+            const arr = distEnd.data ? distEnd.data.array : distEnd.array;
+            totalLen = arr[arr.length - 1] || 1;
+          }
+
+          // Start fully hidden
+          material.dashSize = 0;
+          material.gapSize = totalLen;
+          material.needsUpdate = true;
+        }
+      });
+
+      this._glyphTotalLengths.push(totalLen);
+    }
+  }
+
+  interpolate(alpha: number): void {
+    const effectiveAlpha = this._reverse ? 1 - alpha : alpha;
+
+    if (this._useGlyphStroke) {
+      this._interpolateGlyphStroke(effectiveAlpha);
+    } else if (this._useDashReveal) {
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
@@ -448,16 +537,91 @@ export class Write extends Animation {
           material.needsUpdate = true;
         }
       });
-    } else if (this._useRevealProgress) {
-      // Progressive left-to-right reveal
-      (this.mobject as any).setRevealProgress(effectiveAlpha);
     } else {
-      // Fallback: opacity
       this.mobject.setOpacity(this._originalOpacity * effectiveAlpha);
     }
   }
 
+  /**
+   * Glyph stroke interpolation:
+   * Phase 1 (0 → strokeRatio): Dash-reveal glyph outlines with lag stagger
+   * Phase 2 (strokeRatio → 1): Cross-fade from glyph strokes to texture mesh
+   */
+  private _interpolateGlyphStroke(alpha: number): void {
+    const glyphGroup = this._glyphGroup!;
+    const children = glyphGroup.children;
+    const numChildren = children.length;
+    const strokeRatio = this._strokeRatio;
+
+    if (alpha <= strokeRatio) {
+      // Phase 1: Progressive dash-reveal across all glyph children
+      const strokeAlpha = alpha / strokeRatio; // normalize to 0-1
+
+      for (let i = 0; i < numChildren; i++) {
+        // Compute per-character alpha with stagger
+        const charStart = (i / numChildren) * (1 - this.lagRatio);
+        const charEnd = charStart + this.lagRatio + (1 - this.lagRatio) / numChildren;
+        const charAlpha = Math.max(0, Math.min(1, (strokeAlpha - charStart) / (charEnd - charStart)));
+
+        const totalLen = this._glyphTotalLengths[i] || 1;
+        const child = children[i];
+        const childThreeObj = child.getThreeObject();
+
+        childThreeObj.traverse((obj) => {
+          if (obj instanceof Line2) {
+            const material = obj.material as LineMaterial;
+            const visibleLength = charAlpha * totalLen;
+            material.dashSize = visibleLength;
+            material.gapSize = totalLen - visibleLength + 0.0001;
+            material.needsUpdate = true;
+          }
+        });
+      }
+
+      // Ensure texture mesh stays hidden during stroke phase
+      if (this._textMesh) {
+        this._textMesh.visible = false;
+      }
+    } else {
+      // Phase 2: Cross-fade — strokes fully visible, fade in texture, fade out strokes
+      const fadeAlpha = (alpha - strokeRatio) / (1 - strokeRatio); // normalize to 0-1
+
+      // Ensure all glyph strokes are fully revealed
+      for (let i = 0; i < numChildren; i++) {
+        const totalLen = this._glyphTotalLengths[i] || 1;
+        const child = children[i];
+        const childThreeObj = child.getThreeObject();
+
+        childThreeObj.traverse((obj) => {
+          if (obj instanceof Line2) {
+            const material = obj.material as LineMaterial;
+            material.dashSize = totalLen;
+            material.gapSize = 0.0001;
+            // Fade out stroke opacity
+            material.opacity = 1 - fadeAlpha;
+            material.needsUpdate = true;
+          }
+        });
+      }
+
+      // Fade in the texture mesh
+      if (this._textMesh) {
+        this._textMesh.visible = true;
+        const material = this._textMesh.material as THREE.MeshBasicMaterial;
+        if (material) {
+          material.opacity = this._originalOpacity * fadeAlpha;
+        }
+      }
+    }
+  }
+
   override finish(): void {
+    if (this._useGlyphStroke) {
+      this._finishGlyphStroke();
+      super.finish();
+      return;
+    }
+
     if (this._remover) {
       if (this._useDashReveal) {
         const threeObj = this.mobject.getThreeObject();
@@ -469,9 +633,6 @@ export class Write extends Animation {
             material.needsUpdate = true;
           }
         });
-      }
-      if (this._useRevealProgress) {
-        (this.mobject as any).setRevealProgress(0);
       }
       this.mobject.setOpacity(0);
     } else {
@@ -485,12 +646,56 @@ export class Write extends Animation {
           }
         });
       }
-      if (this._useRevealProgress) {
-        (this.mobject as any).setRevealProgress(1);
-      }
       this.mobject.setOpacity(this._originalOpacity);
     }
     super.finish();
+  }
+
+  /**
+   * Clean up glyph stroke mode: remove glyph group from scene,
+   * restore texture mesh to full opacity.
+   */
+  private _finishGlyphStroke(): void {
+    const glyphGroup = this._glyphGroup!;
+
+    if (this._remover) {
+      // Unwrite: hide everything
+      if (this._textMesh) {
+        this._textMesh.visible = false;
+      }
+      this.mobject.setOpacity(0);
+    } else {
+      // Write complete: show texture, hide glyphs
+      if (this._textMesh) {
+        this._textMesh.visible = true;
+        const material = this._textMesh.material as THREE.MeshBasicMaterial;
+        if (material) {
+          material.opacity = this._originalOpacity;
+        }
+      }
+      this.mobject.setOpacity(this._originalOpacity);
+    }
+
+    // Remove glyph group from the Three.js scene
+    if (this._parentThreeObj) {
+      const glyphThreeObj = glyphGroup.getThreeObject();
+      this._parentThreeObj.remove(glyphThreeObj);
+    }
+
+    // Disable dashing on glyph strokes
+    for (const child of glyphGroup.children) {
+      child.getThreeObject().traverse((obj) => {
+        if (obj instanceof Line2) {
+          const material = obj.material as LineMaterial;
+          material.dashed = false;
+          material.needsUpdate = true;
+        }
+      });
+    }
+
+    this._glyphGroup = null;
+    this._textMesh = null;
+    this._parentThreeObj = null;
   }
 }
 

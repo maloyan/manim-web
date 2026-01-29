@@ -92,7 +92,8 @@
         await basel.waitForRender?.();
 
         new VGroup(title, basel).arrange(DOWN);
-        await scene.play(new Write(title), new FadeIn(basel, { shift: DOWN }));
+        scene.add(title, basel);
+        await scene.play(new Write(title, { duration: 2 }), new FadeIn(basel, { shift: DOWN }));
         await scene.wait(1);
 
         // Part 2: Transform title to UL corner, fade out equation downward

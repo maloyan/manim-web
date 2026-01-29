@@ -8,6 +8,10 @@
 // Text - Basic text rendering
 export { Text, type TextOptions } from './Text';
 
+// Glyph vector extraction (for stroke-draw animation)
+export { GlyphVMobject, type GlyphVMobjectOptions } from './GlyphVMobject';
+export { TextGlyphGroup, type TextGlyphGroupOptions } from './TextGlyphGroup';
+
 // Paragraph - Text with word wrapping
 export { Paragraph, type ParagraphOptions } from './Paragraph';
 

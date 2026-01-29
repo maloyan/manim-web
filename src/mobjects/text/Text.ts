@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
+import { TextGlyphGroup } from './TextGlyphGroup';
 
 /**
  * Options for creating a Text mobject
@@ -28,6 +29,8 @@ export interface TextOptions {
   letterSpacing?: number;
   /** Text alignment. Default: 'center' */
   textAlign?: 'left' | 'center' | 'right';
+  /** URL to a font file (OTF/TTF) for glyph vector extraction. When provided, loadGlyphs() can extract glyph outlines for stroke-draw animation. */
+  fontUrl?: string;
 }
 
 /** Scale factor: pixels to world units (100 pixels = 1 world unit) */
@@ -73,6 +76,11 @@ export class Text extends VMobject {
   protected _letterSpacing: number;
   protected _textAlign: 'left' | 'center' | 'right';
 
+  /** Optional font URL for glyph vector extraction */
+  protected _fontUrl?: string;
+  /** Cached glyph group (created lazily by loadGlyphs) */
+  protected _glyphGroup: TextGlyphGroup | null = null;
+
   /** Off-screen canvas for text rendering */
   protected _canvas: HTMLCanvasElement | null = null;
   protected _ctx: CanvasRenderingContext2D | null = null;
@@ -102,6 +110,7 @@ export class Text extends VMobject {
       lineHeight = 1.2,
       letterSpacing = 0,
       textAlign = 'center',
+      fontUrl,
     } = options;
 
     this._text = text;
@@ -112,6 +121,7 @@ export class Text extends VMobject {
     this._lineHeight = lineHeight;
     this._letterSpacing = letterSpacing;
     this._textAlign = textAlign;
+    this._fontUrl = fontUrl;
 
     this.color = color;
     this.fillOpacity = fillOpacity;
@@ -446,29 +456,36 @@ export class Text extends VMobject {
   }
 
   /**
-   * Set reveal progress for Write animation (left-to-right wipe).
-   * @param alpha - Progress from 0 (hidden) to 1 (fully visible)
+   * Get the cached TextGlyphGroup (null until loadGlyphs() resolves).
    */
-  setRevealProgress(alpha: number): void {
-    if (!this._mesh || !this._texture) return;
+  getGlyphGroup(): TextGlyphGroup | null {
+    return this._glyphGroup;
+  }
 
-    const a = Math.max(0.001, Math.min(1, alpha));
+  /**
+   * Lazily create a TextGlyphGroup from the font file at _fontUrl.
+   * Returns null if no fontUrl was provided.
+   */
+  async loadGlyphs(): Promise<TextGlyphGroup | null> {
+    if (this._glyphGroup) return this._glyphGroup;
+    if (!this._fontUrl) return null;
 
-    if (a <= 0.001) {
-      this._mesh.visible = false;
-      return;
-    }
+    this._glyphGroup = new TextGlyphGroup({
+      text: this._text,
+      fontUrl: this._fontUrl,
+      fontSize: this._fontSize,
+      color: this.color,
+      strokeWidth: 2,
+    });
+    await this._glyphGroup.waitForReady();
+    return this._glyphGroup;
+  }
 
-    this._mesh.visible = true;
-
-    // Scale X to reveal left portion, keep left edge fixed
-    this._mesh.scale.x = a;
-    this._mesh.position.x = this._worldWidth * (a - 1) / 2;
-
-    // Adjust texture to show only revealed portion (prevent squishing)
-    this._texture.repeat.set(a, 1);
-    this._texture.offset.set(0, 0);
-    this._texture.needsUpdate = true;
+  /**
+   * Get the texture mesh (for animation cross-fade access).
+   */
+  getTextureMesh(): THREE.Mesh | null {
+    return this._mesh;
   }
 
   /**
@@ -494,6 +511,7 @@ export class Text extends VMobject {
       lineHeight: this._lineHeight,
       letterSpacing: this._letterSpacing,
       textAlign: this._textAlign,
+      fontUrl: this._fontUrl,
     });
   }
 

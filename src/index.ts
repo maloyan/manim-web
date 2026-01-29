@@ -137,6 +137,10 @@ export {
   type DecimalNumberOptions,
   Variable,
   type VariableOptions,
+  GlyphVMobject,
+  type GlyphVMobjectOptions,
+  TextGlyphGroup,
+  type TextGlyphGroupOptions,
 } from './mobjects/text';
 
 // 3D Mobjects
