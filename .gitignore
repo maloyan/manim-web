@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.vite/
+*.log
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+.beads/
