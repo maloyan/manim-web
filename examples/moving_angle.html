@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Moving Angle</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #ff6b6b; }
+    button:disabled { background: #666; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="playBtn">Play Animation</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <script type="module">
+    // Converted from Python Manim → ManimWeb TypeScript
+    // Review and adjust as needed — automated conversion is approximate.
+    import {
+      Angle,
+      FadeToColor,
+      LEFT,
+      Line,
+      MathTex,
+      RED,
+      RIGHT,
+      SMALL_BUFF,
+      Scene,
+      ValueTracker,
+      BLACK,
+      WHITE,
+    } from '../manim-js/src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK,
+    });
+
+    let isAnimating = false;
+
+    async function movingAngle(scene) {
+      scene.clear();
+
+      const rotation_center = LEFT;
+
+      const theta_tracker = new ValueTracker(110);
+      const line1 = new Line({ start: LEFT, end: RIGHT });
+      const line_moving = new Line({ start: LEFT, end: RIGHT });
+      const line_ref = line_moving.copy();
+      line_moving.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
+      const a = new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false });
+      const tex = new MathTex({ latex: "\\theta", color: WHITE });
+      await tex.waitForRender();
+      tex.moveTo( new Angle({ line1: line1, line2: line_moving }, { radius: 0.5 + 3 * SMALL_BUFF, otherAngle: false }).pointFromProportion(0.5) );
+
+      scene.add(line1, line_moving, a, tex);
+      await scene.wait(1);
+
+      line_moving.addUpdater( (x) => {
+        x.become(line_ref.copy());
+        x.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
+      });
+
+      a.addUpdater( (x) => x.become(new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false })) );
+      tex.addUpdater( (x) => x.moveTo( new Angle({ line1: line1, line2: line_moving }, { radius: 0.5 + 3 * SMALL_BUFF, otherAngle: false }).pointFromProportion(0.5) ) );
+
+      await scene.play(theta_tracker.animateTo(40));
+      await scene.play(theta_tracker.animateTo(theta_tracker.getValue() + 140));
+      await scene.play(new FadeToColor(tex, { color: RED, duration: 0.5 }));
+      await scene.play(theta_tracker.animateTo(350));
+
+      await scene.wait(1);
+    }
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      document.getElementById('playBtn').disabled = true;
+
+      await movingAngle(scene);
+
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+    });
+  </script>
+</body>
+</html>

@@ -1,6 +1,21 @@
 // Colors
 export * from './constants/colors';
-export * from './constants';
+export {
+  DEFAULT_STROKE_WIDTH,
+  DEFAULT_FONT_SIZE,
+  DEFAULT_ANIMATION_DURATION,
+  DEFAULT_FRAME_WIDTH,
+  DEFAULT_FRAME_HEIGHT,
+  DEFAULT_PIXEL_WIDTH,
+  DEFAULT_PIXEL_HEIGHT,
+  DEFAULT_FPS,
+  SMALL_BUFF,
+  MED_SMALL_BUFF,
+  MED_LARGE_BUFF,
+  LARGE_BUFF,
+  DEFAULT_MOBJECT_TO_EDGE_BUFFER,
+  DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
+} from './constants';
 
 // Core
 export { Mobject, type MobjectStyle, type Vector3Tuple, type UpdaterFunction } from './core/Mobject';
@@ -10,8 +25,30 @@ export { VGroup } from './core/VGroup';
 export { VDict, VectorizedPoint } from './core/VDict';
 export { Group } from './core/Group';
 export { Scene, type SceneOptions } from './core/Scene';
+export { InteractiveScene, type InteractiveSceneOptions } from './core/InteractiveScene';
+export { AudioManager, type AudioTrack, type AddSoundOptions } from './core/AudioManager';
 export { Renderer, type RendererOptions } from './core/Renderer';
+export {
+  SceneStateManager,
+  serializeMobject,
+  deserializeMobject,
+  saveMobjectState,
+  restoreMobjectState,
+  stateToJSON,
+  stateFromJSON,
+  snapshotToJSON,
+  snapshotFromJSON,
+  type MobjectState,
+  type SceneSnapshot,
+} from './core/StateManager';
 export { Camera2D, type CameraOptions, Camera3D, type Camera3DOptions } from './core/Camera';
+export {
+  CameraFrame,
+  CameraAnimateProxy,
+  type CameraFrameOptions,
+  type CameraFrameState,
+  type CameraFrameAnimationOptions,
+} from './core/CameraFrame';
 export {
   Lighting,
   type AmbientLightOptions,
@@ -99,6 +136,13 @@ export {
   type RightAngleOptions,
   type ElbowOptions,
   type TangentLineOptions,
+  // Boolean operations
+  Union,
+  Intersection,
+  Difference,
+  Exclusion,
+  BooleanResult,
+  type BooleanOperationOptions,
 } from './mobjects/geometry';
 
 // Graphing
@@ -130,10 +174,22 @@ export {
   type MarkupTextOptions,
   MathTex,
   type MathTexOptions,
+  type TexRenderer,
   Tex,
   type TexOptions,
   ensureKatexStyles,
   areKatexStylesLoaded,
+  // MathJax renderer (full LaTeX support, dynamic import)
+  renderLatexToSVG,
+  preloadMathJax,
+  isMathJaxLoaded,
+  katexCanRender,
+  type MathJaxRenderOptions,
+  type MathJaxRenderResult,
+  // SVG path parser
+  parseSVGPathData,
+  svgToVMobjects,
+  type SVGToVMobjectOptions,
   DecimalNumber,
   Integer,
   type DecimalNumberOptions,
@@ -172,6 +228,11 @@ export {
   ParametricSurface,
   SurfacePresets,
   type ParametricSurfaceOptions,
+  // Textured surfaces
+  TexturedSurface,
+  texturedSphere,
+  type TexturedSurfaceOptions,
+  type TexturedSphereOptions,
   // Coordinate systems
   ThreeDAxes,
   type ThreeDAxesOptions,
@@ -295,6 +356,26 @@ export {
   type PointData,
 } from './mobjects/point';
 
+// Fractal mobjects
+export {
+  MandelbrotSet,
+  type MandelbrotSetOptions,
+  NewtonFractal,
+  type NewtonFractalOptions,
+} from './mobjects/fractals';
+
+// Probability mobjects
+export {
+  SampleSpace,
+  type SampleSpaceOptions,
+  type Partition,
+  type DivideOptions,
+  type BraceAnnotationOptions,
+  DiceFace,
+  createDiceRow,
+  type DiceFaceOptions,
+} from './mobjects/probability';
+
 // Animations
 export {
   Animation,
@@ -325,6 +406,7 @@ export {
 } from './animation/creation';
 export { Transform, transform, ReplacementTransform, replacementTransform, MoveToTarget, moveToTarget } from './animation/transform';
 export { ApplyPointwiseFunction, applyPointwiseFunction } from './animation/transform';
+export { FadeToColor, fadeToColor, type FadeToColorOptions } from './animation/transform';
 
 // Movement animations
 export {
@@ -344,6 +426,22 @@ export {
   MoveAlongPath,
   moveAlongPath,
   type MoveAlongPathOptions,
+  // Homotopy animations
+  Homotopy,
+  homotopy,
+  ComplexHomotopy,
+  complexHomotopy,
+  SmoothedVectorizedHomotopy,
+  smoothedVectorizedHomotopy,
+  PhaseFlow,
+  phaseFlow,
+  type HomotopyFunction,
+  type ComplexHomotopyFunction,
+  type VectorFieldFunction,
+  type HomotopyOptions,
+  type ComplexHomotopyOptions,
+  type SmoothedVectorizedHomotopyOptions,
+  type PhaseFlowOptions,
 } from './animation/movement';
 
 // Animation utilities
@@ -355,6 +453,45 @@ export { Succession, succession, type SuccessionOptions } from './animation/Succ
 export { UpdateFromFunc, updateFromFunc } from './animation/UpdateFromFunc';
 export { UpdateFromAlphaFunc, updateFromAlphaFunc } from './animation/UpdateFromAlphaFunc';
 export { maintainPositionRelativeTo } from './animation/MaintainPositionRelativeTo';
+
+// Utility animations
+export { Rotating, rotating, type RotatingOptions, Broadcast, broadcast, type BroadcastOptions } from './animation/utility';
+
+// Indication animations
+export {
+  Indicate,
+  indicate,
+  type IndicateOptions,
+  Flash,
+  flash,
+  type FlashOptions,
+  Circumscribe,
+  circumscribe,
+  type CircumscribeOptions,
+  type CircumscribeShape,
+  Wiggle,
+  wiggle,
+  type WiggleOptions,
+  ShowPassingFlash,
+  showPassingFlash,
+  type ShowPassingFlashOptions,
+  ApplyWave,
+  applyWave,
+  type ApplyWaveOptions,
+  type WaveDirection,
+  FocusOn,
+  focusOn,
+  type FocusOnOptions,
+  Pulse,
+  pulse,
+  type PulseOptions,
+  ShowCreationThenDestruction,
+  showCreationThenDestruction,
+  type ShowCreationThenDestructionOptions,
+  WiggleOutThenIn,
+  wiggleOutThenIn,
+  type WiggleOutThenInOptions,
+} from './animation/indication';
 
 // Rate functions
 export {
@@ -406,6 +543,9 @@ export {
   type ClickableOptions,
 } from './interaction';
 
+// Interaction - Selection
+export { SelectionManager, type SelectionManagerOptions } from './interaction';
+
 // Interaction - Camera Controls
 export { OrbitControls, type OrbitControlsOptions } from './interaction';
 
@@ -419,6 +559,16 @@ export {
   type VideoExportOptions,
 } from './export';
 
+// Rendering (GPU Bezier SDF shaders)
+export {
+  createBezierShaderMaterial,
+  updateBezierMaterialResolution,
+  type BezierShaderMaterialOptions,
+  BezierRenderer,
+  type BezierRendererOptions,
+  type BezierSegment,
+} from './rendering';
+
 // Performance utilities
 export {
   PerformanceMonitor,
@@ -426,3 +576,43 @@ export {
   FrameTimeTracker,
   createFrameTimeTracker,
 } from './utils/Performance';
+
+// ODE solver utilities
+export {
+  rk4Step,
+  solveIVP,
+  flowPoint,
+  flowPointTrajectory,
+  type ODEFunction,
+  type VectorFieldFunction3D,
+  type SolveIVPOptions,
+  type IVPResult,
+} from './utils/ode';
+
+// Hungarian algorithm utilities
+export {
+  hungarian,
+  hungarianFromSimilarity,
+  type HungarianResult,
+} from './utils/hungarian';
+
+// Skeletonization utilities (medial axis extraction for glyph stroke animation)
+export {
+  skeletonizeGlyph,
+  type SkeletonizeOptions,
+} from './utils/skeletonize';
+
+// Polygon triangulation utilities (earcut-based, for robust SVG fill)
+export {
+  triangulatePolygon,
+  triangulatePolygonPositions,
+  signedArea2D,
+  ensureCCW,
+  ensureCW,
+} from './utils/triangulate';
+
+// Vector math utilities
+export {
+  scaleVec,
+  addVec,
+} from './utils/vectors';
