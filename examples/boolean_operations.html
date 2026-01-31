@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Boolean Operations</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #ff6b6b; }
+    button:disabled { background: #666; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="playBtn">Play Animation</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <script type="module">
+    import {
+      BLUE,
+      DOWN,
+      Difference,
+      Ellipse,
+      Exclusion,
+      FadeIn,
+      GREEN,
+      Group,
+      Intersection,
+      LEFT,
+      MarkupText,
+      MoveToTarget,
+      ORANGE,
+      PINK,
+      RED,
+      RIGHT,
+      Scene,
+      Text,
+      UP,
+      Union,
+      YELLOW,
+      addVec,
+      scaleVec
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: '#000000'
+    });
+
+    async function booleanOperations(scene) {
+      const ellipse1 = new Ellipse({ width: 4.0, height: 5.0, fillOpacity: 0.5, color: BLUE, strokeWidth: 3 }).moveTo(LEFT);
+      const ellipse2 = ellipse1.copy().setColor(RED).moveTo(RIGHT);
+      const bool_ops_text = new MarkupText({ text: "<u>Boolean Operation</u>" }).nextTo(ellipse1, scaleVec(3, UP));
+      const ellipse_group = new Group(bool_ops_text, ellipse1, ellipse2).moveTo(scaleVec(3, LEFT));
+      await scene.play(new FadeIn(ellipse_group));
+
+      const i = new Intersection(ellipse1, ellipse2, { color: GREEN, fillOpacity: 0.5 });
+      i.generateTarget();
+      i.targetCopy.scale(0.25).moveTo(addVec(scaleVec(5, RIGHT), scaleVec(2.5, UP)));
+      await scene.play(new MoveToTarget(i));
+      const intersection_text = new Text({ text: "Intersection", fontSize: 23 }).nextTo(i, UP);
+      await scene.play(new FadeIn(intersection_text));
+
+      const u = new Union(ellipse1, ellipse2, { color: ORANGE, fillOpacity: 0.5 });
+      const union_text = new Text({ text: "Union", fontSize: 23 });
+      u.generateTarget();
+      u.targetCopy.scale(0.3).nextTo(i, DOWN, union_text.getHeight() * 3);
+      await scene.play(new MoveToTarget(u));
+      union_text.nextTo(u, UP);
+      await scene.play(new FadeIn(union_text));
+
+      const e = new Exclusion(ellipse1, ellipse2, { color: YELLOW, fillOpacity: 0.5 });
+      const exclusion_text = new Text({ text: "Exclusion", fontSize: 23 });
+      e.generateTarget();
+      e.targetCopy.scale(0.3).nextTo(u, DOWN, exclusion_text.getHeight() * 3.5);
+      await scene.play(new MoveToTarget(e));
+      exclusion_text.nextTo(e, UP);
+      await scene.play(new FadeIn(exclusion_text));
+
+      const d = new Difference(ellipse1, ellipse2, { color: PINK, fillOpacity: 0.5 });
+      const difference_text = new Text({ text: "Difference", fontSize: 23 });
+      d.generateTarget();
+      d.targetCopy.scale(0.3).nextTo(u, LEFT, difference_text.getHeight() * 3.5);
+      await scene.play(new MoveToTarget(d));
+      difference_text.nextTo(d, UP);
+      await scene.play(new FadeIn(difference_text));
+    }
+
+    let isAnimating = false;
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      document.getElementById('playBtn').disabled = true;
+
+      scene.clear();
+      await booleanOperations(scene);
+
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+    });
+  </script>
+</body>
+</html>
