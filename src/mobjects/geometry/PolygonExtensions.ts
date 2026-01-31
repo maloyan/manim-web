@@ -473,12 +473,34 @@ export class Star extends VMobject {
 }
 
 /**
+ * Compute the greatest common divisor of two positive integers.
+ */
+function gcd(a: number, b: number): number {
+  a = Math.abs(a);
+  b = Math.abs(b);
+  while (b) {
+    [a, b] = [b, a % b];
+  }
+  return a;
+}
+
+/**
  * Options for creating a RegularPolygram
  */
 export interface RegularPolygramOptions {
-  /** Number of vertices. Default: 5 */
+  /** Number of vertices on the circumscribed circle. Default: 5 */
   numVertices?: number;
-  /** Density (vertex skip count). Default: 2 */
+  /**
+   * Density (vertex step count), i.e. how many vertices to skip when
+   * drawing each edge. Default: 2
+   *
+   * The Schlafli symbol {numVertices/density} describes the polygram.
+   * For example {5/2} is a pentagram, {7/3} is a heptagram.
+   *
+   * When gcd(numVertices, density) > 1 the polygram decomposes into
+   * multiple congruent regular polygon components. For instance {6/2}
+   * simplifies to 2{3} -- two overlapping equilateral triangles.
+   */
   density?: number;
   /** Radius from center to vertices. Default: 1 */
   radius?: number;
@@ -495,20 +517,33 @@ export interface RegularPolygramOptions {
 }
 
 /**
- * RegularPolygram - A star polygon (like pentagram)
+ * RegularPolygram - A generalized star polygon {n/k}
  *
- * Creates a regular star polygon by connecting every nth vertex of a regular polygon,
- * where n is the density. A pentagram is {5/2}, hexagram is {6/2}, etc.
+ * Creates a regular star polygon by placing n vertices equally spaced on a
+ * circle and connecting every k-th vertex, where k is the density.
+ *
+ * When gcd(n, k) = 1 the result is a single continuous self-intersecting
+ * path that winds k times around the center before closing (e.g. the
+ * pentagram {5/2}).
+ *
+ * When gcd(n, k) > 1 the polygram decomposes into gcd(n,k) congruent
+ * regular polygon components, each rendered as a separate child VMobject.
+ * For example, a hexagram {6/2} becomes 2 equilateral triangles (2{3}).
+ *
+ * This matches the behavior of Python manim's RegularPolygram.
  *
  * @example
  * ```typescript
- * // Create a pentagram (5-pointed star polygon)
+ * // Pentagram {5/2} -- single continuous star
  * const pentagram = new RegularPolygram({ numVertices: 5, density: 2 });
  *
- * // Create a hexagram (Star of David)
+ * // Hexagram {6/2} = 2{3} -- two overlapping triangles
  * const hexagram = new RegularPolygram({ numVertices: 6, density: 2 });
  *
- * // Create an octagram {8/3}
+ * // Heptagram {7/3}
+ * const heptagram = new RegularPolygram({ numVertices: 7, density: 3 });
+ *
+ * // Octagram {8/3}
  * const octagram = new RegularPolygram({ numVertices: 8, density: 3 });
  * ```
  */
@@ -518,6 +553,7 @@ export class RegularPolygram extends VMobject {
   private _radius: number;
   private _centerPoint: Vector3Tuple;
   private _startAngle: number;
+  private _numComponents: number;
 
   constructor(options: RegularPolygramOptions = {}) {
     super();
@@ -536,8 +572,18 @@ export class RegularPolygram extends VMobject {
     if (numVertices < 3) {
       throw new Error('RegularPolygram requires at least 3 vertices');
     }
-    if (density < 1 || density >= numVertices / 2) {
-      throw new Error(`Density must be between 1 and ${Math.floor(numVertices / 2) - 1} for ${numVertices} vertices`);
+    if (density < 1) {
+      throw new Error('Density must be at least 1');
+    }
+    // For even n, density = n/2 produces degenerate diameters, not a polygon.
+    // For odd n, density can go up to floor(n/2).
+    const maxDensity = numVertices % 2 === 0
+      ? numVertices / 2 - 1
+      : Math.floor(numVertices / 2);
+    if (density > maxDensity) {
+      throw new Error(
+        `Density must be between 1 and ${maxDensity} for ${numVertices} vertices`
+      );
     }
 
     this._numVertices = numVertices;
@@ -545,6 +591,7 @@ export class RegularPolygram extends VMobject {
     this._radius = radius;
     this._centerPoint = [...center];
     this._startAngle = startAngle;
+    this._numComponents = gcd(numVertices, density);
 
     this.color = color;
     this.fillOpacity = fillOpacity;
@@ -554,15 +601,29 @@ export class RegularPolygram extends VMobject {
   }
 
   /**
-   * Generate the polygram points by connecting every density-th vertex
+   * Generate the polygram geometry.
+   *
+   * If gcd(n,k) = 1 the polygram is a single continuous path stored
+   * directly in this VMobject's points.
+   *
+   * If gcd(n,k) > 1 the polygram is composed of gcd(n,k) congruent
+   * regular polygon components. Each component is a child VMobject so
+   * that the rendering pipeline draws them as separate closed paths.
    */
   private _generatePoints(): void {
-    const [cx, cy, cz] = this._centerPoint;
-    const angleStep = (2 * Math.PI) / this._numVertices;
+    // Remove any previous component children
+    while (this.children.length > 0) {
+      this.remove(this.children[0]);
+    }
 
-    // Generate all vertices
+    const [cx, cy, cz] = this._centerPoint;
+    const n = this._numVertices;
+    const k = this._density;
+    const angleStep = (2 * Math.PI) / n;
+
+    // Generate all n vertices on the circumscribed circle
     const allVertices: Vector3Tuple[] = [];
-    for (let i = 0; i < this._numVertices; i++) {
+    for (let i = 0; i < n; i++) {
       const angle = this._startAngle + i * angleStep;
       allVertices.push([
         cx + this._radius * Math.cos(angle),
@@ -571,50 +632,103 @@ export class RegularPolygram extends VMobject {
       ]);
     }
 
-    // Create the path by connecting every density-th vertex
-    const points: number[][] = [];
-    const visited = new Set<number>();
-    let currentIndex = 0;
-    let isFirst = true;
+    const numGons = this._numComponents;
 
-    const addLineSegment = (p0: Vector3Tuple, p1: Vector3Tuple, first: boolean) => {
-      const dx = p1[0] - p0[0];
-      const dy = p1[1] - p0[1];
-      const dz = p1[2] - p0[2];
+    // Helper: build cubic-Bezier line segments for a vertex sequence
+    const buildPathPoints = (vertexIndices: number[]): number[][] => {
+      const pts: number[][] = [];
+      for (let i = 0; i < vertexIndices.length; i++) {
+        const p0 = allVertices[vertexIndices[i]];
+        const p1 = allVertices[vertexIndices[(i + 1) % vertexIndices.length]];
+        const dx = p1[0] - p0[0];
+        const dy = p1[1] - p0[1];
+        const dz = p1[2] - p0[2];
 
-      if (first) {
-        points.push([...p0]);
+        if (i === 0) {
+          pts.push([...p0]);
+        }
+        pts.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
+        pts.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+        pts.push([...p1]);
       }
-      points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-      points.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
-      points.push([...p1]);
+      return pts;
     };
 
-    // Trace the path
-    const startIndex = 0;
-    do {
-      const nextIndex = (currentIndex + this._density) % this._numVertices;
-      addLineSegment(allVertices[currentIndex], allVertices[nextIndex], isFirst);
-      isFirst = false;
-      visited.add(currentIndex);
-      currentIndex = nextIndex;
-    } while (currentIndex !== startIndex);
+    if (numGons === 1) {
+      // Single continuous path -- trace all n vertices stepping by k
+      const vertexOrder: number[] = [];
+      let idx = 0;
+      for (let step = 0; step < n; step++) {
+        vertexOrder.push(idx);
+        idx = (idx + k) % n;
+      }
 
-    this.setPoints3D(points);
+      const points = buildPathPoints(vertexOrder);
+      this.setPoints3D(points);
+    } else {
+      // Multiple components: gcd(n,k) separate regular polygons.
+      // Each component has n/gcd vertices, stepping by k/gcd,
+      // starting at vertex i for i in [0, gcd).
+      //
+      // The simplified step within each component is always 1 in terms of
+      // the component's own vertex ordering, but we express it as indices
+      // into the original n vertices for simplicity.
+      this.clearPoints();
+
+      for (let g = 0; g < numGons; g++) {
+        const vertexOrder: number[] = [];
+        let idx = g;
+        const vertsPerComponent = n / numGons;
+        for (let step = 0; step < vertsPerComponent; step++) {
+          vertexOrder.push(idx);
+          idx = (idx + k) % n;
+        }
+
+        const componentPoints = buildPathPoints(vertexOrder);
+
+        // Create a child VMobject for this component
+        const component = new VMobject();
+        component.color = this.color;
+        component.fillOpacity = this.fillOpacity;
+        component.strokeWidth = this.strokeWidth;
+        component.setPoints3D(componentPoints);
+
+        this.add(component);
+      }
+    }
   }
 
   /**
-   * Get the number of vertices
+   * Get the number of vertices (n in the Schlafli symbol {n/k})
    */
   getNumVertices(): number {
     return this._numVertices;
   }
 
   /**
-   * Get the density (skip count)
+   * Get the density (k in the Schlafli symbol {n/k})
    */
   getDensity(): number {
     return this._density;
+  }
+
+  /**
+   * Get the number of disconnected polygon components.
+   * Equal to gcd(numVertices, density).
+   * When this is 1 the polygram is a single continuous path.
+   */
+  getNumComponents(): number {
+    return this._numComponents;
+  }
+
+  /**
+   * Get the Schlafli symbol as a string, e.g. "{5/2}"
+   */
+  getSchlafliSymbol(): string {
+    if (this._density === 1) {
+      return `{${this._numVertices}}`;
+    }
+    return `{${this._numVertices}/${this._density}}`;
   }
 
   /**

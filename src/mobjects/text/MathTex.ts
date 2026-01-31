@@ -266,12 +266,15 @@ export class MathTex extends Mobject {
         this._renderState.texture.dispose();
       }
       this._renderState.texture = new THREE.CanvasTexture(canvas);
+      this._renderState.texture.colorSpace = THREE.SRGBColorSpace;
       this._renderState.texture.minFilter = THREE.LinearFilter;
       this._renderState.texture.magFilter = THREE.LinearFilter;
       this._renderState.texture.needsUpdate = true;
 
-      // Calculate world dimensions
-      const scaleFactor = 0.01;
+      // Calculate world dimensions — scale factor calibrated to match Manim CE's
+      // tex-to-world-unit conversion (TEX_MOB_SCALE_FACTOR) so that MathTex
+      // at font_size=48 produces the same relative size as in Python Manim.
+      const scaleFactor = 0.0088;
       this._renderState.width = width * scaleFactor;
       this._renderState.height = height * scaleFactor;
 

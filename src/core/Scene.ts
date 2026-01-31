@@ -143,6 +143,15 @@ export class Scene {
   }
 
   /**
+   * Set the background color at runtime.
+   * @param color - CSS color string (e.g., '#ece6e2')
+   */
+  setBackgroundColor(color: string): void {
+    this._renderer.backgroundColor = color;
+    this._render();
+  }
+
+  /**
    * Get the current timeline.
    */
   get timeline(): Timeline | null {

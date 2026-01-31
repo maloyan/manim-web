@@ -4,7 +4,7 @@ export * from './constants';
 
 // Core
 export { Mobject, type MobjectStyle, type Vector3Tuple, type UpdaterFunction } from './core/Mobject';
-export { UP, DOWN, LEFT, RIGHT, IN, OUT, ORIGIN, UL, UR, DL, DR } from './core/Mobject';
+export { UP, DOWN, LEFT, RIGHT, IN, OUT, ORIGIN, UL, UR, DL, DR, scaleVec, addVec } from './core/Mobject';
 export { VMobject, type Point } from './core/VMobject';
 export { VGroup } from './core/VGroup';
 export { VDict, VectorizedPoint } from './core/VDict';
@@ -99,6 +99,17 @@ export {
   type RightAngleOptions,
   type ElbowOptions,
   type TangentLineOptions,
+  // Boolean operations
+  Union,
+  Intersection,
+  Difference,
+  Exclusion,
+  BooleanResult,
+  union,
+  intersection,
+  difference,
+  exclusion,
+  type BooleanOperationOptions,
 } from './mobjects/geometry';
 
 // Graphing

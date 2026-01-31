@@ -78,7 +78,8 @@ export class Group extends Mobject {
   }
 
   /**
-   * Get the center of the group (average of all children centers).
+   * Get the center of the group (bounding box center, matching Manim's get_center).
+   * Computes the midpoint of the min/max coordinates across all children's edges.
    * @returns Center position as [x, y, z]
    */
   override getCenter(): Vector3Tuple {
@@ -86,19 +87,28 @@ export class Group extends Mobject {
       return [this.position.x, this.position.y, this.position.z];
     }
 
-    let sumX = 0, sumY = 0, sumZ = 0;
+    // Use bounding box center (like Manim's get_center / get_critical_point(ORIGIN))
+    let minX = Infinity, minY = Infinity, minZ = Infinity;
+    let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+
     for (const child of this.children) {
-      const center = child.getCenter();
-      sumX += center[0];
-      sumY += center[1];
-      sumZ += center[2];
+      const top = child.getEdge([0, 1, 0]);
+      const bottom = child.getEdge([0, -1, 0]);
+      const left = child.getEdge([-1, 0, 0]);
+      const right = child.getEdge([1, 0, 0]);
+
+      minX = Math.min(minX, left[0]);
+      maxX = Math.max(maxX, right[0]);
+      minY = Math.min(minY, bottom[1]);
+      maxY = Math.max(maxY, top[1]);
+      minZ = Math.min(minZ, Math.min(top[2], bottom[2]));
+      maxZ = Math.max(maxZ, Math.max(top[2], bottom[2]));
     }
 
-    const count = this.children.length;
     return [
-      this.position.x + sumX / count,
-      this.position.y + sumY / count,
-      this.position.z + sumZ / count
+      this.position.x + (minX + maxX) / 2,
+      this.position.y + (minY + maxY) / 2,
+      this.position.z + (minZ + maxZ) / 2
     ];
   }
 
@@ -108,10 +118,12 @@ export class Group extends Mobject {
    * @returns this for chaining
    */
   override shift(delta: Vector3Tuple): this {
-    // Apply to group's own position
-    super.shift(delta);
-
-    // Also shift children in local space
+    // Only shift children — do NOT shift the Group's own position.
+    // Children's Three.js objects are parented to the Group's Three.js
+    // object, so shifting the Group position AND children would cause
+    // a double-shift (once from the parent transform, once from the
+    // child's own position).  Keep Group._threeObject at the origin
+    // and let children carry world-space positions.
     for (const child of this.children) {
       child.shift(delta);
     }
@@ -128,8 +140,8 @@ export class Group extends Mobject {
   override moveTo(target: Vector3Tuple | Mobject, alignedEdge?: Vector3Tuple): this {
     if (!Array.isArray(target)) {
       if (alignedEdge) {
-        const targetEdge = target._getEdgeInDirection(alignedEdge);
-        const thisEdge = this._getEdgeInDirection(alignedEdge);
+        const targetEdge = target.getEdge(alignedEdge);
+        const thisEdge = this.getEdge(alignedEdge);
         return this.shift([
           targetEdge[0] - thisEdge[0],
           targetEdge[1] - thisEdge[1],

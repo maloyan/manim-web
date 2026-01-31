@@ -7,6 +7,7 @@
  * VMobject descendant, and interpolates them all simultaneously.
  */
 
+import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 
@@ -66,11 +67,40 @@ export class ApplyPointwiseFunction extends Animation {
     super.begin();
 
     this._snapshots = [];
+    const _v = new THREE.Vector3();
+
     for (const mob of this.mobject.getFamily()) {
       if (isVMobjectLike(mob)) {
         const startPoints = mob.getPoints();
         if (startPoints.length === 0) continue;
-        const targetPoints = startPoints.map(p => this.func([...p]));
+
+        // Get the Three.js object to transform local ↔ world space.
+        // This is needed because rotated objects (e.g. y-axis rotated 90°)
+        // store points in local space, but the user's function expects
+        // world-space coordinates.
+        const threeObj = (mob as Mobject)._threeObject;
+        let worldMatrix: THREE.Matrix4 | null = null;
+        let inverseWorld: THREE.Matrix4 | null = null;
+
+        if (threeObj) {
+          threeObj.updateWorldMatrix(true, false);
+          worldMatrix = threeObj.matrixWorld;
+          inverseWorld = worldMatrix.clone().invert();
+        }
+
+        let targetPoints: number[][];
+        if (worldMatrix && inverseWorld) {
+          // Transform local → world, apply func, then world → local
+          targetPoints = startPoints.map(p => {
+            _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
+            const worldResult = this.func([_v.x, _v.y, _v.z]);
+            _v.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
+            return [_v.x, _v.y, _v.z];
+          });
+        } else {
+          targetPoints = startPoints.map(p => this.func([...p]));
+        }
+
         this._snapshots.push({ mob, startPoints, targetPoints });
       }
     }

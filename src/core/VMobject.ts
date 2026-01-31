@@ -470,22 +470,28 @@ export class VMobject extends Mobject {
   protected _createThreeObject(): THREE.Object3D {
     const group = new THREE.Group();
 
-    // Create stroke material using LineMaterial for thick strokes
+    // Create stroke material using LineMaterial for thick strokes.
+    // depthTest/depthWrite disabled for correct 2D painter's-algorithm layering
+    // (controlled by renderOrder in Mobject._syncToThree instead).
     this._strokeMaterial = new LineMaterial({
       color: new THREE.Color(this.color).getHex(),
       linewidth: this.strokeWidth,
       opacity: this._opacity,
-      transparent: this._opacity < 1,
+      transparent: true,
       resolution: new THREE.Vector2(VMobject._rendererWidth, VMobject._rendererHeight),
       dashed: false,
+      depthTest: false,
+      depthWrite: false,
     });
 
-    // Create fill material
+    // Create fill material (depthTest/depthWrite disabled for 2D layering)
     this._fillMaterial = new THREE.MeshBasicMaterial({
       color: new THREE.Color(this.color),
       transparent: true,
       opacity: this._opacity * this.fillOpacity,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      depthTest: false,
+      depthWrite: false,
     });
 
     this._updateGeometry(group);
@@ -670,7 +676,7 @@ export class VMobject extends Mobject {
     if (this._strokeMaterial) {
       this._strokeMaterial.color.set(this.color);
       this._strokeMaterial.opacity = this._opacity;
-      this._strokeMaterial.transparent = this._opacity < 1;
+      this._strokeMaterial.transparent = true;
       this._strokeMaterial.linewidth = this.strokeWidth;
       // Update resolution for proper line width rendering
       this._strokeMaterial.resolution.set(VMobject._rendererWidth, VMobject._rendererHeight);
@@ -708,24 +714,26 @@ export class VMobject extends Mobject {
   }
 
   /**
-   * Get the center of this VMobject based on its points
+   * Get the center of this VMobject based on bounding box of its points.
+   * Uses (min + max) / 2 to match Manim's get_critical_point(ORIGIN).
    */
   override getCenter(): Vector3Tuple {
     if (this._points2D.length === 0) {
       return [this.position.x, this.position.y, this.position.z];
     }
 
-    // Calculate centroid of all points
-    let sumX = 0, sumY = 0;
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
     for (const point of this._points2D) {
-      sumX += point.x;
-      sumY += point.y;
+      if (point.x < minX) minX = point.x;
+      if (point.x > maxX) maxX = point.x;
+      if (point.y < minY) minY = point.y;
+      if (point.y > maxY) maxY = point.y;
     }
-    const count = this._points2D.length;
 
     return [
-      this.position.x + sumX / count,
-      this.position.y + sumY / count,
+      this.position.x + (minX + maxX) / 2,
+      this.position.y + (minY + maxY) / 2,
       this.position.z
     ];
   }

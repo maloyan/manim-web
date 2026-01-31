@@ -18,6 +18,18 @@ export const ORIGIN: Vector3Tuple = [0, 0, 0];
 export const UL: Vector3Tuple = [-1, 1, 0];  // UP + LEFT
 export const UR: Vector3Tuple = [1, 1, 0];   // UP + RIGHT
 export const DL: Vector3Tuple = [-1, -1, 0]; // DOWN + LEFT
+
+// Vector math utilities (needed because JS has no operator overloading)
+/** Scale a vector by a scalar: scaleVec(2, UP) → [0, 2, 0] */
+export function scaleVec(s: number, v: Vector3Tuple): Vector3Tuple {
+  return [s * v[0], s * v[1], s * v[2]];
+}
+/** Add vectors: addVec(LEFT, UP) → [-1, 1, 0] */
+export function addVec(...vecs: Vector3Tuple[]): Vector3Tuple {
+  const r: Vector3Tuple = [0, 0, 0];
+  for (const v of vecs) { r[0] += v[0]; r[1] += v[1]; r[2] += v[2]; }
+  return r;
+}
 export const DR: Vector3Tuple = [1, -1, 0];  // DOWN + RIGHT
 
 /**
@@ -87,6 +99,18 @@ export abstract class Mobject {
 
   /** Dirty flag indicating transforms need sync */
   _dirty: boolean = true;
+
+  /**
+   * Target copy used by generateTarget() / MoveToTarget animation.
+   * Call generateTarget() to create a copy, modify targetCopy, then
+   * play MoveToTarget to interpolate from current to target state.
+   */
+  targetCopy: Mobject | null = null;
+
+  /**
+   * Saved state copy used by saveState() / restoreState().
+   */
+  savedState: Mobject | null = null;
 
   /** Updater functions that run every frame */
   private _updaters: UpdaterFunction[] = [];
@@ -418,6 +442,18 @@ export abstract class Mobject {
   }
 
   /**
+   * Create a copy of this mobject as a target for MoveToTarget animation.
+   * Modify the returned copy, then play `new MoveToTarget(this)` to
+   * smoothly interpolate from the current state to the target.
+   *
+   * @returns The target copy for modification
+   */
+  generateTarget(): Mobject {
+    this.targetCopy = this.copy();
+    return this.targetCopy;
+  }
+
+  /**
    * Create a new instance for copying. Subclasses must implement this.
    */
   protected abstract _createCopy(): Mobject;
@@ -542,10 +578,12 @@ export abstract class Mobject {
     const center = this.getCenter();
     const bounds = this._getBoundingBox();
 
+    // Use sign of direction components (like Manim's get_critical_point)
+    // so that UP*3 returns the same edge as UP.
     return [
-      center[0] + direction[0] * bounds.width / 2,
-      center[1] + direction[1] * bounds.height / 2,
-      center[2] + direction[2] * bounds.depth / 2
+      center[0] + Math.sign(direction[0]) * bounds.width / 2,
+      center[1] + Math.sign(direction[1]) * bounds.height / 2,
+      center[2] + Math.sign(direction[2]) * bounds.depth / 2
     ];
   }
 
@@ -561,6 +599,22 @@ export abstract class Mobject {
     Mobject._tempBox3.setFromObject(obj);
     Mobject._tempBox3.getSize(Mobject._tempVec3);
     return { width: Mobject._tempVec3.x, height: Mobject._tempVec3.y, depth: Mobject._tempVec3.z };
+  }
+
+  /**
+   * Get the width of this mobject in world units
+   * @returns Width based on bounding box
+   */
+  getWidth(): number {
+    return this._getBoundingBox().width;
+  }
+
+  /**
+   * Get the height of this mobject in world units
+   * @returns Height based on bounding box
+   */
+  getHeight(): number {
+    return this._getBoundingBox().height;
   }
 
   /**
@@ -657,6 +711,14 @@ export abstract class Mobject {
     this._threeObject.position.copy(this.position);
     this._threeObject.rotation.copy(this.rotation);
     this._threeObject.scale.copy(this.scaleVector);
+
+    // 2D z-layering: later children in the parent render on top.
+    // Set renderOrder on all Three.js descendants so the GPU draws shapes
+    // in painter's-algorithm order (materials use depthTest:false).
+    if (this.parent) {
+      const idx = this.parent.children.indexOf(this);
+      this._threeObject.traverse((child) => { child.renderOrder = idx; });
+    }
 
     // Sync material properties if applicable
     this._syncMaterialToThree();

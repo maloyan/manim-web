@@ -64,6 +64,36 @@ const RESOLUTION_SCALE = 2;
  * const multiline = new Text({ text: 'Line 1\nLine 2\nLine 3' });
  * ```
  */
+/**
+ * Global cache: fontUrl -> { familyName, loadPromise }
+ * Ensures the same OTF/TTF is loaded only once via @font-face,
+ * and all Text instances sharing a URL get the same CSS family name.
+ */
+const _fontFaceCache = new Map<string, { familyName: string; loadPromise: Promise<void> }>();
+let _fontFaceIdCounter = 0;
+
+/**
+ * Load a font URL as a CSS @font-face rule (cached).
+ * Returns the unique font-family name assigned to this URL.
+ */
+async function _loadFontFace(url: string): Promise<string> {
+  const cached = _fontFaceCache.get(url);
+  if (cached) {
+    await cached.loadPromise;
+    return cached.familyName;
+  }
+
+  const familyName = `ManimFont_${_fontFaceIdCounter++}`;
+  const face = new FontFace(familyName, `url(${url})`);
+  const loadPromise = face.load().then(() => {
+    document.fonts.add(face);
+  });
+
+  _fontFaceCache.set(url, { familyName, loadPromise });
+  await loadPromise;
+  return familyName;
+}
+
 export class Text extends VMobject {
   protected _text: string;
   protected _fontSize: number;
@@ -209,6 +239,9 @@ export class Text extends VMobject {
    * Get text width in world units
    */
   getWidth(): number {
+    if (this._worldWidth === 0 && this._text) {
+      this._renderToCanvas();
+    }
     return this._worldWidth;
   }
 
@@ -216,6 +249,9 @@ export class Text extends VMobject {
    * Get text height in world units
    */
   getHeight(): number {
+    if (this._worldHeight === 0 && this._text) {
+      this._renderToCanvas();
+    }
     return this._worldHeight;
   }
 
@@ -469,6 +505,14 @@ export class Text extends VMobject {
   async loadGlyphs(): Promise<TextGlyphGroup | null> {
     if (this._glyphGroup) return this._glyphGroup;
     if (!this._fontUrl) return null;
+
+    // Load the font URL as a CSS @font-face (cached across all Text instances)
+    // so the Canvas 2D renderer uses the same font file as the opentype.js glyph strokes.
+    const familyName = await _loadFontFace(this._fontUrl);
+    this._fontFamily = `'${familyName}'`;
+    this._canvasDirty = true;
+    this._renderToCanvas();
+    this._updateMesh();
 
     this._glyphGroup = new TextGlyphGroup({
       text: this._text,

@@ -47,6 +47,14 @@ export class Transform extends Animation {
   private _startStrokeWidth: number = 2;
   private _targetStrokeWidth: number = 2;
 
+  /** Starting and target transform properties (position, rotation, scale) */
+  private _startPosition: THREE.Vector3 = new THREE.Vector3();
+  private _targetPosition: THREE.Vector3 = new THREE.Vector3();
+  private _startRotation: THREE.Euler = new THREE.Euler();
+  private _targetRotation: THREE.Euler = new THREE.Euler();
+  private _startScale: THREE.Vector3 = new THREE.Vector3(1, 1, 1);
+  private _targetScale: THREE.Vector3 = new THREE.Vector3(1, 1, 1);
+
   /** Whether to use cross-fade instead of point morphing */
   private _useCrossFade: boolean = false;
 
@@ -155,6 +163,14 @@ export class Transform extends Animation {
       this._targetFillOpacity = vtarget.fillOpacity;
       this._startStrokeWidth = vmobject.strokeWidth;
       this._targetStrokeWidth = vtarget.strokeWidth;
+
+      // Capture transform properties (position, rotation, scale)
+      this._startPosition.copy(vmobject.position);
+      this._targetPosition.copy(vtarget.position);
+      this._startRotation.copy(vmobject.rotation);
+      this._targetRotation.copy(vtarget.rotation);
+      this._startScale.copy(vmobject.scaleVector);
+      this._targetScale.copy(vtarget.scaleVector);
 
       vmobject.setPoints(this._startPoints);
 
@@ -380,6 +396,15 @@ export class Transform extends Animation {
     vmobject.strokeWidth =
       this._startStrokeWidth + (this._targetStrokeWidth - this._startStrokeWidth) * alpha;
 
+    // Interpolate transform properties
+    vmobject.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
+    vmobject.rotation.set(
+      this._startRotation.x + (this._targetRotation.x - this._startRotation.x) * alpha,
+      this._startRotation.y + (this._targetRotation.y - this._startRotation.y) * alpha,
+      this._startRotation.z + (this._targetRotation.z - this._startRotation.z) * alpha,
+    );
+    vmobject.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
+
     // Interpolate submobject points
     for (let s = 0; s < this._submobjectRefs.length; s++) {
       const sub = this._submobjectRefs[s];
@@ -479,6 +504,11 @@ export class Transform extends Animation {
     vmobject.strokeWidth = this._targetStrokeWidth;
     vmobject.color = this.target.color;
 
+    // Apply final transform properties
+    vmobject.position.copy(this._targetPosition);
+    vmobject.rotation.copy(this._targetRotation);
+    vmobject.scaleVector.copy(this._targetScale);
+
     // Set final submobject points
     for (let s = 0; s < this._submobjectRefs.length; s++) {
       this._submobjectRefs[s].setPoints(this._targetSubmobjectPoints[s]);
@@ -576,7 +606,7 @@ export function replacementTransform(
  * The mobject must have a `.targetCopy` property set beforehand.
  */
 export interface MobjectWithTarget extends VMobject {
-  targetCopy?: VMobject;
+  targetCopy: Mobject | null;
 }
 
 export class MoveToTarget extends Transform {
