@@ -564,6 +564,7 @@ export class VMobject extends Mobject {
           const fillGeometry = new THREE.ShapeGeometry(shape);
           const fillMesh = new THREE.Mesh(fillGeometry, this._fillMaterial!);
           fillMesh.position.z = -0.001; // Slightly behind stroke
+          fillMesh.frustumCulled = false;
           group.add(fillMesh);
           this._cachedFillMesh = fillMesh;
         }
@@ -683,7 +684,7 @@ export class VMobject extends Mobject {
     }
 
     if (this._fillMaterial) {
-      this._fillMaterial.color.set(this.color);
+      this._fillMaterial.color.set(this._style.fillColor || this.color);
       this._fillMaterial.opacity = this._opacity * this.fillOpacity;
     }
 

@@ -347,6 +347,22 @@ export abstract class Mobject {
   }
 
   /**
+   * Set the fill color and/or opacity (Manim Python parity: set_fill)
+   * @param color - CSS color string (optional)
+   * @param opacity - Fill opacity 0-1 (optional)
+   * @returns this for chaining
+   */
+  setFill(color?: string, opacity?: number): this {
+    if (color !== undefined) {
+      this.fillColor = color;
+    }
+    if (opacity !== undefined) {
+      this.setFillOpacity(opacity);
+    }
+    return this;
+  }
+
+  /**
    * Get the fill color
    */
   get fillColor(): string | undefined {

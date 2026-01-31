@@ -58,7 +58,7 @@ export class Rectangle extends VMobject {
     this._height = height;
     this._centerPoint = [...center];
 
-    this.color = color;
+    this.setColor(color);
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
 

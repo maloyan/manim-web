@@ -47,6 +47,16 @@ export class Transform extends Animation {
   private _startStrokeWidth: number = 2;
   private _targetStrokeWidth: number = 2;
 
+  /** Starting and target colors for interpolation (stroke) */
+  private _startColor: THREE.Color = new THREE.Color();
+  private _targetColor: THREE.Color = new THREE.Color();
+  private _interpolateColor: boolean = false;
+
+  /** Starting and target fill colors for interpolation (separate from stroke) */
+  private _startFillColor: THREE.Color = new THREE.Color();
+  private _targetFillColor: THREE.Color = new THREE.Color();
+  private _interpolateFillColor: boolean = false;
+
   /** Starting and target transform properties (position, rotation, scale) */
   private _startPosition: THREE.Vector3 = new THREE.Vector3();
   private _targetPosition: THREE.Vector3 = new THREE.Vector3();
@@ -163,6 +173,18 @@ export class Transform extends Animation {
       this._targetFillOpacity = vtarget.fillOpacity;
       this._startStrokeWidth = vmobject.strokeWidth;
       this._targetStrokeWidth = vtarget.strokeWidth;
+
+      // Capture stroke colors for interpolation
+      this._startColor.set(vmobject.color);
+      this._targetColor.set(vtarget.color);
+      this._interpolateColor = vmobject.color !== vtarget.color;
+
+      // Capture fill colors for interpolation (separate from stroke)
+      const sourceFillColor = vmobject.fillColor || vmobject.color;
+      const targetFillColor = vtarget.fillColor || vtarget.color;
+      this._startFillColor.set(sourceFillColor);
+      this._targetFillColor.set(targetFillColor);
+      this._interpolateFillColor = sourceFillColor !== targetFillColor;
 
       // Capture transform properties (position, rotation, scale)
       this._startPosition.copy(vmobject.position);
@@ -396,6 +418,18 @@ export class Transform extends Animation {
     vmobject.strokeWidth =
       this._startStrokeWidth + (this._targetStrokeWidth - this._startStrokeWidth) * alpha;
 
+    // Interpolate stroke color
+    if (this._interpolateColor) {
+      const lerpedColor = new THREE.Color().lerpColors(this._startColor, this._targetColor, alpha);
+      vmobject.color = '#' + lerpedColor.getHexString();
+    }
+
+    // Interpolate fill color (separate from stroke)
+    if (this._interpolateFillColor) {
+      const lerpedFillColor = new THREE.Color().lerpColors(this._startFillColor, this._targetFillColor, alpha);
+      vmobject.fillColor = '#' + lerpedFillColor.getHexString();
+    }
+
     // Interpolate transform properties
     vmobject.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
     vmobject.rotation.set(
@@ -498,11 +532,17 @@ export class Transform extends Animation {
     }
 
     const vmobject = this.mobject as VMobject;
+    const vtarget = this.target as VMobject;
     vmobject.setPoints(this._targetPoints);
     vmobject.opacity = this._targetOpacity;
     vmobject.fillOpacity = this._targetFillOpacity;
     vmobject.strokeWidth = this._targetStrokeWidth;
     vmobject.color = this.target.color;
+
+    // Apply final fill color if it was interpolated separately
+    if (this._interpolateFillColor) {
+      vmobject.fillColor = vtarget.fillColor || vtarget.color;
+    }
 
     // Apply final transform properties
     vmobject.position.copy(this._targetPosition);
