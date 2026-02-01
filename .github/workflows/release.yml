@@ -24,33 +24,40 @@ jobs:
 
       - run: npm install --no-package-lock
 
-      - name: Configure git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Run standard-version
-        run: npx standard-version
-
-      - name: Push tags
-        run: git push --follow-tags origin main
-
       - name: Extract version
         id: version
         run: echo "tag=v$(node -p 'require(\"./package.json\").version')" >> "$GITHUB_OUTPUT"
 
-      - name: Extract changelog for release
+      - name: Check if tag already exists
+        id: check
+        run: |
+          if git rev-parse "${{ steps.version.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate changelog
+        if: steps.check.outputs.exists == 'false'
         id: changelog
         run: |
-          # Extract the latest version section from CHANGELOG.md
-          changelog=$(awk '/^## \[/{if(found) exit; found=1; next} found{print}' CHANGELOG.md)
+          changelog=$(git log "$(git describe --tags --abbrev=0 2>/dev/null || git rev-list --max-parents=0 HEAD)"..HEAD --pretty=format:"- %s" --no-merges)
           {
             echo "body<<EOF"
             echo "$changelog"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Create tag
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.tag }}"
+          git push origin "${{ steps.version.outputs.tag }}"
+
       - name: Create GitHub Release
+        if: steps.check.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
