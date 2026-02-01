@@ -21,4 +21,10 @@ jobs:
       - name: Typecheck
         run: npm run typecheck || true
       - name: Test
-        run: npm test
+        run: npx vitest run --reporter=verbose
+      - name: Validate AGENTS.md commands
+        run: |
+          npm run typecheck || true
+          npm run lint || true
+          npm test
+          npm run format:check || true

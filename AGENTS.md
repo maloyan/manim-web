@@ -90,3 +90,10 @@ tools/
 - **polygon-clipping**: Boolean polygon operations
 - **opentype.js**: Font/glyph handling
 - **gif.js**: GIF export
+
+## Monitoring & Observability
+
+- **CI Dashboard**: [GitHub Actions](https://github.com/maloyan/manim-js/actions) — build, test, and security scan status
+- **Release History**: [GitHub Releases](https://github.com/maloyan/manim-js/releases) — versioned releases with changelogs
+- **Dependency Updates**: [Dependabot alerts](https://github.com/maloyan/manim-js/security/dependabot) — automated dependency vulnerability tracking
+- **Secret Scanning**: [Security alerts](https://github.com/maloyan/manim-js/security) — gitleaks secret scanning results

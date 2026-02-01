@@ -18,7 +18,12 @@ export {
 } from './constants';
 
 // Core
-export { Mobject, type MobjectStyle, type Vector3Tuple, type UpdaterFunction } from './core/Mobject';
+export {
+  Mobject,
+  type MobjectStyle,
+  type Vector3Tuple,
+  type UpdaterFunction,
+} from './core/Mobject';
 export { UP, DOWN, LEFT, RIGHT, IN, OUT, ORIGIN, UL, UR, DL, DR } from './core/Mobject';
 export { VMobject, type Point } from './core/VMobject';
 export { VGroup } from './core/VGroup';
@@ -324,11 +329,7 @@ export {
 } from './mobjects/graph';
 
 // Image mobjects
-export {
-  ImageMobject,
-  type ImageMobjectOptions,
-  type ImageFilterOptions,
-} from './mobjects/image';
+export { ImageMobject, type ImageMobjectOptions, type ImageFilterOptions } from './mobjects/image';
 
 // Frame/Screen mobjects
 export {
@@ -377,11 +378,7 @@ export {
 } from './mobjects/probability';
 
 // Animations
-export {
-  Animation,
-  type AnimationOptions,
-  type RateFunction,
-} from './animation/Animation';
+export { Animation, type AnimationOptions, type RateFunction } from './animation/Animation';
 export { Timeline, type PositionParam } from './animation/Timeline';
 
 // Animation types
@@ -404,7 +401,14 @@ export {
   type WriteOptions,
   type AddTextLetterByLetterOptions,
 } from './animation/creation';
-export { Transform, transform, ReplacementTransform, replacementTransform, MoveToTarget, moveToTarget } from './animation/transform';
+export {
+  Transform,
+  transform,
+  ReplacementTransform,
+  replacementTransform,
+  MoveToTarget,
+  moveToTarget,
+} from './animation/transform';
 export { ApplyPointwiseFunction, applyPointwiseFunction } from './animation/transform';
 export { FadeToColor, fadeToColor, type FadeToColorOptions } from './animation/transform';
 
@@ -445,7 +449,11 @@ export {
 } from './animation/movement';
 
 // Animation utilities
-export { AnimationGroup, animationGroup, type AnimationGroupOptions } from './animation/AnimationGroup';
+export {
+  AnimationGroup,
+  animationGroup,
+  type AnimationGroupOptions,
+} from './animation/AnimationGroup';
 export { LaggedStart, laggedStart, type LaggedStartOptions } from './animation/LaggedStart';
 export { Succession, succession, type SuccessionOptions } from './animation/Succession';
 
@@ -455,7 +463,14 @@ export { UpdateFromAlphaFunc, updateFromAlphaFunc } from './animation/UpdateFrom
 export { maintainPositionRelativeTo } from './animation/MaintainPositionRelativeTo';
 
 // Utility animations
-export { Rotating, rotating, type RotatingOptions, Broadcast, broadcast, type BroadcastOptions } from './animation/utility';
+export {
+  Rotating,
+  rotating,
+  type RotatingOptions,
+  Broadcast,
+  broadcast,
+  type BroadcastOptions,
+} from './animation/utility';
 
 // Indication animations
 export {
@@ -590,17 +605,10 @@ export {
 } from './utils/ode';
 
 // Hungarian algorithm utilities
-export {
-  hungarian,
-  hungarianFromSimilarity,
-  type HungarianResult,
-} from './utils/hungarian';
+export { hungarian, hungarianFromSimilarity, type HungarianResult } from './utils/hungarian';
 
 // Skeletonization utilities (medial axis extraction for glyph stroke animation)
-export {
-  skeletonizeGlyph,
-  type SkeletonizeOptions,
-} from './utils/skeletonize';
+export { skeletonizeGlyph, type SkeletonizeOptions } from './utils/skeletonize';
 
 // Polygon triangulation utilities (earcut-based, for robust SVG fill)
 export {
@@ -612,9 +620,12 @@ export {
 } from './utils/triangulate';
 
 // Vector math utilities
+export { scaleVec, addVec, subVec, linspace } from './utils/vectors';
+
+// Feature flags
 export {
-  scaleVec,
-  addVec,
-  subVec,
-  linspace,
-} from './utils/vectors';
+  isFeatureEnabled,
+  setFeatureFlags,
+  resetFeatureFlags,
+  getFeatureFlags,
+} from './utils/featureFlags';

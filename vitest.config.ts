@@ -8,6 +8,7 @@ export default defineConfig({
     },
   },
   test: {
+    pool: 'threads',
     include: ['src/**/*.test.ts'],
     coverage: {
       provider: 'v8',
