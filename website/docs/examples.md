@@ -1,0 +1,871 @@
+---
+title: Examples
+sidebar_label: Examples
+---
+
+# Examples
+
+A collection of examples showing what you can build with manim-js.
+Each example is a standalone scene you can run in the browser with `npm run dev`.
+
+## Graphing and Plotting
+
+### Arg Min
+
+Plots a quadratic function on coordinate axes and animates a dot that slides along the curve to find the minimum value. Uses a ValueTracker to drive the animation and addUpdater for reactive positioning.
+
+```typescript
+import {
+  Axes,
+  BLACK,
+  Dot,
+  MAROON,
+  Scene,
+  ValueTracker,
+  linspace
+} from 'manim-js';
+
+const ax = new Axes({ xRange: [0, 10], yRange: [0, 100, 10], axisConfig: {includeTip: false} });
+const labels = ax.getAxisLabels({ xLabel: "x", yLabel: "f(x)" });
+
+const t = new ValueTracker(0);
+
+const func = (x) => {
+    return 2 * (x - 5) ** 2;
+};
+const graph = ax.plot(func, { color: MAROON });
+
+const initialPoint = [ax.coordsToPoint(t.getValue(), func(t.getValue()))];
+const dot = new Dot({ point: initialPoint });
+
+dot.addUpdater((x) => x.moveTo(ax.coordsToPoint(t.getValue(), func(t.getValue()))));
+const xSpace = linspace(...ax.xRange.slice(0, 2),200);
+const minimumIndex = xSpace.reduce((mi, _, i, a) => func(a[i]) < func(a[mi]) ? i : mi, 0);
+
+scene.add(ax, labels, graph, dot);
+await scene.play(t.animateTo(xSpace[minimumIndex]));
+await scene.wait();
+```
+
+**API:** **Axes** · **Dot** · **ValueTracker**
+
+---
+
+### Graph Area Plot
+
+Draws two curves on coordinate axes with vertical reference lines, a shaded area between the curves, and Riemann sum rectangles. Demonstrates the Axes area and Riemann integration visualization methods.
+
+```typescript
+import {
+  Axes,
+  BLACK,
+  BLUE,
+  BLUE_C,
+  GRAY,
+  GREEN_B,
+  Scene,
+  YELLOW
+} from 'manim-js';
+
+const ax = new Axes({ xRange: [0, 5], yRange: [0, 6], xAxisConfig: {numbersToInclude: [2, 3]}, tips: false });
+const labels = ax.getAxisLabels();
+
+const curve1 = ax.plot((x) => 4 * x - Math.pow(x, 2), { xRange: [0, 4], color: BLUE_C });
+const curve2 = ax.plot((x) => 0.8 * Math.pow(x, 2) - 3 * x + 4, { xRange: [0, 4], color: GREEN_B });
+
+const line1 = ax.getVerticalLine(ax.inputToGraphPoint(2, curve1), { color: YELLOW });
+const line2 = ax.getVerticalLine(ax.i2gp(3, curve1), { color: YELLOW });
+
+const riemannArea = ax.getRiemannRectangles(curve1, { xRange: [0.3, 0.6], dx: 0.03, color: BLUE, fillOpacity: 0.5 });
+const area = ax.getArea(curve2, [2, 3], { boundedGraph: curve1, color: GRAY, opacity: 0.5 });
+
+scene.add(ax, labels, curve1, curve2, line1, line2, riemannArea, area);
+```
+
+**API:** **Axes**
+
+---
+
+### Sin Cos Plot
+
+Plots sine and cosine functions on labeled coordinate axes with color-coded graphs. Adds a vertical reference line at x=2π with a label. Demonstrates Axes.plot() and getGraphLabel().
+
+```typescript
+import {
+  Axes,
+  BLACK,
+  BLUE,
+  GREEN,
+  Line,
+  RED,
+  Scene,
+  UP,
+  UR,
+  VGroup,
+  WHITE,
+  YELLOW,
+  scaleVec
+} from 'manim-js';
+
+const axes = new Axes({ xRange: [-10, 10.3, 1], yRange: [-1.5, 1.5, 1], xLength: 10, axisConfig: {color: GREEN}, xAxisConfig: { numbersToInclude: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10], numbersWithElongatedTicks: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10], }, tips: false });
+const axesLabels = axes.getAxisLabels();
+const sinGraph = axes.plot((x) => Math.sin(x), { color: BLUE });
+const cosGraph = axes.plot((x) => Math.cos(x), { color: RED });
+
+const sinLabel = axes.getGraphLabel(sinGraph, "\\sin(x)", { xVal: -10, direction: scaleVec(0.5, UP) });
+const cosLabel = axes.getGraphLabel(cosGraph, { label: "\\cos(x)" });
+
+const vertLine = axes.getVerticalLine(axes.i2gp(2 * Math.PI, cosGraph), { color: YELLOW, lineFunc: Line });
+const lineLabel = axes.getGraphLabel(cosGraph, "x=2\\pi", { xVal: 2 * Math.PI, direction: UR, color: WHITE });
+
+const plot = new VGroup(axes, sinGraph, cosGraph, vertLine);
+const labels = new VGroup(axesLabels, sinLabel, cosLabel, lineLabel);
+scene.add(plot, labels);
+```
+
+**API:** **Axes** · **Line** · **VGroup**
+
+---
+
+## Geometry and Shapes
+
+### Boolean Operations
+
+Demonstrates the four boolean set operations (union, intersection, difference, exclusion) applied to overlapping ellipses. Each result is scaled down and labeled with animated transitions.
+
+```typescript
+import {
+  BLUE,
+  DOWN,
+  Difference,
+  Ellipse,
+  Exclusion,
+  FadeIn,
+  GREEN,
+  Group,
+  Intersection,
+  LEFT,
+  MarkupText,
+  MoveToTarget,
+  ORANGE,
+  PINK,
+  RED,
+  RIGHT,
+  Scene,
+  Text,
+  UP,
+  Union,
+  YELLOW,
+  addVec,
+  scaleVec
+} from 'manim-js';
+
+const ellipse1 = new Ellipse({ width: 4.0, height: 5.0, fillOpacity: 0.5, color: BLUE, strokeWidth: 3 }).moveTo(LEFT);
+const ellipse2 = ellipse1.copy().setColor(RED).moveTo(RIGHT);
+const bool_ops_text = new MarkupText({ text: "<u>Boolean Operation</u>" }).nextTo(ellipse1, scaleVec(3, UP));
+const ellipse_group = new Group(bool_ops_text, ellipse1, ellipse2).moveTo(scaleVec(3, LEFT));
+await scene.play(new FadeIn(ellipse_group));
+
+const i = new Intersection(ellipse1, ellipse2, { color: GREEN, fillOpacity: 0.5 });
+i.generateTarget();
+i.targetCopy.scale(0.25).moveTo(addVec(scaleVec(5, RIGHT), scaleVec(2.5, UP)));
+await scene.play(new MoveToTarget(i));
+const intersection_text = new Text({ text: "Intersection", fontSize: 23 }).nextTo(i, UP);
+await scene.play(new FadeIn(intersection_text));
+
+const u = new Union(ellipse1, ellipse2, { color: ORANGE, fillOpacity: 0.5 });
+const union_text = new Text({ text: "Union", fontSize: 23 });
+u.generateTarget();
+u.targetCopy.scale(0.3).nextTo(i, DOWN, union_text.getHeight() * 3);
+await scene.play(new MoveToTarget(u));
+union_text.nextTo(u, UP);
+await scene.play(new FadeIn(union_text));
+
+const e = new Exclusion(ellipse1, ellipse2, { color: YELLOW, fillOpacity: 0.5 });
+const exclusion_text = new Text({ text: "Exclusion", fontSize: 23 });
+e.generateTarget();
+e.targetCopy.scale(0.3).nextTo(u, DOWN, exclusion_text.getHeight() * 3.5);
+await scene.play(new MoveToTarget(e));
+exclusion_text.nextTo(e, UP);
+await scene.play(new FadeIn(exclusion_text));
+
+const d = new Difference(ellipse1, ellipse2, { color: PINK, fillOpacity: 0.5 });
+const difference_text = new Text({ text: "Difference", fontSize: 23 });
+d.generateTarget();
+d.targetCopy.scale(0.3).nextTo(u, LEFT, difference_text.getHeight() * 3.5);
+await scene.play(new MoveToTarget(d));
+difference_text.nextTo(d, UP);
+await scene.play(new FadeIn(difference_text));
+```
+
+**API:** **Union** · **Intersection** · **Difference** · **Exclusion** · **Ellipse** · **FadeIn** · **MoveToTarget**
+
+---
+
+### Moving Angle
+
+Creates two lines forming an angle with a LaTeX theta label, then animates the angle changing using a ValueTracker. The angle arc and label update reactively via addUpdater.
+
+```typescript
+import {
+  Angle,
+  BLACK,
+  FadeToColor,
+  LEFT,
+  Line,
+  MathTex,
+  RED,
+  RIGHT,
+  SMALL_BUFF,
+  Scene,
+  ValueTracker,
+  WHITE
+} from 'manim-js';
+
+scene.clear();
+
+const rotation_center = LEFT;
+
+const theta_tracker = new ValueTracker(110);
+const line1 = new Line({ start: LEFT, end: RIGHT });
+const line_moving = new Line({ start: LEFT, end: RIGHT });
+const line_ref = line_moving.copy();
+line_moving.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
+const a = new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false });
+const tex = new MathTex({ latex: "\\theta", color: WHITE });
+await tex.waitForRender();
+tex.moveTo( new Angle({ line1: line1, line2: line_moving }, { radius: 0.5 + 3 * SMALL_BUFF, otherAngle: false }).pointFromProportion(0.5) );
+
+scene.add(line1, line_moving, a, tex);
+await scene.wait(1);
+
+line_moving.addUpdater( (x) => {
+  x.become(line_ref.copy());
+  x.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
+});
+
+a.addUpdater( (x) => x.become(new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false })) );
+tex.addUpdater( (x) => x.moveTo( new Angle({ line1: line1, line2: line_moving }, { radius: 0.5 + 3 * SMALL_BUFF, otherAngle: false }).pointFromProportion(0.5) ) );
+
+await scene.play(theta_tracker.animateTo(40));
+await scene.play(theta_tracker.animateTo(theta_tracker.getValue() + 140));
+await scene.play(new FadeToColor(tex, { color: RED, duration: 0.5 }));
+await scene.play(theta_tracker.animateTo(350));
+
+await scene.wait(1);
+```
+
+**API:** **Angle** · **Line** · **MathTex** · **ValueTracker** · **FadeToColor**
+
+---
+
+### Point Moving On Shapes
+
+Grows a circle from its center, transforms a dot to a new position, moves it along the circle path with MoveAlongPath, and rotates it around an external point with Rotating.
+
+```typescript
+import {
+  BLACK,
+  BLUE,
+  Circle,
+  Dot,
+  GrowFromCenter,
+  Line,
+  MoveAlongPath,
+  RIGHT,
+  Rotating,
+  Scene,
+  Transform,
+  linear
+} from 'manim-js';
+
+const circle = new Circle({ radius: 1, color: BLUE });
+const dot = new Dot();
+const dot2 = dot.copy().shift(RIGHT);
+scene.add(dot);
+
+const line = new Line({ start: [3, 0, 0], end: [5, 0, 0] });
+scene.add(line);
+
+await scene.play(new GrowFromCenter(circle));
+await scene.play(new Transform(dot, dot2));
+await scene.play(new MoveAlongPath(dot, { path: circle, duration: 2, rateFunc: linear }));
+await scene.play(new Rotating(dot, { aboutPoint: [2, 0, 0], duration: 1.5 }));
+await scene.wait();
+```
+
+**API:** **Circle** · **Dot** · **GrowFromCenter** · **Transform** · **MoveAlongPath** · **Rotating**
+
+---
+
+## Text and Equations
+
+### Displaying Equations
+
+Renders two lines of text with the Write animation, then transforms them into a LaTeX equation using ReplacementTransform. Shows how to combine Text and MathTex for mathematical content.
+
+```typescript
+import {
+  BLACK,
+  DOWN,
+  FadeOut,
+  MathTex,
+  ReplacementTransform,
+  Scene,
+  Text,
+  WHITE,
+  Write
+} from 'manim-js';
+
+const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
+const firstLine = new Text({ text: 'Manim also allows you', fontSize: 36, color: WHITE, fontUrl: FONT_URL });
+const secondLine = new Text({ text: 'to show beautiful math equations', fontSize: 36, color: WHITE, fontUrl: FONT_URL });
+const equation = new MathTex({
+  latex: 'd(p, q) = \\sqrt{\\sum_{i=1}^n (q_i - p_i)^2}',
+  fontSize: 48,
+  color: WHITE
+});
+
+await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
+secondLine.nextTo(firstLine, DOWN);
+
+await equation.waitForRender();
+
+await scene.play(new Write(firstLine), new Write(secondLine));
+await scene.wait(1);
+await scene.play(new ReplacementTransform(firstLine, equation), new FadeOut(secondLine));
+await scene.wait(3);
+```
+
+**API:** **MathTex** · **Text** · **Write** · **ReplacementTransform** · **FadeOut**
+
+---
+
+### Displaying Text
+
+Animates text creation using the Write animation, then cross-fades between multiple text objects using AnimationGroup with simultaneous FadeIn and FadeOut transitions.
+
+```typescript
+import {
+  AnimationGroup,
+  BLACK,
+  DOWN,
+  FadeIn,
+  FadeOut,
+  RED,
+  Scene,
+  Text,
+  WHITE,
+  Write,
+  smooth
+} from 'manim-js';
+
+const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
+const firstLine = new Text({ text: 'Create cool animations', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+const secondLine = new Text({ text: 'using Manim', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+const thirdLine = new Text({ text: 'Try it out yourself.', fontSize: 48, color: RED });
+
+await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
+secondLine.nextTo(firstLine, DOWN);
+
+await scene.wait(1);
+await scene.play(new Write(firstLine), new Write(secondLine));
+await scene.wait(1);
+
+// Cross-fade: fade out first line while fading in third line at same position
+scene.add(thirdLine);
+thirdLine.opacity = 0;
+await scene.play(new AnimationGroup([
+  new FadeOut(firstLine, { duration: 1.5, rateFunc: smooth }),
+  new FadeIn(thirdLine, { duration: 1.5, rateFunc: smooth }),
+  new FadeOut(secondLine, { duration: 1.5, rateFunc: smooth })
+]));
+await scene.wait(2);
+```
+
+**API:** **Text** · **Write** · **FadeIn** · **FadeOut** · **AnimationGroup**
+
+---
+
+### Moving Frame Box
+
+Renders a multi-part LaTeX equation (the product rule), then highlights individual terms with a SurroundingRectangle that animates between terms using ReplacementTransform.
+
+```typescript
+import {
+  Create,
+  MathTex,
+  ReplacementTransform,
+  Scene,
+  SurroundingRectangle,
+  Write
+} from 'manim-js';
+
+const text = new MathTex({ latex: ["\\frac{d}{dx}f(x)g(x)=", "f(x)\\frac{d}{dx}g(x)", "+", "g(x)\\frac{d}{dx}f(x)"] });
+await text.waitForRender();
+await scene.play(new Write(text));
+const framebox1 = new SurroundingRectangle(text.getPart(1), { buff: .1 });
+const framebox2 = new SurroundingRectangle(text.getPart(3), { buff: .1 });
+await scene.play( new Create(framebox1), );
+await scene.wait();
+await scene.play( new ReplacementTransform(framebox1,framebox2), );
+await scene.wait();
+```
+
+**API:** **MathTex** · **SurroundingRectangle** · **Create** · **ReplacementTransform**
+
+---
+
+### Test Write
+
+A minimal test of the Write animation: loads a custom font, renders a text object, and plays a slow 5-second Write animation to draw each letter stroke by stroke.
+
+```typescript
+import {
+  BLACK,
+  Circle,
+  Create,
+  Scene,
+  Text,
+  WHITE,
+  Write
+} from 'manim-js';
+
+const text = new Text({ text: 'This is some LaTeX', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+await text.loadGlyphs();
+scene.add(text);
+await scene.play(new Write(text, { duration: 5 }));
+```
+
+**API:** **Text** · **Write** · **Create** · **Circle**
+
+---
+
+## Movement and Animation
+
+### Moving Around
+
+Demonstrates the MoveToTarget pattern for animating a square through a sequence of transformations: shifting, changing fill color, scaling, and rotating.
+
+```typescript
+import {
+  BLACK,
+  BLUE,
+  LEFT,
+  MoveToTarget,
+  ORANGE,
+  Scene,
+  Square
+} from 'manim-js';
+
+const square = new Square({ color: BLUE, fillOpacity: 1 });
+
+scene.add(square);
+
+square.generateTarget();
+square.targetCopy.shift(LEFT);
+await scene.play(new MoveToTarget(square));
+
+square.generateTarget();
+square.targetCopy.setFill(ORANGE);
+await scene.play(new MoveToTarget(square));
+
+square.generateTarget();
+square.targetCopy.scale(0.3);
+await scene.play(new MoveToTarget(square));
+
+square.generateTarget();
+square.targetCopy.rotate(0.4);
+await scene.play(new MoveToTarget(square));
+```
+
+**API:** **Square** · **MoveToTarget**
+
+---
+
+### Moving Dots
+
+Creates two dots connected by a line, then animates them independently using ValueTrackers. The connecting line updates reactively via addUpdater and the become() method.
+
+```typescript
+import {
+  BLUE,
+  Dot,
+  GREEN,
+  Line,
+  RED,
+  RIGHT,
+  Scene,
+  VGroup,
+  ValueTracker
+} from 'manim-js';
+
+const d1 = new Dot({ color: BLUE });
+const d2 = new Dot({ color: GREEN });
+const dg = new VGroup(d1, d2).arrange(RIGHT, 1);
+const l1 = new Line({ start: d1.getCenter(), end: d2.getCenter() }).setColor(RED);
+const x = new ValueTracker(0);
+const y = new ValueTracker(0);
+d1.addUpdater((z) => z.setX(x.getValue()));
+d2.addUpdater((z) => z.setY(y.getValue()));
+l1.addUpdater((z) => z.become(new Line({ start: d1.getCenter(), end: d2.getCenter() })));
+scene.add(d1, d2, l1);
+await scene.play(x.animateTo(5));
+await scene.play(y.animateTo(4));
+await scene.wait();
+```
+
+**API:** **Dot** · **Line** · **VGroup** · **ValueTracker**
+
+---
+
+### Moving Group To Destination
+
+Arranges a group of dots in a row, then shifts the entire group so a specific dot aligns with a target position. Shows vector math with subVec for computing shift direction.
+
+```typescript
+import {
+  BLACK,
+  Dot,
+  LEFT,
+  ORIGIN,
+  RED,
+  RIGHT,
+  Scene,
+  Shift,
+  VGroup,
+  YELLOW,
+  scaleVec,
+  subVec
+} from 'manim-js';
+
+const group = new VGroup(
+  new Dot({ point: LEFT }),
+  new Dot({ point: ORIGIN }),
+  new Dot({ point: RIGHT, color: RED }),
+  new Dot({ point: scaleVec(2, RIGHT) })
+).scale(1.4);
+
+const dest = new Dot({ point: [4, 3, 0], color: YELLOW });
+
+scene.add(group, dest);
+
+await scene.play(new Shift(group, {
+  direction: subVec(dest.getCenter(), group.get(2).getCenter())
+}));
+await scene.wait(0.5);
+```
+
+**API:** **VGroup** · **Dot** · **Shift**
+
+---
+
+### Point With Trace
+
+Creates a dot that leaves a visible trail as it moves. Uses a VMobject with addUpdater to continuously extend the path, then rotates and shifts the dot to draw a pattern.
+
+```typescript
+import {
+  BLACK,
+  Dot,
+  LEFT,
+  RIGHT,
+  Rotating,
+  Scene,
+  Shift,
+  UP,
+  VMobject
+} from 'manim-js';
+
+const path = new VMobject();
+path.fillOpacity = 0;
+const dot = new Dot();
+path.setPointsAsCorners([dot.getCenter(), dot.getCenter()]);
+
+const updatePath = (pathMob) => {
+  const previousPath = pathMob.copy();
+  previousPath.addPointsAsCorners([dot.getCenter()]);
+  pathMob.become(previousPath);
+};
+path.addUpdater(updatePath);
+
+scene.add(path, dot);
+
+await scene.play(new Rotating(dot, { angle: Math.PI, aboutPoint: RIGHT, duration: 2 }));
+await scene.wait();
+await scene.play(new Shift(dot, { direction: UP }));
+await scene.play(new Shift(dot, { direction: LEFT }));
+await scene.wait();
+```
+
+**API:** **VMobject** · **Dot** · **Rotating** · **Shift**
+
+---
+
+### Rotation Updater
+
+Shows a reference line alongside a rotating line driven by a time-based updater function. The updater is swapped mid-animation to reverse the rotation direction.
+
+```typescript
+import {
+  LEFT,
+  Line,
+  ORIGIN,
+  Scene,
+  WHITE,
+  YELLOW
+} from 'manim-js';
+
+const updaterForth = (mobj, dt) => {
+  mobj.rotateAboutOrigin(dt);
+};
+const updaterBack = (mobj, dt) => {
+  mobj.rotateAboutOrigin(-dt);
+};
+const lineReference = new Line({ start: ORIGIN, end: LEFT }).setColor(WHITE);
+const lineMoving = new Line({ start: ORIGIN, end: LEFT }).setColor(YELLOW);
+lineMoving.addUpdater(updaterForth);
+scene.add(lineReference, lineMoving);
+await scene.wait(2);
+lineMoving.removeUpdater(updaterForth);
+lineMoving.addUpdater(updaterBack);
+await scene.wait(2);
+lineMoving.removeUpdater(updaterBack);
+await scene.wait(0.5);
+```
+
+**API:** **Line**
+
+---
+
+## Showcase
+
+### Manim Examples
+
+A collection of five classic Manim scenes: square-to-circle transform, shape modification, text animation, LaTeX equations, and function graph plotting with Transform animations.
+
+```typescript
+import {
+  AnimationGroup,
+  Axes,
+  BLACK,
+  BLUE,
+  Circle,
+  Create,
+  DOWN,
+  FadeIn,
+  FadeOut,
+  FunctionGraph,
+  MathTex,
+  PINK,
+  RED,
+  RIGHT,
+  ReplacementTransform,
+  Scene,
+  Square,
+  Text,
+  Transform,
+  WHITE,
+  Write,
+  smooth
+} from 'manim-js';
+
+// --- Square to Circle ---
+const circle = new Circle({ radius: 1.5 });
+const square = new Square({ sideLength: 3 });
+
+await scene.play(new Create(square));
+await scene.play(new Transform(square, circle));
+await scene.play(new FadeOut(square));
+
+// --- Square to Circle with Modifications ---
+const circle = new Circle({ radius: 1.5, fillColor: PINK, fillOpacity: 0.5 });
+const square = new Square({ sideLength: 3 });
+
+square.flip(RIGHT);
+square.rotate(-3 * TAU / 8);
+
+await scene.play(new Create(square));
+await scene.play(new Transform(square, circle));
+await scene.play(new FadeOut(square));
+
+// --- Displaying Text ---
+const firstLine = new Text({ text: 'Create cool animations', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+const secondLine = new Text({ text: 'using Manim', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+const thirdLine = new Text({ text: 'Try it out yourself.', fontSize: 48, color: RED });
+
+await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
+secondLine.nextTo(firstLine, DOWN);
+
+await scene.wait(1);
+await scene.play(new Write(firstLine), new Write(secondLine));
+await scene.wait(1);
+
+// Cross-fade: fade out first line while fading in third line at same position
+scene.add(thirdLine);
+thirdLine.opacity = 0;
+await scene.play(new AnimationGroup([
+  new FadeOut(firstLine, { duration: 1.5, rateFunc: smooth }),
+  new FadeIn(thirdLine, { duration: 1.5, rateFunc: smooth }),
+  new FadeOut(secondLine, { duration: 1.5, rateFunc: smooth })
+]));
+await scene.wait(2);
+
+// --- Math Equations ---
+const firstLine = new Text({ text: 'Manim also allows you', fontSize: 36, color: WHITE, fontUrl: FONT_URL });
+const secondLine = new Text({ text: 'to show beautiful math equations', fontSize: 36, color: WHITE, fontUrl: FONT_URL });
+const equation = new MathTex({
+  latex: 'd(p, q) = \\sqrt{\\sum_{i=1}^n (q_i - p_i)^2}',
+  fontSize: 48,
+  color: WHITE
+});
+
+await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
+secondLine.nextTo(firstLine, DOWN);
+
+await equation.waitForRender();
+
+await scene.play(new Write(firstLine), new Write(secondLine));
+await scene.wait(1);
+await scene.play(new ReplacementTransform(firstLine, equation), new FadeOut(secondLine));
+await scene.wait(3);
+
+// --- Function Graph ---
+const axes = new Axes({
+  xRange: [-3, 3, 1],
+  yRange: [-5, 5, 1],
+  xLength: 8,
+  yLength: 6,
+  color: BLUE,
+  tips: true
+});
+
+const graph = new FunctionGraph({
+  func: (x) => x * x,
+  xRange: [-2.2, 2.2],
+  color: WHITE,
+  axes: axes
+});
+
+const graphLabel = new MathTex({ latex: 'x^2', fontSize: 32, color: WHITE });
+graphLabel.shift([4.5, 2, 0]);
+
+const graph2 = new FunctionGraph({
+  func: (x) => x * x * x,
+  xRange: [-1.7, 1.7],
+  color: WHITE,
+  axes: axes
+});
+
+const graphLabel2 = new MathTex({ latex: 'x^3', fontSize: 32, color: WHITE });
+graphLabel2.shift([4.5, 2, 0]);
+
+await graphLabel.waitForRender();
+await graphLabel2.waitForRender();
+
+await scene.play(new Create(axes), new Create(graph), new FadeIn(graphLabel));
+await scene.wait(1);
+await scene.play(new Transform(graph, graph2), new Transform(graphLabel, graphLabel2));
+await scene.wait(1);
+```
+
+**API:** **Scene** · **Circle** · **Square** · **Text** · **MathTex** · **Axes** · **FunctionGraph** · **Create** · **Transform**
+
+---
+
+### Opening Manim
+
+A multi-part showcase: writes text and a LaTeX equation, transforms the title, creates a NumberPlane grid, and applies a non-linear sine warp using ApplyPointwiseFunction.
+
+```typescript
+import {
+  ApplyPointwiseFunction,
+  BLACK,
+  Create,
+  DOWN,
+  FadeIn,
+  FadeOut,
+  LaggedStart,
+  MathTex,
+  NumberPlane,
+  Scene,
+  Text,
+  Transform,
+  UL,
+  UP,
+  VGroup,
+  WHITE,
+  Write
+} from 'manim-js';
+
+try {
+  // Part 1: Title and equation (Write title, FadeIn equation from below)
+  log('Part 1: Title and equation...');
+  const title = new Text({ text: "This is some LaTeX", fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+  const basel = new MathTex({ latex: "\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}" });
+  await title.loadGlyphs();
+  await basel.waitForRender?.();
+
+  new VGroup(title, basel).arrange(DOWN);
+  scene.add(title, basel);
+  await scene.play(new Write(title, { duration: 2 }), new FadeIn(basel, { shift: DOWN }));
+  await scene.wait(1);
+
+  // Part 2: Transform title to UL corner, fade out equation downward
+  log('Part 2: Transform title...');
+  const transformTitle = new Text({ text: "That was a transform", fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+  await transformTitle.loadGlyphs();
+  transformTitle.toCorner(UL);
+  await scene.play(
+    new Transform(title, transformTitle),
+    new FadeOut(basel, { shift: DOWN })
+  );
+  await scene.wait(1);
+
+  // Part 3: Number plane grid with title
+  log('Part 3: Number plane grid...');
+  const grid = new NumberPlane();
+  const gridTitle = new Text({ text: "This is a grid", fontSize: 72, color: WHITE, fontUrl: FONT_URL });
+  await gridTitle.loadGlyphs();
+  gridTitle.moveTo(transformTitle);
+
+  scene.add(grid, gridTitle);
+  await scene.play(
+    new FadeOut(title),
+    new FadeIn(gridTitle, { shift: UP }),
+    new Create(grid, { duration: 3, lagRatio: 0.1 })
+  );
+  await scene.wait(1);
+
+  // Part 4: Non-linear grid transform (sin warp)
+  log('Part 4: Non-linear grid transform...');
+  const gridTransformTitle = new Text({ text: "That was a non-linear function\napplied to the grid", fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+  await gridTransformTitle.loadGlyphs();
+  gridTransformTitle.moveTo(gridTitle, UL);
+  grid.prepareForNonlinearTransform();
+  await scene.play(
+    new ApplyPointwiseFunction(grid, (p) => {
+      return [
+        p[0] + Math.sin(p[1]),
+        p[1] + Math.sin(p[0]),
+        p[2]
+      ];
+    }, { duration: 3 })
+  );
+  await scene.wait(1);
+
+  // Part 5: Transform grid title to explain what happened
+  log('Part 5: Grid transform title...');
+  await scene.play(new Transform(gridTitle, gridTransformTitle));
+  await scene.wait(1);
+
+  log('Done!');
+} catch (err) {
+  log('Error: ' + err.message);
+```
+
+**API:** **Text** · **MathTex** · **NumberPlane** · **Write** · **Transform** · **ApplyPointwiseFunction** · **Create**
+
+
+
+See the full [API Reference](/api) for all available classes and animations.

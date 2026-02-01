@@ -1,7 +1,11 @@
 node_modules/
 dist/
-docs/*
-!docs/architecture.mermaid
+docs-src/
+website/node_modules/
+website/build/
+website/.docusaurus/
+website/docs/api/
+website/docs/examples/
 coverage/
 .vite/
 *.log
