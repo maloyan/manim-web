@@ -1,5 +1,7 @@
 node_modules/
 dist/
+docs/
+coverage/
 .vite/
 *.log
 .DS_Store
@@ -9,3 +11,6 @@ dist/
 .idea/
 .vscode/
 .beads/
+.env*
+!.env.example
+.claude
