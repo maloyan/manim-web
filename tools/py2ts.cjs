@@ -163,6 +163,10 @@ const CLASS_MAP = {
   'UpdateFromFunc': 'UpdateFromFunc',
   'UpdateFromAlphaFunc': 'UpdateFromAlphaFunc',
 
+  // Animations — Utility
+  'Rotating': 'Rotating',
+  'Broadcast': 'Broadcast',
+
   // Misc
   'ValueTracker': 'ValueTracker',
   'ImageMobject': 'ImageMobject',
@@ -183,6 +187,7 @@ const ANIMATION_CLASSES = new Set([
   'FocusOn','Pulse',
   'AnimationGroup','LaggedStart','LaggedStartMap','Succession',
   'UpdateFromFunc','UpdateFromAlphaFunc',
+  'Rotating','Broadcast',
 ]);
 
 // Mobject classes (also need `new`)
@@ -287,6 +292,8 @@ const METHOD_MAP = {
   'save_state': 'saveState',
   'restore': 'restore',
   'rotate_about_origin': 'rotateAboutOrigin',
+  'set_points_as_corners': 'setPointsAsCorners',
+  'add_points_as_corners': 'addPointsAsCorners',
 };
 
 // ─── Color constant map ──────────────────────────────────────────────
@@ -629,7 +636,27 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   line = line.replace(/self\.clear\s*\(/g, 'scene.clear(');
   line = line.replace(/self\.camera/g, 'scene.camera');
 
-  // .animate.method() → strip .animate, mark with comment
+  // .animate.shift(direction) → new Shift(obj, { direction: direction })
+  line = line.replace(/(\w+)\.animate\.shift\s*\(([^)]+)\)/g, (_, obj, args) => {
+    tracking.usedClasses.add('Shift');
+    return `new Shift(${obj}, { direction: ${args.trim()} })`;
+  });
+  // .animate.scale(factor) → new Scale(obj, { factor: factor })
+  line = line.replace(/(\w+)\.animate\.scale\s*\(([^)]+)\)/g, (_, obj, args) => {
+    tracking.usedClasses.add('Scale');
+    return `new Scale(${obj}, { factor: ${args.trim()} })`;
+  });
+  // .animate.rotate(angle) → new Rotate(obj, { angle: angle })
+  line = line.replace(/(\w+)\.animate\.rotate\s*\(([^)]+)\)/g, (_, obj, args) => {
+    tracking.usedClasses.add('Rotate');
+    return `new Rotate(${obj}, { angle: ${args.trim()} })`;
+  });
+  // .animate.set_color(color) / .animate.setColor(color) → new FadeToColor(obj, { color: color })
+  line = line.replace(/(\w+)\.animate\.(?:set_color|setColor)\s*\(([^)]+)\)/g, (_, obj, args) => {
+    tracking.usedClasses.add('FadeToColor');
+    return `new FadeToColor(${obj}, { color: ${args.trim()} })`;
+  });
+  // Remaining .animate.method() → strip .animate, mark with comment
   line = line.replace(/\.animate\.(\w+)\s*\(/g, '.$1( /* animate */ ');
 
   // Remaining self. → strip

@@ -252,6 +252,90 @@ export class VMobject extends Mobject {
   }
 
   /**
+   * Set the points to form straight line segments between corner points.
+   * Each pair of consecutive corners becomes a cubic Bezier with linear handles.
+   * Matches Manim's set_points_as_corners.
+   * @param corners Array of [x, y, z] corner points
+   * @returns this for chaining
+   */
+  setPointsAsCorners(corners: number[][]): this {
+    if (corners.length < 2) {
+      if (corners.length === 1) {
+        return this.setPoints([corners[0]]);
+      }
+      return this.setPoints([]);
+    }
+
+    const points: number[][] = [];
+    for (let i = 0; i < corners.length - 1; i++) {
+      const p0 = corners[i];
+      const p1 = corners[i + 1];
+      if (i === 0) {
+        points.push([p0[0], p0[1], p0[2] || 0]);
+      }
+      // handle1 = lerp(p0, p1, 1/3)
+      points.push([
+        p0[0] + (p1[0] - p0[0]) / 3,
+        p0[1] + (p1[1] - p0[1]) / 3,
+        (p0[2] || 0) + ((p1[2] || 0) - (p0[2] || 0)) / 3,
+      ]);
+      // handle2 = lerp(p0, p1, 2/3)
+      points.push([
+        p0[0] + 2 * (p1[0] - p0[0]) / 3,
+        p0[1] + 2 * (p1[1] - p0[1]) / 3,
+        (p0[2] || 0) + 2 * ((p1[2] || 0) - (p0[2] || 0)) / 3,
+      ]);
+      // anchor2 = p1
+      points.push([p1[0], p1[1], p1[2] || 0]);
+    }
+
+    return this.setPoints(points);
+  }
+
+  /**
+   * Add straight line segments from the last point to each corner.
+   * Each corner creates a new cubic Bezier segment with linear handles.
+   * Matches Manim's add_points_as_corners.
+   * @param corners Array of [x, y, z] corner points to connect to
+   * @returns this for chaining
+   */
+  addPointsAsCorners(corners: number[][]): this {
+    for (const corner of corners) {
+      if (this._points3D.length === 0) {
+        this.setPointsAsCorners([corner]);
+        continue;
+      }
+
+      const last = this._points3D[this._points3D.length - 1];
+      const cz = corner[2] || 0;
+      const lz = last[2] || 0;
+      // handle1 = lerp(last, corner, 1/3)
+      const h1 = [
+        last[0] + (corner[0] - last[0]) / 3,
+        last[1] + (corner[1] - last[1]) / 3,
+        lz + (cz - lz) / 3,
+      ];
+      // handle2 = lerp(last, corner, 2/3)
+      const h2 = [
+        last[0] + 2 * (corner[0] - last[0]) / 3,
+        last[1] + 2 * (corner[1] - last[1]) / 3,
+        lz + 2 * (cz - lz) / 3,
+      ];
+      const anchor = [corner[0], corner[1], cz];
+
+      this._points3D.push(h1, h2, anchor);
+      this._points2D.push(
+        { x: h1[0], y: h1[1] },
+        { x: h2[0], y: h2[1] },
+        { x: anchor[0], y: anchor[1] }
+      );
+      this._geometryDirty = true;
+      this._markDirtyUpward();
+    }
+    return this;
+  }
+
+  /**
    * Clear all points
    */
   clearPoints(): this {
