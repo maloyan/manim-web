@@ -46,5 +46,5 @@ await scene.play(new FadeOut(circle));
 ## Next steps
 
 - [Getting Started](./getting-started.md) -- install the library and build your first scene
-- [Examples](./examples/index.md) -- browse working examples with source code
-- [API Reference](./api/) -- full TypeDoc-generated reference
+- [Examples](./examples.mdx) -- browse working examples with source code
+- [API Reference](./api/globals.md) -- full TypeDoc-generated reference

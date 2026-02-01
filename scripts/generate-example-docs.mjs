@@ -3,14 +3,14 @@
 /**
  * generate-example-docs.mjs
  *
- * Reads all examples/*.html files, extracts the scene function code (not boilerplate),
- * and generates a single Docusaurus-compatible examples.mdx page in website/docs/.
+ * Reads all examples/*.ts files and generates a single Docusaurus-compatible
+ * examples.mdx page in website/docs/ with clean source code blocks.
  *
  * Usage:
  *   node scripts/generate-example-docs.mjs
  */
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'fs';
 import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -144,214 +144,699 @@ function toTitle(stem) {
     .join(' ');
 }
 
-/** Extract the content between <script type="module"> and </script>. */
-function extractScript(html) {
-  const startTag = '<script type="module">';
-  const endTag = '</script>';
-  const startIdx = html.indexOf(startTag);
-  if (startIdx === -1) return null;
-  const contentStart = startIdx + startTag.length;
-  const endIdx = html.indexOf(endTag, contentStart);
-  if (endIdx === -1) return null;
-  return html.slice(contentStart, endIdx);
-}
+// ---------------------------------------------------------------------------
+// Code extraction: strip boilerplate from .ts example files
+// ---------------------------------------------------------------------------
 
-/** Extract imported names from the code. */
-function extractImports(code) {
-  const importRegex = /import\s*\{([^}]+)\}\s*from\s*['"](?:\.\.\/src\/index\.ts|manim-js)['"]/gs;
-  const imports = new Set();
-  let match;
-  while ((match = importRegex.exec(code)) !== null) {
-    const names = match[1].split(',').map((s) => s.trim()).filter(Boolean);
-    for (const name of names) imports.add(name);
+/**
+ * Find the index of the closing brace that matches the opening brace at
+ * position `openIndex` in `text`. Handles string literals (single, double,
+ * backtick) and comments so braces inside them are not counted.
+ * Returns -1 if no match is found.
+ */
+function findMatchingBrace(text, openIndex) {
+  let depth = 0;
+  let i = openIndex;
+  while (i < text.length) {
+    const ch = text[i];
+
+    // Skip string literals
+    if (ch === '"' || ch === "'" || ch === '`') {
+      const quote = ch;
+      i++;
+      while (i < text.length) {
+        if (text[i] === '\\') { i += 2; continue; }
+        if (text[i] === quote) { i++; break; }
+        i++;
+      }
+      continue;
+    }
+
+    // Skip single-line comments
+    if (ch === '/' && i + 1 < text.length && text[i + 1] === '/') {
+      while (i < text.length && text[i] !== '\n') i++;
+      continue;
+    }
+
+    // Skip multi-line comments
+    if (ch === '/' && i + 1 < text.length && text[i + 1] === '*') {
+      i += 2;
+      while (i < text.length && !(text[i] === '*' && i + 1 < text.length && text[i + 1] === '/')) i++;
+      i += 2;
+      continue;
+    }
+
+    if (ch === '{') depth++;
+    if (ch === '}') {
+      depth--;
+      if (depth === 0) return i;
+    }
+    i++;
   }
-  return [...imports].sort();
-}
-
-/** Build a clean import statement from imported names. */
-function buildImportStatement(imports) {
-  if (imports.length <= 4) {
-    return `import { ${imports.join(', ')} } from 'manim-js';`;
-  }
-  const lines = imports.map((name, i) => {
-    const comma = i < imports.length - 1 ? ',' : '';
-    return `  ${name}${comma}`;
-  });
-  return `import {\n${lines.join('\n')}\n} from 'manim-js';`;
-}
-
-/** Dedent code block: remove common leading whitespace. */
-function dedent(code) {
-  const lines = code.split('\n');
-  // Trim leading/trailing empty lines
-  let first = 0;
-  while (first < lines.length && lines[first].trim() === '') first++;
-  let last = lines.length - 1;
-  while (last >= 0 && lines[last].trim() === '') last--;
-  const trimmed = lines.slice(first, last + 1);
-
-  let minIndent = Infinity;
-  for (const line of trimmed) {
-    if (line.trim() === '') continue;
-    const indent = line.match(/^(\s*)/)[1].length;
-    if (indent < minIndent) minIndent = indent;
-  }
-  if (minIndent === Infinity) minIndent = 0;
-
-  return trimmed.map((line) => (line.trim() === '' ? '' : line.slice(minIndent))).join('\n');
+  return -1;
 }
 
 /**
- * Extract the scene function code from the script content.
- *
- * Strategy:
- *  1. Look for a named async function like `async function name(scene) { ... }`
- *  2. If not found, look for inline scene code inside the click handler
- *     (between `scene.clear();` and `} catch` or `isAnimating = false`)
- *  3. For special cases (manim_examples), extract all demo functions
+ * Find the matching closing paren for an opening paren at `openIndex`.
+ * Handles strings and comments.
  */
-function extractSceneCode(scriptContent, stem) {
-  // Special case: manim_examples has multiple demos
-  if (stem === 'manim_examples') {
-    return extractManimExamplesDemos(scriptContent);
-  }
+function findMatchingParen(text, openIndex) {
+  let depth = 0;
+  let i = openIndex;
+  while (i < text.length) {
+    const ch = text[i];
 
-  // Special case: test_write has an async function run()
-  if (stem === 'test_write') {
-    return extractTestWrite(scriptContent);
-  }
-
-  // Strategy 1: Named scene function
-  const namedFuncMatch = scriptContent.match(
-    /(?:export\s+)?async\s+function\s+(\w+)\s*\(\s*scene\s*\)\s*\{/
-  );
-  if (namedFuncMatch) {
-    const funcName = namedFuncMatch[1];
-    const funcStart = namedFuncMatch.index;
-    const body = extractBalancedBraces(scriptContent, scriptContent.indexOf('{', funcStart));
-    if (body) {
-      // Return just the inner body of the function, dedented
-      return dedent(body);
+    if (ch === '"' || ch === "'" || ch === '`') {
+      const quote = ch;
+      i++;
+      while (i < text.length) {
+        if (text[i] === '\\') { i += 2; continue; }
+        if (text[i] === quote) { i++; break; }
+        i++;
+      }
+      continue;
     }
-  }
 
-  // Strategy 2: Inline code in click handler
-  return extractInlineSceneCode(scriptContent);
-}
+    if (ch === '/' && i + 1 < text.length && text[i + 1] === '/') {
+      while (i < text.length && text[i] !== '\n') i++;
+      continue;
+    }
 
-/** Extract code between balanced braces (returns inner content, excluding outer braces). */
-function extractBalancedBraces(code, openPos) {
-  if (code[openPos] !== '{') return null;
-  let depth = 1;
-  let i = openPos + 1;
-  while (i < code.length && depth > 0) {
-    if (code[i] === '{') depth++;
-    else if (code[i] === '}') depth--;
+    if (ch === '/' && i + 1 < text.length && text[i + 1] === '*') {
+      i += 2;
+      while (i < text.length && !(text[i] === '*' && i + 1 < text.length && text[i + 1] === '/')) i++;
+      i += 2;
+      continue;
+    }
+
+    if (ch === '(') depth++;
+    if (ch === ')') {
+      depth--;
+      if (depth === 0) return i;
+    }
     i++;
   }
-  if (depth !== 0) return null;
-  return code.slice(openPos + 1, i - 1);
+  return -1;
 }
 
-/** Extract inline scene code from a click handler. */
-function extractInlineSceneCode(scriptContent) {
-  // Find the click handler
-  const clickMatch = scriptContent.match(/addEventListener\s*\(\s*['"]click['"]/);
-  if (!clickMatch) return null;
+/**
+ * De-indent a block of lines: find the minimum leading whitespace across
+ * non-empty lines and remove that many characters from the start of each line.
+ */
+function deindent(lines) {
+  const nonEmpty = lines.filter((l) => l.trim().length > 0);
+  if (nonEmpty.length === 0) return lines;
+  const minIndent = Math.min(...nonEmpty.map((l) => l.match(/^(\s*)/)[1].length));
+  if (minIndent === 0) return lines;
+  return lines.map((l) => l.slice(minIndent));
+}
 
-  const clickStart = clickMatch.index;
-  // Find the arrow function or function body
-  const arrowMatch = scriptContent.slice(clickStart).match(/=>\s*\{/);
-  if (!arrowMatch) return null;
+/**
+ * Remove boilerplate lines from a set of body lines (already split).
+ * These are lines that belong to the HTML harness, not the animation logic.
+ */
+function removeBoilerplateLines(lines) {
+  return lines.filter((line) => {
+    const trimmed = line.trim();
+    if (trimmed === '') return true; // keep blank lines
 
-  const bodyStart = clickStart + arrowMatch.index + arrowMatch[0].length;
-  const fullBody = extractBalancedBraces(scriptContent, bodyStart - 1);
-  if (!fullBody) return null;
+    // Animation-state boilerplate
+    if (trimmed === 'if (isAnimating) return;') return false;
+    if (/^isAnimating\s*=\s*(true|false);?$/.test(trimmed)) return false;
+    if (/^document\.getElementById\(['"]playBtn['"]\)\.disabled\s*=/.test(trimmed)) return false;
+    if (/^setAnimating\(/.test(trimmed)) return false;
+    if (trimmed === 'scene.clear();') return false;
 
-  // Extract the interesting part: from after scene.clear() to before isAnimating/catch
-  const lines = fullBody.split('\n');
-  let startLine = 0;
-  let endLine = lines.length - 1;
+    // try/catch wrapper lines
+    if (trimmed === 'try {') return false;
+    if (/^\}\s*catch\s*\(/.test(trimmed)) return false;
+    if (/^console\.error\(/.test(trimmed)) return false;
 
-  // Find where scene.clear() is (skip past it)
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].includes('scene.clear()')) {
-      startLine = i + 1;
-      break;
+    // status / log boilerplate
+    if (/^status\.textContent\s*=/.test(trimmed)) return false;
+    if (/^log\(/.test(trimmed)) return false;
+
+    return true;
+  });
+}
+
+/**
+ * Remove trailing lone closing braces that were left over from stripped
+ * try/catch blocks. We walk from the end and remove lines that are just `}`.
+ */
+function removeTrailingBraces(lines) {
+  const result = [...lines];
+  while (result.length > 0 && result[result.length - 1].trim() === '}') {
+    result.pop();
+  }
+  return result;
+}
+
+/**
+ * Remove consecutive blank lines, keeping at most one blank line in a row.
+ * Also trim leading/trailing blank lines from the whole block.
+ */
+function collapseBlankLines(lines) {
+  const result = [];
+  let prevBlank = false;
+  for (const line of lines) {
+    const blank = line.trim().length === 0;
+    if (blank && prevBlank) continue;
+    result.push(line);
+    prevBlank = blank;
+  }
+  // Trim leading/trailing blanks
+  while (result.length > 0 && result[0].trim() === '') result.shift();
+  while (result.length > 0 && result[result.length - 1].trim() === '') result.pop();
+  return result;
+}
+
+/**
+ * Clean a body extracted from inside a function or handler:
+ * de-indent, remove boilerplate lines, de-indent again (in case boilerplate
+ * lines were at a lower indent level than the real content), remove trailing
+ * braces, collapse blanks.
+ */
+function cleanBody(bodyStr) {
+  let lines = bodyStr.split('\n');
+  lines = deindent(lines);
+  lines = removeBoilerplateLines(lines);
+  // Strip trailing blank lines so removeTrailingBraces can see the `}`
+  while (lines.length > 0 && lines[lines.length - 1].trim() === '') lines.pop();
+  lines = removeTrailingBraces(lines);
+  lines = deindent(lines);           // second pass after boilerplate/brace removal
+  lines = collapseBlankLines(lines);
+  return lines.join('\n');
+}
+
+/**
+ * Remove a region from `start` to `end` in `code`, also consuming
+ * whitespace/newlines immediately before `start`.
+ */
+function removeRegion(code, start, end) {
+  let cutStart = start;
+  while (cutStart > 0 && (code[cutStart - 1] === '\n' || code[cutStart - 1] === ' ')) cutStart--;
+  // Keep at most one newline after end
+  let cutEnd = end;
+  while (cutEnd < code.length && code[cutEnd] === '\n') cutEnd++;
+  return code.slice(0, cutStart) + '\n' + code.slice(cutEnd);
+}
+
+/**
+ * Extract clean animation code from a .ts example file, stripping all HTML
+ * harness boilerplate. The result is suitable for documentation display.
+ */
+function extractCleanCode(tsContent) {
+  let code = tsContent;
+
+  // 1. Replace import path '../src/index.ts' -> 'manim-js'
+  code = code.replace(/from\s+['"]\.\.\/src\/index\.ts['"]/g, "from 'manim-js'");
+
+  // 2. Remove "// Converted from Python..." comment lines at top
+  code = code.replace(/^\/\/\s*Converted from Python[^\n]*\n/gm, '');
+  code = code.replace(/^\/\/\s*Review and adjust[^\n]*\n/gm, '');
+  code = code.replace(/^\/\/\s*Original:[^\n]*\n/gm, '');
+
+  // 3. Remove embed mode block: from "// Embed mode:" to end of file
+  const embedIdx = code.indexOf('// Embed mode:');
+  if (embedIdx !== -1) {
+    let cutStart = embedIdx;
+    while (cutStart > 0 && code[cutStart - 1] === '\n') cutStart--;
+    code = code.slice(0, cutStart);
+  }
+
+  // 4. Remove boilerplate variable declarations
+  code = code.replace(/^const container = document\.getElementById\(['"]container['"]\);?\s*\n/gm, '');
+  code = code.replace(/^const status = document\.getElementById\(['"]status['"]\);?\s*\n/gm, '');
+  code = code.replace(/^let isAnimating = false;?\s*\n/gm, '');
+  code = code.replace(/^const buttons = document\.querySelectorAll\(['"]button['"]\);?\s*\n/gm, '');
+
+  // 5. Remove `function setAnimating(state) { ... }` helper
+  const setAnimMatch = code.match(/function setAnimating\s*\([^)]*\)\s*\{/);
+  if (setAnimMatch) {
+    const braceIdx = code.indexOf('{', setAnimMatch.index);
+    const endIdx = findMatchingBrace(code, braceIdx);
+    if (endIdx !== -1) {
+      code = removeRegion(code, setAnimMatch.index, endIdx + 1);
     }
   }
 
-  // Skip past the `try {` if it's right before scene.clear
-  // (we already skipped scene.clear, so check if the line before was `try {`)
-
-  // Find where the boilerplate resumes at the end
-  for (let i = lines.length - 1; i >= startLine; i--) {
-    const trimmed = lines[i].trim();
-    if (
-      trimmed === '' ||
-      trimmed.startsWith('isAnimating') ||
-      trimmed.startsWith('document.getElementById') ||
-      trimmed === '} catch(e) {' ||
-      trimmed === '} catch (e) {' ||
-      trimmed.startsWith('console.error') ||
-      trimmed === '}' ||
-      trimmed === '});'
-    ) {
-      endLine = i - 1;
-    } else {
-      break;
+  // 6. Remove `function log(msg) { ... }` helper
+  const logMatch = code.match(/function log\s*\([^)]*\)\s*\{/);
+  if (logMatch) {
+    const braceIdx = code.indexOf('{', logMatch.index);
+    const endIdx = findMatchingBrace(code, braceIdx);
+    if (endIdx !== -1) {
+      code = removeRegion(code, logMatch.index, endIdx + 1);
     }
   }
 
-  if (endLine < startLine) return null;
+  // 7. Remove resetBtn event listener block
+  const resetMatch = code.match(/document\.getElementById\(['"]resetBtn['"]\)\.addEventListener\(/);
+  if (resetMatch) {
+    const parenIdx = code.indexOf('(', resetMatch.index + 'document.getElementById'.length);
+    // Find the opening paren of addEventListener(
+    const addEventParenIdx = code.indexOf('(', code.indexOf('.addEventListener', resetMatch.index));
+    const endParenIdx = findMatchingParen(code, addEventParenIdx);
+    if (endParenIdx !== -1) {
+      let afterEnd = endParenIdx + 1;
+      if (afterEnd < code.length && code[afterEnd] === ';') afterEnd++;
+      code = removeRegion(code, resetMatch.index, afterEnd);
+    }
+  }
 
-  const extracted = lines.slice(startLine, endLine + 1).join('\n');
-  return dedent(extracted);
-}
+  // 8. Remove `// Auto-play on load` + next line
+  code = code.replace(/\/\/\s*Auto-play on load\s*\n[^\n]*\n?/g, '');
+  // Remove `// Run first demo on load` + next line
+  code = code.replace(/\/\/\s*Run first demo on load\s*\n[^\n]*\n?/g, '');
 
-/** Special extraction for manim_examples.html (multiple demos). */
-function extractManimExamplesDemos(scriptContent) {
-  const demos = [];
-  const demoRegex = /\/\/\s*Demo\s*\d+:\s*(.+)\n\s*document\.getElementById\(['"]demo\d+['"]\)\.addEventListener\(['"]click['"]\s*,\s*async\s*\(\)\s*=>\s*\{/g;
+  // 9. Remove `run().catch(...)` blocks
+  const runCatchMatch = code.match(/run\(\)\s*\.catch\s*\(/);
+  if (runCatchMatch) {
+    const catchParenIdx = code.indexOf('(', code.indexOf('.catch', runCatchMatch.index));
+    const endParenIdx = findMatchingParen(code, catchParenIdx);
+    if (endParenIdx !== -1) {
+      let afterEnd = endParenIdx + 1;
+      if (afterEnd < code.length && code[afterEnd] === ';') afterEnd++;
+      code = removeRegion(code, runCatchMatch.index, afterEnd);
+    }
+  }
 
+  // 10. Inline container in Scene constructor
+  code = code.replace(
+    /new Scene\(\s*container\s*,/g,
+    "new Scene(document.getElementById('container'),"
+  );
+
+  // 11. Collect named async functions that take `scene` param
+  //     Store their cleaned bodies and remove them from code.
+  //     Also matches `export async function ...`
+  const namedFunctions = {}; // name -> cleaned body
+  let namedFuncRe = /(?:export\s+)?async\s+function\s+(\w+)\s*\(\s*scene\s*\)\s*\{/g;
   let match;
-  while ((match = demoRegex.exec(scriptContent)) !== null) {
-    const demoName = match[1].trim();
-    const bodyStart = scriptContent.indexOf('{', match.index + match[0].length - 1);
-    const body = extractBalancedBraces(scriptContent, bodyStart);
-    if (body) {
-      // Extract from after scene.clear() to before setAnimating(false)
-      const lines = body.split('\n');
-      let start = 0;
-      let end = lines.length - 1;
-      for (let i = 0; i < lines.length; i++) {
-        if (lines[i].includes('scene.clear()')) { start = i + 1; break; }
+  // Collect all matches first, then process from end to start to preserve indices
+  const namedMatches = [];
+  while ((match = namedFuncRe.exec(code)) !== null) {
+    namedMatches.push({ name: match[1], index: match.index, matchLength: match[0].length });
+  }
+  // Process from end to start
+  for (let i = namedMatches.length - 1; i >= 0; i--) {
+    const m = namedMatches[i];
+    const braceIdx = code.indexOf('{', m.index + m.matchLength - 1);
+    const closeIdx = findMatchingBrace(code, braceIdx);
+    if (closeIdx !== -1) {
+      const body = code.slice(braceIdx + 1, closeIdx);
+      namedFunctions[m.name] = cleanBody(body);
+      code = removeRegion(code, m.index, closeIdx + 1);
+    }
+  }
+
+  // 12. Remove `async function run() { ... }` wrapper (test_write pattern)
+  const runFuncMatch = code.match(/async\s+function\s+run\s*\(\s*\)\s*\{/);
+  if (runFuncMatch) {
+    const braceIdx = code.indexOf('{', runFuncMatch.index);
+    const closeIdx = findMatchingBrace(code, braceIdx);
+    if (closeIdx !== -1) {
+      const body = code.slice(braceIdx + 1, closeIdx);
+      const cleanedBody = cleanBody(body);
+      code = code.slice(0, runFuncMatch.index) + cleanedBody + code.slice(closeIdx + 1);
+    }
+  }
+
+  // 13. Process event handler blocks
+  //     For each `document.getElementById('...').addEventListener('click', async () => { ... });`
+  //     - If the body just calls a named function, replace entire handler with the function body
+  //     - Otherwise, extract and clean the handler body
+  //     Preserve "// Demo N: ..." comments before handlers
+
+  let handlerRe = /document\.getElementById\(['"](\w+)['"]\)\.addEventListener\(\s*['"]click['"]\s*,\s*async\s*\(\s*\)\s*=>\s*\{/g;
+  // Collect all handler matches
+  const handlerMatches = [];
+  while ((match = handlerRe.exec(code)) !== null) {
+    handlerMatches.push({ id: match[1], index: match.index, matchEnd: match.index + match[0].length });
+  }
+
+  // Process from end to start
+  for (let i = handlerMatches.length - 1; i >= 0; i--) {
+    const h = handlerMatches[i];
+    const braceIdx = code.lastIndexOf('{', h.matchEnd);
+    const closeIdx = findMatchingBrace(code, braceIdx);
+    if (closeIdx === -1) continue;
+
+    const body = code.slice(braceIdx + 1, closeIdx);
+
+    // Find the end of the addEventListener call: after `});`
+    // The closing brace is at closeIdx, then we expect `});`
+    let afterClose = closeIdx + 1;
+    // Skip whitespace
+    while (afterClose < code.length && /\s/.test(code[afterClose])) afterClose++;
+    // Should see `)` then possibly `;`
+    if (afterClose < code.length && code[afterClose] === ')') afterClose++;
+    if (afterClose < code.length && code[afterClose] === ';') afterClose++;
+
+    // Check for "// Demo N: ..." comment right before the handler
+    let handlerStart = h.index;
+    // Look backward for a comment line
+    const beforeHandler = code.slice(0, handlerStart);
+    const demoCommentMatch = beforeHandler.match(/(\/\/\s*Demo\s+\d+[^\n]*)\n\s*$/);
+    let demoComment = '';
+    if (demoCommentMatch) {
+      demoComment = demoCommentMatch[1];
+      handlerStart = demoCommentMatch.index;
+    }
+
+    // Check if handler body just calls a named function
+    const bodyStripped = body.trim()
+      .replace(/^if\s*\(isAnimating\)\s*return;?\s*/m, '')
+      .replace(/^setAnimating\(true\);?\s*/m, '')
+      .replace(/^isAnimating\s*=\s*true;?\s*/gm, '')
+      .replace(/^document\.getElementById\(['"]playBtn['"]\)\.disabled\s*=[^;]*;?\s*/gm, '')
+      .replace(/^scene\.clear\(\);?\s*/m, '')
+      .replace(/setAnimating\(false\);?\s*/gm, '')
+      .replace(/isAnimating\s*=\s*false;?\s*/gm, '')
+      .replace(/document\.getElementById\(['"]playBtn['"]\)\.disabled\s*=[^;]*;?\s*/gm, '')
+      .trim();
+
+    const funcCallMatch = bodyStripped.match(/^(?:await\s+)?(\w+)\s*\(\s*scene\s*\)\s*;?\s*$/);
+
+    if (funcCallMatch && namedFunctions[funcCallMatch[1]]) {
+      // Body just calls a named function whose body we already have -> remove handler entirely
+      code = removeRegion(code, handlerStart, afterClose);
+    } else {
+      // Extract and clean the handler body, keep demo comment
+      const cleaned = cleanBody(body);
+      let replacement = '';
+      if (demoComment) {
+        replacement = demoComment + '\n' + cleaned;
+      } else {
+        replacement = cleaned;
       }
-      for (let i = lines.length - 1; i >= start; i--) {
-        const t = lines[i].trim();
-        if (t === '' || t.startsWith('setAnimating') || t === '}' || t === '});') {
-          end = i - 1;
-        } else break;
-      }
-      if (end >= start) {
-        demos.push({ name: demoName, code: dedent(lines.slice(start, end + 1).join('\n')) });
+      code = code.slice(0, handlerStart) + replacement + code.slice(afterClose);
+    }
+  }
+
+  // 14. Remove any remaining bare function calls like `await funcName(scene);` or `funcName(scene);`
+  //     that reference named functions we already extracted
+  for (const name of Object.keys(namedFunctions)) {
+    const callRe = new RegExp(`^\\s*(?:await\\s+)?${name}\\s*\\(\\s*scene\\s*\\)\\s*;?\\s*$`, 'gm');
+    code = code.replace(callRe, '');
+  }
+
+  // 15. Now insert named function bodies where we removed them
+  //     They were already removed from the code. If the handler that called them
+  //     was also removed (and the bare call too), we need to re-insert the body.
+  //     Strategy: for each named function, check if any reference still exists.
+  //     If not, insert the body after the Scene creation block.
+  for (const [name, body] of Object.entries(namedFunctions)) {
+    const refPattern = new RegExp(`\\b${name}\\b`);
+    if (!refPattern.test(code)) {
+      // Find the end of the Scene creation block (constructor may be multi-line)
+      const sceneStart = code.match(/const scene = new Scene\(/);
+      if (sceneStart) {
+        const parenIdx = code.indexOf('(', sceneStart.index);
+        const closeParenIdx = findMatchingParen(code, parenIdx);
+        if (closeParenIdx !== -1) {
+          let insertIdx = closeParenIdx + 1;
+          if (insertIdx < code.length && code[insertIdx] === ';') insertIdx++;
+          code = code.slice(0, insertIdx) + '\n\n' + body + '\n' + code.slice(insertIdx);
+        }
+      } else {
+        // Append at end
+        code = code + '\n\n' + body;
       }
     }
   }
 
-  if (demos.length === 0) return null;
-  return demos.map((d) => `// --- ${d.name} ---\n${d.code}`).join('\n\n');
+  // 16. Final cleanup
+  let finalLines = code.split('\n');
+
+  // Remove any remaining status/log lines
+  finalLines = finalLines.filter((line) => {
+    const trimmed = line.trim();
+    if (/^status\.textContent\s*=/.test(trimmed)) return false;
+    if (/^log\(/.test(trimmed)) return false;
+    return true;
+  });
+
+  finalLines = collapseBlankLines(finalLines);
+
+  return finalLines.join('\n');
 }
 
-/** Special extraction for test_write.html. */
-function extractTestWrite(scriptContent) {
-  const funcMatch = scriptContent.match(/async\s+function\s+run\s*\(\s*\)\s*\{/);
-  if (!funcMatch) return null;
-  const body = extractBalancedBraces(scriptContent, scriptContent.indexOf('{', funcMatch.index));
-  if (!body) return null;
-  // Remove status.textContent lines
-  const lines = body.split('\n').filter((l) => !l.includes('status.textContent'));
-  return dedent(lines.join('\n'));
+// ---------------------------------------------------------------------------
+// Component generation: split clean code into imports, constants, and body
+// ---------------------------------------------------------------------------
+
+const COMPONENTS_DIR = join(ROOT, 'website', 'src', 'components', 'examples');
+
+/** Convert a filename stem like "sin_cos_plot" to PascalCase "SinCosPlot". */
+function toPascalCase(stem) {
+  return stem
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join('');
+}
+
+/**
+ * Parse clean code into parts for component generation:
+ * - imports: the full import block (may span multiple lines)
+ * - constants: non-import, non-scene top-level declarations before animation body
+ * - body: the animation logic (everything after scene creation)
+ */
+function parseCleanCode(cleanCode) {
+  const lines = cleanCode.split('\n');
+  const importLines = [];
+  const constantLines = [];
+  const bodyLines = [];
+
+  let phase = 'imports'; // imports -> constants -> body
+  let inImportBlock = false; // tracking multi-line import { ... } from '...'
+  let inSceneCreation = false;
+  let parenDepth = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Handle multi-line import blocks
+    if (inImportBlock) {
+      importLines.push(line);
+      if (trimmed.includes("from '") || trimmed.includes('from "')) {
+        inImportBlock = false;
+      }
+      continue;
+    }
+
+    if (phase === 'imports') {
+      if (trimmed === '') {
+        if (importLines.length > 0 && !inImportBlock) {
+          // Blank line after imports - move to constants phase
+          phase = 'constants';
+        }
+        continue;
+      }
+      if (trimmed.startsWith('import ')) {
+        importLines.push(line);
+        // Check if this is a multi-line import (has { but no closing })
+        if (trimmed.includes('{') && !trimmed.includes('}')) {
+          inImportBlock = true;
+        }
+        continue;
+      }
+      // Not an import line - move to constants phase
+      phase = 'constants';
+    }
+
+    // Handle scene creation line(s) - can be multi-line
+    if (!inSceneCreation && /^const scene = new Scene\(/.test(trimmed)) {
+      inSceneCreation = true;
+      parenDepth = 0;
+      // Count parens to handle multi-line
+      for (const ch of line) {
+        if (ch === '(') parenDepth++;
+        if (ch === ')') parenDepth--;
+      }
+      if (parenDepth <= 0) {
+        inSceneCreation = false;
+        parenDepth = 0;
+        phase = 'body';
+      }
+      continue;
+    }
+
+    if (inSceneCreation) {
+      for (const ch of line) {
+        if (ch === '(') parenDepth++;
+        if (ch === ')') parenDepth--;
+      }
+      if (parenDepth <= 0) {
+        inSceneCreation = false;
+        parenDepth = 0;
+        phase = 'body';
+      }
+      continue;
+    }
+
+    if (phase === 'constants') {
+      // Lines before scene creation that are not imports are constants
+      // e.g., `const TAU = Math.PI * 2;`, `const FONT_URL = '...'`
+      // But once we hit `await`, `scene.`, or an animation call, we're in body
+      if (trimmed.startsWith('await ') || trimmed.startsWith('scene.') ||
+          /^(const|let)\s+\w+\s*=\s*new\s+(Axes|Circle|Square|Dot|Line|Text|MathTex|Tex|VGroup|Group|NumberPlane|Ellipse|MarkupText)\b/.test(trimmed) ||
+          /^(const|let)\s+\w+\s*=\s*\w+\.(plot|copy|getAxis)/.test(trimmed) ||
+          /^\/\/\s*(Demo|Part)\s+\d+/.test(trimmed)) {
+        phase = 'body';
+        bodyLines.push(line);
+      } else {
+        constantLines.push(line);
+      }
+      continue;
+    }
+
+    // phase === 'body'
+    bodyLines.push(line);
+  }
+
+  // Clean up: remove leading/trailing blank lines from each section
+  const cleanSection = (arr) => {
+    while (arr.length > 0 && arr[0].trim() === '') arr.shift();
+    while (arr.length > 0 && arr[arr.length - 1].trim() === '') arr.pop();
+    return arr;
+  };
+
+  cleanSection(importLines);
+  cleanSection(constantLines);
+  cleanSection(bodyLines);
+
+  return {
+    imports: importLines.join('\n'),
+    constants: constantLines.join('\n'),
+    body: bodyLines.join('\n'),
+  };
+}
+
+/**
+ * Extract all manim-js import specifiers from the import lines string.
+ * Returns array of specifier names.
+ */
+function extractImportSpecifiers(importStr) {
+  const specifiers = [];
+  // Match everything inside { ... } from 'manim-js' imports
+  const re = /import\s*\{([^}]+)\}\s*from\s*['"]manim-js['"]/g;
+  let m;
+  while ((m = re.exec(importStr)) !== null) {
+    const inner = m[1];
+    for (const spec of inner.split(',')) {
+      const name = spec.trim();
+      if (name) specifiers.push(name);
+    }
+  }
+  return specifiers;
+}
+
+/**
+ * Wrap demo sections in block scopes to avoid duplicate `const` declarations.
+ * Detects `// Demo N: ...` comment patterns and wraps each section in `{ }`.
+ * Also adds `scene.clear();` between demo sections.
+ */
+function wrapDemoSectionsInBlockScopes(bodyStr) {
+  const lines = bodyStr.split('\n');
+  const demoStarts = [];
+
+  // Find all demo comment lines
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\s*\/\/\s*Demo\s+\d+/.test(lines[i])) {
+      demoStarts.push(i);
+    }
+  }
+
+  // If fewer than 2 demo sections, no wrapping needed
+  if (demoStarts.length < 2) return bodyStr;
+
+  const result = [];
+  for (let d = 0; d < demoStarts.length; d++) {
+    const start = demoStarts[d];
+    const end = d + 1 < demoStarts.length ? demoStarts[d + 1] : lines.length;
+
+    // Add scene.clear() before each demo except the first
+    if (d > 0) {
+      result.push('scene.clear();');
+    }
+
+    // Open block scope
+    result.push('{');
+
+    // Add demo lines (indented)
+    for (let i = start; i < end; i++) {
+      const line = lines[i];
+      // Remove trailing blank lines at the end of each section
+      if (i === end - 1 && line.trim() === '') continue;
+      result.push('  ' + line);
+    }
+
+    // Close block scope
+    result.push('}');
+    result.push('');
+  }
+
+  return result.join('\n');
+}
+
+/**
+ * Generate a React component file for an example.
+ * The component dynamically imports manim-js and renders a ManimExample.
+ */
+function generateComponentFile(stem, cleanCode) {
+  const componentName = toPascalCase(stem) + 'Example';
+  const parsed = parseCleanCode(cleanCode);
+
+  // Check if body has multiple demo sections that need block scoping
+  let body = parsed.body;
+  if (/\/\/\s*Demo\s+\d+/.test(body)) {
+    body = wrapDemoSectionsInBlockScopes(body);
+  }
+
+  // Build the component file
+  const lines = [
+    '// Auto-generated by generate-example-docs.mjs - do not edit',
+    "import React from 'react';",
+    "import ManimExample from '../ManimExample';",
+    '',
+  ];
+
+  // The animate function will use dynamic imports to avoid SSR issues
+  lines.push(`async function animate(scene: any) {`);
+
+  // Dynamically import manim-js at the start of the animation function
+  const specifiers = extractImportSpecifiers(parsed.imports);
+  if (specifiers.length > 0) {
+    lines.push(`  const { ${specifiers.join(', ')} } = await import('manim-js');`);
+  }
+
+  // Add constants (indented)
+  if (parsed.constants) {
+    lines.push('');
+    for (const line of parsed.constants.split('\n')) {
+      lines.push(line ? `  ${line}` : '');
+    }
+  }
+
+  // Add body (indented)
+  if (body) {
+    lines.push('');
+    for (const line of body.split('\n')) {
+      lines.push(line ? `  ${line}` : '');
+    }
+  }
+
+  lines.push('}');
+  lines.push('');
+  lines.push(`export default function ${componentName}() {`);
+  lines.push('  return <ManimExample animationFn={animate} />;');
+  lines.push('}');
+  lines.push('');
+
+  return lines.join('\n');
 }
 
 // ---------------------------------------------------------------------------
@@ -360,41 +845,46 @@ function extractTestWrite(scriptContent) {
 
 function main() {
   mkdirSync(DOCS_DIR, { recursive: true });
+  mkdirSync(COMPONENTS_DIR, { recursive: true });
 
-  const files = readdirSync(EXAMPLES_DIR)
-    .filter((f) => f.endsWith('.html'))
+  const tsFiles = readdirSync(EXAMPLES_DIR)
+    .filter((f) => f.endsWith('.ts'))
     .sort();
 
   const examples = [];
 
-  for (const file of files) {
-    const stem = basename(file, '.html');
-    const title = toTitle(stem);
-    const html = readFileSync(join(EXAMPLES_DIR, file), 'utf-8');
-    const scriptContent = extractScript(html);
+  for (const file of tsFiles) {
+    const stem = basename(file, '.ts');
+    const htmlFile = `${stem}.html`;
 
-    if (!scriptContent) {
-      console.warn(`  Skipping ${file}: no <script type="module"> found`);
+    // Only include examples that have a matching HTML file
+    if (!existsSync(join(EXAMPLES_DIR, htmlFile))) {
+      console.warn(`  Skipping ${file}: no matching ${htmlFile}`);
       continue;
     }
 
-    const allImports = extractImports(html);
-    const sceneCode = extractSceneCode(scriptContent, stem);
+    const title = toTitle(stem);
+    const tsContent = readFileSync(join(EXAMPLES_DIR, file), 'utf-8');
     const meta = EXAMPLE_META[stem] || {};
     const description = meta.description || `Example demonstrating ${title}.`;
     const learnMore = meta.learnMore || [];
     const category = fileToCategory[stem] || 'Other';
 
-    const importStatement = buildImportStatement(allImports);
-    const codeBlock = sceneCode
-      ? `${importStatement}\n\n${sceneCode}`
-      : importStatement;
+    // Extract clean code for documentation
+    const codeBlock = extractCleanCode(tsContent);
 
-    examples.push({ stem, file, title, category, description, learnMore, codeBlock });
+    // Generate component file
+    const componentName = toPascalCase(stem) + 'Example';
+    const componentCode = generateComponentFile(stem, codeBlock);
+    const componentPath = join(COMPONENTS_DIR, `${componentName}.tsx`);
+    writeFileSync(componentPath, componentCode, 'utf-8');
+    console.log(`  Generated component: ${componentName}.tsx`);
+
+    examples.push({ stem, htmlFile, title, category, description, learnMore, codeBlock, componentName });
   }
 
   // -------------------------------------------------------------------------
-  // Generate single examples.mdx page
+  // Generate single examples.mdx page with inline components
   // -------------------------------------------------------------------------
 
   const lines = [
@@ -403,11 +893,18 @@ function main() {
     'sidebar_label: Examples',
     '---',
     '',
-    '# Examples',
-    '',
-    'Interactive examples showing what you can build with manim-js. Each example includes a live animation and source code.',
-    '',
   ];
+
+  // Add all component imports at the top
+  for (const ex of examples) {
+    lines.push(`import ${ex.componentName} from '@site/src/components/examples/${ex.componentName}';`);
+  }
+
+  lines.push('');
+  lines.push('# Examples');
+  lines.push('');
+  lines.push('Interactive examples showing what you can build with manim-js. Each example includes a live animation and source code.');
+  lines.push('');
 
   // Group examples by category
   const grouped = {};
@@ -432,7 +929,7 @@ function main() {
       lines.push('');
       lines.push(ex.description);
       lines.push('');
-      lines.push(`<iframe src="http://localhost:5173/examples/${ex.file}?embed" width="100%" height="480" style={{border: 'none', borderRadius: '12px', background: '#1a1a2e'}} />`);
+      lines.push(`<${ex.componentName} />`);
       lines.push('');
       lines.push('<details>');
       lines.push('<summary>Source Code</summary>');
@@ -456,7 +953,7 @@ function main() {
   writeFileSync(outPath, lines.join('\n'), 'utf-8');
   console.log(`  Generated: website/docs/examples.mdx`);
 
-  console.log(`\nDone! Generated single examples page with ${examples.length} examples.`);
+  console.log(`\nDone! Generated ${examples.length} example components and examples page.`);
 }
 
 main();

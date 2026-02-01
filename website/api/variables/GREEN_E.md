@@ -1,0 +1,5 @@
+# Variable: GREEN\_E
+
+> `const` **GREEN\_E**: `"#699C52"` = `'#699C52'`
+
+Defined in: [constants/colors.ts:38](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/constants/colors.ts#L38)

@@ -1,0 +1,21 @@
+# Function: complexValueTracker()
+
+> **complexValueTracker**(`value?`): [`ComplexValueTracker`](../classes/ComplexValueTracker.md)
+
+Defined in: [mobjects/value-tracker/ValueTracker.ts:427](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/value-tracker/ValueTracker.ts#L427)
+
+Factory function to create a ComplexValueTracker.
+
+## Parameters
+
+### value?
+
+[`Complex`](../interfaces/Complex.md)
+
+Initial complex value (default: { re: 0, im: 0 })
+
+## Returns
+
+[`ComplexValueTracker`](../classes/ComplexValueTracker.md)
+
+A new ComplexValueTracker
