@@ -1,7 +1,11 @@
 import { Group } from '../../core/Group';
-import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
+import { VGroup } from '../../core/VGroup';
 import { NumberLine, NumberLineOptions } from './NumberLine';
+import { FunctionGraph, FunctionGraphOptions } from './FunctionGraph';
+import { MathTex } from '../../mobjects/text/MathTex';
+import { Line } from '../../mobjects/geometry/Line';
 
 /**
  * Options for creating Axes
@@ -90,9 +94,10 @@ export class Axes extends Group {
     this._tips = tips;
     this._tipLength = tipLength;
 
-    // Create x-axis
+    // Create x-axis (Manim excludes origin label by default)
     const xConfig: NumberLineOptions = {
       color,
+      numbersToExclude: [0],
       ...axisConfig,
       ...xAxisConfig,
       xRange: this._xRange,
@@ -100,9 +105,12 @@ export class Axes extends Group {
     };
     this.xAxis = new NumberLine(xConfig);
 
-    // Create y-axis (rotated 90 degrees)
+    // Create y-axis (rotated 90 degrees, Manim excludes origin label by default)
+    // Use smaller tick size for the y-axis (Manim default behavior)
     const yConfig: NumberLineOptions = {
       color,
+      numbersToExclude: [0],
+      tickSize: 0.12,
       ...axisConfig,
       ...yAxisConfig,
       xRange: this._yRange,
@@ -110,6 +118,12 @@ export class Axes extends Group {
     };
     this.yAxis = new NumberLine(yConfig);
     this.yAxis.rotate(Math.PI / 2);
+
+    // Position axes so they intersect at the origin (0,0) in graph space
+    const xOriginVisual = this._numberToVisualX(0);
+    const yOriginVisual = this._numberToVisualY(0);
+    this.yAxis.position.x = xOriginVisual;
+    this.xAxis.position.y = yOriginVisual;
 
     this.add(this.xAxis);
     this.add(this.yAxis);
@@ -290,6 +304,140 @@ export class Axes extends Group {
    */
   c2pY(y: number): number {
     return this.coordsToPoint(0, y)[1];
+  }
+
+  /**
+   * Plot a function on these axes, returning a FunctionGraph.
+   * @param func - Function y = f(x)
+   * @param options - Additional FunctionGraph options (color, strokeWidth, etc.)
+   * @returns A FunctionGraph bound to these axes
+   */
+  plot(func: (x: number) => number, options: Partial<Omit<FunctionGraphOptions, 'func' | 'axes'>> = {}): FunctionGraph {
+    return new FunctionGraph({
+      func,
+      axes: this,
+      ...options,
+    });
+  }
+
+  /**
+   * Get axis labels ("x" and "y" by default).
+   * @param xLabel - LaTeX string for x-axis label. Default: "x"
+   * @param yLabel - LaTeX string for y-axis label. Default: "y"
+   * @returns A Group containing the two labels
+   */
+  getAxisLabels(xLabel: string = 'x', yLabel: string = 'y'): Group {
+    const xLabelMob = new MathTex({ latex: xLabel, fontSize: 32, color: '#ffffff' });
+    const yLabelMob = new MathTex({ latex: yLabel, fontSize: 32, color: '#ffffff' });
+
+    // Position x label to the right of x-axis
+    const xEnd = this._xLength / 2;
+    xLabelMob.position.set(xEnd + 0.3, -0.35, 0);
+
+    // Position y label above y-axis
+    const yEnd = this._yLength / 2;
+    yLabelMob.position.set(0.35, yEnd + 0.3, 0);
+
+    const group = new Group();
+    group.add(xLabelMob);
+    group.add(yLabelMob);
+    return group;
+  }
+
+  /**
+   * Get a label for a graph at a specific x-value.
+   * Matches Python Manim's axes.get_graph_label() API.
+   * @param graph - The FunctionGraph to label
+   * @param label - LaTeX string for the label
+   * @param options - Positioning options
+   * @returns A MathTex label positioned near the graph
+   */
+  getGraphLabel(
+    graph: FunctionGraph,
+    labelOrOptions?: string | {
+      xVal?: number;
+      direction?: Vector3Tuple;
+      color?: string;
+      label?: string;
+    },
+    options: {
+      xVal?: number;
+      direction?: Vector3Tuple;
+      color?: string;
+      label?: string;
+    } = {}
+  ): MathTex {
+    // Handle overload: second arg can be a string label or an options object
+    let opts = options;
+    let label: string | undefined;
+    if (typeof labelOrOptions === 'object' && labelOrOptions !== null) {
+      opts = { ...labelOrOptions, ...options };
+      label = undefined;
+    } else {
+      label = labelOrOptions;
+    }
+    const labelStr = label ?? opts.label ?? '';
+    const xVal = opts.xVal ?? this._xRange[1];
+    const direction = opts.direction ?? [1, 1, 0];
+    const color = opts.color ?? graph.color;
+
+    // Get the point on the graph at xVal
+    const point = graph.getPointFromX(xVal);
+    const pos: Vector3Tuple = point ?? this.coordsToPoint(xVal, 0);
+
+    const labelMob = new MathTex({ latex: labelStr, fontSize: 32, color });
+    // Offset by direction (scaled for readability)
+    const dx = direction[0] * 0.5;
+    const dy = direction[1] * 0.5;
+    labelMob.position.set(pos[0] + dx, pos[1] + dy, pos[2]);
+
+    return labelMob;
+  }
+
+  /**
+   * Create a vertical line from the x-axis to a point.
+   * @param point - The target point [x, y, z] in visual coordinates
+   * @param options - Line options
+   * @returns A Line from the x-axis to the point
+   */
+  getVerticalLine(
+    point: Vector3Tuple,
+    options: { color?: string; strokeWidth?: number } = {}
+  ): Line {
+    const { color = '#ffffff', strokeWidth = 2 } = options;
+    const xAxisY = this.coordsToPoint(0, 0)[1];
+    return new Line({
+      start: [point[0], xAxisY, point[2]],
+      end: [point[0], point[1], point[2]],
+      color,
+      strokeWidth,
+    });
+  }
+
+  /**
+   * Input to graph point: convert an x value to the visual point on a graph.
+   * Shorthand for graph.getPointFromX(x).
+   * @param x - The x coordinate in graph space
+   * @param graph - The FunctionGraph
+   * @returns The visual coordinates on the graph
+   */
+  i2gp(x: number, graph: FunctionGraph): Vector3Tuple {
+    const point = graph.getPointFromX(x);
+    return point ?? this.coordsToPoint(x, 0);
+  }
+
+  private _numberToVisualX(x: number): number {
+    const [min, max] = this._xRange;
+    const range = max - min;
+    if (range === 0) return 0;
+    return ((x - min) / range - 0.5) * this._xLength;
+  }
+
+  private _numberToVisualY(y: number): number {
+    const [min, max] = this._yRange;
+    const range = max - min;
+    if (range === 0) return 0;
+    return ((y - min) / range - 0.5) * this._yLength;
   }
 
   /**

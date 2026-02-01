@@ -1,5 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
+import { Text } from '../../mobjects/text/Text';
 
 /**
  * Options for creating a NumberLine
@@ -21,8 +22,14 @@ export interface NumberLineOptions {
   includeNumbers?: boolean;
   /** Numbers to exclude from labels. Default: [] */
   numbersToExclude?: number[];
+  /** Specific numbers to show as labels (overrides includeNumbers). */
+  numbersToInclude?: number[];
+  /** Numbers that get elongated (taller) tick marks. */
+  numbersWithElongatedTicks?: number[];
   /** Decimal places for number labels. Default: 0 */
   decimalPlaces?: number;
+  /** Font size for number labels. Default: 24 */
+  numberFontSize?: number;
 }
 
 /**
@@ -51,8 +58,12 @@ export class NumberLine extends VMobject {
   private _tickSize: number;
   private _includeNumbers: boolean;
   private _numbersToExclude: number[];
+  private _numbersToInclude: number[] | null;
+  private _numbersWithElongatedTicks: number[];
   private _decimalPlaces: number;
+  private _numberFontSize: number;
   private _tickMarks: VMobject[];
+  private _numberLabels: Text[];
 
   constructor(options: NumberLineOptions = {}) {
     super();
@@ -66,7 +77,10 @@ export class NumberLine extends VMobject {
       tickSize = 0.2,
       includeNumbers = false,
       numbersToExclude = [],
+      numbersToInclude,
+      numbersWithElongatedTicks = [],
       decimalPlaces = 0,
+      numberFontSize = 24,
     } = options;
 
     this._xRange = [...xRange];
@@ -75,8 +89,12 @@ export class NumberLine extends VMobject {
     this._tickSize = tickSize;
     this._includeNumbers = includeNumbers;
     this._numbersToExclude = [...numbersToExclude];
+    this._numbersToInclude = numbersToInclude ? [...numbersToInclude] : null;
+    this._numbersWithElongatedTicks = [...numbersWithElongatedTicks];
     this._decimalPlaces = decimalPlaces;
+    this._numberFontSize = numberFontSize;
     this._tickMarks = [];
+    this._numberLabels = [];
 
     this.color = color;
     this.fillOpacity = 0;
@@ -107,23 +125,61 @@ export class NumberLine extends VMobject {
     // Add tick marks as separate child VMobjects
     this._tickMarks = [];
     if (this._includeTicks && step > 0) {
+      const elongatedSet = new Set(this._numbersWithElongatedTicks.map(n => Math.round(n * 1e9) / 1e9));
+      const elongatedTickSize = this._tickSize * 1.5;
       const epsilon = step * 0.0001;
       for (let n = min; n <= max + epsilon; n += step) {
         const roundedN = Math.round(n / step) * step;
         const x = this._numberToX(roundedN);
+        const isElongated = elongatedSet.has(Math.round(roundedN * 1e9) / 1e9);
+        const ts = isElongated ? elongatedTickSize : this._tickSize;
 
         const tick = new VMobject();
         tick.color = this.color;
         tick.strokeWidth = this.strokeWidth;
         tick.fillOpacity = 0;
         tick.setPoints3D([
-          [x, -this._tickSize, 0],
-          [x, -this._tickSize / 3, 0],
-          [x, this._tickSize / 3, 0],
-          [x, this._tickSize, 0],
+          [x, -ts, 0],
+          [x, -ts / 3, 0],
+          [x, ts / 3, 0],
+          [x, ts, 0],
         ]);
         this._tickMarks.push(tick);
         this.add(tick);
+      }
+    }
+
+    // Remove old number labels
+    for (const label of this._numberLabels) {
+      this.remove(label);
+    }
+    this._numberLabels = [];
+
+    // Add number labels
+    const numbersToShow = this._numbersToInclude ?? (this._includeNumbers ? this._getDefaultNumbers() : null);
+    if (numbersToShow) {
+      const excludeSet = new Set(this._numbersToExclude);
+      const elongatedSetForLabels = new Set(this._numbersWithElongatedTicks.map(n => Math.round(n * 1e9) / 1e9));
+      const elongatedTs = this._tickSize * 1.5;
+      for (const n of numbersToShow) {
+        if (excludeSet.has(n)) continue;
+        if (n < min - step * 0.01 || n > max + step * 0.01) continue;
+        const x = this._numberToX(n);
+        const rawText = Number.isInteger(n) ? String(n) : n.toFixed(this._decimalPlaces);
+        // Use proper Unicode minus sign (−) instead of hyphen-minus (-) for negative numbers
+        const labelText = rawText.replace(/^-/, '\u2212');
+        const label = new Text({
+          text: labelText,
+          fontSize: this._numberFontSize,
+          fontFamily: 'Times New Roman, serif',
+          color: '#ffffff',
+          textAlign: 'center',
+        });
+        // Position below the tick with enough clearance (account for elongated ticks)
+        const ts = elongatedSetForLabels.has(Math.round(n * 1e9) / 1e9) ? elongatedTs : this._tickSize;
+        label.position.set(x, -ts - label.getHeight() * 0.5 - 0.12, 0);
+        this._numberLabels.push(label);
+        this.add(label);
       }
     }
   }
@@ -258,6 +314,26 @@ export class NumberLine extends VMobject {
   }
 
   /**
+   * Get default numbers to show (at each step)
+   */
+  private _getDefaultNumbers(): number[] {
+    const [min, max, step] = this._xRange;
+    const numbers: number[] = [];
+    const epsilon = step * 0.0001;
+    for (let n = min; n <= max + epsilon; n += step) {
+      numbers.push(Math.round(n / step) * step);
+    }
+    return numbers;
+  }
+
+  /**
+   * Get number label mobjects
+   */
+  getNumberLabels(): Text[] {
+    return [...this._numberLabels];
+  }
+
+  /**
    * Create a copy of this NumberLine
    */
   protected override _createCopy(): NumberLine {
@@ -270,7 +346,10 @@ export class NumberLine extends VMobject {
       tickSize: this._tickSize,
       includeNumbers: this._includeNumbers,
       numbersToExclude: this._numbersToExclude,
+      numbersToInclude: this._numbersToInclude ?? undefined,
+      numbersWithElongatedTicks: this._numbersWithElongatedTicks,
       decimalPlaces: this._decimalPlaces,
+      numberFontSize: this._numberFontSize,
     });
   }
 }

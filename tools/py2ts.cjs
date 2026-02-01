@@ -294,6 +294,11 @@ const METHOD_MAP = {
   'rotate_about_origin': 'rotateAboutOrigin',
   'set_points_as_corners': 'setPointsAsCorners',
   'add_points_as_corners': 'addPointsAsCorners',
+  'get_axis_labels': 'getAxisLabels',
+  'get_graph_label': 'getGraphLabel',
+  'get_vertical_line': 'getVerticalLine',
+  'i2gp': 'i2gp',
+  'plot': 'plot',
 };
 
 // ─── Color constant map ──────────────────────────────────────────────
@@ -558,6 +563,7 @@ function convertPythonToTypeScript(pythonCode) {
     usedColors: new Set(),
     usedDirections: new Set(),
     usedRateFuncs: new Set(),
+    usedUtilities: new Set(),
   };
 
   const convertedScenes = scenes.map(scene => {
@@ -583,6 +589,7 @@ function convertPythonToTypeScript(pythonCode) {
   tracking.usedColors.forEach(c => imports.add(COLOR_MAP[c] || c));
   tracking.usedDirections.forEach(d => imports.add(d));
   tracking.usedRateFuncs.forEach(r => imports.add(r));
+  tracking.usedUtilities.forEach(u => imports.add(u));
   const uniqueImports = [...imports].sort();
 
   const output = [];
@@ -684,6 +691,18 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   line = convertNpArray(line);
   line = line.replace(/\bnp\.pi\b/g, 'Math.PI');
 
+  // np.arange(start, stop, step) → expanded array literal
+  line = line.replace(/\bnp\.arange\s*\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/g,
+    (_, start, stop, step) => {
+      const arr = [];
+      const s = parseFloat(start), e = parseFloat(stop), st = parseFloat(step);
+      for (let i = s; i < e; i += st) {
+        arr.push(Math.round(i * 1e10) / 1e10);
+      }
+      return `[${arr.join(', ')}]`;
+    }
+  );
+
   // ** power → Math.pow (AFTER **kwargs conversion, so x**2 is still intact)
   line = line.replace(/(\w+)\s*\*\*\s*(\w+)/g, 'Math.pow($1, $2)');
 
@@ -705,8 +724,9 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
     '`' + inner.replace(/\{([^}]+)\}/g, '${$1}') + '`');
 
   // Raw strings: double backslashes so they survive as literals in JS strings
-  line = line.replace(/r"([^"]*?)"/g, (_, s) => '"' + s.replace(/\\/g, '\\\\') + '"');
-  line = line.replace(/r'([^']*?)'/g, (_, s) => "'" + s.replace(/\\/g, '\\\\') + "'");
+  // Negative lookbehind ensures we don't match r" inside a word like "color"
+  line = line.replace(/(?<![a-zA-Z0-9_"])r"([^"]*?)"/g, (_, s) => '"' + s.replace(/\\/g, '\\\\') + '"');
+  line = line.replace(/(?<![a-zA-Z0-9_'])r'([^']*?)'/g, (_, s) => "'" + s.replace(/\\/g, '\\\\') + "'");
 
   // Direction vector addition → compound constants (before tracking)
   line = line.replace(/\bUP\s*\+\s*LEFT\b/g, 'UL');
@@ -717,6 +737,30 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   line = line.replace(/\bRIGHT\s*\+\s*UP\b/g, 'UR');
   line = line.replace(/\bLEFT\s*\+\s*DOWN\b/g, 'DL');
   line = line.replace(/\bRIGHT\s*\+\s*DOWN\b/g, 'DR');
+
+  // Vector arithmetic: DIRECTION / scalar → scaleVec(1/scalar, DIRECTION)
+  // DIRECTION * scalar → scaleVec(scalar, DIRECTION)
+  // scalar * DIRECTION → scaleVec(scalar, DIRECTION)
+  const dirNames = Object.keys(DIRECTION_MAP).join('|');
+  const dirRe = `\\b(${dirNames})\\b`;
+  // DIRECTION / number
+  line = line.replace(new RegExp(`${dirRe}\\s*/\\s*(\\d+(?:\\.\\d+)?)`, 'g'), (_, dir, num) => {
+    tracking.usedDirections.add(dir);
+    tracking.usedUtilities.add('scaleVec');
+    return `scaleVec(${1 / parseFloat(num)}, ${dir})`;
+  });
+  // DIRECTION * number
+  line = line.replace(new RegExp(`${dirRe}\\s*\\*\\s*(\\d+(?:\\.\\d+)?)`, 'g'), (_, dir, num) => {
+    tracking.usedDirections.add(dir);
+    tracking.usedUtilities.add('scaleVec');
+    return `scaleVec(${num}, ${dir})`;
+  });
+  // number * DIRECTION
+  line = line.replace(new RegExp(`(\\d+(?:\\.\\d+)?)\\s*\\*\\s*${dirRe}`, 'g'), (_, num, dir) => {
+    tracking.usedDirections.add(dir);
+    tracking.usedUtilities.add('scaleVec');
+    return `scaleVec(${num}, ${dir})`;
+  });
 
   // Track colors and directions
   for (const c of Object.keys(COLOR_MAP)) {
@@ -748,6 +792,10 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
     return `${ws}${KWARG_MAP[key] || snakeToCamel(key)}: `;
   });
 
+  // Python dict string keys → JS property names: "snake_key": → camelKey:
+  line = line.replace(/"([a-z_][a-z_0-9]*)"\s*:/g, (_, key) =>
+    `${KWARG_MAP[key] || snakeToCamel(key)}:`);
+
   // Known method renames
   for (const [pyMethod, tsMethod] of Object.entries(METHOD_MAP)) {
     line = line.replace(new RegExp(`\\.${pyMethod}\\b`, 'g'), `.${tsMethod}`);
@@ -764,6 +812,11 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
     if (re.test(line)) {
       tracking.usedClasses.add(tsClass);
       line = line.replace(new RegExp(`(?<!\\.|new\\s)\\b${cls}\\s*\\(`, 'g'), `new ${tsClass}(`);
+    }
+    // Also track class names used as values (e.g., line_func=Line)
+    const valueRe = new RegExp(`:\\s*${tsClass}\\b(?!\\s*[({])`, 'g');
+    if (valueRe.test(line)) {
+      tracking.usedClasses.add(tsClass);
     }
   }
 

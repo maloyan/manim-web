@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Sin And Cos Function Plot</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #ff6b6b; }
+    button:disabled { background: #666; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="playBtn">Play Animation</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <script type="module">
+    // Converted from Python Manim → ManimWeb TypeScript
+    // Review and adjust as needed — automated conversion is approximate.
+
+    import {
+      Axes,
+      BLUE,
+      GREEN,
+      Line,
+      RED,
+      Scene,
+      UP,
+      UR,
+      VGroup,
+      WHITE,
+      YELLOW,
+      scaleVec,
+      BLACK
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 854,
+      height: 480,
+      backgroundColor: BLACK
+    });
+
+    let isAnimating = false;
+
+    async function sinAndCosFunctionPlot(scene) {
+      const axes = new Axes({ xRange: [-10, 10.3, 1], yRange: [-1.5, 1.5, 1], xLength: 10, axisConfig: {color: GREEN}, xAxisConfig: { numbersToInclude: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10], numbersWithElongatedTicks: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10], }, tips: false });
+      const axesLabels = axes.getAxisLabels();
+      const sinGraph = axes.plot((x) => Math.sin(x), { color: BLUE });
+      const cosGraph = axes.plot((x) => Math.cos(x), { color: RED });
+
+      const sinLabel = axes.getGraphLabel(sinGraph, "\\sin(x)", { xVal: -10, direction: scaleVec(0.5, UP) });
+      const cosLabel = axes.getGraphLabel(cosGraph, { label: "\\cos(x)" });
+
+      const vertLine = axes.getVerticalLine(axes.i2gp(2 * Math.PI, cosGraph), { color: YELLOW, lineFunc: Line });
+      const lineLabel = axes.getGraphLabel(cosGraph, "x=2\\pi", { xVal: 2 * Math.PI, direction: UR, color: WHITE });
+
+      const plot = new VGroup(axes, sinGraph, cosGraph, vertLine);
+      const labels = new VGroup(axesLabels, sinLabel, cosLabel, lineLabel);
+      scene.add(plot, labels);
+    }
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      document.getElementById('playBtn').disabled = true;
+
+      scene.clear();
+      await sinAndCosFunctionPlot(scene);
+
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+    });
+  </script>
+</body>
+</html>

@@ -263,14 +263,10 @@ export class Scene {
           }
         });
         this._threeScene.add(threeObj);
-        // If mobject has pending async rendering (e.g. MathTex), re-render when done
-        if (typeof (mobject as any).waitForRender === 'function') {
-          (mobject as any).waitForRender().then(() => {
-            if (this._autoRender && this._mobjects.has(mobject)) {
-              this._render();
-            }
-          });
-        }
+        // If mobject or any descendant has pending async rendering (e.g. MathTex),
+        // re-render when done. Recursively check children since MathTex objects
+        // may be nested inside VGroup/Group containers.
+        this._awaitAsyncRenders(mobject);
       }
     }
     if (this._autoRender) {
@@ -534,6 +530,23 @@ export class Scene {
     }
     this._stopRenderLoop();
     return this;
+  }
+
+  /**
+   * Recursively find all descendant mobjects with waitForRender() and
+   * trigger a scene re-render when each completes.
+   */
+  private _awaitAsyncRenders(mobject: Mobject): void {
+    if (typeof (mobject as any).waitForRender === 'function') {
+      (mobject as any).waitForRender().then(() => {
+        if (this._autoRender) {
+          this._render();
+        }
+      });
+    }
+    for (const child of mobject.children) {
+      this._awaitAsyncRenders(child);
+    }
   }
 
   /**

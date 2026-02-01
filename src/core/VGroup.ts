@@ -13,18 +13,19 @@ import { VMobject, Point } from './VMobject';
  */
 export class VGroup extends VMobject {
   /**
-   * Create a new VGroup containing the given vmobjects.
-   * @param vmobjects - VMobjects to add to the group
+   * Create a new VGroup containing the given mobjects.
+   * Accepts both VMobjects and general Mobjects (e.g., Axes, Group).
+   * @param mobjects - Mobjects to add to the group
    */
-  constructor(...vmobjects: VMobject[]) {
+  constructor(...mobjects: Mobject[]) {
     super();
 
     // VGroup should not have its own fill by default
     this.fillOpacity = 0;
     this._style.fillOpacity = 0;
 
-    for (const vmobject of vmobjects) {
-      this.addVMobjects(vmobject);
+    for (const mobject of mobjects) {
+      this.add(mobject);
     }
   }
 
