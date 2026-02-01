@@ -299,6 +299,7 @@ const METHOD_MAP = {
   'get_vertical_line': 'getVerticalLine',
   'i2gp': 'i2gp',
   'plot': 'plot',
+  'c2p': 'coordsToPoint',
 };
 
 // ─── Color constant map ──────────────────────────────────────────────
@@ -663,6 +664,8 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
     tracking.usedClasses.add('FadeToColor');
     return `new FadeToColor(${obj}, { color: ${args.trim()} })`;
   });
+  // .animate.set_value(val) / .animate.setValue(val) → obj.animateTo(val) (ValueTracker)
+  line = line.replace(/(\w+)\.animate\.(?:set_value|setValue)\s*\(([^)]+)\)/g, '$1.animateTo($2)');
   // Remaining .animate.method() → strip .animate, mark with comment
   line = line.replace(/\.animate\.(\w+)\s*\(/g, '.$1( /* animate */ ');
 
@@ -702,6 +705,21 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
       return `[${arr.join(', ')}]`;
     }
   );
+
+  // np.linspace(start, stop, N) → linspace(start, stop, N)
+  line = line.replace(/\bnp\.linspace\s*\(/g, () => {
+    tracking.usedUtilities.add('linspace');
+    return 'linspace(';
+  });
+
+  // Python slice notation: arr[:N] → arr.slice(0, N)
+  line = line.replace(/(\w+(?:\.\w+)*)\s*\[\s*:(\d+)\s*\]/g, '$1.slice(0, $2)');
+  // Python slice notation: arr[N:] → arr.slice(N)
+  line = line.replace(/(\w+(?:\.\w+)*)\s*\[(\d+)\s*:\s*\]/g, '$1.slice($2)');
+
+  // func(array).argmin() → array.reduce((mi, _, i, a) => func(a[i]) < func(a[mi]) ? i : mi, 0)
+  line = line.replace(/(\w+)\((\w+)\)\.argmin\(\)/g,
+    '$2.reduce((mi, _, i, a) => $1(a[i]) < $1(a[mi]) ? i : mi, 0)');
 
   // ** power → Math.pow (AFTER **kwargs conversion, so x**2 is still intact)
   line = line.replace(/(\w+)\s*\*\*\s*(\w+)/g, 'Math.pow($1, $2)');
@@ -804,6 +822,11 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   // Remaining snake_case method names
   line = line.replace(/\.([a-z_][a-z_0-9]*)\s*\(/g, (_, method) =>
     `.${snakeToCamel(method)}(`);
+
+  // Snake_case property access (not method calls) → camelCase
+  // Matches .prop_name followed by [ . , ) ; space or end-of-line, but NOT (
+  line = line.replace(/\.([a-z_][a-z_0-9]*)(?=\s*[.[,);\s]|$)(?!\s*\()/g, (_, prop) =>
+    `.${snakeToCamel(prop)}`);
 
   // Class instantiation → new ClassName()
   for (const cls of Object.keys(CLASS_MAP)) {

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - ArgMin Example</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #ff6b6b; }
+    button:disabled { background: #666; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="playBtn">Play Animation</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <script type="module">
+    import {
+      Scene,
+      Axes,
+      Dot,
+      MAROON,
+      ValueTracker,
+      linspace,
+      BLACK
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK
+    });
+
+    let isAnimating = false;
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      document.getElementById('playBtn').disabled = true;
+
+      try {
+        scene.clear();
+
+        const ax = new Axes({ xRange: [0, 10], yRange: [0, 100, 10], axisConfig: {includeTip: false} });
+        const labels = ax.getAxisLabels({ xLabel: "x", yLabel: "f(x)" });
+
+        const t = new ValueTracker(0);
+
+        const func = (x) => {
+            return 2 * (x - 5) ** 2;
+        };
+        const graph = ax.plot(func, { color: MAROON });
+
+        const initialPoint = [ax.coordsToPoint(t.getValue(), func(t.getValue()))];
+        const dot = new Dot({ point: initialPoint });
+
+        dot.addUpdater((x) => x.moveTo(ax.coordsToPoint(t.getValue(), func(t.getValue()))));
+        const xSpace = linspace(...ax.xRange.slice(0, 2),200);
+        const minimumIndex = xSpace.reduce((mi, _, i, a) => func(a[i]) < func(a[mi]) ? i : mi, 0);
+
+        scene.add(ax, labels, graph, dot);
+        await scene.play(t.animateTo(xSpace[minimumIndex]));
+        await scene.wait();
+      } catch(e) {
+        console.error('ERROR:', e.message, e.stack);
+      }
+
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+    });
+  </script>
+</body>
+</html>

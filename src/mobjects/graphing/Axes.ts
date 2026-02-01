@@ -11,10 +11,10 @@ import { Line } from '../../mobjects/geometry/Line';
  * Options for creating Axes
  */
 export interface AxesOptions {
-  /** X-axis range as [min, max, step]. Default: [-5, 5, 1] */
-  xRange?: [number, number, number];
-  /** Y-axis range as [min, max, step]. Default: [-3, 3, 1] */
-  yRange?: [number, number, number];
+  /** X-axis range as [min, max] or [min, max, step]. Default: [-5, 5, 1] */
+  xRange?: [number, number] | [number, number, number];
+  /** Y-axis range as [min, max] or [min, max, step]. Default: [-3, 3, 1] */
+  yRange?: [number, number] | [number, number, number];
   /** Visual length of the x-axis. Default: 10 */
   xLength?: number;
   /** Visual length of the y-axis. Default: 6 */
@@ -75,8 +75,8 @@ export class Axes extends Group {
     super();
 
     const {
-      xRange = [-5, 5, 1],
-      yRange = [-3, 3, 1],
+      xRange: xRangeRaw = [-5, 5, 1],
+      yRange: yRangeRaw = [-3, 3, 1],
       xLength = 10,
       yLength = 6,
       color = '#ffffff',
@@ -87,17 +87,27 @@ export class Axes extends Group {
       tipLength = 0.25,
     } = options;
 
+    // Normalize 2-element ranges to 3-element [min, max, step] (default step = 1)
+    const xRange: [number, number, number] = xRangeRaw.length === 2
+      ? [xRangeRaw[0], xRangeRaw[1], 1]
+      : xRangeRaw as [number, number, number];
+    const yRange: [number, number, number] = yRangeRaw.length === 2
+      ? [yRangeRaw[0], yRangeRaw[1], 1]
+      : yRangeRaw as [number, number, number];
+
     this._xRange = [...xRange];
     this._yRange = [...yRange];
     this._xLength = xLength;
     this._yLength = yLength;
-    this._tips = tips;
+    // Support includeTip from axisConfig (Python Manim pattern: axis_config={"include_tip": False})
+    this._tips = options.tips ?? (axisConfig as any)?.includeTip ?? true;
     this._tipLength = tipLength;
 
     // Create x-axis (Manim excludes origin label by default)
     const xConfig: NumberLineOptions = {
       color,
       numbersToExclude: [0],
+      tickSize: 0.1,
       ...axisConfig,
       ...xAxisConfig,
       xRange: this._xRange,
@@ -200,6 +210,13 @@ export class Axes extends Group {
    * @param y - Y coordinate in graph space
    * @returns The visual point [x, y, z]
    */
+  /**
+   * Alias for coordsToPoint (matches Python Manim's c2p shorthand)
+   */
+  c2p(x: number, y: number): Vector3Tuple {
+    return this.coordsToPoint(x, y);
+  }
+
   coordsToPoint(x: number, y: number): Vector3Tuple {
     const [xMin, xMax] = this._xRange;
     const [yMin, yMax] = this._yRange;
@@ -264,10 +281,20 @@ export class Axes extends Group {
     return [...this._xRange];
   }
 
+  /** Public accessor for x range (matches Python Manim's ax.x_range) */
+  get xRange(): [number, number, number] {
+    return [...this._xRange];
+  }
+
   /**
    * Get the y range
    */
   getYRange(): [number, number, number] {
+    return [...this._yRange];
+  }
+
+  /** Public accessor for y range (matches Python Manim's ax.y_range) */
+  get yRange(): [number, number, number] {
     return [...this._yRange];
   }
 
@@ -326,17 +353,28 @@ export class Axes extends Group {
    * @param yLabel - LaTeX string for y-axis label. Default: "y"
    * @returns A Group containing the two labels
    */
-  getAxisLabels(xLabel: string = 'x', yLabel: string = 'y'): Group {
+  getAxisLabels(xLabelOrOpts?: string | { xLabel?: string; yLabel?: string }, yLabelArg?: string): Group {
+    let xLabel: string;
+    let yLabel: string;
+    if (typeof xLabelOrOpts === 'object' && xLabelOrOpts !== null) {
+      xLabel = xLabelOrOpts.xLabel ?? 'x';
+      yLabel = xLabelOrOpts.yLabel ?? 'y';
+    } else {
+      xLabel = xLabelOrOpts ?? 'x';
+      yLabel = yLabelArg ?? 'y';
+    }
     const xLabelMob = new MathTex({ latex: xLabel, fontSize: 32, color: '#ffffff' });
     const yLabelMob = new MathTex({ latex: yLabel, fontSize: 32, color: '#ffffff' });
 
-    // Position x label to the right of x-axis
+    // Position x label at the end of x-axis (right end, below axis line)
     const xEnd = this._xLength / 2;
-    xLabelMob.position.set(xEnd + 0.3, -0.35, 0);
+    const xAxisY = this._numberToVisualY(0);
+    xLabelMob.position.set(xEnd + 0.3, xAxisY - 0.35, 0);
 
-    // Position y label above y-axis
+    // Position y label at the top of y-axis (above axis, to the right of axis line)
+    const yAxisX = this._numberToVisualX(0);
     const yEnd = this._yLength / 2;
-    yLabelMob.position.set(0.35, yEnd + 0.3, 0);
+    yLabelMob.position.set(yAxisX + 0.35, yEnd + 0.3, 0);
 
     const group = new Group();
     group.add(xLabelMob);

@@ -616,4 +616,5 @@ export {
   scaleVec,
   addVec,
   subVec,
+  linspace,
 } from './utils/vectors';

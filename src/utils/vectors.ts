@@ -62,3 +62,22 @@ export function addVec(...vecs: Vector3Tuple[]): Vector3Tuple {
 export function subVec(a: Vector3Tuple, b: Vector3Tuple): Vector3Tuple {
   return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 }
+
+/**
+ * Create an array of evenly spaced values (NumPy linspace equivalent).
+ *
+ * @param start - Start value
+ * @param stop - End value (inclusive)
+ * @param num - Number of points to generate
+ * @returns Array of `num` evenly spaced values from `start` to `stop`
+ *
+ * @example
+ * ```ts
+ * linspace(0, 10, 5)  // [0, 2.5, 5, 7.5, 10]
+ * linspace(0, 1, 3)   // [0, 0.5, 1]
+ * ```
+ */
+export function linspace(start: number, stop: number, num: number): number[] {
+  if (num <= 1) return num === 1 ? [start] : [];
+  return Array.from({ length: num }, (_, i) => start + (stop - start) * i / (num - 1));
+}

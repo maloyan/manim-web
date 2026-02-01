@@ -45,12 +45,15 @@ export class Dot extends Circle {
 
   constructor(options: DotOptions = {}) {
     const {
-      point = [0, 0, 0],
+      point: rawPoint = [0, 0, 0],
       radius = 0.08,
       color = WHITE,
       fillOpacity = 1,
       strokeWidth = 0,
     } = options;
+
+    // Handle nested array (from Python patterns like [coords_to_point(...)])
+    const point: Vector3Tuple = (Array.isArray(rawPoint[0]) ? rawPoint[0] : rawPoint) as Vector3Tuple;
 
     // Initialize as a filled circle at the specified point
     super({
