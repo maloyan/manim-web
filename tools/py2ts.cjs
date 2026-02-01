@@ -60,12 +60,6 @@ const CLASS_MAP = {
   'Cross': 'Cross',
   'Underline': 'Underline',
 
-  // Boolean operations
-  'Intersection': 'Intersection',
-  'Union': 'Union',
-  'Difference': 'Difference',
-  'Exclusion': 'Exclusion',
-
   // Text
   'Text': 'Text',
   'MathTex': 'MathTex',
@@ -169,12 +163,6 @@ const CLASS_MAP = {
   'UpdateFromFunc': 'UpdateFromFunc',
   'UpdateFromAlphaFunc': 'UpdateFromAlphaFunc',
 
-  // Animations — Color
-  'FadeToColor': 'FadeToColor',
-
-  // Animations — Utility
-  'Rotating': 'Rotating',
-
   // Misc
   'ValueTracker': 'ValueTracker',
   'ImageMobject': 'ImageMobject',
@@ -195,8 +183,6 @@ const ANIMATION_CLASSES = new Set([
   'FocusOn','Pulse',
   'AnimationGroup','LaggedStart','LaggedStartMap','Succession',
   'UpdateFromFunc','UpdateFromAlphaFunc',
-  'FadeToColor',
-  'Rotating',
 ]);
 
 // Mobject classes (also need `new`)
@@ -249,7 +235,6 @@ const KWARG_MAP = {
   'bar_width': 'barWidth',
   'bar_separation': 'barSeparation',
   'num_decimal_places': 'decimalPlaces',
-  'other_angle': 'otherAngle',
 };
 
 // ─── Method name remap (snake → camel + special cases) ───────────────
@@ -264,8 +249,8 @@ const METHOD_MAP = {
   'get_bottom': 'getBottom',
   'get_left': 'getLeft',
   'get_right': 'getRight',
-  'get_start': 'getStart',
-  'get_end': 'getEnd',
+  'get_start': 'getStartPoint',
+  'get_end': 'getEndPoint',
   'get_width': 'getWidth',
   'get_height': 'getHeight',
   'move_to': 'moveTo',
@@ -301,15 +286,6 @@ const METHOD_MAP = {
   'generate_target': 'generateTarget',
   'save_state': 'saveState',
   'restore': 'restore',
-  'become': 'become',
-  'point_from_proportion': 'pointFromProportion',
-  'get_angle': 'getAngle',
-  'set_value': 'setValue',
-  'get_value': 'getValue',
-  'increment_value': 'incrementValue',
-  'set_x': 'setX',
-  'set_y': 'setY',
-  'set_z': 'setZ',
 };
 
 // ─── Color constant map ──────────────────────────────────────────────
@@ -343,14 +319,6 @@ const DIRECTION_MAP = {
   'UP': 'UP', 'DOWN': 'DOWN', 'LEFT': 'LEFT', 'RIGHT': 'RIGHT',
   'ORIGIN': 'ORIGIN', 'OUT': 'OUT', 'IN': 'IN',
   'UL': 'UL', 'UR': 'UR', 'DL': 'DL', 'DR': 'DR',
-};
-
-// Manim spacing/buffer constants
-const BUFF_CONSTANTS = {
-  'SMALL_BUFF': 'SMALL_BUFF',
-  'MED_SMALL_BUFF': 'MED_SMALL_BUFF',
-  'MED_LARGE_BUFF': 'MED_LARGE_BUFF',
-  'LARGE_BUFF': 'LARGE_BUFF',
 };
 
 const RATE_FUNC_MAP = {
@@ -437,35 +405,31 @@ function findMatchingParen(s, openIndex) {
   return -1;
 }
 
-// ─── Expand tuple unpacking: a,b = x,y → separate assignments ────────
-function expandTupleUnpacking(lines) {
-  const result = [];
-  for (const line of lines) {
-    // Match: indent var1, var2 [, var3 ...] = expr1, expr2 [, expr3 ...]
-    // But not inside for loops, function defs, or lines with ==
-    const m = line.match(/^(\s*)([a-zA-Z_]\w*(?:\s*,\s*[a-zA-Z_]\w*)+)\s*=\s*(.+)$/);
-    if (m && !/^\s*(for|if|while|def|return)\b/.test(line) && !line.includes('==')) {
-      const indent = m[1];
-      const varNames = m[2].split(',').map(v => v.trim());
-      const rhsStr = m[3];
-      // Split RHS by top-level commas (respecting parens/brackets/strings)
-      const rhsParts = smartSplit(rhsStr);
-      if (rhsParts.length === varNames.length) {
-        for (let i = 0; i < varNames.length; i++) {
-          result.push(`${indent}${varNames[i]} = ${rhsParts[i].trim()}`);
-        }
-        continue;
-      }
-    }
-    result.push(line);
+// ─── Convert np.array([...]) → [...] ─────────────────────────────────
+// Properly strips the outer np.array() call, keeping the inner [...] intact.
+function convertNpArray(line) {
+  const pattern = /\bnp\.array\s*\(/g;
+  const replacements = [];
+  let m;
+  while ((m = pattern.exec(line)) !== null) {
+    const openParen = m.index + m[0].length - 1; // position of '('
+    const closeParen = findMatchingParen(line, openParen);
+    if (closeParen === -1) continue;
+    const inner = line.slice(openParen + 1, closeParen).trim();
+    replacements.push({ start: m.index, end: closeParen + 1, inner });
   }
-  return result;
+  // Apply right-to-left to preserve offsets
+  for (let i = replacements.length - 1; i >= 0; i--) {
+    const r = replacements[i];
+    line = line.slice(0, r.start) + r.inner + line.slice(r.end);
+  }
+  return line;
 }
 
 // ─── Main converter ──────────────────────────────────────────────────
 function convertPythonToTypeScript(pythonCode) {
   const rawLines = pythonCode.split('\n');
-  const lines = expandTupleUnpacking(joinContinuationLines(rawLines));
+  const lines = joinContinuationLines(rawLines);
 
   // ── Phase 1: Parse into scene blocks ──
   const scenes = [];
@@ -537,14 +501,13 @@ function convertPythonToTypeScript(pythonCode) {
     usedColors: new Set(),
     usedDirections: new Set(),
     usedRateFuncs: new Set(),
-    usedBuffConstants: new Set(),
   };
 
   const convertedScenes = scenes.map(scene => {
-    const declaredVars = new Set();
+    const varRenames = new Map();
     const converted = [];
     for (const line of scene.lines) {
-      converted.push(convertLine(line, tracking, declaredVars));
+      converted.push(convertLine(line, tracking, varRenames));
     }
     // PascalCase → camelCase, remove "Scene" suffix
     let funcName = scene.name.replace(/Scene$/, '');
@@ -559,7 +522,6 @@ function convertPythonToTypeScript(pythonCode) {
   tracking.usedColors.forEach(c => imports.add(COLOR_MAP[c] || c));
   tracking.usedDirections.forEach(d => imports.add(d));
   tracking.usedRateFuncs.forEach(r => imports.add(r));
-  tracking.usedBuffConstants.forEach(b => imports.add(b));
   const uniqueImports = [...imports].sort();
 
   const output = [];
@@ -593,30 +555,17 @@ function convertPythonToTypeScript(pythonCode) {
 }
 
 // ─── Convert a single line of Python → TypeScript ────────────────────
-function convertLine(rawLine, tracking, declaredVars) {
+function convertLine(rawLine, tracking, varRenames) {
   if (rawLine.trim() === '') return rawLine;
   let line = rawLine;
 
-  // Comments: # → // (skip # inside strings)
-  line = line.replace(/^([^"']*?)#(.*)$/, (match, before, after) => {
-    // Count unescaped quotes in 'before' to check if # is inside a string
-    let inStr = false, strChar = '';
-    for (let j = 0; j < before.length; j++) {
-      const ch = before[j];
-      if (inStr) { if (ch === strChar && before[j - 1] !== '\\') inStr = false; continue; }
-      if (ch === '"' || ch === "'") { inStr = true; strChar = ch; }
-    }
-    if (inStr) return match; // # is inside a string, don't convert
-    return before + '//' + after;
-  });
+  // Comments: # → // (basic — doesn't handle # inside strings)
+  line = line.replace(/#(.*)$/, '//$1');
 
   // Booleans / None
   line = line.replace(/\bTrue\b/g, 'true');
   line = line.replace(/\bFalse\b/g, 'false');
   line = line.replace(/\bNone\b/g, 'null');
-
-  // self.camera.background_color = "..." → scene.setBackgroundColor("...")
-  line = line.replace(/self\.camera\.background_color\s*=\s*(.+)/, 'scene.setBackgroundColor($1)');
 
   // self.play/wait/add/remove/clear → scene.*
   line = line.replace(/self\.play\s*\(/g, 'await scene.play(');
@@ -626,68 +575,8 @@ function convertLine(rawLine, tracking, declaredVars) {
   line = line.replace(/self\.clear\s*\(/g, 'scene.clear(');
   line = line.replace(/self\.camera/g, 'scene.camera');
 
-  // .animate.method() handling
-  // Special case: ValueTracker.animate.set_value(x) → tracker.animateTo(x)
-  // Special case: ValueTracker.animate.increment_value(x) → tracker.animateTo(tracker.getValue() + x)
-  // General case: obj.animate.method() → generateTarget + MoveToTarget pattern
-  const animatePlayMatch = line.match(/^(\s*)(await\s+scene\.play\s*\()(\w+)\.animate\.([\s\S]+?)\)\s*;?\s*$/);
-  if (animatePlayMatch) {
-    const indent = animatePlayMatch[1];
-    const objName = animatePlayMatch[3];
-    let chainedCalls = animatePlayMatch[4];
-
-    // Extract play-level kwargs (e.g., run_time=0.5) from after the animate call
-    // Note: kwargs still use Python syntax (=) at this point in the pipeline
-    let playOpts = '';
-    const callParts = smartSplit(chainedCalls);
-    const animCall = callParts[0] ? callParts[0].trim() : chainedCalls;
-    const extraKwargs = callParts.slice(1).filter(p => /^\s*\w+=/.test(p.trim()));
-    if (extraKwargs.length > 0) {
-      const convertedKwargs = extraKwargs.map(k => {
-        const kv = k.trim().match(/^(\w+)\s*=\s*(.+)$/);
-        if (kv) {
-          const tsKey = KWARG_MAP[kv[1]] || snakeToCamel(kv[1]);
-          return `${tsKey}: ${kv[2]}`;
-        }
-        return k.trim();
-      });
-      playOpts = `{ ${convertedKwargs.join(', ')} }`;
-    }
-
-    // Check for specific patterns (still snake_case since this runs before method renames)
-    const setValueMatch = animCall.match(/^set_value\s*\(\s*(.+)\s*\)$/);
-    const incrementMatch = animCall.match(/^increment_value\s*\(\s*(.+)\s*\)$/);
-    const setColorMatch = animCall.match(/^set_color\s*\(\s*(.+)\s*\)$/);
-    const shiftMatch = animCall.match(/^shift\s*\(\s*(.+)\s*\)$/);
-
-    if (setValueMatch) {
-      const opts = playOpts ? `, ${playOpts}` : '';
-      line = `${indent}await scene.play(${objName}.animateTo(${setValueMatch[1]}${opts}));`;
-    } else if (incrementMatch) {
-      const opts = playOpts ? `, ${playOpts}` : '';
-      line = `${indent}await scene.play(${objName}.animateTo(${objName}.getValue() + ${incrementMatch[1]}${opts}));`;
-    } else if (setColorMatch) {
-      // obj.animate.set_color(X) → use FadeToColor for smooth color interpolation
-      tracking.usedClasses.add('FadeToColor');
-      const targetColor = setColorMatch[1].trim();
-      const playOptsObj = playOpts ? playOpts.slice(2, -2).trim() : ''; // strip "{ " and " }"
-      const optsStr = playOptsObj ? `{ color: ${targetColor}, ${playOptsObj} }` : `{ color: ${targetColor} }`;
-      line = `${indent}await scene.play(new FadeToColor(${objName}, ${optsStr}));`;
-    } else if (shiftMatch) {
-      // obj.animate.shift(vec) → new Shift(obj, { direction: vec })
-      tracking.usedClasses.add('Shift');
-      const dirExpr = shiftMatch[1].trim();
-      const opts = playOpts ? `, ...${playOpts}` : '';
-      line = `${indent}await scene.play(new Shift(${objName}, { direction: ${dirExpr}${opts} }));`;
-    } else {
-      tracking.usedClasses.add('MoveToTarget');
-      const opts = playOpts ? `, ${playOpts}` : '';
-      line = `${indent}${objName}.generateTarget();\n${indent}${objName}.targetCopy!.${animCall};\n${indent}await scene.play(new MoveToTarget(${objName}${opts}));`;
-    }
-  } else {
-    // Fallback: strip .animate for non-play contexts
-    line = line.replace(/\.animate\.(\w+)\s*\(/g, '.$1(');
-  }
+  // .animate.method() → strip .animate, mark with comment
+  line = line.replace(/\.animate\.(\w+)\s*\(/g, '.$1( /* animate */ ');
 
   // Remaining self. → strip
   line = line.replace(/self\./g, '');
@@ -711,54 +600,22 @@ function convertLine(rawLine, tracking, declaredVars) {
   line = line.replace(/\bDEGREES\b/g, '(Math.PI / 180)');
   line = line.replace(/\bmath\.(sqrt|sin|cos|tan|exp|log|abs|ceil|floor)\b/g, 'Math.$1');
   line = line.replace(/\bnp\.(sin|cos|sqrt|tan|exp|log)\b/g, 'Math.$1');
-  line = line.replace(/\bnp\.array\s*\(\s*\[/g, '[');
+  line = convertNpArray(line);
   line = line.replace(/\bnp\.pi\b/g, 'Math.PI');
-
-  // Strip numpy type wrappers: np.uint8(...) → inner content
-  line = stripFunctionWrapper(line, 'np.uint8');
 
   // ** power → Math.pow (AFTER **kwargs conversion, so x**2 is still intact)
   line = line.replace(/(\w+)\s*\*\*\s*(\w+)/g, 'Math.pow($1, $2)');
 
-  // Vector math: scalar * DIRECTION → scaleVec(scalar, DIRECTION)
-  // Handles: 2.25 * LEFT, -1.5 * UP, etc.
-  const DIRS = Object.keys(DIRECTION_MAP).join('|');
-  const scaleVecRe = new RegExp(`(-?[\\d.]+)\\s*\\*\\s*(${DIRS})\\b`, 'g');
-  if (scaleVecRe.test(line)) {
-    tracking.usedClasses.add('scaleVec');
-    line = line.replace(new RegExp(`(-?[\\d.]+)\\s*\\*\\s*(${DIRS})\\b`, 'g'), 'scaleVec($1, $2)');
-  }
-
-  // Also handle DIRECTION * scalar (e.g., UP * 3, LEFT * 2.5)
-  const dirScalarRe = new RegExp(`(${DIRS})\\s*\\*\\s*(-?[\\d.]+)`, 'g');
-  if (dirScalarRe.test(line)) {
-    tracking.usedClasses.add('scaleVec');
-    line = line.replace(new RegExp(`(${DIRS})\\s*\\*\\s*(-?[\\d.]+)`, 'g'), 'scaleVec($2, $1)');
-  }
-
-  // Vector addition: scaleVec(...) + scaleVec(...) or DIR + DIR → addVec(a, b)
-  // Handles: scaleVec(2.25, LEFT) + scaleVec(1.5, UP) and LEFT + UP
-  const vecTermPattern = `(?:scaleVec\\([^)]+\\)|${DIRS})`;
-  const addVecRe = new RegExp(`(${vecTermPattern})\\s*\\+\\s*(${vecTermPattern})`);
-  if (addVecRe.test(line)) {
-    tracking.usedClasses.add('addVec');
-    // Handle chains: A + B + C → addVec(A, B, C)
-    const chainRe = new RegExp(`(${vecTermPattern}(?:\\s*\\+\\s*${vecTermPattern})+)`);
-    line = line.replace(chainRe, (match) => {
-      const parts = match.split(/\s*\+\s*/);
-      return `addVec(${parts.join(', ')})`;
-    });
-  }
+  // range()
+  line = line.replace(/range\((\d+)\)/g, 'Array.from({length: $1}, (_, i) => i)');
+  line = line.replace(/range\((\d+),\s*(\d+)\)/g,
+    'Array.from({length: $2 - $1}, (_, i) => i + $1)');
 
   // List comprehension: [expr for x in iterable]
-  // Must run BEFORE range() conversion to avoid Array.from(...) breaking comprehension parsing
-  line = convertListComprehensions(line);
-
-  // range() — accept any expression (variables, numbers, etc.)
-  line = line.replace(/\brange\(([^,)]+),\s*([^,)]+)\)/g,
-    'Array.from({length: $2 - $1}, (_, i) => i + $1)');
-  line = line.replace(/\brange\(([^,)]+)\)/g,
-    'Array.from({length: $1}, (_, i) => i)');
+  line = line.replace(
+    /\[\s*(.+?)\s+for\s+(\w+)\s+in\s+(.+?)\s*\]/g,
+    '$3.map(($2) => $1)'
+  );
 
   // f-strings
   line = line.replace(/f"([^"]*?)"/g, (_, inner) =>
@@ -766,19 +623,26 @@ function convertLine(rawLine, tracking, declaredVars) {
   line = line.replace(/f'([^']*?)'/g, (_, inner) =>
     '`' + inner.replace(/\{([^}]+)\}/g, '${$1}') + '`');
 
-  // Raw strings — escape backslashes since JS doesn't have raw strings
-  line = line.replace(/r"([^"]*?)"/g, (_, inner) => '"' + inner.replace(/\\/g, '\\\\') + '"');
-  line = line.replace(/r'([^']*?)'/g, (_, inner) => "'" + inner.replace(/\\/g, '\\\\') + "'");
+  // Raw strings: double backslashes so they survive as literals in JS strings
+  line = line.replace(/r"([^"]*?)"/g, (_, s) => '"' + s.replace(/\\/g, '\\\\') + '"');
+  line = line.replace(/r'([^']*?)'/g, (_, s) => "'" + s.replace(/\\/g, '\\\\') + "'");
 
-  // Track colors, directions, and buffer constants
+  // Direction vector addition → compound constants (before tracking)
+  line = line.replace(/\bUP\s*\+\s*LEFT\b/g, 'UL');
+  line = line.replace(/\bUP\s*\+\s*RIGHT\b/g, 'UR');
+  line = line.replace(/\bDOWN\s*\+\s*LEFT\b/g, 'DL');
+  line = line.replace(/\bDOWN\s*\+\s*RIGHT\b/g, 'DR');
+  line = line.replace(/\bLEFT\s*\+\s*UP\b/g, 'UL');
+  line = line.replace(/\bRIGHT\s*\+\s*UP\b/g, 'UR');
+  line = line.replace(/\bLEFT\s*\+\s*DOWN\b/g, 'DL');
+  line = line.replace(/\bRIGHT\s*\+\s*DOWN\b/g, 'DR');
+
+  // Track colors and directions
   for (const c of Object.keys(COLOR_MAP)) {
     if (new RegExp(`\\b${c}\\b`).test(line)) tracking.usedColors.add(c);
   }
   for (const d of Object.keys(DIRECTION_MAP)) {
     if (new RegExp(`\\b${d}\\b`).test(line)) tracking.usedDirections.add(d);
-  }
-  for (const b of Object.keys(BUFF_CONSTANTS)) {
-    if (new RegExp(`\\b${b}\\b`).test(line)) tracking.usedBuffConstants.add(b);
   }
 
   // Rate functions
@@ -789,15 +653,15 @@ function convertLine(rawLine, tracking, declaredVars) {
     }
   }
 
-  // Known kwargs: key=value → tsKey: value (only inside function calls: after ( or ,)
+  // Known kwargs: key=value → tsKey: value
   for (const [pyKey, tsKey] of Object.entries(KWARG_MAP)) {
-    line = line.replace(new RegExp(`([(,]\\s*)${pyKey}\\s*=`, 'g'), `$1${tsKey}: `);
+    line = line.replace(new RegExp(`\\b${pyKey}\\s*=`, 'g'), `${tsKey}: `);
   }
 
-  // Remaining snake_case kwargs: key=value → camelKey: value (only inside function calls)
-  line = line.replace(/([(,]\s*)([a-z_][a-z_0-9]*)=/g, (match, before, key) => {
+  // Remaining snake_case kwargs: key=value → camelKey: value
+  line = line.replace(/\b([a-z_][a-z_0-9]*)=/g, (match, key) => {
     if (match.endsWith('==')) return match;
-    return `${before}${KWARG_MAP[key] || snakeToCamel(key)}: `;
+    return `${KWARG_MAP[key] || snakeToCamel(key)}: `;
   });
 
   // Known method renames
@@ -805,27 +669,9 @@ function convertLine(rawLine, tracking, declaredVars) {
     line = line.replace(new RegExp(`\\.${pyMethod}\\b`, 'g'), `.${tsMethod}`);
   }
 
-  // Property access: obj.height → obj.getHeight(), obj.width → obj.getWidth()
-  line = line.replace(/\.height\b(?!\s*\()/g, '.getHeight()');
-  line = line.replace(/\.width\b(?!\s*\()/g, '.getWidth()');
-
   // Remaining snake_case method names
   line = line.replace(/\.([a-z_][a-z_0-9]*)\s*\(/g, (_, method) =>
     `.${snakeToCamel(method)}(`);
-
-  // VGroup indexing: var[n].method() → var.get(n)!.method()
-  // In Manim Python, group[n] uses __getitem__; in TS we use .get(n)
-  // Must run after method renames so .getCenter() etc. are already camelCase.
-  line = line.replace(/(\w+)\[(\d+)\]\./g, '$1.get($2)!.');
-
-  // Vector subtraction: expr.getCenter() - expr.getCenter() → subVec(a, b)
-  // Must run after method renames and VGroup indexing.
-  const VEC_METHODS = 'getCenter|getTop|getBottom|getLeft|getRight|getStart|getEnd|getPoint|getOrigin';
-  const subVecRe = new RegExp(`([\\w.!()]+\\.(?:${VEC_METHODS})\\(\\))\\s*-\\s*([\\w.!()]+\\.(?:${VEC_METHODS})\\(\\))`, 'g');
-  if (subVecRe.test(line)) {
-    tracking.usedClasses.add('subVec');
-    line = line.replace(new RegExp(`([\\w.!()]+\\.(?:${VEC_METHODS})\\(\\))\\s*-\\s*([\\w.!()]+\\.(?:${VEC_METHODS})\\(\\))`, 'g'), 'subVec($1, $2)');
-  }
 
   // Class instantiation → new ClassName()
   for (const cls of Object.keys(CLASS_MAP)) {
@@ -837,18 +683,18 @@ function convertLine(rawLine, tracking, declaredVars) {
     }
   }
 
+  // Convert Python tuples to arrays in value positions: key: (a, b) → key: [a, b]
+  line = line.replace(/([=:])\s*\(([^()]*,[^()]*)\)/g, (match, sep, inner, offset) => {
+    // Skip comparison operators (==, !=, <=, >=)
+    if (sep === '=' && offset > 0 && /[=!<>]/.test(line[offset - 1])) return match;
+    return `${sep} [${inner}]`;
+  });
+
   // Constructor args → options object (uses findMatchingParen for accuracy)
   line = convertConstructorArgs(line);
 
   // Method call kwargs → options object
   line = convertMethodCallArgs(line);
-
-  // Merge scene.play() kwargs into animation constructors
-  // Python: self.play(Anim(args), run_time=2) → TS: scene.play(new Anim(args, {duration: 2}))
-  line = mergePlayOptions(line);
-
-  // Fix setColor kwargs: .setColor({ color: X }) → .setColor(X)
-  line = line.replace(/\.setColor\(\s*\{\s*color:\s*([^}]+)\}\s*\)/g, '.setColor($1)');
 
   // GREY → GRAY
   line = line.replace(/\bGREY\b/g, 'GRAY');
@@ -877,15 +723,23 @@ function convertLine(rawLine, tracking, declaredVars) {
   line = line.replace(/^(\s*)(if|else if)\s+(.+?)\s*\{/g, '$1$2 ($3) {');
   line = line.replace(/^(\s*)while\s+(.+?)\s*\{/g, '$1while ($2) {');
 
-  // Variable declarations: first assignment → const
+  // Variable declarations: first assignment → const, snake_case → camelCase
   const varMatch = line.match(/^(\s*)([a-zA-Z_]\w*)\s*=\s*(.+)/);
   if (varMatch) {
     const [, indent, varName, value] = varMatch;
     if (!/\b(const|let|var)\s/.test(line) &&
         !/^\s*(for|if|while|return|export)\b/.test(line.trim()) &&
-        !declaredVars.has(varName)) {
-      declaredVars.add(varName);
-      line = `${indent}const ${varName} = ${value}`;
+        !varRenames.has(varName)) {
+      const camelName = snakeToCamel(varName);
+      varRenames.set(varName, camelName);
+      line = `${indent}const ${camelName} = ${value}`;
+    }
+  }
+
+  // Rename snake_case variable references to camelCase
+  for (const [original, camel] of varRenames) {
+    if (original !== camel) {
+      line = line.replace(new RegExp(`\\b${original}\\b`, 'g'), camel);
     }
   }
 
@@ -895,78 +749,6 @@ function convertLine(rawLine, tracking, declaredVars) {
   }
 
   return line;
-}
-
-// ─── Strip a function wrapper using paren matching ───────────────────
-function stripFunctionWrapper(line, funcName) {
-  const re = new RegExp(`\\b${funcName.replace('.', '\\.')}\\s*\\(`);
-  let m;
-  while ((m = re.exec(line)) !== null) {
-    const openIdx = m.index + m[0].length - 1;
-    const closeIdx = findMatchingParen(line, openIdx);
-    if (closeIdx === -1) break;
-    const inner = line.slice(openIdx + 1, closeIdx).trim();
-    line = line.slice(0, m.index) + inner + line.slice(closeIdx + 1);
-  }
-  return line;
-}
-
-// ─── Convert list comprehensions (handles nesting) ───────────────────
-function convertListComprehensions(line) {
-  // Repeatedly convert innermost list comprehension until none remain.
-  // An innermost comprehension has no [ ] inside its expr part.
-  const MAX_ITERS = 10;
-  for (let iter = 0; iter < MAX_ITERS; iter++) {
-    // Find a bracket-delimited comprehension: [ expr for var in iterable ]
-    // We need to find matching [ ] pairs that contain "for ... in ..."
-    let found = false;
-    // Scan for '[' chars that start a comprehension
-    for (let i = 0; i < line.length; i++) {
-      if (line[i] !== '[') continue;
-      const closeIdx = findMatchingParen(line, i);
-      if (closeIdx === -1) continue;
-      const inner = line.slice(i + 1, closeIdx);
-      // Match: expr for var in iterable (at top level of this bracket)
-      const forMatch = matchComprehension(inner);
-      if (!forMatch) continue;
-      const { expr, varName, iterable } = forMatch;
-      const replacement = `${iterable.trim()}.map((${varName}) => ${expr.trim()})`;
-      line = line.slice(0, i) + replacement + line.slice(closeIdx + 1);
-      found = true;
-      break; // restart scan since indices changed
-    }
-    if (!found) break;
-  }
-  return line;
-}
-
-// Match "expr for var in iterable" at the top nesting level of a string.
-// Returns { expr, varName, iterable } or null.
-function matchComprehension(s) {
-  // Find ' for ' at top level (not inside parens/brackets/braces)
-  let depth = 0;
-  let inStr = false;
-  let strChar = '';
-  for (let i = 0; i < s.length - 4; i++) {
-    const ch = s[i];
-    if (inStr) {
-      if (ch === strChar && s[i - 1] !== '\\') inStr = false;
-      continue;
-    }
-    if (ch === '"' || ch === "'" || ch === '`') { inStr = true; strChar = ch; continue; }
-    if (ch === '(' || ch === '[' || ch === '{') { depth++; continue; }
-    if (ch === ')' || ch === ']' || ch === '}') { depth--; continue; }
-    if (depth === 0 && s.slice(i).match(/^\s+for\s+/)) {
-      const expr = s.slice(0, i);
-      const rest = s.slice(i).replace(/^\s+for\s+/, '');
-      // rest should be: varName in iterable
-      const inMatch = rest.match(/^(\w+)\s+in\s+([\s\S]+)$/);
-      if (inMatch) {
-        return { expr, varName: inMatch[1], iterable: inMatch[2] };
-      }
-    }
-  }
-  return null;
 }
 
 // ─── Convert constructor args to options object ──────────────────────
@@ -990,11 +772,7 @@ function convertConstructorArgs(line) {
     if (args.trim().startsWith('{')) continue;
 
     // For Text/MathTex classes, always wrap positional args even without kwargs
-    const needsWrapping = ['Text', 'Title', 'Paragraph', 'MarkupText', 'MathTex', 'Tex',
-      'Dot', 'SmallDot', 'LargeDot',
-      'Line', 'Arrow', 'DoubleArrow', 'Vector', 'Line3D', 'Arrow3D',
-      'ImageMobject', 'MoveAlongPath',
-      'Angle', 'RightAngle'].includes(className);
+    const needsWrapping = ['Text', 'Title', 'Paragraph', 'MarkupText', 'MathTex', 'Tex'].includes(className);
     if (!args.includes(':') && !needsWrapping) continue;
 
     const parts = smartSplit(args);
@@ -1013,14 +791,7 @@ function convertConstructorArgs(line) {
 
     let newArgs;
 
-    if (className === 'ImageMobject') {
-      if (positional.length > 0) {
-        const kw = kwargs.length > 0 ? ', ' + kwargs.join(', ') : '';
-        newArgs = `{ pixelData: ${positional[0]}${kw} }`;
-      } else {
-        newArgs = `{ ${kwargs.join(', ')} }`;
-      }
-    } else if (className === 'Text' || className === 'Title' || className === 'Paragraph' || className === 'MarkupText') {
+    if (className === 'Text' || className === 'Title' || className === 'Paragraph' || className === 'MarkupText') {
       if (positional.length > 0) {
         const kw = kwargs.length > 0 ? ', ' + kwargs.join(', ') : '';
         newArgs = `{ text: ${positional[0]}${kw} }`;
@@ -1028,29 +799,11 @@ function convertConstructorArgs(line) {
         newArgs = `{ ${kwargs.join(', ')} }`;
       }
     } else if (className === 'MathTex' || className === 'Tex') {
-      // For MathTex/Tex, fill_color maps to 'color' not 'fillColor'
-      const fixedKwargs = kwargs.map(k => k.replace(/^fillColor:/, 'color:'));
-      if (positional.length > 0) {
-        const kw = fixedKwargs.length > 0 ? ', ' + fixedKwargs.join(', ') : '';
-        newArgs = `{ latex: ${positional[0]}${kw} }`;
-      } else {
-        newArgs = `{ ${fixedKwargs.join(', ')} }`;
-      }
-    } else if (className === 'Dot' || className === 'SmallDot' || className === 'LargeDot') {
       if (positional.length > 0) {
         const kw = kwargs.length > 0 ? ', ' + kwargs.join(', ') : '';
-        newArgs = `{ point: ${positional[0]}${kw} }`;
+        newArgs = `{ latex: ${positional[0]}${kw} }`;
       } else {
         newArgs = `{ ${kwargs.join(', ')} }`;
-      }
-    } else if (className === 'Angle' || className === 'RightAngle') {
-      // Angle(line1, line2, kwargs) → new Angle({ line1: line1, line2: line2 }, { kwargs })
-      if (positional.length >= 2) {
-        const inputObj = `{ line1: ${positional[0]}, line2: ${positional[1]} }`;
-        const opts = kwargs.length > 0 ? `, { ${kwargs.join(', ')} }` : '';
-        newArgs = `${inputObj}${opts}`;
-      } else {
-        continue;
       }
     } else if (className === 'Line' || className === 'Arrow' || className === 'DoubleArrow' ||
                className === 'Line3D' || className === 'Arrow3D') {
@@ -1065,24 +818,13 @@ function convertConstructorArgs(line) {
       } else {
         newArgs = `{ ${kwargs.join(', ')} }`;
       }
-    } else if (['Intersection', 'Union', 'Difference', 'Exclusion',
-                'Transform', 'ReplacementTransform', 'TransformFromCopy',
+    } else if (['Transform', 'ReplacementTransform', 'TransformFromCopy',
                 'ClockwiseTransform', 'CounterclockwiseTransform'].includes(className)) {
       if (positional.length >= 2) {
         const opts = kwargs.length > 0 ? `, { ${kwargs.join(', ')} }` : '';
         newArgs = `${positional[0]}, ${positional[1]}${opts}`;
       } else {
         continue; // can't convert
-      }
-    } else if (className === 'MoveAlongPath') {
-      // MoveAlongPath(mobject, path) → new MoveAlongPath(mobject, { path: pathMobject, ...opts })
-      if (positional.length >= 2) {
-        const kw = kwargs.length > 0 ? ', ' + kwargs.join(', ') : '';
-        newArgs = `${positional[0]}, { path: ${positional[1]}${kw} }`;
-      } else if (positional.length === 1 && kwargs.length > 0) {
-        newArgs = `${positional[0]}, { ${kwargs.join(', ')} }`;
-      } else {
-        continue;
       }
     } else if (ANIMATION_CLASSES.has(className)) {
       if (positional.length > 0) {
@@ -1119,15 +861,9 @@ function convertMethodCallArgs(line) {
     matches.push({ method: m[1], parenIndex });
   }
 
-  // Methods where kwargs should be inlined as positional args, not wrapped in {}
-  // These methods take positional parameters, not an options object
-  const POSITIONAL_KWARGS_METHODS = new Set([
-    'arrange', 'setFill', 'setStroke', 'nextTo',
-  ]);
-
   // Process right-to-left
   for (let i = matches.length - 1; i >= 0; i--) {
-    const { method, parenIndex } = matches[i];
+    const { parenIndex } = matches[i];
     const closeIndex = findMatchingParen(line, parenIndex);
     if (closeIndex === -1) continue;
 
@@ -1150,77 +886,12 @@ function convertMethodCallArgs(line) {
 
     if (kwargs.length === 0) continue;
 
-    // For methods that take positional args, inline kwargs as values (strip key names)
-    if (POSITIONAL_KWARGS_METHODS.has(method)) {
-      const allArgs = [...positional, ...kwargs.map(kw => kw.replace(/^\w+:\s*/, ''))];
-      const newArgs = allArgs.join(', ');
-      line = line.slice(0, parenIndex + 1) + newArgs + line.slice(closeIndex);
-    } else {
-      const posStr = positional.length > 0 ? positional.join(', ') + ', ' : '';
-      const newArgs = `${posStr}{ ${kwargs.join(', ')} }`;
-      line = line.slice(0, parenIndex + 1) + newArgs + line.slice(closeIndex);
-    }
+    const posStr = positional.length > 0 ? positional.join(', ') + ', ' : '';
+    const newArgs = `${posStr}{ ${kwargs.join(', ')} }`;
+    line = line.slice(0, parenIndex + 1) + newArgs + line.slice(closeIndex);
   }
 
   return line;
-}
-
-// ─── Merge scene.play() trailing options into animation constructors ─
-// Python: self.play(Anim(x), run_time=2) becomes TS: scene.play(new Anim(x, {duration: 2}))
-// because scene.play() only takes Animation[] — no options parameter.
-function mergePlayOptions(line) {
-  const playIdx = line.indexOf('scene.play(');
-  if (playIdx === -1) return line;
-
-  const openParen = playIdx + 'scene.play'.length;
-  const closeParen = findMatchingParen(line, openParen);
-  if (closeParen === -1) return line;
-
-  const playArgs = line.slice(openParen + 1, closeParen);
-  const parts = smartSplit(playArgs);
-  if (parts.length < 2) return line;
-
-  // Check if last part is a standalone options object { ... }
-  const lastPart = parts[parts.length - 1].trim();
-  if (!lastPart.startsWith('{') || !lastPart.endsWith('}')) return line;
-  if (/^new\s/.test(lastPart)) return line;
-
-  const optionsContent = lastPart.slice(1, -1).trim();
-  if (!optionsContent) return line;
-
-  // Merge options into each animation constructor
-  const animParts = parts.slice(0, -1);
-  const mergedParts = animParts.map(part => {
-    part = part.trim();
-    if (!part.startsWith('new ')) return part;
-
-    const firstParen = part.indexOf('(');
-    if (firstParen === -1) return part;
-    const lastClose = findMatchingParen(part, firstParen);
-    if (lastClose === -1 || lastClose !== part.length - 1) return part;
-
-    const ctorArgs = part.slice(firstParen + 1, lastClose);
-    const ctorParts = smartSplit(ctorArgs);
-
-    if (ctorParts.length > 0) {
-      const lastCtorPart = ctorParts[ctorParts.length - 1].trim();
-      if (lastCtorPart.startsWith('{') && lastCtorPart.endsWith('}')) {
-        // Merge into existing options object
-        const existing = lastCtorPart.slice(1, -1).trim();
-        const merged = existing ? `{ ${existing}, ${optionsContent} }` : `{ ${optionsContent} }`;
-        ctorParts[ctorParts.length - 1] = merged;
-        return part.slice(0, firstParen + 1) + ctorParts.join(', ') + ')';
-      }
-    }
-
-    // No existing options — add one
-    if (ctorArgs.trim()) {
-      return part.slice(0, firstParen + 1) + ctorArgs + ', { ' + optionsContent + ' })';
-    }
-    return part.slice(0, firstParen + 1) + '{ ' + optionsContent + ' })';
-  });
-
-  return line.slice(0, openParen + 1) + mergedParts.join(', ') + line.slice(closeParen);
 }
 
 // ─── Smart split by commas (respects nesting) ────────────────────────

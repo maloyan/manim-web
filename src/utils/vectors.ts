@@ -46,3 +46,19 @@ export function addVec(...vecs: Vector3Tuple[]): Vector3Tuple {
   }
   return [x, y, z];
 }
+
+/**
+ * Subtract one vector from another (a - b).
+ *
+ * @param a - The vector to subtract from
+ * @param b - The vector to subtract
+ * @returns Difference vector as [a_x - b_x, a_y - b_y, a_z - b_z]
+ *
+ * @example
+ * ```ts
+ * subVec([4, 3, 0], [1, 0, 0])  // [3, 3, 0]
+ * ```
+ */
+export function subVec(a: Vector3Tuple, b: Vector3Tuple): Vector3Tuple {
+  return [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+}

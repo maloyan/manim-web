@@ -156,18 +156,16 @@ export class VGroup extends VMobject {
 
   /**
    * Shift all children by the given delta.
+   * Only shifts children's internal positions, not the group's own position,
+   * to avoid double-counting in THREE.js hierarchy.
    * @param delta - Translation vector [x, y, z]
    * @returns this for chaining
    */
   override shift(delta: Vector3Tuple): this {
-    // Apply to group's own position
-    super.shift(delta);
-
-    // Also shift children in local space
     for (const child of this.children) {
       child.shift(delta);
     }
-
+    this._markDirty();
     return this;
   }
 
@@ -220,17 +218,29 @@ export class VGroup extends VMobject {
   }
 
   /**
-   * Scale all children.
+   * Scale all children about the group's center.
+   * Each child's size is scaled, and their positions are repositioned
+   * relative to the group center — matching Manim Python behavior.
+   * Does not change the group's own scaleVector.
    * @param factor - Scale factor (number for uniform, tuple for non-uniform)
    * @returns this for chaining
    */
   override scale(factor: number | Vector3Tuple): this {
-    // Apply to group's own scale
-    super.scale(factor);
+    const center = this.getCenter();
+    const fx = typeof factor === 'number' ? factor : factor[0];
+    const fy = typeof factor === 'number' ? factor : factor[1];
+    const fz = typeof factor === 'number' ? factor : factor[2];
 
-    // Also scale each child
     for (const child of this.children) {
+      const cc = child.getCenter();
+      // Scale child's own size (about its own center)
       child.scale(factor);
+      // Reposition child about the group center
+      child.moveTo([
+        center[0] + (cc[0] - center[0]) * fx,
+        center[1] + (cc[1] - center[1]) * fy,
+        center[2] + (cc[2] - center[2]) * fz,
+      ]);
     }
 
     return this;

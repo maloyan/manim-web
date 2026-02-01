@@ -556,17 +556,15 @@ export abstract class Mobject {
   }
 
   /**
-   * Replace this mobject's transform, style, and geometry with that of another.
-   * Preserves identity (updaters, scene membership).
-   * Matches Manim Python's become() behavior.
-   * @param other - The mobject to copy from
+   * Replace this mobject's visual properties with those of another mobject.
+   * Preserves identity (updaters, scene membership) but copies appearance.
+   * @param other - The mobject to copy appearance from
    * @returns this for chaining
    */
   become(other: Mobject): this {
     this.position.copy(other.position);
     this.rotation.copy(other.rotation);
     this.scaleVector.copy(other.scaleVector);
-
     this.color = other.color;
     this._opacity = other._opacity;
     this.strokeWidth = other.strokeWidth;

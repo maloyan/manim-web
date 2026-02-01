@@ -148,6 +148,34 @@ export class Circle extends VMobject {
   }
 
   /**
+   * Scale the circle by changing its actual radius (not scaleVector).
+   * Scales about the circle's own center so the center stays put.
+   */
+  override scale(factor: number | Vector3Tuple): this {
+    if (typeof factor === 'number') {
+      this._radius *= factor;
+      this._generatePoints();
+      this._markDirty();
+      return this;
+    }
+    // For non-uniform scaling, fall back to base
+    return super.scale(factor);
+  }
+
+  /**
+   * Shift the circle by updating its center point and regenerating geometry.
+   * Does not change Mobject.position to avoid double-counting in THREE.js hierarchy.
+   */
+  override shift(delta: Vector3Tuple): this {
+    this._centerPoint[0] += delta[0];
+    this._centerPoint[1] += delta[1];
+    this._centerPoint[2] += delta[2];
+    this._generatePoints();
+    this._markDirty();
+    return this;
+  }
+
+  /**
    * Get the circumference of the circle
    */
   getCircumference(): number {
