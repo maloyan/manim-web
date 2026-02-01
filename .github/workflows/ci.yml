@@ -15,8 +15,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm install
+      - run: npm install --no-package-lock
       - name: Lint
         run: npx eslint src/ || true
       - name: Typecheck
