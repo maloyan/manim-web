@@ -677,6 +677,10 @@ export class Scene {
         this._currentTime = this._timeline.getCurrentTime();
       }
 
+      // Update camera frame updaters AFTER animations so camera
+      // updaters see the latest positions set by MoveAlongPath etc.
+      this._camera.updateFrame(dt);
+
       // Render frame
       this._render();
 
@@ -707,6 +711,7 @@ export class Scene {
           }
           this._timeline.update(dt);
           this._currentTime = this._timeline.getCurrentTime();
+          this._camera.updateFrame(dt);
           this._render();
           this._checkFinished();
         }

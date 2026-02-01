@@ -74,6 +74,9 @@ export class MoveAlongPath extends Animation {
   /** Initial rotation */
   private _initialRotation: THREE.Euler = new THREE.Euler();
 
+  /** Offset from mobject.position to mobject.getCenter() (accounts for geometry offset, e.g. Dot) */
+  private _centerOffset: number[] = [0, 0, 0];
+
   constructor(mobject: Mobject, options: MoveAlongPathOptions) {
     super(mobject, options);
     this.path = options.path;
@@ -101,6 +104,17 @@ export class MoveAlongPath extends Animation {
 
     // Store initial rotation
     this._initialRotation.copy(this.mobject.rotation);
+
+    // Calculate offset between mobject's center and its position.
+    // Mobjects like Dot have internal geometry offset from their position,
+    // so getCenter() != position. We need this offset to correctly set position
+    // such that the mobject's center lands on the path point.
+    const center = this.mobject.getCenter();
+    this._centerOffset = [
+      center[0] - this.mobject.position.x,
+      center[1] - this.mobject.position.y,
+      center[2] - this.mobject.position.z,
+    ];
   }
 
   /**
@@ -143,8 +157,14 @@ export class MoveAlongPath extends Animation {
   interpolate(alpha: number): void {
     const { position, tangent } = this._getPositionAndTangent(alpha);
 
-    // Set position
-    this.mobject.position.set(position[0], position[1], position[2]);
+    // Set position, compensating for the mobject's internal center offset.
+    // For a Dot, getCenter() = _point + position, so we need
+    // position = desired_point - _point = desired_point - centerOffset.
+    this.mobject.position.set(
+      position[0] - this._centerOffset[0],
+      position[1] - this._centerOffset[1],
+      position[2] - this._centerOffset[2],
+    );
 
     // Optionally set rotation to tangent direction
     if (this.rotateAlongPath) {

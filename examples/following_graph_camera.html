@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Following Graph Camera</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #ff6b6b; }
+    button:disabled { background: #666; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="playBtn">Play Animation</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <script type="module">
+    // Converted from Python Manim → ManimWeb TypeScript
+    // Original: FollowingGraphCamera (MovingCameraScene)
+    import {
+      Scene,
+      Axes,
+      Dot,
+      MoveAlongPath,
+      MoveToTarget,
+      Restore,
+      BLUE,
+      ORANGE,
+      WHITE,
+      BLACK,
+      linear
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK
+    });
+
+    let isAnimating = false;
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      document.getElementById('playBtn').disabled = true;
+
+      scene.clear();
+
+      // Save camera frame state
+      scene.camera.frame.saveState();
+
+      // Create the axes and the curve
+      const ax = new Axes({ xRange: [-1, 10], yRange: [-1, 10] });
+      const graph = ax.plot((x) => Math.sin(x), { color: BLUE, xRange: [0, 3 * Math.PI] });
+
+      // Create dots based on the graph
+      const movingDot = new Dot({ point: ax.i2gp(graph.tMin, graph), color: ORANGE });
+      const dot1 = new Dot({ point: ax.i2gp(graph.tMin, graph) });
+      const dot2 = new Dot({ point: ax.i2gp(graph.tMax, graph) });
+
+      scene.add(ax, graph, dot1, dot2, movingDot);
+
+      // Zoom camera to 0.5x and center on moving dot
+      scene.camera.frame.generateTarget();
+      scene.camera.frame.targetCopy.scale(0.5);
+      scene.camera.frame.targetCopy.moveTo(movingDot.getCenter());
+      await scene.play(new MoveToTarget(scene.camera.frame));
+
+      // Add updater so camera follows the moving dot
+      const updateCurve = (mob) => {
+        mob.moveTo(movingDot.getCenter());
+      };
+      scene.camera.frame.addUpdater(updateCurve);
+
+      // Animate dot moving along the graph path
+      await scene.play(new MoveAlongPath(movingDot, { path: graph, rateFunc: linear }));
+
+      // Remove updater and restore camera to original state
+      scene.camera.frame.removeUpdater(updateCurve);
+      await scene.play(new Restore(scene.camera.frame));
+
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+    });
+  </script>
+</body>
+</html>

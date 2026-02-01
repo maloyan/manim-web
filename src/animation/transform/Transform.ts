@@ -193,6 +193,10 @@ export class Transform extends Animation {
       this._startRotation.z + (this._targetRotation.z - this._startRotation.z) * alpha,
     );
     vmobject.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
+
+    // Notify the mobject that its transform changed (needed for
+    // Camera2DFrame to sync position/scale back to the Camera2D).
+    vmobject._markDirty();
   }
 
   /**
@@ -245,6 +249,7 @@ export class Transform extends Animation {
     vmobject.position.copy(this._targetPosition);
     vmobject.rotation.copy(this._targetRotation);
     vmobject.scaleVector.copy(this._targetScale);
+    vmobject._markDirty();
 
     super.finish();
   }

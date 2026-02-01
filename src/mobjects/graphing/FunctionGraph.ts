@@ -286,6 +286,16 @@ export class FunctionGraph extends VMobject {
     return [...this._xRange];
   }
 
+  /** Minimum x value (alias for Python Manim's graph.t_min). */
+  get tMin(): number {
+    return this._xRange[0];
+  }
+
+  /** Maximum x value (alias for Python Manim's graph.t_max). */
+  get tMax(): number {
+    return this._xRange[1];
+  }
+
   /**
    * Set the x range
    */

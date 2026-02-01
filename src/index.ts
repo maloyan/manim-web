@@ -47,6 +47,7 @@ export {
   type SceneSnapshot,
 } from './core/StateManager';
 export { Camera2D, type CameraOptions, Camera3D, type Camera3DOptions } from './core/Camera';
+export { Camera2DFrame } from './core/Camera2DFrame';
 export {
   CameraFrame,
   CameraAnimateProxy,
@@ -411,6 +412,7 @@ export {
 } from './animation/transform';
 export { ApplyPointwiseFunction, applyPointwiseFunction } from './animation/transform';
 export { FadeToColor, fadeToColor, type FadeToColorOptions } from './animation/transform';
+export { Restore, restore } from './animation/transform';
 
 // Movement animations
 export {

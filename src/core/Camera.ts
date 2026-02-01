@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { Camera2DFrame } from './Camera2DFrame';
 
 /**
  * Options for configuring a Camera3D.
@@ -179,6 +180,7 @@ export class Camera2D {
   private _camera: THREE.OrthographicCamera;
   private _frameWidth: number;
   private _frameHeight: number;
+  private _frame: Camera2DFrame | null = null;
 
   /**
    * Create a new 2D camera.
@@ -274,6 +276,29 @@ export class Camera2D {
     // Keep frame height, adjust width to match aspect ratio
     this._frameWidth = this._frameHeight * aspectRatio;
     this._updateProjection();
+  }
+
+  /**
+   * Lazy-created Camera2DFrame for Manim-style camera.frame API.
+   * The frame is a VMobject whose position and scale drive the camera,
+   * enabling animations like Restore, MoveToTarget, and updaters.
+   */
+  get frame(): Camera2DFrame {
+    if (!this._frame) {
+      this._frame = new Camera2DFrame(this);
+    }
+    return this._frame;
+  }
+
+  /**
+   * Run updaters on the camera frame (if it exists).
+   * Called by Scene after the timeline update so camera updaters
+   * see the latest positions set by animations.
+   */
+  updateFrame(dt: number): void {
+    if (this._frame) {
+      this._frame.update(dt);
+    }
   }
 
   /**

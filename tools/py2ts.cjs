@@ -16,7 +16,7 @@ const path = require('path');
 
 // ─── Snake → camelCase ───────────────────────────────────────────────
 function snakeToCamel(s) {
-  return s.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+  return s.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase());
 }
 
 // ─── Known Manim class name mapping (Python → TS) ───────────────────
@@ -81,6 +81,9 @@ const CLASS_MAP = {
   'ParametricFunction': 'ParametricFunction',
   'BarChart': 'BarChart',
   'ComplexPlane': 'ComplexPlane',
+
+  // Camera
+  'MovingCameraScene': 'Scene',
 
   // 3D
   'ThreeDScene': 'Scene',
@@ -656,6 +659,23 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   line = line.replace(/self\.clear\s*\(/g, 'scene.clear(');
   line = line.replace(/self\.camera/g, 'scene.camera');
 
+  // Camera frame animate chain: scene.camera.frame.animate.scale(X).move_to(Y)
+  // → multi-line: generateTarget + scale + moveTo + MoveToTarget
+  line = line.replace(
+    /await scene\.play\(\s*scene\.camera\.frame\.animate\.scale\s*\(([^)]+)\)\.(?:move_to|moveTo)\s*\(([^)]+)\)\s*\)/g,
+    (_, scaleFactor, target) => {
+      tracking.usedClasses.add('MoveToTarget');
+      const sf = scaleFactor.trim();
+      const tgt = target.trim();
+      return [
+        'scene.camera.frame.generateTarget()',
+        `  scene.camera.frame.targetCopy!.scale(${sf})`,
+        `  scene.camera.frame.targetCopy!.moveTo(${tgt}.getCenter())`,
+        `  await scene.play(new MoveToTarget(scene.camera.frame))`
+      ].join(';\n');
+    }
+  );
+
   // .animate.shift(direction) → new Shift(obj, { direction: direction })
   line = line.replace(/(\w+)\.animate\.shift\s*\(([^)]+)\)/g, (_, obj, args) => {
     tracking.usedClasses.add('Shift');
@@ -970,8 +990,9 @@ function convertConstructorArgs(line) {
 
     // Classes that always need their positional args wrapped into an options object
     const needsWrapping = ['Text', 'Title', 'Paragraph', 'MarkupText', 'MathTex', 'Tex'].includes(className);
+    const needsDotWrapping = ['Dot', 'SmallDot', 'LargeDot'].includes(className);
     const needsPositionalWrapping = ['Line', 'Arrow', 'DoubleArrow', 'Line3D', 'Arrow3D', 'Vector'].includes(className);
-    if (!args.includes(':') && !needsWrapping && !needsPositionalWrapping) continue;
+    if (!args.includes(':') && !needsWrapping && !needsPositionalWrapping && !needsDotWrapping) continue;
 
     const parts = smartSplit(args);
     const positional = [];
@@ -985,11 +1006,32 @@ function convertConstructorArgs(line) {
       }
     }
 
-    if (kwargs.length === 0 && !needsWrapping && !needsPositionalWrapping) continue;
+    if (kwargs.length === 0 && !needsWrapping && !needsPositionalWrapping && !needsDotWrapping) continue;
 
     let newArgs;
 
-    if (className === 'Text' || className === 'Title' || className === 'Paragraph' || className === 'MarkupText') {
+    if (needsDotWrapping) {
+      // Dot(point, color=...) → Dot({ point: point, color: ... })
+      if (positional.length > 0) {
+        const kw = kwargs.length > 0 ? ', ' + kwargs.join(', ') : '';
+        newArgs = `{ point: ${positional[0]}${kw} }`;
+      } else if (kwargs.length > 0) {
+        newArgs = `{ ${kwargs.join(', ')} }`;
+      } else {
+        continue;
+      }
+    } else if (className === 'MoveAlongPath') {
+      // MoveAlongPath(mobject, path, rate_func=...) → MoveAlongPath(mobject, { path: path, ... })
+      if (positional.length >= 2) {
+        const opts = [{ key: 'path', val: positional[1] }];
+        for (const k of kwargs) opts.push({ key: null, val: k });
+        newArgs = `${positional[0]}, { ${opts.map(o => o.key ? `${o.key}: ${o.val}` : o.val).join(', ')} }`;
+      } else if (positional.length === 1 && kwargs.length > 0) {
+        newArgs = `${positional[0]}, { ${kwargs.join(', ')} }`;
+      } else {
+        continue;
+      }
+    } else if (className === 'Text' || className === 'Title' || className === 'Paragraph' || className === 'MarkupText') {
       if (positional.length > 0) {
         const kw = kwargs.length > 0 ? ', ' + kwargs.join(', ') : '';
         newArgs = `{ text: ${positional[0]}${kw} }`;

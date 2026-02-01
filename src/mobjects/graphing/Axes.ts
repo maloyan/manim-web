@@ -173,6 +173,11 @@ export class Axes extends Group {
     const yEnd = this._yLength / 2;
     const tipWidth = this._tipLength * 0.6;
 
+    // The axes are offset so they intersect at the graph origin (0,0).
+    // Tips must be placed at the same offsets so they attach to the axis endpoints.
+    const xAxisY = this._numberToVisualY(0); // y-offset of the x-axis line
+    const yAxisX = this._numberToVisualX(0); // x-offset of the y-axis line
+
     // Helper to create a triangular tip as a filled VMobject
     const createTip = (tipPoint: number[], baseLeft: number[], baseRight: number[]): VMobject => {
       const tip = new VMobject();
@@ -198,19 +203,19 @@ export class Axes extends Group {
       return tip;
     };
 
-    // X-axis tip (pointing right) — base starts at axis end so it doesn't overlap the last tick
+    // X-axis tip (pointing right) — positioned at the x-axis's vertical offset
     this._xTip = createTip(
-      [xEnd + this._tipLength, 0, 0],
-      [xEnd, tipWidth, 0],
-      [xEnd, -tipWidth, 0]
+      [xEnd + this._tipLength, xAxisY, 0],
+      [xEnd, xAxisY + tipWidth, 0],
+      [xEnd, xAxisY - tipWidth, 0]
     );
     this.add(this._xTip);
 
-    // Y-axis tip (pointing up) — base starts at axis end so it doesn't overlap the last tick
+    // Y-axis tip (pointing up) — positioned at the y-axis's horizontal offset
     this._yTip = createTip(
-      [0, yEnd + this._tipLength, 0],
-      [-tipWidth, yEnd, 0],
-      [tipWidth, yEnd, 0]
+      [yAxisX, yEnd + this._tipLength, 0],
+      [yAxisX - tipWidth, yEnd, 0],
+      [yAxisX + tipWidth, yEnd, 0]
     );
     this.add(this._yTip);
 
