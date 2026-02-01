@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Heat Diagram Plot</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #ff6b6b; }
+    button:disabled { background: #666; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="playBtn">Show Plot</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <script type="module">
+    // Converted from Python Manim → ManimWeb TypeScript
+    // Original: HeatDiagramPlot example from Manim Community docs
+
+    import {
+      Scene,
+      Axes,
+      Tex,
+      BLACK
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK
+    });
+
+    let isAnimating = false;
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      document.getElementById('playBtn').disabled = true;
+
+      scene.clear();
+
+      const ax = new Axes({
+        xRange: [0, 40, 5],
+        yRange: [-8, 32, 5],
+        xLength: 9,
+        yLength: 6,
+        xAxisConfig: { numbersToInclude: [0, 5, 10, 15, 20, 25, 30, 35] },
+        yAxisConfig: { numbersToInclude: [-5, 0, 5, 10, 15, 20, 25, 30] },
+        tips: false,
+      });
+
+      // Create Tex labels and wait for rendering
+      const xLabel = new Tex({ latex: "$\\Delta Q$" });
+      const yLabel = new Tex({ latex: "T[$^\\circ C$]" });
+      await xLabel.waitForRender();
+      await yLabel.waitForRender();
+
+      const labels = ax.getAxisLabels({ xLabel, yLabel });
+
+      const xVals = [0, 8, 38, 39];
+      const yVals = [20, 0, 0, -5];
+      const graph = ax.plotLineGraph({ xValues: xVals, yValues: yVals });
+
+      scene.add(ax, labels, graph);
+
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+    });
+
+    // Auto-play on load
+    document.getElementById('playBtn').click();
+  </script>
+</body>
+</html>
