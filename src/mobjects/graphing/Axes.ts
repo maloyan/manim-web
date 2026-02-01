@@ -2,11 +2,13 @@ import { Group } from '../../core/Group';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
+import { VDict } from '../../core/VDict';
 import { NumberLine, NumberLineOptions } from './NumberLine';
 import { FunctionGraph, FunctionGraphOptions } from './FunctionGraph';
 import { MathTex } from '../../mobjects/text/MathTex';
 import { Line } from '../../mobjects/geometry/Line';
 import { DashedLine } from '../../mobjects/geometry/DashedLine';
+import { Dot } from '../../mobjects/geometry/Dot';
 
 /**
  * Options for creating Axes
@@ -129,6 +131,24 @@ export class Axes extends Group {
     };
     this.yAxis = new NumberLine(yConfig);
     this.yAxis.rotate(Math.PI / 2);
+
+    // Counter-rotate y-axis number labels so text stays horizontal,
+    // and reposition them to the left of the axis
+    for (const label of this.yAxis.getNumberLabels()) {
+      label.rotate(-Math.PI / 2);
+      // After counter-rotation, the label is horizontal but its position
+      // (which was set relative to a horizontal number line) has been rotated.
+      // The label's local position was (x, yBelow, 0) in the unrotated line.
+      // After the line rotates 90° CCW, that becomes (-yBelow, x, 0).
+      // We need the label to sit to the left of the tick at visual y = x.
+      // Current position after rotation: (-yBelow, x, 0) — we want (-offset, x, 0)
+      // where offset accounts for label width.
+      const curX = label.position.x;
+      const curY = label.position.y;
+      // curX is the negated below-offset; curY is the original x-position on the line
+      // Place label to the left of the axis with consistent offset
+      label.position.set(-0.45, curY, 0);
+    }
 
     // Position axes so they intersect at the origin (0,0) in graph space
     const xOriginVisual = this._numberToVisualX(0);
@@ -350,32 +370,41 @@ export class Axes extends Group {
 
   /**
    * Get axis labels ("x" and "y" by default).
-   * @param xLabel - LaTeX string for x-axis label. Default: "x"
-   * @param yLabel - LaTeX string for y-axis label. Default: "y"
+   * Labels can be LaTeX strings or pre-built Mobject instances (e.g. Tex, MathTex).
+   * @param xLabel - LaTeX string or Mobject for x-axis label. Default: "x"
+   * @param yLabel - LaTeX string or Mobject for y-axis label. Default: "y"
    * @returns A Group containing the two labels
    */
-  getAxisLabels(xLabelOrOpts?: string | { xLabel?: string; yLabel?: string }, yLabelArg?: string): Group {
-    let xLabel: string;
-    let yLabel: string;
-    if (typeof xLabelOrOpts === 'object' && xLabelOrOpts !== null) {
-      xLabel = xLabelOrOpts.xLabel ?? 'x';
-      yLabel = xLabelOrOpts.yLabel ?? 'y';
+  getAxisLabels(
+    xLabelOrOpts?: string | Mobject | { xLabel?: string | Mobject; yLabel?: string | Mobject },
+    yLabelArg?: string | Mobject
+  ): Group {
+    let xLabelInput: string | Mobject;
+    let yLabelInput: string | Mobject;
+    if (typeof xLabelOrOpts === 'object' && xLabelOrOpts !== null && !(xLabelOrOpts instanceof Mobject)) {
+      xLabelInput = (xLabelOrOpts as { xLabel?: string | Mobject; yLabel?: string | Mobject }).xLabel ?? 'x';
+      yLabelInput = (xLabelOrOpts as { xLabel?: string | Mobject; yLabel?: string | Mobject }).yLabel ?? 'y';
     } else {
-      xLabel = xLabelOrOpts ?? 'x';
-      yLabel = yLabelArg ?? 'y';
+      xLabelInput = xLabelOrOpts ?? 'x';
+      yLabelInput = yLabelArg ?? 'y';
     }
-    const xLabelMob = new MathTex({ latex: xLabel, fontSize: 32, color: '#ffffff' });
-    const yLabelMob = new MathTex({ latex: yLabel, fontSize: 32, color: '#ffffff' });
 
-    // Position x label at the end of x-axis (right end, below axis line)
+    const xLabelMob = xLabelInput instanceof Mobject
+      ? xLabelInput
+      : new MathTex({ latex: xLabelInput, fontSize: 32, color: '#ffffff' });
+    const yLabelMob = yLabelInput instanceof Mobject
+      ? yLabelInput
+      : new MathTex({ latex: yLabelInput, fontSize: 32, color: '#ffffff' });
+
+    // Position x label at the end of x-axis (UR direction from right end, matching Manim)
     const xEnd = this._xLength / 2;
     const xAxisY = this._numberToVisualY(0);
-    xLabelMob.position.set(xEnd + 0.3, xAxisY - 0.35, 0);
+    xLabelMob.position.set(xEnd + 0.5, xAxisY + 0.35, 0);
 
-    // Position y label at the top of y-axis (above axis, to the right of axis line)
+    // Position y label at the top of y-axis (UR direction from top, matching Manim)
     const yAxisX = this._numberToVisualX(0);
     const yEnd = this._yLength / 2;
-    yLabelMob.position.set(yAxisX + 0.35, yEnd + 0.3, 0);
+    yLabelMob.position.set(yAxisX + 0.55, yEnd + 0.35, 0);
 
     const group = new Group();
     group.add(xLabelMob);
@@ -629,6 +658,85 @@ export class Axes extends Group {
 
     area.setPoints3D(bezierPoints);
     return area;
+  }
+
+  /**
+   * Plot a line graph connecting data points with straight line segments.
+   * Returns a VDict with "line_graph" (the connecting line) and
+   * "vertex_dots" (dots at each data point).
+   *
+   * Matches Python Manim's axes.plot_line_graph() API.
+   *
+   * @param options - Line graph options
+   * @returns A VDict with "line_graph" and "vertex_dots" entries
+   */
+  plotLineGraph(options: {
+    xValues: number[];
+    yValues: number[];
+    lineColor?: string;
+    addVertexDots?: boolean;
+    vertexDotRadius?: number;
+    vertexDotStyle?: { color?: string; fillOpacity?: number; strokeWidth?: number; strokeColor?: string };
+    strokeWidth?: number;
+  }): VDict {
+    const {
+      xValues,
+      yValues,
+      lineColor = '#fcff00', // YELLOW_C
+      addVertexDots = true,
+      vertexDotRadius = 0.08,
+      vertexDotStyle = {},
+      strokeWidth = 2,
+    } = options;
+
+    const result = new VDict();
+
+    // Build the connecting line as a VMobject with straight segments
+    if (xValues.length >= 2) {
+      const lineMob = new VMobject();
+      lineMob.color = lineColor;
+      lineMob.fillOpacity = 0;
+      lineMob.strokeWidth = strokeWidth;
+
+      const points: number[][] = [];
+      for (let i = 0; i < xValues.length - 1; i++) {
+        const p0 = this.coordsToPoint(xValues[i], yValues[i]);
+        const p1 = this.coordsToPoint(xValues[i + 1], yValues[i + 1]);
+        const dx = p1[0] - p0[0];
+        const dy = p1[1] - p0[1];
+        const dz = p1[2] - p0[2];
+        if (i === 0) points.push([...p0]);
+        points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
+        points.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+        points.push([...p1]);
+      }
+      lineMob.setPoints3D(points);
+      result.set('line_graph', lineMob);
+    }
+
+    // Build vertex dots (default color is white, matching Manim's Dot default)
+    if (addVertexDots) {
+      const dotsGroup = new VGroup();
+      const dotColor = vertexDotStyle.color ?? '#ffffff';
+      for (let i = 0; i < xValues.length; i++) {
+        const pt = this.coordsToPoint(xValues[i], yValues[i]);
+        const dot = new Dot({
+          point: pt,
+          radius: vertexDotRadius,
+          color: dotColor,
+          fillOpacity: vertexDotStyle.fillOpacity ?? 1,
+          strokeWidth: vertexDotStyle.strokeWidth ?? 0,
+        });
+        if (vertexDotStyle.strokeColor) {
+          dot.color = vertexDotStyle.strokeColor;
+          dot.strokeWidth = vertexDotStyle.strokeWidth ?? 2;
+        }
+        dotsGroup.add(dot);
+      }
+      result.set('vertex_dots', dotsGroup);
+    }
+
+    return result;
   }
 
   private _numberToVisualX(x: number): number {

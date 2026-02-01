@@ -1,6 +1,7 @@
 import { VMobject } from '../../core/VMobject';
-import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Text } from '../../mobjects/text/Text';
+import { MathTex } from '../../mobjects/text/MathTex';
 
 /**
  * Options for creating a NumberLine
@@ -63,7 +64,7 @@ export class NumberLine extends VMobject {
   private _decimalPlaces: number;
   private _numberFontSize: number;
   private _tickMarks: VMobject[];
-  private _numberLabels: Text[];
+  private _numberLabels: Mobject[];
 
   constructor(options: NumberLineOptions = {}) {
     super();
@@ -130,6 +131,8 @@ export class NumberLine extends VMobject {
       const epsilon = step * 0.0001;
       for (let n = min; n <= max + epsilon; n += step) {
         const roundedN = Math.round(n / step) * step;
+        // Skip ticks that fall outside the actual range after rounding
+        if (roundedN < min - epsilon || roundedN > max + epsilon) continue;
         const x = this._numberToX(roundedN);
         const isElongated = elongatedSet.has(Math.round(roundedN * 1e9) / 1e9);
         const ts = isElongated ? elongatedTickSize : this._tickSize;
@@ -166,18 +169,16 @@ export class NumberLine extends VMobject {
         if (n < min - step * 0.01 || n > max + step * 0.01) continue;
         const x = this._numberToX(n);
         const rawText = Number.isInteger(n) ? String(n) : n.toFixed(this._decimalPlaces);
-        // Use proper Unicode minus sign (−) instead of hyphen-minus (-) for negative numbers
-        const labelText = rawText.replace(/^-/, '\u2212');
-        const label = new Text({
-          text: labelText,
+        // Use LaTeX minus sign for negative numbers
+        const labelText = rawText.replace(/^-/, '-');
+        const label = new MathTex({
+          latex: labelText,
           fontSize: this._numberFontSize,
-          fontFamily: 'Times New Roman, serif',
           color: '#ffffff',
-          textAlign: 'center',
         });
         // Position below the tick with enough clearance (account for elongated ticks)
         const ts = elongatedSetForLabels.has(Math.round(n * 1e9) / 1e9) ? elongatedTs : this._tickSize;
-        label.position.set(x, -ts - label.getHeight() * 0.5 - 0.22, 0);
+        label.position.set(x, -ts - 0.35, 0);
         this._numberLabels.push(label);
         this.add(label);
       }
@@ -329,7 +330,7 @@ export class NumberLine extends VMobject {
   /**
    * Get number label mobjects
    */
-  getNumberLabels(): Text[] {
+  getNumberLabels(): Mobject[] {
     return [...this._numberLabels];
   }
 

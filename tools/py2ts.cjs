@@ -240,6 +240,14 @@ const KWARG_MAP = {
   'bar_width': 'barWidth',
   'bar_separation': 'barSeparation',
   'num_decimal_places': 'decimalPlaces',
+  'x_values': 'xValues',
+  'y_values': 'yValues',
+  'line_color': 'lineColor',
+  'add_vertex_dots': 'addVertexDots',
+  'vertex_dot_radius': 'vertexDotRadius',
+  'vertex_dot_style': 'vertexDotStyle',
+  'x_label': 'xLabel',
+  'y_label': 'yLabel',
 };
 
 // ─── Method name remap (snake → camel + special cases) ───────────────
@@ -302,6 +310,7 @@ const METHOD_MAP = {
   'get_area': 'getArea',
   'i2gp': 'i2gp',
   'plot': 'plot',
+  'plot_line_graph': 'plotLineGraph',
   'c2p': 'coordsToPoint',
 };
 
