@@ -1,6 +1,7 @@
 node_modules/
 dist/
-docs/
+docs/*
+!docs/architecture.mermaid
 coverage/
 .vite/
 *.log

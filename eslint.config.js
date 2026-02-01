@@ -41,6 +41,10 @@ export default [
         "warn",
         { terms: ["TODO", "FIXME", "HACK", "XXX"] },
       ],
+      "max-lines": [
+        "warn",
+        { max: 500, skipBlankLines: true, skipComments: true },
+      ],
     },
   },
 ];
