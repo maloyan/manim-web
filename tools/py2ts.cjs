@@ -505,9 +505,10 @@ function convertPythonToTypeScript(pythonCode) {
 
   const convertedScenes = scenes.map(scene => {
     const varRenames = new Map();
+    const mathTexVars = new Set(); // Track MathTex/Tex variable names
     const converted = [];
     for (const line of scene.lines) {
-      converted.push(convertLine(line, tracking, varRenames));
+      converted.push(convertLine(line, tracking, varRenames, mathTexVars));
     }
     // PascalCase → camelCase, remove "Scene" suffix
     let funcName = scene.name.replace(/Scene$/, '');
@@ -531,7 +532,7 @@ function convertPythonToTypeScript(pythonCode) {
   if (uniqueImports.length > 0) {
     output.push('import {');
     output.push(`  ${uniqueImports.join(',\n  ')}`);
-    output.push("} from '../src';");
+    output.push("} from '../src/index.ts';");
     output.push('');
   }
 
@@ -555,7 +556,7 @@ function convertPythonToTypeScript(pythonCode) {
 }
 
 // ─── Convert a single line of Python → TypeScript ────────────────────
-function convertLine(rawLine, tracking, varRenames) {
+function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   if (rawLine.trim() === '') return rawLine;
   let line = rawLine;
 
@@ -653,15 +654,18 @@ function convertLine(rawLine, tracking, varRenames) {
     }
   }
 
-  // Known kwargs: key=value → tsKey: value
+  // Known kwargs: key=value → tsKey: value (only inside function calls)
   for (const [pyKey, tsKey] of Object.entries(KWARG_MAP)) {
-    line = line.replace(new RegExp(`\\b${pyKey}\\s*=`, 'g'), `${tsKey}: `);
+    line = line.replace(new RegExp(`(?<=[,(])\\s*\\b${pyKey}\\s*=(?!=)\\s*`, 'g'), (m) => {
+      const ws = m.match(/^(\s*)/)[1];
+      return `${ws}${tsKey}: `;
+    });
   }
 
-  // Remaining snake_case kwargs: key=value → camelKey: value
-  line = line.replace(/\b([a-z_][a-z_0-9]*)=/g, (match, key) => {
-    if (match.endsWith('==')) return match;
-    return `${KWARG_MAP[key] || snakeToCamel(key)}: `;
+  // Remaining snake_case kwargs: key=value → camelKey: value (only inside function calls)
+  line = line.replace(/(?<=[,(])\s*\b([a-z_][a-z_0-9]*)=(?!=)\s*/g, (match, key) => {
+    const ws = match.match(/^(\s*)/)[1];
+    return `${ws}${KWARG_MAP[key] || snakeToCamel(key)}: `;
   });
 
   // Known method renames
@@ -725,6 +729,9 @@ function convertLine(rawLine, tracking, varRenames) {
 
   // Variable declarations: first assignment → const, snake_case → camelCase
   const varMatch = line.match(/^(\s*)([a-zA-Z_]\w*)\s*=\s*(.+)/);
+  let isMathTexAssignment = false;
+  let assignedVarName = null;
+  let assignIndent = '';
   if (varMatch) {
     const [, indent, varName, value] = varMatch;
     if (!/\b(const|let|var)\s/.test(line) &&
@@ -733,7 +740,20 @@ function convertLine(rawLine, tracking, varRenames) {
       const camelName = snakeToCamel(varName);
       varRenames.set(varName, camelName);
       line = `${indent}const ${camelName} = ${value}`;
+      assignIndent = indent;
+      assignedVarName = camelName;
+
+      // Track MathTex/Tex variable assignments for indexing conversion
+      if (/\bnew\s+MathTex\b/.test(value) || /\bnew\s+Tex\b/.test(value)) {
+        mathTexVars.add(camelName);
+        isMathTexAssignment = true;
+      }
     }
+  }
+
+  // Convert MathTex variable indexing: text[N] → text.getPart(N)
+  for (const mtVar of mathTexVars) {
+    line = line.replace(new RegExp(`\\b${mtVar}\\[\\s*(\\d+)\\s*\\]`, 'g'), `${mtVar}.getPart($1)`);
   }
 
   // Rename snake_case variable references to camelCase
@@ -746,6 +766,11 @@ function convertLine(rawLine, tracking, varRenames) {
   // Semicolons
   if (shouldAddSemicolon(line)) {
     line = line.replace(/\s*$/, ';');
+  }
+
+  // Insert waitForRender() after MathTex/Tex creation
+  if (isMathTexAssignment && assignedVarName) {
+    line += `\n${assignIndent}await ${assignedVarName}.waitForRender();`;
   }
 
   return line;
@@ -799,7 +824,12 @@ function convertConstructorArgs(line) {
         newArgs = `{ ${kwargs.join(', ')} }`;
       }
     } else if (className === 'MathTex' || className === 'Tex') {
-      if (positional.length > 0) {
+      if (positional.length > 1) {
+        // Multi-part: wrap in array for indexed access via getPart()
+        const latexArray = `[${positional.join(', ')}]`;
+        const kw = kwargs.length > 0 ? ', ' + kwargs.join(', ') : '';
+        newArgs = `{ latex: ${latexArray}${kw} }`;
+      } else if (positional.length > 0) {
         const kw = kwargs.length > 0 ? ', ' + kwargs.join(', ') : '';
         newArgs = `{ latex: ${positional[0]}${kw} }`;
       } else {

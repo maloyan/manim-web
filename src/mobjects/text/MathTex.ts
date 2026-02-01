@@ -31,8 +31,10 @@ export type TexRenderer = 'katex' | 'mathjax' | 'auto';
  * Options for creating a MathTex object
  */
 export interface MathTexOptions {
-  /** LaTeX string to render, e.g., 'E = mc^2' */
-  latex: string;
+  /** LaTeX string or array of strings for multi-part expressions.
+   *  When an array is provided, each string becomes a separate sub-mobject
+   *  accessible via getPart(index), matching Python Manim's behavior. */
+  latex: string | string[];
   /** Color as CSS color string. Default: '#ffffff' */
   color?: string;
   /** Base font size in pixels. Default: 48 */
@@ -41,6 +43,8 @@ export interface MathTexOptions {
   displayMode?: boolean;
   /** Position in 3D space. Default: [0, 0, 0] */
   position?: Vector3Tuple;
+  /** Internal: padding in pixels around the rendered content. Default: 10 */
+  _padding?: number;
   /**
    * Which renderer to use.
    * - 'katex'  : KaTeX only (fast)
@@ -94,6 +98,14 @@ export class MathTex extends Mobject {
   protected _renderer: TexRenderer;
   /** Which renderer was actually used for the last successful render */
   protected _activeRenderer: 'katex' | 'mathjax' | null = null;
+  /** Whether this is a multi-part MathTex (created from string[]) */
+  protected _isMultiPart: boolean = false;
+  /** Child MathTex parts (only when _isMultiPart is true) */
+  protected _parts: MathTex[] = [];
+  /** Promise that resolves when parts are arranged (multi-part only) */
+  protected _arrangePromise: Promise<void> | null = null;
+  /** Padding in pixels around rendered content */
+  protected _padding: number;
 
   constructor(options: MathTexOptions) {
     super();
@@ -105,12 +117,13 @@ export class MathTex extends Mobject {
       displayMode = true,
       position = [0, 0, 0],
       renderer = 'auto',
+      _padding = 10,
     } = options;
 
-    this._latex = latex;
     this._fontSize = fontSize;
     this._displayMode = displayMode;
     this._renderer = renderer;
+    this._padding = _padding;
     this.color = color;
 
     // Initialize render state
@@ -127,13 +140,40 @@ export class MathTex extends Mobject {
     // Set position
     this.position.set(position[0], position[1], position[2]);
 
-    // Ensure KaTeX CSS is loaded (needed for 'katex' and 'auto' modes)
-    if (this._renderer !== 'mathjax') {
-      ensureKatexStyles();
-    }
+    if (Array.isArray(latex)) {
+      // Multi-part mode: create child MathTex for each string
+      this._isMultiPart = true;
+      this._latex = latex.join('');
 
-    // Start async rendering
-    this._startRender();
+      for (const part of latex) {
+        const child = new MathTex({
+          latex: part,
+          color,
+          fontSize,
+          displayMode: false, // inline mode for parts to avoid extra spacing
+          renderer,
+          _padding: 2, // minimal padding for multi-part children
+        });
+        this._parts.push(child);
+        this.add(child);
+      }
+
+      // Arrange parts after they all render
+      this._arrangePromise = this._arrangeParts();
+      this._renderState.renderPromise = this._arrangePromise;
+    } else {
+      // Single-string mode: existing behavior
+      this._isMultiPart = false;
+      this._latex = latex;
+
+      // Ensure KaTeX CSS is loaded (needed for 'katex' and 'auto' modes)
+      if (this._renderer !== 'mathjax') {
+        ensureKatexStyles();
+      }
+
+      // Start async rendering
+      this._startRender();
+    }
   }
 
   /**
@@ -207,17 +247,106 @@ export class MathTex extends Mobject {
    */
   override setColor(color: string): this {
     super.setColor(color);
+    if (this._isMultiPart) {
+      for (const part of this._parts) {
+        part.setColor(color);
+      }
+    }
     this._markDirty();
     return this;
   }
 
   /**
-   * Wait for the LaTeX to finish rendering
+   * Override setOpacity to propagate to multi-part children.
+   */
+  override setOpacity(opacity: number): this {
+    super.setOpacity(opacity);
+    if (this._isMultiPart) {
+      for (const part of this._parts) {
+        part.setOpacity(opacity);
+      }
+    }
+    return this;
+  }
+
+  /**
+   * Wait for the LaTeX to finish rendering.
+   * For multi-part MathTex, waits for all parts to render and be arranged.
    * @returns Promise that resolves when rendering is complete
    */
   async waitForRender(): Promise<void> {
+    if (this._isMultiPart) {
+      await Promise.all(this._parts.map(p => p.waitForRender()));
+      if (this._arrangePromise) {
+        await this._arrangePromise;
+      }
+      return;
+    }
     if (this._renderState.renderPromise) {
       await this._renderState.renderPromise;
+    }
+  }
+
+  /**
+   * Get a sub-part of a multi-part MathTex expression.
+   * Only available when the MathTex was created with a string array.
+   * @param index Zero-based index of the part
+   * @returns The MathTex sub-part at the given index
+   */
+  getPart(index: number): MathTex {
+    if (!this._isMultiPart) {
+      throw new Error('getPart() is only available on multi-part MathTex (created with string[])');
+    }
+    if (index < 0 || index >= this._parts.length) {
+      throw new Error(`Part index ${index} out of range [0, ${this._parts.length - 1}]`);
+    }
+    return this._parts[index];
+  }
+
+  /**
+   * Get the number of parts (1 for single-string, N for multi-part).
+   */
+  getPartCount(): number {
+    return this._isMultiPart ? this._parts.length : 1;
+  }
+
+  /**
+   * Arrange child parts horizontally after they all render.
+   * Positions parts so their content (minus padding) is seamlessly adjacent.
+   */
+  private async _arrangeParts(): Promise<void> {
+    await Promise.all(this._parts.map(p => p.waitForRender()));
+
+    const SCALE = 0.01;
+
+    // Collect content widths (total width minus padding on each side)
+    const widths = this._parts.map(p => {
+      const [w] = p.getDimensions();
+      return w;
+    });
+    const contentWidths = this._parts.map((p, i) => {
+      const paddingWorld = p._padding * SCALE;
+      return Math.max(0, widths[i] - 2 * paddingWorld);
+    });
+
+    // Small gap between parts to approximate natural LaTeX inter-expression spacing
+    const INTER_PART_GAP = 0.03;
+
+    // Position parts so content edges are adjacent with small gaps
+    let cx = 0;
+    const positions: number[] = [];
+    for (let i = 0; i < this._parts.length; i++) {
+      if (i > 0) cx += INTER_PART_GAP;
+      positions.push(cx + contentWidths[i] / 2);
+      cx += contentWidths[i];
+    }
+
+    // Center the entire group
+    const totalContentWidth = cx;
+    const centerOffset = totalContentWidth / 2;
+    for (let i = 0; i < this._parts.length; i++) {
+      this._parts[i].position.set(positions[i] - centerOffset, 0, 0);
+      this._parts[i]._markDirty();
     }
   }
 
@@ -233,6 +362,11 @@ export class MathTex extends Mobject {
    * @returns [width, height] or [0, 0] if not yet rendered
    */
   getDimensions(): [number, number] {
+    if (this._isMultiPart) {
+      // Compute aggregate dimensions from bounding box of all parts
+      const bbox = this._getBoundingBox();
+      return [bbox.width, bbox.height];
+    }
     return [this._renderState.width, this._renderState.height];
   }
 
@@ -334,7 +468,7 @@ export class MathTex extends Mobject {
     const finalSvgString = new XMLSerializer().serializeToString(svgEl);
     document.body.removeChild(tempDiv);
 
-    const padding = 10;
+    const padding = this._padding;
     const width = Math.ceil(svgW) + padding * 2;
     const height = Math.ceil(svgH) + padding * 2;
 
@@ -444,7 +578,7 @@ export class MathTex extends Mobject {
 
       // Measure the rendered content
       const containerRect = container.getBoundingClientRect();
-      const padding = 10;
+      const padding = this._padding;
       const width = Math.ceil(containerRect.width) + padding * 2;
       const height = Math.ceil(containerRect.height) + padding * 2;
 
@@ -732,6 +866,11 @@ export class MathTex extends Mobject {
    * Create the Three.js backing object
    */
   protected _createThreeObject(): THREE.Object3D {
+    // Multi-part mode: just return an empty group; children add their own meshes
+    if (this._isMultiPart) {
+      return new THREE.Group();
+    }
+
     const group = new THREE.Group();
     const { width, height, texture } = this._renderState;
 
@@ -787,8 +926,11 @@ export class MathTex extends Mobject {
    * Create a copy of this MathTex
    */
   protected override _createCopy(): MathTex {
+    const latexValue = this._isMultiPart
+      ? this._parts.map(p => p._latex)
+      : this._latex;
     return new MathTex({
-      latex: this._latex,
+      latex: latexValue,
       color: this.color,
       fontSize: this._fontSize,
       displayMode: this._displayMode,
@@ -802,6 +944,17 @@ export class MathTex extends Mobject {
    * @param alpha - Progress from 0 (hidden) to 1 (fully visible)
    */
   setRevealProgress(alpha: number): void {
+    if (this._isMultiPart) {
+      // Reveal parts sequentially, each part gets its own slice of the alpha range
+      const n = this._parts.length;
+      for (let i = 0; i < n; i++) {
+        const partStart = i / n;
+        const partEnd = (i + 1) / n;
+        const partAlpha = Math.max(0, Math.min(1, (alpha - partStart) / (partEnd - partStart)));
+        this._parts[i].setRevealProgress(partAlpha);
+      }
+      return;
+    }
     if (!this._renderState.mesh || !this._renderState.texture) return;
 
     const a = Math.max(0.001, Math.min(1, alpha));

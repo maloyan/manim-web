@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Moving Frame Box</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+
+  <script type="module">
+    // Converted from Python Manim → ManimWeb TypeScript
+    // Review and adjust as needed — automated conversion is approximate.
+
+    import {
+      Create,
+      MathTex,
+      ReplacementTransform,
+      Scene,
+      SurroundingRectangle,
+      Write
+    } from '../src/index.ts';
+
+    export async function movingFrameBox(scene) {
+      const text = new MathTex({ latex: ["\\frac{d}{dx}f(x)g(x)=", "f(x)\\frac{d}{dx}g(x)", "+", "g(x)\\frac{d}{dx}f(x)"] });
+      await text.waitForRender();
+      await scene.play(new Write(text));
+      const framebox1 = new SurroundingRectangle(text.getPart(1), { buff: .1 });
+      const framebox2 = new SurroundingRectangle(text.getPart(3), { buff: .1 });
+      await scene.play( new Create(framebox1), );
+      await scene.wait();
+      await scene.play( new ReplacementTransform(framebox1,framebox2), );
+      await scene.wait();
+    }
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: '#000000'
+    });
+
+    movingFrameBox(scene);
+  </script>
+</body>
+</html>

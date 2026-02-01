@@ -389,6 +389,7 @@ export class Write extends Animation {
   // Rendering mode flags (mutually exclusive)
   private _useGlyphStroke: boolean = false;
   private _useDashReveal: boolean = false;
+  private _useRevealProgress: boolean = false;
 
   // Dash reveal state
   private _totalLength: number = 0;
@@ -439,7 +440,17 @@ export class Write extends Animation {
       }
     }
 
-    // Priority 2: Dash reveal for VMobjects with Line2
+    // Priority 2: Left-to-right reveal for mobjects with setRevealProgress (MathTex)
+    if (
+      'setRevealProgress' in this.mobject &&
+      typeof (this.mobject as any).setRevealProgress === 'function'
+    ) {
+      this._useRevealProgress = true;
+      (this.mobject as any).setRevealProgress(this._reverse ? 1 : 0);
+      return;
+    }
+
+    // Priority 3: Dash reveal for VMobjects with Line2
     this._useDashReveal = (this.mobject instanceof VMobject) && this._hasLine2Children();
 
     if (this._useDashReveal) {
@@ -604,6 +615,8 @@ export class Write extends Animation {
 
     if (this._useGlyphStroke) {
       this._interpolateGlyphStroke(effectiveAlpha);
+    } else if (this._useRevealProgress) {
+      (this.mobject as any).setRevealProgress(effectiveAlpha);
     } else if (this._useDashReveal) {
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
@@ -737,6 +750,16 @@ export class Write extends Animation {
   override finish(): void {
     if (this._useGlyphStroke) {
       this._finishGlyphStroke();
+      super.finish();
+      return;
+    }
+
+    if (this._useRevealProgress) {
+      if (this._remover) {
+        (this.mobject as any).setRevealProgress(0);
+      } else {
+        (this.mobject as any).setRevealProgress(1);
+      }
       super.finish();
       return;
     }
