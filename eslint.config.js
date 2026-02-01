@@ -45,6 +45,7 @@ export default [
         "warn",
         { max: 500, skipBlankLines: true, skipComments: true },
       ],
+      complexity: ["warn", 15],
     },
   },
 ];

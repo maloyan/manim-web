@@ -1,0 +1,51 @@
+name: Error to Issue
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  issues: write
+
+jobs:
+  create-issue:
+    name: Create issue on CI failure
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.head_branch == 'main' }}
+    steps:
+      - name: Create failure issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RUN_URL="${{ github.event.workflow_run.html_url }}"
+          COMMIT_SHA="${{ github.event.workflow_run.head_sha }}"
+          SHORT_SHA="${COMMIT_SHA:0:7}"
+          BRANCH="${{ github.event.workflow_run.head_branch }}"
+
+          # Check for existing open issue to avoid duplicates
+          EXISTING=$(gh issue list \
+            --repo "${{ github.repository }}" \
+            --label "bug,ci-failure" \
+            --state open \
+            --limit 1 \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING" ]; then
+            gh issue comment "$EXISTING" \
+              --repo "${{ github.repository }}" \
+              --body "Another CI failure on \`${BRANCH}\` at [\`${SHORT_SHA}\`](${RUN_URL})."
+          else
+            gh issue create \
+              --repo "${{ github.repository }}" \
+              --title "CI failure on ${BRANCH} at ${SHORT_SHA}" \
+              --label "bug,ci-failure" \
+              --body "## CI Failure
+
+          **Branch:** \`${BRANCH}\`
+          **Commit:** \`${SHORT_SHA}\`
+          **Run:** ${RUN_URL}
+
+          The CI pipeline failed on the main branch. Investigate and fix the failing checks."
+          fi
