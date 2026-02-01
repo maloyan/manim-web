@@ -23,7 +23,29 @@ export {
   type CameraEntry,
   type MultiCameraOptions,
 } from './CameraExtensions';
+export {
+  CameraFrame,
+  CameraAnimateProxy,
+  type CameraFrameOptions,
+  type CameraFrameState,
+  type CameraAnimationOptions as CameraFrameAnimationOptions,
+} from './CameraFrame';
 export { Renderer, type RendererOptions } from './Renderer';
+export {
+  SceneStateManager,
+  serializeMobject,
+  deserializeMobject,
+  saveMobjectState,
+  restoreMobjectState,
+  stateToJSON,
+  stateFromJSON,
+  snapshotToJSON,
+  snapshotFromJSON,
+  type MobjectState,
+  type SceneSnapshot,
+} from './StateManager';
+export { AudioManager, type AudioTrack, type AddSoundOptions } from './AudioManager';
+export { InteractiveScene, type InteractiveSceneOptions } from './InteractiveScene';
 export { Lighting, type AmbientLightOptions, type DirectionalLightOptions, type PointLightOptions, type SpotLightOptions } from './Lighting';
 export {
   ThreeDScene,

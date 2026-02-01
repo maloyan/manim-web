@@ -1,7 +1,7 @@
 import { Group } from '../../core/Group';
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { WHITE, DEFAULT_STROKE_WIDTH } from '../../constants';
 
 /**
  * Options for creating an Arrow
@@ -11,7 +11,7 @@ export interface ArrowOptions {
   start?: Vector3Tuple;
   /** End point of the arrow (where the tip points). Default: [1, 0, 0] */
   end?: Vector3Tuple;
-  /** Stroke color as CSS color string. Default: Manim's blue (#58C4DD) */
+  /** Stroke color as CSS color string. Default: WHITE (#FFFFFF) */
   color?: string;
   /** Stroke width in pixels. Default: 4 (Manim's default) */
   strokeWidth?: number;
@@ -121,7 +121,7 @@ export class Arrow extends Group {
     const {
       start = [0, 0, 0],
       end = [1, 0, 0],
-      color = BLUE,
+      color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       tipLength = 0.25,
       tipWidth = 0.15,
@@ -336,7 +336,7 @@ export class DoubleArrow extends Group {
     const {
       start = [0, 0, 0],
       end = [1, 0, 0],
-      color = BLUE,
+      color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       tipLength = 0.25,
       tipWidth = 0.15,

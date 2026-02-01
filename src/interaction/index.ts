@@ -25,5 +25,8 @@ export { Draggable, makeDraggable, type DraggableOptions } from './Draggable';
 export { Hoverable, makeHoverable, type HoverableOptions } from './Hoverable';
 export { Clickable, makeClickable, type ClickableOptions } from './Clickable';
 
+// Selection
+export { SelectionManager, type SelectionManagerOptions } from './SelectionManager';
+
 // Camera controls
 export { OrbitControls, type OrbitControlsOptions } from './OrbitControls';

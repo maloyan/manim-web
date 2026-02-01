@@ -19,8 +19,10 @@ export interface ImageFilterOptions {
  * Options for creating an ImageMobject
  */
 export interface ImageMobjectOptions {
-  /** Image source: URL or base64 data URI */
-  source: string;
+  /** Image source: URL or base64 data URI. Either source or pixelData is required. */
+  source?: string;
+  /** 2D grayscale pixel array (values 0-255). Each inner array is a row. Either source or pixelData is required. */
+  pixelData?: number[][];
   /** Width of the image in scene units. Default: auto-calculated from aspect ratio */
   width?: number;
   /** Height of the image in scene units. Default: auto-calculated from aspect ratio */
@@ -72,6 +74,7 @@ export interface ImageMobjectOptions {
  */
 export class ImageMobject extends Mobject {
   protected _source: string;
+  protected _pixelData: number[][] | undefined;
   protected _width: number | undefined;
   protected _height: number | undefined;
   protected _scaleToFit: boolean;
@@ -91,7 +94,8 @@ export class ImageMobject extends Mobject {
     super();
 
     const {
-      source,
+      source = '',
+      pixelData,
       width,
       height,
       scaleToFit = true,
@@ -102,6 +106,7 @@ export class ImageMobject extends Mobject {
     } = options;
 
     this._source = source;
+    this._pixelData = pixelData;
     this._width = width;
     this._height = height;
     this._scaleToFit = scaleToFit;
@@ -115,6 +120,13 @@ export class ImageMobject extends Mobject {
     this._doubleSided = doubleSided;
     this._opacity = opacity;
 
+    // For pixelData images, default height to 2 scene units.
+    // Manim Python's ImageMobject initializes points at a 2×2 unit square;
+    // users typically call .scale(2) which brings it to 4 units (half the frame).
+    if (pixelData && width === undefined && height === undefined) {
+      this._height = 2;
+    }
+
     // Set position from center
     this.position.set(center[0], center[1], center[2]);
 
@@ -123,8 +135,57 @@ export class ImageMobject extends Mobject {
       this._loadResolve = resolve;
     });
 
-    // Start loading the texture
-    this._loadTexture();
+    if (pixelData) {
+      this._loadFromPixelData(pixelData);
+    } else {
+      this._loadTexture();
+    }
+  }
+
+  /**
+   * Load texture from a 2D grayscale pixel array
+   */
+  private _loadFromPixelData(pixelData: number[][]): void {
+    const rows = pixelData.length;
+    const cols = pixelData[0]?.length ?? 0;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = cols;
+    canvas.height = rows;
+    const ctx = canvas.getContext('2d')!;
+    const imageData = ctx.createImageData(cols, rows);
+    const data = imageData.data;
+
+    for (let y = 0; y < rows; y++) {
+      const row = pixelData[y];
+      for (let x = 0; x < cols; x++) {
+        const v = Math.max(0, Math.min(255, Math.round(row[x] ?? 0)));
+        const idx = (y * cols + x) * 4;
+        data[idx] = v;
+        data[idx + 1] = v;
+        data[idx + 2] = v;
+        data[idx + 3] = 255;
+      }
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+
+    this._texture = texture;
+    this._naturalWidth = cols;
+    this._naturalHeight = rows;
+    this._imageLoaded = true;
+
+    this._applyFilters();
+    this._updateGeometry();
+    this._markDirty();
+
+    if (this._loadResolve) {
+      this._loadResolve();
+      this._loadResolve = null;
+    }
   }
 
   /**
@@ -560,7 +621,8 @@ export class ImageMobject extends Mobject {
    */
   protected override _createCopy(): ImageMobject {
     return new ImageMobject({
-      source: this._source,
+      source: this._source || undefined,
+      pixelData: this._pixelData,
       width: this._width,
       height: this._height,
       scaleToFit: this._scaleToFit,

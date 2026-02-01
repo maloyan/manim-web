@@ -1,5 +1,6 @@
 import { Group } from '../../core/Group';
 import { Vector3Tuple } from '../../core/Mobject';
+import { VMobject } from '../../core/VMobject';
 import { NumberPlane, NumberPlaneOptions } from './NumberPlane';
 import { Line } from '../geometry';
 import { Circle } from '../geometry';
@@ -53,6 +54,7 @@ export class ComplexPlane extends NumberPlane {
   private _labelFontSize: number;
   private _labelColor: string;
   private _imaginaryLabels: Group;
+  private _coordinateLabels: Group;
 
   constructor(options: ComplexPlaneOptions = {}) {
     const {
@@ -68,6 +70,7 @@ export class ComplexPlane extends NumberPlane {
     this._labelFontSize = labelFontSize;
     this._labelColor = labelColor;
     this._imaginaryLabels = new Group();
+    this._coordinateLabels = new Group();
 
     if (this._includeImaginaryLabels) {
       this._generateImaginaryLabels();
@@ -205,6 +208,84 @@ export class ComplexPlane extends NumberPlane {
   }
 
   /**
+   * Subtract two complex numbers: a - b
+   */
+  static subtract(a: Complex, b: Complex): Complex {
+    return { re: a.re - b.re, im: a.im - b.im };
+  }
+
+  /**
+   * Divide two complex numbers: a / b = (a * conj(b)) / |b|^2
+   */
+  static divide(a: Complex, b: Complex): Complex {
+    const denom = b.re * b.re + b.im * b.im;
+    return {
+      re: (a.re * b.re + a.im * b.im) / denom,
+      im: (a.im * b.re - a.re * b.im) / denom,
+    };
+  }
+
+  /**
+   * Raise a complex number to a real power: z^n via polar form (r^n * e^(in*theta))
+   * @param z - Complex number
+   * @param n - Real exponent
+   */
+  static pow(z: Complex, n: number): Complex {
+    const r = ComplexPlane.modulus(z);
+    const theta = ComplexPlane.argument(z);
+    const rn = Math.pow(r, n);
+    return {
+      re: rn * Math.cos(n * theta),
+      im: rn * Math.sin(n * theta),
+    };
+  }
+
+  /**
+   * Complex exponential: e^z = e^re * (cos(im) + i*sin(im))
+   */
+  static exp(z: Complex): Complex {
+    const er = Math.exp(z.re);
+    return {
+      re: er * Math.cos(z.im),
+      im: er * Math.sin(z.im),
+    };
+  }
+
+  /**
+   * Complex logarithm (principal branch): log(z) = ln|z| + i*arg(z)
+   */
+  static log(z: Complex): Complex {
+    return {
+      re: Math.log(ComplexPlane.modulus(z)),
+      im: ComplexPlane.argument(z),
+    };
+  }
+
+  /**
+   * Complex square root (principal root) via polar form
+   */
+  static sqrt(z: Complex): Complex {
+    const r = ComplexPlane.modulus(z);
+    const theta = ComplexPlane.argument(z);
+    const sqrtR = Math.sqrt(r);
+    return {
+      re: sqrtR * Math.cos(theta / 2),
+      im: sqrtR * Math.sin(theta / 2),
+    };
+  }
+
+  /**
+   * Complex reciprocal: 1/z = conj(z) / |z|^2
+   */
+  static reciprocal(z: Complex): Complex {
+    const denom = z.re * z.re + z.im * z.im;
+    return {
+      re: z.re / denom,
+      im: -z.im / denom,
+    };
+  }
+
+  /**
    * Get the imaginary labels group
    */
   getImaginaryLabels(): Group {
@@ -234,6 +315,148 @@ export class ComplexPlane extends NumberPlane {
 
     this._markDirty();
     return this;
+  }
+
+  /**
+   * Apply a complex function to all children of this plane, warping
+   * any VMobject's control points through the function.
+   *
+   * Each point is converted to a complex number via `p2n()`, passed through
+   * `func`, then mapped back to visual space via `n2p()`.
+   *
+   * @param func - A function mapping one complex number to another
+   * @returns this for chaining
+   */
+  applyComplexFunction(func: (z: Complex) => Complex): this {
+    const transformPoint = (point: number[]): number[] => {
+      const z = this.p2n(point as [number, number, number]);
+      const w = func(z);
+      return [...this.n2p(w)];
+    };
+
+    // Transform all VMobject children recursively
+    this._transformChildren(this, transformPoint);
+    return this;
+  }
+
+  /**
+   * Recursively walk `group` and transform the points of every VMobject child.
+   */
+  private _transformChildren(
+    group: any,
+    transformFn: (p: number[]) => number[],
+  ): void {
+    for (const child of group.children || []) {
+      if (child instanceof VMobject) {
+        const points = child.getPoints();
+        if (points.length > 0) {
+          const newPoints = points.map(transformFn);
+          child.setPoints3D(newPoints);
+        }
+      }
+      if (child.children) {
+        this._transformChildren(child, transformFn);
+      }
+    }
+  }
+
+  /**
+   * Add numeric coordinate labels at the specified values.
+   *
+   * - For real (x) values: creates Text labels below the x-axis.
+   * - For imaginary (y) values: creates Text labels (e.g. "2i", "-i") to the
+   *   left of the y-axis.
+   *
+   * If no values are supplied the ranges are derived from the axis settings.
+   *
+   * @param xVals - Real-axis values to label (defaults to integer steps from axis range)
+   * @param yVals - Imaginary-axis values to label (defaults to integer steps from axis range)
+   * @returns this for chaining
+   */
+  addCoordinates(xVals?: number[], yVals?: number[]): this {
+    // Clear previous coordinate labels
+    while (this._coordinateLabels.children.length > 0) {
+      this._coordinateLabels.remove(this._coordinateLabels.children[0]);
+    }
+
+    const epsilon = 0.0001;
+
+    // Derive default x values from axis range
+    if (!xVals) {
+      const [xMin, xMax, xStep] = this._xRange;
+      xVals = [];
+      if (xStep > 0) {
+        for (let x = xMin; x <= xMax + epsilon; x += xStep) {
+          const rounded = Math.round(x / xStep) * xStep;
+          if (Math.abs(rounded) >= epsilon) {
+            xVals.push(rounded);
+          }
+        }
+      }
+    }
+
+    // Derive default y values from axis range
+    if (!yVals) {
+      const [yMin, yMax, yStep] = this._yRange;
+      yVals = [];
+      if (yStep > 0) {
+        for (let y = yMin; y <= yMax + epsilon; y += yStep) {
+          const rounded = Math.round(y / yStep) * yStep;
+          if (Math.abs(rounded) >= epsilon) {
+            yVals.push(rounded);
+          }
+        }
+      }
+    }
+
+    // Create x-axis labels
+    for (const x of xVals) {
+      const labelText = Number.isInteger(x) ? `${x}` : x.toFixed(1);
+      const [visualX, visualY] = this.coordsToPoint(x, 0);
+      const label = new Text({
+        text: labelText,
+        fontSize: this._labelFontSize,
+        color: this._labelColor,
+      });
+      label.moveTo([
+        visualX - this.position.x,
+        visualY - this.position.y - 0.3,
+        0,
+      ]);
+      this._coordinateLabels.add(label);
+    }
+
+    // Create y-axis (imaginary) labels
+    for (const y of yVals) {
+      const labelText = this._formatImaginaryLabel(y);
+      const [visualX, visualY] = this.coordsToPoint(0, y);
+      const label = new Text({
+        text: labelText,
+        fontSize: this._labelFontSize,
+        color: this._labelColor,
+      });
+      label.moveTo([
+        visualX - this.position.x - 0.3,
+        visualY - this.position.y,
+        0,
+      ]);
+      this._coordinateLabels.add(label);
+    }
+
+    // Add coordinate labels group as a child (if not already present)
+    if (!this.children.includes(this._coordinateLabels)) {
+      this.add(this._coordinateLabels);
+    }
+
+    this._markDirty();
+    return this;
+  }
+
+  /**
+   * Get the coordinate labels group
+   */
+  getCoordinateLabels(): Group {
+    return this._coordinateLabels;
   }
 
   /**

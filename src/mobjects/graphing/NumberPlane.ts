@@ -22,6 +22,10 @@ export interface NumberPlaneOptions extends AxesOptions {
   includeBackgroundLines?: boolean;
   /** Style configuration for background grid lines */
   backgroundLineStyle?: BackgroundLineStyle;
+  /** Style configuration for faded sub-grid lines. Auto-computed from backgroundLineStyle if not set. */
+  fadedLineStyle?: BackgroundLineStyle;
+  /** Number of faded lines per interval between main lines. Default: 1 */
+  fadedLineRatio?: number;
   /** Fading factor for lines far from axes. Default: 1 (no fading) */
   fadingFactor?: number;
 }
@@ -52,6 +56,8 @@ export interface NumberPlaneOptions extends AxesOptions {
 export class NumberPlane extends Axes {
   private _includeBackgroundLines: boolean;
   private _backgroundLineStyle: BackgroundLineStyle;
+  private _fadedLineStyle: BackgroundLineStyle;
+  private _fadedLineRatio: number;
   private _fadingFactor: number;
   private _backgroundLines: Group;
 
@@ -59,6 +65,8 @@ export class NumberPlane extends Axes {
     const {
       includeBackgroundLines = true,
       backgroundLineStyle = {},
+      fadedLineStyle,
+      fadedLineRatio = 0,
       fadingFactor = 1,
       ...axesOptions
     } = options;
@@ -82,10 +90,19 @@ export class NumberPlane extends Axes {
     this._includeBackgroundLines = includeBackgroundLines;
     this._backgroundLineStyle = {
       color: '#29ABCA',
-      strokeWidth: 2,
+      strokeWidth: 1,
       opacity: 1,
       ...backgroundLineStyle,
     };
+    // Faded line style: auto-compute by halving numerical values (matching Python manim)
+    this._fadedLineStyle = fadedLineStyle
+      ? { color: this._backgroundLineStyle.color, ...fadedLineStyle }
+      : {
+          color: this._backgroundLineStyle.color,
+          strokeWidth: (this._backgroundLineStyle.strokeWidth ?? 2) / 2,
+          opacity: (this._backgroundLineStyle.opacity ?? 1) / 2,
+        };
+    this._fadedLineRatio = fadedLineRatio;
     this._fadingFactor = fadingFactor;
     this._backgroundLines = new Group();
 
@@ -112,16 +129,30 @@ export class NumberPlane extends Axes {
 
     const epsilon = 0.0001;
 
+    // Extend grid lines beyond the declared range so the grid fills
+    // the entire camera frame without a visible rectangular border.
+    // Extra lines outside the frustum are clipped by the camera.
+    const extraStepsX = Math.ceil(2 / xStep);  // ~2 extra units each side
+    const extraStepsY = Math.ceil(2 / yStep);
+    const extXMin = xMin - extraStepsX * xStep;
+    const extXMax = xMax + extraStepsX * xStep;
+    const extYMin = yMin - extraStepsY * yStep;
+    const extYMax = yMax + extraStepsY * yStep;
+
+    // Line lengths also overshoot to avoid visible endpoints
+    const xHalf = this._xLength / 2 + extraStepsX * xStep + 1;
+    const yHalf = this._yLength / 2 + extraStepsY * yStep + 1;
+
     // Vertical lines (parallel to y-axis)
     if (xStep > 0) {
-      for (let x = xMin; x <= xMax + epsilon; x += xStep) {
+      for (let x = extXMin; x <= extXMax + epsilon; x += xStep) {
         const roundedX = Math.round(x / xStep) * xStep;
         const [visualX] = this.coordsToPoint(roundedX, 0);
         const localX = visualX - this.position.x;
 
         const line = new Line({
-          start: [localX, -this._yLength / 2, 0],
-          end: [localX, this._yLength / 2, 0],
+          start: [localX, -yHalf, 0],
+          end: [localX, yHalf, 0],
           color: color!,
           strokeWidth: strokeWidth!,
         });
@@ -132,19 +163,68 @@ export class NumberPlane extends Axes {
 
     // Horizontal lines (parallel to x-axis)
     if (yStep > 0) {
-      for (let y = yMin; y <= yMax + epsilon; y += yStep) {
+      for (let y = extYMin; y <= extYMax + epsilon; y += yStep) {
         const roundedY = Math.round(y / yStep) * yStep;
         const [, visualY] = this.coordsToPoint(0, roundedY);
         const localY = visualY - this.position.y;
 
         const line = new Line({
-          start: [-this._xLength / 2, localY, 0],
-          end: [this._xLength / 2, localY, 0],
+          start: [-xHalf, localY, 0],
+          end: [xHalf, localY, 0],
           color: color!,
           strokeWidth: strokeWidth!,
         });
         line.setOpacity(this._calculateLineOpacity(0, roundedY, opacity!));
         this._backgroundLines.add(line);
+      }
+    }
+
+    // Faded sub-grid lines (between main grid lines)
+    if (this._fadedLineRatio > 0) {
+      const { color: fadedColor, strokeWidth: fadedStrokeWidth, opacity: fadedOpacity } = this._fadedLineStyle;
+      const xSubStep = xStep / (this._fadedLineRatio + 1);
+      const ySubStep = yStep / (this._fadedLineRatio + 1);
+
+      // Vertical faded lines
+      if (xStep > 0 && xSubStep > 0) {
+        for (let x = extXMin; x <= extXMax + epsilon; x += xStep) {
+          for (let k = 1; k <= this._fadedLineRatio; k++) {
+            const subX = Math.round(x / xStep) * xStep + k * xSubStep;
+            if (subX > extXMax + epsilon) break;
+            const [visualX] = this.coordsToPoint(subX, 0);
+            const localX = visualX - this.position.x;
+
+            const line = new Line({
+              start: [localX, -yHalf, 0],
+              end: [localX, yHalf, 0],
+              color: fadedColor!,
+              strokeWidth: fadedStrokeWidth!,
+            });
+            line.setOpacity(fadedOpacity!);
+            this._backgroundLines.add(line);
+          }
+        }
+      }
+
+      // Horizontal faded lines
+      if (yStep > 0 && ySubStep > 0) {
+        for (let y = extYMin; y <= extYMax + epsilon; y += yStep) {
+          for (let k = 1; k <= this._fadedLineRatio; k++) {
+            const subY = Math.round(y / yStep) * yStep + k * ySubStep;
+            if (subY > extYMax + epsilon) break;
+            const [, visualY] = this.coordsToPoint(0, subY);
+            const localY = visualY - this.position.y;
+
+            const line = new Line({
+              start: [-xHalf, localY, 0],
+              end: [xHalf, localY, 0],
+              color: fadedColor!,
+              strokeWidth: fadedStrokeWidth!,
+            });
+            line.setOpacity(fadedOpacity!);
+            this._backgroundLines.add(line);
+          }
+        }
       }
     }
   }
@@ -236,6 +316,8 @@ export class NumberPlane extends Axes {
       tipLength: this._tipLength,
       includeBackgroundLines: this._includeBackgroundLines,
       backgroundLineStyle: this._backgroundLineStyle,
+      fadedLineStyle: this._fadedLineStyle,
+      fadedLineRatio: this._fadedLineRatio,
       fadingFactor: this._fadingFactor,
     });
   }

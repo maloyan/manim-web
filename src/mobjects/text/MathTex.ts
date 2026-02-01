@@ -1,16 +1,31 @@
 /**
- * MathTex - LaTeX rendering for manimweb using KaTeX
+ * MathTex - LaTeX rendering for manimweb using KaTeX (default) or MathJax (fallback)
  *
  * This module provides LaTeX math rendering capabilities by:
- * 1. Using KaTeX to render LaTeX to HTML
- * 2. Converting HTML to canvas via SVG foreignObject
- * 3. Creating a THREE.js textured plane mesh
+ * 1. Using KaTeX to render LaTeX to HTML (fast, limited subset)
+ * 2. Falling back to MathJax SVG output for unsupported LaTeX (full LaTeX support)
+ * 3. Converting output to canvas via DOM walking / SVG foreignObject
+ * 4. Creating a THREE.js textured plane mesh
+ *
+ * Renderer selection:
+ * - 'katex'  : KaTeX only (fast, limited subset)
+ * - 'mathjax': MathJax only (slower, full LaTeX including \usepackage, align, etc.)
+ * - 'auto'   : Try KaTeX first; fall back to MathJax if KaTeX throws (default)
  */
 
 import * as THREE from 'three';
 import katex from 'katex';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { ensureKatexStyles, waitForKatexStyles } from './katex-styles';
+import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
+
+/**
+ * Which renderer to use for LaTeX.
+ * - 'katex'  : KaTeX only (fast, but limited LaTeX subset)
+ * - 'mathjax': MathJax SVG only (slower, full LaTeX support)
+ * - 'auto'   : Try KaTeX first; if it throws, fall back to MathJax
+ */
+export type TexRenderer = 'katex' | 'mathjax' | 'auto';
 
 /**
  * Options for creating a MathTex object
@@ -26,6 +41,13 @@ export interface MathTexOptions {
   displayMode?: boolean;
   /** Position in 3D space. Default: [0, 0, 0] */
   position?: Vector3Tuple;
+  /**
+   * Which renderer to use.
+   * - 'katex'  : KaTeX only (fast)
+   * - 'mathjax': MathJax SVG only (full LaTeX support)
+   * - 'auto'   : KaTeX first, MathJax fallback (default)
+   */
+  renderer?: TexRenderer;
 }
 
 /**
@@ -68,6 +90,10 @@ export class MathTex extends Mobject {
   protected _fontSize: number;
   protected _displayMode: boolean;
   protected _renderState: RenderState;
+  /** User-requested renderer mode */
+  protected _renderer: TexRenderer;
+  /** Which renderer was actually used for the last successful render */
+  protected _activeRenderer: 'katex' | 'mathjax' | null = null;
 
   constructor(options: MathTexOptions) {
     super();
@@ -78,11 +104,13 @@ export class MathTex extends Mobject {
       fontSize = 48,
       displayMode = true,
       position = [0, 0, 0],
+      renderer = 'auto',
     } = options;
 
     this._latex = latex;
     this._fontSize = fontSize;
     this._displayMode = displayMode;
+    this._renderer = renderer;
     this.color = color;
 
     // Initialize render state
@@ -99,11 +127,40 @@ export class MathTex extends Mobject {
     // Set position
     this.position.set(position[0], position[1], position[2]);
 
-    // Ensure KaTeX CSS is loaded
-    ensureKatexStyles();
+    // Ensure KaTeX CSS is loaded (needed for 'katex' and 'auto' modes)
+    if (this._renderer !== 'mathjax') {
+      ensureKatexStyles();
+    }
 
     // Start async rendering
     this._startRender();
+  }
+
+  /**
+   * Get the renderer mode
+   */
+  getRenderer(): TexRenderer {
+    return this._renderer;
+  }
+
+  /**
+   * Get which renderer was actually used for the current render.
+   * Returns null if not yet rendered.
+   */
+  getActiveRenderer(): 'katex' | 'mathjax' | null {
+    return this._activeRenderer;
+  }
+
+  /**
+   * Set the renderer mode and re-render.
+   * @param renderer The renderer to use
+   * @returns this for chaining
+   */
+  setRenderer(renderer: TexRenderer): this {
+    if (this._renderer === renderer) return this;
+    this._renderer = renderer;
+    this._startRender();
+    return this;
   }
 
   /**
@@ -145,11 +202,12 @@ export class MathTex extends Mobject {
   }
 
   /**
-   * Override setColor to trigger re-render
+   * Override setColor — texture is always rendered white, so we only need
+   * to update the material tint via _syncMaterialToThree (no re-render).
    */
   override setColor(color: string): this {
     super.setColor(color);
-    this._startRender();
+    this._markDirty();
     return this;
   }
 
@@ -195,10 +253,150 @@ export class MathTex extends Mobject {
   }
 
   /**
+   * Render the LaTeX to a canvas using the selected renderer.
+   *
+   * Renderer selection logic:
+   * - 'katex'  : Use KaTeX directly (throwOnError: false)
+   * - 'mathjax': Use MathJax SVG output, rendered to canvas via Image
+   * - 'auto'   : Try KaTeX with throwOnError: true. If it throws,
+   *              fall back to MathJax.
+   */
+  protected async _renderLatex(): Promise<void> {
+    const useRenderer = this._resolveRenderer();
+
+    if (useRenderer === 'mathjax') {
+      return this._renderLatexViaMathJax();
+    }
+
+    // KaTeX path (used by both 'katex' and 'auto' after resolution)
+    return this._renderLatexViaKaTeX();
+  }
+
+  /**
+   * Determine which concrete renderer to use for the current LaTeX string.
+   */
+  private _resolveRenderer(): 'katex' | 'mathjax' {
+    if (this._renderer === 'katex') return 'katex';
+    if (this._renderer === 'mathjax') return 'mathjax';
+
+    // 'auto': probe KaTeX
+    if (katexCanRender(this._latex, this._displayMode)) {
+      return 'katex';
+    }
+    return 'mathjax';
+  }
+
+  /**
+   * Render using MathJax SVG output.  The SVG is painted onto a canvas
+   * texture in the same way the KaTeX path works, keeping the visual
+   * pipeline consistent.
+   */
+  protected async _renderLatexViaMathJax(): Promise<void> {
+    this._activeRenderer = 'mathjax';
+
+    const result = await renderLatexToSVG(this._latex, {
+      displayMode: this._displayMode,
+      color: '#ffffff', // always render white; actual color applied via material tint
+      fontScale: this._fontSize / 48, // normalise against base 48px
+    });
+
+    // Render the MathJax SVG into a canvas via <img>
+    const svgString = result.svgString;
+
+    // Measure intrinsic size
+    const tempDiv = document.createElement('div');
+    tempDiv.style.position = 'absolute';
+    tempDiv.style.left = '-9999px';
+    tempDiv.style.top = '-9999px';
+    tempDiv.innerHTML = svgString;
+    document.body.appendChild(tempDiv);
+
+    const svgEl = tempDiv.querySelector('svg');
+    if (!svgEl) {
+      document.body.removeChild(tempDiv);
+      console.warn('MathTex: MathJax produced no SVG for:', this._latex);
+      return;
+    }
+
+    // Ensure the SVG has explicit width/height for rasterization
+    const wAttr = svgEl.getAttribute('width');
+    const hAttr = svgEl.getAttribute('height');
+    let svgW = wAttr ? parseFloat(wAttr) : 0;
+    let svgH = hAttr ? parseFloat(hAttr) : 0;
+    if ((!svgW || !svgH) && result.width && result.height) {
+      // viewBox units — scale to a reasonable pixel size
+      svgW = result.width * this._fontSize;
+      svgH = result.height * this._fontSize;
+      svgEl.setAttribute('width', String(svgW));
+      svgEl.setAttribute('height', String(svgH));
+    }
+
+    const finalSvgString = new XMLSerializer().serializeToString(svgEl);
+    document.body.removeChild(tempDiv);
+
+    const padding = 10;
+    const width = Math.ceil(svgW) + padding * 2;
+    const height = Math.ceil(svgH) + padding * 2;
+
+    if (width <= 0 || height <= 0) {
+      console.warn('MathTex (MathJax): Invalid dimensions', { width, height, latex: this._latex });
+      return;
+    }
+
+    // Rasterize to canvas
+    const scale = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    const ctx = canvas.getContext('2d')!;
+    ctx.scale(scale, scale);
+
+    await new Promise<void>((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        ctx.drawImage(img, padding, padding, svgW, svgH);
+        URL.revokeObjectURL(img.src);
+        resolve();
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        console.warn('MathTex (MathJax): Failed to rasterize SVG');
+        resolve();
+      };
+      const blob = new Blob([finalSvgString], { type: 'image/svg+xml;charset=utf-8' });
+      img.src = URL.createObjectURL(blob);
+    });
+
+    // Store in render state (same pipeline as KaTeX)
+    this._renderState.canvas = canvas;
+
+    if (this._renderState.texture) {
+      this._renderState.texture.dispose();
+    }
+    this._renderState.texture = new THREE.CanvasTexture(canvas);
+    this._renderState.texture.minFilter = THREE.LinearFilter;
+    this._renderState.texture.magFilter = THREE.LinearFilter;
+    this._renderState.texture.needsUpdate = true;
+
+    const scaleFactor = 0.01;
+    this._renderState.width = width * scaleFactor;
+    this._renderState.height = height * scaleFactor;
+
+    if (this._renderState.mesh) {
+      this._updateMeshGeometry();
+      const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
+      material.map = this._renderState.texture;
+      material.needsUpdate = true;
+    }
+  }
+
+  /**
    * Render the LaTeX to a canvas by walking the KaTeX DOM
    * and drawing each text element at its computed CSS position.
    */
-  protected async _renderLatex(): Promise<void> {
+  protected async _renderLatexViaKaTeX(): Promise<void> {
+    this._activeRenderer = 'katex';
+
     const container = document.createElement('div');
     container.style.position = 'absolute';
     container.style.left = '-9999px';
@@ -266,15 +464,12 @@ export class MathTex extends Mobject {
         this._renderState.texture.dispose();
       }
       this._renderState.texture = new THREE.CanvasTexture(canvas);
-      this._renderState.texture.colorSpace = THREE.SRGBColorSpace;
       this._renderState.texture.minFilter = THREE.LinearFilter;
       this._renderState.texture.magFilter = THREE.LinearFilter;
       this._renderState.texture.needsUpdate = true;
 
-      // Calculate world dimensions — scale factor calibrated to match Manim CE's
-      // tex-to-world-unit conversion (TEX_MOB_SCALE_FACTOR) so that MathTex
-      // at font_size=48 produces the same relative size as in Python Manim.
-      const scaleFactor = 0.0088;
+      // Calculate world dimensions
+      const scaleFactor = 0.01;
       this._renderState.width = width * scaleFactor;
       this._renderState.height = height * scaleFactor;
 
@@ -308,7 +503,7 @@ export class MathTex extends Mobject {
 
     const ctx = canvas.getContext('2d')!;
     ctx.scale(scale, scale);
-    ctx.fillStyle = this.color;
+    ctx.fillStyle = '#ffffff'; // always render white; actual color applied via material tint
 
     // Collect text items, SVG items, and CSS rule items from KaTeX DOM
     interface TextItem {
@@ -389,23 +584,24 @@ export class MathTex extends Mobject {
               if (origVb) clone.setAttribute('viewBox', origVb);
             }
             // Set color property for currentColor inheritance in standalone SVG
-            clone.setAttribute('color', this.color);
-            clone.setAttribute('style', `color: ${this.color}; overflow: visible;`);
+            // Always render white; actual color applied via material tint
+            clone.setAttribute('color', '#ffffff');
+            clone.setAttribute('style', 'color: #ffffff; overflow: visible;');
 
             // Replace currentColor in all shape elements (attributes + inline styles)
             const shapes = clone.querySelectorAll('path, line, rect, circle, polyline, polygon');
             shapes.forEach(p => {
               const fill = p.getAttribute('fill');
               if (!fill || fill === 'currentColor' || fill === 'inherit') {
-                p.setAttribute('fill', this.color);
+                p.setAttribute('fill', '#ffffff');
               }
               const stroke = p.getAttribute('stroke');
               if (stroke === 'currentColor' || stroke === 'inherit') {
-                p.setAttribute('stroke', this.color);
+                p.setAttribute('stroke', '#ffffff');
               }
               const inlineStyle = p.getAttribute('style');
               if (inlineStyle && inlineStyle.includes('currentColor')) {
-                p.setAttribute('style', inlineStyle.replace(/currentColor/g, this.color));
+                p.setAttribute('style', inlineStyle.replace(/currentColor/g, '#ffffff'));
               }
             });
 
@@ -494,14 +690,14 @@ export class MathTex extends Mobject {
 
     // 2. CSS rule items (fraction bars, overlines)
     for (const item of ruleItems) {
-      ctx.fillStyle = this.color;
+      ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
       ctx.fillRect(item.x, item.y, item.w, item.h);
     }
 
     // 3. Text items LAST (foreground — actual math content on top)
     for (const item of textItems) {
       ctx.font = item.font;
-      ctx.fillStyle = this.color;
+      ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'left';
 
@@ -542,12 +738,13 @@ export class MathTex extends Mobject {
     // Create geometry (may be placeholder if not yet rendered)
     const geometry = new THREE.PlaneGeometry(width || 1, height || 0.5);
 
-    // Create material with texture
+    // Create material with texture — canvas is always white, material.color tints
     const material = new THREE.MeshBasicMaterial({
       map: texture,
       transparent: true,
       side: THREE.DoubleSide,
       opacity: this._opacity,
+      color: new THREE.Color(this.color),
     });
 
     // Create mesh inside group so _syncToThree sets group position,
@@ -566,6 +763,7 @@ export class MathTex extends Mobject {
     if (this._renderState.mesh) {
       const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
       material.opacity = this._opacity;
+      material.color.set(this.color); // tint white texture to desired color
 
       // Update texture if available
       if (this._renderState.texture && material.map !== this._renderState.texture) {
@@ -595,6 +793,7 @@ export class MathTex extends Mobject {
       fontSize: this._fontSize,
       displayMode: this._displayMode,
       position: [this.position.x, this.position.y, this.position.z],
+      renderer: this._renderer,
     });
   }
 

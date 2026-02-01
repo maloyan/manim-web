@@ -2,11 +2,15 @@
  * Matching-based Transform animations for manimweb.
  * These animations match parts between source and target mobjects,
  * transforming matching parts smoothly while fading in/out unmatched parts.
+ *
+ * Uses the Hungarian (Kuhn-Munkres) algorithm for optimal O(n^3) assignment
+ * instead of greedy matching, ensuring globally optimal submobject pairing.
  */
 
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
+import { hungarian, hungarianFromSimilarity } from '../../utils/hungarian';
 
 /**
  * Helper function for linear interpolation between two 3D points
@@ -62,7 +66,8 @@ function getBoundingBox(vmobject: VMobject): { min: Vector3Tuple; max: Vector3Tu
 }
 
 /**
- * Calculate similarity between two shapes based on bounding box and point count
+ * Calculate similarity between two shapes based on bounding box and point count.
+ * Returns a value in [0, 1] where 1 means identical shape characteristics.
  */
 function shapeSimilarity(a: VMobject, b: VMobject): number {
   const boxA = getBoundingBox(a);
@@ -88,6 +93,20 @@ function shapeSimilarity(a: VMobject, b: VMobject): number {
 
   // Weighted average
   return sizeSimilarity * 0.4 + aspectSimilarity * 0.3 + pointSimilarity * 0.3;
+}
+
+/**
+ * Calculate Euclidean distance between the centers of two VMobjects.
+ * Used as a cost metric for position-based pairing of unmatched parts.
+ */
+function centerDistance(a: VMobject, b: VMobject): number {
+  const centerA = getBoundingBox(a).center;
+  const centerB = getBoundingBox(b).center;
+  return Math.sqrt(
+    (centerA[0] - centerB[0]) ** 2 +
+    (centerA[1] - centerB[1]) ** 2 +
+    (centerA[2] - centerB[2]) ** 2
+  );
 }
 
 // ============================================================================
@@ -125,7 +144,13 @@ export interface TransformMatchingShapesOptions extends AnimationOptions {
 
 /**
  * TransformMatchingShapes animation - transforms matching shapes between mobjects.
- * Shapes are matched by similarity (bounding box, aspect ratio, point count).
+ *
+ * Uses the Hungarian algorithm for optimal shape matching:
+ * - When a keyFunc is provided: exact key-based matching (same as before)
+ * - When no keyFunc: builds a similarity matrix and uses the Hungarian algorithm
+ *   to find the globally optimal one-to-one assignment that maximizes total
+ *   similarity, subject to a minimum threshold.
+ *
  * Matched shapes transform smoothly, while unmatched shapes fade in/out.
  */
 export class TransformMatchingShapes extends Animation {
@@ -175,7 +200,7 @@ export class TransformMatchingShapes extends Animation {
   }
 
   /**
-   * Match submobjects between source and target
+   * Match submobjects between source and target using optimal assignment.
    */
   private _matchSubmobjects(): void {
     const sourceSubmobs = this._getSubmobjects(this.mobject as VMobject);
@@ -184,7 +209,7 @@ export class TransformMatchingShapes extends Animation {
     const usedSourceIndices = new Set<number>();
     const usedTargetIndices = new Set<number>();
 
-    // If key function provided, use exact matching
+    // If key function provided, use exact matching (deterministic, no optimization needed)
     if (this.keyFunc) {
       const sourceByKey = new Map<string, { vmob: VMobject; index: number }[]>();
       const targetByKey = new Map<string, { vmob: VMobject; index: number }[]>();
@@ -216,26 +241,23 @@ export class TransformMatchingShapes extends Animation {
         }
       }
     } else {
-      // Use similarity-based matching with greedy algorithm
-      const similarities: Array<{ srcIdx: number; tgtIdx: number; similarity: number }> = [];
+      // Build similarity matrix and use Hungarian algorithm for optimal matching
+      const simMatrix: number[][] = Array.from(
+        { length: sourceSubmobs.length },
+        (_, si) => Array.from(
+          { length: targetSubmobs.length },
+          (_, ti) => shapeSimilarity(sourceSubmobs[si], targetSubmobs[ti])
+        )
+      );
+
+      const result = hungarianFromSimilarity(simMatrix, this.matchThreshold);
 
       for (let si = 0; si < sourceSubmobs.length; si++) {
-        for (let ti = 0; ti < targetSubmobs.length; ti++) {
-          const sim = shapeSimilarity(sourceSubmobs[si], targetSubmobs[ti]);
-          if (sim >= this.matchThreshold) {
-            similarities.push({ srcIdx: si, tgtIdx: ti, similarity: sim });
-          }
-        }
-      }
-
-      // Sort by similarity descending and greedily match
-      similarities.sort((a, b) => b.similarity - a.similarity);
-
-      for (const { srcIdx, tgtIdx } of similarities) {
-        if (!usedSourceIndices.has(srcIdx) && !usedTargetIndices.has(tgtIdx)) {
-          this._addMatchedPart(sourceSubmobs[srcIdx], targetSubmobs[tgtIdx]);
-          usedSourceIndices.add(srcIdx);
-          usedTargetIndices.add(tgtIdx);
+        const ti = result.assignments[si];
+        if (ti >= 0) {
+          this._addMatchedPart(sourceSubmobs[si], targetSubmobs[ti]);
+          usedSourceIndices.add(si);
+          usedTargetIndices.add(ti);
         }
       }
     }
@@ -398,8 +420,11 @@ function defaultTexKey(vmobject: VMobject): string {
 
 /**
  * TransformMatchingTex animation - transforms matching TeX parts between expressions.
- * Parts are matched by their LaTeX content or structure.
- * Matched parts transform smoothly, while unmatched parts fade in/out.
+ *
+ * Parts are matched by their LaTeX content using key-based exact matching.
+ * When `transformMismatches` is enabled, unmatched parts are optimally paired
+ * using the Hungarian algorithm with position-based cost (center distance),
+ * ensuring the closest unmatched source/target parts are transformed together.
  *
  * @example
  * ```typescript
@@ -470,7 +495,11 @@ export class TransformMatchingTex extends Animation {
   }
 
   /**
-   * Match TeX parts between source and target
+   * Match TeX parts between source and target.
+   *
+   * Phase 1: Exact key-based matching (LaTeX string comparison).
+   * Phase 2 (if transformMismatches): Use Hungarian algorithm with center-distance
+   *   cost to optimally pair remaining unmatched source and target parts.
    */
   private _matchTexParts(): void {
     const sourceParts = this._getTexParts(this.mobject as VMobject);
@@ -479,7 +508,7 @@ export class TransformMatchingTex extends Animation {
     const usedSourceIndices = new Set<number>();
     const usedTargetIndices = new Set<number>();
 
-    // Group parts by key
+    // Phase 1: Group parts by key and match exact keys
     const sourceByKey = new Map<string, { vmob: VMobject; index: number }[]>();
     const targetByKey = new Map<string, { vmob: VMobject; index: number }[]>();
 
@@ -510,47 +539,73 @@ export class TransformMatchingTex extends Animation {
       }
     }
 
-    // Handle unmatched parts
-    const unmatchedSources: VMobject[] = [];
-    const unmatchedTargets: VMobject[] = [];
+    // Collect unmatched parts
+    const unmatchedSourceIndices: number[] = [];
+    const unmatchedTargetIndices: number[] = [];
 
     for (let i = 0; i < sourceParts.length; i++) {
       if (!usedSourceIndices.has(i)) {
-        unmatchedSources.push(sourceParts[i]);
+        unmatchedSourceIndices.push(i);
       }
     }
 
     for (let i = 0; i < targetParts.length; i++) {
       if (!usedTargetIndices.has(i)) {
-        unmatchedTargets.push(targetParts[i]);
+        unmatchedTargetIndices.push(i);
       }
     }
 
-    if (this.transformMismatches) {
-      // Pair up mismatches for transformation
-      const pairCount = Math.min(unmatchedSources.length, unmatchedTargets.length);
-      for (let i = 0; i < pairCount; i++) {
-        this._addMismatchedPair(unmatchedSources[i], unmatchedTargets[i]);
+    if (this.transformMismatches && unmatchedSourceIndices.length > 0 && unmatchedTargetIndices.length > 0) {
+      // Phase 2: Use Hungarian algorithm to optimally pair unmatched parts
+      // by minimizing total center distance (closest parts get paired)
+      const unmatchedSources = unmatchedSourceIndices.map(i => sourceParts[i]);
+      const unmatchedTargets = unmatchedTargetIndices.map(i => targetParts[i]);
+
+      const costMatrix: number[][] = Array.from(
+        { length: unmatchedSources.length },
+        (_, si) => Array.from(
+          { length: unmatchedTargets.length },
+          (_, ti) => centerDistance(unmatchedSources[si], unmatchedTargets[ti])
+        )
+      );
+
+      const result = hungarian(costMatrix);
+
+      const pairedSourceSet = new Set<number>();
+      const pairedTargetSet = new Set<number>();
+
+      for (let si = 0; si < unmatchedSources.length; si++) {
+        const ti = result.assignments[si];
+        if (ti >= 0 && ti < unmatchedTargets.length) {
+          this._addMismatchedPair(unmatchedSources[si], unmatchedTargets[ti]);
+          pairedSourceSet.add(si);
+          pairedTargetSet.add(ti);
+        }
       }
 
       // Remaining unmatched sources fade out
-      for (let i = pairCount; i < unmatchedSources.length; i++) {
-        const vmob = unmatchedSources[i];
-        this._fadeOutParts.push({
-          mobject: vmob,
-          fadeIn: false,
-          startOpacity: vmob.opacity,
-          targetOpacity: 0
-        });
+      for (let si = 0; si < unmatchedSources.length; si++) {
+        if (!pairedSourceSet.has(si)) {
+          const vmob = unmatchedSources[si];
+          this._fadeOutParts.push({
+            mobject: vmob,
+            fadeIn: false,
+            startOpacity: vmob.opacity,
+            targetOpacity: 0
+          });
+        }
       }
 
       // Remaining unmatched targets fade in
-      for (let i = pairCount; i < unmatchedTargets.length; i++) {
-        this._addFadeInPart(unmatchedTargets[i]);
+      for (let ti = 0; ti < unmatchedTargets.length; ti++) {
+        if (!pairedTargetSet.has(ti)) {
+          this._addFadeInPart(unmatchedTargets[ti]);
+        }
       }
     } else {
-      // All unmatched sources fade out
-      for (const vmob of unmatchedSources) {
+      // No transformMismatches: all unmatched sources fade out, targets fade in
+      for (const si of unmatchedSourceIndices) {
+        const vmob = sourceParts[si];
         this._fadeOutParts.push({
           mobject: vmob,
           fadeIn: false,
@@ -559,9 +614,8 @@ export class TransformMatchingTex extends Animation {
         });
       }
 
-      // All unmatched targets fade in
-      for (const vmob of unmatchedTargets) {
-        this._addFadeInPart(vmob);
+      for (const ti of unmatchedTargetIndices) {
+        this._addFadeInPart(targetParts[ti]);
       }
     }
   }

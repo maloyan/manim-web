@@ -161,8 +161,8 @@ export function wait(
 // ============================================================================
 
 export interface RotatingOptions extends AnimationOptions {
-  /** Rotation speed in radians per second. Default: PI (180 degrees/sec) */
-  speed?: number;
+  /** Total angle to rotate in radians. Default: 2*PI (full revolution, matching Manim's TAU) */
+  angle?: number;
   /** Axis of rotation [x, y, z]. Default: Z axis [0, 0, 1] */
   axis?: Vector3Tuple;
   /** Point to rotate about. Default: mobject center */
@@ -170,13 +170,13 @@ export interface RotatingOptions extends AnimationOptions {
 }
 
 /**
- * Continuous rotation animation that rotates while active.
- * Unlike Rotate which rotates by a specific angle, Rotating
- * continuously rotates at a given speed for the animation duration.
+ * Continuous rotation animation that rotates by a total angle over the duration.
+ * Matches Manim Python's Rotating: default angle=TAU (full revolution),
+ * default run_time=5, default rate_func=linear.
  */
 export class Rotating extends Animation {
-  /** Rotation speed in radians per second */
-  readonly speed: number;
+  /** Total angle to rotate in radians */
+  readonly angle: number;
 
   /** Axis of rotation */
   readonly axis: Vector3Tuple;
@@ -198,10 +198,10 @@ export class Rotating extends Animation {
 
   constructor(mobject: Mobject, options: RotatingOptions = {}) {
     super(mobject, {
-      duration: options.duration ?? 2,
-      rateFunc: options.rateFunc ?? linear, // Linear for smooth continuous rotation
+      duration: options.duration ?? 5,
+      rateFunc: options.rateFunc ?? linear,
     });
-    this.speed = options.speed ?? Math.PI; // Default: 180 deg/sec
+    this.angle = options.angle ?? (2 * Math.PI); // Default: TAU (full revolution)
     this.axis = options.axis ?? [0, 0, 1];
     this.aboutPoint = options.aboutPoint ?? null;
   }
@@ -237,11 +237,11 @@ export class Rotating extends Animation {
 
   /**
    * Interpolate the rotation at the given alpha
-   * For continuous rotation, alpha maps to total rotation = speed * duration * alpha
+   * Total rotation = angle * alpha (at alpha=1, full angle is reached)
    */
   interpolate(alpha: number): void {
-    // Total angle rotated so far: speed * duration * alpha
-    const totalAngle = this.speed * this.duration * alpha;
+    // Total angle rotated so far: angle * alpha
+    const totalAngle = this.angle * alpha;
 
     // Create rotation quaternion for current angle
     const rotationQuat = new THREE.Quaternion().setFromAxisAngle(
@@ -272,9 +272,9 @@ export class Rotating extends Animation {
 
 /**
  * Create a Rotating animation for a mobject.
- * Continuously rotates the mobject at the specified speed.
+ * Rotates the mobject by the specified angle over the animation duration.
  * @param mobject The mobject to rotate
- * @param options Rotating options (speed, axis, aboutPoint, duration)
+ * @param options Rotating options (angle, axis, aboutPoint, duration)
  */
 export function rotating(mobject: Mobject, options?: RotatingOptions): Rotating {
   return new Rotating(mobject, options);

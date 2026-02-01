@@ -190,6 +190,14 @@ export {
   Pulse,
   pulse,
   type PulseOptions,
+  // ShowCreationThenDestruction - draw then erase
+  ShowCreationThenDestruction,
+  showCreationThenDestruction,
+  type ShowCreationThenDestructionOptions,
+  // WiggleOutThenIn - scale + rotation oscillation out and back
+  WiggleOutThenIn,
+  wiggleOutThenIn,
+  type WiggleOutThenInOptions,
 } from './indication';
 
 // Growing animations

@@ -6,6 +6,7 @@
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
+import { flowPoint } from '../../utils/ode';
 
 /**
  * Type for a 3D homotopy function
@@ -60,6 +61,8 @@ export interface PhaseFlowOptions extends AnimationOptions {
   vectorField: VectorFieldFunction;
   /** Virtual time to flow through (default: 1) */
   virtualTime?: number;
+  /** Number of RK4 integration steps per unit of virtual time (default: 100) */
+  integrationSteps?: number;
 }
 
 /**
@@ -374,6 +377,18 @@ export class SmoothedVectorizedHomotopy extends Animation {
 /**
  * Animation that flows a mobject along a vector field.
  * The mobject follows the flow lines defined by the vector field function.
+ *
+ * Uses the RK4 ODE solver from `utils/ode` for accurate numerical integration.
+ *
+ * @example
+ * ```typescript
+ * // Circular flow
+ * const flow = new PhaseFlow(dots, {
+ *   vectorField: ([x, y, z]) => [-y, x, 0],
+ *   virtualTime: 2,
+ *   duration: 3,
+ * });
+ * ```
  */
 export class PhaseFlow extends Animation {
   /** The vector field function */
@@ -385,16 +400,20 @@ export class PhaseFlow extends Animation {
   /** Original points stored at animation start */
   private _originalPoints: number[][] | null = null;
 
+  /** Original position for non-VMobject mobjects */
+  private _originalPosition: [number, number, number] | null = null;
+
   /** Whether the mobject is a VMobject */
   private _isVMobject: boolean = false;
 
-  /** Number of integration steps for numerical integration */
-  private readonly _integrationSteps: number = 100;
+  /** Number of integration steps per unit of virtual time */
+  private readonly _integrationSteps: number;
 
   constructor(mobject: Mobject, options: PhaseFlowOptions) {
     super(mobject, options);
     this.vectorField = options.vectorField;
     this.virtualTime = options.virtualTime ?? 1;
+    this._integrationSteps = options.integrationSteps ?? 100;
   }
 
   /**
@@ -409,73 +428,48 @@ export class PhaseFlow extends Animation {
     } else {
       this._isVMobject = false;
       this._originalPoints = null;
+      const pos = this.mobject.position;
+      this._originalPosition = [pos.x, pos.y, pos.z];
     }
   }
 
   /**
-   * Flow a single point along the vector field for a given time using RK4 integration
-   */
-  private _flowPoint(start: [number, number, number], time: number): [number, number, number] {
-    if (time === 0) {
-      return [...start] as [number, number, number];
-    }
-
-    const steps = Math.ceil(Math.abs(time) * this._integrationSteps);
-    const dt = time / steps;
-
-    let [x, y, z] = start;
-
-    // RK4 integration
-    for (let i = 0; i < steps; i++) {
-      const k1 = this.vectorField([x, y, z]);
-
-      const k2 = this.vectorField([
-        x + 0.5 * dt * k1[0],
-        y + 0.5 * dt * k1[1],
-        z + 0.5 * dt * k1[2]
-      ]);
-
-      const k3 = this.vectorField([
-        x + 0.5 * dt * k2[0],
-        y + 0.5 * dt * k2[1],
-        z + 0.5 * dt * k2[2]
-      ]);
-
-      const k4 = this.vectorField([
-        x + dt * k3[0],
-        y + dt * k3[1],
-        z + dt * k3[2]
-      ]);
-
-      x += (dt / 6) * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]);
-      y += (dt / 6) * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]);
-      z += (dt / 6) * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]);
-    }
-
-    return [x, y, z];
-  }
-
-  /**
-   * Apply the phase flow at the given progress value
+   * Apply the phase flow at the given progress value.
+   * Each point is flowed from its original position for alpha * virtualTime
+   * using RK4 integration from the ODE solver utility.
    */
   interpolate(alpha: number): void {
     const flowTime = alpha * this.virtualTime;
 
     if (!this._isVMobject || !this._originalPoints) {
-      // For non-VMobjects, flow the position
-      const pos = this.mobject.position;
-      const [newX, newY, newZ] = this._flowPoint([pos.x, pos.y, pos.z], flowTime);
+      // For non-VMobjects, flow the position from the stored original
+      const start = this._originalPosition ?? [
+        this.mobject.position.x,
+        this.mobject.position.y,
+        this.mobject.position.z,
+      ] as [number, number, number];
+      const [newX, newY, newZ] = flowPoint(
+        this.vectorField,
+        start,
+        flowTime,
+        this._integrationSteps
+      );
       this.mobject.position.set(newX, newY, newZ);
       this.mobject._markDirty();
       return;
     }
 
-    // Flow all points on the VMobject
+    // Flow all points on the VMobject from their original positions
     const vmobject = this.mobject as VMobject;
     const newPoints: number[][] = [];
 
     for (const point of this._originalPoints) {
-      const flowed = this._flowPoint([point[0], point[1], point[2]], flowTime);
+      const flowed = flowPoint(
+        this.vectorField,
+        [point[0], point[1], point[2]],
+        flowTime,
+        this._integrationSteps
+      );
       newPoints.push(flowed);
     }
 

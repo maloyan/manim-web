@@ -307,6 +307,9 @@ const METHOD_MAP = {
   'set_value': 'setValue',
   'get_value': 'getValue',
   'increment_value': 'incrementValue',
+  'set_x': 'setX',
+  'set_y': 'setY',
+  'set_z': 'setZ',
 };
 
 // ─── Color constant map ──────────────────────────────────────────────
@@ -434,10 +437,35 @@ function findMatchingParen(s, openIndex) {
   return -1;
 }
 
+// ─── Expand tuple unpacking: a,b = x,y → separate assignments ────────
+function expandTupleUnpacking(lines) {
+  const result = [];
+  for (const line of lines) {
+    // Match: indent var1, var2 [, var3 ...] = expr1, expr2 [, expr3 ...]
+    // But not inside for loops, function defs, or lines with ==
+    const m = line.match(/^(\s*)([a-zA-Z_]\w*(?:\s*,\s*[a-zA-Z_]\w*)+)\s*=\s*(.+)$/);
+    if (m && !/^\s*(for|if|while|def|return)\b/.test(line) && !line.includes('==')) {
+      const indent = m[1];
+      const varNames = m[2].split(',').map(v => v.trim());
+      const rhsStr = m[3];
+      // Split RHS by top-level commas (respecting parens/brackets/strings)
+      const rhsParts = smartSplit(rhsStr);
+      if (rhsParts.length === varNames.length) {
+        for (let i = 0; i < varNames.length; i++) {
+          result.push(`${indent}${varNames[i]} = ${rhsParts[i].trim()}`);
+        }
+        continue;
+      }
+    }
+    result.push(line);
+  }
+  return result;
+}
+
 // ─── Main converter ──────────────────────────────────────────────────
 function convertPythonToTypeScript(pythonCode) {
   const rawLines = pythonCode.split('\n');
-  const lines = joinContinuationLines(rawLines);
+  const lines = expandTupleUnpacking(joinContinuationLines(rawLines));
 
   // ── Phase 1: Parse into scene blocks ──
   const scenes = [];
@@ -754,15 +782,15 @@ function convertLine(rawLine, tracking, declaredVars) {
     }
   }
 
-  // Known kwargs: key=value → tsKey: value
+  // Known kwargs: key=value → tsKey: value (only inside function calls: after ( or ,)
   for (const [pyKey, tsKey] of Object.entries(KWARG_MAP)) {
-    line = line.replace(new RegExp(`\\b${pyKey}\\s*=`, 'g'), `${tsKey}: `);
+    line = line.replace(new RegExp(`([(,]\\s*)${pyKey}\\s*=`, 'g'), `$1${tsKey}: `);
   }
 
-  // Remaining snake_case kwargs: key=value → camelKey: value
-  line = line.replace(/\b([a-z_][a-z_0-9]*)=/g, (match, key) => {
+  // Remaining snake_case kwargs: key=value → camelKey: value (only inside function calls)
+  line = line.replace(/([(,]\s*)([a-z_][a-z_0-9]*)=/g, (match, before, key) => {
     if (match.endsWith('==')) return match;
-    return `${KWARG_MAP[key] || snakeToCamel(key)}: `;
+    return `${before}${KWARG_MAP[key] || snakeToCamel(key)}: `;
   });
 
   // Known method renames

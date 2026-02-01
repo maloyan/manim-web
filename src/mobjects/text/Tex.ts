@@ -3,6 +3,11 @@
  *
  * In the original Manim library, Tex is used for LaTeX rendering.
  * This alias provides the same interface for users familiar with Manim.
+ *
+ * Supports the same `renderer` option as MathTex:
+ * - 'katex'  : KaTeX only (fast)
+ * - 'mathjax': MathJax SVG only (full LaTeX support)
+ * - 'auto'   : KaTeX first, MathJax fallback (default)
  */
 
 import { MathTex, MathTexOptions } from './MathTex';
@@ -30,6 +35,12 @@ export type TexOptions = MathTexOptions;
  *   color: '#ffff00',
  *   fontSize: 56
  * });
+ *
+ * // Use MathJax for advanced LaTeX
+ * const chem = new Tex({
+ *   latex: '\\ce{H2O -> H+ + OH-}',
+ *   renderer: 'mathjax'
+ * });
  * ```
  */
 export class Tex extends MathTex {
@@ -51,6 +62,7 @@ export class Tex extends MathTex {
       fontSize: this._fontSize,
       displayMode: this._displayMode,
       position: [this.position.x, this.position.y, this.position.z],
+      renderer: this._renderer,
     });
   }
 }

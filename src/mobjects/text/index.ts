@@ -15,14 +15,31 @@ export { TextGlyphGroup, type TextGlyphGroupOptions } from './TextGlyphGroup';
 // Paragraph - Text with word wrapping
 export { Paragraph, type ParagraphOptions } from './Paragraph';
 
-// MarkupText - Text with inline formatting (**bold**, *italic*, `code`)
-export { MarkupText, type MarkupTextOptions } from './MarkupText';
+// MarkupText - Text with Pango-like XML markup (bold, italic, colors, spans, etc.)
+export { MarkupText, type MarkupTextOptions, type StyledTextSegment } from './MarkupText';
 
 // KaTeX styles helper
 export { ensureKatexStyles, areKatexStylesLoaded } from './katex-styles';
 
-// MathTex - LaTeX rendering
-export { MathTex, type MathTexOptions } from './MathTex';
+// MathTex - LaTeX rendering (KaTeX default, MathJax fallback)
+export { MathTex, type MathTexOptions, type TexRenderer } from './MathTex';
+
+// MathJax renderer (dynamic import, full LaTeX support)
+export {
+  renderLatexToSVG,
+  preloadMathJax,
+  isMathJaxLoaded,
+  katexCanRender,
+  type MathJaxRenderOptions,
+  type MathJaxRenderResult,
+} from './MathJaxRenderer';
+
+// SVG path parser (SVG d-attribute -> VMobject conversion)
+export {
+  parseSVGPathData,
+  svgToVMobjects,
+  type SVGToVMobjectOptions,
+} from './svgPathParser';
 
 // Tex - Manim compatibility alias
 export { Tex, type TexOptions } from './Tex';

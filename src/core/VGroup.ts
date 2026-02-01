@@ -181,8 +181,8 @@ export class VGroup extends VMobject {
     if (!Array.isArray(target)) {
       // Mobject target: delegate to base which uses shift
       if (alignedEdge) {
-        const targetEdge = target.getEdge(alignedEdge);
-        const thisEdge = this.getEdge(alignedEdge);
+        const targetEdge = target._getEdgeInDirection(alignedEdge);
+        const thisEdge = this._getEdgeInDirection(alignedEdge);
         return this.shift([
           targetEdge[0] - thisEdge[0],
           targetEdge[1] - thisEdge[1],

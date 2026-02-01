@@ -14,7 +14,6 @@
  */
 
 import { VMobject } from '../../core/VMobject';
-// @ts-ignore - polygon-clipping .d.ts declares named exports but ESM bundle uses default export
 import polygonClipping from 'polygon-clipping';
 
 // Re-export types from polygon-clipping for internal use
@@ -41,7 +40,7 @@ export interface BooleanOperationOptions {
   fillColor?: string;
   /** Fill opacity. Default: inherited from first shape */
   fillOpacity?: number;
-  /** Stroke width. Default: 3 (thin outline) */
+  /** Stroke width. Default: inherited from first shape */
   strokeWidth?: number;
   /** Number of samples per Bezier segment for polygon approximation. Default: 8 */
   samplesPerSegment?: number;
@@ -83,15 +82,6 @@ export class BooleanResult extends VMobject {
     const shifted = pts.map(p => [p[0] - cx, p[1] - cy, p[2]]);
     this.setPoints3D(shifted);
 
-    // Also shift children's points (stroke-only children for multi-polygon results)
-    for (const child of this.children) {
-      if (child instanceof VMobject) {
-        const childPts = child.getPoints();
-        const childShifted = childPts.map(p => [p[0] - cx, p[1] - cy, p[2]]);
-        child.setPoints3D(childShifted);
-      }
-    }
-
     // Move the mobject's world position to the centroid
     this.position.set(cx, cy, 0);
   }
@@ -126,10 +116,7 @@ export class BooleanResult extends VMobject {
 
   /**
    * Set VMobject points from multiple polygons.
-   *
-   * The parent keeps bridge-connected points for fill rendering and layout
-   * (the bridge is invisible in fill). Stroke-only child VMobjects are
-   * created for each polygon so that no bridge line appears in the stroke.
+   * Joins polygons with degenerate bezier segments.
    */
   protected _setPointsFromMultiplePolygons(polygons: Vertex2D[][]): void {
     const validPolygons = polygons.filter(p => p.length >= 3);
@@ -140,15 +127,16 @@ export class BooleanResult extends VMobject {
       return;
     }
 
-    // --- Parent: bridge-connected points for fill + layout ---
     const points: number[][] = [];
 
     for (let polyIdx = 0; polyIdx < validPolygons.length; polyIdx++) {
       const vertices = validPolygons[polyIdx];
 
       if (polyIdx > 0) {
+        // Degenerate bridge segment from previous polygon's last point
+        // to this polygon's first point
         const prevPoly = validPolygons[polyIdx - 1];
-        const lastPt = prevPoly[0];
+        const lastPt = prevPoly[0]; // closed polygon ends at first vertex
         const firstPt = vertices[0];
 
         const bdx = firstPt.x - lastPt.x;
@@ -162,6 +150,7 @@ export class BooleanResult extends VMobject {
       for (let i = 0; i < vertices.length; i++) {
         const p0 = vertices[i];
         const p1 = vertices[(i + 1) % vertices.length];
+
         const dx = p1.x - p0.x;
         const dy = p1.y - p0.y;
 
@@ -175,34 +164,6 @@ export class BooleanResult extends VMobject {
     }
 
     this.setPoints3D(points);
-
-    // --- Children: one per polygon for stroke rendering (no bridge) ---
-    const parentStrokeWidth = this.strokeWidth;
-    this.strokeWidth = 0; // Parent renders fill only
-
-    for (const poly of validPolygons) {
-      const child = new VMobject();
-      child.color = this.color;
-      child.fillOpacity = 0;                // No fill on children
-      child.strokeWidth = parentStrokeWidth; // Stroke on children
-      child._opacity = this._opacity;
-
-      const childPoints: number[][] = [];
-      for (let i = 0; i < poly.length; i++) {
-        const p0 = poly[i];
-        const p1 = poly[(i + 1) % poly.length];
-        const dx = p1.x - p0.x;
-        const dy = p1.y - p0.y;
-        if (i === 0) childPoints.push([p0.x, p0.y, 0]);
-        childPoints.push([p0.x + dx / 3, p0.y + dy / 3, 0]);
-        childPoints.push([p0.x + 2 * dx / 3, p0.y + 2 * dy / 3, 0]);
-        childPoints.push([p1.x, p1.y, 0]);
-      }
-      child.setPoints3D(childPoints);
-
-      child.parent = this;
-      this.children.push(child);
-    }
   }
 }
 
@@ -212,6 +173,18 @@ export class BooleanResult extends VMobject {
 
 /**
  * Perform a boolean operation using the polygon-clipping library.
+ *
+ * This wraps the Martinez-Rueda-Feito algorithm which robustly handles:
+ * - Convex and concave polygons
+ * - Self-intersecting paths (via pre-processing)
+ * - Coincident and collinear edges
+ * - Holes and multi-polygon output
+ * - Degenerate inputs
+ *
+ * @param polyA - Subject polygon vertices
+ * @param polyB - Clip polygon vertices
+ * @param operation - Boolean operation to perform
+ * @returns Array of result polygons as Vertex2D arrays
  */
 function performBooleanOp(
   polyA: Vertex2D[],
@@ -220,6 +193,10 @@ function performBooleanOp(
 ): Vertex2D[][] {
   if (polyA.length < 3 || polyB.length < 3) return [];
 
+  // Convert Vertex2D[] to polygon-clipping Polygon format:
+  // A Polygon is Ring[] where Ring is [number, number][]
+  // First ring is outer boundary; subsequent rings are holes.
+  // We treat each input as a single polygon with one outer ring.
   const ringA: Ring = verticesToRing(polyA);
   const ringB: Ring = verticesToRing(polyB);
 
@@ -244,17 +221,25 @@ function performBooleanOp(
         break;
     }
   } catch (_e) {
+    // If polygon-clipping throws (extremely degenerate input), fall back
+    // to returning the subject polygon for union/difference, or empty for
+    // intersection/xor.
     if (operation === 'union' || operation === 'difference') {
       return [polyA];
     }
     return [];
   }
 
+  // Convert MultiPolygon result back to Vertex2D[][] arrays.
+  // Each Polygon in the result may have holes (rings[1..n]).
+  // We flatten all rings into separate Vertex2D[] arrays so the caller
+  // can render them as joined subpaths.
   return multiPolygonToVertices(result);
 }
 
 /**
  * Convert Vertex2D[] to a polygon-clipping Ring (closed coordinate array).
+ * Ensures the ring is properly closed (first == last point).
  */
 function verticesToRing(vertices: Vertex2D[]): Ring {
   const ring: Ring = vertices.map(v => [v.x, v.y] as Pair);
@@ -273,6 +258,7 @@ function verticesToRing(vertices: Vertex2D[]): Ring {
 
 /**
  * Convert a polygon-clipping MultiPolygon result to Vertex2D[][] arrays.
+ * Flattens all polygons and their rings (outer + holes) into separate arrays.
  */
 function multiPolygonToVertices(mp: MultiPolygon): Vertex2D[][] {
   const result: Vertex2D[][] = [];
@@ -284,7 +270,8 @@ function multiPolygonToVertices(mp: MultiPolygon): Vertex2D[][] {
         vertices.push({ x: pair[0], y: pair[1] });
       }
 
-      // Remove closing point if it duplicates the first
+      // Remove closing point if it duplicates the first (polygon-clipping
+      // convention), since our Bezier conversion handles closure implicitly.
       if (vertices.length > 1) {
         const first = vertices[0];
         const last = vertices[vertices.length - 1];
@@ -311,6 +298,13 @@ function multiPolygonToVertices(mp: MultiPolygon): Vertex2D[][] {
  *
  * Creates a new shape that encompasses both input shapes.
  * Uses the Martinez-Rueda-Feito algorithm for robust handling of all polygon types.
+ *
+ * @example
+ * ```typescript
+ * const circle1 = new Circle({ radius: 1 });
+ * const circle2 = new Circle({ radius: 1 }).shift([1, 0, 0]);
+ * const combined = new Union(circle1, circle2);
+ * ```
  */
 export class Union extends BooleanResult {
   constructor(shape1: VMobject, shape2: VMobject, options: BooleanOperationOptions = {}) {
@@ -320,7 +314,7 @@ export class Union extends BooleanResult {
       color = shape1.color,
       fillColor,
       fillOpacity = shape1.fillOpacity,
-      strokeWidth = 3,
+      strokeWidth = shape1.strokeWidth,
       samplesPerSegment = 8,
     } = options;
 
@@ -337,6 +331,7 @@ export class Union extends BooleanResult {
       this._resultVertices = resultPolygons;
       this._setPointsFromMultiplePolygons(resultPolygons);
     } else {
+      // Fallback: if union produces nothing, return both polygons
       if (poly1.length >= 3 && poly2.length >= 3) {
         this._resultVertices = [poly1, poly2];
         this._setPointsFromMultiplePolygons([poly1, poly2]);
@@ -357,6 +352,13 @@ export class Union extends BooleanResult {
  *
  * Creates a new shape representing the overlapping region of both inputs.
  * Uses the Martinez-Rueda-Feito algorithm for robust handling of all polygon types.
+ *
+ * @example
+ * ```typescript
+ * const square1 = new Square({ sideLength: 2 });
+ * const square2 = new Square({ sideLength: 2 }).shift([1, 1, 0]);
+ * const overlap = new Intersection(square1, square2);
+ * ```
  */
 export class Intersection extends BooleanResult {
   constructor(shape1: VMobject, shape2: VMobject, options: BooleanOperationOptions = {}) {
@@ -366,7 +368,7 @@ export class Intersection extends BooleanResult {
       color = shape1.color,
       fillColor,
       fillOpacity = shape1.fillOpacity,
-      strokeWidth = 3,
+      strokeWidth = shape1.strokeWidth,
       samplesPerSegment = 8,
     } = options;
 
@@ -383,6 +385,7 @@ export class Intersection extends BooleanResult {
       this._resultVertices = resultPolygons;
       this._setPointsFromMultiplePolygons(resultPolygons);
     }
+    // If intersection is empty, the shape has no points (empty result)
     this._centerOnPoints();
   }
 }
@@ -391,7 +394,15 @@ export class Intersection extends BooleanResult {
  * Difference - Boolean difference of two shapes (subtract second from first)
  *
  * Creates a new shape representing the first shape with the second removed.
- * Uses the Martinez-Rueda-Feito algorithm for robust handling of all polygon types.
+ * Uses the Martinez-Rueda-Feito algorithm for robust handling of all polygon types,
+ * including proper hole representation when one shape is inside another.
+ *
+ * @example
+ * ```typescript
+ * const bigCircle = new Circle({ radius: 2 });
+ * const smallCircle = new Circle({ radius: 1 });
+ * const donut = new Difference(bigCircle, smallCircle);
+ * ```
  */
 export class Difference extends BooleanResult {
   constructor(shape1: VMobject, shape2: VMobject, options: BooleanOperationOptions = {}) {
@@ -401,7 +412,7 @@ export class Difference extends BooleanResult {
       color = shape1.color,
       fillColor,
       fillOpacity = shape1.fillOpacity,
-      strokeWidth = 3,
+      strokeWidth = shape1.strokeWidth,
       samplesPerSegment = 8,
     } = options;
 
@@ -418,6 +429,7 @@ export class Difference extends BooleanResult {
       this._resultVertices = resultPolygons;
       this._setPointsFromMultiplePolygons(resultPolygons);
     } else {
+      // If difference produces nothing meaningful, use original poly1
       if (poly1.length >= 3) {
         this._resultVertices = [poly1];
         this._setPointsFromVertices(poly1);
@@ -432,6 +444,13 @@ export class Difference extends BooleanResult {
  *
  * Creates shapes representing the areas that are in one shape but not both.
  * Uses the Martinez-Rueda-Feito algorithm for robust handling of all polygon types.
+ *
+ * @example
+ * ```typescript
+ * const circle1 = new Circle({ radius: 1 });
+ * const circle2 = new Circle({ radius: 1 }).shift([0.5, 0, 0]);
+ * const xorShape = new Exclusion(circle1, circle2);
+ * ```
  */
 export class Exclusion extends BooleanResult {
   constructor(shape1: VMobject, shape2: VMobject, options: BooleanOperationOptions = {}) {
@@ -441,7 +460,7 @@ export class Exclusion extends BooleanResult {
       color = shape1.color,
       fillColor,
       fillOpacity = shape1.fillOpacity,
-      strokeWidth = 3,
+      strokeWidth = shape1.strokeWidth,
       samplesPerSegment = 8,
     } = options;
 
@@ -458,6 +477,7 @@ export class Exclusion extends BooleanResult {
       this._resultVertices = resultPolygons;
       this._setPointsFromMultiplePolygons(resultPolygons);
     }
+    // If XOR is empty, shapes are identical or degenerate
     this._centerOnPoints();
   }
 }
@@ -468,6 +488,11 @@ export class Exclusion extends BooleanResult {
 
 /**
  * Create a boolean union of two shapes
+ *
+ * @param shape1 - First shape
+ * @param shape2 - Second shape
+ * @param options - Optional styling options
+ * @returns New VMobject representing the union
  */
 export function union(
   shape1: VMobject,
@@ -479,6 +504,11 @@ export function union(
 
 /**
  * Create a boolean intersection of two shapes
+ *
+ * @param shape1 - First shape
+ * @param shape2 - Second shape
+ * @param options - Optional styling options
+ * @returns New VMobject representing the intersection
  */
 export function intersection(
   shape1: VMobject,
@@ -490,6 +520,11 @@ export function intersection(
 
 /**
  * Create a boolean difference of two shapes (subtract second from first)
+ *
+ * @param shape1 - First shape (base)
+ * @param shape2 - Second shape (to subtract)
+ * @param options - Optional styling options
+ * @returns New VMobject representing the difference
  */
 export function difference(
   shape1: VMobject,
@@ -501,6 +536,11 @@ export function difference(
 
 /**
  * Create a boolean exclusion (XOR) of two shapes
+ *
+ * @param shape1 - First shape
+ * @param shape2 - Second shape
+ * @param options - Optional styling options
+ * @returns New VMobject representing the exclusion
  */
 export function exclusion(
   shape1: VMobject,
@@ -517,14 +557,18 @@ export function exclusion(
 /**
  * Sample a VMobject's path to get polygon vertices.
  * Converts cubic Bezier curves to a polyline approximation.
- * Applies the mobject's world-space position offset so that shapes
- * moved via shift()/moveTo() are sampled at their actual on-screen location.
+ *
+ * @param vmobject - The VMobject to sample
+ * @param samplesPerSegment - Number of samples per cubic Bezier segment
+ * @returns Array of 2D vertices approximating the path
  */
 function sampleVMobjectToPolygon(vmobject: VMobject, samplesPerSegment: number): Vertex2D[] {
   const points3D = vmobject.getPoints();
   if (points3D.length === 0) return [];
 
-  // Apply the mobject's world-space position offset
+  // Apply the mobject's world-space position offset so that shapes
+  // moved via shift() / arrange() / moveTo() are sampled at their
+  // actual on-screen location rather than their local-space origin.
   const ox = vmobject.position.x;
   const oy = vmobject.position.y;
 

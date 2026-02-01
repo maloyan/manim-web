@@ -21,6 +21,9 @@ export {
 // FunctionGraph
 export { FunctionGraph, type FunctionGraphOptions } from './FunctionGraph';
 
+// ImplicitFunction
+export { ImplicitFunction, type ImplicitFunctionOptions } from './ImplicitFunction';
+
 // ParametricFunction
 export { ParametricFunction, type ParametricFunctionOptions } from './ParametricFunction';
 

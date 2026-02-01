@@ -18,18 +18,6 @@ export const ORIGIN: Vector3Tuple = [0, 0, 0];
 export const UL: Vector3Tuple = [-1, 1, 0];  // UP + LEFT
 export const UR: Vector3Tuple = [1, 1, 0];   // UP + RIGHT
 export const DL: Vector3Tuple = [-1, -1, 0]; // DOWN + LEFT
-
-// Vector math utilities (needed because JS has no operator overloading)
-/** Scale a vector by a scalar: scaleVec(2, UP) → [0, 2, 0] */
-export function scaleVec(s: number, v: Vector3Tuple): Vector3Tuple {
-  return [s * v[0], s * v[1], s * v[2]];
-}
-/** Add vectors: addVec(LEFT, UP) → [-1, 1, 0] */
-export function addVec(...vecs: Vector3Tuple[]): Vector3Tuple {
-  const r: Vector3Tuple = [0, 0, 0];
-  for (const v of vecs) { r[0] += v[0]; r[1] += v[1]; r[2] += v[2]; }
-  return r;
-}
 export const DR: Vector3Tuple = [1, -1, 0];  // DOWN + RIGHT
 
 /**
@@ -100,6 +88,15 @@ export abstract class Mobject {
   /** Dirty flag indicating transforms need sync */
   _dirty: boolean = true;
 
+  /** Updater functions that run every frame */
+  private _updaters: UpdaterFunction[] = [];
+
+  /**
+   * Saved mobject copy (used by Restore animation in TransformExtensions).
+   * Set by saveState().
+   */
+  savedState: Mobject | null = null;
+
   /**
    * Target copy used by generateTarget() / MoveToTarget animation.
    * Call generateTarget() to create a copy, modify targetCopy, then
@@ -108,12 +105,11 @@ export abstract class Mobject {
   targetCopy: Mobject | null = null;
 
   /**
-   * Saved state copy used by saveState() / restoreState().
+   * JSON-serializable saved state (used by restoreState()).
+   * Set by saveState() -- typed as `unknown` here to avoid circular import;
+   * actual type is MobjectState from StateManager.ts.
    */
-  savedState: Mobject | null = null;
-
-  /** Updater functions that run every frame */
-  private _updaters: UpdaterFunction[] = [];
+  __savedMobjectState: unknown = null;
 
   private static _idCounter: number = 0;
 
@@ -237,17 +233,119 @@ export abstract class Mobject {
    * Rotate the mobject around an axis
    * Uses object pooling to avoid allocations in hot paths (performance optimization).
    * @param angle - Rotation angle in radians
-   * @param axis - Axis of rotation [x, y, z], defaults to Z axis
+   * @param axisOrOptions - Axis of rotation [x, y, z] (defaults to Z axis), or options object
    * @returns this for chaining
    */
-  rotate(angle: number, axis: Vector3Tuple = [0, 0, 1]): this {
-    // Use pooled vector and quaternion to avoid allocation
-    Mobject._tempVec3.set(axis[0], axis[1], axis[2]).normalize();
-    Mobject._tempQuaternion.setFromAxisAngle(Mobject._tempVec3, angle);
-    const currentQuat = new THREE.Quaternion().setFromEuler(this.rotation);
-    currentQuat.multiply(Mobject._tempQuaternion);
-    this.rotation.setFromQuaternion(currentQuat);
-    this._markDirty();
+  rotate(angle: number, axisOrOptions?: Vector3Tuple | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple }): this {
+    let axis: Vector3Tuple = [0, 0, 1];
+    let aboutPoint: Vector3Tuple | undefined;
+
+    if (axisOrOptions) {
+      if (Array.isArray(axisOrOptions)) {
+        axis = axisOrOptions;
+      } else {
+        axis = axisOrOptions.axis ?? [0, 0, 1];
+        aboutPoint = axisOrOptions.aboutPoint;
+      }
+    }
+
+    // For VMobjects with point data, transform points directly (Manim Python behavior)
+    if ('_points3D' in this && (this as any)._points3D.length > 0) {
+      const points: number[][] = (this as any)._points3D;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+
+      // When no aboutPoint specified, rotate around center of points bounding box
+      if (!aboutPoint) {
+        let minX = Infinity, maxX = -Infinity;
+        let minY = Infinity, maxY = -Infinity;
+        let minZ = Infinity, maxZ = -Infinity;
+        for (const p of points) {
+          if (p[0] < minX) minX = p[0]; if (p[0] > maxX) maxX = p[0];
+          if (p[1] < minY) minY = p[1]; if (p[1] > maxY) maxY = p[1];
+          if (p[2] < minZ) minZ = p[2]; if (p[2] > maxZ) maxZ = p[2];
+        }
+        aboutPoint = [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2];
+      }
+
+      const cx = aboutPoint[0];
+      const cy = aboutPoint[1];
+      const cz = aboutPoint[2];
+
+      // Check if rotating around Z axis (2D case - by far most common)
+      if (axis[0] === 0 && axis[1] === 0 && axis[2] !== 0) {
+        // 2D rotation: transform each point around center
+        for (const point of points) {
+          const dx = point[0] - cx;
+          const dy = point[1] - cy;
+          point[0] = cx + dx * cos - dy * sin;
+          point[1] = cy + dx * sin + dy * cos;
+        }
+      } else {
+        // 3D rotation: use quaternion
+        Mobject._tempVec3.set(axis[0], axis[1], axis[2]).normalize();
+        Mobject._tempQuaternion.setFromAxisAngle(Mobject._tempVec3, angle);
+
+        for (const point of points) {
+          const dx = point[0] - cx;
+          const dy = point[1] - cy;
+          const dz = point[2] - cz;
+          const v = new THREE.Vector3(dx, dy, dz);
+          v.applyQuaternion(Mobject._tempQuaternion);
+          point[0] = cx + v.x;
+          point[1] = cy + v.y;
+          point[2] = cz + v.z;
+        }
+      }
+
+      // Also sync _points2D from _points3D
+      const points2D: any[] = (this as any)._points2D;
+      if (points2D) {
+        for (let i = 0; i < points.length && i < points2D.length; i++) {
+          points2D[i].x = points[i][0];
+          points2D[i].y = points[i][1];
+        }
+      }
+
+      (this as any)._geometryDirty = true;
+      this._markDirty();
+
+      // Recursively rotate children
+      for (const child of this.children) {
+        child.rotate(angle, { axis, aboutPoint });
+      }
+    } else {
+      // Non-VMobject fallback: use Three.js transform
+      if (aboutPoint) {
+        const dx = this.position.x - aboutPoint[0];
+        const dy = this.position.y - aboutPoint[1];
+        const dz = this.position.z - aboutPoint[2];
+
+        Mobject._tempVec3.set(axis[0], axis[1], axis[2]).normalize();
+        Mobject._tempQuaternion.setFromAxisAngle(Mobject._tempVec3, angle);
+
+        const offsetVec = new THREE.Vector3(dx, dy, dz);
+        offsetVec.applyQuaternion(Mobject._tempQuaternion);
+
+        this.position.set(
+          aboutPoint[0] + offsetVec.x,
+          aboutPoint[1] + offsetVec.y,
+          aboutPoint[2] + offsetVec.z,
+        );
+
+        const currentQuat = new THREE.Quaternion().setFromEuler(this.rotation);
+        currentQuat.multiply(Mobject._tempQuaternion);
+        this.rotation.setFromQuaternion(currentQuat);
+      } else {
+        Mobject._tempVec3.set(axis[0], axis[1], axis[2]).normalize();
+        Mobject._tempQuaternion.setFromAxisAngle(Mobject._tempVec3, angle);
+        const currentQuat = new THREE.Quaternion().setFromEuler(this.rotation);
+        currentQuat.multiply(Mobject._tempQuaternion);
+        this.rotation.setFromQuaternion(currentQuat);
+      }
+      this._markDirty();
+    }
+
     return this;
   }
 
@@ -458,15 +556,35 @@ export abstract class Mobject {
   }
 
   /**
-   * Create a copy of this mobject as a target for MoveToTarget animation.
-   * Modify the returned copy, then play `new MoveToTarget(this)` to
-   * smoothly interpolate from the current state to the target.
-   *
-   * @returns The target copy for modification
+   * Replace this mobject's transform, style, and geometry with that of another.
+   * Preserves identity (updaters, scene membership).
+   * Matches Manim Python's become() behavior.
+   * @param other - The mobject to copy from
+   * @returns this for chaining
    */
-  generateTarget(): Mobject {
-    this.targetCopy = this.copy();
-    return this.targetCopy;
+  become(other: Mobject): this {
+    this.position.copy(other.position);
+    this.rotation.copy(other.rotation);
+    this.scaleVector.copy(other.scaleVector);
+
+    this.color = other.color;
+    this._opacity = other._opacity;
+    this.strokeWidth = other.strokeWidth;
+    this.fillOpacity = other.fillOpacity;
+    this._style = { ...other._style };
+
+    // If both are VMobjects, copy points
+    if ('_points3D' in this && '_points3D' in other) {
+      const self = this as any;
+      const src = other as any;
+      self._points3D = src._points3D.map((p: number[]) => [...p]);
+      self._points2D = src._points2D.map((p: any) => ({ ...p }));
+      self._visiblePointCount = src._visiblePointCount;
+      self._geometryDirty = true;
+    }
+
+    this._markDirty();
+    return this;
   }
 
   /**
@@ -479,24 +597,14 @@ export abstract class Mobject {
    * @returns Center position as [x, y, z]
    */
   getCenter(): Vector3Tuple {
-    if (this.children.length === 0) {
-      return [this.position.x, this.position.y, this.position.z];
+    // Use bounding box center (matches Manim's get_center behavior)
+    const obj = this.getThreeObject();
+    Mobject._tempBox3.setFromObject(obj);
+    if (!Mobject._tempBox3.isEmpty()) {
+      Mobject._tempBox3.getCenter(Mobject._tempVec3);
+      return [Mobject._tempVec3.x, Mobject._tempVec3.y, Mobject._tempVec3.z];
     }
-
-    // Calculate average center of all children
-    let sumX = 0, sumY = 0, sumZ = 0;
-    for (const child of this.children) {
-      const center = child.getCenter();
-      sumX += center[0];
-      sumY += center[1];
-      sumZ += center[2];
-    }
-    const count = this.children.length;
-    return [
-      this.position.x + sumX / count,
-      this.position.y + sumY / count,
-      this.position.z + sumZ / count
-    ];
+    return [this.position.x, this.position.y, this.position.z];
   }
 
   /**
@@ -539,11 +647,15 @@ export abstract class Mobject {
       ? targetPoint
       : target._getEdgeInDirection(direction);
 
+    // Normalize direction for buff (matches Manim behavior)
+    const len = Math.sqrt(direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2) || 1;
+    const nx = direction[0] / len, ny = direction[1] / len, nz = direction[2] / len;
+
     // Calculate offset needed
     const offset: Vector3Tuple = [
-      targetEdge[0] + direction[0] * buff - thisEdge[0],
-      targetEdge[1] + direction[1] * buff - thisEdge[1],
-      targetEdge[2] + direction[2] * buff - thisEdge[2]
+      targetEdge[0] + nx * buff - thisEdge[0],
+      targetEdge[1] + ny * buff - thisEdge[1],
+      targetEdge[2] + nz * buff - thisEdge[2]
     ];
 
     return this.shift(offset);
@@ -594,8 +706,7 @@ export abstract class Mobject {
     const center = this.getCenter();
     const bounds = this._getBoundingBox();
 
-    // Use sign of direction components (like Manim's get_critical_point)
-    // so that UP*3 returns the same edge as UP.
+    // Use sign only (matches Manim's get_critical_point behavior)
     return [
       center[0] + Math.sign(direction[0]) * bounds.width / 2,
       center[1] + Math.sign(direction[1]) * bounds.height / 2,
@@ -615,22 +726,6 @@ export abstract class Mobject {
     Mobject._tempBox3.setFromObject(obj);
     Mobject._tempBox3.getSize(Mobject._tempVec3);
     return { width: Mobject._tempVec3.x, height: Mobject._tempVec3.y, depth: Mobject._tempVec3.z };
-  }
-
-  /**
-   * Get the width of this mobject in world units
-   * @returns Width based on bounding box
-   */
-  getWidth(): number {
-    return this._getBoundingBox().width;
-  }
-
-  /**
-   * Get the height of this mobject in world units
-   * @returns Height based on bounding box
-   */
-  getHeight(): number {
-    return this._getBoundingBox().height;
   }
 
   /**
@@ -672,6 +767,33 @@ export abstract class Mobject {
    */
   getRight(): Vector3Tuple {
     return this._getEdgeInDirection(RIGHT);
+  }
+
+  /**
+   * Set the x-coordinate of this mobject's center, preserving y and z.
+   * Matches Manim Python's set_x() behavior.
+   */
+  setX(x: number): this {
+    const center = this.getCenter();
+    return this.shift([x - center[0], 0, 0]);
+  }
+
+  /**
+   * Set the y-coordinate of this mobject's center, preserving x and z.
+   * Matches Manim Python's set_y() behavior.
+   */
+  setY(y: number): this {
+    const center = this.getCenter();
+    return this.shift([0, y - center[1], 0]);
+  }
+
+  /**
+   * Set the z-coordinate of this mobject's center, preserving x and y.
+   * Matches Manim Python's set_z() behavior.
+   */
+  setZ(z: number): this {
+    const center = this.getCenter();
+    return this.shift([0, 0, z - center[2]]);
   }
 
   /**
@@ -729,11 +851,13 @@ export abstract class Mobject {
     this._threeObject.scale.copy(this.scaleVector);
 
     // 2D z-layering: later children in the parent render on top.
-    // Set renderOrder on all Three.js descendants so the GPU draws shapes
-    // in painter's-algorithm order (materials use depthTest:false).
+    // Add a tiny z-offset per sibling index so the depth buffer resolves
+    // overlapping shapes in the correct painter's-algorithm order.
     if (this.parent) {
       const idx = this.parent.children.indexOf(this);
-      this._threeObject.traverse((child) => { child.renderOrder = idx; });
+      if (idx > 0) {
+        this._threeObject.position.z += idx * 0.01;
+      }
     }
 
     // Sync material properties if applicable
@@ -947,6 +1071,109 @@ export abstract class Mobject {
       }
     }
     return this;
+  }
+
+  /**
+   * Create a copy of this mobject as a target for MoveToTarget animation.
+   * Modify the returned copy, then play `new MoveToTarget(this)` to
+   * smoothly interpolate from the current state to the target.
+   *
+   * @returns The target copy for modification
+   *
+   * @example
+   * ```ts
+   * mob.generateTarget();
+   * mob.targetCopy!.shift([2, 0, 0]);
+   * mob.targetCopy!.setColor('red');
+   * await scene.play(new MoveToTarget(mob));
+   * ```
+   */
+  generateTarget(): Mobject {
+    this.targetCopy = this.copy();
+    return this.targetCopy;
+  }
+
+  /**
+   * Save the current state of this mobject so it can be restored later.
+   * Stores a deep copy on `this.savedState` (for Restore animation
+   * compatibility) and a serializable snapshot on `this.__savedMobjectState`
+   * (for restoreState).
+   *
+   * @returns this for chaining
+   *
+   * @example
+   * ```ts
+   * mob.saveState();
+   * mob.shift([2, 0, 0]);
+   * mob.setColor('red');
+   * mob.restoreState(); // back to original position and color
+   * ```
+   */
+  saveState(): this {
+    // Store a deep copy for Restore animation and for restoreState()
+    this.savedState = this.copy();
+
+    // Also store a plain-object snapshot for JSON serialization
+    // (consumers can import serializeMobject from StateManager for richer snapshots)
+    this.__savedMobjectState = {
+      position: [this.position.x, this.position.y, this.position.z],
+      rotation: [this.rotation.x, this.rotation.y, this.rotation.z, this.rotation.order],
+      scale: [this.scaleVector.x, this.scaleVector.y, this.scaleVector.z],
+      color: this.color,
+      opacity: this._opacity,
+      strokeWidth: this.strokeWidth,
+      fillOpacity: this.fillOpacity,
+      style: { ...this._style },
+    };
+    return this;
+  }
+
+  /**
+   * Restore this mobject to its previously saved state (from saveState).
+   * Uses the deep copy stored on `this.savedState` to restore all properties.
+   *
+   * @returns true if state was restored, false if no saved state exists
+   */
+  restoreState(): boolean {
+    const saved = this.savedState;
+    if (!saved) return false;
+
+    // Restore transform
+    this.position.copy(saved.position);
+    this.rotation.copy(saved.rotation);
+    this.scaleVector.copy(saved.scaleVector);
+
+    // Restore visual properties
+    this.color = saved.color;
+    this._opacity = saved.opacity;
+    this.strokeWidth = saved.strokeWidth;
+    this.fillOpacity = saved.fillOpacity;
+    this._style = { ...saved._style };
+
+    // Restore VMobject points if applicable (duck-typed to avoid import)
+    const self = this as any;
+    const src = saved as any;
+    if (typeof self.setPoints === 'function' && typeof src.getPoints === 'function') {
+      const pts = src.getPoints();
+      if (pts && pts.length > 0) {
+        self.setPoints(pts);
+      }
+      if (src._visiblePointCount !== undefined) {
+        self._visiblePointCount = src._visiblePointCount;
+        self._geometryDirty = true;
+      }
+    }
+
+    // Recursively restore children by index
+    const minLen = Math.min(this.children.length, saved.children.length);
+    for (let i = 0; i < minLen; i++) {
+      // Temporarily set the child's savedState for recursive restore
+      this.children[i].savedState = saved.children[i];
+      this.children[i].restoreState();
+    }
+
+    this._markDirty();
+    return true;
   }
 
   /**

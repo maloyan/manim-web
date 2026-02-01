@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { TextGlyphGroup } from './TextGlyphGroup';
+import type { SkeletonizeOptions } from '../../utils/skeletonize';
 
 /**
  * Options for creating a Text mobject
@@ -239,9 +240,6 @@ export class Text extends VMobject {
    * Get text width in world units
    */
   getWidth(): number {
-    if (this._worldWidth === 0 && this._text) {
-      this._renderToCanvas();
-    }
     return this._worldWidth;
   }
 
@@ -249,9 +247,6 @@ export class Text extends VMobject {
    * Get text height in world units
    */
   getHeight(): number {
-    if (this._worldHeight === 0 && this._text) {
-      this._renderToCanvas();
-    }
     return this._worldHeight;
   }
 
@@ -501,8 +496,16 @@ export class Text extends VMobject {
   /**
    * Lazily create a TextGlyphGroup from the font file at _fontUrl.
    * Returns null if no fontUrl was provided.
+   *
+   * @param options.useSkeletonStroke  When true, each glyph computes its
+   *   skeleton (medial axis) for center-line stroke animation. Default: false.
+   * @param options.skeletonOptions  Fine-tuning options for the skeletonization
+   *   algorithm (grid resolution, smoothing, etc.).
    */
-  async loadGlyphs(): Promise<TextGlyphGroup | null> {
+  async loadGlyphs(options?: {
+    useSkeletonStroke?: boolean;
+    skeletonOptions?: SkeletonizeOptions;
+  }): Promise<TextGlyphGroup | null> {
     if (this._glyphGroup) return this._glyphGroup;
     if (!this._fontUrl) return null;
 
@@ -520,6 +523,8 @@ export class Text extends VMobject {
       fontSize: this._fontSize,
       color: this.color,
       strokeWidth: 2,
+      useSkeletonStroke: options?.useSkeletonStroke,
+      skeletonOptions: options?.skeletonOptions,
     });
     await this._glyphGroup.waitForReady();
     return this._glyphGroup;

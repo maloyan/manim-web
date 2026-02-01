@@ -65,10 +65,16 @@ export class Dot extends Circle {
   }
 
   /**
-   * Get the center position of the dot
+   * Get the center position of the dot.
+   * Combines the logical point with the Three.js position offset
+   * (shift() modifies position, not _point).
    */
   override getCenter(): Vector3Tuple {
-    return [...this._point];
+    return [
+      this._point[0] + this.position.x,
+      this._point[1] + this.position.y,
+      this._point[2] + this.position.z,
+    ];
   }
 
   /**

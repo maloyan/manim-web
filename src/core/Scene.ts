@@ -7,6 +7,8 @@ import { AnimationGroup } from '../animation/AnimationGroup';
 import { Timeline } from '../animation/Timeline';
 import { MANIM_BACKGROUND } from '../constants/colors';
 import { VMobject } from './VMobject';
+import { SceneStateManager, SceneSnapshot } from './StateManager';
+import { AudioManager, type AddSoundOptions, type AudioTrack } from './AudioManager';
 
 /**
  * Options for configuring a Scene.
@@ -63,6 +65,15 @@ export class Scene {
   // Performance optimization: auto-render control
   private _autoRender: boolean = true;
 
+  // Z-ordering: assign increasing renderOrder to each added mobject
+  private _renderOrderCounter: number = 0;
+
+  // State management (undo/redo)
+  private _stateManager: SceneStateManager;
+
+  // Audio manager (lazy – created on first access)
+  private _audioManager: AudioManager | null = null;
+
   /**
    * Create a new Scene.
    * @param container - DOM element to render into
@@ -117,6 +128,11 @@ export class Scene {
     // Initialize mobjects set
     this._mobjects = new Set();
 
+    // Initialize state manager (undo/redo)
+    this._stateManager = new SceneStateManager(
+      () => Array.from(this._mobjects)
+    );
+
     // Initial render
     this._render();
   }
@@ -140,15 +156,6 @@ export class Scene {
    */
   get renderer(): Renderer {
     return this._renderer;
-  }
-
-  /**
-   * Set the background color at runtime.
-   * @param color - CSS color string (e.g., '#ece6e2')
-   */
-  setBackgroundColor(color: string): void {
-    this._renderer.backgroundColor = color;
-    this._render();
   }
 
   /**
@@ -179,6 +186,62 @@ export class Scene {
     return this._mobjects;
   }
 
+  // ---------------------------------------------------------------------------
+  // Audio
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Get the audio manager (lazily created on first access).
+   * Use this to access lower-level audio controls.
+   */
+  get audioManager(): AudioManager {
+    if (!this._audioManager) {
+      this._audioManager = new AudioManager();
+    }
+    return this._audioManager;
+  }
+
+  /**
+   * Add a sound to play at a specific time on the timeline.
+   * Mirrors Python manim's `self.add_sound("file.wav", time_offset=0.5)`.
+   *
+   * @param url - URL of the audio file
+   * @param options - Scheduling and playback options
+   * @returns Promise resolving to the created AudioTrack
+   *
+   * @example
+   * ```ts
+   * await scene.addSound('/sounds/click.wav', { time: 0.5 });
+   * await scene.addSound('/sounds/whoosh.wav');  // plays at time 0
+   * ```
+   */
+  async addSound(url: string, options?: AddSoundOptions): Promise<AudioTrack> {
+    return this.audioManager.addSound(url, options);
+  }
+
+  /**
+   * Add a sound that starts when a given animation begins.
+   *
+   * @param animation - The animation to sync with
+   * @param url - URL of the audio file
+   * @param options - Additional options (timeOffset shifts relative to animation start)
+   * @returns Promise resolving to the created AudioTrack
+   *
+   * @example
+   * ```ts
+   * const fadeIn = new FadeIn(circle);
+   * await scene.addSoundAtAnimation(fadeIn, '/sounds/appear.wav');
+   * await scene.play(fadeIn);
+   * ```
+   */
+  async addSoundAtAnimation(
+    animation: Animation,
+    url: string,
+    options?: Omit<AddSoundOptions, 'time'> & { timeOffset?: number },
+  ): Promise<AudioTrack> {
+    return this.audioManager.addSoundAtAnimation(animation, url, options);
+  }
+
   /**
    * Add mobjects to the scene.
    * @param mobjects - Mobjects to add
@@ -187,7 +250,27 @@ export class Scene {
     for (const mobject of mobjects) {
       if (!this._mobjects.has(mobject)) {
         this._mobjects.add(mobject);
-        this._threeScene.add(mobject.getThreeObject());
+        const threeObj = mobject.getThreeObject();
+        threeObj.renderOrder = this._renderOrderCounter++;
+        // Disable depth test so renderOrder controls draw order (2D scene)
+        threeObj.traverse((child: any) => {
+          if (child.material) {
+            if (Array.isArray(child.material)) {
+              for (const m of child.material) m.depthTest = false;
+            } else {
+              child.material.depthTest = false;
+            }
+          }
+        });
+        this._threeScene.add(threeObj);
+        // If mobject has pending async rendering (e.g. MathTex), re-render when done
+        if (typeof (mobject as any).waitForRender === 'function') {
+          (mobject as any).waitForRender().then(() => {
+            if (this._autoRender && this._mobjects.has(mobject)) {
+              this._render();
+            }
+          });
+        }
       }
     }
     if (this._autoRender) {
@@ -285,6 +368,12 @@ export class Scene {
     this._isPlaying = true;
     this._currentTime = 0;
 
+    // Start audio playback if audio has been loaded
+    if (this._audioManager) {
+      this._audioManager.seek(0);
+      this._audioManager.play();
+    }
+
     // Start render loop if not already running
     this._startRenderLoop();
 
@@ -354,6 +443,7 @@ export class Scene {
 
   /**
    * Seek to a specific time in the timeline.
+   * Also seeks the audio manager if audio has been used.
    * @param time - Time in seconds
    */
   seek(time: number): this {
@@ -362,40 +452,52 @@ export class Scene {
       this._currentTime = time;
       this._render();
     }
+    if (this._audioManager) {
+      this._audioManager.seek(time);
+    }
     return this;
   }
 
   /**
-   * Pause playback.
+   * Pause playback (video and audio).
    */
   pause(): this {
     this._isPlaying = false;
     if (this._timeline) {
       this._timeline.pause();
     }
+    if (this._audioManager) {
+      this._audioManager.pause();
+    }
     return this;
   }
 
   /**
-   * Resume playback.
+   * Resume playback (video and audio).
    */
   resume(): this {
     if (this._timeline && !this._timeline.isFinished()) {
       this._isPlaying = true;
       this._timeline.play();
       this._startRenderLoop();
+      if (this._audioManager) {
+        this._audioManager.play();
+      }
     }
     return this;
   }
 
   /**
-   * Stop playback and reset timeline.
+   * Stop playback and reset timeline (video and audio).
    */
   stop(): this {
     this._isPlaying = false;
     this._currentTime = 0;
     if (this._timeline) {
       this._timeline.reset();
+    }
+    if (this._audioManager) {
+      this._audioManager.stop();
     }
     this._stopRenderLoop();
     return this;
@@ -697,6 +799,82 @@ export class Scene {
     return this._timeline?.getDuration() ?? 0;
   }
 
+  // ---------------------------------------------------------------------------
+  // State management (save / restore / undo / redo)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Get the scene's state manager for advanced undo/redo control.
+   */
+  get stateManager(): SceneStateManager {
+    return this._stateManager;
+  }
+
+  /**
+   * Save the current state of all scene mobjects.
+   * Pushes onto the undo stack and clears the redo stack.
+   *
+   * @param label - Optional human-readable label
+   * @returns The captured SceneSnapshot
+   *
+   * @example
+   * ```ts
+   * scene.add(circle, square);
+   * scene.saveState();
+   * circle.shift([2, 0, 0]);
+   * scene.undo(); // circle returns to original position
+   * ```
+   */
+  saveState(label?: string): SceneSnapshot {
+    return this._stateManager.save(label);
+  }
+
+  /**
+   * Undo the last change (restore the most recently saved state).
+   * The current state is pushed to the redo stack.
+   *
+   * @returns true if undo was applied, false if nothing to undo
+   */
+  undo(): boolean {
+    const result = this._stateManager.undo();
+    if (result && this._autoRender) {
+      this._render();
+    }
+    return result;
+  }
+
+  /**
+   * Redo the last undone change.
+   * The current state is pushed to the undo stack.
+   *
+   * @returns true if redo was applied, false if nothing to redo
+   */
+  redo(): boolean {
+    const result = this._stateManager.redo();
+    if (result && this._autoRender) {
+      this._render();
+    }
+    return result;
+  }
+
+  /**
+   * Get a snapshot of the current scene state without modifying stacks.
+   */
+  getState(label?: string): SceneSnapshot {
+    return this._stateManager.getState(label);
+  }
+
+  /**
+   * Apply a previously captured snapshot, overwriting all mobject states.
+   * Does NOT modify undo/redo stacks. Call saveState() first to preserve.
+   */
+  setState(snapshot: SceneSnapshot): void {
+    this._stateManager.setState(snapshot);
+    if (this._autoRender) {
+      this._render();
+    }
+  }
+
   /**
    * Force render a single frame.
    * Useful for video export where frames need to be captured at specific times.
@@ -706,7 +884,7 @@ export class Scene {
   }
 
   /**
-   * Clean up all resources.
+   * Clean up all resources (renderer, mobjects, audio).
    */
   dispose(): void {
     // Stop playback
@@ -724,5 +902,11 @@ export class Scene {
 
     // Clear timeline
     this._timeline = null;
+
+    // Dispose audio
+    if (this._audioManager) {
+      this._audioManager.dispose();
+      this._audioManager = null;
+    }
   }
 }

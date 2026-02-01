@@ -9,6 +9,11 @@
 import { VGroup } from '../../core/VGroup';
 import { GlyphVMobject } from './GlyphVMobject';
 import opentype from 'opentype.js';
+import type { Font } from 'opentype.js';
+import type { SkeletonizeOptions } from '../../utils/skeletonize';
+
+/** Scale factor: pixels to world units (100 pixels = 1 world unit) */
+const PIXEL_TO_WORLD = 1 / 100;
 
 export interface TextGlyphGroupOptions {
   /** The text string to render */
@@ -21,6 +26,13 @@ export interface TextGlyphGroupOptions {
   color?: string;
   /** Stroke width for glyph outlines (default: 2) */
   strokeWidth?: number;
+  /**
+   * When true, each GlyphVMobject computes its skeleton (medial axis)
+   * so the Write animation can draw along the center-line. Default: false.
+   */
+  useSkeletonStroke?: boolean;
+  /** Options forwarded to the skeletonization algorithm. */
+  skeletonOptions?: SkeletonizeOptions;
 }
 
 /**
@@ -37,7 +49,11 @@ export class TextGlyphGroup extends VGroup {
   private _fontSize: number;
   private _color: string;
   private _glyphStrokeWidth: number;
+  private _useSkeletonStroke: boolean;
+  private _skeletonOptions: SkeletonizeOptions;
   private _readyPromise: Promise<void>;
+  private _font: Font | null = null;
+
   constructor(options: TextGlyphGroupOptions) {
     super();
 
@@ -46,6 +62,8 @@ export class TextGlyphGroup extends VGroup {
     this._fontSize = options.fontSize ?? 48;
     this._color = options.color ?? '#ffffff';
     this._glyphStrokeWidth = options.strokeWidth ?? 2;
+    this._useSkeletonStroke = options.useSkeletonStroke ?? false;
+    this._skeletonOptions = options.skeletonOptions ?? {};
 
     // VGroup defaults
     this.fillOpacity = 0;
@@ -68,32 +86,9 @@ export class TextGlyphGroup extends VGroup {
   private async _loadAndBuild(): Promise<void> {
     // Load font via opentype.js
     const font = await opentype.load(this._fontUrl);
+    this._font = font;
 
     const scale = this._fontSize / font.unitsPerEm;
-
-    // First pass: compute total advance width for centering
-    let totalAdvance = 0;
-    for (let i = 0; i < this._text.length; i++) {
-      const char = this._text[i];
-      const glyph = font.charToGlyph(char);
-      if (i > 0) {
-        const prevGlyph = font.charToGlyph(this._text[i - 1]);
-        totalAdvance += font.getKerningValue(prevGlyph, glyph) * scale;
-      }
-      totalAdvance += (glyph.advanceWidth ?? (char === ' ' ? this._fontSize * 0.25 : this._fontSize * 0.5)) * scale;
-    }
-
-    // Centering offsets in pixels
-    const centerOffsetX = -totalAdvance / 2;
-
-    // Vertical centering: font ascender/descender are in font units
-    // After Y-flip in GlyphVMobject, ascent is positive Y, descent is negative Y
-    // Center the vertical midpoint at Y=0
-    const ascenderPx = font.ascender * scale;
-    const descenderPx = font.descender * scale; // negative
-    const centerOffsetY = (ascenderPx + descenderPx) / 2;
-
-    // Second pass: create glyphs with centered coordinates
     let xCursor = 0; // in pixels
 
     for (let i = 0; i < this._text.length; i++) {
@@ -124,10 +119,12 @@ export class TextGlyphGroup extends VGroup {
         glyph,
         font,
         fontSize: this._fontSize,
-        xOffset: xCursor + centerOffsetX,
-        yOffset: centerOffsetY,
+        xOffset: xCursor,
+        yOffset: 0,
         color: this._color,
         strokeWidth: this._glyphStrokeWidth,
+        useSkeletonStroke: this._useSkeletonStroke,
+        skeletonOptions: this._skeletonOptions,
       });
 
       this.add(glyphVMob);

@@ -36,6 +36,12 @@ export {
   SurfacePresets,
   type ParametricSurfaceOptions,
 } from './ParametricSurface';
+export {
+  TexturedSurface,
+  texturedSphere,
+  type TexturedSurfaceOptions,
+  type TexturedSphereOptions,
+} from './TexturedSurface';
 
 // Coordinate systems
 export { ThreeDAxes, type ThreeDAxesOptions } from './ThreeDAxes';

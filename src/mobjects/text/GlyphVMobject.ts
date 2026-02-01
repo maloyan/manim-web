@@ -8,6 +8,7 @@
 
 import { VMobject } from '../../core/VMobject';
 import type { Font, Glyph } from 'opentype.js';
+import { skeletonizeGlyph, type SkeletonizeOptions } from '../../utils/skeletonize';
 
 /** Scale factor: pixels to world units (100 pixels = 1 world unit) */
 const PIXEL_TO_WORLD = 1 / 100;
@@ -27,6 +28,14 @@ export interface GlyphVMobjectOptions {
   color?: string;
   /** Stroke width for outline drawing */
   strokeWidth?: number;
+  /**
+   * When true, compute the skeleton (medial axis) of the glyph outline
+   * so the Write animation can draw along the center-line rather than
+   * the perimeter. Default: false.
+   */
+  useSkeletonStroke?: boolean;
+  /** Options forwarded to the skeletonization algorithm. */
+  skeletonOptions?: SkeletonizeOptions;
 }
 
 /**
@@ -43,11 +52,22 @@ export class GlyphVMobject extends VMobject {
   private _glyph: Glyph;
   private _glyphFontSize: number;
 
+  /** Whether skeleton computation was requested */
+  private _useSkeletonStroke: boolean;
+  /** Options for skeleton computation */
+  private _skeletonOptions: SkeletonizeOptions;
+  /** Cached skeleton path (null = not yet computed, empty array = no skeleton) */
+  private _skeletonPath: number[][] | null = null;
+  /** The raw outline points used to derive the skeleton */
+  private _outlinePoints: number[][] = [];
+
   constructor(options: GlyphVMobjectOptions) {
     super();
 
     this._glyph = options.glyph;
     this._glyphFontSize = options.fontSize;
+    this._useSkeletonStroke = options.useSkeletonStroke ?? false;
+    this._skeletonOptions = options.skeletonOptions ?? {};
 
     const xOff = options.xOffset ?? 0;
     const yOff = options.yOffset ?? 0;
@@ -60,8 +80,15 @@ export class GlyphVMobject extends VMobject {
     this._style.fillOpacity = 0;
 
     const points3D = this._buildPoints(options.glyph, options.font, options.fontSize, xOff, yOff);
+    this._outlinePoints = points3D;
+
     if (points3D.length > 0) {
       this.setPoints3D(points3D);
+    }
+
+    // Eagerly compute skeleton if requested
+    if (this._useSkeletonStroke && points3D.length > 0) {
+      this._skeletonPath = skeletonizeGlyph(points3D, this._skeletonOptions);
     }
   }
 
@@ -70,7 +97,7 @@ export class GlyphVMobject extends VMobject {
    */
   private _buildPoints(
     glyph: Glyph,
-    _font: Font,
+    font: Font,
     fontSize: number,
     xOffset: number,
     yOffset: number,
@@ -184,6 +211,46 @@ export class GlyphVMobject extends VMobject {
     return allPoints;
   }
 
+  /**
+   * Get the skeleton (medial-axis) path for this glyph.
+   *
+   * The skeleton is computed lazily on first call (unless pre-computed
+   * at construction via `useSkeletonStroke: true`).
+   *
+   * @param options  Override skeletonization options for this call.
+   * @returns Cubic Bezier control points tracing the glyph center-line,
+   *   or `null` if the glyph has no computable skeleton.
+   */
+  getSkeletonPath(options?: SkeletonizeOptions): number[][] | null {
+    if (this._skeletonPath !== null) return this._skeletonPath.length > 0 ? this._skeletonPath : null;
+
+    if (this._outlinePoints.length < 4) {
+      this._skeletonPath = [];
+      return null;
+    }
+
+    this._skeletonPath = skeletonizeGlyph(this._outlinePoints, options ?? this._skeletonOptions);
+    return this._skeletonPath.length > 0 ? this._skeletonPath : null;
+  }
+
+  /**
+   * Returns true if this glyph was configured with skeleton stroke mode.
+   */
+  get useSkeletonStroke(): boolean {
+    return this._useSkeletonStroke;
+  }
+
+  /**
+   * Enable or disable skeleton stroke mode.
+   * If enabling, the skeleton is computed immediately.
+   */
+  set useSkeletonStroke(value: boolean) {
+    this._useSkeletonStroke = value;
+    if (value && this._skeletonPath === null && this._outlinePoints.length > 0) {
+      this._skeletonPath = skeletonizeGlyph(this._outlinePoints, this._skeletonOptions);
+    }
+  }
+
   protected override _createCopy(): GlyphVMobject {
     return new GlyphVMobject({
       glyph: this._glyph,
@@ -191,6 +258,8 @@ export class GlyphVMobject extends VMobject {
       fontSize: this._glyphFontSize,
       color: this.color,
       strokeWidth: this.strokeWidth,
+      useSkeletonStroke: this._useSkeletonStroke,
+      skeletonOptions: { ...this._skeletonOptions },
     });
   }
 }

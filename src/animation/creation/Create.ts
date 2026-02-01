@@ -11,6 +11,7 @@ import { Animation, AnimationOptions } from '../Animation';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import type { TextGlyphGroup } from '../../mobjects/text/TextGlyphGroup';
+import type { GlyphVMobject } from '../../mobjects/text/GlyphVMobject';
 
 export class Create extends Animation {
   /** Total path length for dash-based reveal */
@@ -359,6 +360,13 @@ export interface WriteOptions extends AnimationOptions {
   remover?: boolean;
   /** Ratio of animation time spent on stroke drawing vs cross-fade (default 0.7 = 70% stroke, 30% crossfade) */
   strokeRatio?: number;
+  /**
+   * When true, the Write animation uses the glyph's skeleton (medial axis)
+   * for stroke drawing, producing natural center-line pen strokes instead
+   * of perimeter outlines. Requires glyphs to be loaded with
+   * `useSkeletonStroke: true`. Default: false (uses outline strokes).
+   */
+  useSkeletonStroke?: boolean;
 }
 
 /**
@@ -390,6 +398,12 @@ export class Write extends Animation {
   private _textMesh: THREE.Mesh | null = null;
   private _glyphTotalLengths: number[] = [];
   private _parentThreeObj: THREE.Object3D | null = null;
+
+  // Skeleton stroke state: when a glyph has a skeleton, we create
+  // a temporary VMobject with skeleton points and animate that instead.
+  // _skeletonVMobs[i] is non-null if glyph child i has a skeleton path.
+  private _skeletonVMobs: (VMobject | null)[] = [];
+  private _skeletonTotalLengths: number[] = [];
 
   constructor(mobject: Mobject, options: WriteOptions = {}) {
     super(mobject, { duration: options.duration ?? 1, ...options });
@@ -464,6 +478,10 @@ export class Write extends Animation {
   /**
    * Set up glyph-stroke mode: hide the texture mesh, attach the glyph group
    * to the Text's Three.js parent, and prepare dash reveal for each glyph child.
+   *
+   * When a glyph has a skeleton path (medial axis), a temporary VMobject is
+   * created with the skeleton points and used for the dash-reveal animation
+   * instead of the outline. The outline glyph is hidden in that case.
    */
   private _beginGlyphStroke(): void {
     const glyphGroup = this._glyphGroup!;
@@ -490,34 +508,94 @@ export class Write extends Animation {
 
     // Set up dash reveal for each glyph child's Line2 children
     this._glyphTotalLengths = [];
+    this._skeletonVMobs = [];
+    this._skeletonTotalLengths = [];
     const children = glyphGroup.children;
+
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
       const childThreeObj = child.getThreeObject();
-      let totalLen = 1;
 
-      childThreeObj.traverse((obj) => {
-        if (obj instanceof Line2) {
-          const material = obj.material as LineMaterial;
-          material.dashed = true;
-          material.dashScale = 1;
+      // Check if this glyph has a skeleton path
+      const glyphChild = child as unknown as GlyphVMobject;
+      let skeletonPath: number[][] | null = null;
+      if (
+        'getSkeletonPath' in glyphChild &&
+        typeof (glyphChild as any).getSkeletonPath === 'function'
+      ) {
+        skeletonPath = (glyphChild as any).getSkeletonPath() as number[][] | null;
+      }
 
-          obj.computeLineDistances();
-          const geom = obj.geometry as any;
-          const distEnd = geom.attributes.instanceDistanceEnd;
-          if (distEnd && distEnd.count > 0) {
-            const arr = distEnd.data ? distEnd.data.array : distEnd.array;
-            totalLen = arr[arr.length - 1] || 1;
+      if (skeletonPath && skeletonPath.length >= 4) {
+        // --- Skeleton mode for this glyph ---
+        // Hide the outline glyph
+        childThreeObj.visible = false;
+
+        // Create a temporary VMobject with skeleton points
+        const skelVMob = new VMobject();
+        skelVMob.setColor(child.color || '#ffffff');
+        skelVMob.strokeWidth = (child as any).strokeWidth ?? 2;
+        skelVMob.fillOpacity = 0;
+        skelVMob.setPoints3D(skeletonPath);
+
+        // Attach skeleton VMobject's Three.js object into the glyph group
+        const skelThreeObj = skelVMob.getThreeObject();
+        glyphThreeObj.add(skelThreeObj);
+
+        // Set up dash reveal on the skeleton's Line2
+        let skelTotalLen = 1;
+        skelThreeObj.traverse((obj) => {
+          if (obj instanceof Line2) {
+            const material = obj.material as LineMaterial;
+            material.dashed = true;
+            material.dashScale = 1;
+
+            obj.computeLineDistances();
+            const geom = obj.geometry as any;
+            const distEnd = geom.attributes.instanceDistanceEnd;
+            if (distEnd && distEnd.count > 0) {
+              const arr = distEnd.data ? distEnd.data.array : distEnd.array;
+              skelTotalLen = arr[arr.length - 1] || 1;
+            }
+
+            material.dashSize = 0;
+            material.gapSize = skelTotalLen;
+            material.needsUpdate = true;
           }
+        });
 
-          // Start fully hidden
-          material.dashSize = 0;
-          material.gapSize = totalLen;
-          material.needsUpdate = true;
-        }
-      });
+        this._skeletonVMobs.push(skelVMob);
+        this._skeletonTotalLengths.push(skelTotalLen);
+        this._glyphTotalLengths.push(1); // placeholder (unused when skeleton active)
+      } else {
+        // --- Standard outline mode for this glyph ---
+        this._skeletonVMobs.push(null);
+        this._skeletonTotalLengths.push(0);
 
-      this._glyphTotalLengths.push(totalLen);
+        let totalLen = 1;
+        childThreeObj.traverse((obj) => {
+          if (obj instanceof Line2) {
+            const material = obj.material as LineMaterial;
+            material.dashed = true;
+            material.dashScale = 1;
+
+            obj.computeLineDistances();
+            const geom = obj.geometry as any;
+            const distEnd = geom.attributes.instanceDistanceEnd;
+            if (distEnd && distEnd.count > 0) {
+              const arr = distEnd.data ? distEnd.data.array : distEnd.array;
+              totalLen = arr[arr.length - 1] || 1;
+            }
+
+            // Start fully hidden
+            material.dashSize = 0;
+            material.gapSize = totalLen;
+            material.needsUpdate = true;
+          }
+        });
+
+        this._glyphTotalLengths.push(totalLen);
+      }
     }
   }
 
@@ -544,8 +622,12 @@ export class Write extends Animation {
 
   /**
    * Glyph stroke interpolation:
-   * Phase 1 (0 → strokeRatio): Dash-reveal glyph outlines with lag stagger
-   * Phase 2 (strokeRatio → 1): Cross-fade from glyph strokes to texture mesh
+   * Phase 1 (0 -> strokeRatio): Dash-reveal glyph outlines (or skeletons) with lag stagger
+   * Phase 2 (strokeRatio -> 1): Cross-fade from glyph strokes to texture mesh
+   *
+   * When a glyph has a skeleton VMobject, the skeleton is used for the
+   * dash-reveal animation instead of the outline, producing a natural
+   * center-line pen-stroke effect.
    */
   private _interpolateGlyphStroke(alpha: number): void {
     const glyphGroup = this._glyphGroup!;
@@ -563,19 +645,38 @@ export class Write extends Animation {
         const charEnd = charStart + this.lagRatio + (1 - this.lagRatio) / numChildren;
         const charAlpha = Math.max(0, Math.min(1, (strokeAlpha - charStart) / (charEnd - charStart)));
 
-        const totalLen = this._glyphTotalLengths[i] || 1;
-        const child = children[i];
-        const childThreeObj = child.getThreeObject();
+        const skelVMob = this._skeletonVMobs[i];
 
-        childThreeObj.traverse((obj) => {
-          if (obj instanceof Line2) {
-            const material = obj.material as LineMaterial;
-            const visibleLength = charAlpha * totalLen;
-            material.dashSize = visibleLength;
-            material.gapSize = totalLen - visibleLength + 0.0001;
-            material.needsUpdate = true;
-          }
-        });
+        if (skelVMob) {
+          // Skeleton mode: animate the skeleton VMobject
+          const totalLen = this._skeletonTotalLengths[i] || 1;
+          const skelThreeObj = skelVMob.getThreeObject();
+
+          skelThreeObj.traverse((obj) => {
+            if (obj instanceof Line2) {
+              const material = obj.material as LineMaterial;
+              const visibleLength = charAlpha * totalLen;
+              material.dashSize = visibleLength;
+              material.gapSize = totalLen - visibleLength + 0.0001;
+              material.needsUpdate = true;
+            }
+          });
+        } else {
+          // Standard outline mode
+          const totalLen = this._glyphTotalLengths[i] || 1;
+          const child = children[i];
+          const childThreeObj = child.getThreeObject();
+
+          childThreeObj.traverse((obj) => {
+            if (obj instanceof Line2) {
+              const material = obj.material as LineMaterial;
+              const visibleLength = charAlpha * totalLen;
+              material.dashSize = visibleLength;
+              material.gapSize = totalLen - visibleLength + 0.0001;
+              material.needsUpdate = true;
+            }
+          });
+        }
       }
 
       // Ensure texture mesh stays hidden during stroke phase
@@ -586,22 +687,40 @@ export class Write extends Animation {
       // Phase 2: Cross-fade — strokes fully visible, fade in texture, fade out strokes
       const fadeAlpha = (alpha - strokeRatio) / (1 - strokeRatio); // normalize to 0-1
 
-      // Ensure all glyph strokes are fully revealed
+      // Ensure all glyph strokes are fully revealed, then fade out
       for (let i = 0; i < numChildren; i++) {
-        const totalLen = this._glyphTotalLengths[i] || 1;
-        const child = children[i];
-        const childThreeObj = child.getThreeObject();
+        const skelVMob = this._skeletonVMobs[i];
 
-        childThreeObj.traverse((obj) => {
-          if (obj instanceof Line2) {
-            const material = obj.material as LineMaterial;
-            material.dashSize = totalLen;
-            material.gapSize = 0.0001;
-            // Fade out stroke opacity
-            material.opacity = 1 - fadeAlpha;
-            material.needsUpdate = true;
-          }
-        });
+        if (skelVMob) {
+          // Fade out skeleton stroke
+          const totalLen = this._skeletonTotalLengths[i] || 1;
+          const skelThreeObj = skelVMob.getThreeObject();
+
+          skelThreeObj.traverse((obj) => {
+            if (obj instanceof Line2) {
+              const material = obj.material as LineMaterial;
+              material.dashSize = totalLen;
+              material.gapSize = 0.0001;
+              material.opacity = 1 - fadeAlpha;
+              material.needsUpdate = true;
+            }
+          });
+        } else {
+          // Fade out outline stroke
+          const totalLen = this._glyphTotalLengths[i] || 1;
+          const child = children[i];
+          const childThreeObj = child.getThreeObject();
+
+          childThreeObj.traverse((obj) => {
+            if (obj instanceof Line2) {
+              const material = obj.material as LineMaterial;
+              material.dashSize = totalLen;
+              material.gapSize = 0.0001;
+              material.opacity = 1 - fadeAlpha;
+              material.needsUpdate = true;
+            }
+          });
+        }
       }
 
       // Fade in the texture mesh
@@ -652,11 +771,12 @@ export class Write extends Animation {
   }
 
   /**
-   * Clean up glyph stroke mode: remove glyph group from scene,
-   * restore texture mesh to full opacity.
+   * Clean up glyph stroke mode: remove glyph group and skeleton VMobjects
+   * from scene, restore texture mesh to full opacity.
    */
   private _finishGlyphStroke(): void {
     const glyphGroup = this._glyphGroup!;
+    const glyphThreeObj = glyphGroup.getThreeObject();
 
     if (this._remover) {
       // Unwrite: hide everything
@@ -676,9 +796,26 @@ export class Write extends Animation {
       this.mobject.setOpacity(this._originalOpacity);
     }
 
+    // Clean up skeleton VMobjects
+    for (let i = 0; i < this._skeletonVMobs.length; i++) {
+      const skelVMob = this._skeletonVMobs[i];
+      if (skelVMob) {
+        const skelThreeObj = skelVMob.getThreeObject();
+        // Remove skeleton Three.js object from glyph group
+        glyphThreeObj.remove(skelThreeObj);
+        // Restore outline glyph visibility
+        if (i < glyphGroup.children.length) {
+          glyphGroup.children[i].getThreeObject().visible = true;
+        }
+        // Dispose skeleton VMobject resources
+        skelVMob.dispose();
+      }
+    }
+    this._skeletonVMobs = [];
+    this._skeletonTotalLengths = [];
+
     // Remove glyph group from the Three.js scene
     if (this._parentThreeObj) {
-      const glyphThreeObj = glyphGroup.getThreeObject();
       this._parentThreeObj.remove(glyphThreeObj);
     }
 

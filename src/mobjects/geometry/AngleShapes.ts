@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { BLUE, WHITE, DEFAULT_STROKE_WIDTH } from '../../constants';
 import { Line } from './Line';
 
 /**
@@ -11,9 +11,11 @@ export interface AngleOptions {
   radius?: number;
   /** Quadrant for angle indicator (1, 2, 3, or 4). Default: auto-detect */
   quadrant?: 1 | 2 | 3 | 4;
+  /** If true, display the reflex angle (other side). Default: false */
+  otherAngle?: boolean;
   /** Show the angle value as a label. Default: false */
   showValue?: boolean;
-  /** Stroke color. Default: Manim's blue (#58C4DD) */
+  /** Stroke color. Default: WHITE (matches Manim Python) */
   color?: string;
   /** Stroke width. Default: 4 */
   strokeWidth?: number;
@@ -21,8 +23,6 @@ export interface AngleOptions {
   decimalPlaces?: number;
   /** Display unit for angle. Default: 'radians' */
   unit?: 'radians' | 'degrees';
-  /** Other lines (for double/triple angle indicators). Default: undefined */
-  otherAngle?: Angle;
 }
 
 /**
@@ -68,8 +68,9 @@ export class Angle extends VMobject {
     const {
       radius = 0.5,
       quadrant,
+      otherAngle = false,
       showValue = false,
-      color = BLUE,
+      color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       decimalPlaces = 2,
       unit = 'radians',
@@ -141,20 +142,19 @@ export class Angle extends VMobject {
       this._startAngle = adjustedAngle.start;
       this._angleValue = adjustedAngle.delta;
     } else {
-      // Auto-detect: use smaller angle
-      if (deltaAngle > Math.PI) {
-        deltaAngle -= 2 * Math.PI;
-      } else if (deltaAngle < -Math.PI) {
+      // Always use the CCW (counterclockwise) arc from line1 to line2.
+      // Normalize deltaAngle to [0, 2π) so the arc never flips side
+      // when the angle crosses 180°.
+      if (deltaAngle < 0) {
         deltaAngle += 2 * Math.PI;
       }
 
-      // Prefer positive angles
-      if (deltaAngle < 0) {
-        this._startAngle = angle2;
-        this._angleValue = -deltaAngle;
-      } else {
-        this._startAngle = angle1;
-        this._angleValue = deltaAngle;
+      this._startAngle = angle1;
+      this._angleValue = deltaAngle;
+
+      if (otherAngle) {
+        // The other angle is the remaining arc (CW direction)
+        this._angleValue = deltaAngle - 2 * Math.PI;
       }
     }
 
@@ -297,6 +297,20 @@ export class Angle extends VMobject {
   setLabel(label: string): this {
     this._label = label;
     return this;
+  }
+
+  /**
+   * Get a point on the angle arc at a given proportion (0 = start, 1 = end).
+   * @param alpha - Proportion along the arc (0 to 1)
+   * @returns Point on the arc as [x, y, z]
+   */
+  pointFromProportion(alpha: number): Vector3Tuple {
+    const angle = this._startAngle + alpha * this._angleValue;
+    return [
+      this._vertex[0] + this._radius * Math.cos(angle),
+      this._vertex[1] + this._radius * Math.sin(angle),
+      this._vertex[2],
+    ];
   }
 
   /**

@@ -53,3 +53,17 @@ export {
 
 // Blink - repeated fade out/in effect
 export { Blink, blink, type BlinkOptions } from './Blink';
+
+// ShowCreationThenDestruction - draw then erase
+export {
+  ShowCreationThenDestruction,
+  showCreationThenDestruction,
+  type ShowCreationThenDestructionOptions,
+} from './ShowCreationThenDestruction';
+
+// WiggleOutThenIn - scale + rotation oscillation out and back
+export {
+  WiggleOutThenIn,
+  wiggleOutThenIn,
+  type WiggleOutThenInOptions,
+} from './WiggleOutThenIn';

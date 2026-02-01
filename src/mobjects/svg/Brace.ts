@@ -2,6 +2,7 @@ import { VMobject } from '../../core/VMobject';
 import { Mobject, Vector3Tuple, DOWN } from '../../core/Mobject';
 import { Group } from '../../core/Group';
 import { Text } from '../text/Text';
+import { MathTex } from '../text/MathTex';
 import { Arc } from '../geometry/Arc';
 import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 
@@ -72,14 +73,29 @@ export interface BraceLabelOptions extends BraceOptions {
 }
 
 /**
- * Helper function to get bounding box from a mobject
+ * Get key points from a mobject for brace placement.
+ * Uses actual VMobject points when available, falls back to bounding box corners.
  */
-function getMobjectBounds(mobject: Mobject): { width: number; height: number; depth: number } {
-  // Try to access _getBoundingBox if it exists
-  if (typeof (mobject as any)._getBoundingBox === 'function') {
-    return (mobject as any)._getBoundingBox();
+function getMobjectKeyPoints(mobject: Mobject): number[][] {
+  // If it's a VMobject with accessible points, use those
+  if (mobject instanceof VMobject) {
+    const pts = (mobject as VMobject).getPoints();
+    if (pts.length > 0) return pts;
   }
-  return { width: 1, height: 1, depth: 1 };
+  // Fallback: use bounding box corners from the mobject
+  const center = mobject.getCenter();
+  let w = 1, h = 1;
+  if (typeof (mobject as any)._getBoundingBox === 'function') {
+    const bb = (mobject as any)._getBoundingBox();
+    w = bb.width;
+    h = bb.height;
+  }
+  return [
+    [center[0] - w/2, center[1] - h/2, center[2]],
+    [center[0] + w/2, center[1] - h/2, center[2]],
+    [center[0] + w/2, center[1] + h/2, center[2]],
+    [center[0] - w/2, center[1] + h/2, center[2]],
+  ];
 }
 
 /**
@@ -118,7 +134,7 @@ export class Brace extends VMobject {
       direction = DOWN,
       buff = 0.2,
       color = WHITE,
-      strokeWidth = DEFAULT_STROKE_WIDTH,
+      strokeWidth = 1,
       sharpness = 2,
     } = options;
 
@@ -129,21 +145,22 @@ export class Brace extends VMobject {
     this._tipPoint = [0, 0, 0];
 
     this.color = color;
-    this.fillOpacity = 0;
-    this.strokeWidth = strokeWidth;
+    this.fillOpacity = 1;
+    this.strokeWidth = 0;
 
     this._generateBracePoints();
   }
 
   /**
-   * Generate the Bezier curve points for the curly brace shape
+   * Generate the Bezier curve points for the curly brace shape.
+   * Projects the mobject's actual points onto the brace's perpendicular axis
+   * to correctly handle diagonal and arbitrarily-oriented mobjects.
    */
   protected _generateBracePoints(): void {
     if (!this.mobject) return;
 
-    // Get the mobject bounds
     const mobjectCenter = this.mobject.getCenter();
-    const bounds = getMobjectBounds(this.mobject);
+    const keyPoints = getMobjectKeyPoints(this.mobject);
 
     // Normalize direction
     const dirMag = Math.sqrt(
@@ -157,33 +174,36 @@ export class Brace extends VMobject {
       this.braceDirection[2] / dirMag,
     ];
 
-    // Perpendicular direction (for the width of the brace)
+    // Perpendicular direction (tangent along which the brace spans)
     const perpDir: Vector3Tuple = [-normDir[1], normDir[0], 0];
 
-    // Calculate the width based on direction and bounds
-    let width: number;
-    if (Math.abs(normDir[0]) > Math.abs(normDir[1])) {
-      // Horizontal direction - brace spans height
-      width = bounds.height;
-    } else {
-      // Vertical direction - brace spans width
-      width = bounds.width;
+    // Project all key points onto normDir and perpDir (relative to center)
+    let maxNormProj = -Infinity;
+    let minPerpProj = Infinity;
+    let maxPerpProj = -Infinity;
+
+    for (const p of keyPoints) {
+      const dx = p[0] - mobjectCenter[0];
+      const dy = p[1] - mobjectCenter[1];
+      const normProj = dx * normDir[0] + dy * normDir[1];
+      const perpProj = dx * perpDir[0] + dy * perpDir[1];
+      if (normProj > maxNormProj) maxNormProj = normProj;
+      if (perpProj < minPerpProj) minPerpProj = perpProj;
+      if (perpProj > maxPerpProj) maxPerpProj = perpProj;
     }
 
-    // Calculate the start point (edge of mobject in direction)
-    const edgeOffset = Math.abs(normDir[0]) > Math.abs(normDir[1])
-      ? bounds.width / 2
-      : bounds.height / 2;
+    // Brace is placed just beyond the mobject's extent in normDir
+    const offset = maxNormProj + this.buff;
 
     const braceStart: Vector3Tuple = [
-      mobjectCenter[0] + normDir[0] * (edgeOffset + this.buff) - perpDir[0] * width / 2,
-      mobjectCenter[1] + normDir[1] * (edgeOffset + this.buff) - perpDir[1] * width / 2,
+      mobjectCenter[0] + normDir[0] * offset + perpDir[0] * minPerpProj,
+      mobjectCenter[1] + normDir[1] * offset + perpDir[1] * minPerpProj,
       mobjectCenter[2],
     ];
 
     const braceEnd: Vector3Tuple = [
-      mobjectCenter[0] + normDir[0] * (edgeOffset + this.buff) + perpDir[0] * width / 2,
-      mobjectCenter[1] + normDir[1] * (edgeOffset + this.buff) + perpDir[1] * width / 2,
+      mobjectCenter[0] + normDir[0] * offset + perpDir[0] * maxPerpProj,
+      mobjectCenter[1] + normDir[1] * offset + perpDir[1] * maxPerpProj,
       mobjectCenter[2],
     ];
 
@@ -191,148 +211,168 @@ export class Brace extends VMobject {
   }
 
   /**
-   * Generate the brace shape between two points
+   * Generate the brace shape between two points as a filled outline.
+   *
+   * Creates a curly brace using cubic Bezier curves that match
+   * the Manim CE brace proportions. The shape is rendered as a filled
+   * closed path with variable thickness:
+   * - Thin at the end curls (tapering to points)
+   * - Thick at the arm sections
+   * - Thin at the center tip (tapering to a point)
    */
   protected _generateBraceFromPoints(
     start: Vector3Tuple,
     end: Vector3Tuple,
     direction: Vector3Tuple
   ): void {
-    const points: number[][] = [];
-
-    // Calculate mid point and tip position
-    const midX = (start[0] + end[0]) / 2;
-    const midY = (start[1] + end[1]) / 2;
-    const midZ = (start[2] + end[2]) / 2;
-
-    // The brace extends outward in the direction
-    const tipDepth = 0.25 * this.sharpness;
-    this._tipPoint = [
-      midX + direction[0] * tipDepth,
-      midY + direction[1] * tipDepth,
-      midZ,
-    ];
-
-    // Vector from start to end
     const dx = end[0] - start[0];
     const dy = end[1] - start[1];
     const length = Math.sqrt(dx * dx + dy * dy);
 
     if (length < 1e-6) {
-      // Degenerate case - just a point
       this.setPoints3D([[...start], [...start], [...start], [...start]]);
       return;
     }
 
-    // Unit vectors
-    const tangent: Vector3Tuple = [dx / length, dy / length, 0];
+    const t: Vector3Tuple = [dx / length, dy / length, 0]; // tangent
+    const n = direction; // normal (toward tip)
 
-    // Control point distances
-    const quarterLength = length / 4;
-    const controlDepth = tipDepth * 0.5;
-    const curveWidth = quarterLength * 0.4;
+    // Fixed centerline heights from Manim CE SVG analysis
+    const CURL_HEIGHT = 0.14;
+    const TIP_HEIGHT = 0.25;
+    const tipProt = TIP_HEIGHT - CURL_HEIGHT;
 
-    // Generate the { shape using 4 Bezier curves:
-    // 1. Start -> quarter point (curving outward)
-    // 2. Quarter point -> tip (sharp curve)
-    // 3. Tip -> three-quarter point (sharp curve back)
-    // 4. Three-quarter point -> end (curving inward)
+    // Compute widths based on Manim CE formula
+    const SVG_MIN_WIDTH = 0.90552;
+    const linearSection = Math.max(0, (length * this.sharpness - SVG_MIN_WIDTH) / 2);
+    const svgTotalWidth = SVG_MIN_WIDTH + 2 * linearSection;
+    const wScale = length / svgTotalWidth;
 
-    // Quarter point
-    const q1: Vector3Tuple = [
-      start[0] + tangent[0] * quarterLength,
-      start[1] + tangent[1] * quarterLength,
-      start[2],
-    ];
+    // Scaled section widths
+    const curlW = 0.23 * wScale;
+    const tipTransW = 0.22 * wScale;
+    const armLen = linearSection * wScale;
 
-    // Three-quarter point
-    const q3: Vector3Tuple = [
-      start[0] + tangent[0] * quarterLength * 3,
-      start[1] + tangent[1] * quarterLength * 3,
-      start[2],
-    ];
-
-    // Curve 1: Start to quarter point (gentle curve outward)
-    const c1_h1: number[] = [
-      start[0] + tangent[0] * curveWidth,
-      start[1] + tangent[1] * curveWidth,
-      start[2],
-    ];
-    const c1_h2: number[] = [
-      q1[0] - tangent[0] * curveWidth + direction[0] * controlDepth,
-      q1[1] - tangent[1] * curveWidth + direction[1] * controlDepth,
-      q1[2],
-    ];
-    const c1_end: number[] = [
-      q1[0] + direction[0] * controlDepth,
-      q1[1] + direction[1] * controlDepth,
-      q1[2],
+    // Tip point
+    const midX = (start[0] + end[0]) / 2;
+    const midY = (start[1] + end[1]) / 2;
+    const midZ = (start[2] + end[2]) / 2;
+    this._tipPoint = [
+      midX + n[0] * TIP_HEIGHT,
+      midY + n[1] * TIP_HEIGHT,
+      midZ,
     ];
 
-    // Curve 2: Quarter point to tip (sharp curve to peak)
-    const c2_h1: number[] = [
-      c1_end[0] + tangent[0] * quarterLength * 0.3,
-      c1_end[1] + tangent[1] * quarterLength * 0.3,
-      c1_end[2],
-    ];
-    const c2_h2: number[] = [
-      this._tipPoint[0] - tangent[0] * quarterLength * 0.3,
-      this._tipPoint[1] - tangent[1] * quarterLength * 0.3,
-      this._tipPoint[2],
+    // Helper: point at offset along tangent and normal from origin
+    const pt = (ox: number[], td: number, nd: number): number[] => [
+      ox[0] + t[0] * td + n[0] * nd,
+      ox[1] + t[1] * td + n[1] * nd,
+      ox[2],
     ];
 
-    // Curve 3: Tip to three-quarter point (sharp curve down)
-    const c3_h1: number[] = [
-      this._tipPoint[0] + tangent[0] * quarterLength * 0.3,
-      this._tipPoint[1] + tangent[1] * quarterLength * 0.3,
-      this._tipPoint[2],
-    ];
-    const c3_end: number[] = [
-      q3[0] + direction[0] * controlDepth,
-      q3[1] + direction[1] * controlDepth,
-      q3[2],
-    ];
+    // Centerline anchor points
+    const lArmStart = pt(start, curlW, CURL_HEIGHT);
+    const lArmEnd = pt(lArmStart, armLen, 0);
+    const rArmEnd = pt(end, -curlW, CURL_HEIGHT);
+    const rArmStart = pt(rArmEnd, -armLen, 0);
+
+    // Centerline control points
+    const c1_h1 = pt(start, curlW * 0.30, CURL_HEIGHT * 0.85);
+    const c1_h2 = pt(start, curlW * 0.78, CURL_HEIGHT * 1.0);
+    const c2_h1 = pt(lArmStart, armLen / 3, 0);
+    const c2_h2 = pt(lArmStart, armLen * 2 / 3, 0);
+    const c3_h1 = pt(lArmEnd, tipTransW * 0.55, tipProt * 0.05);
     const c3_h2: number[] = [
-      c3_end[0] - tangent[0] * quarterLength * 0.3,
-      c3_end[1] - tangent[1] * quarterLength * 0.3,
-      c3_end[2],
+      this._tipPoint[0] - t[0] * tipTransW * 0.02 - n[0] * tipProt * 0.45,
+      this._tipPoint[1] - t[1] * tipTransW * 0.02 - n[1] * tipProt * 0.45,
+      this._tipPoint[2],
     ];
-
-    // Curve 4: Three-quarter point to end (gentle curve inward)
     const c4_h1: number[] = [
-      c3_end[0] + tangent[0] * curveWidth - direction[0] * controlDepth,
-      c3_end[1] + tangent[1] * curveWidth - direction[1] * controlDepth,
-      c3_end[2],
+      this._tipPoint[0] + t[0] * tipTransW * 0.02 - n[0] * tipProt * 0.45,
+      this._tipPoint[1] + t[1] * tipTransW * 0.02 - n[1] * tipProt * 0.45,
+      this._tipPoint[2],
     ];
-    const c4_h2: number[] = [
-      end[0] - tangent[0] * curveWidth,
-      end[1] - tangent[1] * curveWidth,
-      end[2],
+    const c4_h2 = pt(rArmStart, -tipTransW * 0.55, tipProt * 0.05);
+    const c5_h1 = pt(rArmStart, armLen / 3, 0);
+    const c5_h2 = pt(rArmStart, armLen * 2 / 3, 0);
+    const c6_h1 = pt(end, -curlW * 0.78, CURL_HEIGHT * 1.0);
+    const c6_h2 = pt(end, -curlW * 0.30, CURL_HEIGHT * 0.85);
+
+    // All 19 centerline points
+    const cl: number[][] = [
+      [...start], c1_h1, c1_h2, lArmStart,
+      c2_h1, c2_h2, lArmEnd,
+      c3_h1, c3_h2, [...this._tipPoint],
+      c4_h1, c4_h2, rArmStart,
+      c5_h1, c5_h2, rArmEnd,
+      c6_h1, c6_h2, [...end],
     ];
 
-    // Assemble all points
-    // Curve 1
-    points.push([...start]);
-    points.push(c1_h1);
-    points.push(c1_h2);
-    points.push(c1_end);
+    // Half-thickness at each point (0 at ends/tip, max at arms)
+    const H = 0.025;
+    const ht = [
+      0, H*0.3, H*0.8, H,         // curl → arm start
+      H, H, H,                     // arm
+      H*0.7, H*0.15, 0,            // tip transition → tip
+      H*0.15, H*0.7, H,            // tip → arm start
+      H, H, H,                     // arm
+      H*0.8, H*0.3, 0,             // arm end → curl edge
+    ];
 
-    // Curve 2
-    points.push(c2_h1);
-    points.push(c2_h2);
-    points.push([...this._tipPoint]);
+    // Per-point normals (perpendicular to local tangent, pointing outward)
+    const normals: number[][] = [];
+    for (let i = 0; i < 19; i++) {
+      const prev = cl[Math.max(0, i - 1)];
+      const next = cl[Math.min(18, i + 1)];
+      const ddx = next[0] - prev[0];
+      const ddy = next[1] - prev[1];
+      const len = Math.sqrt(ddx * ddx + ddy * ddy);
+      if (len < 1e-10) {
+        normals.push([n[0], n[1]]);
+        continue;
+      }
+      const tx = ddx / len;
+      const ty = ddy / len;
+      let nx = -ty, ny = tx;
+      // Ensure normal points outward (same side as n)
+      if (nx * n[0] + ny * n[1] < 0) { nx = -nx; ny = -ny; }
+      normals.push([nx, ny]);
+    }
 
-    // Curve 3
-    points.push(c3_h1);
-    points.push(c3_h2);
-    points.push(c3_end);
+    // Compute upper (outer) and lower (inner) contour points
+    const upper: number[][] = [];
+    const lower: number[][] = [];
+    for (let i = 0; i < 19; i++) {
+      const h = ht[i];
+      upper.push([
+        cl[i][0] + normals[i][0] * h,
+        cl[i][1] + normals[i][1] * h,
+        cl[i][2],
+      ]);
+      lower.push([
+        cl[i][0] - normals[i][0] * h,
+        cl[i][1] - normals[i][1] * h,
+        cl[i][2],
+      ]);
+    }
 
-    // Curve 4
-    points.push(c4_h1);
-    points.push(c4_h2);
-    points.push([...end]);
-
-    this.setPoints3D(points);
+    // Closed filled path: upper contour forward + lower contour reversed
+    this.setPoints3D([
+      upper[0],
+      upper[1],  upper[2],  upper[3],   // curve 1
+      upper[4],  upper[5],  upper[6],   // curve 2
+      upper[7],  upper[8],  upper[9],   // curve 3
+      upper[10], upper[11], upper[12],  // curve 4
+      upper[13], upper[14], upper[15],  // curve 5
+      upper[16], upper[17], upper[18],  // curve 6
+      // Lower contour reversed (right to left)
+      lower[17], lower[16], lower[15],  // curve 6 rev
+      lower[14], lower[13], lower[12],  // curve 5 rev
+      lower[11], lower[10], lower[9],   // curve 4 rev
+      lower[8],  lower[7],  lower[6],   // curve 3 rev
+      lower[5],  lower[4],  lower[3],   // curve 2 rev
+      lower[2],  lower[1],  lower[0],   // curve 1 rev
+    ]);
   }
 
   /**
@@ -358,6 +398,40 @@ export class Brace extends VMobject {
       this.braceDirection[1] / mag,
       this.braceDirection[2] / mag,
     ];
+  }
+
+  /**
+   * Create a Text label positioned at the tip of the brace.
+   * Mirrors Manim's Brace.get_text() API.
+   */
+  getText(text: string, options: { fontSize?: number; color?: string; buff?: number } = {}): Text {
+    const { fontSize = 36, color = WHITE, buff = 0.4 } = options;
+    const tip = this.getTip();
+    const dir = this.getDirection();
+    const label = new Text({ text, fontSize, color });
+    label.moveTo([
+      tip[0] + dir[0] * buff,
+      tip[1] + dir[1] * buff,
+      tip[2],
+    ]);
+    return label;
+  }
+
+  /**
+   * Create a MathTex label positioned at the tip of the brace.
+   * Mirrors Manim's Brace.get_tex() API.
+   */
+  getTex(latex: string, options: { fontSize?: number; color?: string; buff?: number } = {}): MathTex {
+    const { fontSize = 36, color = WHITE, buff = 0.4 } = options;
+    const tip = this.getTip();
+    const dir = this.getDirection();
+    const label = new MathTex({ latex, fontSize, color });
+    label.moveTo([
+      tip[0] + dir[0] * buff,
+      tip[1] + dir[1] * buff,
+      tip[2],
+    ]);
+    return label;
   }
 
   /**
@@ -408,7 +482,7 @@ export class BraceBetweenPoints extends VMobject {
       direction,
       buff = 0.2,
       color = WHITE,
-      strokeWidth = DEFAULT_STROKE_WIDTH,
+      strokeWidth = 1,
       sharpness = 2,
     } = options;
 
@@ -434,8 +508,8 @@ export class BraceBetweenPoints extends VMobject {
     }
 
     this.color = color;
-    this.fillOpacity = 0;
-    this.strokeWidth = strokeWidth;
+    this.fillOpacity = 1;
+    this.strokeWidth = 0;
 
     this._generateBracePoints();
   }
@@ -472,29 +546,14 @@ export class BraceBetweenPoints extends VMobject {
   }
 
   /**
-   * Generate the brace shape between two points (same algorithm as Brace)
+   * Generate the brace shape between two points as a filled outline.
+   * Same algorithm as Brace._generateBraceFromPoints.
    */
   protected _generateBraceFromPoints(
     start: Vector3Tuple,
     end: Vector3Tuple,
     direction: Vector3Tuple
   ): void {
-    const points: number[][] = [];
-
-    // Calculate mid point and tip position
-    const midX = (start[0] + end[0]) / 2;
-    const midY = (start[1] + end[1]) / 2;
-    const midZ = (start[2] + end[2]) / 2;
-
-    // The brace extends outward in the direction
-    const tipDepth = 0.25 * this._sharpness;
-    this._tipPoint = [
-      midX + direction[0] * tipDepth,
-      midY + direction[1] * tipDepth,
-      midZ,
-    ];
-
-    // Vector from start to end
     const dx = end[0] - start[0];
     const dy = end[1] - start[1];
     const length = Math.sqrt(dx * dx + dy * dy);
@@ -504,105 +563,121 @@ export class BraceBetweenPoints extends VMobject {
       return;
     }
 
-    // Unit vectors
-    const tangent: Vector3Tuple = [dx / length, dy / length, 0];
+    const t: Vector3Tuple = [dx / length, dy / length, 0];
+    const n = direction;
 
-    // Control point distances
-    const quarterLength = length / 4;
-    const controlDepth = tipDepth * 0.5;
-    const curveWidth = quarterLength * 0.4;
+    const CURL_HEIGHT = 0.14;
+    const TIP_HEIGHT = 0.25;
+    const SVG_MIN_WIDTH = 0.90552;
+    const linearSection = Math.max(0, (length * this._sharpness - SVG_MIN_WIDTH) / 2);
+    const svgTotalWidth = SVG_MIN_WIDTH + 2 * linearSection;
+    const wScale = length / svgTotalWidth;
 
-    // Quarter point
-    const q1: Vector3Tuple = [
-      start[0] + tangent[0] * quarterLength,
-      start[1] + tangent[1] * quarterLength,
-      start[2],
-    ];
+    const curlW = 0.23 * wScale;
+    const tipTransW = 0.22 * wScale;
+    const armLen = linearSection * wScale;
+    const tipProt = TIP_HEIGHT - CURL_HEIGHT;
 
-    // Three-quarter point
-    const q3: Vector3Tuple = [
-      start[0] + tangent[0] * quarterLength * 3,
-      start[1] + tangent[1] * quarterLength * 3,
-      start[2],
-    ];
+    const midX = (start[0] + end[0]) / 2;
+    const midY = (start[1] + end[1]) / 2;
+    const midZ = (start[2] + end[2]) / 2;
+    this._tipPoint = [midX + n[0] * TIP_HEIGHT, midY + n[1] * TIP_HEIGHT, midZ];
 
-    // Curve 1: Start to quarter point
-    const c1_h1: number[] = [
-      start[0] + tangent[0] * curveWidth,
-      start[1] + tangent[1] * curveWidth,
-      start[2],
-    ];
-    const c1_h2: number[] = [
-      q1[0] - tangent[0] * curveWidth + direction[0] * controlDepth,
-      q1[1] - tangent[1] * curveWidth + direction[1] * controlDepth,
-      q1[2],
-    ];
-    const c1_end: number[] = [
-      q1[0] + direction[0] * controlDepth,
-      q1[1] + direction[1] * controlDepth,
-      q1[2],
+    const pt = (ox: number[], td: number, nd: number): number[] => [
+      ox[0] + t[0] * td + n[0] * nd,
+      ox[1] + t[1] * td + n[1] * nd,
+      ox[2],
     ];
 
-    // Curve 2: Quarter point to tip
-    const c2_h1: number[] = [
-      c1_end[0] + tangent[0] * quarterLength * 0.3,
-      c1_end[1] + tangent[1] * quarterLength * 0.3,
-      c1_end[2],
-    ];
-    const c2_h2: number[] = [
-      this._tipPoint[0] - tangent[0] * quarterLength * 0.3,
-      this._tipPoint[1] - tangent[1] * quarterLength * 0.3,
-      this._tipPoint[2],
-    ];
+    const lArmStart = pt(start, curlW, CURL_HEIGHT);
+    const lArmEnd = pt(lArmStart, armLen, 0);
+    const rArmEnd = pt(end, -curlW, CURL_HEIGHT);
+    const rArmStart = pt(rArmEnd, -armLen, 0);
 
-    // Curve 3: Tip to three-quarter point
-    const c3_h1: number[] = [
-      this._tipPoint[0] + tangent[0] * quarterLength * 0.3,
-      this._tipPoint[1] + tangent[1] * quarterLength * 0.3,
-      this._tipPoint[2],
-    ];
-    const c3_end: number[] = [
-      q3[0] + direction[0] * controlDepth,
-      q3[1] + direction[1] * controlDepth,
-      q3[2],
-    ];
+    const c1_h1 = pt(start, curlW * 0.30, CURL_HEIGHT * 0.85);
+    const c1_h2 = pt(start, curlW * 0.78, CURL_HEIGHT * 1.0);
+    const c2_h1 = pt(lArmStart, armLen / 3, 0);
+    const c2_h2 = pt(lArmStart, armLen * 2 / 3, 0);
+    const c3_h1 = pt(lArmEnd, tipTransW * 0.55, tipProt * 0.05);
     const c3_h2: number[] = [
-      c3_end[0] - tangent[0] * quarterLength * 0.3,
-      c3_end[1] - tangent[1] * quarterLength * 0.3,
-      c3_end[2],
+      this._tipPoint[0] - t[0] * tipTransW * 0.02 - n[0] * tipProt * 0.45,
+      this._tipPoint[1] - t[1] * tipTransW * 0.02 - n[1] * tipProt * 0.45,
+      this._tipPoint[2],
     ];
-
-    // Curve 4: Three-quarter point to end
     const c4_h1: number[] = [
-      c3_end[0] + tangent[0] * curveWidth - direction[0] * controlDepth,
-      c3_end[1] + tangent[1] * curveWidth - direction[1] * controlDepth,
-      c3_end[2],
+      this._tipPoint[0] + t[0] * tipTransW * 0.02 - n[0] * tipProt * 0.45,
+      this._tipPoint[1] + t[1] * tipTransW * 0.02 - n[1] * tipProt * 0.45,
+      this._tipPoint[2],
     ];
-    const c4_h2: number[] = [
-      end[0] - tangent[0] * curveWidth,
-      end[1] - tangent[1] * curveWidth,
-      end[2],
+    const c4_h2 = pt(rArmStart, -tipTransW * 0.55, tipProt * 0.05);
+    const c5_h1 = pt(rArmStart, armLen / 3, 0);
+    const c5_h2 = pt(rArmStart, armLen * 2 / 3, 0);
+    const c6_h1 = pt(end, -curlW * 0.78, CURL_HEIGHT * 1.0);
+    const c6_h2 = pt(end, -curlW * 0.30, CURL_HEIGHT * 0.85);
+
+    // All 19 centerline points
+    const cl: number[][] = [
+      [...start], c1_h1, c1_h2, lArmStart,
+      c2_h1, c2_h2, lArmEnd,
+      c3_h1, c3_h2, [...this._tipPoint],
+      c4_h1, c4_h2, rArmStart,
+      c5_h1, c5_h2, rArmEnd,
+      c6_h1, c6_h2, [...end],
     ];
 
-    // Assemble all points
-    points.push([...start]);
-    points.push(c1_h1);
-    points.push(c1_h2);
-    points.push(c1_end);
+    // Half-thickness at each point (0 at ends/tip, max at arms)
+    const H = 0.025;
+    const ht = [
+      0, H*0.3, H*0.8, H,
+      H, H, H,
+      H*0.7, H*0.15, 0,
+      H*0.15, H*0.7, H,
+      H, H, H,
+      H*0.8, H*0.3, 0,
+    ];
 
-    points.push(c2_h1);
-    points.push(c2_h2);
-    points.push([...this._tipPoint]);
+    // Per-point normals
+    const normals: number[][] = [];
+    for (let i = 0; i < 19; i++) {
+      const prev = cl[Math.max(0, i - 1)];
+      const next = cl[Math.min(18, i + 1)];
+      const ddx = next[0] - prev[0];
+      const ddy = next[1] - prev[1];
+      const len = Math.sqrt(ddx * ddx + ddy * ddy);
+      if (len < 1e-10) {
+        normals.push([n[0], n[1]]);
+        continue;
+      }
+      const tx = ddx / len;
+      const ty = ddy / len;
+      let nx = -ty, ny = tx;
+      if (nx * n[0] + ny * n[1] < 0) { nx = -nx; ny = -ny; }
+      normals.push([nx, ny]);
+    }
 
-    points.push(c3_h1);
-    points.push(c3_h2);
-    points.push(c3_end);
+    const upper: number[][] = [];
+    const lower: number[][] = [];
+    for (let i = 0; i < 19; i++) {
+      const h = ht[i];
+      upper.push([cl[i][0] + normals[i][0]*h, cl[i][1] + normals[i][1]*h, cl[i][2]]);
+      lower.push([cl[i][0] - normals[i][0]*h, cl[i][1] - normals[i][1]*h, cl[i][2]]);
+    }
 
-    points.push(c4_h1);
-    points.push(c4_h2);
-    points.push([...end]);
-
-    this.setPoints3D(points);
+    this.setPoints3D([
+      upper[0],
+      upper[1],  upper[2],  upper[3],
+      upper[4],  upper[5],  upper[6],
+      upper[7],  upper[8],  upper[9],
+      upper[10], upper[11], upper[12],
+      upper[13], upper[14], upper[15],
+      upper[16], upper[17], upper[18],
+      lower[17], lower[16], lower[15],
+      lower[14], lower[13], lower[12],
+      lower[11], lower[10], lower[9],
+      lower[8],  lower[7],  lower[6],
+      lower[5],  lower[4],  lower[3],
+      lower[2],  lower[1],  lower[0],
+    ]);
   }
 
   /**
@@ -691,7 +766,7 @@ export class ArcBrace extends VMobject {
       direction = 1,
       buff = 0.2,
       color = WHITE,
-      strokeWidth = DEFAULT_STROKE_WIDTH,
+      strokeWidth = 1,
     } = options;
 
     this._arc = arc;

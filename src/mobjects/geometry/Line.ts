@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { WHITE, DEFAULT_STROKE_WIDTH } from '../../constants';
 
 /**
  * Options for creating a Line
@@ -10,7 +10,7 @@ export interface LineOptions {
   start?: Vector3Tuple;
   /** End point of the line. Default: [1, 0, 0] */
   end?: Vector3Tuple;
-  /** Stroke color as CSS color string. Default: Manim's blue (#58C4DD) */
+  /** Stroke color as CSS color string. Default: WHITE */
   color?: string;
   /** Stroke width in pixels. Default: 4 (Manim's default) */
   strokeWidth?: number;
@@ -44,8 +44,8 @@ export class Line extends VMobject {
     const {
       start = [0, 0, 0],
       end = [1, 0, 0],
-      color = BLUE,
-      strokeWidth = DEFAULT_STROKE_WIDTH,
+      color = WHITE,
+      strokeWidth = 3,
     } = options;
 
     this._start = [...start];
@@ -84,9 +84,13 @@ export class Line extends VMobject {
   }
 
   /**
-   * Get the start point
+   * Get the start point (derived from transformed _points3D when available)
    */
   getStart(): Vector3Tuple {
+    if (this._points3D.length >= 4) {
+      const p = this._points3D[0];
+      return [p[0], p[1], p[2]];
+    }
     return [...this._start];
   }
 
@@ -100,9 +104,13 @@ export class Line extends VMobject {
   }
 
   /**
-   * Get the end point
+   * Get the end point (derived from transformed _points3D when available)
    */
   getEnd(): Vector3Tuple {
+    if (this._points3D.length >= 4) {
+      const p = this._points3D[this._points3D.length - 1];
+      return [p[0], p[1], p[2]];
+    }
     return [...this._end];
   }
 

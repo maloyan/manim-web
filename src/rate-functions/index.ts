@@ -11,11 +11,15 @@ export type RateFunction = (t: number) => number;
 export const linear: RateFunction = (t: number): number => t;
 
 /**
- * Manim's smooth function: 3t^2 - 2t^3
- * Also known as smoothstep - starts and ends smoothly
+ * Manim Python's smooth function using sigmoid curve.
+ * Matches: smooth(t, inflection=10) from manim.utils.rate_functions
+ * Steeper in the middle, flatter at endpoints than simple smoothstep.
  */
 export const smooth: RateFunction = (t: number): number => {
-  return t * t * (3 - 2 * t);
+  const inflection = 10.0;
+  const error = 1 / (1 + Math.exp(inflection / 2));
+  const sigmoid = 1 / (1 + Math.exp(-inflection * (t - 0.5)));
+  return Math.max(0, Math.min(1, (sigmoid - error) / (1 - 2 * error)));
 };
 
 /**

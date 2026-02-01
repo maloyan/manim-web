@@ -59,7 +59,7 @@ export class Circle extends VMobject {
     this._numPoints = numPoints;
     this._centerPoint = [...center];
 
-    this.color = color;
+    this.setColor(color);
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
 
