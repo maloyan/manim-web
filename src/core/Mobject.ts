@@ -350,6 +350,16 @@ export abstract class Mobject {
   }
 
   /**
+   * Rotate the mobject about the coordinate origin [0, 0, 0].
+   * @param angle - Rotation angle in radians
+   * @param axis - Axis of rotation (defaults to Z axis [0, 0, 1])
+   * @returns this for chaining
+   */
+  rotateAboutOrigin(angle: number, axis: Vector3Tuple = [0, 0, 1]): this {
+    return this.rotate(angle, { axis, aboutPoint: [0, 0, 0] });
+  }
+
+  /**
    * Flip the mobject along an axis (mirror reflection).
    * @param axis - Axis to flip across, defaults to RIGHT ([1,0,0]) for horizontal flip
    * @returns this for chaining

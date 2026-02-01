@@ -286,6 +286,7 @@ const METHOD_MAP = {
   'generate_target': 'generateTarget',
   'save_state': 'saveState',
   'restore': 'restore',
+  'rotate_about_origin': 'rotateAboutOrigin',
 };
 
 // ─── Color constant map ──────────────────────────────────────────────
@@ -426,6 +427,50 @@ function convertNpArray(line) {
   return line;
 }
 
+// ─── Convert nested function definitions to arrow functions ──────────
+// Converts:
+//   def updater_forth(mobj, dt):
+//       mobj.rotate_about_origin(dt)
+// To:
+//   const updaterForth = (mobj, dt) => {
+//       mobj.rotate_about_origin(dt)
+//   };
+function convertNestedDefs(lines) {
+  const result = [];
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    const defMatch = line.match(/^(\s*)def\s+(\w+)\s*\(([^)]*)\)\s*:/);
+    if (defMatch) {
+      const [, indent, funcName, params] = defMatch;
+      // Keep snake_case name — convertLine will add `const` and rename via varRenames
+      const tsParams = params.split(',').map(p => p.trim()).filter(p => p && p !== 'self').join(', ');
+      result.push(`${indent}${funcName} = (${tsParams}) => {`);
+
+      // Collect body lines (more indented than the def line)
+      const defIndent = indent.length;
+      i++;
+      while (i < lines.length) {
+        const bodyLine = lines[i];
+        if (bodyLine.trim() === '') {
+          result.push('');
+          i++;
+          continue;
+        }
+        const bodyIndent = bodyLine.match(/^(\s*)/)[1].length;
+        if (bodyIndent <= defIndent) break;
+        result.push(bodyLine);
+        i++;
+      }
+      result.push(`${indent}};`);
+    } else {
+      result.push(line);
+      i++;
+    }
+  }
+  return result;
+}
+
 // ─── Main converter ──────────────────────────────────────────────────
 function convertPythonToTypeScript(pythonCode) {
   const rawLines = pythonCode.split('\n');
@@ -464,10 +509,15 @@ function convertPythonToTypeScript(pythonCode) {
       continue;
     }
 
-    // Other methods → stop collecting construct body
+    // Other class-level methods → stop collecting construct body
+    // But only if the def is at class method level (not a nested function)
     if (/^\s*def\s+\w+\s*\(/.test(line) && !/def\s+construct/.test(line)) {
-      inConstruct = false;
-      continue;
+      const defIndent = line.match(/^(\s*)/)[1].length;
+      if (defIndent < baseIndent) {
+        inConstruct = false;
+        continue;
+      }
+      // Otherwise it's a nested function definition within construct - keep collecting
     }
 
     if (!currentScene || !inConstruct) continue;
@@ -504,6 +554,9 @@ function convertPythonToTypeScript(pythonCode) {
   };
 
   const convertedScenes = scenes.map(scene => {
+    // Pre-process: convert nested function definitions to arrow functions
+    scene.lines = convertNestedDefs(scene.lines);
+
     const varRenames = new Map();
     const mathTexVars = new Set(); // Track MathTex/Tex variable names
     const converted = [];
@@ -688,9 +741,13 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   }
 
   // Convert Python tuples to arrays in value positions: key: (a, b) → key: [a, b]
+  // But skip arrow function parameters: = (a, b) => ...
   line = line.replace(/([=:])\s*\(([^()]*,[^()]*)\)/g, (match, sep, inner, offset) => {
     // Skip comparison operators (==, !=, <=, >=)
     if (sep === '=' && offset > 0 && /[=!<>]/.test(line[offset - 1])) return match;
+    // Skip arrow function parameters
+    const afterClose = line.slice(offset + match.length);
+    if (/^\s*=>/.test(afterClose)) return match;
     return `${sep} [${inner}]`;
   });
 
@@ -796,9 +853,10 @@ function convertConstructorArgs(line) {
     if (!args.trim()) continue;
     if (args.trim().startsWith('{')) continue;
 
-    // For Text/MathTex classes, always wrap positional args even without kwargs
+    // Classes that always need their positional args wrapped into an options object
     const needsWrapping = ['Text', 'Title', 'Paragraph', 'MarkupText', 'MathTex', 'Tex'].includes(className);
-    if (!args.includes(':') && !needsWrapping) continue;
+    const needsPositionalWrapping = ['Line', 'Arrow', 'DoubleArrow', 'Line3D', 'Arrow3D', 'Vector'].includes(className);
+    if (!args.includes(':') && !needsWrapping && !needsPositionalWrapping) continue;
 
     const parts = smartSplit(args);
     const positional = [];
@@ -812,7 +870,7 @@ function convertConstructorArgs(line) {
       }
     }
 
-    if (kwargs.length === 0 && !needsWrapping) continue;
+    if (kwargs.length === 0 && !needsWrapping && !needsPositionalWrapping) continue;
 
     let newArgs;
 

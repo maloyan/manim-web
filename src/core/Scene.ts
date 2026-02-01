@@ -432,12 +432,45 @@ export class Scene {
 
   /**
    * Wait for a duration (pause between animations).
+   * Runs a render loop during the wait so that updaters keep ticking.
    * @param duration - Duration in seconds
    * @returns Promise that resolves after the duration
    */
-  async wait(duration: number): Promise<void> {
+  async wait(duration: number = 1): Promise<void> {
     return new Promise((resolve) => {
-      setTimeout(resolve, duration * 1000);
+      const startTime = performance.now();
+      let lastFrameTime = startTime;
+
+      const loop = (currentTime: number) => {
+        const elapsed = (currentTime - startTime) / 1000;
+        if (elapsed >= duration) {
+          // Final update at exactly the remaining dt
+          const dt = (currentTime - lastFrameTime) / 1000;
+          if (dt > 0) {
+            for (const mobject of this._mobjects) {
+              mobject.update(dt);
+            }
+            this._render();
+          }
+          resolve();
+          return;
+        }
+
+        const dt = (currentTime - lastFrameTime) / 1000;
+        lastFrameTime = currentTime;
+
+        // Update all mobjects (run updaters)
+        for (const mobject of this._mobjects) {
+          mobject.update(dt);
+        }
+
+        // Render frame
+        this._render();
+
+        requestAnimationFrame(loop);
+      };
+
+      requestAnimationFrame(loop);
     });
   }
 

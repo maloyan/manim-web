@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Rotation Updater</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #ff6b6b; }
+    button:disabled { background: #666; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="playBtn">Play Animation</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <script type="module">
+    import {
+      Scene,
+      Line,
+      ORIGIN,
+      LEFT,
+      WHITE,
+      YELLOW
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: '#000000'
+    });
+
+    let isAnimating = false;
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      document.getElementById('playBtn').disabled = true;
+
+      try {
+        scene.clear();
+
+        const updaterForth = (mobj, dt) => {
+          mobj.rotateAboutOrigin(dt);
+        };
+        const updaterBack = (mobj, dt) => {
+          mobj.rotateAboutOrigin(-dt);
+        };
+        const lineReference = new Line({ start: ORIGIN, end: LEFT }).setColor(WHITE);
+        const lineMoving = new Line({ start: ORIGIN, end: LEFT }).setColor(YELLOW);
+        lineMoving.addUpdater(updaterForth);
+        scene.add(lineReference, lineMoving);
+        await scene.wait(2);
+        lineMoving.removeUpdater(updaterForth);
+        lineMoving.addUpdater(updaterBack);
+        await scene.wait(2);
+        lineMoving.removeUpdater(updaterBack);
+        await scene.wait(0.5);
+      } catch(e) {
+        console.error('ERROR:', e.message, e.stack);
+      }
+
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+    });
+  </script>
+</body>
+</html>
