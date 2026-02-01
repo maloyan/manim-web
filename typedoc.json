@@ -1,0 +1,10 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "out": "docs",
+  "name": "manim-js",
+  "tsconfig": "tsconfig.typedoc.json",
+  "readme": "README.md",
+  "skipErrorChecking": true,
+  "excludePrivate": true,
+  "excludeInternal": true
+}
