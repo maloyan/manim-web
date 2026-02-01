@@ -80,7 +80,7 @@ export class NumberLine extends VMobject {
       numbersToInclude,
       numbersWithElongatedTicks = [],
       decimalPlaces = 0,
-      numberFontSize = 24,
+      numberFontSize = 28,
     } = options;
 
     this._xRange = [...xRange];
@@ -177,7 +177,7 @@ export class NumberLine extends VMobject {
         });
         // Position below the tick with enough clearance (account for elongated ticks)
         const ts = elongatedSetForLabels.has(Math.round(n * 1e9) / 1e9) ? elongatedTs : this._tickSize;
-        label.position.set(x, -ts - label.getHeight() * 0.5 - 0.12, 0);
+        label.position.set(x, -ts - label.getHeight() * 0.5 - 0.22, 0);
         this._numberLabels.push(label);
         this.add(label);
       }

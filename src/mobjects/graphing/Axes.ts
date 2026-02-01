@@ -6,6 +6,7 @@ import { NumberLine, NumberLineOptions } from './NumberLine';
 import { FunctionGraph, FunctionGraphOptions } from './FunctionGraph';
 import { MathTex } from '../../mobjects/text/MathTex';
 import { Line } from '../../mobjects/geometry/Line';
+import { DashedLine } from '../../mobjects/geometry/DashedLine';
 
 /**
  * Options for creating Axes
@@ -440,13 +441,13 @@ export class Axes extends Group {
    */
   getVerticalLine(
     point: Vector3Tuple,
-    options: { color?: string; strokeWidth?: number } = {}
-  ): Line {
-    const { color = '#ffffff', strokeWidth = 2 } = options;
+    options: { color?: string; strokeWidth?: number; lineFunc?: typeof Line | typeof DashedLine } = {}
+  ): VMobject {
+    const { color = '#ffffff', strokeWidth = 2, lineFunc = DashedLine } = options;
     const xAxisY = this.coordsToPoint(0, 0)[1];
-    return new Line({
-      start: [point[0], xAxisY, point[2]],
-      end: [point[0], point[1], point[2]],
+    return new lineFunc({
+      start: [point[0], xAxisY, point[2]] as Vector3Tuple,
+      end: [point[0], point[1], point[2]] as Vector3Tuple,
       color,
       strokeWidth,
     });
@@ -462,6 +463,172 @@ export class Axes extends Group {
   i2gp(x: number, graph: FunctionGraph): Vector3Tuple {
     const point = graph.getPointFromX(x);
     return point ?? this.coordsToPoint(x, 0);
+  }
+
+  /**
+   * Alias for i2gp — convert an x value to the visual point on a graph.
+   * Matches Python Manim's axes.input_to_graph_point() API.
+   */
+  inputToGraphPoint(x: number, graph: FunctionGraph): Vector3Tuple {
+    return this.i2gp(x, graph);
+  }
+
+  /**
+   * Create Riemann sum rectangles under a graph.
+   * @param graph - The FunctionGraph to approximate
+   * @param options - Riemann rectangle options
+   * @returns A VGroup of filled rectangles
+   */
+  getRiemannRectangles(
+    graph: FunctionGraph,
+    options: {
+      xRange?: [number, number];
+      dx?: number;
+      color?: string;
+      fillOpacity?: number;
+      strokeWidth?: number;
+      strokeColor?: string;
+    } = {}
+  ): VGroup {
+    const {
+      xRange,
+      dx = 0.1,
+      color = '#58c4dd',
+      fillOpacity = 0.5,
+      strokeWidth = 1,
+      strokeColor = color,
+    } = options;
+
+    const [xStart, xEnd] = xRange ?? [this._xRange[0], this._xRange[1]];
+    const func = graph.getFunction();
+    const group = new VGroup();
+
+    for (let x = xStart; x < xEnd - dx * 0.001; x += dx) {
+      const y = func(x);
+      if (!isFinite(y) || isNaN(y)) continue;
+
+      // Rectangle corners in visual coordinates
+      const bl = this.coordsToPoint(x, 0);
+      const br = this.coordsToPoint(x + dx, 0);
+      const tr = this.coordsToPoint(x + dx, y);
+      const tl = this.coordsToPoint(x, y);
+
+      const rect = new VMobject();
+      rect.color = strokeColor;
+      rect.fillColor = color;
+      rect.fillOpacity = fillOpacity;
+      rect.strokeWidth = strokeWidth;
+
+      // Build closed rectangle path as degenerate cubic Bezier segments
+      const points: number[][] = [];
+      const addSeg = (p0: number[], p1: number[], first: boolean) => {
+        const ddx = p1[0] - p0[0];
+        const ddy = p1[1] - p0[1];
+        const ddz = p1[2] - p0[2];
+        if (first) points.push([...p0]);
+        points.push([p0[0] + ddx / 3, p0[1] + ddy / 3, p0[2] + ddz / 3]);
+        points.push([p0[0] + 2 * ddx / 3, p0[1] + 2 * ddy / 3, p0[2] + 2 * ddz / 3]);
+        points.push([...p1]);
+      };
+      addSeg(bl, tl, true);
+      addSeg(tl, tr, false);
+      addSeg(tr, br, false);
+      addSeg(br, bl, false);
+
+      rect.setPoints3D(points);
+      group.add(rect);
+    }
+
+    return group;
+  }
+
+  /**
+   * Create a filled area between a graph and either the x-axis or another graph.
+   * @param graph - The primary graph boundary
+   * @param xRange - The x interval [start, end]
+   * @param options - Area options
+   * @returns A filled VMobject representing the area
+   */
+  getArea(
+    graph: FunctionGraph,
+    xRange: [number, number],
+    options: {
+      boundedGraph?: FunctionGraph;
+      color?: string;
+      opacity?: number;
+      strokeWidth?: number;
+    } = {}
+  ): VMobject {
+    const {
+      boundedGraph,
+      color = '#888888',
+      opacity = 0.5,
+      strokeWidth = 0,
+    } = options;
+
+    const [xStart, xEnd] = xRange;
+    const numSamples = 100;
+    const dx = (xEnd - xStart) / numSamples;
+    const func1 = graph.getFunction();
+
+    const area = new VMobject();
+    area.color = color;
+    area.fillColor = color;
+    area.fillOpacity = opacity;
+    area.strokeWidth = strokeWidth;
+
+    // Forward path along the main graph
+    const forwardPoints: number[][] = [];
+    for (let i = 0; i <= numSamples; i++) {
+      const x = xStart + i * dx;
+      const y = func1(x);
+      if (isFinite(y) && !isNaN(y)) {
+        forwardPoints.push(this.coordsToPoint(x, y));
+      }
+    }
+
+    // Backward path along bounded graph or x-axis
+    const backwardPoints: number[][] = [];
+    if (boundedGraph) {
+      const func2 = boundedGraph.getFunction();
+      for (let i = numSamples; i >= 0; i--) {
+        const x = xStart + i * dx;
+        const y = func2(x);
+        if (isFinite(y) && !isNaN(y)) {
+          backwardPoints.push(this.coordsToPoint(x, y));
+        }
+      }
+    } else {
+      // Use x-axis (y = 0)
+      for (let i = numSamples; i >= 0; i--) {
+        const x = xStart + i * dx;
+        backwardPoints.push(this.coordsToPoint(x, 0));
+      }
+    }
+
+    // Combine into closed polygon
+    const allPoints = [...forwardPoints, ...backwardPoints];
+    if (allPoints.length < 3) return area;
+
+    // Close the polygon back to start
+    allPoints.push([...allPoints[0]]);
+
+    // Convert to cubic Bezier segments (degenerate — straight lines)
+    const bezierPoints: number[][] = [];
+    for (let i = 0; i < allPoints.length - 1; i++) {
+      const p0 = allPoints[i];
+      const p1 = allPoints[i + 1];
+      const ddx = p1[0] - p0[0];
+      const ddy = p1[1] - p0[1];
+      const ddz = p1[2] - p0[2];
+      if (i === 0) bezierPoints.push([...p0]);
+      bezierPoints.push([p0[0] + ddx / 3, p0[1] + ddy / 3, p0[2] + ddz / 3]);
+      bezierPoints.push([p0[0] + 2 * ddx / 3, p0[1] + 2 * ddy / 3, p0[2] + 2 * ddz / 3]);
+      bezierPoints.push([...p1]);
+    }
+
+    area.setPoints3D(bezierPoints);
+    return area;
   }
 
   private _numberToVisualX(x: number): number {
