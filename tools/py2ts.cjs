@@ -658,6 +658,7 @@ function convertLine(rawLine, tracking, declaredVars) {
     const setValueMatch = animCall.match(/^set_value\s*\(\s*(.+)\s*\)$/);
     const incrementMatch = animCall.match(/^increment_value\s*\(\s*(.+)\s*\)$/);
     const setColorMatch = animCall.match(/^set_color\s*\(\s*(.+)\s*\)$/);
+    const shiftMatch = animCall.match(/^shift\s*\(\s*(.+)\s*\)$/);
 
     if (setValueMatch) {
       const opts = playOpts ? `, ${playOpts}` : '';
@@ -672,6 +673,12 @@ function convertLine(rawLine, tracking, declaredVars) {
       const playOptsObj = playOpts ? playOpts.slice(2, -2).trim() : ''; // strip "{ " and " }"
       const optsStr = playOptsObj ? `{ color: ${targetColor}, ${playOptsObj} }` : `{ color: ${targetColor} }`;
       line = `${indent}await scene.play(new FadeToColor(${objName}, ${optsStr}));`;
+    } else if (shiftMatch) {
+      // obj.animate.shift(vec) → new Shift(obj, { direction: vec })
+      tracking.usedClasses.add('Shift');
+      const dirExpr = shiftMatch[1].trim();
+      const opts = playOpts ? `, ...${playOpts}` : '';
+      line = `${indent}await scene.play(new Shift(${objName}, { direction: ${dirExpr}${opts} }));`;
     } else {
       tracking.usedClasses.add('MoveToTarget');
       const opts = playOpts ? `, ${playOpts}` : '';
@@ -805,6 +812,20 @@ function convertLine(rawLine, tracking, declaredVars) {
   // Remaining snake_case method names
   line = line.replace(/\.([a-z_][a-z_0-9]*)\s*\(/g, (_, method) =>
     `.${snakeToCamel(method)}(`);
+
+  // VGroup indexing: var[n].method() → var.get(n)!.method()
+  // In Manim Python, group[n] uses __getitem__; in TS we use .get(n)
+  // Must run after method renames so .getCenter() etc. are already camelCase.
+  line = line.replace(/(\w+)\[(\d+)\]\./g, '$1.get($2)!.');
+
+  // Vector subtraction: expr.getCenter() - expr.getCenter() → subVec(a, b)
+  // Must run after method renames and VGroup indexing.
+  const VEC_METHODS = 'getCenter|getTop|getBottom|getLeft|getRight|getStart|getEnd|getPoint|getOrigin';
+  const subVecRe = new RegExp(`([\\w.!()]+\\.(?:${VEC_METHODS})\\(\\))\\s*-\\s*([\\w.!()]+\\.(?:${VEC_METHODS})\\(\\))`, 'g');
+  if (subVecRe.test(line)) {
+    tracking.usedClasses.add('subVec');
+    line = line.replace(new RegExp(`([\\w.!()]+\\.(?:${VEC_METHODS})\\(\\))\\s*-\\s*([\\w.!()]+\\.(?:${VEC_METHODS})\\(\\))`, 'g'), 'subVec($1, $2)');
+  }
 
   // Class instantiation → new ClassName()
   for (const cls of Object.keys(CLASS_MAP)) {
