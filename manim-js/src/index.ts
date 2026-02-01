@@ -615,4 +615,5 @@ export {
 export {
   scaleVec,
   addVec,
+  subVec,
 } from './utils/vectors';
