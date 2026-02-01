@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>if(new URLSearchParams(location.search).has('embed'))document.documentElement.classList.add('embed')</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ManimWeb - Moving Frame Box</title>
@@ -23,61 +24,15 @@
       border-radius: 8px;
       overflow: hidden;
     }
+    html.embed, html.embed body { margin:0!important;padding:0!important;overflow:hidden;background:#000!important;width:100%;height:100%; }
+    html.embed body { display:flex;justify-content:center;align-items:center; }
+    html.embed .controls, html.embed .buttons, html.embed h1, html.embed #status { display:none!important; }
+    html.embed #container { border:none!important;border-radius:0!important;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center; }
   </style>
 </head>
 <body>
   <div id="container"></div>
 
-  <script type="module">
-    // Converted from Python Manim → ManimWeb TypeScript
-    // Review and adjust as needed — automated conversion is approximate.
-
-    import {
-      Create,
-      MathTex,
-      ReplacementTransform,
-      Scene,
-      SurroundingRectangle,
-      Write
-    } from '../src/index.ts';
-
-    export async function movingFrameBox(scene) {
-      const text = new MathTex({ latex: ["\\frac{d}{dx}f(x)g(x)=", "f(x)\\frac{d}{dx}g(x)", "+", "g(x)\\frac{d}{dx}f(x)"] });
-      await text.waitForRender();
-      await scene.play(new Write(text));
-      const framebox1 = new SurroundingRectangle(text.getPart(1), { buff: .1 });
-      const framebox2 = new SurroundingRectangle(text.getPart(3), { buff: .1 });
-      await scene.play( new Create(framebox1), );
-      await scene.wait();
-      await scene.play( new ReplacementTransform(framebox1,framebox2), );
-      await scene.wait();
-    }
-
-    const container = document.getElementById('container');
-    const scene = new Scene(container, {
-      width: 800,
-      height: 450,
-      backgroundColor: '#000000'
-    });
-
-    movingFrameBox(scene);
-  
-
-    // Embed mode: hide controls, auto-play, loop
-    if (new URLSearchParams(window.location.search).has('embed')) {
-      document.querySelectorAll('.controls, .buttons, h1, #status').forEach(el => el.style.display = 'none');
-      const cont = document.getElementById('container');
-      if (cont) { cont.style.border = 'none'; cont.style.borderRadius = '0'; }
-      document.body.style.background = '#000';
-      document.body.style.padding = '0';
-      const playBtn = document.getElementById('playBtn');
-      if (playBtn) {
-        setTimeout(() => playBtn.click(), 500);
-        new MutationObserver(() => {
-          if (!playBtn.disabled) setTimeout(() => playBtn.click(), 2000);
-        }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
-      }
-    }
-  </script>
+  <script type="module" src="./moving_frame_box.ts"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>if(new URLSearchParams(location.search).has('embed'))document.documentElement.classList.add('embed')</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ManimWeb - Heat Diagram Plot</title>
@@ -36,6 +37,10 @@
     }
     button:hover { background: #ff6b6b; }
     button:disabled { background: #666; cursor: not-allowed; }
+    html.embed, html.embed body { margin:0!important;padding:0!important;overflow:hidden;background:#000!important;width:100%;height:100%; }
+    html.embed body { display:flex;justify-content:center;align-items:center; }
+    html.embed .controls, html.embed .buttons, html.embed h1, html.embed #status { display:none!important; }
+    html.embed #container { border:none!important;border-radius:0!important;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center; }
   </style>
 </head>
 <body>
@@ -45,67 +50,6 @@
     <button id="resetBtn">Reset</button>
   </div>
 
-  <script type="module">
-    // Converted from Python Manim → ManimWeb TypeScript
-    // Original: HeatDiagramPlot example from Manim Community docs
-
-    import {
-      Scene,
-      Axes,
-      Tex,
-      BLACK
-    } from '../src/index.ts';
-
-    const container = document.getElementById('container');
-    const scene = new Scene(container, {
-      width: 800,
-      height: 450,
-      backgroundColor: BLACK
-    });
-
-    let isAnimating = false;
-
-    document.getElementById('playBtn').addEventListener('click', async () => {
-      if (isAnimating) return;
-      isAnimating = true;
-      document.getElementById('playBtn').disabled = true;
-
-      scene.clear();
-
-      const ax = new Axes({
-        xRange: [0, 40, 5],
-        yRange: [-8, 32, 5],
-        xLength: 9,
-        yLength: 6,
-        xAxisConfig: { numbersToInclude: [0, 5, 10, 15, 20, 25, 30, 35] },
-        yAxisConfig: { numbersToInclude: [-5, 0, 5, 10, 15, 20, 25, 30] },
-        tips: false,
-      });
-
-      // Create Tex labels and wait for rendering
-      const xLabel = new Tex({ latex: "$\\Delta Q$" });
-      const yLabel = new Tex({ latex: "T[$^\\circ C$]" });
-      await xLabel.waitForRender();
-      await yLabel.waitForRender();
-
-      const labels = ax.getAxisLabels({ xLabel, yLabel });
-
-      const xVals = [0, 8, 38, 39];
-      const yVals = [20, 0, 0, -5];
-      const graph = ax.plotLineGraph({ xValues: xVals, yValues: yVals });
-
-      scene.add(ax, labels, graph);
-
-      isAnimating = false;
-      document.getElementById('playBtn').disabled = false;
-    });
-
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      scene.clear();
-    });
-
-    // Auto-play on load
-    document.getElementById('playBtn').click();
-  </script>
+  <script type="module" src="./heat_diagram_plot.ts"></script>
 </body>
 </html>

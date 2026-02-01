@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>if(new URLSearchParams(location.search).has('embed'))document.documentElement.classList.add('embed')</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ManimWeb - Moving Angle</title>
@@ -36,6 +37,10 @@
     }
     button:hover { background: #ff6b6b; }
     button:disabled { background: #666; cursor: not-allowed; }
+    html.embed, html.embed body { margin:0!important;padding:0!important;overflow:hidden;background:#000!important;width:100%;height:100%; }
+    html.embed body { display:flex;justify-content:center;align-items:center; }
+    html.embed .controls, html.embed .buttons, html.embed h1, html.embed #status { display:none!important; }
+    html.embed #container { border:none!important;border-radius:0!important;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center; }
   </style>
 </head>
 <body>
@@ -45,98 +50,6 @@
     <button id="resetBtn">Reset</button>
   </div>
 
-  <script type="module">
-    // Converted from Python Manim → ManimWeb TypeScript
-    // Review and adjust as needed — automated conversion is approximate.
-    import {
-      Angle,
-      FadeToColor,
-      LEFT,
-      Line,
-      MathTex,
-      RED,
-      RIGHT,
-      SMALL_BUFF,
-      Scene,
-      ValueTracker,
-      BLACK,
-      WHITE,
-    } from '../src/index.ts';
-
-    const container = document.getElementById('container');
-    const scene = new Scene(container, {
-      width: 800,
-      height: 450,
-      backgroundColor: BLACK,
-    });
-
-    let isAnimating = false;
-
-    async function movingAngle(scene) {
-      scene.clear();
-
-      const rotation_center = LEFT;
-
-      const theta_tracker = new ValueTracker(110);
-      const line1 = new Line({ start: LEFT, end: RIGHT });
-      const line_moving = new Line({ start: LEFT, end: RIGHT });
-      const line_ref = line_moving.copy();
-      line_moving.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
-      const a = new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false });
-      const tex = new MathTex({ latex: "\\theta", color: WHITE });
-      await tex.waitForRender();
-      tex.moveTo( new Angle({ line1: line1, line2: line_moving }, { radius: 0.5 + 3 * SMALL_BUFF, otherAngle: false }).pointFromProportion(0.5) );
-
-      scene.add(line1, line_moving, a, tex);
-      await scene.wait(1);
-
-      line_moving.addUpdater( (x) => {
-        x.become(line_ref.copy());
-        x.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
-      });
-
-      a.addUpdater( (x) => x.become(new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false })) );
-      tex.addUpdater( (x) => x.moveTo( new Angle({ line1: line1, line2: line_moving }, { radius: 0.5 + 3 * SMALL_BUFF, otherAngle: false }).pointFromProportion(0.5) ) );
-
-      await scene.play(theta_tracker.animateTo(40));
-      await scene.play(theta_tracker.animateTo(theta_tracker.getValue() + 140));
-      await scene.play(new FadeToColor(tex, { color: RED, duration: 0.5 }));
-      await scene.play(theta_tracker.animateTo(350));
-
-      await scene.wait(1);
-    }
-
-    document.getElementById('playBtn').addEventListener('click', async () => {
-      if (isAnimating) return;
-      isAnimating = true;
-      document.getElementById('playBtn').disabled = true;
-
-      await movingAngle(scene);
-
-      isAnimating = false;
-      document.getElementById('playBtn').disabled = false;
-    });
-
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      scene.clear();
-    });
-  
-
-    // Embed mode: hide controls, auto-play, loop
-    if (new URLSearchParams(window.location.search).has('embed')) {
-      document.querySelectorAll('.controls, .buttons, h1, #status').forEach(el => el.style.display = 'none');
-      const cont = document.getElementById('container');
-      if (cont) { cont.style.border = 'none'; cont.style.borderRadius = '0'; }
-      document.body.style.background = '#000';
-      document.body.style.padding = '0';
-      const playBtn = document.getElementById('playBtn');
-      if (playBtn) {
-        setTimeout(() => playBtn.click(), 500);
-        new MutationObserver(() => {
-          if (!playBtn.disabled) setTimeout(() => playBtn.click(), 2000);
-        }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
-      }
-    }
-  </script>
+  <script type="module" src="./moving_angle.ts"></script>
 </body>
 </html>

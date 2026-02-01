@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>if(new URLSearchParams(location.search).has('embed'))document.documentElement.classList.add('embed')</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ManimWeb - Displaying Text</title>
@@ -36,6 +37,10 @@
     }
     button:hover { background: #ff6b6b; }
     button:disabled { background: #666; cursor: not-allowed; }
+    html.embed, html.embed body { margin:0!important;padding:0!important;overflow:hidden;background:#000!important;width:100%;height:100%; }
+    html.embed body { display:flex;justify-content:center;align-items:center; }
+    html.embed .controls, html.embed .buttons, html.embed h1, html.embed #status { display:none!important; }
+    html.embed #container { border:none!important;border-radius:0!important;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center; }
   </style>
 </head>
 <body>
@@ -45,83 +50,6 @@
     <button id="resetBtn">Reset</button>
   </div>
 
-  <script type="module">
-    import {
-      Scene,
-      Text,
-      Write,
-      FadeIn,
-      FadeOut,
-      AnimationGroup,
-      BLACK,
-      WHITE,
-      RED,
-      DOWN,
-      smooth
-    } from '../src/index.ts';
-
-    const container = document.getElementById('container');
-    const scene = new Scene(container, {
-      width: 800,
-      height: 450,
-      backgroundColor: BLACK
-    });
-
-    let isAnimating = false;
-
-    document.getElementById('playBtn').addEventListener('click', async () => {
-      if (isAnimating) return;
-      isAnimating = true;
-      document.getElementById('playBtn').disabled = true;
-
-      scene.clear();
-
-      const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
-      const firstLine = new Text({ text: 'Create cool animations', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
-      const secondLine = new Text({ text: 'using Manim', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
-      const thirdLine = new Text({ text: 'Try it out yourself.', fontSize: 48, color: RED });
-
-      await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
-      secondLine.nextTo(firstLine, DOWN);
-
-      await scene.wait(1);
-      await scene.play(new Write(firstLine), new Write(secondLine));
-      await scene.wait(1);
-
-      // Cross-fade: fade out first line while fading in third line at same position
-      scene.add(thirdLine);
-      thirdLine.opacity = 0;
-      await scene.play(new AnimationGroup([
-        new FadeOut(firstLine, { duration: 1.5, rateFunc: smooth }),
-        new FadeIn(thirdLine, { duration: 1.5, rateFunc: smooth }),
-        new FadeOut(secondLine, { duration: 1.5, rateFunc: smooth })
-      ]));
-      await scene.wait(2);
-
-      isAnimating = false;
-      document.getElementById('playBtn').disabled = false;
-    });
-
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      scene.clear();
-    });
-  
-
-    // Embed mode: hide controls, auto-play, loop
-    if (new URLSearchParams(window.location.search).has('embed')) {
-      document.querySelectorAll('.controls, .buttons, h1, #status').forEach(el => el.style.display = 'none');
-      const cont = document.getElementById('container');
-      if (cont) { cont.style.border = 'none'; cont.style.borderRadius = '0'; }
-      document.body.style.background = '#000';
-      document.body.style.padding = '0';
-      const playBtn = document.getElementById('playBtn');
-      if (playBtn) {
-        setTimeout(() => playBtn.click(), 500);
-        new MutationObserver(() => {
-          if (!playBtn.disabled) setTimeout(() => playBtn.click(), 2000);
-        }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
-      }
-    }
-  </script>
+  <script type="module" src="./displaying_text.ts"></script>
 </body>
 </html>

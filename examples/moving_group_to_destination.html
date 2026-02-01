@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>if(new URLSearchParams(location.search).has('embed'))document.documentElement.classList.add('embed')</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ManimWeb - Moving Group To Destination</title>
@@ -36,6 +37,10 @@
     }
     button:hover { background: #ff6b6b; }
     button:disabled { background: #666; cursor: not-allowed; }
+    html.embed, html.embed body { margin:0!important;padding:0!important;overflow:hidden;background:#000!important;width:100%;height:100%; }
+    html.embed body { display:flex;justify-content:center;align-items:center; }
+    html.embed .controls, html.embed .buttons, html.embed h1, html.embed #status { display:none!important; }
+    html.embed #container { border:none!important;border-radius:0!important;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center; }
   </style>
 </head>
 <body>
@@ -45,78 +50,6 @@
     <button id="resetBtn">Reset</button>
   </div>
 
-  <script type="module">
-    import {
-      Scene,
-      VGroup,
-      Dot,
-      Shift,
-      LEFT,
-      ORIGIN,
-      RIGHT,
-      RED,
-      YELLOW,
-      BLACK,
-      scaleVec,
-      subVec
-    } from '../src/index.ts';
-
-    const container = document.getElementById('container');
-    const scene = new Scene(container, {
-      width: 800,
-      height: 450,
-      backgroundColor: BLACK
-    });
-
-    let isAnimating = false;
-
-    document.getElementById('playBtn').addEventListener('click', async () => {
-      if (isAnimating) return;
-      isAnimating = true;
-      document.getElementById('playBtn').disabled = true;
-
-      scene.clear();
-
-      const group = new VGroup(
-        new Dot({ point: LEFT }),
-        new Dot({ point: ORIGIN }),
-        new Dot({ point: RIGHT, color: RED }),
-        new Dot({ point: scaleVec(2, RIGHT) })
-      ).scale(1.4);
-
-      const dest = new Dot({ point: [4, 3, 0], color: YELLOW });
-
-      scene.add(group, dest);
-
-      await scene.play(new Shift(group, {
-        direction: subVec(dest.getCenter(), group.get(2).getCenter())
-      }));
-      await scene.wait(0.5);
-
-      isAnimating = false;
-      document.getElementById('playBtn').disabled = false;
-    });
-
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      scene.clear();
-    });
-  
-
-    // Embed mode: hide controls, auto-play, loop
-    if (new URLSearchParams(window.location.search).has('embed')) {
-      document.querySelectorAll('.controls, .buttons, h1, #status').forEach(el => el.style.display = 'none');
-      const cont = document.getElementById('container');
-      if (cont) { cont.style.border = 'none'; cont.style.borderRadius = '0'; }
-      document.body.style.background = '#000';
-      document.body.style.padding = '0';
-      const playBtn = document.getElementById('playBtn');
-      if (playBtn) {
-        setTimeout(() => playBtn.click(), 500);
-        new MutationObserver(() => {
-          if (!playBtn.disabled) setTimeout(() => playBtn.click(), 2000);
-        }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
-      }
-    }
-  </script>
+  <script type="module" src="./moving_group_to_destination.ts"></script>
 </body>
 </html>

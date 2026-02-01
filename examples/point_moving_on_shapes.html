@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>if(new URLSearchParams(location.search).has('embed'))document.documentElement.classList.add('embed')</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ManimWeb - Point Moving On Shapes</title>
@@ -36,6 +37,10 @@
     }
     button:hover { background: #ff6b6b; }
     button:disabled { background: #666; cursor: not-allowed; }
+    html.embed, html.embed body { margin:0!important;padding:0!important;overflow:hidden;background:#000!important;width:100%;height:100%; }
+    html.embed body { display:flex;justify-content:center;align-items:center; }
+    html.embed .controls, html.embed .buttons, html.embed h1, html.embed #status { display:none!important; }
+    html.embed #container { border:none!important;border-radius:0!important;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center; }
   </style>
 </head>
 <body>
@@ -45,76 +50,6 @@
     <button id="resetBtn">Reset</button>
   </div>
 
-  <script type="module">
-    import {
-      BLUE,
-      Circle,
-      Dot,
-      GrowFromCenter,
-      Line,
-      MoveAlongPath,
-      RIGHT,
-      Rotating,
-      Scene,
-      Transform,
-      linear,
-      BLACK
-    } from '../src/index.ts';
-
-    const container = document.getElementById('container');
-    const scene = new Scene(container, {
-      width: 800,
-      height: 450,
-      backgroundColor: BLACK
-    });
-
-    let isAnimating = false;
-
-    document.getElementById('playBtn').addEventListener('click', async () => {
-      if (isAnimating) return;
-      isAnimating = true;
-      document.getElementById('playBtn').disabled = true;
-
-      scene.clear();
-
-      const circle = new Circle({ radius: 1, color: BLUE });
-      const dot = new Dot();
-      const dot2 = dot.copy().shift(RIGHT);
-      scene.add(dot);
-
-      const line = new Line({ start: [3, 0, 0], end: [5, 0, 0] });
-      scene.add(line);
-
-      await scene.play(new GrowFromCenter(circle));
-      await scene.play(new Transform(dot, dot2));
-      await scene.play(new MoveAlongPath(dot, { path: circle, duration: 2, rateFunc: linear }));
-      await scene.play(new Rotating(dot, { aboutPoint: [2, 0, 0], duration: 1.5 }));
-      await scene.wait();
-
-      isAnimating = false;
-      document.getElementById('playBtn').disabled = false;
-    });
-
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      scene.clear();
-    });
-  
-
-    // Embed mode: hide controls, auto-play, loop
-    if (new URLSearchParams(window.location.search).has('embed')) {
-      document.querySelectorAll('.controls, .buttons, h1, #status').forEach(el => el.style.display = 'none');
-      const cont = document.getElementById('container');
-      if (cont) { cont.style.border = 'none'; cont.style.borderRadius = '0'; }
-      document.body.style.background = '#000';
-      document.body.style.padding = '0';
-      const playBtn = document.getElementById('playBtn');
-      if (playBtn) {
-        setTimeout(() => playBtn.click(), 500);
-        new MutationObserver(() => {
-          if (!playBtn.disabled) setTimeout(() => playBtn.click(), 2000);
-        }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
-      }
-    }
-  </script>
+  <script type="module" src="./point_moving_on_shapes.ts"></script>
 </body>
 </html>
