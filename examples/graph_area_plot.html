@@ -100,6 +100,23 @@
     document.getElementById('resetBtn').addEventListener('click', () => {
       scene.clear();
     });
+  
+
+    // Embed mode: hide controls, auto-play, loop
+    if (new URLSearchParams(window.location.search).has('embed')) {
+      document.querySelectorAll('.controls, .buttons, h1, #status').forEach(el => el.style.display = 'none');
+      const cont = document.getElementById('container');
+      if (cont) { cont.style.border = 'none'; cont.style.borderRadius = '0'; }
+      document.body.style.background = '#000';
+      document.body.style.padding = '0';
+      const playBtn = document.getElementById('playBtn');
+      if (playBtn) {
+        setTimeout(() => playBtn.click(), 500);
+        new MutationObserver(() => {
+          if (!playBtn.disabled) setTimeout(() => playBtn.click(), 2000);
+        }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
+      }
+    }
   </script>
 </body>
 </html>

@@ -4,7 +4,7 @@
  * generate-example-docs.mjs
  *
  * Reads all examples/*.html files, extracts the scene function code (not boilerplate),
- * and generates Docusaurus-compatible markdown documentation pages in website/docs/examples/.
+ * and generates a single Docusaurus-compatible examples.mdx page in website/docs/.
  *
  * Usage:
  *   node scripts/generate-example-docs.mjs
@@ -18,7 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..');
 const EXAMPLES_DIR = join(ROOT, 'examples');
-const DOCS_OUT_DIR = join(ROOT, 'website', 'docs', 'examples');
+const DOCS_DIR = join(ROOT, 'website', 'docs');
 
 // ---------------------------------------------------------------------------
 // Category definitions
@@ -130,27 +130,6 @@ const EXAMPLE_META = {
       'A minimal test of the Write animation: loads a custom font, renders a text object, and plays a slow 5-second Write animation to draw each letter stroke by stroke.',
     learnMore: ['Text', 'Write', 'Create', 'Circle'],
   },
-};
-
-// Index page descriptions (shorter, for the table)
-const INDEX_DESCRIPTIONS = {
-  arg_min: 'Animate a dot finding the minimum of a quadratic curve',
-  boolean_operations: 'Union, intersection, difference, and exclusion on ellipses',
-  displaying_equations: 'Write text and transform it into a LaTeX equation',
-  displaying_text: 'Create and cross-fade between animated text objects',
-  graph_area_plot: 'Shaded areas and Riemann sum rectangles between curves',
-  manim_examples: 'Five classic Manim demos in one scene',
-  moving_angle: 'Animate a changing angle with a reactive theta label',
-  moving_around: 'Shift, recolor, scale, and rotate a square with MoveToTarget',
-  moving_dots: 'Two dots connected by a line, driven by ValueTrackers',
-  moving_frame_box: 'Highlight terms in a LaTeX equation with a moving box',
-  moving_group_to_destination: 'Shift a dot group so one dot aligns with a target',
-  opening_manim: 'Multi-part showcase with text, equations, grid, and warp',
-  point_moving_on_shapes: 'Move a dot along a circle path and rotate it',
-  point_with_trace: 'A dot that leaves a visible trail as it moves',
-  rotation_updater: 'A line that rotates via time-based updater functions',
-  sin_cos_plot: 'Sine and cosine plots on labeled coordinate axes',
-  test_write: 'Minimal Write animation test on a text object',
 };
 
 // ---------------------------------------------------------------------------
@@ -380,15 +359,12 @@ function extractTestWrite(scriptContent) {
 // ---------------------------------------------------------------------------
 
 function main() {
-  // Output is a single file, ensure parent dir exists
-  const outDir = join(ROOT, 'website', 'docs');
-  mkdirSync(outDir, { recursive: true });
+  mkdirSync(DOCS_DIR, { recursive: true });
 
   const files = readdirSync(EXAMPLES_DIR)
     .filter((f) => f.endsWith('.html'))
     .sort();
 
-  // Collect all example data
   const examples = [];
 
   for (const file of files) {
@@ -418,16 +394,8 @@ function main() {
   }
 
   // -------------------------------------------------------------------------
-  // Generate a single examples.md page with all examples
+  // Generate single examples.mdx page
   // -------------------------------------------------------------------------
-
-  // Group by category, preserving order
-  const grouped = {};
-  for (const cat of Object.keys(CATEGORIES)) grouped[cat] = [];
-  grouped['Other'] = [];
-  for (const ex of examples) {
-    (grouped[ex.category] || grouped['Other']).push(ex);
-  }
 
   const lines = [
     '---',
@@ -437,51 +405,56 @@ function main() {
     '',
     '# Examples',
     '',
-    'A collection of examples showing what you can build with manim-js.',
-    'Each example is a standalone scene you can run in the browser with `npm run dev`.',
+    'Interactive examples showing what you can build with manim-js. Each example includes a live animation and source code.',
     '',
   ];
 
+  // Group examples by category
+  const grouped = {};
+  for (const cat of Object.keys(CATEGORIES)) grouped[cat] = [];
+  grouped['Other'] = [];
+  for (const ex of examples) {
+    (grouped[ex.category] || grouped['Other']).push(ex);
+  }
+
+  let isFirst = true;
   for (const [category, entries] of Object.entries(grouped)) {
     if (entries.length === 0) continue;
 
-    lines.push(`## ${category}`);
-    lines.push('');
-
     for (const ex of entries) {
-      lines.push(`### ${ex.title}`);
+      if (!isFirst) {
+        lines.push('---');
+        lines.push('');
+      }
+      isFirst = false;
+
+      lines.push(`## ${ex.title}`);
       lines.push('');
       lines.push(ex.description);
+      lines.push('');
+      lines.push(`<iframe src="http://localhost:5173/examples/${ex.file}?embed" width="100%" height="480" style={{border: 'none', borderRadius: '12px', background: '#1a1a2e'}} />`);
+      lines.push('');
+      lines.push('<details>');
+      lines.push('<summary>Source Code</summary>');
       lines.push('');
       lines.push('```typescript');
       lines.push(ex.codeBlock);
       lines.push('```');
       lines.push('');
+      lines.push('</details>');
+      lines.push('');
 
-      // Learn More links
       if (ex.learnMore.length > 0) {
-        const items = ex.learnMore.map((name) => `**${name}**`).join(' · ');
-        lines.push(`**API:** ${items}`);
+        const learnMoreInline = ex.learnMore.map((name) => `**${name}**`).join(' \u00B7 ');
+        lines.push(`**Learn More:** ${learnMoreInline}`);
         lines.push('');
       }
-
-      lines.push('---');
-      lines.push('');
     }
   }
 
-  // Remove trailing separator
-  if (lines[lines.length - 2] === '---') {
-    lines.splice(lines.length - 2, 1);
-  }
-
-  lines.push('');
-  lines.push('See the full [API Reference](/api) for all available classes and animations.');
-  lines.push('');
-
-  const outPath = join(outDir, 'examples.md');
+  const outPath = join(DOCS_DIR, 'examples.mdx');
   writeFileSync(outPath, lines.join('\n'), 'utf-8');
-  console.log(`  Generated: website/docs/examples.md`);
+  console.log(`  Generated: website/docs/examples.mdx`);
 
   console.log(`\nDone! Generated single examples page with ${examples.length} examples.`);
 }
