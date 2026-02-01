@@ -747,7 +747,7 @@ export class VMobject extends Mobject {
 
     // Create fill material
     this._fillMaterial = new THREE.MeshBasicMaterial({
-      color: new THREE.Color(this.color),
+      color: new THREE.Color(this._style.fillColor || this.color),
       transparent: true,
       opacity: this._opacity * this.fillOpacity,
       side: THREE.DoubleSide

@@ -18,6 +18,10 @@ export class Create extends Animation {
   private _totalLength: number = 0;
   /** Whether to use dash-based reveal (needs Line2 children) */
   private _useDashReveal: boolean = false;
+  /** Whether the mobject has fill that needs to be animated */
+  private _hasFill: boolean = false;
+  /** Original fill opacity to restore */
+  private _originalFillOpacity: number = 0;
 
   constructor(mobject: Mobject, options: AnimationOptions = {}) {
     // Manim default for Create is 2 seconds
@@ -36,7 +40,10 @@ export class Create extends Animation {
   }
 
   /**
-   * Set up the animation - configure dashed lines for progressive reveal
+   * Set up the animation - configure dashed lines for progressive reveal.
+   * For filled VMobjects (like Polygon with fillOpacity > 0), this behaves
+   * like Manim's DrawBorderThenFill: first half draws the border, second
+   * half fades in the fill.
    */
   override begin(): void {
     super.begin();
@@ -44,6 +51,17 @@ export class Create extends Animation {
     this._useDashReveal = (this.mobject instanceof VMobject) && this._hasLine2Children();
 
     if (this._useDashReveal) {
+      const vmob = this.mobject as VMobject;
+
+      // Check if this VMobject has fill
+      this._originalFillOpacity = vmob.fillOpacity;
+      this._hasFill = this._originalFillOpacity > 0;
+
+      // Hide fill initially so it can fade in during second half
+      if (this._hasFill) {
+        vmob.setFillOpacity(0);
+      }
+
       // Set up dashed line for progressive reveal
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
@@ -77,21 +95,61 @@ export class Create extends Animation {
   }
 
   /**
-   * Interpolate the dash size to progressively reveal the stroke
+   * Interpolate the dash size to progressively reveal the stroke.
+   * For filled VMobjects: first half draws border, second half fades in fill.
    */
   interpolate(alpha: number): void {
     if (this._useDashReveal) {
-      const threeObj = this.mobject.getThreeObject();
-      threeObj.traverse((child) => {
-        if (child instanceof Line2) {
-          const material = child.material as LineMaterial;
-          const visibleLength = alpha * this._totalLength;
-          material.dashSize = visibleLength;
-          // Small epsilon to avoid visual artifacts
-          material.gapSize = this._totalLength - visibleLength + 0.0001;
-          material.needsUpdate = true;
+      if (this._hasFill) {
+        // Two-phase animation: border then fill (like Manim's DrawBorderThenFill)
+        const vmob = this.mobject as VMobject;
+        if (alpha < 0.5) {
+          // First half: draw border with dash reveal, keep fill hidden
+          // Must set fillOpacity every frame because updaters may reset it
+          vmob.setFillOpacity(0);
+          const strokeAlpha = alpha * 2;
+          const threeObj = this.mobject.getThreeObject();
+          threeObj.traverse((child) => {
+            if (child instanceof Line2) {
+              const material = child.material as LineMaterial;
+              const visibleLength = strokeAlpha * this._totalLength;
+              material.dashSize = visibleLength;
+              material.gapSize = this._totalLength - visibleLength + 0.0001;
+              material.needsUpdate = true;
+            }
+          });
+        } else {
+          // Second half: fill in, stroke fully visible
+          const fillAlpha = (alpha - 0.5) * 2;
+          vmob.setFillOpacity(this._originalFillOpacity * fillAlpha);
+
+          // Ensure stroke is fully visible (disable dashing)
+          const threeObj = this.mobject.getThreeObject();
+          threeObj.traverse((child) => {
+            if (child instanceof Line2) {
+              const material = child.material as LineMaterial;
+              if (material.dashed) {
+                material.dashSize = this._totalLength;
+                material.gapSize = 0.0001;
+                material.needsUpdate = true;
+              }
+            }
+          });
         }
-      });
+      } else {
+        // No fill: simple stroke reveal
+        const threeObj = this.mobject.getThreeObject();
+        threeObj.traverse((child) => {
+          if (child instanceof Line2) {
+            const material = child.material as LineMaterial;
+            const visibleLength = alpha * this._totalLength;
+            material.dashSize = visibleLength;
+            // Small epsilon to avoid visual artifacts
+            material.gapSize = this._totalLength - visibleLength + 0.0001;
+            material.needsUpdate = true;
+          }
+        });
+      }
     } else {
       this.mobject.setOpacity(alpha);
     }
@@ -102,6 +160,11 @@ export class Create extends Animation {
    */
   override finish(): void {
     if (this._useDashReveal) {
+      // Restore fill opacity
+      if (this._hasFill) {
+        (this.mobject as VMobject).setFillOpacity(this._originalFillOpacity);
+      }
+
       // Disable dashing, show full stroke
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {

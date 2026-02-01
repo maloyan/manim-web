@@ -664,15 +664,17 @@ export class Scene {
       const dt = elapsed / 1000;
       this._lastFrameTime = currentTime;
 
-      // Update timeline
+      // Update all mobjects (run updaters) BEFORE animations,
+      // so animations can override updater-set values (e.g. Create
+      // hiding fill while an updater rebuilds the polygon via become()).
+      for (const mobject of this._mobjects) {
+        mobject.update(dt);
+      }
+
+      // Update timeline (animations override updater state)
       if (this._timeline) {
         this._timeline.update(dt);
         this._currentTime = this._timeline.getCurrentTime();
-      }
-
-      // Update all mobjects (run updaters)
-      for (const mobject of this._mobjects) {
-        mobject.update(dt);
       }
 
       // Render frame
@@ -699,11 +701,12 @@ export class Scene {
         if (elapsed > 200) {
           const dt = elapsed / 1000;
           this._lastFrameTime = now;
-          this._timeline.update(dt);
-          this._currentTime = this._timeline.getCurrentTime();
+          // Same order as main loop: updaters first, then animations
           for (const mobject of this._mobjects) {
             mobject.update(dt);
           }
+          this._timeline.update(dt);
+          this._currentTime = this._timeline.getCurrentTime();
           this._render();
           this._checkFinished();
         }
