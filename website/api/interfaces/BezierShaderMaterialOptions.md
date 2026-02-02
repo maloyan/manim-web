@@ -1,6 +1,6 @@
 # Interface: BezierShaderMaterialOptions
 
-Defined in: [rendering/BezierShaderMaterial.ts:247](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierShaderMaterial.ts#L247)
+Defined in: [rendering/BezierShaderMaterial.ts:247](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierShaderMaterial.ts#L247)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [rendering/BezierShaderMaterial.ts:247](https://github.com/maloyan/m
 
 > `optional` **blending**: `Blending`
 
-Defined in: [rendering/BezierShaderMaterial.ts:255](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierShaderMaterial.ts#L255)
+Defined in: [rendering/BezierShaderMaterial.ts:255](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierShaderMaterial.ts#L255)
 
 Blending mode. Default: THREE.NormalBlending
 
@@ -18,7 +18,7 @@ Blending mode. Default: THREE.NormalBlending
 
 > `optional` **depthTest**: `boolean`
 
-Defined in: [rendering/BezierShaderMaterial.ts:251](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierShaderMaterial.ts#L251)
+Defined in: [rendering/BezierShaderMaterial.ts:251](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierShaderMaterial.ts#L251)
 
 Depth test. Default: true
 
@@ -28,7 +28,7 @@ Depth test. Default: true
 
 > `optional` **depthWrite**: `boolean`
 
-Defined in: [rendering/BezierShaderMaterial.ts:253](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierShaderMaterial.ts#L253)
+Defined in: [rendering/BezierShaderMaterial.ts:253](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierShaderMaterial.ts#L253)
 
 Depth write. Default: false (for proper alpha blending)
 
@@ -38,7 +38,7 @@ Depth write. Default: false (for proper alpha blending)
 
 > `optional` **pixelRatio**: `number`
 
-Defined in: [rendering/BezierShaderMaterial.ts:259](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierShaderMaterial.ts#L259)
+Defined in: [rendering/BezierShaderMaterial.ts:259](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierShaderMaterial.ts#L259)
 
 Device pixel ratio. Default: 1
 
@@ -48,7 +48,7 @@ Device pixel ratio. Default: 1
 
 > `optional` **resolution**: \[`number`, `number`\]
 
-Defined in: [rendering/BezierShaderMaterial.ts:261](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierShaderMaterial.ts#L261)
+Defined in: [rendering/BezierShaderMaterial.ts:261](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierShaderMaterial.ts#L261)
 
 Renderer resolution [width, height] in CSS pixels
 
@@ -58,7 +58,7 @@ Renderer resolution [width, height] in CSS pixels
 
 > `optional` **side**: `Side`
 
-Defined in: [rendering/BezierShaderMaterial.ts:257](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierShaderMaterial.ts#L257)
+Defined in: [rendering/BezierShaderMaterial.ts:257](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierShaderMaterial.ts#L257)
 
 Side to render. Default: THREE.DoubleSide
 
@@ -68,6 +68,6 @@ Side to render. Default: THREE.DoubleSide
 
 > `optional` **transparent**: `boolean`
 
-Defined in: [rendering/BezierShaderMaterial.ts:249](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierShaderMaterial.ts#L249)
+Defined in: [rendering/BezierShaderMaterial.ts:249](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierShaderMaterial.ts#L249)
 
 Enable transparency. Default: true

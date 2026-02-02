@@ -2,9 +2,8 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function animate(scene: any) {
-  const { Line, ORIGIN, LEFT, WHITE, YELLOW } = await import('manim-js');
+  const { Scene, Line, ORIGIN, LEFT, WHITE, YELLOW } = await import('manim-js');
 
   const updaterForth = (mobj, dt) => {
     mobj.rotateAboutOrigin(dt);

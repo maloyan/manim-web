@@ -2,11 +2,14 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function animate(scene: any) {
-  const { Axes, Dot, MAROON, ValueTracker, linspace } = await import('manim-js');
+  const { Scene, Axes, Dot, MAROON, ValueTracker, linspace, BLACK } = await import('manim-js');
 
-  const ax = new Axes({ xRange: [0, 10], yRange: [0, 100, 10], axisConfig: { includeTip: false } });
+  const ax = new Axes({
+    xRange: [0, 10],
+    yRange: [0, 100, 10],
+    axisConfig: { includeTip: false },
+  });
   const labels = ax.getAxisLabels({ xLabel: 'x', yLabel: 'f(x)' });
 
   const t = new ValueTracker(0);

@@ -1,6 +1,6 @@
 # Interface: Box3DOptions
 
-Defined in: [mobjects/three-d/Cube.ts:179](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/three-d/Cube.ts#L179)
+Defined in: [mobjects/three-d/Cube.ts:179](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cube.ts#L179)
 
 Options for creating a Box3D
 
@@ -10,7 +10,7 @@ Options for creating a Box3D
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/three-d/Cube.ts:187](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/three-d/Cube.ts#L187)
+Defined in: [mobjects/three-d/Cube.ts:187](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cube.ts#L187)
 
 Center position [x, y, z]. Default: [0, 0, 0]
 
@@ -20,7 +20,7 @@ Center position [x, y, z]. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/three-d/Cube.ts:189](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/three-d/Cube.ts#L189)
+Defined in: [mobjects/three-d/Cube.ts:189](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cube.ts#L189)
 
 Color as CSS color string. Default: '#ffffff'
 
@@ -30,7 +30,7 @@ Color as CSS color string. Default: '#ffffff'
 
 > `optional` **depth**: `number`
 
-Defined in: [mobjects/three-d/Cube.ts:185](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/three-d/Cube.ts#L185)
+Defined in: [mobjects/three-d/Cube.ts:185](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cube.ts#L185)
 
 Depth (z dimension). Default: 1
 
@@ -40,7 +40,7 @@ Depth (z dimension). Default: 1
 
 > `optional` **height**: `number`
 
-Defined in: [mobjects/three-d/Cube.ts:183](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/three-d/Cube.ts#L183)
+Defined in: [mobjects/three-d/Cube.ts:183](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cube.ts#L183)
 
 Height (y dimension). Default: 1
 
@@ -50,7 +50,7 @@ Height (y dimension). Default: 1
 
 > `optional` **opacity**: `number`
 
-Defined in: [mobjects/three-d/Cube.ts:191](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/three-d/Cube.ts#L191)
+Defined in: [mobjects/three-d/Cube.ts:191](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cube.ts#L191)
 
 Opacity from 0 to 1. Default: 1
 
@@ -60,7 +60,7 @@ Opacity from 0 to 1. Default: 1
 
 > `optional` **width**: `number`
 
-Defined in: [mobjects/three-d/Cube.ts:181](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/three-d/Cube.ts#L181)
+Defined in: [mobjects/three-d/Cube.ts:181](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cube.ts#L181)
 
 Width (x dimension). Default: 1
 
@@ -70,6 +70,6 @@ Width (x dimension). Default: 1
 
 > `optional` **wireframe**: `boolean`
 
-Defined in: [mobjects/three-d/Cube.ts:193](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/three-d/Cube.ts#L193)
+Defined in: [mobjects/three-d/Cube.ts:193](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cube.ts#L193)
 
 Whether to render as wireframe. Default: false

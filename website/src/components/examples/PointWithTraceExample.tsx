@@ -2,9 +2,8 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function animate(scene: any) {
-  const { VMobject, Dot, Rotating, Shift, UP, LEFT, RIGHT } = await import('manim-js');
+  const { Scene, VMobject, Dot, Rotating, Shift, UP, LEFT, RIGHT, BLACK } = await import('manim-js');
 
   const path = new VMobject();
   path.fillOpacity = 0;

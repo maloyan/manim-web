@@ -2,4 +2,4 @@
 
 > `const` **YELLOW\_C**: `"#FFFF00"` = `'#FFFF00'`
 
-Defined in: [constants/colors.ts:44](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/constants/colors.ts#L44)
+Defined in: [constants/colors.ts:44](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/constants/colors.ts#L44)

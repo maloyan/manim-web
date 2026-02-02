@@ -1,6 +1,6 @@
 # Interface: LaggedStartOptions
 
-Defined in: [animation/LaggedStart.ts:8](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/LaggedStart.ts#L8)
+Defined in: [animation/LaggedStart.ts:8](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/LaggedStart.ts#L8)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/LaggedStart.ts:8](https://github.com/maloyan/manim-js/blo
 
 > `optional` **lagRatio**: `number`
 
-Defined in: [animation/LaggedStart.ts:14](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/LaggedStart.ts#L14)
+Defined in: [animation/LaggedStart.ts:14](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/LaggedStart.ts#L14)
 
 Lag ratio between animation starts.
 Default is 0.2 (20% overlap between consecutive animations).
@@ -28,7 +28,7 @@ Default is 0.2 (20% overlap between consecutive animations).
 
 > `optional` **rateFunc**: (`t`) => `number`
 
-Defined in: [animation/AnimationGroup.ts:17](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/AnimationGroup.ts#L17)
+Defined in: [animation/AnimationGroup.ts:17](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/AnimationGroup.ts#L17)
 
 Rate function applied to the group's overall progress
 

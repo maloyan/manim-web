@@ -2,9 +2,8 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function animate(scene: any) {
-  const { Square, MoveToTarget, BLUE, ORANGE, LEFT } = await import('manim-js');
+  const { Scene, Square, MoveToTarget, BLUE, ORANGE, LEFT, BLACK } = await import('manim-js');
 
   const square = new Square({ color: BLUE, fillOpacity: 1 });
 

@@ -2,7 +2,7 @@
 
 > **UpdaterFunction** = (`mobject`, `dt`) => `void`
 
-Defined in: [core/Mobject.ts:28](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Mobject.ts#L28)
+Defined in: [core/Mobject.ts:28](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L28)
 
 Updater function type that runs every frame
 

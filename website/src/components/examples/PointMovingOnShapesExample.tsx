@@ -2,20 +2,8 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function animate(scene: any) {
-  const {
-    BLUE,
-    Circle,
-    Dot,
-    GrowFromCenter,
-    Line,
-    MoveAlongPath,
-    RIGHT,
-    Rotating,
-    Transform,
-    linear,
-  } = await import('manim-js');
+  const { BLUE, Circle, Dot, GrowFromCenter, Line, MoveAlongPath, RIGHT, Rotating, Scene, Transform, linear, BLACK } = await import('manim-js');
 
   const circle = new Circle({ radius: 1, color: BLUE });
   const dot = new Dot();

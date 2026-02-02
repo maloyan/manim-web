@@ -2,30 +2,8 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function animate(scene: any) {
-  const {
-    Circle,
-    Square,
-    Text,
-    MathTex,
-    Axes,
-    FunctionGraph,
-    Create,
-    Write,
-    Transform,
-    ReplacementTransform,
-    FadeIn,
-    FadeOut,
-    AnimationGroup,
-    WHITE,
-    BLUE,
-    RED,
-    PINK,
-    DOWN,
-    RIGHT,
-    smooth,
-  } = await import('manim-js');
+  const { Scene, Circle, Square, Text, MathTex, Axes, FunctionGraph, Create, Write, Transform, ReplacementTransform, FadeIn, FadeOut, AnimationGroup, BLACK, WHITE, BLUE, RED, PINK, DOWN, RIGHT, smooth } = await import('manim-js');
 
   const TAU = Math.PI * 2;
   const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
@@ -34,7 +12,7 @@ async function animate(scene: any) {
     // Demo 1: Square to Circle
     const circle = new Circle({ radius: 1.5 });
     const square = new Square({ sideLength: 3 });
-
+    
     await scene.play(new Create(square));
     await scene.play(new Transform(square, circle));
     await scene.play(new FadeOut(square));
@@ -45,10 +23,10 @@ async function animate(scene: any) {
     // Demo 2: Square to Circle with Modifications
     const circle = new Circle({ radius: 1.5, fillColor: PINK, fillOpacity: 0.5 });
     const square = new Square({ sideLength: 3 });
-
+    
     square.flip(RIGHT);
     square.rotate((-3 * TAU) / 8);
-
+    
     await scene.play(new Create(square));
     await scene.play(new Transform(square, circle));
     await scene.play(new FadeOut(square));
@@ -70,14 +48,14 @@ async function animate(scene: any) {
       fontUrl: FONT_URL,
     });
     const thirdLine = new Text({ text: 'Try it out yourself.', fontSize: 48, color: RED });
-
+    
     await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
     secondLine.nextTo(firstLine, DOWN);
-
+    
     await scene.wait(1);
     await scene.play(new Write(firstLine), new Write(secondLine));
     await scene.wait(1);
-
+    
     // Cross-fade: fade out first line while fading in third line at same position
     scene.add(thirdLine);
     thirdLine.opacity = 0;
@@ -111,12 +89,12 @@ async function animate(scene: any) {
       fontSize: 48,
       color: WHITE,
     });
-
+    
     await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
     secondLine.nextTo(firstLine, DOWN);
-
+    
     await equation.waitForRender();
-
+    
     await scene.play(new Write(firstLine), new Write(secondLine));
     await scene.wait(1);
     await scene.play(new ReplacementTransform(firstLine, equation), new FadeOut(secondLine));
@@ -134,35 +112,36 @@ async function animate(scene: any) {
       color: BLUE,
       tips: true,
     });
-
+    
     const graph = new FunctionGraph({
       func: (x) => x * x,
       xRange: [-2.2, 2.2],
       color: WHITE,
       axes: axes,
     });
-
+    
     const graphLabel = new MathTex({ latex: 'x^2', fontSize: 32, color: WHITE });
     graphLabel.shift([4.5, 2, 0]);
-
+    
     const graph2 = new FunctionGraph({
       func: (x) => x * x * x,
       xRange: [-1.7, 1.7],
       color: WHITE,
       axes: axes,
     });
-
+    
     const graphLabel2 = new MathTex({ latex: 'x^3', fontSize: 32, color: WHITE });
     graphLabel2.shift([4.5, 2, 0]);
-
+    
     await graphLabel.waitForRender();
     await graphLabel2.waitForRender();
-
+    
     await scene.play(new Create(axes), new Create(graph), new FadeIn(graphLabel));
     await scene.wait(1);
     await scene.play(new Transform(graph, graph2), new Transform(graphLabel, graphLabel2));
     await scene.wait(1);
   }
+
 }
 
 export default function ManimExamplesExample() {

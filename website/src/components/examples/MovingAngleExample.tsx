@@ -2,10 +2,8 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function animate(scene: any) {
-  const { Angle, FadeToColor, LEFT, Line, MathTex, RED, RIGHT, SMALL_BUFF, ValueTracker, WHITE } =
-    await import('manim-js');
+  const { Angle, FadeToColor, LEFT, Line, MathTex, RED, RIGHT, SMALL_BUFF, Scene, ValueTracker, BLACK, WHITE } = await import('manim-js');
 
   const rotation_center = LEFT;
 

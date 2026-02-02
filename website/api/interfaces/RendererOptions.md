@@ -1,6 +1,6 @@
 # Interface: RendererOptions
 
-Defined in: [core/Renderer.ts:6](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Renderer.ts#L6)
+Defined in: [core/Renderer.ts:6](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Renderer.ts#L6)
 
 Options for configuring the Renderer.
 
@@ -10,7 +10,7 @@ Options for configuring the Renderer.
 
 > `optional` **alpha**: `boolean`
 
-Defined in: [core/Renderer.ts:20](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Renderer.ts#L20)
+Defined in: [core/Renderer.ts:20](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Renderer.ts#L20)
 
 Enable alpha channel. Defaults to false.
 
@@ -20,7 +20,7 @@ Enable alpha channel. Defaults to false.
 
 > `optional` **antialias**: `boolean`
 
-Defined in: [core/Renderer.ts:14](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Renderer.ts#L14)
+Defined in: [core/Renderer.ts:14](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Renderer.ts#L14)
 
 Enable antialiasing. Defaults to true.
 
@@ -30,7 +30,7 @@ Enable antialiasing. Defaults to true.
 
 > `optional` **backgroundColor**: `string`
 
-Defined in: [core/Renderer.ts:12](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Renderer.ts#L12)
+Defined in: [core/Renderer.ts:12](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Renderer.ts#L12)
 
 Background color as CSS color string. Defaults to '#000000'.
 
@@ -40,7 +40,7 @@ Background color as CSS color string. Defaults to '#000000'.
 
 > `optional` **canvas**: `HTMLCanvasElement`
 
-Defined in: [core/Renderer.ts:24](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Renderer.ts#L24)
+Defined in: [core/Renderer.ts:24](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Renderer.ts#L24)
 
 Existing canvas element to reuse. If not provided, a new canvas is created.
 
@@ -50,7 +50,7 @@ Existing canvas element to reuse. If not provided, a new canvas is created.
 
 > `optional` **height**: `number`
 
-Defined in: [core/Renderer.ts:10](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Renderer.ts#L10)
+Defined in: [core/Renderer.ts:10](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Renderer.ts#L10)
 
 Canvas height in pixels. Defaults to container height.
 
@@ -60,7 +60,7 @@ Canvas height in pixels. Defaults to container height.
 
 > `optional` **pixelRatio**: `number`
 
-Defined in: [core/Renderer.ts:16](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Renderer.ts#L16)
+Defined in: [core/Renderer.ts:16](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Renderer.ts#L16)
 
 Device pixel ratio. Defaults to window.devicePixelRatio (capped at 2x for performance).
 
@@ -70,7 +70,7 @@ Device pixel ratio. Defaults to window.devicePixelRatio (capped at 2x for perfor
 
 > `optional` **powerPreference**: `"default"` \| `"high-performance"` \| `"low-power"`
 
-Defined in: [core/Renderer.ts:18](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Renderer.ts#L18)
+Defined in: [core/Renderer.ts:18](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Renderer.ts#L18)
 
 GPU power preference. Defaults to 'high-performance'.
 
@@ -80,7 +80,7 @@ GPU power preference. Defaults to 'high-performance'.
 
 > `optional` **preserveDrawingBuffer**: `boolean`
 
-Defined in: [core/Renderer.ts:22](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Renderer.ts#L22)
+Defined in: [core/Renderer.ts:22](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Renderer.ts#L22)
 
 Preserve drawing buffer for export. Defaults to true for video/image export support.
 
@@ -90,6 +90,6 @@ Preserve drawing buffer for export. Defaults to true for video/image export supp
 
 > `optional` **width**: `number`
 
-Defined in: [core/Renderer.ts:8](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Renderer.ts#L8)
+Defined in: [core/Renderer.ts:8](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Renderer.ts#L8)
 
 Canvas width in pixels. Defaults to container width.

@@ -1,6 +1,6 @@
 # Interface: FlashOptions
 
-Defined in: [animation/indication/Flash.ts:16](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/Flash.ts#L16)
+Defined in: [animation/indication/Flash.ts:16](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Flash.ts#L16)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/indication/Flash.ts:16](https://github.com/maloyan/manim-
 
 > `optional` **color**: `string`
 
-Defined in: [animation/indication/Flash.ts:18](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/Flash.ts#L18)
+Defined in: [animation/indication/Flash.ts:18](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Flash.ts#L18)
 
 Color of the flash lines. Default: YELLOW
 
@@ -22,7 +22,7 @@ Color of the flash lines. Default: YELLOW
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -36,7 +36,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **flashRadius**: `number`
 
-Defined in: [animation/indication/Flash.ts:22](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/Flash.ts#L22)
+Defined in: [animation/indication/Flash.ts:22](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Flash.ts#L22)
 
 Maximum radius the flash extends to. Default: 1
 
@@ -46,7 +46,7 @@ Maximum radius the flash extends to. Default: 1
 
 > `optional` **innerRadius**: `number`
 
-Defined in: [animation/indication/Flash.ts:26](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/Flash.ts#L26)
+Defined in: [animation/indication/Flash.ts:26](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Flash.ts#L26)
 
 Starting radius (from center). Default: 0
 
@@ -56,7 +56,7 @@ Starting radius (from center). Default: 0
 
 > `optional` **lineWidth**: `number`
 
-Defined in: [animation/indication/Flash.ts:24](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/Flash.ts#L24)
+Defined in: [animation/indication/Flash.ts:24](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Flash.ts#L24)
 
 Width of flash lines. Default: DEFAULT_STROKE_WIDTH
 
@@ -66,7 +66,7 @@ Width of flash lines. Default: DEFAULT_STROKE_WIDTH
 
 > `optional` **numLines**: `number`
 
-Defined in: [animation/indication/Flash.ts:20](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/Flash.ts#L20)
+Defined in: [animation/indication/Flash.ts:20](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Flash.ts#L20)
 
 Number of flash lines. Default: 8
 
@@ -76,7 +76,7 @@ Number of flash lines. Default: 8
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -90,7 +90,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 

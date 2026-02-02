@@ -1,6 +1,6 @@
 # Class: Clickable
 
-Defined in: [interaction/Clickable.ts:17](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/interaction/Clickable.ts#L17)
+Defined in: [interaction/Clickable.ts:17](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Clickable.ts#L17)
 
 Adds click detection to a mobject.
 
@@ -10,7 +10,7 @@ Adds click detection to a mobject.
 
 > **new Clickable**(`mobject`, `scene`, `options`): `Clickable`
 
-Defined in: [interaction/Clickable.ts:43](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/interaction/Clickable.ts#L43)
+Defined in: [interaction/Clickable.ts:43](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Clickable.ts#L43)
 
 Create a new Clickable behavior.
 
@@ -46,7 +46,7 @@ Clickable configuration options
 
 > **get** **isEnabled**(): `boolean`
 
-Defined in: [interaction/Clickable.ts:60](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/interaction/Clickable.ts#L60)
+Defined in: [interaction/Clickable.ts:60](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Clickable.ts#L60)
 
 Get whether clicking is enabled.
 
@@ -62,7 +62,7 @@ Get whether clicking is enabled.
 
 > **get** **mobject**(): [`Mobject`](Mobject.md)
 
-Defined in: [interaction/Clickable.ts:67](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/interaction/Clickable.ts#L67)
+Defined in: [interaction/Clickable.ts:67](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Clickable.ts#L67)
 
 Get the mobject this clickable is attached to.
 
@@ -76,7 +76,7 @@ Get the mobject this clickable is attached to.
 
 > **disable**(): `void`
 
-Defined in: [interaction/Clickable.ts:191](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/interaction/Clickable.ts#L191)
+Defined in: [interaction/Clickable.ts:191](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Clickable.ts#L191)
 
 Disable clicking.
 
@@ -90,7 +90,7 @@ Disable clicking.
 
 > **dispose**(): `void`
 
-Defined in: [interaction/Clickable.ts:198](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/interaction/Clickable.ts#L198)
+Defined in: [interaction/Clickable.ts:198](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Clickable.ts#L198)
 
 Clean up event listeners.
 
@@ -104,7 +104,7 @@ Clean up event listeners.
 
 > **enable**(): `void`
 
-Defined in: [interaction/Clickable.ts:184](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/interaction/Clickable.ts#L184)
+Defined in: [interaction/Clickable.ts:184](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Clickable.ts#L184)
 
 Enable clicking.
 

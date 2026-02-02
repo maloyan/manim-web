@@ -1,6 +1,6 @@
 # Interface: ScreenRectangleOptions
 
-Defined in: [mobjects/frame/index.ts:24](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/frame/index.ts#L24)
+Defined in: [mobjects/frame/index.ts:24](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/frame/index.ts#L24)
 
 Options for creating a ScreenRectangle
 
@@ -14,7 +14,7 @@ Options for creating a ScreenRectangle
 
 > `optional` **aspectRatio**: `number`
 
-Defined in: [mobjects/frame/index.ts:28](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/frame/index.ts#L28)
+Defined in: [mobjects/frame/index.ts:28](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/frame/index.ts#L28)
 
 Aspect ratio (width/height). Default: 16/9
 
@@ -24,7 +24,7 @@ Aspect ratio (width/height). Default: 16/9
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/geometry/Rectangle.ts:20](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/Rectangle.ts#L20)
+Defined in: [mobjects/geometry/Rectangle.ts:20](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Rectangle.ts#L20)
 
 Center position. Default: [0, 0, 0]
 
@@ -38,7 +38,7 @@ Center position. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/Rectangle.ts:14](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/Rectangle.ts#L14)
+Defined in: [mobjects/geometry/Rectangle.ts:14](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Rectangle.ts#L14)
 
 Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
@@ -52,7 +52,7 @@ Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/geometry/Rectangle.ts:16](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/Rectangle.ts#L16)
+Defined in: [mobjects/geometry/Rectangle.ts:16](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Rectangle.ts#L16)
 
 Fill opacity from 0 to 1. Default: 0
 
@@ -66,7 +66,7 @@ Fill opacity from 0 to 1. Default: 0
 
 > `optional` **height**: `number`
 
-Defined in: [mobjects/frame/index.ts:26](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/frame/index.ts#L26)
+Defined in: [mobjects/frame/index.ts:26](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/frame/index.ts#L26)
 
 Height of the rectangle. Default: 4
 
@@ -80,7 +80,7 @@ Height of the rectangle. Default: 4
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/Rectangle.ts:18](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/Rectangle.ts#L18)
+Defined in: [mobjects/geometry/Rectangle.ts:18](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Rectangle.ts#L18)
 
 Stroke width in pixels. Default: 4 (Manim's default)
 

@@ -1,6 +1,6 @@
 # Interface: CircleOptions
 
-Defined in: [mobjects/geometry/Circle.ts:8](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/Circle.ts#L8)
+Defined in: [mobjects/geometry/Circle.ts:8](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Circle.ts#L8)
 
 Options for creating a Circle
 
@@ -10,7 +10,7 @@ Options for creating a Circle
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/geometry/Circle.ts:20](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/Circle.ts#L20)
+Defined in: [mobjects/geometry/Circle.ts:20](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Circle.ts#L20)
 
 Center position. Default: [0, 0, 0]
 
@@ -20,7 +20,7 @@ Center position. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/Circle.ts:12](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/Circle.ts#L12)
+Defined in: [mobjects/geometry/Circle.ts:12](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Circle.ts#L12)
 
 Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
@@ -30,7 +30,7 @@ Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/geometry/Circle.ts:14](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/Circle.ts#L14)
+Defined in: [mobjects/geometry/Circle.ts:14](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Circle.ts#L14)
 
 Fill opacity from 0 to 1. Default: 0
 
@@ -40,7 +40,7 @@ Fill opacity from 0 to 1. Default: 0
 
 > `optional` **numPoints**: `number`
 
-Defined in: [mobjects/geometry/Circle.ts:18](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/Circle.ts#L18)
+Defined in: [mobjects/geometry/Circle.ts:18](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Circle.ts#L18)
 
 Number of points for Bezier approximation. Default: 64
 
@@ -50,7 +50,7 @@ Number of points for Bezier approximation. Default: 64
 
 > `optional` **radius**: `number`
 
-Defined in: [mobjects/geometry/Circle.ts:10](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/Circle.ts#L10)
+Defined in: [mobjects/geometry/Circle.ts:10](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Circle.ts#L10)
 
 Radius of the circle. Default: 1
 
@@ -60,6 +60,6 @@ Radius of the circle. Default: 1
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/Circle.ts:16](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/Circle.ts#L16)
+Defined in: [mobjects/geometry/Circle.ts:16](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Circle.ts#L16)
 
 Stroke width in pixels. Default: 4 (Manim's default)

@@ -1,6 +1,6 @@
 # Interface: DirectionalLightOptions
 
-Defined in: [core/Lighting.ts:16](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Lighting.ts#L16)
+Defined in: [core/Lighting.ts:16](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L16)
 
 Options for configuring a directional light.
 
@@ -10,7 +10,7 @@ Options for configuring a directional light.
 
 > `optional` **castShadow**: `boolean`
 
-Defined in: [core/Lighting.ts:24](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Lighting.ts#L24)
+Defined in: [core/Lighting.ts:24](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L24)
 
 Whether the light casts shadows. Defaults to false.
 
@@ -20,7 +20,7 @@ Whether the light casts shadows. Defaults to false.
 
 > `optional` **color**: `string`
 
-Defined in: [core/Lighting.ts:18](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Lighting.ts#L18)
+Defined in: [core/Lighting.ts:18](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L18)
 
 Light color. Defaults to '#ffffff'.
 
@@ -30,7 +30,7 @@ Light color. Defaults to '#ffffff'.
 
 > `optional` **intensity**: `number`
 
-Defined in: [core/Lighting.ts:20](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Lighting.ts#L20)
+Defined in: [core/Lighting.ts:20](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L20)
 
 Light intensity. Defaults to 1.
 
@@ -40,6 +40,6 @@ Light intensity. Defaults to 1.
 
 > `optional` **position**: \[`number`, `number`, `number`\]
 
-Defined in: [core/Lighting.ts:22](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Lighting.ts#L22)
+Defined in: [core/Lighting.ts:22](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L22)
 
 Light position [x, y, z]. Defaults to [5, 10, 7].

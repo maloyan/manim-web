@@ -2,24 +2,8 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function animate(scene: any) {
-  const {
-    Create,
-    FadeIn,
-    FadeOut,
-    Write,
-    Transform,
-    ApplyPointwiseFunction,
-    Text,
-    MathTex,
-    NumberPlane,
-    VGroup,
-    UP,
-    DOWN,
-    UL,
-    WHITE,
-  } = await import('manim-js');
+  const { Scene, Create, FadeIn, FadeOut, Write, Transform, ApplyPointwiseFunction, Text, MathTex, NumberPlane, VGroup, UP, DOWN, UL, BLACK, WHITE } = await import('manim-js');
 
   const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
 

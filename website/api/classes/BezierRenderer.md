@@ -1,6 +1,6 @@
 # Class: BezierRenderer
 
-Defined in: [rendering/BezierRenderer.ts:86](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierRenderer.ts#L86)
+Defined in: [rendering/BezierRenderer.ts:86](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierRenderer.ts#L86)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [rendering/BezierRenderer.ts:86](https://github.com/maloyan/manim-js
 
 > **new BezierRenderer**(`options`): `BezierRenderer`
 
-Defined in: [rendering/BezierRenderer.ts:90](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierRenderer.ts#L90)
+Defined in: [rendering/BezierRenderer.ts:90](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierRenderer.ts#L90)
 
 #### Parameters
 
@@ -28,7 +28,7 @@ Defined in: [rendering/BezierRenderer.ts:90](https://github.com/maloyan/manim-js
 
 > **get** **material**(): `ShaderMaterial`
 
-Defined in: [rendering/BezierRenderer.ts:107](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierRenderer.ts#L107)
+Defined in: [rendering/BezierRenderer.ts:107](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierRenderer.ts#L107)
 
 Access the underlying ShaderMaterial (e.g. to update uniforms).
 
@@ -42,7 +42,7 @@ Access the underlying ShaderMaterial (e.g. to update uniforms).
 
 > **buildMesh**(`points`, `strokeWidth`, `color`, `opacity`, `strokeWidthEnd?`): `Mesh`
 
-Defined in: [rendering/BezierRenderer.ts:259](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierRenderer.ts#L259)
+Defined in: [rendering/BezierRenderer.ts:259](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierRenderer.ts#L259)
 
 Convenience: build a mesh directly from VMobject-style data.
 
@@ -90,7 +90,7 @@ THREE.Mesh
 
 > **buildMeshFromSegments**(`segments`): `Mesh`
 
-Defined in: [rendering/BezierRenderer.ts:192](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierRenderer.ts#L192)
+Defined in: [rendering/BezierRenderer.ts:192](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierRenderer.ts#L192)
 
 Build an InstancedMesh for the given Bezier segments.
 
@@ -114,7 +114,7 @@ THREE.Mesh using InstancedBufferGeometry
 
 > **dispose**(): `void`
 
-Defined in: [rendering/BezierRenderer.ts:361](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierRenderer.ts#L361)
+Defined in: [rendering/BezierRenderer.ts:361](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierRenderer.ts#L361)
 
 Dispose the shared material. Call when the renderer is no longer needed.
 
@@ -128,7 +128,7 @@ Dispose the shared material. Call when the renderer is no longer needed.
 
 > **updateMesh**(`mesh`, `points`, `strokeWidth`, `color`, `opacity`, `strokeWidthEnd?`): `Mesh`
 
-Defined in: [rendering/BezierRenderer.ts:344](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierRenderer.ts#L344)
+Defined in: [rendering/BezierRenderer.ts:344](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierRenderer.ts#L344)
 
 Convenience: update from VMobject-style data.
 
@@ -168,7 +168,7 @@ Convenience: update from VMobject-style data.
 
 > **updateMeshFromSegments**(`mesh`, `segments`): `Mesh`
 
-Defined in: [rendering/BezierRenderer.ts:280](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierRenderer.ts#L280)
+Defined in: [rendering/BezierRenderer.ts:280](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierRenderer.ts#L280)
 
 Update an existing mesh's instance data without reallocating geometry
 (when segment count is the same) or rebuild if count differs.
@@ -199,7 +199,7 @@ The (possibly new) mesh
 
 > **updateResolution**(`width`, `height`, `pixelRatio?`): `void`
 
-Defined in: [rendering/BezierRenderer.ts:114](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierRenderer.ts#L114)
+Defined in: [rendering/BezierRenderer.ts:114](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierRenderer.ts#L114)
 
 Update renderer resolution. Call on window/canvas resize.
 
@@ -227,7 +227,7 @@ Update renderer resolution. Call on window/canvas resize.
 
 > `static` **extractSegments**(`points`, `strokeWidth`, `strokeWidthEnd?`, `color?`, `opacity?`): [`BezierSegment`](../interfaces/BezierSegment.md)[]
 
-Defined in: [rendering/BezierRenderer.ts:137](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/rendering/BezierRenderer.ts#L137)
+Defined in: [rendering/BezierRenderer.ts:137](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/rendering/BezierRenderer.ts#L137)
 
 Extract cubic Bezier segments from a VMobject-like object.
 

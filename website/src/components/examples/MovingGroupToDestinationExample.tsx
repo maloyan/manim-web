@@ -2,10 +2,8 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function animate(scene: any) {
-  const { VGroup, Dot, Shift, LEFT, ORIGIN, RIGHT, RED, YELLOW, scaleVec, subVec } =
-    await import('manim-js');
+  const { Scene, VGroup, Dot, Shift, LEFT, ORIGIN, RIGHT, RED, YELLOW, BLACK, scaleVec, subVec } = await import('manim-js');
 
   const group = new VGroup(
     new Dot({ point: LEFT }),

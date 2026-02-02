@@ -2,7 +2,7 @@
 
 > **updateFromFunc**(`mobject`, `func`, `options?`): [`UpdateFromFunc`](../classes/UpdateFromFunc.md)
 
-Defined in: [animation/UpdateFromFunc.ts:47](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/UpdateFromFunc.ts#L47)
+Defined in: [animation/UpdateFromFunc.ts:47](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/UpdateFromFunc.ts#L47)
 
 Factory function to create an UpdateFromFunc animation.
 

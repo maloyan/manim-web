@@ -1,6 +1,6 @@
 # Interface: CameraOptions
 
-Defined in: [core/Camera.ts:165](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Camera.ts#L165)
+Defined in: [core/Camera.ts:166](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L166)
 
 Options for configuring a Camera2D.
 
@@ -10,7 +10,7 @@ Options for configuring a Camera2D.
 
 > `optional` **frameHeight**: `number`
 
-Defined in: [core/Camera.ts:169](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Camera.ts#L169)
+Defined in: [core/Camera.ts:170](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L170)
 
 Height of the visible frame in world units. Defaults to 8 (Manim standard).
 
@@ -20,7 +20,7 @@ Height of the visible frame in world units. Defaults to 8 (Manim standard).
 
 > `optional` **frameWidth**: `number`
 
-Defined in: [core/Camera.ts:167](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Camera.ts#L167)
+Defined in: [core/Camera.ts:168](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L168)
 
 Width of the visible frame in world units. Defaults to 14 (Manim standard).
 
@@ -30,6 +30,6 @@ Width of the visible frame in world units. Defaults to 14 (Manim standard).
 
 > `optional` **position**: \[`number`, `number`, `number`\]
 
-Defined in: [core/Camera.ts:171](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/Camera.ts#L171)
+Defined in: [core/Camera.ts:172](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L172)
 
 Initial camera position [x, y, z]. Defaults to [0, 0, 10].

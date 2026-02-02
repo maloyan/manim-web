@@ -2,32 +2,8 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function animate(scene: any) {
-  const {
-    BLUE,
-    DOWN,
-    Difference,
-    Ellipse,
-    Exclusion,
-    FadeIn,
-    GREEN,
-    Group,
-    Intersection,
-    LEFT,
-    MoveToTarget,
-    ORANGE,
-    PINK,
-    RED,
-    RIGHT,
-    Text,
-    Underline,
-    UP,
-    Union,
-    WHITE,
-    YELLOW,
-    scaleVec,
-  } = await import('manim-js');
+  const { BLUE, Difference, DOWN, Ellipse, Exclusion, FadeIn, GREEN, Group, Intersection, LEFT, MoveToTarget, ORANGE, PINK, RED, RIGHT, Scene, Text, Underline, UP, Union, WHITE, YELLOW, scaleVec } = await import('manim-js');
 
   const ellipse1 = new Ellipse({
     width: 4.0,
@@ -37,19 +13,34 @@ async function animate(scene: any) {
     strokeWidth: 2,
   }).moveTo(LEFT);
   const ellipse2 = ellipse1.copy().setColor(RED).moveTo(RIGHT);
+  // Large italic underlined title matching Python Manim reference
   const bool_ops_text = new Text({
     text: 'Boolean Operation',
     fontFamily: 'serif',
     fontSize: 48,
   }).nextTo(ellipse1, UP);
   const ellipse_group = new Group(bool_ops_text, ellipse1, ellipse2).moveTo(scaleVec(3, LEFT));
+  // Create underline AFTER group is positioned so it uses the text's final position
   const underline = new Underline(bool_ops_text, { color: WHITE, strokeWidth: 2, buff: -0.25 });
   ellipse_group.add(underline);
   await scene.play(new FadeIn(ellipse_group));
 
+  // Layout matching Python Manim reference:
+  //        Intersection
+  //  Difference    Union
+  //        Exclusion
+  // Intersection, Union, Exclusion are vertically aligned on the right.
+  // Difference is offset to the left at the same row as Union.
+  // Positions and scales matching Python Manim reference exactly:
+  // Intersection: scale(0.25), move_to(RIGHT*5 + UP*2.5)
+  // Union: scale(0.3), next_to(i, DOWN, buff=text.height*3)
+  // Exclusion: scale(0.3), next_to(u, DOWN, buff=text.height*3.5)
+  // Difference: scale(0.3), next_to(u, LEFT, buff=text.height*3.5)
+  const rightX = 5;
+
   const i = new Intersection(ellipse1, ellipse2, { color: GREEN, fillOpacity: 0.5 });
   i.generateTarget();
-  i.targetCopy.scale(0.25).setStrokeWidth(1).moveTo([5, 2.5, 0]);
+  i.targetCopy.scale(0.25).setStrokeWidth(1).moveTo([rightX, 2.5, 0]);
   await scene.play(new MoveToTarget(i));
   const intersection_text = new Text({ text: 'Intersection', fontSize: 23 }).nextTo(i, UP);
   await scene.play(new FadeIn(intersection_text));

@@ -1,6 +1,6 @@
 # Interface: RegularPolygramOptions
 
-Defined in: [mobjects/geometry/PolygonExtensions.ts:490](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/PolygonExtensions.ts#L490)
+Defined in: [mobjects/geometry/PolygonExtensions.ts:490](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/PolygonExtensions.ts#L490)
 
 Options for creating a RegularPolygram
 
@@ -10,7 +10,7 @@ Options for creating a RegularPolygram
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/geometry/PolygonExtensions.ts:514](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/PolygonExtensions.ts#L514)
+Defined in: [mobjects/geometry/PolygonExtensions.ts:514](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/PolygonExtensions.ts#L514)
 
 Center position. Default: [0, 0, 0]
 
@@ -20,7 +20,7 @@ Center position. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/PolygonExtensions.ts:508](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/PolygonExtensions.ts#L508)
+Defined in: [mobjects/geometry/PolygonExtensions.ts:508](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/PolygonExtensions.ts#L508)
 
 Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
@@ -30,7 +30,7 @@ Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
 > `optional` **density**: `number`
 
-Defined in: [mobjects/geometry/PolygonExtensions.ts:504](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/PolygonExtensions.ts#L504)
+Defined in: [mobjects/geometry/PolygonExtensions.ts:504](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/PolygonExtensions.ts#L504)
 
 Density (vertex step count), i.e. how many vertices to skip when
 drawing each edge. Default: 2
@@ -48,7 +48,7 @@ simplifies to 2{3} -- two overlapping equilateral triangles.
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/geometry/PolygonExtensions.ts:510](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/PolygonExtensions.ts#L510)
+Defined in: [mobjects/geometry/PolygonExtensions.ts:510](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/PolygonExtensions.ts#L510)
 
 Fill opacity from 0 to 1. Default: 0
 
@@ -58,7 +58,7 @@ Fill opacity from 0 to 1. Default: 0
 
 > `optional` **numVertices**: `number`
 
-Defined in: [mobjects/geometry/PolygonExtensions.ts:492](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/PolygonExtensions.ts#L492)
+Defined in: [mobjects/geometry/PolygonExtensions.ts:492](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/PolygonExtensions.ts#L492)
 
 Number of vertices on the circumscribed circle. Default: 5
 
@@ -68,7 +68,7 @@ Number of vertices on the circumscribed circle. Default: 5
 
 > `optional` **radius**: `number`
 
-Defined in: [mobjects/geometry/PolygonExtensions.ts:506](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/PolygonExtensions.ts#L506)
+Defined in: [mobjects/geometry/PolygonExtensions.ts:506](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/PolygonExtensions.ts#L506)
 
 Radius from center to vertices. Default: 1
 
@@ -78,7 +78,7 @@ Radius from center to vertices. Default: 1
 
 > `optional` **startAngle**: `number`
 
-Defined in: [mobjects/geometry/PolygonExtensions.ts:516](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/PolygonExtensions.ts#L516)
+Defined in: [mobjects/geometry/PolygonExtensions.ts:516](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/PolygonExtensions.ts#L516)
 
 Start angle in radians. Default: PI/2 (first vertex up)
 
@@ -88,6 +88,6 @@ Start angle in radians. Default: PI/2 (first vertex up)
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/PolygonExtensions.ts:512](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/geometry/PolygonExtensions.ts#L512)
+Defined in: [mobjects/geometry/PolygonExtensions.ts:512](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/PolygonExtensions.ts#L512)
 
 Stroke width in pixels. Default: 4 (Manim's default)

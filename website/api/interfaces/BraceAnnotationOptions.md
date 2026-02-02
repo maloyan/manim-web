@@ -1,6 +1,6 @@
 # Interface: BraceAnnotationOptions
 
-Defined in: [mobjects/probability/SampleSpace.ts:77](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L77)
+Defined in: [mobjects/probability/SampleSpace.ts:74](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L74)
 
 Options for adding braces and labels to the sample space
 
@@ -10,7 +10,7 @@ Options for adding braces and labels to the sample space
 
 > `optional` **braceColor**: `string`
 
-Defined in: [mobjects/probability/SampleSpace.ts:83](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L83)
+Defined in: [mobjects/probability/SampleSpace.ts:80](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L80)
 
 Color for the braces. Default: WHITE
 
@@ -20,7 +20,7 @@ Color for the braces. Default: WHITE
 
 > `optional` **buff**: `number`
 
-Defined in: [mobjects/probability/SampleSpace.ts:87](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L87)
+Defined in: [mobjects/probability/SampleSpace.ts:84](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L84)
 
 Buffer distance from the partition edge. Default: 0.15
 
@@ -30,7 +30,7 @@ Buffer distance from the partition edge. Default: 0.15
 
 > `optional` **direction**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/probability/SampleSpace.ts:79](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L79)
+Defined in: [mobjects/probability/SampleSpace.ts:76](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L76)
 
 Direction for the brace. Default: DOWN
 
@@ -40,7 +40,7 @@ Direction for the brace. Default: DOWN
 
 > `optional` **fontSize**: `number`
 
-Defined in: [mobjects/probability/SampleSpace.ts:81](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L81)
+Defined in: [mobjects/probability/SampleSpace.ts:78](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L78)
 
 Font size for brace labels. Default: 24
 
@@ -50,6 +50,6 @@ Font size for brace labels. Default: 24
 
 > `optional` **labelColor**: `string`
 
-Defined in: [mobjects/probability/SampleSpace.ts:85](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L85)
+Defined in: [mobjects/probability/SampleSpace.ts:82](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L82)
 
 Color for the labels. Default: WHITE

@@ -1,6 +1,6 @@
 # Interface: SampleSpaceOptions
 
-Defined in: [mobjects/probability/SampleSpace.ts:29](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L29)
+Defined in: [mobjects/probability/SampleSpace.ts:26](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L26)
 
 Options for creating a SampleSpace
 
@@ -10,7 +10,7 @@ Options for creating a SampleSpace
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/probability/SampleSpace.ts:41](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L41)
+Defined in: [mobjects/probability/SampleSpace.ts:38](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L38)
 
 Center position. Default: [0, 0, 0]
 
@@ -20,7 +20,7 @@ Center position. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/probability/SampleSpace.ts:35](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L35)
+Defined in: [mobjects/probability/SampleSpace.ts:32](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L32)
 
 Stroke color for the outline. Default: WHITE
 
@@ -30,7 +30,7 @@ Stroke color for the outline. Default: WHITE
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/probability/SampleSpace.ts:37](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L37)
+Defined in: [mobjects/probability/SampleSpace.ts:34](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L34)
 
 Fill opacity for partitions. Default: 1
 
@@ -40,7 +40,7 @@ Fill opacity for partitions. Default: 1
 
 > `optional` **fontSize**: `number`
 
-Defined in: [mobjects/probability/SampleSpace.ts:43](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L43)
+Defined in: [mobjects/probability/SampleSpace.ts:40](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L40)
 
 Default font size for labels. Default: 24
 
@@ -50,7 +50,7 @@ Default font size for labels. Default: 24
 
 > `optional` **height**: `number`
 
-Defined in: [mobjects/probability/SampleSpace.ts:33](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L33)
+Defined in: [mobjects/probability/SampleSpace.ts:30](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L30)
 
 Height of the sample space rectangle. Default: 3
 
@@ -60,7 +60,7 @@ Height of the sample space rectangle. Default: 3
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/probability/SampleSpace.ts:39](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L39)
+Defined in: [mobjects/probability/SampleSpace.ts:36](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L36)
 
 Stroke width for the outline. Default: 2
 
@@ -70,6 +70,6 @@ Stroke width for the outline. Default: 2
 
 > `optional` **width**: `number`
 
-Defined in: [mobjects/probability/SampleSpace.ts:31](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/mobjects/probability/SampleSpace.ts#L31)
+Defined in: [mobjects/probability/SampleSpace.ts:28](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/SampleSpace.ts#L28)
 
 Width of the sample space rectangle. Default: 3

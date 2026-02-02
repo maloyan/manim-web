@@ -1,6 +1,6 @@
 # Interface: SuccessionOptions
 
-Defined in: [animation/Succession.ts:8](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/Succession.ts#L8)
+Defined in: [animation/Succession.ts:8](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Succession.ts#L8)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/Succession.ts:8](https://github.com/maloyan/manim-js/blob
 
 > `optional` **rateFunc**: (`t`) => `number`
 
-Defined in: [animation/AnimationGroup.ts:17](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/AnimationGroup.ts#L17)
+Defined in: [animation/AnimationGroup.ts:17](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/AnimationGroup.ts#L17)
 
 Rate function applied to the group's overall progress
 

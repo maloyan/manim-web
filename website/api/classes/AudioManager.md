@@ -1,6 +1,6 @@
 # Class: AudioManager
 
-Defined in: [core/AudioManager.ts:91](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L91)
+Defined in: [core/AudioManager.ts:91](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L91)
 
 Manages audio playback synchronized with the manim-js Scene timeline.
 
@@ -31,7 +31,7 @@ const wav = await audio.exportWAV();
 
 > **get** **context**(): `AudioContext`
 
-Defined in: [core/AudioManager.ts:136](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L136)
+Defined in: [core/AudioManager.ts:136](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L136)
 
 Get the underlying AudioContext (creates one if needed).
 
@@ -47,7 +47,7 @@ Get the underlying AudioContext (creates one if needed).
 
 > **get** **isPlaying**(): `boolean`
 
-Defined in: [core/AudioManager.ts:358](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L358)
+Defined in: [core/AudioManager.ts:358](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L358)
 
 Whether audio is currently playing.
 
@@ -63,7 +63,7 @@ Whether audio is currently playing.
 
 > **get** **tracks**(): readonly [`AudioTrack`](../interfaces/AudioTrack.md)[]
 
-Defined in: [core/AudioManager.ts:351](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L351)
+Defined in: [core/AudioManager.ts:351](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L351)
 
 Get a readonly copy of the current track list.
 
@@ -77,7 +77,7 @@ readonly [`AudioTrack`](../interfaces/AudioTrack.md)[]
 
 > **addSound**(`url`, `options`): `Promise`\<[`AudioTrack`](../interfaces/AudioTrack.md)\>
 
-Defined in: [core/AudioManager.ts:175](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L175)
+Defined in: [core/AudioManager.ts:175](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L175)
 
 Add a sound to the timeline.
 
@@ -107,7 +107,7 @@ The created AudioTrack (buffer may still be loading)
 
 > **addSoundAtAnimation**(`animation`, `url`, `options`): `Promise`\<[`AudioTrack`](../interfaces/AudioTrack.md)\>
 
-Defined in: [core/AudioManager.ts:208](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L208)
+Defined in: [core/AudioManager.ts:208](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L208)
 
 Add a sound that starts when a given animation begins on the timeline.
 
@@ -146,7 +146,7 @@ The created AudioTrack
 
 > **clearTracks**(): `void`
 
-Defined in: [core/AudioManager.ts:341](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L341)
+Defined in: [core/AudioManager.ts:341](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L341)
 
 Remove all tracks and stop playback.
 
@@ -160,7 +160,7 @@ Remove all tracks and stop playback.
 
 > **createStreamDestination**(): `MediaStreamAudioDestinationNode`
 
-Defined in: [core/AudioManager.ts:450](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L450)
+Defined in: [core/AudioManager.ts:450](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L450)
 
 Get an AudioNode destination suitable for muxing with a MediaRecorder.
 This creates a MediaStreamAudioDestinationNode that can be combined with
@@ -178,7 +178,7 @@ MediaStreamAudioDestinationNode connected to the master gain
 
 > **dispose**(): `void`
 
-Defined in: [core/AudioManager.ts:522](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L522)
+Defined in: [core/AudioManager.ts:522](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L522)
 
 Release all audio resources.
 
@@ -192,7 +192,7 @@ Release all audio resources.
 
 > **exportWAV**(`duration?`, `sampleRate?`): `Promise`\<`Blob`\>
 
-Defined in: [core/AudioManager.ts:438](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L438)
+Defined in: [core/AudioManager.ts:438](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L438)
 
 Export all audio tracks as a WAV Blob.
 
@@ -222,7 +222,7 @@ WAV Blob
 
 > **getCurrentTime**(): `number`
 
-Defined in: [core/AudioManager.ts:279](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L279)
+Defined in: [core/AudioManager.ts:279](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L279)
 
 Get the current playback position on the timeline (seconds).
 
@@ -236,7 +236,7 @@ Get the current playback position on the timeline (seconds).
 
 > **getDuration**(): `number`
 
-Defined in: [core/AudioManager.ts:365](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L365)
+Defined in: [core/AudioManager.ts:365](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L365)
 
 Get the total duration of the audio timeline (end of the latest track).
 
@@ -250,7 +250,7 @@ Get the total duration of the audio timeline (end of the latest track).
 
 > **loadBuffer**(`url`): `Promise`\<`AudioBuffer`\>
 
-Defined in: [core/AudioManager.ts:149](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L149)
+Defined in: [core/AudioManager.ts:149](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L149)
 
 Load and decode an audio file, with caching.
 
@@ -274,7 +274,7 @@ Decoded AudioBuffer
 
 > **mixdown**(`duration?`, `sampleRate?`): `Promise`\<`AudioBuffer`\>
 
-Defined in: [core/AudioManager.ts:385](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L385)
+Defined in: [core/AudioManager.ts:385](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L385)
 
 Render all audio tracks into a single stereo AudioBuffer (offline).
 
@@ -304,7 +304,7 @@ Mixed-down AudioBuffer
 
 > **pause**(): `void`
 
-Defined in: [core/AudioManager.ts:239](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L239)
+Defined in: [core/AudioManager.ts:239](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L239)
 
 Pause audio playback, remembering the current position.
 
@@ -318,7 +318,7 @@ Pause audio playback, remembering the current position.
 
 > **play**(): `void`
 
-Defined in: [core/AudioManager.ts:225](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L225)
+Defined in: [core/AudioManager.ts:225](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L225)
 
 Start (or resume) audio playback from the current position.
 
@@ -332,7 +332,7 @@ Start (or resume) audio playback from the current position.
 
 > **removeTrack**(`trackId`): `void`
 
-Defined in: [core/AudioManager.ts:327](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L327)
+Defined in: [core/AudioManager.ts:327](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L327)
 
 Remove a track by id.
 
@@ -352,7 +352,7 @@ Remove a track by id.
 
 > **seek**(`time`): `void`
 
-Defined in: [core/AudioManager.ts:254](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L254)
+Defined in: [core/AudioManager.ts:254](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L254)
 
 Seek to an absolute time on the timeline (seconds).
 If currently playing, audio restarts from the new position.
@@ -373,7 +373,7 @@ If currently playing, audio restarts from the new position.
 
 > **setGlobalGain**(`value`): `void`
 
-Defined in: [core/AudioManager.ts:292](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L292)
+Defined in: [core/AudioManager.ts:292](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L292)
 
 Set the master output volume.
 
@@ -395,7 +395,7 @@ Gain value (0 = silent, 1 = unity)
 
 > **setTrackGain**(`trackId`, `value`): `void`
 
-Defined in: [core/AudioManager.ts:307](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L307)
+Defined in: [core/AudioManager.ts:307](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L307)
 
 Set the gain for a specific track.
 
@@ -423,7 +423,7 @@ Gain value (0 = silent, 1 = unity)
 
 > **stop**(): `void`
 
-Defined in: [core/AudioManager.ts:270](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L270)
+Defined in: [core/AudioManager.ts:270](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L270)
 
 Stop playback and reset to the beginning.
 
@@ -437,7 +437,7 @@ Stop playback and reset to the beginning.
 
 > `static` **audioBufferToWAV**(`buffer`): `Blob`
 
-Defined in: [core/AudioManager.ts:464](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/core/AudioManager.ts#L464)
+Defined in: [core/AudioManager.ts:464](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/AudioManager.ts#L464)
 
 Encode an AudioBuffer as a WAV Blob (PCM 16-bit).
 

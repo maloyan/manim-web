@@ -2,9 +2,8 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function animate(scene: any) {
-  const { Axes, Tex } = await import('manim-js');
+  const { Scene, Axes, Tex, BLACK } = await import('manim-js');
 
   const ax = new Axes({
     xRange: [0, 40, 5],

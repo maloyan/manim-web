@@ -2,10 +2,8 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function animate(scene: any) {
-  const { Create, MathTex, ReplacementTransform, SurroundingRectangle, Write } =
-    await import('manim-js');
+  const { Create, MathTex, ReplacementTransform, Scene, SurroundingRectangle, Write } = await import('manim-js');
 
   const text = new MathTex({
     latex: ['\\frac{d}{dx}f(x)g(x)=', 'f(x)\\frac{d}{dx}g(x)', '+', 'g(x)\\frac{d}{dx}f(x)'],

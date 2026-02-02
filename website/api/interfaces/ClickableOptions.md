@@ -1,6 +1,6 @@
 # Interface: ClickableOptions
 
-Defined in: [interaction/Clickable.ts:7](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/interaction/Clickable.ts#L7)
+Defined in: [interaction/Clickable.ts:7](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Clickable.ts#L7)
 
 Options for configuring clickable behavior.
 
@@ -10,7 +10,7 @@ Options for configuring clickable behavior.
 
 > **onClick**: (`mobject`, `event`) => `void`
 
-Defined in: [interaction/Clickable.ts:9](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/interaction/Clickable.ts#L9)
+Defined in: [interaction/Clickable.ts:9](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Clickable.ts#L9)
 
 Callback when the mobject is clicked
 
@@ -34,7 +34,7 @@ Callback when the mobject is clicked
 
 > `optional` **onDoubleClick**: (`mobject`, `event`) => `void`
 
-Defined in: [interaction/Clickable.ts:11](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/interaction/Clickable.ts#L11)
+Defined in: [interaction/Clickable.ts:11](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Clickable.ts#L11)
 
 Callback when the mobject is double-clicked
 

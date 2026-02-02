@@ -2,7 +2,7 @@
 
 > **showPassingFlash**(`mobject`, `options?`): [`ShowPassingFlash`](../classes/ShowPassingFlash.md)
 
-Defined in: [animation/indication/ShowPassingFlash.ts:225](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/ShowPassingFlash.ts#L225)
+Defined in: [animation/indication/ShowPassingFlash.ts:212](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L212)
 
 Create a ShowPassingFlash animation for a mobject.
 Shows a highlighted flash traveling along the mobject's path.

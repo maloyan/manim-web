@@ -1,6 +1,6 @@
 # Interface: ApplyWaveOptions
 
-Defined in: [animation/indication/ApplyWave.ts:16](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/ApplyWave.ts#L16)
+Defined in: [animation/indication/ApplyWave.ts:16](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ApplyWave.ts#L16)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/indication/ApplyWave.ts:16](https://github.com/maloyan/ma
 
 > `optional` **amplitude**: `number`
 
-Defined in: [animation/indication/ApplyWave.ts:20](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/ApplyWave.ts#L20)
+Defined in: [animation/indication/ApplyWave.ts:20](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ApplyWave.ts#L20)
 
 Amplitude of the wave. Default: 0.2
 
@@ -22,7 +22,7 @@ Amplitude of the wave. Default: 0.2
 
 > `optional` **direction**: [`WaveDirection`](../type-aliases/WaveDirection.md)
 
-Defined in: [animation/indication/ApplyWave.ts:18](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/ApplyWave.ts#L18)
+Defined in: [animation/indication/ApplyWave.ts:18](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ApplyWave.ts#L18)
 
 Direction of the wave. Default: 'horizontal'
 
@@ -32,7 +32,7 @@ Direction of the wave. Default: 'horizontal'
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -46,7 +46,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -60,7 +60,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **ripples**: `boolean`
 
-Defined in: [animation/indication/ApplyWave.ts:26](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/ApplyWave.ts#L26)
+Defined in: [animation/indication/ApplyWave.ts:26](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ApplyWave.ts#L26)
 
 Ripple out from center instead of linear wave. Default: false
 
@@ -70,7 +70,7 @@ Ripple out from center instead of linear wave. Default: false
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 
@@ -84,7 +84,7 @@ Shift direction for fade animations
 
 > `optional` **speed**: `number`
 
-Defined in: [animation/indication/ApplyWave.ts:24](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/ApplyWave.ts#L24)
+Defined in: [animation/indication/ApplyWave.ts:24](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ApplyWave.ts#L24)
 
 Speed multiplier for wave propagation. Default: 1
 
@@ -94,6 +94,6 @@ Speed multiplier for wave propagation. Default: 1
 
 > `optional` **wavelength**: `number`
 
-Defined in: [animation/indication/ApplyWave.ts:22](https://github.com/maloyan/manim-js/blob/cbd3b062e7939ad24695e46e2d279c4e033e6a03/src/animation/indication/ApplyWave.ts#L22)
+Defined in: [animation/indication/ApplyWave.ts:22](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ApplyWave.ts#L22)
 
 Number of wave cycles. Default: 1.5

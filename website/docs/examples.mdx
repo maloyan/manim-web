@@ -37,29 +37,25 @@ Plots a quadratic function on coordinate axes and animates a dot that slides alo
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Scene,
-  Axes,
-  Dot,
-  MAROON,
-  ValueTracker,
-  linspace,
-  BLACK
-} from 'manim-js';
+import { Scene, Axes, Dot, MAROON, ValueTracker, linspace, BLACK } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 
-const ax = new Axes({ xRange: [0, 10], yRange: [0, 100, 10], axisConfig: {includeTip: false} });
-const labels = ax.getAxisLabels({ xLabel: "x", yLabel: "f(x)" });
+const ax = new Axes({
+  xRange: [0, 10],
+  yRange: [0, 100, 10],
+  axisConfig: { includeTip: false },
+});
+const labels = ax.getAxisLabels({ xLabel: 'x', yLabel: 'f(x)' });
 
 const t = new ValueTracker(0);
 
 const func = (x) => {
-    return 2 * (x - 5) ** 2;
+  return 2 * (x - 5) ** 2;
 };
 const graph = ax.plot(func, { color: MAROON });
 
@@ -67,8 +63,8 @@ const initialPoint = [ax.coordsToPoint(t.getValue(), func(t.getValue()))];
 const dot = new Dot({ point: initialPoint });
 
 dot.addUpdater((x) => x.moveTo(ax.coordsToPoint(t.getValue(), func(t.getValue()))));
-const xSpace = linspace(...ax.xRange.slice(0, 2),200);
-const minimumIndex = xSpace.reduce((mi, _, i, a) => func(a[i]) < func(a[mi]) ? i : mi, 0);
+const xSpace = linspace(...ax.xRange.slice(0, 2), 200);
+const minimumIndex = xSpace.reduce((mi, _, i, a) => (func(a[i]) < func(a[mi]) ? i : mi), 0);
 
 scene.add(ax, labels, graph, dot);
 await scene.play(t.animateTo(xSpace[minimumIndex]));
@@ -91,33 +87,37 @@ Draws two curves on coordinate axes with vertical reference lines, a shaded area
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Axes,
-  BLUE,
-  BLUE_C,
-  GRAY,
-  GREEN_B,
-  Scene,
-  YELLOW,
-  BLACK
-} from 'manim-js';
+import { Axes, BLUE, BLUE_C, GRAY, GREEN_B, Scene, YELLOW, BLACK } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 854,
   height: 480,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 
-const ax = new Axes({ xRange: [0, 5], yRange: [0, 6], xAxisConfig: {numbersToInclude: [2, 3]}, tips: false });
+const ax = new Axes({
+  xRange: [0, 5],
+  yRange: [0, 6],
+  xAxisConfig: { numbersToInclude: [2, 3] },
+  tips: false,
+});
 const labels = ax.getAxisLabels();
 
 const curve1 = ax.plot((x) => 4 * x - Math.pow(x, 2), { xRange: [0, 4], color: BLUE_C });
-const curve2 = ax.plot((x) => 0.8 * Math.pow(x, 2) - 3 * x + 4, { xRange: [0, 4], color: GREEN_B });
+const curve2 = ax.plot((x) => 0.8 * Math.pow(x, 2) - 3 * x + 4, {
+  xRange: [0, 4],
+  color: GREEN_B,
+});
 
 const line1 = ax.getVerticalLine(ax.inputToGraphPoint(2, curve1), { color: YELLOW });
 const line2 = ax.getVerticalLine(ax.i2gp(3, curve1), { color: YELLOW });
 
-const riemannArea = ax.getRiemannRectangles(curve1, { xRange: [0.3, 0.6], dx: 0.03, color: BLUE, fillOpacity: 0.5 });
+const riemannArea = ax.getRiemannRectangles(curve1, {
+  xRange: [0.3, 0.6],
+  dx: 0.03,
+  color: BLUE,
+  fillOpacity: 0.5,
+});
 const area = ax.getArea(curve2, [2, 3], { boundedGraph: curve1, color: GRAY, opacity: 0.5 });
 
 scene.add(ax, labels, curve1, curve2, line1, line2, riemannArea, area);
@@ -152,25 +152,45 @@ import {
   WHITE,
   YELLOW,
   scaleVec,
-  BLACK
+  BLACK,
 } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 854,
   height: 480,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 
-const axes = new Axes({ xRange: [-10, 10.3, 1], yRange: [-1.5, 1.5, 1], xLength: 10, axisConfig: {color: GREEN}, xAxisConfig: { numbersToInclude: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10], numbersWithElongatedTicks: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10], }, tips: false });
+const axes = new Axes({
+  xRange: [-10, 10.3, 1],
+  yRange: [-1.5, 1.5, 1],
+  xLength: 10,
+  axisConfig: { color: GREEN },
+  xAxisConfig: {
+    numbersToInclude: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10],
+    numbersWithElongatedTicks: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10],
+  },
+  tips: false,
+});
 const axesLabels = axes.getAxisLabels();
 const sinGraph = axes.plot((x) => Math.sin(x), { color: BLUE });
 const cosGraph = axes.plot((x) => Math.cos(x), { color: RED });
 
-const sinLabel = axes.getGraphLabel(sinGraph, "\\sin(x)", { xVal: -10, direction: scaleVec(0.5, UP) });
-const cosLabel = axes.getGraphLabel(cosGraph, { label: "\\cos(x)" });
+const sinLabel = axes.getGraphLabel(sinGraph, '\\sin(x)', {
+  xVal: -10,
+  direction: scaleVec(0.5, UP),
+});
+const cosLabel = axes.getGraphLabel(cosGraph, { label: '\\cos(x)' });
 
-const vertLine = axes.getVerticalLine(axes.i2gp(2 * Math.PI, cosGraph), { color: YELLOW, lineFunc: Line });
-const lineLabel = axes.getGraphLabel(cosGraph, "x=2\\pi", { xVal: 2 * Math.PI, direction: UR, color: WHITE });
+const vertLine = axes.getVerticalLine(axes.i2gp(2 * Math.PI, cosGraph), {
+  color: YELLOW,
+  lineFunc: Line,
+});
+const lineLabel = axes.getGraphLabel(cosGraph, 'x=2\\pi', {
+  xVal: 2 * Math.PI,
+  direction: UR,
+  color: WHITE,
+});
 
 const plot = new VGroup(axes, sinGraph, cosGraph, vertLine);
 const labels = new VGroup(axesLabels, sinLabel, cosLabel, lineLabel);
@@ -194,30 +214,73 @@ Demonstrates the four boolean set operations (union, intersection, difference, e
 
 ```typescript
 import {
-  BLUE, DOWN, Difference, Ellipse, Exclusion, FadeIn, GREEN, Group,
-  Intersection, LEFT, MoveToTarget, ORANGE, PINK, RED, RIGHT, Scene,
-  Text, Underline, UP, Union, WHITE, YELLOW, scaleVec
+  BLUE,
+  Difference,
+  DOWN,
+  Ellipse,
+  Exclusion,
+  FadeIn,
+  GREEN,
+  Group,
+  Intersection,
+  LEFT,
+  MoveToTarget,
+  ORANGE,
+  PINK,
+  RED,
+  RIGHT,
+  Scene,
+  Text,
+  Underline,
+  UP,
+  Union,
+  WHITE,
+  YELLOW,
+  scaleVec,
 } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
-  width: 800, height: 450, backgroundColor: '#000000'
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
 });
 
 const ellipse1 = new Ellipse({
-  width: 4.0, height: 5.0, fillOpacity: 0.5, color: BLUE, strokeWidth: 2
+  width: 4.0,
+  height: 5.0,
+  fillOpacity: 0.5,
+  color: BLUE,
+  strokeWidth: 2,
 }).moveTo(LEFT);
 const ellipse2 = ellipse1.copy().setColor(RED).moveTo(RIGHT);
+// Large italic underlined title matching Python Manim reference
 const bool_ops_text = new Text({
-  text: 'Boolean Operation', fontFamily: 'serif', fontSize: 48
+  text: 'Boolean Operation',
+  fontFamily: 'serif',
+  fontSize: 48,
 }).nextTo(ellipse1, UP);
 const ellipse_group = new Group(bool_ops_text, ellipse1, ellipse2).moveTo(scaleVec(3, LEFT));
+// Create underline AFTER group is positioned so it uses the text's final position
 const underline = new Underline(bool_ops_text, { color: WHITE, strokeWidth: 2, buff: -0.25 });
 ellipse_group.add(underline);
 await scene.play(new FadeIn(ellipse_group));
 
+// Layout matching Python Manim reference:
+//        Intersection
+//  Difference    Union
+//        Exclusion
+// Intersection, Union, Exclusion are vertically aligned on the right.
+// Difference is offset to the left at the same row as Union.
+// Positions and scales matching Python Manim reference exactly:
+// Intersection: scale(0.25), move_to(RIGHT*5 + UP*2.5)
+// Union: scale(0.3), next_to(i, DOWN, buff=text.height*3)
+// Exclusion: scale(0.3), next_to(u, DOWN, buff=text.height*3.5)
+// Difference: scale(0.3), next_to(u, LEFT, buff=text.height*3.5)
+const rightX = 5;
+
 const i = new Intersection(ellipse1, ellipse2, { color: GREEN, fillOpacity: 0.5 });
 i.generateTarget();
-i.targetCopy.scale(0.25).setStrokeWidth(1).moveTo([5, 2.5, 0]);
+i.targetCopy.scale(0.25).setStrokeWidth(1).moveTo([rightX, 2.5, 0]);
 await scene.play(new MoveToTarget(i));
 const intersection_text = new Text({ text: 'Intersection', fontSize: 23 }).nextTo(i, UP);
 await scene.play(new FadeIn(intersection_text));
@@ -225,7 +288,10 @@ await scene.play(new FadeIn(intersection_text));
 const u = new Union(ellipse1, ellipse2, { color: ORANGE, fillOpacity: 0.5 });
 const union_text = new Text({ text: 'Union', fontSize: 23 });
 u.generateTarget();
-u.targetCopy.scale(0.3).setStrokeWidth(1.2).nextTo(i, DOWN, union_text.getHeight() * 3);
+u.targetCopy
+  .scale(0.3)
+  .setStrokeWidth(1.2)
+  .nextTo(i, DOWN, union_text.getHeight() * 3);
 await scene.play(new MoveToTarget(u));
 union_text.nextTo(u, UP);
 await scene.play(new FadeIn(union_text));
@@ -233,7 +299,10 @@ await scene.play(new FadeIn(union_text));
 const e = new Exclusion(ellipse1, ellipse2, { color: YELLOW, fillOpacity: 0.5 });
 const exclusion_text = new Text({ text: 'Exclusion', fontSize: 23 });
 e.generateTarget();
-e.targetCopy.scale(0.3).setStrokeWidth(1.2).nextTo(u, DOWN, exclusion_text.getHeight() * 3.5);
+e.targetCopy
+  .scale(0.3)
+  .setStrokeWidth(1.2)
+  .nextTo(u, DOWN, exclusion_text.getHeight() * 3.5);
 await scene.play(new MoveToTarget(e));
 exclusion_text.nextTo(e, UP);
 await scene.play(new FadeIn(exclusion_text));
@@ -241,7 +310,10 @@ await scene.play(new FadeIn(exclusion_text));
 const d = new Difference(ellipse1, ellipse2, { color: PINK, fillOpacity: 0.5 });
 const difference_text = new Text({ text: 'Difference', fontSize: 23 });
 d.generateTarget();
-d.targetCopy.scale(0.3).setStrokeWidth(1.2).nextTo(u, LEFT, difference_text.getHeight() * 3.5);
+d.targetCopy
+  .scale(0.3)
+  .setStrokeWidth(1.2)
+  .nextTo(u, LEFT, difference_text.getHeight() * 3.5);
 await scene.play(new MoveToTarget(d));
 difference_text.nextTo(d, UP);
 await scene.play(new FadeIn(difference_text));
@@ -292,20 +364,34 @@ const line_moving = new Line({ start: LEFT, end: RIGHT });
 const line_ref = line_moving.copy();
 line_moving.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
 const a = new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false });
-const tex = new MathTex({ latex: "\\theta", color: WHITE });
+const tex = new MathTex({ latex: '\\theta', color: WHITE });
 await tex.waitForRender();
-tex.moveTo( new Angle({ line1: line1, line2: line_moving }, { radius: 0.5 + 3 * SMALL_BUFF, otherAngle: false }).pointFromProportion(0.5) );
+tex.moveTo(
+  new Angle(
+    { line1: line1, line2: line_moving },
+    { radius: 0.5 + 3 * SMALL_BUFF, otherAngle: false },
+  ).pointFromProportion(0.5),
+);
 
 scene.add(line1, line_moving, a, tex);
 await scene.wait(1);
 
-line_moving.addUpdater( (x) => {
+line_moving.addUpdater((x) => {
   x.become(line_ref.copy());
   x.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
 });
 
-a.addUpdater( (x) => x.become(new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false })) );
-tex.addUpdater( (x) => x.moveTo( new Angle({ line1: line1, line2: line_moving }, { radius: 0.5 + 3 * SMALL_BUFF, otherAngle: false }).pointFromProportion(0.5) ) );
+a.addUpdater((x) =>
+  x.become(new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false })),
+);
+tex.addUpdater((x) =>
+  x.moveTo(
+    new Angle(
+      { line1: line1, line2: line_moving },
+      { radius: 0.5 + 3 * SMALL_BUFF, otherAngle: false },
+    ).pointFromProportion(0.5),
+  ),
+);
 
 await scene.play(theta_tracker.animateTo(40));
 await scene.play(theta_tracker.animateTo(theta_tracker.getValue() + 140));
@@ -343,13 +429,13 @@ import {
   Scene,
   Transform,
   linear,
-  BLACK
+  BLACK,
 } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 
 const circle = new Circle({ radius: 1, color: BLUE });
@@ -392,22 +478,32 @@ import {
   FadeOut,
   BLACK,
   WHITE,
-  DOWN
+  DOWN,
 } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 
 const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
-const firstLine = new Text({ text: 'Manim also allows you', fontSize: 36, color: WHITE, fontUrl: FONT_URL });
-const secondLine = new Text({ text: 'to show beautiful math equations', fontSize: 36, color: WHITE, fontUrl: FONT_URL });
+const firstLine = new Text({
+  text: 'Manim also allows you',
+  fontSize: 36,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
+const secondLine = new Text({
+  text: 'to show beautiful math equations',
+  fontSize: 36,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
 const equation = new MathTex({
   latex: 'd(p, q) = \\sqrt{\\sum_{i=1}^n (q_i - p_i)^2}',
   fontSize: 48,
-  color: WHITE
+  color: WHITE,
 });
 
 await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
@@ -448,18 +544,28 @@ import {
   WHITE,
   RED,
   DOWN,
-  smooth
+  smooth,
 } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 
 const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
-const firstLine = new Text({ text: 'Create cool animations', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
-const secondLine = new Text({ text: 'using Manim', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+const firstLine = new Text({
+  text: 'Create cool animations',
+  fontSize: 48,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
+const secondLine = new Text({
+  text: 'using Manim',
+  fontSize: 48,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
 const thirdLine = new Text({ text: 'Try it out yourself.', fontSize: 48, color: RED });
 
 await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
@@ -472,11 +578,13 @@ await scene.wait(1);
 // Cross-fade: fade out first line while fading in third line at same position
 scene.add(thirdLine);
 thirdLine.opacity = 0;
-await scene.play(new AnimationGroup([
-  new FadeOut(firstLine, { duration: 1.5, rateFunc: smooth }),
-  new FadeIn(thirdLine, { duration: 1.5, rateFunc: smooth }),
-  new FadeOut(secondLine, { duration: 1.5, rateFunc: smooth })
-]));
+await scene.play(
+  new AnimationGroup([
+    new FadeOut(firstLine, { duration: 1.5, rateFunc: smooth }),
+    new FadeIn(thirdLine, { duration: 1.5, rateFunc: smooth }),
+    new FadeOut(secondLine, { duration: 1.5, rateFunc: smooth }),
+  ]),
+);
 await scene.wait(2);
 ```
 
@@ -502,22 +610,24 @@ import {
   ReplacementTransform,
   Scene,
   SurroundingRectangle,
-  Write
+  Write,
 } from 'manim-js';
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: '#000000'
+  backgroundColor: '#000000',
 });
 
-const text = new MathTex({ latex: ["\\frac{d}{dx}f(x)g(x)=", "f(x)\\frac{d}{dx}g(x)", "+", "g(x)\\frac{d}{dx}f(x)"] });
+const text = new MathTex({
+  latex: ['\\frac{d}{dx}f(x)g(x)=', 'f(x)\\frac{d}{dx}g(x)', '+', 'g(x)\\frac{d}{dx}f(x)'],
+});
 await text.waitForRender();
 await scene.play(new Write(text));
-const framebox1 = new SurroundingRectangle(text.getPart(1), { buff: .1 });
-const framebox2 = new SurroundingRectangle(text.getPart(3), { buff: .1 });
-await scene.play( new Create(framebox1), );
+const framebox1 = new SurroundingRectangle(text.getPart(1), { buff: 0.1 });
+const framebox2 = new SurroundingRectangle(text.getPart(3), { buff: 0.1 });
+await scene.play(new Create(framebox1));
 await scene.wait();
-await scene.play( new ReplacementTransform(framebox1,framebox2), );
+await scene.play(new ReplacementTransform(framebox1, framebox2));
 await scene.wait();
 ```
 
@@ -537,12 +647,17 @@ A minimal test of the Write animation: loads a custom font, renders a text objec
 <summary>Source Code</summary>
 
 ```typescript
-import { Scene, Text, Write, Create, Circle, BLACK, WHITE } from 'manim-js';
+import { Scene, Text, Write, BLACK, WHITE } from 'manim-js';
 
 const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
 const scene = new Scene(document.getElementById('container'), { width: 800, height: 450, backgroundColor: BLACK });
 
-const text = new Text({ text: 'This is some LaTeX', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+const text = new Text({
+  text: 'This is some LaTeX',
+  fontSize: 48,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
 await text.loadGlyphs();
 scene.add(text);
 await scene.play(new Write(text, { duration: 5 }));
@@ -564,20 +679,12 @@ Demonstrates the MoveToTarget pattern for animating a square through a sequence 
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Scene,
-  Square,
-  MoveToTarget,
-  BLUE,
-  ORANGE,
-  LEFT,
-  BLACK
-} from 'manim-js';
+import { Scene, Square, MoveToTarget, BLUE, ORANGE, LEFT, BLACK } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 
 const square = new Square({ color: BLUE, fillOpacity: 1 });
@@ -617,27 +724,17 @@ Creates two dots connected by a line, then animates them independently using Val
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Scene,
-  Dot,
-  VGroup,
-  Line,
-  ValueTracker,
-  BLUE,
-  GREEN,
-  RED,
-  RIGHT
-} from 'manim-js';
+import { Scene, Dot, VGroup, Line, ValueTracker, BLUE, GREEN, RED, RIGHT } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: '#000000'
+  backgroundColor: '#000000',
 });
 
 const d1 = new Dot({ color: BLUE });
 const d2 = new Dot({ color: GREEN });
-const dg = new VGroup(d1, d2).arrange(RIGHT, 1);
+new VGroup(d1, d2).arrange(RIGHT, 1);
 const l1 = new Line({ start: d1.getCenter(), end: d2.getCenter() }).setColor(RED);
 const x = new ValueTracker(0);
 const y = new ValueTracker(0);
@@ -678,29 +775,31 @@ import {
   YELLOW,
   BLACK,
   scaleVec,
-  subVec
+  subVec,
 } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 
 const group = new VGroup(
   new Dot({ point: LEFT }),
   new Dot({ point: ORIGIN }),
   new Dot({ point: RIGHT, color: RED }),
-  new Dot({ point: scaleVec(2, RIGHT) })
+  new Dot({ point: scaleVec(2, RIGHT) }),
 ).scale(1.4);
 
 const dest = new Dot({ point: [4, 3, 0], color: YELLOW });
 
 scene.add(group, dest);
 
-await scene.play(new Shift(group, {
-  direction: subVec(dest.getCenter(), group.get(2).getCenter())
-}));
+await scene.play(
+  new Shift(group, {
+    direction: subVec(dest.getCenter(), group.get(2).getCenter()),
+  }),
+);
 await scene.wait(0.5);
 ```
 
@@ -720,22 +819,12 @@ Creates a dot that leaves a visible trail as it moves. Uses a VMobject with addU
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Scene,
-  VMobject,
-  Dot,
-  Rotating,
-  Shift,
-  UP,
-  LEFT,
-  RIGHT,
-  BLACK
-} from 'manim-js';
+import { Scene, VMobject, Dot, Rotating, Shift, UP, LEFT, RIGHT, BLACK } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 
 const path = new VMobject();
@@ -775,19 +864,12 @@ Shows a reference line alongside a rotating line driven by a time-based updater 
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Scene,
-  Line,
-  ORIGIN,
-  LEFT,
-  WHITE,
-  YELLOW
-} from 'manim-js';
+import { Scene, Line, ORIGIN, LEFT, WHITE, YELLOW } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: '#000000'
+  backgroundColor: '#000000',
 });
 
 const updaterForth = (mobj, dt) => {
@@ -846,7 +928,7 @@ import {
   PINK,
   DOWN,
   RIGHT,
-  smooth
+  smooth,
 } from 'manim-js';
 
 const TAU = Math.PI * 2;
@@ -855,7 +937,7 @@ const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 // Demo 1: Square to Circle
 const circle = new Circle({ radius: 1.5 });
@@ -870,15 +952,25 @@ const circle = new Circle({ radius: 1.5, fillColor: PINK, fillOpacity: 0.5 });
 const square = new Square({ sideLength: 3 });
 
 square.flip(RIGHT);
-square.rotate(-3 * TAU / 8);
+square.rotate((-3 * TAU) / 8);
 
 await scene.play(new Create(square));
 await scene.play(new Transform(square, circle));
 await scene.play(new FadeOut(square));
 
 // Demo 3: Displaying Text
-const firstLine = new Text({ text: 'Create cool animations', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
-const secondLine = new Text({ text: 'using Manim', fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+const firstLine = new Text({
+  text: 'Create cool animations',
+  fontSize: 48,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
+const secondLine = new Text({
+  text: 'using Manim',
+  fontSize: 48,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
 const thirdLine = new Text({ text: 'Try it out yourself.', fontSize: 48, color: RED });
 
 await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
@@ -891,20 +983,32 @@ await scene.wait(1);
 // Cross-fade: fade out first line while fading in third line at same position
 scene.add(thirdLine);
 thirdLine.opacity = 0;
-await scene.play(new AnimationGroup([
-  new FadeOut(firstLine, { duration: 1.5, rateFunc: smooth }),
-  new FadeIn(thirdLine, { duration: 1.5, rateFunc: smooth }),
-  new FadeOut(secondLine, { duration: 1.5, rateFunc: smooth })
-]));
+await scene.play(
+  new AnimationGroup([
+    new FadeOut(firstLine, { duration: 1.5, rateFunc: smooth }),
+    new FadeIn(thirdLine, { duration: 1.5, rateFunc: smooth }),
+    new FadeOut(secondLine, { duration: 1.5, rateFunc: smooth }),
+  ]),
+);
 await scene.wait(2);
 
 // Demo 4: Math Equations
-const firstLine = new Text({ text: 'Manim also allows you', fontSize: 36, color: WHITE, fontUrl: FONT_URL });
-const secondLine = new Text({ text: 'to show beautiful math equations', fontSize: 36, color: WHITE, fontUrl: FONT_URL });
+const firstLine = new Text({
+  text: 'Manim also allows you',
+  fontSize: 36,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
+const secondLine = new Text({
+  text: 'to show beautiful math equations',
+  fontSize: 36,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
 const equation = new MathTex({
   latex: 'd(p, q) = \\sqrt{\\sum_{i=1}^n (q_i - p_i)^2}',
   fontSize: 48,
-  color: WHITE
+  color: WHITE,
 });
 
 await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
@@ -924,14 +1028,14 @@ const axes = new Axes({
   xLength: 8,
   yLength: 6,
   color: BLUE,
-  tips: true
+  tips: true,
 });
 
 const graph = new FunctionGraph({
   func: (x) => x * x,
   xRange: [-2.2, 2.2],
   color: WHITE,
-  axes: axes
+  axes: axes,
 });
 
 const graphLabel = new MathTex({ latex: 'x^2', fontSize: 32, color: WHITE });
@@ -941,7 +1045,7 @@ const graph2 = new FunctionGraph({
   func: (x) => x * x * x,
   xRange: [-1.7, 1.7],
   color: WHITE,
-  axes: axes
+  axes: axes,
 });
 
 const graphLabel2 = new MathTex({ latex: 'x^3', fontSize: 32, color: WHITE });
@@ -974,11 +1078,21 @@ A multi-part showcase: writes text and a LaTeX equation, transforms the title, c
 ```typescript
 import {
   Scene,
-  Create, FadeIn, FadeOut, Write, Transform, LaggedStart,
+  Create,
+  FadeIn,
+  FadeOut,
+  Write,
+  Transform,
   ApplyPointwiseFunction,
-  Text, MathTex, NumberPlane, VGroup,
-  UP, DOWN, UL,
-  BLACK, WHITE
+  Text,
+  MathTex,
+  NumberPlane,
+  VGroup,
+  UP,
+  DOWN,
+  UL,
+  BLACK,
+  WHITE,
 } from 'manim-js';
 
 const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
@@ -986,11 +1100,16 @@ const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 // Part 1: Title and equation (Write title, FadeIn equation from below)
-const title = new Text({ text: "This is some LaTeX", fontSize: 48, color: WHITE, fontUrl: FONT_URL });
-const basel = new MathTex({ latex: "\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}" });
+const title = new Text({
+  text: 'This is some LaTeX',
+  fontSize: 48,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
+const basel = new MathTex({ latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}' });
 await title.loadGlyphs();
 await basel.waitForRender?.();
 
@@ -1000,18 +1119,25 @@ await scene.play(new Write(title, { duration: 2 }), new FadeIn(basel, { shift: D
 await scene.wait(1);
 
 // Part 2: Transform title to UL corner, fade out equation downward
-const transformTitle = new Text({ text: "That was a transform", fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+const transformTitle = new Text({
+  text: 'That was a transform',
+  fontSize: 48,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
 await transformTitle.loadGlyphs();
 transformTitle.toCorner(UL);
-await scene.play(
-  new Transform(title, transformTitle),
-  new FadeOut(basel, { shift: DOWN })
-);
+await scene.play(new Transform(title, transformTitle), new FadeOut(basel, { shift: DOWN }));
 await scene.wait(1);
 
 // Part 3: Number plane grid with title
 const grid = new NumberPlane();
-const gridTitle = new Text({ text: "This is a grid", fontSize: 72, color: WHITE, fontUrl: FONT_URL });
+const gridTitle = new Text({
+  text: 'This is a grid',
+  fontSize: 72,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
 await gridTitle.loadGlyphs();
 gridTitle.moveTo(transformTitle);
 
@@ -1019,23 +1145,28 @@ scene.add(grid, gridTitle);
 await scene.play(
   new FadeOut(title),
   new FadeIn(gridTitle, { shift: UP }),
-  new Create(grid, { duration: 3, lagRatio: 0.1 })
+  new Create(grid, { duration: 3, lagRatio: 0.1 }),
 );
 await scene.wait(1);
 
 // Part 4: Non-linear grid transform (sin warp)
-const gridTransformTitle = new Text({ text: "That was a non-linear function\napplied to the grid", fontSize: 48, color: WHITE, fontUrl: FONT_URL });
+const gridTransformTitle = new Text({
+  text: 'That was a non-linear function\napplied to the grid',
+  fontSize: 48,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
 await gridTransformTitle.loadGlyphs();
 gridTransformTitle.moveTo(gridTitle, UL);
 grid.prepareForNonlinearTransform();
 await scene.play(
-  new ApplyPointwiseFunction(grid, (p) => {
-    return [
-      p[0] + Math.sin(p[1]),
-      p[1] + Math.sin(p[0]),
-      p[2]
-    ];
-  }, { duration: 3 })
+  new ApplyPointwiseFunction(
+    grid,
+    (p) => {
+      return [p[0] + Math.sin(p[1]), p[1] + Math.sin(p[0]), p[2]];
+    },
+    { duration: 3 },
+  ),
 );
 await scene.wait(1);
 
@@ -1060,17 +1191,12 @@ Example demonstrating Heat Diagram Plot.
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Scene,
-  Axes,
-  Tex,
-  BLACK
-} from 'manim-js';
+import { Scene, Axes, Tex, BLACK } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 
 const ax = new Axes({
@@ -1084,8 +1210,8 @@ const ax = new Axes({
 });
 
 // Create Tex labels and wait for rendering
-const xLabel = new Tex({ latex: "$\\Delta Q$" });
-const yLabel = new Tex({ latex: "T[$^\\circ C$]" });
+const xLabel = new Tex({ latex: '$\\Delta Q$' });
+const yLabel = new Tex({ latex: 'T[$^\\circ C$]' });
 await xLabel.waitForRender();
 await yLabel.waitForRender();
 
@@ -1122,13 +1248,13 @@ import {
   ValueTracker,
   YELLOW_B,
   YELLOW_D,
-  BLACK
+  BLACK,
 } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 854,
   height: 480,
-  backgroundColor: BLACK
+  backgroundColor: BLACK,
 });
 
 const ax = new Axes({
@@ -1136,22 +1262,16 @@ const ax = new Axes({
   yRange: [0, 10],
   xLength: 6,
   yLength: 6,
-  tips: false
+  tips: false,
 });
 
 const t = new ValueTracker(5);
 const k = 25;
 
-const graph = ax.plot(
-  (x) => k / x,
-  { color: YELLOW_D, xRange: [k / 10, 10.0], numSamples: 750 }
-);
+const graph = ax.plot((x) => k / x, { color: YELLOW_D, xRange: [k / 10, 10.0], numSamples: 750 });
 
 function makeRectangle() {
-  const corners = getRectangleCorners(
-    [0, 0],
-    [t.getValue(), k / t.getValue()]
-  );
+  const corners = getRectangleCorners([0, 0], [t.getValue(), k / t.getValue()]);
   const vertices = corners.map(([x, y]) => ax.c2p(x, y));
   const p = new Polygon({ vertices, strokeWidth: 1, color: YELLOW_B, fillOpacity: 0.5 });
   p.fillColor = BLUE;
