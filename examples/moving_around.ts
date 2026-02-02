@@ -1,4 +1,15 @@
-import { Scene, Square, MoveToTarget, BLUE, ORANGE, LEFT, BLACK } from '../src/index.ts';
+import {
+  Scene,
+  Square,
+  Shift,
+  MoveToTarget,
+  Scale,
+  Rotate,
+  BLUE,
+  ORANGE,
+  LEFT,
+  BLACK,
+} from '../src/index.ts';
 
 const container = document.getElementById('container');
 const scene = new Scene(container, {
@@ -18,23 +29,15 @@ document.getElementById('playBtn').addEventListener('click', async () => {
 
   const square = new Square({ color: BLUE, fillOpacity: 1 });
 
-  scene.add(square);
-
-  square.generateTarget();
-  square.targetCopy.shift(LEFT);
-  await scene.play(new MoveToTarget(square));
+  await scene.play(new Shift(square, { direction: LEFT }));
 
   square.generateTarget();
   square.targetCopy.setFill(ORANGE);
   await scene.play(new MoveToTarget(square));
 
-  square.generateTarget();
-  square.targetCopy.scale(0.3);
-  await scene.play(new MoveToTarget(square));
+  await scene.play(new Scale(square, { scaleFactor: 0.3 }));
 
-  square.generateTarget();
-  square.targetCopy.rotate(0.4);
-  await scene.play(new MoveToTarget(square));
+  await scene.play(new Rotate(square, { angle: 0.4 }));
 
   isAnimating = false;
   document.getElementById('playBtn').disabled = false;

@@ -3,27 +3,20 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Scene, Square, MoveToTarget, BLUE, ORANGE, LEFT, BLACK } = await import('manim-js');
+  const { Square, Shift, MoveToTarget, Scale, Rotate, BLUE, ORANGE, LEFT } =
+    await import('manim-js');
 
   const square = new Square({ color: BLUE, fillOpacity: 1 });
 
-  scene.add(square);
-
-  square.generateTarget();
-  square.targetCopy.shift(LEFT);
-  await scene.play(new MoveToTarget(square));
+  await scene.play(new Shift(square, { direction: LEFT }));
 
   square.generateTarget();
   square.targetCopy.setFill(ORANGE);
   await scene.play(new MoveToTarget(square));
 
-  square.generateTarget();
-  square.targetCopy.scale(0.3);
-  await scene.play(new MoveToTarget(square));
+  await scene.play(new Scale(square, { scaleFactor: 0.3 }));
 
-  square.generateTarget();
-  square.targetCopy.rotate(0.4);
-  await scene.play(new MoveToTarget(square));
+  await scene.play(new Rotate(square, { angle: 0.4 }));
 }
 
 export default function MovingAroundExample() {
