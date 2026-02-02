@@ -14,6 +14,7 @@
  */
 
 import { VMobject } from '../../core/VMobject';
+import { DEFAULT_STROKE_WIDTH } from '../../constants';
 import polygonClipping from 'polygon-clipping';
 
 // Re-export types from polygon-clipping for internal use
@@ -71,7 +72,7 @@ export class BooleanResult extends VMobject {
    * Get the result polygon vertices
    */
   getResultVertices(): Vertex2D[][] {
-    return this._resultVertices.map(poly => poly.map(v => ({ ...v })));
+    return this._resultVertices.map((poly) => poly.map((v) => ({ ...v })));
   }
 
   /**
@@ -84,13 +85,17 @@ export class BooleanResult extends VMobject {
     const pts = this.getPoints();
     if (pts.length === 0) return;
 
-    let cx = 0, cy = 0;
-    for (const p of pts) { cx += p[0]; cy += p[1]; }
+    let cx = 0,
+      cy = 0;
+    for (const p of pts) {
+      cx += p[0];
+      cy += p[1];
+    }
     cx /= pts.length;
     cy /= pts.length;
 
     // Shift all points so they are centered at local origin
-    const shifted = pts.map(p => [p[0] - cx, p[1] - cy, p[2]]);
+    const shifted = pts.map((p) => [p[0] - cx, p[1] - cy, p[2]]);
     this.setPoints3D(shifted);
 
     // Move the mobject's world position to the centroid
@@ -118,7 +123,7 @@ export class BooleanResult extends VMobject {
       }
       // Control points at 1/3 and 2/3 for straight line
       points.push([p0.x + dx / 3, p0.y + dy / 3, 0]);
-      points.push([p0.x + 2 * dx / 3, p0.y + 2 * dy / 3, 0]);
+      points.push([p0.x + (2 * dx) / 3, p0.y + (2 * dy) / 3, 0]);
       points.push([p1.x, p1.y, 0]);
     }
 
@@ -131,7 +136,7 @@ export class BooleanResult extends VMobject {
    * Subpath lengths are tracked for proper fill and stroke rendering.
    */
   protected _setPointsFromMultiplePolygons(polygons: Vertex2D[][]): void {
-    const validPolygons = polygons.filter(p => p.length >= 3);
+    const validPolygons = polygons.filter((p) => p.length >= 3);
     if (validPolygons.length === 0) return;
 
     if (validPolygons.length === 1) {
@@ -157,7 +162,7 @@ export class BooleanResult extends VMobject {
           allPoints.push([p0.x, p0.y, 0]);
         }
         allPoints.push([p0.x + dx / 3, p0.y + dy / 3, 0]);
-        allPoints.push([p0.x + 2 * dx / 3, p0.y + 2 * dy / 3, 0]);
+        allPoints.push([p0.x + (2 * dx) / 3, p0.y + (2 * dy) / 3, 0]);
         allPoints.push([p1.x, p1.y, 0]);
       }
 
@@ -190,7 +195,7 @@ export class BooleanResult extends VMobject {
 function performBooleanOp(
   polyA: Vertex2D[],
   polyB: Vertex2D[],
-  operation: 'union' | 'intersection' | 'difference' | 'xor'
+  operation: 'union' | 'intersection' | 'difference' | 'xor',
 ): Vertex2D[][] {
   if (polyA.length < 3 || polyB.length < 3) return [];
 
@@ -243,7 +248,7 @@ function performBooleanOp(
  * Ensures the ring is properly closed (first == last point).
  */
 function verticesToRing(vertices: Vertex2D[]): Ring {
-  const ring: Ring = vertices.map(v => [v.x, v.y] as Pair);
+  const ring: Ring = vertices.map((v) => [v.x, v.y] as Pair);
 
   // polygon-clipping expects rings to be closed (first == last point)
   if (ring.length > 0) {
@@ -315,7 +320,7 @@ export class Union extends BooleanResult {
       color = shape1.color,
       fillColor,
       fillOpacity = shape1.fillOpacity,
-      strokeWidth = shape1.strokeWidth,
+      strokeWidth = DEFAULT_STROKE_WIDTH,
       samplesPerSegment = 8,
     } = options;
 
@@ -372,7 +377,7 @@ export class Intersection extends BooleanResult {
       color = shape1.color,
       fillColor,
       fillOpacity = shape1.fillOpacity,
-      strokeWidth = shape1.strokeWidth,
+      strokeWidth = DEFAULT_STROKE_WIDTH,
       samplesPerSegment = 8,
     } = options;
 
@@ -419,7 +424,7 @@ export class Difference extends BooleanResult {
       color = shape1.color,
       fillColor,
       fillOpacity = shape1.fillOpacity,
-      strokeWidth = shape1.strokeWidth,
+      strokeWidth = DEFAULT_STROKE_WIDTH,
       samplesPerSegment = 8,
     } = options;
 
@@ -470,7 +475,7 @@ export class Exclusion extends BooleanResult {
       color = shape1.color,
       fillColor,
       fillOpacity = shape1.fillOpacity,
-      strokeWidth = shape1.strokeWidth,
+      strokeWidth = DEFAULT_STROKE_WIDTH,
       samplesPerSegment = 8,
     } = options;
 
@@ -510,7 +515,7 @@ export class Exclusion extends BooleanResult {
 export function union(
   shape1: VMobject,
   shape2: VMobject,
-  options?: BooleanOperationOptions
+  options?: BooleanOperationOptions,
 ): Union {
   return new Union(shape1, shape2, options);
 }
@@ -526,7 +531,7 @@ export function union(
 export function intersection(
   shape1: VMobject,
   shape2: VMobject,
-  options?: BooleanOperationOptions
+  options?: BooleanOperationOptions,
 ): Intersection {
   return new Intersection(shape1, shape2, options);
 }
@@ -542,7 +547,7 @@ export function intersection(
 export function difference(
   shape1: VMobject,
   shape2: VMobject,
-  options?: BooleanOperationOptions
+  options?: BooleanOperationOptions,
 ): Difference {
   return new Difference(shape1, shape2, options);
 }
@@ -558,7 +563,7 @@ export function difference(
 export function exclusion(
   shape1: VMobject,
   shape2: VMobject,
-  options?: BooleanOperationOptions
+  options?: BooleanOperationOptions,
 ): Exclusion {
   return new Exclusion(shape1, shape2, options);
 }
@@ -614,7 +619,13 @@ function sampleVMobjectToPolygon(vmobject: VMobject, samplesPerSegment: number):
 /**
  * Evaluate cubic Bezier at parameter t
  */
-function evalCubicBezier(p0: number[], p1: number[], p2: number[], p3: number[], t: number): number[] {
+function evalCubicBezier(
+  p0: number[],
+  p1: number[],
+  p2: number[],
+  p3: number[],
+  t: number,
+): number[] {
   const mt = 1 - t;
   const mt2 = mt * mt;
   const mt3 = mt2 * mt;

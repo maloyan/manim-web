@@ -12,12 +12,32 @@ import { Angle } from './mobjects/geometry/AngleShapes';
 import { ValueTracker } from './mobjects/value-tracker/ValueTracker';
 import { VGroup } from './core/VGroup';
 import { VMobject } from './core/VMobject';
-import { BLUE, BLUE_C, GREEN, RED, YELLOW, YELLOW_B, YELLOW_D, GRAY, ORANGE, PINK } from './constants';
+import {
+  BLUE,
+  BLUE_C,
+  GREEN,
+  RED,
+  YELLOW,
+  YELLOW_B,
+  YELLOW_D,
+  GRAY,
+  ORANGE,
+  PINK,
+} from './constants';
 import { LEFT, RIGHT, ORIGIN, UP, Mobject } from './core/Mobject';
 import { subVec, scaleVec } from './utils/vectors';
 import { Group } from './core/Group';
 import { Square } from './mobjects/geometry/Rectangle';
-import { Union, Intersection, Difference, Exclusion, BooleanResult } from './mobjects/geometry/BooleanOperations';
+import {
+  Union,
+  Intersection,
+  Difference,
+  Exclusion,
+  BooleanResult,
+} from './mobjects/geometry/BooleanOperations';
+import { Underline } from './mobjects/geometry/ShapeMatchers';
+import { Ellipse } from './mobjects/geometry/ArcShapes';
+import { DEFAULT_STROKE_WIDTH } from './constants';
 
 // ---------------------------------------------------------------------------
 // 1. Graph Area Plot
@@ -603,7 +623,7 @@ describe('Boolean Operations', () => {
     const verts = u.getResultVertices();
     expect(verts.length).toBeGreaterThan(0);
     // Union vertices should span from x=-1 to x=2
-    const allX = verts.flat().map(v => v.x);
+    const allX = verts.flat().map((v) => v.x);
     expect(Math.min(...allX)).toBeCloseTo(-1, 0);
     expect(Math.max(...allX)).toBeCloseTo(2, 0);
   });
@@ -616,7 +636,7 @@ describe('Boolean Operations', () => {
     expect(verts.length).toBeGreaterThan(0);
     // Difference should only have vertices in the left part (x < 0)
     // of sq1 that doesn't overlap with sq2
-    const allX = verts.flat().map(v => v.x);
+    const allX = verts.flat().map((v) => v.x);
     expect(Math.min(...allX)).toBeCloseTo(-1, 0);
     // Max x should be near 0 (the left edge of sq2)
     expect(Math.max(...allX)).toBeCloseTo(0, 0);
@@ -645,7 +665,9 @@ describe('Boolean Operations', () => {
     const u = new Union(s1, s2);
     expect(u.color).toBe(RED);
     expect(u.fillOpacity).toBe(0.8);
-    expect(u.strokeWidth).toBe(5);
+    // Boolean operations use DEFAULT_STROKE_WIDTH (4), not input shape's strokeWidth
+    // This matches Python Manim behavior where BooleanOps inherit VMobject defaults
+    expect(u.strokeWidth).toBe(4);
   });
 
   it('non-overlapping shapes produce empty intersection', () => {
@@ -677,6 +699,85 @@ describe('Boolean Operations', () => {
     const origCenter = i.getCenter();
     const copyCenter = copy.getCenter();
     expect(Math.abs(copyCenter[0] - origCenter[0])).toBeGreaterThan(5);
+  });
+
+  it('all boolean ops default to DEFAULT_STROKE_WIDTH', () => {
+    const s1 = new Square({ sideLength: 2, color: RED });
+    s1.strokeWidth = 10;
+    const s2 = new Square({ sideLength: 2 }).shift([0.5, 0, 0]);
+    expect(new Union(s1, s2).strokeWidth).toBe(DEFAULT_STROKE_WIDTH);
+    expect(new Intersection(s1, s2).strokeWidth).toBe(DEFAULT_STROKE_WIDTH);
+    expect(new Difference(s1, s2).strokeWidth).toBe(DEFAULT_STROKE_WIDTH);
+    expect(new Exclusion(s1, s2).strokeWidth).toBe(DEFAULT_STROKE_WIDTH);
+  });
+
+  it('boolean ops accept explicit strokeWidth override', () => {
+    const s1 = new Square({ sideLength: 2 });
+    const s2 = new Square({ sideLength: 2 }).shift([0.5, 0, 0]);
+    const u = new Union(s1, s2, { strokeWidth: 1.2 });
+    expect(u.strokeWidth).toBe(1.2);
+  });
+
+  it('setStrokeWidth works on boolean results', () => {
+    const s1 = new Square({ sideLength: 2 });
+    const s2 = new Square({ sideLength: 2 }).shift([0.5, 0, 0]);
+    const i = new Intersection(s1, s2, { color: GREEN });
+    i.setStrokeWidth(1);
+    expect(i.strokeWidth).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 11b. Underline positioning
+//      Exercises: Underline buff, negative buff for tight text underlines
+// ---------------------------------------------------------------------------
+describe('Underline', () => {
+  it('creates a line below a mobject', () => {
+    const sq = new Square({ sideLength: 2 });
+    const ul = new Underline(sq);
+    const pts = ul.getPoints();
+    expect(pts.length).toBeGreaterThan(0);
+  });
+
+  it('negative buff moves line closer to mobject than positive buff', () => {
+    const sq = new Square({ sideLength: 2 });
+    const ulFar = new Underline(sq, { buff: 0.2 });
+    const ulClose = new Underline(sq, { buff: -0.25 });
+    const farY = ulFar.getPoints()[0][1];
+    const closeY = ulClose.getPoints()[0][1];
+    // Negative buff → line higher (closer to mobject center)
+    expect(closeY).toBeGreaterThan(farY);
+    // Difference should match buff difference (0.45)
+    expect(closeY - farY).toBeCloseTo(0.45, 1);
+  });
+
+  it('spans the width of the target mobject', () => {
+    const sq = new Square({ sideLength: 4 });
+    const ul = new Underline(sq, { buff: 0 });
+    const pts = ul.getPoints();
+    const startX = pts[0][0];
+    const endX = pts[pts.length - 1][0];
+    // Line should roughly span the square's width (± stroke padding)
+    expect(endX - startX).toBeGreaterThan(3.5);
+    expect(endX - startX).toBeLessThan(5);
+    // Symmetric around center
+    expect(Math.abs(startX + endX)).toBeLessThan(0.5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 11c. Ellipse construction for Boolean Operations example
+// ---------------------------------------------------------------------------
+describe('Ellipse for boolean ops', () => {
+  it('accepts explicit strokeWidth', () => {
+    const e = new Ellipse({ width: 4, height: 5, strokeWidth: 2 });
+    expect(e.strokeWidth).toBe(2);
+  });
+
+  it('copy preserves strokeWidth', () => {
+    const e1 = new Ellipse({ width: 4, height: 5, strokeWidth: 2 });
+    const e2 = e1.copy();
+    expect(e2.strokeWidth).toBe(2);
   });
 });
 

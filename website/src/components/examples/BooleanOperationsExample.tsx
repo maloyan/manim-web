@@ -15,17 +15,17 @@ async function animate(scene: any) {
     Group,
     Intersection,
     LEFT,
-    MarkupText,
     MoveToTarget,
     ORANGE,
     PINK,
     RED,
     RIGHT,
     Text,
+    Underline,
     UP,
     Union,
+    WHITE,
     YELLOW,
-    addVec,
     scaleVec,
   } = await import('manim-js');
 
@@ -34,19 +34,22 @@ async function animate(scene: any) {
     height: 5.0,
     fillOpacity: 0.5,
     color: BLUE,
-    strokeWidth: 3,
+    strokeWidth: 2,
   }).moveTo(LEFT);
   const ellipse2 = ellipse1.copy().setColor(RED).moveTo(RIGHT);
-  const bool_ops_text = new MarkupText({ text: '<u>Boolean Operation</u>' }).nextTo(
-    ellipse1,
-    scaleVec(3, UP),
-  );
+  const bool_ops_text = new Text({
+    text: 'Boolean Operation',
+    fontFamily: 'serif',
+    fontSize: 48,
+  }).nextTo(ellipse1, UP);
   const ellipse_group = new Group(bool_ops_text, ellipse1, ellipse2).moveTo(scaleVec(3, LEFT));
+  const underline = new Underline(bool_ops_text, { color: WHITE, strokeWidth: 2, buff: -0.25 });
+  ellipse_group.add(underline);
   await scene.play(new FadeIn(ellipse_group));
 
   const i = new Intersection(ellipse1, ellipse2, { color: GREEN, fillOpacity: 0.5 });
   i.generateTarget();
-  i.targetCopy.scale(0.25).moveTo(addVec(scaleVec(5, RIGHT), scaleVec(2.5, UP)));
+  i.targetCopy.scale(0.25).setStrokeWidth(1).moveTo([5, 2.5, 0]);
   await scene.play(new MoveToTarget(i));
   const intersection_text = new Text({ text: 'Intersection', fontSize: 23 }).nextTo(i, UP);
   await scene.play(new FadeIn(intersection_text));
@@ -54,7 +57,10 @@ async function animate(scene: any) {
   const u = new Union(ellipse1, ellipse2, { color: ORANGE, fillOpacity: 0.5 });
   const union_text = new Text({ text: 'Union', fontSize: 23 });
   u.generateTarget();
-  u.targetCopy.scale(0.3).nextTo(i, DOWN, union_text.getHeight() * 3);
+  u.targetCopy
+    .scale(0.3)
+    .setStrokeWidth(1.2)
+    .nextTo(i, DOWN, union_text.getHeight() * 3);
   await scene.play(new MoveToTarget(u));
   union_text.nextTo(u, UP);
   await scene.play(new FadeIn(union_text));
@@ -62,7 +68,10 @@ async function animate(scene: any) {
   const e = new Exclusion(ellipse1, ellipse2, { color: YELLOW, fillOpacity: 0.5 });
   const exclusion_text = new Text({ text: 'Exclusion', fontSize: 23 });
   e.generateTarget();
-  e.targetCopy.scale(0.3).nextTo(u, DOWN, exclusion_text.getHeight() * 3.5);
+  e.targetCopy
+    .scale(0.3)
+    .setStrokeWidth(1.2)
+    .nextTo(u, DOWN, exclusion_text.getHeight() * 3.5);
   await scene.play(new MoveToTarget(e));
   exclusion_text.nextTo(e, UP);
   await scene.play(new FadeIn(exclusion_text));
@@ -70,7 +79,10 @@ async function animate(scene: any) {
   const d = new Difference(ellipse1, ellipse2, { color: PINK, fillOpacity: 0.5 });
   const difference_text = new Text({ text: 'Difference', fontSize: 23 });
   d.generateTarget();
-  d.targetCopy.scale(0.3).nextTo(u, LEFT, difference_text.getHeight() * 3.5);
+  d.targetCopy
+    .scale(0.3)
+    .setStrokeWidth(1.2)
+    .nextTo(u, LEFT, difference_text.getHeight() * 3.5);
   await scene.play(new MoveToTarget(d));
   difference_text.nextTo(d, UP);
   await scene.play(new FadeIn(difference_text));
