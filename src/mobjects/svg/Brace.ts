@@ -134,7 +134,6 @@ export class Brace extends VMobject {
       direction = DOWN,
       buff = 0.2,
       color = WHITE,
-      strokeWidth = 1,
       sharpness = 2,
     } = options;
 
@@ -482,7 +481,6 @@ export class BraceBetweenPoints extends VMobject {
       direction,
       buff = 0.2,
       color = WHITE,
-      strokeWidth = 1,
       sharpness = 2,
     } = options;
 

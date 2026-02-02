@@ -150,7 +150,7 @@ export class Draggable {
     const y = -((clientY - rect.top) / rect.height) * 2 + 1;
 
     // Use camera's frame dimensions
-    const camera = this._scene.getCamera();
+    const camera = this._scene.camera;
     const worldX = x * camera.frameWidth / 2;
     const worldY = y * camera.frameHeight / 2;
 

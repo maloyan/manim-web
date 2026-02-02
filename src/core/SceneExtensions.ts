@@ -7,6 +7,7 @@ import { Mobject, Vector3Tuple } from './Mobject';
 import { Group } from './Group';
 import { Line } from '../mobjects/geometry/Line';
 import { Arrow } from '../mobjects/geometry/Arrow';
+import { smoothstep, coordsToPoint as coordsToPointHelper, pointToCoords as pointToCoordsHelper } from '../utils/math';
 
 /**
  * Options for configuring a ThreeDScene.
@@ -297,7 +298,7 @@ export class MovingCameraScene extends Scene {
 
         this._cameraAnimationProgress += 1 / 60; // Assume 60fps
         const t = Math.min(1, this._cameraAnimationProgress / this._cameraAnimationDuration);
-        const smoothT = this._smoothstep(t);
+        const smoothT = smoothstep(t);
 
         if (this._cameraAnimationStart && this._cameraAnimationTarget) {
           const newPos = new THREE.Vector3().lerpVectors(
@@ -346,7 +347,7 @@ export class MovingCameraScene extends Scene {
 
         this._zoomProgress += 1 / 60; // Assume 60fps
         const t = Math.min(1, this._zoomProgress / this._zoomDuration);
-        const smoothT = this._smoothstep(t);
+        const smoothT = smoothstep(t);
 
         const currentZoom = this._zoomStart + (this._zoomTarget - this._zoomStart) * smoothT;
         this.camera.frameWidth = 14 * currentZoom;
@@ -392,12 +393,6 @@ export class MovingCameraScene extends Scene {
     }
   }
 
-  /**
-   * Smoothstep interpolation function.
-   */
-  private _smoothstep(t: number): number {
-    return t * t * (3 - 2 * t);
-  }
 }
 
 /**
@@ -952,13 +947,7 @@ export class VectorScene extends Scene {
    * @returns The visual point [x, y, z]
    */
   coordsToPoint(x: number, y: number): Vector3Tuple {
-    const [xMin, xMax] = this._xRange;
-    const [yMin, yMax] = this._yRange;
-
-    const xNorm = xMax !== xMin ? (x - xMin) / (xMax - xMin) : 0.5;
-    const yNorm = yMax !== yMin ? (y - yMin) / (yMax - yMin) : 0.5;
-
-    return [(xNorm - 0.5) * this._xLength, (yNorm - 0.5) * this._yLength, 0];
+    return coordsToPointHelper(x, y, this._xRange, this._yRange, this._xLength, this._yLength);
   }
 
   /**
@@ -967,13 +956,7 @@ export class VectorScene extends Scene {
    * @returns Graph coordinates [x, y]
    */
   pointToCoords(point: Vector3Tuple): [number, number] {
-    const [xMin, xMax] = this._xRange;
-    const [yMin, yMax] = this._yRange;
-
-    const xNorm = point[0] / this._xLength + 0.5;
-    const yNorm = point[1] / this._yLength + 0.5;
-
-    return [xNorm * (xMax - xMin) + xMin, yNorm * (yMax - yMin) + yMin];
+    return pointToCoordsHelper(point, this._xRange, this._yRange, this._xLength, this._yLength);
   }
 
   /**
@@ -1274,7 +1257,7 @@ export class LinearTransformationScene extends Scene {
    * @returns The visual point [x, y, z]
    */
   coordsToPoint(x: number, y: number): Vector3Tuple {
-    return [this._coordToVisualX(x), this._coordToVisualY(y), 0];
+    return coordsToPointHelper(x, y, this._xRange, this._yRange, this._xLength, this._yLength);
   }
 
   /**
@@ -1283,13 +1266,7 @@ export class LinearTransformationScene extends Scene {
    * @returns Graph coordinates [x, y]
    */
   pointToCoords(point: Vector3Tuple): [number, number] {
-    const [xMin, xMax] = this._xRange;
-    const [yMin, yMax] = this._yRange;
-
-    const xNorm = point[0] / this._xLength + 0.5;
-    const yNorm = point[1] / this._yLength + 0.5;
-
-    return [xNorm * (xMax - xMin) + xMin, yNorm * (yMax - yMin) + yMin];
+    return pointToCoordsHelper(point, this._xRange, this._yRange, this._xLength, this._yLength);
   }
 
   /**

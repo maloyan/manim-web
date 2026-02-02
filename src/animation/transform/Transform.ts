@@ -8,17 +8,7 @@ import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
-
-/**
- * Helper function for linear interpolation between two 3D points
- */
-function lerpPoint(a: number[], b: number[], t: number): number[] {
-  return [
-    a[0] + (b[0] - a[0]) * t,
-    a[1] + (b[1] - a[1]) * t,
-    a[2] + (b[2] - a[2]) * t
-  ];
-}
+import { lerpPoint } from '../../utils/math';
 
 export class Transform extends Animation {
   /** The target mobject to transform into */

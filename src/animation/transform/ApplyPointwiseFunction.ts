@@ -10,17 +10,7 @@
 import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
-
-/**
- * Helper for linear interpolation between 3D points.
- */
-function lerpPoint(a: number[], b: number[], t: number): number[] {
-  return [
-    a[0] + (b[0] - a[0]) * t,
-    a[1] + (b[1] - a[1]) * t,
-    a[2] + (b[2] - a[2]) * t
-  ];
-}
+import { lerpPoint } from '../../utils/math';
 
 export interface ApplyPointwiseFunctionOptions extends AnimationOptions {
   /** Function to apply to each point [x, y, z] => [x', y', z'] */

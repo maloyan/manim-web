@@ -16,6 +16,7 @@ import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { Mobject, Vector3Tuple } from './Mobject';
 import { BezierRenderer } from '../rendering/BezierRenderer';
 import { triangulatePolygon } from '../utils/triangulate';
+import { lerp, lerpPoint as lerpPoint3D, evalCubicBezier } from '../utils/math';
 
 /**
  * 2D Point interface for backward compatibility
@@ -26,43 +27,9 @@ export interface Point {
 }
 
 /**
- * Helper function for linear interpolation between numbers
- */
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
-
-/**
- * Helper function to interpolate between two 3D points
- */
-function lerpPoint3D(a: number[], b: number[], t: number): number[] {
-  return [
-    lerp(a[0], b[0], t),
-    lerp(a[1], b[1], t),
-    lerp(a[2], b[2], t)
-  ];
-}
-
-/**
- * Helper function to interpolate between two 2D Points
- */
-function lerpPoint2D(a: Point, b: Point, t: number): Point {
-  return {
-    x: lerp(a.x, b.x, t),
-    y: lerp(a.y, b.y, t)
-  };
-}
-
-/**
  * Vectorized mobject class for path-based shapes.
  */
 export class VMobject extends Mobject {
-  /**
-   * Array of 2D points for backward compatibility.
-   * Each point is {x, y}.
-   */
-  protected _points2D: Point[] = [];
-
   /**
    * Array of cubic Bezier control points in 3D.
    * Each point is [x, y, z].
@@ -152,10 +119,10 @@ export class VMobject extends Mobject {
   }
 
   /**
-   * Get all points as 2D Point objects (backward compatibility)
+   * Get all points as 2D Point objects (derived from _points3D)
    */
   get points(): Point[] {
-    return this._points2D.map(p => ({ ...p }));
+    return this._points3D.map(p => ({ x: p[0], y: p[1] }));
   }
 
   /**
@@ -166,17 +133,14 @@ export class VMobject extends Mobject {
    */
   setPoints(points: Point[] | number[][]): this {
     if (points.length === 0) {
-      this._points2D = [];
       this._points3D = [];
     } else if (Array.isArray(points[0])) {
       // points is number[][]
       const points3D = points as number[][];
       this._points3D = points3D.map(p => [...p]);
-      this._points2D = points3D.map(p => ({ x: p[0], y: p[1] }));
     } else {
       // points is Point[]
       const points2D = points as Point[];
-      this._points2D = points2D.map(p => ({ ...p }));
       this._points3D = points2D.map(p => [p.x, p.y, 0]);
     }
     this._visiblePointCount = null;
@@ -208,21 +172,21 @@ export class VMobject extends Mobject {
    * Get the number of points
    */
   get numPoints(): number {
-    return this._points2D.length;
+    return this._points3D.length;
   }
 
   /**
    * Get the number of visible points (for Create animation)
    */
   get visiblePointCount(): number {
-    return this._visiblePointCount ?? this._points2D.length;
+    return this._visiblePointCount ?? this._points3D.length;
   }
 
   /**
    * Set the number of visible points (for Create animation)
    */
   set visiblePointCount(count: number) {
-    this._visiblePointCount = Math.max(0, Math.min(this._points2D.length, count));
+    this._visiblePointCount = Math.max(0, Math.min(this._points3D.length, count));
     this._geometryDirty = true;
     this._markDirty();
   }
@@ -232,7 +196,7 @@ export class VMobject extends Mobject {
    */
   getVisiblePoints(): Point[] {
     const count = this.visiblePointCount;
-    return this._points2D.slice(0, count).map(p => ({ ...p }));
+    return this._points3D.slice(0, count).map(p => ({ x: p[0], y: p[1] }));
   }
 
   /**
@@ -247,7 +211,6 @@ export class VMobject extends Mobject {
    * Add points to this VMobject using 2D Point objects
    */
   addPoints(...points: Point[]): this {
-    this._points2D.push(...points.map(p => ({ ...p })));
     this._points3D.push(...points.map(p => [p.x, p.y, 0]));
     this._geometryDirty = true;
     this._markDirty();
@@ -327,11 +290,6 @@ export class VMobject extends Mobject {
       const anchor = [corner[0], corner[1], cz];
 
       this._points3D.push(h1, h2, anchor);
-      this._points2D.push(
-        { x: h1[0], y: h1[1] },
-        { x: h2[0], y: h2[1] },
-        { x: anchor[0], y: anchor[1] }
-      );
       this._geometryDirty = true;
       this._markDirtyUpward();
     }
@@ -342,7 +300,6 @@ export class VMobject extends Mobject {
    * Clear all points
    */
   clearPoints(): this {
-    this._points2D = [];
     this._points3D = [];
     this._visiblePointCount = null;
     this._geometryDirty = true;
@@ -358,13 +315,8 @@ export class VMobject extends Mobject {
    */
   interpolate(target: VMobject, alpha: number): this {
     // Ensure we have the same number of points
-    if (this._points2D.length !== target._points2D.length) {
+    if (this._points3D.length !== target._points3D.length) {
       this.alignPoints(target);
-    }
-
-    // Interpolate each 2D point
-    for (let i = 0; i < this._points2D.length; i++) {
-      this._points2D[i] = lerpPoint2D(this._points2D[i], target._points2D[i], alpha);
     }
 
     // Interpolate each 3D point
@@ -405,8 +357,8 @@ export class VMobject extends Mobject {
    * @param target - The target VMobject to align with
    */
   alignPoints(target: VMobject): void {
-    const thisCount = this._points2D.length;
-    const targetCount = target._points2D.length;
+    const thisCount = this._points3D.length;
+    const targetCount = target._points3D.length;
 
     if (thisCount === targetCount) return;
 
@@ -414,47 +366,11 @@ export class VMobject extends Mobject {
 
     // Interpolate points to match counts
     if (thisCount < maxCount) {
-      this._points2D = this._interpolatePointList2D(this._points2D, maxCount);
       this._points3D = this._interpolatePointList3D(this._points3D, maxCount);
     }
     if (targetCount < maxCount) {
-      target._points2D = this._interpolatePointList2D(target._points2D, maxCount);
       target._points3D = this._interpolatePointList3D(target._points3D, maxCount);
     }
-  }
-
-  /**
-   * Interpolate a 2D point list to have a specific number of points.
-   */
-  protected _interpolatePointList2D(points: Point[], targetCount: number): Point[] {
-    if (points.length === 0) {
-      return Array(targetCount).fill(null).map(() => ({ x: 0, y: 0 }));
-    }
-
-    if (points.length === targetCount) {
-      return points.map(p => ({ ...p }));
-    }
-
-    if (points.length === 1) {
-      return Array(targetCount).fill(null).map(() => ({ ...points[0] }));
-    }
-
-    const result: Point[] = [];
-    const ratio = (points.length - 1) / (targetCount - 1);
-
-    for (let i = 0; i < targetCount; i++) {
-      const t = i * ratio;
-      const index = Math.floor(t);
-      const frac = t - index;
-
-      if (index >= points.length - 1) {
-        result.push({ ...points[points.length - 1] });
-      } else {
-        result.push(lerpPoint2D(points[index], points[index + 1], frac));
-      }
-    }
-
-    return result;
   }
 
   /**
@@ -679,7 +595,7 @@ export class VMobject extends Mobject {
       const startT = (i === 0) ? 0 : 1; // skip first point of subsequent segments (shared anchor)
       for (let t = startT; t <= samples; t++) {
         const u = t / samples;
-        const pt = this._evalCubicBezier(p0, p1, p2, p3, u);
+        const pt = evalCubicBezier(p0, p1, p2, p3, u);
         result.push([pt[0], pt[1]]);
       }
     }
@@ -1054,7 +970,7 @@ export class VMobject extends Mobject {
 
       for (let t = 0; t <= samples; t++) {
         const u = t / samples;
-        const pt = this._evalCubicBezier(p0, p1, p2, p3, u);
+        const pt = evalCubicBezier(p0, p1, p2, p3, u);
         // Avoid duplicate points
         if (t === 0 || result.length === 0 ||
             Math.abs(pt[0] - result[result.length - 1][0]) > 0.0001 ||
@@ -1091,22 +1007,6 @@ export class VMobject extends Mobject {
     return Math.max(d1, d2) < 0.01; // < 0.01 world-units off the chord
   }
 
-  /**
-   * Evaluate a cubic Bezier curve at parameter t
-   */
-  private _evalCubicBezier(p0: number[], p1: number[], p2: number[], p3: number[], t: number): number[] {
-    const mt = 1 - t;
-    const mt2 = mt * mt;
-    const mt3 = mt2 * mt;
-    const t2 = t * t;
-    const t3 = t2 * t;
-
-    return [
-      mt3 * p0[0] + 3 * mt2 * t * p1[0] + 3 * mt * t2 * p2[0] + t3 * p3[0],
-      mt3 * p0[1] + 3 * mt2 * t * p1[1] + 3 * mt * t2 * p2[1] + t3 * p3[1],
-      mt3 * p0[2] + 3 * mt2 * t * p1[2] + 3 * mt * t2 * p2[2] + t3 * p3[2],
-    ];
-  }
 
   /**
    * Sync material properties to Three.js
@@ -1147,18 +1047,9 @@ export class VMobject extends Mobject {
    */
   protected override _createCopy(): VMobject {
     const vmobject = new VMobject();
-    vmobject._points2D = this._points2D.map(p => ({ ...p }));
     vmobject._points3D = this._points3D.map(p => [...p]);
     vmobject._visiblePointCount = this._visiblePointCount;
     return vmobject;
-  }
-
-  /**
-   * Override copy to also copy VMobject-specific properties
-   */
-  override copy(): VMobject {
-    const clone = super.copy() as VMobject;
-    return clone;
   }
 
   /**
@@ -1188,17 +1079,17 @@ export class VMobject extends Mobject {
    * Get the center of this VMobject based on its points
    */
   override getCenter(): Vector3Tuple {
-    if (this._points2D.length === 0) {
+    if (this._points3D.length === 0) {
       return [this.position.x, this.position.y, this.position.z];
     }
 
     // Calculate centroid of all points
     let sumX = 0, sumY = 0;
-    for (const point of this._points2D) {
-      sumX += point.x;
-      sumY += point.y;
+    for (const point of this._points3D) {
+      sumX += point[0];
+      sumY += point[1];
     }
-    const count = this._points2D.length;
+    const count = this._points3D.length;
 
     return [
       this.position.x + sumX / count,

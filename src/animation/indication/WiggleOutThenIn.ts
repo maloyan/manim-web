@@ -18,6 +18,7 @@ import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { linear } from '../../rate-functions';
+import { smoothstep } from '../../utils/math';
 
 /** TAU = 2 * PI, full circle in radians */
 const TAU = 2 * Math.PI;
@@ -38,8 +39,7 @@ export interface WiggleOutThenInOptions extends AnimationOptions {
  * Used internally for the scale envelope.
  */
 function thereAndBackSmooth(t: number): number {
-  const s = (x: number) => x * x * (3 - 2 * x); // smoothstep
-  return t < 0.5 ? s(2 * t) : s(2 * (1 - t));
+  return t < 0.5 ? smoothstep(2 * t) : smoothstep(2 * (1 - t));
 }
 
 /**

@@ -86,7 +86,6 @@ export class Axes extends Group {
       axisConfig = {},
       xAxisConfig = {},
       yAxisConfig = {},
-      tips = true,
       tipLength = 0.25,
     } = options;
 
@@ -143,7 +142,6 @@ export class Axes extends Group {
       // We need the label to sit to the left of the tick at visual y = x.
       // Current position after rotation: (-yBelow, x, 0) — we want (-offset, x, 0)
       // where offset accounts for label width.
-      const curX = label.position.x;
       const curY = label.position.y;
       // curX is the negated below-offset; curY is the original x-position on the line
       // Place label to the left of the axis with consistent offset

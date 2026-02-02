@@ -1,6 +1,5 @@
 import { VMobject } from '../../core/VMobject';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { Text } from '../../mobjects/text/Text';
 import { MathTex } from '../../mobjects/text/MathTex';
 
 /**

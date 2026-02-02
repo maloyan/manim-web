@@ -88,12 +88,6 @@ export abstract class Mobject {
   /** Style properties for backward compatibility */
   protected _style: MobjectStyle;
 
-  /** Submobjects alias for backward compatibility */
-  protected _submobjects: Mobject[] = [];
-
-  /** Parent alias for backward compatibility */
-  protected _parent: Mobject | null = null;
-
   /** Three.js backing object */
   _threeObject: THREE.Object3D | null = null;
 
@@ -310,15 +304,6 @@ export abstract class Mobject {
         }
       }
 
-      // Also sync _points2D from _points3D
-      const points2D: any[] = (this as any)._points2D;
-      if (points2D) {
-        for (let i = 0; i < points.length && i < points2D.length; i++) {
-          points2D[i].x = points[i][0];
-          points2D[i].y = points[i][1];
-        }
-      }
-
       (this as any)._geometryDirty = true;
       this._markDirty();
 
@@ -508,9 +493,7 @@ export abstract class Mobject {
         child.parent.remove(child);
       }
       child.parent = this;
-      child._parent = this;
       this.children.push(child);
-      this._submobjects.push(child);
 
       // Sync Three.js hierarchy if objects exist
       if (this._threeObject) {
@@ -535,12 +518,6 @@ export abstract class Mobject {
       if (index !== -1) {
         this.children.splice(index, 1);
         child.parent = null;
-        child._parent = null;
-
-        const subIndex = this._submobjects.indexOf(child);
-        if (subIndex !== -1) {
-          this._submobjects.splice(subIndex, 1);
-        }
 
         if (this._threeObject && child._threeObject) {
           this._threeObject.remove(child._threeObject);
@@ -596,7 +573,6 @@ export abstract class Mobject {
       const self = this as any;
       const src = other as any;
       self._points3D = src._points3D.map((p: number[]) => [...p]);
-      self._points2D = src._points2D.map((p: any) => ({ ...p }));
       self._visiblePointCount = src._visiblePointCount;
       self._geometryDirty = true;
     }

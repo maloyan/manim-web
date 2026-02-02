@@ -341,7 +341,6 @@ export class VectorizedPoint extends VMobject {
   setLocation(point: Vector3Tuple): this {
     // Store as a single point in the points array
     this._points3D = [[point[0], point[1], point[2]]];
-    this._points2D = [{ x: point[0], y: point[1] }];
     this._markDirty();
     return this;
   }

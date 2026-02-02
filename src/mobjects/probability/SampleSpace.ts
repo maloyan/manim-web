@@ -2,7 +2,6 @@ import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Rectangle } from '../geometry/Rectangle';
-import { Line } from '../geometry/Line';
 import { Text } from '../text/Text';
 import { Brace } from '../svg/Brace';
 import {
@@ -14,8 +13,6 @@ import {
   TEAL,
   GOLD,
   WHITE,
-  GRAY,
-  DEFAULT_STROKE_WIDTH,
 } from '../../constants';
 
 /**
@@ -211,7 +208,6 @@ export class SampleSpace extends VGroup {
     const height = this._ssHeight;
     const [cx, cy, cz] = this._ssCenter;
     const left = cx - totalWidth / 2;
-    const top = cy + height / 2;
 
     let currentX = left;
 

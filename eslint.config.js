@@ -46,6 +46,25 @@ export default [
         { max: 500, skipBlankLines: true, skipComments: true },
       ],
       complexity: ["warn", 15],
+
+      // Dead/unused code detection
+      // TS-aware version of no-unused-vars (disable base rule to avoid conflicts)
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+      // Catch expressions that don't affect state (e.g. `x + 1;` with no assignment)
+      "no-unused-expressions": "off",
+      "@typescript-eslint/no-unused-expressions": "warn",
+      // Verify recommended rules are active at error level (explicit for visibility)
+      "no-unreachable": "error",
+      "no-constant-condition": "error",
+      "no-empty": "error",
     },
   },
 ];

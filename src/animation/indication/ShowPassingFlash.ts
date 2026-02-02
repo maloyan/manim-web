@@ -14,6 +14,7 @@ import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { linear } from '../../rate-functions';
 import { YELLOW, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { evalCubicBezier } from '../../utils/math';
 
 export interface ShowPassingFlashOptions extends AnimationOptions {
   /** Color of the flash. Default: YELLOW */
@@ -35,16 +36,16 @@ export class ShowPassingFlash extends Animation {
   readonly flashStrokeWidth: number;
 
   /** Flash line group */
-  private _flashGroup: THREE.Group | null = null;
+  protected _flashGroup: THREE.Group | null = null;
 
   /** Parent object */
-  private _parentObject: THREE.Object3D | null = null;
+  protected _parentObject: THREE.Object3D | null = null;
 
   /** Path points (sampled from VMobject) */
-  private _pathPoints: number[][] = [];
+  protected _pathPoints: number[][] = [];
 
   /** Whether mobject is a VMobject */
-  private _isVMobject: boolean = false;
+  protected _isVMobject: boolean = false;
 
   constructor(mobject: Mobject, options: ShowPassingFlashOptions = {}) {
     super(mobject, {
@@ -93,7 +94,7 @@ export class ShowPassingFlash extends Animation {
     this._parentObject.add(this._flashGroup);
   }
 
-  private _samplePath(points: number[][]): number[][] {
+  protected _samplePath(points: number[][]): number[][] {
     if (points.length < 4) return points;
 
     const result: number[][] = [];
@@ -108,7 +109,7 @@ export class ShowPassingFlash extends Animation {
 
       for (let t = 0; t <= samplesPerSegment; t++) {
         const u = t / samplesPerSegment;
-        const pt = this._evalCubicBezier(p0, p1, p2, p3, u);
+        const pt = evalCubicBezier(p0, p1, p2, p3, u);
         if (result.length === 0 || this._distance(pt, result[result.length - 1]) > 0.01) {
           result.push(pt);
         }
@@ -118,21 +119,7 @@ export class ShowPassingFlash extends Animation {
     return result.length > 1 ? result : points;
   }
 
-  private _evalCubicBezier(p0: number[], p1: number[], p2: number[], p3: number[], t: number): number[] {
-    const mt = 1 - t;
-    const mt2 = mt * mt;
-    const mt3 = mt2 * mt;
-    const t2 = t * t;
-    const t3 = t2 * t;
-
-    return [
-      mt3 * p0[0] + 3 * mt2 * t * p1[0] + 3 * mt * t2 * p2[0] + t3 * p3[0],
-      mt3 * p0[1] + 3 * mt2 * t * p1[1] + 3 * mt * t2 * p2[1] + t3 * p3[1],
-      (p0[2] ?? 0) * mt3 + (p1[2] ?? 0) * 3 * mt2 * t + (p2[2] ?? 0) * 3 * mt * t2 + (p3[2] ?? 0) * t3,
-    ];
-  }
-
-  private _distance(a: number[], b: number[]): number {
+  protected _distance(a: number[], b: number[]): number {
     const dx = a[0] - b[0];
     const dy = a[1] - b[1];
     const dz = (a[2] ?? 0) - (b[2] ?? 0);

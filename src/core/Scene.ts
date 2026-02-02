@@ -388,42 +388,12 @@ export class Scene {
 
   /**
    * Play multiple animations in parallel (all at once).
+   * Alias for play() - delegates to play() to avoid duplicated logic.
    * @param animations - Animations to play simultaneously
    * @returns Promise that resolves when all animations complete
    */
   async playAll(...animations: Animation[]): Promise<void> {
-    if (animations.length === 0) return;
-
-    // Collect all nested mobjects (for scene.add)
-    const allAnimations = this._collectAllAnimations(animations);
-
-    // Initialize only top-level animations to avoid double begin() on AnimationGroup children
-    for (const animation of animations) {
-      animation.begin();
-    }
-
-    // Ensure all animated mobjects are in the scene
-    for (const animation of allAnimations) {
-      if (!this._mobjects.has(animation.mobject)) {
-        this.add(animation.mobject);
-      }
-    }
-
-    // Create a timeline with all animations starting at the same time
-    this._timeline = new Timeline();
-    this._timeline.addParallel(animations);
-
-    // Start playback
-    this._timeline.play();
-    this._isPlaying = true;
-    this._currentTime = 0;
-
-    // Start render loop
-    this._startRenderLoop();
-
-    return new Promise<void>((resolve) => {
-      this._playPromiseResolve = resolve;
-    });
+    return this.play(...animations);
   }
 
   /**
@@ -806,14 +776,6 @@ export class Scene {
    */
   getCanvas(): HTMLCanvasElement {
     return this._renderer.getCanvas();
-  }
-
-  /**
-   * Get the camera.
-   * @returns The Camera2D instance
-   */
-  getCamera(): Camera2D {
-    return this._camera;
   }
 
   /**

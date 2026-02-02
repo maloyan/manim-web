@@ -480,13 +480,6 @@ export class VGroup extends VMobject {
   }
 
   /**
-   * Copy this VGroup.
-   */
-  override copy(): VMobject {
-    return super.copy();
-  }
-
-  /**
    * Get the number of vmobjects in this group.
    */
   get length(): number {

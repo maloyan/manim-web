@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { ParametricGeometry } from 'three/examples/jsm/geometries/ParametricGeometry.js';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { Surface3D, Surface3DOptions } from './Surface3D';
+import { Surface3D } from './Surface3D';
 
 /**
  * Options for creating a TexturedSurface

@@ -233,9 +233,6 @@ export class SelectionManager {
     // Only handle left button
     if (e.button !== 0) return;
 
-    const canvas = this._scene.getCanvas();
-    const rect = canvas.getBoundingClientRect();
-
     this._boxStart = { x: e.clientX, y: e.clientY };
     this._isBoxSelecting = false;
   }

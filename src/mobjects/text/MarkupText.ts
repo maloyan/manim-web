@@ -441,8 +441,8 @@ function applySpanAttributes(
   ctx: StyleContext,
   attrs: Record<string, string>,
   defaultFontSize: number,
-  defaultFontFamily: string,
-  codeFontFamily: string,
+  _defaultFontFamily: string,
+  _codeFontFamily: string,
 ): void {
   // font_family / font
   const family = attrs['font_family'] || attrs['font'] || attrs['face'];

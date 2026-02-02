@@ -13,7 +13,7 @@ import type { Font } from 'opentype.js';
 import type { SkeletonizeOptions } from '../../utils/skeletonize';
 
 /** Scale factor: pixels to world units (100 pixels = 1 world unit) */
-const PIXEL_TO_WORLD = 1 / 100;
+const _PIXEL_TO_WORLD = 1 / 100;
 
 export interface TextGlyphGroupOptions {
   /** The text string to render */

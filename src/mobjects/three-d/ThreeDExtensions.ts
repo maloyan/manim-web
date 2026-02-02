@@ -654,7 +654,6 @@ export class ThreeDVMobject extends VMobject {
    */
   addPoint3D(point: number[]): this {
     this._points3D.push([...point]);
-    this._points2D.push({ x: point[0], y: point[1] });
     this._markDirty();
     return this;
   }
@@ -667,11 +666,6 @@ export class ThreeDVMobject extends VMobject {
    */
   addCubicBezierCurveTo(handle1: number[], handle2: number[], anchor: number[]): this {
     this._points3D.push([...handle1], [...handle2], [...anchor]);
-    this._points2D.push(
-      { x: handle1[0], y: handle1[1] },
-      { x: handle2[0], y: handle2[1] },
-      { x: anchor[0], y: anchor[1] }
-    );
     this._markDirty();
     return this;
   }
@@ -683,7 +677,6 @@ export class ThreeDVMobject extends VMobject {
   addLineTo(end: number[]): this {
     if (this._points3D.length === 0) {
       this._points3D.push([0, 0, 0]);
-      this._points2D.push({ x: 0, y: 0 });
     }
 
     const start = this._points3D[this._points3D.length - 1];
@@ -709,7 +702,6 @@ export class ThreeDVMobject extends VMobject {
    */
   startNewPath(point: number[]): this {
     this._points3D.push([...point]);
-    this._points2D.push({ x: point[0], y: point[1] });
     this._markDirty();
     return this;
   }

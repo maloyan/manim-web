@@ -881,7 +881,7 @@ export class AnnotationDot extends VGroup {
         center: this._dot.getPoint(),
       });
       // Insert at beginning (behind dot)
-      this._submobjects.unshift(this._outline);
+      this.children.unshift(this._outline);
     } else if (!show && this._outline) {
       // Remove outline
       this.remove(this._outline);

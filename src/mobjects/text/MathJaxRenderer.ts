@@ -171,7 +171,7 @@ export async function renderLatexToSVG(
     color = '#ffffff',
     fontScale = 1,
     macros = {},
-    preamble,
+    preamble: _preamble,
   } = options;
 
   const mj = await loadMathJax();

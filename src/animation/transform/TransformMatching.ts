@@ -11,24 +11,7 @@ import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { hungarian, hungarianFromSimilarity } from '../../utils/hungarian';
-
-/**
- * Helper function for linear interpolation between two 3D points
- */
-function lerpPoint(a: number[], b: number[], t: number): number[] {
-  return [
-    a[0] + (b[0] - a[0]) * t,
-    a[1] + (b[1] - a[1]) * t,
-    a[2] + (b[2] - a[2]) * t
-  ];
-}
-
-/**
- * Helper function for linear interpolation between numbers
- */
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
+import { lerp, lerpPoint } from '../../utils/math';
 
 /**
  * Compute the bounding box of a VMobject
