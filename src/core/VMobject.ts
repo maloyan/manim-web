@@ -85,6 +85,9 @@ export class VMobject extends Mobject {
   /** Cached Line2 for in-place geometry updates (avoids dispose/recreate) */
   private _cachedLine2: Line2 | null = null;
 
+  /** Cached Line2 array for multi-subpath stroke rendering */
+  private _cachedLine2Array: Line2[] = [];
+
   /** Cached fill mesh for in-place geometry updates */
   private _cachedFillMesh: THREE.Mesh | null = null;
 
@@ -581,34 +584,22 @@ export class VMobject extends Mobject {
    *          polygon is too degenerate even for fallback.
    */
   protected _buildEarcutFillGeometry(points3D: number[][]): THREE.BufferGeometry | null {
+    const subpathLengths = (this as any).getSubpaths?.() as number[] | undefined;
+
+    // For disjoint subpaths (e.g. boolean XOR), split control points FIRST
+    // then sample each subpath independently. This avoids bogus bezier
+    // segments at subpath boundaries that create triangulation artifacts.
+    if (subpathLengths && subpathLengths.length > 1) {
+      return this._buildEarcutFillGeometryMulti(points3D, subpathLengths);
+    }
+
     // Sample Bezier curves into a dense polyline for triangulation.
     // Use 8 samples per segment (enough detail for smooth fills).
     const outline = this._sampleBezierOutline(points3D, 8);
     if (outline.length < 3) return null;
 
-    // Detect subpaths (holes).  Subclasses like Cutout store subpath lengths
-    // via a getSubpaths() method.  If present, split the sampled outline into
-    // an outer ring and hole rings.
-    let outerRing: number[][] = outline;
-    let holes: number[][] | undefined;
-
-    const subpathLengths = (this as any).getSubpaths?.() as number[] | undefined;
-    if (subpathLengths && subpathLengths.length > 1) {
-      // Subpath lengths refer to Bezier control-point counts.  We need to
-      // approximate which portion of the sampled outline corresponds to each
-      // subpath.  Since _sampleBezierOutline samples uniformly per-segment,
-      // we compute samples per subpath based on segment counts.
-      const rings = this._splitOutlineBySubpaths(points3D, outline, subpathLengths);
-      if (rings.length > 0) {
-        outerRing = rings[0];
-        if (rings.length > 1) {
-          holes = rings.slice(1);
-        }
-      }
-    }
-
     // Triangulate with earcut
-    const indices = triangulatePolygon(outerRing, holes);
+    const indices = triangulatePolygon(outline);
 
     if (indices.length === 0) {
       // Earcut couldn't triangulate -- fall back to THREE.ShapeGeometry
@@ -616,18 +607,10 @@ export class VMobject extends Mobject {
       return new THREE.ShapeGeometry(shape);
     }
 
-    // Build combined vertex list (outer + holes)
-    const allVerts: number[][] = [...outerRing];
-    if (holes) {
-      for (const hole of holes) {
-        allVerts.push(...hole);
-      }
-    }
-
     // Create BufferGeometry from earcut output
     const positions = new Float32Array(indices.length * 3);
     for (let i = 0; i < indices.length; i++) {
-      const v = allVerts[indices[i]];
+      const v = outline[indices[i]];
       positions[i * 3] = v[0];
       positions[i * 3 + 1] = v[1];
       positions[i * 3 + 2] = 0;
@@ -635,6 +618,43 @@ export class VMobject extends Mobject {
 
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    return geometry;
+  }
+
+  /**
+   * Build fill geometry for multi-subpath shapes (e.g. boolean XOR).
+   * Splits control points by subpath boundaries, samples each independently,
+   * and triangulates each subpath as a separate region.
+   */
+  private _buildEarcutFillGeometryMulti(
+    points3D: number[][],
+    subpathLengths: number[],
+  ): THREE.BufferGeometry | null {
+    // Split control points by subpath boundaries and sample each separately
+    let offset = 0;
+    const allPositions: number[] = [];
+
+    for (const len of subpathLengths) {
+      const subPoints = points3D.slice(offset, offset + len);
+      offset += len;
+
+      const ring = this._sampleBezierOutline(subPoints, 8);
+      if (ring.length < 3) continue;
+
+      const indices = triangulatePolygon(ring);
+      for (const idx of indices) {
+        const v = ring[idx];
+        allPositions.push(v[0], v[1], 0);
+      }
+    }
+
+    if (allPositions.length === 0) return null;
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(new Float32Array(allPositions), 3),
+    );
     return geometry;
   }
 
@@ -772,6 +792,7 @@ export class VMobject extends Mobject {
       // Clear everything
       this._disposeGroupChildren(group);
       this._cachedLine2 = null;
+      this._cachedLine2Array = [];
       this._cachedFillMesh = null;
       this._cachedBezierMesh = null;
       return;
@@ -827,8 +848,21 @@ export class VMobject extends Mobject {
 
   /**
    * Update stroke using the classic Line2 approach (polyline approximation).
+   * Supports subpath-aware rendering: when getSubpaths() returns multiple
+   * subpaths, each is rendered as a separate Line2 to avoid visible bridge lines.
    */
   private _updateLine2Stroke(group: THREE.Group, points3D: number[][]): void {
+    const subpathLengths = (this as any).getSubpaths?.() as number[] | undefined;
+
+    if (subpathLengths && subpathLengths.length > 1) {
+      // Multi-subpath: render each subpath as a separate Line2
+      this._updateLine2StrokeMulti(group, points3D, subpathLengths);
+      return;
+    }
+
+    // Remove any multi-subpath Line2s from a previous render
+    this._clearCachedLine2Array(group);
+
     // Convert Bezier points to sampled path for rendering
     const sampledPoints = this._sampleBezierPath(points3D, 16);
 
@@ -865,6 +899,72 @@ export class VMobject extends Mobject {
       group.remove(this._cachedLine2);
       this._cachedLine2 = null;
     }
+  }
+
+  /**
+   * Render multiple separate Line2 strokes, one per subpath.
+   */
+  private _updateLine2StrokeMulti(group: THREE.Group, points3D: number[][], subpathLengths: number[]): void {
+    // Remove single Line2 if it exists
+    if (this._cachedLine2) {
+      this._cachedLine2.geometry.dispose();
+      group.remove(this._cachedLine2);
+      this._cachedLine2 = null;
+    }
+
+    // Split points by subpath boundaries
+    const subpathPointArrays: number[][][] = [];
+    let offset = 0;
+    for (const len of subpathLengths) {
+      subpathPointArrays.push(points3D.slice(offset, offset + len));
+      offset += len;
+    }
+
+    // Remove excess cached Line2s
+    while (this._cachedLine2Array.length > subpathPointArrays.length) {
+      const old = this._cachedLine2Array.pop()!;
+      old.geometry.dispose();
+      group.remove(old);
+    }
+
+    for (let i = 0; i < subpathPointArrays.length; i++) {
+      const subPoints = subpathPointArrays[i];
+      const sampledPoints = this._sampleBezierPath(subPoints, 16);
+
+      if (this.strokeWidth > 0 && sampledPoints.length >= 2) {
+        const positions: number[] = [];
+        for (const pt of sampledPoints) {
+          positions.push(pt[0], pt[1], pt[2]);
+        }
+
+        if (this._cachedLine2Array[i]) {
+          this._cachedLine2Array[i].geometry.dispose();
+          const geometry = new LineGeometry();
+          geometry.setPositions(positions);
+          this._cachedLine2Array[i].geometry = geometry;
+          this._cachedLine2Array[i].computeLineDistances();
+        } else {
+          const geometry = new LineGeometry();
+          geometry.setPositions(positions);
+          const line = new Line2(geometry, this._strokeMaterial!);
+          line.computeLineDistances();
+          line.frustumCulled = false;
+          group.add(line);
+          this._cachedLine2Array[i] = line;
+        }
+      }
+    }
+  }
+
+  /**
+   * Remove all cached multi-subpath Line2 objects.
+   */
+  private _clearCachedLine2Array(group: THREE.Group): void {
+    for (const line of this._cachedLine2Array) {
+      line.geometry.dispose();
+      group.remove(line);
+    }
+    this._cachedLine2Array = [];
   }
 
   /**
@@ -1114,6 +1214,10 @@ export class VMobject extends Mobject {
     this._strokeMaterial?.dispose();
     this._fillMaterial?.dispose();
     this._cachedLine2 = null;
+    for (const line of this._cachedLine2Array) {
+      line.geometry.dispose();
+    }
+    this._cachedLine2Array = [];
     this._cachedFillMesh = null;
     if (this._cachedBezierMesh) {
       this._cachedBezierMesh.geometry.dispose();

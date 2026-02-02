@@ -51,9 +51,20 @@ export interface BooleanOperationOptions {
  */
 export class BooleanResult extends VMobject {
   protected _resultVertices: Vertex2D[][] = [];
+  /** Control-point counts per subpath (for multi-polygon results) */
+  private _subpathLengths: number[] = [];
 
   constructor() {
     super();
+  }
+
+  /**
+   * Get subpath control-point counts for multi-polygon results.
+   * Used by VMobject's fill and stroke renderers to handle
+   * disjoint regions without visible bridge lines.
+   */
+  getSubpaths(): number[] {
+    return [...this._subpathLengths];
   }
 
   /**
@@ -116,7 +127,8 @@ export class BooleanResult extends VMobject {
 
   /**
    * Set VMobject points from multiple polygons.
-   * Joins polygons with degenerate bezier segments.
+   * Each polygon becomes a separate subpath (no bridge segments).
+   * Subpath lengths are tracked for proper fill and stroke rendering.
    */
   protected _setPointsFromMultiplePolygons(polygons: Vertex2D[][]): void {
     const validPolygons = polygons.filter(p => p.length >= 3);
@@ -124,28 +136,15 @@ export class BooleanResult extends VMobject {
 
     if (validPolygons.length === 1) {
       this._setPointsFromVertices(validPolygons[0]);
+      this._subpathLengths = [];
       return;
     }
 
-    const points: number[][] = [];
+    const allPoints: number[][] = [];
+    this._subpathLengths = [];
 
-    for (let polyIdx = 0; polyIdx < validPolygons.length; polyIdx++) {
-      const vertices = validPolygons[polyIdx];
-
-      if (polyIdx > 0) {
-        // Degenerate bridge segment from previous polygon's last point
-        // to this polygon's first point
-        const prevPoly = validPolygons[polyIdx - 1];
-        const lastPt = prevPoly[0]; // closed polygon ends at first vertex
-        const firstPt = vertices[0];
-
-        const bdx = firstPt.x - lastPt.x;
-        const bdy = firstPt.y - lastPt.y;
-
-        points.push([lastPt.x + bdx / 3, lastPt.y + bdy / 3, 0]);
-        points.push([lastPt.x + 2 * bdx / 3, lastPt.y + 2 * bdy / 3, 0]);
-        points.push([firstPt.x, firstPt.y, 0]);
-      }
+    for (const vertices of validPolygons) {
+      const startIdx = allPoints.length;
 
       for (let i = 0; i < vertices.length; i++) {
         const p0 = vertices[i];
@@ -154,16 +153,18 @@ export class BooleanResult extends VMobject {
         const dx = p1.x - p0.x;
         const dy = p1.y - p0.y;
 
-        if (i === 0 && polyIdx === 0) {
-          points.push([p0.x, p0.y, 0]);
+        if (i === 0) {
+          allPoints.push([p0.x, p0.y, 0]);
         }
-        points.push([p0.x + dx / 3, p0.y + dy / 3, 0]);
-        points.push([p0.x + 2 * dx / 3, p0.y + 2 * dy / 3, 0]);
-        points.push([p1.x, p1.y, 0]);
+        allPoints.push([p0.x + dx / 3, p0.y + dy / 3, 0]);
+        allPoints.push([p0.x + 2 * dx / 3, p0.y + 2 * dy / 3, 0]);
+        allPoints.push([p1.x, p1.y, 0]);
       }
+
+      this._subpathLengths.push(allPoints.length - startIdx);
     }
 
-    this.setPoints3D(points);
+    this.setPoints3D(allPoints);
   }
 }
 
@@ -220,7 +221,7 @@ function performBooleanOp(
         result = polygonClipping.xor(geomA, geomB);
         break;
     }
-  } catch (_e) {
+  } catch {
     // If polygon-clipping throws (extremely degenerate input), fall back
     // to returning the subject polygon for union/difference, or empty for
     // intersection/xor.
@@ -318,7 +319,10 @@ export class Union extends BooleanResult {
       samplesPerSegment = 8,
     } = options;
 
-    this.color = fillColor || color;
+    this.setColor(color);
+    if (fillColor) {
+      this._style.fillColor = fillColor;
+    }
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
 
@@ -372,7 +376,10 @@ export class Intersection extends BooleanResult {
       samplesPerSegment = 8,
     } = options;
 
-    this.color = fillColor || color;
+    this.setColor(color);
+    if (fillColor) {
+      this._style.fillColor = fillColor;
+    }
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
 
@@ -416,7 +423,10 @@ export class Difference extends BooleanResult {
       samplesPerSegment = 8,
     } = options;
 
-    this.color = fillColor || color;
+    this.setColor(color);
+    if (fillColor) {
+      this._style.fillColor = fillColor;
+    }
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
 
@@ -464,7 +474,10 @@ export class Exclusion extends BooleanResult {
       samplesPerSegment = 8,
     } = options;
 
-    this.color = fillColor || color;
+    this.setColor(color);
+    if (fillColor) {
+      this._style.fillColor = fillColor;
+    }
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
 

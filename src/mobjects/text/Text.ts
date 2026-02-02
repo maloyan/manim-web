@@ -158,8 +158,9 @@ export class Text extends VMobject {
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
 
-    // Initialize canvas
+    // Initialize canvas and render text so dimensions are available immediately
     this._initCanvas();
+    this._renderToCanvas();
   }
 
   /**

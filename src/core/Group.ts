@@ -79,6 +79,8 @@ export class Group extends Mobject {
 
   /**
    * Get the center of the group (average of all children centers).
+   * Children maintain world-space coordinates, so no group position offset
+   * is added (shift/moveTo only update children, not group position).
    * @returns Center position as [x, y, z]
    */
   override getCenter(): Vector3Tuple {
@@ -95,27 +97,22 @@ export class Group extends Mobject {
     }
 
     const count = this.children.length;
-    return [
-      this.position.x + sumX / count,
-      this.position.y + sumY / count,
-      this.position.z + sumZ / count
-    ];
+    return [sumX / count, sumY / count, sumZ / count];
   }
 
   /**
    * Shift all children by the given delta.
+   * Only children are shifted (they maintain world-space coordinates).
+   * The group's own position is NOT updated to avoid double-counting
+   * when getCenter() computes the average of children centers.
    * @param delta - Translation vector [x, y, z]
    * @returns this for chaining
    */
   override shift(delta: Vector3Tuple): this {
-    // Apply to group's own position
-    super.shift(delta);
-
-    // Also shift children in local space
     for (const child of this.children) {
       child.shift(delta);
     }
-
+    this._markDirty();
     return this;
   }
 
@@ -150,36 +147,30 @@ export class Group extends Mobject {
 
   /**
    * Rotate all children around an axis.
+   * Only children are rotated to avoid double-counting with Three.js hierarchy.
    * @param angle - Rotation angle in radians
    * @param axis - Axis of rotation [x, y, z], defaults to Z axis
    * @returns this for chaining
    */
   override rotate(angle: number, axis: Vector3Tuple = [0, 0, 1]): this {
-    // Apply to group's own rotation
-    super.rotate(angle, axis);
-
-    // Also rotate each child
     for (const child of this.children) {
       child.rotate(angle, axis);
     }
-
+    this._markDirty();
     return this;
   }
 
   /**
    * Scale all children.
+   * Only children are scaled to avoid double-counting with Three.js hierarchy.
    * @param factor - Scale factor (number for uniform, tuple for non-uniform)
    * @returns this for chaining
    */
   override scale(factor: number | Vector3Tuple): this {
-    // Apply to group's own scale
-    super.scale(factor);
-
-    // Also scale each child
     for (const child of this.children) {
       child.scale(factor);
     }
-
+    this._markDirty();
     return this;
   }
 

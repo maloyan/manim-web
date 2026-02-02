@@ -12,9 +12,12 @@ import { Angle } from './mobjects/geometry/AngleShapes';
 import { ValueTracker } from './mobjects/value-tracker/ValueTracker';
 import { VGroup } from './core/VGroup';
 import { VMobject } from './core/VMobject';
-import { BLUE, BLUE_C, GREEN, RED, YELLOW, YELLOW_B, YELLOW_D, GRAY } from './constants';
+import { BLUE, BLUE_C, GREEN, RED, YELLOW, YELLOW_B, YELLOW_D, GRAY, ORANGE, PINK } from './constants';
 import { LEFT, RIGHT, ORIGIN, UP, Mobject } from './core/Mobject';
 import { subVec, scaleVec } from './utils/vectors';
+import { Group } from './core/Group';
+import { Square } from './mobjects/geometry/Rectangle';
+import { Union, Intersection, Difference, Exclusion, BooleanResult } from './mobjects/geometry/BooleanOperations';
 
 // ---------------------------------------------------------------------------
 // 1. Graph Area Plot
@@ -552,5 +555,200 @@ describe('Polygon On Axes', () => {
 
     t.setValue(k / 10);
     expect(t.getValue()).toBeCloseTo(2.5, 5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 11. Boolean Operations
+//     Exercises: Union, Intersection, Difference, Exclusion, BooleanResult,
+//     Group positioning (shift/moveTo/getCenter), generateTarget
+// ---------------------------------------------------------------------------
+describe('Boolean Operations', () => {
+  // Create two overlapping squares for reliable boolean ops
+  const sq1 = new Square({ sideLength: 2 });
+  const sq2 = new Square({ sideLength: 2 }).shift([1, 0, 0]);
+
+  it('Intersection produces a shape with points', () => {
+    const i = new Intersection(sq1, sq2, { color: GREEN, fillOpacity: 0.5 });
+    const pts = i.getPoints();
+    expect(pts.length).toBeGreaterThan(0);
+  });
+
+  it('Intersection inherits color and fillOpacity', () => {
+    const i = new Intersection(sq1, sq2, { color: GREEN, fillOpacity: 0.7 });
+    expect(i.color).toBe(GREEN);
+    expect(i.fillOpacity).toBe(0.7);
+  });
+
+  it('Intersection result vertices are within both shapes', () => {
+    const i = new Intersection(sq1, sq2, { color: GREEN });
+    const verts = i.getResultVertices();
+    expect(verts.length).toBeGreaterThan(0);
+    // The intersection of sq1 (center 0,0 side 2) and sq2 (center 1,0 side 2)
+    // should be a rectangle from x=0 to x=1, y=-1 to y=1
+    for (const poly of verts) {
+      for (const v of poly) {
+        expect(v.x).toBeGreaterThanOrEqual(-0.01);
+        expect(v.x).toBeLessThanOrEqual(1.01);
+        expect(v.y).toBeGreaterThanOrEqual(-1.01);
+        expect(v.y).toBeLessThanOrEqual(1.01);
+      }
+    }
+  });
+
+  it('Union produces a shape larger than either input', () => {
+    const u = new Union(sq1, sq2, { color: ORANGE, fillOpacity: 0.5 });
+    const pts = u.getPoints();
+    expect(pts.length).toBeGreaterThan(0);
+    const verts = u.getResultVertices();
+    expect(verts.length).toBeGreaterThan(0);
+    // Union vertices should span from x=-1 to x=2
+    const allX = verts.flat().map(v => v.x);
+    expect(Math.min(...allX)).toBeCloseTo(-1, 0);
+    expect(Math.max(...allX)).toBeCloseTo(2, 0);
+  });
+
+  it('Difference subtracts second shape from first', () => {
+    const d = new Difference(sq1, sq2, { color: PINK, fillOpacity: 0.5 });
+    const pts = d.getPoints();
+    expect(pts.length).toBeGreaterThan(0);
+    const verts = d.getResultVertices();
+    expect(verts.length).toBeGreaterThan(0);
+    // Difference should only have vertices in the left part (x < 0)
+    // of sq1 that doesn't overlap with sq2
+    const allX = verts.flat().map(v => v.x);
+    expect(Math.min(...allX)).toBeCloseTo(-1, 0);
+    // Max x should be near 0 (the left edge of sq2)
+    expect(Math.max(...allX)).toBeCloseTo(0, 0);
+  });
+
+  it('Exclusion produces XOR of two shapes', () => {
+    const e = new Exclusion(sq1, sq2, { color: YELLOW, fillOpacity: 0.5 });
+    const pts = e.getPoints();
+    expect(pts.length).toBeGreaterThan(0);
+    const verts = e.getResultVertices();
+    // XOR of two overlapping squares should produce two separate regions
+    expect(verts.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('BooleanResult extends VMobject', () => {
+    const i = new Intersection(sq1, sq2);
+    expect(i).toBeInstanceOf(VMobject);
+    expect(i).toBeInstanceOf(BooleanResult);
+  });
+
+  it('defaults to shape1 styling when no options given', () => {
+    const s1 = new Square({ sideLength: 2, color: RED });
+    s1.fillOpacity = 0.8;
+    s1.strokeWidth = 5;
+    const s2 = new Square({ sideLength: 2 }).shift([0.5, 0, 0]);
+    const u = new Union(s1, s2);
+    expect(u.color).toBe(RED);
+    expect(u.fillOpacity).toBe(0.8);
+    expect(u.strokeWidth).toBe(5);
+  });
+
+  it('non-overlapping shapes produce empty intersection', () => {
+    const s1 = new Square({ sideLength: 1 }).moveTo([-5, 0, 0]);
+    const s2 = new Square({ sideLength: 1 }).moveTo([5, 0, 0]);
+    const i = new Intersection(s1, s2);
+    // No overlap → no result vertices
+    expect(i.getResultVertices().length).toBe(0);
+    expect(i.getPoints().length).toBe(0);
+  });
+
+  it('generateTarget creates a copy for MoveToTarget', () => {
+    const i = new Intersection(sq1, sq2, { color: GREEN });
+    const target = i.generateTarget();
+    expect(target).toBeDefined();
+    expect(i.targetCopy).toBe(target);
+    // Target should be independent
+    target.moveTo([5, 5, 0]);
+    const origCenter = i.getCenter();
+    const targetCenter = target.getCenter();
+    expect(targetCenter[0]).not.toBeCloseTo(origCenter[0], 0);
+  });
+
+  it('copy creates independent BooleanResult', () => {
+    const i = new Intersection(sq1, sq2, { color: GREEN });
+    const copy = i.copy();
+    copy.shift([10, 0, 0]);
+    // Original should not have moved
+    const origCenter = i.getCenter();
+    const copyCenter = copy.getCenter();
+    expect(Math.abs(copyCenter[0] - origCenter[0])).toBeGreaterThan(5);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 12. Group positioning
+//     Exercises: Group.shift, Group.moveTo, Group.getCenter
+//     (fixes the double-counting bug)
+// ---------------------------------------------------------------------------
+describe('Group positioning', () => {
+  it('getCenter returns average of children centers', () => {
+    const d1 = new Dot({ point: [-2, 0, 0] });
+    const d2 = new Dot({ point: [2, 0, 0] });
+    const g = new Group(d1, d2);
+    const center = g.getCenter();
+    expect(center[0]).toBeCloseTo(0, 1);
+    expect(center[1]).toBeCloseTo(0, 1);
+  });
+
+  it('moveTo positions group center at target', () => {
+    const d1 = new Dot({ point: [0, 0, 0] });
+    const d2 = new Dot({ point: [2, 0, 0] });
+    const g = new Group(d1, d2);
+    g.moveTo([5, 3, 0]);
+    const center = g.getCenter();
+    expect(center[0]).toBeCloseTo(5, 1);
+    expect(center[1]).toBeCloseTo(3, 1);
+  });
+
+  it('shift moves group center by delta', () => {
+    const d1 = new Dot({ point: [0, 0, 0] });
+    const d2 = new Dot({ point: [2, 0, 0] });
+    const g = new Group(d1, d2);
+    const before = g.getCenter();
+    g.shift([3, -1, 0]);
+    const after = g.getCenter();
+    expect(after[0]).toBeCloseTo(before[0] + 3, 1);
+    expect(after[1]).toBeCloseTo(before[1] - 1, 1);
+  });
+
+  it('moveTo then getCenter is consistent (no double-counting)', () => {
+    const d1 = new Dot({ point: [-1, 0, 0] });
+    const d2 = new Dot({ point: [1, 0, 0] });
+    const g = new Group(d1, d2);
+    g.moveTo([-3, 0, 0]);
+    const center = g.getCenter();
+    // After moveTo([-3,0,0]), center should be at (-3,0,0)
+    expect(center[0]).toBeCloseTo(-3, 1);
+    expect(center[1]).toBeCloseTo(0, 1);
+    // Children should be at -4 and -2
+    expect(d1.getCenter()[0]).toBeCloseTo(-4, 1);
+    expect(d2.getCenter()[0]).toBeCloseTo(-2, 1);
+  });
+
+  it('multiple shifts accumulate correctly', () => {
+    const d1 = new Dot({ point: [0, 0, 0] });
+    const d2 = new Dot({ point: [2, 0, 0] });
+    const g = new Group(d1, d2);
+    g.shift([1, 0, 0]);
+    g.shift([1, 0, 0]);
+    g.shift([1, 0, 0]);
+    const center = g.getCenter();
+    // Initial center was (1, 0), after 3 shifts of +1 → (4, 0)
+    expect(center[0]).toBeCloseTo(4, 1);
+  });
+
+  it('moveTo after moveTo works correctly', () => {
+    const d1 = new Dot({ point: [0, 0, 0] });
+    const d2 = new Dot({ point: [2, 0, 0] });
+    const g = new Group(d1, d2);
+    g.moveTo([5, 0, 0]);
+    g.moveTo([-5, 0, 0]);
+    const center = g.getCenter();
+    expect(center[0]).toBeCloseTo(-5, 1);
   });
 });

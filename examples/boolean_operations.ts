@@ -1,6 +1,5 @@
 import {
   BLUE,
-  DOWN,
   Difference,
   Ellipse,
   Exclusion,
@@ -9,7 +8,6 @@ import {
   Group,
   Intersection,
   LEFT,
-  MarkupText,
   MoveToTarget,
   ORANGE,
   PINK,
@@ -17,10 +15,11 @@ import {
   RIGHT,
   Scene,
   Text,
+  Underline,
   UP,
   Union,
+  WHITE,
   YELLOW,
-  addVec,
   scaleVec,
 } from '../src/index.ts';
 
@@ -40,42 +39,56 @@ async function booleanOperations(scene) {
     strokeWidth: 3,
   }).moveTo(LEFT);
   const ellipse2 = ellipse1.copy().setColor(RED).moveTo(RIGHT);
-  const bool_ops_text = new MarkupText({ text: '<u>Boolean Operation</u>' }).nextTo(
-    ellipse1,
-    scaleVec(3, UP),
+  // Large italic underlined title matching Python Manim reference
+  const bool_ops_text = new Text({
+    text: 'Boolean Operation',
+    fontFamily: 'serif',
+    fontSize: 48,
+  }).nextTo(ellipse1, UP);
+  const ellipse_group = new Group(bool_ops_text, ellipse1, ellipse2).moveTo(
+    scaleVec(3, LEFT),
   );
-  const ellipse_group = new Group(bool_ops_text, ellipse1, ellipse2).moveTo(scaleVec(3, LEFT));
+  // Create underline AFTER group is positioned so it uses the text's final position
+  const underline = new Underline(bool_ops_text, { color: WHITE, strokeWidth: 2 });
+  ellipse_group.add(underline);
   await scene.play(new FadeIn(ellipse_group));
+
+  // Layout matching Python Manim reference:
+  //        Intersection
+  //  Difference    Union
+  //        Exclusion
+  // Intersection, Union, Exclusion are vertically aligned on the right.
+  // Difference is offset to the left at the same row as Union.
+  const rightX = 5.5;
+  const diffX = 3.5;
+  const shapeScale = 0.25;
 
   const i = new Intersection(ellipse1, ellipse2, { color: GREEN, fillOpacity: 0.5 });
   i.generateTarget();
-  i.targetCopy.scale(0.25).moveTo(addVec(scaleVec(5, RIGHT), scaleVec(2.5, UP)));
+  i.targetCopy.scale(shapeScale).moveTo([rightX, 2.5, 0]);
   await scene.play(new MoveToTarget(i));
   const intersection_text = new Text({ text: 'Intersection', fontSize: 23 }).nextTo(i, UP);
   await scene.play(new FadeIn(intersection_text));
 
   const u = new Union(ellipse1, ellipse2, { color: ORANGE, fillOpacity: 0.5 });
-  const union_text = new Text({ text: 'Union', fontSize: 23 });
   u.generateTarget();
-  u.targetCopy.scale(0.3).nextTo(i, DOWN, union_text.getHeight() * 3);
+  u.targetCopy.scale(shapeScale).moveTo([rightX, 0, 0]);
   await scene.play(new MoveToTarget(u));
-  union_text.nextTo(u, UP);
+  const union_text = new Text({ text: 'Union', fontSize: 23 }).nextTo(u, UP);
   await scene.play(new FadeIn(union_text));
 
   const e = new Exclusion(ellipse1, ellipse2, { color: YELLOW, fillOpacity: 0.5 });
-  const exclusion_text = new Text({ text: 'Exclusion', fontSize: 23 });
   e.generateTarget();
-  e.targetCopy.scale(0.3).nextTo(u, DOWN, exclusion_text.getHeight() * 3.5);
+  e.targetCopy.scale(shapeScale).moveTo([rightX, -2.5, 0]);
   await scene.play(new MoveToTarget(e));
-  exclusion_text.nextTo(e, UP);
+  const exclusion_text = new Text({ text: 'Exclusion', fontSize: 23 }).nextTo(e, UP);
   await scene.play(new FadeIn(exclusion_text));
 
   const d = new Difference(ellipse1, ellipse2, { color: PINK, fillOpacity: 0.5 });
-  const difference_text = new Text({ text: 'Difference', fontSize: 23 });
   d.generateTarget();
-  d.targetCopy.scale(0.3).nextTo(u, LEFT, difference_text.getHeight() * 3.5);
+  d.targetCopy.scale(shapeScale).moveTo([diffX, 0, 0]);
   await scene.play(new MoveToTarget(d));
-  difference_text.nextTo(d, UP);
+  const difference_text = new Text({ text: 'Difference', fontSize: 23 }).nextTo(d, UP);
   await scene.play(new FadeIn(difference_text));
 }
 

@@ -61,8 +61,20 @@ export abstract class Mobject {
   /** Scale factors (named scaleVector to avoid conflict with scale method) */
   scaleVector: THREE.Vector3;
 
-  /** Color as CSS color string */
-  color: string = '#ffffff';
+  /** Color as CSS color string (syncs stroke and fill via setter) */
+  private _color: string = '#ffffff';
+
+  get color(): string {
+    return this._color;
+  }
+
+  set color(value: string) {
+    this._color = value;
+    if (this._style) {
+      this._style.strokeColor = value;
+      this._style.fillColor = value;
+    }
+  }
 
   /** Overall opacity (0-1) - protected for backward compatibility */
   protected _opacity: number = 1;
@@ -397,10 +409,8 @@ export abstract class Mobject {
    * @returns this for chaining
    */
   setColor(color: string): this {
-    if (this.color !== color) {
-      this.color = color;
-      this._style.strokeColor = color;
-      this._style.fillColor = color;
+    if (this._color !== color) {
+      this.color = color; // setter syncs _style
       this._markDirty();
     }
     return this;
