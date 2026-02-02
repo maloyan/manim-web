@@ -5,11 +5,11 @@ sidebar_label: Examples
 
 import ArgMinExample from '@site/src/components/examples/ArgMinExample';
 import BooleanOperationsExample from '@site/src/components/examples/BooleanOperationsExample';
-import DisplayingEquationsExample from '@site/src/components/examples/DisplayingEquationsExample';
-import DisplayingTextExample from '@site/src/components/examples/DisplayingTextExample';
+import BraceAnnotationExample from '@site/src/components/examples/BraceAnnotationExample';
+import FollowingGraphCameraExample from '@site/src/components/examples/FollowingGraphCameraExample';
 import GraphAreaPlotExample from '@site/src/components/examples/GraphAreaPlotExample';
 import HeatDiagramPlotExample from '@site/src/components/examples/HeatDiagramPlotExample';
-import ManimExamplesExample from '@site/src/components/examples/ManimExamplesExample';
+import ManimCeLogoExample from '@site/src/components/examples/ManimCeLogoExample';
 import MovingAngleExample from '@site/src/components/examples/MovingAngleExample';
 import MovingAroundExample from '@site/src/components/examples/MovingAroundExample';
 import MovingDotsExample from '@site/src/components/examples/MovingDotsExample';
@@ -21,185 +21,155 @@ import PointWithTraceExample from '@site/src/components/examples/PointWithTraceE
 import PolygonOnAxesExample from '@site/src/components/examples/PolygonOnAxesExample';
 import RotationUpdaterExample from '@site/src/components/examples/RotationUpdaterExample';
 import SinCosPlotExample from '@site/src/components/examples/SinCosPlotExample';
-import TestWriteExample from '@site/src/components/examples/TestWriteExample';
+import VectorArrowExample from '@site/src/components/examples/VectorArrowExample';
 
 # Examples
 
 Interactive examples showing what you can build with manim-js. Each example includes a live animation and source code.
 
-## Arg Min
+## Manim Ce Logo
 
-Plots a quadratic function on coordinate axes and animates a dot that slides along the curve to find the minimum value. Uses a ValueTracker to drive the animation and addUpdater for reactive positioning.
+Creates the Manim Community Edition logo using a large blackboard-bold M, a circle, square, and triangle in signature colors, all composed into a VGroup.
 
-<ArgMinExample />
-
-<details>
-<summary>Source Code</summary>
-
-```typescript
-import { Scene, Axes, Dot, MAROON, ValueTracker, linspace, BLACK } from 'manim-js';
-
-const scene = new Scene(document.getElementById('container'), {
-  width: 800,
-  height: 450,
-  backgroundColor: BLACK,
-});
-
-const ax = new Axes({
-  xRange: [0, 10],
-  yRange: [0, 100, 10],
-  axisConfig: { includeTip: false },
-});
-const labels = ax.getAxisLabels({ xLabel: 'x', yLabel: 'f(x)' });
-
-const t = new ValueTracker(0);
-
-const func = (x) => {
-  return 2 * (x - 5) ** 2;
-};
-const graph = ax.plot(func, { color: MAROON });
-
-const initialPoint = [ax.coordsToPoint(t.getValue(), func(t.getValue()))];
-const dot = new Dot({ point: initialPoint });
-
-dot.addUpdater((x) => x.moveTo(ax.coordsToPoint(t.getValue(), func(t.getValue()))));
-const xSpace = linspace(...ax.xRange.slice(0, 2), 200);
-const minimumIndex = xSpace.reduce((mi, _, i, a) => (func(a[i]) < func(a[mi]) ? i : mi), 0);
-
-scene.add(ax, labels, graph, dot);
-await scene.play(t.animateTo(xSpace[minimumIndex]));
-await scene.wait();
-```
-
-</details>
-
-**Learn More:** **Axes** · **Dot** · **ValueTracker**
-
----
-
-## Graph Area Plot
-
-Draws two curves on coordinate axes with vertical reference lines, a shaded area between the curves, and Riemann sum rectangles. Demonstrates the Axes area and Riemann integration visualization methods.
-
-<GraphAreaPlotExample />
-
-<details>
-<summary>Source Code</summary>
-
-```typescript
-import { Axes, BLUE, BLUE_C, GRAY, GREEN_B, Scene, YELLOW, BLACK } from 'manim-js';
-
-const scene = new Scene(document.getElementById('container'), {
-  width: 854,
-  height: 480,
-  backgroundColor: BLACK,
-});
-
-const ax = new Axes({
-  xRange: [0, 5],
-  yRange: [0, 6],
-  xAxisConfig: { numbersToInclude: [2, 3] },
-  tips: false,
-});
-const labels = ax.getAxisLabels();
-
-const curve1 = ax.plot((x) => 4 * x - Math.pow(x, 2), { xRange: [0, 4], color: BLUE_C });
-const curve2 = ax.plot((x) => 0.8 * Math.pow(x, 2) - 3 * x + 4, {
-  xRange: [0, 4],
-  color: GREEN_B,
-});
-
-const line1 = ax.getVerticalLine(ax.inputToGraphPoint(2, curve1), { color: YELLOW });
-const line2 = ax.getVerticalLine(ax.i2gp(3, curve1), { color: YELLOW });
-
-const riemannArea = ax.getRiemannRectangles(curve1, {
-  xRange: [0.3, 0.6],
-  dx: 0.03,
-  color: BLUE,
-  fillOpacity: 0.5,
-});
-const area = ax.getArea(curve2, [2, 3], { boundedGraph: curve1, color: GRAY, opacity: 0.5 });
-
-scene.add(ax, labels, curve1, curve2, line1, line2, riemannArea, area);
-```
-
-</details>
-
-**Learn More:** **Axes**
-
----
-
-## Sin Cos Plot
-
-Plots sine and cosine functions on labeled coordinate axes with color-coded graphs. Adds a vertical reference line at x=2π with a label. Demonstrates Axes.plot() and getGraphLabel().
-
-<SinCosPlotExample />
+<ManimCeLogoExample />
 
 <details>
 <summary>Source Code</summary>
 
 ```typescript
 import {
-  Axes,
-  BLUE,
-  GREEN,
-  Line,
-  RED,
+  Circle,
+  LEFT,
+  MathTex,
+  ORIGIN,
+  RIGHT,
   Scene,
+  Square,
+  Triangle,
   UP,
-  UR,
   VGroup,
-  WHITE,
-  YELLOW,
+  addVec,
   scaleVec,
-  BLACK,
 } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
-  width: 854,
-  height: 480,
-  backgroundColor: BLACK,
+  width: 800,
+  height: 450,
+  backgroundColor: '#ece6e2',
 });
 
-const axes = new Axes({
-  xRange: [-10, 10.3, 1],
-  yRange: [-1.5, 1.5, 1],
-  xLength: 10,
-  axisConfig: { color: GREEN },
-  xAxisConfig: {
-    numbersToInclude: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10],
-    numbersWithElongatedTicks: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10],
-  },
-  tips: false,
-});
-const axesLabels = axes.getAxisLabels();
-const sinGraph = axes.plot((x) => Math.sin(x), { color: BLUE });
-const cosGraph = axes.plot((x) => Math.cos(x), { color: RED });
+async function manimCELogo(scene: Scene) {
+  const logoGreen = '#87c2a5';
+  const logoBlue = '#525893';
+  const logoRed = '#e07a5f';
+  const logoBlack = '#343434';
+  const dsM = new MathTex({ latex: '\\mathbb{M}', fillColor: logoBlack });
+  await dsM.waitForRender();
+  dsM.scale(7);
+  dsM.shift(addVec(scaleVec(2.25, LEFT), scaleVec(1.5, UP)));
+  const circle = new Circle({ color: logoGreen, fillOpacity: 1 }).shift(LEFT);
+  const square = new Square({ color: logoBlue, fillOpacity: 1 }).shift(UP);
+  const triangle = new Triangle({ color: logoRed, fillOpacity: 1 }).shift(RIGHT);
+  const logo = new VGroup(triangle, square, circle, dsM);
+  logo.moveTo(ORIGIN);
+  scene.add(logo);
+}
 
-const sinLabel = axes.getGraphLabel(sinGraph, '\\sin(x)', {
-  xVal: -10,
-  direction: scaleVec(0.5, UP),
-});
-const cosLabel = axes.getGraphLabel(cosGraph, { label: '\\cos(x)' });
-
-const vertLine = axes.getVerticalLine(axes.i2gp(2 * Math.PI, cosGraph), {
-  color: YELLOW,
-  lineFunc: Line,
-});
-const lineLabel = axes.getGraphLabel(cosGraph, 'x=2\\pi', {
-  xVal: 2 * Math.PI,
-  direction: UR,
-  color: WHITE,
-});
-
-const plot = new VGroup(axes, sinGraph, cosGraph, vertLine);
-const labels = new VGroup(axesLabels, sinLabel, cosLabel, lineLabel);
-scene.add(plot, labels);
+await manimCELogo(scene);
 ```
 
 </details>
 
-**Learn More:** **Axes** · **Line** · **VGroup**
+**Learn More:** **MathTex** · **Circle** · **Square** · **Triangle** · **VGroup**
+
+---
+
+## Brace Annotation
+
+Shows how to annotate lines with curly braces and labels. Creates a diagonal line between two dots, then adds horizontal and perpendicular braces with text and LaTeX labels.
+
+<BraceAnnotationExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Brace,
+  Dot,
+  Line,
+  ORANGE,
+  Scene,
+} from 'manim-js';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+async function braceAnnotation(scene: Scene) {
+  const dot = new Dot({ point: [-2, -1, 0] });
+  const dot2 = new Dot({ point: [2, 1, 0] });
+  const line = new Line({ start: dot.getCenter(), end: dot2.getCenter() }).setColor(ORANGE);
+  const b1 = new Brace(line);
+  const b1text = b1.getText('Horizontal distance');
+  const b2 = new Brace(line, { direction: line.copy().rotate(Math.PI / 2).getUnitVector() });
+  const b2text = b2.getTex('x-x_1');
+  scene.add(line, dot, dot2, b1, b2, b1text, b2text);
+}
+
+await braceAnnotation(scene);
+```
+
+</details>
+
+**Learn More:** **Brace** · **Dot** · **Line**
+
+---
+
+## Vector Arrow
+
+Displays a vector arrow on a coordinate plane with labeled origin and tip points. Demonstrates combining NumberPlane, Arrow, Dot, and Text for basic vector visualization.
+
+<VectorArrowExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Arrow,
+  DOWN,
+  Dot,
+  NumberPlane,
+  ORIGIN,
+  RIGHT,
+  Scene,
+  Text,
+} from 'manim-js';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+async function vectorArrow(scene: Scene) {
+  const dot = new Dot({ point: ORIGIN });
+  const arrow = new Arrow({ start: ORIGIN, end: [2, 2, 0] });
+  const numberplane = new NumberPlane();
+  const originText = new Text({ text: '(0, 0)' }).nextTo(dot, DOWN);
+  const tipText = new Text({ text: '(2, 2)' }).nextTo(arrow.getEndPoint(), RIGHT);
+  scene.add(numberplane, dot, arrow, originText, tipText);
+}
+
+await vectorArrow(scene);
+```
+
+</details>
+
+**Learn More:** **Arrow** · **NumberPlane** · **Dot** · **Text**
 
 ---
 
@@ -325,6 +295,106 @@ await scene.play(new FadeIn(difference_text));
 
 ---
 
+## Point Moving On Shapes
+
+Grows a circle from its center, transforms a dot to a new position, moves it along the circle path with MoveAlongPath, and rotates it around an external point with Rotating.
+
+<PointMovingOnShapesExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  BLUE,
+  Circle,
+  Dot,
+  GrowFromCenter,
+  Line,
+  MoveAlongPath,
+  RIGHT,
+  Rotating,
+  Scene,
+  Transform,
+  linear,
+  BLACK,
+} from 'manim-js';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const circle = new Circle({ radius: 1, color: BLUE });
+const dot = new Dot();
+const dot2 = dot.copy().shift(RIGHT);
+scene.add(dot);
+
+const line = new Line({ start: [3, 0, 0], end: [5, 0, 0] });
+scene.add(line);
+
+await scene.play(new GrowFromCenter(circle));
+await scene.play(new Transform(dot, dot2));
+await scene.play(new MoveAlongPath(dot, { path: circle, duration: 2, rateFunc: linear }));
+await scene.play(new Rotating(dot, { aboutPoint: [2, 0, 0], duration: 1.5 }));
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** **Circle** · **Dot** · **GrowFromCenter** · **Transform** · **MoveAlongPath** · **Rotating**
+
+---
+
+## Moving Around
+
+Demonstrates the MoveToTarget pattern for animating a square through a sequence of transformations: shifting, changing fill color, scaling, and rotating.
+
+<MovingAroundExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Square,
+  Shift,
+  MoveToTarget,
+  Scale,
+  Rotate,
+  BLUE,
+  ORANGE,
+  LEFT,
+  BLACK,
+} from 'manim-js';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const square = new Square({ color: BLUE, fillOpacity: 1 });
+
+await scene.play(new Shift(square, { direction: LEFT }));
+
+square.generateTarget();
+square.targetCopy.setFill(ORANGE);
+await scene.play(new MoveToTarget(square));
+
+await scene.play(new Scale(square, { scaleFactor: 0.3 }));
+
+await scene.play(new Rotate(square, { angle: 0.4 }));
+```
+
+</details>
+
+**Learn More:** **Square** · **MoveToTarget**
+
+---
+
 ## Moving Angle
 
 Creates two lines forming an angle with a LaTeX theta label, then animates the angle changing using a ValueTracker. The angle arc and label update reactively via addUpdater.
@@ -404,313 +474,6 @@ await scene.wait(1);
 </details>
 
 **Learn More:** **Angle** · **Line** · **MathTex** · **ValueTracker** · **FadeToColor**
-
----
-
-## Point Moving On Shapes
-
-Grows a circle from its center, transforms a dot to a new position, moves it along the circle path with MoveAlongPath, and rotates it around an external point with Rotating.
-
-<PointMovingOnShapesExample />
-
-<details>
-<summary>Source Code</summary>
-
-```typescript
-import {
-  BLUE,
-  Circle,
-  Dot,
-  GrowFromCenter,
-  Line,
-  MoveAlongPath,
-  RIGHT,
-  Rotating,
-  Scene,
-  Transform,
-  linear,
-  BLACK,
-} from 'manim-js';
-
-const scene = new Scene(document.getElementById('container'), {
-  width: 800,
-  height: 450,
-  backgroundColor: BLACK,
-});
-
-const circle = new Circle({ radius: 1, color: BLUE });
-const dot = new Dot();
-const dot2 = dot.copy().shift(RIGHT);
-scene.add(dot);
-
-const line = new Line({ start: [3, 0, 0], end: [5, 0, 0] });
-scene.add(line);
-
-await scene.play(new GrowFromCenter(circle));
-await scene.play(new Transform(dot, dot2));
-await scene.play(new MoveAlongPath(dot, { path: circle, duration: 2, rateFunc: linear }));
-await scene.play(new Rotating(dot, { aboutPoint: [2, 0, 0], duration: 1.5 }));
-await scene.wait();
-```
-
-</details>
-
-**Learn More:** **Circle** · **Dot** · **GrowFromCenter** · **Transform** · **MoveAlongPath** · **Rotating**
-
----
-
-## Displaying Equations
-
-Renders two lines of text with the Write animation, then transforms them into a LaTeX equation using ReplacementTransform. Shows how to combine Text and MathTex for mathematical content.
-
-<DisplayingEquationsExample />
-
-<details>
-<summary>Source Code</summary>
-
-```typescript
-import {
-  Scene,
-  Text,
-  MathTex,
-  Write,
-  ReplacementTransform,
-  FadeOut,
-  BLACK,
-  WHITE,
-  DOWN,
-} from 'manim-js';
-
-const scene = new Scene(document.getElementById('container'), {
-  width: 800,
-  height: 450,
-  backgroundColor: BLACK,
-});
-
-const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
-const firstLine = new Text({
-  text: 'Manim also allows you',
-  fontSize: 36,
-  color: WHITE,
-  fontUrl: FONT_URL,
-});
-const secondLine = new Text({
-  text: 'to show beautiful math equations',
-  fontSize: 36,
-  color: WHITE,
-  fontUrl: FONT_URL,
-});
-const equation = new MathTex({
-  latex: 'd(p, q) = \\sqrt{\\sum_{i=1}^n (q_i - p_i)^2}',
-  fontSize: 48,
-  color: WHITE,
-});
-
-await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
-secondLine.nextTo(firstLine, DOWN);
-
-await equation.waitForRender();
-
-await scene.play(new Write(firstLine), new Write(secondLine));
-await scene.wait(1);
-await scene.play(new ReplacementTransform(firstLine, equation), new FadeOut(secondLine));
-await scene.wait(3);
-```
-
-</details>
-
-**Learn More:** **MathTex** · **Text** · **Write** · **ReplacementTransform** · **FadeOut**
-
----
-
-## Displaying Text
-
-Animates text creation using the Write animation, then cross-fades between multiple text objects using AnimationGroup with simultaneous FadeIn and FadeOut transitions.
-
-<DisplayingTextExample />
-
-<details>
-<summary>Source Code</summary>
-
-```typescript
-import {
-  Scene,
-  Text,
-  Write,
-  FadeIn,
-  FadeOut,
-  AnimationGroup,
-  BLACK,
-  WHITE,
-  RED,
-  DOWN,
-  smooth,
-} from 'manim-js';
-
-const scene = new Scene(document.getElementById('container'), {
-  width: 800,
-  height: 450,
-  backgroundColor: BLACK,
-});
-
-const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
-const firstLine = new Text({
-  text: 'Create cool animations',
-  fontSize: 48,
-  color: WHITE,
-  fontUrl: FONT_URL,
-});
-const secondLine = new Text({
-  text: 'using Manim',
-  fontSize: 48,
-  color: WHITE,
-  fontUrl: FONT_URL,
-});
-const thirdLine = new Text({ text: 'Try it out yourself.', fontSize: 48, color: RED });
-
-await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
-secondLine.nextTo(firstLine, DOWN);
-
-await scene.wait(1);
-await scene.play(new Write(firstLine), new Write(secondLine));
-await scene.wait(1);
-
-// Cross-fade: fade out first line while fading in third line at same position
-scene.add(thirdLine);
-thirdLine.opacity = 0;
-await scene.play(
-  new AnimationGroup([
-    new FadeOut(firstLine, { duration: 1.5, rateFunc: smooth }),
-    new FadeIn(thirdLine, { duration: 1.5, rateFunc: smooth }),
-    new FadeOut(secondLine, { duration: 1.5, rateFunc: smooth }),
-  ]),
-);
-await scene.wait(2);
-```
-
-</details>
-
-**Learn More:** **Text** · **Write** · **FadeIn** · **FadeOut** · **AnimationGroup**
-
----
-
-## Moving Frame Box
-
-Renders a multi-part LaTeX equation (the product rule), then highlights individual terms with a SurroundingRectangle that animates between terms using ReplacementTransform.
-
-<MovingFrameBoxExample />
-
-<details>
-<summary>Source Code</summary>
-
-```typescript
-import {
-  Create,
-  MathTex,
-  ReplacementTransform,
-  Scene,
-  SurroundingRectangle,
-  Write,
-} from 'manim-js';
-const scene = new Scene(document.getElementById('container'), {
-  width: 800,
-  height: 450,
-  backgroundColor: '#000000',
-});
-
-const text = new MathTex({
-  latex: ['\\frac{d}{dx}f(x)g(x)=', 'f(x)\\frac{d}{dx}g(x)', '+', 'g(x)\\frac{d}{dx}f(x)'],
-});
-await text.waitForRender();
-await scene.play(new Write(text));
-const framebox1 = new SurroundingRectangle(text.getPart(1), { buff: 0.1 });
-const framebox2 = new SurroundingRectangle(text.getPart(3), { buff: 0.1 });
-await scene.play(new Create(framebox1));
-await scene.wait();
-await scene.play(new ReplacementTransform(framebox1, framebox2));
-await scene.wait();
-```
-
-</details>
-
-**Learn More:** **MathTex** · **SurroundingRectangle** · **Create** · **ReplacementTransform**
-
----
-
-## Test Write
-
-A minimal test of the Write animation: loads a custom font, renders a text object, and plays a slow 5-second Write animation to draw each letter stroke by stroke.
-
-<TestWriteExample />
-
-<details>
-<summary>Source Code</summary>
-
-```typescript
-import { Scene, Text, Write, BLACK, WHITE } from 'manim-js';
-
-const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
-const scene = new Scene(document.getElementById('container'), { width: 800, height: 450, backgroundColor: BLACK });
-
-const text = new Text({
-  text: 'This is some LaTeX',
-  fontSize: 48,
-  color: WHITE,
-  fontUrl: FONT_URL,
-});
-await text.loadGlyphs();
-scene.add(text);
-await scene.play(new Write(text, { duration: 5 }));
-```
-
-</details>
-
-**Learn More:** **Text** · **Write** · **Create** · **Circle**
-
----
-
-## Moving Around
-
-Demonstrates the MoveToTarget pattern for animating a square through a sequence of transformations: shifting, changing fill color, scaling, and rotating.
-
-<MovingAroundExample />
-
-<details>
-<summary>Source Code</summary>
-
-```typescript
-import { Scene, Square, MoveToTarget, BLUE, ORANGE, LEFT, BLACK } from 'manim-js';
-
-const scene = new Scene(document.getElementById('container'), {
-  width: 800,
-  height: 450,
-  backgroundColor: BLACK,
-});
-
-const square = new Square({ color: BLUE, fillOpacity: 1 });
-
-scene.add(square);
-
-square.generateTarget();
-square.targetCopy.shift(LEFT);
-await scene.play(new MoveToTarget(square));
-
-square.generateTarget();
-square.targetCopy.setFill(ORANGE);
-await scene.play(new MoveToTarget(square));
-
-square.generateTarget();
-square.targetCopy.scale(0.3);
-await scene.play(new MoveToTarget(square));
-
-square.generateTarget();
-square.targetCopy.rotate(0.4);
-await scene.play(new MoveToTarget(square));
-```
-
-</details>
-
-**Learn More:** **Square** · **MoveToTarget**
 
 ---
 
@@ -809,48 +572,46 @@ await scene.wait(0.5);
 
 ---
 
-## Point With Trace
+## Moving Frame Box
 
-Creates a dot that leaves a visible trail as it moves. Uses a VMobject with addUpdater to continuously extend the path, then rotates and shifts the dot to draw a pattern.
+Renders a multi-part LaTeX equation (the product rule), then highlights individual terms with a SurroundingRectangle that animates between terms using ReplacementTransform.
 
-<PointWithTraceExample />
+<MovingFrameBoxExample />
 
 <details>
 <summary>Source Code</summary>
 
 ```typescript
-import { Scene, VMobject, Dot, Rotating, Shift, UP, LEFT, RIGHT, BLACK } from 'manim-js';
-
+import {
+  Create,
+  MathTex,
+  ReplacementTransform,
+  Scene,
+  SurroundingRectangle,
+  Write,
+} from 'manim-js';
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
-  backgroundColor: BLACK,
+  backgroundColor: '#000000',
 });
 
-const path = new VMobject();
-path.fillOpacity = 0;
-const dot = new Dot();
-path.setPointsAsCorners([dot.getCenter(), dot.getCenter()]);
-
-const updatePath = (pathMob) => {
-  const previousPath = pathMob.copy();
-  previousPath.addPointsAsCorners([dot.getCenter()]);
-  pathMob.become(previousPath);
-};
-path.addUpdater(updatePath);
-
-scene.add(path, dot);
-
-await scene.play(new Rotating(dot, { angle: Math.PI, aboutPoint: RIGHT, duration: 2 }));
+const text = new MathTex({
+  latex: ['\\frac{d}{dx}f(x)g(x)=', 'f(x)\\frac{d}{dx}g(x)', '+', 'g(x)\\frac{d}{dx}f(x)'],
+});
+await text.waitForRender();
+await scene.play(new Write(text));
+const framebox1 = new SurroundingRectangle(text.getPart(1), { buff: 0.1 });
+const framebox2 = new SurroundingRectangle(text.getPart(3), { buff: 0.1 });
+await scene.play(new Create(framebox1));
 await scene.wait();
-await scene.play(new Shift(dot, { direction: UP }));
-await scene.play(new Shift(dot, { direction: LEFT }));
+await scene.play(new ReplacementTransform(framebox1, framebox2));
 await scene.wait();
 ```
 
 </details>
 
-**Learn More:** **VMobject** · **Dot** · **Rotating** · **Shift**
+**Learn More:** **MathTex** · **SurroundingRectangle** · **Create** · **ReplacementTransform**
 
 ---
 
@@ -896,173 +657,427 @@ await scene.wait(0.5);
 
 ---
 
-## Manim Examples
+## Point With Trace
 
-A collection of five classic Manim scenes: square-to-circle transform, shape modification, text animation, LaTeX equations, and function graph plotting with Transform animations.
+Creates a dot that leaves a visible trail as it moves. Uses a VMobject with addUpdater to continuously extend the path, then rotates and shifts the dot to draw a pattern.
 
-<ManimExamplesExample />
+<PointWithTraceExample />
 
 <details>
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Scene,
-  Circle,
-  Square,
-  Text,
-  MathTex,
-  Axes,
-  FunctionGraph,
-  Create,
-  Write,
-  Transform,
-  ReplacementTransform,
-  FadeIn,
-  FadeOut,
-  AnimationGroup,
-  BLACK,
-  WHITE,
-  BLUE,
-  RED,
-  PINK,
-  DOWN,
-  RIGHT,
-  smooth,
-} from 'manim-js';
-
-const TAU = Math.PI * 2;
-const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
+import { Scene, VMobject, Dot, Rotating, Shift, UP, LEFT, RIGHT, BLACK } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
   backgroundColor: BLACK,
 });
-// Demo 1: Square to Circle
-const circle = new Circle({ radius: 1.5 });
-const square = new Square({ sideLength: 3 });
 
-await scene.play(new Create(square));
-await scene.play(new Transform(square, circle));
-await scene.play(new FadeOut(square));
+const path = new VMobject();
+path.fillOpacity = 0;
+const dot = new Dot();
+path.setPointsAsCorners([dot.getCenter(), dot.getCenter()]);
 
-// Demo 2: Square to Circle with Modifications
-const circle = new Circle({ radius: 1.5, fillColor: PINK, fillOpacity: 0.5 });
-const square = new Square({ sideLength: 3 });
+const updatePath = (pathMob) => {
+  const previousPath = pathMob.copy();
+  previousPath.addPointsAsCorners([dot.getCenter()]);
+  pathMob.become(previousPath);
+};
+path.addUpdater(updatePath);
 
-square.flip(RIGHT);
-square.rotate((-3 * TAU) / 8);
+scene.add(path, dot);
 
-await scene.play(new Create(square));
-await scene.play(new Transform(square, circle));
-await scene.play(new FadeOut(square));
-
-// Demo 3: Displaying Text
-const firstLine = new Text({
-  text: 'Create cool animations',
-  fontSize: 48,
-  color: WHITE,
-  fontUrl: FONT_URL,
-});
-const secondLine = new Text({
-  text: 'using Manim',
-  fontSize: 48,
-  color: WHITE,
-  fontUrl: FONT_URL,
-});
-const thirdLine = new Text({ text: 'Try it out yourself.', fontSize: 48, color: RED });
-
-await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
-secondLine.nextTo(firstLine, DOWN);
-
-await scene.wait(1);
-await scene.play(new Write(firstLine), new Write(secondLine));
-await scene.wait(1);
-
-// Cross-fade: fade out first line while fading in third line at same position
-scene.add(thirdLine);
-thirdLine.opacity = 0;
-await scene.play(
-  new AnimationGroup([
-    new FadeOut(firstLine, { duration: 1.5, rateFunc: smooth }),
-    new FadeIn(thirdLine, { duration: 1.5, rateFunc: smooth }),
-    new FadeOut(secondLine, { duration: 1.5, rateFunc: smooth }),
-  ]),
-);
-await scene.wait(2);
-
-// Demo 4: Math Equations
-const firstLine = new Text({
-  text: 'Manim also allows you',
-  fontSize: 36,
-  color: WHITE,
-  fontUrl: FONT_URL,
-});
-const secondLine = new Text({
-  text: 'to show beautiful math equations',
-  fontSize: 36,
-  color: WHITE,
-  fontUrl: FONT_URL,
-});
-const equation = new MathTex({
-  latex: 'd(p, q) = \\sqrt{\\sum_{i=1}^n (q_i - p_i)^2}',
-  fontSize: 48,
-  color: WHITE,
-});
-
-await Promise.all([firstLine.loadGlyphs(), secondLine.loadGlyphs()]);
-secondLine.nextTo(firstLine, DOWN);
-
-await equation.waitForRender();
-
-await scene.play(new Write(firstLine), new Write(secondLine));
-await scene.wait(1);
-await scene.play(new ReplacementTransform(firstLine, equation), new FadeOut(secondLine));
-await scene.wait(3);
-
-// Demo 5: Function Graph
-const axes = new Axes({
-  xRange: [-3, 3, 1],
-  yRange: [-5, 5, 1],
-  xLength: 8,
-  yLength: 6,
-  color: BLUE,
-  tips: true,
-});
-
-const graph = new FunctionGraph({
-  func: (x) => x * x,
-  xRange: [-2.2, 2.2],
-  color: WHITE,
-  axes: axes,
-});
-
-const graphLabel = new MathTex({ latex: 'x^2', fontSize: 32, color: WHITE });
-graphLabel.shift([4.5, 2, 0]);
-
-const graph2 = new FunctionGraph({
-  func: (x) => x * x * x,
-  xRange: [-1.7, 1.7],
-  color: WHITE,
-  axes: axes,
-});
-
-const graphLabel2 = new MathTex({ latex: 'x^3', fontSize: 32, color: WHITE });
-graphLabel2.shift([4.5, 2, 0]);
-
-await graphLabel.waitForRender();
-await graphLabel2.waitForRender();
-
-await scene.play(new Create(axes), new Create(graph), new FadeIn(graphLabel));
-await scene.wait(1);
-await scene.play(new Transform(graph, graph2), new Transform(graphLabel, graphLabel2));
-await scene.wait(1);
+await scene.play(new Rotating(dot, { angle: Math.PI, aboutPoint: RIGHT, duration: 2 }));
+await scene.wait();
+await scene.play(new Shift(dot, { direction: UP }));
+await scene.play(new Shift(dot, { direction: LEFT }));
+await scene.wait();
 ```
 
 </details>
 
-**Learn More:** **Scene** · **Circle** · **Square** · **Text** · **MathTex** · **Axes** · **FunctionGraph** · **Create** · **Transform**
+**Learn More:** **VMobject** · **Dot** · **Rotating** · **Shift**
+
+---
+
+## Sin Cos Plot
+
+Plots sine and cosine functions on labeled coordinate axes with color-coded graphs. Adds a vertical reference line at x=2π with a label. Demonstrates Axes.plot() and getGraphLabel().
+
+<SinCosPlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Axes,
+  BLUE,
+  GREEN,
+  Line,
+  RED,
+  Scene,
+  UP,
+  UR,
+  VGroup,
+  WHITE,
+  YELLOW,
+  scaleVec,
+  BLACK,
+} from 'manim-js';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 854,
+  height: 480,
+  backgroundColor: BLACK,
+});
+
+const axes = new Axes({
+  xRange: [-10, 10.3, 1],
+  yRange: [-1.5, 1.5, 1],
+  xLength: 10,
+  axisConfig: { color: GREEN },
+  xAxisConfig: {
+    numbersToInclude: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10],
+    numbersWithElongatedTicks: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10],
+  },
+  tips: false,
+});
+const axesLabels = axes.getAxisLabels();
+const sinGraph = axes.plot((x) => Math.sin(x), { color: BLUE });
+const cosGraph = axes.plot((x) => Math.cos(x), { color: RED });
+
+const sinLabel = axes.getGraphLabel(sinGraph, '\\sin(x)', {
+  xVal: -10,
+  direction: scaleVec(0.5, UP),
+});
+const cosLabel = axes.getGraphLabel(cosGraph, { label: '\\cos(x)' });
+
+const vertLine = axes.getVerticalLine(axes.i2gp(2 * Math.PI, cosGraph), {
+  color: YELLOW,
+  lineFunc: Line,
+});
+const lineLabel = axes.getGraphLabel(cosGraph, 'x=2\\pi', {
+  xVal: 2 * Math.PI,
+  direction: UR,
+  color: WHITE,
+});
+
+const plot = new VGroup(axes, sinGraph, cosGraph, vertLine);
+const labels = new VGroup(axesLabels, sinLabel, cosLabel, lineLabel);
+scene.add(plot, labels);
+```
+
+</details>
+
+**Learn More:** **Axes** · **Line** · **VGroup**
+
+---
+
+## Arg Min
+
+Plots a quadratic function on coordinate axes and animates a dot that slides along the curve to find the minimum value. Uses a ValueTracker to drive the animation and addUpdater for reactive positioning.
+
+<ArgMinExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, Axes, Dot, MAROON, ValueTracker, linspace, BLACK } from 'manim-js';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const ax = new Axes({
+  xRange: [0, 10],
+  yRange: [0, 100, 10],
+  axisConfig: { includeTip: false },
+});
+const labels = ax.getAxisLabels({ xLabel: 'x', yLabel: 'f(x)' });
+
+const t = new ValueTracker(0);
+
+const func = (x) => {
+  return 2 * (x - 5) ** 2;
+};
+const graph = ax.plot(func, { color: MAROON });
+
+const initialPoint = [ax.coordsToPoint(t.getValue(), func(t.getValue()))];
+const dot = new Dot({ point: initialPoint });
+
+dot.addUpdater((x) => x.moveTo(ax.coordsToPoint(t.getValue(), func(t.getValue()))));
+const xSpace = linspace(...ax.xRange.slice(0, 2), 200);
+const minimumIndex = xSpace.reduce((mi, _, i, a) => (func(a[i]) < func(a[mi]) ? i : mi), 0);
+
+scene.add(ax, labels, graph, dot);
+await scene.play(t.animateTo(xSpace[minimumIndex]));
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** **Axes** · **Dot** · **ValueTracker**
+
+---
+
+## Graph Area Plot
+
+Draws two curves on coordinate axes with vertical reference lines, a shaded area between the curves, and Riemann sum rectangles. Demonstrates the Axes area and Riemann integration visualization methods.
+
+<GraphAreaPlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Axes, BLUE, BLUE_C, GRAY, GREEN_B, Scene, YELLOW, BLACK } from 'manim-js';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 854,
+  height: 480,
+  backgroundColor: BLACK,
+});
+
+const ax = new Axes({
+  xRange: [0, 5],
+  yRange: [0, 6],
+  xAxisConfig: { numbersToInclude: [2, 3] },
+  tips: false,
+});
+const labels = ax.getAxisLabels();
+
+const curve1 = ax.plot((x) => 4 * x - Math.pow(x, 2), { xRange: [0, 4], color: BLUE_C });
+const curve2 = ax.plot((x) => 0.8 * Math.pow(x, 2) - 3 * x + 4, {
+  xRange: [0, 4],
+  color: GREEN_B,
+});
+
+const line1 = ax.getVerticalLine(ax.inputToGraphPoint(2, curve1), { color: YELLOW });
+const line2 = ax.getVerticalLine(ax.i2gp(3, curve1), { color: YELLOW });
+
+const riemannArea = ax.getRiemannRectangles(curve1, {
+  xRange: [0.3, 0.6],
+  dx: 0.03,
+  color: BLUE,
+  fillOpacity: 0.5,
+});
+const area = ax.getArea(curve2, [2, 3], { boundedGraph: curve1, color: GRAY, opacity: 0.5 });
+
+scene.add(ax, labels, curve1, curve2, line1, line2, riemannArea, area);
+```
+
+</details>
+
+**Learn More:** **Axes**
+
+---
+
+## Polygon On Axes
+
+Draws a dynamic rectangle under a hyperbola curve on coordinate axes. Uses a ValueTracker and always_redraw pattern to animate the rectangle width while keeping it constrained to the curve.
+
+<PolygonOnAxesExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Axes,
+  BLUE,
+  Create,
+  Dot,
+  Polygon,
+  Scene,
+  ValueTracker,
+  YELLOW_B,
+  YELLOW_D,
+  BLACK,
+} from 'manim-js';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 854,
+  height: 480,
+  backgroundColor: BLACK,
+});
+
+const ax = new Axes({
+  xRange: [0, 10],
+  yRange: [0, 10],
+  xLength: 6,
+  yLength: 6,
+  tips: false,
+});
+
+const t = new ValueTracker(5);
+const k = 25;
+
+const graph = ax.plot((x) => k / x, { color: YELLOW_D, xRange: [k / 10, 10.0], numSamples: 750 });
+
+function makeRectangle() {
+  const corners = getRectangleCorners([0, 0], [t.getValue(), k / t.getValue()]);
+  const vertices = corners.map(([x, y]) => ax.c2p(x, y));
+  const p = new Polygon({ vertices, strokeWidth: 1, color: YELLOW_B, fillOpacity: 0.5 });
+  p.fillColor = BLUE;
+  return p;
+}
+
+const polygon = makeRectangle();
+polygon.addUpdater(() => {
+  polygon.become(makeRectangle());
+});
+
+const dot = new Dot();
+dot.addUpdater(() => dot.moveTo(ax.c2p(t.getValue(), k / t.getValue())));
+
+scene.add(ax, graph);
+await scene.play(new Create(polygon));
+scene.add(dot);
+await scene.play(t.animateTo(10));
+await scene.play(t.animateTo(k / 10));
+await scene.play(t.animateTo(5));
+
+function getRectangleCorners(bottomLeft, topRight) {
+  return [
+    [topRight[0], topRight[1]],
+    [bottomLeft[0], topRight[1]],
+    [bottomLeft[0], bottomLeft[1]],
+    [topRight[0], bottomLeft[1]],
+  ];
+}
+```
+
+</details>
+
+**Learn More:** **Axes** · **Polygon** · **ValueTracker**
+
+---
+
+## Heat Diagram Plot
+
+Creates a line graph showing temperature change over time using plotLineGraph. Demonstrates the Axes line graph plotting and axis label methods.
+
+<HeatDiagramPlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, Axes, Tex, BLACK } from 'manim-js';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const ax = new Axes({
+  xRange: [0, 40, 5],
+  yRange: [-8, 32, 5],
+  xLength: 9,
+  yLength: 6,
+  xAxisConfig: { numbersToInclude: [0, 5, 10, 15, 20, 25, 30, 35] },
+  yAxisConfig: { numbersToInclude: [-5, 0, 5, 10, 15, 20, 25, 30] },
+  tips: false,
+});
+
+// Create Tex labels and wait for rendering
+const xLabel = new Tex({ latex: '$\\Delta Q$' });
+const yLabel = new Tex({ latex: 'T[$^\\circ C$]' });
+await xLabel.waitForRender();
+await yLabel.waitForRender();
+
+const labels = ax.getAxisLabels({ xLabel, yLabel });
+
+const xVals = [0, 8, 38, 39];
+const yVals = [20, 0, 0, -5];
+const graph = ax.plotLineGraph({ xValues: xVals, yValues: yVals });
+
+scene.add(ax, labels, graph);
+```
+
+</details>
+
+**Learn More:** **Axes** · **Tex**
+
+---
+
+## Following Graph Camera
+
+Animates a camera that follows a dot moving along a sine curve. Zooms in, tracks with an updater, then restores to the original view. Demonstrates camera frame manipulation with saveState, generateTarget, and MoveToTarget.
+
+<FollowingGraphCameraExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Axes,
+  BLUE,
+  BLACK,
+  Dot,
+  MoveAlongPath,
+  MoveToTarget,
+  ORANGE,
+  Restore,
+  Scene,
+  linear,
+} from 'manim-js';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+async function followingGraphCamera(scene: Scene) {
+  // Save camera frame state
+  scene.camera.frame.saveState();
+
+  // Create the axes and the curve
+  const ax = new Axes({ xRange: [-1, 10], yRange: [-1, 10] });
+  const graph = ax.plot((x) => Math.sin(x), { color: BLUE, xRange: [0, 3 * Math.PI] });
+
+  // Create dots based on the graph
+  const movingDot = new Dot({ point: ax.i2gp(graph.tMin, graph), color: ORANGE });
+  const dot1 = new Dot({ point: ax.i2gp(graph.tMin, graph) });
+  const dot2 = new Dot({ point: ax.i2gp(graph.tMax, graph) });
+
+  scene.add(ax, graph, dot1, dot2, movingDot);
+
+  // Zoom camera to 0.5x and center on moving dot
+  scene.camera.frame.generateTarget();
+  scene.camera.frame.targetCopy.scale(0.5);
+  scene.camera.frame.targetCopy.moveTo(movingDot.getCenter());
+  await scene.play(new MoveToTarget(scene.camera.frame));
+
+  // Add updater so camera follows the moving dot
+  const updateCurve = (mob) => {
+    mob.moveTo(movingDot.getCenter());
+  };
+  scene.camera.frame.addUpdater(updateCurve);
+
+  // Animate dot moving along the graph path
+  await scene.play(new MoveAlongPath(movingDot, { path: graph, rateFunc: linear }));
+
+  // Remove updater and restore camera to original state
+  scene.camera.frame.removeUpdater(updateCurve);
+  await scene.play(new Restore(scene.camera.frame));
+}
+
+await followingGraphCamera(scene);
+```
+
+</details>
+
+**Learn More:** **Axes** · **Dot** · **MoveAlongPath** · **MoveToTarget** · **Restore**
 
 ---
 
@@ -1178,129 +1193,3 @@ await scene.wait(1);
 </details>
 
 **Learn More:** **Text** · **MathTex** · **NumberPlane** · **Write** · **Transform** · **ApplyPointwiseFunction** · **Create**
-
----
-
-## Heat Diagram Plot
-
-Example demonstrating Heat Diagram Plot.
-
-<HeatDiagramPlotExample />
-
-<details>
-<summary>Source Code</summary>
-
-```typescript
-import { Scene, Axes, Tex, BLACK } from 'manim-js';
-
-const scene = new Scene(document.getElementById('container'), {
-  width: 800,
-  height: 450,
-  backgroundColor: BLACK,
-});
-
-const ax = new Axes({
-  xRange: [0, 40, 5],
-  yRange: [-8, 32, 5],
-  xLength: 9,
-  yLength: 6,
-  xAxisConfig: { numbersToInclude: [0, 5, 10, 15, 20, 25, 30, 35] },
-  yAxisConfig: { numbersToInclude: [-5, 0, 5, 10, 15, 20, 25, 30] },
-  tips: false,
-});
-
-// Create Tex labels and wait for rendering
-const xLabel = new Tex({ latex: '$\\Delta Q$' });
-const yLabel = new Tex({ latex: 'T[$^\\circ C$]' });
-await xLabel.waitForRender();
-await yLabel.waitForRender();
-
-const labels = ax.getAxisLabels({ xLabel, yLabel });
-
-const xVals = [0, 8, 38, 39];
-const yVals = [20, 0, 0, -5];
-const graph = ax.plotLineGraph({ xValues: xVals, yValues: yVals });
-
-scene.add(ax, labels, graph);
-```
-
-</details>
-
----
-
-## Polygon On Axes
-
-Example demonstrating Polygon On Axes.
-
-<PolygonOnAxesExample />
-
-<details>
-<summary>Source Code</summary>
-
-```typescript
-import {
-  Axes,
-  BLUE,
-  Create,
-  Dot,
-  Polygon,
-  Scene,
-  ValueTracker,
-  YELLOW_B,
-  YELLOW_D,
-  BLACK,
-} from 'manim-js';
-
-const scene = new Scene(document.getElementById('container'), {
-  width: 854,
-  height: 480,
-  backgroundColor: BLACK,
-});
-
-const ax = new Axes({
-  xRange: [0, 10],
-  yRange: [0, 10],
-  xLength: 6,
-  yLength: 6,
-  tips: false,
-});
-
-const t = new ValueTracker(5);
-const k = 25;
-
-const graph = ax.plot((x) => k / x, { color: YELLOW_D, xRange: [k / 10, 10.0], numSamples: 750 });
-
-function makeRectangle() {
-  const corners = getRectangleCorners([0, 0], [t.getValue(), k / t.getValue()]);
-  const vertices = corners.map(([x, y]) => ax.c2p(x, y));
-  const p = new Polygon({ vertices, strokeWidth: 1, color: YELLOW_B, fillOpacity: 0.5 });
-  p.fillColor = BLUE;
-  return p;
-}
-
-const polygon = makeRectangle();
-polygon.addUpdater(() => {
-  polygon.become(makeRectangle());
-});
-
-const dot = new Dot();
-dot.addUpdater(() => dot.moveTo(ax.c2p(t.getValue(), k / t.getValue())));
-
-scene.add(ax, graph);
-await scene.play(new Create(polygon));
-scene.add(dot);
-await scene.play(t.animateTo(10));
-await scene.play(t.animateTo(k / 10));
-await scene.play(t.animateTo(5));
-
-function getRectangleCorners(bottomLeft, topRight) {
-  return [
-    [topRight[0], topRight[1]],
-    [bottomLeft[0], topRight[1]],
-    [bottomLeft[0], bottomLeft[1]],
-    [topRight[0], bottomLeft[1]],
-  ];
-}
-```
-
-</details>

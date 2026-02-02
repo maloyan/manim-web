@@ -25,11 +25,11 @@ const DOCS_DIR = join(ROOT, 'website', 'docs');
 // ---------------------------------------------------------------------------
 
 const CATEGORIES = {
-  'Graphing and Plotting': ['arg_min', 'graph_area_plot', 'sin_cos_plot'],
-  'Geometry and Shapes': ['boolean_operations', 'moving_angle', 'point_moving_on_shapes'],
-  'Text and Equations': ['displaying_equations', 'displaying_text', 'moving_frame_box', 'test_write'],
-  'Movement and Animation': ['moving_around', 'moving_dots', 'moving_group_to_destination', 'point_with_trace', 'rotation_updater'],
-  'Showcase': ['opening_manim', 'manim_examples'],
+  'Basic Concepts': ['manim_ce_logo', 'brace_annotation', 'vector_arrow', 'boolean_operations'],
+  'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace'],
+  'Plotting': ['sin_cos_plot', 'arg_min', 'graph_area_plot', 'polygon_on_axes', 'heat_diagram_plot'],
+  'Special Camera Settings': ['following_graph_camera'],
+  'Advanced Projects': ['opening_manim'],
 };
 
 // Build reverse lookup: filename (no ext) -> category
@@ -45,90 +45,100 @@ for (const [category, files] of Object.entries(CATEGORIES)) {
 // ---------------------------------------------------------------------------
 
 const EXAMPLE_META = {
-  arg_min: {
+  manim_ce_logo: {
     description:
-      'Plots a quadratic function on coordinate axes and animates a dot that slides along the curve to find the minimum value. Uses a ValueTracker to drive the animation and addUpdater for reactive positioning.',
-    learnMore: ['Axes', 'Dot', 'ValueTracker'],
+      'Creates the Manim Community Edition logo using a large blackboard-bold M, a circle, square, and triangle in signature colors, all composed into a VGroup.',
+    learnMore: ['MathTex', 'Circle', 'Square', 'Triangle', 'VGroup'],
+  },
+  brace_annotation: {
+    description:
+      'Shows how to annotate lines with curly braces and labels. Creates a diagonal line between two dots, then adds horizontal and perpendicular braces with text and LaTeX labels.',
+    learnMore: ['Brace', 'Dot', 'Line'],
+  },
+  vector_arrow: {
+    description:
+      'Displays a vector arrow on a coordinate plane with labeled origin and tip points. Demonstrates combining NumberPlane, Arrow, Dot, and Text for basic vector visualization.',
+    learnMore: ['Arrow', 'NumberPlane', 'Dot', 'Text'],
   },
   boolean_operations: {
     description:
       'Demonstrates the four boolean set operations (union, intersection, difference, exclusion) applied to overlapping ellipses. Each result is scaled down and labeled with animated transitions.',
     learnMore: ['Union', 'Intersection', 'Difference', 'Exclusion', 'Ellipse', 'FadeIn', 'MoveToTarget'],
   },
-  displaying_equations: {
+  point_moving_on_shapes: {
     description:
-      'Renders two lines of text with the Write animation, then transforms them into a LaTeX equation using ReplacementTransform. Shows how to combine Text and MathTex for mathematical content.',
-    learnMore: ['MathTex', 'Text', 'Write', 'ReplacementTransform', 'FadeOut'],
-  },
-  displaying_text: {
-    description:
-      'Animates text creation using the Write animation, then cross-fades between multiple text objects using AnimationGroup with simultaneous FadeIn and FadeOut transitions.',
-    learnMore: ['Text', 'Write', 'FadeIn', 'FadeOut', 'AnimationGroup'],
-  },
-  graph_area_plot: {
-    description:
-      'Draws two curves on coordinate axes with vertical reference lines, a shaded area between the curves, and Riemann sum rectangles. Demonstrates the Axes area and Riemann integration visualization methods.',
-    learnMore: ['Axes'],
-  },
-  manim_examples: {
-    description:
-      'A collection of five classic Manim scenes: square-to-circle transform, shape modification, text animation, LaTeX equations, and function graph plotting with Transform animations.',
-    learnMore: ['Scene', 'Circle', 'Square', 'Text', 'MathTex', 'Axes', 'FunctionGraph', 'Create', 'Transform'],
-  },
-  moving_angle: {
-    description:
-      'Creates two lines forming an angle with a LaTeX theta label, then animates the angle changing using a ValueTracker. The angle arc and label update reactively via addUpdater.',
-    learnMore: ['Angle', 'Line', 'MathTex', 'ValueTracker', 'FadeToColor'],
+      'Grows a circle from its center, transforms a dot to a new position, moves it along the circle path with MoveAlongPath, and rotates it around an external point with Rotating.',
+    learnMore: ['Circle', 'Dot', 'GrowFromCenter', 'Transform', 'MoveAlongPath', 'Rotating'],
   },
   moving_around: {
     description:
       'Demonstrates the MoveToTarget pattern for animating a square through a sequence of transformations: shifting, changing fill color, scaling, and rotating.',
     learnMore: ['Square', 'MoveToTarget'],
   },
+  moving_angle: {
+    description:
+      'Creates two lines forming an angle with a LaTeX theta label, then animates the angle changing using a ValueTracker. The angle arc and label update reactively via addUpdater.',
+    learnMore: ['Angle', 'Line', 'MathTex', 'ValueTracker', 'FadeToColor'],
+  },
   moving_dots: {
     description:
       'Creates two dots connected by a line, then animates them independently using ValueTrackers. The connecting line updates reactively via addUpdater and the become() method.',
     learnMore: ['Dot', 'Line', 'VGroup', 'ValueTracker'],
-  },
-  moving_frame_box: {
-    description:
-      'Renders a multi-part LaTeX equation (the product rule), then highlights individual terms with a SurroundingRectangle that animates between terms using ReplacementTransform.',
-    learnMore: ['MathTex', 'SurroundingRectangle', 'Create', 'ReplacementTransform'],
   },
   moving_group_to_destination: {
     description:
       'Arranges a group of dots in a row, then shifts the entire group so a specific dot aligns with a target position. Shows vector math with subVec for computing shift direction.',
     learnMore: ['VGroup', 'Dot', 'Shift'],
   },
-  opening_manim: {
+  moving_frame_box: {
     description:
-      'A multi-part showcase: writes text and a LaTeX equation, transforms the title, creates a NumberPlane grid, and applies a non-linear sine warp using ApplyPointwiseFunction.',
-    learnMore: ['Text', 'MathTex', 'NumberPlane', 'Write', 'Transform', 'ApplyPointwiseFunction', 'Create'],
-  },
-  point_moving_on_shapes: {
-    description:
-      'Grows a circle from its center, transforms a dot to a new position, moves it along the circle path with MoveAlongPath, and rotates it around an external point with Rotating.',
-    learnMore: ['Circle', 'Dot', 'GrowFromCenter', 'Transform', 'MoveAlongPath', 'Rotating'],
-  },
-  point_with_trace: {
-    description:
-      'Creates a dot that leaves a visible trail as it moves. Uses a VMobject with addUpdater to continuously extend the path, then rotates and shifts the dot to draw a pattern.',
-    learnMore: ['VMobject', 'Dot', 'Rotating', 'Shift'],
+      'Renders a multi-part LaTeX equation (the product rule), then highlights individual terms with a SurroundingRectangle that animates between terms using ReplacementTransform.',
+    learnMore: ['MathTex', 'SurroundingRectangle', 'Create', 'ReplacementTransform'],
   },
   rotation_updater: {
     description:
       'Shows a reference line alongside a rotating line driven by a time-based updater function. The updater is swapped mid-animation to reverse the rotation direction.',
     learnMore: ['Line'],
   },
+  point_with_trace: {
+    description:
+      'Creates a dot that leaves a visible trail as it moves. Uses a VMobject with addUpdater to continuously extend the path, then rotates and shifts the dot to draw a pattern.',
+    learnMore: ['VMobject', 'Dot', 'Rotating', 'Shift'],
+  },
   sin_cos_plot: {
     description:
       'Plots sine and cosine functions on labeled coordinate axes with color-coded graphs. Adds a vertical reference line at x=2\u03C0 with a label. Demonstrates Axes.plot() and getGraphLabel().',
     learnMore: ['Axes', 'Line', 'VGroup'],
   },
-  test_write: {
+  arg_min: {
     description:
-      'A minimal test of the Write animation: loads a custom font, renders a text object, and plays a slow 5-second Write animation to draw each letter stroke by stroke.',
-    learnMore: ['Text', 'Write', 'Create', 'Circle'],
+      'Plots a quadratic function on coordinate axes and animates a dot that slides along the curve to find the minimum value. Uses a ValueTracker to drive the animation and addUpdater for reactive positioning.',
+    learnMore: ['Axes', 'Dot', 'ValueTracker'],
+  },
+  graph_area_plot: {
+    description:
+      'Draws two curves on coordinate axes with vertical reference lines, a shaded area between the curves, and Riemann sum rectangles. Demonstrates the Axes area and Riemann integration visualization methods.',
+    learnMore: ['Axes'],
+  },
+  polygon_on_axes: {
+    description:
+      'Draws a dynamic rectangle under a hyperbola curve on coordinate axes. Uses a ValueTracker and always_redraw pattern to animate the rectangle width while keeping it constrained to the curve.',
+    learnMore: ['Axes', 'Polygon', 'ValueTracker'],
+  },
+  heat_diagram_plot: {
+    description:
+      'Creates a line graph showing temperature change over time using plotLineGraph. Demonstrates the Axes line graph plotting and axis label methods.',
+    learnMore: ['Axes', 'Tex'],
+  },
+  following_graph_camera: {
+    description:
+      'Animates a camera that follows a dot moving along a sine curve. Zooms in, tracks with an updater, then restores to the original view. Demonstrates camera frame manipulation with saveState, generateTarget, and MoveToTarget.',
+    learnMore: ['Axes', 'Dot', 'MoveAlongPath', 'MoveToTarget', 'Restore'],
+  },
+  opening_manim: {
+    description:
+      'A multi-part showcase: writes text and a LaTeX equation, transforms the title, creates a NumberPlane grid, and applies a non-linear sine warp using ApplyPointwiseFunction.',
+    learnMore: ['Text', 'MathTex', 'NumberPlane', 'Write', 'Transform', 'ApplyPointwiseFunction', 'Create'],
   },
 };
 
@@ -863,6 +873,11 @@ function main() {
       continue;
     }
 
+    // Only include examples that are in a defined category
+    if (!fileToCategory[stem]) {
+      continue;
+    }
+
     const title = toTitle(stem);
     const tsContent = readFileSync(join(EXAMPLES_DIR, file), 'utf-8');
     const meta = EXAMPLE_META[stem] || {};
@@ -906,12 +921,12 @@ function main() {
   lines.push('Interactive examples showing what you can build with manim-js. Each example includes a live animation and source code.');
   lines.push('');
 
-  // Group examples by category
+  // Group examples by category, preserving CATEGORIES definition order
+  const exampleByStem = {};
+  for (const ex of examples) exampleByStem[ex.stem] = ex;
   const grouped = {};
-  for (const cat of Object.keys(CATEGORIES)) grouped[cat] = [];
-  grouped['Other'] = [];
-  for (const ex of examples) {
-    (grouped[ex.category] || grouped['Other']).push(ex);
+  for (const [cat, stems] of Object.entries(CATEGORIES)) {
+    grouped[cat] = stems.filter(s => exampleByStem[s]).map(s => exampleByStem[s]);
   }
 
   let isFirst = true;
