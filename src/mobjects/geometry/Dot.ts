@@ -68,19 +68,6 @@ export class Dot extends Circle {
   }
 
   /**
-   * Get the center position of the dot in world space.
-   * Accounts for both the internal point and the THREE.js position transform
-   * (which may be modified by animations like Rotating or Shift).
-   */
-  override getCenter(): Vector3Tuple {
-    return [
-      this._point[0] + this.position.x,
-      this._point[1] + this.position.y,
-      this._point[2] + this.position.z,
-    ];
-  }
-
-  /**
    * Shift the dot by updating its internal point and Circle center.
    * Does not change Mobject.position to avoid double-counting in THREE.js hierarchy.
    */

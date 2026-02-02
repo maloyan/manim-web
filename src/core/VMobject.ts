@@ -1076,25 +1076,31 @@ export class VMobject extends Mobject {
   }
 
   /**
-   * Get the center of this VMobject based on its points
+   * Get the center of this VMobject based on its points.
+   * Uses bounding box center (matching Python Manim's get_center behavior)
+   * rather than point centroid, which is inaccurate for Bezier control points.
    */
   override getCenter(): Vector3Tuple {
     if (this._points3D.length === 0) {
       return [this.position.x, this.position.y, this.position.z];
     }
 
-    // Calculate centroid of all points
-    let sumX = 0, sumY = 0;
-    for (const point of this._points3D) {
-      sumX += point[0];
-      sumY += point[1];
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+    let minZ = Infinity, maxZ = -Infinity;
+    for (const p of this._points3D) {
+      if (p[0] < minX) minX = p[0];
+      if (p[0] > maxX) maxX = p[0];
+      if (p[1] < minY) minY = p[1];
+      if (p[1] > maxY) maxY = p[1];
+      if (p[2] < minZ) minZ = p[2];
+      if (p[2] > maxZ) maxZ = p[2];
     }
-    const count = this._points3D.length;
 
     return [
-      this.position.x + sumX / count,
-      this.position.y + sumY / count,
-      this.position.z
+      this.position.x + (minX + maxX) / 2,
+      this.position.y + (minY + maxY) / 2,
+      this.position.z + (minZ + maxZ) / 2,
     ];
   }
 
