@@ -1,6 +1,6 @@
 # Interface: MandelbrotSetOptions
 
-Defined in: [mobjects/fractals/MandelbrotSet.ts:7](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/MandelbrotSet.ts#L7)
+Defined in: [mobjects/fractals/MandelbrotSet.ts:7](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/MandelbrotSet.ts#L7)
 
 Options for creating a MandelbrotSet visualization
 
@@ -10,7 +10,7 @@ Options for creating a MandelbrotSet visualization
 
 > `optional` **center**: \[`number`, `number`\]
 
-Defined in: [mobjects/fractals/MandelbrotSet.ts:13](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/MandelbrotSet.ts#L13)
+Defined in: [mobjects/fractals/MandelbrotSet.ts:13](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/MandelbrotSet.ts#L13)
 
 Center of the view in the complex plane [re, im]. Default: [-0.5, 0]
 
@@ -20,7 +20,7 @@ Center of the view in the complex plane [re, im]. Default: [-0.5, 0]
 
 > `optional` **height**: `number`
 
-Defined in: [mobjects/fractals/MandelbrotSet.ts:11](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/MandelbrotSet.ts#L11)
+Defined in: [mobjects/fractals/MandelbrotSet.ts:11](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/MandelbrotSet.ts#L11)
 
 Height of the render plane in world units. Default: 6
 
@@ -30,7 +30,7 @@ Height of the render plane in world units. Default: 6
 
 > `optional` **lightness**: `number`
 
-Defined in: [mobjects/fractals/MandelbrotSet.ts:21](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/MandelbrotSet.ts#L21)
+Defined in: [mobjects/fractals/MandelbrotSet.ts:21](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/MandelbrotSet.ts#L21)
 
 Lightness for HSL-based coloring (0-1). Default: 0.5
 
@@ -40,7 +40,7 @@ Lightness for HSL-based coloring (0-1). Default: 0.5
 
 > `optional` **maxIterations**: `number`
 
-Defined in: [mobjects/fractals/MandelbrotSet.ts:17](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/MandelbrotSet.ts#L17)
+Defined in: [mobjects/fractals/MandelbrotSet.ts:17](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/MandelbrotSet.ts#L17)
 
 Maximum iteration count. Default: 100
 
@@ -50,7 +50,7 @@ Maximum iteration count. Default: 100
 
 > `optional` **opacity**: `number`
 
-Defined in: [mobjects/fractals/MandelbrotSet.ts:23](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/MandelbrotSet.ts#L23)
+Defined in: [mobjects/fractals/MandelbrotSet.ts:23](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/MandelbrotSet.ts#L23)
 
 Opacity (0-1). Default: 1
 
@@ -60,7 +60,7 @@ Opacity (0-1). Default: 1
 
 > `optional` **saturation**: `number`
 
-Defined in: [mobjects/fractals/MandelbrotSet.ts:19](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/MandelbrotSet.ts#L19)
+Defined in: [mobjects/fractals/MandelbrotSet.ts:19](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/MandelbrotSet.ts#L19)
 
 Saturation for HSL-based coloring (0-1). Default: 0.8
 
@@ -70,7 +70,7 @@ Saturation for HSL-based coloring (0-1). Default: 0.8
 
 > `optional` **width**: `number`
 
-Defined in: [mobjects/fractals/MandelbrotSet.ts:9](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/MandelbrotSet.ts#L9)
+Defined in: [mobjects/fractals/MandelbrotSet.ts:9](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/MandelbrotSet.ts#L9)
 
 Width of the render plane in world units. Default: 8
 
@@ -80,6 +80,6 @@ Width of the render plane in world units. Default: 8
 
 > `optional` **zoom**: `number`
 
-Defined in: [mobjects/fractals/MandelbrotSet.ts:15](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/MandelbrotSet.ts#L15)
+Defined in: [mobjects/fractals/MandelbrotSet.ts:15](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/MandelbrotSet.ts#L15)
 
 Zoom level (higher = more zoomed in). Default: 1

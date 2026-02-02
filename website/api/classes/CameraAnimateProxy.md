@@ -1,6 +1,6 @@
 # Class: CameraAnimateProxy
 
-Defined in: [core/CameraFrame.ts:377](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L377)
+Defined in: [core/CameraFrame.ts:377](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L377)
 
 Fluent builder returned by `CameraFrame.animate`.
 
@@ -20,7 +20,7 @@ When play() calls `.begin()`, the proxy finalises the CameraAnimation.
 
 > **new CameraAnimateProxy**(`frame`, `options`): `CameraAnimateProxy`
 
-Defined in: [core/CameraFrame.ts:383](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L383)
+Defined in: [core/CameraFrame.ts:383](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L383)
 
 #### Parameters
 
@@ -46,7 +46,7 @@ Defined in: [core/CameraFrame.ts:383](https://github.com/maloyan/manim-js/blob/f
 
 > `protected` **\_hasBegun**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:37](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L37)
+Defined in: [animation/Animation.ts:37](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L37)
 
 Track if begin() has been called
 
@@ -60,7 +60,7 @@ Track if begin() has been called
 
 > `protected` **\_isFinished**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:34](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L34)
+Defined in: [animation/Animation.ts:34](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L34)
 
 Whether the animation has finished
 
@@ -74,7 +74,7 @@ Whether the animation has finished
 
 > `protected` **\_startTime**: `number` = `null`
 
-Defined in: [animation/Animation.ts:31](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L31)
+Defined in: [animation/Animation.ts:31](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L31)
 
 Time when the animation started (set by Timeline)
 
@@ -88,7 +88,7 @@ Time when the animation started (set by Timeline)
 
 > `readonly` **duration**: `number`
 
-Defined in: [animation/Animation.ts:25](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L25)
+Defined in: [animation/Animation.ts:25](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L25)
 
 Duration of the animation in seconds
 
@@ -102,7 +102,7 @@ Duration of the animation in seconds
 
 > `readonly` **mobject**: [`Mobject`](Mobject.md)
 
-Defined in: [animation/Animation.ts:22](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L22)
+Defined in: [animation/Animation.ts:22](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L22)
 
 The mobject being animated
 
@@ -116,7 +116,7 @@ The mobject being animated
 
 > `readonly` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:28](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L28)
+Defined in: [animation/Animation.ts:28](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L28)
 
 Rate function controlling the animation's pacing
 
@@ -130,7 +130,7 @@ Rate function controlling the animation's pacing
 
 > **remover**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:43](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L43)
+Defined in: [animation/Animation.ts:43](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L43)
 
 If true, the scene will remove this mobject after the animation finishes.
 Used by FadeOut (like Python manim's remover=True).
@@ -147,7 +147,7 @@ Used by FadeOut (like Python manim's remover=True).
 
 > **get** **startTime**(): `number`
 
-Defined in: [animation/Animation.ts:125](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L125)
+Defined in: [animation/Animation.ts:125](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L125)
 
 Get the start time of this animation (set by Timeline)
 
@@ -159,7 +159,7 @@ Get the start time of this animation (set by Timeline)
 
 > **set** **startTime**(`time`): `void`
 
-Defined in: [animation/Animation.ts:132](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L132)
+Defined in: [animation/Animation.ts:132](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L132)
 
 Set the start time of this animation (used by Timeline)
 
@@ -183,7 +183,7 @@ Set the start time of this animation (used by Timeline)
 
 > **begin**(): `void`
 
-Defined in: [core/CameraFrame.ts:448](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L448)
+Defined in: [core/CameraFrame.ts:448](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L448)
 
 Called when the animation starts.
 Subclasses can override to set up initial state.
@@ -202,7 +202,7 @@ Subclasses can override to set up initial state.
 
 > **finish**(): `void`
 
-Defined in: [core/CameraFrame.ts:487](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L487)
+Defined in: [core/CameraFrame.ts:487](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L487)
 
 Called when the animation ends.
 Subclasses can override to clean up or finalize state.
@@ -221,7 +221,7 @@ Subclasses can override to clean up or finalize state.
 
 > **getFrame**(): [`CameraFrame`](CameraFrame.md)
 
-Defined in: [core/CameraFrame.ts:493](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L493)
+Defined in: [core/CameraFrame.ts:493](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L493)
 
 Get the CameraFrame this proxy animates.
 
@@ -235,7 +235,7 @@ Get the CameraFrame this proxy animates.
 
 > **incrementGamma**(`delta`): `this`
 
-Defined in: [core/CameraFrame.ts:411](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L411)
+Defined in: [core/CameraFrame.ts:411](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L411)
 
 Animate incrementing gamma by delta.
 
@@ -255,7 +255,7 @@ Animate incrementing gamma by delta.
 
 > **incrementPhi**(`delta`): `this`
 
-Defined in: [core/CameraFrame.ts:405](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L405)
+Defined in: [core/CameraFrame.ts:405](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L405)
 
 Animate incrementing phi by delta.
 
@@ -275,7 +275,7 @@ Animate incrementing phi by delta.
 
 > **incrementTheta**(`delta`): `this`
 
-Defined in: [core/CameraFrame.ts:399](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L399)
+Defined in: [core/CameraFrame.ts:399](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L399)
 
 Animate incrementing theta by delta.
 
@@ -295,7 +295,7 @@ Animate incrementing theta by delta.
 
 > **interpolate**(`alpha`): `void`
 
-Defined in: [core/CameraFrame.ts:457](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L457)
+Defined in: [core/CameraFrame.ts:457](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L457)
 
 Interpolate camera state at the given alpha (0..1).
 
@@ -319,7 +319,7 @@ Interpolate camera state at the given alpha (0..1).
 
 > **isFinished**(): `boolean`
 
-Defined in: [animation/Animation.ts:109](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L109)
+Defined in: [animation/Animation.ts:109](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L109)
 
 Check if the animation has finished
 
@@ -337,7 +337,7 @@ Check if the animation has finished
 
 > **moveTo**(`point`): `this`
 
-Defined in: [core/CameraFrame.ts:429](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L429)
+Defined in: [core/CameraFrame.ts:429](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L429)
 
 Animate moving the look-at center.
 
@@ -357,7 +357,7 @@ Animate moving the look-at center.
 
 > **reset**(): `void`
 
-Defined in: [animation/Animation.ts:116](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L116)
+Defined in: [animation/Animation.ts:116](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L116)
 
 Reset the animation to its initial state
 
@@ -375,7 +375,7 @@ Reset the animation to its initial state
 
 > **setDistance**(`value`): `this`
 
-Defined in: [core/CameraFrame.ts:417](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L417)
+Defined in: [core/CameraFrame.ts:417](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L417)
 
 Animate setting distance.
 
@@ -395,7 +395,7 @@ Animate setting distance.
 
 > **setEulerAngles**(`opts`): `this`
 
-Defined in: [core/CameraFrame.ts:391](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L391)
+Defined in: [core/CameraFrame.ts:391](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L391)
 
 Animate setting Euler angles (absolute targets).
 
@@ -425,7 +425,7 @@ Animate setting Euler angles (absolute targets).
 
 > **setFieldOfView**(`fov`): `this`
 
-Defined in: [core/CameraFrame.ts:423](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L423)
+Defined in: [core/CameraFrame.ts:423](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L423)
 
 Animate setting field of view.
 
@@ -445,7 +445,7 @@ Animate setting field of view.
 
 > **update**(`_dt`, `currentTime`): `void`
 
-Defined in: [animation/Animation.ts:79](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L79)
+Defined in: [animation/Animation.ts:79](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L79)
 
 Update the animation for the current frame.
 
@@ -477,7 +477,7 @@ Current time in the timeline
 
 > **withDuration**(`seconds`): `this`
 
-Defined in: [core/CameraFrame.ts:435](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L435)
+Defined in: [core/CameraFrame.ts:435](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L435)
 
 Override duration for this animation (builder-style).
 
@@ -497,7 +497,7 @@ Override duration for this animation (builder-style).
 
 > **withRateFunc**(`fn`): `this`
 
-Defined in: [core/CameraFrame.ts:441](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/CameraFrame.ts#L441)
+Defined in: [core/CameraFrame.ts:441](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/CameraFrame.ts#L441)
 
 Override rate function (builder-style).
 

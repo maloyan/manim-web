@@ -2,7 +2,7 @@
 
 > **fadeIn**(`mobject`, `options?`): [`FadeIn`](../classes/FadeIn.md)
 
-Defined in: [animation/fading/FadeIn.ts:79](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/fading/FadeIn.ts#L79)
+Defined in: [animation/fading/FadeIn.ts:79](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/fading/FadeIn.ts#L79)
 
 Create a FadeIn animation for a mobject.
 

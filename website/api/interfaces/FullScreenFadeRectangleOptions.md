@@ -1,6 +1,6 @@
 # Interface: FullScreenFadeRectangleOptions
 
-Defined in: [mobjects/frame/index.ts:230](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/frame/index.ts#L230)
+Defined in: [mobjects/frame/index.ts:230](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/frame/index.ts#L230)
 
 Options for creating a FullScreenFadeRectangle
 
@@ -14,7 +14,7 @@ Options for creating a FullScreenFadeRectangle
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/frame/index.ts:124](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/frame/index.ts#L124)
+Defined in: [mobjects/frame/index.ts:124](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/frame/index.ts#L124)
 
 Center position. Default: [0, 0, 0]
 
@@ -28,7 +28,7 @@ Center position. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/frame/index.ts:112](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/frame/index.ts#L112)
+Defined in: [mobjects/frame/index.ts:112](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/frame/index.ts#L112)
 
 Fill color. Default: BLACK (#000000)
 
@@ -42,7 +42,7 @@ Fill color. Default: BLACK (#000000)
 
 > `optional` **frameHeight**: `number`
 
-Defined in: [mobjects/frame/index.ts:122](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/frame/index.ts#L122)
+Defined in: [mobjects/frame/index.ts:122](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/frame/index.ts#L122)
 
 Frame height in world units. Default: DEFAULT_FRAME_HEIGHT (8)
 
@@ -56,7 +56,7 @@ Frame height in world units. Default: DEFAULT_FRAME_HEIGHT (8)
 
 > `optional` **frameWidth**: `number`
 
-Defined in: [mobjects/frame/index.ts:120](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/frame/index.ts#L120)
+Defined in: [mobjects/frame/index.ts:120](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/frame/index.ts#L120)
 
 Frame width in world units. Default: DEFAULT_FRAME_WIDTH (14.222)
 
@@ -70,7 +70,7 @@ Frame width in world units. Default: DEFAULT_FRAME_WIDTH (14.222)
 
 > `optional` **opacity**: `number`
 
-Defined in: [mobjects/frame/index.ts:232](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/frame/index.ts#L232)
+Defined in: [mobjects/frame/index.ts:232](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/frame/index.ts#L232)
 
 Initial opacity for the fade. Default: 0 (invisible)
 
@@ -80,7 +80,7 @@ Initial opacity for the fade. Default: 0 (invisible)
 
 > `optional` **strokeColor**: `string`
 
-Defined in: [mobjects/frame/index.ts:118](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/frame/index.ts#L118)
+Defined in: [mobjects/frame/index.ts:118](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/frame/index.ts#L118)
 
 Stroke color. Default: same as fill color
 
@@ -94,7 +94,7 @@ Stroke color. Default: same as fill color
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/frame/index.ts:116](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/frame/index.ts#L116)
+Defined in: [mobjects/frame/index.ts:116](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/frame/index.ts#L116)
 
 Stroke width in pixels. Default: 0 (no stroke)
 

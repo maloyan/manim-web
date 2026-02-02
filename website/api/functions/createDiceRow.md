@@ -2,7 +2,7 @@
 
 > **createDiceRow**(`options`, `buff`): [`VGroup`](../classes/VGroup.md)
 
-Defined in: [mobjects/probability/DiceFace.ts:316](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/probability/DiceFace.ts#L316)
+Defined in: [mobjects/probability/DiceFace.ts:316](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/probability/DiceFace.ts#L316)
 
 Create a VGroup containing all six die faces arranged in a row.
 

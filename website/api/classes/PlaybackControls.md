@@ -1,6 +1,6 @@
 # Class: PlaybackControls
 
-Defined in: [interaction/PlaybackControls.ts:30](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/PlaybackControls.ts#L30)
+Defined in: [interaction/PlaybackControls.ts:30](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/PlaybackControls.ts#L30)
 
 PlaybackControls for timeline manipulation.
 Extends Controls to add playback-specific UI elements.
@@ -15,7 +15,7 @@ Extends Controls to add playback-specific UI elements.
 
 > **new PlaybackControls**(`scene`, `options`): `PlaybackControls`
 
-Defined in: [interaction/PlaybackControls.ts:45](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/PlaybackControls.ts#L45)
+Defined in: [interaction/PlaybackControls.ts:45](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/PlaybackControls.ts#L45)
 
 Create new PlaybackControls.
 
@@ -47,7 +47,7 @@ Configuration options
 
 > `protected` **\_options**: `Required`\<[`ControlsOptions`](../interfaces/ControlsOptions.md)\>
 
-Defined in: [interaction/Controls.ts:89](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L89)
+Defined in: [interaction/Controls.ts:89](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L89)
 
 #### Inherited from
 
@@ -59,7 +59,7 @@ Defined in: [interaction/Controls.ts:89](https://github.com/maloyan/manim-js/blo
 
 > `protected` **\_panel**: `HTMLElement`
 
-Defined in: [interaction/Controls.ts:88](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L88)
+Defined in: [interaction/Controls.ts:88](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L88)
 
 #### Inherited from
 
@@ -71,7 +71,7 @@ Defined in: [interaction/Controls.ts:88](https://github.com/maloyan/manim-js/blo
 
 > `protected` **\_scene**: [`Scene`](Scene.md)
 
-Defined in: [interaction/Controls.ts:87](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L87)
+Defined in: [interaction/Controls.ts:87](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L87)
 
 #### Inherited from
 
@@ -85,7 +85,7 @@ Defined in: [interaction/Controls.ts:87](https://github.com/maloyan/manim-js/blo
 
 > **get** **panel**(): `HTMLElement`
 
-Defined in: [interaction/Controls.ts:109](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L109)
+Defined in: [interaction/Controls.ts:109](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L109)
 
 Get the underlying HTML panel element.
 
@@ -105,7 +105,7 @@ Get the underlying HTML panel element.
 
 > **get** **playbackRate**(): `number`
 
-Defined in: [interaction/PlaybackControls.ts:62](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/PlaybackControls.ts#L62)
+Defined in: [interaction/PlaybackControls.ts:62](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/PlaybackControls.ts#L62)
 
 Get the current playback rate.
 
@@ -117,7 +117,7 @@ Get the current playback rate.
 
 > **set** **playbackRate**(`rate`): `void`
 
-Defined in: [interaction/PlaybackControls.ts:69](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/PlaybackControls.ts#L69)
+Defined in: [interaction/PlaybackControls.ts:69](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/PlaybackControls.ts#L69)
 
 Set the playback rate.
 
@@ -139,7 +139,7 @@ Set the playback rate.
 
 > **get** **scene**(): [`Scene`](Scene.md)
 
-Defined in: [interaction/Controls.ts:116](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L116)
+Defined in: [interaction/Controls.ts:116](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L116)
 
 Get the scene this controls panel is attached to.
 
@@ -157,7 +157,7 @@ Get the scene this controls panel is attached to.
 
 > `protected` **\_getAccentColor**(): `string`
 
-Defined in: [interaction/Controls.ts:176](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L176)
+Defined in: [interaction/Controls.ts:176](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L176)
 
 Get the accent color based on theme.
 
@@ -175,7 +175,7 @@ Get the accent color based on theme.
 
 > `protected` **\_getBorderColor**(): `string`
 
-Defined in: [interaction/Controls.ts:190](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L190)
+Defined in: [interaction/Controls.ts:190](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L190)
 
 Get the border color based on theme.
 
@@ -193,7 +193,7 @@ Get the border color based on theme.
 
 > `protected` **\_getHoverColor**(): `string`
 
-Defined in: [interaction/Controls.ts:183](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L183)
+Defined in: [interaction/Controls.ts:183](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L183)
 
 Get the hover color based on theme.
 
@@ -211,7 +211,7 @@ Get the hover color based on theme.
 
 > **addButton**(`config`): `HTMLElement`
 
-Defined in: [interaction/Controls.ts:318](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L318)
+Defined in: [interaction/Controls.ts:318](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L318)
 
 Add a button control.
 
@@ -239,7 +239,7 @@ The created button element
 
 > **addCheckbox**(`config`): `HTMLElement`
 
-Defined in: [interaction/Controls.ts:366](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L366)
+Defined in: [interaction/Controls.ts:366](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L366)
 
 Add a checkbox control.
 
@@ -267,7 +267,7 @@ The created wrapper element
 
 > **addColorPicker**(`config`): `HTMLElement`
 
-Defined in: [interaction/Controls.ts:447](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L447)
+Defined in: [interaction/Controls.ts:447](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L447)
 
 Add a color picker control.
 
@@ -295,7 +295,7 @@ The created wrapper element
 
 > **addLabel**(`text`): `HTMLElement`
 
-Defined in: [interaction/Controls.ts:566](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L566)
+Defined in: [interaction/Controls.ts:566](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L566)
 
 Add a section label.
 
@@ -323,7 +323,7 @@ The created label element
 
 > **addSeparator**(): `void`
 
-Defined in: [interaction/Controls.ts:551](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L551)
+Defined in: [interaction/Controls.ts:551](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L551)
 
 Add a horizontal separator line.
 
@@ -341,7 +341,7 @@ Add a horizontal separator line.
 
 > **addSlider**(`config`): `HTMLElement`
 
-Defined in: [interaction/Controls.ts:199](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L199)
+Defined in: [interaction/Controls.ts:199](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L199)
 
 Add a slider control.
 
@@ -369,7 +369,7 @@ The created wrapper element
 
 > **dispose**(): `void`
 
-Defined in: [interaction/PlaybackControls.ts:464](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/PlaybackControls.ts#L464)
+Defined in: [interaction/PlaybackControls.ts:464](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/PlaybackControls.ts#L464)
 
 Clean up resources.
 
@@ -387,7 +387,7 @@ Clean up resources.
 
 > **hide**(): `void`
 
-Defined in: [interaction/Controls.ts:592](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L592)
+Defined in: [interaction/Controls.ts:592](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L592)
 
 Hide the controls panel.
 
@@ -405,7 +405,7 @@ Hide the controls panel.
 
 > **isVisible**(): `boolean`
 
-Defined in: [interaction/Controls.ts:610](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L610)
+Defined in: [interaction/Controls.ts:610](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L610)
 
 Check if the controls panel is visible.
 
@@ -423,7 +423,7 @@ Check if the controls panel is visible.
 
 > **onTimeUpdate**(`callback`): `void`
 
-Defined in: [interaction/PlaybackControls.ts:55](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/PlaybackControls.ts#L55)
+Defined in: [interaction/PlaybackControls.ts:55](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/PlaybackControls.ts#L55)
 
 Set callback for time updates.
 
@@ -445,7 +445,7 @@ Function called when time changes
 
 > **show**(): `void`
 
-Defined in: [interaction/Controls.ts:585](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L585)
+Defined in: [interaction/Controls.ts:585](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L585)
 
 Show the controls panel.
 
@@ -463,7 +463,7 @@ Show the controls panel.
 
 > **toggle**(): `void`
 
-Defined in: [interaction/Controls.ts:599](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Controls.ts#L599)
+Defined in: [interaction/Controls.ts:599](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L599)
 
 Toggle the controls panel visibility.
 
@@ -481,7 +481,7 @@ Toggle the controls panel visibility.
 
 > **updateTime**(`currentTime`, `duration`): `void`
 
-Defined in: [interaction/PlaybackControls.ts:355](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/PlaybackControls.ts#L355)
+Defined in: [interaction/PlaybackControls.ts:355](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/PlaybackControls.ts#L355)
 
 Update the time display.
 

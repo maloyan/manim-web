@@ -1,6 +1,6 @@
 # Interface: ConeOptions
 
-Defined in: [mobjects/three-d/Cylinder.ts:294](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cylinder.ts#L294)
+Defined in: [mobjects/three-d/Cylinder.ts:294](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L294)
 
 Options for creating a Cone
 
@@ -10,7 +10,7 @@ Options for creating a Cone
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/three-d/Cylinder.ts:300](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cylinder.ts#L300)
+Defined in: [mobjects/three-d/Cylinder.ts:300](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L300)
 
 Center position [x, y, z]. Default: [0, 0, 0]
 
@@ -20,7 +20,7 @@ Center position [x, y, z]. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/three-d/Cylinder.ts:302](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cylinder.ts#L302)
+Defined in: [mobjects/three-d/Cylinder.ts:302](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L302)
 
 Color as CSS color string. Default: '#ffffff'
 
@@ -30,7 +30,7 @@ Color as CSS color string. Default: '#ffffff'
 
 > `optional` **height**: `number`
 
-Defined in: [mobjects/three-d/Cylinder.ts:298](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cylinder.ts#L298)
+Defined in: [mobjects/three-d/Cylinder.ts:298](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L298)
 
 Height of the cone. Default: 2
 
@@ -40,7 +40,7 @@ Height of the cone. Default: 2
 
 > `optional` **opacity**: `number`
 
-Defined in: [mobjects/three-d/Cylinder.ts:304](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cylinder.ts#L304)
+Defined in: [mobjects/three-d/Cylinder.ts:304](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L304)
 
 Opacity from 0 to 1. Default: 1
 
@@ -50,7 +50,7 @@ Opacity from 0 to 1. Default: 1
 
 > `optional` **openEnded**: `boolean`
 
-Defined in: [mobjects/three-d/Cylinder.ts:308](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cylinder.ts#L308)
+Defined in: [mobjects/three-d/Cylinder.ts:308](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L308)
 
 Whether base is open. Default: false
 
@@ -60,7 +60,7 @@ Whether base is open. Default: false
 
 > `optional` **radialSegments**: `number`
 
-Defined in: [mobjects/three-d/Cylinder.ts:306](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cylinder.ts#L306)
+Defined in: [mobjects/three-d/Cylinder.ts:306](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L306)
 
 Number of radial segments. Default: 32
 
@@ -70,7 +70,7 @@ Number of radial segments. Default: 32
 
 > `optional` **radius**: `number`
 
-Defined in: [mobjects/three-d/Cylinder.ts:296](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cylinder.ts#L296)
+Defined in: [mobjects/three-d/Cylinder.ts:296](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L296)
 
 Radius of the cone base. Default: 1
 
@@ -80,6 +80,6 @@ Radius of the cone base. Default: 1
 
 > `optional` **wireframe**: `boolean`
 
-Defined in: [mobjects/three-d/Cylinder.ts:310](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/three-d/Cylinder.ts#L310)
+Defined in: [mobjects/three-d/Cylinder.ts:310](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L310)
 
 Whether to render as wireframe. Default: false

@@ -2,7 +2,7 @@
 
 > **createPerformanceMonitor**(): [`PerformanceMonitor`](../classes/PerformanceMonitor.md)
 
-Defined in: [utils/Performance.ts:122](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/utils/Performance.ts#L122)
+Defined in: [utils/Performance.ts:122](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/Performance.ts#L122)
 
 Create a new PerformanceMonitor instance.
 

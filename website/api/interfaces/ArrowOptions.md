@@ -1,6 +1,6 @@
 # Interface: ArrowOptions
 
-Defined in: [mobjects/geometry/Arrow.ts:9](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Arrow.ts#L9)
+Defined in: [mobjects/geometry/Arrow.ts:9](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arrow.ts#L9)
 
 Options for creating an Arrow
 
@@ -10,7 +10,7 @@ Options for creating an Arrow
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/Arrow.ts:15](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Arrow.ts#L15)
+Defined in: [mobjects/geometry/Arrow.ts:15](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arrow.ts#L15)
 
 Stroke color as CSS color string. Default: WHITE (#FFFFFF)
 
@@ -20,7 +20,7 @@ Stroke color as CSS color string. Default: WHITE (#FFFFFF)
 
 > `optional` **end**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/geometry/Arrow.ts:13](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Arrow.ts#L13)
+Defined in: [mobjects/geometry/Arrow.ts:13](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arrow.ts#L13)
 
 End point of the arrow (where the tip points). Default: [1, 0, 0]
 
@@ -30,7 +30,7 @@ End point of the arrow (where the tip points). Default: [1, 0, 0]
 
 > `optional` **start**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/geometry/Arrow.ts:11](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Arrow.ts#L11)
+Defined in: [mobjects/geometry/Arrow.ts:11](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arrow.ts#L11)
 
 Start point of the arrow. Default: [0, 0, 0]
 
@@ -40,7 +40,7 @@ Start point of the arrow. Default: [0, 0, 0]
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/Arrow.ts:17](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Arrow.ts#L17)
+Defined in: [mobjects/geometry/Arrow.ts:17](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arrow.ts#L17)
 
 Stroke width in pixels. Default: 4 (Manim's default)
 
@@ -50,7 +50,7 @@ Stroke width in pixels. Default: 4 (Manim's default)
 
 > `optional` **tipLength**: `number`
 
-Defined in: [mobjects/geometry/Arrow.ts:19](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Arrow.ts#L19)
+Defined in: [mobjects/geometry/Arrow.ts:19](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arrow.ts#L19)
 
 Length of the arrowhead tip. Default: 0.25
 
@@ -60,6 +60,6 @@ Length of the arrowhead tip. Default: 0.25
 
 > `optional` **tipWidth**: `number`
 
-Defined in: [mobjects/geometry/Arrow.ts:21](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Arrow.ts#L21)
+Defined in: [mobjects/geometry/Arrow.ts:21](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arrow.ts#L21)
 
 Width of the arrowhead base. Default: 0.15

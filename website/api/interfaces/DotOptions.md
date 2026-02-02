@@ -1,6 +1,6 @@
 # Interface: DotOptions
 
-Defined in: [mobjects/geometry/Dot.ts:8](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Dot.ts#L8)
+Defined in: [mobjects/geometry/Dot.ts:8](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Dot.ts#L8)
 
 Options for creating a Dot
 
@@ -10,7 +10,7 @@ Options for creating a Dot
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/Dot.ts:14](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Dot.ts#L14)
+Defined in: [mobjects/geometry/Dot.ts:14](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Dot.ts#L14)
 
 Fill color as CSS color string. Default: white (#FFFFFF)
 
@@ -20,7 +20,7 @@ Fill color as CSS color string. Default: white (#FFFFFF)
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/geometry/Dot.ts:16](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Dot.ts#L16)
+Defined in: [mobjects/geometry/Dot.ts:16](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Dot.ts#L16)
 
 Fill opacity from 0 to 1. Default: 1
 
@@ -30,7 +30,7 @@ Fill opacity from 0 to 1. Default: 1
 
 > `optional` **point**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/geometry/Dot.ts:10](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Dot.ts#L10)
+Defined in: [mobjects/geometry/Dot.ts:10](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Dot.ts#L10)
 
 Position of the dot. Default: [0, 0, 0]
 
@@ -40,7 +40,7 @@ Position of the dot. Default: [0, 0, 0]
 
 > `optional` **radius**: `number`
 
-Defined in: [mobjects/geometry/Dot.ts:12](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Dot.ts#L12)
+Defined in: [mobjects/geometry/Dot.ts:12](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Dot.ts#L12)
 
 Radius of the dot. Default: 0.08
 
@@ -50,6 +50,6 @@ Radius of the dot. Default: 0.08
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/Dot.ts:18](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/Dot.ts#L18)
+Defined in: [mobjects/geometry/Dot.ts:18](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Dot.ts#L18)
 
 Stroke width in pixels. Default: 0 (no stroke)

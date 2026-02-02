@@ -2,7 +2,7 @@
 
 > **valueTracker**(`value`): [`ValueTracker`](../classes/ValueTracker.md)
 
-Defined in: [mobjects/value-tracker/ValueTracker.ts:418](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/value-tracker/ValueTracker.ts#L418)
+Defined in: [mobjects/value-tracker/ValueTracker.ts:418](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/value-tracker/ValueTracker.ts#L418)
 
 Factory function to create a ValueTracker.
 

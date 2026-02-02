@@ -1,6 +1,6 @@
 # Class: ShowPassingFlash
 
-Defined in: [animation/indication/ShowPassingFlash.ts:28](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L28)
+Defined in: [animation/indication/ShowPassingFlash.ts:28](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L28)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/indication/ShowPassingFlash.ts:28](https://github.com/mal
 
 > **new ShowPassingFlash**(`mobject`, `options`): `ShowPassingFlash`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:50](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L50)
+Defined in: [animation/indication/ShowPassingFlash.ts:50](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L50)
 
 #### Parameters
 
@@ -38,7 +38,7 @@ Defined in: [animation/indication/ShowPassingFlash.ts:50](https://github.com/mal
 
 > `protected` **\_flashGroup**: `Group`\<`Object3DEventMap`\> = `null`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:39](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L39)
+Defined in: [animation/indication/ShowPassingFlash.ts:39](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L39)
 
 Flash line group
 
@@ -48,7 +48,7 @@ Flash line group
 
 > `protected` **\_hasBegun**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:37](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L37)
+Defined in: [animation/Animation.ts:37](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L37)
 
 Track if begin() has been called
 
@@ -62,7 +62,7 @@ Track if begin() has been called
 
 > `protected` **\_isFinished**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:34](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L34)
+Defined in: [animation/Animation.ts:34](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L34)
 
 Whether the animation has finished
 
@@ -76,7 +76,7 @@ Whether the animation has finished
 
 > `protected` **\_isVMobject**: `boolean` = `false`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:48](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L48)
+Defined in: [animation/indication/ShowPassingFlash.ts:48](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L48)
 
 Whether mobject is a VMobject
 
@@ -86,7 +86,7 @@ Whether mobject is a VMobject
 
 > `protected` **\_parentObject**: `Object3D`\<`Object3DEventMap`\> = `null`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:42](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L42)
+Defined in: [animation/indication/ShowPassingFlash.ts:42](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L42)
 
 Parent object
 
@@ -96,7 +96,7 @@ Parent object
 
 > `protected` **\_pathPoints**: `number`[][] = `[]`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:45](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L45)
+Defined in: [animation/indication/ShowPassingFlash.ts:45](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L45)
 
 Path points (sampled from VMobject)
 
@@ -106,7 +106,7 @@ Path points (sampled from VMobject)
 
 > `protected` **\_startTime**: `number` = `null`
 
-Defined in: [animation/Animation.ts:31](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L31)
+Defined in: [animation/Animation.ts:31](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L31)
 
 Time when the animation started (set by Timeline)
 
@@ -120,7 +120,7 @@ Time when the animation started (set by Timeline)
 
 > `readonly` **duration**: `number`
 
-Defined in: [animation/Animation.ts:25](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L25)
+Defined in: [animation/Animation.ts:25](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L25)
 
 Duration of the animation in seconds
 
@@ -134,7 +134,7 @@ Duration of the animation in seconds
 
 > `readonly` **flashColor**: `string`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:30](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L30)
+Defined in: [animation/indication/ShowPassingFlash.ts:30](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L30)
 
 Flash color
 
@@ -144,7 +144,7 @@ Flash color
 
 > `readonly` **flashStrokeWidth**: `number`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:36](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L36)
+Defined in: [animation/indication/ShowPassingFlash.ts:36](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L36)
 
 Flash stroke width
 
@@ -154,7 +154,7 @@ Flash stroke width
 
 > `readonly` **mobject**: [`Mobject`](Mobject.md)
 
-Defined in: [animation/Animation.ts:22](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L22)
+Defined in: [animation/Animation.ts:22](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L22)
 
 The mobject being animated
 
@@ -168,7 +168,7 @@ The mobject being animated
 
 > `readonly` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:28](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L28)
+Defined in: [animation/Animation.ts:28](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L28)
 
 Rate function controlling the animation's pacing
 
@@ -182,7 +182,7 @@ Rate function controlling the animation's pacing
 
 > **remover**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:43](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L43)
+Defined in: [animation/Animation.ts:43](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L43)
 
 If true, the scene will remove this mobject after the animation finishes.
 Used by FadeOut (like Python manim's remover=True).
@@ -197,7 +197,7 @@ Used by FadeOut (like Python manim's remover=True).
 
 > `readonly` **timeWidth**: `number`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:33](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L33)
+Defined in: [animation/indication/ShowPassingFlash.ts:33](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L33)
 
 Width of flash as proportion of path
 
@@ -209,7 +209,7 @@ Width of flash as proportion of path
 
 > **get** **startTime**(): `number`
 
-Defined in: [animation/Animation.ts:125](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L125)
+Defined in: [animation/Animation.ts:125](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L125)
 
 Get the start time of this animation (set by Timeline)
 
@@ -221,7 +221,7 @@ Get the start time of this animation (set by Timeline)
 
 > **set** **startTime**(`time`): `void`
 
-Defined in: [animation/Animation.ts:132](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L132)
+Defined in: [animation/Animation.ts:132](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L132)
 
 Set the start time of this animation (used by Timeline)
 
@@ -245,7 +245,7 @@ Set the start time of this animation (used by Timeline)
 
 > `protected` **\_distance**(`a`, `b`): `number`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:122](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L122)
+Defined in: [animation/indication/ShowPassingFlash.ts:122](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L122)
 
 #### Parameters
 
@@ -267,7 +267,7 @@ Defined in: [animation/indication/ShowPassingFlash.ts:122](https://github.com/ma
 
 > `protected` **\_samplePath**(`points`): `number`[][]
 
-Defined in: [animation/indication/ShowPassingFlash.ts:97](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L97)
+Defined in: [animation/indication/ShowPassingFlash.ts:97](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L97)
 
 #### Parameters
 
@@ -285,7 +285,7 @@ Defined in: [animation/indication/ShowPassingFlash.ts:97](https://github.com/mal
 
 > **begin**(): `void`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:61](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L61)
+Defined in: [animation/indication/ShowPassingFlash.ts:61](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L61)
 
 Called when the animation starts.
 Subclasses can override to set up initial state.
@@ -304,7 +304,7 @@ Subclasses can override to set up initial state.
 
 > **finish**(): `void`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:187](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L187)
+Defined in: [animation/indication/ShowPassingFlash.ts:187](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L187)
 
 Called when the animation ends.
 Subclasses can override to clean up or finalize state.
@@ -323,7 +323,7 @@ Subclasses can override to clean up or finalize state.
 
 > **interpolate**(`alpha`): `void`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:129](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/ShowPassingFlash.ts#L129)
+Defined in: [animation/indication/ShowPassingFlash.ts:129](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L129)
 
 Apply the animation at a given progress value.
 
@@ -349,7 +349,7 @@ Progress from 0 (start) to 1 (end)
 
 > **isFinished**(): `boolean`
 
-Defined in: [animation/Animation.ts:109](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L109)
+Defined in: [animation/Animation.ts:109](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L109)
 
 Check if the animation has finished
 
@@ -367,7 +367,7 @@ Check if the animation has finished
 
 > **reset**(): `void`
 
-Defined in: [animation/Animation.ts:116](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L116)
+Defined in: [animation/Animation.ts:116](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L116)
 
 Reset the animation to its initial state
 
@@ -385,7 +385,7 @@ Reset the animation to its initial state
 
 > **update**(`_dt`, `currentTime`): `void`
 
-Defined in: [animation/Animation.ts:79](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L79)
+Defined in: [animation/Animation.ts:79](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L79)
 
 Update the animation for the current frame.
 

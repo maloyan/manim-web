@@ -2,7 +2,7 @@
 
 > **maintainPositionRelativeTo**(`mobject`, `target`): [`UpdaterFunction`](../type-aliases/UpdaterFunction.md)
 
-Defined in: [animation/MaintainPositionRelativeTo.ts:28](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/MaintainPositionRelativeTo.ts#L28)
+Defined in: [animation/MaintainPositionRelativeTo.ts:28](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/MaintainPositionRelativeTo.ts#L28)
 
 Creates an updater function that maintains a mobject's position relative to a target.
 The offset is calculated when this function is called and preserved during updates.

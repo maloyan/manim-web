@@ -1,6 +1,6 @@
 # Interface: SurroundingRectangleOptions
 
-Defined in: [mobjects/geometry/ShapeMatchers.ts:119](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ShapeMatchers.ts#L119)
+Defined in: [mobjects/geometry/ShapeMatchers.ts:119](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ShapeMatchers.ts#L119)
 
 Options for creating a SurroundingRectangle
 
@@ -10,7 +10,7 @@ Options for creating a SurroundingRectangle
 
 > `optional` **buff**: `number`
 
-Defined in: [mobjects/geometry/ShapeMatchers.ts:121](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ShapeMatchers.ts#L121)
+Defined in: [mobjects/geometry/ShapeMatchers.ts:121](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ShapeMatchers.ts#L121)
 
 Padding around the mobject. Default: 0.2
 
@@ -20,7 +20,7 @@ Padding around the mobject. Default: 0.2
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/ShapeMatchers.ts:123](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ShapeMatchers.ts#L123)
+Defined in: [mobjects/geometry/ShapeMatchers.ts:123](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ShapeMatchers.ts#L123)
 
 Stroke color. Default: YELLOW
 
@@ -30,7 +30,7 @@ Stroke color. Default: YELLOW
 
 > `optional` **cornerRadius**: `number`
 
-Defined in: [mobjects/geometry/ShapeMatchers.ts:125](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ShapeMatchers.ts#L125)
+Defined in: [mobjects/geometry/ShapeMatchers.ts:125](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ShapeMatchers.ts#L125)
 
 Corner radius for rounded corners. Default: 0 (sharp corners)
 
@@ -40,7 +40,7 @@ Corner radius for rounded corners. Default: 0 (sharp corners)
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/geometry/ShapeMatchers.ts:129](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ShapeMatchers.ts#L129)
+Defined in: [mobjects/geometry/ShapeMatchers.ts:129](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ShapeMatchers.ts#L129)
 
 Fill opacity. Default: 0 (no fill)
 
@@ -50,6 +50,6 @@ Fill opacity. Default: 0 (no fill)
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/ShapeMatchers.ts:127](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ShapeMatchers.ts#L127)
+Defined in: [mobjects/geometry/ShapeMatchers.ts:127](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ShapeMatchers.ts#L127)
 
 Stroke width. Default: 4 (Manim's default)

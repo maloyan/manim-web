@@ -1,6 +1,6 @@
 # Interface: BraceOptions
 
-Defined in: [mobjects/svg/Brace.ts:12](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/svg/Brace.ts#L12)
+Defined in: [mobjects/svg/Brace.ts:12](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/svg/Brace.ts#L12)
 
 Options for creating a Brace
 
@@ -14,7 +14,7 @@ Options for creating a Brace
 
 > `optional` **buff**: `number`
 
-Defined in: [mobjects/svg/Brace.ts:16](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/svg/Brace.ts#L16)
+Defined in: [mobjects/svg/Brace.ts:16](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/svg/Brace.ts#L16)
 
 Buffer distance from the mobject. Default: 0.2
 
@@ -24,7 +24,7 @@ Buffer distance from the mobject. Default: 0.2
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/svg/Brace.ts:18](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/svg/Brace.ts#L18)
+Defined in: [mobjects/svg/Brace.ts:18](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/svg/Brace.ts#L18)
 
 Stroke color as CSS color string. Default: WHITE
 
@@ -34,7 +34,7 @@ Stroke color as CSS color string. Default: WHITE
 
 > `optional` **direction**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/svg/Brace.ts:14](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/svg/Brace.ts#L14)
+Defined in: [mobjects/svg/Brace.ts:14](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/svg/Brace.ts#L14)
 
 Direction to place the brace relative to the mobject. Default: DOWN
 
@@ -44,7 +44,7 @@ Direction to place the brace relative to the mobject. Default: DOWN
 
 > `optional` **sharpness**: `number`
 
-Defined in: [mobjects/svg/Brace.ts:22](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/svg/Brace.ts#L22)
+Defined in: [mobjects/svg/Brace.ts:22](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/svg/Brace.ts#L22)
 
 Sharpness of the brace tip (0-1). Default: 2
 
@@ -54,6 +54,6 @@ Sharpness of the brace tip (0-1). Default: 2
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/svg/Brace.ts:20](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/svg/Brace.ts#L20)
+Defined in: [mobjects/svg/Brace.ts:20](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/svg/Brace.ts#L20)
 
 Stroke width in pixels. Default: 4

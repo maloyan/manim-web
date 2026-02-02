@@ -2,7 +2,7 @@
 
 > **flash**(`mobject`, `options?`): [`Flash`](../classes/Flash.md)
 
-Defined in: [animation/indication/Flash.ts:168](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Flash.ts#L168)
+Defined in: [animation/indication/Flash.ts:168](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Flash.ts#L168)
 
 Create a Flash animation for a mobject.
 Creates radiating lines that flash outward from the mobject's center.

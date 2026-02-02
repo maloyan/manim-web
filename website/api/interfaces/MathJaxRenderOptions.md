@@ -1,6 +1,6 @@
 # Interface: MathJaxRenderOptions
 
-Defined in: [mobjects/text/MathJaxRenderer.ts:22](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathJaxRenderer.ts#L22)
+Defined in: [mobjects/text/MathJaxRenderer.ts:22](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathJaxRenderer.ts#L22)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [mobjects/text/MathJaxRenderer.ts:22](https://github.com/maloyan/man
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/text/MathJaxRenderer.ts:30](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathJaxRenderer.ts#L30)
+Defined in: [mobjects/text/MathJaxRenderer.ts:30](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathJaxRenderer.ts#L30)
 
 Color applied to the output (CSS color string). Default: '#ffffff'
 
@@ -18,7 +18,7 @@ Color applied to the output (CSS color string). Default: '#ffffff'
 
 > `optional` **displayMode**: `boolean`
 
-Defined in: [mobjects/text/MathJaxRenderer.ts:24](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathJaxRenderer.ts#L24)
+Defined in: [mobjects/text/MathJaxRenderer.ts:24](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathJaxRenderer.ts#L24)
 
 Display mode (block) vs inline mode. Default: true
 
@@ -28,7 +28,7 @@ Display mode (block) vs inline mode. Default: true
 
 > `optional` **fontScale**: `number`
 
-Defined in: [mobjects/text/MathJaxRenderer.ts:32](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathJaxRenderer.ts#L32)
+Defined in: [mobjects/text/MathJaxRenderer.ts:32](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathJaxRenderer.ts#L32)
 
 Font scale relative to surrounding text (em). Default: 1
 
@@ -38,7 +38,7 @@ Font scale relative to surrounding text (em). Default: 1
 
 > `optional` **macros**: `Record`\<`string`, `string`\>
 
-Defined in: [mobjects/text/MathJaxRenderer.ts:28](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathJaxRenderer.ts#L28)
+Defined in: [mobjects/text/MathJaxRenderer.ts:28](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathJaxRenderer.ts#L28)
 
 Custom macros as { name: expansion }.
 
@@ -48,6 +48,6 @@ Custom macros as { name: expansion }.
 
 > `optional` **preamble**: `string`
 
-Defined in: [mobjects/text/MathJaxRenderer.ts:26](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathJaxRenderer.ts#L26)
+Defined in: [mobjects/text/MathJaxRenderer.ts:26](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathJaxRenderer.ts#L26)
 
 Custom LaTeX preamble (e.g. '\\usepackage{amsmath}'). Merged with defaults.

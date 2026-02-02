@@ -1,6 +1,6 @@
 # Interface: MobjectState
 
-Defined in: [core/StateManager.ts:24](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L24)
+Defined in: [core/StateManager.ts:24](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L24)
 
 JSON-serializable snapshot of a single mobject's visual state.
 Captures position, rotation, scale, style, and VMobject-specific data.
@@ -11,7 +11,7 @@ Captures position, rotation, scale, style, and VMobject-specific data.
 
 > **children**: `MobjectState`[]
 
-Defined in: [core/StateManager.ts:64](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L64)
+Defined in: [core/StateManager.ts:64](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L64)
 
 Recursively captured child states
 
@@ -21,7 +21,7 @@ Recursively captured child states
 
 > **color**: `string`
 
-Defined in: [core/StateManager.ts:38](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L38)
+Defined in: [core/StateManager.ts:38](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L38)
 
 CSS color string
 
@@ -31,7 +31,7 @@ CSS color string
 
 > `optional` **custom**: `Record`\<`string`, `unknown`\>
 
-Defined in: [core/StateManager.ts:67](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L67)
+Defined in: [core/StateManager.ts:67](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L67)
 
 Optional user-supplied custom data
 
@@ -41,7 +41,7 @@ Optional user-supplied custom data
 
 > **fillOpacity**: `number`
 
-Defined in: [core/StateManager.ts:47](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L47)
+Defined in: [core/StateManager.ts:47](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L47)
 
 Fill opacity 0-1
 
@@ -51,7 +51,7 @@ Fill opacity 0-1
 
 > **id**: `string`
 
-Defined in: [core/StateManager.ts:26](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L26)
+Defined in: [core/StateManager.ts:26](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L26)
 
 Mobject id at time of capture (used for lookup during restore)
 
@@ -61,7 +61,7 @@ Mobject id at time of capture (used for lookup during restore)
 
 > **opacity**: `number`
 
-Defined in: [core/StateManager.ts:41](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L41)
+Defined in: [core/StateManager.ts:41](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L41)
 
 Overall stroke opacity 0-1
 
@@ -71,7 +71,7 @@ Overall stroke opacity 0-1
 
 > `optional` **points2D**: [`Point`](Point.md)[]
 
-Defined in: [core/StateManager.ts:55](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L55)
+Defined in: [core/StateManager.ts:55](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L55)
 
 2D points [{x,y}, ...]
 
@@ -81,7 +81,7 @@ Defined in: [core/StateManager.ts:55](https://github.com/maloyan/manim-js/blob/f
 
 > `optional` **points3D**: `number`[][]
 
-Defined in: [core/StateManager.ts:58](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L58)
+Defined in: [core/StateManager.ts:58](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L58)
 
 3D Bezier control points [[x,y,z], ...]
 
@@ -91,7 +91,7 @@ Defined in: [core/StateManager.ts:58](https://github.com/maloyan/manim-js/blob/f
 
 > **position**: \[`number`, `number`, `number`\]
 
-Defined in: [core/StateManager.ts:29](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L29)
+Defined in: [core/StateManager.ts:29](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L29)
 
 Position [x, y, z]
 
@@ -101,7 +101,7 @@ Position [x, y, z]
 
 > **rotation**: \[`number`, `number`, `number`, `string`\]
 
-Defined in: [core/StateManager.ts:32](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L32)
+Defined in: [core/StateManager.ts:32](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L32)
 
 Euler rotation [x, y, z, order]
 
@@ -111,7 +111,7 @@ Euler rotation [x, y, z, order]
 
 > **scale**: \[`number`, `number`, `number`\]
 
-Defined in: [core/StateManager.ts:35](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L35)
+Defined in: [core/StateManager.ts:35](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L35)
 
 Scale [x, y, z]
 
@@ -121,7 +121,7 @@ Scale [x, y, z]
 
 > **strokeWidth**: `number`
 
-Defined in: [core/StateManager.ts:44](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L44)
+Defined in: [core/StateManager.ts:44](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L44)
 
 Stroke width
 
@@ -131,7 +131,7 @@ Stroke width
 
 > **style**: [`MobjectStyle`](MobjectStyle.md)
 
-Defined in: [core/StateManager.ts:50](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L50)
+Defined in: [core/StateManager.ts:50](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L50)
 
 Full style object
 
@@ -141,6 +141,6 @@ Full style object
 
 > `optional` **visiblePointCount**: `number`
 
-Defined in: [core/StateManager.ts:61](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/StateManager.ts#L61)
+Defined in: [core/StateManager.ts:61](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L61)
 
 Visible point count (null means all)

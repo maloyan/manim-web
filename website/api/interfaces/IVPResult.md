@@ -1,6 +1,6 @@
 # Interface: IVPResult
 
-Defined in: [utils/ode.ts:42](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/utils/ode.ts#L42)
+Defined in: [utils/ode.ts:42](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/ode.ts#L42)
 
 Result of solving an IVP.
 
@@ -10,7 +10,7 @@ Result of solving an IVP.
 
 > **t**: `number`
 
-Defined in: [utils/ode.ts:46](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/utils/ode.ts#L46)
+Defined in: [utils/ode.ts:46](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/ode.ts#L46)
 
 Final time
 
@@ -20,7 +20,7 @@ Final time
 
 > **trajectory**: `object`[]
 
-Defined in: [utils/ode.ts:48](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/utils/ode.ts#L48)
+Defined in: [utils/ode.ts:48](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/ode.ts#L48)
 
 Trajectory of [t, y] pairs (only populated if recordTrajectory is true)
 
@@ -38,6 +38,6 @@ Trajectory of [t, y] pairs (only populated if recordTrajectory is true)
 
 > **y**: `number`[]
 
-Defined in: [utils/ode.ts:44](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/utils/ode.ts#L44)
+Defined in: [utils/ode.ts:44](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/ode.ts#L44)
 
 Final state vector

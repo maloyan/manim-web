@@ -1,6 +1,6 @@
 # Class: Camera3D
 
-Defined in: [core/Camera.ts:24](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L24)
+Defined in: [core/Camera.ts:24](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Camera.ts#L24)
 
 3D camera for manimweb scenes.
 Wraps Three.js PerspectiveCamera with orbit controls support.
@@ -11,7 +11,7 @@ Wraps Three.js PerspectiveCamera with orbit controls support.
 
 > **new Camera3D**(`aspectRatio`, `options?`): `Camera3D`
 
-Defined in: [core/Camera.ts:35](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L35)
+Defined in: [core/Camera.ts:35](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Camera.ts#L35)
 
 Create a new 3D camera.
 
@@ -41,7 +41,7 @@ Camera configuration options
 
 > **get** **fov**(): `number`
 
-Defined in: [core/Camera.ts:76](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L76)
+Defined in: [core/Camera.ts:76](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Camera.ts#L76)
 
 Get the field of view.
 
@@ -57,7 +57,7 @@ Get the field of view.
 
 > **get** **lookAtTarget**(): `Vector3`
 
-Defined in: [core/Camera.ts:69](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L69)
+Defined in: [core/Camera.ts:69](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Camera.ts#L69)
 
 Get the look-at target.
 
@@ -73,7 +73,7 @@ Get the look-at target.
 
 > **get** **position**(): `Vector3`
 
-Defined in: [core/Camera.ts:62](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L62)
+Defined in: [core/Camera.ts:62](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Camera.ts#L62)
 
 Get the camera position.
 
@@ -87,7 +87,7 @@ Get the camera position.
 
 > **getCamera**(): `PerspectiveCamera`
 
-Defined in: [core/Camera.ts:55](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L55)
+Defined in: [core/Camera.ts:55](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Camera.ts#L55)
 
 Get the underlying Three.js PerspectiveCamera.
 
@@ -103,7 +103,7 @@ The PerspectiveCamera instance
 
 > **getOrbitAngles**(): `object`
 
-Defined in: [core/Camera.ts:149](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L149)
+Defined in: [core/Camera.ts:149](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Camera.ts#L149)
 
 Get spherical coordinates relative to the look-at point.
 
@@ -131,7 +131,7 @@ Object with phi (polar), theta (azimuthal), and distance
 
 > **moveTo**(`position`): `this`
 
-Defined in: [core/Camera.ts:85](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L85)
+Defined in: [core/Camera.ts:85](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Camera.ts#L85)
 
 Move the camera to a specific position.
 
@@ -155,7 +155,7 @@ this for chaining
 
 > **orbit**(`phi`, `theta`, `distance?`): `this`
 
-Defined in: [core/Camera.ts:133](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L133)
+Defined in: [core/Camera.ts:133](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Camera.ts#L133)
 
 Orbit the camera around the look-at point using spherical coordinates.
 
@@ -191,7 +191,7 @@ this for chaining
 
 > **setAspectRatio**(`ratio`): `this`
 
-Defined in: [core/Camera.ts:120](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L120)
+Defined in: [core/Camera.ts:120](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Camera.ts#L120)
 
 Update the aspect ratio.
 
@@ -215,7 +215,7 @@ this for chaining
 
 > **setFov**(`fov`): `this`
 
-Defined in: [core/Camera.ts:108](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L108)
+Defined in: [core/Camera.ts:108](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Camera.ts#L108)
 
 Set the field of view.
 
@@ -239,7 +239,7 @@ this for chaining
 
 > **setLookAt**(`target`): `this`
 
-Defined in: [core/Camera.ts:97](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Camera.ts#L97)
+Defined in: [core/Camera.ts:97](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Camera.ts#L97)
 
 Set the look-at target.
 

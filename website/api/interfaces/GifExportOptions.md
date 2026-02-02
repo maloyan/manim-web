@@ -1,6 +1,6 @@
 # Interface: GifExportOptions
 
-Defined in: [export/GifExporter.ts:4](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/export/GifExporter.ts#L4)
+Defined in: [export/GifExporter.ts:4](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/GifExporter.ts#L4)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [export/GifExporter.ts:4](https://github.com/maloyan/manim-js/blob/f
 
 > `optional` **duration**: `number`
 
-Defined in: [export/GifExporter.ts:9](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/export/GifExporter.ts#L9)
+Defined in: [export/GifExporter.ts:9](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/GifExporter.ts#L9)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [export/GifExporter.ts:9](https://github.com/maloyan/manim-js/blob/f
 
 > `optional` **fps**: `number`
 
-Defined in: [export/GifExporter.ts:5](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/export/GifExporter.ts#L5)
+Defined in: [export/GifExporter.ts:5](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/GifExporter.ts#L5)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [export/GifExporter.ts:5](https://github.com/maloyan/manim-js/blob/f
 
 > `optional` **height**: `number`
 
-Defined in: [export/GifExporter.ts:8](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/export/GifExporter.ts#L8)
+Defined in: [export/GifExporter.ts:8](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/GifExporter.ts#L8)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [export/GifExporter.ts:8](https://github.com/maloyan/manim-js/blob/f
 
 > `optional` **onProgress**: (`progress`) => `void`
 
-Defined in: [export/GifExporter.ts:12](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/export/GifExporter.ts#L12)
+Defined in: [export/GifExporter.ts:12](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/GifExporter.ts#L12)
 
 #### Parameters
 
@@ -50,7 +50,7 @@ Defined in: [export/GifExporter.ts:12](https://github.com/maloyan/manim-js/blob/
 
 > `optional` **quality**: `number`
 
-Defined in: [export/GifExporter.ts:6](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/export/GifExporter.ts#L6)
+Defined in: [export/GifExporter.ts:6](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/GifExporter.ts#L6)
 
 ***
 
@@ -58,7 +58,7 @@ Defined in: [export/GifExporter.ts:6](https://github.com/maloyan/manim-js/blob/f
 
 > `optional` **repeat**: `number`
 
-Defined in: [export/GifExporter.ts:11](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/export/GifExporter.ts#L11)
+Defined in: [export/GifExporter.ts:11](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/GifExporter.ts#L11)
 
 ***
 
@@ -66,7 +66,7 @@ Defined in: [export/GifExporter.ts:11](https://github.com/maloyan/manim-js/blob/
 
 > `optional` **width**: `number`
 
-Defined in: [export/GifExporter.ts:7](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/export/GifExporter.ts#L7)
+Defined in: [export/GifExporter.ts:7](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/GifExporter.ts#L7)
 
 ***
 
@@ -74,4 +74,4 @@ Defined in: [export/GifExporter.ts:7](https://github.com/maloyan/manim-js/blob/f
 
 > `optional` **workers**: `number`
 
-Defined in: [export/GifExporter.ts:10](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/export/GifExporter.ts#L10)
+Defined in: [export/GifExporter.ts:10](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/GifExporter.ts#L10)

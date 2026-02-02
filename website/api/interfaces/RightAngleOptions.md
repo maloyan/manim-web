@@ -1,6 +1,6 @@
 # Interface: RightAngleOptions
 
-Defined in: [mobjects/geometry/AngleShapes.ts:363](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/AngleShapes.ts#L363)
+Defined in: [mobjects/geometry/AngleShapes.ts:363](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/AngleShapes.ts#L363)
 
 Options for creating a RightAngle
 
@@ -10,7 +10,7 @@ Options for creating a RightAngle
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/AngleShapes.ts:367](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/AngleShapes.ts#L367)
+Defined in: [mobjects/geometry/AngleShapes.ts:367](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/AngleShapes.ts#L367)
 
 Stroke color. Default: Manim's blue (#58C4DD)
 
@@ -20,7 +20,7 @@ Stroke color. Default: Manim's blue (#58C4DD)
 
 > `optional` **size**: `number`
 
-Defined in: [mobjects/geometry/AngleShapes.ts:365](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/AngleShapes.ts#L365)
+Defined in: [mobjects/geometry/AngleShapes.ts:365](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/AngleShapes.ts#L365)
 
 Size of the square indicator. Default: 0.3
 
@@ -30,6 +30,6 @@ Size of the square indicator. Default: 0.3
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/AngleShapes.ts:369](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/AngleShapes.ts#L369)
+Defined in: [mobjects/geometry/AngleShapes.ts:369](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/AngleShapes.ts#L369)
 
 Stroke width. Default: 4

@@ -1,6 +1,6 @@
 # Interface: PGroupOptions
 
-Defined in: [mobjects/point/index.ts:341](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/point/index.ts#L341)
+Defined in: [mobjects/point/index.ts:341](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L341)
 
 Options for creating a PGroup
 
@@ -10,6 +10,6 @@ Options for creating a PGroup
 
 > `optional` **pmobjects**: [`PMobject`](../classes/PMobject.md)[]
 
-Defined in: [mobjects/point/index.ts:343](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/point/index.ts#L343)
+Defined in: [mobjects/point/index.ts:343](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L343)
 
 Initial PMobjects to add

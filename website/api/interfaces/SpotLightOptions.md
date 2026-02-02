@@ -1,6 +1,6 @@
 # Interface: SpotLightOptions
 
-Defined in: [core/Lighting.ts:48](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L48)
+Defined in: [core/Lighting.ts:48](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L48)
 
 Options for configuring a spot light.
 
@@ -10,7 +10,7 @@ Options for configuring a spot light.
 
 > `optional` **angle**: `number`
 
-Defined in: [core/Lighting.ts:58](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L58)
+Defined in: [core/Lighting.ts:58](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L58)
 
 Maximum angle of light dispersion from its direction (radians). Defaults to PI/3.
 
@@ -20,7 +20,7 @@ Maximum angle of light dispersion from its direction (radians). Defaults to PI/3
 
 > `optional` **castShadow**: `boolean`
 
-Defined in: [core/Lighting.ts:64](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L64)
+Defined in: [core/Lighting.ts:64](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L64)
 
 Whether the light casts shadows. Defaults to false.
 
@@ -30,7 +30,7 @@ Whether the light casts shadows. Defaults to false.
 
 > `optional` **color**: `string`
 
-Defined in: [core/Lighting.ts:50](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L50)
+Defined in: [core/Lighting.ts:50](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L50)
 
 Light color. Defaults to '#ffffff'.
 
@@ -40,7 +40,7 @@ Light color. Defaults to '#ffffff'.
 
 > `optional` **decay**: `number`
 
-Defined in: [core/Lighting.ts:62](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L62)
+Defined in: [core/Lighting.ts:62](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L62)
 
 Light decay rate. Defaults to 2 (physically correct).
 
@@ -50,7 +50,7 @@ Light decay rate. Defaults to 2 (physically correct).
 
 > `optional` **distance**: `number`
 
-Defined in: [core/Lighting.ts:56](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L56)
+Defined in: [core/Lighting.ts:56](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L56)
 
 Maximum range of the light. Defaults to 0 (no limit).
 
@@ -60,7 +60,7 @@ Maximum range of the light. Defaults to 0 (no limit).
 
 > `optional` **intensity**: `number`
 
-Defined in: [core/Lighting.ts:52](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L52)
+Defined in: [core/Lighting.ts:52](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L52)
 
 Light intensity. Defaults to 1.
 
@@ -70,7 +70,7 @@ Light intensity. Defaults to 1.
 
 > `optional` **penumbra**: `number`
 
-Defined in: [core/Lighting.ts:60](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L60)
+Defined in: [core/Lighting.ts:60](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L60)
 
 Percent of the cone attenuated due to penumbra. Defaults to 0.
 
@@ -80,7 +80,7 @@ Percent of the cone attenuated due to penumbra. Defaults to 0.
 
 > `optional` **position**: \[`number`, `number`, `number`\]
 
-Defined in: [core/Lighting.ts:54](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L54)
+Defined in: [core/Lighting.ts:54](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L54)
 
 Light position [x, y, z]. Defaults to [0, 10, 0].
 
@@ -90,6 +90,6 @@ Light position [x, y, z]. Defaults to [0, 10, 0].
 
 > `optional` **target**: \[`number`, `number`, `number`\]
 
-Defined in: [core/Lighting.ts:66](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L66)
+Defined in: [core/Lighting.ts:66](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L66)
 
 Target position for the light to point at [x, y, z]. Defaults to origin.

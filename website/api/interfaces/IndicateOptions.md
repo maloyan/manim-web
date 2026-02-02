@@ -1,6 +1,6 @@
 # Interface: IndicateOptions
 
-Defined in: [animation/indication/Indicate.ts:16](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Indicate.ts#L16)
+Defined in: [animation/indication/Indicate.ts:16](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Indicate.ts#L16)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/indication/Indicate.ts:16](https://github.com/maloyan/man
 
 > `optional` **color**: `string`
 
-Defined in: [animation/indication/Indicate.ts:20](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Indicate.ts#L20)
+Defined in: [animation/indication/Indicate.ts:20](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Indicate.ts#L20)
 
 Color to use for indication highlight. Default: YELLOW
 
@@ -22,7 +22,7 @@ Color to use for indication highlight. Default: YELLOW
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -36,7 +36,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -50,7 +50,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **scaleFactor**: `number`
 
-Defined in: [animation/indication/Indicate.ts:18](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Indicate.ts#L18)
+Defined in: [animation/indication/Indicate.ts:18](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Indicate.ts#L18)
 
 Scale factor at peak of indication. Default: 1.2
 
@@ -60,7 +60,7 @@ Scale factor at peak of indication. Default: 1.2
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 

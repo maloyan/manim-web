@@ -1,6 +1,6 @@
 # Class: PerformanceMonitor
 
-Defined in: [utils/Performance.ts:10](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/utils/Performance.ts#L10)
+Defined in: [utils/Performance.ts:10](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/Performance.ts#L10)
 
 Performance monitor for tracking frame rate and other metrics.
 Useful for debugging and optimizing animations.
@@ -21,7 +21,7 @@ Useful for debugging and optimizing animations.
 
 > **getFps**(): `number`
 
-Defined in: [utils/Performance.ts:85](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/utils/Performance.ts#L85)
+Defined in: [utils/Performance.ts:85](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/Performance.ts#L85)
 
 Get the current FPS (rolling average).
 
@@ -37,7 +37,7 @@ Current frames per second
 
 > **getInstantFps**(): `number`
 
-Defined in: [utils/Performance.ts:93](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/utils/Performance.ts#L93)
+Defined in: [utils/Performance.ts:93](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/Performance.ts#L93)
 
 Get the instant FPS (last measured value before averaging).
 
@@ -53,7 +53,7 @@ Instant frames per second
 
 > **isRunning**(): `boolean`
 
-Defined in: [utils/Performance.ts:103](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/utils/Performance.ts#L103)
+Defined in: [utils/Performance.ts:103](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/Performance.ts#L103)
 
 Check if the monitor is currently running.
 
@@ -69,7 +69,7 @@ true if monitoring is active
 
 > **reset**(): `void`
 
-Defined in: [utils/Performance.ts:110](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/utils/Performance.ts#L110)
+Defined in: [utils/Performance.ts:110](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/Performance.ts#L110)
 
 Reset the monitor statistics.
 
@@ -83,7 +83,7 @@ Reset the monitor statistics.
 
 > **start**(`callback?`): `void`
 
-Defined in: [utils/Performance.ts:26](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/utils/Performance.ts#L26)
+Defined in: [utils/Performance.ts:26](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/Performance.ts#L26)
 
 Start monitoring performance.
 
@@ -105,7 +105,7 @@ Optional callback called each second with current FPS
 
 > **stop**(): `void`
 
-Defined in: [utils/Performance.ts:40](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/utils/Performance.ts#L40)
+Defined in: [utils/Performance.ts:40](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/Performance.ts#L40)
 
 Stop monitoring performance.
 

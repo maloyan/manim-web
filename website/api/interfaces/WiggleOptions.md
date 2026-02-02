@@ -1,6 +1,6 @@
 # Interface: WiggleOptions
 
-Defined in: [animation/indication/Wiggle.ts:13](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Wiggle.ts#L13)
+Defined in: [animation/indication/Wiggle.ts:13](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Wiggle.ts#L13)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/indication/Wiggle.ts:13](https://github.com/maloyan/manim
 
 > `optional` **aboutPoint**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [animation/indication/Wiggle.ts:23](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Wiggle.ts#L23)
+Defined in: [animation/indication/Wiggle.ts:23](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Wiggle.ts#L23)
 
 Point to wiggle about. Default: mobject center
 
@@ -22,7 +22,7 @@ Point to wiggle about. Default: mobject center
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -36,7 +36,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **nWiggles**: `number`
 
-Defined in: [animation/indication/Wiggle.ts:17](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Wiggle.ts#L17)
+Defined in: [animation/indication/Wiggle.ts:17](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Wiggle.ts#L17)
 
 Number of wiggles. Default: 6
 
@@ -46,7 +46,7 @@ Number of wiggles. Default: 6
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -60,7 +60,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **rotationAngle**: `number`
 
-Defined in: [animation/indication/Wiggle.ts:15](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Wiggle.ts#L15)
+Defined in: [animation/indication/Wiggle.ts:15](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Wiggle.ts#L15)
 
 Maximum rotation angle in radians. Default: PI/12 (15 degrees)
 
@@ -70,7 +70,7 @@ Maximum rotation angle in radians. Default: PI/12 (15 degrees)
 
 > `optional` **rotationAxis**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [animation/indication/Wiggle.ts:21](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Wiggle.ts#L21)
+Defined in: [animation/indication/Wiggle.ts:21](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Wiggle.ts#L21)
 
 Axis to rotate about. Default: [0, 0, 1] (Z axis)
 
@@ -80,7 +80,7 @@ Axis to rotate about. Default: [0, 0, 1] (Z axis)
 
 > `optional` **scaleFactor**: `number`
 
-Defined in: [animation/indication/Wiggle.ts:19](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/indication/Wiggle.ts#L19)
+Defined in: [animation/indication/Wiggle.ts:19](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Wiggle.ts#L19)
 
 Scale factor at peak of wiggle. Default: 1.1
 
@@ -90,7 +90,7 @@ Scale factor at peak of wiggle. Default: 1.1
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 

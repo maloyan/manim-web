@@ -1,6 +1,6 @@
 # Interface: PointData
 
-Defined in: [mobjects/point/index.ts:14](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/point/index.ts#L14)
+Defined in: [mobjects/point/index.ts:14](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L14)
 
 A single point with position, color, and opacity.
 
@@ -10,7 +10,7 @@ A single point with position, color, and opacity.
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/point/index.ts:18](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/point/index.ts#L18)
+Defined in: [mobjects/point/index.ts:18](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L18)
 
 Color as CSS color string
 
@@ -20,7 +20,7 @@ Color as CSS color string
 
 > `optional` **opacity**: `number`
 
-Defined in: [mobjects/point/index.ts:20](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/point/index.ts#L20)
+Defined in: [mobjects/point/index.ts:20](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L20)
 
 Opacity from 0 to 1
 
@@ -30,6 +30,6 @@ Opacity from 0 to 1
 
 > **position**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/point/index.ts:16](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/point/index.ts#L16)
+Defined in: [mobjects/point/index.ts:16](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L16)
 
 Position [x, y, z]

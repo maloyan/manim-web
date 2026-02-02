@@ -1,6 +1,6 @@
 # Interface: HoverableOptions
 
-Defined in: [interaction/Hoverable.ts:7](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Hoverable.ts#L7)
+Defined in: [interaction/Hoverable.ts:7](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Hoverable.ts#L7)
 
 Options for configuring hoverable behavior.
 
@@ -10,7 +10,7 @@ Options for configuring hoverable behavior.
 
 > `optional` **cursor**: `string`
 
-Defined in: [interaction/Hoverable.ts:19](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Hoverable.ts#L19)
+Defined in: [interaction/Hoverable.ts:19](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Hoverable.ts#L19)
 
 CSS cursor on hover, default 'pointer'
 
@@ -20,7 +20,7 @@ CSS cursor on hover, default 'pointer'
 
 > `optional` **hoverColor**: `string`
 
-Defined in: [interaction/Hoverable.ts:15](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Hoverable.ts#L15)
+Defined in: [interaction/Hoverable.ts:15](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Hoverable.ts#L15)
 
 Color change on hover, or null for no change
 
@@ -30,7 +30,7 @@ Color change on hover, or null for no change
 
 > `optional` **hoverOpacity**: `number`
 
-Defined in: [interaction/Hoverable.ts:17](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Hoverable.ts#L17)
+Defined in: [interaction/Hoverable.ts:17](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Hoverable.ts#L17)
 
 Opacity change on hover, or null for no change
 
@@ -40,7 +40,7 @@ Opacity change on hover, or null for no change
 
 > `optional` **hoverScale**: `number`
 
-Defined in: [interaction/Hoverable.ts:13](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Hoverable.ts#L13)
+Defined in: [interaction/Hoverable.ts:13](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Hoverable.ts#L13)
 
 Scale factor on hover, default 1.1
 
@@ -50,7 +50,7 @@ Scale factor on hover, default 1.1
 
 > `optional` **onHoverEnd**: (`mobject`) => `void`
 
-Defined in: [interaction/Hoverable.ts:11](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Hoverable.ts#L11)
+Defined in: [interaction/Hoverable.ts:11](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Hoverable.ts#L11)
 
 Callback when hover ends
 
@@ -70,7 +70,7 @@ Callback when hover ends
 
 > `optional` **onHoverStart**: (`mobject`) => `void`
 
-Defined in: [interaction/Hoverable.ts:9](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Hoverable.ts#L9)
+Defined in: [interaction/Hoverable.ts:9](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Hoverable.ts#L9)
 
 Callback when hover starts
 

@@ -1,6 +1,6 @@
 # Interface: Complex
 
-Defined in: [mobjects/value-tracker/ValueTracker.ts:188](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/value-tracker/ValueTracker.ts#L188)
+Defined in: [mobjects/value-tracker/ValueTracker.ts:188](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/value-tracker/ValueTracker.ts#L188)
 
 Complex number representation
 
@@ -10,7 +10,7 @@ Complex number representation
 
 > **im**: `number`
 
-Defined in: [mobjects/value-tracker/ValueTracker.ts:192](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/value-tracker/ValueTracker.ts#L192)
+Defined in: [mobjects/value-tracker/ValueTracker.ts:192](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/value-tracker/ValueTracker.ts#L192)
 
 Imaginary part
 
@@ -20,6 +20,6 @@ Imaginary part
 
 > **re**: `number`
 
-Defined in: [mobjects/value-tracker/ValueTracker.ts:190](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/value-tracker/ValueTracker.ts#L190)
+Defined in: [mobjects/value-tracker/ValueTracker.ts:190](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/value-tracker/ValueTracker.ts#L190)
 
 Real part

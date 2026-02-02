@@ -2,4 +2,4 @@
 
 > `const` **LEFT**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:11](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L11)
+Defined in: [core/Mobject.ts:11](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L11)

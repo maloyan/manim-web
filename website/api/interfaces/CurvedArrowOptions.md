@@ -1,6 +1,6 @@
 # Interface: CurvedArrowOptions
 
-Defined in: [mobjects/geometry/ArcShapes.ts:1153](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ArcShapes.ts#L1153)
+Defined in: [mobjects/geometry/ArcShapes.ts:1153](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L1153)
 
 Options for creating a CurvedArrow
 
@@ -10,7 +10,7 @@ Options for creating a CurvedArrow
 
 > `optional` **angle**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:1159](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ArcShapes.ts#L1159)
+Defined in: [mobjects/geometry/ArcShapes.ts:1159](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L1159)
 
 Arc angle in radians. Default: PI/4
 
@@ -20,7 +20,7 @@ Arc angle in radians. Default: PI/4
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:1161](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ArcShapes.ts#L1161)
+Defined in: [mobjects/geometry/ArcShapes.ts:1161](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L1161)
 
 Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
@@ -30,7 +30,7 @@ Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
 > `optional` **endPoint**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/geometry/ArcShapes.ts:1157](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ArcShapes.ts#L1157)
+Defined in: [mobjects/geometry/ArcShapes.ts:1157](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L1157)
 
 End point of the arrow. Default: [1, 0, 0]
 
@@ -40,7 +40,7 @@ End point of the arrow. Default: [1, 0, 0]
 
 > `optional` **numComponents**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:1169](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ArcShapes.ts#L1169)
+Defined in: [mobjects/geometry/ArcShapes.ts:1169](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L1169)
 
 Number of Bezier segments for approximation. Default: 8
 
@@ -50,7 +50,7 @@ Number of Bezier segments for approximation. Default: 8
 
 > `optional` **startPoint**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/geometry/ArcShapes.ts:1155](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ArcShapes.ts#L1155)
+Defined in: [mobjects/geometry/ArcShapes.ts:1155](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L1155)
 
 Start point of the arrow. Default: [-1, 0, 0]
 
@@ -60,7 +60,7 @@ Start point of the arrow. Default: [-1, 0, 0]
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:1163](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ArcShapes.ts#L1163)
+Defined in: [mobjects/geometry/ArcShapes.ts:1163](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L1163)
 
 Stroke width in pixels. Default: 4 (Manim's default)
 
@@ -70,7 +70,7 @@ Stroke width in pixels. Default: 4 (Manim's default)
 
 > `optional` **tipLength**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:1165](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ArcShapes.ts#L1165)
+Defined in: [mobjects/geometry/ArcShapes.ts:1165](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L1165)
 
 Length of the arrowhead tip. Default: 0.25
 
@@ -80,6 +80,6 @@ Length of the arrowhead tip. Default: 0.25
 
 > `optional` **tipWidth**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:1167](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/geometry/ArcShapes.ts#L1167)
+Defined in: [mobjects/geometry/ArcShapes.ts:1167](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L1167)
 
 Width of the arrowhead base. Default: 0.15

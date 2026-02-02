@@ -1,6 +1,6 @@
 # Class: MathTex
 
-Defined in: [mobjects/text/MathTex.ts:92](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L92)
+Defined in: [mobjects/text/MathTex.ts:92](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L92)
 
 MathTex - A mobject for rendering LaTeX mathematical expressions
 
@@ -38,7 +38,7 @@ await integral.waitForRender();
 
 > **new MathTex**(`options`): `MathTex`
 
-Defined in: [mobjects/text/MathTex.ts:110](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L110)
+Defined in: [mobjects/text/MathTex.ts:110](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L110)
 
 #### Parameters
 
@@ -60,7 +60,7 @@ Defined in: [mobjects/text/MathTex.ts:110](https://github.com/maloyan/manim-js/b
 
 > **\_\_savedMobjectState**: `unknown` = `null`
 
-Defined in: [core/Mobject.ts:118](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L118)
+Defined in: [core/Mobject.ts:118](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L118)
 
 JSON-serializable saved state (used by restoreState()).
 Set by saveState() -- typed as `unknown` here to avoid circular import;
@@ -76,7 +76,7 @@ actual type is MobjectState from StateManager.ts.
 
 > `protected` **\_activeRenderer**: `"katex"` \| `"mathjax"` = `null`
 
-Defined in: [mobjects/text/MathTex.ts:100](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L100)
+Defined in: [mobjects/text/MathTex.ts:100](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L100)
 
 Which renderer was actually used for the last successful render
 
@@ -86,7 +86,7 @@ Which renderer was actually used for the last successful render
 
 > `protected` **\_arrangePromise**: `Promise`\<`void`\> = `null`
 
-Defined in: [mobjects/text/MathTex.ts:106](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L106)
+Defined in: [mobjects/text/MathTex.ts:106](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L106)
 
 Promise that resolves when parts are arranged (multi-part only)
 
@@ -96,7 +96,7 @@ Promise that resolves when parts are arranged (multi-part only)
 
 > **\_dirty**: `boolean` = `true`
 
-Defined in: [core/Mobject.ts:95](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L95)
+Defined in: [core/Mobject.ts:95](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L95)
 
 Dirty flag indicating transforms need sync
 
@@ -110,7 +110,7 @@ Dirty flag indicating transforms need sync
 
 > `protected` **\_displayMode**: `boolean`
 
-Defined in: [mobjects/text/MathTex.ts:95](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L95)
+Defined in: [mobjects/text/MathTex.ts:95](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L95)
 
 ***
 
@@ -118,7 +118,7 @@ Defined in: [mobjects/text/MathTex.ts:95](https://github.com/maloyan/manim-js/bl
 
 > `protected` **\_fontSize**: `number`
 
-Defined in: [mobjects/text/MathTex.ts:94](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L94)
+Defined in: [mobjects/text/MathTex.ts:94](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L94)
 
 ***
 
@@ -126,7 +126,7 @@ Defined in: [mobjects/text/MathTex.ts:94](https://github.com/maloyan/manim-js/bl
 
 > `protected` **\_isMultiPart**: `boolean` = `false`
 
-Defined in: [mobjects/text/MathTex.ts:102](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L102)
+Defined in: [mobjects/text/MathTex.ts:102](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L102)
 
 Whether this is a multi-part MathTex (created from string[])
 
@@ -136,7 +136,7 @@ Whether this is a multi-part MathTex (created from string[])
 
 > `protected` **\_latex**: `string`
 
-Defined in: [mobjects/text/MathTex.ts:93](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L93)
+Defined in: [mobjects/text/MathTex.ts:93](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L93)
 
 ***
 
@@ -144,7 +144,7 @@ Defined in: [mobjects/text/MathTex.ts:93](https://github.com/maloyan/manim-js/bl
 
 > `protected` **\_opacity**: `number` = `1`
 
-Defined in: [core/Mobject.ts:80](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L80)
+Defined in: [core/Mobject.ts:80](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L80)
 
 Overall opacity (0-1) - protected for backward compatibility
 
@@ -158,7 +158,7 @@ Overall opacity (0-1) - protected for backward compatibility
 
 > `protected` **\_padding**: `number`
 
-Defined in: [mobjects/text/MathTex.ts:108](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L108)
+Defined in: [mobjects/text/MathTex.ts:108](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L108)
 
 Padding in pixels around rendered content
 
@@ -168,7 +168,7 @@ Padding in pixels around rendered content
 
 > `protected` **\_parts**: `MathTex`[] = `[]`
 
-Defined in: [mobjects/text/MathTex.ts:104](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L104)
+Defined in: [mobjects/text/MathTex.ts:104](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L104)
 
 Child MathTex parts (only when _isMultiPart is true)
 
@@ -178,7 +178,7 @@ Child MathTex parts (only when _isMultiPart is true)
 
 > `protected` **\_renderer**: [`TexRenderer`](../type-aliases/TexRenderer.md)
 
-Defined in: [mobjects/text/MathTex.ts:98](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L98)
+Defined in: [mobjects/text/MathTex.ts:98](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L98)
 
 User-requested renderer mode
 
@@ -188,7 +188,7 @@ User-requested renderer mode
 
 > `protected` **\_renderState**: `RenderState`
 
-Defined in: [mobjects/text/MathTex.ts:96](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L96)
+Defined in: [mobjects/text/MathTex.ts:96](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L96)
 
 ***
 
@@ -196,7 +196,7 @@ Defined in: [mobjects/text/MathTex.ts:96](https://github.com/maloyan/manim-js/bl
 
 > `protected` **\_style**: [`MobjectStyle`](../interfaces/MobjectStyle.md)
 
-Defined in: [core/Mobject.ts:89](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L89)
+Defined in: [core/Mobject.ts:89](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L89)
 
 Style properties for backward compatibility
 
@@ -210,7 +210,7 @@ Style properties for backward compatibility
 
 > **\_threeObject**: `Object3D`\<`Object3DEventMap`\> = `null`
 
-Defined in: [core/Mobject.ts:92](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L92)
+Defined in: [core/Mobject.ts:92](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L92)
 
 Three.js backing object
 
@@ -224,7 +224,7 @@ Three.js backing object
 
 > **children**: [`Mobject`](Mobject.md)[] = `[]`
 
-Defined in: [core/Mobject.ts:53](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L53)
+Defined in: [core/Mobject.ts:53](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L53)
 
 Child mobjects
 
@@ -238,7 +238,7 @@ Child mobjects
 
 > **fillOpacity**: `number` = `0`
 
-Defined in: [core/Mobject.ts:86](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L86)
+Defined in: [core/Mobject.ts:86](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L86)
 
 Fill opacity (0-1)
 
@@ -252,7 +252,7 @@ Fill opacity (0-1)
 
 > `readonly` **id**: `string`
 
-Defined in: [core/Mobject.ts:47](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L47)
+Defined in: [core/Mobject.ts:47](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L47)
 
 Unique identifier for this mobject
 
@@ -266,7 +266,7 @@ Unique identifier for this mobject
 
 > **parent**: [`Mobject`](Mobject.md) = `null`
 
-Defined in: [core/Mobject.ts:50](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L50)
+Defined in: [core/Mobject.ts:50](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L50)
 
 Parent mobject in hierarchy
 
@@ -280,7 +280,7 @@ Parent mobject in hierarchy
 
 > **position**: `Vector3`
 
-Defined in: [core/Mobject.ts:56](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L56)
+Defined in: [core/Mobject.ts:56](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L56)
 
 Position in 3D space
 
@@ -294,7 +294,7 @@ Position in 3D space
 
 > **rotation**: `Euler`
 
-Defined in: [core/Mobject.ts:59](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L59)
+Defined in: [core/Mobject.ts:59](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L59)
 
 Rotation as Euler angles
 
@@ -308,7 +308,7 @@ Rotation as Euler angles
 
 > **savedState**: [`Mobject`](Mobject.md) = `null`
 
-Defined in: [core/Mobject.ts:104](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L104)
+Defined in: [core/Mobject.ts:104](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L104)
 
 Saved mobject copy (used by Restore animation in TransformExtensions).
 Set by saveState().
@@ -323,7 +323,7 @@ Set by saveState().
 
 > **scaleVector**: `Vector3`
 
-Defined in: [core/Mobject.ts:62](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L62)
+Defined in: [core/Mobject.ts:62](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L62)
 
 Scale factors (named scaleVector to avoid conflict with scale method)
 
@@ -337,7 +337,7 @@ Scale factors (named scaleVector to avoid conflict with scale method)
 
 > **strokeWidth**: `number` = `4`
 
-Defined in: [core/Mobject.ts:83](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L83)
+Defined in: [core/Mobject.ts:83](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L83)
 
 Stroke width for outlines (default 4, matching Manim's thicker strokes)
 
@@ -351,7 +351,7 @@ Stroke width for outlines (default 4, matching Manim's thicker strokes)
 
 > **targetCopy**: [`Mobject`](Mobject.md) = `null`
 
-Defined in: [core/Mobject.ts:111](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L111)
+Defined in: [core/Mobject.ts:111](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L111)
 
 Target copy used by generateTarget() / MoveToTarget animation.
 Call generateTarget() to create a copy, modify targetCopy, then
@@ -369,7 +369,7 @@ play MoveToTarget to interpolate from current to target state.
 
 > **get** **color**(): `string`
 
-Defined in: [core/Mobject.ts:67](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L67)
+Defined in: [core/Mobject.ts:67](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L67)
 
 ##### Returns
 
@@ -379,7 +379,7 @@ Defined in: [core/Mobject.ts:67](https://github.com/maloyan/manim-js/blob/f77403
 
 > **set** **color**(`value`): `void`
 
-Defined in: [core/Mobject.ts:71](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L71)
+Defined in: [core/Mobject.ts:71](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L71)
 
 ##### Parameters
 
@@ -403,7 +403,7 @@ Defined in: [core/Mobject.ts:71](https://github.com/maloyan/manim-js/blob/f77403
 
 > **get** **fillColor**(): `string`
 
-Defined in: [core/Mobject.ts:471](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L471)
+Defined in: [core/Mobject.ts:471](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L471)
 
 Get the fill color
 
@@ -415,7 +415,7 @@ Get the fill color
 
 > **set** **fillColor**(`color`): `void`
 
-Defined in: [core/Mobject.ts:478](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L478)
+Defined in: [core/Mobject.ts:478](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L478)
 
 Set the fill color
 
@@ -441,7 +441,7 @@ Set the fill color
 
 > **get** **isDirty**(): `boolean`
 
-Defined in: [core/Mobject.ts:902](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L902)
+Defined in: [core/Mobject.ts:902](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L902)
 
 Check if this mobject needs sync
 
@@ -461,7 +461,7 @@ Check if this mobject needs sync
 
 > **get** **opacity**(): `number`
 
-Defined in: [core/Mobject.ts:145](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L145)
+Defined in: [core/Mobject.ts:145](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L145)
 
 Get the overall opacity of the mobject
 
@@ -473,7 +473,7 @@ Get the overall opacity of the mobject
 
 > **set** **opacity**(`value`): `void`
 
-Defined in: [core/Mobject.ts:152](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L152)
+Defined in: [core/Mobject.ts:152](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L152)
 
 Set the overall opacity of the mobject
 
@@ -499,7 +499,7 @@ Set the overall opacity of the mobject
 
 > **get** **style**(): [`MobjectStyle`](../interfaces/MobjectStyle.md)
 
-Defined in: [core/Mobject.ts:160](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L160)
+Defined in: [core/Mobject.ts:160](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L160)
 
 Get the style properties
 
@@ -519,7 +519,7 @@ Get the style properties
 
 > **get** **submobjects**(): [`Mobject`](Mobject.md)[]
 
-Defined in: [core/Mobject.ts:192](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L192)
+Defined in: [core/Mobject.ts:192](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L192)
 
 Get all submobjects (alias for children)
 
@@ -537,7 +537,7 @@ Get all submobjects (alias for children)
 
 > `protected` **\_createCopy**(): `MathTex`
 
-Defined in: [mobjects/text/MathTex.ts:928](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L928)
+Defined in: [mobjects/text/MathTex.ts:928](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L928)
 
 Create a copy of this MathTex
 
@@ -555,7 +555,7 @@ Create a copy of this MathTex
 
 > `protected` **\_createThreeObject**(): `Object3D`
 
-Defined in: [mobjects/text/MathTex.ts:868](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L868)
+Defined in: [mobjects/text/MathTex.ts:868](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L868)
 
 Create the Three.js backing object
 
@@ -573,7 +573,7 @@ Create the Three.js backing object
 
 > `protected` **\_getBoundingBox**(): `object`
 
-Defined in: [core/Mobject.ts:716](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L716)
+Defined in: [core/Mobject.ts:716](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L716)
 
 Get bounding box dimensions
 Uses object pooling to avoid allocations in hot paths (performance optimization).
@@ -606,7 +606,7 @@ Object with width, height, and depth
 
 > `protected` **\_getEdgeInDirection**(`direction`): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:699](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L699)
+Defined in: [core/Mobject.ts:699](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L699)
 
 Get the edge point of the bounding box in a direction
 
@@ -634,7 +634,7 @@ Edge point as [x, y, z]
 
 > **\_markDirty**(): `void`
 
-Defined in: [core/Mobject.ts:882](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L882)
+Defined in: [core/Mobject.ts:882](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L882)
 
 Mark this mobject as needing sync
 
@@ -652,7 +652,7 @@ Mark this mobject as needing sync
 
 > **\_markDirtyUpward**(): `void`
 
-Defined in: [core/Mobject.ts:891](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L891)
+Defined in: [core/Mobject.ts:891](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L891)
 
 Mark this mobject and all ancestors as needing sync.
 Use when a deep child's geometry changes and the parent tree must re-traverse.
@@ -672,7 +672,7 @@ Short-circuits if this node is already dirty (ancestors must be dirty too).
 
 > `protected` **\_renderDomToCanvas**(`container`, `containerRect`, `width`, `height`, `padding`): `Promise`\<`HTMLCanvasElement`\>
 
-Defined in: [mobjects/text/MathTex.ts:626](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L626)
+Defined in: [mobjects/text/MathTex.ts:626](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L626)
 
 Walk the KaTeX DOM tree and render text nodes + SVG elements
 at their computed CSS positions onto a canvas.
@@ -709,7 +709,7 @@ at their computed CSS positions onto a canvas.
 
 > `protected` **\_renderLatex**(): `Promise`\<`void`\>
 
-Defined in: [mobjects/text/MathTex.ts:398](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L398)
+Defined in: [mobjects/text/MathTex.ts:398](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L398)
 
 Render the LaTeX to a canvas using the selected renderer.
 
@@ -729,7 +729,7 @@ Renderer selection logic:
 
 > `protected` **\_renderLatexViaKaTeX**(): `Promise`\<`void`\>
 
-Defined in: [mobjects/text/MathTex.ts:531](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L531)
+Defined in: [mobjects/text/MathTex.ts:531](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L531)
 
 Render the LaTeX to a canvas by walking the KaTeX DOM
 and drawing each text element at its computed CSS position.
@@ -744,7 +744,7 @@ and drawing each text element at its computed CSS position.
 
 > `protected` **\_renderLatexViaMathJax**(): `Promise`\<`void`\>
 
-Defined in: [mobjects/text/MathTex.ts:428](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L428)
+Defined in: [mobjects/text/MathTex.ts:428](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L428)
 
 Render using MathJax SVG output.  The SVG is painted onto a canvas
 texture in the same way the KaTeX path works, keeping the visual
@@ -760,7 +760,7 @@ pipeline consistent.
 
 > `protected` **\_startRender**(): `void`
 
-Defined in: [mobjects/text/MathTex.ts:376](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L376)
+Defined in: [mobjects/text/MathTex.ts:376](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L376)
 
 Start the async rendering process
 
@@ -774,7 +774,7 @@ Start the async rendering process
 
 > `protected` **\_syncMaterialToThree**(): `void`
 
-Defined in: [mobjects/text/MathTex.ts:901](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L901)
+Defined in: [mobjects/text/MathTex.ts:901](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L901)
 
 Sync material properties to Three.js
 
@@ -792,7 +792,7 @@ Sync material properties to Three.js
 
 > **\_syncToThree**(): `void`
 
-Defined in: [core/Mobject.ts:836](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L836)
+Defined in: [core/Mobject.ts:836](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L836)
 
 Sync transform properties to the Three.js object
 
@@ -810,7 +810,7 @@ Sync transform properties to the Three.js object
 
 > `protected` **\_updateMeshGeometry**(): `void`
 
-Defined in: [mobjects/text/MathTex.ts:854](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L854)
+Defined in: [mobjects/text/MathTex.ts:854](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L854)
 
 Update the mesh geometry to match current dimensions
 
@@ -824,7 +824,7 @@ Update the mesh geometry to match current dimensions
 
 > **add**(...`mobjects`): `this`
 
-Defined in: [core/Mobject.ts:490](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L490)
+Defined in: [core/Mobject.ts:490](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L490)
 
 Add a child mobject (supports multiple arguments for backward compatibility)
 
@@ -852,7 +852,7 @@ this for chaining
 
 > **addUpdater**(`updater`, `callOnAdd`): `this`
 
-Defined in: [core/Mobject.ts:950](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L950)
+Defined in: [core/Mobject.ts:950](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L950)
 
 Add an updater function that runs every frame
 
@@ -886,7 +886,7 @@ this for chaining
 
 > **alignTo**(`target`, `direction`): `this`
 
-Defined in: [core/Mobject.ts:664](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L664)
+Defined in: [core/Mobject.ts:664](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L664)
 
 Align this mobject with another along an edge
 
@@ -920,7 +920,7 @@ this for chaining
 
 > **applyFunction**(`fn`): `this`
 
-Defined in: [core/Mobject.ts:1017](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L1017)
+Defined in: [core/Mobject.ts:1017](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1017)
 
 Apply a point-wise function to every VMobject descendant's control points.
 Uses duck-type check for getPoints/setPoints to avoid circular imports.
@@ -949,7 +949,7 @@ this for chaining
 
 > **applyToFamily**(`func`): `this`
 
-Defined in: [core/Mobject.ts:925](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L925)
+Defined in: [core/Mobject.ts:925](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L925)
 
 Apply a function to this mobject and all descendants
 
@@ -973,7 +973,7 @@ Apply a function to this mobject and all descendants
 
 > **become**(`other`): `this`
 
-Defined in: [core/Mobject.ts:561](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L561)
+Defined in: [core/Mobject.ts:561](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L561)
 
 Replace this mobject's visual properties with those of another mobject.
 Preserves identity (updaters, scene membership) but copies appearance.
@@ -1002,7 +1002,7 @@ this for chaining
 
 > **center**(): `this`
 
-Defined in: [core/Mobject.ts:797](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L797)
+Defined in: [core/Mobject.ts:797](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L797)
 
 Center this mobject at origin
 
@@ -1022,7 +1022,7 @@ this for chaining
 
 > **clearUpdaters**(): `this`
 
-Defined in: [core/Mobject.ts:975](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L975)
+Defined in: [core/Mobject.ts:975](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L975)
 
 Remove all updaters
 
@@ -1042,7 +1042,7 @@ this for chaining
 
 > **copy**(): [`Mobject`](Mobject.md)
 
-Defined in: [core/Mobject.ts:534](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L534)
+Defined in: [core/Mobject.ts:534](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L534)
 
 Create a deep copy of this mobject
 
@@ -1062,7 +1062,7 @@ New mobject with copied properties
 
 > **dispose**(): `void`
 
-Defined in: [mobjects/text/MathTex.ts:989](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L989)
+Defined in: [mobjects/text/MathTex.ts:989](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L989)
 
 Clean up Three.js resources
 
@@ -1080,7 +1080,7 @@ Clean up Three.js resources
 
 > **flip**(`axis`): `this`
 
-Defined in: [core/Mobject.ts:364](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L364)
+Defined in: [core/Mobject.ts:364](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L364)
 
 Flip the mobject along an axis (mirror reflection).
 
@@ -1108,7 +1108,7 @@ this for chaining
 
 > **generateTarget**(): [`Mobject`](Mobject.md)
 
-Defined in: [core/Mobject.ts:1085](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L1085)
+Defined in: [core/Mobject.ts:1085](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1085)
 
 Create a copy of this mobject as a target for MoveToTarget animation.
 Modify the returned copy, then play `new MoveToTarget(this)` to
@@ -1139,7 +1139,7 @@ await scene.play(new MoveToTarget(mob));
 
 > **getActiveRenderer**(): `"katex"` \| `"mathjax"`
 
-Defined in: [mobjects/text/MathTex.ts:190](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L190)
+Defined in: [mobjects/text/MathTex.ts:190](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L190)
 
 Get which renderer was actually used for the current render.
 Returns null if not yet rendered.
@@ -1154,7 +1154,7 @@ Returns null if not yet rendered.
 
 > **getBottom**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:746](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L746)
+Defined in: [core/Mobject.ts:746](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L746)
 
 Get the bottom edge center
 
@@ -1174,7 +1174,7 @@ Bottom edge center as [x, y, z]
 
 > **getBounds**(): `object`
 
-Defined in: [core/Mobject.ts:608](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L608)
+Defined in: [core/Mobject.ts:608](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L608)
 
 Get the bounding box of this mobject in world coordinates.
 
@@ -1226,7 +1226,7 @@ Object with min and max Vector3Tuple
 
 > **getCenter**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/text/MathTex.ts:982](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L982)
+Defined in: [mobjects/text/MathTex.ts:982](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L982)
 
 Get the center of this MathTex
 
@@ -1244,7 +1244,7 @@ Get the center of this MathTex
 
 > **getDimensions**(): \[`number`, `number`\]
 
-Defined in: [mobjects/text/MathTex.ts:364](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L364)
+Defined in: [mobjects/text/MathTex.ts:364](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L364)
 
 Get the rendered dimensions in world units
 
@@ -1260,7 +1260,7 @@ Get the rendered dimensions in world units
 
 > **getEdge**(`direction`): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:730](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L730)
+Defined in: [core/Mobject.ts:730](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L730)
 
 Get a specific edge point of the bounding box in a direction
 
@@ -1288,7 +1288,7 @@ Edge point as [x, y, z]
 
 > **getFamily**(): [`Mobject`](Mobject.md)[]
 
-Defined in: [core/Mobject.ts:936](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L936)
+Defined in: [core/Mobject.ts:936](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L936)
 
 Get all mobjects in the family (this mobject and all descendants)
 
@@ -1306,7 +1306,7 @@ Get all mobjects in the family (this mobject and all descendants)
 
 > **getFontSize**(): `number`
 
-Defined in: [mobjects/text/MathTex.ts:228](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L228)
+Defined in: [mobjects/text/MathTex.ts:228](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L228)
 
 Get the font size
 
@@ -1320,7 +1320,7 @@ Get the font size
 
 > **getLatex**(): `string`
 
-Defined in: [mobjects/text/MathTex.ts:209](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L209)
+Defined in: [mobjects/text/MathTex.ts:209](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L209)
 
 Get the LaTeX string
 
@@ -1334,7 +1334,7 @@ Get the LaTeX string
 
 > **getLeft**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:754](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L754)
+Defined in: [core/Mobject.ts:754](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L754)
 
 Get the left edge center
 
@@ -1354,7 +1354,7 @@ Left edge center as [x, y, z]
 
 > **getPart**(`index`): `MathTex`
 
-Defined in: [mobjects/text/MathTex.ts:296](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L296)
+Defined in: [mobjects/text/MathTex.ts:296](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L296)
 
 Get a sub-part of a multi-part MathTex expression.
 Only available when the MathTex was created with a string array.
@@ -1379,7 +1379,7 @@ The MathTex sub-part at the given index
 
 > **getPartCount**(): `number`
 
-Defined in: [mobjects/text/MathTex.ts:309](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L309)
+Defined in: [mobjects/text/MathTex.ts:309](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L309)
 
 Get the number of parts (1 for single-string, N for multi-part).
 
@@ -1393,7 +1393,7 @@ Get the number of parts (1 for single-string, N for multi-part).
 
 > **getRenderer**(): [`TexRenderer`](../type-aliases/TexRenderer.md)
 
-Defined in: [mobjects/text/MathTex.ts:182](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L182)
+Defined in: [mobjects/text/MathTex.ts:182](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L182)
 
 Get the renderer mode
 
@@ -1407,7 +1407,7 @@ Get the renderer mode
 
 > **getRight**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:762](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L762)
+Defined in: [core/Mobject.ts:762](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L762)
 
 Get the right edge center
 
@@ -1427,7 +1427,7 @@ Right edge center as [x, y, z]
 
 > **getThreeObject**(): `Object3D`
 
-Defined in: [core/Mobject.ts:909](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L909)
+Defined in: [core/Mobject.ts:909](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L909)
 
 Get the Three.js object, creating it if necessary
 
@@ -1445,7 +1445,7 @@ Get the Three.js object, creating it if necessary
 
 > **getTop**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:738](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L738)
+Defined in: [core/Mobject.ts:738](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L738)
 
 Get the top edge center
 
@@ -1465,7 +1465,7 @@ Top edge center as [x, y, z]
 
 > **getUpdaters**(): [`UpdaterFunction`](../type-aliases/UpdaterFunction.md)[]
 
-Defined in: [core/Mobject.ts:992](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L992)
+Defined in: [core/Mobject.ts:992](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L992)
 
 Get all updaters (for internal use)
 
@@ -1485,7 +1485,7 @@ A copy of the updaters array
 
 > **hasUpdaters**(): `boolean`
 
-Defined in: [core/Mobject.ts:984](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L984)
+Defined in: [core/Mobject.ts:984](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L984)
 
 Check if this mobject has any updaters
 
@@ -1505,7 +1505,7 @@ true if the mobject has updaters
 
 > **isRendering**(): `boolean`
 
-Defined in: [mobjects/text/MathTex.ts:356](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L356)
+Defined in: [mobjects/text/MathTex.ts:356](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L356)
 
 Check if rendering is in progress
 
@@ -1519,7 +1519,7 @@ Check if rendering is in progress
 
 > **moveTo**(`target`, `alignedEdge?`): `this`
 
-Defined in: [core/Mobject.ts:215](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L215)
+Defined in: [core/Mobject.ts:215](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L215)
 
 Move the mobject to an absolute position, or align with another Mobject.
 
@@ -1553,7 +1553,7 @@ this for chaining
 
 > **moveToAligned**(`target`, `alignedEdge?`): `this`
 
-Defined in: [core/Mobject.ts:686](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L686)
+Defined in: [core/Mobject.ts:686](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L686)
 
 Move this mobject to align its center with a point or mobject center
 
@@ -1587,7 +1587,7 @@ this for chaining
 
 > **nextTo**(`target`, `direction`, `buff`): `this`
 
-Defined in: [core/Mobject.ts:632](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L632)
+Defined in: [core/Mobject.ts:632](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L632)
 
 Position this mobject next to another mobject
 
@@ -1627,7 +1627,7 @@ this for chaining
 
 > **prepareForNonlinearTransform**(`numPieces`): `this`
 
-Defined in: [core/Mobject.ts:1037](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L1037)
+Defined in: [core/Mobject.ts:1037](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1037)
 
 Subdivide every VMobject descendant's cubic Bezier curves so that non-linear
 transforms produce smooth results. Each cubic segment is split into n sub-segments
@@ -1657,7 +1657,7 @@ this for chaining
 
 > **remove**(...`mobjects`): `this`
 
-Defined in: [core/Mobject.ts:515](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L515)
+Defined in: [core/Mobject.ts:515](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L515)
 
 Remove a child mobject (supports multiple arguments for backward compatibility)
 
@@ -1685,7 +1685,7 @@ this for chaining
 
 > **removeUpdater**(`updater`): `this`
 
-Defined in: [core/Mobject.ts:963](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L963)
+Defined in: [core/Mobject.ts:963](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L963)
 
 Remove an updater function
 
@@ -1713,7 +1713,7 @@ this for chaining
 
 > **restoreState**(): `boolean`
 
-Defined in: [core/Mobject.ts:1131](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L1131)
+Defined in: [core/Mobject.ts:1131](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1131)
 
 Restore this mobject to its previously saved state (from saveState).
 Uses the deep copy stored on `this.savedState` to restore all properties.
@@ -1734,7 +1734,7 @@ true if state was restored, false if no saved state exists
 
 > **rotate**(`angle`, `axisOrOptions?`): `this`
 
-Defined in: [core/Mobject.ts:245](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L245)
+Defined in: [core/Mobject.ts:245](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L245)
 
 Rotate the mobject around an axis
 Uses object pooling to avoid allocations in hot paths (performance optimization).
@@ -1769,7 +1769,7 @@ this for chaining
 
 > **rotateAboutOrigin**(`angle`, `axis`): `this`
 
-Defined in: [core/Mobject.ts:355](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L355)
+Defined in: [core/Mobject.ts:355](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L355)
 
 Rotate the mobject about the coordinate origin [0, 0, 0].
 
@@ -1803,7 +1803,7 @@ this for chaining
 
 > **saveState**(): `this`
 
-Defined in: [core/Mobject.ts:1106](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L1106)
+Defined in: [core/Mobject.ts:1106](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1106)
 
 Save the current state of this mobject so it can be restored later.
 Stores a deep copy on `this.savedState` (for Restore animation
@@ -1835,7 +1835,7 @@ mob.restoreState(); // back to original position and color
 
 > **scale**(`factor`): `this`
 
-Defined in: [core/Mobject.ts:378](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L378)
+Defined in: [core/Mobject.ts:378](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L378)
 
 Scale the mobject uniformly or non-uniformly
 
@@ -1863,7 +1863,7 @@ this for chaining
 
 > **setColor**(`color`): `this`
 
-Defined in: [mobjects/text/MathTex.ts:248](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L248)
+Defined in: [mobjects/text/MathTex.ts:248](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L248)
 
 Override setColor — texture is always rendered white, so we only need
 to update the material tint via _syncMaterialToThree (no re-render).
@@ -1888,7 +1888,7 @@ to update the material tint via _syncMaterialToThree (no re-render).
 
 > **setFill**(`color?`, `opacity?`): `this`
 
-Defined in: [core/Mobject.ts:458](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L458)
+Defined in: [core/Mobject.ts:458](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L458)
 
 Set the fill color and/or opacity (Manim Python parity: set_fill)
 
@@ -1922,7 +1922,7 @@ this for chaining
 
 > **setFillOpacity**(`opacity`): `this`
 
-Defined in: [core/Mobject.ts:442](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L442)
+Defined in: [core/Mobject.ts:442](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L442)
 
 Set the fill opacity
 Only marks dirty if value actually changed (performance optimization).
@@ -1951,7 +1951,7 @@ this for chaining
 
 > **setFontSize**(`size`): `this`
 
-Defined in: [mobjects/text/MathTex.ts:237](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L237)
+Defined in: [mobjects/text/MathTex.ts:237](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L237)
 
 Set the font size and re-render
 
@@ -1975,7 +1975,7 @@ this for chaining
 
 > **setLatex**(`latex`): `this`
 
-Defined in: [mobjects/text/MathTex.ts:218](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L218)
+Defined in: [mobjects/text/MathTex.ts:218](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L218)
 
 Set the LaTeX string and re-render
 
@@ -1999,7 +1999,7 @@ this for chaining
 
 > **setOpacity**(`opacity`): `this`
 
-Defined in: [mobjects/text/MathTex.ts:262](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L262)
+Defined in: [mobjects/text/MathTex.ts:262](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L262)
 
 Override setOpacity to propagate to multi-part children.
 
@@ -2023,7 +2023,7 @@ Override setOpacity to propagate to multi-part children.
 
 > **setRenderer**(`renderer`): `this`
 
-Defined in: [mobjects/text/MathTex.ts:199](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L199)
+Defined in: [mobjects/text/MathTex.ts:199](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L199)
 
 Set the renderer mode and re-render.
 
@@ -2047,7 +2047,7 @@ this for chaining
 
 > **setRevealProgress**(`alpha`): `void`
 
-Defined in: [mobjects/text/MathTex.ts:946](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L946)
+Defined in: [mobjects/text/MathTex.ts:946](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L946)
 
 Set reveal progress for Write animation (left-to-right wipe).
 
@@ -2069,7 +2069,7 @@ Progress from 0 (hidden) to 1 (fully visible)
 
 > **setStrokeWidth**(`width`): `this`
 
-Defined in: [core/Mobject.ts:426](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L426)
+Defined in: [core/Mobject.ts:426](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L426)
 
 Set the stroke width for outlines
 Only marks dirty if value actually changed (performance optimization).
@@ -2098,7 +2098,7 @@ this for chaining
 
 > **setStyle**(`style`): `this`
 
-Defined in: [core/Mobject.ts:167](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L167)
+Defined in: [core/Mobject.ts:167](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L167)
 
 Set style properties
 
@@ -2122,7 +2122,7 @@ Set style properties
 
 > **setX**(`x`): `this`
 
-Defined in: [core/Mobject.ts:770](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L770)
+Defined in: [core/Mobject.ts:770](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L770)
 
 Set the x-coordinate of this mobject's center, preserving y and z.
 Matches Manim Python's set_x() behavior.
@@ -2147,7 +2147,7 @@ Matches Manim Python's set_x() behavior.
 
 > **setY**(`y`): `this`
 
-Defined in: [core/Mobject.ts:779](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L779)
+Defined in: [core/Mobject.ts:779](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L779)
 
 Set the y-coordinate of this mobject's center, preserving x and z.
 Matches Manim Python's set_y() behavior.
@@ -2172,7 +2172,7 @@ Matches Manim Python's set_y() behavior.
 
 > **setZ**(`z`): `this`
 
-Defined in: [core/Mobject.ts:788](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L788)
+Defined in: [core/Mobject.ts:788](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L788)
 
 Set the z-coordinate of this mobject's center, preserving x and y.
 Matches Manim Python's set_z() behavior.
@@ -2197,7 +2197,7 @@ Matches Manim Python's set_z() behavior.
 
 > **shift**(`delta`): `this`
 
-Defined in: [core/Mobject.ts:201](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L201)
+Defined in: [core/Mobject.ts:201](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L201)
 
 Translate the mobject by a delta
 
@@ -2225,7 +2225,7 @@ this for chaining
 
 > **toCorner**(`direction`, `buff`): `this`
 
-Defined in: [core/Mobject.ts:829](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L829)
+Defined in: [core/Mobject.ts:829](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L829)
 
 Move to a corner of the frame
 
@@ -2259,7 +2259,7 @@ this for chaining
 
 > **toEdge**(`direction`, `buff`): `this`
 
-Defined in: [core/Mobject.ts:807](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L807)
+Defined in: [core/Mobject.ts:807](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L807)
 
 Move to the edge of the frame
 
@@ -2293,7 +2293,7 @@ this for chaining
 
 > **update**(`dt`): `void`
 
-Defined in: [core/Mobject.ts:1001](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Mobject.ts#L1001)
+Defined in: [core/Mobject.ts:1001](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1001)
 
 Run all updaters with given dt
 Called by Scene during render loop
@@ -2320,7 +2320,7 @@ Delta time in seconds since last frame
 
 > **waitForRender**(): `Promise`\<`void`\>
 
-Defined in: [mobjects/text/MathTex.ts:277](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/text/MathTex.ts#L277)
+Defined in: [mobjects/text/MathTex.ts:277](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/MathTex.ts#L277)
 
 Wait for the LaTeX to finish rendering.
 For multi-part MathTex, waits for all parts to render and be arranged.

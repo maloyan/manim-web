@@ -1,6 +1,6 @@
 # Interface: NewtonFractalOptions
 
-Defined in: [mobjects/fractals/NewtonFractal.ts:14](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/NewtonFractal.ts#L14)
+Defined in: [mobjects/fractals/NewtonFractal.ts:14](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/NewtonFractal.ts#L14)
 
 Options for creating a NewtonFractal visualization
 
@@ -10,7 +10,7 @@ Options for creating a NewtonFractal visualization
 
 > `optional` **center**: \[`number`, `number`\]
 
-Defined in: [mobjects/fractals/NewtonFractal.ts:20](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/NewtonFractal.ts#L20)
+Defined in: [mobjects/fractals/NewtonFractal.ts:20](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/NewtonFractal.ts#L20)
 
 Center of the view in the complex plane [re, im]. Default: [0, 0]
 
@@ -20,7 +20,7 @@ Center of the view in the complex plane [re, im]. Default: [0, 0]
 
 > `optional` **coefficients**: `number`[]
 
-Defined in: [mobjects/fractals/NewtonFractal.ts:30](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/NewtonFractal.ts#L30)
+Defined in: [mobjects/fractals/NewtonFractal.ts:30](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/NewtonFractal.ts#L30)
 
 Polynomial coefficients in ascending degree order.
 e.g. [-1, 0, 0, 1] represents z^3 - 1  (coeff[0]*z^0 + ... + coeff[3]*z^3).
@@ -32,7 +32,7 @@ Default: [-1, 0, 0, 1]  (z^3 - 1)
 
 > `optional` **height**: `number`
 
-Defined in: [mobjects/fractals/NewtonFractal.ts:18](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/NewtonFractal.ts#L18)
+Defined in: [mobjects/fractals/NewtonFractal.ts:18](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/NewtonFractal.ts#L18)
 
 Height of the render plane in world units. Default: 6
 
@@ -42,7 +42,7 @@ Height of the render plane in world units. Default: 6
 
 > `optional` **lightness**: `number`
 
-Defined in: [mobjects/fractals/NewtonFractal.ts:36](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/NewtonFractal.ts#L36)
+Defined in: [mobjects/fractals/NewtonFractal.ts:36](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/NewtonFractal.ts#L36)
 
 Root color lightness (0-1). Default: 0.5
 
@@ -52,7 +52,7 @@ Root color lightness (0-1). Default: 0.5
 
 > `optional` **maxIterations**: `number`
 
-Defined in: [mobjects/fractals/NewtonFractal.ts:24](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/NewtonFractal.ts#L24)
+Defined in: [mobjects/fractals/NewtonFractal.ts:24](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/NewtonFractal.ts#L24)
 
 Maximum iteration count. Default: 40
 
@@ -62,7 +62,7 @@ Maximum iteration count. Default: 40
 
 > `optional` **opacity**: `number`
 
-Defined in: [mobjects/fractals/NewtonFractal.ts:38](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/NewtonFractal.ts#L38)
+Defined in: [mobjects/fractals/NewtonFractal.ts:38](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/NewtonFractal.ts#L38)
 
 Opacity (0-1). Default: 1
 
@@ -72,7 +72,7 @@ Opacity (0-1). Default: 1
 
 > `optional` **saturation**: `number`
 
-Defined in: [mobjects/fractals/NewtonFractal.ts:34](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/NewtonFractal.ts#L34)
+Defined in: [mobjects/fractals/NewtonFractal.ts:34](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/NewtonFractal.ts#L34)
 
 Root color saturation (0-1). Default: 0.85
 
@@ -82,7 +82,7 @@ Root color saturation (0-1). Default: 0.85
 
 > `optional` **tolerance**: `number`
 
-Defined in: [mobjects/fractals/NewtonFractal.ts:32](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/NewtonFractal.ts#L32)
+Defined in: [mobjects/fractals/NewtonFractal.ts:32](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/NewtonFractal.ts#L32)
 
 Convergence threshold. Default: 1e-6
 
@@ -92,7 +92,7 @@ Convergence threshold. Default: 1e-6
 
 > `optional` **width**: `number`
 
-Defined in: [mobjects/fractals/NewtonFractal.ts:16](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/NewtonFractal.ts#L16)
+Defined in: [mobjects/fractals/NewtonFractal.ts:16](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/NewtonFractal.ts#L16)
 
 Width of the render plane in world units. Default: 8
 
@@ -102,6 +102,6 @@ Width of the render plane in world units. Default: 8
 
 > `optional` **zoom**: `number`
 
-Defined in: [mobjects/fractals/NewtonFractal.ts:22](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/fractals/NewtonFractal.ts#L22)
+Defined in: [mobjects/fractals/NewtonFractal.ts:22](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/fractals/NewtonFractal.ts#L22)
 
 Zoom level (higher = more zoomed in). Default: 1

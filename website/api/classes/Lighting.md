@@ -1,6 +1,6 @@
 # Class: Lighting
 
-Defined in: [core/Lighting.ts:73](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L73)
+Defined in: [core/Lighting.ts:73](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L73)
 
 Lighting system for 3D manimweb scenes.
 Manages multiple lights attached to a Three.js scene.
@@ -11,7 +11,7 @@ Manages multiple lights attached to a Three.js scene.
 
 > **new Lighting**(`threeScene`): `Lighting`
 
-Defined in: [core/Lighting.ts:81](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L81)
+Defined in: [core/Lighting.ts:81](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L81)
 
 Create a new lighting system.
 
@@ -33,7 +33,7 @@ The Three.js scene to add lights to
 
 > **addAmbient**(`options?`): `AmbientLight`
 
-Defined in: [core/Lighting.ts:91](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L91)
+Defined in: [core/Lighting.ts:91](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L91)
 
 Add an ambient light to the scene.
 Ambient lights illuminate all objects equally from all directions.
@@ -58,7 +58,7 @@ The created AmbientLight
 
 > **addDirectional**(`options?`): `DirectionalLight`
 
-Defined in: [core/Lighting.ts:107](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L107)
+Defined in: [core/Lighting.ts:107](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L107)
 
 Add a directional light to the scene.
 Directional lights emit parallel rays, like sunlight.
@@ -83,7 +83,7 @@ The created DirectionalLight
 
 > **addPoint**(`options?`): `PointLight`
 
-Defined in: [core/Lighting.ts:127](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L127)
+Defined in: [core/Lighting.ts:127](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L127)
 
 Add a point light to the scene.
 Point lights emit in all directions from a single point.
@@ -108,7 +108,7 @@ The created PointLight
 
 > **addSpot**(`options?`): `SpotLight`
 
-Defined in: [core/Lighting.ts:149](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L149)
+Defined in: [core/Lighting.ts:149](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L149)
 
 Add a spot light to the scene.
 Spot lights emit in a cone from a single point.
@@ -133,7 +133,7 @@ The created SpotLight
 
 > **dispose**(): `void`
 
-Defined in: [core/Lighting.ts:215](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L215)
+Defined in: [core/Lighting.ts:215](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L215)
 
 Dispose of all lights and clean up resources.
 
@@ -147,7 +147,7 @@ Dispose of all lights and clean up resources.
 
 > **getLights**(): `Light`\<`LightShadow`\<`Camera`\>\>[]
 
-Defined in: [core/Lighting.ts:186](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L186)
+Defined in: [core/Lighting.ts:186](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L186)
 
 Get all lights in the system.
 
@@ -163,7 +163,7 @@ Array of all lights
 
 > **remove**(`light`): `void`
 
-Defined in: [core/Lighting.ts:194](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L194)
+Defined in: [core/Lighting.ts:194](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L194)
 
 Remove a specific light from the scene.
 
@@ -185,7 +185,7 @@ The light to remove
 
 > **removeAll**(): `void`
 
-Defined in: [core/Lighting.ts:205](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L205)
+Defined in: [core/Lighting.ts:205](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L205)
 
 Remove all lights from the scene.
 
@@ -199,7 +199,7 @@ Remove all lights from the scene.
 
 > **setupDefault**(): `void`
 
-Defined in: [core/Lighting.ts:176](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/core/Lighting.ts#L176)
+Defined in: [core/Lighting.ts:176](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Lighting.ts#L176)
 
 Set up default 3-point lighting.
 Creates ambient light plus two directional lights for balanced illumination.

@@ -1,6 +1,6 @@
 # Interface: TableOptions
 
-Defined in: [mobjects/table/Table.ts:21](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L21)
+Defined in: [mobjects/table/Table.ts:21](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L21)
 
 Options for creating a Table
 
@@ -14,7 +14,7 @@ Options for creating a Table
 
 > `optional` **arrangeInRowsFirst**: `boolean`
 
-Defined in: [mobjects/table/Table.ts:41](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L41)
+Defined in: [mobjects/table/Table.ts:41](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L41)
 
 Whether to arrange entries in rows. Default: true
 
@@ -24,7 +24,7 @@ Whether to arrange entries in rows. Default: true
 
 > `optional` **backgroundFillOpacity**: `number`
 
-Defined in: [mobjects/table/Table.ts:47](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L47)
+Defined in: [mobjects/table/Table.ts:47](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L47)
 
 Background fill opacity. Default: 0
 
@@ -34,7 +34,7 @@ Background fill opacity. Default: 0
 
 > `optional` **backgroundStrokeColor**: `string`
 
-Defined in: [mobjects/table/Table.ts:45](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L45)
+Defined in: [mobjects/table/Table.ts:45](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L45)
 
 Background color for cells. Default: transparent
 
@@ -44,7 +44,7 @@ Background color for cells. Default: transparent
 
 > `optional` **colLabels**: [`Mobject`](../classes/Mobject.md)[]
 
-Defined in: [mobjects/table/Table.ts:27](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L27)
+Defined in: [mobjects/table/Table.ts:27](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L27)
 
 Column labels to display on top
 
@@ -54,7 +54,7 @@ Column labels to display on top
 
 > **data**: [`Mobject`](../classes/Mobject.md)[][]
 
-Defined in: [mobjects/table/Table.ts:23](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L23)
+Defined in: [mobjects/table/Table.ts:23](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L23)
 
 2D array of mobjects to display in the table
 
@@ -64,7 +64,7 @@ Defined in: [mobjects/table/Table.ts:23](https://github.com/maloyan/manim-js/blo
 
 > `optional` **entriesColor**: `string`
 
-Defined in: [mobjects/table/Table.ts:43](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L43)
+Defined in: [mobjects/table/Table.ts:43](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L43)
 
 Color for all entries. If set, overrides individual colors
 
@@ -74,7 +74,7 @@ Color for all entries. If set, overrides individual colors
 
 > `optional` **hBuff**: `number`
 
-Defined in: [mobjects/table/Table.ts:35](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L35)
+Defined in: [mobjects/table/Table.ts:35](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L35)
 
 Horizontal buffer between cells. Default: 0.5
 
@@ -84,7 +84,7 @@ Horizontal buffer between cells. Default: 0.5
 
 > `optional` **includeOuterLines**: `boolean`
 
-Defined in: [mobjects/table/Table.ts:31](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L31)
+Defined in: [mobjects/table/Table.ts:31](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L31)
 
 Whether to include outer lines around the table. Default: true
 
@@ -94,7 +94,7 @@ Whether to include outer lines around the table. Default: true
 
 > `optional` **lineColor**: `string`
 
-Defined in: [mobjects/table/Table.ts:37](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L37)
+Defined in: [mobjects/table/Table.ts:37](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L37)
 
 Color of the grid lines. Default: WHITE
 
@@ -104,7 +104,7 @@ Color of the grid lines. Default: WHITE
 
 > `optional` **lineStrokeWidth**: `number`
 
-Defined in: [mobjects/table/Table.ts:39](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L39)
+Defined in: [mobjects/table/Table.ts:39](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L39)
 
 Stroke width of grid lines. Default: 2
 
@@ -114,7 +114,7 @@ Stroke width of grid lines. Default: 2
 
 > `optional` **position**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/table/Table.ts:49](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L49)
+Defined in: [mobjects/table/Table.ts:49](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L49)
 
 Starting position. Default: ORIGIN
 
@@ -124,7 +124,7 @@ Starting position. Default: ORIGIN
 
 > `optional` **rowLabels**: [`Mobject`](../classes/Mobject.md)[]
 
-Defined in: [mobjects/table/Table.ts:25](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L25)
+Defined in: [mobjects/table/Table.ts:25](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L25)
 
 Row labels to display on the left side
 
@@ -134,7 +134,7 @@ Row labels to display on the left side
 
 > `optional` **topLeftEntry**: [`Mobject`](../classes/Mobject.md)
 
-Defined in: [mobjects/table/Table.ts:29](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L29)
+Defined in: [mobjects/table/Table.ts:29](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L29)
 
 Top-left element when both row and column labels exist
 
@@ -144,6 +144,6 @@ Top-left element when both row and column labels exist
 
 > `optional` **vBuff**: `number`
 
-Defined in: [mobjects/table/Table.ts:33](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/mobjects/table/Table.ts#L33)
+Defined in: [mobjects/table/Table.ts:33](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/table/Table.ts#L33)
 
 Vertical buffer between cells. Default: 0.3

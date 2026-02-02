@@ -1,6 +1,6 @@
 # Class: Draggable
 
-Defined in: [interaction/Draggable.ts:25](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Draggable.ts#L25)
+Defined in: [interaction/Draggable.ts:25](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Draggable.ts#L25)
 
 Makes a mobject draggable with mouse and touch support.
 
@@ -10,7 +10,7 @@ Makes a mobject draggable with mouse and touch support.
 
 > **new Draggable**(`mobject`, `scene`, `options?`): `Draggable`
 
-Defined in: [interaction/Draggable.ts:47](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Draggable.ts#L47)
+Defined in: [interaction/Draggable.ts:47](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Draggable.ts#L47)
 
 Create a new Draggable behavior.
 
@@ -46,7 +46,7 @@ Draggable configuration options
 
 > **get** **isDragging**(): `boolean`
 
-Defined in: [interaction/Draggable.ts:66](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Draggable.ts#L66)
+Defined in: [interaction/Draggable.ts:66](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Draggable.ts#L66)
 
 Get whether the mobject is currently being dragged.
 
@@ -62,7 +62,7 @@ Get whether the mobject is currently being dragged.
 
 > **get** **isEnabled**(): `boolean`
 
-Defined in: [interaction/Draggable.ts:73](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Draggable.ts#L73)
+Defined in: [interaction/Draggable.ts:73](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Draggable.ts#L73)
 
 Get whether dragging is enabled.
 
@@ -78,7 +78,7 @@ Get whether dragging is enabled.
 
 > **get** **mobject**(): [`Mobject`](Mobject.md)
 
-Defined in: [interaction/Draggable.ts:80](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Draggable.ts#L80)
+Defined in: [interaction/Draggable.ts:80](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Draggable.ts#L80)
 
 Get the mobject this draggable is attached to.
 
@@ -92,7 +92,7 @@ Get the mobject this draggable is attached to.
 
 > **disable**(): `void`
 
-Defined in: [interaction/Draggable.ts:225](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Draggable.ts#L225)
+Defined in: [interaction/Draggable.ts:225](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Draggable.ts#L225)
 
 Disable dragging.
 
@@ -106,7 +106,7 @@ Disable dragging.
 
 > **dispose**(): `void`
 
-Defined in: [interaction/Draggable.ts:232](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Draggable.ts#L232)
+Defined in: [interaction/Draggable.ts:232](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Draggable.ts#L232)
 
 Clean up event listeners.
 
@@ -120,7 +120,7 @@ Clean up event listeners.
 
 > **enable**(): `void`
 
-Defined in: [interaction/Draggable.ts:218](https://github.com/maloyan/manim-js/blob/f77403d9d2350b95d57aff0649ec7fe97066a5b8/src/interaction/Draggable.ts#L218)
+Defined in: [interaction/Draggable.ts:218](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Draggable.ts#L218)
 
 Enable dragging.
 
