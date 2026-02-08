@@ -1,6 +1,6 @@
 # Interface: FadeToColorOptions
 
-Defined in: [animation/transform/TransformExtensions.ts:1108](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/transform/TransformExtensions.ts#L1108)
+Defined in: [animation/transform/TransformExtensions.ts:1108](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/transform/TransformExtensions.ts#L1108)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/transform/TransformExtensions.ts:1108](https://github.com
 
 > **color**: `string`
 
-Defined in: [animation/transform/TransformExtensions.ts:1110](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/transform/TransformExtensions.ts#L1110)
+Defined in: [animation/transform/TransformExtensions.ts:1110](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/transform/TransformExtensions.ts#L1110)
 
 Target color
 
@@ -22,7 +22,7 @@ Target color
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -36,7 +36,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -50,7 +50,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 

@@ -2,7 +2,7 @@
 
 > **updateFromAlphaFunc**(`mobject`, `func`, `options?`): [`UpdateFromAlphaFunc`](../classes/UpdateFromAlphaFunc.md)
 
-Defined in: [animation/UpdateFromAlphaFunc.ts:50](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/UpdateFromAlphaFunc.ts#L50)
+Defined in: [animation/UpdateFromAlphaFunc.ts:50](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/UpdateFromAlphaFunc.ts#L50)
 
 Factory function to create an UpdateFromAlphaFunc animation.
 

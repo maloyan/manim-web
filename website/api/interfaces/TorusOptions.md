@@ -1,6 +1,6 @@
 # Interface: TorusOptions
 
-Defined in: [mobjects/three-d/Torus.ts:7](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Torus.ts#L7)
+Defined in: [mobjects/three-d/Torus.ts:7](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Torus.ts#L7)
 
 Options for creating a Torus
 
@@ -10,7 +10,7 @@ Options for creating a Torus
 
 > `optional` **arc**: `number`
 
-Defined in: [mobjects/three-d/Torus.ts:23](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Torus.ts#L23)
+Defined in: [mobjects/three-d/Torus.ts:23](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Torus.ts#L23)
 
 Central angle (arc). Default: 2*PI (full torus)
 
@@ -20,7 +20,7 @@ Central angle (arc). Default: 2*PI (full torus)
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/three-d/Torus.ts:13](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Torus.ts#L13)
+Defined in: [mobjects/three-d/Torus.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Torus.ts#L13)
 
 Center position [x, y, z]. Default: [0, 0, 0]
 
@@ -30,7 +30,7 @@ Center position [x, y, z]. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/three-d/Torus.ts:15](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Torus.ts#L15)
+Defined in: [mobjects/three-d/Torus.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Torus.ts#L15)
 
 Color as CSS color string. Default: '#ffffff'
 
@@ -40,7 +40,7 @@ Color as CSS color string. Default: '#ffffff'
 
 > `optional` **opacity**: `number`
 
-Defined in: [mobjects/three-d/Torus.ts:17](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Torus.ts#L17)
+Defined in: [mobjects/three-d/Torus.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Torus.ts#L17)
 
 Opacity from 0 to 1. Default: 1
 
@@ -50,7 +50,7 @@ Opacity from 0 to 1. Default: 1
 
 > `optional` **radialSegments**: `number`
 
-Defined in: [mobjects/three-d/Torus.ts:19](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Torus.ts#L19)
+Defined in: [mobjects/three-d/Torus.ts:19](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Torus.ts#L19)
 
 Number of radial segments. Default: 32
 
@@ -60,7 +60,7 @@ Number of radial segments. Default: 32
 
 > `optional` **radius**: `number`
 
-Defined in: [mobjects/three-d/Torus.ts:9](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Torus.ts#L9)
+Defined in: [mobjects/three-d/Torus.ts:9](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Torus.ts#L9)
 
 Major radius (distance from center of tube to center of torus). Default: 1
 
@@ -70,7 +70,7 @@ Major radius (distance from center of tube to center of torus). Default: 1
 
 > `optional` **tubeRadius**: `number`
 
-Defined in: [mobjects/three-d/Torus.ts:11](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Torus.ts#L11)
+Defined in: [mobjects/three-d/Torus.ts:11](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Torus.ts#L11)
 
 Minor radius (radius of the tube). Default: 0.3
 
@@ -80,7 +80,7 @@ Minor radius (radius of the tube). Default: 0.3
 
 > `optional` **tubularSegments**: `number`
 
-Defined in: [mobjects/three-d/Torus.ts:21](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Torus.ts#L21)
+Defined in: [mobjects/three-d/Torus.ts:21](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Torus.ts#L21)
 
 Number of tubular segments. Default: 64
 
@@ -90,6 +90,6 @@ Number of tubular segments. Default: 64
 
 > `optional` **wireframe**: `boolean`
 
-Defined in: [mobjects/three-d/Torus.ts:25](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Torus.ts#L25)
+Defined in: [mobjects/three-d/Torus.ts:25](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Torus.ts#L25)
 
 Whether to render as wireframe. Default: false

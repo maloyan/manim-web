@@ -1,6 +1,6 @@
 # Interface: ShowPassingFlashOptions
 
-Defined in: [animation/indication/ShowPassingFlash.ts:19](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L19)
+Defined in: [animation/indication/ShowPassingFlash.ts:19](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/ShowPassingFlash.ts#L19)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/indication/ShowPassingFlash.ts:19](https://github.com/mal
 
 > `optional` **color**: `string`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:21](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L21)
+Defined in: [animation/indication/ShowPassingFlash.ts:21](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/ShowPassingFlash.ts#L21)
 
 Color of the flash. Default: YELLOW
 
@@ -22,7 +22,7 @@ Color of the flash. Default: YELLOW
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -36,7 +36,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -50,7 +50,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 
@@ -64,7 +64,7 @@ Shift direction for fade animations
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:25](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L25)
+Defined in: [animation/indication/ShowPassingFlash.ts:25](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/ShowPassingFlash.ts#L25)
 
 Stroke width of the flash. Default: DEFAULT_STROKE_WIDTH * 1.5
 
@@ -74,6 +74,6 @@ Stroke width of the flash. Default: DEFAULT_STROKE_WIDTH * 1.5
 
 > `optional` **timeWidth**: `number`
 
-Defined in: [animation/indication/ShowPassingFlash.ts:23](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/ShowPassingFlash.ts#L23)
+Defined in: [animation/indication/ShowPassingFlash.ts:23](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/ShowPassingFlash.ts#L23)
 
 Width of the flash as a proportion of the path (0-1). Default: 0.2

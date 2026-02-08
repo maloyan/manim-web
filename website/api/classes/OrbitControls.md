@@ -1,6 +1,6 @@
 # Class: OrbitControls
 
-Defined in: [interaction/OrbitControls.ts:40](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L40)
+Defined in: [interaction/OrbitControls.ts:40](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L40)
 
 Wrapper for Three.js OrbitControls providing camera orbit interaction.
 Allows users to rotate, zoom, and pan the camera around a target point.
@@ -11,7 +11,7 @@ Allows users to rotate, zoom, and pan the camera around a target point.
 
 > **new OrbitControls**(`camera`, `canvas`, `options?`): `OrbitControls`
 
-Defined in: [interaction/OrbitControls.ts:50](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L50)
+Defined in: [interaction/OrbitControls.ts:50](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L50)
 
 Create new OrbitControls.
 
@@ -45,7 +45,7 @@ Controls configuration options
 
 > **addEventListener**(`event`, `callback`): `void`
 
-Defined in: [interaction/OrbitControls.ts:217](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L217)
+Defined in: [interaction/OrbitControls.ts:217](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L217)
 
 Add an event listener for control changes.
 
@@ -73,7 +73,7 @@ Callback function
 
 > **disable**(): `void`
 
-Defined in: [interaction/OrbitControls.ts:106](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L106)
+Defined in: [interaction/OrbitControls.ts:106](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L106)
 
 Disable the controls.
 
@@ -87,7 +87,7 @@ Disable the controls.
 
 > **dispose**(): `void`
 
-Defined in: [interaction/OrbitControls.ts:239](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L239)
+Defined in: [interaction/OrbitControls.ts:239](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L239)
 
 Dispose of the controls and clean up event listeners.
 
@@ -101,7 +101,7 @@ Dispose of the controls and clean up event listeners.
 
 > **enable**(): `void`
 
-Defined in: [interaction/OrbitControls.ts:98](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L98)
+Defined in: [interaction/OrbitControls.ts:98](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L98)
 
 Enable the controls.
 
@@ -115,7 +115,7 @@ Enable the controls.
 
 > **getControls**(): `OrbitControls`
 
-Defined in: [interaction/OrbitControls.ts:208](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L208)
+Defined in: [interaction/OrbitControls.ts:208](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L208)
 
 Get the underlying Three.js OrbitControls.
 
@@ -131,7 +131,7 @@ The ThreeOrbitControls instance
 
 > **getTarget**(): `Vector3`
 
-Defined in: [interaction/OrbitControls.ts:131](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L131)
+Defined in: [interaction/OrbitControls.ts:131](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L131)
 
 Get the current target point.
 
@@ -147,7 +147,7 @@ The target position as a Vector3
 
 > **isEnabled**(): `boolean`
 
-Defined in: [interaction/OrbitControls.ts:115](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L115)
+Defined in: [interaction/OrbitControls.ts:115](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L115)
 
 Check if controls are enabled.
 
@@ -163,7 +163,7 @@ true if controls are enabled
 
 > **removeEventListener**(`event`, `callback`): `void`
 
-Defined in: [interaction/OrbitControls.ts:229](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L229)
+Defined in: [interaction/OrbitControls.ts:229](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L229)
 
 Remove an event listener.
 
@@ -191,7 +191,7 @@ Callback function to remove
 
 > **reset**(): `void`
 
-Defined in: [interaction/OrbitControls.ts:200](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L200)
+Defined in: [interaction/OrbitControls.ts:200](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L200)
 
 Reset the camera to its default position and target.
 
@@ -205,7 +205,7 @@ Reset the camera to its default position and target.
 
 > **setAutoRotate**(`enabled`): `void`
 
-Defined in: [interaction/OrbitControls.ts:155](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L155)
+Defined in: [interaction/OrbitControls.ts:155](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L155)
 
 Enable or disable auto-rotation.
 
@@ -227,7 +227,7 @@ Whether auto-rotation should be enabled
 
 > **setAutoRotateSpeed**(`speed`): `void`
 
-Defined in: [interaction/OrbitControls.ts:163](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L163)
+Defined in: [interaction/OrbitControls.ts:163](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L163)
 
 Set the auto-rotation speed.
 
@@ -249,7 +249,7 @@ Rotation speed in degrees per second
 
 > **setAzimuthLimits**(`min`, `max`): `void`
 
-Defined in: [interaction/OrbitControls.ts:192](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L192)
+Defined in: [interaction/OrbitControls.ts:192](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L192)
 
 Set azimuth angle limits (horizontal rotation).
 
@@ -277,7 +277,7 @@ Maximum angle in radians
 
 > **setDamping**(`enabled`): `void`
 
-Defined in: [interaction/OrbitControls.ts:139](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L139)
+Defined in: [interaction/OrbitControls.ts:139](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L139)
 
 Enable or disable damping (smooth motion).
 
@@ -299,7 +299,7 @@ Whether damping should be enabled
 
 > **setDampingFactor**(`factor`): `void`
 
-Defined in: [interaction/OrbitControls.ts:147](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L147)
+Defined in: [interaction/OrbitControls.ts:147](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L147)
 
 Set the damping factor.
 
@@ -321,7 +321,7 @@ Damping factor (0 = no damping, 1 = full damping)
 
 > **setPolarLimits**(`min`, `max`): `void`
 
-Defined in: [interaction/OrbitControls.ts:182](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L182)
+Defined in: [interaction/OrbitControls.ts:182](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L182)
 
 Set polar angle limits (vertical rotation).
 
@@ -349,7 +349,7 @@ Maximum angle in radians (PI = looking up)
 
 > **setTarget**(`target`): `void`
 
-Defined in: [interaction/OrbitControls.ts:123](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L123)
+Defined in: [interaction/OrbitControls.ts:123](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L123)
 
 Set the target point for the camera to orbit around.
 
@@ -371,7 +371,7 @@ Target position [x, y, z]
 
 > **setZoomLimits**(`min`, `max`): `void`
 
-Defined in: [interaction/OrbitControls.ts:172](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L172)
+Defined in: [interaction/OrbitControls.ts:172](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L172)
 
 Set zoom distance limits.
 
@@ -399,7 +399,7 @@ Maximum zoom distance
 
 > **update**(): `void`
 
-Defined in: [interaction/OrbitControls.ts:89](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/OrbitControls.ts#L89)
+Defined in: [interaction/OrbitControls.ts:89](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/OrbitControls.ts#L89)
 
 Update the controls. Must be called in the animation loop when damping is enabled.
 

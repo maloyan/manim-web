@@ -379,9 +379,11 @@ export abstract class Mobject {
     if (typeof factor === 'number') {
       this.scaleVector.multiplyScalar(factor);
     } else {
+      // For 2D scenes, z-scale=0 means "preserve z" (matching Python Manim).
+      // Avoid z=0 which creates a singular transform matrix in THREE.js.
       this.scaleVector.x *= factor[0];
       this.scaleVector.y *= factor[1];
-      this.scaleVector.z *= factor[2];
+      this.scaleVector.z *= factor[2] === 0 ? 1 : factor[2];
     }
     this._markDirty();
     return this;
@@ -582,6 +584,36 @@ export abstract class Mobject {
   }
 
   /**
+   * Scale and reposition this mobject to match another mobject's bounding box.
+   * Matches Manim Python's replace() behavior.
+   * @param target - The mobject whose bounding box to match
+   * @param stretch - If true, stretch per-axis to match exactly; if false (default), uniform scale to match width
+   * @returns this for chaining
+   */
+  replace(target: Mobject, stretch: boolean = false): this {
+    const targetBounds = target._getBoundingBox();
+    const selfBounds = this._getBoundingBox();
+
+    if (stretch) {
+      const sx = selfBounds.width > 0.0001 ? targetBounds.width / selfBounds.width : 1;
+      const sy = selfBounds.height > 0.0001 ? targetBounds.height / selfBounds.height : 1;
+      this.scaleVector.x *= sx;
+      this.scaleVector.y *= sy;
+    } else {
+      const factor = selfBounds.width > 0.0001
+        ? targetBounds.width / selfBounds.width
+        : 1;
+      this.scaleVector.multiplyScalar(factor);
+    }
+
+    // Center on target
+    const targetCenter = target.getCenter();
+    this.position.set(targetCenter[0], targetCenter[1], targetCenter[2]);
+    this._markDirty();
+    return this;
+  }
+
+  /**
    * Create a new instance for copying. Subclasses must implement this.
    */
   protected abstract _createCopy(): Mobject;
@@ -714,7 +746,6 @@ export abstract class Mobject {
    * @returns Object with width, height, and depth
    */
   protected _getBoundingBox(): { width: number; height: number; depth: number } {
-    // Trigger lazy Three.js object creation if needed
     const obj = this.getThreeObject();
     // Use pooled objects to avoid allocation
     Mobject._tempBox3.setFromObject(obj);

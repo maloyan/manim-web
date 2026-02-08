@@ -1,6 +1,6 @@
 # Interface: PointCloudDotOptions
 
-Defined in: [mobjects/point/index.ts:667](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L667)
+Defined in: [mobjects/point/index.ts:667](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/point/index.ts#L667)
 
 Options for creating a PointCloudDot
 
@@ -10,7 +10,7 @@ Options for creating a PointCloudDot
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/point/index.ts:669](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L669)
+Defined in: [mobjects/point/index.ts:669](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/point/index.ts#L669)
 
 Center position [x, y, z]. Default: [0, 0, 0]
 
@@ -20,7 +20,7 @@ Center position [x, y, z]. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/point/index.ts:675](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L675)
+Defined in: [mobjects/point/index.ts:675](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/point/index.ts#L675)
 
 Color as CSS color string. Default: white (#FFFFFF)
 
@@ -30,7 +30,7 @@ Color as CSS color string. Default: white (#FFFFFF)
 
 > `optional` **distribution**: `"uniform"` \| `"gaussian"`
 
-Defined in: [mobjects/point/index.ts:681](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L681)
+Defined in: [mobjects/point/index.ts:681](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/point/index.ts#L681)
 
 Spread pattern: 'uniform' for even distribution, 'gaussian' for center-heavy. Default: 'gaussian'
 
@@ -40,7 +40,7 @@ Spread pattern: 'uniform' for even distribution, 'gaussian' for center-heavy. De
 
 > `optional` **numParticles**: `number`
 
-Defined in: [mobjects/point/index.ts:673](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L673)
+Defined in: [mobjects/point/index.ts:673](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/point/index.ts#L673)
 
 Number of particles. Default: 50
 
@@ -50,7 +50,7 @@ Number of particles. Default: 50
 
 > `optional` **opacity**: `number`
 
-Defined in: [mobjects/point/index.ts:677](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L677)
+Defined in: [mobjects/point/index.ts:677](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/point/index.ts#L677)
 
 Opacity from 0 to 1. Default: 1
 
@@ -60,7 +60,7 @@ Opacity from 0 to 1. Default: 1
 
 > `optional` **particleSize**: `number`
 
-Defined in: [mobjects/point/index.ts:679](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L679)
+Defined in: [mobjects/point/index.ts:679](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/point/index.ts#L679)
 
 Size of each particle in pixels. Default: 4
 
@@ -70,6 +70,6 @@ Size of each particle in pixels. Default: 4
 
 > `optional` **radius**: `number`
 
-Defined in: [mobjects/point/index.ts:671](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/point/index.ts#L671)
+Defined in: [mobjects/point/index.ts:671](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/point/index.ts#L671)
 
 Radius of the dot. Default: 0.08

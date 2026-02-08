@@ -1,6 +1,6 @@
 # Interface: SceneSnapshot
 
-Defined in: [core/StateManager.ts:73](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L73)
+Defined in: [core/StateManager.ts:73](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/StateManager.ts#L73)
 
 A full scene snapshot: an ordered array of top-level mobject states.
 
@@ -10,7 +10,7 @@ A full scene snapshot: an ordered array of top-level mobject states.
 
 > `optional` **label**: `string`
 
-Defined in: [core/StateManager.ts:75](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L75)
+Defined in: [core/StateManager.ts:75](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/StateManager.ts#L75)
 
 Human-readable label (optional)
 
@@ -20,7 +20,7 @@ Human-readable label (optional)
 
 > **mobjects**: [`MobjectState`](MobjectState.md)[]
 
-Defined in: [core/StateManager.ts:81](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L81)
+Defined in: [core/StateManager.ts:81](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/StateManager.ts#L81)
 
 Ordered array of top-level mobject states (one per scene mobject)
 
@@ -30,6 +30,6 @@ Ordered array of top-level mobject states (one per scene mobject)
 
 > **timestamp**: `number`
 
-Defined in: [core/StateManager.ts:78](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/StateManager.ts#L78)
+Defined in: [core/StateManager.ts:78](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/StateManager.ts#L78)
 
 Timestamp (ms) when snapshot was taken

@@ -66,10 +66,14 @@ export class Scale extends Animation {
         this._initialScale.z * this.scaleFactor
       );
     } else {
+      // For 2D scenes, z-scale=0 means "preserve z" (matching Python Manim where
+      // z*0=0 is a no-op for 2D points). Avoid z=0 which creates a singular
+      // transform matrix that breaks Line2/LineMaterial rendering in THREE.js.
+      const zFactor = this.scaleFactor[2] === 0 ? 1 : this.scaleFactor[2];
       this._targetScale.set(
         this._initialScale.x * this.scaleFactor[0],
         this._initialScale.y * this.scaleFactor[1],
-        this._initialScale.z * this.scaleFactor[2]
+        this._initialScale.z * zFactor
       );
     }
 

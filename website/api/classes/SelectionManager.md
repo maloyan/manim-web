@@ -1,6 +1,6 @@
 # Class: SelectionManager
 
-Defined in: [interaction/SelectionManager.ts:38](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L38)
+Defined in: [interaction/SelectionManager.ts:38](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L38)
 
 Manages interactive selection of mobjects in a Scene.
 
@@ -13,7 +13,7 @@ and box/lasso selection with visual feedback.
 
 > **new SelectionManager**(`scene`, `options`): `SelectionManager`
 
-Defined in: [interaction/SelectionManager.ts:70](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L70)
+Defined in: [interaction/SelectionManager.ts:70](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L70)
 
 Create a new SelectionManager.
 
@@ -43,7 +43,7 @@ Configuration options
 
 > **get** **count**(): `number`
 
-Defined in: [interaction/SelectionManager.ts:98](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L98)
+Defined in: [interaction/SelectionManager.ts:98](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L98)
 
 Number of currently selected mobjects.
 
@@ -59,7 +59,7 @@ Number of currently selected mobjects.
 
 > **get** **isEnabled**(): `boolean`
 
-Defined in: [interaction/SelectionManager.ts:103](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L103)
+Defined in: [interaction/SelectionManager.ts:103](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L103)
 
 Whether the manager is enabled.
 
@@ -75,7 +75,7 @@ Whether the manager is enabled.
 
 > **get** **selected**(): `ReadonlySet`\<[`Mobject`](Mobject.md)\>
 
-Defined in: [interaction/SelectionManager.ts:93](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L93)
+Defined in: [interaction/SelectionManager.ts:93](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L93)
 
 Currently selected mobjects (read-only view).
 
@@ -89,7 +89,7 @@ Currently selected mobjects (read-only view).
 
 > **deselect**(...`mobjects`): `void`
 
-Defined in: [interaction/SelectionManager.ts:136](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L136)
+Defined in: [interaction/SelectionManager.ts:136](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L136)
 
 Programmatically deselect one or more mobjects.
 
@@ -111,7 +111,7 @@ Mobjects to deselect
 
 > **deselectAll**(): `void`
 
-Defined in: [interaction/SelectionManager.ts:174](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L174)
+Defined in: [interaction/SelectionManager.ts:174](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L174)
 
 Deselect all mobjects, removing all highlights.
 
@@ -125,7 +125,7 @@ Deselect all mobjects, removing all highlights.
 
 > **disable**(): `void`
 
-Defined in: [interaction/SelectionManager.ts:113](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L113)
+Defined in: [interaction/SelectionManager.ts:113](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L113)
 
 Disable selection interactions. Clears current selection.
 
@@ -139,7 +139,7 @@ Disable selection interactions. Clears current selection.
 
 > **dispose**(): `void`
 
-Defined in: [interaction/SelectionManager.ts:199](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L199)
+Defined in: [interaction/SelectionManager.ts:199](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L199)
 
 Clean up event listeners and highlights.
 
@@ -153,7 +153,7 @@ Clean up event listeners and highlights.
 
 > **enable**(): `void`
 
-Defined in: [interaction/SelectionManager.ts:108](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L108)
+Defined in: [interaction/SelectionManager.ts:108](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L108)
 
 Enable selection interactions.
 
@@ -167,7 +167,7 @@ Enable selection interactions.
 
 > **getSelectedArray**(): [`Mobject`](Mobject.md)[]
 
-Defined in: [interaction/SelectionManager.ts:192](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L192)
+Defined in: [interaction/SelectionManager.ts:192](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L192)
 
 Get selected mobjects as an array (ordered by selection time).
 
@@ -181,7 +181,7 @@ Get selected mobjects as an array (ordered by selection time).
 
 > **isSelected**(`mob`): `boolean`
 
-Defined in: [interaction/SelectionManager.ts:185](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L185)
+Defined in: [interaction/SelectionManager.ts:185](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L185)
 
 Check if a specific mobject is selected.
 
@@ -201,7 +201,7 @@ Check if a specific mobject is selected.
 
 > **refreshHighlights**(): `void`
 
-Defined in: [interaction/SelectionManager.ts:549](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L549)
+Defined in: [interaction/SelectionManager.ts:549](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L549)
 
 Refresh highlight positions for all selected mobjects.
 Call this after moving/transforming selected mobjects.
@@ -216,7 +216,7 @@ Call this after moving/transforming selected mobjects.
 
 > **select**(...`mobjects`): `void`
 
-Defined in: [interaction/SelectionManager.ts:122](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L122)
+Defined in: [interaction/SelectionManager.ts:122](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L122)
 
 Programmatically select one or more mobjects.
 
@@ -238,7 +238,7 @@ Mobjects to select
 
 > **selectAll**(): `void`
 
-Defined in: [interaction/SelectionManager.ts:161](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L161)
+Defined in: [interaction/SelectionManager.ts:161](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L161)
 
 Select all mobjects currently in the scene.
 
@@ -252,7 +252,7 @@ Select all mobjects currently in the scene.
 
 > **toggleSelect**(`mob`): `void`
 
-Defined in: [interaction/SelectionManager.ts:150](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/SelectionManager.ts#L150)
+Defined in: [interaction/SelectionManager.ts:150](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L150)
 
 Toggle selection state of a mobject.
 

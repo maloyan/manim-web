@@ -58,9 +58,22 @@ export class VMobject extends Mobject {
   /** Cached fill mesh for in-place geometry updates */
   private _cachedFillMesh: THREE.Mesh | null = null;
 
+
   /** Renderer resolution for LineMaterial (set by Scene) */
   static _rendererWidth: number = 800;
   static _rendererHeight: number = 450;
+
+  /** Camera frame width in world units (set by Scene, for stroke width conversion) */
+  static _frameWidth: number = 14;
+
+  /**
+   * Convert Manim-compatible strokeWidth to LineMaterial linewidth in pixels.
+   * Python Manim uses cairo_line_width_multiple=0.01, so:
+   *   linewidth_px = strokeWidth * 0.01 * (rendererWidth / frameWidth)
+   */
+  static _toLinewidth(strokeWidth: number): number {
+    return strokeWidth * 0.01 * (VMobject._rendererWidth / VMobject._frameWidth);
+  }
 
   /**
    * When true, VMobjects use GPU Bezier SDF shaders for stroke rendering
@@ -78,6 +91,19 @@ export class VMobject extends Mobject {
 
   /** Per-instance override for shader curves (null = use static default) */
   private _useShaderCurvesOverride: boolean | null = null;
+
+  /**
+   * When true, render stroke as a mesh ring with miter-joined corners instead
+   * of Line2 for closed paths.  Falls back to Line2 for open/partial paths
+   * (e.g. during Create/Uncreate animations).
+   */
+  useStrokeMesh: boolean = false;
+
+  /** Cached mesh-based stroke ring */
+  private _cachedStrokeMesh: THREE.Mesh | null = null;
+
+  /** Material for mesh-based stroke */
+  private _strokeMeshMaterial: THREE.MeshBasicMaterial | null = null;
 
   /**
    * Get the shared BezierRenderer, creating it if needed.
@@ -674,7 +700,7 @@ export class VMobject extends Mobject {
     // Create stroke material using LineMaterial for thick strokes
     this._strokeMaterial = new LineMaterial({
       color: new THREE.Color(this.color).getHex(),
-      linewidth: this.strokeWidth,
+      linewidth: VMobject._toLinewidth(this.strokeWidth),
       opacity: this._opacity,
       transparent: this._opacity < 1,
       resolution: new THREE.Vector2(VMobject._rendererWidth, VMobject._rendererHeight),
@@ -711,30 +737,50 @@ export class VMobject extends Mobject {
       this._cachedLine2Array = [];
       this._cachedFillMesh = null;
       this._cachedBezierMesh = null;
+      this._cachedStrokeMesh = null;
       return;
     }
 
     const useShader = this.shaderCurves;
-
+    const useMeshStroke = !useShader && this.useStrokeMesh && this._isClosedPath(points3D);
     // --- Stroke ---
     if (useShader) {
       // --- Shader-based Bezier SDF stroke ---
       this._updateBezierStroke(group, points3D);
-      // Remove Line2 if it was previously used
+      // Remove Line2 and mesh stroke if previously used
       if (this._cachedLine2) {
         this._cachedLine2.geometry.dispose();
         group.remove(this._cachedLine2);
         this._cachedLine2 = null;
       }
-    } else {
-      // --- Classic Line2 stroke ---
-      this._updateLine2Stroke(group, points3D);
-      // Remove Bezier mesh if it was previously used
+      this._clearCachedLine2Array(group);
+      this._removeMeshStroke(group);
+    } else if (useMeshStroke) {
+      // --- Mesh-based stroke ring with miter corners ---
+      const sampledPoints = this._sampleBezierPath(points3D, 16);
+      this._updateMeshStroke(group, sampledPoints);
+      // Remove Line2 and Bezier if previously used
+      if (this._cachedLine2) {
+        this._cachedLine2.geometry.dispose();
+        group.remove(this._cachedLine2);
+        this._cachedLine2 = null;
+      }
+      this._clearCachedLine2Array(group);
       if (this._cachedBezierMesh) {
         this._cachedBezierMesh.geometry.dispose();
         group.remove(this._cachedBezierMesh);
         this._cachedBezierMesh = null;
       }
+    } else {
+      // --- Classic Line2 stroke ---
+      this._updateLine2Stroke(group, points3D);
+      // Remove Bezier and mesh stroke if previously used
+      if (this._cachedBezierMesh) {
+        this._cachedBezierMesh.geometry.dispose();
+        group.remove(this._cachedBezierMesh);
+        this._cachedBezierMesh = null;
+      }
+      this._removeMeshStroke(group);
     }
 
     // --- Fill mesh (same for both rendering modes) ---
@@ -791,6 +837,22 @@ export class VMobject extends Mobject {
         positions.push(pt[0], pt[1], pt[2]);
       }
 
+      // Line2 doesn't handle corner joins. For closed paths (first ≈ last point),
+      // wrap a few extra points from the start to fill the gap at the closing corner.
+      if (sampledPoints.length >= 3) {
+        const first = sampledPoints[0];
+        const last = sampledPoints[sampledPoints.length - 1];
+        const dx = first[0] - last[0], dy = first[1] - last[1], dz = first[2] - last[2];
+        if (dx * dx + dy * dy + dz * dz < 1e-6) {
+          // Closed path: append the next 2 points to overlap the join
+          const wrap = Math.min(2, sampledPoints.length - 1);
+          for (let i = 1; i <= wrap; i++) {
+            const pt = sampledPoints[i];
+            positions.push(pt[0], pt[1], pt[2]);
+          }
+        }
+      }
+
       if (this._cachedLine2) {
         // Reuse existing Line2: just swap geometry
         this._cachedLine2.geometry.dispose();
@@ -815,6 +877,7 @@ export class VMobject extends Mobject {
       group.remove(this._cachedLine2);
       this._cachedLine2 = null;
     }
+
   }
 
   /**
@@ -853,6 +916,20 @@ export class VMobject extends Mobject {
           positions.push(pt[0], pt[1], pt[2]);
         }
 
+        // Close path corner overlap (same as single-path branch above)
+        if (sampledPoints.length >= 3) {
+          const first = sampledPoints[0];
+          const last = sampledPoints[sampledPoints.length - 1];
+          const dx = first[0] - last[0], dy = first[1] - last[1], dz = first[2] - last[2];
+          if (dx * dx + dy * dy + dz * dz < 1e-6) {
+            const wrap = Math.min(2, sampledPoints.length - 1);
+            for (let j = 1; j <= wrap; j++) {
+              const pt = sampledPoints[j];
+              positions.push(pt[0], pt[1], pt[2]);
+            }
+          }
+        }
+
         if (this._cachedLine2Array[i]) {
           this._cachedLine2Array[i].geometry.dispose();
           const geometry = new LineGeometry();
@@ -869,6 +946,191 @@ export class VMobject extends Mobject {
           this._cachedLine2Array[i] = line;
         }
       }
+    }
+  }
+
+  /**
+   * Check if the Bezier control points form a closed path (first ≈ last anchor).
+   */
+  private _isClosedPath(points3D: number[][]): boolean {
+    if (points3D.length < 4) return false;
+    const first = points3D[0];
+    const last = points3D[points3D.length - 1];
+    const dx = first[0] - last[0], dy = first[1] - last[1], dz = first[2] - last[2];
+    return dx * dx + dy * dy + dz * dz < 1e-6;
+  }
+
+  /**
+   * Build a mesh-based stroke ring from a closed sampled path.
+   * Uses miter joins at corners for pixel-perfect sharp corners.
+   * Stroke width is in world units (strokeWidth * 0.005 per side).
+   */
+  private _updateMeshStroke(group: THREE.Group, sampledPoints: number[][]): void {
+    if (this.strokeWidth <= 0 || sampledPoints.length < 3) {
+      this._removeMeshStroke(group);
+      return;
+    }
+
+    // Remove closing duplicate and consecutive duplicate points
+    // (Bezier sampling produces duplicates at segment boundaries)
+    const deduped: number[][] = [sampledPoints[0]];
+    for (let i = 1; i < sampledPoints.length; i++) {
+      const prev = deduped[deduped.length - 1];
+      const dx = sampledPoints[i][0] - prev[0];
+      const dy = sampledPoints[i][1] - prev[1];
+      const dz = sampledPoints[i][2] - prev[2];
+      if (dx * dx + dy * dy + dz * dz > 1e-8) {
+        deduped.push(sampledPoints[i]);
+      }
+    }
+    // Remove closing point if it matches the first
+    if (deduped.length >= 2) {
+      const f = deduped[0], l = deduped[deduped.length - 1];
+      const dx = f[0] - l[0], dy = f[1] - l[1], dz = f[2] - l[2];
+      if (dx * dx + dy * dy + dz * dz < 1e-6) {
+        deduped.pop();
+      }
+    }
+    const n = deduped.length;
+    if (n < 3) {
+      this._removeMeshStroke(group);
+      return;
+    }
+
+    // Transform points to world space so miter offsets are visually uniform
+    // regardless of non-uniform parent scale (e.g. Scale([0.5, 1.5, 0]))
+    group.updateWorldMatrix(true, false);
+    const worldMatrix = group.matrixWorld;
+    const invWorldMatrix = new THREE.Matrix4().copy(worldMatrix).invert();
+    const _v = new THREE.Vector3();
+
+    const pts: number[][] = deduped.map(p => {
+      _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
+      return [_v.x, _v.y, _v.z];
+    });
+
+    // Half stroke width in world units
+    const halfW = this.strokeWidth * 0.005;
+
+    // Determine winding direction via signed area (in world space)
+    let signedArea = 0;
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      signedArea += pts[i][0] * pts[j][1] - pts[j][0] * pts[i][1];
+    }
+    const normalSign = signedArea < 0 ? 1 : -1;
+
+    // World-space positions for outer and inner rings
+    const worldPositions: number[] = [];
+
+    // Compute outer offset points with miter joins (in world space)
+    for (let i = 0; i < n; i++) {
+      const prev = pts[(i - 1 + n) % n];
+      const curr = pts[i];
+      const next = pts[(i + 1) % n];
+
+      const d1x = curr[0] - prev[0], d1y = curr[1] - prev[1];
+      const d2x = next[0] - curr[0], d2y = next[1] - curr[1];
+
+      const len1 = Math.sqrt(d1x * d1x + d1y * d1y) || 1;
+      const len2 = Math.sqrt(d2x * d2x + d2y * d2y) || 1;
+
+      const n1x = normalSign * (-d1y / len1);
+      const n1y = normalSign * (d1x / len1);
+      const n2x = normalSign * (-d2y / len2);
+      const n2y = normalSign * (d2x / len2);
+
+      let mx = n1x + n2x, my = n1y + n2y;
+      const mlen = Math.sqrt(mx * mx + my * my);
+      if (mlen > 1e-10) { mx /= mlen; my /= mlen; }
+      else { mx = n1x; my = n1y; }
+
+      // Add sub-pixel epsilon to outer miter to prevent GPU fill-rule gaps
+      const cosHalf = n1x * mx + n1y * my;
+      const miterLen = (cosHalf > 0.1 ? halfW / cosHalf : halfW * 2) + 0.005;
+
+      worldPositions.push(curr[0] + mx * miterLen, curr[1] + my * miterLen, curr[2]);
+    }
+    // Compute inner offset points (in world space)
+    for (let i = 0; i < n; i++) {
+      const prev = pts[(i - 1 + n) % n];
+      const curr = pts[i];
+      const next = pts[(i + 1) % n];
+
+      const d1x = curr[0] - prev[0], d1y = curr[1] - prev[1];
+      const d2x = next[0] - curr[0], d2y = next[1] - curr[1];
+      const len1 = Math.sqrt(d1x * d1x + d1y * d1y) || 1;
+      const len2 = Math.sqrt(d2x * d2x + d2y * d2y) || 1;
+      const n1x = normalSign * (-d1y / len1);
+      const n1y = normalSign * (d1x / len1);
+      const n2x = normalSign * (-d2y / len2);
+      const n2y = normalSign * (d2x / len2);
+
+      let mx = n1x + n2x, my = n1y + n2y;
+      const mlen = Math.sqrt(mx * mx + my * my);
+      if (mlen > 1e-10) { mx /= mlen; my /= mlen; }
+      else { mx = n1x; my = n1y; }
+
+      const cosHalf = n1x * mx + n1y * my;
+      const miterLen = cosHalf > 0.1 ? halfW / cosHalf : halfW * 2;
+
+      worldPositions.push(curr[0] - mx * miterLen, curr[1] - my * miterLen, curr[2]);
+    }
+
+    // Transform world-space positions back to local space
+    const positions: number[] = [];
+    for (let i = 0; i < worldPositions.length; i += 3) {
+      _v.set(worldPositions[i], worldPositions[i + 1], worldPositions[i + 2])
+        .applyMatrix4(invWorldMatrix);
+      positions.push(_v.x, _v.y, _v.z);
+    }
+
+    // Triangles: for each edge, two triangles forming a quad
+    const indices: number[] = [];
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n;
+      indices.push(i, j, n + j);
+      indices.push(i, n + j, n + i);
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setIndex(indices);
+
+    if (this._cachedStrokeMesh) {
+      this._cachedStrokeMesh.geometry.dispose();
+      this._cachedStrokeMesh.geometry = geometry;
+      // Update material
+      if (this._strokeMeshMaterial) {
+        this._strokeMeshMaterial.color.set(this.color);
+        this._strokeMeshMaterial.opacity = this._opacity;
+        this._strokeMeshMaterial.transparent = this._opacity < 1;
+      }
+    } else {
+      this._strokeMeshMaterial = this._strokeMeshMaterial || new THREE.MeshBasicMaterial({
+        color: new THREE.Color(this.color),
+        side: THREE.DoubleSide,
+        depthTest: false,
+        transparent: this._opacity < 1,
+        opacity: this._opacity,
+      });
+      this._strokeMeshMaterial.color.set(this.color);
+      this._strokeMeshMaterial.opacity = this._opacity;
+      this._strokeMeshMaterial.transparent = this._opacity < 1;
+      this._cachedStrokeMesh = new THREE.Mesh(geometry, this._strokeMeshMaterial);
+      this._cachedStrokeMesh.frustumCulled = false;
+      group.add(this._cachedStrokeMesh);
+    }
+  }
+
+  /**
+   * Remove the cached mesh-based stroke ring.
+   */
+  private _removeMeshStroke(group: THREE.Group): void {
+    if (this._cachedStrokeMesh) {
+      this._cachedStrokeMesh.geometry.dispose();
+      group.remove(this._cachedStrokeMesh);
+      this._cachedStrokeMesh = null;
     }
   }
 
@@ -1016,7 +1278,7 @@ export class VMobject extends Mobject {
       this._strokeMaterial.color.set(this.color);
       this._strokeMaterial.opacity = this._opacity;
       this._strokeMaterial.transparent = this._opacity < 1;
-      this._strokeMaterial.linewidth = this.strokeWidth;
+      this._strokeMaterial.linewidth = VMobject._toLinewidth(this.strokeWidth);
       // Update resolution for proper line width rendering
       this._strokeMaterial.resolution.set(VMobject._rendererWidth, VMobject._rendererHeight);
     }
@@ -1025,6 +1287,14 @@ export class VMobject extends Mobject {
       this._fillMaterial.color.set(this._style.fillColor || this.color);
       this._fillMaterial.opacity = this._opacity * this.fillOpacity;
     }
+
+    if (this._strokeMeshMaterial) {
+      this._strokeMeshMaterial.color.set(this.color);
+      this._strokeMeshMaterial.opacity = this._opacity;
+      this._strokeMeshMaterial.transparent = this._opacity < 1;
+    }
+
+
 
     // Keep BezierRenderer resolution in sync
     if (VMobject._sharedBezierRenderer) {
@@ -1120,6 +1390,12 @@ export class VMobject extends Mobject {
       this._cachedBezierMesh.geometry.dispose();
       this._cachedBezierMesh = null;
     }
+    if (this._cachedStrokeMesh) {
+      this._cachedStrokeMesh.geometry.dispose();
+      this._cachedStrokeMesh = null;
+    }
+    this._strokeMeshMaterial?.dispose();
+    this._strokeMeshMaterial = null;
     super.dispose();
   }
 }

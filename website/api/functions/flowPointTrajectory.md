@@ -2,7 +2,7 @@
 
 > **flowPointTrajectory**(`vectorField`, `start`, `time`, `numSteps`): \[`number`, `number`, `number`\][]
 
-Defined in: [utils/ode.ts:234](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/utils/ode.ts#L234)
+Defined in: [utils/ode.ts:234](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/utils/ode.ts#L234)
 
 Flow a 3D point along an autonomous vector field and return the full trajectory.
 

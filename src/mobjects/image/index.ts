@@ -149,11 +149,12 @@ export class ImageMobject extends Mobject {
     const rows = pixelData.length;
     const cols = pixelData[0]?.length ?? 0;
 
-    const canvas = document.createElement('canvas');
-    canvas.width = cols;
-    canvas.height = rows;
-    const ctx = canvas.getContext('2d')!;
-    const imageData = ctx.createImageData(cols, rows);
+    // Paint raw pixel values onto a tiny source canvas
+    const srcCanvas = document.createElement('canvas');
+    srcCanvas.width = cols;
+    srcCanvas.height = rows;
+    const srcCtx = srcCanvas.getContext('2d')!;
+    const imageData = srcCtx.createImageData(cols, rows);
     const data = imageData.data;
 
     for (let y = 0; y < rows; y++) {
@@ -167,11 +168,24 @@ export class ImageMobject extends Mobject {
         data[idx + 3] = 255;
       }
     }
+    srcCtx.putImageData(imageData, 0, 0);
 
-    ctx.putImageData(imageData, 0, 0);
+    // Upscale with bilinear interpolation for smooth gradients
+    // (matches Python Manim's Cairo interpolation on tiny pixel arrays)
+    const scale = 128;
+    const canvas = document.createElement('canvas');
+    canvas.width = cols * scale;
+    canvas.height = rows * scale;
+    const ctx = canvas.getContext('2d')!;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(srcCanvas, 0, 0, canvas.width, canvas.height);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
+    texture.magFilter = THREE.LinearFilter;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.generateMipmaps = true;
 
     this._texture = texture;
     this._naturalWidth = cols;
@@ -397,6 +411,7 @@ export class ImageMobject extends Mobject {
     });
 
     const mesh = new THREE.Mesh(geometry, material);
+    mesh.frustumCulled = false;
     return mesh;
   }
 

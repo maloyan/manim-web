@@ -1,6 +1,6 @@
 # Class: Flash
 
-Defined in: [animation/indication/Flash.ts:29](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Flash.ts#L29)
+Defined in: [animation/indication/Flash.ts:29](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Flash.ts#L29)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/indication/Flash.ts:29](https://github.com/maloyan/manim-
 
 > **new Flash**(`mobject`, `options`): `Flash`
 
-Defined in: [animation/indication/Flash.ts:54](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Flash.ts#L54)
+Defined in: [animation/indication/Flash.ts:54](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Flash.ts#L54)
 
 #### Parameters
 
@@ -38,7 +38,7 @@ Defined in: [animation/indication/Flash.ts:54](https://github.com/maloyan/manim-
 
 > `protected` **\_hasBegun**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:37](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L37)
+Defined in: [animation/Animation.ts:37](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L37)
 
 Track if begin() has been called
 
@@ -52,7 +52,7 @@ Track if begin() has been called
 
 > `protected` **\_isFinished**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:34](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L34)
+Defined in: [animation/Animation.ts:34](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L34)
 
 Whether the animation has finished
 
@@ -66,7 +66,7 @@ Whether the animation has finished
 
 > `protected` **\_startTime**: `number` = `null`
 
-Defined in: [animation/Animation.ts:31](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L31)
+Defined in: [animation/Animation.ts:31](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L31)
 
 Time when the animation started (set by Timeline)
 
@@ -80,7 +80,7 @@ Time when the animation started (set by Timeline)
 
 > `readonly` **duration**: `number`
 
-Defined in: [animation/Animation.ts:25](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L25)
+Defined in: [animation/Animation.ts:25](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L25)
 
 Duration of the animation in seconds
 
@@ -94,7 +94,7 @@ Duration of the animation in seconds
 
 > `readonly` **flashColor**: `string`
 
-Defined in: [animation/indication/Flash.ts:31](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Flash.ts#L31)
+Defined in: [animation/indication/Flash.ts:31](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Flash.ts#L31)
 
 Flash color
 
@@ -104,7 +104,7 @@ Flash color
 
 > `readonly` **flashRadius**: `number`
 
-Defined in: [animation/indication/Flash.ts:37](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Flash.ts#L37)
+Defined in: [animation/indication/Flash.ts:37](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Flash.ts#L37)
 
 Maximum radius
 
@@ -114,7 +114,7 @@ Maximum radius
 
 > `readonly` **innerRadius**: `number`
 
-Defined in: [animation/indication/Flash.ts:43](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Flash.ts#L43)
+Defined in: [animation/indication/Flash.ts:43](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Flash.ts#L43)
 
 Inner radius
 
@@ -124,7 +124,7 @@ Inner radius
 
 > `readonly` **lineWidth**: `number`
 
-Defined in: [animation/indication/Flash.ts:40](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Flash.ts#L40)
+Defined in: [animation/indication/Flash.ts:40](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Flash.ts#L40)
 
 Line width
 
@@ -134,7 +134,7 @@ Line width
 
 > `readonly` **mobject**: [`Mobject`](Mobject.md)
 
-Defined in: [animation/Animation.ts:22](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L22)
+Defined in: [animation/Animation.ts:22](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L22)
 
 The mobject being animated
 
@@ -148,7 +148,7 @@ The mobject being animated
 
 > `readonly` **numLines**: `number`
 
-Defined in: [animation/indication/Flash.ts:34](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Flash.ts#L34)
+Defined in: [animation/indication/Flash.ts:34](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Flash.ts#L34)
 
 Number of flash lines
 
@@ -158,7 +158,7 @@ Number of flash lines
 
 > `readonly` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:28](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L28)
+Defined in: [animation/Animation.ts:28](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L28)
 
 Rate function controlling the animation's pacing
 
@@ -172,7 +172,7 @@ Rate function controlling the animation's pacing
 
 > **remover**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:43](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L43)
+Defined in: [animation/Animation.ts:43](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L43)
 
 If true, the scene will remove this mobject after the animation finishes.
 Used by FadeOut (like Python manim's remover=True).
@@ -189,7 +189,7 @@ Used by FadeOut (like Python manim's remover=True).
 
 > **get** **startTime**(): `number`
 
-Defined in: [animation/Animation.ts:125](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L125)
+Defined in: [animation/Animation.ts:125](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L125)
 
 Get the start time of this animation (set by Timeline)
 
@@ -201,7 +201,7 @@ Get the start time of this animation (set by Timeline)
 
 > **set** **startTime**(`time`): `void`
 
-Defined in: [animation/Animation.ts:132](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L132)
+Defined in: [animation/Animation.ts:132](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L132)
 
 Set the start time of this animation (used by Timeline)
 
@@ -225,7 +225,7 @@ Set the start time of this animation (used by Timeline)
 
 > **begin**(): `void`
 
-Defined in: [animation/indication/Flash.ts:63](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Flash.ts#L63)
+Defined in: [animation/indication/Flash.ts:63](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Flash.ts#L63)
 
 Called when the animation starts.
 Subclasses can override to set up initial state.
@@ -244,7 +244,7 @@ Subclasses can override to set up initial state.
 
 > **finish**(): `void`
 
-Defined in: [animation/indication/Flash.ts:142](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Flash.ts#L142)
+Defined in: [animation/indication/Flash.ts:142](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Flash.ts#L142)
 
 Called when the animation ends.
 Subclasses can override to clean up or finalize state.
@@ -263,7 +263,7 @@ Subclasses can override to clean up or finalize state.
 
 > **interpolate**(`alpha`): `void`
 
-Defined in: [animation/indication/Flash.ts:108](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Flash.ts#L108)
+Defined in: [animation/indication/Flash.ts:108](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Flash.ts#L108)
 
 Apply the animation at a given progress value.
 
@@ -289,7 +289,7 @@ Progress from 0 (start) to 1 (end)
 
 > **isFinished**(): `boolean`
 
-Defined in: [animation/Animation.ts:109](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L109)
+Defined in: [animation/Animation.ts:109](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L109)
 
 Check if the animation has finished
 
@@ -307,7 +307,7 @@ Check if the animation has finished
 
 > **reset**(): `void`
 
-Defined in: [animation/Animation.ts:116](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L116)
+Defined in: [animation/Animation.ts:116](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L116)
 
 Reset the animation to its initial state
 
@@ -325,7 +325,7 @@ Reset the animation to its initial state
 
 > **update**(`_dt`, `currentTime`): `void`
 
-Defined in: [animation/Animation.ts:79](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L79)
+Defined in: [animation/Animation.ts:79](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L79)
 
 Update the animation for the current frame.
 

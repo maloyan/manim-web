@@ -63,7 +63,7 @@ export class Scene {
   private static _tempBox3: THREE.Box3 = new THREE.Box3();
 
   // Performance optimization: auto-render control
-  private _autoRender: boolean = true;
+  protected _autoRender: boolean = true;
 
   // Z-ordering: assign increasing renderOrder to each added mobject
   private _renderOrderCounter: number = 0;
@@ -124,6 +124,7 @@ export class Scene {
     // Set renderer dimensions for VMobject LineMaterial resolution
     VMobject._rendererWidth = this._renderer.width;
     VMobject._rendererHeight = this._renderer.height;
+    VMobject._frameWidth = frameWidth;
 
     // Initialize mobjects set
     this._mobjects = new Set();
@@ -243,6 +244,26 @@ export class Scene {
   }
 
   /**
+   * Add mobjects as foreground objects that render on top of everything.
+   * Matches Manim Python's add_foreground_mobject().
+   * @param mobjects - Mobjects to add in the foreground
+   */
+  addForegroundMobject(...mobjects: Mobject[]): this {
+    for (const mobject of mobjects) {
+      if (!this._mobjects.has(mobject)) {
+        this.add(mobject);
+      }
+      // Set very high renderOrder so it draws on top
+      const threeObj = mobject.getThreeObject();
+      threeObj.renderOrder = 10000 + this._renderOrderCounter++;
+    }
+    if (this._autoRender) {
+      this._render();
+    }
+    return this;
+  }
+
+  /**
    * Add mobjects to the scene.
    * @param mobjects - Mobjects to add
    */
@@ -262,7 +283,11 @@ export class Scene {
             }
           }
         });
-        this._threeScene.add(threeObj);
+        // Only add to THREE scene root if not already in the scene graph
+        // (prevents reparenting sub-objects like ZoomedDisplay.displayFrame)
+        if (!this._isInSceneGraph(threeObj)) {
+          this._threeScene.add(threeObj);
+        }
         // If mobject or any descendant has pending async rendering (e.g. MathTex),
         // re-render when done. Recursively check children since MathTex objects
         // may be nested inside VGroup/Group containers.
@@ -284,13 +309,29 @@ export class Scene {
       if (this._mobjects.has(mobject)) {
         this._mobjects.delete(mobject);
         const threeObj = mobject.getThreeObject();
-        this._threeScene.remove(threeObj);
+        // Only remove from THREE scene root if it's a direct child
+        // (sub-objects stay with their parent group)
+        if (threeObj.parent === this._threeScene) {
+          this._threeScene.remove(threeObj);
+        }
       }
     }
     if (this._autoRender) {
       this._render();
     }
     return this;
+  }
+
+  /**
+   * Check if a THREE object is already part of this scene's graph.
+   */
+  private _isInSceneGraph(obj: THREE.Object3D): boolean {
+    let current = obj.parent;
+    while (current) {
+      if (current === this._threeScene) return true;
+      current = current.parent;
+    }
+    return false;
   }
 
   /**
@@ -406,8 +447,12 @@ export class Scene {
     return new Promise((resolve) => {
       const startTime = performance.now();
       let lastFrameTime = startTime;
+      let rafId: number | null = null;
+      let timerId: ReturnType<typeof setInterval> | null = null;
+      let resolved = false;
 
-      const loop = (currentTime: number) => {
+      const tick = (currentTime: number) => {
+        if (resolved) return;
         const elapsed = (currentTime - startTime) / 1000;
         if (elapsed >= duration) {
           // Final update at exactly the remaining dt
@@ -418,6 +463,9 @@ export class Scene {
             }
             this._render();
           }
+          resolved = true;
+          if (rafId !== null) cancelAnimationFrame(rafId);
+          if (timerId !== null) clearInterval(timerId);
           resolve();
           return;
         }
@@ -432,11 +480,28 @@ export class Scene {
 
         // Render frame
         this._render();
-
-        requestAnimationFrame(loop);
       };
 
-      requestAnimationFrame(loop);
+      const loop = (currentTime: number) => {
+        tick(currentTime);
+        if (!resolved) {
+          rafId = requestAnimationFrame(loop);
+        }
+      };
+
+      rafId = requestAnimationFrame(loop);
+
+      // Background-tab fallback: rAF is suspended when tab is hidden,
+      // but setInterval still fires (~1Hz). This ensures wait() resolves
+      // even when the tab is in the background.
+      timerId = setInterval(() => {
+        if (resolved) return;
+        const now = performance.now();
+        const elapsed = now - lastFrameTime;
+        if (elapsed > 200) {
+          tick(now);
+        }
+      }, 100);
     });
   }
 
@@ -522,8 +587,9 @@ export class Scene {
   /**
    * Render a single frame.
    * Syncs only dirty mobjects before rendering for performance.
+   * Protected so subclasses (e.g. ZoomedScene) can override for multi-pass rendering.
    */
-  private _render(): void {
+  protected _render(): void {
     // Sync only dirty mobjects (dirty flag optimization)
     this._syncDirtyMobjects();
 

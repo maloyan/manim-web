@@ -2,7 +2,7 @@
 
 > **VectorFieldFunction** = (`point`) => \[`number`, `number`, `number`\]
 
-Defined in: [animation/movement/Homotopy.ts:42](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/movement/Homotopy.ts#L42)
+Defined in: [animation/movement/Homotopy.ts:42](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Homotopy.ts#L42)
 
 Type for a vector field function
 

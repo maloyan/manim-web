@@ -135,6 +135,7 @@
 - [RoundedRectangle](classes/RoundedRectangle.md)
 - [SampleSpace](classes/SampleSpace.md)
 - [Scale](classes/Scale.md)
+- [ScaleInPlace](classes/ScaleInPlace.md)
 - [Scene](classes/Scene.md)
 - [SceneStateManager](classes/SceneStateManager.md)
 - [ScreenRectangle](classes/ScreenRectangle.md)
@@ -184,6 +185,7 @@
 - [Wiggle](classes/Wiggle.md)
 - [WiggleOutThenIn](classes/WiggleOutThenIn.md)
 - [Write](classes/Write.md)
+- [ZoomedScene](classes/ZoomedScene.md)
 
 ## Interfaces
 
@@ -316,6 +318,7 @@
 - [RotatingOptions](interfaces/RotatingOptions.md)
 - [RoundedRectangleOptions](interfaces/RoundedRectangleOptions.md)
 - [SampleSpaceOptions](interfaces/SampleSpaceOptions.md)
+- [ScaleInPlaceOptions](interfaces/ScaleInPlaceOptions.md)
 - [ScaleOptions](interfaces/ScaleOptions.md)
 - [SceneOptions](interfaces/SceneOptions.md)
 - [SceneSnapshot](interfaces/SceneSnapshot.md)
@@ -357,6 +360,7 @@
 - [WiggleOptions](interfaces/WiggleOptions.md)
 - [WiggleOutThenInOptions](interfaces/WiggleOutThenInOptions.md)
 - [WriteOptions](interfaces/WriteOptions.md)
+- [ZoomedSceneOptions](interfaces/ZoomedSceneOptions.md)
 
 ## Type Aliases
 

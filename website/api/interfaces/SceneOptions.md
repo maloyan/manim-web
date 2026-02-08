@@ -1,12 +1,13 @@
 # Interface: SceneOptions
 
-Defined in: [core/Scene.ts:16](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L16)
+Defined in: [core/Scene.ts:16](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L16)
 
 Options for configuring a Scene.
 
 ## Extended by
 
 - [`InteractiveSceneOptions`](InteractiveSceneOptions.md)
+- [`ZoomedSceneOptions`](ZoomedSceneOptions.md)
 
 ## Properties
 
@@ -14,7 +15,7 @@ Options for configuring a Scene.
 
 > `optional` **autoRender**: `boolean`
 
-Defined in: [core/Scene.ts:32](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L32)
+Defined in: [core/Scene.ts:32](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L32)
 
 Enable auto-render on add/remove. Defaults to true.
 
@@ -24,7 +25,7 @@ Enable auto-render on add/remove. Defaults to true.
 
 > `optional` **backgroundColor**: `string`
 
-Defined in: [core/Scene.ts:22](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L22)
+Defined in: [core/Scene.ts:22](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L22)
 
 Background color as CSS color string. Defaults to Manim's dark gray (#1C1C1C).
 
@@ -34,7 +35,7 @@ Background color as CSS color string. Defaults to Manim's dark gray (#1C1C1C).
 
 > `optional` **frameHeight**: `number`
 
-Defined in: [core/Scene.ts:26](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L26)
+Defined in: [core/Scene.ts:26](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L26)
 
 Frame height in world units. Defaults to 8 (Manim standard).
 
@@ -44,7 +45,7 @@ Frame height in world units. Defaults to 8 (Manim standard).
 
 > `optional` **frameWidth**: `number`
 
-Defined in: [core/Scene.ts:24](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L24)
+Defined in: [core/Scene.ts:24](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L24)
 
 Frame width in world units. Defaults to 14 (Manim standard).
 
@@ -54,7 +55,7 @@ Frame width in world units. Defaults to 14 (Manim standard).
 
 > `optional` **frustumCulling**: `boolean`
 
-Defined in: [core/Scene.ts:30](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L30)
+Defined in: [core/Scene.ts:30](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L30)
 
 Enable frustum culling optimization. Defaults to true.
 
@@ -64,7 +65,7 @@ Enable frustum culling optimization. Defaults to true.
 
 > `optional` **height**: `number`
 
-Defined in: [core/Scene.ts:20](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L20)
+Defined in: [core/Scene.ts:20](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L20)
 
 Canvas height in pixels. Defaults to container height.
 
@@ -74,7 +75,7 @@ Canvas height in pixels. Defaults to container height.
 
 > `optional` **targetFps**: `number`
 
-Defined in: [core/Scene.ts:28](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L28)
+Defined in: [core/Scene.ts:28](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L28)
 
 Target frame rate in fps. Defaults to 60.
 
@@ -84,6 +85,6 @@ Target frame rate in fps. Defaults to 60.
 
 > `optional` **width**: `number`
 
-Defined in: [core/Scene.ts:18](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L18)
+Defined in: [core/Scene.ts:18](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L18)
 
 Canvas width in pixels. Defaults to container width.

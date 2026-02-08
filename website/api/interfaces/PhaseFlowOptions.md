@@ -1,6 +1,6 @@
 # Interface: PhaseFlowOptions
 
-Defined in: [animation/movement/Homotopy.ts:59](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/movement/Homotopy.ts#L59)
+Defined in: [animation/movement/Homotopy.ts:59](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Homotopy.ts#L59)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/movement/Homotopy.ts:59](https://github.com/maloyan/manim
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -26,7 +26,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **integrationSteps**: `number`
 
-Defined in: [animation/movement/Homotopy.ts:65](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/movement/Homotopy.ts#L65)
+Defined in: [animation/movement/Homotopy.ts:65](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Homotopy.ts#L65)
 
 Number of RK4 integration steps per unit of virtual time (default: 100)
 
@@ -36,7 +36,7 @@ Number of RK4 integration steps per unit of virtual time (default: 100)
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -50,7 +50,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 
@@ -64,7 +64,7 @@ Shift direction for fade animations
 
 > **vectorField**: [`VectorFieldFunction`](../type-aliases/VectorFieldFunction.md)
 
-Defined in: [animation/movement/Homotopy.ts:61](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/movement/Homotopy.ts#L61)
+Defined in: [animation/movement/Homotopy.ts:61](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Homotopy.ts#L61)
 
 The vector field function defining the flow
 
@@ -74,6 +74,6 @@ The vector field function defining the flow
 
 > `optional` **virtualTime**: `number`
 
-Defined in: [animation/movement/Homotopy.ts:63](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/movement/Homotopy.ts#L63)
+Defined in: [animation/movement/Homotopy.ts:63](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Homotopy.ts#L63)
 
 Virtual time to flow through (default: 1)

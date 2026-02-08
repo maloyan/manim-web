@@ -1,6 +1,6 @@
 # Interface: DivideOptions
 
-Defined in: [mobjects/probability/SampleSpace.ts:58](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/probability/SampleSpace.ts#L58)
+Defined in: [mobjects/probability/SampleSpace.ts:58](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/SampleSpace.ts#L58)
 
 Options for dividing the sample space
 
@@ -10,7 +10,7 @@ Options for dividing the sample space
 
 > `optional` **colors**: `string`[]
 
-Defined in: [mobjects/probability/SampleSpace.ts:60](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/probability/SampleSpace.ts#L60)
+Defined in: [mobjects/probability/SampleSpace.ts:60](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/SampleSpace.ts#L60)
 
 Colors for each partition. If not provided, uses default cycle.
 
@@ -20,7 +20,7 @@ Colors for each partition. If not provided, uses default cycle.
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/probability/SampleSpace.ts:62](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/probability/SampleSpace.ts#L62)
+Defined in: [mobjects/probability/SampleSpace.ts:62](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/SampleSpace.ts#L62)
 
 Fill opacity for partitions. Default: 1
 
@@ -30,7 +30,7 @@ Fill opacity for partitions. Default: 1
 
 > `optional` **labelColor**: `string`
 
-Defined in: [mobjects/probability/SampleSpace.ts:68](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/probability/SampleSpace.ts#L68)
+Defined in: [mobjects/probability/SampleSpace.ts:68](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/SampleSpace.ts#L68)
 
 Color for label text. Default: WHITE
 
@@ -40,7 +40,7 @@ Color for label text. Default: WHITE
 
 > `optional` **labelFontSize**: `number`
 
-Defined in: [mobjects/probability/SampleSpace.ts:66](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/probability/SampleSpace.ts#L66)
+Defined in: [mobjects/probability/SampleSpace.ts:66](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/SampleSpace.ts#L66)
 
 Font size for labels. Default: 24
 
@@ -50,6 +50,6 @@ Font size for labels. Default: 24
 
 > `optional` **labels**: `string`[]
 
-Defined in: [mobjects/probability/SampleSpace.ts:64](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/probability/SampleSpace.ts#L64)
+Defined in: [mobjects/probability/SampleSpace.ts:64](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/SampleSpace.ts#L64)
 
 Labels for each partition (probability strings like "0.3", "P(A)", etc.)

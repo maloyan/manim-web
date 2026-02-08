@@ -1,6 +1,6 @@
 # Class: VideoExporter
 
-Defined in: [export/VideoExporter.ts:58](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/VideoExporter.ts#L58)
+Defined in: [export/VideoExporter.ts:58](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L58)
 
 Video exporter for manimweb scenes.
 Uses the MediaRecorder API for browser-native recording.
@@ -19,7 +19,7 @@ video includes the mixed-down audio from the scene's AudioManager.
 
 > **new VideoExporter**(`scene`, `options?`): `VideoExporter`
 
-Defined in: [export/VideoExporter.ts:70](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/VideoExporter.ts#L70)
+Defined in: [export/VideoExporter.ts:70](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L70)
 
 Create a new VideoExporter.
 
@@ -47,7 +47,7 @@ Export options
 
 > **exportAndDownload**(`filename?`, `duration?`): `Promise`\<`void`\>
 
-Defined in: [export/VideoExporter.ts:267](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/VideoExporter.ts#L267)
+Defined in: [export/VideoExporter.ts:267](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L267)
 
 Convenience method: export timeline and download the result.
 
@@ -75,7 +75,7 @@ Optional duration override
 
 > **exportAudio**(`duration?`): `Promise`\<`Blob`\>
 
-Defined in: [export/VideoExporter.ts:238](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/VideoExporter.ts#L238)
+Defined in: [export/VideoExporter.ts:238](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L238)
 
 Export audio-only as a WAV Blob.
 Useful when you need the audio track separately (e.g., for external muxing).
@@ -100,7 +100,7 @@ WAV Blob, or null if no audio is available
 
 > **exportTimeline**(`duration?`): `Promise`\<`Blob`\>
 
-Defined in: [export/VideoExporter.ts:192](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/VideoExporter.ts#L192)
+Defined in: [export/VideoExporter.ts:192](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L192)
 
 Export a specific duration of the timeline.
 Renders frame-by-frame for consistent results.
@@ -128,7 +128,7 @@ Promise resolving to the video Blob
 
 > **getOptions**(): `Readonly`\<`ResolvedVideoExportOptions`\>
 
-Defined in: [export/VideoExporter.ts:285](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/VideoExporter.ts#L285)
+Defined in: [export/VideoExporter.ts:285](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L285)
 
 Get the export options.
 
@@ -144,7 +144,7 @@ The resolved export options
 
 > **isRecording**(): `boolean`
 
-Defined in: [export/VideoExporter.ts:277](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/VideoExporter.ts#L277)
+Defined in: [export/VideoExporter.ts:277](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L277)
 
 Check if currently recording.
 
@@ -160,7 +160,7 @@ true if recording is in progress
 
 > **startRecording**(): `Promise`\<`void`\>
 
-Defined in: [export/VideoExporter.ts:108](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/VideoExporter.ts#L108)
+Defined in: [export/VideoExporter.ts:108](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L108)
 
 Start recording the scene.
 If audio is available and `includeAudio` is true, the audio stream
@@ -180,7 +180,7 @@ Error if already recording or format not supported
 
 > **stopRecording**(): `Promise`\<`Blob`\>
 
-Defined in: [export/VideoExporter.ts:162](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/VideoExporter.ts#L162)
+Defined in: [export/VideoExporter.ts:162](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L162)
 
 Stop recording and return the video blob.
 
@@ -200,7 +200,7 @@ Error if not recording
 
 > `static` **download**(`blob`, `filename`): `void`
 
-Defined in: [export/VideoExporter.ts:251](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/export/VideoExporter.ts#L251)
+Defined in: [export/VideoExporter.ts:251](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L251)
 
 Download a video blob as a file.
 

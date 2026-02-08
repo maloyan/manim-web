@@ -2,7 +2,7 @@
 
 > **indicate**(`mobject`, `options?`): [`Indicate`](../classes/Indicate.md)
 
-Defined in: [animation/indication/Indicate.ts:85](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Indicate.ts#L85)
+Defined in: [animation/indication/Indicate.ts:85](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Indicate.ts#L85)
 
 Create an Indicate animation for a mobject.
 Draws attention by scaling up and changing color, then returning to original.

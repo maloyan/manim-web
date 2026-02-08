@@ -1,6 +1,6 @@
 # Interface: BooleanOperationOptions
 
-Defined in: [mobjects/geometry/BooleanOperations.ts:37](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/BooleanOperations.ts#L37)
+Defined in: [mobjects/geometry/BooleanOperations.ts:37](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/BooleanOperations.ts#L37)
 
 Options for boolean operations
 
@@ -10,7 +10,7 @@ Options for boolean operations
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/BooleanOperations.ts:39](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/BooleanOperations.ts#L39)
+Defined in: [mobjects/geometry/BooleanOperations.ts:39](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/BooleanOperations.ts#L39)
 
 Stroke color. Default: inherited from first shape
 
@@ -20,7 +20,7 @@ Stroke color. Default: inherited from first shape
 
 > `optional` **fillColor**: `string`
 
-Defined in: [mobjects/geometry/BooleanOperations.ts:41](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/BooleanOperations.ts#L41)
+Defined in: [mobjects/geometry/BooleanOperations.ts:41](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/BooleanOperations.ts#L41)
 
 Fill color (separate from stroke). If set, overrides color for fill.
 
@@ -30,7 +30,7 @@ Fill color (separate from stroke). If set, overrides color for fill.
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/geometry/BooleanOperations.ts:43](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/BooleanOperations.ts#L43)
+Defined in: [mobjects/geometry/BooleanOperations.ts:43](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/BooleanOperations.ts#L43)
 
 Fill opacity. Default: inherited from first shape
 
@@ -40,7 +40,7 @@ Fill opacity. Default: inherited from first shape
 
 > `optional` **samplesPerSegment**: `number`
 
-Defined in: [mobjects/geometry/BooleanOperations.ts:47](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/BooleanOperations.ts#L47)
+Defined in: [mobjects/geometry/BooleanOperations.ts:47](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/BooleanOperations.ts#L47)
 
 Number of samples per Bezier segment for polygon approximation. Default: 8
 
@@ -50,6 +50,6 @@ Number of samples per Bezier segment for polygon approximation. Default: 8
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/BooleanOperations.ts:45](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/BooleanOperations.ts#L45)
+Defined in: [mobjects/geometry/BooleanOperations.ts:45](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/BooleanOperations.ts#L45)
 
 Stroke width. Default: inherited from first shape

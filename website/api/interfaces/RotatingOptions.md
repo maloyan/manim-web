@@ -1,6 +1,6 @@
 # Interface: RotatingOptions
 
-Defined in: [animation/utility/index.ts:163](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/utility/index.ts#L163)
+Defined in: [animation/utility/index.ts:163](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/utility/index.ts#L163)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/utility/index.ts:163](https://github.com/maloyan/manim-js
 
 > `optional` **aboutPoint**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [animation/utility/index.ts:169](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/utility/index.ts#L169)
+Defined in: [animation/utility/index.ts:169](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/utility/index.ts#L169)
 
 Point to rotate about. Default: mobject center
 
@@ -22,7 +22,7 @@ Point to rotate about. Default: mobject center
 
 > `optional` **angle**: `number`
 
-Defined in: [animation/utility/index.ts:165](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/utility/index.ts#L165)
+Defined in: [animation/utility/index.ts:165](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/utility/index.ts#L165)
 
 Total angle to rotate in radians. Default: 2*PI (full revolution, matching Manim's TAU)
 
@@ -32,7 +32,7 @@ Total angle to rotate in radians. Default: 2*PI (full revolution, matching Manim
 
 > `optional` **axis**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [animation/utility/index.ts:167](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/utility/index.ts#L167)
+Defined in: [animation/utility/index.ts:167](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/utility/index.ts#L167)
 
 Axis of rotation [x, y, z]. Default: Z axis [0, 0, 1]
 
@@ -42,7 +42,7 @@ Axis of rotation [x, y, z]. Default: Z axis [0, 0, 1]
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -56,7 +56,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -70,7 +70,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 

@@ -1,6 +1,6 @@
 # Interface: IntegerMatrixOptions
 
-Defined in: [mobjects/matrix/Matrix.ts:561](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/matrix/Matrix.ts#L561)
+Defined in: [mobjects/matrix/Matrix.ts:561](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/matrix/Matrix.ts#L561)
 
 Options for IntegerMatrix
 
@@ -14,7 +14,7 @@ Options for IntegerMatrix
 
 > `optional` **bracketColor**: `string`
 
-Defined in: [mobjects/matrix/Matrix.ts:39](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/matrix/Matrix.ts#L39)
+Defined in: [mobjects/matrix/Matrix.ts:39](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/matrix/Matrix.ts#L39)
 
 Bracket color. Default: WHITE
 
@@ -28,7 +28,7 @@ Bracket color. Default: WHITE
 
 > `optional` **bracketStrokeWidth**: `number`
 
-Defined in: [mobjects/matrix/Matrix.ts:41](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/matrix/Matrix.ts#L41)
+Defined in: [mobjects/matrix/Matrix.ts:41](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/matrix/Matrix.ts#L41)
 
 Bracket stroke width. Default: DEFAULT_STROKE_WIDTH
 
@@ -42,7 +42,7 @@ Bracket stroke width. Default: DEFAULT_STROKE_WIDTH
 
 > `optional` **bracketType**: [`BracketType`](../type-aliases/BracketType.md)
 
-Defined in: [mobjects/matrix/Matrix.ts:31](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/matrix/Matrix.ts#L31)
+Defined in: [mobjects/matrix/Matrix.ts:31](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/matrix/Matrix.ts#L31)
 
 Type of brackets to use. Default: '[]'
 
@@ -56,7 +56,7 @@ Type of brackets to use. Default: '[]'
 
 > `optional` **elementAlignment**: [`ElementAlignment`](../type-aliases/ElementAlignment.md)
 
-Defined in: [mobjects/matrix/Matrix.ts:37](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/matrix/Matrix.ts#L37)
+Defined in: [mobjects/matrix/Matrix.ts:37](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/matrix/Matrix.ts#L37)
 
 Alignment of elements within cells. Default: 'center'
 
@@ -70,7 +70,7 @@ Alignment of elements within cells. Default: 'center'
 
 > `optional` **elementColor**: `string`
 
-Defined in: [mobjects/matrix/Matrix.ts:43](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/matrix/Matrix.ts#L43)
+Defined in: [mobjects/matrix/Matrix.ts:43](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/matrix/Matrix.ts#L43)
 
 Element color for auto-generated MathTex. Default: WHITE
 
@@ -84,7 +84,7 @@ Element color for auto-generated MathTex. Default: WHITE
 
 > `optional` **fontSize**: `number`
 
-Defined in: [mobjects/matrix/Matrix.ts:45](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/matrix/Matrix.ts#L45)
+Defined in: [mobjects/matrix/Matrix.ts:45](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/matrix/Matrix.ts#L45)
 
 Font size for elements. Default: 48
 
@@ -98,7 +98,7 @@ Font size for elements. Default: 48
 
 > `optional` **hBuff**: `number`
 
-Defined in: [mobjects/matrix/Matrix.ts:35](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/matrix/Matrix.ts#L35)
+Defined in: [mobjects/matrix/Matrix.ts:35](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/matrix/Matrix.ts#L35)
 
 Horizontal buffer between columns. Default: 1.3
 
@@ -112,7 +112,7 @@ Horizontal buffer between columns. Default: 1.3
 
 > `optional` **position**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/matrix/Matrix.ts:47](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/matrix/Matrix.ts#L47)
+Defined in: [mobjects/matrix/Matrix.ts:47](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/matrix/Matrix.ts#L47)
 
 Position. Default: [0, 0, 0]
 
@@ -126,7 +126,7 @@ Position. Default: [0, 0, 0]
 
 > `optional` **vBuff**: `number`
 
-Defined in: [mobjects/matrix/Matrix.ts:33](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/matrix/Matrix.ts#L33)
+Defined in: [mobjects/matrix/Matrix.ts:33](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/matrix/Matrix.ts#L33)
 
 Vertical buffer between rows. Default: 0.8
 

@@ -1,6 +1,6 @@
 # Interface: ArcOptions
 
-Defined in: [mobjects/geometry/Arc.ts:8](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arc.ts#L8)
+Defined in: [mobjects/geometry/Arc.ts:8](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Arc.ts#L8)
 
 Options for creating an Arc
 
@@ -10,7 +10,7 @@ Options for creating an Arc
 
 > `optional` **angle**: `number`
 
-Defined in: [mobjects/geometry/Arc.ts:14](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arc.ts#L14)
+Defined in: [mobjects/geometry/Arc.ts:14](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Arc.ts#L14)
 
 Arc angle (span) in radians. Default: PI/2
 
@@ -20,7 +20,7 @@ Arc angle (span) in radians. Default: PI/2
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/geometry/Arc.ts:22](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arc.ts#L22)
+Defined in: [mobjects/geometry/Arc.ts:22](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Arc.ts#L22)
 
 Center position. Default: [0, 0, 0]
 
@@ -30,7 +30,7 @@ Center position. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/Arc.ts:16](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arc.ts#L16)
+Defined in: [mobjects/geometry/Arc.ts:16](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Arc.ts#L16)
 
 Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
@@ -40,7 +40,7 @@ Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
 > `optional` **numComponents**: `number`
 
-Defined in: [mobjects/geometry/Arc.ts:20](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arc.ts#L20)
+Defined in: [mobjects/geometry/Arc.ts:20](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Arc.ts#L20)
 
 Number of Bezier segments for approximation. Default: 8
 
@@ -50,7 +50,7 @@ Number of Bezier segments for approximation. Default: 8
 
 > `optional` **radius**: `number`
 
-Defined in: [mobjects/geometry/Arc.ts:10](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arc.ts#L10)
+Defined in: [mobjects/geometry/Arc.ts:10](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Arc.ts#L10)
 
 Radius of the arc. Default: 1
 
@@ -60,7 +60,7 @@ Radius of the arc. Default: 1
 
 > `optional` **startAngle**: `number`
 
-Defined in: [mobjects/geometry/Arc.ts:12](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arc.ts#L12)
+Defined in: [mobjects/geometry/Arc.ts:12](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Arc.ts#L12)
 
 Start angle in radians. Default: 0
 
@@ -70,6 +70,6 @@ Start angle in radians. Default: 0
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/Arc.ts:18](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/Arc.ts#L18)
+Defined in: [mobjects/geometry/Arc.ts:18](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Arc.ts#L18)
 
 Stroke width in pixels. Default: 4 (Manim's default)

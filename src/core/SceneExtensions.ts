@@ -7,7 +7,9 @@ import { Mobject, Vector3Tuple } from './Mobject';
 import { Group } from './Group';
 import { Line } from '../mobjects/geometry/Line';
 import { Arrow } from '../mobjects/geometry/Arrow';
+import { Rectangle } from '../mobjects/geometry/Rectangle';
 import { smoothstep, coordsToPoint as coordsToPointHelper, pointToCoords as pointToCoordsHelper } from '../utils/math';
+import { Animation, AnimationOptions } from '../animation/Animation';
 
 /**
  * Options for configuring a ThreeDScene.
@@ -399,401 +401,415 @@ export class MovingCameraScene extends Scene {
  * Options for configuring a ZoomedScene.
  */
 export interface ZoomedSceneOptions extends SceneOptions {
-  /** Default zoom factor. Defaults to 4. */
-  defaultZoomFactor?: number;
-  /** Zoom window size as fraction of frame. Defaults to 0.2. */
-  zoomWindowSize?: number;
-  /** Zoom window position as [x, y] in normalized coordinates. Defaults to [0.8, 0.8] (upper right). */
-  zoomWindowPosition?: [number, number];
-  /** Border color for zoom window. Defaults to '#FFFF00' (yellow). */
-  zoomBorderColor?: string;
-  /** Border width for zoom window. Defaults to 2. */
-  zoomBorderWidth?: number;
+  /** Width of the zoom camera frame in world units. Defaults to 3. */
+  cameraFrameWidth?: number;
+  /** Height of the zoom camera frame in world units. Defaults to 3. */
+  cameraFrameHeight?: number;
+  /** Default zoom factor (frame.width / display.width). Defaults to 0.3. */
+  zoomFactor?: number;
+  /** Width of the zoomed display in world units. Defaults to 3. */
+  displayWidth?: number;
+  /** Height of the zoomed display in world units. Defaults to 3. */
+  displayHeight?: number;
+  /** Color of the camera frame border. Defaults to '#FFFF00'. */
+  cameraFrameColor?: string;
+  /** Color of the display frame border. Defaults to '#FFFF00'. */
+  displayFrameColor?: string;
+  /** Stroke width of camera frame. Defaults to 3. */
+  cameraFrameStrokeWidth?: number;
+  /** Stroke width of display frame. Defaults to 3. */
+  displayFrameStrokeWidth?: number;
+  /** Size of render target in pixels. Defaults to 512. */
+  renderTargetSize?: number;
+  /** Corner direction for zoomed display [x, y, z]. Defaults to UP+RIGHT [1,1,0]. */
+  displayCorner?: [number, number, number];
+  /** Buffer from corner edges. Defaults to 0.5. */
+  displayCornerBuff?: number;
+}
+
+/**
+ * Helper: the zoomed camera with its visible frame rectangle.
+ */
+class ZoomedCamera {
+  /** The visible frame rectangle showing the zoom region */
+  readonly frame: Rectangle;
+
+  constructor(width: number, height: number, color: string, strokeWidth: number) {
+    this.frame = new Rectangle({
+      width,
+      height,
+      color,
+      strokeWidth,
+    });
+    this.frame.fillOpacity = 0;
+  }
+}
+
+/**
+ * Helper: a Mobject that contains both the render-target texture mesh
+ * and a visible display frame border.
+ */
+class ZoomedDisplay extends Mobject {
+  /** The visible border of the display window */
+  readonly displayFrame: Rectangle;
+
+  /** The THREE.Mesh showing the zoomed texture */
+  private _imageMesh: THREE.Mesh;
+
+  /** Width/height in world units */
+  private _width: number;
+  private _height: number;
+
+  constructor(
+    width: number,
+    height: number,
+    renderTarget: THREE.WebGLRenderTarget,
+    color: string,
+    strokeWidth: number,
+  ) {
+    super();
+    this._width = width;
+    this._height = height;
+
+    // Create the display frame (visible border)
+    this.displayFrame = new Rectangle({
+      width,
+      height,
+      color,
+      strokeWidth,
+    });
+    this.displayFrame.fillOpacity = 0;
+    this.displayFrame.useStrokeMesh = true;
+
+    // Make displayFrame a Mobject child so parent→child dirty propagation
+    // works (needed for world-space miter recomputation after Scale animations)
+    this.add(this.displayFrame);
+
+    // Create the image mesh (shows the render target texture)
+    const geometry = new THREE.PlaneGeometry(width, height);
+    const material = new THREE.MeshBasicMaterial({
+      map: renderTarget.texture,
+      side: THREE.FrontSide,
+      depthTest: false,
+    });
+    this._imageMesh = new THREE.Mesh(geometry, material);
+    this._imageMesh.position.z = -0.01; // Behind frame
+  }
+
+  protected _createThreeObject(): THREE.Object3D {
+    const group = new THREE.Group();
+    // Add image mesh
+    group.add(this._imageMesh);
+    // Add display frame's THREE object, rendered after image so it paints on top
+    // (both have depthTest=false, so render order determines visibility)
+    const frameObj = this.displayFrame.getThreeObject();
+    frameObj.traverse((child: THREE.Object3D) => {
+      child.renderOrder = 1;
+    });
+    group.add(frameObj);
+    return group;
+  }
+
+  override _syncToThree(): void {
+    // When the display is dirty (e.g. from Scale animation), force
+    // displayFrame dirty too so its world-space miter stroke recomputes
+    if (this._dirty) {
+      this.displayFrame._dirty = true;
+      (this.displayFrame as any)._geometryDirty = true;
+    }
+    super._syncToThree();
+  }
+
+  protected _createCopy(): Mobject {
+    // ZoomedDisplay is not meaningfully copyable
+    return this;
+  }
+
+  getWidth(): number {
+    return this._width * this.scaleVector.x;
+  }
+
+  getHeight(): number {
+    return this._height * this.scaleVector.y;
+  }
+}
+
+/**
+ * Animation that pops the zoomed display out from the camera frame to its
+ * target position, mimicking Manim's get_zoomed_display_pop_out_animation().
+ *
+ * In begin(), the display's current position/scale are saved, then the display
+ * is snapped onto the camera frame via replace(frame, stretch=true).
+ * interpolate(alpha) lerps from frame-matched state (alpha=0) to the saved
+ * original state (alpha=1). Works with reversed rate functions for reverse
+ * pop-out.
+ */
+export class ZoomDisplayPopOut extends Animation {
+  private _savedPosition: THREE.Vector3 | null = null;
+  private _savedScale: THREE.Vector3 | null = null;
+  private _startPosition: THREE.Vector3 | null = null;
+  private _startScale: THREE.Vector3 | null = null;
+  private _frame: Mobject;
+
+  constructor(display: Mobject, frame: Mobject, options?: AnimationOptions) {
+    super(display, options);
+    this._frame = frame;
+  }
+
+  begin(): void {
+    super.begin();
+    const display = this.mobject;
+
+    // Save the display's current (target) position and scale
+    this._savedPosition = display.position.clone();
+    this._savedScale = display.scaleVector.clone();
+
+    // Snap display onto the frame (stretch to match frame dimensions)
+    display.replace(this._frame, true);
+
+    // Save the frame-matched (start) position and scale
+    this._startPosition = display.position.clone();
+    this._startScale = display.scaleVector.clone();
+  }
+
+  interpolate(alpha: number): void {
+    if (!this._startPosition || !this._startScale || !this._savedPosition || !this._savedScale) {
+      return;
+    }
+    const display = this.mobject;
+
+    // Lerp position from frame-matched to saved target
+    display.position.lerpVectors(this._startPosition, this._savedPosition, alpha);
+
+    // Lerp scale from frame-matched to saved target
+    display.scaleVector.x = this._startScale.x + (this._savedScale.x - this._startScale.x) * alpha;
+    display.scaleVector.y = this._startScale.y + (this._savedScale.y - this._startScale.y) * alpha;
+    display.scaleVector.z = this._startScale.z + (this._savedScale.z - this._startScale.z) * alpha;
+
+    display._markDirty();
+  }
+
+  finish(): void {
+    // Apply final state via the last interpolation (respects rateFunc).
+    // For forward pop-out, rateFunc(1) = 1, so display ends at saved position.
+    // For reverse pop-out, rateFunc(1) = 0, so display ends at frame-matched position.
+    const finalAlpha = this.rateFunc(1.0);
+    this.interpolate(finalAlpha);
+    super.finish();
+  }
 }
 
 /**
  * Scene with zoom/magnification capability.
- * Displays a zoomed view of a region in a separate window.
+ * Displays a zoomed view of a region in a separate window, using Mobject-based
+ * camera frame and display objects compatible with Manim animations.
  */
 export class ZoomedScene extends Scene {
+  /** The zoomed camera with its frame */
+  readonly zoomedCamera: ZoomedCamera;
+
+  /** The zoomed display (texture + border) */
+  readonly zoomedDisplay: ZoomedDisplay;
+
   /** Whether zooming is currently active */
   private _zoomActive: boolean = false;
 
-  /** Center point of the zoomed region */
-  private _zoomCenter: THREE.Vector3 = new THREE.Vector3(0, 0, 0);
-
-  /** Current zoom factor */
-  private _zoomFactor: number;
-
-  /** Zoom window size as fraction of frame */
-  private _zoomWindowSize: number;
-
-  /** Zoom window position (normalized coordinates) */
-  private _zoomWindowPosition: [number, number];
-
-  /** Zoom window border color */
-  private _zoomBorderColor: string;
-
-  /** Zoom window border width */
-  private _zoomBorderWidth: number;
-
   /** Render target for zoomed view */
-  private _zoomRenderTarget: THREE.WebGLRenderTarget | null = null;
+  private _zoomRenderTarget: THREE.WebGLRenderTarget;
 
-  /** Zoom window mesh for display */
-  private _zoomWindowMesh: THREE.Mesh | null = null;
+  /** Default display position (for reset in clear()) */
+  private _displayDefaultPos: [number, number, number];
 
-  /** Zoom indicator (shows zoomed region in main view) */
-  private _zoomIndicator: THREE.LineLoop | null = null;
-
-  /**
-   * Create a new zoomed scene.
-   * @param container - DOM element to render into
-   * @param options - Scene configuration options
-   */
   constructor(container: HTMLElement, options: ZoomedSceneOptions = {}) {
     super(container, options);
 
-    this._zoomFactor = options.defaultZoomFactor ?? 4;
-    this._zoomWindowSize = options.zoomWindowSize ?? 0.2;
-    this._zoomWindowPosition = options.zoomWindowPosition ?? [0.8, 0.8];
-    this._zoomBorderColor = options.zoomBorderColor ?? '#FFFF00';
-    this._zoomBorderWidth = options.zoomBorderWidth ?? 2;
+    const displayWidth = options.displayWidth ?? 3;
+    const displayHeight = options.displayHeight ?? 3;
+    const zoomFactor = options.zoomFactor ?? 0.3;
+    const cameraFrameWidth = options.cameraFrameWidth ?? (displayWidth * zoomFactor);
+    const cameraFrameHeight = options.cameraFrameHeight ?? (displayHeight * zoomFactor);
+    const cameraFrameColor = options.cameraFrameColor ?? '#FFFF00';
+    const displayFrameColor = options.displayFrameColor ?? '#FFFF00';
+    const cameraFrameStrokeWidth = options.cameraFrameStrokeWidth ?? 3;
+    const displayFrameStrokeWidth = options.displayFrameStrokeWidth ?? 3;
+    const renderTargetSize = options.renderTargetSize ?? 512;
+
+    // Create render target
+    this._zoomRenderTarget = new THREE.WebGLRenderTarget(renderTargetSize, renderTargetSize, {
+      minFilter: THREE.LinearMipmapLinearFilter,
+      magFilter: THREE.LinearFilter,
+      format: THREE.RGBAFormat,
+      generateMipmaps: true,
+    });
+
+    // Create zoomed camera
+    this.zoomedCamera = new ZoomedCamera(
+      cameraFrameWidth,
+      cameraFrameHeight,
+      cameraFrameColor,
+      cameraFrameStrokeWidth,
+    );
+    this.zoomedDisplay = new ZoomedDisplay(
+      displayWidth,
+      displayHeight,
+      this._zoomRenderTarget,
+      displayFrameColor,
+      displayFrameStrokeWidth,
+    );
+
+    // Position zoomed display at corner (default: upper-right, matching Python Manim)
+    const corner = options.displayCorner ?? [1, 1, 0];
+    const cornerBuff = options.displayCornerBuff ?? 0.5;
+    const frameW = this.camera.frameWidth;
+    const frameH = this.camera.frameHeight;
+    const dx = corner[0] !== 0
+      ? corner[0] * (frameW / 2 - cornerBuff - displayWidth / 2)
+      : 0;
+    const dy = corner[1] !== 0
+      ? corner[1] * (frameH / 2 - cornerBuff - displayHeight / 2)
+      : 0;
+    this._displayDefaultPos = [dx, dy, 0];
+    this.zoomedDisplay.moveTo(this._displayDefaultPos);
   }
 
-  /**
-   * Check if zooming is currently active.
-   */
+  /** Check if zooming is active */
   get isZoomActive(): boolean {
     return this._zoomActive;
   }
 
   /**
-   * Get the current zoom center.
-   */
-  get zoomCenter(): Vector3Tuple {
-    return [this._zoomCenter.x, this._zoomCenter.y, this._zoomCenter.z];
-  }
-
-  /**
-   * Get the current zoom factor.
-   */
-  get zoomFactor(): number {
-    return this._zoomFactor;
-  }
-
-  /**
-   * Activate zooming, displaying the zoom window.
-   * @returns this for chaining
+   * Activate zooming: adds camera frame and display to the scene.
    */
   activateZooming(): this {
     if (this._zoomActive) return this;
-
     this._zoomActive = true;
-    this._setupZoomRenderTarget();
-    this._createZoomWindow();
-    this._createZoomIndicator();
-    this.render();
+
+    // Suppress auto-render while adding mobjects so the display doesn't
+    // flash at its target position before the pop-out animation begins.
+    const wasAutoRender = this._autoRender;
+    this._autoRender = false;
+
+    this.add(this.zoomedCamera.frame);
+    this.addForegroundMobject(this.zoomedDisplay);
+
+    this._autoRender = wasAutoRender;
     return this;
   }
 
   /**
-   * Deactivate zooming, hiding the zoom window.
-   * @returns this for chaining
+   * Deactivate zooming: removes camera frame and display from the scene.
    */
   deactivateZooming(): this {
     if (!this._zoomActive) return this;
-
     this._zoomActive = false;
-    this._cleanupZoomElements();
+
+    this.remove(this.zoomedCamera.frame);
+    this.remove(this.zoomedDisplay);
     this.render();
     return this;
   }
 
   /**
-   * Toggle zooming on/off.
-   * @returns this for chaining
+   * Get a pop-out animation that moves the zoomed display from the camera
+   * frame to its current position, mimicking Manim's
+   * get_zoomed_display_pop_out_animation().
+   *
+   * The animation starts by snapping the display onto the frame, then
+   * interpolates position and scale to the display's original state.
+   * Use { rateFunc: (t) => smooth(1 - t) } for a reverse pop-out.
    */
-  toggleZooming(): this {
+  getZoomedDisplayPopOutAnimation(options?: AnimationOptions): Animation {
+    return new ZoomDisplayPopOut(this.zoomedDisplay, this.zoomedCamera.frame, options);
+  }
+
+  /**
+   * Override _render to include zoom view on every frame (including animation loop).
+   */
+  protected override _render(): void {
     if (this._zoomActive) {
-      return this.deactivateZooming();
-    } else {
-      return this.activateZooming();
-    }
-  }
+      const webglRenderer = this.renderer.getThreeRenderer();
 
-  /**
-   * Set the center point of the zoomed region.
-   * @param point - Center point [x, y, z]
-   * @returns this for chaining
-   */
-  setZoomCenter(point: Vector3Tuple): this {
-    this._zoomCenter.set(point[0], point[1], point[2]);
-    this._updateZoomIndicator();
-    this.render();
-    return this;
-  }
+      // Sync dirty mobjects FIRST so frame bounds are up-to-date
+      for (const m of this.mobjects) {
+        if (m._dirty) {
+          m._syncToThree();
+          m._dirty = false;
+        }
+      }
 
-  /**
-   * Set the zoom factor.
-   * @param factor - Zoom magnification factor (> 1 for zoom in)
-   * @returns this for chaining
-   */
-  setZoomFactor(factor: number): this {
-    this._zoomFactor = Math.max(1, factor);
-    this._updateZoomIndicator();
-    this.render();
-    return this;
-  }
+      // Get frame position/size from the camera frame mobject
+      const frameCenter = this.zoomedCamera.frame.getCenter();
+      const frameObj = this.zoomedCamera.frame.getThreeObject();
+      const frameBounds = new THREE.Box3().setFromObject(frameObj);
+      const frameSize = new THREE.Vector3();
+      frameBounds.getSize(frameSize);
 
-  /**
-   * Set the zoom window position.
-   * @param x - X position (0-1, left to right)
-   * @param y - Y position (0-1, bottom to top)
-   * @returns this for chaining
-   */
-  setZoomWindowPosition(x: number, y: number): this {
-    this._zoomWindowPosition = [
-      Math.max(0, Math.min(1, x)),
-      Math.max(0, Math.min(1, y)),
-    ];
-    this._updateZoomWindowPosition();
-    this.render();
-    return this;
-  }
-
-  /**
-   * Set the zoom window size.
-   * @param size - Size as fraction of frame width (0-1)
-   * @returns this for chaining
-   */
-  setZoomWindowSize(size: number): this {
-    this._zoomWindowSize = Math.max(0.05, Math.min(0.5, size));
-    this._recreateZoomWindow();
-    this.render();
-    return this;
-  }
-
-  /**
-   * Set up the render target for the zoomed view.
-   */
-  private _setupZoomRenderTarget(): void {
-    const size = Math.floor(this.renderer.width * this._zoomWindowSize);
-    this._zoomRenderTarget = new THREE.WebGLRenderTarget(size, size, {
-      minFilter: THREE.LinearFilter,
-      magFilter: THREE.LinearFilter,
-      format: THREE.RGBAFormat,
-    });
-  }
-
-  /**
-   * Create the zoom window display mesh.
-   */
-  private _createZoomWindow(): void {
-    if (!this._zoomRenderTarget) return;
-
-    const frameWidth = this.camera.frameWidth;
-    const windowSize = frameWidth * this._zoomWindowSize;
-
-    // Create quad geometry for zoom window
-    const geometry = new THREE.PlaneGeometry(windowSize, windowSize);
-    const material = new THREE.MeshBasicMaterial({
-      map: this._zoomRenderTarget.texture,
-      side: THREE.FrontSide,
-    });
-
-    this._zoomWindowMesh = new THREE.Mesh(geometry, material);
-    this._zoomWindowMesh.renderOrder = 1000; // Render on top
-
-    // Create border
-    const borderGeometry = new THREE.BufferGeometry();
-    const halfSize = windowSize / 2;
-    const borderVertices = new Float32Array([
-      -halfSize, -halfSize, 0.01,
-      halfSize, -halfSize, 0.01,
-      halfSize, halfSize, 0.01,
-      -halfSize, halfSize, 0.01,
-    ]);
-    borderGeometry.setAttribute('position', new THREE.BufferAttribute(borderVertices, 3));
-
-    const borderMaterial = new THREE.LineBasicMaterial({
-      color: this._zoomBorderColor,
-      linewidth: this._zoomBorderWidth,
-    });
-
-    const border = new THREE.LineLoop(borderGeometry, borderMaterial);
-    border.renderOrder = 1001;
-    this._zoomWindowMesh.add(border);
-
-    this._updateZoomWindowPosition();
-    this.threeScene.add(this._zoomWindowMesh);
-  }
-
-  /**
-   * Create the zoom indicator showing the zoomed region.
-   */
-  private _createZoomIndicator(): void {
-    const regionSize = this.camera.frameWidth / this._zoomFactor;
-    const halfSize = regionSize / 2;
-
-    const geometry = new THREE.BufferGeometry();
-    const vertices = new Float32Array([
-      -halfSize, -halfSize, 0.01,
-      halfSize, -halfSize, 0.01,
-      halfSize, halfSize, 0.01,
-      -halfSize, halfSize, 0.01,
-    ]);
-    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-
-    const material = new THREE.LineBasicMaterial({
-      color: this._zoomBorderColor,
-      linewidth: this._zoomBorderWidth,
-    });
-
-    this._zoomIndicator = new THREE.LineLoop(geometry, material);
-    this._zoomIndicator.position.copy(this._zoomCenter);
-    this.threeScene.add(this._zoomIndicator);
-  }
-
-  /**
-   * Update the zoom indicator position and size.
-   */
-  private _updateZoomIndicator(): void {
-    if (!this._zoomIndicator) return;
-
-    const regionSize = this.camera.frameWidth / this._zoomFactor;
-    const halfSize = regionSize / 2;
-
-    const positions = this._zoomIndicator.geometry.attributes.position as THREE.BufferAttribute;
-    positions.setXYZ(0, -halfSize, -halfSize, 0.01);
-    positions.setXYZ(1, halfSize, -halfSize, 0.01);
-    positions.setXYZ(2, halfSize, halfSize, 0.01);
-    positions.setXYZ(3, -halfSize, halfSize, 0.01);
-    positions.needsUpdate = true;
-
-    this._zoomIndicator.position.copy(this._zoomCenter);
-  }
-
-  /**
-   * Update the zoom window position.
-   */
-  private _updateZoomWindowPosition(): void {
-    if (!this._zoomWindowMesh) return;
-
-    const frameWidth = this.camera.frameWidth;
-    const frameHeight = this.camera.frameHeight;
-    const windowSize = frameWidth * this._zoomWindowSize;
-
-    // Convert normalized position to world coordinates
-    const x = (this._zoomWindowPosition[0] - 0.5) * frameWidth;
-    const y = (this._zoomWindowPosition[1] - 0.5) * frameHeight;
-
-    // Adjust to keep window inside frame
-    const maxX = (frameWidth - windowSize) / 2;
-    const maxY = (frameHeight - windowSize) / 2;
-
-    this._zoomWindowMesh.position.set(
-      Math.max(-maxX, Math.min(maxX, x)),
-      Math.max(-maxY, Math.min(maxY, y)),
-      0.1 // Slightly in front of main content
-    );
-  }
-
-  /**
-   * Recreate the zoom window after size change.
-   */
-  private _recreateZoomWindow(): void {
-    if (!this._zoomActive) return;
-
-    // Clean up old elements
-    if (this._zoomWindowMesh) {
-      this.threeScene.remove(this._zoomWindowMesh);
-      this._zoomWindowMesh.geometry.dispose();
-      (this._zoomWindowMesh.material as THREE.Material).dispose();
-      this._zoomWindowMesh = null;
-    }
-    if (this._zoomRenderTarget) {
-      this._zoomRenderTarget.dispose();
-      this._zoomRenderTarget = null;
-    }
-
-    // Recreate
-    this._setupZoomRenderTarget();
-    this._createZoomWindow();
-  }
-
-  /**
-   * Clean up zoom elements.
-   */
-  private _cleanupZoomElements(): void {
-    if (this._zoomWindowMesh) {
-      this.threeScene.remove(this._zoomWindowMesh);
-      this._zoomWindowMesh.geometry.dispose();
-      (this._zoomWindowMesh.material as THREE.Material).dispose();
-      this._zoomWindowMesh = null;
-    }
-    if (this._zoomIndicator) {
-      this.threeScene.remove(this._zoomIndicator);
-      this._zoomIndicator.geometry.dispose();
-      (this._zoomIndicator.material as THREE.Material).dispose();
-      this._zoomIndicator = null;
-    }
-    if (this._zoomRenderTarget) {
-      this._zoomRenderTarget.dispose();
-      this._zoomRenderTarget = null;
-    }
-  }
-
-  /**
-   * Override render to include zoom view.
-   */
-  render(): void {
-    if (this._zoomActive && this._zoomRenderTarget && this._zoomWindowMesh) {
-      // Temporarily hide zoom window for zoomed render
-      this._zoomWindowMesh.visible = false;
+      // Hide the display and its frame so they don't appear in the zoomed render
+      const displayObj = this.zoomedDisplay.getThreeObject();
+      const prevDisplayVisible = displayObj.visible;
+      displayObj.visible = false;
 
       // Save camera state
-      const originalPosition = this.camera.position.clone();
-      const originalWidth = this.camera.frameWidth;
-      const originalHeight = this.camera.frameHeight;
+      const cam = this.camera;
+      const origWidth = cam.frameWidth;
+      const origHeight = cam.frameHeight;
+      const origPos = cam.position.clone();
 
-      // Set up zoomed camera view
-      const zoomedWidth = originalWidth / this._zoomFactor;
-      const zoomedHeight = originalHeight / this._zoomFactor;
-      this.camera.frameWidth = zoomedWidth;
-      this.camera.frameHeight = zoomedHeight;
-      this.camera.moveTo([this._zoomCenter.x, this._zoomCenter.y, originalPosition.z]);
+      // Set camera to show the frame region
+      cam.frameWidth = frameSize.x > 0.001 ? frameSize.x : origWidth;
+      cam.frameHeight = frameSize.y > 0.001 ? frameSize.y : origHeight;
+      cam.moveTo([frameCenter[0], frameCenter[1], origPos.z]);
 
       // Render to zoom target
-      const webglRenderer = (this.renderer as any)._renderer as THREE.WebGLRenderer;
       webglRenderer.setRenderTarget(this._zoomRenderTarget);
-      webglRenderer.render(this.threeScene, this.camera.getCamera());
+      webglRenderer.render(this.threeScene, cam.getCamera());
       webglRenderer.setRenderTarget(null);
 
-      // Restore camera state
-      this.camera.frameWidth = originalWidth;
-      this.camera.frameHeight = originalHeight;
-      this.camera.moveTo([originalPosition.x, originalPosition.y, originalPosition.z]);
+      // Restore viewport to full canvas size (setRenderTarget may leave it at
+      // the render target's dimensions, which clips the main scene render)
+      const sz = webglRenderer.getSize(new THREE.Vector2());
+      webglRenderer.setViewport(0, 0, sz.x, sz.y);
 
-      // Show zoom window
-      this._zoomWindowMesh.visible = true;
+      // Restore camera state
+      cam.frameWidth = origWidth;
+      cam.frameHeight = origHeight;
+      cam.moveTo([origPos.x, origPos.y, origPos.z]);
+
+      // Restore display visibility
+      displayObj.visible = prevDisplayVisible;
     }
 
     // Render main view
-    super.render();
+    super._render();
+  }
+
+  /**
+   * Override clear to reset zoom state.
+   */
+  clear(): this {
+    this._zoomActive = false;
+    // Reset frame and display transforms for clean re-play
+    this.zoomedCamera.frame.position.set(0, 0, 0);
+    this.zoomedCamera.frame.scaleVector.set(1, 1, 1);
+    this.zoomedCamera.frame.setOpacity(1);
+    this.zoomedCamera.frame._markDirty();
+    this.zoomedDisplay.position.set(
+      this._displayDefaultPos[0],
+      this._displayDefaultPos[1],
+      this._displayDefaultPos[2],
+    );
+    this.zoomedDisplay.scaleVector.set(1, 1, 1);
+    this.zoomedDisplay.setOpacity(1);
+    this.zoomedDisplay.displayFrame.setOpacity(1);
+    this.zoomedDisplay._markDirty();
+    return super.clear();
   }
 
   /**
    * Handle window resize.
-   * @param width - New width in pixels
-   * @param height - New height in pixels
    */
   resize(width: number, height: number): this {
     super.resize(width, height);
-    if (this._zoomActive) {
-      this._recreateZoomWindow();
-      this._updateZoomIndicator();
-    }
     return this;
   }
 
@@ -801,7 +817,9 @@ export class ZoomedScene extends Scene {
    * Clean up all resources.
    */
   dispose(): void {
-    this._cleanupZoomElements();
+    if (this._zoomRenderTarget) {
+      this._zoomRenderTarget.dispose();
+    }
     super.dispose();
   }
 }

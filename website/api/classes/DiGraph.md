@@ -1,6 +1,6 @@
 # Class: DiGraph
 
-Defined in: [mobjects/graph/index.ts:1399](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1399)
+Defined in: [mobjects/graph/index.ts:1399](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1399)
 
 DiGraph - Directed graph visualization
 
@@ -39,7 +39,7 @@ const tree = new DiGraph({
 
 > **new DiGraph**(`options`): `DiGraph`
 
-Defined in: [mobjects/graph/index.ts:1400](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1400)
+Defined in: [mobjects/graph/index.ts:1400](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1400)
 
 #### Parameters
 
@@ -61,7 +61,7 @@ Defined in: [mobjects/graph/index.ts:1400](https://github.com/maloyan/manim-js/b
 
 > **\_\_savedMobjectState**: `unknown` = `null`
 
-Defined in: [core/Mobject.ts:118](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L118)
+Defined in: [core/Mobject.ts:118](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L118)
 
 JSON-serializable saved state (used by restoreState()).
 Set by saveState() -- typed as `unknown` here to avoid circular import;
@@ -77,7 +77,7 @@ actual type is MobjectState from StateManager.ts.
 
 > `protected` **\_directed**: `boolean` = `false`
 
-Defined in: [mobjects/graph/index.ts:686](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L686)
+Defined in: [mobjects/graph/index.ts:686](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L686)
 
 Whether this is a directed graph
 
@@ -91,7 +91,7 @@ Whether this is a directed graph
 
 > **\_dirty**: `boolean` = `true`
 
-Defined in: [core/Mobject.ts:95](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L95)
+Defined in: [core/Mobject.ts:95](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L95)
 
 Dirty flag indicating transforms need sync
 
@@ -105,7 +105,7 @@ Dirty flag indicating transforms need sync
 
 > `protected` **\_edgeConfig**: `Map`\<`string`, [`EdgeConfig`](../interfaces/EdgeConfig.md)\>
 
-Defined in: [mobjects/graph/index.ts:683](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L683)
+Defined in: [mobjects/graph/index.ts:683](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L683)
 
 Per-edge configuration
 
@@ -119,7 +119,7 @@ Per-edge configuration
 
 > `protected` **\_edgeMobjects**: `Map`\<`string`, [`Mobject`](Mobject.md)\>
 
-Defined in: [mobjects/graph/index.ts:668](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L668)
+Defined in: [mobjects/graph/index.ts:668](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L668)
 
 Map of edge key to Line/Arrow mobject
 
@@ -133,7 +133,7 @@ Map of edge key to Line/Arrow mobject
 
 > `protected` **\_edges**: [`EdgeTuple`](../type-aliases/EdgeTuple.md)[] = `[]`
 
-Defined in: [mobjects/graph/index.ts:659](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L659)
+Defined in: [mobjects/graph/index.ts:659](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L659)
 
 List of edges as [source, target] tuples
 
@@ -147,7 +147,7 @@ List of edges as [source, target] tuples
 
 > `protected` **\_edgeStyle**: [`EdgeStyleOptions`](../interfaces/EdgeStyleOptions.md)
 
-Defined in: [mobjects/graph/index.ts:677](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L677)
+Defined in: [mobjects/graph/index.ts:677](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L677)
 
 Default edge style
 
@@ -161,7 +161,7 @@ Default edge style
 
 > `protected` **\_group**: `Group`\<`Object3DEventMap`\> = `null`
 
-Defined in: [mobjects/graph/index.ts:689](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L689)
+Defined in: [mobjects/graph/index.ts:689](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L689)
 
 Three.js group for this graph
 
@@ -175,7 +175,7 @@ Three.js group for this graph
 
 > `protected` **\_layoutConfig**: [`LayoutConfig`](../interfaces/LayoutConfig.md)
 
-Defined in: [mobjects/graph/index.ts:671](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L671)
+Defined in: [mobjects/graph/index.ts:671](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L671)
 
 Layout configuration
 
@@ -189,7 +189,7 @@ Layout configuration
 
 > `protected` **\_opacity**: `number` = `1`
 
-Defined in: [core/Mobject.ts:80](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L80)
+Defined in: [core/Mobject.ts:80](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L80)
 
 Overall opacity (0-1) - protected for backward compatibility
 
@@ -203,7 +203,7 @@ Overall opacity (0-1) - protected for backward compatibility
 
 > `protected` **\_positions**: `Map`\<[`VertexId`](../type-aliases/VertexId.md), [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)\>
 
-Defined in: [mobjects/graph/index.ts:662](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L662)
+Defined in: [mobjects/graph/index.ts:662](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L662)
 
 Map of vertex id to position
 
@@ -217,7 +217,7 @@ Map of vertex id to position
 
 > `protected` **\_style**: [`MobjectStyle`](../interfaces/MobjectStyle.md)
 
-Defined in: [core/Mobject.ts:89](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L89)
+Defined in: [core/Mobject.ts:89](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L89)
 
 Style properties for backward compatibility
 
@@ -231,7 +231,7 @@ Style properties for backward compatibility
 
 > **\_threeObject**: `Object3D`\<`Object3DEventMap`\> = `null`
 
-Defined in: [core/Mobject.ts:92](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L92)
+Defined in: [core/Mobject.ts:92](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L92)
 
 Three.js backing object
 
@@ -245,7 +245,7 @@ Three.js backing object
 
 > `protected` **\_vertexConfig**: `Map`\<[`VertexId`](../type-aliases/VertexId.md), [`VertexConfig`](../interfaces/VertexConfig.md)\>
 
-Defined in: [mobjects/graph/index.ts:680](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L680)
+Defined in: [mobjects/graph/index.ts:680](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L680)
 
 Per-vertex configuration
 
@@ -259,7 +259,7 @@ Per-vertex configuration
 
 > `protected` **\_vertexMobjects**: `Map`\<[`VertexId`](../type-aliases/VertexId.md), [`Dot`](Dot.md)\>
 
-Defined in: [mobjects/graph/index.ts:665](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L665)
+Defined in: [mobjects/graph/index.ts:665](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L665)
 
 Map of vertex id to Dot mobject
 
@@ -273,7 +273,7 @@ Map of vertex id to Dot mobject
 
 > `protected` **\_vertexStyle**: [`VertexStyleOptions`](../interfaces/VertexStyleOptions.md)
 
-Defined in: [mobjects/graph/index.ts:674](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L674)
+Defined in: [mobjects/graph/index.ts:674](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L674)
 
 Default vertex style
 
@@ -287,7 +287,7 @@ Default vertex style
 
 > `protected` **\_vertices**: [`VertexId`](../type-aliases/VertexId.md)[] = `[]`
 
-Defined in: [mobjects/graph/index.ts:656](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L656)
+Defined in: [mobjects/graph/index.ts:656](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L656)
 
 List of vertex identifiers
 
@@ -301,7 +301,7 @@ List of vertex identifiers
 
 > **children**: [`Mobject`](Mobject.md)[] = `[]`
 
-Defined in: [core/Mobject.ts:53](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L53)
+Defined in: [core/Mobject.ts:53](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L53)
 
 Child mobjects
 
@@ -315,7 +315,7 @@ Child mobjects
 
 > **fillOpacity**: `number` = `0`
 
-Defined in: [core/Mobject.ts:86](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L86)
+Defined in: [core/Mobject.ts:86](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L86)
 
 Fill opacity (0-1)
 
@@ -329,7 +329,7 @@ Fill opacity (0-1)
 
 > `readonly` **id**: `string`
 
-Defined in: [core/Mobject.ts:47](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L47)
+Defined in: [core/Mobject.ts:47](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L47)
 
 Unique identifier for this mobject
 
@@ -343,7 +343,7 @@ Unique identifier for this mobject
 
 > **parent**: [`Mobject`](Mobject.md) = `null`
 
-Defined in: [core/Mobject.ts:50](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L50)
+Defined in: [core/Mobject.ts:50](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L50)
 
 Parent mobject in hierarchy
 
@@ -357,7 +357,7 @@ Parent mobject in hierarchy
 
 > **position**: `Vector3`
 
-Defined in: [core/Mobject.ts:56](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L56)
+Defined in: [core/Mobject.ts:56](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L56)
 
 Position in 3D space
 
@@ -371,7 +371,7 @@ Position in 3D space
 
 > **rotation**: `Euler`
 
-Defined in: [core/Mobject.ts:59](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L59)
+Defined in: [core/Mobject.ts:59](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L59)
 
 Rotation as Euler angles
 
@@ -385,7 +385,7 @@ Rotation as Euler angles
 
 > **savedState**: [`Mobject`](Mobject.md) = `null`
 
-Defined in: [core/Mobject.ts:104](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L104)
+Defined in: [core/Mobject.ts:104](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L104)
 
 Saved mobject copy (used by Restore animation in TransformExtensions).
 Set by saveState().
@@ -400,7 +400,7 @@ Set by saveState().
 
 > **scaleVector**: `Vector3`
 
-Defined in: [core/Mobject.ts:62](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L62)
+Defined in: [core/Mobject.ts:62](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L62)
 
 Scale factors (named scaleVector to avoid conflict with scale method)
 
@@ -414,7 +414,7 @@ Scale factors (named scaleVector to avoid conflict with scale method)
 
 > **strokeWidth**: `number` = `4`
 
-Defined in: [core/Mobject.ts:83](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L83)
+Defined in: [core/Mobject.ts:83](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L83)
 
 Stroke width for outlines (default 4, matching Manim's thicker strokes)
 
@@ -428,7 +428,7 @@ Stroke width for outlines (default 4, matching Manim's thicker strokes)
 
 > **targetCopy**: [`Mobject`](Mobject.md) = `null`
 
-Defined in: [core/Mobject.ts:111](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L111)
+Defined in: [core/Mobject.ts:111](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L111)
 
 Target copy used by generateTarget() / MoveToTarget animation.
 Call generateTarget() to create a copy, modify targetCopy, then
@@ -446,7 +446,7 @@ play MoveToTarget to interpolate from current to target state.
 
 > **get** **color**(): `string`
 
-Defined in: [core/Mobject.ts:67](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L67)
+Defined in: [core/Mobject.ts:67](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L67)
 
 ##### Returns
 
@@ -456,7 +456,7 @@ Defined in: [core/Mobject.ts:67](https://github.com/maloyan/manim-js/blob/aaf5f7
 
 > **set** **color**(`value`): `void`
 
-Defined in: [core/Mobject.ts:71](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L71)
+Defined in: [core/Mobject.ts:71](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L71)
 
 ##### Parameters
 
@@ -480,7 +480,7 @@ Defined in: [core/Mobject.ts:71](https://github.com/maloyan/manim-js/blob/aaf5f7
 
 > **get** **fillColor**(): `string`
 
-Defined in: [core/Mobject.ts:471](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L471)
+Defined in: [core/Mobject.ts:471](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L471)
 
 Get the fill color
 
@@ -492,7 +492,7 @@ Get the fill color
 
 > **set** **fillColor**(`color`): `void`
 
-Defined in: [core/Mobject.ts:478](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L478)
+Defined in: [core/Mobject.ts:478](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L478)
 
 Set the fill color
 
@@ -518,7 +518,7 @@ Set the fill color
 
 > **get** **isDirty**(): `boolean`
 
-Defined in: [core/Mobject.ts:902](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L902)
+Defined in: [core/Mobject.ts:932](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L932)
 
 Check if this mobject needs sync
 
@@ -538,7 +538,7 @@ Check if this mobject needs sync
 
 > **get** **numEdges**(): `number`
 
-Defined in: [mobjects/graph/index.ts:1165](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1165)
+Defined in: [mobjects/graph/index.ts:1165](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1165)
 
 Get the number of edges
 
@@ -558,7 +558,7 @@ Get the number of edges
 
 > **get** **numVertices**(): `number`
 
-Defined in: [mobjects/graph/index.ts:990](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L990)
+Defined in: [mobjects/graph/index.ts:990](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L990)
 
 Get the number of vertices
 
@@ -578,7 +578,7 @@ Get the number of vertices
 
 > **get** **opacity**(): `number`
 
-Defined in: [core/Mobject.ts:145](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L145)
+Defined in: [core/Mobject.ts:145](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L145)
 
 Get the overall opacity of the mobject
 
@@ -590,7 +590,7 @@ Get the overall opacity of the mobject
 
 > **set** **opacity**(`value`): `void`
 
-Defined in: [core/Mobject.ts:152](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L152)
+Defined in: [core/Mobject.ts:152](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L152)
 
 Set the overall opacity of the mobject
 
@@ -616,7 +616,7 @@ Set the overall opacity of the mobject
 
 > **get** **style**(): [`MobjectStyle`](../interfaces/MobjectStyle.md)
 
-Defined in: [core/Mobject.ts:160](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L160)
+Defined in: [core/Mobject.ts:160](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L160)
 
 Get the style properties
 
@@ -636,7 +636,7 @@ Get the style properties
 
 > **get** **submobjects**(): [`Mobject`](Mobject.md)[]
 
-Defined in: [core/Mobject.ts:192](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L192)
+Defined in: [core/Mobject.ts:192](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L192)
 
 Get all submobjects (alias for children)
 
@@ -654,7 +654,7 @@ Get all submobjects (alias for children)
 
 > `protected` **\_computeLayout**(): `void`
 
-Defined in: [mobjects/graph/index.ts:779](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L779)
+Defined in: [mobjects/graph/index.ts:779](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L779)
 
 Compute vertex positions using the layout algorithm
 
@@ -672,7 +672,7 @@ Compute vertex positions using the layout algorithm
 
 > `protected` **\_createCopy**(): `DiGraph`
 
-Defined in: [mobjects/graph/index.ts:1458](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1458)
+Defined in: [mobjects/graph/index.ts:1458](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1458)
 
 Create a copy of this digraph
 
@@ -690,7 +690,7 @@ Create a copy of this digraph
 
 > `protected` **\_createEdgeMobject**(`source`, `target`): `void`
 
-Defined in: [mobjects/graph/index.ts:842](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L842)
+Defined in: [mobjects/graph/index.ts:842](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L842)
 
 Create a single edge mobject
 
@@ -718,7 +718,7 @@ Create a single edge mobject
 
 > `protected` **\_createMobjects**(): `void`
 
-Defined in: [mobjects/graph/index.ts:791](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L791)
+Defined in: [mobjects/graph/index.ts:791](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L791)
 
 Create vertex and edge mobjects
 
@@ -736,7 +736,7 @@ Create vertex and edge mobjects
 
 > `protected` **\_createThreeObject**(): `Object3D`
 
-Defined in: [mobjects/graph/index.ts:1296](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1296)
+Defined in: [mobjects/graph/index.ts:1296](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1296)
 
 Create the Three.js backing object
 
@@ -754,7 +754,7 @@ Create the Three.js backing object
 
 > `protected` **\_createVertexMobject**(`v`): `void`
 
-Defined in: [mobjects/graph/index.ts:818](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L818)
+Defined in: [mobjects/graph/index.ts:818](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L818)
 
 Create a single vertex mobject
 
@@ -778,7 +778,7 @@ Create a single vertex mobject
 
 > `protected` **\_getBoundingBox**(): `object`
 
-Defined in: [core/Mobject.ts:716](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L716)
+Defined in: [core/Mobject.ts:746](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L746)
 
 Get bounding box dimensions
 Uses object pooling to avoid allocations in hot paths (performance optimization).
@@ -811,7 +811,7 @@ Object with width, height, and depth
 
 > `protected` **\_getEdgeInDirection**(`direction`): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:699](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L699)
+Defined in: [core/Mobject.ts:729](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L729)
 
 Get the edge point of the bounding box in a direction
 
@@ -839,7 +839,7 @@ Edge point as [x, y, z]
 
 > `protected` **\_getEdgeKey**(`source`, `target`): `string`
 
-Defined in: [mobjects/graph/index.ts:766](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L766)
+Defined in: [mobjects/graph/index.ts:766](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L766)
 
 Get edge key from vertex pair
 
@@ -867,7 +867,7 @@ Get edge key from vertex pair
 
 > **\_markDirty**(): `void`
 
-Defined in: [core/Mobject.ts:882](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L882)
+Defined in: [core/Mobject.ts:912](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L912)
 
 Mark this mobject as needing sync
 
@@ -885,7 +885,7 @@ Mark this mobject as needing sync
 
 > **\_markDirtyUpward**(): `void`
 
-Defined in: [core/Mobject.ts:891](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L891)
+Defined in: [core/Mobject.ts:921](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L921)
 
 Mark this mobject and all ancestors as needing sync.
 Use when a deep child's geometry changes and the parent tree must re-traverse.
@@ -905,7 +905,7 @@ Short-circuits if this node is already dirty (ancestors must be dirty too).
 
 > `protected` **\_shortenEdge**(`start`, `end`, `radius`): \[[`Vector3Tuple`](../type-aliases/Vector3Tuple.md), [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)\]
 
-Defined in: [mobjects/graph/index.ts:879](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L879)
+Defined in: [mobjects/graph/index.ts:879](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L879)
 
 Shorten an edge to not overlap with vertex circles
 
@@ -937,7 +937,7 @@ Shorten an edge to not overlap with vertex circles
 
 > `protected` **\_syncMaterialToThree**(): `void`
 
-Defined in: [core/Mobject.ts:874](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L874)
+Defined in: [core/Mobject.ts:904](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L904)
 
 Sync material-specific properties. Override in subclasses.
 
@@ -955,7 +955,7 @@ Sync material-specific properties. Override in subclasses.
 
 > **\_syncToThree**(): `void`
 
-Defined in: [core/Mobject.ts:836](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L836)
+Defined in: [core/Mobject.ts:866](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L866)
 
 Sync transform properties to the Three.js object
 
@@ -973,7 +973,7 @@ Sync transform properties to the Three.js object
 
 > **add**(...`mobjects`): `this`
 
-Defined in: [core/Mobject.ts:490](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L490)
+Defined in: [core/Mobject.ts:490](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L490)
 
 Add a child mobject (supports multiple arguments for backward compatibility)
 
@@ -1001,7 +1001,7 @@ this for chaining
 
 > **addEdge**(`source`, `target`, `config?`): `this`
 
-Defined in: [mobjects/graph/index.ts:1077](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1077)
+Defined in: [mobjects/graph/index.ts:1077](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1077)
 
 Add an edge to the graph
 
@@ -1041,7 +1041,7 @@ this for chaining
 
 > **addEdges**(...`edges`): `this`
 
-Defined in: [mobjects/graph/index.ts:1108](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1108)
+Defined in: [mobjects/graph/index.ts:1108](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1108)
 
 Add multiple edges to the graph
 
@@ -1069,7 +1069,7 @@ this for chaining
 
 > **addUpdater**(`updater`, `callOnAdd`): `this`
 
-Defined in: [core/Mobject.ts:950](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L950)
+Defined in: [core/Mobject.ts:980](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L980)
 
 Add an updater function that runs every frame
 
@@ -1103,7 +1103,7 @@ this for chaining
 
 > **addVertex**(`v`, `config?`): `this`
 
-Defined in: [mobjects/graph/index.ts:922](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L922)
+Defined in: [mobjects/graph/index.ts:922](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L922)
 
 Add a vertex to the graph
 
@@ -1137,7 +1137,7 @@ this for chaining
 
 > **addVertices**(...`vertices`): `this`
 
-Defined in: [mobjects/graph/index.ts:944](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L944)
+Defined in: [mobjects/graph/index.ts:944](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L944)
 
 Add multiple vertices to the graph
 
@@ -1165,7 +1165,7 @@ this for chaining
 
 > **alignTo**(`target`, `direction`): `this`
 
-Defined in: [core/Mobject.ts:664](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L664)
+Defined in: [core/Mobject.ts:694](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L694)
 
 Align this mobject with another along an edge
 
@@ -1199,7 +1199,7 @@ this for chaining
 
 > **applyFunction**(`fn`): `this`
 
-Defined in: [core/Mobject.ts:1017](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1017)
+Defined in: [core/Mobject.ts:1047](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L1047)
 
 Apply a point-wise function to every VMobject descendant's control points.
 Uses duck-type check for getPoints/setPoints to avoid circular imports.
@@ -1228,7 +1228,7 @@ this for chaining
 
 > **applyToFamily**(`func`): `this`
 
-Defined in: [core/Mobject.ts:925](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L925)
+Defined in: [core/Mobject.ts:955](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L955)
 
 Apply a function to this mobject and all descendants
 
@@ -1252,7 +1252,7 @@ Apply a function to this mobject and all descendants
 
 > **become**(`other`): `this`
 
-Defined in: [core/Mobject.ts:561](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L561)
+Defined in: [core/Mobject.ts:561](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L561)
 
 Replace this mobject's visual properties with those of another mobject.
 Preserves identity (updaters, scene membership) but copies appearance.
@@ -1281,7 +1281,7 @@ this for chaining
 
 > **center**(): `this`
 
-Defined in: [core/Mobject.ts:797](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L797)
+Defined in: [core/Mobject.ts:827](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L827)
 
 Center this mobject at origin
 
@@ -1301,7 +1301,7 @@ this for chaining
 
 > **clearUpdaters**(): `this`
 
-Defined in: [core/Mobject.ts:975](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L975)
+Defined in: [core/Mobject.ts:1005](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L1005)
 
 Remove all updaters
 
@@ -1321,7 +1321,7 @@ this for chaining
 
 > **copy**(): [`Mobject`](Mobject.md)
 
-Defined in: [core/Mobject.ts:534](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L534)
+Defined in: [core/Mobject.ts:534](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L534)
 
 Create a deep copy of this mobject
 
@@ -1341,7 +1341,7 @@ New mobject with copied properties
 
 > **dispose**(): `void`
 
-Defined in: [core/Mobject.ts:1176](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1176)
+Defined in: [core/Mobject.ts:1206](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L1206)
 
 Clean up Three.js resources.
 
@@ -1359,7 +1359,7 @@ Clean up Three.js resources.
 
 > **flip**(`axis`): `this`
 
-Defined in: [core/Mobject.ts:364](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L364)
+Defined in: [core/Mobject.ts:364](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L364)
 
 Flip the mobject along an axis (mirror reflection).
 
@@ -1387,7 +1387,7 @@ this for chaining
 
 > **generateTarget**(): [`Mobject`](Mobject.md)
 
-Defined in: [core/Mobject.ts:1085](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1085)
+Defined in: [core/Mobject.ts:1115](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L1115)
 
 Create a copy of this mobject as a target for MoveToTarget animation.
 Modify the returned copy, then play `new MoveToTarget(this)` to
@@ -1418,7 +1418,7 @@ await scene.play(new MoveToTarget(mob));
 
 > **getBottom**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:746](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L746)
+Defined in: [core/Mobject.ts:776](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L776)
 
 Get the bottom edge center
 
@@ -1438,7 +1438,7 @@ Bottom edge center as [x, y, z]
 
 > **getBounds**(): `object`
 
-Defined in: [core/Mobject.ts:608](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L608)
+Defined in: [core/Mobject.ts:638](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L638)
 
 Get the bounding box of this mobject in world coordinates.
 
@@ -1490,7 +1490,7 @@ Object with min and max Vector3Tuple
 
 > **getCenter**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:593](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L593)
+Defined in: [core/Mobject.ts:623](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L623)
 
 Get the center point of this mobject
 
@@ -1510,7 +1510,7 @@ Center position as [x, y, z]
 
 > **getDegree**(`v`): `number`
 
-Defined in: [mobjects/graph/index.ts:1064](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1064)
+Defined in: [mobjects/graph/index.ts:1064](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1064)
 
 Get the degree of a vertex (number of edges)
 
@@ -1534,7 +1534,7 @@ Get the degree of a vertex (number of edges)
 
 > **getEdge**(`direction`): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:730](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L730)
+Defined in: [core/Mobject.ts:760](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L760)
 
 Get a specific edge point of the bounding box in a direction
 
@@ -1562,7 +1562,7 @@ Edge point as [x, y, z]
 
 > **getEdgeMobject**(`source`, `target`): [`Mobject`](Mobject.md)
 
-Defined in: [mobjects/graph/index.ts:1180](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1180)
+Defined in: [mobjects/graph/index.ts:1180](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1180)
 
 Get the Line/Arrow mobject for an edge
 
@@ -1590,7 +1590,7 @@ Get the Line/Arrow mobject for an edge
 
 > **getEdges**(): [`EdgeTuple`](../type-aliases/EdgeTuple.md)[]
 
-Defined in: [mobjects/graph/index.ts:1158](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1158)
+Defined in: [mobjects/graph/index.ts:1158](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1158)
 
 Get all edges
 
@@ -1608,7 +1608,7 @@ Get all edges
 
 > **getFamily**(): [`Mobject`](Mobject.md)[]
 
-Defined in: [core/Mobject.ts:936](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L936)
+Defined in: [core/Mobject.ts:966](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L966)
 
 Get all mobjects in the family (this mobject and all descendants)
 
@@ -1626,7 +1626,7 @@ Get all mobjects in the family (this mobject and all descendants)
 
 > **getInDegree**(`v`): `number`
 
-Defined in: [mobjects/graph/index.ts:1451](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1451)
+Defined in: [mobjects/graph/index.ts:1451](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1451)
 
 Get in-degree (number of incoming edges)
 
@@ -1646,7 +1646,7 @@ Get in-degree (number of incoming edges)
 
 > **getInNeighbors**(`v`): [`VertexId`](../type-aliases/VertexId.md)[]
 
-Defined in: [mobjects/graph/index.ts:1431](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1431)
+Defined in: [mobjects/graph/index.ts:1431](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1431)
 
 Get in-neighbors (vertices that point to this vertex)
 
@@ -1666,7 +1666,7 @@ Get in-neighbors (vertices that point to this vertex)
 
 > **getLeft**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:754](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L754)
+Defined in: [core/Mobject.ts:784](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L784)
 
 Get the left edge center
 
@@ -1686,7 +1686,7 @@ Left edge center as [x, y, z]
 
 > **getNeighbors**(`v`): [`VertexId`](../type-aliases/VertexId.md)[]
 
-Defined in: [mobjects/graph/index.ts:1049](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1049)
+Defined in: [mobjects/graph/index.ts:1049](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1049)
 
 Get neighbors of a vertex (adjacent vertices)
 
@@ -1710,7 +1710,7 @@ Get neighbors of a vertex (adjacent vertices)
 
 > **getOutDegree**(`v`): `number`
 
-Defined in: [mobjects/graph/index.ts:1444](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1444)
+Defined in: [mobjects/graph/index.ts:1444](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1444)
 
 Get out-degree (number of outgoing edges)
 
@@ -1730,7 +1730,7 @@ Get out-degree (number of outgoing edges)
 
 > **getOutNeighbors**(`v`): [`VertexId`](../type-aliases/VertexId.md)[]
 
-Defined in: [mobjects/graph/index.ts:1418](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1418)
+Defined in: [mobjects/graph/index.ts:1418](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1418)
 
 Get out-neighbors (vertices this vertex points to)
 
@@ -1750,7 +1750,7 @@ Get out-neighbors (vertices this vertex points to)
 
 > **getPositions**(): `Map`\<[`VertexId`](../type-aliases/VertexId.md), [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)\>
 
-Defined in: [mobjects/graph/index.ts:1228](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1228)
+Defined in: [mobjects/graph/index.ts:1228](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1228)
 
 Get all vertex positions
 
@@ -1768,7 +1768,7 @@ Get all vertex positions
 
 > **getRight**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:762](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L762)
+Defined in: [core/Mobject.ts:792](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L792)
 
 Get the right edge center
 
@@ -1788,7 +1788,7 @@ Right edge center as [x, y, z]
 
 > **getThreeObject**(): `Object3D`
 
-Defined in: [core/Mobject.ts:909](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L909)
+Defined in: [core/Mobject.ts:939](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L939)
 
 Get the Three.js object, creating it if necessary
 
@@ -1806,7 +1806,7 @@ Get the Three.js object, creating it if necessary
 
 > **getTop**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:738](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L738)
+Defined in: [core/Mobject.ts:768](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L768)
 
 Get the top edge center
 
@@ -1826,7 +1826,7 @@ Top edge center as [x, y, z]
 
 > **getUpdaters**(): [`UpdaterFunction`](../type-aliases/UpdaterFunction.md)[]
 
-Defined in: [core/Mobject.ts:992](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L992)
+Defined in: [core/Mobject.ts:1022](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L1022)
 
 Get all updaters (for internal use)
 
@@ -1846,7 +1846,7 @@ A copy of the updaters array
 
 > **getVertexMobject**(`v`): [`Dot`](Dot.md)
 
-Defined in: [mobjects/graph/index.ts:1004](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1004)
+Defined in: [mobjects/graph/index.ts:1004](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1004)
 
 Get the Dot mobject for a vertex
 
@@ -1870,7 +1870,7 @@ Get the Dot mobject for a vertex
 
 > **getVertexPosition**(`v`): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/graph/index.ts:1011](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1011)
+Defined in: [mobjects/graph/index.ts:1011](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1011)
 
 Get the position of a vertex
 
@@ -1894,7 +1894,7 @@ Get the position of a vertex
 
 > **getVertices**(): [`VertexId`](../type-aliases/VertexId.md)[]
 
-Defined in: [mobjects/graph/index.ts:983](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L983)
+Defined in: [mobjects/graph/index.ts:983](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L983)
 
 Get all vertex identifiers
 
@@ -1912,7 +1912,7 @@ Get all vertex identifiers
 
 > **hasEdge**(`source`, `target`): `boolean`
 
-Defined in: [mobjects/graph/index.ts:1172](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1172)
+Defined in: [mobjects/graph/index.ts:1172](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1172)
 
 Check if the graph contains an edge
 
@@ -1940,7 +1940,7 @@ Check if the graph contains an edge
 
 > **hasUpdaters**(): `boolean`
 
-Defined in: [core/Mobject.ts:984](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L984)
+Defined in: [core/Mobject.ts:1014](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L1014)
 
 Check if this mobject has any updaters
 
@@ -1960,7 +1960,7 @@ true if the mobject has updaters
 
 > **hasVertex**(`v`): `boolean`
 
-Defined in: [mobjects/graph/index.ts:997](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L997)
+Defined in: [mobjects/graph/index.ts:997](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L997)
 
 Check if the graph contains a vertex
 
@@ -1984,7 +1984,7 @@ Check if the graph contains a vertex
 
 > **highlightPath**(`path`, `vertexColor`, `edgeColor`): `this`
 
-Defined in: [mobjects/graph/index.ts:1261](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1261)
+Defined in: [mobjects/graph/index.ts:1261](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1261)
 
 Highlight a path (sequence of vertices)
 
@@ -2016,7 +2016,7 @@ Highlight a path (sequence of vertices)
 
 > **moveTo**(`target`, `alignedEdge?`): `this`
 
-Defined in: [core/Mobject.ts:215](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L215)
+Defined in: [core/Mobject.ts:215](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L215)
 
 Move the mobject to an absolute position, or align with another Mobject.
 
@@ -2050,7 +2050,7 @@ this for chaining
 
 > **moveToAligned**(`target`, `alignedEdge?`): `this`
 
-Defined in: [core/Mobject.ts:686](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L686)
+Defined in: [core/Mobject.ts:716](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L716)
 
 Move this mobject to align its center with a point or mobject center
 
@@ -2084,7 +2084,7 @@ this for chaining
 
 > **nextTo**(`target`, `direction`, `buff`): `this`
 
-Defined in: [core/Mobject.ts:632](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L632)
+Defined in: [core/Mobject.ts:662](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L662)
 
 Position this mobject next to another mobject
 
@@ -2124,7 +2124,7 @@ this for chaining
 
 > **prepareForNonlinearTransform**(`numPieces`): `this`
 
-Defined in: [core/Mobject.ts:1037](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1037)
+Defined in: [core/Mobject.ts:1067](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L1067)
 
 Subdivide every VMobject descendant's cubic Bezier curves so that non-linear
 transforms produce smooth results. Each cubic segment is split into n sub-segments
@@ -2154,7 +2154,7 @@ this for chaining
 
 > **remove**(...`mobjects`): `this`
 
-Defined in: [core/Mobject.ts:515](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L515)
+Defined in: [core/Mobject.ts:515](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L515)
 
 Remove a child mobject (supports multiple arguments for backward compatibility)
 
@@ -2182,7 +2182,7 @@ this for chaining
 
 > **removeEdge**(`source`, `target`): `this`
 
-Defined in: [mobjects/graph/index.ts:1135](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1135)
+Defined in: [mobjects/graph/index.ts:1135](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1135)
 
 Remove an edge from the graph
 
@@ -2216,7 +2216,7 @@ this for chaining
 
 > **removeUpdater**(`updater`): `this`
 
-Defined in: [core/Mobject.ts:963](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L963)
+Defined in: [core/Mobject.ts:993](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L993)
 
 Remove an updater function
 
@@ -2244,7 +2244,7 @@ this for chaining
 
 > **removeVertex**(`v`): `this`
 
-Defined in: [mobjects/graph/index.ts:962](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L962)
+Defined in: [mobjects/graph/index.ts:962](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L962)
 
 Remove a vertex from the graph
 
@@ -2268,11 +2268,46 @@ this for chaining
 
 ***
 
+### replace()
+
+> **replace**(`target`, `stretch`): `this`
+
+Defined in: [core/Mobject.ts:591](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L591)
+
+Scale and reposition this mobject to match another mobject's bounding box.
+Matches Manim Python's replace() behavior.
+
+#### Parameters
+
+##### target
+
+[`Mobject`](Mobject.md)
+
+The mobject whose bounding box to match
+
+##### stretch
+
+`boolean` = `false`
+
+If true, stretch per-axis to match exactly; if false (default), uniform scale to match width
+
+#### Returns
+
+`this`
+
+this for chaining
+
+#### Inherited from
+
+[`GenericGraph`](GenericGraph.md).[`replace`](GenericGraph.md#replace)
+
+***
+
 ### resetColors()
 
 > **resetColors**(): `this`
 
-Defined in: [mobjects/graph/index.ts:1274](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1274)
+Defined in: [mobjects/graph/index.ts:1274](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1274)
 
 Reset all colors to default
 
@@ -2290,7 +2325,7 @@ Reset all colors to default
 
 > **restoreState**(): `boolean`
 
-Defined in: [core/Mobject.ts:1131](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1131)
+Defined in: [core/Mobject.ts:1161](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L1161)
 
 Restore this mobject to its previously saved state (from saveState).
 Uses the deep copy stored on `this.savedState` to restore all properties.
@@ -2311,7 +2346,7 @@ true if state was restored, false if no saved state exists
 
 > **rotate**(`angle`, `axisOrOptions?`): `this`
 
-Defined in: [core/Mobject.ts:245](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L245)
+Defined in: [core/Mobject.ts:245](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L245)
 
 Rotate the mobject around an axis
 Uses object pooling to avoid allocations in hot paths (performance optimization).
@@ -2346,7 +2381,7 @@ this for chaining
 
 > **rotateAboutOrigin**(`angle`, `axis`): `this`
 
-Defined in: [core/Mobject.ts:355](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L355)
+Defined in: [core/Mobject.ts:355](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L355)
 
 Rotate the mobject about the coordinate origin [0, 0, 0].
 
@@ -2380,7 +2415,7 @@ this for chaining
 
 > **saveState**(): `this`
 
-Defined in: [core/Mobject.ts:1106](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1106)
+Defined in: [core/Mobject.ts:1136](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L1136)
 
 Save the current state of this mobject so it can be restored later.
 Stores a deep copy on `this.savedState` (for Restore animation
@@ -2412,7 +2447,7 @@ mob.restoreState(); // back to original position and color
 
 > **scale**(`factor`): `this`
 
-Defined in: [core/Mobject.ts:378](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L378)
+Defined in: [core/Mobject.ts:378](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L378)
 
 Scale the mobject uniformly or non-uniformly
 
@@ -2440,7 +2475,7 @@ this for chaining
 
 > **setColor**(`color`): `this`
 
-Defined in: [core/Mobject.ts:396](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L396)
+Defined in: [core/Mobject.ts:396](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L396)
 
 Set the mobject's color
 Only marks dirty if value actually changed (performance optimization).
@@ -2469,7 +2504,7 @@ this for chaining
 
 > **setEdgeColor**(`source`, `target`, `color`): `this`
 
-Defined in: [mobjects/graph/index.ts:1249](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1249)
+Defined in: [mobjects/graph/index.ts:1249](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1249)
 
 Set the color of a specific edge
 
@@ -2501,7 +2536,7 @@ Set the color of a specific edge
 
 > **setFill**(`color?`, `opacity?`): `this`
 
-Defined in: [core/Mobject.ts:458](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L458)
+Defined in: [core/Mobject.ts:458](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L458)
 
 Set the fill color and/or opacity (Manim Python parity: set_fill)
 
@@ -2535,7 +2570,7 @@ this for chaining
 
 > **setFillOpacity**(`opacity`): `this`
 
-Defined in: [core/Mobject.ts:442](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L442)
+Defined in: [core/Mobject.ts:442](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L442)
 
 Set the fill opacity
 Only marks dirty if value actually changed (performance optimization).
@@ -2564,7 +2599,7 @@ this for chaining
 
 > **setLayout**(`layout`): `this`
 
-Defined in: [mobjects/graph/index.ts:1192](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1192)
+Defined in: [mobjects/graph/index.ts:1192](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1192)
 
 Change the layout algorithm
 
@@ -2592,7 +2627,7 @@ this for chaining
 
 > **setOpacity**(`opacity`): `this`
 
-Defined in: [core/Mobject.ts:410](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L410)
+Defined in: [core/Mobject.ts:410](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L410)
 
 Set the mobject's overall opacity
 Only marks dirty if value actually changed (performance optimization).
@@ -2621,7 +2656,7 @@ this for chaining
 
 > **setStrokeWidth**(`width`): `this`
 
-Defined in: [core/Mobject.ts:426](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L426)
+Defined in: [core/Mobject.ts:426](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L426)
 
 Set the stroke width for outlines
 Only marks dirty if value actually changed (performance optimization).
@@ -2650,7 +2685,7 @@ this for chaining
 
 > **setStyle**(`style`): `this`
 
-Defined in: [core/Mobject.ts:167](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L167)
+Defined in: [core/Mobject.ts:167](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L167)
 
 Set style properties
 
@@ -2674,7 +2709,7 @@ Set style properties
 
 > **setVertexColor**(`v`, `color`): `this`
 
-Defined in: [mobjects/graph/index.ts:1237](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1237)
+Defined in: [mobjects/graph/index.ts:1237](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1237)
 
 Set the color of a specific vertex
 
@@ -2702,7 +2737,7 @@ Set the color of a specific vertex
 
 > **setVertexPosition**(`v`, `position`): `this`
 
-Defined in: [mobjects/graph/index.ts:1018](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/graph/index.ts#L1018)
+Defined in: [mobjects/graph/index.ts:1018](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L1018)
 
 Set the position of a vertex
 
@@ -2730,7 +2765,7 @@ Set the position of a vertex
 
 > **setX**(`x`): `this`
 
-Defined in: [core/Mobject.ts:770](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L770)
+Defined in: [core/Mobject.ts:800](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L800)
 
 Set the x-coordinate of this mobject's center, preserving y and z.
 Matches Manim Python's set_x() behavior.
@@ -2755,7 +2790,7 @@ Matches Manim Python's set_x() behavior.
 
 > **setY**(`y`): `this`
 
-Defined in: [core/Mobject.ts:779](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L779)
+Defined in: [core/Mobject.ts:809](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L809)
 
 Set the y-coordinate of this mobject's center, preserving x and z.
 Matches Manim Python's set_y() behavior.
@@ -2780,7 +2815,7 @@ Matches Manim Python's set_y() behavior.
 
 > **setZ**(`z`): `this`
 
-Defined in: [core/Mobject.ts:788](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L788)
+Defined in: [core/Mobject.ts:818](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L818)
 
 Set the z-coordinate of this mobject's center, preserving x and y.
 Matches Manim Python's set_z() behavior.
@@ -2805,7 +2840,7 @@ Matches Manim Python's set_z() behavior.
 
 > **shift**(`delta`): `this`
 
-Defined in: [core/Mobject.ts:201](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L201)
+Defined in: [core/Mobject.ts:201](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L201)
 
 Translate the mobject by a delta
 
@@ -2833,7 +2868,7 @@ this for chaining
 
 > **toCorner**(`direction`, `buff`): `this`
 
-Defined in: [core/Mobject.ts:829](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L829)
+Defined in: [core/Mobject.ts:859](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L859)
 
 Move to a corner of the frame
 
@@ -2867,7 +2902,7 @@ this for chaining
 
 > **toEdge**(`direction`, `buff`): `this`
 
-Defined in: [core/Mobject.ts:807](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L807)
+Defined in: [core/Mobject.ts:837](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L837)
 
 Move to the edge of the frame
 
@@ -2901,7 +2936,7 @@ this for chaining
 
 > **update**(`dt`): `void`
 
-Defined in: [core/Mobject.ts:1001](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Mobject.ts#L1001)
+Defined in: [core/Mobject.ts:1031](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L1031)
 
 Run all updaters with given dt
 Called by Scene during render loop

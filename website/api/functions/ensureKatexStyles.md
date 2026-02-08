@@ -2,7 +2,7 @@
 
 > **ensureKatexStyles**(): `void`
 
-Defined in: [mobjects/text/katex-styles.ts:16](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/text/katex-styles.ts#L16)
+Defined in: [mobjects/text/katex-styles.ts:16](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/katex-styles.ts#L16)
 
 Ensure KaTeX styles are loaded in the document.
 This is called automatically by MathTex on first use.

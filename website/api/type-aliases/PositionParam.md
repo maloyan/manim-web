@@ -2,7 +2,7 @@
 
 > **PositionParam** = `number` \| `string`
 
-Defined in: [animation/Timeline.ts:16](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/Timeline.ts#L16)
+Defined in: [animation/Timeline.ts:16](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Timeline.ts#L16)
 
 Position parameter for adding animations to the timeline.
 - Number: absolute time in seconds

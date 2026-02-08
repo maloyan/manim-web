@@ -465,6 +465,7 @@ export class Text extends VMobject {
 
     // Create mesh
     this._mesh = new THREE.Mesh(geometry, material);
+    this._mesh.frustumCulled = false;
     group.add(this._mesh);
 
     return group;

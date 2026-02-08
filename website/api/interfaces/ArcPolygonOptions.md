@@ -1,6 +1,6 @@
 # Interface: ArcPolygonOptions
 
-Defined in: [mobjects/geometry/ArcShapes.ts:935](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L935)
+Defined in: [mobjects/geometry/ArcShapes.ts:935](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L935)
 
 Options for creating an ArcPolygon
 
@@ -10,7 +10,7 @@ Options for creating an ArcPolygon
 
 > `optional` **arcConfigs**: [`ArcConfig`](ArcConfig.md)[]
 
-Defined in: [mobjects/geometry/ArcShapes.ts:939](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L939)
+Defined in: [mobjects/geometry/ArcShapes.ts:939](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L939)
 
 Arc configurations for each edge. If not provided, straight lines are used.
 
@@ -20,7 +20,7 @@ Arc configurations for each edge. If not provided, straight lines are used.
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:941](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L941)
+Defined in: [mobjects/geometry/ArcShapes.ts:941](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L941)
 
 Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
@@ -30,7 +30,7 @@ Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:943](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L943)
+Defined in: [mobjects/geometry/ArcShapes.ts:943](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L943)
 
 Fill opacity from 0 to 1. Default: 0
 
@@ -40,7 +40,7 @@ Fill opacity from 0 to 1. Default: 0
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:945](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L945)
+Defined in: [mobjects/geometry/ArcShapes.ts:945](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L945)
 
 Stroke width in pixels. Default: 4 (Manim's default)
 
@@ -50,6 +50,6 @@ Stroke width in pixels. Default: 4 (Manim's default)
 
 > **vertices**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)[]
 
-Defined in: [mobjects/geometry/ArcShapes.ts:937](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ArcShapes.ts#L937)
+Defined in: [mobjects/geometry/ArcShapes.ts:937](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L937)
 
 Array of vertices defining the polygon. Required.

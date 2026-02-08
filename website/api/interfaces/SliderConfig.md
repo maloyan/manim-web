@@ -1,6 +1,6 @@
 # Interface: SliderConfig
 
-Defined in: [interaction/Controls.ts:33](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L33)
+Defined in: [interaction/Controls.ts:33](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L33)
 
 Configuration for a slider control.
 
@@ -10,7 +10,7 @@ Configuration for a slider control.
 
 > **label**: `string`
 
-Defined in: [interaction/Controls.ts:35](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L35)
+Defined in: [interaction/Controls.ts:35](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L35)
 
 Label text displayed above the slider.
 
@@ -20,7 +20,7 @@ Label text displayed above the slider.
 
 > **max**: `number`
 
-Defined in: [interaction/Controls.ts:39](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L39)
+Defined in: [interaction/Controls.ts:39](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L39)
 
 Maximum value.
 
@@ -30,7 +30,7 @@ Maximum value.
 
 > **min**: `number`
 
-Defined in: [interaction/Controls.ts:37](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L37)
+Defined in: [interaction/Controls.ts:37](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L37)
 
 Minimum value.
 
@@ -40,7 +40,7 @@ Minimum value.
 
 > **onChange**: (`value`) => `void`
 
-Defined in: [interaction/Controls.ts:45](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L45)
+Defined in: [interaction/Controls.ts:45](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L45)
 
 Callback when value changes.
 
@@ -60,7 +60,7 @@ Callback when value changes.
 
 > `optional` **step**: `number`
 
-Defined in: [interaction/Controls.ts:43](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L43)
+Defined in: [interaction/Controls.ts:43](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L43)
 
 Step increment. Defaults to (max-min)/100.
 
@@ -70,6 +70,6 @@ Step increment. Defaults to (max-min)/100.
 
 > `optional` **value**: `number`
 
-Defined in: [interaction/Controls.ts:41](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/interaction/Controls.ts#L41)
+Defined in: [interaction/Controls.ts:41](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L41)
 
 Initial value. Defaults to min.

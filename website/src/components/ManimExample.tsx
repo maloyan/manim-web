@@ -3,9 +3,13 @@ import BrowserOnly from '@docusaurus/BrowserOnly';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnimationFn = (scene: any) => Promise<void>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SceneFactory = (container: HTMLElement, manim: any) => any;
 
 interface ManimExampleProps {
   animationFn: AnimationFn;
+  /** Optional factory to create a custom scene type (e.g. ZoomedScene). */
+  createScene?: SceneFactory;
 }
 
 const placeholderStyle: React.CSSProperties = {
@@ -16,7 +20,7 @@ const placeholderStyle: React.CSSProperties = {
   borderRadius: 12,
 };
 
-function ManimExampleInner({ animationFn }: ManimExampleProps) {
+function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cancelledRef = useRef(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,11 +61,13 @@ function ManimExampleInner({ animationFn }: ManimExampleProps) {
         const container = containerRef.current;
         if (!container) return;
 
-        const scene = new manim.Scene(container, {
-          width: 800,
-          height: 450,
-          backgroundColor: '#000000',
-        });
+        const scene = createScene
+          ? createScene(container, manim)
+          : new manim.Scene(container, {
+              width: 800,
+              height: 450,
+              backgroundColor: '#000000',
+            });
         sceneRef.current = scene;
 
         // Run animation loop

@@ -1,6 +1,6 @@
 # Interface: InteractiveSceneOptions
 
-Defined in: [core/InteractiveScene.ts:36](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/InteractiveScene.ts#L36)
+Defined in: [core/InteractiveScene.ts:36](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/InteractiveScene.ts#L36)
 
 Options for configuring an InteractiveScene.
 
@@ -14,7 +14,7 @@ Options for configuring an InteractiveScene.
 
 > `optional` **autoRender**: `boolean`
 
-Defined in: [core/Scene.ts:32](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L32)
+Defined in: [core/Scene.ts:32](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L32)
 
 Enable auto-render on add/remove. Defaults to true.
 
@@ -28,7 +28,7 @@ Enable auto-render on add/remove. Defaults to true.
 
 > `optional` **backgroundColor**: `string`
 
-Defined in: [core/Scene.ts:22](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L22)
+Defined in: [core/Scene.ts:22](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L22)
 
 Background color as CSS color string. Defaults to Manim's dark gray (#1C1C1C).
 
@@ -42,7 +42,7 @@ Background color as CSS color string. Defaults to Manim's dark gray (#1C1C1C).
 
 > `optional` **colorPaletteToggleKey**: `string`
 
-Defined in: [core/InteractiveScene.ts:42](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/InteractiveScene.ts#L42)
+Defined in: [core/InteractiveScene.ts:42](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/InteractiveScene.ts#L42)
 
 Hotkey to toggle color palette. Defaults to 'c'.
 
@@ -52,7 +52,7 @@ Hotkey to toggle color palette. Defaults to 'c'.
 
 > `optional` **enableDragMove**: `boolean`
 
-Defined in: [core/InteractiveScene.ts:44](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/InteractiveScene.ts#L44)
+Defined in: [core/InteractiveScene.ts:44](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/InteractiveScene.ts#L44)
 
 Whether drag-to-reposition is enabled. Defaults to true.
 
@@ -62,7 +62,7 @@ Whether drag-to-reposition is enabled. Defaults to true.
 
 > `optional` **enableKeyboardShortcuts**: `boolean`
 
-Defined in: [core/InteractiveScene.ts:46](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/InteractiveScene.ts#L46)
+Defined in: [core/InteractiveScene.ts:46](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/InteractiveScene.ts#L46)
 
 Whether keyboard shortcuts are enabled. Defaults to true.
 
@@ -72,7 +72,7 @@ Whether keyboard shortcuts are enabled. Defaults to true.
 
 > `optional` **frameHeight**: `number`
 
-Defined in: [core/Scene.ts:26](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L26)
+Defined in: [core/Scene.ts:26](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L26)
 
 Frame height in world units. Defaults to 8 (Manim standard).
 
@@ -86,7 +86,7 @@ Frame height in world units. Defaults to 8 (Manim standard).
 
 > `optional` **frameWidth**: `number`
 
-Defined in: [core/Scene.ts:24](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L24)
+Defined in: [core/Scene.ts:24](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L24)
 
 Frame width in world units. Defaults to 14 (Manim standard).
 
@@ -100,7 +100,7 @@ Frame width in world units. Defaults to 14 (Manim standard).
 
 > `optional` **frustumCulling**: `boolean`
 
-Defined in: [core/Scene.ts:30](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L30)
+Defined in: [core/Scene.ts:30](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L30)
 
 Enable frustum culling optimization. Defaults to true.
 
@@ -114,7 +114,7 @@ Enable frustum culling optimization. Defaults to true.
 
 > `optional` **height**: `number`
 
-Defined in: [core/Scene.ts:20](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L20)
+Defined in: [core/Scene.ts:20](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L20)
 
 Canvas height in pixels. Defaults to container height.
 
@@ -128,7 +128,7 @@ Canvas height in pixels. Defaults to container height.
 
 > `optional` **selection**: [`SelectionManagerOptions`](SelectionManagerOptions.md)
 
-Defined in: [core/InteractiveScene.ts:38](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/InteractiveScene.ts#L38)
+Defined in: [core/InteractiveScene.ts:38](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/InteractiveScene.ts#L38)
 
 SelectionManager configuration.
 
@@ -138,7 +138,7 @@ SelectionManager configuration.
 
 > `optional` **showColorPalette**: `boolean`
 
-Defined in: [core/InteractiveScene.ts:40](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/InteractiveScene.ts#L40)
+Defined in: [core/InteractiveScene.ts:40](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/InteractiveScene.ts#L40)
 
 Whether to show the color palette HUD on launch. Defaults to false.
 
@@ -148,7 +148,7 @@ Whether to show the color palette HUD on launch. Defaults to false.
 
 > `optional` **targetFps**: `number`
 
-Defined in: [core/Scene.ts:28](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L28)
+Defined in: [core/Scene.ts:28](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L28)
 
 Target frame rate in fps. Defaults to 60.
 
@@ -162,7 +162,7 @@ Target frame rate in fps. Defaults to 60.
 
 > `optional` **width**: `number`
 
-Defined in: [core/Scene.ts:18](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/core/Scene.ts#L18)
+Defined in: [core/Scene.ts:18](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Scene.ts#L18)
 
 Canvas width in pixels. Defaults to container width.
 

@@ -1,6 +1,6 @@
 # Interface: CylinderOptions
 
-Defined in: [mobjects/three-d/Cylinder.ts:7](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L7)
+Defined in: [mobjects/three-d/Cylinder.ts:7](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Cylinder.ts#L7)
 
 Options for creating a Cylinder
 
@@ -10,7 +10,7 @@ Options for creating a Cylinder
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/three-d/Cylinder.ts:17](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L17)
+Defined in: [mobjects/three-d/Cylinder.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Cylinder.ts#L17)
 
 Center position [x, y, z]. Default: [0, 0, 0]
 
@@ -20,7 +20,7 @@ Center position [x, y, z]. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/three-d/Cylinder.ts:19](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L19)
+Defined in: [mobjects/three-d/Cylinder.ts:19](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Cylinder.ts#L19)
 
 Color as CSS color string. Default: '#ffffff'
 
@@ -30,7 +30,7 @@ Color as CSS color string. Default: '#ffffff'
 
 > `optional` **height**: `number`
 
-Defined in: [mobjects/three-d/Cylinder.ts:11](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L11)
+Defined in: [mobjects/three-d/Cylinder.ts:11](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Cylinder.ts#L11)
 
 Height of the cylinder. Default: 2
 
@@ -40,7 +40,7 @@ Height of the cylinder. Default: 2
 
 > `optional` **opacity**: `number`
 
-Defined in: [mobjects/three-d/Cylinder.ts:21](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L21)
+Defined in: [mobjects/three-d/Cylinder.ts:21](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Cylinder.ts#L21)
 
 Opacity from 0 to 1. Default: 1
 
@@ -50,7 +50,7 @@ Opacity from 0 to 1. Default: 1
 
 > `optional` **openEnded**: `boolean`
 
-Defined in: [mobjects/three-d/Cylinder.ts:25](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L25)
+Defined in: [mobjects/three-d/Cylinder.ts:25](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Cylinder.ts#L25)
 
 Whether ends are open. Default: false
 
@@ -60,7 +60,7 @@ Whether ends are open. Default: false
 
 > `optional` **radialSegments**: `number`
 
-Defined in: [mobjects/three-d/Cylinder.ts:23](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L23)
+Defined in: [mobjects/three-d/Cylinder.ts:23](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Cylinder.ts#L23)
 
 Number of radial segments. Default: 32
 
@@ -70,7 +70,7 @@ Number of radial segments. Default: 32
 
 > `optional` **radius**: `number`
 
-Defined in: [mobjects/three-d/Cylinder.ts:9](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L9)
+Defined in: [mobjects/three-d/Cylinder.ts:9](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Cylinder.ts#L9)
 
 Radius of the cylinder. Default: 1
 
@@ -80,7 +80,7 @@ Radius of the cylinder. Default: 1
 
 > `optional` **radiusBottom**: `number`
 
-Defined in: [mobjects/three-d/Cylinder.ts:15](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L15)
+Defined in: [mobjects/three-d/Cylinder.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Cylinder.ts#L15)
 
 Radius at the bottom (overrides radius if set). Default: same as radius
 
@@ -90,7 +90,7 @@ Radius at the bottom (overrides radius if set). Default: same as radius
 
 > `optional` **radiusTop**: `number`
 
-Defined in: [mobjects/three-d/Cylinder.ts:13](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L13)
+Defined in: [mobjects/three-d/Cylinder.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Cylinder.ts#L13)
 
 Radius at the top (overrides radius if set). Default: same as radius
 
@@ -100,6 +100,6 @@ Radius at the top (overrides radius if set). Default: same as radius
 
 > `optional` **wireframe**: `boolean`
 
-Defined in: [mobjects/three-d/Cylinder.ts:27](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/three-d/Cylinder.ts#L27)
+Defined in: [mobjects/three-d/Cylinder.ts:27](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/three-d/Cylinder.ts#L27)
 
 Whether to render as wireframe. Default: false

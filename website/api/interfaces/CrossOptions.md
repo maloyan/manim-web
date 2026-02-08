@@ -1,6 +1,6 @@
 # Interface: CrossOptions
 
-Defined in: [mobjects/geometry/ShapeMatchers.ts:559](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ShapeMatchers.ts#L559)
+Defined in: [mobjects/geometry/ShapeMatchers.ts:559](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ShapeMatchers.ts#L559)
 
 Options for creating a Cross
 
@@ -10,7 +10,7 @@ Options for creating a Cross
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/ShapeMatchers.ts:563](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ShapeMatchers.ts#L563)
+Defined in: [mobjects/geometry/ShapeMatchers.ts:563](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ShapeMatchers.ts#L563)
 
 Stroke color. Default: RED
 
@@ -20,7 +20,7 @@ Stroke color. Default: RED
 
 > `optional` **scale**: `number`
 
-Defined in: [mobjects/geometry/ShapeMatchers.ts:565](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ShapeMatchers.ts#L565)
+Defined in: [mobjects/geometry/ShapeMatchers.ts:565](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ShapeMatchers.ts#L565)
 
 Scale factor for the cross size. Default: 1
 
@@ -30,6 +30,6 @@ Scale factor for the cross size. Default: 1
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/ShapeMatchers.ts:561](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/mobjects/geometry/ShapeMatchers.ts#L561)
+Defined in: [mobjects/geometry/ShapeMatchers.ts:561](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ShapeMatchers.ts#L561)
 
 Stroke width. Default: 6

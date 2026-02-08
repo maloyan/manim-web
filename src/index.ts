@@ -31,6 +31,7 @@ export { VDict, VectorizedPoint } from './core/VDict';
 export { Group } from './core/Group';
 export { Scene, type SceneOptions } from './core/Scene';
 export { InteractiveScene, type InteractiveSceneOptions } from './core/InteractiveScene';
+export { ZoomedScene, ZoomDisplayPopOut, type ZoomedSceneOptions } from './core/SceneExtensions';
 export { AudioManager, type AudioTrack, type AddSoundOptions } from './core/AudioManager';
 export { Renderer, type RendererOptions } from './core/Renderer';
 export {
@@ -413,6 +414,7 @@ export {
 export { ApplyPointwiseFunction, applyPointwiseFunction } from './animation/transform';
 export { FadeToColor, fadeToColor, type FadeToColorOptions } from './animation/transform';
 export { Restore, restore } from './animation/transform';
+export { ScaleInPlace, type ScaleInPlaceOptions } from './animation/transform';
 
 // Movement animations
 export {

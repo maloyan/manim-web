@@ -2,7 +2,7 @@
 
 > **circumscribe**(`mobject`, `options?`): [`Circumscribe`](../classes/Circumscribe.md)
 
-Defined in: [animation/indication/Circumscribe.ts:235](https://github.com/maloyan/manim-js/blob/aaf5f7fed77e6558d37f7196101e49e89a6e93e9/src/animation/indication/Circumscribe.ts#L235)
+Defined in: [animation/indication/Circumscribe.ts:235](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L235)
 
 Create a Circumscribe animation for a mobject.
 Draws a shape (rectangle or circle) around the mobject.

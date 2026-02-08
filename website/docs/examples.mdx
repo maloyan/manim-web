@@ -7,6 +7,7 @@ import ArgMinExample from '@site/src/components/examples/ArgMinExample';
 import BooleanOperationsExample from '@site/src/components/examples/BooleanOperationsExample';
 import BraceAnnotationExample from '@site/src/components/examples/BraceAnnotationExample';
 import FollowingGraphCameraExample from '@site/src/components/examples/FollowingGraphCameraExample';
+import MovingZoomedSceneAroundExample from '@site/src/components/examples/MovingZoomedSceneAroundExample';
 import GraphAreaPlotExample from '@site/src/components/examples/GraphAreaPlotExample';
 import HeatDiagramPlotExample from '@site/src/components/examples/HeatDiagramPlotExample';
 import ManimCeLogoExample from '@site/src/components/examples/ManimCeLogoExample';
@@ -160,7 +161,7 @@ async function vectorArrow(scene: Scene) {
   const arrow = new Arrow({ start: ORIGIN, end: [2, 2, 0] });
   const numberplane = new NumberPlane();
   const originText = new Text({ text: '(0, 0)' }).nextTo(dot, DOWN);
-  const tipText = new Text({ text: '(2, 2)' }).nextTo(arrow.getEndPoint(), RIGHT);
+  const tipText = new Text({ text: '(2, 2)' }).nextTo(arrow.getEnd(), RIGHT);
   scene.add(numberplane, dot, arrow, originText, tipText);
 }
 
@@ -1078,6 +1079,135 @@ await followingGraphCamera(scene);
 </details>
 
 **Learn More:** **Axes** · **Dot** · **MoveAlongPath** · **MoveToTarget** · **Restore**
+
+---
+
+## Moving Zoomed Scene Around
+
+Demonstrates a zoomed camera scene with pop-out display, frame animations, and scale/shift operations. Creates a grid of colored dots, sets up a zoomed camera frame, animates the display popping out, then scales and shifts both frame and display independently.
+
+<MovingZoomedSceneAroundExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  BackgroundRectangle,
+  BLACK,
+  Create,
+  Dot,
+  DOWN,
+  FadeIn,
+  FadeOut,
+  MED_SMALL_BUFF,
+  PURPLE,
+  RED,
+  Scale,
+  ScaleInPlace,
+  Shift,
+  Text,
+  UL,
+  Uncreate,
+  UP,
+  UpdateFromFunc,
+  VGroup,
+  ZoomedScene,
+  scaleVec,
+} from 'manim-js';
+
+const scene = new ZoomedScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+  cameraFrameWidth: 3,
+  cameraFrameHeight: 3,
+  zoomFactor: 0.3,
+  cameraFrameStrokeWidth: 3,
+  displayFrameStrokeWidth: 20,
+  displayFrameColor: RED,
+});
+
+// Create a grid of colored dots as content
+const dots = [];
+for (let row = 0; row < 15; row++) {
+  for (let col = 0; col < 15; col++) {
+    const r = Math.floor((row / 14) * 255);
+    const g = Math.floor((col / 14) * 255);
+    const b = Math.floor(((row + col) / 28) * 255);
+    const color = `rgb(${r}, ${g}, ${b})`;
+    const dot = new Dot({ radius: 0.15, color });
+    dot.moveTo([col * 0.45 - 3.15, row * 0.45 - 3.15, 0]);
+    dots.push(dot);
+  }
+}
+const image = new VGroup(...dots);
+image.moveTo([0, 0, 0]);
+
+const dot = new Dot().shift(scaleVec(2, UL));
+const frameText = new Text({ text: 'Frame', color: PURPLE, fontSize: 48 });
+const zoomedCameraText = new Text({ text: 'Zoomed camera', color: RED, fontSize: 48 });
+
+scene.add(image, dot);
+
+const frame = scene.zoomedCamera.frame;
+const zoomedDisplay = scene.zoomedDisplay;
+const zoomedDisplayFrame = zoomedDisplay.displayFrame;
+
+frame.moveTo(dot);
+frame.setColor(PURPLE);
+zoomedDisplayFrame.setColor(RED);
+zoomedDisplay.shift([0, -2, 0]);
+
+const zdRect = new BackgroundRectangle(zoomedDisplay, {
+  fillOpacity: 0,
+  buff: MED_SMALL_BUFF,
+});
+scene.addForegroundMobject(zdRect);
+
+const unfoldCamera = new UpdateFromFunc(zdRect, (rect) => {
+  rect.replace(zoomedDisplay);
+});
+
+frameText.nextTo(frame, DOWN);
+
+await scene.play(new Create(frame), new FadeIn(frameText, { shift: UP }));
+scene.activateZooming();
+
+const popOut = scene.getZoomedDisplayPopOutAnimation();
+zoomedDisplay.moveTo(popOut.startPosition);
+await scene.play(
+  new Shift(zoomedDisplay, {
+    direction: [
+      popOut.endPosition[0] - popOut.startPosition[0],
+      popOut.endPosition[1] - popOut.startPosition[1],
+      popOut.endPosition[2] - popOut.startPosition[2],
+    ],
+  }),
+  unfoldCamera,
+);
+
+zoomedCameraText.nextTo(zoomedDisplayFrame, DOWN);
+await scene.play(new FadeIn(zoomedCameraText, { shift: UP }));
+
+await scene.play(
+  new Scale(frame, { scaleFactor: [0.5, 1.5, 1] }),
+  new Scale(zoomedDisplay, { scaleFactor: [0.5, 1.5, 1] }),
+  new FadeOut(zoomedCameraText),
+  new FadeOut(frameText),
+);
+await scene.wait();
+
+await scene.play(new ScaleInPlace(zoomedDisplay, { scaleFactor: 2 }));
+await scene.wait();
+
+await scene.play(new Shift(frame, { direction: scaleVec(2.5, DOWN) }));
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** **ZoomedScene** · **BackgroundRectangle** · **Scale** · **ScaleInPlace** · **UpdateFromFunc**
 
 ---
 
