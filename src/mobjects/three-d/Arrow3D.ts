@@ -100,8 +100,9 @@ export class Arrow3D extends Mobject {
     // Shaft length (total - tip)
     const shaftLength = Math.max(0, totalLength - this._tipLength);
 
-    // Create material
-    const material = new THREE.MeshStandardMaterial({
+    // Create material (unlit so color renders exactly as specified,
+    // matching Python Manim's flat-shaded axes appearance)
+    const material = new THREE.MeshBasicMaterial({
       color: this.color,
       opacity: this._opacity,
       transparent: this._opacity < 1,
@@ -113,15 +114,15 @@ export class Arrow3D extends Mobject {
         this._shaftRadius,
         this._shaftRadius,
         shaftLength,
-        this._radialSegments
+        this._radialSegments,
       );
       const shaft = new THREE.Mesh(shaftGeometry, material.clone());
 
       // Position shaft: center it at midpoint of shaft segment
       const shaftCenter = new THREE.Vector3(
-        this._start[0] + dir.x * shaftLength / 2,
-        this._start[1] + dir.y * shaftLength / 2,
-        this._start[2] + dir.z * shaftLength / 2
+        this._start[0] + (dir.x * shaftLength) / 2,
+        this._start[1] + (dir.y * shaftLength) / 2,
+        this._start[2] + (dir.z * shaftLength) / 2,
       );
       shaft.position.copy(shaftCenter);
 
@@ -131,25 +132,61 @@ export class Arrow3D extends Mobject {
       group.add(shaft);
     }
 
-    // Create tip (cone)
-    const tipGeometry = new THREE.ConeGeometry(
-      this._tipRadius,
-      this._tipLength,
-      this._radialSegments
+    // Create tip as two perpendicular flat triangles (cross formation).
+    // This matches Python Manim's 2D ArrowTriangleFilledTip appearance:
+    // visible from any camera angle, never shows as a circle like a cone.
+    const tipBase = new THREE.Vector3(
+      this._end[0] - dir.x * this._tipLength,
+      this._end[1] - dir.y * this._tipLength,
+      this._end[2] - dir.z * this._tipLength,
     );
-    const tip = new THREE.Mesh(tipGeometry, material.clone());
 
-    // Position tip: center of cone at (end - tipLength/2 along direction)
-    const tipCenter = new THREE.Vector3(
-      this._end[0] - dir.x * this._tipLength / 2,
-      this._end[1] - dir.y * this._tipLength / 2,
-      this._end[2] - dir.z * this._tipLength / 2
-    );
-    tip.position.copy(tipCenter);
+    // Get two perpendicular vectors for the cross formation
+    const worldUp = new THREE.Vector3(0, 1, 0);
+    const side1 = new THREE.Vector3().crossVectors(dir, worldUp);
+    if (side1.lengthSq() < 0.001) {
+      side1.crossVectors(dir, new THREE.Vector3(1, 0, 0));
+    }
+    side1.normalize();
+    const side2 = new THREE.Vector3().crossVectors(dir, side1).normalize();
 
-    // Orient tip
-    this._orientMesh(tip, dir);
+    const s1 = side1.clone().multiplyScalar(this._tipRadius);
+    const s2 = side2.clone().multiplyScalar(this._tipRadius);
 
+    // Two triangles at 90° to each other
+    const tipGeometry = new THREE.BufferGeometry();
+    const vertices = new Float32Array([
+      // Triangle 1 (in dir×worldUp plane)
+      this._end[0],
+      this._end[1],
+      this._end[2],
+      tipBase.x - s1.x,
+      tipBase.y - s1.y,
+      tipBase.z - s1.z,
+      tipBase.x + s1.x,
+      tipBase.y + s1.y,
+      tipBase.z + s1.z,
+      // Triangle 2 (perpendicular plane)
+      this._end[0],
+      this._end[1],
+      this._end[2],
+      tipBase.x - s2.x,
+      tipBase.y - s2.y,
+      tipBase.z - s2.z,
+      tipBase.x + s2.x,
+      tipBase.y + s2.y,
+      tipBase.z + s2.z,
+    ]);
+    tipGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    tipGeometry.computeVertexNormals();
+
+    const tipMaterial = new THREE.MeshBasicMaterial({
+      color: this.color,
+      opacity: this._opacity,
+      transparent: this._opacity < 1,
+      side: THREE.DoubleSide,
+    });
+    const tip = new THREE.Mesh(tipGeometry, tipMaterial);
     group.add(tip);
 
     return group;
@@ -177,7 +214,7 @@ export class Arrow3D extends Mobject {
     if (this._threeObject instanceof THREE.Group) {
       this._threeObject.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          const material = child.material as THREE.MeshStandardMaterial;
+          const material = child.material as THREE.MeshBasicMaterial;
           if (material) {
             material.color.set(this.color);
             material.opacity = this._opacity;

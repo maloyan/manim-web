@@ -121,11 +121,13 @@ export class ThreeDAxes extends Group {
     const effectiveZColor = zColor ?? axisColor;
 
     // Calculate axis endpoints based on ranges and lengths
+    // Manim→THREE.js coordinate mapping: (mx, my, mz) → (mx, mz, -my)
+    // Manim X → THREE.js X, Manim Y → THREE.js -Z, Manim Z → THREE.js Y (up)
     const xHalf = xLength / 2;
     const yHalf = yLength / 2;
     const zHalf = zLength / 2;
 
-    // Create X-axis (pointing right, +X)
+    // Create X-axis (Manim +X → THREE.js +X)
     this._xAxis = new Arrow3D({
       start: [-xHalf, 0, 0],
       end: [xHalf, 0, 0],
@@ -135,20 +137,20 @@ export class ThreeDAxes extends Group {
       shaftRadius,
     });
 
-    // Create Y-axis (pointing up, +Y)
+    // Create Y-axis (Manim +Y → THREE.js -Z)
     this._yAxis = new Arrow3D({
-      start: [0, -yHalf, 0],
-      end: [0, yHalf, 0],
+      start: [0, 0, yHalf],
+      end: [0, 0, -yHalf],
       color: effectiveYColor,
       tipLength,
       tipRadius,
       shaftRadius,
     });
 
-    // Create Z-axis (pointing out, +Z)
+    // Create Z-axis (Manim +Z → THREE.js +Y, up)
     this._zAxis = new Arrow3D({
-      start: [0, 0, -zHalf],
-      end: [0, 0, zHalf],
+      start: [0, -zHalf, 0],
+      end: [0, zHalf, 0],
       color: effectiveZColor,
       tipLength,
       tipRadius,
@@ -166,84 +168,86 @@ export class ThreeDAxes extends Group {
   }
 
   /**
-   * Create tick marks for all axes
+   * Convert Manim coordinates (mx, my, mz) to THREE.js coordinates.
+   * Manim: X right, Y forward, Z up → THREE.js: X right, Y up, Z backward
+   */
+  private _m2t(mx: number, my: number, mz: number): [number, number, number] {
+    return [mx, mz, -my];
+  }
+
+  /**
+   * Create tick marks for all axes using Manim→THREE.js coordinate mapping
    */
   private _createTicks(xColor: string, yColor: string, zColor: string): void {
     const xHalf = this._xLength / 2;
     const yHalf = this._yLength / 2;
     const zHalf = this._zLength / 2;
 
-    // Calculate tick positions
     const [xMin, xMax, xStep] = this._xRange;
     const [yMin, yMax, yStep] = this._yRange;
     const [zMin, zMax, zStep] = this._zRange;
+    const t = this._tickLength / 2;
 
-    // X-axis ticks
+    // X-axis ticks (along Manim X; perpendicular ticks in Manim Y and Z)
     for (let x = xMin; x <= xMax; x += xStep) {
-      if (Math.abs(x) < 0.001) continue; // Skip origin
-      const visualX = this._mapToVisual(x, xMin, xMax, -xHalf, xHalf);
+      if (Math.abs(x) < 0.001) continue;
+      const vx = this._mapToVisual(x, xMin, xMax, -xHalf, xHalf);
 
-      // Tick in Y direction
       const tickY = new Line3D({
-        start: [visualX, -this._tickLength / 2, 0],
-        end: [visualX, this._tickLength / 2, 0],
+        start: this._m2t(vx, -t, 0),
+        end: this._m2t(vx, t, 0),
         color: xColor,
       });
       this._ticks.push(tickY);
       this.add(tickY);
 
-      // Tick in Z direction
       const tickZ = new Line3D({
-        start: [visualX, 0, -this._tickLength / 2],
-        end: [visualX, 0, this._tickLength / 2],
+        start: this._m2t(vx, 0, -t),
+        end: this._m2t(vx, 0, t),
         color: xColor,
       });
       this._ticks.push(tickZ);
       this.add(tickZ);
     }
 
-    // Y-axis ticks
+    // Y-axis ticks (along Manim Y; perpendicular ticks in Manim X and Z)
     for (let y = yMin; y <= yMax; y += yStep) {
-      if (Math.abs(y) < 0.001) continue; // Skip origin
-      const visualY = this._mapToVisual(y, yMin, yMax, -yHalf, yHalf);
+      if (Math.abs(y) < 0.001) continue;
+      const vy = this._mapToVisual(y, yMin, yMax, -yHalf, yHalf);
 
-      // Tick in X direction
       const tickX = new Line3D({
-        start: [-this._tickLength / 2, visualY, 0],
-        end: [this._tickLength / 2, visualY, 0],
+        start: this._m2t(-t, vy, 0),
+        end: this._m2t(t, vy, 0),
         color: yColor,
       });
       this._ticks.push(tickX);
       this.add(tickX);
 
-      // Tick in Z direction
       const tickZ = new Line3D({
-        start: [0, visualY, -this._tickLength / 2],
-        end: [0, visualY, this._tickLength / 2],
+        start: this._m2t(0, vy, -t),
+        end: this._m2t(0, vy, t),
         color: yColor,
       });
       this._ticks.push(tickZ);
       this.add(tickZ);
     }
 
-    // Z-axis ticks
+    // Z-axis ticks (along Manim Z; perpendicular ticks in Manim X and Y)
     for (let z = zMin; z <= zMax; z += zStep) {
-      if (Math.abs(z) < 0.001) continue; // Skip origin
-      const visualZ = this._mapToVisual(z, zMin, zMax, -zHalf, zHalf);
+      if (Math.abs(z) < 0.001) continue;
+      const vz = this._mapToVisual(z, zMin, zMax, -zHalf, zHalf);
 
-      // Tick in X direction
       const tickX = new Line3D({
-        start: [-this._tickLength / 2, 0, visualZ],
-        end: [this._tickLength / 2, 0, visualZ],
+        start: this._m2t(-t, 0, vz),
+        end: this._m2t(t, 0, vz),
         color: zColor,
       });
       this._ticks.push(tickX);
       this.add(tickX);
 
-      // Tick in Y direction
       const tickY = new Line3D({
-        start: [0, -this._tickLength / 2, visualZ],
-        end: [0, this._tickLength / 2, visualZ],
+        start: this._m2t(0, -t, vz),
+        end: this._m2t(0, t, vz),
         color: zColor,
       });
       this._ticks.push(tickY);
@@ -259,7 +263,7 @@ export class ThreeDAxes extends Group {
     graphMin: number,
     graphMax: number,
     visualMin: number,
-    visualMax: number
+    visualMax: number,
   ): number {
     if (graphMax === graphMin) return (visualMin + visualMax) / 2;
     const normalized = (value - graphMin) / (graphMax - graphMin);
@@ -267,11 +271,12 @@ export class ThreeDAxes extends Group {
   }
 
   /**
-   * Convert graph coordinates to visual point coordinates
-   * @param x X coordinate in graph space
-   * @param y Y coordinate in graph space
-   * @param z Z coordinate in graph space
-   * @returns The visual point [x, y, z]
+   * Convert graph coordinates (Manim space) to visual point coordinates (THREE.js space).
+   * Applies Manim→THREE.js mapping: (mx, my, mz) → (mx, mz, -my)
+   * @param x X coordinate in graph space (Manim X)
+   * @param y Y coordinate in graph space (Manim Y)
+   * @param z Z coordinate in graph space (Manim Z)
+   * @returns The visual point [x, y, z] in THREE.js space
    */
   coordsToPoint(x: number, y: number, z: number): Vector3Tuple {
     const [xMin, xMax] = this._xRange;
@@ -282,21 +287,19 @@ export class ThreeDAxes extends Group {
     const yHalf = this._yLength / 2;
     const zHalf = this._zLength / 2;
 
-    const visualX = this._mapToVisual(x, xMin, xMax, -xHalf, xHalf);
-    const visualY = this._mapToVisual(y, yMin, yMax, -yHalf, yHalf);
-    const visualZ = this._mapToVisual(z, zMin, zMax, -zHalf, zHalf);
+    const manimX = this._mapToVisual(x, xMin, xMax, -xHalf, xHalf);
+    const manimY = this._mapToVisual(y, yMin, yMax, -yHalf, yHalf);
+    const manimZ = this._mapToVisual(z, zMin, zMax, -zHalf, zHalf);
 
-    return [
-      visualX + this.position.x,
-      visualY + this.position.y,
-      visualZ + this.position.z,
-    ];
+    // Apply Manim→THREE.js: (mx, my, mz) → (mx, mz, -my)
+    return [manimX + this.position.x, manimZ + this.position.y, -manimY + this.position.z];
   }
 
   /**
-   * Convert visual point coordinates to graph coordinates
-   * @param point Visual point [x, y, z]
-   * @returns The graph coordinates [x, y, z]
+   * Convert visual point coordinates (THREE.js space) to graph coordinates (Manim space).
+   * Applies inverse THREE.js→Manim mapping: (tx, ty, tz) → (tx, -tz, ty)
+   * @param point Visual point [x, y, z] in THREE.js space
+   * @returns The graph coordinates [x, y, z] in Manim space
    */
   pointToCoords(point: Vector3Tuple): Vector3Tuple {
     const [xMin, xMax] = this._xRange;
@@ -307,15 +310,15 @@ export class ThreeDAxes extends Group {
     const yHalf = this._yLength / 2;
     const zHalf = this._zLength / 2;
 
-    // Get local coordinates
-    const localX = point[0] - this.position.x;
-    const localY = point[1] - this.position.y;
-    const localZ = point[2] - this.position.z;
+    // Get local THREE.js coordinates
+    const tx = point[0] - this.position.x;
+    const ty = point[1] - this.position.y;
+    const tz = point[2] - this.position.z;
 
-    // Map from visual to graph coordinates
-    const graphX = this._mapToVisual(localX, -xHalf, xHalf, xMin, xMax);
-    const graphY = this._mapToVisual(localY, -yHalf, yHalf, yMin, yMax);
-    const graphZ = this._mapToVisual(localZ, -zHalf, zHalf, zMin, zMax);
+    // Inverse mapping THREE.js→Manim: (tx, ty, tz) → (tx, -tz, ty)
+    const graphX = this._mapToVisual(tx, -xHalf, xHalf, xMin, xMax);
+    const graphY = this._mapToVisual(-tz, -yHalf, yHalf, yMin, yMax);
+    const graphZ = this._mapToVisual(ty, -zHalf, zHalf, zMin, zMax);
 
     return [graphX, graphY, graphZ];
   }

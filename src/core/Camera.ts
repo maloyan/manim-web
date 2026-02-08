@@ -124,18 +124,24 @@ export class Camera3D {
   }
 
   /**
-   * Orbit the camera around the look-at point using spherical coordinates.
-   * @param phi - Polar angle from Y axis (0 = top, PI = bottom)
-   * @param theta - Azimuthal angle in XZ plane
+   * Orbit the camera around the look-at point using Python Manim convention.
+   * Manim rotation: R = Rx(-phi) @ Rz(-theta - PI/2), applied to scene points.
+   * Camera position in Manim space: (d*sin(phi)*cos(theta), d*sin(phi)*sin(theta), d*cos(phi))
+   * @param phi - Polar angle from Z axis (0 = top, PI/2 = side, PI = bottom)
+   * @param theta - Azimuthal angle around Z axis
    * @param distance - Optional distance from look-at point
    * @returns this for chaining
    */
   orbit(phi: number, theta: number, distance?: number): this {
     const dist = distance ?? this._position.distanceTo(this._lookAt);
 
+    // Manim rotation matrix: R = Rx(-phi) @ Rz(-theta - PI/2)
+    // Camera at (0,0,d) in rotated frame → world position via R^T:
+    // Manim: (d*sin(phi)*cos(theta), d*sin(phi)*sin(theta), d*cos(phi))
+    // THREE.js mapping (mx, mz, -my):
     this._position.x = this._lookAt.x + dist * Math.sin(phi) * Math.cos(theta);
     this._position.y = this._lookAt.y + dist * Math.cos(phi);
-    this._position.z = this._lookAt.z + dist * Math.sin(phi) * Math.sin(theta);
+    this._position.z = this._lookAt.z - dist * Math.sin(phi) * Math.sin(theta);
 
     this._camera.position.copy(this._position);
     this._camera.lookAt(this._lookAt);
@@ -152,9 +158,10 @@ export class Camera3D {
     const dz = this._position.z - this._lookAt.z;
     const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
+    // Inverse of orbit(): dx = d*sin(phi)*cos(theta), -dz = d*sin(phi)*sin(theta)
     return {
       phi: Math.acos(dy / distance),
-      theta: Math.atan2(dz, dx),
+      theta: Math.atan2(-dz, dx),
       distance,
     };
   }
@@ -187,11 +194,7 @@ export class Camera2D {
    * @param options - Camera configuration options
    */
   constructor(options: CameraOptions = {}) {
-    const {
-      frameWidth = 14,
-      frameHeight = 8,
-      position = [0, 0, 10],
-    } = options;
+    const { frameWidth = 14, frameHeight = 8, position = [0, 0, 10] } = options;
 
     this._frameWidth = frameWidth;
     this._frameHeight = frameHeight;
@@ -201,12 +204,12 @@ export class Camera2D {
     const halfHeight = frameHeight / 2;
 
     this._camera = new THREE.OrthographicCamera(
-      -halfWidth,  // left
-      halfWidth,   // right
-      halfHeight,  // top
+      -halfWidth, // left
+      halfWidth, // right
+      halfHeight, // top
       -halfHeight, // bottom
-      0.1,         // near
-      1000         // far
+      0.1, // near
+      1000, // far
     );
 
     this._camera.position.set(position[0], position[1], position[2]);

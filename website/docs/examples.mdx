@@ -6,6 +6,7 @@ sidebar_label: Examples
 import ArgMinExample from '@site/src/components/examples/ArgMinExample';
 import BooleanOperationsExample from '@site/src/components/examples/BooleanOperationsExample';
 import BraceAnnotationExample from '@site/src/components/examples/BraceAnnotationExample';
+import FixedInFrameMobjectTestExample from '@site/src/components/examples/FixedInFrameMobjectTestExample';
 import FollowingGraphCameraExample from '@site/src/components/examples/FollowingGraphCameraExample';
 import GraphAreaPlotExample from '@site/src/components/examples/GraphAreaPlotExample';
 import HeatDiagramPlotExample from '@site/src/components/examples/HeatDiagramPlotExample';
@@ -1181,6 +1182,58 @@ await scene.wait();
 </details>
 
 **Learn More:** **ZoomedScene** · **ImageMobject** · **BackgroundRectangle** · **Create** · **FadeIn** · **Scale** · **Shift**
+
+---
+
+## Fixed In Frame Mobject Test
+
+Demonstrates how to pin 2D text to the screen while the 3D camera is rotated, using addFixedInFrameMobjects. The text stays in the upper-left corner as a HUD overlay on top of ThreeDAxes.
+
+<FixedInFrameMobjectTestExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Text,
+  ThreeDAxes,
+  ThreeDScene,
+  UL,
+} from 'manim-js';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 75 * (Math.PI / 180),
+  theta: -45 * (Math.PI / 180),
+  distance: 15,
+  fov: 23,
+});
+
+const axes = new ThreeDAxes({
+  xRange: [-6, 6, 1],
+  yRange: [-6, 6, 1],
+  zRange: [-6, 6, 1],
+  xLength: 10.5,
+  yLength: 10.5,
+  zLength: 10.5,
+  axisColor: '#bababa',
+  tipLength: 0.35,
+  tipRadius: 0.15,
+  shaftRadius: 0.03,
+});
+const text3d = new Text({ text: "This is a 3D text" });
+scene.addFixedInFrameMobjects(text3d);
+text3d.toCorner(UL);
+scene.add(axes);
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** **ThreeDScene** · **ThreeDAxes** · **Text**
 
 ---
 

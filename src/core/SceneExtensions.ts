@@ -8,7 +8,11 @@ import { Group } from './Group';
 import { Line } from '../mobjects/geometry/Line';
 import { Arrow } from '../mobjects/geometry/Arrow';
 import { Rectangle } from '../mobjects/geometry/Rectangle';
-import { smoothstep, coordsToPoint as coordsToPointHelper, pointToCoords as pointToCoordsHelper } from '../utils/math';
+import {
+  smoothstep,
+  coordsToPoint as coordsToPointHelper,
+  pointToCoords as pointToCoordsHelper,
+} from '../utils/math';
 import { Animation, AnimationOptions } from '../animation/Animation';
 
 /**
@@ -41,6 +45,11 @@ export class ThreeDScene extends Scene {
   private _lighting: Lighting;
   private _orbitControls: OrbitControls | null = null;
   private _orbitControlsEnabled: boolean = true;
+
+  // HUD overlay for fixed-in-frame mobjects (pinned to screen)
+  private _hudScene: THREE.Scene;
+  private _hudCamera: THREE.OrthographicCamera;
+  private _fixedMobjects: Set<Mobject> = new Set();
 
   /**
    * Create a new 3D scene.
@@ -80,21 +89,25 @@ export class ThreeDScene extends Scene {
     // Set up orbit controls
     this._orbitControlsEnabled = enableOrbitControls;
     if (enableOrbitControls) {
-      this._orbitControls = new OrbitControls(
-        this._camera3D.getCamera(),
-        this.getCanvas(),
-        {
-          enableDamping: true,
-          dampingFactor: 0.05,
-          ...orbitControlsOptions,
-        }
-      );
+      this._orbitControls = new OrbitControls(this._camera3D.getCamera(), this.getCanvas(), {
+        enableDamping: true,
+        dampingFactor: 0.05,
+        ...orbitControlsOptions,
+      });
 
       // Add change listener to trigger re-render
       this._orbitControls.addEventListener('change', () => {
         this.render();
       });
     }
+
+    // HUD overlay for fixed-in-frame mobjects
+    this._hudScene = new THREE.Scene();
+    const halfW = (options.frameWidth ?? 14) / 2;
+    const halfH = (options.frameHeight ?? 8) / 2;
+    this._hudCamera = new THREE.OrthographicCamera(-halfW, halfW, halfH, -halfH, 0.1, 1000);
+    this._hudCamera.position.set(0, 0, 10);
+    this._hudCamera.lookAt(0, 0, 0);
 
     // Initial render with 3D camera
     this.render();
@@ -174,15 +187,123 @@ export class ThreeDScene extends Scene {
   }
 
   /**
-   * Override render to use the 3D camera.
+   * Pin mobjects to the screen (HUD) so they don't move with the 3D camera.
+   * Equivalent to Python Manim's add_fixed_in_frame_mobjects.
+   * @param mobjects - Mobjects to fix in screen space
+   * @returns this for chaining
    */
-  render(): void {
+  addFixedInFrameMobjects(...mobjects: Mobject[]): this {
+    for (const mob of mobjects) {
+      this._fixedMobjects.add(mob);
+      // Ensure the Three.js object is initialized
+      const threeObj = mob.getThreeObject();
+      this._hudScene.add(threeObj);
+    }
+    if (this._fixedMobjects.size > 0) {
+      this.render();
+    }
+    return this;
+  }
+
+  /**
+   * Remove mobjects from the fixed-in-frame HUD.
+   * @param mobjects - Mobjects to unpin from screen space
+   * @returns this for chaining
+   */
+  removeFixedInFrameMobjects(...mobjects: Mobject[]): this {
+    for (const mob of mobjects) {
+      if (this._fixedMobjects.has(mob)) {
+        this._fixedMobjects.delete(mob);
+        const threeObj = mob.getThreeObject();
+        this._hudScene.remove(threeObj);
+      }
+    }
+    return this;
+  }
+
+  /**
+   * Override _render to use the 3D camera with two-pass rendering for HUD.
+   * This is called by the animation loop internally.
+   */
+  protected override _render(): void {
+    // Guard: super() calls _render() before our fields are initialized
+    if (!this._camera3D) return;
+
+    // Sync dirty mobjects in the main scene
+    for (const mob of this.mobjects) {
+      if (mob._dirty) {
+        mob._syncToThree();
+        mob._dirty = false;
+      }
+    }
+
+    // Sync fixed (HUD) mobjects
+    if (this._fixedMobjects) {
+      for (const mob of this._fixedMobjects) {
+        if (mob._dirty) {
+          mob._syncToThree();
+          mob._dirty = false;
+        }
+      }
+    }
+
     // Update orbit controls if enabled
     if (this._orbitControls && this._orbitControlsEnabled) {
       this._orbitControls.update();
     }
 
-    this.renderer.render(this.threeScene, this._camera3D.getCamera());
+    const threeRenderer = this.renderer.getThreeRenderer();
+
+    // Pass 1: 3D scene (clears buffer)
+    threeRenderer.autoClear = true;
+    threeRenderer.render(this.threeScene, this._camera3D.getCamera());
+
+    // Pass 2: HUD overlay (no clear, composites on top)
+    if (this._fixedMobjects && this._fixedMobjects.size > 0) {
+      threeRenderer.autoClear = false;
+      threeRenderer.render(this._hudScene, this._hudCamera);
+      threeRenderer.autoClear = true;
+    }
+  }
+
+  /**
+   * Public render - delegates to _render.
+   */
+  render(): void {
+    this._render();
+  }
+
+  /**
+   * Override clear to also clear the HUD scene and fixed mobjects.
+   */
+  clear(): this {
+    // Clear fixed mobjects from HUD scene
+    for (const mob of this._fixedMobjects) {
+      const threeObj = mob.getThreeObject();
+      this._hudScene.remove(threeObj);
+    }
+    this._fixedMobjects.clear();
+
+    // Clear any remaining HUD scene children
+    while (this._hudScene.children.length > 0) {
+      this._hudScene.remove(this._hudScene.children[0]);
+    }
+
+    return super.clear();
+  }
+
+  /**
+   * Override remove to also handle fixed mobjects.
+   */
+  remove(...mobjects: Mobject[]): this {
+    for (const mob of mobjects) {
+      if (this._fixedMobjects.has(mob)) {
+        this._fixedMobjects.delete(mob);
+        const threeObj = mob.getThreeObject();
+        this._hudScene.remove(threeObj);
+      }
+    }
+    return super.remove(...mobjects);
   }
 
   /**
@@ -306,7 +427,7 @@ export class MovingCameraScene extends Scene {
           const newPos = new THREE.Vector3().lerpVectors(
             this._cameraAnimationStart,
             this._cameraAnimationTarget,
-            smoothT
+            smoothT,
           );
           this.camera.moveTo([newPos.x, newPos.y, newPos.z]);
         }
@@ -394,7 +515,6 @@ export class MovingCameraScene extends Scene {
       return Promise.resolve();
     }
   }
-
 }
 
 /**
@@ -515,6 +635,7 @@ class ZoomedDisplay extends Mobject {
     // displayFrame dirty too so its world-space miter stroke recomputes
     if (this._dirty) {
       this.displayFrame._dirty = true;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (this.displayFrame as any)._geometryDirty = true;
     }
     super._syncToThree();
@@ -626,8 +747,8 @@ export class ZoomedScene extends Scene {
     const displayWidth = options.displayWidth ?? 3;
     const displayHeight = options.displayHeight ?? 3;
     const zoomFactor = options.zoomFactor ?? 0.3;
-    const cameraFrameWidth = options.cameraFrameWidth ?? (displayWidth * zoomFactor);
-    const cameraFrameHeight = options.cameraFrameHeight ?? (displayHeight * zoomFactor);
+    const cameraFrameWidth = options.cameraFrameWidth ?? displayWidth * zoomFactor;
+    const cameraFrameHeight = options.cameraFrameHeight ?? displayHeight * zoomFactor;
     const cameraFrameColor = options.cameraFrameColor ?? '#FFFF00';
     const displayFrameColor = options.displayFrameColor ?? '#FFFF00';
     const cameraFrameStrokeWidth = options.cameraFrameStrokeWidth ?? 3;
@@ -662,12 +783,8 @@ export class ZoomedScene extends Scene {
     const cornerBuff = options.displayCornerBuff ?? 0.5;
     const frameW = this.camera.frameWidth;
     const frameH = this.camera.frameHeight;
-    const dx = corner[0] !== 0
-      ? corner[0] * (frameW / 2 - cornerBuff - displayWidth / 2)
-      : 0;
-    const dy = corner[1] !== 0
-      ? corner[1] * (frameH / 2 - cornerBuff - displayHeight / 2)
-      : 0;
+    const dx = corner[0] !== 0 ? corner[0] * (frameW / 2 - cornerBuff - displayWidth / 2) : 0;
+    const dy = corner[1] !== 0 ? corner[1] * (frameH / 2 - cornerBuff - displayHeight / 2) : 0;
     this._displayDefaultPos = [dx, dy, 0];
     this.zoomedDisplay.moveTo(this._displayDefaultPos);
   }
@@ -996,7 +1113,7 @@ export class VectorScene extends Scene {
       color?: string;
       name?: string;
       startPoint?: Vector3Tuple;
-    } = {}
+    } = {},
   ): Mobject {
     const { color = '#58C4DD', name, startPoint } = options;
 
@@ -1007,9 +1124,11 @@ export class VectorScene extends Scene {
     // Convert to visual coordinates
     const start = startPoint ?? this.coordsToPoint(0, 0);
     const endCoords = startPoint
-      ? [startPoint[0] + this._xLength * vx / (this._xRange[1] - this._xRange[0]),
-         startPoint[1] + this._yLength * vy / (this._yRange[1] - this._yRange[0]),
-         vz]
+      ? [
+          startPoint[0] + (this._xLength * vx) / (this._xRange[1] - this._xRange[0]),
+          startPoint[1] + (this._yLength * vy) / (this._yRange[1] - this._yRange[0]),
+          vz,
+        ]
       : this.coordsToPoint(vx, vy);
 
     const arrow = new Arrow({
@@ -1137,7 +1256,10 @@ export class LinearTransformationScene extends Scene {
   private _iVector: Mobject | null = null;
   private _jVector: Mobject | null = null;
   private _transformableObjects: Mobject[] = [];
-  private _currentMatrix: Matrix2D = [[1, 0], [0, 1]];
+  private _currentMatrix: Matrix2D = [
+    [1, 0],
+    [0, 1],
+  ];
   private _showBasisVectors: boolean;
 
   /**
@@ -1333,12 +1455,7 @@ export class LinearTransformationScene extends Scene {
     // Apply transformation to all transformable objects
     // Create a THREE.js matrix for the transformation
     const threeMatrix = new THREE.Matrix4();
-    threeMatrix.set(
-      a, b, 0, 0,
-      c, d, 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1
-    );
+    threeMatrix.set(a, b, 0, 0, c, d, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 
     for (const obj of this._transformableObjects) {
       const threeObj = obj.getThreeObject();
@@ -1372,10 +1489,22 @@ export class LinearTransformationScene extends Scene {
     // Apply inverse to reset
     const threeMatrix = new THREE.Matrix4();
     threeMatrix.set(
-      invMatrix[0][0], invMatrix[0][1], 0, 0,
-      invMatrix[1][0], invMatrix[1][1], 0, 0,
-      0, 0, 1, 0,
-      0, 0, 0, 1
+      invMatrix[0][0],
+      invMatrix[0][1],
+      0,
+      0,
+      invMatrix[1][0],
+      invMatrix[1][1],
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
     );
 
     for (const obj of this._transformableObjects) {
@@ -1383,7 +1512,10 @@ export class LinearTransformationScene extends Scene {
       threeObj.applyMatrix4(threeMatrix);
     }
 
-    this._currentMatrix = [[1, 0], [0, 1]];
+    this._currentMatrix = [
+      [1, 0],
+      [0, 1],
+    ];
     this.render();
     return this;
   }
@@ -1402,7 +1534,10 @@ export class LinearTransformationScene extends Scene {
     this._jVector = null;
 
     // Reset matrix
-    this._currentMatrix = [[1, 0], [0, 1]];
+    this._currentMatrix = [
+      [1, 0],
+      [0, 1],
+    ];
 
     // Rebuild
     this._setupGrid();
@@ -1424,7 +1559,7 @@ export class LinearTransformationScene extends Scene {
     options: {
       color?: string;
       addToTransformable?: boolean;
-    } = {}
+    } = {},
   ): Mobject {
     const { color = '#FFFF00', addToTransformable = true } = options;
 
