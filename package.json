@@ -75,7 +75,7 @@
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "jscpd": "^4.0.8",
-    "knip": "^5.82.1",
+    "knip": "^5.83.1",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
     "standard-version": "^9.5.0",
