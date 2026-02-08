@@ -7,7 +7,6 @@ import ArgMinExample from '@site/src/components/examples/ArgMinExample';
 import BooleanOperationsExample from '@site/src/components/examples/BooleanOperationsExample';
 import BraceAnnotationExample from '@site/src/components/examples/BraceAnnotationExample';
 import FollowingGraphCameraExample from '@site/src/components/examples/FollowingGraphCameraExample';
-import MovingZoomedSceneAroundExample from '@site/src/components/examples/MovingZoomedSceneAroundExample';
 import GraphAreaPlotExample from '@site/src/components/examples/GraphAreaPlotExample';
 import HeatDiagramPlotExample from '@site/src/components/examples/HeatDiagramPlotExample';
 import ManimCeLogoExample from '@site/src/components/examples/ManimCeLogoExample';
@@ -16,6 +15,7 @@ import MovingAroundExample from '@site/src/components/examples/MovingAroundExamp
 import MovingDotsExample from '@site/src/components/examples/MovingDotsExample';
 import MovingFrameBoxExample from '@site/src/components/examples/MovingFrameBoxExample';
 import MovingGroupToDestinationExample from '@site/src/components/examples/MovingGroupToDestinationExample';
+import MovingZoomedSceneAroundExample from '@site/src/components/examples/MovingZoomedSceneAroundExample';
 import OpeningManimExample from '@site/src/components/examples/OpeningManimExample';
 import PointMovingOnShapesExample from '@site/src/components/examples/PointMovingOnShapesExample';
 import PointWithTraceExample from '@site/src/components/examples/PointWithTraceExample';
@@ -59,24 +59,20 @@ const scene = new Scene(document.getElementById('container'), {
   backgroundColor: '#ece6e2',
 });
 
-async function manimCELogo(scene: Scene) {
-  const logoGreen = '#87c2a5';
-  const logoBlue = '#525893';
-  const logoRed = '#e07a5f';
-  const logoBlack = '#343434';
-  const dsM = new MathTex({ latex: '\\mathbb{M}', fillColor: logoBlack });
-  await dsM.waitForRender();
-  dsM.scale(7);
-  dsM.shift(addVec(scaleVec(2.25, LEFT), scaleVec(1.5, UP)));
-  const circle = new Circle({ color: logoGreen, fillOpacity: 1 }).shift(LEFT);
-  const square = new Square({ color: logoBlue, fillOpacity: 1 }).shift(UP);
-  const triangle = new Triangle({ color: logoRed, fillOpacity: 1 }).shift(RIGHT);
-  const logo = new VGroup(triangle, square, circle, dsM);
-  logo.moveTo(ORIGIN);
-  scene.add(logo);
-}
-
-await manimCELogo(scene);
+const logoGreen = '#87c2a5';
+const logoBlue = '#525893';
+const logoRed = '#e07a5f';
+const logoBlack = '#343434';
+const dsM = new MathTex({ latex: '\\mathbb{M}', fillColor: logoBlack });
+await dsM.waitForRender();
+dsM.scale(7);
+dsM.shift(addVec(scaleVec(2.25, LEFT), scaleVec(1.5, UP)));
+const circle = new Circle({ color: logoGreen, fillOpacity: 1 }).shift(LEFT);
+const square = new Square({ color: logoBlue, fillOpacity: 1 }).shift(UP);
+const triangle = new Triangle({ color: logoRed, fillOpacity: 1 }).shift(RIGHT);
+const logo = new VGroup(triangle, square, circle, dsM);
+logo.moveTo(ORIGIN);
+scene.add(logo);
 ```
 
 </details>
@@ -95,13 +91,7 @@ Shows how to annotate lines with curly braces and labels. Creates a diagonal lin
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Brace,
-  Dot,
-  Line,
-  ORANGE,
-  Scene,
-} from 'manim-js';
+import { Brace, Dot, Line, ORANGE, Scene } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -109,18 +99,19 @@ const scene = new Scene(document.getElementById('container'), {
   backgroundColor: '#000000',
 });
 
-async function braceAnnotation(scene: Scene) {
-  const dot = new Dot({ point: [-2, -1, 0] });
-  const dot2 = new Dot({ point: [2, 1, 0] });
-  const line = new Line({ start: dot.getCenter(), end: dot2.getCenter() }).setColor(ORANGE);
-  const b1 = new Brace(line);
-  const b1text = b1.getText('Horizontal distance');
-  const b2 = new Brace(line, { direction: line.copy().rotate(Math.PI / 2).getUnitVector() });
-  const b2text = b2.getTex('x-x_1');
-  scene.add(line, dot, dot2, b1, b2, b1text, b2text);
-}
-
-await braceAnnotation(scene);
+const dot = new Dot({ point: [-2, -1, 0] });
+const dot2 = new Dot({ point: [2, 1, 0] });
+const line = new Line({ start: dot.getCenter(), end: dot2.getCenter() }).setColor(ORANGE);
+const b1 = new Brace(line);
+const b1text = b1.getText('Horizontal distance');
+const b2 = new Brace(line, {
+  direction: line
+    .copy()
+    .rotate(Math.PI / 2)
+    .getUnitVector(),
+});
+const b2text = b2.getTex('x-x_1');
+scene.add(line, dot, dot2, b1, b2, b1text, b2text);
 ```
 
 </details>
@@ -139,16 +130,7 @@ Displays a vector arrow on a coordinate plane with labeled origin and tip points
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Arrow,
-  DOWN,
-  Dot,
-  NumberPlane,
-  ORIGIN,
-  RIGHT,
-  Scene,
-  Text,
-} from 'manim-js';
+import { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text } from 'manim-js';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -156,16 +138,12 @@ const scene = new Scene(document.getElementById('container'), {
   backgroundColor: '#000000',
 });
 
-async function vectorArrow(scene: Scene) {
-  const dot = new Dot({ point: ORIGIN });
-  const arrow = new Arrow({ start: ORIGIN, end: [2, 2, 0] });
-  const numberplane = new NumberPlane();
-  const originText = new Text({ text: '(0, 0)' }).nextTo(dot, DOWN);
-  const tipText = new Text({ text: '(2, 2)' }).nextTo(arrow.getEnd(), RIGHT);
-  scene.add(numberplane, dot, arrow, originText, tipText);
-}
-
-await vectorArrow(scene);
+const dot = new Dot({ point: ORIGIN });
+const arrow = new Arrow({ start: ORIGIN, end: [2, 2, 0] });
+const numberplane = new NumberPlane();
+const originText = new Text({ text: '(0, 0)' }).nextTo(dot, DOWN);
+const tipText = new Text({ text: '(2, 2)' }).nextTo(arrow.getEnd(), RIGHT);
+scene.add(numberplane, dot, arrow, originText, tipText);
 ```
 
 </details>
@@ -1022,7 +1000,6 @@ Animates a camera that follows a dot moving along a sine curve. Zooms in, tracks
 import {
   Axes,
   BLUE,
-  BLACK,
   Dot,
   MoveAlongPath,
   MoveToTarget,
@@ -1038,42 +1015,38 @@ const scene = new Scene(document.getElementById('container'), {
   backgroundColor: '#000000',
 });
 
-async function followingGraphCamera(scene: Scene) {
-  // Save camera frame state
-  scene.camera.frame.saveState();
+// Save camera frame state
+scene.camera.frame.saveState();
 
-  // Create the axes and the curve
-  const ax = new Axes({ xRange: [-1, 10], yRange: [-1, 10] });
-  const graph = ax.plot((x) => Math.sin(x), { color: BLUE, xRange: [0, 3 * Math.PI] });
+// Create the axes and the curve
+const ax = new Axes({ xRange: [-1, 10], yRange: [-1, 10] });
+const graph = ax.plot((x) => Math.sin(x), { color: BLUE, xRange: [0, 3 * Math.PI] });
 
-  // Create dots based on the graph
-  const movingDot = new Dot({ point: ax.i2gp(graph.tMin, graph), color: ORANGE });
-  const dot1 = new Dot({ point: ax.i2gp(graph.tMin, graph) });
-  const dot2 = new Dot({ point: ax.i2gp(graph.tMax, graph) });
+// Create dots based on the graph
+const movingDot = new Dot({ point: ax.i2gp(graph.tMin, graph), color: ORANGE });
+const dot1 = new Dot({ point: ax.i2gp(graph.tMin, graph) });
+const dot2 = new Dot({ point: ax.i2gp(graph.tMax, graph) });
 
-  scene.add(ax, graph, dot1, dot2, movingDot);
+scene.add(ax, graph, dot1, dot2, movingDot);
 
-  // Zoom camera to 0.5x and center on moving dot
-  scene.camera.frame.generateTarget();
-  scene.camera.frame.targetCopy.scale(0.5);
-  scene.camera.frame.targetCopy.moveTo(movingDot.getCenter());
-  await scene.play(new MoveToTarget(scene.camera.frame));
+// Zoom camera to 0.5x and center on moving dot
+scene.camera.frame.generateTarget();
+scene.camera.frame.targetCopy.scale(0.5);
+scene.camera.frame.targetCopy.moveTo(movingDot.getCenter());
+await scene.play(new MoveToTarget(scene.camera.frame));
 
-  // Add updater so camera follows the moving dot
-  const updateCurve = (mob) => {
-    mob.moveTo(movingDot.getCenter());
-  };
-  scene.camera.frame.addUpdater(updateCurve);
+// Add updater so camera follows the moving dot
+const updateCurve = (mob) => {
+  mob.moveTo(movingDot.getCenter());
+};
+scene.camera.frame.addUpdater(updateCurve);
 
-  // Animate dot moving along the graph path
-  await scene.play(new MoveAlongPath(movingDot, { path: graph, rateFunc: linear }));
+// Animate dot moving along the graph path
+await scene.play(new MoveAlongPath(movingDot, { path: graph, rateFunc: linear }));
 
-  // Remove updater and restore camera to original state
-  scene.camera.frame.removeUpdater(updateCurve);
-  await scene.play(new Restore(scene.camera.frame));
-}
-
-await followingGraphCamera(scene);
+// Remove updater and restore camera to original state
+scene.camera.frame.removeUpdater(updateCurve);
+await scene.play(new Restore(scene.camera.frame));
 ```
 
 </details>
@@ -1084,7 +1057,7 @@ await followingGraphCamera(scene);
 
 ## Moving Zoomed Scene Around
 
-Demonstrates a zoomed camera scene with pop-out display, frame animations, and scale/shift operations. Creates a grid of colored dots, sets up a zoomed camera frame, animates the display popping out, then scales and shifts both frame and display independently.
+Demonstrates ZoomedScene with a camera frame that magnifies part of a grayscale image. Shows the zoomed display popping out, non-uniform scaling, shifting, and the reverse pop-out animation.
 
 <MovingZoomedSceneAroundExample />
 
@@ -1100,18 +1073,19 @@ import {
   DOWN,
   FadeIn,
   FadeOut,
+  ImageMobject,
   MED_SMALL_BUFF,
   PURPLE,
   RED,
   Scale,
   ScaleInPlace,
   Shift,
+  smooth,
   Text,
   UL,
   Uncreate,
   UP,
   UpdateFromFunc,
-  VGroup,
   ZoomedScene,
   scaleVec,
 } from 'manim-js';
@@ -1120,44 +1094,39 @@ const scene = new ZoomedScene(document.getElementById('container'), {
   width: 800,
   height: 450,
   backgroundColor: BLACK,
-  cameraFrameWidth: 3,
-  cameraFrameHeight: 3,
   zoomFactor: 0.3,
+  displayWidth: 6,
+  displayHeight: 1,
   cameraFrameStrokeWidth: 3,
-  displayFrameStrokeWidth: 20,
+  displayFrameStrokeWidth: 3,
   displayFrameColor: RED,
 });
 
-// Create a grid of colored dots as content
-const dots = [];
-for (let row = 0; row < 15; row++) {
-  for (let col = 0; col < 15; col++) {
-    const r = Math.floor((row / 14) * 255);
-    const g = Math.floor((col / 14) * 255);
-    const b = Math.floor(((row + col) / 28) * 255);
-    const color = `rgb(${r}, ${g}, ${b})`;
-    const dot = new Dot({ radius: 0.15, color });
-    dot.moveTo([col * 0.45 - 3.15, row * 0.45 - 3.15, 0]);
-    dots.push(dot);
-  }
-}
-const image = new VGroup(...dots);
-image.moveTo([0, 0, 0]);
+// Grayscale image matching Python: np.uint8([[0, 100, 30, 200], [255, 0, 5, 33]])
+const image = new ImageMobject({
+  pixelData: [
+    [0, 100, 30, 200],
+    [255, 0, 5, 33],
+  ],
+  height: 7,
+});
 
 const dot = new Dot().shift(scaleVec(2, UL));
-const frameText = new Text({ text: 'Frame', color: PURPLE, fontSize: 48 });
-const zoomedCameraText = new Text({ text: 'Zoomed camera', color: RED, fontSize: 48 });
+
+const frameText = new Text({ text: 'Frame', color: PURPLE, fontSize: 67 });
+const zoomedCameraText = new Text({ text: 'Zoomed camera', color: RED, fontSize: 67 });
 
 scene.add(image, dot);
 
-const frame = scene.zoomedCamera.frame;
+const zoomedCamera = scene.zoomedCamera;
 const zoomedDisplay = scene.zoomedDisplay;
+const frame = zoomedCamera.frame;
 const zoomedDisplayFrame = zoomedDisplay.displayFrame;
 
 frame.moveTo(dot);
 frame.setColor(PURPLE);
 zoomedDisplayFrame.setColor(RED);
-zoomedDisplay.shift([0, -2, 0]);
+zoomedDisplay.shift(DOWN);
 
 const zdRect = new BackgroundRectangle(zoomedDisplay, {
   fillOpacity: 0,
@@ -1174,25 +1143,21 @@ frameText.nextTo(frame, DOWN);
 await scene.play(new Create(frame), new FadeIn(frameText, { shift: UP }));
 scene.activateZooming();
 
-const popOut = scene.getZoomedDisplayPopOutAnimation();
-zoomedDisplay.moveTo(popOut.startPosition);
+// Pop-out animation: display pops from frame position to its shifted position
 await scene.play(
-  new Shift(zoomedDisplay, {
-    direction: [
-      popOut.endPosition[0] - popOut.startPosition[0],
-      popOut.endPosition[1] - popOut.startPosition[1],
-      popOut.endPosition[2] - popOut.startPosition[2],
-    ],
-  }),
+  scene.getZoomedDisplayPopOutAnimation(),
   unfoldCamera,
 );
 
-zoomedCameraText.nextTo(zoomedDisplayFrame, DOWN);
+// Use zoomedDisplay (parent) for positioning since displayFrame is a nested
+// child whose world coords depend on parent transform being synced
+zoomedCameraText.nextTo(zoomedDisplay, DOWN);
 await scene.play(new FadeIn(zoomedCameraText, { shift: UP }));
 
+// Scale frame and display non-uniformly
 await scene.play(
-  new Scale(frame, { scaleFactor: [0.5, 1.5, 1] }),
-  new Scale(zoomedDisplay, { scaleFactor: [0.5, 1.5, 1] }),
+  new Scale(frame, { scaleFactor: [0.5, 1.5, 0] }),
+  new Scale(zoomedDisplay, { scaleFactor: [0.5, 1.5, 0] }),
   new FadeOut(zoomedCameraText),
   new FadeOut(frameText),
 );
@@ -1203,11 +1168,19 @@ await scene.wait();
 
 await scene.play(new Shift(frame, { direction: scaleVec(2.5, DOWN) }));
 await scene.wait();
+
+// Reverse pop-out: move display back to frame
+await scene.play(
+  scene.getZoomedDisplayPopOutAnimation({ rateFunc: (t: number) => smooth(1 - t) }),
+  unfoldCamera,
+);
+await scene.play(new Uncreate(zoomedDisplayFrame), new FadeOut(frame));
+await scene.wait();
 ```
 
 </details>
 
-**Learn More:** **ZoomedScene** · **BackgroundRectangle** · **Scale** · **ScaleInPlace** · **UpdateFromFunc**
+**Learn More:** **ZoomedScene** · **ImageMobject** · **BackgroundRectangle** · **Create** · **FadeIn** · **Scale** · **Shift**
 
 ---
 

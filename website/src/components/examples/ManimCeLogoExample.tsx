@@ -18,24 +18,20 @@ async function animate(scene: any) {
     scaleVec,
   } = await import('manim-js');
 
-  async function manimCELogo(scene: Scene) {
-    const logoGreen = '#87c2a5';
-    const logoBlue = '#525893';
-    const logoRed = '#e07a5f';
-    const logoBlack = '#343434';
-    const dsM = new MathTex({ latex: '\\mathbb{M}', fillColor: logoBlack });
-    await dsM.waitForRender();
-    dsM.scale(7);
-    dsM.shift(addVec(scaleVec(2.25, LEFT), scaleVec(1.5, UP)));
-    const circle = new Circle({ color: logoGreen, fillOpacity: 1 }).shift(LEFT);
-    const square = new Square({ color: logoBlue, fillOpacity: 1 }).shift(UP);
-    const triangle = new Triangle({ color: logoRed, fillOpacity: 1 }).shift(RIGHT);
-    const logo = new VGroup(triangle, square, circle, dsM);
-    logo.moveTo(ORIGIN);
-    scene.add(logo);
-  }
-
-  await manimCELogo(scene);
+  const logoGreen = '#87c2a5';
+  const logoBlue = '#525893';
+  const logoRed = '#e07a5f';
+  const logoBlack = '#343434';
+  const dsM = new MathTex({ latex: '\\mathbb{M}', fillColor: logoBlack });
+  await dsM.waitForRender();
+  dsM.scale(7);
+  dsM.shift(addVec(scaleVec(2.25, LEFT), scaleVec(1.5, UP)));
+  const circle = new Circle({ color: logoGreen, fillOpacity: 1 }).shift(LEFT);
+  const square = new Square({ color: logoBlue, fillOpacity: 1 }).shift(UP);
+  const triangle = new Triangle({ color: logoRed, fillOpacity: 1 }).shift(RIGHT);
+  const logo = new VGroup(triangle, square, circle, dsM);
+  logo.moveTo(ORIGIN);
+  scene.add(logo);
 }
 
 export default function ManimCeLogoExample() {

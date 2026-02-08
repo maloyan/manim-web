@@ -5,23 +5,19 @@ import ManimExample from '../ManimExample';
 async function animate(scene: any) {
   const { Brace, Dot, Line, ORANGE, Scene } = await import('manim-js');
 
-  async function braceAnnotation(scene: Scene) {
-    const dot = new Dot({ point: [-2, -1, 0] });
-    const dot2 = new Dot({ point: [2, 1, 0] });
-    const line = new Line({ start: dot.getCenter(), end: dot2.getCenter() }).setColor(ORANGE);
-    const b1 = new Brace(line);
-    const b1text = b1.getText('Horizontal distance');
-    const b2 = new Brace(line, {
-      direction: line
-        .copy()
-        .rotate(Math.PI / 2)
-        .getUnitVector(),
-    });
-    const b2text = b2.getTex('x-x_1');
-    scene.add(line, dot, dot2, b1, b2, b1text, b2text);
-  }
-
-  await braceAnnotation(scene);
+  const dot = new Dot({ point: [-2, -1, 0] });
+  const dot2 = new Dot({ point: [2, 1, 0] });
+  const line = new Line({ start: dot.getCenter(), end: dot2.getCenter() }).setColor(ORANGE);
+  const b1 = new Brace(line);
+  const b1text = b1.getText('Horizontal distance');
+  const b2 = new Brace(line, {
+    direction: line
+      .copy()
+      .rotate(Math.PI / 2)
+      .getUnitVector(),
+  });
+  const b2text = b2.getTex('x-x_1');
+  scene.add(line, dot, dot2, b1, b2, b1text, b2text);
 }
 
 export default function BraceAnnotationExample() {

@@ -1,6 +1,7 @@
 import { themes as prismThemes } from 'prism-react-renderer';
 import type { Config } from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import path from 'path';
 
 const config: Config = {
   title: 'manim-js',
@@ -26,6 +27,20 @@ const config: Config = {
   },
 
   plugins: [
+    function manimSourceAlias() {
+      return {
+        name: 'manim-js-source-alias',
+        configureWebpack() {
+          return {
+            resolve: {
+              alias: {
+                'manim-js': path.resolve(__dirname, '../src/index.ts'),
+              },
+            },
+          };
+        },
+      };
+    },
     [
       'docusaurus-plugin-typedoc',
       {

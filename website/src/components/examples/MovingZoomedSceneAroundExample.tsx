@@ -2,75 +2,56 @@
 import React from 'react';
 import ManimExample from '../ManimExample';
 
-function createZoomedScene(container: HTMLElement, manim: any) {
-  return new manim.ZoomedScene(container, {
-    width: 800,
-    height: 450,
-    backgroundColor: '#000000',
-    cameraFrameWidth: 3,
-    cameraFrameHeight: 3,
-    zoomFactor: 0.3,
-    displayWidth: 6,
-    displayHeight: 1,
-    cameraFrameStrokeWidth: 3,
-    displayFrameStrokeWidth: 20,
-    displayFrameColor: manim.RED,
-  });
-}
-
 async function animate(scene: any) {
   const {
     BackgroundRectangle,
+    BLACK,
     Create,
     Dot,
     DOWN,
     FadeIn,
     FadeOut,
+    ImageMobject,
     MED_SMALL_BUFF,
     PURPLE,
     RED,
     Scale,
     ScaleInPlace,
     Shift,
+    smooth,
     Text,
     UL,
     Uncreate,
     UP,
     UpdateFromFunc,
-    VGroup,
     scaleVec,
   } = await import('manim-js');
 
-  // Create a grid of colored dots as content
-  const dots: any[] = [];
-  for (let row = 0; row < 15; row++) {
-    for (let col = 0; col < 15; col++) {
-      const r = Math.floor((row / 14) * 255);
-      const g = Math.floor((col / 14) * 255);
-      const b = Math.floor(((row + col) / 28) * 255);
-      const color = `rgb(${r}, ${g}, ${b})`;
-      const dot = new Dot({ radius: 0.15, color });
-      dot.moveTo([col * 0.45 - 3.15, row * 0.45 - 3.15, 0]);
-      dots.push(dot);
-    }
-  }
-  const image = new VGroup(...dots);
-  image.moveTo([0, 0, 0]);
+  // Grayscale image matching Python: np.uint8([[0, 100, 30, 200], [255, 0, 5, 33]])
+  const image = new ImageMobject({
+    pixelData: [
+      [0, 100, 30, 200],
+      [255, 0, 5, 33],
+    ],
+    height: 7,
+  });
 
   const dot = new Dot().shift(scaleVec(2, UL));
-  const frameText = new Text({ text: 'Frame', color: PURPLE, fontSize: 48 });
-  const zoomedCameraText = new Text({ text: 'Zoomed camera', color: RED, fontSize: 48 });
+
+  const frameText = new Text({ text: 'Frame', color: PURPLE, fontSize: 67 });
+  const zoomedCameraText = new Text({ text: 'Zoomed camera', color: RED, fontSize: 67 });
 
   scene.add(image, dot);
 
-  const frame = scene.zoomedCamera.frame;
+  const zoomedCamera = scene.zoomedCamera;
   const zoomedDisplay = scene.zoomedDisplay;
+  const frame = zoomedCamera.frame;
   const zoomedDisplayFrame = zoomedDisplay.displayFrame;
 
   frame.moveTo(dot);
   frame.setColor(PURPLE);
   zoomedDisplayFrame.setColor(RED);
-  zoomedDisplay.shift([0, -2, 0]);
+  zoomedDisplay.shift(DOWN);
 
   const zdRect = new BackgroundRectangle(zoomedDisplay, {
     fillOpacity: 0,
@@ -78,7 +59,7 @@ async function animate(scene: any) {
   });
   scene.addForegroundMobject(zdRect);
 
-  const unfoldCamera = new UpdateFromFunc(zdRect, (rect: any) => {
+  const unfoldCamera = new UpdateFromFunc(zdRect, (rect) => {
     rect.replace(zoomedDisplay);
   });
 
@@ -87,25 +68,18 @@ async function animate(scene: any) {
   await scene.play(new Create(frame), new FadeIn(frameText, { shift: UP }));
   scene.activateZooming();
 
-  const popOut = scene.getZoomedDisplayPopOutAnimation();
-  zoomedDisplay.moveTo(popOut.startPosition);
-  await scene.play(
-    new Shift(zoomedDisplay, {
-      direction: [
-        popOut.endPosition[0] - popOut.startPosition[0],
-        popOut.endPosition[1] - popOut.startPosition[1],
-        popOut.endPosition[2] - popOut.startPosition[2],
-      ],
-    }),
-    unfoldCamera,
-  );
+  // Pop-out animation: display pops from frame position to its shifted position
+  await scene.play(scene.getZoomedDisplayPopOutAnimation(), unfoldCamera);
 
-  zoomedCameraText.nextTo(zoomedDisplayFrame, DOWN);
+  // Use zoomedDisplay (parent) for positioning since displayFrame is a nested
+  // child whose world coords depend on parent transform being synced
+  zoomedCameraText.nextTo(zoomedDisplay, DOWN);
   await scene.play(new FadeIn(zoomedCameraText, { shift: UP }));
 
+  // Scale frame and display non-uniformly
   await scene.play(
-    new Scale(frame, { scaleFactor: [0.5, 1.5, 1] }),
-    new Scale(zoomedDisplay, { scaleFactor: [0.5, 1.5, 1] }),
+    new Scale(frame, { scaleFactor: [0.5, 1.5, 0] }),
+    new Scale(zoomedDisplay, { scaleFactor: [0.5, 1.5, 0] }),
     new FadeOut(zoomedCameraText),
     new FadeOut(frameText),
   );
@@ -116,8 +90,30 @@ async function animate(scene: any) {
 
   await scene.play(new Shift(frame, { direction: scaleVec(2.5, DOWN) }));
   await scene.wait();
+
+  // Reverse pop-out: move display back to frame
+  await scene.play(
+    scene.getZoomedDisplayPopOutAnimation({ rateFunc: (t: number) => smooth(1 - t) }),
+    unfoldCamera,
+  );
+  await scene.play(new Uncreate(zoomedDisplayFrame), new FadeOut(frame));
+  await scene.wait();
+}
+
+function createScene(container: HTMLElement, manim: any) {
+  return new manim.ZoomedScene(container, {
+    width: 800,
+    height: 450,
+    backgroundColor: manim.BLACK,
+    zoomFactor: 0.3,
+    displayWidth: 6,
+    displayHeight: 1,
+    cameraFrameStrokeWidth: 3,
+    displayFrameStrokeWidth: 3,
+    displayFrameColor: manim.RED,
+  });
 }
 
 export default function MovingZoomedSceneAroundExample() {
-  return <ManimExample animationFn={animate} createScene={createZoomedScene} />;
+  return <ManimExample animationFn={animate} createScene={createScene} />;
 }

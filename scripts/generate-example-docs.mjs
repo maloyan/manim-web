@@ -28,7 +28,7 @@ const CATEGORIES = {
   'Basic Concepts': ['manim_ce_logo', 'brace_annotation', 'vector_arrow', 'boolean_operations'],
   'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace'],
   'Plotting': ['sin_cos_plot', 'arg_min', 'graph_area_plot', 'polygon_on_axes', 'heat_diagram_plot'],
-  'Special Camera Settings': ['following_graph_camera'],
+  'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around'],
   'Advanced Projects': ['opening_manim'],
 };
 
@@ -134,6 +134,11 @@ const EXAMPLE_META = {
     description:
       'Animates a camera that follows a dot moving along a sine curve. Zooms in, tracks with an updater, then restores to the original view. Demonstrates camera frame manipulation with saveState, generateTarget, and MoveToTarget.',
     learnMore: ['Axes', 'Dot', 'MoveAlongPath', 'MoveToTarget', 'Restore'],
+  },
+  moving_zoomed_scene_around: {
+    description:
+      'Demonstrates ZoomedScene with a camera frame that magnifies part of a grayscale image. Shows the zoomed display popping out, non-uniform scaling, shifting, and the reverse pop-out animation.',
+    learnMore: ['ZoomedScene', 'ImageMobject', 'BackgroundRectangle', 'Create', 'FadeIn', 'Scale', 'Shift'],
   },
   opening_manim: {
     description:
@@ -432,17 +437,17 @@ function extractCleanCode(tsContent) {
     }
   }
 
-  // 10. Inline container in Scene constructor
+  // 10. Inline container in Scene constructor (handles Scene and subclasses like ZoomedScene)
   code = code.replace(
-    /new Scene\(\s*container\s*,/g,
-    "new Scene(document.getElementById('container'),"
+    /new (\w*Scene)\(\s*container\s*,/g,
+    "new $1(document.getElementById('container'),"
   );
 
   // 11. Collect named async functions that take `scene` param
   //     Store their cleaned bodies and remove them from code.
   //     Also matches `export async function ...`
   const namedFunctions = {}; // name -> cleaned body
-  let namedFuncRe = /(?:export\s+)?async\s+function\s+(\w+)\s*\(\s*scene\s*\)\s*\{/g;
+  let namedFuncRe = /(?:export\s+)?async\s+function\s+(\w+)\s*\(\s*scene\s*(?::\s*\w+)?\s*\)\s*\{/g;
   let match;
   // Collect all matches first, then process from end to start to preserve indices
   const namedMatches = [];
@@ -527,7 +532,7 @@ function extractCleanCode(tsContent) {
       .replace(/document\.getElementById\(['"]playBtn['"]\)\.disabled\s*=[^;]*;?\s*/gm, '')
       .trim();
 
-    const funcCallMatch = bodyStripped.match(/^(?:await\s+)?(\w+)\s*\(\s*scene\s*\)\s*;?\s*$/);
+    const funcCallMatch = bodyStripped.match(/^(?:await\s+)?(\w+)\s*\(\s*scene\s*(?::\s*\w+)?\s*\)\s*;?\s*$/);
 
     if (funcCallMatch && namedFunctions[funcCallMatch[1]]) {
       // Body just calls a named function whose body we already have -> remove handler entirely
@@ -548,7 +553,7 @@ function extractCleanCode(tsContent) {
   // 14. Remove any remaining bare function calls like `await funcName(scene);` or `funcName(scene);`
   //     that reference named functions we already extracted
   for (const name of Object.keys(namedFunctions)) {
-    const callRe = new RegExp(`^\\s*(?:await\\s+)?${name}\\s*\\(\\s*scene\\s*\\)\\s*;?\\s*$`, 'gm');
+    const callRe = new RegExp(`^\\s*(?:await\\s+)?${name}\\s*\\(\\s*scene\\s*(?::\\s*\\w+)?\\s*\\)\\s*;?\\s*$`, 'gm');
     code = code.replace(callRe, '');
   }
 
@@ -561,7 +566,7 @@ function extractCleanCode(tsContent) {
     const refPattern = new RegExp(`\\b${name}\\b`);
     if (!refPattern.test(code)) {
       // Find the end of the Scene creation block (constructor may be multi-line)
-      const sceneStart = code.match(/const scene = new Scene\(/);
+      const sceneStart = code.match(/const scene = new \w*Scene\(/);
       if (sceneStart) {
         const parenIdx = code.indexOf('(', sceneStart.index);
         const closeParenIdx = findMatchingParen(code, parenIdx);
@@ -618,6 +623,7 @@ function parseCleanCode(cleanCode) {
   const importLines = [];
   const constantLines = [];
   const bodyLines = [];
+  const sceneCreationLines = [];
 
   let phase = 'imports'; // imports -> constants -> body
   let inImportBlock = false; // tracking multi-line import { ... } from '...'
@@ -658,9 +664,10 @@ function parseCleanCode(cleanCode) {
     }
 
     // Handle scene creation line(s) - can be multi-line
-    if (!inSceneCreation && /^const scene = new Scene\(/.test(trimmed)) {
+    if (!inSceneCreation && /^const scene = new \w*Scene\(/.test(trimmed)) {
       inSceneCreation = true;
       parenDepth = 0;
+      sceneCreationLines.push(line);
       // Count parens to handle multi-line
       for (const ch of line) {
         if (ch === '(') parenDepth++;
@@ -675,6 +682,7 @@ function parseCleanCode(cleanCode) {
     }
 
     if (inSceneCreation) {
+      sceneCreationLines.push(line);
       for (const ch of line) {
         if (ch === '(') parenDepth++;
         if (ch === ')') parenDepth--;
@@ -717,11 +725,13 @@ function parseCleanCode(cleanCode) {
   cleanSection(importLines);
   cleanSection(constantLines);
   cleanSection(bodyLines);
+  cleanSection(sceneCreationLines);
 
   return {
     imports: importLines.join('\n'),
     constants: constantLines.join('\n'),
     body: bodyLines.join('\n'),
+    sceneCreation: sceneCreationLines.join('\n'),
   };
 }
 
@@ -806,6 +816,23 @@ function generateComponentFile(stem, cleanCode) {
     body = wrapDemoSectionsInBlockScopes(body);
   }
 
+  // Detect custom scene type (e.g. ZoomedScene) from the scene creation line
+  const sceneClassMatch = parsed.sceneCreation.match(/new (\w+Scene)\(/);
+  const sceneClassName = sceneClassMatch ? sceneClassMatch[1] : 'Scene';
+  const isCustomScene = sceneClassName !== 'Scene';
+
+  // Extract scene options from creation block (everything between first { and last })
+  let sceneOptions = '';
+  if (isCustomScene && parsed.sceneCreation) {
+    const braceStart = parsed.sceneCreation.indexOf('{');
+    if (braceStart !== -1) {
+      const braceEnd = parsed.sceneCreation.lastIndexOf('}');
+      if (braceEnd !== -1) {
+        sceneOptions = parsed.sceneCreation.slice(braceStart, braceEnd + 1);
+      }
+    }
+  }
+
   // Build the component file
   const lines = [
     '// Auto-generated by generate-example-docs.mjs - do not edit',
@@ -819,8 +846,12 @@ function generateComponentFile(stem, cleanCode) {
 
   // Dynamically import manim-js at the start of the animation function
   const specifiers = extractImportSpecifiers(parsed.imports);
-  if (specifiers.length > 0) {
-    lines.push(`  const { ${specifiers.join(', ')} } = await import('manim-js');`);
+  // For the createScene factory, the scene class import is handled there, not in animate
+  const animateSpecifiers = isCustomScene
+    ? specifiers.filter(s => s !== sceneClassName)
+    : specifiers;
+  if (animateSpecifiers.length > 0) {
+    lines.push(`  const { ${animateSpecifiers.join(', ')} } = await import('manim-js');`);
   }
 
   // Add constants (indented)
@@ -841,8 +872,29 @@ function generateComponentFile(stem, cleanCode) {
 
   lines.push('}');
   lines.push('');
+
+  // Generate createScene factory for custom scene types.
+  // Uses the `manim` module passed by ManimExample (which already imports manim-js)
+  // to avoid webpack splitting into separate chunks with different class instances.
+  if (isCustomScene) {
+    lines.push(`function createScene(container: HTMLElement, manim: any) {`);
+    // Replace direct references to imported specifiers with manim.X
+    let opts = sceneOptions;
+    const optionSpecifiers = specifiers.filter(s => opts.includes(s));
+    for (const spec of optionSpecifiers) {
+      opts = opts.replace(new RegExp(`\\b${spec}\\b`, 'g'), `manim.${spec}`);
+    }
+    lines.push(`  return new manim.${sceneClassName}(container, ${opts});`);
+    lines.push('}');
+    lines.push('');
+  }
+
   lines.push(`export default function ${componentName}() {`);
-  lines.push('  return <ManimExample animationFn={animate} />;');
+  if (isCustomScene) {
+    lines.push('  return <ManimExample animationFn={animate} createScene={createScene} />;');
+  } else {
+    lines.push('  return <ManimExample animationFn={animate} />;');
+  }
   lines.push('}');
   lines.push('');
 

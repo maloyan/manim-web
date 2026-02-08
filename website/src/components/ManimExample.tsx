@@ -4,7 +4,7 @@ import BrowserOnly from '@docusaurus/BrowserOnly';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnimationFn = (scene: any) => Promise<void>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SceneFactory = (container: HTMLElement, manim: any) => any;
+type SceneFactory = (container: HTMLElement, manim: any) => any | Promise<any>;
 
 interface ManimExampleProps {
   animationFn: AnimationFn;
@@ -62,7 +62,7 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
         if (!container) return;
 
         const scene = createScene
-          ? createScene(container, manim)
+          ? await createScene(container, manim)
           : new manim.Scene(container, {
               width: 800,
               height: 450,
