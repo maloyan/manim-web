@@ -68,7 +68,7 @@
     "@playwright/test": "^1.58.1",
     "@types/earcut": "^3.0.0",
     "@types/katex": "^0.16.8",
-    "@types/react": "^19.2.10",
+    "@types/react": "^19.2.13",
     "@types/three": "^0.182.0",
     "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9.39.2",
