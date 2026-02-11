@@ -2,7 +2,7 @@
 
 > **RateFunction** = (`t`) => `number`
 
-Defined in: [rate-functions/index.ts:6](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/rate-functions/index.ts#L6)
+Defined in: [rate-functions/index.ts:6](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/rate-functions/index.ts#L6)
 
 Rate/easing functions for animations.
 These control how the animation progress (0-1) is mapped to visual progress.

@@ -1,6 +1,6 @@
 # Interface: AudioTrack
 
-Defined in: [core/AudioManager.ts:48](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L48)
+Defined in: [core/AudioManager.ts:48](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L48)
 
 Represents a single audio clip scheduled on the timeline.
 
@@ -10,7 +10,7 @@ Represents a single audio clip scheduled on the timeline.
 
 > **buffer**: `AudioBuffer`
 
-Defined in: [core/AudioManager.ts:54](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L54)
+Defined in: [core/AudioManager.ts:54](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L54)
 
 Decoded audio buffer (null until loaded).
 
@@ -20,7 +20,7 @@ Decoded audio buffer (null until loaded).
 
 > **duration**: `number`
 
-Defined in: [core/AudioManager.ts:58](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L58)
+Defined in: [core/AudioManager.ts:58](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L58)
 
 How long the clip plays (seconds). Derived from buffer or explicit option.
 
@@ -30,7 +30,7 @@ How long the clip plays (seconds). Derived from buffer or explicit option.
 
 > **fadeIn**: `number`
 
-Defined in: [core/AudioManager.ts:64](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L64)
+Defined in: [core/AudioManager.ts:64](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L64)
 
 Fade-in duration (seconds).
 
@@ -40,7 +40,7 @@ Fade-in duration (seconds).
 
 > **fadeOut**: `number`
 
-Defined in: [core/AudioManager.ts:66](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L66)
+Defined in: [core/AudioManager.ts:66](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L66)
 
 Fade-out duration (seconds).
 
@@ -50,7 +50,7 @@ Fade-out duration (seconds).
 
 > **gain**: `number`
 
-Defined in: [core/AudioManager.ts:60](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L60)
+Defined in: [core/AudioManager.ts:60](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L60)
 
 Volume gain [0, 1].
 
@@ -60,7 +60,7 @@ Volume gain [0, 1].
 
 > **id**: `number`
 
-Defined in: [core/AudioManager.ts:50](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L50)
+Defined in: [core/AudioManager.ts:50](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L50)
 
 Unique identifier for this track.
 
@@ -70,7 +70,7 @@ Unique identifier for this track.
 
 > **loop**: `boolean`
 
-Defined in: [core/AudioManager.ts:62](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L62)
+Defined in: [core/AudioManager.ts:62](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L62)
 
 Whether the clip loops.
 
@@ -80,7 +80,7 @@ Whether the clip loops.
 
 > **offset**: `number`
 
-Defined in: [core/AudioManager.ts:68](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L68)
+Defined in: [core/AudioManager.ts:68](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L68)
 
 Offset into the buffer (seconds).
 
@@ -90,7 +90,7 @@ Offset into the buffer (seconds).
 
 > **paused**: `boolean`
 
-Defined in: [core/AudioManager.ts:72](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L72)
+Defined in: [core/AudioManager.ts:72](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L72)
 
 Whether this track is paused.
 
@@ -100,7 +100,7 @@ Whether this track is paused.
 
 > **playing**: `boolean`
 
-Defined in: [core/AudioManager.ts:70](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L70)
+Defined in: [core/AudioManager.ts:70](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L70)
 
 Whether this track is currently playing.
 
@@ -110,7 +110,7 @@ Whether this track is currently playing.
 
 > **startTime**: `number`
 
-Defined in: [core/AudioManager.ts:56](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L56)
+Defined in: [core/AudioManager.ts:56](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L56)
 
 When the track starts on the timeline (seconds).
 
@@ -120,6 +120,6 @@ When the track starts on the timeline (seconds).
 
 > **url**: `string`
 
-Defined in: [core/AudioManager.ts:52](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L52)
+Defined in: [core/AudioManager.ts:52](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L52)
 
 URL the audio was loaded from.

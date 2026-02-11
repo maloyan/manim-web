@@ -13,19 +13,29 @@ import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import type { TextGlyphGroup } from '../../mobjects/text/TextGlyphGroup';
 import type { GlyphVMobject } from '../../mobjects/text/GlyphVMobject';
 
+export interface CreateOptions extends AnimationOptions {
+  /** Stagger ratio between submobjects (0 = simultaneous, higher = more stagger). Default: 0 */
+  lagRatio?: number;
+}
+
 export class Create extends Animation {
-  /** Total path length for dash-based reveal */
-  private _totalLength: number = 0;
   /** Whether to use dash-based reveal (needs Line2 children) */
   private _useDashReveal: boolean = false;
   /** Whether the mobject has fill that needs to be animated */
   private _hasFill: boolean = false;
   /** Original fill opacity to restore */
   private _originalFillOpacity: number = 0;
+  /** Lag ratio for staggered submobject animation */
+  private _lagRatio: number = 0;
+  /** Individual Line2 children for per-child stagger */
+  private _line2Children: Line2[] = [];
+  /** Per-Line2 total lengths */
+  private _line2TotalLengths: number[] = [];
 
-  constructor(mobject: Mobject, options: AnimationOptions = {}) {
+  constructor(mobject: Mobject, options: CreateOptions = {}) {
     // Manim default for Create is 2 seconds
     super(mobject, { duration: options.duration ?? 2, ...options });
+    this._lagRatio = options.lagRatio ?? 0;
   }
 
   /**
@@ -62,7 +72,9 @@ export class Create extends Animation {
         vmob.setFillOpacity(0);
       }
 
-      // Set up dashed line for progressive reveal
+      // Collect all Line2 children for per-child stagger support
+      this._line2Children = [];
+      this._line2TotalLengths = [];
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
@@ -70,21 +82,20 @@ export class Create extends Animation {
           material.dashed = true;
           material.dashScale = 1;
 
-          // Calculate total line length from line distances
           child.computeLineDistances();
           const geom = child.geometry as any;
-          // Line2 uses instanceDistanceEnd attribute for cumulative distances
           const distEnd = geom.attributes.instanceDistanceEnd;
+          let totalLen = 1;
           if (distEnd && distEnd.count > 0) {
             const arr = distEnd.data ? distEnd.data.array : distEnd.array;
-            this._totalLength = arr[arr.length - 1] || 1;
-          } else {
-            this._totalLength = 1;
+            totalLen = arr[arr.length - 1] || 1;
           }
+          this._line2Children.push(child);
+          this._line2TotalLengths.push(totalLen);
 
           // Start with nothing visible
           material.dashSize = 0;
-          material.gapSize = this._totalLength;
+          material.gapSize = totalLen;
           material.needsUpdate = true;
         }
       });
@@ -98,57 +109,62 @@ export class Create extends Animation {
    * Interpolate the dash size to progressively reveal the stroke.
    * For filled VMobjects: first half draws border, second half fades in fill.
    */
+  /**
+   * Compute per-child alpha with lag stagger.
+   * With lagRatio=0, all children animate together.
+   * With lagRatio>0, each child starts slightly after the previous.
+   */
+  private _childAlpha(alpha: number, childIndex: number, totalChildren: number): number {
+    if (this._lagRatio <= 0 || totalChildren <= 1) return alpha;
+    const maxStagger = Math.min(this._lagRatio, 0.99);
+    const childStart = (childIndex / Math.max(1, totalChildren - 1)) * maxStagger;
+    const childWindow = 1 - maxStagger;
+    return Math.max(0, Math.min(1, (alpha - childStart) / childWindow));
+  }
+
   interpolate(alpha: number): void {
     if (this._useDashReveal) {
+      const n = this._line2Children.length;
+
       if (this._hasFill) {
         // Two-phase animation: border then fill (like Manim's DrawBorderThenFill)
         const vmob = this.mobject as VMobject;
         if (alpha < 0.5) {
-          // First half: draw border with dash reveal, keep fill hidden
-          // Must set fillOpacity every frame because updaters may reset it
           vmob.setFillOpacity(0);
           const strokeAlpha = alpha * 2;
-          const threeObj = this.mobject.getThreeObject();
-          threeObj.traverse((child) => {
-            if (child instanceof Line2) {
-              const material = child.material as LineMaterial;
-              const visibleLength = strokeAlpha * this._totalLength;
-              material.dashSize = visibleLength;
-              material.gapSize = this._totalLength - visibleLength + 0.0001;
-              material.needsUpdate = true;
-            }
-          });
-        } else {
-          // Second half: fill in, stroke fully visible
-          const fillAlpha = (alpha - 0.5) * 2;
-          vmob.setFillOpacity(this._originalFillOpacity * fillAlpha);
-
-          // Ensure stroke is fully visible (disable dashing)
-          const threeObj = this.mobject.getThreeObject();
-          threeObj.traverse((child) => {
-            if (child instanceof Line2) {
-              const material = child.material as LineMaterial;
-              if (material.dashed) {
-                material.dashSize = this._totalLength;
-                material.gapSize = 0.0001;
-                material.needsUpdate = true;
-              }
-            }
-          });
-        }
-      } else {
-        // No fill: simple stroke reveal
-        const threeObj = this.mobject.getThreeObject();
-        threeObj.traverse((child) => {
-          if (child instanceof Line2) {
-            const material = child.material as LineMaterial;
-            const visibleLength = alpha * this._totalLength;
+          for (let i = 0; i < n; i++) {
+            const cAlpha = this._childAlpha(strokeAlpha, i, n);
+            const totalLen = this._line2TotalLengths[i];
+            const material = this._line2Children[i].material as LineMaterial;
+            const visibleLength = cAlpha * totalLen;
             material.dashSize = visibleLength;
-            // Small epsilon to avoid visual artifacts
-            material.gapSize = this._totalLength - visibleLength + 0.0001;
+            material.gapSize = totalLen - visibleLength + 0.0001;
             material.needsUpdate = true;
           }
-        });
+        } else {
+          const fillAlpha = (alpha - 0.5) * 2;
+          vmob.setFillOpacity(this._originalFillOpacity * fillAlpha);
+          for (let i = 0; i < n; i++) {
+            const totalLen = this._line2TotalLengths[i];
+            const material = this._line2Children[i].material as LineMaterial;
+            if (material.dashed) {
+              material.dashSize = totalLen;
+              material.gapSize = 0.0001;
+              material.needsUpdate = true;
+            }
+          }
+        }
+      } else {
+        // No fill: stroke reveal with per-child stagger
+        for (let i = 0; i < n; i++) {
+          const cAlpha = this._childAlpha(alpha, i, n);
+          const totalLen = this._line2TotalLengths[i];
+          const material = this._line2Children[i].material as LineMaterial;
+          const visibleLength = cAlpha * totalLen;
+          material.dashSize = visibleLength;
+          material.gapSize = totalLen - visibleLength + 0.0001;
+          material.needsUpdate = true;
+        }
       }
     } else {
       this.mobject.setOpacity(alpha);
@@ -166,14 +182,11 @@ export class Create extends Animation {
       }
 
       // Disable dashing, show full stroke
-      const threeObj = this.mobject.getThreeObject();
-      threeObj.traverse((child) => {
-        if (child instanceof Line2) {
-          const material = child.material as LineMaterial;
-          material.dashed = false;
-          material.needsUpdate = true;
-        }
-      });
+      for (const child of this._line2Children) {
+        const material = child.material as LineMaterial;
+        material.dashed = false;
+        material.needsUpdate = true;
+      }
     } else {
       this.mobject.setOpacity(1);
     }
@@ -187,7 +200,7 @@ export class Create extends Animation {
  * @param mobject The mobject to create (should be a VMobject)
  * @param options Animation options (duration, rateFunc)
  */
-export function create(mobject: Mobject, options?: AnimationOptions): Create {
+export function create(mobject: Mobject, options?: CreateOptions): Create {
   return new Create(mobject, options);
 }
 

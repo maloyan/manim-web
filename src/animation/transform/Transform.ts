@@ -72,10 +72,32 @@ export class Transform extends Animation {
     const isTargetVM = this.target instanceof VMobject;
 
     if (isSourceVM && isTargetVM) {
-      // Point-based morphing
       const vmobject = this.mobject as VMobject;
       const vtarget = this.target as VMobject;
 
+      // Text objects extend VMobject but render via canvas texture (no geometry
+      // points).  Fall back to cross-fade when both VMobjects lack points.
+      if (vmobject.getPoints().length === 0 && vtarget.getPoints().length === 0) {
+        this._useCrossFade = true;
+        this._startOpacity = this.mobject.opacity;
+        this._crossFadeTargetOpacity = this.target.opacity;
+
+        // Capture positions for interpolation during cross-fade
+        this._startPosition.copy(vmobject.position);
+        this._targetPosition.copy(vtarget.position);
+
+        const sourceObj = this.mobject.getThreeObject();
+        const targetObj = this.target.getThreeObject();
+        if (sourceObj.parent && !targetObj.parent) {
+          sourceObj.parent.add(targetObj);
+        }
+
+        this.target.setOpacity(0);
+        this.target._syncToThree();
+        return;
+      }
+
+      // Point-based morphing
       const startCopy = vmobject.copy() as VMobject;
       const targetCopy = vtarget.copy() as VMobject;
 
@@ -113,10 +135,14 @@ export class Transform extends Animation {
 
       vmobject.setPoints(this._startPoints);
     } else {
-      // Cross-fade for non-VMobject transforms (e.g., Text → MathTex)
+      // Cross-fade for non-VMobject transforms (e.g., MathTex → MathTex)
       this._useCrossFade = true;
       this._startOpacity = this.mobject.opacity;
       this._crossFadeTargetOpacity = this.target.opacity;
+
+      // Capture positions for interpolation during cross-fade
+      this._startPosition.copy(this.mobject.position);
+      this._targetPosition.copy(this.target.position);
 
       // Add target to the Three.js scene graph so it renders
       const sourceObj = this.mobject.getThreeObject();
@@ -139,6 +165,11 @@ export class Transform extends Animation {
       // Cross-fade: source fades out, target fades in
       this.mobject.setOpacity(this._startOpacity * (1 - alpha));
       this.target.setOpacity(this._crossFadeTargetOpacity * alpha);
+
+      // Move source toward target position for a smooth transition
+      this.mobject.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
+      this.mobject._markDirty();
+
       // Target is not in Scene._mobjects, so sync manually
       this.target._syncToThree();
       return;

@@ -1,6 +1,6 @@
 # Interface: ComplexValueTrackerOptions
 
-Defined in: [mobjects/value-tracker/ValueTracker.ts:230](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/value-tracker/ValueTracker.ts#L230)
+Defined in: [mobjects/value-tracker/ValueTracker.ts:230](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/value-tracker/ValueTracker.ts#L230)
 
 Options for creating a ComplexValueTracker
 
@@ -10,6 +10,6 @@ Options for creating a ComplexValueTracker
 
 > `optional` **value**: [`Complex`](Complex.md)
 
-Defined in: [mobjects/value-tracker/ValueTracker.ts:232](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/value-tracker/ValueTracker.ts#L232)
+Defined in: [mobjects/value-tracker/ValueTracker.ts:232](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/value-tracker/ValueTracker.ts#L232)
 
 Initial complex value

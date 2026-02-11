@@ -1,6 +1,6 @@
 # Class: CameraFrame
 
-Defined in: [core/CameraFrame.ts:44](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L44)
+Defined in: [core/CameraFrame.ts:44](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L44)
 
 CameraFrame wraps a Camera3D and exposes ManimGL-compatible Euler angle
 methods for both immediate use and animation (via the `.animate` proxy).
@@ -11,7 +11,7 @@ methods for both immediate use and animation (via the `.animate` proxy).
 
 > **new CameraFrame**(`aspectRatio`, `options`): `CameraFrame`
 
-Defined in: [core/CameraFrame.ts:60](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L60)
+Defined in: [core/CameraFrame.ts:60](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L60)
 
 #### Parameters
 
@@ -33,7 +33,7 @@ Defined in: [core/CameraFrame.ts:60](https://github.com/maloyan/manim-js/blob/c0
 
 > `readonly` **mobjectStub**: [`Mobject`](Mobject.md)
 
-Defined in: [core/CameraFrame.ts:58](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L58)
+Defined in: [core/CameraFrame.ts:58](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L58)
 
 A lightweight Mobject stub used as the Animation target.
 This lets CameraAnimation integrate with the existing Timeline / Scene.play()
@@ -47,7 +47,7 @@ system which requires every Animation to have a `.mobject`.
 
 > **get** **animate**(): [`CameraAnimateProxy`](CameraAnimateProxy.md)
 
-Defined in: [core/CameraFrame.ts:301](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L301)
+Defined in: [core/CameraFrame.ts:301](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L301)
 
 Returns a proxy that records camera state changes and produces a
 CameraAnimation when called with `scene.play()`.
@@ -69,7 +69,7 @@ Usage (method with options):
 
 > **\_applyState**(`state`): `void`
 
-Defined in: [core/CameraFrame.ts:275](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L275)
+Defined in: [core/CameraFrame.ts:275](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L275)
 
 Apply a full camera state.
 
@@ -89,7 +89,7 @@ Apply a full camera state.
 
 > **\_snapshot**(): [`CameraFrameState`](../interfaces/CameraFrameState.md)
 
-Defined in: [core/CameraFrame.ts:263](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L263)
+Defined in: [core/CameraFrame.ts:263](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L263)
 
 Capture the current camera state.
 
@@ -103,7 +103,7 @@ Capture the current camera state.
 
 > **animateTo**(`options`): [`CameraAnimateProxy`](CameraAnimateProxy.md)
 
-Defined in: [core/CameraFrame.ts:308](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L308)
+Defined in: [core/CameraFrame.ts:308](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L308)
 
 Like `animate`, but accepts AnimationOptions (duration, rateFunc).
 
@@ -123,7 +123,7 @@ Like `animate`, but accepts AnimationOptions (duration, rateFunc).
 
 > **getCamera3D**(): [`Camera3D`](Camera3D.md)
 
-Defined in: [core/CameraFrame.ts:89](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L89)
+Defined in: [core/CameraFrame.ts:89](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L89)
 
 Get the underlying Camera3D instance.
 
@@ -137,7 +137,7 @@ Get the underlying Camera3D instance.
 
 > **getCenter**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/CameraFrame.ts:205](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L205)
+Defined in: [core/CameraFrame.ts:205](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L205)
 
 Get the look-at center.
 
@@ -151,7 +151,7 @@ Get the look-at center.
 
 > **getDistance**(): `number`
 
-Defined in: [core/CameraFrame.ts:181](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L181)
+Defined in: [core/CameraFrame.ts:181](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L181)
 
 Get the distance from the look-at target.
 
@@ -165,7 +165,7 @@ Get the distance from the look-at target.
 
 > **getEulerAngles**(): \[`number`, `number`, `number`\]
 
-Defined in: [core/CameraFrame.ts:103](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L103)
+Defined in: [core/CameraFrame.ts:103](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L103)
 
 Get the current Euler angles [theta, phi, gamma].
 
@@ -179,7 +179,7 @@ Get the current Euler angles [theta, phi, gamma].
 
 > **getFieldOfView**(): `number`
 
-Defined in: [core/CameraFrame.ts:193](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L193)
+Defined in: [core/CameraFrame.ts:193](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L193)
 
 Get the current field of view in degrees.
 
@@ -193,7 +193,7 @@ Get the current field of view in degrees.
 
 > **getGamma**(): `number`
 
-Defined in: [core/CameraFrame.ts:158](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L158)
+Defined in: [core/CameraFrame.ts:158](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L158)
 
 Get the current gamma (roll) angle.
 
@@ -207,7 +207,7 @@ Get the current gamma (roll) angle.
 
 > **getPhi**(): `number`
 
-Defined in: [core/CameraFrame.ts:139](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L139)
+Defined in: [core/CameraFrame.ts:139](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L139)
 
 Get the current phi (polar) angle.
 
@@ -221,7 +221,7 @@ Get the current phi (polar) angle.
 
 > **getTheta**(): `number`
 
-Defined in: [core/CameraFrame.ts:120](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L120)
+Defined in: [core/CameraFrame.ts:120](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L120)
 
 Get the current theta (azimuthal) angle.
 
@@ -235,7 +235,7 @@ Get the current theta (azimuthal) angle.
 
 > **getThreeCamera**(): `PerspectiveCamera`
 
-Defined in: [core/CameraFrame.ts:94](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L94)
+Defined in: [core/CameraFrame.ts:94](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L94)
 
 Get the underlying Three.js PerspectiveCamera.
 
@@ -249,7 +249,7 @@ Get the underlying Three.js PerspectiveCamera.
 
 > **incrementGamma**(`delta`): `this`
 
-Defined in: [core/CameraFrame.ts:170](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L170)
+Defined in: [core/CameraFrame.ts:170](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L170)
 
 Increment the gamma (roll) angle by delta.
 
@@ -269,7 +269,7 @@ Increment the gamma (roll) angle by delta.
 
 > **incrementPhi**(`delta`): `this`
 
-Defined in: [core/CameraFrame.ts:151](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L151)
+Defined in: [core/CameraFrame.ts:151](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L151)
 
 Increment the phi (polar) angle by delta.
 
@@ -289,7 +289,7 @@ Increment the phi (polar) angle by delta.
 
 > **incrementTheta**(`delta`): `this`
 
-Defined in: [core/CameraFrame.ts:132](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L132)
+Defined in: [core/CameraFrame.ts:132](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L132)
 
 Increment the theta (azimuthal) angle by delta.
 
@@ -309,7 +309,7 @@ Increment the theta (azimuthal) angle by delta.
 
 > **moveTo**(`point`): `this`
 
-Defined in: [core/CameraFrame.ts:210](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L210)
+Defined in: [core/CameraFrame.ts:210](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L210)
 
 Move the look-at center to a point. Camera position updates accordingly.
 
@@ -329,7 +329,7 @@ Move the look-at center to a point. Camera position updates accordingly.
 
 > **setAspectRatio**(`ratio`): `this`
 
-Defined in: [core/CameraFrame.ts:217](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L217)
+Defined in: [core/CameraFrame.ts:217](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L217)
 
 Set the aspect ratio of the underlying camera.
 
@@ -349,7 +349,7 @@ Set the aspect ratio of the underlying camera.
 
 > **setDistance**(`value`): `this`
 
-Defined in: [core/CameraFrame.ts:186](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L186)
+Defined in: [core/CameraFrame.ts:186](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L186)
 
 Set the distance from the look-at target.
 
@@ -369,7 +369,7 @@ Set the distance from the look-at target.
 
 > **setEulerAngles**(`opts`): `this`
 
-Defined in: [core/CameraFrame.ts:111](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L111)
+Defined in: [core/CameraFrame.ts:111](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L111)
 
 Set Euler angles (absolute). Any parameter left undefined is unchanged.
 
@@ -401,7 +401,7 @@ this for chaining
 
 > **setFieldOfView**(`fov`): `this`
 
-Defined in: [core/CameraFrame.ts:198](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L198)
+Defined in: [core/CameraFrame.ts:198](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L198)
 
 Set the field of view in degrees.
 
@@ -421,7 +421,7 @@ Set the field of view in degrees.
 
 > **setGamma**(`value`): `this`
 
-Defined in: [core/CameraFrame.ts:163](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L163)
+Defined in: [core/CameraFrame.ts:163](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L163)
 
 Set the gamma (roll) angle absolutely.
 
@@ -441,7 +441,7 @@ Set the gamma (roll) angle absolutely.
 
 > **setPhi**(`value`): `this`
 
-Defined in: [core/CameraFrame.ts:144](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L144)
+Defined in: [core/CameraFrame.ts:144](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L144)
 
 Set the phi (polar) angle absolutely.
 
@@ -461,7 +461,7 @@ Set the phi (polar) angle absolutely.
 
 > **setTheta**(`value`): `this`
 
-Defined in: [core/CameraFrame.ts:125](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L125)
+Defined in: [core/CameraFrame.ts:125](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/CameraFrame.ts#L125)
 
 Set the theta (azimuthal) angle absolutely.
 

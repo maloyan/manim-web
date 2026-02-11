@@ -2,7 +2,7 @@
 
 > **texturedSphere**(`options`): [`TexturedSurface`](../classes/TexturedSurface.md)
 
-Defined in: [mobjects/three-d/TexturedSurface.ts:563](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/TexturedSurface.ts#L563)
+Defined in: [mobjects/three-d/TexturedSurface.ts:563](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/TexturedSurface.ts#L563)
 
 Create a textured sphere -- a common use case for Earth, Moon, etc.
 

@@ -2,7 +2,7 @@
 
 > **flowPoint**(`vectorField`, `start`, `time`, `numSteps`): \[`number`, `number`, `number`\]
 
-Defined in: [utils/ode.ts:192](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/ode.ts#L192)
+Defined in: [utils/ode.ts:192](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/ode.ts#L192)
 
 Flow a 3D point along an autonomous vector field for a given duration.
 

@@ -1,6 +1,6 @@
 # Class: Camera2D
 
-Defined in: [core/Camera.ts:186](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L186)
+Defined in: [core/Camera.ts:186](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Camera.ts#L186)
 
 2D camera for manimweb scenes.
 Wraps Three.js OrthographicCamera with Manim-style frame dimensions.
@@ -11,7 +11,7 @@ Wraps Three.js OrthographicCamera with Manim-style frame dimensions.
 
 > **new Camera2D**(`options`): `Camera2D`
 
-Defined in: [core/Camera.ts:196](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L196)
+Defined in: [core/Camera.ts:196](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Camera.ts#L196)
 
 Create a new 2D camera.
 
@@ -35,7 +35,7 @@ Camera configuration options
 
 > **get** **frame**(): [`Camera2DFrame`](Camera2DFrame.md)
 
-Defined in: [core/Camera.ts:289](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L289)
+Defined in: [core/Camera.ts:289](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Camera.ts#L289)
 
 Lazy-created Camera2DFrame for Manim-style camera.frame API.
 The frame is a VMobject whose position and scale drive the camera,
@@ -53,7 +53,7 @@ enabling animations like Restore, MoveToTarget, and updaters.
 
 > **get** **frameHeight**(): `number`
 
-Defined in: [core/Camera.ts:237](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L237)
+Defined in: [core/Camera.ts:237](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Camera.ts#L237)
 
 Get the frame height in world units.
 
@@ -65,7 +65,7 @@ Get the frame height in world units.
 
 > **set** **frameHeight**(`height`): `void`
 
-Defined in: [core/Camera.ts:244](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L244)
+Defined in: [core/Camera.ts:244](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Camera.ts#L244)
 
 Set the frame height in world units.
 
@@ -87,7 +87,7 @@ Set the frame height in world units.
 
 > **get** **frameWidth**(): `number`
 
-Defined in: [core/Camera.ts:222](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L222)
+Defined in: [core/Camera.ts:222](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Camera.ts#L222)
 
 Get the frame width in world units.
 
@@ -99,7 +99,7 @@ Get the frame width in world units.
 
 > **set** **frameWidth**(`width`): `void`
 
-Defined in: [core/Camera.ts:229](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L229)
+Defined in: [core/Camera.ts:229](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Camera.ts#L229)
 
 Set the frame width in world units.
 
@@ -121,7 +121,7 @@ Set the frame width in world units.
 
 > **get** **position**(): `Vector3`
 
-Defined in: [core/Camera.ts:252](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L252)
+Defined in: [core/Camera.ts:252](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Camera.ts#L252)
 
 Get the camera position.
 
@@ -135,7 +135,7 @@ Get the camera position.
 
 > **getCamera**(): `OrthographicCamera`
 
-Defined in: [core/Camera.ts:269](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L269)
+Defined in: [core/Camera.ts:269](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Camera.ts#L269)
 
 Get the underlying Three.js OrthographicCamera.
 
@@ -151,7 +151,7 @@ The OrthographicCamera instance
 
 > **moveTo**(`point`): `void`
 
-Defined in: [core/Camera.ts:260](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L260)
+Defined in: [core/Camera.ts:260](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Camera.ts#L260)
 
 Move the camera to a specific point.
 
@@ -173,7 +173,7 @@ Target position [x, y, z]
 
 > **setAspectRatio**(`aspectRatio`): `void`
 
-Defined in: [core/Camera.ts:278](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L278)
+Defined in: [core/Camera.ts:278](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Camera.ts#L278)
 
 Update the frame dimensions to match an aspect ratio.
 Useful for responsive layouts.
@@ -196,7 +196,7 @@ Width / height ratio
 
 > **updateFrame**(`dt`): `void`
 
-Defined in: [core/Camera.ts:301](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L301)
+Defined in: [core/Camera.ts:301](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Camera.ts#L301)
 
 Run updaters on the camera frame (if it exists).
 Called by Scene after the timeline update so camera updaters

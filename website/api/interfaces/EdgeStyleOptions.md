@@ -1,6 +1,6 @@
 # Interface: EdgeStyleOptions
 
-Defined in: [mobjects/graph/index.ts:64](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graph/index.ts#L64)
+Defined in: [mobjects/graph/index.ts:64](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graph/index.ts#L64)
 
 Options for edge styling
 
@@ -10,7 +10,7 @@ Options for edge styling
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/graph/index.ts:66](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graph/index.ts#L66)
+Defined in: [mobjects/graph/index.ts:66](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graph/index.ts#L66)
 
 Color of the edge. Default: BLUE
 
@@ -20,7 +20,7 @@ Color of the edge. Default: BLUE
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/graph/index.ts:68](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graph/index.ts#L68)
+Defined in: [mobjects/graph/index.ts:68](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graph/index.ts#L68)
 
 Stroke width of the edge. Default: 4
 
@@ -30,7 +30,7 @@ Stroke width of the edge. Default: 4
 
 > `optional` **tipLength**: `number`
 
-Defined in: [mobjects/graph/index.ts:70](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graph/index.ts#L70)
+Defined in: [mobjects/graph/index.ts:70](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graph/index.ts#L70)
 
 For directed graphs, tip length. Default: 0.2
 
@@ -40,6 +40,6 @@ For directed graphs, tip length. Default: 0.2
 
 > `optional` **tipWidth**: `number`
 
-Defined in: [mobjects/graph/index.ts:72](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graph/index.ts#L72)
+Defined in: [mobjects/graph/index.ts:72](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graph/index.ts#L72)
 
 For directed graphs, tip width. Default: 0.12

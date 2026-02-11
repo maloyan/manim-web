@@ -1,6 +1,6 @@
 # Interface: TextGlyphGroupOptions
 
-Defined in: [mobjects/text/TextGlyphGroup.ts:18](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/TextGlyphGroup.ts#L18)
+Defined in: [mobjects/text/TextGlyphGroup.ts:18](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/TextGlyphGroup.ts#L18)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [mobjects/text/TextGlyphGroup.ts:18](https://github.com/maloyan/mani
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/text/TextGlyphGroup.ts:26](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/TextGlyphGroup.ts#L26)
+Defined in: [mobjects/text/TextGlyphGroup.ts:26](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/TextGlyphGroup.ts#L26)
 
 Stroke color (default: '#ffffff')
 
@@ -18,7 +18,7 @@ Stroke color (default: '#ffffff')
 
 > `optional` **fontSize**: `number`
 
-Defined in: [mobjects/text/TextGlyphGroup.ts:24](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/TextGlyphGroup.ts#L24)
+Defined in: [mobjects/text/TextGlyphGroup.ts:24](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/TextGlyphGroup.ts#L24)
 
 Font size in pixels (default: 48)
 
@@ -28,7 +28,7 @@ Font size in pixels (default: 48)
 
 > **fontUrl**: `string`
 
-Defined in: [mobjects/text/TextGlyphGroup.ts:22](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/TextGlyphGroup.ts#L22)
+Defined in: [mobjects/text/TextGlyphGroup.ts:22](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/TextGlyphGroup.ts#L22)
 
 URL to the font file (OTF/TTF)
 
@@ -38,7 +38,7 @@ URL to the font file (OTF/TTF)
 
 > `optional` **skeletonOptions**: [`SkeletonizeOptions`](SkeletonizeOptions.md)
 
-Defined in: [mobjects/text/TextGlyphGroup.ts:35](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/TextGlyphGroup.ts#L35)
+Defined in: [mobjects/text/TextGlyphGroup.ts:35](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/TextGlyphGroup.ts#L35)
 
 Options forwarded to the skeletonization algorithm.
 
@@ -48,7 +48,7 @@ Options forwarded to the skeletonization algorithm.
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/text/TextGlyphGroup.ts:28](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/TextGlyphGroup.ts#L28)
+Defined in: [mobjects/text/TextGlyphGroup.ts:28](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/TextGlyphGroup.ts#L28)
 
 Stroke width for glyph outlines (default: 2)
 
@@ -58,7 +58,7 @@ Stroke width for glyph outlines (default: 2)
 
 > **text**: `string`
 
-Defined in: [mobjects/text/TextGlyphGroup.ts:20](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/TextGlyphGroup.ts#L20)
+Defined in: [mobjects/text/TextGlyphGroup.ts:20](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/TextGlyphGroup.ts#L20)
 
 The text string to render
 
@@ -68,7 +68,7 @@ The text string to render
 
 > `optional` **useSkeletonStroke**: `boolean`
 
-Defined in: [mobjects/text/TextGlyphGroup.ts:33](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/TextGlyphGroup.ts#L33)
+Defined in: [mobjects/text/TextGlyphGroup.ts:33](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/TextGlyphGroup.ts#L33)
 
 When true, each GlyphVMobject computes its skeleton (medial axis)
 so the Write animation can draw along the center-line. Default: false.

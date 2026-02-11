@@ -2,7 +2,7 @@
 
 > **svgToVMobjects**(`svgElement`, `options`): [`VGroup`](../classes/VGroup.md)
 
-Defined in: [mobjects/text/svgPathParser.ts:407](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/svgPathParser.ts#L407)
+Defined in: [mobjects/text/svgPathParser.ts:407](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/svgPathParser.ts#L407)
 
 Walk an SVG element tree (as produced by MathJax) and convert every
 `<path>` element into a VMobject.  Returns a VGroup containing one

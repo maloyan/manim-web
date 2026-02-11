@@ -2,7 +2,7 @@
 
 > **rotate**(`mobject`, `angle`, `options?`): [`Rotate`](../classes/Rotate.md)
 
-Defined in: [animation/movement/Rotate.ts:123](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Rotate.ts#L123)
+Defined in: [animation/movement/Rotate.ts:123](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/movement/Rotate.ts#L123)
 
 Create a Rotate animation for a mobject.
 

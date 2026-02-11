@@ -1,6 +1,6 @@
 # Interface: PointMobjectOptions
 
-Defined in: [mobjects/point/index.ts:565](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/point/index.ts#L565)
+Defined in: [mobjects/point/index.ts:565](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/point/index.ts#L565)
 
 Options for creating a PointMobject
 
@@ -10,7 +10,7 @@ Options for creating a PointMobject
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/point/index.ts:569](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/point/index.ts#L569)
+Defined in: [mobjects/point/index.ts:569](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/point/index.ts#L569)
 
 Color as CSS color string. Default: white (#FFFFFF)
 
@@ -20,7 +20,7 @@ Color as CSS color string. Default: white (#FFFFFF)
 
 > `optional` **opacity**: `number`
 
-Defined in: [mobjects/point/index.ts:571](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/point/index.ts#L571)
+Defined in: [mobjects/point/index.ts:571](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/point/index.ts#L571)
 
 Opacity from 0 to 1. Default: 1
 
@@ -30,7 +30,7 @@ Opacity from 0 to 1. Default: 1
 
 > `optional` **position**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/point/index.ts:567](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/point/index.ts#L567)
+Defined in: [mobjects/point/index.ts:567](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/point/index.ts#L567)
 
 Position [x, y, z]. Default: [0, 0, 0]
 
@@ -40,6 +40,6 @@ Position [x, y, z]. Default: [0, 0, 0]
 
 > `optional` **size**: `number`
 
-Defined in: [mobjects/point/index.ts:573](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/point/index.ts#L573)
+Defined in: [mobjects/point/index.ts:573](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/point/index.ts#L573)
 
 Size in pixels. Default: 8

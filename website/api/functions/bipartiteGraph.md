@@ -2,7 +2,7 @@
 
 > **bipartiteGraph**(`n1`, `n2`, `edges?`, `options?`): [`Graph`](../classes/Graph.md)
 
-Defined in: [mobjects/graph/index.ts:1639](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graph/index.ts#L1639)
+Defined in: [mobjects/graph/index.ts:1639](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graph/index.ts#L1639)
 
 Create a bipartite graph
 

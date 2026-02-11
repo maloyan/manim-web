@@ -2,7 +2,7 @@
 
 > **broadcast**(`mobject`, `options?`): [`Broadcast`](../classes/Broadcast.md)
 
-Defined in: [animation/utility/index.ts:474](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/utility/index.ts#L474)
+Defined in: [animation/utility/index.ts:474](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/utility/index.ts#L474)
 
 Create a Broadcast animation for a mobject.
 Creates expanding rings that radiate from the mobject's center.

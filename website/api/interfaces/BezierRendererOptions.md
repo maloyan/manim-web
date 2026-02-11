@@ -1,6 +1,6 @@
 # Interface: BezierRendererOptions
 
-Defined in: [rendering/BezierRenderer.ts:34](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/rendering/BezierRenderer.ts#L34)
+Defined in: [rendering/BezierRenderer.ts:34](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/rendering/BezierRenderer.ts#L34)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [rendering/BezierRenderer.ts:34](https://github.com/maloyan/manim-js
 
 > `optional` **materialOptions**: [`BezierShaderMaterialOptions`](BezierShaderMaterialOptions.md)
 
-Defined in: [rendering/BezierRenderer.ts:40](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/rendering/BezierRenderer.ts#L40)
+Defined in: [rendering/BezierRenderer.ts:40](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/rendering/BezierRenderer.ts#L40)
 
 Additional material options
 
@@ -18,7 +18,7 @@ Additional material options
 
 > `optional` **pixelRatio**: `number`
 
-Defined in: [rendering/BezierRenderer.ts:38](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/rendering/BezierRenderer.ts#L38)
+Defined in: [rendering/BezierRenderer.ts:38](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/rendering/BezierRenderer.ts#L38)
 
 Device pixel ratio. Default: 1
 
@@ -28,6 +28,6 @@ Device pixel ratio. Default: 1
 
 > `optional` **resolution**: \[`number`, `number`\]
 
-Defined in: [rendering/BezierRenderer.ts:36](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/rendering/BezierRenderer.ts#L36)
+Defined in: [rendering/BezierRenderer.ts:36](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/rendering/BezierRenderer.ts#L36)
 
 Renderer resolution [width, height] in CSS pixels. Default: [800, 450]

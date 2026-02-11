@@ -2,7 +2,7 @@
 
 > **shift**(`mobject`, `direction`, `options?`): [`Shift`](../classes/Shift.md)
 
-Defined in: [animation/movement/Shift.ts:74](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Shift.ts#L74)
+Defined in: [animation/movement/Shift.ts:74](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/movement/Shift.ts#L74)
 
 Create a Shift animation for a mobject.
 

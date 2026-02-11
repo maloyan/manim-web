@@ -1,6 +1,6 @@
 # Interface: AddSoundOptions
 
-Defined in: [core/AudioManager.ts:28](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L28)
+Defined in: [core/AudioManager.ts:28](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L28)
 
 Options when adding a sound to the audio manager.
 
@@ -10,7 +10,7 @@ Options when adding a sound to the audio manager.
 
 > `optional` **duration**: `number`
 
-Defined in: [core/AudioManager.ts:42](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L42)
+Defined in: [core/AudioManager.ts:42](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L42)
 
 Duration to play (seconds). Defaults to the full buffer length.
 
@@ -20,7 +20,7 @@ Duration to play (seconds). Defaults to the full buffer length.
 
 > `optional` **fadeIn**: `number`
 
-Defined in: [core/AudioManager.ts:36](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L36)
+Defined in: [core/AudioManager.ts:36](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L36)
 
 Fade-in duration in seconds. Defaults to 0.
 
@@ -30,7 +30,7 @@ Fade-in duration in seconds. Defaults to 0.
 
 > `optional` **fadeOut**: `number`
 
-Defined in: [core/AudioManager.ts:38](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L38)
+Defined in: [core/AudioManager.ts:38](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L38)
 
 Fade-out duration in seconds. Defaults to 0.
 
@@ -40,7 +40,7 @@ Fade-out duration in seconds. Defaults to 0.
 
 > `optional` **gain**: `number`
 
-Defined in: [core/AudioManager.ts:32](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L32)
+Defined in: [core/AudioManager.ts:32](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L32)
 
 Volume gain (0 = silent, 1 = full). Defaults to 1.
 
@@ -50,7 +50,7 @@ Volume gain (0 = silent, 1 = full). Defaults to 1.
 
 > `optional` **loop**: `boolean`
 
-Defined in: [core/AudioManager.ts:34](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L34)
+Defined in: [core/AudioManager.ts:34](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L34)
 
 Whether to loop the clip. Defaults to false.
 
@@ -60,7 +60,7 @@ Whether to loop the clip. Defaults to false.
 
 > `optional` **offset**: `number`
 
-Defined in: [core/AudioManager.ts:40](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L40)
+Defined in: [core/AudioManager.ts:40](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L40)
 
 Offset into the audio buffer to start playback from (seconds). Defaults to 0.
 
@@ -70,6 +70,6 @@ Offset into the audio buffer to start playback from (seconds). Defaults to 0.
 
 > `optional` **time**: `number`
 
-Defined in: [core/AudioManager.ts:30](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/AudioManager.ts#L30)
+Defined in: [core/AudioManager.ts:30](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/AudioManager.ts#L30)
 
 Absolute time (in seconds) when the sound should start playing. Defaults to 0.

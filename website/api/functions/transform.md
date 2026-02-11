@@ -2,7 +2,7 @@
 
 > **transform**(`mobject`, `target`, `options?`): [`Transform`](../classes/Transform.md)
 
-Defined in: [animation/transform/Transform.ts:254](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/transform/Transform.ts#L254)
+Defined in: [animation/transform/Transform.ts:285](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/transform/Transform.ts#L285)
 
 Create a Transform animation that morphs one mobject into another.
 

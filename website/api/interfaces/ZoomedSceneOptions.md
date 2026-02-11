@@ -1,6 +1,6 @@
 # Interface: ZoomedSceneOptions
 
-Defined in: [core/SceneExtensions.ts:523](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L523)
+Defined in: [core/SceneExtensions.ts:729](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L729)
 
 Options for configuring a ZoomedScene.
 
@@ -14,7 +14,7 @@ Options for configuring a ZoomedScene.
 
 > `optional` **autoRender**: `boolean`
 
-Defined in: [core/Scene.ts:32](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L32)
+Defined in: [core/Scene.ts:32](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L32)
 
 Enable auto-render on add/remove. Defaults to true.
 
@@ -28,7 +28,7 @@ Enable auto-render on add/remove. Defaults to true.
 
 > `optional` **backgroundColor**: `string`
 
-Defined in: [core/Scene.ts:22](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L22)
+Defined in: [core/Scene.ts:22](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L22)
 
 Background color as CSS color string. Defaults to Manim's dark gray (#1C1C1C).
 
@@ -42,7 +42,7 @@ Background color as CSS color string. Defaults to Manim's dark gray (#1C1C1C).
 
 > `optional` **cameraFrameColor**: `string`
 
-Defined in: [core/SceneExtensions.ts:535](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L535)
+Defined in: [core/SceneExtensions.ts:741](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L741)
 
 Color of the camera frame border. Defaults to '#FFFF00'.
 
@@ -52,7 +52,7 @@ Color of the camera frame border. Defaults to '#FFFF00'.
 
 > `optional` **cameraFrameHeight**: `number`
 
-Defined in: [core/SceneExtensions.ts:527](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L527)
+Defined in: [core/SceneExtensions.ts:733](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L733)
 
 Height of the zoom camera frame in world units. Defaults to 3.
 
@@ -62,7 +62,7 @@ Height of the zoom camera frame in world units. Defaults to 3.
 
 > `optional` **cameraFrameStrokeWidth**: `number`
 
-Defined in: [core/SceneExtensions.ts:539](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L539)
+Defined in: [core/SceneExtensions.ts:745](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L745)
 
 Stroke width of camera frame. Defaults to 3.
 
@@ -72,7 +72,7 @@ Stroke width of camera frame. Defaults to 3.
 
 > `optional` **cameraFrameWidth**: `number`
 
-Defined in: [core/SceneExtensions.ts:525](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L525)
+Defined in: [core/SceneExtensions.ts:731](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L731)
 
 Width of the zoom camera frame in world units. Defaults to 3.
 
@@ -82,7 +82,7 @@ Width of the zoom camera frame in world units. Defaults to 3.
 
 > `optional` **displayCorner**: \[`number`, `number`, `number`\]
 
-Defined in: [core/SceneExtensions.ts:545](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L545)
+Defined in: [core/SceneExtensions.ts:751](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L751)
 
 Corner direction for zoomed display [x, y, z]. Defaults to UP+RIGHT [1,1,0].
 
@@ -92,7 +92,7 @@ Corner direction for zoomed display [x, y, z]. Defaults to UP+RIGHT [1,1,0].
 
 > `optional` **displayCornerBuff**: `number`
 
-Defined in: [core/SceneExtensions.ts:547](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L547)
+Defined in: [core/SceneExtensions.ts:753](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L753)
 
 Buffer from corner edges. Defaults to 0.5.
 
@@ -102,7 +102,7 @@ Buffer from corner edges. Defaults to 0.5.
 
 > `optional` **displayFrameColor**: `string`
 
-Defined in: [core/SceneExtensions.ts:537](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L537)
+Defined in: [core/SceneExtensions.ts:743](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L743)
 
 Color of the display frame border. Defaults to '#FFFF00'.
 
@@ -112,7 +112,7 @@ Color of the display frame border. Defaults to '#FFFF00'.
 
 > `optional` **displayFrameStrokeWidth**: `number`
 
-Defined in: [core/SceneExtensions.ts:541](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L541)
+Defined in: [core/SceneExtensions.ts:747](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L747)
 
 Stroke width of display frame. Defaults to 3.
 
@@ -122,7 +122,7 @@ Stroke width of display frame. Defaults to 3.
 
 > `optional` **displayHeight**: `number`
 
-Defined in: [core/SceneExtensions.ts:533](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L533)
+Defined in: [core/SceneExtensions.ts:739](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L739)
 
 Height of the zoomed display in world units. Defaults to 3.
 
@@ -132,7 +132,7 @@ Height of the zoomed display in world units. Defaults to 3.
 
 > `optional` **displayWidth**: `number`
 
-Defined in: [core/SceneExtensions.ts:531](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L531)
+Defined in: [core/SceneExtensions.ts:737](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L737)
 
 Width of the zoomed display in world units. Defaults to 3.
 
@@ -142,7 +142,7 @@ Width of the zoomed display in world units. Defaults to 3.
 
 > `optional` **frameHeight**: `number`
 
-Defined in: [core/Scene.ts:26](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L26)
+Defined in: [core/Scene.ts:26](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L26)
 
 Frame height in world units. Defaults to 8 (Manim standard).
 
@@ -156,7 +156,7 @@ Frame height in world units. Defaults to 8 (Manim standard).
 
 > `optional` **frameWidth**: `number`
 
-Defined in: [core/Scene.ts:24](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L24)
+Defined in: [core/Scene.ts:24](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L24)
 
 Frame width in world units. Defaults to 14 (Manim standard).
 
@@ -170,7 +170,7 @@ Frame width in world units. Defaults to 14 (Manim standard).
 
 > `optional` **frustumCulling**: `boolean`
 
-Defined in: [core/Scene.ts:30](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L30)
+Defined in: [core/Scene.ts:30](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L30)
 
 Enable frustum culling optimization. Defaults to true.
 
@@ -184,7 +184,7 @@ Enable frustum culling optimization. Defaults to true.
 
 > `optional` **height**: `number`
 
-Defined in: [core/Scene.ts:20](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L20)
+Defined in: [core/Scene.ts:20](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L20)
 
 Canvas height in pixels. Defaults to container height.
 
@@ -198,7 +198,7 @@ Canvas height in pixels. Defaults to container height.
 
 > `optional` **renderTargetSize**: `number`
 
-Defined in: [core/SceneExtensions.ts:543](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L543)
+Defined in: [core/SceneExtensions.ts:749](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L749)
 
 Size of render target in pixels. Defaults to 512.
 
@@ -208,7 +208,7 @@ Size of render target in pixels. Defaults to 512.
 
 > `optional` **targetFps**: `number`
 
-Defined in: [core/Scene.ts:28](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L28)
+Defined in: [core/Scene.ts:28](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L28)
 
 Target frame rate in fps. Defaults to 60.
 
@@ -222,7 +222,7 @@ Target frame rate in fps. Defaults to 60.
 
 > `optional` **width**: `number`
 
-Defined in: [core/Scene.ts:18](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L18)
+Defined in: [core/Scene.ts:18](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L18)
 
 Canvas width in pixels. Defaults to container width.
 
@@ -236,6 +236,6 @@ Canvas width in pixels. Defaults to container width.
 
 > `optional` **zoomFactor**: `number`
 
-Defined in: [core/SceneExtensions.ts:529](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L529)
+Defined in: [core/SceneExtensions.ts:735](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L735)
 
 Default zoom factor (frame.width / display.width). Defaults to 0.3.

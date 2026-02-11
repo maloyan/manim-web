@@ -2,7 +2,7 @@
 
 > **addTextLetterByLetter**(`mobject`, `options?`): [`AddTextLetterByLetter`](../classes/AddTextLetterByLetter.md)
 
-Defined in: [animation/creation/Create.ts:1019](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/creation/Create.ts#L1019)
+Defined in: [animation/creation/Create.ts:1032](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/creation/Create.ts#L1032)
 
 Create an AddTextLetterByLetter animation.
 Types out text letter by letter (typewriter effect).

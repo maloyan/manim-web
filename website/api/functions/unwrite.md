@@ -2,7 +2,7 @@
 
 > **unwrite**(`mobject`, `options?`): [`Unwrite`](../classes/Unwrite.md)
 
-Defined in: [animation/creation/Create.ts:950](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/creation/Create.ts#L950)
+Defined in: [animation/creation/Create.ts:963](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/creation/Create.ts#L963)
 
 Create an Unwrite animation for a mobject.
 Progressively erases text with a pen-stroke effect.

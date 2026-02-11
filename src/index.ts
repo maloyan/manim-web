@@ -406,6 +406,7 @@ export {
   addTextLetterByLetter,
   RemoveTextLetterByLetter,
   removeTextLetterByLetter,
+  type CreateOptions,
   type WriteOptions,
   type AddTextLetterByLetterOptions,
 } from './animation/creation';

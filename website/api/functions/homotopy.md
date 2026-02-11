@@ -2,7 +2,7 @@
 
 > **homotopy**(`mobject`, `homotopyFunc`, `options?`): [`Homotopy`](../classes/Homotopy.md)
 
-Defined in: [animation/movement/Homotopy.ts:496](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Homotopy.ts#L496)
+Defined in: [animation/movement/Homotopy.ts:496](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/movement/Homotopy.ts#L496)
 
 Create a Homotopy animation for a mobject.
 

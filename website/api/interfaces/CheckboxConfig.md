@@ -1,6 +1,6 @@
 # Interface: CheckboxConfig
 
-Defined in: [interaction/Controls.ts:61](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Controls.ts#L61)
+Defined in: [interaction/Controls.ts:61](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/interaction/Controls.ts#L61)
 
 Configuration for a checkbox control.
 
@@ -10,7 +10,7 @@ Configuration for a checkbox control.
 
 > `optional` **checked**: `boolean`
 
-Defined in: [interaction/Controls.ts:65](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Controls.ts#L65)
+Defined in: [interaction/Controls.ts:65](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/interaction/Controls.ts#L65)
 
 Initial checked state. Defaults to false.
 
@@ -20,7 +20,7 @@ Initial checked state. Defaults to false.
 
 > **label**: `string`
 
-Defined in: [interaction/Controls.ts:63](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Controls.ts#L63)
+Defined in: [interaction/Controls.ts:63](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/interaction/Controls.ts#L63)
 
 Label text displayed next to the checkbox.
 
@@ -30,7 +30,7 @@ Label text displayed next to the checkbox.
 
 > **onChange**: (`checked`) => `void`
 
-Defined in: [interaction/Controls.ts:67](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Controls.ts#L67)
+Defined in: [interaction/Controls.ts:67](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/interaction/Controls.ts#L67)
 
 Callback when checked state changes.
 

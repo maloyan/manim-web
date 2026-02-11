@@ -2,7 +2,7 @@
 
 > **moveAlongPath**(`mobject`, `path`, `options?`): [`MoveAlongPath`](../classes/MoveAlongPath.md)
 
-Defined in: [animation/movement/MoveAlongPath.ts:202](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/MoveAlongPath.ts#L202)
+Defined in: [animation/movement/MoveAlongPath.ts:202](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/movement/MoveAlongPath.ts#L202)
 
 Create a MoveAlongPath animation for a mobject.
 

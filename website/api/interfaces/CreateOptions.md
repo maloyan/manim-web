@@ -1,22 +1,12 @@
-# Interface: ShowPassingFlashOptions
+# Interface: CreateOptions
 
-Defined in: [animation/indication/ShowPassingFlash.ts:19](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/indication/ShowPassingFlash.ts#L19)
+Defined in: [animation/creation/Create.ts:16](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/creation/Create.ts#L16)
 
 ## Extends
 
 - [`AnimationOptions`](AnimationOptions.md)
 
 ## Properties
-
-### color?
-
-> `optional` **color**: `string`
-
-Defined in: [animation/indication/ShowPassingFlash.ts:21](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/indication/ShowPassingFlash.ts#L21)
-
-Color of the flash. Default: YELLOW
-
-***
 
 ### duration?
 
@@ -29,6 +19,16 @@ Duration of the animation in seconds (default: 1)
 #### Inherited from
 
 [`AnimationOptions`](AnimationOptions.md).[`duration`](AnimationOptions.md#duration)
+
+***
+
+### lagRatio?
+
+> `optional` **lagRatio**: `number`
+
+Defined in: [animation/creation/Create.ts:18](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/creation/Create.ts#L18)
+
+Stagger ratio between submobjects (0 = simultaneous, higher = more stagger). Default: 0
 
 ***
 
@@ -57,23 +57,3 @@ Shift direction for fade animations
 #### Inherited from
 
 [`AnimationOptions`](AnimationOptions.md).[`shift`](AnimationOptions.md#shift)
-
-***
-
-### strokeWidth?
-
-> `optional` **strokeWidth**: `number`
-
-Defined in: [animation/indication/ShowPassingFlash.ts:25](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/indication/ShowPassingFlash.ts#L25)
-
-Stroke width of the flash. Default: DEFAULT_STROKE_WIDTH * 1.5
-
-***
-
-### timeWidth?
-
-> `optional` **timeWidth**: `number`
-
-Defined in: [animation/indication/ShowPassingFlash.ts:23](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/indication/ShowPassingFlash.ts#L23)
-
-Width of the flash as a proportion of the path (0-1). Default: 0.2

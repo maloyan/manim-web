@@ -1,6 +1,6 @@
 # Class: FrameTimeTracker
 
-Defined in: [utils/Performance.ts:129](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/Performance.ts#L129)
+Defined in: [utils/Performance.ts:129](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/Performance.ts#L129)
 
 Simple frame time tracker for measuring render performance.
 
@@ -10,7 +10,7 @@ Simple frame time tracker for measuring render performance.
 
 > **new FrameTimeTracker**(`maxSamples`): `FrameTimeTracker`
 
-Defined in: [utils/Performance.ts:138](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/Performance.ts#L138)
+Defined in: [utils/Performance.ts:138](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/Performance.ts#L138)
 
 Create a new FrameTimeTracker.
 
@@ -32,7 +32,7 @@ Maximum number of samples to keep (default: 60)
 
 > **endFrame**(): `void`
 
-Defined in: [utils/Performance.ts:152](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/Performance.ts#L152)
+Defined in: [utils/Performance.ts:152](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/Performance.ts#L152)
 
 Mark the end of a frame and record the time.
 
@@ -46,7 +46,7 @@ Mark the end of a frame and record the time.
 
 > **get95thPercentile**(): `number`
 
-Defined in: [utils/Performance.ts:192](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/Performance.ts#L192)
+Defined in: [utils/Performance.ts:192](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/Performance.ts#L192)
 
 Get the 95th percentile frame time.
 Useful for identifying stutter/jank.
@@ -63,7 +63,7 @@ Useful for identifying stutter/jank.
 
 > **getAverageFrameTime**(): `number`
 
-Defined in: [utils/Performance.ts:164](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/Performance.ts#L164)
+Defined in: [utils/Performance.ts:164](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/Performance.ts#L164)
 
 Get the average frame time in milliseconds.
 
@@ -79,7 +79,7 @@ Average frame time in ms
 
 > **getMaxFrameTime**(): `number`
 
-Defined in: [utils/Performance.ts:173](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/Performance.ts#L173)
+Defined in: [utils/Performance.ts:173](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/Performance.ts#L173)
 
 Get the maximum frame time in milliseconds.
 
@@ -95,7 +95,7 @@ Max frame time in ms
 
 > **getMinFrameTime**(): `number`
 
-Defined in: [utils/Performance.ts:182](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/Performance.ts#L182)
+Defined in: [utils/Performance.ts:182](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/Performance.ts#L182)
 
 Get the minimum frame time in milliseconds.
 
@@ -111,7 +111,7 @@ Min frame time in ms
 
 > **getSummary**(): `object`
 
-Defined in: [utils/Performance.ts:210](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/Performance.ts#L210)
+Defined in: [utils/Performance.ts:210](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/Performance.ts#L210)
 
 Get a summary of frame time statistics.
 
@@ -143,7 +143,7 @@ Object with avg, min, max, and p95 frame times
 
 > **reset**(): `void`
 
-Defined in: [utils/Performance.ts:202](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/Performance.ts#L202)
+Defined in: [utils/Performance.ts:202](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/Performance.ts#L202)
 
 Reset all recorded frame times.
 
@@ -157,7 +157,7 @@ Reset all recorded frame times.
 
 > **startFrame**(): `void`
 
-Defined in: [utils/Performance.ts:145](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/Performance.ts#L145)
+Defined in: [utils/Performance.ts:145](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/Performance.ts#L145)
 
 Mark the start of a frame.
 

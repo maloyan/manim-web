@@ -1,6 +1,6 @@
 # Interface: ThreeDAxesOptions
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:9](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L9)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:9](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L9)
 
 Options for creating ThreeDAxes
 
@@ -10,7 +10,7 @@ Options for creating ThreeDAxes
 
 > `optional` **axisColor**: `string`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:23](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L23)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:23](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L23)
 
 Default color for all axes. Default: '#ffffff'
 
@@ -20,9 +20,9 @@ Default color for all axes. Default: '#ffffff'
 
 > `optional` **shaftRadius**: `number`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:41](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L41)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:41](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L41)
 
-Shaft radius for arrows. Default: 0.02
+Shaft radius for arrows. Default: 0.01
 
 ***
 
@@ -30,7 +30,7 @@ Shaft radius for arrows. Default: 0.02
 
 > `optional` **showLabels**: `boolean`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:31](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L31)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:31](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L31)
 
 Whether to show axis labels (X, Y, Z). Default: false
 
@@ -40,7 +40,7 @@ Whether to show axis labels (X, Y, Z). Default: false
 
 > `optional` **showTicks**: `boolean`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:33](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L33)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:33](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L33)
 
 Whether to show tick marks. Default: true
 
@@ -50,9 +50,9 @@ Whether to show tick marks. Default: true
 
 > `optional` **tickLength**: `number`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:35](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L35)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:35](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L35)
 
-Length of tick marks. Default: 0.1
+Length of tick marks. Default: 0.15
 
 ***
 
@@ -60,7 +60,7 @@ Length of tick marks. Default: 0.1
 
 > `optional` **tipLength**: `number`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:37](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L37)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:37](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L37)
 
 Tip length for arrows. Default: 0.2
 
@@ -70,7 +70,7 @@ Tip length for arrows. Default: 0.2
 
 > `optional` **tipRadius**: `number`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:39](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L39)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:39](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L39)
 
 Tip radius for arrows. Default: 0.08
 
@@ -80,7 +80,7 @@ Tip radius for arrows. Default: 0.08
 
 > `optional` **xColor**: `string`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:25](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L25)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:25](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L25)
 
 Color for x-axis (overrides axisColor). Default: same as axisColor
 
@@ -90,7 +90,7 @@ Color for x-axis (overrides axisColor). Default: same as axisColor
 
 > `optional` **xLength**: `number`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L17)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:17](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L17)
 
 Visual length of the x-axis. Default: 10
 
@@ -100,7 +100,7 @@ Visual length of the x-axis. Default: 10
 
 > `optional` **xRange**: \[`number`, `number`, `number`\]
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:11](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L11)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:11](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L11)
 
 X-axis range as [min, max, step]. Default: [-5, 5, 1]
 
@@ -110,7 +110,7 @@ X-axis range as [min, max, step]. Default: [-5, 5, 1]
 
 > `optional` **yColor**: `string`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:27](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L27)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:27](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L27)
 
 Color for y-axis (overrides axisColor). Default: same as axisColor
 
@@ -120,7 +120,7 @@ Color for y-axis (overrides axisColor). Default: same as axisColor
 
 > `optional` **yLength**: `number`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:19](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L19)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:19](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L19)
 
 Visual length of the y-axis. Default: 10
 
@@ -130,7 +130,7 @@ Visual length of the y-axis. Default: 10
 
 > `optional` **yRange**: \[`number`, `number`, `number`\]
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L13)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:13](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L13)
 
 Y-axis range as [min, max, step]. Default: [-5, 5, 1]
 
@@ -140,7 +140,7 @@ Y-axis range as [min, max, step]. Default: [-5, 5, 1]
 
 > `optional` **zColor**: `string`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:29](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L29)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:29](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L29)
 
 Color for z-axis (overrides axisColor). Default: same as axisColor
 
@@ -150,7 +150,7 @@ Color for z-axis (overrides axisColor). Default: same as axisColor
 
 > `optional` **zLength**: `number`
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:21](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L21)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:21](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L21)
 
 Visual length of the z-axis. Default: 10
 
@@ -160,6 +160,6 @@ Visual length of the z-axis. Default: 10
 
 > `optional` **zRange**: \[`number`, `number`, `number`\]
 
-Defined in: [mobjects/three-d/ThreeDAxes.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ThreeDAxes.ts#L15)
+Defined in: [mobjects/three-d/ThreeDAxes.ts:15](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ThreeDAxes.ts#L15)
 
 Z-axis range as [min, max, step]. Default: [-5, 5, 1]

@@ -2,7 +2,7 @@
 
 > **createVideoExporter**(`scene`, `options?`): [`VideoExporter`](../classes/VideoExporter.md)
 
-Defined in: [export/VideoExporter.ts:296](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/VideoExporter.ts#L296)
+Defined in: [export/VideoExporter.ts:296](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/export/VideoExporter.ts#L296)
 
 Factory function to create a VideoExporter.
 

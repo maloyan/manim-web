@@ -1,6 +1,6 @@
 # Interface: SVGToVMobjectOptions
 
-Defined in: [mobjects/text/svgPathParser.ts:31](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/svgPathParser.ts#L31)
+Defined in: [mobjects/text/svgPathParser.ts:31](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/svgPathParser.ts#L31)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [mobjects/text/svgPathParser.ts:31](https://github.com/maloyan/manim
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/text/svgPathParser.ts:33](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/svgPathParser.ts#L33)
+Defined in: [mobjects/text/svgPathParser.ts:33](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/svgPathParser.ts#L33)
 
 Stroke / fill color for the resulting VMobjects.
 
@@ -18,7 +18,7 @@ Stroke / fill color for the resulting VMobjects.
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/text/svgPathParser.ts:37](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/svgPathParser.ts#L37)
+Defined in: [mobjects/text/svgPathParser.ts:37](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/svgPathParser.ts#L37)
 
 Fill opacity. Default: 0 (stroke only).
 
@@ -28,7 +28,7 @@ Fill opacity. Default: 0 (stroke only).
 
 > `optional` **flipY**: `boolean`
 
-Defined in: [mobjects/text/svgPathParser.ts:44](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/svgPathParser.ts#L44)
+Defined in: [mobjects/text/svgPathParser.ts:44](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/svgPathParser.ts#L44)
 
 If true, flip the Y axis so SVG screen-space (Y-down) maps
 to manim world-space (Y-up). Default: true.
@@ -39,7 +39,7 @@ to manim world-space (Y-up). Default: true.
 
 > `optional` **scale**: `number`
 
-Defined in: [mobjects/text/svgPathParser.ts:39](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/svgPathParser.ts#L39)
+Defined in: [mobjects/text/svgPathParser.ts:39](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/svgPathParser.ts#L39)
 
 Uniform scale factor applied to every point. Default: 1
 
@@ -49,6 +49,6 @@ Uniform scale factor applied to every point. Default: 1
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/text/svgPathParser.ts:35](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/svgPathParser.ts#L35)
+Defined in: [mobjects/text/svgPathParser.ts:35](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/svgPathParser.ts#L35)
 
 Stroke width. Default: DEFAULT_STROKE_WIDTH (4).

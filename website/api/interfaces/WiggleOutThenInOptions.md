@@ -1,6 +1,6 @@
 # Interface: WiggleOutThenInOptions
 
-Defined in: [animation/indication/WiggleOutThenIn.ts:26](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/WiggleOutThenIn.ts#L26)
+Defined in: [animation/indication/WiggleOutThenIn.ts:26](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/indication/WiggleOutThenIn.ts#L26)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/indication/WiggleOutThenIn.ts:26](https://github.com/malo
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -26,7 +26,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **nWiggles**: `number`
 
-Defined in: [animation/indication/WiggleOutThenIn.ts:32](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/WiggleOutThenIn.ts#L32)
+Defined in: [animation/indication/WiggleOutThenIn.ts:32](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/indication/WiggleOutThenIn.ts#L32)
 
 Number of rotation oscillations. Default: 6
 
@@ -36,7 +36,7 @@ Number of rotation oscillations. Default: 6
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -50,7 +50,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **rotationAngle**: `number`
 
-Defined in: [animation/indication/WiggleOutThenIn.ts:30](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/WiggleOutThenIn.ts#L30)
+Defined in: [animation/indication/WiggleOutThenIn.ts:30](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/indication/WiggleOutThenIn.ts#L30)
 
 Maximum rotation angle in radians. Default: 0.01 * TAU (~3.6 degrees)
 
@@ -60,7 +60,7 @@ Maximum rotation angle in radians. Default: 0.01 * TAU (~3.6 degrees)
 
 > `optional` **rotationAxis**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [animation/indication/WiggleOutThenIn.ts:34](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/WiggleOutThenIn.ts#L34)
+Defined in: [animation/indication/WiggleOutThenIn.ts:34](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/indication/WiggleOutThenIn.ts#L34)
 
 Axis to rotate about. Default: [0, 0, 1] (Z axis)
 
@@ -70,7 +70,7 @@ Axis to rotate about. Default: [0, 0, 1] (Z axis)
 
 > `optional` **scaleValue**: `number`
 
-Defined in: [animation/indication/WiggleOutThenIn.ts:28](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/WiggleOutThenIn.ts#L28)
+Defined in: [animation/indication/WiggleOutThenIn.ts:28](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/indication/WiggleOutThenIn.ts#L28)
 
 Peak scale factor. Default: 1.1
 
@@ -80,7 +80,7 @@ Peak scale factor. Default: 1.1
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 

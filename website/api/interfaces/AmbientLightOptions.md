@@ -1,6 +1,6 @@
 # Interface: AmbientLightOptions
 
-Defined in: [core/Lighting.ts:6](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Lighting.ts#L6)
+Defined in: [core/Lighting.ts:6](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Lighting.ts#L6)
 
 Options for configuring an ambient light.
 
@@ -10,7 +10,7 @@ Options for configuring an ambient light.
 
 > `optional` **color**: `string`
 
-Defined in: [core/Lighting.ts:8](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Lighting.ts#L8)
+Defined in: [core/Lighting.ts:8](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Lighting.ts#L8)
 
 Light color. Defaults to '#ffffff'.
 
@@ -20,6 +20,6 @@ Light color. Defaults to '#ffffff'.
 
 > `optional` **intensity**: `number`
 
-Defined in: [core/Lighting.ts:10](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Lighting.ts#L10)
+Defined in: [core/Lighting.ts:10](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Lighting.ts#L10)
 
 Light intensity. Defaults to 0.5.

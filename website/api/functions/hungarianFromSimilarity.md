@@ -2,7 +2,7 @@
 
 > **hungarianFromSimilarity**(`similarityMatrix`, `threshold`): [`HungarianResult`](../interfaces/HungarianResult.md)
 
-Defined in: [utils/hungarian.ts:199](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/hungarian.ts#L199)
+Defined in: [utils/hungarian.ts:199](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/hungarian.ts#L199)
 
 Convenience function to find the optimal matching given a similarity matrix.
 Converts similarities (higher = better) to costs (lower = better) and

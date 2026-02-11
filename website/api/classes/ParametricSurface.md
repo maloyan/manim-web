@@ -1,6 +1,6 @@
 # Class: ParametricSurface
 
-Defined in: [mobjects/three-d/ParametricSurface.ts:52](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ParametricSurface.ts#L52)
+Defined in: [mobjects/three-d/ParametricSurface.ts:52](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ParametricSurface.ts#L52)
 
 ParametricSurface - Alias for Surface3D
 
@@ -54,7 +54,7 @@ const klein = new ParametricSurface({
 
 > **new ParametricSurface**(`options`): `ParametricSurface`
 
-Defined in: [mobjects/three-d/ParametricSurface.ts:53](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ParametricSurface.ts#L53)
+Defined in: [mobjects/three-d/ParametricSurface.ts:53](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ParametricSurface.ts#L53)
 
 #### Parameters
 
@@ -76,7 +76,7 @@ Defined in: [mobjects/three-d/ParametricSurface.ts:53](https://github.com/maloya
 
 > **\_\_savedMobjectState**: `unknown` = `null`
 
-Defined in: [core/Mobject.ts:118](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L118)
+Defined in: [core/Mobject.ts:123](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L123)
 
 JSON-serializable saved state (used by restoreState()).
 Set by saveState() -- typed as `unknown` here to avoid circular import;
@@ -92,7 +92,7 @@ actual type is MobjectState from StateManager.ts.
 
 > `protected` **\_centerPoint**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/three-d/Surface3D.ts:74](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L74)
+Defined in: [mobjects/three-d/Surface3D.ts:76](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L76)
 
 #### Inherited from
 
@@ -100,11 +100,23 @@ Defined in: [mobjects/three-d/Surface3D.ts:74](https://github.com/maloyan/manim-
 
 ***
 
+### \_checkerboardColors?
+
+> `protected` `optional` **\_checkerboardColors**: \[`string`, `string`\]
+
+Defined in: [mobjects/three-d/Surface3D.ts:77](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L77)
+
+#### Inherited from
+
+[`Surface3D`](Surface3D.md).[`_checkerboardColors`](Surface3D.md#_checkerboardcolors)
+
+***
+
 ### \_dirty
 
 > **\_dirty**: `boolean` = `true`
 
-Defined in: [core/Mobject.ts:95](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L95)
+Defined in: [core/Mobject.ts:100](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L100)
 
 Dirty flag indicating transforms need sync
 
@@ -114,11 +126,27 @@ Dirty flag indicating transforms need sync
 
 ***
 
+### \_disableChildZLayering
+
+> `protected` **\_disableChildZLayering**: `boolean` = `false`
+
+Defined in: [core/Mobject.ts:91](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L91)
+
+When true, children skip the 2D z-layering offset in _syncToThree.
+ Set this on 3D container objects (e.g. ThreeDAxes) where z-offsets
+ would shift objects away from their intended 3D positions.
+
+#### Inherited from
+
+[`Surface3D`](Surface3D.md).[`_disableChildZLayering`](Surface3D.md#_disablechildzlayering)
+
+***
+
 ### \_doubleSided
 
 > `protected` **\_doubleSided**: `boolean`
 
-Defined in: [mobjects/three-d/Surface3D.ts:73](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L73)
+Defined in: [mobjects/three-d/Surface3D.ts:75](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L75)
 
 #### Inherited from
 
@@ -130,7 +158,7 @@ Defined in: [mobjects/three-d/Surface3D.ts:73](https://github.com/maloyan/manim-
 
 > `protected` **\_func**: (`u`, `v`) => [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/three-d/Surface3D.ts:67](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L67)
+Defined in: [mobjects/three-d/Surface3D.ts:69](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L69)
 
 #### Parameters
 
@@ -156,7 +184,7 @@ Defined in: [mobjects/three-d/Surface3D.ts:67](https://github.com/maloyan/manim-
 
 > `protected` **\_opacity**: `number` = `1`
 
-Defined in: [core/Mobject.ts:80](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L80)
+Defined in: [core/Mobject.ts:80](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L80)
 
 Overall opacity (0-1) - protected for backward compatibility
 
@@ -170,7 +198,7 @@ Overall opacity (0-1) - protected for backward compatibility
 
 > `protected` **\_style**: [`MobjectStyle`](../interfaces/MobjectStyle.md)
 
-Defined in: [core/Mobject.ts:89](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L89)
+Defined in: [core/Mobject.ts:94](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L94)
 
 Style properties for backward compatibility
 
@@ -184,7 +212,7 @@ Style properties for backward compatibility
 
 > **\_threeObject**: `Object3D`\<`Object3DEventMap`\> = `null`
 
-Defined in: [core/Mobject.ts:92](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L92)
+Defined in: [core/Mobject.ts:97](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L97)
 
 Three.js backing object
 
@@ -198,7 +226,7 @@ Three.js backing object
 
 > `protected` **\_uRange**: \[`number`, `number`\]
 
-Defined in: [mobjects/three-d/Surface3D.ts:68](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L68)
+Defined in: [mobjects/three-d/Surface3D.ts:70](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L70)
 
 #### Inherited from
 
@@ -210,7 +238,7 @@ Defined in: [mobjects/three-d/Surface3D.ts:68](https://github.com/maloyan/manim-
 
 > `protected` **\_uResolution**: `number`
 
-Defined in: [mobjects/three-d/Surface3D.ts:70](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L70)
+Defined in: [mobjects/three-d/Surface3D.ts:72](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L72)
 
 #### Inherited from
 
@@ -222,7 +250,7 @@ Defined in: [mobjects/three-d/Surface3D.ts:70](https://github.com/maloyan/manim-
 
 > `protected` **\_vRange**: \[`number`, `number`\]
 
-Defined in: [mobjects/three-d/Surface3D.ts:69](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L69)
+Defined in: [mobjects/three-d/Surface3D.ts:71](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L71)
 
 #### Inherited from
 
@@ -234,7 +262,7 @@ Defined in: [mobjects/three-d/Surface3D.ts:69](https://github.com/maloyan/manim-
 
 > `protected` **\_vResolution**: `number`
 
-Defined in: [mobjects/three-d/Surface3D.ts:71](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L71)
+Defined in: [mobjects/three-d/Surface3D.ts:73](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L73)
 
 #### Inherited from
 
@@ -246,7 +274,7 @@ Defined in: [mobjects/three-d/Surface3D.ts:71](https://github.com/maloyan/manim-
 
 > `protected` **\_wireframe**: `boolean`
 
-Defined in: [mobjects/three-d/Surface3D.ts:72](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L72)
+Defined in: [mobjects/three-d/Surface3D.ts:74](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L74)
 
 #### Inherited from
 
@@ -258,7 +286,7 @@ Defined in: [mobjects/three-d/Surface3D.ts:72](https://github.com/maloyan/manim-
 
 > **children**: [`Mobject`](Mobject.md)[] = `[]`
 
-Defined in: [core/Mobject.ts:53](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L53)
+Defined in: [core/Mobject.ts:53](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L53)
 
 Child mobjects
 
@@ -272,7 +300,7 @@ Child mobjects
 
 > **fillOpacity**: `number` = `0`
 
-Defined in: [core/Mobject.ts:86](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L86)
+Defined in: [core/Mobject.ts:86](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L86)
 
 Fill opacity (0-1)
 
@@ -286,7 +314,7 @@ Fill opacity (0-1)
 
 > `readonly` **id**: `string`
 
-Defined in: [core/Mobject.ts:47](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L47)
+Defined in: [core/Mobject.ts:47](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L47)
 
 Unique identifier for this mobject
 
@@ -300,7 +328,7 @@ Unique identifier for this mobject
 
 > **parent**: [`Mobject`](Mobject.md) = `null`
 
-Defined in: [core/Mobject.ts:50](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L50)
+Defined in: [core/Mobject.ts:50](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L50)
 
 Parent mobject in hierarchy
 
@@ -314,7 +342,7 @@ Parent mobject in hierarchy
 
 > **position**: `Vector3`
 
-Defined in: [core/Mobject.ts:56](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L56)
+Defined in: [core/Mobject.ts:56](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L56)
 
 Position in 3D space
 
@@ -328,7 +356,7 @@ Position in 3D space
 
 > **rotation**: `Euler`
 
-Defined in: [core/Mobject.ts:59](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L59)
+Defined in: [core/Mobject.ts:59](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L59)
 
 Rotation as Euler angles
 
@@ -342,7 +370,7 @@ Rotation as Euler angles
 
 > **savedState**: [`Mobject`](Mobject.md) = `null`
 
-Defined in: [core/Mobject.ts:104](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L104)
+Defined in: [core/Mobject.ts:109](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L109)
 
 Saved mobject copy (used by Restore animation in TransformExtensions).
 Set by saveState().
@@ -357,7 +385,7 @@ Set by saveState().
 
 > **scaleVector**: `Vector3`
 
-Defined in: [core/Mobject.ts:62](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L62)
+Defined in: [core/Mobject.ts:62](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L62)
 
 Scale factors (named scaleVector to avoid conflict with scale method)
 
@@ -371,7 +399,7 @@ Scale factors (named scaleVector to avoid conflict with scale method)
 
 > **strokeWidth**: `number` = `4`
 
-Defined in: [core/Mobject.ts:83](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L83)
+Defined in: [core/Mobject.ts:83](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L83)
 
 Stroke width for outlines (default 4, matching Manim's thicker strokes)
 
@@ -385,7 +413,7 @@ Stroke width for outlines (default 4, matching Manim's thicker strokes)
 
 > **targetCopy**: [`Mobject`](Mobject.md) = `null`
 
-Defined in: [core/Mobject.ts:111](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L111)
+Defined in: [core/Mobject.ts:116](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L116)
 
 Target copy used by generateTarget() / MoveToTarget animation.
 Call generateTarget() to create a copy, modify targetCopy, then
@@ -403,7 +431,7 @@ play MoveToTarget to interpolate from current to target state.
 
 > **get** **color**(): `string`
 
-Defined in: [core/Mobject.ts:67](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L67)
+Defined in: [core/Mobject.ts:67](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L67)
 
 ##### Returns
 
@@ -413,7 +441,7 @@ Defined in: [core/Mobject.ts:67](https://github.com/maloyan/manim-js/blob/c05b67
 
 > **set** **color**(`value`): `void`
 
-Defined in: [core/Mobject.ts:71](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L71)
+Defined in: [core/Mobject.ts:71](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L71)
 
 ##### Parameters
 
@@ -437,7 +465,7 @@ Defined in: [core/Mobject.ts:71](https://github.com/maloyan/manim-js/blob/c05b67
 
 > **get** **fillColor**(): `string`
 
-Defined in: [core/Mobject.ts:473](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L473)
+Defined in: [core/Mobject.ts:490](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L490)
 
 Get the fill color
 
@@ -449,7 +477,7 @@ Get the fill color
 
 > **set** **fillColor**(`color`): `void`
 
-Defined in: [core/Mobject.ts:480](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L480)
+Defined in: [core/Mobject.ts:497](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L497)
 
 Set the fill color
 
@@ -475,7 +503,7 @@ Set the fill color
 
 > **get** **isDirty**(): `boolean`
 
-Defined in: [core/Mobject.ts:933](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L933)
+Defined in: [core/Mobject.ts:958](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L958)
 
 Check if this mobject needs sync
 
@@ -495,7 +523,7 @@ Check if this mobject needs sync
 
 > **get** **opacity**(): `number`
 
-Defined in: [core/Mobject.ts:145](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L145)
+Defined in: [core/Mobject.ts:150](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L150)
 
 Get the overall opacity of the mobject
 
@@ -507,7 +535,7 @@ Get the overall opacity of the mobject
 
 > **set** **opacity**(`value`): `void`
 
-Defined in: [core/Mobject.ts:152](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L152)
+Defined in: [core/Mobject.ts:157](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L157)
 
 Set the overall opacity of the mobject
 
@@ -533,7 +561,7 @@ Set the overall opacity of the mobject
 
 > **get** **style**(): [`MobjectStyle`](../interfaces/MobjectStyle.md)
 
-Defined in: [core/Mobject.ts:160](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L160)
+Defined in: [core/Mobject.ts:165](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L165)
 
 Get the style properties
 
@@ -553,7 +581,7 @@ Get the style properties
 
 > **get** **submobjects**(): [`Mobject`](Mobject.md)[]
 
-Defined in: [core/Mobject.ts:192](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L192)
+Defined in: [core/Mobject.ts:197](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L197)
 
 Get all submobjects (alias for children)
 
@@ -571,7 +599,7 @@ Get all submobjects (alias for children)
 
 > `protected` **\_createCopy**(): `ParametricSurface`
 
-Defined in: [mobjects/three-d/ParametricSurface.ts:60](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/ParametricSurface.ts#L60)
+Defined in: [mobjects/three-d/ParametricSurface.ts:60](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/ParametricSurface.ts#L60)
 
 Create a copy of this ParametricSurface
 
@@ -589,7 +617,7 @@ Create a copy of this ParametricSurface
 
 > `protected` **\_createThreeObject**(): `Object3D`
 
-Defined in: [mobjects/three-d/Surface3D.ts:112](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L112)
+Defined in: [mobjects/three-d/Surface3D.ts:117](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L117)
 
 Create the Three.js parametric surface mesh
 
@@ -607,7 +635,7 @@ Create the Three.js parametric surface mesh
 
 > `protected` **\_getBoundingBox**(): `object`
 
-Defined in: [core/Mobject.ts:748](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L748)
+Defined in: [core/Mobject.ts:770](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L770)
 
 Get bounding box dimensions
 Uses object pooling to avoid allocations in hot paths (performance optimization).
@@ -640,7 +668,7 @@ Object with width, height, and depth
 
 > `protected` **\_getEdgeInDirection**(`direction`): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:731](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L731)
+Defined in: [core/Mobject.ts:753](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L753)
 
 Get the edge point of the bounding box in a direction
 
@@ -668,7 +696,7 @@ Edge point as [x, y, z]
 
 > **\_markDirty**(): `void`
 
-Defined in: [core/Mobject.ts:913](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L913)
+Defined in: [core/Mobject.ts:938](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L938)
 
 Mark this mobject as needing sync
 
@@ -686,7 +714,7 @@ Mark this mobject as needing sync
 
 > **\_markDirtyUpward**(): `void`
 
-Defined in: [core/Mobject.ts:922](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L922)
+Defined in: [core/Mobject.ts:947](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L947)
 
 Mark this mobject and all ancestors as needing sync.
 Use when a deep child's geometry changes and the parent tree must re-traverse.
@@ -706,7 +734,7 @@ Short-circuits if this node is already dirty (ancestors must be dirty too).
 
 > `protected` **\_syncMaterialToThree**(): `void`
 
-Defined in: [mobjects/three-d/Surface3D.ts:152](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L152)
+Defined in: [mobjects/three-d/Surface3D.ts:193](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L193)
 
 Sync material properties to Three.js object
 
@@ -724,7 +752,7 @@ Sync material properties to Three.js object
 
 > **\_syncToThree**(): `void`
 
-Defined in: [core/Mobject.ts:867](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L867)
+Defined in: [core/Mobject.ts:891](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L891)
 
 Sync transform properties to the Three.js object
 
@@ -742,7 +770,7 @@ Sync transform properties to the Three.js object
 
 > `protected` **\_updateGeometry**(): `void`
 
-Defined in: [mobjects/three-d/Surface3D.ts:169](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L169)
+Defined in: [mobjects/three-d/Surface3D.ts:213](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L213)
 
 Update the geometry with current function and parameters
 
@@ -760,7 +788,7 @@ Update the geometry with current function and parameters
 
 > **add**(...`mobjects`): `this`
 
-Defined in: [core/Mobject.ts:492](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L492)
+Defined in: [core/Mobject.ts:509](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L509)
 
 Add a child mobject (supports multiple arguments for backward compatibility)
 
@@ -788,7 +816,7 @@ this for chaining
 
 > **addUpdater**(`updater`, `callOnAdd`): `this`
 
-Defined in: [core/Mobject.ts:981](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L981)
+Defined in: [core/Mobject.ts:1006](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L1006)
 
 Add an updater function that runs every frame
 
@@ -822,7 +850,7 @@ this for chaining
 
 > **alignTo**(`target`, `direction`): `this`
 
-Defined in: [core/Mobject.ts:696](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L696)
+Defined in: [core/Mobject.ts:720](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L720)
 
 Align this mobject with another along an edge
 
@@ -856,7 +884,7 @@ this for chaining
 
 > **applyFunction**(`fn`): `this`
 
-Defined in: [core/Mobject.ts:1048](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L1048)
+Defined in: [core/Mobject.ts:1073](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L1073)
 
 Apply a point-wise function to every VMobject descendant's control points.
 Uses duck-type check for getPoints/setPoints to avoid circular imports.
@@ -885,7 +913,7 @@ this for chaining
 
 > **applyToFamily**(`func`): `this`
 
-Defined in: [core/Mobject.ts:956](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L956)
+Defined in: [core/Mobject.ts:981](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L981)
 
 Apply a function to this mobject and all descendants
 
@@ -909,7 +937,7 @@ Apply a function to this mobject and all descendants
 
 > **become**(`other`): `this`
 
-Defined in: [core/Mobject.ts:563](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L563)
+Defined in: [core/Mobject.ts:580](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L580)
 
 Replace this mobject's visual properties with those of another mobject.
 Preserves identity (updaters, scene membership) but copies appearance.
@@ -938,7 +966,7 @@ this for chaining
 
 > **center**(): `this`
 
-Defined in: [core/Mobject.ts:828](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L828)
+Defined in: [core/Mobject.ts:850](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L850)
 
 Center this mobject at origin
 
@@ -958,7 +986,7 @@ this for chaining
 
 > **clearUpdaters**(): `this`
 
-Defined in: [core/Mobject.ts:1006](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L1006)
+Defined in: [core/Mobject.ts:1031](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L1031)
 
 Remove all updaters
 
@@ -978,7 +1006,7 @@ this for chaining
 
 > **copy**(): [`Mobject`](Mobject.md)
 
-Defined in: [core/Mobject.ts:536](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L536)
+Defined in: [core/Mobject.ts:553](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L553)
 
 Create a deep copy of this mobject
 
@@ -998,7 +1026,7 @@ New mobject with copied properties
 
 > **dispose**(): `void`
 
-Defined in: [core/Mobject.ts:1207](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L1207)
+Defined in: [core/Mobject.ts:1243](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L1243)
 
 Clean up Three.js resources.
 
@@ -1016,7 +1044,7 @@ Clean up Three.js resources.
 
 > **evaluate**(`u`, `v`): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/three-d/Surface3D.ts:313](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L313)
+Defined in: [mobjects/three-d/Surface3D.ts:386](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L386)
 
 Evaluate the surface at given parameters
 
@@ -1048,7 +1076,7 @@ V parameter
 
 > **flip**(`axis`): `this`
 
-Defined in: [core/Mobject.ts:364](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L364)
+Defined in: [core/Mobject.ts:381](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L381)
 
 Flip the mobject along an axis (mirror reflection).
 
@@ -1076,7 +1104,7 @@ this for chaining
 
 > **generateTarget**(): [`Mobject`](Mobject.md)
 
-Defined in: [core/Mobject.ts:1116](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L1116)
+Defined in: [core/Mobject.ts:1150](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L1150)
 
 Create a copy of this mobject as a target for MoveToTarget animation.
 Modify the returned copy, then play `new MoveToTarget(this)` to
@@ -1107,7 +1135,7 @@ await scene.play(new MoveToTarget(mob));
 
 > **getBottom**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:777](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L777)
+Defined in: [core/Mobject.ts:799](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L799)
 
 Get the bottom edge center
 
@@ -1127,7 +1155,7 @@ Bottom edge center as [x, y, z]
 
 > **getBounds**(): `object`
 
-Defined in: [core/Mobject.ts:640](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L640)
+Defined in: [core/Mobject.ts:657](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L657)
 
 Get the bounding box of this mobject in world coordinates.
 
@@ -1179,7 +1207,7 @@ Object with min and max Vector3Tuple
 
 > **getCenter**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:625](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L625)
+Defined in: [core/Mobject.ts:642](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L642)
 
 Get the center point of this mobject
 
@@ -1199,7 +1227,7 @@ Center position as [x, y, z]
 
 > **getEdge**(`direction`): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:761](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L761)
+Defined in: [core/Mobject.ts:783](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L783)
 
 Get a specific edge point of the bounding box in a direction
 
@@ -1227,7 +1255,7 @@ Edge point as [x, y, z]
 
 > **getFamily**(): [`Mobject`](Mobject.md)[]
 
-Defined in: [core/Mobject.ts:967](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L967)
+Defined in: [core/Mobject.ts:992](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L992)
 
 Get all mobjects in the family (this mobject and all descendants)
 
@@ -1245,7 +1273,7 @@ Get all mobjects in the family (this mobject and all descendants)
 
 > **getFunc**(): (`u`, `v`) => [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/three-d/Surface3D.ts:199](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L199)
+Defined in: [mobjects/three-d/Surface3D.ts:272](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L272)
 
 Get the parametric function
 
@@ -1277,7 +1305,7 @@ Get the parametric function
 
 > **getLeft**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:785](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L785)
+Defined in: [core/Mobject.ts:807](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L807)
 
 Get the left edge center
 
@@ -1297,7 +1325,7 @@ Left edge center as [x, y, z]
 
 > **getRight**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:793](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L793)
+Defined in: [core/Mobject.ts:815](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L815)
 
 Get the right edge center
 
@@ -1317,7 +1345,7 @@ Right edge center as [x, y, z]
 
 > **getThreeObject**(): `Object3D`
 
-Defined in: [core/Mobject.ts:940](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L940)
+Defined in: [core/Mobject.ts:965](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L965)
 
 Get the Three.js object, creating it if necessary
 
@@ -1335,7 +1363,7 @@ Get the Three.js object, creating it if necessary
 
 > **getTop**(): [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/Mobject.ts:769](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L769)
+Defined in: [core/Mobject.ts:791](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L791)
 
 Get the top edge center
 
@@ -1355,7 +1383,7 @@ Top edge center as [x, y, z]
 
 > **getUpdaters**(): [`UpdaterFunction`](../type-aliases/UpdaterFunction.md)[]
 
-Defined in: [core/Mobject.ts:1023](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L1023)
+Defined in: [core/Mobject.ts:1048](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L1048)
 
 Get all updaters (for internal use)
 
@@ -1375,7 +1403,7 @@ A copy of the updaters array
 
 > **getURange**(): \[`number`, `number`\]
 
-Defined in: [mobjects/three-d/Surface3D.ts:215](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L215)
+Defined in: [mobjects/three-d/Surface3D.ts:288](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L288)
 
 Get the U parameter range
 
@@ -1393,7 +1421,7 @@ Get the U parameter range
 
 > **getUResolution**(): `number`
 
-Defined in: [mobjects/three-d/Surface3D.ts:247](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L247)
+Defined in: [mobjects/three-d/Surface3D.ts:320](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L320)
 
 Get the U resolution
 
@@ -1411,7 +1439,7 @@ Get the U resolution
 
 > **getVRange**(): \[`number`, `number`\]
 
-Defined in: [mobjects/three-d/Surface3D.ts:231](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L231)
+Defined in: [mobjects/three-d/Surface3D.ts:304](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L304)
 
 Get the V parameter range
 
@@ -1429,7 +1457,7 @@ Get the V parameter range
 
 > **getVResolution**(): `number`
 
-Defined in: [mobjects/three-d/Surface3D.ts:263](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L263)
+Defined in: [mobjects/three-d/Surface3D.ts:336](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L336)
 
 Get the V resolution
 
@@ -1447,7 +1475,7 @@ Get the V resolution
 
 > **hasUpdaters**(): `boolean`
 
-Defined in: [core/Mobject.ts:1015](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L1015)
+Defined in: [core/Mobject.ts:1040](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L1040)
 
 Check if this mobject has any updaters
 
@@ -1467,7 +1495,7 @@ true if the mobject has updaters
 
 > **isDoubleSided**(): `boolean`
 
-Defined in: [mobjects/three-d/Surface3D.ts:295](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L295)
+Defined in: [mobjects/three-d/Surface3D.ts:368](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L368)
 
 Get whether double-sided rendering is enabled
 
@@ -1485,7 +1513,7 @@ Get whether double-sided rendering is enabled
 
 > **isWireframe**(): `boolean`
 
-Defined in: [mobjects/three-d/Surface3D.ts:279](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L279)
+Defined in: [mobjects/three-d/Surface3D.ts:352](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L352)
 
 Get whether wireframe mode is enabled
 
@@ -1503,7 +1531,7 @@ Get whether wireframe mode is enabled
 
 > **moveTo**(`target`, `alignedEdge?`): `this`
 
-Defined in: [core/Mobject.ts:215](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L215)
+Defined in: [core/Mobject.ts:220](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L220)
 
 Move the mobject to an absolute position, or align with another Mobject.
 
@@ -1537,7 +1565,7 @@ this for chaining
 
 > **moveToAligned**(`target`, `alignedEdge?`): `this`
 
-Defined in: [core/Mobject.ts:718](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L718)
+Defined in: [core/Mobject.ts:740](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L740)
 
 Move this mobject to align its center with a point or mobject center
 
@@ -1571,7 +1599,7 @@ this for chaining
 
 > **nextTo**(`target`, `direction`, `buff`): `this`
 
-Defined in: [core/Mobject.ts:664](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L664)
+Defined in: [core/Mobject.ts:684](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L684)
 
 Position this mobject next to another mobject
 
@@ -1611,7 +1639,7 @@ this for chaining
 
 > **prepareForNonlinearTransform**(`numPieces`): `this`
 
-Defined in: [core/Mobject.ts:1068](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L1068)
+Defined in: [core/Mobject.ts:1096](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L1096)
 
 Subdivide every VMobject descendant's cubic Bezier curves so that non-linear
 transforms produce smooth results. Each cubic segment is split into n sub-segments
@@ -1641,7 +1669,7 @@ this for chaining
 
 > **remove**(...`mobjects`): `this`
 
-Defined in: [core/Mobject.ts:517](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L517)
+Defined in: [core/Mobject.ts:534](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L534)
 
 Remove a child mobject (supports multiple arguments for backward compatibility)
 
@@ -1669,7 +1697,7 @@ this for chaining
 
 > **removeUpdater**(`updater`): `this`
 
-Defined in: [core/Mobject.ts:994](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L994)
+Defined in: [core/Mobject.ts:1019](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L1019)
 
 Remove an updater function
 
@@ -1697,7 +1725,7 @@ this for chaining
 
 > **replace**(`target`, `stretch`): `this`
 
-Defined in: [core/Mobject.ts:593](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L593)
+Defined in: [core/Mobject.ts:612](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L612)
 
 Scale and reposition this mobject to match another mobject's bounding box.
 Matches Manim Python's replace() behavior.
@@ -1732,7 +1760,7 @@ this for chaining
 
 > **restoreState**(): `boolean`
 
-Defined in: [core/Mobject.ts:1162](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L1162)
+Defined in: [core/Mobject.ts:1196](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L1196)
 
 Restore this mobject to its previously saved state (from saveState).
 Uses the deep copy stored on `this.savedState` to restore all properties.
@@ -1753,7 +1781,7 @@ true if state was restored, false if no saved state exists
 
 > **rotate**(`angle`, `axisOrOptions?`): `this`
 
-Defined in: [core/Mobject.ts:245](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L245)
+Defined in: [core/Mobject.ts:250](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L250)
 
 Rotate the mobject around an axis
 Uses object pooling to avoid allocations in hot paths (performance optimization).
@@ -1788,7 +1816,7 @@ this for chaining
 
 > **rotateAboutOrigin**(`angle`, `axis`): `this`
 
-Defined in: [core/Mobject.ts:355](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L355)
+Defined in: [core/Mobject.ts:372](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L372)
 
 Rotate the mobject about the coordinate origin [0, 0, 0].
 
@@ -1822,7 +1850,7 @@ this for chaining
 
 > **saveState**(): `this`
 
-Defined in: [core/Mobject.ts:1137](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L1137)
+Defined in: [core/Mobject.ts:1171](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L1171)
 
 Save the current state of this mobject so it can be restored later.
 Stores a deep copy on `this.savedState` (for Restore animation
@@ -1854,7 +1882,7 @@ mob.restoreState(); // back to original position and color
 
 > **scale**(`factor`): `this`
 
-Defined in: [core/Mobject.ts:378](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L378)
+Defined in: [core/Mobject.ts:395](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L395)
 
 Scale the mobject uniformly or non-uniformly
 
@@ -1882,7 +1910,7 @@ this for chaining
 
 > **setColor**(`color`): `this`
 
-Defined in: [core/Mobject.ts:398](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L398)
+Defined in: [core/Mobject.ts:415](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L415)
 
 Set the mobject's color
 Only marks dirty if value actually changed (performance optimization).
@@ -1911,7 +1939,7 @@ this for chaining
 
 > **setDoubleSided**(`value`): `this`
 
-Defined in: [mobjects/three-d/Surface3D.ts:302](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L302)
+Defined in: [mobjects/three-d/Surface3D.ts:375](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L375)
 
 Set double-sided rendering
 
@@ -1935,7 +1963,7 @@ Set double-sided rendering
 
 > **setFill**(`color?`, `opacity?`): `this`
 
-Defined in: [core/Mobject.ts:460](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L460)
+Defined in: [core/Mobject.ts:477](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L477)
 
 Set the fill color and/or opacity (Manim Python parity: set_fill)
 
@@ -1969,7 +1997,7 @@ this for chaining
 
 > **setFillOpacity**(`opacity`): `this`
 
-Defined in: [core/Mobject.ts:444](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L444)
+Defined in: [core/Mobject.ts:461](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L461)
 
 Set the fill opacity
 Only marks dirty if value actually changed (performance optimization).
@@ -1998,7 +2026,7 @@ this for chaining
 
 > **setFunc**(`func`): `this`
 
-Defined in: [mobjects/three-d/Surface3D.ts:206](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L206)
+Defined in: [mobjects/three-d/Surface3D.ts:279](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L279)
 
 Set the parametric function
 
@@ -2022,7 +2050,7 @@ Set the parametric function
 
 > **setOpacity**(`opacity`): `this`
 
-Defined in: [core/Mobject.ts:412](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L412)
+Defined in: [core/Mobject.ts:429](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L429)
 
 Set the mobject's overall opacity
 Only marks dirty if value actually changed (performance optimization).
@@ -2051,7 +2079,7 @@ this for chaining
 
 > **setStrokeWidth**(`width`): `this`
 
-Defined in: [core/Mobject.ts:428](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L428)
+Defined in: [core/Mobject.ts:445](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L445)
 
 Set the stroke width for outlines
 Only marks dirty if value actually changed (performance optimization).
@@ -2080,7 +2108,7 @@ this for chaining
 
 > **setStyle**(`style`): `this`
 
-Defined in: [core/Mobject.ts:167](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L167)
+Defined in: [core/Mobject.ts:172](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L172)
 
 Set style properties
 
@@ -2104,7 +2132,7 @@ Set style properties
 
 > **setURange**(`range`): `this`
 
-Defined in: [mobjects/three-d/Surface3D.ts:222](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L222)
+Defined in: [mobjects/three-d/Surface3D.ts:295](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L295)
 
 Set the U parameter range
 
@@ -2128,7 +2156,7 @@ Set the U parameter range
 
 > **setUResolution**(`value`): `this`
 
-Defined in: [mobjects/three-d/Surface3D.ts:254](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L254)
+Defined in: [mobjects/three-d/Surface3D.ts:327](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L327)
 
 Set the U resolution
 
@@ -2152,7 +2180,7 @@ Set the U resolution
 
 > **setVRange**(`range`): `this`
 
-Defined in: [mobjects/three-d/Surface3D.ts:238](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L238)
+Defined in: [mobjects/three-d/Surface3D.ts:311](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L311)
 
 Set the V parameter range
 
@@ -2176,7 +2204,7 @@ Set the V parameter range
 
 > **setVResolution**(`value`): `this`
 
-Defined in: [mobjects/three-d/Surface3D.ts:270](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L270)
+Defined in: [mobjects/three-d/Surface3D.ts:343](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L343)
 
 Set the V resolution
 
@@ -2200,7 +2228,7 @@ Set the V resolution
 
 > **setWireframe**(`value`): `this`
 
-Defined in: [mobjects/three-d/Surface3D.ts:286](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Surface3D.ts#L286)
+Defined in: [mobjects/three-d/Surface3D.ts:359](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Surface3D.ts#L359)
 
 Set wireframe mode
 
@@ -2224,7 +2252,7 @@ Set wireframe mode
 
 > **setX**(`x`): `this`
 
-Defined in: [core/Mobject.ts:801](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L801)
+Defined in: [core/Mobject.ts:823](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L823)
 
 Set the x-coordinate of this mobject's center, preserving y and z.
 Matches Manim Python's set_x() behavior.
@@ -2249,7 +2277,7 @@ Matches Manim Python's set_x() behavior.
 
 > **setY**(`y`): `this`
 
-Defined in: [core/Mobject.ts:810](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L810)
+Defined in: [core/Mobject.ts:832](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L832)
 
 Set the y-coordinate of this mobject's center, preserving x and z.
 Matches Manim Python's set_y() behavior.
@@ -2274,7 +2302,7 @@ Matches Manim Python's set_y() behavior.
 
 > **setZ**(`z`): `this`
 
-Defined in: [core/Mobject.ts:819](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L819)
+Defined in: [core/Mobject.ts:841](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L841)
 
 Set the z-coordinate of this mobject's center, preserving x and y.
 Matches Manim Python's set_z() behavior.
@@ -2299,7 +2327,7 @@ Matches Manim Python's set_z() behavior.
 
 > **shift**(`delta`): `this`
 
-Defined in: [core/Mobject.ts:201](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L201)
+Defined in: [core/Mobject.ts:206](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L206)
 
 Translate the mobject by a delta
 
@@ -2327,7 +2355,7 @@ this for chaining
 
 > **toCorner**(`direction`, `buff`): `this`
 
-Defined in: [core/Mobject.ts:860](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L860)
+Defined in: [core/Mobject.ts:884](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L884)
 
 Move to a corner of the frame
 
@@ -2361,7 +2389,7 @@ this for chaining
 
 > **toEdge**(`direction`, `buff`): `this`
 
-Defined in: [core/Mobject.ts:838](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L838)
+Defined in: [core/Mobject.ts:860](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L860)
 
 Move to the edge of the frame
 
@@ -2395,7 +2423,7 @@ this for chaining
 
 > **update**(`dt`): `void`
 
-Defined in: [core/Mobject.ts:1032](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L1032)
+Defined in: [core/Mobject.ts:1057](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Mobject.ts#L1057)
 
 Run all updaters with given dt
 Called by Scene during render loop

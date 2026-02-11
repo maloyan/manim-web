@@ -2,7 +2,7 @@
 
 > **create**(`mobject`, `options?`): [`Create`](../classes/Create.md)
 
-Defined in: [animation/creation/Create.ts:190](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/creation/Create.ts#L190)
+Defined in: [animation/creation/Create.ts:203](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/creation/Create.ts#L203)
 
 Create a Create animation for a mobject.
 Progressively draws the mobject's stroke.
@@ -17,7 +17,7 @@ The mobject to create (should be a VMobject)
 
 ### options?
 
-[`AnimationOptions`](../interfaces/AnimationOptions.md)
+[`CreateOptions`](../interfaces/CreateOptions.md)
 
 Animation options (duration, rateFunc)
 

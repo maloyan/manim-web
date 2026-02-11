@@ -1,6 +1,6 @@
 # Interface: SphereOptions
 
-Defined in: [mobjects/three-d/Sphere.ts:7](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Sphere.ts#L7)
+Defined in: [mobjects/three-d/Sphere.ts:7](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Sphere.ts#L7)
 
 Options for creating a Sphere
 
@@ -10,7 +10,7 @@ Options for creating a Sphere
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/three-d/Sphere.ts:11](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Sphere.ts#L11)
+Defined in: [mobjects/three-d/Sphere.ts:11](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Sphere.ts#L11)
 
 Center position [x, y, z]. Default: [0, 0, 0]
 
@@ -20,7 +20,7 @@ Center position [x, y, z]. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/three-d/Sphere.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Sphere.ts#L13)
+Defined in: [mobjects/three-d/Sphere.ts:13](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Sphere.ts#L13)
 
 Color as CSS color string. Default: '#ffffff'
 
@@ -30,7 +30,7 @@ Color as CSS color string. Default: '#ffffff'
 
 > `optional` **opacity**: `number`
 
-Defined in: [mobjects/three-d/Sphere.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Sphere.ts#L15)
+Defined in: [mobjects/three-d/Sphere.ts:15](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Sphere.ts#L15)
 
 Opacity from 0 to 1. Default: 1
 
@@ -40,7 +40,7 @@ Opacity from 0 to 1. Default: 1
 
 > `optional` **radius**: `number`
 
-Defined in: [mobjects/three-d/Sphere.ts:9](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Sphere.ts#L9)
+Defined in: [mobjects/three-d/Sphere.ts:9](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Sphere.ts#L9)
 
 Radius of the sphere. Default: 1
 
@@ -50,7 +50,7 @@ Radius of the sphere. Default: 1
 
 > `optional` **resolution**: `number`
 
-Defined in: [mobjects/three-d/Sphere.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Sphere.ts#L17)
+Defined in: [mobjects/three-d/Sphere.ts:17](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Sphere.ts#L17)
 
 Number of segments for sphere geometry. Default: 32
 
@@ -60,6 +60,6 @@ Number of segments for sphere geometry. Default: 32
 
 > `optional` **wireframe**: `boolean`
 
-Defined in: [mobjects/three-d/Sphere.ts:19](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/three-d/Sphere.ts#L19)
+Defined in: [mobjects/three-d/Sphere.ts:19](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/three-d/Sphere.ts#L19)
 
 Whether to render as wireframe. Default: false

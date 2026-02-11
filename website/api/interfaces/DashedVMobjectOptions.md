@@ -1,6 +1,6 @@
 # Interface: DashedVMobjectOptions
 
-Defined in: [mobjects/geometry/DashedVMobject.ts:7](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/DashedVMobject.ts#L7)
+Defined in: [mobjects/geometry/DashedVMobject.ts:7](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/geometry/DashedVMobject.ts#L7)
 
 Options for creating a DashedVMobject
 
@@ -10,7 +10,7 @@ Options for creating a DashedVMobject
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/DashedVMobject.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/DashedVMobject.ts#L15)
+Defined in: [mobjects/geometry/DashedVMobject.ts:15](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/geometry/DashedVMobject.ts#L15)
 
 Override color. Default: uses vmobject's color
 
@@ -20,7 +20,7 @@ Override color. Default: uses vmobject's color
 
 > `optional` **dashRatio**: `number`
 
-Defined in: [mobjects/geometry/DashedVMobject.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/DashedVMobject.ts#L13)
+Defined in: [mobjects/geometry/DashedVMobject.ts:13](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/geometry/DashedVMobject.ts#L13)
 
 Ratio of dash length to total (dash + gap). Default: 0.5
 
@@ -30,7 +30,7 @@ Ratio of dash length to total (dash + gap). Default: 0.5
 
 > `optional` **numDashes**: `number`
 
-Defined in: [mobjects/geometry/DashedVMobject.ts:11](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/DashedVMobject.ts#L11)
+Defined in: [mobjects/geometry/DashedVMobject.ts:11](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/geometry/DashedVMobject.ts#L11)
 
 Number of dashes. Default: 15
 
@@ -40,7 +40,7 @@ Number of dashes. Default: 15
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/DashedVMobject.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/DashedVMobject.ts#L17)
+Defined in: [mobjects/geometry/DashedVMobject.ts:17](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/geometry/DashedVMobject.ts#L17)
 
 Override stroke width. Default: uses vmobject's stroke width
 
@@ -50,6 +50,6 @@ Override stroke width. Default: uses vmobject's stroke width
 
 > **vmobject**: [`VMobject`](../classes/VMobject.md)
 
-Defined in: [mobjects/geometry/DashedVMobject.ts:9](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/DashedVMobject.ts#L9)
+Defined in: [mobjects/geometry/DashedVMobject.ts:9](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/geometry/DashedVMobject.ts#L9)
 
 The VMobject to create a dashed version of

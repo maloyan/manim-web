@@ -2,7 +2,7 @@
 
 > **makeHoverable**(`mobject`, `scene`, `options?`): [`Hoverable`](../classes/Hoverable.md)
 
-Defined in: [interaction/Hoverable.ts:224](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Hoverable.ts#L224)
+Defined in: [interaction/Hoverable.ts:224](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/interaction/Hoverable.ts#L224)
 
 Factory function to make a mobject hoverable.
 

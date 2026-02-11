@@ -237,6 +237,7 @@
 - [ConeOptions](interfaces/ConeOptions.md)
 - [ControlsOptions](interfaces/ControlsOptions.md)
 - [ConvexHullOptions](interfaces/ConvexHullOptions.md)
+- [CreateOptions](interfaces/CreateOptions.md)
 - [CrossOptions](interfaces/CrossOptions.md)
 - [CubeOptions](interfaces/CubeOptions.md)
 - [CubicBezierOptions](interfaces/CubicBezierOptions.md)

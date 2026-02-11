@@ -2,7 +2,7 @@
 
 > **applyWave**(`mobject`, `options?`): [`ApplyWave`](../classes/ApplyWave.md)
 
-Defined in: [animation/indication/ApplyWave.ts:211](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/ApplyWave.ts#L211)
+Defined in: [animation/indication/ApplyWave.ts:211](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/indication/ApplyWave.ts#L211)
 
 Create an ApplyWave animation for a mobject.
 Applies a wave distortion that passes through the mobject.

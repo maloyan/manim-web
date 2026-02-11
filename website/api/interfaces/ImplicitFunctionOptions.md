@@ -1,6 +1,6 @@
 # Interface: ImplicitFunctionOptions
 
-Defined in: [mobjects/graphing/ImplicitFunction.ts:7](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ImplicitFunction.ts#L7)
+Defined in: [mobjects/graphing/ImplicitFunction.ts:7](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graphing/ImplicitFunction.ts#L7)
 
 Options for creating an ImplicitFunction
 
@@ -10,7 +10,7 @@ Options for creating an ImplicitFunction
 
 > `optional` **axes**: [`Axes`](../classes/Axes.md)
 
-Defined in: [mobjects/graphing/ImplicitFunction.ts:23](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ImplicitFunction.ts#L23)
+Defined in: [mobjects/graphing/ImplicitFunction.ts:23](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graphing/ImplicitFunction.ts#L23)
 
 Reference axes for coordinate transformation. Optional
 
@@ -20,7 +20,7 @@ Reference axes for coordinate transformation. Optional
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/graphing/ImplicitFunction.ts:19](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ImplicitFunction.ts#L19)
+Defined in: [mobjects/graphing/ImplicitFunction.ts:19](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graphing/ImplicitFunction.ts#L19)
 
 Stroke color. Default: '#58c4dd' (Manim blue)
 
@@ -30,7 +30,7 @@ Stroke color. Default: '#58c4dd' (Manim blue)
 
 > **func**: (`x`, `y`) => `number`
 
-Defined in: [mobjects/graphing/ImplicitFunction.ts:9](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ImplicitFunction.ts#L9)
+Defined in: [mobjects/graphing/ImplicitFunction.ts:9](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graphing/ImplicitFunction.ts#L9)
 
 The implicit function f(x, y) whose zero-level set is plotted
 
@@ -54,7 +54,7 @@ The implicit function f(x, y) whose zero-level set is plotted
 
 > `optional` **maxDepth**: `number`
 
-Defined in: [mobjects/graphing/ImplicitFunction.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ImplicitFunction.ts#L17)
+Defined in: [mobjects/graphing/ImplicitFunction.ts:17](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graphing/ImplicitFunction.ts#L17)
 
 Maximum grid depth for adaptive refinement (grid = 2^maxDepth at finest). Default: 9
 
@@ -64,7 +64,7 @@ Maximum grid depth for adaptive refinement (grid = 2^maxDepth at finest). Defaul
 
 > `optional` **minDepth**: `number`
 
-Defined in: [mobjects/graphing/ImplicitFunction.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ImplicitFunction.ts#L15)
+Defined in: [mobjects/graphing/ImplicitFunction.ts:15](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graphing/ImplicitFunction.ts#L15)
 
 Minimum grid depth (grid = 2^minDepth cells per axis). Default: 5
 
@@ -74,7 +74,7 @@ Minimum grid depth (grid = 2^minDepth cells per axis). Default: 5
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/graphing/ImplicitFunction.ts:21](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ImplicitFunction.ts#L21)
+Defined in: [mobjects/graphing/ImplicitFunction.ts:21](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graphing/ImplicitFunction.ts#L21)
 
 Stroke width in pixels. Default: 2
 
@@ -84,7 +84,7 @@ Stroke width in pixels. Default: 2
 
 > `optional` **xRange**: \[`number`, `number`\]
 
-Defined in: [mobjects/graphing/ImplicitFunction.ts:11](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ImplicitFunction.ts#L11)
+Defined in: [mobjects/graphing/ImplicitFunction.ts:11](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graphing/ImplicitFunction.ts#L11)
 
 X range for the plot as [min, max]. Default: [-5, 5]
 
@@ -94,6 +94,6 @@ X range for the plot as [min, max]. Default: [-5, 5]
 
 > `optional` **yRange**: \[`number`, `number`\]
 
-Defined in: [mobjects/graphing/ImplicitFunction.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ImplicitFunction.ts#L13)
+Defined in: [mobjects/graphing/ImplicitFunction.ts:13](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/graphing/ImplicitFunction.ts#L13)
 
 Y range for the plot as [min, max]. Default: [-5, 5]

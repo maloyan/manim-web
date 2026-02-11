@@ -1,6 +1,6 @@
 # Class: Renderer
 
-Defined in: [core/Renderer.ts:31](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Renderer.ts#L31)
+Defined in: [core/Renderer.ts:31](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Renderer.ts#L31)
 
 Three.js WebGLRenderer wrapper for manimweb.
 Handles canvas creation, rendering, and lifecycle management.
@@ -11,7 +11,7 @@ Handles canvas creation, rendering, and lifecycle management.
 
 > **new Renderer**(`container`, `options`): `Renderer`
 
-Defined in: [core/Renderer.ts:42](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Renderer.ts#L42)
+Defined in: [core/Renderer.ts:42](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Renderer.ts#L42)
 
 Create a new Renderer and append it to the container.
 
@@ -41,7 +41,7 @@ Renderer configuration options
 
 > **get** **backgroundColor**(): `Color`
 
-Defined in: [core/Renderer.ts:96](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Renderer.ts#L96)
+Defined in: [core/Renderer.ts:96](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Renderer.ts#L96)
 
 Get the background color.
 
@@ -53,7 +53,7 @@ Get the background color.
 
 > **set** **backgroundColor**(`color`): `void`
 
-Defined in: [core/Renderer.ts:103](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Renderer.ts#L103)
+Defined in: [core/Renderer.ts:103](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Renderer.ts#L103)
 
 Set the background color.
 
@@ -75,7 +75,7 @@ Set the background color.
 
 > **get** **height**(): `number`
 
-Defined in: [core/Renderer.ts:89](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Renderer.ts#L89)
+Defined in: [core/Renderer.ts:89](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Renderer.ts#L89)
 
 Get the current height.
 
@@ -91,7 +91,7 @@ Get the current height.
 
 > **get** **width**(): `number`
 
-Defined in: [core/Renderer.ts:82](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Renderer.ts#L82)
+Defined in: [core/Renderer.ts:82](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Renderer.ts#L82)
 
 Get the current width.
 
@@ -105,7 +105,7 @@ Get the current width.
 
 > **dispose**(): `void`
 
-Defined in: [core/Renderer.ts:148](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Renderer.ts#L148)
+Defined in: [core/Renderer.ts:148](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Renderer.ts#L148)
 
 Clean up resources.
 Removes canvas from DOM and disposes WebGL resources.
@@ -120,7 +120,7 @@ Removes canvas from DOM and disposes WebGL resources.
 
 > **getCanvas**(): `HTMLCanvasElement`
 
-Defined in: [core/Renderer.ts:132](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Renderer.ts#L132)
+Defined in: [core/Renderer.ts:132](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Renderer.ts#L132)
 
 Get the underlying canvas element.
 
@@ -136,7 +136,7 @@ The HTMLCanvasElement used for rendering
 
 > **getThreeRenderer**(): `WebGLRenderer`
 
-Defined in: [core/Renderer.ts:140](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Renderer.ts#L140)
+Defined in: [core/Renderer.ts:140](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Renderer.ts#L140)
 
 Get the underlying Three.js WebGLRenderer.
 
@@ -152,7 +152,7 @@ The WebGLRenderer instance
 
 > **render**(`scene`, `camera`): `void`
 
-Defined in: [core/Renderer.ts:113](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Renderer.ts#L113)
+Defined in: [core/Renderer.ts:113](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Renderer.ts#L113)
 
 Render a frame.
 
@@ -180,7 +180,7 @@ Three.js camera to use
 
 > **resize**(`width`, `height`): `void`
 
-Defined in: [core/Renderer.ts:122](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Renderer.ts#L122)
+Defined in: [core/Renderer.ts:122](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Renderer.ts#L122)
 
 Handle resize events.
 

@@ -1,6 +1,6 @@
 # Interface: SkeletonizeOptions
 
-Defined in: [utils/skeletonize.ts:21](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/skeletonize.ts#L21)
+Defined in: [utils/skeletonize.ts:21](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/skeletonize.ts#L21)
 
 Glyph Skeletonization — Medial Axis Extraction via Zhang-Suen Thinning
 
@@ -22,7 +22,7 @@ The output format matches VMobject's control point convention:
 
 > `optional` **gridResolution**: `number`
 
-Defined in: [utils/skeletonize.ts:23](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/skeletonize.ts#L23)
+Defined in: [utils/skeletonize.ts:23](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/skeletonize.ts#L23)
 
 Grid resolution (pixels along the longest glyph dimension). Default: 100
 
@@ -32,7 +32,7 @@ Grid resolution (pixels along the longest glyph dimension). Default: 100
 
 > `optional` **minChainLength**: `number`
 
-Defined in: [utils/skeletonize.ts:27](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/skeletonize.ts#L27)
+Defined in: [utils/skeletonize.ts:27](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/skeletonize.ts#L27)
 
 Minimum chain length in pixels to keep. Default: 3
 
@@ -42,6 +42,6 @@ Minimum chain length in pixels to keep. Default: 3
 
 > `optional` **smoothSubdivisions**: `number`
 
-Defined in: [utils/skeletonize.ts:25](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/skeletonize.ts#L25)
+Defined in: [utils/skeletonize.ts:25](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/skeletonize.ts#L25)
 
 Smoothing subdivisions per traced segment (Catmull-Rom). Default: 4

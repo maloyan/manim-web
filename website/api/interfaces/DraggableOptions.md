@@ -1,6 +1,6 @@
 # Interface: DraggableOptions
 
-Defined in: [interaction/Draggable.ts:7](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Draggable.ts#L7)
+Defined in: [interaction/Draggable.ts:7](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/interaction/Draggable.ts#L7)
 
 Options for configuring draggable behavior.
 
@@ -10,7 +10,7 @@ Options for configuring draggable behavior.
 
 > `optional` **constrainX**: \[`number`, `number`\]
 
-Defined in: [interaction/Draggable.ts:9](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Draggable.ts#L9)
+Defined in: [interaction/Draggable.ts:9](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/interaction/Draggable.ts#L9)
 
 X-axis constraints as [min, max] or null for no constraint
 
@@ -20,7 +20,7 @@ X-axis constraints as [min, max] or null for no constraint
 
 > `optional` **constrainY**: \[`number`, `number`\]
 
-Defined in: [interaction/Draggable.ts:11](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Draggable.ts#L11)
+Defined in: [interaction/Draggable.ts:11](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/interaction/Draggable.ts#L11)
 
 Y-axis constraints as [min, max] or null for no constraint
 
@@ -30,7 +30,7 @@ Y-axis constraints as [min, max] or null for no constraint
 
 > `optional` **onDrag**: (`mobject`, `position`, `delta`) => `void`
 
-Defined in: [interaction/Draggable.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Draggable.ts#L15)
+Defined in: [interaction/Draggable.ts:15](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/interaction/Draggable.ts#L15)
 
 Callback during drag with position and delta
 
@@ -58,7 +58,7 @@ Callback during drag with position and delta
 
 > `optional` **onDragEnd**: (`mobject`, `position`) => `void`
 
-Defined in: [interaction/Draggable.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Draggable.ts#L17)
+Defined in: [interaction/Draggable.ts:17](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/interaction/Draggable.ts#L17)
 
 Callback when drag ends
 
@@ -82,7 +82,7 @@ Callback when drag ends
 
 > `optional` **onDragStart**: (`mobject`, `position`) => `void`
 
-Defined in: [interaction/Draggable.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Draggable.ts#L13)
+Defined in: [interaction/Draggable.ts:13](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/interaction/Draggable.ts#L13)
 
 Callback when drag starts
 
@@ -106,6 +106,6 @@ Callback when drag starts
 
 > `optional` **snapToGrid**: `number`
 
-Defined in: [interaction/Draggable.ts:19](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Draggable.ts#L19)
+Defined in: [interaction/Draggable.ts:19](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/interaction/Draggable.ts#L19)
 
 Grid size for snapping, or null for no snapping

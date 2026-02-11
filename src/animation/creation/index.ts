@@ -16,6 +16,7 @@ export {
   RemoveTextLetterByLetter,
   removeTextLetterByLetter,
   // Types
+  type CreateOptions,
   type WriteOptions,
   type AddTextLetterByLetterOptions,
 } from './Create';

@@ -2,7 +2,7 @@
 
 > **scale**(`mobject`, `factor`, `options?`): [`Scale`](../classes/Scale.md)
 
-Defined in: [animation/movement/Scale.ts:140](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Scale.ts#L140)
+Defined in: [animation/movement/Scale.ts:140](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/movement/Scale.ts#L140)
 
 Create a Scale animation for a mobject.
 

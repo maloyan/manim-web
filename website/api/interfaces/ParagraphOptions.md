@@ -1,6 +1,6 @@
 # Interface: ParagraphOptions
 
-Defined in: [mobjects/text/Paragraph.ts:6](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Paragraph.ts#L6)
+Defined in: [mobjects/text/Paragraph.ts:6](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Paragraph.ts#L6)
 
 Options for creating a Paragraph mobject
 
@@ -14,7 +14,7 @@ Options for creating a Paragraph mobject
 
 > `optional` **alignment**: `"center"` \| `"left"` \| `"right"` \| `"justify"`
 
-Defined in: [mobjects/text/Paragraph.ts:10](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Paragraph.ts#L10)
+Defined in: [mobjects/text/Paragraph.ts:10](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Paragraph.ts#L10)
 
 Text alignment within the paragraph. Default: 'left'
 
@@ -24,7 +24,7 @@ Text alignment within the paragraph. Default: 'left'
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/text/Text.ts:22](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Text.ts#L22)
+Defined in: [mobjects/text/Text.ts:22](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Text.ts#L22)
 
 Text color as CSS color string. Default: '#ffffff'
 
@@ -38,7 +38,7 @@ Text color as CSS color string. Default: '#ffffff'
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/text/Text.ts:24](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Text.ts#L24)
+Defined in: [mobjects/text/Text.ts:24](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Text.ts#L24)
 
 Fill opacity from 0 to 1. Default: 1
 
@@ -52,7 +52,7 @@ Fill opacity from 0 to 1. Default: 1
 
 > `optional` **fontFamily**: `string`
 
-Defined in: [mobjects/text/Text.ts:16](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Text.ts#L16)
+Defined in: [mobjects/text/Text.ts:16](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Text.ts#L16)
 
 Font family. Default: 'CMU Serif, Georgia, Times New Roman, serif' (Manim-like)
 
@@ -66,7 +66,7 @@ Font family. Default: 'CMU Serif, Georgia, Times New Roman, serif' (Manim-like)
 
 > `optional` **fontSize**: `number`
 
-Defined in: [mobjects/text/Text.ts:14](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Text.ts#L14)
+Defined in: [mobjects/text/Text.ts:14](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Text.ts#L14)
 
 Font size in pixels. Default: 48
 
@@ -80,7 +80,7 @@ Font size in pixels. Default: 48
 
 > `optional` **fontStyle**: `string`
 
-Defined in: [mobjects/text/Text.ts:20](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Text.ts#L20)
+Defined in: [mobjects/text/Text.ts:20](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Text.ts#L20)
 
 Font style ('normal' | 'italic'). Default: 'normal'
 
@@ -94,7 +94,7 @@ Font style ('normal' | 'italic'). Default: 'normal'
 
 > `optional` **fontUrl**: `string`
 
-Defined in: [mobjects/text/Text.ts:34](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Text.ts#L34)
+Defined in: [mobjects/text/Text.ts:34](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Text.ts#L34)
 
 URL to a font file (OTF/TTF) for glyph vector extraction. When provided, loadGlyphs() can extract glyph outlines for stroke-draw animation.
 
@@ -108,7 +108,7 @@ URL to a font file (OTF/TTF) for glyph vector extraction. When provided, loadGly
 
 > `optional` **fontWeight**: `string` \| `number`
 
-Defined in: [mobjects/text/Text.ts:18](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Text.ts#L18)
+Defined in: [mobjects/text/Text.ts:18](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Text.ts#L18)
 
 Font weight. Default: 'normal'
 
@@ -122,7 +122,7 @@ Font weight. Default: 'normal'
 
 > `optional` **letterSpacing**: `number`
 
-Defined in: [mobjects/text/Text.ts:30](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Text.ts#L30)
+Defined in: [mobjects/text/Text.ts:30](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Text.ts#L30)
 
 Letter spacing in pixels. Default: 0
 
@@ -136,7 +136,7 @@ Letter spacing in pixels. Default: 0
 
 > `optional` **lineHeight**: `number`
 
-Defined in: [mobjects/text/Text.ts:28](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Text.ts#L28)
+Defined in: [mobjects/text/Text.ts:28](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Text.ts#L28)
 
 Line height multiplier. Default: 1.2
 
@@ -150,7 +150,7 @@ Line height multiplier. Default: 1.2
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/text/Text.ts:26](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Text.ts#L26)
+Defined in: [mobjects/text/Text.ts:26](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Text.ts#L26)
 
 Stroke width for outlined text. Default: 0
 
@@ -164,7 +164,7 @@ Stroke width for outlined text. Default: 0
 
 > **text**: `string`
 
-Defined in: [mobjects/text/Text.ts:12](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Text.ts#L12)
+Defined in: [mobjects/text/Text.ts:12](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Text.ts#L12)
 
 The text content to display
 
@@ -178,7 +178,7 @@ The text content to display
 
 > `optional` **textAlign**: `"center"` \| `"left"` \| `"right"`
 
-Defined in: [mobjects/text/Text.ts:32](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Text.ts#L32)
+Defined in: [mobjects/text/Text.ts:32](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Text.ts#L32)
 
 Text alignment. Default: 'center'
 
@@ -192,6 +192,6 @@ Text alignment. Default: 'center'
 
 > `optional` **width**: `number`
 
-Defined in: [mobjects/text/Paragraph.ts:8](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/Paragraph.ts#L8)
+Defined in: [mobjects/text/Paragraph.ts:8](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/mobjects/text/Paragraph.ts#L8)
 
 Maximum width in world units for text wrapping

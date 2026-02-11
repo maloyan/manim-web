@@ -2,7 +2,7 @@
 
 > **laggedStart**(`animations`, `options?`): [`AnimationGroup`](../classes/AnimationGroup.md)
 
-Defined in: [animation/LaggedStart.ts:24](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/LaggedStart.ts#L24)
+Defined in: [animation/LaggedStart.ts:24](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/LaggedStart.ts#L24)
 
 Create a LaggedStart animation group.
 Each animation starts lagRatio * singleDuration after the previous.

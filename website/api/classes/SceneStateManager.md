@@ -1,6 +1,6 @@
 # Class: SceneStateManager
 
-Defined in: [core/StateManager.ts:223](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L223)
+Defined in: [core/StateManager.ts:223](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L223)
 
 Manages undo/redo state for a collection of mobjects (typically a Scene).
 
@@ -22,7 +22,7 @@ a getter so that additions/removals from the scene are reflected.
 
 > **new SceneStateManager**(`getMobjects`, `maxDepth`): `SceneStateManager`
 
-Defined in: [core/StateManager.ts:244](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L244)
+Defined in: [core/StateManager.ts:244](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L244)
 
 #### Parameters
 
@@ -48,7 +48,7 @@ Maximum undo stack depth (default 50)
 
 > `readonly` **maxDepth**: `number`
 
-Defined in: [core/StateManager.ts:225](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L225)
+Defined in: [core/StateManager.ts:225](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L225)
 
 Maximum number of undo entries. Oldest are discarded when exceeded.
 
@@ -60,7 +60,7 @@ Maximum number of undo entries. Oldest are discarded when exceeded.
 
 > **get** **canRedo**(): `boolean`
 
-Defined in: [core/StateManager.ts:359](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L359)
+Defined in: [core/StateManager.ts:359](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L359)
 
 Whether redo is available
 
@@ -76,7 +76,7 @@ Whether redo is available
 
 > **get** **canUndo**(): `boolean`
 
-Defined in: [core/StateManager.ts:354](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L354)
+Defined in: [core/StateManager.ts:354](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L354)
 
 Whether undo is available
 
@@ -92,7 +92,7 @@ Whether undo is available
 
 > **get** **redoCount**(): `number`
 
-Defined in: [core/StateManager.ts:349](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L349)
+Defined in: [core/StateManager.ts:349](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L349)
 
 Number of available redo steps
 
@@ -108,7 +108,7 @@ Number of available redo steps
 
 > **get** **redoStack**(): readonly [`SceneSnapshot`](../interfaces/SceneSnapshot.md)[]
 
-Defined in: [core/StateManager.ts:369](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L369)
+Defined in: [core/StateManager.ts:369](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L369)
 
 Read-only view of the redo stack (newest last)
 
@@ -124,7 +124,7 @@ readonly [`SceneSnapshot`](../interfaces/SceneSnapshot.md)[]
 
 > **get** **undoCount**(): `number`
 
-Defined in: [core/StateManager.ts:344](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L344)
+Defined in: [core/StateManager.ts:344](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L344)
 
 Number of available undo steps
 
@@ -140,7 +140,7 @@ Number of available undo steps
 
 > **get** **undoStack**(): readonly [`SceneSnapshot`](../interfaces/SceneSnapshot.md)[]
 
-Defined in: [core/StateManager.ts:364](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L364)
+Defined in: [core/StateManager.ts:364](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L364)
 
 Read-only view of the undo stack (newest last)
 
@@ -154,7 +154,7 @@ readonly [`SceneSnapshot`](../interfaces/SceneSnapshot.md)[]
 
 > **clearHistory**(): `void`
 
-Defined in: [core/StateManager.ts:338](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L338)
+Defined in: [core/StateManager.ts:338](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L338)
 
 Clear both undo and redo stacks.
 
@@ -168,7 +168,7 @@ Clear both undo and redo stacks.
 
 > **getState**(`label?`): [`SceneSnapshot`](../interfaces/SceneSnapshot.md)
 
-Defined in: [core/StateManager.ts:322](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L322)
+Defined in: [core/StateManager.ts:322](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L322)
 
 Get a snapshot of the current scene state without pushing it
 onto any stack.
@@ -189,7 +189,7 @@ onto any stack.
 
 > **redo**(): `boolean`
 
-Defined in: [core/StateManager.ts:301](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L301)
+Defined in: [core/StateManager.ts:301](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L301)
 
 Redo: re-apply the last undone state.
 Pushes the current state onto the undo stack first.
@@ -206,7 +206,7 @@ true if redo was applied, false if nothing to redo
 
 > **save**(`label?`): [`SceneSnapshot`](../interfaces/SceneSnapshot.md)
 
-Defined in: [core/StateManager.ts:260](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L260)
+Defined in: [core/StateManager.ts:260](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L260)
 
 Capture the current scene state and push it onto the undo stack.
 Clears the redo stack (new action branch).
@@ -231,7 +231,7 @@ The captured SceneSnapshot (for inspection / persistence)
 
 > **setState**(`snapshot`): `void`
 
-Defined in: [core/StateManager.ts:331](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L331)
+Defined in: [core/StateManager.ts:331](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L331)
 
 Apply a previously captured snapshot, overwriting the current scene
 state. Does NOT modify undo/redo stacks -- call save() first if you
@@ -253,7 +253,7 @@ want the current state preserved.
 
 > **undo**(): `boolean`
 
-Defined in: [core/StateManager.ts:281](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/StateManager.ts#L281)
+Defined in: [core/StateManager.ts:281](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/StateManager.ts#L281)
 
 Undo: restore the most recently saved state.
 Pushes the current state onto the redo stack first.

@@ -2,7 +2,7 @@
 
 > **removeTextLetterByLetter**(`mobject`, `options?`): [`RemoveTextLetterByLetter`](../classes/RemoveTextLetterByLetter.md)
 
-Defined in: [animation/creation/Create.ts:1074](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/creation/Create.ts#L1074)
+Defined in: [animation/creation/Create.ts:1087](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/animation/creation/Create.ts#L1087)
 
 Create a RemoveTextLetterByLetter animation.
 Removes text letter by letter (reverse typewriter effect).

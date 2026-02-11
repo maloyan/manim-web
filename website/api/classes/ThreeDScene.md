@@ -1,6 +1,6 @@
 # Class: ThreeDScene
 
-Defined in: [core/SceneExtensions.ts:43](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L43)
+Defined in: [core/SceneExtensions.ts:43](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L43)
 
 Scene configured for 3D content.
 Provides a 3D camera, orbit controls, and lighting setup by default.
@@ -16,7 +16,7 @@ Compatible with the Timeline system for animations.
 
 > **new ThreeDScene**(`container`, `options`): `ThreeDScene`
 
-Defined in: [core/SceneExtensions.ts:59](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L59)
+Defined in: [core/SceneExtensions.ts:72](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L72)
 
 Create a new 3D scene.
 
@@ -48,7 +48,7 @@ Scene configuration options
 
 > `protected` **\_autoRender**: `boolean` = `true`
 
-Defined in: [core/Scene.ts:66](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L66)
+Defined in: [core/Scene.ts:66](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L66)
 
 #### Inherited from
 
@@ -62,7 +62,7 @@ Defined in: [core/Scene.ts:66](https://github.com/maloyan/manim-js/blob/c05b6757
 
 > **get** **audioManager**(): [`AudioManager`](AudioManager.md)
 
-Defined in: [core/Scene.ts:198](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L198)
+Defined in: [core/Scene.ts:198](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L198)
 
 Get the audio manager (lazily created on first access).
 Use this to access lower-level audio controls.
@@ -83,7 +83,7 @@ Use this to access lower-level audio controls.
 
 > **get** **camera**(): [`Camera2D`](Camera2D.md)
 
-Defined in: [core/Scene.ts:151](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L151)
+Defined in: [core/Scene.ts:151](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L151)
 
 Get the camera.
 
@@ -103,7 +103,7 @@ Get the camera.
 
 > **get** **camera3D**(): [`Camera3D`](Camera3D.md)
 
-Defined in: [core/SceneExtensions.ts:119](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L119)
+Defined in: [core/SceneExtensions.ts:132](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L132)
 
 Get the 3D camera.
 
@@ -119,7 +119,7 @@ Get the 3D camera.
 
 > **get** **currentTime**(): `number`
 
-Defined in: [core/Scene.ts:179](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L179)
+Defined in: [core/Scene.ts:179](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L179)
 
 Get the current playback time.
 
@@ -139,7 +139,7 @@ Get the current playback time.
 
 > **get** **isPlaying**(): `boolean`
 
-Defined in: [core/Scene.ts:172](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L172)
+Defined in: [core/Scene.ts:172](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L172)
 
 Get whether animations are currently playing.
 
@@ -159,7 +159,7 @@ Get whether animations are currently playing.
 
 > **get** **lighting**(): [`Lighting`](Lighting.md)
 
-Defined in: [core/SceneExtensions.ts:126](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L126)
+Defined in: [core/SceneExtensions.ts:139](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L139)
 
 Get the lighting system.
 
@@ -175,7 +175,7 @@ Get the lighting system.
 
 > **get** **mobjects**(): `ReadonlySet`\<[`Mobject`](Mobject.md)\>
 
-Defined in: [core/Scene.ts:186](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L186)
+Defined in: [core/Scene.ts:186](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L186)
 
 Get all mobjects in the scene.
 
@@ -195,7 +195,7 @@ Get all mobjects in the scene.
 
 > **get** **orbitControls**(): [`OrbitControls`](OrbitControls.md)
 
-Defined in: [core/SceneExtensions.ts:133](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L133)
+Defined in: [core/SceneExtensions.ts:146](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L146)
 
 Get the orbit controls (if enabled).
 
@@ -211,7 +211,7 @@ Get the orbit controls (if enabled).
 
 > **get** **renderer**(): [`Renderer`](Renderer.md)
 
-Defined in: [core/Scene.ts:158](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L158)
+Defined in: [core/Scene.ts:158](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L158)
 
 Get the renderer.
 
@@ -231,7 +231,7 @@ Get the renderer.
 
 > **get** **stateManager**(): [`SceneStateManager`](SceneStateManager.md)
 
-Defined in: [core/Scene.ts:891](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L891)
+Defined in: [core/Scene.ts:891](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L891)
 
 Get the scene's state manager for advanced undo/redo control.
 
@@ -251,7 +251,7 @@ Get the scene's state manager for advanced undo/redo control.
 
 > **get** **threeScene**(): `Scene`
 
-Defined in: [core/Scene.ts:144](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L144)
+Defined in: [core/Scene.ts:144](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L144)
 
 Get the Three.js scene.
 
@@ -271,7 +271,7 @@ Get the Three.js scene.
 
 > **get** **timeline**(): [`Timeline`](Timeline.md)
 
-Defined in: [core/Scene.ts:165](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L165)
+Defined in: [core/Scene.ts:165](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L165)
 
 Get the current timeline.
 
@@ -289,7 +289,7 @@ Get the current timeline.
 
 > `protected` **\_render**(): `void`
 
-Defined in: [core/SceneExtensions.ts:228](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L228)
+Defined in: [core/SceneExtensions.ts:385](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L385)
 
 Override _render to use the 3D camera with two-pass rendering for HUD.
 This is called by the animation loop internally.
@@ -308,7 +308,7 @@ This is called by the animation loop internally.
 
 > **add**(...`mobjects`): `this`
 
-Defined in: [core/Scene.ts:270](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L270)
+Defined in: [core/Scene.ts:270](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L270)
 
 Add mobjects to the scene.
 
@@ -334,7 +334,7 @@ Mobjects to add
 
 > **addFixedInFrameMobjects**(...`mobjects`): `this`
 
-Defined in: [core/SceneExtensions.ts:195](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L195)
+Defined in: [core/SceneExtensions.ts:352](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L352)
 
 Pin mobjects to the screen (HUD) so they don't move with the 3D camera.
 Equivalent to Python Manim's add_fixed_in_frame_mobjects.
@@ -359,7 +359,7 @@ this for chaining
 
 > **addForegroundMobject**(...`mobjects`): `this`
 
-Defined in: [core/Scene.ts:251](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L251)
+Defined in: [core/Scene.ts:251](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L251)
 
 Add mobjects as foreground objects that render on top of everything.
 Matches Manim Python's add_foreground_mobject().
@@ -386,7 +386,7 @@ Mobjects to add in the foreground
 
 > **addSound**(`url`, `options?`): `Promise`\<[`AudioTrack`](../interfaces/AudioTrack.md)\>
 
-Defined in: [core/Scene.ts:219](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L219)
+Defined in: [core/Scene.ts:219](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L219)
 
 Add a sound to play at a specific time on the timeline.
 Mirrors Python manim's `self.add_sound("file.wav", time_offset=0.5)`.
@@ -428,7 +428,7 @@ await scene.addSound('/sounds/whoosh.wav');  // plays at time 0
 
 > **addSoundAtAnimation**(`animation`, `url`, `options?`): `Promise`\<[`AudioTrack`](../interfaces/AudioTrack.md)\>
 
-Defined in: [core/Scene.ts:238](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L238)
+Defined in: [core/Scene.ts:238](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L238)
 
 Add a sound that starts when a given animation begins.
 
@@ -476,7 +476,7 @@ await scene.play(fadeIn);
 
 > **batch**(`callback`): `void`
 
-Defined in: [core/Scene.ts:785](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L785)
+Defined in: [core/Scene.ts:785](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L785)
 
 Batch multiple mobject updates without re-rendering between each.
 Useful for performance when making many changes at once.
@@ -509,11 +509,66 @@ scene.batch(() => {
 
 ***
 
+### begin3DIllusionCameraRotation()
+
+> **begin3DIllusionCameraRotation**(`rate`): `this`
+
+Defined in: [core/SceneExtensions.ts:218](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L218)
+
+Begin 3D illusion camera rotation.
+Unlike ambient rotation (which only rotates theta), this also oscillates
+phi sinusoidally, creating a wobbling 3D illusion as if the viewer walks
+around the scene.
+Equivalent to Python Manim's begin_3dillusion_camera_rotation(rate).
+
+#### Parameters
+
+##### rate
+
+`number` = `2`
+
+Rotation rate in radians per second. Defaults to 2.
+
+#### Returns
+
+`this`
+
+this for chaining
+
+***
+
+### beginAmbientCameraRotation()
+
+> **beginAmbientCameraRotation**(`rate`): `this`
+
+Defined in: [core/SceneExtensions.ts:193](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L193)
+
+Begin continuous ambient rotation of the camera around the scene.
+Rotates the camera's theta angle at the given rate (radians per second)
+during wait() calls and play() calls.
+Equivalent to Python Manim's begin_ambient_camera_rotation(rate).
+
+#### Parameters
+
+##### rate
+
+`number` = `0.1`
+
+Rotation rate in radians per second. Defaults to 0.1.
+
+#### Returns
+
+`this`
+
+this for chaining
+
+***
+
 ### clear()
 
 > **clear**(): `this`
 
-Defined in: [core/SceneExtensions.ts:279](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L279)
+Defined in: [core/SceneExtensions.ts:478](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L478)
 
 Override clear to also clear the HUD scene and fixed mobjects.
 
@@ -531,7 +586,7 @@ Override clear to also clear the HUD scene and fixed mobjects.
 
 > **dispose**(): `void`
 
-Defined in: [core/SceneExtensions.ts:325](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L325)
+Defined in: [core/SceneExtensions.ts:531](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L531)
 
 Clean up all resources.
 
@@ -549,7 +604,7 @@ Clean up all resources.
 
 > **getCameraOrientation**(): `object`
 
-Defined in: [core/SceneExtensions.ts:168](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L168)
+Defined in: [core/SceneExtensions.ts:181](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L181)
 
 Get the current camera orientation angles.
 
@@ -577,7 +632,7 @@ Object with phi, theta, and distance
 
 > **getCanvas**(): `HTMLCanvasElement`
 
-Defined in: [core/Scene.ts:843](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L843)
+Defined in: [core/Scene.ts:843](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L843)
 
 Get the canvas element.
 
@@ -597,7 +652,7 @@ The HTMLCanvasElement used for rendering
 
 > **getContainer**(): `HTMLElement`
 
-Defined in: [core/Scene.ts:852](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L852)
+Defined in: [core/Scene.ts:852](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L852)
 
 Get the container element the scene is rendered into.
 Returns the parent element of the canvas.
@@ -618,7 +673,7 @@ The container HTMLElement
 
 > **getHeight**(): `number`
 
-Defined in: [core/Scene.ts:872](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L872)
+Defined in: [core/Scene.ts:872](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L872)
 
 Get the height of the canvas in pixels.
 
@@ -638,7 +693,7 @@ Canvas height in pixels
 
 > **getState**(`label?`): [`SceneSnapshot`](../interfaces/SceneSnapshot.md)
 
-Defined in: [core/Scene.ts:945](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L945)
+Defined in: [core/Scene.ts:945](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L945)
 
 Get a snapshot of the current scene state without modifying stacks.
 
@@ -662,7 +717,7 @@ Get a snapshot of the current scene state without modifying stacks.
 
 > **getTargetFps**(): `number`
 
-Defined in: [core/Scene.ts:811](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L811)
+Defined in: [core/Scene.ts:811](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L811)
 
 Get the current target frame rate.
 
@@ -682,7 +737,7 @@ Target fps
 
 > **getTimelineDuration**(): `number`
 
-Defined in: [core/Scene.ts:880](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L880)
+Defined in: [core/Scene.ts:880](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L880)
 
 Get the total duration of the current timeline.
 
@@ -702,7 +757,7 @@ Duration in seconds, or 0 if no timeline
 
 > **getWidth**(): `number`
 
-Defined in: [core/Scene.ts:864](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L864)
+Defined in: [core/Scene.ts:864](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L864)
 
 Get the width of the canvas in pixels.
 
@@ -722,7 +777,7 @@ Canvas width in pixels
 
 > **isInView**(`object`): `boolean`
 
-Defined in: [core/Scene.ts:634](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L634)
+Defined in: [core/Scene.ts:634](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L634)
 
 Check if an object is within the camera's view frustum.
 Useful for manual culling checks or debugging.
@@ -747,11 +802,51 @@ true if object is in view or if culling is disabled
 
 ***
 
+### moveCamera()
+
+> **moveCamera**(`options`): `Promise`\<`void`\>
+
+Defined in: [core/SceneExtensions.ts:248](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L248)
+
+Animate the camera to a new orientation over a given duration.
+Equivalent to Python Manim's move_camera(phi, theta, distance).
+If no duration is given, snaps instantly.
+
+#### Parameters
+
+##### options
+
+Target orientation and duration
+
+###### distance?
+
+`number`
+
+###### duration?
+
+`number`
+
+###### phi?
+
+`number`
+
+###### theta?
+
+`number`
+
+#### Returns
+
+`Promise`\<`void`\>
+
+Promise that resolves when the animation completes
+
+***
+
 ### pause()
 
 > **pause**(): `this`
 
-Defined in: [core/Scene.ts:528](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L528)
+Defined in: [core/Scene.ts:528](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L528)
 
 Pause playback (video and audio).
 
@@ -769,7 +864,7 @@ Pause playback (video and audio).
 
 > **play**(...`animations`): `Promise`\<`void`\>
 
-Defined in: [core/Scene.ts:380](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L380)
+Defined in: [core/Scene.ts:380](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L380)
 
 Play animations in parallel (all at once).
 Matches Manim's scene.play() behavior where multiple animations run simultaneously.
@@ -799,7 +894,7 @@ Promise that resolves when all animations complete
 
 > **playAll**(...`animations`): `Promise`\<`void`\>
 
-Defined in: [core/Scene.ts:436](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L436)
+Defined in: [core/Scene.ts:436](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L436)
 
 Play multiple animations in parallel (all at once).
 Alias for play() - delegates to play() to avoid duplicated logic.
@@ -828,7 +923,7 @@ Promise that resolves when all animations complete
 
 > **redo**(): `boolean`
 
-Defined in: [core/Scene.ts:934](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L934)
+Defined in: [core/Scene.ts:934](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L934)
 
 Redo the last undone change.
 The current state is pushed to the undo stack.
@@ -849,7 +944,7 @@ true if redo was applied, false if nothing to redo
 
 > **remove**(...`mobjects`): `this`
 
-Defined in: [core/SceneExtensions.ts:298](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L298)
+Defined in: [core/SceneExtensions.ts:504](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L504)
 
 Override remove to also handle fixed mobjects.
 
@@ -873,7 +968,7 @@ Override remove to also handle fixed mobjects.
 
 > **removeFixedInFrameMobjects**(...`mobjects`): `this`
 
-Defined in: [core/SceneExtensions.ts:213](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L213)
+Defined in: [core/SceneExtensions.ts:370](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L370)
 
 Remove mobjects from the fixed-in-frame HUD.
 
@@ -897,7 +992,7 @@ this for chaining
 
 > **render**(): `void`
 
-Defined in: [core/SceneExtensions.ts:272](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L272)
+Defined in: [core/SceneExtensions.ts:465](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L465)
 
 Public render - delegates to _render.
 
@@ -915,7 +1010,7 @@ Public render - delegates to _render.
 
 > **resize**(`width`, `height`): `this`
 
-Defined in: [core/SceneExtensions.ts:314](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L314)
+Defined in: [core/SceneExtensions.ts:520](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L520)
 
 Handle window resize.
 
@@ -947,7 +1042,7 @@ New height in pixels
 
 > **resume**(): `this`
 
-Defined in: [core/Scene.ts:542](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L542)
+Defined in: [core/Scene.ts:542](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L542)
 
 Resume playback (video and audio).
 
@@ -965,7 +1060,7 @@ Resume playback (video and audio).
 
 > **saveState**(`label?`): [`SceneSnapshot`](../interfaces/SceneSnapshot.md)
 
-Defined in: [core/Scene.ts:910](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L910)
+Defined in: [core/Scene.ts:910](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L910)
 
 Save the current state of all scene mobjects.
 Pushes onto the undo stack and clears the redo stack.
@@ -1003,7 +1098,7 @@ scene.undo(); // circle returns to original position
 
 > **seek**(`time`): `this`
 
-Defined in: [core/Scene.ts:513](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L513)
+Defined in: [core/Scene.ts:513](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L513)
 
 Seek to a specific time in the timeline.
 Also seeks the audio manager if audio has been used.
@@ -1030,7 +1125,7 @@ Time in seconds
 
 > **setCameraOrientation**(`phi`, `theta`, `distance?`): `this`
 
-Defined in: [core/SceneExtensions.ts:144](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L144)
+Defined in: [core/SceneExtensions.ts:157](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L157)
 
 Set the camera orientation using spherical coordinates.
 
@@ -1066,7 +1161,7 @@ this for chaining
 
 > **setFrustumCulling**(`enabled`): `this`
 
-Defined in: [core/Scene.ts:819](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L819)
+Defined in: [core/Scene.ts:819](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L819)
 
 Enable or disable frustum culling.
 
@@ -1092,7 +1187,7 @@ Whether frustum culling should be enabled
 
 > **setLookAt**(`target`): `this`
 
-Defined in: [core/SceneExtensions.ts:155](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L155)
+Defined in: [core/SceneExtensions.ts:168](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L168)
 
 Set the camera's look-at target.
 
@@ -1116,7 +1211,7 @@ this for chaining
 
 > **setOrbitControlsEnabled**(`enabled`): `this`
 
-Defined in: [core/SceneExtensions.ts:177](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/SceneExtensions.ts#L177)
+Defined in: [core/SceneExtensions.ts:334](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L334)
 
 Enable or disable orbit controls.
 
@@ -1140,7 +1235,7 @@ this for chaining
 
 > **setState**(`snapshot`): `void`
 
-Defined in: [core/Scene.ts:953](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L953)
+Defined in: [core/Scene.ts:953](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L953)
 
 Apply a previously captured snapshot, overwriting all mobject states.
 Does NOT modify undo/redo stacks. Call saveState() first to preserve.
@@ -1165,7 +1260,7 @@ Does NOT modify undo/redo stacks. Call saveState() first to preserve.
 
 > **setTargetFps**(`fps`): `this`
 
-Defined in: [core/Scene.ts:801](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L801)
+Defined in: [core/Scene.ts:801](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L801)
 
 Set the target frame rate.
 
@@ -1191,7 +1286,7 @@ Target frames per second (1-120)
 
 > **stop**(): `this`
 
-Defined in: [core/Scene.ts:557](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L557)
+Defined in: [core/Scene.ts:557](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L557)
 
 Stop playback and reset timeline (video and audio).
 
@@ -1205,11 +1300,45 @@ Stop playback and reset timeline (video and audio).
 
 ***
 
+### stop3DIllusionCameraRotation()
+
+> **stop3DIllusionCameraRotation**(): `this`
+
+Defined in: [core/SceneExtensions.ts:235](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L235)
+
+Stop the 3D illusion camera rotation.
+Equivalent to Python Manim's stop_3dillusion_camera_rotation().
+
+#### Returns
+
+`this`
+
+this for chaining
+
+***
+
+### stopAmbientCameraRotation()
+
+> **stopAmbientCameraRotation**(): `this`
+
+Defined in: [core/SceneExtensions.ts:204](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/SceneExtensions.ts#L204)
+
+Stop the ambient camera rotation.
+Equivalent to Python Manim's stop_ambient_camera_rotation().
+
+#### Returns
+
+`this`
+
+this for chaining
+
+***
+
 ### undo()
 
 > **undo**(): `boolean`
 
-Defined in: [core/Scene.ts:920](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L920)
+Defined in: [core/Scene.ts:920](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L920)
 
 Undo the last change (restore the most recently saved state).
 The current state is pushed to the redo stack.
@@ -1230,7 +1359,7 @@ true if undo was applied, false if nothing to undo
 
 > **wait**(`duration`): `Promise`\<`void`\>
 
-Defined in: [core/Scene.ts:446](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Scene.ts#L446)
+Defined in: [core/Scene.ts:446](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/core/Scene.ts#L446)
 
 Wait for a duration (pause between animations).
 Runs a render loop during the wait so that updaters keep ticking.

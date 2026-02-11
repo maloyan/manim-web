@@ -2,7 +2,7 @@
 
 > **triangulatePolygonPositions**(`vertices`, `holes?`, `z?`): `Float32Array`
 
-Defined in: [utils/triangulate.ts:82](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/triangulate.ts#L82)
+Defined in: [utils/triangulate.ts:82](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/utils/triangulate.ts#L82)
 
 Triangulate a polygon and return a flat Float32Array of triangle positions
 suitable for use as a Three.js BufferGeometry position attribute.

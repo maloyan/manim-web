@@ -1,6 +1,6 @@
 # Class: GifExporter
 
-Defined in: [export/GifExporter.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/GifExporter.ts#L15)
+Defined in: [export/GifExporter.ts:15](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/export/GifExporter.ts#L15)
 
 ## Constructors
 
@@ -8,7 +8,7 @@ Defined in: [export/GifExporter.ts:15](https://github.com/maloyan/manim-js/blob/
 
 > **new GifExporter**(`scene`, `options?`): `GifExporter`
 
-Defined in: [export/GifExporter.ts:19](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/GifExporter.ts#L19)
+Defined in: [export/GifExporter.ts:19](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/export/GifExporter.ts#L19)
 
 #### Parameters
 
@@ -30,7 +30,7 @@ Defined in: [export/GifExporter.ts:19](https://github.com/maloyan/manim-js/blob/
 
 > **exportAndDownload**(`filename`, `duration?`): `Promise`\<`void`\>
 
-Defined in: [export/GifExporter.ts:127](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/GifExporter.ts#L127)
+Defined in: [export/GifExporter.ts:127](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/export/GifExporter.ts#L127)
 
 Convenience method: export and download
 
@@ -54,7 +54,7 @@ Convenience method: export and download
 
 > **exportTimeline**(`duration?`): `Promise`\<`Blob`\>
 
-Defined in: [export/GifExporter.ts:37](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/GifExporter.ts#L37)
+Defined in: [export/GifExporter.ts:37](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/export/GifExporter.ts#L37)
 
 Export the timeline as a GIF
 
@@ -74,7 +74,7 @@ Export the timeline as a GIF
 
 > `static` **download**(`blob`, `filename`): `void`
 
-Defined in: [export/GifExporter.ts:113](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/GifExporter.ts#L113)
+Defined in: [export/GifExporter.ts:113](https://github.com/maloyan/manim-js/blob/9c9bee74d35f8b24042f1a9c73cb07c40c986b6e/src/export/GifExporter.ts#L113)
 
 Download the GIF
 
