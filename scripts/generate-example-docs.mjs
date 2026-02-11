@@ -28,7 +28,7 @@ const CATEGORIES = {
   'Basic Concepts': ['manim_ce_logo', 'brace_annotation', 'vector_arrow', 'boolean_operations'],
   'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace'],
   'Plotting': ['sin_cos_plot', 'arg_min', 'graph_area_plot', 'polygon_on_axes', 'heat_diagram_plot'],
-  'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'three_d_light_source_position', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation'],
+  'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation'],
   'Advanced Projects': ['opening_manim'],
 };
 
@@ -154,6 +154,11 @@ const EXAMPLE_META = {
     description:
       'Shows a parametric sphere with checkerboard colors (RED_D, RED_E) on ThreeDAxes with custom point light positioning. Demonstrates Surface3D checkerboardColors and the Lighting system.',
     learnMore: ['ThreeDScene', 'ThreeDAxes', 'Surface3D', 'Lighting'],
+  },
+  three_d_surface_plot: {
+    description:
+      'Renders a 3D Gaussian surface plot on ThreeDAxes with checkerboard coloring (ORANGE, BLUE). The parametric surface maps (u,v) to a bell-shaped Gaussian peak, scaled by 2 and displayed with semi-transparent faces.',
+    learnMore: ['ThreeDScene', 'ThreeDAxes', 'Surface3D'],
   },
   three_d_camera_rotation: {
     description:
