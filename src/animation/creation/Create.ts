@@ -116,10 +116,10 @@ export class Create extends Animation {
    */
   private _childAlpha(alpha: number, childIndex: number, totalChildren: number): number {
     if (this._lagRatio <= 0 || totalChildren <= 1) return alpha;
-    const maxStagger = Math.min(this._lagRatio, 0.99);
-    const childStart = (childIndex / Math.max(1, totalChildren - 1)) * maxStagger;
-    const childWindow = 1 - maxStagger;
-    return Math.max(0, Math.min(1, (alpha - childStart) / childWindow));
+    const fullLength = (totalChildren - 1) * this._lagRatio + 1;
+    const value = alpha * fullLength;
+    const lower = childIndex * this._lagRatio;
+    return Math.max(0, Math.min(1, value - lower));
   }
 
   interpolate(alpha: number): void {
@@ -589,8 +589,15 @@ export class Write extends Animation {
     this._parentThreeObj = textThreeObj;
     const glyphThreeObj = glyphGroup.getThreeObject();
 
-    // Position glyph group to align with Text — copy world transform
-    // The glyphs are built in pixel-world space matching the Text's coordinate system
+    // Center the glyph group to match the centered canvas texture.
+    // Compute bounding box BEFORE adding to parent so it's in local space.
+    const glyphBounds = new THREE.Box3().setFromObject(glyphThreeObj);
+    if (!glyphBounds.isEmpty()) {
+      const glyphCenterX = (glyphBounds.min.x + glyphBounds.max.x) / 2;
+      const glyphCenterY = (glyphBounds.min.y + glyphBounds.max.y) / 2;
+      glyphThreeObj.position.x = -glyphCenterX;
+      glyphThreeObj.position.y = -glyphCenterY;
+    }
     this._parentThreeObj.add(glyphThreeObj);
 
     // Set up dash reveal for each glyph child's Line2 children

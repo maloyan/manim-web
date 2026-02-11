@@ -8,7 +8,6 @@ async function animate(scene: any) {
     Create,
     FadeIn,
     FadeOut,
-    Write,
     Transform,
     ApplyPointwiseFunction,
     Text,
@@ -32,12 +31,11 @@ async function animate(scene: any) {
     fontUrl: FONT_URL,
   });
   const basel = new MathTex({ latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}' });
-  await title.loadGlyphs();
   await basel.waitForRender?.();
 
   new VGroup(title, basel).arrange(DOWN);
   scene.add(title, basel);
-  await scene.play(new Write(title, { duration: 2 }), new FadeIn(basel, { shift: DOWN }));
+  await scene.play(new FadeIn(title), new FadeIn(basel, { shift: DOWN }));
   await scene.wait(1);
 
   // Part 2: Transform title to UL corner, fade out equation downward
@@ -63,7 +61,6 @@ async function animate(scene: any) {
   await gridTitle.loadGlyphs();
   gridTitle.moveTo(transformTitle);
 
-  scene.add(grid, gridTitle);
   await scene.play(
     new FadeOut(title),
     new FadeIn(gridTitle, { shift: UP }),

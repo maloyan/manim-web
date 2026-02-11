@@ -225,29 +225,54 @@ export class Transform extends Animation {
    */
   override finish(): void {
     if (this._useCrossFade) {
-      this.mobject.setOpacity(0);
-      this.target.setOpacity(this._crossFadeTargetOpacity);
-      this.target._syncToThree();
+      // Check if both source and target are Text objects with texture meshes
+      const getTexMesh = (m: Mobject): THREE.Mesh | null => {
+        const candidate = m as unknown as { getTextureMesh?: () => THREE.Mesh | null };
+        return typeof candidate.getTextureMesh === 'function' ? candidate.getTextureMesh() : null;
+      };
+      const srcMesh = getTexMesh(this.mobject);
+      const tgtMesh = getTexMesh(this.target);
 
-      // Reparent target Three.js object under source so that if the source
-      // is later removed from the scene (e.g. via FadeOut), the cross-fade
-      // target is cleaned up along with it.
-      const sourceObj = this.mobject.getThreeObject();
-      const targetObj = this.target.getThreeObject();
-      const srcWorld = new THREE.Vector3();
-      sourceObj.getWorldPosition(srcWorld);
-      const tgtWorld = new THREE.Vector3();
-      targetObj.getWorldPosition(tgtWorld);
-      if (targetObj.parent) {
-        targetObj.parent.remove(targetObj);
+      if (srcMesh && tgtMesh) {
+        // Text→Text: swap texture/geometry so source visually becomes target.
+        // This way FadeOut(source) correctly fades the visible text.
+        const srcMat = srcMesh.material as THREE.MeshBasicMaterial;
+        const tgtMat = tgtMesh.material as THREE.MeshBasicMaterial;
+        srcMat.map = tgtMat.map;
+        srcMat.needsUpdate = true;
+        srcMesh.geometry.dispose();
+        srcMesh.geometry = tgtMesh.geometry;
+
+        // Position source at target location
+        this.mobject.position.copy(this._targetPosition);
+        this.mobject.setOpacity(this._crossFadeTargetOpacity);
+        this.mobject._markDirty();
+
+        // Remove target from scene graph
+        const targetObj = this.target.getThreeObject();
+        if (targetObj.parent) targetObj.parent.remove(targetObj);
+      } else {
+        // Non-Text cross-fade: reparent target under source
+        this.mobject.setOpacity(0);
+        this.target.setOpacity(this._crossFadeTargetOpacity);
+        this.target._syncToThree();
+
+        const sourceObj = this.mobject.getThreeObject();
+        const targetObj = this.target.getThreeObject();
+        const srcWorld = new THREE.Vector3();
+        sourceObj.getWorldPosition(srcWorld);
+        const tgtWorld = new THREE.Vector3();
+        targetObj.getWorldPosition(tgtWorld);
+        if (targetObj.parent) {
+          targetObj.parent.remove(targetObj);
+        }
+        (sourceObj as THREE.Group).add(targetObj);
+        targetObj.position.set(
+          tgtWorld.x - srcWorld.x,
+          tgtWorld.y - srcWorld.y,
+          tgtWorld.z - srcWorld.z
+        );
       }
-      (sourceObj as THREE.Group).add(targetObj);
-      // Adjust local position so target keeps its world position
-      targetObj.position.set(
-        tgtWorld.x - srcWorld.x,
-        tgtWorld.y - srcWorld.y,
-        tgtWorld.z - srcWorld.z
-      );
 
       super.finish();
       return;
