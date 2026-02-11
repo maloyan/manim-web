@@ -136,9 +136,9 @@ export class Surface3D extends Mobject {
     geometry.computeVertexNormals();
 
     if (this._checkerboardColors) {
-      // Convert to non-indexed so each face can have its own vertex colors
+      // Convert to non-indexed so each face can have its own vertex colors.
+      // Smooth normals from the indexed geometry are preserved by toNonIndexed().
       const nonIndexed = geometry.toNonIndexed();
-      nonIndexed.computeVertexNormals();
       geometry.dispose();
 
       const posAttr = nonIndexed.getAttribute('position');
@@ -231,7 +231,6 @@ export class Surface3D extends Mobject {
 
       if (this._checkerboardColors) {
         const nonIndexed = geometry.toNonIndexed();
-        nonIndexed.computeVertexNormals();
         geometry.dispose();
 
         const posAttr = nonIndexed.getAttribute('position');
