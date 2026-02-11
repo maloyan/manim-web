@@ -1,5 +1,5 @@
 /**
- * AudioManager - Audio playback and synchronization for manim-js.
+ * AudioManager - Audio playback and synchronization for manim-web.
  *
  * Manages loading, scheduling, and playing audio clips in sync with
  * the Scene animation timeline. Uses the Web Audio API exclusively
@@ -77,7 +77,7 @@ export interface AudioTrack {
 // ---------------------------------------------------------------------------
 
 /**
- * Manages audio playback synchronized with the manim-js Scene timeline.
+ * Manages audio playback synchronized with the manim-web Scene timeline.
  *
  * Usage:
  * ```ts

@@ -156,7 +156,7 @@ export async function preloadMathJax(): Promise<void> {
 
 /**
  * Render a LaTeX string to SVG using MathJax and convert the result
- * into VMobject paths suitable for manim-js animation.
+ * into VMobject paths suitable for manim-web animation.
  *
  * @param texString - The raw LaTeX to render (without delimiters).
  * @param options   - Rendering options.

@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug in manim-js
+about: Report a bug in manim-web
 labels: bug
 ---
 
@@ -20,7 +20,7 @@ What actually happened.
 ## Environment
 - Browser:
 - OS:
-- manim-js version:
+- manim-web version:
 
 ## Additional Context
 Any extra info, screenshots, or code snippets.

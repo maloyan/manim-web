@@ -9,7 +9,7 @@ The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the bro
 <img src="assets/demo_square_to_circle.gif" width="600" alt="Square to Circle demo">
 
 [![npm version](https://img.shields.io/npm/v/manim-web.svg)](https://www.npmjs.com/package/manim-web)
-[![CI](https://github.com/maloyan/manim-js/actions/workflows/ci.yml/badge.svg)](https://github.com/maloyan/manim-js/actions/workflows/ci.yml)
+[![CI](https://github.com/maloyan/manim-web/actions/workflows/ci.yml/badge.svg)](https://github.com/maloyan/manim-web/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 [Quick Start](#quick-start) · [Examples](https://maloyan.github.io/manim-web/) · [Docs](https://maloyan.github.io/manim-web/) · [npm](https://www.npmjs.com/package/manim-web)
@@ -98,7 +98,7 @@ node tools/py2ts.cjs input.py -o output.ts
 ## Contributing
 
 ```bash
-git clone https://github.com/maloyan/manim-js.git
+git clone https://github.com/maloyan/manim-web.git
 cd manim-web
 npm install
 npm run dev

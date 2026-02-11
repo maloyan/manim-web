@@ -4,7 +4,7 @@
  * MathJax SVG output contains `<path>` elements with `d` attributes.
  * This module parses those path data strings into arrays of cubic Bezier
  * control points and assembles them into VMobject / VGroup hierarchies
- * that can be animated with manim-js.
+ * that can be animated with manim-web.
  *
  * The parser handles all SVG path commands:
  *   M/m  L/l  H/h  V/v  C/c  S/s  Q/q  T/t  A/a  Z/z

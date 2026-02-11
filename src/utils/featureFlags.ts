@@ -1,5 +1,5 @@
 /**
- * Lightweight feature flag system for manim-js.
+ * Lightweight feature flag system for manim-web.
  * Enables toggling experimental features without code changes.
  */
 

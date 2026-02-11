@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest a new feature for manim-js
+about: Suggest a new feature for manim-web
 labels: enhancement
 ---
 

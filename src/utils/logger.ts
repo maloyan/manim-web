@@ -1,5 +1,5 @@
 /**
- * Structured logger for manim-js.
+ * Structured logger for manim-web.
  * Provides consistent logging interface for both browser and Node environments.
  * Includes log sanitization to redact sensitive data (tokens, keys, emails).
  */
@@ -117,15 +117,15 @@ function sanitizeArgs(args: unknown[]): unknown[] {
 
 export const logger: Logger = {
   debug: (...args: unknown[]) => {
-    if (shouldLog('debug')) console.debug('[manim-js]', ...sanitizeArgs(args));
+    if (shouldLog('debug')) console.debug('[manim-web]', ...sanitizeArgs(args));
   },
   info: (...args: unknown[]) => {
-    if (shouldLog('info')) console.info('[manim-js]', ...sanitizeArgs(args));
+    if (shouldLog('info')) console.info('[manim-web]', ...sanitizeArgs(args));
   },
   warn: (...args: unknown[]) => {
-    if (shouldLog('warn')) console.warn('[manim-js]', ...sanitizeArgs(args));
+    if (shouldLog('warn')) console.warn('[manim-web]', ...sanitizeArgs(args));
   },
   error: (...args: unknown[]) => {
-    if (shouldLog('error')) console.error('[manim-js]', ...sanitizeArgs(args));
+    if (shouldLog('error')) console.error('[manim-web]', ...sanitizeArgs(args));
   },
 };
