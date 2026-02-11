@@ -60,6 +60,8 @@ export class ThreeDScene extends Scene {
   private _illusionRotationRate: number = 0;
   private _illusionOriginPhi: number = 0;
   private _illusionOriginTheta: number = 0;
+  private _illusionThetaTracker: number = 0;
+  private _illusionPhiTracker: number = 0;
   private _illusionActive: boolean = false;
 
   /**
@@ -218,6 +220,8 @@ export class ThreeDScene extends Scene {
     this._illusionRotationRate = rate;
     this._illusionOriginPhi = current.phi;
     this._illusionOriginTheta = current.theta;
+    this._illusionThetaTracker = current.theta;
+    this._illusionPhiTracker = current.phi;
     this._illusionActive = true;
     this._lastRenderTime = performance.now();
     return this;
@@ -398,7 +402,9 @@ export class ThreeDScene extends Scene {
       this._lastRenderTime = now;
     }
 
-    // Advance 3D illusion camera rotation
+    // Advance 3D illusion camera rotation (elliptical orbit)
+    // Python Manim: theta oscillates via 0.2*sin(tracker), phi via 0.1*cos(tracker)
+    // Both trackers advance at rate*dt, creating an elliptical camera path
     if (this._illusionActive && this._illusionRotationRate !== 0) {
       const now = performance.now();
       if (this._lastRenderTime > 0) {
@@ -406,9 +412,10 @@ export class ThreeDScene extends Scene {
         const clampedDt = Math.min(dt, 0.1);
         if (clampedDt > 0) {
           const current = this._camera3D.getOrbitAngles();
-          const newTheta = current.theta + this._illusionRotationRate * clampedDt;
-          const newPhi =
-            this._illusionOriginPhi + 0.1 * Math.sin(newTheta - this._illusionOriginTheta);
+          this._illusionThetaTracker += this._illusionRotationRate * clampedDt;
+          this._illusionPhiTracker += this._illusionRotationRate * clampedDt;
+          const newTheta = this._illusionOriginTheta + 0.2 * Math.sin(this._illusionThetaTracker);
+          const newPhi = this._illusionOriginPhi + 0.1 * Math.cos(this._illusionPhiTracker);
           this._camera3D.orbit(newPhi, newTheta, current.distance);
         }
       }
