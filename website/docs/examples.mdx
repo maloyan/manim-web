@@ -1344,6 +1344,13 @@ scene.lighting.addDirectional({ position: [-5, 0, 0], intensity: 0.5 });
 
 scene.add(axes);
 scene.add(sphere);
+
+// Re-enable depth testing for the 3D sphere mesh.
+// Scene.add() disables depthTest (correct for 2D), but this raw THREE.Mesh
+// needs it for proper 3D occlusion.
+mat.depthTest = true;
+mat.depthWrite = true;
+
 await scene.wait();
 ```
 
@@ -1397,7 +1404,7 @@ const gaussSurface = new Surface3D({
   uResolution: 24,
   vResolution: 24,
   checkerboardColors: [ORANGE, BLUE],
-  opacity: 0.5,
+  opacity: 0.85,
 });
 
 // Scale by 2 about origin (matches Python: gauss_plane.scale(2, about_point=ORIGIN))

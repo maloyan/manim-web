@@ -879,6 +879,35 @@ function generateComponentFile(stem, cleanCode) {
     lines.push(`  const { ${animateSpecifiers.join(', ')} } = await import('manim-js');`);
   }
 
+  // Handle namespace imports from non-manim-js packages (e.g. `import * as THREE from 'three'`)
+  // Convert to destructured dynamic imports and replace namespace references in body/constants
+  const nsImportRe = /import\s+\*\s+as\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g;
+  let nsMatch;
+  while ((nsMatch = nsImportRe.exec(parsed.imports)) !== null) {
+    const nsName = nsMatch[1];
+    const pkg = nsMatch[2];
+    // Find all NS.X usages in body and constants
+    const usageRe = new RegExp(`\\b${nsName}\\.(\\w+)\\b`, 'g');
+    const usedExports = new Set();
+    let usageMatch;
+    const allCode = (parsed.constants || '') + '\n' + (body || '');
+    while ((usageMatch = usageRe.exec(allCode)) !== null) {
+      usedExports.add(usageMatch[1]);
+    }
+    if (usedExports.size > 0) {
+      const sorted = [...usedExports].sort();
+      lines.push(`  const {`);
+      lines.push(`    ${sorted.join(',\n    ')},`);
+      lines.push(`  } = await import('${pkg}');`);
+      // Replace NS.X -> X in body and constants
+      const replaceRe = new RegExp(`\\b${nsName}\\.(\\w+)\\b`, 'g');
+      body = body.replace(replaceRe, '$1');
+      if (parsed.constants) {
+        parsed.constants = parsed.constants.replace(replaceRe, '$1');
+      }
+    }
+  }
+
   // Add constants (indented)
   if (parsed.constants) {
     lines.push('');
