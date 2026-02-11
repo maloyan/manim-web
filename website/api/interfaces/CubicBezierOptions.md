@@ -1,6 +1,6 @@
 # Interface: CubicBezierOptions
 
-Defined in: [mobjects/geometry/CubicBezier.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/CubicBezier.ts#L13)
+Defined in: [mobjects/geometry/CubicBezier.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/CubicBezier.ts#L13)
 
 Options for creating a CubicBezier
 
@@ -10,7 +10,7 @@ Options for creating a CubicBezier
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/CubicBezier.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/CubicBezier.ts#L17)
+Defined in: [mobjects/geometry/CubicBezier.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/CubicBezier.ts#L17)
 
 Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
@@ -20,7 +20,7 @@ Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
 > **points**: `CubicBezierPoints`
 
-Defined in: [mobjects/geometry/CubicBezier.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/CubicBezier.ts#L15)
+Defined in: [mobjects/geometry/CubicBezier.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/CubicBezier.ts#L15)
 
 The four control points [p0, p1, p2, p3]
 
@@ -30,6 +30,6 @@ The four control points [p0, p1, p2, p3]
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/CubicBezier.ts:19](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/CubicBezier.ts#L19)
+Defined in: [mobjects/geometry/CubicBezier.ts:19](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/CubicBezier.ts#L19)
 
 Stroke width in pixels. Default: 4 (Manim's default)

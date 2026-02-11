@@ -1,6 +1,6 @@
 # Interface: ButtonConfig
 
-Defined in: [interaction/Controls.ts:51](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L51)
+Defined in: [interaction/Controls.ts:51](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Controls.ts#L51)
 
 Configuration for a button control.
 
@@ -10,7 +10,7 @@ Configuration for a button control.
 
 > **label**: `string`
 
-Defined in: [interaction/Controls.ts:53](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L53)
+Defined in: [interaction/Controls.ts:53](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Controls.ts#L53)
 
 Button label text.
 
@@ -20,7 +20,7 @@ Button label text.
 
 > **onClick**: () => `void`
 
-Defined in: [interaction/Controls.ts:55](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L55)
+Defined in: [interaction/Controls.ts:55](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Controls.ts#L55)
 
 Callback when button is clicked.
 

@@ -2,7 +2,7 @@
 
 > **fadeToColor**(`mobject`, `color`, `options?`): [`FadeToColor`](../classes/FadeToColor.md)
 
-Defined in: [animation/transform/TransformExtensions.ts:1157](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/transform/TransformExtensions.ts#L1157)
+Defined in: [animation/transform/TransformExtensions.ts:1157](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/transform/TransformExtensions.ts#L1157)
 
 Create a FadeToColor animation.
 

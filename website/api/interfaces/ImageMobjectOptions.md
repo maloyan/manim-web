@@ -1,6 +1,6 @@
 # Interface: ImageMobjectOptions
 
-Defined in: [mobjects/image/index.ts:21](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/image/index.ts#L21)
+Defined in: [mobjects/image/index.ts:21](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/image/index.ts#L21)
 
 Options for creating an ImageMobject
 
@@ -10,7 +10,7 @@ Options for creating an ImageMobject
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/image/index.ts:33](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/image/index.ts#L33)
+Defined in: [mobjects/image/index.ts:33](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/image/index.ts#L33)
 
 Center position [x, y, z]. Default: [0, 0, 0]
 
@@ -20,7 +20,7 @@ Center position [x, y, z]. Default: [0, 0, 0]
 
 > `optional` **doubleSided**: `boolean`
 
-Defined in: [mobjects/image/index.ts:39](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/image/index.ts#L39)
+Defined in: [mobjects/image/index.ts:39](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/image/index.ts#L39)
 
 Whether to render both sides. Default: false
 
@@ -30,7 +30,7 @@ Whether to render both sides. Default: false
 
 > `optional` **filters**: [`ImageFilterOptions`](ImageFilterOptions.md)
 
-Defined in: [mobjects/image/index.ts:37](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/image/index.ts#L37)
+Defined in: [mobjects/image/index.ts:37](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/image/index.ts#L37)
 
 Image filter options
 
@@ -40,7 +40,7 @@ Image filter options
 
 > `optional` **height**: `number`
 
-Defined in: [mobjects/image/index.ts:29](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/image/index.ts#L29)
+Defined in: [mobjects/image/index.ts:29](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/image/index.ts#L29)
 
 Height of the image in scene units. Default: auto-calculated from aspect ratio
 
@@ -50,7 +50,7 @@ Height of the image in scene units. Default: auto-calculated from aspect ratio
 
 > `optional` **opacity**: `number`
 
-Defined in: [mobjects/image/index.ts:35](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/image/index.ts#L35)
+Defined in: [mobjects/image/index.ts:35](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/image/index.ts#L35)
 
 Opacity from 0 to 1. Default: 1
 
@@ -60,7 +60,7 @@ Opacity from 0 to 1. Default: 1
 
 > `optional` **pixelData**: `number`[][]
 
-Defined in: [mobjects/image/index.ts:25](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/image/index.ts#L25)
+Defined in: [mobjects/image/index.ts:25](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/image/index.ts#L25)
 
 2D grayscale pixel array (values 0-255). Each inner array is a row. Either source or pixelData is required.
 
@@ -70,7 +70,7 @@ Defined in: [mobjects/image/index.ts:25](https://github.com/maloyan/manim-js/blo
 
 > `optional` **scaleToFit**: `boolean`
 
-Defined in: [mobjects/image/index.ts:31](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/image/index.ts#L31)
+Defined in: [mobjects/image/index.ts:31](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/image/index.ts#L31)
 
 If both width and height specified, whether to scale to fit within bounds preserving aspect ratio. Default: true
 
@@ -80,7 +80,7 @@ If both width and height specified, whether to scale to fit within bounds preser
 
 > `optional` **source**: `string`
 
-Defined in: [mobjects/image/index.ts:23](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/image/index.ts#L23)
+Defined in: [mobjects/image/index.ts:23](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/image/index.ts#L23)
 
 Image source: URL or base64 data URI. Either source or pixelData is required.
 
@@ -90,6 +90,6 @@ Image source: URL or base64 data URI. Either source or pixelData is required.
 
 > `optional` **width**: `number`
 
-Defined in: [mobjects/image/index.ts:27](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/image/index.ts#L27)
+Defined in: [mobjects/image/index.ts:27](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/image/index.ts#L27)
 
 Width of the image in scene units. Default: auto-calculated from aspect ratio

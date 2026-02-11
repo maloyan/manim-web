@@ -161,6 +161,7 @@
 - [TextGlyphGroup](classes/TextGlyphGroup.md)
 - [TexturedSurface](classes/TexturedSurface.md)
 - [ThreeDAxes](classes/ThreeDAxes.md)
+- [ThreeDScene](classes/ThreeDScene.md)
 - [Timeline](classes/Timeline.md)
 - [Torus](classes/Torus.md)
 - [Transform](classes/Transform.md)
@@ -185,6 +186,7 @@
 - [Wiggle](classes/Wiggle.md)
 - [WiggleOutThenIn](classes/WiggleOutThenIn.md)
 - [Write](classes/Write.md)
+- [ZoomDisplayPopOut](classes/ZoomDisplayPopOut.md)
 - [ZoomedScene](classes/ZoomedScene.md)
 
 ## Interfaces
@@ -348,6 +350,7 @@
 - [TexturedSphereOptions](interfaces/TexturedSphereOptions.md)
 - [TexturedSurfaceOptions](interfaces/TexturedSurfaceOptions.md)
 - [ThreeDAxesOptions](interfaces/ThreeDAxesOptions.md)
+- [ThreeDSceneOptions](interfaces/ThreeDSceneOptions.md)
 - [TorusOptions](interfaces/TorusOptions.md)
 - [UnderlineOptions](interfaces/UnderlineOptions.md)
 - [ValueTrackerOptions](interfaces/ValueTrackerOptions.md)

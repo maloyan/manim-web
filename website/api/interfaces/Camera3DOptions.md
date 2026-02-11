@@ -1,6 +1,6 @@
 # Interface: Camera3DOptions
 
-Defined in: [core/Camera.ts:7](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Camera.ts#L7)
+Defined in: [core/Camera.ts:7](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L7)
 
 Options for configuring a Camera3D.
 
@@ -14,7 +14,7 @@ Options for configuring a Camera3D.
 
 > `optional` **far**: `number`
 
-Defined in: [core/Camera.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Camera.ts#L13)
+Defined in: [core/Camera.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L13)
 
 Far clipping plane. Defaults to 1000.
 
@@ -24,7 +24,7 @@ Far clipping plane. Defaults to 1000.
 
 > `optional` **fov**: `number`
 
-Defined in: [core/Camera.ts:9](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Camera.ts#L9)
+Defined in: [core/Camera.ts:9](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L9)
 
 Field of view in degrees. Defaults to 45.
 
@@ -34,7 +34,7 @@ Field of view in degrees. Defaults to 45.
 
 > `optional` **lookAt**: \[`number`, `number`, `number`\]
 
-Defined in: [core/Camera.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Camera.ts#L17)
+Defined in: [core/Camera.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L17)
 
 Initial look-at target [x, y, z]. Defaults to origin [0, 0, 0].
 
@@ -44,7 +44,7 @@ Initial look-at target [x, y, z]. Defaults to origin [0, 0, 0].
 
 > `optional` **near**: `number`
 
-Defined in: [core/Camera.ts:11](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Camera.ts#L11)
+Defined in: [core/Camera.ts:11](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L11)
 
 Near clipping plane. Defaults to 0.1.
 
@@ -54,6 +54,6 @@ Near clipping plane. Defaults to 0.1.
 
 > `optional` **position**: \[`number`, `number`, `number`\]
 
-Defined in: [core/Camera.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Camera.ts#L15)
+Defined in: [core/Camera.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Camera.ts#L15)
 
 Initial camera position [x, y, z]. Defaults to [0, 0, 10].

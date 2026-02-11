@@ -1,6 +1,6 @@
 # Interface: CircumscribeOptions
 
-Defined in: [animation/indication/Circumscribe.ts:18](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L18)
+Defined in: [animation/indication/Circumscribe.ts:18](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L18)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/indication/Circumscribe.ts:18](https://github.com/maloyan
 
 > `optional` **buff**: `number`
 
-Defined in: [animation/indication/Circumscribe.ts:24](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L24)
+Defined in: [animation/indication/Circumscribe.ts:24](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L24)
 
 Buffer space between mobject and shape. Default: 0.2
 
@@ -22,7 +22,7 @@ Buffer space between mobject and shape. Default: 0.2
 
 > `optional` **color**: `string`
 
-Defined in: [animation/indication/Circumscribe.ts:22](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L22)
+Defined in: [animation/indication/Circumscribe.ts:22](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L22)
 
 Color of the circumscribe shape. Default: YELLOW
 
@@ -32,7 +32,7 @@ Color of the circumscribe shape. Default: YELLOW
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -46,7 +46,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **fadeOut**: `boolean`
 
-Defined in: [animation/indication/Circumscribe.ts:30](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L30)
+Defined in: [animation/indication/Circumscribe.ts:30](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L30)
 
 Whether to fade out after drawing. Default: true
 
@@ -56,7 +56,7 @@ Whether to fade out after drawing. Default: true
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -70,7 +70,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **shape**: [`CircumscribeShape`](../type-aliases/CircumscribeShape.md)
 
-Defined in: [animation/indication/Circumscribe.ts:20](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L20)
+Defined in: [animation/indication/Circumscribe.ts:20](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L20)
 
 Shape to draw around the mobject. Default: 'rectangle'
 
@@ -80,7 +80,7 @@ Shape to draw around the mobject. Default: 'rectangle'
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 
@@ -94,7 +94,7 @@ Shift direction for fade animations
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [animation/indication/Circumscribe.ts:26](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L26)
+Defined in: [animation/indication/Circumscribe.ts:26](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L26)
 
 Width of the shape stroke. Default: DEFAULT_STROKE_WIDTH
 
@@ -104,6 +104,6 @@ Width of the shape stroke. Default: DEFAULT_STROKE_WIDTH
 
 > `optional` **timeWidth**: `number`
 
-Defined in: [animation/indication/Circumscribe.ts:28](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L28)
+Defined in: [animation/indication/Circumscribe.ts:28](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L28)
 
 Time proportion to draw the shape (0-1). Default: 0.3

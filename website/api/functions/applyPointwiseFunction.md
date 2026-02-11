@@ -2,7 +2,7 @@
 
 > **applyPointwiseFunction**(`mobject`, `func`, `options?`): [`ApplyPointwiseFunction`](../classes/ApplyPointwiseFunction.md)
 
-Defined in: [animation/transform/ApplyPointwiseFunction.ts:123](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/transform/ApplyPointwiseFunction.ts#L123)
+Defined in: [animation/transform/ApplyPointwiseFunction.ts:123](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/transform/ApplyPointwiseFunction.ts#L123)
 
 Factory helper.
 

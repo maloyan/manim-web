@@ -2,7 +2,7 @@
 
 > **createBezierShaderMaterial**(`options`): `ShaderMaterial`
 
-Defined in: [rendering/BezierShaderMaterial.ts:282](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/rendering/BezierShaderMaterial.ts#L282)
+Defined in: [rendering/BezierShaderMaterial.ts:282](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/rendering/BezierShaderMaterial.ts#L282)
 
 Create a Three.js ShaderMaterial configured for Bezier curve SDF rendering.
 

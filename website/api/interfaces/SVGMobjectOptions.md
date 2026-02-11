@@ -1,6 +1,6 @@
 # Interface: SVGMobjectOptions
 
-Defined in: [mobjects/svg/SVGMobject.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/svg/SVGMobject.ts#L17)
+Defined in: [mobjects/svg/SVGMobject.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/svg/SVGMobject.ts#L17)
 
 SVGMobject options
 
@@ -10,7 +10,7 @@ SVGMobject options
 
 > `optional` **center**: \[`number`, `number`, `number`\]
 
-Defined in: [mobjects/svg/SVGMobject.ts:33](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/svg/SVGMobject.ts#L33)
+Defined in: [mobjects/svg/SVGMobject.ts:33](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/svg/SVGMobject.ts#L33)
 
 Center position
 
@@ -20,7 +20,7 @@ Center position
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/svg/SVGMobject.ts:21](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/svg/SVGMobject.ts#L21)
+Defined in: [mobjects/svg/SVGMobject.ts:21](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/svg/SVGMobject.ts#L21)
 
 Stroke color (default: WHITE)
 
@@ -30,7 +30,7 @@ Stroke color (default: WHITE)
 
 > `optional` **fillColor**: `string`
 
-Defined in: [mobjects/svg/SVGMobject.ts:25](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/svg/SVGMobject.ts#L25)
+Defined in: [mobjects/svg/SVGMobject.ts:25](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/svg/SVGMobject.ts#L25)
 
 Fill color (optional)
 
@@ -40,7 +40,7 @@ Fill color (optional)
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/svg/SVGMobject.ts:27](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/svg/SVGMobject.ts#L27)
+Defined in: [mobjects/svg/SVGMobject.ts:27](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/svg/SVGMobject.ts#L27)
 
 Fill opacity (default: 0)
 
@@ -50,7 +50,7 @@ Fill opacity (default: 0)
 
 > `optional` **height**: `number`
 
-Defined in: [mobjects/svg/SVGMobject.ts:29](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/svg/SVGMobject.ts#L29)
+Defined in: [mobjects/svg/SVGMobject.ts:29](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/svg/SVGMobject.ts#L29)
 
 Scale to fit within this height
 
@@ -60,7 +60,7 @@ Scale to fit within this height
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/svg/SVGMobject.ts:23](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/svg/SVGMobject.ts#L23)
+Defined in: [mobjects/svg/SVGMobject.ts:23](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/svg/SVGMobject.ts#L23)
 
 Stroke width (default: DEFAULT_STROKE_WIDTH)
 
@@ -70,7 +70,7 @@ Stroke width (default: DEFAULT_STROKE_WIDTH)
 
 > `optional` **svgString**: `string`
 
-Defined in: [mobjects/svg/SVGMobject.ts:19](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/svg/SVGMobject.ts#L19)
+Defined in: [mobjects/svg/SVGMobject.ts:19](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/svg/SVGMobject.ts#L19)
 
 SVG string content
 
@@ -80,6 +80,6 @@ SVG string content
 
 > `optional` **width**: `number`
 
-Defined in: [mobjects/svg/SVGMobject.ts:31](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/svg/SVGMobject.ts#L31)
+Defined in: [mobjects/svg/SVGMobject.ts:31](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/svg/SVGMobject.ts#L31)
 
 Scale to fit within this width

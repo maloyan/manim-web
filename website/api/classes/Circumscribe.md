@@ -1,6 +1,6 @@
 # Class: Circumscribe
 
-Defined in: [animation/indication/Circumscribe.ts:33](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L33)
+Defined in: [animation/indication/Circumscribe.ts:33](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L33)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/indication/Circumscribe.ts:33](https://github.com/maloyan
 
 > **new Circumscribe**(`mobject`, `options`): `Circumscribe`
 
-Defined in: [animation/indication/Circumscribe.ts:64](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L64)
+Defined in: [animation/indication/Circumscribe.ts:64](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L64)
 
 #### Parameters
 
@@ -38,7 +38,7 @@ Defined in: [animation/indication/Circumscribe.ts:64](https://github.com/maloyan
 
 > `protected` **\_hasBegun**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:37](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L37)
+Defined in: [animation/Animation.ts:37](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L37)
 
 Track if begin() has been called
 
@@ -52,7 +52,7 @@ Track if begin() has been called
 
 > `protected` **\_isFinished**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:34](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L34)
+Defined in: [animation/Animation.ts:34](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L34)
 
 Whether the animation has finished
 
@@ -66,7 +66,7 @@ Whether the animation has finished
 
 > `protected` **\_startTime**: `number` = `null`
 
-Defined in: [animation/Animation.ts:31](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L31)
+Defined in: [animation/Animation.ts:31](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L31)
 
 Time when the animation started (set by Timeline)
 
@@ -80,7 +80,7 @@ Time when the animation started (set by Timeline)
 
 > `readonly` **buff**: `number`
 
-Defined in: [animation/indication/Circumscribe.ts:41](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L41)
+Defined in: [animation/indication/Circumscribe.ts:41](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L41)
 
 Buffer space
 
@@ -90,7 +90,7 @@ Buffer space
 
 > `readonly` **duration**: `number`
 
-Defined in: [animation/Animation.ts:25](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L25)
+Defined in: [animation/Animation.ts:25](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L25)
 
 Duration of the animation in seconds
 
@@ -104,7 +104,7 @@ Duration of the animation in seconds
 
 > `readonly` **fadeOut**: `boolean`
 
-Defined in: [animation/indication/Circumscribe.ts:50](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L50)
+Defined in: [animation/indication/Circumscribe.ts:50](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L50)
 
 Whether to fade out
 
@@ -114,7 +114,7 @@ Whether to fade out
 
 > `readonly` **mobject**: [`Mobject`](Mobject.md)
 
-Defined in: [animation/Animation.ts:22](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L22)
+Defined in: [animation/Animation.ts:22](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L22)
 
 The mobject being animated
 
@@ -128,7 +128,7 @@ The mobject being animated
 
 > `readonly` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:28](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L28)
+Defined in: [animation/Animation.ts:28](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L28)
 
 Rate function controlling the animation's pacing
 
@@ -142,7 +142,7 @@ Rate function controlling the animation's pacing
 
 > **remover**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:43](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L43)
+Defined in: [animation/Animation.ts:43](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L43)
 
 If true, the scene will remove this mobject after the animation finishes.
 Used by FadeOut (like Python manim's remover=True).
@@ -157,7 +157,7 @@ Used by FadeOut (like Python manim's remover=True).
 
 > `readonly` **shapeColor**: `string`
 
-Defined in: [animation/indication/Circumscribe.ts:38](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L38)
+Defined in: [animation/indication/Circumscribe.ts:38](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L38)
 
 Shape color
 
@@ -167,7 +167,7 @@ Shape color
 
 > `readonly` **shapeType**: [`CircumscribeShape`](../type-aliases/CircumscribeShape.md)
 
-Defined in: [animation/indication/Circumscribe.ts:35](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L35)
+Defined in: [animation/indication/Circumscribe.ts:35](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L35)
 
 Shape type
 
@@ -177,7 +177,7 @@ Shape type
 
 > `readonly` **strokeWidth**: `number`
 
-Defined in: [animation/indication/Circumscribe.ts:44](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L44)
+Defined in: [animation/indication/Circumscribe.ts:44](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L44)
 
 Stroke width
 
@@ -187,7 +187,7 @@ Stroke width
 
 > `readonly` **timeWidth**: `number`
 
-Defined in: [animation/indication/Circumscribe.ts:47](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L47)
+Defined in: [animation/indication/Circumscribe.ts:47](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L47)
 
 Time proportion for drawing
 
@@ -199,7 +199,7 @@ Time proportion for drawing
 
 > **get** **startTime**(): `number`
 
-Defined in: [animation/Animation.ts:125](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L125)
+Defined in: [animation/Animation.ts:125](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L125)
 
 Get the start time of this animation (set by Timeline)
 
@@ -211,7 +211,7 @@ Get the start time of this animation (set by Timeline)
 
 > **set** **startTime**(`time`): `void`
 
-Defined in: [animation/Animation.ts:132](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L132)
+Defined in: [animation/Animation.ts:132](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L132)
 
 Set the start time of this animation (used by Timeline)
 
@@ -235,7 +235,7 @@ Set the start time of this animation (used by Timeline)
 
 > **begin**(): `void`
 
-Defined in: [animation/indication/Circumscribe.ts:74](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L74)
+Defined in: [animation/indication/Circumscribe.ts:74](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L74)
 
 Called when the animation starts.
 Subclasses can override to set up initial state.
@@ -254,7 +254,7 @@ Subclasses can override to set up initial state.
 
 > **finish**(): `void`
 
-Defined in: [animation/indication/Circumscribe.ts:210](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L210)
+Defined in: [animation/indication/Circumscribe.ts:210](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L210)
 
 Called when the animation ends.
 Subclasses can override to clean up or finalize state.
@@ -273,7 +273,7 @@ Subclasses can override to clean up or finalize state.
 
 > **interpolate**(`alpha`): `void`
 
-Defined in: [animation/indication/Circumscribe.ts:179](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L179)
+Defined in: [animation/indication/Circumscribe.ts:179](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L179)
 
 Apply the animation at a given progress value.
 
@@ -299,7 +299,7 @@ Progress from 0 (start) to 1 (end)
 
 > **isFinished**(): `boolean`
 
-Defined in: [animation/Animation.ts:109](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L109)
+Defined in: [animation/Animation.ts:109](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L109)
 
 Check if the animation has finished
 
@@ -317,7 +317,7 @@ Check if the animation has finished
 
 > **reset**(): `void`
 
-Defined in: [animation/Animation.ts:116](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L116)
+Defined in: [animation/Animation.ts:116](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L116)
 
 Reset the animation to its initial state
 
@@ -335,7 +335,7 @@ Reset the animation to its initial state
 
 > **update**(`_dt`, `currentTime`): `void`
 
-Defined in: [animation/Animation.ts:79](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L79)
+Defined in: [animation/Animation.ts:79](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L79)
 
 Update the animation for the current frame.
 

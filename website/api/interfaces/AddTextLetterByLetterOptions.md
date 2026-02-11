@@ -1,6 +1,6 @@
 # Interface: AddTextLetterByLetterOptions
 
-Defined in: [animation/creation/Create.ts:958](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/creation/Create.ts#L958)
+Defined in: [animation/creation/Create.ts:958](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/creation/Create.ts#L958)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/creation/Create.ts:958](https://github.com/maloyan/manim-
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -26,7 +26,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -40,7 +40,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 
@@ -54,6 +54,6 @@ Shift direction for fade animations
 
 > `optional` **timePerChar**: `number`
 
-Defined in: [animation/creation/Create.ts:960](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/creation/Create.ts#L960)
+Defined in: [animation/creation/Create.ts:960](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/creation/Create.ts#L960)
 
 Time per character in seconds, default 0.1

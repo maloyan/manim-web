@@ -1,6 +1,6 @@
 # Interface: PolygonOptions
 
-Defined in: [mobjects/geometry/Polygon.ts:8](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Polygon.ts#L8)
+Defined in: [mobjects/geometry/Polygon.ts:8](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/Polygon.ts#L8)
 
 Options for creating a Polygon
 
@@ -10,7 +10,7 @@ Options for creating a Polygon
 
 > `optional` **closed**: `boolean`
 
-Defined in: [mobjects/geometry/Polygon.ts:18](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Polygon.ts#L18)
+Defined in: [mobjects/geometry/Polygon.ts:18](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/Polygon.ts#L18)
 
 Whether to close the polygon. Default: true
 
@@ -20,7 +20,7 @@ Whether to close the polygon. Default: true
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/Polygon.ts:12](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Polygon.ts#L12)
+Defined in: [mobjects/geometry/Polygon.ts:12](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/Polygon.ts#L12)
 
 Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
@@ -30,7 +30,7 @@ Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/geometry/Polygon.ts:14](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Polygon.ts#L14)
+Defined in: [mobjects/geometry/Polygon.ts:14](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/Polygon.ts#L14)
 
 Fill opacity from 0 to 1. Default: 0
 
@@ -40,7 +40,7 @@ Fill opacity from 0 to 1. Default: 0
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/Polygon.ts:16](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Polygon.ts#L16)
+Defined in: [mobjects/geometry/Polygon.ts:16](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/Polygon.ts#L16)
 
 Stroke width in pixels. Default: 4 (Manim's default)
 
@@ -50,6 +50,6 @@ Stroke width in pixels. Default: 4 (Manim's default)
 
 > **vertices**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)[]
 
-Defined in: [mobjects/geometry/Polygon.ts:10](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/Polygon.ts#L10)
+Defined in: [mobjects/geometry/Polygon.ts:10](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/Polygon.ts#L10)
 
 Array of vertices defining the polygon. Required.

@@ -2,7 +2,7 @@
 
 > **TexRenderer** = `"katex"` \| `"mathjax"` \| `"auto"`
 
-Defined in: [mobjects/text/MathTex.ts:28](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/MathTex.ts#L28)
+Defined in: [mobjects/text/MathTex.ts:28](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/MathTex.ts#L28)
 
 Which renderer to use for LaTeX.
 - 'katex'  : KaTeX only (fast, but limited LaTeX subset)

@@ -1,6 +1,6 @@
 # Interface: ParametricFunctionOptions
 
-Defined in: [mobjects/graphing/ParametricFunction.ts:8](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graphing/ParametricFunction.ts#L8)
+Defined in: [mobjects/graphing/ParametricFunction.ts:8](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ParametricFunction.ts#L8)
 
 Options for creating a ParametricFunction
 
@@ -10,7 +10,7 @@ Options for creating a ParametricFunction
 
 > `optional` **axes**: [`Axes`](../classes/Axes.md)
 
-Defined in: [mobjects/graphing/ParametricFunction.ts:20](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graphing/ParametricFunction.ts#L20)
+Defined in: [mobjects/graphing/ParametricFunction.ts:20](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ParametricFunction.ts#L20)
 
 Reference axes for coordinate transformation. Optional
 
@@ -20,7 +20,7 @@ Reference axes for coordinate transformation. Optional
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/graphing/ParametricFunction.ts:14](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graphing/ParametricFunction.ts#L14)
+Defined in: [mobjects/graphing/ParametricFunction.ts:14](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ParametricFunction.ts#L14)
 
 Stroke color. Default: '#58c4dd' (Manim blue)
 
@@ -30,7 +30,7 @@ Stroke color. Default: '#58c4dd' (Manim blue)
 
 > **func**: (`t`) => \[`number`, `number`, `number`\] \| \[`number`, `number`\]
 
-Defined in: [mobjects/graphing/ParametricFunction.ts:10](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graphing/ParametricFunction.ts#L10)
+Defined in: [mobjects/graphing/ParametricFunction.ts:10](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ParametricFunction.ts#L10)
 
 The parametric function: returns [x, y] or [x, y, z] for a given t
 
@@ -50,7 +50,7 @@ The parametric function: returns [x, y] or [x, y, z] for a given t
 
 > `optional` **numSamples**: `number`
 
-Defined in: [mobjects/graphing/ParametricFunction.ts:18](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graphing/ParametricFunction.ts#L18)
+Defined in: [mobjects/graphing/ParametricFunction.ts:18](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ParametricFunction.ts#L18)
 
 Number of samples to take. Default: 100
 
@@ -60,7 +60,7 @@ Number of samples to take. Default: 100
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/graphing/ParametricFunction.ts:16](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graphing/ParametricFunction.ts#L16)
+Defined in: [mobjects/graphing/ParametricFunction.ts:16](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ParametricFunction.ts#L16)
 
 Stroke width in pixels. Default: 2
 
@@ -70,7 +70,7 @@ Stroke width in pixels. Default: 2
 
 > `optional` **tRange**: \[`number`, `number`\]
 
-Defined in: [mobjects/graphing/ParametricFunction.ts:12](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graphing/ParametricFunction.ts#L12)
+Defined in: [mobjects/graphing/ParametricFunction.ts:12](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ParametricFunction.ts#L12)
 
 Parameter range as [min, max]. Default: [0, 1]
 
@@ -80,6 +80,6 @@ Parameter range as [min, max]. Default: [0, 1]
 
 > `optional` **useAxesCoords**: `boolean`
 
-Defined in: [mobjects/graphing/ParametricFunction.ts:22](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graphing/ParametricFunction.ts#L22)
+Defined in: [mobjects/graphing/ParametricFunction.ts:22](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graphing/ParametricFunction.ts#L22)
 
 Whether to use axes coordinate transformation. Default: true if axes provided

@@ -1,6 +1,6 @@
 # Interface: DecimalNumberOptions
 
-Defined in: [mobjects/text/DecimalNumber.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L15)
+Defined in: [mobjects/text/DecimalNumber.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L15)
 
 Options for creating a DecimalNumber mobject
 
@@ -10,7 +10,7 @@ Options for creating a DecimalNumber mobject
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/text/DecimalNumber.ts:33](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L33)
+Defined in: [mobjects/text/DecimalNumber.ts:33](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L33)
 
 Text color as CSS color string. Default: '#ffffff'
 
@@ -20,7 +20,7 @@ Text color as CSS color string. Default: '#ffffff'
 
 > `optional` **edgeToFix**: `"left"` \| `"right"`
 
-Defined in: [mobjects/text/DecimalNumber.ts:37](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L37)
+Defined in: [mobjects/text/DecimalNumber.ts:37](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L37)
 
 Edge to preserve when number width changes. Default: null (center)
 
@@ -30,7 +30,7 @@ Edge to preserve when number width changes. Default: null (center)
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/text/DecimalNumber.ts:35](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L35)
+Defined in: [mobjects/text/DecimalNumber.ts:35](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L35)
 
 Fill opacity from 0 to 1. Default: 1
 
@@ -40,7 +40,7 @@ Fill opacity from 0 to 1. Default: 1
 
 > `optional` **fontFamily**: `string`
 
-Defined in: [mobjects/text/DecimalNumber.ts:29](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L29)
+Defined in: [mobjects/text/DecimalNumber.ts:29](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L29)
 
 Font family. Default: 'monospace'
 
@@ -50,7 +50,7 @@ Font family. Default: 'monospace'
 
 > `optional` **fontSize**: `number`
 
-Defined in: [mobjects/text/DecimalNumber.ts:27](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L27)
+Defined in: [mobjects/text/DecimalNumber.ts:27](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L27)
 
 Font size in pixels. Default: 48
 
@@ -60,7 +60,7 @@ Font size in pixels. Default: 48
 
 > `optional` **fontWeight**: `string` \| `number`
 
-Defined in: [mobjects/text/DecimalNumber.ts:31](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L31)
+Defined in: [mobjects/text/DecimalNumber.ts:31](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L31)
 
 Font weight. Default: 'normal'
 
@@ -70,7 +70,7 @@ Font weight. Default: 'normal'
 
 > `optional` **groupWithCommas**: `boolean`
 
-Defined in: [mobjects/text/DecimalNumber.ts:25](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L25)
+Defined in: [mobjects/text/DecimalNumber.ts:25](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L25)
 
 Group digits with separator (e.g., 1,000). Default: false
 
@@ -80,7 +80,7 @@ Group digits with separator (e.g., 1,000). Default: false
 
 > `optional` **includeSign**: `boolean`
 
-Defined in: [mobjects/text/DecimalNumber.ts:23](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L23)
+Defined in: [mobjects/text/DecimalNumber.ts:23](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L23)
 
 Whether to show + sign for positive numbers. Default: false
 
@@ -90,7 +90,7 @@ Whether to show + sign for positive numbers. Default: false
 
 > `optional` **numDecimalPlaces**: `number`
 
-Defined in: [mobjects/text/DecimalNumber.ts:19](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L19)
+Defined in: [mobjects/text/DecimalNumber.ts:19](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L19)
 
 Number of decimal places to show. Default: 2
 
@@ -100,7 +100,7 @@ Number of decimal places to show. Default: 2
 
 > `optional` **showEllipsis**: `boolean`
 
-Defined in: [mobjects/text/DecimalNumber.ts:21](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L21)
+Defined in: [mobjects/text/DecimalNumber.ts:21](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L21)
 
 Whether to show ellipsis (...) after the number. Default: false
 
@@ -110,7 +110,7 @@ Whether to show ellipsis (...) after the number. Default: false
 
 > `optional` **unit**: `string`
 
-Defined in: [mobjects/text/DecimalNumber.ts:39](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L39)
+Defined in: [mobjects/text/DecimalNumber.ts:39](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L39)
 
 Unit string to append (e.g., '%', 'm/s'). Default: ''
 
@@ -120,7 +120,7 @@ Unit string to append (e.g., '%', 'm/s'). Default: ''
 
 > `optional` **unitBuff**: `number`
 
-Defined in: [mobjects/text/DecimalNumber.ts:41](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L41)
+Defined in: [mobjects/text/DecimalNumber.ts:41](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L41)
 
 Buffer between number and unit. Default: 0.05
 
@@ -130,6 +130,6 @@ Buffer between number and unit. Default: 0.05
 
 > `optional` **value**: `number`
 
-Defined in: [mobjects/text/DecimalNumber.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/DecimalNumber.ts#L17)
+Defined in: [mobjects/text/DecimalNumber.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/DecimalNumber.ts#L17)
 
 The numeric value to display. Default: 0

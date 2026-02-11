@@ -1,6 +1,6 @@
 # Interface: SelectionManagerOptions
 
-Defined in: [interaction/SelectionManager.ts:19](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L19)
+Defined in: [interaction/SelectionManager.ts:19](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/SelectionManager.ts#L19)
 
 Options for configuring the SelectionManager.
 
@@ -10,7 +10,7 @@ Options for configuring the SelectionManager.
 
 > `optional` **boxSelectColor**: `string`
 
-Defined in: [interaction/SelectionManager.ts:27](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L27)
+Defined in: [interaction/SelectionManager.ts:27](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/SelectionManager.ts#L27)
 
 Color of the box selection overlay. Defaults to '#58C4DD' (manim blue).
 
@@ -20,7 +20,7 @@ Color of the box selection overlay. Defaults to '#58C4DD' (manim blue).
 
 > `optional` **boxSelectOpacity**: `number`
 
-Defined in: [interaction/SelectionManager.ts:25](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L25)
+Defined in: [interaction/SelectionManager.ts:25](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/SelectionManager.ts#L25)
 
 Opacity of the box selection overlay. Defaults to 0.15.
 
@@ -30,7 +30,7 @@ Opacity of the box selection overlay. Defaults to 0.15.
 
 > `optional` **highlightColor**: `string`
 
-Defined in: [interaction/SelectionManager.ts:21](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L21)
+Defined in: [interaction/SelectionManager.ts:21](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/SelectionManager.ts#L21)
 
 Color of the selection highlight outline. Defaults to '#FFFF00' (yellow).
 
@@ -40,7 +40,7 @@ Color of the selection highlight outline. Defaults to '#FFFF00' (yellow).
 
 > `optional` **highlightWidth**: `number`
 
-Defined in: [interaction/SelectionManager.ts:23](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L23)
+Defined in: [interaction/SelectionManager.ts:23](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/SelectionManager.ts#L23)
 
 Width of the selection highlight outline. Defaults to 2.
 
@@ -50,7 +50,7 @@ Width of the selection highlight outline. Defaults to 2.
 
 > `optional` **onSelectionChange**: (`selected`) => `void`
 
-Defined in: [interaction/SelectionManager.ts:29](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/SelectionManager.ts#L29)
+Defined in: [interaction/SelectionManager.ts:29](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/SelectionManager.ts#L29)
 
 Callback when selection changes.
 

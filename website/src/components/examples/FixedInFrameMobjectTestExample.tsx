@@ -7,15 +7,15 @@ async function animate(scene: any) {
 
   const axes = new ThreeDAxes({
     xRange: [-6, 6, 1],
-    yRange: [-6, 6, 1],
-    zRange: [-6, 6, 1],
-    xLength: 10.5,
-    yLength: 10.5,
-    zLength: 10.5,
-    axisColor: '#bababa',
-    tipLength: 0.35,
-    tipRadius: 0.15,
-    shaftRadius: 0.03,
+    yRange: [-5, 5, 1],
+    zRange: [-4, 4, 1],
+    xLength: 12,
+    yLength: 10,
+    zLength: 6,
+    axisColor: '#ffffff',
+    tipLength: 0.3,
+    tipRadius: 0.12,
+    shaftRadius: 0.008,
   });
   const text3d = new Text({ text: 'This is a 3D text' });
   scene.addFixedInFrameMobjects(text3d);
@@ -31,8 +31,8 @@ function createScene(container: HTMLElement, manim: any) {
     backgroundColor: '#000000',
     phi: 75 * (Math.PI / 180),
     theta: -45 * (Math.PI / 180),
-    distance: 15,
-    fov: 23,
+    distance: 20,
+    fov: 30,
   });
 }
 

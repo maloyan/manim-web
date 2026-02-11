@@ -1,6 +1,6 @@
 # Interface: EdgeConfig
 
-Defined in: [mobjects/graph/index.ts:90](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L90)
+Defined in: [mobjects/graph/index.ts:90](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graph/index.ts#L90)
 
 Configuration for a single edge
 
@@ -10,7 +10,7 @@ Configuration for a single edge
 
 > `optional` **label**: `string`
 
-Defined in: [mobjects/graph/index.ts:94](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L94)
+Defined in: [mobjects/graph/index.ts:94](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graph/index.ts#L94)
 
 Label text to display on the edge
 
@@ -20,7 +20,7 @@ Label text to display on the edge
 
 > `optional` **style**: [`EdgeStyleOptions`](EdgeStyleOptions.md)
 
-Defined in: [mobjects/graph/index.ts:92](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L92)
+Defined in: [mobjects/graph/index.ts:92](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graph/index.ts#L92)
 
 Custom styling for this edge
 
@@ -30,6 +30,6 @@ Custom styling for this edge
 
 > `optional` **weight**: `number`
 
-Defined in: [mobjects/graph/index.ts:96](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/graph/index.ts#L96)
+Defined in: [mobjects/graph/index.ts:96](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/graph/index.ts#L96)
 
 Weight of the edge (used by some layout algorithms)

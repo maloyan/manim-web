@@ -1,6 +1,6 @@
 # Interface: ColorPickerConfig
 
-Defined in: [interaction/Controls.ts:73](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L73)
+Defined in: [interaction/Controls.ts:73](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Controls.ts#L73)
 
 Configuration for a color picker control.
 
@@ -10,7 +10,7 @@ Configuration for a color picker control.
 
 > **label**: `string`
 
-Defined in: [interaction/Controls.ts:75](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L75)
+Defined in: [interaction/Controls.ts:75](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Controls.ts#L75)
 
 Label text displayed above the color picker.
 
@@ -20,7 +20,7 @@ Label text displayed above the color picker.
 
 > **onChange**: (`color`) => `void`
 
-Defined in: [interaction/Controls.ts:79](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L79)
+Defined in: [interaction/Controls.ts:79](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Controls.ts#L79)
 
 Callback when color changes.
 
@@ -40,6 +40,6 @@ Callback when color changes.
 
 > `optional` **value**: `string`
 
-Defined in: [interaction/Controls.ts:77](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/interaction/Controls.ts#L77)
+Defined in: [interaction/Controls.ts:77](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/interaction/Controls.ts#L77)
 
 Initial color value. Defaults to '#ffffff'.

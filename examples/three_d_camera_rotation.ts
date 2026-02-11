@@ -25,7 +25,11 @@ async function threeDCameraRotation(scene: ThreeDScene) {
     shaftRadius: 0.008,
   });
 
-  const circle = new Circle({ radius: 1, color: '#58C4DD' });
+  const circle = new Circle({ radius: 1, color: '#FC6255' });
+  // Circle points are in Manim x-y plane but VMobject renders them
+  // directly in THREE.js coords. Rotate -90° around X to lay flat
+  // on the ground plane (THREE.js x-z = Manim x-y).
+  circle.rotation.x = -Math.PI / 2;
 
   scene.add(circle, axes);
 

@@ -2,7 +2,7 @@
 
 > **moveToTargetPosition**(`mobject`, `options?`): [`MoveToTargetPosition`](../classes/MoveToTargetPosition.md)
 
-Defined in: [animation/movement/Shift.ts:161](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Shift.ts#L161)
+Defined in: [animation/movement/Shift.ts:161](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Shift.ts#L161)
 
 Create a MoveToTargetPosition animation for a mobject.
 

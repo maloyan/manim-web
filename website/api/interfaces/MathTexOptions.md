@@ -1,6 +1,6 @@
 # Interface: MathTexOptions
 
-Defined in: [mobjects/text/MathTex.ts:33](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/MathTex.ts#L33)
+Defined in: [mobjects/text/MathTex.ts:33](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/MathTex.ts#L33)
 
 Options for creating a MathTex object
 
@@ -10,7 +10,7 @@ Options for creating a MathTex object
 
 > `optional` **\_padding**: `number`
 
-Defined in: [mobjects/text/MathTex.ts:47](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/MathTex.ts#L47)
+Defined in: [mobjects/text/MathTex.ts:47](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/MathTex.ts#L47)
 
 Internal: padding in pixels around the rendered content. Default: 10
 
@@ -20,7 +20,7 @@ Internal: padding in pixels around the rendered content. Default: 10
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/text/MathTex.ts:39](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/MathTex.ts#L39)
+Defined in: [mobjects/text/MathTex.ts:39](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/MathTex.ts#L39)
 
 Color as CSS color string. Default: '#ffffff'
 
@@ -30,7 +30,7 @@ Color as CSS color string. Default: '#ffffff'
 
 > `optional` **displayMode**: `boolean`
 
-Defined in: [mobjects/text/MathTex.ts:43](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/MathTex.ts#L43)
+Defined in: [mobjects/text/MathTex.ts:43](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/MathTex.ts#L43)
 
 Use display mode (block) vs inline mode. Default: true
 
@@ -40,7 +40,7 @@ Use display mode (block) vs inline mode. Default: true
 
 > `optional` **fontSize**: `number`
 
-Defined in: [mobjects/text/MathTex.ts:41](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/MathTex.ts#L41)
+Defined in: [mobjects/text/MathTex.ts:41](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/MathTex.ts#L41)
 
 Base font size in pixels. Default: 48
 
@@ -50,7 +50,7 @@ Base font size in pixels. Default: 48
 
 > **latex**: `string` \| `string`[]
 
-Defined in: [mobjects/text/MathTex.ts:37](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/MathTex.ts#L37)
+Defined in: [mobjects/text/MathTex.ts:37](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/MathTex.ts#L37)
 
 LaTeX string or array of strings for multi-part expressions.
  When an array is provided, each string becomes a separate sub-mobject
@@ -62,7 +62,7 @@ LaTeX string or array of strings for multi-part expressions.
 
 > `optional` **position**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/text/MathTex.ts:45](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/MathTex.ts#L45)
+Defined in: [mobjects/text/MathTex.ts:45](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/MathTex.ts#L45)
 
 Position in 3D space. Default: [0, 0, 0]
 
@@ -72,7 +72,7 @@ Position in 3D space. Default: [0, 0, 0]
 
 > `optional` **renderer**: [`TexRenderer`](../type-aliases/TexRenderer.md)
 
-Defined in: [mobjects/text/MathTex.ts:54](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/text/MathTex.ts#L54)
+Defined in: [mobjects/text/MathTex.ts:54](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/text/MathTex.ts#L54)
 
 Which renderer to use.
 - 'katex'  : KaTeX only (fast)

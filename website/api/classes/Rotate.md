@@ -1,6 +1,6 @@
 # Class: Rotate
 
-Defined in: [animation/movement/Rotate.ts:18](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Rotate.ts#L18)
+Defined in: [animation/movement/Rotate.ts:18](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Rotate.ts#L18)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/movement/Rotate.ts:18](https://github.com/maloyan/manim-j
 
 > **new Rotate**(`mobject`, `options`): `Rotate`
 
-Defined in: [animation/movement/Rotate.ts:40](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Rotate.ts#L40)
+Defined in: [animation/movement/Rotate.ts:40](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Rotate.ts#L40)
 
 #### Parameters
 
@@ -38,7 +38,7 @@ Defined in: [animation/movement/Rotate.ts:40](https://github.com/maloyan/manim-j
 
 > `protected` **\_hasBegun**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:37](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L37)
+Defined in: [animation/Animation.ts:37](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L37)
 
 Track if begin() has been called
 
@@ -52,7 +52,7 @@ Track if begin() has been called
 
 > `protected` **\_isFinished**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:34](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L34)
+Defined in: [animation/Animation.ts:34](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L34)
 
 Whether the animation has finished
 
@@ -66,7 +66,7 @@ Whether the animation has finished
 
 > `protected` **\_startTime**: `number` = `null`
 
-Defined in: [animation/Animation.ts:31](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L31)
+Defined in: [animation/Animation.ts:31](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L31)
 
 Time when the animation started (set by Timeline)
 
@@ -80,7 +80,7 @@ Time when the animation started (set by Timeline)
 
 > `readonly` **aboutPoint**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [animation/movement/Rotate.ts:26](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Rotate.ts#L26)
+Defined in: [animation/movement/Rotate.ts:26](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Rotate.ts#L26)
 
 Point to rotate about
 
@@ -90,7 +90,7 @@ Point to rotate about
 
 > `readonly` **angle**: `number`
 
-Defined in: [animation/movement/Rotate.ts:20](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Rotate.ts#L20)
+Defined in: [animation/movement/Rotate.ts:20](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Rotate.ts#L20)
 
 Angle to rotate in radians
 
@@ -100,7 +100,7 @@ Angle to rotate in radians
 
 > `readonly` **axis**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [animation/movement/Rotate.ts:23](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Rotate.ts#L23)
+Defined in: [animation/movement/Rotate.ts:23](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Rotate.ts#L23)
 
 Axis of rotation
 
@@ -110,7 +110,7 @@ Axis of rotation
 
 > `readonly` **duration**: `number`
 
-Defined in: [animation/Animation.ts:25](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L25)
+Defined in: [animation/Animation.ts:25](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L25)
 
 Duration of the animation in seconds
 
@@ -124,7 +124,7 @@ Duration of the animation in seconds
 
 > `readonly` **mobject**: [`Mobject`](Mobject.md)
 
-Defined in: [animation/Animation.ts:22](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L22)
+Defined in: [animation/Animation.ts:22](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L22)
 
 The mobject being animated
 
@@ -138,7 +138,7 @@ The mobject being animated
 
 > `readonly` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:28](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L28)
+Defined in: [animation/Animation.ts:28](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L28)
 
 Rate function controlling the animation's pacing
 
@@ -152,7 +152,7 @@ Rate function controlling the animation's pacing
 
 > **remover**: `boolean` = `false`
 
-Defined in: [animation/Animation.ts:43](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L43)
+Defined in: [animation/Animation.ts:43](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L43)
 
 If true, the scene will remove this mobject after the animation finishes.
 Used by FadeOut (like Python manim's remover=True).
@@ -169,7 +169,7 @@ Used by FadeOut (like Python manim's remover=True).
 
 > **get** **startTime**(): `number`
 
-Defined in: [animation/Animation.ts:125](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L125)
+Defined in: [animation/Animation.ts:125](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L125)
 
 Get the start time of this animation (set by Timeline)
 
@@ -181,7 +181,7 @@ Get the start time of this animation (set by Timeline)
 
 > **set** **startTime**(`time`): `void`
 
-Defined in: [animation/Animation.ts:132](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L132)
+Defined in: [animation/Animation.ts:132](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L132)
 
 Set the start time of this animation (used by Timeline)
 
@@ -205,7 +205,7 @@ Set the start time of this animation (used by Timeline)
 
 > **begin**(): `void`
 
-Defined in: [animation/movement/Rotate.ts:50](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Rotate.ts#L50)
+Defined in: [animation/movement/Rotate.ts:50](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Rotate.ts#L50)
 
 Set up the animation - store initial rotation
 
@@ -223,7 +223,7 @@ Set up the animation - store initial rotation
 
 > **finish**(): `void`
 
-Defined in: [animation/movement/Rotate.ts:111](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Rotate.ts#L111)
+Defined in: [animation/movement/Rotate.ts:111](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Rotate.ts#L111)
 
 Ensure the rotation is exact at the end
 
@@ -241,7 +241,7 @@ Ensure the rotation is exact at the end
 
 > **interpolate**(`alpha`): `void`
 
-Defined in: [animation/movement/Rotate.ts:79](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/movement/Rotate.ts#L79)
+Defined in: [animation/movement/Rotate.ts:79](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/movement/Rotate.ts#L79)
 
 Interpolate the rotation at the given alpha
 
@@ -265,7 +265,7 @@ Interpolate the rotation at the given alpha
 
 > **isFinished**(): `boolean`
 
-Defined in: [animation/Animation.ts:109](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L109)
+Defined in: [animation/Animation.ts:109](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L109)
 
 Check if the animation has finished
 
@@ -283,7 +283,7 @@ Check if the animation has finished
 
 > **reset**(): `void`
 
-Defined in: [animation/Animation.ts:116](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L116)
+Defined in: [animation/Animation.ts:116](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L116)
 
 Reset the animation to its initial state
 
@@ -301,7 +301,7 @@ Reset the animation to its initial state
 
 > **update**(`_dt`, `currentTime`): `void`
 
-Defined in: [animation/Animation.ts:79](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L79)
+Defined in: [animation/Animation.ts:79](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L79)
 
 Update the animation for the current frame.
 

@@ -1,6 +1,6 @@
 # Interface: CameraFrameState
 
-Defined in: [core/CameraFrame.ts:317](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/CameraFrame.ts#L317)
+Defined in: [core/CameraFrame.ts:317](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L317)
 
 ## Properties
 
@@ -8,7 +8,7 @@ Defined in: [core/CameraFrame.ts:317](https://github.com/maloyan/manim-js/blob/b
 
 > **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [core/CameraFrame.ts:323](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/CameraFrame.ts#L323)
+Defined in: [core/CameraFrame.ts:323](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L323)
 
 ***
 
@@ -16,7 +16,7 @@ Defined in: [core/CameraFrame.ts:323](https://github.com/maloyan/manim-js/blob/b
 
 > **distance**: `number`
 
-Defined in: [core/CameraFrame.ts:321](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/CameraFrame.ts#L321)
+Defined in: [core/CameraFrame.ts:321](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L321)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [core/CameraFrame.ts:321](https://github.com/maloyan/manim-js/blob/b
 
 > **fov**: `number`
 
-Defined in: [core/CameraFrame.ts:322](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/CameraFrame.ts#L322)
+Defined in: [core/CameraFrame.ts:322](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L322)
 
 ***
 
@@ -32,7 +32,7 @@ Defined in: [core/CameraFrame.ts:322](https://github.com/maloyan/manim-js/blob/b
 
 > **gamma**: `number`
 
-Defined in: [core/CameraFrame.ts:320](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/CameraFrame.ts#L320)
+Defined in: [core/CameraFrame.ts:320](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L320)
 
 ***
 
@@ -40,7 +40,7 @@ Defined in: [core/CameraFrame.ts:320](https://github.com/maloyan/manim-js/blob/b
 
 > **phi**: `number`
 
-Defined in: [core/CameraFrame.ts:319](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/CameraFrame.ts#L319)
+Defined in: [core/CameraFrame.ts:319](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L319)
 
 ***
 
@@ -48,4 +48,4 @@ Defined in: [core/CameraFrame.ts:319](https://github.com/maloyan/manim-js/blob/b
 
 > **theta**: `number`
 
-Defined in: [core/CameraFrame.ts:318](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/CameraFrame.ts#L318)
+Defined in: [core/CameraFrame.ts:318](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/CameraFrame.ts#L318)

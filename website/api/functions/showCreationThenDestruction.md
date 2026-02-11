@@ -2,7 +2,7 @@
 
 > **showCreationThenDestruction**(`mobject`, `options?`): [`ShowCreationThenDestruction`](../classes/ShowCreationThenDestruction.md)
 
-Defined in: [animation/indication/ShowCreationThenDestruction.ts:136](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/ShowCreationThenDestruction.ts#L136)
+Defined in: [animation/indication/ShowCreationThenDestruction.ts:136](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/ShowCreationThenDestruction.ts#L136)
 
 Create a ShowCreationThenDestruction animation for a mobject.
 First half draws the stroke progressively; second half erases it.

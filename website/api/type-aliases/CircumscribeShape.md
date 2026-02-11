@@ -2,4 +2,4 @@
 
 > **CircumscribeShape** = `"rectangle"` \| `"circle"`
 
-Defined in: [animation/indication/Circumscribe.ts:16](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/Circumscribe.ts#L16)
+Defined in: [animation/indication/Circumscribe.ts:16](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/Circumscribe.ts#L16)

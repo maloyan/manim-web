@@ -1,6 +1,6 @@
 # Interface: WriteOptions
 
-Defined in: [animation/creation/Create.ts:417](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/creation/Create.ts#L417)
+Defined in: [animation/creation/Create.ts:417](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/creation/Create.ts#L417)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/creation/Create.ts:417](https://github.com/maloyan/manim-
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -26,7 +26,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **lagRatio**: `number`
 
-Defined in: [animation/creation/Create.ts:419](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/creation/Create.ts#L419)
+Defined in: [animation/creation/Create.ts:419](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/creation/Create.ts#L419)
 
 Stagger between characters, default 0.05
 
@@ -36,7 +36,7 @@ Stagger between characters, default 0.05
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -50,7 +50,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **remover**: `boolean`
 
-Defined in: [animation/creation/Create.ts:423](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/creation/Create.ts#L423)
+Defined in: [animation/creation/Create.ts:423](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/creation/Create.ts#L423)
 
 Remove after animation, default false
 
@@ -60,7 +60,7 @@ Remove after animation, default false
 
 > `optional` **reverse**: `boolean`
 
-Defined in: [animation/creation/Create.ts:421](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/creation/Create.ts#L421)
+Defined in: [animation/creation/Create.ts:421](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/creation/Create.ts#L421)
 
 Write in reverse (right to left), default false
 
@@ -70,7 +70,7 @@ Write in reverse (right to left), default false
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 
@@ -84,7 +84,7 @@ Shift direction for fade animations
 
 > `optional` **strokeRatio**: `number`
 
-Defined in: [animation/creation/Create.ts:425](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/creation/Create.ts#L425)
+Defined in: [animation/creation/Create.ts:425](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/creation/Create.ts#L425)
 
 Ratio of animation time spent on stroke drawing vs cross-fade (default 0.7 = 70% stroke, 30% crossfade)
 
@@ -94,7 +94,7 @@ Ratio of animation time spent on stroke drawing vs cross-fade (default 0.7 = 70%
 
 > `optional` **useSkeletonStroke**: `boolean`
 
-Defined in: [animation/creation/Create.ts:432](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/creation/Create.ts#L432)
+Defined in: [animation/creation/Create.ts:432](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/creation/Create.ts#L432)
 
 When true, the Write animation uses the glyph's skeleton (medial axis)
 for stroke drawing, producing natural center-line pen strokes instead

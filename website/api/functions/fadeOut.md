@@ -2,7 +2,7 @@
 
 > **fadeOut**(`mobject`, `options?`): [`FadeOut`](../classes/FadeOut.md)
 
-Defined in: [animation/fading/FadeOut.ts:78](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/fading/FadeOut.ts#L78)
+Defined in: [animation/fading/FadeOut.ts:78](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/fading/FadeOut.ts#L78)
 
 Create a FadeOut animation for a mobject.
 

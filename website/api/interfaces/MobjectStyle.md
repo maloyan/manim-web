@@ -1,6 +1,6 @@
 # Interface: MobjectStyle
 
-Defined in: [core/Mobject.ts:33](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L33)
+Defined in: [core/Mobject.ts:33](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L33)
 
 Style properties for mobjects
 
@@ -10,7 +10,7 @@ Style properties for mobjects
 
 > `optional` **fillColor**: `string`
 
-Defined in: [core/Mobject.ts:34](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L34)
+Defined in: [core/Mobject.ts:34](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L34)
 
 ***
 
@@ -18,7 +18,7 @@ Defined in: [core/Mobject.ts:34](https://github.com/maloyan/manim-js/blob/bb3df5
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [core/Mobject.ts:35](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L35)
+Defined in: [core/Mobject.ts:35](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L35)
 
 ***
 
@@ -26,7 +26,7 @@ Defined in: [core/Mobject.ts:35](https://github.com/maloyan/manim-js/blob/bb3df5
 
 > `optional` **strokeColor**: `string`
 
-Defined in: [core/Mobject.ts:36](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L36)
+Defined in: [core/Mobject.ts:36](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L36)
 
 ***
 
@@ -34,7 +34,7 @@ Defined in: [core/Mobject.ts:36](https://github.com/maloyan/manim-js/blob/bb3df5
 
 > `optional` **strokeOpacity**: `number`
 
-Defined in: [core/Mobject.ts:37](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L37)
+Defined in: [core/Mobject.ts:37](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L37)
 
 ***
 
@@ -42,4 +42,4 @@ Defined in: [core/Mobject.ts:37](https://github.com/maloyan/manim-js/blob/bb3df5
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [core/Mobject.ts:38](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/core/Mobject.ts#L38)
+Defined in: [core/Mobject.ts:38](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/core/Mobject.ts#L38)

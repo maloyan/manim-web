@@ -2,7 +2,7 @@
 
 > **skeletonizeGlyph**(`outlinePoints`, `options`): `number`[][]
 
-Defined in: [utils/skeletonize.ts:40](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/utils/skeletonize.ts#L40)
+Defined in: [utils/skeletonize.ts:40](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/skeletonize.ts#L40)
 
 Extract the medial-axis (skeleton) of a glyph outline as cubic Bezier
 control points compatible with VMobject.

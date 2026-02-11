@@ -2,7 +2,7 @@
 
 > **solveIVP**(`f`, `t0`, `y0`, `tEnd`, `options`): [`IVPResult`](../interfaces/IVPResult.md)
 
-Defined in: [utils/ode.ts:125](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/utils/ode.ts#L125)
+Defined in: [utils/ode.ts:125](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/ode.ts#L125)
 
 Solve an initial value problem (IVP) using RK4 integration.
 

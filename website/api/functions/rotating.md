@@ -2,7 +2,7 @@
 
 > **rotating**(`mobject`, `options?`): [`Rotating`](../classes/Rotating.md)
 
-Defined in: [animation/utility/index.ts:279](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/utility/index.ts#L279)
+Defined in: [animation/utility/index.ts:279](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/utility/index.ts#L279)
 
 Create a Rotating animation for a mobject.
 Rotates the mobject by the specified angle over the animation duration.

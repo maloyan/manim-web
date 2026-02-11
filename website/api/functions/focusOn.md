@@ -2,7 +2,7 @@
 
 > **focusOn**(`mobject`, `options?`): [`FocusOn`](../classes/FocusOn.md)
 
-Defined in: [animation/indication/FocusOn.ts:206](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/indication/FocusOn.ts#L206)
+Defined in: [animation/indication/FocusOn.ts:206](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/indication/FocusOn.ts#L206)
 
 Create a FocusOn animation for a mobject.
 Creates converging rings that focus attention on the mobject.

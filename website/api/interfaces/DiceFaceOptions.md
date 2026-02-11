@@ -1,6 +1,6 @@
 # Interface: DiceFaceOptions
 
-Defined in: [mobjects/probability/DiceFace.ts:11](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/DiceFace.ts#L11)
+Defined in: [mobjects/probability/DiceFace.ts:11](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/probability/DiceFace.ts#L11)
 
 Options for creating a DiceFace
 
@@ -10,7 +10,7 @@ Options for creating a DiceFace
 
 > `optional` **backgroundColor**: `string`
 
-Defined in: [mobjects/probability/DiceFace.ts:19](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/DiceFace.ts#L19)
+Defined in: [mobjects/probability/DiceFace.ts:19](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/probability/DiceFace.ts#L19)
 
 Background fill color. Default: WHITE
 
@@ -20,7 +20,7 @@ Background fill color. Default: WHITE
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/probability/DiceFace.ts:29](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/DiceFace.ts#L29)
+Defined in: [mobjects/probability/DiceFace.ts:29](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/probability/DiceFace.ts#L29)
 
 Center position. Default: [0, 0, 0]
 
@@ -30,7 +30,7 @@ Center position. Default: [0, 0, 0]
 
 > `optional` **cornerRadius**: `number`
 
-Defined in: [mobjects/probability/DiceFace.ts:21](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/DiceFace.ts#L21)
+Defined in: [mobjects/probability/DiceFace.ts:21](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/probability/DiceFace.ts#L21)
 
 Corner radius for the die face. Default: 0.15
 
@@ -40,7 +40,7 @@ Corner radius for the die face. Default: 0.15
 
 > `optional` **dotColor**: `string`
 
-Defined in: [mobjects/probability/DiceFace.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/DiceFace.ts#L17)
+Defined in: [mobjects/probability/DiceFace.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/probability/DiceFace.ts#L17)
 
 Color for the dots (pips). Default: BLACK
 
@@ -50,7 +50,7 @@ Color for the dots (pips). Default: BLACK
 
 > `optional` **dotRadius**: `number`
 
-Defined in: [mobjects/probability/DiceFace.ts:27](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/DiceFace.ts#L27)
+Defined in: [mobjects/probability/DiceFace.ts:27](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/probability/DiceFace.ts#L27)
 
 Radius of each dot (pip). Default: auto-calculated from size
 
@@ -60,7 +60,7 @@ Radius of each dot (pip). Default: auto-calculated from size
 
 > `optional` **size**: `number`
 
-Defined in: [mobjects/probability/DiceFace.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/DiceFace.ts#L15)
+Defined in: [mobjects/probability/DiceFace.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/probability/DiceFace.ts#L15)
 
 Side length of the die face square. Default: 1.5
 
@@ -70,7 +70,7 @@ Side length of the die face square. Default: 1.5
 
 > `optional` **strokeColor**: `string`
 
-Defined in: [mobjects/probability/DiceFace.ts:23](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/DiceFace.ts#L23)
+Defined in: [mobjects/probability/DiceFace.ts:23](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/probability/DiceFace.ts#L23)
 
 Stroke color for the outline. Default: BLACK
 
@@ -80,7 +80,7 @@ Stroke color for the outline. Default: BLACK
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/probability/DiceFace.ts:25](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/DiceFace.ts#L25)
+Defined in: [mobjects/probability/DiceFace.ts:25](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/probability/DiceFace.ts#L25)
 
 Stroke width. Default: 2
 
@@ -90,6 +90,6 @@ Stroke width. Default: 2
 
 > `optional` **value**: `number`
 
-Defined in: [mobjects/probability/DiceFace.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/probability/DiceFace.ts#L13)
+Defined in: [mobjects/probability/DiceFace.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/probability/DiceFace.ts#L13)
 
 Face value (1-6). Default: 1

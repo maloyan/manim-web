@@ -1,6 +1,6 @@
 # Interface: AnnularSectorOptions
 
-Defined in: [mobjects/geometry/ArcShapes.ts:439](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L439)
+Defined in: [mobjects/geometry/ArcShapes.ts:439](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/ArcShapes.ts#L439)
 
 Options for creating an AnnularSector
 
@@ -10,7 +10,7 @@ Options for creating an AnnularSector
 
 > `optional` **angle**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:447](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L447)
+Defined in: [mobjects/geometry/ArcShapes.ts:447](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/ArcShapes.ts#L447)
 
 Arc angle (span) in radians. Default: PI/2
 
@@ -20,7 +20,7 @@ Arc angle (span) in radians. Default: PI/2
 
 > `optional` **center**: [`Vector3Tuple`](../type-aliases/Vector3Tuple.md)
 
-Defined in: [mobjects/geometry/ArcShapes.ts:455](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L455)
+Defined in: [mobjects/geometry/ArcShapes.ts:455](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/ArcShapes.ts#L455)
 
 Center position. Default: [0, 0, 0]
 
@@ -30,7 +30,7 @@ Center position. Default: [0, 0, 0]
 
 > `optional` **color**: `string`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:449](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L449)
+Defined in: [mobjects/geometry/ArcShapes.ts:449](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/ArcShapes.ts#L449)
 
 Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
@@ -40,7 +40,7 @@ Stroke color as CSS color string. Default: Manim's blue (#58C4DD)
 
 > `optional` **fillOpacity**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:451](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L451)
+Defined in: [mobjects/geometry/ArcShapes.ts:451](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/ArcShapes.ts#L451)
 
 Fill opacity from 0 to 1. Default: 0.5
 
@@ -50,7 +50,7 @@ Fill opacity from 0 to 1. Default: 0.5
 
 > `optional` **innerRadius**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:441](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L441)
+Defined in: [mobjects/geometry/ArcShapes.ts:441](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/ArcShapes.ts#L441)
 
 Inner radius of the sector. Default: 0.5
 
@@ -60,7 +60,7 @@ Inner radius of the sector. Default: 0.5
 
 > `optional` **numComponents**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:457](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L457)
+Defined in: [mobjects/geometry/ArcShapes.ts:457](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/ArcShapes.ts#L457)
 
 Number of Bezier segments for approximation. Default: 8
 
@@ -70,7 +70,7 @@ Number of Bezier segments for approximation. Default: 8
 
 > `optional` **outerRadius**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:443](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L443)
+Defined in: [mobjects/geometry/ArcShapes.ts:443](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/ArcShapes.ts#L443)
 
 Outer radius of the sector. Default: 1
 
@@ -80,7 +80,7 @@ Outer radius of the sector. Default: 1
 
 > `optional` **startAngle**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:445](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L445)
+Defined in: [mobjects/geometry/ArcShapes.ts:445](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/ArcShapes.ts#L445)
 
 Start angle in radians. Default: 0
 
@@ -90,6 +90,6 @@ Start angle in radians. Default: 0
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [mobjects/geometry/ArcShapes.ts:453](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/mobjects/geometry/ArcShapes.ts#L453)
+Defined in: [mobjects/geometry/ArcShapes.ts:453](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/mobjects/geometry/ArcShapes.ts#L453)
 
 Stroke width in pixels. Default: 4 (Manim's default)

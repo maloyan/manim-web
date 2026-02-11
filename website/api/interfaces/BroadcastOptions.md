@@ -1,6 +1,6 @@
 # Interface: BroadcastOptions
 
-Defined in: [animation/utility/index.ts:287](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/utility/index.ts#L287)
+Defined in: [animation/utility/index.ts:287](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/utility/index.ts#L287)
 
 ## Extends
 
@@ -12,7 +12,7 @@ Defined in: [animation/utility/index.ts:287](https://github.com/maloyan/manim-js
 
 > `optional` **color**: `string`
 
-Defined in: [animation/utility/index.ts:289](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/utility/index.ts#L289)
+Defined in: [animation/utility/index.ts:289](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/utility/index.ts#L289)
 
 Color of the broadcast rings. Default: YELLOW
 
@@ -22,7 +22,7 @@ Color of the broadcast rings. Default: YELLOW
 
 > `optional` **duration**: `number`
 
-Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L13)
+Defined in: [animation/Animation.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L13)
 
 Duration of the animation in seconds (default: 1)
 
@@ -36,7 +36,7 @@ Duration of the animation in seconds (default: 1)
 
 > `optional` **lagRatio**: `number`
 
-Defined in: [animation/utility/index.ts:297](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/utility/index.ts#L297)
+Defined in: [animation/utility/index.ts:297](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/utility/index.ts#L297)
 
 Time offset between rings (0-1). Default: 0.3
 
@@ -46,7 +46,7 @@ Time offset between rings (0-1). Default: 0.3
 
 > `optional` **maxRadius**: `number`
 
-Defined in: [animation/utility/index.ts:293](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/utility/index.ts#L293)
+Defined in: [animation/utility/index.ts:293](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/utility/index.ts#L293)
 
 Maximum radius the rings expand to. Default: 2
 
@@ -56,7 +56,7 @@ Maximum radius the rings expand to. Default: 2
 
 > `optional` **numRings**: `number`
 
-Defined in: [animation/utility/index.ts:291](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/utility/index.ts#L291)
+Defined in: [animation/utility/index.ts:291](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/utility/index.ts#L291)
 
 Number of rings to broadcast. Default: 3
 
@@ -66,7 +66,7 @@ Number of rings to broadcast. Default: 3
 
 > `optional` **rateFunc**: [`RateFunction`](../type-aliases/RateFunction.md)
 
-Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L15)
+Defined in: [animation/Animation.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L15)
 
 Rate function controlling the animation's pacing (default: smooth)
 
@@ -80,7 +80,7 @@ Rate function controlling the animation's pacing (default: smooth)
 
 > `optional` **shift**: \[`number`, `number`, `number`\]
 
-Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/Animation.ts#L17)
+Defined in: [animation/Animation.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/Animation.ts#L17)
 
 Shift direction for fade animations
 
@@ -94,6 +94,6 @@ Shift direction for fade animations
 
 > `optional` **strokeWidth**: `number`
 
-Defined in: [animation/utility/index.ts:295](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/animation/utility/index.ts#L295)
+Defined in: [animation/utility/index.ts:295](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/animation/utility/index.ts#L295)
 
 Stroke width of rings. Default: DEFAULT_STROKE_WIDTH

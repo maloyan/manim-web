@@ -1,6 +1,6 @@
 # Interface: VideoExportOptions
 
-Defined in: [export/VideoExporter.ts:7](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L7)
+Defined in: [export/VideoExporter.ts:7](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/VideoExporter.ts#L7)
 
 Options for configuring video export.
 
@@ -10,7 +10,7 @@ Options for configuring video export.
 
 > `optional` **audioManager**: [`AudioManager`](../classes/AudioManager.md)
 
-Defined in: [export/VideoExporter.ts:31](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L31)
+Defined in: [export/VideoExporter.ts:31](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/VideoExporter.ts#L31)
 
 Provide an external AudioManager to use for the audio track.
 If not specified, the scene's audioManager is used.
@@ -21,7 +21,7 @@ If not specified, the scene's audioManager is used.
 
 > `optional` **duration**: `number`
 
-Defined in: [export/VideoExporter.ts:19](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L19)
+Defined in: [export/VideoExporter.ts:19](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/VideoExporter.ts#L19)
 
 Duration in seconds. Auto-detects from timeline if not specified.
 
@@ -31,7 +31,7 @@ Duration in seconds. Auto-detects from timeline if not specified.
 
 > `optional` **format**: `"webm"` \| `"mp4"`
 
-Defined in: [export/VideoExporter.ts:13](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L13)
+Defined in: [export/VideoExporter.ts:13](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/VideoExporter.ts#L13)
 
 Video format. Defaults to 'webm' (mp4 requires additional browser codec support).
 
@@ -41,7 +41,7 @@ Video format. Defaults to 'webm' (mp4 requires additional browser codec support)
 
 > `optional` **fps**: `number`
 
-Defined in: [export/VideoExporter.ts:9](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L9)
+Defined in: [export/VideoExporter.ts:9](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/VideoExporter.ts#L9)
 
 Frames per second. Defaults to 60.
 
@@ -51,7 +51,7 @@ Frames per second. Defaults to 60.
 
 > `optional` **height**: `number`
 
-Defined in: [export/VideoExporter.ts:17](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L17)
+Defined in: [export/VideoExporter.ts:17](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/VideoExporter.ts#L17)
 
 Output height in pixels. Defaults to scene height.
 
@@ -61,7 +61,7 @@ Output height in pixels. Defaults to scene height.
 
 > `optional` **includeAudio**: `boolean`
 
-Defined in: [export/VideoExporter.ts:26](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L26)
+Defined in: [export/VideoExporter.ts:26](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/VideoExporter.ts#L26)
 
 Include audio from the scene's AudioManager in the exported video.
 Defaults to true when the scene has audio tracks loaded.
@@ -72,7 +72,7 @@ Defaults to true when the scene has audio tracks loaded.
 
 > `optional` **onProgress**: (`progress`) => `void`
 
-Defined in: [export/VideoExporter.ts:21](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L21)
+Defined in: [export/VideoExporter.ts:21](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/VideoExporter.ts#L21)
 
 Progress callback (0-1).
 
@@ -92,7 +92,7 @@ Progress callback (0-1).
 
 > `optional` **quality**: `number`
 
-Defined in: [export/VideoExporter.ts:11](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L11)
+Defined in: [export/VideoExporter.ts:11](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/VideoExporter.ts#L11)
 
 Quality from 0-1. Defaults to 0.9.
 
@@ -102,6 +102,6 @@ Quality from 0-1. Defaults to 0.9.
 
 > `optional` **width**: `number`
 
-Defined in: [export/VideoExporter.ts:15](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/export/VideoExporter.ts#L15)
+Defined in: [export/VideoExporter.ts:15](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/export/VideoExporter.ts#L15)
 
 Output width in pixels. Defaults to scene width.

@@ -2,7 +2,7 @@
 
 > **hungarian**(`costMatrix`): [`HungarianResult`](../interfaces/HungarianResult.md)
 
-Defined in: [utils/hungarian.ts:59](https://github.com/maloyan/manim-js/blob/bb3df540431462df8cb4b68d80f4f748b060aefb/src/utils/hungarian.ts#L59)
+Defined in: [utils/hungarian.ts:59](https://github.com/maloyan/manim-js/blob/c05b6757c237b624c0c3a6b2afda7111f378c148/src/utils/hungarian.ts#L59)
 
 Solve the assignment problem using the Hungarian (Kuhn-Munkres) algorithm.
 
