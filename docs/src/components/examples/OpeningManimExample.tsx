@@ -3,7 +3,23 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Scene, Create, FadeIn, FadeOut, Transform, ApplyPointwiseFunction, Text, MathTex, NumberPlane, VGroup, UP, DOWN, UL, BLACK, WHITE } = await import('manim-web');
+  const {
+    Scene,
+    Create,
+    FadeIn,
+    FadeOut,
+    Transform,
+    ApplyPointwiseFunction,
+    Text,
+    MathTex,
+    NumberPlane,
+    VGroup,
+    UP,
+    DOWN,
+    UL,
+    BLACK,
+    WHITE,
+  } = await import('manim-web');
 
   const FONT_URL = 'https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/fonts/KaTeX_Main-Regular.ttf';
 

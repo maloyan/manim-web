@@ -3,7 +3,20 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Angle, FadeToColor, LEFT, Line, MathTex, RED, RIGHT, SMALL_BUFF, Scene, ValueTracker, BLACK, WHITE } = await import('manim-web');
+  const {
+    Angle,
+    FadeToColor,
+    LEFT,
+    Line,
+    MathTex,
+    RED,
+    RIGHT,
+    SMALL_BUFF,
+    Scene,
+    ValueTracker,
+    BLACK,
+    WHITE,
+  } = await import('manim-web');
 
   const rotation_center = LEFT;
 

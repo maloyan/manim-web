@@ -4,7 +4,7 @@
  * generate-example-docs.mjs
  *
  * Reads all examples/*.ts files and generates a single Docusaurus-compatible
- * examples.mdx page in website/docs/ with clean source code blocks.
+ * examples.mdx page in docs/docs/ with clean source code blocks.
  *
  * Usage:
  *   node scripts/generate-example-docs.mjs
@@ -18,7 +18,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..');
 const EXAMPLES_DIR = join(ROOT, 'examples');
-const DOCS_DIR = join(ROOT, 'website', 'docs');
+const DOCS_DIR = join(ROOT, 'docs', 'docs');
 
 // ---------------------------------------------------------------------------
 // Category definitions
@@ -633,7 +633,7 @@ function extractCleanCode(tsContent) {
 // Component generation: split clean code into imports, constants, and body
 // ---------------------------------------------------------------------------
 
-const COMPONENTS_DIR = join(ROOT, 'website', 'src', 'components', 'examples');
+const COMPONENTS_DIR = join(ROOT, 'docs', 'src', 'components', 'examples');
 
 /** Convert a filename stem like "sin_cos_plot" to PascalCase "SinCosPlot". */
 function toPascalCase(stem) {
@@ -1078,7 +1078,7 @@ function main() {
 
   const outPath = join(DOCS_DIR, 'examples.mdx');
   writeFileSync(outPath, lines.join('\n'), 'utf-8');
-  console.log(`  Generated: website/docs/examples.mdx`);
+  console.log(`  Generated: docs/docs/examples.mdx`);
 
   console.log(`\nDone! Generated ${examples.length} example components and examples page.`);
 }

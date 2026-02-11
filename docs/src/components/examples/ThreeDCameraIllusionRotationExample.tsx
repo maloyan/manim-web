@@ -26,18 +26,13 @@ async function animate(scene: any) {
 
   scene.add(circle, axes);
 
-  // Begin ambient camera rotation (theta rotates at 0.1 rad/s)
-  scene.beginAmbientCameraRotation(0.1);
-  await scene.wait(3);
+  // Begin 3D illusion camera rotation (theta rotates at 2 rad/s,
+  // phi oscillates sinusoidally for a wobbling 3D effect)
+  scene.begin3DIllusionCameraRotation(2);
+  await scene.wait(Math.PI / 2);
 
-  // Stop rotation and animate camera back to original orientation
-  scene.stopAmbientCameraRotation();
-  await scene.moveCamera({
-    phi: 75 * (Math.PI / 180),
-    theta: 30 * (Math.PI / 180),
-    duration: 1,
-  });
-  await scene.wait(1);
+  // Stop illusion rotation
+  scene.stop3DIllusionCameraRotation();
 
   // Reset camera orientation for replay
   scene.setCameraOrientation(75 * (Math.PI / 180), 30 * (Math.PI / 180));
@@ -45,16 +40,16 @@ async function animate(scene: any) {
 
 function createScene(container: HTMLElement, manim: any) {
   return new manim.ThreeDScene(container, {
-  width: 800,
-  height: 450,
-  backgroundColor: '#000000',
-  phi: 75 * (Math.PI / 180),
-  theta: 30 * (Math.PI / 180),
-  distance: 20,
-  fov: 30,
-});
+    width: 800,
+    height: 450,
+    backgroundColor: '#000000',
+    phi: 75 * (Math.PI / 180),
+    theta: 30 * (Math.PI / 180),
+    distance: 20,
+    fov: 30,
+  });
 }
 
-export default function ThreeDCameraRotationExample() {
+export default function ThreeDCameraIllusionRotationExample() {
   return <ManimExample animationFn={animate} createScene={createScene} />;
 }
