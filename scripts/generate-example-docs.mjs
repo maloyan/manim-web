@@ -392,6 +392,12 @@ function extractCleanCode(tsContent) {
   // 1. Replace import path '../src/index.ts' -> 'manim-js'
   code = code.replace(/from\s+['"]\.\.\/src\/index\.ts['"]/g, "from 'manim-js'");
 
+  // 1b. Replace local font paths with CDN URLs (local paths don't exist in Docusaurus build)
+  code = code.replace(
+    /['"]\.\/fonts\/KaTeX_Main-Regular\.ttf['"]/g,
+    "'https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/fonts/KaTeX_Main-Regular.ttf'"
+  );
+
   // 2. Remove "// Converted from Python..." comment lines at top
   code = code.replace(/^\/\/\s*Converted from Python[^\n]*\n/gm, '');
   code = code.replace(/^\/\/\s*Review and adjust[^\n]*\n/gm, '');
