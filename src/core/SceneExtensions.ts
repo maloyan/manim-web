@@ -56,6 +56,12 @@ export class ThreeDScene extends Scene {
   private _ambientRotationRate: number = 0;
   private _lastRenderTime: number = 0;
 
+  // 3D illusion camera rotation
+  private _illusionRotationRate: number = 0;
+  private _illusionOriginPhi: number = 0;
+  private _illusionOriginTheta: number = 0;
+  private _illusionActive: boolean = false;
+
   /**
    * Create a new 3D scene.
    * @param container - DOM element to render into
@@ -195,6 +201,36 @@ export class ThreeDScene extends Scene {
    */
   stopAmbientCameraRotation(): this {
     this._ambientRotationRate = 0;
+    return this;
+  }
+
+  /**
+   * Begin 3D illusion camera rotation.
+   * Unlike ambient rotation (which only rotates theta), this also oscillates
+   * phi sinusoidally, creating a wobbling 3D illusion as if the viewer walks
+   * around the scene.
+   * Equivalent to Python Manim's begin_3dillusion_camera_rotation(rate).
+   * @param rate - Rotation rate in radians per second. Defaults to 2.
+   * @returns this for chaining
+   */
+  begin3DIllusionCameraRotation(rate: number = 2): this {
+    const current = this._camera3D.getOrbitAngles();
+    this._illusionRotationRate = rate;
+    this._illusionOriginPhi = current.phi;
+    this._illusionOriginTheta = current.theta;
+    this._illusionActive = true;
+    this._lastRenderTime = performance.now();
+    return this;
+  }
+
+  /**
+   * Stop the 3D illusion camera rotation.
+   * Equivalent to Python Manim's stop_3dillusion_camera_rotation().
+   * @returns this for chaining
+   */
+  stop3DIllusionCameraRotation(): this {
+    this._illusionActive = false;
+    this._illusionRotationRate = 0;
     return this;
   }
 
@@ -357,6 +393,23 @@ export class ThreeDScene extends Scene {
           const current = this._camera3D.getOrbitAngles();
           const newTheta = current.theta + this._ambientRotationRate * clampedDt;
           this._camera3D.orbit(current.phi, newTheta, current.distance);
+        }
+      }
+      this._lastRenderTime = now;
+    }
+
+    // Advance 3D illusion camera rotation
+    if (this._illusionActive && this._illusionRotationRate !== 0) {
+      const now = performance.now();
+      if (this._lastRenderTime > 0) {
+        const dt = (now - this._lastRenderTime) / 1000;
+        const clampedDt = Math.min(dt, 0.1);
+        if (clampedDt > 0) {
+          const current = this._camera3D.getOrbitAngles();
+          const newTheta = current.theta + this._illusionRotationRate * clampedDt;
+          const newPhi =
+            this._illusionOriginPhi + 0.1 * Math.sin(newTheta - this._illusionOriginTheta);
+          this._camera3D.orbit(newPhi, newTheta, current.distance);
         }
       }
       this._lastRenderTime = now;
