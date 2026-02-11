@@ -3,7 +3,8 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const THREE = await import('three');
+  const { SphereGeometry, Color, BufferAttribute, MeshLambertMaterial, FrontSide, Mesh } =
+    await import('three');
   const { ThreeDAxes, Group, RED_D, RED_E } = await import('manim-js');
 
   const axes = new ThreeDAxes({
@@ -19,19 +20,19 @@ async function animate(scene: any) {
     shaftRadius: 0.01,
   });
 
-  // Checkerboard sphere using THREE.SphereGeometry for proper topology
+  // Checkerboard sphere using SphereGeometry for proper topology
   // (no pole/seam artifacts that ParametricGeometry can produce)
   const widthSegs = 32;
   const heightSegs = 16;
-  const geom = new THREE.SphereGeometry(1.5, widthSegs, heightSegs);
+  const geom = new SphereGeometry(1.5, widthSegs, heightSegs);
   // Convert to non-indexed for per-face checkerboard vertex colors
   const nonIndexed = geom.toNonIndexed();
   geom.dispose();
 
   const posAttr = nonIndexed.getAttribute('position');
   const colors = new Float32Array(posAttr.count * 3);
-  const c1 = new THREE.Color(RED_D);
-  const c2 = new THREE.Color(RED_E);
+  const c1 = new Color(RED_D);
+  const c2 = new Color(RED_E);
 
   // SphereGeometry: each quad = 2 triangles = 6 verts, except poles = 1 triangle = 3 verts
   // Layout: top cap (widthSegs triangles), then (heightSegs-2) rows of quads, then bottom cap
@@ -68,15 +69,15 @@ async function animate(scene: any) {
       vi++;
     }
   }
-  nonIndexed.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  nonIndexed.setAttribute('color', new BufferAttribute(colors, 3));
 
-  const mat = new THREE.MeshLambertMaterial({
+  const mat = new MeshLambertMaterial({
     vertexColors: true,
-    side: THREE.FrontSide,
-    emissive: new THREE.Color('#883333'),
+    side: FrontSide,
+    emissive: new Color('#883333'),
     emissiveIntensity: 1.0,
   });
-  const sphereMesh = new THREE.Mesh(nonIndexed, mat);
+  const sphereMesh = new Mesh(nonIndexed, mat);
 
   // Wrap in Group so scene.add() works
   const sphere = new Group();
