@@ -3,29 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const {
-    BackgroundRectangle,
-    BLACK,
-    Create,
-    Dot,
-    DOWN,
-    FadeIn,
-    FadeOut,
-    ImageMobject,
-    MED_SMALL_BUFF,
-    PURPLE,
-    RED,
-    Scale,
-    ScaleInPlace,
-    Shift,
-    smooth,
-    Text,
-    UL,
-    Uncreate,
-    UP,
-    UpdateFromFunc,
-    scaleVec,
-  } = await import('manim-js');
+  const { BackgroundRectangle, BLACK, Create, Dot, DOWN, FadeIn, FadeOut, ImageMobject, MED_SMALL_BUFF, PURPLE, RED, Scale, ScaleInPlace, Shift, smooth, Text, UL, Uncreate, UP, UpdateFromFunc, scaleVec } = await import('manim-js');
 
   // Grayscale image matching Python: np.uint8([[0, 100, 30, 200], [255, 0, 5, 33]])
   const image = new ImageMobject({
@@ -69,7 +47,10 @@ async function animate(scene: any) {
   scene.activateZooming();
 
   // Pop-out animation: display pops from frame position to its shifted position
-  await scene.play(scene.getZoomedDisplayPopOutAnimation(), unfoldCamera);
+  await scene.play(
+    scene.getZoomedDisplayPopOutAnimation(),
+    unfoldCamera,
+  );
 
   // Use zoomedDisplay (parent) for positioning since displayFrame is a nested
   // child whose world coords depend on parent transform being synced
@@ -102,16 +83,16 @@ async function animate(scene: any) {
 
 function createScene(container: HTMLElement, manim: any) {
   return new manim.ZoomedScene(container, {
-    width: 800,
-    height: 450,
-    backgroundColor: manim.BLACK,
-    zoomFactor: 0.3,
-    displayWidth: 6,
-    displayHeight: 1,
-    cameraFrameStrokeWidth: 3,
-    displayFrameStrokeWidth: 3,
-    displayFrameColor: manim.RED,
-  });
+  width: 800,
+  height: 450,
+  backgroundColor: manim.BLACK,
+  zoomFactor: 0.3,
+  displayWidth: 6,
+  displayHeight: 1,
+  cameraFrameStrokeWidth: 3,
+  displayFrameStrokeWidth: 3,
+  displayFrameColor: manim.RED,
+});
 }
 
 export default function MovingZoomedSceneAroundExample() {
