@@ -52,6 +52,10 @@ export class ThreeDScene extends Scene {
   private _hudCamera: THREE.OrthographicCamera;
   private _fixedMobjects: Set<Mobject> = new Set();
 
+  // Ambient camera rotation
+  private _ambientRotationRate: number = 0;
+  private _lastRenderTime: number = 0;
+
   /**
    * Create a new 3D scene.
    * @param container - DOM element to render into
@@ -171,6 +175,118 @@ export class ThreeDScene extends Scene {
   }
 
   /**
+   * Begin continuous ambient rotation of the camera around the scene.
+   * Rotates the camera's theta angle at the given rate (radians per second)
+   * during wait() calls and play() calls.
+   * Equivalent to Python Manim's begin_ambient_camera_rotation(rate).
+   * @param rate - Rotation rate in radians per second. Defaults to 0.1.
+   * @returns this for chaining
+   */
+  beginAmbientCameraRotation(rate: number = 0.1): this {
+    this._ambientRotationRate = rate;
+    this._lastRenderTime = performance.now();
+    return this;
+  }
+
+  /**
+   * Stop the ambient camera rotation.
+   * Equivalent to Python Manim's stop_ambient_camera_rotation().
+   * @returns this for chaining
+   */
+  stopAmbientCameraRotation(): this {
+    this._ambientRotationRate = 0;
+    return this;
+  }
+
+  /**
+   * Animate the camera to a new orientation over a given duration.
+   * Equivalent to Python Manim's move_camera(phi, theta, distance).
+   * If no duration is given, snaps instantly.
+   * @param options - Target orientation and duration
+   * @returns Promise that resolves when the animation completes
+   */
+  async moveCamera(options: {
+    phi?: number;
+    theta?: number;
+    distance?: number;
+    duration?: number;
+  }): Promise<void> {
+    const current = this._camera3D.getOrbitAngles();
+    const targetPhi = options.phi ?? current.phi;
+    const targetTheta = options.theta ?? current.theta;
+    const targetDistance = options.distance ?? current.distance;
+    const duration = options.duration ?? 1;
+
+    if (duration <= 0) {
+      this._camera3D.orbit(targetPhi, targetTheta, targetDistance);
+      this.render();
+      return;
+    }
+
+    const startPhi = current.phi;
+    const startTheta = current.theta;
+    const startDistance = current.distance;
+
+    return new Promise((resolve) => {
+      const startTime = performance.now();
+      let lastFrameTime = startTime;
+      let rafId: number | null = null;
+      let timerId: ReturnType<typeof setInterval> | null = null;
+      let resolved = false;
+
+      const tick = (currentTime: number) => {
+        if (resolved) return;
+        const elapsed = (currentTime - startTime) / 1000;
+        const t = Math.min(1, elapsed / duration);
+        // Smooth interpolation using smoothstep
+        const s = t * t * (3 - 2 * t);
+
+        const phi = startPhi + (targetPhi - startPhi) * s;
+        const theta = startTheta + (targetTheta - startTheta) * s;
+        const dist = startDistance + (targetDistance - startDistance) * s;
+
+        this._camera3D.orbit(phi, theta, dist);
+
+        // Also run mobject updaters during camera animation
+        const dt = (currentTime - lastFrameTime) / 1000;
+        lastFrameTime = currentTime;
+        for (const mobject of this.mobjects) {
+          mobject.update(dt);
+        }
+
+        this._render();
+
+        if (t >= 1) {
+          resolved = true;
+          if (rafId !== null) cancelAnimationFrame(rafId);
+          if (timerId !== null) clearInterval(timerId);
+          resolve();
+          return;
+        }
+      };
+
+      const loop = (currentTime: number) => {
+        tick(currentTime);
+        if (!resolved) {
+          rafId = requestAnimationFrame(loop);
+        }
+      };
+
+      rafId = requestAnimationFrame(loop);
+
+      // Background-tab fallback
+      timerId = setInterval(() => {
+        if (resolved) return;
+        const now = performance.now();
+        const elapsed = now - lastFrameTime;
+        if (elapsed > 200) {
+          tick(now);
+        }
+      }, 100);
+    });
+  }
+
+  /**
    * Enable or disable orbit controls.
    * @param enabled - Whether orbit controls should be enabled
    * @returns this for chaining
@@ -229,6 +345,22 @@ export class ThreeDScene extends Scene {
   protected override _render(): void {
     // Guard: super() calls _render() before our fields are initialized
     if (!this._camera3D) return;
+
+    // Advance ambient camera rotation
+    if (this._ambientRotationRate !== 0) {
+      const now = performance.now();
+      if (this._lastRenderTime > 0) {
+        const dt = (now - this._lastRenderTime) / 1000;
+        // Clamp dt to avoid huge jumps (e.g. after tab regains focus)
+        const clampedDt = Math.min(dt, 0.1);
+        if (clampedDt > 0) {
+          const current = this._camera3D.getOrbitAngles();
+          const newTheta = current.theta + this._ambientRotationRate * clampedDt;
+          this._camera3D.orbit(current.phi, newTheta, current.distance);
+        }
+      }
+      this._lastRenderTime = now;
+    }
 
     // Sync dirty mobjects in the main scene
     for (const mob of this.mobjects) {
