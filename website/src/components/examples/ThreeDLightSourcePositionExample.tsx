@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { ThreeDAxes, Surface3D, RED_D, RED_E } = await import('manim-js');
+  const { ThreeDAxes, Group, RED_D, RED_E } = await import('manim-js');
 
   const axes = new ThreeDAxes({
     xRange: [-5, 5, 1],
@@ -18,46 +18,75 @@ async function animate(scene: any) {
     shaftRadius: 0.01,
   });
 
-  // Parametric sphere: radius 1.5
-  // Python Manim convention: u = latitude [-PI/2, PI/2], v = longitude [0, TAU]
-  // Manim coords: (x, y, z) where z is up
-  // manim-js Surface3D renders in THREE.js space directly
-  // THREE.js mapping from Manim: (mx, mz, -my)
-  const sphere = new Surface3D({
-    func: (u, v) => {
-      // Manim coordinates
-      const mx = 1.5 * Math.cos(u) * Math.cos(v);
-      const my = 1.5 * Math.cos(u) * Math.sin(v);
-      const mz = 1.5 * Math.sin(u);
-      // Convert to THREE.js: (mx, mz, -my)
-      return [mx, mz, -my];
-    },
-    uRange: [-Math.PI / 2, Math.PI / 2],
-    vRange: [0, Math.PI * 2],
-    uResolution: 15,
-    vResolution: 32,
-    checkerboardColors: [RED_D, RED_E],
-  });
+  // Checkerboard sphere using THREE.SphereGeometry for proper topology
+  // (no pole/seam artifacts that ParametricGeometry can produce)
+  const widthSegs = 32;
+  const heightSegs = 16;
+  const geom = new THREE.SphereGeometry(1.5, widthSegs, heightSegs);
+  // Convert to non-indexed for per-face checkerboard vertex colors
+  const nonIndexed = geom.toNonIndexed();
+  geom.dispose();
 
-  // Python Manim: self.renderer.camera.light_source.move_to(3*IN)
-  // IN = [0, 0, -1] in Manim 3D (Z-up), so 3*IN = [0, 0, -3]
-  // THREE.js mapping: (mx, mz, -my) = (0, -3, 0)
-  // Reduce roughness for brighter appearance matching Python Manim
-  const threeObj = sphere.getThreeObject();
-  threeObj.traverse((child: THREE.Object3D) => {
-    if (child instanceof THREE.Mesh) {
-      const mat = child.material as THREE.MeshStandardMaterial;
-      mat.roughness = 0.6;
+  const posAttr = nonIndexed.getAttribute('position');
+  const colors = new Float32Array(posAttr.count * 3);
+  const c1 = new THREE.Color(RED_D);
+  const c2 = new THREE.Color(RED_E);
+
+  // SphereGeometry: each quad = 2 triangles = 6 verts, except poles = 1 triangle = 3 verts
+  // Layout: top cap (widthSegs triangles), then (heightSegs-2) rows of quads, then bottom cap
+  let vi = 0;
+  // Top cap: widthSegs triangles
+  for (let i = 0; i < widthSegs; i++) {
+    const c = i % 2 === 0 ? c1 : c2;
+    for (let k = 0; k < 3; k++) {
+      colors[vi * 3] = c.r;
+      colors[vi * 3 + 1] = c.g;
+      colors[vi * 3 + 2] = c.b;
+      vi++;
     }
-  });
+  }
+  // Middle rows: (heightSegs - 2) rows × widthSegs quads × 6 verts
+  for (let row = 0; row < heightSegs - 2; row++) {
+    for (let col = 0; col < widthSegs; col++) {
+      const c = (row + col) % 2 === 0 ? c1 : c2;
+      for (let k = 0; k < 6; k++) {
+        colors[vi * 3] = c.r;
+        colors[vi * 3 + 1] = c.g;
+        colors[vi * 3 + 2] = c.b;
+        vi++;
+      }
+    }
+  }
+  // Bottom cap: widthSegs triangles
+  for (let i = 0; i < widthSegs; i++) {
+    const c = (i + (heightSegs - 2)) % 2 === 0 ? c1 : c2;
+    for (let k = 0; k < 3; k++) {
+      colors[vi * 3] = c.r;
+      colors[vi * 3 + 1] = c.g;
+      colors[vi * 3 + 2] = c.b;
+      vi++;
+    }
+  }
+  nonIndexed.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-  // Python Manim: self.renderer.camera.light_source.move_to(3*IN)
-  // IN = [0, 0, -1] in Manim 3D (Z-up), so 3*IN = [0, 0, -3]
-  // THREE.js mapping: (mx, mz, -my) = (0, -3, 0)
+  const mat = new THREE.MeshLambertMaterial({
+    vertexColors: true,
+    side: THREE.FrontSide,
+    emissive: new THREE.Color('#883333'),
+    emissiveIntensity: 1.0,
+  });
+  const sphereMesh = new THREE.Mesh(nonIndexed, mat);
+
+  // Wrap in Group so scene.add() works
+  const sphere = new Group();
+  sphere.getThreeObject().add(sphereMesh);
+
+  // Multi-directional lighting to eliminate dark shadows (matches Python Manim)
   scene.lighting.removeAll();
-  scene.lighting.addAmbient({ intensity: 1.0 });
-  scene.lighting.addDirectional({ position: [0, 5, 3], intensity: 2.5 });
-  scene.lighting.addDirectional({ position: [-3, -5, 0], intensity: 0.5 });
+  scene.lighting.addAmbient({ intensity: 3.0 });
+  scene.lighting.addDirectional({ position: [0, 5, 3], intensity: 1.5 });
+  scene.lighting.addDirectional({ position: [0, -3, -3], intensity: 1.0 });
+  scene.lighting.addDirectional({ position: [-5, 0, 0], intensity: 0.5 });
 
   scene.add(axes);
   scene.add(sphere);

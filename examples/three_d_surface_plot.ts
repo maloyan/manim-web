@@ -34,7 +34,7 @@ async function threeDSurfacePlot(scene: ThreeDScene) {
     uResolution: 24,
     vResolution: 24,
     checkerboardColors: [ORANGE, BLUE],
-    opacity: 0.5,
+    opacity: 0.85,
   });
 
   // Scale by 2 about origin (matches Python: gauss_plane.scale(2, about_point=ORIGIN))

@@ -488,7 +488,14 @@ export class ThreeDScene extends Scene {
       this._hudScene.remove(this._hudScene.children[0]);
     }
 
-    return super.clear();
+    super.clear();
+
+    // Re-add lights after clear (super.clear removes ALL three scene children)
+    for (const light of this._lighting.getLights()) {
+      this.threeScene.add(light);
+    }
+
+    return this;
   }
 
   /**

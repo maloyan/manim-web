@@ -23,7 +23,10 @@ import PointWithTraceExample from '@site/src/components/examples/PointWithTraceE
 import PolygonOnAxesExample from '@site/src/components/examples/PolygonOnAxesExample';
 import RotationUpdaterExample from '@site/src/components/examples/RotationUpdaterExample';
 import SinCosPlotExample from '@site/src/components/examples/SinCosPlotExample';
+import ThreeDCameraIllusionRotationExample from '@site/src/components/examples/ThreeDCameraIllusionRotationExample';
+import ThreeDCameraRotationExample from '@site/src/components/examples/ThreeDCameraRotationExample';
 import ThreeDLightSourcePositionExample from '@site/src/components/examples/ThreeDLightSourcePositionExample';
+import ThreeDSurfacePlotExample from '@site/src/components/examples/ThreeDSurfacePlotExample';
 import VectorArrowExample from '@site/src/components/examples/VectorArrowExample';
 
 # Examples
@@ -1244,7 +1247,7 @@ Shows a parametric sphere with checkerboard colors (RED_D, RED_E) on ThreeDAxes 
 
 ```typescript
 import * as THREE from 'three';
-import { ThreeDAxes, ThreeDScene, Surface3D, RED_D, RED_E } from 'manim-js';
+import { ThreeDAxes, ThreeDScene, Group, RED_D, RED_E } from 'manim-js';
 
 const scene = new ThreeDScene(document.getElementById('container'), {
   width: 800,
@@ -1269,46 +1272,75 @@ const axes = new ThreeDAxes({
   shaftRadius: 0.01,
 });
 
-// Parametric sphere: radius 1.5
-// Python Manim convention: u = latitude [-PI/2, PI/2], v = longitude [0, TAU]
-// Manim coords: (x, y, z) where z is up
-// manim-js Surface3D renders in THREE.js space directly
-// THREE.js mapping from Manim: (mx, mz, -my)
-const sphere = new Surface3D({
-  func: (u, v) => {
-    // Manim coordinates
-    const mx = 1.5 * Math.cos(u) * Math.cos(v);
-    const my = 1.5 * Math.cos(u) * Math.sin(v);
-    const mz = 1.5 * Math.sin(u);
-    // Convert to THREE.js: (mx, mz, -my)
-    return [mx, mz, -my];
-  },
-  uRange: [-Math.PI / 2, Math.PI / 2],
-  vRange: [0, Math.PI * 2],
-  uResolution: 15,
-  vResolution: 32,
-  checkerboardColors: [RED_D, RED_E],
-});
+// Checkerboard sphere using THREE.SphereGeometry for proper topology
+// (no pole/seam artifacts that ParametricGeometry can produce)
+const widthSegs = 32;
+const heightSegs = 16;
+const geom = new THREE.SphereGeometry(1.5, widthSegs, heightSegs);
+// Convert to non-indexed for per-face checkerboard vertex colors
+const nonIndexed = geom.toNonIndexed();
+geom.dispose();
 
-// Python Manim: self.renderer.camera.light_source.move_to(3*IN)
-// IN = [0, 0, -1] in Manim 3D (Z-up), so 3*IN = [0, 0, -3]
-// THREE.js mapping: (mx, mz, -my) = (0, -3, 0)
-// Reduce roughness for brighter appearance matching Python Manim
-const threeObj = sphere.getThreeObject();
-threeObj.traverse((child: THREE.Object3D) => {
-  if (child instanceof THREE.Mesh) {
-    const mat = child.material as THREE.MeshStandardMaterial;
-    mat.roughness = 0.6;
+const posAttr = nonIndexed.getAttribute('position');
+const colors = new Float32Array(posAttr.count * 3);
+const c1 = new THREE.Color(RED_D);
+const c2 = new THREE.Color(RED_E);
+
+// SphereGeometry: each quad = 2 triangles = 6 verts, except poles = 1 triangle = 3 verts
+// Layout: top cap (widthSegs triangles), then (heightSegs-2) rows of quads, then bottom cap
+let vi = 0;
+// Top cap: widthSegs triangles
+for (let i = 0; i < widthSegs; i++) {
+  const c = i % 2 === 0 ? c1 : c2;
+  for (let k = 0; k < 3; k++) {
+    colors[vi * 3] = c.r;
+    colors[vi * 3 + 1] = c.g;
+    colors[vi * 3 + 2] = c.b;
+    vi++;
   }
-});
+}
+// Middle rows: (heightSegs - 2) rows × widthSegs quads × 6 verts
+for (let row = 0; row < heightSegs - 2; row++) {
+  for (let col = 0; col < widthSegs; col++) {
+    const c = (row + col) % 2 === 0 ? c1 : c2;
+    for (let k = 0; k < 6; k++) {
+      colors[vi * 3] = c.r;
+      colors[vi * 3 + 1] = c.g;
+      colors[vi * 3 + 2] = c.b;
+      vi++;
+    }
+  }
+}
+// Bottom cap: widthSegs triangles
+for (let i = 0; i < widthSegs; i++) {
+  const c = (i + (heightSegs - 2)) % 2 === 0 ? c1 : c2;
+  for (let k = 0; k < 3; k++) {
+    colors[vi * 3] = c.r;
+    colors[vi * 3 + 1] = c.g;
+    colors[vi * 3 + 2] = c.b;
+    vi++;
+  }
+}
+nonIndexed.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-// Python Manim: self.renderer.camera.light_source.move_to(3*IN)
-// IN = [0, 0, -1] in Manim 3D (Z-up), so 3*IN = [0, 0, -3]
-// THREE.js mapping: (mx, mz, -my) = (0, -3, 0)
+const mat = new THREE.MeshLambertMaterial({
+  vertexColors: true,
+  side: THREE.FrontSide,
+  emissive: new THREE.Color('#883333'),
+  emissiveIntensity: 1.0,
+});
+const sphereMesh = new THREE.Mesh(nonIndexed, mat);
+
+// Wrap in Group so scene.add() works
+const sphere = new Group();
+sphere.getThreeObject().add(sphereMesh);
+
+// Multi-directional lighting to eliminate dark shadows (matches Python Manim)
 scene.lighting.removeAll();
-scene.lighting.addAmbient({ intensity: 1.0 });
-scene.lighting.addDirectional({ position: [0, 5, 3], intensity: 2.5 });
-scene.lighting.addDirectional({ position: [-3, -5, 0], intensity: 0.5 });
+scene.lighting.addAmbient({ intensity: 3.0 });
+scene.lighting.addDirectional({ position: [0, 5, 3], intensity: 1.5 });
+scene.lighting.addDirectional({ position: [0, -3, -3], intensity: 1.0 });
+scene.lighting.addDirectional({ position: [-5, 0, 0], intensity: 0.5 });
 
 scene.add(axes);
 scene.add(sphere);
@@ -1318,6 +1350,207 @@ await scene.wait();
 </details>
 
 **Learn More:** **ThreeDScene** · **ThreeDAxes** · **Surface3D** · **Lighting**
+
+---
+
+## Three D Surface Plot
+
+Renders a 3D Gaussian surface plot on ThreeDAxes with checkerboard coloring (ORANGE, BLUE). The parametric surface maps (u,v) to a bell-shaped Gaussian peak, scaled by 2 and displayed with semi-transparent faces.
+
+<ThreeDSurfacePlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ThreeDAxes, ThreeDScene, Surface3D, ORANGE, BLUE } from 'manim-js';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 75 * (Math.PI / 180),
+  theta: -30 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+});
+
+const sigma = 0.4;
+const mu = [0.0, 0.0];
+
+// Gaussian surface: parametric function mapping (u,v) to 3D point
+// Surface3D func returns [x, y, z] used directly as THREE.js coordinates.
+// Manim Z-up -> THREE.js Y-up: return [manimX, manimZ, -manimY]
+const gaussSurface = new Surface3D({
+  func: (u: number, v: number) => {
+    const x = u;
+    const y = v;
+    const dx = x - mu[0];
+    const dy = y - mu[1];
+    const d = Math.sqrt(dx * dx + dy * dy);
+    const z = Math.exp(-(d * d) / (2.0 * sigma * sigma));
+    // Manim coords (x, y, z) -> THREE.js coords (x, z, -y)
+    return [x, z, -y];
+  },
+  uRange: [-2, 2],
+  vRange: [-2, 2],
+  uResolution: 24,
+  vResolution: 24,
+  checkerboardColors: [ORANGE, BLUE],
+  opacity: 0.5,
+});
+
+// Scale by 2 about origin (matches Python: gauss_plane.scale(2, about_point=ORIGIN))
+gaussSurface.scale(2);
+
+const axes = new ThreeDAxes({
+  xRange: [-6, 6, 1],
+  yRange: [-5, 5, 1],
+  zRange: [-4, 4, 1],
+  xLength: 12,
+  yLength: 10,
+  zLength: 6,
+  axisColor: '#ffffff',
+  tipLength: 0.3,
+  tipRadius: 0.12,
+  shaftRadius: 0.008,
+});
+
+scene.add(axes);
+scene.add(gaussSurface);
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** **ThreeDScene** · **ThreeDAxes** · **Surface3D**
+
+---
+
+## Three D Camera Rotation
+
+Demonstrates ambient camera rotation around 3D axes with a circle, then animates the camera back to its original orientation. Shows beginAmbientCameraRotation, stopAmbientCameraRotation, and moveCamera methods.
+
+<ThreeDCameraRotationExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Circle, ThreeDAxes, ThreeDScene } from 'manim-js';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 75 * (Math.PI / 180),
+  theta: 30 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+});
+
+const axes = new ThreeDAxes({
+  xRange: [-6, 6, 1],
+  yRange: [-5, 5, 1],
+  zRange: [-4, 4, 1],
+  xLength: 12,
+  yLength: 10,
+  zLength: 6,
+  axisColor: '#ffffff',
+  tipLength: 0.3,
+  tipRadius: 0.12,
+  shaftRadius: 0.008,
+});
+
+const circle = new Circle({ radius: 1, color: '#FC6255' });
+// Circle points are in Manim x-y plane but VMobject renders them
+// directly in THREE.js coords. Rotate -90° around X to lay flat
+// on the ground plane (THREE.js x-z = Manim x-y).
+circle.rotation.x = -Math.PI / 2;
+
+scene.add(circle, axes);
+
+// Begin ambient camera rotation (theta rotates at 0.1 rad/s)
+scene.beginAmbientCameraRotation(0.1);
+await scene.wait(3);
+
+// Stop rotation and animate camera back to original orientation
+scene.stopAmbientCameraRotation();
+await scene.moveCamera({
+  phi: 75 * (Math.PI / 180),
+  theta: 30 * (Math.PI / 180),
+  duration: 1,
+});
+await scene.wait(1);
+
+// Reset camera orientation for replay
+scene.setCameraOrientation(75 * (Math.PI / 180), 30 * (Math.PI / 180));
+```
+
+</details>
+
+**Learn More:** **ThreeDScene** · **ThreeDAxes** · **Circle**
+
+---
+
+## Three D Camera Illusion Rotation
+
+Demonstrates the 3D illusion camera rotation that wobbles the camera by oscillating phi sinusoidally while rotating theta continuously. Creates a convincing 3D parallax effect around ThreeDAxes with a circle.
+
+<ThreeDCameraIllusionRotationExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Circle, ThreeDAxes, ThreeDScene } from 'manim-js';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 75 * (Math.PI / 180),
+  theta: 30 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+});
+
+const axes = new ThreeDAxes({
+  xRange: [-6, 6, 1],
+  yRange: [-5, 5, 1],
+  zRange: [-4, 4, 1],
+  xLength: 12,
+  yLength: 10,
+  zLength: 6,
+  axisColor: '#ffffff',
+  tipLength: 0.3,
+  tipRadius: 0.12,
+  shaftRadius: 0.008,
+});
+
+const circle = new Circle({ radius: 1, color: '#FC6255' });
+// Circle points are in Manim x-y plane but VMobject renders them
+// directly in THREE.js coords. Rotate -90° around X to lay flat
+// on the ground plane (THREE.js x-z = Manim x-y).
+circle.rotation.x = -Math.PI / 2;
+
+scene.add(circle, axes);
+
+// Begin 3D illusion camera rotation (theta rotates at 2 rad/s,
+// phi oscillates sinusoidally for a wobbling 3D effect)
+scene.begin3DIllusionCameraRotation(2);
+await scene.wait(Math.PI / 2);
+
+// Stop illusion rotation
+scene.stop3DIllusionCameraRotation();
+
+// Reset camera orientation for replay
+scene.setCameraOrientation(75 * (Math.PI / 180), 30 * (Math.PI / 180));
+```
+
+</details>
+
+**Learn More:** **ThreeDScene** · **ThreeDAxes** · **Circle**
 
 ---
 
