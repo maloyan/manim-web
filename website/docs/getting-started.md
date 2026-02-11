@@ -107,4 +107,4 @@ manim-js supports a wide range of mathematical animations:
 ## Next steps
 
 - Browse the [Examples](./examples.mdx) to see what is possible
-- Explore the [API Reference](./api/globals.md) in the sidebar for detailed documentation
+- Explore the [API Reference](/api) in the sidebar for detailed documentation
