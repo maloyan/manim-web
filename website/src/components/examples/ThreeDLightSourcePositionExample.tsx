@@ -3,6 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
+  const THREE = await import('three');
   const { ThreeDAxes, Group, RED_D, RED_E } = await import('manim-js');
 
   const axes = new ThreeDAxes({
@@ -90,6 +91,13 @@ async function animate(scene: any) {
 
   scene.add(axes);
   scene.add(sphere);
+
+  // Re-enable depth testing for the 3D sphere mesh.
+  // Scene.add() disables depthTest (correct for 2D), but this raw THREE.Mesh
+  // needs it for proper 3D occlusion.
+  mat.depthTest = true;
+  mat.depthWrite = true;
+
   await scene.wait();
 }
 
