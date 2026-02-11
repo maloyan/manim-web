@@ -146,12 +146,7 @@ function computeBBox(points: number[][]): BBox {
  * Rasterize the cubic Bezier outline into a binary grid.
  * Uses the even-odd fill rule with scanline intersection counting.
  */
-function rasterizeOutline(
-  points: number[][],
-  bbox: BBox,
-  cols: number,
-  rows: number,
-): Uint8Array {
+function rasterizeOutline(points: number[][], bbox: BBox, cols: number, rows: number): Uint8Array {
   const grid = new Uint8Array(cols * rows);
 
   // Small margin to avoid edge aliasing
@@ -237,15 +232,9 @@ function flattenCubicsToSegments(
       const mt = 1 - t;
       // De Casteljau
       const x =
-        mt * mt * mt * p0[0] +
-        3 * mt * mt * t * p1[0] +
-        3 * mt * t * t * p2[0] +
-        t * t * t * p3[0];
+        mt * mt * mt * p0[0] + 3 * mt * mt * t * p1[0] + 3 * mt * t * t * p2[0] + t * t * t * p3[0];
       const y =
-        mt * mt * mt * p0[1] +
-        3 * mt * mt * t * p1[1] +
-        3 * mt * t * t * p2[1] +
-        t * t * t * p3[1];
+        mt * mt * mt * p0[1] + 3 * mt * mt * t * p1[1] + 3 * mt * t * t * p2[1] + t * t * t * p3[1];
 
       const px = toPixelX(x);
       const py = toPixelY(y);
@@ -354,11 +343,25 @@ function zhangSuenThin(grid: Uint8Array, cols: number, rows: number): void {
 
 /** Count the number of non-zero neighbors (B in Zhang-Suen). */
 function neighborCount(
-  p2: number, p3: number, p4: number, p5: number,
-  p6: number, p7: number, p8: number, p9: number,
+  p2: number,
+  p3: number,
+  p4: number,
+  p5: number,
+  p6: number,
+  p7: number,
+  p8: number,
+  p9: number,
 ): number {
-  return (p2 ? 1 : 0) + (p3 ? 1 : 0) + (p4 ? 1 : 0) + (p5 ? 1 : 0) +
-         (p6 ? 1 : 0) + (p7 ? 1 : 0) + (p8 ? 1 : 0) + (p9 ? 1 : 0);
+  return (
+    (p2 ? 1 : 0) +
+    (p3 ? 1 : 0) +
+    (p4 ? 1 : 0) +
+    (p5 ? 1 : 0) +
+    (p6 ? 1 : 0) +
+    (p7 ? 1 : 0) +
+    (p8 ? 1 : 0) +
+    (p9 ? 1 : 0)
+  );
 }
 
 /**
@@ -366,8 +369,14 @@ function neighborCount(
  * (A in Zhang-Suen.)
  */
 function transitions(
-  p2: number, p3: number, p4: number, p5: number,
-  p6: number, p7: number, p8: number, p9: number,
+  p2: number,
+  p3: number,
+  p4: number,
+  p5: number,
+  p6: number,
+  p7: number,
+  p8: number,
+  p9: number,
 ): number {
   const seq = [p2, p3, p4, p5, p6, p7, p8, p9, p2];
   let count = 0;
@@ -400,10 +409,10 @@ function traceChains(
   cols: number,
   rows: number,
   minLength: number,
-): number[][] {
+): number[][][] {
   // Build a visited map
   const visited = new Uint8Array(cols * rows);
-  const chains: number[][] = [];
+  const chains: number[][][] = [];
 
   /**
    * Count how many skeleton neighbors a pixel has.
@@ -422,16 +431,16 @@ function traceChains(
 
   /**
    * Walk from (startR, startC) following unvisited skeleton neighbors.
-   * Returns the chain as flat [col0, row0, col1, row1, ...].
+   * Returns the chain as [[col0, row0], [col1, row1], ...].
    */
-  function walk(startR: number, startC: number): number[] {
-    const chain: number[] = [];
+  function walk(startR: number, startC: number): number[][] {
+    const chain: number[][] = [];
     let r = startR;
     let c = startC;
 
     while (true) {
       visited[r * cols + c] = 1;
-      chain.push(c, r);
+      chain.push([c, r]);
 
       // Find unvisited neighbor
       let foundNext = false;
@@ -439,8 +448,12 @@ function traceChains(
         const nr = r + N8_DR[n];
         const nc = c + N8_DC[n];
         if (
-          nr >= 0 && nr < rows && nc >= 0 && nc < cols &&
-          grid[nr * cols + nc] && !visited[nr * cols + nc]
+          nr >= 0 &&
+          nr < rows &&
+          nc >= 0 &&
+          nc < cols &&
+          grid[nr * cols + nc] &&
+          !visited[nr * cols + nc]
         ) {
           r = nr;
           c = nc;
@@ -460,7 +473,7 @@ function traceChains(
       if (!grid[r * cols + c] || visited[r * cols + c]) continue;
       if (degree(r, c) === 1) {
         const chain = walk(r, c);
-        if (chain.length / 2 >= minLength) {
+        if (chain.length >= minLength) {
           chains.push(chain);
         }
       }
@@ -472,7 +485,7 @@ function traceChains(
     for (let c = 0; c < cols; c++) {
       if (!grid[r * cols + c] || visited[r * cols + c]) continue;
       const chain = walk(r, c);
-      if (chain.length / 2 >= minLength) {
+      if (chain.length >= minLength) {
         chains.push(chain);
       }
     }
@@ -482,10 +495,10 @@ function traceChains(
   // to approximate natural writing order
   chains.sort((a, b) => {
     // Compare by starting Y (row), then X (col)
-    const ay = a[1];
-    const ax = a[0];
-    const by = b[1];
-    const bx = b[0];
+    const ay = a[0][1];
+    const ax = a[0][0];
+    const by = b[0][1];
+    const bx = b[0][0];
     if (ay !== by) return ay - by;
     return ax - bx;
   });
@@ -498,13 +511,7 @@ function traceChains(
 // ---------------------------------------------------------------------------
 
 /** Convert pixel coordinates back to world coordinates (3D with z=0). */
-function pixelToWorld(
-  px: number,
-  py: number,
-  bbox: BBox,
-  cols: number,
-  rows: number,
-): number[] {
+function pixelToWorld(px: number, py: number, bbox: BBox, cols: number, rows: number): number[] {
   const wx = bbox.minX + (px / cols) * bbox.width;
   const wy = bbox.minY + (py / rows) * bbox.height;
   return [wx, wy, 0];
