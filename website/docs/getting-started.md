@@ -9,7 +9,7 @@ sidebar_position: 2
 ## Installation
 
 ```bash
-npm install manim-js
+npm install manim-web
 ```
 
 ## Basic Usage
@@ -17,7 +17,7 @@ npm install manim-js
 Create a minimal scene with a shape animation:
 
 ```typescript
-import { Scene, Circle, Create, FadeOut, BLACK } from 'manim-js';
+import { Scene, Circle, Create, FadeOut, BLACK } from 'manim-web';
 
 // Set up the scene
 const container = document.getElementById('container');
@@ -43,23 +43,23 @@ You will need an HTML page with a container element:
 
 ## Using with a bundler
 
-manim-js works with any modern bundler (Vite, webpack, esbuild, etc.). With Vite:
+manim-web works with any modern bundler (Vite, webpack, esbuild, etc.). With Vite:
 
 ```bash
 npm create vite@latest my-animation -- --template vanilla-ts
 cd my-animation
-npm install manim-js
+npm install manim-web
 ```
 
-Then import and use `manim-js` in your TypeScript files.
+Then import and use `manim-web` in your TypeScript files.
 
 ## Framework integrations
 
 ### React
 
 ```tsx
-import { ManimScene } from 'manim-js/react';
-import { Circle, Create } from 'manim-js';
+import { ManimScene } from 'manim-web/react';
+import { Circle, Create } from 'manim-web';
 
 function App() {
   return (
@@ -83,8 +83,8 @@ function App() {
 </template>
 
 <script setup lang="ts">
-import { ManimScene } from 'manim-js/vue';
-import { Circle, Create } from 'manim-js';
+import { ManimScene } from 'manim-web/vue';
+import { Circle, Create } from 'manim-web';
 
 const setup = async (scene) => {
   const circle = new Circle({ radius: 1.5 });
@@ -95,7 +95,7 @@ const setup = async (scene) => {
 
 ## What you can build
 
-manim-js supports a wide range of mathematical animations:
+manim-web supports a wide range of mathematical animations:
 
 - **Shapes and geometry** -- circles, squares, ellipses, lines, polygons, and boolean operations
 - **Graphs and plots** -- axes, function graphs, area plots, and Riemann sums

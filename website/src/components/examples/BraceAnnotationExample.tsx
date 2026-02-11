@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Brace, Dot, Line, ORANGE, Scene } = await import('manim-js');
+  const { Brace, Dot, Line, ORANGE, Scene } = await import('manim-web');
 
   const dot = new Dot({ point: [-2, -1, 0] });
   const dot2 = new Dot({ point: [2, 1, 0] });

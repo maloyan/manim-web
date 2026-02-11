@@ -1,6 +1,6 @@
 <div align="center">
 
-# manim-js
+# manim-web
 
 **Mathematical animations for the web.**
 
@@ -8,11 +8,11 @@ The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the bro
 
 <img src="assets/demo_square_to_circle.gif" width="600" alt="Square to Circle demo">
 
-[![npm version](https://img.shields.io/npm/v/manim-js.svg)](https://www.npmjs.com/package/manim-js)
-[![CI](https://github.com/maloyan/manim-js/actions/workflows/ci.yml/badge.svg)](https://github.com/maloyan/manim-js/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/manim-web.svg)](https://www.npmjs.com/package/manim-web)
+[![CI](https://github.com/maloyan/manim-web/actions/workflows/ci.yml/badge.svg)](https://github.com/maloyan/manim-web/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-[Quick Start](#quick-start) · [Examples](https://maloyan.github.io/manim-js/) · [Docs](https://maloyan.github.io/manim-js/) · [npm](https://www.npmjs.com/package/manim-js)
+[Quick Start](#quick-start) · [Examples](https://maloyan.github.io/manim-web/) · [Docs](https://maloyan.github.io/manim-web/) · [npm](https://www.npmjs.com/package/manim-web)
 
 </div>
 
@@ -21,11 +21,11 @@ The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the bro
 ## Quick Start
 
 ```bash
-npm install manim-js
+npm install manim-web
 ```
 
 ```typescript
-import { Scene, Circle, Square, Create, Transform, FadeOut } from 'manim-js';
+import { Scene, Circle, Square, Create, Transform, FadeOut } from 'manim-web';
 
 async function squareToCircle(scene: Scene) {
   const square = new Square({ sideLength: 3 });
@@ -37,7 +37,7 @@ async function squareToCircle(scene: Scene) {
 }
 ```
 
-Or use a plain `<script>` tag — see the [examples](https://maloyan.github.io/manim-js/) for more.
+Or use a plain `<script>` tag — see the [examples](https://maloyan.github.io/manim-web/) for more.
 
 ## What You Can Build
 
@@ -68,7 +68,7 @@ Or use a plain `<script>` tag — see the [examples](https://maloyan.github.io/m
 ### React
 
 ```tsx
-import { ManimScene } from 'manim-js/react';
+import { ManimScene } from 'manim-web/react';
 
 function App() {
   return <ManimScene construct={squareToCircle} width={800} height={450} />;
@@ -79,7 +79,7 @@ function App() {
 
 ```vue
 <script setup>
-import { ManimScene } from 'manim-js/vue';
+import { ManimScene } from 'manim-web/vue';
 </script>
 
 <template>
@@ -98,8 +98,8 @@ node tools/py2ts.cjs input.py -o output.ts
 ## Contributing
 
 ```bash
-git clone https://github.com/maloyan/manim-js.git
-cd manim-js
+git clone https://github.com/maloyan/manim-web.git
+cd manim-web
 npm install
 npm run dev
 ```

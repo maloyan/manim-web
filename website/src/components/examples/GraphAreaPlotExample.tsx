@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Axes, BLUE, BLUE_C, GRAY, GREEN_B, Scene, YELLOW, BLACK } = await import('manim-js');
+  const { Axes, BLUE, BLUE_C, GRAY, GREEN_B, Scene, YELLOW, BLACK } = await import('manim-web');
 
   const ax = new Axes({
     xRange: [0, 5],

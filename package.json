@@ -1,5 +1,5 @@
 {
-  "name": "manim-js",
+  "name": "manim-web",
   "version": "0.2.0",
   "description": "Manim-like mathematical animation library for the web",
   "type": "module",

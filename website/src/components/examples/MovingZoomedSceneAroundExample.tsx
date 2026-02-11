@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { BackgroundRectangle, BLACK, Create, Dot, DOWN, FadeIn, FadeOut, ImageMobject, MED_SMALL_BUFF, PURPLE, RED, Scale, ScaleInPlace, Shift, smooth, Text, UL, Uncreate, UP, UpdateFromFunc, scaleVec } = await import('manim-js');
+  const { BackgroundRectangle, BLACK, Create, Dot, DOWN, FadeIn, FadeOut, ImageMobject, MED_SMALL_BUFF, PURPLE, RED, Scale, ScaleInPlace, Shift, smooth, Text, UL, Uncreate, UP, UpdateFromFunc, scaleVec } = await import('manim-web');
 
   // Grayscale image matching Python: np.uint8([[0, 100, 30, 200], [255, 0, 5, 33]])
   const image = new ImageMobject({

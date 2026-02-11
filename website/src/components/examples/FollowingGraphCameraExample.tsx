@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Axes, BLUE, Dot, MoveAlongPath, MoveToTarget, ORANGE, Restore, Scene, linear } = await import('manim-js');
+  const { Axes, BLUE, Dot, MoveAlongPath, MoveToTarget, ORANGE, Restore, Scene, linear } = await import('manim-web');
 
   // Save camera frame state
   scene.camera.frame.saveState();

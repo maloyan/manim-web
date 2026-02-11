@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text } = await import('manim-js');
+  const { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text } = await import('manim-web');
 
   const dot = new Dot({ point: ORIGIN });
   const arrow = new Arrow({ start: ORIGIN, end: [2, 2, 0] });

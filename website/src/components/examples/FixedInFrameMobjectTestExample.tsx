@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Text, ThreeDAxes, UL } = await import('manim-js');
+  const { Text, ThreeDAxes, UL } = await import('manim-web');
 
   const axes = new ThreeDAxes({
     xRange: [-6, 6, 1],

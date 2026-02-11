@@ -5,13 +5,13 @@ slug: /
 sidebar_position: 1
 ---
 
-# manim-js
+# manim-web
 
 Mathematical animations for the web -- a TypeScript port of the Python [Manim](https://www.manim.community/) library that runs entirely in the browser using WebGL (Three.js).
 
-## What is manim-js?
+## What is manim-web?
 
-manim-js lets you create programmatic mathematical animations directly in the browser. It provides a scene-based API where you describe objects (shapes, text, graphs) and the animations that act on them (create, fade, transform, move).
+manim-web lets you create programmatic mathematical animations directly in the browser. It provides a scene-based API where you describe objects (shapes, text, graphs) and the animations that act on them (create, fade, transform, move).
 
 Everything renders in real time using WebGL -- no server, no video encoding, no Python required.
 
@@ -28,7 +28,7 @@ Everything renders in real time using WebGL -- no server, no video encoding, no 
 ## Quick example
 
 ```typescript
-import { Scene, Circle, Create, FadeOut, BLACK } from 'manim-js';
+import { Scene, Circle, Create, FadeOut, BLACK } from 'manim-web';
 
 const container = document.getElementById('container');
 const scene = new Scene(container, {

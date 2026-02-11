@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { ThreeDAxes, Group, RED_D, RED_E } = await import('manim-js');
+  const { ThreeDAxes, Group, RED_D, RED_E } = await import('manim-web');
   const {
     BufferAttribute,
     Color,

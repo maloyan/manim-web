@@ -389,8 +389,8 @@ function removeRegion(code, start, end) {
 function extractCleanCode(tsContent) {
   let code = tsContent;
 
-  // 1. Replace import path '../src/index.ts' -> 'manim-js'
-  code = code.replace(/from\s+['"]\.\.\/src\/index\.ts['"]/g, "from 'manim-js'");
+  // 1. Replace import path '../src/index.ts' -> 'manim-web'
+  code = code.replace(/from\s+['"]\.\.\/src\/index\.ts['"]/g, "from 'manim-web'");
 
   // 1b. Replace local font paths with CDN URLs (local paths don't exist in Docusaurus build)
   code = code.replace(
@@ -767,13 +767,13 @@ function parseCleanCode(cleanCode) {
 }
 
 /**
- * Extract all manim-js import specifiers from the import lines string.
+ * Extract all manim-web import specifiers from the import lines string.
  * Returns array of specifier names.
  */
 function extractImportSpecifiers(importStr) {
   const specifiers = [];
-  // Match everything inside { ... } from 'manim-js' imports
-  const re = /import\s*\{([^}]+)\}\s*from\s*['"]manim-js['"]/g;
+  // Match everything inside { ... } from 'manim-web' imports
+  const re = /import\s*\{([^}]+)\}\s*from\s*['"]manim-web['"]/g;
   let m;
   while ((m = re.exec(importStr)) !== null) {
     const inner = m[1];
@@ -835,7 +835,7 @@ function wrapDemoSectionsInBlockScopes(bodyStr) {
 
 /**
  * Generate a React component file for an example.
- * The component dynamically imports manim-js and renders a ManimExample.
+ * The component dynamically imports manim-web and renders a ManimExample.
  */
 function generateComponentFile(stem, cleanCode) {
   const componentName = toPascalCase(stem) + 'Example';
@@ -875,17 +875,17 @@ function generateComponentFile(stem, cleanCode) {
   // The animate function will use dynamic imports to avoid SSR issues
   lines.push(`async function animate(scene: any) {`);
 
-  // Dynamically import manim-js at the start of the animation function
+  // Dynamically import manim-web at the start of the animation function
   const specifiers = extractImportSpecifiers(parsed.imports);
   // For the createScene factory, the scene class import is handled there, not in animate
   const animateSpecifiers = isCustomScene
     ? specifiers.filter(s => s !== sceneClassName)
     : specifiers;
   if (animateSpecifiers.length > 0) {
-    lines.push(`  const { ${animateSpecifiers.join(', ')} } = await import('manim-js');`);
+    lines.push(`  const { ${animateSpecifiers.join(', ')} } = await import('manim-web');`);
   }
 
-  // Handle namespace imports from non-manim-js packages (e.g. `import * as THREE from 'three'`)
+  // Handle namespace imports from non-manim-web packages (e.g. `import * as THREE from 'three'`)
   // Convert to destructured dynamic imports and replace namespace references in body/constants
   const nsImportRe = /import\s+\*\s+as\s+(\w+)\s+from\s+['"]([^'"]+)['"]/g;
   let nsMatch;
@@ -934,7 +934,7 @@ function generateComponentFile(stem, cleanCode) {
   lines.push('');
 
   // Generate createScene factory for custom scene types.
-  // Uses the `manim` module passed by ManimExample (which already imports manim-js)
+  // Uses the `manim` module passed by ManimExample (which already imports manim-web)
   // to avoid webpack splitting into separate chunks with different class instances.
   if (isCustomScene) {
     lines.push(`function createScene(container: HTMLElement, manim: any) {`);
@@ -1030,7 +1030,7 @@ function main() {
   lines.push('');
   lines.push('# Examples');
   lines.push('');
-  lines.push('Interactive examples showing what you can build with manim-js. Each example includes a live animation and source code.');
+  lines.push('Interactive examples showing what you can build with manim-web. Each example includes a live animation and source code.');
   lines.push('');
 
   // Group examples by category, preserving CATEGORIES definition order

@@ -4,7 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 import path from 'path';
 
 const config: Config = {
-  title: 'manim-js',
+  title: 'manim-web',
   tagline: 'Mathematical animations for the web',
   favicon: 'img/favicon.ico',
 
@@ -13,7 +13,7 @@ const config: Config = {
   },
 
   url: 'https://maloyan.github.io',
-  baseUrl: '/manim-js/',
+  baseUrl: '/manim-web/',
 
   onBrokenLinks: 'warn',
 
@@ -29,12 +29,12 @@ const config: Config = {
   plugins: [
     function manimSourceAlias() {
       return {
-        name: 'manim-js-source-alias',
+        name: 'manim-web-source-alias',
         configureWebpack() {
           return {
             resolve: {
               alias: {
-                'manim-js': path.resolve(__dirname, '../src/index.ts'),
+                'manim-web': path.resolve(__dirname, '../src/index.ts'),
               },
             },
           };
@@ -87,7 +87,7 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'manim-js',
+      title: 'manim-web',
       items: [
         {
           type: 'docSidebar',
@@ -96,7 +96,7 @@ const config: Config = {
           label: 'Docs',
         },
         {
-          href: 'https://github.com/maloyan/manim-js',
+          href: 'https://github.com/maloyan/manim-web',
           label: 'GitHub',
           position: 'right',
         },
@@ -123,12 +123,12 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/maloyan/manim-js',
+              href: 'https://github.com/maloyan/manim-web',
             },
           ],
         },
       ],
-      copyright: `Copyright ${new Date().getFullYear()} manim-js contributors. Built with Docusaurus.`,
+      copyright: `Copyright ${new Date().getFullYear()} manim-web contributors. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,

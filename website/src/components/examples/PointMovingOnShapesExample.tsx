@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { BLUE, Circle, Dot, GrowFromCenter, Line, MoveAlongPath, RIGHT, Rotating, Scene, Transform, linear, BLACK } = await import('manim-js');
+  const { BLUE, Circle, Dot, GrowFromCenter, Line, MoveAlongPath, RIGHT, Rotating, Scene, Transform, linear, BLACK } = await import('manim-web');
 
   const circle = new Circle({ radius: 1, color: BLUE });
   const dot = new Dot();

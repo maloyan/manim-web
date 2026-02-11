@@ -1,5 +1,5 @@
 {
-  "name": "manim-js",
+  "name": "manim-web",
   "image": "mcr.microsoft.com/devcontainers/typescript-node:22",
   "postCreateCommand": "npm install",
   "customizations": {

@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { ThreeDAxes, Surface3D, ORANGE, BLUE } = await import('manim-js');
+  const { ThreeDAxes, Surface3D, ORANGE, BLUE } = await import('manim-web');
 
   const sigma = 0.4;
   const mu = [0.0, 0.0];

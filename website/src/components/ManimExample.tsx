@@ -55,7 +55,7 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
 
     (async () => {
       try {
-        const manim = await import('manim-js');
+        const manim = await import('manim-web');
         if (cancelled) return;
 
         const container = containerRef.current;

@@ -31,7 +31,7 @@ import VectorArrowExample from '@site/src/components/examples/VectorArrowExample
 
 # Examples
 
-Interactive examples showing what you can build with manim-js. Each example includes a live animation and source code.
+Interactive examples showing what you can build with manim-web. Each example includes a live animation and source code.
 
 ## Manim Ce Logo
 
@@ -56,7 +56,7 @@ import {
   VGroup,
   addVec,
   scaleVec,
-} from 'manim-js';
+} from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -96,7 +96,7 @@ Shows how to annotate lines with curly braces and labels. Creates a diagonal lin
 <summary>Source Code</summary>
 
 ```typescript
-import { Brace, Dot, Line, ORANGE, Scene } from 'manim-js';
+import { Brace, Dot, Line, ORANGE, Scene } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -135,7 +135,7 @@ Displays a vector arrow on a coordinate plane with labeled origin and tip points
 <summary>Source Code</summary>
 
 ```typescript
-import { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text } from 'manim-js';
+import { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -191,7 +191,7 @@ import {
   WHITE,
   YELLOW,
   scaleVec,
-} from 'manim-js';
+} from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -302,7 +302,7 @@ import {
   Transform,
   linear,
   BLACK,
-} from 'manim-js';
+} from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -352,7 +352,7 @@ import {
   ORANGE,
   LEFT,
   BLACK,
-} from 'manim-js';
+} from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -402,7 +402,7 @@ import {
   ValueTracker,
   BLACK,
   WHITE,
-} from 'manim-js';
+} from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -471,7 +471,7 @@ Creates two dots connected by a line, then animates them independently using Val
 <summary>Source Code</summary>
 
 ```typescript
-import { Scene, Dot, VGroup, Line, ValueTracker, BLUE, GREEN, RED, RIGHT } from 'manim-js';
+import { Scene, Dot, VGroup, Line, ValueTracker, BLUE, GREEN, RED, RIGHT } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -523,7 +523,7 @@ import {
   BLACK,
   scaleVec,
   subVec,
-} from 'manim-js';
+} from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -573,7 +573,7 @@ import {
   Scene,
   SurroundingRectangle,
   Write,
-} from 'manim-js';
+} from 'manim-web';
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
@@ -609,7 +609,7 @@ Shows a reference line alongside a rotating line driven by a time-based updater 
 <summary>Source Code</summary>
 
 ```typescript
-import { Scene, Line, ORIGIN, LEFT, WHITE, YELLOW } from 'manim-js';
+import { Scene, Line, ORIGIN, LEFT, WHITE, YELLOW } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -651,7 +651,7 @@ Creates a dot that leaves a visible trail as it moves. Uses a VMobject with addU
 <summary>Source Code</summary>
 
 ```typescript
-import { Scene, VMobject, Dot, Rotating, Shift, UP, LEFT, RIGHT, BLACK } from 'manim-js';
+import { Scene, VMobject, Dot, Rotating, Shift, UP, LEFT, RIGHT, BLACK } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -710,7 +710,7 @@ import {
   YELLOW,
   scaleVec,
   BLACK,
-} from 'manim-js';
+} from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 854,
@@ -770,7 +770,7 @@ Plots a quadratic function on coordinate axes and animates a dot that slides alo
 <summary>Source Code</summary>
 
 ```typescript
-import { Scene, Axes, Dot, MAROON, ValueTracker, linspace, BLACK } from 'manim-js';
+import { Scene, Axes, Dot, MAROON, ValueTracker, linspace, BLACK } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -820,7 +820,7 @@ Draws two curves on coordinate axes with vertical reference lines, a shaded area
 <summary>Source Code</summary>
 
 ```typescript
-import { Axes, BLUE, BLUE_C, GRAY, GREEN_B, Scene, YELLOW, BLACK } from 'manim-js';
+import { Axes, BLUE, BLUE_C, GRAY, GREEN_B, Scene, YELLOW, BLACK } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 854,
@@ -883,7 +883,7 @@ import {
   YELLOW_B,
   YELLOW_D,
   BLACK,
-} from 'manim-js';
+} from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 854,
@@ -953,7 +953,7 @@ Creates a line graph showing temperature change over time using plotLineGraph. D
 <summary>Source Code</summary>
 
 ```typescript
-import { Scene, Axes, Tex, BLACK } from 'manim-js';
+import { Scene, Axes, Tex, BLACK } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -1012,7 +1012,7 @@ import {
   Restore,
   Scene,
   linear,
-} from 'manim-js';
+} from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -1093,7 +1093,7 @@ import {
   UpdateFromFunc,
   ZoomedScene,
   scaleVec,
-} from 'manim-js';
+} from 'manim-web';
 
 const scene = new ZoomedScene(document.getElementById('container'), {
   width: 800,
@@ -1199,7 +1199,7 @@ Demonstrates how to pin 2D text to the screen while the 3D camera is rotated, us
 <summary>Source Code</summary>
 
 ```typescript
-import { Text, ThreeDAxes, ThreeDScene, UL } from 'manim-js';
+import { Text, ThreeDAxes, ThreeDScene, UL } from 'manim-web';
 
 const scene = new ThreeDScene(document.getElementById('container'), {
   width: 800,
@@ -1247,7 +1247,7 @@ Shows a parametric sphere with checkerboard colors (RED_D, RED_E) on ThreeDAxes 
 
 ```typescript
 import * as THREE from 'three';
-import { ThreeDAxes, ThreeDScene, Group, RED_D, RED_E } from 'manim-js';
+import { ThreeDAxes, ThreeDScene, Group, RED_D, RED_E } from 'manim-web';
 
 const scene = new ThreeDScene(document.getElementById('container'), {
   width: 800,
@@ -1370,7 +1370,7 @@ Renders a 3D Gaussian surface plot on ThreeDAxes with checkerboard coloring (ORA
 <summary>Source Code</summary>
 
 ```typescript
-import { ThreeDAxes, ThreeDScene, Surface3D, ORANGE, BLUE } from 'manim-js';
+import { ThreeDAxes, ThreeDScene, Surface3D, ORANGE, BLUE } from 'manim-web';
 
 const scene = new ThreeDScene(document.getElementById('container'), {
   width: 800,
@@ -1444,7 +1444,7 @@ Demonstrates ambient camera rotation around 3D axes with a circle, then animates
 <summary>Source Code</summary>
 
 ```typescript
-import { Circle, ThreeDAxes, ThreeDScene } from 'manim-js';
+import { Circle, ThreeDAxes, ThreeDScene } from 'manim-web';
 
 const scene = new ThreeDScene(document.getElementById('container'), {
   width: 800,
@@ -1510,7 +1510,7 @@ Demonstrates the 3D illusion camera rotation that wobbles the camera by oscillat
 <summary>Source Code</summary>
 
 ```typescript
-import { Circle, ThreeDAxes, ThreeDScene } from 'manim-js';
+import { Circle, ThreeDAxes, ThreeDScene } from 'manim-web';
 
 const scene = new ThreeDScene(document.getElementById('container'), {
   width: 800,
@@ -1576,7 +1576,6 @@ import {
   Create,
   FadeIn,
   FadeOut,
-  Write,
   Transform,
   ApplyPointwiseFunction,
   Text,
@@ -1588,7 +1587,7 @@ import {
   UL,
   BLACK,
   WHITE,
-} from 'manim-js';
+} from 'manim-web';
 
 const FONT_URL = 'https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/fonts/KaTeX_Main-Regular.ttf';
 
@@ -1605,12 +1604,11 @@ const title = new Text({
   fontUrl: FONT_URL,
 });
 const basel = new MathTex({ latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}' });
-await title.loadGlyphs();
 await basel.waitForRender?.();
 
 new VGroup(title, basel).arrange(DOWN);
 scene.add(title, basel);
-await scene.play(new Write(title, { duration: 2 }), new FadeIn(basel, { shift: DOWN }));
+await scene.play(new FadeIn(title), new FadeIn(basel, { shift: DOWN }));
 await scene.wait(1);
 
 // Part 2: Transform title to UL corner, fade out equation downward
@@ -1636,7 +1634,6 @@ const gridTitle = new Text({
 await gridTitle.loadGlyphs();
 gridTitle.moveTo(transformTitle);
 
-scene.add(grid, gridTitle);
 await scene.play(
   new FadeOut(title),
   new FadeIn(gridTitle, { shift: UP }),

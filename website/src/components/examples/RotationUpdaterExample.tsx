@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Scene, Line, ORIGIN, LEFT, WHITE, YELLOW } = await import('manim-js');
+  const { Scene, Line, ORIGIN, LEFT, WHITE, YELLOW } = await import('manim-web');
 
   const updaterForth = (mobj, dt) => {
     mobj.rotateAboutOrigin(dt);
