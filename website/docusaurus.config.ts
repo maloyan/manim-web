@@ -13,7 +13,7 @@ const config: Config = {
   },
 
   url: 'https://maloyan.github.io',
-  baseUrl: '/manim-web/',
+  baseUrl: '/manim-js/',
 
   onBrokenLinks: 'warn',
 
