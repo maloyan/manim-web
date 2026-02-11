@@ -6,9 +6,9 @@ const scene = new ThreeDScene(container, {
   height: 450,
   backgroundColor: '#000000',
   phi: 75 * (Math.PI / 180),
-  theta: 30 * (Math.PI / 180),
+  theta: -45 * (Math.PI / 180),
   distance: 20,
-  fov: 23,
+  fov: 30,
 });
 
 async function fixedInFrameMObjectTest(scene: ThreeDScene) {
@@ -20,9 +20,9 @@ async function fixedInFrameMObjectTest(scene: ThreeDScene) {
     yLength: 10,
     zLength: 6,
     axisColor: '#ffffff',
-    tipLength: 0.2,
-    tipRadius: 0.1,
-    shaftRadius: 0.012,
+    tipLength: 0.3,
+    tipRadius: 0.12,
+    shaftRadius: 0.008,
   });
   const text3d = new Text({ text: 'This is a 3D text' });
   scene.addFixedInFrameMobjects(text3d);

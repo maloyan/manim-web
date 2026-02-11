@@ -15,10 +15,10 @@ export const IN: Vector3Tuple = [0, 0, -1];
 export const ORIGIN: Vector3Tuple = [0, 0, 0];
 
 // Diagonal direction constants
-export const UL: Vector3Tuple = [-1, 1, 0];  // UP + LEFT
-export const UR: Vector3Tuple = [1, 1, 0];   // UP + RIGHT
+export const UL: Vector3Tuple = [-1, 1, 0]; // UP + LEFT
+export const UR: Vector3Tuple = [1, 1, 0]; // UP + RIGHT
 export const DL: Vector3Tuple = [-1, -1, 0]; // DOWN + LEFT
-export const DR: Vector3Tuple = [1, -1, 0];  // DOWN + RIGHT
+export const DR: Vector3Tuple = [1, -1, 0]; // DOWN + RIGHT
 
 /**
  * Updater function type that runs every frame
@@ -84,6 +84,11 @@ export abstract class Mobject {
 
   /** Fill opacity (0-1) */
   fillOpacity: number = 0;
+
+  /** When true, children skip the 2D z-layering offset in _syncToThree.
+   *  Set this on 3D container objects (e.g. ThreeDAxes) where z-offsets
+   *  would shift objects away from their intended 3D positions. */
+  protected _disableChildZLayering: boolean = false;
 
   /** Style properties for backward compatibility */
   protected _style: MobjectStyle;
@@ -226,7 +231,7 @@ export abstract class Mobject {
       return this.shift([
         targetEdge[0] - thisEdge[0],
         targetEdge[1] - thisEdge[1],
-        targetEdge[2] - thisEdge[2]
+        targetEdge[2] - thisEdge[2],
       ]);
     }
     const targetCenter = target.getCenter();
@@ -242,7 +247,10 @@ export abstract class Mobject {
    * @param axisOrOptions - Axis of rotation [x, y, z] (defaults to Z axis), or options object
    * @returns this for chaining
    */
-  rotate(angle: number, axisOrOptions?: Vector3Tuple | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple }): this {
+  rotate(
+    angle: number,
+    axisOrOptions?: Vector3Tuple | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple },
+  ): this {
     let axis: Vector3Tuple = [0, 0, 1];
     let aboutPoint: Vector3Tuple | undefined;
 
@@ -256,20 +264,28 @@ export abstract class Mobject {
     }
 
     // For VMobjects with point data, transform points directly (Manim Python behavior)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ('_points3D' in this && (this as any)._points3D.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const points: number[][] = (this as any)._points3D;
       const cos = Math.cos(angle);
       const sin = Math.sin(angle);
 
       // When no aboutPoint specified, rotate around center of points bounding box
       if (!aboutPoint) {
-        let minX = Infinity, maxX = -Infinity;
-        let minY = Infinity, maxY = -Infinity;
-        let minZ = Infinity, maxZ = -Infinity;
+        let minX = Infinity,
+          maxX = -Infinity;
+        let minY = Infinity,
+          maxY = -Infinity;
+        let minZ = Infinity,
+          maxZ = -Infinity;
         for (const p of points) {
-          if (p[0] < minX) minX = p[0]; if (p[0] > maxX) maxX = p[0];
-          if (p[1] < minY) minY = p[1]; if (p[1] > maxY) maxY = p[1];
-          if (p[2] < minZ) minZ = p[2]; if (p[2] > maxZ) maxZ = p[2];
+          if (p[0] < minX) minX = p[0];
+          if (p[0] > maxX) maxX = p[0];
+          if (p[1] < minY) minY = p[1];
+          if (p[1] > maxY) maxY = p[1];
+          if (p[2] < minZ) minZ = p[2];
+          if (p[2] > maxZ) maxZ = p[2];
         }
         aboutPoint = [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2];
       }
@@ -304,6 +320,7 @@ export abstract class Mobject {
         }
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (this as any)._geometryDirty = true;
       this._markDirty();
 
@@ -572,7 +589,9 @@ export abstract class Mobject {
 
     // If both are VMobjects, copy points
     if ('_points3D' in this && '_points3D' in other) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const self = this as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const src = other as any;
       self._points3D = src._points3D.map((p: number[]) => [...p]);
       self._visiblePointCount = src._visiblePointCount;
@@ -600,9 +619,7 @@ export abstract class Mobject {
       this.scaleVector.x *= sx;
       this.scaleVector.y *= sy;
     } else {
-      const factor = selfBounds.width > 0.0001
-        ? targetBounds.width / selfBounds.width
-        : 1;
+      const factor = selfBounds.width > 0.0001 ? targetBounds.width / selfBounds.width : 1;
       this.scaleVector.multiplyScalar(factor);
     }
 
@@ -637,12 +654,15 @@ export abstract class Mobject {
    * Get the bounding box of this mobject in world coordinates.
    * @returns Object with min and max Vector3Tuple
    */
-  getBounds(): { min: { x: number; y: number; z: number }; max: { x: number; y: number; z: number } } {
+  getBounds(): {
+    min: { x: number; y: number; z: number };
+    max: { x: number; y: number; z: number };
+  } {
     if (this._threeObject) {
       const box = new THREE.Box3().setFromObject(this._threeObject);
       return {
         min: { x: box.min.x, y: box.min.y, z: box.min.z },
-        max: { x: box.max.x, y: box.max.y, z: box.max.z }
+        max: { x: box.max.x, y: box.max.y, z: box.max.z },
       };
     }
 
@@ -650,7 +670,7 @@ export abstract class Mobject {
     const center = this.getCenter();
     return {
       min: { x: center[0] - 0.5, y: center[1] - 0.5, z: center[2] - 0.5 },
-      max: { x: center[0] + 0.5, y: center[1] + 0.5, z: center[2] + 0.5 }
+      max: { x: center[0] + 0.5, y: center[1] + 0.5, z: center[2] + 0.5 },
     };
   }
 
@@ -661,7 +681,11 @@ export abstract class Mobject {
    * @param buff Buffer distance between mobjects, default 0.25
    * @returns this for chaining
    */
-  nextTo(target: Mobject | Vector3Tuple, direction: Vector3Tuple = RIGHT, buff: number = 0.25): this {
+  nextTo(
+    target: Mobject | Vector3Tuple,
+    direction: Vector3Tuple = RIGHT,
+    buff: number = 0.25,
+  ): this {
     // If target is a mobject, get its center
     const targetPoint = Array.isArray(target) ? target : target.getCenter();
 
@@ -669,19 +693,19 @@ export abstract class Mobject {
     const thisEdge = this._getEdgeInDirection([-direction[0], -direction[1], -direction[2]]);
 
     // Get the edge of target in the direction
-    const targetEdge = Array.isArray(target)
-      ? targetPoint
-      : target._getEdgeInDirection(direction);
+    const targetEdge = Array.isArray(target) ? targetPoint : target._getEdgeInDirection(direction);
 
     // Normalize direction for buff (matches Manim behavior)
     const len = Math.sqrt(direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2) || 1;
-    const nx = direction[0] / len, ny = direction[1] / len, nz = direction[2] / len;
+    const nx = direction[0] / len,
+      ny = direction[1] / len,
+      nz = direction[2] / len;
 
     // Calculate offset needed
     const offset: Vector3Tuple = [
       targetEdge[0] + nx * buff - thisEdge[0],
       targetEdge[1] + ny * buff - thisEdge[1],
-      targetEdge[2] + nz * buff - thisEdge[2]
+      targetEdge[2] + nz * buff - thisEdge[2],
     ];
 
     return this.shift(offset);
@@ -694,16 +718,14 @@ export abstract class Mobject {
    * @returns this for chaining
    */
   alignTo(target: Mobject | Vector3Tuple, direction: Vector3Tuple): this {
-    const targetPoint = Array.isArray(target)
-      ? target
-      : target._getEdgeInDirection(direction);
+    const targetPoint = Array.isArray(target) ? target : target._getEdgeInDirection(direction);
     const thisPoint = this._getEdgeInDirection(direction);
 
     // Only move in the direction's non-zero components
     const offset: Vector3Tuple = [
       direction[0] !== 0 ? targetPoint[0] - thisPoint[0] : 0,
       direction[1] !== 0 ? targetPoint[1] - thisPoint[1] : 0,
-      direction[2] !== 0 ? targetPoint[2] - thisPoint[2] : 0
+      direction[2] !== 0 ? targetPoint[2] - thisPoint[2] : 0,
     ];
 
     return this.shift(offset);
@@ -734,9 +756,9 @@ export abstract class Mobject {
 
     // Use sign only (matches Manim's get_critical_point behavior)
     return [
-      center[0] + Math.sign(direction[0]) * bounds.width / 2,
-      center[1] + Math.sign(direction[1]) * bounds.height / 2,
-      center[2] + Math.sign(direction[2]) * bounds.depth / 2
+      center[0] + (Math.sign(direction[0]) * bounds.width) / 2,
+      center[1] + (Math.sign(direction[1]) * bounds.height) / 2,
+      center[2] + (Math.sign(direction[2]) * bounds.depth) / 2,
     ];
   }
 
@@ -841,12 +863,14 @@ export abstract class Mobject {
     const frameHeight = 8;
     const bbox = this._getBoundingBox();
 
-    const targetX = direction[0] !== 0
-      ? direction[0] * (frameWidth / 2 - buff - bbox.width / 2)
-      : this.position.x;
-    const targetY = direction[1] !== 0
-      ? direction[1] * (frameHeight / 2 - buff - bbox.height / 2)
-      : this.position.y;
+    const targetX =
+      direction[0] !== 0
+        ? direction[0] * (frameWidth / 2 - buff - bbox.width / 2)
+        : this.position.x;
+    const targetY =
+      direction[1] !== 0
+        ? direction[1] * (frameHeight / 2 - buff - bbox.height / 2)
+        : this.position.y;
 
     return this.moveTo([targetX, targetY, this.position.z]);
   }
@@ -878,7 +902,8 @@ export abstract class Mobject {
     // 2D z-layering: later children in the parent render on top.
     // Add a tiny z-offset per sibling index so the depth buffer resolves
     // overlapping shapes in the correct painter's-algorithm order.
-    if (this.parent) {
+    // Skip for 3D containers where z-offsets would break positioning.
+    if (this.parent && !this.parent._disableChildZLayering) {
       const idx = this.parent.children.indexOf(this);
       if (idx > 0) {
         this._threeObject.position.z += idx * 0.01;
@@ -1047,11 +1072,14 @@ export abstract class Mobject {
    */
   applyFunction(fn: (point: number[]) => number[]): this {
     for (const mob of this.getFamily()) {
-      const asAny = mob as unknown as { getPoints?: () => number[][]; setPoints?: (pts: number[][]) => void };
+      const asAny = mob as unknown as {
+        getPoints?: () => number[][];
+        setPoints?: (pts: number[][]) => void;
+      };
       if (typeof asAny.getPoints === 'function' && typeof asAny.setPoints === 'function') {
         const pts = asAny.getPoints();
         if (pts.length > 0) {
-          asAny.setPoints(pts.map(p => fn([...p])));
+          asAny.setPoints(pts.map((p) => fn([...p])));
         }
       }
     }
@@ -1067,14 +1095,20 @@ export abstract class Mobject {
    */
   prepareForNonlinearTransform(numPieces: number = 50): this {
     for (const mob of this.getFamily()) {
-      const asAny = mob as unknown as { getPoints?: () => number[][]; setPoints?: (pts: number[][]) => void };
+      const asAny = mob as unknown as {
+        getPoints?: () => number[][];
+        setPoints?: (pts: number[][]) => void;
+      };
       if (typeof asAny.getPoints === 'function' && typeof asAny.setPoints === 'function') {
         const pts = asAny.getPoints();
         if (pts.length < 4) continue;
         const newPoints: number[][] = [];
         // Process each cubic Bezier segment (groups of 4 points: anchor, handle, handle, anchor)
         for (let i = 0; i + 3 < pts.length; i += 3) {
-          const p0 = pts[i], p1 = pts[i + 1], p2 = pts[i + 2], p3 = pts[i + 3];
+          const p0 = pts[i],
+            p1 = pts[i + 1],
+            p2 = pts[i + 2],
+            p3 = pts[i + 3];
           for (let j = 0; j < numPieces; j++) {
             const tStart = j / numPieces;
             const tEnd = (j + 1) / numPieces;
@@ -1083,7 +1117,7 @@ export abstract class Mobject {
             const end = _evalBezier(p0, p1, p2, p3, tEnd);
             // Approximate sub-curve handles by evaluating at 1/3 and 2/3 within sub-interval
             const t1 = tStart + (tEnd - tStart) / 3;
-            const t2 = tStart + 2 * (tEnd - tStart) / 3;
+            const t2 = tStart + (2 * (tEnd - tStart)) / 3;
             const h1 = _evalBezier(p0, p1, p2, p3, t1);
             const h2 = _evalBezier(p0, p1, p2, p3, t2);
             if (j === 0 && i === 0) {
@@ -1176,7 +1210,9 @@ export abstract class Mobject {
     this._style = { ...saved._style };
 
     // Restore VMobject points if applicable (duck-typed to avoid import)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const self = this as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const src = saved as any;
     if (typeof self.setPoints === 'function' && typeof src.getPoints === 'function') {
       const pts = src.getPoints();
@@ -1215,7 +1251,7 @@ export abstract class Mobject {
         if (object instanceof THREE.Mesh) {
           object.geometry?.dispose();
           if (Array.isArray(object.material)) {
-            object.material.forEach(m => m.dispose());
+            object.material.forEach((m) => m.dispose());
           } else {
             object.material?.dispose();
           }
@@ -1234,10 +1270,7 @@ function _evalBezier(p0: number[], p1: number[], p2: number[], p3: number[], t: 
   for (let k = 0; k < p0.length; k++) {
     // B(t) = (1-t)^3 * P0 + 3(1-t)^2*t * P1 + 3(1-t)*t^2 * P2 + t^3 * P3
     result.push(
-      s * s * s * p0[k] +
-      3 * s * s * t * p1[k] +
-      3 * s * t * t * p2[k] +
-      t * t * t * p3[k]
+      s * s * s * p0[k] + 3 * s * s * t * p1[k] + 3 * s * t * t * p2[k] + t * t * t * p3[k],
     );
   }
   return result;

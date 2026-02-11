@@ -45,6 +45,7 @@ export class ThreeDScene extends Scene {
   private _lighting: Lighting;
   private _orbitControls: OrbitControls | null = null;
   private _orbitControlsEnabled: boolean = true;
+  private _isRendering: boolean = false;
 
   // HUD overlay for fixed-in-frame mobjects (pinned to screen)
   private _hudScene: THREE.Scene;
@@ -270,7 +271,13 @@ export class ThreeDScene extends Scene {
    * Public render - delegates to _render.
    */
   render(): void {
-    this._render();
+    if (this._isRendering) return;
+    this._isRendering = true;
+    try {
+      this._render();
+    } finally {
+      this._isRendering = false;
+    }
   }
 
   /**

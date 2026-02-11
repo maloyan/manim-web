@@ -31,13 +31,13 @@ export interface ThreeDAxesOptions {
   showLabels?: boolean;
   /** Whether to show tick marks. Default: true */
   showTicks?: boolean;
-  /** Length of tick marks. Default: 0.1 */
+  /** Length of tick marks. Default: 0.15 */
   tickLength?: number;
   /** Tip length for arrows. Default: 0.2 */
   tipLength?: number;
   /** Tip radius for arrows. Default: 0.08 */
   tipRadius?: number;
-  /** Shaft radius for arrows. Default: 0.02 */
+  /** Shaft radius for arrows. Default: 0.01 */
   shaftRadius?: number;
 }
 
@@ -87,6 +87,7 @@ export class ThreeDAxes extends Group {
 
   constructor(options: ThreeDAxesOptions = {}) {
     super();
+    this._disableChildZLayering = true;
 
     const {
       xRange = [-5, 5, 1],
@@ -101,10 +102,10 @@ export class ThreeDAxes extends Group {
       zColor,
       showLabels: _showLabels = false,
       showTicks = true,
-      tickLength = 0.1,
+      tickLength = 0.15,
       tipLength = 0.2,
       tipRadius = 0.08,
-      shaftRadius = 0.02,
+      shaftRadius = 0.01,
     } = options;
 
     this._xRange = [...xRange];
@@ -188,70 +189,49 @@ export class ThreeDAxes extends Group {
     const [zMin, zMax, zStep] = this._zRange;
     const t = this._tickLength / 2;
 
-    // X-axis ticks (along Manim X; perpendicular ticks in Manim Y and Z)
+    // X-axis ticks: single perpendicular mark in Manim Z direction (vertical)
     for (let x = xMin; x <= xMax; x += xStep) {
       if (Math.abs(x) < 0.001) continue;
+      if (Math.abs(x - xMin) < 0.001 || Math.abs(x - xMax) < 0.001) continue;
       const vx = this._mapToVisual(x, xMin, xMax, -xHalf, xHalf);
 
-      const tickY = new Line3D({
-        start: this._m2t(vx, -t, 0),
-        end: this._m2t(vx, t, 0),
-        color: xColor,
-      });
-      this._ticks.push(tickY);
-      this.add(tickY);
-
-      const tickZ = new Line3D({
+      const tick = new Line3D({
         start: this._m2t(vx, 0, -t),
         end: this._m2t(vx, 0, t),
         color: xColor,
       });
-      this._ticks.push(tickZ);
-      this.add(tickZ);
+      this._ticks.push(tick);
+      this.add(tick);
     }
 
-    // Y-axis ticks (along Manim Y; perpendicular ticks in Manim X and Z)
+    // Y-axis ticks: single perpendicular mark in Manim Z direction (vertical)
     for (let y = yMin; y <= yMax; y += yStep) {
       if (Math.abs(y) < 0.001) continue;
+      if (Math.abs(y - yMin) < 0.001 || Math.abs(y - yMax) < 0.001) continue;
       const vy = this._mapToVisual(y, yMin, yMax, -yHalf, yHalf);
 
-      const tickX = new Line3D({
-        start: this._m2t(-t, vy, 0),
-        end: this._m2t(t, vy, 0),
-        color: yColor,
-      });
-      this._ticks.push(tickX);
-      this.add(tickX);
-
-      const tickZ = new Line3D({
+      const tick = new Line3D({
         start: this._m2t(0, vy, -t),
         end: this._m2t(0, vy, t),
         color: yColor,
       });
-      this._ticks.push(tickZ);
-      this.add(tickZ);
+      this._ticks.push(tick);
+      this.add(tick);
     }
 
-    // Z-axis ticks (along Manim Z; perpendicular ticks in Manim X and Y)
+    // Z-axis ticks: single perpendicular mark in Manim X direction (horizontal)
     for (let z = zMin; z <= zMax; z += zStep) {
       if (Math.abs(z) < 0.001) continue;
+      if (Math.abs(z - zMin) < 0.001 || Math.abs(z - zMax) < 0.001) continue;
       const vz = this._mapToVisual(z, zMin, zMax, -zHalf, zHalf);
 
-      const tickX = new Line3D({
+      const tick = new Line3D({
         start: this._m2t(-t, 0, vz),
         end: this._m2t(t, 0, vz),
         color: zColor,
       });
-      this._ticks.push(tickX);
-      this.add(tickX);
-
-      const tickY = new Line3D({
-        start: this._m2t(0, -t, vz),
-        end: this._m2t(0, t, vz),
-        color: zColor,
-      });
-      this._ticks.push(tickY);
-      this.add(tickY);
+      this._ticks.push(tick);
+      this.add(tick);
     }
   }
 

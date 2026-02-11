@@ -15,7 +15,7 @@ export interface Arrow3DOptions {
   opacity?: number;
   /** Length of the arrowhead cone. Default: 0.2 */
   tipLength?: number;
-  /** Radius of the arrowhead cone. Default: 0.08 */
+  /** Half-width of the arrowhead triangle base. Default: 0.08 */
   tipRadius?: number;
   /** Radius of the shaft. Default: 0.02 */
   shaftRadius?: number;
@@ -24,9 +24,9 @@ export interface Arrow3DOptions {
 }
 
 /**
- * Arrow3D - A 3D arrow with cylindrical shaft and conical tip
+ * Arrow3D - A 3D arrow with cylindrical shaft and flat triangle tip
  *
- * Creates a 3D arrow by combining a cylinder (shaft) with a cone (tip).
+ * Creates a 3D arrow by combining a cylinder (shaft) with a flat triangle (tip).
  * The arrow automatically orients itself from start to end point.
  *
  * @example
@@ -132,53 +132,15 @@ export class Arrow3D extends Mobject {
       group.add(shaft);
     }
 
-    // Create tip as two perpendicular flat triangles (cross formation).
-    // This matches Python Manim's 2D ArrowTriangleFilledTip appearance:
-    // visible from any camera angle, never shows as a circle like a cone.
-    const tipBase = new THREE.Vector3(
-      this._end[0] - dir.x * this._tipLength,
-      this._end[1] - dir.y * this._tipLength,
-      this._end[2] - dir.z * this._tipLength,
-    );
-
-    // Get two perpendicular vectors for the cross formation
-    const worldUp = new THREE.Vector3(0, 1, 0);
-    const side1 = new THREE.Vector3().crossVectors(dir, worldUp);
-    if (side1.lengthSq() < 0.001) {
-      side1.crossVectors(dir, new THREE.Vector3(1, 0, 0));
-    }
-    side1.normalize();
-    const side2 = new THREE.Vector3().crossVectors(dir, side1).normalize();
-
-    const s1 = side1.clone().multiplyScalar(this._tipRadius);
-    const s2 = side2.clone().multiplyScalar(this._tipRadius);
-
-    // Two triangles at 90° to each other
-    const tipGeometry = new THREE.BufferGeometry();
-    const vertices = new Float32Array([
-      // Triangle 1 (in dir×worldUp plane)
-      this._end[0],
-      this._end[1],
-      this._end[2],
-      tipBase.x - s1.x,
-      tipBase.y - s1.y,
-      tipBase.z - s1.z,
-      tipBase.x + s1.x,
-      tipBase.y + s1.y,
-      tipBase.z + s1.z,
-      // Triangle 2 (perpendicular plane)
-      this._end[0],
-      this._end[1],
-      this._end[2],
-      tipBase.x - s2.x,
-      tipBase.y - s2.y,
-      tipBase.z - s2.z,
-      tipBase.x + s2.x,
-      tipBase.y + s2.y,
-      tipBase.z + s2.z,
-    ]);
-    tipGeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-    tipGeometry.computeVertexNormals();
+    // Create flat triangle tip (2D, matching Python Manim's ArrowTriangleFilledTip)
+    const halfBase = this._tipRadius;
+    const halfHeight = this._tipLength / 2;
+    const shape = new THREE.Shape();
+    shape.moveTo(0, halfHeight);
+    shape.lineTo(-halfBase, -halfHeight);
+    shape.lineTo(halfBase, -halfHeight);
+    shape.closePath();
+    const tipGeometry = new THREE.ShapeGeometry(shape);
 
     const tipMaterial = new THREE.MeshBasicMaterial({
       color: this.color,
@@ -187,6 +149,15 @@ export class Arrow3D extends Mobject {
       side: THREE.DoubleSide,
     });
     const tip = new THREE.Mesh(tipGeometry, tipMaterial);
+
+    // Position tip center at the midpoint of the tip segment
+    const tipCenter = new THREE.Vector3(
+      this._end[0] - (dir.x * this._tipLength) / 2,
+      this._end[1] - (dir.y * this._tipLength) / 2,
+      this._end[2] - (dir.z * this._tipLength) / 2,
+    );
+    tip.position.copy(tipCenter);
+    this._orientMesh(tip, dir);
     group.add(tip);
 
     return group;
@@ -197,7 +168,7 @@ export class Arrow3D extends Mobject {
    * Cylinders and cones in Three.js are oriented along the Y axis by default
    */
   private _orientMesh(mesh: THREE.Mesh, direction: THREE.Vector3): void {
-    // Default up direction for cylinders/cones in Three.js
+    // Default up direction for cylinders/triangles in Three.js
     const up = new THREE.Vector3(0, 1, 0);
 
     // Calculate rotation quaternion
