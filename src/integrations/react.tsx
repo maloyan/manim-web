@@ -9,6 +9,7 @@ import {
   type RefObject,
   type DependencyList,
   type CSSProperties,
+  type ReactElement,
 } from 'react';
 import { Scene, type SceneOptions, type Mobject, type Animation } from '../index';
 
@@ -179,7 +180,7 @@ export function ManimScene({
   children,
   className,
   style,
-}: ManimSceneProps): JSX.Element {
+}: ManimSceneProps): ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
   const scene = useScene(containerRef, { width, height, backgroundColor });
   const onSceneReadyRef = useRef(onSceneReady);
@@ -264,7 +265,7 @@ export function ManimProvider({
   backgroundColor = '#1a1a2e',
   className,
   style,
-}: ManimProviderProps): JSX.Element {
+}: ManimProviderProps): ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
   const scene = useScene(containerRef, { width, height, backgroundColor });
 

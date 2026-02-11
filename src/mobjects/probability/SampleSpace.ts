@@ -236,7 +236,8 @@ export class SampleSpace extends VGroup {
 
       // Add label if provided
       if (labels && labels[i]) {
-        const label = new Text(labels[i], {
+        const label = new Text({
+          text: labels[i],
           fontSize: labelFontSize,
           color: labelColor,
         });
@@ -315,7 +316,8 @@ export class SampleSpace extends VGroup {
 
       // Add label if provided
       if (labels && labels[i]) {
-        const label = new Text(labels[i], {
+        const label = new Text({
+          text: labels[i],
           fontSize: labelFontSize,
           color: labelColor,
         });
@@ -410,7 +412,8 @@ export class SampleSpace extends VGroup {
       };
 
       if (labels && labels[i]) {
-        const label = new Text(labels[i], {
+        const label = new Text({
+          text: labels[i],
           fontSize: labelFontSize,
           color: labelColor,
         });
@@ -519,7 +522,7 @@ export class SampleSpace extends VGroup {
     }
 
     const [cx, cy, cz] = this._ssCenter;
-    this._title = new Text(text, { fontSize, color });
+    this._title = new Text({ text, fontSize, color });
     this._title.moveTo([cx, cy + this._ssHeight / 2 + buff + 0.2, cz]);
     this.add(this._title);
 
@@ -583,7 +586,8 @@ export class SampleSpace extends VGroup {
       this._braces.add(brace);
 
       if (labels[i]) {
-        const label = new Text(labels[i], {
+        const label = new Text({
+          text: labels[i],
           fontSize,
           color: labelColor,
         });

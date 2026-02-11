@@ -47,8 +47,9 @@ export class Tex extends MathTex {
   constructor(options: TexOptions) {
     // Wrap in \text{...} for text-mode rendering (upright serif, proper word spacing)
     // Split on \\ to handle line breaks, wrap each segment separately
-    const parts = options.latex.split('\\\\');
-    const wrapped = parts.map(p => `\\text{${p.trim()}}`).join(' \\\\ ');
+    const latexStr = Array.isArray(options.latex) ? options.latex.join(' \\\\ ') : options.latex;
+    const parts = latexStr.split('\\\\');
+    const wrapped = parts.map((p: string) => `\\text{${p.trim()}}`).join(' \\\\ ');
     super({ ...options, latex: wrapped });
   }
 

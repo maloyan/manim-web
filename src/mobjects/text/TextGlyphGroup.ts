@@ -9,11 +9,7 @@
 import { VGroup } from '../../core/VGroup';
 import { GlyphVMobject } from './GlyphVMobject';
 import opentype from 'opentype.js';
-import type { Font } from 'opentype.js';
 import type { SkeletonizeOptions } from '../../utils/skeletonize';
-
-/** Scale factor: pixels to world units (100 pixels = 1 world unit) */
-const _PIXEL_TO_WORLD = 1 / 100;
 
 export interface TextGlyphGroupOptions {
   /** The text string to render */
@@ -47,12 +43,10 @@ export class TextGlyphGroup extends VGroup {
   private _text: string;
   private _fontUrl: string;
   private _fontSize: number;
-  private _color: string;
   private _glyphStrokeWidth: number;
   private _useSkeletonStroke: boolean;
   private _skeletonOptions: SkeletonizeOptions;
   private _readyPromise: Promise<void>;
-  private _font: Font | null = null;
 
   constructor(options: TextGlyphGroupOptions) {
     super();
@@ -86,7 +80,6 @@ export class TextGlyphGroup extends VGroup {
   private async _loadAndBuild(): Promise<void> {
     // Load font via opentype.js
     const font = await opentype.load(this._fontUrl);
-    this._font = font;
 
     const scale = this._fontSize / font.unitsPerEm;
     let xCursor = 0; // in pixels

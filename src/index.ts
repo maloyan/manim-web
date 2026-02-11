@@ -60,7 +60,7 @@ export {
   CameraAnimateProxy,
   type CameraFrameOptions,
   type CameraFrameState,
-  type CameraFrameAnimationOptions,
+  type CameraAnimationOptions,
 } from './core/CameraFrame';
 export {
   Lighting,

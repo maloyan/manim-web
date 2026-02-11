@@ -3,7 +3,7 @@
  * - Default displayFrameStrokeWidth matches Python Manim (3)
  * - activateZooming suppresses auto-render to prevent flicker
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { Rectangle } from '../mobjects/geometry/Rectangle';
 import { Scene } from './Scene';
 

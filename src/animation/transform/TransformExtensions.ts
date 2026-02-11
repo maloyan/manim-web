@@ -1071,7 +1071,7 @@ export function shrinkToCenter(
  * Interface for mobjects that support saved state
  */
 export interface MobjectWithSavedState extends VMobject {
-  savedState?: VMobject;
+  savedState: VMobject | null;
 }
 
 export interface RestoreOptions extends AnimationOptions {}

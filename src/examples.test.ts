@@ -393,7 +393,7 @@ describe('Point With Trace', () => {
       [0, 0, 0],
       [1, 1, 0],
     ]);
-    const copy = path.copy();
+    const copy = path.copy() as VMobject;
     expect(copy.numPoints).toBe(path.numPoints);
   });
 

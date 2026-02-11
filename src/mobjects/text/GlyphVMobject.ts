@@ -97,7 +97,7 @@ export class GlyphVMobject extends VMobject {
    */
   private _buildPoints(
     glyph: Glyph,
-    font: Font,
+    _font: Font,
     fontSize: number,
     xOffset: number,
     yOffset: number,

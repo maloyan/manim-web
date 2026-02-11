@@ -20,7 +20,7 @@ export function isFeatureEnabled(flag: string): boolean {
 
 /** Override feature flags (e.g., from environment or config). */
 export function setFeatureFlags(overrides: Partial<FeatureFlags>): void {
-  flags = { ...flags, ...overrides };
+  flags = { ...flags, ...overrides } as FeatureFlags;
 }
 
 /** Reset all flags to defaults. */

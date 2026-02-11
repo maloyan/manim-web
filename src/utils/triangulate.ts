@@ -33,7 +33,7 @@ import earcut from 'earcut';
  */
 export function triangulatePolygon(
   vertices: number[][],
-  holes?: number[][],
+  holes?: number[][][],
 ): number[] {
   // ---- Guard: need at least 3 outer-ring vertices ----
   if (!vertices || vertices.length < 3) {
@@ -81,7 +81,7 @@ export function triangulatePolygon(
  */
 export function triangulatePolygonPositions(
   vertices: number[][],
-  holes?: number[][],
+  holes?: number[][][],
   z: number = 0,
 ): Float32Array {
   const indices = triangulatePolygon(vertices, holes);

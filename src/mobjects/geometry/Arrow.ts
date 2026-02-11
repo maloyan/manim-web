@@ -110,7 +110,6 @@ export class Arrow extends Group {
   private _end: Vector3Tuple;
   private _tipLength: number;
   private _tipWidth: number;
-  private _color: string;
   private _strokeWidth: number;
   private _shaft: ArrowShaft | null = null;
   private _tip: ArrowTip | null = null;
@@ -327,7 +326,6 @@ export class DoubleArrow extends Group {
   private _end: Vector3Tuple;
   private _tipLength: number;
   private _tipWidth: number;
-  private _color: string;
   private _strokeWidth: number;
 
   constructor(options: ArrowOptions = {}) {

@@ -652,44 +652,6 @@ export class VMobject extends Mobject {
    * Each subpath length is the number of Bezier control points.  We compute
    * how many sampled points each subpath produced and split accordingly.
    */
-  private _splitOutlineBySubpaths(
-    controlPoints: number[][],
-    sampledOutline: number[][],
-    subpathLengths: number[],
-  ): number[][][] {
-    // Count the number of Bezier segments per subpath (segments = (len - 1) / 3)
-    const segCounts: number[] = [];
-    for (const len of subpathLengths) {
-      segCounts.push(Math.max(0, Math.floor((len - 1) / 3)));
-    }
-
-    const totalSegs = segCounts.reduce((a, b) => a + b, 0);
-    if (totalSegs === 0) return [sampledOutline];
-
-    // Estimate sampled points per segment (outline length / totalSegments)
-    const avgSamplesPerSeg = sampledOutline.length / totalSegs;
-
-    const rings: number[][][] = [];
-    let offset = 0;
-
-    for (const segs of segCounts) {
-      const count = Math.round(segs * avgSamplesPerSeg);
-      const end = Math.min(offset + count, sampledOutline.length);
-      const ring = sampledOutline.slice(offset, end);
-      if (ring.length >= 3) {
-        rings.push(ring);
-      }
-      offset = end;
-    }
-
-    // If any remainder, append to last ring
-    if (offset < sampledOutline.length && rings.length > 0) {
-      rings[rings.length - 1].push(...sampledOutline.slice(offset));
-    }
-
-    return rings;
-  }
-
   /**
    * Create the Three.js backing object for this VMobject.
    * Creates both stroke (using Line2 for thick, smooth strokes) and fill meshes.

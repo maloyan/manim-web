@@ -355,7 +355,7 @@ export function replacementTransform(
  * The mobject must have a `.targetCopy` property set beforehand.
  */
 export interface MobjectWithTarget extends VMobject {
-  targetCopy?: VMobject;
+  targetCopy: VMobject | null;
 }
 
 export class MoveToTarget extends Transform {

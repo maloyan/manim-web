@@ -62,7 +62,7 @@ export abstract class Mobject {
   scaleVector: THREE.Vector3;
 
   /** Color as CSS color string (syncs stroke and fill via setter) */
-  private _color: string = '#ffffff';
+  protected _color: string = '#ffffff';
 
   get color(): string {
     return this._color;
@@ -750,7 +750,7 @@ export abstract class Mobject {
    * @param direction Direction to get edge in
    * @returns Edge point as [x, y, z]
    */
-  protected _getEdgeInDirection(direction: Vector3Tuple): Vector3Tuple {
+  _getEdgeInDirection(direction: Vector3Tuple): Vector3Tuple {
     const center = this.getCenter();
     const bounds = this._getBoundingBox();
 

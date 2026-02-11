@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Mobject } from '../../core/Mobject';
+import { Mobject, Vector3Tuple } from '../../core/Mobject';
 
 /**
  * Options for creating a MandelbrotSet visualization
@@ -213,8 +213,8 @@ export class MandelbrotSet extends Mobject {
   }
 
   /** Get the current view center. */
-  getCenter(): [number, number] {
-    return [...this._center];
+  override getCenter(): Vector3Tuple {
+    return [this._center[0], this._center[1], 0];
   }
 
   /** Set the zoom level (higher = more zoomed in). */

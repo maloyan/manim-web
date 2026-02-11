@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Mobject } from '../../core/Mobject';
+import { Mobject, Vector3Tuple } from '../../core/Mobject';
 
 /**
  * Maximum number of polynomial coefficients supported by the shader.
@@ -326,8 +326,8 @@ export class NewtonFractal extends Mobject {
   }
 
   /** Get the current view center. */
-  getCenter(): [number, number] {
-    return [...this._center];
+  override getCenter(): Vector3Tuple {
+    return [this._center[0], this._center[1], 0];
   }
 
   /** Set the zoom level (higher = more zoomed in). */
