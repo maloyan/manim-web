@@ -26,6 +26,8 @@ export interface Surface3DOptions {
   wireframe?: boolean;
   /** Whether to render both sides. Default: true */
   doubleSided?: boolean;
+  /** Two alternating colors for a checkerboard pattern on the surface, e.g. ['#E65A4C', '#CF5044']. */
+  checkerboardColors?: [string, string];
 }
 
 /**
@@ -72,6 +74,7 @@ export class Surface3D extends Mobject {
   protected _wireframe: boolean;
   protected _doubleSided: boolean;
   protected _centerPoint: Vector3Tuple;
+  protected _checkerboardColors?: [string, string];
 
   constructor(options: Surface3DOptions) {
     super();
@@ -87,6 +90,7 @@ export class Surface3D extends Mobject {
       opacity = 1,
       wireframe = false,
       doubleSided = true,
+      checkerboardColors,
     } = options;
 
     this._func = func;
@@ -97,6 +101,7 @@ export class Surface3D extends Mobject {
     this._wireframe = wireframe;
     this._doubleSided = doubleSided;
     this._centerPoint = [...center];
+    this._checkerboardColors = checkerboardColors;
 
     this.color = color;
     this._opacity = opacity;
@@ -125,14 +130,50 @@ export class Surface3D extends Mobject {
       target.set(x, y, z);
     };
 
-    const geometry = new ParametricGeometry(
-      paramFunc,
-      this._uResolution,
-      this._vResolution
-    );
+    const geometry = new ParametricGeometry(paramFunc, this._uResolution, this._vResolution);
 
     // Compute normals for proper lighting
     geometry.computeVertexNormals();
+
+    if (this._checkerboardColors) {
+      // Convert to non-indexed so each face can have its own vertex colors
+      const nonIndexed = geometry.toNonIndexed();
+      nonIndexed.computeVertexNormals();
+      geometry.dispose();
+
+      const posAttr = nonIndexed.getAttribute('position');
+      const colors = new Float32Array(posAttr.count * 3);
+      const c1 = new THREE.Color(this._checkerboardColors[0]);
+      const c2 = new THREE.Color(this._checkerboardColors[1]);
+
+      // Each quad = 2 triangles = 6 vertices
+      // Quads go u-major: for each v row, iterate u cols
+      let vertexIdx = 0;
+      for (let vi = 0; vi < this._vResolution; vi++) {
+        for (let ui = 0; ui < this._uResolution; ui++) {
+          const c = (ui + vi) % 2 === 0 ? c1 : c2;
+          // 2 triangles per quad = 6 vertices
+          for (let k = 0; k < 6; k++) {
+            colors[vertexIdx * 3] = c.r;
+            colors[vertexIdx * 3 + 1] = c.g;
+            colors[vertexIdx * 3 + 2] = c.b;
+            vertexIdx++;
+          }
+        }
+      }
+
+      nonIndexed.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const material = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        opacity: this._opacity,
+        transparent: this._opacity < 1,
+        wireframe: this._wireframe,
+        side: this._doubleSided ? THREE.DoubleSide : THREE.FrontSide,
+      });
+
+      return new THREE.Mesh(nonIndexed, material);
+    }
 
     const material = new THREE.MeshStandardMaterial({
       color: this.color,
@@ -153,7 +194,10 @@ export class Surface3D extends Mobject {
     if (this._threeObject instanceof THREE.Mesh) {
       const material = this._threeObject.material as THREE.MeshStandardMaterial;
       if (material) {
-        material.color.set(this.color);
+        if (!this._checkerboardColors) {
+          material.color.set(this.color);
+        }
+        material.vertexColors = !!this._checkerboardColors;
         material.opacity = this._opacity;
         material.transparent = this._opacity < 1;
         material.wireframe = this._wireframe;
@@ -182,13 +226,43 @@ export class Surface3D extends Mobject {
         target.set(x, y, z);
       };
 
-      const geometry = new ParametricGeometry(
-        paramFunc,
-        this._uResolution,
-        this._vResolution
-      );
+      const geometry = new ParametricGeometry(paramFunc, this._uResolution, this._vResolution);
       geometry.computeVertexNormals();
-      this._threeObject.geometry = geometry;
+
+      if (this._checkerboardColors) {
+        const nonIndexed = geometry.toNonIndexed();
+        nonIndexed.computeVertexNormals();
+        geometry.dispose();
+
+        const posAttr = nonIndexed.getAttribute('position');
+        const colors = new Float32Array(posAttr.count * 3);
+        const c1 = new THREE.Color(this._checkerboardColors[0]);
+        const c2 = new THREE.Color(this._checkerboardColors[1]);
+
+        let vertexIdx = 0;
+        for (let vi = 0; vi < this._vResolution; vi++) {
+          for (let ui = 0; ui < this._uResolution; ui++) {
+            const c = (ui + vi) % 2 === 0 ? c1 : c2;
+            for (let k = 0; k < 6; k++) {
+              colors[vertexIdx * 3] = c.r;
+              colors[vertexIdx * 3 + 1] = c.g;
+              colors[vertexIdx * 3 + 2] = c.b;
+              vertexIdx++;
+            }
+          }
+        }
+
+        nonIndexed.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        this._threeObject.geometry = nonIndexed;
+
+        const material = this._threeObject.material as THREE.MeshStandardMaterial;
+        if (material) {
+          material.vertexColors = true;
+          material.needsUpdate = true;
+        }
+      } else {
+        this._threeObject.geometry = geometry;
+      }
     }
     this._markDirty();
   }
@@ -312,11 +386,7 @@ export class Surface3D extends Mobject {
    */
   evaluate(u: number, v: number): Vector3Tuple {
     const [x, y, z] = this._func(u, v);
-    return [
-      x + this.position.x,
-      y + this.position.y,
-      z + this.position.z,
-    ];
+    return [x + this.position.x, y + this.position.y, z + this.position.z];
   }
 
   /**
@@ -334,6 +404,7 @@ export class Surface3D extends Mobject {
       opacity: this._opacity,
       wireframe: this._wireframe,
       doubleSided: this._doubleSided,
+      checkerboardColors: this._checkerboardColors,
     });
   }
 }
