@@ -21,12 +21,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          registry-url: https://registry.npmjs.org
 
-      - run: npm install --no-package-lock
+      - run: npm ci
 
       - name: Extract version
         id: version
-        run: echo "tag=v$(node -p 'require(\"./package.json\").version')" >> "$GITHUB_OUTPUT"
+        run: echo "tag=v$(node -p 'require("./package.json").version')" >> "$GITHUB_OUTPUT"
 
       - name: Check if tag already exists
         id: check
@@ -65,3 +66,13 @@ jobs:
             --title "${{ steps.version.outputs.tag }}" \
             --notes "${{ steps.changelog.outputs.body }}" \
             --target main
+
+      - name: Build package
+        if: steps.check.outputs.exists == 'false'
+        run: npm run build
+
+      - name: Publish to npm
+        if: steps.check.outputs.exists == 'false'
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

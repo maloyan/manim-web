@@ -1,32 +1,28 @@
+<div align="center">
+
 # manim-js
 
-A TypeScript port of [Manim](https://github.com/3b1b/manim) (Mathematical Animation Engine) for the browser. Built on Three.js and WebGL, it brings Manim's declarative animation API to the web with no server-side rendering required.
+**Mathematical animations for the web.**
 
-## Features
+The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the browser, no Python required.
 
-- **Geometry** — Circle, Rectangle, Polygon, Arrow, Arc, Dot, Line, DashedLine, CubicBezier, Star, Brace, and more
-- **Text & LaTeX** — Text, MathTex, Tex, Paragraph, MarkupText rendered via KaTeX
-- **Graphing** — Axes, NumberLine, NumberPlane, FunctionGraph, ParametricFunction, VectorField, BarChart
-- **3D** — Sphere, Cube, Cylinder, Torus, Surface3D, ThreeDAxes, Arrow3D with orbit controls
-- **Animations** — FadeIn/Out, Create, Transform, Rotate, Scale, Shift, Write, GrowFromCenter, AnimationGroup, LaggedStart, Succession
-- **Rate functions** — smooth, easeIn/Out, thereAndBack, rushInto, bounce, and composable utilities
-- **Interaction** — Draggable, Hoverable, Clickable mobjects, PlaybackControls, OrbitControls
-- **Export** — GIF and video export from animations
-- **Framework integrations** — React and Vue component wrappers
-- **Graphs & Tables** — Network graph visualization, Matrix, Table with typed variants
+<img src="assets/demo_square_to_circle.gif" width="600" alt="Square to Circle demo">
+
+[![npm version](https://img.shields.io/npm/v/manim-js.svg)](https://www.npmjs.com/package/manim-js)
+[![CI](https://github.com/maloyan/manim-js/actions/workflows/ci.yml/badge.svg)](https://github.com/maloyan/manim-js/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+[Quick Start](#quick-start) · [Examples](https://maloyan.github.io/manim-js/) · [Docs](https://maloyan.github.io/manim-js/) · [npm](https://www.npmjs.com/package/manim-js)
+
+</div>
+
+---
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/maloyan/manim-js.git
-cd manim-js
-npm install
-npm run dev
+npm install manim-js
 ```
-
-## Usage
-
-### Square to Circle
 
 ```typescript
 import { Scene, Circle, Square, Create, Transform, FadeOut } from 'manim-js';
@@ -41,128 +37,72 @@ async function squareToCircle(scene: Scene) {
 }
 ```
 
-<p align="center">
-  <img src="assets/demo_square_to_circle.gif" width="600" alt="Square to Circle">
-</p>
+Or use a plain `<script>` tag — see the [examples](https://maloyan.github.io/manim-js/) for more.
 
-### Function Graphs
+## What You Can Build
 
-```typescript
-import { Scene, Axes, FunctionGraph, MathTex, Create, FadeIn, WHITE } from 'manim-js';
+<table>
+<tr>
+<td align="center"><img src="assets/demo_function_graph.gif" width="350" alt="Function Graphs"><br><b>Function Graphs</b></td>
+<td align="center"><img src="assets/demo_math_equations.gif" width="350" alt="LaTeX Equations"><br><b>LaTeX Equations</b></td>
+</tr>
+<tr>
+<td align="center"><img src="assets/demo_text.gif" width="350" alt="Text Animations"><br><b>Text Animations</b></td>
+<td align="center"><img src="assets/demo_square_to_circle.gif" width="350" alt="Geometry Transforms"><br><b>Geometry Transforms</b></td>
+</tr>
+</table>
 
-async function graphDemo(scene: Scene) {
-  const axes = new Axes({
-    xRange: [-3, 3, 1],
-    yRange: [-5, 5, 1],
-    xLength: 8,
-    yLength: 6,
-    tips: true,
-  });
+## Features
 
-  const graph = new FunctionGraph({
-    func: (x) => x * x,
-    xRange: [-2.2, 2.2],
-    color: WHITE,
-    axes,
-  });
+- **Geometry** — Circle, Rectangle, Polygon, Arrow, Arc, Star, Brace, and more
+- **Text & LaTeX** — Text, MathTex, Tex, Paragraph via KaTeX
+- **Graphing** — Axes, NumberPlane, FunctionGraph, ParametricFunction, VectorField, BarChart
+- **3D** — Sphere, Cube, Cylinder, Torus, Surface3D, ThreeDAxes with orbit controls
+- **Animations** — FadeIn/Out, Create, Transform, Write, GrowFromCenter, AnimationGroup, LaggedStart
+- **Interaction** — Draggable, Hoverable, Clickable mobjects
+- **Export** — GIF and video export
+- **Graphs & Tables** — Network graphs, Matrix, Table
 
-  const label = new MathTex({ latex: 'x^2', fontSize: 32 });
-  label.shift([4.5, 2, 0]);
+## Framework Integrations
 
-  await scene.play(new Create(axes), new Create(graph), new FadeIn(label));
+### React
+
+```tsx
+import { ManimScene } from 'manim-js/react';
+
+function App() {
+  return <ManimScene construct={squareToCircle} width={800} height={450} />;
 }
 ```
 
-<p align="center">
-  <img src="assets/demo_function_graph.gif" width="600" alt="Function Graph">
-</p>
+### Vue
 
-### LaTeX Equations
+```vue
+<script setup>
+import { ManimScene } from 'manim-js/vue';
+</script>
 
-```typescript
-import { Scene, MathTex, Write } from 'manim-js';
-
-async function equationDemo(scene: Scene) {
-  const equation = new MathTex({
-    latex: 'd(p, q) = \\sqrt{\\sum_{i=1}^n (q_i - p_i)^2}',
-    fontSize: 48,
-  });
-  await scene.play(new Write(equation));
-}
+<template>
+  <ManimScene :construct="squareToCircle" :width="800" :height="450" />
+</template>
 ```
 
-<p align="center">
-  <img src="assets/demo_math_equations.gif" width="600" alt="Math Equations">
-</p>
+## Python to TypeScript
 
-### Text Animations
-
-```typescript
-import { Scene, Text, Write, FadeIn, FadeOut, AnimationGroup, WHITE, RED, DOWN } from 'manim-js';
-
-async function textDemo(scene: Scene) {
-  const firstLine = new Text({ text: 'Create cool animations', fontSize: 48, color: WHITE });
-  const secondLine = new Text({ text: 'using Manim', fontSize: 48, color: WHITE });
-  const thirdLine = new Text({ text: 'Try it out yourself.', fontSize: 48, color: RED });
-
-  secondLine.nextTo(firstLine, DOWN);
-
-  await scene.play(new Write(firstLine), new Write(secondLine));
-  await scene.play(new AnimationGroup([
-    new FadeOut(firstLine),
-    new FadeIn(thirdLine),
-    new FadeOut(secondLine),
-  ]));
-}
-```
-
-<p align="center">
-  <img src="assets/demo_text.gif" width="600" alt="Text Animation">
-</p>
-
-## Tools
-
-### Python Manim to TypeScript Converter
+Have existing Manim scripts? Convert them:
 
 ```bash
-node tools/py2ts.cjs input.py           # convert a Python Manim script
-node tools/py2ts.cjs input.py -o out.ts # specify output file
-node tools/py2ts.cjs --test             # run built-in test suite
+node tools/py2ts.cjs input.py -o output.ts
 ```
 
-Handles class/method mapping, kwargs conversion, lambda syntax, multi-line statements, and constructor arg wrapping.
+## Contributing
 
-## Project Structure
-
+```bash
+git clone https://github.com/maloyan/manim-js.git
+cd manim-js
+npm install
+npm run dev
 ```
-src/
-├── core/           # Scene, Mobject, VMobject, VGroup, Camera, Renderer
-├── animation/      # All animation types (creation, fading, movement, transform)
-├── constants/      # Colors and direction constants
-├── mobjects/
-│   ├── geometry/   # 2D shapes (Circle, Line, Polygon, Arrow, etc.)
-│   ├── graphing/   # Axes, NumberLine, FunctionGraph, VectorField
-│   ├── text/       # Text, MathTex, KaTeX rendering
-│   ├── three-d/    # 3D primitives and surfaces
-│   ├── svg/        # SVG parsing, Brace
-│   ├── graph/      # Network graph visualization
-│   ├── matrix/     # Matrix display
-│   └── table/      # Table display
-├── interaction/    # Drag, hover, click, orbit controls
-├── integrations/   # React and Vue wrappers
-├── export/         # GIF and video export
-├── rate-functions/ # Easing and timing functions
-└── utils/          # Performance monitoring
-tools/
-└── py2ts.cjs       # Python Manim → TypeScript converter
-```
-
-## Tech Stack
-
-- **TypeScript** with strict types
-- **Three.js** for WebGL rendering
-- **KaTeX** for LaTeX math rendering
-- **Vite** for dev server and builds
 
 ## License
 

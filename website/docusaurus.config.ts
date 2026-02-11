@@ -12,8 +12,8 @@ const config: Config = {
     v4: true,
   },
 
-  url: 'https://manim-js.example.com',
-  baseUrl: '/',
+  url: 'https://maloyan.github.io',
+  baseUrl: '/manim-js/',
 
   onBrokenLinks: 'warn',
 
@@ -96,7 +96,7 @@ const config: Config = {
           label: 'Docs',
         },
         {
-          href: 'https://github.com/manim-js/manim-js',
+          href: 'https://github.com/maloyan/manim-js',
           label: 'GitHub',
           position: 'right',
         },
@@ -123,7 +123,7 @@ const config: Config = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/manim-js/manim-js',
+              href: 'https://github.com/maloyan/manim-js',
             },
           ],
         },

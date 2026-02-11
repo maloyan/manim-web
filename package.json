@@ -99,13 +99,24 @@
       "optional": true
     }
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/maloyan/manim-js.git"
+  },
+  "homepage": "https://maloyan.github.io/manim-js/",
+  "bugs": {
+    "url": "https://github.com/maloyan/manim-js/issues"
+  },
   "keywords": [
     "animation",
     "math",
     "visualization",
     "manim",
     "threejs",
-    "webgl"
+    "webgl",
+    "3blue1brown",
+    "mathematical-animations",
+    "typescript"
   ],
   "license": "MIT"
 }
