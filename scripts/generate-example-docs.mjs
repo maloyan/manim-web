@@ -26,7 +26,7 @@ const DOCS_DIR = join(ROOT, 'docs', 'docs');
 
 const CATEGORIES = {
   'Basic Concepts': ['manim_ce_logo', 'brace_annotation', 'vector_arrow', 'boolean_operations'],
-  'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace'],
+  'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace', 'sine_curve_unit_circle'],
   'Plotting': ['sin_cos_plot', 'arg_min', 'graph_area_plot', 'polygon_on_axes', 'heat_diagram_plot'],
   'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation'],
   'Advanced Projects': ['opening_manim'],
@@ -104,6 +104,11 @@ const EXAMPLE_META = {
     description:
       'Creates a dot that leaves a visible trail as it moves. Uses a VMobject with addUpdater to continuously extend the path, then rotates and shifts the dot to draw a pattern.',
     learnMore: ['VMobject', 'Dot', 'Rotating', 'Shift'],
+  },
+  sine_curve_unit_circle: {
+    description:
+      'Animates a dot orbiting a unit circle while tracing the corresponding sine curve. Uses addUpdater for continuous motion, with connecting lines from origin-to-dot and dot-to-curve updating each frame.',
+    learnMore: ['Circle', 'Dot', 'Line', 'VGroup', 'MathTex'],
   },
   sin_cos_plot: {
     description:

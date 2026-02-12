@@ -23,6 +23,7 @@ import PointWithTraceExample from '@site/src/components/examples/PointWithTraceE
 import PolygonOnAxesExample from '@site/src/components/examples/PolygonOnAxesExample';
 import RotationUpdaterExample from '@site/src/components/examples/RotationUpdaterExample';
 import SinCosPlotExample from '@site/src/components/examples/SinCosPlotExample';
+import SineCurveUnitCircleExample from '@site/src/components/examples/SineCurveUnitCircleExample';
 import ThreeDCameraIllusionRotationExample from '@site/src/components/examples/ThreeDCameraIllusionRotationExample';
 import ThreeDCameraRotationExample from '@site/src/components/examples/ThreeDCameraRotationExample';
 import ThreeDLightSourcePositionExample from '@site/src/components/examples/ThreeDLightSourcePositionExample';
@@ -683,6 +684,136 @@ await scene.wait();
 </details>
 
 **Learn More:** **VMobject** · **Dot** · **Rotating** · **Shift**
+
+---
+
+## Sine Curve Unit Circle
+
+Animates a dot orbiting a unit circle while tracing the corresponding sine curve. Uses addUpdater for continuous motion, with connecting lines from origin-to-dot and dot-to-curve updating each frame.
+
+<SineCurveUnitCircleExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Circle,
+  Dot,
+  Line,
+  VGroup,
+  MathTex,
+  BLACK,
+  BLUE,
+  RED,
+  YELLOW,
+  YELLOW_A,
+  YELLOW_D,
+  DOWN,
+} from 'manim-web';
+
+const TAU = 2 * Math.PI;
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+// --- Axes ---
+const xAxis = new Line({ start: [-6, 0, 0], end: [6, 0, 0] });
+const yAxis = new Line({ start: [-4, -2, 0], end: [-4, 2, 0] });
+scene.add(xAxis, yAxis);
+
+// --- X labels ---
+const xLabels = [
+  new MathTex({ latex: '\\pi' }),
+  new MathTex({ latex: '2\\pi' }),
+  new MathTex({ latex: '3\\pi' }),
+  new MathTex({ latex: '4\\pi' }),
+];
+for (let i = 0; i < xLabels.length; i++) {
+  xLabels[i].nextTo([-1 + 2 * i, 0, 0], DOWN, 0.4);
+  scene.add(xLabels[i]);
+}
+
+const originPoint = [-4, 0, 0];
+const curveStart = [-3, 0, 0];
+
+// --- Circle ---
+const circle = new Circle({ radius: 1, center: originPoint, color: RED });
+scene.add(circle);
+
+// --- Dot orbiting the circle ---
+let tOffset = 0;
+const rate = 0.25;
+
+const dot = new Dot({
+  radius: 0.08,
+  color: YELLOW,
+  point: circle.pointAtAngle(0),
+});
+
+const goAroundCircle = (_mob, dt) => {
+  tOffset += dt * rate;
+  dot.moveTo(circle.pointAtAngle((tOffset % 1) * TAU));
+};
+dot.addUpdater(goAroundCircle);
+
+// --- Line from origin to dot (always_redraw equivalent) ---
+const originToCircleLine = new Line({
+  start: originPoint,
+  end: dot.getPoint(),
+  color: BLUE,
+});
+originToCircleLine.addUpdater(() => {
+  originToCircleLine.setStart(originPoint);
+  originToCircleLine.setEnd(dot.getPoint());
+});
+
+// --- Line from dot to curve (always_redraw equivalent) ---
+const dotToCurveLine = new Line({
+  start: dot.getPoint(),
+  end: dot.getPoint(),
+  color: YELLOW_A,
+  strokeWidth: 2,
+});
+dotToCurveLine.addUpdater(() => {
+  const x = curveStart[0] + tOffset * 4;
+  const y = dot.getPoint()[1];
+  dotToCurveLine.setStart(dot.getPoint());
+  dotToCurveLine.setEnd([x, y, 0]);
+});
+
+// --- Growing sine curve ---
+const curve = new VGroup();
+curve.add(new Line({ start: curveStart, end: curveStart, color: YELLOW_D }));
+let lastEnd = [...curveStart];
+
+curve.addUpdater(() => {
+  const x = curveStart[0] + tOffset * 4;
+  const y = dot.getPoint()[1];
+  const newLine = new Line({
+    start: lastEnd,
+    end: [x, y, 0],
+    color: YELLOW_D,
+  });
+  curve.add(newLine);
+  lastEnd = [x, y, 0];
+});
+
+// Add in order: dot first so tOffset/position updates before lines read it
+scene.add(dot, originToCircleLine, dotToCurveLine, curve);
+
+await scene.wait(8.5);
+
+dot.removeUpdater(goAroundCircle);
+```
+
+</details>
+
+**Learn More:** **Circle** · **Dot** · **Line** · **VGroup** · **MathTex**
 
 ---
 
