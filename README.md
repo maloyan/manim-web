@@ -10,7 +10,8 @@ The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the bro
 
 [![npm version](https://img.shields.io/npm/v/manim-web.svg)](https://www.npmjs.com/package/manim-web)
 [![CI](https://github.com/maloyan/manim-web/actions/workflows/ci.yml/badge.svg)](https://github.com/maloyan/manim-web/actions/workflows/ci.yml)
-[![Tests](https://img.shields.io/badge/tests-317%20passed-brightgreen)](https://github.com/maloyan/manim-web)
+[![Tests](https://img.shields.io/badge/tests-905%20passed-brightgreen)](https://github.com/maloyan/manim-web)
+[![Coverage](https://img.shields.io/badge/coverage-26%25-yellow)](https://github.com/maloyan/manim-web)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 [Quick Start](#quick-start) · [Examples](https://maloyan.github.io/manim-web/) · [Docs](https://maloyan.github.io/manim-web/) · [npm](https://www.npmjs.com/package/manim-web)
