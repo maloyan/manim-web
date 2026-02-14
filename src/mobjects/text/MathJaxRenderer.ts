@@ -199,6 +199,28 @@ export async function renderLatexToSVG(
       throw new Error(`MathJax failed to produce SVG for: ${texString}`);
     }
 
+    // Inject global font cache <defs> into the SVG so that <use> refs
+    // can be resolved by svgToVMobjects.  MathJax with fontCache:'global'
+    // stores glyph <path> definitions in a separate internal node tree
+    // (MathJax.startup.output.fontCache.defs) instead of inlining them.
+    try {
+      const adaptor = MathJax.startup?.adaptor;
+      const fontDefs = MathJax.startup?.output?.fontCache?.defs;
+      if (adaptor && fontDefs) {
+        const defsHTML = adaptor.outerHTML(fontDefs);
+        if (defsHTML) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = defsHTML;
+          const defsEl = tmp.querySelector('defs');
+          if (defsEl) {
+            svgElement.insertBefore(defsEl, svgElement.firstChild);
+          }
+        }
+      }
+    } catch {
+      // Non-critical: svgToVMobjects will just produce fewer paths
+    }
+
     svgString = svgElement.outerHTML;
   } else {
     // ------------------------------------------------------------------
@@ -261,7 +283,7 @@ export async function renderLatexToSVG(
   // ------------------------------------------------------------------
   // Convert SVG paths to VMobjects
   // ------------------------------------------------------------------
-  const vmobjectGroup = svgToVMobjects(svgElement, { color, scale: fontScale });
+  const vmobjectGroup = svgToVMobjects(svgElement, { color, scale: fontScale, flipY: false });
 
   return {
     svgElement,

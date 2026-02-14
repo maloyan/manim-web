@@ -534,15 +534,22 @@ function pathDataToVMobject(
   const subPaths = parseSVGPathData(d);
   if (subPaths.length === 0) return null;
 
-  // Merge all sub-paths into a single points array.
-  // (MathJax glyph paths are usually a single closed contour.)
+  // Merge all sub-paths into a single points array, tracking per-sub-path lengths
+  // so that compound glyphs (e.g. "0" with outer contour + inner hole) render
+  // correctly with even-odd fill and separate strokes.
   const allPoints: Vec3[] = [];
+  const subpathLengths: number[] = [];
 
   for (const sp of subPaths) {
+    const startLen = allPoints.length;
     for (const [px, py] of sp) {
       const x = (px + tx) * scale;
       const y = flipY ? -(py + ty) * scale : (py + ty) * scale;
       allPoints.push([x, y, 0]);
+    }
+    const count = allPoints.length - startLen;
+    if (count > 0) {
+      subpathLengths.push(count);
     }
   }
 
@@ -553,6 +560,11 @@ function pathDataToVMobject(
   vmob.strokeWidth = strokeWidth;
   vmob.fillOpacity = fillOpacity;
   vmob.setPoints3D(allPoints);
+
+  // Attach subpath info so VMobject renders holes correctly
+  if (subpathLengths.length > 1) {
+    (vmob as any).getSubpaths = () => [...subpathLengths];
+  }
 
   return vmob;
 }

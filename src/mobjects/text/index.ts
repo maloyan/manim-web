@@ -24,6 +24,9 @@ export { ensureKatexStyles, areKatexStylesLoaded } from './katex-styles';
 // MathTex - LaTeX rendering (KaTeX default, MathJax fallback)
 export { MathTex, type MathTexOptions, type TexRenderer } from './MathTex';
 
+// MathTexSVG - Vector-based LaTeX rendering (SVG paths, supports Create/DrawBorderThenFill)
+export { MathTexSVG, type MathTexSVGOptions } from './MathTexSVG';
+
 // MathJax renderer (dynamic import, full LaTeX support)
 export {
   renderLatexToSVG,
