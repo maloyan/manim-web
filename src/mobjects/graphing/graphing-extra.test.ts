@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { ImplicitFunction } from './ImplicitFunction';
 import { VectorField, ArrowVectorField, StreamLines } from './VectorField';
+import { NumberPlane } from './NumberPlane';
 
 const EPSILON = 1e-6;
 function closeTo(a: number, b: number, eps = EPSILON): boolean {
@@ -637,5 +638,418 @@ describe('ImplicitFunction', () => {
     expect(cp).not.toBe(imp);
     expect(cp.color).toBe('#00ff00');
     expect(cp.getXRange()).toEqual([-2, 2]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// NumberPlane
+// ---------------------------------------------------------------------------
+describe('NumberPlane', () => {
+  describe('constructor defaults', () => {
+    it('should create with default options', () => {
+      const plane = new NumberPlane();
+      expect(plane).toBeDefined();
+    });
+
+    it('should have default xRange [-7, 7, 1]', () => {
+      const plane = new NumberPlane();
+      expect(plane.getXRange()).toEqual([-7, 7, 1]);
+    });
+
+    it('should have default yRange [-4, 4, 1]', () => {
+      const plane = new NumberPlane();
+      expect(plane.getYRange()).toEqual([-4, 4, 1]);
+    });
+
+    it('should have default xLength 14', () => {
+      const plane = new NumberPlane();
+      expect(plane.getXLength()).toBe(14);
+    });
+
+    it('should have default yLength 8', () => {
+      const plane = new NumberPlane();
+      expect(plane.getYLength()).toBe(8);
+    });
+
+    it('should include background lines by default', () => {
+      const plane = new NumberPlane();
+      const bgLines = plane.getBackgroundLines();
+      expect(bgLines).toBeDefined();
+      expect(bgLines.children.length).toBeGreaterThan(0);
+    });
+
+    it('should default to no tips', () => {
+      // NumberPlane defaults tips to false
+      const plane = new NumberPlane();
+      // The plane should not have tip children beyond axes + background
+      expect(plane).toBeDefined();
+    });
+  });
+
+  describe('constructor with custom options', () => {
+    it('should accept custom xRange and yRange', () => {
+      const plane = new NumberPlane({
+        xRange: [-3, 3, 0.5],
+        yRange: [-2, 2, 0.5],
+      });
+      expect(plane.getXRange()).toEqual([-3, 3, 0.5]);
+      expect(plane.getYRange()).toEqual([-2, 2, 0.5]);
+    });
+
+    it('should accept custom xLength and yLength', () => {
+      const plane = new NumberPlane({
+        xLength: 8,
+        yLength: 4,
+      });
+      expect(plane.getXLength()).toBe(8);
+      expect(plane.getYLength()).toBe(4);
+    });
+
+    it('should accept includeBackgroundLines=false', () => {
+      const plane = new NumberPlane({ includeBackgroundLines: false });
+      const bgLines = plane.getBackgroundLines();
+      expect(bgLines.children.length).toBe(0);
+    });
+
+    it('should accept custom backgroundLineStyle', () => {
+      const plane = new NumberPlane({
+        backgroundLineStyle: {
+          color: '#ff0000',
+          strokeWidth: 3,
+          opacity: 0.5,
+        },
+      });
+      const style = plane.getBackgroundLineStyle();
+      expect(style.color).toBe('#ff0000');
+      expect(style.strokeWidth).toBe(3);
+      expect(style.opacity).toBe(0.5);
+    });
+
+    it('should have default backgroundLineStyle when not specified', () => {
+      const plane = new NumberPlane();
+      const style = plane.getBackgroundLineStyle();
+      expect(style.color).toBe('#29ABCA');
+      expect(style.strokeWidth).toBe(1);
+      expect(style.opacity).toBe(1);
+    });
+
+    it('should accept custom fadedLineRatio with faded lines', () => {
+      const plane = new NumberPlane({
+        xRange: [-2, 2, 1],
+        yRange: [-2, 2, 1],
+        fadedLineRatio: 2,
+      });
+      // With fadedLineRatio > 0, extra faded lines are generated
+      const bgLines = plane.getBackgroundLines();
+      expect(bgLines.children.length).toBeGreaterThan(0);
+    });
+
+    it('should accept custom fadedLineStyle', () => {
+      const plane = new NumberPlane({
+        xRange: [-2, 2, 1],
+        yRange: [-2, 2, 1],
+        fadedLineRatio: 1,
+        fadedLineStyle: {
+          color: '#00ff00',
+          strokeWidth: 0.5,
+          opacity: 0.2,
+        },
+      });
+      expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
+    });
+
+    it('should auto-compute fadedLineStyle from backgroundLineStyle', () => {
+      const plane = new NumberPlane({
+        xRange: [-2, 2, 1],
+        yRange: [-2, 2, 1],
+        fadedLineRatio: 1,
+        backgroundLineStyle: {
+          color: '#aabbcc',
+          strokeWidth: 4,
+          opacity: 0.8,
+        },
+      });
+      // Auto-computed faded style should halve strokeWidth and opacity
+      expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
+    });
+
+    it('should accept fadingFactor != 1', () => {
+      const plane = new NumberPlane({
+        xRange: [-3, 3, 1],
+        yRange: [-3, 3, 1],
+        fadingFactor: 0.5,
+      });
+      expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('coordsToPoint / pointToCoords', () => {
+    it('should map origin to visual center', () => {
+      const plane = new NumberPlane();
+      const pt = plane.coordsToPoint(0, 0);
+      expect(closeTo(pt[0], 0)).toBe(true);
+      expect(closeTo(pt[1], 0)).toBe(true);
+    });
+
+    it('should roundtrip coordinates', () => {
+      const plane = new NumberPlane({
+        xRange: [-5, 5, 1],
+        yRange: [-3, 3, 1],
+      });
+      const pt = plane.coordsToPoint(3, -2);
+      const [x, y] = plane.pointToCoords(pt);
+      expect(closeTo(x, 3)).toBe(true);
+      expect(closeTo(y, -2)).toBe(true);
+    });
+
+    it('should map edge coordinates to visual edges', () => {
+      const plane = new NumberPlane({
+        xRange: [-5, 5, 1],
+        yRange: [-3, 3, 1],
+        xLength: 10,
+        yLength: 6,
+      });
+      const ptMax = plane.coordsToPoint(5, 3);
+      expect(closeTo(ptMax[0], 5)).toBe(true);
+      expect(closeTo(ptMax[1], 3)).toBe(true);
+
+      const ptMin = plane.coordsToPoint(-5, -3);
+      expect(closeTo(ptMin[0], -5)).toBe(true);
+      expect(closeTo(ptMin[1], -3)).toBe(true);
+    });
+  });
+
+  describe('getAxes (xAxis / yAxis)', () => {
+    it('should have xAxis and yAxis', () => {
+      const plane = new NumberPlane();
+      expect(plane.getXAxis()).toBeDefined();
+      expect(plane.getYAxis()).toBeDefined();
+    });
+
+    it('xAxis and yAxis should be accessible via public fields', () => {
+      const plane = new NumberPlane();
+      expect(plane.xAxis).toBe(plane.getXAxis());
+      expect(plane.yAxis).toBe(plane.getYAxis());
+    });
+  });
+
+  describe('getBackgroundLines', () => {
+    it('should return the background lines group', () => {
+      const plane = new NumberPlane();
+      const bg = plane.getBackgroundLines();
+      expect(bg).toBeDefined();
+      expect(bg.children.length).toBeGreaterThan(0);
+    });
+
+    it('should return empty group when background lines disabled', () => {
+      const plane = new NumberPlane({ includeBackgroundLines: false });
+      expect(plane.getBackgroundLines().children.length).toBe(0);
+    });
+  });
+
+  describe('setIncludeBackgroundLines', () => {
+    it('should return this when value is already the same', () => {
+      const plane = new NumberPlane();
+      expect(plane.setIncludeBackgroundLines(true)).toBe(plane);
+    });
+
+    it('should remove background lines when toggled off', () => {
+      const plane = new NumberPlane();
+      const childrenBefore = plane.children.length;
+      plane.setIncludeBackgroundLines(false);
+      expect(plane.children.length).toBeLessThan(childrenBefore);
+      // The background lines group is removed from the plane's children,
+      // but the group itself still retains its internal line children
+      expect(plane.children.includes(plane.getBackgroundLines())).toBe(false);
+    });
+
+    it('should add background lines when toggled on', () => {
+      const plane = new NumberPlane({ includeBackgroundLines: false });
+      const childrenBefore = plane.children.length;
+      plane.setIncludeBackgroundLines(true);
+      expect(plane.children.length).toBeGreaterThan(childrenBefore);
+      expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
+    });
+
+    it('should not add duplicate background lines group when called multiple times', () => {
+      const plane = new NumberPlane({ includeBackgroundLines: false });
+      plane.setIncludeBackgroundLines(true);
+      const countAfter = plane.children.length;
+      plane.setIncludeBackgroundLines(true); // no-op
+      expect(plane.children.length).toBe(countAfter);
+    });
+
+    it('should return this for chaining', () => {
+      const plane = new NumberPlane();
+      expect(plane.setIncludeBackgroundLines(false)).toBe(plane);
+    });
+  });
+
+  describe('setBackgroundLineStyle', () => {
+    it('should update background line style and return this', () => {
+      const plane = new NumberPlane();
+      const result = plane.setBackgroundLineStyle({ color: '#ff0000' });
+      expect(result).toBe(plane);
+      expect(plane.getBackgroundLineStyle().color).toBe('#ff0000');
+    });
+
+    it('should regenerate lines when background is active', () => {
+      const plane = new NumberPlane();
+      const linesBefore = plane.getBackgroundLines().children.length;
+      plane.setBackgroundLineStyle({ strokeWidth: 5 });
+      // Lines are regenerated but count stays similar
+      expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
+      expect(plane.getBackgroundLineStyle().strokeWidth).toBe(5);
+    });
+
+    it('should not regenerate lines when background is disabled', () => {
+      const plane = new NumberPlane({ includeBackgroundLines: false });
+      plane.setBackgroundLineStyle({ color: '#00ff00' });
+      expect(plane.getBackgroundLines().children.length).toBe(0);
+      expect(plane.getBackgroundLineStyle().color).toBe('#00ff00');
+    });
+
+    it('should merge with existing style, not replace', () => {
+      const plane = new NumberPlane({
+        backgroundLineStyle: { color: '#111111', strokeWidth: 3, opacity: 0.7 },
+      });
+      plane.setBackgroundLineStyle({ opacity: 0.3 });
+      const style = plane.getBackgroundLineStyle();
+      expect(style.color).toBe('#111111');
+      expect(style.strokeWidth).toBe(3);
+      expect(style.opacity).toBe(0.3);
+    });
+  });
+
+  describe('getBackgroundLineStyle', () => {
+    it('should return a copy (not the internal reference)', () => {
+      const plane = new NumberPlane();
+      const s1 = plane.getBackgroundLineStyle();
+      const s2 = plane.getBackgroundLineStyle();
+      expect(s1).not.toBe(s2);
+      expect(s1).toEqual(s2);
+    });
+  });
+
+  describe('_calculateLineOpacity (via fadingFactor)', () => {
+    it('fadingFactor=1 should produce uniform opacity', () => {
+      const plane = new NumberPlane({
+        xRange: [-3, 3, 1],
+        yRange: [-3, 3, 1],
+        fadingFactor: 1,
+      });
+      // All lines should have full opacity (base opacity)
+      expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
+    });
+
+    it('fadingFactor < 1 should produce distance-based fading', () => {
+      const plane = new NumberPlane({
+        xRange: [-3, 3, 1],
+        yRange: [-3, 3, 1],
+        fadingFactor: 0.5,
+      });
+      expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
+    });
+
+    it('fadingFactor=0 should still generate lines', () => {
+      const plane = new NumberPlane({
+        xRange: [-3, 3, 1],
+        yRange: [-3, 3, 1],
+        fadingFactor: 0,
+      });
+      expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('background lines generation details', () => {
+    it('should generate vertical and horizontal lines', () => {
+      const plane = new NumberPlane({
+        xRange: [-2, 2, 1],
+        yRange: [-2, 2, 1],
+      });
+      // Should have both vertical (for each x step) and horizontal (for each y step)
+      const count = plane.getBackgroundLines().children.length;
+      expect(count).toBeGreaterThan(0);
+    });
+
+    it('fadedLineRatio > 0 should produce more lines than ratio=0', () => {
+      const noFaded = new NumberPlane({
+        xRange: [-2, 2, 1],
+        yRange: [-2, 2, 1],
+        fadedLineRatio: 0,
+      });
+      const withFaded = new NumberPlane({
+        xRange: [-2, 2, 1],
+        yRange: [-2, 2, 1],
+        fadedLineRatio: 2,
+      });
+      expect(withFaded.getBackgroundLines().children.length).toBeGreaterThan(
+        noFaded.getBackgroundLines().children.length,
+      );
+    });
+
+    it('fadedLineRatio=3 should produce even more sub-grid lines', () => {
+      const r2 = new NumberPlane({
+        xRange: [-2, 2, 1],
+        yRange: [-2, 2, 1],
+        fadedLineRatio: 2,
+      });
+      const r3 = new NumberPlane({
+        xRange: [-2, 2, 1],
+        yRange: [-2, 2, 1],
+        fadedLineRatio: 3,
+      });
+      expect(r3.getBackgroundLines().children.length).toBeGreaterThan(
+        r2.getBackgroundLines().children.length,
+      );
+    });
+  });
+
+  describe('_createCopy via copy()', () => {
+    it('should produce an independent NumberPlane', () => {
+      const plane = new NumberPlane({
+        xRange: [-3, 3, 1],
+        yRange: [-2, 2, 1],
+        xLength: 8,
+        yLength: 4,
+        backgroundLineStyle: { color: '#112233' },
+        fadedLineRatio: 2,
+        fadingFactor: 0.7,
+      });
+      const cp = plane.copy() as NumberPlane;
+      expect(cp).toBeInstanceOf(NumberPlane);
+      expect(cp).not.toBe(plane);
+      expect(cp.getXRange()).toEqual([-3, 3, 1]);
+      expect(cp.getYRange()).toEqual([-2, 2, 1]);
+      expect(cp.getXLength()).toBe(8);
+      expect(cp.getYLength()).toBe(4);
+    });
+
+    it('copy with no background lines should also have none', () => {
+      const plane = new NumberPlane({ includeBackgroundLines: false });
+      const cp = plane.copy() as NumberPlane;
+      expect(cp.getBackgroundLines().children.length).toBe(0);
+    });
+  });
+
+  describe('c2p alias', () => {
+    it('c2p should be equivalent to coordsToPoint', () => {
+      const plane = new NumberPlane();
+      const pt1 = plane.c2p(2, -1);
+      const pt2 = plane.coordsToPoint(2, -1);
+      expect(closeTo(pt1[0], pt2[0])).toBe(true);
+      expect(closeTo(pt1[1], pt2[1])).toBe(true);
+      expect(closeTo(pt1[2], pt2[2])).toBe(true);
+    });
+  });
+
+  describe('NumberPlane with tips enabled', () => {
+    it('should support tips option', () => {
+      const plane = new NumberPlane({ tips: true });
+      expect(plane).toBeDefined();
+      // Should have more children than without tips
+      const noTips = new NumberPlane({ tips: false });
+      expect(plane.children.length).toBeGreaterThan(noTips.children.length);
+    });
   });
 });

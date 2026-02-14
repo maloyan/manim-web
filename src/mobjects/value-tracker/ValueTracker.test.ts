@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   ValueTracker,
   ComplexValueTracker,
+  ComplexValueTrackerOptions,
   valueTracker,
   complexValueTracker,
 } from './ValueTracker';
@@ -80,6 +81,63 @@ describe('ValueTracker', () => {
     const anim = vt.animate(10);
     expect(anim).toBeDefined();
     expect(typeof anim.interpolate).toBe('function');
+  });
+
+  it('animateTo interpolation changes value smoothly', () => {
+    const vt = new ValueTracker(0);
+    const anim = vt.animateTo(10);
+    anim.begin();
+    anim.interpolate(0);
+    expect(vt.getValue()).toBe(0);
+    anim.interpolate(0.5);
+    expect(vt.getValue()).toBe(5);
+    anim.interpolate(1);
+    expect(vt.getValue()).toBe(10);
+  });
+
+  it('animateTo begin captures current value as start', () => {
+    const vt = new ValueTracker(0);
+    const anim = vt.animateTo(10);
+    // Change value before begin
+    vt.setValue(2);
+    anim.begin();
+    // Now interpolation should start from 2
+    anim.interpolate(0.5);
+    expect(vt.getValue()).toBe(6); // 2 + (10 - 2) * 0.5
+    anim.interpolate(1);
+    expect(vt.getValue()).toBe(10);
+  });
+
+  it('animateTo with custom duration', () => {
+    const vt = new ValueTracker(0);
+    const anim = vt.animateTo(10, { duration: 3 });
+    expect(anim.duration).toBe(3);
+  });
+
+  it('setValue is a no-op when value is unchanged', () => {
+    const vt = new ValueTracker(5);
+    const result = vt.setValue(5);
+    expect(result).toBe(vt);
+    expect(vt.getValue()).toBe(5);
+  });
+
+  it('copy creates an independent ValueTracker with same value', () => {
+    const vt = new ValueTracker(42);
+    const c = vt.copy() as ValueTracker;
+    expect(c).toBeInstanceOf(ValueTracker);
+    expect(c.getValue()).toBe(42);
+    // Independent
+    c.setValue(100);
+    expect(vt.getValue()).toBe(42);
+  });
+
+  it('getCenter reflects shifted position', () => {
+    const vt = new ValueTracker(5);
+    vt.shift([1, 2, 3]);
+    const center = vt.getCenter();
+    expect(center[0]).toBeCloseTo(1);
+    expect(center[1]).toBeCloseTo(2);
+    expect(center[2]).toBeCloseTo(3);
   });
 });
 
@@ -202,6 +260,63 @@ describe('ComplexValueTracker', () => {
     const ct = new ComplexValueTracker();
     const anim = ct.animate({ re: 5, im: 5 });
     expect(anim).toBeDefined();
+  });
+
+  it('animateTo interpolation changes value smoothly', () => {
+    const ct = new ComplexValueTracker({ re: 0, im: 0 });
+    const anim = ct.animateTo({ re: 10, im: 20 });
+    anim.begin();
+    anim.interpolate(0);
+    expect(ct.getValue()).toEqual({ re: 0, im: 0 });
+    anim.interpolate(0.5);
+    expect(ct.getValue().re).toBeCloseTo(5);
+    expect(ct.getValue().im).toBeCloseTo(10);
+    anim.interpolate(1);
+    expect(ct.getValue()).toEqual({ re: 10, im: 20 });
+  });
+
+  it('animateTo begin captures current value as start', () => {
+    const ct = new ComplexValueTracker({ re: 0, im: 0 });
+    const anim = ct.animateTo({ re: 10, im: 10 });
+    // Change value before begin
+    ct.setValue({ re: 2, im: 4 });
+    anim.begin();
+    anim.interpolate(0.5);
+    expect(ct.getValue().re).toBeCloseTo(6); // 2 + (10 - 2) * 0.5
+    expect(ct.getValue().im).toBeCloseTo(7); // 4 + (10 - 4) * 0.5
+    anim.interpolate(1);
+    expect(ct.getValue()).toEqual({ re: 10, im: 10 });
+  });
+
+  it('setValue is a no-op when value is unchanged', () => {
+    const ct = new ComplexValueTracker({ re: 3, im: 4 });
+    const result = ct.setValue({ re: 3, im: 4 });
+    expect(result).toBe(ct);
+    expect(ct.getValue()).toEqual({ re: 3, im: 4 });
+  });
+
+  it('copy creates an independent ComplexValueTracker with same value', () => {
+    const ct = new ComplexValueTracker({ re: 5, im: 7 });
+    const c = ct.copy() as ComplexValueTracker;
+    expect(c).toBeInstanceOf(ComplexValueTracker);
+    expect(c.getValue()).toEqual({ re: 5, im: 7 });
+    // Independent
+    c.setValue({ re: 0, im: 0 });
+    expect(ct.getValue()).toEqual({ re: 5, im: 7 });
+  });
+
+  it('getCenter reflects shifted position plus complex value', () => {
+    const ct = new ComplexValueTracker({ re: 1, im: 2 });
+    ct.shift([3, 4, 5]);
+    const center = ct.getCenter();
+    expect(center[0]).toBeCloseTo(4); // re=1 + position.x=3
+    expect(center[1]).toBeCloseTo(6); // im=2 + position.y=4
+    expect(center[2]).toBeCloseTo(5); // position.z=5
+  });
+
+  it('constructs with options object that has no value', () => {
+    const ct = new ComplexValueTracker({ value: undefined } as ComplexValueTrackerOptions);
+    expect(ct.getValue()).toEqual({ re: 0, im: 0 });
   });
 });
 

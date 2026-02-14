@@ -1,5 +1,6 @@
+// @vitest-environment happy-dom
 import { describe, it, expect } from 'vitest';
-import { parseSVGPathData } from './svgPathParser';
+import { parseSVGPathData, svgToVMobjects } from './svgPathParser';
 
 // Helper: check that a point is close to expected within tolerance
 function expectPointClose(actual: [number, number], expected: [number, number], _tol = 1e-6) {
@@ -573,6 +574,468 @@ describe('parseSVGPathData', () => {
       const result = parseSVGPathData('M 3 7 L 10 0 L 10 10 Z');
       const sp = result[0];
       expectPointClose(sp[sp.length - 1], [3, 7]);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 6. Additional arc edge cases
+  // ─────────────────────────────────────────────────────────────────────────
+
+  describe('arc edge cases', () => {
+    it('degenerate arc with ry=0 produces a line', () => {
+      const result = parseSVGPathData('M 0 0 A 5 0 0 0 1 10 0');
+      const sp = result[0];
+      expect(sp).toHaveLength(4);
+      expectPointClose(sp[3], [10, 0]);
+    });
+
+    it('arc with non-zero rotation and elliptical radii', () => {
+      const result = parseSVGPathData('M 0 0 A 20 10 30 0 1 15 5');
+      const sp = result[0];
+      expect(sp.length).toBeGreaterThanOrEqual(4);
+      expectPointClose(sp[sp.length - 1], [15, 5]);
+    });
+
+    it('arc with sweep-flag=0 and large-arc-flag=0', () => {
+      const result = parseSVGPathData('M 0 0 A 10 10 0 0 0 10 10');
+      const sp = result[0];
+      expectPointClose(sp[sp.length - 1], [10, 10]);
+    });
+
+    it('arc with sweep-flag=0 and large-arc-flag=1', () => {
+      const result = parseSVGPathData('M 0 0 A 10 10 0 1 0 10 10');
+      const sp = result[0];
+      expectPointClose(sp[sp.length - 1], [10, 10]);
+    });
+
+    it('arc with sweep-flag=1 and large-arc-flag=1', () => {
+      const result = parseSVGPathData('M 0 0 A 10 10 0 1 1 10 10');
+      const sp = result[0];
+      expectPointClose(sp[sp.length - 1], [10, 10]);
+    });
+
+    it('multiple arc segments in one A command', () => {
+      const result = parseSVGPathData('M 0 0 A 5 5 0 0 1 10 0 5 5 0 0 1 20 0');
+      const sp = result[0];
+      expectPointClose(sp[sp.length - 1], [20, 0]);
+    });
+
+    it('relative arc (a) command', () => {
+      const result = parseSVGPathData('M 5 5 a 5 5 0 0 1 10 0');
+      const sp = result[0];
+      expectPointClose(sp[sp.length - 1], [15, 5]);
+    });
+
+    it('arc with negative radii (absolute values used)', () => {
+      const result = parseSVGPathData('M 0 0 A -10 -10 0 0 1 10 0');
+      const sp = result[0];
+      expectPointClose(sp[sp.length - 1], [10, 0]);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 7. Smooth quadratic (T/t) edge cases
+  // ─────────────────────────────────────────────────────────────────────────
+
+  describe('smooth quadratic (T/t) edge cases', () => {
+    it('T without prior Q uses current point as control', () => {
+      const result = parseSVGPathData('M 0 0 T 10 0');
+      const sp = result[0];
+      expect(sp).toHaveLength(4);
+      // No prior Q, so reflected cp = current point (0,0)
+      // cp1 = 0 + 2/3*(0-0) = 0, cp2 = 10 + 2/3*(0-10) = 10/3
+      expectPointClose(sp[1], [0, 0]);
+      expectPointClose(sp[2], [10 / 3, 0]);
+      expectPointClose(sp[3], [10, 0]);
+    });
+
+    it('chained T commands accumulate reflections', () => {
+      const result = parseSVGPathData('M 0 0 Q 5 10 10 0 T 20 0 T 30 0');
+      const sp = result[0];
+      expect(sp).toHaveLength(10);
+      expectPointClose(sp[3], [10, 0]);
+      expectPointClose(sp[6], [20, 0]);
+      expectPointClose(sp[9], [30, 0]);
+    });
+
+    it('relative t command accumulates reflections', () => {
+      const result = parseSVGPathData('M 0 0 Q 5 10 10 0 t 10 0 t 10 0');
+      const sp = result[0];
+      expectPointClose(sp[6], [20, 0]);
+      expectPointClose(sp[9], [30, 0]);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 8. Smooth cubic (S/s) edge cases
+  // ─────────────────────────────────────────────────────────────────────────
+
+  describe('smooth cubic (S/s) edge cases', () => {
+    it('S after L uses current point as reflected cp', () => {
+      const result = parseSVGPathData('M 0 0 L 10 0 S 15 5 20 0');
+      const sp = result[0];
+      // L doesn't set prevCmd to C/S, so reflected cp = current point (10,0)
+      expectPointClose(sp[4], [10, 0]);
+      expectPointClose(sp[5], [15, 5]);
+      expectPointClose(sp[6], [20, 0]);
+    });
+
+    it('chained S commands after C', () => {
+      const result = parseSVGPathData('M 0 0 C 0 5 5 5 5 0 S 10 -5 10 0 S 15 5 15 0');
+      const sp = result[0];
+      expect(sp).toHaveLength(10);
+      expectPointClose(sp[3], [5, 0]);
+      expectPointClose(sp[6], [10, 0]);
+      expectPointClose(sp[9], [15, 0]);
+    });
+
+    it('multiple S segments in one command', () => {
+      const result = parseSVGPathData('M 0 0 C 1 2 3 4 5 0 S 8 -2 10 0 12 2 15 0');
+      const sp = result[0];
+      expect(sp).toHaveLength(10);
+      expectPointClose(sp[9], [15, 0]);
+    });
+
+    it('relative s command', () => {
+      const result = parseSVGPathData('M 0 0 C 0 5 5 5 5 0 s 5 -5 5 0');
+      const sp = result[0];
+      // s relative: cp2=(5+5, 0-5)=(10,-5), end=(5+5, 0+0)=(10,0)
+      expectPointClose(sp[5], [10, -5]);
+      expectPointClose(sp[6], [10, 0]);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 9. Implicit LineTo after M
+  // ─────────────────────────────────────────────────────────────────────────
+
+  describe('implicit LineTo after M', () => {
+    it('relative m with implicit line-to segments', () => {
+      const result = parseSVGPathData('M 0 0 m 5 5 3 3 2 2');
+      // First sub-path: just M 0 0
+      // Second sub-path: m 5 5 starts at (5,5), then implicit l 3 3, l 2 2
+      expect(result).toHaveLength(2);
+      expectPointClose(result[1][0], [5, 5]);
+      expectPointClose(result[1][3], [8, 8]);
+      expectPointClose(result[1][6], [10, 10]);
+    });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// svgToVMobjects (lines 417-557)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('svgToVMobjects', () => {
+  /** Helper to create an SVG element from a string */
+  function createSVG(html: string): SVGElement {
+    const container = document.createElement('div');
+    container.innerHTML = html;
+    return container.querySelector('svg')! as unknown as SVGElement;
+  }
+
+  describe('basic path conversion', () => {
+    it('should convert a simple <path> to a VGroup with one child', () => {
+      const svg = createSVG('<svg><path d="M 0 0 L 10 0 L 10 10 Z"/></svg>');
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should return an empty VGroup for an empty SVG', () => {
+      const svg = createSVG('<svg></svg>');
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(0);
+    });
+
+    it('should convert multiple <path> elements', () => {
+      const svg = createSVG(
+        '<svg>' +
+          '<path d="M 0 0 L 5 0 L 5 5 Z"/>' +
+          '<path d="M 10 10 L 15 10 L 15 15 Z"/>' +
+          '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(2);
+    });
+
+    it('should skip paths with no d attribute', () => {
+      const svg = createSVG('<svg><path/></svg>');
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(0);
+    });
+  });
+
+  describe('options', () => {
+    it('should apply custom color', () => {
+      const svg = createSVG('<svg><path d="M 0 0 L 10 0 L 10 10 Z"/></svg>');
+      const group = svgToVMobjects(svg, { color: '#ff0000' });
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should apply custom strokeWidth', () => {
+      const svg = createSVG('<svg><path d="M 0 0 L 10 0 L 10 10 Z"/></svg>');
+      const group = svgToVMobjects(svg, { strokeWidth: 8 });
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should apply scale factor', () => {
+      const svg = createSVG('<svg><path d="M 0 0 L 100 0 L 100 100 Z"/></svg>');
+      const group1 = svgToVMobjects(svg, { scale: 1 });
+      const group2 = svgToVMobjects(svg, { scale: 2 });
+      expect(group1.submobjects.length).toBe(1);
+      expect(group2.submobjects.length).toBe(1);
+    });
+
+    it('should apply flipY=false', () => {
+      const svg = createSVG('<svg><path d="M 0 0 L 10 0 L 10 10 Z"/></svg>');
+      const group = svgToVMobjects(svg, { flipY: false });
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should apply fillOpacity', () => {
+      const svg = createSVG('<svg><path d="M 0 0 L 10 0 L 10 10 Z"/></svg>');
+      const group = svgToVMobjects(svg, { fillOpacity: 0.5 });
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should use defaults when no options provided', () => {
+      const svg = createSVG('<svg><path d="M 0 0 L 10 0 L 10 10 Z"/></svg>');
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+  });
+
+  describe('viewBox handling', () => {
+    it('should parse viewBox and apply scale', () => {
+      const svg = createSVG(
+        '<svg viewBox="0 0 1000 1000"><path d="M 0 0 L 500 0 L 500 500 Z"/></svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should handle viewBox with non-standard width', () => {
+      const svg = createSVG(
+        '<svg viewBox="0 0 2000 1000"><path d="M 0 0 L 100 0 L 100 100 Z"/></svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should handle missing viewBox', () => {
+      const svg = createSVG('<svg><path d="M 0 0 L 10 0 L 10 10 Z"/></svg>');
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+  });
+
+  describe('defs and use elements', () => {
+    it('should resolve <use> elements referencing <defs> paths', () => {
+      const svg = createSVG(
+        '<svg>' +
+          '<defs><path id="glyph1" d="M 0 0 L 10 0 L 10 10 Z"/></defs>' +
+          '<use xlink:href="#glyph1"/>' +
+          '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should resolve <use> with href (no xlink)', () => {
+      const svg = createSVG(
+        '<svg>' +
+          '<defs><path id="g2" d="M 0 0 L 5 5 L 10 0 Z"/></defs>' +
+          '<use href="#g2"/>' +
+          '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should handle <use> with x/y offsets', () => {
+      const svg = createSVG(
+        '<svg>' +
+          '<defs><path id="g3" d="M 0 0 L 5 0 L 5 5 Z"/></defs>' +
+          '<use href="#g3" x="100" y="200"/>' +
+          '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should skip <use> with unknown href', () => {
+      const svg = createSVG(
+        '<svg>' +
+          '<defs><path id="known" d="M 0 0 L 5 5 Z"/></defs>' +
+          '<use href="#unknown"/>' +
+          '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(0);
+    });
+
+    it('should skip <use> with no href at all', () => {
+      const svg = createSVG(
+        '<svg>' + '<defs><path id="nouse" d="M 0 0 L 5 5 Z"/></defs>' + '<use/>' + '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(0);
+    });
+
+    it('should skip <defs> paths without id', () => {
+      const svg = createSVG('<svg>' + '<defs><path d="M 0 0 L 5 5 Z"/></defs>' + '</svg>');
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(0);
+    });
+
+    it('should skip <defs> paths without d', () => {
+      const svg = createSVG(
+        '<svg>' + '<defs><path id="nod"/></defs>' + '<use href="#nod"/>' + '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(0);
+    });
+  });
+
+  describe('nested <g> transforms', () => {
+    it('should apply translate transform from <g>', () => {
+      const svg = createSVG(
+        '<svg>' +
+          '<g transform="translate(100, 200)">' +
+          '<path d="M 0 0 L 10 0 L 10 10 Z"/>' +
+          '</g>' +
+          '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should handle nested <g> transforms', () => {
+      const svg = createSVG(
+        '<svg>' +
+          '<g transform="translate(10, 20)">' +
+          '<g transform="translate(5, 5)">' +
+          '<path d="M 0 0 L 3 0 L 3 3 Z"/>' +
+          '</g>' +
+          '</g>' +
+          '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should handle <g> without transform', () => {
+      const svg = createSVG(
+        '<svg>' + '<g>' + '<path d="M 0 0 L 10 0 L 10 10 Z"/>' + '</g>' + '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+  });
+
+  describe('rect elements', () => {
+    it('should convert <rect> to VMobject', () => {
+      const svg = createSVG('<svg><rect x="10" y="20" width="100" height="50"/></svg>');
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should skip <rect> with zero width', () => {
+      const svg = createSVG('<svg><rect x="0" y="0" width="0" height="50"/></svg>');
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(0);
+    });
+
+    it('should skip <rect> with zero height', () => {
+      const svg = createSVG('<svg><rect x="0" y="0" width="50" height="0"/></svg>');
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(0);
+    });
+
+    it('should handle <rect> with no attributes (defaults to 0)', () => {
+      const svg = createSVG('<svg><rect/></svg>');
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(0);
+    });
+
+    it('should handle <rect> inside transformed <g>', () => {
+      const svg = createSVG(
+        '<svg>' +
+          '<g transform="translate(50, 50)">' +
+          '<rect x="0" y="0" width="10" height="10"/>' +
+          '</g>' +
+          '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+    });
+  });
+
+  describe('pathDataToVMobject edge cases', () => {
+    it('should return null for empty path data (via svgToVMobjects)', () => {
+      const svg = createSVG('<svg><path d=""/></svg>');
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(0);
+    });
+
+    it('should return null for path with only M (single point)', () => {
+      const svg = createSVG('<svg><path d="M 5 5"/></svg>');
+      const group = svgToVMobjects(svg);
+      // Single point -> allPoints has length 1 -> returns null
+      expect(group.submobjects.length).toBe(0);
+    });
+
+    it('should handle path with multiple sub-paths', () => {
+      const svg = createSVG(
+        '<svg><path d="M 0 0 L 10 0 L 10 10 Z M 20 20 L 30 20 L 30 30 Z"/></svg>',
+      );
+      const group = svgToVMobjects(svg);
+      // Both sub-paths merged into a single VMobject
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should handle flipY=true (default) flipping Y coordinates', () => {
+      const svg = createSVG('<svg><path d="M 0 0 L 10 10"/></svg>');
+      const group = svgToVMobjects(svg, { flipY: true });
+      expect(group.submobjects.length).toBe(1);
+    });
+
+    it('should handle flipY=false keeping Y coordinates', () => {
+      const svg = createSVG('<svg><path d="M 0 0 L 10 10"/></svg>');
+      const group = svgToVMobjects(svg, { flipY: false });
+      expect(group.submobjects.length).toBe(1);
+    });
+  });
+
+  describe('MathJax-like SVG structure', () => {
+    it('should handle typical MathJax SVG with defs, use, and g elements', () => {
+      const svg = createSVG(
+        '<svg viewBox="0 0 1000 500">' +
+          '<defs>' +
+          '<path id="MJX-1" d="M 220 462 Q 220 500 242 535 L 365 368 Z"/>' +
+          '<path id="MJX-2" d="M 100 200 L 200 200 L 200 300 Z"/>' +
+          '</defs>' +
+          '<g transform="translate(0, 0)">' +
+          '<use xlink:href="#MJX-1"/>' +
+          '<use xlink:href="#MJX-2" x="500" y="0"/>' +
+          '</g>' +
+          '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(2);
+    });
+
+    it('should handle mixed path and rect elements in nested groups', () => {
+      const svg = createSVG(
+        '<svg>' +
+          '<g transform="translate(10, 20)">' +
+          '<path d="M 0 0 L 5 0 L 5 5 Z"/>' +
+          '<rect x="10" y="10" width="5" height="5"/>' +
+          '</g>' +
+          '</svg>',
+      );
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(2);
     });
   });
 });

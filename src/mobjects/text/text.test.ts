@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import * as THREE from 'three';
 import { Text } from './Text';
 
 /** Type-safe access to private members in tests */
@@ -459,6 +460,391 @@ describe('Text', () => {
       t.position.set(1, 2, 3);
       const center = t.getCenter();
       expect(center).toEqual([1, 2, 3]);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // _renderToCanvas – text alignment branches
+  // ---------------------------------------------------------------------------
+
+  describe('_renderToCanvas alignment branches', () => {
+    it('should use left alignment (textX = padding)', () => {
+      const t = new Text({ text: 'Left aligned', textAlign: 'left' });
+      const internal = t as unknown as TextInternal;
+      expect(internal._textAlign).toBe('left');
+      // Width and height should be positive (canvas was rendered)
+      expect(t.getWidth()).toBeGreaterThan(0);
+      expect(t.getHeight()).toBeGreaterThan(0);
+    });
+
+    it('should use right alignment (textX = width - padding)', () => {
+      const t = new Text({ text: 'Right aligned', textAlign: 'right' });
+      const internal = t as unknown as TextInternal;
+      expect(internal._textAlign).toBe('right');
+      expect(t.getWidth()).toBeGreaterThan(0);
+    });
+
+    it('should use center alignment by default (textX = width / 2)', () => {
+      const t = new Text({ text: 'Center aligned' });
+      expect(t.getWidth()).toBeGreaterThan(0);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // _renderToCanvas – stroke path
+  // ---------------------------------------------------------------------------
+
+  describe('_renderToCanvas with strokeWidth > 0', () => {
+    it('should invoke strokeText when strokeWidth > 0 and letterSpacing == 0', () => {
+      const t = new Text({ text: 'Stroked', strokeWidth: 3 });
+      // Access internal canvas context to verify strokeText was called
+      const internal = t as unknown as TextInternal;
+      const ctx = internal._ctx!;
+      expect(ctx.strokeText).toHaveBeenCalled();
+    });
+
+    it('should invoke fillText when strokeWidth is 0', () => {
+      const t = new Text({ text: 'Filled', strokeWidth: 0 });
+      const internal = t as unknown as TextInternal;
+      const ctx = internal._ctx!;
+      expect(ctx.fillText).toHaveBeenCalled();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // _drawTextWithLetterSpacing – letter spacing rendering
+  // ---------------------------------------------------------------------------
+
+  describe('_drawTextWithLetterSpacing', () => {
+    it('should render with letter spacing and center alignment', () => {
+      const t = new Text({ text: 'ABC', letterSpacing: 5, textAlign: 'center' });
+      const internal = t as unknown as TextInternal;
+      const ctx = internal._ctx!;
+      // fillText is called once per character for letter spacing
+      expect(ctx.fillText).toHaveBeenCalled();
+      expect(t.getWidth()).toBeGreaterThan(0);
+    });
+
+    it('should render with letter spacing and right alignment', () => {
+      const t = new Text({ text: 'ABC', letterSpacing: 5, textAlign: 'right' });
+      const internal = t as unknown as TextInternal;
+      const ctx = internal._ctx!;
+      expect(ctx.fillText).toHaveBeenCalled();
+    });
+
+    it('should render with letter spacing and left alignment', () => {
+      const t = new Text({ text: 'ABC', letterSpacing: 5, textAlign: 'left' });
+      const internal = t as unknown as TextInternal;
+      const ctx = internal._ctx!;
+      expect(ctx.fillText).toHaveBeenCalled();
+    });
+
+    it('should render stroke per character when letterSpacing > 0 and strokeWidth > 0', () => {
+      const t = new Text({ text: 'XY', letterSpacing: 3, strokeWidth: 2 });
+      const internal = t as unknown as TextInternal;
+      const ctx = internal._ctx!;
+      expect(ctx.strokeText).toHaveBeenCalled();
+      expect(ctx.fillText).toHaveBeenCalled();
+    });
+
+    it('should handle empty string with letter spacing', () => {
+      const t = new Text({ text: '', letterSpacing: 5 });
+      expect(t.getWidth()).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should handle single character with letter spacing', () => {
+      const t = new Text({ text: 'A', letterSpacing: 10 });
+      const internal = t as unknown as TextInternal;
+      const ctx = internal._ctx!;
+      expect(ctx.fillText).toHaveBeenCalled();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Multi-line rendering with different options
+  // ---------------------------------------------------------------------------
+
+  describe('multi-line rendering', () => {
+    it('should render multi-line text with left alignment', () => {
+      const t = new Text({ text: 'Line1\nLine2', textAlign: 'left' });
+      expect(t.getHeight()).toBeGreaterThan(0);
+    });
+
+    it('should render multi-line text with right alignment', () => {
+      const t = new Text({ text: 'Line1\nLine2', textAlign: 'right' });
+      expect(t.getHeight()).toBeGreaterThan(0);
+    });
+
+    it('should render multi-line text with letter spacing', () => {
+      const t = new Text({ text: 'AB\nCD', letterSpacing: 5, textAlign: 'center' });
+      expect(t.getHeight()).toBeGreaterThan(0);
+    });
+
+    it('should render multi-line text with strokeWidth > 0', () => {
+      const t = new Text({ text: 'A\nB', strokeWidth: 2 });
+      const internal = t as unknown as TextInternal;
+      const ctx = internal._ctx!;
+      expect(ctx.strokeText).toHaveBeenCalled();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // _createThreeObject, _syncMaterialToThree, getTextureMesh
+  // ---------------------------------------------------------------------------
+
+  describe('Three.js integration', () => {
+    it('getTextureMesh should return null before _createThreeObject is called', () => {
+      const t = new Text({ text: 'Mesh' });
+      // Before getThreeObject() is called, _mesh is null
+      expect(t.getTextureMesh()).toBeNull();
+    });
+
+    it('getTextureMesh should return a Mesh after Three.js object is created', () => {
+      const t = new Text({ text: 'Mesh' });
+      t.getThreeObject();
+      const mesh = t.getTextureMesh();
+      expect(mesh).not.toBeNull();
+      expect(mesh).toBeInstanceOf(THREE.Mesh);
+    });
+
+    it('getGlyphGroup should return null when no glyphs loaded', () => {
+      const t = new Text({ text: 'No glyphs' });
+      expect(t.getGlyphGroup()).toBeNull();
+    });
+
+    it('loadGlyphs should return null when no fontUrl provided', async () => {
+      const t = new Text({ text: 'No URL' });
+      const result = await t.loadGlyphs();
+      expect(result).toBeNull();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // _syncMaterialToThree
+  // ---------------------------------------------------------------------------
+
+  describe('_syncMaterialToThree', () => {
+    it('should handle canvasDirty flag and re-render canvas', () => {
+      const t = new Text({ text: 'Sync' });
+      const internal = t as unknown as {
+        _canvasDirty: boolean;
+        _syncMaterialToThree(): void;
+        _ctx: CanvasRenderingContext2D | null;
+      };
+
+      // After construction, canvasDirty should be false
+      expect(internal._canvasDirty).toBe(false);
+
+      // Mark dirty and call sync
+      internal._canvasDirty = true;
+      internal._syncMaterialToThree();
+
+      // After sync, canvasDirty should be cleared
+      expect(internal._canvasDirty).toBe(false);
+    });
+
+    it('should update material opacity when mesh exists', () => {
+      const t = new Text({ text: 'Opacity' });
+      t.getThreeObject(); // Force mesh creation
+      const internal = t as unknown as {
+        _syncMaterialToThree(): void;
+        _opacity: number;
+        _mesh: { material: { opacity: number } } | null;
+      };
+
+      expect(internal._mesh).not.toBeNull();
+      internal._opacity = 0.5;
+      internal._syncMaterialToThree();
+      expect(internal._mesh!.material.opacity).toBe(0.5);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // _updateMesh (called from setText / setFontSize / setFontFamily)
+  // ---------------------------------------------------------------------------
+
+  describe('_updateMesh', () => {
+    it('setText triggers _updateMesh to resize geometry', () => {
+      const t = new Text({ text: 'Short' });
+      t.getThreeObject(); // Force mesh creation
+      const widthBefore = t.getWidth();
+      t.setText('A much longer text string here');
+      const widthAfter = t.getWidth();
+      // The width should change (longer text = wider)
+      expect(widthAfter).not.toBe(widthBefore);
+    });
+
+    it('setFontSize triggers _updateMesh', () => {
+      const t = new Text({ text: 'Scale' });
+      t.getThreeObject(); // Force mesh creation
+      const heightBefore = t.getHeight();
+      t.setFontSize(96);
+      const heightAfter = t.getHeight();
+      expect(heightAfter).not.toBe(heightBefore);
+    });
+
+    it('setFontFamily triggers _updateMesh', () => {
+      const t = new Text({ text: 'Family' });
+      t.getThreeObject(); // Force mesh creation
+      // Just ensure it doesn't throw
+      expect(() => t.setFontFamily('monospace')).not.toThrow();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // dispose with mesh (lines 575-576)
+  // ---------------------------------------------------------------------------
+
+  describe('dispose with mesh resources', () => {
+    it('should dispose texture, geometry, and material when mesh exists', () => {
+      const t = new Text({ text: 'Dispose with mesh' });
+      // Force Three.js object creation (lazy init)
+      t.getThreeObject();
+
+      const internal = t as unknown as {
+        _mesh: THREE.Mesh | null;
+        _texture: THREE.CanvasTexture | null;
+        _canvas: HTMLCanvasElement | null;
+        _ctx: CanvasRenderingContext2D | null;
+      };
+
+      expect(internal._mesh).not.toBeNull();
+      const geoDispose = vi.spyOn(internal._mesh!.geometry, 'dispose');
+      const matDispose = vi.spyOn(internal._mesh!.material as THREE.Material, 'dispose');
+      t.dispose();
+      expect(geoDispose).toHaveBeenCalled();
+      expect(matDispose).toHaveBeenCalled();
+      expect(internal._canvas).toBeNull();
+      expect(internal._ctx).toBeNull();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // _measureText edge cases
+  // ---------------------------------------------------------------------------
+
+  describe('_measureText', () => {
+    it('should account for letterSpacing in line width measurement', () => {
+      const noSpacing = new Text({ text: 'ABCDEF', letterSpacing: 0 });
+      const withSpacing = new Text({ text: 'ABCDEF', letterSpacing: 10 });
+      // With letter spacing, measured width should be larger
+      expect(withSpacing.getWidth()).toBeGreaterThan(noSpacing.getWidth());
+    });
+
+    it('should return empty lines for empty text', () => {
+      const t = new Text({ text: '' });
+      const measured = (t as unknown as TextInternal)._measureText();
+      expect(measured.lines).toEqual(['']);
+    });
+
+    it('should handle ctx being null gracefully', () => {
+      const t = new Text({ text: 'Test' });
+      const internal = t as unknown as {
+        _ctx: CanvasRenderingContext2D | null;
+        _measureText(): { lines: string[]; width: number; height: number };
+      };
+      internal._ctx = null;
+      const result = internal._measureText();
+      expect(result).toEqual({ lines: [], width: 0, height: 0 });
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // _renderToCanvas when canvas/ctx is null
+  // ---------------------------------------------------------------------------
+
+  describe('_renderToCanvas null guards', () => {
+    it('should return early if canvas is null', () => {
+      const t = new Text({ text: 'Guard' });
+      const internal = t as unknown as {
+        _canvas: HTMLCanvasElement | null;
+        _renderToCanvas(): void;
+      };
+      internal._canvas = null;
+      // Should not throw
+      expect(() => internal._renderToCanvas()).not.toThrow();
+    });
+
+    it('should return early if ctx is null', () => {
+      const t = new Text({ text: 'Guard' });
+      const internal = t as unknown as {
+        _ctx: CanvasRenderingContext2D | null;
+        _renderToCanvas(): void;
+      };
+      internal._ctx = null;
+      expect(() => internal._renderToCanvas()).not.toThrow();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // _drawTextWithLetterSpacing null ctx guard
+  // ---------------------------------------------------------------------------
+
+  describe('_drawTextWithLetterSpacing null guard', () => {
+    it('should return early if ctx is null', () => {
+      const t = new Text({ text: 'Guard', letterSpacing: 5 });
+      const internal = t as unknown as {
+        _ctx: CanvasRenderingContext2D | null;
+        _drawTextWithLetterSpacing(text: string, startX: number, y: number, fontSize: number): void;
+      };
+      internal._ctx = null;
+      expect(() => internal._drawTextWithLetterSpacing('Test', 0, 0, 48)).not.toThrow();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // _updateMesh when no mesh
+  // ---------------------------------------------------------------------------
+
+  describe('_updateMesh when no mesh', () => {
+    it('should return early if _mesh is null', () => {
+      const t = new Text({ text: 'No mesh' });
+      const internal = t as unknown as {
+        _mesh: THREE.Mesh | null;
+        _updateMesh(): void;
+      };
+      internal._mesh = null;
+      expect(() => internal._updateMesh()).not.toThrow();
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // _createThreeObject
+  // ---------------------------------------------------------------------------
+
+  describe('_createThreeObject', () => {
+    it('should return a group when canvas is null', () => {
+      const t = new Text({ text: 'Test' });
+      const internal = t as unknown as {
+        _canvas: HTMLCanvasElement | null;
+        _createThreeObject(): THREE.Object3D;
+      };
+      internal._canvas = null;
+      const result = internal._createThreeObject();
+      expect(result).toBeInstanceOf(THREE.Group);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Texture update on re-render
+  // ---------------------------------------------------------------------------
+
+  describe('texture update', () => {
+    it('should set texture.needsUpdate when texture exists during render', () => {
+      const t = new Text({ text: 'Texture' });
+      t.getThreeObject(); // Force mesh + texture creation
+      const internal = t as unknown as {
+        _texture: THREE.CanvasTexture | null;
+        _canvasDirty: boolean;
+        _renderToCanvas(): void;
+      };
+      expect(internal._texture).not.toBeNull();
+      // Manually set a mock texture with needsUpdate property
+      const mockTexture = { needsUpdate: false } as unknown as THREE.CanvasTexture;
+      internal._texture = mockTexture;
+      internal._canvasDirty = true;
+      internal._renderToCanvas();
+      expect(mockTexture.needsUpdate).toBe(true);
     });
   });
 
