@@ -1,12 +1,11 @@
 node_modules/
 dist/
 docs-src/
-website/node_modules/
-website/build/
-website/.docusaurus/
-website/docs/api/
-website/api/
-website/docs/examples/
+docs/api/
+docs/node_modules/
+docs/build/
+docs/.docusaurus/
+docs/docs/examples/
 coverage/
 .vite/
 *.log
