@@ -5,6 +5,7 @@ website/node_modules/
 website/build/
 website/.docusaurus/
 website/docs/api/
+website/api/
 website/docs/examples/
 coverage/
 .vite/
