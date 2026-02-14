@@ -1,40 +1,43 @@
 # Agent Instructions
 
-This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
+**manim-web** — Mathematical animation library for the browser (TypeScript, Three.js, KaTeX).
 
-## Quick Reference
+## Project Commands
 
 ```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --status in_progress  # Claim work
-bd close <id>         # Complete work
-bd sync               # Sync with git
+npm run dev               # Start Vite dev server
+npm run build             # TypeScript compile + Vite build
+npm run typecheck         # Type-check without emitting
+npm test                  # Run unit tests (vitest)
+npm run test:coverage     # Run tests with coverage report
+npm run test:integration  # Run Playwright smoke tests
+npm run lint              # ESLint
+npm run format:check      # Prettier check
+npm run docs              # Generate example docs + build Docusaurus site
 ```
 
-## Landing the Plane (Session Completion)
+## Architecture
 
-**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
+- `src/core/` — Mobject, VMobject, Group, VGroup, Scene, Camera, Renderer
+- `src/animation/` — Animation base, Transform, FadeIn/Out, Create, etc.
+- `src/mobjects/` — Geometry, graphing, text, SVG, table, matrix, probability
+- `src/integrations/` — React and Vue components
+- `src/utils/` — Math helpers, vectors, triangulation, skeletonization
+- `examples/` — HTML+TS example pairs (auto-generated docs from these)
+- `docs/` — Docusaurus documentation site
+- `tools/py2ts.cjs` — Python Manim to TypeScript converter
 
-**MANDATORY WORKFLOW:**
+## Testing
 
-1. **File issues for remaining work** - Create issues for anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished work, update in-progress items
-4. **PUSH TO REMOTE** - This is MANDATORY:
-   ```bash
-   git pull --rebase
-   bd sync
-   git push
-   git status  # MUST show "up to date with origin"
-   ```
-5. **Clean up** - Clear stashes, prune remote branches
-6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
+- Unit tests live alongside source: `src/**/*.test.ts`
+- Use `vitest` with `happy-dom` environment for DOM-dependent tests
+- Add `// @vitest-environment happy-dom` at top of test files that need DOM/canvas
+- Coverage config in `vitest.config.ts` (v8 provider, lcov reporter)
+- Integration smoke test: `tests/integration/smoke.spec.ts`
 
-**CRITICAL RULES:**
-- Work is NOT complete until `git push` succeeds
-- NEVER stop before pushing - that leaves work stranded locally
-- NEVER say "ready to push when you are" - YOU must push
-- If push fails, resolve and retry until it succeeds
+## Code Style
 
+- ESLint + Prettier enforced via pre-commit hook (husky + lint-staged)
+- Max 500 lines per file (eslint `max-lines` rule)
+- No `any` types (`@typescript-eslint/no-explicit-any`)
+- camelCase naming convention for methods/properties
