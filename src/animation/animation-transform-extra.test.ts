@@ -1,18 +1,39 @@
 import { describe, it, expect } from 'vitest';
+import * as THREE from 'three';
 import { VMobject } from '../core/VMobject';
+import { Circle } from '../mobjects/geometry/Circle';
 import {
   ApplyFunction,
   applyFunction,
+  ApplyMethod,
+  applyMethod,
   ApplyMatrix,
   applyMatrix,
   FadeTransform,
   fadeTransform,
+  FadeTransformPieces,
+  fadeTransformPieces,
   ClockwiseTransform,
   clockwiseTransform,
   CounterclockwiseTransform,
   counterclockwiseTransform,
   TransformFromCopy,
   transformFromCopy,
+  Swap,
+  swap,
+  CyclicReplace,
+  cyclicReplace,
+  ScaleInPlace,
+  scaleInPlace,
+  ShrinkToCenter,
+  shrinkToCenter,
+  Restore,
+  restore,
+  MobjectWithSavedState,
+  FadeToColor,
+  fadeToColor,
+  TransformAnimations,
+  transformAnimations,
 } from './transform/TransformExtensions';
 import {
   TransformMatchingShapes,
@@ -760,5 +781,623 @@ describe('TransformMatchingTex', () => {
     const anim = transformMatchingTex(sq(), sq(), { transformMismatches: true });
     expect(anim).toBeInstanceOf(TransformMatchingTex);
     expect(anim.transformMismatches).toBe(true);
+  });
+});
+
+// ── ApplyMethod ────────────────────────────────────────────────────────────
+
+describe('ApplyMethod', () => {
+  it('creates a target by copying and calling the method', () => {
+    const c = new Circle({ radius: 1 });
+    c.position.set(0, 0, 0);
+    const anim = new ApplyMethod(c, { methodName: 'shift', args: [[3, 0, 0]] });
+    expect(anim.methodName).toBe('shift');
+    expect(anim.args).toEqual([[3, 0, 0]]);
+  });
+
+  it('transforms toward target after calling method on copy', () => {
+    const c = new Circle({ radius: 1, color: '#ff0000' });
+    c.opacity = 1;
+    c.position.set(0, 0, 0);
+    const anim = new ApplyMethod(c, { methodName: 'setColor', args: ['#0000ff'] });
+    anim.begin();
+    anim.finish();
+    // After finish, color should match the target (which had setColor called)
+    expect(c.color.toLowerCase()).toBe('#0000ff');
+  });
+
+  it('handles non-existent method gracefully', () => {
+    const c = new Circle({ radius: 1 });
+    // Non-existent method should just create a copy without calling anything
+    const anim = new ApplyMethod(c, { methodName: 'nonExistentMethod' });
+    expect(anim.methodName).toBe('nonExistentMethod');
+    expect(anim.args).toEqual([]);
+  });
+
+  it('defaults args to empty array', () => {
+    const c = new Circle({ radius: 1 });
+    const anim = new ApplyMethod(c, { methodName: 'setColor' });
+    expect(anim.args).toEqual([]);
+  });
+
+  it('factory creates ApplyMethod', () => {
+    const c = new Circle({ radius: 1 });
+    const anim = applyMethod(c, 'setColor', ['#ff0000'], { duration: 2 });
+    expect(anim).toBeInstanceOf(ApplyMethod);
+    expect(anim.methodName).toBe('setColor');
+    expect(anim.duration).toBeCloseTo(2, 5);
+  });
+});
+
+// ── FadeTransformPieces ────────────────────────────────────────────────────
+
+describe('FadeTransformPieces', () => {
+  it('stores target and defaults', () => {
+    const s = sq();
+    const t = sq();
+    const anim = new FadeTransformPieces(s, t);
+    expect(anim.target).toBe(t);
+    expect(anim.duration).toBe(1);
+  });
+
+  it('handles single piece (no submobjects) with fade V-curve', () => {
+    const s = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 1, 0],
+      [0, 1, 0],
+    ]);
+    s.opacity = 1;
+    const t = vm([
+      [2, 0, 0],
+      [3, 0, 0],
+      [3, 1, 0],
+      [2, 1, 0],
+    ]);
+    t.opacity = 0.8;
+
+    const anim = new FadeTransformPieces(s, t);
+    anim.begin();
+
+    // First half: fading out
+    anim.interpolate(0);
+    expect(s.opacity).toBeCloseTo(1, 3);
+    anim.interpolate(0.25);
+    expect(s.opacity).toBeCloseTo(0.5, 3);
+    anim.interpolate(0.5);
+    expect(s.opacity).toBeCloseTo(0, 3);
+
+    // Second half: fading in toward target opacity
+    anim.interpolate(0.75);
+    expect(s.opacity).toBeCloseTo(0.4, 3); // 0.8 * (2*0.75 - 1) = 0.8*0.5
+    anim.interpolate(1);
+    expect(s.opacity).toBeCloseTo(0.8, 3);
+  });
+
+  it('handles submobjects (pieces) independently', () => {
+    const c1 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    c1.opacity = 1;
+    const c2 = vm([
+      [0, 1, 0],
+      [1, 1, 0],
+    ]);
+    c2.opacity = 1;
+    const src = vgroup(c1, c2);
+
+    const t1 = vm([
+      [2, 0, 0],
+      [3, 0, 0],
+    ]);
+    t1.opacity = 0.6;
+    const t2 = vm([
+      [2, 1, 0],
+      [3, 1, 0],
+    ]);
+    t2.opacity = 0.4;
+    const tgt = vgroup(t1, t2);
+
+    const anim = new FadeTransformPieces(src, tgt);
+    anim.begin();
+    anim.interpolate(0.5);
+    // At alpha 0.5 both children should have near-zero opacity (mid-fade)
+    expect(c1.opacity).toBeCloseTo(0, 3);
+    expect(c2.opacity).toBeCloseTo(0, 3);
+
+    anim.interpolate(1);
+    expect(c1.opacity).toBeCloseTo(0.6, 3);
+    expect(c2.opacity).toBeCloseTo(0.4, 3);
+  });
+
+  it('finish sets final target points and opacity for submobjects', () => {
+    const c1 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    c1.opacity = 1;
+    const src = vgroup(c1);
+
+    const t1 = vm([
+      [5, 5, 0],
+      [6, 5, 0],
+    ]);
+    t1.opacity = 0.3;
+    const tgt = vgroup(t1);
+
+    const anim = new FadeTransformPieces(src, tgt);
+    anim.begin();
+    anim.finish();
+    expect(c1.opacity).toBeCloseTo(0.3, 5);
+    expect(anim.isFinished()).toBe(true);
+  });
+
+  it('finish sets final state for single-piece (no submobjects)', () => {
+    const s = vm([[0, 0, 0]]);
+    s.opacity = 1;
+    const t = vm([[5, 5, 0]]);
+    t.opacity = 0.5;
+
+    const anim = new FadeTransformPieces(s, t);
+    anim.begin();
+    anim.finish();
+    expect(s.opacity).toBeCloseTo(0.5, 5);
+    expect(anim.isFinished()).toBe(true);
+  });
+
+  it('handles more source children than target children', () => {
+    const c1 = vm([[0, 0, 0]]);
+    const c2 = vm([[1, 1, 0]]);
+    const c3 = vm([[2, 2, 0]]);
+    const src = vgroup(c1, c2, c3);
+
+    const t1 = vm([[5, 0, 0]]);
+    const tgt = vgroup(t1);
+
+    const anim = new FadeTransformPieces(src, tgt);
+    anim.begin();
+    anim.interpolate(0.5);
+    anim.finish();
+    expect(anim.isFinished()).toBe(true);
+  });
+
+  it('handles more target children than source children', () => {
+    const c1 = vm([[0, 0, 0]]);
+    const src = vgroup(c1);
+
+    const t1 = vm([[5, 0, 0]]);
+    const t2 = vm([[6, 0, 0]]);
+    const t3 = vm([[7, 0, 0]]);
+    const tgt = vgroup(t1, t2, t3);
+
+    const anim = new FadeTransformPieces(src, tgt);
+    anim.begin();
+    anim.interpolate(0.5);
+    anim.finish();
+    expect(anim.isFinished()).toBe(true);
+  });
+
+  it('factory creates FadeTransformPieces', () => {
+    const anim = fadeTransformPieces(sq(), sq());
+    expect(anim).toBeInstanceOf(FadeTransformPieces);
+  });
+});
+
+// ── Swap ───────────────────────────────────────────────────────────────────
+
+describe('Swap', () => {
+  it('stores defaults', () => {
+    const m1 = sq();
+    const m2 = sq();
+    const anim = new Swap(m1, m2);
+    expect(anim.mobject).toBe(m1);
+    expect(anim.mobject2).toBe(m2);
+    expect(anim.pathArc).toBeCloseTo(Math.PI / 2, 5);
+    expect(anim.duration).toBe(1);
+  });
+
+  it('accepts custom pathArc', () => {
+    const anim = new Swap(sq(), sq(), { pathArc: Math.PI });
+    expect(anim.pathArc).toBeCloseTo(Math.PI, 5);
+  });
+
+  it('swaps positions after finish', () => {
+    const m1 = sq();
+    m1.position.set(0, 0, 0);
+    const m2 = sq();
+    m2.position.set(5, 3, 0);
+
+    const anim = new Swap(m1, m2);
+    anim.begin();
+    anim.finish();
+
+    expect(m1.position.x).toBeCloseTo(5, 5);
+    expect(m1.position.y).toBeCloseTo(3, 5);
+    expect(m2.position.x).toBeCloseTo(0, 5);
+    expect(m2.position.y).toBeCloseTo(0, 5);
+  });
+
+  it('positions interpolate halfway at alpha 0.5', () => {
+    const m1 = sq();
+    m1.position.set(0, 0, 0);
+    const m2 = sq();
+    m2.position.set(10, 0, 0);
+
+    const anim = new Swap(m1, m2);
+    anim.begin();
+    anim.interpolate(0.5);
+
+    // x positions should be halfway (5) with arc offsets on y
+    expect(m1.position.x).toBeCloseTo(5, 3);
+    expect(m2.position.x).toBeCloseTo(5, 3);
+    // y positions should have arc offset (sin(0.5*PI) * pathArc * 0.5)
+    const arcOffset = Math.sin(0.5 * Math.PI) * (Math.PI / 2);
+    expect(m1.position.y).toBeCloseTo(arcOffset * 0.5, 3);
+    expect(m2.position.y).toBeCloseTo(-arcOffset * 0.5, 3);
+  });
+
+  it('at alpha 0 positions are at start', () => {
+    const m1 = sq();
+    m1.position.set(0, 0, 0);
+    const m2 = sq();
+    m2.position.set(8, 0, 0);
+
+    const anim = new Swap(m1, m2);
+    anim.begin();
+    anim.interpolate(0);
+
+    expect(m1.position.x).toBeCloseTo(0, 5);
+    expect(m2.position.x).toBeCloseTo(8, 5);
+  });
+
+  it('factory creates Swap', () => {
+    const anim = swap(sq(), sq(), { pathArc: 1 });
+    expect(anim).toBeInstanceOf(Swap);
+    expect(anim.pathArc).toBeCloseTo(1, 5);
+  });
+});
+
+// ── CyclicReplace ──────────────────────────────────────────────────────────
+
+describe('CyclicReplace', () => {
+  it('requires at least 2 mobjects', () => {
+    expect(() => new CyclicReplace([sq()])).toThrow('at least 2 mobjects');
+  });
+
+  it('stores defaults', () => {
+    const m1 = sq();
+    const m2 = sq();
+    const anim = new CyclicReplace([m1, m2]);
+    expect(anim.mobjects).toEqual([m1, m2]);
+    expect(anim.pathArc).toBeCloseTo(Math.PI / 2, 5);
+    expect(anim.duration).toBe(1);
+  });
+
+  it('accepts custom pathArc', () => {
+    const anim = new CyclicReplace([sq(), sq()], { pathArc: 2 });
+    expect(anim.pathArc).toBeCloseTo(2, 5);
+  });
+
+  it('cycles positions for 2 mobjects (equivalent to swap)', () => {
+    const m1 = sq();
+    m1.position.set(0, 0, 0);
+    const m2 = sq();
+    m2.position.set(4, 0, 0);
+
+    const anim = new CyclicReplace([m1, m2]);
+    anim.begin();
+    anim.finish();
+
+    // After cycle: m1 goes to m2's position, m2 goes to m1's position
+    expect(m1.position.x).toBeCloseTo(4, 5);
+    expect(m2.position.x).toBeCloseTo(0, 5);
+  });
+
+  it('cycles positions for 3 mobjects', () => {
+    const m1 = sq();
+    m1.position.set(0, 0, 0);
+    const m2 = sq();
+    m2.position.set(3, 0, 0);
+    const m3 = sq();
+    m3.position.set(6, 0, 0);
+
+    const anim = new CyclicReplace([m1, m2, m3]);
+    anim.begin();
+    anim.finish();
+
+    // After cycle: m1->m2 pos, m2->m3 pos, m3->m1 pos
+    expect(m1.position.x).toBeCloseTo(3, 5);
+    expect(m2.position.x).toBeCloseTo(6, 5);
+    expect(m3.position.x).toBeCloseTo(0, 5);
+  });
+
+  it('interpolates with arc offsets at alpha 0.5', () => {
+    const m1 = sq();
+    m1.position.set(0, 0, 0);
+    const m2 = sq();
+    m2.position.set(10, 0, 0);
+
+    const anim = new CyclicReplace([m1, m2]);
+    anim.begin();
+    anim.interpolate(0.5);
+
+    // x positions should be halfway
+    expect(m1.position.x).toBeCloseTo(5, 3);
+    expect(m2.position.x).toBeCloseTo(5, 3);
+  });
+
+  it('factory creates CyclicReplace', () => {
+    const anim = cyclicReplace([sq(), sq(), sq()], { duration: 3 });
+    expect(anim).toBeInstanceOf(CyclicReplace);
+    expect(anim.duration).toBeCloseTo(3, 5);
+  });
+});
+
+// ── ScaleInPlace ───────────────────────────────────────────────────────────
+
+describe('ScaleInPlace', () => {
+  it('stores scale factor', () => {
+    const m = sq();
+    const anim = new ScaleInPlace(m, { scaleFactor: 2 });
+    expect(anim.scaleFactor).toBe(2);
+    expect(anim.duration).toBe(1);
+  });
+
+  it('scales from initial to target scale', () => {
+    const m = sq();
+    m.scaleVector.set(1, 1, 1);
+
+    const anim = new ScaleInPlace(m, { scaleFactor: 3 });
+    anim.begin();
+    anim.interpolate(0);
+    expect(m.scaleVector.x).toBeCloseTo(1, 3);
+
+    anim.interpolate(0.5);
+    expect(m.scaleVector.x).toBeCloseTo(2, 3);
+
+    anim.interpolate(1);
+    expect(m.scaleVector.x).toBeCloseTo(3, 3);
+  });
+
+  it('finish sets final scale', () => {
+    const m = sq();
+    m.scaleVector.set(1, 1, 1);
+
+    const anim = new ScaleInPlace(m, { scaleFactor: 2 });
+    anim.begin();
+    anim.finish();
+
+    expect(m.scaleVector.x).toBeCloseTo(2, 5);
+    expect(m.scaleVector.y).toBeCloseTo(2, 5);
+    expect(m.scaleVector.z).toBeCloseTo(2, 5);
+    expect(anim.isFinished()).toBe(true);
+  });
+
+  it('works with scale factor less than 1', () => {
+    const m = sq();
+    m.scaleVector.set(4, 4, 4);
+
+    const anim = new ScaleInPlace(m, { scaleFactor: 0.5 });
+    anim.begin();
+    anim.finish();
+
+    expect(m.scaleVector.x).toBeCloseTo(2, 5);
+    expect(m.scaleVector.y).toBeCloseTo(2, 5);
+  });
+
+  it('factory creates ScaleInPlace', () => {
+    const anim = scaleInPlace(sq(), 2.5, { duration: 0.5 });
+    expect(anim).toBeInstanceOf(ScaleInPlace);
+    expect(anim.scaleFactor).toBe(2.5);
+    expect(anim.duration).toBeCloseTo(0.5, 5);
+  });
+});
+
+// ── ShrinkToCenter ─────────────────────────────────────────────────────────
+
+describe('ShrinkToCenter', () => {
+  it('defaults to 1s duration', () => {
+    const anim = new ShrinkToCenter(sq());
+    expect(anim.duration).toBe(1);
+  });
+
+  it('scale shrinks to zero over animation', () => {
+    const m = sq();
+    m.scaleVector.set(2, 2, 2);
+
+    const anim = new ShrinkToCenter(m);
+    anim.begin();
+
+    anim.interpolate(0);
+    expect(m.scaleVector.x).toBeCloseTo(2, 3);
+
+    anim.interpolate(0.5);
+    expect(m.scaleVector.x).toBeCloseTo(1, 3);
+
+    anim.interpolate(1);
+    expect(m.scaleVector.x).toBeCloseTo(0, 3);
+  });
+
+  it('finish sets scale to zero', () => {
+    const m = sq();
+    m.scaleVector.set(3, 3, 3);
+
+    const anim = new ShrinkToCenter(m);
+    anim.begin();
+    anim.finish();
+
+    expect(m.scaleVector.x).toBeCloseTo(0, 5);
+    expect(m.scaleVector.y).toBeCloseTo(0, 5);
+    expect(m.scaleVector.z).toBeCloseTo(0, 5);
+    expect(anim.isFinished()).toBe(true);
+  });
+
+  it('factory creates ShrinkToCenter', () => {
+    const anim = shrinkToCenter(sq(), { duration: 0.3 });
+    expect(anim).toBeInstanceOf(ShrinkToCenter);
+    expect(anim.duration).toBeCloseTo(0.3, 5);
+  });
+});
+
+// ── Restore ────────────────────────────────────────────────────────────────
+
+describe('Restore', () => {
+  it('throws if savedState is null', () => {
+    const c = new Circle({ radius: 1 });
+    expect(() => {
+      new Restore(c as unknown as MobjectWithSavedState);
+    }).toThrow('Restore requires mobject.savedState to be set');
+  });
+
+  it('works when savedState is set via saveState()', () => {
+    const c = new Circle({ radius: 1, color: '#ff0000' });
+    c.opacity = 1;
+    c.saveState();
+
+    // Modify the circle
+    c.opacity = 0.2;
+    c.color = '#0000ff';
+    c.position.set(5, 5, 0);
+
+    const anim = new Restore(c as unknown as MobjectWithSavedState);
+    anim.begin();
+    anim.interpolate(0.5);
+    // Opacity should be between 0.2 and 1
+    expect(c.opacity).toBeGreaterThan(0.2);
+    expect(c.opacity).toBeLessThan(1);
+
+    anim.finish();
+    // After restore, should be back to saved state
+    expect(c.opacity).toBeCloseTo(1, 3);
+    expect(anim.isFinished()).toBe(true);
+  });
+
+  it('factory creates Restore', () => {
+    const c = new Circle({ radius: 1 });
+    c.saveState();
+    const anim = restore(c as unknown as MobjectWithSavedState);
+    expect(anim).toBeInstanceOf(Restore);
+  });
+
+  it('factory throws without savedState', () => {
+    const c = new Circle({ radius: 1 });
+    expect(() => {
+      restore(c as unknown as MobjectWithSavedState);
+    }).toThrow('Restore requires mobject.savedState to be set');
+  });
+});
+
+// ── FadeToColor ────────────────────────────────────────────────────────────
+
+describe('FadeToColor', () => {
+  it('stores target color', () => {
+    const m = sq();
+    const anim = new FadeToColor(m, { color: '#00ff00' });
+    expect(anim.targetColor).toBe('#00ff00');
+    expect(anim.duration).toBe(1);
+  });
+
+  it('interpolates color from source to target', () => {
+    const m = sq();
+    m.color = '#ff0000';
+
+    const anim = new FadeToColor(m, { color: '#0000ff' });
+    anim.begin();
+
+    anim.interpolate(0);
+    expect(new THREE.Color(m.color).r).toBeCloseTo(1.0, 2);
+
+    anim.interpolate(1);
+    expect(new THREE.Color(m.color).b).toBeCloseTo(1.0, 2);
+
+    anim.interpolate(0.5);
+    const mid = new THREE.Color(m.color);
+    expect(mid.r).toBeCloseTo(0.5, 1);
+    expect(mid.b).toBeCloseTo(0.5, 1);
+  });
+
+  it('finish sets exact target color', () => {
+    const m = sq();
+    m.color = '#ff0000';
+
+    const anim = new FadeToColor(m, { color: '#00ff00' });
+    anim.begin();
+    anim.finish();
+
+    expect(m.color).toBe('#00ff00');
+    expect(anim.isFinished()).toBe(true);
+  });
+
+  it('factory creates FadeToColor', () => {
+    const anim = fadeToColor(sq(), '#ff00ff', { duration: 2 });
+    expect(anim).toBeInstanceOf(FadeToColor);
+    expect(anim.targetColor).toBe('#ff00ff');
+    expect(anim.duration).toBeCloseTo(2, 5);
+  });
+});
+
+// ── TransformAnimations ────────────────────────────────────────────────────
+
+describe('TransformAnimations', () => {
+  it('stores both animations', () => {
+    const v1 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    const v2 = vm([
+      [2, 0, 0],
+      [3, 0, 0],
+    ]);
+    const anim1 = new ApplyFunction(v1, { func: (p) => [p[0] + 1, p[1], p[2]] });
+    const anim2 = new ApplyFunction(v2, { func: (p) => [p[0] + 2, p[1], p[2]] });
+    const meta = new TransformAnimations(anim1, anim2);
+    expect(meta.animation1).toBe(anim1);
+    expect(meta.animation2).toBe(anim2);
+    expect(meta.duration).toBe(1);
+  });
+
+  it('accepts custom transformRateFunc', () => {
+    const v1 = vm([[0, 0, 0]]);
+    const v2 = vm([[1, 0, 0]]);
+    const anim1 = new ApplyFunction(v1, { func: (p) => [p[0] + 1, p[1], p[2]] });
+    const anim2 = new ApplyFunction(v2, { func: (p) => [p[0] + 2, p[1], p[2]] });
+    const customRate = (t: number) => t * t;
+    const meta = new TransformAnimations(anim1, anim2, { transformRateFunc: customRate });
+    expect(meta.transformRateFunc).toBe(customRate);
+  });
+
+  it('begin/interpolate/finish runs without error', () => {
+    const v1 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 1, 0],
+      [0, 1, 0],
+    ]);
+    const v2 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 1, 0],
+      [0, 1, 0],
+    ]);
+    const anim1 = new ApplyFunction(v1, { func: (p) => [p[0] + 2, p[1], p[2]] });
+    const anim2 = new ApplyFunction(v2, { func: (p) => [p[0], p[1] + 2, p[2]] });
+    const meta = new TransformAnimations(anim1, anim2);
+    meta.begin();
+    meta.interpolate(0);
+    meta.interpolate(0.5);
+    meta.interpolate(1);
+    meta.finish();
+    expect(meta.isFinished()).toBe(true);
+  });
+
+  it('factory creates TransformAnimations', () => {
+    const v1 = vm([[0, 0, 0]]);
+    const v2 = vm([[1, 0, 0]]);
+    const anim1 = new ApplyFunction(v1, { func: (p) => [p[0] + 1, p[1], p[2]] });
+    const anim2 = new ApplyFunction(v2, { func: (p) => [p[0] + 2, p[1], p[2]] });
+    const meta = transformAnimations(anim1, anim2, { duration: 2 });
+    expect(meta).toBeInstanceOf(TransformAnimations);
+    expect(meta.duration).toBeCloseTo(2, 5);
   });
 });

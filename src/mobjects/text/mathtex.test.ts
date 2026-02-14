@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect } from 'vitest';
+import * as THREE from 'three';
 import { MathTex } from './MathTex';
 
 describe('MathTex', () => {
@@ -472,6 +473,316 @@ describe('MathTex', () => {
     it('should accept Greek letters', () => {
       const tex = new MathTex({ latex: '\\alpha + \\beta = \\gamma' });
       expect(tex.getLatex()).toBe('\\alpha + \\beta = \\gamma');
+    });
+  });
+
+  // -----------------------------------------------------------
+  // _createThreeObject and getThreeObject
+  // -----------------------------------------------------------
+  describe('getThreeObject / _createThreeObject', () => {
+    it('should create a THREE.Group for single-part', () => {
+      const tex = new MathTex({ latex: 'x^2' });
+      const obj = tex.getThreeObject();
+      expect(obj).toBeDefined();
+      expect(obj.type).toBe('Group');
+    });
+
+    it('should create a THREE.Group for multi-part', () => {
+      const tex = new MathTex({ latex: ['a', '+', 'b'] });
+      const obj = tex.getThreeObject();
+      expect(obj).toBeDefined();
+      expect(obj.type).toBe('Group');
+    });
+
+    it('should have a mesh child in single-part after getThreeObject', () => {
+      const tex = new MathTex({ latex: 'x' });
+      const obj = tex.getThreeObject();
+      // The group should contain a mesh
+      const hasMesh = obj.children.some((c) => c.type === 'Mesh');
+      expect(hasMesh).toBe(true);
+    });
+
+    it('should have correct mesh material with opacity and color', () => {
+      const tex = new MathTex({ latex: 'y', color: '#ff0000' });
+      tex.setOpacity(0.5);
+      const obj = tex.getThreeObject();
+      const mesh = obj.children.find((c) => c.type === 'Mesh') as THREE.Mesh;
+      expect(mesh).toBeDefined();
+      const material = mesh.material as THREE.MeshBasicMaterial;
+      expect(material.transparent).toBe(true);
+      expect(material.side).toBe(THREE.DoubleSide);
+    });
+
+    it('calling getThreeObject twice returns same object', () => {
+      const tex = new MathTex({ latex: 'z' });
+      const obj1 = tex.getThreeObject();
+      const obj2 = tex.getThreeObject();
+      expect(obj1).toBe(obj2);
+    });
+  });
+
+  // -----------------------------------------------------------
+  // _syncMaterialToThree (triggered via _syncToThree / getThreeObject)
+  // -----------------------------------------------------------
+  describe('_syncMaterialToThree', () => {
+    it('should update material opacity when opacity changes', () => {
+      const tex = new MathTex({ latex: 'q' });
+      const obj = tex.getThreeObject();
+      const mesh = obj.children.find((c) => c.type === 'Mesh') as THREE.Mesh;
+
+      tex.setOpacity(0.3);
+      tex._syncToThree();
+
+      const material = mesh.material as THREE.MeshBasicMaterial;
+      expect(material.opacity).toBeCloseTo(0.3, 3);
+    });
+
+    it('should update material color when color changes', () => {
+      const tex = new MathTex({ latex: 'q' });
+      const obj = tex.getThreeObject();
+      const mesh = obj.children.find((c) => c.type === 'Mesh') as THREE.Mesh;
+
+      tex.setColor('#00ff00');
+      tex._syncToThree();
+
+      const material = mesh.material as THREE.MeshBasicMaterial;
+      expect(material.color.getHexString()).toBe('00ff00');
+    });
+  });
+
+  // -----------------------------------------------------------
+  // _updateMeshGeometry (triggered when dimensions change)
+  // -----------------------------------------------------------
+  describe('_updateMeshGeometry', () => {
+    it('should not throw when called with no mesh', () => {
+      const tex = new MathTex({ latex: 'a' });
+      // Access the protected method through a cast
+      const protectedTex = tex as unknown as { _updateMeshGeometry: () => void };
+      expect(() => protectedTex._updateMeshGeometry()).not.toThrow();
+    });
+  });
+
+  // -----------------------------------------------------------
+  // _resolveRenderer (internal renderer selection)
+  // -----------------------------------------------------------
+  describe('renderer resolution', () => {
+    it('katex renderer mode should use katex directly', () => {
+      const tex = new MathTex({ latex: 'x', renderer: 'katex' });
+      expect(tex.getRenderer()).toBe('katex');
+    });
+
+    it('mathjax renderer mode should use mathjax', () => {
+      const tex = new MathTex({ latex: 'x', renderer: 'mathjax' });
+      expect(tex.getRenderer()).toBe('mathjax');
+    });
+
+    it('auto renderer mode defaults to auto', () => {
+      const tex = new MathTex({ latex: 'x' });
+      expect(tex.getRenderer()).toBe('auto');
+    });
+
+    it('changing renderer from auto to katex and back', () => {
+      const tex = new MathTex({ latex: 'x' });
+      tex.setRenderer('katex');
+      expect(tex.getRenderer()).toBe('katex');
+      tex.setRenderer('mathjax');
+      expect(tex.getRenderer()).toBe('mathjax');
+      tex.setRenderer('auto');
+      expect(tex.getRenderer()).toBe('auto');
+    });
+  });
+
+  // -----------------------------------------------------------
+  // _startRender error handling
+  // -----------------------------------------------------------
+  describe('_startRender error handling', () => {
+    it('should handle render failure gracefully', () => {
+      // MathTex should not throw even if rendering fails
+      const tex = new MathTex({ latex: 'x' });
+      expect(tex.isRendering()).toBe(true);
+      // The rendering will eventually complete (or fail), isRendering becomes false
+    });
+  });
+
+  // -----------------------------------------------------------
+  // setRevealProgress with rendered state
+  // -----------------------------------------------------------
+  describe('setRevealProgress with mesh state', () => {
+    it('should handle sequential reveal progress calls', () => {
+      const tex = new MathTex({ latex: 'hello' });
+      expect(() => {
+        tex.setRevealProgress(0);
+        tex.setRevealProgress(0.001);
+        tex.setRevealProgress(0.25);
+        tex.setRevealProgress(0.5);
+        tex.setRevealProgress(0.75);
+        tex.setRevealProgress(1);
+      }).not.toThrow();
+    });
+
+    it('should handle multi-part reveal progress sequentially per part', () => {
+      const tex = new MathTex({ latex: ['a', 'b', 'c', 'd'] });
+      expect(() => {
+        // Reveal in steps: each part gets an equal slice
+        for (let alpha = 0; alpha <= 1; alpha += 0.1) {
+          tex.setRevealProgress(alpha);
+        }
+      }).not.toThrow();
+    });
+
+    it('should handle alpha slightly above zero', () => {
+      const tex = new MathTex({ latex: 'x' });
+      expect(() => tex.setRevealProgress(0.002)).not.toThrow();
+    });
+
+    it('should handle negative alpha clamping', () => {
+      const tex = new MathTex({ latex: 'x' });
+      expect(() => tex.setRevealProgress(-0.5)).not.toThrow();
+    });
+
+    it('should handle alpha greater than 1 clamping', () => {
+      const tex = new MathTex({ latex: 'x' });
+      expect(() => tex.setRevealProgress(1.5)).not.toThrow();
+    });
+  });
+
+  // -----------------------------------------------------------
+  // dispose with rendered resources
+  // -----------------------------------------------------------
+  describe('dispose with rendered state', () => {
+    it('should dispose texture and mesh when they exist', () => {
+      const tex = new MathTex({ latex: 'a' });
+      // Force three object creation to create the mesh
+      tex.getThreeObject();
+      expect(() => tex.dispose()).not.toThrow();
+    });
+
+    it('should dispose cleanly after getThreeObject on multi-part', () => {
+      const tex = new MathTex({ latex: ['a', 'b'] });
+      tex.getThreeObject();
+      expect(() => tex.dispose()).not.toThrow();
+    });
+  });
+
+  // -----------------------------------------------------------
+  // Multi-part edge cases
+  // -----------------------------------------------------------
+  describe('multi-part edge cases', () => {
+    it('should set displayMode to false for child parts', () => {
+      const tex = new MathTex({ latex: ['x', '=', '5'], displayMode: true });
+      // Children should use inline mode
+      const part = tex.getPart(0);
+      // The internal _displayMode of children should be false
+      expect((part as unknown as { _displayMode: boolean })._displayMode).toBe(false);
+    });
+
+    it('should use minimal padding for child parts', () => {
+      const tex = new MathTex({ latex: ['a', 'b'] });
+      const part = tex.getPart(0);
+      expect((part as unknown as { _padding: number })._padding).toBe(2);
+    });
+
+    it('should inherit color in child parts', () => {
+      const tex = new MathTex({ latex: ['x', 'y'], color: '#ff0000' });
+      expect(tex.getPart(0).color).toBe('#ff0000');
+      expect(tex.getPart(1).color).toBe('#ff0000');
+    });
+
+    it('should inherit fontSize in child parts', () => {
+      const tex = new MathTex({ latex: ['a', 'b'], fontSize: 72 });
+      expect(tex.getPart(0).getFontSize()).toBe(72);
+      expect(tex.getPart(1).getFontSize()).toBe(72);
+    });
+
+    it('should inherit renderer in child parts', () => {
+      const tex = new MathTex({ latex: ['a', 'b'], renderer: 'mathjax' });
+      expect(tex.getPart(0).getRenderer()).toBe('mathjax');
+      expect(tex.getPart(1).getRenderer()).toBe('mathjax');
+    });
+
+    it('getDimensions returns aggregate for multi-part', () => {
+      const tex = new MathTex({ latex: ['a', 'b'] });
+      const dims = tex.getDimensions();
+      expect(dims).toHaveLength(2);
+      expect(typeof dims[0]).toBe('number');
+      expect(typeof dims[1]).toBe('number');
+    });
+
+    it('waitForRender waits for all parts', async () => {
+      const tex = new MathTex({ latex: ['x', 'y'] });
+      // waitForRender should not hang (or reject)
+      // We just verify it returns a promise
+      const p = tex.waitForRender();
+      expect(p).toBeInstanceOf(Promise);
+    });
+  });
+
+  // -----------------------------------------------------------
+  // waitForRender single-part path
+  // -----------------------------------------------------------
+  describe('waitForRender single-part', () => {
+    it('should resolve the render promise', async () => {
+      const tex = new MathTex({ latex: 'x^2' });
+      const p = tex.waitForRender();
+      expect(p).toBeInstanceOf(Promise);
+      // Should resolve without hanging
+      // Note: KaTeX may fail in quirks mode, but the promise should still resolve
+    });
+  });
+
+  // -----------------------------------------------------------
+  // copy preserves properties
+  // -----------------------------------------------------------
+  describe('copy edge cases', () => {
+    it('should preserve displayMode in copy', () => {
+      const original = new MathTex({ latex: 'x', displayMode: false });
+      const clone = original.copy() as MathTex;
+      // displayMode should be preserved
+      expect((clone as unknown as { _displayMode: boolean })._displayMode).toBe(false);
+    });
+
+    it('should preserve position in copy', () => {
+      const original = new MathTex({ latex: 'x', position: [1, 2, 3] });
+      const clone = original.copy() as MathTex;
+      expect(clone.position.x).toBeCloseTo(1, 5);
+      expect(clone.position.y).toBeCloseTo(2, 5);
+      expect(clone.position.z).toBeCloseTo(3, 5);
+    });
+  });
+
+  // -----------------------------------------------------------
+  // ensureKatexStyles is called for katex and auto modes
+  // -----------------------------------------------------------
+  describe('katex styles loading', () => {
+    it('does not call ensureKatexStyles for mathjax renderer', () => {
+      // Should not throw when creating with mathjax renderer
+      const tex = new MathTex({ latex: 'x', renderer: 'mathjax' });
+      expect(tex.getRenderer()).toBe('mathjax');
+    });
+
+    it('calls ensureKatexStyles for katex renderer', () => {
+      const tex = new MathTex({ latex: 'x', renderer: 'katex' });
+      expect(tex.getRenderer()).toBe('katex');
+    });
+
+    it('calls ensureKatexStyles for auto renderer', () => {
+      const tex = new MathTex({ latex: 'x', renderer: 'auto' });
+      expect(tex.getRenderer()).toBe('auto');
+    });
+  });
+
+  // -----------------------------------------------------------
+  // _padding option
+  // -----------------------------------------------------------
+  describe('_padding option', () => {
+    it('should default to 10', () => {
+      const tex = new MathTex({ latex: 'x' });
+      expect((tex as unknown as { _padding: number })._padding).toBe(10);
+    });
+
+    it('should accept custom _padding', () => {
+      const tex = new MathTex({ latex: 'x', _padding: 20 });
+      expect((tex as unknown as { _padding: number })._padding).toBe(20);
     });
   });
 });

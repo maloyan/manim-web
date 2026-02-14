@@ -302,6 +302,278 @@ describe('ParametricFunction', () => {
       // Should still produce some points
       expect(pf.getPoints().length).toBeGreaterThan(0);
     });
+
+    it('should handle Infinity values by skipping them', () => {
+      const pf = new ParametricFunction({
+        func: (t) => {
+          if (Math.abs(t - 0.5) < 0.01) return [Infinity, 0];
+          return [t, t];
+        },
+        tRange: [0, 1],
+        numSamples: 20,
+      });
+      expect(pf.getPoints().length).toBeGreaterThan(0);
+    });
+
+    it('should handle function that throws for some values', () => {
+      const pf = new ParametricFunction({
+        func: (t) => {
+          if (t > 0.3 && t < 0.7) throw new Error('domain error');
+          return [t, t];
+        },
+        tRange: [0, 1],
+        numSamples: 20,
+      });
+      expect(pf.getPoints().length).toBeGreaterThan(0);
+    });
+
+    it('should produce empty points when all samples are invalid', () => {
+      const pf = new ParametricFunction({
+        func: () => [NaN, NaN],
+        tRange: [0, 1],
+        numSamples: 10,
+      });
+      expect(pf.getPoints().length).toBe(0);
+    });
+
+    it('should produce Bezier points for exactly 2 valid samples', () => {
+      // When there are exactly 2 valid sample points, _pointsToBezier
+      // creates a single cubic Bezier segment (4 control points)
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        tRange: [0, 1],
+        numSamples: 2,
+      });
+      const pts = pf.getPoints();
+      // 2 points -> 1 Bezier segment -> 4 control points
+      expect(pts.length).toBe(4);
+    });
+  });
+
+  describe('with axes', () => {
+    it('should use axes coordinate transformation when axes provided', () => {
+      const axes = new Axes({
+        xRange: [-5, 5, 1],
+        yRange: [-3, 3, 1],
+        xLength: 10,
+        yLength: 6,
+      });
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        tRange: [-1, 1],
+        axes,
+      });
+      // With axes, points should be transformed through coordsToPoint
+      const pts = pf.getPoints();
+      expect(pts.length).toBeGreaterThan(0);
+    });
+
+    it('should enable useAxesCoords by default when axes is provided', () => {
+      const axes = new Axes({ xRange: [-5, 5, 1], yRange: [-3, 3, 1] });
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        tRange: [0, 1],
+        axes,
+      });
+      // getPointFromT should use axes transformation
+      const pt = pf.getPointFromT(0);
+      const expected = axes.coordsToPoint(0, 0);
+      expect(tupleCloseTo(pt, expected)).toBe(true);
+    });
+
+    it('getPointFromT should transform through axes when useAxesCoords is true', () => {
+      const axes = new Axes({
+        xRange: [-5, 5, 1],
+        yRange: [-3, 3, 1],
+        xLength: 10,
+        yLength: 6,
+      });
+      const pf = new ParametricFunction({
+        func: (t) => [t * 2, t * 3],
+        tRange: [0, 1],
+        axes,
+        useAxesCoords: true,
+      });
+      const pt = pf.getPointFromT(1);
+      const expected = axes.coordsToPoint(2, 3);
+      expect(tupleCloseTo(pt, expected)).toBe(true);
+    });
+
+    it('getPointFromT should NOT transform when useAxesCoords is false', () => {
+      const axes = new Axes({ xRange: [-5, 5, 1], yRange: [-3, 3, 1] });
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        tRange: [0, 1],
+        axes,
+        useAxesCoords: false,
+      });
+      // Without axes transformation, raw coordinates are returned
+      const pt = pf.getPointFromT(0.5);
+      expect(closeTo(pt[0], 0.5)).toBe(true);
+      expect(closeTo(pt[1], 0.5)).toBe(true);
+      expect(pt[2]).toBe(0);
+    });
+  });
+
+  describe('setAxes', () => {
+    it('should set axes and regenerate points', () => {
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        tRange: [0, 1],
+      });
+      const axes = new Axes({
+        xRange: [-5, 5, 1],
+        yRange: [-3, 3, 1],
+        xLength: 10,
+        yLength: 6,
+      });
+      const result = pf.setAxes(axes);
+      expect(result).toBe(pf); // chainable
+      expect(pf.getPoints().length).toBeGreaterThan(0);
+    });
+
+    it('should clear axes when set to null', () => {
+      const axes = new Axes({ xRange: [-5, 5, 1], yRange: [-3, 3, 1] });
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        tRange: [0, 1],
+        axes,
+      });
+      pf.setAxes(null);
+      // After clearing axes, getPointFromT should return raw coordinates
+      const pt = pf.getPointFromT(0.5);
+      expect(closeTo(pt[0], 0.5)).toBe(true);
+      expect(closeTo(pt[1], 0.5)).toBe(true);
+    });
+  });
+
+  describe('setUseAxesCoords', () => {
+    it('should toggle axes coordinate transformation', () => {
+      const axes = new Axes({
+        xRange: [-5, 5, 1],
+        yRange: [-3, 3, 1],
+        xLength: 10,
+        yLength: 6,
+      });
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        tRange: [0, 1],
+        axes,
+        useAxesCoords: false,
+      });
+      // Initially no transformation
+      const ptRaw = pf.getPointFromT(0.5);
+      expect(closeTo(ptRaw[0], 0.5)).toBe(true);
+
+      // Enable transformation
+      const result = pf.setUseAxesCoords(true);
+      expect(result).toBe(pf); // chainable
+      const ptTransformed = pf.getPointFromT(0.5);
+      const expected = axes.coordsToPoint(0.5, 0.5);
+      expect(tupleCloseTo(ptTransformed, expected)).toBe(true);
+    });
+
+    it('should disable axes coordinate transformation', () => {
+      const axes = new Axes({ xRange: [-5, 5, 1], yRange: [-3, 3, 1] });
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        tRange: [0, 1],
+        axes,
+        useAxesCoords: true,
+      });
+      pf.setUseAxesCoords(false);
+      const pt = pf.getPointFromT(0.5);
+      // Should return raw coords, not axes-transformed
+      expect(closeTo(pt[0], 0.5)).toBe(true);
+      expect(closeTo(pt[1], 0.5)).toBe(true);
+    });
+  });
+
+  describe('copy', () => {
+    it('should create a copy with the same function and parameters', () => {
+      const func = (t: number): [number, number] => [Math.cos(t), Math.sin(t)];
+      const pf = new ParametricFunction({
+        func,
+        tRange: [0, 2 * Math.PI],
+        color: '#ff0000',
+        strokeWidth: 4,
+        numSamples: 50,
+      });
+      const copied = pf.copy() as ParametricFunction;
+      expect(copied).not.toBe(pf);
+      expect(copied.getTRange()).toEqual([0, 2 * Math.PI]);
+      expect(copied.getNumSamples()).toBe(50);
+      expect(copied.color).toBe('#ff0000');
+      expect(copied.strokeWidth).toBe(4);
+      expect(copied.getFunction()).toBe(func);
+    });
+
+    it('should create a copy with axes', () => {
+      const axes = new Axes({ xRange: [-5, 5, 1], yRange: [-3, 3, 1] });
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        tRange: [0, 1],
+        axes,
+        useAxesCoords: true,
+      });
+      const copied = pf.copy() as ParametricFunction;
+      expect(copied).not.toBe(pf);
+      // The copy should produce similar points
+      const origPt = pf.getPointFromT(0.5);
+      const copyPt = copied.getPointFromT(0.5);
+      expect(tupleCloseTo(origPt, copyPt)).toBe(true);
+    });
+
+    it('should create an independent copy (changes to copy do not affect original)', () => {
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        tRange: [0, 1],
+        numSamples: 50,
+      });
+      const copied = pf.copy() as ParametricFunction;
+      copied.setTRange([0, 10]);
+      expect(pf.getTRange()).toEqual([0, 1]);
+      expect(copied.getTRange()).toEqual([0, 10]);
+    });
+  });
+
+  describe('constructor options', () => {
+    it('should accept custom strokeWidth', () => {
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        strokeWidth: 5,
+      });
+      expect(pf.strokeWidth).toBe(5);
+    });
+
+    it('should accept custom color', () => {
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        color: '#ff0000',
+      });
+      expect(pf.color).toBe('#ff0000');
+    });
+
+    it('should have fillOpacity 0', () => {
+      const pf = new ParametricFunction({ func: (t) => [t, t] });
+      expect(pf.fillOpacity).toBe(0);
+    });
+
+    it('should accept custom numSamples', () => {
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        numSamples: 200,
+      });
+      expect(pf.getNumSamples()).toBe(200);
+    });
+
+    it('should accept custom tRange', () => {
+      const pf = new ParametricFunction({
+        func: (t) => [t, t],
+        tRange: [-10, 10],
+      });
+      expect(pf.getTRange()).toEqual([-10, 10]);
+    });
   });
 });
 

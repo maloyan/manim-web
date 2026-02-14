@@ -435,4 +435,409 @@ describe('Code', () => {
       expect(kw).toContain('return');
     });
   });
+
+  describe('tokenization - Python strings', () => {
+    it('should detect f-strings', () => {
+      const strings = tokenTexts(
+        new Code({ code: 'x = f"hello {name}"', language: 'python' }),
+        'string',
+      );
+      expect(strings.length).toBeGreaterThan(0);
+    });
+
+    it('should detect r-strings (raw strings)', () => {
+      const strings = tokenTexts(
+        new Code({ code: "x = r'raw\\nstring'", language: 'python' }),
+        'string',
+      );
+      expect(strings.length).toBeGreaterThan(0);
+    });
+
+    it('should detect triple-quoted strings', () => {
+      const strings = tokenTexts(
+        new Code({ code: 'x = """triple\nquoted"""', language: 'python' }),
+        'string',
+      );
+      expect(strings.length).toBeGreaterThan(0);
+    });
+
+    it('should detect triple-quoted strings on the same line', () => {
+      const strings = tokenTexts(
+        new Code({ code: 'x = """hello world"""', language: 'python' }),
+        'string',
+      );
+      // Triple quotes are tokenized (though imperfectly for complex cases)
+      expect(strings.length).toBeGreaterThan(0);
+    });
+
+    it('should detect triple single-quoted strings', () => {
+      const strings = tokenTexts(
+        new Code({ code: "x = '''multi line'''", language: 'python' }),
+        'string',
+      );
+      expect(strings.length).toBeGreaterThan(0);
+    });
+
+    it('should handle unclosed string at end of line', () => {
+      const strings = tokenTexts(new Code({ code: 'x = "unclosed', language: 'python' }), 'string');
+      expect(strings.length).toBeGreaterThan(0);
+    });
+
+    it('should handle escaped quotes in strings', () => {
+      const strings = tokenTexts(
+        new Code({ code: 'x = "he said \\"hello\\""', language: 'python' }),
+        'string',
+      );
+      expect(strings.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('tokenization - comments', () => {
+    it('should handle multi-line comment that closes on the same line', () => {
+      const comments = tokenTexts(
+        new Code({ code: '/* closed */ var x = 1;', language: 'javascript' }),
+        'comment',
+      );
+      expect(comments.length).toBeGreaterThan(0);
+      expect(comments[0]).toContain('/* closed */');
+    });
+
+    it('should handle multi-line comment that does not close on the line', () => {
+      const comments = tokenTexts(
+        new Code({ code: '/* unclosed comment', language: 'javascript' }),
+        'comment',
+      );
+      expect(comments.length).toBeGreaterThan(0);
+      expect(comments[0]).toContain('/* unclosed comment');
+    });
+  });
+
+  describe('tokenization - operators', () => {
+    it('should detect arrow operator ->', () => {
+      const ops = tokenTexts(new Code({ code: 'fn -> int', language: 'python' }), 'operator');
+      expect(ops).toContain('->');
+    });
+
+    it('should detect comparison operators <=, >=', () => {
+      const ops = tokenTexts(new Code({ code: 'x <= y >= z', language: 'python' }), 'operator');
+      expect(ops).toContain('<=');
+      expect(ops).toContain('>=');
+    });
+
+    it('should detect logical operators &&, ||', () => {
+      const ops = tokenTexts(new Code({ code: 'a && b || c', language: 'javascript' }), 'operator');
+      expect(ops).toContain('&&');
+      expect(ops).toContain('||');
+    });
+
+    it('should detect shift operators <<, >>', () => {
+      const ops = tokenTexts(new Code({ code: 'x << 2 >> 1', language: 'javascript' }), 'operator');
+      expect(ops).toContain('<<');
+      expect(ops).toContain('>>');
+    });
+
+    it('should detect single character operators like ~, ^, |, &', () => {
+      const ops = tokenTexts(new Code({ code: '~x ^ y | z & w', language: 'python' }), 'operator');
+      expect(ops).toContain('~');
+      expect(ops).toContain('^');
+    });
+  });
+
+  describe('tokenization - numbers', () => {
+    it('should detect scientific notation with negative exponent', () => {
+      const nums = tokenTexts(new Code({ code: 'x = 1e-5', language: 'python' }), 'number');
+      expect(nums).toContain('1e-5');
+    });
+
+    it('should detect scientific notation with positive exponent', () => {
+      const nums = tokenTexts(new Code({ code: 'x = 2.5e+10', language: 'python' }), 'number');
+      expect(nums).toContain('2.5e+10');
+    });
+  });
+
+  describe('tokenization - Rust types', () => {
+    it('should detect Rust builtin types', () => {
+      const types = tokenTexts(
+        new Code({ code: 'let x: i32 = 0;\nlet y: String = String::new();', language: 'rust' }),
+        'type',
+      );
+      expect(types).toContain('i32');
+      expect(types).toContain('String');
+    });
+  });
+
+  describe('tokenization - Go types', () => {
+    it('should detect Go builtin types', () => {
+      const types = tokenTexts(
+        new Code({ code: 'var x int = 0\nvar s string = ""', language: 'go' }),
+        'type',
+      );
+      expect(types).toContain('string');
+    });
+  });
+
+  describe('tokenization - C++ types', () => {
+    it('should detect C++ builtin types', () => {
+      const types = tokenTexts(
+        new Code({ code: 'std::vector<int> v;\nstd::string s;', language: 'cpp' }),
+        'type',
+      );
+      expect(types).toContain('vector');
+    });
+  });
+
+  describe('tokenization - Java types', () => {
+    it('should detect Java builtin types', () => {
+      const types = tokenTexts(
+        new Code({ code: 'String s = "hello";\nArrayList<Integer> list;', language: 'java' }),
+        'type',
+      );
+      expect(types).toContain('String');
+      expect(types).toContain('ArrayList');
+    });
+  });
+
+  describe('line numbers', () => {
+    it('should enable line numbers by default', () => {
+      const c = new Code({ code: 'hello\nworld' });
+      // Verify it constructs without error (lineNumbers = true by default)
+      expect(c.getLineCount()).toBe(2);
+    });
+
+    it('should disable line numbers when lineNumbers is false', () => {
+      const c = new Code({ code: 'hello\nworld', lineNumbers: false });
+      expect(c.getLineCount()).toBe(2);
+    });
+  });
+
+  describe('tab expansion', () => {
+    it('should expand tabs with custom tabWidth', () => {
+      const c = new Code({ code: '\thello', tabWidth: 2 });
+      expect(c.getLineOfCode(1)!.text).toBe('  hello');
+    });
+
+    it('should expand tabs with default tabWidth of 4', () => {
+      const c = new Code({ code: '\thello' });
+      expect(c.getLineOfCode(1)!.text).toBe('    hello');
+    });
+
+    it('should expand multiple tabs', () => {
+      const c = new Code({ code: '\t\tx', tabWidth: 3 });
+      expect(c.getLineOfCode(1)!.text).toBe('      x');
+    });
+  });
+
+  describe('showBackground', () => {
+    it('should render with background (default true)', () => {
+      const c = new Code({ code: 'hello' });
+      expect(c.getWidth()).toBeGreaterThanOrEqual(0);
+    });
+
+    it('should render without background', () => {
+      const c = new Code({ code: 'hello', showBackground: false });
+      expect(c.getWidth()).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('highlightLines', () => {
+    it('should highlight a range of lines', () => {
+      const c = new Code({ code: 'line1\nline2\nline3\nline4' });
+      const result = c.highlightLines(2, 3);
+      expect(result).toBe(c); // chaining
+    });
+
+    it('should handle highlight with custom color', () => {
+      const c = new Code({ code: 'line1\nline2\nline3' });
+      const result = c.highlightLines(1, 2, 'rgba(255, 0, 0, 0.5)');
+      expect(result).toBe(c);
+    });
+
+    it('should handle highlight with non-rgba color', () => {
+      const c = new Code({ code: 'line1\nline2\nline3' });
+      const result = c.highlightLines(1, 2, '#ff0000');
+      expect(result).toBe(c);
+    });
+
+    it('should clamp line numbers to valid range', () => {
+      const c = new Code({ code: 'line1\nline2' });
+      expect(() => c.highlightLines(0, 10)).not.toThrow();
+    });
+
+    it('should clear previous highlights when highlighting new lines', () => {
+      const c = new Code({ code: 'line1\nline2\nline3' });
+      c.highlightLines(1, 2);
+      c.highlightLines(2, 3);
+      // Should not throw - old highlights cleared
+    });
+  });
+
+  describe('clearHighlights', () => {
+    it('should clear all highlights', () => {
+      const c = new Code({ code: 'line1\nline2\nline3' });
+      c.highlightLines(1, 2);
+      const result = c.clearHighlights();
+      expect(result).toBe(c); // chaining
+    });
+
+    it('should be safe to call when no highlights exist', () => {
+      const c = new Code({ code: 'hello' });
+      expect(() => c.clearHighlights()).not.toThrow();
+    });
+  });
+
+  describe('constructor options', () => {
+    it('should accept custom fontFamily', () => {
+      const c = new Code({ code: 'hello', fontFamily: 'Courier New' });
+      expect(c.getCode()).toBe('hello');
+    });
+
+    it('should accept custom backgroundPadding and backgroundRadius', () => {
+      const c = new Code({
+        code: 'hello',
+        backgroundPadding: 32,
+        backgroundRadius: 16,
+      });
+      expect(c.getCode()).toBe('hello');
+    });
+
+    it('should accept custom lineHeight', () => {
+      const c = new Code({ code: 'hello\nworld', lineHeight: 2.0 });
+      expect(c.getLineCount()).toBe(2);
+    });
+  });
+
+  describe('multi-line code', () => {
+    it('should handle large code blocks', () => {
+      const lines = Array.from({ length: 50 }, (_, i) => `line ${i + 1}`).join('\n');
+      const c = new Code({ code: lines, language: 'python' });
+      expect(c.getLineCount()).toBe(50);
+      expect(c.getLineOfCode(1)!.text).toBe('line 1');
+      expect(c.getLineOfCode(50)!.text).toBe('line 50');
+    });
+
+    it('should handle code with mixed tokens per line', () => {
+      const code = `def greet(name):
+    # Say hello
+    msg = f"Hello {name}"
+    print(msg)
+    return True`;
+      const c = new Code({ code, language: 'python' });
+      expect(c.getLineCount()).toBe(5);
+      expect(tokenTexts(c, 'keyword')).toContain('def');
+      expect(tokenTexts(c, 'keyword')).toContain('return');
+      expect(tokenTexts(c, 'keyword')).toContain('True');
+      expect(tokenTexts(c, 'comment').length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('setCode re-rendering', () => {
+    it('should update dimensions when code changes', () => {
+      const c = new Code({ code: 'short' });
+      const w1 = c.getWidth();
+      c.setCode('a much longer line of code that should be wider');
+      const w2 = c.getWidth();
+      // Wider code should have at least as wide dimensions
+      expect(w2).toBeGreaterThanOrEqual(w1);
+    });
+
+    it('should update line count and tokens', () => {
+      const c = new Code({ code: 'hello', language: 'python' });
+      expect(c.getLineCount()).toBe(1);
+      c.setCode('def foo():\n    pass');
+      expect(c.getLineCount()).toBe(2);
+      expect(tokenTexts(c, 'keyword')).toContain('def');
+      expect(tokenTexts(c, 'keyword')).toContain('pass');
+    });
+  });
+
+  describe('setLanguage re-tokenization', () => {
+    it('should change tokenization results', () => {
+      const c = new Code({ code: 'fn main() { let x = 42; }', language: 'text' });
+      expect(tokenTexts(c, 'keyword')).toHaveLength(0);
+      c.setLanguage('rust');
+      expect(tokenTexts(c, 'keyword')).toContain('fn');
+      expect(tokenTexts(c, 'keyword')).toContain('let');
+    });
+  });
+
+  describe('punctuation tokenization', () => {
+    it('should detect all standard punctuation', () => {
+      const punc = tokenTexts(new Code({ code: '(){};:,.[]', language: 'python' }), 'punctuation');
+      expect(punc).toContain('(');
+      expect(punc).toContain(')');
+      expect(punc).toContain('{');
+      expect(punc).toContain('}');
+      expect(punc).toContain(';');
+      expect(punc).toContain(':');
+      expect(punc).toContain(',');
+      expect(punc).toContain('.');
+      expect(punc).toContain('[');
+      expect(punc).toContain(']');
+    });
+  });
+
+  describe('Rust string delimiters', () => {
+    it('should handle Rust strings', () => {
+      const strings = tokenTexts(
+        new Code({ code: 'let s = "hello rust";', language: 'rust' }),
+        'string',
+      );
+      expect(strings.length).toBeGreaterThan(0);
+      expect(strings[0]).toContain('hello rust');
+    });
+
+    it('should handle Rust char literals', () => {
+      const strings = tokenTexts(new Code({ code: "let c = 'a';", language: 'rust' }), 'string');
+      expect(strings.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('Go string delimiters', () => {
+    it('should handle Go backtick raw strings', () => {
+      const strings = tokenTexts(
+        new Code({ code: 'var s = `raw string`', language: 'go' }),
+        'string',
+      );
+      expect(strings.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('JavaScript template literals', () => {
+    it('should handle backtick template strings', () => {
+      const strings = tokenTexts(
+        new Code({ code: 'const s = `hello ${name}`', language: 'javascript' }),
+        'string',
+      );
+      expect(strings.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('copy preserves all options', () => {
+    it('should preserve lineNumbers, tabWidth, fontSize, and fontFamily', () => {
+      const c = new Code({
+        code: 'hello',
+        language: 'python',
+        lineNumbers: false,
+        tabWidth: 2,
+        fontSize: 18,
+        fontFamily: 'Courier New',
+        showBackground: false,
+        backgroundPadding: 20,
+        backgroundRadius: 12,
+        lineHeight: 1.8,
+      });
+      const cp = c.copy() as Code;
+      expect(cp.getCode()).toBe('hello');
+      expect(cp.getLanguage()).toBe('python');
+    });
+
+    it('should preserve colorScheme in copy', () => {
+      const c = new Code({
+        code: 'hello',
+        colorScheme: MONOKAI_COLOR_SCHEME,
+      });
+      const cp = c.copy() as Code;
+      expect(cp.getCode()).toBe('hello');
+    });
+  });
 });

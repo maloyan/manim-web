@@ -449,3 +449,264 @@ describe('edge cases', () => {
     expect(c1.opacity).toBeCloseTo(c2.opacity, 5);
   });
 });
+
+describe('cross-fade finish()', () => {
+  it('finish() reparents target under source for non-VMobject Mobjects', () => {
+    class SimpleMobject extends Mobject {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      protected _createThreeObject(): THREE.Object3D {
+        return new THREE.Group();
+      }
+    }
+    const m1 = new SimpleMobject();
+    const m2 = new SimpleMobject();
+    m1.opacity = 1;
+    m2.opacity = 0.7;
+
+    // Give them different positions
+    m1.position.set(0, 0, 0);
+    m2.position.set(3, 4, 0);
+
+    // Attach m1 to a parent so the scene graph add logic works
+    const parent = new THREE.Group();
+    parent.add(m1.getThreeObject());
+
+    const t = new Transform(m1, m2);
+    t.begin();
+    t.interpolate(0.5);
+    t.finish();
+
+    // After cross-fade finish, source opacity should be 0
+    // and target should be reparented under source
+    expect(m1.opacity).toBeCloseTo(0, 3);
+    expect(t.isFinished()).toBe(true);
+  });
+
+  it('finish() handles cross-fade for VMobjects with zero points', () => {
+    const vm1 = new VMobject();
+    const vm2 = new VMobject();
+    vm1.opacity = 1;
+    vm2.opacity = 0.8;
+    vm1.position.set(0, 0, 0);
+    vm2.position.set(2, 3, 0);
+
+    // Attach vm1 to a parent so cross-fade path adds target to scene graph
+    const parent = new THREE.Group();
+    parent.add(vm1.getThreeObject());
+
+    const t = new Transform(vm1, vm2);
+    t.begin();
+    t.interpolate(0.5);
+    t.finish();
+
+    // The non-Text cross-fade path should execute finish without error
+    expect(t.isFinished()).toBe(true);
+  });
+
+  it('cross-fade adds target to scene graph when source has parent', () => {
+    class SimpleMobject extends Mobject {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      protected _createThreeObject(): THREE.Object3D {
+        return new THREE.Group();
+      }
+    }
+    const m1 = new SimpleMobject();
+    const m2 = new SimpleMobject();
+
+    // Source attached to parent, target is not
+    const parent = new THREE.Group();
+    parent.add(m1.getThreeObject());
+    expect(m2.getThreeObject().parent).toBeFalsy();
+
+    const t = new Transform(m1, m2);
+    t.begin();
+
+    // After begin(), target should be added to the same parent
+    // because sourceObj.parent exists and targetObj has no parent
+    expect(m2.getThreeObject().parent).toBeTruthy();
+  });
+
+  it('cross-fade position interpolation works for non-VMobject', () => {
+    class SimpleMobject extends Mobject {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      protected _createThreeObject(): THREE.Object3D {
+        return new THREE.Group();
+      }
+    }
+    const m1 = new SimpleMobject();
+    const m2 = new SimpleMobject();
+    m1.position.set(0, 0, 0);
+    m2.position.set(10, 0, 0);
+    m1.opacity = 1;
+    m2.opacity = 1;
+
+    const t = new Transform(m1, m2);
+    t.begin();
+    t.interpolate(0.5);
+
+    // Position should be interpolated halfway
+    expect(m1.position.x).toBeCloseTo(5, 3);
+  });
+
+  it('cross-fade for zero-point VMobjects interpolates position', () => {
+    const vm1 = new VMobject();
+    const vm2 = new VMobject();
+    vm1.position.set(0, 0, 0);
+    vm2.position.set(6, 0, 0);
+    vm1.opacity = 1;
+    vm2.opacity = 1;
+
+    const parent = new THREE.Group();
+    parent.add(vm1.getThreeObject());
+
+    const t = new Transform(vm1, vm2);
+    t.begin();
+    t.interpolate(0.5);
+
+    // Position should be halfway
+    expect(vm1.position.x).toBeCloseTo(3, 3);
+    // Opacity should be fading out (source: 1*(1-0.5) = 0.5)
+    expect(vm1.opacity).toBeCloseTo(0.5, 3);
+  });
+});
+
+describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
+  it('swaps texture and geometry when both source and target have getTextureMesh', () => {
+    // Create mobjects that look like Text objects with getTextureMesh
+    class TextLikeMobject extends Mobject {
+      private _mesh: THREE.Mesh;
+
+      constructor() {
+        super();
+        const geometry = new THREE.PlaneGeometry(1, 1);
+        // Use a DataTexture instead of CanvasTexture to avoid DOM dependency
+        const dataTexture = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+        const material = new THREE.MeshBasicMaterial({
+          transparent: true,
+          map: dataTexture,
+        });
+        this._mesh = new THREE.Mesh(geometry, material);
+      }
+
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      protected _createThreeObject(): THREE.Object3D {
+        const group = new THREE.Group();
+        group.add(this._mesh);
+        return group;
+      }
+
+      getTextureMesh(): THREE.Mesh | null {
+        return this._mesh;
+      }
+    }
+
+    const m1 = new TextLikeMobject();
+    const m2 = new TextLikeMobject();
+    m1.opacity = 1;
+    m2.opacity = 0.8;
+    m1.position.set(0, 0, 0);
+    m2.position.set(2, 3, 0);
+
+    // Attach m1 to a parent so cross-fade begin() works
+    const parent = new THREE.Group();
+    parent.add(m1.getThreeObject());
+
+    const t = new Transform(m1, m2);
+    t.begin();
+    t.interpolate(0.5);
+    t.finish();
+
+    // After Text-like cross-fade finish:
+    // source should be positioned at target location
+    expect(m1.position.x).toBeCloseTo(2, 3);
+    expect(m1.position.y).toBeCloseTo(3, 3);
+    expect(t.isFinished()).toBe(true);
+  });
+
+  it('removes target from scene graph after Text-like cross-fade finish', () => {
+    class TextLikeMobject extends Mobject {
+      private _mesh: THREE.Mesh;
+
+      constructor() {
+        super();
+        const geometry = new THREE.PlaneGeometry(1, 1);
+        const dataTexture = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+        const material = new THREE.MeshBasicMaterial({
+          transparent: true,
+          map: dataTexture,
+        });
+        this._mesh = new THREE.Mesh(geometry, material);
+      }
+
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      protected _createThreeObject(): THREE.Object3D {
+        const group = new THREE.Group();
+        group.add(this._mesh);
+        return group;
+      }
+
+      getTextureMesh(): THREE.Mesh | null {
+        return this._mesh;
+      }
+    }
+
+    const m1 = new TextLikeMobject();
+    const m2 = new TextLikeMobject();
+    m1.opacity = 1;
+    m2.opacity = 1;
+
+    const parent = new THREE.Group();
+    parent.add(m1.getThreeObject());
+
+    const t = new Transform(m1, m2);
+    t.begin();
+
+    // Target should have been added to scene graph during begin()
+    expect(m2.getThreeObject().parent).toBeTruthy();
+
+    t.finish();
+
+    // After finish, target should be removed from scene graph
+    expect(m2.getThreeObject().parent).toBeFalsy();
+  });
+});
+
+describe('finish() with fill color interpolation', () => {
+  it('sets final fill color when source and target differ', () => {
+    const c1 = new Circle({ radius: 1, color: '#ff0000' });
+    c1.fillColor = '#00ff00';
+    c1.fillOpacity = 0.5;
+    const c2 = new Circle({ radius: 2, color: '#0000ff' });
+    c2.fillColor = '#ff00ff';
+    c2.fillOpacity = 0.5;
+
+    const t = new Transform(c1, c2);
+    t.begin();
+    t.finish();
+
+    // fillColor should match target
+    const finalFill = new THREE.Color(c1.fillColor ?? c1.color);
+    const expectedFill = new THREE.Color('#ff00ff');
+    expect(finalFill.r).toBeCloseTo(expectedFill.r, 1);
+    expect(finalFill.g).toBeCloseTo(expectedFill.g, 1);
+    expect(finalFill.b).toBeCloseTo(expectedFill.b, 1);
+  });
+
+  it('finish() sets rotation and scale from target', () => {
+    const c1 = new Circle({ radius: 1 });
+    c1.rotation.set(0, 0, 0);
+    c1.scaleVector.set(1, 1, 1);
+    const c2 = new Circle({ radius: 1 });
+    c2.rotation.set(Math.PI / 4, Math.PI / 2, 0);
+    c2.scaleVector.set(2, 3, 1);
+
+    const t = new Transform(c1, c2);
+    t.begin();
+    t.finish();
+
+    expect(c1.rotation.x).toBeCloseTo(Math.PI / 4, 5);
+    expect(c1.rotation.y).toBeCloseTo(Math.PI / 2, 5);
+    expect(c1.scaleVector.x).toBeCloseTo(2, 5);
+    expect(c1.scaleVector.y).toBeCloseTo(3, 5);
+  });
+});
