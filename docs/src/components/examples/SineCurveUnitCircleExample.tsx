@@ -3,21 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const {
-    Scene,
-    Circle,
-    Dot,
-    Line,
-    VGroup,
-    MathTex,
-    BLACK,
-    BLUE,
-    RED,
-    YELLOW,
-    YELLOW_A,
-    YELLOW_D,
-    DOWN,
-  } = await import('manim-web');
+  const { Scene, Circle, Dot, Line, VGroup, MathTex, BLACK, BLUE, RED, YELLOW, YELLOW_A, YELLOW_D, DOWN } = await import('manim-web');
 
   const TAU = 2 * Math.PI;
 
