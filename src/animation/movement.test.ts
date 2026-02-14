@@ -1,8 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { Mobject } from '../core/Mobject';
-import { Shift, shift, MoveToTargetPosition, MobjectWithTargetPosition } from './movement/Shift';
+import {
+  Shift,
+  shift,
+  MoveToTargetPosition,
+  MobjectWithTargetPosition,
+  moveToTargetPosition,
+} from './movement/Shift';
 import { Scale, scale, GrowFromCenter, growFromCenter } from './movement/Scale';
 import { Rotate, rotate } from './movement/Rotate';
+import { VMobject } from '../core/VMobject';
 
 // Helper: cast Mobject to bypass abstract instantiation
 function mob(): Mobject {
@@ -122,6 +129,27 @@ describe('MoveToTargetPosition', () => {
     expect(m.position.x).toBeCloseTo(6, 5);
     expect(m.position.y).toBeCloseTo(8, 5);
     expect(m.position.z).toBeCloseTo(10, 5);
+  });
+
+  it('finish() sets exact target position', () => {
+    const m = mob() as MobjectWithTargetPosition;
+    m.position.set(1, 2, 3);
+    m.targetPosition = [10, 20, 30];
+    const anim = new MoveToTargetPosition(m);
+    anim.begin();
+    anim.interpolate(0.3); // partial
+    anim.finish();
+    expect(m.position.x).toBeCloseTo(10, 5);
+    expect(m.position.y).toBeCloseTo(20, 5);
+    expect(m.position.z).toBeCloseTo(30, 5);
+  });
+
+  it('moveToTargetPosition() factory creates instance', () => {
+    const m = mob() as MobjectWithTargetPosition;
+    m.targetPosition = [5, 6, 7];
+    const anim = moveToTargetPosition(m, { duration: 2 });
+    expect(anim).toBeInstanceOf(MoveToTargetPosition);
+    expect(anim.duration).toBe(2);
   });
 });
 
@@ -367,6 +395,24 @@ describe('Rotate', () => {
     anim.interpolate(0.3); // partial
     anim.finish();
     expect(m.rotation.z).toBeCloseTo(Math.PI, 5);
+  });
+
+  it('default aboutPoint uses mobject center', () => {
+    const m = new VMobject();
+    m.setPoints([
+      [2, 3, 0],
+      [3, 3, 0],
+      [3, 4, 0],
+      [2, 4, 0],
+    ]);
+    // No aboutPoint => defaults to mobject getCenter()
+    const anim = new Rotate(m, { angle: Math.PI / 2 });
+    expect(anim.aboutPoint).toBeNull();
+    anim.begin();
+    // Should rotate around center without error
+    anim.interpolate(1);
+    // Rotation should be applied (z axis)
+    expect(m.rotation.z).toBeCloseTo(Math.PI / 2, 5);
   });
 
   it('rotate() factory function creates a Rotate animation', () => {

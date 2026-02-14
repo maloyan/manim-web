@@ -415,5 +415,165 @@ describe('MarkupText', () => {
     it('should handle font_size "smaller"', () => {
       expect(segs('<span font_size="smaller">X</span>')[0].fontSize).toBeCloseTo(39.84, 0);
     });
+
+    it('should handle named absolute sizes', () => {
+      // Default fontSize is 48. Named sizes are multipliers.
+      expect(segs('<span font_size="xx-small">X</span>')[0].fontSize).toBeCloseTo(48 * 0.5789, 0);
+      expect(segs('<span font_size="medium">X</span>')[0].fontSize).toBeCloseTo(48, 0);
+      expect(segs('<span font_size="x-large">X</span>')[0].fontSize).toBeCloseTo(48 * 1.44, 0);
+      expect(segs('<span font_size="xx-large">X</span>')[0].fontSize).toBeCloseTo(48 * 1.728, 0);
+    });
+
+    it('should handle Pango units (>200) in font_size', () => {
+      // Value > 200 => divide by 1024
+      expect(segs('<span font_size="24576">X</span>')[0].fontSize).toBeCloseTo(24, 0);
+    });
+
+    it('should return current size for unparseable font_size', () => {
+      expect(segs('<span font_size="abc">X</span>')[0].fontSize).toBeCloseTo(48, 0);
+    });
+
+    it('should handle malformed markup: unclosed tag at top level', () => {
+      // '<b' without '>' - should treat as text
+      const s = segs('<b>Bold</b> then <i unclosed');
+      expect(s.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should handle stray closing tag at top level', () => {
+      // Closing tag outside any element
+      const s = segs('text</b>more');
+      expect(s.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should handle unknown element tag in Pango markup', () => {
+      // <div> is not a recognized Pango tag but has children
+      const s = segs('<b><div>text</div></b>');
+      expect(s.length).toBeGreaterThanOrEqual(1);
+      expect(s[0].text).toBe('text');
+    });
+
+    it('should handle malformed inner markup: no closing >', () => {
+      const s = segs('<b>text<i broken');
+      expect(s.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should handle inner text without tags (no < found)', () => {
+      // Triggers tagStart === -1 inside inner parser
+      const s = segs('<b>just plain text inside</b>');
+      expect(s[0].text).toBe('just plain text inside');
+    });
+
+    it('should handle span with style="normal"', () => {
+      expect(segs('<span style="normal">N</span>')[0].fontStyle).toBe('normal');
+    });
+
+    it('should handle span underline="true"', () => {
+      expect(segs('<span underline="true">U</span>')[0].underline).toBe(true);
+    });
+  });
+
+  describe('rendering integration', () => {
+    it('should construct with different textAlign options', () => {
+      const left = new MarkupText({ text: '<b>Left</b>', textAlign: 'left' });
+      const right = new MarkupText({ text: '<b>Right</b>', textAlign: 'right' });
+      const center = new MarkupText({ text: '<b>Center</b>', textAlign: 'center' });
+      expect(left.getStyledSegments()[0].text).toBe('Left');
+      expect(right.getStyledSegments()[0].text).toBe('Right');
+      expect(center.getStyledSegments()[0].text).toBe('Center');
+    });
+
+    it('should handle text with newlines in segments', () => {
+      const mt = new MarkupText({ text: '<b>Line1\nLine2</b>' });
+      const s = mt.getStyledSegments();
+      // The segments include text with newlines; split happens in _splitStyledSegmentsByLine
+      expect(s.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('should handle text with strokeWidth > 0', () => {
+      const mt = new MarkupText({ text: '<b>Stroked</b>', strokeWidth: 2 });
+      expect(mt.getStyledSegments()[0].text).toBe('Stroked');
+    });
+
+    it('should handle background color segment', () => {
+      const mt = new MarkupText({ text: '<span background="yellow">Highlighted</span>' });
+      expect(mt.getStyledSegments()[0].backgroundColor).toBe('yellow');
+    });
+
+    it('should handle underline rendering', () => {
+      const mt = new MarkupText({ text: '<u>Underlined text</u>' });
+      expect(mt.getStyledSegments()[0].underline).toBe(true);
+    });
+
+    it('should handle strikethrough rendering', () => {
+      const mt = new MarkupText({ text: '<s>Struck text</s>' });
+      expect(mt.getStyledSegments()[0].strikethrough).toBe(true);
+    });
+
+    it('should resolve segment font size with relativeScale', () => {
+      const mt = new MarkupText({ text: '<big>Big text</big>' });
+      const s = mt.getStyledSegments()[0];
+      // relativeScale is 1.2 for big; effective font size = 48 * 1.2 = 57.6
+      expect(s.relativeScale).toBeCloseTo(1.2, 2);
+    });
+
+    it('should handle numeric fontWeight in _buildStyledFontString', () => {
+      const mt = new MarkupText({ text: '<span weight="700">Heavy</span>' });
+      const s = mt.getStyledSegments()[0];
+      expect(s.fontWeight).toBe(700);
+    });
+
+    it('should handle segments with custom fontSize and fontFamily', () => {
+      const mt = new MarkupText({
+        text: '<span font_family="Courier" font_size="24">Custom</span>',
+      });
+      const s = mt.getStyledSegments()[0];
+      expect(s.fontFamily).toBe('Courier');
+      expect(s.fontSize).toBe(24);
+    });
+
+    it('should handle superscript stacking', () => {
+      const s = segs('<sup><sup>2</sup></sup>');
+      // Nested sup: shift compounds
+      expect(s[0].baselineShift).toBeLessThan(-0.35);
+      expect(s[0].relativeScale).toBeCloseTo(0.7 * 0.7, 2);
+    });
+
+    it('should handle mixed legacy markdown without overlaps', () => {
+      // Use text where patterns don't interfere with each other
+      const s = segs('a **bold** and `code` end');
+      expect(s.length).toBe(5);
+      expect(s[1].text).toBe('bold');
+      expect(s[1].fontWeight).toBe('bold');
+      expect(s[3].text).toBe('code');
+      expect(s[3].fontFamily).toBe('monospace');
+    });
+
+    it('should render strikethrough when setText is called', () => {
+      const mt = new MarkupText({ text: 'plain' });
+      mt.setText('<s>struck</s>');
+      const s = mt.getStyledSegments();
+      expect(s[0].strikethrough).toBe(true);
+    });
+
+    it('should render underline when setText is called', () => {
+      const mt = new MarkupText({ text: 'plain' });
+      mt.setText('<u>underlined</u>');
+      const s = mt.getStyledSegments();
+      expect(s[0].underline).toBe(true);
+    });
+
+    it('should render background color when setText is called', () => {
+      const mt = new MarkupText({ text: 'plain' });
+      mt.setText('<span background="yellow">highlighted</span>');
+      const s = mt.getStyledSegments();
+      expect(s[0].backgroundColor).toBe('yellow');
+    });
+
+    it('should render stroke when strokeWidth > 0 and setText is called', () => {
+      const mt = new MarkupText({ text: 'plain', strokeWidth: 2 });
+      mt.setText('<b>stroked</b>');
+      const s = mt.getStyledSegments();
+      expect(s[0].text).toBe('stroked');
+    });
   });
 });

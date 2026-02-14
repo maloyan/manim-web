@@ -339,6 +339,18 @@ describe('Variable', () => {
   });
 
   // -----------------------------------------------------------
+  // _createThreeObject
+  // -----------------------------------------------------------
+  describe('_createThreeObject via getThreeObject', () => {
+    it('should create a THREE group with child objects', () => {
+      const v = new Variable({ label: 'x', value: 5 });
+      const obj = v.getThreeObject();
+      expect(obj).toBeDefined();
+      expect(obj.children.length).toBeGreaterThanOrEqual(3);
+    });
+  });
+
+  // -----------------------------------------------------------
   // dispose
   // -----------------------------------------------------------
   describe('dispose', () => {

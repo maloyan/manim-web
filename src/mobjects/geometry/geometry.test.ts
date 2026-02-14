@@ -252,3 +252,105 @@ describe('Square', () => {
     expect(s).toBeInstanceOf(Rectangle);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Arc – uncovered branches
+// ---------------------------------------------------------------------------
+describe('Arc – uncovered branches', () => {
+  it('setStartAngle updates start angle and regenerates', () => {
+    const a = new Arc({ radius: 1, startAngle: 0, angle: Math.PI / 2 });
+    a.setStartAngle(Math.PI / 2);
+    expect(a.getStartAngle()).toBe(Math.PI / 2);
+    const start = a.getStartPoint();
+    expect(start[0]).toBeCloseTo(0, 10);
+    expect(start[1]).toBeCloseTo(1, 10);
+  });
+
+  it('setArcCenter updates center and regenerates', () => {
+    const a = new Arc({ radius: 1 });
+    a.setArcCenter([3, 4, 0]);
+    expect(a.getArcCenter()).toEqual([3, 4, 0]);
+    const start = a.getStartPoint();
+    expect(start[0]).toBeCloseTo(4, 10);
+    expect(start[1]).toBeCloseTo(4, 10);
+  });
+
+  it('_createCopy returns independent copy', () => {
+    const a = new Arc({
+      radius: 3,
+      startAngle: Math.PI / 4,
+      angle: Math.PI,
+      color: '#ff0000',
+      strokeWidth: 5,
+      numComponents: 12,
+      center: [1, 2, 0],
+    });
+    const copy = a.copy() as Arc;
+    expect(copy).not.toBe(a);
+    expect(copy.getRadius()).toBe(3);
+    expect(copy.getStartAngle()).toBe(Math.PI / 4);
+    expect(copy.getAngle()).toBe(Math.PI);
+    expect(copy.color).toBe('#ff0000');
+    expect(copy.strokeWidth).toBe(5);
+    expect(copy.getArcCenter()).toEqual([1, 2, 0]);
+  });
+
+  it('negative angle creates clockwise arc', () => {
+    const a = new Arc({ radius: 1, startAngle: 0, angle: -Math.PI / 2 });
+    expect(a.getArcLength()).toBeCloseTo(Math.PI / 2, 10);
+    const end = a.getEndPoint();
+    expect(end[0]).toBeCloseTo(0, 10);
+    expect(end[1]).toBeCloseTo(-1, 10);
+  });
+
+  it('full circle arc generates points', () => {
+    const a = new Arc({ radius: 1, angle: Math.PI * 2 });
+    expect(a.numPoints).toBeGreaterThan(0);
+    expect(a.getArcLength()).toBeCloseTo(2 * Math.PI, 10);
+  });
+
+  it('custom center offsets start and end points', () => {
+    const a = new Arc({ radius: 1, center: [5, 5, 0], startAngle: 0, angle: Math.PI / 2 });
+    const start = a.getStartPoint();
+    const end = a.getEndPoint();
+    expect(start[0]).toBeCloseTo(6, 10);
+    expect(start[1]).toBeCloseTo(5, 10);
+    expect(end[0]).toBeCloseTo(5, 10);
+    expect(end[1]).toBeCloseTo(6, 10);
+  });
+
+  it('pointFromProportion at 0 and 1 match start/end', () => {
+    const a = new Arc({
+      radius: 2,
+      startAngle: Math.PI / 6,
+      angle: Math.PI / 3,
+      center: [1, 1, 0],
+    });
+    const start = a.getStartPoint();
+    const prop0 = a.pointFromProportion(0);
+    expect(prop0[0]).toBeCloseTo(start[0], 10);
+    expect(prop0[1]).toBeCloseTo(start[1], 10);
+    const end = a.getEndPoint();
+    const prop1 = a.pointFromProportion(1);
+    expect(prop1[0]).toBeCloseTo(end[0], 10);
+    expect(prop1[1]).toBeCloseTo(end[1], 10);
+  });
+
+  it('custom numComponents changes Bezier resolution', () => {
+    const a4 = new Arc({ angle: Math.PI * 2, numComponents: 4 });
+    const a16 = new Arc({ angle: Math.PI * 2, numComponents: 16 });
+    expect(a16.numPoints).toBeGreaterThan(a4.numPoints);
+  });
+
+  it('setStartAngle is chainable', () => {
+    const a = new Arc();
+    const result = a.setStartAngle(Math.PI);
+    expect(result).toBe(a);
+  });
+
+  it('setArcCenter is chainable', () => {
+    const a = new Arc();
+    const result = a.setArcCenter([1, 1, 0]);
+    expect(result).toBe(a);
+  });
+});

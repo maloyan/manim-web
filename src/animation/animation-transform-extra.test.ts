@@ -1401,3 +1401,362 @@ describe('TransformAnimations', () => {
     expect(meta.duration).toBeCloseTo(2, 5);
   });
 });
+
+// ── TransformMatchingShapes extra coverage ──────────────────────────────────
+
+describe('TransformMatchingShapes - fade-in with parent', () => {
+  it('adds fade-in copies to parent when source has a parent', () => {
+    // Source has 1 child, target has 2 children -> 1 unmatched target fades in
+    const parentGroup = new VMobject();
+    const srcChild = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    const src = vgroup(srcChild);
+    parentGroup.add(src);
+
+    const tgtChild1 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    const tgtChild2 = vm([
+      [5, 5, 0],
+      [6, 5, 0],
+    ]);
+    tgtChild2.opacity = 0.8;
+    const tgt = vgroup(tgtChild1, tgtChild2);
+
+    const anim = new TransformMatchingShapes(src, tgt);
+    anim.begin();
+    // parentGroup should now have extra child for fade-in
+    expect(parentGroup.children.length).toBeGreaterThan(1);
+    anim.interpolate(0.5);
+    anim.finish();
+    expect(anim.isFinished()).toBe(true);
+  });
+
+  it('handles unmatched source fading out', () => {
+    // Source has 2 children, target has 1 -> 1 source fades out
+    const srcChild1 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    srcChild1.opacity = 1;
+    const srcChild2 = vm([
+      [5, 5, 0],
+      [6, 5, 0],
+    ]);
+    srcChild2.opacity = 1;
+    const src = vgroup(srcChild1, srcChild2);
+    const tgtChild = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    const tgt = vgroup(tgtChild);
+
+    const anim = new TransformMatchingShapes(src, tgt);
+    anim.begin();
+    anim.interpolate(0.5);
+    // One source should be fading out
+    const minOpacity = Math.min(srcChild1.opacity, srcChild2.opacity);
+    expect(minOpacity).toBeLessThan(1);
+    anim.finish();
+  });
+});
+
+// ── TransformMatchingTex extra coverage ─────────────────────────────────────
+
+describe('TransformMatchingTex - mismatch cross-fade', () => {
+  it('cross-fades mismatched pairs at alpha < 0.5 and >= 0.5', () => {
+    const keyFn = (v: VMobject) => `unique_${v.getPoints()[0]?.[0]}_${v.getPoints()[0]?.[1]}`;
+    const srcChild = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    srcChild.opacity = 1;
+    const tgtChild = vm([
+      [10, 10, 0],
+      [11, 10, 0],
+    ]);
+    tgtChild.opacity = 0.8;
+
+    const src = vgroup(srcChild);
+    const tgt = vgroup(tgtChild);
+
+    const anim = new TransformMatchingTex(src, tgt, {
+      keyFunc: keyFn,
+      transformMismatches: true,
+    });
+    anim.begin();
+
+    // At alpha 0.25 (< 0.5): fading out
+    anim.interpolate(0.25);
+    expect(srcChild.opacity).toBeGreaterThan(0);
+    expect(srcChild.opacity).toBeLessThan(1);
+
+    // At alpha 0.75 (> 0.5): fading in
+    anim.interpolate(0.75);
+    expect(srcChild.opacity).toBeGreaterThan(0);
+
+    anim.finish();
+  });
+
+  it('handles nested VGroups in _getTexParts', () => {
+    // Create nested structure: parent -> group -> children
+    const leaf1 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    const leaf2 = vm([
+      [0, 1, 0],
+      [1, 1, 0],
+    ]);
+    const innerGroup = vgroup(leaf1, leaf2);
+    const src = vgroup(innerGroup);
+
+    const tLeaf1 = vm([
+      [5, 0, 0],
+      [6, 0, 0],
+    ]);
+    const tLeaf2 = vm([
+      [5, 1, 0],
+      [6, 1, 0],
+    ]);
+    const tInnerGroup = vgroup(tLeaf1, tLeaf2);
+    const tgt = vgroup(tInnerGroup);
+
+    const anim = new TransformMatchingTex(src, tgt);
+    anim.begin();
+    anim.interpolate(0.5);
+    anim.finish();
+    expect(anim.isFinished()).toBe(true);
+  });
+
+  it('finish finalizes mismatched pairs', () => {
+    const keyFn = (v: VMobject) => `u_${v.getPoints()[0]?.[0]}`;
+    const srcChild = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    srcChild.opacity = 1;
+    const tgtChild = vm([
+      [10, 0, 0],
+      [11, 0, 0],
+    ]);
+    tgtChild.opacity = 0.6;
+    tgtChild.color = '#ff0000';
+
+    const anim = new TransformMatchingTex(vgroup(srcChild), vgroup(tgtChild), {
+      keyFunc: keyFn,
+      transformMismatches: true,
+    });
+    anim.begin();
+    anim.finish();
+    expect(srcChild.opacity).toBeCloseTo(0.6, 5);
+    expect(srcChild.color).toBe('#ff0000');
+  });
+});
+
+// ── TransformMatchingTex asymmetric unmatched coverage ──────────────────────
+
+describe('TransformMatchingTex - asymmetric transformMismatches', () => {
+  it('fades out extra unmatched sources when sources > targets (lines 572-573)', () => {
+    // 3 unique source children, 1 unique target child
+    // All different keys -> 0 matched by key
+    // transformMismatches: Hungarian pairs 1 source with 1 target, leaving 2 sources unpaired
+    const s1 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    s1.opacity = 1;
+    const s2 = vm([
+      [2, 0, 0],
+      [3, 0, 0],
+    ]);
+    s2.opacity = 1;
+    const s3 = vm([
+      [4, 0, 0],
+      [5, 0, 0],
+    ]);
+    s3.opacity = 1;
+    const t1 = vm([
+      [10, 10, 0],
+      [11, 10, 0],
+    ]);
+    t1.opacity = 1;
+
+    const keyFn = (v: VMobject) => {
+      const p = v.getPoints();
+      return `k_${p[0]?.[0]}_${p[0]?.[1]}`;
+    };
+
+    const src = vgroup(s1, s2, s3);
+    const tgt = vgroup(t1);
+
+    const anim = new TransformMatchingTex(src, tgt, {
+      keyFunc: keyFn,
+      transformMismatches: true,
+    });
+    anim.begin();
+    anim.interpolate(0.5);
+
+    // At least 2 sources should be fading (opacity < 1)
+    const fading = [s1, s2, s3].filter((s) => s.opacity < 1);
+    expect(fading.length).toBeGreaterThanOrEqual(2);
+
+    anim.finish();
+  });
+
+  it('fades in extra unmatched targets when targets > sources (lines 585, 655)', () => {
+    // 1 unique source child, 3 unique target children
+    // All different keys -> 0 matched by key
+    // transformMismatches: Hungarian pairs 1 source with closest target, 2 targets fade in
+    const s1 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    s1.opacity = 1;
+    const t1 = vm([
+      [10, 0, 0],
+      [11, 0, 0],
+    ]);
+    t1.opacity = 0.9;
+    const t2 = vm([
+      [20, 0, 0],
+      [21, 0, 0],
+    ]);
+    t2.opacity = 0.8;
+    const t3 = vm([
+      [30, 0, 0],
+      [31, 0, 0],
+    ]);
+    t3.opacity = 0.7;
+
+    const keyFn = (v: VMobject) => {
+      const p = v.getPoints();
+      return `k_${p[0]?.[0]}_${p[0]?.[1]}`;
+    };
+
+    // Add parent so _addFadeInPart hits line 655 (parent.add)
+    const parentGroup = new VMobject();
+    const src = vgroup(s1);
+    parentGroup.add(src);
+
+    const tgt = vgroup(t1, t2, t3);
+
+    const anim = new TransformMatchingTex(src, tgt, {
+      keyFunc: keyFn,
+      transformMismatches: true,
+    });
+    anim.begin();
+
+    // parentGroup should have fade-in copies added
+    expect(parentGroup.children.length).toBeGreaterThan(1);
+
+    anim.interpolate(0.5);
+    anim.finish();
+  });
+});
+
+describe('TransformMatchingTex - finish with fade parts (lines 729, 733)', () => {
+  it('finish() sets fadeOutParts to 0 and fadeInParts to target opacity', () => {
+    // Source has 2 children, target has 2 children, all unique keys -> no key matches
+    // transformMismatches: false -> all sources fadeOut, all targets fadeIn
+    const s1 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    s1.opacity = 1;
+    const s2 = vm([
+      [2, 0, 0],
+      [3, 0, 0],
+    ]);
+    s2.opacity = 0.9;
+    const t1 = vm([
+      [10, 10, 0],
+      [11, 10, 0],
+    ]);
+    t1.opacity = 0.8;
+    const t2 = vm([
+      [20, 20, 0],
+      [21, 20, 0],
+    ]);
+    t2.opacity = 0.7;
+
+    const keyFn = (v: VMobject) => {
+      const p = v.getPoints();
+      return `unique_${p[0]?.[0]}_${p[0]?.[1]}_${p[1]?.[0]}`;
+    };
+
+    const parentGroup = new VMobject();
+    const src = vgroup(s1, s2);
+    parentGroup.add(src);
+    const tgt = vgroup(t1, t2);
+
+    const anim = new TransformMatchingTex(src, tgt, {
+      keyFunc: keyFn,
+      transformMismatches: false,
+    });
+    anim.begin();
+    anim.interpolate(0.5);
+    anim.finish();
+
+    // Sources should be faded out to 0
+    expect(s1.opacity).toBe(0);
+    expect(s2.opacity).toBe(0);
+  });
+});
+
+describe('TransformMatchingTex - defaultTexKey with getLatex (line 393)', () => {
+  it('uses getLatex() when available on vmobject', () => {
+    const s1 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    (s1 as unknown as { getLatex: () => string }).getLatex = () => 'x^2';
+    const s2 = vm([
+      [2, 0, 0],
+      [3, 0, 0],
+    ]);
+    (s2 as unknown as { getLatex: () => string }).getLatex = () => 'y^2';
+
+    const t1 = vm([
+      [10, 0, 0],
+      [11, 0, 0],
+    ]);
+    (t1 as unknown as { getLatex: () => string }).getLatex = () => 'x^2';
+    const t2 = vm([
+      [20, 0, 0],
+      [21, 0, 0],
+    ]);
+    (t2 as unknown as { getLatex: () => string }).getLatex = () => 'z^2';
+
+    const src = vgroup(s1, s2);
+    const tgt = vgroup(t1, t2);
+
+    // Use default key function (no keyFunc override) which calls defaultTexKey
+    const anim = new TransformMatchingTex(src, tgt);
+    anim.begin();
+    anim.interpolate(0.5);
+    anim.finish();
+    expect(anim.isFinished()).toBe(true);
+  });
+});
+
+describe('TransformMatchingTex - empty VMobject getBoundingBox (lines 22-23)', () => {
+  it('handles VMobject with no points via getBoundingBox fallback', () => {
+    // Create children with no points - defaultTexKey calls getBoundingBox which hits the empty branch
+    const s1 = new VMobject(); // no points set
+    const t1 = new VMobject(); // no points set
+
+    const src = vgroup(s1);
+    const tgt = vgroup(t1);
+
+    // defaultTexKey will call getBoundingBox on empty VMobjects
+    const anim = new TransformMatchingTex(src, tgt);
+    anim.begin();
+    anim.interpolate(0.5);
+    anim.finish();
+    expect(anim.isFinished()).toBe(true);
+  });
+});

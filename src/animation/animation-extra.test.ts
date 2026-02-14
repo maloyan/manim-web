@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Mobject } from '../core/Mobject';
+import { VMobject } from '../core/VMobject';
 import { Animation, AnimationOptions } from './Animation';
+import { MoveAlongPath } from './movement/MoveAlongPath';
 import { AnimationGroup } from './AnimationGroup';
 import { laggedStart, LaggedStart } from './LaggedStart';
 import { UpdateFromAlphaFunc, updateFromAlphaFunc } from './UpdateFromAlphaFunc';
@@ -472,5 +474,44 @@ describe('LaggedStartMap', () => {
     const group = laggedStartMap(TestAnimation, []);
     expect(group.animations.length).toBe(0);
     expect(group.duration).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MoveAlongPath - rotateAlongPath
+// ---------------------------------------------------------------------------
+describe('MoveAlongPath rotateAlongPath', () => {
+  it('sets rotation to tangent direction when rotateAlongPath is true', () => {
+    const path = new VMobject();
+    // Horizontal line from (0,0,0) to (4,0,0)
+    path.setPoints([
+      [0, 0, 0],
+      [1, 0, 0],
+      [3, 0, 0],
+      [4, 0, 0],
+    ]);
+    const mob = new VMobject();
+    const anim = new MoveAlongPath(mob, { path, rotateAlongPath: true });
+    anim.begin();
+    anim.interpolate(0.5);
+    // Tangent along x-axis => angle ~ 0
+    expect(mob.rotation.z).toBeCloseTo(0, 3);
+  });
+
+  it('sets rotation for angled path', () => {
+    const path = new VMobject();
+    // Diagonal line from (0,0,0) to (4,4,0) via bezier
+    path.setPoints([
+      [0, 0, 0],
+      [1, 1, 0],
+      [3, 3, 0],
+      [4, 4, 0],
+    ]);
+    const mob = new VMobject();
+    const anim = new MoveAlongPath(mob, { path, rotateAlongPath: true });
+    anim.begin();
+    anim.interpolate(0.5);
+    // Tangent at 45 degrees => rotation.z ~ PI/4
+    expect(mob.rotation.z).toBeCloseTo(Math.PI / 4, 2);
   });
 });

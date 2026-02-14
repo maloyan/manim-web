@@ -419,6 +419,83 @@ describe('Cross', () => {
     expect(new Cross(new Square({ sideLength: 3 })).children.length).toBe(2);
     expect(new Cross(new Circle({ radius: 1 })).children.length).toBe(2);
   });
+
+  it('copy creates equivalent Cross', () => {
+    const target = new Rectangle({ width: 2, height: 2 });
+    const cross = new Cross(target, { color: '#00ff00', scale: 1.5, strokeWidth: 8 });
+    const copy = cross.copy();
+    expect(copy.getScale()).toBe(1.5);
+    expect(copy.color.toLowerCase()).toBe('#00ff00');
+    expect(copy.strokeWidth).toBe(8);
+    expect(copy.children.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('tracking updater adjusts lines when target moves', () => {
+    const target = new Rectangle({ width: 2, height: 2 });
+    const cross = new Cross(target);
+    target.shift([3, 3, 0]);
+    cross.update(0);
+    expect(cross.children.length).toBe(2);
+  });
+});
+
+describe('BackgroundRectangle copy and updater', () => {
+  it('copy creates equivalent BackgroundRectangle', () => {
+    const target = new Rectangle({ width: 4, height: 2 });
+    const bg = new BackgroundRectangle(target, { buff: 0.5, fillOpacity: 0.9, color: '#123456' });
+    const copy = bg.copy();
+    expect(copy.getBuff()).toBe(0.5);
+    expect(copy.fillOpacity).toBe(0.9);
+    expect(copy.color.toLowerCase()).toBe('#123456');
+  });
+
+  it('tracking updater syncs to target changes', () => {
+    const target = new Rectangle({ width: 4, height: 2 });
+    const bg = new BackgroundRectangle(target);
+    target.shift([1, 1, 0]);
+    bg.update(0);
+    expect(bg.getWidth()).toBeGreaterThan(0);
+  });
+});
+
+describe('SurroundingRectangle copy and updater', () => {
+  it('copy creates equivalent SurroundingRectangle', () => {
+    const target = new Rectangle({ width: 4, height: 2 });
+    const sr = new SurroundingRectangle(target, { buff: 0.3, cornerRadius: 0.2, color: '#aabbcc' });
+    const copy = sr.copy();
+    expect(copy.getBuff()).toBe(0.3);
+    expect(copy.getCornerRadius()).toBe(0.2);
+    expect(copy.color.toLowerCase()).toBe('#aabbcc');
+  });
+
+  it('tracking updater regenerates when target moves', () => {
+    const target = new Rectangle({ width: 4, height: 2 });
+    const sr = new SurroundingRectangle(target);
+    const ptsBefore = sr.getPoints().length;
+    target.shift([2, 0, 0]);
+    sr.update(0);
+    expect(sr.getPoints().length).toBe(ptsBefore);
+  });
+});
+
+describe('Underline copy and updater', () => {
+  it('copy creates equivalent Underline', () => {
+    const target = new Rectangle({ width: 4, height: 2 });
+    const ul = new Underline(target, { buff: 0.3, stretch: 0.5, color: '#aabb00' });
+    const copy = ul.copy();
+    expect(copy.getBuff()).toBe(0.3);
+    expect(copy.getStretch()).toBe(0.5);
+    expect(copy.color.toLowerCase()).toBe('#aabb00');
+  });
+
+  it('tracking updater syncs to target changes', () => {
+    const target = new Rectangle({ width: 4, height: 2 });
+    const ul = new Underline(target);
+    target.shift([1, 1, 0]);
+    ul.update(0);
+    const start = ul.getStart();
+    expect(start[1]).toBeLessThan(1);
+  });
 });
 
 // ---------------------------------------------------------------------------

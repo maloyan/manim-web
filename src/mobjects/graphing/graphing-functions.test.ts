@@ -781,4 +781,37 @@ describe('VectorFieldVector', () => {
       expect(closeTo(v.getVisualLength(), 3)).toBe(true);
     });
   });
+
+  describe('setStartPoint', () => {
+    it('should update start point and keep direction', () => {
+      const v = new VectorFieldVector({ direction: [1, 0, 0], startPoint: [0, 0, 0] });
+      v.setStartPoint([5, 5, 0]);
+      expect(v.getStartPoint()).toEqual([5, 5, 0]);
+      expect(v.getDirection()).toEqual([1, 0, 0]);
+    });
+
+    it('should be chainable', () => {
+      const v = new VectorFieldVector({ direction: [1, 0, 0] });
+      const result = v.setStartPoint([2, 3, 0]);
+      expect(result).toBe(v);
+    });
+  });
+
+  describe('copy', () => {
+    it('should create an independent copy', () => {
+      const v = new VectorFieldVector({
+        direction: [3, 4, 0],
+        startPoint: [1, 2, 0],
+        color: '#ff0000',
+        maxLength: 5,
+      });
+      const cp = v.copy();
+      expect(cp).not.toBe(v);
+      expect(cp).toBeInstanceOf(VectorFieldVector);
+      const cpv = cp as VectorFieldVector;
+      expect(cpv.getDirection()).toEqual([3, 4, 0]);
+      expect(cpv.getStartPoint()).toEqual([1, 2, 0]);
+      expect(cpv.getMaxLength()).toBe(5);
+    });
+  });
 });

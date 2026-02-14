@@ -190,86 +190,23 @@ describe('DecimalNumber', () => {
     });
   });
 
-  describe('_formatNumber (tested via observable behavior)', () => {
-    // _formatNumber is protected, so we test its effects indirectly.
-    // The formatted string is what gets rendered. We can verify by
-    // checking that width changes as expected for different formatting options.
-
-    it('should handle default formatting (value=0, 2 decimal places)', () => {
-      // The number "0.00" with default settings
-      const num = new DecimalNumber({ value: 0, numDecimalPlaces: 2 });
-      expect(num.getValue()).toBe(0);
-      expect(num.getNumDecimalPlaces()).toBe(2);
-      // Width should be positive for "0.00"
-      expect(num.getWidth()).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should format with includeSign for positive number', () => {
-      // "+3.14" should be wider than "3.14" due to the + sign
-      const withSign = new DecimalNumber({ value: 3.14, includeSign: true });
-      const withoutSign = new DecimalNumber({ value: 3.14, includeSign: false });
-      // Both should have valid widths
-      expect(withSign.getWidth()).toBeGreaterThanOrEqual(0);
-      expect(withoutSign.getWidth()).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should not add sign for negative numbers even with includeSign', () => {
-      // includeSign only adds + for positive; negative already has -
-      const num = new DecimalNumber({ value: -3.14, includeSign: true });
-      expect(num.getValue()).toBe(-3.14);
-    });
-
-    it('should not add sign for zero with includeSign', () => {
-      // 0 is not > 0, so no sign
-      const num = new DecimalNumber({ value: 0, includeSign: true });
-      expect(num.getValue()).toBe(0);
-    });
-
-    it('should handle groupWithCommas for large numbers', () => {
-      // "1,000.00" should be wider than "100.00"
-      const large = new DecimalNumber({ value: 1000, groupWithCommas: true });
-      const small = new DecimalNumber({ value: 100, groupWithCommas: true });
-      expect(large.getWidth()).toBeGreaterThanOrEqual(0);
-      expect(small.getWidth()).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle showEllipsis', () => {
-      const withEllipsis = new DecimalNumber({ value: 3.14, showEllipsis: true });
-      const withoutEllipsis = new DecimalNumber({ value: 3.14, showEllipsis: false });
-      expect(withEllipsis.getWidth()).toBeGreaterThanOrEqual(0);
-      expect(withoutEllipsis.getWidth()).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle unit', () => {
-      const withUnit = new DecimalNumber({ value: 75.5, unit: '%' });
-      const withoutUnit = new DecimalNumber({ value: 75.5 });
-      expect(withUnit.getWidth()).toBeGreaterThanOrEqual(0);
-      expect(withoutUnit.getWidth()).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle combined formatting options', () => {
-      const num = new DecimalNumber({
-        value: 1000,
-        includeSign: true,
-        groupWithCommas: true,
-        unit: '%',
-        showEllipsis: true,
-      });
-      // "+1,000.00%..." - should have valid dimensions
-      expect(num.getWidth()).toBeGreaterThanOrEqual(0);
-      expect(num.getHeight()).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle 0 decimal places', () => {
-      const num = new DecimalNumber({ value: 42, numDecimalPlaces: 0 });
-      // "42" - no decimal point
-      expect(num.getWidth()).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle many decimal places', () => {
-      const num = new DecimalNumber({ value: 3.14159, numDecimalPlaces: 5 });
-      // "3.14159"
-      expect(num.getWidth()).toBeGreaterThanOrEqual(0);
+  describe('_formatNumber via constructor options (width checks)', () => {
+    it('handles includeSign, groupWithCommas, unit, showEllipsis, and decimal places', () => {
+      const opts = [
+        { value: 3.14, includeSign: true },
+        { value: -3.14, includeSign: true },
+        { value: 0, includeSign: true },
+        { value: 1000, groupWithCommas: true },
+        { value: 75.5, unit: '%' },
+        { value: 3.14, showEllipsis: true },
+        { value: 1000, includeSign: true, groupWithCommas: true, unit: '%', showEllipsis: true },
+        { value: 42, numDecimalPlaces: 0 },
+        { value: 3.14159, numDecimalPlaces: 5 },
+      ];
+      for (const o of opts) {
+        const num = new DecimalNumber(o);
+        expect(num.getWidth()).toBeGreaterThanOrEqual(0);
+      }
     });
   });
 
@@ -366,6 +303,12 @@ describe('DecimalNumber', () => {
       num.dispose();
       expect(() => num.dispose()).not.toThrow();
     });
+
+    it('should dispose mesh resources after getThreeObject', () => {
+      const num = new DecimalNumber({ value: 1 });
+      num.getThreeObject();
+      expect(() => num.dispose()).not.toThrow();
+    });
   });
 
   describe('getCenter', () => {
@@ -380,6 +323,55 @@ describe('DecimalNumber', () => {
       num.position.set(1, 2, 3);
       const center = num.getCenter();
       expect(center).toEqual([1, 2, 3]);
+    });
+  });
+
+  describe('_formatNumber via setValue', () => {
+    it('covers includeSign branch', () => {
+      const n = new DecimalNumber({ value: 1, includeSign: true });
+      n.setValue(5);
+      expect(n.getValue()).toBe(5);
+    });
+    it('covers groupWithCommas branch', () => {
+      const n = new DecimalNumber({ value: 0, groupWithCommas: true, numDecimalPlaces: 2 });
+      n.setValue(1234567.89);
+      expect(n.getValue()).toBe(1234567.89);
+    });
+    it('covers unit branch', () => {
+      const n = new DecimalNumber({ value: 0, unit: 'px' });
+      n.setValue(10);
+      expect(n.getValue()).toBe(10);
+    });
+    it('covers showEllipsis branch', () => {
+      const n = new DecimalNumber({ value: 0, showEllipsis: true });
+      n.setValue(3.14);
+      expect(n.getValue()).toBe(3.14);
+    });
+    it('covers negative numDecimalPlaces (toString branch)', () => {
+      const n = new DecimalNumber({ value: 0, numDecimalPlaces: -1 });
+      n.setValue(3.14159);
+      expect(n.getValue()).toBe(3.14159);
+    });
+  });
+
+  describe('Three.js integration', () => {
+    it('getThreeObject creates mesh and texture', () => {
+      const n = new DecimalNumber({ value: 42 });
+      const obj = n.getThreeObject();
+      expect(obj).toBeDefined();
+    });
+    it('_syncMaterialToThree runs after getThreeObject', () => {
+      const n = new DecimalNumber({ value: 1 });
+      n.getThreeObject();
+      n.setColor('#ff0000');
+      const obj = n.getThreeObject();
+      expect(obj).toBeDefined();
+    });
+    it('setValue updates mesh after getThreeObject', () => {
+      const n = new DecimalNumber({ value: 1 });
+      n.getThreeObject();
+      n.setValue(999);
+      expect(n.getValue()).toBe(999);
     });
   });
 

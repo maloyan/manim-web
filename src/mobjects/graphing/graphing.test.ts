@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { NumberLine, UnitInterval } from './NumberLine';
+import { FunctionGraph } from './FunctionGraph';
 import { Axes } from './Axes';
 
 // ---------------------------------------------------------------------------
@@ -367,5 +368,166 @@ describe('Axes', () => {
 });
 
 // ---------------------------------------------------------------------------
-// FunctionGraph
+// NumberLine – uncovered branches
 // ---------------------------------------------------------------------------
+describe('NumberLine – uncovered branches', () => {
+  it('includeNumbers creates labels; numbersToExclude removes them', () => {
+    const nl = new NumberLine({ xRange: [0, 3, 1], includeNumbers: true });
+    expect(nl.getNumberLabels().length).toBe(4);
+    const nl2 = new NumberLine({
+      xRange: [0, 3, 1],
+      includeNumbers: true,
+      numbersToExclude: [0, 3],
+    });
+    expect(nl2.getNumberLabels().length).toBe(2);
+  });
+
+  it('numbersToInclude overrides includeNumbers; filters out-of-range and excluded', () => {
+    expect(
+      new NumberLine({ xRange: [0, 5, 1], numbersToInclude: [1, 3, 5] }).getNumberLabels().length,
+    ).toBe(3);
+    expect(
+      new NumberLine({
+        xRange: [0, 5, 1],
+        numbersToInclude: [1, 3, 5],
+        numbersToExclude: [3],
+      }).getNumberLabels().length,
+    ).toBe(2);
+    expect(
+      new NumberLine({ xRange: [0, 3, 1], numbersToInclude: [-10, 1, 2, 100] }).getNumberLabels()
+        .length,
+    ).toBe(2);
+  });
+
+  it('elongated ticks and decimal labels', () => {
+    const nl = new NumberLine({
+      xRange: [0, 2, 1],
+      includeNumbers: true,
+      numbersWithElongatedTicks: [1],
+    });
+    expect(nl.getNumberLabels().length).toBe(3);
+    expect(nl.getTickMarks().length).toBe(3);
+    const nl2 = new NumberLine({ xRange: [0, 1, 0.5], includeNumbers: true, decimalPlaces: 1 });
+    expect(nl2.getNumberLabels().length).toBe(3);
+  });
+
+  it('zero-range returns position.x', () => {
+    const nl = new NumberLine({ xRange: [5, 5, 1] });
+    expect(nl.numberToPoint(5)[0]).toBe(nl.position.x);
+  });
+
+  it('_createCopy returns independent copy', () => {
+    const nl = new NumberLine({
+      xRange: [0, 5, 1],
+      length: 8,
+      includeNumbers: true,
+      numbersToExclude: [0],
+      numbersToInclude: [1, 2, 3],
+      numbersWithElongatedTicks: [2],
+      decimalPlaces: 1,
+      tickSize: 0.3,
+    });
+    const copy = nl.copy() as NumberLine;
+    expect(copy).not.toBe(nl);
+    expect(copy.getXRange()).toEqual(nl.getXRange());
+    expect(copy.getLength()).toBe(8);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// UnitInterval – uncovered branches
+// ---------------------------------------------------------------------------
+describe('UnitInterval – uncovered branches', () => {
+  it('numDecimalPlaces=0 gives step 0.5; copy preserves it', () => {
+    const ui = new UnitInterval({ numDecimalPlaces: 0 });
+    expect(closeTo(ui.getXRange()[2], 0.5)).toBe(true);
+    const copy = ui.copy() as UnitInterval;
+    expect(closeTo(copy.getXRange()[2], 0.5)).toBe(true);
+  });
+
+  it('_createCopy for numDecimalPlaces=1 and =2', () => {
+    const u1 = new UnitInterval({ numDecimalPlaces: 1 });
+    expect(closeTo((u1.copy() as UnitInterval).getXRange()[2], 0.1)).toBe(true);
+    const u2 = new UnitInterval({ length: 8, tickSize: 0.3, numDecimalPlaces: 2 });
+    const c2 = u2.copy() as UnitInterval;
+    expect(c2.getLength()).toBe(8);
+    expect(c2.getTickSize()).toBe(0.3);
+  });
+
+  it('custom options applied', () => {
+    const ui = new UnitInterval({
+      color: '#ff0000',
+      strokeWidth: 4,
+      includeTicks: false,
+      includeNumbers: true,
+      numbersToExclude: [0],
+    });
+    expect(ui.color).toBe('#ff0000');
+    expect(ui.hasTicks()).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FunctionGraph – uncovered branches
+// ---------------------------------------------------------------------------
+describe('FunctionGraph – uncovered branches', () => {
+  it('setAxes sets/clears axes', () => {
+    const fg = new FunctionGraph({ func: (x) => x });
+    const axes = new Axes();
+    expect(fg.setAxes(axes)).toBe(fg);
+    fg.setAxes(null);
+    const pt = fg.getPointFromX(2);
+    expect(pt).not.toBeNull();
+    expect(closeTo(pt![0], 2)).toBe(true);
+  });
+
+  it('_createCopy preserves all options including axes', () => {
+    const axes = new Axes();
+    const fg = new FunctionGraph({
+      func: (x) => x * x,
+      xRange: [-3, 3],
+      color: '#ff0000',
+      strokeWidth: 4,
+      discontinuities: [0],
+      numSamples: 50,
+      axes,
+    });
+    const copy = fg.copy() as FunctionGraph;
+    expect(copy).not.toBe(fg);
+    expect(copy.getXRange()).toEqual([-3, 3]);
+    expect(copy.color).toBe('#ff0000');
+    expect(copy.getNumSamples()).toBe(50);
+    expect(copy.getDiscontinuities()).toEqual([0]);
+    const pt = copy.getPointFromX(1);
+    expect(pt).not.toBeNull();
+  });
+
+  it('getPointFromX edge cases: throws, axes transform, Infinity', () => {
+    const fg1 = new FunctionGraph({
+      func: (x) => {
+        if (x > 0) throw new Error('boom');
+        return x;
+      },
+      xRange: [-5, 5],
+    });
+    expect(fg1.getPointFromX(2)).toBeNull();
+    const fg2 = new FunctionGraph({ func: () => Infinity, xRange: [-5, 5] });
+    expect(fg2.getPointFromX(0)).toBeNull();
+    const axes = new Axes({ xRange: [-5, 5, 1], yRange: [-5, 5, 1], xLength: 10, yLength: 10 });
+    const fg3 = new FunctionGraph({ func: (x) => x * 2, axes });
+    const pt = fg3.getPointFromX(1);
+    expect(pt).not.toBeNull();
+    expect(tupleCloseTo(pt!, axes.coordsToPoint(1, 2))).toBe(true);
+  });
+
+  it('multiple discontinuities split the range', () => {
+    const fg = new FunctionGraph({ func: (x) => x, xRange: [-5, 5], discontinuities: [-2, 0, 2] });
+    expect(fg.getPoints().length).toBeGreaterThan(0);
+  });
+
+  it('2-point segment uses simple Bezier line', () => {
+    // Very narrow range with few samples produces exactly 2 points in a segment
+    const fg = new FunctionGraph({ func: (x) => x, xRange: [0, 0.01], numSamples: 2 });
+    expect(fg.getPoints().length).toBe(4); // 2 points -> 1 cubic Bezier (4 control points)
+  });
+});

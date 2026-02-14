@@ -639,6 +639,89 @@ describe('ImplicitFunction', () => {
     expect(cp.color).toBe('#00ff00');
     expect(cp.getXRange()).toEqual([-2, 2]);
   });
+
+  it('handles saddle point case 5 center > 0 branch', () => {
+    // (x-0.1)*(y-0.1) with saddle shifted off grid lines
+    // In cell containing saddle, BL+TR > 0, center > 0
+    const imp = new ImplicitFunction({
+      func: (x, y) => (x - 0.1) * (y - 0.1),
+      xRange: [-2, 2],
+      yRange: [-2, 2],
+      minDepth: 3,
+      maxDepth: 3,
+    });
+    expect(imp.getPoints().length).toBeGreaterThan(0);
+  });
+
+  it('handles saddle point case 5 center <= 0 branch', () => {
+    // depth 2, range [-2,2], cell [0,1]x[0,1] for f=(x-0.5)*(y-0.5)-0.01
+    // BL(0,0)=0.25-0.01=0.24>0, BR(1,0)=-0.25-0.01<0,
+    // TL(0,1)=-0.25-0.01<0, TR(1,1)=0.25-0.01=0.24>0 => case 5
+    // center(0.5,0.5)=-0.01 < 0 => else branch (lines 264-265)
+    const imp = new ImplicitFunction({
+      func: (x, y) => (x - 0.5) * (y - 0.5) - 0.01,
+      xRange: [-2, 2],
+      yRange: [-2, 2],
+      minDepth: 2,
+      maxDepth: 2,
+    });
+    expect(imp.getPoints().length).toBeGreaterThan(0);
+  });
+
+  it('handles saddle point case 10 center > 0 branch', () => {
+    // depth 2, range [-2,2], cell [0,1]x[0,1] for f=-(x-0.5)*(y-0.5)+0.01
+    // BL(0,0)=-0.24<0, BR(1,0)=0.26>0,
+    // TL(0,1)=0.26>0, TR(1,1)=-0.24<0 => case 10
+    // center(0.5,0.5)=0.01 > 0 => if branch (lines 285-286)
+    const imp = new ImplicitFunction({
+      func: (x, y) => -((x - 0.5) * (y - 0.5)) + 0.01,
+      xRange: [-2, 2],
+      yRange: [-2, 2],
+      minDepth: 2,
+      maxDepth: 2,
+    });
+    expect(imp.getPoints().length).toBeGreaterThan(0);
+  });
+
+  it('handles saddle point case 10 center <= 0 branch', () => {
+    // depth 2, range [-2,2], cell [0,1]x[0,1] for f=-(x-0.5)*(y-0.5)-0.01
+    // BL(0,0)=-0.26<0, BR(1,0)=0.24>0,
+    // TL(0,1)=0.24>0, TR(1,1)=-0.26<0 => case 10
+    // center(0.5,0.5)=-0.01 < 0 => else branch (lines 289-290)
+    const imp = new ImplicitFunction({
+      func: (x, y) => -((x - 0.5) * (y - 0.5)) - 0.01,
+      xRange: [-2, 2],
+      yRange: [-2, 2],
+      minDepth: 2,
+      maxDepth: 2,
+    });
+    expect(imp.getPoints().length).toBeGreaterThan(0);
+  });
+
+  it('handles _interpolateEdge near-zero division', () => {
+    // When v0 and v1 are nearly equal, interpolation falls back to midpoint
+    const flatFunc = (x: number, y: number) => {
+      // Returns very small values near zero that cross sign
+      if (x < 0) return -1e-15;
+      return 1e-15;
+    };
+    const imp = new ImplicitFunction({
+      func: flatFunc,
+      xRange: [-1, 1],
+      yRange: [-1, 1],
+      minDepth: 2,
+      maxDepth: 2,
+    });
+    // Should not crash; may or may not produce points depending on cell alignment
+    expect(imp).toBeDefined();
+  });
+
+  it('setYRange updates range and regenerates', () => {
+    const imp = new ImplicitFunction({ func: circleFunc, yRange: [-1, 1] });
+    expect(imp.getYRange()).toEqual([-1, 1]);
+    imp.setYRange([-3, 3]);
+    expect(imp.getYRange()).toEqual([-3, 3]);
+  });
 });
 
 // ---------------------------------------------------------------------------

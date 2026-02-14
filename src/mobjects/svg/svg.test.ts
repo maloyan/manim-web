@@ -2,6 +2,8 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
   VMobjectFromSVGPath,
+  SVGMobject,
+  svgMobject,
   BraceBetweenPoints,
   Brace,
   ArcBrace,
@@ -59,40 +61,21 @@ beforeAll(() => {
 
 describe('VMobjectFromSVGPath', () => {
   it('constructs from a simple line path', () => {
-    const path = new VMobjectFromSVGPath({
-      pathData: 'M 0,0 L 10,0',
-    });
+    const path = new VMobjectFromSVGPath({ pathData: 'M 0,0 L 10,0' });
     expect(path).toBeInstanceOf(VMobject);
     expect(path.numPoints).toBeGreaterThan(0);
   });
 
-  it('constructs from a move-line path', () => {
-    const path = new VMobjectFromSVGPath({
-      pathData: 'M 0,0 L 10,10',
-    });
-    expect(path.numPoints).toBeGreaterThan(0);
-  });
-
   it('constructs from a cubic bezier path', () => {
-    const path = new VMobjectFromSVGPath({
-      pathData: 'M 0,0 C 5,10 15,10 20,0',
-    });
+    const path = new VMobjectFromSVGPath({ pathData: 'M 0,0 C 5,10 15,10 20,0' });
     expect(path.numPoints).toBeGreaterThan(0);
   });
 
-  it('uses default color WHITE', () => {
-    const path = new VMobjectFromSVGPath({
-      pathData: 'M 0,0 L 10,0',
-    });
-    expect(path.color).toBe(WHITE);
-  });
-
-  it('uses custom color', () => {
-    const path = new VMobjectFromSVGPath({
-      pathData: 'M 0,0 L 10,0',
-      color: '#ff0000',
-    });
-    expect(path.color).toBe('#ff0000');
+  it('uses default color WHITE and custom color', () => {
+    expect(new VMobjectFromSVGPath({ pathData: 'M 0,0 L 10,0' }).color).toBe(WHITE);
+    expect(new VMobjectFromSVGPath({ pathData: 'M 0,0 L 10,0', color: '#ff0000' }).color).toBe(
+      '#ff0000',
+    );
   });
 
   it('uses custom fill settings', () => {
@@ -105,53 +88,445 @@ describe('VMobjectFromSVGPath', () => {
     expect(path.fillOpacity).toBe(0.5);
   });
 
-  it('handles close path Z command', () => {
-    const path = new VMobjectFromSVGPath({
-      pathData: 'M 0,0 L 10,0 L 10,10 Z',
-    });
-    expect(path.numPoints).toBeGreaterThan(0);
+  it('handles H, V, Z commands', () => {
+    expect(new VMobjectFromSVGPath({ pathData: 'M 0,0 H 10' }).numPoints).toBeGreaterThan(0);
+    expect(new VMobjectFromSVGPath({ pathData: 'M 0,0 V 10' }).numPoints).toBeGreaterThan(0);
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 0,0 L 10,0 L 10,10 Z' }).numPoints,
+    ).toBeGreaterThan(0);
   });
 
-  it('handles horizontal line H command', () => {
-    const path = new VMobjectFromSVGPath({
-      pathData: 'M 0,0 H 10',
-    });
-    expect(path.numPoints).toBeGreaterThan(0);
+  it('handles relative commands (l, m, h, v, c, s, q, t)', () => {
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 0,0 l 10,10 l 10,-10' }).numPoints,
+    ).toBeGreaterThan(0);
+    expect(new VMobjectFromSVGPath({ pathData: 'm 5,5 l 10,0' }).numPoints).toBeGreaterThan(0);
+    expect(new VMobjectFromSVGPath({ pathData: 'M 0,0 h 10' }).numPoints).toBeGreaterThan(0);
+    expect(new VMobjectFromSVGPath({ pathData: 'M 0,0 v 10' }).numPoints).toBeGreaterThan(0);
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 0,0 c 5,10 15,10 20,0' }).numPoints,
+    ).toBeGreaterThan(0);
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 0,0 c 5,10 15,10 20,0 s 15,-10 20,0' }).numPoints,
+    ).toBeGreaterThan(0);
+    expect(new VMobjectFromSVGPath({ pathData: 'M 0,0 q 5,10 10,0' }).numPoints).toBeGreaterThan(0);
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 0,0 q 5,10 10,0 t 10,0' }).numPoints,
+    ).toBeGreaterThan(0);
   });
 
-  it('handles vertical line V command', () => {
-    const path = new VMobjectFromSVGPath({
-      pathData: 'M 0,0 V 10',
-    });
-    expect(path.numPoints).toBeGreaterThan(0);
+  it('handles Q command', () => {
+    expect(new VMobjectFromSVGPath({ pathData: 'M 0,0 Q 5,10 10,0' }).numPoints).toBeGreaterThan(0);
   });
 
-  it('handles relative commands', () => {
-    const path = new VMobjectFromSVGPath({
-      pathData: 'M 0,0 l 10,10 l 10,-10',
-    });
-    expect(path.numPoints).toBeGreaterThan(0);
+  it('handles S command with and without preceding C', () => {
+    // S after C: reflects previous control point
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 0,0 C 5,10 15,10 20,0 S 35,-10 40,0' }).numPoints,
+    ).toBeGreaterThan(0);
+    // S without preceding C: control point = current point
+    expect(new VMobjectFromSVGPath({ pathData: 'M 0,0 S 5,10 10,0' }).numPoints).toBeGreaterThan(0);
   });
 
-  it('handles quadratic bezier Q command', () => {
-    const path = new VMobjectFromSVGPath({
-      pathData: 'M 0,0 Q 5,10 10,0',
-    });
-    expect(path.numPoints).toBeGreaterThan(0);
+  it('handles T command with and without preceding Q', () => {
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 0,0 Q 5,10 10,0 T 20,0' }).numPoints,
+    ).toBeGreaterThan(0);
+    // T without preceding Q
+    expect(new VMobjectFromSVGPath({ pathData: 'M 0,0 T 10,0' }).numPoints).toBeGreaterThan(0);
   });
 
-  it('handles smooth cubic S command', () => {
-    const path = new VMobjectFromSVGPath({
-      pathData: 'M 0,0 C 5,10 15,10 20,0 S 35,-10 40,0',
-    });
+  it('handles arc A command', () => {
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 10,80 A 25,25 0 0,1 50,80' }).numPoints,
+    ).toBeGreaterThan(0);
+  });
+
+  it('handles arc with large-arc and sweep flags', () => {
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 10,80 A 25,25 0 1,0 50,80' }).numPoints,
+    ).toBeGreaterThan(0);
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 10,80 A 25,25 0 1,1 50,80' }).numPoints,
+    ).toBeGreaterThan(0);
+  });
+
+  it('handles degenerate arc (rx=0)', () => {
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 0,0 A 0,25 0 0,1 50,0' }).numPoints,
+    ).toBeGreaterThan(0);
+  });
+
+  it('handles relative arc command', () => {
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 10,80 a 25,25 0 0,1 40,0' }).numPoints,
+    ).toBeGreaterThan(0);
+  });
+
+  it('handles arc with rotation', () => {
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 10,80 A 25,50 45 0,1 50,80' }).numPoints,
+    ).toBeGreaterThan(0);
+  });
+
+  it('handles arc where radii need scaling (too small)', () => {
+    expect(
+      new VMobjectFromSVGPath({ pathData: 'M 0,0 A 1,1 0 0,1 100,100' }).numPoints,
+    ).toBeGreaterThan(0);
+  });
+
+  it('handles Z when already at start position', () => {
+    // Z where current==start: no extra line segment added
+    const path = new VMobjectFromSVGPath({ pathData: 'M 0,0 L 10,0 L 0,0 Z' });
     expect(path.numPoints).toBeGreaterThan(0);
   });
 
   it('handles empty path gracefully', () => {
-    const path = new VMobjectFromSVGPath({
-      pathData: '',
+    expect(new VMobjectFromSVGPath({ pathData: '' }).numPoints).toBe(0);
+  });
+
+  it('creates a copy preserving pathData and styles', () => {
+    const orig = new VMobjectFromSVGPath({
+      pathData: 'M 0,0 L 10,0',
+      color: '#f00',
+      fillColor: '#0f0',
+      fillOpacity: 0.3,
+      strokeWidth: 2,
     });
-    expect(path.numPoints).toBe(0);
+    const copy = orig.copy() as VMobjectFromSVGPath;
+    expect(copy).not.toBe(orig);
+    expect(copy).toBeInstanceOf(VMobjectFromSVGPath);
+    expect(copy.color).toBe('#f00');
+    expect(copy.fillColor).toBe('#0f0');
+    expect(copy.fillOpacity).toBe(0.3);
+    expect(copy.numPoints).toBeGreaterThan(0);
+  });
+
+  it('handles multiple subpaths (M after first path)', () => {
+    // Only first subpath is used for VMobjectFromSVGPath
+    const path = new VMobjectFromSVGPath({ pathData: 'M 0,0 L 10,0 M 20,0 L 30,0' });
+    expect(path.numPoints).toBeGreaterThan(0);
+  });
+});
+
+describe('SVGMobject', () => {
+  it('constructs with empty options', () => {
+    const svg = new SVGMobject();
+    expect(svg).toBeInstanceOf(SVGMobject);
+    expect(svg.children.length).toBe(0);
+  });
+
+  it('parses SVG with a single path', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 100,0 L 100,100 Z"/></svg>',
+    });
+    expect(svg.children.length).toBeGreaterThan(0);
+  });
+
+  it('parses SVG rect element', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><rect x="10" y="10" width="50" height="30"/></svg>',
+    });
+    expect(svg.children.length).toBeGreaterThan(0);
+  });
+
+  it('skips rect with zero dimensions', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="0" height="30"/></svg>',
+    });
+    expect(svg.children.length).toBe(0);
+  });
+
+  it('parses SVG circle element', () => {
+    const svg = new SVGMobject({
+      svgString: '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="25"/></svg>',
+    });
+    expect(svg.children.length).toBeGreaterThan(0);
+  });
+
+  it('skips circle with zero radius', () => {
+    const svg = new SVGMobject({
+      svgString: '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="0"/></svg>',
+    });
+    expect(svg.children.length).toBe(0);
+  });
+
+  it('parses SVG ellipse element', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="50" rx="30" ry="20"/></svg>',
+    });
+    expect(svg.children.length).toBeGreaterThan(0);
+  });
+
+  it('skips ellipse with zero radii', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><ellipse cx="50" cy="50" rx="0" ry="20"/></svg>',
+    });
+    expect(svg.children.length).toBe(0);
+  });
+
+  it('parses SVG line element', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><line x1="0" y1="0" x2="100" y2="100"/></svg>',
+    });
+    expect(svg.children.length).toBeGreaterThan(0);
+  });
+
+  it('parses SVG polygon element', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><polygon points="50,0 100,100 0,100"/></svg>',
+    });
+    expect(svg.children.length).toBeGreaterThan(0);
+  });
+
+  it('skips polygon with insufficient points', () => {
+    const svg = new SVGMobject({
+      svgString: '<svg xmlns="http://www.w3.org/2000/svg"><polygon points="50"/></svg>',
+    });
+    expect(svg.children.length).toBe(0);
+  });
+
+  it('parses SVG polyline element', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><polyline points="0,0 50,50 100,0"/></svg>',
+    });
+    expect(svg.children.length).toBeGreaterThan(0);
+  });
+
+  it('skips polyline with insufficient points', () => {
+    const svg = new SVGMobject({
+      svgString: '<svg xmlns="http://www.w3.org/2000/svg"><polyline points="50"/></svg>',
+    });
+    expect(svg.children.length).toBe(0);
+  });
+
+  it('extracts stroke and fill styles from path attributes', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 10,0" stroke="#ff0000" fill="#00ff00" stroke-width="3"/></svg>',
+    });
+    const child = svg.children[0] as VMobject;
+    expect(child.color).toBe('#ff0000');
+    expect(child.fillColor).toBe('#00ff00');
+    expect(child.strokeWidth).toBe(3);
+  });
+
+  it('uses default color when path has no stroke attribute', () => {
+    const svg = new SVGMobject({
+      svgString: '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 10,0"/></svg>',
+      color: '#abcdef',
+    });
+    const child = svg.children[0] as VMobject;
+    expect(child.color).toBe('#abcdef');
+  });
+
+  it('handles fill="none" on path', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 10,0 L 10,10 Z" fill="none"/></svg>',
+    });
+    const child = svg.children[0] as VMobject;
+    expect(child.fillOpacity).toBe(0);
+  });
+
+  it('parses rect with stroke and fill attributes', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="50" height="50" stroke="#f00" fill="#0f0" stroke-width="2"/></svg>',
+    });
+    const child = svg.children[0] as VMobject;
+    expect(child.color).toBe('#f00');
+    expect(child.fillColor).toBe('#0f0');
+  });
+
+  it('parses circle with fill attribute', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="20" fill="blue"/></svg>',
+    });
+    const child = svg.children[0] as VMobject;
+    expect(child.fillColor).toBe('blue');
+  });
+
+  it('parses polygon with fill attribute', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><polygon points="0,0 100,0 50,100" fill="red"/></svg>',
+    });
+    const child = svg.children[0] as VMobject;
+    expect(child.fillColor).toBe('red');
+  });
+
+  it('handles rect fill="none"', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><rect x="0" y="0" width="50" height="30" fill="none"/></svg>',
+    });
+    const child = svg.children[0] as VMobject;
+    expect(child.fillOpacity).toBe(0);
+  });
+
+  it('handles polygon fill="none"', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><polygon points="0,0 50,0 25,50" fill="none"/></svg>',
+    });
+    const child = svg.children[0] as VMobject;
+    expect(child.fillOpacity).toBe(0);
+  });
+
+  it('handles circle fill="none"', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="5" fill="none"/></svg>',
+    });
+    const child = svg.children[0] as VMobject;
+    expect(child.fillOpacity).toBe(0);
+  });
+
+  it('parses multiple SVG elements', () => {
+    const svg = new SVGMobject({
+      svgString: `<svg xmlns="http://www.w3.org/2000/svg">
+        <path d="M 0,0 L 10,0"/>
+        <circle cx="50" cy="50" r="10"/>
+        <rect x="0" y="0" width="20" height="20"/>
+        <line x1="0" y1="0" x2="50" y2="50"/>
+      </svg>`,
+    });
+    expect(svg.children.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('skips path without d attribute', () => {
+    const svg = new SVGMobject({
+      svgString: '<svg xmlns="http://www.w3.org/2000/svg"><path/></svg>',
+    });
+    expect(svg.children.length).toBe(0);
+  });
+
+  it('warns and returns empty when no SVG element found', () => {
+    const svg = new SVGMobject({ svgString: '<div>not svg</div>' });
+    expect(svg.children.length).toBe(0);
+  });
+
+  it('getSubpaths returns VMobject children', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 10,0"/><path d="M 20,0 L 30,0"/></svg>',
+    });
+    const subpaths = svg.getSubpaths();
+    expect(subpaths.length).toBe(2);
+    subpaths.forEach((s) => expect(s).toBeInstanceOf(VMobject));
+  });
+
+  it('creates a copy', () => {
+    const orig = new SVGMobject({
+      svgString: '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 10,0"/></svg>',
+    });
+    const copy = orig.copy() as SVGMobject;
+    expect(copy).not.toBe(orig);
+    expect(copy).toBeInstanceOf(SVGMobject);
+    // _createCopy re-parses SVG, then Mobject.copy() also deep-copies children
+    expect(copy.children.length).toBeGreaterThanOrEqual(orig.children.length);
+  });
+
+  it('applies fillOpacity option to children', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 10,0 L 10,10 Z" fill="red"/></svg>',
+      fillOpacity: 0.8,
+    });
+    const child = svg.children[0] as VMobject;
+    expect(child.fillOpacity).toBeCloseTo(0.8);
+  });
+
+  it('applies custom strokeWidth option', () => {
+    const svg = new SVGMobject({
+      svgString: '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 10,0"/></svg>',
+      strokeWidth: 5,
+    });
+    const child = svg.children[0] as VMobject;
+    expect(child.strokeWidth).toBe(5);
+  });
+
+  it('applies custom fillColor option', () => {
+    const svg = new SVGMobject({
+      svgString: '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 10,0 L 10,10 Z"/></svg>',
+      fillColor: '#ff00ff',
+    });
+    // fillColor should be passed as default when no explicit fill on element
+    const child = svg.children[0] as VMobject;
+    expect(child.fillOpacity).toBeDefined();
+  });
+
+  it('skips polyline and polygon without points attr', () => {
+    const svg = new SVGMobject({
+      svgString: '<svg xmlns="http://www.w3.org/2000/svg"><polygon/><polyline/></svg>',
+    });
+    expect(svg.children.length).toBe(0);
+  });
+
+  it('applies height scaling', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 100,0 L 100,100 L 0,100 Z"/></svg>',
+      height: 2,
+    });
+    expect(svg.children.length).toBeGreaterThan(0);
+  });
+
+  it('applies width scaling', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 100,0 L 100,100 L 0,100 Z"/></svg>',
+      width: 3,
+    });
+    expect(svg.children.length).toBeGreaterThan(0);
+  });
+
+  it('applies both height and width scaling (picks smaller scale)', () => {
+    const svg = new SVGMobject({
+      svgString:
+        '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 100,0 L 100,100 L 0,100 Z"/></svg>',
+      height: 2,
+      width: 3,
+    });
+    expect(svg.children.length).toBeGreaterThan(0);
+  });
+
+  it('applies center option', () => {
+    const svg = new SVGMobject({
+      svgString: '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 10,0"/></svg>',
+      center: [1, 2, 0],
+    });
+    expect(svg.children.length).toBeGreaterThan(0);
+  });
+});
+
+describe('svgMobject factory', () => {
+  it('creates SVGMobject from string', () => {
+    const svg = svgMobject(
+      '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 10,0"/></svg>',
+    );
+    expect(svg).toBeInstanceOf(SVGMobject);
+    expect(svg.children.length).toBeGreaterThan(0);
+  });
+
+  it('passes options through', () => {
+    const svg = svgMobject(
+      '<svg xmlns="http://www.w3.org/2000/svg"><path d="M 0,0 L 10,0"/></svg>',
+      { color: '#ff0000', strokeWidth: 3 },
+    );
+    const child = svg.children[0] as VMobject;
+    expect(child.color).toBe('#ff0000');
+    expect(child.strokeWidth).toBe(3);
   });
 });
 
