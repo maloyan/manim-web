@@ -188,6 +188,8 @@ export {
   MathTex,
   type MathTexOptions,
   type TexRenderer,
+  MathTexSVG,
+  type MathTexSVGOptions,
   Tex,
   type TexOptions,
   ensureKatexStyles,

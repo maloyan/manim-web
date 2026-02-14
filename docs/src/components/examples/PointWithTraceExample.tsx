@@ -3,8 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Scene, VMobject, Dot, Rotating, Shift, UP, LEFT, RIGHT, BLACK } =
-    await import('manim-web');
+  const { Scene, VMobject, Dot, Rotating, Shift, UP, LEFT, RIGHT, BLACK } = await import('manim-web');
 
   const path = new VMobject();
   path.fillOpacity = 0;

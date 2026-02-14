@@ -564,28 +564,72 @@ export class VMobject extends Mobject {
   }
 
   /**
-   * Build fill geometry for multi-subpath shapes (e.g. boolean XOR).
-   * Splits control points by subpath boundaries, samples each independently,
-   * and triangulates each subpath as a separate region.
+   * Build fill geometry for multi-subpath shapes (compound glyphs).
+   * Uses point-in-polygon containment to distinguish holes (subpaths inside
+   * another subpath, like the counter of "0") from disjoint regions (like
+   * the two bars of "=" or the dot+stroke of "i").
    */
+  // eslint-disable-next-line complexity
   private _buildEarcutFillGeometryMulti(
     points3D: number[][],
     subpathLengths: number[],
   ): THREE.BufferGeometry | null {
-    // Split control points by subpath boundaries and sample each separately
+    // Sample each subpath into a 2D ring
     let offset = 0;
-    const allPositions: number[] = [];
+    const rings: number[][][] = [];
 
     for (const len of subpathLengths) {
       const subPoints = points3D.slice(offset, offset + len);
       offset += len;
 
       const ring = this._sampleBezierOutline(subPoints, 8);
-      if (ring.length < 3) continue;
+      if (ring.length >= 3) {
+        rings.push(ring);
+      }
+    }
 
-      const indices = triangulatePolygon(ring);
+    if (rings.length === 0) return null;
+
+    // Determine containment: for each ring, check if it's inside another ring.
+    // Group into clusters of {outer, holes[]}.
+    const isHoleOf = new Array<number>(rings.length).fill(-1); // -1 = not a hole
+
+    for (let i = 0; i < rings.length; i++) {
+      for (let j = 0; j < rings.length; j++) {
+        if (i === j) continue;
+        // Check if ring i's first point is inside ring j
+        if (VMobject._pointInPolygon(rings[i][0], rings[j])) {
+          isHoleOf[i] = j;
+          break;
+        }
+      }
+    }
+
+    // Collect outer rings (not holes) and their associated holes
+    const allPositions: number[] = [];
+
+    for (let i = 0; i < rings.length; i++) {
+      if (isHoleOf[i] >= 0) continue; // skip holes, they'll be handled with their parent
+
+      const outerRing = rings[i];
+      const holeRings: number[][][] = [];
+      for (let j = 0; j < rings.length; j++) {
+        if (isHoleOf[j] === i) {
+          holeRings.push(rings[j]);
+        }
+      }
+
+      const indices = triangulatePolygon(outerRing, holeRings.length > 0 ? holeRings : undefined);
+      if (indices.length === 0) continue;
+
+      // Build combined vertex list (outer + holes, same order earcut expects)
+      const allVerts: number[][] = [...outerRing];
+      for (const hole of holeRings) {
+        allVerts.push(...hole);
+      }
+
       for (const idx of indices) {
-        const v = ring[idx];
+        const v = allVerts[idx];
         allPositions.push(v[0], v[1], 0);
       }
     }
@@ -598,6 +642,23 @@ export class VMobject extends Mobject {
       new THREE.BufferAttribute(new Float32Array(allPositions), 3),
     );
     return geometry;
+  }
+
+  /**
+   * Ray-casting point-in-polygon test (2D).
+   * Returns true if point is inside the polygon ring.
+   */
+  private static _pointInPolygon(point: number[], ring: number[][]): boolean {
+    const [px, py] = point;
+    let inside = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const xi = ring[i][0], yi = ring[i][1];
+      const xj = ring[j][0], yj = ring[j][1];
+      if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) {
+        inside = !inside;
+      }
+    }
+    return inside;
   }
 
   /**

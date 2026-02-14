@@ -11,6 +11,7 @@ import FollowingGraphCameraExample from '@site/src/components/examples/Following
 import GraphAreaPlotExample from '@site/src/components/examples/GraphAreaPlotExample';
 import HeatDiagramPlotExample from '@site/src/components/examples/HeatDiagramPlotExample';
 import ManimCeLogoExample from '@site/src/components/examples/ManimCeLogoExample';
+import MathtexSvgExample from '@site/src/components/examples/MathtexSvgExample';
 import MovingAngleExample from '@site/src/components/examples/MovingAngleExample';
 import MovingAroundExample from '@site/src/components/examples/MovingAroundExample';
 import MovingDotsExample from '@site/src/components/examples/MovingDotsExample';
@@ -277,6 +278,95 @@ await scene.play(new FadeIn(difference_text));
 </details>
 
 **Learn More:** **Union** · **Intersection** · **Difference** · **Exclusion** · **Ellipse** · **FadeIn** · **MoveToTarget**
+
+---
+
+## Mathtex Svg
+
+Demonstrates vector-based LaTeX rendering with MathTexSVG. Shows Create (stroke-draw reveal), DrawBorderThenFill, FadeIn, and multi-part expressions with per-part coloring. Unlike raster MathTex, MathTexSVG produces real VMobject paths that support path-based animations.
+
+<MathtexSvgExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  MathTexSVG,
+  Create,
+  DrawBorderThenFill,
+  FadeIn,
+  FadeOut,
+  BLACK,
+  WHITE,
+  RED,
+  BLUE,
+  GREEN,
+  YELLOW,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+// 1. Create animation - stroke-draw reveal (the main feature)
+const equation1 = new MathTexSVG({
+  latex: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
+  color: WHITE,
+  fontSize: 2,
+});
+await equation1.waitForRender();
+
+await scene.play(new Create(equation1, { duration: 3 }));
+await scene.wait(1);
+await scene.play(new FadeOut(equation1));
+
+// 2. DrawBorderThenFill animation
+const equation2 = new MathTexSVG({
+  latex: 'e^{i\\pi} + 1 = 0',
+  color: YELLOW,
+  fontSize: 2.5,
+});
+await equation2.waitForRender();
+
+await scene.play(new DrawBorderThenFill(equation2, { duration: 2 }));
+await scene.wait(1);
+await scene.play(new FadeOut(equation2));
+
+// 3. Multi-part with per-part coloring
+const multiPart = new MathTexSVG({
+  latex: ['E', '=', 'mc^2'],
+  color: WHITE,
+  fontSize: 3,
+});
+await multiPart.waitForRender();
+
+multiPart.getPart(0).setColor(RED);
+multiPart.getPart(1).setColor(WHITE);
+multiPart.getPart(2).setColor(BLUE);
+
+await scene.play(new FadeIn(multiPart));
+await scene.wait(2);
+await scene.play(new FadeOut(multiPart));
+
+// 4. Another Create with a summation
+const equation3 = new MathTexSVG({
+  latex: '\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}',
+  color: GREEN,
+  fontSize: 2,
+});
+await equation3.waitForRender();
+
+await scene.play(new Create(equation3, { duration: 2 }));
+await scene.wait(2);
+```
+
+</details>
+
+**Learn More:** **MathTexSVG** · **Create** · **DrawBorderThenFill** · **FadeIn** · **FadeOut**
 
 ---
 

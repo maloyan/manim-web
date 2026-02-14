@@ -3,8 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Scene, VGroup, Dot, Shift, LEFT, ORIGIN, RIGHT, RED, YELLOW, BLACK, scaleVec, subVec } =
-    await import('manim-web');
+  const { Scene, VGroup, Dot, Shift, LEFT, ORIGIN, RIGHT, RED, YELLOW, BLACK, scaleVec, subVec } = await import('manim-web');
 
   const group = new VGroup(
     new Dot({ point: LEFT }),

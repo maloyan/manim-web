@@ -3,20 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const {
-    Circle,
-    LEFT,
-    MathTex,
-    ORIGIN,
-    RIGHT,
-    Scene,
-    Square,
-    Triangle,
-    UP,
-    VGroup,
-    addVec,
-    scaleVec,
-  } = await import('manim-web');
+  const { Circle, LEFT, MathTex, ORIGIN, RIGHT, Scene, Square, Triangle, UP, VGroup, addVec, scaleVec } = await import('manim-web');
 
   const logoGreen = '#87c2a5';
   const logoBlue = '#525893';

@@ -3,31 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const {
-    BLUE,
-    Difference,
-    DOWN,
-    Ellipse,
-    Exclusion,
-    FadeIn,
-    GREEN,
-    Group,
-    Intersection,
-    LEFT,
-    MoveToTarget,
-    ORANGE,
-    PINK,
-    RED,
-    RIGHT,
-    Scene,
-    Text,
-    Underline,
-    UP,
-    Union,
-    WHITE,
-    YELLOW,
-    scaleVec,
-  } = await import('manim-web');
+  const { BLUE, Difference, DOWN, Ellipse, Exclusion, FadeIn, GREEN, Group, Intersection, LEFT, MoveToTarget, ORANGE, PINK, RED, RIGHT, Scene, Text, Underline, UP, Union, WHITE, YELLOW, scaleVec } = await import('manim-web');
 
   const ellipse1 = new Ellipse({
     width: 4.0,

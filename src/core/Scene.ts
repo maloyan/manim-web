@@ -384,12 +384,24 @@ export class Scene {
     // AnimationGroup.begin() handles calling begin() on its own children.
     const allAnimations = this._collectAllAnimations(animations);
 
+    // Force geometry sync so begin() can detect Line2 children for dash-reveal
+    // animations (e.g. MathTexSVG Create). This must happen before begin() but
+    // we must NOT add to the scene yet — otherwise the mobject renders at full
+    // opacity for one frame before begin() hides it.
+    for (const animation of allAnimations) {
+      if (animation.mobject._dirty) {
+        animation.mobject._syncToThree();
+        animation.mobject._dirty = false;
+      }
+    }
+
     // Initialize only top-level animations to avoid double begin() on AnimationGroup children
     for (const animation of animations) {
       animation.begin();
     }
 
-    // Ensure all animated mobjects are in the scene
+    // Add animated mobjects to scene AFTER begin() so they appear in their
+    // initial animation state (e.g. hidden for Create, zero opacity for FadeIn).
     for (const animation of allAnimations) {
       if (!this._mobjects.has(animation.mobject)) {
         this.add(animation.mobject);
