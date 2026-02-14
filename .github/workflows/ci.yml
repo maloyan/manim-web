@@ -21,7 +21,12 @@ jobs:
       - name: Typecheck
         run: npm run typecheck || true
       - name: Test
-        run: npx vitest run --reporter=verbose
+        run: npx vitest run --coverage
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Validate AGENTS.md commands
         run: |
           npm run typecheck || true
