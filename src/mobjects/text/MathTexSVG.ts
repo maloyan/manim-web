@@ -361,11 +361,8 @@ export class MathTexSVG extends VGroup {
   private static _PartGroup = class extends VGroup {
     _latex: string = '';
     _color: string = WHITE;
-    private _parentRef: MathTexSVG;
-
-    constructor(parent: MathTexSVG) {
+    constructor(_parent: MathTexSVG) {
       super();
-      this._parentRef = parent;
     }
 
     override setColor(color: string): this {
