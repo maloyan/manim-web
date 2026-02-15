@@ -67,12 +67,23 @@ jobs:
             --notes "${{ steps.changelog.outputs.body }}" \
             --target main
 
+      - name: Check if version is on npm
+        id: npm_check
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          PKG=$(node -p 'require("./package.json").name')
+          if npm view "${PKG}@${VERSION}" version >/dev/null 2>&1; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build package
-        if: steps.check.outputs.exists == 'false'
+        if: steps.npm_check.outputs.published == 'false'
         run: npm run build
 
       - name: Publish to npm
-        if: steps.check.outputs.exists == 'false'
+        if: steps.npm_check.outputs.published == 'false'
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
