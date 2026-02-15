@@ -1,7 +1,7 @@
 node_modules/
 dist/
 docs-src/
-docs/api/
+docs/docs/api/
 docs/node_modules/
 docs/build/
 docs/.docusaurus/

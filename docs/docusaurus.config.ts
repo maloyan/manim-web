@@ -46,7 +46,7 @@ const config: Config = {
       {
         entryPoints: ['../src/index.ts'],
         tsconfig: '../tsconfig.typedoc.json',
-        out: 'api',
+        out: 'docs/api',
         readme: 'none',
         skipErrorChecking: true,
         excludePrivate: true,
