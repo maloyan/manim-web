@@ -7,17 +7,17 @@ import { Line3D } from './Line3D';
  * Options for creating ThreeDAxes
  */
 export interface ThreeDAxesOptions {
-  /** X-axis range as [min, max, step]. Default: [-5, 5, 1] */
+  /** X-axis range as [min, max, step]. Default: [-6, 6, 1] */
   xRange?: [number, number, number];
   /** Y-axis range as [min, max, step]. Default: [-5, 5, 1] */
   yRange?: [number, number, number];
-  /** Z-axis range as [min, max, step]. Default: [-5, 5, 1] */
+  /** Z-axis range as [min, max, step]. Default: [-4, 4, 1] */
   zRange?: [number, number, number];
-  /** Visual length of the x-axis. Default: 10 */
+  /** Visual length of the x-axis. Default: range span (max - min) */
   xLength?: number;
-  /** Visual length of the y-axis. Default: 10 */
+  /** Visual length of the y-axis. Default: range span (max - min) */
   yLength?: number;
-  /** Visual length of the z-axis. Default: 10 */
+  /** Visual length of the z-axis. Default: range span (max - min) */
   zLength?: number;
   /** Default color for all axes. Default: '#ffffff' */
   axisColor?: string;
@@ -90,12 +90,9 @@ export class ThreeDAxes extends Group {
     this._disableChildZLayering = true;
 
     const {
-      xRange = [-5, 5, 1],
+      xRange = [-6, 6, 1],
       yRange = [-5, 5, 1],
-      zRange = [-5, 5, 1],
-      xLength = 10,
-      yLength = 10,
-      zLength = 10,
+      zRange = [-4, 4, 1],
       axisColor = '#ffffff',
       xColor,
       yColor,
@@ -107,6 +104,11 @@ export class ThreeDAxes extends Group {
       tipRadius = 0.08,
       shaftRadius = 0.01,
     } = options;
+
+    // Default lengths match range spans (unit_size=1), matching Python manim behavior
+    const xLength = options.xLength ?? xRange[1] - xRange[0];
+    const yLength = options.yLength ?? yRange[1] - yRange[0];
+    const zLength = options.zLength ?? zRange[1] - zRange[0];
 
     this._xRange = [...xRange];
     this._yRange = [...yRange];
