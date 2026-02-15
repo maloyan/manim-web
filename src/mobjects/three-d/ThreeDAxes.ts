@@ -122,16 +122,20 @@ export class ThreeDAxes extends Group {
     const effectiveZColor = zColor ?? axisColor;
 
     // Calculate axis endpoints based on ranges and lengths
+    // graph coordinate 0 always maps to visual position 0 (the origin)
     // Manim→THREE.js coordinate mapping: (mx, my, mz) → (mx, mz, -my)
     // Manim X → THREE.js X, Manim Y → THREE.js -Z, Manim Z → THREE.js Y (up)
-    const xHalf = xLength / 2;
-    const yHalf = yLength / 2;
-    const zHalf = zLength / 2;
+    const xStart = this._graphToVisual(xRange[0], xRange, xLength);
+    const xEnd = this._graphToVisual(xRange[1], xRange, xLength);
+    const yStart = this._graphToVisual(yRange[0], yRange, yLength);
+    const yEnd = this._graphToVisual(yRange[1], yRange, yLength);
+    const zStart = this._graphToVisual(zRange[0], zRange, zLength);
+    const zEnd = this._graphToVisual(zRange[1], zRange, zLength);
 
     // Create X-axis (Manim +X → THREE.js +X)
     this._xAxis = new Arrow3D({
-      start: [-xHalf, 0, 0],
-      end: [xHalf, 0, 0],
+      start: [xStart, 0, 0],
+      end: [xEnd, 0, 0],
       color: effectiveXColor,
       tipLength,
       tipRadius,
@@ -140,8 +144,8 @@ export class ThreeDAxes extends Group {
 
     // Create Y-axis (Manim +Y → THREE.js -Z)
     this._yAxis = new Arrow3D({
-      start: [0, 0, yHalf],
-      end: [0, 0, -yHalf],
+      start: [0, 0, -yStart],
+      end: [0, 0, -yEnd],
       color: effectiveYColor,
       tipLength,
       tipRadius,
@@ -150,8 +154,8 @@ export class ThreeDAxes extends Group {
 
     // Create Z-axis (Manim +Z → THREE.js +Y, up)
     this._zAxis = new Arrow3D({
-      start: [0, -zHalf, 0],
-      end: [0, zHalf, 0],
+      start: [0, zStart, 0],
+      end: [0, zEnd, 0],
       color: effectiveZColor,
       tipLength,
       tipRadius,
@@ -180,10 +184,6 @@ export class ThreeDAxes extends Group {
    * Create tick marks for all axes using Manim→THREE.js coordinate mapping
    */
   private _createTicks(xColor: string, yColor: string, zColor: string): void {
-    const xHalf = this._xLength / 2;
-    const yHalf = this._yLength / 2;
-    const zHalf = this._zLength / 2;
-
     const [xMin, xMax, xStep] = this._xRange;
     const [yMin, yMax, yStep] = this._yRange;
     const [zMin, zMax, zStep] = this._zRange;
@@ -193,7 +193,7 @@ export class ThreeDAxes extends Group {
     for (let x = xMin; x <= xMax; x += xStep) {
       if (Math.abs(x) < 0.001) continue;
       if (Math.abs(x - xMin) < 0.001 || Math.abs(x - xMax) < 0.001) continue;
-      const vx = this._mapToVisual(x, xMin, xMax, -xHalf, xHalf);
+      const vx = this._graphToVisual(x, this._xRange, this._xLength);
 
       const tick = new Line3D({
         start: this._m2t(vx, 0, -t),
@@ -208,7 +208,7 @@ export class ThreeDAxes extends Group {
     for (let y = yMin; y <= yMax; y += yStep) {
       if (Math.abs(y) < 0.001) continue;
       if (Math.abs(y - yMin) < 0.001 || Math.abs(y - yMax) < 0.001) continue;
-      const vy = this._mapToVisual(y, yMin, yMax, -yHalf, yHalf);
+      const vy = this._graphToVisual(y, this._yRange, this._yLength);
 
       const tick = new Line3D({
         start: this._m2t(0, vy, -t),
@@ -223,7 +223,7 @@ export class ThreeDAxes extends Group {
     for (let z = zMin; z <= zMax; z += zStep) {
       if (Math.abs(z) < 0.001) continue;
       if (Math.abs(z - zMin) < 0.001 || Math.abs(z - zMax) < 0.001) continue;
-      const vz = this._mapToVisual(z, zMin, zMax, -zHalf, zHalf);
+      const vz = this._graphToVisual(z, this._zRange, this._zLength);
 
       const tick = new Line3D({
         start: this._m2t(-t, 0, vz),
@@ -236,18 +236,13 @@ export class ThreeDAxes extends Group {
   }
 
   /**
-   * Map a value from graph coordinates to visual coordinates
+   * Map a graph coordinate value to visual position such that graph 0 maps to visual 0.
+   * visual = value * (length / (max - min))
    */
-  private _mapToVisual(
-    value: number,
-    graphMin: number,
-    graphMax: number,
-    visualMin: number,
-    visualMax: number,
-  ): number {
-    if (graphMax === graphMin) return (visualMin + visualMax) / 2;
-    const normalized = (value - graphMin) / (graphMax - graphMin);
-    return visualMin + normalized * (visualMax - visualMin);
+  private _graphToVisual(value: number, range: [number, number, number], length: number): number {
+    const [min, max] = range;
+    if (max === min) return 0;
+    return value * (length / (max - min));
   }
 
   /**
@@ -259,17 +254,9 @@ export class ThreeDAxes extends Group {
    * @returns The visual point [x, y, z] in THREE.js space
    */
   coordsToPoint(x: number, y: number, z: number): Vector3Tuple {
-    const [xMin, xMax] = this._xRange;
-    const [yMin, yMax] = this._yRange;
-    const [zMin, zMax] = this._zRange;
-
-    const xHalf = this._xLength / 2;
-    const yHalf = this._yLength / 2;
-    const zHalf = this._zLength / 2;
-
-    const manimX = this._mapToVisual(x, xMin, xMax, -xHalf, xHalf);
-    const manimY = this._mapToVisual(y, yMin, yMax, -yHalf, yHalf);
-    const manimZ = this._mapToVisual(z, zMin, zMax, -zHalf, zHalf);
+    const manimX = this._graphToVisual(x, this._xRange, this._xLength);
+    const manimY = this._graphToVisual(y, this._yRange, this._yLength);
+    const manimZ = this._graphToVisual(z, this._zRange, this._zLength);
 
     // Apply Manim→THREE.js: (mx, my, mz) → (mx, mz, -my)
     return [manimX + this.position.x, manimZ + this.position.y, -manimY + this.position.z];
@@ -286,19 +273,16 @@ export class ThreeDAxes extends Group {
     const [yMin, yMax] = this._yRange;
     const [zMin, zMax] = this._zRange;
 
-    const xHalf = this._xLength / 2;
-    const yHalf = this._yLength / 2;
-    const zHalf = this._zLength / 2;
-
     // Get local THREE.js coordinates
     const tx = point[0] - this.position.x;
     const ty = point[1] - this.position.y;
     const tz = point[2] - this.position.z;
 
     // Inverse mapping THREE.js→Manim: (tx, ty, tz) → (tx, -tz, ty)
-    const graphX = this._mapToVisual(tx, -xHalf, xHalf, xMin, xMax);
-    const graphY = this._mapToVisual(-tz, -yHalf, yHalf, yMin, yMax);
-    const graphZ = this._mapToVisual(ty, -zHalf, zHalf, zMin, zMax);
+    // Inverse of _graphToVisual: graph = visual * (max - min) / length
+    const graphX = (tx * (xMax - xMin)) / this._xLength;
+    const graphY = (-tz * (yMax - yMin)) / this._yLength;
+    const graphZ = (ty * (zMax - zMin)) / this._zLength;
 
     return [graphX, graphY, graphZ];
   }
