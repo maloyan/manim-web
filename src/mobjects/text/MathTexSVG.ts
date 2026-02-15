@@ -46,6 +46,7 @@ export class MathTexSVG extends VGroup {
   protected _svgFillOpacity: number;
   protected _targetHeight: number | undefined;
   protected _macros: Record<string, string> | undefined;
+  protected _svgViewBoxWidth: number = 1000;
 
   /** Whether this is a multi-part MathTexSVG (created from string[]) */
   protected _isMultiPart: boolean = false;
@@ -109,7 +110,9 @@ export class MathTexSVG extends VGroup {
    */
   getPart(index: number): VGroup {
     if (!this._isMultiPart) {
-      throw new Error('getPart() is only available on multi-part MathTexSVG (created with string[])');
+      throw new Error(
+        'getPart() is only available on multi-part MathTexSVG (created with string[])',
+      );
     }
     if (index < 0 || index >= this._parts.length) {
       throw new Error(`Part index ${index} out of range [0, ${this._parts.length - 1}]`);
@@ -184,6 +187,12 @@ export class MathTexSVG extends VGroup {
       macros: this._macros,
     });
 
+    const viewBox = result.svgElement.getAttribute?.('viewBox');
+    if (viewBox) {
+      const parts = viewBox.split(/\s+/).map(Number);
+      this._svgViewBoxWidth = parts[2] || 1000;
+    }
+
     const vmobjectGroup = result.vmobjectGroup;
 
     // Restyle children: MathJax glyphs should be filled with visible border
@@ -244,8 +253,10 @@ export class MathTexSVG extends VGroup {
     collect(this);
 
     // Compute bounding box from raw point data
-    let minX = Infinity, maxX = -Infinity;
-    let minY = Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      maxX = -Infinity;
+    let minY = Infinity,
+      maxY = -Infinity;
 
     for (const vmob of vmobjects) {
       for (const p of vmob.getPoints()) {
@@ -259,9 +270,17 @@ export class MathTexSVG extends VGroup {
     const rawHeight = maxY - minY;
     if (rawHeight < 0.0001) return;
 
-    // Target height: explicit option, or ~0.5 world units per fontSize unit
-    const targetHeight = this._targetHeight ?? (0.5 * this._fontSize);
-    const s = targetHeight / rawHeight;
+    let s: number;
+    if (this._targetHeight !== undefined) {
+      // Explicit height: scale bounding box to fit (user intent)
+      s = this._targetHeight / rawHeight;
+    } else {
+      // Scale based on em height for consistent font sizing.
+      // svgToVMobjects scales paths by fontSize / vbWidth, so in raw coords
+      // 1 em = 1000 * fontSize / vbWidth. We want 1 em = 0.5 * fontSize
+      // world units, giving: s = 0.5 * vbWidth / 1000.
+      s = (0.5 * this._svgViewBoxWidth) / 1000;
+    }
 
     // Center of current bounds
     const cx = (minX + maxX) / 2;
@@ -270,11 +289,7 @@ export class MathTexSVG extends VGroup {
     // Transform all point data: scale and center at origin
     for (const vmob of vmobjects) {
       const pts = vmob.getPoints();
-      const transformed = pts.map(p => [
-        (p[0] - cx) * s,
-        (p[1] - cy) * s,
-        p[2],
-      ]);
+      const transformed = pts.map((p) => [(p[0] - cx) * s, (p[1] - cy) * s, p[2]]);
       vmob.setPoints3D(transformed);
     }
   }
@@ -295,6 +310,12 @@ export class MathTexSVG extends VGroup {
       fontScale: this._fontSize,
       macros: this._macros,
     });
+    const viewBox = fullResult.svgElement.getAttribute?.('viewBox');
+    if (viewBox) {
+      const parts = viewBox.split(/\s+/).map(Number);
+      this._svgViewBoxWidth = parts[2] || 1000;
+    }
+
     this._restyleChildren(fullResult.vmobjectGroup);
 
     // Collect all VMobject children from the full render
@@ -386,7 +407,7 @@ export class MathTexSVG extends VGroup {
    */
   protected override _createCopy(): MathTexSVG {
     const latexValue = this._isMultiPart
-      ? this._parts.map(p => (p as any)._latex as string)
+      ? this._parts.map((p) => (p as any)._latex as string)
       : this._latex;
     return new MathTexSVG({
       latex: latexValue,
