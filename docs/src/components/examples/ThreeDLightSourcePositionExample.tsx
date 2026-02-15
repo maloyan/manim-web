@@ -4,22 +4,13 @@ import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
   const { ThreeDAxes, Group, RED_D, RED_E } = await import('manim-web');
-  const {
-    BufferAttribute,
-    Color,
-    FrontSide,
-    Mesh,
-    MeshLambertMaterial,
-    SphereGeometry,
-  } = await import('three');
+  const { BufferAttribute, Color, FrontSide, Mesh, MeshLambertMaterial, SphereGeometry } =
+    await import('three');
 
   const axes = new ThreeDAxes({
     xRange: [-5, 5, 1],
     yRange: [-5, 5, 1],
     zRange: [-5, 5, 1],
-    xLength: 10,
-    yLength: 10,
-    zLength: 10,
     axisColor: '#ffffff',
     tipLength: 0.2,
     tipRadius: 0.08,
@@ -110,14 +101,14 @@ async function animate(scene: any) {
 
 function createScene(container: HTMLElement, manim: any) {
   return new manim.ThreeDScene(container, {
-  width: 800,
-  height: 450,
-  backgroundColor: '#000000',
-  phi: 75 * (Math.PI / 180),
-  theta: 30 * (Math.PI / 180),
-  distance: 20,
-  fov: 30,
-});
+    width: 800,
+    height: 450,
+    backgroundColor: '#000000',
+    phi: 75 * (Math.PI / 180),
+    theta: 30 * (Math.PI / 180),
+    distance: 20,
+    fov: 30,
+  });
 }
 
 export default function ThreeDLightSourcePositionExample() {

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Gradient Image From Array</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+
+  <script type="module">
+    import {
+      Scene,
+      GREEN,
+      ImageMobject,
+      SurroundingRectangle
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: '#000000'
+    });
+
+    async function gradientImageFromArray(scene) {
+      const n = 256;
+      const imageArray = Array.from({length: n}, () =>
+        Array.from({length: n}, (_, i) => i * 256 / n));
+      const image = new ImageMobject({ pixelData: imageArray }).scale(2);
+      image.backgroundRectangle = new SurroundingRectangle(image, { color: GREEN });
+      scene.add(image, image.backgroundRectangle);
+    }
+
+    await gradientImageFromArray(scene);
+  </script>
+</body>
+</html>

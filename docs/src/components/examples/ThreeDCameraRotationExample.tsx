@@ -9,9 +9,6 @@ async function animate(scene: any) {
     xRange: [-6, 6, 1],
     yRange: [-5, 5, 1],
     zRange: [-4, 4, 1],
-    xLength: 12,
-    yLength: 10,
-    zLength: 6,
     axisColor: '#ffffff',
     tipLength: 0.3,
     tipRadius: 0.12,
@@ -45,14 +42,14 @@ async function animate(scene: any) {
 
 function createScene(container: HTMLElement, manim: any) {
   return new manim.ThreeDScene(container, {
-  width: 800,
-  height: 450,
-  backgroundColor: '#000000',
-  phi: 75 * (Math.PI / 180),
-  theta: 30 * (Math.PI / 180),
-  distance: 20,
-  fov: 30,
-});
+    width: 800,
+    height: 450,
+    backgroundColor: '#000000',
+    phi: 75 * (Math.PI / 180),
+    theta: 30 * (Math.PI / 180),
+    distance: 20,
+    fov: 30,
+  });
 }
 
 export default function ThreeDCameraRotationExample() {

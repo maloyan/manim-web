@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb Showcase</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0f0f23;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      font-family: system-ui, sans-serif;
+      color: #fff;
+    }
+    h1 { margin-bottom: 20px; color: #e94560; }
+    #container {
+      border: 2px solid #333;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .buttons {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      padding: 12px 24px;
+      background: #e94560;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    button:hover { background: #ff6b6b; }
+    button:disabled { background: #666; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <h1>ManimWeb Showcase</h1>
+  <div id="container"></div>
+  <div class="buttons">
+    <button id="demo1">Circle to Square</button>
+    <button id="demo2">Math Equation</button>
+    <button id="demo3">Function Graph</button>
+    <button id="demo4">Animated Shapes</button>
+  </div>
+
+  <script type="module">
+    import {
+      Scene, Circle, Square, Rectangle, Triangle,
+      Line, Arrow, Axes, FunctionGraph,
+      Text, MathTex,
+      FadeIn, FadeOut, Create, Transform, Write, DrawBorderThenFill,
+      Rotate, Scale, GrowFromCenter,
+      AnimationGroup, LaggedStart,
+      UP, DOWN, LEFT, RIGHT,
+      smooth,
+      // Manim colors
+      BLUE, RED, GREEN, YELLOW, TEAL, PURPLE, GOLD, WHITE, PINK,
+      BLUE_A, BLUE_D, RED_C, GREEN_C, YELLOW_C,
+      BLACK
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK
+    });
+
+    let isAnimating = false;
+    const buttons = document.querySelectorAll('button');
+
+    function setAnimating(state) {
+      isAnimating = state;
+      buttons.forEach(b => b.disabled = state);
+    }
+
+    // Demo 1: Circle transforms into Square
+    document.getElementById('demo1').addEventListener('click', async () => {
+      if (isAnimating) return;
+      setAnimating(true);
+      scene.clear();
+
+      const circle = new Circle({ radius: 1.5, color: BLUE });
+      const square = new Square({ sideLength: 3, color: RED });
+
+      await scene.play(new Create(circle));
+      await scene.wait(0.5);
+      await scene.play(new Transform(circle, square));
+      await scene.wait(0.5);
+      await scene.play(new FadeOut(circle));
+
+      setAnimating(false);
+    });
+
+    // Demo 2: Math Equation with Write animation
+    document.getElementById('demo2').addEventListener('click', async () => {
+      if (isAnimating) return;
+      setAnimating(true);
+      scene.clear();
+
+      const title = new Text({ text: 'The Pythagorean Theorem', fontSize: 36, color: WHITE });
+      title.shift([0, 2.5, 0]);
+
+      const equation = new MathTex({ latex: 'a^2 + b^2 = c^2', fontSize: 64, color: TEAL });
+
+      const triangle = new Triangle({
+        vertices: [[-2, -2, 0], [2, -2, 0], [2, 1, 0]],
+        color: YELLOW
+      });
+      triangle.shift([0, -1, 0]).scale(0.6);
+
+      await scene.play(new FadeIn(title));
+      await scene.wait(0.3);
+
+      await scene.play(new GrowFromCenter(equation));
+      await scene.wait(0.5);
+
+      await scene.play(new Create(triangle));
+      await scene.wait(1);
+
+      setAnimating(false);
+    });
+
+    // Demo 3: Function Graph
+    document.getElementById('demo3').addEventListener('click', async () => {
+      if (isAnimating) return;
+      setAnimating(true);
+      scene.clear();
+
+      const axes = new Axes({
+        xRange: [-4, 4, 1],
+        yRange: [-2, 2, 1],
+        xLength: 10,
+        yLength: 5,
+        color: '#666666',
+        tips: false
+      });
+
+      const sinGraph = new FunctionGraph({
+        func: (x) => Math.sin(x),
+        xRange: [-4, 4],
+        color: BLUE,
+        axes: axes
+      });
+
+      const cosGraph = new FunctionGraph({
+        func: (x) => Math.cos(x),
+        xRange: [-4, 4],
+        color: RED,
+        axes: axes
+      });
+
+      const label1 = new MathTex({ latex: '\\sin(x)', fontSize: 32, color: BLUE });
+      label1.shift([5, 1, 0]);
+
+      const label2 = new MathTex({ latex: '\\cos(x)', fontSize: 32, color: RED });
+      label2.shift([5, -0.5, 0]);
+
+      await label1.waitForRender();
+      await label2.waitForRender();
+
+      await scene.play(new Create(axes));
+
+      await scene.play(new Create(sinGraph), new FadeIn(label1));
+
+      await scene.play(new Create(cosGraph), new FadeIn(label2));
+
+      await scene.wait(1);
+      setAnimating(false);
+    });
+
+    // Demo 4: Multiple animated shapes
+    document.getElementById('demo4').addEventListener('click', async () => {
+      if (isAnimating) return;
+      setAnimating(true);
+      scene.clear();
+
+      const shapes = [
+        new Circle({ radius: 0.5, color: BLUE }),
+        new Square({ sideLength: 1, color: RED }),
+        new Triangle({
+          vertices: [[-0.5, -0.4, 0], [0.5, -0.4, 0], [0, 0.5, 0]],
+          color: YELLOW
+        }),
+        new Rectangle({ width: 1.2, height: 0.6, color: PURPLE }),
+      ];
+
+      // Position shapes in a row
+      const spacing = 2.5;
+      const startX = -((shapes.length - 1) * spacing) / 2;
+      shapes.forEach((shape, i) => {
+        shape.shift([startX + i * spacing, 0, 0]);
+      });
+
+      // Animate them appearing with stagger
+      const fadeIns = shapes.map(s => new GrowFromCenter(s, { duration: 0.8 }));
+      await scene.play(new LaggedStart(fadeIns, { lagRatio: 0.3 }));
+
+      // Rotate all shapes
+      const rotations = shapes.map(s => new Rotate(s, { angle: Math.PI * 2, duration: 2 }));
+      await scene.play(new AnimationGroup(rotations));
+
+      await scene.wait(0.5);
+      setAnimating(false);
+    });
+
+    // Run first demo on load
+    document.getElementById('demo1').click();
+  </script>
+</body>
+</html>

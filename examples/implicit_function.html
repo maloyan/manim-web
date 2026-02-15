@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Implicit Functions</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      color: white;
+    }
+    h1 {
+      margin-bottom: 10px;
+      font-size: 24px;
+      color: #e94560;
+    }
+    p {
+      margin-bottom: 20px;
+      color: #aaa;
+      font-size: 14px;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #ff6b6b; }
+    button:disabled { background: #666; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+  <h1>Implicit Functions (Marching Squares)</h1>
+  <p>Plots curves defined by f(x, y) = 0</p>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="circleBtn">Circle</button>
+    <button id="ellipseBtn">Ellipse</button>
+    <button id="figure8Btn">Figure-8</button>
+    <button id="allBtn">Show All</button>
+  </div>
+
+  <script type="module">
+    import {
+      Scene,
+      Axes,
+      ImplicitFunction,
+      Create,
+      FadeOut,
+      BLACK
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK
+    });
+
+    const axes = new Axes({
+      xRange: [-5, 5, 1],
+      yRange: [-3, 3, 1],
+      xLength: 10,
+      yLength: 6,
+    });
+    scene.add(axes);
+
+    let isAnimating = false;
+
+    async function showCurve(func, color) {
+      if (isAnimating) return;
+      isAnimating = true;
+      setButtonsDisabled(true);
+
+      // Clear previous implicit curves (keep axes)
+      for (const child of [...scene.children]) {
+        if (child !== axes) scene.remove(child);
+      }
+
+      const curve = new ImplicitFunction({
+        func,
+        xRange: [-5, 5],
+        yRange: [-3, 3],
+        color,
+        strokeWidth: 3,
+        axes,
+      });
+
+      await scene.play(new Create(curve));
+      isAnimating = false;
+      setButtonsDisabled(false);
+    }
+
+    async function showAll() {
+      if (isAnimating) return;
+      isAnimating = true;
+      setButtonsDisabled(true);
+
+      for (const child of [...scene.children]) {
+        if (child !== axes) scene.remove(child);
+      }
+
+      // Circle: x^2 + y^2 - 1 = 0
+      const circle = new ImplicitFunction({
+        func: (x, y) => x * x + y * y - 1,
+        xRange: [-5, 5],
+        yRange: [-3, 3],
+        color: '#58c4dd',
+        strokeWidth: 3,
+        axes,
+      });
+
+      // Ellipse: x^2/4 + y^2 - 1 = 0
+      const ellipse = new ImplicitFunction({
+        func: (x, y) => x * x / 4 + y * y - 1,
+        xRange: [-5, 5],
+        yRange: [-3, 3],
+        color: '#e94560',
+        strokeWidth: 3,
+        axes,
+      });
+
+      // Figure-8 (lemniscate): (x^2+y^2)^2 - 4(x^2-y^2) = 0
+      const figure8 = new ImplicitFunction({
+        func: (x, y) => {
+          const r2 = x * x + y * y;
+          return r2 * r2 - 4 * (x * x - y * y);
+        },
+        xRange: [-5, 5],
+        yRange: [-3, 3],
+        color: '#83c167',
+        strokeWidth: 3,
+        axes,
+      });
+
+      await scene.play(new Create(circle));
+      await scene.play(new Create(ellipse));
+      await scene.play(new Create(figure8));
+
+      isAnimating = false;
+      setButtonsDisabled(false);
+    }
+
+    function setButtonsDisabled(disabled) {
+      document.querySelectorAll('button').forEach(b => b.disabled = disabled);
+    }
+
+    // Circle: x^2 + y^2 - 1 = 0
+    document.getElementById('circleBtn').addEventListener('click', () => {
+      showCurve((x, y) => x * x + y * y - 1, '#58c4dd');
+    });
+
+    // Ellipse: x^2/4 + y^2 - 1 = 0
+    document.getElementById('ellipseBtn').addEventListener('click', () => {
+      showCurve((x, y) => x * x / 4 + y * y - 1, '#e94560');
+    });
+
+    // Figure-8 (lemniscate): (x^2+y^2)^2 - 4(x^2-y^2) = 0
+    document.getElementById('figure8Btn').addEventListener('click', () => {
+      showCurve((x, y) => {
+        const r2 = x * x + y * y;
+        return r2 * r2 - 4 * (x * x - y * y);
+      }, '#83c167');
+    });
+
+    document.getElementById('allBtn').addEventListener('click', showAll);
+  </script>
+</body>
+</html>
