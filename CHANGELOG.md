@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.3](https://github.com/maloyan/manim-js/compare/v0.3.2...v0.3.3) (2026-02-15)
+
+
+### Bug Fixes
+
+* **ci:** create GitHub Release even when tag is pre-pushed ([70b6d49](https://github.com/maloyan/manim-js/commit/70b6d49a9398c7181eacec949b5e1ff7e71c2c7b))
+
 ### [0.3.2](https://github.com/maloyan/manim-js/compare/v0.1.0...v0.3.2) (2026-02-15)
 
 
