@@ -447,15 +447,16 @@ export function svgToVMobjects(
 
   const worldScale = scaleFactor * vbScale;
 
-  function walkElement(el: Element, tx: number, ty: number): void {
+  function walkElement(el: Element, tx: number, ty: number, inheritedScale: number): void {
     const tag = el.tagName.toLowerCase();
 
     // Skip <defs> — we collected them above
     if (tag === 'defs') return;
 
-    // Handle <g> transform
+    // Handle <g> transform (translate + scale)
     let localTx = tx;
     let localTy = ty;
+    let localScale = inheritedScale;
     const transform = el.getAttribute('transform');
     if (transform) {
       const translate = transform.match(/translate\s*\(\s*([^,\s]+)[\s,]+([^)]+)\)/);
@@ -463,12 +464,18 @@ export function svgToVMobjects(
         localTx += parseFloat(translate[1]) || 0;
         localTy += parseFloat(translate[2]) || 0;
       }
+      const scaleMatch = transform.match(/scale\s*\(\s*([^,)\s]+)(?:[\s,]+([^)]+))?\)/);
+      if (scaleMatch) {
+        localScale *= parseFloat(scaleMatch[1]) || 1;
+      }
     }
+
+    const effectiveScale = worldScale * localScale;
 
     if (tag === 'path') {
       const d = el.getAttribute('d');
       if (d) {
-        const vmob = pathDataToVMobject(d, localTx, localTy, worldScale, flipY, color, strokeWidth, fillOpacity);
+        const vmob = pathDataToVMobject(d, localTx, localTy, effectiveScale, flipY, color, strokeWidth, fillOpacity);
         if (vmob) group.add(vmob);
       }
     } else if (tag === 'use') {
@@ -486,7 +493,7 @@ export function svgToVMobjects(
           d,
           localTx + useX,
           localTy + useY,
-          worldScale,
+          effectiveScale,
           flipY,
           color,
           strokeWidth,
@@ -501,18 +508,18 @@ export function svgToVMobjects(
       const rh = parseFloat(el.getAttribute('height') || '0');
       if (rw > 0 && rh > 0) {
         const d = `M${rx},${ry} L${rx + rw},${ry} L${rx + rw},${ry + rh} L${rx},${ry + rh} Z`;
-        const vmob = pathDataToVMobject(d, localTx, localTy, worldScale, flipY, color, strokeWidth, fillOpacity);
+        const vmob = pathDataToVMobject(d, localTx, localTy, effectiveScale, flipY, color, strokeWidth, fillOpacity);
         if (vmob) group.add(vmob);
       }
     }
 
     // Recurse into children
     for (const child of el.children) {
-      walkElement(child, localTx, localTy);
+      walkElement(child, localTx, localTy, localScale);
     }
   }
 
-  walkElement(svgElement, 0, 0);
+  walkElement(svgElement, 0, 0, 1);
 
   return group;
 }
