@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.4](https://github.com/maloyan/manim-js/compare/v0.3.0...v0.3.4) (2026-02-16)
+
+
+### Bug Fixes
+
+* **ci:** check remote tags to avoid push conflict with pre-existing releases ([c4fb884](https://github.com/maloyan/manim-js/commit/c4fb8847fab1263e0b0fbecea4f77ed2e89613a0))
+* **ci:** create GitHub Release even when tag is pre-pushed ([70b6d49](https://github.com/maloyan/manim-js/commit/70b6d49a9398c7181eacec949b5e1ff7e71c2c7b))
+* **ci:** decouple npm publish from tag check to handle pre-created releases ([6f438e4](https://github.com/maloyan/manim-js/commit/6f438e4843d945f0fae4f812237b2307e26a9d3a))
+* **docs:** generate API docs into docs/docs/api/ so Docusaurus routes them ([3a5e0d7](https://github.com/maloyan/manim-js/commit/3a5e0d7ed6bcc39c45d7a127871b68307df834b9))
+* **MathTexSVG:** scale text by em width for consistent fontSize across expressions ([a3550d6](https://github.com/maloyan/manim-js/commit/a3550d65a907459b791a021308e5b0124e5af77d))
+
 ### [0.3.3](https://github.com/maloyan/manim-js/compare/v0.3.2...v0.3.3) (2026-02-15)
 
 
