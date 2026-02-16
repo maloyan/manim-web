@@ -1007,6 +1007,172 @@ describe('svgToVMobjects', () => {
     });
   });
 
+  describe('scale() transforms on <g> elements', () => {
+    it('should scale path coordinates by <g> scale factor', () => {
+      // Path point (100, 0) inside scale(0.5) should produce half-size coordinates
+      const svg = createSVG(
+        '<svg>' + '<g transform="scale(0.5)">' + '<path d="M 0 0 L 100 0"/>' + '</g>' + '</svg>',
+      );
+      const groupScaled = svgToVMobjects(svg, { flipY: false, scale: 1 });
+      // Without scale: path endpoint would be at x=100
+      // With scale(0.5): path endpoint should be at x=50
+      const svgNoScale = createSVG('<svg>' + '<path d="M 0 0 L 100 0"/>' + '</svg>');
+      const groupUnscaled = svgToVMobjects(svgNoScale, { flipY: false, scale: 1 });
+
+      const ptsScaled = (groupScaled.submobjects[0] as any).getPoints();
+      const ptsUnscaled = (groupUnscaled.submobjects[0] as any).getPoints();
+
+      // The endpoint x of scaled should be half of unscaled
+      const endScaled = ptsScaled[ptsScaled.length - 1][0];
+      const endUnscaled = ptsUnscaled[ptsUnscaled.length - 1][0];
+      expect(endScaled).toBeCloseTo(endUnscaled * 0.5, 5);
+    });
+
+    it('should handle translate(a,b) scale(s) combined', () => {
+      // translate(100,0) scale(0.5): point (200,0) -> 100 + 0.5*200 = 200
+      // vs just translate(100,0): point (200,0) -> 100 + 200 = 300
+      const svgWithScale = createSVG(
+        '<svg>' +
+          '<g transform="translate(100, 0) scale(0.5)">' +
+          '<path d="M 0 0 L 200 0"/>' +
+          '</g>' +
+          '</svg>',
+      );
+      const svgTranslateOnly = createSVG(
+        '<svg>' +
+          '<g transform="translate(100, 0)">' +
+          '<path d="M 0 0 L 200 0"/>' +
+          '</g>' +
+          '</svg>',
+      );
+
+      const grpScale = svgToVMobjects(svgWithScale, { flipY: false, scale: 1 });
+      const grpNoScale = svgToVMobjects(svgTranslateOnly, { flipY: false, scale: 1 });
+
+      const endScale = (grpScale.submobjects[0] as any).getPoints();
+      const endNoScale = (grpNoScale.submobjects[0] as any).getPoints();
+
+      // With scale: endpoint x = 100 + 0.5*200 = 200
+      // Without scale: endpoint x = 100 + 200 = 300
+      // Start point with scale: x = 100 + 0.5*0 = 100
+      // Start point without: x = 100 + 0 = 100  (same)
+      expect(endScale[0][0]).toBeCloseTo(endNoScale[0][0], 5); // start same
+      expect(endScale[endScale.length - 1][0]).toBeLessThan(endNoScale[endNoScale.length - 1][0]);
+    });
+
+    it('should propagate scale through nested <g> elements', () => {
+      // Nested: scale(0.5) > scale(0.5) => effective scale 0.25
+      const svg = createSVG(
+        '<svg>' +
+          '<g transform="scale(0.5)">' +
+          '<g transform="scale(0.5)">' +
+          '<path d="M 0 0 L 100 0"/>' +
+          '</g>' +
+          '</g>' +
+          '</svg>',
+      );
+      const svgFlat = createSVG('<svg>' + '<path d="M 0 0 L 100 0"/>' + '</svg>');
+
+      const grpNested = svgToVMobjects(svg, { flipY: false, scale: 1 });
+      const grpFlat = svgToVMobjects(svgFlat, { flipY: false, scale: 1 });
+
+      const endNested = (grpNested.submobjects[0] as any).getPoints();
+      const endFlat = (grpFlat.submobjects[0] as any).getPoints();
+
+      // Nested scale 0.5*0.5 = 0.25
+      expect(endNested[endNested.length - 1][0]).toBeCloseTo(
+        endFlat[endFlat.length - 1][0] * 0.25,
+        5,
+      );
+    });
+
+    it('should apply scale to <use> glyph references', () => {
+      const svg = createSVG(
+        '<svg>' +
+          '<defs><path id="g1" d="M 0 0 L 100 0"/></defs>' +
+          '<g transform="scale(0.5)">' +
+          '<use href="#g1"/>' +
+          '</g>' +
+          '</svg>',
+      );
+      const svgNoScale = createSVG(
+        '<svg>' + '<defs><path id="g1" d="M 0 0 L 100 0"/></defs>' + '<use href="#g1"/>' + '</svg>',
+      );
+
+      const grpScale = svgToVMobjects(svg, { flipY: false, scale: 1 });
+      const grpNoScale = svgToVMobjects(svgNoScale, { flipY: false, scale: 1 });
+
+      const endScale = (grpScale.submobjects[0] as any).getPoints();
+      const endNoScale = (grpNoScale.submobjects[0] as any).getPoints();
+
+      expect(endScale[endScale.length - 1][0]).toBeCloseTo(
+        endNoScale[endNoScale.length - 1][0] * 0.5,
+        5,
+      );
+    });
+
+    it('should apply scale to <use> x/y offsets', () => {
+      // <use x="100"> inside scale(0.5): offset contributes 0.5*100=50 not 100
+      const svg = createSVG(
+        '<svg>' +
+          '<defs><path id="g2" d="M 0 0 L 10 0"/></defs>' +
+          '<g transform="scale(0.5)">' +
+          '<use href="#g2" x="100" y="0"/>' +
+          '</g>' +
+          '</svg>',
+      );
+      const svgNoScale = createSVG(
+        '<svg>' +
+          '<defs><path id="g2" d="M 0 0 L 10 0"/></defs>' +
+          '<use href="#g2" x="100" y="0"/>' +
+          '</svg>',
+      );
+
+      const grpScale = svgToVMobjects(svg, { flipY: false, scale: 1 });
+      const grpNoScale = svgToVMobjects(svgNoScale, { flipY: false, scale: 1 });
+
+      const startScale = (grpScale.submobjects[0] as any).getPoints()[0][0];
+      const startNoScale = (grpNoScale.submobjects[0] as any).getPoints()[0][0];
+
+      // With scale(0.5): start x = 0.5*100 + 0.5*0 = 50
+      // Without scale: start x = 100 + 0 = 100
+      expect(startScale).toBeCloseTo(startNoScale * 0.5, 5);
+    });
+
+    it('should handle MathJax-style superscript with translate+scale', () => {
+      // Simulates x^2 where "2" is positioned as superscript
+      const svg = createSVG(
+        '<svg viewBox="0 0 1000 500">' +
+          '<defs>' +
+          '<path id="base" d="M 0 0 L 100 0 L 100 100 Z"/>' +
+          '<path id="sup" d="M 0 0 L 100 0 L 100 100 Z"/>' +
+          '</defs>' +
+          '<g transform="translate(0, 0)">' +
+          '<use href="#base"/>' +
+          '</g>' +
+          '<g transform="translate(500, 200) scale(0.707)">' +
+          '<use href="#sup"/>' +
+          '</g>' +
+          '</svg>',
+      );
+      const group = svgToVMobjects(svg, { flipY: false });
+      expect(group.submobjects.length).toBe(2);
+
+      // The superscript glyph should be smaller than the base glyph
+      const basePts = (group.submobjects[0] as any).getPoints();
+      const supPts = (group.submobjects[1] as any).getPoints();
+
+      // Compute bounding box widths
+      const baseXs = basePts.map((p: number[]) => p[0]);
+      const supXs = supPts.map((p: number[]) => p[0]);
+      const baseWidth = Math.max(...baseXs) - Math.min(...baseXs);
+      const supWidth = Math.max(...supXs) - Math.min(...supXs);
+
+      // Superscript should be ~70.7% the size of base
+      expect(supWidth).toBeCloseTo(baseWidth * 0.707, 2);
+    });
+  });
+
   describe('MathJax-like SVG structure', () => {
     it('should handle typical MathJax SVG with defs, use, and g elements', () => {
       const svg = createSVG(
