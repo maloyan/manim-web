@@ -931,6 +931,111 @@ describe('svgToVMobjects', () => {
       const group = svgToVMobjects(svg);
       expect(group.submobjects.length).toBe(1);
     });
+
+    it('should apply scale() transform from <g> to path points', () => {
+      // A path at M 0 0 L 100 0 inside <g scale(0.5)> should produce points
+      // half the size of the same path without scale
+      const svgScaled = createSVG(
+        '<svg>' +
+          '<g transform="scale(0.5)">' +
+          '<path d="M 0 0 L 100 0"/>' +
+          '</g>' +
+          '</svg>',
+      );
+      const svgUnscaled = createSVG(
+        '<svg>' +
+          '<path d="M 0 0 L 100 0"/>' +
+          '</svg>',
+      );
+      const groupScaled = svgToVMobjects(svgScaled, { flipY: false });
+      const groupUnscaled = svgToVMobjects(svgUnscaled, { flipY: false });
+      expect(groupScaled.submobjects.length).toBe(1);
+      expect(groupUnscaled.submobjects.length).toBe(1);
+
+      const ptsScaled = groupScaled.submobjects[0].getPoints();
+      const ptsUnscaled = groupUnscaled.submobjects[0].getPoints();
+      // Endpoint x of scaled should be ~half of unscaled
+      const lastScaled = ptsScaled[ptsScaled.length - 1][0];
+      const lastUnscaled = ptsUnscaled[ptsUnscaled.length - 1][0];
+      expect(lastScaled).toBeCloseTo(lastUnscaled * 0.5, 5);
+    });
+
+    it('should apply combined translate + scale transforms', () => {
+      // MathJax pattern: translate(x,y) scale(s) on subscript/superscript groups
+      const svg = createSVG(
+        '<svg>' +
+          '<g transform="translate(100, 200) scale(0.707)">' +
+          '<path d="M 0 0 L 10 0"/>' +
+          '</g>' +
+          '</svg>',
+      );
+      const group = svgToVMobjects(svg, { flipY: false });
+      expect(group.submobjects.length).toBe(1);
+      const pts = group.submobjects[0].getPoints();
+      // First point: (0 + 100) * scale * 0.707, (0 + 200) * scale * 0.707
+      // Last point:  (10 + 100) * scale * 0.707, (0 + 200) * scale * 0.707
+      // The x difference between first and last should reflect the 0.707 scale
+      const xDiff = pts[pts.length - 1][0] - pts[0][0];
+      // Without scale it would be 10 * worldScale; with scale it's 10 * worldScale * 0.707
+      expect(xDiff).toBeGreaterThan(0);
+      // Compare to a version without scale
+      const svgNoScale = createSVG(
+        '<svg>' +
+          '<g transform="translate(100, 200)">' +
+          '<path d="M 0 0 L 10 0"/>' +
+          '</g>' +
+          '</svg>',
+      );
+      const groupNoScale = svgToVMobjects(svgNoScale, { flipY: false });
+      const ptsNoScale = groupNoScale.submobjects[0].getPoints();
+      const xDiffNoScale = ptsNoScale[ptsNoScale.length - 1][0] - ptsNoScale[0][0];
+      expect(xDiff).toBeCloseTo(xDiffNoScale * 0.707, 3);
+    });
+
+    it('should inherit scale through nested <g> elements', () => {
+      const svg = createSVG(
+        '<svg>' +
+          '<g transform="scale(0.5)">' +
+          '<g transform="scale(0.5)">' +
+          '<path d="M 0 0 L 100 0"/>' +
+          '</g>' +
+          '</g>' +
+          '</svg>',
+      );
+      const svgUnscaled = createSVG('<svg><path d="M 0 0 L 100 0"/></svg>');
+      const groupScaled = svgToVMobjects(svg, { flipY: false });
+      const groupUnscaled = svgToVMobjects(svgUnscaled, { flipY: false });
+      const ptsScaled = groupScaled.submobjects[0].getPoints();
+      const ptsUnscaled = groupUnscaled.submobjects[0].getPoints();
+      // Nested 0.5 * 0.5 = 0.25 scale
+      const lastScaled = ptsScaled[ptsScaled.length - 1][0];
+      const lastUnscaled = ptsUnscaled[ptsUnscaled.length - 1][0];
+      expect(lastScaled).toBeCloseTo(lastUnscaled * 0.25, 5);
+    });
+
+    it('should apply scale to <use> elements', () => {
+      const svg = createSVG(
+        '<svg>' +
+          '<defs><path id="gl" d="M 0 0 L 100 0"/></defs>' +
+          '<g transform="scale(0.5)">' +
+          '<use href="#gl"/>' +
+          '</g>' +
+          '</svg>',
+      );
+      const svgUnscaled = createSVG(
+        '<svg>' +
+          '<defs><path id="gl2" d="M 0 0 L 100 0"/></defs>' +
+          '<use href="#gl2"/>' +
+          '</svg>',
+      );
+      const groupScaled = svgToVMobjects(svg, { flipY: false });
+      const groupUnscaled = svgToVMobjects(svgUnscaled, { flipY: false });
+      const ptsScaled = groupScaled.submobjects[0].getPoints();
+      const ptsUnscaled = groupUnscaled.submobjects[0].getPoints();
+      const lastScaled = ptsScaled[ptsScaled.length - 1][0];
+      const lastUnscaled = ptsUnscaled[ptsUnscaled.length - 1][0];
+      expect(lastScaled).toBeCloseTo(lastUnscaled * 0.5, 5);
+    });
   });
 
   describe('rect elements', () => {
