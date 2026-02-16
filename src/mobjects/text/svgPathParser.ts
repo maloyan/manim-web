@@ -60,9 +60,13 @@ function tokenizePath(d: string): Array<{ cmd: string; args: number[] }> {
   for (const seg of segments) {
     const cmd = seg[0];
     const raw = seg.slice(1).trim();
-    const args = raw.length > 0
-      ? raw.split(/[\s,]+/).filter(Boolean).map(Number)
-      : [];
+    const args =
+      raw.length > 0
+        ? raw
+            .split(/[\s,]+/)
+            .filter(Boolean)
+            .map(Number)
+        : [];
     tokens.push({ cmd, args });
   }
   return tokens;
@@ -155,13 +159,19 @@ export function parseSVGPathData(d: string): Vec2[][] {
 
       case 'C': {
         for (let i = 0; i < args.length; i += 6) {
-          let c1x = args[i], c1y = args[i + 1];
-          let c2x = args[i + 2], c2y = args[i + 3];
-          let ex = args[i + 4], ey = args[i + 5];
+          let c1x = args[i],
+            c1y = args[i + 1];
+          let c2x = args[i + 2],
+            c2y = args[i + 3];
+          let ex = args[i + 4],
+            ey = args[i + 5];
           if (rel) {
-            c1x += cx; c1y += cy;
-            c2x += cx; c2y += cy;
-            ex += cx; ey += cy;
+            c1x += cx;
+            c1y += cy;
+            c2x += cx;
+            c2y += cy;
+            ex += cx;
+            ey += cy;
           }
           currentPath.push([c1x, c1y], [c2x, c2y], [ex, ey]);
           lastCtrlX = c2x;
@@ -176,16 +186,21 @@ export function parseSVGPathData(d: string): Vec2[][] {
       case 'S': {
         for (let i = 0; i < args.length; i += 4) {
           // Reflected control point
-          let c1x = cx, c1y = cy;
+          let c1x = cx,
+            c1y = cy;
           if (prevCmd === 'C' || prevCmd === 'S') {
             c1x = 2 * cx - lastCtrlX;
             c1y = 2 * cy - lastCtrlY;
           }
-          let c2x = args[i], c2y = args[i + 1];
-          let ex = args[i + 2], ey = args[i + 3];
+          let c2x = args[i],
+            c2y = args[i + 1];
+          let ex = args[i + 2],
+            ey = args[i + 3];
           if (rel) {
-            c2x += cx; c2y += cy;
-            ex += cx; ey += cy;
+            c2x += cx;
+            c2y += cy;
+            ex += cx;
+            ey += cy;
           }
           currentPath.push([c1x, c1y], [c2x, c2y], [ex, ey]);
           lastCtrlX = c2x;
@@ -199,11 +214,15 @@ export function parseSVGPathData(d: string): Vec2[][] {
 
       case 'Q': {
         for (let i = 0; i < args.length; i += 4) {
-          let qx = args[i], qy = args[i + 1];
-          let ex = args[i + 2], ey = args[i + 3];
+          let qx = args[i],
+            qy = args[i + 1];
+          let ex = args[i + 2],
+            ey = args[i + 3];
           if (rel) {
-            qx += cx; qy += cy;
-            ex += cx; ey += cy;
+            qx += cx;
+            qy += cy;
+            ex += cx;
+            ey += cy;
           }
           // Elevate quadratic to cubic
           const c1x = cx + (2 / 3) * (qx - cx);
@@ -222,14 +241,17 @@ export function parseSVGPathData(d: string): Vec2[][] {
 
       case 'T': {
         for (let i = 0; i < args.length; i += 2) {
-          let qx = cx, qy = cy;
+          let qx = cx,
+            qy = cy;
           if (prevCmd === 'Q' || prevCmd === 'T') {
             qx = 2 * cx - lastCtrlX;
             qy = 2 * cy - lastCtrlY;
           }
-          let ex = args[i], ey = args[i + 1];
+          let ex = args[i],
+            ey = args[i + 1];
           if (rel) {
-            ex += cx; ey += cy;
+            ex += cx;
+            ey += cy;
           }
           const c1x = cx + (2 / 3) * (qx - cx);
           const c1y = cy + (2 / 3) * (qy - cy);
@@ -249,11 +271,15 @@ export function parseSVGPathData(d: string): Vec2[][] {
         for (let i = 0; i < args.length; i += 7) {
           const rx = args[i];
           const ry = args[i + 1];
-          const phi = args[i + 2] * Math.PI / 180;
+          const phi = (args[i + 2] * Math.PI) / 180;
           const fa = args[i + 3];
           const fs = args[i + 4];
-          let ex = args[i + 5], ey = args[i + 6];
-          if (rel) { ex += cx; ey += cy; }
+          let ex = args[i + 5],
+            ey = args[i + 6];
+          if (rel) {
+            ex += cx;
+            ey += cy;
+          }
           const arcPts = arcToCubicBezier(cx, cy, ex, ey, rx, ry, phi, fa, fs);
           for (const pt of arcPts) {
             currentPath.push(pt);
@@ -293,8 +319,8 @@ export function parseSVGPathData(d: string): Vec2[][] {
 function pushLineTo(path: Vec2[], x0: number, y0: number, x1: number, y1: number): void {
   const c1x = x0 + (x1 - x0) / 3;
   const c1y = y0 + (y1 - y0) / 3;
-  const c2x = x0 + (x1 - x0) * 2 / 3;
-  const c2y = y0 + (y1 - y0) * 2 / 3;
+  const c2x = x0 + ((x1 - x0) * 2) / 3;
+  const c2y = y0 + ((y1 - y0) * 2) / 3;
   path.push([c1x, c1y], [c2x, c2y], [x1, y1]);
 }
 
@@ -303,10 +329,15 @@ function pushLineTo(path: Vec2[], x0: number, y0: number, x1: number, y1: number
  * Returns an array of Vec2 points (handle1, handle2, endpoint triples).
  */
 function arcToCubicBezier(
-  x1: number, y1: number,
-  x2: number, y2: number,
-  _rx: number, _ry: number,
-  phi: number, fa: number, fs: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  _rx: number,
+  _ry: number,
+  phi: number,
+  fa: number,
+  fs: number,
 ): Vec2[] {
   let rx = Math.abs(_rx);
   let ry = Math.abs(_ry);
@@ -336,17 +367,14 @@ function arcToCubicBezier(
   const denom = rx * rx * y1p * y1p + ry * ry * x1p * x1p;
   const sq = Math.max(0, (rx * rx * ry * ry - denom) / denom);
   const coef = sign * Math.sqrt(sq);
-  const cxp = coef * rx * y1p / ry;
-  const cyp = -coef * ry * x1p / rx;
+  const cxp = (coef * rx * y1p) / ry;
+  const cyp = (-coef * ry * x1p) / rx;
 
   const cxOrig = cosPhi * cxp - sinPhi * cyp + (x1 + x2) / 2;
   const cyOrig = sinPhi * cxp + cosPhi * cyp + (y1 + y2) / 2;
 
   const theta1 = vecAngle(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry);
-  let dtheta = vecAngle(
-    (x1p - cxp) / rx, (y1p - cyp) / ry,
-    (-x1p - cxp) / rx, (-y1p - cyp) / ry,
-  );
+  let dtheta = vecAngle((x1p - cxp) / rx, (y1p - cyp) / ry, (-x1p - cxp) / rx, (-y1p - cyp) / ry);
   if (fs === 0 && dtheta > 0) dtheta -= 2 * Math.PI;
   if (fs === 1 && dtheta < 0) dtheta += 2 * Math.PI;
 
@@ -356,10 +384,12 @@ function arcToCubicBezier(
   for (let i = 0; i < numSeg; i++) {
     const sa = theta1 + i * segAngle;
     const ea = sa + segAngle;
-    const alpha = Math.sin(segAngle) * (Math.sqrt(4 + 3 * Math.tan(segAngle / 2) ** 2) - 1) / 3;
+    const alpha = (Math.sin(segAngle) * (Math.sqrt(4 + 3 * Math.tan(segAngle / 2) ** 2) - 1)) / 3;
 
-    const cos1 = Math.cos(sa), sin1 = Math.sin(sa);
-    const cos2 = Math.cos(ea), sin2 = Math.sin(ea);
+    const cos1 = Math.cos(sa),
+      sin1 = Math.sin(sa);
+    const cos2 = Math.cos(ea),
+      sin2 = Math.sin(ea);
 
     const p1x = cxOrig + rx * cosPhi * cos1 - ry * sinPhi * sin1;
     const p1y = cyOrig + rx * sinPhi * cos1 + ry * cosPhi * sin1;
@@ -447,28 +477,53 @@ export function svgToVMobjects(
 
   const worldScale = scaleFactor * vbScale;
 
-  function walkElement(el: Element, tx: number, ty: number): void {
+  function walkElement(el: Element, accTx: number, accTy: number, accScale: number): void {
     const tag = el.tagName.toLowerCase();
 
     // Skip <defs> — we collected them above
     if (tag === 'defs') return;
 
-    // Handle <g> transform
-    let localTx = tx;
-    let localTy = ty;
+    // Handle <g> transform: translate and scale
+    // SVG transforms apply left-to-right in the attribute string.
+    // For "translate(a,b) scale(s)": point p → (a + s*p.x, b + s*p.y)
+    // We accumulate into (accTx, accTy, accScale) so that:
+    //   worldPoint = (accTx + accScale * localPoint) * worldScale
+    let localTx = accTx;
+    let localTy = accTy;
+    let localScale = accScale;
     const transform = el.getAttribute('transform');
     if (transform) {
-      const translate = transform.match(/translate\s*\(\s*([^,\s]+)[\s,]+([^)]+)\)/);
-      if (translate) {
-        localTx += parseFloat(translate[1]) || 0;
-        localTy += parseFloat(translate[2]) || 0;
+      const regex = /(translate|scale)\s*\(([^)]*)\)/g;
+      let m;
+      while ((m = regex.exec(transform)) !== null) {
+        const type = m[1];
+        const args = m[2]
+          .split(/[\s,]+/)
+          .filter(Boolean)
+          .map(Number);
+        if (type === 'translate') {
+          localTx += localScale * (args[0] || 0);
+          localTy += localScale * (args[1] || 0);
+        } else if (type === 'scale') {
+          localScale *= args[0] || 1;
+        }
       }
     }
 
     if (tag === 'path') {
       const d = el.getAttribute('d');
       if (d) {
-        const vmob = pathDataToVMobject(d, localTx, localTy, worldScale, flipY, color, strokeWidth, fillOpacity);
+        const vmob = pathDataToVMobject(
+          d,
+          localTx,
+          localTy,
+          localScale,
+          worldScale,
+          flipY,
+          color,
+          strokeWidth,
+          fillOpacity,
+        );
         if (vmob) group.add(vmob);
       }
     } else if (tag === 'use') {
@@ -477,15 +532,16 @@ export function svgToVMobjects(
       const id = href.replace(/^#/, '');
       const d = defs.get(id);
 
-      // <use> elements can have their own x/y offsets
+      // <use> elements can have their own x/y offsets (in local coordinate space)
       const useX = parseFloat(el.getAttribute('x') || '0');
       const useY = parseFloat(el.getAttribute('y') || '0');
 
       if (d) {
         const vmob = pathDataToVMobject(
           d,
-          localTx + useX,
-          localTy + useY,
+          localTx + localScale * useX,
+          localTy + localScale * useY,
+          localScale,
           worldScale,
           flipY,
           color,
@@ -501,31 +557,48 @@ export function svgToVMobjects(
       const rh = parseFloat(el.getAttribute('height') || '0');
       if (rw > 0 && rh > 0) {
         const d = `M${rx},${ry} L${rx + rw},${ry} L${rx + rw},${ry + rh} L${rx},${ry + rh} Z`;
-        const vmob = pathDataToVMobject(d, localTx, localTy, worldScale, flipY, color, strokeWidth, fillOpacity);
+        const vmob = pathDataToVMobject(
+          d,
+          localTx,
+          localTy,
+          localScale,
+          worldScale,
+          flipY,
+          color,
+          strokeWidth,
+          fillOpacity,
+        );
         if (vmob) group.add(vmob);
       }
     }
 
     // Recurse into children
     for (const child of el.children) {
-      walkElement(child, localTx, localTy);
+      walkElement(child, localTx, localTy, localScale);
     }
   }
 
-  walkElement(svgElement, 0, 0);
+  walkElement(svgElement, 0, 0, 1);
 
   return group;
 }
 
 /**
  * Convert SVG path data string into a single VMobject (or null if empty).
- * Applies translation, scale, and optional Y-flip.
+ * Applies accumulated translation, element scale, world scale, and optional Y-flip.
+ *
+ * The final position for each path point (px, py) is:
+ *   worldX = (accTx + elementScale * px) * worldScale
+ *   worldY = ±(accTy + elementScale * py) * worldScale   (sign depends on flipY)
+ *
+ * When elementScale=1, this reduces to (px + accTx) * worldScale (original behavior).
  */
 function pathDataToVMobject(
   d: string,
-  tx: number,
-  ty: number,
-  scale: number,
+  accTx: number,
+  accTy: number,
+  elementScale: number,
+  worldScale: number,
   flipY: boolean,
   color: string,
   strokeWidth: number,
@@ -543,8 +616,10 @@ function pathDataToVMobject(
   for (const sp of subPaths) {
     const startLen = allPoints.length;
     for (const [px, py] of sp) {
-      const x = (px + tx) * scale;
-      const y = flipY ? -(py + ty) * scale : (py + ty) * scale;
+      const x = (accTx + elementScale * px) * worldScale;
+      const y = flipY
+        ? -(accTy + elementScale * py) * worldScale
+        : (accTy + elementScale * py) * worldScale;
       allPoints.push([x, y, 0]);
     }
     const count = allPoints.length - startLen;
@@ -563,6 +638,7 @@ function pathDataToVMobject(
 
   // Attach subpath info so VMobject renders holes correctly
   if (subpathLengths.length > 1) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (vmob as any).getSubpaths = () => [...subpathLengths];
   }
 
