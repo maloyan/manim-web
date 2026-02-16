@@ -84,11 +84,11 @@ jobs:
         if: steps.release_check.outputs.exists == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_NOTES: "${{ steps.changelog.outputs.body }}${{ steps.changelog_existing.outputs.body }}"
         run: |
-          NOTES="${{ steps.changelog.outputs.body }}${{ steps.changelog_existing.outputs.body }}"
           gh release create "${{ steps.version.outputs.tag }}" \
             --title "${{ steps.version.outputs.tag }}" \
-            --notes "$NOTES" \
+            --notes "$RELEASE_NOTES" \
             --target main
 
       - name: Check if version is on npm
