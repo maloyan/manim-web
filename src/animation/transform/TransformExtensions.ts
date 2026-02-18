@@ -9,6 +9,34 @@ import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { Transform } from './Transform';
 import { lerp, lerpPoint } from '../../utils/math';
+import { Arrow, DoubleArrow } from '../../mobjects/geometry/Arrow';
+
+// ============================================================================
+// Shared VMobjectLike duck-type (mirrors ApplyPointwiseFunction)
+// ============================================================================
+
+interface VMobjectLike {
+  getPoints(): number[][];
+  setPoints(pts: number[][]): void;
+}
+
+function isVMobjectLike(m: unknown): m is VMobjectLike {
+  const obj = m as Record<string, unknown>;
+  return typeof obj.getPoints === 'function' && typeof obj.setPoints === 'function';
+}
+
+interface ChildSnapshot {
+  mob: VMobjectLike;
+  startPoints: number[][];
+  targetPoints: number[][];
+}
+
+function _reconstructArrowTips(mobject: Mobject): void {
+  for (const mob of mobject.getFamily()) {
+    if (mob instanceof Arrow) mob.reconstructTip();
+    else if (mob instanceof DoubleArrow) mob.reconstructTips();
+  }
+}
 
 // ============================================================================
 // ApplyFunction
@@ -21,19 +49,13 @@ export interface ApplyFunctionOptions extends AnimationOptions {
 
 /**
  * ApplyFunction animation - applies an arbitrary function to mobject points.
- * The points interpolate from their original positions to the transformed positions.
+ * Supports both VMobject and Group (walks the family tree like ApplyPointwiseFunction).
  */
 export class ApplyFunction extends Animation {
-  /** Function to apply to each point */
   readonly func: (point: number[]) => number[];
+  private _snapshots: ChildSnapshot[] = [];
 
-  /** Copy of the starting points */
-  private _startPoints: number[][] = [];
-
-  /** Target points after applying function */
-  private _targetPoints: number[][] = [];
-
-  constructor(mobject: VMobject, options: ApplyFunctionOptions) {
+  constructor(mobject: Mobject, options: ApplyFunctionOptions) {
     super(mobject, options);
     this.func = options.func;
   }
@@ -41,39 +63,73 @@ export class ApplyFunction extends Animation {
   override begin(): void {
     super.begin();
 
-    const vmobject = this.mobject as VMobject;
-    this._startPoints = vmobject.getPoints();
-    this._targetPoints = this._startPoints.map(p => this.func([...p]));
+    this._snapshots = [];
+    const _v = new THREE.Vector3();
+
+    for (const mob of this.mobject.getFamily()) {
+      if (isVMobjectLike(mob)) {
+        const startPoints = mob.getPoints();
+        if (startPoints.length === 0) continue;
+
+        const threeObj = (mob as Mobject)._threeObject;
+        let worldMatrix: THREE.Matrix4 | null = null;
+        let inverseWorld: THREE.Matrix4 | null = null;
+
+        if (threeObj) {
+          threeObj.updateWorldMatrix(true, false);
+          worldMatrix = threeObj.matrixWorld;
+          inverseWorld = worldMatrix.clone().invert();
+        }
+
+        let targetPoints: number[][];
+        if (worldMatrix && inverseWorld) {
+          targetPoints = startPoints.map((p) => {
+            _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
+            const worldResult = this.func([_v.x, _v.y, _v.z]);
+            _v.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
+            return [_v.x, _v.y, _v.z];
+          });
+        } else {
+          targetPoints = startPoints.map((p) => this.func([...p]));
+        }
+
+        this._snapshots.push({ mob, startPoints, targetPoints });
+      }
+    }
   }
 
   interpolate(alpha: number): void {
-    const vmobject = this.mobject as VMobject;
-    const interpolatedPoints: number[][] = [];
-
-    for (let i = 0; i < this._startPoints.length; i++) {
-      interpolatedPoints.push(lerpPoint(this._startPoints[i], this._targetPoints[i], alpha));
+    for (const snap of this._snapshots) {
+      const interpolated: number[][] = [];
+      for (let i = 0; i < snap.startPoints.length; i++) {
+        interpolated.push(lerpPoint(snap.startPoints[i], snap.targetPoints[i], alpha));
+      }
+      snap.mob.setPoints(interpolated);
     }
-
-    vmobject.setPoints(interpolatedPoints);
+    _reconstructArrowTips(this.mobject);
+    this.mobject._markDirtyUpward();
   }
 
   override finish(): void {
-    const vmobject = this.mobject as VMobject;
-    vmobject.setPoints(this._targetPoints);
+    for (const snap of this._snapshots) {
+      snap.mob.setPoints(snap.targetPoints);
+    }
+    _reconstructArrowTips(this.mobject);
+    this.mobject._markDirtyUpward();
     super.finish();
   }
 }
 
 /**
  * Create an ApplyFunction animation.
- * @param mobject The VMobject to transform
+ * @param mobject The Mobject to transform (VMobject or Group)
  * @param func Function to apply to each point [x, y, z] => [x', y', z']
  * @param options Animation options
  */
 export function applyFunction(
-  mobject: VMobject,
+  mobject: Mobject,
   func: (point: number[]) => number[],
-  options?: Omit<ApplyFunctionOptions, 'func'>
+  options?: Omit<ApplyFunctionOptions, 'func'>,
 ): ApplyFunction {
   return new ApplyFunction(mobject, { ...options, func });
 }
@@ -103,7 +159,9 @@ export class ApplyMethod extends Transform {
   constructor(mobject: VMobject, options: ApplyMethodOptions) {
     // Create target by copying and calling method
     const target = mobject.copy() as VMobject;
-    const method = (target as unknown as Record<string, (...args: unknown[]) => unknown>)[options.methodName];
+    const method = (target as unknown as Record<string, (...args: unknown[]) => unknown>)[
+      options.methodName
+    ];
     if (typeof method === 'function') {
       method.call(target, ...(options.args || []));
     }
@@ -125,7 +183,7 @@ export function applyMethod(
   mobject: VMobject,
   methodName: string,
   args?: unknown[],
-  options?: AnimationOptions
+  options?: AnimationOptions,
 ): ApplyMethod {
   return new ApplyMethod(mobject, { ...options, methodName, args });
 }
@@ -143,21 +201,14 @@ export interface ApplyMatrixOptions extends AnimationOptions {
 
 /**
  * ApplyMatrix animation - applies a matrix transformation to mobject points.
+ * Supports both VMobject and Group (walks the family tree like ApplyPointwiseFunction).
  */
 export class ApplyMatrix extends Animation {
-  /** Transformation matrix */
   readonly matrix: number[][];
-
-  /** Point to apply transformation about */
   readonly aboutPoint: Vector3Tuple;
+  private _snapshots: ChildSnapshot[] = [];
 
-  /** Copy of the starting points */
-  private _startPoints: number[][] = [];
-
-  /** Target points after applying matrix */
-  private _targetPoints: number[][] = [];
-
-  constructor(mobject: VMobject, options: ApplyMatrixOptions) {
+  constructor(mobject: Mobject, options: ApplyMatrixOptions) {
     super(mobject, options);
     this.matrix = options.matrix;
     this.aboutPoint = options.aboutPoint ?? [0, 0, 0];
@@ -166,15 +217,42 @@ export class ApplyMatrix extends Animation {
   override begin(): void {
     super.begin();
 
-    const vmobject = this.mobject as VMobject;
-    this._startPoints = vmobject.getPoints();
+    this._snapshots = [];
+    const _v = new THREE.Vector3();
 
-    // Apply matrix transformation to each point
-    this._targetPoints = this._startPoints.map(p => this._transformPoint(p));
+    for (const mob of this.mobject.getFamily()) {
+      if (isVMobjectLike(mob)) {
+        const startPoints = mob.getPoints();
+        if (startPoints.length === 0) continue;
+
+        const threeObj = (mob as Mobject)._threeObject;
+        let worldMatrix: THREE.Matrix4 | null = null;
+        let inverseWorld: THREE.Matrix4 | null = null;
+
+        if (threeObj) {
+          threeObj.updateWorldMatrix(true, false);
+          worldMatrix = threeObj.matrixWorld;
+          inverseWorld = worldMatrix.clone().invert();
+        }
+
+        let targetPoints: number[][];
+        if (worldMatrix && inverseWorld) {
+          targetPoints = startPoints.map((p) => {
+            _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
+            const worldResult = this._transformPoint([_v.x, _v.y, _v.z]);
+            _v.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
+            return [_v.x, _v.y, _v.z];
+          });
+        } else {
+          targetPoints = startPoints.map((p) => this._transformPoint(p));
+        }
+
+        this._snapshots.push({ mob, startPoints, targetPoints });
+      }
+    }
   }
 
   private _transformPoint(point: number[]): number[] {
-    // Translate to origin (about point)
     const x = point[0] - this.aboutPoint[0];
     const y = point[1] - this.aboutPoint[1];
     const z = point[2] - this.aboutPoint[2];
@@ -182,57 +260,69 @@ export class ApplyMatrix extends Animation {
     let newX: number, newY: number, newZ: number;
 
     if (this.matrix.length === 3 && this.matrix[0].length === 3) {
-      // 3x3 matrix
       newX = this.matrix[0][0] * x + this.matrix[0][1] * y + this.matrix[0][2] * z;
       newY = this.matrix[1][0] * x + this.matrix[1][1] * y + this.matrix[1][2] * z;
       newZ = this.matrix[2][0] * x + this.matrix[2][1] * y + this.matrix[2][2] * z;
     } else if (this.matrix.length === 4 && this.matrix[0].length === 4) {
-      // 4x4 matrix (homogeneous coordinates)
-      const w = this.matrix[3][0] * x + this.matrix[3][1] * y + this.matrix[3][2] * z + this.matrix[3][3];
-      newX = (this.matrix[0][0] * x + this.matrix[0][1] * y + this.matrix[0][2] * z + this.matrix[0][3]) / w;
-      newY = (this.matrix[1][0] * x + this.matrix[1][1] * y + this.matrix[1][2] * z + this.matrix[1][3]) / w;
-      newZ = (this.matrix[2][0] * x + this.matrix[2][1] * y + this.matrix[2][2] * z + this.matrix[2][3]) / w;
+      const w =
+        this.matrix[3][0] * x + this.matrix[3][1] * y + this.matrix[3][2] * z + this.matrix[3][3];
+      newX =
+        (this.matrix[0][0] * x +
+          this.matrix[0][1] * y +
+          this.matrix[0][2] * z +
+          this.matrix[0][3]) /
+        w;
+      newY =
+        (this.matrix[1][0] * x +
+          this.matrix[1][1] * y +
+          this.matrix[1][2] * z +
+          this.matrix[1][3]) /
+        w;
+      newZ =
+        (this.matrix[2][0] * x +
+          this.matrix[2][1] * y +
+          this.matrix[2][2] * z +
+          this.matrix[2][3]) /
+        w;
     } else {
-      // Invalid matrix, return original
       return point;
     }
 
-    // Translate back
-    return [
-      newX + this.aboutPoint[0],
-      newY + this.aboutPoint[1],
-      newZ + this.aboutPoint[2]
-    ];
+    return [newX + this.aboutPoint[0], newY + this.aboutPoint[1], newZ + this.aboutPoint[2]];
   }
 
   interpolate(alpha: number): void {
-    const vmobject = this.mobject as VMobject;
-    const interpolatedPoints: number[][] = [];
-
-    for (let i = 0; i < this._startPoints.length; i++) {
-      interpolatedPoints.push(lerpPoint(this._startPoints[i], this._targetPoints[i], alpha));
+    for (const snap of this._snapshots) {
+      const interpolated: number[][] = [];
+      for (let i = 0; i < snap.startPoints.length; i++) {
+        interpolated.push(lerpPoint(snap.startPoints[i], snap.targetPoints[i], alpha));
+      }
+      snap.mob.setPoints(interpolated);
     }
-
-    vmobject.setPoints(interpolatedPoints);
+    _reconstructArrowTips(this.mobject);
+    this.mobject._markDirtyUpward();
   }
 
   override finish(): void {
-    const vmobject = this.mobject as VMobject;
-    vmobject.setPoints(this._targetPoints);
+    for (const snap of this._snapshots) {
+      snap.mob.setPoints(snap.targetPoints);
+    }
+    _reconstructArrowTips(this.mobject);
+    this.mobject._markDirtyUpward();
     super.finish();
   }
 }
 
 /**
  * Create an ApplyMatrix animation.
- * @param mobject The VMobject to transform
+ * @param mobject The Mobject to transform (VMobject or Group)
  * @param matrix 3x3 or 4x4 transformation matrix
  * @param options Animation options including aboutPoint
  */
 export function applyMatrix(
-  mobject: VMobject,
+  mobject: Mobject,
   matrix: number[][],
-  options?: Omit<ApplyMatrixOptions, 'matrix'>
+  options?: Omit<ApplyMatrixOptions, 'matrix'>,
 ): ApplyMatrix {
   return new ApplyMatrix(mobject, { ...options, matrix });
 }
@@ -333,7 +423,7 @@ export class FadeTransform extends Animation {
 export function fadeTransform(
   mobject: VMobject,
   target: VMobject,
-  options?: FadeTransformOptions
+  options?: FadeTransformOptions,
 ): FadeTransform {
   return new FadeTransform(mobject, target, options);
 }
@@ -342,7 +432,7 @@ export function fadeTransform(
 // FadeTransformPieces
 // ============================================================================
 
-export interface FadeTransformPiecesOptions extends AnimationOptions {}
+export type FadeTransformPiecesOptions = AnimationOptions;
 
 /**
  * FadeTransformPieces animation - transforms pieces (submobjects) with fade effect.
@@ -388,7 +478,7 @@ export class FadeTransformPieces extends Animation {
           startPoints: srcCopy.getPoints(),
           targetPoints: tgtCopy.getPoints(),
           startOpacity: srcChild.opacity,
-          targetOpacity: tgtChild.opacity
+          targetOpacity: tgtChild.opacity,
         });
       }
     } else {
@@ -401,7 +491,7 @@ export class FadeTransformPieces extends Animation {
         startPoints: srcCopy.getPoints(),
         targetPoints: tgtCopy.getPoints(),
         startOpacity: source.opacity,
-        targetOpacity: this.target.opacity
+        targetOpacity: this.target.opacity,
       });
     }
   }
@@ -475,7 +565,7 @@ export class FadeTransformPieces extends Animation {
 export function fadeTransformPieces(
   mobject: VMobject,
   target: VMobject,
-  options?: FadeTransformPiecesOptions
+  options?: FadeTransformPiecesOptions,
 ): FadeTransformPieces {
   return new FadeTransformPieces(mobject, target, options);
 }
@@ -484,7 +574,7 @@ export function fadeTransformPieces(
 // TransformFromCopy
 // ============================================================================
 
-export interface TransformFromCopyOptions extends AnimationOptions {}
+export type TransformFromCopyOptions = AnimationOptions;
 
 /**
  * TransformFromCopy animation - transforms from a copy of the source to target.
@@ -511,7 +601,7 @@ export class TransformFromCopy extends Transform {
 export function transformFromCopy(
   source: VMobject,
   target: VMobject,
-  options?: TransformFromCopyOptions
+  options?: TransformFromCopyOptions,
 ): TransformFromCopy {
   return new TransformFromCopy(source, target, options);
 }
@@ -573,7 +663,7 @@ export class ClockwiseTransform extends Animation {
     this._center = [
       (srcCenter[0] + tgtCenter[0]) / 2,
       (srcCenter[1] + tgtCenter[1]) / 2,
-      (srcCenter[2] + tgtCenter[2]) / 2
+      (srcCenter[2] + tgtCenter[2]) / 2,
     ];
 
     this._startOpacity = vmobject.opacity;
@@ -608,7 +698,7 @@ export class ClockwiseTransform extends Animation {
       interpolatedPoints.push([
         lerp(linearPoint[0], rotatedX, blendFactor),
         lerp(linearPoint[1], rotatedY, blendFactor),
-        linearPoint[2]
+        linearPoint[2],
       ]);
     }
 
@@ -634,7 +724,7 @@ export class ClockwiseTransform extends Animation {
 export function clockwiseTransform(
   mobject: VMobject,
   target: VMobject,
-  options?: ClockwiseTransformOptions
+  options?: ClockwiseTransformOptions,
 ): ClockwiseTransform {
   return new ClockwiseTransform(mobject, target, options);
 }
@@ -695,7 +785,7 @@ export class CounterclockwiseTransform extends Animation {
     this._center = [
       (srcCenter[0] + tgtCenter[0]) / 2,
       (srcCenter[1] + tgtCenter[1]) / 2,
-      (srcCenter[2] + tgtCenter[2]) / 2
+      (srcCenter[2] + tgtCenter[2]) / 2,
     ];
 
     this._startOpacity = vmobject.opacity;
@@ -727,7 +817,7 @@ export class CounterclockwiseTransform extends Animation {
       interpolatedPoints.push([
         lerp(linearPoint[0], rotatedX, blendFactor),
         lerp(linearPoint[1], rotatedY, blendFactor),
-        linearPoint[2]
+        linearPoint[2],
       ]);
     }
 
@@ -753,7 +843,7 @@ export class CounterclockwiseTransform extends Animation {
 export function counterclockwiseTransform(
   mobject: VMobject,
   target: VMobject,
-  options?: CounterclockwiseTransformOptions
+  options?: CounterclockwiseTransformOptions,
 ): CounterclockwiseTransform {
   return new CounterclockwiseTransform(mobject, target, options);
 }
@@ -835,11 +925,7 @@ export class Swap extends Animation {
  * @param mobject2 Second mobject to swap with
  * @param options Animation options
  */
-export function swap(
-  mobject1: Mobject,
-  mobject2: Mobject,
-  options?: SwapOptions
-): Swap {
+export function swap(mobject1: Mobject, mobject2: Mobject, options?: SwapOptions): Swap {
   return new Swap(mobject1, mobject2, options);
 }
 
@@ -882,7 +968,7 @@ export class CyclicReplace extends Animation {
     super.begin();
 
     // Store starting positions
-    this._startPositions = this.mobjects.map(m => m.position.clone());
+    this._startPositions = this.mobjects.map((m) => m.position.clone());
 
     // Target positions are cycled (each goes to next position)
     this._targetPositions = this.mobjects.map((_, i) => {
@@ -899,7 +985,7 @@ export class CyclicReplace extends Animation {
       const pos = new THREE.Vector3().lerpVectors(
         this._startPositions[i],
         this._targetPositions[i],
-        alpha
+        alpha,
       );
 
       // Alternate arc direction for visual variety
@@ -924,10 +1010,7 @@ export class CyclicReplace extends Animation {
  * @param mobjects Array of mobjects to cycle
  * @param options Animation options
  */
-export function cyclicReplace(
-  mobjects: Mobject[],
-  options?: CyclicReplaceOptions
-): CyclicReplace {
+export function cyclicReplace(mobjects: Mobject[], options?: CyclicReplaceOptions): CyclicReplace {
   return new CyclicReplace(mobjects, options);
 }
 
@@ -969,7 +1052,7 @@ export class ScaleInPlace extends Animation {
     this._targetScale.set(
       this._initialScale.x * this.scaleFactor,
       this._initialScale.y * this.scaleFactor,
-      this._initialScale.z * this.scaleFactor
+      this._initialScale.z * this.scaleFactor,
     );
     this._center = this.mobject.getCenter();
   }
@@ -983,7 +1066,7 @@ export class ScaleInPlace extends Animation {
     const offset: Vector3Tuple = [
       this._center[0] - currentCenter[0],
       this._center[1] - currentCenter[1],
-      this._center[2] - currentCenter[2]
+      this._center[2] - currentCenter[2],
     ];
     this.mobject.shift(offset);
 
@@ -1006,7 +1089,7 @@ export class ScaleInPlace extends Animation {
 export function scaleInPlace(
   mobject: Mobject,
   scaleFactor: number,
-  options?: Omit<ScaleInPlaceOptions, 'scaleFactor'>
+  options?: Omit<ScaleInPlaceOptions, 'scaleFactor'>,
 ): ScaleInPlace {
   return new ScaleInPlace(mobject, { ...options, scaleFactor });
 }
@@ -1015,7 +1098,7 @@ export function scaleInPlace(
 // ShrinkToCenter
 // ============================================================================
 
-export interface ShrinkToCenterOptions extends AnimationOptions {}
+export type ShrinkToCenterOptions = AnimationOptions;
 
 /**
  * ShrinkToCenter animation - shrinks a mobject to its center point.
@@ -1039,7 +1122,7 @@ export class ShrinkToCenter extends Animation {
     this.mobject.scaleVector.set(
       this._initialScale.x * scale,
       this._initialScale.y * scale,
-      this._initialScale.z * scale
+      this._initialScale.z * scale,
     );
     this.mobject._markDirty();
   }
@@ -1056,10 +1139,7 @@ export class ShrinkToCenter extends Animation {
  * @param mobject The mobject to shrink
  * @param options Animation options
  */
-export function shrinkToCenter(
-  mobject: Mobject,
-  options?: ShrinkToCenterOptions
-): ShrinkToCenter {
+export function shrinkToCenter(mobject: Mobject, options?: ShrinkToCenterOptions): ShrinkToCenter {
   return new ShrinkToCenter(mobject, options);
 }
 
@@ -1074,7 +1154,7 @@ export interface MobjectWithSavedState extends VMobject {
   savedState: VMobject | null;
 }
 
-export interface RestoreOptions extends AnimationOptions {}
+export type RestoreOptions = AnimationOptions;
 
 /**
  * Restore animation - restores a mobject to its saved state.
@@ -1083,7 +1163,9 @@ export interface RestoreOptions extends AnimationOptions {}
 export class Restore extends Transform {
   constructor(mobject: MobjectWithSavedState, options: RestoreOptions = {}) {
     if (!mobject.savedState) {
-      throw new Error('Restore requires mobject.savedState to be set. Use mobject.saveState() first.');
+      throw new Error(
+        'Restore requires mobject.savedState to be set. Use mobject.saveState() first.',
+      );
     }
     super(mobject, mobject.savedState, options);
   }
@@ -1094,10 +1176,7 @@ export class Restore extends Transform {
  * @param mobject The mobject to restore (must have savedState)
  * @param options Animation options
  */
-export function restore(
-  mobject: MobjectWithSavedState,
-  options?: RestoreOptions
-): Restore {
+export function restore(mobject: MobjectWithSavedState, options?: RestoreOptions): Restore {
   return new Restore(mobject, options);
 }
 
@@ -1157,7 +1236,7 @@ export class FadeToColor extends Animation {
 export function fadeToColor(
   mobject: Mobject,
   color: string,
-  options?: Omit<FadeToColorOptions, 'color'>
+  options?: Omit<FadeToColorOptions, 'color'>,
 ): FadeToColor {
   return new FadeToColor(mobject, { ...options, color });
 }
@@ -1220,7 +1299,7 @@ export class TransformAnimations extends Animation {
   constructor(
     animation1: Animation,
     animation2: Animation,
-    options: TransformAnimationsOptions = {}
+    options: TransformAnimationsOptions = {},
   ) {
     // Use the mobject from animation1 as the primary mobject
     super(animation1.mobject, options);
@@ -1344,7 +1423,7 @@ export class TransformAnimations extends Animation {
 export function transformAnimations(
   animation1: Animation,
   animation2: Animation,
-  options?: TransformAnimationsOptions
+  options?: TransformAnimationsOptions,
 ): TransformAnimations {
   return new TransformAnimations(animation1, animation2, options);
 }

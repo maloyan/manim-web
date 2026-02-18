@@ -15,9 +15,9 @@ export interface ArrowOptions {
   color?: string;
   /** Stroke width in pixels. Default: 4 (Manim's default) */
   strokeWidth?: number;
-  /** Length of the arrowhead tip. Default: 0.25 */
+  /** Length of the arrowhead tip. Default: 0.3 */
   tipLength?: number;
-  /** Width of the arrowhead base. Default: 0.15 */
+  /** Width of the arrowhead base. Default: 0.1 */
   tipWidth?: number;
 }
 
@@ -38,7 +38,7 @@ class ArrowShaft extends VMobject {
     this.setPoints3D([
       [...start],
       [start[0] + dx / 3, start[1] + dy / 3, start[2] + dz / 3],
-      [start[0] + 2 * dx / 3, start[1] + 2 * dy / 3, start[2] + 2 * dz / 3],
+      [start[0] + (2 * dx) / 3, start[1] + (2 * dy) / 3, start[2] + (2 * dz) / 3],
       [...end],
     ]);
   }
@@ -67,7 +67,7 @@ class ArrowTip extends VMobject {
         points.push([...p0]);
       }
       points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-      points.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+      points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
       points.push([...p1]);
     };
 
@@ -122,8 +122,8 @@ export class Arrow extends Group {
       end = [1, 0, 0],
       color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
-      tipLength = 0.25,
-      tipWidth = 0.15,
+      tipLength = 0.3,
+      tipWidth = 0.1,
     } = options;
 
     this._start = [...start];
@@ -191,16 +191,11 @@ export class Arrow extends Group {
       [x0, y0, z0],
       [tipBaseX, tipBaseY, tipBaseZ],
       this._color,
-      this._strokeWidth
+      this._strokeWidth,
     );
     this.add(this._shaft);
 
-    this._tip = new ArrowTip(
-      [x1, y1, z1],
-      tipLeft,
-      tipRight,
-      this._color
-    );
+    this._tip = new ArrowTip([x1, y1, z1], tipLeft, tipRight, this._color);
     this.add(this._tip);
   }
 
@@ -297,10 +292,82 @@ export class Arrow extends Group {
    * Get the angle of the arrow in the XY plane (in radians)
    */
   getAngle(): number {
-    return Math.atan2(
-      this._end[1] - this._start[1],
-      this._end[0] - this._start[0]
-    );
+    return Math.atan2(this._end[1] - this._start[1], this._end[0] - this._start[0]);
+  }
+
+  /**
+   * Rebuild the tip triangle from the shaft's and tip's current (possibly transformed) points.
+   * Uses the tip's already-transformed apex so the arrow still points at the exact
+   * transformed coordinate, while restoring a clean isosceles triangle shape.
+   */
+  reconstructTip(): void {
+    if (!this._shaft || !this._tip) return;
+
+    const shaftPts = this._shaft.getPoints();
+    if (shaftPts.length < 4) return;
+
+    // The tip's transformed apex is at Bezier index 3
+    // (segment 0: tipLeft→tipPoint, so index 3 = tipPoint)
+    const curTipPts = this._tip.getPoints();
+    if (curTipPts.length < 4) return;
+
+    const start = shaftPts[0];
+    const shaftEnd = shaftPts[shaftPts.length - 1];
+    const tipApex = curTipPts[3]; // already at the correct transformed position
+
+    const dx = tipApex[0] - shaftEnd[0];
+    const dy = tipApex[1] - shaftEnd[1];
+    const dz = tipApex[2] - shaftEnd[2];
+    const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (len === 0) return;
+
+    const dirX = dx / len;
+    const dirY = dy / len;
+    const dirZ = dz / len;
+
+    let perpX: number, perpY: number, perpZ: number;
+    if (Math.abs(dirZ) > 0.99) {
+      perpX = 1;
+      perpY = 0;
+      perpZ = 0;
+    } else {
+      perpX = -dirY;
+      perpY = dirX;
+      perpZ = 0;
+      const perpLen = Math.sqrt(perpX * perpX + perpY * perpY);
+      perpX /= perpLen;
+      perpY /= perpLen;
+    }
+
+    const halfW = this._tipWidth;
+    const tipLeft = [
+      shaftEnd[0] + perpX * halfW,
+      shaftEnd[1] + perpY * halfW,
+      shaftEnd[2] + perpZ * halfW,
+    ];
+    const tipRight = [
+      shaftEnd[0] - perpX * halfW,
+      shaftEnd[1] - perpY * halfW,
+      shaftEnd[2] - perpZ * halfW,
+    ];
+
+    const addSeg = (pts: number[][], p0: number[], p1: number[], first: boolean) => {
+      const sdx = p1[0] - p0[0],
+        sdy = p1[1] - p0[1],
+        sdz = p1[2] - p0[2];
+      if (first) pts.push([...p0]);
+      pts.push([p0[0] + sdx / 3, p0[1] + sdy / 3, p0[2] + sdz / 3]);
+      pts.push([p0[0] + (2 * sdx) / 3, p0[1] + (2 * sdy) / 3, p0[2] + (2 * sdz) / 3]);
+      pts.push([...p1]);
+    };
+    const newPts: number[][] = [];
+    addSeg(newPts, tipLeft, tipApex, true);
+    addSeg(newPts, tipApex, tipRight, false);
+    addSeg(newPts, tipRight, tipLeft, false);
+    this._tip.setPoints(newPts);
+
+    this._start = [start[0], start[1], start[2]];
+    this._end = [tipApex[0], tipApex[1], tipApex[2]];
   }
 
   /**
@@ -336,8 +403,8 @@ export class DoubleArrow extends Group {
       end = [1, 0, 0],
       color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
-      tipLength = 0.25,
-      tipWidth = 0.15,
+      tipLength = 0.3,
+      tipWidth = 0.1,
     } = options;
 
     this._start = [...start];
@@ -391,16 +458,32 @@ export class DoubleArrow extends Group {
     const startTipBaseY = y0 + dirY * this._tipLength;
     const startTipBaseZ = z0 + dirZ * this._tipLength;
 
-    const endTipLeft = [endTipBaseX + perpX * this._tipWidth, endTipBaseY + perpY * this._tipWidth, endTipBaseZ + perpZ * this._tipWidth];
-    const endTipRight = [endTipBaseX - perpX * this._tipWidth, endTipBaseY - perpY * this._tipWidth, endTipBaseZ - perpZ * this._tipWidth];
-    const startTipLeft = [startTipBaseX + perpX * this._tipWidth, startTipBaseY + perpY * this._tipWidth, startTipBaseZ + perpZ * this._tipWidth];
-    const startTipRight = [startTipBaseX - perpX * this._tipWidth, startTipBaseY - perpY * this._tipWidth, startTipBaseZ - perpZ * this._tipWidth];
+    const endTipLeft = [
+      endTipBaseX + perpX * this._tipWidth,
+      endTipBaseY + perpY * this._tipWidth,
+      endTipBaseZ + perpZ * this._tipWidth,
+    ];
+    const endTipRight = [
+      endTipBaseX - perpX * this._tipWidth,
+      endTipBaseY - perpY * this._tipWidth,
+      endTipBaseZ - perpZ * this._tipWidth,
+    ];
+    const startTipLeft = [
+      startTipBaseX + perpX * this._tipWidth,
+      startTipBaseY + perpY * this._tipWidth,
+      startTipBaseZ + perpZ * this._tipWidth,
+    ];
+    const startTipRight = [
+      startTipBaseX - perpX * this._tipWidth,
+      startTipBaseY - perpY * this._tipWidth,
+      startTipBaseZ - perpZ * this._tipWidth,
+    ];
 
     const shaft = new ArrowShaft(
       [startTipBaseX, startTipBaseY, startTipBaseZ],
       [endTipBaseX, endTipBaseY, endTipBaseZ],
       this._color,
-      this._strokeWidth
+      this._strokeWidth,
     );
     this.add(shaft);
 
@@ -436,6 +519,103 @@ export class DoubleArrow extends Group {
     const dy = this._end[1] - this._start[1];
     const dz = this._end[2] - this._start[2];
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
+  }
+
+  /**
+   * Rebuild both tip triangles from the shaft's current transformed endpoints.
+   */
+  reconstructTips(): void {
+    // DoubleArrow has children: [shaft, endTip, startTip]
+    const kids = this.children;
+    if (kids.length < 3) return;
+
+    const shaft = kids[0];
+    const endTipMob = kids[1];
+    const startTipMob = kids[2];
+
+    // Duck-type check
+    type VMobLike = { getPoints(): number[][]; setPoints(p: number[][]): void };
+    const asVMob = (m: unknown): VMobLike | null => {
+      const o = m as Record<string, unknown>;
+      return typeof o.getPoints === 'function' && typeof o.setPoints === 'function'
+        ? (o as unknown as VMobLike)
+        : null;
+    };
+    const shaftVM = asVMob(shaft);
+    const endTipVM = asVMob(endTipMob);
+    const startTipVM = asVMob(startTipMob);
+    if (!shaftVM || !endTipVM || !startTipVM) return;
+
+    const shaftPts = shaftVM.getPoints();
+    if (shaftPts.length < 4) return;
+
+    const endTipCurPts = endTipVM.getPoints();
+    const startTipCurPts = startTipVM.getPoints();
+    if (endTipCurPts.length < 4 || startTipCurPts.length < 4) return;
+
+    const shaftStart = shaftPts[0];
+    const shaftEnd = shaftPts[shaftPts.length - 1];
+
+    // Use already-transformed apex positions (Bezier index 3) so tips
+    // land on the exact transformed coordinates
+    const endApex = endTipCurPts[3];
+    const startApex = startTipCurPts[3];
+
+    const halfW = this._tipWidth;
+    const addSeg = (pts: number[][], p0: number[], p1: number[], first: boolean) => {
+      const sdx = p1[0] - p0[0],
+        sdy = p1[1] - p0[1],
+        sdz = p1[2] - p0[2];
+      if (first) pts.push([...p0]);
+      pts.push([p0[0] + sdx / 3, p0[1] + sdy / 3, p0[2] + sdz / 3]);
+      pts.push([p0[0] + (2 * sdx) / 3, p0[1] + (2 * sdy) / 3, p0[2] + (2 * sdz) / 3]);
+      pts.push([...p1]);
+    };
+
+    const rebuildTip = (base: number[], apex: number[], vm: VMobLike, reverse: boolean) => {
+      const dx = apex[0] - base[0];
+      const dy = apex[1] - base[1];
+      const dz = apex[2] - base[2];
+      const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      if (len === 0) return;
+      const dxn = dx / len,
+        dyn = dy / len,
+        dzn = dz / len;
+
+      let perpX: number, perpY: number, perpZ: number;
+      if (Math.abs(dzn) > 0.99) {
+        perpX = 1;
+        perpY = 0;
+        perpZ = 0;
+      } else {
+        perpX = -dyn;
+        perpY = dxn;
+        perpZ = 0;
+        const pl = Math.sqrt(perpX * perpX + perpY * perpY);
+        perpX /= pl;
+        perpY /= pl;
+      }
+
+      const left = [base[0] + perpX * halfW, base[1] + perpY * halfW, base[2] + perpZ * halfW];
+      const right = [base[0] - perpX * halfW, base[1] - perpY * halfW, base[2] - perpZ * halfW];
+      const pts: number[][] = [];
+      if (reverse) {
+        addSeg(pts, right, apex, true);
+        addSeg(pts, apex, left, false);
+        addSeg(pts, left, right, false);
+      } else {
+        addSeg(pts, left, apex, true);
+        addSeg(pts, apex, right, false);
+        addSeg(pts, right, left, false);
+      }
+      vm.setPoints(pts);
+    };
+
+    rebuildTip(shaftEnd, endApex, endTipVM, false);
+    rebuildTip(shaftStart, startApex, startTipVM, true);
+
+    this._start = [startApex[0], startApex[1], startApex[2]];
+    this._end = [endApex[0], endApex[1], endApex[2]];
   }
 
   protected override _createCopy(): DoubleArrow {

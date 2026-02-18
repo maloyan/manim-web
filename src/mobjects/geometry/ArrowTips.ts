@@ -6,9 +6,9 @@ import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
  * Base options for all arrow tips
  */
 export interface ArrowTipOptions {
-  /** Length of the tip along the arrow direction. Default: 0.25 */
+  /** Length of the tip along the arrow direction. Default: 0.3 */
   length?: number;
-  /** Width of the tip perpendicular to arrow direction. Default: 0.15 */
+  /** Width of the tip perpendicular to arrow direction. Default: 0.1 */
   width?: number;
   /** Color of the tip. Default: Manim's blue (#58C4DD) */
   color?: string;
@@ -40,8 +40,8 @@ function getPerpendicular(dir: Vector3Tuple): Vector3Tuple {
     return [1, 0, 0];
   }
   // Cross with Z axis to get perpendicular in XY plane
-  let perpX = -dir[1];
-  let perpY = dir[0];
+  const perpX = -dir[1];
+  const perpY = dir[0];
   const perpLen = Math.sqrt(perpX * perpX + perpY * perpY);
   if (perpLen === 0) return [0, 1, 0];
   return [perpX / perpLen, perpY / perpLen, 0];
@@ -74,8 +74,8 @@ export abstract class ArrowTip extends VMobject {
     super();
 
     const {
-      length = 0.25,
-      width = 0.15,
+      length = 0.3,
+      width = 0.1,
       color = BLUE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       fillOpacity = 0,
@@ -232,7 +232,7 @@ export class ArrowTriangleTip extends ArrowTip {
         points.push([...p0]);
       }
       points.push([p0[0] + ldx / 3, p0[1] + ldy / 3, p0[2] + ldz / 3]);
-      points.push([p0[0] + 2 * ldx / 3, p0[1] + 2 * ldy / 3, p0[2] + 2 * ldz / 3]);
+      points.push([p0[0] + (2 * ldx) / 3, p0[1] + (2 * ldy) / 3, p0[2] + (2 * ldz) / 3]);
       points.push([...p1]);
     };
 
@@ -328,7 +328,8 @@ export class ArrowCircleTip extends ArrowTip {
     // Generate circle points using cubic Bezier approximation
     // For a unit circle, the optimal handle length is 4 * (sqrt(2) - 1) / 3 ~ 0.5523
     // (Note: kappa is the standard approximation but we use the tangent-based formula below for variable arc sizes)
-    const _kappa = 0.5522847498; void _kappa;
+    const _kappa = 0.5522847498;
+    void _kappa;
 
     for (let i = 0; i < numSegments; i++) {
       const angle1 = (i / numSegments) * 2 * Math.PI;
@@ -340,34 +341,18 @@ export class ArrowCircleTip extends ArrowTip {
       const sin2 = Math.sin(angle2);
 
       // Start point of segment
-      const p0 = [
-        centerX + radius * cos1,
-        centerY + radius * sin1,
-        centerZ,
-      ];
+      const p0 = [centerX + radius * cos1, centerY + radius * sin1, centerZ];
 
       // End point of segment
-      const p3 = [
-        centerX + radius * cos2,
-        centerY + radius * sin2,
-        centerZ,
-      ];
+      const p3 = [centerX + radius * cos2, centerY + radius * sin2, centerZ];
 
       // Calculate control points for circular arc
       const arcLength = (2 * Math.PI) / numSegments;
       const handleLen = (4 / 3) * Math.tan(arcLength / 4) * radius;
 
-      const p1 = [
-        p0[0] - handleLen * sin1,
-        p0[1] + handleLen * cos1,
-        p0[2],
-      ];
+      const p1 = [p0[0] - handleLen * sin1, p0[1] + handleLen * cos1, p0[2]];
 
-      const p2 = [
-        p3[0] + handleLen * sin2,
-        p3[1] - handleLen * cos2,
-        p3[2],
-      ];
+      const p2 = [p3[0] + handleLen * sin2, p3[1] - handleLen * cos2, p3[2]];
 
       if (i === 0) {
         points.push(p0);
@@ -486,13 +471,21 @@ export class ArrowSquareTip extends ArrowTip {
         points.push([...p0]);
       }
       points.push([p0[0] + ldx / 3, p0[1] + ldy / 3, p0[2] + ldz / 3]);
-      points.push([p0[0] + 2 * ldx / 3, p0[1] + 2 * ldy / 3, p0[2] + 2 * ldz / 3]);
+      points.push([p0[0] + (2 * ldx) / 3, p0[1] + (2 * ldy) / 3, p0[2] + (2 * ldz) / 3]);
       points.push([...p1]);
     };
 
     // Square: frontLeft -> frontRight -> backRight -> backLeft -> frontLeft
-    addLineSegment([frontLeftX, frontLeftY, frontLeftZ], [frontRightX, frontRightY, frontRightZ], true);
-    addLineSegment([frontRightX, frontRightY, frontRightZ], [backRightX, backRightY, backRightZ], false);
+    addLineSegment(
+      [frontLeftX, frontLeftY, frontLeftZ],
+      [frontRightX, frontRightY, frontRightZ],
+      true,
+    );
+    addLineSegment(
+      [frontRightX, frontRightY, frontRightZ],
+      [backRightX, backRightY, backRightZ],
+      false,
+    );
     addLineSegment([backRightX, backRightY, backRightZ], [backLeftX, backLeftY, backLeftZ], false);
     addLineSegment([backLeftX, backLeftY, backLeftZ], [frontLeftX, frontLeftY, frontLeftZ], false);
 
@@ -607,7 +600,7 @@ export class StealthTip extends ArrowTip {
         points.push([...p0]);
       }
       points.push([p0[0] + ldx / 3, p0[1] + ldy / 3, p0[2] + ldz / 3]);
-      points.push([p0[0] + 2 * ldx / 3, p0[1] + 2 * ldy / 3, p0[2] + 2 * ldz / 3]);
+      points.push([p0[0] + (2 * ldx) / 3, p0[1] + (2 * ldy) / 3, p0[2] + (2 * ldz) / 3]);
       points.push([...p1]);
     };
 
