@@ -3,7 +3,20 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Scene, MathTexSVG, Create, DrawBorderThenFill, FadeIn, FadeOut, BLACK, WHITE, RED, BLUE, GREEN, YELLOW } = await import('manim-web');
+  const {
+    Scene,
+    MathTexSVG,
+    Create,
+    DrawBorderThenFill,
+    FadeIn,
+    FadeOut,
+    BLACK,
+    WHITE,
+    RED,
+    BLUE,
+    GREEN,
+    YELLOW,
+  } = await import('manim-web');
 
   // 1. Create animation - stroke-draw reveal (the main feature)
   const equation1 = new MathTexSVG({
