@@ -71,6 +71,18 @@ async function mathtexSvgDemo(scene: Scene) {
 
   await scene.play(new Create(equation3, { duration: 2 }));
   await scene.wait(2);
+  await scene.play(new FadeOut(equation3));
+
+  // 5. 2x2 matrix with subscript indices
+  const matrix = new MathTexSVG({
+    latex: 'A = \\begin{pmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{pmatrix}',
+    color: WHITE,
+    fontSize: 2,
+  });
+  await matrix.waitForRender();
+
+  await scene.play(new Create(matrix, { duration: 2 }));
+  await scene.wait(2);
 }
 
 let isAnimating = false;
@@ -109,7 +121,8 @@ if (new URLSearchParams(window.location.search).has('embed')) {
   if (playBtn) {
     setTimeout(() => (playBtn as HTMLButtonElement).click(), 500);
     new MutationObserver(() => {
-      if (!(playBtn as HTMLButtonElement).disabled) setTimeout(() => (playBtn as HTMLButtonElement).click(), 2000);
+      if (!(playBtn as HTMLButtonElement).disabled)
+        setTimeout(() => (playBtn as HTMLButtonElement).click(), 2000);
     }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
   }
 }

@@ -363,6 +363,18 @@ await equation3.waitForRender();
 
 await scene.play(new Create(equation3, { duration: 2 }));
 await scene.wait(2);
+await scene.play(new FadeOut(equation3));
+
+// 5. 2x2 matrix with subscript indices
+const matrix = new MathTexSVG({
+  latex: 'A = \\begin{pmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{pmatrix}',
+  color: WHITE,
+  fontSize: 2,
+});
+await matrix.waitForRender();
+
+await scene.play(new Create(matrix, { duration: 2 }));
+await scene.wait(2);
 ```
 
 </details>

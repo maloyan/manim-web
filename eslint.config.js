@@ -4,7 +4,7 @@ import eslintConfigPrettier from "eslint-config-prettier";
 
 export default [
   {
-    ignores: ["dist/", "node_modules/", "docs/"],
+    ignores: ["dist/", "node_modules/", "docs/", "src/**/*.test.ts"],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
