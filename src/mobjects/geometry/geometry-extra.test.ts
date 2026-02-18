@@ -17,8 +17,8 @@ describe('Arrow', () => {
     const a = new Arrow();
     expect(a.getStart()).toEqual([0, 0, 0]);
     expect(a.getEnd()).toEqual([1, 0, 0]);
-    expect(a.getTipLength()).toBe(0.25);
-    expect(a.getTipWidth()).toBe(0.15);
+    expect(a.getTipLength()).toBe(0.3);
+    expect(a.getTipWidth()).toBe(0.1);
   });
 
   it('constructs with custom start/end', () => {

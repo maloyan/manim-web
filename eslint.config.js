@@ -11,6 +11,7 @@ export default [
   eslintConfigPrettier,
   {
     files: ["src/**/*.ts", "src/**/*.tsx"],
+    ignores: ["src/**/*.test.ts"],
     languageOptions: {
       parserOptions: {
         project: true,

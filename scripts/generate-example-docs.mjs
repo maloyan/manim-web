@@ -26,7 +26,7 @@ const DOCS_DIR = join(ROOT, 'docs', 'docs');
 
 const CATEGORIES = {
   'Basic Concepts': ['manim_ce_logo', 'brace_annotation', 'vector_arrow', 'boolean_operations', 'mathtex_svg'],
-  'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace', 'sine_curve_unit_circle'],
+  'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace', 'sine_curve_unit_circle', 'apply_matrix_arrows'],
   'Plotting': ['sin_cos_plot', 'arg_min', 'graph_area_plot', 'polygon_on_axes', 'heat_diagram_plot'],
   'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation'],
   'Advanced Projects': ['opening_manim'],
@@ -179,6 +179,11 @@ const EXAMPLE_META = {
     description:
       'Demonstrates the 3D illusion camera rotation that wobbles the camera by oscillating phi sinusoidally while rotating theta continuously. Creates a convincing 3D parallax effect around ThreeDAxes with a circle.',
     learnMore: ['ThreeDScene', 'ThreeDAxes', 'Circle'],
+  },
+  apply_matrix_arrows: {
+    description:
+      'Shows how ApplyMatrix works on Arrows and a NumberPlane. A shear transformation is applied to multiple arrows, and their tips are automatically reconstructed so they remain properly shaped.',
+    learnMore: ['Arrow', 'NumberPlane', 'ApplyMatrix'],
   },
 };
 
