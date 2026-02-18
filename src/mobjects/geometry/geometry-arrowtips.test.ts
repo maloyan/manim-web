@@ -20,10 +20,10 @@ describe('ArrowTriangleTip', () => {
     expect(tip.getPoints().length).toBeGreaterThan(0);
   });
 
-  it('default length is 0.25 and width is 0.15', () => {
+  it('default length is 0.3 and width is 0.1', () => {
     const tip = new ArrowTriangleTip();
-    expect(tip.getLength()).toBe(0.25);
-    expect(tip.getWidth()).toBe(0.15);
+    expect(tip.getLength()).toBe(0.3);
+    expect(tip.getWidth()).toBe(0.1);
   });
 
   it('default fillOpacity is 0 (unfilled)', () => {
