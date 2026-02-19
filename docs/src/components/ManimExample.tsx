@@ -4,7 +4,11 @@ import BrowserOnly from '@docusaurus/BrowserOnly';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnimationFn = (scene: any) => Promise<void>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type SceneFactory = (container: HTMLElement, manim: any) => any | Promise<any>;
+type SceneFactory = (
+  container: HTMLElement,
+  manim: any,
+  dims: { width: number; height: number },
+) => any | Promise<any>;
 
 interface ManimExampleProps {
   animationFn: AnimationFn;
@@ -12,10 +16,12 @@ interface ManimExampleProps {
   createScene?: SceneFactory;
 }
 
+const ASPECT_RATIO = 800 / 450; // ~16:9
+
 const placeholderStyle: React.CSSProperties = {
   width: '100%',
   maxWidth: 800,
-  height: 450,
+  aspectRatio: `${ASPECT_RATIO}`,
   background: '#000000',
   borderRadius: 12,
 };
@@ -61,11 +67,14 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
         const container = containerRef.current;
         if (!container) return;
 
+        const width = container.clientWidth || 800;
+        const height = Math.round(width / ASPECT_RATIO);
+
         const scene = createScene
-          ? await createScene(container, manim)
+          ? await createScene(container, manim, { width, height })
           : new manim.Scene(container, {
-              width: 800,
-              height: 450,
+              width,
+              height,
               backgroundColor: '#000000',
             });
         sceneRef.current = scene;
@@ -123,7 +132,7 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
       style={{
         width: '100%',
         maxWidth: 800,
-        height: 450,
+        aspectRatio: `${ASPECT_RATIO}`,
         background: '#000000',
         borderRadius: 12,
         overflow: 'hidden',
