@@ -21,16 +21,15 @@ async function animate(scene: any) {
   await scene.wait();
 }
 
-function createScene(container: HTMLElement, manim: any) {
+function createScene(container: HTMLElement, manim: any, dims: { width: number; height: number }) {
   return new manim.ThreeDScene(container, {
-  width: 800,
-  height: 450,
-  backgroundColor: '#000000',
-  phi: 75 * (Math.PI / 180),
-  theta: -45 * (Math.PI / 180),
-  distance: 20,
-  fov: 30,
-});
+    ...dims,
+    backgroundColor: '#000000',
+    phi: 75 * (Math.PI / 180),
+    theta: -45 * (Math.PI / 180),
+    distance: 20,
+    fov: 30,
+  });
 }
 
 export default function FixedInFrameMobjectTestExample() {
