@@ -18,38 +18,53 @@ async function animate(scene: any) {
     YELLOW,
   } = await import('manim-web');
 
-  // 1. Create animation - stroke-draw reveal (the main feature)
+  // Pre-create all equations
   const equation1 = new MathTexSVG({
     latex: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
     color: WHITE,
     fontSize: 2,
   });
-  await equation1.waitForRender();
-
-  await scene.play(new Create(equation1, { duration: 3 }));
-  await scene.wait(1);
-  await scene.play(new FadeOut(equation1));
-
-  // 2. DrawBorderThenFill animation
   const equation2 = new MathTexSVG({
     latex: 'e^{i\\pi} + 1 = 0',
     color: YELLOW,
     fontSize: 2.5,
   });
-  await equation2.waitForRender();
-
-  await scene.play(new DrawBorderThenFill(equation2, { duration: 2 }));
-  await scene.wait(1);
-  await scene.play(new FadeOut(equation2));
-
-  // 3. Multi-part with per-part coloring
   const multiPart = new MathTexSVG({
     latex: ['E', '=', 'mc^2'],
     color: WHITE,
     fontSize: 3,
   });
-  await multiPart.waitForRender();
+  const equation3 = new MathTexSVG({
+    latex: '\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}',
+    color: GREEN,
+    fontSize: 2,
+  });
+  const matrix = new MathTexSVG({
+    latex: 'A = \\begin{pmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{pmatrix}',
+    color: WHITE,
+    fontSize: 2,
+  });
 
+  // Render all SVGs in parallel
+  await Promise.all([
+    equation1.waitForRender(),
+    equation2.waitForRender(),
+    multiPart.waitForRender(),
+    equation3.waitForRender(),
+    matrix.waitForRender(),
+  ]);
+
+  // 1. Create animation - stroke-draw reveal (the main feature)
+  await scene.play(new Create(equation1, { duration: 3 }));
+  await scene.wait(1);
+  await scene.play(new FadeOut(equation1));
+
+  // 2. DrawBorderThenFill animation
+  await scene.play(new DrawBorderThenFill(equation2, { duration: 2 }));
+  await scene.wait(1);
+  await scene.play(new FadeOut(equation2));
+
+  // 3. Multi-part with per-part coloring
   multiPart.getPart(0).setColor(RED);
   multiPart.getPart(1).setColor(WHITE);
   multiPart.getPart(2).setColor(BLUE);
@@ -59,25 +74,11 @@ async function animate(scene: any) {
   await scene.play(new FadeOut(multiPart));
 
   // 4. Another Create with a summation
-  const equation3 = new MathTexSVG({
-    latex: '\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}',
-    color: GREEN,
-    fontSize: 2,
-  });
-  await equation3.waitForRender();
-
   await scene.play(new Create(equation3, { duration: 2 }));
   await scene.wait(2);
   await scene.play(new FadeOut(equation3));
 
   // 5. 2x2 matrix with subscript indices
-  const matrix = new MathTexSVG({
-    latex: 'A = \\begin{pmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{pmatrix}',
-    color: WHITE,
-    fontSize: 2,
-  });
-  await matrix.waitForRender();
-
   await scene.play(new Create(matrix, { duration: 2 }));
   await scene.wait(2);
 }
