@@ -26,7 +26,7 @@ const DOCS_DIR = join(ROOT, 'docs', 'docs');
 
 const CATEGORIES = {
   'Basic Concepts': ['manim_ce_logo', 'brace_annotation', 'vector_arrow', 'boolean_operations', 'mathtex_svg'],
-  'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace', 'sine_curve_unit_circle', 'apply_matrix_arrows'],
+  'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace', 'sine_curve_unit_circle', 'apply_matrix_arrows', 'rate_functions_comparison'],
   'Plotting': ['sin_cos_plot', 'arg_min', 'graph_area_plot', 'polygon_on_axes', 'heat_diagram_plot'],
   'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation'],
   'Advanced Projects': ['opening_manim'],

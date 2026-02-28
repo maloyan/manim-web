@@ -39,7 +39,7 @@ export class Shift extends Animation {
     this._targetPosition.set(
       this._initialPosition.x + this.direction[0],
       this._initialPosition.y + this.direction[1],
-      this._initialPosition.z + this.direction[2]
+      this._initialPosition.z + this.direction[2],
     );
   }
 
@@ -50,16 +50,21 @@ export class Shift extends Animation {
     this.mobject.position.set(
       this._initialPosition.x + this.direction[0] * alpha,
       this._initialPosition.y + this.direction[1] * alpha,
-      this._initialPosition.z + this.direction[2] * alpha
+      this._initialPosition.z + this.direction[2] * alpha,
     );
     this.mobject._markDirty();
   }
 
   /**
-   * Ensure the position is exact at the end
+   * Ensure the position is exact at the end by applying rateFunc(1)
    */
   override finish(): void {
-    this.mobject.position.copy(this._targetPosition);
+    const finalAlpha = this.rateFunc(1);
+    this.mobject.position.set(
+      this._initialPosition.x + this.direction[0] * finalAlpha,
+      this._initialPosition.y + this.direction[1] * finalAlpha,
+      this._initialPosition.z + this.direction[2] * finalAlpha,
+    );
     this.mobject._markDirty();
     super.finish();
   }
@@ -74,7 +79,7 @@ export class Shift extends Animation {
 export function shift(
   mobject: Mobject,
   direction: Vector3Tuple,
-  options?: Omit<ShiftOptions, 'direction'>
+  options?: Omit<ShiftOptions, 'direction'>,
 ): Shift {
   return new Shift(mobject, { ...options, direction });
 }
@@ -82,7 +87,7 @@ export function shift(
 /**
  * MoveToTargetPosition options - moves mobject to its targetPosition property.
  */
-export interface MoveToTargetPositionOptions extends AnimationOptions {}
+export type MoveToTargetPositionOptions = AnimationOptions;
 
 /**
  * Interface for mobjects with a targetPosition property.
@@ -104,9 +109,7 @@ export class MoveToTargetPosition extends Animation {
   constructor(mobject: MobjectWithTargetPosition, options: MoveToTargetPositionOptions = {}) {
     super(mobject, options);
     if (!mobject.targetPosition) {
-      throw new Error(
-        'MoveToTargetPosition requires mobject.targetPosition to be set.'
-      );
+      throw new Error('MoveToTargetPosition requires mobject.targetPosition to be set.');
     }
   }
 
@@ -126,7 +129,7 @@ export class MoveToTargetPosition extends Animation {
       this._targetPosition.set(
         mobject.targetPosition[0],
         mobject.targetPosition[1],
-        mobject.targetPosition[2]
+        mobject.targetPosition[2],
       );
     }
   }
@@ -138,7 +141,7 @@ export class MoveToTargetPosition extends Animation {
     this.mobject.position.set(
       this._initialPosition.x + (this._targetPosition.x - this._initialPosition.x) * alpha,
       this._initialPosition.y + (this._targetPosition.y - this._initialPosition.y) * alpha,
-      this._initialPosition.z + (this._targetPosition.z - this._initialPosition.z) * alpha
+      this._initialPosition.z + (this._targetPosition.z - this._initialPosition.z) * alpha,
     );
     this.mobject._markDirty();
   }
@@ -160,7 +163,7 @@ export class MoveToTargetPosition extends Animation {
  */
 export function moveToTargetPosition(
   mobject: MobjectWithTargetPosition,
-  options?: MoveToTargetPositionOptions
+  options?: MoveToTargetPositionOptions,
 ): MoveToTargetPosition {
   return new MoveToTargetPosition(mobject, options);
 }
