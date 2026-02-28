@@ -52,7 +52,7 @@ async function threeDSurfacePlot(scene: ThreeDScene) {
 
   scene.add(axes);
   scene.add(gaussSurface);
-  await scene.wait();
+  await scene.wait(999999);
 }
 
 let isAnimating = false;
