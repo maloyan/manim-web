@@ -44,7 +44,7 @@ async function threeDLightSourcePosition(scene: ThreeDScene) {
   scene.add(axes);
   scene.add(sphere);
 
-  await scene.wait();
+  await scene.wait(999999);
 }
 
 let isAnimating = false;

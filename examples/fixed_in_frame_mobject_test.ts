@@ -25,7 +25,7 @@ async function fixedInFrameMObjectTest(scene: ThreeDScene) {
   scene.addFixedInFrameMobjects(text3d);
   text3d.toCorner(UL);
   scene.add(axes);
-  await scene.wait();
+  await scene.wait(999999);
 }
 
 let isAnimating = false;

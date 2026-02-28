@@ -45,12 +45,13 @@ async function animate(scene: any) {
 
   scene.add(axes);
   scene.add(gaussSurface);
-  await scene.wait();
+  await scene.wait(999999);
 }
 
-function createScene(container: HTMLElement, manim: any, dims: { width: number; height: number }) {
+function createScene(container: HTMLElement, manim: any) {
   return new manim.ThreeDScene(container, {
-    ...dims,
+    width: 800,
+    height: 450,
     backgroundColor: '#000000',
     phi: 75 * (Math.PI / 180),
     theta: -30 * (Math.PI / 180),
