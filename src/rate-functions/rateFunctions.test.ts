@@ -26,6 +26,33 @@ import {
   notQuiteThere,
   lingering,
   exponentialDecay,
+  smoothstep,
+  smootherstep,
+  smoothererstep,
+  easeInSine,
+  easeOutSine,
+  easeInOutSine,
+  easeInOutQuad,
+  easeInQuart,
+  easeOutQuart,
+  easeInOutQuart,
+  easeInQuint,
+  easeOutQuint,
+  easeInOutQuint,
+  easeInOutExpo,
+  easeInCirc,
+  easeOutCirc,
+  easeInOutCirc,
+  easeInBack,
+  easeOutBack,
+  easeInOutBack,
+  easeInElastic,
+  easeOutElastic,
+  easeInOutElastic,
+  easeInOutBounce,
+  easeInCubic,
+  easeOutCubic,
+  easeInOutCubic,
 } from './index';
 
 const EPSILON = 1e-6;
@@ -365,9 +392,14 @@ describe('rate functions', () => {
       expect(squished(0.75)).toBeCloseTo(1, 5);
     });
 
-    it('should default to a=0, b=1 (identity)', () => {
+    it('should default to a=0.4, b=0.6 (Python Manim defaults)', () => {
       const squished = squishRateFunc(smooth);
+      // t < 0.4 => smooth(0) ≈ 0
+      expect(squished(0.3)).toBeCloseTo(smooth(0), 5);
+      // t = 0.5 => smooth((0.5-0.4)/0.2) = smooth(0.5)
       expect(squished(0.5)).toBeCloseTo(smooth(0.5), 5);
+      // t > 0.6 => smooth(1) ≈ 1
+      expect(squished(0.7)).toBeCloseTo(smooth(1), 5);
     });
   });
 
@@ -415,21 +447,24 @@ describe('rate functions', () => {
       expect(fn(1)).toBeCloseTo(1, 5);
     });
 
-    it('should go negative in the middle with default pullFactor', () => {
+    it('should go near zero in the middle with default pullFactor (degree-6)', () => {
       const fn = runningStart();
-      // At t=0.5, value should be -0.125
-      expect(fn(0.5)).toBeCloseTo(-0.125, 5);
+      // Degree-6 Bernstein with control points [0,0,-0.5,-0.5,1,1,1]
+      // At t=0.5: 0.0703125
+      expect(fn(0.5)).toBeCloseTo(0.0703125, 5);
     });
 
-    it('should match Python Manim numerical values', () => {
+    it('should match Python Manim numerical values (degree-6)', () => {
       const fn = runningStart();
-      expect(fn(0.25)).toBeCloseTo(-0.16015625, 5);
-      expect(fn(0.75)).toBeCloseTo(0.45703125, 5);
+      // At t=0.25: ≈ -0.176635742
+      expect(fn(0.25)).toBeCloseTo(-0.176635742, 4);
+      // At t=0.75: ≈ 0.748168945
+      expect(fn(0.75)).toBeCloseTo(0.748168945, 4);
     });
 
     it('should support custom pullFactor', () => {
       const fn = runningStart(0);
-      // With pullFactor=0, control points are [0,0,0,0,1,1]
+      // With pullFactor=0, control points are [0,0,0,0,1,1,1]
       // Should still go from 0 to 1 but without pullback
       expect(fn(0)).toBeCloseTo(0, 5);
       expect(fn(1)).toBeCloseTo(1, 5);
@@ -493,16 +528,21 @@ describe('rate functions', () => {
     });
 
     it('should reach 1 before t=1 and stay there', () => {
-      // lingering = squishRateFunc(smooth, 0, 0.8)
-      // At t=0.8, smooth(1) ≈ 1
+      // lingering = squishRateFunc(linear, 0, 0.8)
+      // At t=0.8, linear(1) = 1
       expect(lingering(0.8)).toBeCloseTo(1, 5);
       expect(lingering(0.9)).toBeCloseTo(1, 5);
       expect(lingering(1)).toBeCloseTo(1, 5);
     });
 
     it('should match Python Manim at t=0.4', () => {
-      // lingering(0.4) = smooth(0.4/0.8) = smooth(0.5) = 0.5
+      // lingering(0.4) = linear(0.4/0.8) = 0.5
       expect(lingering(0.4)).toBeCloseTo(0.5, 5);
+    });
+
+    it('should match Python Manim at t=0.2', () => {
+      // lingering(0.2) = linear(0.2/0.8) = 0.25
+      expect(lingering(0.2)).toBeCloseTo(0.25, 5);
     });
 
     it('should be monotonically increasing', () => {
@@ -549,6 +589,416 @@ describe('rate functions', () => {
     });
   });
 
+  describe('smoothstep', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(smoothstep(0)).toBe(0);
+      expect(smoothstep(1)).toBe(1);
+    });
+
+    it('should map 0.5 to 0.5', () => {
+      expect(smoothstep(0.5)).toBeCloseTo(0.5, 10);
+    });
+
+    it('should equal 3t^2 - 2t^3', () => {
+      expect(smoothstep(0.25)).toBeCloseTo(3 * 0.0625 - 2 * 0.015625, 10);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(smoothstep(t2)).toBeGreaterThanOrEqual(smoothstep(t1) - EPSILON);
+      }
+    });
+  });
+
+  describe('smootherstep', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(smootherstep(0)).toBe(0);
+      expect(smootherstep(1)).toBe(1);
+    });
+
+    it('should map 0.5 to 0.5', () => {
+      expect(smootherstep(0.5)).toBeCloseTo(0.5, 10);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(smootherstep(t2)).toBeGreaterThanOrEqual(smootherstep(t1) - EPSILON);
+      }
+    });
+  });
+
+  describe('smoothererstep', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(smoothererstep(0)).toBe(0);
+      expect(smoothererstep(1)).toBe(1);
+    });
+
+    it('should map 0.5 to 0.5', () => {
+      expect(smoothererstep(0.5)).toBeCloseTo(0.5, 10);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(smoothererstep(t2)).toBeGreaterThanOrEqual(smoothererstep(t1) - EPSILON);
+      }
+    });
+  });
+
+  describe('easeInSine', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInSine(0)).toBeCloseTo(0, 10);
+      expect(easeInSine(1)).toBeCloseTo(1, 10);
+    });
+
+    it('should start slow', () => {
+      expect(easeInSine(0.1)).toBeLessThan(0.1);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(easeInSine(t2)).toBeGreaterThanOrEqual(easeInSine(t1) - EPSILON);
+      }
+    });
+  });
+
+  describe('easeOutSine', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeOutSine(0)).toBeCloseTo(0, 10);
+      expect(easeOutSine(1)).toBeCloseTo(1, 10);
+    });
+
+    it('should start fast', () => {
+      expect(easeOutSine(0.1)).toBeGreaterThan(0.1);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(easeOutSine(t2)).toBeGreaterThanOrEqual(easeOutSine(t1) - EPSILON);
+      }
+    });
+  });
+
+  describe('easeInOutSine', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInOutSine(0)).toBeCloseTo(0, 10);
+      expect(easeInOutSine(1)).toBeCloseTo(1, 10);
+    });
+
+    it('should map 0.5 to 0.5', () => {
+      expect(easeInOutSine(0.5)).toBeCloseTo(0.5, 10);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(easeInOutSine(t2)).toBeGreaterThanOrEqual(easeInOutSine(t1) - EPSILON);
+      }
+    });
+  });
+
+  describe('easeInOutQuad', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInOutQuad(0)).toBe(0);
+      expect(easeInOutQuad(1)).toBe(1);
+    });
+
+    it('should map 0.5 to 0.5', () => {
+      expect(easeInOutQuad(0.5)).toBeCloseTo(0.5, 10);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(easeInOutQuad(t2)).toBeGreaterThanOrEqual(easeInOutQuad(t1) - EPSILON);
+      }
+    });
+  });
+
+  describe('easeInQuart', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInQuart(0)).toBe(0);
+      expect(easeInQuart(1)).toBe(1);
+    });
+
+    it('should equal t^4', () => {
+      expect(easeInQuart(0.5)).toBeCloseTo(0.0625, 10);
+    });
+
+    it('should start slow', () => {
+      expect(easeInQuart(0.1)).toBeLessThan(0.1);
+    });
+  });
+
+  describe('easeOutQuart', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeOutQuart(0)).toBe(0);
+      expect(easeOutQuart(1)).toBe(1);
+    });
+
+    it('should start fast', () => {
+      expect(easeOutQuart(0.1)).toBeGreaterThan(0.1);
+    });
+  });
+
+  describe('easeInOutQuart', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInOutQuart(0)).toBe(0);
+      expect(easeInOutQuart(1)).toBe(1);
+    });
+
+    it('should map 0.5 to 0.5', () => {
+      expect(easeInOutQuart(0.5)).toBeCloseTo(0.5, 10);
+    });
+  });
+
+  describe('easeInQuint', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInQuint(0)).toBe(0);
+      expect(easeInQuint(1)).toBe(1);
+    });
+
+    it('should equal t^5', () => {
+      expect(easeInQuint(0.5)).toBeCloseTo(0.03125, 10);
+    });
+
+    it('should start slow', () => {
+      expect(easeInQuint(0.1)).toBeLessThan(0.1);
+    });
+  });
+
+  describe('easeOutQuint', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeOutQuint(0)).toBe(0);
+      expect(easeOutQuint(1)).toBe(1);
+    });
+
+    it('should start fast', () => {
+      expect(easeOutQuint(0.1)).toBeGreaterThan(0.1);
+    });
+  });
+
+  describe('easeInOutQuint', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInOutQuint(0)).toBe(0);
+      expect(easeInOutQuint(1)).toBe(1);
+    });
+
+    it('should map 0.5 to 0.5', () => {
+      expect(easeInOutQuint(0.5)).toBeCloseTo(0.5, 10);
+    });
+  });
+
+  describe('easeInOutExpo', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInOutExpo(0)).toBe(0);
+      expect(easeInOutExpo(1)).toBe(1);
+    });
+
+    it('should map 0.5 to 0.5', () => {
+      expect(easeInOutExpo(0.5)).toBeCloseTo(0.5, 5);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(easeInOutExpo(t2)).toBeGreaterThanOrEqual(easeInOutExpo(t1) - EPSILON);
+      }
+    });
+  });
+
+  describe('easeInCirc', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInCirc(0)).toBe(0);
+      expect(easeInCirc(1)).toBe(1);
+    });
+
+    it('should start slow', () => {
+      expect(easeInCirc(0.1)).toBeLessThan(0.1);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(easeInCirc(t2)).toBeGreaterThanOrEqual(easeInCirc(t1) - EPSILON);
+      }
+    });
+  });
+
+  describe('easeOutCirc', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeOutCirc(0)).toBe(0);
+      expect(easeOutCirc(1)).toBeCloseTo(1, 10);
+    });
+
+    it('should start fast', () => {
+      expect(easeOutCirc(0.1)).toBeGreaterThan(0.1);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(easeOutCirc(t2)).toBeGreaterThanOrEqual(easeOutCirc(t1) - EPSILON);
+      }
+    });
+  });
+
+  describe('easeInOutCirc', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInOutCirc(0)).toBeCloseTo(0, 10);
+      expect(easeInOutCirc(1)).toBeCloseTo(1, 10);
+    });
+
+    it('should map 0.5 to 0.5', () => {
+      expect(easeInOutCirc(0.5)).toBeCloseTo(0.5, 10);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(easeInOutCirc(t2)).toBeGreaterThanOrEqual(easeInOutCirc(t1) - EPSILON);
+      }
+    });
+  });
+
+  describe('easeInBack', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInBack(0)).toBe(0);
+      expect(easeInBack(1)).toBeCloseTo(1, 10);
+    });
+
+    it('should go negative initially (overshoot back)', () => {
+      expect(easeInBack(0.1)).toBeLessThan(0);
+    });
+  });
+
+  describe('easeOutBack', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeOutBack(0)).toBeCloseTo(0, 10);
+      expect(easeOutBack(1)).toBe(1);
+    });
+
+    it('should overshoot past 1', () => {
+      expect(easeOutBack(0.7)).toBeGreaterThan(1);
+    });
+  });
+
+  describe('easeInOutBack', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInOutBack(0)).toBeCloseTo(0, 10);
+      expect(easeInOutBack(1)).toBeCloseTo(1, 10);
+    });
+
+    it('should map 0.5 to 0.5', () => {
+      expect(easeInOutBack(0.5)).toBeCloseTo(0.5, 10);
+    });
+  });
+
+  describe('easeInElastic', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInElastic(0)).toBe(0);
+      expect(easeInElastic(1)).toBe(1);
+    });
+
+    it('should oscillate near 0 at the start', () => {
+      // Values near 0 should be very small but can oscillate
+      expect(Math.abs(easeInElastic(0.1))).toBeLessThan(0.01);
+    });
+  });
+
+  describe('easeOutElastic', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeOutElastic(0)).toBe(0);
+      expect(easeOutElastic(1)).toBe(1);
+    });
+
+    it('should overshoot past 1', () => {
+      // Elastic out should overshoot at some point
+      // At t≈0.45, the elastic oscillation exceeds 1
+      let overshoots = false;
+      for (let i = 1; i < 20; i++) {
+        if (easeOutElastic(i / 20) > 1) {
+          overshoots = true;
+          break;
+        }
+      }
+      expect(overshoots).toBe(true);
+    });
+  });
+
+  describe('easeInOutElastic', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInOutElastic(0)).toBe(0);
+      expect(easeInOutElastic(1)).toBe(1);
+    });
+
+    it('should map 0.5 to approximately 0.5', () => {
+      expect(easeInOutElastic(0.5)).toBeCloseTo(0.5, 5);
+    });
+  });
+
+  describe('easeInOutBounce', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(easeInOutBounce(0)).toBe(0);
+      expect(easeInOutBounce(1)).toBe(1);
+    });
+
+    it('should map 0.5 to 0.5', () => {
+      expect(easeInOutBounce(0.5)).toBeCloseTo(0.5, 5);
+    });
+
+    it('should stay bounded [0, 1]', () => {
+      for (let i = 0; i <= 20; i++) {
+        const t = i / 20;
+        expect(easeInOutBounce(t)).toBeLessThanOrEqual(1 + EPSILON);
+        expect(easeInOutBounce(t)).toBeGreaterThanOrEqual(-EPSILON);
+      }
+    });
+  });
+
+  describe('Python Manim-compatible aliases', () => {
+    it('easeInCubic should be the same as easeIn', () => {
+      expect(easeInCubic(0.5)).toBe(easeIn(0.5));
+      expect(easeInCubic(0.25)).toBe(easeIn(0.25));
+    });
+
+    it('easeOutCubic should be the same as easeOut', () => {
+      expect(easeOutCubic(0.5)).toBe(easeOut(0.5));
+      expect(easeOutCubic(0.25)).toBe(easeOut(0.25));
+    });
+
+    it('easeInOutCubic should be the same as easeInOut', () => {
+      expect(easeInOutCubic(0.5)).toBe(easeInOut(0.5));
+      expect(easeInOutCubic(0.25)).toBe(easeInOut(0.25));
+    });
+  });
+
   describe('all standard easing functions boundary behavior', () => {
     const standardFunctions = [
       { name: 'linear', fn: linear },
@@ -567,6 +1017,24 @@ describe('rate functions', () => {
       { name: 'doubleSmooth', fn: doubleSmooth },
       { name: 'slowInto', fn: slowInto },
       { name: 'lingering', fn: lingering },
+      { name: 'smoothstep', fn: smoothstep },
+      { name: 'smootherstep', fn: smootherstep },
+      { name: 'smoothererstep', fn: smoothererstep },
+      { name: 'easeInSine', fn: easeInSine },
+      { name: 'easeOutSine', fn: easeOutSine },
+      { name: 'easeInOutSine', fn: easeInOutSine },
+      { name: 'easeInOutQuad', fn: easeInOutQuad },
+      { name: 'easeInQuart', fn: easeInQuart },
+      { name: 'easeOutQuart', fn: easeOutQuart },
+      { name: 'easeInOutQuart', fn: easeInOutQuart },
+      { name: 'easeInQuint', fn: easeInQuint },
+      { name: 'easeOutQuint', fn: easeOutQuint },
+      { name: 'easeInOutQuint', fn: easeInOutQuint },
+      { name: 'easeInOutExpo', fn: easeInOutExpo },
+      { name: 'easeInCirc', fn: easeInCirc },
+      { name: 'easeOutCirc', fn: easeOutCirc },
+      { name: 'easeInOutCirc', fn: easeInOutCirc },
+      { name: 'easeInOutBounce', fn: easeInOutBounce },
     ];
 
     for (const { name, fn } of standardFunctions) {

@@ -20,11 +20,13 @@ async function animate(scene: any) {
     ORANGE,
     WHITE,
     smooth,
-    runningStart,
-    thereAndBackWithPause,
-    lingering,
-    exponentialDecay,
-    slowInto,
+    easeInOutSine,
+    easeInOutBack,
+    easeOutElastic,
+    easeOutBounce,
+    easeInOutCirc,
+    smoothstep,
+    easeInOutExpo,
     scaleVec,
   } = await import('manim-web');
 
@@ -35,17 +37,19 @@ async function animate(scene: any) {
     color: string;
   }> = [
     { name: 'smooth', rateFunc: smooth, color: BLUE },
-    { name: 'runningStart', rateFunc: runningStart(-0.2), color: RED },
-    { name: 'thereAndBackWithPause', rateFunc: thereAndBackWithPause(), color: GREEN },
-    { name: 'lingering', rateFunc: lingering, color: YELLOW },
-    { name: 'exponentialDecay', rateFunc: exponentialDecay(), color: PURPLE },
-    { name: 'slowInto', rateFunc: slowInto, color: ORANGE },
+    { name: 'easeInOutSine', rateFunc: easeInOutSine, color: RED },
+    { name: 'easeInOutBack', rateFunc: easeInOutBack, color: GREEN },
+    { name: 'easeOutElastic', rateFunc: easeOutElastic, color: YELLOW },
+    { name: 'easeOutBounce', rateFunc: easeOutBounce, color: PURPLE },
+    { name: 'easeInOutCirc', rateFunc: easeInOutCirc, color: ORANGE },
+    { name: 'smoothstep', rateFunc: smoothstep, color: '#ff69b4' },
+    { name: 'easeInOutExpo', rateFunc: easeInOutExpo, color: '#00ced1' },
   ];
 
   const ROW_COUNT = rateFunctions.length;
-  const TOP_Y = 2.0;
-  const ROW_SPACING = 0.7;
-  const START_X = -2.5;
+  const TOP_Y = 2.5;
+  const ROW_SPACING = 0.65;
+  const START_X = -2.2;
   const SHIFT_DISTANCE = 5.0;
 
   const dots: Dot[] = [];
@@ -58,10 +62,10 @@ async function animate(scene: any) {
     // Label on the left
     const label = new Text({
       text: name,
-      fontSize: 20,
+      fontSize: 18,
       color: WHITE,
     });
-    label.moveTo([START_X - 2.0, y, 0]);
+    label.moveTo([START_X - 2.3, y, 0]);
 
     // Track line (faint guide)
     const trackLine = new Line({
@@ -95,6 +99,6 @@ async function animate(scene: any) {
   await scene.play(new AnimationGroup(animations));
 }
 
-export default function RateFunctionsComparisonExample() {
+export default function EasingFunctionsShowcaseExample() {
   return <ManimExample animationFn={animate} />;
 }
