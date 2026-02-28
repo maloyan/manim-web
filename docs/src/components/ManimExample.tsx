@@ -77,7 +77,7 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
             if (cancelled) break;
             await scene.wait(2);
             if (cancelled) break;
-            scene.clear();
+            scene.clear({ render: false });
           } catch (e) {
             if (cancelled) break;
             console.error('Animation error:', e);

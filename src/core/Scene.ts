@@ -130,9 +130,7 @@ export class Scene {
     this._mobjects = new Set();
 
     // Initialize state manager (undo/redo)
-    this._stateManager = new SceneStateManager(
-      () => Array.from(this._mobjects)
-    );
+    this._stateManager = new SceneStateManager(() => Array.from(this._mobjects));
 
     // Initial render
     this._render();
@@ -255,7 +253,11 @@ export class Scene {
       }
       // Set very high renderOrder so it draws on top
       const threeObj = mobject.getThreeObject();
-      threeObj.renderOrder = 10000 + this._renderOrderCounter++;
+      const fgRo = 10000 + this._renderOrderCounter++;
+      threeObj.renderOrder = fgRo;
+      threeObj.traverse((child) => {
+        child.renderOrder = fgRo;
+      });
     }
     if (this._autoRender) {
       this._render();
@@ -272,14 +274,19 @@ export class Scene {
       if (!this._mobjects.has(mobject)) {
         this._mobjects.add(mobject);
         const threeObj = mobject.getThreeObject();
-        threeObj.renderOrder = this._renderOrderCounter++;
-        // Disable depth test so renderOrder controls draw order (2D scene)
-        threeObj.traverse((child: any) => {
-          if (child.material) {
-            if (Array.isArray(child.material)) {
-              for (const m of child.material) m.depthTest = false;
+        const ro = this._renderOrderCounter++;
+        threeObj.renderOrder = ro;
+        // Propagate renderOrder to ALL children so THREE.js sorts meshes
+        // correctly (Group renderOrder doesn't cascade to child meshes).
+        // Also disable depth test so renderOrder controls draw order (2D scene).
+        threeObj.traverse((child) => {
+          child.renderOrder = ro;
+          const mesh = child as THREE.Mesh;
+          if (mesh.material) {
+            if (Array.isArray(mesh.material)) {
+              for (const m of mesh.material) m.depthTest = false;
             } else {
-              child.material.depthTest = false;
+              mesh.material.depthTest = false;
             }
           }
         });
@@ -336,8 +343,11 @@ export class Scene {
 
   /**
    * Clear all mobjects from the scene.
+   * @param options.render - Whether to auto-render after clearing. Default: true.
+   *   Pass `false` to suppress the render (e.g., when rebuilding the scene
+   *   immediately afterwards to avoid a blank-frame flicker).
    */
-  clear(): this {
+  clear({ render = true }: { render?: boolean } = {}): this {
     for (const mobject of this._mobjects) {
       const threeObj = mobject.getThreeObject();
       this._threeScene.remove(threeObj);
@@ -350,7 +360,7 @@ export class Scene {
       this._threeScene.remove(this._threeScene.children[0]);
     }
 
-    if (this._autoRender) {
+    if (render && this._autoRender) {
       this._render();
     }
     return this;
@@ -582,14 +592,30 @@ export class Scene {
   /**
    * Recursively find all descendant mobjects with waitForRender() and
    * trigger a scene re-render when each completes.
+   *
+   * Guards against already-resolved promises: if the mobject exposes an
+   * `isRendering()` method and it returns false, the render has already
+   * finished so we skip the callback to avoid redundant _render() calls
+   * that can cause visible flicker.
    */
   private _awaitAsyncRenders(mobject: Mobject): void {
-    if (typeof (mobject as any).waitForRender === 'function') {
-      (mobject as any).waitForRender().then(() => {
-        if (this._autoRender) {
-          this._render();
-        }
-      });
+    const asyncMob = mobject as Mobject & {
+      waitForRender?: () => Promise<void>;
+      isRendering?: () => boolean;
+    };
+    if (typeof asyncMob.waitForRender === 'function') {
+      // If the mobject exposes an isRendering() check and is no longer
+      // rendering, the promise is already settled -- skip the callback
+      // to avoid a redundant (and potentially flickering) re-render.
+      const stillRendering = typeof asyncMob.isRendering !== 'function' || asyncMob.isRendering();
+
+      if (stillRendering) {
+        asyncMob.waitForRender().then(() => {
+          if (this._autoRender) {
+            this._render();
+          }
+        });
+      }
     }
     for (const child of mobject.children) {
       this._awaitAsyncRenders(child);
@@ -630,10 +656,7 @@ export class Scene {
    */
   private _updateFrustum(): void {
     const camera = this._camera.getCamera();
-    this._projScreenMatrix.multiplyMatrices(
-      camera.projectionMatrix,
-      camera.matrixWorldInverse
-    );
+    this._projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
     this._frustum.setFromProjectionMatrix(this._projScreenMatrix);
   }
 
