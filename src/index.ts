@@ -29,7 +29,7 @@ export { VMobject, type Point } from './core/VMobject';
 export { VGroup } from './core/VGroup';
 export { VDict, VectorizedPoint } from './core/VDict';
 export { Group } from './core/Group';
-export { Scene, type SceneOptions } from './core/Scene';
+export { Scene, type SceneOptions, type SceneExportOptions } from './core/Scene';
 export { InteractiveScene, type InteractiveSceneOptions } from './core/InteractiveScene';
 export {
   ThreeDScene,

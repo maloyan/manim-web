@@ -37,14 +37,6 @@ async function animate(scene: any) {
     color: WHITE,
   });
 
-  // Wait for all MathTex labels to finish rendering before adding to scene
-  await Promise.all([
-    ...axesLabels.children.filter((c: any) => c.waitForRender).map((c: any) => c.waitForRender()),
-    sinLabel.waitForRender(),
-    cosLabel.waitForRender(),
-    lineLabel.waitForRender(),
-  ]);
-
   const plot = new VGroup(axes, sinGraph, cosGraph, vertLine);
   const labels = new VGroup(axesLabels, sinLabel, cosLabel, lineLabel);
   scene.add(plot, labels);

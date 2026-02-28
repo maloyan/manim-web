@@ -15,6 +15,7 @@ async function animate(scene: any) {
     MED_SMALL_BUFF,
     PURPLE,
     RED,
+    RIGHT,
     Scale,
     ScaleInPlace,
     Shift,
@@ -71,9 +72,7 @@ async function animate(scene: any) {
   // Pop-out animation: display pops from frame position to its shifted position
   await scene.play(scene.getZoomedDisplayPopOutAnimation(), unfoldCamera);
 
-  // Use zoomedDisplay (parent) for positioning since displayFrame is a nested
-  // child whose world coords depend on parent transform being synced
-  zoomedCameraText.nextTo(zoomedDisplay, DOWN);
+  zoomedCameraText.nextTo(zoomedDisplayFrame, DOWN);
   await scene.play(new FadeIn(zoomedCameraText, { shift: UP }));
 
   // Scale frame and display non-uniformly
@@ -88,7 +87,7 @@ async function animate(scene: any) {
   await scene.play(new ScaleInPlace(zoomedDisplay, { scaleFactor: 2 }));
   await scene.wait();
 
-  await scene.play(new Shift(frame, { direction: scaleVec(2.5, DOWN) }));
+  await scene.play(new Shift(frame, { direction: scaleVec(2.5, RIGHT) }));
   await scene.wait();
 
   // Reverse pop-out: move display back to frame
@@ -100,9 +99,10 @@ async function animate(scene: any) {
   await scene.wait();
 }
 
-function createScene(container: HTMLElement, manim: any, dims: { width: number; height: number }) {
+function createScene(container: HTMLElement, manim: any) {
   return new manim.ZoomedScene(container, {
-    ...dims,
+    width: 800,
+    height: 450,
     backgroundColor: manim.BLACK,
     zoomFactor: 0.3,
     displayWidth: 6,
