@@ -14,6 +14,8 @@ import {
   pointToCoords as pointToCoordsHelper,
 } from '../utils/math';
 import { Animation, AnimationOptions } from '../animation/Animation';
+import { Line2 } from 'three/examples/jsm/lines/Line2.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 
 /**
  * Options for configuring a ThreeDScene.
@@ -124,6 +126,29 @@ export class ThreeDScene extends Scene {
 
     // Initial render with 3D camera
     this.render();
+  }
+
+  /**
+   * Override add to re-enable depth testing for proper 3D occlusion.
+   * The base Scene disables depthTest for 2D render-order layering,
+   * but 3D scenes need depth testing for correct visibility.
+   */
+  add(...mobjects: Mobject[]): this {
+    super.add(...mobjects);
+    for (const mobject of mobjects) {
+      const threeObj = mobject.getThreeObject();
+      threeObj.traverse((child) => {
+        const mesh = child as THREE.Mesh;
+        if (mesh.material) {
+          const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+          for (const m of mats) {
+            m.depthTest = true;
+            m.depthWrite = true;
+          }
+        }
+      });
+    }
+    return this;
   }
 
   /**
@@ -475,7 +500,7 @@ export class ThreeDScene extends Scene {
   /**
    * Override clear to also clear the HUD scene and fixed mobjects.
    */
-  clear(): this {
+  clear(options: { render?: boolean } = {}): this {
     // Clear fixed mobjects from HUD scene
     for (const mob of this._fixedMobjects) {
       const threeObj = mob.getThreeObject();
@@ -488,7 +513,7 @@ export class ThreeDScene extends Scene {
       this._hudScene.remove(this._hudScene.children[0]);
     }
 
-    super.clear();
+    super.clear(options);
 
     // Re-add lights after clear (super.clear removes ALL three scene children)
     for (const light of this._lighting.getLights()) {
@@ -947,6 +972,9 @@ export class ZoomedScene extends Scene {
   /** Default display position (for reset in clear()) */
   private _displayDefaultPos: [number, number, number];
 
+  /** Dedicated orthographic camera for zoom render pass (avoids mutating scene camera) */
+  private _zoomCamera: THREE.OrthographicCamera;
+
   constructor(container: HTMLElement, options: ZoomedSceneOptions = {}) {
     super(container, options);
 
@@ -968,6 +996,11 @@ export class ZoomedScene extends Scene {
       format: THREE.RGBAFormat,
       generateMipmaps: true,
     });
+
+    // Create dedicated camera for zoom render pass (separate from scene camera)
+    this._zoomCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
+    this._zoomCamera.position.set(0, 0, 10);
+    this._zoomCamera.lookAt(0, 0, 0);
 
     // Create zoomed camera
     this.zoomedCamera = new ZoomedCamera(
@@ -1045,71 +1078,79 @@ export class ZoomedScene extends Scene {
     return new ZoomDisplayPopOut(this.zoomedDisplay, this.zoomedCamera.frame, options);
   }
 
+  /** Guard against reentrant _render() calls */
+  private _isRendering = false;
+
   /**
    * Override _render to include zoom view on every frame (including animation loop).
+   * Uses a dedicated orthographic camera for the RT pass so the scene camera is
+   * never mutated — this prevents THREE.js internal state contamination that
+   * caused the RT to render empty when the scene camera was temporarily modified.
    */
   protected override _render(): void {
-    if (this._zoomActive) {
-      const webglRenderer = this.renderer.getThreeRenderer();
+    // Guard against reentrant calls (from _autoRender side-effects)
+    if (this._isRendering) return;
+    this._isRendering = true;
 
-      // Sync dirty mobjects FIRST so frame bounds are up-to-date
-      for (const m of this.mobjects) {
-        if (m._dirty) {
-          m._syncToThree();
-          m._dirty = false;
+    try {
+      if (this._zoomActive) {
+        const webglRenderer = this.renderer.getThreeRenderer();
+
+        // Sync dirty mobjects so frame bounds are up-to-date
+        for (const m of this.mobjects) {
+          if (m._dirty) {
+            m._syncToThree();
+            m._dirty = false;
+          }
         }
+
+        // Get frame position/size from the camera frame mobject
+        const frameCenter = this.zoomedCamera.frame.getCenter();
+        const frameObj = this.zoomedCamera.frame.getThreeObject();
+        const frameBounds = new THREE.Box3().setFromObject(frameObj);
+        const frameSize = new THREE.Vector3();
+        frameBounds.getSize(frameSize);
+
+        // Hide the display so it doesn't appear in the zoomed render
+        const displayObj = this.zoomedDisplay.getThreeObject();
+        const prevDisplayVisible = displayObj.visible;
+        displayObj.visible = false;
+
+        // Update dedicated zoom camera to match frame region
+        const hw = (frameSize.x > 0.001 ? frameSize.x : 1) / 2;
+        const hh = (frameSize.y > 0.001 ? frameSize.y : 1) / 2;
+        this._zoomCamera.left = -hw;
+        this._zoomCamera.right = hw;
+        this._zoomCamera.top = hh;
+        this._zoomCamera.bottom = -hh;
+        this._zoomCamera.updateProjectionMatrix();
+        this._zoomCamera.position.set(frameCenter[0], frameCenter[1], 10);
+        this._zoomCamera.lookAt(frameCenter[0], frameCenter[1], 0);
+
+        // Render to zoom render target using dedicated camera
+        webglRenderer.setRenderTarget(this._zoomRenderTarget);
+        webglRenderer.render(this.threeScene, this._zoomCamera);
+        webglRenderer.setRenderTarget(null);
+
+        // Restore viewport to full canvas size
+        const sz = webglRenderer.getSize(new THREE.Vector2());
+        webglRenderer.setViewport(0, 0, sz.x, sz.y);
+
+        // Restore display visibility
+        displayObj.visible = prevDisplayVisible;
       }
 
-      // Get frame position/size from the camera frame mobject
-      const frameCenter = this.zoomedCamera.frame.getCenter();
-      const frameObj = this.zoomedCamera.frame.getThreeObject();
-      const frameBounds = new THREE.Box3().setFromObject(frameObj);
-      const frameSize = new THREE.Vector3();
-      frameBounds.getSize(frameSize);
-
-      // Hide the display and its frame so they don't appear in the zoomed render
-      const displayObj = this.zoomedDisplay.getThreeObject();
-      const prevDisplayVisible = displayObj.visible;
-      displayObj.visible = false;
-
-      // Save camera state
-      const cam = this.camera;
-      const origWidth = cam.frameWidth;
-      const origHeight = cam.frameHeight;
-      const origPos = cam.position.clone();
-
-      // Set camera to show the frame region
-      cam.frameWidth = frameSize.x > 0.001 ? frameSize.x : origWidth;
-      cam.frameHeight = frameSize.y > 0.001 ? frameSize.y : origHeight;
-      cam.moveTo([frameCenter[0], frameCenter[1], origPos.z]);
-
-      // Render to zoom target
-      webglRenderer.setRenderTarget(this._zoomRenderTarget);
-      webglRenderer.render(this.threeScene, cam.getCamera());
-      webglRenderer.setRenderTarget(null);
-
-      // Restore viewport to full canvas size (setRenderTarget may leave it at
-      // the render target's dimensions, which clips the main scene render)
-      const sz = webglRenderer.getSize(new THREE.Vector2());
-      webglRenderer.setViewport(0, 0, sz.x, sz.y);
-
-      // Restore camera state
-      cam.frameWidth = origWidth;
-      cam.frameHeight = origHeight;
-      cam.moveTo([origPos.x, origPos.y, origPos.z]);
-
-      // Restore display visibility
-      displayObj.visible = prevDisplayVisible;
+      // Render main view (scene camera is untouched)
+      super._render();
+    } finally {
+      this._isRendering = false;
     }
-
-    // Render main view
-    super._render();
   }
 
   /**
    * Override clear to reset zoom state.
    */
-  clear(): this {
+  clear(options: { render?: boolean } = {}): this {
     this._zoomActive = false;
     // Reset frame and display transforms for clean re-play
     this.zoomedCamera.frame.position.set(0, 0, 0);
@@ -1125,7 +1166,20 @@ export class ZoomedScene extends Scene {
     this.zoomedDisplay.setOpacity(1);
     this.zoomedDisplay.displayFrame.setOpacity(1);
     this.zoomedDisplay._markDirty();
-    return super.clear();
+
+    // Reset Line2 material dashed state left behind by Uncreate
+    // (Uncreate.finish() leaves dashed=true + dashSize=0, making strokes invisible)
+    for (const mob of [this.zoomedCamera.frame, this.zoomedDisplay.displayFrame]) {
+      mob.getThreeObject().traverse((child) => {
+        if (child instanceof Line2) {
+          const material = child.material as LineMaterial;
+          material.dashed = false;
+          material.needsUpdate = true;
+        }
+      });
+    }
+
+    return super.clear(options);
   }
 
   /**

@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeAll } from 'vitest';
+import * as THREE from 'three';
 import { DecimalNumber, Integer } from './DecimalNumber';
 
 /**
@@ -372,6 +373,15 @@ describe('DecimalNumber', () => {
       n.getThreeObject();
       n.setValue(999);
       expect(n.getValue()).toBe(999);
+    });
+    it('should set texture.colorSpace to SRGBColorSpace', () => {
+      const n = new DecimalNumber({ value: 7 });
+      const obj = n.getThreeObject();
+      const mesh = obj.children.find((ch: { type: string }) => ch.type === 'Mesh') as THREE.Mesh;
+      expect(mesh).toBeDefined();
+      const mat = mesh.material as THREE.MeshBasicMaterial;
+      expect(mat.map).toBeDefined();
+      expect(mat.map!.colorSpace).toBe(THREE.SRGBColorSpace);
     });
   });
 

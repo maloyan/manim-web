@@ -56,9 +56,9 @@ describe('FadeIn', () => {
       mob.position.set(1, 2, 0);
       const anim = new FadeIn(mob, { shift: [0, -1, 0] });
       anim.begin();
-      // Start position = target + shift = (1, 2, 0) + (0, -1, 0) = (1, 1, 0)
+      // Start position = target - shift = (1, 2, 0) - (0, -1, 0) = (1, 3, 0)
       expect(mob.position.x).toBeCloseTo(1, 5);
-      expect(mob.position.y).toBeCloseTo(1, 5);
+      expect(mob.position.y).toBeCloseTo(3, 5);
       expect(mob.position.z).toBeCloseTo(0, 5);
     });
   });
@@ -93,13 +93,13 @@ describe('FadeIn', () => {
       mob.position.set(2, 0, 0);
       const anim = new FadeIn(mob, { shift: [-2, 0, 0] });
       anim.begin();
-      // Start = (2,0,0) + (-2,0,0) = (0,0,0), target = (2,0,0)
+      // Start = (2,0,0) - (-2,0,0) = (4,0,0), target = (2,0,0)
 
       anim.interpolate(0);
-      expect(mob.position.x).toBeCloseTo(0, 5);
+      expect(mob.position.x).toBeCloseTo(4, 5);
 
       anim.interpolate(0.5);
-      expect(mob.position.x).toBeCloseTo(1, 5);
+      expect(mob.position.x).toBeCloseTo(3, 5);
 
       anim.interpolate(1);
       expect(mob.position.x).toBeCloseTo(2, 5);

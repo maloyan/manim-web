@@ -3,7 +3,8 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Axes, BLUE, GREEN, Line, RED, Scene, UP, UR, VGroup, WHITE, YELLOW, scaleVec, BLACK } = await import('manim-web');
+  const { Axes, BLUE, GREEN, Line, RED, Scene, UP, UR, VGroup, WHITE, YELLOW, scaleVec, BLACK } =
+    await import('manim-web');
 
   const axes = new Axes({
     xRange: [-10, 10.3, 1],
@@ -35,6 +36,14 @@ async function animate(scene: any) {
     direction: UR,
     color: WHITE,
   });
+
+  // Wait for all MathTex labels to finish rendering before adding to scene
+  await Promise.all([
+    ...axesLabels.children.filter((c: any) => c.waitForRender).map((c: any) => c.waitForRender()),
+    sinLabel.waitForRender(),
+    cosLabel.waitForRender(),
+    lineLabel.waitForRender(),
+  ]);
 
   const plot = new VGroup(axes, sinGraph, cosGraph, vertLine);
   const labels = new VGroup(axesLabels, sinLabel, cosLabel, lineLabel);

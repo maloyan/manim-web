@@ -276,7 +276,7 @@ export class MathTex extends Mobject {
    */
   async waitForRender(): Promise<void> {
     if (this._isMultiPart) {
-      await Promise.all(this._parts.map(p => p.waitForRender()));
+      await Promise.all(this._parts.map((p) => p.waitForRender()));
       if (this._arrangePromise) {
         await this._arrangePromise;
       }
@@ -315,12 +315,12 @@ export class MathTex extends Mobject {
    * Positions parts so their content (minus padding) is seamlessly adjacent.
    */
   private async _arrangeParts(): Promise<void> {
-    await Promise.all(this._parts.map(p => p.waitForRender()));
+    await Promise.all(this._parts.map((p) => p.waitForRender()));
 
     const SCALE = 0.01;
 
     // Collect content widths (total width minus padding on each side)
-    const widths = this._parts.map(p => {
+    const widths = this._parts.map((p) => {
       const [w] = p.getDimensions();
       return w;
     });
@@ -508,6 +508,7 @@ export class MathTex extends Mobject {
       this._renderState.texture.dispose();
     }
     this._renderState.texture = new THREE.CanvasTexture(canvas);
+    this._renderState.texture.colorSpace = THREE.SRGBColorSpace;
     this._renderState.texture.minFilter = THREE.LinearFilter;
     this._renderState.texture.magFilter = THREE.LinearFilter;
     this._renderState.texture.needsUpdate = true;
@@ -555,21 +556,23 @@ export class MathTex extends Mobject {
       // Wait a tick for CSS processing and font discovery.
       // NOTE: use setTimeout instead of requestAnimationFrame — rAF is
       // suspended in background tabs, causing waitForRender() to hang.
-      await new Promise<void>(r => setTimeout(r, 0));
+      await new Promise<void>((r) => setTimeout(r, 0));
 
       // Explicitly request common KaTeX fonts (triggers download if not cached).
       // Race against a timeout to avoid hanging if fonts can't load.
       const fs = `${this._fontSize}px`;
-      const fontTimeout = new Promise<void>(r => setTimeout(r, 5000));
+      const fontTimeout = new Promise<void>((r) => setTimeout(r, 5000));
       await Promise.race([
-        Promise.all([
-          document.fonts.load(`${fs} KaTeX_Main`),
-          document.fonts.load(`italic ${fs} KaTeX_Math`),
-          document.fonts.load(`bold ${fs} KaTeX_Main`),
-          document.fonts.load(`${fs} KaTeX_Size1`),
-          document.fonts.load(`${fs} KaTeX_Size2`),
-          document.fonts.load(`${fs} KaTeX_AMS`),
-        ].map(p => p.catch(() => {}))),
+        Promise.all(
+          [
+            document.fonts.load(`${fs} KaTeX_Main`),
+            document.fonts.load(`italic ${fs} KaTeX_Math`),
+            document.fonts.load(`bold ${fs} KaTeX_Main`),
+            document.fonts.load(`${fs} KaTeX_Size1`),
+            document.fonts.load(`${fs} KaTeX_Size2`),
+            document.fonts.load(`${fs} KaTeX_AMS`),
+          ].map((p) => p.catch(() => {})),
+        ),
         fontTimeout,
       ]);
 
@@ -588,7 +591,13 @@ export class MathTex extends Mobject {
       }
 
       // Walk KaTeX DOM and render each text/SVG element to canvas
-      const canvas = await this._renderDomToCanvas(container, containerRect, width, height, padding);
+      const canvas = await this._renderDomToCanvas(
+        container,
+        containerRect,
+        width,
+        height,
+        padding,
+      );
 
       // Store render state
       this._renderState.canvas = canvas;
@@ -598,6 +607,7 @@ export class MathTex extends Mobject {
         this._renderState.texture.dispose();
       }
       this._renderState.texture = new THREE.CanvasTexture(canvas);
+      this._renderState.texture.colorSpace = THREE.SRGBColorSpace;
       this._renderState.texture.minFilter = THREE.LinearFilter;
       this._renderState.texture.magFilter = THREE.LinearFilter;
       this._renderState.texture.needsUpdate = true;
@@ -628,7 +638,7 @@ export class MathTex extends Mobject {
     containerRect: DOMRect,
     width: number,
     height: number,
-    padding: number
+    padding: number,
   ): Promise<HTMLCanvasElement> {
     const scale = 2;
     const canvas = document.createElement('canvas');
@@ -669,7 +679,7 @@ export class MathTex extends Mobject {
         const text = node.textContent;
         if (!text || !text.trim()) return;
         // Skip zero-width/invisible characters (KaTeX uses ZWSP in vlist-s spacing elements)
-        if (/^[\u200B\u200C\u200D\uFEFF]+$/.test(text)) return;
+        if (/^(?:\u200B|\u200C|\u200D|\uFEFF)+$/.test(text)) return;
 
         const parent = node.parentElement;
         if (!parent) return;
@@ -724,7 +734,7 @@ export class MathTex extends Mobject {
 
             // Replace currentColor in all shape elements (attributes + inline styles)
             const shapes = clone.querySelectorAll('path, line, rect, circle, polyline, polygon');
-            shapes.forEach(p => {
+            shapes.forEach((p) => {
               const fill = p.getAttribute('fill');
               if (!fill || fill === 'currentColor' || fill === 'inherit') {
                 p.setAttribute('fill', '#ffffff');
@@ -804,22 +814,24 @@ export class MathTex extends Mobject {
     // Draw layers in correct z-order:
     // 1. SVG items FIRST (radical signs, delimiters — background decorations)
     if (svgItems.length > 0) {
-      await Promise.all(svgItems.map(item => {
-        return new Promise<void>((resolve) => {
-          const img = new Image();
-          img.onload = () => {
-            ctx.drawImage(img, item.x, item.y, item.w, item.h);
-            URL.revokeObjectURL(img.src);
-            resolve();
-          };
-          img.onerror = () => {
-            URL.revokeObjectURL(img.src);
-            resolve();
-          };
-          const blob = new Blob([item.svgString], { type: 'image/svg+xml;charset=utf-8' });
-          img.src = URL.createObjectURL(blob);
-        });
-      }));
+      await Promise.all(
+        svgItems.map((item) => {
+          return new Promise<void>((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              ctx.drawImage(img, item.x, item.y, item.w, item.h);
+              URL.revokeObjectURL(img.src);
+              resolve();
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(img.src);
+              resolve();
+            };
+            const blob = new Blob([item.svgString], { type: 'image/svg+xml;charset=utf-8' });
+            img.src = URL.createObjectURL(blob);
+          });
+        }),
+      );
     }
 
     // 2. CSS rule items (fraction bars, overlines)
@@ -913,10 +925,7 @@ export class MathTex extends Mobject {
       // Update geometry if dimensions changed
       const geometry = this._renderState.mesh.geometry as THREE.PlaneGeometry;
       const params = geometry.parameters;
-      if (
-        params.width !== this._renderState.width ||
-        params.height !== this._renderState.height
-      ) {
+      if (params.width !== this._renderState.width || params.height !== this._renderState.height) {
         this._updateMeshGeometry();
       }
     }
@@ -926,9 +935,7 @@ export class MathTex extends Mobject {
    * Create a copy of this MathTex
    */
   protected override _createCopy(): MathTex {
-    const latexValue = this._isMultiPart
-      ? this._parts.map(p => p._latex)
-      : this._latex;
+    const latexValue = this._isMultiPart ? this._parts.map((p) => p._latex) : this._latex;
     return new MathTex({
       latex: latexValue,
       color: this.color,
@@ -968,7 +975,7 @@ export class MathTex extends Mobject {
 
     // Scale X to reveal left portion, keep left edge fixed
     this._renderState.mesh.scale.x = a;
-    this._renderState.mesh.position.x = this._renderState.width * (a - 1) / 2;
+    this._renderState.mesh.position.x = (this._renderState.width * (a - 1)) / 2;
 
     // Adjust texture to show only revealed portion (prevent squishing)
     this._renderState.texture.repeat.set(a, 1);
