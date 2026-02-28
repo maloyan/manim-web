@@ -1,5 +1,4 @@
-import * as THREE from 'three';
-import { ThreeDAxes, ThreeDScene, Group, RED_D, RED_E } from '../src/index.ts';
+import { ThreeDAxes, ThreeDScene, Surface3D, RED_D, RED_E } from '../src/index.ts';
 
 const container = document.getElementById('container');
 const scene = new ThreeDScene(container, {
@@ -23,84 +22,27 @@ async function threeDLightSourcePosition(scene: ThreeDScene) {
     shaftRadius: 0.01,
   });
 
-  // Checkerboard sphere using THREE.SphereGeometry for proper topology
-  // (no pole/seam artifacts that ParametricGeometry can produce)
-  const widthSegs = 32;
-  const heightSegs = 16;
-  const geom = new THREE.SphereGeometry(1.5, widthSegs, heightSegs);
-  // Convert to non-indexed for per-face checkerboard vertex colors
-  const nonIndexed = geom.toNonIndexed();
-  geom.dispose();
-
-  const posAttr = nonIndexed.getAttribute('position');
-  const colors = new Float32Array(posAttr.count * 3);
-  const c1 = new THREE.Color(RED_D);
-  const c2 = new THREE.Color(RED_E);
-
-  // SphereGeometry: each quad = 2 triangles = 6 verts, except poles = 1 triangle = 3 verts
-  // Layout: top cap (widthSegs triangles), then (heightSegs-2) rows of quads, then bottom cap
-  let vi = 0;
-  // Top cap: widthSegs triangles
-  for (let i = 0; i < widthSegs; i++) {
-    const c = i % 2 === 0 ? c1 : c2;
-    for (let k = 0; k < 3; k++) {
-      colors[vi * 3] = c.r;
-      colors[vi * 3 + 1] = c.g;
-      colors[vi * 3 + 2] = c.b;
-      vi++;
-    }
-  }
-  // Middle rows: (heightSegs - 2) rows × widthSegs quads × 6 verts
-  for (let row = 0; row < heightSegs - 2; row++) {
-    for (let col = 0; col < widthSegs; col++) {
-      const c = (row + col) % 2 === 0 ? c1 : c2;
-      for (let k = 0; k < 6; k++) {
-        colors[vi * 3] = c.r;
-        colors[vi * 3 + 1] = c.g;
-        colors[vi * 3 + 2] = c.b;
-        vi++;
-      }
-    }
-  }
-  // Bottom cap: widthSegs triangles
-  for (let i = 0; i < widthSegs; i++) {
-    const c = (i + (heightSegs - 2)) % 2 === 0 ? c1 : c2;
-    for (let k = 0; k < 3; k++) {
-      colors[vi * 3] = c.r;
-      colors[vi * 3 + 1] = c.g;
-      colors[vi * 3 + 2] = c.b;
-      vi++;
-    }
-  }
-  nonIndexed.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-  const mat = new THREE.MeshLambertMaterial({
-    vertexColors: true,
-    side: THREE.FrontSide,
-    emissive: new THREE.Color('#883333'),
-    emissiveIntensity: 1.0,
+  // Checkerboard sphere matching Python Manim's Surface(..., checkerboard_colors=[RED_D, RED_E])
+  const sphere = new Surface3D({
+    func: (u: number, v: number) => [
+      1.5 * Math.cos(u) * Math.cos(v),
+      1.5 * Math.cos(u) * Math.sin(v),
+      1.5 * Math.sin(u),
+    ],
+    uRange: [-Math.PI / 2, Math.PI / 2],
+    vRange: [0, 2 * Math.PI],
+    uResolution: 15,
+    vResolution: 32,
+    checkerboardColors: [RED_D, RED_E],
   });
-  const sphereMesh = new THREE.Mesh(nonIndexed, mat);
 
-  // Wrap in Group so scene.add() works
-  const sphere = new Group();
-  sphere.getThreeObject().add(sphereMesh);
-
-  // Multi-directional lighting to eliminate dark shadows (matches Python Manim)
+  // Light from above to match Python Manim's default top-lit appearance
   scene.lighting.removeAll();
-  scene.lighting.addAmbient({ intensity: 3.0 });
-  scene.lighting.addDirectional({ position: [0, 5, 3], intensity: 1.5 });
-  scene.lighting.addDirectional({ position: [0, -3, -3], intensity: 1.0 });
-  scene.lighting.addDirectional({ position: [-5, 0, 0], intensity: 0.5 });
+  scene.lighting.addAmbient({ intensity: 0.3 });
+  scene.lighting.addPoint({ position: [0, 5, 0], intensity: 2.5, decay: 0 });
 
   scene.add(axes);
   scene.add(sphere);
-
-  // Re-enable depth testing for the 3D sphere mesh.
-  // Scene.add() disables depthTest (correct for 2D), but this raw THREE.Mesh
-  // needs it for proper 3D occlusion.
-  mat.depthTest = true;
-  mat.depthWrite = true;
 
   await scene.wait();
 }
