@@ -7,6 +7,7 @@ import ApplyMatrixArrowsExample from '@site/src/components/examples/ApplyMatrixA
 import ArgMinExample from '@site/src/components/examples/ArgMinExample';
 import BooleanOperationsExample from '@site/src/components/examples/BooleanOperationsExample';
 import BraceAnnotationExample from '@site/src/components/examples/BraceAnnotationExample';
+import EasingFunctionsShowcaseExample from '@site/src/components/examples/EasingFunctionsShowcaseExample';
 import FixedInFrameMobjectTestExample from '@site/src/components/examples/FixedInFrameMobjectTestExample';
 import FollowingGraphCameraExample from '@site/src/components/examples/FollowingGraphCameraExample';
 import GraphAreaPlotExample from '@site/src/components/examples/GraphAreaPlotExample';
@@ -1100,13 +1101,131 @@ const animations = dots.map(
       direction: shiftDirection,
       duration: 3,
       rateFunc: rateFunctions[i].rateFunc,
-    })
+    }),
 );
 
 await scene.play(new AnimationGroup(animations));
 ```
 
 </details>
+
+---
+
+## Easing Functions Showcase
+
+Compares eight easing functions side by side. Colored dots shift right simultaneously using different rate functions — smooth, sine, back, elastic, bounce, circ, smoothstep, and exponential — to visualize how each one affects animation timing.
+
+<EasingFunctionsShowcaseExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Dot,
+  Text,
+  Line,
+  Shift,
+  AnimationGroup,
+  RIGHT,
+  BLACK,
+  BLUE,
+  RED,
+  GREEN,
+  YELLOW,
+  PURPLE,
+  ORANGE,
+  WHITE,
+  smooth,
+  easeInOutSine,
+  easeInOutBack,
+  easeOutElastic,
+  easeOutBounce,
+  easeInOutCirc,
+  smoothstep,
+  easeInOutExpo,
+  scaleVec,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+// Rate functions to compare, each with a label and color
+const rateFunctions: Array<{
+  name: string;
+  rateFunc: (t: number) => number;
+  color: string;
+}> = [
+  { name: 'smooth', rateFunc: smooth, color: BLUE },
+  { name: 'easeInOutSine', rateFunc: easeInOutSine, color: RED },
+  { name: 'easeInOutBack', rateFunc: easeInOutBack, color: GREEN },
+  { name: 'easeOutElastic', rateFunc: easeOutElastic, color: YELLOW },
+  { name: 'easeOutBounce', rateFunc: easeOutBounce, color: PURPLE },
+  { name: 'easeInOutCirc', rateFunc: easeInOutCirc, color: ORANGE },
+  { name: 'smoothstep', rateFunc: smoothstep, color: '#ff69b4' },
+  { name: 'easeInOutExpo', rateFunc: easeInOutExpo, color: '#00ced1' },
+];
+
+const ROW_COUNT = rateFunctions.length;
+const TOP_Y = 2.5;
+const ROW_SPACING = 0.65;
+const START_X = -2.2;
+const SHIFT_DISTANCE = 5.0;
+
+const dots: Dot[] = [];
+const shiftDirection = scaleVec(SHIFT_DISTANCE, RIGHT) as [number, number, number];
+
+for (let i = 0; i < ROW_COUNT; i++) {
+  const y = TOP_Y - i * ROW_SPACING;
+  const { name, color } = rateFunctions[i];
+
+  // Label on the left
+  const label = new Text({
+    text: name,
+    fontSize: 18,
+    color: WHITE,
+  });
+  label.moveTo([START_X - 2.3, y, 0]);
+
+  // Track line (faint guide)
+  const trackLine = new Line({
+    start: [START_X, y, 0],
+    end: [START_X + SHIFT_DISTANCE, y, 0],
+    color: '#333333',
+    strokeWidth: 1,
+  });
+
+  // Dot at the start position
+  const dot = new Dot({
+    point: [START_X, y, 0],
+    radius: 0.1,
+    color,
+  });
+
+  scene.add(label, trackLine, dot);
+  dots.push(dot);
+}
+
+// Build simultaneous shift animations with different rate functions
+const animations = dots.map(
+  (dot, i) =>
+    new Shift(dot, {
+      direction: shiftDirection,
+      duration: 3,
+      rateFunc: rateFunctions[i].rateFunc,
+    }),
+);
+
+await scene.play(new AnimationGroup(animations));
+```
+
+</details>
+
+**Learn More:** **Shift** · **AnimationGroup**
 
 ---
 
