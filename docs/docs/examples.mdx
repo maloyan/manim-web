@@ -8,6 +8,7 @@ import ArgMinExample from '@site/src/components/examples/ArgMinExample';
 import BooleanOperationsExample from '@site/src/components/examples/BooleanOperationsExample';
 import BraceAnnotationExample from '@site/src/components/examples/BraceAnnotationExample';
 import EasingFunctionsShowcaseExample from '@site/src/components/examples/EasingFunctionsShowcaseExample';
+import ExportAnimationExample from '@site/src/components/examples/ExportAnimationExample';
 import FixedInFrameMobjectTestExample from '@site/src/components/examples/FixedInFrameMobjectTestExample';
 import FollowingGraphCameraExample from '@site/src/components/examples/FollowingGraphCameraExample';
 import GraphAreaPlotExample from '@site/src/components/examples/GraphAreaPlotExample';
@@ -2136,3 +2137,50 @@ await scene.wait(1);
 </details>
 
 **Learn More:** **Text** · **MathTex** · **NumberPlane** · **Write** · **Transform** · **ApplyPointwiseFunction** · **Create**
+
+---
+
+## Export Animation
+
+Demonstrates the scene.export() convenience API. Creates a square, transforms it into a circle, then exports the animation as GIF or WebM with a progress callback.
+
+<ExportAnimationExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Circle,
+  Square,
+  Create,
+  Transform,
+  FadeOut,
+  BLACK,
+  BLUE,
+  GREEN,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const square = new Square({ sideLength: 2.5, color: BLUE, fillOpacity: 0.5 });
+const circle = new Circle({ radius: 1.25, color: GREEN, fillOpacity: 0.5 });
+
+await scene.play(new Create(square));
+await scene.play(new Transform(square, circle));
+await scene.play(new FadeOut(square));
+
+// Export as GIF: scene.export('animation.gif', { fps: 15, quality: 10 })
+// Export as WebM: scene.export('animation.webm', { fps: 30 })
+// Export as MP4: scene.export('animation.mp4')
+// Export as MOV: scene.export('animation.mov')
+```
+
+</details>
+
+**Learn More:** **Scene** · **Circle** · **Square** · **Create** · **Transform** · **FadeOut**

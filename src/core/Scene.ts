@@ -11,6 +11,31 @@ import { SceneStateManager, SceneSnapshot } from './StateManager';
 import { AudioManager, type AddSoundOptions, type AudioTrack } from './AudioManager';
 
 /**
+ * Options for scene.export() convenience method.
+ * Format is inferred from the filename extension.
+ */
+export interface SceneExportOptions {
+  /** Frames per second. Defaults to 30 for GIF, 60 for video. */
+  fps?: number;
+  /** Quality. For GIF: 1-30 (lower is better), default 10. For video: 0-1, default 0.9. */
+  quality?: number;
+  /** Output width in pixels. Defaults to scene width. */
+  width?: number;
+  /** Output height in pixels. Defaults to scene height. */
+  height?: number;
+  /** Duration in seconds. Auto-detects from timeline if not specified. */
+  duration?: number;
+  /** Progress callback (0-1). */
+  onProgress?: (progress: number) => void;
+  /** Include audio in video export. Defaults to true when audio tracks exist. */
+  includeAudio?: boolean;
+  /** GIF repeat mode. 0 = loop forever, -1 = no repeat. Default 0. */
+  repeat?: number;
+  /** Number of GIF encoding workers. Default 4. */
+  workers?: number;
+}
+
+/**
  * Options for configuring a Scene.
  */
 export interface SceneOptions {
@@ -998,6 +1023,78 @@ export class Scene {
    */
   render(): void {
     this._render();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Export
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Export the scene animation as a file (GIF or video).
+   * Format is inferred from the filename extension.
+   *
+   * Supported extensions:
+   * - `.gif` - Animated GIF
+   * - `.webm` - WebM video (VP9)
+   * - `.mp4` - MP4 video (browser codec support varies)
+   * - `.mov` - QuickTime video (browser codec support varies)
+   *
+   * @param filename - Output filename (e.g. 'animation.gif', 'scene.webm')
+   * @param options - Export options (fps, quality, dimensions, etc.)
+   * @returns The exported Blob
+   *
+   * @example
+   * ```ts
+   * // Export as GIF
+   * const blob = await scene.export('animation.gif');
+   *
+   * // Export as WebM with custom options
+   * const blob = await scene.export('scene.webm', {
+   *   fps: 30,
+   *   quality: 0.8,
+   *   onProgress: (p) => console.log(`${Math.round(p * 100)}%`),
+   * });
+   * ```
+   */
+  async export(filename: string, options?: SceneExportOptions): Promise<Blob> {
+    const ext = filename.slice(filename.lastIndexOf('.')).toLowerCase();
+
+    let blob: Blob;
+
+    if (ext === '.gif') {
+      const { GifExporter } = await import('../export/GifExporter');
+      const exporter = new GifExporter(this, {
+        fps: options?.fps,
+        quality: options?.quality as number | undefined,
+        width: options?.width,
+        height: options?.height,
+        duration: options?.duration,
+        onProgress: options?.onProgress,
+        repeat: options?.repeat,
+        workers: options?.workers,
+      });
+      blob = await exporter.exportTimeline(options?.duration);
+      GifExporter.download(blob, filename);
+    } else if (ext === '.webm' || ext === '.mp4' || ext === '.mov') {
+      const { VideoExporter } = await import('../export/VideoExporter');
+      const format = ext === '.mp4' ? 'mp4' : ext === '.mov' ? 'mov' : 'webm';
+      const exporter = new VideoExporter(this, {
+        fps: options?.fps,
+        quality: options?.quality,
+        format,
+        width: options?.width,
+        height: options?.height,
+        duration: options?.duration,
+        onProgress: options?.onProgress,
+        includeAudio: options?.includeAudio,
+      });
+      blob = await exporter.exportTimeline(options?.duration);
+      VideoExporter.download(blob, filename);
+    } else {
+      throw new Error(`Unsupported export format "${ext}". Supported: .gif, .webm, .mp4, .mov`);
+    }
+
+    return blob;
   }
 
   /**

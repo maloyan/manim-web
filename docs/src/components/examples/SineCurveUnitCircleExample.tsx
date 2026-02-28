@@ -33,7 +33,6 @@ async function animate(scene: any) {
     new MathTex({ latex: '3\\pi' }),
     new MathTex({ latex: '4\\pi' }),
   ];
-  await Promise.all(xLabels.map((l) => l.waitForRender()));
   for (let i = 0; i < xLabels.length; i++) {
     xLabels[i].nextTo([-1 + 2 * i, 0, 0], DOWN, 0.4);
     scene.add(xLabels[i]);

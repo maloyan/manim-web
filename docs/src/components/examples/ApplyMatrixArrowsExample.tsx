@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Arrow, NumberPlane, Scene, Text, DOWN, YELLOW, GREEN_C, RED_C, applyMatrix } =
+  const { Arrow, NumberPlane, Scene, Text, YELLOW, GREEN_C, RED_C, applyMatrix } =
     await import('manim-web');
 
   const plane = new NumberPlane();

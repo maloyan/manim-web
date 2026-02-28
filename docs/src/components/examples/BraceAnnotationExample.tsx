@@ -17,7 +17,6 @@ async function animate(scene: any) {
       .getUnitVector(),
   });
   const b2text = b2.getTex('x-x_1');
-  await b2text.waitForRender();
   scene.add(line, dot, dot2, b1, b2, b1text, b2text);
 }
 
