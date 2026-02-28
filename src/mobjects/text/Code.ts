@@ -45,15 +45,15 @@ export interface CodeColorScheme {
  * Default color scheme (VS Code dark theme inspired)
  */
 export const DEFAULT_COLOR_SCHEME: CodeColorScheme = {
-  keyword: '#569cd6',    // Blue
-  string: '#6a9955',     // Green
-  comment: '#6a9955',    // Gray-green (comments)
-  number: '#b5cea8',     // Light green (numbers)
-  function: '#dcdcaa',   // Yellow
-  operator: '#d4d4d4',   // Light gray
+  keyword: '#569cd6', // Blue
+  string: '#6a9955', // Green
+  comment: '#6a9955', // Gray-green (comments)
+  number: '#b5cea8', // Light green (numbers)
+  function: '#dcdcaa', // Yellow
+  operator: '#d4d4d4', // Light gray
   punctuation: '#d4d4d4', // Light gray
-  type: '#4ec9b0',       // Cyan
-  default: '#d4d4d4',    // White/light gray
+  type: '#4ec9b0', // Cyan
+  default: '#d4d4d4', // White/light gray
   background: '#1e1e1e', // Dark background
   lineNumber: '#858585', // Gray for line numbers
 };
@@ -62,15 +62,15 @@ export const DEFAULT_COLOR_SCHEME: CodeColorScheme = {
  * Monokai color scheme
  */
 export const MONOKAI_COLOR_SCHEME: CodeColorScheme = {
-  keyword: '#f92672',    // Pink
-  string: '#e6db74',     // Yellow
-  comment: '#75715e',    // Gray
-  number: '#ae81ff',     // Purple
-  function: '#a6e22e',   // Green
-  operator: '#f8f8f2',   // White
+  keyword: '#f92672', // Pink
+  string: '#e6db74', // Yellow
+  comment: '#75715e', // Gray
+  number: '#ae81ff', // Purple
+  function: '#a6e22e', // Green
+  operator: '#f8f8f2', // White
   punctuation: '#f8f8f2', // White
-  type: '#66d9ef',       // Cyan
-  default: '#f8f8f2',    // White
+  type: '#66d9ef', // Cyan
+  default: '#f8f8f2', // White
   background: '#272822', // Dark background
   lineNumber: '#75715e', // Gray
 };
@@ -80,68 +80,381 @@ export const MONOKAI_COLOR_SCHEME: CodeColorScheme = {
  */
 const LANGUAGE_KEYWORDS: Record<string, string[]> = {
   python: [
-    'False', 'None', 'True', 'and', 'as', 'assert', 'async', 'await',
-    'break', 'class', 'continue', 'def', 'del', 'elif', 'else', 'except',
-    'finally', 'for', 'from', 'global', 'if', 'import', 'in', 'is',
-    'lambda', 'nonlocal', 'not', 'or', 'pass', 'raise', 'return', 'try',
-    'while', 'with', 'yield', 'self', 'cls',
+    'False',
+    'None',
+    'True',
+    'and',
+    'as',
+    'assert',
+    'async',
+    'await',
+    'break',
+    'class',
+    'continue',
+    'def',
+    'del',
+    'elif',
+    'else',
+    'except',
+    'finally',
+    'for',
+    'from',
+    'global',
+    'if',
+    'import',
+    'in',
+    'is',
+    'lambda',
+    'nonlocal',
+    'not',
+    'or',
+    'pass',
+    'raise',
+    'return',
+    'try',
+    'while',
+    'with',
+    'yield',
+    'self',
+    'cls',
   ],
   javascript: [
-    'async', 'await', 'break', 'case', 'catch', 'class', 'const', 'continue',
-    'debugger', 'default', 'delete', 'do', 'else', 'export', 'extends',
-    'false', 'finally', 'for', 'function', 'if', 'import', 'in', 'instanceof',
-    'let', 'new', 'null', 'return', 'static', 'super', 'switch', 'this',
-    'throw', 'true', 'try', 'typeof', 'undefined', 'var', 'void', 'while',
-    'with', 'yield', 'of', 'from',
+    'async',
+    'await',
+    'break',
+    'case',
+    'catch',
+    'class',
+    'const',
+    'continue',
+    'debugger',
+    'default',
+    'delete',
+    'do',
+    'else',
+    'export',
+    'extends',
+    'false',
+    'finally',
+    'for',
+    'function',
+    'if',
+    'import',
+    'in',
+    'instanceof',
+    'let',
+    'new',
+    'null',
+    'return',
+    'static',
+    'super',
+    'switch',
+    'this',
+    'throw',
+    'true',
+    'try',
+    'typeof',
+    'undefined',
+    'var',
+    'void',
+    'while',
+    'with',
+    'yield',
+    'of',
+    'from',
   ],
   typescript: [
-    'abstract', 'any', 'as', 'async', 'await', 'boolean', 'break', 'case',
-    'catch', 'class', 'const', 'constructor', 'continue', 'debugger', 'declare',
-    'default', 'delete', 'do', 'else', 'enum', 'export', 'extends', 'false',
-    'finally', 'for', 'from', 'function', 'get', 'if', 'implements', 'import',
-    'in', 'infer', 'instanceof', 'interface', 'is', 'keyof', 'let', 'module',
-    'namespace', 'never', 'new', 'null', 'number', 'object', 'of', 'package',
-    'private', 'protected', 'public', 'readonly', 'return', 'set', 'static',
-    'string', 'super', 'switch', 'symbol', 'this', 'throw', 'true', 'try',
-    'type', 'typeof', 'undefined', 'unique', 'unknown', 'var', 'void', 'while',
-    'with', 'yield',
+    'abstract',
+    'any',
+    'as',
+    'async',
+    'await',
+    'boolean',
+    'break',
+    'case',
+    'catch',
+    'class',
+    'const',
+    'constructor',
+    'continue',
+    'debugger',
+    'declare',
+    'default',
+    'delete',
+    'do',
+    'else',
+    'enum',
+    'export',
+    'extends',
+    'false',
+    'finally',
+    'for',
+    'from',
+    'function',
+    'get',
+    'if',
+    'implements',
+    'import',
+    'in',
+    'infer',
+    'instanceof',
+    'interface',
+    'is',
+    'keyof',
+    'let',
+    'module',
+    'namespace',
+    'never',
+    'new',
+    'null',
+    'number',
+    'object',
+    'of',
+    'package',
+    'private',
+    'protected',
+    'public',
+    'readonly',
+    'return',
+    'set',
+    'static',
+    'string',
+    'super',
+    'switch',
+    'symbol',
+    'this',
+    'throw',
+    'true',
+    'try',
+    'type',
+    'typeof',
+    'undefined',
+    'unique',
+    'unknown',
+    'var',
+    'void',
+    'while',
+    'with',
+    'yield',
   ],
   java: [
-    'abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch', 'char',
-    'class', 'const', 'continue', 'default', 'do', 'double', 'else', 'enum',
-    'extends', 'final', 'finally', 'float', 'for', 'goto', 'if', 'implements',
-    'import', 'instanceof', 'int', 'interface', 'long', 'native', 'new',
-    'package', 'private', 'protected', 'public', 'return', 'short', 'static',
-    'strictfp', 'super', 'switch', 'synchronized', 'this', 'throw', 'throws',
-    'transient', 'try', 'void', 'volatile', 'while', 'true', 'false', 'null',
+    'abstract',
+    'assert',
+    'boolean',
+    'break',
+    'byte',
+    'case',
+    'catch',
+    'char',
+    'class',
+    'const',
+    'continue',
+    'default',
+    'do',
+    'double',
+    'else',
+    'enum',
+    'extends',
+    'final',
+    'finally',
+    'float',
+    'for',
+    'goto',
+    'if',
+    'implements',
+    'import',
+    'instanceof',
+    'int',
+    'interface',
+    'long',
+    'native',
+    'new',
+    'package',
+    'private',
+    'protected',
+    'public',
+    'return',
+    'short',
+    'static',
+    'strictfp',
+    'super',
+    'switch',
+    'synchronized',
+    'this',
+    'throw',
+    'throws',
+    'transient',
+    'try',
+    'void',
+    'volatile',
+    'while',
+    'true',
+    'false',
+    'null',
   ],
   rust: [
-    'as', 'async', 'await', 'break', 'const', 'continue', 'crate', 'dyn',
-    'else', 'enum', 'extern', 'false', 'fn', 'for', 'if', 'impl', 'in',
-    'let', 'loop', 'match', 'mod', 'move', 'mut', 'pub', 'ref', 'return',
-    'self', 'Self', 'static', 'struct', 'super', 'trait', 'true', 'type',
-    'unsafe', 'use', 'where', 'while',
+    'as',
+    'async',
+    'await',
+    'break',
+    'const',
+    'continue',
+    'crate',
+    'dyn',
+    'else',
+    'enum',
+    'extern',
+    'false',
+    'fn',
+    'for',
+    'if',
+    'impl',
+    'in',
+    'let',
+    'loop',
+    'match',
+    'mod',
+    'move',
+    'mut',
+    'pub',
+    'ref',
+    'return',
+    'self',
+    'Self',
+    'static',
+    'struct',
+    'super',
+    'trait',
+    'true',
+    'type',
+    'unsafe',
+    'use',
+    'where',
+    'while',
   ],
   go: [
-    'break', 'case', 'chan', 'const', 'continue', 'default', 'defer', 'else',
-    'fallthrough', 'for', 'func', 'go', 'goto', 'if', 'import', 'interface',
-    'map', 'package', 'range', 'return', 'select', 'struct', 'switch', 'type',
-    'var', 'true', 'false', 'nil', 'iota',
+    'break',
+    'case',
+    'chan',
+    'const',
+    'continue',
+    'default',
+    'defer',
+    'else',
+    'fallthrough',
+    'for',
+    'func',
+    'go',
+    'goto',
+    'if',
+    'import',
+    'interface',
+    'map',
+    'package',
+    'range',
+    'return',
+    'select',
+    'struct',
+    'switch',
+    'type',
+    'var',
+    'true',
+    'false',
+    'nil',
+    'iota',
   ],
   cpp: [
-    'alignas', 'alignof', 'and', 'and_eq', 'asm', 'auto', 'bitand', 'bitor',
-    'bool', 'break', 'case', 'catch', 'char', 'char8_t', 'char16_t', 'char32_t',
-    'class', 'compl', 'concept', 'const', 'consteval', 'constexpr', 'const_cast',
-    'continue', 'co_await', 'co_return', 'co_yield', 'decltype', 'default',
-    'delete', 'do', 'double', 'dynamic_cast', 'else', 'enum', 'explicit',
-    'export', 'extern', 'false', 'float', 'for', 'friend', 'goto', 'if',
-    'inline', 'int', 'long', 'mutable', 'namespace', 'new', 'noexcept', 'not',
-    'not_eq', 'nullptr', 'operator', 'or', 'or_eq', 'private', 'protected',
-    'public', 'register', 'reinterpret_cast', 'requires', 'return', 'short',
-    'signed', 'sizeof', 'static', 'static_assert', 'static_cast', 'struct',
-    'switch', 'template', 'this', 'thread_local', 'throw', 'true', 'try',
-    'typedef', 'typeid', 'typename', 'union', 'unsigned', 'using', 'virtual',
-    'void', 'volatile', 'wchar_t', 'while', 'xor', 'xor_eq',
+    'alignas',
+    'alignof',
+    'and',
+    'and_eq',
+    'asm',
+    'auto',
+    'bitand',
+    'bitor',
+    'bool',
+    'break',
+    'case',
+    'catch',
+    'char',
+    'char8_t',
+    'char16_t',
+    'char32_t',
+    'class',
+    'compl',
+    'concept',
+    'const',
+    'consteval',
+    'constexpr',
+    'const_cast',
+    'continue',
+    'co_await',
+    'co_return',
+    'co_yield',
+    'decltype',
+    'default',
+    'delete',
+    'do',
+    'double',
+    'dynamic_cast',
+    'else',
+    'enum',
+    'explicit',
+    'export',
+    'extern',
+    'false',
+    'float',
+    'for',
+    'friend',
+    'goto',
+    'if',
+    'inline',
+    'int',
+    'long',
+    'mutable',
+    'namespace',
+    'new',
+    'noexcept',
+    'not',
+    'not_eq',
+    'nullptr',
+    'operator',
+    'or',
+    'or_eq',
+    'private',
+    'protected',
+    'public',
+    'register',
+    'reinterpret_cast',
+    'requires',
+    'return',
+    'short',
+    'signed',
+    'sizeof',
+    'static',
+    'static_assert',
+    'static_cast',
+    'struct',
+    'switch',
+    'template',
+    'this',
+    'thread_local',
+    'throw',
+    'true',
+    'try',
+    'typedef',
+    'typeid',
+    'typename',
+    'union',
+    'unsigned',
+    'using',
+    'virtual',
+    'void',
+    'volatile',
+    'wchar_t',
+    'while',
+    'xor',
+    'xor_eq',
   ],
 };
 
@@ -150,26 +463,125 @@ const LANGUAGE_KEYWORDS: Record<string, string[]> = {
  */
 const BUILTIN_TYPES: Record<string, string[]> = {
   python: ['int', 'float', 'str', 'bool', 'list', 'dict', 'tuple', 'set', 'type', 'object'],
-  javascript: ['Array', 'Object', 'String', 'Number', 'Boolean', 'Function', 'Symbol', 'Promise', 'Map', 'Set'],
-  typescript: ['Array', 'Object', 'String', 'Number', 'Boolean', 'Function', 'Symbol', 'Promise', 'Map', 'Set', 'Partial', 'Required', 'Pick', 'Omit', 'Record'],
-  java: ['String', 'Integer', 'Boolean', 'Double', 'Float', 'Long', 'Character', 'Object', 'List', 'Map', 'Set', 'ArrayList', 'HashMap'],
-  rust: ['i8', 'i16', 'i32', 'i64', 'i128', 'u8', 'u16', 'u32', 'u64', 'u128', 'f32', 'f64', 'bool', 'char', 'str', 'String', 'Vec', 'Option', 'Result', 'Box'],
-  go: ['int', 'int8', 'int16', 'int32', 'int64', 'uint', 'uint8', 'uint16', 'uint32', 'uint64', 'float32', 'float64', 'complex64', 'complex128', 'bool', 'string', 'byte', 'rune', 'error'],
-  cpp: ['string', 'vector', 'map', 'set', 'unordered_map', 'unordered_set', 'array', 'list', 'deque', 'queue', 'stack', 'pair', 'tuple', 'unique_ptr', 'shared_ptr'],
+  javascript: [
+    'Array',
+    'Object',
+    'String',
+    'Number',
+    'Boolean',
+    'Function',
+    'Symbol',
+    'Promise',
+    'Map',
+    'Set',
+  ],
+  typescript: [
+    'Array',
+    'Object',
+    'String',
+    'Number',
+    'Boolean',
+    'Function',
+    'Symbol',
+    'Promise',
+    'Map',
+    'Set',
+    'Partial',
+    'Required',
+    'Pick',
+    'Omit',
+    'Record',
+  ],
+  java: [
+    'String',
+    'Integer',
+    'Boolean',
+    'Double',
+    'Float',
+    'Long',
+    'Character',
+    'Object',
+    'List',
+    'Map',
+    'Set',
+    'ArrayList',
+    'HashMap',
+  ],
+  rust: [
+    'i8',
+    'i16',
+    'i32',
+    'i64',
+    'i128',
+    'u8',
+    'u16',
+    'u32',
+    'u64',
+    'u128',
+    'f32',
+    'f64',
+    'bool',
+    'char',
+    'str',
+    'String',
+    'Vec',
+    'Option',
+    'Result',
+    'Box',
+  ],
+  go: [
+    'int',
+    'int8',
+    'int16',
+    'int32',
+    'int64',
+    'uint',
+    'uint8',
+    'uint16',
+    'uint32',
+    'uint64',
+    'float32',
+    'float64',
+    'complex64',
+    'complex128',
+    'bool',
+    'string',
+    'byte',
+    'rune',
+    'error',
+  ],
+  cpp: [
+    'string',
+    'vector',
+    'map',
+    'set',
+    'unordered_map',
+    'unordered_set',
+    'array',
+    'list',
+    'deque',
+    'queue',
+    'stack',
+    'pair',
+    'tuple',
+    'unique_ptr',
+    'shared_ptr',
+  ],
 };
 
 /**
  * Comment patterns for various languages
  */
-const COMMENT_PATTERNS: Record<string, { single: string; multiStart?: string; multiEnd?: string }> = {
-  python: { single: '#' },
-  javascript: { single: '//', multiStart: '/*', multiEnd: '*/' },
-  typescript: { single: '//', multiStart: '/*', multiEnd: '*/' },
-  java: { single: '//', multiStart: '/*', multiEnd: '*/' },
-  rust: { single: '//', multiStart: '/*', multiEnd: '*/' },
-  go: { single: '//', multiStart: '/*', multiEnd: '*/' },
-  cpp: { single: '//', multiStart: '/*', multiEnd: '*/' },
-};
+const COMMENT_PATTERNS: Record<string, { single: string; multiStart?: string; multiEnd?: string }> =
+  {
+    python: { single: '#' },
+    javascript: { single: '//', multiStart: '/*', multiEnd: '*/' },
+    typescript: { single: '//', multiStart: '/*', multiEnd: '*/' },
+    java: { single: '//', multiStart: '/*', multiEnd: '*/' },
+    rust: { single: '//', multiStart: '/*', multiEnd: '*/' },
+    go: { single: '//', multiStart: '/*', multiEnd: '*/' },
+    cpp: { single: '//', multiStart: '/*', multiEnd: '*/' },
+  };
 
 /**
  * String delimiters for various languages
@@ -348,7 +760,7 @@ export class Code extends VMobject {
     this._lines = expandedCode.split('\n');
 
     // Tokenize each line
-    this._tokenizedLines = this._lines.map(line => this._tokenizeLine(line));
+    this._tokenizedLines = this._lines.map((line) => this._tokenizeLine(line));
   }
 
   /**
@@ -373,7 +785,10 @@ export class Code extends VMobject {
       if (commentPattern.multiStart && line.substring(i).startsWith(commentPattern.multiStart)) {
         const endIdx = line.indexOf(commentPattern.multiEnd!, i + commentPattern.multiStart.length);
         if (endIdx !== -1) {
-          tokens.push({ type: 'comment', text: line.substring(i, endIdx + commentPattern.multiEnd!.length) });
+          tokens.push({
+            type: 'comment',
+            text: line.substring(i, endIdx + commentPattern.multiEnd!.length),
+          });
           i = endIdx + commentPattern.multiEnd!.length;
           continue;
         } else {
@@ -386,7 +801,10 @@ export class Code extends VMobject {
       let foundString = false;
       for (const delim of stringDelims) {
         if (line.substring(i).startsWith(delim)) {
-          const actualDelim = delim.length > 1 && !delim.startsWith('f') && !delim.startsWith('r') ? delim : delim.slice(-1);
+          const actualDelim =
+            delim.length > 1 && !delim.startsWith('f') && !delim.startsWith('r')
+              ? delim
+              : delim.slice(-1);
           const searchStart = i + delim.length;
           let endIdx = searchStart;
 
@@ -418,7 +836,9 @@ export class Code extends VMobject {
       if (foundString) continue;
 
       // Check for numbers
-      const numberMatch = line.substring(i).match(/^(0x[\da-fA-F]+|0b[01]+|0o[0-7]+|\d+\.?\d*(?:e[+-]?\d+)?)/);
+      const numberMatch = line
+        .substring(i)
+        .match(/^(0x[\da-fA-F]+|0b[01]+|0o[0-7]+|\d+\.?\d*(?:e[+-]?\d+)?)/);
       if (numberMatch && (i === 0 || !/[\w]/.test(line[i - 1]))) {
         tokens.push({ type: 'number', text: numberMatch[0] });
         i += numberMatch[0].length;
@@ -446,7 +866,9 @@ export class Code extends VMobject {
       }
 
       // Check for operators
-      const operatorMatch = line.substring(i).match(/^(===|!==|==|!=|<=|>=|&&|\|\||<<|>>|->|=>|[+\-*/%&|^~<>!=])/);
+      const operatorMatch = line
+        .substring(i)
+        .match(/^(===|!==|==|!=|<=|>=|&&|\|\||<<|>>|->|=>|[+\-*/%&|^~<>!=])/);
       if (operatorMatch) {
         tokens.push({ type: 'operator', text: operatorMatch[0] });
         i += operatorMatch[0].length;
@@ -454,7 +876,7 @@ export class Code extends VMobject {
       }
 
       // Check for punctuation
-      if (/^[(){}\[\];:,.]/.test(line[i])) {
+      if (/^[(){}[\];:,.]/.test(line[i])) {
         tokens.push({ type: 'punctuation', text: line[i] });
         i++;
         continue;
@@ -537,7 +959,9 @@ export class Code extends VMobject {
    * @param lineNumber - 1-based line number
    * @returns Object with line info or null if out of range
    */
-  getLineOfCode(lineNumber: number): { text: string; position: Vector3Tuple; tokens: Token[] } | null {
+  getLineOfCode(
+    lineNumber: number,
+  ): { text: string; position: Vector3Tuple; tokens: Token[] } | null {
     const index = lineNumber - 1;
     if (index < 0 || index >= this._lines.length) {
       return null;
@@ -549,7 +973,7 @@ export class Code extends VMobject {
 
     // Calculate line position relative to code block
     const lineY = scaledPadding + (index + 0.5) * scaledLineHeight;
-    const worldY = (this._worldHeight / 2) - (lineY / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
+    const worldY = this._worldHeight / 2 - (lineY / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
 
     return {
       text: this._lines[index],
@@ -565,7 +989,11 @@ export class Code extends VMobject {
    * @param color - Highlight color. Default: semi-transparent yellow
    * @returns this for chaining
    */
-  highlightLines(startLine: number, endLine: number, color: string = 'rgba(255, 255, 0, 0.3)'): this {
+  highlightLines(
+    startLine: number,
+    endLine: number,
+    color: string = 'rgba(255, 255, 0, 0.3)',
+  ): this {
     // Clear existing highlights
     this.clearHighlights();
 
@@ -578,12 +1006,13 @@ export class Code extends VMobject {
     const end = Math.max(1, Math.min(endLine, this._lines.length));
 
     // Calculate highlight dimensions
-    const highlightHeight = ((end - start + 1) * scaledLineHeight / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
+    const highlightHeight =
+      (((end - start + 1) * scaledLineHeight) / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
     const highlightWidth = this._worldWidth - 2 * (this._backgroundPadding * PIXEL_TO_WORLD);
 
     // Calculate position
     const topY = this._worldHeight / 2 - (scaledPadding / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
-    const startY = topY - ((start - 0.5) * scaledLineHeight / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
+    const startY = topY - (((start - 0.5) * scaledLineHeight) / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
     const centerY = startY - highlightHeight / 2;
 
     // Create highlight geometry
@@ -796,6 +1225,7 @@ export class Code extends VMobject {
 
     // Create texture from canvas
     this._texture = new THREE.CanvasTexture(this._canvas);
+    this._texture.colorSpace = THREE.SRGBColorSpace;
     this._texture.minFilter = THREE.LinearFilter;
     this._texture.magFilter = THREE.LinearFilter;
 

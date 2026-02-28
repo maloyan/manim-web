@@ -1074,8 +1074,9 @@ export class ScaleInPlace extends Animation {
   }
 
   override finish(): void {
-    this.mobject.scaleVector.copy(this._targetScale);
-    this.mobject._markDirty();
+    // Must call interpolate(1) instead of setting scaleVector directly,
+    // because interpolate also applies the center correction shift.
+    this.interpolate(1.0);
     super.finish();
   }
 }

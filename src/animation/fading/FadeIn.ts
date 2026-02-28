@@ -35,11 +35,12 @@ export class FadeIn extends Animation {
     // Start fully transparent
     this.mobject.opacity = 0;
 
-    // Apply shift: start at target + shift, animate towards target
+    // Apply shift: start at target - shift, animate towards target
+    // (matches Python Manim: mobject starts displaced opposite to shift direction)
     if (this._shift) {
-      this._startX = this._targetX + this._shift[0];
-      this._startY = this._targetY + this._shift[1];
-      this._startZ = this._targetZ + this._shift[2];
+      this._startX = this._targetX - this._shift[0];
+      this._startY = this._targetY - this._shift[1];
+      this._startZ = this._targetZ - this._shift[2];
       this.mobject.position.set(this._startX, this._startY, this._startZ);
     }
   }

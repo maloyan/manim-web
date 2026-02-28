@@ -273,9 +273,8 @@ export class DecimalNumber extends VMobject {
    * Build the CSS font string
    */
   protected _buildFontString(): string {
-    const weight = typeof this._fontWeight === 'number'
-      ? this._fontWeight.toString()
-      : this._fontWeight;
+    const weight =
+      typeof this._fontWeight === 'number' ? this._fontWeight.toString() : this._fontWeight;
     const size = Math.round(this._fontSize * RESOLUTION_SCALE);
     return `${weight} ${size}px ${this._fontFamily}`;
   }
@@ -371,6 +370,7 @@ export class DecimalNumber extends VMobject {
 
     // Create texture from canvas
     this._texture = new THREE.CanvasTexture(this._canvas);
+    this._texture.colorSpace = THREE.SRGBColorSpace;
     this._texture.minFilter = THREE.LinearFilter;
     this._texture.magFilter = THREE.LinearFilter;
 

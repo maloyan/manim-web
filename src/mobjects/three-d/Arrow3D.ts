@@ -132,21 +132,17 @@ export class Arrow3D extends Mobject {
       group.add(shaft);
     }
 
-    // Create flat triangle tip (2D, matching Python Manim's ArrowTriangleFilledTip)
-    const halfBase = this._tipRadius;
-    const halfHeight = this._tipLength / 2;
-    const shape = new THREE.Shape();
-    shape.moveTo(0, halfHeight);
-    shape.lineTo(-halfBase, -halfHeight);
-    shape.lineTo(halfBase, -halfHeight);
-    shape.closePath();
-    const tipGeometry = new THREE.ShapeGeometry(shape);
+    // Create 3D cone tip (visible from all viewing angles, unlike flat 2D triangles)
+    const tipGeometry = new THREE.ConeGeometry(
+      this._tipRadius,
+      this._tipLength,
+      this._radialSegments,
+    );
 
     const tipMaterial = new THREE.MeshBasicMaterial({
       color: this.color,
       opacity: this._opacity,
       transparent: this._opacity < 1,
-      side: THREE.DoubleSide,
     });
     const tip = new THREE.Mesh(tipGeometry, tipMaterial);
 

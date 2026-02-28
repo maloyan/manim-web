@@ -10,6 +10,7 @@ import {
   MED_SMALL_BUFF,
   PURPLE,
   RED,
+  RIGHT,
   Scale,
   ScaleInPlace,
   Shift,
@@ -79,14 +80,9 @@ async function movingZoomedSceneAround(scene: ZoomedScene) {
   scene.activateZooming();
 
   // Pop-out animation: display pops from frame position to its shifted position
-  await scene.play(
-    scene.getZoomedDisplayPopOutAnimation(),
-    unfoldCamera,
-  );
+  await scene.play(scene.getZoomedDisplayPopOutAnimation(), unfoldCamera);
 
-  // Use zoomedDisplay (parent) for positioning since displayFrame is a nested
-  // child whose world coords depend on parent transform being synced
-  zoomedCameraText.nextTo(zoomedDisplay, DOWN);
+  zoomedCameraText.nextTo(zoomedDisplayFrame, DOWN);
   await scene.play(new FadeIn(zoomedCameraText, { shift: UP }));
 
   // Scale frame and display non-uniformly
@@ -101,7 +97,7 @@ async function movingZoomedSceneAround(scene: ZoomedScene) {
   await scene.play(new ScaleInPlace(zoomedDisplay, { scaleFactor: 2 }));
   await scene.wait();
 
-  await scene.play(new Shift(frame, { direction: scaleVec(2.5, DOWN) }));
+  await scene.play(new Shift(frame, { direction: scaleVec(2.5, RIGHT) }));
   await scene.wait();
 
   // Reverse pop-out: move display back to frame

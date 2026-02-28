@@ -256,9 +256,8 @@ export class Text extends VMobject {
    */
   protected _buildFontString(): string {
     const style = this._fontStyle === 'italic' ? 'italic' : 'normal';
-    const weight = typeof this._fontWeight === 'number'
-      ? this._fontWeight.toString()
-      : this._fontWeight;
+    const weight =
+      typeof this._fontWeight === 'number' ? this._fontWeight.toString() : this._fontWeight;
     const size = Math.round(this._fontSize * RESOLUTION_SCALE);
     return `${style} ${weight} ${size}px ${this._fontFamily}`;
   }
@@ -380,7 +379,7 @@ export class Text extends VMobject {
     text: string,
     startX: number,
     y: number,
-    _fontSize: number
+    _fontSize: number,
   ): void {
     if (!this._ctx) return;
 
@@ -449,6 +448,7 @@ export class Text extends VMobject {
 
     // Create texture from canvas
     this._texture = new THREE.CanvasTexture(this._canvas);
+    this._texture.colorSpace = THREE.SRGBColorSpace;
     this._texture.minFilter = THREE.LinearFilter;
     this._texture.magFilter = THREE.LinearFilter;
 
