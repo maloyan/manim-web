@@ -543,6 +543,14 @@ export {
   stepFunction,
   reverse,
   compose,
+  slowInto,
+  squishRateFunc,
+  thereAndBackWithPause,
+  runningStart,
+  wiggle as wiggleRate,
+  notQuiteThere,
+  lingering,
+  exponentialDecay,
 } from './rate-functions';
 
 // Interaction - UI Controls

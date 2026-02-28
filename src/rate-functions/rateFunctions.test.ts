@@ -18,6 +18,14 @@ import {
   stepFunction,
   reverse,
   compose,
+  slowInto,
+  squishRateFunc,
+  thereAndBackWithPause,
+  runningStart,
+  wiggle,
+  notQuiteThere,
+  lingering,
+  exponentialDecay,
 } from './index';
 
 const EPSILON = 1e-6;
@@ -223,6 +231,32 @@ describe('rate functions', () => {
       expect(doubleSmooth(0)).toBeCloseTo(0, 5);
       expect(doubleSmooth(1)).toBeCloseTo(1, 5);
     });
+
+    it('should map 0.5 to 0.5 (midpoint)', () => {
+      expect(doubleSmooth(0.5)).toBeCloseTo(0.5, 5);
+    });
+
+    it('should match Python Manim values', () => {
+      // doubleSmooth(0.25) = 0.5 * smooth(0.5) = 0.5 * 0.5 = 0.25
+      expect(doubleSmooth(0.25)).toBeCloseTo(0.25, 5);
+      // doubleSmooth(0.75) = 0.5 * (1 + smooth(0.5)) = 0.5 * 1.5 = 0.75
+      expect(doubleSmooth(0.75)).toBeCloseTo(0.75, 5);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(doubleSmooth(t2)).toBeGreaterThanOrEqual(doubleSmooth(t1) - EPSILON);
+      }
+    });
+
+    it('should be symmetric: doubleSmooth(t) + doubleSmooth(1-t) ≈ 1', () => {
+      for (const t of [0.1, 0.2, 0.3, 0.4]) {
+        expect(doubleSmooth(t) + doubleSmooth(1 - t)).toBeCloseTo(1, 5);
+      }
+    });
   });
 
   describe('stepFunction', () => {
@@ -278,6 +312,243 @@ describe('rate functions', () => {
     });
   });
 
+  describe('slowInto', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      expect(slowInto(0)).toBe(0);
+      expect(slowInto(1)).toBe(1);
+    });
+
+    it('should match Python Manim: sqrt(1 - (1-t)^2)', () => {
+      expect(slowInto(0.5)).toBeCloseTo(0.86602540378, 5);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(slowInto(t2)).toBeGreaterThanOrEqual(slowInto(t1) - EPSILON);
+      }
+    });
+
+    it('should decelerate into the end (values above linear)', () => {
+      expect(slowInto(0.1)).toBeGreaterThan(0.1);
+      expect(slowInto(0.3)).toBeGreaterThan(0.3);
+    });
+  });
+
+  describe('squishRateFunc', () => {
+    it('should clamp below a to func(0)', () => {
+      const squished = squishRateFunc(smooth, 0.2, 0.8);
+      expect(squished(0)).toBeCloseTo(smooth(0), 5);
+      expect(squished(0.1)).toBeCloseTo(smooth(0), 5);
+      expect(squished(0.19)).toBeCloseTo(smooth(0), 5);
+    });
+
+    it('should clamp above b to func(1)', () => {
+      const squished = squishRateFunc(smooth, 0.2, 0.8);
+      expect(squished(0.81)).toBeCloseTo(smooth(1), 5);
+      expect(squished(0.9)).toBeCloseTo(smooth(1), 5);
+      expect(squished(1)).toBeCloseTo(smooth(1), 5);
+    });
+
+    it('should remap [a, b] to [0, 1]', () => {
+      const squished = squishRateFunc(smooth, 0.2, 0.8);
+      // midpoint of [0.2, 0.8] is 0.5 -> func((0.5-0.2)/0.6) = func(0.5)
+      expect(squished(0.5)).toBeCloseTo(smooth(0.5), 5);
+    });
+
+    it('should work with linear to verify remapping', () => {
+      const squished = squishRateFunc(linear, 0.25, 0.75);
+      expect(squished(0.25)).toBeCloseTo(0, 5);
+      expect(squished(0.5)).toBeCloseTo(0.5, 5);
+      expect(squished(0.75)).toBeCloseTo(1, 5);
+    });
+
+    it('should default to a=0, b=1 (identity)', () => {
+      const squished = squishRateFunc(smooth);
+      expect(squished(0.5)).toBeCloseTo(smooth(0.5), 5);
+    });
+  });
+
+  describe('thereAndBackWithPause', () => {
+    it('should map 0 to ~0 and 1 to ~0 with default pause', () => {
+      const fn = thereAndBackWithPause();
+      expect(fn(0)).toBeCloseTo(0, 5);
+      expect(fn(1)).toBeCloseTo(0, 5);
+    });
+
+    it('should hold at 1 during the pause window', () => {
+      const fn = thereAndBackWithPause();
+      // pause is [0.5 - 1/6, 0.5 + 1/6] ≈ [0.333, 0.667]
+      expect(fn(0.4)).toBeCloseTo(1, 5);
+      expect(fn(0.5)).toBeCloseTo(1, 5);
+      expect(fn(0.6)).toBeCloseTo(1, 5);
+    });
+
+    it('should be symmetric around t=0.5', () => {
+      const fn = thereAndBackWithPause();
+      expect(fn(0.25)).toBeCloseTo(fn(0.75), 5);
+    });
+
+    it('should be continuous at pause boundaries', () => {
+      const fn = thereAndBackWithPause();
+      // At t=0.25 (in the going segment), should be close to 1
+      expect(fn(0.25)).toBeCloseTo(0.929896, 4);
+      // At boundary t≈0.333, should be ~1 (continuous with pause)
+      expect(fn(0.333)).toBeCloseTo(1, 2);
+    });
+
+    it('should support custom pause ratio', () => {
+      const fn = thereAndBackWithPause(0.5);
+      // pause is [0.25, 0.75]
+      expect(fn(0.3)).toBeCloseTo(1, 5);
+      expect(fn(0.5)).toBeCloseTo(1, 5);
+      expect(fn(0.7)).toBeCloseTo(1, 5);
+    });
+  });
+
+  describe('runningStart', () => {
+    it('should map 0 to 0 and 1 to 1', () => {
+      const fn = runningStart();
+      expect(fn(0)).toBeCloseTo(0, 5);
+      expect(fn(1)).toBeCloseTo(1, 5);
+    });
+
+    it('should go negative in the middle with default pullFactor', () => {
+      const fn = runningStart();
+      // At t=0.5, value should be -0.125
+      expect(fn(0.5)).toBeCloseTo(-0.125, 5);
+    });
+
+    it('should match Python Manim numerical values', () => {
+      const fn = runningStart();
+      expect(fn(0.25)).toBeCloseTo(-0.16015625, 5);
+      expect(fn(0.75)).toBeCloseTo(0.45703125, 5);
+    });
+
+    it('should support custom pullFactor', () => {
+      const fn = runningStart(0);
+      // With pullFactor=0, control points are [0,0,0,0,1,1]
+      // Should still go from 0 to 1 but without pullback
+      expect(fn(0)).toBeCloseTo(0, 5);
+      expect(fn(1)).toBeCloseTo(1, 5);
+      expect(fn(0.5)).toBeGreaterThanOrEqual(0); // no negative values
+    });
+  });
+
+  describe('wiggle', () => {
+    it('should map 0 to 0 and 1 to ~0', () => {
+      const fn = wiggle();
+      expect(fn(0)).toBeCloseTo(0, 5);
+      expect(fn(1)).toBeCloseTo(0, 5);
+    });
+
+    it('should oscillate with default wiggles=2', () => {
+      const fn = wiggle();
+      // At t=0.25: thereAndBack(0.25)*sin(pi/2) = 0.5*1 = 0.5
+      expect(fn(0.25)).toBeCloseTo(0.5, 5);
+      // At t=0.5: thereAndBack(0.5)*sin(pi) = 1*0 ≈ 0
+      expect(fn(0.5)).toBeCloseTo(0, 5);
+      // At t=0.75: thereAndBack(0.75)*sin(3pi/2) = 0.5*(-1) = -0.5
+      expect(fn(0.75)).toBeCloseTo(-0.5, 5);
+    });
+
+    it('should support custom wiggles count', () => {
+      const fn = wiggle(1);
+      // At t=0.5: thereAndBack(0.5)*sin(pi/2*... wait, sin(1*pi*0.5) = sin(pi/2) = 1
+      // thereAndBack(0.5) = 1
+      // So wiggle(1)(0.5) = 1*1 = 1
+      expect(fn(0.5)).toBeCloseTo(1, 5);
+    });
+  });
+
+  describe('notQuiteThere', () => {
+    it('should map 0 to 0 with defaults', () => {
+      const fn = notQuiteThere();
+      expect(fn(0)).toBeCloseTo(0, 5);
+    });
+
+    it('should only reach proportion of 1 at t=1', () => {
+      const fn = notQuiteThere();
+      expect(fn(1)).toBeCloseTo(0.7, 5);
+    });
+
+    it('should match Python Manim values at midpoint', () => {
+      const fn = notQuiteThere();
+      // 0.7 * smooth(0.5) = 0.7 * 0.5 = 0.35
+      expect(fn(0.5)).toBeCloseTo(0.35, 5);
+    });
+
+    it('should support custom function and proportion', () => {
+      const fn = notQuiteThere(linear, 0.5);
+      expect(fn(0.5)).toBeCloseTo(0.25, 5);
+      expect(fn(1)).toBeCloseTo(0.5, 5);
+    });
+  });
+
+  describe('lingering', () => {
+    it('should map 0 to ~0', () => {
+      expect(lingering(0)).toBeCloseTo(0, 5);
+    });
+
+    it('should reach 1 before t=1 and stay there', () => {
+      // lingering = squishRateFunc(smooth, 0, 0.8)
+      // At t=0.8, smooth(1) ≈ 1
+      expect(lingering(0.8)).toBeCloseTo(1, 5);
+      expect(lingering(0.9)).toBeCloseTo(1, 5);
+      expect(lingering(1)).toBeCloseTo(1, 5);
+    });
+
+    it('should match Python Manim at t=0.4', () => {
+      // lingering(0.4) = smooth(0.4/0.8) = smooth(0.5) = 0.5
+      expect(lingering(0.4)).toBeCloseTo(0.5, 5);
+    });
+
+    it('should be monotonically increasing', () => {
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(lingering(t2)).toBeGreaterThanOrEqual(lingering(t1) - EPSILON);
+      }
+    });
+  });
+
+  describe('exponentialDecay', () => {
+    it('should map 0 to 0', () => {
+      const fn = exponentialDecay();
+      expect(fn(0)).toBe(0);
+    });
+
+    it('should approach 1 as t increases', () => {
+      const fn = exponentialDecay();
+      expect(fn(1)).toBeCloseTo(1, 3);
+    });
+
+    it('should match Python Manim values with default halfLife=0.1', () => {
+      const fn = exponentialDecay();
+      expect(fn(0.1)).toBeCloseTo(0.63212055882, 5);
+      expect(fn(0.5)).toBeCloseTo(0.993262053, 5);
+    });
+
+    it('should support custom halfLife', () => {
+      const fn = exponentialDecay(0.5);
+      // 1 - exp(-0.5/0.5) = 1 - exp(-1) ≈ 0.6321
+      expect(fn(0.5)).toBeCloseTo(0.63212055882, 5);
+    });
+
+    it('should be monotonically increasing', () => {
+      const fn = exponentialDecay();
+      const steps = 20;
+      for (let i = 0; i < steps; i++) {
+        const t1 = i / steps;
+        const t2 = (i + 1) / steps;
+        expect(fn(t2)).toBeGreaterThanOrEqual(fn(t1) - EPSILON);
+      }
+    });
+  });
+
   describe('all standard easing functions boundary behavior', () => {
     const standardFunctions = [
       { name: 'linear', fn: linear },
@@ -294,6 +565,8 @@ describe('rate functions', () => {
       { name: 'rushInto', fn: rushInto },
       { name: 'rushFrom', fn: rushFrom },
       { name: 'doubleSmooth', fn: doubleSmooth },
+      { name: 'slowInto', fn: slowInto },
+      { name: 'lingering', fn: lingering },
     ];
 
     for (const { name, fn } of standardFunctions) {
