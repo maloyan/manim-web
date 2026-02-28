@@ -551,6 +551,44 @@ export {
   notQuiteThere,
   lingering,
   exponentialDecay,
+  // Smoothstep family
+  smoothstep,
+  smootherstep,
+  smoothererstep,
+  // Sine easing
+  easeInSine,
+  easeOutSine,
+  easeInOutSine,
+  // Quad InOut
+  easeInOutQuad,
+  // Quart easing
+  easeInQuart,
+  easeOutQuart,
+  easeInOutQuart,
+  // Quint easing
+  easeInQuint,
+  easeOutQuint,
+  easeInOutQuint,
+  // Expo InOut
+  easeInOutExpo,
+  // Circ easing
+  easeInCirc,
+  easeOutCirc,
+  easeInOutCirc,
+  // Back easing
+  easeInBack,
+  easeOutBack,
+  easeInOutBack,
+  // Elastic easing
+  easeInElastic,
+  easeOutElastic,
+  easeInOutElastic,
+  // Bounce InOut
+  easeInOutBounce,
+  // Python Manim-compatible aliases
+  easeInCubic,
+  easeOutCubic,
+  easeInOutCubic,
 } from './rate-functions';
 
 // Interaction - UI Controls
