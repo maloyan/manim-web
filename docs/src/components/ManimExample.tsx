@@ -28,6 +28,7 @@ const placeholderStyle: React.CSSProperties = {
 
 function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<any>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   // Bidirectional observer — create on enter, dispose on leave
@@ -75,6 +76,8 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
           return;
         }
 
+        sceneRef.current = scene;
+
         // Listen for context loss — mark not visible so re-init can happen
         const canvas = container.querySelector('canvas');
         const onContextLost = () => {
@@ -104,6 +107,7 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
         } catch {
           /* ignore */
         }
+        sceneRef.current = null;
       } catch (e) {
         console.error('Scene init error:', e);
       }
@@ -111,6 +115,16 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
 
     return () => {
       cancelled = true;
+      // Dispose scene immediately to free WebGL context and cancel pending
+      // play()/wait() promises, rather than waiting for the async loop to exit.
+      if (sceneRef.current) {
+        try {
+          sceneRef.current.dispose();
+        } catch {
+          /* ignore */
+        }
+        sceneRef.current = null;
+      }
       // Clear old canvas so a fresh one is created on re-init
       container.innerHTML = '';
     };
