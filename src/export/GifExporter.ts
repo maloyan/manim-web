@@ -102,8 +102,7 @@ export class GifExporter {
         resolve(blob);
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (gif as any).on('abort', () => {
+      (gif as unknown as { on: (event: string, cb: () => void) => void }).on('abort', () => {
         clearTimeout(timeout);
         URL.revokeObjectURL(workerBlobUrl);
         reject(new Error('GIF encoding was aborted'));

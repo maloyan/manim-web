@@ -34,6 +34,8 @@ export class PlayerUI {
   private _fullscreenBtn: HTMLButtonElement;
   private _exportBtn: HTMLButtonElement;
   private _exportMenu: HTMLElement | null = null;
+  private _exportMenuBackdrop: HTMLElement | null = null;
+  private _exportBtnWrapper: HTMLElement | null = null;
   private _callbacks: PlayerUICallbacks;
   private _autoHideMs: number;
   private _hideTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -93,9 +95,7 @@ export class PlayerUI {
     rightGroup.appendChild(this._timeDisplay);
     rightGroup.appendChild(this._speedSelect);
     // Export button is wrapped in a positioned container for the dropdown menu
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const exportWrapper = (this._exportBtn as any)._wrapper as HTMLElement;
-    rightGroup.appendChild(exportWrapper);
+    rightGroup.appendChild(this._exportBtnWrapper!);
     rightGroup.appendChild(this._fullscreenBtn);
 
     // Top row: progress bar spanning full width
@@ -381,8 +381,7 @@ export class PlayerUI {
     });
 
     wrapper.appendChild(btn);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (btn as any)._wrapper = wrapper;
+    this._exportBtnWrapper = wrapper;
     return btn;
   }
 
@@ -454,17 +453,15 @@ export class PlayerUI {
     }
 
     this._exportMenu = menu;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (menu as any)._backdrop = backdrop;
+    this._exportMenuBackdrop = backdrop;
     document.body.appendChild(backdrop);
     document.body.appendChild(menu);
   }
 
   private _closeExportMenu(): void {
     if (this._exportMenu) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const backdrop = (this._exportMenu as any)._backdrop as HTMLElement;
-      backdrop?.remove();
+      this._exportMenuBackdrop?.remove();
+      this._exportMenuBackdrop = null;
       this._exportMenu.remove();
       this._exportMenu = null;
     }

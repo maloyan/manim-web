@@ -39,5 +39,5 @@ npm run docs              # Generate example docs + build Docusaurus site
 
 - ESLint + Prettier enforced via pre-commit hook (husky + lint-staged)
 - Max 500 lines per file (eslint `max-lines` rule)
-- No `any` types (`@typescript-eslint/no-explicit-any`)
+- No `any` types (`@typescript-eslint/no-explicit-any`) — use proper types, never `eslint-disable`
 - camelCase naming convention for methods/properties
