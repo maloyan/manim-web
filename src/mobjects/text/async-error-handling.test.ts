@@ -27,6 +27,7 @@ describe('MathTex async error propagation', () => {
       height: 0,
       isRendering: false,
       renderPromise: null,
+      renderError: null,
     };
     tex._isMultiPart = false;
 
@@ -50,6 +51,7 @@ describe('MathTex async error propagation', () => {
       height: 0,
       isRendering: false,
       renderPromise: null,
+      renderError: null,
     };
     tex._isMultiPart = false;
 
@@ -75,6 +77,7 @@ describe('MathTexSVG async error propagation', () => {
     // Create a MathTexSVG with an intercepted prototype to prevent initial render
     const tex = Object.create(MathTexSVG.prototype);
     tex._renderPromise = null;
+    tex._renderError = null;
 
     // Override _render to simulate a failure
     tex._render = vi.fn().mockRejectedValue(new Error('simulated SVG render failure'));

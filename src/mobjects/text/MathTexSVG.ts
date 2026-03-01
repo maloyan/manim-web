@@ -54,6 +54,8 @@ export class MathTexSVG extends VGroup {
   protected _parts: VGroup[] = [];
   /** Promise that resolves when rendering is complete */
   protected _renderPromise: Promise<void> | null = null;
+  /** Error from rendering, if any */
+  protected _renderError: Error | null = null;
 
   constructor(options: MathTexSVGOptions) {
     super();
@@ -100,6 +102,9 @@ export class MathTexSVG extends VGroup {
   async waitForRender(): Promise<void> {
     if (this._renderPromise) {
       await this._renderPromise;
+    }
+    if (this._renderError) {
+      throw this._renderError;
     }
   }
 
@@ -173,7 +178,7 @@ export class MathTexSVG extends VGroup {
       })
       .catch((error) => {
         console.error('MathTexSVG rendering error:', error);
-        throw error;
+        this._renderError = error instanceof Error ? error : new Error(String(error));
       });
   }
 

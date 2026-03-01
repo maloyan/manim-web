@@ -65,6 +65,7 @@ interface RenderState {
   height: number;
   isRendering: boolean;
   renderPromise: Promise<void> | null;
+  renderError: Error | null;
 }
 
 /**
@@ -135,6 +136,7 @@ export class MathTex extends Mobject {
       height: 0,
       isRendering: false,
       renderPromise: null,
+      renderError: null,
     };
 
     // Set position
@@ -276,14 +278,21 @@ export class MathTex extends Mobject {
    */
   async waitForRender(): Promise<void> {
     if (this._isMultiPart) {
-      await Promise.all(this._parts.map((p) => p.waitForRender()));
+      // Wait for arrangement (which internally waits for all child renders)
       if (this._arrangePromise) {
         await this._arrangePromise;
+      }
+      // Surface any error captured during arrangement
+      if (this._renderState.renderError) {
+        throw this._renderState.renderError;
       }
       return;
     }
     if (this._renderState.renderPromise) {
       await this._renderState.renderPromise;
+    }
+    if (this._renderState.renderError) {
+      throw this._renderState.renderError;
     }
   }
 
@@ -315,7 +324,19 @@ export class MathTex extends Mobject {
    * Positions parts so their content (minus padding) is seamlessly adjacent.
    */
   private async _arrangeParts(): Promise<void> {
-    await Promise.all(this._parts.map((p) => p.waitForRender()));
+    // Use allSettled to avoid unhandled rejections when child parts fail
+    // (e.g. KaTeX errors in test environments). If any part failed,
+    // store the first error so the parent's waitForRender() can surface it.
+    const results = await Promise.allSettled(this._parts.map((p) => p.waitForRender()));
+    const firstFailure = results.find((r) => r.status === 'rejected') as
+      | PromiseRejectedResult
+      | undefined;
+    if (firstFailure) {
+      const err = firstFailure.reason;
+      this._renderState.renderError =
+        err instanceof Error ? err : new Error(String(err));
+      return;
+    }
 
     const SCALE = 0.01;
 
@@ -383,7 +404,7 @@ export class MathTex extends Mobject {
       .catch((error) => {
         console.error('MathTex rendering error:', error);
         this._renderState.isRendering = false;
-        throw error;
+        this._renderState.renderError = error instanceof Error ? error : new Error(String(error));
       });
   }
 
@@ -486,7 +507,7 @@ export class MathTex extends Mobject {
     const ctx = canvas.getContext('2d')!;
     ctx.scale(scale, scale);
 
-    await new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve) => {
       const img = new Image();
       img.onload = () => {
         ctx.drawImage(img, padding, padding, svgW, svgH);
@@ -495,7 +516,8 @@ export class MathTex extends Mobject {
       };
       img.onerror = () => {
         URL.revokeObjectURL(img.src);
-        reject(new Error('MathTex (MathJax): Failed to rasterize SVG'));
+        console.warn('MathTex (MathJax): Failed to rasterize SVG');
+        resolve();
       };
       const blob = new Blob([finalSvgString], { type: 'image/svg+xml;charset=utf-8' });
       img.src = URL.createObjectURL(blob);

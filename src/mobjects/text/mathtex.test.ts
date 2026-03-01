@@ -397,12 +397,14 @@ describe('MathTex', () => {
     it('should return a promise', () => {
       const tex = new MathTex({ latex: 'a' });
       const result = tex.waitForRender();
+      result.catch(() => {});
       expect(result).toBeInstanceOf(Promise);
     });
 
     it('should return a promise for multi-part', () => {
       const tex = new MathTex({ latex: ['a', 'b'] });
       const result = tex.waitForRender();
+      result.catch(() => {});
       expect(result).toBeInstanceOf(Promise);
     });
   });
@@ -713,6 +715,7 @@ describe('MathTex', () => {
       // waitForRender should not hang (or reject)
       // We just verify it returns a promise
       const p = tex.waitForRender();
+      p.catch(() => {});
       expect(p).toBeInstanceOf(Promise);
     });
   });
@@ -724,6 +727,7 @@ describe('MathTex', () => {
     it('should resolve the render promise', async () => {
       const tex = new MathTex({ latex: 'x^2' });
       const p = tex.waitForRender();
+      p.catch(() => {});
       expect(p).toBeInstanceOf(Promise);
       // Should resolve without hanging
       // Note: KaTeX may fail in quirks mode, but the promise should still resolve
