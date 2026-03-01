@@ -40,6 +40,77 @@ import VectorArrowExample from '@site/src/components/examples/VectorArrowExample
 
 Interactive examples showing what you can build with manim-web. Each example includes a live animation and source code.
 
+## Integrated Player
+
+A full-featured playback controller with play/pause, segment navigation, timeline scrubbing, speed control, fullscreen, and export. Use <kbd>Space</kbd> to play/pause, <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> for segments, <kbd>Shift+&larr;/&rarr;</kbd> to scrub, and <kbd>F</kbd> for fullscreen.
+
+<PlayerExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Player,
+  Circle,
+  Square,
+  Triangle,
+  Create,
+  Transform,
+  FadeIn,
+  FadeOut,
+  Indicate,
+  Rotate,
+  BLACK,
+  BLUE,
+  RED,
+  GREEN,
+  YELLOW,
+} from 'manim-web';
+
+const player = new Player(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+player.sequence(async (scene) => {
+  // Create a blue circle
+  const circle = new Circle({ radius: 1.5, color: BLUE });
+  await scene.play(new Create(circle));
+
+  await scene.wait(0.5);
+
+  // Transform to red square
+  const square = new Square({ sideLength: 3, color: RED });
+  await scene.play(new Transform(circle, square));
+
+  // Indicate
+  await scene.play(new Indicate(circle));
+
+  // Transform to green triangle
+  const triangle = new Triangle({ color: GREEN });
+  triangle.scale(2);
+  await scene.play(new Transform(circle, triangle));
+
+  // Rotate 180°
+  await scene.play(new Rotate(circle, { angle: Math.PI }));
+
+  // Fade out
+  await scene.play(new FadeOut(circle));
+
+  // Bring in a yellow circle
+  const circle2 = new Circle({ radius: 1, color: YELLOW });
+  await scene.play(new FadeIn(circle2));
+
+  await scene.wait(1);
+});
+```
+
+</details>
+
+**Learn More:** [**Player**](/api/classes/Player) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square) · [**Triangle**](/api/classes/Triangle) · [**Create**](/api/classes/Create) · [**Transform**](/api/classes/Transform) · [**Indicate**](/api/classes/Indicate) · [**Rotate**](/api/classes/Rotate)
+
 ## Manim Ce Logo
 
 Creates the Manim Community Edition logo using a large blackboard-bold M, a circle, square, and triangle in signature colors, all composed into a VGroup.
@@ -2191,74 +2262,3 @@ await scene.export('animation.gif', {
 </details>
 
 **Learn More:** [**Scene**](/api/classes/Scene) · [**GifExporter**](/api/classes/GifExporter) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square) · [**Create**](/api/classes/Create) · [**Transform**](/api/classes/Transform) · [**FadeOut**](/api/classes/FadeOut)
-
-## Integrated Player
-
-A full-featured playback controller with play/pause, segment navigation, timeline scrubbing, speed control, fullscreen, and export. Use <kbd>Space</kbd> to play/pause, <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> for segments, <kbd>Shift+&larr;/&rarr;</kbd> to scrub, and <kbd>F</kbd> for fullscreen.
-
-<PlayerExample />
-
-<details>
-<summary>Source Code</summary>
-
-```typescript
-import {
-  Player,
-  Circle,
-  Square,
-  Triangle,
-  Create,
-  Transform,
-  FadeIn,
-  FadeOut,
-  Indicate,
-  Rotate,
-  BLACK,
-  BLUE,
-  RED,
-  GREEN,
-  YELLOW,
-} from 'manim-web';
-
-const player = new Player(document.getElementById('container'), {
-  width: 800,
-  height: 450,
-  backgroundColor: BLACK,
-});
-
-player.sequence(async (scene) => {
-  // Create a blue circle
-  const circle = new Circle({ radius: 1.5, color: BLUE });
-  await scene.play(new Create(circle));
-
-  await scene.wait(0.5);
-
-  // Transform to red square
-  const square = new Square({ sideLength: 3, color: RED });
-  await scene.play(new Transform(circle, square));
-
-  // Indicate
-  await scene.play(new Indicate(circle));
-
-  // Transform to green triangle
-  const triangle = new Triangle({ color: GREEN });
-  triangle.scale(2);
-  await scene.play(new Transform(circle, triangle));
-
-  // Rotate 180°
-  await scene.play(new Rotate(circle, { angle: Math.PI }));
-
-  // Fade out
-  await scene.play(new FadeOut(circle));
-
-  // Bring in a yellow circle
-  const circle2 = new Circle({ radius: 1, color: YELLOW });
-  await scene.play(new FadeIn(circle2));
-
-  await scene.wait(1);
-});
-```
-
-</details>
-
-**Learn More:** [**Player**](/api/classes/Player) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square) · [**Triangle**](/api/classes/Triangle) · [**Create**](/api/classes/Create) · [**Transform**](/api/classes/Transform) · [**Indicate**](/api/classes/Indicate) · [**Rotate**](/api/classes/Rotate)
