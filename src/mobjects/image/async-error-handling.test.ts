@@ -7,6 +7,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
+import * as THREE from 'three';
 import { ImageMobject } from './index';
 
 describe('ImageMobject async error propagation', () => {
@@ -63,5 +64,25 @@ describe('ImageMobject async error propagation', () => {
 
     // Suppress unhandled rejection
     img.waitForLoad().catch(() => {});
+  });
+
+  it('should reject via onError callback in _loadTexture', async () => {
+    // Mock TextureLoader.load to call the onError callback
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const loadSpy = vi.spyOn(THREE.TextureLoader.prototype, 'load').mockImplementation(
+      (_url: string, _onLoad?: any, _onProgress?: any, onError?: any) => {
+        // Simulate async error
+        setTimeout(() => onError?.('network timeout'), 0);
+        return new THREE.Texture();
+      },
+    );
+
+    const img = new ImageMobject({ source: 'https://bad-url.example.com/image.png' });
+
+    await expect(img.waitForLoad()).rejects.toThrow('Failed to load image');
+    expect(errorSpy).toHaveBeenCalledWith('Failed to load image:', 'network timeout');
+
+    loadSpy.mockRestore();
+    errorSpy.mockRestore();
   });
 });
