@@ -121,6 +121,13 @@ export class PlayerUI {
     container.addEventListener('mousemove', this._onMouseMove);
     container.addEventListener('mouseleave', this._onMouseLeave);
 
+    // Click on canvas area to toggle play/pause (skip if clicking controls)
+    container.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('[data-player-bar]')) return;
+      this._callbacks.onPlayPause();
+    });
+
     // Progress bar drag
     this._onProgressDown = (e) => this._startDrag(e);
     this._onProgressMove = (e) => this._moveDrag(e);
