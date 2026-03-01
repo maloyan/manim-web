@@ -67,9 +67,51 @@ export class VMobject extends Mobject {
   static _frameWidth: number = 14;
 
   /**
+   * Per-instance renderer context (set by Scene when VMobject is added).
+   * When non-null these override the class-level statics so that multiple
+   * Scene instances do not corrupt each other's stroke-width calculations.
+   */
+  _sceneRendererWidth: number | null = null;
+  _sceneRendererHeight: number | null = null;
+  _sceneFrameWidth: number | null = null;
+
+  /** Get effective renderer width (per-instance override or static fallback) */
+  private _getRendererWidth(): number {
+    return this._sceneRendererWidth ?? VMobject._rendererWidth;
+  }
+
+  /** Get effective renderer height (per-instance override or static fallback) */
+  private _getRendererHeight(): number {
+    return this._sceneRendererHeight ?? VMobject._rendererHeight;
+  }
+
+  /** Get effective frame width (per-instance override or static fallback) */
+  private _getFrameWidth(): number {
+    return this._sceneFrameWidth ?? VMobject._frameWidth;
+  }
+
+  /** Instance-level linewidth computation using per-instance scene context */
+  private _computeLinewidth(strokeWidth: number): number {
+    return strokeWidth * 0.01 * (this._getRendererWidth() / this._getFrameWidth());
+  }
+
+  /**
+   * Set per-instance scene context for multi-scene support.
+   * Called by Scene when a VMobject is added or the scene is resized.
+   */
+  _setSceneContext(rendererWidth: number, rendererHeight: number, frameWidth: number): void {
+    this._sceneRendererWidth = rendererWidth;
+    this._sceneRendererHeight = rendererHeight;
+    this._sceneFrameWidth = frameWidth;
+  }
+
+  /**
    * Convert Manim-compatible strokeWidth to LineMaterial linewidth in pixels.
    * Python Manim uses cairo_line_width_multiple=0.01, so:
    *   linewidth_px = strokeWidth * 0.01 * (rendererWidth / frameWidth)
+   *
+   * NOTE: This static method uses class-level statics. For multi-scene
+   * correctness, internal code should use the instance method _computeLinewidth().
    */
   static _toLinewidth(strokeWidth: number): number {
     return strokeWidth * 0.01 * (VMobject._rendererWidth / VMobject._frameWidth);
@@ -723,10 +765,10 @@ export class VMobject extends Mobject {
     // Create stroke material using LineMaterial for thick strokes
     this._strokeMaterial = new LineMaterial({
       color: new THREE.Color(this.color).getHex(),
-      linewidth: VMobject._toLinewidth(this.strokeWidth),
+      linewidth: this._computeLinewidth(this.strokeWidth),
       opacity: this._opacity,
       transparent: this._opacity < 1,
-      resolution: new THREE.Vector2(VMobject._rendererWidth, VMobject._rendererHeight),
+      resolution: new THREE.Vector2(this._getRendererWidth(), this._getRendererHeight()),
       dashed: false,
     });
 
@@ -1301,9 +1343,9 @@ export class VMobject extends Mobject {
       this._strokeMaterial.color.set(this.color);
       this._strokeMaterial.opacity = this._opacity;
       this._strokeMaterial.transparent = this._opacity < 1;
-      this._strokeMaterial.linewidth = VMobject._toLinewidth(this.strokeWidth);
+      this._strokeMaterial.linewidth = this._computeLinewidth(this.strokeWidth);
       // Update resolution for proper line width rendering
-      this._strokeMaterial.resolution.set(VMobject._rendererWidth, VMobject._rendererHeight);
+      this._strokeMaterial.resolution.set(this._getRendererWidth(), this._getRendererHeight());
     }
 
     if (this._fillMaterial) {
@@ -1322,8 +1364,8 @@ export class VMobject extends Mobject {
     // Keep BezierRenderer resolution in sync
     if (VMobject._sharedBezierRenderer) {
       VMobject._sharedBezierRenderer.updateResolution(
-        VMobject._rendererWidth,
-        VMobject._rendererHeight,
+        this._getRendererWidth(),
+        this._getRendererHeight(),
         typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1,
       );
     }
