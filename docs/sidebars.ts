@@ -4,6 +4,7 @@ const sidebars: SidebarsConfig = {
   docs: [
     'intro',
     'getting-started',
+    'py2ts-converter',
     'examples',
     {
       type: 'link',
