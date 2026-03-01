@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Mobject, UP, LEFT, RIGHT, UL, UR, DL, DR } from './Mobject';
 import {
   VMobject,
@@ -2897,6 +2897,24 @@ describe('VMobject.dispose', () => {
       [3, 0, 0],
     ]);
     expect(() => v.dispose()).not.toThrow();
+  });
+
+  it('disposes _cachedLine2 geometry before nulling', () => {
+    const v = new VMobject();
+    v.setPoints([
+      [0, 0, 0],
+      [1, 0, 0],
+      [2, 0, 0],
+      [3, 0, 0],
+    ]);
+    v.strokeWidth = 2;
+    v._syncToThree();
+    const cachedLine = (v as any)._cachedLine2;
+    expect(cachedLine).not.toBeNull();
+    const disposeSpy = vi.spyOn(cachedLine.geometry, 'dispose');
+    v.dispose();
+    expect(disposeSpy).toHaveBeenCalled();
+    expect((v as any)._cachedLine2).toBeNull();
   });
 });
 

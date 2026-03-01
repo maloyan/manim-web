@@ -1403,7 +1403,10 @@ export class VMobject extends Mobject {
   override dispose(): void {
     this._strokeMaterial?.dispose();
     this._fillMaterial?.dispose();
-    this._cachedLine2 = null;
+    if (this._cachedLine2) {
+      this._cachedLine2.geometry.dispose();
+      this._cachedLine2 = null;
+    }
     for (const line of this._cachedLine2Array) {
       line.geometry.dispose();
     }
