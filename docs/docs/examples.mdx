@@ -3,13 +3,13 @@ title: Examples
 sidebar_label: Examples
 ---
 
+import PlayerExample from '@site/src/components/examples/PlayerExample';
 import ApplyMatrixArrowsExample from '@site/src/components/examples/ApplyMatrixArrowsExample';
 import ArgMinExample from '@site/src/components/examples/ArgMinExample';
 import BooleanOperationsExample from '@site/src/components/examples/BooleanOperationsExample';
 import BraceAnnotationExample from '@site/src/components/examples/BraceAnnotationExample';
 import EasingFunctionsShowcaseExample from '@site/src/components/examples/EasingFunctionsShowcaseExample';
 import ExportAnimationExample from '@site/src/components/examples/ExportAnimationExample';
-import PlayerExample from '@site/src/components/examples/PlayerExample';
 import FixedInFrameMobjectTestExample from '@site/src/components/examples/FixedInFrameMobjectTestExample';
 import FollowingGraphCameraExample from '@site/src/components/examples/FollowingGraphCameraExample';
 import GraphAreaPlotExample from '@site/src/components/examples/GraphAreaPlotExample';
@@ -110,6 +110,8 @@ player.sequence(async (scene) => {
 </details>
 
 **Learn More:** [**Player**](/api/classes/Player) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square) · [**Triangle**](/api/classes/Triangle) · [**Create**](/api/classes/Create) · [**Transform**](/api/classes/Transform) · [**Indicate**](/api/classes/Indicate) · [**Rotate**](/api/classes/Rotate)
+
+---
 
 ## Manim Ce Logo
 
@@ -2214,7 +2216,7 @@ await scene.wait(1);
 
 ## Export Animation
 
-Demonstrates the `scene.export()` API. Play the animation first, then export it as GIF or WebM. The progress callback reports capture and encoding phases.
+Demonstrates the scene.export() convenience API. Creates a square, transforms it into a circle, then exports the animation as GIF or WebM with a progress callback.
 
 <ExportAnimationExample />
 
@@ -2234,31 +2236,99 @@ import {
   GREEN,
 } from 'manim-web';
 
+const container = document.getElementById('container')!;
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
   height: 450,
   backgroundColor: BLACK,
 });
 
-const square = new Square({ sideLength: 2.5, color: BLUE, fillOpacity: 0.5 });
-const circle = new Circle({ radius: 1.25, color: GREEN, fillOpacity: 0.5 });
+const progressContainer = document.getElementById('progressContainer')!;
+const progressFill = document.getElementById('progressFill')!;
+const progressText = document.getElementById('progressText')!;
 
-await scene.play(new Create(square));
-await scene.play(new Transform(square, circle));
-await scene.play(new FadeOut(square));
+function showProgress(progress: number, label: string) {
+  progressContainer.style.display = 'block';
+  progressFill.style.width = `${Math.round(progress * 100)}%`;
+  progressText.textContent = `${label} — ${Math.round(progress * 100)}%`;
+}
 
-// Export as GIF with progress tracking
-await scene.export('animation.gif', {
-  fps: 15,
-  quality: 10,
-  onProgress: (p) => console.log(`${Math.round(p * 100)}%`),
+function hideProgress() {
+  progressContainer.style.display = 'none';
+  progressFill.style.width = '0%';
+}
+
+function setButtonsDisabled(disabled: boolean) {
+  document
+    .querySelectorAll<HTMLButtonElement>('.controls button')
+    .forEach((btn) => (btn.disabled = disabled));
+}
+
+// Play animation
+document.getElementById('playBtn')!.addEventListener('click', async () => {
+  if (isAnimating) return;
+  isAnimating = true;
+  setButtonsDisabled(true);
+
+  scene.clear();
+  const square = new Square({ sideLength: 2.5, color: BLUE, fillOpacity: 0.5 });
+  const circle = new Circle({ radius: 1.25, color: GREEN, fillOpacity: 0.5 });
+
+  await scene.play(new Create(square));
+  await scene.play(new Transform(square, circle));
+  await scene.play(new FadeOut(square));
+
+  isAnimating = false;
+  setButtonsDisabled(false);
 });
 
-// Other formats:
-// await scene.export('animation.webm', { fps: 30 })
-// await scene.export('animation.mp4')
+// Export GIF
+document.getElementById('exportGifBtn')!.addEventListener('click', async () => {
+  if (isAnimating) return;
+  isAnimating = true;
+  setButtonsDisabled(true);
+
+  try {
+    await scene.export('animation.gif', {
+      fps: 15,
+      quality: 10,
+      onProgress: (p) => showProgress(p, 'Exporting GIF'),
+    });
+  } catch (err) {
+    console.error('GIF export failed:', err);
+  } finally {
+    hideProgress();
+    isAnimating = false;
+    setButtonsDisabled(false);
+  }
+});
+
+// Export WebM
+document.getElementById('exportWebmBtn')!.addEventListener('click', async () => {
+  if (isAnimating) return;
+  isAnimating = true;
+  setButtonsDisabled(true);
+
+  try {
+    await scene.export('animation.webm', {
+      fps: 30,
+      onProgress: (p) => showProgress(p, 'Exporting WebM'),
+    });
+  } catch (err) {
+    console.error('WebM export failed:', err);
+  } finally {
+    hideProgress();
+    isAnimating = false;
+    setButtonsDisabled(false);
+  }
+});
+
+// Reset
+document.getElementById('resetBtn')!.addEventListener('click', () => {
+  scene.clear();
+});
 ```
 
 </details>
 
-**Learn More:** [**Scene**](/api/classes/Scene) · [**GifExporter**](/api/classes/GifExporter) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square) · [**Create**](/api/classes/Create) · [**Transform**](/api/classes/Transform) · [**FadeOut**](/api/classes/FadeOut)
+**Learn More:** [**Scene**](/api/classes/Scene) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square) · [**Create**](/api/classes/Create) · [**Transform**](/api/classes/Transform) · [**FadeOut**](/api/classes/FadeOut)

@@ -6,17 +6,92 @@ async function animate(scene: any) {
   const { Scene, Circle, Square, Create, Transform, FadeOut, BLACK, BLUE, GREEN } =
     await import('manim-web');
 
-  const square = new Square({ sideLength: 2.5, color: BLUE, fillOpacity: 0.5 });
-  const circle = new Circle({ radius: 1.25, color: GREEN, fillOpacity: 0.5 });
+  const container = document.getElementById('container')!;
 
-  await scene.play(new Create(square));
-  await scene.play(new Transform(square, circle));
-  await scene.play(new FadeOut(square));
+  const progressContainer = document.getElementById('progressContainer')!;
+  const progressFill = document.getElementById('progressFill')!;
+  const progressText = document.getElementById('progressText')!;
 
-  // Export as GIF: scene.export('animation.gif', { fps: 15, quality: 10 })
-  // Export as WebM: scene.export('animation.webm', { fps: 30 })
-  // Export as MP4: scene.export('animation.mp4')
-  // Export as MOV: scene.export('animation.mov')
+  function showProgress(progress: number, label: string) {
+    progressContainer.style.display = 'block';
+    progressFill.style.width = `${Math.round(progress * 100)}%`;
+    progressText.textContent = `${label} — ${Math.round(progress * 100)}%`;
+  }
+
+  function hideProgress() {
+    progressContainer.style.display = 'none';
+    progressFill.style.width = '0%';
+  }
+
+  function setButtonsDisabled(disabled: boolean) {
+    document
+      .querySelectorAll<HTMLButtonElement>('.controls button')
+      .forEach((btn) => (btn.disabled = disabled));
+  }
+
+  // Play animation
+  document.getElementById('playBtn')!.addEventListener('click', async () => {
+    if (isAnimating) return;
+    isAnimating = true;
+    setButtonsDisabled(true);
+
+    scene.clear();
+    const square = new Square({ sideLength: 2.5, color: BLUE, fillOpacity: 0.5 });
+    const circle = new Circle({ radius: 1.25, color: GREEN, fillOpacity: 0.5 });
+
+    await scene.play(new Create(square));
+    await scene.play(new Transform(square, circle));
+    await scene.play(new FadeOut(square));
+
+    isAnimating = false;
+    setButtonsDisabled(false);
+  });
+
+  // Export GIF
+  document.getElementById('exportGifBtn')!.addEventListener('click', async () => {
+    if (isAnimating) return;
+    isAnimating = true;
+    setButtonsDisabled(true);
+
+    try {
+      await scene.export('animation.gif', {
+        fps: 15,
+        quality: 10,
+        onProgress: (p) => showProgress(p, 'Exporting GIF'),
+      });
+    } catch (err) {
+      console.error('GIF export failed:', err);
+    } finally {
+      hideProgress();
+      isAnimating = false;
+      setButtonsDisabled(false);
+    }
+  });
+
+  // Export WebM
+  document.getElementById('exportWebmBtn')!.addEventListener('click', async () => {
+    if (isAnimating) return;
+    isAnimating = true;
+    setButtonsDisabled(true);
+
+    try {
+      await scene.export('animation.webm', {
+        fps: 30,
+        onProgress: (p) => showProgress(p, 'Exporting WebM'),
+      });
+    } catch (err) {
+      console.error('WebM export failed:', err);
+    } finally {
+      hideProgress();
+      isAnimating = false;
+      setButtonsDisabled(false);
+    }
+  });
+
+  // Reset
+  document.getElementById('resetBtn')!.addEventListener('click', () => {
+    scene.clear();
+  });
 }
 
 export default function ExportAnimationExample() {
