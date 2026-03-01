@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import BrowserOnly from '@docusaurus/BrowserOnly';
 
 const ASPECT_RATIO = 800 / 450;
@@ -13,11 +13,25 @@ const placeholderStyle: React.CSSProperties = {
 
 function PlayerExampleInner() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
+  // Bidirectional observer — create on enter, dispose on leave
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
+    const observer = new IntersectionObserver(([entry]) => setIsVisible(entry.isIntersecting), {
+      rootMargin: '200px',
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  // Player lifecycle tied to visibility
+  useEffect(() => {
+    if (!isVisible || !containerRef.current) return;
+
+    const el = containerRef.current;
     let disposed = false;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let player: any = null;
@@ -57,6 +71,13 @@ function PlayerExampleInner() {
         return;
       }
 
+      // Handle WebGL context loss
+      const canvas = el.querySelector('canvas');
+      const onContextLost = () => {
+        if (!disposed) setIsVisible(false);
+      };
+      canvas?.addEventListener('webglcontextlost', onContextLost);
+
       player.sequence(async (scene) => {
         const circle = new Circle({ radius: 1.5, color: BLUE });
         await scene.play(new Create(circle));
@@ -94,7 +115,7 @@ function PlayerExampleInner() {
       }
       el.innerHTML = '';
     };
-  }, []);
+  }, [isVisible]);
 
   return (
     <div
