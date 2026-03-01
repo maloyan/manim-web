@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GifExporter } from './GifExporter';
-import { VideoExporter } from './VideoExporter';
+import { VideoExporter, createVideoExporter } from './VideoExporter';
 
 // ---------------------------------------------------------------------------
 // Shared mock helpers
@@ -207,6 +207,13 @@ describe('VideoExporter', () => {
 
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it('createVideoExporter factory returns a VideoExporter instance', () => {
+    const scene = createMockScene();
+    const exporter = createVideoExporter(scene, { fps: 24 });
+    expect(exporter).toBeInstanceOf(VideoExporter);
+    expect(exporter.getOptions().fps).toBe(24);
   });
 });
 

@@ -413,6 +413,189 @@ describe('Player', () => {
 });
 
 // ---------------------------------------------------------------------------
+// _startLoop render-loop tests
+// ---------------------------------------------------------------------------
+
+describe('Player _startLoop render loop', () => {
+  let player: Player;
+  let container: HTMLElement;
+  let rafCallbacks: Array<(time: number) => void>;
+  let originalRaf: typeof requestAnimationFrame;
+  let originalCaf: typeof cancelAnimationFrame;
+  let originalPerfNow: typeof performance.now;
+  let rafIdCounter: number;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockScene = createMockSceneMethods();
+
+    // Mock requestAnimationFrame to capture callbacks
+    rafCallbacks = [];
+    rafIdCounter = 1;
+    originalRaf = globalThis.requestAnimationFrame;
+    originalCaf = globalThis.cancelAnimationFrame;
+    originalPerfNow = performance.now;
+
+    vi.stubGlobal(
+      'requestAnimationFrame',
+      vi.fn((cb: FrameRequestCallback) => {
+        rafCallbacks.push(cb as (time: number) => void);
+        return rafIdCounter++;
+      }),
+    );
+    vi.stubGlobal('cancelAnimationFrame', vi.fn());
+    vi.spyOn(performance, 'now').mockReturnValue(0);
+
+    const result = createPlayer();
+    player = result.player;
+    container = result.container;
+  });
+
+  afterEach(() => {
+    player.dispose();
+    container.remove();
+    vi.unstubAllGlobals();
+  });
+
+  /** Flush all pending rAF callbacks at the given timestamp */
+  function flushRaf(time: number) {
+    const cbs = rafCallbacks.splice(0);
+    for (const cb of cbs) cb(time);
+  }
+
+  it('_startLoop schedules requestAnimationFrame and loop calls update/render/UI', async () => {
+    await player.sequence(async (scene) => {
+      await scene.wait(2);
+    });
+
+    mockScene.render.mockClear();
+    player.play();
+
+    // The first rAF is scheduled; flush it with enough elapsed time (> 14ms)
+    flushRaf(20);
+
+    expect(mockScene.render).toHaveBeenCalled();
+    // Timeline should have advanced
+    expect(player.timeline.getCurrentTime()).toBeGreaterThan(0);
+  });
+
+  it('_startLoop skips frame when elapsed < 14ms', async () => {
+    await player.sequence(async (scene) => {
+      await scene.wait(2);
+    });
+
+    player.play();
+    mockScene.render.mockClear();
+
+    // Flush with only 5ms elapsed — too fast, should skip
+    flushRaf(5);
+
+    // Render should NOT have been called because elapsed < 14
+    expect(mockScene.render).not.toHaveBeenCalled();
+    // Timeline should still be at 0
+    expect(player.timeline.getCurrentTime()).toBe(0);
+  });
+
+  it('_startLoop stops when not playing', async () => {
+    await player.sequence(async (scene) => {
+      await scene.wait(2);
+    });
+
+    player.play();
+    player.pause();
+    mockScene.render.mockClear();
+
+    // Flush — loop should exit early because _isPlaying is false
+    flushRaf(20);
+
+    expect(mockScene.render).not.toHaveBeenCalled();
+  });
+
+  it('_startLoop handles finished + loop: seeks to 0 and continues', async () => {
+    player.dispose();
+    container.remove();
+    mockScene = createMockSceneMethods();
+    const result = createPlayer({ loop: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(0.5);
+    });
+
+    player.play();
+    mockScene.render.mockClear();
+
+    // Flush with enough time to finish the timeline (500ms + more)
+    flushRaf(600);
+
+    // With loop=true, timeline should have been reset to 0 and still playing
+    expect(player.isPlaying).toBe(true);
+    expect(player.timeline.getCurrentTime()).toBe(0);
+  });
+
+  it('_startLoop handles finished + no loop: shows replay and stops', async () => {
+    await player.sequence(async (scene) => {
+      await scene.wait(0.5);
+    });
+
+    player.play();
+
+    // Flush with enough time to finish the timeline
+    flushRaf(600);
+
+    // With loop=false (default), playback should stop
+    expect(player.isPlaying).toBe(false);
+  });
+
+  it('_startLoop does not double-start when called while already running', async () => {
+    await player.sequence(async (scene) => {
+      await scene.wait(2);
+    });
+
+    player.play();
+    const rafCountAfterPlay = rafCallbacks.length;
+
+    // Calling play again should not add more rAF callbacks
+    // because _animFrameId is already set
+    (player as unknown as { _startLoop: () => void })._startLoop();
+    expect(rafCallbacks.length).toBe(rafCountAfterPlay);
+  });
+
+  it('_startLoop updates mobject updaters', async () => {
+    const mockMob = { update: vi.fn() };
+    mockScene.mobjects.add(mockMob);
+
+    await player.sequence(async (scene) => {
+      await scene.wait(2);
+    });
+
+    player.play();
+
+    // Flush with sufficient elapsed time
+    flushRaf(20);
+
+    expect(mockMob.update).toHaveBeenCalled();
+  });
+
+  it('_startLoop applies playback rate to dt', async () => {
+    await player.sequence(async (scene) => {
+      await scene.wait(10);
+    });
+
+    player.setPlaybackRate(2);
+    player.play();
+    mockScene.render.mockClear();
+
+    // Flush at 100ms elapsed
+    flushRaf(100);
+
+    // With rate=2, dt should be (100/1000)*2 = 0.2s
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.2, 1);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // RecordingScene pass-through methods
 // ---------------------------------------------------------------------------
 
