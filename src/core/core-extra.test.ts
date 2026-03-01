@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { Mobject, UP, LEFT, RIGHT, UL, UR, DL, DR } from './Mobject';
 import {
   VMobject,
@@ -2898,6 +2898,24 @@ describe('VMobject.dispose', () => {
     ]);
     expect(() => v.dispose()).not.toThrow();
   });
+
+  it('disposes _cachedLine2 geometry before nulling', () => {
+    const v = new VMobject();
+    v.setPoints([
+      [0, 0, 0],
+      [1, 0, 0],
+      [2, 0, 0],
+      [3, 0, 0],
+    ]);
+    v.strokeWidth = 2;
+    v._syncToThree();
+    const cachedLine = (v as any)._cachedLine2;
+    expect(cachedLine).not.toBeNull();
+    const disposeSpy = vi.spyOn(cachedLine.geometry, 'dispose');
+    v.dispose();
+    expect(disposeSpy).toHaveBeenCalled();
+    expect((v as any)._cachedLine2).toBeNull();
+  });
 });
 
 describe('VMobject.useStrokeMesh', () => {
@@ -2924,6 +2942,106 @@ describe('VMobject static properties', () => {
 
   it('useShaderCurves defaults to false', () => {
     expect(VMobject.useShaderCurves).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Per-instance scene context (_setSceneContext / multi-scene support)
+// ---------------------------------------------------------------------------
+
+describe('VMobject per-instance scene context', () => {
+  it('_setSceneContext overrides static defaults for linewidth', () => {
+    const v = new VMobject();
+    // Without scene context, uses static defaults (800/14)
+    const defaultLw = (v as any)._computeLinewidth(4);
+    expect(defaultLw).toBeCloseTo(4 * 0.01 * (800 / 14));
+
+    // Set per-instance context with different dimensions
+    v._setSceneContext(1600, 900, 28);
+    const overriddenLw = (v as any)._computeLinewidth(4);
+    expect(overriddenLw).toBeCloseTo(4 * 0.01 * (1600 / 28));
+
+    // Static method still uses class-level statics
+    expect(VMobject._toLinewidth(4)).toBeCloseTo(4 * 0.01 * (VMobject._rendererWidth / VMobject._frameWidth));
+  });
+
+  it('per-instance context does not affect other VMobjects', () => {
+    const v1 = new VMobject();
+    const v2 = new VMobject();
+
+    v1._setSceneContext(1920, 1080, 14);
+    // v2 still uses static defaults (800/14)
+    const v2Lw = (v2 as any)._computeLinewidth(4);
+    expect(v2Lw).toBeCloseTo(4 * 0.01 * (VMobject._rendererWidth / VMobject._frameWidth));
+
+    const v1Lw = (v1 as any)._computeLinewidth(4);
+    expect(v1Lw).toBeCloseTo(4 * 0.01 * (1920 / 14));
+    expect(v1Lw).not.toBeCloseTo(v2Lw);
+  });
+
+  it('two scenes with different sizes produce different linewidths', () => {
+    // Simulate Scene A: 800x450, frameWidth=14
+    const vA = new VMobject();
+    vA._setSceneContext(800, 450, 14);
+
+    // Simulate Scene B: 1920x1080, frameWidth=14
+    const vB = new VMobject();
+    vB._setSceneContext(1920, 1080, 14);
+
+    const lwA = (vA as any)._computeLinewidth(4);
+    const lwB = (vB as any)._computeLinewidth(4);
+
+    expect(lwA).toBeCloseTo(4 * 0.01 * (800 / 14));
+    expect(lwB).toBeCloseTo(4 * 0.01 * (1920 / 14));
+    expect(lwA).not.toBeCloseTo(lwB);
+  });
+
+  it('falls back to statics when scene context is null', () => {
+    const v = new VMobject();
+    expect(v._sceneRendererWidth).toBeNull();
+    expect(v._sceneRendererHeight).toBeNull();
+    expect(v._sceneFrameWidth).toBeNull();
+
+    const lw = (v as any)._computeLinewidth(4);
+    expect(lw).toBeCloseTo(VMobject._toLinewidth(4));
+  });
+
+  it('_setSceneContext updates all three fields', () => {
+    const v = new VMobject();
+    v._setSceneContext(1024, 768, 10);
+    expect(v._sceneRendererWidth).toBe(1024);
+    expect(v._sceneRendererHeight).toBe(768);
+    expect(v._sceneFrameWidth).toBe(10);
+  });
+
+  it('second scene does not corrupt first scene VMobject linewidth', () => {
+    const savedW = VMobject._rendererWidth;
+    const savedH = VMobject._rendererHeight;
+    const savedF = VMobject._frameWidth;
+
+    try {
+      // Scene A creates a VMobject with its context
+      const vA = new VMobject();
+      vA._setSceneContext(800, 450, 14);
+
+      // Scene B overwrites the statics (simulating Scene constructor)
+      VMobject._rendererWidth = 1920;
+      VMobject._rendererHeight = 1080;
+      VMobject._frameWidth = 14;
+
+      // vA's linewidth should still use its per-instance context, NOT the new statics
+      const lwA = (vA as any)._computeLinewidth(4);
+      expect(lwA).toBeCloseTo(4 * 0.01 * (800 / 14));
+
+      // A VMobject without scene context WOULD use the corrupted statics
+      const vNoContext = new VMobject();
+      const lwNoContext = (vNoContext as any)._computeLinewidth(4);
+      expect(lwNoContext).toBeCloseTo(4 * 0.01 * (1920 / 14));
+    } finally {
+      VMobject._rendererWidth = savedW;
+      VMobject._rendererHeight = savedH;
+      VMobject._frameWidth = savedF;
+    }
   });
 });
 
