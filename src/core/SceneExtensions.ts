@@ -48,6 +48,8 @@ export class ThreeDScene extends Scene {
   private _orbitControls: OrbitControls | null = null;
   private _orbitControlsEnabled: boolean = true;
   private _isRendering: boolean = false;
+  private _orbitRafId: number | null = null;
+  private _orbitInteracting: boolean = false;
 
   // HUD overlay for fixed-in-frame mobjects (pinned to screen)
   private _hudScene: THREE.Scene;
@@ -110,9 +112,13 @@ export class ThreeDScene extends Scene {
         ...orbitControlsOptions,
       });
 
-      // Add change listener to trigger re-render
-      this._orbitControls.addEventListener('change', () => {
-        this.render();
+      // Idle orbit loop: re-render only when user drags while scene isn't animating
+      this._orbitControls.addEventListener('start', () => {
+        this._orbitInteracting = true;
+        this._startOrbitLoop();
+      });
+      this._orbitControls.addEventListener('end', () => {
+        this._orbitInteracting = false;
       });
     }
 
@@ -551,9 +557,49 @@ export class ThreeDScene extends Scene {
   }
 
   /**
+   * Start a lightweight rAF loop for orbit controls when the scene
+   * isn't already rendering (no active animations/waits).
+   * Stops automatically when the user releases and damping settles.
+   */
+  private _startOrbitLoop(): void {
+    if (this._orbitRafId !== null) return;
+    // Skip if the scene's own animation loop is already rendering
+    if (this.isPlaying) return;
+
+    let lastCamJson = '';
+    const tick = () => {
+      this._orbitControls!.update();
+      this._render();
+
+      // Check if camera has settled (for damping)
+      const cam = this._camera3D.getCamera();
+      const camJson =
+        cam.position.x.toFixed(6) +
+        cam.position.y.toFixed(6) +
+        cam.position.z.toFixed(6) +
+        cam.quaternion.x.toFixed(6) +
+        cam.quaternion.y.toFixed(6) +
+        cam.quaternion.z.toFixed(6) +
+        cam.quaternion.w.toFixed(6);
+
+      if (this._orbitInteracting || camJson !== lastCamJson) {
+        lastCamJson = camJson;
+        this._orbitRafId = requestAnimationFrame(tick);
+      } else {
+        this._orbitRafId = null;
+      }
+    };
+    this._orbitRafId = requestAnimationFrame(tick);
+  }
+
+  /**
    * Clean up all resources.
    */
   dispose(): void {
+    if (this._orbitRafId !== null) {
+      cancelAnimationFrame(this._orbitRafId);
+      this._orbitRafId = null;
+    }
     this._lighting.dispose();
     if (this._orbitControls) {
       this._orbitControls.dispose();
