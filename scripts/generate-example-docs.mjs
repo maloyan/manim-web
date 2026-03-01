@@ -1048,6 +1048,7 @@ function main() {
   ];
 
   // Add all component imports at the top
+  lines.push("import PlayerExample from '@site/src/components/examples/PlayerExample';");
   for (const ex of examples) {
     lines.push(`import ${ex.componentName} from '@site/src/components/examples/${ex.componentName}';`);
   }
@@ -1056,6 +1057,81 @@ function main() {
   lines.push('# Examples');
   lines.push('');
   lines.push('Interactive examples showing what you can build with manim-web. Each example includes a live animation and source code.');
+  lines.push('');
+
+  // -- Integrated Player (pinned at the top) ----------------------------------
+  lines.push('## Integrated Player');
+  lines.push('');
+  lines.push('A full-featured playback controller with play/pause, segment navigation, timeline scrubbing, speed control, fullscreen, and export. Use <kbd>Space</kbd> to play/pause, <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> for segments, <kbd>Shift+&larr;/&rarr;</kbd> to scrub, and <kbd>F</kbd> for fullscreen.');
+  lines.push('');
+  lines.push('<PlayerExample />');
+  lines.push('');
+  lines.push('<details>');
+  lines.push('<summary>Source Code</summary>');
+  lines.push('');
+  lines.push('```typescript');
+  lines.push(`import {
+  Player,
+  Circle,
+  Square,
+  Triangle,
+  Create,
+  Transform,
+  FadeIn,
+  FadeOut,
+  Indicate,
+  Rotate,
+  BLACK,
+  BLUE,
+  RED,
+  GREEN,
+  YELLOW,
+} from 'manim-web';
+
+const player = new Player(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+player.sequence(async (scene) => {
+  // Create a blue circle
+  const circle = new Circle({ radius: 1.5, color: BLUE });
+  await scene.play(new Create(circle));
+
+  await scene.wait(0.5);
+
+  // Transform to red square
+  const square = new Square({ sideLength: 3, color: RED });
+  await scene.play(new Transform(circle, square));
+
+  // Indicate
+  await scene.play(new Indicate(circle));
+
+  // Transform to green triangle
+  const triangle = new Triangle({ color: GREEN });
+  triangle.scale(2);
+  await scene.play(new Transform(circle, triangle));
+
+  // Rotate 180°
+  await scene.play(new Rotate(circle, { angle: Math.PI }));
+
+  // Fade out
+  await scene.play(new FadeOut(circle));
+
+  // Bring in a yellow circle
+  const circle2 = new Circle({ radius: 1, color: YELLOW });
+  await scene.play(new FadeIn(circle2));
+
+  await scene.wait(1);
+});`);
+  lines.push('```');
+  lines.push('');
+  lines.push('</details>');
+  lines.push('');
+  lines.push('**Learn More:** [**Player**](/api/classes/Player) \u00B7 [**Circle**](/api/classes/Circle) \u00B7 [**Square**](/api/classes/Square) \u00B7 [**Triangle**](/api/classes/Triangle) \u00B7 [**Create**](/api/classes/Create) \u00B7 [**Transform**](/api/classes/Transform) \u00B7 [**Indicate**](/api/classes/Indicate) \u00B7 [**Rotate**](/api/classes/Rotate)');
+  lines.push('');
+  lines.push('---');
   lines.push('');
 
   // Group examples by category, preserving CATEGORIES definition order
