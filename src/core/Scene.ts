@@ -74,6 +74,8 @@ export class Scene {
   private _backgroundTimerId: ReturnType<typeof setInterval> | null = null;
   private _lastFrameTime: number = 0;
   private _playPromiseResolve: (() => void) | null = null;
+  private _disposed: boolean = false;
+  private _waitCleanups: Array<() => void> = [];
 
   // Performance optimization: frame rate control
   private _targetFps: number = 60;
@@ -376,6 +378,7 @@ export class Scene {
     for (const mobject of this._mobjects) {
       const threeObj = mobject.getThreeObject();
       this._threeScene.remove(threeObj);
+      mobject.dispose();
     }
     this._mobjects.clear();
 
@@ -461,7 +464,8 @@ export class Scene {
     // Start render loop if not already running
     this._startRenderLoop();
 
-    // Wait for all animations to finish
+    // Wait for all animations to finish (or dispose cancels)
+    if (this._disposed) return;
     await new Promise<void>((resolve) => {
       this._playPromiseResolve = resolve;
     });
@@ -491,6 +495,7 @@ export class Scene {
    * @returns Promise that resolves after the duration
    */
   async wait(duration: number = 1): Promise<void> {
+    if (this._disposed) return;
     return new Promise((resolve) => {
       const startTime = performance.now();
       let lastFrameTime = startTime;
@@ -498,8 +503,25 @@ export class Scene {
       let timerId: ReturnType<typeof setInterval> | null = null;
       let resolved = false;
 
-      const tick = (currentTime: number) => {
+      const cleanup = () => {
         if (resolved) return;
+        resolved = true;
+        if (rafId !== null) cancelAnimationFrame(rafId);
+        if (timerId !== null) clearInterval(timerId);
+        // Remove from active cleanups
+        const idx = this._waitCleanups.indexOf(cleanup);
+        if (idx >= 0) this._waitCleanups.splice(idx, 1);
+        resolve();
+      };
+
+      // Register cleanup so dispose() can cancel this wait
+      this._waitCleanups.push(cleanup);
+
+      const tick = (currentTime: number) => {
+        if (resolved || this._disposed) {
+          cleanup();
+          return;
+        }
         const elapsed = (currentTime - startTime) / 1000;
         if (elapsed >= duration) {
           // Final update at exactly the remaining dt
@@ -510,10 +532,7 @@ export class Scene {
             }
             this._render();
           }
-          resolved = true;
-          if (rafId !== null) cancelAnimationFrame(rafId);
-          if (timerId !== null) clearInterval(timerId);
-          resolve();
+          cleanup();
           return;
         }
 
@@ -1101,9 +1120,23 @@ export class Scene {
    * Clean up all resources (renderer, mobjects, audio).
    */
   dispose(): void {
+    this._disposed = true;
+
     // Stop playback
     this._stopRenderLoop();
     this._isPlaying = false;
+
+    // Cancel any pending play() promise
+    if (this._playPromiseResolve) {
+      this._playPromiseResolve();
+      this._playPromiseResolve = null;
+    }
+
+    // Cancel any pending wait() timers
+    for (const cleanup of [...this._waitCleanups]) {
+      cleanup();
+    }
+    this._waitCleanups.length = 0;
 
     // Dispose mobjects
     for (const mobject of this._mobjects) {
