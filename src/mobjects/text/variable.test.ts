@@ -302,6 +302,9 @@ describe('Variable', () => {
     it('should return a promise', () => {
       const v = new Variable({ label: 'x' });
       const result = v.waitForRender();
+      // Catch rejection to avoid unhandled rejection in test environments
+      // where KaTeX may fail (e.g. happy-dom quirks mode)
+      result.catch(() => {});
       expect(result).toBeInstanceOf(Promise);
     });
   });

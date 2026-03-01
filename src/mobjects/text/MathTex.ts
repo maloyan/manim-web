@@ -65,6 +65,7 @@ interface RenderState {
   height: number;
   isRendering: boolean;
   renderPromise: Promise<void> | null;
+  renderError: Error | null;
 }
 
 /**
@@ -135,6 +136,7 @@ export class MathTex extends Mobject {
       height: 0,
       isRendering: false,
       renderPromise: null,
+      renderError: null,
     };
 
     // Set position
@@ -276,14 +278,21 @@ export class MathTex extends Mobject {
    */
   async waitForRender(): Promise<void> {
     if (this._isMultiPart) {
-      await Promise.all(this._parts.map((p) => p.waitForRender()));
+      // Wait for arrangement (which internally waits for all child renders)
       if (this._arrangePromise) {
         await this._arrangePromise;
+      }
+      // Surface any error captured during arrangement
+      if (this._renderState.renderError) {
+        throw this._renderState.renderError;
       }
       return;
     }
     if (this._renderState.renderPromise) {
       await this._renderState.renderPromise;
+    }
+    if (this._renderState.renderError) {
+      throw this._renderState.renderError;
     }
   }
 
@@ -315,7 +324,19 @@ export class MathTex extends Mobject {
    * Positions parts so their content (minus padding) is seamlessly adjacent.
    */
   private async _arrangeParts(): Promise<void> {
-    await Promise.all(this._parts.map((p) => p.waitForRender()));
+    // Use allSettled to avoid unhandled rejections when child parts fail
+    // (e.g. KaTeX errors in test environments). If any part failed,
+    // store the first error so the parent's waitForRender() can surface it.
+    const results = await Promise.allSettled(this._parts.map((p) => p.waitForRender()));
+    const firstFailure = results.find((r) => r.status === 'rejected') as
+      | PromiseRejectedResult
+      | undefined;
+    if (firstFailure) {
+      const err = firstFailure.reason;
+      this._renderState.renderError =
+        err instanceof Error ? err : new Error(String(err));
+      return;
+    }
 
     const SCALE = 0.01;
 
@@ -383,6 +404,7 @@ export class MathTex extends Mobject {
       .catch((error) => {
         console.error('MathTex rendering error:', error);
         this._renderState.isRendering = false;
+        this._renderState.renderError = error instanceof Error ? error : new Error(String(error));
       });
   }
 
@@ -571,7 +593,9 @@ export class MathTex extends Mobject {
             document.fonts.load(`${fs} KaTeX_Size1`),
             document.fonts.load(`${fs} KaTeX_Size2`),
             document.fonts.load(`${fs} KaTeX_AMS`),
-          ].map((p) => p.catch(() => {})),
+          ].map((p) => p.catch((err) => {
+            console.warn('MathTex: KaTeX font failed to load. Rendering may be degraded.', err);
+          })),
         ),
         fontTimeout,
       ]);

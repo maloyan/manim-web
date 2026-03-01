@@ -146,8 +146,9 @@ export class Variable extends Mobject {
     // Add submobjects
     this.add(this._labelMobject, this._equalsMobject, this._numberMobject);
 
-    // Arrange horizontally
-    this._arrangeSubmobjects();
+    // Arrange horizontally (catch errors to avoid unhandled rejections
+    // when rendering fails in non-browser environments)
+    this._arrangeSubmobjects().catch(() => {});
   }
 
   /**
