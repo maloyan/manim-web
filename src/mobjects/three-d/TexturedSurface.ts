@@ -217,8 +217,8 @@ export class TexturedSurface extends Mobject {
         this._texturesLoaded = true;
         this._applyTextures();
       })
-      .catch(() => {
-        // Textures failed to load; surface stays with placeholder material
+      .catch((error) => {
+        console.error('TexturedSurface: Failed to load textures. Surface will use placeholder material.', error);
       });
   }
 

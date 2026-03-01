@@ -41,7 +41,10 @@ export function waitForKatexStyles(): Promise<void> {
     link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css';
     link.crossOrigin = 'anonymous';
     link.onload = () => resolve();
-    link.onerror = () => resolve(); // Proceed even if CSS fails
+    link.onerror = () => {
+      console.warn('MathTex: KaTeX CSS failed to load from CDN. LaTeX rendering may be degraded.');
+      resolve();
+    };
     document.head.appendChild(link);
   });
 

@@ -383,6 +383,7 @@ export class MathTex extends Mobject {
       .catch((error) => {
         console.error('MathTex rendering error:', error);
         this._renderState.isRendering = false;
+        throw error;
       });
   }
 
@@ -485,7 +486,7 @@ export class MathTex extends Mobject {
     const ctx = canvas.getContext('2d')!;
     ctx.scale(scale, scale);
 
-    await new Promise<void>((resolve) => {
+    await new Promise<void>((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
         ctx.drawImage(img, padding, padding, svgW, svgH);
@@ -494,8 +495,7 @@ export class MathTex extends Mobject {
       };
       img.onerror = () => {
         URL.revokeObjectURL(img.src);
-        console.warn('MathTex (MathJax): Failed to rasterize SVG');
-        resolve();
+        reject(new Error('MathTex (MathJax): Failed to rasterize SVG'));
       };
       const blob = new Blob([finalSvgString], { type: 'image/svg+xml;charset=utf-8' });
       img.src = URL.createObjectURL(blob);
@@ -571,7 +571,9 @@ export class MathTex extends Mobject {
             document.fonts.load(`${fs} KaTeX_Size1`),
             document.fonts.load(`${fs} KaTeX_Size2`),
             document.fonts.load(`${fs} KaTeX_AMS`),
-          ].map((p) => p.catch(() => {})),
+          ].map((p) => p.catch((err) => {
+            console.warn('MathTex: KaTeX font failed to load. Rendering may be degraded.', err);
+          })),
         ),
         fontTimeout,
       ]);

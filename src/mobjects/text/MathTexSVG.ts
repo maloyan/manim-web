@@ -173,6 +173,7 @@ export class MathTexSVG extends VGroup {
       })
       .catch((error) => {
         console.error('MathTexSVG rendering error:', error);
+        throw error;
       });
   }
 

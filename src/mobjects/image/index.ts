@@ -89,6 +89,7 @@ export class ImageMobject extends Mobject {
   // Promise that resolves when image is loaded
   private _loadPromise: Promise<void>;
   private _loadResolve: (() => void) | null = null;
+  private _loadReject: ((reason: Error) => void) | null = null;
 
   constructor(options: ImageMobjectOptions) {
     super();
@@ -131,8 +132,9 @@ export class ImageMobject extends Mobject {
     this.position.set(center[0], center[1], center[2]);
 
     // Initialize load promise
-    this._loadPromise = new Promise((resolve) => {
+    this._loadPromise = new Promise((resolve, reject) => {
       this._loadResolve = resolve;
+      this._loadReject = reject;
     });
 
     if (pixelData) {
@@ -237,9 +239,9 @@ export class ImageMobject extends Mobject {
       // onError callback
       (error) => {
         console.error('Failed to load image:', error);
-        // Still resolve promise to prevent hanging
-        if (this._loadResolve) {
-          this._loadResolve();
+        if (this._loadReject) {
+          this._loadReject(new Error(`Failed to load image: ${error}`));
+          this._loadReject = null;
           this._loadResolve = null;
         }
       }
@@ -470,8 +472,9 @@ export class ImageMobject extends Mobject {
   setSource(source: string): this {
     this._source = source;
     this._imageLoaded = false;
-    this._loadPromise = new Promise((resolve) => {
+    this._loadPromise = new Promise((resolve, reject) => {
       this._loadResolve = resolve;
+      this._loadReject = reject;
     });
     this._loadTexture();
     return this;
