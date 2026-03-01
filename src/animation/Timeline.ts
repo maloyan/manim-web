@@ -35,7 +35,7 @@ export class Timeline {
   private _isPlaying: boolean = false;
 
   /** Track which animations have been started */
-  private _startedAnimations: Set<Animation> = new Set();
+  protected _startedAnimations: Set<Animation> = new Set();
 
   /**
    * Add an animation to the timeline.

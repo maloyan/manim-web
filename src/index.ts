@@ -390,6 +390,7 @@ export {
 // Animations
 export { Animation, type AnimationOptions, type RateFunction } from './animation/Animation';
 export { Timeline, type PositionParam } from './animation/Timeline';
+export { MasterTimeline, type Segment } from './animation/MasterTimeline';
 
 // Animation types
 export { FadeIn, fadeIn, FadeOut, fadeOut } from './animation/fading';
@@ -682,6 +683,11 @@ export {
 
 // Vector math utilities
 export { scaleVec, addVec, subVec, linspace } from './utils/vectors';
+
+// Player
+export { Player, type PlayerOptions } from './player';
+export { PlayerUI, type PlayerUIOptions, type PlayerUICallbacks } from './player';
+export { PlayerController, type PlayerControllerCallbacks } from './player';
 
 // Feature flags
 export {
