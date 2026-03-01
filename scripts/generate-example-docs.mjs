@@ -1094,7 +1094,7 @@ function main() {
       lines.push('');
 
       if (ex.learnMore.length > 0) {
-        const learnMoreInline = ex.learnMore.map((name) => `**${name}**`).join(' \u00B7 ');
+        const learnMoreInline = ex.learnMore.map((name) => `[**${name}**](/api/classes/${name})`).join(' \u00B7 ');
         lines.push(`**Learn More:** ${learnMoreInline}`);
         lines.push('');
       }
