@@ -322,6 +322,8 @@ export class Scene {
         if (!this._isInSceneGraph(threeObj)) {
           this._threeScene.add(threeObj);
         }
+        // Set per-instance renderer context for VMobjects (multi-scene support)
+        this._setSceneContextRecursive(mobject);
         // If mobject or any descendant has pending async rendering (e.g. MathTex),
         // re-render when done. Recursively check children since MathTex objects
         // may be nested inside VGroup/Group containers.
@@ -354,6 +356,20 @@ export class Scene {
       this._render();
     }
     return this;
+  }
+
+  /**
+   * Recursively set per-instance scene context on a mobject and all its
+   * VMobject children so that stroke-width calculations use this scene's
+   * renderer dimensions instead of the class-level statics.
+   */
+  private _setSceneContextRecursive(mobject: Mobject): void {
+    if (mobject instanceof VMobject) {
+      mobject._setSceneContext(this._renderer.width, this._renderer.height, this._camera.frameWidth);
+    }
+    for (const child of mobject.children) {
+      this._setSceneContextRecursive(child);
+    }
   }
 
   /**
@@ -911,6 +927,10 @@ export class Scene {
     this._camera.setAspectRatio(aspectRatio);
     VMobject._rendererWidth = width;
     VMobject._rendererHeight = height;
+    // Update per-instance context on all VMobjects (multi-scene support)
+    for (const mob of this._mobjects) {
+      this._setSceneContextRecursive(mob);
+    }
     this._render();
     return this;
   }
