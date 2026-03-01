@@ -1039,6 +1039,76 @@ function main() {
   // Generate single examples.mdx page with inline components
   // -------------------------------------------------------------------------
 
+  // -------------------------------------------------------------------------
+  // Featured examples: hand-written components that aren't auto-generated
+  // from examples/*.ts files. These appear at the top of the page.
+  // -------------------------------------------------------------------------
+
+  const FEATURED_EXAMPLES = [
+    {
+      componentName: 'PlayerExample',
+      title: 'Integrated Player',
+      description:
+        'A full-featured playback controller with play/pause, segment navigation, timeline scrubbing, speed control, fullscreen, and export. Use <kbd>Space</kbd> to play/pause, <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> for segments, <kbd>Shift+&larr;/&rarr;</kbd> to scrub, and <kbd>F</kbd> for fullscreen.',
+      sourceCode: `import {
+  Player,
+  Circle,
+  Square,
+  Triangle,
+  Create,
+  Transform,
+  FadeIn,
+  FadeOut,
+  Indicate,
+  Rotate,
+  BLACK,
+  BLUE,
+  RED,
+  GREEN,
+  YELLOW,
+} from 'manim-web';
+
+const player = new Player(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+player.sequence(async (scene) => {
+  // Create a blue circle
+  const circle = new Circle({ radius: 1.5, color: BLUE });
+  await scene.play(new Create(circle));
+
+  await scene.wait(0.5);
+
+  // Transform to red square
+  const square = new Square({ sideLength: 3, color: RED });
+  await scene.play(new Transform(circle, square));
+
+  // Indicate
+  await scene.play(new Indicate(circle));
+
+  // Transform to green triangle
+  const triangle = new Triangle({ color: GREEN });
+  triangle.scale(2);
+  await scene.play(new Transform(circle, triangle));
+
+  // Rotate 180°
+  await scene.play(new Rotate(circle, { angle: Math.PI }));
+
+  // Fade out
+  await scene.play(new FadeOut(circle));
+
+  // Bring in a yellow circle
+  const circle2 = new Circle({ radius: 1, color: YELLOW });
+  await scene.play(new FadeIn(circle2));
+
+  await scene.wait(1);
+});`,
+      learnMore: ['Player', 'Circle', 'Square', 'Triangle', 'Create', 'Transform', 'Indicate', 'Rotate'],
+    },
+  ];
+
   const lines = [
     '---',
     'title: Examples',
@@ -1047,7 +1117,12 @@ function main() {
     '',
   ];
 
-  // Add all component imports at the top
+  // Add featured component imports
+  for (const feat of FEATURED_EXAMPLES) {
+    lines.push(`import ${feat.componentName} from '@site/src/components/examples/${feat.componentName}';`);
+  }
+
+  // Add all auto-generated component imports
   for (const ex of examples) {
     lines.push(`import ${ex.componentName} from '@site/src/components/examples/${ex.componentName}';`);
   }
@@ -1058,6 +1133,30 @@ function main() {
   lines.push('Interactive examples showing what you can build with manim-web. Each example includes a live animation and source code.');
   lines.push('');
 
+  // Emit featured examples first
+  for (const feat of FEATURED_EXAMPLES) {
+    lines.push(`## ${feat.title}`);
+    lines.push('');
+    lines.push(feat.description);
+    lines.push('');
+    lines.push(`<${feat.componentName} />`);
+    lines.push('');
+    lines.push('<details>');
+    lines.push('<summary>Source Code</summary>');
+    lines.push('');
+    lines.push('```typescript');
+    lines.push(feat.sourceCode);
+    lines.push('```');
+    lines.push('');
+    lines.push('</details>');
+    lines.push('');
+    if (feat.learnMore && feat.learnMore.length > 0) {
+      const learnMoreInline = feat.learnMore.map((name) => `[**${name}**](/api/classes/${name})`).join(' \u00B7 ');
+      lines.push(`**Learn More:** ${learnMoreInline}`);
+      lines.push('');
+    }
+  }
+
   // Group examples by category, preserving CATEGORIES definition order
   const exampleByStem = {};
   for (const ex of examples) exampleByStem[ex.stem] = ex;
@@ -1066,7 +1165,7 @@ function main() {
     grouped[cat] = stems.filter(s => exampleByStem[s]).map(s => exampleByStem[s]);
   }
 
-  let isFirst = true;
+  let isFirst = FEATURED_EXAMPLES.length === 0;
   for (const [category, entries] of Object.entries(grouped)) {
     if (entries.length === 0) continue;
 
