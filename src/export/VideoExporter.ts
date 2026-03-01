@@ -223,12 +223,14 @@ export class VideoExporter {
     for (let frame = 0; frame < totalFrames; frame++) {
       const time = frame * frameDuration;
 
-      // Seek to time and render
+      // Seek to time (this also renders the frame internally)
       this._scene.seek(time);
-      this._scene.render(); // Force render
 
-      // Small delay to ensure frame is captured
-      await new Promise((r) => setTimeout(r, 16));
+      // Wait for the next animation frame to ensure the canvas is
+      // painted and MediaRecorder has captured the frame.
+      // setTimeout(16) is unreliable — requestAnimationFrame synchronizes
+      // with the browser's paint cycle.
+      await new Promise((r) => requestAnimationFrame(r));
 
       this._options.onProgress(frame / totalFrames);
     }
