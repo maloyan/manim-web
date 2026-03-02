@@ -563,8 +563,8 @@ export class ThreeDScene extends Scene {
    */
   private _startOrbitLoop(): void {
     if (this._orbitRafId !== null) return;
-    // Skip if the scene's own animation loop is already rendering
-    if (this.isPlaying) return;
+    // Skip if the scene's own rAF loop is already rendering (play or wait)
+    if (this._hasActiveLoop) return;
 
     let lastCamJson = '';
     const tick = () => {

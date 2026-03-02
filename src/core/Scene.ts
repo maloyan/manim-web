@@ -199,6 +199,14 @@ export class Scene {
   }
 
   /**
+   * Whether a render loop is active (play() or wait()).
+   * Used by ThreeDScene to avoid duplicate orbit rAF loops.
+   */
+  protected get _hasActiveLoop(): boolean {
+    return this._isPlaying || this._waitCleanups.length > 0;
+  }
+
+  /**
    * Get the current playback time.
    */
   get currentTime(): number {
