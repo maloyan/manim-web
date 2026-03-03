@@ -66,9 +66,14 @@ export abstract class Animation {
     if (!this._preAnimationState) {
       try {
         this._preAnimationState = this.mobject.copy();
-      } catch {
+      } catch (err) {
         // Some mobjects (test mocks, minimal subclasses) don't support copy().
         // Fall back to a lightweight property-only snapshot.
+        console.warn(
+          'Animation.begin(): mobject.copy() failed, using minimal state snapshot. ' +
+            'Backward seeking may not fully restore this mobject.',
+          err,
+        );
         this._preAnimationState = this._captureMinimalState();
       }
     }

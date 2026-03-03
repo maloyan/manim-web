@@ -41,7 +41,7 @@ function computeGroupDuration(animations: Animation[], lagRatio: number): number
 
   if (lagRatio === 0) {
     // All parallel - duration is max of all durations
-    return Math.max(...animations.map(a => a.duration));
+    return Math.max(...animations.map((a) => a.duration));
   } else if (lagRatio >= 1) {
     // Sequential - duration is sum of all durations
     return animations.reduce((sum, a) => sum + a.duration, 0);
@@ -83,7 +83,7 @@ export class AnimationGroup extends Animation {
 
     super(dummyMobject, {
       duration: computedDuration,
-      rateFunc: options.rateFunc ?? linear
+      rateFunc: options.rateFunc ?? linear,
     });
 
     this.animations = animations;
@@ -172,7 +172,7 @@ export class AnimationGroup extends Animation {
    * Check if all child animations have finished
    */
   override isFinished(): boolean {
-    return this.animations.every(anim => anim.isFinished());
+    return this._isFinished || this.animations.every((anim) => anim.isFinished());
   }
 
   /**
@@ -193,7 +193,7 @@ export class AnimationGroup extends Animation {
  */
 export function animationGroup(
   animations: Animation[],
-  options?: AnimationGroupOptions
+  options?: AnimationGroupOptions,
 ): AnimationGroup {
   return new AnimationGroup(animations, options);
 }

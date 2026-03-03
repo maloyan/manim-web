@@ -697,11 +697,16 @@ export class Scene {
       const stillRendering = typeof asyncMob.isRendering !== 'function' || asyncMob.isRendering();
 
       if (stillRendering) {
-        asyncMob.waitForRender().then(() => {
-          if (this._autoRender) {
-            this._render();
-          }
-        });
+        asyncMob
+          .waitForRender()
+          .then(() => {
+            if (this._autoRender) {
+              this._render();
+            }
+          })
+          .catch((err) => {
+            console.warn('Scene: async mobject render failed for', asyncMob, err);
+          });
       }
     }
     for (const child of mobject.children) {

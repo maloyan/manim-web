@@ -33,6 +33,7 @@ export class Renderer {
   private _width: number;
   private _height: number;
   private _backgroundColor: THREE.Color;
+  private _contextLost: boolean = false;
 
   /**
    * Create a new Renderer and append it to the container.
@@ -49,7 +50,7 @@ export class Renderer {
       pixelRatio = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1,
       powerPreference = 'high-performance',
       alpha = false,
-      preserveDrawingBuffer = true,  // Needed for video/image export
+      preserveDrawingBuffer = true, // Needed for video/image export
       canvas,
     } = options;
 
@@ -58,7 +59,7 @@ export class Renderer {
     this._backgroundColor = new THREE.Color(backgroundColor);
 
     this._renderer = new THREE.WebGLRenderer({
-      canvas,  // Reuse existing canvas if provided
+      canvas, // Reuse existing canvas if provided
       antialias,
       alpha,
       preserveDrawingBuffer,
@@ -70,10 +71,29 @@ export class Renderer {
     this._renderer.setPixelRatio(Math.min(pixelRatio, 2));
     this._renderer.setClearColor(this._backgroundColor);
 
+    // Handle WebGL context loss/restore (common on mobile, GPU pressure, backgrounded tabs)
+    const domElement = this._renderer.domElement;
+    domElement.addEventListener('webglcontextlost', (event) => {
+      event.preventDefault();
+      this._contextLost = true;
+      console.warn('Renderer: WebGL context lost. Rendering suspended.');
+    });
+    domElement.addEventListener('webglcontextrestored', () => {
+      this._contextLost = false;
+      console.warn('Renderer: WebGL context restored.');
+    });
+
     // Only append if we created a new canvas (no existing canvas provided)
     if (!canvas) {
       container.appendChild(this._renderer.domElement);
     }
+  }
+
+  /**
+   * Whether the WebGL context is currently lost.
+   */
+  get isContextLost(): boolean {
+    return this._contextLost;
   }
 
   /**
@@ -111,6 +131,7 @@ export class Renderer {
    * @param camera - Three.js camera to use
    */
   render(scene: THREE.Scene, camera: THREE.Camera): void {
+    if (this._contextLost) return;
     this._renderer.render(scene, camera);
   }
 
