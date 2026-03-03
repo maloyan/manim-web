@@ -64,6 +64,7 @@ export class Renderer {
       alpha,
       preserveDrawingBuffer,
       powerPreference,
+      stencil: true, // Needed for anti-overlap stencil on transparent strokes
     });
 
     this._renderer.setSize(this._width, this._height);

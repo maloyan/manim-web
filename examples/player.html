@@ -95,22 +95,26 @@
       // Segment 4: Indicate
       await scene.play(new Indicate(circle));
 
-      // Segment 5: Transform to green triangle
+      // Segment 5: Transform red square to red circle
+      const redCircle = new Circle({ radius: 1.5, color: RED });
+      await scene.play(new Transform(circle, redCircle));
+
+      // Segment 6: Transform to green triangle
       const triangle = new Triangle({ color: GREEN });
       triangle.scale(2);
       await scene.play(new Transform(circle, triangle));
 
-      // Segment 6: Rotate
+      // Segment 7: Rotate
       await scene.play(new Rotate(circle, { angle: Math.PI }));
 
-      // Segment 7: Fade out
+      // Segment 8: Fade out
       await scene.play(new FadeOut(circle));
 
-      // Segment 8: Bring in a new circle with a yellow color
+      // Segment 9: Bring in a new circle with a yellow color
       const circle2 = new Circle({ radius: 1, color: YELLOW });
       await scene.play(new FadeIn(circle2));
 
-      // Segment 9: Final pause
+      // Segment 10: Final pause
       await scene.wait(1);
     });
   </script>

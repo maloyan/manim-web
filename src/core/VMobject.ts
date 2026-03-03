@@ -49,6 +49,9 @@ export class VMobject extends Mobject {
   /** Whether geometry needs rebuild (separate from material dirty) */
   protected _geometryDirty: boolean = true;
 
+  /** Tracks whether opacity was fully opaque last sync (for corner-wrap rebuild) */
+  private _wasOpaque: boolean = true;
+
   /** Cached Line2 for in-place geometry updates (avoids dispose/recreate) */
   private _cachedLine2: Line2 | null = null;
 
@@ -58,6 +61,13 @@ export class VMobject extends Mobject {
   /** Cached fill mesh for in-place geometry updates */
   private _cachedFillMesh: THREE.Mesh | null = null;
 
+  /**
+   * Per-instance stencil ref for preventing double-blending at Line2 joints
+   * when the stroke is partially transparent. Each VMobject gets a unique
+   * ref (mod 254, range 1-255) so different objects don't block each other.
+   */
+  private static _stencilCounter = 0;
+  private _stencilRef: number = (VMobject._stencilCounter++ % 254) + 1;
 
   /** Renderer resolution for LineMaterial (set by Scene) */
   static _rendererWidth: number = 800;
@@ -190,7 +200,7 @@ export class VMobject extends Mobject {
    * Get all points as 2D Point objects (derived from _points3D)
    */
   get points(): Point[] {
-    return this._points3D.map(p => ({ x: p[0], y: p[1] }));
+    return this._points3D.map((p) => ({ x: p[0], y: p[1] }));
   }
 
   /**
@@ -205,11 +215,11 @@ export class VMobject extends Mobject {
     } else if (Array.isArray(points[0])) {
       // points is number[][]
       const points3D = points as number[][];
-      this._points3D = points3D.map(p => [...p]);
+      this._points3D = points3D.map((p) => [...p]);
     } else {
       // points is Point[]
       const points2D = points as Point[];
-      this._points3D = points2D.map(p => [p.x, p.y, 0]);
+      this._points3D = points2D.map((p) => [p.x, p.y, 0]);
     }
     this._visiblePointCount = null;
     this._geometryDirty = true;
@@ -233,7 +243,7 @@ export class VMobject extends Mobject {
    * @returns Copy of the points array
    */
   getPoints(): number[][] {
-    return this._points3D.map(p => [...p]);
+    return this._points3D.map((p) => [...p]);
   }
 
   /**
@@ -264,7 +274,7 @@ export class VMobject extends Mobject {
    */
   getVisiblePoints(): Point[] {
     const count = this.visiblePointCount;
-    return this._points3D.slice(0, count).map(p => ({ x: p[0], y: p[1] }));
+    return this._points3D.slice(0, count).map((p) => ({ x: p[0], y: p[1] }));
   }
 
   /**
@@ -272,14 +282,14 @@ export class VMobject extends Mobject {
    */
   getVisiblePoints3D(): number[][] {
     const count = this.visiblePointCount;
-    return this._points3D.slice(0, count).map(p => [...p]);
+    return this._points3D.slice(0, count).map((p) => [...p]);
   }
 
   /**
    * Add points to this VMobject using 2D Point objects
    */
   addPoints(...points: Point[]): this {
-    this._points3D.push(...points.map(p => [p.x, p.y, 0]));
+    this._points3D.push(...points.map((p) => [p.x, p.y, 0]));
     this._geometryDirty = true;
     this._markDirty();
     return this;
@@ -315,9 +325,9 @@ export class VMobject extends Mobject {
       ]);
       // handle2 = lerp(p0, p1, 2/3)
       points.push([
-        p0[0] + 2 * (p1[0] - p0[0]) / 3,
-        p0[1] + 2 * (p1[1] - p0[1]) / 3,
-        (p0[2] || 0) + 2 * ((p1[2] || 0) - (p0[2] || 0)) / 3,
+        p0[0] + (2 * (p1[0] - p0[0])) / 3,
+        p0[1] + (2 * (p1[1] - p0[1])) / 3,
+        (p0[2] || 0) + (2 * ((p1[2] || 0) - (p0[2] || 0))) / 3,
       ]);
       // anchor2 = p1
       points.push([p1[0], p1[1], p1[2] || 0]);
@@ -351,9 +361,9 @@ export class VMobject extends Mobject {
       ];
       // handle2 = lerp(last, corner, 2/3)
       const h2 = [
-        last[0] + 2 * (corner[0] - last[0]) / 3,
-        last[1] + 2 * (corner[1] - last[1]) / 3,
-        lz + 2 * (cz - lz) / 3,
+        last[0] + (2 * (corner[0] - last[0])) / 3,
+        last[1] + (2 * (corner[1] - last[1])) / 3,
+        lz + (2 * (cz - lz)) / 3,
       ];
       const anchor = [corner[0], corner[1], cz];
 
@@ -402,7 +412,11 @@ export class VMobject extends Mobject {
       this._style.fillOpacity = lerp(this._style.fillOpacity, target._style.fillOpacity, alpha);
     }
     if (this._style.strokeOpacity !== undefined && target._style.strokeOpacity !== undefined) {
-      this._style.strokeOpacity = lerp(this._style.strokeOpacity, target._style.strokeOpacity, alpha);
+      this._style.strokeOpacity = lerp(
+        this._style.strokeOpacity,
+        target._style.strokeOpacity,
+        alpha,
+      );
     }
     if (this._style.strokeWidth !== undefined && target._style.strokeWidth !== undefined) {
       this._style.strokeWidth = lerp(this._style.strokeWidth, target._style.strokeWidth, alpha);
@@ -420,15 +434,13 @@ export class VMobject extends Mobject {
   }
 
   /**
-   * Align points between this VMobject and a target so they have the same count.
-   * This is necessary for smooth morphing animations.
+   * Align points between this VMobject and a target so they have the same
+   * count, consistent winding, and optimal rotation for smooth morphing.
    * @param target - The target VMobject to align with
    */
   alignPoints(target: VMobject): void {
     const thisCount = this._points3D.length;
     const targetCount = target._points3D.length;
-
-    if (thisCount === targetCount) return;
 
     const maxCount = Math.max(thisCount, targetCount);
 
@@ -439,6 +451,114 @@ export class VMobject extends Mobject {
     if (targetCount < maxCount) {
       target._points3D = this._interpolatePointList3D(target._points3D, maxCount);
     }
+
+    // Need at least 4 points (one cubic bezier segment) to optimize
+    if (this._points3D.length < 4) return;
+
+    // Ensure consistent winding direction between source and target.
+    // Opposite winding causes collapsed/twisted intermediate shapes.
+    const srcWinding = VMobject._signedArea2D(this._points3D);
+    const tgtWinding = VMobject._signedArea2D(target._points3D);
+    if (srcWinding * tgtWinding < 0) {
+      // Opposite winding — reverse target points (preserve bezier structure)
+      target._points3D = VMobject._reverseBezierPath(target._points3D);
+    }
+
+    // Find the cyclic rotation of target points that minimises total
+    // squared distance to the source, so corresponding points are
+    // geometrically close and the morph looks smooth.
+    target._points3D = VMobject._bestRotation(this._points3D, target._points3D);
+  }
+
+  /**
+   * Compute the signed area of a 2D polygon formed by the anchor points.
+   * Positive = counter-clockwise, negative = clockwise.
+   */
+  private static _signedArea2D(pts: number[][]): number {
+    // Use only anchor points (every 3rd starting from 0 for cubic bezier)
+    const stride = 3;
+    const anchors: number[][] = [];
+    for (let i = 0; i < pts.length; i += stride) {
+      anchors.push(pts[i]);
+    }
+    if (anchors.length < 3) return 0;
+    let area = 0;
+    for (let i = 0; i < anchors.length; i++) {
+      const j = (i + 1) % anchors.length;
+      area += anchors[i][0] * anchors[j][1];
+      area -= anchors[j][0] * anchors[i][1];
+    }
+    return area / 2;
+  }
+
+  /**
+   * Reverse a cubic-bezier point path while preserving bezier structure.
+   * For cubic segments [A0, H1, H2, A1, H3, H4, A2, ...],
+   * reversing means the path goes in the opposite direction.
+   */
+  private static _reverseBezierPath(pts: number[][]): number[][] {
+    if (pts.length < 2) return pts.map((p) => [...p]);
+    // Simply reverse the entire array — this reverses the path direction
+    // and swaps control handle order within each segment, which is correct
+    // for cubic beziers.
+    return [...pts].reverse().map((p) => [...p]);
+  }
+
+  /**
+   * Find the cyclic rotation of `target` anchor points that minimises
+   * total squared distance to `source`, then apply that rotation.
+   * Only rotates by multiples of the bezier stride (3) to preserve
+   * the cubic bezier segment structure.
+   */
+  private static _bestRotation(source: number[][], target: number[][]): number[][] {
+    const n = target.length;
+    if (n < 4) return target;
+
+    // Detect closed path: first point ≈ last point
+    const first = target[0];
+    const last = target[n - 1];
+    const closed = Math.abs(first[0] - last[0]) < 1e-6 && Math.abs(first[1] - last[1]) < 1e-6;
+
+    // For closed paths, the "open" portion is points 0..n-2 (length = n-1).
+    // We rotate within this open portion, then duplicate the first point.
+    const openLen = closed ? n - 1 : n;
+
+    const stride = 3; // cubic bezier: each segment = 3 new points
+    const numRotations = Math.floor(openLen / stride);
+    if (numRotations <= 1) return target;
+
+    let bestDist = Infinity;
+    let bestShift = 0;
+
+    for (let r = 0; r < numRotations; r++) {
+      const shift = r * stride;
+      let dist = 0;
+      for (let i = 0; i < openLen; i++) {
+        const si = source[i];
+        const ti = target[(i + shift) % openLen];
+        const dx = si[0] - ti[0];
+        const dy = si[1] - ti[1];
+        dist += dx * dx + dy * dy;
+      }
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestShift = shift;
+      }
+    }
+
+    if (bestShift === 0) return target;
+
+    // Apply the rotation within the open portion
+    const rotated: number[][] = [];
+    for (let i = 0; i < openLen; i++) {
+      const srcIdx = (i + bestShift) % openLen;
+      rotated.push([...target[srcIdx]]);
+    }
+    // Re-close the path
+    if (closed) {
+      rotated.push([...rotated[0]]);
+    }
+    return rotated;
   }
 
   /**
@@ -446,15 +566,19 @@ export class VMobject extends Mobject {
    */
   protected _interpolatePointList3D(points: number[][], targetCount: number): number[][] {
     if (points.length === 0) {
-      return Array(targetCount).fill(null).map(() => [0, 0, 0]);
+      return Array(targetCount)
+        .fill(null)
+        .map(() => [0, 0, 0]);
     }
 
     if (points.length === targetCount) {
-      return points.map(p => [...p]);
+      return points.map((p) => [...p]);
     }
 
     if (points.length === 1) {
-      return Array(targetCount).fill(null).map(() => [...points[0]]);
+      return Array(targetCount)
+        .fill(null)
+        .map(() => [...points[0]]);
     }
 
     const result: number[][] = [];
@@ -499,11 +623,7 @@ export class VMobject extends Mobject {
       const handle2 = points[i + 2];
       const anchor2 = points[i + 3];
 
-      shape.bezierCurveTo(
-        handle1.x, handle1.y,
-        handle2.x, handle2.y,
-        anchor2.x, anchor2.y
-      );
+      shape.bezierCurveTo(handle1.x, handle1.y, handle2.x, handle2.y, anchor2.x, anchor2.y);
 
       // Move to next segment (skip by 3 to share anchor)
       i += 3;
@@ -568,7 +688,7 @@ export class VMobject extends Mobject {
    *          polygon is too degenerate even for fallback.
    */
   protected _buildEarcutFillGeometry(points3D: number[][]): THREE.BufferGeometry | null {
-    const subpathLengths = (this as any).getSubpaths?.() as number[] | undefined;
+    const subpathLengths = (this as unknown as { getSubpaths?: () => number[] }).getSubpaths?.();
 
     // For disjoint subpaths (e.g. boolean XOR), split control points FIRST
     // then sample each subpath independently. This avoids bogus bezier
@@ -679,10 +799,7 @@ export class VMobject extends Mobject {
     if (allPositions.length === 0) return null;
 
     const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute(
-      'position',
-      new THREE.BufferAttribute(new Float32Array(allPositions), 3),
-    );
+    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(allPositions), 3));
     return geometry;
   }
 
@@ -694,9 +811,11 @@ export class VMobject extends Mobject {
     const [px, py] = point;
     let inside = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const xi = ring[i][0], yi = ring[i][1];
-      const xj = ring[j][0], yj = ring[j][1];
-      if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) {
+      const xi = ring[i][0],
+        yi = ring[i][1];
+      const xj = ring[j][0],
+        yj = ring[j][1];
+      if (yi > py !== yj > py && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) {
         inside = !inside;
       }
     }
@@ -721,7 +840,7 @@ export class VMobject extends Mobject {
 
       const samples = VMobject._isNearlyLinear(p0, p1, p2, p3) ? 1 : samplesPerSegment;
 
-      const startT = (i === 0) ? 0 : 1; // skip first point of subsequent segments (shared anchor)
+      const startT = i === 0 ? 0 : 1; // skip first point of subsequent segments (shared anchor)
       for (let t = startT; t <= samples; t++) {
         const u = t / samples;
         const pt = evalCubicBezier(p0, p1, p2, p3, u);
@@ -763,11 +882,14 @@ export class VMobject extends Mobject {
     const group = new THREE.Group();
 
     // Create stroke material using LineMaterial for thick strokes
+    // depthWrite disabled when transparent to prevent double-blending at
+    // Line2 segment joints (visible as bright dots during fade animations).
     this._strokeMaterial = new LineMaterial({
       color: new THREE.Color(this.color).getHex(),
       linewidth: this._computeLinewidth(this.strokeWidth),
       opacity: this._opacity,
       transparent: this._opacity < 1,
+      depthWrite: this._opacity >= 1,
       resolution: new THREE.Vector2(this._getRendererWidth(), this._getRendererHeight()),
       dashed: false,
     });
@@ -776,8 +898,9 @@ export class VMobject extends Mobject {
     this._fillMaterial = new THREE.MeshBasicMaterial({
       color: new THREE.Color(this._style.fillColor || this.color),
       transparent: true,
+      depthWrite: false,
       opacity: this._opacity * this.fillOpacity,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
     });
 
     this._updateGeometry(group);
@@ -879,7 +1002,7 @@ export class VMobject extends Mobject {
    * subpaths, each is rendered as a separate Line2 to avoid visible bridge lines.
    */
   private _updateLine2Stroke(group: THREE.Group, points3D: number[][]): void {
-    const subpathLengths = (this as any).getSubpaths?.() as number[] | undefined;
+    const subpathLengths = (this as unknown as { getSubpaths?: () => number[] }).getSubpaths?.();
 
     if (subpathLengths && subpathLengths.length > 1) {
       // Multi-subpath: render each subpath as a separate Line2
@@ -904,10 +1027,14 @@ export class VMobject extends Mobject {
 
       // Line2 doesn't handle corner joins. For closed paths (first ≈ last point),
       // wrap a few extra points from the start to fill the gap at the closing corner.
-      if (sampledPoints.length >= 3) {
+      // Skip when transparent: the overlapping quads double-blend at partial opacity,
+      // creating visible bright dots at vertices.
+      if (this._opacity >= 1 && sampledPoints.length >= 3) {
         const first = sampledPoints[0];
         const last = sampledPoints[sampledPoints.length - 1];
-        const dx = first[0] - last[0], dy = first[1] - last[1], dz = first[2] - last[2];
+        const dx = first[0] - last[0],
+          dy = first[1] - last[1],
+          dz = first[2] - last[2];
         if (dx * dx + dy * dy + dz * dz < 1e-6) {
           // Closed path: append the next 2 points to overlap the join
           const wrap = Math.min(2, sampledPoints.length - 1);
@@ -942,13 +1069,16 @@ export class VMobject extends Mobject {
       group.remove(this._cachedLine2);
       this._cachedLine2 = null;
     }
-
   }
 
   /**
    * Render multiple separate Line2 strokes, one per subpath.
    */
-  private _updateLine2StrokeMulti(group: THREE.Group, points3D: number[][], subpathLengths: number[]): void {
+  private _updateLine2StrokeMulti(
+    group: THREE.Group,
+    points3D: number[][],
+    subpathLengths: number[],
+  ): void {
     // Remove single Line2 if it exists
     if (this._cachedLine2) {
       this._cachedLine2.geometry.dispose();
@@ -982,10 +1112,13 @@ export class VMobject extends Mobject {
         }
 
         // Close path corner overlap (same as single-path branch above)
-        if (sampledPoints.length >= 3) {
+        // Skip when transparent to avoid bright dots from double-blending.
+        if (this._opacity >= 1 && sampledPoints.length >= 3) {
           const first = sampledPoints[0];
           const last = sampledPoints[sampledPoints.length - 1];
-          const dx = first[0] - last[0], dy = first[1] - last[1], dz = first[2] - last[2];
+          const dx = first[0] - last[0],
+            dy = first[1] - last[1],
+            dz = first[2] - last[2];
           if (dx * dx + dy * dy + dz * dz < 1e-6) {
             const wrap = Math.min(2, sampledPoints.length - 1);
             for (let j = 1; j <= wrap; j++) {
@@ -1021,7 +1154,9 @@ export class VMobject extends Mobject {
     if (points3D.length < 4) return false;
     const first = points3D[0];
     const last = points3D[points3D.length - 1];
-    const dx = first[0] - last[0], dy = first[1] - last[1], dz = first[2] - last[2];
+    const dx = first[0] - last[0],
+      dy = first[1] - last[1],
+      dz = first[2] - last[2];
     return dx * dx + dy * dy + dz * dz < 1e-6;
   }
 
@@ -1050,8 +1185,11 @@ export class VMobject extends Mobject {
     }
     // Remove closing point if it matches the first
     if (deduped.length >= 2) {
-      const f = deduped[0], l = deduped[deduped.length - 1];
-      const dx = f[0] - l[0], dy = f[1] - l[1], dz = f[2] - l[2];
+      const f = deduped[0],
+        l = deduped[deduped.length - 1];
+      const dx = f[0] - l[0],
+        dy = f[1] - l[1],
+        dz = f[2] - l[2];
       if (dx * dx + dy * dy + dz * dz < 1e-6) {
         deduped.pop();
       }
@@ -1069,7 +1207,7 @@ export class VMobject extends Mobject {
     const invWorldMatrix = new THREE.Matrix4().copy(worldMatrix).invert();
     const _v = new THREE.Vector3();
 
-    const pts: number[][] = deduped.map(p => {
+    const pts: number[][] = deduped.map((p) => {
       _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
       return [_v.x, _v.y, _v.z];
     });
@@ -1094,8 +1232,10 @@ export class VMobject extends Mobject {
       const curr = pts[i];
       const next = pts[(i + 1) % n];
 
-      const d1x = curr[0] - prev[0], d1y = curr[1] - prev[1];
-      const d2x = next[0] - curr[0], d2y = next[1] - curr[1];
+      const d1x = curr[0] - prev[0],
+        d1y = curr[1] - prev[1];
+      const d2x = next[0] - curr[0],
+        d2y = next[1] - curr[1];
 
       const len1 = Math.sqrt(d1x * d1x + d1y * d1y) || 1;
       const len2 = Math.sqrt(d2x * d2x + d2y * d2y) || 1;
@@ -1105,10 +1245,16 @@ export class VMobject extends Mobject {
       const n2x = normalSign * (-d2y / len2);
       const n2y = normalSign * (d2x / len2);
 
-      let mx = n1x + n2x, my = n1y + n2y;
+      let mx = n1x + n2x,
+        my = n1y + n2y;
       const mlen = Math.sqrt(mx * mx + my * my);
-      if (mlen > 1e-10) { mx /= mlen; my /= mlen; }
-      else { mx = n1x; my = n1y; }
+      if (mlen > 1e-10) {
+        mx /= mlen;
+        my /= mlen;
+      } else {
+        mx = n1x;
+        my = n1y;
+      }
 
       // Add sub-pixel epsilon to outer miter to prevent GPU fill-rule gaps
       const cosHalf = n1x * mx + n1y * my;
@@ -1122,8 +1268,10 @@ export class VMobject extends Mobject {
       const curr = pts[i];
       const next = pts[(i + 1) % n];
 
-      const d1x = curr[0] - prev[0], d1y = curr[1] - prev[1];
-      const d2x = next[0] - curr[0], d2y = next[1] - curr[1];
+      const d1x = curr[0] - prev[0],
+        d1y = curr[1] - prev[1];
+      const d2x = next[0] - curr[0],
+        d2y = next[1] - curr[1];
       const len1 = Math.sqrt(d1x * d1x + d1y * d1y) || 1;
       const len2 = Math.sqrt(d2x * d2x + d2y * d2y) || 1;
       const n1x = normalSign * (-d1y / len1);
@@ -1131,10 +1279,16 @@ export class VMobject extends Mobject {
       const n2x = normalSign * (-d2y / len2);
       const n2y = normalSign * (d2x / len2);
 
-      let mx = n1x + n2x, my = n1y + n2y;
+      let mx = n1x + n2x,
+        my = n1y + n2y;
       const mlen = Math.sqrt(mx * mx + my * my);
-      if (mlen > 1e-10) { mx /= mlen; my /= mlen; }
-      else { mx = n1x; my = n1y; }
+      if (mlen > 1e-10) {
+        mx /= mlen;
+        my /= mlen;
+      } else {
+        mx = n1x;
+        my = n1y;
+      }
 
       const cosHalf = n1x * mx + n1y * my;
       const miterLen = cosHalf > 0.1 ? halfW / cosHalf : halfW * 2;
@@ -1145,8 +1299,9 @@ export class VMobject extends Mobject {
     // Transform world-space positions back to local space
     const positions: number[] = [];
     for (let i = 0; i < worldPositions.length; i += 3) {
-      _v.set(worldPositions[i], worldPositions[i + 1], worldPositions[i + 2])
-        .applyMatrix4(invWorldMatrix);
+      _v.set(worldPositions[i], worldPositions[i + 1], worldPositions[i + 2]).applyMatrix4(
+        invWorldMatrix,
+      );
       positions.push(_v.x, _v.y, _v.z);
     }
 
@@ -1170,18 +1325,23 @@ export class VMobject extends Mobject {
         this._strokeMeshMaterial.color.set(this.color);
         this._strokeMeshMaterial.opacity = this._opacity;
         this._strokeMeshMaterial.transparent = this._opacity < 1;
+        this._strokeMeshMaterial.depthWrite = this._opacity >= 1;
       }
     } else {
-      this._strokeMeshMaterial = this._strokeMeshMaterial || new THREE.MeshBasicMaterial({
-        color: new THREE.Color(this.color),
-        side: THREE.DoubleSide,
-        depthTest: false,
-        transparent: this._opacity < 1,
-        opacity: this._opacity,
-      });
+      this._strokeMeshMaterial =
+        this._strokeMeshMaterial ||
+        new THREE.MeshBasicMaterial({
+          color: new THREE.Color(this.color),
+          side: THREE.DoubleSide,
+          depthTest: false,
+          transparent: this._opacity < 1,
+          depthWrite: this._opacity >= 1,
+          opacity: this._opacity,
+        });
       this._strokeMeshMaterial.color.set(this.color);
       this._strokeMeshMaterial.opacity = this._opacity;
       this._strokeMeshMaterial.transparent = this._opacity < 1;
+      this._strokeMeshMaterial.depthWrite = this._opacity >= 1;
       this._cachedStrokeMesh = new THREE.Mesh(geometry, this._strokeMeshMaterial);
       this._cachedStrokeMesh.frustumCulled = false;
       group.add(this._cachedStrokeMesh);
@@ -1299,9 +1459,12 @@ export class VMobject extends Mobject {
         const u = t / samples;
         const pt = evalCubicBezier(p0, p1, p2, p3, u);
         // Avoid duplicate points
-        if (t === 0 || result.length === 0 ||
-            Math.abs(pt[0] - result[result.length - 1][0]) > 0.0001 ||
-            Math.abs(pt[1] - result[result.length - 1][1]) > 0.0001) {
+        if (
+          t === 0 ||
+          result.length === 0 ||
+          Math.abs(pt[0] - result[result.length - 1][0]) > 0.0001 ||
+          Math.abs(pt[1] - result[result.length - 1][1]) > 0.0001
+        ) {
           result.push(pt);
         }
       }
@@ -1327,13 +1490,12 @@ export class VMobject extends Mobject {
 
     const invLen = 1 / Math.sqrt(len2);
     // Perpendicular distance from p1 to chord
-    const d1 = Math.abs((p1[0] - p0[0]) * (-dy) + (p1[1] - p0[1]) * dx) * invLen;
+    const d1 = Math.abs((p1[0] - p0[0]) * -dy + (p1[1] - p0[1]) * dx) * invLen;
     // Perpendicular distance from p2 to chord
-    const d2 = Math.abs((p2[0] - p0[0]) * (-dy) + (p2[1] - p0[1]) * dx) * invLen;
+    const d2 = Math.abs((p2[0] - p0[0]) * -dy + (p2[1] - p0[1]) * dx) * invLen;
 
     return Math.max(d1, d2) < 0.01; // < 0.01 world-units off the chord
   }
-
 
   /**
    * Sync material properties to Three.js
@@ -1343,9 +1505,26 @@ export class VMobject extends Mobject {
       this._strokeMaterial.color.set(this.color);
       this._strokeMaterial.opacity = this._opacity;
       this._strokeMaterial.transparent = this._opacity < 1;
+      this._strokeMaterial.depthWrite = this._opacity >= 1;
       this._strokeMaterial.linewidth = this._computeLinewidth(this.strokeWidth);
       // Update resolution for proper line width rendering
       this._strokeMaterial.resolution.set(this._getRendererWidth(), this._getRendererHeight());
+
+      // Prevent double-blending at Line2 segment joints when partially
+      // transparent.  Each VMobject uses a unique stencilRef so overlapping
+      // objects don't block each other; within one object, the first fragment
+      // to render claims the pixel and subsequent overlapping segments skip it.
+      if (this._opacity < 1) {
+        this._strokeMaterial.stencilWrite = true;
+        this._strokeMaterial.stencilFunc = THREE.NotEqualStencilFunc;
+        this._strokeMaterial.stencilRef = this._stencilRef;
+        this._strokeMaterial.stencilFuncMask = 0xff;
+        this._strokeMaterial.stencilFail = THREE.KeepStencilOp;
+        this._strokeMaterial.stencilZFail = THREE.KeepStencilOp;
+        this._strokeMaterial.stencilZPass = THREE.ReplaceStencilOp;
+      } else {
+        this._strokeMaterial.stencilWrite = false;
+      }
     }
 
     if (this._fillMaterial) {
@@ -1357,9 +1536,8 @@ export class VMobject extends Mobject {
       this._strokeMeshMaterial.color.set(this.color);
       this._strokeMeshMaterial.opacity = this._opacity;
       this._strokeMeshMaterial.transparent = this._opacity < 1;
+      this._strokeMeshMaterial.depthWrite = this._opacity >= 1;
     }
-
-
 
     // Keep BezierRenderer resolution in sync
     if (VMobject._sharedBezierRenderer) {
@@ -1370,6 +1548,14 @@ export class VMobject extends Mobject {
       );
     }
 
+    // Rebuild geometry when opacity crosses the 1.0 boundary (corner-wrap
+    // is skipped for transparent strokes to avoid bright dots).
+    const isOpaque = this._opacity >= 1;
+    if (isOpaque !== this._wasOpaque) {
+      this._geometryDirty = true;
+      this._wasOpaque = isOpaque;
+    }
+
     // Only rebuild geometry if points actually changed
     if (this._geometryDirty && this._threeObject instanceof THREE.Group) {
       this._updateGeometry(this._threeObject);
@@ -1378,11 +1564,30 @@ export class VMobject extends Mobject {
   }
 
   /**
+   * Create a copy of this VMobject.
+   * Subclasses override _createCopy() to produce an instance of the right
+   * concrete type (Circle, Square, etc.), but those constructors typically
+   * regenerate points from their own parameters (radius, sideLength, …).
+   * After a Transform animation has morphed the point data, the regenerated
+   * points no longer match the actual visual state.  We therefore always
+   * overwrite the clone's _points3D with the source's current data.
+   */
+  override copy(): VMobject {
+    const clone = super.copy() as VMobject;
+    // Overwrite points so they reflect current (possibly morphed) state,
+    // not whatever _createCopy()'s constructor regenerated.
+    clone._points3D = this._points3D.map((p) => [...p]);
+    clone._visiblePointCount = this._visiblePointCount;
+    clone._geometryDirty = true;
+    return clone;
+  }
+
+  /**
    * Create a copy of this VMobject
    */
   protected override _createCopy(): VMobject {
     const vmobject = new VMobject();
-    vmobject._points3D = this._points3D.map(p => [...p]);
+    vmobject._points3D = this._points3D.map((p) => [...p]);
     vmobject._visiblePointCount = this._visiblePointCount;
     return vmobject;
   }
@@ -1420,9 +1625,12 @@ export class VMobject extends Mobject {
       return [this.position.x, this.position.y, this.position.z];
     }
 
-    let minX = Infinity, maxX = -Infinity;
-    let minY = Infinity, maxY = -Infinity;
-    let minZ = Infinity, maxZ = -Infinity;
+    let minX = Infinity,
+      maxX = -Infinity;
+    let minY = Infinity,
+      maxY = -Infinity;
+    let minZ = Infinity,
+      maxZ = -Infinity;
     for (const p of this._points3D) {
       if (p[0] < minX) minX = p[0];
       if (p[0] > maxX) maxX = p[0];
