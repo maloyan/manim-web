@@ -143,7 +143,7 @@ class ZoomedDisplay extends Mobject {
         return new THREE.Group();
       }
       protected _createCopy() {
-        return new this.constructor() as Mobject;
+        return new (this.constructor as new () => Mobject)();
       }
     })();
   }
