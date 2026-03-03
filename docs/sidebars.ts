@@ -5,7 +5,11 @@ const sidebars: SidebarsConfig = {
     'intro',
     'getting-started',
     'py2ts-converter',
-    'examples',
+    {
+      type: 'category',
+      label: 'Examples',
+      items: ['examples/animations', 'examples/graphing', 'examples/3d-scenes'],
+    },
     {
       type: 'link',
       label: 'API Reference',

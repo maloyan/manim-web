@@ -26,40 +26,120 @@ const placeholderStyle: React.CSSProperties = {
   borderRadius: 12,
 };
 
+/**
+ * Global initialization queue.  Scene creation is serialized through this
+ * queue so that WebGL contexts are allocated one at a time (avoiding a burst
+ * of simultaneous context requests that can cause GPU OOM).  The queue is
+ * released as soon as the scene is created, allowing multiple scenes to
+ * animate concurrently.
+ */
+let initQueue: Array<() => void> = [];
+let initRunning = false;
+
+function enqueueInit(): Promise<void> {
+  if (!initRunning) {
+    initRunning = true;
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    initQueue.push(resolve);
+  });
+}
+
+function dequeueInit(): void {
+  if (initQueue.length > 0) {
+    const next = initQueue.shift()!;
+    next();
+  } else {
+    initRunning = false;
+  }
+}
+
+/** Release the queue exactly once via a shared flag. */
+function releaseQueue(flag: { released: boolean }): void {
+  if (!flag.released) {
+    flag.released = true;
+    dequeueInit();
+  }
+}
+
+/** Force the browser to release a WebGL context immediately. */
+function forceContextLoss(canvas: HTMLCanvasElement | null): void {
+  if (!canvas) return;
+  try {
+    const gl =
+      (canvas.getContext('webgl2') as WebGL2RenderingContext | null) ||
+      (canvas.getContext('webgl') as WebGLRenderingContext | null);
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+  } catch {
+    /* ignore — context may already be lost */
+  }
+}
+
+/** Check if an element is in the viewport using getBoundingClientRect. */
+function isElementInViewport(el: HTMLElement): boolean {
+  const rect = el.getBoundingClientRect();
+  return rect.top < window.innerHeight && rect.bottom > 0;
+}
+
 function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sceneRef = useRef<any>(null);
+  const queueFlagRef = useRef<{ released: boolean } | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Bidirectional observer — create on enter, dispose on leave
+  // Visibility detection — IntersectionObserver with manual fallback.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
+    // Manual check — IntersectionObserver may not fire its initial callback
+    // immediately when used inside Docusaurus BrowserOnly.
+    if (isElementInViewport(el)) {
+      setIsVisible(true);
+    }
+
     const observer = new IntersectionObserver(([entry]) => setIsVisible(entry.isIntersecting), {
-      rootMargin: '200px',
+      threshold: [0, 0.1],
     });
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
-  // Scene lifecycle tied to visibility
+  // Scene lifecycle — loops while visible.
+  // ALL scenes go through the init queue so only one WebGL context is active.
+  const shouldRun = isVisible;
+
   useEffect(() => {
-    if (!isVisible || !containerRef.current) return;
+    if (!shouldRun || !containerRef.current) return;
 
     const container = containerRef.current;
     let cancelled = false;
+    const queueFlag = { released: true };
 
     (async () => {
+      await enqueueInit();
+      queueFlag.released = false;
+      queueFlagRef.current = queueFlag;
+
+      if (cancelled) {
+        releaseQueue(queueFlag);
+        return;
+      }
+
       try {
         const manim = await import('manim-web');
-        if (cancelled) return;
-        if (!container) return;
+        if (cancelled) {
+          releaseQueue(queueFlag);
+          return;
+        }
 
         const width = container.clientWidth || 800;
         const height = Math.round(width / ASPECT_RATIO);
 
+        // Create scene ONCE — reuse across loop iterations to avoid
+        // WebGL context churn that causes GPU OOM.
         const scene = createScene
           ? await createScene(container, manim, { width, height })
           : new manim.Scene(container, {
@@ -69,40 +149,72 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
             });
 
         if (cancelled) {
+          const c = container.querySelector('canvas') as HTMLCanvasElement | null;
+          forceContextLoss(c);
           try {
             scene.dispose();
           } catch {
             /* ignore */
           }
+          releaseQueue(queueFlag);
           return;
         }
 
         sceneRef.current = scene;
 
-        // Listen for context loss — mark not visible so re-init can happen
-        const canvas = container.querySelector('canvas');
+        // Release the init queue now that the scene is created — other
+        // scenes can start initializing while this one animates.
+        releaseQueue(queueFlag);
+
+        const canvas = container.querySelector('canvas') as HTMLCanvasElement | null;
         const onContextLost = () => {
           if (!cancelled) setIsVisible(false);
         };
         canvas?.addEventListener('webglcontextlost', onContextLost);
 
-        // Run animation loop
+        // Animation loop: run animation, hold, clear, repeat
         while (!cancelled) {
           try {
             await animationFn(scene);
-            if (cancelled) break;
-            await scene.wait(2);
-            if (cancelled) break;
-            scene.clear({ render: false });
           } catch (e) {
-            if (cancelled) break;
             console.error('Animation error:', e);
-            break;
           }
+
+          // Force a render so static scenes (add-only, no play) are visible.
+          try {
+            scene._render?.();
+          } catch {
+            /* ignore */
+          }
+
+          if (cancelled) break;
+
+          // Hold the final frame so the result is visible before looping.
+          await new Promise((r) => setTimeout(r, 2000));
+
+          if (cancelled) break;
+
+          // Clear scene state for next iteration
+          if (scene.clear) {
+            scene.clear();
+          } else {
+            while (scene.mobjects && scene.mobjects.length > 0) {
+              scene.remove(scene.mobjects[0]);
+            }
+          }
+          try {
+            scene._render?.();
+          } catch {
+            /* ignore */
+          }
+
+          // Brief pause between loops
+          await new Promise((r) => setTimeout(r, 500));
         }
 
         canvas?.removeEventListener('webglcontextlost', onContextLost);
 
+        forceContextLoss(canvas);
         try {
           scene.dispose();
         } catch {
@@ -112,13 +224,15 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
       } catch (e) {
         console.error('Scene init error:', e);
       }
+
+      releaseQueue(queueFlag);
     })();
 
     return () => {
       cancelled = true;
-      // Dispose scene immediately to free WebGL context and cancel pending
-      // play()/wait() promises, rather than waiting for the async loop to exit.
       if (sceneRef.current) {
+        const c = containerRef.current?.querySelector('canvas') as HTMLCanvasElement | null;
+        forceContextLoss(c);
         try {
           sceneRef.current.dispose();
         } catch {
@@ -126,10 +240,13 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
         }
         sceneRef.current = null;
       }
-      // Clear old canvas so a fresh one is created on re-init
       container.innerHTML = '';
+      if (queueFlagRef.current) {
+        releaseQueue(queueFlagRef.current);
+        queueFlagRef.current = null;
+      }
     };
-  }, [isVisible, animationFn, createScene]);
+  }, [shouldRun, animationFn, createScene]);
 
   return (
     <div
@@ -141,6 +258,7 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
         background: '#000000',
         borderRadius: 12,
         overflow: 'hidden',
+        position: 'relative',
       }}
     />
   );

@@ -1,0 +1,511 @@
+---
+title: Graphing
+sidebar_label: Graphing
+---
+
+import SinCosPlotExample from '@site/src/components/examples/SinCosPlotExample';
+import ArgMinExample from '@site/src/components/examples/ArgMinExample';
+import GraphAreaPlotExample from '@site/src/components/examples/GraphAreaPlotExample';
+import PolygonOnAxesExample from '@site/src/components/examples/PolygonOnAxesExample';
+import HeatDiagramPlotExample from '@site/src/components/examples/HeatDiagramPlotExample';
+import FollowingGraphCameraExample from '@site/src/components/examples/FollowingGraphCameraExample';
+import MovingZoomedSceneAroundExample from '@site/src/components/examples/MovingZoomedSceneAroundExample';
+
+Coordinate systems, function plotting, and data visualization examples.
+
+## Sin Cos Plot
+
+Plots sine and cosine functions on labeled coordinate axes with color-coded graphs. Adds a vertical reference line at x=2π with a label. Demonstrates Axes.plot() and getGraphLabel().
+
+<SinCosPlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Axes,
+  BLUE,
+  GREEN,
+  Line,
+  RED,
+  Scene,
+  UP,
+  UR,
+  VGroup,
+  WHITE,
+  YELLOW,
+  scaleVec,
+  BLACK,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 854,
+  height: 480,
+  backgroundColor: BLACK,
+});
+
+const axes = new Axes({
+  xRange: [-10, 10.3, 1],
+  yRange: [-1.5, 1.5, 1],
+  xLength: 10,
+  axisConfig: { color: GREEN },
+  xAxisConfig: {
+    numbersToInclude: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10],
+    numbersWithElongatedTicks: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10],
+  },
+  tips: false,
+});
+const axesLabels = axes.getAxisLabels();
+const sinGraph = axes.plot((x) => Math.sin(x), { color: BLUE });
+const cosGraph = axes.plot((x) => Math.cos(x), { color: RED });
+
+const sinLabel = axes.getGraphLabel(sinGraph, '\\sin(x)', {
+  xVal: -10,
+  direction: scaleVec(0.5, UP),
+});
+const cosLabel = axes.getGraphLabel(cosGraph, { label: '\\cos(x)' });
+
+const vertLine = axes.getVerticalLine(axes.i2gp(2 * Math.PI, cosGraph), {
+  color: YELLOW,
+  lineFunc: Line,
+});
+const lineLabel = axes.getGraphLabel(cosGraph, 'x=2\\pi', {
+  xVal: 2 * Math.PI,
+  direction: UR,
+  color: WHITE,
+});
+
+const plot = new VGroup(axes, sinGraph, cosGraph, vertLine);
+const labels = new VGroup(axesLabels, sinLabel, cosLabel, lineLabel);
+scene.add(plot, labels);
+```
+
+</details>
+
+**Learn More:** [**Axes**](/api/classes/Axes) · [**Line**](/api/classes/Line) · [**VGroup**](/api/classes/VGroup)
+
+---
+
+## Arg Min
+
+Plots a quadratic function on coordinate axes and animates a dot that slides along the curve to find the minimum value. Uses a ValueTracker to drive the animation and addUpdater for reactive positioning.
+
+<ArgMinExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, Axes, Dot, MAROON, ValueTracker, linspace, BLACK } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const ax = new Axes({
+  xRange: [0, 10],
+  yRange: [0, 100, 10],
+  axisConfig: { includeTip: false },
+});
+const labels = ax.getAxisLabels({ xLabel: 'x', yLabel: 'f(x)' });
+
+const t = new ValueTracker(0);
+
+const func = (x) => {
+  return 2 * (x - 5) ** 2;
+};
+const graph = ax.plot(func, { color: MAROON });
+
+const initialPoint = [ax.coordsToPoint(t.getValue(), func(t.getValue()))];
+const dot = new Dot({ point: initialPoint });
+
+dot.addUpdater((x) => x.moveTo(ax.coordsToPoint(t.getValue(), func(t.getValue()))));
+const xSpace = linspace(...ax.xRange.slice(0, 2), 200);
+const minimumIndex = xSpace.reduce((mi, _, i, a) => (func(a[i]) < func(a[mi]) ? i : mi), 0);
+
+scene.add(ax, labels, graph, dot);
+await scene.play(t.animateTo(xSpace[minimumIndex]));
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** [**Axes**](/api/classes/Axes) · [**Dot**](/api/classes/Dot) · [**ValueTracker**](/api/classes/ValueTracker)
+
+---
+
+## Graph Area Plot
+
+Draws two curves on coordinate axes with vertical reference lines, a shaded area between the curves, and Riemann sum rectangles. Demonstrates the Axes area and Riemann integration visualization methods.
+
+<GraphAreaPlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Axes, BLUE, BLUE_C, GRAY, GREEN_B, Scene, YELLOW, BLACK } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 854,
+  height: 480,
+  backgroundColor: BLACK,
+});
+
+const ax = new Axes({
+  xRange: [0, 5],
+  yRange: [0, 6],
+  xAxisConfig: { numbersToInclude: [2, 3] },
+  tips: false,
+});
+const labels = ax.getAxisLabels();
+
+const curve1 = ax.plot((x) => 4 * x - Math.pow(x, 2), { xRange: [0, 4], color: BLUE_C });
+const curve2 = ax.plot((x) => 0.8 * Math.pow(x, 2) - 3 * x + 4, {
+  xRange: [0, 4],
+  color: GREEN_B,
+});
+
+const line1 = ax.getVerticalLine(ax.inputToGraphPoint(2, curve1), { color: YELLOW });
+const line2 = ax.getVerticalLine(ax.i2gp(3, curve1), { color: YELLOW });
+
+const riemannArea = ax.getRiemannRectangles(curve1, {
+  xRange: [0.3, 0.6],
+  dx: 0.03,
+  color: BLUE,
+  fillOpacity: 0.5,
+});
+const area = ax.getArea(curve2, [2, 3], { boundedGraph: curve1, color: GRAY, opacity: 0.5 });
+
+scene.add(ax, labels, curve1, curve2, line1, line2, riemannArea, area);
+```
+
+</details>
+
+**Learn More:** [**Axes**](/api/classes/Axes)
+
+---
+
+## Polygon On Axes
+
+Draws a dynamic rectangle under a hyperbola curve on coordinate axes. Uses a ValueTracker and always_redraw pattern to animate the rectangle width while keeping it constrained to the curve.
+
+<PolygonOnAxesExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Axes,
+  BLUE,
+  Create,
+  Dot,
+  Polygon,
+  Scene,
+  ValueTracker,
+  YELLOW_B,
+  YELLOW_D,
+  BLACK,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 854,
+  height: 480,
+  backgroundColor: BLACK,
+});
+
+const ax = new Axes({
+  xRange: [0, 10],
+  yRange: [0, 10],
+  xLength: 6,
+  yLength: 6,
+  tips: false,
+});
+
+const t = new ValueTracker(5);
+const k = 25;
+
+const graph = ax.plot((x) => k / x, { color: YELLOW_D, xRange: [k / 10, 10.0], numSamples: 750 });
+
+function makeRectangle() {
+  const corners = getRectangleCorners([0, 0], [t.getValue(), k / t.getValue()]);
+  const vertices = corners.map(([x, y]) => ax.c2p(x, y));
+  const p = new Polygon({ vertices, strokeWidth: 1, color: YELLOW_B, fillOpacity: 0.5 });
+  p.fillColor = BLUE;
+  return p;
+}
+
+const polygon = makeRectangle();
+polygon.addUpdater(() => {
+  polygon.become(makeRectangle());
+});
+
+const dot = new Dot();
+dot.addUpdater(() => dot.moveTo(ax.c2p(t.getValue(), k / t.getValue())));
+
+scene.add(ax, graph);
+await scene.play(new Create(polygon));
+scene.add(dot);
+await scene.play(t.animateTo(10));
+await scene.play(t.animateTo(k / 10));
+await scene.play(t.animateTo(5));
+
+function getRectangleCorners(bottomLeft, topRight) {
+  return [
+    [topRight[0], topRight[1]],
+    [bottomLeft[0], topRight[1]],
+    [bottomLeft[0], bottomLeft[1]],
+    [topRight[0], bottomLeft[1]],
+  ];
+}
+```
+
+</details>
+
+**Learn More:** [**Axes**](/api/classes/Axes) · [**Polygon**](/api/classes/Polygon) · [**ValueTracker**](/api/classes/ValueTracker)
+
+---
+
+## Heat Diagram Plot
+
+Creates a line graph showing temperature change over time using plotLineGraph. Demonstrates the Axes line graph plotting and axis label methods.
+
+<HeatDiagramPlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, Axes, Tex, BLACK } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const ax = new Axes({
+  xRange: [0, 40, 5],
+  yRange: [-8, 32, 5],
+  xLength: 9,
+  yLength: 6,
+  xAxisConfig: { numbersToInclude: [0, 5, 10, 15, 20, 25, 30, 35] },
+  yAxisConfig: { numbersToInclude: [-5, 0, 5, 10, 15, 20, 25, 30] },
+  tips: false,
+});
+
+// Create Tex labels and wait for rendering
+const xLabel = new Tex({ latex: '$\\Delta Q$' });
+const yLabel = new Tex({ latex: 'T[$^\\circ C$]' });
+await xLabel.waitForRender();
+await yLabel.waitForRender();
+
+const labels = ax.getAxisLabels({ xLabel, yLabel });
+
+const xVals = [0, 8, 38, 39];
+const yVals = [20, 0, 0, -5];
+const graph = ax.plotLineGraph({ xValues: xVals, yValues: yVals });
+
+scene.add(ax, labels, graph);
+```
+
+</details>
+
+**Learn More:** [**Axes**](/api/classes/Axes) · [**Tex**](/api/classes/Tex)
+
+---
+
+## Following Graph Camera
+
+Animates a camera that follows a dot moving along a sine curve. Zooms in, tracks with an updater, then restores to the original view. Demonstrates camera frame manipulation with saveState, generateTarget, and MoveToTarget.
+
+<FollowingGraphCameraExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Axes,
+  BLUE,
+  Dot,
+  MoveAlongPath,
+  MoveToTarget,
+  ORANGE,
+  Restore,
+  Scene,
+  linear,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+// Save camera frame state
+scene.camera.frame.saveState();
+
+// Create the axes and the curve
+const ax = new Axes({ xRange: [-1, 10], yRange: [-1, 10] });
+const graph = ax.plot((x) => Math.sin(x), { color: BLUE, xRange: [0, 3 * Math.PI] });
+
+// Create dots based on the graph
+const movingDot = new Dot({ point: ax.i2gp(graph.tMin, graph), color: ORANGE });
+const dot1 = new Dot({ point: ax.i2gp(graph.tMin, graph) });
+const dot2 = new Dot({ point: ax.i2gp(graph.tMax, graph) });
+
+scene.add(ax, graph, dot1, dot2, movingDot);
+
+// Zoom camera to 0.5x and center on moving dot
+scene.camera.frame.generateTarget();
+scene.camera.frame.targetCopy.scale(0.5);
+scene.camera.frame.targetCopy.moveTo(movingDot.getCenter());
+await scene.play(new MoveToTarget(scene.camera.frame));
+
+// Add updater so camera follows the moving dot
+const updateCurve = (mob) => {
+  mob.moveTo(movingDot.getCenter());
+};
+scene.camera.frame.addUpdater(updateCurve);
+
+// Animate dot moving along the graph path
+await scene.play(new MoveAlongPath(movingDot, { path: graph, rateFunc: linear }));
+
+// Remove updater and restore camera to original state
+scene.camera.frame.removeUpdater(updateCurve);
+await scene.play(new Restore(scene.camera.frame));
+```
+
+</details>
+
+**Learn More:** [**Axes**](/api/classes/Axes) · [**Dot**](/api/classes/Dot) · [**MoveAlongPath**](/api/classes/MoveAlongPath) · [**MoveToTarget**](/api/classes/MoveToTarget) · [**Restore**](/api/classes/Restore)
+
+---
+
+## Moving Zoomed Scene Around
+
+Demonstrates ZoomedScene with a camera frame that magnifies part of a grayscale image. Shows the zoomed display popping out, non-uniform scaling, shifting, and the reverse pop-out animation.
+
+<MovingZoomedSceneAroundExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  BackgroundRectangle,
+  BLACK,
+  Create,
+  Dot,
+  DOWN,
+  FadeIn,
+  FadeOut,
+  ImageMobject,
+  MED_SMALL_BUFF,
+  PURPLE,
+  RED,
+  RIGHT,
+  Scale,
+  ScaleInPlace,
+  Shift,
+  smooth,
+  Text,
+  UL,
+  Uncreate,
+  UP,
+  UpdateFromFunc,
+  ZoomedScene,
+  scaleVec,
+} from 'manim-web';
+
+const scene = new ZoomedScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+  zoomFactor: 0.3,
+  displayWidth: 6,
+  displayHeight: 1,
+  cameraFrameStrokeWidth: 3,
+  displayFrameStrokeWidth: 3,
+  displayFrameColor: RED,
+});
+
+// Grayscale image matching Python: np.uint8([[0, 100, 30, 200], [255, 0, 5, 33]])
+const image = new ImageMobject({
+  pixelData: [
+    [0, 100, 30, 200],
+    [255, 0, 5, 33],
+  ],
+  height: 7,
+});
+
+const dot = new Dot().shift(scaleVec(2, UL));
+
+const frameText = new Text({ text: 'Frame', color: PURPLE, fontSize: 67 });
+const zoomedCameraText = new Text({ text: 'Zoomed camera', color: RED, fontSize: 67 });
+
+scene.add(image, dot);
+
+const zoomedCamera = scene.zoomedCamera;
+const zoomedDisplay = scene.zoomedDisplay;
+const frame = zoomedCamera.frame;
+const zoomedDisplayFrame = zoomedDisplay.displayFrame;
+
+frame.moveTo(dot);
+frame.setColor(PURPLE);
+zoomedDisplayFrame.setColor(RED);
+zoomedDisplay.shift(DOWN);
+
+const zdRect = new BackgroundRectangle(zoomedDisplay, {
+  fillOpacity: 0,
+  buff: MED_SMALL_BUFF,
+});
+scene.addForegroundMobject(zdRect);
+
+const unfoldCamera = new UpdateFromFunc(zdRect, (rect) => {
+  rect.replace(zoomedDisplay);
+});
+
+frameText.nextTo(frame, DOWN);
+
+await scene.play(new Create(frame), new FadeIn(frameText, { shift: UP }));
+scene.activateZooming();
+
+// Pop-out animation: display pops from frame position to its shifted position
+await scene.play(scene.getZoomedDisplayPopOutAnimation(), unfoldCamera);
+
+zoomedCameraText.nextTo(zoomedDisplayFrame, DOWN);
+await scene.play(new FadeIn(zoomedCameraText, { shift: UP }));
+
+// Scale frame and display non-uniformly
+await scene.play(
+  new Scale(frame, { scaleFactor: [0.5, 1.5, 0] }),
+  new Scale(zoomedDisplay, { scaleFactor: [0.5, 1.5, 0] }),
+  new FadeOut(zoomedCameraText),
+  new FadeOut(frameText),
+);
+await scene.wait();
+
+await scene.play(new ScaleInPlace(zoomedDisplay, { scaleFactor: 2 }));
+await scene.wait();
+
+await scene.play(new Shift(frame, { direction: scaleVec(2.5, RIGHT) }));
+await scene.wait();
+
+// Reverse pop-out: move display back to frame
+await scene.play(
+  scene.getZoomedDisplayPopOutAnimation({ rateFunc: (t: number) => smooth(1 - t) }),
+  unfoldCamera,
+);
+await scene.play(new Uncreate(zoomedDisplayFrame), new FadeOut(frame));
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** [**ZoomedScene**](/api/classes/ZoomedScene) · [**ImageMobject**](/api/classes/ImageMobject) · [**BackgroundRectangle**](/api/classes/BackgroundRectangle) · [**Create**](/api/classes/Create) · [**FadeIn**](/api/classes/FadeIn) · [**Scale**](/api/classes/Scale) · [**Shift**](/api/classes/Shift)

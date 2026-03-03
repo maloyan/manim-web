@@ -5,7 +5,6 @@ docs/docs/api/
 docs/node_modules/
 docs/build/
 docs/.docusaurus/
-docs/docs/examples/
 coverage/
 .vite/
 *.log

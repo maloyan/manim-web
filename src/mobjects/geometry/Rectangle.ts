@@ -38,9 +38,9 @@ export interface RectangleOptions {
  * ```
  */
 export class Rectangle extends VMobject {
-  private _width: number;
-  private _height: number;
-  private _centerPoint: Vector3Tuple;
+  protected _width: number;
+  protected _height: number;
+  protected _centerPoint: Vector3Tuple;
 
   constructor(options: RectangleOptions = {}) {
     super();
@@ -92,13 +92,13 @@ export class Rectangle extends VMobject {
       if (points.length > 0) {
         // Control points
         points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-        points.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+        points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
         points.push([...p1]);
       } else {
         // First segment includes anchor
         points.push([...p0]);
         points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-        points.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+        points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
         points.push([...p1]);
       }
     };
@@ -244,9 +244,7 @@ export class Rectangle extends VMobject {
  * Square - A special case of Rectangle with equal width and height
  */
 export class Square extends Rectangle {
-  constructor(
-    options: Omit<RectangleOptions, 'width' | 'height'> & { sideLength?: number } = {}
-  ) {
+  constructor(options: Omit<RectangleOptions, 'width' | 'height'> & { sideLength?: number } = {}) {
     const { sideLength = 2, ...rest } = options;
     super({ ...rest, width: sideLength, height: sideLength });
   }

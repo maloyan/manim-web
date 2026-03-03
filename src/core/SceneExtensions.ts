@@ -305,8 +305,22 @@ export class ThreeDScene extends Scene {
       let timerId: ReturnType<typeof setInterval> | null = null;
       let resolved = false;
 
-      const tick = (currentTime: number) => {
+      const cleanup = () => {
         if (resolved) return;
+        resolved = true;
+        if (rafId !== null) cancelAnimationFrame(rafId);
+        if (timerId !== null) clearInterval(timerId);
+        resolve();
+      };
+
+      // Register so dispose() can cancel this animation
+      this._waitCleanups.push(cleanup);
+
+      const tick = (currentTime: number) => {
+        if (resolved || this._disposed) {
+          cleanup();
+          return;
+        }
         const elapsed = (currentTime - startTime) / 1000;
         const t = Math.min(1, elapsed / duration);
         // Smooth interpolation using smoothstep
@@ -328,10 +342,9 @@ export class ThreeDScene extends Scene {
         this._render();
 
         if (t >= 1) {
-          resolved = true;
-          if (rafId !== null) cancelAnimationFrame(rafId);
-          if (timerId !== null) clearInterval(timerId);
-          resolve();
+          const idx = this._waitCleanups.indexOf(cleanup);
+          if (idx >= 0) this._waitCleanups.splice(idx, 1);
+          cleanup();
           return;
         }
       };
@@ -410,12 +423,21 @@ export class ThreeDScene extends Scene {
   }
 
   /**
+   * Override: also needs per-frame rendering when camera is animating.
+   */
+  protected override _needsPerFrameRendering(): boolean {
+    if (this._ambientRotationRate !== 0) return true;
+    if (this._illusionActive && this._illusionRotationRate !== 0) return true;
+    return super._needsPerFrameRendering();
+  }
+
+  /**
    * Override _render to use the 3D camera with two-pass rendering for HUD.
    * This is called by the animation loop internally.
    */
   protected override _render(): void {
     // Guard: super() calls _render() before our fields are initialized
-    if (!this._camera3D) return;
+    if (!this._camera3D || this._disposed) return;
 
     // Advance ambient camera rotation
     if (this._ambientRotationRate !== 0) {
@@ -563,11 +585,17 @@ export class ThreeDScene extends Scene {
    */
   private _startOrbitLoop(): void {
     if (this._orbitRafId !== null) return;
-    // Skip if the scene's own animation loop is already rendering
-    if (this.isPlaying) return;
+    // Skip only if the scene's rAF loop is actively rendering every frame
+    // (e.g. play() or wait() with updaters/camera animation).
+    // Allow orbit loop for static waits where no rAF loop is running.
+    if (this._hasActiveLoop && this._needsPerFrameRendering()) return;
 
     let lastCamJson = '';
     const tick = () => {
+      if (this._disposed) {
+        this._orbitRafId = null;
+        return;
+      }
       this._orbitControls!.update();
       this._render();
 
@@ -691,7 +719,8 @@ export class MovingCameraScene extends Scene {
 
     return new Promise((resolve) => {
       const animate = () => {
-        if (!this._cameraAnimating) {
+        if (!this._cameraAnimating || this._disposed) {
+          this._cameraAnimating = false;
           resolve();
           return;
         }
@@ -740,7 +769,8 @@ export class MovingCameraScene extends Scene {
 
     return new Promise((resolve) => {
       const animate = () => {
-        if (!this._zoomAnimating) {
+        if (!this._zoomAnimating || this._disposed) {
+          this._zoomAnimating = false;
           resolve();
           return;
         }
@@ -908,19 +938,32 @@ class ZoomedDisplay extends Mobject {
   }
 
   override _syncToThree(): void {
-    // When the display is dirty (e.g. from Scale animation), force
-    // displayFrame dirty too so its world-space miter stroke recomputes
     if (this._dirty) {
       this.displayFrame._dirty = true;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (this.displayFrame as any)._geometryDirty = true;
+      // Note: we intentionally do NOT force _geometryDirty here.
+      // The displayFrame stroke mesh scales naturally with the parent
+      // transform. Forcing _geometryDirty on every frame during Scale/pop-out
+      // animations causes expensive per-frame stroke mesh rebuilds that crash
+      // the browser in ZoomedScene dual-pass rendering.
     }
     super._syncToThree();
   }
 
   protected _createCopy(): Mobject {
-    // ZoomedDisplay is not meaningfully copyable
-    return this;
+    // ZoomedDisplay holds a render-target-backed mesh and cannot be
+    // meaningfully deep-cloned.  Return a lightweight Mobject stand-in
+    // so Animation.begin() can snapshot pre-animation state.
+    // CRITICAL: never return `this` — Mobject.copy() iterates children
+    // and adds copies back to clone, causing an infinite loop when
+    // clone === this.
+    return new (class extends Mobject {
+      protected _createThreeObject() {
+        return new THREE.Group();
+      }
+      protected _createCopy() {
+        return new this.constructor() as Mobject;
+      }
+    })();
   }
 
   getWidth(): number {
@@ -1021,6 +1064,11 @@ export class ZoomedScene extends Scene {
   /** Dedicated orthographic camera for zoom render pass (avoids mutating scene camera) */
   private _zoomCamera: THREE.OrthographicCamera;
 
+  /** Cached THREE objects reused every frame to avoid per-frame allocations */
+  private _frameBounds = new THREE.Box3();
+  private _frameSize = new THREE.Vector3();
+  private _viewportSize = new THREE.Vector2();
+
   constructor(container: HTMLElement, options: ZoomedSceneOptions = {}) {
     super(container, options);
 
@@ -1037,10 +1085,10 @@ export class ZoomedScene extends Scene {
 
     // Create render target
     this._zoomRenderTarget = new THREE.WebGLRenderTarget(renderTargetSize, renderTargetSize, {
-      minFilter: THREE.LinearMipmapLinearFilter,
+      minFilter: THREE.LinearFilter,
       magFilter: THREE.LinearFilter,
       format: THREE.RGBAFormat,
-      generateMipmaps: true,
+      generateMipmaps: false,
     });
 
     // Create dedicated camera for zoom render pass (separate from scene camera)
@@ -1134,37 +1182,35 @@ export class ZoomedScene extends Scene {
    * caused the RT to render empty when the scene camera was temporarily modified.
    */
   protected override _render(): void {
-    // Guard against reentrant calls (from _autoRender side-effects)
-    if (this._isRendering) return;
+    // Guard against reentrant calls (from _autoRender side-effects) and disposed state
+    if (this._isRendering || this._disposed) return;
     this._isRendering = true;
 
     try {
       if (this._zoomActive) {
         const webglRenderer = this.renderer.getThreeRenderer();
 
-        // Sync dirty mobjects so frame bounds are up-to-date
-        for (const m of this.mobjects) {
-          if (m._dirty) {
-            m._syncToThree();
-            m._dirty = false;
-          }
-        }
+        // Get frame position/size — use cached _threeObject to avoid
+        // triggering redundant _syncToThree() via getThreeObject()
+        const frame = this.zoomedCamera.frame;
+        const frameCenter = frame.getCenter();
+        const frameObj = frame._threeObject ?? frame.getThreeObject();
+        this._frameBounds.setFromObject(frameObj);
+        this._frameBounds.getSize(this._frameSize);
 
-        // Get frame position/size from the camera frame mobject
-        const frameCenter = this.zoomedCamera.frame.getCenter();
-        const frameObj = this.zoomedCamera.frame.getThreeObject();
-        const frameBounds = new THREE.Box3().setFromObject(frameObj);
-        const frameSize = new THREE.Vector3();
-        frameBounds.getSize(frameSize);
-
-        // Hide the display so it doesn't appear in the zoomed render
-        const displayObj = this.zoomedDisplay.getThreeObject();
+        // Hide the display and frame so they don't appear in the zoomed render
+        const display = this.zoomedDisplay;
+        const displayObj = display._threeObject ?? display.getThreeObject();
         const prevDisplayVisible = displayObj.visible;
         displayObj.visible = false;
 
+        const frameThreeObj = frame._threeObject ?? frame.getThreeObject();
+        const prevFrameVisible = frameThreeObj.visible;
+        frameThreeObj.visible = false;
+
         // Update dedicated zoom camera to match frame region
-        const hw = (frameSize.x > 0.001 ? frameSize.x : 1) / 2;
-        const hh = (frameSize.y > 0.001 ? frameSize.y : 1) / 2;
+        const hw = (this._frameSize.x > 0.001 ? this._frameSize.x : 1) / 2;
+        const hh = (this._frameSize.y > 0.001 ? this._frameSize.y : 1) / 2;
         this._zoomCamera.left = -hw;
         this._zoomCamera.right = hw;
         this._zoomCamera.top = hh;
@@ -1175,15 +1221,17 @@ export class ZoomedScene extends Scene {
 
         // Render to zoom render target using dedicated camera
         webglRenderer.setRenderTarget(this._zoomRenderTarget);
+        webglRenderer.clear();
         webglRenderer.render(this.threeScene, this._zoomCamera);
         webglRenderer.setRenderTarget(null);
 
         // Restore viewport to full canvas size
-        const sz = webglRenderer.getSize(new THREE.Vector2());
-        webglRenderer.setViewport(0, 0, sz.x, sz.y);
+        webglRenderer.getSize(this._viewportSize);
+        webglRenderer.setViewport(0, 0, this._viewportSize.x, this._viewportSize.y);
 
-        // Restore display visibility
+        // Restore display and frame visibility
         displayObj.visible = prevDisplayVisible;
+        frameThreeObj.visible = prevFrameVisible;
       }
 
       // Render main view (scene camera is untouched)

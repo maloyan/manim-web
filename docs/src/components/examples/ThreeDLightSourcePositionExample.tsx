@@ -37,13 +37,13 @@ async function animate(scene: any) {
   scene.add(axes);
   scene.add(sphere);
 
-  await scene.wait(999999);
+  await scene.wait(3);
 }
 
-function createScene(container: HTMLElement, manim: any) {
+function createScene(container: HTMLElement, manim: any, dims: { width: number; height: number }) {
   return new manim.ThreeDScene(container, {
-    width: 800,
-    height: 450,
+    width: dims.width,
+    height: dims.height,
     backgroundColor: '#000000',
     phi: 75 * (Math.PI / 180),
     theta: 30 * (Math.PI / 180),

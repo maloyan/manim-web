@@ -553,6 +553,10 @@ export abstract class Mobject {
   copy(): Mobject {
     const clone = this._createCopy();
 
+    // Guard: if _createCopy() returns `this`, skip property/child copy
+    // to prevent an infinite loop (iterating + appending to this.children).
+    if (clone === this) return clone;
+
     clone.position.copy(this.position);
     clone.rotation.copy(this.rotation);
     clone.scaleVector.copy(this.scaleVector);

@@ -74,8 +74,8 @@ export class Scene {
   private _backgroundTimerId: ReturnType<typeof setInterval> | null = null;
   private _lastFrameTime: number = 0;
   private _playPromiseResolve: (() => void) | null = null;
-  private _disposed: boolean = false;
-  private _waitCleanups: Array<() => void> = [];
+  protected _disposed: boolean = false;
+  protected _waitCleanups: Array<() => void> = [];
 
   // Performance optimization: frame rate control
   private _targetFps: number = 60;
@@ -196,6 +196,14 @@ export class Scene {
    */
   get isPlaying(): boolean {
     return this._isPlaying;
+  }
+
+  /**
+   * Whether a render loop is active (play() or wait()).
+   * Used by ThreeDScene to avoid duplicate orbit rAF loops.
+   */
+  protected get _hasActiveLoop(): boolean {
+    return this._isPlaying || this._waitCleanups.length > 0;
   }
 
   /**
@@ -365,7 +373,11 @@ export class Scene {
    */
   private _setSceneContextRecursive(mobject: Mobject): void {
     if (mobject instanceof VMobject) {
-      mobject._setSceneContext(this._renderer.width, this._renderer.height, this._camera.frameWidth);
+      mobject._setSceneContext(
+        this._renderer.width,
+        this._renderer.height,
+        this._camera.frameWidth,
+      );
     }
     for (const child of mobject.children) {
       this._setSceneContextRecursive(child);
@@ -533,6 +545,21 @@ export class Scene {
       // Register cleanup so dispose() can cancel this wait
       this._waitCleanups.push(cleanup);
 
+      // If nothing needs per-frame rendering (no updaters, no camera animation),
+      // render once and skip the rAF loop. This prevents 3D scenes from
+      // running 60fps GPU rendering when the scene is static.
+      if (!this._needsPerFrameRendering()) {
+        this._render();
+        if (duration > 86400) {
+          // "Forever" wait (e.g. wait(999999)) — resolve only on dispose
+          return;
+        }
+        timerId = setTimeout(() => {
+          cleanup();
+        }, duration * 1000) as unknown as ReturnType<typeof setInterval>;
+        return;
+      }
+
       const tick = (currentTime: number) => {
         if (resolved || this._disposed) {
           cleanup();
@@ -683,11 +710,25 @@ export class Scene {
   }
 
   /**
+   * Whether the scene needs per-frame rendering during wait().
+   * Returns true if any mobject has updaters. Subclasses (e.g. ThreeDScene)
+   * can override to also check for ambient camera rotation, etc.
+   */
+  protected _needsPerFrameRendering(): boolean {
+    for (const mob of this._mobjects) {
+      if (mob.hasUpdaters()) return true;
+    }
+    return false;
+  }
+
+  /**
    * Render a single frame.
    * Syncs only dirty mobjects before rendering for performance.
    * Protected so subclasses (e.g. ZoomedScene) can override for multi-pass rendering.
    */
   protected _render(): void {
+    if (this._disposed) return;
+
     // Sync only dirty mobjects (dirty flag optimization)
     this._syncDirtyMobjects();
 
@@ -1140,6 +1181,7 @@ export class Scene {
    * Clean up all resources (renderer, mobjects, audio).
    */
   dispose(): void {
+    if (this._disposed) return;
     this._disposed = true;
 
     // Stop playback

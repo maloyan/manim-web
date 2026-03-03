@@ -36,12 +36,7 @@ export class BackgroundRectangle extends Rectangle {
   private _buff: number;
 
   constructor(mobject: Mobject, options: BackgroundRectangleOptions = {}) {
-    const {
-      buff = 0.2,
-      color = BLACK,
-      fillOpacity = 0.75,
-      strokeWidth = 0,
-    } = options;
+    const { buff = 0.2, color = BLACK, fillOpacity = 0.75, strokeWidth = 0 } = options;
 
     // Calculate initial dimensions from mobject bounding box
     const bounds = mobject['_getBoundingBox']();
@@ -64,16 +59,54 @@ export class BackgroundRectangle extends Rectangle {
   }
 
   /**
-   * Add an updater that tracks the target mobject's position and size
+   * Add an updater that tracks the target mobject's position and size.
+   * Uses transform-based tracking (scaleVector + position) instead of
+   * geometry rebuilds (setWidth/setHeight/setRectCenter) to avoid
+   * expensive per-frame _generatePoints → _updateGeometry calls that
+   * crash the browser during ZoomedScene dual-pass rendering.
    */
   private _addTrackingUpdater(): void {
+    // Store initial geometry dimensions and center for transform math.
+    // The geometry is generated centered at initC with size initW × initH.
+    // To match new bounds (w, h) at new center c, we set:
+    //   scaleVector = (w/initW, h/initH, 1)
+    //   position = c - initC * scale  (so scaled geometry center = c)
+    const initW = this._width;
+    const initH = this._height;
+    const initC: Vector3Tuple = [...this._centerPoint];
+
+    let prevW = -1;
+    let prevH = -1;
+    let prevCx = NaN;
+    let prevCy = NaN;
+    let prevCz = NaN;
     this.addUpdater(() => {
       const bounds = this._targetMobject['_getBoundingBox']();
       const center = this._targetMobject.getCenter();
+      const w = bounds.width + 2 * this._buff;
+      const h = bounds.height + 2 * this._buff;
+      if (
+        w === prevW &&
+        h === prevH &&
+        center[0] === prevCx &&
+        center[1] === prevCy &&
+        center[2] === prevCz
+      ) {
+        return;
+      }
+      prevW = w;
+      prevH = h;
+      prevCx = center[0];
+      prevCy = center[1];
+      prevCz = center[2];
 
-      this.setWidth(bounds.width + 2 * this._buff);
-      this.setHeight(bounds.height + 2 * this._buff);
-      this.setRectCenter(center);
+      // Transform-based: scale + reposition without geometry rebuild
+      const sx = initW > 0.0001 ? w / initW : 1;
+      const sy = initH > 0.0001 ? h / initH : 1;
+      this.scaleVector.set(sx, sy, 1);
+      // Compensate position so scaled geometry center aligns with target center
+      this.position.set(center[0] - initC[0] * sx, center[1] - initC[1] * sy, center[2] - initC[2]);
+      this._markDirty();
     });
   }
 
@@ -201,8 +234,11 @@ export class SurroundingRectangle extends VMobject {
    * Generate points for sharp corner rectangle
    */
   private _generateSharpCornerPoints(
-    cx: number, cy: number, cz: number,
-    halfWidth: number, halfHeight: number
+    cx: number,
+    cy: number,
+    cz: number,
+    halfWidth: number,
+    halfHeight: number,
   ): void {
     const topLeft: number[] = [cx - halfWidth, cy + halfHeight, cz];
     const topRight: number[] = [cx + halfWidth, cy + halfHeight, cz];
@@ -218,12 +254,12 @@ export class SurroundingRectangle extends VMobject {
 
       if (!isFirst) {
         points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-        points.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+        points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
         points.push([...p1]);
       } else {
         points.push([...p0]);
         points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-        points.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+        points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
         points.push([...p1]);
       }
     };
@@ -240,9 +276,12 @@ export class SurroundingRectangle extends VMobject {
    * Generate points for rounded corner rectangle
    */
   private _generateRoundedCornerPoints(
-    cx: number, cy: number, cz: number,
-    halfWidth: number, halfHeight: number,
-    r: number
+    cx: number,
+    cy: number,
+    cz: number,
+    halfWidth: number,
+    halfHeight: number,
+    r: number,
   ): void {
     const points: number[][] = [];
     // Magic number for approximating circular arc with cubic Bezier
@@ -277,16 +316,8 @@ export class SurroundingRectangle extends VMobject {
       const p3: number[] = [arcCx + r * cosEnd, arcCy + r * sinEnd, cz];
 
       // Control points for quarter circle
-      const p1: number[] = [
-        p0[0] - k * r * sinStart,
-        p0[1] + k * r * cosStart,
-        cz
-      ];
-      const p2: number[] = [
-        p3[0] + k * r * sinEnd,
-        p3[1] - k * r * cosEnd,
-        cz
-      ];
+      const p1: number[] = [p0[0] - k * r * sinStart, p0[1] + k * r * cosStart, cz];
+      const p2: number[] = [p3[0] + k * r * sinEnd, p3[1] - k * r * cosEnd, cz];
 
       if (isFirst) {
         points.push([...p0]);
@@ -301,7 +332,7 @@ export class SurroundingRectangle extends VMobject {
       const dz = p1[2] - p0[2];
 
       points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-      points.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+      points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
       points.push([...p1]);
     };
 
@@ -309,37 +340,25 @@ export class SurroundingRectangle extends VMobject {
     addArc(tlCx, tlCy, Math.PI / 2, true);
 
     // Top edge
-    addLine(
-      [tlCx, cy + halfHeight, cz],
-      [trCx, cy + halfHeight, cz]
-    );
+    addLine([tlCx, cy + halfHeight, cz], [trCx, cy + halfHeight, cz]);
 
     // Top-right arc (starts pointing right, 0 degrees)
     addArc(trCx, trCy, 0, false);
 
     // Right edge
-    addLine(
-      [cx + halfWidth, trCy, cz],
-      [cx + halfWidth, brCy, cz]
-    );
+    addLine([cx + halfWidth, trCy, cz], [cx + halfWidth, brCy, cz]);
 
     // Bottom-right arc (starts pointing down, -90 degrees)
     addArc(brCx, brCy, -Math.PI / 2, false);
 
     // Bottom edge
-    addLine(
-      [brCx, cy - halfHeight, cz],
-      [blCx, cy - halfHeight, cz]
-    );
+    addLine([brCx, cy - halfHeight, cz], [blCx, cy - halfHeight, cz]);
 
     // Bottom-left arc (starts pointing left, 180 degrees)
     addArc(blCx, blCy, Math.PI, false);
 
     // Left edge (closing)
-    addLine(
-      [cx - halfWidth, blCy, cz],
-      [cx - halfWidth, tlCy, cz]
-    );
+    addLine([cx - halfWidth, blCy, cz], [cx - halfWidth, tlCy, cz]);
 
     this.setPoints3D(points);
   }
@@ -459,12 +478,7 @@ export class Underline extends Line {
   private _stretch: number;
 
   constructor(mobject: Mobject, options: UnderlineOptions = {}) {
-    const {
-      buff = 0.1,
-      stretch = 0,
-      color = YELLOW,
-      strokeWidth = DEFAULT_STROKE_WIDTH,
-    } = options;
+    const { buff = 0.1, stretch = 0, color = YELLOW, strokeWidth = DEFAULT_STROKE_WIDTH } = options;
 
     // Calculate initial line position
     const bounds = mobject['_getBoundingBox']();
@@ -490,14 +504,28 @@ export class Underline extends Line {
    * Add an updater that tracks the target mobject
    */
   private _addTrackingUpdater(): void {
+    let prevSx = NaN,
+      prevSy = NaN,
+      prevEx = NaN,
+      prevEy = NaN,
+      prevZ = NaN;
     this.addUpdater(() => {
       const bounds = this._targetMobject['_getBoundingBox']();
       const center = this._targetMobject.getCenter();
       const bottom = center[1] - bounds.height / 2;
       const halfWidth = bounds.width / 2 + this._stretch;
-
-      this.setStart([center[0] - halfWidth, bottom - this._buff, center[2]]);
-      this.setEnd([center[0] + halfWidth, bottom - this._buff, center[2]]);
+      const sx = center[0] - halfWidth;
+      const sy = bottom - this._buff;
+      const ex = center[0] + halfWidth;
+      const z = center[2];
+      if (sx === prevSx && sy === prevSy && ex === prevEx && sy === prevEy && z === prevZ) return;
+      prevSx = sx;
+      prevSy = sy;
+      prevEx = ex;
+      prevEy = sy;
+      prevZ = z;
+      this.setStart([sx, sy, z]);
+      this.setEnd([ex, sy, z]);
     });
   }
 
@@ -587,11 +615,7 @@ export class Cross extends VMobject {
   constructor(mobject: Mobject, options: CrossOptions = {}) {
     super();
 
-    const {
-      strokeWidth = 6,
-      color = RED,
-      scale = 1,
-    } = options;
+    const { strokeWidth = 6, color = RED, scale = 1 } = options;
 
     this._targetMobject = mobject;
     this._scale = scale;
@@ -627,15 +651,31 @@ export class Cross extends VMobject {
    * Add an updater that tracks the target mobject
    */
   private _addTrackingUpdater(): void {
+    let prevHw = NaN,
+      prevHh = NaN,
+      prevCx = NaN,
+      prevCy = NaN,
+      prevCz = NaN;
     this.addUpdater(() => {
       const bounds = this._targetMobject['_getBoundingBox']();
       const center = this._targetMobject.getCenter();
       const halfWidth = (bounds.width / 2) * this._scale;
       const halfHeight = (bounds.height / 2) * this._scale;
-
+      if (
+        halfWidth === prevHw &&
+        halfHeight === prevHh &&
+        center[0] === prevCx &&
+        center[1] === prevCy &&
+        center[2] === prevCz
+      )
+        return;
+      prevHw = halfWidth;
+      prevHh = halfHeight;
+      prevCx = center[0];
+      prevCy = center[1];
+      prevCz = center[2];
       this._line1.setStart([center[0] - halfWidth, center[1] + halfHeight, center[2]]);
       this._line1.setEnd([center[0] + halfWidth, center[1] - halfHeight, center[2]]);
-
       this._line2.setStart([center[0] + halfWidth, center[1] + halfHeight, center[2]]);
       this._line2.setEnd([center[0] - halfWidth, center[1] - halfHeight, center[2]]);
     });
