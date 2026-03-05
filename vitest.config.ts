@@ -1,7 +1,13 @@
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 export default defineConfig({
+  define: {
+    __VERSION__: JSON.stringify(require('katex/package.json').version),
+  },
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
