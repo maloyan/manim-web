@@ -10,7 +10,6 @@ import {
   MED_SMALL_BUFF,
   PURPLE,
   RED,
-  RIGHT,
   Scale,
   ScaleInPlace,
   Shift,
@@ -97,7 +96,7 @@ async function movingZoomedSceneAround(scene: ZoomedScene) {
   await scene.play(new ScaleInPlace(zoomedDisplay, { scaleFactor: 2 }));
   await scene.wait();
 
-  await scene.play(new Shift(frame, { direction: scaleVec(2.5, RIGHT) }));
+  await scene.play(new Shift(frame, { direction: scaleVec(2.5, DOWN) }));
   await scene.wait();
 
   // Reverse pop-out: move display back to frame
