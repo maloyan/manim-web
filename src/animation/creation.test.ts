@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
+import { Group } from '../core/Group';
 import {
   Create,
   create,
@@ -71,6 +72,52 @@ describe('Create', () => {
       anim.interpolate(0.5);
       anim.finish();
       expect(m.opacity).toBe(1);
+    });
+  });
+
+  describe('Group with per-child opacities (opacity fallback)', () => {
+    it('preserves per-child opacities after finish (#109)', () => {
+      const group = new Group();
+      const child1 = new Mobject();
+      const child2 = new Mobject();
+      child1.setOpacity(1);
+      child2.setOpacity(0); // e.g. background line with opacity 0
+      group.add(child1);
+      group.add(child2);
+
+      const anim = new Create(group);
+      anim.begin();
+      expect(child1.opacity).toBe(0);
+      expect(child2.opacity).toBe(0);
+
+      anim.interpolate(0.5);
+      expect(child1.opacity).toBeCloseTo(0.5, 5);
+      expect(child2.opacity).toBeCloseTo(0, 5); // 0 * 0.5 = 0
+
+      anim.finish();
+      expect(child1.opacity).toBe(1);
+      expect(child2.opacity).toBe(0); // should stay 0, not become 1
+    });
+
+    it('scales children proportionally during interpolation', () => {
+      const group = new Group();
+      const child1 = new Mobject();
+      const child2 = new Mobject();
+      child1.setOpacity(1);
+      child2.setOpacity(0.4);
+      group.add(child1);
+      group.add(child2);
+
+      const anim = new Create(group);
+      anim.begin();
+
+      anim.interpolate(0.5);
+      expect(child1.opacity).toBeCloseTo(0.5, 5);
+      expect(child2.opacity).toBeCloseTo(0.2, 5); // 0.4 * 0.5 = 0.2
+
+      anim.finish();
+      expect(child1.opacity).toBe(1);
+      expect(child2.opacity).toBeCloseTo(0.4, 5);
     });
   });
 
