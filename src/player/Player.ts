@@ -364,6 +364,14 @@ export class Player {
     this._lastFrameTime = performance.now();
 
     const loop = (now: number) => {
+      const curSegment = this._masterTimeline.getCurrentSegment();
+
+      if (curSegment && curSegment.startTime <= this._masterTimeline.getCurrentTime()) {
+        for (const anim of curSegment.animations) {
+          anim.mobject.opacity = 1;
+        }
+      }
+
       if (!this._isPlaying) {
         this._animFrameId = null;
         return;
