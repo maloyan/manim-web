@@ -180,7 +180,11 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
             console.error('Animation error:', e);
           }
 
-          // Force a render so static scenes (add-only, no play) are visible.
+          // Re-enable auto-render and force a render so static scenes
+          // (add-only, no play) show their final state.
+          if (scene._autoRender !== undefined) {
+            scene._autoRender = true;
+          }
           try {
             scene._render?.();
           } catch {
@@ -194,22 +198,21 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
 
           if (cancelled) break;
 
-          // Clear scene state for next iteration
+          // Clear scene without rendering and suppress auto-render so the
+          // canvas keeps showing the last frame while the next iteration
+          // rebuilds.  play() calls _render() directly (not gated by
+          // _autoRender), so animations still render normally — only the
+          // redundant per-add() renders are suppressed.
+          if (scene._autoRender !== undefined) {
+            scene._autoRender = false;
+          }
           if (scene.clear) {
-            scene.clear();
+            scene.clear({ render: false });
           } else {
             while (scene.mobjects && scene.mobjects.length > 0) {
               scene.remove(scene.mobjects[0]);
             }
           }
-          try {
-            scene._render?.();
-          } catch {
-            /* ignore */
-          }
-
-          // Brief pause between loops
-          await new Promise((r) => setTimeout(r, 500));
         }
 
         canvas?.removeEventListener('webglcontextlost', onContextLost);
