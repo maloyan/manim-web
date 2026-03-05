@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.9](https://github.com/maloyan/manim-js/compare/v0.3.6...v0.3.9) (2026-03-05)
+
+
+### Bug Fixes
+
+* eliminate black flash between animation loops in docs examples ([c21961a](https://github.com/maloyan/manim-js/commit/c21961a645da7b1af4e813a4fe13b99925e3a45c))
+* preserve per-child opacities in Create animation ([#109](https://github.com/maloyan/manim-js/issues/109)) ([a8f56f1](https://github.com/maloyan/manim-js/commit/a8f56f15acb526b1f810bb4bfc7231490f406002))
+* restore mobject opacity when segment starts during playback ([e88b557](https://github.com/maloyan/manim-js/commit/e88b55783288365fe264125873f4e19efd22f397)), closes [#106](https://github.com/maloyan/manim-js/issues/106)
+
 ### [0.3.4](https://github.com/maloyan/manim-js/compare/v0.3.0...v0.3.4) (2026-02-16)
 
 
