@@ -54,7 +54,9 @@ export class MasterTimeline extends Timeline {
     for (const [mobject, segIndex] of this._mobjectFirstSegment) {
       const seg = this._segments[segIndex];
       if (seg && time < seg.startTime) {
-        mobject.opacity = 0;
+        if (!this._animationControlsVisibility(mobject, segIndex)) {
+          mobject.opacity = 0;
+        }
       }
     }
 
@@ -75,7 +77,9 @@ export class MasterTimeline extends Timeline {
     for (const [mobject, segIndex] of this._mobjectFirstSegment) {
       const seg = this._segments[segIndex];
       if (seg && prevTime < seg.startTime && newTime >= seg.startTime) {
-        mobject.opacity = 1;
+        if (!this._animationControlsVisibility(mobject, segIndex)) {
+          mobject.opacity = 1;
+        }
       }
     }
   }
@@ -87,6 +91,16 @@ export class MasterTimeline extends Timeline {
     this.seek(0);
     this.pause();
     return this;
+  }
+
+  /**
+   * Check if any animation for the given mobject in the specified segment
+   * has controlsOwnVisibility set to true.
+   */
+  private _animationControlsVisibility(mobject: Animation['mobject'], segIndex: number): boolean {
+    const seg = this._segments[segIndex];
+    if (!seg) return false;
+    return seg.animations.some((a) => a.mobject === mobject && a.controlsOwnVisibility);
   }
 
   /**

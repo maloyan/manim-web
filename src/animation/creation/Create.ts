@@ -88,6 +88,8 @@ export class Create extends Animation {
     // Manim default for Create is 2 seconds
     super(mobject, { duration: options.duration ?? 2, ...options });
     this._lagRatio = options.lagRatio ?? 0;
+    // Create always manages its own visibility (opacity fallback or dash reveal)
+    this._controlsOwnVisibility = true;
   }
 
   /**

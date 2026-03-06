@@ -38,6 +38,12 @@ export abstract class Animation {
   protected _hasBegun: boolean = false;
 
   /**
+   * When true, the animation manages its own mobject visibility (opacity).
+   * MasterTimeline will skip its automatic opacity overrides for this mobject.
+   */
+  protected _controlsOwnVisibility: boolean = false;
+
+  /**
    * If true, the scene will remove this mobject after the animation finishes.
    * Used by FadeOut (like Python manim's remover=True).
    */
@@ -149,6 +155,10 @@ export abstract class Animation {
    */
   isFinished(): boolean {
     return this._isFinished;
+  }
+
+  get controlsOwnVisibility(): boolean {
+    return this._controlsOwnVisibility;
   }
 
   /**
