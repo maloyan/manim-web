@@ -55,6 +55,8 @@ export interface SceneOptions {
   frustumCulling?: boolean;
   /** Enable auto-render on add/remove. Defaults to true. */
   autoRender?: boolean;
+  /** Background opacity (0 = fully transparent, 1 = fully opaque). Defaults to 1. */
+  backgroundOpacity?: number;
 }
 
 /**
@@ -116,6 +118,7 @@ export class Scene {
       targetFps = 60,
       frustumCulling = true,
       autoRender = true,
+      backgroundOpacity = 1,
     } = options;
 
     // Initialize performance options
@@ -132,6 +135,7 @@ export class Scene {
       width,
       height,
       backgroundColor,
+      backgroundOpacity,
       antialias: true,
     };
     this._renderer = new Renderer(container, rendererOptions);
@@ -1026,6 +1030,21 @@ export class Scene {
    */
   getHeight(): number {
     return this._renderer.height;
+  }
+
+  /**
+   * Get the background opacity (0 = fully transparent, 1 = fully opaque).
+   */
+  get backgroundOpacity(): number {
+    return this._renderer.backgroundOpacity;
+  }
+
+  /**
+   * Set the background opacity (0 = fully transparent, 1 = fully opaque).
+   * Only effective if the scene was created with backgroundOpacity < 1.
+   */
+  set backgroundOpacity(value: number) {
+    this._renderer.backgroundOpacity = value;
   }
 
   /**

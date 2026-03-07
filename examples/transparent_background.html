@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Transparent Background</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      /* Colorful gradient so transparency is immediately visible */
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f7971e 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    h1 { color: #fff; margin-bottom: 12px; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    p { color: rgba(255,255,255,0.8); margin-bottom: 20px; font-size: 14px; }
+    #container {
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: rgba(255,255,255,0.35); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .opacity-control {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      font-size: 14px;
+    }
+    .opacity-control input { width: 200px; }
+    .slider-row {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      font-size: 14px;
+    }
+    .slider-row input { width: 200px; }
+  </style>
+</head>
+<body>
+  <h1>Transparent Background</h1>
+  <p>The page gradient is visible through the scene canvas</p>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="playBtn">Play Animation</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+  <div class="opacity-control">
+    <label for="opacityRange">Background opacity:</label>
+    <input id="opacityRange" type="range" min="0" max="1" step="0.05" value="0">
+    <span id="opacityValue">0</span>
+  </div>
+  <div class="slider-row">
+    <label for="hueRange">Background hue:</label>
+    <input id="hueRange" type="range" min="0" max="360" step="1" value="0">
+    <span id="hueValue">0°</span>
+  </div>
+
+  <script type="module">
+    import {
+      Scene,
+      Circle,
+      Square,
+      NumberPlane,
+      Create,
+      FadeIn,
+      Transform,
+      WHITE,
+      BLUE,
+      YELLOW,
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundOpacity: 0,
+    });
+
+    // Add a NumberPlane grid so you can see how grid lines composite
+    const grid = new NumberPlane();
+    scene.add(grid);
+
+    let isAnimating = false;
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      document.getElementById('playBtn').disabled = true;
+
+      scene.clear();
+      scene.add(grid);
+
+      const square = new Square({ sideLength: 2, color: BLUE, fillOpacity: 0.6 });
+      const circle = new Circle({ radius: 1.5, color: YELLOW, fillOpacity: 0.6 });
+
+      await scene.play(new Create(square));
+      await scene.play(new Transform(square, circle));
+      await scene.play(new FadeIn(
+        new Circle({ radius: 0.3, color: WHITE, fillOpacity: 1 })
+      ));
+
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+      scene.add(grid);
+    });
+
+    // Runtime opacity slider
+    const slider = document.getElementById('opacityRange');
+    const label = document.getElementById('opacityValue');
+    slider.addEventListener('input', () => {
+      const value = parseFloat(slider.value);
+      scene.backgroundOpacity = value;
+      label.textContent = value.toFixed(2);
+    });
+
+    // Page hue slider — changes scene backgroundColor
+    const hueSlider = document.getElementById('hueRange');
+    const hueLabel = document.getElementById('hueValue');
+    hueSlider.addEventListener('input', () => {
+      const hue = hueSlider.value;
+      scene.renderer.backgroundColor = `hsl(${hue}, 50%, 30%)`;
+      hueLabel.textContent = hue + '°';
+    });
+  </script>
+</body>
+</html>

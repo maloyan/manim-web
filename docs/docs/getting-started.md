@@ -25,6 +25,7 @@ const scene = new Scene(container, {
   width: 800,
   height: 450,
   backgroundColor: BLACK,
+  backgroundOpacity: 1, // 0 = fully transparent, 1 = fully opaque
 });
 
 // Create and animate a circle

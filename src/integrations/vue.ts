@@ -294,6 +294,14 @@ export const ManimScene = defineComponent({
       type: Number as PropType<number>,
       default: 8,
     },
+    /**
+     * Background opacity (0 = fully transparent, 1 = fully opaque).
+     * @default 1
+     */
+    backgroundOpacity: {
+      type: Number as PropType<number>,
+      default: 1,
+    },
   },
 
   emits: {
@@ -311,6 +319,7 @@ export const ManimScene = defineComponent({
       width: props.width,
       height: props.height,
       backgroundColor: props.backgroundColor,
+      backgroundOpacity: props.backgroundOpacity,
       frameWidth: props.frameWidth,
       frameHeight: props.frameHeight,
     });
