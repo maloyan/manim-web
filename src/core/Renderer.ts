@@ -18,6 +18,8 @@ export interface RendererOptions {
   powerPreference?: 'default' | 'high-performance' | 'low-power';
   /** Enable alpha channel. Defaults to false. */
   alpha?: boolean;
+  /** Background opacity (0 = fully transparent, 1 = fully opaque). Defaults to 1. When < 1, alpha channel is enabled automatically. */
+  backgroundOpacity?: number;
   /** Preserve drawing buffer for export. Defaults to true for video/image export support. */
   preserveDrawingBuffer?: boolean;
   /** Existing canvas element to reuse. If not provided, a new canvas is created. */
@@ -33,6 +35,8 @@ export class Renderer {
   private _width: number;
   private _height: number;
   private _backgroundColor: THREE.Color;
+  private _backgroundOpacity: number;
+  private _alpha: boolean;
   private _contextLost: boolean = false;
 
   /**
@@ -50,9 +54,14 @@ export class Renderer {
       pixelRatio = typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1,
       powerPreference = 'high-performance',
       alpha = false,
+      backgroundOpacity = 1,
       preserveDrawingBuffer = true, // Needed for video/image export
       canvas,
     } = options;
+
+    this._backgroundOpacity = Math.max(0, Math.min(1, backgroundOpacity));
+    // Enable alpha channel if background is semi-transparent or explicitly requested
+    this._alpha = alpha || this._backgroundOpacity < 1;
 
     this._width = width;
     this._height = height;
@@ -61,7 +70,7 @@ export class Renderer {
     this._renderer = new THREE.WebGLRenderer({
       canvas, // Reuse existing canvas if provided
       antialias,
-      alpha,
+      alpha: this._alpha,
       preserveDrawingBuffer,
       powerPreference,
       stencil: true, // Needed for anti-overlap stencil on transparent strokes
@@ -70,7 +79,7 @@ export class Renderer {
     this._renderer.setSize(this._width, this._height);
     // Ensure pixel ratio is capped at 2x even if explicitly provided higher
     this._renderer.setPixelRatio(Math.min(pixelRatio, 2));
-    this._renderer.setClearColor(this._backgroundColor);
+    this._renderer.setClearColor(this._backgroundColor, this._backgroundOpacity);
 
     // Handle WebGL context loss/restore (common on mobile, GPU pressure, backgrounded tabs)
     const domElement = this._renderer.domElement;
@@ -123,7 +132,30 @@ export class Renderer {
    */
   set backgroundColor(color: THREE.Color | string) {
     this._backgroundColor = color instanceof THREE.Color ? color : new THREE.Color(color);
-    this._renderer.setClearColor(this._backgroundColor);
+    this._renderer.setClearColor(this._backgroundColor, this._backgroundOpacity);
+  }
+
+  /**
+   * Get the background opacity (0 = fully transparent, 1 = fully opaque).
+   */
+  get backgroundOpacity(): number {
+    return this._backgroundOpacity;
+  }
+
+  /**
+   * Set the background opacity (0 = fully transparent, 1 = fully opaque).
+   * Only effective if the scene was created with backgroundOpacity < 1 or alpha enabled.
+   */
+  set backgroundOpacity(value: number) {
+    const clamped = Math.max(0, Math.min(1, value));
+    if (!this._alpha && clamped < 1) {
+      console.warn(
+        'Renderer: backgroundOpacity < 1 has no effect because the WebGL context ' +
+          'was created without alpha. Set backgroundOpacity < 1 in the initial options.'
+      );
+    }
+    this._backgroundOpacity = clamped;
+    this._renderer.setClearColor(this._backgroundColor, this._backgroundOpacity);
   }
 
   /**

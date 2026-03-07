@@ -146,6 +146,8 @@ export interface ManimSceneProps {
   height?: number;
   /** Background color as CSS color string. Defaults to '#1a1a2e'. */
   backgroundColor?: string;
+  /** Background opacity (0 = fully transparent, 1 = fully opaque). Defaults to 1. */
+  backgroundOpacity?: number;
   /** Callback when scene is ready */
   onSceneReady?: (scene: Scene) => void;
   /** Child elements to render (overlay content) */
@@ -176,13 +178,14 @@ export function ManimScene({
   width = 800,
   height = 450,
   backgroundColor = '#1a1a2e',
+  backgroundOpacity,
   onSceneReady,
   children,
   className,
   style,
 }: ManimSceneProps): ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
-  const scene = useScene(containerRef, { width, height, backgroundColor });
+  const scene = useScene(containerRef, { width, height, backgroundColor, backgroundOpacity });
   const onSceneReadyRef = useRef(onSceneReady);
 
   // Update callback ref when it changes
@@ -237,6 +240,8 @@ export interface ManimProviderProps {
   height?: number;
   /** Background color as CSS color string. Defaults to '#1a1a2e'. */
   backgroundColor?: string;
+  /** Background opacity (0 = fully transparent, 1 = fully opaque). Defaults to 1. */
+  backgroundOpacity?: number;
   /** CSS class name for the container */
   className?: string;
   /** Inline styles for the container */
@@ -263,11 +268,12 @@ export function ManimProvider({
   width = 800,
   height = 450,
   backgroundColor = '#1a1a2e',
+  backgroundOpacity,
   className,
   style,
 }: ManimProviderProps): ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
-  const scene = useScene(containerRef, { width, height, backgroundColor });
+  const scene = useScene(containerRef, { width, height, backgroundColor, backgroundOpacity });
 
   return (
     <SceneContext.Provider value={scene}>
