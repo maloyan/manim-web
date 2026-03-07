@@ -18,7 +18,7 @@ export interface RendererOptions {
   powerPreference?: 'default' | 'high-performance' | 'low-power';
   /** Enable alpha channel. Defaults to false. */
   alpha?: boolean;
-  /** Background opacity (0 = fully transparent, 1 = fully opaque). Defaults to 1. When < 1, alpha channel is enabled automatically. */
+  /** Background opacity (0 = fully transparent, 1 = fully opaque). Defaults to 1. When < 1, alpha channel is enabled automatically. Not supported when exporting to video or GIF formats. */
   backgroundOpacity?: number;
   /** Preserve drawing buffer for export. Defaults to true for video/image export support. */
   preserveDrawingBuffer?: boolean;
@@ -151,7 +151,7 @@ export class Renderer {
     if (!this._alpha && clamped < 1) {
       console.warn(
         'Renderer: backgroundOpacity < 1 has no effect because the WebGL context ' +
-          'was created without alpha. Set backgroundOpacity < 1 in the initial options.'
+          'was created without alpha. Set backgroundOpacity < 1 in the initial options.',
       );
     }
     this._backgroundOpacity = clamped;

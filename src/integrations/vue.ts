@@ -32,10 +32,7 @@ export * from '../index';
  * const { scene, isReady } = useScene(containerRef, { backgroundColor: '#1a1a2e' });
  * ```
  */
-export function useScene(
-  containerRef: Ref<HTMLElement | null>,
-  options?: SceneOptions
-) {
+export function useScene(containerRef: Ref<HTMLElement | null>, options?: SceneOptions) {
   const scene = shallowRef<Scene | null>(null);
   const isReady = ref(false);
 
@@ -90,7 +87,7 @@ export function useScene(
  */
 export function useMobject<T extends Mobject>(
   scene: Ref<Scene | null>,
-  createMobject: () => T
+  createMobject: () => T,
 ): Ref<T | null> {
   const mobject = shallowRef<T | null>(null);
 
@@ -110,7 +107,7 @@ export function useMobject<T extends Mobject>(
         newScene.add(mobject.value);
       }
     },
-    { immediate: true }
+    { immediate: true },
   );
 
   onUnmounted(() => {
@@ -197,10 +194,7 @@ export function useAnimation(scene: Ref<Scene | null>) {
  * });
  * ```
  */
-export function useUpdater(
-  mobject: Ref<Mobject | null>,
-  updater: UpdaterFunction
-): void {
+export function useUpdater(mobject: Ref<Mobject | null>, updater: UpdaterFunction): void {
   watch(
     mobject,
     (newMobject, oldMobject) => {
@@ -211,7 +205,7 @@ export function useUpdater(
         newMobject.addUpdater(updater);
       }
     },
-    { immediate: true }
+    { immediate: true },
   );
 
   onUnmounted(() => {
@@ -300,7 +294,7 @@ export const ManimScene = defineComponent({
      */
     backgroundOpacity: {
       type: Number as PropType<number>,
-      default: 1,
+      default: undefined,
     },
   },
 
@@ -345,7 +339,7 @@ export const ManimScene = defineComponent({
             position: 'relative',
           },
         },
-        slots.default?.()
+        slots.default?.(),
       );
   },
 });

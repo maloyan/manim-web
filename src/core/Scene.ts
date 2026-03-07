@@ -55,7 +55,7 @@ export interface SceneOptions {
   frustumCulling?: boolean;
   /** Enable auto-render on add/remove. Defaults to true. */
   autoRender?: boolean;
-  /** Background opacity (0 = fully transparent, 1 = fully opaque). Defaults to 1. */
+  /** Background opacity (0 = fully transparent, 1 = fully opaque). Defaults to 1. Not supported when exporting to video or GIF formats. */
   backgroundOpacity?: number;
 }
 
