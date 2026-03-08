@@ -52,6 +52,7 @@ export abstract class Mobject {
   position: THREE.Vector3;
   rotation: THREE.Euler;
   scaleVector: THREE.Vector3;
+  createdAtBeginning: boolean = false;
   protected _color: string = '#ffffff';
   get color(): string {
     return this._color;

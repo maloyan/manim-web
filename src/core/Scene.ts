@@ -349,6 +349,7 @@ export class Scene {
         // re-render when done. Recursively check children since MathTex objects
         // may be nested inside VGroup/Group containers.
         this._awaitAsyncRenders(mobject);
+        mobject.createdAtBeginning = true;
       }
     }
     if (this._autoRender) {

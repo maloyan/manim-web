@@ -102,9 +102,10 @@ export class MasterTimeline extends Timeline {
     const newTime = this.getCurrentTime();
 
     // Re-hide mobjects whose introducing segment still hasn't started
+    // and were not added immediately via `scene.add()`.
     for (const [mobject, segIndex] of this._mobjectFirstSegment) {
       const seg = this._segments[segIndex];
-      if (seg && newTime < seg.startTime) {
+      if (seg && newTime < seg.startTime && !mobject.createdAtBeginning) {
         mobject.opacity = 0;
       }
     }
