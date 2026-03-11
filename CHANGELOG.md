@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.13](https://github.com/maloyan/manim-js/compare/v0.3.12...v0.3.13) (2026-03-11)
+
+
+### Bug Fixes
+
+* export missing graphing classes from main index ([#131](https://github.com/maloyan/manim-js/issues/131)) ([#132](https://github.com/maloyan/manim-js/issues/132)) ([4c40604](https://github.com/maloyan/manim-js/commit/4c40604b5e532ddbac3c5439455570223fd9c648))
+
 ### [0.3.12](https://github.com/maloyan/manim-web/compare/v0.3.11...v0.3.12) (2026-03-09)
 
 ### [0.3.11](https://github.com/maloyan/manim-js/compare/v0.3.10...v0.3.11) (2026-03-07)
