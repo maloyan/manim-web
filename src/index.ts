@@ -157,6 +157,8 @@ export {
 export {
   NumberLine,
   type NumberLineOptions,
+  UnitInterval,
+  type UnitIntervalOptions,
   Axes,
   type AxesOptions,
   NumberPlane,
@@ -170,6 +172,20 @@ export {
   type ParametricFunctionOptions,
   VectorFieldVector,
   type VectorFieldVectorOptions,
+  ComplexPlane,
+  type ComplexPlaneOptions,
+  PolarPlane,
+  type PolarPlaneOptions,
+  BarChart,
+  type BarChartOptions,
+  VectorField,
+  ArrowVectorField,
+  StreamLines,
+  type VectorFunction,
+  type ColorFunction,
+  type VectorFieldBaseOptions,
+  type ArrowVectorFieldOptions,
+  type StreamLinesOptions,
 } from './mobjects/graphing';
 
 // Text and LaTeX
