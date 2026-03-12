@@ -1,6 +1,6 @@
 {
   "name": "manim-web",
-  "version": "0.3.14",
+  "version": "0.3.15",
   "description": "Manim-like mathematical animation library for the web",
   "type": "module",
   "main": "dist/index.js",
