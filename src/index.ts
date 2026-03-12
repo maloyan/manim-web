@@ -475,6 +475,22 @@ export {
   type PhaseFlowOptions,
 } from './animation/movement';
 
+// Growing animations
+export {
+  GrowArrow,
+  growArrow,
+  type GrowArrowOptions,
+  GrowFromEdge,
+  growFromEdge,
+  type GrowFromEdgeOptions,
+  GrowFromPoint,
+  growFromPoint,
+  type GrowFromPointOptions,
+  SpinInFromNothing,
+  spinInFromNothing,
+  type SpinInFromNothingOptions,
+} from './animation/growing';
+
 // Animation utilities
 export {
   AnimationGroup,

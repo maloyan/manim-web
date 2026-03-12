@@ -70,7 +70,6 @@
       BLUE,
       RED,
       GREEN,
-      YELLOW,
     } from '../src/index.ts';
 
     const container = document.getElementById('container');
@@ -110,11 +109,7 @@
       // Segment 8: Fade out
       await scene.play(new FadeOut(circle));
 
-      // Segment 9: Bring in a new circle with a yellow color
-      const circle2 = new Circle({ radius: 1, color: YELLOW });
-      await scene.play(new FadeIn(circle2));
-
-      // Segment 10: Final pause
+      // Segment 9: Final pause
       await scene.wait(1);
     });
   </script>
