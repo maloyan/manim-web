@@ -3,41 +3,29 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { NumberPlane, StreamLines, BLACK } = await import('manim-web');
+  const { StreamLines, BLUE, UP, RIGHT, LEFT, BLACK } = await import('manim-web');
 
-  const plane = new NumberPlane({
-    xRange: [-7, 7, 1],
-    yRange: [-4, 4, 1],
-    backgroundLineStyle: {
-      color: '#333355',
-      strokeWidth: 0.5,
-      opacity: 0.3,
-    },
-  });
-  scene.add(plane);
-
+  // Matches the Python manim EndAnimation example exactly:
+  // func = lambda pos: np.sin(pos[0] / 2) * UR + np.cos(pos[1] / 2) * LEFT
   const streamLines = new StreamLines({
     func: (x, y) => [
-      Math.sin(x / 2) + Math.cos(y / 2) * 0.5,
-      Math.cos(x / 2) * 0.5 - Math.sin(y / 2),
+      Math.sin(x / 2) * (1 / Math.sqrt(2)) + Math.cos(y / 2) * -1,
+      Math.sin(x / 2) * (1 / Math.sqrt(2)),
     ],
-    xRange: [-6, 6, 0.5],
-    yRange: [-3.5, 3.5, 0.5],
-    numLines: 25,
     strokeWidth: 3,
-    maxLineLength: 12,
-    stepSize: 0.08,
-    opacity: 0.9,
+    color: '#58C4DD', // BLUE
+    stepSize: 0.05,
+    maxLineLength: 3, // virtual_time=1 equivalent
   });
   scene.add(streamLines);
 
   streamLines.startAnimation({
-    warmUp: true,
+    warmUp: false,
     flowSpeed: 1.5,
-    timeWidth: 0.3,
+    timeWidth: 0.5,
   });
 
-  await scene.wait(10);
+  await scene.wait(6);
 
   streamLines.endAnimation();
 }

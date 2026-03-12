@@ -97,9 +97,11 @@
     scene.add(plane);
 
     // Vector field functions
+    // Matches Python: func = lambda pos: np.sin(pos[0]/2) * UR + np.cos(pos[1]/2) * LEFT
+    const sq = 1 / Math.sqrt(2);
     const sineField = (x, y) => [
-      Math.sin(x / 2) * 1 + Math.cos(y / 2) * 0.5,
-      Math.cos(x / 2) * 0.5 - Math.sin(y / 2) * 1,
+      Math.sin(x / 2) * sq + Math.cos(y / 2) * (-1),
+      Math.sin(x / 2) * sq,
     ];
 
     const rotationField = (x, y) => [-y * 0.5, x * 0.5];
@@ -126,13 +128,10 @@
 
       currentStreamLines = new StreamLines({
         func,
-        xRange: [-6, 6, 0.5],
-        yRange: [-3.5, 3.5, 0.5],
-        numLines: 25,
         strokeWidth: 3,
-        maxLineLength: 12,
-        stepSize: 0.08,
-        opacity: 0.9,
+        color: '#58C4DD', // BLUE
+        stepSize: 0.05,
+        maxLineLength: 3,
       });
 
       scene.add(currentStreamLines);
@@ -145,9 +144,9 @@
     document.getElementById('startBtn').addEventListener('click', () => {
       if (!currentStreamLines || isAnimating) return;
       currentStreamLines.startAnimation({
-        warmUp: true,
+        warmUp: false,
         flowSpeed: 1.5,
-        timeWidth: 0.3,
+        timeWidth: 0.5,
       });
       isAnimating = true;
     });

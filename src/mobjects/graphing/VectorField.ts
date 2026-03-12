@@ -915,48 +915,35 @@ export class StreamLines extends VectorField {
       }
     }
 
-    // Compute total arc length for each streamline so flowSpeed is consistent
-    const arcLengths: number[] = [];
+    // Compute per-line duration (integration time) matching Python manim:
+    // line.duration = step * dt. Here each line has linePoints.length steps × stepSize.
+    const durations: number[] = [];
     for (const linePoints of this._streamlineData) {
-      let len = 0;
-      for (let j = 1; j < linePoints.length; j++) {
-        const dx = linePoints[j].x - linePoints[j - 1].x;
-        const dy = linePoints[j].y - linePoints[j - 1].y;
-        len += Math.sqrt(dx * dx + dy * dy);
-      }
-      arcLengths.push(Math.max(len, 1e-6));
+      durations.push(linePoints.length * this._stepSize);
     }
 
-    // Compute cumulative arc-length parameter (0..1) for each integrated point
-    // so we can quickly map alpha positions to point indices.
-    const cumulativeParams: number[][] = [];
-    for (let i = 0; i < numLines; i++) {
-      const linePoints = this._streamlineData[i];
-      const params: number[] = [0];
-      let cumLen = 0;
-      for (let j = 1; j < linePoints.length; j++) {
-        const dx = linePoints[j].x - linePoints[j - 1].x;
-        const dy = linePoints[j].y - linePoints[j - 1].y;
-        cumLen += Math.sqrt(dx * dx + dy * dy);
-        params.push(cumLen / arcLengths[i]);
-      }
-      cumulativeParams.push(params);
-    }
+    // runTime per streamline: duration / flowSpeed (matches Python manim)
+    const runTimes: number[] = durations.map((d) => d / Math.max(flowSpeed, 1e-6));
 
-    // runTime per streamline: time for the flash to traverse the full path once
-    const runTimes: number[] = arcLengths.map((len) => len / Math.max(flowSpeed, 1e-6));
+    // virtualTime for the whole field (max duration across all lines)
+    const virtualTime = Math.max(...durations, 1e-6);
 
-    // Initialize per-line time (seconds). If warmUp, randomise so streaks
-    // don't all start at the same position.
+    // Initialize per-line time (seconds). Matches Python manim:
+    //   line.time = random.random() * virtual_time
+    //   if warm_up: line.time *= -1
+    // When warmUp=True, time starts negative so lines are initially invisible
+    // and gradually appear. When warmUp=False, time starts positive (random phase).
     this._phases = new Array(numLines);
     for (let i = 0; i < numLines; i++) {
-      this._phases[i] = warmUp ? Math.random() * runTimes[i] : 0;
+      const randTime = Math.random() * virtualTime;
+      this._phases[i] = warmUp ? -randTime : randTime;
     }
 
-    // Create the updater – mirrors Python manim's updater logic:
-    //   line.time += dt
-    //   alpha = (line.time % run_time) / run_time
-    //   line.anim.interpolate(alpha)
+    // Create the updater – mirrors Python manim's updater logic exactly:
+    //   line.time += dt * flow_speed
+    //   if line.time >= virtual_time: line.time -= virtual_time
+    //   alpha = clip(line.time / line.anim.run_time, 0, 1)
+    //   line.anim.interpolate(alpha)  # ShowPassingFlash
     this._animationUpdater = (_mob: Mobject, dt: number) => {
       for (let i = 0; i < numLines; i++) {
         const linePoints = this._streamlineData[i];
@@ -964,71 +951,54 @@ export class StreamLines extends VectorField {
         if (!linePoints || !vmob || linePoints.length < 2) continue;
 
         const runTime = runTimes[i];
-        const params = cumulativeParams[i];
+        const n = linePoints.length;
 
-        // Advance time and compute looping alpha (0..1 along path)
-        this._phases[i] += dt;
-        const alpha = (this._phases[i] % runTime) / runTime;
+        // Advance time (matches Python: line.time += dt * flow_speed)
+        this._phases[i] += dt * flowSpeed;
+        if (this._phases[i] >= virtualTime) {
+          this._phases[i] -= virtualTime;
+        }
 
-        // The visible window in parameter space
-        const windowLow = Math.max(alpha - timeWidth / 2, 0);
-        const windowHigh = Math.min(alpha + timeWidth / 2, 1);
+        // Compute alpha, clamped to [0, 1] (matches Python: np.clip)
+        const alpha = Math.max(0, Math.min(this._phases[i] / runTime, 1));
 
-        // If window is empty (timeWidth too small, or fully clipped), hide
-        if (windowHigh <= windowLow) {
+        // ShowPassingFlash window: show portion [alpha - timeWidth, alpha + timeWidth]
+        // This matches Python's ShowPassingFlash.interpolate which calls
+        // pointwise_become_partial(start, max(0, alpha-tw), min(1, alpha+tw))
+        const lower = Math.max(0, alpha - timeWidth);
+        const upper = Math.min(1, alpha + timeWidth);
+
+        if (upper <= lower || alpha <= 0) {
+          // Line not yet visible (warm-up) or degenerate window
           vmob.setOpacity(0);
           vmob._markDirty();
           continue;
         }
 
-        // Find the range of integrated points that fall within the window.
-        // params[] is monotonically increasing 0..1 so we can binary-search.
-        let iStart = 0;
-        let iEnd = linePoints.length - 1;
+        // Map parameter-space bounds to point indices
+        const iStart = Math.max(0, Math.floor(lower * (n - 1)));
+        const iEnd = Math.min(n - 1, Math.ceil(upper * (n - 1)));
 
-        // First index where params[j] >= windowLow
-        for (let j = 0; j < linePoints.length; j++) {
-          if (params[j] >= windowLow) {
-            iStart = j;
-            break;
-          }
-        }
-        // Last index where params[j] <= windowHigh
-        for (let j = linePoints.length - 1; j >= 0; j--) {
-          if (params[j] <= windowHigh) {
-            iEnd = j;
-            break;
-          }
-        }
-
-        // We need at least 2 points to draw a curve
         if (iEnd - iStart < 1) {
           vmob.setOpacity(0);
           vmob._markDirty();
           continue;
         }
 
-        // Extract the visible subset of integrated points
+        // Extract visible subset and rebuild bezier
         const visiblePoints = linePoints.slice(iStart, iEnd + 1);
-
-        // Rebuild bezier from the visible subset
         const bezierPoints = this._pointsToBezier(visiblePoints);
         vmob.setPoints3D(bezierPoints);
 
-        // Compute opacity: peak brightness at centre of window, fading at edges.
-        // For each visible point, its position within the window is p in 0..1,
-        // and the opacity is rateFunc(1 - 2 * |p - 0.5|).
-        // We use the average opacity across visible points.
-        const windowWidth = windowHigh - windowLow;
-        let opacitySum = 0;
-        for (let j = iStart; j <= iEnd; j++) {
-          const p = (params[j] - windowLow) / windowWidth; // 0..1 within window
-          const fade = rateFunc(1 - 2 * Math.abs(p - 0.5));
-          opacitySum += fade;
+        // Opacity: fade in at edges of the window, full in center
+        let opacity = 1;
+        if (alpha < timeWidth) {
+          opacity = rateFunc(alpha / timeWidth);
+        } else if (alpha > 1 - timeWidth) {
+          opacity = rateFunc((1 - alpha) / timeWidth);
         }
-        const avgOpacity = opacitySum / (iEnd - iStart + 1);
 
-        vmob.setOpacity(this._opacity * avgOpacity);
+        vmob.setOpacity(this._opacity * opacity);
         vmob._markDirty();
       }
     };
