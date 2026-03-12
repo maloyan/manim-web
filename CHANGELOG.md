@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.14](https://github.com/maloyan/manim-js/compare/v0.3.13...v0.3.14) (2026-03-12)
+
+
+### Bug Fixes
+
+* export missing growing animations from main index ([#134](https://github.com/maloyan/manim-js/issues/134)) ([#136](https://github.com/maloyan/manim-js/issues/136)) ([392756d](https://github.com/maloyan/manim-js/commit/392756dd63bfc49ab27eeed277b8ee600ec2dae4))
+
 ### [0.3.13](https://github.com/maloyan/manim-js/compare/v0.3.12...v0.3.13) (2026-03-11)
 
 
