@@ -3,31 +3,24 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { StreamLines, BLUE, UP, RIGHT, LEFT, BLACK } = await import('manim-web');
+  const { StreamLines } = await import('manim-web');
 
-  // Matches the Python manim EndAnimation example exactly:
+  // Matches Python manim ContinuousMotion example exactly:
   // func = lambda pos: np.sin(pos[0] / 2) * UR + np.cos(pos[1] / 2) * LEFT
+  // UR = [1, 1, 0], LEFT = [-1, 0, 0]
   const streamLines = new StreamLines({
-    func: (x, y) => [
-      Math.sin(x / 2) * (1 / Math.sqrt(2)) + Math.cos(y / 2) * -1,
-      Math.sin(x / 2) * (1 / Math.sqrt(2)),
-    ],
+    func: (x, y) => [Math.sin(x / 2) - Math.cos(y / 2), Math.sin(x / 2)],
     strokeWidth: 3,
-    color: '#58C4DD', // BLUE
-    stepSize: 0.05,
-    maxLineLength: 3, // virtual_time=1 equivalent
+    maxAnchorsPerLine: 30,
   });
   scene.add(streamLines);
 
   streamLines.startAnimation({
     warmUp: false,
     flowSpeed: 1.5,
-    timeWidth: 0.5,
   });
 
-  await scene.wait(6);
-
-  streamLines.endAnimation();
+  await scene.wait(streamLines.virtualTime / 1.5);
 }
 
 export default function StreamLinesContinuousMotionExample() {
