@@ -81,6 +81,10 @@ class RecordingScene {
     for (const anim of allAnimations) {
       if (!this._realScene.mobjects.has(anim.mobject)) {
         this._realScene.add(anim.mobject);
+        // Mark as animation-introduced so MasterTimeline hides it
+        // until its segment starts (scene.add sets createdAtBeginning=true
+        // which would bypass the hiding logic in MasterTimeline.update).
+        anim.mobject.createdAtBeginning = false;
       }
     }
   }
