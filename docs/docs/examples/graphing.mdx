@@ -10,6 +10,7 @@ import PolygonOnAxesExample from '@site/src/components/examples/PolygonOnAxesExa
 import HeatDiagramPlotExample from '@site/src/components/examples/HeatDiagramPlotExample';
 import FollowingGraphCameraExample from '@site/src/components/examples/FollowingGraphCameraExample';
 import MovingZoomedSceneAroundExample from '@site/src/components/examples/MovingZoomedSceneAroundExample';
+import StreamLinesContinuousMotionExample from '@site/src/components/examples/StreamLinesContinuousMotionExample';
 
 Coordinate systems, function plotting, and data visualization examples.
 
@@ -509,3 +510,66 @@ await scene.wait();
 </details>
 
 **Learn More:** [**ZoomedScene**](/api/classes/ZoomedScene) · [**ImageMobject**](/api/classes/ImageMobject) · [**BackgroundRectangle**](/api/classes/BackgroundRectangle) · [**Create**](/api/classes/Create) · [**FadeIn**](/api/classes/FadeIn) · [**Scale**](/api/classes/Scale) · [**Shift**](/api/classes/Shift)
+
+---
+
+## StreamLines Continuous Motion
+
+Visualizes a vector field with flowing streamlines. Uses StreamLines with startAnimation() to create continuous particle flow along field lines, with fade-in/out at the window edges.
+
+<StreamLinesContinuousMotionExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, NumberPlane, StreamLines, BLACK } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 854,
+  height: 480,
+  backgroundColor: BLACK,
+});
+
+const plane = new NumberPlane({
+  xRange: [-7, 7, 1],
+  yRange: [-4, 4, 1],
+  backgroundLineStyle: {
+    color: '#333355',
+    strokeWidth: 0.5,
+    opacity: 0.3,
+  },
+});
+scene.add(plane);
+
+const streamLines = new StreamLines({
+  func: (x, y) => [
+    Math.sin(x / 2) + Math.cos(y / 2) * 0.5,
+    Math.cos(x / 2) * 0.5 - Math.sin(y / 2),
+  ],
+  xRange: [-6, 6, 0.5],
+  yRange: [-3.5, 3.5, 0.5],
+  numLines: 25,
+  strokeWidth: 3,
+  maxLineLength: 12,
+  stepSize: 0.08,
+  opacity: 0.9,
+});
+scene.add(streamLines);
+
+// Start continuous flowing animation
+streamLines.startAnimation({
+  warmUp: true,     // randomize initial phases
+  flowSpeed: 1.5,   // speed multiplier
+  timeWidth: 0.3,   // visible window fraction
+});
+
+await scene.wait(10);
+
+// Stop and restore static streamlines
+streamLines.endAnimation();
+```
+
+</details>
+
+**Learn More:** [**StreamLines**](/api/classes/StreamLines) · [**NumberPlane**](/api/classes/NumberPlane)
