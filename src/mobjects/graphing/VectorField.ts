@@ -533,6 +533,8 @@ export class StreamLines extends VectorField {
   private _animationUpdater: UpdaterFunction | null = null;
   /** Phase for each streamline (0-1), used during continuous motion */
   private _phases: number[] = [];
+  /** Saved original bezier points per streamline for restoration after animation */
+  private _savedOriginalPoints: number[][][] = [];
 
   constructor(options: StreamLinesOptions) {
     super(options);
@@ -884,9 +886,10 @@ export class StreamLines extends VectorField {
   /**
    * Start continuous flowing animation on the streamlines.
    *
-   * Each streamline gets a sliding visible window that advances each frame,
-   * creating the illusion of particles flowing along the field.
-   * Lines fade in at the leading edge and fade out at the trailing edge.
+   * Matches Python manim's AnimatedStreamLines / ShowPassingFlash behavior:
+   * each streamline shows only a `timeWidth` fraction of its path, sliding
+   * along each frame as a bright streak that fades in at the front and out
+   * at the back.
    *
    * @param options - Animation configuration
    */
@@ -901,97 +904,130 @@ export class StreamLines extends VectorField {
     const numLines = this._streamlineData.length;
     if (numLines === 0) return this;
 
-    // Initialize phases
-    this._phases = new Array(numLines);
+    // Save each streamline's original bezier points so endAnimation can restore them
+    this._savedOriginalPoints = [];
     for (let i = 0; i < numLines; i++) {
-      this._phases[i] = warmUp ? Math.random() : 0;
+      const vmob = this._streamlineVMobjects[i];
+      if (vmob) {
+        this._savedOriginalPoints.push(vmob.getPoints());
+      } else {
+        this._savedOriginalPoints.push([]);
+      }
     }
 
-    // Compute total arc lengths for each streamline (used to normalize speed)
+    // Compute total arc length for each streamline so flowSpeed is consistent
     const arcLengths: number[] = [];
     for (const linePoints of this._streamlineData) {
       let len = 0;
-      for (let i = 1; i < linePoints.length; i++) {
-        const dx = linePoints[i].x - linePoints[i - 1].x;
-        const dy = linePoints[i].y - linePoints[i - 1].y;
+      for (let j = 1; j < linePoints.length; j++) {
+        const dx = linePoints[j].x - linePoints[j - 1].x;
+        const dy = linePoints[j].y - linePoints[j - 1].y;
         len += Math.sqrt(dx * dx + dy * dy);
       }
       arcLengths.push(Math.max(len, 1e-6));
     }
 
-    // Create the updater
+    // Compute cumulative arc-length parameter (0..1) for each integrated point
+    // so we can quickly map alpha positions to point indices.
+    const cumulativeParams: number[][] = [];
+    for (let i = 0; i < numLines; i++) {
+      const linePoints = this._streamlineData[i];
+      const params: number[] = [0];
+      let cumLen = 0;
+      for (let j = 1; j < linePoints.length; j++) {
+        const dx = linePoints[j].x - linePoints[j - 1].x;
+        const dy = linePoints[j].y - linePoints[j - 1].y;
+        cumLen += Math.sqrt(dx * dx + dy * dy);
+        params.push(cumLen / arcLengths[i]);
+      }
+      cumulativeParams.push(params);
+    }
+
+    // runTime per streamline: time for the flash to traverse the full path once
+    const runTimes: number[] = arcLengths.map((len) => len / Math.max(flowSpeed, 1e-6));
+
+    // Initialize per-line time (seconds). If warmUp, randomise so streaks
+    // don't all start at the same position.
+    this._phases = new Array(numLines);
+    for (let i = 0; i < numLines; i++) {
+      this._phases[i] = warmUp ? Math.random() * runTimes[i] : 0;
+    }
+
+    // Create the updater – mirrors Python manim's updater logic:
+    //   line.time += dt
+    //   alpha = (line.time % run_time) / run_time
+    //   line.anim.interpolate(alpha)
     this._animationUpdater = (_mob: Mobject, dt: number) => {
       for (let i = 0; i < numLines; i++) {
         const linePoints = this._streamlineData[i];
         const vmob = this._streamlineVMobjects[i];
         if (!linePoints || !vmob || linePoints.length < 2) continue;
 
-        // Advance phase; normalize by arc length so speed is consistent
-        this._phases[i] = (this._phases[i] + (flowSpeed * dt) / arcLengths[i]) % 1.0;
-        const phase = this._phases[i];
+        const runTime = runTimes[i];
+        const params = cumulativeParams[i];
 
-        // Determine the visible window [windowStart, windowEnd] in 0..1 parameter space
-        const windowStart = phase;
-        const windowEnd = phase + timeWidth;
+        // Advance time and compute looping alpha (0..1 along path)
+        this._phases[i] += dt;
+        const alpha = (this._phases[i] % runTime) / runTime;
 
-        const n = linePoints.length;
+        // The visible window in parameter space
+        const windowLow = Math.max(alpha - timeWidth / 2, 0);
+        const windowHigh = Math.min(alpha + timeWidth / 2, 1);
 
-        // Collect the visible subset of points, handling wrap-around
-        const visiblePoints: { x: number; y: number; vx: number; vy: number }[] = [];
-        const opacities: number[] = [];
-
-        for (let j = 0; j < n; j++) {
-          const t = j / (n - 1); // 0..1 parameter along the streamline
-
-          // Check if this point is within the window (possibly wrapping)
-          let inWindow = false;
-          let windowPos = 0; // position within the window (0..1)
-
-          if (windowEnd <= 1.0) {
-            // No wrap-around
-            if (t >= windowStart && t <= windowEnd) {
-              inWindow = true;
-              windowPos = (t - windowStart) / timeWidth;
-            }
-          } else {
-            // Window wraps around
-            if (t >= windowStart) {
-              inWindow = true;
-              windowPos = (t - windowStart) / timeWidth;
-            } else if (t <= windowEnd - 1.0) {
-              inWindow = true;
-              windowPos = (t + 1.0 - windowStart) / timeWidth;
-            }
-          }
-
-          if (inWindow) {
-            visiblePoints.push(linePoints[j]);
-            // Apply rate function for opacity: ramp up at start, ramp down at end
-            // windowPos goes 0..1 through the visible window
-            // Create a tent: opacity = rateFunc(2*windowPos) for first half,
-            // rateFunc(2*(1-windowPos)) for second half
-            let opacity: number;
-            if (windowPos <= 0.5) {
-              opacity = rateFunc(2 * windowPos);
-            } else {
-              opacity = rateFunc(2 * (1 - windowPos));
-            }
-            opacities.push(opacity);
-          }
-        }
-
-        if (visiblePoints.length < 2) {
-          // Not enough visible points; hide the streamline
+        // If window is empty (timeWidth too small, or fully clipped), hide
+        if (windowHigh <= windowLow) {
           vmob.setOpacity(0);
+          vmob._markDirty();
           continue;
         }
 
-        // Compute average opacity for the visible window
-        const avgOpacity = opacities.reduce((a, b) => a + b, 0) / opacities.length;
+        // Find the range of integrated points that fall within the window.
+        // params[] is monotonically increasing 0..1 so we can binary-search.
+        let iStart = 0;
+        let iEnd = linePoints.length - 1;
 
-        // Rebuild the VMobject with only the visible points
+        // First index where params[j] >= windowLow
+        for (let j = 0; j < linePoints.length; j++) {
+          if (params[j] >= windowLow) {
+            iStart = j;
+            break;
+          }
+        }
+        // Last index where params[j] <= windowHigh
+        for (let j = linePoints.length - 1; j >= 0; j--) {
+          if (params[j] <= windowHigh) {
+            iEnd = j;
+            break;
+          }
+        }
+
+        // We need at least 2 points to draw a curve
+        if (iEnd - iStart < 1) {
+          vmob.setOpacity(0);
+          vmob._markDirty();
+          continue;
+        }
+
+        // Extract the visible subset of integrated points
+        const visiblePoints = linePoints.slice(iStart, iEnd + 1);
+
+        // Rebuild bezier from the visible subset
         const bezierPoints = this._pointsToBezier(visiblePoints);
         vmob.setPoints3D(bezierPoints);
+
+        // Compute opacity: peak brightness at centre of window, fading at edges.
+        // For each visible point, its position within the window is p in 0..1,
+        // and the opacity is rateFunc(1 - 2 * |p - 0.5|).
+        // We use the average opacity across visible points.
+        const windowWidth = windowHigh - windowLow;
+        let opacitySum = 0;
+        for (let j = iStart; j <= iEnd; j++) {
+          const p = (params[j] - windowLow) / windowWidth; // 0..1 within window
+          const fade = rateFunc(1 - 2 * Math.abs(p - 0.5));
+          opacitySum += fade;
+        }
+        const avgOpacity = opacitySum / (iEnd - iStart + 1);
+
         vmob.setOpacity(this._opacity * avgOpacity);
         vmob._markDirty();
       }
@@ -1003,7 +1039,8 @@ export class StreamLines extends VectorField {
 
   /**
    * Stop the continuous flowing animation.
-   * Removes the updater and restores all streamlines to full visibility.
+   * Removes the updater and restores all streamlines to their full original
+   * bezier points and opacity.
    */
   endAnimation(): this {
     if (this._animationUpdater) {
@@ -1011,18 +1048,27 @@ export class StreamLines extends VectorField {
       this._animationUpdater = null;
     }
 
-    // Restore full streamlines from stored data
-    for (let i = 0; i < this._streamlineData.length; i++) {
-      const linePoints = this._streamlineData[i];
+    // Restore each streamline from saved original bezier points
+    for (let i = 0; i < this._streamlineVMobjects.length; i++) {
       const vmob = this._streamlineVMobjects[i];
-      if (!linePoints || !vmob || linePoints.length < 2) continue;
+      if (!vmob) continue;
 
-      const bezierPoints = this._pointsToBezier(linePoints);
-      vmob.setPoints3D(bezierPoints);
+      if (this._savedOriginalPoints[i] && this._savedOriginalPoints[i].length > 0) {
+        vmob.setPoints3D(this._savedOriginalPoints[i]);
+      } else {
+        // Fallback: recompute from integrated data
+        const linePoints = this._streamlineData[i];
+        if (linePoints && linePoints.length >= 2) {
+          const bezierPoints = this._pointsToBezier(linePoints);
+          vmob.setPoints3D(bezierPoints);
+        }
+      }
+
       vmob.setOpacity(this._opacity);
       vmob._markDirty();
     }
 
+    this._savedOriginalPoints = [];
     this._phases = [];
     return this;
   }
