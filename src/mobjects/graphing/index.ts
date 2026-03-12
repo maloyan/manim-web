@@ -6,17 +6,18 @@
  */
 
 // NumberLine and UnitInterval
-export { NumberLine, type NumberLineOptions, UnitInterval, type UnitIntervalOptions } from './NumberLine';
+export {
+  NumberLine,
+  type NumberLineOptions,
+  UnitInterval,
+  type UnitIntervalOptions,
+} from './NumberLine';
 
 // Axes
 export { Axes, type AxesOptions } from './Axes';
 
 // NumberPlane
-export {
-  NumberPlane,
-  type NumberPlaneOptions,
-  type BackgroundLineStyle,
-} from './NumberPlane';
+export { NumberPlane, type NumberPlaneOptions, type BackgroundLineStyle } from './NumberPlane';
 
 // FunctionGraph
 export { FunctionGraph, type FunctionGraphOptions } from './FunctionGraph';
@@ -31,17 +32,10 @@ export { ParametricFunction, type ParametricFunctionOptions } from './Parametric
 export { VectorFieldVector, type VectorFieldVectorOptions } from './Vector';
 
 // ComplexPlane
-export {
-  ComplexPlane,
-  type ComplexPlaneOptions,
-  type Complex,
-} from './ComplexPlane';
+export { ComplexPlane, type ComplexPlaneOptions, type Complex } from './ComplexPlane';
 
 // PolarPlane
-export {
-  PolarPlane,
-  type PolarPlaneOptions,
-} from './ComplexPlane';
+export { PolarPlane, type PolarPlaneOptions } from './ComplexPlane';
 
 // BarChart
 export { BarChart, type BarChartOptions } from './BarChart';
@@ -56,4 +50,5 @@ export {
   type VectorFieldBaseOptions,
   type ArrowVectorFieldOptions,
   type StreamLinesOptions,
+  type ContinuousMotionOptions,
 } from './VectorField';

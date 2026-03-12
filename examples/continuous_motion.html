@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - StreamLines Continuous Motion</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #ff6b6b;
+    }
+    button.active {
+      background: #0f3460;
+    }
+    .info {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #aaa;
+      font-size: 14px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="info">StreamLines Continuous Motion (Issue #135)</div>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="startBtn">Start Animation</button>
+    <button id="stopBtn">Stop Animation</button>
+    <button id="field1Btn" class="active">Sine Field</button>
+    <button id="field2Btn">Rotation Field</button>
+    <button id="field3Btn">Dipole Field</button>
+  </div>
+
+  <script type="module">
+    import {
+      Scene,
+      StreamLines,
+      NumberPlane,
+      Create,
+      FadeIn,
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 900,
+      height: 550,
+      backgroundColor: '#1a1a2e'
+    });
+
+    // Add a subtle grid
+    const plane = new NumberPlane({
+      xRange: [-7, 7, 1],
+      yRange: [-4, 4, 1],
+      backgroundLineStyle: {
+        color: '#333355',
+        strokeWidth: 0.5,
+        opacity: 0.3,
+      },
+    });
+    scene.add(plane);
+
+    // Vector field functions
+    const sineField = (x, y) => [
+      Math.sin(x / 2) * 1 + Math.cos(y / 2) * 0.5,
+      Math.cos(x / 2) * 0.5 - Math.sin(y / 2) * 1,
+    ];
+
+    const rotationField = (x, y) => [-y * 0.5, x * 0.5];
+
+    const dipoleField = (x, y) => {
+      const r2 = x * x + y * y + 0.5;
+      return [
+        (2 * x * y) / (r2 * r2),
+        (y * y - x * x) / (r2 * r2),
+      ];
+    };
+
+    let currentStreamLines = null;
+    let isAnimating = false;
+
+    function createField(func) {
+      if (currentStreamLines) {
+        if (isAnimating) {
+          currentStreamLines.endAnimation();
+          isAnimating = false;
+        }
+        scene.remove(currentStreamLines);
+      }
+
+      currentStreamLines = new StreamLines({
+        func,
+        xRange: [-6, 6, 0.5],
+        yRange: [-3.5, 3.5, 0.5],
+        numLines: 25,
+        strokeWidth: 3,
+        maxLineLength: 12,
+        stepSize: 0.08,
+        opacity: 0.9,
+      });
+
+      scene.add(currentStreamLines);
+    }
+
+    // Initialize with sine field
+    createField(sineField);
+
+    // Start animation button
+    document.getElementById('startBtn').addEventListener('click', () => {
+      if (!currentStreamLines || isAnimating) return;
+      currentStreamLines.startAnimation({
+        warmUp: true,
+        flowSpeed: 1.5,
+        timeWidth: 0.3,
+      });
+      isAnimating = true;
+    });
+
+    // Stop animation button
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      if (!currentStreamLines || !isAnimating) return;
+      currentStreamLines.endAnimation();
+      isAnimating = false;
+    });
+
+    // Field selection buttons
+    const fieldBtns = [
+      document.getElementById('field1Btn'),
+      document.getElementById('field2Btn'),
+      document.getElementById('field3Btn'),
+    ];
+    const fields = [sineField, rotationField, dipoleField];
+
+    fieldBtns.forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        fieldBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        isAnimating = false;
+        createField(fields[idx]);
+      });
+    });
+  </script>
+</body>
+</html>

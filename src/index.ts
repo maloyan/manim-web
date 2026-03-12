@@ -186,6 +186,7 @@ export {
   type VectorFieldBaseOptions,
   type ArrowVectorFieldOptions,
   type StreamLinesOptions,
+  type ContinuousMotionOptions,
 } from './mobjects/graphing';
 
 // Text and LaTeX
