@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - LabeledPolygram</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #ff6b6b; }
+    button:disabled { background: #666; cursor: not-allowed; }
+    h1 { color: #eee; margin-bottom: 20px; font-size: 24px; }
+    p { color: #aaa; margin-top: 10px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>LabeledPolygram Demo</h1>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="playBtn">Play</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+  <p>Displays a polygon with holes, labeled at its pole of inaccessibility</p>
+
+  <script type="module">
+    import {
+      Scene,
+      Polygon,
+      LabeledPolygram,
+      Circle,
+      FadeIn,
+      Create,
+      BLACK,
+      BLUE,
+      WHITE,
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK,
+    });
+
+    let isAnimating = false;
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      document.getElementById('playBtn').disabled = true;
+
+      scene.clear();
+
+      // Outer ring: an irregular shape
+      const ring1 = [
+        [-3.8, -2.4, 0], [-2.4, -2.5, 0], [-1.3, -1.6, 0], [-0.2, -1.7, 0],
+        [1.7, -2.5, 0], [2.9, -2.6, 0], [3.5, -1.5, 0], [4.9, -1.4, 0],
+        [4.5, 0.2, 0], [4.7, 1.6, 0], [3.5, 2.4, 0], [1.1, 2.5, 0],
+        [-0.1, 0.9, 0], [-1.2, 0.5, 0], [-1.6, 0.7, 0], [-1.4, 1.9, 0],
+        [-2.6, 2.6, 0], [-4.4, 1.2, 0], [-4.9, -0.8, 0],
+      ];
+
+      // Inner hole
+      const ring2 = [
+        [0.2, -1.2, 0], [0.9, -1.2, 0], [1.4, -2.0, 0], [2.1, -1.6, 0],
+        [2.2, -0.5, 0], [1.4, 0.0, 0], [0.4, -0.2, 0],
+      ];
+
+      // Small inner hole
+      const ring3 = [[-2.7, 1.4, 0], [-2.3, 1.7, 0], [-2.8, 1.9, 0]];
+
+      // Create the polygon with holes and add to scene
+      const outerPoly = new Polygon({
+        vertices: ring1,
+        color: BLUE,
+        fillOpacity: 0.75,
+        strokeWidth: 2,
+      });
+      const holePoly1 = new Polygon({
+        vertices: ring2,
+        color: BLACK,
+        fillOpacity: 1,
+        strokeWidth: 0,
+      });
+      const holePoly2 = new Polygon({
+        vertices: ring3,
+        color: BLACK,
+        fillOpacity: 1,
+        strokeWidth: 0,
+      });
+      // Fade in polygon + holes together (parallel FadeIn on each)
+      await scene.play(
+        new FadeIn(outerPoly, { duration: 0.8 }),
+        new FadeIn(holePoly1, { duration: 0.8 }),
+        new FadeIn(holePoly2, { duration: 0.8 }),
+      );
+
+      // Create labeled polygram and compute pole
+      const labeledPolygram = new LabeledPolygram({
+        vertexGroups: [ring1, ring2, ring3],
+        label: 'Pole',
+        precision: 0.01,
+        labelFontSize: 28,
+        labelColor: WHITE,
+        color: BLUE,
+        fillOpacity: 0,
+        strokeWidth: 0,
+      });
+
+      // Hide label before adding, then fade it in
+      const label = labeledPolygram.getLabel();
+      label.opacity = 0;
+      scene.add(labeledPolygram);
+      await scene.play(new FadeIn(label, { duration: 1 }));
+
+      // Draw the reference circle at the pole
+      const pole = labeledPolygram.pole;
+      const radius = labeledPolygram.radius;
+      const circle = new Circle({
+        radius: radius,
+        color: WHITE,
+        center: [pole[0], pole[1], 0],
+        fillOpacity: 0,
+        strokeWidth: 2,
+      });
+      await scene.play(new Create(circle, { duration: 0.8 }));
+      await scene.wait(2);
+
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+    });
+  </script>
+</body>
+</html>
