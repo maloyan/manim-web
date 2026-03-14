@@ -2,7 +2,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Polygon, LabeledPolygram, Circle, FadeIn, BLACK, BLUE, WHITE } =
+  const { Polygon, LabeledPolygram, Circle, FadeIn, Create, BLACK, BLUE, WHITE } =
     await import('manim-web');
 
   // Define an irregular polygon with two holes
@@ -42,7 +42,7 @@ async function animate(scene: any) {
     [-2.8, 1.9, 0],
   ];
 
-  // Show the filled polygon with holes
+  // Create polygon shapes
   const outerPoly = new Polygon({
     vertices: ring1,
     color: BLUE,
@@ -61,10 +61,15 @@ async function animate(scene: any) {
     fillOpacity: 1,
     strokeWidth: 0,
   });
-  scene.add(outerPoly, hole1, hole2);
-  await scene.play(new FadeIn(outerPoly, { duration: 0.8 }));
 
-  // Create labeled polygram - label appears at the pole of inaccessibility
+  // Fade in polygon + holes together
+  await scene.play(
+    new FadeIn(outerPoly, { duration: 0.8 }),
+    new FadeIn(hole1, { duration: 0.8 }),
+    new FadeIn(hole2, { duration: 0.8 }),
+  );
+
+  // Create labeled polygram - computes pole of inaccessibility
   const labeled = new LabeledPolygram({
     vertexGroups: [ring1, ring2, ring3],
     label: 'Pole',
@@ -75,10 +80,14 @@ async function animate(scene: any) {
     fillOpacity: 0,
     strokeWidth: 0,
   });
-  scene.add(labeled);
-  await scene.play(new FadeIn(labeled, { duration: 1 }));
 
-  // Show a reference circle at the pole
+  // Hide label, add to scene, then fade in
+  const label = labeled.getLabel();
+  label.opacity = 0;
+  scene.add(labeled);
+  await scene.play(new FadeIn(label, { duration: 1 }));
+
+  // Draw a reference circle at the pole
   const circle = new Circle({
     radius: labeled.radius,
     color: WHITE,
@@ -86,8 +95,7 @@ async function animate(scene: any) {
     fillOpacity: 0,
     strokeWidth: 2,
   });
-  scene.add(circle);
-  await scene.play(new FadeIn(circle, { duration: 0.8 }));
+  await scene.play(new Create(circle, { duration: 0.8 }));
   await scene.wait(2);
 }
 

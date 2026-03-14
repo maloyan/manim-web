@@ -60,7 +60,6 @@
       BLACK,
       BLUE,
       WHITE,
-      GREEN_C,
     } from '../src/index.ts';
 
     const container = document.getElementById('container');
@@ -97,32 +96,33 @@
       // Small inner hole
       const ring3 = [[-2.7, 1.4, 0], [-2.3, 1.7, 0], [-2.8, 1.9, 0]];
 
-      // Create the outer polygon for reference fill
+      // Create the polygon with holes and add to scene
       const outerPoly = new Polygon({
         vertices: ring1,
         color: BLUE,
         fillOpacity: 0.75,
         strokeWidth: 2,
       });
-
       const holePoly1 = new Polygon({
         vertices: ring2,
         color: BLACK,
         fillOpacity: 1,
         strokeWidth: 0,
       });
-
       const holePoly2 = new Polygon({
         vertices: ring3,
         color: BLACK,
         fillOpacity: 1,
         strokeWidth: 0,
       });
+      // Fade in polygon + holes together (parallel FadeIn on each)
+      await scene.play(
+        new FadeIn(outerPoly, { duration: 0.8 }),
+        new FadeIn(holePoly1, { duration: 0.8 }),
+        new FadeIn(holePoly2, { duration: 0.8 }),
+      );
 
-      scene.add(outerPoly, holePoly1, holePoly2);
-      await scene.play(new FadeIn(outerPoly, { duration: 0.5 }));
-
-      // Create labeled polygram
+      // Create labeled polygram and compute pole
       const labeledPolygram = new LabeledPolygram({
         vertexGroups: [ring1, ring2, ring3],
         label: 'Pole',
@@ -133,22 +133,24 @@
         fillOpacity: 0,
         strokeWidth: 0,
       });
-      scene.add(labeledPolygram);
 
-      // Show circle at the pole with the computed radius
+      // Hide label before adding, then fade it in
+      const label = labeledPolygram.getLabel();
+      label.opacity = 0;
+      scene.add(labeledPolygram);
+      await scene.play(new FadeIn(label, { duration: 1 }));
+
+      // Draw the reference circle at the pole
       const pole = labeledPolygram.pole;
       const radius = labeledPolygram.radius;
       const circle = new Circle({
         radius: radius,
-        color: GREEN_C || '#58C4DD',
+        color: WHITE,
         center: [pole[0], pole[1], 0],
         fillOpacity: 0,
         strokeWidth: 2,
       });
-      scene.add(circle);
-
-      await scene.play(new FadeIn(labeledPolygram, { duration: 1 }));
-      await scene.play(new FadeIn(circle, { duration: 0.8 }));
+      await scene.play(new Create(circle, { duration: 0.8 }));
       await scene.wait(2);
 
       isAnimating = false;
