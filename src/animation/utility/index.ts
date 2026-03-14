@@ -9,21 +9,15 @@
  */
 
 import * as THREE from 'three';
-import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { linear } from '../../rate-functions';
-import { YELLOW, DEFAULT_STROKE_WIDTH } from '../../constants';
 
 // ============================================================================
 // Add Animation
 // ============================================================================
 
-export interface AddOptions extends AnimationOptions {
-  // Add has no special options - it's instant
-}
+export type AddOptions = AnimationOptions;
 
 /**
  * Instant animation that adds a mobject to the scene.
@@ -68,9 +62,7 @@ export function add(mobject: Mobject, options?: AddOptions): Add {
 // Remove Animation
 // ============================================================================
 
-export interface RemoveOptions extends AnimationOptions {
-  // Remove has no special options - it's instant
-}
+export type RemoveOptions = AnimationOptions;
 
 /**
  * Instant animation that removes a mobject from visibility.
@@ -151,7 +143,7 @@ export class Wait extends Animation {
 export function wait(
   mobject: Mobject,
   duration?: number,
-  options?: Omit<WaitOptions, 'duration'>
+  options?: Omit<WaitOptions, 'duration'>,
 ): Wait {
   return new Wait(mobject, { ...options, duration });
 }
@@ -201,7 +193,7 @@ export class Rotating extends Animation {
       duration: options.duration ?? 5,
       rateFunc: options.rateFunc ?? linear,
     });
-    this.angle = options.angle ?? (2 * Math.PI); // Default: TAU (full revolution)
+    this.angle = options.angle ?? 2 * Math.PI; // Default: TAU (full revolution)
     this.axis = options.axis ?? [0, 0, 1];
     this.aboutPoint = options.aboutPoint ?? null;
   }
@@ -226,7 +218,7 @@ export class Rotating extends Animation {
       this._aboutPointVector = new THREE.Vector3(
         this.aboutPoint[0],
         this.aboutPoint[1],
-        this.aboutPoint[2]
+        this.aboutPoint[2],
       );
     } else {
       // Default to mobject center
@@ -244,10 +236,7 @@ export class Rotating extends Animation {
     const totalAngle = this.angle * alpha;
 
     // Create rotation quaternion for current angle
-    const rotationQuat = new THREE.Quaternion().setFromAxisAngle(
-      this._axisVector,
-      totalAngle
-    );
+    const rotationQuat = new THREE.Quaternion().setFromAxisAngle(this._axisVector, totalAngle);
 
     // Apply rotation to initial quaternion
     const newQuat = new THREE.Quaternion().copy(this._initialQuaternion);
@@ -285,181 +274,174 @@ export function rotating(mobject: Mobject, options?: RotatingOptions): Rotating 
 // ============================================================================
 
 export interface BroadcastOptions extends AnimationOptions {
-  /** Color of the broadcast rings. Default: YELLOW */
-  color?: string;
-  /** Number of rings to broadcast. Default: 3 */
-  numRings?: number;
-  /** Maximum radius the rings expand to. Default: 2 */
-  maxRadius?: number;
-  /** Stroke width of rings. Default: DEFAULT_STROKE_WIDTH */
-  strokeWidth?: number;
-  /** Time offset between rings (0-1). Default: 0.3 */
+  /** Center of the broadcast effect. Default: ORIGIN [0,0,0] */
+  focalPoint?: [number, number, number];
+  /** Number of mobject copies that emerge. Default: 5 */
+  nMobs?: number;
+  /** Starting opacity of copies. Default: 1 */
+  initialOpacity?: number;
+  /** Ending opacity of copies. Default: 0 */
+  finalOpacity?: number;
+  /** Starting width of copies. Default: 0.0 */
+  initialWidth?: number;
+  /** Time offset between copies (0-1). Default: 0.2 */
   lagRatio?: number;
 }
 
 /**
- * Broadcast/ripple animation that creates expanding rings from the mobject center.
- * Useful for emphasis or drawing attention to an object.
- * Rings expand outward and fade as they grow.
+ * Broadcast animation that creates copies of the mobject which scale up and
+ * fade out, matching Python manim's Broadcast behavior.
+ *
+ * Each copy starts at the focal point with `initialWidth` and `initialOpacity`,
+ * then animates to the original mobject's width and `finalOpacity` with
+ * staggered timing via `lagRatio`.
  */
 export class Broadcast extends Animation {
-  /** Ring color */
-  readonly ringColor: string;
+  /** Center of the broadcast effect */
+  readonly focalPoint: [number, number, number];
 
-  /** Number of rings */
-  readonly numRings: number;
+  /** Number of copies */
+  readonly nMobs: number;
 
-  /** Maximum radius */
-  readonly maxRadius: number;
+  /** Starting opacity */
+  readonly initialOpacity: number;
 
-  /** Stroke width */
-  readonly strokeWidth: number;
+  /** Ending opacity */
+  readonly finalOpacity: number;
 
-  /** Lag ratio between rings */
+  /** Starting width of copies */
+  readonly initialWidth: number;
+
+  /** Lag ratio between copies */
   readonly lagRatio: number;
 
-  /** Rings group */
-  private _ringsGroup: THREE.Group | null = null;
+  /** Copies of the mobject */
+  private _copies: Mobject[] = [];
 
-  /** Parent object */
+  /** Original mobject width (for scale computation) */
+  private _originalWidth: number = 1;
+
+  /** Original scale of the mobject */
+  private _originalScale: THREE.Vector3 = new THREE.Vector3(1, 1, 1);
+
+  /** Parent Three.js object for adding copy objects */
   private _parentObject: THREE.Object3D | null = null;
-
-  /** Center point */
-  private _center: Vector3Tuple = [0, 0, 0];
 
   constructor(mobject: Mobject, options: BroadcastOptions = {}) {
     super(mobject, {
-      duration: options.duration ?? 1,
+      duration: options.duration ?? 3,
       rateFunc: options.rateFunc ?? linear,
     });
-    this.ringColor = options.color ?? YELLOW;
-    this.numRings = options.numRings ?? 3;
-    this.maxRadius = options.maxRadius ?? 2;
-    this.strokeWidth = options.strokeWidth ?? DEFAULT_STROKE_WIDTH;
-    this.lagRatio = options.lagRatio ?? 0.3;
+    this.focalPoint = options.focalPoint ?? [0, 0, 0];
+    this.nMobs = options.nMobs ?? 5;
+    this.initialOpacity = options.initialOpacity ?? 1;
+    this.finalOpacity = options.finalOpacity ?? 0;
+    this.initialWidth = options.initialWidth ?? 0.0;
+    this.lagRatio = options.lagRatio ?? 0.2;
   }
 
   override begin(): void {
     super.begin();
 
-    // Get center of mobject
-    this._center = this.mobject.getCenter();
+    // Get original width for scale computation
+    const bbox = this.mobject.getBoundingBox();
+    this._originalWidth = Math.max(bbox.width, 0.001); // avoid division by zero
+    this._originalScale.copy(this.mobject.scaleVector);
 
-    // Get parent Three.js object
+    // Get parent Three.js object to add copies to
     const threeObj = this.mobject.getThreeObject();
     this._parentObject = threeObj.parent ?? threeObj;
 
-    // Create rings group
-    this._ringsGroup = new THREE.Group();
-    this._ringsGroup.position.set(this._center[0], this._center[1], this._center[2] + 0.01);
+    // Create N copies
+    this._copies = [];
+    for (let i = 0; i < this.nMobs; i++) {
+      const copy = this.mobject.copy();
 
-    // Create rings (start with 0 radius)
-    for (let i = 0; i < this.numRings; i++) {
-      const ring = this._createRing(0.01); // Start very small
-      this._ringsGroup.add(ring);
+      // Position at focal point
+      copy.position.set(this.focalPoint[0], this.focalPoint[1], this.focalPoint[2]);
+
+      // Set initial scale based on initialWidth
+      const scaleFactor = this._originalWidth > 0.001 ? this.initialWidth / this._originalWidth : 0;
+      copy.scaleVector.copy(this._originalScale).multiplyScalar(Math.max(scaleFactor, 0));
+
+      // Set initial opacity
+      copy.setOpacity(this.initialOpacity);
+      copy._markDirty();
+
+      // Add the copy's Three.js object to the parent
+      const copyThree = copy.getThreeObject();
+      this._parentObject.add(copyThree);
+
+      this._copies.push(copy);
     }
-
-    // Add to scene
-    this._parentObject.add(this._ringsGroup);
-  }
-
-  private _createRing(radius: number): Line2 {
-    const numSegments = 64;
-    const positions: number[] = [];
-
-    for (let i = 0; i <= numSegments; i++) {
-      const angle = (i / numSegments) * Math.PI * 2;
-      positions.push(
-        Math.cos(angle) * radius,
-        Math.sin(angle) * radius,
-        0
-      );
-    }
-
-    const geometry = new LineGeometry();
-    geometry.setPositions(positions);
-
-    const material = new LineMaterial({
-      color: new THREE.Color(this.ringColor).getHex(),
-      linewidth: this.strokeWidth * 0.01,
-      transparent: true,
-      opacity: 1,
-      resolution: new THREE.Vector2(window.innerWidth, window.innerHeight),
-    });
-
-    const ring = new Line2(geometry, material);
-    ring.computeLineDistances();
-    return ring;
-  }
-
-  private _updateRing(ring: Line2, radius: number, opacity: number): void {
-    const numSegments = 64;
-    const positions: number[] = [];
-
-    const effectiveRadius = Math.max(0.01, radius);
-    for (let i = 0; i <= numSegments; i++) {
-      const angle = (i / numSegments) * Math.PI * 2;
-      positions.push(
-        Math.cos(angle) * effectiveRadius,
-        Math.sin(angle) * effectiveRadius,
-        0
-      );
-    }
-
-    // Create new geometry
-    const geometry = new LineGeometry();
-    geometry.setPositions(positions);
-
-    // Update geometry and material
-    ring.geometry.dispose();
-    ring.geometry = geometry;
-    ring.computeLineDistances();
-
-    const material = ring.material as LineMaterial;
-    material.opacity = Math.max(0, opacity);
-    material.needsUpdate = true;
   }
 
   interpolate(alpha: number): void {
-    if (!this._ringsGroup) return;
+    if (this._copies.length === 0) return;
 
-    this._ringsGroup.children.forEach((child, i) => {
-      if (child instanceof Line2) {
-        // Stagger the rings - each one starts later
-        const ringDelay = i * this.lagRatio;
-        const ringAlpha = Math.max(0, Math.min(1, (alpha - ringDelay) / (1 - ringDelay * (this.numRings - 1) / this.numRings)));
+    for (let i = 0; i < this._copies.length; i++) {
+      const copy = this._copies[i];
 
-        if (ringAlpha <= 0) {
-          // Ring hasn't started yet
-          this._updateRing(child, 0.01, 0);
-        } else {
-          // Calculate radius: grows from 0 to maxRadius
-          const radius = this.maxRadius * ringAlpha;
-
-          // Calculate opacity: starts at 1, fades to 0
-          const opacity = 1 - ringAlpha;
-
-          this._updateRing(child, radius, opacity);
-        }
+      // Compute staggered local alpha for this copy
+      // Each copy is offset by i * lagRatio
+      const copyDelay = i * this.lagRatio;
+      // The available window for this copy shrinks as lag accumulates
+      const copyWindow = 1 - copyDelay;
+      let localAlpha: number;
+      if (copyWindow <= 0) {
+        localAlpha = alpha >= 1 ? 1 : 0;
+      } else {
+        localAlpha = Math.max(0, Math.min(1, (alpha - copyDelay) / copyWindow));
       }
-    });
+
+      // Interpolate scale: from initialWidth to originalWidth
+      const targetScaleFactor =
+        this._originalWidth > 0.001 ? this.initialWidth / this._originalWidth : 0;
+      const currentScaleFactor = targetScaleFactor + (1 - targetScaleFactor) * localAlpha;
+      copy.scaleVector.copy(this._originalScale).multiplyScalar(Math.max(currentScaleFactor, 0));
+
+      // Interpolate position: from focalPoint to original position
+      const origPos = this.mobject.position;
+      copy.position.set(
+        this.focalPoint[0] + (origPos.x - this.focalPoint[0]) * localAlpha,
+        this.focalPoint[1] + (origPos.y - this.focalPoint[1]) * localAlpha,
+        this.focalPoint[2] + (origPos.z - this.focalPoint[2]) * localAlpha,
+      );
+
+      // Interpolate opacity: from initialOpacity to finalOpacity
+      const currentOpacity =
+        this.initialOpacity + (this.finalOpacity - this.initialOpacity) * localAlpha;
+      copy.setOpacity(currentOpacity);
+
+      copy._markDirty();
+      // Sync Three.js object so visual updates are applied
+      copy.getThreeObject();
+    }
   }
 
   override finish(): void {
-    // Remove rings from scene
-    if (this._ringsGroup && this._parentObject) {
-      this._parentObject.remove(this._ringsGroup);
-
-      // Dispose geometries and materials
-      this._ringsGroup.traverse((child) => {
-        if (child instanceof Line2) {
-          child.geometry.dispose();
-          (child.material as LineMaterial).dispose();
-        }
-      });
-
-      this._ringsGroup = null;
+    // Remove all copy Three.js objects from the parent and dispose
+    if (this._parentObject) {
+      for (const copy of this._copies) {
+        const copyThree = copy.getThreeObject();
+        this._parentObject.remove(copyThree);
+        // Dispose Three.js resources
+        copyThree.traverse((child) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const mesh = child as any;
+          if (mesh.geometry) mesh.geometry.dispose();
+          if (mesh.material) {
+            if (Array.isArray(mesh.material)) {
+              mesh.material.forEach((m: { dispose: () => void }) => m.dispose());
+            } else {
+              mesh.material.dispose();
+            }
+          }
+        });
+      }
     }
+    this._copies = [];
+    this._parentObject = null;
 
     super.finish();
   }
@@ -467,9 +449,9 @@ export class Broadcast extends Animation {
 
 /**
  * Create a Broadcast animation for a mobject.
- * Creates expanding rings that radiate from the mobject's center.
- * @param mobject The mobject to broadcast from
- * @param options Broadcast options (color, numRings, maxRadius, strokeWidth, lagRatio)
+ * Creates copies of the mobject that scale up and fade out from the focal point.
+ * @param mobject The mobject to broadcast
+ * @param options Broadcast options (focalPoint, nMobs, initialOpacity, finalOpacity, initialWidth, lagRatio)
  */
 export function broadcast(mobject: Mobject, options?: BroadcastOptions): Broadcast {
   return new Broadcast(mobject, options);

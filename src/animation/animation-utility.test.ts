@@ -388,9 +388,9 @@ describe('Rotating', () => {
 // ==================================================================
 // Broadcast
 // ==================================================================
-// NOTE: Broadcast relies on THREE.js Line2/LineMaterial/LineGeometry
-// and window.innerWidth/innerHeight. Full interpolation testing
-// requires WebGL context. We test constructor/config and factory only.
+// NOTE: Broadcast creates copies of the mobject that scale up and fade out.
+// Full interpolation testing requires Three.js context.
+// We test constructor/config and factory only.
 
 describe('Broadcast', () => {
   let mob: Mobject;
@@ -400,24 +400,24 @@ describe('Broadcast', () => {
   });
 
   describe('constructor', () => {
-    it('defaults duration to 1', () => {
+    it('defaults duration to 3', () => {
       const anim = new Broadcast(mob);
-      expect(anim.duration).toBe(1);
+      expect(anim.duration).toBe(3);
     });
 
-    it('defaults numRings to 3', () => {
+    it('defaults nMobs to 5', () => {
       const anim = new Broadcast(mob);
-      expect(anim.numRings).toBe(3);
+      expect(anim.nMobs).toBe(5);
     });
 
-    it('defaults maxRadius to 2', () => {
+    it('defaults focalPoint to ORIGIN', () => {
       const anim = new Broadcast(mob);
-      expect(anim.maxRadius).toBe(2);
+      expect(anim.focalPoint).toEqual([0, 0, 0]);
     });
 
-    it('defaults lagRatio to 0.3', () => {
+    it('defaults lagRatio to 0.2', () => {
       const anim = new Broadcast(mob);
-      expect(anim.lagRatio).toBeCloseTo(0.3, 5);
+      expect(anim.lagRatio).toBeCloseTo(0.2, 5);
     });
 
     it('defaults rateFunc to linear', () => {
@@ -427,19 +427,63 @@ describe('Broadcast', () => {
 
     it('accepts custom options', () => {
       const anim = new Broadcast(mob, {
-        color: '#ff0000',
-        numRings: 5,
-        maxRadius: 4,
-        strokeWidth: 2,
+        focalPoint: [1, 2, 0],
+        nMobs: 8,
+        initialOpacity: 0.9,
+        finalOpacity: 0.1,
+        initialWidth: 0.5,
         lagRatio: 0.5,
         duration: 2,
       });
-      expect(anim.ringColor).toBe('#ff0000');
-      expect(anim.numRings).toBe(5);
-      expect(anim.maxRadius).toBe(4);
-      expect(anim.strokeWidth).toBe(2);
+      expect(anim.focalPoint).toEqual([1, 2, 0]);
+      expect(anim.nMobs).toBe(8);
+      expect(anim.initialOpacity).toBe(0.9);
+      expect(anim.finalOpacity).toBe(0.1);
+      expect(anim.initialWidth).toBe(0.5);
       expect(anim.lagRatio).toBeCloseTo(0.5, 5);
       expect(anim.duration).toBe(2);
+    });
+
+    it('defaults initialOpacity to 1', () => {
+      const anim = new Broadcast(mob);
+      expect(anim.initialOpacity).toBe(1);
+    });
+
+    it('defaults finalOpacity to 0', () => {
+      const anim = new Broadcast(mob);
+      expect(anim.finalOpacity).toBe(0);
+    });
+
+    it('defaults initialWidth to 0', () => {
+      const anim = new Broadcast(mob);
+      expect(anim.initialWidth).toBe(0);
+    });
+
+    it('does not set remover (original mobject stays in scene)', () => {
+      const anim = new Broadcast(mob);
+      expect(anim.remover).toBe(false);
+    });
+  });
+
+  describe('finish()', () => {
+    it('clears internal copies array', () => {
+      const anim = new Broadcast(mob);
+      // Access private field via cast to verify cleanup
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const internal = anim as any;
+      internal._copies = [createMob(), createMob()];
+      anim.finish();
+      expect(internal._copies).toEqual([]);
+    });
+
+    it('nullifies parent reference', () => {
+      const anim = new Broadcast(mob);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const internal = anim as any;
+      internal._parentObject = {};
+      internal._copies = [];
+      anim.finish();
+      expect(internal._parentObject).toBeNull();
     });
   });
 
@@ -451,13 +495,13 @@ describe('Broadcast', () => {
 
     it('passes options through', () => {
       const anim = broadcast(mob, {
-        numRings: 7,
-        maxRadius: 5,
-        duration: 3,
+        nMobs: 7,
+        initialWidth: 1.0,
+        duration: 5,
       });
-      expect(anim.numRings).toBe(7);
-      expect(anim.maxRadius).toBe(5);
-      expect(anim.duration).toBe(3);
+      expect(anim.nMobs).toBe(7);
+      expect(anim.initialWidth).toBe(1.0);
+      expect(anim.duration).toBe(5);
     });
   });
 });

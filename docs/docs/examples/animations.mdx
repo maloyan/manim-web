@@ -3,6 +3,7 @@ title: Animations
 sidebar_label: Animations
 ---
 
+import BroadcastExample from '@site/src/components/examples/BroadcastExample';
 import PlayerExample from '@site/src/components/examples/PlayerExample';
 import OpeningManimExample from '@site/src/components/examples/OpeningManimExample';
 import ManimCeLogoExample from '@site/src/components/examples/ManimCeLogoExample';
@@ -1398,4 +1399,62 @@ await scene.play(new AnimationGroup(animations));
 </details>
 
 **Learn More:** [**Shift**](/api/classes/Shift) · [**AnimationGroup**](/api/classes/AnimationGroup)
+
+---
+
+## Broadcast
+
+Animates a mobject emanating outward from a focal point with multiple fading copies. Each copy starts small and transparent, scaling up to the original size while fading out. Supports custom focal point, number of copies, opacity range, and stagger timing.
+
+<BroadcastExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Circle,
+  Square,
+  Broadcast,
+  Create,
+  FadeIn,
+  FadeOut,
+  TEAL_A,
+  YELLOW,
+  BLACK,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+// Basic Broadcast - circle emanates outward with fading copies
+const circle = new Circle({ radius: 1.5, color: TEAL_A });
+scene.add(circle);
+await scene.play(new Create(circle));
+await scene.play(new Broadcast(circle));
+await scene.wait(0.5);
+
+// Broadcast with custom options on a square
+await scene.play(new FadeOut(circle));
+const square = new Square({ sideLength: 2, color: YELLOW });
+scene.add(square);
+await scene.play(new FadeIn(square));
+await scene.play(
+  new Broadcast(square, {
+    nMobs: 3,
+    initialOpacity: 0.8,
+    lagRatio: 0.3,
+    duration: 2,
+  }),
+);
+await scene.wait(0.5);
+```
+
+</details>
+
+**Learn More:** [**Broadcast**](/api/classes/Broadcast) · [**Circle**](/api/classes/Circle) · [**Create**](/api/classes/Create) · [**FadeIn**](/api/classes/FadeIn)
 
