@@ -24,6 +24,9 @@ export {
   type PolygonOptions,
 } from './Polygon';
 
+// Polygram (generalized polygon with multiple vertex groups)
+export { Polygram, type PolygramOptions } from './Polygram';
+
 // Arrow and variants
 export { Arrow, DoubleArrow, Vector, type ArrowOptions } from './Arrow';
 
@@ -123,10 +126,12 @@ export {
   LabeledArrow,
   LabeledDot,
   AnnotationDot,
+  LabeledPolygram,
   type LabeledLineOptions,
   type LabeledArrowOptions,
   type LabeledDotOptions,
   type AnnotationDotOptions,
+  type LabeledPolygramOptions,
   type LabelDirection,
   type LabelOrientation,
 } from './LabeledGeometry';

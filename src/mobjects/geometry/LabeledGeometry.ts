@@ -10,7 +10,9 @@ import { Line, LineOptions } from './Line';
 import { Arrow, ArrowOptions } from './Arrow';
 import { Dot, DotOptions } from './Dot';
 import { Circle } from './Circle';
+import { Polygram } from './Polygram';
 import { Text } from '../text/Text';
+import { polylabel } from '../../utils/polylabel';
 import { BLUE, WHITE, YELLOW } from '../../constants';
 
 /**
@@ -23,14 +25,22 @@ export type LabelDirection = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT' | 'UL' | 'UR' | 'D
  */
 function directionToVector(direction: LabelDirection): Vector3Tuple {
   switch (direction) {
-    case 'UP': return [0, 1, 0];
-    case 'DOWN': return [0, -1, 0];
-    case 'LEFT': return [-1, 0, 0];
-    case 'RIGHT': return [1, 0, 0];
-    case 'UL': return [-0.707, 0.707, 0];
-    case 'UR': return [0.707, 0.707, 0];
-    case 'DL': return [-0.707, -0.707, 0];
-    case 'DR': return [0.707, -0.707, 0];
+    case 'UP':
+      return [0, 1, 0];
+    case 'DOWN':
+      return [0, -1, 0];
+    case 'LEFT':
+      return [-1, 0, 0];
+    case 'RIGHT':
+      return [1, 0, 0];
+    case 'UL':
+      return [-0.707, 0.707, 0];
+    case 'UR':
+      return [0.707, 0.707, 0];
+    case 'DL':
+      return [-0.707, -0.707, 0];
+    case 'DR':
+      return [0.707, -0.707, 0];
   }
 }
 
@@ -910,6 +920,178 @@ export class AnnotationDot extends VGroup {
       color: this._dot.color,
       fillOpacity: this._dot.fillOpacity,
       strokeWidth: this._dot.strokeWidth,
+    });
+  }
+}
+
+/**
+ * Options for creating a LabeledPolygram
+ */
+export interface LabeledPolygramOptions {
+  /** Vertex groups defining the polygram. Required. */
+  vertexGroups: Vector3Tuple[][];
+  /** Text label content */
+  label: string;
+  /** Precision for the polylabel algorithm. Default: 0.01 */
+  precision?: number;
+  /** Font size for label. Default: 36 */
+  labelFontSize?: number;
+  /** Color for label text. Default: white */
+  labelColor?: string;
+  /** Stroke color for the polygram. Default: Manim's blue */
+  color?: string;
+  /** Fill opacity for the polygram. Default: 0 */
+  fillOpacity?: number;
+  /** Stroke width for the polygram. Default: 4 */
+  strokeWidth?: number;
+}
+
+/**
+ * LabeledPolygram - A polygram with a text label placed at the pole of inaccessibility
+ *
+ * Uses the polylabel algorithm to find the optimal interior point for label
+ * placement -- the point inside the polygon that is farthest from any edge.
+ *
+ * @example
+ * ```typescript
+ * const lp = new LabeledPolygram({
+ *   vertexGroups: [
+ *     [[0, 0, 0], [4, 0, 0], [4, 3, 0], [0, 3, 0]]
+ *   ],
+ *   label: 'Rectangle'
+ * });
+ * ```
+ */
+export class LabeledPolygram extends VGroup {
+  private _polygram: Polygram;
+  private _label: Text;
+  private _precision: number;
+  private _pole: [number, number];
+  private _poleRadius: number;
+  private _labelFontSize: number;
+  private _labelColor: string;
+
+  constructor(options: LabeledPolygramOptions) {
+    super();
+
+    const {
+      vertexGroups,
+      label,
+      precision = 0.01,
+      labelFontSize = 36,
+      labelColor = WHITE,
+      color = BLUE,
+      fillOpacity = 0,
+      strokeWidth,
+    } = options;
+
+    this._precision = precision;
+    this._labelFontSize = labelFontSize;
+    this._labelColor = labelColor;
+
+    // Create the polygram
+    this._polygram = new Polygram({
+      vertexGroups,
+      color,
+      fillOpacity,
+      strokeWidth,
+    });
+
+    // Compute pole of inaccessibility
+    const rings = this._buildRings(vertexGroups);
+    const result = polylabel(rings, precision);
+    this._pole = result.point;
+    this._poleRadius = result.distance;
+
+    // Create the label at the pole
+    this._label = new Text({
+      text: label,
+      fontSize: labelFontSize,
+      color: labelColor,
+    });
+    this._label.moveTo([this._pole[0], this._pole[1], 0]);
+
+    this.add(this._polygram, this._label);
+  }
+
+  /**
+   * Convert vertex groups to the ring format expected by polylabel.
+   * Each ring is an array of [x, y] points.
+   */
+  private _buildRings(vertexGroups: Vector3Tuple[][]): number[][][] {
+    return vertexGroups.map((group) => {
+      const ring: number[][] = group.map((v) => [v[0], v[1]]);
+      // Ensure the ring is closed
+      const first = ring[0];
+      const last = ring[ring.length - 1];
+      if (first[0] !== last[0] || first[1] !== last[1]) {
+        ring.push([first[0], first[1]]);
+      }
+      return ring;
+    });
+  }
+
+  /**
+   * Get the pole of inaccessibility as [x, y]
+   */
+  get pole(): [number, number] {
+    return [...this._pole];
+  }
+
+  /**
+   * Get the distance from the pole to the nearest edge
+   */
+  get radius(): number {
+    return this._poleRadius;
+  }
+
+  /**
+   * Get the underlying Polygram mobject
+   */
+  getPolygram(): Polygram {
+    return this._polygram;
+  }
+
+  /**
+   * Get the Text label mobject
+   */
+  getLabel(): Text {
+    return this._label;
+  }
+
+  /**
+   * Set the label text
+   */
+  setLabelText(text: string): this {
+    this._label.setText(text);
+    return this;
+  }
+
+  /**
+   * Create a copy of this LabeledPolygram
+   */
+  protected override _createCopy(): LabeledPolygram {
+    const groups = this._polygram.getVertexGroups().map((group) => {
+      // Remove closing vertex if present
+      if (group.length > 1) {
+        const first = group[0];
+        const last = group[group.length - 1];
+        if (first[0] === last[0] && first[1] === last[1] && first[2] === last[2]) {
+          group.pop();
+        }
+      }
+      return group;
+    });
+
+    return new LabeledPolygram({
+      vertexGroups: groups,
+      label: this._label.getText(),
+      precision: this._precision,
+      labelFontSize: this._labelFontSize,
+      labelColor: this._labelColor,
+      color: this._polygram.color,
+      fillOpacity: this._polygram.fillOpacity,
+      strokeWidth: this._polygram.strokeWidth,
     });
   }
 }

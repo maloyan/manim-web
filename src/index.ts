@@ -80,6 +80,8 @@ export {
   Hexagon,
   Pentagon,
   type PolygonOptions,
+  Polygram,
+  type PolygramOptions,
   Arrow,
   DoubleArrow,
   Vector,
@@ -151,6 +153,9 @@ export {
   Exclusion,
   BooleanResult,
   type BooleanOperationOptions,
+  // Labeled geometry
+  LabeledPolygram,
+  type LabeledPolygramOptions,
 } from './mobjects/geometry';
 
 // Graphing
@@ -713,6 +718,9 @@ export {
   ensureCCW,
   ensureCW,
 } from './utils/triangulate';
+
+// Polylabel (pole of inaccessibility)
+export { polylabel, type PolylabelResult } from './utils/polylabel';
 
 // Vector math utilities
 export { scaleVec, addVec, subVec, linspace } from './utils/vectors';
