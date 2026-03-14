@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - ApplyComplexFunction</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover { background: #ff6b6b; }
+    button:disabled { background: #666; cursor: not-allowed; }
+    h1 { color: #eee; margin-bottom: 20px; font-size: 24px; }
+    p { color: #aaa; margin-top: 10px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <h1>ApplyComplexFunction Demo</h1>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="playBtn">Play z => z^2</button>
+    <button id="play2Btn">Play z => 1/z</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+  <p>Applies complex functions to a NumberPlane, treating (x, y) as complex numbers</p>
+
+  <script type="module">
+    import {
+      Scene,
+      NumberPlane,
+      Circle,
+      Create,
+      FadeIn,
+      ApplyComplexFunction,
+      BLACK,
+      BLUE,
+      YELLOW,
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK,
+    });
+
+    let isAnimating = false;
+
+    async function setupGrid() {
+      scene.clear();
+      const grid = new NumberPlane();
+      grid.prepareForNonlinearTransform();
+      scene.add(grid);
+      await scene.play(new Create(grid, { duration: 1.5, lagRatio: 0.1 }));
+      return grid;
+    }
+
+    // z => z^2: squares every complex number
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      document.getElementById('playBtn').disabled = true;
+      document.getElementById('play2Btn').disabled = true;
+
+      const grid = await setupGrid();
+      await scene.wait(0.5);
+      await scene.play(new ApplyComplexFunction(grid, {
+        func: (z) => ({
+          re: z.re * z.re - z.im * z.im,
+          im: 2 * z.re * z.im,
+        }),
+        duration: 3,
+      }));
+      await scene.wait(1);
+
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+      document.getElementById('play2Btn').disabled = false;
+    });
+
+    // z => 1/z (inversion): maps circles through origin to lines and vice versa
+    document.getElementById('play2Btn').addEventListener('click', async () => {
+      if (isAnimating) return;
+      isAnimating = true;
+      document.getElementById('playBtn').disabled = true;
+      document.getElementById('play2Btn').disabled = true;
+
+      const grid = await setupGrid();
+      await scene.wait(0.5);
+      await scene.play(new ApplyComplexFunction(grid, {
+        func: (z) => {
+          const denom = z.re * z.re + z.im * z.im;
+          if (denom < 0.001) return { re: z.re, im: z.im };
+          return { re: z.re / denom, im: -z.im / denom };
+        },
+        duration: 3,
+      }));
+      await scene.wait(1);
+
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+      document.getElementById('play2Btn').disabled = false;
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+      isAnimating = false;
+      document.getElementById('playBtn').disabled = false;
+      document.getElementById('play2Btn').disabled = false;
+    });
+  </script>
+</body>
+</html>

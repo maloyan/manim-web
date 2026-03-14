@@ -10,6 +10,7 @@ import { Animation, AnimationOptions } from '../Animation';
 import { Transform } from './Transform';
 import { lerpPoint } from '../../utils/math';
 import { Arrow, DoubleArrow } from '../../mobjects/geometry/Arrow';
+import type { Complex } from '../movement/Homotopy';
 
 // ============================================================================
 // Shared VMobjectLike duck-type (mirrors ApplyPointwiseFunction)
@@ -132,6 +133,109 @@ export function applyFunction(
   options?: Omit<ApplyFunctionOptions, 'func'>,
 ): ApplyFunction {
   return new ApplyFunction(mobject, { ...options, func });
+}
+
+// ============================================================================
+// ApplyComplexFunction
+// ============================================================================
+
+export interface ApplyComplexFunctionOptions extends AnimationOptions {
+  /** Complex function to apply to each point, treating (x, y) as (re, im) */
+  func: (z: Complex) => Complex;
+}
+
+/**
+ * ApplyComplexFunction animation - applies a complex function to mobject points.
+ * Treats each point's (x, y) as (Re, Im) of a complex number, applies the function,
+ * and preserves the z coordinate.
+ * Supports both VMobject and Group (walks the family tree).
+ */
+export class ApplyComplexFunction extends Animation {
+  readonly func: (z: Complex) => Complex;
+  private _snapshots: ChildSnapshot[] = [];
+
+  constructor(mobject: Mobject, options: ApplyComplexFunctionOptions) {
+    super(mobject, options);
+    this.func = options.func;
+  }
+
+  override begin(): void {
+    super.begin();
+
+    this._snapshots = [];
+    const _v = new THREE.Vector3();
+
+    for (const mob of this.mobject.getFamily()) {
+      if (isVMobjectLike(mob)) {
+        const startPoints = mob.getPoints();
+        if (startPoints.length === 0) continue;
+
+        const threeObj = (mob as Mobject)._threeObject;
+        let worldMatrix: THREE.Matrix4 | null = null;
+        let inverseWorld: THREE.Matrix4 | null = null;
+
+        if (threeObj) {
+          threeObj.updateWorldMatrix(true, false);
+          worldMatrix = threeObj.matrixWorld;
+          inverseWorld = worldMatrix.clone().invert();
+        }
+
+        let targetPoints: number[][];
+        if (worldMatrix && inverseWorld) {
+          targetPoints = startPoints.map((p) => {
+            _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
+            const z: Complex = { re: _v.x, im: _v.y };
+            const result = this.func(z);
+            _v.set(result.re, result.im, _v.z).applyMatrix4(inverseWorld!);
+            return [_v.x, _v.y, _v.z];
+          });
+        } else {
+          targetPoints = startPoints.map((p) => {
+            const z: Complex = { re: p[0], im: p[1] };
+            const result = this.func(z);
+            return [result.re, result.im, p[2]];
+          });
+        }
+
+        this._snapshots.push({ mob, startPoints, targetPoints });
+      }
+    }
+  }
+
+  interpolate(alpha: number): void {
+    for (const snap of this._snapshots) {
+      const interpolated: number[][] = [];
+      for (let i = 0; i < snap.startPoints.length; i++) {
+        interpolated.push(lerpPoint(snap.startPoints[i], snap.targetPoints[i], alpha));
+      }
+      snap.mob.setPoints(interpolated);
+    }
+    _reconstructArrowTips(this.mobject);
+    this.mobject._markDirtyUpward();
+  }
+
+  override finish(): void {
+    for (const snap of this._snapshots) {
+      snap.mob.setPoints(snap.targetPoints);
+    }
+    _reconstructArrowTips(this.mobject);
+    this.mobject._markDirtyUpward();
+    super.finish();
+  }
+}
+
+/**
+ * Create an ApplyComplexFunction animation.
+ * @param mobject The Mobject to transform (VMobject or Group)
+ * @param func Complex function to apply: (z: Complex) => Complex
+ * @param options Animation options
+ */
+export function applyComplexFunction(
+  mobject: Mobject,
+  func: (z: Complex) => Complex,
+  options?: Omit<ApplyComplexFunctionOptions, 'func'>,
+): ApplyComplexFunction {
+  return new ApplyComplexFunction(mobject, { ...options, func });
 }
 
 // ============================================================================

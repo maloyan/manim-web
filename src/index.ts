@@ -436,6 +436,11 @@ export {
 export { ApplyPointwiseFunction, applyPointwiseFunction } from './animation/transform';
 export { ApplyFunction, applyFunction, type ApplyFunctionOptions } from './animation/transform';
 export { ApplyMatrix, applyMatrix, type ApplyMatrixOptions } from './animation/transform';
+export {
+  ApplyComplexFunction,
+  applyComplexFunction,
+  type ApplyComplexFunctionOptions,
+} from './animation/transform';
 export { FadeToColor, fadeToColor, type FadeToColorOptions } from './animation/transform';
 export { Restore, restore } from './animation/transform';
 export { ScaleInPlace, type ScaleInPlaceOptions } from './animation/transform';

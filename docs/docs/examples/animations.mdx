@@ -21,6 +21,7 @@ import RotationUpdaterExample from '@site/src/components/examples/RotationUpdate
 import PointWithTraceExample from '@site/src/components/examples/PointWithTraceExample';
 import SineCurveUnitCircleExample from '@site/src/components/examples/SineCurveUnitCircleExample';
 import ApplyMatrixArrowsExample from '@site/src/components/examples/ApplyMatrixArrowsExample';
+import ApplyComplexFunctionExample from '@site/src/components/examples/ApplyComplexFunctionExample';
 import RateFunctionsComparisonExample from '@site/src/components/examples/RateFunctionsComparisonExample';
 import EasingFunctionsShowcaseExample from '@site/src/components/examples/EasingFunctionsShowcaseExample';
 
@@ -1169,6 +1170,57 @@ await scene.wait(2);
 </details>
 
 **Learn More:** [**Arrow**](/api/classes/Arrow) · [**NumberPlane**](/api/classes/NumberPlane) · [**ApplyMatrix**](/api/classes/ApplyMatrix)
+
+---
+
+## Apply Complex Function
+
+Applies a complex function to a NumberPlane, treating each point's (x, y) coordinates as a complex number z = x + iy. Here, the function z => z^2 bends the grid into parabolic curves, visualizing how complex squaring maps the plane.
+
+<ApplyComplexFunctionExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  NumberPlane,
+  Create,
+  ApplyComplexFunction,
+  BLACK,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+// Create a number plane grid
+const grid = new NumberPlane();
+grid.prepareForNonlinearTransform();
+scene.add(grid);
+await scene.play(new Create(grid, { duration: 2, lagRatio: 0.1 }));
+await scene.wait(0.5);
+
+// Apply z => z^2: squares every complex number
+// This maps the grid non-linearly, bending lines into parabolic curves
+await scene.play(
+  new ApplyComplexFunction(grid, {
+    func: (z) => ({
+      re: z.re * z.re - z.im * z.im,
+      im: 2 * z.re * z.im,
+    }),
+    duration: 3,
+  }),
+);
+await scene.wait(1);
+```
+
+</details>
+
+**Learn More:** [**ApplyComplexFunction**](/api/classes/ApplyComplexFunction) · [**NumberPlane**](/api/classes/NumberPlane) · [**Create**](/api/classes/Create)
 
 ---
 
