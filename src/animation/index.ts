@@ -3,28 +3,16 @@ export { Animation, type AnimationOptions } from './Animation';
 export { Timeline, type PositionParam } from './Timeline';
 
 // Animation utilities
-export {
-  AnimationGroup,
-  animationGroup,
-  type AnimationGroupOptions
-} from './AnimationGroup';
-export {
-  LaggedStart,
-  laggedStart,
-  type LaggedStartOptions
-} from './LaggedStart';
-export {
-  Succession,
-  succession,
-  type SuccessionOptions
-} from './Succession';
+export { AnimationGroup, animationGroup, type AnimationGroupOptions } from './AnimationGroup';
+export { LaggedStart, laggedStart, type LaggedStartOptions } from './LaggedStart';
+export { Succession, succession, type SuccessionOptions } from './Succession';
 
 // Composition animations
 export {
   LaggedStartMap,
   laggedStartMap,
   type LaggedStartMapOptions,
-  type AnimationClass
+  type AnimationClass,
 } from './composition';
 
 // Fading animations
@@ -88,6 +76,9 @@ export {
   ApplyMatrix,
   applyMatrix,
   type ApplyMatrixOptions,
+  ApplyComplexFunction,
+  applyComplexFunction,
+  type ApplyComplexFunctionOptions,
   FadeTransform,
   fadeTransform,
   type FadeTransformOptions,

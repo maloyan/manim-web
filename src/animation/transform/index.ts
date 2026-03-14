@@ -23,6 +23,11 @@ export {
   ApplyMatrix,
   applyMatrix,
   type ApplyMatrixOptions,
+
+  // ApplyComplexFunction
+  ApplyComplexFunction,
+  applyComplexFunction,
+  type ApplyComplexFunctionOptions,
 } from './ApplyTransforms';
 
 export {
