@@ -61,7 +61,7 @@ export class ApplyPointwiseFunctionToCenter extends Animation {
     super.begin();
 
     this._snapshots = [];
-    const _v = new THREE.Vector3();
+    const vec = new THREE.Vector3();
 
     for (const mob of this.mobject.getFamily()) {
       if (isVMobjectLike(mob)) {
@@ -86,16 +86,16 @@ export class ApplyPointwiseFunctionToCenter extends Animation {
         if (worldMatrix && inverseWorld) {
           targetPoints = startPoints.map((p) => {
             // Transform to world space
-            _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
+            vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
             // Shift to center-relative coordinates
-            const relPoint = [_v.x - center[0], _v.y - center[1], _v.z - center[2]];
+            const relPoint = [vec.x - center[0], vec.y - center[1], vec.z - center[2]];
             // Apply function in center-relative space
             const result = this.func(relPoint);
             // Shift back from center-relative
-            _v.set(result[0] + center[0], result[1] + center[1], result[2] + center[2]);
+            vec.set(result[0] + center[0], result[1] + center[1], result[2] + center[2]);
             // Transform back to local space
-            _v.applyMatrix4(inverseWorld!);
-            return [_v.x, _v.y, _v.z];
+            vec.applyMatrix4(inverseWorld!);
+            return [vec.x, vec.y, vec.z];
           });
         } else {
           targetPoints = startPoints.map((p) => {
