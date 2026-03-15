@@ -1,19 +1,26 @@
-import type { Mobject } from './Mobject';
+import type { MobjectLike, MobjectStyle } from './MobjectTypes';
 import { isVMobjectLike } from './MobjectTypes';
+
+/** Helper to access protected/private members on MobjectLike at runtime. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function asInternal(m: MobjectLike): any {
+  return m;
+}
 
 /**
  * Copy the core visual/transform properties from `src` onto `dst`.
  * Used by both becomeMobjectImpl and restoreMobjectStateImpl.
  */
-function copyMobjectProperties(dst: Mobject, src: Mobject): void {
+function copyMobjectProperties(dst: MobjectLike, src: MobjectLike): void {
   dst.position.copy(src.position);
   dst.rotation.copy(src.rotation);
   dst.scaleVector.copy(src.scaleVector);
   dst.color = src.color;
-  dst['_opacity'] = src['_opacity'];
+  // Access protected members via runtime helper (bypasses TS access checks)
+  asInternal(dst)._opacity = asInternal(src)._opacity;
   dst.strokeWidth = src.strokeWidth;
   dst.fillOpacity = src.fillOpacity;
-  dst['_style'] = { ...src['_style'] };
+  asInternal(dst)._style = { ...asInternal(src)._style } as MobjectStyle;
 }
 
 /**
@@ -21,7 +28,7 @@ function copyMobjectProperties(dst: Mobject, src: Mobject): void {
  * Stores a deep copy on `mob.savedState` and a serializable snapshot
  * on `mob.__savedMobjectState`.
  */
-export function saveMobjectStateImpl(mob: Mobject): void {
+export function saveMobjectStateImpl(mob: MobjectLike): void {
   // Store a deep copy for Restore animation and for restoreState()
   mob.savedState = mob.copy();
 
@@ -34,7 +41,7 @@ export function saveMobjectStateImpl(mob: Mobject): void {
     opacity: mob.opacity,
     strokeWidth: mob.strokeWidth,
     fillOpacity: mob.fillOpacity,
-    style: { ...mob['_style'] },
+    style: { ...asInternal(mob)._style },
   };
 }
 
@@ -44,7 +51,7 @@ export function saveMobjectStateImpl(mob: Mobject): void {
  *
  * @returns true if state was restored, false if no saved state exists
  */
-export function restoreMobjectStateImpl(mob: Mobject): boolean {
+export function restoreMobjectStateImpl(mob: MobjectLike): boolean {
   const saved = mob.savedState;
   if (!saved) return false;
 
@@ -79,7 +86,7 @@ export function restoreMobjectStateImpl(mob: Mobject): boolean {
  * Replace a mobject's visual properties with those of another mobject.
  * Preserves identity (updaters, scene membership) but copies appearance.
  */
-export function becomeMobjectImpl(mob: Mobject, other: Mobject): void {
+export function becomeMobjectImpl(mob: MobjectLike, other: MobjectLike): void {
   copyMobjectProperties(mob, other);
 
   // If both are VMobjects, copy points
@@ -96,7 +103,7 @@ export function becomeMobjectImpl(mob: Mobject, other: Mobject): void {
  * Scale and reposition a mobject to match another mobject's bounding box.
  * Matches Manim Python's replace() behavior.
  */
-export function replaceMobjectImpl(mob: Mobject, target: Mobject, stretch: boolean): void {
+export function replaceMobjectImpl(mob: MobjectLike, target: MobjectLike, stretch: boolean): void {
   const targetBounds = target.getBoundingBox();
   const selfBounds = mob.getBoundingBox();
 
@@ -120,7 +127,7 @@ export function replaceMobjectImpl(mob: Mobject, target: Mobject, stretch: boole
  * Apply a point-wise function to every VMobject descendant's control points.
  * Uses duck-type check for getPoints/setPoints to avoid circular imports.
  */
-export function applyFunctionImpl(mob: Mobject, fn: (point: number[]) => number[]): void {
+export function applyFunctionImpl(mob: MobjectLike, fn: (point: number[]) => number[]): void {
   for (const m of mob.getFamily()) {
     const asAny = m as unknown as {
       getPoints?: () => number[][];
@@ -138,13 +145,7 @@ export function applyFunctionImpl(mob: Mobject, fn: (point: number[]) => number[
 /**
  * Evaluate a cubic Bezier curve at parameter t using de Casteljau's algorithm.
  */
-export function evalBezier(
-  p0: number[],
-  p1: number[],
-  p2: number[],
-  p3: number[],
-  t: number,
-): number[] {
+function evalBezier(p0: number[], p1: number[], p2: number[], p3: number[], t: number): number[] {
   const s = 1 - t;
   const result: number[] = [];
   for (let k = 0; k < p0.length; k++) {
@@ -161,7 +162,7 @@ export function evalBezier(
  * transforms produce smooth results. Each cubic segment is split into n sub-segments
  * via de Casteljau evaluation.
  */
-export function prepareForNonlinearTransformImpl(mob: Mobject, numPieces: number): void {
+export function prepareForNonlinearTransformImpl(mob: MobjectLike, numPieces: number): void {
   for (const m of mob.getFamily()) {
     const asAny = m as unknown as {
       getPoints?: () => number[][];

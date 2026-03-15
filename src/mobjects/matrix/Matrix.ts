@@ -696,5 +696,3 @@ export class MobjectMatrix extends Matrix {
     });
   }
 }
-
-export default Matrix;

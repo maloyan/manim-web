@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import type { Mobject } from './Mobject';
-import type { Vector3Tuple } from './MobjectTypes';
+import type { MobjectLike, Vector3Tuple } from './MobjectTypes';
 import { isVMobjectLike } from './MobjectTypes';
 
 // Performance optimization: Object pooling for temporary vectors
@@ -15,7 +14,7 @@ const _tempQuaternion2: THREE.Quaternion = new THREE.Quaternion();
  * Uses object pooling to avoid allocations in hot paths.
  */
 export function rotateMobject(
-  mob: Mobject,
+  mob: MobjectLike,
   angle: number,
   axisOrOptions?: Vector3Tuple | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple },
 ): void {
@@ -44,13 +43,13 @@ export function rotateMobject(
  * Rotate VMobject points directly (Manim Python behavior).
  */
 function _rotateVMobjectPoints(
-  mob: Mobject,
+  mob: MobjectLike,
   angle: number,
   axis: Vector3Tuple,
   aboutPoint: Vector3Tuple | undefined,
 ): void {
   // Cast is safe here: caller checks isVMobjectLike
-  const vmob = mob as Mobject & { _points3D: number[][]; _geometryDirty: boolean };
+  const vmob = mob as MobjectLike & { _points3D: number[][]; _geometryDirty: boolean };
   const points: number[][] = vmob._points3D;
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
@@ -114,7 +113,7 @@ function _rotateVMobjectPoints(
  * Non-VMobject fallback: rotate using Three.js transforms.
  */
 function _rotateWithThreeJS(
-  mob: Mobject,
+  mob: MobjectLike,
   angle: number,
   axis: Vector3Tuple,
   aboutPoint: Vector3Tuple | undefined,
@@ -152,7 +151,7 @@ function _rotateWithThreeJS(
 /**
  * Get the center point of a mobject.
  */
-export function getCenterImpl(mob: Mobject): Vector3Tuple {
+export function getCenterImpl(mob: MobjectLike): Vector3Tuple {
   const obj = mob.getThreeObject();
   _tempBox3.setFromObject(obj);
   if (!_tempBox3.isEmpty()) {
@@ -166,7 +165,11 @@ export function getCenterImpl(mob: Mobject): Vector3Tuple {
  * Get bounding box dimensions.
  * Uses object pooling to avoid allocations in hot paths.
  */
-export function getBoundingBoxImpl(mob: Mobject): { width: number; height: number; depth: number } {
+export function getBoundingBoxImpl(mob: MobjectLike): {
+  width: number;
+  height: number;
+  depth: number;
+} {
   const obj = mob.getThreeObject();
   _tempBox3.setFromObject(obj);
   _tempBox3.getSize(_tempVec3);
@@ -176,7 +179,7 @@ export function getBoundingBoxImpl(mob: Mobject): { width: number; height: numbe
 /**
  * Get the edge point of the bounding box in a direction.
  */
-export function getEdgeInDirectionImpl(mob: Mobject, direction: Vector3Tuple): Vector3Tuple {
+export function getEdgeInDirectionImpl(mob: MobjectLike, direction: Vector3Tuple): Vector3Tuple {
   const center = mob.getCenter();
   const bounds = mob.getBoundingBox();
 
@@ -192,7 +195,7 @@ export function getEdgeInDirectionImpl(mob: Mobject, direction: Vector3Tuple): V
  * Move a mobject to the edge of the frame.
  */
 export function toEdgeImpl(
-  mob: Mobject,
+  mob: MobjectLike,
   direction: Vector3Tuple,
   buff: number,
   frameDimensions?: [number, number],

@@ -1,6 +1,14 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import type { Axes } from './Axes';
+
+/**
+ * Duck-type interface for Axes, used to avoid circular imports.
+ * FunctionGraph only needs coordsToPoint and getXRange from Axes.
+ */
+interface AxesLike {
+  coordsToPoint(x: number, y: number): Vector3Tuple;
+  getXRange(): [number, number, number];
+}
 
 /**
  * Options for creating a FunctionGraph
@@ -19,7 +27,7 @@ export interface FunctionGraphOptions {
   /** Number of samples to take. Default: 100 */
   numSamples?: number;
   /** Reference axes for coordinate transformation. Optional */
-  axes?: Axes;
+  axes?: AxesLike;
 }
 
 /**
@@ -56,7 +64,7 @@ export class FunctionGraph extends VMobject {
   private _xRange: [number, number];
   private _discontinuities: number[];
   private _numSamples: number;
-  private _axes: Axes | null;
+  private _axes: AxesLike | null;
 
   constructor(options: FunctionGraphOptions) {
     super();
@@ -336,7 +344,7 @@ export class FunctionGraph extends VMobject {
   /**
    * Set the reference axes
    */
-  setAxes(axes: Axes | null): this {
+  setAxes(axes: AxesLike | null): this {
     this._axes = axes;
     this._generatePoints();
     return this;

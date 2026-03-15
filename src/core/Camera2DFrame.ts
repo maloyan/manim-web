@@ -17,12 +17,23 @@
  * to the underlying Camera2D whenever it changes.
  */
 
-import type { Camera2D } from './Camera';
 import { VMobject } from './VMobject';
 import { Mobject, Vector3Tuple } from './Mobject';
+import * as THREE from 'three';
+
+/**
+ * Duck-type interface for Camera2D, used to avoid circular imports.
+ * Camera2DFrame only needs frame dimensions, position, and moveTo.
+ */
+interface Camera2DLike {
+  frameWidth: number;
+  frameHeight: number;
+  position: THREE.Vector3;
+  moveTo(point: [number, number, number]): void;
+}
 
 export class Camera2DFrame extends VMobject {
-  private _camera: Camera2D;
+  private _camera: Camera2DLike;
   private _baseFrameWidth: number;
   private _baseFrameHeight: number;
   private _isPrimary: boolean;
@@ -33,7 +44,7 @@ export class Camera2DFrame extends VMobject {
    *                   Copies created by copy() / generateTarget() are
    *                   non-primary so they don't affect the camera directly.
    */
-  constructor(camera: Camera2D, isPrimary = true) {
+  constructor(camera: Camera2DLike, isPrimary = true) {
     super();
     this._camera = camera;
     this._isPrimary = isPrimary;

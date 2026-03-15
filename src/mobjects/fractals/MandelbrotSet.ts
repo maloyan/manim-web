@@ -321,5 +321,3 @@ export class MandelbrotSet extends Mobject {
     }
   }
 }
-
-export default MandelbrotSet;

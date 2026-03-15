@@ -1,7 +1,14 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "entry": ["src/index.ts"],
   "project": ["src/**/*.ts", "src/**/*.tsx"],
-  "ignore": ["src/**/*.test.ts"],
-  "ignoreDependencies": ["gif.js"]
+  "ignore": ["src/core/SceneExtensions.ts"],
+  "ignoreDependencies": ["@types/katex", "typedoc"],
+  "ignoreExportsUsedInFile": {
+    "interface": true,
+    "type": true
+  },
+  "rules": {
+    "optionalPeerDependencies": "off",
+    "duplicates": "off"
+  }
 }

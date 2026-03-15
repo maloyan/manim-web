@@ -662,5 +662,3 @@ export class ImageMobject extends Mobject {
     }
   }
 }
-
-export default ImageMobject;

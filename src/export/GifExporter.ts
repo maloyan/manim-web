@@ -1,5 +1,15 @@
 import GIF from 'gif.js';
-import { Scene } from '../core/Scene';
+
+/**
+ * Duck-type interface for Scene, used to avoid circular imports.
+ * GifExporter only needs canvas access, seek, timeline, and renderer dimensions.
+ */
+interface ExportableScene {
+  renderer: { width: number; height: number };
+  getCanvas(): HTMLCanvasElement;
+  seek(time: number): void;
+  timeline: { getDuration(): number } | null;
+}
 
 interface GifExportOptions {
   fps?: number; // default 30 (GIFs are typically lower fps)
@@ -13,10 +23,10 @@ interface GifExportOptions {
 }
 
 export class GifExporter {
-  private _scene: Scene;
+  private _scene: ExportableScene;
   private _options: Required<GifExportOptions>;
 
-  constructor(scene: Scene, options?: GifExportOptions) {
+  constructor(scene: ExportableScene, options?: GifExportOptions) {
     this._scene = scene;
     this._options = {
       fps: options?.fps ?? 30,
@@ -173,7 +183,7 @@ export class GifExporter {
   }
 }
 
-export function createGifExporter(scene: Scene, options?: GifExportOptions): GifExporter {
+export function createGifExporter(scene: ExportableScene, options?: GifExportOptions): GifExporter {
   return new GifExporter(scene, options);
 }
 

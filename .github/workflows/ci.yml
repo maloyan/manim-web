@@ -17,7 +17,7 @@ jobs:
           node-version: 22
       - run: npm install --no-package-lock
       - name: ESLint (errors block, warnings tracked)
-        run: npx eslint src/ --max-warnings 108
+        run: npx eslint src/ --max-warnings 106
 
   typecheck:
     name: Typecheck
@@ -58,7 +58,7 @@ jobs:
           node-version: 22
       - run: npm install --no-package-lock
       - name: Check for dead exports (knip)
-        run: npx knip --no-exit-code --reporter compact
+        run: npx knip
 
   circular-deps:
     name: Circular imports
@@ -70,8 +70,7 @@ jobs:
           node-version: 22
       - run: npm install --no-package-lock
       - name: Check for circular imports (madge)
-        run: |
-          npx madge --circular --extensions ts src/ || echo "::warning::Circular imports detected — see output above"
+        run: npx madge --circular --extensions ts src/
 
   format:
     name: Format

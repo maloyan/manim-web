@@ -16,17 +16,17 @@ import type { Complex } from '../movement/Homotopy';
 // Shared VMobjectLike duck-type (mirrors ApplyPointwiseFunction)
 // ============================================================================
 
-export interface VMobjectLike {
+interface VMobjectLike {
   getPoints(): number[][];
   setPoints(pts: number[][]): void;
 }
 
-export function isVMobjectLike(m: unknown): m is VMobjectLike {
+function isVMobjectLike(m: unknown): m is VMobjectLike {
   const obj = m as Record<string, unknown>;
   return typeof obj.getPoints === 'function' && typeof obj.setPoints === 'function';
 }
 
-export interface ChildSnapshot {
+interface ChildSnapshot {
   mob: VMobjectLike;
   startPoints: number[][];
   targetPoints: number[][];

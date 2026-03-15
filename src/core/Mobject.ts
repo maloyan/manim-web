@@ -1,13 +1,5 @@
 import * as THREE from 'three';
-import {
-  type Vector3Tuple,
-  type UpdaterFunction,
-  type MobjectStyle,
-  UP,
-  DOWN,
-  LEFT,
-  RIGHT,
-} from './MobjectTypes';
+import { type Vector3Tuple, type MobjectStyle, UP, DOWN, LEFT, RIGHT } from './MobjectTypes';
 import {
   rotateMobject,
   getCenterImpl,
@@ -27,8 +19,8 @@ import {
 // Re-export everything from MobjectTypes so existing imports from './Mobject' continue to work
 export {
   type Vector3Tuple,
-  type UpdaterFunction,
   type MobjectStyle,
+  type MobjectLike,
   type VMobjectLike,
   isVMobjectLike,
   UP,
@@ -43,6 +35,15 @@ export {
   DL,
   DR,
 } from './MobjectTypes';
+
+/**
+ * Updater function type that runs every frame.
+ * Defined here (not in MobjectTypes) to reference the concrete Mobject class
+ * without introducing a circular import.
+ * @param mobject - The mobject being updated
+ * @param dt - Delta time in seconds since last frame
+ */
+export type UpdaterFunction = (mobject: Mobject, dt: number) => void;
 
 /** Base mathematical object class. All visible objects in manimweb inherit from this class. */
 export abstract class Mobject {

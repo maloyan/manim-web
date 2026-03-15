@@ -1,5 +1,17 @@
-import { Scene } from '../core/Scene';
-import { AudioManager } from '../core/AudioManager';
+import type { AudioManager } from '../core/AudioManager';
+
+/**
+ * Duck-type interface for Scene, used to avoid circular imports.
+ * VideoExporter only needs canvas access, seek, dimensions, timeline duration, and audio.
+ */
+interface ExportableScene {
+  getCanvas(): HTMLCanvasElement;
+  getWidth(): number;
+  getHeight(): number;
+  seek(time: number): void;
+  getTimelineDuration(): number | null;
+  audioManager: AudioManager;
+}
 
 /**
  * Options for configuring video export.
@@ -56,7 +68,7 @@ interface ResolvedVideoExportOptions {
  * video includes the mixed-down audio from the scene's AudioManager.
  */
 export class VideoExporter {
-  private _scene: Scene;
+  private _scene: ExportableScene;
   private _options: ResolvedVideoExportOptions;
   private _mediaRecorder: MediaRecorder | null = null;
   private _recordedChunks: Blob[] = [];
@@ -67,7 +79,7 @@ export class VideoExporter {
    * @param scene - The scene to export
    * @param options - Export options
    */
-  constructor(scene: Scene, options?: VideoExportOptions) {
+  constructor(scene: ExportableScene, options?: VideoExportOptions) {
     this._scene = scene;
     this._options = {
       fps: options?.fps ?? 60,
@@ -311,6 +323,9 @@ export class VideoExporter {
  * @param options - Export options
  * @returns A new VideoExporter instance
  */
-export function createVideoExporter(scene: Scene, options?: VideoExportOptions): VideoExporter {
+export function createVideoExporter(
+  scene: ExportableScene,
+  options?: VideoExportOptions,
+): VideoExporter {
   return new VideoExporter(scene, options);
 }

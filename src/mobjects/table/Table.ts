@@ -843,5 +843,3 @@ export class DecimalTable extends Table {
     });
   }
 }
-
-export default Table;

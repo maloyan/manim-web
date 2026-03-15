@@ -1,4 +1,4 @@
-import type { Mobject } from './Mobject';
+import * as THREE from 'three';
 
 /**
  * Vector3 type as a tuple for external API
@@ -21,13 +21,6 @@ export const DL: Vector3Tuple = [-1, -1, 0]; // DOWN + LEFT
 export const DR: Vector3Tuple = [1, -1, 0]; // DOWN + RIGHT
 
 /**
- * Updater function type that runs every frame
- * @param mobject - The mobject being updated
- * @param dt - Delta time in seconds since last frame
- */
-export type UpdaterFunction = (mobject: Mobject, dt: number) => void;
-
-/**
  * Style properties for mobjects
  */
 export interface MobjectStyle {
@@ -36,6 +29,42 @@ export interface MobjectStyle {
   strokeColor?: string;
   strokeOpacity?: number;
   strokeWidth?: number;
+}
+
+/**
+ * Duck-type interface for Mobject, used to avoid circular imports.
+ * MobjectPositioning, MobjectState, and other helper modules use this
+ * instead of importing the concrete Mobject class.
+ *
+ * Only includes public members; protected/private members like _style
+ * and _opacity are accessed via bracket notation in helper modules.
+ */
+export interface MobjectLike {
+  position: THREE.Vector3;
+  rotation: THREE.Euler;
+  scaleVector: THREE.Vector3;
+  children: MobjectLike[];
+  color: string;
+  opacity: number;
+  strokeWidth: number;
+  fillOpacity: number;
+  savedState: MobjectLike | null;
+  targetCopy: MobjectLike | null;
+  __savedMobjectState: unknown;
+  _threeObject: THREE.Object3D | null;
+  _dirty: boolean;
+  _markDirty(): void;
+  getThreeObject(): THREE.Object3D;
+  getCenter(): Vector3Tuple;
+  getBoundingBox(): { width: number; height: number; depth: number };
+  moveTo(target: Vector3Tuple | MobjectLike, alignedEdge?: Vector3Tuple): MobjectLike;
+  rotate(
+    angle: number,
+    axisOrOptions?: Vector3Tuple | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple },
+  ): MobjectLike;
+  copy(): MobjectLike;
+  restoreState(): boolean;
+  getFamily(): MobjectLike[];
 }
 
 /**
@@ -51,8 +80,8 @@ export interface VMobjectLike {
 }
 
 /**
- * Type guard to check if a Mobject has VMobject-like point data.
+ * Type guard to check if a MobjectLike has VMobject-like point data.
  */
-export function isVMobjectLike(m: Mobject): m is Mobject & VMobjectLike {
+export function isVMobjectLike(m: MobjectLike): m is MobjectLike & VMobjectLike {
   return '_points3D' in m;
 }

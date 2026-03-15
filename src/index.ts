@@ -33,6 +33,13 @@ export { Scene, type SceneOptions, type SceneExportOptions } from './core/Scene'
 export { InteractiveScene, type InteractiveSceneOptions } from './core/InteractiveScene';
 export { ThreeDScene, type ThreeDSceneOptions } from './core/ThreeDScene';
 export { ZoomedScene, ZoomDisplayPopOut, type ZoomedSceneOptions } from './core/ZoomedScene';
+export { MovingCameraScene, type MovingCameraSceneOptions } from './core/MovingCameraScene';
+export { VectorScene, type VectorSceneOptions } from './core/VectorScene';
+export {
+  LinearTransformationScene,
+  type LinearTransformationSceneOptions,
+  type Matrix2D,
+} from './core/LinearTransformationScene';
 export { AudioManager, type AudioTrack, type AddSoundOptions } from './core/AudioManager';
 export { Renderer, type RendererOptions } from './core/Renderer';
 export {
@@ -50,6 +57,16 @@ export {
 } from './core/StateManager';
 export { Camera2D, type CameraOptions, Camera3D, type Camera3DOptions } from './core/Camera';
 export { Camera2DFrame } from './core/Camera2DFrame';
+export {
+  MovingCamera,
+  ThreeDCamera,
+  MultiCamera,
+  type MovingCameraOptions,
+  type ThreeDCameraOptions,
+  type CameraViewport,
+  type CameraEntry,
+  type MultiCameraOptions,
+} from './core/CameraExtensions';
 export {
   CameraFrame,
   CameraAnimateProxy,
@@ -146,16 +163,42 @@ export {
   type RightAngleOptions,
   type ElbowOptions,
   type TangentLineOptions,
+  // Arrow tips
+  ArrowTip,
+  ArrowTriangleTip,
+  ArrowTriangleFilledTip,
+  ArrowCircleTip,
+  ArrowCircleFilledTip,
+  ArrowSquareTip,
+  ArrowSquareFilledTip,
+  StealthTip,
+  type ArrowTipOptions,
+  // Cubic bezier points type
+  type CubicBezierPoints,
   // Boolean operations
   Union,
   Intersection,
   Difference,
   Exclusion,
   BooleanResult,
+  union,
+  intersection,
+  difference,
+  exclusion,
   type BooleanOperationOptions,
   // Labeled geometry
   LabeledPolygram,
   type LabeledPolygramOptions,
+  LabeledLine,
+  LabeledArrow,
+  LabeledDot,
+  AnnotationDot,
+  type LabeledLineOptions,
+  type LabeledArrowOptions,
+  type LabeledDotOptions,
+  type AnnotationDotOptions,
+  type LabelDirection,
+  type LabelOrientation,
 } from './mobjects/geometry';
 
 // Graphing
@@ -231,6 +274,22 @@ export {
   type GlyphVMobjectOptions,
   TextGlyphGroup,
   type TextGlyphGroupOptions,
+  // Code blocks
+  Code,
+  type CodeOptions,
+  type CodeColorScheme,
+  type Token,
+  type TokenType,
+  DEFAULT_COLOR_SCHEME,
+  MONOKAI_COLOR_SCHEME,
+  // Extended text
+  BulletedList,
+  Title,
+  MarkdownText,
+  type BulletedListOptions,
+  type TitleOptions,
+  type MarkdownTextOptions,
+  type StyledTextSegment,
 } from './mobjects/text';
 
 // 3D Mobjects
@@ -268,6 +327,24 @@ export {
   // Coordinate systems
   ThreeDAxes,
   type ThreeDAxesOptions,
+  // Platonic solids
+  Polyhedron,
+  Tetrahedron,
+  Octahedron,
+  Icosahedron,
+  Dodecahedron,
+  type PolyhedronOptions,
+  type TetrahedronOptions,
+  type OctahedronOptions,
+  type IcosahedronOptions,
+  type DodecahedronOptions,
+  // Additional 3D primitives
+  Prism,
+  Dot3D,
+  ThreeDVMobject,
+  type PrismOptions,
+  type Dot3DOptions,
+  type ThreeDVMobjectOptions,
 } from './mobjects/three-d';
 
 // Value Trackers
@@ -345,6 +422,9 @@ export {
   type LayoutConfig,
   type GenericGraphOptions,
   type DiGraphOptions,
+  // Layout algorithms
+  computeLayout,
+  computeCircularLayout,
   // Helper functions for common graph types
   completeGraph,
   cycleGraph,
@@ -382,6 +462,11 @@ export {
   type PointMobjectOptions,
   type PointCloudDotOptions,
   type PointData,
+  Mobject1D,
+  type Mobject1DOptions,
+  Mobject2D,
+  type Mobject2DOptions,
+  type Distribution2D,
 } from './mobjects/point';
 
 // Fractal mobjects
@@ -537,6 +622,7 @@ export {
   GrowFromCenter,
   growFromCenter,
   type ScaleOptions,
+  type GrowFromCenterOptions,
   Shift,
   shift,
   MoveToTargetPosition,
@@ -686,6 +772,14 @@ export {
   WiggleOutThenIn,
   wiggleOutThenIn,
   type WiggleOutThenInOptions,
+  // ShowPassingFlashWithThinningStrokeWidth
+  ShowPassingFlashWithThinningStrokeWidth,
+  showPassingFlashWithThinningStrokeWidth,
+  type ShowPassingFlashWithThinningStrokeWidthOptions,
+  // Blink
+  Blink,
+  blink,
+  type BlinkOptions,
 } from './animation/indication';
 
 // Rate functions

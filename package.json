@@ -40,7 +40,7 @@
     "docs": "node scripts/generate-example-docs.mjs && cd docs && npm run build",
     "docs:dev": "node scripts/generate-example-docs.mjs && cd docs && npm start",
     "docs:examples": "node scripts/generate-example-docs.mjs",
-    "lint:strict": "eslint src/ --max-warnings 108",
+    "lint:strict": "eslint src/ --max-warnings 106",
     "circular": "madge --circular --extensions ts src/",
     "cpd": "jscpd src/",
     "test:integration": "npx playwright test",

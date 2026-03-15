@@ -10,5 +10,3 @@ export { PointMobject, type PointMobjectOptions } from './PointMobject';
 export { PointCloudDot, type PointCloudDotOptions } from './PointCloudDot';
 export { Mobject1D, type Mobject1DOptions } from './Mobject1D';
 export { Mobject2D, type Mobject2DOptions, type Distribution2D } from './Mobject2D';
-
-export { PMobject as default } from './PMobject';

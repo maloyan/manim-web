@@ -463,5 +463,3 @@ export class NewtonFractal extends Mobject {
     }
   }
 }
-
-export default NewtonFractal;

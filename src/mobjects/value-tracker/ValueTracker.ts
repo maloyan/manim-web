@@ -419,5 +419,3 @@ export function valueTracker(value: number = 0): ValueTracker {
 export function complexValueTracker(value?: Complex): ComplexValueTracker {
   return new ComplexValueTracker(value);
 }
-
-export default ValueTracker;
