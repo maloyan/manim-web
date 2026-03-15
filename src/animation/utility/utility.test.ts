@@ -650,9 +650,9 @@ describe('Broadcast', () => {
       expect(anim.initialWidth).toBe(0);
     });
 
-    it('sets remover to true', () => {
+    it('defaults remover to false', () => {
       const anim = new Broadcast(mob);
-      expect(anim.remover).toBe(true);
+      expect(anim.remover).toBe(false);
     });
   });
 
