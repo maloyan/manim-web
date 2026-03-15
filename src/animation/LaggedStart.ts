@@ -21,13 +21,10 @@ export interface LaggedStartOptions extends AnimationGroupOptions {
  * @param animations Array of animations to stagger
  * @param options Options including lagRatio (default 0.2)
  */
-export function laggedStart(
-  animations: Animation[],
-  options?: LaggedStartOptions
-): AnimationGroup {
+export function laggedStart(animations: Animation[], options?: LaggedStartOptions): AnimationGroup {
   return new AnimationGroup(animations, {
     ...options,
-    lagRatio: options?.lagRatio ?? 0.2
+    lagRatio: options?.lagRatio ?? 0.2,
   });
 }
 
@@ -38,7 +35,7 @@ export class LaggedStart extends AnimationGroup {
   constructor(animations: Animation[], options: LaggedStartOptions = {}) {
     super(animations, {
       ...options,
-      lagRatio: options.lagRatio ?? 0.2
+      lagRatio: options.lagRatio ?? 0.2,
     });
   }
 }

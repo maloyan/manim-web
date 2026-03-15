@@ -104,7 +104,10 @@ export class Axes extends Group {
     this._xLength = xLength;
     this._yLength = yLength;
     // Support includeTip from axisConfig (Python Manim pattern: axis_config={"include_tip": False})
-    this._tips = options.tips ?? (axisConfig as Record<string, unknown>)?.includeTip ?? true;
+    this._tips =
+      options.tips ??
+      ((axisConfig as Record<string, unknown>)?.includeTip as boolean | undefined) ??
+      true;
     this._tipLength = tipLength;
 
     // Create x-axis (Manim excludes origin label by default)

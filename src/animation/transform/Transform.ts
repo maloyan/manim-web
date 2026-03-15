@@ -52,11 +52,7 @@ export class Transform extends Animation {
   /** Original target opacity before cross-fade zeroes it */
   private _crossFadeTargetOpacity: number = 1;
 
-  constructor(
-    mobject: Mobject,
-    target: Mobject,
-    options: AnimationOptions = {}
-  ) {
+  constructor(mobject: Mobject, target: Mobject, options: AnimationOptions = {}) {
     super(mobject, options);
     this.target = target;
   }
@@ -184,8 +180,7 @@ export class Transform extends Animation {
     }
     vmobject.setPoints(interpolatedPoints);
 
-    vmobject.opacity =
-      this._startOpacity + (this._targetOpacity - this._startOpacity) * alpha;
+    vmobject.opacity = this._startOpacity + (this._targetOpacity - this._startOpacity) * alpha;
 
     vmobject.fillOpacity =
       this._startFillOpacity + (this._targetFillOpacity - this._startFillOpacity) * alpha;
@@ -201,7 +196,11 @@ export class Transform extends Animation {
 
     // Interpolate fill color (separate from stroke)
     if (this._interpolateFillColor) {
-      const lerpedFillColor = new THREE.Color().lerpColors(this._startFillColor, this._targetFillColor, alpha);
+      const lerpedFillColor = new THREE.Color().lerpColors(
+        this._startFillColor,
+        this._targetFillColor,
+        alpha,
+      );
       vmobject.fillColor = '#' + lerpedFillColor.getHexString();
     }
 
@@ -270,7 +269,7 @@ export class Transform extends Animation {
         targetObj.position.set(
           tgtWorld.x - srcWorld.x,
           tgtWorld.y - srcWorld.y,
-          tgtWorld.z - srcWorld.z
+          tgtWorld.z - srcWorld.z,
         );
       }
 
@@ -310,7 +309,7 @@ export class Transform extends Animation {
 export function transform(
   mobject: Mobject,
   target: Mobject,
-  options?: AnimationOptions
+  options?: AnimationOptions,
 ): Transform {
   return new Transform(mobject, target, options);
 }
@@ -320,11 +319,7 @@ export function transform(
  * in the scene after the animation completes.
  */
 export class ReplacementTransform extends Transform {
-  constructor(
-    mobject: Mobject,
-    target: Mobject,
-    options: AnimationOptions = {}
-  ) {
+  constructor(mobject: Mobject, target: Mobject, options: AnimationOptions = {}) {
     super(mobject, target, options);
   }
 
@@ -345,7 +340,7 @@ export class ReplacementTransform extends Transform {
 export function replacementTransform(
   mobject: Mobject,
   target: Mobject,
-  options?: AnimationOptions
+  options?: AnimationOptions,
 ): ReplacementTransform {
   return new ReplacementTransform(mobject, target, options);
 }
@@ -362,7 +357,7 @@ export class MoveToTarget extends Transform {
   constructor(mobject: MobjectWithTarget, options: AnimationOptions = {}) {
     if (!mobject.targetCopy) {
       throw new Error(
-        'MoveToTarget requires mobject.targetCopy to be set. Use mobject.generateTarget() first.'
+        'MoveToTarget requires mobject.targetCopy to be set. Use mobject.generateTarget() first.',
       );
     }
     super(mobject, mobject.targetCopy, options);
@@ -372,9 +367,6 @@ export class MoveToTarget extends Transform {
 /**
  * Create a MoveToTarget animation.
  */
-export function moveToTarget(
-  mobject: MobjectWithTarget,
-  options?: AnimationOptions
-): MoveToTarget {
+export function moveToTarget(mobject: MobjectWithTarget, options?: AnimationOptions): MoveToTarget {
   return new MoveToTarget(mobject, options);
 }

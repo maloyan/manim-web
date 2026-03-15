@@ -209,6 +209,9 @@ export class ShowPassingFlash extends Animation {
  * @param mobject The mobject (preferably VMobject) to show flash on
  * @param options ShowPassingFlash options (color, timeWidth, strokeWidth)
  */
-export function showPassingFlash(mobject: Mobject, options?: ShowPassingFlashOptions): ShowPassingFlash {
+export function showPassingFlash(
+  mobject: Mobject,
+  options?: ShowPassingFlashOptions,
+): ShowPassingFlash {
   return new ShowPassingFlash(mobject, options);
 }

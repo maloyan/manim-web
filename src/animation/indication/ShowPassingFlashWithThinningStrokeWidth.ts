@@ -78,8 +78,12 @@ export class ShowPassingFlashWithThinningStrokeWidth extends ShowPassingFlash {
       const pt1 = flashPoints[segmentEndIdx];
 
       const positions: number[] = [
-        pt0[0], pt0[1], (pt0[2] ?? 0) + 0.01,
-        pt1[0], pt1[1], (pt1[2] ?? 0) + 0.01,
+        pt0[0],
+        pt0[1],
+        (pt0[2] ?? 0) + 0.01,
+        pt1[0],
+        pt1[1],
+        (pt1[2] ?? 0) + 0.01,
       ];
 
       const geometry = new LineGeometry();
@@ -92,8 +96,8 @@ export class ShowPassingFlashWithThinningStrokeWidth extends ShowPassingFlash {
       const progressAlongFlash = i / Math.max(1, numSegments - 1);
 
       // Stroke width: min at tail (progressAlongFlash=0), max at head (progressAlongFlash=1)
-      const strokeWidthMultiplier = this.minStrokeWidthRatio +
-        (1 - this.minStrokeWidthRatio) * progressAlongFlash;
+      const strokeWidthMultiplier =
+        this.minStrokeWidthRatio + (1 - this.minStrokeWidthRatio) * progressAlongFlash;
       const segmentStrokeWidth = this.flashStrokeWidth * strokeWidthMultiplier;
 
       // Opacity also tapers slightly for smoother visual
@@ -123,7 +127,7 @@ export class ShowPassingFlashWithThinningStrokeWidth extends ShowPassingFlash {
  */
 export function showPassingFlashWithThinningStrokeWidth(
   mobject: Mobject,
-  options?: ShowPassingFlashWithThinningStrokeWidthOptions
+  options?: ShowPassingFlashWithThinningStrokeWidthOptions,
 ): ShowPassingFlashWithThinningStrokeWidth {
   return new ShowPassingFlashWithThinningStrokeWidth(mobject, options);
 }

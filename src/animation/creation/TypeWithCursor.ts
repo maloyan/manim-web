@@ -9,6 +9,59 @@
 import { Mobject } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 
+/** Interface for mobjects that support getText/setText */
+interface TextLikeMobject {
+  getText(): string;
+  setText(text: string): void;
+}
+
+/** Interface for mobjects that have a color property */
+interface ColorableMobject {
+  color: string;
+}
+
+/** Interface for mobjects that have _renderToCanvas */
+interface RenderableMobject {
+  _renderToCanvas(): void;
+}
+
+/** Type guard for text-like mobjects */
+function hasTextMethods(obj: unknown): obj is TextLikeMobject {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'getText' in obj &&
+    typeof (obj as TextLikeMobject).getText === 'function' &&
+    'setText' in obj &&
+    typeof (obj as TextLikeMobject).setText === 'function'
+  );
+}
+
+/** Type guard for mobjects with setText only */
+function hasSetText(obj: unknown): obj is TextLikeMobject {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'setText' in obj &&
+    typeof (obj as TextLikeMobject).setText === 'function'
+  );
+}
+
+/** Type guard for colorable mobjects */
+function hasColor(obj: unknown): obj is ColorableMobject {
+  return typeof obj === 'object' && obj !== null && 'color' in obj;
+}
+
+/** Type guard for renderable mobjects */
+function hasRenderToCanvas(obj: unknown): obj is RenderableMobject {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    '_renderToCanvas' in obj &&
+    typeof (obj as RenderableMobject)._renderToCanvas === 'function'
+  );
+}
+
 /**
  * Options for TypeWithCursor animation
  */
@@ -90,13 +143,13 @@ export class TypeWithCursor extends Animation {
     super.begin();
 
     // Get the full text to type
-    if ('getText' in this.mobject && typeof (this.mobject as any).getText === 'function') {
-      this._fullText = (this.mobject as any).getText();
+    if (hasTextMethods(this.mobject)) {
+      this._fullText = this.mobject.getText();
     }
 
     // Store original color for highlighting
-    if ('color' in this.mobject) {
-      this._originalColor = (this.mobject as any).color || '#ffffff';
+    if (hasColor(this.mobject)) {
+      this._originalColor = this.mobject.color || '#ffffff';
     }
 
     // Start with empty text + cursor
@@ -104,13 +157,13 @@ export class TypeWithCursor extends Animation {
     this._cursorVisible = true;
     this._lastCursorToggleTime = 0;
 
-    if ('setText' in this.mobject && typeof (this.mobject as any).setText === 'function') {
-      (this.mobject as any).setText(this.cursorChar);
+    if (hasSetText(this.mobject)) {
+      this.mobject.setText(this.cursorChar);
     }
   }
 
   interpolate(alpha: number): void {
-    if (!('setText' in this.mobject) || typeof (this.mobject as any).setText !== 'function') {
+    if (!hasSetText(this.mobject)) {
       return;
     }
 
@@ -136,36 +189,34 @@ export class TypeWithCursor extends Animation {
     }
 
     // Build display text with cursor
-    const displayText = this._cursorVisible
-      ? partialText + this.cursorChar
-      : partialText + ' '; // Space to maintain width when cursor hidden
+    const displayText = this._cursorVisible ? partialText + this.cursorChar : partialText + ' '; // Space to maintain width when cursor hidden
 
-    (this.mobject as any).setText(displayText);
+    this.mobject.setText(displayText);
 
     // Apply highlight color if specified
-    if (this.highlightColor && 'color' in this.mobject) {
-      (this.mobject as any).color = this.highlightColor;
-      if ('_renderToCanvas' in this.mobject) {
-        (this.mobject as any)._renderToCanvas();
+    if (this.highlightColor && hasColor(this.mobject)) {
+      this.mobject.color = this.highlightColor;
+      if (hasRenderToCanvas(this.mobject)) {
+        this.mobject._renderToCanvas();
       }
     }
   }
 
   override finish(): void {
-    if ('setText' in this.mobject && typeof (this.mobject as any).setText === 'function') {
+    if (hasSetText(this.mobject)) {
       // Show full text, optionally with or without cursor
       if (this.hideCursorOnComplete) {
-        (this.mobject as any).setText(this._fullText);
+        this.mobject.setText(this._fullText);
       } else {
-        (this.mobject as any).setText(this._fullText + this.cursorChar);
+        this.mobject.setText(this._fullText + this.cursorChar);
       }
     }
 
     // Restore original color if highlighting was used
-    if (this.highlightColor && this._originalColor && 'color' in this.mobject) {
-      (this.mobject as any).color = this._originalColor;
-      if ('_renderToCanvas' in this.mobject) {
-        (this.mobject as any)._renderToCanvas();
+    if (this.highlightColor && this._originalColor && hasColor(this.mobject)) {
+      this.mobject.color = this._originalColor;
+      if (hasRenderToCanvas(this.mobject)) {
+        this.mobject._renderToCanvas();
       }
     }
 
@@ -179,10 +230,7 @@ export class TypeWithCursor extends Animation {
  * @param mobject The mobject to animate (must support getText/setText)
  * @param options Animation options
  */
-export function typeWithCursor(
-  mobject: Mobject,
-  options?: TypeWithCursorOptions
-): TypeWithCursor {
+export function typeWithCursor(mobject: Mobject, options?: TypeWithCursorOptions): TypeWithCursor {
   return new TypeWithCursor(mobject, options);
 }
 
@@ -257,8 +305,8 @@ export class UntypeWithCursor extends Animation {
     super.begin();
 
     // Get the full text to untype
-    if ('getText' in this.mobject && typeof (this.mobject as any).getText === 'function') {
-      this._fullText = (this.mobject as any).getText();
+    if (hasTextMethods(this.mobject)) {
+      this._fullText = this.mobject.getText();
       // Remove trailing cursor if present
       const cursorLen = this.cursorChar.length;
       if (this._fullText.slice(-cursorLen) === this.cursorChar) {
@@ -267,21 +315,21 @@ export class UntypeWithCursor extends Animation {
     }
 
     // Store original color
-    if ('color' in this.mobject) {
-      this._originalColor = (this.mobject as any).color || '#ffffff';
+    if (hasColor(this.mobject)) {
+      this._originalColor = this.mobject.color || '#ffffff';
     }
 
     this._cursorVisible = true;
     this._lastCursorToggleTime = 0;
 
     // Start with full text + cursor
-    if ('setText' in this.mobject && typeof (this.mobject as any).setText === 'function') {
-      (this.mobject as any).setText(this._fullText + this.cursorChar);
+    if (hasSetText(this.mobject)) {
+      this.mobject.setText(this._fullText + this.cursorChar);
     }
   }
 
   interpolate(alpha: number): void {
-    if (!('setText' in this.mobject) || typeof (this.mobject as any).setText !== 'function') {
+    if (!hasSetText(this.mobject)) {
       return;
     }
 
@@ -307,36 +355,34 @@ export class UntypeWithCursor extends Animation {
     }
 
     // Build display text with cursor
-    const displayText = this._cursorVisible
-      ? partialText + this.cursorChar
-      : partialText + ' ';
+    const displayText = this._cursorVisible ? partialText + this.cursorChar : partialText + ' ';
 
-    (this.mobject as any).setText(displayText);
+    this.mobject.setText(displayText);
 
     // Apply highlight color if specified
-    if (this.highlightColor && 'color' in this.mobject) {
-      (this.mobject as any).color = this.highlightColor;
-      if ('_renderToCanvas' in this.mobject) {
-        (this.mobject as any)._renderToCanvas();
+    if (this.highlightColor && hasColor(this.mobject)) {
+      this.mobject.color = this.highlightColor;
+      if (hasRenderToCanvas(this.mobject)) {
+        this.mobject._renderToCanvas();
       }
     }
   }
 
   override finish(): void {
-    if ('setText' in this.mobject && typeof (this.mobject as any).setText === 'function') {
+    if (hasSetText(this.mobject)) {
       // End with empty text, optionally with or without cursor
       if (this.hideCursorOnComplete) {
-        (this.mobject as any).setText('');
+        this.mobject.setText('');
       } else {
-        (this.mobject as any).setText(this.cursorChar);
+        this.mobject.setText(this.cursorChar);
       }
     }
 
     // Restore original color if highlighting was used
-    if (this.highlightColor && this._originalColor && 'color' in this.mobject) {
-      (this.mobject as any).color = this._originalColor;
-      if ('_renderToCanvas' in this.mobject) {
-        (this.mobject as any)._renderToCanvas();
+    if (this.highlightColor && this._originalColor && hasColor(this.mobject)) {
+      this.mobject.color = this._originalColor;
+      if (hasRenderToCanvas(this.mobject)) {
+        this.mobject._renderToCanvas();
       }
     }
 
@@ -352,7 +398,7 @@ export class UntypeWithCursor extends Animation {
  */
 export function untypeWithCursor(
   mobject: Mobject,
-  options?: UntypeWithCursorOptions
+  options?: UntypeWithCursorOptions,
 ): UntypeWithCursor {
   return new UntypeWithCursor(mobject, options);
 }

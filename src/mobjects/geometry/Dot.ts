@@ -53,7 +53,9 @@ export class Dot extends Circle {
     } = options;
 
     // Handle nested array (from Python patterns like [coords_to_point(...)])
-    const point: Vector3Tuple = (Array.isArray(rawPoint[0]) ? rawPoint[0] : rawPoint) as Vector3Tuple;
+    const point: Vector3Tuple = (
+      Array.isArray(rawPoint[0]) ? rawPoint[0] : rawPoint
+    ) as Vector3Tuple;
 
     // Initialize as a filled circle at the specified point
     super({

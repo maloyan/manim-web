@@ -41,12 +41,7 @@ export class Line extends VMobject {
   constructor(options: LineOptions = {}) {
     super();
 
-    const {
-      start = [0, 0, 0],
-      end = [1, 0, 0],
-      color = WHITE,
-      strokeWidth = 3,
-    } = options;
+    const { start = [0, 0, 0], end = [1, 0, 0], color = WHITE, strokeWidth = 3 } = options;
 
     this._start = [...start];
     this._end = [...end];
@@ -73,14 +68,9 @@ export class Line extends VMobject {
 
     // Control points at 1/3 and 2/3 along the line
     const h1: number[] = [x0 + dx / 3, y0 + dy / 3, z0 + dz / 3];
-    const h2: number[] = [x0 + 2 * dx / 3, y0 + 2 * dy / 3, z0 + 2 * dz / 3];
+    const h2: number[] = [x0 + (2 * dx) / 3, y0 + (2 * dy) / 3, z0 + (2 * dz) / 3];
 
-    this.setPoints3D([
-      [...this._start],
-      h1,
-      h2,
-      [...this._end],
-    ]);
+    this.setPoints3D([[...this._start], h1, h2, [...this._end]]);
   }
 
   /**
@@ -163,10 +153,7 @@ export class Line extends VMobject {
    * Get the angle of the line in the XY plane (in radians)
    */
   getAngle(): number {
-    return Math.atan2(
-      this._end[1] - this._start[1],
-      this._end[0] - this._start[0]
-    );
+    return Math.atan2(this._end[1] - this._start[1], this._end[0] - this._start[0]);
   }
 
   /**

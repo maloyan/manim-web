@@ -50,11 +50,7 @@ export class CubicBezier extends VMobject {
   constructor(options: CubicBezierOptions) {
     super();
 
-    const {
-      points,
-      color = BLUE,
-      strokeWidth = DEFAULT_STROKE_WIDTH,
-    } = options;
+    const { points, color = BLUE, strokeWidth = DEFAULT_STROKE_WIDTH } = options;
 
     // Deep copy the control points
     this._controlPoints = [
@@ -180,7 +176,7 @@ export class CubicBezier extends VMobject {
   normalizedTangentAtT(t: number): Vector3Tuple {
     const tangent = this.tangentAtT(t);
     const length = Math.sqrt(
-      tangent[0] * tangent[0] + tangent[1] * tangent[1] + tangent[2] * tangent[2]
+      tangent[0] * tangent[0] + tangent[1] * tangent[1] + tangent[2] * tangent[2],
     );
 
     if (length < 1e-10) {

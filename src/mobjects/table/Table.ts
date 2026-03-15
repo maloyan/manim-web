@@ -136,7 +136,7 @@ export class Table extends VGroup {
 
     // Calculate dimensions
     this._numRows = data.length;
-    this._numCols = data.length > 0 ? Math.max(...data.map(row => row.length)) : 0;
+    this._numCols = data.length > 0 ? Math.max(...data.map((row) => row.length)) : 0;
 
     // Initialize groups
     this._entries = new VGroup();
@@ -231,8 +231,8 @@ export class Table extends VGroup {
     }
 
     // Add buffer to dimensions
-    this._rowHeights = this._rowHeights.map(h => h + this._vBuff * 2);
-    this._colWidths = this._colWidths.map(w => w + this._hBuff * 2);
+    this._rowHeights = this._rowHeights.map((h) => h + this._vBuff * 2);
+    this._colWidths = this._colWidths.map((w) => w + this._hBuff * 2);
 
     // Calculate positions (center-based)
     this._rowPositions = [];
@@ -315,7 +315,7 @@ export class Table extends VGroup {
         this._data[row][col].moveTo([
           this._colPositions[actualCol],
           this._rowPositions[actualRow],
-          0
+          0,
         ]);
         this._entries.add(this._data[row][col] as VMobject);
       }
@@ -412,7 +412,7 @@ export class Table extends VGroup {
     if (row < 0 || row >= this._numRows) {
       throw new Error(`Row ${row} out of bounds`);
     }
-    return new VGroup(...this._data[row].map(m => m as VMobject));
+    return new VGroup(...this._data[row].map((m) => m as VMobject));
   }
 
   /**
@@ -451,14 +451,14 @@ export class Table extends VGroup {
    * Get row labels as a VGroup
    */
   getRowLabels(): VGroup {
-    return new VGroup(...this._rowLabels.map(m => m as VMobject));
+    return new VGroup(...this._rowLabels.map((m) => m as VMobject));
   }
 
   /**
    * Get column labels as a VGroup
    */
   getColLabels(): VGroup {
-    return new VGroup(...this._colLabels.map(m => m as VMobject));
+    return new VGroup(...this._colLabels.map((m) => m as VMobject));
   }
 
   /**
@@ -566,11 +566,9 @@ export class Table extends VGroup {
    */
   protected override _createCopy(): VMobject {
     // Deep copy data
-    const dataCopy = this._data.map(row =>
-      row.map(entry => entry.copy())
-    );
-    const rowLabelsCopy = this._rowLabels.map(label => label.copy());
-    const colLabelsCopy = this._colLabels.map(label => label.copy());
+    const dataCopy = this._data.map((row) => row.map((entry) => entry.copy()));
+    const rowLabelsCopy = this._rowLabels.map((label) => label.copy());
+    const colLabelsCopy = this._colLabels.map((label) => label.copy());
 
     return new Table({
       data: dataCopy,
@@ -622,29 +620,16 @@ export interface MathTableOptions extends Omit<TableOptions, 'data' | 'rowLabels
  */
 export class MathTable extends Table {
   constructor(options: MathTableOptions) {
-    const {
-      data,
-      rowLabels,
-      colLabels,
-      fontSize = 36,
-      color = WHITE,
-      ...rest
-    } = options;
+    const { data, rowLabels, colLabels, fontSize = 36, color = WHITE, ...rest } = options;
 
     // Convert string[][] to MathTex[][]
-    const mathData = data.map(row =>
-      row.map(latex => new MathTex({ latex, fontSize, color }))
-    );
+    const mathData = data.map((row) => row.map((latex) => new MathTex({ latex, fontSize, color })));
 
     // Convert row labels
-    const mathRowLabels = rowLabels?.map(latex =>
-      new MathTex({ latex, fontSize, color })
-    );
+    const mathRowLabels = rowLabels?.map((latex) => new MathTex({ latex, fontSize, color }));
 
     // Convert column labels
-    const mathColLabels = colLabels?.map(latex =>
-      new MathTex({ latex, fontSize, color })
-    );
+    const mathColLabels = colLabels?.map((latex) => new MathTex({ latex, fontSize, color }));
 
     super({
       data: mathData,
@@ -658,9 +643,7 @@ export class MathTable extends Table {
 /**
  * Options for creating a MobjectTable
  */
-export interface MobjectTableOptions extends TableOptions {
-  // Same as TableOptions, just renamed for clarity
-}
+export type MobjectTableOptions = TableOptions;
 
 /**
  * MobjectTable - A table that can contain any type of mobject
@@ -688,7 +671,10 @@ export class MobjectTable extends Table {
 /**
  * Options for creating an IntegerTable
  */
-export interface IntegerTableOptions extends Omit<TableOptions, 'data' | 'rowLabels' | 'colLabels'> {
+export interface IntegerTableOptions extends Omit<
+  TableOptions,
+  'data' | 'rowLabels' | 'colLabels'
+> {
   /** 2D array of integers */
   data: number[][];
   /** Row labels as integers */
@@ -719,43 +705,41 @@ export interface IntegerTableOptions extends Omit<TableOptions, 'data' | 'rowLab
  */
 export class IntegerTable extends Table {
   constructor(options: IntegerTableOptions) {
-    const {
-      data,
-      rowLabels,
-      colLabels,
-      fontSize = 36,
-      color = WHITE,
-      ...rest
-    } = options;
+    const { data, rowLabels, colLabels, fontSize = 36, color = WHITE, ...rest } = options;
 
     // Convert number[][] to DecimalNumber[][]
-    const intData = data.map(row =>
-      row.map(value => new DecimalNumber({
-        value,
-        numDecimalPlaces: 0,
-        fontSize,
-        color,
-      }))
+    const intData = data.map((row) =>
+      row.map(
+        (value) =>
+          new DecimalNumber({
+            value,
+            numDecimalPlaces: 0,
+            fontSize,
+            color,
+          }),
+      ),
     );
 
     // Convert row labels
-    const intRowLabels = rowLabels?.map(value =>
-      new DecimalNumber({
-        value,
-        numDecimalPlaces: 0,
-        fontSize,
-        color,
-      })
+    const intRowLabels = rowLabels?.map(
+      (value) =>
+        new DecimalNumber({
+          value,
+          numDecimalPlaces: 0,
+          fontSize,
+          color,
+        }),
     );
 
     // Convert column labels
-    const intColLabels = colLabels?.map(value =>
-      new DecimalNumber({
-        value,
-        numDecimalPlaces: 0,
-        fontSize,
-        color,
-      })
+    const intColLabels = colLabels?.map(
+      (value) =>
+        new DecimalNumber({
+          value,
+          numDecimalPlaces: 0,
+          fontSize,
+          color,
+        }),
     );
 
     super({
@@ -770,7 +754,10 @@ export class IntegerTable extends Table {
 /**
  * Options for creating a DecimalTable
  */
-export interface DecimalTableOptions extends Omit<TableOptions, 'data' | 'rowLabels' | 'colLabels'> {
+export interface DecimalTableOptions extends Omit<
+  TableOptions,
+  'data' | 'rowLabels' | 'colLabels'
+> {
   /** 2D array of decimal numbers */
   data: number[][];
   /** Row labels as decimal numbers */
@@ -814,33 +801,38 @@ export class DecimalTable extends Table {
     } = options;
 
     // Convert number[][] to DecimalNumber[][]
-    const decData = data.map(row =>
-      row.map(value => new DecimalNumber({
-        value,
-        numDecimalPlaces,
-        fontSize,
-        color,
-      }))
+    const decData = data.map((row) =>
+      row.map(
+        (value) =>
+          new DecimalNumber({
+            value,
+            numDecimalPlaces,
+            fontSize,
+            color,
+          }),
+      ),
     );
 
     // Convert row labels
-    const decRowLabels = rowLabels?.map(value =>
-      new DecimalNumber({
-        value,
-        numDecimalPlaces,
-        fontSize,
-        color,
-      })
+    const decRowLabels = rowLabels?.map(
+      (value) =>
+        new DecimalNumber({
+          value,
+          numDecimalPlaces,
+          fontSize,
+          color,
+        }),
     );
 
     // Convert column labels
-    const decColLabels = colLabels?.map(value =>
-      new DecimalNumber({
-        value,
-        numDecimalPlaces,
-        fontSize,
-        color,
-      })
+    const decColLabels = colLabels?.map(
+      (value) =>
+        new DecimalNumber({
+          value,
+          numDecimalPlaces,
+          fontSize,
+          color,
+        }),
     );
 
     super({

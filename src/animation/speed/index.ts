@@ -46,7 +46,7 @@ class SpeedWrapperMobject extends Mobject {
 function computeAdjustedDuration(
   originalDuration: number,
   speedFunc: SpeedFunction,
-  numSamples: number = 100
+  numSamples: number = 100,
 ): number {
   let integral = 0;
   const dt = 1 / numSamples;
@@ -57,7 +57,7 @@ function computeAdjustedDuration(
     const speed0 = Math.max(0.001, speedFunc(t0)); // Avoid division by zero
     const speed1 = Math.max(0.001, speedFunc(t1));
     // Trapezoidal rule: integrate 1/speed(t)
-    integral += (1 / speed0 + 1 / speed1) / 2 * dt;
+    integral += ((1 / speed0 + 1 / speed1) / 2) * dt;
   }
 
   return originalDuration * integral;
@@ -72,7 +72,7 @@ function computeAdjustedDuration(
 function mapProgressToOriginal(
   adjustedAlpha: number,
   speedFunc: SpeedFunction,
-  numSamples: number = 100
+  numSamples: number = 100,
 ): number {
   // We need to find t such that integral from 0 to t of 1/speed(s) ds = adjustedAlpha * totalIntegral
   // Use numerical search
@@ -87,7 +87,7 @@ function mapProgressToOriginal(
     const t1 = (i + 1) / numSamples;
     const speed0 = Math.max(0.001, speedFunc(t0));
     const speed1 = Math.max(0.001, speedFunc(t1));
-    totalIntegral += (1 / speed0 + 1 / speed1) / 2 * dt;
+    totalIntegral += ((1 / speed0 + 1 / speed1) / 2) * dt;
     integrals.push(totalIntegral);
   }
 
@@ -110,9 +110,8 @@ function mapProgressToOriginal(
   // Linear interpolation within the segment
   const segmentStart = integrals[low];
   const segmentEnd = integrals[Math.min(high, numSamples)];
-  const segmentProgress = segmentEnd > segmentStart
-    ? (targetIntegral - segmentStart) / (segmentEnd - segmentStart)
-    : 0;
+  const segmentProgress =
+    segmentEnd > segmentStart ? (targetIntegral - segmentStart) / (segmentEnd - segmentStart) : 0;
 
   return Math.min(1, Math.max(0, (low + segmentProgress) / numSamples));
 }
@@ -152,23 +151,16 @@ export class ChangeSpeed extends Animation {
   /** Number of samples for numerical integration */
   private readonly _numSamples: number = 200;
 
-  constructor(
-    animation: Animation,
-    speedFunc: SpeedFunction,
-    options: ChangeSpeedOptions = {}
-  ) {
+  constructor(animation: Animation, speedFunc: SpeedFunction, options: ChangeSpeedOptions = {}) {
     // Create a dummy mobject for the wrapper
     const dummyMobject = new SpeedWrapperMobject();
 
     // Compute adjusted duration
-    const adjustedDuration = computeAdjustedDuration(
-      animation.duration,
-      speedFunc
-    );
+    const adjustedDuration = computeAdjustedDuration(animation.duration, speedFunc);
 
     super(dummyMobject, {
       duration: adjustedDuration,
-      rateFunc: options.rateFunc ?? linear
+      rateFunc: options.rateFunc ?? linear,
     });
 
     this.animation = animation;
@@ -188,11 +180,7 @@ export class ChangeSpeed extends Animation {
    */
   interpolate(alpha: number): void {
     // Map the adjusted alpha to the original animation's progress
-    const originalAlpha = mapProgressToOriginal(
-      alpha,
-      this.speedFunc,
-      this._numSamples
-    );
+    const originalAlpha = mapProgressToOriginal(alpha, this.speedFunc, this._numSamples);
 
     // Apply the wrapped animation's rate function
     const transformedAlpha = this.animation.rateFunc(originalAlpha);
@@ -241,7 +229,7 @@ export class ChangeSpeed extends Animation {
 export function changeSpeed(
   animation: Animation,
   speedFunc: SpeedFunction,
-  options?: ChangeSpeedOptions
+  options?: ChangeSpeedOptions,
 ): ChangeSpeed {
   return new ChangeSpeed(animation, speedFunc, options);
 }
@@ -267,7 +255,7 @@ export function emphasizeRegion(
   emphasizeStart: number,
   emphasizeEnd: number,
   normalSpeed: number = 2,
-  emphasizedSpeed: number = 0.5
+  emphasizedSpeed: number = 0.5,
 ): SpeedFunction {
   return (t: number) => {
     if (t >= emphasizeStart && t <= emphasizeEnd) {
@@ -289,7 +277,7 @@ export function rushRegion(
   rushStart: number,
   rushEnd: number,
   normalSpeed: number = 1,
-  rushedSpeed: number = 3
+  rushedSpeed: number = 3,
 ): SpeedFunction {
   return (t: number) => {
     if (t >= rushStart && t <= rushEnd) {

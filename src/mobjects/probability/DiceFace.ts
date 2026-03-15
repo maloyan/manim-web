@@ -36,9 +36,7 @@ export interface DiceFaceOptions {
  * using the standard Western die layout.
  */
 const PIP_POSITIONS: Record<number, [number, number][]> = {
-  1: [
-    [0, 0],
-  ],
+  1: [[0, 0]],
   2: [
     [-0.5, 0.5],
     [0.5, -0.5],
@@ -178,11 +176,7 @@ export class DiceFace extends VGroup {
 
     for (const [nx, ny] of positions) {
       const dot = new Dot({
-        point: [
-          cx + nx * innerScale,
-          cy + ny * innerScale,
-          cz + 0.001,
-        ],
+        point: [cx + nx * innerScale, cy + ny * innerScale, cz + 0.001],
         radius: this._dotRadius,
         color: this._dotColor,
         fillOpacity: 1,

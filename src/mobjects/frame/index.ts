@@ -8,10 +8,7 @@
 import { Rectangle, type RectangleOptions } from '../geometry/Rectangle';
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLACK, WHITE } from '../../constants/colors';
-import {
-  DEFAULT_FRAME_WIDTH,
-  DEFAULT_FRAME_HEIGHT,
-} from '../../constants';
+import { DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT } from '../../constants';
 
 /**
  * Default 16:9 aspect ratio
@@ -50,11 +47,7 @@ export class ScreenRectangle extends Rectangle {
   private _aspectRatio: number;
 
   constructor(options: ScreenRectangleOptions = {}) {
-    const {
-      height = 4,
-      aspectRatio = DEFAULT_ASPECT_RATIO,
-      ...rest
-    } = options;
+    const { height = 4, aspectRatio = DEFAULT_ASPECT_RATIO, ...rest } = options;
 
     const width = height * aspectRatio;
 
@@ -227,7 +220,10 @@ export class FullScreenRectangle extends Rectangle {
 /**
  * Options for creating a FullScreenFadeRectangle
  */
-export interface FullScreenFadeRectangleOptions extends Omit<FullScreenRectangleOptions, 'fillOpacity'> {
+export interface FullScreenFadeRectangleOptions extends Omit<
+  FullScreenRectangleOptions,
+  'fillOpacity'
+> {
   /** Initial opacity for the fade. Default: 0 (invisible) */
   opacity?: number;
 }
@@ -330,13 +326,17 @@ export class FullScreenFadeRectangle extends FullScreenRectangle {
 /**
  * Create a black fade rectangle for fade-to-black effects
  */
-export function createFadeToBlack(options: Omit<FullScreenFadeRectangleOptions, 'color'> = {}): FullScreenFadeRectangle {
+export function createFadeToBlack(
+  options: Omit<FullScreenFadeRectangleOptions, 'color'> = {},
+): FullScreenFadeRectangle {
   return new FullScreenFadeRectangle({ ...options, color: BLACK });
 }
 
 /**
  * Create a white fade rectangle for fade-to-white effects
  */
-export function createFadeToWhite(options: Omit<FullScreenFadeRectangleOptions, 'color'> = {}): FullScreenFadeRectangle {
+export function createFadeToWhite(
+  options: Omit<FullScreenFadeRectangleOptions, 'color'> = {},
+): FullScreenFadeRectangle {
   return new FullScreenFadeRectangle({ ...options, color: WHITE });
 }

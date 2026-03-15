@@ -88,7 +88,8 @@ export class Blink extends Animation {
     if (blinkPhase < fadeOutEnd) {
       // Fading out
       const fadeProgress = blinkPhase / fadeOutEnd;
-      currentOpacity = this._originalOpacity + (this.minOpacity - this._originalOpacity) * fadeProgress;
+      currentOpacity =
+        this._originalOpacity + (this.minOpacity - this._originalOpacity) * fadeProgress;
     } else if (blinkPhase < fadeInStart) {
       // At minimum opacity
       currentOpacity = this.minOpacity;

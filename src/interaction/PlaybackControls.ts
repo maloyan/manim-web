@@ -32,6 +32,7 @@ export class PlaybackControls extends Controls {
   private _playPauseBtn: HTMLButtonElement | null = null;
   private _speedSelect: HTMLSelectElement | null = null;
   private _timeDisplay: HTMLElement | null = null;
+  private _durationDisplay: HTMLElement | null = null;
   private _isPlaying: boolean = false;
   private _playbackRate: number = 1;
   private _updateInterval: number | null = null;
@@ -262,7 +263,7 @@ export class PlaybackControls extends Controls {
     });
 
     // Store reference to duration display for updates
-    (timeline as any)._durationDisplay = durationDisplay;
+    this._durationDisplay = durationDisplay;
 
     wrapper.appendChild(timeRow);
     wrapper.appendChild(timeline);
@@ -369,11 +370,8 @@ export class PlaybackControls extends Controls {
       this._timeDisplay.textContent = this._formatTime(currentTime);
     }
 
-    if (this._timeline) {
-      const durationDisplay = (this._timeline as any)._durationDisplay as HTMLElement;
-      if (durationDisplay) {
-        durationDisplay.textContent = this._formatTime(duration);
-      }
+    if (this._timeline && this._durationDisplay) {
+      this._durationDisplay.textContent = this._formatTime(duration);
     }
   }
 

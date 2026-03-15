@@ -24,7 +24,7 @@ export * from '../index';
  */
 export function useScene(
   containerRef: RefObject<HTMLElement | null>,
-  options?: SceneOptions
+  options?: SceneOptions,
 ): Scene | null {
   const [scene, setScene] = useState<Scene | null>(null);
   const optionsRef = useRef(options);
@@ -64,7 +64,7 @@ export function useScene(
 export function useMobject<T extends Mobject>(
   scene: Scene | null,
   createMobject: () => T,
-  deps: DependencyList = []
+  deps: DependencyList = [],
 ): T | null {
   const mobjectRef = useRef<T | null>(null);
 
@@ -87,7 +87,6 @@ export function useMobject<T extends Mobject>(
         mobjectRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene, ...deps]);
 
   return mobjectRef.current;
@@ -98,9 +97,7 @@ export function useMobject<T extends Mobject>(
  * @param scene - The scene to play animations in
  * @returns Object with play, playAll functions and isPlaying state
  */
-export function useAnimation(
-  scene: Scene | null
-): {
+export function useAnimation(scene: Scene | null): {
   play: (...animations: Animation[]) => Promise<void>;
   playAll: (...animations: Animation[]) => Promise<void>;
   isPlaying: boolean;
@@ -117,7 +114,7 @@ export function useAnimation(
         setIsPlaying(false);
       }
     },
-    [scene]
+    [scene],
   );
 
   const playAll = useCallback(
@@ -130,7 +127,7 @@ export function useAnimation(
         setIsPlaying(false);
       }
     },
-    [scene]
+    [scene],
   );
 
   return { play, playAll, isPlaying };
@@ -307,7 +304,7 @@ export function ManimProvider({
 export function useUpdater(
   mobject: Mobject | null,
   updater: (m: Mobject, dt: number) => void,
-  deps: DependencyList = []
+  deps: DependencyList = [],
 ): void {
   const updaterRef = useRef(updater);
 
@@ -329,7 +326,6 @@ export function useUpdater(
     return () => {
       mobject.removeUpdater(stableUpdater);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mobject, ...deps]);
 }
 
@@ -344,7 +340,7 @@ export function useWait(scene: Scene | null): (duration: number) => Promise<void
       if (!scene) return Promise.resolve();
       return scene.wait(duration);
     },
-    [scene]
+    [scene],
   );
 }
 
@@ -397,7 +393,7 @@ export function usePlaybackControls(scene: Scene | null): {
       scene?.seek(time);
       setCurrentTime(time);
     },
-    [scene]
+    [scene],
   );
 
   return { pause, resume, stop, seek, isPlaying, currentTime };

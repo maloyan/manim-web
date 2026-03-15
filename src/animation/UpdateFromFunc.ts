@@ -22,7 +22,7 @@ export class UpdateFromFunc extends Animation {
   constructor(
     mobject: Mobject,
     func: (mobject: Mobject, alpha: number) => void,
-    options?: AnimationOptions
+    options?: AnimationOptions,
   ) {
     super(mobject, options);
     this._func = func;
@@ -47,7 +47,7 @@ export class UpdateFromFunc extends Animation {
 export function updateFromFunc(
   mobject: Mobject,
   func: (mobject: Mobject, alpha: number) => void,
-  options?: AnimationOptions
+  options?: AnimationOptions,
 ): UpdateFromFunc {
   return new UpdateFromFunc(mobject, func, options);
 }

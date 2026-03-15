@@ -12,8 +12,4 @@ export {
   type BezierShaderMaterialOptions,
 } from './BezierShaderMaterial';
 
-export {
-  BezierRenderer,
-  type BezierRendererOptions,
-  type BezierSegment,
-} from './BezierRenderer';
+export { BezierRenderer, type BezierRendererOptions, type BezierSegment } from './BezierRenderer';

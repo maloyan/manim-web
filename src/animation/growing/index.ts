@@ -13,7 +13,7 @@ export { GrowFromCenter, growFromCenter, type GrowFromCenterOptions } from '../m
 /**
  * GrowArrow options
  */
-export interface GrowArrowOptions extends AnimationOptions {}
+export type GrowArrowOptions = AnimationOptions;
 
 /**
  * GrowArrow animation - grows an arrow from its start point.
@@ -54,7 +54,7 @@ export class GrowArrow extends Animation {
     arrow.scaleVector.set(
       this._targetScale.x * scale,
       this._targetScale.y * scale,
-      this._targetScale.z * scale
+      this._targetScale.z * scale,
     );
 
     // Interpolate position from start to proper position
@@ -68,7 +68,7 @@ export class GrowArrow extends Animation {
     arrow.position.set(
       start[0] + (midX - start[0]) * alpha,
       start[1] + (midY - start[1]) * alpha,
-      start[2] + (midZ - start[2]) * alpha
+      start[2] + (midZ - start[2]) * alpha,
     );
 
     arrow._markDirty();
@@ -81,11 +81,7 @@ export class GrowArrow extends Animation {
     // Restore proper position
     const start = this._startPoint;
     const end = this._endPoint;
-    arrow.position.set(
-      (start[0] + end[0]) / 2,
-      (start[1] + end[1]) / 2,
-      (start[2] + end[2]) / 2
-    );
+    arrow.position.set((start[0] + end[0]) / 2, (start[1] + end[1]) / 2, (start[2] + end[2]) / 2);
 
     arrow._markDirty();
     super.finish();
@@ -135,9 +131,9 @@ export class GrowFromEdge extends Animation {
 
     // Calculate edge point based on direction
     this._edgePoint.set(
-      edge[0] > 0 ? bounds.max.x : (edge[0] < 0 ? bounds.min.x : (bounds.min.x + bounds.max.x) / 2),
-      edge[1] > 0 ? bounds.max.y : (edge[1] < 0 ? bounds.min.y : (bounds.min.y + bounds.max.y) / 2),
-      edge[2] > 0 ? bounds.max.z : (edge[2] < 0 ? bounds.min.z : (bounds.min.z + bounds.max.z) / 2)
+      edge[0] > 0 ? bounds.max.x : edge[0] < 0 ? bounds.min.x : (bounds.min.x + bounds.max.x) / 2,
+      edge[1] > 0 ? bounds.max.y : edge[1] < 0 ? bounds.min.y : (bounds.min.y + bounds.max.y) / 2,
+      edge[2] > 0 ? bounds.max.z : edge[2] < 0 ? bounds.min.z : (bounds.min.z + bounds.max.z) / 2,
     );
 
     // Start at scale 0
@@ -150,14 +146,14 @@ export class GrowFromEdge extends Animation {
     this.mobject.scaleVector.set(
       this._targetScale.x * scale,
       this._targetScale.y * scale,
-      this._targetScale.z * scale
+      this._targetScale.z * scale,
     );
 
     // Position moves from edge point toward target
     this.mobject.position.set(
       this._edgePoint.x + (this._targetPosition.x - this._edgePoint.x) * alpha,
       this._edgePoint.y + (this._targetPosition.y - this._edgePoint.y) * alpha,
-      this._edgePoint.z + (this._targetPosition.z - this._edgePoint.z) * alpha
+      this._edgePoint.z + (this._targetPosition.z - this._edgePoint.z) * alpha,
     );
 
     this.mobject._markDirty();
@@ -177,7 +173,7 @@ export class GrowFromEdge extends Animation {
 export function growFromEdge(
   mobject: Mobject,
   edge: Vector3Tuple,
-  options?: Omit<GrowFromEdgeOptions, 'edge'>
+  options?: Omit<GrowFromEdgeOptions, 'edge'>,
 ): GrowFromEdge {
   return new GrowFromEdge(mobject, { ...options, edge });
 }
@@ -224,14 +220,14 @@ export class GrowFromPoint extends Animation {
     this.mobject.scaleVector.set(
       this._targetScale.x * scale,
       this._targetScale.y * scale,
-      this._targetScale.z * scale
+      this._targetScale.z * scale,
     );
 
     // Position moves from grow point toward target
     this.mobject.position.set(
       this._growPoint.x + (this._targetPosition.x - this._growPoint.x) * alpha,
       this._growPoint.y + (this._targetPosition.y - this._growPoint.y) * alpha,
-      this._growPoint.z + (this._targetPosition.z - this._growPoint.z) * alpha
+      this._growPoint.z + (this._targetPosition.z - this._growPoint.z) * alpha,
     );
 
     this.mobject._markDirty();
@@ -251,7 +247,7 @@ export class GrowFromPoint extends Animation {
 export function growFromPoint(
   mobject: Mobject,
   point: Vector3Tuple,
-  options?: Omit<GrowFromPointOptions, 'point'>
+  options?: Omit<GrowFromPointOptions, 'point'>,
 ): GrowFromPoint {
   return new GrowFromPoint(mobject, { ...options, point });
 }
@@ -302,7 +298,7 @@ export class SpinInFromNothing extends Animation {
     this.mobject.scaleVector.set(
       this._targetScale.x * scale,
       this._targetScale.y * scale,
-      this._targetScale.z * scale
+      this._targetScale.z * scale,
     );
 
     // Rotate from -angle to 0 (so it ends at initial rotation)
@@ -333,7 +329,7 @@ export class SpinInFromNothing extends Animation {
  */
 export function spinInFromNothing(
   mobject: Mobject,
-  options?: SpinInFromNothingOptions
+  options?: SpinInFromNothingOptions,
 ): SpinInFromNothing {
   return new SpinInFromNothing(mobject, options);
 }

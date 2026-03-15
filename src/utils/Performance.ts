@@ -67,7 +67,7 @@ export class PerformanceMonitor {
 
       // Calculate rolling average
       this._fps = Math.round(
-        this._fpsHistory.reduce((sum, fps) => sum + fps, 0) / this._fpsHistory.length
+        this._fpsHistory.reduce((sum, fps) => sum + fps, 0) / this._fpsHistory.length,
       );
 
       this._callback?.(this._fps);
@@ -91,9 +91,7 @@ export class PerformanceMonitor {
    * @returns Instant frames per second
    */
   getInstantFps(): number {
-    return this._fpsHistory.length > 0
-      ? this._fpsHistory[this._fpsHistory.length - 1]
-      : 0;
+    return this._fpsHistory.length > 0 ? this._fpsHistory[this._fpsHistory.length - 1] : 0;
   }
 
   /**

@@ -127,7 +127,7 @@ export function solveIVP(
   t0: number,
   y0: number[],
   tEnd: number,
-  options: SolveIVPOptions = {}
+  options: SolveIVPOptions = {},
 ): IVPResult {
   const { recordTrajectory = false } = options;
 
@@ -193,7 +193,7 @@ export function flowPoint(
   vectorField: VectorFieldFunction3D,
   start: [number, number, number],
   time: number,
-  numSteps: number = 100
+  numSteps: number = 100,
 ): [number, number, number] {
   if (time === 0) {
     return [...start] as [number, number, number];
@@ -235,7 +235,7 @@ export function flowPointTrajectory(
   vectorField: VectorFieldFunction3D,
   start: [number, number, number],
   time: number,
-  numSteps: number = 100
+  numSteps: number = 100,
 ): [number, number, number][] {
   if (time === 0) {
     return [[...start] as [number, number, number]];

@@ -123,9 +123,9 @@ export class GlyphVMobject extends VMobject {
             // Add degenerate zero-length cubic to connect contours
             const lastPt = allPoints[allPoints.length - 1];
             const newPt = [cmd.x * PIXEL_TO_WORLD, -cmd.y * PIXEL_TO_WORLD, 0];
-            allPoints.push([...lastPt]);  // handle1 = previous anchor
-            allPoints.push([...newPt]);   // handle2 = new anchor
-            allPoints.push([...newPt]);   // anchor2 = new start
+            allPoints.push([...lastPt]); // handle1 = previous anchor
+            allPoints.push([...newPt]); // handle2 = new anchor
+            allPoints.push([...newPt]); // anchor2 = new start
           } else {
             // First contour: set the start anchor
             allPoints.push([cmd.x * PIXEL_TO_WORLD, -cmd.y * PIXEL_TO_WORLD, 0]);
@@ -144,8 +144,8 @@ export class GlyphVMobject extends VMobject {
           const y = cmd.y;
           const cp1x = currentX + (x - currentX) / 3;
           const cp1y = currentY + (y - currentY) / 3;
-          const cp2x = currentX + (x - currentX) * 2 / 3;
-          const cp2y = currentY + (y - currentY) * 2 / 3;
+          const cp2x = currentX + ((x - currentX) * 2) / 3;
+          const cp2y = currentY + ((y - currentY) * 2) / 3;
 
           allPoints.push([cp1x * PIXEL_TO_WORLD, -cp1y * PIXEL_TO_WORLD, 0]);
           allPoints.push([cp2x * PIXEL_TO_WORLD, -cp2y * PIXEL_TO_WORLD, 0]);
@@ -194,8 +194,8 @@ export class GlyphVMobject extends VMobject {
           if (currentX !== contourStartX || currentY !== contourStartY) {
             const cp1x = currentX + (contourStartX - currentX) / 3;
             const cp1y = currentY + (contourStartY - currentY) / 3;
-            const cp2x = currentX + (contourStartX - currentX) * 2 / 3;
-            const cp2y = currentY + (contourStartY - currentY) * 2 / 3;
+            const cp2x = currentX + ((contourStartX - currentX) * 2) / 3;
+            const cp2y = currentY + ((contourStartY - currentY) * 2) / 3;
 
             allPoints.push([cp1x * PIXEL_TO_WORLD, -cp1y * PIXEL_TO_WORLD, 0]);
             allPoints.push([cp2x * PIXEL_TO_WORLD, -cp2y * PIXEL_TO_WORLD, 0]);
@@ -222,7 +222,8 @@ export class GlyphVMobject extends VMobject {
    *   or `null` if the glyph has no computable skeleton.
    */
   getSkeletonPath(options?: SkeletonizeOptions): number[][] | null {
-    if (this._skeletonPath !== null) return this._skeletonPath.length > 0 ? this._skeletonPath : null;
+    if (this._skeletonPath !== null)
+      return this._skeletonPath.length > 0 ? this._skeletonPath : null;
 
     if (this._outlinePoints.length < 4) {
       this._skeletonPath = [];
@@ -254,7 +255,7 @@ export class GlyphVMobject extends VMobject {
   protected override _createCopy(): GlyphVMobject {
     return new GlyphVMobject({
       glyph: this._glyph,
-      font: null as any, // font reference not needed for copy since points are already built
+      font: null as unknown as Font, // font reference not needed for copy since points are already built
       fontSize: this._glyphFontSize,
       color: this.color,
       strokeWidth: this.strokeWidth,

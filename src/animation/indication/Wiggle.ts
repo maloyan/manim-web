@@ -75,18 +75,16 @@ export class Wiggle extends Animation {
     this._initialPosition.copy(this.mobject.position);
 
     // Set up rotation axis
-    this._axisVector.set(
-      this.rotationAxis[0],
-      this.rotationAxis[1],
-      this.rotationAxis[2]
-    ).normalize();
+    this._axisVector
+      .set(this.rotationAxis[0], this.rotationAxis[1], this.rotationAxis[2])
+      .normalize();
 
     // Set up about point
     if (this.aboutPoint) {
       this._aboutPointVector = new THREE.Vector3(
         this.aboutPoint[0],
         this.aboutPoint[1],
-        this.aboutPoint[2]
+        this.aboutPoint[2],
       );
     } else {
       const center = this.mobject.getCenter();
@@ -107,10 +105,7 @@ export class Wiggle extends Animation {
     const currentAngle = Math.sin(wigglePhase) * this.rotationAngle * envelope;
 
     // Create rotation quaternion
-    const rotationQuat = new THREE.Quaternion().setFromAxisAngle(
-      this._axisVector,
-      currentAngle
-    );
+    const rotationQuat = new THREE.Quaternion().setFromAxisAngle(this._axisVector, currentAngle);
 
     // Apply rotation to initial quaternion
     const newQuat = new THREE.Quaternion().copy(this._initialQuaternion);
@@ -123,7 +118,7 @@ export class Wiggle extends Animation {
     this.mobject.scaleVector.set(
       this._initialScale.x * currentScaleFactor,
       this._initialScale.y * currentScaleFactor,
-      this._initialScale.z * currentScaleFactor
+      this._initialScale.z * currentScaleFactor,
     );
 
     // Handle rotation about a point

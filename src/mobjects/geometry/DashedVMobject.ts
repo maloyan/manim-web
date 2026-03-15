@@ -49,13 +49,7 @@ export class DashedVMobject extends Group {
   constructor(options: DashedVMobjectOptions) {
     super();
 
-    const {
-      vmobject,
-      numDashes = 15,
-      dashRatio = 0.5,
-      color,
-      strokeWidth,
-    } = options;
+    const { vmobject, numDashes = 15, dashRatio = 0.5, color, strokeWidth } = options;
 
     this._sourceVMobject = vmobject;
     this._numDashes = Math.max(1, Math.floor(numDashes));
@@ -104,11 +98,7 @@ export class DashedVMobject extends Group {
       const dashEndLength = Math.min(currentLength + dashLength, totalLength);
 
       // Get points for this dash
-      const dashPoints = this._getPointsInRange(
-        pathPoints,
-        dashStartLength,
-        dashEndLength
-      );
+      const dashPoints = this._getPointsInRange(pathPoints, dashStartLength, dashEndLength);
 
       if (dashPoints.length >= 2) {
         const dash = new VMobject();
@@ -136,7 +126,7 @@ export class DashedVMobject extends Group {
     let i = 0;
     const samplesPerSegment = Math.max(
       2,
-      Math.ceil(numSamples / Math.floor((points.length - 1) / 3))
+      Math.ceil(numSamples / Math.floor((points.length - 1) / 3)),
     );
 
     while (i + 3 < points.length) {
@@ -169,7 +159,7 @@ export class DashedVMobject extends Group {
     p1: number[],
     p2: number[],
     p3: number[],
-    t: number
+    t: number,
   ): number[] {
     const t2 = t * t;
     const t3 = t2 * t;
@@ -204,7 +194,7 @@ export class DashedVMobject extends Group {
   private _getPointsInRange(
     points: number[][],
     startLength: number,
-    endLength: number
+    endLength: number,
   ): number[][] {
     const result: number[][] = [];
     let currentLength = 0;

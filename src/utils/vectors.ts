@@ -38,7 +38,9 @@ export function scaleVec(scalar: number, vec: Vector3Tuple): Vector3Tuple {
  * ```
  */
 export function addVec(...vecs: Vector3Tuple[]): Vector3Tuple {
-  let x = 0, y = 0, z = 0;
+  let x = 0,
+    y = 0,
+    z = 0;
   for (const v of vecs) {
     x += v[0];
     y += v[1];
@@ -79,5 +81,5 @@ export function subVec(a: Vector3Tuple, b: Vector3Tuple): Vector3Tuple {
  */
 export function linspace(start: number, stop: number, num: number): number[] {
   if (num <= 1) return num === 1 ? [start] : [];
-  return Array.from({ length: num }, (_, i) => start + (stop - start) * i / (num - 1));
+  return Array.from({ length: num }, (_, i) => start + ((stop - start) * i) / (num - 1));
 }

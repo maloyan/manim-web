@@ -15,8 +15,4 @@ export {
 } from './SampleSpace';
 
 // Dice Face
-export {
-  DiceFace,
-  createDiceRow,
-  type DiceFaceOptions,
-} from './DiceFace';
+export { DiceFace, createDiceRow, type DiceFaceOptions } from './DiceFace';

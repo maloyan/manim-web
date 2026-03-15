@@ -16,7 +16,12 @@ import { lerp, lerpPoint } from '../../utils/math';
 /**
  * Compute the bounding box of a VMobject
  */
-function getBoundingBox(vmobject: VMobject): { min: Vector3Tuple; max: Vector3Tuple; center: Vector3Tuple; size: Vector3Tuple } {
+function getBoundingBox(vmobject: VMobject): {
+  min: Vector3Tuple;
+  max: Vector3Tuple;
+  center: Vector3Tuple;
+  size: Vector3Tuple;
+} {
   const points = vmobject.getPoints();
   if (points.length === 0) {
     const pos = vmobject.getCenter();
@@ -24,12 +29,16 @@ function getBoundingBox(vmobject: VMobject): { min: Vector3Tuple; max: Vector3Tu
       min: pos,
       max: pos,
       center: pos,
-      size: [0, 0, 0]
+      size: [0, 0, 0],
     };
   }
 
-  let minX = Infinity, minY = Infinity, minZ = Infinity;
-  let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+  let minX = Infinity,
+    minY = Infinity,
+    minZ = Infinity;
+  let maxX = -Infinity,
+    maxY = -Infinity,
+    maxZ = -Infinity;
 
   for (const p of points) {
     minX = Math.min(minX, p[0]);
@@ -44,7 +53,7 @@ function getBoundingBox(vmobject: VMobject): { min: Vector3Tuple; max: Vector3Tu
     min: [minX, minY, minZ],
     max: [maxX, maxY, maxZ],
     center: [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2],
-    size: [maxX - minX, maxY - minY, maxZ - minZ]
+    size: [maxX - minX, maxY - minY, maxZ - minZ],
   };
 }
 
@@ -87,8 +96,8 @@ function centerDistance(a: VMobject, b: VMobject): number {
   const centerB = getBoundingBox(b).center;
   return Math.sqrt(
     (centerA[0] - centerB[0]) ** 2 +
-    (centerA[1] - centerB[1]) ** 2 +
-    (centerA[2] - centerB[2]) ** 2
+      (centerA[1] - centerB[1]) ** 2 +
+      (centerA[2] - centerB[2]) ** 2,
   );
 }
 
@@ -158,11 +167,7 @@ export class TransformMatchingShapes extends Animation {
   /** Target parts that will fade in (no match in source) */
   private _fadeInParts: FadingPart[] = [];
 
-  constructor(
-    source: VMobject,
-    target: VMobject,
-    options: TransformMatchingShapesOptions = {}
-  ) {
+  constructor(source: VMobject, target: VMobject, options: TransformMatchingShapesOptions = {}) {
     super(source, options);
     this.target = target;
     this.matchThreshold = options.matchThreshold ?? 0.5;
@@ -174,7 +179,7 @@ export class TransformMatchingShapes extends Animation {
    * Get submobjects from a VMobject (or treat as single if no children)
    */
   private _getSubmobjects(vmobject: VMobject): VMobject[] {
-    const children = vmobject.children.filter(c => c instanceof VMobject) as VMobject[];
+    const children = vmobject.children.filter((c) => c instanceof VMobject) as VMobject[];
     if (children.length > 0) {
       return children;
     }
@@ -225,12 +230,10 @@ export class TransformMatchingShapes extends Animation {
       }
     } else {
       // Build similarity matrix and use Hungarian algorithm for optimal matching
-      const simMatrix: number[][] = Array.from(
-        { length: sourceSubmobs.length },
-        (_, si) => Array.from(
-          { length: targetSubmobs.length },
-          (_, ti) => shapeSimilarity(sourceSubmobs[si], targetSubmobs[ti])
-        )
+      const simMatrix: number[][] = Array.from({ length: sourceSubmobs.length }, (_, si) =>
+        Array.from({ length: targetSubmobs.length }, (_, ti) =>
+          shapeSimilarity(sourceSubmobs[si], targetSubmobs[ti]),
+        ),
       );
 
       const result = hungarianFromSimilarity(simMatrix, this.matchThreshold);
@@ -253,7 +256,7 @@ export class TransformMatchingShapes extends Animation {
           mobject: vmob,
           fadeIn: false,
           startOpacity: vmob.opacity,
-          targetOpacity: 0
+          targetOpacity: 0,
         });
       }
     }
@@ -276,7 +279,7 @@ export class TransformMatchingShapes extends Animation {
           mobject: copy,
           fadeIn: true,
           startOpacity: 0,
-          targetOpacity: vmob.opacity
+          targetOpacity: vmob.opacity,
         });
       }
     }
@@ -296,7 +299,7 @@ export class TransformMatchingShapes extends Animation {
       startPoints: srcCopy.getPoints(),
       targetPoints: tgtCopy.getPoints(),
       startOpacity: source.opacity,
-      targetOpacity: target.opacity
+      targetOpacity: target.opacity,
     });
 
     // Set source to have aligned points
@@ -364,7 +367,7 @@ export class TransformMatchingShapes extends Animation {
 export function transformMatchingShapes(
   source: VMobject,
   target: VMobject,
-  options?: TransformMatchingShapesOptions
+  options?: TransformMatchingShapesOptions,
 ): TransformMatchingShapes {
   return new TransformMatchingShapes(source, target, options);
 }
@@ -442,11 +445,7 @@ export class TransformMatchingTex extends Animation {
   /** Mismatched pairs that will transform (if transformMismatches is true) */
   private _mismatchedPairs: MatchedPart[] = [];
 
-  constructor(
-    source: VMobject,
-    target: VMobject,
-    options: TransformMatchingTexOptions = {}
-  ) {
+  constructor(source: VMobject, target: VMobject, options: TransformMatchingTexOptions = {}) {
     super(source, options);
     this.target = target;
     this.keyFunc = options.keyFunc ?? defaultTexKey;
@@ -459,7 +458,7 @@ export class TransformMatchingTex extends Animation {
    */
   private _getTexParts(vmobject: VMobject): VMobject[] {
     // If the mobject has children (like a VGroup of TeX parts), use those
-    const children = vmobject.children.filter(c => c instanceof VMobject) as VMobject[];
+    const children = vmobject.children.filter((c) => c instanceof VMobject) as VMobject[];
     if (children.length > 0) {
       // Recursively flatten nested groups
       const result: VMobject[] = [];
@@ -538,18 +537,20 @@ export class TransformMatchingTex extends Animation {
       }
     }
 
-    if (this.transformMismatches && unmatchedSourceIndices.length > 0 && unmatchedTargetIndices.length > 0) {
+    if (
+      this.transformMismatches &&
+      unmatchedSourceIndices.length > 0 &&
+      unmatchedTargetIndices.length > 0
+    ) {
       // Phase 2: Use Hungarian algorithm to optimally pair unmatched parts
       // by minimizing total center distance (closest parts get paired)
-      const unmatchedSources = unmatchedSourceIndices.map(i => sourceParts[i]);
-      const unmatchedTargets = unmatchedTargetIndices.map(i => targetParts[i]);
+      const unmatchedSources = unmatchedSourceIndices.map((i) => sourceParts[i]);
+      const unmatchedTargets = unmatchedTargetIndices.map((i) => targetParts[i]);
 
-      const costMatrix: number[][] = Array.from(
-        { length: unmatchedSources.length },
-        (_, si) => Array.from(
-          { length: unmatchedTargets.length },
-          (_, ti) => centerDistance(unmatchedSources[si], unmatchedTargets[ti])
-        )
+      const costMatrix: number[][] = Array.from({ length: unmatchedSources.length }, (_, si) =>
+        Array.from({ length: unmatchedTargets.length }, (_, ti) =>
+          centerDistance(unmatchedSources[si], unmatchedTargets[ti]),
+        ),
       );
 
       const result = hungarian(costMatrix);
@@ -574,7 +575,7 @@ export class TransformMatchingTex extends Animation {
             mobject: vmob,
             fadeIn: false,
             startOpacity: vmob.opacity,
-            targetOpacity: 0
+            targetOpacity: 0,
           });
         }
       }
@@ -593,7 +594,7 @@ export class TransformMatchingTex extends Animation {
           mobject: vmob,
           fadeIn: false,
           startOpacity: vmob.opacity,
-          targetOpacity: 0
+          targetOpacity: 0,
         });
       }
 
@@ -617,7 +618,7 @@ export class TransformMatchingTex extends Animation {
       startPoints: srcCopy.getPoints(),
       targetPoints: tgtCopy.getPoints(),
       startOpacity: source.opacity,
-      targetOpacity: target.opacity
+      targetOpacity: target.opacity,
     });
 
     source.setPoints(srcCopy.getPoints());
@@ -637,7 +638,7 @@ export class TransformMatchingTex extends Animation {
       startPoints: srcCopy.getPoints(),
       targetPoints: tgtCopy.getPoints(),
       startOpacity: source.opacity,
-      targetOpacity: target.opacity
+      targetOpacity: target.opacity,
     });
 
     source.setPoints(srcCopy.getPoints());
@@ -659,7 +660,7 @@ export class TransformMatchingTex extends Animation {
       mobject: copy,
       fadeIn: true,
       startOpacity: 0,
-      targetOpacity: vmob.opacity
+      targetOpacity: vmob.opacity,
     });
   }
 
@@ -746,7 +747,7 @@ export class TransformMatchingTex extends Animation {
 export function transformMatchingTex(
   source: VMobject,
   target: VMobject,
-  options?: TransformMatchingTexOptions
+  options?: TransformMatchingTexOptions,
 ): TransformMatchingTex {
   return new TransformMatchingTex(source, target, options);
 }

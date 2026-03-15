@@ -99,11 +99,7 @@ export class FocusOn extends Animation {
 
     for (let i = 0; i <= numSegments; i++) {
       const angle = (i / numSegments) * Math.PI * 2;
-      positions.push(
-        Math.cos(angle) * radius,
-        Math.sin(angle) * radius,
-        0
-      );
+      positions.push(Math.cos(angle) * radius, Math.sin(angle) * radius, 0);
     }
 
     const geometry = new LineGeometry();
@@ -128,11 +124,7 @@ export class FocusOn extends Animation {
 
     for (let i = 0; i <= numSegments; i++) {
       const angle = (i / numSegments) * Math.PI * 2;
-      positions.push(
-        Math.cos(angle) * radius,
-        Math.sin(angle) * radius,
-        0
-      );
+      positions.push(Math.cos(angle) * radius, Math.sin(angle) * radius, 0);
     }
 
     // Create new geometry
@@ -165,7 +157,7 @@ export class FocusOn extends Animation {
         let opacity: number;
         if (adjustedAlpha < 0.1) {
           // Fade in
-          opacity = adjustedAlpha / 0.1 * this.ringOpacity;
+          opacity = (adjustedAlpha / 0.1) * this.ringOpacity;
         } else if (adjustedAlpha > 0.8) {
           // Fade out
           opacity = (1 - (adjustedAlpha - 0.8) / 0.2) * this.ringOpacity;
@@ -254,7 +246,7 @@ export class Pulse extends Animation {
     this.mobject.scaleVector.set(
       this._originalScale.x * currentScale,
       this._originalScale.y * currentScale,
-      this._originalScale.z * currentScale
+      this._originalScale.z * currentScale,
     );
 
     this.mobject._markDirty();

@@ -6,5 +6,5 @@ export {
   LaggedStartMap,
   laggedStartMap,
   type LaggedStartMapOptions,
-  type AnimationClass
+  type AnimationClass,
 } from './LaggedStartMap';

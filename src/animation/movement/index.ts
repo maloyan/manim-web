@@ -1,11 +1,7 @@
 // Movement animations
 
 // Rotate
-export {
-  Rotate,
-  rotate,
-  type RotateOptions
-} from './Rotate';
+export { Rotate, rotate, type RotateOptions } from './Rotate';
 
 // Scale
 export {
@@ -14,7 +10,7 @@ export {
   GrowFromCenter,
   growFromCenter,
   type ScaleOptions,
-  type GrowFromCenterOptions
+  type GrowFromCenterOptions,
 } from './Scale';
 
 // Shift
@@ -25,15 +21,11 @@ export {
   moveToTargetPosition,
   type ShiftOptions,
   type MoveToTargetPositionOptions,
-  type MobjectWithTargetPosition
+  type MobjectWithTargetPosition,
 } from './Shift';
 
 // MoveAlongPath
-export {
-  MoveAlongPath,
-  moveAlongPath,
-  type MoveAlongPathOptions
-} from './MoveAlongPath';
+export { MoveAlongPath, moveAlongPath, type MoveAlongPathOptions } from './MoveAlongPath';
 
 // Homotopy animations
 export {
@@ -52,5 +44,5 @@ export {
   type HomotopyOptions,
   type ComplexHomotopyOptions,
   type SmoothedVectorizedHomotopyOptions,
-  type PhaseFlowOptions
+  type PhaseFlowOptions,
 } from './Homotopy';

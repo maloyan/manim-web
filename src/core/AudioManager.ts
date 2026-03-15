@@ -102,7 +102,7 @@ export class AudioManager {
 
   // -- Transport state -------------------------------------------------------
   private _isPlaying: boolean = false;
-  private _startedAt: number = 0;   // AudioContext.currentTime when play() was called
+  private _startedAt: number = 0; // AudioContext.currentTime when play() was called
   private _pauseOffset: number = 0; // timeline seconds elapsed before pause
 
   // -- Active source nodes (track id -> source) ------------------------------
@@ -292,10 +292,7 @@ export class AudioManager {
   setGlobalGain(value: number): void {
     this._ensureContext();
     if (this._masterGain) {
-      this._masterGain.gain.setValueAtTime(
-        Math.max(0, Math.min(1, value)),
-        this._ctx!.currentTime,
-      );
+      this._masterGain.gain.setValueAtTime(Math.max(0, Math.min(1, value)), this._ctx!.currentTime);
     }
   }
 
@@ -305,15 +302,12 @@ export class AudioManager {
    * @param value - Gain value (0 = silent, 1 = unity)
    */
   setTrackGain(trackId: number, value: number): void {
-    const track = this._tracks.find(t => t.id === trackId);
+    const track = this._tracks.find((t) => t.id === trackId);
     if (track) track.gain = value;
 
     const gainNode = this._activeGains.get(trackId);
     if (gainNode && this._ctx) {
-      gainNode.gain.setValueAtTime(
-        Math.max(0, Math.min(1, value)),
-        this._ctx.currentTime,
-      );
+      gainNode.gain.setValueAtTime(Math.max(0, Math.min(1, value)), this._ctx.currentTime);
     }
   }
 
@@ -328,11 +322,15 @@ export class AudioManager {
     // Stop if playing
     const source = this._activeSources.get(trackId);
     if (source) {
-      try { source.stop(); } catch { /* already stopped */ }
+      try {
+        source.stop();
+      } catch {
+        /* already stopped */
+      }
       this._activeSources.delete(trackId);
     }
     this._activeGains.delete(trackId);
-    this._tracks = this._tracks.filter(t => t.id !== trackId);
+    this._tracks = this._tracks.filter((t) => t.id !== trackId);
   }
 
   /**
@@ -481,13 +479,13 @@ export class AudioManager {
 
     // -- fmt sub-chunk --
     writeString(view, 12, 'fmt ');
-    view.setUint32(16, 16, true);            // sub-chunk size
-    view.setUint16(20, 1, true);             // PCM format
+    view.setUint32(16, 16, true); // sub-chunk size
+    view.setUint16(20, 1, true); // PCM format
     view.setUint16(22, numChannels, true);
     view.setUint32(24, sampleRate, true);
     view.setUint32(28, sampleRate * blockAlign, true); // byte rate
     view.setUint16(32, blockAlign, true);
-    view.setUint16(34, 16, true);            // bits per sample
+    view.setUint16(34, 16, true); // bits per sample
 
     // -- data sub-chunk --
     writeString(view, 36, 'data');
@@ -503,7 +501,7 @@ export class AudioManager {
     for (let i = 0; i < length; i++) {
       for (let ch = 0; ch < numChannels; ch++) {
         const sample = Math.max(-1, Math.min(1, channels[ch][i]));
-        const int16 = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        const int16 = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
         view.setInt16(offset, int16, true);
         offset += 2;
       }
@@ -595,7 +593,7 @@ export class AudioManager {
       let bufferOffset = track.offset;
       if (timelinePos > track.startTime) {
         // We're seeking into the middle of this track
-        bufferOffset += (timelinePos - track.startTime);
+        bufferOffset += timelinePos - track.startTime;
       }
 
       const remaining = track.duration - (bufferOffset - track.offset);
@@ -622,8 +620,12 @@ export class AudioManager {
    */
   private _stopAllSources(): void {
     for (const [id, source] of this._activeSources) {
-      try { source.stop(); } catch { /* already stopped */ }
-      const track = this._tracks.find(t => t.id === id);
+      try {
+        source.stop();
+      } catch {
+        /* already stopped */
+      }
+      const track = this._tracks.find((t) => t.id === id);
       if (track) {
         track.playing = false;
         track.paused = true;

@@ -4,16 +4,7 @@ import { Vector3Tuple } from '../../core/Mobject';
 import { Rectangle } from '../geometry/Rectangle';
 import { Text } from '../text/Text';
 import { Brace } from '../svg/Brace';
-import {
-  BLUE,
-  GREEN,
-  YELLOW,
-  RED,
-  PURPLE,
-  TEAL,
-  GOLD,
-  WHITE,
-} from '../../constants';
+import { BLUE, GREEN, YELLOW, RED, PURPLE, TEAL, GOLD, WHITE } from '../../constants';
 
 /**
  * Default color cycle used when no colors are specified for divisions.
@@ -362,7 +353,7 @@ export class SampleSpace extends VGroup {
     if (partitionIndex >= this._verticalPartitions.length) {
       throw new Error(
         `Partition index ${partitionIndex} out of range. ` +
-        `Only ${this._verticalPartitions.length} vertical partitions exist.`,
+          `Only ${this._verticalPartitions.length} vertical partitions exist.`,
       );
     }
 
@@ -440,7 +431,7 @@ export class SampleSpace extends VGroup {
     if (index < 0 || index >= this._verticalPartitions.length) {
       throw new Error(
         `Division index ${index} out of range. ` +
-        `Only ${this._verticalPartitions.length} vertical partitions exist.`,
+          `Only ${this._verticalPartitions.length} vertical partitions exist.`,
       );
     }
     return this._verticalPartitions[index];
@@ -455,7 +446,7 @@ export class SampleSpace extends VGroup {
     if (index < 0 || index >= this._horizontalPartitions.length) {
       throw new Error(
         `Horizontal division index ${index} out of range. ` +
-        `Only ${this._horizontalPartitions.length} horizontal partitions exist.`,
+          `Only ${this._horizontalPartitions.length} horizontal partitions exist.`,
       );
     }
     return this._horizontalPartitions[index];
@@ -475,7 +466,7 @@ export class SampleSpace extends VGroup {
     if (subIndex < 0 || subIndex >= subs.length) {
       throw new Error(
         `Subdivision index ${subIndex} out of range for partition ${partitionIndex}. ` +
-        `Only ${subs.length} subdivisions exist.`,
+          `Only ${subs.length} subdivisions exist.`,
       );
     }
     return subs[subIndex];
@@ -510,10 +501,7 @@ export class SampleSpace extends VGroup {
    * @param options - Font size and color overrides
    * @returns The created Text mobject
    */
-  addTitle(
-    text: string,
-    options: { fontSize?: number; color?: string; buff?: number } = {},
-  ): Text {
+  addTitle(text: string, options: { fontSize?: number; color?: string; buff?: number } = {}): Text {
     const { fontSize = this._fontSize * 1.2, color = WHITE, buff = 0.25 } = options;
 
     // Remove existing title
@@ -552,10 +540,7 @@ export class SampleSpace extends VGroup {
    * sampleSpace.addBracesAndLabels(["0.3", "0.7"]);
    * ```
    */
-  addBracesAndLabels(
-    labels: string[],
-    options: BraceAnnotationOptions = {},
-  ): this {
+  addBracesAndLabels(labels: string[], options: BraceAnnotationOptions = {}): this {
     const {
       direction = [0, -1, 0] as Vector3Tuple,
       fontSize = this._fontSize,
@@ -570,9 +555,8 @@ export class SampleSpace extends VGroup {
       this._braces = new VGroup();
     }
 
-    const partitions = this._verticalPartitions.length > 0
-      ? this._verticalPartitions
-      : this._horizontalPartitions;
+    const partitions =
+      this._verticalPartitions.length > 0 ? this._verticalPartitions : this._horizontalPartitions;
 
     for (let i = 0; i < partitions.length; i++) {
       const partition = partitions[i];

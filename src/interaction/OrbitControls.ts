@@ -47,11 +47,7 @@ export class OrbitControls {
    * @param canvas - The HTML canvas element for mouse events
    * @param options - Controls configuration options
    */
-  constructor(
-    camera: THREE.Camera,
-    canvas: HTMLCanvasElement,
-    options?: OrbitControlsOptions
-  ) {
+  constructor(camera: THREE.Camera, canvas: HTMLCanvasElement, options?: OrbitControlsOptions) {
     this._controls = new ThreeOrbitControls(camera, canvas);
 
     this._controls.enableDamping = options?.enableDamping ?? true;
@@ -214,10 +210,7 @@ export class OrbitControls {
    * @param event - Event type ('change', 'start', 'end')
    * @param callback - Callback function
    */
-  addEventListener(
-    event: 'change' | 'start' | 'end',
-    callback: () => void
-  ): void {
+  addEventListener(event: 'change' | 'start' | 'end', callback: () => void): void {
     this._controls.addEventListener(event, callback);
   }
 
@@ -226,10 +219,7 @@ export class OrbitControls {
    * @param event - Event type ('change', 'start', 'end')
    * @param callback - Callback function to remove
    */
-  removeEventListener(
-    event: 'change' | 'start' | 'end',
-    callback: () => void
-  ): void {
+  removeEventListener(event: 'change' | 'start' | 'end', callback: () => void): void {
     this._controls.removeEventListener(event, callback);
   }
 
