@@ -66,6 +66,11 @@ export default [
       "no-unreachable": "error",
       "no-constant-condition": "error",
       "no-empty": "error",
+
+      // Security: catch dangerous DOM/eval patterns
+      "no-eval": "error",
+      "no-implied-eval": "off",
+      "@typescript-eslint/no-implied-eval": "error",
     },
   },
 ];

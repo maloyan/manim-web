@@ -126,7 +126,11 @@ export class Circumscribe extends Animation {
     line.computeLineDistances();
 
     // Calculate total length for dash animation
-    const lineDistances = (line.geometry as any).attributes.lineDistance;
+    const lineDistances = (
+      line.geometry as unknown as {
+        attributes: { lineDistance?: { count: number; array: number[] } };
+      }
+    ).attributes.lineDistance;
     if (lineDistances && lineDistances.count > 0) {
       this._totalLength = lineDistances.array[lineDistances.count - 1] || 1;
     } else {
@@ -149,11 +153,21 @@ export class Circumscribe extends Animation {
 
     // Rectangle corners (centered at origin since group is at mobject center)
     return [
-      -hw, hh, 0,    // top-left
-      hw, hh, 0,     // top-right
-      hw, -hh, 0,    // bottom-right
-      -hw, -hh, 0,   // bottom-left
-      -hw, hh, 0,    // close back to top-left
+      -hw,
+      hh,
+      0, // top-left
+      hw,
+      hh,
+      0, // top-right
+      hw,
+      -hh,
+      0, // bottom-right
+      -hw,
+      -hh,
+      0, // bottom-left
+      -hw,
+      hh,
+      0, // close back to top-left
     ];
   }
 
@@ -166,11 +180,7 @@ export class Circumscribe extends Animation {
 
     for (let i = 0; i <= numSegments; i++) {
       const angle = (i / numSegments) * Math.PI * 2;
-      positions.push(
-        Math.cos(angle) * radius,
-        Math.sin(angle) * radius,
-        0
-      );
+      positions.push(Math.cos(angle) * radius, Math.sin(angle) * radius, 0);
     }
 
     return positions;

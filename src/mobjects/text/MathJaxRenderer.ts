@@ -46,14 +46,81 @@ export interface MathJaxRenderResult {
 }
 
 // ---------------------------------------------------------------------------
+// Window augmentation for global MathJax
+// ---------------------------------------------------------------------------
+
+interface MathJaxAdaptor {
+  outerHTML(node: unknown): string;
+  [key: string]: unknown;
+}
+
+interface MathJaxGlobal {
+  tex2svg?: (input: string, options?: Record<string, unknown>) => HTMLElement;
+  tex?: Record<string, unknown>;
+  svg?: Record<string, unknown>;
+  startup?: {
+    typeset?: boolean;
+    ready?: () => void;
+    defaultReady?: () => void;
+    adaptor?: MathJaxAdaptor;
+    output?: { fontCache?: { defs?: unknown } };
+  };
+}
+
+interface WindowWithMathJax {
+  MathJax: MathJaxGlobal;
+}
+
+// ---------------------------------------------------------------------------
+// Internal MathJax module state (discriminated union)
+// ---------------------------------------------------------------------------
+
+interface MathJaxModuleGlobal {
+  strategy: 'global';
+  MathJax: MathJaxGlobal;
+}
+
+/** Generic callable constructor for dynamic MathJax classes */
+type MathJaxConstructor = new (options: Record<string, unknown>) => Record<string, unknown>;
+
+interface MathJaxNpmMjModule {
+  mathjax: {
+    document: (
+      content: string,
+      options: Record<string, unknown>,
+    ) => {
+      convert: (input: string, options: Record<string, unknown>) => unknown;
+    };
+  };
+}
+
+interface MathJaxNpmTexModule {
+  TeX: MathJaxConstructor;
+}
+
+interface MathJaxNpmSvgModule {
+  SVG: MathJaxConstructor;
+}
+
+interface MathJaxModuleNpm {
+  strategy: 'npm';
+  mjModule: MathJaxNpmMjModule;
+  texModule: MathJaxNpmTexModule;
+  svgModule: MathJaxNpmSvgModule;
+  adaptor: MathJaxAdaptor;
+}
+
+type MathJaxModuleState = MathJaxModuleGlobal | MathJaxModuleNpm;
+
+// ---------------------------------------------------------------------------
 // Internal MathJax handle (lazy-loaded)
 // ---------------------------------------------------------------------------
 
 /** Cached MathJax module after first dynamic import */
-let _mathjaxModule: any = null;
+let _mathjaxModule: MathJaxModuleState | null = null;
 
 /** Promise for the in-flight import (prevents duplicate loads) */
-let _mathjaxLoadPromise: Promise<any> | null = null;
+let _mathjaxLoadPromise: Promise<MathJaxModuleState> | null = null;
 
 /**
  * Dynamically load MathJax's SVG output module.
@@ -62,7 +129,7 @@ let _mathjaxLoadPromise: Promise<any> | null = null;
  * without needing the global MathJax bootstrap. If that is not available we
  * fall back to loading via a CDN script tag.
  */
-async function loadMathJax(): Promise<any> {
+async function loadMathJax(): Promise<MathJaxModuleState> {
   if (_mathjaxModule) return _mathjaxModule;
   if (_mathjaxLoadPromise) return _mathjaxLoadPromise;
 
@@ -70,17 +137,26 @@ async function loadMathJax(): Promise<any> {
     // Strategy 1: try the npm package "mathjax-full"
     try {
       // Use Function constructor to hide specifiers from Vite's static analysis
-      const _import = new Function('s', 'return import(s)') as (s: string) => Promise<any>;
+      // eslint-disable-next-line @typescript-eslint/no-implied-eval
+      const _import = new Function('s', 'return import(s)') as (
+        s: string,
+      ) => Promise<Record<string, (...args: unknown[]) => unknown>>;
       const mjModule = await _import('mathjax-full/js/mathjax.js');
       const texModule = await _import('mathjax-full/js/input/tex-full.js');
       const svgModule = await _import('mathjax-full/js/output/svg.js');
       const liteAdaptor = await _import('mathjax-full/js/adaptors/liteAdaptor.js');
       const htmlHandler = await _import('mathjax-full/js/handlers/html.js');
 
-      const adaptor = liteAdaptor.liteAdaptor();
+      const adaptor = liteAdaptor.liteAdaptor() as unknown as MathJaxAdaptor;
       htmlHandler.RegisterHTMLHandler(adaptor);
 
-      _mathjaxModule = { mjModule, texModule, svgModule, adaptor, strategy: 'npm' as const };
+      _mathjaxModule = {
+        mjModule: mjModule as unknown as MathJaxNpmMjModule,
+        texModule: texModule as unknown as MathJaxNpmTexModule,
+        svgModule: svgModule as unknown as MathJaxNpmSvgModule,
+        adaptor,
+        strategy: 'npm' as const,
+      };
       return _mathjaxModule;
     } catch {
       // npm package not available -- fall through
@@ -88,7 +164,7 @@ async function loadMathJax(): Promise<any> {
 
     // Strategy 2: global MathJax loaded via <script> tag (CDN fallback)
     if (typeof window !== 'undefined') {
-      const win = window as any;
+      const win = window as unknown as WindowWithMathJax;
       if (win.MathJax && win.MathJax.tex2svg) {
         _mathjaxModule = { strategy: 'global' as const, MathJax: win.MathJax };
         return _mathjaxModule;
@@ -99,8 +175,14 @@ async function loadMathJax(): Promise<any> {
         // Configure before loading
         win.MathJax = {
           tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']],
-            displayMath: [['$$', '$$'], ['\\[', '\\]']],
+            inlineMath: [
+              ['$', '$'],
+              ['\\(', '\\)'],
+            ],
+            displayMath: [
+              ['$$', '$$'],
+              ['\\[', '\\]'],
+            ],
             packages: { '[+]': ['ams', 'newcommand', 'configmacros'] },
           },
           svg: {
@@ -109,7 +191,7 @@ async function loadMathJax(): Promise<any> {
           startup: {
             typeset: false,
             ready: () => {
-              win.MathJax.startup.defaultReady();
+              win.MathJax.startup?.defaultReady?.();
               resolve();
             },
           },
@@ -188,10 +270,14 @@ export async function renderLatexToSVG(
     // Merge custom macros
     if (Object.keys(macros).length > 0) {
       MathJax.tex = MathJax.tex || {};
-      MathJax.tex.macros = { ...MathJax.tex.macros, ...macros };
+      const existingMacros = (MathJax.tex.macros as Record<string, string> | undefined) ?? {};
+      MathJax.tex.macros = { ...existingMacros, ...macros };
     }
 
     // Render
+    if (!MathJax.tex2svg) {
+      throw new Error('MathJax.tex2svg is not available');
+    }
     const wrapper: HTMLElement = MathJax.tex2svg(texString, { display: displayMode });
     svgElement = wrapper.querySelector('svg')!;
 

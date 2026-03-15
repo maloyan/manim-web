@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  check:
-    name: Lint, Test, Typecheck
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,20 +16,70 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-package-lock
-      - name: Lint
-        run: npx eslint src/ || true
-      - name: Typecheck
-        run: npm run typecheck || true
-      - name: Test
+      - name: ESLint (errors block, warnings tracked)
+        run: npx eslint src/ --max-warnings 108
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-package-lock
+      - name: TypeScript type checking
+        run: npm run typecheck
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-package-lock
+      - name: Run tests with coverage
         run: npx vitest run --coverage
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           files: coverage/lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
-      - name: Validate AGENTS.md commands
-        run: |
-          npm run typecheck || true
-          npm run lint || true
-          npm test
-          npm run format:check || true
+
+  dead-exports:
+    name: Dead exports
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-package-lock
+      - name: Check for dead exports (knip)
+        run: npx knip --no-exit-code --reporter compact
+
+  circular-deps:
+    name: Circular imports
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-package-lock
+      - name: Check for circular imports (madge)
+        run: npx madge --circular --extensions ts src/ --warning
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-package-lock
+      - name: Check formatting
+        run: npm run format:check

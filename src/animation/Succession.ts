@@ -5,7 +5,7 @@
 import { Animation } from './Animation';
 import { AnimationGroup, AnimationGroupOptions } from './AnimationGroup';
 
-export interface SuccessionOptions extends Omit<AnimationGroupOptions, 'lagRatio'> {}
+export type SuccessionOptions = Omit<AnimationGroupOptions, 'lagRatio'>;
 
 /**
  * Create a Succession animation group.
@@ -14,13 +14,10 @@ export interface SuccessionOptions extends Omit<AnimationGroupOptions, 'lagRatio
  * @param animations Array of animations to play in sequence
  * @param options Animation options (rateFunc)
  */
-export function succession(
-  animations: Animation[],
-  options?: SuccessionOptions
-): AnimationGroup {
+export function succession(animations: Animation[], options?: SuccessionOptions): AnimationGroup {
   return new AnimationGroup(animations, {
     ...options,
-    lagRatio: 1
+    lagRatio: 1,
   });
 }
 
@@ -31,7 +28,7 @@ export class Succession extends AnimationGroup {
   constructor(animations: Animation[], options: SuccessionOptions = {}) {
     super(animations, {
       ...options,
-      lagRatio: 1
+      lagRatio: 1,
     });
   }
 }

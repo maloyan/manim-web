@@ -361,9 +361,7 @@ class CameraFrameStub extends Mobject {
 // CameraAnimateProxy - records desired state, builds CameraAnimation
 // ---------------------------------------------------------------------------
 
-export interface CameraAnimationOptions extends AnimationOptions {
-  // No additional options needed; AnimationOptions provides duration + rateFunc.
-}
+export type CameraAnimationOptions = AnimationOptions;
 
 /**
  * Fluent builder returned by `CameraFrame.animate`.
@@ -381,7 +379,10 @@ export class CameraAnimateProxy extends Animation {
   private _startState!: CameraFrameState;
 
   constructor(frame: CameraFrame, options: CameraAnimationOptions = {}) {
-    super(frame.mobjectStub, { duration: options.duration ?? 1, rateFunc: options.rateFunc ?? smooth });
+    super(frame.mobjectStub, {
+      duration: options.duration ?? 1,
+      rateFunc: options.rateFunc ?? smooth,
+    });
     this._frame = frame;
   }
 
@@ -458,11 +459,12 @@ export class CameraAnimateProxy extends Animation {
     const start = this._startState;
 
     // Compute target state from start + deltas + absolutes
-    const targetTheta = this._absolute.theta ?? (start.theta + (this._targetDelta.theta ?? 0));
-    const targetPhi = this._absolute.phi ?? (start.phi + (this._targetDelta.phi ?? 0));
-    const targetGamma = this._absolute.gamma ?? (start.gamma + (this._targetDelta.gamma ?? 0));
-    const targetDistance = this._absolute.distance ?? (start.distance + (this._targetDelta.distance ?? 0));
-    const targetFov = this._absolute.fov ?? (start.fov + (this._targetDelta.fov ?? 0));
+    const targetTheta = this._absolute.theta ?? start.theta + (this._targetDelta.theta ?? 0);
+    const targetPhi = this._absolute.phi ?? start.phi + (this._targetDelta.phi ?? 0);
+    const targetGamma = this._absolute.gamma ?? start.gamma + (this._targetDelta.gamma ?? 0);
+    const targetDistance =
+      this._absolute.distance ?? start.distance + (this._targetDelta.distance ?? 0);
+    const targetFov = this._absolute.fov ?? start.fov + (this._targetDelta.fov ?? 0);
     const targetCenter = this._absolute.center ?? start.center;
 
     // Linearly interpolate every property

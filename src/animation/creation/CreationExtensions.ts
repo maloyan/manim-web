@@ -9,6 +9,24 @@ import { Animation, AnimationOptions } from '../Animation';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 
+/** Interface for mobjects that support getText/setText */
+interface TextLikeMobject {
+  getText(): string;
+  setText(text: string): void;
+}
+
+/** Type guard for text-like mobjects */
+function hasTextMethods(obj: unknown): obj is TextLikeMobject {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'getText' in obj &&
+    typeof (obj as TextLikeMobject).getText === 'function' &&
+    'setText' in obj &&
+    typeof (obj as TextLikeMobject).setText === 'function'
+  );
+}
+
 /**
  * AddTextWordByWord options
  */
@@ -33,30 +51,24 @@ export class AddTextWordByWord extends Animation {
 
   override begin(): void {
     super.begin();
-    if ('getText' in this.mobject && typeof (this.mobject as any).getText === 'function') {
-      this._fullText = (this.mobject as any).getText();
-      this._words = this._fullText.split(/\s+/).filter(w => w.length > 0);
-      if ('setText' in this.mobject && typeof (this.mobject as any).setText === 'function') {
-        (this.mobject as any).setText('');
-      }
+    if (hasTextMethods(this.mobject)) {
+      this._fullText = this.mobject.getText();
+      this._words = this._fullText.split(/\s+/).filter((w) => w.length > 0);
+      this.mobject.setText('');
     }
   }
 
   interpolate(alpha: number): void {
-    if (
-      'setText' in this.mobject &&
-      typeof (this.mobject as any).setText === 'function' &&
-      this._words.length > 0
-    ) {
+    if (hasTextMethods(this.mobject) && this._words.length > 0) {
       const numWords = Math.floor(alpha * this._words.length);
       const text = this._words.slice(0, numWords).join(' ');
-      (this.mobject as any).setText(text);
+      this.mobject.setText(text);
     }
   }
 
   override finish(): void {
-    if ('setText' in this.mobject && typeof (this.mobject as any).setText === 'function') {
-      (this.mobject as any).setText(this._fullText);
+    if (hasTextMethods(this.mobject)) {
+      this.mobject.setText(this._fullText);
     }
     super.finish();
   }
@@ -67,7 +79,7 @@ export class AddTextWordByWord extends Animation {
  */
 export function addTextWordByWord(
   mobject: Mobject,
-  options?: AddTextWordByWordOptions
+  options?: AddTextWordByWordOptions,
 ): AddTextWordByWord {
   return new AddTextWordByWord(mobject, options);
 }
@@ -97,10 +109,10 @@ export class ShowIncreasingSubsets extends Animation {
 
     // Get all submobjects
     this._submobjects = [...this.mobject.children];
-    this._originalOpacities = this._submobjects.map(m => m.opacity);
+    this._originalOpacities = this._submobjects.map((m) => m.opacity);
 
     // Hide all submobjects initially
-    this._submobjects.forEach(m => m.setOpacity(0));
+    this._submobjects.forEach((m) => m.setOpacity(0));
   }
 
   interpolate(alpha: number): void {
@@ -111,7 +123,7 @@ export class ShowIncreasingSubsets extends Animation {
         this._submobjects[i].setOpacity(this._originalOpacities[i]);
       } else if (i === numToShow && alpha < 1) {
         // Partially show the current one
-        const localAlpha = (alpha * this._submobjects.length) - numToShow;
+        const localAlpha = alpha * this._submobjects.length - numToShow;
         this._submobjects[i].setOpacity(this._originalOpacities[i] * localAlpha);
       } else {
         this._submobjects[i].setOpacity(0);
@@ -131,7 +143,7 @@ export class ShowIncreasingSubsets extends Animation {
  */
 export function showIncreasingSubsets(
   mobject: Mobject,
-  options?: ShowIncreasingSubsetsOptions
+  options?: ShowIncreasingSubsetsOptions,
 ): ShowIncreasingSubsets {
   return new ShowIncreasingSubsets(mobject, options);
 }
@@ -175,7 +187,11 @@ export class ShowPartial extends Animation {
           material.dashScale = 1;
 
           child.computeLineDistances();
-          const lineDistances = (child.geometry as any).attributes.lineDistance;
+          const lineDistances = (
+            child.geometry as unknown as {
+              attributes: { lineDistance?: { count: number; array: number[] } };
+            }
+          ).attributes.lineDistance;
           if (lineDistances && lineDistances.count > 0) {
             this._totalLength = lineDistances.array[lineDistances.count - 1] || 1;
           }
@@ -228,17 +244,14 @@ export class ShowPartial extends Animation {
 /**
  * Create a ShowPartial animation.
  */
-export function showPartial(
-  mobject: Mobject,
-  options?: ShowPartialOptions
-): ShowPartial {
+export function showPartial(mobject: Mobject, options?: ShowPartialOptions): ShowPartial {
   return new ShowPartial(mobject, options);
 }
 
 /**
  * ShowSubmobjectsOneByOne options
  */
-export interface ShowSubmobjectsOneByOneOptions extends AnimationOptions {}
+export type ShowSubmobjectsOneByOneOptions = AnimationOptions;
 
 /**
  * ShowSubmobjectsOneByOne - shows each submobject one at a time.
@@ -257,17 +270,17 @@ export class ShowSubmobjectsOneByOne extends Animation {
     super.begin();
 
     this._submobjects = [...this.mobject.children];
-    this._originalOpacities = this._submobjects.map(m => m.opacity);
+    this._originalOpacities = this._submobjects.map((m) => m.opacity);
 
     // Hide all submobjects initially
-    this._submobjects.forEach(m => m.setOpacity(0));
+    this._submobjects.forEach((m) => m.setOpacity(0));
     this._currentIndex = -1;
   }
 
   interpolate(alpha: number): void {
     const newIndex = Math.min(
       Math.floor(alpha * this._submobjects.length),
-      this._submobjects.length - 1
+      this._submobjects.length - 1,
     );
 
     if (newIndex !== this._currentIndex) {
@@ -279,7 +292,9 @@ export class ShowSubmobjectsOneByOne extends Animation {
       // Show current
       this._currentIndex = newIndex;
       if (this._currentIndex >= 0 && this._currentIndex < this._submobjects.length) {
-        this._submobjects[this._currentIndex].setOpacity(this._originalOpacities[this._currentIndex]);
+        this._submobjects[this._currentIndex].setOpacity(
+          this._originalOpacities[this._currentIndex],
+        );
       }
     }
   }
@@ -302,7 +317,7 @@ export class ShowSubmobjectsOneByOne extends Animation {
  */
 export function showSubmobjectsOneByOne(
   mobject: Mobject,
-  options?: ShowSubmobjectsOneByOneOptions
+  options?: ShowSubmobjectsOneByOneOptions,
 ): ShowSubmobjectsOneByOne {
   return new ShowSubmobjectsOneByOne(mobject, options);
 }
@@ -343,7 +358,7 @@ export class SpiralIn extends Animation {
     this._centerPoint.set(
       (bounds.min.x + bounds.max.x) / 2,
       (bounds.min.y + bounds.max.y) / 2,
-      (bounds.min.z + bounds.max.z) / 2
+      (bounds.min.z + bounds.max.z) / 2,
     );
 
     // Store target positions and scales for all children (or the mobject itself)
@@ -374,7 +389,7 @@ export class SpiralIn extends Animation {
       m.scaleVector.set(
         targetScale.x * currentScale,
         targetScale.y * currentScale,
-        targetScale.z * currentScale
+        targetScale.z * currentScale,
       );
 
       // Position: spiral from center to target
@@ -391,7 +406,7 @@ export class SpiralIn extends Animation {
       m.position.set(
         this._centerPoint.x + rotatedX * alpha,
         this._centerPoint.y + rotatedY * alpha,
-        this._centerPoint.z + (targetPos.z - this._centerPoint.z) * alpha
+        this._centerPoint.z + (targetPos.z - this._centerPoint.z) * alpha,
       );
 
       m._markDirty();
