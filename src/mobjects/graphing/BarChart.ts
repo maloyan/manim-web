@@ -120,6 +120,7 @@ export class BarChart extends Group {
   protected _seriesNames: string[];
   protected _showLegend: boolean;
 
+  // eslint-disable-next-line complexity
   constructor(options: BarChartOptions) {
     super();
 

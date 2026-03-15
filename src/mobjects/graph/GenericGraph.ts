@@ -61,6 +61,7 @@ export class GenericGraph extends Mobject {
   /** Three.js group for this graph */
   protected _group: THREE.Group | null = null;
 
+  // eslint-disable-next-line complexity
   constructor(options: GenericGraphOptions = {}) {
     super();
 

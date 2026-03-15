@@ -92,6 +92,7 @@ export const MONOKAI_COLOR_SCHEME: CodeColorScheme = {
  * @param language - The programming language (lowercase)
  * @returns Array of tokens with type and text
  */
+// eslint-disable-next-line complexity
 export function tokenizeLine(line: string, language: string): Token[] {
   const tokens: Token[] = [];
   const keywords = LANGUAGE_KEYWORDS[language] || [];

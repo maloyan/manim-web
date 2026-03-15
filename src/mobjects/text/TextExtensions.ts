@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';

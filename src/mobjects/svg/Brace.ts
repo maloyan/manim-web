@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { VMobject } from '../../core/VMobject';
 import { Mobject, Vector3Tuple, DOWN } from '../../core/Mobject';
 import { Group } from '../../core/Group';
@@ -264,47 +265,47 @@ export class Brace extends VMobject {
     const rArmStart = pt(rArmEnd, -armLen, 0);
 
     // Centerline control points
-    const c1_h1 = pt(start, curlW * 0.3, CURL_HEIGHT * 0.85);
-    const c1_h2 = pt(start, curlW * 0.78, CURL_HEIGHT * 1.0);
-    const c2_h1 = pt(lArmStart, armLen / 3, 0);
-    const c2_h2 = pt(lArmStart, (armLen * 2) / 3, 0);
-    const c3_h1 = pt(lArmEnd, tipTransW * 0.55, tipProt * 0.05);
-    const c3_h2: number[] = [
+    const c1H1 = pt(start, curlW * 0.3, CURL_HEIGHT * 0.85);
+    const c1H2 = pt(start, curlW * 0.78, CURL_HEIGHT * 1.0);
+    const c2H1 = pt(lArmStart, armLen / 3, 0);
+    const c2H2 = pt(lArmStart, (armLen * 2) / 3, 0);
+    const c3H1 = pt(lArmEnd, tipTransW * 0.55, tipProt * 0.05);
+    const c3H2: number[] = [
       this._tipPoint[0] - t[0] * tipTransW * 0.02 - n[0] * tipProt * 0.45,
       this._tipPoint[1] - t[1] * tipTransW * 0.02 - n[1] * tipProt * 0.45,
       this._tipPoint[2],
     ];
-    const c4_h1: number[] = [
+    const c4H1: number[] = [
       this._tipPoint[0] + t[0] * tipTransW * 0.02 - n[0] * tipProt * 0.45,
       this._tipPoint[1] + t[1] * tipTransW * 0.02 - n[1] * tipProt * 0.45,
       this._tipPoint[2],
     ];
-    const c4_h2 = pt(rArmStart, -tipTransW * 0.55, tipProt * 0.05);
-    const c5_h1 = pt(rArmStart, armLen / 3, 0);
-    const c5_h2 = pt(rArmStart, (armLen * 2) / 3, 0);
-    const c6_h1 = pt(end, -curlW * 0.78, CURL_HEIGHT * 1.0);
-    const c6_h2 = pt(end, -curlW * 0.3, CURL_HEIGHT * 0.85);
+    const c4H2 = pt(rArmStart, -tipTransW * 0.55, tipProt * 0.05);
+    const c5H1 = pt(rArmStart, armLen / 3, 0);
+    const c5H2 = pt(rArmStart, (armLen * 2) / 3, 0);
+    const c6H1 = pt(end, -curlW * 0.78, CURL_HEIGHT * 1.0);
+    const c6H2 = pt(end, -curlW * 0.3, CURL_HEIGHT * 0.85);
 
     // All 19 centerline points
     const cl: number[][] = [
       [...start],
-      c1_h1,
-      c1_h2,
+      c1H1,
+      c1H2,
       lArmStart,
-      c2_h1,
-      c2_h2,
+      c2H1,
+      c2H2,
       lArmEnd,
-      c3_h1,
-      c3_h2,
+      c3H1,
+      c3H2,
       [...this._tipPoint],
-      c4_h1,
-      c4_h2,
+      c4H1,
+      c4H2,
       rArmStart,
-      c5_h1,
-      c5_h2,
+      c5H1,
+      c5H2,
       rArmEnd,
-      c6_h1,
-      c6_h2,
+      c6H1,
+      c6H2,
       [...end],
     ];
 
@@ -609,47 +610,47 @@ export class BraceBetweenPoints extends VMobject {
     const rArmEnd = pt(end, -curlW, CURL_HEIGHT);
     const rArmStart = pt(rArmEnd, -armLen, 0);
 
-    const c1_h1 = pt(start, curlW * 0.3, CURL_HEIGHT * 0.85);
-    const c1_h2 = pt(start, curlW * 0.78, CURL_HEIGHT * 1.0);
-    const c2_h1 = pt(lArmStart, armLen / 3, 0);
-    const c2_h2 = pt(lArmStart, (armLen * 2) / 3, 0);
-    const c3_h1 = pt(lArmEnd, tipTransW * 0.55, tipProt * 0.05);
-    const c3_h2: number[] = [
+    const c1H1 = pt(start, curlW * 0.3, CURL_HEIGHT * 0.85);
+    const c1H2 = pt(start, curlW * 0.78, CURL_HEIGHT * 1.0);
+    const c2H1 = pt(lArmStart, armLen / 3, 0);
+    const c2H2 = pt(lArmStart, (armLen * 2) / 3, 0);
+    const c3H1 = pt(lArmEnd, tipTransW * 0.55, tipProt * 0.05);
+    const c3H2: number[] = [
       this._tipPoint[0] - t[0] * tipTransW * 0.02 - n[0] * tipProt * 0.45,
       this._tipPoint[1] - t[1] * tipTransW * 0.02 - n[1] * tipProt * 0.45,
       this._tipPoint[2],
     ];
-    const c4_h1: number[] = [
+    const c4H1: number[] = [
       this._tipPoint[0] + t[0] * tipTransW * 0.02 - n[0] * tipProt * 0.45,
       this._tipPoint[1] + t[1] * tipTransW * 0.02 - n[1] * tipProt * 0.45,
       this._tipPoint[2],
     ];
-    const c4_h2 = pt(rArmStart, -tipTransW * 0.55, tipProt * 0.05);
-    const c5_h1 = pt(rArmStart, armLen / 3, 0);
-    const c5_h2 = pt(rArmStart, (armLen * 2) / 3, 0);
-    const c6_h1 = pt(end, -curlW * 0.78, CURL_HEIGHT * 1.0);
-    const c6_h2 = pt(end, -curlW * 0.3, CURL_HEIGHT * 0.85);
+    const c4H2 = pt(rArmStart, -tipTransW * 0.55, tipProt * 0.05);
+    const c5H1 = pt(rArmStart, armLen / 3, 0);
+    const c5H2 = pt(rArmStart, (armLen * 2) / 3, 0);
+    const c6H1 = pt(end, -curlW * 0.78, CURL_HEIGHT * 1.0);
+    const c6H2 = pt(end, -curlW * 0.3, CURL_HEIGHT * 0.85);
 
     // All 19 centerline points
     const cl: number[][] = [
       [...start],
-      c1_h1,
-      c1_h2,
+      c1H1,
+      c1H2,
       lArmStart,
-      c2_h1,
-      c2_h2,
+      c2H1,
+      c2H2,
       lArmEnd,
-      c3_h1,
-      c3_h2,
+      c3H1,
+      c3H2,
       [...this._tipPoint],
-      c4_h1,
-      c4_h2,
+      c4H1,
+      c4H2,
       rArmStart,
-      c5_h1,
-      c5_h2,
+      c5H1,
+      c5H2,
       rArmEnd,
-      c6_h1,
-      c6_h2,
+      c6H1,
+      c6H2,
       [...end],
     ];
 

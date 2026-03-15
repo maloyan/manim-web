@@ -57,7 +57,7 @@ export class ApplyPointwiseFunction extends Animation {
     super.begin();
 
     this._snapshots = [];
-    const _v = new THREE.Vector3();
+    const vec = new THREE.Vector3();
 
     for (const mob of this.mobject.getFamily()) {
       if (isVMobjectLike(mob)) {
@@ -82,10 +82,10 @@ export class ApplyPointwiseFunction extends Animation {
         if (worldMatrix && inverseWorld) {
           // Transform local → world, apply func, then world → local
           targetPoints = startPoints.map((p) => {
-            _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
-            const worldResult = this.func([_v.x, _v.y, _v.z]);
-            _v.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
-            return [_v.x, _v.y, _v.z];
+            vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
+            const worldResult = this.func([vec.x, vec.y, vec.z]);
+            vec.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
+            return [vec.x, vec.y, vec.z];
           });
         } else {
           targetPoints = startPoints.map((p) => this.func([...p]));

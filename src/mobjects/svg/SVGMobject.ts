@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /**
  * SVGMobject - Parse and display SVG files/strings as VMobjects.
  * Converts SVG paths to Bezier curves that can be animated.
@@ -52,6 +53,7 @@ export interface VMobjectFromSVGPathOptions {
 /**
  * Parse a single SVG path d attribute into Bezier control points.
  */
+// eslint-disable-next-line complexity
 function parseSVGPath(d: string): SVGPoint[][] {
   const paths: SVGPoint[][] = [];
   let currentPath: SVGPoint[] = [];
@@ -601,6 +603,7 @@ export class SVGMobject extends VGroup {
     }
   }
 
+  // eslint-disable-next-line complexity
   private _parseSVG(
     svgString: string,
     defaultColor: string,

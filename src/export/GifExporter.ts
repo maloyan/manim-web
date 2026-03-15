@@ -26,6 +26,7 @@ export class GifExporter {
   private _scene: ExportableScene;
   private _options: Required<GifExportOptions>;
 
+  // eslint-disable-next-line complexity
   constructor(scene: ExportableScene, options?: GifExportOptions) {
     this._scene = scene;
     this._options = {

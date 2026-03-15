@@ -37,7 +37,7 @@ export interface LaggedStartMapOptions<
  * Create a LaggedStartMap animation group.
  * Applies an animation class to each mobject with staggered start times.
  *
- * @param AnimClass The animation class to instantiate (e.g., FadeIn, Create)
+ * @param animClass The animation class to instantiate (e.g., FadeIn, Create)
  * @param mobjects Array of mobjects to animate
  * @param options Options including lagRatio and animation-specific options
  *
@@ -54,14 +54,14 @@ export interface LaggedStartMapOptions<
  * ```
  */
 export function laggedStartMap<T extends AnimationOptions = AnimationOptions>(
-  AnimClass: AnimationClass<T>,
+  animClass: AnimationClass<T>,
   mobjects: Mobject[],
   options?: LaggedStartMapOptions<T>,
 ): AnimationGroup {
   const { lagRatio = 0.2, animOptions, ...groupOptions } = options ?? {};
 
   // Create an animation instance for each mobject
-  const animations = mobjects.map((mobject) => new AnimClass(mobject, animOptions));
+  const animations = mobjects.map((mobject) => new animClass(mobject, animOptions));
 
   return new AnimationGroup(animations, {
     ...groupOptions,
@@ -74,14 +74,14 @@ export function laggedStartMap<T extends AnimationOptions = AnimationOptions>(
  */
 export class LaggedStartMap<T extends AnimationOptions = AnimationOptions> extends AnimationGroup {
   constructor(
-    AnimClass: AnimationClass<T>,
+    animClass: AnimationClass<T>,
     mobjects: Mobject[],
     options: LaggedStartMapOptions<T> = {},
   ) {
     const { lagRatio = 0.2, animOptions, ...groupOptions } = options;
 
     // Create an animation instance for each mobject
-    const animations = mobjects.map((mobject) => new AnimClass(mobject, animOptions));
+    const animations = mobjects.map((mobject) => new animClass(mobject, animOptions));
 
     super(animations, {
       ...groupOptions,

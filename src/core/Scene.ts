@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import * as THREE from 'three';
 import { Renderer, RendererOptions } from './Renderer';
 import { Camera2D, CameraOptions } from './Camera';
@@ -1171,6 +1172,7 @@ export class Scene {
    * });
    * ```
    */
+  // eslint-disable-next-line complexity
   async export(filename: string, options?: SceneExportOptions): Promise<Blob> {
     const ext = filename.slice(filename.lastIndexOf('.')).toLowerCase();
 

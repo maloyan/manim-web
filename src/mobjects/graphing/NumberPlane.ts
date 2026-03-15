@@ -61,6 +61,7 @@ export class NumberPlane extends Axes {
   private _fadingFactor: number;
   private _backgroundLines: Group;
 
+  // eslint-disable-next-line complexity
   constructor(options: NumberPlaneOptions = {}) {
     const {
       includeBackgroundLines = true,
@@ -117,6 +118,7 @@ export class NumberPlane extends Axes {
   /**
    * Generate the background grid lines
    */
+  // eslint-disable-next-line complexity
   private _generateBackgroundLines(): void {
     const [xMin, xMax, xStep] = this._xRange;
     const [yMin, yMax, yStep] = this._yRange;

@@ -79,6 +79,7 @@ export class VideoExporter {
    * @param scene - The scene to export
    * @param options - Export options
    */
+  // eslint-disable-next-line complexity
   constructor(scene: ExportableScene, options?: VideoExportOptions) {
     this._scene = scene;
     this._options = {

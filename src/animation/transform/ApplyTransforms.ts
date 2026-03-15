@@ -32,7 +32,7 @@ interface ChildSnapshot {
   targetPoints: number[][];
 }
 
-function _reconstructArrowTips(mobject: Mobject): void {
+function reconstructArrowTips(mobject: Mobject): void {
   for (const mob of mobject.getFamily()) {
     if (mob instanceof Arrow) mob.reconstructTip();
     else if (mob instanceof DoubleArrow) mob.reconstructTips();
@@ -65,7 +65,7 @@ export class ApplyFunction extends Animation {
     super.begin();
 
     this._snapshots = [];
-    const _v = new THREE.Vector3();
+    const vec = new THREE.Vector3();
 
     for (const mob of this.mobject.getFamily()) {
       if (isVMobjectLike(mob)) {
@@ -85,10 +85,10 @@ export class ApplyFunction extends Animation {
         let targetPoints: number[][];
         if (worldMatrix && inverseWorld) {
           targetPoints = startPoints.map((p) => {
-            _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
-            const worldResult = this.func([_v.x, _v.y, _v.z]);
-            _v.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
-            return [_v.x, _v.y, _v.z];
+            vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
+            const worldResult = this.func([vec.x, vec.y, vec.z]);
+            vec.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
+            return [vec.x, vec.y, vec.z];
           });
         } else {
           targetPoints = startPoints.map((p) => this.func([...p]));
@@ -107,7 +107,7 @@ export class ApplyFunction extends Animation {
       }
       snap.mob.setPoints(interpolated);
     }
-    _reconstructArrowTips(this.mobject);
+    reconstructArrowTips(this.mobject);
     this.mobject._markDirtyUpward();
   }
 
@@ -115,7 +115,7 @@ export class ApplyFunction extends Animation {
     for (const snap of this._snapshots) {
       snap.mob.setPoints(snap.targetPoints);
     }
-    _reconstructArrowTips(this.mobject);
+    reconstructArrowTips(this.mobject);
     this.mobject._markDirtyUpward();
     super.finish();
   }
@@ -163,7 +163,7 @@ export class ApplyComplexFunction extends Animation {
     super.begin();
 
     this._snapshots = [];
-    const _v = new THREE.Vector3();
+    const vec = new THREE.Vector3();
 
     for (const mob of this.mobject.getFamily()) {
       if (isVMobjectLike(mob)) {
@@ -183,11 +183,11 @@ export class ApplyComplexFunction extends Animation {
         let targetPoints: number[][];
         if (worldMatrix && inverseWorld) {
           targetPoints = startPoints.map((p) => {
-            _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
-            const z: Complex = { re: _v.x, im: _v.y };
+            vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
+            const z: Complex = { re: vec.x, im: vec.y };
             const result = this.func(z);
-            _v.set(result.re, result.im, _v.z).applyMatrix4(inverseWorld!);
-            return [_v.x, _v.y, _v.z];
+            vec.set(result.re, result.im, vec.z).applyMatrix4(inverseWorld!);
+            return [vec.x, vec.y, vec.z];
           });
         } else {
           targetPoints = startPoints.map((p) => {
@@ -210,7 +210,7 @@ export class ApplyComplexFunction extends Animation {
       }
       snap.mob.setPoints(interpolated);
     }
-    _reconstructArrowTips(this.mobject);
+    reconstructArrowTips(this.mobject);
     this.mobject._markDirtyUpward();
   }
 
@@ -218,7 +218,7 @@ export class ApplyComplexFunction extends Animation {
     for (const snap of this._snapshots) {
       snap.mob.setPoints(snap.targetPoints);
     }
-    _reconstructArrowTips(this.mobject);
+    reconstructArrowTips(this.mobject);
     this.mobject._markDirtyUpward();
     super.finish();
   }
@@ -322,7 +322,7 @@ export class ApplyMatrix extends Animation {
     super.begin();
 
     this._snapshots = [];
-    const _v = new THREE.Vector3();
+    const vec = new THREE.Vector3();
 
     for (const mob of this.mobject.getFamily()) {
       if (isVMobjectLike(mob)) {
@@ -342,10 +342,10 @@ export class ApplyMatrix extends Animation {
         let targetPoints: number[][];
         if (worldMatrix && inverseWorld) {
           targetPoints = startPoints.map((p) => {
-            _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
-            const worldResult = this._transformPoint([_v.x, _v.y, _v.z]);
-            _v.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
-            return [_v.x, _v.y, _v.z];
+            vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
+            const worldResult = this._transformPoint([vec.x, vec.y, vec.z]);
+            vec.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
+            return [vec.x, vec.y, vec.z];
           });
         } else {
           targetPoints = startPoints.map((p) => this._transformPoint(p));
@@ -403,7 +403,7 @@ export class ApplyMatrix extends Animation {
       }
       snap.mob.setPoints(interpolated);
     }
-    _reconstructArrowTips(this.mobject);
+    reconstructArrowTips(this.mobject);
     this.mobject._markDirtyUpward();
   }
 
@@ -411,7 +411,7 @@ export class ApplyMatrix extends Animation {
     for (const snap of this._snapshots) {
       snap.mob.setPoints(snap.targetPoints);
     }
-    _reconstructArrowTips(this.mobject);
+    reconstructArrowTips(this.mobject);
     this.mobject._markDirtyUpward();
     super.finish();
   }

@@ -178,6 +178,7 @@ export class ImplicitFunction extends VMobject {
    * the current depth is below maxDepth, subdivide it into 4 sub-cells.
    * Otherwise, emit marching-squares segments for this cell.
    */
+  // eslint-disable-next-line complexity
   private _processCell(
     cellX: number,
     cellY: number,

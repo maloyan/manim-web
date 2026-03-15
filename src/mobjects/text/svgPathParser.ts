@@ -83,6 +83,7 @@ function tokenizePath(d: string): Array<{ cmd: string; args: number[] }> {
  * Returns an array of sub-paths, where each sub-path is an array of Vec2 points
  * laid out as: [anchor, handle1, handle2, anchor, handle3, handle4, anchor, ...].
  */
+// eslint-disable-next-line complexity
 export function parseSVGPathData(d: string): Vec2[][] {
   const subPaths: Vec2[][] = [];
   let currentPath: Vec2[] = [];
@@ -477,6 +478,7 @@ export function svgToVMobjects(
 
   const worldScale = scaleFactor * vbScale;
 
+  // eslint-disable-next-line complexity
   function walkElement(el: Element, accTx: number, accTy: number, accScale: number): void {
     const tag = el.tagName.toLowerCase();
 

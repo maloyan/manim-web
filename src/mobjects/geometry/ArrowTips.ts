@@ -328,8 +328,8 @@ export class ArrowCircleTip extends ArrowTip {
     // Generate circle points using cubic Bezier approximation
     // For a unit circle, the optimal handle length is 4 * (sqrt(2) - 1) / 3 ~ 0.5523
     // (Note: kappa is the standard approximation but we use the tangent-based formula below for variable arc sizes)
-    const _kappa = 0.5522847498;
-    void _kappa;
+    const kappa = 0.5522847498;
+    void kappa;
 
     for (let i = 0; i < numSegments; i++) {
       const angle1 = (i / numSegments) * 2 * Math.PI;

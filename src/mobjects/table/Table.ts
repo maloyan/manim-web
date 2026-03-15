@@ -107,6 +107,7 @@ export class Table extends VGroup {
   protected _rowPositions: number[] = [];
   protected _colPositions: number[] = [];
 
+  // eslint-disable-next-line complexity
   constructor(options: TableOptions) {
     super();
 
@@ -175,6 +176,7 @@ export class Table extends VGroup {
   /**
    * Calculate cell dimensions based on entry sizes
    */
+  // eslint-disable-next-line complexity
   protected _calculateDimensions(): void {
     const hasRowLabels = this._rowLabels.length > 0;
     const hasColLabels = this._colLabels.length > 0;

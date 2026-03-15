@@ -17,7 +17,7 @@ jobs:
           node-version: 22
       - run: npm install --no-package-lock
       - name: ESLint (errors block, warnings tracked)
-        run: npx eslint src/ --max-warnings 106
+        run: npx eslint src/ --max-warnings 0
 
   typecheck:
     name: Typecheck

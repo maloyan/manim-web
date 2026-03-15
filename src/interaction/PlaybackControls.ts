@@ -253,9 +253,9 @@ export class PlaybackControls extends Controls {
     `;
 
     timeline.addEventListener('input', () => {
-      const timeline_ = this._scene.timeline;
-      if (timeline_) {
-        const duration = timeline_.getDuration();
+      const timelineRef = this._scene.timeline;
+      if (timelineRef) {
+        const duration = timelineRef.getDuration();
         const time = (parseFloat(timeline.value) / 100) * duration;
         this._scene.seek(time);
         this._updateTimeDisplay(time, duration);

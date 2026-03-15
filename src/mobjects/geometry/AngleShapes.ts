@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, WHITE, DEFAULT_STROKE_WIDTH } from '../../constants';
@@ -62,6 +63,7 @@ export class Angle extends VMobject {
   private _decimalPlaces: number;
   private _unit: 'radians' | 'degrees';
 
+  // eslint-disable-next-line complexity
   constructor(input: AngleInput, options: AngleOptions = {}) {
     super();
 

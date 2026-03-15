@@ -4,10 +4,10 @@ import { isVMobjectLike } from './MobjectTypes';
 
 // Performance optimization: Object pooling for temporary vectors
 // These are shared to avoid allocation in hot paths
-const _tempVec3: THREE.Vector3 = new THREE.Vector3();
-const _tempBox3: THREE.Box3 = new THREE.Box3();
-const _tempQuaternion: THREE.Quaternion = new THREE.Quaternion();
-const _tempQuaternion2: THREE.Quaternion = new THREE.Quaternion();
+const tempVec3: THREE.Vector3 = new THREE.Vector3();
+const tempBox3: THREE.Box3 = new THREE.Box3();
+const tempQuaternion: THREE.Quaternion = new THREE.Quaternion();
+const tempQuaternion2: THREE.Quaternion = new THREE.Quaternion();
 
 /**
  * Rotate a mobject around an axis.
@@ -32,17 +32,17 @@ export function rotateMobject(
 
   // For VMobjects with point data, transform points directly (Manim Python behavior)
   if (isVMobjectLike(mob) && mob._points3D.length > 0) {
-    _rotateVMobjectPoints(mob, angle, axis, aboutPoint);
+    rotateVMobjectPoints(mob, angle, axis, aboutPoint);
   } else {
     // Non-VMobject fallback: use Three.js transform
-    _rotateWithThreeJS(mob, angle, axis, aboutPoint);
+    rotateWithThreeJS(mob, angle, axis, aboutPoint);
   }
 }
 
 /**
  * Rotate VMobject points directly (Manim Python behavior).
  */
-function _rotateVMobjectPoints(
+function rotateVMobjectPoints(
   mob: MobjectLike,
   angle: number,
   axis: Vector3Tuple,
@@ -88,15 +88,15 @@ function _rotateVMobjectPoints(
     }
   } else {
     // 3D rotation: use quaternion
-    _tempVec3.set(axis[0], axis[1], axis[2]).normalize();
-    _tempQuaternion.setFromAxisAngle(_tempVec3, angle);
+    tempVec3.set(axis[0], axis[1], axis[2]).normalize();
+    tempQuaternion.setFromAxisAngle(tempVec3, angle);
 
     for (const point of points) {
-      _tempVec3.set(point[0] - cx, point[1] - cy, point[2] - cz);
-      _tempVec3.applyQuaternion(_tempQuaternion);
-      point[0] = cx + _tempVec3.x;
-      point[1] = cy + _tempVec3.y;
-      point[2] = cz + _tempVec3.z;
+      tempVec3.set(point[0] - cx, point[1] - cy, point[2] - cz);
+      tempVec3.applyQuaternion(tempQuaternion);
+      point[0] = cx + tempVec3.x;
+      point[1] = cy + tempVec3.y;
+      point[2] = cz + tempVec3.z;
     }
   }
 
@@ -112,7 +112,7 @@ function _rotateVMobjectPoints(
 /**
  * Non-VMobject fallback: rotate using Three.js transforms.
  */
-function _rotateWithThreeJS(
+function rotateWithThreeJS(
   mob: MobjectLike,
   angle: number,
   axis: Vector3Tuple,
@@ -123,27 +123,27 @@ function _rotateWithThreeJS(
     const dy = mob.position.y - aboutPoint[1];
     const dz = mob.position.z - aboutPoint[2];
 
-    _tempVec3.set(axis[0], axis[1], axis[2]).normalize();
-    _tempQuaternion.setFromAxisAngle(_tempVec3, angle);
+    tempVec3.set(axis[0], axis[1], axis[2]).normalize();
+    tempQuaternion.setFromAxisAngle(tempVec3, angle);
 
-    _tempVec3.set(dx, dy, dz);
-    _tempVec3.applyQuaternion(_tempQuaternion);
+    tempVec3.set(dx, dy, dz);
+    tempVec3.applyQuaternion(tempQuaternion);
 
     mob.position.set(
-      aboutPoint[0] + _tempVec3.x,
-      aboutPoint[1] + _tempVec3.y,
-      aboutPoint[2] + _tempVec3.z,
+      aboutPoint[0] + tempVec3.x,
+      aboutPoint[1] + tempVec3.y,
+      aboutPoint[2] + tempVec3.z,
     );
 
-    _tempQuaternion2.setFromEuler(mob.rotation);
-    _tempQuaternion2.multiply(_tempQuaternion);
-    mob.rotation.setFromQuaternion(_tempQuaternion2);
+    tempQuaternion2.setFromEuler(mob.rotation);
+    tempQuaternion2.multiply(tempQuaternion);
+    mob.rotation.setFromQuaternion(tempQuaternion2);
   } else {
-    _tempVec3.set(axis[0], axis[1], axis[2]).normalize();
-    _tempQuaternion.setFromAxisAngle(_tempVec3, angle);
-    _tempQuaternion2.setFromEuler(mob.rotation);
-    _tempQuaternion2.multiply(_tempQuaternion);
-    mob.rotation.setFromQuaternion(_tempQuaternion2);
+    tempVec3.set(axis[0], axis[1], axis[2]).normalize();
+    tempQuaternion.setFromAxisAngle(tempVec3, angle);
+    tempQuaternion2.setFromEuler(mob.rotation);
+    tempQuaternion2.multiply(tempQuaternion);
+    mob.rotation.setFromQuaternion(tempQuaternion2);
   }
   mob._markDirty();
 }
@@ -153,10 +153,10 @@ function _rotateWithThreeJS(
  */
 export function getCenterImpl(mob: MobjectLike): Vector3Tuple {
   const obj = mob.getThreeObject();
-  _tempBox3.setFromObject(obj);
-  if (!_tempBox3.isEmpty()) {
-    _tempBox3.getCenter(_tempVec3);
-    return [_tempVec3.x, _tempVec3.y, _tempVec3.z];
+  tempBox3.setFromObject(obj);
+  if (!tempBox3.isEmpty()) {
+    tempBox3.getCenter(tempVec3);
+    return [tempVec3.x, tempVec3.y, tempVec3.z];
   }
   return [mob.position.x, mob.position.y, mob.position.z];
 }
@@ -171,9 +171,9 @@ export function getBoundingBoxImpl(mob: MobjectLike): {
   depth: number;
 } {
   const obj = mob.getThreeObject();
-  _tempBox3.setFromObject(obj);
-  _tempBox3.getSize(_tempVec3);
-  return { width: _tempVec3.x, height: _tempVec3.y, depth: _tempVec3.z };
+  tempBox3.setFromObject(obj);
+  tempBox3.getSize(tempVec3);
+  return { width: tempVec3.x, height: tempVec3.y, depth: tempVec3.z };
 }
 
 /**

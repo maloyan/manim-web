@@ -117,10 +117,10 @@ type MathJaxModuleState = MathJaxModuleGlobal | MathJaxModuleNpm;
 // ---------------------------------------------------------------------------
 
 /** Cached MathJax module after first dynamic import */
-let _mathjaxModule: MathJaxModuleState | null = null;
+let mathjaxModule: MathJaxModuleState | null = null;
 
 /** Promise for the in-flight import (prevents duplicate loads) */
-let _mathjaxLoadPromise: Promise<MathJaxModuleState> | null = null;
+let mathjaxLoadPromise: Promise<MathJaxModuleState> | null = null;
 
 /**
  * Dynamically load MathJax's SVG output module.
@@ -130,34 +130,34 @@ let _mathjaxLoadPromise: Promise<MathJaxModuleState> | null = null;
  * fall back to loading via a CDN script tag.
  */
 async function loadMathJax(): Promise<MathJaxModuleState> {
-  if (_mathjaxModule) return _mathjaxModule;
-  if (_mathjaxLoadPromise) return _mathjaxLoadPromise;
+  if (mathjaxModule) return mathjaxModule;
+  if (mathjaxLoadPromise) return mathjaxLoadPromise;
 
-  _mathjaxLoadPromise = (async () => {
+  mathjaxLoadPromise = (async () => {
     // Strategy 1: try the npm package "mathjax-full"
     try {
       // Use Function constructor to hide specifiers from Vite's static analysis
       // eslint-disable-next-line @typescript-eslint/no-implied-eval
-      const _import = new Function('s', 'return import(s)') as (
+      const importFn = new Function('s', 'return import(s)') as (
         s: string,
       ) => Promise<Record<string, (...args: unknown[]) => unknown>>;
-      const mjModule = await _import('mathjax-full/js/mathjax.js');
-      const texModule = await _import('mathjax-full/js/input/tex-full.js');
-      const svgModule = await _import('mathjax-full/js/output/svg.js');
-      const liteAdaptor = await _import('mathjax-full/js/adaptors/liteAdaptor.js');
-      const htmlHandler = await _import('mathjax-full/js/handlers/html.js');
+      const mjModule = await importFn('mathjax-full/js/mathjax.js');
+      const texModule = await importFn('mathjax-full/js/input/tex-full.js');
+      const svgModule = await importFn('mathjax-full/js/output/svg.js');
+      const liteAdaptor = await importFn('mathjax-full/js/adaptors/liteAdaptor.js');
+      const htmlHandler = await importFn('mathjax-full/js/handlers/html.js');
 
       const adaptor = liteAdaptor.liteAdaptor() as unknown as MathJaxAdaptor;
       htmlHandler.RegisterHTMLHandler(adaptor);
 
-      _mathjaxModule = {
+      mathjaxModule = {
         mjModule: mjModule as unknown as MathJaxNpmMjModule,
         texModule: texModule as unknown as MathJaxNpmTexModule,
         svgModule: svgModule as unknown as MathJaxNpmSvgModule,
         adaptor,
         strategy: 'npm' as const,
       };
-      return _mathjaxModule;
+      return mathjaxModule;
     } catch {
       // npm package not available -- fall through
     }
@@ -166,8 +166,8 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
     if (typeof window !== 'undefined') {
       const win = window as unknown as WindowWithMathJax;
       if (win.MathJax && win.MathJax.tex2svg) {
-        _mathjaxModule = { strategy: 'global' as const, MathJax: win.MathJax };
-        return _mathjaxModule;
+        mathjaxModule = { strategy: 'global' as const, MathJax: win.MathJax };
+        return mathjaxModule;
       }
 
       // Load from CDN
@@ -207,14 +207,14 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
         setTimeout(() => reject(new Error('MathJax CDN load timed out')), 15000);
       });
 
-      _mathjaxModule = { strategy: 'global' as const, MathJax: win.MathJax };
-      return _mathjaxModule;
+      mathjaxModule = { strategy: 'global' as const, MathJax: win.MathJax };
+      return mathjaxModule;
     }
 
     throw new Error('MathJax could not be loaded: no npm package and no browser environment.');
   })();
 
-  return _mathjaxLoadPromise;
+  return mathjaxLoadPromise;
 }
 
 // ---------------------------------------------------------------------------
@@ -225,7 +225,7 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
  * Check whether MathJax has already been loaded.
  */
 export function isMathJaxLoaded(): boolean {
-  return _mathjaxModule !== null;
+  return mathjaxModule !== null;
 }
 
 /**
@@ -244,17 +244,12 @@ export async function preloadMathJax(): Promise<void> {
  * @param options   - Rendering options.
  * @returns A MathJaxRenderResult containing the SVG element and VMobject group.
  */
+// eslint-disable-next-line complexity
 export async function renderLatexToSVG(
   texString: string,
   options: MathJaxRenderOptions = {},
 ): Promise<MathJaxRenderResult> {
-  const {
-    displayMode = true,
-    color = '#ffffff',
-    fontScale = 1,
-    macros = {},
-    preamble: _preamble,
-  } = options;
+  const { displayMode = true, color = '#ffffff', fontScale = 1, macros = {} } = options;
 
   const mj = await loadMathJax();
 

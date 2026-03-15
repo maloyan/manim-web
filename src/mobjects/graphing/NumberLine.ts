@@ -106,6 +106,7 @@ export class NumberLine extends VMobject {
   /**
    * Generate the number line points including main line and ticks
    */
+  // eslint-disable-next-line complexity
   private _generatePoints(): void {
     const [min, max, step] = this._xRange;
 

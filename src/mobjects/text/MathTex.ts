@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /**
  * MathTex - LaTeX rendering for manimweb using KaTeX (default) or MathJax (fallback)
  *
@@ -118,13 +119,13 @@ export class MathTex extends Mobject {
       displayMode = true,
       position = [0, 0, 0],
       renderer = 'auto',
-      _padding = 10,
+      _padding: padding = 10,
     } = options;
 
     this._fontSize = fontSize;
     this._displayMode = displayMode;
     this._renderer = renderer;
-    this._padding = _padding;
+    this._padding = padding;
     this.color = color;
 
     // Initialize render state
@@ -699,6 +700,7 @@ export class MathTex extends Mobject {
     const svgItems: SvgItem[] = [];
     const ruleItems: RuleItem[] = [];
 
+    // eslint-disable-next-line complexity
     const collectNodes = (node: Node): void => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent;

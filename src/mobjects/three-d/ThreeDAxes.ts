@@ -88,7 +88,7 @@ export class ThreeDAxes extends Group {
       xColor,
       yColor,
       zColor,
-      showLabels: _showLabels = false,
+      // showLabels is accepted by options but not yet implemented
       showTicks = true,
       tickLength = 0.15,
       tipLength = 0.2,

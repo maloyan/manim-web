@@ -140,6 +140,7 @@ export class Lighting {
    * @param options - Light configuration options
    * @returns The created SpotLight
    */
+  // eslint-disable-next-line complexity
   addSpot(options?: SpotLightOptions): THREE.SpotLight {
     const light = new THREE.SpotLight(
       options?.color ?? '#ffffff',

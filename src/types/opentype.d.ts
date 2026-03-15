@@ -23,6 +23,7 @@ declare module 'opentype.js' {
     [key: string]: unknown;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   function load(url: string): Promise<Font>;
 
   const opentype: {

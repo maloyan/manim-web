@@ -8,6 +8,7 @@ import { VertexId, EdgeTuple, LayoutConfig, VertexConfig } from './graphTypes';
 /**
  * Compute vertex positions using the specified layout algorithm
  */
+// eslint-disable-next-line complexity
 export function computeLayout(
   vertices: VertexId[],
   edges: EdgeTuple[],
@@ -89,6 +90,7 @@ export function computeCircularLayout(
 /**
  * Spring (force-directed) layout using Fruchterman-Reingold algorithm
  */
+// eslint-disable-next-line complexity
 function computeSpringLayout(
   vertices: VertexId[],
   edges: EdgeTuple[],
@@ -377,6 +379,7 @@ function computeShellLayout(
 /**
  * Kamada-Kawai layout: force-directed with graph-theoretic distances
  */
+// eslint-disable-next-line complexity
 function computeKamadaKawaiLayout(
   vertices: VertexId[],
   edges: EdgeTuple[],

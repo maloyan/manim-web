@@ -483,6 +483,7 @@ export class TransformMatchingTex extends Animation {
    * Phase 2 (if transformMismatches): Use Hungarian algorithm with center-distance
    *   cost to optimally pair remaining unmatched source and target parts.
    */
+  // eslint-disable-next-line complexity
   private _matchTexParts(): void {
     const sourceParts = this._getTexParts(this.mobject as VMobject);
     const targetParts = this._getTexParts(this.target);

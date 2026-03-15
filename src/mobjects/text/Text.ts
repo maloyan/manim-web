@@ -70,27 +70,27 @@ const RESOLUTION_SCALE = 2;
  * Ensures the same OTF/TTF is loaded only once via @font-face,
  * and all Text instances sharing a URL get the same CSS family name.
  */
-const _fontFaceCache = new Map<string, { familyName: string; loadPromise: Promise<void> }>();
-let _fontFaceIdCounter = 0;
+const fontFaceCache = new Map<string, { familyName: string; loadPromise: Promise<void> }>();
+let fontFaceIdCounter = 0;
 
 /**
  * Load a font URL as a CSS @font-face rule (cached).
  * Returns the unique font-family name assigned to this URL.
  */
-async function _loadFontFace(url: string): Promise<string> {
-  const cached = _fontFaceCache.get(url);
+async function loadFontFace(url: string): Promise<string> {
+  const cached = fontFaceCache.get(url);
   if (cached) {
     await cached.loadPromise;
     return cached.familyName;
   }
 
-  const familyName = `ManimFont_${_fontFaceIdCounter++}`;
+  const familyName = `ManimFont_${fontFaceIdCounter++}`;
   const face = new FontFace(familyName, `url(${url})`);
   const loadPromise = face.load().then(() => {
     document.fonts.add(face);
   });
 
-  _fontFaceCache.set(url, { familyName, loadPromise });
+  fontFaceCache.set(url, { familyName, loadPromise });
   await loadPromise;
   return familyName;
 }
@@ -513,7 +513,7 @@ export class Text extends VMobject {
 
     // Load the font URL as a CSS @font-face (cached across all Text instances)
     // so the Canvas 2D renderer uses the same font file as the opentype.js glyph strokes.
-    const familyName = await _loadFontFace(this._fontUrl);
+    const familyName = await loadFontFace(this._fontUrl);
     this._fontFamily = `'${familyName}'`;
     this._canvasDirty = true;
     this._renderToCanvas();

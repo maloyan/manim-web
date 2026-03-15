@@ -404,6 +404,7 @@ function buildEarcutFillGeometryMulti(
  * @param opacity - Current opacity
  * @returns BufferGeometry and index data, or null if insufficient points
  */
+// eslint-disable-next-line complexity
 export function buildMeshStrokeGeometry(
   group: THREE.Group,
   sampledPoints: number[][],
@@ -447,11 +448,11 @@ export function buildMeshStrokeGeometry(
   group.updateWorldMatrix(true, false);
   const worldMatrix = group.matrixWorld;
   const invWorldMatrix = new THREE.Matrix4().copy(worldMatrix).invert();
-  const _v = new THREE.Vector3();
+  const vec = new THREE.Vector3();
 
   const pts: number[][] = deduped.map((p) => {
-    _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
-    return [_v.x, _v.y, _v.z];
+    vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
+    return [vec.x, vec.y, vec.z];
   });
 
   // Half stroke width in world units
@@ -541,10 +542,10 @@ export function buildMeshStrokeGeometry(
   // Transform world-space positions back to local space
   const positions: number[] = [];
   for (let i = 0; i < worldPositions.length; i += 3) {
-    _v.set(worldPositions[i], worldPositions[i + 1], worldPositions[i + 2]).applyMatrix4(
-      invWorldMatrix,
-    );
-    positions.push(_v.x, _v.y, _v.z);
+    vec
+      .set(worldPositions[i], worldPositions[i + 1], worldPositions[i + 2])
+      .applyMatrix4(invWorldMatrix);
+    positions.push(vec.x, vec.y, vec.z);
   }
 
   // Triangles: for each edge, two triangles forming a quad

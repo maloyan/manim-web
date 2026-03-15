@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 // Colors
 export * from './constants/colors';
 export {

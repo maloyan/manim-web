@@ -47,6 +47,7 @@ export class OrbitControls {
    * @param canvas - The HTML canvas element for mouse events
    * @param options - Controls configuration options
    */
+  // eslint-disable-next-line complexity
   constructor(camera: THREE.Camera, canvas: HTMLCanvasElement, options?: OrbitControlsOptions) {
     this._controls = new ThreeOrbitControls(camera, canvas);
 

@@ -423,6 +423,7 @@ export class ThreeDScene extends Scene {
    * Override _render to use the 3D camera with two-pass rendering for HUD.
    * This is called by the animation loop internally.
    */
+  // eslint-disable-next-line complexity
   protected override _render(): void {
     // Guard: super() calls _render() before our fields are initialized
     if (!this._camera3D || this._disposed) return;
