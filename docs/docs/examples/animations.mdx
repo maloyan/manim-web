@@ -22,6 +22,7 @@ import PointWithTraceExample from '@site/src/components/examples/PointWithTraceE
 import SineCurveUnitCircleExample from '@site/src/components/examples/SineCurveUnitCircleExample';
 import ApplyMatrixArrowsExample from '@site/src/components/examples/ApplyMatrixArrowsExample';
 import ApplyComplexFunctionExample from '@site/src/components/examples/ApplyComplexFunctionExample';
+import ApplyPointwiseFunctionToCenterExample from '@site/src/components/examples/ApplyPointwiseFunctionToCenterExample';
 import LabeledPolygramExample from '@site/src/components/examples/LabeledPolygramExample';
 import RateFunctionsComparisonExample from '@site/src/components/examples/RateFunctionsComparisonExample';
 import EasingFunctionsShowcaseExample from '@site/src/components/examples/EasingFunctionsShowcaseExample';
@@ -1222,6 +1223,69 @@ await scene.wait(1);
 </details>
 
 **Learn More:** [**ApplyComplexFunction**](/api/classes/ApplyComplexFunction) · [**NumberPlane**](/api/classes/NumberPlane) · [**Create**](/api/classes/Create)
+
+---
+
+## Apply Pointwise Function To Center
+
+Applies a pointwise function relative to each mobject's center rather than absolute coordinates. Here, three shapes at different positions are each scaled by 1.5x around their own center -- they grow in place without drifting toward or away from the origin.
+
+<ApplyPointwiseFunctionToCenterExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Circle,
+  Square,
+  Triangle,
+  FadeIn,
+  ApplyPointwiseFunctionToCenter,
+  BLUE,
+  GREEN_C,
+  RED_C,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+// Create three shapes at different positions
+const circle = new Circle({ radius: 0.8, color: BLUE });
+circle.moveTo([-3, 0, 0]);
+
+const square = new Square({ sideLength: 1.4, color: GREEN_C });
+square.moveTo([0, 0, 0]);
+
+const triangle = new Triangle({ color: RED_C });
+triangle.scale(0.8);
+triangle.moveTo([3, 0, 0]);
+
+scene.add(circle, square, triangle);
+await scene.play(
+  new FadeIn(circle, { duration: 0.8 }),
+  new FadeIn(square, { duration: 0.8 }),
+  new FadeIn(triangle, { duration: 0.8 }),
+);
+await scene.wait(0.5);
+
+// Scale each shape by 1.5x around its own center
+const scaleFn = (p: number[]) => [p[0] * 1.5, p[1] * 1.5, p[2]];
+await scene.play(
+  new ApplyPointwiseFunctionToCenter(circle, scaleFn, { duration: 2 }),
+  new ApplyPointwiseFunctionToCenter(square, scaleFn, { duration: 2 }),
+  new ApplyPointwiseFunctionToCenter(triangle, scaleFn, { duration: 2 }),
+);
+await scene.wait(1);
+```
+
+</details>
+
+**Learn More:** [**ApplyPointwiseFunctionToCenter**](/api/classes/ApplyPointwiseFunctionToCenter) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square)
 
 ---
 
