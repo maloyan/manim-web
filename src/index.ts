@@ -549,6 +549,11 @@ export {
   applyPointwiseFunction,
   type ApplyPointwiseFunctionOptions,
 } from './animation/transform';
+export {
+  ApplyPointwiseFunctionToCenter,
+  applyPointwiseFunctionToCenter,
+  type ApplyPointwiseFunctionToCenterOptions,
+} from './animation/transform';
 export { ApplyFunction, applyFunction, type ApplyFunctionOptions } from './animation/transform';
 export { ApplyMethod, applyMethod, type ApplyMethodOptions } from './animation/transform';
 export { ApplyMatrix, applyMatrix, type ApplyMatrixOptions } from './animation/transform';

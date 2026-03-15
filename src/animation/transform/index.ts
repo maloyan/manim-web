@@ -114,3 +114,9 @@ export {
   applyPointwiseFunction,
   type ApplyPointwiseFunctionOptions,
 } from './ApplyPointwiseFunction';
+
+export {
+  ApplyPointwiseFunctionToCenter,
+  applyPointwiseFunctionToCenter,
+  type ApplyPointwiseFunctionToCenterOptions,
+} from './ApplyPointwiseFunctionToCenter';
