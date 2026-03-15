@@ -1186,5 +1186,3 @@ export class StreamLines extends VectorField {
     });
   }
 }
-
-export default VectorField;

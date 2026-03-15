@@ -827,5 +827,3 @@ export class CurvesAsSubmobjects extends VMobject {
     return copy;
   }
 }
-
-export default VMobject;

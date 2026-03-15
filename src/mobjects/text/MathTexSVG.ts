@@ -140,6 +140,14 @@ export class MathTexSVG extends VGroup {
   }
 
   /**
+   * Get the render error, if any.
+   * Returns null if rendering succeeded or is still in progress.
+   */
+  getRenderError(): Error | null {
+    return this._renderError;
+  }
+
+  /**
    * Override setColor to propagate to all VMobject children (fill + stroke).
    */
   override setColor(color: string): this {
@@ -428,5 +436,3 @@ export class MathTexSVG extends VGroup {
     });
   }
 }
-
-export default MathTexSVG;

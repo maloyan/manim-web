@@ -18,7 +18,7 @@ import {
   TransformMatchingTex,
   transformMatchingTex,
 } from './transform/TransformMatching';
-import { ApplyPointwiseFunction, applyPointwiseFunction } from './transform/ApplyPointwiseFunction';
+import { ApplyPointwiseFunction } from './transform/ApplyPointwiseFunction';
 
 // ---------------------------------------------------------------------------
 // Helpers

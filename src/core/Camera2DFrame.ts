@@ -17,7 +17,7 @@
  * to the underlying Camera2D whenever it changes.
  */
 
-import { Camera2D } from './Camera';
+import type { Camera2D } from './Camera';
 import { VMobject } from './VMobject';
 import { Mobject, Vector3Tuple } from './Mobject';
 
@@ -48,10 +48,19 @@ export class Camera2DFrame extends VMobject {
     // Give it a small set of dummy Bezier points so that
     // VMobject operations (alignPoints, copy, Transform) work.
     this.setPoints3D([
-      [0, 0, 0], [0.33, 0, 0], [0.66, 0, 0], [1, 0, 0],
-      [1, 0.33, 0], [1, 0.66, 0], [1, 1, 0],
-      [0.66, 1, 0], [0.33, 1, 0], [0, 1, 0],
-      [0, 0.66, 0], [0, 0.33, 0], [0, 0, 0],
+      [0, 0, 0],
+      [0.33, 0, 0],
+      [0.66, 0, 0],
+      [1, 0, 0],
+      [1, 0.33, 0],
+      [1, 0.66, 0],
+      [1, 1, 0],
+      [0.66, 1, 0],
+      [0.33, 1, 0],
+      [0, 1, 0],
+      [0, 0.66, 0],
+      [0, 0.33, 0],
+      [0, 0, 0],
     ]);
 
     if (isPrimary) {
@@ -67,11 +76,7 @@ export class Camera2DFrame extends VMobject {
   private _syncToCamera(): void {
     this._camera.frameWidth = this._baseFrameWidth * this.scaleVector.x;
     this._camera.frameHeight = this._baseFrameHeight * this.scaleVector.y;
-    this._camera.moveTo([
-      this.position.x,
-      this.position.y,
-      this._camera.position.z,
-    ]);
+    this._camera.moveTo([this.position.x, this.position.y, this._camera.position.z]);
   }
 
   /**

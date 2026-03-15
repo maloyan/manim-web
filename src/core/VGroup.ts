@@ -139,7 +139,9 @@ export class VGroup extends VMobject {
       return [this.position.x, this.position.y, this.position.z];
     }
 
-    let sumX = 0, sumY = 0, sumZ = 0;
+    let sumX = 0,
+      sumY = 0,
+      sumZ = 0;
     for (const child of this.children) {
       const center = child.getCenter();
       sumX += center[0];
@@ -151,7 +153,7 @@ export class VGroup extends VMobject {
     return [
       this.position.x + sumX / count,
       this.position.y + sumY / count,
-      this.position.z + sumZ / count
+      this.position.z + sumZ / count,
     ];
   }
 
@@ -185,7 +187,7 @@ export class VGroup extends VMobject {
         return this.shift([
           targetEdge[0] - thisEdge[0],
           targetEdge[1] - thisEdge[1],
-          targetEdge[2] - thisEdge[2]
+          targetEdge[2] - thisEdge[2],
         ]);
       }
       const targetCenter = target.getCenter();
@@ -195,7 +197,7 @@ export class VGroup extends VMobject {
     const delta: Vector3Tuple = [
       target[0] - currentCenter[0],
       target[1] - currentCenter[1],
-      target[2] - currentCenter[2]
+      target[2] - currentCenter[2],
     ];
     return this.shift(delta);
   }
@@ -360,14 +362,12 @@ export class VGroup extends VMobject {
     // Position first child
     let prevChild = this.children[0];
 
-    // Arrange subsequent children next to the previous one
     for (let i = 1; i < this.children.length; i++) {
       const child = this.children[i];
       child.nextTo(prevChild, direction, buff);
       prevChild = child;
     }
 
-    // Recenter if requested
     if (originalCenter) {
       this.moveTo(originalCenter);
     }
@@ -433,13 +433,6 @@ export class VGroup extends VMobject {
 
     this._markDirty();
     return this;
-  }
-
-  /**
-   * Arrange children in a submobject grid (alias for arrangeInGrid).
-   */
-  arrangeSubmobjects(rows?: number, cols?: number, buffX?: number, buffY?: number): this {
-    return this.arrangeInGrid(rows, cols, buffX, buffY);
   }
 
   /**
@@ -528,7 +521,7 @@ export class VGroup extends VMobject {
    */
   filter(fn: (vmobject: VMobject, index: number) => boolean): VGroup {
     const filtered = (this.children as VMobject[]).filter(fn);
-    return new VGroup(...filtered.map(m => m.copy() as VMobject));
+    return new VGroup(...filtered.map((m) => m.copy() as VMobject));
   }
 
   /**
@@ -552,5 +545,3 @@ export class VGroup extends VMobject {
     return this.getCombinedPoints();
   }
 }
-
-export default VGroup;

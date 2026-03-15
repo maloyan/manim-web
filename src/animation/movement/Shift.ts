@@ -32,10 +32,8 @@ export class Shift extends Animation {
   override begin(): void {
     super.begin();
 
-    // Store initial position
     this._initialPosition.copy(this.mobject.position);
 
-    // Calculate target position
     this._targetPosition.set(
       this._initialPosition.x + this.direction[0],
       this._initialPosition.y + this.direction[1],
@@ -121,10 +119,8 @@ export class MoveToTargetPosition extends Animation {
 
     const mobject = this.mobject as MobjectWithTargetPosition;
 
-    // Store initial position
     this._initialPosition.copy(this.mobject.position);
 
-    // Get target position
     if (mobject.targetPosition) {
       this._targetPosition.set(
         mobject.targetPosition[0],

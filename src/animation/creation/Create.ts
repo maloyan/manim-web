@@ -50,7 +50,7 @@ interface SkeletonPathMobject {
  * The instanceDistanceEnd attribute is an InterleavedBufferAttribute whose backing
  * data lives in `.data.array`, or a plain BufferAttribute with `.array`.
  */
-function getLine2TotalLength(child: Line2): number {
+export function getLine2TotalLength(child: Line2): number {
   const geom = child.geometry;
   const distEnd = geom.getAttribute('instanceDistanceEnd') as
     | THREE.InterleavedBufferAttribute
@@ -61,6 +61,18 @@ function getLine2TotalLength(child: Line2): number {
     return (arr[arr.length - 1] as number) || 1;
   }
   return 1;
+}
+
+/**
+ * Check whether a mobject's Three.js subtree contains at least one Line2 child.
+ * Used by Create-family animations to decide between dash-based reveal and opacity fallback.
+ */
+export function hasLine2Children(mobject: Mobject): boolean {
+  let found = false;
+  mobject.getThreeObject().traverse((child) => {
+    if (child instanceof Line2) found = true;
+  });
+  return found;
 }
 
 export interface CreateOptions extends AnimationOptions {
@@ -91,17 +103,6 @@ export class Create extends Animation {
   }
 
   /**
-   * Check if the mobject has Line2 children for dash-based reveal
-   */
-  private _hasLine2Children(): boolean {
-    let found = false;
-    this.mobject.getThreeObject().traverse((child) => {
-      if (child instanceof Line2) found = true;
-    });
-    return found;
-  }
-
-  /**
    * Set up the animation - configure dashed lines for progressive reveal.
    * For filled VMobjects (like Polygon with fillOpacity > 0), this behaves
    * like Manim's DrawBorderThenFill: first half draws the border, second
@@ -110,7 +111,7 @@ export class Create extends Animation {
   override begin(): void {
     super.begin();
 
-    this._useDashReveal = this.mobject instanceof VMobject && this._hasLine2Children();
+    this._useDashReveal = this.mobject instanceof VMobject && hasLine2Children(this.mobject);
 
     if (this._useDashReveal) {
       const vmob = this.mobject as VMobject;
@@ -293,17 +294,9 @@ export class DrawBorderThenFill extends Animation {
     super(mobject, { duration: options.duration ?? 2, ...options });
   }
 
-  private _hasLine2Children(): boolean {
-    let found = false;
-    this.mobject.getThreeObject().traverse((child) => {
-      if (child instanceof Line2) found = true;
-    });
-    return found;
-  }
-
   override begin(): void {
     super.begin();
-    this._useDashReveal = this.mobject instanceof VMobject && this._hasLine2Children();
+    this._useDashReveal = this.mobject instanceof VMobject && hasLine2Children(this.mobject);
 
     if (this._useDashReveal) {
       const vmob = this.mobject as VMobject;
@@ -408,17 +401,9 @@ export class Uncreate extends Animation {
     super(mobject, { duration: options.duration ?? 2, ...options });
   }
 
-  private _hasLine2Children(): boolean {
-    let found = false;
-    this.mobject.getThreeObject().traverse((child) => {
-      if (child instanceof Line2) found = true;
-    });
-    return found;
-  }
-
   override begin(): void {
     super.begin();
-    this._useDashReveal = this.mobject instanceof VMobject && this._hasLine2Children();
+    this._useDashReveal = this.mobject instanceof VMobject && hasLine2Children(this.mobject);
 
     if (this._useDashReveal) {
       const threeObj = this.mobject.getThreeObject();
@@ -548,14 +533,6 @@ export class Write extends Animation {
     this._strokeRatio = options.strokeRatio ?? 0.7;
   }
 
-  private _hasLine2Children(): boolean {
-    let found = false;
-    this.mobject.getThreeObject().traverse((child) => {
-      if (child instanceof Line2) found = true;
-    });
-    return found;
-  }
-
   override begin(): void {
     super.begin();
     this._originalOpacity = this.mobject.opacity;
@@ -585,7 +562,7 @@ export class Write extends Animation {
     }
 
     // Priority 3: Dash reveal for VMobjects with Line2
-    this._useDashReveal = this.mobject instanceof VMobject && this._hasLine2Children();
+    this._useDashReveal = this.mobject instanceof VMobject && hasLine2Children(this.mobject);
 
     if (this._useDashReveal) {
       const threeObj = this.mobject.getThreeObject();
@@ -1022,16 +999,24 @@ export function unwrite(mobject: Mobject, options?: WriteOptions): Unwrite {
 export interface AddTextLetterByLetterOptions extends AnimationOptions {
   /** Time per character in seconds, default 0.1 */
   timePerChar?: number;
+  /**
+   * When true, animate in reverse: remove letters one by one instead of adding them.
+   * Used internally by RemoveTextLetterByLetter.
+   */
+  reverse?: boolean;
 }
 
 /**
  * Types out text letter by letter (typewriter effect).
  * Works with Text mobjects that support partial text display.
+ * When `reverse` is true, removes letters one by one instead.
  */
 export class AddTextLetterByLetter extends Animation {
   /** Time per character for duration calculation */
   protected readonly timePerChar: number;
-  private _fullText: string = '';
+  /** Whether to run in reverse (remove letters) */
+  protected readonly reverse: boolean;
+  protected _fullText: string = '';
 
   constructor(mobject: Mobject, options: AddTextLetterByLetterOptions = {}) {
     const timePerChar = options.timePerChar ?? 0.1;
@@ -1039,6 +1024,7 @@ export class AddTextLetterByLetter extends Animation {
     // For now, use a default or the provided duration
     super(mobject, { ...options, duration: options.duration ?? 1 });
     this.timePerChar = timePerChar;
+    this.reverse = options.reverse ?? false;
   }
 
   override begin(): void {
@@ -1049,6 +1035,7 @@ export class AddTextLetterByLetter extends Animation {
     ) {
       this._fullText = (this.mobject as unknown as TextAccessMobject).getText();
       if (
+        !this.reverse &&
         'setText' in this.mobject &&
         typeof (this.mobject as unknown as TextAccessMobject).setText === 'function'
       ) {
@@ -1063,18 +1050,31 @@ export class AddTextLetterByLetter extends Animation {
       typeof (this.mobject as unknown as TextAccessMobject).setText === 'function' &&
       this._fullText
     ) {
-      const numChars = Math.floor(alpha * this._fullText.length);
-      (this.mobject as unknown as TextAccessMobject).setText(this._fullText.substring(0, numChars));
+      if (this.reverse) {
+        const numCharsToRemove = Math.floor(alpha * this._fullText.length);
+        const remainingChars = this._fullText.length - numCharsToRemove;
+        (this.mobject as unknown as TextAccessMobject).setText(
+          this._fullText.substring(0, remainingChars),
+        );
+      } else {
+        const numChars = Math.floor(alpha * this._fullText.length);
+        (this.mobject as unknown as TextAccessMobject).setText(
+          this._fullText.substring(0, numChars),
+        );
+      }
     }
   }
 
   override finish(): void {
     if (
       'setText' in this.mobject &&
-      typeof (this.mobject as unknown as TextAccessMobject).setText === 'function' &&
-      this._fullText
+      typeof (this.mobject as unknown as TextAccessMobject).setText === 'function'
     ) {
-      (this.mobject as unknown as TextAccessMobject).setText(this._fullText);
+      if (this.reverse) {
+        (this.mobject as unknown as TextAccessMobject).setText('');
+      } else if (this._fullText) {
+        (this.mobject as unknown as TextAccessMobject).setText(this._fullText);
+      }
     }
     super.finish();
   }
@@ -1096,50 +1096,13 @@ export function addTextLetterByLetter(
 /**
  * Removes text letter by letter (reverse typewriter effect).
  * Works with Text mobjects that support partial text display.
+ *
+ * Extends AddTextLetterByLetter with `reverse: true` — all logic is shared,
+ * this class exists only for backward-compatible exports.
  */
-export class RemoveTextLetterByLetter extends Animation {
-  /** Time per character for duration calculation */
-  protected readonly timePerChar: number;
-  private _fullText: string = '';
-
+export class RemoveTextLetterByLetter extends AddTextLetterByLetter {
   constructor(mobject: Mobject, options: AddTextLetterByLetterOptions = {}) {
-    const timePerChar = options.timePerChar ?? 0.1;
-    super(mobject, { ...options, duration: options.duration ?? 1 });
-    this.timePerChar = timePerChar;
-  }
-
-  override begin(): void {
-    super.begin();
-    if (
-      'getText' in this.mobject &&
-      typeof (this.mobject as unknown as TextAccessMobject).getText === 'function'
-    ) {
-      this._fullText = (this.mobject as unknown as TextAccessMobject).getText();
-    }
-  }
-
-  interpolate(alpha: number): void {
-    if (
-      'setText' in this.mobject &&
-      typeof (this.mobject as unknown as TextAccessMobject).setText === 'function' &&
-      this._fullText
-    ) {
-      const numCharsToRemove = Math.floor(alpha * this._fullText.length);
-      const remainingChars = this._fullText.length - numCharsToRemove;
-      (this.mobject as unknown as TextAccessMobject).setText(
-        this._fullText.substring(0, remainingChars),
-      );
-    }
-  }
-
-  override finish(): void {
-    if (
-      'setText' in this.mobject &&
-      typeof (this.mobject as unknown as TextAccessMobject).setText === 'function'
-    ) {
-      (this.mobject as unknown as TextAccessMobject).setText('');
-    }
-    super.finish();
+    super(mobject, { ...options, reverse: true });
   }
 }
 

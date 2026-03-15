@@ -16,7 +16,7 @@ import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import * as THREE from 'three';
 import { MathTex } from './MathTex';
 import { katexCanRender, isMathJaxLoaded } from './MathJaxRenderer';
-import { Code, DEFAULT_COLOR_SCHEME, MONOKAI_COLOR_SCHEME } from './Code';
+import { Code } from './Code';
 import { MarkupText } from './MarkupText';
 
 // ---------------------------------------------------------------------------

@@ -140,7 +140,7 @@ export class TexturedSurface extends Mobject {
     this._lightDirection = new THREE.Vector3(
       lightDirection[0],
       lightDirection[1],
-      lightDirection[2]
+      lightDirection[2],
     ).normalize();
     this._doubleSided = doubleSided;
     this._textureRepeat = [...textureRepeat];
@@ -182,9 +182,9 @@ export class TexturedSurface extends Mobject {
           (err) => {
             console.warn(`TexturedSurface: Failed to load texture "${this._textureUrl}"`, err);
             reject(err);
-          }
+          },
         );
-      })
+      }),
     );
 
     // Load dark texture if provided
@@ -204,11 +204,14 @@ export class TexturedSurface extends Mobject {
             },
             undefined,
             (err) => {
-              console.warn(`TexturedSurface: Failed to load dark texture "${this._darkTextureUrl}"`, err);
+              console.warn(
+                `TexturedSurface: Failed to load dark texture "${this._darkTextureUrl}"`,
+                err,
+              );
               reject(err);
-            }
+            },
           );
-        })
+        }),
       );
     }
 
@@ -218,7 +221,10 @@ export class TexturedSurface extends Mobject {
         this._applyTextures();
       })
       .catch((error) => {
-        console.error('TexturedSurface: Failed to load textures. Surface will use placeholder material.', error);
+        console.error(
+          'TexturedSurface: Failed to load textures. Surface will use placeholder material.',
+          error,
+        );
       });
   }
 
@@ -242,7 +248,7 @@ export class TexturedSurface extends Mobject {
       this._dayNightMaterial = this._createDayNightMaterial(
         this._texture,
         this._darkTexture,
-        this._lightDirection
+        this._lightDirection,
       );
       mesh.material = this._dayNightMaterial;
     } else {
@@ -266,7 +272,7 @@ export class TexturedSurface extends Mobject {
   private _createDayNightMaterial(
     dayTexture: THREE.Texture,
     nightTexture: THREE.Texture,
-    lightDir: THREE.Vector3
+    lightDir: THREE.Vector3,
   ): THREE.ShaderMaterial {
     return new THREE.ShaderMaterial({
       uniforms: {
@@ -380,9 +386,7 @@ export class TexturedSurface extends Mobject {
       this._dayNightMaterial.uniforms.opacity.value = this._opacity;
       this._dayNightMaterial.uniforms.lightDirection.value.copy(this._lightDirection);
       this._dayNightMaterial.transparent = this._opacity < 1;
-      this._dayNightMaterial.side = this._doubleSided
-        ? THREE.DoubleSide
-        : THREE.FrontSide;
+      this._dayNightMaterial.side = this._doubleSided ? THREE.DoubleSide : THREE.FrontSide;
       this._dayNightMaterial.needsUpdate = true;
     } else if (material instanceof THREE.MeshStandardMaterial) {
       // Standard material (single texture or placeholder)
@@ -602,5 +606,3 @@ export function texturedSphere(options: TexturedSphereOptions): TexturedSurface 
     textureOffset,
   });
 }
-
-export default TexturedSurface;

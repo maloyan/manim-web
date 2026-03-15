@@ -102,8 +102,7 @@ export abstract class Mobject {
   }
 
   set opacity(value: number) {
-    this._opacity = Math.max(0, Math.min(1, value));
-    this._markDirty();
+    this.setOpacity(value);
   }
 
   get style(): MobjectStyle {
@@ -545,5 +544,3 @@ export abstract class Mobject {
     }
   }
 }
-
-export default Mobject;

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Mobject, UP, LEFT, RIGHT, UL, UR, DL, DR } from './Mobject';
+import { Mobject, UP, LEFT, RIGHT, UL, UR, DL } from './Mobject';
 import {
   VMobject,
   getNumCurves,
@@ -1969,12 +1969,6 @@ describe('VGroup - extended coverage', () => {
     vg.arrangeInGrid(undefined, 3); // auto rows, 3 cols
   });
 
-  it('arrangeSubmobjects is alias for arrangeInGrid', () => {
-    const items = Array.from({ length: 4 }, () => new VMobject());
-    const vg = new VGroup(...items);
-    expect(() => vg.arrangeSubmobjects(2, 2)).not.toThrow();
-  });
-
   it('getCombinedPoints returns points from all VMobject children', () => {
     const a = new VMobject();
     a.setPoints([
@@ -2962,7 +2956,9 @@ describe('VMobject per-instance scene context', () => {
     expect(overriddenLw).toBeCloseTo(4 * 0.01 * (1600 / 28));
 
     // Static method still uses class-level statics
-    expect(VMobject._toLinewidth(4)).toBeCloseTo(4 * 0.01 * (VMobject._rendererWidth / VMobject._frameWidth));
+    expect(VMobject._toLinewidth(4)).toBeCloseTo(
+      4 * 0.01 * (VMobject._rendererWidth / VMobject._frameWidth),
+    );
   });
 
   it('per-instance context does not affect other VMobjects', () => {

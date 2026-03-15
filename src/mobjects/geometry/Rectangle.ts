@@ -194,6 +194,8 @@ export class Rectangle extends VMobject {
         return [cx + halfWidth, cy - halfHeight, cz];
       case 'bottomLeft':
         return [cx - halfWidth, cy - halfHeight, cz];
+      default:
+        throw new Error(`Unexpected corner: ${corner}`);
     }
   }
 

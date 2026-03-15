@@ -181,14 +181,14 @@ export class VDict extends VGroup {
         if (typeof prop === 'string' && target._dict.has(prop)) {
           return target._dict.get(prop);
         }
-        return (target as any)[prop];
+        return (target as unknown as Record<string | symbol, unknown>)[prop];
       },
       set(target, prop, value) {
         if (typeof prop === 'string' && value instanceof VMobject) {
           target.set(prop, value);
           return true;
         }
-        (target as any)[prop] = value;
+        (target as unknown as Record<string | symbol, unknown>)[prop] = value;
         return true;
       },
       has(target, prop) {
@@ -196,7 +196,7 @@ export class VDict extends VGroup {
           return target._dict.has(prop) || prop in target;
         }
         return prop in target;
-      }
+      },
     }) as unknown as VDict & { [key: string]: VMobject | undefined };
   }
 
@@ -369,11 +369,7 @@ export class VectorizedPoint extends VMobject {
    */
   override shift(delta: Vector3Tuple): this {
     const current = this.getLocation();
-    return this.setLocation([
-      current[0] + delta[0],
-      current[1] + delta[1],
-      current[2] + delta[2]
-    ]);
+    return this.setLocation([current[0] + delta[0], current[1] + delta[1], current[2] + delta[2]]);
   }
 
   /**
@@ -412,5 +408,3 @@ export class VectorizedPoint extends VMobject {
     return this._createCopy();
   }
 }
-
-export default VDict;

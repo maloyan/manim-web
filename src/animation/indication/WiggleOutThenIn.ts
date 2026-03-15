@@ -18,7 +18,7 @@ import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { linear } from '../../rate-functions';
-import { smoothstep } from '../../utils/math';
+import { lerp, smoothstep } from '../../utils/math';
 
 /** TAU = 2 * PI, full circle in radians */
 const TAU = 2 * Math.PI;
@@ -48,13 +48,6 @@ function thereAndBackSmooth(t: number): number {
  */
 function wiggle(t: number, nWiggles: number): number {
   return Math.sin(nWiggles * TAU * t) * thereAndBackSmooth(t);
-}
-
-/**
- * Linear interpolation between two values.
- */
-function interpolateValue(start: number, end: number, alpha: number): number {
-  return start + (end - start) * alpha;
 }
 
 export class WiggleOutThenIn extends Animation {
@@ -105,11 +98,9 @@ export class WiggleOutThenIn extends Animation {
     this._initialPosition.copy(this.mobject.position);
 
     // Set up rotation axis
-    this._axisVector.set(
-      this.rotationAxis[0],
-      this.rotationAxis[1],
-      this.rotationAxis[2]
-    ).normalize();
+    this._axisVector
+      .set(this.rotationAxis[0], this.rotationAxis[1], this.rotationAxis[2])
+      .normalize();
 
     // Use mobject center as the rotation pivot
     const center = this.mobject.getCenter();
@@ -119,21 +110,18 @@ export class WiggleOutThenIn extends Animation {
   interpolate(alpha: number): void {
     // Scale: there-and-back envelope, peaks at alpha=0.5
     const scaleAlpha = thereAndBackSmooth(alpha);
-    const currentScaleFactor = interpolateValue(1, this.scaleValue, scaleAlpha);
+    const currentScaleFactor = lerp(1, this.scaleValue, scaleAlpha);
     this.mobject.scaleVector.set(
       this._initialScale.x * currentScaleFactor,
       this._initialScale.y * currentScaleFactor,
-      this._initialScale.z * currentScaleFactor
+      this._initialScale.z * currentScaleFactor,
     );
 
     // Rotation: sinusoidal oscillation with smooth envelope
     const currentAngle = wiggle(alpha, this.nWiggles) * this.rotationAngle;
 
     // Create rotation quaternion
-    const rotationQuat = new THREE.Quaternion().setFromAxisAngle(
-      this._axisVector,
-      currentAngle
-    );
+    const rotationQuat = new THREE.Quaternion().setFromAxisAngle(this._axisVector, currentAngle);
 
     // Apply rotation to initial quaternion
     const newQuat = new THREE.Quaternion().copy(this._initialQuaternion);
@@ -141,13 +129,9 @@ export class WiggleOutThenIn extends Animation {
     this.mobject.rotation.setFromQuaternion(newQuat);
 
     // Handle rotation about the center point
-    const offset = new THREE.Vector3()
-      .copy(this._initialPosition)
-      .sub(this._aboutPoint);
+    const offset = new THREE.Vector3().copy(this._initialPosition).sub(this._aboutPoint);
     offset.applyQuaternion(rotationQuat);
-    const newPosition = new THREE.Vector3()
-      .copy(this._aboutPoint)
-      .add(offset);
+    const newPosition = new THREE.Vector3().copy(this._aboutPoint).add(offset);
     this.mobject.position.copy(newPosition);
 
     this.mobject._markDirty();
@@ -171,7 +155,7 @@ export class WiggleOutThenIn extends Animation {
  */
 export function wiggleOutThenIn(
   mobject: Mobject,
-  options?: WiggleOutThenInOptions
+  options?: WiggleOutThenInOptions,
 ): WiggleOutThenIn {
   return new WiggleOutThenIn(mobject, options);
 }

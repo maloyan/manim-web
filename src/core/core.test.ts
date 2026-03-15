@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { Mobject, UP, DOWN, LEFT, RIGHT, ORIGIN } from './Mobject';
+import { Mobject } from './Mobject';
 import { VMobject } from './VMobject';
 import { VGroup } from './VGroup';
-import { BLUE, WHITE, RED, DEFAULT_STROKE_WIDTH } from '../constants';
+import { RED, DEFAULT_STROKE_WIDTH } from '../constants';
 
 describe('Mobject', () => {
   it('constructs with default position at origin', () => {

@@ -71,11 +71,7 @@ export class Cube extends Mobject {
    * Create the Three.js box mesh
    */
   protected _createThreeObject(): THREE.Object3D {
-    const geometry = new THREE.BoxGeometry(
-      this._sideLength,
-      this._sideLength,
-      this._sideLength
-    );
+    const geometry = new THREE.BoxGeometry(this._sideLength, this._sideLength, this._sideLength);
 
     const material = new THREE.MeshStandardMaterial({
       color: this.color,
@@ -122,7 +118,7 @@ export class Cube extends Mobject {
       this._threeObject.geometry = new THREE.BoxGeometry(
         this._sideLength,
         this._sideLength,
-        this._sideLength
+        this._sideLength,
       );
     }
     this._markDirty();
@@ -251,11 +247,7 @@ export class Box3D extends Mobject {
    * Create the Three.js box mesh
    */
   protected _createThreeObject(): THREE.Object3D {
-    const geometry = new THREE.BoxGeometry(
-      this._width,
-      this._height,
-      this._depth
-    );
+    const geometry = new THREE.BoxGeometry(this._width, this._height, this._depth);
 
     const material = new THREE.MeshStandardMaterial({
       color: this.color,
@@ -339,11 +331,7 @@ export class Box3D extends Mobject {
   private _updateGeometry(): void {
     if (this._threeObject instanceof THREE.Mesh) {
       this._threeObject.geometry.dispose();
-      this._threeObject.geometry = new THREE.BoxGeometry(
-        this._width,
-        this._height,
-        this._depth
-      );
+      this._threeObject.geometry = new THREE.BoxGeometry(this._width, this._height, this._depth);
     }
     this._markDirty();
   }
@@ -368,10 +356,8 @@ export class Box3D extends Mobject {
    * Get the surface area of the box
    */
   getSurfaceArea(): number {
-    return 2 * (
-      this._width * this._height +
-      this._height * this._depth +
-      this._depth * this._width
+    return (
+      2 * (this._width * this._height + this._height * this._depth + this._depth * this._width)
     );
   }
 
@@ -397,5 +383,3 @@ export class Box3D extends Mobject {
     });
   }
 }
-
-export default Cube;

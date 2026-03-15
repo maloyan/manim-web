@@ -4,7 +4,17 @@ import { VMobject } from '../../core/VMobject';
 import { Rectangle } from '../geometry/Rectangle';
 import { Text } from '../text/Text';
 import { NumberLine, NumberLineOptions } from './NumberLine';
-import { BLUE, GREEN, RED, YELLOW, ORANGE, PURPLE, TEAL, GOLD, WHITE } from '../../constants/colors';
+import {
+  BLUE,
+  GREEN,
+  RED,
+  YELLOW,
+  ORANGE,
+  PURPLE,
+  TEAL,
+  GOLD,
+  WHITE,
+} from '../../constants/colors';
 
 /** Default color cycle for bars */
 const DEFAULT_BAR_COLORS = [BLUE, GREEN, RED, YELLOW, ORANGE, PURPLE, TEAL, GOLD];
@@ -273,7 +283,7 @@ export class BarChart extends Group {
     const points: number[][] = [
       [startX, y, 0],
       [startX + (endX - startX) / 3, y, 0],
-      [startX + 2 * (endX - startX) / 3, y, 0],
+      [startX + (2 * (endX - startX)) / 3, y, 0],
       [endX, y, 0],
     ];
 
@@ -310,7 +320,8 @@ export class BarChart extends Group {
   private _barCenterX(groupIndex: number, seriesIndex: number): number {
     const groupCenter = this._groupCenterX(groupIndex);
     const groupWidth = this._numSeries * this._barWidth + (this._numSeries - 1) * this._barGap;
-    const barOffset = seriesIndex * (this._barWidth + this._barGap) - groupWidth / 2 + this._barWidth / 2;
+    const barOffset =
+      seriesIndex * (this._barWidth + this._barGap) - groupWidth / 2 + this._barWidth / 2;
     return groupCenter + barOffset;
   }
 
@@ -447,7 +458,7 @@ export class BarChart extends Group {
    * Get the current values
    */
   getValues(): number[][] {
-    return this._values.map(series => [...series]);
+    return this._values.map((series) => [...series]);
   }
 
   /**
@@ -659,5 +670,3 @@ export class BarChart extends Group {
     });
   }
 }
-
-export default BarChart;

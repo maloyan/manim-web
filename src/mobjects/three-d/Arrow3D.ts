@@ -360,5 +360,3 @@ export class Vector3D extends Arrow3D {
     });
   }
 }
-
-export default Arrow3D;

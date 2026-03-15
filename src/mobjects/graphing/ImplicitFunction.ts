@@ -108,7 +108,7 @@ export class ImplicitFunction extends VMobject {
 
       // Transform points if axes are provided
       const transformed = polyline.map((p) =>
-        this._axes ? this._axes.coordsToPoint(p[0], p[1]) : [p[0], p[1], 0]
+        this._axes ? this._axes.coordsToPoint(p[0], p[1]) : [p[0], p[1], 0],
       );
 
       const bezierPoints = this._pointsToBezier(transformed);
@@ -148,8 +148,8 @@ export class ImplicitFunction extends VMobject {
       // Quantize to avoid floating-point key mismatches.
       // Use the finest possible grid spacing for quantization.
       const finestRes = Math.pow(2, this._maxDepth);
-      const qx = Math.round((x - xMin) * finestRes / (xMax - xMin));
-      const qy = Math.round((y - yMin) * finestRes / (yMax - yMin));
+      const qx = Math.round(((x - xMin) * finestRes) / (xMax - xMin));
+      const qy = Math.round(((y - yMin) * finestRes) / (yMax - yMin));
       const key = `${qx},${qy}`;
       let val = valueCache.get(key);
       if (val === undefined) {
@@ -166,10 +166,7 @@ export class ImplicitFunction extends VMobject {
       for (let ix = 0; ix < baseRes; ix++) {
         const cellX = xMin + ix * baseDx;
         const cellY = yMin + iy * baseDy;
-        this._processCell(
-          cellX, cellY, baseDx, baseDy,
-          this._minDepth, evalFunc, segments
-        );
+        this._processCell(cellX, cellY, baseDx, baseDy, this._minDepth, evalFunc, segments);
       }
     }
 
@@ -182,11 +179,13 @@ export class ImplicitFunction extends VMobject {
    * Otherwise, emit marching-squares segments for this cell.
    */
   private _processCell(
-    cellX: number, cellY: number,
-    dx: number, dy: number,
+    cellX: number,
+    cellY: number,
+    dx: number,
+    dy: number,
     depth: number,
     evalFunc: (x: number, y: number) => number,
-    segments: number[][][]
+    segments: number[][][],
   ): void {
     // Evaluate corner values: BL, BR, TR, TL
     const vBL = evalFunc(cellX, cellY);
@@ -216,44 +215,41 @@ export class ImplicitFunction extends VMobject {
       // Top-left sub-cell
       this._processCell(cellX, cellY + halfDy, halfDx, halfDy, nextDepth, evalFunc, segments);
       // Top-right sub-cell
-      this._processCell(cellX + halfDx, cellY + halfDy, halfDx, halfDy, nextDepth, evalFunc, segments);
+      this._processCell(
+        cellX + halfDx,
+        cellY + halfDy,
+        halfDx,
+        halfDy,
+        nextDepth,
+        evalFunc,
+        segments,
+      );
       return;
     }
 
     // At maxDepth: emit segments for this leaf cell
     // Compute interpolated edge crossing points
-    const left = this._interpolateEdge(
-      cellX, cellY + dy, vTL,
-      cellX, cellY, vBL
-    );
-    const right = this._interpolateEdge(
-      cellX + dx, cellY + dy, vTR,
-      cellX + dx, cellY, vBR
-    );
-    const bottom = this._interpolateEdge(
-      cellX, cellY, vBL,
-      cellX + dx, cellY, vBR
-    );
-    const top = this._interpolateEdge(
-      cellX, cellY + dy, vTL,
-      cellX + dx, cellY + dy, vTR
-    );
+    const left = this._interpolateEdge(cellX, cellY + dy, vTL, cellX, cellY, vBL);
+    const right = this._interpolateEdge(cellX + dx, cellY + dy, vTR, cellX + dx, cellY, vBR);
+    const bottom = this._interpolateEdge(cellX, cellY, vBL, cellX + dx, cellY, vBR);
+    const top = this._interpolateEdge(cellX, cellY + dy, vTL, cellX + dx, cellY + dy, vTR);
 
     // Map case index to line segments
     switch (caseIndex) {
-      case 1:  // BL positive only
+      case 1: // BL positive only
         segments.push([left, bottom]);
         break;
-      case 2:  // BR positive only
+      case 2: // BR positive only
         segments.push([bottom, right]);
         break;
-      case 3:  // BL + BR positive (bottom half)
+      case 3: // BL + BR positive (bottom half)
         segments.push([left, right]);
         break;
-      case 4:  // TR positive only
+      case 4: // TR positive only
         segments.push([right, top]);
         break;
-      case 5: { // BL + TR positive (saddle)
+      case 5: {
+        // BL + TR positive (saddle)
         const center = evalFunc(cellX + dx / 2, cellY + dy / 2);
         if (center > 0) {
           // Center joins BL-TR: contour isolates TL and BR separately
@@ -266,19 +262,20 @@ export class ImplicitFunction extends VMobject {
         }
         break;
       }
-      case 6:  // TR + BR positive (right half)
+      case 6: // TR + BR positive (right half)
         segments.push([bottom, top]);
         break;
-      case 7:  // All positive except TL
+      case 7: // All positive except TL
         segments.push([left, top]);
         break;
-      case 8:  // TL positive only
+      case 8: // TL positive only
         segments.push([top, left]);
         break;
-      case 9:  // TL + BL positive (left half)
+      case 9: // TL + BL positive (left half)
         segments.push([bottom, top]);
         break;
-      case 10: { // TL + BR positive (saddle)
+      case 10: {
+        // TL + BR positive (saddle)
         const center = evalFunc(cellX + dx / 2, cellY + dy / 2);
         if (center > 0) {
           // Center joins TL-BR: contour isolates TR and BL separately
@@ -312,8 +309,12 @@ export class ImplicitFunction extends VMobject {
    * Interpolates between (x0, y0) with value v0 and (x1, y1) with value v1.
    */
   private _interpolateEdge(
-    x0: number, y0: number, v0: number,
-    x1: number, y1: number, v1: number
+    x0: number,
+    y0: number,
+    v0: number,
+    x1: number,
+    y1: number,
+    v1: number,
   ): number[] {
     // Avoid division by zero
     if (Math.abs(v1 - v0) < 1e-12) {
@@ -321,10 +322,7 @@ export class ImplicitFunction extends VMobject {
     }
     const t = -v0 / (v1 - v0);
     const tc = Math.max(0, Math.min(1, t));
-    return [
-      x0 + tc * (x1 - x0),
-      y0 + tc * (y1 - y0),
-    ];
+    return [x0 + tc * (x1 - x0), y0 + tc * (y1 - y0)];
   }
 
   /**
@@ -338,10 +336,7 @@ export class ImplicitFunction extends VMobject {
     const [yMin, yMax] = this._yRange;
     // Use the finest grid level for epsilon so adaptive segments chain properly
     const finestRes = Math.pow(2, this._maxDepth);
-    const cellSize = Math.max(
-      (xMax - xMin) / finestRes,
-      (yMax - yMin) / finestRes
-    );
+    const cellSize = Math.max((xMax - xMin) / finestRes, (yMax - yMin) / finestRes);
     const epsilon = cellSize * 0.1;
 
     // Build endpoint spatial index
@@ -445,7 +440,7 @@ export class ImplicitFunction extends VMobject {
       return [
         [...p0],
         [p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3],
-        [p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3],
+        [p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3],
         [...p1],
       ];
     }
@@ -461,27 +456,11 @@ export class ImplicitFunction extends VMobject {
 
       // Calculate control points
       const tension = 0.5;
-      const d1 = [
-        (p2[0] - p0[0]) * tension,
-        (p2[1] - p0[1]) * tension,
-        (p2[2] - p0[2]) * tension,
-      ];
-      const d2 = [
-        (p3[0] - p1[0]) * tension,
-        (p3[1] - p1[1]) * tension,
-        (p3[2] - p1[2]) * tension,
-      ];
+      const d1 = [(p2[0] - p0[0]) * tension, (p2[1] - p0[1]) * tension, (p2[2] - p0[2]) * tension];
+      const d2 = [(p3[0] - p1[0]) * tension, (p3[1] - p1[1]) * tension, (p3[2] - p1[2]) * tension];
 
-      const cp1 = [
-        p1[0] + d1[0] / 3,
-        p1[1] + d1[1] / 3,
-        p1[2] + d1[2] / 3,
-      ];
-      const cp2 = [
-        p2[0] - d2[0] / 3,
-        p2[1] - d2[1] / 3,
-        p2[2] - d2[2] / 3,
-      ];
+      const cp1 = [p1[0] + d1[0] / 3, p1[1] + d1[1] / 3, p1[2] + d1[2] / 3];
+      const cp2 = [p2[0] - d2[0] / 3, p2[1] - d2[1] / 3, p2[2] - d2[2] / 3];
 
       if (i === 0) {
         bezierPoints.push([...p1]);
@@ -567,5 +546,3 @@ export class ImplicitFunction extends VMobject {
     });
   }
 }
-
-export default ImplicitFunction;

@@ -407,5 +407,3 @@ export class Surface3D extends Mobject {
     });
   }
 }
-
-export default Surface3D;

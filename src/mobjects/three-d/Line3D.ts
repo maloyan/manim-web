@@ -44,13 +44,7 @@ export class Line3D extends Mobject {
   constructor(options: Line3DOptions) {
     super();
 
-    const {
-      start = [0, 0, 0],
-      end,
-      color = '#ffffff',
-      lineWidth = 2,
-      opacity = 1,
-    } = options;
+    const { start = [0, 0, 0], end, color = '#ffffff', lineWidth = 2, opacity = 1 } = options;
 
     this._start = [...start];
     this._end = [...end];
@@ -223,5 +217,3 @@ export class Line3D extends Mobject {
     });
   }
 }
-
-export default Line3D;

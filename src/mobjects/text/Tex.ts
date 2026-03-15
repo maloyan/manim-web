@@ -67,5 +67,3 @@ export class Tex extends MathTex {
     });
   }
 }
-
-export default Tex;

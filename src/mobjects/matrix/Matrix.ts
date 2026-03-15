@@ -106,10 +106,7 @@ export class Matrix extends VGroup {
   /** The matrix content without brackets */
   protected _content: VGroup | null = null;
 
-  constructor(
-    data: (string | number | Mobject)[][],
-    options: MatrixOptions = {}
-  ) {
+  constructor(data: (string | number | Mobject)[][], options: MatrixOptions = {}) {
     super();
 
     const {
@@ -146,7 +143,7 @@ export class Matrix extends VGroup {
     const numRows = this._data.length;
     if (numRows === 0) return;
 
-    const numCols = Math.max(...this._data.map(row => row.length));
+    const numCols = Math.max(...this._data.map((row) => row.length));
     if (numCols === 0) return;
 
     // Create entry mobjects
@@ -284,22 +281,14 @@ export class Matrix extends VGroup {
     this._brackets = new VGroup();
 
     // Create left bracket
-    this._leftBracket = this._createBracketShape(
-      this._bracketType,
-      'left',
-      height
-    );
+    this._leftBracket = this._createBracketShape(this._bracketType, 'left', height);
     if (this._leftBracket) {
       this._leftBracket.moveTo([-(width / 2 + this._hBuff * 0.3), 0, 0]);
       this._brackets.add(this._leftBracket);
     }
 
     // Create right bracket
-    this._rightBracket = this._createBracketShape(
-      this._bracketType,
-      'right',
-      height
-    );
+    this._rightBracket = this._createBracketShape(this._bracketType, 'right', height);
     if (this._rightBracket) {
       this._rightBracket.moveTo([width / 2 + this._hBuff * 0.3, 0, 0]);
       this._brackets.add(this._rightBracket);
@@ -312,7 +301,7 @@ export class Matrix extends VGroup {
   protected _createBracketShape(
     type: BracketType,
     side: 'left' | 'right',
-    height: number
+    height: number,
   ): VMobject {
     const bracket = new VMobject();
     bracket.color = this._bracketColor;
@@ -332,7 +321,7 @@ export class Matrix extends VGroup {
             [hookSize, halfHeight, 0],
             [0, halfHeight, 0],
             [0, -halfHeight, 0],
-            [hookSize, -halfHeight, 0]
+            [hookSize, -halfHeight, 0],
           );
         } else {
           // Top hook, vertical line, bottom hook (right side: opens left)
@@ -340,12 +329,12 @@ export class Matrix extends VGroup {
             [-hookSize, halfHeight, 0],
             [0, halfHeight, 0],
             [0, -halfHeight, 0],
-            [-hookSize, -halfHeight, 0]
+            [-hookSize, -halfHeight, 0],
           );
         }
         break;
 
-      case '()':
+      case '()': {
         // Parentheses (curved)
         const curveWidth = hookSize * 1.5;
         const numSegments = 20;
@@ -363,6 +352,7 @@ export class Matrix extends VGroup {
           }
         }
         break;
+      }
 
       case '||':
         // Vertical bars (for determinants)
@@ -372,6 +362,8 @@ export class Matrix extends VGroup {
           points.push([0, halfHeight, 0], [0, -halfHeight, 0]);
         }
         break;
+      default:
+        throw new Error(`Unexpected bracket type: ${type}`);
     }
 
     // Convert points to Bezier control points
@@ -401,11 +393,7 @@ export class Matrix extends VGroup {
 
       // Add control points for line segment (1/3 and 2/3 along line)
       bezierPoints.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-      bezierPoints.push([
-        p0[0] + (2 * dx) / 3,
-        p0[1] + (2 * dy) / 3,
-        p0[2] + (2 * dz) / 3,
-      ]);
+      bezierPoints.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
       bezierPoints.push([...p1]);
     }
 
@@ -537,8 +525,8 @@ export class Matrix extends VGroup {
    */
   protected override _createCopy(): VMobject {
     // Deep copy the data
-    const dataCopy = this._data.map(row =>
-      row.map(val => (val instanceof Mobject ? val.copy() : val))
+    const dataCopy = this._data.map((row) =>
+      row.map((val) => (val instanceof Mobject ? val.copy() : val)),
     );
 
     return new Matrix(dataCopy, {
@@ -558,7 +546,7 @@ export class Matrix extends VGroup {
 /**
  * Options for IntegerMatrix
  */
-export interface IntegerMatrixOptions extends Omit<MatrixOptions, never> {}
+export type IntegerMatrixOptions = MatrixOptions;
 
 /**
  * IntegerMatrix - A matrix specialized for integer values
@@ -575,7 +563,7 @@ export interface IntegerMatrixOptions extends Omit<MatrixOptions, never> {}
 export class IntegerMatrix extends Matrix {
   constructor(data: number[][], options: IntegerMatrixOptions = {}) {
     // Round all values to integers
-    const intData = data.map(row => row.map(val => Math.round(val)));
+    const intData = data.map((row) => row.map((val) => Math.round(val)));
     super(intData, options);
   }
 
@@ -583,9 +571,7 @@ export class IntegerMatrix extends Matrix {
    * Create a copy of this IntegerMatrix
    */
   protected override _createCopy(): VMobject {
-    const dataCopy = this._data.map(row =>
-      row.map(val => (typeof val === 'number' ? val : 0))
-    );
+    const dataCopy = this._data.map((row) => row.map((val) => (typeof val === 'number' ? val : 0)));
 
     return new IntegerMatrix(dataCopy as number[][], {
       bracketType: this._bracketType,
@@ -627,9 +613,7 @@ export class DecimalMatrix extends Matrix {
     const { numDecimalPlaces = 2, ...matrixOptions } = options;
 
     // Format all values with specified decimal places
-    const formattedData = data.map(row =>
-      row.map(val => val.toFixed(numDecimalPlaces))
-    );
+    const formattedData = data.map((row) => row.map((val) => val.toFixed(numDecimalPlaces)));
 
     super(formattedData, matrixOptions);
     this._numDecimalPlaces = numDecimalPlaces;
@@ -640,8 +624,8 @@ export class DecimalMatrix extends Matrix {
    */
   protected override _createCopy(): VMobject {
     // Parse the formatted strings back to numbers
-    const dataCopy = this._data.map(row =>
-      row.map(val => (typeof val === 'string' ? parseFloat(val) : val as number))
+    const dataCopy = this._data.map((row) =>
+      row.map((val) => (typeof val === 'string' ? parseFloat(val) : (val as number))),
     );
 
     return new DecimalMatrix(dataCopy as number[][], {
@@ -662,7 +646,7 @@ export class DecimalMatrix extends Matrix {
 /**
  * Options for MobjectMatrix
  */
-export interface MobjectMatrixOptions extends MatrixOptions {}
+export type MobjectMatrixOptions = MatrixOptions;
 
 /**
  * MobjectMatrix - A matrix containing arbitrary Mobjects
@@ -695,8 +679,8 @@ export class MobjectMatrix extends Matrix {
    * Create a copy of this MobjectMatrix
    */
   protected override _createCopy(): VMobject {
-    const dataCopy = this._data.map(row =>
-      row.map(val => (val instanceof Mobject ? val.copy() : val))
+    const dataCopy = this._data.map((row) =>
+      row.map((val) => (val instanceof Mobject ? val.copy() : val)),
     ) as Mobject[][];
 
     return new MobjectMatrix(dataCopy, {

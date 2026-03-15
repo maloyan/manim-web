@@ -76,11 +76,7 @@ export class Sphere extends Mobject {
    * Create the Three.js sphere mesh
    */
   protected _createThreeObject(): THREE.Object3D {
-    const geometry = new THREE.SphereGeometry(
-      this._radius,
-      this._resolution,
-      this._resolution
-    );
+    const geometry = new THREE.SphereGeometry(this._radius, this._resolution, this._resolution);
 
     const material = new THREE.MeshStandardMaterial({
       color: this.color,
@@ -128,7 +124,7 @@ export class Sphere extends Mobject {
       this._threeObject.geometry = new THREE.SphereGeometry(
         this._radius,
         this._resolution,
-        this._resolution
+        this._resolution,
       );
     }
     this._markDirty();
@@ -152,7 +148,7 @@ export class Sphere extends Mobject {
       this._threeObject.geometry = new THREE.SphereGeometry(
         this._radius,
         this._resolution,
-        this._resolution
+        this._resolution,
       );
     }
     this._markDirty();
@@ -198,11 +194,7 @@ export class Sphere extends Mobject {
     const x = this._radius * Math.sin(phi) * Math.cos(theta);
     const y = this._radius * Math.sin(phi) * Math.sin(theta);
     const z = this._radius * Math.cos(phi);
-    return [
-      x + this.position.x,
-      y + this.position.y,
-      z + this.position.z,
-    ];
+    return [x + this.position.x, y + this.position.y, z + this.position.z];
   }
 
   /**
@@ -219,5 +211,3 @@ export class Sphere extends Mobject {
     });
   }
 }
-
-export default Sphere;

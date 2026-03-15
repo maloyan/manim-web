@@ -17,11 +17,7 @@ export interface ScaleOptions extends AnimationOptions {
  * Helper function to lerp between two Vector3
  */
 function lerpVector3(a: THREE.Vector3, b: THREE.Vector3, t: number): THREE.Vector3 {
-  return new THREE.Vector3(
-    a.x + (b.x - a.x) * t,
-    a.y + (b.y - a.y) * t,
-    a.z + (b.z - a.z) * t
-  );
+  return new THREE.Vector3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t);
 }
 
 export class Scale extends Animation {
@@ -55,15 +51,13 @@ export class Scale extends Animation {
   override begin(): void {
     super.begin();
 
-    // Store initial scale
     this._initialScale.copy(this.mobject.scaleVector);
 
-    // Calculate target scale
     if (typeof this.scaleFactor === 'number') {
       this._targetScale.set(
         this._initialScale.x * this.scaleFactor,
         this._initialScale.y * this.scaleFactor,
-        this._initialScale.z * this.scaleFactor
+        this._initialScale.z * this.scaleFactor,
       );
     } else {
       // For 2D scenes, z-scale=0 means "preserve z" (matching Python Manim where
@@ -73,19 +67,17 @@ export class Scale extends Animation {
       this._targetScale.set(
         this._initialScale.x * this.scaleFactor[0],
         this._initialScale.y * this.scaleFactor[1],
-        this._initialScale.z * zFactor
+        this._initialScale.z * zFactor,
       );
     }
 
-    // Store initial position
     this._initialPosition.copy(this.mobject.position);
 
-    // Prepare about point
     if (this.aboutPoint) {
       this._aboutPointVector = new THREE.Vector3(
         this.aboutPoint[0],
         this.aboutPoint[1],
-        this.aboutPoint[2]
+        this.aboutPoint[2],
       );
     } else {
       // Default to mobject center
@@ -108,7 +100,7 @@ export class Scale extends Animation {
       const currentScaleFactor = new THREE.Vector3(
         newScale.x / this._initialScale.x,
         newScale.y / this._initialScale.y,
-        newScale.z / this._initialScale.z
+        newScale.z / this._initialScale.z,
       );
 
       // Scale position offset from about point
@@ -140,7 +132,7 @@ export class Scale extends Animation {
 export function scale(
   mobject: Mobject,
   factor: number | Vector3Tuple,
-  options?: Omit<ScaleOptions, 'scaleFactor'>
+  options?: Omit<ScaleOptions, 'scaleFactor'>,
 ): Scale {
   return new Scale(mobject, { ...options, scaleFactor: factor });
 }
@@ -148,7 +140,7 @@ export function scale(
 /**
  * GrowFromCenter options
  */
-export interface GrowFromCenterOptions extends AnimationOptions {}
+export type GrowFromCenterOptions = AnimationOptions;
 
 /**
  * GrowFromCenter animation - scales from 0 to 1, appearing from center.
@@ -181,7 +173,7 @@ export class GrowFromCenter extends Animation {
     this.mobject.scaleVector.set(
       this._targetScale.x * alpha,
       this._targetScale.y * alpha,
-      this._targetScale.z * alpha
+      this._targetScale.z * alpha,
     );
     this.mobject._markDirty();
   }
@@ -201,9 +193,6 @@ export class GrowFromCenter extends Animation {
  * @param mobject The mobject to grow from center
  * @param options Animation options (duration, rateFunc)
  */
-export function growFromCenter(
-  mobject: Mobject,
-  options?: GrowFromCenterOptions
-): GrowFromCenter {
+export function growFromCenter(mobject: Mobject, options?: GrowFromCenterOptions): GrowFromCenter {
   return new GrowFromCenter(mobject, options);
 }

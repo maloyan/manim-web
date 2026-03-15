@@ -306,5 +306,3 @@ export class Group extends Mobject {
     return new Group(...filtered.map((m) => m.copy()));
   }
 }
-
-export default Group;
