@@ -407,7 +407,7 @@ export {
 // Animations
 export { Animation, type AnimationOptions, type RateFunction } from './animation/Animation';
 export { Timeline, type PositionParam } from './animation/Timeline';
-export { MasterTimeline, type Segment } from './animation/MasterTimeline';
+export { MasterTimeline, masterTimeline, type Segment } from './animation/MasterTimeline';
 
 // Animation types
 export { FadeIn, fadeIn, FadeOut, fadeOut } from './animation/fading';
@@ -426,6 +426,27 @@ export {
   addTextLetterByLetter,
   RemoveTextLetterByLetter,
   removeTextLetterByLetter,
+  AddTextWordByWord,
+  addTextWordByWord,
+  type AddTextWordByWordOptions,
+  ShowIncreasingSubsets,
+  showIncreasingSubsets,
+  type ShowIncreasingSubsetsOptions,
+  ShowPartial,
+  showPartial,
+  type ShowPartialOptions,
+  ShowSubmobjectsOneByOne,
+  showSubmobjectsOneByOne,
+  type ShowSubmobjectsOneByOneOptions,
+  SpiralIn,
+  spiralIn,
+  type SpiralInOptions,
+  TypeWithCursor,
+  typeWithCursor,
+  UntypeWithCursor,
+  untypeWithCursor,
+  type TypeWithCursorOptions,
+  type UntypeWithCursorOptions,
   type CreateOptions,
   type WriteOptions,
   type AddTextLetterByLetterOptions,
@@ -438,17 +459,73 @@ export {
   MoveToTarget,
   moveToTarget,
 } from './animation/transform';
-export { ApplyPointwiseFunction, applyPointwiseFunction } from './animation/transform';
+export {
+  ApplyPointwiseFunction,
+  applyPointwiseFunction,
+  type ApplyPointwiseFunctionOptions,
+} from './animation/transform';
 export { ApplyFunction, applyFunction, type ApplyFunctionOptions } from './animation/transform';
+export { ApplyMethod, applyMethod, type ApplyMethodOptions } from './animation/transform';
 export { ApplyMatrix, applyMatrix, type ApplyMatrixOptions } from './animation/transform';
 export {
   ApplyComplexFunction,
   applyComplexFunction,
   type ApplyComplexFunctionOptions,
 } from './animation/transform';
+export {
+  FadeTransform,
+  fadeTransform,
+  type FadeTransformOptions,
+  FadeTransformPieces,
+  fadeTransformPieces,
+  type FadeTransformPiecesOptions,
+  TransformFromCopy,
+  transformFromCopy,
+  type TransformFromCopyOptions,
+} from './animation/transform';
+export {
+  ClockwiseTransform,
+  clockwiseTransform,
+  type ClockwiseTransformOptions,
+  CounterclockwiseTransform,
+  counterclockwiseTransform,
+  type CounterclockwiseTransformOptions,
+  Swap,
+  swap,
+  type SwapOptions,
+  CyclicReplace,
+  cyclicReplace,
+  type CyclicReplaceOptions,
+} from './animation/transform';
 export { FadeToColor, fadeToColor, type FadeToColorOptions } from './animation/transform';
-export { Restore, restore } from './animation/transform';
-export { ScaleInPlace, type ScaleInPlaceOptions } from './animation/transform';
+export {
+  Restore,
+  restore,
+  type MobjectWithSavedState,
+  type RestoreOptions,
+} from './animation/transform';
+export {
+  ScaleInPlace,
+  scaleInPlace,
+  type ScaleInPlaceOptions,
+  ShrinkToCenter,
+  shrinkToCenter,
+  type ShrinkToCenterOptions,
+} from './animation/transform';
+export {
+  TransformMatchingShapes,
+  transformMatchingShapes,
+  type TransformMatchingShapesOptions,
+  TransformMatchingTex,
+  transformMatchingTex,
+  type TransformMatchingTexOptions,
+} from './animation/transform';
+export {
+  TransformAnimations,
+  transformAnimations,
+  type TransformAnimationsOptions,
+} from './animation/transform';
+export { type MobjectWithTarget } from './animation/transform';
 
 // Movement animations
 export {
@@ -465,6 +542,8 @@ export {
   MoveToTargetPosition,
   moveToTargetPosition,
   type ShiftOptions,
+  type MoveToTargetPositionOptions,
+  type MobjectWithTargetPosition,
   MoveAlongPath,
   moveAlongPath,
   type MoveAlongPathOptions,
@@ -510,14 +589,61 @@ export {
 } from './animation/AnimationGroup';
 export { LaggedStart, laggedStart, type LaggedStartOptions } from './animation/LaggedStart';
 export { Succession, succession, type SuccessionOptions } from './animation/Succession';
+export {
+  LaggedStartMap,
+  laggedStartMap,
+  type LaggedStartMapOptions,
+  type AnimationClass,
+} from './animation/composition';
 
 // Updater animations
 export { UpdateFromFunc, updateFromFunc } from './animation/UpdateFromFunc';
 export { UpdateFromAlphaFunc, updateFromAlphaFunc } from './animation/UpdateFromAlphaFunc';
 export { maintainPositionRelativeTo } from './animation/MaintainPositionRelativeTo';
 
+// Number animations
+export {
+  ChangingDecimal,
+  changingDecimal,
+  type ChangingDecimalOptions,
+  ChangeDecimalToValue,
+  changeDecimalToValue,
+  type ChangeDecimalToValueOptions,
+} from './animation/numbers';
+
+// Changing animations (path tracing, animated boundaries)
+export {
+  TracedPath,
+  tracedPath,
+  type TracedPathOptions,
+  AnimatedBoundary,
+  animatedBoundary,
+  type AnimatedBoundaryOptions,
+} from './animation/changing';
+
+// Speed animations
+export {
+  ChangeSpeed,
+  changeSpeed,
+  type ChangeSpeedOptions,
+  type SpeedFunction,
+  linearSpeedRamp,
+  emphasizeRegion,
+  rushRegion,
+  smoothSpeedCurve,
+} from './animation/speed';
+
 // Utility animations
 export {
+  Add,
+  add,
+  type AddOptions,
+  Remove,
+  remove,
+  type RemoveOptions,
+  Wait,
+  wait,
+  type WaitOptions,
   Rotating,
   rotating,
   type RotatingOptions,
@@ -673,54 +799,6 @@ export {
   createVideoExporter,
   type VideoExportOptions,
 } from './export';
-
-// Rendering (GPU Bezier SDF shaders)
-export {
-  createBezierShaderMaterial,
-  updateBezierMaterialResolution,
-  type BezierShaderMaterialOptions,
-  BezierRenderer,
-  type BezierRendererOptions,
-  type BezierSegment,
-} from './rendering';
-
-// Performance utilities
-export {
-  PerformanceMonitor,
-  createPerformanceMonitor,
-  FrameTimeTracker,
-  createFrameTimeTracker,
-} from './utils/Performance';
-
-// ODE solver utilities
-export {
-  rk4Step,
-  solveIVP,
-  flowPoint,
-  flowPointTrajectory,
-  type ODEFunction,
-  type VectorFieldFunction3D,
-  type SolveIVPOptions,
-  type IVPResult,
-} from './utils/ode';
-
-// Hungarian algorithm utilities
-export { hungarian, hungarianFromSimilarity, type HungarianResult } from './utils/hungarian';
-
-// Skeletonization utilities (medial axis extraction for glyph stroke animation)
-export { skeletonizeGlyph, type SkeletonizeOptions } from './utils/skeletonize';
-
-// Polygon triangulation utilities (earcut-based, for robust SVG fill)
-export {
-  triangulatePolygon,
-  triangulatePolygonPositions,
-  signedArea2D,
-  ensureCCW,
-  ensureCW,
-} from './utils/triangulate';
-
-// Polylabel (pole of inaccessibility)
-export { polylabel, type PolylabelResult } from './utils/polylabel';
 
 // Vector math utilities
 export { scaleVec, addVec, subVec, linspace } from './utils/vectors';

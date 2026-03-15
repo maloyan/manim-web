@@ -19,7 +19,7 @@ export { Paragraph, type ParagraphOptions } from './Paragraph';
 export { MarkupText, type MarkupTextOptions, type StyledTextSegment } from './MarkupText';
 
 // KaTeX styles helper
-export { ensureKatexStyles, areKatexStylesLoaded } from './katex-styles';
+export { ensureKatexStyles, areKatexStylesLoaded } from './katexStyles';
 
 // MathTex - LaTeX rendering (KaTeX default, MathJax fallback)
 export { MathTex, type MathTexOptions, type TexRenderer } from './MathTex';
@@ -38,21 +38,13 @@ export {
 } from './MathJaxRenderer';
 
 // SVG path parser (SVG d-attribute -> VMobject conversion)
-export {
-  parseSVGPathData,
-  svgToVMobjects,
-  type SVGToVMobjectOptions,
-} from './svgPathParser';
+export { parseSVGPathData, svgToVMobjects, type SVGToVMobjectOptions } from './svgPathParser';
 
 // Tex - Manim compatibility alias
 export { Tex, type TexOptions } from './Tex';
 
 // DecimalNumber - Animatable number display
-export {
-  DecimalNumber,
-  Integer,
-  type DecimalNumberOptions,
-} from './DecimalNumber';
+export { DecimalNumber, Integer, type DecimalNumberOptions } from './DecimalNumber';
 
 // Variable - Label with animatable value (e.g., "x = 5")
 export { Variable, type VariableOptions } from './Variable';

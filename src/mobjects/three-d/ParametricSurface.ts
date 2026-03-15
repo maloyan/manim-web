@@ -80,7 +80,10 @@ export const SurfacePresets = {
   /**
    * Create a sphere surface
    */
-  sphere(radius: number = 1, options: Partial<Omit<Surface3DOptions, 'func'>> = {}): ParametricSurface {
+  sphere(
+    radius: number = 1,
+    options: Partial<Omit<Surface3DOptions, 'func'>> = {},
+  ): ParametricSurface {
     return new ParametricSurface({
       func: (u: number, v: number): Vector3Tuple => {
         const theta = u * Math.PI * 2;
@@ -88,17 +91,21 @@ export const SurfacePresets = {
         return [
           radius * Math.sin(phi) * Math.cos(theta),
           radius * Math.sin(phi) * Math.sin(theta),
-          radius * Math.cos(phi)
+          radius * Math.cos(phi),
         ];
       },
-      ...options
+      ...options,
     });
   },
 
   /**
    * Create a torus surface
    */
-  torus(majorRadius: number = 1, minorRadius: number = 0.3, options: Partial<Omit<Surface3DOptions, 'func'>> = {}): ParametricSurface {
+  torus(
+    majorRadius: number = 1,
+    minorRadius: number = 0.3,
+    options: Partial<Omit<Surface3DOptions, 'func'>> = {},
+  ): ParametricSurface {
     return new ParametricSurface({
       func: (u: number, v: number): Vector3Tuple => {
         const theta = u * Math.PI * 2;
@@ -106,17 +113,21 @@ export const SurfacePresets = {
         return [
           (majorRadius + minorRadius * Math.cos(phi)) * Math.cos(theta),
           (majorRadius + minorRadius * Math.cos(phi)) * Math.sin(theta),
-          minorRadius * Math.sin(phi)
+          minorRadius * Math.sin(phi),
         ];
       },
-      ...options
+      ...options,
     });
   },
 
   /**
    * Create a mobius strip surface
    */
-  mobiusStrip(radius: number = 1, width: number = 0.5, options: Partial<Omit<Surface3DOptions, 'func'>> = {}): ParametricSurface {
+  mobiusStrip(
+    radius: number = 1,
+    width: number = 0.5,
+    options: Partial<Omit<Surface3DOptions, 'func'>> = {},
+  ): ParametricSurface {
     return new ParametricSurface({
       func: (u: number, v: number): Vector3Tuple => {
         const theta = u * Math.PI * 2;
@@ -124,62 +135,66 @@ export const SurfacePresets = {
         return [
           (radius + w * Math.cos(theta / 2)) * Math.cos(theta),
           (radius + w * Math.cos(theta / 2)) * Math.sin(theta),
-          w * Math.sin(theta / 2)
+          w * Math.sin(theta / 2),
         ];
       },
       uResolution: 64,
       vResolution: 16,
-      ...options
+      ...options,
     });
   },
 
   /**
    * Create a paraboloid surface
    */
-  paraboloid(scale: number = 1, options: Partial<Omit<Surface3DOptions, 'func'>> = {}): ParametricSurface {
+  paraboloid(
+    scale: number = 1,
+    options: Partial<Omit<Surface3DOptions, 'func'>> = {},
+  ): ParametricSurface {
     return new ParametricSurface({
       func: (u: number, v: number): Vector3Tuple => {
         const x = scale * (2 * u - 1);
         const y = scale * (2 * v - 1);
         return [x, y, (x * x + y * y) / scale];
       },
-      ...options
+      ...options,
     });
   },
 
   /**
    * Create a saddle surface (hyperbolic paraboloid)
    */
-  saddle(scale: number = 1, options: Partial<Omit<Surface3DOptions, 'func'>> = {}): ParametricSurface {
+  saddle(
+    scale: number = 1,
+    options: Partial<Omit<Surface3DOptions, 'func'>> = {},
+  ): ParametricSurface {
     return new ParametricSurface({
       func: (u: number, v: number): Vector3Tuple => {
         const x = scale * (2 * u - 1);
         const y = scale * (2 * v - 1);
         return [x, y, (x * x - y * y) / scale];
       },
-      ...options
+      ...options,
     });
   },
 
   /**
    * Create a helicoid surface
    */
-  helicoid(radius: number = 1, pitch: number = 0.5, options: Partial<Omit<Surface3DOptions, 'func'>> = {}): ParametricSurface {
+  helicoid(
+    radius: number = 1,
+    pitch: number = 0.5,
+    options: Partial<Omit<Surface3DOptions, 'func'>> = {},
+  ): ParametricSurface {
     return new ParametricSurface({
       func: (u: number, v: number): Vector3Tuple => {
         const theta = u * Math.PI * 4;
         const r = radius * (2 * v - 1);
-        return [
-          r * Math.cos(theta),
-          r * Math.sin(theta),
-          pitch * theta
-        ];
+        return [r * Math.cos(theta), r * Math.sin(theta), pitch * theta];
       },
       uResolution: 64,
       vResolution: 16,
-      ...options
+      ...options,
     });
   },
 };
-
-export default ParametricSurface;

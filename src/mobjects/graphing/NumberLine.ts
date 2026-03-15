@@ -118,14 +118,16 @@ export class NumberLine extends VMobject {
     this.setPoints3D([
       [startX, 0, 0],
       [startX + dx / 3, 0, 0],
-      [startX + 2 * dx / 3, 0, 0],
+      [startX + (2 * dx) / 3, 0, 0],
       [endX, 0, 0],
     ]);
 
     // Add tick marks as separate child VMobjects
     this._tickMarks = [];
     if (this._includeTicks && step > 0) {
-      const elongatedSet = new Set(this._numbersWithElongatedTicks.map(n => Math.round(n * 1e9) / 1e9));
+      const elongatedSet = new Set(
+        this._numbersWithElongatedTicks.map((n) => Math.round(n * 1e9) / 1e9),
+      );
       const elongatedTickSize = this._tickSize * 1.5;
       const epsilon = step * 0.0001;
       for (let n = min; n <= max + epsilon; n += step) {
@@ -158,10 +160,13 @@ export class NumberLine extends VMobject {
     this._numberLabels = [];
 
     // Add number labels
-    const numbersToShow = this._numbersToInclude ?? (this._includeNumbers ? this._getDefaultNumbers() : null);
+    const numbersToShow =
+      this._numbersToInclude ?? (this._includeNumbers ? this._getDefaultNumbers() : null);
     if (numbersToShow) {
       const excludeSet = new Set(this._numbersToExclude);
-      const elongatedSetForLabels = new Set(this._numbersWithElongatedTicks.map(n => Math.round(n * 1e9) / 1e9));
+      const elongatedSetForLabels = new Set(
+        this._numbersWithElongatedTicks.map((n) => Math.round(n * 1e9) / 1e9),
+      );
       const elongatedTs = this._tickSize * 1.5;
       for (const n of numbersToShow) {
         if (excludeSet.has(n)) continue;
@@ -176,7 +181,9 @@ export class NumberLine extends VMobject {
           color: '#ffffff',
         });
         // Position below the tick with enough clearance (account for elongated ticks)
-        const ts = elongatedSetForLabels.has(Math.round(n * 1e9) / 1e9) ? elongatedTs : this._tickSize;
+        const ts = elongatedSetForLabels.has(Math.round(n * 1e9) / 1e9)
+          ? elongatedTs
+          : this._tickSize;
         label.position.set(x, -ts - 0.35, 0);
         this._numberLabels.push(label);
         this.add(label);
@@ -201,11 +208,7 @@ export class NumberLine extends VMobject {
    */
   numberToPoint(n: number): Vector3Tuple {
     const x = this._numberToX(n);
-    return [
-      x + this.position.x,
-      this.position.y,
-      this.position.z,
-    ];
+    return [x + this.position.x, this.position.y, this.position.z];
   }
 
   /**
@@ -217,7 +220,7 @@ export class NumberLine extends VMobject {
     const [min, max] = this._xRange;
     const range = max - min;
     const localX = point[0] - this.position.x;
-    return ((localX / this._length) + 0.5) * range + min;
+    return (localX / this._length + 0.5) * range + min;
   }
 
   /**
@@ -441,5 +444,3 @@ export class UnitInterval extends NumberLine {
     });
   }
 }
-
-export default NumberLine;

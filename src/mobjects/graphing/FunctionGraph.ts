@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { Axes } from './Axes';
+import type { Axes } from './Axes';
 
 /**
  * Options for creating a FunctionGraph
@@ -357,5 +357,3 @@ export class FunctionGraph extends VMobject {
     });
   }
 }
-
-export default FunctionGraph;

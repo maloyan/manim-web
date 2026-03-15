@@ -3,38 +3,37 @@ import { Text, TextOptions } from './Text';
 /**
  * Options for creating a MarkupText mobject
  */
-export interface MarkupTextOptions extends TextOptions {
-  /**
-   * MarkupText uses the same base options as Text.
-   * The `text` field should contain Pango-like XML markup.
-   *
-   * Supported tags:
-   *   <b>, <bold>          - Bold text
-   *   <i>, <italic>        - Italic text
-   *   <u>, <underline>     - Underlined text
-   *   <s>, <strikethrough> - Strikethrough text
-   *   <sup>                - Superscript
-   *   <sub>                - Subscript
-   *   <big>                - Larger text (1.2x)
-   *   <small>              - Smaller text (0.83x)
-   *   <tt>                 - Monospace / code font
-   *   <span ...>           - Span with attributes:
-   *       font_family="..."  / font="..."
-   *       font_size="..."    (absolute px, or relative like "larger"/"smaller"/percentage)
-   *       color="..."        / foreground="..." / fgcolor="..."
-   *       background="..."   / bgcolor="..."
-   *       weight="..."       (bold, normal, 100-900)
-   *       style="..."        (italic, normal, oblique)
-   *       underline="single" / underline="none"
-   *       strikethrough="true" / strikethrough="false"
-   *       variant="..."      (normal, small-caps)
-   *       size="..."         (alias for font_size)
-   *
-   * Tags can be nested arbitrarily: <b><i>bold italic</i></b>
-   *
-   * Special characters: &amp; &lt; &gt; &quot; &apos;
-   */
-}
+/**
+ * MarkupText uses the same base options as Text.
+ * The `text` field should contain Pango-like XML markup.
+ *
+ * Supported tags:
+ *   <b>, <bold>          - Bold text
+ *   <i>, <italic>        - Italic text
+ *   <u>, <underline>     - Underlined text
+ *   <s>, <strikethrough> - Strikethrough text
+ *   <sup>                - Superscript
+ *   <sub>                - Subscript
+ *   <big>                - Larger text (1.2x)
+ *   <small>              - Smaller text (0.83x)
+ *   <tt>                 - Monospace / code font
+ *   <span ...>           - Span with attributes:
+ *       font_family="..."  / font="..."
+ *       font_size="..."    (absolute px, or relative like "larger"/"smaller"/percentage)
+ *       color="..."        / foreground="..." / fgcolor="..."
+ *       background="..."   / bgcolor="..."
+ *       weight="..."       (bold, normal, 100-900)
+ *       style="..."        (italic, normal, oblique)
+ *       underline="single" / underline="none"
+ *       strikethrough="true" / strikethrough="false"
+ *       variant="..."      (normal, small-caps)
+ *       size="..."         (alias for font_size)
+ *
+ * Tags can be nested arbitrarily: <b><i>bold italic</i></b>
+ *
+ * Special characters: &amp; &lt; &gt; &quot; &apos;
+ */
+export type MarkupTextOptions = TextOptions;
 
 // ---------------------------------------------------------------------------
 // Styled text segment (leaf node after parsing)
@@ -222,7 +221,7 @@ function parsePangoMarkup(markup: string): MarkupNode[] {
   }
 
   // Filter out any stray __close__ sentinels (shouldn't happen in well-formed input)
-  return nodes.filter(n => !(n.type === 'element' && n.tag === '__close__'));
+  return nodes.filter((n) => !(n.type === 'element' && n.tag === '__close__'));
 }
 
 /**
@@ -231,7 +230,7 @@ function parsePangoMarkup(markup: string): MarkupNode[] {
 function parsePangoMarkupInner(
   markup: string,
   startPos: number,
-  parentTag: string
+  parentTag: string,
 ): { children: MarkupNode[]; endPos: number } {
   const children: MarkupNode[] = [];
   let pos = startPos;
@@ -425,7 +424,11 @@ function flattenToSegments(
 
     if (node.children && node.children.length > 0) {
       const childSegments = flattenToSegments(
-        node.children, ctx, defaultFontSize, defaultFontFamily, codeFontFamily
+        node.children,
+        ctx,
+        defaultFontSize,
+        defaultFontFamily,
+        codeFontFamily,
       );
       segments.push(...childSegments);
     }
@@ -531,9 +534,9 @@ function parseFontSize(value: string, currentSize: number, _currentScale: number
   const namedSizes: Record<string, number> = {
     'xx-small': 0.5789,
     'x-small': 0.6944,
-    'small': 0.8333,
-    'medium': 1.0,
-    'large': 1.2,
+    small: 0.8333,
+    medium: 1.0,
+    large: 1.2,
     'x-large': 1.44,
     'xx-large': 1.728,
   };
@@ -568,7 +571,9 @@ function parseFontSize(value: string, currentSize: number, _currentScale: number
 
 function containsMarkupTags(text: string): boolean {
   // Check for common Pango tags
-  return /<\s*\/?\s*(b|bold|i|italic|u|underline|s|strikethrough|span|sup|sub|big|small|tt)\b/i.test(text);
+  return /<\s*\/?\s*(b|bold|i|italic|u|underline|s|strikethrough|span|sup|sub|big|small|tt)\b/i.test(
+    text,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -720,7 +725,11 @@ export class MarkupText extends Text {
       fontVariant: null,
     };
     this._styledSegments = flattenToSegments(
-      ast, rootContext, this._fontSize, this._fontFamily, this._codeFontFamily
+      ast,
+      rootContext,
+      this._fontSize,
+      this._fontFamily,
+      this._codeFontFamily,
     );
   }
 
@@ -754,8 +763,9 @@ export class MarkupText extends Text {
       let match;
       while ((match = pattern.regex.exec(text)) !== null) {
         const overlaps = matches.some(
-          m => (match!.index >= m.start && match!.index < m.end) ||
-               (match!.index + match![0].length > m.start && match!.index + match![0].length <= m.end)
+          (m) =>
+            (match!.index >= m.start && match!.index < m.end) ||
+            (match!.index + match![0].length > m.start && match!.index + match![0].length <= m.end),
         );
         if (!overlaps) {
           matches.push({
@@ -829,7 +839,7 @@ export class MarkupText extends Text {
   protected _buildStyledFontString(seg: StyledTextSegment): string {
     const style = seg.fontStyle || this._fontStyle || 'normal';
     const weightRaw = seg.fontWeight ?? this._fontWeight;
-    const weight = typeof weightRaw === 'number' ? weightRaw.toString() : (weightRaw || 'normal');
+    const weight = typeof weightRaw === 'number' ? weightRaw.toString() : weightRaw || 'normal';
     const size = Math.round(this._resolveSegmentFontSize(seg) * RESOLUTION_SCALE);
     const family = seg.fontFamily || this._fontFamily;
 
@@ -846,7 +856,7 @@ export class MarkupText extends Text {
    * Get plain text without markup for compatibility
    */
   protected _getPlainText(): string {
-    return this._styledSegments.map(s => s.text).join('');
+    return this._styledSegments.map((s) => s.text).join('');
   }
 
   /**
@@ -932,7 +942,7 @@ export class MarkupText extends Text {
     const width = Math.ceil(maxWidth + padding * 2);
     const height = Math.ceil(totalHeight + padding * 2);
 
-    const lines = lineSegments.map(segs => segs.map(s => s.text).join(''));
+    const lines = lineSegments.map((segs) => segs.map((s) => s.text).join(''));
 
     return { lines, width, height };
   }
@@ -996,8 +1006,9 @@ export class MarkupText extends Text {
         const shiftPx = seg.baselineShift * lineMaxFs;
         const segY = baseline + shiftPx;
 
-        const segWidth = this._ctx.measureText(seg.text).width
-          + (seg.text.length - 1) * this._letterSpacing * RESOLUTION_SCALE;
+        const segWidth =
+          this._ctx.measureText(seg.text).width +
+          (seg.text.length - 1) * this._letterSpacing * RESOLUTION_SCALE;
 
         // Draw background if present
         if (seg.backgroundColor) {
@@ -1092,5 +1103,3 @@ export class MarkupText extends Text {
     return copy;
   }
 }
-
-export default MarkupText;

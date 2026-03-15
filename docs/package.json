@@ -21,6 +21,7 @@
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
     "docusaurus-plugin-typedoc": "^1.4.2",
+    "estree-util-value-to-estree": "^3.5.0",
     "manim-web": "file:..",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",

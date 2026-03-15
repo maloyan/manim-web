@@ -451,7 +451,7 @@ export class SelectionManager {
     let best: Mobject | null = null;
     for (const mob of this._scene.mobjects) {
       const center = mob.getCenter();
-      const bounds = mob._getBoundingBox?.() ?? { width: 1, height: 1 };
+      const bounds = mob.getBoundingBox();
 
       if (
         Math.abs(worldPos[0] - center[0]) <= bounds.width / 2 &&

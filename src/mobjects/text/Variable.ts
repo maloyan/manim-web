@@ -165,7 +165,8 @@ export class Variable extends Mobject {
     const numberWidth = this._numberMobject.getWidth();
 
     // Calculate total width
-    const totalWidth = labelDims[0] + this._labelBuff + equalsDims[0] + this._valueBuff + numberWidth;
+    const totalWidth =
+      labelDims[0] + this._labelBuff + equalsDims[0] + this._valueBuff + numberWidth;
 
     // Position from left to right, centered at origin
     let currentX = -totalWidth / 2;
@@ -341,5 +342,3 @@ export class Variable extends Mobject {
     super.dispose();
   }
 }
-
-export default Variable;

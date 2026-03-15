@@ -1,5 +1,5 @@
 import { Group } from '../../core/Group';
-import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { NumberPlane, NumberPlaneOptions } from './NumberPlane';
 import { Line } from '../geometry';
@@ -108,11 +108,7 @@ export class ComplexPlane extends NumberPlane {
       });
 
       // Position label to the left of the y-axis
-      label.moveTo([
-        visualX - this.position.x - 0.3,
-        visualY - this.position.y,
-        0,
-      ]);
+      label.moveTo([visualX - this.position.x - 0.3, visualY - this.position.y, 0]);
 
       this._imaginaryLabels.add(label);
     }
@@ -342,10 +338,7 @@ export class ComplexPlane extends NumberPlane {
   /**
    * Recursively walk `group` and transform the points of every VMobject child.
    */
-  private _transformChildren(
-    group: any,
-    transformFn: (p: number[]) => number[],
-  ): void {
+  private _transformChildren(group: Mobject, transformFn: (p: number[]) => number[]): void {
     for (const child of group.children || []) {
       if (child instanceof VMobject) {
         const points = child.getPoints();
@@ -418,11 +411,7 @@ export class ComplexPlane extends NumberPlane {
         fontSize: this._labelFontSize,
         color: this._labelColor,
       });
-      label.moveTo([
-        visualX - this.position.x,
-        visualY - this.position.y - 0.3,
-        0,
-      ]);
+      label.moveTo([visualX - this.position.x, visualY - this.position.y - 0.3, 0]);
       this._coordinateLabels.add(label);
     }
 
@@ -435,11 +424,7 @@ export class ComplexPlane extends NumberPlane {
         fontSize: this._labelFontSize,
         color: this._labelColor,
       });
-      label.moveTo([
-        visualX - this.position.x - 0.3,
-        visualY - this.position.y,
-        0,
-      ]);
+      label.moveTo([visualX - this.position.x - 0.3, visualY - this.position.y, 0]);
       this._coordinateLabels.add(label);
     }
 
@@ -698,17 +683,17 @@ export class PolarPlane extends Group {
     if (Math.abs(angle - Math.PI / 4) < epsilon) return 'π/4';
     if (Math.abs(angle - Math.PI / 3) < epsilon) return 'π/3';
     if (Math.abs(angle - Math.PI / 2) < epsilon) return 'π/2';
-    if (Math.abs(angle - 2 * Math.PI / 3) < epsilon) return '2π/3';
-    if (Math.abs(angle - 3 * Math.PI / 4) < epsilon) return '3π/4';
-    if (Math.abs(angle - 5 * Math.PI / 6) < epsilon) return '5π/6';
+    if (Math.abs(angle - (2 * Math.PI) / 3) < epsilon) return '2π/3';
+    if (Math.abs(angle - (3 * Math.PI) / 4) < epsilon) return '3π/4';
+    if (Math.abs(angle - (5 * Math.PI) / 6) < epsilon) return '5π/6';
     if (Math.abs(angle - Math.PI) < epsilon) return 'π';
-    if (Math.abs(angle - 7 * Math.PI / 6) < epsilon) return '7π/6';
-    if (Math.abs(angle - 5 * Math.PI / 4) < epsilon) return '5π/4';
-    if (Math.abs(angle - 4 * Math.PI / 3) < epsilon) return '4π/3';
-    if (Math.abs(angle - 3 * Math.PI / 2) < epsilon) return '3π/2';
-    if (Math.abs(angle - 5 * Math.PI / 3) < epsilon) return '5π/3';
-    if (Math.abs(angle - 7 * Math.PI / 4) < epsilon) return '7π/4';
-    if (Math.abs(angle - 11 * Math.PI / 6) < epsilon) return '11π/6';
+    if (Math.abs(angle - (7 * Math.PI) / 6) < epsilon) return '7π/6';
+    if (Math.abs(angle - (5 * Math.PI) / 4) < epsilon) return '5π/4';
+    if (Math.abs(angle - (4 * Math.PI) / 3) < epsilon) return '4π/3';
+    if (Math.abs(angle - (3 * Math.PI) / 2) < epsilon) return '3π/2';
+    if (Math.abs(angle - (5 * Math.PI) / 3) < epsilon) return '5π/3';
+    if (Math.abs(angle - (7 * Math.PI) / 4) < epsilon) return '7π/4';
+    if (Math.abs(angle - (11 * Math.PI) / 6) < epsilon) return '11π/6';
     if (Math.abs(angle - 2 * Math.PI) < epsilon) return '2π';
 
     // Fallback to decimal radians
@@ -870,5 +855,3 @@ export class PolarPlane extends Group {
     });
   }
 }
-
-export default ComplexPlane;

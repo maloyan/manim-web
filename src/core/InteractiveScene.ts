@@ -399,7 +399,7 @@ export class InteractiveScene extends Scene {
     const worldPos = this._screenToWorldIScene(e.clientX, e.clientY);
     for (const mob of this.selection.selected) {
       const center = mob.getCenter();
-      const bounds = mob._getBoundingBox?.() ?? { width: 1, height: 1 };
+      const bounds = mob.getBoundingBox();
 
       if (
         Math.abs(worldPos[0] - center[0]) <= bounds.width / 2 &&

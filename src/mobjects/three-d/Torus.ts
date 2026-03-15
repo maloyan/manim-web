@@ -98,7 +98,7 @@ export class Torus extends Mobject {
       this._tubeRadius,
       this._radialSegments,
       this._tubularSegments,
-      this._arc
+      this._arc,
     );
 
     const material = new THREE.MeshStandardMaterial({
@@ -140,7 +140,7 @@ export class Torus extends Mobject {
         this._tubeRadius,
         this._radialSegments,
         this._tubularSegments,
-        this._arc
+        this._arc,
       );
     }
     this._markDirty();
@@ -235,11 +235,7 @@ export class Torus extends Mobject {
     const x = (this._radius + this._tubeRadius * Math.cos(v)) * Math.cos(u);
     const y = (this._radius + this._tubeRadius * Math.cos(v)) * Math.sin(u);
     const z = this._tubeRadius * Math.sin(v);
-    return [
-      x + this.position.x,
-      y + this.position.y,
-      z + this.position.z,
-    ];
+    return [x + this.position.x, y + this.position.y, z + this.position.z];
   }
 
   /**
@@ -259,5 +255,3 @@ export class Torus extends Mobject {
     });
   }
 }
-
-export default Torus;

@@ -733,8 +733,9 @@ export class MarkdownText extends VMobject {
       while ((match = pattern.regex.exec(text)) !== null) {
         // Check for overlap with existing matches
         const overlaps = matches.some(
-          m => (match!.index >= m.start && match!.index < m.end) ||
-               (match!.index + match![0].length > m.start && match!.index + match![0].length <= m.end)
+          (m) =>
+            (match!.index >= m.start && match!.index < m.end) ||
+            (match!.index + match![0].length > m.start && match!.index + match![0].length <= m.end),
         );
 
         if (!overlaps) {
@@ -801,8 +802,10 @@ export class MarkdownText extends VMobject {
 
     for (const parsedLine of this._parsedLines) {
       // Skip empty lines but add vertical space
-      if (parsedLine.tokens.length === 0 ||
-          (parsedLine.tokens.length === 1 && parsedLine.tokens[0].text.trim() === '')) {
+      if (
+        parsedLine.tokens.length === 0 ||
+        (parsedLine.tokens.length === 1 && parsedLine.tokens[0].text.trim() === '')
+      ) {
         currentY -= baseLineHeight * 0.5;
         continue;
       }
@@ -946,5 +949,3 @@ export class MarkdownText extends VMobject {
     });
   }
 }
-
-export default { BulletedList, Title, MarkdownText };

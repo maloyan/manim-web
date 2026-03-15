@@ -238,7 +238,6 @@ export class ImageMobject extends Mobject {
       undefined,
       // onError callback
       (error) => {
-        console.error('Failed to load image:', error);
         if (this._loadReject) {
           this._loadReject(new Error(`Failed to load image: ${error}`));
           this._loadReject = null;

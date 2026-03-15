@@ -138,7 +138,7 @@ export class Hoverable {
   private _hitTest(worldPos: Vector3Tuple): boolean {
     // Check if point is within mobject's bounding box
     const center = this._mobject.getCenter();
-    const bounds = this._mobject._getBoundingBox?.() ?? { width: 1, height: 1 };
+    const bounds = this._mobject.getBoundingBox();
 
     return (
       Math.abs(worldPos[0] - center[0]) <= bounds.width / 2 &&

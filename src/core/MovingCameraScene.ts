@@ -72,7 +72,7 @@ export class MovingCameraScene extends Scene {
    * @param duration - Animation duration in seconds (optional)
    * @returns Promise that resolves when the animation completes
    */
-  async moveCameraTo(position: Vector3Tuple, duration?: number): Promise<void> {
+  moveCameraTo(position: Vector3Tuple, duration?: number): Promise<void> {
     const dur = duration ?? this._defaultCameraDuration;
 
     this._cameraAnimating = true;
@@ -125,7 +125,7 @@ export class MovingCameraScene extends Scene {
    * @param duration - Animation duration in seconds (optional)
    * @returns Promise that resolves when the animation completes
    */
-  async zoomTo(zoom: number, duration?: number): Promise<void> {
+  zoomTo(zoom: number, duration?: number): Promise<void> {
     const dur = duration ?? this._defaultCameraDuration;
 
     this._zoomAnimating = true;
@@ -170,7 +170,7 @@ export class MovingCameraScene extends Scene {
    * @param duration - Animation duration in seconds (optional)
    * @returns Promise that resolves when the animation completes
    */
-  async panTo(target: Vector3Tuple, duration?: number): Promise<void> {
+  panTo(target: Vector3Tuple, duration?: number): Promise<void> {
     return this.moveCameraTo([target[0], target[1], this.camera.position.z], duration);
   }
 
@@ -180,7 +180,7 @@ export class MovingCameraScene extends Scene {
    * @param duration - Duration to follow (0 = instant move)
    * @returns Promise that resolves when initial move completes
    */
-  async followMobject(mobject: Mobject, duration: number = 0): Promise<void> {
+  followMobject(mobject: Mobject, duration: number = 0): Promise<void> {
     const center = mobject.getCenter();
     if (duration > 0) {
       return this.panTo(center, duration);

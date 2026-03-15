@@ -32,7 +32,7 @@ export interface ChildSnapshot {
   targetPoints: number[][];
 }
 
-export function _reconstructArrowTips(mobject: Mobject): void {
+function _reconstructArrowTips(mobject: Mobject): void {
   for (const mob of mobject.getFamily()) {
     if (mob instanceof Arrow) mob.reconstructTip();
     else if (mob instanceof DoubleArrow) mob.reconstructTips();

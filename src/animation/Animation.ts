@@ -128,14 +128,9 @@ export abstract class Animation {
       this.begin();
     }
 
-    // Calculate raw progress (0 to 1)
     const elapsed = currentTime - this._startTime;
     const rawAlpha = this.duration > 0 ? Math.min(1, Math.max(0, elapsed / this.duration)) : 1;
-
-    // Apply rate function to get transformed progress
     const alpha = this.rateFunc(rawAlpha);
-
-    // Apply the interpolation
     this.interpolate(alpha);
 
     // Check if finished

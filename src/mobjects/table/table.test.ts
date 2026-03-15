@@ -3,7 +3,6 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { Table, MathTable, MobjectTable, IntegerTable, DecimalTable } from './Table';
 import { Rectangle } from '../geometry/Rectangle';
 import { VGroup } from '../../core/VGroup';
-import { YELLOW, WHITE } from '../../constants/colors';
 
 /**
  * happy-dom does not support canvas 2D context. DecimalNumber (used by

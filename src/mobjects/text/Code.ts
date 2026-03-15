@@ -602,5 +602,3 @@ export class Code extends VMobject {
     super.dispose();
   }
 }
-
-export default Code;

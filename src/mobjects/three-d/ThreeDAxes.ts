@@ -333,5 +333,3 @@ export class ThreeDAxes extends Group {
     });
   }
 }
-
-export default ThreeDAxes;

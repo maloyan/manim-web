@@ -132,7 +132,7 @@ export class NumberPlane extends Axes {
     // Extend grid lines beyond the declared range so the grid fills
     // the entire camera frame without a visible rectangular border.
     // Extra lines outside the frustum are clipped by the camera.
-    const extraStepsX = Math.ceil(2 / xStep);  // ~2 extra units each side
+    const extraStepsX = Math.ceil(2 / xStep); // ~2 extra units each side
     const extraStepsY = Math.ceil(2 / yStep);
     const extXMin = xMin - extraStepsX * xStep;
     const extXMax = xMax + extraStepsX * xStep;
@@ -181,7 +181,11 @@ export class NumberPlane extends Axes {
 
     // Faded sub-grid lines (between main grid lines)
     if (this._fadedLineRatio > 0) {
-      const { color: fadedColor, strokeWidth: fadedStrokeWidth, opacity: fadedOpacity } = this._fadedLineStyle;
+      const {
+        color: fadedColor,
+        strokeWidth: fadedStrokeWidth,
+        opacity: fadedOpacity,
+      } = this._fadedLineStyle;
       const xSubStep = xStep / (this._fadedLineRatio + 1);
       const ySubStep = yStep / (this._fadedLineRatio + 1);
 
@@ -322,5 +326,3 @@ export class NumberPlane extends Axes {
     });
   }
 }
-
-export default NumberPlane;

@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import * as THREE from 'three';
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
 import { Animation, AnimationOptions } from './Animation';
-import { MasterTimeline, Segment } from './MasterTimeline';
+import { MasterTimeline } from './MasterTimeline';
 import { linear } from '../rate-functions';
 
 // =============================================================================

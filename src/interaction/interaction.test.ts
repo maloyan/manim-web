@@ -23,7 +23,7 @@ function createMockMobject(
 
   return {
     getCenter: vi.fn(() => [...center] as [number, number, number]),
-    _getBoundingBox: vi.fn(() => ({ ...bounds })),
+    getBoundingBox: vi.fn(() => ({ ...bounds })),
     position: { x: center[0], y: center[1], z: center[2] },
     scaleVector: {
       x: 1,
@@ -1103,47 +1103,42 @@ describe('Edge cases', () => {
     scene._canvas.remove();
   });
 
-  it('Clickable with mobject that has no _getBoundingBox falls back to default', () => {
+  it('Clickable uses getBoundingBox for hit testing', () => {
     scene = createMockScene();
-    const mob = createMockMobject({ center: [0, 0, 0] });
-    // Remove _getBoundingBox to simulate a mobject without it
-    (mob as any)._getBoundingBox = undefined;
+    const mob = createMockMobject({ center: [0, 0, 0], bounds: { width: 2, height: 2 } });
     const onClick = vi.fn();
     const clickable = new Clickable(mob as any, scene as any, { onClick });
 
     const canvas = scene.getCanvas();
-    // Default fallback is { width: 1, height: 1 }, so center (0,0) with 0.5 range
+    // Point at center (0,0) which is within bounds width:2, height:2
     fireMouseEvent(canvas, 'click', { clientX: 400, clientY: 300 });
     expect(onClick).toHaveBeenCalledTimes(1);
+    expect(mob.getBoundingBox).toHaveBeenCalled();
     clickable.dispose();
   });
 
-  it('Draggable with mobject that has no _getBoundingBox falls back to default', () => {
+  it('Draggable uses getBoundingBox for hit testing', () => {
     scene = createMockScene();
-    const mob = createMockMobject({ center: [0, 0, 0] });
-    // Remove _getBoundingBox to simulate a mobject without it
-    (mob as any)._getBoundingBox = undefined;
+    const mob = createMockMobject({ center: [0, 0, 0], bounds: { width: 2, height: 2 } });
     const draggable = new Draggable(mob as any, scene as any);
 
     const canvas = scene.getCanvas();
-    // Default fallback is { width: 1, height: 1 }, so center (0,0) with 0.5 range
     fireMouseEvent(canvas, 'mousedown', { clientX: 400, clientY: 300 });
     expect(draggable.isDragging).toBe(true);
+    expect(mob.getBoundingBox).toHaveBeenCalled();
     fireMouseEvent(window as any, 'mouseup', { clientX: 400, clientY: 300 });
     draggable.dispose();
   });
 
-  it('Hoverable with mobject that has no _getBoundingBox falls back to default', () => {
+  it('Hoverable uses getBoundingBox for hit testing', () => {
     scene = createMockScene();
-    const mob = createMockMobject({ center: [0, 0, 0] });
-    // Remove _getBoundingBox to simulate a mobject without it
-    (mob as any)._getBoundingBox = undefined;
+    const mob = createMockMobject({ center: [0, 0, 0], bounds: { width: 2, height: 2 } });
     const hoverable = new Hoverable(mob as any, scene as any);
 
     const canvas = scene.getCanvas();
-    // Default fallback is { width: 1, height: 1 }, so center (0,0) with 0.5 range
     fireMouseEvent(canvas, 'mousemove', { clientX: 400, clientY: 300 });
     expect(hoverable.isHovering).toBe(true);
+    expect(mob.getBoundingBox).toHaveBeenCalled();
     hoverable.dispose();
   });
 

@@ -80,21 +80,16 @@ export class TracedPath extends VMobject {
     this._minDistanceToNewPoint = options.minDistanceToNewPoint ?? 0.05;
     this._maxPoints = options.maxPoints ?? 1000;
 
-    // Style configuration
     this.color = options.strokeColor ?? YELLOW;
     this.strokeWidth = options.strokeWidth ?? DEFAULT_STROKE_WIDTH;
     this._opacity = options.strokeOpacity ?? 1;
     this.fillOpacity = 0; // Traced paths are stroke-only
 
-    // Create the updater that tracks the mobject
     this._updater = (_mobject: Mobject, dt: number) => {
       this._updatePath(dt);
     };
 
-    // Add updater to self so it runs every frame
     this.addUpdater(this._updater);
-
-    // Record initial position
     this._recordCurrentPosition(0);
   }
 
@@ -111,15 +106,12 @@ export class TracedPath extends VMobject {
   private _updatePath(dt: number): void {
     this._elapsedTime += dt;
 
-    // Record new position if moved enough
     this._recordCurrentPosition(this._elapsedTime);
 
-    // Remove old points if dissipating
     if (this._dissipatingTime > 0) {
       this._removeOldPoints();
     }
 
-    // Rebuild the VMobject points from path data
     this._rebuildPathPoints();
   }
 
@@ -142,15 +134,13 @@ export class TracedPath extends VMobject {
       }
     }
 
-    // Add the point
     this._pathData.push({
       point: newPoint,
-      time: currentTime
+      time: currentTime,
     });
 
     this._lastPosition = newPoint;
 
-    // Limit total points for performance
     if (this._pathData.length > this._maxPoints) {
       this._pathData.shift();
     }
@@ -192,23 +182,23 @@ export class TracedPath extends VMobject {
       // Calculate control points using Catmull-Rom to Bezier conversion
       const tension = 0.5;
       const handle1 = [
-        p1[0] + (p2[0] - p0[0]) * tension / 3,
-        p1[1] + (p2[1] - p0[1]) * tension / 3,
-        p1[2] + (p2[2] - p0[2]) * tension / 3
+        p1[0] + ((p2[0] - p0[0]) * tension) / 3,
+        p1[1] + ((p2[1] - p0[1]) * tension) / 3,
+        p1[2] + ((p2[2] - p0[2]) * tension) / 3,
       ];
       const handle2 = [
-        p2[0] - (p3[0] - p1[0]) * tension / 3,
-        p2[1] - (p3[1] - p1[1]) * tension / 3,
-        p2[2] - (p3[2] - p1[2]) * tension / 3
+        p2[0] - ((p3[0] - p1[0]) * tension) / 3,
+        p2[1] - ((p3[1] - p1[1]) * tension) / 3,
+        p2[2] - ((p3[2] - p1[2]) * tension) / 3,
       ];
 
       // Add anchor and handles (sharing anchors between segments)
       if (i === 0) {
         bezierPoints.push([...p1]); // First anchor
       }
-      bezierPoints.push(handle1);   // Handle 1
-      bezierPoints.push(handle2);   // Handle 2
-      bezierPoints.push([...p2]);   // Anchor 2 (shared with next segment)
+      bezierPoints.push(handle1); // Handle 1
+      bezierPoints.push(handle2); // Handle 2
+      bezierPoints.push([...p2]); // Anchor 2 (shared with next segment)
     }
 
     this.setPoints3D(bezierPoints);
@@ -252,10 +242,10 @@ export class TracedPath extends VMobject {
       strokeOpacity: this._opacity,
       dissipatingTime: this._dissipatingTime,
       minDistanceToNewPoint: this._minDistanceToNewPoint,
-      maxPoints: this._maxPoints
+      maxPoints: this._maxPoints,
     });
     // Copy current path data
-    copy._pathData = this._pathData.map(d => ({ point: [...d.point], time: d.time }));
+    copy._pathData = this._pathData.map((d) => ({ point: [...d.point], time: d.time }));
     copy._elapsedTime = this._elapsedTime;
     copy._lastPosition = this._lastPosition ? [...this._lastPosition] : null;
     return copy;
@@ -265,13 +255,9 @@ export class TracedPath extends VMobject {
 /**
  * Factory function to create a TracedPath
  */
-export function tracedPath(
-  trackedMobject: Mobject,
-  options?: TracedPathOptions
-): TracedPath {
+export function tracedPath(trackedMobject: Mobject, options?: TracedPathOptions): TracedPath {
   return new TracedPath(trackedMobject, options);
 }
-
 
 /**
  * Options for AnimatedBoundary
@@ -348,10 +334,8 @@ export class AnimatedBoundary extends VMobject {
     this.fillOpacity = 0;
     this._opacity = 1;
 
-    // Create initial boundary
     this._createBoundary();
 
-    // Create updater for animation
     this._updater = (_mobject: Mobject, dt: number) => {
       this._updateAnimation(dt);
     };
@@ -370,21 +354,18 @@ export class AnimatedBoundary extends VMobject {
    * Create the boundary dashes around the mobject
    */
   private _createBoundary(): void {
-    // Clear existing dashes
     for (const dash of this._dashes) {
       this.remove(dash);
       dash.dispose();
     }
     this._dashes = [];
 
-    // Get the bounding box of the mobject
     const bounds = this._boundedMobject.getBounds();
     const minX = bounds.min.x - this._buff;
     const minY = bounds.min.y - this._buff;
     const maxX = bounds.max.x + this._buff;
     const maxY = bounds.max.y + this._buff;
 
-    // Calculate perimeter points (rectangle corners)
     const width = maxX - minX;
     const height = maxY - minY;
     // perimeter is calculated in _positionDashes, only used for context here
@@ -394,15 +375,12 @@ export class AnimatedBoundary extends VMobject {
       const dash = new VMobject();
       dash.strokeWidth = this._dashWidth;
       dash.fillOpacity = 0;
-
-      // Cycle through colors
       dash.color = this._colors[i % this._colors.length];
 
       this._dashes.push(dash);
       this.add(dash);
     }
 
-    // Position dashes initially
     this._positionDashes(0);
   }
 
@@ -427,19 +405,49 @@ export class AnimatedBoundary extends VMobject {
     for (let i = 0; i < this._numDashes; i++) {
       const dash = this._dashes[i];
 
-      // Calculate position along perimeter with phase offset
-      const startDistance = ((i / this._numDashes) + phase) * perimeter;
+      const startDistance = (i / this._numDashes + phase) * perimeter;
       const endDistance = startDistance + dashLength;
 
-      // Convert perimeter distances to actual points
-      const startPoint = this._perimeterToPoint(startDistance % perimeter, minX, minY, maxX, maxY, width, height, perimeter);
-      const endPoint = this._perimeterToPoint(endDistance % perimeter, minX, minY, maxX, maxY, width, height, perimeter);
+      const startPoint = this._perimeterToPoint(
+        startDistance % perimeter,
+        minX,
+        minY,
+        maxX,
+        maxY,
+        width,
+        height,
+        perimeter,
+      );
+      const endPoint = this._perimeterToPoint(
+        endDistance % perimeter,
+        minX,
+        minY,
+        maxX,
+        maxY,
+        width,
+        height,
+        perimeter,
+      );
 
       // Handle wrap-around: if the dash crosses a corner, simplify to a straight line segment
-      if (Math.abs(endDistance % perimeter - startDistance) > dashLength * 1.5) {
+      if (Math.abs((endDistance % perimeter) - startDistance) > dashLength * 1.5) {
         // Dash wraps around perimeter, just draw to the corner
-        const cornerDistance = this._nearestCornerDistance(startDistance % perimeter, width, height, perimeter);
-        const cornerPoint = this._perimeterToPoint(cornerDistance, minX, minY, maxX, maxY, width, height, perimeter);
+        const cornerDistance = this._nearestCornerDistance(
+          startDistance % perimeter,
+          width,
+          height,
+          perimeter,
+        );
+        const cornerPoint = this._perimeterToPoint(
+          cornerDistance,
+          minX,
+          minY,
+          maxX,
+          maxY,
+          width,
+          height,
+          perimeter,
+        );
         this._setDashLine(dash, startPoint, cornerPoint);
       } else {
         this._setDashLine(dash, startPoint, endPoint);
@@ -452,10 +460,13 @@ export class AnimatedBoundary extends VMobject {
    */
   private _perimeterToPoint(
     distance: number,
-    minX: number, minY: number,
-    maxX: number, maxY: number,
-    width: number, height: number,
-    perimeter: number
+    minX: number,
+    minY: number,
+    maxX: number,
+    maxY: number,
+    width: number,
+    height: number,
+    perimeter: number,
   ): number[] {
     // Normalize distance
     distance = distance % perimeter;
@@ -488,8 +499,9 @@ export class AnimatedBoundary extends VMobject {
    */
   private _nearestCornerDistance(
     distance: number,
-    width: number, height: number,
-    perimeter: number
+    width: number,
+    height: number,
+    perimeter: number,
   ): number {
     const corners = [0, width, width + height, 2 * width + height, perimeter];
     let nearest = corners[0];
@@ -517,24 +529,16 @@ export class AnimatedBoundary extends VMobject {
 
     // Control points at 1/3 and 2/3 along the line
     const h1 = [start[0] + dx / 3, start[1] + dy / 3, start[2] + dz / 3];
-    const h2 = [start[0] + 2 * dx / 3, start[1] + 2 * dy / 3, start[2] + 2 * dz / 3];
+    const h2 = [start[0] + (2 * dx) / 3, start[1] + (2 * dy) / 3, start[2] + (2 * dz) / 3];
 
-    dash.setPoints3D([
-      [...start],
-      h1,
-      h2,
-      [...end]
-    ]);
+    dash.setPoints3D([[...start], h1, h2, [...end]]);
   }
 
   /**
    * Update the animation
    */
   private _updateAnimation(dt: number): void {
-    // Update phase (0 to 1 cycles at cycleRate per second)
     this._phase = (this._phase + dt * this._cycleRate) % 1;
-
-    // Reposition dashes
     this._positionDashes(this._phase);
   }
 
@@ -594,7 +598,7 @@ export class AnimatedBoundary extends VMobject {
       numDashes: this._numDashes,
       dashWidth: this._dashWidth,
       cycleRate: this._cycleRate,
-      buff: this._buff
+      buff: this._buff,
     });
     copy._phase = this._phase;
     return copy;
@@ -617,7 +621,7 @@ export class AnimatedBoundary extends VMobject {
  */
 export function animatedBoundary(
   boundedMobject: Mobject,
-  options?: AnimatedBoundaryOptions
+  options?: AnimatedBoundaryOptions,
 ): AnimatedBoundary {
   return new AnimatedBoundary(boundedMobject, options);
 }

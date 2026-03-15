@@ -105,7 +105,7 @@ export class Cylinder extends Mobject {
       this._height,
       this._radialSegments,
       1,
-      this._openEnded
+      this._openEnded,
     );
 
     const material = new THREE.MeshStandardMaterial({
@@ -148,7 +148,7 @@ export class Cylinder extends Mobject {
         this._height,
         this._radialSegments,
         1,
-        this._openEnded
+        this._openEnded,
       );
     }
     this._markDirty();
@@ -239,8 +239,7 @@ export class Cylinder extends Mobject {
    */
   getLateralSurfaceArea(): number {
     const slantHeight = Math.sqrt(
-      this._height * this._height +
-      Math.pow(this._radiusBottom - this._radiusTop, 2)
+      this._height * this._height + Math.pow(this._radiusBottom - this._radiusTop, 2),
     );
     return Math.PI * (this._radiusTop + this._radiusBottom) * slantHeight;
   }
@@ -263,10 +262,11 @@ export class Cylinder extends Mobject {
    */
   getVolume(): number {
     // Volume of truncated cone formula
-    return (Math.PI * this._height / 3) * (
-      this._radiusTop * this._radiusTop +
-      this._radiusTop * this._radiusBottom +
-      this._radiusBottom * this._radiusBottom
+    return (
+      ((Math.PI * this._height) / 3) *
+      (this._radiusTop * this._radiusTop +
+        this._radiusTop * this._radiusBottom +
+        this._radiusBottom * this._radiusBottom)
     );
   }
 
@@ -387,5 +387,3 @@ export class Cone extends Cylinder {
     });
   }
 }
-
-export default Cylinder;

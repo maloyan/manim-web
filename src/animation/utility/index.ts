@@ -26,7 +26,6 @@ export type AddOptions = AnimationOptions;
  */
 export class Add extends Animation {
   constructor(mobject: Mobject, options: AddOptions = {}) {
-    // Force duration to 0 for instant add
     super(mobject, { ...options, duration: 0 });
   }
 
@@ -35,7 +34,6 @@ export class Add extends Animation {
    */
   override begin(): void {
     super.begin();
-    // Make the mobject visible
     this.mobject.opacity = 1;
     this.mobject._markDirty();
   }
@@ -43,9 +41,7 @@ export class Add extends Animation {
   /**
    * No interpolation needed for instant add
    */
-  interpolate(_alpha: number): void {
-    // Instant add - nothing to interpolate
-  }
+  interpolate(_alpha: number): void {}
 }
 
 /**
@@ -72,7 +68,6 @@ export type RemoveOptions = AnimationOptions;
  */
 export class Remove extends Animation {
   constructor(mobject: Mobject, options: RemoveOptions = {}) {
-    // Force duration to 0 for instant remove
     super(mobject, { ...options, duration: 0 });
   }
 
@@ -81,7 +76,6 @@ export class Remove extends Animation {
    */
   override begin(): void {
     super.begin();
-    // Hide the mobject by setting opacity to 0
     this.mobject.opacity = 0;
     this.mobject._markDirty();
   }
@@ -89,9 +83,7 @@ export class Remove extends Animation {
   /**
    * No interpolation needed for instant remove
    */
-  interpolate(_alpha: number): void {
-    // Instant remove - nothing to interpolate
-  }
+  interpolate(_alpha: number): void {}
 }
 
 /**
@@ -128,9 +120,7 @@ export class Wait extends Animation {
   /**
    * No interpolation - just wait
    */
-  interpolate(_alpha: number): void {
-    // Wait does nothing visually
-  }
+  interpolate(_alpha: number): void {}
 }
 
 /**

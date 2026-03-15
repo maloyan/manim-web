@@ -225,6 +225,8 @@ function performBooleanOp(
       case 'xor':
         result = polygonClipping.xor(geomA, geomB);
         break;
+      default:
+        throw new Error(`Unexpected operation: ${operation}`);
     }
   } catch (err) {
     // If polygon-clipping throws (extremely degenerate input), fall back

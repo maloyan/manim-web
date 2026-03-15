@@ -1,43 +1,25 @@
 /**
- * UpdateFromAlphaFunc animation that applies a function continuously.
- * Similar to UpdateFromFunc but specifically named to indicate it receives
- * the rate-function-adjusted alpha value.
+ * UpdateFromAlphaFunc is an alias for UpdateFromFunc.
+ *
+ * Both classes are behaviorally identical: Animation.update() applies the
+ * rate function before calling interpolate(), so the function always receives
+ * the rate-adjusted alpha value. The name "UpdateFromAlphaFunc" is preserved
+ * for Manim API compatibility and backward compatibility.
  */
 
 import { Mobject } from '../core/Mobject';
-import { Animation, AnimationOptions } from './Animation';
+import { AnimationOptions } from './Animation';
+import { UpdateFromFunc } from './UpdateFromFunc';
 
 /**
  * Animation that applies a custom function to a mobject over time.
  * The function receives the mobject and the rate-function-adjusted alpha (progress from 0 to 1).
- * This is similar to UpdateFromFunc but specifically named to match Manim's API.
+ *
+ * This is an alias for UpdateFromFunc — both classes behave identically because
+ * Animation.update() applies rateFunc before calling interpolate().
  */
-export class UpdateFromAlphaFunc extends Animation {
-  private _func: (mobject: Mobject, alpha: number) => void;
-
-  /**
-   * Create an UpdateFromAlphaFunc animation.
-   * @param mobject - The mobject to animate
-   * @param func - Function called with (mobject, alpha) each frame
-   * @param options - Animation options (duration, rateFunc, etc.)
-   */
-  constructor(
-    mobject: Mobject,
-    func: (mobject: Mobject, alpha: number) => void,
-    options?: AnimationOptions
-  ) {
-    super(mobject, options);
-    this._func = func;
-  }
-
-  /**
-   * Apply the animation at a given progress value.
-   * The alpha value has already been transformed by the rate function.
-   * @param alpha Progress from 0 (start) to 1 (end), transformed by rateFunc
-   */
-  interpolate(alpha: number): void {
-    this._func(this.mobject, alpha);
-  }
+export class UpdateFromAlphaFunc extends UpdateFromFunc {
+  // No additional behavior — extends UpdateFromFunc purely for API / backward compatibility.
 }
 
 /**
@@ -50,7 +32,7 @@ export class UpdateFromAlphaFunc extends Animation {
 export function updateFromAlphaFunc(
   mobject: Mobject,
   func: (mobject: Mobject, alpha: number) => void,
-  options?: AnimationOptions
+  options?: AnimationOptions,
 ): UpdateFromAlphaFunc {
   return new UpdateFromAlphaFunc(mobject, func, options);
 }

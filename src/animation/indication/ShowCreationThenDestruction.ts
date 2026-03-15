@@ -16,10 +16,9 @@ import { Animation, AnimationOptions } from '../Animation';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { linear } from '../../rate-functions';
+import { hasLine2Children, getLine2TotalLength } from '../creation/Create';
 
-export interface ShowCreationThenDestructionOptions extends AnimationOptions {
-  // No additional options beyond standard AnimationOptions
-}
+export type ShowCreationThenDestructionOptions = AnimationOptions;
 
 export class ShowCreationThenDestruction extends Animation {
   /** Total path length for dash-based reveal */
@@ -34,21 +33,10 @@ export class ShowCreationThenDestruction extends Animation {
     });
   }
 
-  /**
-   * Check if the mobject has Line2 children for dash-based reveal
-   */
-  private _hasLine2Children(): boolean {
-    let found = false;
-    this.mobject.getThreeObject().traverse((child) => {
-      if (child instanceof Line2) found = true;
-    });
-    return found;
-  }
-
   override begin(): void {
     super.begin();
 
-    this._useDashReveal = (this.mobject instanceof VMobject) && this._hasLine2Children();
+    this._useDashReveal = this.mobject instanceof VMobject && hasLine2Children(this.mobject);
 
     if (this._useDashReveal) {
       // Set up dashed line for progressive reveal
@@ -59,16 +47,8 @@ export class ShowCreationThenDestruction extends Animation {
           material.dashed = true;
           material.dashScale = 1;
 
-          // Calculate total line length from line distances
           child.computeLineDistances();
-          const geom = child.geometry as any;
-          const distEnd = geom.attributes.instanceDistanceEnd;
-          if (distEnd && distEnd.count > 0) {
-            const arr = distEnd.data ? distEnd.data.array : distEnd.array;
-            this._totalLength = arr[arr.length - 1] || 1;
-          } else {
-            this._totalLength = 1;
-          }
+          this._totalLength = getLine2TotalLength(child);
 
           // Start with nothing visible
           material.dashSize = 0;
@@ -135,7 +115,7 @@ export class ShowCreationThenDestruction extends Animation {
  */
 export function showCreationThenDestruction(
   mobject: Mobject,
-  options?: ShowCreationThenDestructionOptions
+  options?: ShowCreationThenDestructionOptions,
 ): ShowCreationThenDestruction {
   return new ShowCreationThenDestruction(mobject, options);
 }

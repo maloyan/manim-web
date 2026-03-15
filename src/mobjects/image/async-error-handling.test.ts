@@ -68,21 +68,19 @@ describe('ImageMobject async error propagation', () => {
 
   it('should reject via onError callback in _loadTexture', async () => {
     // Mock TextureLoader.load to call the onError callback
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const loadSpy = vi.spyOn(THREE.TextureLoader.prototype, 'load').mockImplementation(
-      (_url: string, _onLoad?: any, _onProgress?: any, onError?: any) => {
+    const loadSpy = vi
+      .spyOn(THREE.TextureLoader.prototype, 'load')
+      .mockImplementation((_url: string, _onLoad?: any, _onProgress?: any, onError?: any) => {
         // Simulate async error
         setTimeout(() => onError?.('network timeout'), 0);
         return new THREE.Texture();
-      },
-    );
+      });
 
     const img = new ImageMobject({ source: 'https://bad-url.example.com/image.png' });
 
+    // The rejection is sufficient — console.error is not called (removed as redundant)
     await expect(img.waitForLoad()).rejects.toThrow('Failed to load image');
-    expect(errorSpy).toHaveBeenCalledWith('Failed to load image:', 'network timeout');
 
     loadSpy.mockRestore();
-    errorSpy.mockRestore();
   });
 });

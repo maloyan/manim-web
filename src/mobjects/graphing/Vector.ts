@@ -62,9 +62,7 @@ export class VectorFieldVector extends Arrow {
 
     // Calculate the actual direction vector
     const dirLength = Math.sqrt(
-      direction[0] * direction[0] +
-      direction[1] * direction[1] +
-      direction[2] * direction[2]
+      direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2],
     );
 
     // Apply max length constraint
@@ -115,9 +113,7 @@ export class VectorFieldVector extends Arrow {
 
     // Recalculate length
     const dirLength = Math.sqrt(
-      direction[0] * direction[0] +
-      direction[1] * direction[1] +
-      direction[2] * direction[2]
+      direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2],
     );
 
     // Apply max length constraint
@@ -150,8 +146,8 @@ export class VectorFieldVector extends Arrow {
   getMagnitude(): number {
     return Math.sqrt(
       this._direction[0] * this._direction[0] +
-      this._direction[1] * this._direction[1] +
-      this._direction[2] * this._direction[2]
+        this._direction[1] * this._direction[1] +
+        this._direction[2] * this._direction[2],
     );
   }
 
@@ -188,11 +184,7 @@ export class VectorFieldVector extends Arrow {
   getUnitVector(): Vector3Tuple {
     const length = this.getMagnitude();
     if (length === 0) return [1, 0, 0];
-    return [
-      this._direction[0] / length,
-      this._direction[1] / length,
-      this._direction[2] / length,
-    ];
+    return [this._direction[0] / length, this._direction[1] / length, this._direction[2] / length];
   }
 
   /**
@@ -266,11 +258,7 @@ export class VectorFieldVector extends Arrow {
    */
   dot(other: VectorFieldVector | Vector3Tuple): number {
     const dir = Array.isArray(other) ? other : other.getDirection();
-    return (
-      this._direction[0] * dir[0] +
-      this._direction[1] * dir[1] +
-      this._direction[2] * dir[2]
-    );
+    return this._direction[0] * dir[0] + this._direction[1] * dir[1] + this._direction[2] * dir[2];
   }
 
   /**
@@ -299,5 +287,3 @@ export class VectorFieldVector extends Arrow {
     });
   }
 }
-
-export default VectorFieldVector;

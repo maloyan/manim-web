@@ -94,7 +94,8 @@ export class VideoExporter {
     try {
       const am = this._scene.audioManager;
       return am.tracks.length > 0 ? am : null;
-    } catch {
+    } catch (err) {
+      console.warn('AudioManager unavailable; exporting without audio:', err);
       return null;
     }
   }

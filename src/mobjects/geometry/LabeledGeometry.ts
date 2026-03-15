@@ -41,6 +41,8 @@ function directionToVector(direction: LabelDirection): Vector3Tuple {
       return [-0.707, -0.707, 0];
     case 'DR':
       return [0.707, -0.707, 0];
+    default:
+      throw new Error(`Unexpected direction: ${direction}`);
   }
 }
 
@@ -188,6 +190,8 @@ export class LabeledLine extends VGroup {
       case 'horizontal':
         this._label.rotation.z = 0;
         break;
+      default:
+        throw new Error(`Unexpected labelOrientation: ${this._labelOrientation}`);
     }
   }
 
@@ -408,6 +412,8 @@ export class LabeledArrow extends VGroup {
       case 'horizontal':
         this._label.rotation.z = 0;
         break;
+      default:
+        throw new Error(`Unexpected labelOrientation: ${this._labelOrientation}`);
     }
   }
 

@@ -251,6 +251,14 @@ export class MasterTimeline extends Timeline {
 }
 
 /**
+ * Factory function to create a MasterTimeline.
+ * @returns A new MasterTimeline instance
+ */
+export function masterTimeline(): MasterTimeline {
+  return new MasterTimeline();
+}
+
+/**
  * A no-op animation used to represent wait() durations on the timeline.
  * It needs a real Mobject reference but does nothing to it.
  */

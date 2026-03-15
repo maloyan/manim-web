@@ -90,7 +90,7 @@ export class Prism extends Mobject {
       this._height,
       this._sides, // radialSegments = number of sides
       1,
-      false
+      false,
     );
 
     const material = new THREE.MeshStandardMaterial({
@@ -133,7 +133,7 @@ export class Prism extends Mobject {
         this._height,
         this._sides,
         1,
-        false
+        false,
       );
     }
     this._markDirty();
@@ -217,9 +217,7 @@ export class Prism extends Mobject {
    */
   getBaseArea(): number {
     // Area of regular polygon
-    return (
-      (this._sides * this._radius * this._radius * Math.sin((2 * Math.PI) / this._sides)) / 2
-    );
+    return (this._sides * this._radius * this._radius * Math.sin((2 * Math.PI) / this._sides)) / 2;
   }
 
   /**
@@ -345,11 +343,7 @@ export class Dot3D extends Mobject {
     const group = new THREE.Group();
 
     // Create the main dot sphere
-    const geometry = new THREE.SphereGeometry(
-      this._radius,
-      this._resolution,
-      this._resolution
-    );
+    const geometry = new THREE.SphereGeometry(this._radius, this._resolution, this._resolution);
 
     const material = new THREE.MeshStandardMaterial({
       color: this.color,
@@ -377,13 +371,13 @@ export class Dot3D extends Mobject {
     const glowGeometry = new THREE.SphereGeometry(
       this._radius * this._glowRadius,
       this._resolution,
-      this._resolution
+      this._resolution,
     );
 
     const glowMaterial = new THREE.MeshBasicMaterial({
       color: this.color,
       transparent: true,
-      opacity: this._opacity * 0.3 / this._glowIntensity,
+      opacity: (this._opacity * 0.3) / this._glowIntensity,
       side: THREE.BackSide,
     });
 
@@ -416,7 +410,7 @@ export class Dot3D extends Mobject {
         const glowMaterial = this._glowMesh.material as THREE.MeshBasicMaterial;
         if (glowMaterial) {
           glowMaterial.color.set(this.color);
-          glowMaterial.opacity = this._opacity * 0.3 / this._glowIntensity;
+          glowMaterial.opacity = (this._opacity * 0.3) / this._glowIntensity;
           glowMaterial.needsUpdate = true;
         }
       }
@@ -491,11 +485,7 @@ export class Dot3D extends Mobject {
       }
 
       // Recreate main sphere
-      const geometry = new THREE.SphereGeometry(
-        this._radius,
-        this._resolution,
-        this._resolution
-      );
+      const geometry = new THREE.SphereGeometry(this._radius, this._resolution, this._resolution);
 
       const material = new THREE.MeshStandardMaterial({
         color: this.color,
@@ -718,8 +708,8 @@ export class ThreeDVMobject extends VMobject {
     // If not already closed, add a line back to start
     const dist = Math.sqrt(
       Math.pow(end[0] - start[0], 2) +
-      Math.pow(end[1] - start[1], 2) +
-      Math.pow(end[2] - start[2], 2)
+        Math.pow(end[1] - start[1], 2) +
+        Math.pow(end[2] - start[2], 2),
     );
 
     if (dist > 0.0001) {
@@ -739,7 +729,9 @@ export class ThreeDVMobject extends VMobject {
     }
 
     // Calculate centroid of all 3D points
-    let sumX = 0, sumY = 0, sumZ = 0;
+    let sumX = 0,
+      sumY = 0,
+      sumZ = 0;
     for (const point of this._points3D) {
       sumX += point[0];
       sumY += point[1];
@@ -765,8 +757,12 @@ export class ThreeDVMobject extends VMobject {
       };
     }
 
-    let minX = Infinity, minY = Infinity, minZ = Infinity;
-    let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+    let minX = Infinity,
+      minY = Infinity,
+      minZ = Infinity;
+    let maxX = -Infinity,
+      maxY = -Infinity,
+      maxZ = -Infinity;
 
     for (const point of this._points3D) {
       minX = Math.min(minX, point[0]);
@@ -778,16 +774,8 @@ export class ThreeDVMobject extends VMobject {
     }
 
     return {
-      min: [
-        this.position.x + minX,
-        this.position.y + minY,
-        this.position.z + minZ,
-      ],
-      max: [
-        this.position.x + maxX,
-        this.position.y + maxY,
-        this.position.z + maxZ,
-      ],
+      min: [this.position.x + minX, this.position.y + minY, this.position.z + minZ],
+      max: [this.position.x + maxX, this.position.y + maxY, this.position.z + maxZ],
     };
   }
 
@@ -796,7 +784,7 @@ export class ThreeDVMobject extends VMobject {
    */
   protected override _createCopy(): ThreeDVMobject {
     const copy = new ThreeDVMobject({
-      points: this._points3D.map(p => [...p]),
+      points: this._points3D.map((p) => [...p]),
       color: this.color,
       opacity: this._opacity,
       fillOpacity: this.fillOpacity,
@@ -806,5 +794,3 @@ export class ThreeDVMobject extends VMobject {
     return copy;
   }
 }
-
-export default Prism;

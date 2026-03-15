@@ -9,22 +9,19 @@
  *   _interpolatePointList3D edge cases, getCenter with points
  */
 import { describe, it, expect } from 'vitest';
-import { Mobject, isVMobjectLike } from './Mobject';
+import { isVMobjectLike } from './Mobject';
 import { VMobject } from './VMobject';
 import {
   serializeMobject,
   deserializeMobject,
   saveMobjectState,
   restoreMobjectState,
-  stateToJSON,
-  stateFromJSON,
   snapshotToJSON,
   snapshotFromJSON,
   SceneStateManager,
   MobjectState,
 } from './StateManager';
 import { VDict, VectorizedPoint } from './VDict';
-import { VGroup } from './VGroup';
 
 /** Create a simple VMobject with 4 points (one cubic Bezier segment). */
 function makeVM(): VMobject {

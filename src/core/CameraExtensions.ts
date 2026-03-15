@@ -166,8 +166,9 @@ export class MovingCamera extends Camera2D {
    * Check if an animation is in progress.
    */
   isAnimating(): boolean {
-    return this._animationProgress < 1 &&
-      (this._targetPosition !== null || this._targetZoom !== null);
+    return (
+      this._animationProgress < 1 && (this._targetPosition !== null || this._targetZoom !== null)
+    );
   }
 
   /**
@@ -188,7 +189,10 @@ export class MovingCamera extends Camera2D {
     }
 
     // Update animation
-    if (this._animationProgress < 1 && (this._targetPosition !== null || this._targetZoom !== null)) {
+    if (
+      this._animationProgress < 1 &&
+      (this._targetPosition !== null || this._targetZoom !== null)
+    ) {
       this._animationProgress += dt / this._animationDuration;
       this._animationProgress = Math.min(1, this._animationProgress);
 
@@ -438,8 +442,10 @@ export class ThreeDCamera extends Camera3D {
    * Check if an animation is in progress.
    */
   isAnimating(): boolean {
-    return this._animationProgress < 1 &&
-      (this._targetPhi !== null || this._targetTheta !== null || this._targetDistance !== null);
+    return (
+      this._animationProgress < 1 &&
+      (this._targetPhi !== null || this._targetTheta !== null || this._targetDistance !== null)
+    );
   }
 
   /**
@@ -448,15 +454,18 @@ export class ThreeDCamera extends Camera3D {
    * @param dt - Delta time in seconds
    */
   update(dt: number): void {
-    if (this._animationProgress < 1 &&
-        (this._targetPhi !== null || this._targetTheta !== null || this._targetDistance !== null)) {
+    if (
+      this._animationProgress < 1 &&
+      (this._targetPhi !== null || this._targetTheta !== null || this._targetDistance !== null)
+    ) {
       this._animationProgress += dt / this._animationDuration;
       this._animationProgress = Math.min(1, this._animationProgress);
 
       // Smooth ease-in-out
-      const t = this._animationProgress < 0.5
-        ? 4 * this._animationProgress * this._animationProgress * this._animationProgress
-        : 1 - Math.pow(-2 * this._animationProgress + 2, 3) / 2;
+      const t =
+        this._animationProgress < 0.5
+          ? 4 * this._animationProgress * this._animationProgress * this._animationProgress
+          : 1 - Math.pow(-2 * this._animationProgress + 2, 3) / 2;
 
       if (this._targetPhi !== null) {
         this._phi = this._startPhi + (this._targetPhi - this._startPhi) * t;
@@ -589,7 +598,7 @@ export class MultiCamera {
   addCamera(
     camera: Camera2D | Camera3D | MovingCamera | ThreeDCamera,
     viewport: CameraViewport,
-    label?: string
+    label?: string,
   ): number {
     const entry: CameraEntry = {
       camera,
@@ -671,7 +680,7 @@ export class MultiCamera {
    * @returns Camera entry or null if not found
    */
   getCameraByLabel(label: string): CameraEntry | null {
-    return this._cameras.find(c => c.label === label) ?? null;
+    return this._cameras.find((c) => c.label === label) ?? null;
   }
 
   /**
@@ -679,7 +688,7 @@ export class MultiCamera {
    * @returns Array of enabled camera entries
    */
   getEnabledCameras(): CameraEntry[] {
-    return this._cameras.filter(c => c.enabled);
+    return this._cameras.filter((c) => c.enabled);
   }
 
   /**
@@ -690,7 +699,7 @@ export class MultiCamera {
    */
   setupHorizontalSplit(
     leftCamera: Camera2D | Camera3D | MovingCamera | ThreeDCamera,
-    rightCamera: Camera2D | Camera3D | MovingCamera | ThreeDCamera
+    rightCamera: Camera2D | Camera3D | MovingCamera | ThreeDCamera,
   ): this {
     this._cameras = [];
     this.addCamera(leftCamera, { x: 0, y: 0, width: 0.5, height: 1 }, 'left');
@@ -706,7 +715,7 @@ export class MultiCamera {
    */
   setupVerticalSplit(
     topCamera: Camera2D | Camera3D | MovingCamera | ThreeDCamera,
-    bottomCamera: Camera2D | Camera3D | MovingCamera | ThreeDCamera
+    bottomCamera: Camera2D | Camera3D | MovingCamera | ThreeDCamera,
   ): this {
     this._cameras = [];
     this.addCamera(topCamera, { x: 0, y: 0.5, width: 1, height: 0.5 }, 'top');
@@ -726,7 +735,7 @@ export class MultiCamera {
     mainCamera: Camera2D | Camera3D | MovingCamera | ThreeDCamera,
     pipCamera: Camera2D | Camera3D | MovingCamera | ThreeDCamera,
     pipPosition: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' = 'bottom-right',
-    pipSize: number = 0.25
+    pipSize: number = 0.25,
   ): this {
     this._cameras = [];
 
@@ -755,6 +764,8 @@ export class MultiCamera {
         pipX = 1 - pipSize - margin;
         pipY = margin;
         break;
+      default:
+        throw new Error(`Unexpected pipPosition: ${pipPosition}`);
     }
 
     this.addCamera(pipCamera, { x: pipX, y: pipY, width: pipSize, height: pipSize }, 'pip');
@@ -771,8 +782,8 @@ export class MultiCamera {
       Camera2D | Camera3D | MovingCamera | ThreeDCamera,
       Camera2D | Camera3D | MovingCamera | ThreeDCamera,
       Camera2D | Camera3D | MovingCamera | ThreeDCamera,
-      Camera2D | Camera3D | MovingCamera | ThreeDCamera
-    ]
+      Camera2D | Camera3D | MovingCamera | ThreeDCamera,
+    ],
   ): this {
     this._cameras = [];
     this.addCamera(cameras[0], { x: 0, y: 0.5, width: 0.5, height: 0.5 }, 'top-left');
@@ -794,7 +805,7 @@ export class MultiCamera {
     renderer: THREE.WebGLRenderer,
     scene: THREE.Scene,
     canvasWidth: number,
-    canvasHeight: number
+    canvasHeight: number,
   ): void {
     // Enable scissor test for viewport isolation
     renderer.setScissorTest(true);

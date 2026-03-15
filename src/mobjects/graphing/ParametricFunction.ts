@@ -290,5 +290,3 @@ export class ParametricFunction extends VMobject {
     });
   }
 }
-
-export default ParametricFunction;

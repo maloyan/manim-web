@@ -110,9 +110,8 @@ export class Paragraph extends Text {
     this._ctx.font = this._buildFontString();
 
     // Convert world units to pixels for comparison
-    const maxWidthPixels = this._maxWidth === Infinity
-      ? Infinity
-      : (this._maxWidth / PIXEL_TO_WORLD) * RESOLUTION_SCALE;
+    const maxWidthPixels =
+      this._maxWidth === Infinity ? Infinity : (this._maxWidth / PIXEL_TO_WORLD) * RESOLUTION_SCALE;
 
     const paragraphs = this._text.split('\n');
     const wrappedLines: string[] = [];
@@ -129,7 +128,8 @@ export class Paragraph extends Text {
       for (const word of words) {
         const testLine = currentLine ? `${currentLine} ${word}` : word;
         const metrics = this._ctx.measureText(testLine);
-        const testWidth = metrics.width + (testLine.length - 1) * this._letterSpacing * RESOLUTION_SCALE;
+        const testWidth =
+          metrics.width + (testLine.length - 1) * this._letterSpacing * RESOLUTION_SCALE;
 
         if (testWidth <= maxWidthPixels || currentLine === '') {
           currentLine = testLine;
@@ -216,8 +216,8 @@ export class Paragraph extends Text {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const y = padding + i * scaledLineHeight;
-      const isLastLineOfParagraph = i === lines.length - 1 ||
-        (i < lines.length - 1 && this._isNewParagraph(lines, i));
+      const isLastLineOfParagraph =
+        i === lines.length - 1 || (i < lines.length - 1 && this._isNewParagraph(lines, i));
 
       if (this._alignment === 'justify' && !isLastLineOfParagraph && line.trim().includes(' ')) {
         this._drawJustifiedLine(line, padding, width - padding, y);
@@ -346,5 +346,3 @@ export class Paragraph extends Text {
     });
   }
 }
-
-export default Paragraph;

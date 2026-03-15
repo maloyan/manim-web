@@ -580,5 +580,3 @@ export class Text extends VMobject {
     super.dispose();
   }
 }
-
-export default Text;

@@ -52,7 +52,6 @@ export class Timeline {
       endTime,
     });
 
-    // Update total duration
     this._duration = Math.max(this._duration, endTime);
 
     return this;
@@ -75,7 +74,6 @@ export class Timeline {
         endTime,
       });
 
-      // Update total duration
       this._duration = Math.max(this._duration, endTime);
     }
 
@@ -86,28 +84,22 @@ export class Timeline {
    * Resolve a position parameter to an absolute time.
    */
   private _resolvePosition(position: PositionParam): number {
-    // If it's a number, return it directly
     if (typeof position === 'number') {
       return Math.max(0, position);
     }
 
-    // Get the last animation's timing
     const lastAnim = this._animations[this._animations.length - 1];
     const lastEnd = lastAnim?.endTime ?? 0;
     const lastStart = lastAnim?.startTime ?? 0;
 
-    // Parse string position
     if (position === '>') {
-      // End of previous animation
       return lastEnd;
     }
 
     if (position === '<') {
-      // Same start as previous animation
       return lastStart;
     }
 
-    // Handle +=N and -=N patterns
     const addMatch = position.match(/^\+=(\d*\.?\d+)$/);
     if (addMatch) {
       const offset = parseFloat(addMatch[1]);
@@ -120,7 +112,6 @@ export class Timeline {
       return Math.max(0, lastEnd - offset);
     }
 
-    // Default to after previous
     console.warn(`Invalid position parameter: "${position}", using ">" instead`);
     return lastEnd;
   }
@@ -133,7 +124,6 @@ export class Timeline {
     const prevTime = this._currentTime;
     this._currentTime = Math.max(0, Math.min(time, this._duration));
 
-    // If seeking backwards, reset animations that haven't started yet at new time
     if (time < prevTime) {
       for (const scheduled of this._animations) {
         if (scheduled.startTime > this._currentTime) {
@@ -143,7 +133,6 @@ export class Timeline {
       }
     }
 
-    // Update all active animations at the new time
     this._updateAnimationsAtTime(this._currentTime);
 
     return this;
@@ -158,7 +147,6 @@ export class Timeline {
 
     this._currentTime += dt;
 
-    // Clamp to duration
     if (this._currentTime > this._duration) {
       this._currentTime = this._duration;
       this._isPlaying = false;
@@ -174,18 +162,15 @@ export class Timeline {
     for (const scheduled of this._animations) {
       const { animation, startTime, endTime } = scheduled;
 
-      // Skip animations that haven't started yet
       if (time < startTime) {
         continue;
       }
 
-      // Start animation if not started
       if (!this._startedAnimations.has(animation)) {
         animation.startTime = startTime;
         this._startedAnimations.add(animation);
       }
 
-      // Update animation if it's currently active
       if (time <= endTime || !animation.isFinished()) {
         animation.update(0, time);
       }

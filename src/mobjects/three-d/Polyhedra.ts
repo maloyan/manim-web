@@ -186,7 +186,7 @@ export abstract class Polyhedron extends Mobject {
 /**
  * Options for creating a Tetrahedron
  */
-export interface TetrahedronOptions extends PolyhedronOptions {}
+export type TetrahedronOptions = PolyhedronOptions;
 
 /**
  * Tetrahedron - A 4-faced triangular pyramid (platonic solid)
@@ -212,7 +212,7 @@ export class Tetrahedron extends Polyhedron {
    * For a tetrahedron: circumradius = sideLength * sqrt(6) / 4
    */
   protected _getRadiusFromSideLength(): number {
-    return this._sideLength * Math.sqrt(6) / 4;
+    return (this._sideLength * Math.sqrt(6)) / 4;
   }
 
   protected _createGeometry(): THREE.BufferGeometry {
@@ -261,7 +261,7 @@ export class Tetrahedron extends Polyhedron {
 /**
  * Options for creating an Octahedron
  */
-export interface OctahedronOptions extends PolyhedronOptions {}
+export type OctahedronOptions = PolyhedronOptions;
 
 /**
  * Octahedron - An 8-faced polyhedron (platonic solid)
@@ -336,7 +336,7 @@ export class Octahedron extends Polyhedron {
 /**
  * Options for creating an Icosahedron
  */
-export interface IcosahedronOptions extends PolyhedronOptions {}
+export type IcosahedronOptions = PolyhedronOptions;
 
 /**
  * Icosahedron - A 20-faced polyhedron (platonic solid)
@@ -362,7 +362,7 @@ export class Icosahedron extends Polyhedron {
    * For an icosahedron: circumradius = sideLength * sqrt(10 + 2*sqrt(5)) / 4
    */
   protected _getRadiusFromSideLength(): number {
-    return this._sideLength * Math.sqrt(10 + 2 * Math.sqrt(5)) / 4;
+    return (this._sideLength * Math.sqrt(10 + 2 * Math.sqrt(5))) / 4;
   }
 
   protected _createGeometry(): THREE.BufferGeometry {
@@ -411,7 +411,7 @@ export class Icosahedron extends Polyhedron {
 /**
  * Options for creating a Dodecahedron
  */
-export interface DodecahedronOptions extends PolyhedronOptions {}
+export type DodecahedronOptions = PolyhedronOptions;
 
 /**
  * Dodecahedron - A 12-faced polyhedron (platonic solid)
@@ -439,7 +439,7 @@ export class Dodecahedron extends Polyhedron {
    */
   protected _getRadiusFromSideLength(): number {
     const phi = (1 + Math.sqrt(5)) / 2;
-    return this._sideLength * phi * Math.sqrt(3) / 2;
+    return (this._sideLength * phi * Math.sqrt(3)) / 2;
   }
 
   protected _createGeometry(): THREE.BufferGeometry {
@@ -484,5 +484,3 @@ export class Dodecahedron extends Polyhedron {
     });
   }
 }
-
-export default Polyhedron;

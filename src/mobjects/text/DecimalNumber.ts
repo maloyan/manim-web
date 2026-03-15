@@ -504,5 +504,3 @@ export class Integer extends DecimalNumber {
     });
   }
 }
-
-export default DecimalNumber;

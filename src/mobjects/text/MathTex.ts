@@ -16,7 +16,7 @@
 import * as THREE from 'three';
 import katex from 'katex';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { ensureKatexStyles, waitForKatexStyles } from './katex-styles';
+import { ensureKatexStyles, waitForKatexStyles } from './katexStyles';
 import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
 
 /**
@@ -1029,5 +1029,3 @@ export class MathTex extends Mobject {
     super.dispose();
   }
 }
-
-export default MathTex;

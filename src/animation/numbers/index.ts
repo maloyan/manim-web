@@ -66,18 +66,6 @@ export class ChangingDecimal extends Animation {
   }
 
   /**
-   * Called when the animation starts.
-   * Captures the current value if no explicit start value was provided.
-   */
-  override begin(): void {
-    super.begin();
-    // If no explicit start value was provided, use current value at animation start
-    if (this._startValue === undefined) {
-      this._startValue = this.decimalNumber.getValue();
-    }
-  }
-
-  /**
    * Interpolate the decimal value at the given alpha.
    * @param alpha - Progress from 0 (start) to 1 (end), after rate function applied
    */
@@ -226,7 +214,7 @@ export class ChangeDecimalToValue extends Animation {
  */
 export function changingDecimal(
   decimalNumber: DecimalNumber,
-  options: ChangingDecimalOptions
+  options: ChangingDecimalOptions,
 ): ChangingDecimal {
   return new ChangingDecimal(decimalNumber, options);
 }
@@ -239,9 +227,7 @@ export function changingDecimal(
  */
 export function changeDecimalToValue(
   decimalNumber: DecimalNumber,
-  options: ChangeDecimalToValueOptions
+  options: ChangeDecimalToValueOptions,
 ): ChangeDecimalToValue {
   return new ChangeDecimalToValue(decimalNumber, options);
 }
-
-export default ChangingDecimal;

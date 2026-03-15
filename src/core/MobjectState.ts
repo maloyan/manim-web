@@ -2,6 +2,21 @@ import type { Mobject } from './Mobject';
 import { isVMobjectLike } from './MobjectTypes';
 
 /**
+ * Copy the core visual/transform properties from `src` onto `dst`.
+ * Used by both becomeMobjectImpl and restoreMobjectStateImpl.
+ */
+function copyMobjectProperties(dst: Mobject, src: Mobject): void {
+  dst.position.copy(src.position);
+  dst.rotation.copy(src.rotation);
+  dst.scaleVector.copy(src.scaleVector);
+  dst.color = src.color;
+  dst['_opacity'] = src['_opacity'];
+  dst.strokeWidth = src.strokeWidth;
+  dst.fillOpacity = src.fillOpacity;
+  dst['_style'] = { ...src['_style'] };
+}
+
+/**
  * Save the current state of a mobject so it can be restored later.
  * Stores a deep copy on `mob.savedState` and a serializable snapshot
  * on `mob.__savedMobjectState`.
@@ -33,17 +48,8 @@ export function restoreMobjectStateImpl(mob: Mobject): boolean {
   const saved = mob.savedState;
   if (!saved) return false;
 
-  // Restore transform
-  mob.position.copy(saved.position);
-  mob.rotation.copy(saved.rotation);
-  mob.scaleVector.copy(saved.scaleVector);
-
-  // Restore visual properties
-  mob.color = saved.color;
-  mob['_opacity'] = saved.opacity;
-  mob.strokeWidth = saved.strokeWidth;
-  mob.fillOpacity = saved.fillOpacity;
-  mob['_style'] = { ...saved['_style'] };
+  // Restore transform and visual properties
+  copyMobjectProperties(mob, saved);
 
   // Restore VMobject points if applicable (type-safe duck-typing)
   if (isVMobjectLike(mob) && isVMobjectLike(saved)) {
@@ -74,14 +80,7 @@ export function restoreMobjectStateImpl(mob: Mobject): boolean {
  * Preserves identity (updaters, scene membership) but copies appearance.
  */
 export function becomeMobjectImpl(mob: Mobject, other: Mobject): void {
-  mob.position.copy(other.position);
-  mob.rotation.copy(other.rotation);
-  mob.scaleVector.copy(other.scaleVector);
-  mob.color = other.color;
-  mob['_opacity'] = other['_opacity'];
-  mob.strokeWidth = other.strokeWidth;
-  mob.fillOpacity = other.fillOpacity;
-  mob['_style'] = { ...other['_style'] };
+  copyMobjectProperties(mob, other);
 
   // If both are VMobjects, copy points
   if (isVMobjectLike(mob) && isVMobjectLike(other)) {

@@ -28,7 +28,7 @@ import { Arrow } from './Arrow';
 import { Dot } from './Dot';
 import { Circle } from './Circle';
 import { Polygram } from './Polygram';
-import { BLUE, WHITE, YELLOW } from '../../constants';
+import { WHITE } from '../../constants';
 
 /**
  * Create a mock CanvasRenderingContext2D.
