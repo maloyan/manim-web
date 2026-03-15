@@ -25,10 +25,7 @@ import { Mobject, UpdaterFunction } from '../core/Mobject';
  * // Now when leader moves, follower will follow
  * ```
  */
-export function maintainPositionRelativeTo(
-  mobject: Mobject,
-  target: Mobject
-): UpdaterFunction {
+export function maintainPositionRelativeTo(mobject: Mobject, target: Mobject): UpdaterFunction {
   // Capture the initial offset between the mobject and target
   const offset = [
     mobject.position.x - target.position.x,

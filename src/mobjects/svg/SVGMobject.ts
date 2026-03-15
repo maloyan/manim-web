@@ -68,7 +68,12 @@ function parseSVGPath(d: string): SVGPoint[][] {
 
   for (const cmd of commands) {
     const type = cmd[0];
-    const args = cmd.slice(1).trim().split(/[\s,]+/).filter(s => s).map(parseFloat);
+    const args = cmd
+      .slice(1)
+      .trim()
+      .split(/[\s,]+/)
+      .filter((s) => s)
+      .map(parseFloat);
     const isRelative = type === type.toLowerCase();
 
     switch (type.toUpperCase()) {
@@ -102,8 +107,8 @@ function parseSVGPath(d: string): SVGPoint[][] {
           // Cubic Bezier with control points at 1/3 and 2/3
           const cp1x = currentX + (x - currentX) / 3;
           const cp1y = currentY + (y - currentY) / 3;
-          const cp2x = currentX + (x - currentX) * 2 / 3;
-          const cp2y = currentY + (y - currentY) * 2 / 3;
+          const cp2x = currentX + ((x - currentX) * 2) / 3;
+          const cp2y = currentY + ((y - currentY) * 2) / 3;
 
           currentPath.push([cp1x, -cp1y]);
           currentPath.push([cp2x, -cp2y]);
@@ -123,7 +128,7 @@ function parseSVGPath(d: string): SVGPoint[][] {
           const y = currentY;
 
           const cp1x = currentX + (x - currentX) / 3;
-          const cp2x = currentX + (x - currentX) * 2 / 3;
+          const cp2x = currentX + ((x - currentX) * 2) / 3;
 
           currentPath.push([cp1x, -y]);
           currentPath.push([cp2x, -y]);
@@ -142,7 +147,7 @@ function parseSVGPath(d: string): SVGPoint[][] {
           const y = isRelative ? currentY + arg : arg;
 
           const cp1y = currentY + (y - currentY) / 3;
-          const cp2y = currentY + (y - currentY) * 2 / 3;
+          const cp2y = currentY + ((y - currentY) * 2) / 3;
 
           currentPath.push([x, -cp1y]);
           currentPath.push([x, -cp2y]);
@@ -298,7 +303,7 @@ function parseSVGPath(d: string): SVGPoint[][] {
         for (let i = 0; i < args.length; i += 7) {
           const rx = args[i];
           const ry = args[i + 1];
-          const xAxisRotation = args[i + 2] * Math.PI / 180;
+          const xAxisRotation = (args[i + 2] * Math.PI) / 180;
           const largeArcFlag = args[i + 3];
           const sweepFlag = args[i + 4];
           let x = args[i + 5];
@@ -311,8 +316,15 @@ function parseSVGPath(d: string): SVGPoint[][] {
 
           // Convert arc to Bezier curves
           const arcPoints = arcToBezier(
-            currentX, currentY, x, y,
-            rx, ry, xAxisRotation, largeArcFlag, sweepFlag
+            currentX,
+            currentY,
+            x,
+            y,
+            rx,
+            ry,
+            xAxisRotation,
+            largeArcFlag,
+            sweepFlag,
           );
 
           for (const pt of arcPoints) {
@@ -331,8 +343,8 @@ function parseSVGPath(d: string): SVGPoint[][] {
         if (currentX !== startX || currentY !== startY) {
           const cp1x = currentX + (startX - currentX) / 3;
           const cp1y = currentY + (startY - currentY) / 3;
-          const cp2x = currentX + (startX - currentX) * 2 / 3;
-          const cp2y = currentY + (startY - currentY) * 2 / 3;
+          const cp2x = currentX + ((startX - currentX) * 2) / 3;
+          const cp2y = currentY + ((startY - currentY) * 2) / 3;
 
           currentPath.push([cp1x, -cp1y]);
           currentPath.push([cp2x, -cp2y]);
@@ -358,12 +370,15 @@ function parseSVGPath(d: string): SVGPoint[][] {
  * This is a simplified approximation.
  */
 function arcToBezier(
-  x1: number, y1: number,
-  x2: number, y2: number,
-  rx: number, ry: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  rx: number,
+  ry: number,
   phi: number,
   largeArc: number,
-  sweep: number
+  sweep: number,
 ): SVGPoint[] {
   const points: SVGPoint[] = [];
 
@@ -372,9 +387,13 @@ function arcToBezier(
     // Straight line
     const cp1x = x1 + (x2 - x1) / 3;
     const cp1y = y1 + (y2 - y1) / 3;
-    const cp2x = x1 + (x2 - x1) * 2 / 3;
-    const cp2y = y1 + (y2 - y1) * 2 / 3;
-    return [[cp1x, cp1y], [cp2x, cp2y], [x2, y2]];
+    const cp2x = x1 + ((x2 - x1) * 2) / 3;
+    const cp2y = y1 + ((y2 - y1) * 2) / 3;
+    return [
+      [cp1x, cp1y],
+      [cp2x, cp2y],
+      [x2, y2],
+    ];
   }
 
   // Compute center parametrization
@@ -401,13 +420,14 @@ function arcToBezier(
 
   // Step 2: Compute center in rotated coordinates
   const sign = largeArc === sweep ? -1 : 1;
-  const sq = Math.max(0,
+  const sq = Math.max(
+    0,
     (rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p) /
-    (rx * rx * y1p * y1p + ry * ry * x1p * x1p)
+      (rx * rx * y1p * y1p + ry * ry * x1p * x1p),
   );
   const coef = sign * Math.sqrt(sq);
-  const cxp = coef * rx * y1p / ry;
-  const cyp = -coef * ry * x1p / rx;
+  const cxp = (coef * rx * y1p) / ry;
+  const cyp = (-coef * ry * x1p) / rx;
 
   // Step 3: Compute center in original coordinates
   const cx = cosPhi * cxp - sinPhi * cyp + (x1 + x2) / 2;
@@ -416,8 +436,10 @@ function arcToBezier(
   // Step 4: Compute theta1 and dtheta
   const theta1 = vectorAngle(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry);
   let dtheta = vectorAngle(
-    (x1p - cxp) / rx, (y1p - cyp) / ry,
-    (-x1p - cxp) / rx, (-y1p - cyp) / ry
+    (x1p - cxp) / rx,
+    (y1p - cyp) / ry,
+    (-x1p - cxp) / rx,
+    (-y1p - cyp) / ry,
   );
 
   if (sweep === 0 && dtheta > 0) {
@@ -435,7 +457,8 @@ function arcToBezier(
     const endAngle = startAngle + segmentAngle;
 
     // Bezier approximation for arc segment
-    const alpha = Math.sin(segmentAngle) * (Math.sqrt(4 + 3 * Math.tan(segmentAngle / 2) ** 2) - 1) / 3;
+    const alpha =
+      (Math.sin(segmentAngle) * (Math.sqrt(4 + 3 * Math.tan(segmentAngle / 2) ** 2) - 1)) / 3;
 
     const cos1 = Math.cos(startAngle);
     const sin1 = Math.sin(startAngle);
@@ -484,7 +507,7 @@ function createStyledVMobject(
   color: string,
   strokeWidth: number,
   fillColor?: string,
-  fillOpacity?: number
+  fillOpacity?: number,
 ): VMobject {
   const vmob = new VMobject();
   vmob.setColor(color);
@@ -519,7 +542,7 @@ export class VMobjectFromSVGPath extends VMobject {
     // Use the first path (for single path)
     if (paths.length > 0 && paths[0].length > 0) {
       // Convert 2D points to 3D
-      const points3D: [number, number, number][] = paths[0].map(p => [p[0], p[1], 0]);
+      const points3D: [number, number, number][] = paths[0].map((p) => [p[0], p[1], 0]);
       this.setPoints3D(points3D);
     }
   }
@@ -566,9 +589,7 @@ export class SVGMobject extends VGroup {
       }
       if (options.width !== undefined && currentWidth > 0) {
         const widthScale = options.width / currentWidth;
-        scaleFactor = options.height !== undefined
-          ? Math.min(scaleFactor, widthScale)
-          : widthScale;
+        scaleFactor = options.height !== undefined ? Math.min(scaleFactor, widthScale) : widthScale;
       }
 
       this.scale(scaleFactor);
@@ -585,7 +606,7 @@ export class SVGMobject extends VGroup {
     defaultColor: string,
     defaultStrokeWidth: number,
     defaultFillColor?: string,
-    defaultFillOpacity?: number
+    defaultFillOpacity?: number,
   ): void {
     // Create a DOM parser
     const parser = new DOMParser();
@@ -613,13 +634,13 @@ export class SVGMobject extends VGroup {
       for (const points of pathData) {
         if (points.length === 0) continue;
 
-        const points3D: [number, number, number][] = points.map(p => [p[0], p[1], 0]);
+        const points3D: [number, number, number][] = points.map((p) => [p[0], p[1], 0]);
         const vmob = createStyledVMobject(
           points3D,
           stroke,
           sw,
           fill !== 'none' ? fill : undefined,
-          fill && fill !== 'none' ? (defaultFillOpacity ?? 0.5) : 0
+          fill && fill !== 'none' ? (defaultFillOpacity ?? 0.5) : 0,
         );
         this.add(vmob);
       }
@@ -640,13 +661,17 @@ export class SVGMobject extends VGroup {
       const points = parseSVGPath(d);
 
       for (const pts of points) {
-        const points3D: [number, number, number][] = pts.map(p => [p[0], p[1], 0]);
+        const points3D: [number, number, number][] = pts.map((p) => [p[0], p[1], 0]);
         const vmob = createStyledVMobject(
           points3D,
           rectEl.getAttribute('stroke') || defaultColor,
           parseFloat(rectEl.getAttribute('stroke-width') || String(defaultStrokeWidth)),
-          rectEl.getAttribute('fill') !== 'none' ? rectEl.getAttribute('fill') || undefined : undefined,
-          rectEl.getAttribute('fill') && rectEl.getAttribute('fill') !== 'none' ? (defaultFillOpacity ?? 0.5) : 0
+          rectEl.getAttribute('fill') !== 'none'
+            ? rectEl.getAttribute('fill') || undefined
+            : undefined,
+          rectEl.getAttribute('fill') && rectEl.getAttribute('fill') !== 'none'
+            ? (defaultFillOpacity ?? 0.5)
+            : 0,
         );
         this.add(vmob);
       }
@@ -672,13 +697,17 @@ export class SVGMobject extends VGroup {
 
       const points = parseSVGPath(d);
       for (const pts of points) {
-        const points3D: [number, number, number][] = pts.map(p => [p[0], p[1], 0]);
+        const points3D: [number, number, number][] = pts.map((p) => [p[0], p[1], 0]);
         const vmob = createStyledVMobject(
           points3D,
           circleEl.getAttribute('stroke') || defaultColor,
           parseFloat(circleEl.getAttribute('stroke-width') || String(defaultStrokeWidth)),
-          circleEl.getAttribute('fill') !== 'none' ? circleEl.getAttribute('fill') || undefined : undefined,
-          circleEl.getAttribute('fill') && circleEl.getAttribute('fill') !== 'none' ? (defaultFillOpacity ?? 0.5) : 0
+          circleEl.getAttribute('fill') !== 'none'
+            ? circleEl.getAttribute('fill') || undefined
+            : undefined,
+          circleEl.getAttribute('fill') && circleEl.getAttribute('fill') !== 'none'
+            ? (defaultFillOpacity ?? 0.5)
+            : 0,
         );
         this.add(vmob);
       }
@@ -705,11 +734,11 @@ export class SVGMobject extends VGroup {
 
       const points = parseSVGPath(d);
       for (const pts of points) {
-        const points3D: [number, number, number][] = pts.map(p => [p[0], p[1], 0]);
+        const points3D: [number, number, number][] = pts.map((p) => [p[0], p[1], 0]);
         const vmob = createStyledVMobject(
           points3D,
           ellipseEl.getAttribute('stroke') || defaultColor,
-          parseFloat(ellipseEl.getAttribute('stroke-width') || String(defaultStrokeWidth))
+          parseFloat(ellipseEl.getAttribute('stroke-width') || String(defaultStrokeWidth)),
         );
         this.add(vmob);
       }
@@ -727,11 +756,11 @@ export class SVGMobject extends VGroup {
       const points = parseSVGPath(d);
 
       for (const pts of points) {
-        const points3D: [number, number, number][] = pts.map(p => [p[0], p[1], 0]);
+        const points3D: [number, number, number][] = pts.map((p) => [p[0], p[1], 0]);
         const vmob = createStyledVMobject(
           points3D,
           lineEl.getAttribute('stroke') || defaultColor,
-          parseFloat(lineEl.getAttribute('stroke-width') || String(defaultStrokeWidth))
+          parseFloat(lineEl.getAttribute('stroke-width') || String(defaultStrokeWidth)),
         );
         this.add(vmob);
       }
@@ -743,7 +772,10 @@ export class SVGMobject extends VGroup {
       const pointsAttr = polygonEl.getAttribute('points');
       if (!pointsAttr) continue;
 
-      const coords = pointsAttr.trim().split(/[\s,]+/).map(parseFloat);
+      const coords = pointsAttr
+        .trim()
+        .split(/[\s,]+/)
+        .map(parseFloat);
       if (coords.length < 4) continue;
 
       let d = `M${coords[0]},${coords[1]}`;
@@ -754,13 +786,17 @@ export class SVGMobject extends VGroup {
 
       const points = parseSVGPath(d);
       for (const pts of points) {
-        const points3D: [number, number, number][] = pts.map(p => [p[0], p[1], 0]);
+        const points3D: [number, number, number][] = pts.map((p) => [p[0], p[1], 0]);
         const vmob = createStyledVMobject(
           points3D,
           polygonEl.getAttribute('stroke') || defaultColor,
           parseFloat(polygonEl.getAttribute('stroke-width') || String(defaultStrokeWidth)),
-          polygonEl.getAttribute('fill') !== 'none' ? polygonEl.getAttribute('fill') || undefined : undefined,
-          polygonEl.getAttribute('fill') && polygonEl.getAttribute('fill') !== 'none' ? (defaultFillOpacity ?? 0.5) : 0
+          polygonEl.getAttribute('fill') !== 'none'
+            ? polygonEl.getAttribute('fill') || undefined
+            : undefined,
+          polygonEl.getAttribute('fill') && polygonEl.getAttribute('fill') !== 'none'
+            ? (defaultFillOpacity ?? 0.5)
+            : 0,
         );
         this.add(vmob);
       }
@@ -772,7 +808,10 @@ export class SVGMobject extends VGroup {
       const pointsAttr = polylineEl.getAttribute('points');
       if (!pointsAttr) continue;
 
-      const coords = pointsAttr.trim().split(/[\s,]+/).map(parseFloat);
+      const coords = pointsAttr
+        .trim()
+        .split(/[\s,]+/)
+        .map(parseFloat);
       if (coords.length < 4) continue;
 
       let d = `M${coords[0]},${coords[1]}`;
@@ -782,11 +821,11 @@ export class SVGMobject extends VGroup {
 
       const points = parseSVGPath(d);
       for (const pts of points) {
-        const points3D: [number, number, number][] = pts.map(p => [p[0], p[1], 0]);
+        const points3D: [number, number, number][] = pts.map((p) => [p[0], p[1], 0]);
         const vmob = createStyledVMobject(
           points3D,
           polylineEl.getAttribute('stroke') || defaultColor,
-          parseFloat(polylineEl.getAttribute('stroke-width') || String(defaultStrokeWidth))
+          parseFloat(polylineEl.getAttribute('stroke-width') || String(defaultStrokeWidth)),
         );
         this.add(vmob);
       }
@@ -797,7 +836,7 @@ export class SVGMobject extends VGroup {
    * Get all subpaths as individual VMobjects.
    */
   getSubpaths(): VMobject[] {
-    return this.children.filter(c => c instanceof VMobject) as VMobject[];
+    return this.children.filter((c) => c instanceof VMobject) as VMobject[];
   }
 
   protected _createCopy(): SVGMobject {
@@ -810,6 +849,9 @@ export class SVGMobject extends VGroup {
 /**
  * Parse SVG string and create an SVGMobject.
  */
-export function svgMobject(svgString: string, options?: Omit<SVGMobjectOptions, 'svgString'>): SVGMobject {
+export function svgMobject(
+  svgString: string,
+  options?: Omit<SVGMobjectOptions, 'svgString'>,
+): SVGMobject {
   return new SVGMobject({ ...options, svgString });
 }

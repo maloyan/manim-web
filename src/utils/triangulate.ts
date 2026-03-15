@@ -31,10 +31,7 @@ import earcut from 'earcut';
  *          list (outer ring vertices followed by all hole vertices in order).
  *          Length is always a multiple of 3.  Returns [] for degenerate input.
  */
-export function triangulatePolygon(
-  vertices: number[][],
-  holes?: number[][][],
-): number[] {
+export function triangulatePolygon(vertices: number[][], holes?: number[][][]): number[] {
   // ---- Guard: need at least 3 outer-ring vertices ----
   if (!vertices || vertices.length < 3) {
     return [];

@@ -89,10 +89,7 @@ export class Lighting {
    * @returns The created AmbientLight
    */
   addAmbient(options?: AmbientLightOptions): THREE.AmbientLight {
-    const light = new THREE.AmbientLight(
-      options?.color ?? '#ffffff',
-      options?.intensity ?? 0.5
-    );
+    const light = new THREE.AmbientLight(options?.color ?? '#ffffff', options?.intensity ?? 0.5);
     this._lights.push(light);
     this._scene.add(light);
     return light;
@@ -105,10 +102,7 @@ export class Lighting {
    * @returns The created DirectionalLight
    */
   addDirectional(options?: DirectionalLightOptions): THREE.DirectionalLight {
-    const light = new THREE.DirectionalLight(
-      options?.color ?? '#ffffff',
-      options?.intensity ?? 1
-    );
+    const light = new THREE.DirectionalLight(options?.color ?? '#ffffff', options?.intensity ?? 1);
     const pos = options?.position ?? [5, 10, 7];
     light.position.set(...pos);
     light.castShadow = options?.castShadow ?? false;
@@ -129,7 +123,7 @@ export class Lighting {
       options?.color ?? '#ffffff',
       options?.intensity ?? 1,
       options?.distance ?? 0,
-      options?.decay ?? 2
+      options?.decay ?? 2,
     );
     const pos = options?.position ?? [0, 5, 0];
     light.position.set(...pos);
@@ -153,7 +147,7 @@ export class Lighting {
       options?.distance ?? 0,
       options?.angle ?? Math.PI / 3,
       options?.penumbra ?? 0,
-      options?.decay ?? 2
+      options?.decay ?? 2,
     );
     const pos = options?.position ?? [0, 10, 0];
     light.position.set(...pos);

@@ -88,7 +88,7 @@ export class Polygon extends VMobject {
       }
       // Control points at 1/3 and 2/3
       points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-      points.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+      points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
       points.push([...p1]);
     };
 
@@ -99,11 +99,7 @@ export class Polygon extends VMobject {
 
     // Close the polygon if needed
     if (this._closed && this._vertices.length > 2) {
-      addLineSegment(
-        this._vertices[this._vertices.length - 1],
-        this._vertices[0],
-        false
-      );
+      addLineSegment(this._vertices[this._vertices.length - 1], this._vertices[0], false);
     }
 
     this.setPoints3D(points);
@@ -271,7 +267,7 @@ export class Triangle extends Polygon {
   constructor(
     options: Omit<PolygonOptions, 'vertices' | 'closed'> & {
       vertices?: [Vector3Tuple, Vector3Tuple, Vector3Tuple];
-    } = {}
+    } = {},
   ) {
     const {
       vertices = [
@@ -299,7 +295,7 @@ export class RegularPolygon extends Polygon {
       radius?: number;
       center?: Vector3Tuple;
       startAngle?: number;
-    } = {}
+    } = {},
   ) {
     const {
       numSides = 6,
@@ -320,7 +316,7 @@ export class RegularPolygon extends Polygon {
     numSides: number,
     radius: number,
     center: Vector3Tuple,
-    startAngle: number
+    startAngle: number,
   ): Vector3Tuple[] {
     const vertices: Vector3Tuple[] = [];
     const angleStep = (2 * Math.PI) / numSides;
@@ -374,7 +370,7 @@ export class Hexagon extends RegularPolygon {
     options: Omit<PolygonOptions, 'vertices' | 'closed'> & {
       radius?: number;
       center?: Vector3Tuple;
-    } = {}
+    } = {},
   ) {
     super({ ...options, numSides: 6 });
   }
@@ -388,7 +384,7 @@ export class Pentagon extends RegularPolygon {
     options: Omit<PolygonOptions, 'vertices' | 'closed'> & {
       radius?: number;
       center?: Vector3Tuple;
-    } = {}
+    } = {},
   ) {
     super({ ...options, numSides: 5 });
   }

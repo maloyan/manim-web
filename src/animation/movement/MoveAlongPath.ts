@@ -22,7 +22,7 @@ function evaluateCubicBezier(
   p1: number[],
   p2: number[],
   p3: number[],
-  t: number
+  t: number,
 ): number[] {
   const oneMinusT = 1 - t;
   const oneMinusT2 = oneMinusT * oneMinusT;
@@ -33,7 +33,7 @@ function evaluateCubicBezier(
   return [
     oneMinusT3 * p0[0] + 3 * oneMinusT2 * t * p1[0] + 3 * oneMinusT * t2 * p2[0] + t3 * p3[0],
     oneMinusT3 * p0[1] + 3 * oneMinusT2 * t * p1[1] + 3 * oneMinusT * t2 * p2[1] + t3 * p3[1],
-    oneMinusT3 * p0[2] + 3 * oneMinusT2 * t * p1[2] + 3 * oneMinusT * t2 * p2[2] + t3 * p3[2]
+    oneMinusT3 * p0[2] + 3 * oneMinusT2 * t * p1[2] + 3 * oneMinusT * t2 * p2[2] + t3 * p3[2],
   ];
 }
 
@@ -45,16 +45,22 @@ function evaluateCubicBezierDerivative(
   p1: number[],
   p2: number[],
   p3: number[],
-  t: number
+  t: number,
 ): number[] {
   const oneMinusT = 1 - t;
   const oneMinusT2 = oneMinusT * oneMinusT;
   const t2 = t * t;
 
   return [
-    3 * oneMinusT2 * (p1[0] - p0[0]) + 6 * oneMinusT * t * (p2[0] - p1[0]) + 3 * t2 * (p3[0] - p2[0]),
-    3 * oneMinusT2 * (p1[1] - p0[1]) + 6 * oneMinusT * t * (p2[1] - p1[1]) + 3 * t2 * (p3[1] - p2[1]),
-    3 * oneMinusT2 * (p1[2] - p0[2]) + 6 * oneMinusT * t * (p2[2] - p1[2]) + 3 * t2 * (p3[2] - p2[2])
+    3 * oneMinusT2 * (p1[0] - p0[0]) +
+      6 * oneMinusT * t * (p2[0] - p1[0]) +
+      3 * t2 * (p3[0] - p2[0]),
+    3 * oneMinusT2 * (p1[1] - p0[1]) +
+      6 * oneMinusT * t * (p2[1] - p1[1]) +
+      3 * t2 * (p3[1] - p2[1]),
+    3 * oneMinusT2 * (p1[2] - p0[2]) +
+      6 * oneMinusT * t * (p2[2] - p1[2]) +
+      3 * t2 * (p3[2] - p2[2]),
   ];
 }
 
@@ -126,7 +132,7 @@ export class MoveAlongPath extends Animation {
       const pos = this.mobject.position;
       return {
         position: [pos.x, pos.y, pos.z],
-        tangent: [1, 0, 0]
+        tangent: [1, 0, 0],
       };
     }
 
@@ -202,7 +208,7 @@ export class MoveAlongPath extends Animation {
 export function moveAlongPath(
   mobject: Mobject,
   path: VMobject,
-  options?: Omit<MoveAlongPathOptions, 'path'>
+  options?: Omit<MoveAlongPathOptions, 'path'>,
 ): MoveAlongPath {
   return new MoveAlongPath(mobject, { ...options, path });
 }

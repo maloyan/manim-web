@@ -64,7 +64,7 @@ export class Rotate extends Animation {
       this._aboutPointVector = new THREE.Vector3(
         this.aboutPoint[0],
         this.aboutPoint[1],
-        this.aboutPoint[2]
+        this.aboutPoint[2],
       );
     } else {
       // Default to mobject center
@@ -80,10 +80,7 @@ export class Rotate extends Animation {
     const currentAngle = this.angle * alpha;
 
     // Create rotation quaternion for current angle
-    const rotationQuat = new THREE.Quaternion().setFromAxisAngle(
-      this._axisVector,
-      currentAngle
-    );
+    const rotationQuat = new THREE.Quaternion().setFromAxisAngle(this._axisVector, currentAngle);
 
     // Apply rotation to initial quaternion
     const newQuat = new THREE.Quaternion().copy(this._initialQuaternion);
@@ -123,7 +120,7 @@ export class Rotate extends Animation {
 export function rotate(
   mobject: Mobject,
   angle: number,
-  options?: Omit<RotateOptions, 'angle'>
+  options?: Omit<RotateOptions, 'angle'>,
 ): Rotate {
   return new Rotate(mobject, { ...options, angle });
 }

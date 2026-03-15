@@ -31,12 +31,7 @@ export {
 } from './ShowPassingFlash';
 
 // ApplyWave - wave distortion
-export {
-  ApplyWave,
-  applyWave,
-  type ApplyWaveOptions,
-  type WaveDirection,
-} from './ApplyWave';
+export { ApplyWave, applyWave, type ApplyWaveOptions, type WaveDirection } from './ApplyWave';
 
 // FocusOn - zoom/focus effect with converging rings
 export { FocusOn, focusOn, type FocusOnOptions } from './FocusOn';
@@ -62,8 +57,4 @@ export {
 } from './ShowCreationThenDestruction';
 
 // WiggleOutThenIn - scale + rotation oscillation out and back
-export {
-  WiggleOutThenIn,
-  wiggleOutThenIn,
-  type WiggleOutThenInOptions,
-} from './WiggleOutThenIn';
+export { WiggleOutThenIn, wiggleOutThenIn, type WiggleOutThenInOptions } from './WiggleOutThenIn';

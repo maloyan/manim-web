@@ -84,7 +84,10 @@ export class Arc extends VMobject {
 
     // For a full circle or near-full circle, ensure we get complete coverage
     const totalAngle = this._angle;
-    const numSegments = Math.max(1, Math.ceil(Math.abs(totalAngle) / (Math.PI / 2) * (this._numComponents / 4)));
+    const numSegments = Math.max(
+      1,
+      Math.ceil((Math.abs(totalAngle) / (Math.PI / 2)) * (this._numComponents / 4)),
+    );
 
     // Angle per segment
     const segmentAngle = totalAngle / numSegments;

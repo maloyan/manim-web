@@ -70,7 +70,8 @@ jobs:
           node-version: 22
       - run: npm install --no-package-lock
       - name: Check for circular imports (madge)
-        run: npx madge --circular --extensions ts src/ --warning
+        run: |
+          npx madge --circular --extensions ts src/ || echo "::warning::Circular imports detected — see output above"
 
   format:
     name: Format

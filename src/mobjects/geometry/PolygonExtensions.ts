@@ -92,7 +92,7 @@ export class RoundedRectangle extends VMobject {
         points.push([...p0]);
       }
       points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-      points.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+      points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
       points.push([...p1]);
     };
 
@@ -163,41 +163,25 @@ export class RoundedRectangle extends VMobject {
     addCornerArc(tlX, tlY, arcStart);
 
     // Top edge (from top-left corner end to top-right corner start)
-    addLineSegment(
-      [tlX, cy + halfHeight, cz],
-      [trX, cy + halfHeight, cz],
-      false
-    );
+    addLineSegment([tlX, cy + halfHeight, cz], [trX, cy + halfHeight, cz], false);
 
     // Top-right corner arc (from top going to right)
     addCornerArc(trX, trY, Math.PI / 2);
 
     // Right edge
-    addLineSegment(
-      [cx + halfWidth, trY, cz],
-      [cx + halfWidth, brY, cz],
-      false
-    );
+    addLineSegment([cx + halfWidth, trY, cz], [cx + halfWidth, brY, cz], false);
 
     // Bottom-right corner arc (from right going to bottom)
     addCornerArc(brX, brY, 0);
 
     // Bottom edge
-    addLineSegment(
-      [brX, cy - halfHeight, cz],
-      [blX, cy - halfHeight, cz],
-      false
-    );
+    addLineSegment([brX, cy - halfHeight, cz], [blX, cy - halfHeight, cz], false);
 
     // Bottom-left corner arc (from bottom going to left)
     addCornerArc(blX, blY, -Math.PI / 2);
 
     // Left edge (closes the shape)
-    addLineSegment(
-      [cx - halfWidth, blY, cz],
-      [cx - halfWidth, tlY, cz],
-      false
-    );
+    addLineSegment([cx - halfWidth, blY, cz], [cx - halfWidth, tlY, cz], false);
 
     this.setPoints3D(points);
   }
@@ -370,11 +354,7 @@ export class Star extends VMobject {
     for (let i = 0; i < this._numPoints * 2; i++) {
       const angle = this._startAngle + i * angleStep;
       const radius = i % 2 === 0 ? this._outerRadius : this._innerRadius;
-      vertices.push([
-        cx + radius * Math.cos(angle),
-        cy + radius * Math.sin(angle),
-        cz,
-      ]);
+      vertices.push([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle), cz]);
     }
 
     // Convert vertices to points
@@ -389,7 +369,7 @@ export class Star extends VMobject {
         points.push([...p0]);
       }
       points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-      points.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+      points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
       points.push([...p1]);
     };
 
@@ -577,13 +557,9 @@ export class RegularPolygram extends VMobject {
     }
     // For even n, density = n/2 produces degenerate diameters, not a polygon.
     // For odd n, density can go up to floor(n/2).
-    const maxDensity = numVertices % 2 === 0
-      ? numVertices / 2 - 1
-      : Math.floor(numVertices / 2);
+    const maxDensity = numVertices % 2 === 0 ? numVertices / 2 - 1 : Math.floor(numVertices / 2);
     if (density > maxDensity) {
-      throw new Error(
-        `Density must be between 1 and ${maxDensity} for ${numVertices} vertices`
-      );
+      throw new Error(`Density must be between 1 and ${maxDensity} for ${numVertices} vertices`);
     }
 
     this._numVertices = numVertices;
@@ -648,7 +624,7 @@ export class RegularPolygram extends VMobject {
           pts.push([...p0]);
         }
         pts.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-        pts.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+        pts.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
         pts.push([...p1]);
       }
       return pts;
@@ -934,12 +910,7 @@ export class ConvexHull extends VMobject {
   constructor(options: ConvexHullOptions) {
     super();
 
-    const {
-      points,
-      color = BLUE,
-      fillOpacity = 0,
-      strokeWidth = DEFAULT_STROKE_WIDTH,
-    } = options;
+    const { points, color = BLUE, fillOpacity = 0, strokeWidth = DEFAULT_STROKE_WIDTH } = options;
 
     if (!points || points.length < 3) {
       throw new Error('ConvexHull requires at least 3 points');
@@ -1018,7 +989,10 @@ export class ConvexHull extends VMobject {
 
     for (const item of filtered) {
       // Remove points that make clockwise turn
-      while (hull.length > 1 && cross(hull[hull.length - 2], hull[hull.length - 1], item.point) <= 0) {
+      while (
+        hull.length > 1 &&
+        cross(hull[hull.length - 2], hull[hull.length - 1], item.point) <= 0
+      ) {
         hull.pop();
       }
       hull.push(item.point);
@@ -1046,7 +1020,7 @@ export class ConvexHull extends VMobject {
         points.push([...p0]);
       }
       points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-      points.push([p0[0] + 2 * dx / 3, p0[1] + 2 * dy / 3, p0[2] + 2 * dz / 3]);
+      points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
       points.push([...p1]);
     };
 
@@ -1138,10 +1112,7 @@ export class ConvexHull extends VMobject {
         this._hullVertices[j][0] - this._hullVertices[i][0],
         this._hullVertices[j][1] - this._hullVertices[i][1],
       ];
-      const toPoint = [
-        point[0] - this._hullVertices[i][0],
-        point[1] - this._hullVertices[i][1],
-      ];
+      const toPoint = [point[0] - this._hullVertices[i][0], point[1] - this._hullVertices[i][1]];
       const cross = edge[0] * toPoint[1] - edge[1] * toPoint[0];
 
       // If the point is on the right side of any edge, it's outside

@@ -33,11 +33,7 @@ class ValueTrackerAnimation extends Animation {
   private _startValue: number;
   private _endValue: number;
 
-  constructor(
-    tracker: ValueTracker,
-    endValue: number,
-    options?: AnimationOptions
-  ) {
+  constructor(tracker: ValueTracker, endValue: number, options?: AnimationOptions) {
     super(tracker, options);
     this._tracker = tracker;
     this._startValue = tracker.getValue();
@@ -200,11 +196,7 @@ class ComplexValueTrackerAnimation extends Animation {
   private _startValue: Complex;
   private _endValue: Complex;
 
-  constructor(
-    tracker: ComplexValueTracker,
-    endValue: Complex,
-    options?: AnimationOptions
-  ) {
+  constructor(tracker: ComplexValueTracker, endValue: Complex, options?: AnimationOptions) {
     super(tracker, options);
     this._tracker = tracker;
     this._startValue = { ...tracker.getValue() };
@@ -348,7 +340,7 @@ export class ComplexValueTracker extends Mobject {
   setFromPolar(r: number, theta: number): this {
     return this.setValue({
       re: r * Math.cos(theta),
-      im: r * Math.sin(theta)
+      im: r * Math.sin(theta),
     });
   }
 
@@ -360,7 +352,7 @@ export class ComplexValueTracker extends Mobject {
   incrementValue(amount: Complex): this {
     return this.setValue({
       re: this._value.re + amount.re,
-      im: this._value.im + amount.im
+      im: this._value.im + amount.im,
     });
   }
 

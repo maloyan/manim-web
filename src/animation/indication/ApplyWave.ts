@@ -56,7 +56,10 @@ export class ApplyWave extends Animation {
 
   /** Bounds for wave calculation */
   private _bounds: { minX: number; maxX: number; minY: number; maxY: number } = {
-    minX: 0, maxX: 1, minY: 0, maxY: 1
+    minX: 0,
+    maxX: 1,
+    minY: 0,
+    maxY: 1,
   };
 
   constructor(mobject: Mobject, options: ApplyWaveOptions = {}) {
@@ -80,15 +83,15 @@ export class ApplyWave extends Animation {
 
     if (this._isVMobject) {
       const vmob = this.mobject as VMobject;
-      this._originalPoints = vmob.getPoints().map(p => [...p]);
+      this._originalPoints = vmob.getPoints().map((p) => [...p]);
 
       // Calculate bounds
       if (this._originalPoints.length > 0) {
         this._bounds = {
-          minX: Math.min(...this._originalPoints.map(p => p[0])),
-          maxX: Math.max(...this._originalPoints.map(p => p[0])),
-          minY: Math.min(...this._originalPoints.map(p => p[1])),
-          maxY: Math.max(...this._originalPoints.map(p => p[1])),
+          minX: Math.min(...this._originalPoints.map((p) => p[0])),
+          maxX: Math.max(...this._originalPoints.map((p) => p[0])),
+          minY: Math.min(...this._originalPoints.map((p) => p[1])),
+          maxY: Math.max(...this._originalPoints.map((p) => p[1])),
         };
       }
     } else {
@@ -135,7 +138,7 @@ export class ApplyWave extends Animation {
           this._bounds.maxX - this._center[0],
           this._center[0] - this._bounds.minX,
           this._bounds.maxY - this._center[1],
-          this._center[1] - this._bounds.minY
+          this._center[1] - this._bounds.minY,
         );
         normalizedPos = normalizedPos / (maxDist || 1);
       } else if (this.direction === 'horizontal') {
@@ -159,11 +162,7 @@ export class ApplyWave extends Animation {
         const dx = x - this._center[0];
         const dy = y - this._center[1];
         const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        return [
-          x + (dx / dist) * displacement * 0.5,
-          y + (dy / dist) * displacement * 0.5,
-          z,
-        ];
+        return [x + (dx / dist) * displacement * 0.5, y + (dy / dist) * displacement * 0.5, z];
       } else if (this.direction === 'horizontal') {
         return [x, y + displacement, z];
       } else {

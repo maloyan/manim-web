@@ -14,11 +14,12 @@ import { AnimationGroup, AnimationGroupOptions } from '../AnimationGroup';
  */
 export type AnimationClass<T extends AnimationOptions = AnimationOptions> = new (
   mobject: Mobject,
-  options?: T
+  options?: T,
 ) => Animation;
 
-export interface LaggedStartMapOptions<T extends AnimationOptions = AnimationOptions>
-  extends AnimationGroupOptions {
+export interface LaggedStartMapOptions<
+  T extends AnimationOptions = AnimationOptions,
+> extends AnimationGroupOptions {
   /**
    * Lag ratio between animation starts.
    * Default is 0.2 (20% overlap between consecutive animations).
@@ -55,42 +56,36 @@ export interface LaggedStartMapOptions<T extends AnimationOptions = AnimationOpt
 export function laggedStartMap<T extends AnimationOptions = AnimationOptions>(
   AnimClass: AnimationClass<T>,
   mobjects: Mobject[],
-  options?: LaggedStartMapOptions<T>
+  options?: LaggedStartMapOptions<T>,
 ): AnimationGroup {
   const { lagRatio = 0.2, animOptions, ...groupOptions } = options ?? {};
 
   // Create an animation instance for each mobject
-  const animations = mobjects.map(
-    (mobject) => new AnimClass(mobject, animOptions)
-  );
+  const animations = mobjects.map((mobject) => new AnimClass(mobject, animOptions));
 
   return new AnimationGroup(animations, {
     ...groupOptions,
-    lagRatio
+    lagRatio,
   });
 }
 
 /**
  * LaggedStartMap class for cases where class instantiation is preferred.
  */
-export class LaggedStartMap<
-  T extends AnimationOptions = AnimationOptions
-> extends AnimationGroup {
+export class LaggedStartMap<T extends AnimationOptions = AnimationOptions> extends AnimationGroup {
   constructor(
     AnimClass: AnimationClass<T>,
     mobjects: Mobject[],
-    options: LaggedStartMapOptions<T> = {}
+    options: LaggedStartMapOptions<T> = {},
   ) {
     const { lagRatio = 0.2, animOptions, ...groupOptions } = options;
 
     // Create an animation instance for each mobject
-    const animations = mobjects.map(
-      (mobject) => new AnimClass(mobject, animOptions)
-    );
+    const animations = mobjects.map((mobject) => new AnimClass(mobject, animOptions));
 
     super(animations, {
       ...groupOptions,
-      lagRatio
+      lagRatio,
     });
   }
 }

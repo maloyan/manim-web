@@ -165,13 +165,13 @@ export class MandelbrotSet extends Mobject {
 
     this._material = new THREE.ShaderMaterial({
       uniforms: {
-        u_center:      { value: new THREE.Vector2(this._center[0], this._center[1]) },
-        u_zoom:        { value: this._zoom },
-        u_maxIter:     { value: this._maxIterations },
-        u_saturation:  { value: this._saturation },
-        u_lightness:   { value: this._lightness },
+        u_center: { value: new THREE.Vector2(this._center[0], this._center[1]) },
+        u_zoom: { value: this._zoom },
+        u_maxIter: { value: this._maxIterations },
+        u_saturation: { value: this._saturation },
+        u_lightness: { value: this._lightness },
         u_aspectRatio: { value: this._width / this._height },
-        u_opacity:     { value: this._opacity },
+        u_opacity: { value: this._opacity },
       },
       vertexShader: VERTEX_SHADER,
       fragmentShader: FRAGMENT_SHADER,
@@ -191,12 +191,12 @@ export class MandelbrotSet extends Mobject {
 
     const u = this._material.uniforms;
     u.u_center.value.set(this._center[0], this._center[1]);
-    u.u_zoom.value        = this._zoom;
-    u.u_maxIter.value     = this._maxIterations;
-    u.u_saturation.value  = this._saturation;
-    u.u_lightness.value   = this._lightness;
+    u.u_zoom.value = this._zoom;
+    u.u_maxIter.value = this._maxIterations;
+    u.u_saturation.value = this._saturation;
+    u.u_lightness.value = this._lightness;
     u.u_aspectRatio.value = this._width / this._height;
-    u.u_opacity.value     = this._opacity;
+    u.u_opacity.value = this._opacity;
     this._material.transparent = this._opacity < 1;
     this._material.needsUpdate = true;
   }

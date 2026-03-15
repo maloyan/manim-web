@@ -55,7 +55,7 @@ export class Indicate extends Animation {
     this.mobject.scaleVector.set(
       this._originalScale.x * currentScaleFactor,
       this._originalScale.y * currentScaleFactor,
-      this._originalScale.z * currentScaleFactor
+      this._originalScale.z * currentScaleFactor,
     );
 
     // Color interpolation using THREE.Color for proper blending

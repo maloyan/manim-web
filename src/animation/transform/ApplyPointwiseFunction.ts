@@ -47,7 +47,7 @@ export class ApplyPointwiseFunction extends Animation {
   constructor(
     mobject: Mobject,
     func: (point: number[]) => number[],
-    options?: Omit<ApplyPointwiseFunctionOptions, 'func'>
+    options?: Omit<ApplyPointwiseFunctionOptions, 'func'>,
   ) {
     super(mobject, options ?? {});
     this.func = func;
@@ -81,14 +81,14 @@ export class ApplyPointwiseFunction extends Animation {
         let targetPoints: number[][];
         if (worldMatrix && inverseWorld) {
           // Transform local → world, apply func, then world → local
-          targetPoints = startPoints.map(p => {
+          targetPoints = startPoints.map((p) => {
             _v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
             const worldResult = this.func([_v.x, _v.y, _v.z]);
             _v.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
             return [_v.x, _v.y, _v.z];
           });
         } else {
-          targetPoints = startPoints.map(p => this.func([...p]));
+          targetPoints = startPoints.map((p) => this.func([...p]));
         }
 
         this._snapshots.push({ mob, startPoints, targetPoints });
@@ -123,7 +123,7 @@ export class ApplyPointwiseFunction extends Animation {
 export function applyPointwiseFunction(
   mobject: Mobject,
   func: (point: number[]) => number[],
-  options?: Omit<ApplyPointwiseFunctionOptions, 'func'>
+  options?: Omit<ApplyPointwiseFunctionOptions, 'func'>,
 ): ApplyPointwiseFunction {
   return new ApplyPointwiseFunction(mobject, func, options);
 }

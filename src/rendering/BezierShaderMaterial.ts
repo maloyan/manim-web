@@ -280,7 +280,7 @@ export interface BezierShaderMaterialOptions {
  * @returns Configured ShaderMaterial
  */
 export function createBezierShaderMaterial(
-  options: BezierShaderMaterialOptions = {}
+  options: BezierShaderMaterialOptions = {},
 ): THREE.ShaderMaterial {
   const {
     transparent = true,
@@ -315,7 +315,7 @@ export function updateBezierMaterialResolution(
   material: THREE.ShaderMaterial,
   width: number,
   height: number,
-  pixelRatio: number = 1
+  pixelRatio: number = 1,
 ): void {
   if (material.uniforms.uResolution) {
     material.uniforms.uResolution.value.set(width, height);

@@ -55,11 +55,7 @@ export class ArcBetweenPoints extends Arc {
     } = options;
 
     // Calculate the center and radius from the two points and angle
-    const { center, radius, startAngle } = ArcBetweenPoints._calculateArcParams(
-      start,
-      end,
-      angle
-    );
+    const { center, radius, startAngle } = ArcBetweenPoints._calculateArcParams(start, end, angle);
 
     // Initialize the parent Arc with calculated parameters
     super({
@@ -87,7 +83,7 @@ export class ArcBetweenPoints extends Arc {
   private static _calculateArcParams(
     start: Vector3Tuple,
     end: Vector3Tuple,
-    angle: number
+    angle: number,
   ): { center: Vector3Tuple; radius: number; startAngle: number } {
     // Handle degenerate case where angle is very small
     if (Math.abs(angle) < 1e-10) {

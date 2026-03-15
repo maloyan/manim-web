@@ -70,14 +70,7 @@ export interface BezierSegment {
  *   (0,0), (1,0), (1,1),   // triangle 1
  *   (0,0), (1,1), (0,1)    // triangle 2
  */
-const QUAD_UVS = new Float32Array([
-  0, 0,
-  1, 0,
-  1, 1,
-  0, 0,
-  1, 1,
-  0, 1,
-]);
+const QUAD_UVS = new Float32Array([0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1]);
 
 // ---------------------------------------------------------------------------
 // BezierRenderer
@@ -88,11 +81,7 @@ export class BezierRenderer {
   private _pixelRatio: number;
 
   constructor(options: BezierRendererOptions = {}) {
-    const {
-      resolution = [800, 450],
-      pixelRatio = 1,
-      materialOptions = {},
-    } = options;
+    const { resolution = [800, 450], pixelRatio = 1, materialOptions = {} } = options;
 
     this._pixelRatio = pixelRatio;
 
@@ -219,15 +208,23 @@ export class BezierRenderer {
       const i3 = i * 3;
       const i4 = i * 4;
 
-      p0[i3]     = seg.p0[0]; p0[i3 + 1] = seg.p0[1]; p0[i3 + 2] = seg.p0[2] ?? 0;
-      p1[i3]     = seg.p1[0]; p1[i3 + 1] = seg.p1[1]; p1[i3 + 2] = seg.p1[2] ?? 0;
-      p2[i3]     = seg.p2[0]; p2[i3 + 1] = seg.p2[1]; p2[i3 + 2] = seg.p2[2] ?? 0;
-      p3[i3]     = seg.p3[0]; p3[i3 + 1] = seg.p3[1]; p3[i3 + 2] = seg.p3[2] ?? 0;
+      p0[i3] = seg.p0[0];
+      p0[i3 + 1] = seg.p0[1];
+      p0[i3 + 2] = seg.p0[2] ?? 0;
+      p1[i3] = seg.p1[0];
+      p1[i3 + 1] = seg.p1[1];
+      p1[i3 + 2] = seg.p1[2] ?? 0;
+      p2[i3] = seg.p2[0];
+      p2[i3 + 1] = seg.p2[1];
+      p2[i3 + 2] = seg.p2[2] ?? 0;
+      p3[i3] = seg.p3[0];
+      p3[i3 + 1] = seg.p3[1];
+      p3[i3 + 2] = seg.p3[2] ?? 0;
 
       wStart[i] = seg.widthStart;
-      wEnd[i]   = seg.widthEnd;
+      wEnd[i] = seg.widthEnd;
 
-      colors[i4]     = seg.color[0];
+      colors[i4] = seg.color[0];
       colors[i4 + 1] = seg.color[1];
       colors[i4 + 2] = seg.color[2];
       colors[i4 + 3] = seg.color[3];
@@ -264,7 +261,11 @@ export class BezierRenderer {
     strokeWidthEnd?: number,
   ): THREE.Mesh {
     const segments = BezierRenderer.extractSegments(
-      points, strokeWidth, strokeWidthEnd, color, opacity,
+      points,
+      strokeWidth,
+      strokeWidthEnd,
+      color,
+      opacity,
     );
     return this.buildMeshFromSegments(segments);
   }
@@ -313,15 +314,23 @@ export class BezierRenderer {
       const i3 = i * 3;
       const i4 = i * 4;
 
-      p0Attr.array[i3]     = seg.p0[0]; p0Attr.array[i3 + 1] = seg.p0[1]; p0Attr.array[i3 + 2] = seg.p0[2] ?? 0;
-      p1Attr.array[i3]     = seg.p1[0]; p1Attr.array[i3 + 1] = seg.p1[1]; p1Attr.array[i3 + 2] = seg.p1[2] ?? 0;
-      p2Attr.array[i3]     = seg.p2[0]; p2Attr.array[i3 + 1] = seg.p2[1]; p2Attr.array[i3 + 2] = seg.p2[2] ?? 0;
-      p3Attr.array[i3]     = seg.p3[0]; p3Attr.array[i3 + 1] = seg.p3[1]; p3Attr.array[i3 + 2] = seg.p3[2] ?? 0;
+      p0Attr.array[i3] = seg.p0[0];
+      p0Attr.array[i3 + 1] = seg.p0[1];
+      p0Attr.array[i3 + 2] = seg.p0[2] ?? 0;
+      p1Attr.array[i3] = seg.p1[0];
+      p1Attr.array[i3 + 1] = seg.p1[1];
+      p1Attr.array[i3 + 2] = seg.p1[2] ?? 0;
+      p2Attr.array[i3] = seg.p2[0];
+      p2Attr.array[i3 + 1] = seg.p2[1];
+      p2Attr.array[i3 + 2] = seg.p2[2] ?? 0;
+      p3Attr.array[i3] = seg.p3[0];
+      p3Attr.array[i3 + 1] = seg.p3[1];
+      p3Attr.array[i3 + 2] = seg.p3[2] ?? 0;
 
       (wStartAttr.array as Float32Array)[i] = seg.widthStart;
-      (wEndAttr.array as Float32Array)[i]   = seg.widthEnd;
+      (wEndAttr.array as Float32Array)[i] = seg.widthEnd;
 
-      colorAttr.array[i4]     = seg.color[0];
+      colorAttr.array[i4] = seg.color[0];
       colorAttr.array[i4 + 1] = seg.color[1];
       colorAttr.array[i4 + 2] = seg.color[2];
       colorAttr.array[i4 + 3] = seg.color[3];
@@ -350,7 +359,11 @@ export class BezierRenderer {
     strokeWidthEnd?: number,
   ): THREE.Mesh {
     const segments = BezierRenderer.extractSegments(
-      points, strokeWidth, strokeWidthEnd, color, opacity,
+      points,
+      strokeWidth,
+      strokeWidthEnd,
+      color,
+      opacity,
     );
     return this.updateMeshFromSegments(mesh, segments);
   }
