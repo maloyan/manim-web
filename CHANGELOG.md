@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.16](https://github.com/maloyan/manim-js/compare/v0.3.13...v0.3.16) (2026-03-16)
+
+
+### Features
+
+* implement ApplyComplexFunction animation ([#139](https://github.com/maloyan/manim-js/issues/139)) ([#166](https://github.com/maloyan/manim-js/issues/166)) ([9950a84](https://github.com/maloyan/manim-js/commit/9950a8405661641544065ee4095d3d0ac2eb65ac))
+* implement ApplyPointwiseFunctionToCenter animation ([#140](https://github.com/maloyan/manim-js/issues/140)) ([#179](https://github.com/maloyan/manim-js/issues/179)) ([2db8101](https://github.com/maloyan/manim-js/commit/2db81018c914585c60bb0c343c4e34610a5e5872))
+* implement Broadcast animation ([#155](https://github.com/maloyan/manim-js/issues/155)) ([#165](https://github.com/maloyan/manim-js/issues/165)) ([a5e9339](https://github.com/maloyan/manim-js/commit/a5e933988967678e895c23b670bc126ca8218db2))
+* implement continuous motion for streamlines ([#135](https://github.com/maloyan/manim-js/issues/135)) ([abc327d](https://github.com/maloyan/manim-js/commit/abc327d5ddc9b4ecc5ec855e65f2f992359c6e94))
+* implement LabeledPolygram geometry ([#143](https://github.com/maloyan/manim-js/issues/143)) ([#167](https://github.com/maloyan/manim-js/issues/167)) ([2b6f337](https://github.com/maloyan/manim-js/commit/2b6f337be91c383b9a851beafa63ffc2b2bfbc4d))
+
+
+### Bug Fixes
+
+* export missing growing animations from main index ([#134](https://github.com/maloyan/manim-js/issues/134)) ([#136](https://github.com/maloyan/manim-js/issues/136)) ([392756d](https://github.com/maloyan/manim-js/commit/392756dd63bfc49ab27eeed277b8ee600ec2dae4))
+* match Python manim StreamLines and fix Player yellow circle ([#148](https://github.com/maloyan/manim-js/issues/148)) ([6b36a23](https://github.com/maloyan/manim-js/commit/6b36a23e546c9e16cb50b67dc7f9afe354582034))
+
 ### [0.3.14](https://github.com/maloyan/manim-js/compare/v0.3.13...v0.3.14) (2026-03-12)
 
 
