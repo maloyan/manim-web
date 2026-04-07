@@ -18,3 +18,11 @@ export {
   type BracketType,
   type ElementAlignment,
 } from './Matrix';
+
+// Helper functions
+export {
+  getDetText,
+  matrixToMobject,
+  matrixToTexString,
+  type GetDetTextOptions,
+} from './MatrixHelpers';

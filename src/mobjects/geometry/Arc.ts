@@ -1,11 +1,11 @@
-import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { TipableVMobject, TipableVMobjectOptions } from './TipableVMobject';
 
 /**
  * Options for creating an Arc
  */
-export interface ArcOptions {
+export interface ArcOptions extends TipableVMobjectOptions {
   /** Radius of the arc. Default: 1 */
   radius?: number;
   /** Start angle in radians. Default: 0 */
@@ -40,7 +40,7 @@ export interface ArcOptions {
  * const fullCircle = new Arc({ angle: Math.PI * 2 });
  * ```
  */
-export class Arc extends VMobject {
+export class Arc extends TipableVMobject {
   protected _radius: number;
   protected _startAngle: number;
   protected _angle: number;
@@ -48,8 +48,6 @@ export class Arc extends VMobject {
   protected _arcCenter: Vector3Tuple;
 
   constructor(options: ArcOptions = {}) {
-    super();
-
     const {
       radius = 1,
       startAngle = 0,
@@ -58,7 +56,12 @@ export class Arc extends VMobject {
       strokeWidth = DEFAULT_STROKE_WIDTH,
       numComponents = 8,
       center = [0, 0, 0],
+      addTip,
+      tipConfig,
     } = options;
+
+    // Don't pass addTip to super yet - we need to generate points first
+    super({ tipConfig });
 
     this._radius = radius;
     this._startAngle = startAngle;
@@ -71,6 +74,11 @@ export class Arc extends VMobject {
     this.strokeWidth = strokeWidth;
 
     this._generatePoints();
+
+    // Add tip after points are generated so tip positioning works
+    if (addTip) {
+      this.addTip(this._tipConfig);
+    }
   }
 
   /**

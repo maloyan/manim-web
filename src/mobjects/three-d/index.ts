@@ -55,3 +55,6 @@ export {
   type Dot3DOptions,
   type ThreeDVMobjectOptions,
 } from './ThreeDExtensions';
+
+// Convex Hull
+export { ConvexHull3D, type ConvexHull3DOptions } from './ConvexHull3D';

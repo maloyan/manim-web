@@ -1,0 +1,282 @@
+---
+title: New Features
+sidebar_label: New Features
+---
+
+import MatrixHelpersExample from '@site/src/components/examples/MatrixHelpersExample';
+import ConvexHull3DExample from '@site/src/components/examples/ConvexHull3DExample';
+import TipableVMobjectExample from '@site/src/components/examples/TipableVMobjectExample';
+import TransformMatchingBaseExample from '@site/src/components/examples/TransformMatchingBaseExample';
+import ManimBannerExample from '@site/src/components/examples/ManimBannerExample';
+import TexTemplateExample from '@site/src/components/examples/TexTemplateExample';
+import MathTexPartExample from '@site/src/components/examples/MathTexPartExample';
+import AnimationUtilitiesExample from '@site/src/components/examples/AnimationUtilitiesExample';
+
+Examples showcasing newly implemented features in manim-web.
+
+## Matrix Helpers
+
+Helper functions for working with matrices: `getDetText` adds determinant notation around a matrix, `matrixToMobject` converts arrays to Matrix mobjects, and `matrixToTexString` generates LaTeX strings from arrays.
+
+<MatrixHelpersExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Matrix, IntegerMatrix, DecimalMatrix, MobjectMatrix,
+  Circle, Square, MathTex,
+  Create, FadeIn, getDetText, YELLOW,
+} from 'manim-web';
+
+// Multiple matrix types (like Python Manim's MatrixExamples)
+const m0 = new Matrix([['\\pi', '0'], ['-1', '1']]);
+const m1 = new IntegerMatrix([[1.5, 0], [12, -1.3]], { bracketType: '()' });
+const m2 = new DecimalMatrix([[3.456, 2.122], [33.2244, 12.33]], { numDecimalPlaces: 2 });
+const m3 = new MobjectMatrix([
+  [new Circle({ radius: 0.15 }), new Square({ sideLength: 0.25 })],
+  [new MathTex({ latex: '\\pi' }), new Circle({ radius: 0.1 })],
+]);
+
+// Determinant text (like Python Manim's DeterminantOfAMatrix)
+const matrix = new Matrix([[2, 0], [-1, 1]]);
+const det = getDetText(matrix, { determinant: 3, color: YELLOW });
+scene.add(matrix);
+scene.add(det);
+```
+
+</details>
+
+---
+
+## ConvexHull3D
+
+A 3D convex hull computed from arbitrary points in space. Pass an array of 3D coordinates and get a solid or wireframe hull mesh.
+
+<ConvexHull3DExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ConvexHull3D, Create, Rotate, GREEN_C } from 'manim-web';
+
+const hull = new ConvexHull3D({
+  points: [
+    [1, 0, 0], [-1, 0, 0],
+    [0, 1, 0], [0, -1, 0],
+    [0, 0, 1], [0, 0, -1],
+    [0.5, 0.5, 0.5], [-0.5, -0.5, 0.5],
+  ],
+  color: GREEN_C,
+  opacity: 0.6,
+});
+
+await scene.play(new Create(hull, { duration: 2 }));
+await scene.play(new Rotate(hull, { angle: Math.PI, duration: 3 }));
+
+// Switch to wireframe
+hull.setWireframe(true);
+```
+
+</details>
+
+---
+
+## TipableVMobject
+
+Base class enabling arrow tips on arbitrary VMobjects. Arrows use this internally, but now any curve-based mobject can have tips added to its endpoints.
+
+<TipableVMobjectExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Arc, Arrow, Create, BLUE, RED, YELLOW } from 'manim-web';
+
+const arc = new Arc({
+  radius: 2,
+  startAngle: 0,
+  angle: Math.PI * 1.2,
+  color: BLUE,
+});
+await scene.play(new Create(arc));
+
+const arrow1 = new Arrow({
+  start: [-3, -1.5, 0],
+  end: [0, 1.5, 0],
+  color: RED,
+  tipLength: 0.3,
+});
+
+const arrow2 = new Arrow({
+  start: [0, 1.5, 0],
+  end: [3, -1.5, 0],
+  color: YELLOW,
+  tipLength: 0.3,
+});
+
+await scene.play(new Create(arrow1));
+await scene.play(new Create(arrow2));
+```
+
+</details>
+
+---
+
+## TransformMatchingAbstractBase
+
+Abstract base class for matching-based transform animations. `TransformMatchingShapes` and `TransformMatchingTex` extend this base, and you can create custom matching transforms by subclassing it.
+
+<TransformMatchingBaseExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  VGroup, Circle, Square, Triangle,
+  TransformMatchingShapes, Create,
+  BLUE, RED, GREEN, YELLOW,
+} from 'manim-web';
+
+// Source shapes
+const source = new VGroup();
+source.add(new Circle({ radius: 0.5, color: BLUE, fillOpacity: 0.5 }));
+source.add(new Square({ sideLength: 1, color: RED, fillOpacity: 0.5 }));
+source.add(new Triangle({ sideLength: 1, color: GREEN, fillOpacity: 0.5 }));
+await scene.play(new Create(source));
+
+// Target shapes (rearranged)
+const target = new VGroup();
+target.add(new Circle({ radius: 0.7, color: YELLOW, fillOpacity: 0.5 }));
+target.add(new Square({ sideLength: 1.2, color: GREEN, fillOpacity: 0.5 }));
+target.add(new Triangle({ sideLength: 0.8, color: BLUE, fillOpacity: 0.5 }));
+
+// Shapes are matched and transformed smoothly
+await scene.play(new TransformMatchingShapes(source, target, { duration: 2 }));
+```
+
+</details>
+
+---
+
+## ManimBanner
+
+A branded manim-web banner with logo shapes and text. Includes built-in `createAnimation()` and `expandAnimation()` methods for animated reveals.
+
+<ManimBannerExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ManimBanner } from 'manim-web';
+
+const banner = new ManimBanner({ darkTheme: true });
+
+// Draw the logo shapes
+await scene.play(banner.createAnimation({ duration: 2 }));
+
+// Reveal the text
+await scene.play(banner.expandAnimation({ duration: 1.5 }));
+```
+
+</details>
+
+---
+
+## TeX Templates
+
+Configuration classes for LaTeX rendering. `TexTemplate` lets you customize preamble and packages, while `TexFontTemplates` and `TexTemplateLibrary` provide pre-built configurations.
+
+<TexTemplateExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  TexTemplate, TexTemplateLibrary, TexFontTemplates,
+  MathTex, Create,
+} from 'manim-web';
+
+// Create a custom template
+const template = new TexTemplate();
+template.addPackage('physics');
+console.log(template.getBody('$\\int_0^\\infty e^{-x^2} dx$'));
+
+// Use pre-built templates
+const defaultTemplate = TexTemplateLibrary.default;
+const mathTemplate = TexTemplateLibrary.fullMath;
+
+// Font templates available
+const palatino = TexFontTemplates.palatino;
+console.log(palatino.description); // "Palatino"
+```
+
+</details>
+
+---
+
+## MathTex Parts
+
+`SingleStringMathTex` handles single LaTeX expressions, while `MathTexPart` enables composing equations from individually styleable and animatable parts.
+
+<MathTexPartExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { MathTex, Create, FadeIn, Indicate, RED, BLUE, GREEN, WHITE } from 'manim-web';
+
+// Create individually colored equation parts
+const xSquared = new MathTex({ latex: 'x^2', color: RED });
+const plus = new MathTex({ latex: '+', color: WHITE });
+const ySquared = new MathTex({ latex: 'y^2', color: BLUE });
+const equals = new MathTex({ latex: '=', color: WHITE });
+const rSquared = new MathTex({ latex: 'r^2', color: GREEN });
+
+// Animate each part independently
+await scene.play(new Create(xSquared));
+await scene.play(new Create(ySquared));
+await scene.play(new Create(rSquared));
+
+// Highlight specific parts
+await scene.play(new Indicate(xSquared, { color: YELLOW }));
+```
+
+</details>
+
+---
+
+## Animation Utilities
+
+`prepareAnimation` normalizes animation inputs — accepts Animation instances or functions returning animations. `overrideAnimation` registers custom animations for mobject methods.
+
+<AnimationUtilitiesExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Circle, Square, Create, Transform,
+  prepareAnimation,
+} from 'manim-web';
+
+// Accept direct Animation instances
+const circle = new Circle({ radius: 1, color: BLUE });
+const anim1 = prepareAnimation(new Create(circle));
+await scene.play(anim1);
+
+// Accept functions returning animations
+const square = new Square({ sideLength: 2, color: RED });
+const anim2 = prepareAnimation(() => new Transform(circle, square));
+await scene.play(anim2);
+```
+
+</details>

@@ -8,7 +8,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Examples',
-      items: ['examples/animations', 'examples/graphing', 'examples/3d-scenes'],
+      items: ['examples/animations', 'examples/graphing', 'examples/3d-scenes', 'examples/new'],
     },
     {
       type: 'link',
