@@ -27,6 +27,9 @@ export {
 // Polygram (generalized polygon with multiple vertex groups)
 export { Polygram, type PolygramOptions } from './Polygram';
 
+// TipableVMobject base class
+export { TipableVMobject, type TipableVMobjectOptions, type TipOptions } from './TipableVMobject';
+
 // Arrow and variants
 export { Arrow, DoubleArrow, Vector, type ArrowOptions } from './Arrow';
 

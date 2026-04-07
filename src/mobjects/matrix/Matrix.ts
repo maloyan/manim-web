@@ -16,7 +16,7 @@ import { DEFAULT_STROKE_WIDTH } from '../../constants';
 /**
  * Bracket type options for matrices
  */
-export type BracketType = '[]' | '()' | '||' | '';
+export type BracketType = '[]' | '()' | '||' | '{}' | '<>' | '';
 
 /**
  * Alignment options for elements within cells
@@ -309,67 +309,108 @@ export class Matrix extends VGroup {
     bracket.fillOpacity = 0;
 
     const halfHeight = height / 2;
-    const hookSize = height * 0.08; // Size of the horizontal parts
+    const hookSize = height * 0.08;
+    const sign = side === 'left' ? 1 : -1;
+    const points = this._getBracketPoints(type, halfHeight, hookSize, sign);
+
+    bracket.setPoints3D(this._pointsToLineBezier(points));
+
+    return bracket;
+  }
+
+  /**
+   * Generate points for a bracket shape
+   * @param sign 1 for left side, -1 for right side
+   */
+  protected _getBracketPoints(
+    type: BracketType,
+    halfHeight: number,
+    hookSize: number,
+    sign: number,
+  ): number[][] {
     const points: number[][] = [];
 
     switch (type) {
       case '[]':
-        // Square brackets
-        if (side === 'left') {
-          // Top hook, vertical line, bottom hook (left side: opens right)
-          points.push(
-            [hookSize, halfHeight, 0],
-            [0, halfHeight, 0],
-            [0, -halfHeight, 0],
-            [hookSize, -halfHeight, 0],
-          );
-        } else {
-          // Top hook, vertical line, bottom hook (right side: opens left)
-          points.push(
-            [-hookSize, halfHeight, 0],
-            [0, halfHeight, 0],
-            [0, -halfHeight, 0],
-            [-hookSize, -halfHeight, 0],
-          );
-        }
+        points.push(
+          [sign * hookSize, halfHeight, 0],
+          [0, halfHeight, 0],
+          [0, -halfHeight, 0],
+          [sign * hookSize, -halfHeight, 0],
+        );
         break;
 
-      case '()': {
-        // Parentheses (curved)
-        const curveWidth = hookSize * 1.5;
-        const numSegments = 20;
-
-        for (let i = 0; i <= numSegments; i++) {
-          const t = i / numSegments;
-          const angle = Math.PI * (t - 0.5); // -PI/2 to PI/2
-          const y = halfHeight * Math.sin(angle);
-          const x = curveWidth * (1 - Math.cos(angle));
-
-          if (side === 'left') {
-            points.push([x, y, 0]);
-          } else {
-            points.push([-x, y, 0]);
-          }
-        }
+      case '()':
+        this._addParenthesisPoints(points, halfHeight, hookSize, sign);
         break;
-      }
 
       case '||':
-        // Vertical bars (for determinants)
-        if (side === 'left') {
-          points.push([0, halfHeight, 0], [0, -halfHeight, 0]);
-        } else {
-          points.push([0, halfHeight, 0], [0, -halfHeight, 0]);
-        }
+        points.push([0, halfHeight, 0], [0, -halfHeight, 0]);
         break;
+
+      case '{}':
+        this._addCurlyBracePoints(points, halfHeight, hookSize, sign);
+        break;
+
+      case '<>':
+        points.push([sign * hookSize, halfHeight, 0], [0, 0, 0], [sign * hookSize, -halfHeight, 0]);
+        break;
+
       default:
         throw new Error(`Unexpected bracket type: ${type}`);
     }
 
-    // Convert points to Bezier control points
-    bracket.setPoints3D(this._pointsToLineBezier(points));
+    return points;
+  }
 
-    return bracket;
+  /**
+   * Add parenthesis curve points
+   */
+  private _addParenthesisPoints(
+    points: number[][],
+    halfHeight: number,
+    hookSize: number,
+    sign: number,
+  ): void {
+    const curveWidth = hookSize * 1.5;
+    const numSegments = 20;
+
+    for (let i = 0; i <= numSegments; i++) {
+      const t = i / numSegments;
+      const angle = Math.PI * (t - 0.5);
+      const y = halfHeight * Math.sin(angle);
+      const x = sign * curveWidth * (1 - Math.cos(angle));
+      points.push([x, y, 0]);
+    }
+  }
+
+  /**
+   * Add curly brace points
+   */
+  private _addCurlyBracePoints(
+    points: number[][],
+    halfHeight: number,
+    hookSize: number,
+    sign: number,
+  ): void {
+    const curlyWidth = hookSize * 1.2;
+    const midPointWidth = hookSize * 1.8;
+    const numSegs = 10;
+
+    // Top half: from top to middle point
+    for (let i = 0; i <= numSegs; i++) {
+      const t = i / numSegs;
+      const y = halfHeight - t * halfHeight;
+      const x = sign * (curlyWidth + (midPointWidth - curlyWidth) * Math.sin((t * Math.PI) / 2));
+      points.push([x, y, 0]);
+    }
+    // Bottom half: from middle point to bottom
+    for (let i = 1; i <= numSegs; i++) {
+      const t = i / numSegs;
+      const y = -t * halfHeight;
+      const x = sign * (midPointWidth - (midPointWidth - curlyWidth) * Math.sin((t * Math.PI) / 2));
+      points.push([x, y, 0]);
+    }
   }
 
   /**

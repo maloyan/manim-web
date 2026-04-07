@@ -122,6 +122,20 @@ describe('Matrix', () => {
     expect(m.getBrackets()).not.toBeNull();
   });
 
+  it('curly brace bracket type', () => {
+    const m = new Matrix([[1]], { bracketType: '{}' });
+    expect(m.getBrackets()).not.toBeNull();
+    expect(m.getLeftBracket()).not.toBeNull();
+    expect(m.getRightBracket()).not.toBeNull();
+  });
+
+  it('angle bracket type', () => {
+    const m = new Matrix([[1]], { bracketType: '<>' });
+    expect(m.getBrackets()).not.toBeNull();
+    expect(m.getLeftBracket()).not.toBeNull();
+    expect(m.getRightBracket()).not.toBeNull();
+  });
+
   it('is a VGroup', () => {
     const m = new Matrix([[1]]);
     expect(m).toBeInstanceOf(VGroup);

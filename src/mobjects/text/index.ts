@@ -60,6 +60,14 @@ export {
   MONOKAI_COLOR_SCHEME,
 } from './Code';
 
+// MathTexParts - Single-string MathTex and partitioned MathTex
+export {
+  SingleStringMathTex,
+  type SingleStringMathTexOptions,
+  MathTexPart,
+  type MathTexPartOptions,
+} from './MathTexParts';
+
 // TextExtensions - Additional text mobjects
 export {
   BulletedList,

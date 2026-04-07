@@ -18,6 +18,14 @@ export {
   DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
 } from './constants';
 
+// TeX Templates
+export {
+  TexTemplate,
+  TexFontTemplates,
+  TexTemplateLibrary,
+  type TexTemplateOptions,
+} from './utils/tex-templates';
+
 // Core
 export {
   Mobject,
@@ -100,6 +108,9 @@ export {
   type PolygonOptions,
   Polygram,
   type PolygramOptions,
+  TipableVMobject,
+  type TipableVMobjectOptions,
+  type TipOptions,
   Arrow,
   DoubleArrow,
   Vector,
@@ -283,6 +294,11 @@ export {
   type TokenType,
   DEFAULT_COLOR_SCHEME,
   MONOKAI_COLOR_SCHEME,
+  // MathTexParts
+  SingleStringMathTex,
+  type SingleStringMathTexOptions,
+  MathTexPart,
+  type MathTexPartOptions,
   // Extended text
   BulletedList,
   Title,
@@ -346,6 +362,9 @@ export {
   type PrismOptions,
   type Dot3DOptions,
   type ThreeDVMobjectOptions,
+  // Convex hull
+  ConvexHull3D,
+  type ConvexHull3DOptions,
 } from './mobjects/three-d';
 
 // Value Trackers
@@ -371,7 +390,14 @@ export {
   type MobjectMatrixOptions,
   type BracketType,
   type ElementAlignment,
+  getDetText,
+  matrixToMobject,
+  matrixToTexString,
+  type GetDetTextOptions,
 } from './mobjects/matrix';
+
+// Logo
+export { ManimBanner, type ManimBannerOptions } from './mobjects/logo';
 
 // Table
 export {
@@ -604,6 +630,10 @@ export {
   type ShrinkToCenterOptions,
 } from './animation/transform';
 export {
+  TransformMatchingAbstractBase,
+  type TransformMatchingBaseOptions,
+} from './animation/transform';
+export {
   TransformMatchingShapes,
   transformMatchingShapes,
   type TransformMatchingShapesOptions,
@@ -687,6 +717,16 @@ export {
   type LaggedStartMapOptions,
   type AnimationClass,
 } from './animation/composition';
+
+// Animation override & prepare utilities
+export {
+  overrideAnimation,
+  getAnimationOverride,
+  hasAnimationOverride,
+  clearAnimationOverrides,
+  prepareAnimation,
+  type AnimationOverrideFunc,
+} from './animation/AnimationUtilities';
 
 // Updater animations
 export { UpdateFromFunc, updateFromFunc } from './animation/UpdateFromFunc';

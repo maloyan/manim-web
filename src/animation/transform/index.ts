@@ -98,6 +98,11 @@ export {
 } from './SpecialTransforms';
 
 export {
+  TransformMatchingAbstractBase,
+  type TransformMatchingBaseOptions,
+} from './TransformMatchingBase';
+
+export {
   // TransformMatchingShapes
   TransformMatchingShapes,
   transformMatchingShapes,
