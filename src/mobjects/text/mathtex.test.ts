@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import * as THREE from 'three';
 import { MathTex } from './MathTex';
 
@@ -787,6 +787,99 @@ describe('MathTex', () => {
     it('should accept custom _padding', () => {
       const tex = new MathTex({ latex: 'x', _padding: 20 });
       expect((tex as unknown as { _padding: number })._padding).toBe(20);
+    });
+  });
+
+  // -----------------------------------------------------------
+  // MathJax ex-unit dimension fix (issue #187)
+  // -----------------------------------------------------------
+  describe('MathJax ex-unit SVG dimensions', () => {
+    it('should convert ex-unit dimensions to reasonable pixel sizes', async () => {
+      // Mock renderLatexToSVG to return SVG with ex-unit dimensions
+      vi.spyOn(await import('./MathJaxRenderer'), 'renderLatexToSVG').mockResolvedValue({
+        svgElement: (() => {
+          const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          svg.setAttribute('width', '5ex');
+          svg.setAttribute('height', '2ex');
+          svg.setAttribute('viewBox', '0 -1000 5000 2000');
+          svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rect.setAttribute('width', '100');
+          rect.setAttribute('height', '100');
+          rect.setAttribute('fill', 'white');
+          svg.appendChild(rect);
+          return svg;
+        })(),
+        vmobjectGroup: { children: [] } as never,
+        svgString:
+          '<svg width="5ex" height="2ex" viewBox="0 -1000 5000 2000" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="white"/></svg>',
+        width: 5000,
+        height: 2000,
+      });
+
+      // Mock canvas getContext since happy-dom doesn't support 2d context
+      const origCreateElement = document.createElement.bind(document);
+      vi.spyOn(document, 'createElement').mockImplementation(
+        (tag: string, options?: ElementCreationOptions) => {
+          const el = origCreateElement(tag, options);
+          if (tag === 'canvas') {
+            (el as HTMLCanvasElement).getContext = (() => ({
+              scale: vi.fn(),
+              drawImage: vi.fn(),
+            })) as never;
+          }
+          return el;
+        },
+      );
+
+      // Mock Image so onload fires immediately
+      const OrigImage = globalThis.Image;
+      globalThis.Image = class MockImage {
+        src = '';
+        onload: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        constructor() {
+          setTimeout(() => {
+            if (this.onload) this.onload();
+          }, 0);
+        }
+      } as never;
+
+      // Mock URL.createObjectURL / revokeObjectURL
+      const origCreateObjectURL = URL.createObjectURL;
+      const origRevokeObjectURL = URL.revokeObjectURL;
+      URL.createObjectURL = vi.fn().mockReturnValue('blob:mock');
+      URL.revokeObjectURL = vi.fn();
+
+      const tex = new MathTex({ latex: 'x^2', renderer: 'mathjax', fontSize: 48 });
+
+      // Wait for the render to complete (or fail gracefully)
+      try {
+        await tex.waitForRender();
+      } catch {
+        // Render may throw due to happy-dom limitations, that's OK
+      }
+
+      // Check the render state dimensions
+      // _renderState.width and .height are set as (pixel dimension) * 0.01
+      const renderState = (
+        tex as unknown as {
+          _renderState: { width: number; height: number; canvas: HTMLCanvasElement | null };
+        }
+      )._renderState;
+
+      // With the bug: svgW = parseFloat("5ex") = 5 pixels (tiny!)
+      //   width = ceil(5) + 10*2 = 25, _renderState.width = 25 * 0.01 = 0.25
+      // With the fix: svgW = 5 * 48 * 0.5 = 120 pixels
+      //   width = ceil(120) + 10*2 = 140, _renderState.width = 140 * 0.01 = 1.4
+      // We verify the dimensions are > 0.5 (i.e., not the tiny ~0.25 from the bug)
+      expect(renderState.width).toBeGreaterThan(0.5);
+      expect(renderState.height).toBeGreaterThan(0.3);
+
+      globalThis.Image = OrigImage;
+      URL.createObjectURL = origCreateObjectURL;
+      URL.revokeObjectURL = origRevokeObjectURL;
+      vi.restoreAllMocks();
     });
   });
 });

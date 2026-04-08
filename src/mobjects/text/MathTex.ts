@@ -443,6 +443,19 @@ export class MathTex extends Mobject {
   }
 
   /**
+   * Parse an SVG dimension attribute that may use "ex" units and convert
+   * to pixels.  MathJax outputs width/height like "5.002ex"; parseFloat
+   * strips the suffix, so we detect "ex" and scale appropriately.
+   */
+  private _parseSvgDimension(attr: string | null, fontSize: number): number {
+    if (!attr) return 0;
+    const value = parseFloat(attr);
+    if (!value || isNaN(value)) return 0;
+    // 1ex ≈ fontSize × 0.5 (x-height approximation)
+    return attr.endsWith('ex') ? value * fontSize * 0.5 : value;
+  }
+
+  /**
    * Render using MathJax SVG output.  The SVG is painted onto a canvas
    * texture in the same way the KaTeX path works, keeping the visual
    * pipeline consistent.
@@ -474,15 +487,19 @@ export class MathTex extends Mobject {
       return;
     }
 
-    // Ensure the SVG has explicit width/height for rasterization
-    const wAttr = svgEl.getAttribute('width');
-    const hAttr = svgEl.getAttribute('height');
-    let svgW = wAttr ? parseFloat(wAttr) : 0;
-    let svgH = hAttr ? parseFloat(hAttr) : 0;
+    // Ensure the SVG has explicit pixel width/height for rasterization.
+    let svgW = this._parseSvgDimension(svgEl.getAttribute('width'), this._fontSize);
+    let svgH = this._parseSvgDimension(svgEl.getAttribute('height'), this._fontSize);
+
     if ((!svgW || !svgH) && result.width && result.height) {
-      // viewBox units — scale to a reasonable pixel size
-      svgW = result.width * this._fontSize;
-      svgH = result.height * this._fontSize;
+      // Fallback: derive pixel size from viewBox-based result dimensions.
+      // result.width/height = viewBox units × fontScale (fontSize/48).
+      // viewBox uses ~1000 units per ex → pixels = result.value * 0.024
+      svgW = result.width * 0.024;
+      svgH = result.height * 0.024;
+    }
+
+    if (svgW && svgH) {
       svgEl.setAttribute('width', String(svgW));
       svgEl.setAttribute('height', String(svgH));
     }
