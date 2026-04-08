@@ -38,7 +38,47 @@ async function squareToCircle(scene: Scene) {
 }
 ```
 
-Or use a plain `<script>` tag — see the [examples](https://maloyan.github.io/manim-web/) for more.
+### Browser Usage
+
+Use manim-web directly in the browser with a `<script>` tag -- no bundler needed:
+
+```html
+<canvas id="canvas" width="800" height="450"></canvas>
+<script type="module">
+  import { Scene, Circle, Create } from 'https://esm.sh/manim-web@0.3.17';
+
+  const scene = new Scene({ canvasId: 'canvas' });
+  const circle = new Circle({ radius: 1.5 });
+  await scene.play(new Create(circle));
+</script>
+```
+
+Alternatively, use an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script/type/importmap) for the self-hosted bundle:
+
+```html
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://esm.sh/three@0.183.2"
+  }
+}
+</script>
+<script type="module">
+  import { Scene, Circle, Create } from './node_modules/manim-web/dist/index.js';
+  // ...
+</script>
+```
+
+Or use the self-contained browser bundle that includes Three.js (no import map needed):
+
+```html
+<script type="module">
+  import { Scene, Circle, Create } from './node_modules/manim-web/dist/manim-web.browser.js';
+  // ...
+</script>
+```
+
+See the [examples](https://maloyan.github.io/manim-web/) for more.
 
 ## What You Can Build
 
