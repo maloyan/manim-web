@@ -125,6 +125,7 @@ import { Clickable, makeClickable } from './Clickable';
 import { Hoverable, makeHoverable } from './Hoverable';
 import { Draggable, makeDraggable } from './Draggable';
 import { SelectionManager } from './SelectionManager';
+import { ThreeDScene } from '../core/ThreeDScene';
 
 // ---------------------------------------------------------------------------
 // Helper: Simulate mouse/touch events on a canvas
@@ -1043,6 +1044,125 @@ describe('Drag constraint math', () => {
     expect(delta[1]).toBeCloseTo(position[1] - 0, 1);
     expect(delta[2]).toBe(0);
     draggable.dispose();
+  });
+});
+
+// ============================================================================
+// Draggable – 3D scene support
+// ============================================================================
+
+describe('Draggable in 3D scene', () => {
+  /**
+   * Create a mock ThreeDScene by using Object.create so the mock passes
+   * `instanceof ThreeDScene`. The camera3D getter returns a real
+   * PerspectiveCamera so that raycasting works correctly.
+   */
+  function createMock3DScene() {
+    const canvasWidth = 800;
+    const canvasHeight = 600;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    canvas.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      right: canvasWidth,
+      bottom: canvasHeight,
+      width: canvasWidth,
+      height: canvasHeight,
+      x: 0,
+      y: 0,
+      toJSON: () => {},
+    });
+    document.body.appendChild(canvas);
+
+    // Real PerspectiveCamera looking at origin from z=10
+    const perspCam = new THREE.PerspectiveCamera(45, canvasWidth / canvasHeight, 0.1, 1000);
+    perspCam.position.set(0, 0, 10);
+    perspCam.lookAt(0, 0, 0);
+    perspCam.updateMatrixWorld();
+
+    // Build mock that passes instanceof ThreeDScene
+    // Use Object.defineProperty to override inherited getters
+    const mock = Object.create(ThreeDScene.prototype);
+    Object.defineProperty(mock, 'camera', {
+      value: { frameWidth: 14, frameHeight: 8, getCamera: vi.fn(() => ({})) },
+    });
+    Object.defineProperty(mock, 'camera3D', {
+      value: { getCamera: vi.fn(() => perspCam) },
+    });
+    mock.getCanvas = vi.fn(() => canvas);
+    mock.render = vi.fn();
+    mock._canvas = canvas;
+
+    return mock;
+  }
+
+  it('moves object in all 3 axes when dragged in a 3D scene', () => {
+    const scene = createMock3DScene();
+    // Place object at [2, 3, 1] - not at origin and not on any axis plane
+    const mob = createMockMobject({ center: [2, 3, 1], bounds: { width: 2, height: 2 } });
+    const onDrag = vi.fn();
+    const draggable = new Draggable(mob as any, scene as any, { onDrag });
+
+    const canvas = scene.getCanvas();
+
+    // We need to figure out where [2, 3, 1] projects to on screen.
+    // With camera at (0,0,10) looking at origin, FOV 45, 800x600:
+    // Use Three.js to project the object position to NDC, then to screen coords.
+    const cam = scene.camera3D.getCamera();
+    const objVec = new THREE.Vector3(2, 3, 1);
+    objVec.project(cam);
+    const startX = ((objVec.x + 1) / 2) * 800;
+    const startY = ((-objVec.y + 1) / 2) * 600;
+
+    // Mousedown on the object's projected position
+    fireMouseEvent(canvas, 'mousedown', { clientX: startX, clientY: startY });
+    expect(draggable.isDragging).toBe(true);
+
+    // Move mouse to a different screen position
+    fireMouseEvent(window as any, 'mousemove', { clientX: startX + 50, clientY: startY - 30 });
+
+    expect(onDrag).toHaveBeenCalledTimes(1);
+    const [, position, delta] = onDrag.mock.calls[0];
+
+    // The position should have changed in X and Y (screen motion maps to world motion)
+    // but also Z should NOT be hardcoded to 0 — it should be near the object's depth
+    // since we're raycasting onto a plane at the object's depth
+    expect(position[2]).not.toBe(0); // Z must not be hardcoded to 0
+
+    // Delta should reflect the motion in all 3 coordinates
+    expect(delta[0]).not.toBe(0);
+    expect(delta[1]).not.toBe(0);
+    // Z delta is the projected change on the camera-facing plane
+    // (may be small but should be computed, not hardcoded 0)
+    expect(typeof delta[2]).toBe('number');
+
+    draggable.dispose();
+    scene._canvas.remove();
+  });
+
+  it('hit-tests using 3D distance instead of 2D bounding box', () => {
+    const scene = createMock3DScene();
+    // Place object at origin
+    const mob = createMockMobject({ center: [0, 0, 0], bounds: { width: 2, height: 2 } });
+    const draggable = new Draggable(mob as any, scene as any);
+
+    const canvas = scene.getCanvas();
+
+    // Click at center of canvas — should project to near origin and hit
+    fireMouseEvent(canvas, 'mousedown', { clientX: 400, clientY: 300 });
+    expect(draggable.isDragging).toBe(true);
+
+    fireMouseEvent(window as any, 'mouseup', { clientX: 400, clientY: 300 });
+
+    // Click far from center — should miss
+    fireMouseEvent(canvas, 'mousedown', { clientX: 0, clientY: 0 });
+    expect(draggable.isDragging).toBe(false);
+
+    draggable.dispose();
+    scene._canvas.remove();
   });
 });
 

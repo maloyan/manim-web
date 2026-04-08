@@ -1,5 +1,7 @@
+import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../core/Mobject';
 import { Scene } from '../core/Scene';
+import { ThreeDScene } from '../core/ThreeDScene';
 
 /**
  * Options for configuring draggable behavior.
@@ -145,23 +147,53 @@ export class Draggable {
     const canvas = this._scene.getCanvas();
     const rect = canvas.getBoundingClientRect();
 
-    // Normalize to -1 to 1
-    const x = ((clientX - rect.left) / rect.width) * 2 - 1;
-    const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    // Normalize to -1 to 1 (NDC)
+    const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const ndcY = -((clientY - rect.top) / rect.height) * 2 + 1;
 
-    // Use camera's frame dimensions
+    if (this._scene instanceof ThreeDScene) {
+      // For 3D scenes, raycast onto a plane at the object's depth
+      const threeCamera = this._scene.camera3D.getCamera();
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(ndcX, ndcY), threeCamera);
+
+      // Build a plane perpendicular to the camera's view direction
+      // passing through the object's current position
+      const objPos = new THREE.Vector3(...this._mobject.getCenter());
+      const camDir = new THREE.Vector3();
+      threeCamera.getWorldDirection(camDir);
+      const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(camDir, objPos);
+
+      const intersection = new THREE.Vector3();
+      raycaster.ray.intersectPlane(plane, intersection);
+      if (intersection) {
+        return [intersection.x, intersection.y, intersection.z];
+      }
+    }
+
+    // 2D fallback: use camera's frame dimensions
     const camera = this._scene.camera;
-    const worldX = (x * camera.frameWidth) / 2;
-    const worldY = (y * camera.frameHeight) / 2;
+    const worldX = (ndcX * camera.frameWidth) / 2;
+    const worldY = (ndcY * camera.frameHeight) / 2;
 
     return [worldX, worldY, 0];
   }
 
   private _hitTest(worldPos: Vector3Tuple): boolean {
-    // Check if point is within mobject's bounding box
     const center = this._mobject.getCenter();
     const bounds = this._mobject.getBoundingBox();
 
+    if (this._scene instanceof ThreeDScene) {
+      // In 3D, check distance from the object center on the camera-facing plane
+      const dx = worldPos[0] - center[0];
+      const dy = worldPos[1] - center[1];
+      const dz = worldPos[2] - center[2];
+      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      const maxDim = Math.max(bounds.width, bounds.height) / 2;
+      return dist <= maxDim;
+    }
+
+    // 2D: check within bounding box
     return (
       Math.abs(worldPos[0] - center[0]) <= bounds.width / 2 &&
       Math.abs(worldPos[1] - center[1]) <= bounds.height / 2
@@ -195,11 +227,12 @@ export class Draggable {
       newY = Math.round(newY / grid) * grid;
     }
 
-    const newPos: Vector3Tuple = [newX, newY, this._mobject.position.z];
+    const newZ = this._scene instanceof ThreeDScene ? worldPos[2] : this._mobject.position.z;
+    const newPos: Vector3Tuple = [newX, newY, newZ];
     const delta: Vector3Tuple = [
       newPos[0] - this._lastPosition[0],
       newPos[1] - this._lastPosition[1],
-      0,
+      newPos[2] - this._lastPosition[2],
     ];
 
     this._mobject.moveTo(newPos);
