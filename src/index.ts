@@ -33,6 +33,7 @@ export {
   type Vector3Tuple,
   type UpdaterFunction,
 } from './core/Mobject';
+export { AnimateProxy } from './core/AnimateProxy';
 export { UP, DOWN, LEFT, RIGHT, IN, OUT, ORIGIN, UL, UR, DL, DR } from './core/Mobject';
 export { VMobject, type Point } from './core/VMobject';
 export { VGroup } from './core/VGroup';

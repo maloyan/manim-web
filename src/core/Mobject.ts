@@ -15,6 +15,16 @@ import {
   applyFunctionImpl,
   prepareForNonlinearTransformImpl,
 } from './MobjectState';
+// AnimateProxy registers itself here to break the circular dependency:
+// Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let animateProxyFactory: ((mobject: Mobject) => any) | null = null;
+
+/** @internal Called by AnimateProxy module to register the factory. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function registerAnimateProxy(factory: (mobject: Mobject) => any): void {
+  animateProxyFactory = factory;
+}
 
 // Re-export everything from MobjectTypes so existing imports from './Mobject' continue to work
 export {
@@ -396,6 +406,27 @@ export abstract class Mobject {
   }
   center(): this {
     return this.moveTo([0, 0, 0]);
+  }
+
+  // ── Animate Proxy ────────────────────────────────────────────────
+
+  /**
+   * Returns an AnimateProxy that records method calls.
+   * Pass the proxy to `scene.play()` to animate from the current state
+   * to the state after all recorded calls are applied.
+   *
+   * @example
+   * ```typescript
+   * scene.play(circle.animate.shift([2, 0, 0]));
+   * scene.play(circle.animate.setColor('#ff0000').scale(2));
+   * ```
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  get animate(): any {
+    if (!animateProxyFactory) {
+      throw new Error('AnimateProxy not registered. Ensure AnimateProxy module is imported.');
+    }
+    return animateProxyFactory(this);
   }
 
   toEdge(direction: Vector3Tuple, buff: number = 0.5, frameDimensions?: [number, number]): this {

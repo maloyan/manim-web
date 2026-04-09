@@ -76,9 +76,9 @@ describe('ValueTracker', () => {
     expect(typeof anim.interpolate).toBe('function');
   });
 
-  it('animate is alias for animateTo', () => {
+  it('animateTo returns an animation', () => {
     const vt = new ValueTracker(0);
-    const anim = vt.animate(10);
+    const anim = vt.animateTo(10);
     expect(anim).toBeDefined();
     expect(typeof anim.interpolate).toBe('function');
   });
@@ -256,9 +256,9 @@ describe('ComplexValueTracker', () => {
     expect(typeof anim.interpolate).toBe('function');
   });
 
-  it('animate is alias for animateTo', () => {
+  it('animateTo returns an animation', () => {
     const ct = new ComplexValueTracker();
-    const anim = ct.animate({ re: 5, im: 5 });
+    const anim = ct.animateTo({ re: 5, im: 5 });
     expect(anim).toBeDefined();
   });
 
