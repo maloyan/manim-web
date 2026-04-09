@@ -78,6 +78,7 @@ let fontFaceIdCounter = 0;
  * Returns the unique font-family name assigned to this URL.
  */
 async function loadFontFace(url: string): Promise<string> {
+  // Font loading unavailable in non-DOM environments
   if (typeof document === 'undefined' || typeof FontFace === 'undefined') {
     return '';
   }
@@ -171,6 +172,7 @@ export class Text extends VMobject {
    * Initialize the off-screen canvas
    */
   protected _initCanvas(): void {
+    // Headless / non-DOM environment — skip canvas initialization, geometry will be empty
     if (typeof document === 'undefined') {
       return;
     }

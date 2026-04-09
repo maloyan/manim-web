@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import * as THREE from 'three';
-import { Renderer, RendererOptions } from './Renderer';
+import { Renderer, RendererOptions, IRenderer } from './Renderer';
 import { NullRenderer } from './NullRenderer';
 import { Camera2D, CameraOptions } from './Camera';
 import { Mobject } from './Mobject';
@@ -69,7 +69,7 @@ export interface SceneOptions {
  * Works like Manim's Scene class - add mobjects, play animations.
  */
 export class Scene {
-  private _renderer: Renderer | NullRenderer;
+  private _renderer: IRenderer;
   private _camera: Camera2D;
   private _threeScene: THREE.Scene;
   private _mobjects: Set<Mobject>;
@@ -109,7 +109,7 @@ export class Scene {
 
   /**
    * Create a new Scene.
-   * @param container - DOM element to render into
+   * @param container - DOM element to render into, or null for headless mode
    * @param options - Scene configuration options
    */
   constructor(container: HTMLElement | null, options: SceneOptions = {}) {
@@ -203,7 +203,7 @@ export class Scene {
   /**
    * Get the renderer.
    */
-  get renderer(): Renderer | NullRenderer {
+  get renderer(): IRenderer {
     return this._renderer;
   }
 
@@ -1045,6 +1045,11 @@ export class Scene {
    * @returns The container HTMLElement
    */
   getContainer(): HTMLElement {
+    if (this.isHeadless) {
+      throw new Error(
+        'getContainer() is not available in headless mode. Create a Scene with a container for rendering.',
+      );
+    }
     const canvas = this._renderer.getCanvas();
     if (!canvas.parentElement) {
       throw new Error('Scene canvas is not attached to a container');
@@ -1208,6 +1213,11 @@ export class Scene {
    */
   // eslint-disable-next-line complexity
   async export(filename: string, options?: SceneExportOptions): Promise<Blob> {
+    if (this.isHeadless) {
+      throw new Error(
+        'export() is not available in headless mode. Create a Scene with a container for rendering and exporting.',
+      );
+    }
     const ext = filename.slice(filename.lastIndexOf('.')).toLowerCase();
 
     let blob: Blob;

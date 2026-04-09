@@ -1,9 +1,15 @@
-import { describe, it, expect } from 'vitest';
+// @vitest-environment happy-dom
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { NullRenderer } from './NullRenderer';
 import { Scene } from './Scene';
 import { ThreeDScene } from './ThreeDScene';
 import { ZoomedScene } from './ZoomedScene';
 import { Circle } from '../mobjects/geometry/Circle';
+import { FadeIn } from '../animation/fading/FadeIn';
+import { vi } from 'vitest';
+import { Text } from '../mobjects/text/Text';
+import { Code } from '../mobjects/text/Code';
+import { DecimalNumber } from '../mobjects/text/DecimalNumber';
 
 describe('NullRenderer', () => {
   it('creates with default dimensions', () => {
@@ -127,6 +133,79 @@ describe('Scene headless mode', () => {
     const scene = Scene.createHeadless();
     expect(() => scene.dispose()).not.toThrow();
   });
+
+  it('play() resolves in headless mode', async () => {
+    const scene = Scene.createHeadless();
+    const circle = new Circle();
+    scene.add(circle);
+    await scene.play(new FadeIn(circle, { duration: 0.1 }));
+    scene.dispose();
+  });
+
+  it('wait() resolves in headless mode', async () => {
+    const scene = Scene.createHeadless();
+    await scene.wait(0.1);
+    scene.dispose();
+  });
+
+  it('getContainer throws in headless mode', () => {
+    const scene = Scene.createHeadless();
+    expect(() => scene.getContainer()).toThrow('getContainer() is not available in headless mode');
+    scene.dispose();
+  });
+
+  it('export throws in headless mode', async () => {
+    const scene = Scene.createHeadless();
+    await expect(scene.export('test.gif')).rejects.toThrow('not available in headless mode');
+    scene.dispose();
+  });
+});
+
+describe('Text mobjects in headless scene', () => {
+  // Stub canvas 2D context (happy-dom lacks canvas support)
+  const mockCtx: Record<string, unknown> = new Proxy(
+    { canvas: { width: 100, height: 100 } },
+    {
+      get: (target, prop) =>
+        prop in target ? target[prop as string] : vi.fn(() => ({ width: 0 })),
+    },
+  );
+
+  beforeAll(() => {
+    const origCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const el = origCreateElement(tag);
+      if (tag === 'canvas') {
+        (el as HTMLCanvasElement).getContext = vi.fn(() => mockCtx) as never;
+      }
+      return el;
+    });
+  });
+
+  afterAll(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('Text can be added to headless scene', () => {
+    const scene = Scene.createHeadless();
+    const text = new Text({ text: 'hello' });
+    expect(() => scene.add(text)).not.toThrow();
+    scene.dispose();
+  });
+
+  it('Code can be added to headless scene', () => {
+    const scene = Scene.createHeadless();
+    const code = new Code({ code: 'print(1)' });
+    expect(() => scene.add(code)).not.toThrow();
+    scene.dispose();
+  });
+
+  it('DecimalNumber can be added to headless scene', () => {
+    const scene = Scene.createHeadless();
+    const num = new DecimalNumber(3.14);
+    expect(() => scene.add(num)).not.toThrow();
+    scene.dispose();
+  });
 });
 
 describe('ThreeDScene headless mode', () => {
@@ -138,6 +217,12 @@ describe('ThreeDScene headless mode', () => {
 
   it('does not create orbit controls in headless mode', () => {
     const scene = ThreeDScene.createHeadless();
+    expect(scene.orbitControls).toBeNull();
+    scene.dispose();
+  });
+
+  it('does not create orbit controls even when explicitly enabled', () => {
+    const scene = ThreeDScene.createHeadless({ enableOrbitControls: true });
     expect(scene.orbitControls).toBeNull();
     scene.dispose();
   });

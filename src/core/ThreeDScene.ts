@@ -58,7 +58,7 @@ export class ThreeDScene extends Scene {
 
   /**
    * Create a new 3D scene.
-   * @param container - DOM element to render into
+   * @param container - DOM element to render into, or null for headless mode
    * @param options - Scene configuration options
    */
   constructor(container: HTMLElement | null, options: ThreeDSceneOptions = {}) {

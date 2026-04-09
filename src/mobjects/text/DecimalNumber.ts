@@ -142,6 +142,7 @@ export class DecimalNumber extends VMobject {
    * Initialize the off-screen canvas
    */
   protected _initCanvas(): void {
+    // Headless / non-DOM environment — skip canvas initialization, geometry will be empty
     if (typeof document === 'undefined') {
       return;
     }
