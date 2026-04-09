@@ -569,6 +569,9 @@ export class MathTex extends Mobject {
    * and drawing each text element at its computed CSS position.
    */
   protected async _renderLatexViaKaTeX(): Promise<void> {
+    if (typeof document === 'undefined') {
+      return;
+    }
     this._activeRenderer = 'katex';
 
     const container = document.createElement('div');

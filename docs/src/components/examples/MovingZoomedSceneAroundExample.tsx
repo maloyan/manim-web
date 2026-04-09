@@ -5,6 +5,7 @@ import ManimExample from '../ManimExample';
 async function animate(scene: any) {
   const {
     BackgroundRectangle,
+    BLACK,
     Create,
     Dot,
     DOWN,
@@ -18,14 +19,15 @@ async function animate(scene: any) {
     ScaleInPlace,
     Shift,
     smooth,
-    Uncreate,
+    Text,
     UL,
+    Uncreate,
     UP,
     UpdateFromFunc,
     scaleVec,
-    Text,
   } = await import('manim-web');
 
+  // Grayscale image matching Python: np.uint8([[0, 100, 30, 200], [255, 0, 5, 33]])
   const image = new ImageMobject({
     pixelData: [
       [0, 100, 30, 200],
@@ -33,7 +35,9 @@ async function animate(scene: any) {
     ],
     height: 7,
   });
+
   const dot = new Dot().shift(scaleVec(2, UL));
+
   const frameText = new Text({ text: 'Frame', color: PURPLE, fontSize: 67 });
   const zoomedCameraText = new Text({ text: 'Zoomed camera', color: RED, fontSize: 67 });
 
@@ -55,24 +59,22 @@ async function animate(scene: any) {
   });
   scene.addForegroundMobject(zdRect);
 
-  const unfoldCamera = new UpdateFromFunc(zdRect, (rect: any) => {
+  const unfoldCamera = new UpdateFromFunc(zdRect, (rect) => {
     rect.replace(zoomedDisplay);
   });
 
   frameText.nextTo(frame, DOWN);
 
-  // Step 1: Create + FadeIn
   await scene.play(new Create(frame), new FadeIn(frameText, { shift: UP }));
   scene.activateZooming();
 
-  // Step 2: PopOut + unfoldCamera
+  // Pop-out animation: display pops from frame position to its shifted position
   await scene.play(scene.getZoomedDisplayPopOutAnimation(), unfoldCamera);
 
-  zoomedCameraText.nextTo(zoomedDisplay, DOWN);
-  // Step 3: FadeIn zoomedCameraText
+  zoomedCameraText.nextTo(zoomedDisplayFrame, DOWN);
   await scene.play(new FadeIn(zoomedCameraText, { shift: UP }));
 
-  // Step 4: Scale + FadeOut
+  // Scale frame and display non-uniformly
   await scene.play(
     new Scale(frame, { scaleFactor: [0.5, 1.5, 0] }),
     new Scale(zoomedDisplay, { scaleFactor: [0.5, 1.5, 0] }),
@@ -81,29 +83,25 @@ async function animate(scene: any) {
   );
   await scene.wait();
 
-  // Step 5: ScaleInPlace
   await scene.play(new ScaleInPlace(zoomedDisplay, { scaleFactor: 2 }));
   await scene.wait();
 
-  // Step 6: Shift
   await scene.play(new Shift(frame, { direction: scaleVec(2.5, DOWN) }));
   await scene.wait();
 
-  // Step 7: Reverse PopOut
+  // Reverse pop-out: move display back to frame
   await scene.play(
     scene.getZoomedDisplayPopOutAnimation({ rateFunc: (t: number) => smooth(1 - t) }),
     unfoldCamera,
   );
-
-  // Step 8: Uncreate + FadeOut
   await scene.play(new Uncreate(zoomedDisplayFrame), new FadeOut(frame));
   await scene.wait();
 }
 
-function createScene(container: HTMLElement, manim: any, dims: { width: number; height: number }) {
+function createScene(container: HTMLElement, manim: any) {
   return new manim.ZoomedScene(container, {
-    width: dims.width,
-    height: dims.height,
+    width: 800,
+    height: 450,
     backgroundColor: manim.BLACK,
     zoomFactor: 0.3,
     displayWidth: 6,
@@ -111,7 +109,6 @@ function createScene(container: HTMLElement, manim: any, dims: { width: number; 
     cameraFrameStrokeWidth: 3,
     displayFrameStrokeWidth: 3,
     displayFrameColor: manim.RED,
-    renderTargetSize: 256,
   });
 }
 

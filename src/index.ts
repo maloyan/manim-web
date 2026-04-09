@@ -50,7 +50,8 @@ export {
   type Matrix2D,
 } from './core/LinearTransformationScene';
 export { AudioManager, type AudioTrack, type AddSoundOptions } from './core/AudioManager';
-export { Renderer, type RendererOptions } from './core/Renderer';
+export { Renderer, type RendererOptions, type IRenderer } from './core/Renderer';
+export { NullRenderer } from './core/NullRenderer';
 export {
   SceneStateManager,
   serializeMobject,

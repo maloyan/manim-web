@@ -27,10 +27,27 @@ export interface RendererOptions {
 }
 
 /**
+ * Common interface for renderers (WebGL and headless).
+ * Both Renderer and NullRenderer implement this interface.
+ */
+export interface IRenderer {
+  readonly isContextLost: boolean;
+  readonly width: number;
+  readonly height: number;
+  backgroundColor: THREE.Color | string;
+  backgroundOpacity: number;
+  render(scene: THREE.Scene, camera: THREE.Camera): void;
+  resize(width: number, height: number): void;
+  getCanvas(): HTMLCanvasElement;
+  getThreeRenderer(): THREE.WebGLRenderer;
+  dispose(): void;
+}
+
+/**
  * Three.js WebGLRenderer wrapper for manimweb.
  * Handles canvas creation, rendering, and lifecycle management.
  */
-export class Renderer {
+export class Renderer implements IRenderer {
   private _renderer: THREE.WebGLRenderer;
   private _width: number;
   private _height: number;

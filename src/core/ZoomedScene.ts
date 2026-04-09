@@ -72,7 +72,7 @@ class ZoomedDisplay extends Mobject {
   constructor(
     width: number,
     height: number,
-    renderTarget: THREE.WebGLRenderTarget,
+    renderTarget: THREE.WebGLRenderTarget | null,
     color: string,
     strokeWidth: number,
   ) {
@@ -97,7 +97,7 @@ class ZoomedDisplay extends Mobject {
     // Create the image mesh (shows the render target texture)
     const geometry = new THREE.PlaneGeometry(width, height);
     const material = new THREE.MeshBasicMaterial({
-      map: renderTarget.texture,
+      map: renderTarget?.texture ?? null,
       side: THREE.FrontSide,
       depthTest: false,
     });
@@ -238,7 +238,7 @@ export class ZoomedScene extends Scene {
   private _zoomActive: boolean = false;
 
   /** Render target for zoomed view */
-  private _zoomRenderTarget: THREE.WebGLRenderTarget;
+  private _zoomRenderTarget: THREE.WebGLRenderTarget | null;
 
   /** Default display position (for reset in clear()) */
   private _displayDefaultPos: [number, number, number];
@@ -252,7 +252,7 @@ export class ZoomedScene extends Scene {
   private _viewportSize = new THREE.Vector2();
 
   // eslint-disable-next-line complexity
-  constructor(container: HTMLElement, options: ZoomedSceneOptions = {}) {
+  constructor(container: HTMLElement | null, options: ZoomedSceneOptions = {}) {
     super(container, options);
 
     const displayWidth = options.displayWidth ?? 3;
@@ -266,13 +266,15 @@ export class ZoomedScene extends Scene {
     const displayFrameStrokeWidth = options.displayFrameStrokeWidth ?? 3;
     const renderTargetSize = options.renderTargetSize ?? 512;
 
-    // Create render target
-    this._zoomRenderTarget = new THREE.WebGLRenderTarget(renderTargetSize, renderTargetSize, {
-      minFilter: THREE.LinearFilter,
-      magFilter: THREE.LinearFilter,
-      format: THREE.RGBAFormat,
-      generateMipmaps: false,
-    });
+    // Create render target (skip in headless mode)
+    this._zoomRenderTarget = this.isHeadless
+      ? null
+      : new THREE.WebGLRenderTarget(renderTargetSize, renderTargetSize, {
+          minFilter: THREE.LinearFilter,
+          magFilter: THREE.LinearFilter,
+          format: THREE.RGBAFormat,
+          generateMipmaps: false,
+        });
 
     // Create dedicated camera for zoom render pass (separate from scene camera)
     this._zoomCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
@@ -370,7 +372,7 @@ export class ZoomedScene extends Scene {
     this._isRendering = true;
 
     try {
-      if (this._zoomActive) {
+      if (this._zoomActive && !this.isHeadless) {
         const webglRenderer = this.renderer.getThreeRenderer();
 
         // Get frame position/size -- use cached _threeObject to avoid
@@ -475,5 +477,12 @@ export class ZoomedScene extends Scene {
       this._zoomRenderTarget.dispose();
     }
     super.dispose();
+  }
+
+  /**
+   * Create a headless ZoomedScene for testing without a DOM container.
+   */
+  static createHeadless(options: ZoomedSceneOptions = {}): ZoomedScene {
+    return new ZoomedScene(null, { ...options, headless: true });
   }
 }
