@@ -450,6 +450,14 @@ export class VGroup extends VMobject {
   }
 
   /**
+   * VGroup is a container — it has no stroke/fill materials of its own.
+   * The parent VMobjectRendering._syncMaterialToThree() would attempt to
+   * rebuild geometry using null materials, causing a "material is null"
+   * crash (#206). Children sync their own materials independently.
+   */
+  protected override _syncMaterialToThree(): void {}
+
+  /**
    * Create the Three.js backing object for this VGroup.
    * A VGroup is simply a THREE.Group that contains children.
    */
