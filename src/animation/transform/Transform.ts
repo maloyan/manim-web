@@ -1,14 +1,49 @@
 /**
  * Transform animation - morphs one mobject into another.
  * For VMobjects: interpolates points and style.
+ * For VGroups: per-child point and style interpolation.
  * For non-VMobjects (e.g., MathTex): falls back to opacity cross-fade.
  */
 
 import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
+import { VGroup } from '../../core/VGroup';
 import { Animation, AnimationOptions } from '../Animation';
 import { lerpPoint } from '../../utils/math';
+
+/** Extract style snapshot from a VMobject */
+function captureStyle(m: VMobject): ChildStyle {
+  return {
+    opacity: m.opacity,
+    fillOpacity: m.fillOpacity,
+    strokeWidth: m.strokeWidth,
+    color: m.color,
+    fillColor: m.fillColor || m.color,
+  };
+}
+
+/** Build a style with zero opacity (for fade-in / fade-out placeholders) */
+function captureStyleFaded(m: VMobject): ChildStyle {
+  return {
+    opacity: 0,
+    fillOpacity: 0,
+    strokeWidth: m.strokeWidth,
+    color: m.color,
+    fillColor: m.fillColor || m.color,
+  };
+}
+
+interface ChildStyle {
+  opacity: number;
+  fillOpacity: number;
+  strokeWidth: number;
+  color: string;
+  fillColor: string;
+}
+
+/** Reusable scratch color to avoid per-frame allocations in interpolate() */
+const scratchColor = new THREE.Color();
 
 export class Transform extends Animation {
   /** The target mobject to transform into */
@@ -52,6 +87,29 @@ export class Transform extends Animation {
   /** Original target opacity before cross-fade zeroes it */
   private _crossFadeTargetOpacity: number = 1;
 
+  /** Whether source and target are both VGroups (per-child interpolation) */
+  private _isVGroupTransform: boolean = false;
+
+  /** Per-child start/target points for VGroup transforms */
+  private _childStartPoints: number[][][] = [];
+  private _childTargetPoints: number[][][] = [];
+
+  /** Per-child start/target styles for VGroup transforms */
+  private _childStartStyles: ChildStyle[] = [];
+  private _childTargetStyles: ChildStyle[] = [];
+
+  /** Per-child pre-allocated THREE.Color pairs for interpolation (avoids per-frame allocation) */
+  private _childColorPairs: { start: THREE.Color; target: THREE.Color; interpolate: boolean }[] =
+    [];
+  private _childFillColorPairs: {
+    start: THREE.Color;
+    target: THREE.Color;
+    interpolate: boolean;
+  }[] = [];
+
+  /** Snapshot of source children references at begin() time */
+  private _childRefs: VMobject[] = [];
+
   constructor(mobject: Mobject, target: Mobject, options: AnimationOptions = {}) {
     super(mobject, options);
     this.target = target;
@@ -93,7 +151,13 @@ export class Transform extends Animation {
         return;
       }
 
-      // Point-based morphing
+      // VGroup: per-child point and style interpolation
+      if (vmobject instanceof VGroup && vtarget instanceof VGroup) {
+        this._beginVGroup(vmobject, vtarget);
+        return;
+      }
+
+      // Point-based morphing (single VMobject)
       const startCopy = vmobject.copy() as VMobject;
       const targetCopy = vtarget.copy() as VMobject;
 
@@ -154,6 +218,76 @@ export class Transform extends Animation {
   }
 
   /**
+   * Set up per-child interpolation for VGroup → VGroup transforms.
+   * Matches children pairwise; extra source children fade out, extra
+   * target children fade in via placeholder VMobjects.
+   */
+  private _beginVGroup(vmobject: VGroup, vtarget: VGroup): void {
+    this._isVGroupTransform = true;
+    const srcChildren = vmobject.children.filter((c): c is VMobject => c instanceof VMobject);
+    const tgtChildren = vtarget.children.filter((c): c is VMobject => c instanceof VMobject);
+    const maxLen = Math.max(srcChildren.length, tgtChildren.length);
+
+    for (let i = 0; i < maxLen; i++) {
+      const sc = srcChildren[i] as VMobject | undefined;
+      const tc = tgtChildren[i] as VMobject | undefined;
+
+      if (sc && tc) {
+        const scCopy = sc.copy() as VMobject;
+        const tcCopy = tc.copy() as VMobject;
+        scCopy.alignPoints(tcCopy);
+        this._childStartPoints.push(scCopy.getPoints());
+        this._childTargetPoints.push(tcCopy.getPoints());
+        this._childStartStyles.push(captureStyle(sc));
+        this._childTargetStyles.push(captureStyle(tc));
+        sc.setPoints(scCopy.getPoints());
+      } else if (sc) {
+        // Extra source child with no target counterpart — fade out
+        this._childStartPoints.push(sc.getPoints());
+        this._childTargetPoints.push(sc.getPoints());
+        this._childStartStyles.push(captureStyle(sc));
+        this._childTargetStyles.push(captureStyleFaded(sc));
+      } else if (tc) {
+        // Extra target child with no source counterpart — fade in
+        const tcCopy = tc.copy() as VMobject;
+        const placeholder = tcCopy.copy() as VMobject;
+        placeholder.opacity = 0;
+        placeholder.fillOpacity = 0;
+        vmobject.add(placeholder);
+        this._childStartPoints.push(tcCopy.getPoints());
+        this._childTargetPoints.push(tcCopy.getPoints());
+        this._childStartStyles.push(captureStyleFaded(tc));
+        this._childTargetStyles.push(captureStyle(tc));
+      }
+    }
+
+    // Snapshot child references and pre-allocate color objects
+    this._childRefs = vmobject.children.filter((c): c is VMobject => c instanceof VMobject);
+    for (let i = 0; i < this._childStartStyles.length; i++) {
+      const ss = this._childStartStyles[i];
+      const ts = this._childTargetStyles[i];
+      this._childColorPairs.push({
+        start: new THREE.Color(ss.color),
+        target: new THREE.Color(ts.color),
+        interpolate: ss.color !== ts.color,
+      });
+      this._childFillColorPairs.push({
+        start: new THREE.Color(ss.fillColor),
+        target: new THREE.Color(ts.fillColor),
+        interpolate: ss.fillColor !== ts.fillColor,
+      });
+    }
+
+    // Capture group-level transform properties
+    this._startPosition.copy(vmobject.position);
+    this._targetPosition.copy(vtarget.position);
+    this._startRotation.copy(vmobject.rotation);
+    this._targetRotation.copy(vtarget.rotation);
+    this._startScale.copy(vmobject.scaleVector);
+    this._targetScale.copy(vtarget.scaleVector);
+  }
+
+  /**
    * Interpolate between start and target at the given alpha
    */
   interpolate(alpha: number): void {
@@ -171,7 +305,51 @@ export class Transform extends Animation {
       return;
     }
 
-    // Point-based morphing
+    // VGroup per-child morphing
+    if (this._isVGroupTransform) {
+      const group = this.mobject as VGroup;
+      for (let c = 0; c < this._childStartPoints.length && c < this._childRefs.length; c++) {
+        const child = this._childRefs[c];
+        const startPts = this._childStartPoints[c];
+        const targetPts = this._childTargetPoints[c];
+        const interpolated: number[][] = [];
+        for (let i = 0; i < startPts.length; i++) {
+          interpolated.push(lerpPoint(startPts[i], targetPts[i], alpha));
+        }
+        child.setPoints(interpolated);
+
+        const ss = this._childStartStyles[c];
+        const ts = this._childTargetStyles[c];
+        child.opacity = ss.opacity + (ts.opacity - ss.opacity) * alpha;
+        child.fillOpacity = ss.fillOpacity + (ts.fillOpacity - ss.fillOpacity) * alpha;
+        child.strokeWidth = ss.strokeWidth + (ts.strokeWidth - ss.strokeWidth) * alpha;
+
+        const cp = this._childColorPairs[c];
+        if (cp.interpolate) {
+          child.color = '#' + scratchColor.lerpColors(cp.start, cp.target, alpha).getHexString();
+        }
+        const fp = this._childFillColorPairs[c];
+        if (fp.interpolate) {
+          child.fillColor =
+            '#' + scratchColor.lerpColors(fp.start, fp.target, alpha).getHexString();
+        }
+
+        child._markDirty();
+      }
+
+      // Interpolate group-level transform
+      group.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
+      group.rotation.set(
+        this._startRotation.x + (this._targetRotation.x - this._startRotation.x) * alpha,
+        this._startRotation.y + (this._targetRotation.y - this._startRotation.y) * alpha,
+        this._startRotation.z + (this._targetRotation.z - this._startRotation.z) * alpha,
+      );
+      group.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
+      group._markDirty();
+      return;
+    }
+
+    // Point-based morphing (single VMobject)
     const vmobject = this.mobject as VMobject;
 
     const interpolatedPoints: number[][] = [];
@@ -272,6 +450,29 @@ export class Transform extends Animation {
           tgtWorld.z - srcWorld.z,
         );
       }
+
+      super.finish();
+      return;
+    }
+
+    if (this._isVGroupTransform) {
+      const group = this.mobject as VGroup;
+      for (let c = 0; c < this._childTargetPoints.length && c < this._childRefs.length; c++) {
+        const child = this._childRefs[c];
+        child.setPoints(this._childTargetPoints[c]);
+        const ts = this._childTargetStyles[c];
+        child.opacity = ts.opacity;
+        child.fillOpacity = ts.fillOpacity;
+        child.strokeWidth = ts.strokeWidth;
+        child.color = ts.color;
+        child.fillColor = ts.fillColor;
+        child._markDirty();
+      }
+
+      group.position.copy(this._targetPosition);
+      group.rotation.copy(this._targetRotation);
+      group.scaleVector.copy(this._targetScale);
+      group._markDirty();
 
       super.finish();
       return;

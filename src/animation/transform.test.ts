@@ -11,6 +11,7 @@ import {
 } from './transform/Transform';
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
+import { VGroup } from '../core/VGroup';
 import { Circle } from '../mobjects/geometry/Circle';
 
 /** Two circles with distinct styles for point-morphing tests. */
@@ -708,5 +709,158 @@ describe('finish() with fill color interpolation', () => {
     expect(c1.rotation.y).toBeCloseTo(Math.PI / 2, 5);
     expect(c1.scaleVector.x).toBeCloseTo(2, 5);
     expect(c1.scaleVector.y).toBeCloseTo(3, 5);
+  });
+});
+
+describe('Transform on VGroup (#206)', () => {
+  it('begin/interpolate/finish does not crash with material-is-null', () => {
+    const circle = new Circle({ radius: 1 });
+    const group = new VGroup(circle);
+
+    const target = group.copy() as VGroup;
+    target.scale(2);
+    target.shift([2, 0, 0]);
+
+    const t = new Transform(group, target);
+    // This used to throw "can't access property visible, material is null"
+    expect(() => {
+      t.begin();
+      t.interpolate(0);
+      t.interpolate(0.5);
+      t.interpolate(1);
+      t.finish();
+    }).not.toThrow();
+  });
+
+  it('interpolates child points during VGroup transform', () => {
+    const circle = new Circle({ radius: 1 });
+    const group = new VGroup(circle);
+
+    const target = group.copy() as VGroup;
+    target.scale(2);
+
+    const t = new Transform(group, target);
+    t.begin();
+
+    const startPts = circle.getPoints().map((p) => [...p]);
+    t.interpolate(1);
+    const endPts = circle.getPoints();
+
+    // After interpolation to alpha=1, the child's points should have changed
+    // (scaled up), not remain identical to start
+    let changed = false;
+    for (let i = 0; i < Math.min(startPts.length, endPts.length); i++) {
+      if (
+        Math.abs(startPts[i][0] - endPts[i][0]) > 0.01 ||
+        Math.abs(startPts[i][1] - endPts[i][1]) > 0.01
+      ) {
+        changed = true;
+        break;
+      }
+    }
+    expect(changed).toBe(true);
+  });
+
+  it('finish sets children to target state (points and style)', () => {
+    const circle = new Circle({ radius: 1, color: '#ff0000', strokeWidth: 2 });
+    circle.fillOpacity = 0.3;
+    const group = new VGroup(circle);
+
+    const targetCircle = new Circle({ radius: 2, color: '#0000ff', strokeWidth: 4 });
+    targetCircle.fillOpacity = 0.8;
+    const target = new VGroup(targetCircle);
+
+    const t = new Transform(group, target);
+    t.begin();
+    t.finish();
+
+    // Points should match target
+    const childPts = circle.getPoints();
+    const targetPts = targetCircle.getPoints();
+    expect(childPts.length).toBe(targetPts.length);
+
+    // Style should match target
+    expect(circle.color).toBe(targetCircle.color);
+    expect(circle.strokeWidth).toBe(targetCircle.strokeWidth);
+    expect(circle.fillOpacity).toBeCloseTo(0.8, 5);
+  });
+
+  it('handles VGroup with multiple children', () => {
+    const c1 = new Circle({ radius: 1 });
+    const c2 = new Circle({ radius: 0.5 });
+    c2.shift([2, 0, 0]);
+    const group = new VGroup(c1, c2);
+
+    const target = group.copy() as VGroup;
+    target.scale(2);
+
+    const t = new Transform(group, target);
+    expect(() => {
+      t.begin();
+      t.interpolate(0.5);
+      t.finish();
+    }).not.toThrow();
+  });
+
+  it('fades in extra target children when target has more', () => {
+    const c1 = new Circle({ radius: 1 });
+    const group = new VGroup(c1);
+
+    const tc1 = new Circle({ radius: 1 });
+    const tc2 = new Circle({ radius: 0.5 });
+    tc2.shift([2, 0, 0]);
+    const target = new VGroup(tc1, tc2);
+
+    const t = new Transform(group, target);
+    t.begin();
+
+    // Source group should now have a placeholder child for the extra target
+    expect(group.children.length).toBe(2);
+
+    // At alpha=0, placeholder should be invisible
+    t.interpolate(0);
+    const placeholder = group.children[1] as VMobject;
+    expect(placeholder.opacity).toBeCloseTo(0, 5);
+
+    // At alpha=1, placeholder should be visible
+    t.interpolate(1);
+    expect(placeholder.opacity).toBeCloseTo(tc2.opacity, 5);
+  });
+
+  it('fades out extra source children when source has more', () => {
+    const c1 = new Circle({ radius: 1 });
+    const c2 = new Circle({ radius: 0.5 });
+    const group = new VGroup(c1, c2);
+
+    const tc1 = new Circle({ radius: 2 });
+    const target = new VGroup(tc1);
+
+    const t = new Transform(group, target);
+    t.begin();
+    t.interpolate(1);
+
+    // Extra source child should be faded to invisible
+    expect(c2.opacity).toBeCloseTo(0, 5);
+    expect(c2.fillOpacity).toBeCloseTo(0, 5);
+  });
+
+  it('interpolate at alpha=0 preserves start state', () => {
+    const circle = new Circle({ radius: 1 });
+    const group = new VGroup(circle);
+
+    const target = group.copy() as VGroup;
+    target.scale(2);
+
+    const t = new Transform(group, target);
+    t.begin();
+
+    const startPts = circle.getPoints().map((p) => [...p]);
+    t.interpolate(0);
+    const pts = circle.getPoints();
+
+    for (let i = 0; i < Math.min(startPts.length, pts.length); i++) {
+      expect(pts[i][0]).toBeCloseTo(startPts[i][0], 3);
+      expect(pts[i][1]).toBeCloseTo(startPts[i][1], 3);
+    }
   });
 });
