@@ -1,5 +1,4 @@
-// @vitest-environment happy-dom
-import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { NullRenderer } from './NullRenderer';
 import { Scene } from './Scene';
 import { ThreeDScene } from './ThreeDScene';
@@ -161,30 +160,6 @@ describe('Scene headless mode', () => {
 });
 
 describe('Text mobjects in headless scene', () => {
-  // Stub canvas 2D context (happy-dom lacks canvas support)
-  const mockCtx: Record<string, unknown> = new Proxy(
-    { canvas: { width: 100, height: 100 } },
-    {
-      get: (target, prop) =>
-        prop in target ? target[prop as string] : vi.fn(() => ({ width: 0 })),
-    },
-  );
-
-  beforeAll(() => {
-    const origCreateElement = document.createElement.bind(document);
-    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
-      const el = origCreateElement(tag);
-      if (tag === 'canvas') {
-        (el as HTMLCanvasElement).getContext = vi.fn(() => mockCtx) as never;
-      }
-      return el;
-    });
-  });
-
-  afterAll(() => {
-    vi.restoreAllMocks();
-  });
-
   it('Text can be added to headless scene', () => {
     const scene = Scene.createHeadless();
     const text = new Text({ text: 'hello' });
