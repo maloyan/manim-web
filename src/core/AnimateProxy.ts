@@ -34,13 +34,13 @@ export class AnimateProxy extends Animation {
 
   /** Override duration for this animation (builder-style). */
   withDuration(seconds: number): this {
-    Object.defineProperty(this, 'duration', { value: seconds, writable: false });
+    Object.defineProperty(this, 'duration', { value: seconds, writable: true, configurable: true });
     return this;
   }
 
   /** Override rate function (builder-style). */
   withRateFunc(fn: RateFunction): this {
-    Object.defineProperty(this, 'rateFunc', { value: fn, writable: false });
+    Object.defineProperty(this, 'rateFunc', { value: fn, writable: true, configurable: true });
     return this;
   }
 
@@ -150,7 +150,11 @@ export class AnimateProxy extends Animation {
     // Check for animation override (only if there's exactly one call)
     if (this._calls.length === 1) {
       const [methodName] = this._calls[0];
-      const className = this._source.constructor.name;
+      // Use static className property if available (survives minification),
+      // fall back to constructor.name for development builds.
+      const className =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (this._source.constructor as any).className ?? this._source.constructor.name;
       if (hasAnimationOverride(methodName, className)) {
         const overrideFactory = getAnimationOverride(methodName, className)!;
         this._overrideAnimation = overrideFactory(this._source, {
@@ -168,9 +172,12 @@ export class AnimateProxy extends Animation {
       const method = (target as unknown as Record<string, (...a: unknown[]) => unknown>)[
         methodName
       ];
-      if (typeof method === 'function') {
-        method.apply(target, args);
+      if (typeof method !== 'function') {
+        throw new Error(
+          `AnimateProxy: method "${methodName}" not found on ${target.constructor.name}`,
+        );
       }
+      method.apply(target, args);
     }
 
     this._innerTransform = new Transform(this._source, target, {
