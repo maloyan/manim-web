@@ -244,12 +244,12 @@ export class DashedLine extends VMobject {
   }
 
   /**
-   * Override setOpacity to propagate to dashes
+   * Override setStrokeOpacity to propagate to dashes
    */
-  override setOpacity(opacity: number): this {
-    super.setOpacity(opacity);
+  override setStrokeOpacity(opacity: number): this {
+    super.setStrokeOpacity(opacity);
     for (const dash of this._dashes) {
-      dash.setOpacity(opacity);
+      dash.setStrokeOpacity(opacity);
     }
     return this;
   }

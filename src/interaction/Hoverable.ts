@@ -160,7 +160,7 @@ export class Hoverable {
       this._mobject.setColor(this._options.hoverColor);
     }
     if (this._options.hoverOpacity !== undefined && this._options.hoverOpacity !== null) {
-      this._mobject.setOpacity(this._options.hoverOpacity);
+      this._mobject.setStrokeOpacity(this._options.hoverOpacity);
     }
 
     this._options.onHoverStart?.(this._mobject);
@@ -178,7 +178,7 @@ export class Hoverable {
       this._originalScale[2],
     );
     this._mobject.setColor(this._originalColor);
-    this._mobject.setOpacity(this._originalOpacity);
+    this._mobject.setStrokeOpacity(this._originalOpacity);
     this._mobject._markDirty();
 
     this._options.onHoverEnd?.(this._mobject);

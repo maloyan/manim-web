@@ -267,10 +267,10 @@ export class VGroup extends VMobject {
    * @param opacity - Opacity value (0-1)
    * @returns this for chaining
    */
-  override setOpacity(opacity: number): this {
-    super.setOpacity(opacity);
+  override setStrokeOpacity(opacity: number): this {
+    super.setStrokeOpacity(opacity);
     for (const child of this.children) {
-      child.setOpacity(opacity);
+      child.setStrokeOpacity(opacity);
     }
     return this;
   }
@@ -339,7 +339,7 @@ export class VGroup extends VMobject {
           child.setStrokeWidth(width);
         }
         if (opacity !== undefined) {
-          child.setOpacity(opacity);
+          child.setStrokeOpacity(opacity);
         }
       }
     }

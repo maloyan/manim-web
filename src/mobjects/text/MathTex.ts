@@ -260,13 +260,13 @@ export class MathTex extends Mobject {
   }
 
   /**
-   * Override setOpacity to propagate to multi-part children.
+   * Override setStrokeOpacity to propagate to multi-part children.
    */
-  override setOpacity(opacity: number): this {
-    super.setOpacity(opacity);
+  override setStrokeOpacity(opacity: number): this {
+    super.setStrokeOpacity(opacity);
     if (this._isMultiPart) {
       for (const part of this._parts) {
-        part.setOpacity(opacity);
+        part.setStrokeOpacity(opacity);
       }
     }
     return this;

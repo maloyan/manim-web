@@ -148,7 +148,7 @@ export function deserializeMobject(mob: Mobject, state: MobjectState): void {
 
   // Visual properties
   mob.color = state.color;
-  mob.setOpacity(state.opacity);
+  mob.setStrokeOpacity(state.opacity);
   mob.strokeWidth = state.strokeWidth;
   mob.fillOpacity = state.fillOpacity;
 

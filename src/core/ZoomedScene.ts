@@ -434,7 +434,7 @@ export class ZoomedScene extends Scene {
     // Reset frame and display transforms for clean re-play
     this.zoomedCamera.frame.position.set(0, 0, 0);
     this.zoomedCamera.frame.scaleVector.set(1, 1, 1);
-    this.zoomedCamera.frame.setOpacity(1);
+    this.zoomedCamera.frame.setStrokeOpacity(1);
     this.zoomedCamera.frame._markDirty();
     this.zoomedDisplay.position.set(
       this._displayDefaultPos[0],
@@ -442,8 +442,8 @@ export class ZoomedScene extends Scene {
       this._displayDefaultPos[2],
     );
     this.zoomedDisplay.scaleVector.set(1, 1, 1);
-    this.zoomedDisplay.setOpacity(1);
-    this.zoomedDisplay.displayFrame.setOpacity(1);
+    this.zoomedDisplay.setStrokeOpacity(1);
+    this.zoomedDisplay.displayFrame.setStrokeOpacity(1);
     this.zoomedDisplay._markDirty();
 
     // Reset Line2 material dashed state left behind by Uncreate

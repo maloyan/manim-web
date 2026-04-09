@@ -117,7 +117,7 @@ export class LinearTransformationScene extends Scene {
         color: this._gridColor,
         strokeWidth: 1,
       });
-      line.setOpacity(0.5);
+      line.setStrokeOpacity(0.5);
       grid.add(line);
     }
 
@@ -130,7 +130,7 @@ export class LinearTransformationScene extends Scene {
         color: this._gridColor,
         strokeWidth: 1,
       });
-      line.setOpacity(0.5);
+      line.setStrokeOpacity(0.5);
       grid.add(line);
     }
 

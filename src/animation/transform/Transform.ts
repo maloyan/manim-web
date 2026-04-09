@@ -146,7 +146,7 @@ export class Transform extends Animation {
           sourceObj.parent.add(targetObj);
         }
 
-        this.target.setOpacity(0);
+        this.target.setStrokeOpacity(0);
         this.target._syncToThree();
         return;
       }
@@ -212,7 +212,7 @@ export class Transform extends Animation {
       }
 
       // Start target invisible
-      this.target.setOpacity(0);
+      this.target.setStrokeOpacity(0);
       this.target._syncToThree();
     }
   }
@@ -293,8 +293,8 @@ export class Transform extends Animation {
   interpolate(alpha: number): void {
     if (this._useCrossFade) {
       // Cross-fade: source fades out, target fades in
-      this.mobject.setOpacity(this._startOpacity * (1 - alpha));
-      this.target.setOpacity(this._crossFadeTargetOpacity * alpha);
+      this.mobject.setStrokeOpacity(this._startOpacity * (1 - alpha));
+      this.target.setStrokeOpacity(this._crossFadeTargetOpacity * alpha);
 
       // Move source toward target position for a smooth transition
       this.mobject.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
@@ -422,7 +422,7 @@ export class Transform extends Animation {
 
         // Position source at target location
         this.mobject.position.copy(this._targetPosition);
-        this.mobject.setOpacity(this._crossFadeTargetOpacity);
+        this.mobject.setStrokeOpacity(this._crossFadeTargetOpacity);
         this.mobject._markDirty();
 
         // Remove target from scene graph
@@ -430,8 +430,8 @@ export class Transform extends Animation {
         if (targetObj.parent) targetObj.parent.remove(targetObj);
       } else {
         // Non-Text cross-fade: reparent target under source
-        this.mobject.setOpacity(0);
-        this.target.setOpacity(this._crossFadeTargetOpacity);
+        this.mobject.setStrokeOpacity(0);
+        this.target.setStrokeOpacity(this._crossFadeTargetOpacity);
         this.target._syncToThree();
 
         const sourceObj = this.mobject.getThreeObject();

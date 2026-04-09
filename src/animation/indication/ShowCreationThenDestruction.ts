@@ -58,7 +58,7 @@ export class ShowCreationThenDestruction extends Animation {
       });
     } else {
       // Non-line mobject: start invisible
-      this.mobject.setOpacity(0);
+      this.mobject.setStrokeOpacity(0);
     }
   }
 
@@ -84,7 +84,7 @@ export class ShowCreationThenDestruction extends Animation {
         }
       });
     } else {
-      this.mobject.setOpacity(effectiveAlpha);
+      this.mobject.setStrokeOpacity(effectiveAlpha);
     }
   }
 
@@ -101,7 +101,7 @@ export class ShowCreationThenDestruction extends Animation {
         }
       });
     } else {
-      this.mobject.setOpacity(0);
+      this.mobject.setStrokeOpacity(0);
     }
     super.finish();
   }

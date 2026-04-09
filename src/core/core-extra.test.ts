@@ -179,7 +179,7 @@ describe('serializeMobject', () => {
     vm.rotation.set(0.1, 0.2, 0.3);
     vm.scaleVector.set(2, 3, 4);
     vm.setColor('#ff0000');
-    vm.setOpacity(0.7);
+    vm.setStrokeOpacity(0.7);
     const state = serializeMobject(vm);
     expect(state.position).toEqual([1, 2, 3]);
     expect(state.rotation[0]).toBeCloseTo(0.1);
@@ -254,14 +254,14 @@ describe('deserializeMobject', () => {
   it('restores style (color, opacity, strokeWidth, fillOpacity)', () => {
     const vm = new VMobject();
     vm.setColor('#00ff00');
-    vm.setOpacity(0.3);
+    vm.setStrokeOpacity(0.3);
     // Use setStrokeWidth/setFillOpacity to keep _style in sync
     vm.setStrokeWidth(8);
     vm.setFillOpacity(0.5);
     const state = serializeMobject(vm);
     // Reset the mobject
     vm.setColor('#ffffff');
-    vm.setOpacity(1);
+    vm.setStrokeOpacity(1);
     vm.setStrokeWidth(4);
     vm.setFillOpacity(0);
     deserializeMobject(vm, state);
@@ -287,7 +287,7 @@ describe('deserializeMobject', () => {
     vm.position.set(1, 2, 3);
     vm.scaleVector.set(2, 2, 2);
     vm.setColor('#abcdef');
-    vm.setOpacity(0.42);
+    vm.setStrokeOpacity(0.42);
     vm.setStrokeWidth(6);
     vm.setFillOpacity(0.8);
     const state = serializeMobject(vm);
@@ -645,21 +645,21 @@ describe('Mobject - extended coverage', () => {
     expect(vm._dirty).toBe(false); // should not mark dirty
   });
 
-  // setOpacity clamping and no-op
-  it('setOpacity clamps and is no-op when unchanged', () => {
+  // setStrokeOpacity clamping and no-op
+  it('setStrokeOpacity clamps and is no-op when unchanged', () => {
     const vm = new VMobject();
-    vm.setOpacity(0.5);
+    vm.setStrokeOpacity(0.5);
     expect(vm.opacity).toBe(0.5);
     vm._dirty = false;
-    vm.setOpacity(0.5);
+    vm.setStrokeOpacity(0.5);
     expect(vm._dirty).toBe(false);
   });
 
-  it('setOpacity clamps to [0, 1]', () => {
+  it('setStrokeOpacity clamps to [0, 1]', () => {
     const vm = new VMobject();
-    vm.setOpacity(-1);
+    vm.setStrokeOpacity(-1);
     expect(vm.opacity).toBe(0);
-    vm.setOpacity(5);
+    vm.setStrokeOpacity(5);
     expect(vm.opacity).toBe(1);
   });
 
@@ -849,7 +849,7 @@ describe('Mobject - extended coverage', () => {
     ]);
     vm.position.set(5, 5, 5);
     vm.setColor('#ff0000');
-    vm.setOpacity(0.5);
+    vm.setStrokeOpacity(0.5);
     vm.strokeWidth = 8;
     vm.fillOpacity = 0.7;
 
@@ -882,7 +882,7 @@ describe('Mobject - extended coverage', () => {
     const source = new VMobject();
     source.position.set(10, 20, 30);
     source.setColor('#00ff00');
-    source.setOpacity(0.3);
+    source.setStrokeOpacity(0.3);
     source.strokeWidth = 6;
     source.fillOpacity = 0.9;
     source.setPoints([
@@ -1316,7 +1316,7 @@ describe('Mobject - extended coverage', () => {
     const vm = new VMobject();
     vm.position.set(1, 2, 3);
     vm.setColor('#ff0000');
-    vm.setOpacity(0.5);
+    vm.setStrokeOpacity(0.5);
     vm.strokeWidth = 8;
     vm.fillOpacity = 0.7;
     vm.setPoints([
@@ -1330,7 +1330,7 @@ describe('Mobject - extended coverage', () => {
     // Modify
     vm.position.set(99, 99, 99);
     vm.setColor('#0000ff');
-    vm.setOpacity(1);
+    vm.setStrokeOpacity(1);
     vm.strokeWidth = 2;
     vm.fillOpacity = 0;
     vm.setPoints([[10, 10, 0]]);
@@ -1584,11 +1584,11 @@ describe('Group - extended coverage', () => {
     expect(b.color).toBe('#ff0000');
   });
 
-  it('setOpacity propagates to all children', () => {
+  it('setStrokeOpacity propagates to all children', () => {
     const a = new VMobject();
     const b = new VMobject();
     const g = new Group(a, b);
-    g.setOpacity(0.3);
+    g.setStrokeOpacity(0.3);
     expect(a.opacity).toBe(0.3);
     expect(b.opacity).toBe(0.3);
   });
@@ -1829,10 +1829,10 @@ describe('VGroup - extended coverage', () => {
     expect(b.color).toBe('#00ff00');
   });
 
-  it('setOpacity propagates to children', () => {
+  it('setStrokeOpacity propagates to children', () => {
     const a = new VMobject();
     const vg = new VGroup(a);
-    vg.setOpacity(0.5);
+    vg.setStrokeOpacity(0.5);
     expect(a.opacity).toBe(0.5);
   });
 
@@ -2112,7 +2112,7 @@ describe('VDict - extended coverage', () => {
     const d = new VDict({ a: va, b: vb });
     d.position.set(1, 2, 3);
     d.setColor('#ff0000');
-    d.setOpacity(0.5);
+    d.setStrokeOpacity(0.5);
 
     const clone = d.copy() as VDict;
     expect(clone.size).toBe(2);
@@ -2798,7 +2798,7 @@ describe('VMobject.copy', () => {
       [4, 5, 6],
     ]);
     v.setColor('#ff0000');
-    v.setOpacity(0.7);
+    v.setStrokeOpacity(0.7);
     v.fillOpacity = 0.3;
     v.strokeWidth = 8;
     const c = v.copy() as VMobject;
@@ -3117,7 +3117,7 @@ describe('getNthCurve', () => {
       [3, 0, 0],
     ]);
     v.setColor('#ff0000');
-    v.setOpacity(0.5);
+    v.setStrokeOpacity(0.5);
     v.setStrokeWidth(8);
     v.setFillOpacity(0.3);
     const c = getNthCurve(v, 0);
@@ -3389,11 +3389,11 @@ describe('VMobject._interpolatePointList3D (via alignPoints)', () => {
 });
 
 describe('VMobject style optimization (no-op dirty checks)', () => {
-  it('setOpacity does not mark dirty if value unchanged', () => {
+  it('setStrokeOpacity does not mark dirty if value unchanged', () => {
     const v = new VMobject();
-    v.setOpacity(0.5);
+    v.setStrokeOpacity(0.5);
     v._dirty = false;
-    v.setOpacity(0.5);
+    v.setStrokeOpacity(0.5);
     expect(v._dirty).toBe(false);
   });
 
@@ -3494,8 +3494,8 @@ describe('VMobject chaining (all methods)', () => {
     expect(new VMobject().setColor('#ff0000')).toBeInstanceOf(VMobject);
   });
 
-  it('setOpacity returns this', () => {
-    expect(new VMobject().setOpacity(0.5)).toBeInstanceOf(VMobject);
+  it('setStrokeOpacity returns this', () => {
+    expect(new VMobject().setStrokeOpacity(0.5)).toBeInstanceOf(VMobject);
   });
 
   it('setStrokeWidth returns this', () => {
@@ -3528,7 +3528,7 @@ describe('VMobject become', () => {
       [20, 20, 0],
     ]);
     v2.setColor('#ff0000');
-    v2.setOpacity(0.3);
+    v2.setStrokeOpacity(0.3);
     v2.strokeWidth = 12;
     v2.fillOpacity = 0.7;
     v2.position.set(5, 6, 7);
@@ -3553,11 +3553,11 @@ describe('VMobject saveState / restoreState', () => {
     ]);
     v.position.set(1, 2, 3);
     v.setColor('#ff0000');
-    v.setOpacity(0.5);
+    v.setStrokeOpacity(0.5);
     v.saveState();
     v.position.set(99, 99, 99);
     v.setColor('#00ff00');
-    v.setOpacity(1);
+    v.setStrokeOpacity(1);
     v.setPoints([[5, 5, 5]]);
     expect(v.restoreState()).toBe(true);
     expect(v.position.x).toBe(1);

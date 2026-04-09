@@ -355,7 +355,7 @@ export class Broadcast extends Animation {
       copy.scaleVector.copy(this._originalScale).multiplyScalar(Math.max(scaleFactor, 0));
 
       // Set initial opacity
-      copy.setOpacity(this.initialOpacity);
+      copy.setStrokeOpacity(this.initialOpacity);
       copy._markDirty();
 
       // Add the copy's Three.js object to the parent
@@ -401,7 +401,7 @@ export class Broadcast extends Animation {
       // Interpolate opacity: from initialOpacity to finalOpacity
       const currentOpacity =
         this.initialOpacity + (this.finalOpacity - this.initialOpacity) * localAlpha;
-      copy.setOpacity(currentOpacity);
+      copy.setStrokeOpacity(currentOpacity);
 
       copy._markDirty();
       // Sync Three.js object so visual updates are applied

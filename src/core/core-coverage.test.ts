@@ -44,7 +44,7 @@ describe('saveMobjectState / restoreMobjectState functions', () => {
     const vm = makeVM();
     vm.position.set(1, 2, 3);
     vm.setColor('#ff0000');
-    vm.setOpacity(0.5);
+    vm.setStrokeOpacity(0.5);
 
     const state = saveMobjectState(vm);
     expect(state).toBeDefined();
@@ -364,7 +364,7 @@ describe('VDict - additional coverage', () => {
     const d = new VDict({ item: makeVM() });
     d.position.set(5, 6, 7);
     d.setColor('#ff0000');
-    d.setOpacity(0.5);
+    d.setStrokeOpacity(0.5);
 
     const clone = d.copy() as VDict;
     expect(clone.position.x).toBe(5);
@@ -550,8 +550,8 @@ describe('VMobject - interpolate style branches', () => {
   it('interpolate at alpha=0 keeps original values', () => {
     const v1 = makeVM();
     const v2 = makeVM();
-    v1.setOpacity(0.2);
-    v2.setOpacity(0.8);
+    v1.setStrokeOpacity(0.2);
+    v2.setStrokeOpacity(0.8);
     v1.position.set(0, 0, 0);
     v2.position.set(10, 0, 0);
 
@@ -563,8 +563,8 @@ describe('VMobject - interpolate style branches', () => {
   it('interpolate at alpha=1 reaches target values', () => {
     const v1 = makeVM();
     const v2 = makeVM();
-    v1.setOpacity(0.2);
-    v2.setOpacity(0.8);
+    v1.setStrokeOpacity(0.2);
+    v2.setStrokeOpacity(0.8);
     v1.fillOpacity = 0.1;
     v2.fillOpacity = 0.9;
     v1.strokeWidth = 2;

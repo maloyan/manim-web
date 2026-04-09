@@ -320,18 +320,18 @@ describe('MathTex (additional coverage)', () => {
   });
 
   // -----------------------------------------------------------------
-  // setColor / setOpacity on single-part
+  // setColor / setStrokeOpacity on single-part
   // -----------------------------------------------------------------
-  describe('setColor / setOpacity on single-part', () => {
+  describe('setColor / setStrokeOpacity on single-part', () => {
     it('setColor should not propagate when not multi-part', () => {
       const tex = new MathTex({ latex: 'x' });
       tex.setColor('#00ff00');
       expect(tex.color).toBe('#00ff00');
     });
 
-    it('setOpacity should not propagate when not multi-part', () => {
+    it('setStrokeOpacity should not propagate when not multi-part', () => {
       const tex = new MathTex({ latex: 'x' });
-      tex.setOpacity(0.7);
+      tex.setStrokeOpacity(0.7);
       const internal = tex as unknown as { _opacity: number };
       expect(internal._opacity).toBeCloseTo(0.7);
     });
@@ -648,7 +648,7 @@ describe('Code (additional coverage)', () => {
       const obj = c.getThreeObject();
       const mesh = obj.children.find((ch) => ch.type === 'Mesh') as THREE.Mesh;
 
-      c.setOpacity(0.5);
+      c.setStrokeOpacity(0.5);
       c._syncToThree();
 
       const mat = mesh.material as THREE.MeshBasicMaterial;

@@ -152,7 +152,7 @@ export class Create extends Animation {
       // (e.g. NumberPlane background lines with opacity 0) are preserved
       this._savedOpacities = [];
       this._collectOpacities(this.mobject);
-      this.mobject.setOpacity(0);
+      this.mobject.setStrokeOpacity(0);
     }
   }
 
@@ -170,11 +170,11 @@ export class Create extends Animation {
 
   /**
    * Apply proportionally scaled opacities to all saved descendants.
-   * Uses Mobject.prototype.setOpacity to avoid Group propagation.
+   * Uses Mobject.prototype.setStrokeOpacity to avoid Group propagation.
    */
   private _applyScaledOpacities(factor: number): void {
     for (const [mob, origOpacity] of this._savedOpacities) {
-      Mobject.prototype.setOpacity.call(mob, origOpacity * factor);
+      Mobject.prototype.setStrokeOpacity.call(mob, origOpacity * factor);
     }
   }
 
@@ -437,7 +437,7 @@ export class Uncreate extends Animation {
         }
       });
     } else {
-      this.mobject.setOpacity(1 - alpha);
+      this.mobject.setStrokeOpacity(1 - alpha);
     }
   }
 
@@ -453,7 +453,7 @@ export class Uncreate extends Animation {
         }
       });
     } else {
-      this.mobject.setOpacity(0);
+      this.mobject.setStrokeOpacity(0);
     }
     super.finish();
   }
@@ -586,7 +586,7 @@ export class Write extends Animation {
         }
       });
     } else {
-      this.mobject.setOpacity(this._reverse ? this._originalOpacity : 0);
+      this.mobject.setStrokeOpacity(this._reverse ? this._originalOpacity : 0);
     }
   }
 
@@ -730,7 +730,7 @@ export class Write extends Animation {
         }
       });
     } else {
-      this.mobject.setOpacity(this._originalOpacity * effectiveAlpha);
+      this.mobject.setStrokeOpacity(this._originalOpacity * effectiveAlpha);
     }
   }
 
@@ -880,7 +880,7 @@ export class Write extends Animation {
           }
         });
       }
-      this.mobject.setOpacity(0);
+      this.mobject.setStrokeOpacity(0);
     } else {
       if (this._useDashReveal) {
         const threeObj = this.mobject.getThreeObject();
@@ -892,7 +892,7 @@ export class Write extends Animation {
           }
         });
       }
-      this.mobject.setOpacity(this._originalOpacity);
+      this.mobject.setStrokeOpacity(this._originalOpacity);
     }
     super.finish();
   }
@@ -910,7 +910,7 @@ export class Write extends Animation {
       if (this._textMesh) {
         this._textMesh.visible = false;
       }
-      this.mobject.setOpacity(0);
+      this.mobject.setStrokeOpacity(0);
     } else {
       // Write complete: show texture, hide glyphs
       if (this._textMesh) {
@@ -920,7 +920,7 @@ export class Write extends Animation {
           material.opacity = this._originalOpacity;
         }
       }
-      this.mobject.setOpacity(this._originalOpacity);
+      this.mobject.setStrokeOpacity(this._originalOpacity);
     }
 
     // Clean up skeleton VMobjects

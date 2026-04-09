@@ -969,7 +969,7 @@ export class Scene {
    * scene.batch(() => {
    *   circle.setColor('red');
    *   circle.shift([1, 0, 0]);
-   *   square.setOpacity(0.5);
+   *   square.setStrokeOpacity(0.5);
    * });
    * ```
    */

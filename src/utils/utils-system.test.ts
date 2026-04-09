@@ -313,10 +313,10 @@ describe('saveMobjectState / restoreMobjectState', () => {
   it('restores from saved state', () => {
     const vm = makeVM();
     vm.position.set(5, 6, 7);
-    vm.setOpacity(0.5);
+    vm.setStrokeOpacity(0.5);
     saveMobjectState(vm);
     vm.position.set(0, 0, 0);
-    vm.setOpacity(1);
+    vm.setStrokeOpacity(1);
     expect(restoreMobjectState(vm)).toBe(true);
     expect(vm.position.x).toBe(5);
     expect(vm.position.y).toBe(6);

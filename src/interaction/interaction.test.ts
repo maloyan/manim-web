@@ -40,7 +40,7 @@ function createMockMobject(
     setColor: vi.fn(function (this: any, c: string) {
       this.color = c;
     }),
-    setOpacity: vi.fn(function (this: any, o: number) {
+    setStrokeOpacity: vi.fn(function (this: any, o: number) {
       this.opacity = o;
     }),
     scale: vi.fn(),
@@ -358,7 +358,7 @@ describe('Hoverable', () => {
     const canvas = scene.getCanvas();
 
     fireMouseEvent(canvas, 'mousemove', { clientX: 400, clientY: 300 });
-    expect(mob.setOpacity).toHaveBeenCalledWith(0.5);
+    expect(mob.setStrokeOpacity).toHaveBeenCalledWith(0.5);
   });
 
   it('restores original color/opacity on hover end', () => {
@@ -379,7 +379,7 @@ describe('Hoverable', () => {
 
     // Should restore original values
     expect(mob.setColor).toHaveBeenLastCalledWith('#00ff00');
-    expect(mob.setOpacity).toHaveBeenLastCalledWith(0.8);
+    expect(mob.setStrokeOpacity).toHaveBeenLastCalledWith(0.8);
   });
 
   it('makeHoverable factory returns a Hoverable instance', () => {
@@ -1295,7 +1295,7 @@ describe('Edge cases', () => {
     expect(hoverable.isHovering).toBe(false);
     // Original values should be restored
     expect(mob.setColor).toHaveBeenLastCalledWith('#00ff00');
-    expect(mob.setOpacity).toHaveBeenLastCalledWith(0.7);
+    expect(mob.setStrokeOpacity).toHaveBeenLastCalledWith(0.7);
   });
 
   it('SelectionManager selectAll with empty scene does nothing', () => {
