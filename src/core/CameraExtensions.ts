@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import * as THREE from 'three';
 import { Camera2D, Camera3D, CameraOptions, Camera3DOptions } from './Camera';
 import { Mobject, Vector3Tuple } from './Mobject';
