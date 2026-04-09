@@ -143,16 +143,6 @@ export class ValueTracker extends Mobject {
   }
 
   /**
-   * Alias for animateTo - matches Manim's API.
-   * @param targetValue - The value to animate to
-   * @param options - Animation options
-   * @returns An animation
-   */
-  animate(targetValue: number, options?: AnimationOptions): Animation {
-    return this.animateTo(targetValue, options);
-  }
-
-  /**
    * Get the center position (returns origin since this is invisible).
    * @returns [0, 0, 0]
    */
@@ -364,16 +354,6 @@ export class ComplexValueTracker extends Mobject {
    */
   animateTo(targetValue: Complex, options?: AnimationOptions): Animation {
     return new ComplexValueTrackerAnimation(this, targetValue, options);
-  }
-
-  /**
-   * Alias for animateTo - matches Manim's API.
-   * @param targetValue - The value to animate to
-   * @param options - Animation options
-   * @returns An animation
-   */
-  animate(targetValue: Complex, options?: AnimationOptions): Animation {
-    return this.animateTo(targetValue, options);
   }
 
   /**
