@@ -72,11 +72,16 @@ export {
   MovingCamera,
   ThreeDCamera,
   MultiCamera,
+  MappingCamera,
+  SplitScreenCamera,
   type MovingCameraOptions,
   type ThreeDCameraOptions,
   type CameraViewport,
   type CameraEntry,
   type MultiCameraOptions,
+  type MappingCameraOptions,
+  type MappingFunction,
+  type SplitScreenCameraOptions,
 } from './core/CameraExtensions';
 export {
   CameraFrame,

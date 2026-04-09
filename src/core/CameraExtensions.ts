@@ -1,6 +1,13 @@
+/* eslint-disable max-lines */
 import * as THREE from 'three';
 import { Camera2D, Camera3D, CameraOptions, Camera3DOptions } from './Camera';
 import { Mobject, Vector3Tuple } from './Mobject';
+
+/**
+ * Coordinate mapping function type.
+ * Transforms a 3D point to another 3D point.
+ */
+export type MappingFunction = (point: Vector3Tuple) => Vector3Tuple;
 
 /**
  * Animation options for camera movements.
@@ -859,6 +866,207 @@ export class MultiCamera {
   clear(): this {
     this._cameras = [];
     this._activeIndex = 0;
+    return this;
+  }
+}
+
+/**
+ * Options for configuring a MappingCamera.
+ */
+export interface MappingCameraOptions extends CameraOptions {
+  /** Initial mapping function to apply to coordinates. */
+  mappingFunction?: MappingFunction;
+}
+
+/**
+ * MappingCamera - A Camera2D that applies a coordinate mapping function
+ * to transform how the scene is viewed.
+ *
+ * Based on Python Manim's MappingCamera concept. Use cases include
+ * non-linear coordinate distortions and custom projections.
+ */
+export class MappingCamera extends Camera2D {
+  private _mappingFunction: MappingFunction | null;
+
+  /**
+   * Create a new MappingCamera.
+   * @param options - Camera configuration options
+   */
+  constructor(options: MappingCameraOptions = {}) {
+    super(options);
+    this._mappingFunction = options.mappingFunction ?? null;
+  }
+
+  /**
+   * Set the mapping function used to transform coordinates.
+   * @param fn - Mapping function that transforms [x, y, z] points
+   * @returns this for chaining
+   */
+  setMappingFunction(fn: MappingFunction): this {
+    this._mappingFunction = fn;
+    return this;
+  }
+
+  /**
+   * Get the current mapping function.
+   * @returns The mapping function, or null if none is set
+   */
+  getMappingFunction(): MappingFunction | null {
+    return this._mappingFunction;
+  }
+
+  /**
+   * Apply the mapping function to a point.
+   * Returns the point unchanged if no mapping is set (identity).
+   * @param point - Input point [x, y, z]
+   * @returns The mapped point
+   */
+  mapPoint(point: Vector3Tuple): Vector3Tuple {
+    if (this._mappingFunction === null) {
+      return [point[0], point[1], point[2]];
+    }
+    return this._mappingFunction(point);
+  }
+
+  /**
+   * Clear the mapping function, reverting to identity.
+   * @returns this for chaining
+   */
+  resetMapping(): this {
+    this._mappingFunction = null;
+    return this;
+  }
+}
+
+/**
+ * Options for configuring a SplitScreenCamera.
+ */
+export interface SplitScreenCameraOptions {
+  /** Camera for the left (or top) side. Defaults to a new Camera2D. */
+  leftCamera?: Camera2D;
+  /** Camera for the right (or bottom) side. Defaults to a new Camera2D. */
+  rightCamera?: Camera2D;
+  /** Split direction. Defaults to 'horizontal'. */
+  split?: 'horizontal' | 'vertical';
+  /** Split ratio (0-1). Defaults to 0.5. */
+  splitRatio?: number;
+}
+
+/**
+ * SplitScreenCamera - A convenience class that wraps MultiCamera
+ * for split-screen comparison views.
+ *
+ * Based on Python Manim's multi_camera module. Provides two Camera2D
+ * instances rendered side-by-side (horizontal split) or stacked
+ * (vertical split) with a configurable split ratio.
+ */
+export class SplitScreenCamera {
+  private _leftCamera: Camera2D;
+  private _rightCamera: Camera2D;
+  private _multiCamera: MultiCamera;
+  private _splitDirection: 'horizontal' | 'vertical';
+  private _splitRatio: number;
+
+  /**
+   * Create a new SplitScreenCamera.
+   * @param options - Configuration options
+   */
+  constructor(options: SplitScreenCameraOptions = {}) {
+    this._leftCamera = options.leftCamera ?? new Camera2D();
+    this._rightCamera = options.rightCamera ?? new Camera2D();
+    this._splitDirection = options.split ?? 'horizontal';
+    this._splitRatio = SplitScreenCamera._clampRatio(options.splitRatio ?? 0.5);
+    this._multiCamera = new MultiCamera();
+    this._rebuildViewports();
+  }
+
+  /**
+   * Clamp a ratio to the valid range (0.01 - 0.99).
+   */
+  private static _clampRatio(ratio: number): number {
+    return Math.min(0.99, Math.max(0.01, ratio));
+  }
+
+  /**
+   * Rebuild the MultiCamera viewports based on current split settings.
+   */
+  private _rebuildViewports(): void {
+    this._multiCamera.clear();
+    const r = this._splitRatio;
+
+    if (this._splitDirection === 'horizontal') {
+      this._multiCamera.addCamera(this._leftCamera, { x: 0, y: 0, width: r, height: 1 }, 'left');
+      this._multiCamera.addCamera(
+        this._rightCamera,
+        { x: r, y: 0, width: 1 - r, height: 1 },
+        'right',
+      );
+    } else {
+      // Vertical: left camera on top, right camera on bottom
+      this._multiCamera.addCamera(this._leftCamera, { x: 0, y: r, width: 1, height: 1 - r }, 'top');
+      this._multiCamera.addCamera(this._rightCamera, { x: 0, y: 0, width: 1, height: r }, 'bottom');
+    }
+  }
+
+  /**
+   * Get the left (or top) camera.
+   * @returns The left Camera2D
+   */
+  getLeftCamera(): Camera2D {
+    return this._leftCamera;
+  }
+
+  /**
+   * Get the right (or bottom) camera.
+   * @returns The right Camera2D
+   */
+  getRightCamera(): Camera2D {
+    return this._rightCamera;
+  }
+
+  /**
+   * Get the underlying MultiCamera instance.
+   * @returns The MultiCamera managing the viewports
+   */
+  getMultiCamera(): MultiCamera {
+    return this._multiCamera;
+  }
+
+  /**
+   * Get the current split direction.
+   * @returns 'horizontal' or 'vertical'
+   */
+  getSplitDirection(): 'horizontal' | 'vertical' {
+    return this._splitDirection;
+  }
+
+  /**
+   * Get the current split ratio.
+   * @returns Split ratio between 0.01 and 0.99
+   */
+  getSplitRatio(): number {
+    return this._splitRatio;
+  }
+
+  /**
+   * Set the split direction.
+   * @param direction - 'horizontal' for side-by-side, 'vertical' for stacked
+   * @returns this for chaining
+   */
+  setSplit(direction: 'horizontal' | 'vertical'): this {
+    this._splitDirection = direction;
+    this._rebuildViewports();
+    return this;
+  }
+
+  /**
+   * Set the split ratio.
+   * @param ratio - Position of the split (0-1). 0.5 = equal halves.
+   * @returns this for chaining
+   */
+  setSplitRatio(ratio: number): this {
+    this._splitRatio = SplitScreenCamera._clampRatio(ratio);
+    this._rebuildViewports();
     return this;
   }
 }
