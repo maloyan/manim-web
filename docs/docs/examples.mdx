@@ -1,0 +1,2333 @@
+---
+title: Examples
+sidebar_label: Examples
+---
+
+import PlayerExample from '@site/src/components/examples/PlayerExample';
+import ApplyMatrixArrowsExample from '@site/src/components/examples/ApplyMatrixArrowsExample';
+import ArgMinExample from '@site/src/components/examples/ArgMinExample';
+import BooleanOperationsExample from '@site/src/components/examples/BooleanOperationsExample';
+import BraceAnnotationExample from '@site/src/components/examples/BraceAnnotationExample';
+import EasingFunctionsShowcaseExample from '@site/src/components/examples/EasingFunctionsShowcaseExample';
+import ExportAnimationExample from '@site/src/components/examples/ExportAnimationExample';
+import FixedInFrameMobjectTestExample from '@site/src/components/examples/FixedInFrameMobjectTestExample';
+import FollowingGraphCameraExample from '@site/src/components/examples/FollowingGraphCameraExample';
+import GraphAreaPlotExample from '@site/src/components/examples/GraphAreaPlotExample';
+import HeatDiagramPlotExample from '@site/src/components/examples/HeatDiagramPlotExample';
+import ManimCeLogoExample from '@site/src/components/examples/ManimCeLogoExample';
+import MathtexSvgExample from '@site/src/components/examples/MathtexSvgExample';
+import MovingAngleExample from '@site/src/components/examples/MovingAngleExample';
+import MovingAroundExample from '@site/src/components/examples/MovingAroundExample';
+import MovingDotsExample from '@site/src/components/examples/MovingDotsExample';
+import MovingFrameBoxExample from '@site/src/components/examples/MovingFrameBoxExample';
+import MovingGroupToDestinationExample from '@site/src/components/examples/MovingGroupToDestinationExample';
+import MovingZoomedSceneAroundExample from '@site/src/components/examples/MovingZoomedSceneAroundExample';
+import OpeningManimExample from '@site/src/components/examples/OpeningManimExample';
+import PointMovingOnShapesExample from '@site/src/components/examples/PointMovingOnShapesExample';
+import PointWithTraceExample from '@site/src/components/examples/PointWithTraceExample';
+import PolygonOnAxesExample from '@site/src/components/examples/PolygonOnAxesExample';
+import RateFunctionsComparisonExample from '@site/src/components/examples/RateFunctionsComparisonExample';
+import RotationUpdaterExample from '@site/src/components/examples/RotationUpdaterExample';
+import SinCosPlotExample from '@site/src/components/examples/SinCosPlotExample';
+import SineCurveUnitCircleExample from '@site/src/components/examples/SineCurveUnitCircleExample';
+import ThreeDCameraIllusionRotationExample from '@site/src/components/examples/ThreeDCameraIllusionRotationExample';
+import ThreeDCameraRotationExample from '@site/src/components/examples/ThreeDCameraRotationExample';
+import ThreeDLightSourcePositionExample from '@site/src/components/examples/ThreeDLightSourcePositionExample';
+import ThreeDSurfacePlotExample from '@site/src/components/examples/ThreeDSurfacePlotExample';
+import VectorArrowExample from '@site/src/components/examples/VectorArrowExample';
+
+# Examples
+
+Interactive examples showing what you can build with manim-web. Each example includes a live animation and source code.
+
+## Integrated Player
+
+A full-featured playback controller with play/pause, segment navigation, timeline scrubbing, speed control, fullscreen, and export. Use <kbd>Space</kbd> to play/pause, <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> for segments, <kbd>Shift+&larr;/&rarr;</kbd> to scrub, and <kbd>F</kbd> for fullscreen.
+
+<PlayerExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Player,
+  Circle,
+  Square,
+  Triangle,
+  Create,
+  Transform,
+  FadeIn,
+  FadeOut,
+  Indicate,
+  Rotate,
+  BLACK,
+  BLUE,
+  RED,
+  GREEN,
+  YELLOW,
+} from 'manim-web';
+
+const player = new Player(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+player.sequence(async (scene) => {
+  // Create a blue circle
+  const circle = new Circle({ radius: 1.5, color: BLUE });
+  await scene.play(new Create(circle));
+
+  await scene.wait(0.5);
+
+  // Transform to red square
+  const square = new Square({ sideLength: 3, color: RED });
+  await scene.play(new Transform(circle, square));
+
+  // Indicate
+  await scene.play(new Indicate(circle));
+
+  // Transform to green triangle
+  const triangle = new Triangle({ color: GREEN });
+  triangle.scale(2);
+  await scene.play(new Transform(circle, triangle));
+
+  // Rotate 180°
+  await scene.play(new Rotate(circle, { angle: Math.PI }));
+
+  // Fade out
+  await scene.play(new FadeOut(circle));
+
+  // Bring in a yellow circle
+  const circle2 = new Circle({ radius: 1, color: YELLOW });
+  await scene.play(new FadeIn(circle2));
+
+  await scene.wait(1);
+});
+```
+
+</details>
+
+**Learn More:** [**Player**](/api/classes/Player) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square) · [**Triangle**](/api/classes/Triangle) · [**Create**](/api/classes/Create) · [**Transform**](/api/classes/Transform) · [**Indicate**](/api/classes/Indicate) · [**Rotate**](/api/classes/Rotate)
+
+---
+
+## Manim Ce Logo
+
+Creates the Manim Community Edition logo using a large blackboard-bold M, a circle, square, and triangle in signature colors, all composed into a VGroup.
+
+<ManimCeLogoExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Circle,
+  LEFT,
+  MathTex,
+  ORIGIN,
+  RIGHT,
+  Scene,
+  Square,
+  Triangle,
+  UP,
+  VGroup,
+  addVec,
+  scaleVec,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#ece6e2',
+});
+
+const logoGreen = '#87c2a5';
+const logoBlue = '#525893';
+const logoRed = '#e07a5f';
+const logoBlack = '#343434';
+const dsM = new MathTex({ latex: '\\mathbb{M}', fillColor: logoBlack });
+await dsM.waitForRender();
+dsM.scale(7);
+dsM.shift(addVec(scaleVec(2.25, LEFT), scaleVec(1.5, UP)));
+const circle = new Circle({ color: logoGreen, fillOpacity: 1 }).shift(LEFT);
+const square = new Square({ color: logoBlue, fillOpacity: 1 }).shift(UP);
+const triangle = new Triangle({ color: logoRed, fillOpacity: 1 }).shift(RIGHT);
+const logo = new VGroup(triangle, square, circle, dsM);
+logo.moveTo(ORIGIN);
+scene.add(logo);
+```
+
+</details>
+
+**Learn More:** [**MathTex**](/api/classes/MathTex) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square) · [**Triangle**](/api/classes/Triangle) · [**VGroup**](/api/classes/VGroup)
+
+---
+
+## Brace Annotation
+
+Shows how to annotate lines with curly braces and labels. Creates a diagonal line between two dots, then adds horizontal and perpendicular braces with text and LaTeX labels.
+
+<BraceAnnotationExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Brace, Dot, Line, ORANGE, Scene } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+const dot = new Dot({ point: [-2, -1, 0] });
+const dot2 = new Dot({ point: [2, 1, 0] });
+const line = new Line({ start: dot.getCenter(), end: dot2.getCenter() }).setColor(ORANGE);
+const b1 = new Brace(line);
+const b1text = b1.getText('Horizontal distance');
+const b2 = new Brace(line, {
+  direction: line
+    .copy()
+    .rotate(Math.PI / 2)
+    .getUnitVector(),
+});
+const b2text = b2.getTex('x-x_1');
+scene.add(line, dot, dot2, b1, b2, b1text, b2text);
+```
+
+</details>
+
+**Learn More:** [**Brace**](/api/classes/Brace) · [**Dot**](/api/classes/Dot) · [**Line**](/api/classes/Line)
+
+---
+
+## Vector Arrow
+
+Displays a vector arrow on a coordinate plane with labeled origin and tip points. Demonstrates combining NumberPlane, Arrow, Dot, and Text for basic vector visualization.
+
+<VectorArrowExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+const dot = new Dot({ point: ORIGIN });
+const arrow = new Arrow({ start: ORIGIN, end: [2, 2, 0] });
+const numberplane = new NumberPlane();
+const originText = new Text({ text: '(0, 0)' }).nextTo(dot, DOWN);
+const tipText = new Text({ text: '(2, 2)' }).nextTo(arrow.getEnd(), RIGHT);
+scene.add(numberplane, dot, arrow, originText, tipText);
+```
+
+</details>
+
+**Learn More:** [**Arrow**](/api/classes/Arrow) · [**NumberPlane**](/api/classes/NumberPlane) · [**Dot**](/api/classes/Dot) · [**Text**](/api/classes/Text)
+
+---
+
+## Boolean Operations
+
+Demonstrates the four boolean set operations (union, intersection, difference, exclusion) applied to overlapping ellipses. Each result is scaled down and labeled with animated transitions.
+
+<BooleanOperationsExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  BLUE,
+  Difference,
+  DOWN,
+  Ellipse,
+  Exclusion,
+  FadeIn,
+  GREEN,
+  Group,
+  Intersection,
+  LEFT,
+  MoveToTarget,
+  ORANGE,
+  PINK,
+  RED,
+  RIGHT,
+  Scene,
+  Text,
+  Underline,
+  UP,
+  Union,
+  WHITE,
+  YELLOW,
+  scaleVec,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+const ellipse1 = new Ellipse({
+  width: 4.0,
+  height: 5.0,
+  fillOpacity: 0.5,
+  color: BLUE,
+  strokeWidth: 2,
+}).moveTo(LEFT);
+const ellipse2 = ellipse1.copy().setColor(RED).moveTo(RIGHT);
+// Large italic underlined title matching Python Manim reference
+const bool_ops_text = new Text({
+  text: 'Boolean Operation',
+  fontFamily: 'serif',
+  fontSize: 48,
+}).nextTo(ellipse1, UP);
+const ellipse_group = new Group(bool_ops_text, ellipse1, ellipse2).moveTo(scaleVec(3, LEFT));
+// Create underline AFTER group is positioned so it uses the text's final position
+const underline = new Underline(bool_ops_text, { color: WHITE, strokeWidth: 2, buff: -0.25 });
+ellipse_group.add(underline);
+await scene.play(new FadeIn(ellipse_group));
+
+// Layout matching Python Manim reference:
+//        Intersection
+//  Difference    Union
+//        Exclusion
+// Intersection, Union, Exclusion are vertically aligned on the right.
+// Difference is offset to the left at the same row as Union.
+// Positions and scales matching Python Manim reference exactly:
+// Intersection: scale(0.25), move_to(RIGHT*5 + UP*2.5)
+// Union: scale(0.3), next_to(i, DOWN, buff=text.height*3)
+// Exclusion: scale(0.3), next_to(u, DOWN, buff=text.height*3.5)
+// Difference: scale(0.3), next_to(u, LEFT, buff=text.height*3.5)
+const rightX = 5;
+
+const i = new Intersection(ellipse1, ellipse2, { color: GREEN, fillOpacity: 0.5 });
+i.generateTarget();
+i.targetCopy.scale(0.25).setStrokeWidth(1).moveTo([rightX, 2.5, 0]);
+await scene.play(new MoveToTarget(i));
+const intersection_text = new Text({ text: 'Intersection', fontSize: 23 }).nextTo(i, UP);
+await scene.play(new FadeIn(intersection_text));
+
+const u = new Union(ellipse1, ellipse2, { color: ORANGE, fillOpacity: 0.5 });
+const union_text = new Text({ text: 'Union', fontSize: 23 });
+u.generateTarget();
+u.targetCopy
+  .scale(0.3)
+  .setStrokeWidth(1.2)
+  .nextTo(i, DOWN, union_text.getHeight() * 3);
+await scene.play(new MoveToTarget(u));
+union_text.nextTo(u, UP);
+await scene.play(new FadeIn(union_text));
+
+const e = new Exclusion(ellipse1, ellipse2, { color: YELLOW, fillOpacity: 0.5 });
+const exclusion_text = new Text({ text: 'Exclusion', fontSize: 23 });
+e.generateTarget();
+e.targetCopy
+  .scale(0.3)
+  .setStrokeWidth(1.2)
+  .nextTo(u, DOWN, exclusion_text.getHeight() * 3.5);
+await scene.play(new MoveToTarget(e));
+exclusion_text.nextTo(e, UP);
+await scene.play(new FadeIn(exclusion_text));
+
+const d = new Difference(ellipse1, ellipse2, { color: PINK, fillOpacity: 0.5 });
+const difference_text = new Text({ text: 'Difference', fontSize: 23 });
+d.generateTarget();
+d.targetCopy
+  .scale(0.3)
+  .setStrokeWidth(1.2)
+  .nextTo(u, LEFT, difference_text.getHeight() * 3.5);
+await scene.play(new MoveToTarget(d));
+difference_text.nextTo(d, UP);
+await scene.play(new FadeIn(difference_text));
+```
+
+</details>
+
+**Learn More:** [**Union**](/api/classes/Union) · [**Intersection**](/api/classes/Intersection) · [**Difference**](/api/classes/Difference) · [**Exclusion**](/api/classes/Exclusion) · [**Ellipse**](/api/classes/Ellipse) · [**FadeIn**](/api/classes/FadeIn) · [**MoveToTarget**](/api/classes/MoveToTarget)
+
+---
+
+## Mathtex Svg
+
+Demonstrates vector-based LaTeX rendering with MathTexSVG. Shows Create (stroke-draw reveal), DrawBorderThenFill, FadeIn, and multi-part expressions with per-part coloring. Unlike raster MathTex, MathTexSVG produces real VMobject paths that support path-based animations.
+
+<MathtexSvgExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  MathTexSVG,
+  Create,
+  DrawBorderThenFill,
+  FadeIn,
+  FadeOut,
+  BLACK,
+  WHITE,
+  RED,
+  BLUE,
+  GREEN,
+  YELLOW,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+// Pre-create all equations
+const equation1 = new MathTexSVG({
+  latex: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
+  color: WHITE,
+  fontSize: 2,
+});
+const equation2 = new MathTexSVG({
+  latex: 'e^{i\\pi} + 1 = 0',
+  color: YELLOW,
+  fontSize: 2.5,
+});
+const multiPart = new MathTexSVG({
+  latex: ['E', '=', 'mc^2'],
+  color: WHITE,
+  fontSize: 3,
+});
+const equation3 = new MathTexSVG({
+  latex: '\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}',
+  color: GREEN,
+  fontSize: 2,
+});
+const matrix = new MathTexSVG({
+  latex: 'A = \\begin{pmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{pmatrix}',
+  color: WHITE,
+  fontSize: 2,
+});
+
+// Render all SVGs in parallel
+await Promise.all([
+  equation1.waitForRender(),
+  equation2.waitForRender(),
+  multiPart.waitForRender(),
+  equation3.waitForRender(),
+  matrix.waitForRender(),
+]);
+
+// 1. Create animation - stroke-draw reveal (the main feature)
+await scene.play(new Create(equation1, { duration: 3 }));
+await scene.wait(1);
+await scene.play(new FadeOut(equation1));
+
+// 2. DrawBorderThenFill animation
+await scene.play(new DrawBorderThenFill(equation2, { duration: 2 }));
+await scene.wait(1);
+await scene.play(new FadeOut(equation2));
+
+// 3. Multi-part with per-part coloring
+multiPart.getPart(0).setColor(RED);
+multiPart.getPart(1).setColor(WHITE);
+multiPart.getPart(2).setColor(BLUE);
+
+await scene.play(new FadeIn(multiPart));
+await scene.wait(2);
+await scene.play(new FadeOut(multiPart));
+
+// 4. Another Create with a summation
+await scene.play(new Create(equation3, { duration: 2 }));
+await scene.wait(2);
+await scene.play(new FadeOut(equation3));
+
+// 5. 2x2 matrix with subscript indices
+await scene.play(new Create(matrix, { duration: 2 }));
+await scene.wait(2);
+```
+
+</details>
+
+**Learn More:** [**MathTexSVG**](/api/classes/MathTexSVG) · [**Create**](/api/classes/Create) · [**DrawBorderThenFill**](/api/classes/DrawBorderThenFill) · [**FadeIn**](/api/classes/FadeIn) · [**FadeOut**](/api/classes/FadeOut)
+
+---
+
+## Point Moving On Shapes
+
+Grows a circle from its center, transforms a dot to a new position, moves it along the circle path with MoveAlongPath, and rotates it around an external point with Rotating.
+
+<PointMovingOnShapesExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  BLUE,
+  Circle,
+  Dot,
+  GrowFromCenter,
+  Line,
+  MoveAlongPath,
+  RIGHT,
+  Rotating,
+  Scene,
+  Transform,
+  linear,
+  BLACK,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const circle = new Circle({ radius: 1, color: BLUE });
+const dot = new Dot();
+const dot2 = dot.copy().shift(RIGHT);
+scene.add(dot);
+
+const line = new Line({ start: [3, 0, 0], end: [5, 0, 0] });
+scene.add(line);
+
+await scene.play(new GrowFromCenter(circle));
+await scene.play(new Transform(dot, dot2));
+await scene.play(new MoveAlongPath(dot, { path: circle, duration: 2, rateFunc: linear }));
+await scene.play(new Rotating(dot, { aboutPoint: [2, 0, 0], duration: 1.5 }));
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** [**Circle**](/api/classes/Circle) · [**Dot**](/api/classes/Dot) · [**GrowFromCenter**](/api/classes/GrowFromCenter) · [**Transform**](/api/classes/Transform) · [**MoveAlongPath**](/api/classes/MoveAlongPath) · [**Rotating**](/api/classes/Rotating)
+
+---
+
+## Moving Around
+
+Demonstrates the MoveToTarget pattern for animating a square through a sequence of transformations: shifting, changing fill color, scaling, and rotating.
+
+<MovingAroundExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Square,
+  Shift,
+  MoveToTarget,
+  Scale,
+  Rotate,
+  BLUE,
+  ORANGE,
+  LEFT,
+  BLACK,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const square = new Square({ color: BLUE, fillOpacity: 1 });
+
+await scene.play(new Shift(square, { direction: LEFT }));
+
+square.generateTarget();
+square.targetCopy.setFill(ORANGE);
+await scene.play(new MoveToTarget(square));
+
+await scene.play(new Scale(square, { scaleFactor: 0.3 }));
+
+await scene.play(new Rotate(square, { angle: 0.4 }));
+```
+
+</details>
+
+**Learn More:** [**Square**](/api/classes/Square) · [**MoveToTarget**](/api/classes/MoveToTarget)
+
+---
+
+## Moving Angle
+
+Creates two lines forming an angle with a LaTeX theta label, then animates the angle changing using a ValueTracker. The angle arc and label update reactively via addUpdater.
+
+<MovingAngleExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Angle,
+  FadeToColor,
+  LEFT,
+  Line,
+  MathTex,
+  RED,
+  RIGHT,
+  SMALL_BUFF,
+  Scene,
+  ValueTracker,
+  BLACK,
+  WHITE,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const rotation_center = LEFT;
+
+const theta_tracker = new ValueTracker(110);
+const line1 = new Line({ start: LEFT, end: RIGHT });
+const line_moving = new Line({ start: LEFT, end: RIGHT });
+const line_ref = line_moving.copy();
+line_moving.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
+const a = new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false });
+const tex = new MathTex({ latex: '\\theta', color: WHITE });
+await tex.waitForRender();
+tex.moveTo(
+  new Angle(
+    { line1: line1, line2: line_moving },
+    { radius: 0.5 + 3 * SMALL_BUFF, otherAngle: false },
+  ).pointFromProportion(0.5),
+);
+
+scene.add(line1, line_moving, a, tex);
+await scene.wait(1);
+
+line_moving.addUpdater((x) => {
+  x.become(line_ref.copy());
+  x.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
+});
+
+a.addUpdater((x) =>
+  x.become(new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false })),
+);
+tex.addUpdater((x) =>
+  x.moveTo(
+    new Angle(
+      { line1: line1, line2: line_moving },
+      { radius: 0.5 + 3 * SMALL_BUFF, otherAngle: false },
+    ).pointFromProportion(0.5),
+  ),
+);
+
+await scene.play(theta_tracker.animateTo(40));
+await scene.play(theta_tracker.animateTo(theta_tracker.getValue() + 140));
+await scene.play(new FadeToColor(tex, { color: RED, duration: 0.5 }));
+await scene.play(theta_tracker.animateTo(350));
+
+await scene.wait(1);
+```
+
+</details>
+
+**Learn More:** [**Angle**](/api/classes/Angle) · [**Line**](/api/classes/Line) · [**MathTex**](/api/classes/MathTex) · [**ValueTracker**](/api/classes/ValueTracker) · [**FadeToColor**](/api/classes/FadeToColor)
+
+---
+
+## Moving Dots
+
+Creates two dots connected by a line, then animates them independently using ValueTrackers. The connecting line updates reactively via addUpdater and the become() method.
+
+<MovingDotsExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, Dot, VGroup, Line, ValueTracker, BLUE, GREEN, RED, RIGHT } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+const d1 = new Dot({ color: BLUE });
+const d2 = new Dot({ color: GREEN });
+new VGroup(d1, d2).arrange(RIGHT, 1);
+const l1 = new Line({ start: d1.getCenter(), end: d2.getCenter() }).setColor(RED);
+const x = new ValueTracker(0);
+const y = new ValueTracker(0);
+d1.addUpdater((z) => z.setX(x.getValue()));
+d2.addUpdater((z) => z.setY(y.getValue()));
+l1.addUpdater((z) => z.become(new Line({ start: d1.getCenter(), end: d2.getCenter() })));
+scene.add(d1, d2, l1);
+await scene.play(x.animateTo(5));
+await scene.play(y.animateTo(4));
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** [**Dot**](/api/classes/Dot) · [**Line**](/api/classes/Line) · [**VGroup**](/api/classes/VGroup) · [**ValueTracker**](/api/classes/ValueTracker)
+
+---
+
+## Moving Group To Destination
+
+Arranges a group of dots in a row, then shifts the entire group so a specific dot aligns with a target position. Shows vector math with subVec for computing shift direction.
+
+<MovingGroupToDestinationExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  VGroup,
+  Dot,
+  Shift,
+  LEFT,
+  ORIGIN,
+  RIGHT,
+  RED,
+  YELLOW,
+  BLACK,
+  scaleVec,
+  subVec,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const group = new VGroup(
+  new Dot({ point: LEFT }),
+  new Dot({ point: ORIGIN }),
+  new Dot({ point: RIGHT, color: RED }),
+  new Dot({ point: scaleVec(2, RIGHT) }),
+).scale(1.4);
+
+const dest = new Dot({ point: [4, 3, 0], color: YELLOW });
+
+scene.add(group, dest);
+
+await scene.play(
+  new Shift(group, {
+    direction: subVec(dest.getCenter(), group.get(2).getCenter()),
+  }),
+);
+await scene.wait(0.5);
+```
+
+</details>
+
+**Learn More:** [**VGroup**](/api/classes/VGroup) · [**Dot**](/api/classes/Dot) · [**Shift**](/api/classes/Shift)
+
+---
+
+## Moving Frame Box
+
+Renders a multi-part LaTeX equation (the product rule), then highlights individual terms with a SurroundingRectangle that animates between terms using ReplacementTransform.
+
+<MovingFrameBoxExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Create,
+  MathTex,
+  ReplacementTransform,
+  Scene,
+  SurroundingRectangle,
+  Write,
+} from 'manim-web';
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+const text = new MathTex({
+  latex: ['\\frac{d}{dx}f(x)g(x)=', 'f(x)\\frac{d}{dx}g(x)', '+', 'g(x)\\frac{d}{dx}f(x)'],
+});
+await text.waitForRender();
+await scene.play(new Write(text));
+const framebox1 = new SurroundingRectangle(text.getPart(1), { buff: 0.1 });
+const framebox2 = new SurroundingRectangle(text.getPart(3), { buff: 0.1 });
+await scene.play(new Create(framebox1));
+await scene.wait();
+await scene.play(new ReplacementTransform(framebox1, framebox2));
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** [**MathTex**](/api/classes/MathTex) · [**SurroundingRectangle**](/api/classes/SurroundingRectangle) · [**Create**](/api/classes/Create) · [**ReplacementTransform**](/api/classes/ReplacementTransform)
+
+---
+
+## Rotation Updater
+
+Shows a reference line alongside a rotating line driven by a time-based updater function. The updater is swapped mid-animation to reverse the rotation direction.
+
+<RotationUpdaterExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, Line, ORIGIN, LEFT, WHITE, YELLOW } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+const updaterForth = (mobj, dt) => {
+  mobj.rotateAboutOrigin(dt);
+};
+const updaterBack = (mobj, dt) => {
+  mobj.rotateAboutOrigin(-dt);
+};
+const lineReference = new Line({ start: ORIGIN, end: LEFT }).setColor(WHITE);
+const lineMoving = new Line({ start: ORIGIN, end: LEFT }).setColor(YELLOW);
+lineMoving.addUpdater(updaterForth);
+scene.add(lineReference, lineMoving);
+await scene.wait(2);
+lineMoving.removeUpdater(updaterForth);
+lineMoving.addUpdater(updaterBack);
+await scene.wait(2);
+lineMoving.removeUpdater(updaterBack);
+await scene.wait(0.5);
+```
+
+</details>
+
+**Learn More:** [**Line**](/api/classes/Line)
+
+---
+
+## Point With Trace
+
+Creates a dot that leaves a visible trail as it moves. Uses a VMobject with addUpdater to continuously extend the path, then rotates and shifts the dot to draw a pattern.
+
+<PointWithTraceExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, VMobject, Dot, Rotating, Shift, UP, LEFT, RIGHT, BLACK } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const path = new VMobject();
+path.fillOpacity = 0;
+const dot = new Dot();
+path.setPointsAsCorners([dot.getCenter(), dot.getCenter()]);
+
+const updatePath = (pathMob) => {
+  const previousPath = pathMob.copy();
+  previousPath.addPointsAsCorners([dot.getCenter()]);
+  pathMob.become(previousPath);
+};
+path.addUpdater(updatePath);
+
+scene.add(path, dot);
+
+await scene.play(new Rotating(dot, { angle: Math.PI, aboutPoint: RIGHT, duration: 2 }));
+await scene.wait();
+await scene.play(new Shift(dot, { direction: UP }));
+await scene.play(new Shift(dot, { direction: LEFT }));
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** [**VMobject**](/api/classes/VMobject) · [**Dot**](/api/classes/Dot) · [**Rotating**](/api/classes/Rotating) · [**Shift**](/api/classes/Shift)
+
+---
+
+## Sine Curve Unit Circle
+
+Animates a dot orbiting a unit circle while tracing the corresponding sine curve. Uses addUpdater for continuous motion, with connecting lines from origin-to-dot and dot-to-curve updating each frame.
+
+<SineCurveUnitCircleExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Circle,
+  Dot,
+  Line,
+  VGroup,
+  MathTex,
+  BLACK,
+  BLUE,
+  RED,
+  YELLOW,
+  YELLOW_A,
+  YELLOW_D,
+  DOWN,
+} from 'manim-web';
+
+const TAU = 2 * Math.PI;
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+// --- Axes ---
+const xAxis = new Line({ start: [-6, 0, 0], end: [6, 0, 0] });
+const yAxis = new Line({ start: [-4, -2, 0], end: [-4, 2, 0] });
+scene.add(xAxis, yAxis);
+
+// --- X labels ---
+const xLabels = [
+  new MathTex({ latex: '\\pi' }),
+  new MathTex({ latex: '2\\pi' }),
+  new MathTex({ latex: '3\\pi' }),
+  new MathTex({ latex: '4\\pi' }),
+];
+for (let i = 0; i < xLabels.length; i++) {
+  xLabels[i].nextTo([-1 + 2 * i, 0, 0], DOWN, 0.4);
+  scene.add(xLabels[i]);
+}
+
+const originPoint = [-4, 0, 0];
+const curveStart = [-3, 0, 0];
+
+// --- Circle ---
+const circle = new Circle({ radius: 1, center: originPoint, color: RED });
+scene.add(circle);
+
+// --- Dot orbiting the circle ---
+let tOffset = 0;
+const rate = 0.25;
+
+const dot = new Dot({
+  radius: 0.08,
+  color: YELLOW,
+  point: circle.pointAtAngle(0),
+});
+
+const goAroundCircle = (_mob, dt) => {
+  tOffset += dt * rate;
+  dot.moveTo(circle.pointAtAngle((tOffset % 1) * TAU));
+};
+dot.addUpdater(goAroundCircle);
+
+// --- Line from origin to dot (always_redraw equivalent) ---
+const originToCircleLine = new Line({
+  start: originPoint,
+  end: dot.getPoint(),
+  color: BLUE,
+});
+originToCircleLine.addUpdater(() => {
+  originToCircleLine.setStart(originPoint);
+  originToCircleLine.setEnd(dot.getPoint());
+});
+
+// --- Line from dot to curve (always_redraw equivalent) ---
+const dotToCurveLine = new Line({
+  start: dot.getPoint(),
+  end: dot.getPoint(),
+  color: YELLOW_A,
+  strokeWidth: 2,
+});
+dotToCurveLine.addUpdater(() => {
+  const x = curveStart[0] + tOffset * 4;
+  const y = dot.getPoint()[1];
+  dotToCurveLine.setStart(dot.getPoint());
+  dotToCurveLine.setEnd([x, y, 0]);
+});
+
+// --- Growing sine curve ---
+const curve = new VGroup();
+curve.add(new Line({ start: curveStart, end: curveStart, color: YELLOW_D }));
+let lastEnd = [...curveStart];
+
+curve.addUpdater(() => {
+  const x = curveStart[0] + tOffset * 4;
+  const y = dot.getPoint()[1];
+  const newLine = new Line({
+    start: lastEnd,
+    end: [x, y, 0],
+    color: YELLOW_D,
+  });
+  curve.add(newLine);
+  lastEnd = [x, y, 0];
+});
+
+// Add in order: dot first so tOffset/position updates before lines read it
+scene.add(dot, originToCircleLine, dotToCurveLine, curve);
+
+await scene.wait(8.5);
+
+dot.removeUpdater(goAroundCircle);
+```
+
+</details>
+
+**Learn More:** [**Circle**](/api/classes/Circle) · [**Dot**](/api/classes/Dot) · [**Line**](/api/classes/Line) · [**VGroup**](/api/classes/VGroup) · [**MathTex**](/api/classes/MathTex)
+
+---
+
+## Apply Matrix Arrows
+
+Shows how ApplyMatrix works on Arrows and a NumberPlane. A shear transformation is applied to multiple arrows, and their tips are automatically reconstructed so they remain properly shaped.
+
+<ApplyMatrixArrowsExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Arrow,
+  NumberPlane,
+  Scene,
+  Text,
+  YELLOW,
+  GREEN_C,
+  RED_C,
+  applyMatrix,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+const plane = new NumberPlane();
+scene.add(plane);
+
+const arrow1 = new Arrow({ start: [-2, -1, 0], end: [2, 1, 0], color: YELLOW });
+const arrow2 = new Arrow({ start: [0, -2, 0], end: [0, 2, 0], color: GREEN_C });
+const arrow3 = new Arrow({ start: [-1, 1, 0], end: [1, -1, 0], color: RED_C });
+
+scene.add(arrow1, arrow2, arrow3);
+
+const label = new Text({ text: 'Before shear', fontSize: 24, color: '#ffffff' });
+label.moveTo([0, 3.2, 0]);
+scene.add(label);
+
+await scene.wait(1);
+
+// Shear matrix: x' = x + 0.5*y, y' = y
+const shearMatrix = [
+  [1, 0.5, 0],
+  [0, 1, 0],
+  [0, 0, 1],
+];
+
+// Apply the shear to the plane and arrows simultaneously
+await scene.play(
+  applyMatrix(plane, shearMatrix, { duration: 2 }),
+  applyMatrix(arrow1, shearMatrix, { duration: 2 }),
+  applyMatrix(arrow2, shearMatrix, { duration: 2 }),
+  applyMatrix(arrow3, shearMatrix, { duration: 2 }),
+);
+
+// Update label
+scene.remove(label);
+const label2 = new Text({
+  text: 'After shear — tips reconstructed',
+  fontSize: 24,
+  color: '#ffffff',
+});
+label2.moveTo([0, 3.2, 0]);
+scene.add(label2);
+
+await scene.wait(2);
+```
+
+</details>
+
+**Learn More:** [**Arrow**](/api/classes/Arrow) · [**NumberPlane**](/api/classes/NumberPlane) · [**ApplyMatrix**](/api/classes/ApplyMatrix)
+
+---
+
+## Rate Functions Comparison
+
+Example demonstrating Rate Functions Comparison.
+
+<RateFunctionsComparisonExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Dot,
+  Text,
+  Line,
+  Shift,
+  AnimationGroup,
+  RIGHT,
+  BLACK,
+  BLUE,
+  RED,
+  GREEN,
+  YELLOW,
+  PURPLE,
+  ORANGE,
+  WHITE,
+  smooth,
+  runningStart,
+  thereAndBackWithPause,
+  lingering,
+  exponentialDecay,
+  slowInto,
+  scaleVec,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+// Rate functions to compare, each with a label and color
+const rateFunctions: Array<{
+  name: string;
+  rateFunc: (t: number) => number;
+  color: string;
+}> = [
+  { name: 'smooth', rateFunc: smooth, color: BLUE },
+  { name: 'runningStart', rateFunc: runningStart(-0.2), color: RED },
+  { name: 'thereAndBackWithPause', rateFunc: thereAndBackWithPause(), color: GREEN },
+  { name: 'lingering', rateFunc: lingering, color: YELLOW },
+  { name: 'exponentialDecay', rateFunc: exponentialDecay(), color: PURPLE },
+  { name: 'slowInto', rateFunc: slowInto, color: ORANGE },
+];
+
+const ROW_COUNT = rateFunctions.length;
+const TOP_Y = 2.0;
+const ROW_SPACING = 0.7;
+const START_X = -2.5;
+const SHIFT_DISTANCE = 5.0;
+
+const dots: Dot[] = [];
+const shiftDirection = scaleVec(SHIFT_DISTANCE, RIGHT) as [number, number, number];
+
+for (let i = 0; i < ROW_COUNT; i++) {
+  const y = TOP_Y - i * ROW_SPACING;
+  const { name, color } = rateFunctions[i];
+
+  // Label on the left
+  const label = new Text({
+    text: name,
+    fontSize: 20,
+    color: WHITE,
+  });
+  label.moveTo([START_X - 2.0, y, 0]);
+
+  // Track line (faint guide)
+  const trackLine = new Line({
+    start: [START_X, y, 0],
+    end: [START_X + SHIFT_DISTANCE, y, 0],
+    color: '#333333',
+    strokeWidth: 1,
+  });
+
+  // Dot at the start position
+  const dot = new Dot({
+    point: [START_X, y, 0],
+    radius: 0.1,
+    color,
+  });
+
+  scene.add(label, trackLine, dot);
+  dots.push(dot);
+}
+
+// Build simultaneous shift animations with different rate functions
+const animations = dots.map(
+  (dot, i) =>
+    new Shift(dot, {
+      direction: shiftDirection,
+      duration: 3,
+      rateFunc: rateFunctions[i].rateFunc,
+    }),
+);
+
+await scene.play(new AnimationGroup(animations));
+```
+
+</details>
+
+---
+
+## Easing Functions Showcase
+
+Compares eight easing functions side by side. Colored dots shift right simultaneously using different rate functions — smooth, sine, back, elastic, bounce, circ, smoothstep, and exponential — to visualize how each one affects animation timing.
+
+<EasingFunctionsShowcaseExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Dot,
+  Text,
+  Line,
+  Shift,
+  AnimationGroup,
+  RIGHT,
+  BLACK,
+  BLUE,
+  RED,
+  GREEN,
+  YELLOW,
+  PURPLE,
+  ORANGE,
+  WHITE,
+  smooth,
+  easeInOutSine,
+  easeInOutBack,
+  easeOutElastic,
+  easeOutBounce,
+  easeInOutCirc,
+  smoothstep,
+  easeInOutExpo,
+  scaleVec,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+// Rate functions to compare, each with a label and color
+const rateFunctions: Array<{
+  name: string;
+  rateFunc: (t: number) => number;
+  color: string;
+}> = [
+  { name: 'smooth', rateFunc: smooth, color: BLUE },
+  { name: 'easeInOutSine', rateFunc: easeInOutSine, color: RED },
+  { name: 'easeInOutBack', rateFunc: easeInOutBack, color: GREEN },
+  { name: 'easeOutElastic', rateFunc: easeOutElastic, color: YELLOW },
+  { name: 'easeOutBounce', rateFunc: easeOutBounce, color: PURPLE },
+  { name: 'easeInOutCirc', rateFunc: easeInOutCirc, color: ORANGE },
+  { name: 'smoothstep', rateFunc: smoothstep, color: '#ff69b4' },
+  { name: 'easeInOutExpo', rateFunc: easeInOutExpo, color: '#00ced1' },
+];
+
+const ROW_COUNT = rateFunctions.length;
+const TOP_Y = 2.5;
+const ROW_SPACING = 0.65;
+const START_X = -2.2;
+const SHIFT_DISTANCE = 5.0;
+
+const dots: Dot[] = [];
+const shiftDirection = scaleVec(SHIFT_DISTANCE, RIGHT) as [number, number, number];
+
+for (let i = 0; i < ROW_COUNT; i++) {
+  const y = TOP_Y - i * ROW_SPACING;
+  const { name, color } = rateFunctions[i];
+
+  // Label on the left
+  const label = new Text({
+    text: name,
+    fontSize: 18,
+    color: WHITE,
+  });
+  label.moveTo([START_X - 2.3, y, 0]);
+
+  // Track line (faint guide)
+  const trackLine = new Line({
+    start: [START_X, y, 0],
+    end: [START_X + SHIFT_DISTANCE, y, 0],
+    color: '#333333',
+    strokeWidth: 1,
+  });
+
+  // Dot at the start position
+  const dot = new Dot({
+    point: [START_X, y, 0],
+    radius: 0.1,
+    color,
+  });
+
+  scene.add(label, trackLine, dot);
+  dots.push(dot);
+}
+
+// Build simultaneous shift animations with different rate functions
+const animations = dots.map(
+  (dot, i) =>
+    new Shift(dot, {
+      direction: shiftDirection,
+      duration: 3,
+      rateFunc: rateFunctions[i].rateFunc,
+    }),
+);
+
+await scene.play(new AnimationGroup(animations));
+```
+
+</details>
+
+**Learn More:** [**Shift**](/api/classes/Shift) · [**AnimationGroup**](/api/classes/AnimationGroup)
+
+---
+
+## Sin Cos Plot
+
+Plots sine and cosine functions on labeled coordinate axes with color-coded graphs. Adds a vertical reference line at x=2π with a label. Demonstrates Axes.plot() and getGraphLabel().
+
+<SinCosPlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Axes,
+  BLUE,
+  GREEN,
+  Line,
+  RED,
+  Scene,
+  UP,
+  UR,
+  VGroup,
+  WHITE,
+  YELLOW,
+  scaleVec,
+  BLACK,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 854,
+  height: 480,
+  backgroundColor: BLACK,
+});
+
+const axes = new Axes({
+  xRange: [-10, 10.3, 1],
+  yRange: [-1.5, 1.5, 1],
+  xLength: 10,
+  axisConfig: { color: GREEN },
+  xAxisConfig: {
+    numbersToInclude: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10],
+    numbersWithElongatedTicks: [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10],
+  },
+  tips: false,
+});
+const axesLabels = axes.getAxisLabels();
+const sinGraph = axes.plot((x) => Math.sin(x), { color: BLUE });
+const cosGraph = axes.plot((x) => Math.cos(x), { color: RED });
+
+const sinLabel = axes.getGraphLabel(sinGraph, '\\sin(x)', {
+  xVal: -10,
+  direction: scaleVec(0.5, UP),
+});
+const cosLabel = axes.getGraphLabel(cosGraph, { label: '\\cos(x)' });
+
+const vertLine = axes.getVerticalLine(axes.i2gp(2 * Math.PI, cosGraph), {
+  color: YELLOW,
+  lineFunc: Line,
+});
+const lineLabel = axes.getGraphLabel(cosGraph, 'x=2\\pi', {
+  xVal: 2 * Math.PI,
+  direction: UR,
+  color: WHITE,
+});
+
+const plot = new VGroup(axes, sinGraph, cosGraph, vertLine);
+const labels = new VGroup(axesLabels, sinLabel, cosLabel, lineLabel);
+scene.add(plot, labels);
+```
+
+</details>
+
+**Learn More:** [**Axes**](/api/classes/Axes) · [**Line**](/api/classes/Line) · [**VGroup**](/api/classes/VGroup)
+
+---
+
+## Arg Min
+
+Plots a quadratic function on coordinate axes and animates a dot that slides along the curve to find the minimum value. Uses a ValueTracker to drive the animation and addUpdater for reactive positioning.
+
+<ArgMinExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, Axes, Dot, MAROON, ValueTracker, linspace, BLACK } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const ax = new Axes({
+  xRange: [0, 10],
+  yRange: [0, 100, 10],
+  axisConfig: { includeTip: false },
+});
+const labels = ax.getAxisLabels({ xLabel: 'x', yLabel: 'f(x)' });
+
+const t = new ValueTracker(0);
+
+const func = (x) => {
+  return 2 * (x - 5) ** 2;
+};
+const graph = ax.plot(func, { color: MAROON });
+
+const initialPoint = [ax.coordsToPoint(t.getValue(), func(t.getValue()))];
+const dot = new Dot({ point: initialPoint });
+
+dot.addUpdater((x) => x.moveTo(ax.coordsToPoint(t.getValue(), func(t.getValue()))));
+const xSpace = linspace(...ax.xRange.slice(0, 2), 200);
+const minimumIndex = xSpace.reduce((mi, _, i, a) => (func(a[i]) < func(a[mi]) ? i : mi), 0);
+
+scene.add(ax, labels, graph, dot);
+await scene.play(t.animateTo(xSpace[minimumIndex]));
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** [**Axes**](/api/classes/Axes) · [**Dot**](/api/classes/Dot) · [**ValueTracker**](/api/classes/ValueTracker)
+
+---
+
+## Graph Area Plot
+
+Draws two curves on coordinate axes with vertical reference lines, a shaded area between the curves, and Riemann sum rectangles. Demonstrates the Axes area and Riemann integration visualization methods.
+
+<GraphAreaPlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Axes, BLUE, BLUE_C, GRAY, GREEN_B, Scene, YELLOW, BLACK } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 854,
+  height: 480,
+  backgroundColor: BLACK,
+});
+
+const ax = new Axes({
+  xRange: [0, 5],
+  yRange: [0, 6],
+  xAxisConfig: { numbersToInclude: [2, 3] },
+  tips: false,
+});
+const labels = ax.getAxisLabels();
+
+const curve1 = ax.plot((x) => 4 * x - Math.pow(x, 2), { xRange: [0, 4], color: BLUE_C });
+const curve2 = ax.plot((x) => 0.8 * Math.pow(x, 2) - 3 * x + 4, {
+  xRange: [0, 4],
+  color: GREEN_B,
+});
+
+const line1 = ax.getVerticalLine(ax.inputToGraphPoint(2, curve1), { color: YELLOW });
+const line2 = ax.getVerticalLine(ax.i2gp(3, curve1), { color: YELLOW });
+
+const riemannArea = ax.getRiemannRectangles(curve1, {
+  xRange: [0.3, 0.6],
+  dx: 0.03,
+  color: BLUE,
+  fillOpacity: 0.5,
+});
+const area = ax.getArea(curve2, [2, 3], { boundedGraph: curve1, color: GRAY, opacity: 0.5 });
+
+scene.add(ax, labels, curve1, curve2, line1, line2, riemannArea, area);
+```
+
+</details>
+
+**Learn More:** [**Axes**](/api/classes/Axes)
+
+---
+
+## Polygon On Axes
+
+Draws a dynamic rectangle under a hyperbola curve on coordinate axes. Uses a ValueTracker and always_redraw pattern to animate the rectangle width while keeping it constrained to the curve.
+
+<PolygonOnAxesExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Axes,
+  BLUE,
+  Create,
+  Dot,
+  Polygon,
+  Scene,
+  ValueTracker,
+  YELLOW_B,
+  YELLOW_D,
+  BLACK,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 854,
+  height: 480,
+  backgroundColor: BLACK,
+});
+
+const ax = new Axes({
+  xRange: [0, 10],
+  yRange: [0, 10],
+  xLength: 6,
+  yLength: 6,
+  tips: false,
+});
+
+const t = new ValueTracker(5);
+const k = 25;
+
+const graph = ax.plot((x) => k / x, { color: YELLOW_D, xRange: [k / 10, 10.0], numSamples: 750 });
+
+function makeRectangle() {
+  const corners = getRectangleCorners([0, 0], [t.getValue(), k / t.getValue()]);
+  const vertices = corners.map(([x, y]) => ax.c2p(x, y));
+  const p = new Polygon({ vertices, strokeWidth: 1, color: YELLOW_B, fillOpacity: 0.5 });
+  p.fillColor = BLUE;
+  return p;
+}
+
+const polygon = makeRectangle();
+polygon.addUpdater(() => {
+  polygon.become(makeRectangle());
+});
+
+const dot = new Dot();
+dot.addUpdater(() => dot.moveTo(ax.c2p(t.getValue(), k / t.getValue())));
+
+scene.add(ax, graph);
+await scene.play(new Create(polygon));
+scene.add(dot);
+await scene.play(t.animateTo(10));
+await scene.play(t.animateTo(k / 10));
+await scene.play(t.animateTo(5));
+
+function getRectangleCorners(bottomLeft, topRight) {
+  return [
+    [topRight[0], topRight[1]],
+    [bottomLeft[0], topRight[1]],
+    [bottomLeft[0], bottomLeft[1]],
+    [topRight[0], bottomLeft[1]],
+  ];
+}
+```
+
+</details>
+
+**Learn More:** [**Axes**](/api/classes/Axes) · [**Polygon**](/api/classes/Polygon) · [**ValueTracker**](/api/classes/ValueTracker)
+
+---
+
+## Heat Diagram Plot
+
+Creates a line graph showing temperature change over time using plotLineGraph. Demonstrates the Axes line graph plotting and axis label methods.
+
+<HeatDiagramPlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, Axes, Tex, BLACK } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const ax = new Axes({
+  xRange: [0, 40, 5],
+  yRange: [-8, 32, 5],
+  xLength: 9,
+  yLength: 6,
+  xAxisConfig: { numbersToInclude: [0, 5, 10, 15, 20, 25, 30, 35] },
+  yAxisConfig: { numbersToInclude: [-5, 0, 5, 10, 15, 20, 25, 30] },
+  tips: false,
+});
+
+// Create Tex labels and wait for rendering
+const xLabel = new Tex({ latex: '$\\Delta Q$' });
+const yLabel = new Tex({ latex: 'T[$^\\circ C$]' });
+await xLabel.waitForRender();
+await yLabel.waitForRender();
+
+const labels = ax.getAxisLabels({ xLabel, yLabel });
+
+const xVals = [0, 8, 38, 39];
+const yVals = [20, 0, 0, -5];
+const graph = ax.plotLineGraph({ xValues: xVals, yValues: yVals });
+
+scene.add(ax, labels, graph);
+```
+
+</details>
+
+**Learn More:** [**Axes**](/api/classes/Axes) · [**Tex**](/api/classes/Tex)
+
+---
+
+## Following Graph Camera
+
+Animates a camera that follows a dot moving along a sine curve. Zooms in, tracks with an updater, then restores to the original view. Demonstrates camera frame manipulation with saveState, generateTarget, and MoveToTarget.
+
+<FollowingGraphCameraExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Axes,
+  BLUE,
+  Dot,
+  MoveAlongPath,
+  MoveToTarget,
+  ORANGE,
+  Restore,
+  Scene,
+  linear,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+// Save camera frame state
+scene.camera.frame.saveState();
+
+// Create the axes and the curve
+const ax = new Axes({ xRange: [-1, 10], yRange: [-1, 10] });
+const graph = ax.plot((x) => Math.sin(x), { color: BLUE, xRange: [0, 3 * Math.PI] });
+
+// Create dots based on the graph
+const movingDot = new Dot({ point: ax.i2gp(graph.tMin, graph), color: ORANGE });
+const dot1 = new Dot({ point: ax.i2gp(graph.tMin, graph) });
+const dot2 = new Dot({ point: ax.i2gp(graph.tMax, graph) });
+
+scene.add(ax, graph, dot1, dot2, movingDot);
+
+// Zoom camera to 0.5x and center on moving dot
+scene.camera.frame.generateTarget();
+scene.camera.frame.targetCopy.scale(0.5);
+scene.camera.frame.targetCopy.moveTo(movingDot.getCenter());
+await scene.play(new MoveToTarget(scene.camera.frame));
+
+// Add updater so camera follows the moving dot
+const updateCurve = (mob) => {
+  mob.moveTo(movingDot.getCenter());
+};
+scene.camera.frame.addUpdater(updateCurve);
+
+// Animate dot moving along the graph path
+await scene.play(new MoveAlongPath(movingDot, { path: graph, rateFunc: linear }));
+
+// Remove updater and restore camera to original state
+scene.camera.frame.removeUpdater(updateCurve);
+await scene.play(new Restore(scene.camera.frame));
+```
+
+</details>
+
+**Learn More:** [**Axes**](/api/classes/Axes) · [**Dot**](/api/classes/Dot) · [**MoveAlongPath**](/api/classes/MoveAlongPath) · [**MoveToTarget**](/api/classes/MoveToTarget) · [**Restore**](/api/classes/Restore)
+
+---
+
+## Moving Zoomed Scene Around
+
+Demonstrates ZoomedScene with a camera frame that magnifies part of a grayscale image. Shows the zoomed display popping out, non-uniform scaling, shifting, and the reverse pop-out animation.
+
+<MovingZoomedSceneAroundExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  BackgroundRectangle,
+  BLACK,
+  Create,
+  Dot,
+  DOWN,
+  FadeIn,
+  FadeOut,
+  ImageMobject,
+  MED_SMALL_BUFF,
+  PURPLE,
+  RED,
+  Scale,
+  ScaleInPlace,
+  Shift,
+  smooth,
+  Text,
+  UL,
+  Uncreate,
+  UP,
+  UpdateFromFunc,
+  ZoomedScene,
+  scaleVec,
+} from 'manim-web';
+
+const scene = new ZoomedScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+  zoomFactor: 0.3,
+  displayWidth: 6,
+  displayHeight: 1,
+  cameraFrameStrokeWidth: 3,
+  displayFrameStrokeWidth: 3,
+  displayFrameColor: RED,
+});
+
+// Grayscale image matching Python: np.uint8([[0, 100, 30, 200], [255, 0, 5, 33]])
+const image = new ImageMobject({
+  pixelData: [
+    [0, 100, 30, 200],
+    [255, 0, 5, 33],
+  ],
+  height: 7,
+});
+
+const dot = new Dot().shift(scaleVec(2, UL));
+
+const frameText = new Text({ text: 'Frame', color: PURPLE, fontSize: 67 });
+const zoomedCameraText = new Text({ text: 'Zoomed camera', color: RED, fontSize: 67 });
+
+scene.add(image, dot);
+
+const zoomedCamera = scene.zoomedCamera;
+const zoomedDisplay = scene.zoomedDisplay;
+const frame = zoomedCamera.frame;
+const zoomedDisplayFrame = zoomedDisplay.displayFrame;
+
+frame.moveTo(dot);
+frame.setColor(PURPLE);
+zoomedDisplayFrame.setColor(RED);
+zoomedDisplay.shift(DOWN);
+
+const zdRect = new BackgroundRectangle(zoomedDisplay, {
+  fillOpacity: 0,
+  buff: MED_SMALL_BUFF,
+});
+scene.addForegroundMobject(zdRect);
+
+const unfoldCamera = new UpdateFromFunc(zdRect, (rect) => {
+  rect.replace(zoomedDisplay);
+});
+
+frameText.nextTo(frame, DOWN);
+
+await scene.play(new Create(frame), new FadeIn(frameText, { shift: UP }));
+scene.activateZooming();
+
+// Pop-out animation: display pops from frame position to its shifted position
+await scene.play(scene.getZoomedDisplayPopOutAnimation(), unfoldCamera);
+
+zoomedCameraText.nextTo(zoomedDisplayFrame, DOWN);
+await scene.play(new FadeIn(zoomedCameraText, { shift: UP }));
+
+// Scale frame and display non-uniformly
+await scene.play(
+  new Scale(frame, { scaleFactor: [0.5, 1.5, 0] }),
+  new Scale(zoomedDisplay, { scaleFactor: [0.5, 1.5, 0] }),
+  new FadeOut(zoomedCameraText),
+  new FadeOut(frameText),
+);
+await scene.wait();
+
+await scene.play(new ScaleInPlace(zoomedDisplay, { scaleFactor: 2 }));
+await scene.wait();
+
+await scene.play(new Shift(frame, { direction: scaleVec(2.5, DOWN) }));
+await scene.wait();
+
+// Reverse pop-out: move display back to frame
+await scene.play(
+  scene.getZoomedDisplayPopOutAnimation({ rateFunc: (t: number) => smooth(1 - t) }),
+  unfoldCamera,
+);
+await scene.play(new Uncreate(zoomedDisplayFrame), new FadeOut(frame));
+await scene.wait();
+```
+
+</details>
+
+**Learn More:** [**ZoomedScene**](/api/classes/ZoomedScene) · [**ImageMobject**](/api/classes/ImageMobject) · [**BackgroundRectangle**](/api/classes/BackgroundRectangle) · [**Create**](/api/classes/Create) · [**FadeIn**](/api/classes/FadeIn) · [**Scale**](/api/classes/Scale) · [**Shift**](/api/classes/Shift)
+
+---
+
+## Fixed In Frame Mobject Test
+
+Demonstrates how to pin 2D text to the screen while the 3D camera is rotated, using addFixedInFrameMobjects. The text stays in the upper-left corner as a HUD overlay on top of ThreeDAxes.
+
+<FixedInFrameMobjectTestExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Text, ThreeDAxes, ThreeDScene, UL } from 'manim-web';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 75 * (Math.PI / 180),
+  theta: -45 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+});
+
+const axes = new ThreeDAxes({
+  xRange: [-6, 6, 1],
+  yRange: [-5, 5, 1],
+  zRange: [-4, 4, 1],
+  axisColor: '#ffffff',
+  tipLength: 0.3,
+  tipRadius: 0.12,
+  shaftRadius: 0.008,
+});
+const text3d = new Text({ text: 'This is a 3D text' });
+scene.addFixedInFrameMobjects(text3d);
+text3d.toCorner(UL);
+scene.add(axes);
+await scene.wait(999999);
+```
+
+</details>
+
+**Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Text**](/api/classes/Text)
+
+---
+
+## Three D Light Source Position
+
+Shows a parametric sphere with checkerboard colors (RED_D, RED_E) on ThreeDAxes with custom point light positioning. Demonstrates Surface3D checkerboardColors and the Lighting system.
+
+<ThreeDLightSourcePositionExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ThreeDAxes, ThreeDScene, Surface3D, RED_D, RED_E } from 'manim-web';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 75 * (Math.PI / 180),
+  theta: 30 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+});
+
+const axes = new ThreeDAxes({
+  xRange: [-5, 5, 1],
+  yRange: [-5, 5, 1],
+  zRange: [-5, 5, 1],
+  axisColor: '#ffffff',
+  tipLength: 0.2,
+  tipRadius: 0.08,
+  shaftRadius: 0.01,
+});
+
+// Checkerboard sphere matching Python Manim's Surface(..., checkerboard_colors=[RED_D, RED_E])
+const sphere = new Surface3D({
+  func: (u: number, v: number) => [
+    1.5 * Math.cos(u) * Math.cos(v),
+    1.5 * Math.cos(u) * Math.sin(v),
+    1.5 * Math.sin(u),
+  ],
+  uRange: [-Math.PI / 2, Math.PI / 2],
+  vRange: [0, 2 * Math.PI],
+  uResolution: 15,
+  vResolution: 32,
+  checkerboardColors: [RED_D, RED_E],
+});
+
+// Light from above to match Python Manim's default top-lit appearance
+scene.lighting.removeAll();
+scene.lighting.addAmbient({ intensity: 0.3 });
+scene.lighting.addPoint({ position: [0, 5, 0], intensity: 2.5, decay: 0 });
+
+scene.add(axes);
+scene.add(sphere);
+
+await scene.wait(999999);
+```
+
+</details>
+
+**Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Surface3D**](/api/classes/Surface3D) · [**Lighting**](/api/classes/Lighting)
+
+---
+
+## Three D Surface Plot
+
+Renders a 3D Gaussian surface plot on ThreeDAxes with checkerboard coloring (ORANGE, BLUE). The parametric surface maps (u,v) to a bell-shaped Gaussian peak, scaled by 2 and displayed with semi-transparent faces.
+
+<ThreeDSurfacePlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ThreeDAxes, ThreeDScene, Surface3D, ORANGE, BLUE } from 'manim-web';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 75 * (Math.PI / 180),
+  theta: -30 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+});
+
+const sigma = 0.4;
+const mu = [0.0, 0.0];
+
+// Gaussian surface: parametric function mapping (u,v) to 3D point
+// Surface3D func returns [x, y, z] used directly as THREE.js coordinates.
+// Manim Z-up -> THREE.js Y-up: return [manimX, manimZ, -manimY]
+const gaussSurface = new Surface3D({
+  func: (u: number, v: number) => {
+    const x = u;
+    const y = v;
+    const dx = x - mu[0];
+    const dy = y - mu[1];
+    const d = Math.sqrt(dx * dx + dy * dy);
+    const z = Math.exp(-(d * d) / (2.0 * sigma * sigma));
+    // Manim coords (x, y, z) -> THREE.js coords (x, z, -y)
+    return [x, z, -y];
+  },
+  uRange: [-2, 2],
+  vRange: [-2, 2],
+  uResolution: 24,
+  vResolution: 24,
+  checkerboardColors: [ORANGE, BLUE],
+  opacity: 0.85,
+});
+
+// Scale by 2 about origin (matches Python: gauss_plane.scale(2, about_point=ORIGIN))
+gaussSurface.scale(2);
+
+const axes = new ThreeDAxes({
+  xRange: [-6, 6, 1],
+  yRange: [-5, 5, 1],
+  zRange: [-4, 4, 1],
+  axisColor: '#ffffff',
+  tipLength: 0.3,
+  tipRadius: 0.12,
+  shaftRadius: 0.008,
+});
+
+scene.add(axes);
+scene.add(gaussSurface);
+await scene.wait(999999);
+```
+
+</details>
+
+**Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Surface3D**](/api/classes/Surface3D)
+
+---
+
+## Three D Camera Rotation
+
+Demonstrates ambient camera rotation around 3D axes with a circle, then animates the camera back to its original orientation. Shows beginAmbientCameraRotation, stopAmbientCameraRotation, and moveCamera methods.
+
+<ThreeDCameraRotationExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Circle, ThreeDAxes, ThreeDScene } from 'manim-web';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 75 * (Math.PI / 180),
+  theta: 30 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+});
+
+const axes = new ThreeDAxes({
+  xRange: [-6, 6, 1],
+  yRange: [-5, 5, 1],
+  zRange: [-4, 4, 1],
+  axisColor: '#ffffff',
+  tipLength: 0.3,
+  tipRadius: 0.12,
+  shaftRadius: 0.008,
+});
+
+const circle = new Circle({ radius: 1, color: '#FC6255' });
+// Circle points are in Manim x-y plane but VMobject renders them
+// directly in THREE.js coords. Rotate -90° around X to lay flat
+// on the ground plane (THREE.js x-z = Manim x-y).
+circle.rotation.x = -Math.PI / 2;
+
+scene.add(circle, axes);
+
+// Begin ambient camera rotation (theta rotates at 0.1 rad/s)
+scene.beginAmbientCameraRotation(0.1);
+await scene.wait(3);
+
+// Stop rotation and animate camera back to original orientation
+scene.stopAmbientCameraRotation();
+await scene.moveCamera({
+  phi: 75 * (Math.PI / 180),
+  theta: 30 * (Math.PI / 180),
+  duration: 1,
+});
+await scene.wait(1);
+
+// Reset camera orientation for replay
+scene.setCameraOrientation(75 * (Math.PI / 180), 30 * (Math.PI / 180));
+```
+
+</details>
+
+**Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Circle**](/api/classes/Circle)
+
+---
+
+## Three D Camera Illusion Rotation
+
+Demonstrates the 3D illusion camera rotation that wobbles the camera by oscillating phi sinusoidally while rotating theta continuously. Creates a convincing 3D parallax effect around ThreeDAxes with a circle.
+
+<ThreeDCameraIllusionRotationExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Circle, ThreeDAxes, ThreeDScene } from 'manim-web';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 75 * (Math.PI / 180),
+  theta: 30 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+});
+
+const axes = new ThreeDAxes({
+  xRange: [-6, 6, 1],
+  yRange: [-5, 5, 1],
+  zRange: [-4, 4, 1],
+  axisColor: '#ffffff',
+  tipLength: 0.3,
+  tipRadius: 0.12,
+  shaftRadius: 0.008,
+});
+
+const circle = new Circle({ radius: 1, color: '#FC6255' });
+// Circle points are in Manim x-y plane but VMobject renders them
+// directly in THREE.js coords. Rotate -90° around X to lay flat
+// on the ground plane (THREE.js x-z = Manim x-y).
+circle.rotation.x = -Math.PI / 2;
+
+scene.add(circle, axes);
+
+// Begin 3D illusion camera rotation (theta rotates at 2 rad/s,
+// phi oscillates sinusoidally for a wobbling 3D effect)
+scene.begin3DIllusionCameraRotation(2);
+await scene.wait(Math.PI / 2);
+
+// Stop illusion rotation
+scene.stop3DIllusionCameraRotation();
+
+// Reset camera orientation for replay
+scene.setCameraOrientation(75 * (Math.PI / 180), 30 * (Math.PI / 180));
+```
+
+</details>
+
+**Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Circle**](/api/classes/Circle)
+
+---
+
+## Opening Manim
+
+A multi-part showcase: writes text and a LaTeX equation, transforms the title, creates a NumberPlane grid, and applies a non-linear sine warp using ApplyPointwiseFunction.
+
+<OpeningManimExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Create,
+  FadeIn,
+  FadeOut,
+  Transform,
+  ApplyPointwiseFunction,
+  Text,
+  MathTex,
+  NumberPlane,
+  VGroup,
+  UP,
+  DOWN,
+  UL,
+  BLACK,
+  WHITE,
+} from 'manim-web';
+
+const FONT_URL = 'https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/fonts/KaTeX_Main-Regular.ttf';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+// Part 1: Title and equation (Write title, FadeIn equation from below)
+const title = new Text({
+  text: 'This is some LaTeX',
+  fontSize: 48,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
+const basel = new MathTex({ latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}' });
+await basel.waitForRender?.();
+
+new VGroup(title, basel).arrange(DOWN);
+scene.add(title, basel);
+await scene.play(new FadeIn(title), new FadeIn(basel, { shift: DOWN }));
+await scene.wait(1);
+
+// Part 2: Transform title to UL corner, fade out equation downward
+const transformTitle = new Text({
+  text: 'That was a transform',
+  fontSize: 48,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
+await transformTitle.loadGlyphs();
+transformTitle.toCorner(UL);
+await scene.play(new Transform(title, transformTitle), new FadeOut(basel, { shift: DOWN }));
+await scene.wait(1);
+
+// Part 3: Number plane grid with title
+const grid = new NumberPlane();
+const gridTitle = new Text({
+  text: 'This is a grid',
+  fontSize: 72,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
+await gridTitle.loadGlyphs();
+gridTitle.moveTo(transformTitle);
+
+await scene.play(
+  new FadeOut(title),
+  new FadeIn(gridTitle, { shift: UP }),
+  new Create(grid, { duration: 3, lagRatio: 0.1 }),
+);
+await scene.wait(1);
+
+// Part 4: Non-linear grid transform (sin warp)
+const gridTransformTitle = new Text({
+  text: 'That was a non-linear function\napplied to the grid',
+  fontSize: 48,
+  color: WHITE,
+  fontUrl: FONT_URL,
+});
+await gridTransformTitle.loadGlyphs();
+gridTransformTitle.moveTo(gridTitle, UL);
+grid.prepareForNonlinearTransform();
+await scene.play(
+  new ApplyPointwiseFunction(
+    grid,
+    (p) => {
+      return [p[0] + Math.sin(p[1]), p[1] + Math.sin(p[0]), p[2]];
+    },
+    { duration: 3 },
+  ),
+);
+await scene.wait(1);
+
+// Part 5: Transform grid title to explain what happened
+await scene.play(new Transform(gridTitle, gridTransformTitle));
+await scene.wait(1);
+```
+
+</details>
+
+**Learn More:** [**Text**](/api/classes/Text) · [**MathTex**](/api/classes/MathTex) · [**NumberPlane**](/api/classes/NumberPlane) · [**Write**](/api/classes/Write) · [**Transform**](/api/classes/Transform) · [**ApplyPointwiseFunction**](/api/classes/ApplyPointwiseFunction) · [**Create**](/api/classes/Create)
+
+---
+
+## Export Animation
+
+Demonstrates the scene.export() convenience API. Creates a square, transforms it into a circle, then exports the animation as GIF or WebM with a progress callback.
+
+<ExportAnimationExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Circle,
+  Square,
+  Create,
+  Transform,
+  FadeOut,
+  BLACK,
+  BLUE,
+  GREEN,
+} from 'manim-web';
+
+const container = document.getElementById('container')!;
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: BLACK,
+});
+
+const progressContainer = document.getElementById('progressContainer')!;
+const progressFill = document.getElementById('progressFill')!;
+const progressText = document.getElementById('progressText')!;
+
+function showProgress(progress: number, label: string) {
+  progressContainer.style.display = 'block';
+  progressFill.style.width = `${Math.round(progress * 100)}%`;
+  progressText.textContent = `${label} — ${Math.round(progress * 100)}%`;
+}
+
+function hideProgress() {
+  progressContainer.style.display = 'none';
+  progressFill.style.width = '0%';
+}
+
+function setButtonsDisabled(disabled: boolean) {
+  document
+    .querySelectorAll<HTMLButtonElement>('.controls button')
+    .forEach((btn) => (btn.disabled = disabled));
+}
+
+// Play animation
+document.getElementById('playBtn')!.addEventListener('click', async () => {
+  if (isAnimating) return;
+  isAnimating = true;
+  setButtonsDisabled(true);
+
+  scene.clear();
+  const square = new Square({ sideLength: 2.5, color: BLUE, fillOpacity: 0.5 });
+  const circle = new Circle({ radius: 1.25, color: GREEN, fillOpacity: 0.5 });
+
+  await scene.play(new Create(square));
+  await scene.play(new Transform(square, circle));
+  await scene.play(new FadeOut(square));
+
+  isAnimating = false;
+  setButtonsDisabled(false);
+});
+
+// Export GIF
+document.getElementById('exportGifBtn')!.addEventListener('click', async () => {
+  if (isAnimating) return;
+  isAnimating = true;
+  setButtonsDisabled(true);
+
+  try {
+    await scene.export('animation.gif', {
+      fps: 15,
+      quality: 10,
+      onProgress: (p) => showProgress(p, 'Exporting GIF'),
+    });
+  } catch (err) {
+    console.error('GIF export failed:', err);
+  } finally {
+    hideProgress();
+    isAnimating = false;
+    setButtonsDisabled(false);
+  }
+});
+
+// Export WebM
+document.getElementById('exportWebmBtn')!.addEventListener('click', async () => {
+  if (isAnimating) return;
+  isAnimating = true;
+  setButtonsDisabled(true);
+
+  try {
+    await scene.export('animation.webm', {
+      fps: 30,
+      onProgress: (p) => showProgress(p, 'Exporting WebM'),
+    });
+  } catch (err) {
+    console.error('WebM export failed:', err);
+  } finally {
+    hideProgress();
+    isAnimating = false;
+    setButtonsDisabled(false);
+  }
+});
+
+// Reset
+document.getElementById('resetBtn')!.addEventListener('click', () => {
+  scene.clear();
+});
+```
+
+</details>
+
+**Learn More:** [**Scene**](/api/classes/Scene) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square) · [**Create**](/api/classes/Create) · [**Transform**](/api/classes/Transform) · [**FadeOut**](/api/classes/FadeOut)
