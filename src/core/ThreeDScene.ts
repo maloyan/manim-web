@@ -61,7 +61,7 @@ export class ThreeDScene extends Scene {
    * @param container - DOM element to render into
    * @param options - Scene configuration options
    */
-  constructor(container: HTMLElement, options: ThreeDSceneOptions = {}) {
+  constructor(container: HTMLElement | null, options: ThreeDSceneOptions = {}) {
     super(container, options);
 
     const {
@@ -93,7 +93,7 @@ export class ThreeDScene extends Scene {
 
     // Set up orbit controls
     this._orbitControlsEnabled = enableOrbitControls;
-    if (enableOrbitControls) {
+    if (enableOrbitControls && !this.isHeadless) {
       this._orbitControls = new OrbitControls(this._camera3D.getCamera(), this.getCanvas(), {
         enableDamping: true,
         dampingFactor: 0.05,
@@ -487,6 +487,9 @@ export class ThreeDScene extends Scene {
       this._orbitControls.update();
     }
 
+    // Skip WebGL rendering in headless mode
+    if (this.isHeadless) return;
+
     const threeRenderer = this.renderer.getThreeRenderer();
 
     // Pass 1: 3D scene (clears buffer)
@@ -622,5 +625,12 @@ export class ThreeDScene extends Scene {
       this._orbitControls.dispose();
     }
     super.dispose();
+  }
+
+  /**
+   * Create a headless ThreeDScene for testing without a DOM container.
+   */
+  static createHeadless(options: ThreeDSceneOptions = {}): ThreeDScene {
+    return new ThreeDScene(null, { ...options, headless: true });
   }
 }

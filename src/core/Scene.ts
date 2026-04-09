@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import * as THREE from 'three';
 import { Renderer, RendererOptions } from './Renderer';
+import { NullRenderer } from './NullRenderer';
 import { Camera2D, CameraOptions } from './Camera';
 import { Mobject } from './Mobject';
 import { Animation } from '../animation/Animation';
@@ -58,6 +59,8 @@ export interface SceneOptions {
   autoRender?: boolean;
   /** Background opacity (0 = fully transparent, 1 = fully opaque). Defaults to 1. Not supported when exporting to video or GIF formats. */
   backgroundOpacity?: number;
+  /** Enable headless mode (no WebGL renderer). Useful for testing scene logic without a DOM. */
+  headless?: boolean;
 }
 
 /**
@@ -66,7 +69,7 @@ export interface SceneOptions {
  * Works like Manim's Scene class - add mobjects, play animations.
  */
 export class Scene {
-  private _renderer: Renderer;
+  private _renderer: Renderer | NullRenderer;
   private _camera: Camera2D;
   private _threeScene: THREE.Scene;
   private _mobjects: Set<Mobject>;
@@ -109,7 +112,7 @@ export class Scene {
    * @param container - DOM element to render into
    * @param options - Scene configuration options
    */
-  constructor(container: HTMLElement, options: SceneOptions = {}) {
+  constructor(container: HTMLElement | null, options: SceneOptions = {}) {
     const {
       width,
       height,
@@ -120,6 +123,7 @@ export class Scene {
       frustumCulling = true,
       autoRender = true,
       backgroundOpacity = 1,
+      headless = false,
     } = options;
 
     // Initialize performance options
@@ -132,14 +136,28 @@ export class Scene {
     this._threeScene = new THREE.Scene();
 
     // Create renderer
-    const rendererOptions: RendererOptions = {
-      width,
-      height,
-      backgroundColor,
-      backgroundOpacity,
-      antialias: true,
-    };
-    this._renderer = new Renderer(container, rendererOptions);
+    if (headless) {
+      this._renderer = new NullRenderer({
+        width: width ?? 800,
+        height: height ?? 450,
+        backgroundColor,
+        backgroundOpacity,
+      });
+    } else {
+      if (!container) {
+        throw new Error(
+          'container is required for non-headless Scene. Use { headless: true } to create a scene without a DOM container.',
+        );
+      }
+      const rendererOptions: RendererOptions = {
+        width,
+        height,
+        backgroundColor,
+        backgroundOpacity,
+        antialias: true,
+      };
+      this._renderer = new Renderer(container, rendererOptions);
+    }
 
     // Create camera with Manim-style frame dimensions
     const cameraOptions: CameraOptions = {
@@ -185,8 +203,24 @@ export class Scene {
   /**
    * Get the renderer.
    */
-  get renderer(): Renderer {
+  get renderer(): Renderer | NullRenderer {
     return this._renderer;
+  }
+
+  /**
+   * Whether this scene is running in headless mode (no WebGL renderer).
+   */
+  get isHeadless(): boolean {
+    return this._renderer instanceof NullRenderer;
+  }
+
+  /**
+   * Create a headless Scene for testing without a DOM container.
+   * @param options - Scene configuration options (headless is set automatically)
+   * @returns A new headless Scene instance
+   */
+  static createHeadless(options: SceneOptions = {}): Scene {
+    return new Scene(null, { ...options, headless: true });
   }
 
   /**
