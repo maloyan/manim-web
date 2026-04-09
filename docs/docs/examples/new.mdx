@@ -3,6 +3,8 @@ title: New Features
 sidebar_label: New Features
 ---
 
+import DraggableObjectsExample from '@site/src/components/examples/DraggableObjectsExample';
+import DraggableObjects3DExample from '@site/src/components/examples/DraggableObjects3DExample';
 import MatrixHelpersExample from '@site/src/components/examples/MatrixHelpersExample';
 import ConvexHull3DExample from '@site/src/components/examples/ConvexHull3DExample';
 import TipableVMobjectExample from '@site/src/components/examples/TipableVMobjectExample';
@@ -13,6 +15,84 @@ import MathTexPartExample from '@site/src/components/examples/MathTexPartExample
 import AnimationUtilitiesExample from '@site/src/components/examples/AnimationUtilitiesExample';
 
 Examples showcasing newly implemented features in manim-web.
+
+## Draggable Objects
+
+Make any mobject draggable with mouse and touch support. Supports axis constraints, snap-to-grid, and callbacks. Try dragging the shapes below — the line updates reactively.
+
+<DraggableObjectsExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Circle, Square, Dot, Line, Text, makeDraggable, BLUE, GREEN, RED, YELLOW, WHITE } from 'manim-web';
+
+const circle = new Circle({ radius: 0.5, color: BLUE, fillOpacity: 0.8 });
+circle.moveTo([-2, 1, 0]);
+
+const square = new Square({ sideLength: 0.8, color: GREEN, fillOpacity: 0.8 });
+square.moveTo([2, 1, 0]);
+
+const dot = new Dot({ color: YELLOW, radius: 0.15 });
+dot.moveTo([0, -1, 0]);
+
+// Line updates reactively as objects are dragged
+const line = new Line({ start: circle.getCenter(), end: dot.getCenter() }).setColor(RED);
+line.addUpdater(() => line.become(new Line({ start: circle.getCenter(), end: dot.getCenter() })));
+
+const label = new Text({ text: 'Drag the shapes!', fontSize: 24, color: WHITE });
+label.moveTo([0, 2.5, 0]);
+
+scene.add(circle, square, dot, line, label);
+
+// Free drag
+makeDraggable(circle, scene);
+makeDraggable(dot, scene);
+
+// Constrained to X axis with grid snapping
+makeDraggable(square, scene, { constrainY: [1, 1], snapToGrid: 0.5 });
+```
+
+</details>
+
+---
+
+## Draggable Objects (3D)
+
+Dragging works in 3D scenes too — objects move on a plane facing the camera. You can also orbit the camera (drag the background) and then drag individual objects.
+
+<DraggableObjects3DExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Sphere, Cube, Dot3D, ThreeDAxes, makeDraggable, BLUE, GREEN, YELLOW } from 'manim-web';
+
+// ThreeDScene with orbit controls enabled by default
+const axes = new ThreeDAxes({ xRange: [-4, 4, 1], yRange: [-4, 4, 1], zRange: [-3, 3, 1] });
+
+const sphere = new Sphere({ radius: 0.4, color: BLUE, opacity: 0.8 });
+sphere.moveTo([-2, 0, 0]);
+
+const cube = new Cube({ sideLength: 0.6, color: GREEN, opacity: 0.8 });
+cube.moveTo([2, 0, 0]);
+
+const dot = new Dot3D({ color: YELLOW, radius: 0.2 });
+dot.moveTo([0, 2, 0]);
+
+scene.add(axes, sphere, cube, dot);
+
+// 3D dragging raycasts onto a camera-facing plane at the object's depth
+makeDraggable(sphere, scene);
+makeDraggable(cube, scene);
+makeDraggable(dot, scene);
+```
+
+</details>
+
+---
 
 ## Matrix Helpers
 
