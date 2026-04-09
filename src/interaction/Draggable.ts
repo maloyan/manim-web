@@ -100,6 +100,7 @@ export class Draggable {
     if (this._hitTest(worldPos)) {
       this._startDrag(worldPos);
       e.preventDefault();
+      e.stopPropagation();
     }
   }
 
@@ -124,6 +125,7 @@ export class Draggable {
     if (this._hitTest(worldPos)) {
       this._startDrag(worldPos);
       e.preventDefault();
+      e.stopPropagation();
     }
   }
 
@@ -203,6 +205,12 @@ export class Draggable {
   private _startDrag(worldPos: Vector3Tuple): void {
     this._isDragging = true;
     this._lastPosition = worldPos;
+
+    // Disable orbit controls while dragging so camera doesn't move
+    if (this._scene instanceof ThreeDScene && this._scene.orbitControls) {
+      this._scene.orbitControls.disable();
+    }
+
     this._options.onDragStart?.(this._mobject, worldPos);
   }
 
@@ -242,9 +250,15 @@ export class Draggable {
 
   private _endDrag(): void {
     this._isDragging = false;
+    this._lastPosition = null;
+
+    // Re-enable orbit controls after dragging
+    if (this._scene instanceof ThreeDScene && this._scene.orbitControls) {
+      this._scene.orbitControls.enable();
+    }
+
     const finalPos = this._mobject.getCenter();
     this._options.onDragEnd?.(this._mobject, finalPos);
-    this._lastPosition = null;
   }
 
   /**
