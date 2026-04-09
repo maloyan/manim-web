@@ -6,7 +6,6 @@ import { ThreeDScene } from './ThreeDScene';
 import { ZoomedScene } from './ZoomedScene';
 import { Circle } from '../mobjects/geometry/Circle';
 import { FadeIn } from '../animation/fading/FadeIn';
-import { vi } from 'vitest';
 import { Text } from '../mobjects/text/Text';
 import { Code } from '../mobjects/text/Code';
 import { DecimalNumber } from '../mobjects/text/DecimalNumber';

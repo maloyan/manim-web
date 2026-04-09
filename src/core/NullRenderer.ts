@@ -6,7 +6,7 @@ import { IRenderer } from './Renderer';
  * Drop-in replacement for Renderer that performs no actual rendering.
  * Used when Scene is created with { headless: true } or via Scene.createHeadless().
  *
- * - render(), resize(), dispose() are no-ops
+ * - render() and dispose() are no-ops; resize() updates in-memory dimensions
  * - getCanvas() and getThreeRenderer() throw with descriptive errors
  * - Width, height, colors are stored in memory for scene logic
  */
