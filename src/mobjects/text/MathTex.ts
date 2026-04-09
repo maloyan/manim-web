@@ -418,6 +418,9 @@ export class MathTex extends Mobject {
    *              fall back to MathJax.
    */
   protected async _renderLatex(): Promise<void> {
+    if (typeof document === 'undefined') {
+      return;
+    }
     const useRenderer = this._resolveRenderer();
 
     if (useRenderer === 'mathjax') {

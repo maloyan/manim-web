@@ -323,9 +323,18 @@ export async function renderLatexToSVG(
     svgString = adaptor.outerHTML(node);
 
     // Parse the string into a real SVGElement for downstream use
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svgString, 'image/svg+xml');
-    svgElement = doc.documentElement as unknown as SVGElement;
+    if (typeof DOMParser === 'undefined') {
+      // Headless / no-DOM environment — create a minimal stub SVGElement
+      svgElement = {
+        getAttribute: () => null,
+        setAttribute: () => {},
+        querySelectorAll: () => [],
+      } as unknown as SVGElement;
+    } else {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgString, 'image/svg+xml');
+      svgElement = doc.documentElement as unknown as SVGElement;
+    }
   }
 
   // ------------------------------------------------------------------
