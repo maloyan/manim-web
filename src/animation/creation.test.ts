@@ -47,7 +47,7 @@ describe('Create', () => {
   describe('non-VMobject (opacity fallback)', () => {
     it('begin sets opacity to 0', () => {
       const m = new Mobject();
-      m.setOpacity(1);
+      m.setStrokeOpacity(1);
       const anim = new Create(m);
       anim.begin();
       expect(m.opacity).toBe(0);
@@ -80,8 +80,8 @@ describe('Create', () => {
       const group = new Group();
       const child1 = new Mobject();
       const child2 = new Mobject();
-      child1.setOpacity(1);
-      child2.setOpacity(0); // e.g. background line with opacity 0
+      child1.setStrokeOpacity(1);
+      child2.setStrokeOpacity(0); // e.g. background line with opacity 0
       group.add(child1);
       group.add(child2);
 
@@ -103,8 +103,8 @@ describe('Create', () => {
       const group = new Group();
       const child1 = new Mobject();
       const child2 = new Mobject();
-      child1.setOpacity(1);
-      child2.setOpacity(0.4);
+      child1.setStrokeOpacity(1);
+      child2.setStrokeOpacity(0.4);
       group.add(child1);
       group.add(child2);
 
@@ -238,7 +238,7 @@ describe('Uncreate', () => {
   describe('non-VMobject (opacity fallback)', () => {
     it('interpolate fades opacity from 1 to 0', () => {
       const m = new Mobject();
-      m.setOpacity(1);
+      m.setStrokeOpacity(1);
       const anim = new Uncreate(m);
       anim.begin();
       anim.interpolate(0);
@@ -251,7 +251,7 @@ describe('Uncreate', () => {
 
     it('finish sets opacity to 0', () => {
       const m = new Mobject();
-      m.setOpacity(1);
+      m.setStrokeOpacity(1);
       const anim = new Uncreate(m);
       anim.begin();
       anim.interpolate(0.5);
@@ -296,7 +296,7 @@ describe('Write', () => {
   describe('non-VMobject (opacity fallback)', () => {
     it('begin sets opacity to 0', () => {
       const m = new Mobject();
-      m.setOpacity(1);
+      m.setStrokeOpacity(1);
       const anim = new Write(m);
       anim.begin();
       expect(m.opacity).toBe(0);
@@ -304,7 +304,7 @@ describe('Write', () => {
 
     it('interpolate sets opacity proportional to alpha', () => {
       const m = new Mobject();
-      m.setOpacity(1);
+      m.setStrokeOpacity(1);
       const anim = new Write(m);
       anim.begin();
       anim.interpolate(0.5);
@@ -313,7 +313,7 @@ describe('Write', () => {
 
     it('finish restores opacity', () => {
       const m = new Mobject();
-      m.setOpacity(0.8);
+      m.setStrokeOpacity(0.8);
       const anim = new Write(m);
       anim.begin();
       anim.interpolate(0.5);
@@ -325,7 +325,7 @@ describe('Write', () => {
   describe('reverse mode (opacity fallback)', () => {
     it('reverse starts with full opacity and fades to 0', () => {
       const m = new Mobject();
-      m.setOpacity(1);
+      m.setStrokeOpacity(1);
       const anim = new Write(m, { reverse: true });
       anim.begin();
       // When reverse, begin should set opacity to original (not 0)

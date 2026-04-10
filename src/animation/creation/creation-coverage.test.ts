@@ -114,7 +114,7 @@ function makeParentWithChildren(n: number): Mobject {
   const parent = new Mobject();
   for (let i = 0; i < n; i++) {
     const child = new Mobject();
-    child.setOpacity(1);
+    child.setStrokeOpacity(1);
     parent.add(child);
   }
   return parent;
@@ -167,7 +167,7 @@ describe('DrawBorderThenFill - VMobject without Line2', () => {
 
   it('interpolate does nothing (no dash reveal)', () => {
     const v = makeVMobject();
-    v.setOpacity(0.8);
+    v.setStrokeOpacity(0.8);
     const anim = new DrawBorderThenFill(v);
     anim.begin();
     anim.interpolate(0.5);
@@ -300,9 +300,9 @@ describe('ShowIncreasingSubsets', () => {
   it('finish restores original opacities', () => {
     const parent = new Mobject();
     const c1 = new Mobject();
-    c1.setOpacity(0.5);
+    c1.setStrokeOpacity(0.5);
     const c2 = new Mobject();
-    c2.setOpacity(0.8);
+    c2.setStrokeOpacity(0.8);
     parent.add(c1, c2);
 
     const anim = new ShowIncreasingSubsets(parent);
@@ -399,7 +399,7 @@ describe('Write - VMobject opacity fallback', () => {
 
   it('finish sets opacity to original', () => {
     const v = new VMobject();
-    v.setOpacity(0.8);
+    v.setStrokeOpacity(0.8);
     const anim = new Write(v);
     anim.begin();
     anim.interpolate(0.5);
@@ -461,7 +461,7 @@ describe('Write - setRevealProgress path', () => {
 describe('Write - reverse mode', () => {
   it('starts from original opacity', () => {
     const v = new VMobject(); // empty = opacity fallback
-    v.setOpacity(1);
+    v.setStrokeOpacity(1);
     const anim = new Write(v, { reverse: true });
     anim.begin();
     // reverse=true, VMobject fallback: start at original opacity
@@ -470,7 +470,7 @@ describe('Write - reverse mode', () => {
 
   it('interpolate decreases opacity in reverse', () => {
     const v = new VMobject();
-    v.setOpacity(1);
+    v.setStrokeOpacity(1);
     const anim = new Write(v, { reverse: true });
     anim.begin();
     anim.interpolate(0.5);
@@ -494,7 +494,7 @@ describe('Write - remover mode (opacity)', () => {
 
   it('finish without remover sets opacity to original', () => {
     const v = new VMobject();
-    v.setOpacity(0.9);
+    v.setStrokeOpacity(0.9);
     const anim = new Write(v, { remover: false });
     anim.begin();
     anim.finish();
@@ -521,7 +521,7 @@ describe('Unwrite', () => {
 
   it('begin preserves current opacity', () => {
     const v = new VMobject(); // empty = opacity fallback
-    v.setOpacity(1);
+    v.setStrokeOpacity(1);
     const anim = new Unwrite(v);
     anim.begin();
     expect(v.opacity).toBe(1); // reverse=true starts at original
@@ -846,7 +846,7 @@ describe('Write - plain Mobject fallback', () => {
 
   it('finish restores opacity', () => {
     const m = new Mobject();
-    m.setOpacity(0.7);
+    m.setStrokeOpacity(0.7);
     const anim = new Write(m);
     anim.begin();
     anim.finish();

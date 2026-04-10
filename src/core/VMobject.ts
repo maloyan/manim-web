@@ -651,7 +651,7 @@ export function getNthCurve(vmobject: VMobject, n: number): VMobject {
   curve.setPoints(curvePoints);
 
   curve.setColor(vmobject.color);
-  curve.setOpacity(vmobject.opacity);
+  curve.setStrokeOpacity(vmobject.opacity);
   curve.setStrokeWidth(vmobject.strokeWidth);
   curve.setFillOpacity(vmobject.fillOpacity);
 

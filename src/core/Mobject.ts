@@ -113,7 +113,7 @@ export abstract class Mobject {
   }
 
   set opacity(value: number) {
-    this.setOpacity(value);
+    this.setStrokeOpacity(value);
   }
 
   get style(): MobjectStyle {
@@ -142,7 +142,7 @@ export abstract class Mobject {
     return this;
   }
 
-  setOpacity(opacity: number): this {
+  setStrokeOpacity(opacity: number): this {
     const v = Math.max(0, Math.min(1, opacity));
     if (this._opacity !== v) {
       this._opacity = v;
@@ -185,6 +185,17 @@ export abstract class Mobject {
   set fillColor(color: string) {
     if (this._style.fillColor !== color) {
       this._style.fillColor = color;
+      this._markDirty();
+    }
+  }
+
+  get strokeColor(): string | undefined {
+    return this._style.strokeColor;
+  }
+
+  set strokeColor(color: string) {
+    if (this._style.strokeColor !== color) {
+      this._style.strokeColor = color;
       this._markDirty();
     }
   }

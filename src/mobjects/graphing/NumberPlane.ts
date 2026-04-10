@@ -158,7 +158,7 @@ export class NumberPlane extends Axes {
           color: color!,
           strokeWidth: strokeWidth!,
         });
-        line.setOpacity(this._calculateLineOpacity(roundedX, 0, opacity!));
+        line.setStrokeOpacity(this._calculateLineOpacity(roundedX, 0, opacity!));
         this._backgroundLines.add(line);
       }
     }
@@ -176,7 +176,7 @@ export class NumberPlane extends Axes {
           color: color!,
           strokeWidth: strokeWidth!,
         });
-        line.setOpacity(this._calculateLineOpacity(0, roundedY, opacity!));
+        line.setStrokeOpacity(this._calculateLineOpacity(0, roundedY, opacity!));
         this._backgroundLines.add(line);
       }
     }
@@ -206,7 +206,7 @@ export class NumberPlane extends Axes {
               color: fadedColor!,
               strokeWidth: fadedStrokeWidth!,
             });
-            line.setOpacity(fadedOpacity!);
+            line.setStrokeOpacity(fadedOpacity!);
             this._backgroundLines.add(line);
           }
         }
@@ -227,7 +227,7 @@ export class NumberPlane extends Axes {
               color: fadedColor!,
               strokeWidth: fadedStrokeWidth!,
             });
-            line.setOpacity(fadedOpacity!);
+            line.setStrokeOpacity(fadedOpacity!);
             this._backgroundLines.add(line);
           }
         }

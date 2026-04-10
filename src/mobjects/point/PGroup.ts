@@ -140,10 +140,10 @@ export class PGroup extends Mobject {
    * @param opacity - Opacity value (0-1)
    * @returns this for chaining
    */
-  override setOpacity(opacity: number): this {
-    super.setOpacity(opacity);
+  override setStrokeOpacity(opacity: number): this {
+    super.setStrokeOpacity(opacity);
     for (const child of this.children) {
-      child.setOpacity(opacity);
+      child.setStrokeOpacity(opacity);
     }
     return this;
   }

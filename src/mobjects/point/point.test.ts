@@ -135,11 +135,11 @@ describe('PMobject', () => {
     expect(pts[1].color).toBe('#ff0000');
   });
 
-  it('setOpacity updates opacity of all existing points', () => {
+  it('setStrokeOpacity updates opacity of all existing points', () => {
     const pm = new PMobject({
       points: [{ position: [0, 0, 0] }, { position: [1, 0, 0] }],
     });
-    pm.setOpacity(0.3);
+    pm.setStrokeOpacity(0.3);
     const pts = pm.getPoints();
     expect(pts[0].opacity).toBe(0.3);
     expect(pts[1].opacity).toBe(0.3);
@@ -877,11 +877,11 @@ describe('PGroup', () => {
     expect(p2.getPoints()[0].color).toBe('#00ff00');
   });
 
-  it('setOpacity cascades to all children', () => {
+  it('setStrokeOpacity cascades to all children', () => {
     const p1 = new PMobject({ points: [{ position: [0, 0, 0] }] });
     const p2 = new PMobject({ points: [{ position: [1, 0, 0] }] });
     const g = new PGroup({ pmobjects: [p1, p2] });
-    g.setOpacity(0.5);
+    g.setStrokeOpacity(0.5);
     expect(p1.getPoints()[0].opacity).toBe(0.5);
     expect(p2.getPoints()[0].opacity).toBe(0.5);
   });

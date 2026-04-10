@@ -602,7 +602,7 @@ export class PolarPlane extends Group {
         color: this._gridColor,
         strokeWidth: this._gridStrokeWidth,
       });
-      circle.setOpacity(this._gridOpacity);
+      circle.setStrokeOpacity(this._gridOpacity);
       this._concentricCircles.add(circle);
     }
 
@@ -619,7 +619,7 @@ export class PolarPlane extends Group {
         color: this._gridColor,
         strokeWidth: this._gridStrokeWidth,
       });
-      line.setOpacity(this._gridOpacity);
+      line.setStrokeOpacity(this._gridOpacity);
       this._radialLines.add(line);
     }
   }

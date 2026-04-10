@@ -428,7 +428,7 @@ export class ArrowVectorField extends VectorField {
         tipLength: Math.min(this._tipLength, arrowLength * 0.4),
         tipWidth: Math.min(this._tipLength * 0.6, arrowLength * 0.25),
       });
-      arrow.setOpacity(this._opacity);
+      arrow.setStrokeOpacity(this._opacity);
 
       this.add(arrow);
     }
@@ -886,7 +886,7 @@ export class StreamLines extends VectorField {
       );
 
       streamline.setColor(color);
-      streamline.setOpacity(this._opacity);
+      streamline.setStrokeOpacity(this._opacity);
       streamline.fillOpacity = 0;
 
       // Variable width based on magnitude
@@ -939,7 +939,7 @@ export class StreamLines extends VectorField {
             tipLength: arrowLen * 0.5,
             tipWidth: arrowLen * 0.3,
           });
-          arrow.setOpacity(this._opacity);
+          arrow.setStrokeOpacity(this._opacity);
           this.add(arrow);
 
           lastArrowDist = distanceAccum;
@@ -1098,7 +1098,7 @@ export class StreamLines extends VectorField {
         lower = Math.max(lower, 0);
 
         if (upper <= lower || alpha <= 0) {
-          vmob.setOpacity(0);
+          vmob.setStrokeOpacity(0);
           vmob._markDirty();
           continue;
         }
@@ -1106,13 +1106,13 @@ export class StreamLines extends VectorField {
         // Use pointwise_become_partial equivalent
         const partialPoints = getPartialBezierPoints(origPoints, lower, upper);
         if (partialPoints.length < 4) {
-          vmob.setOpacity(0);
+          vmob.setStrokeOpacity(0);
           vmob._markDirty();
           continue;
         }
 
         vmob.setPoints3D(partialPoints);
-        vmob.setOpacity(this._opacity);
+        vmob.setStrokeOpacity(this._opacity);
         vmob._markDirty();
       }
     };
@@ -1148,7 +1148,7 @@ export class StreamLines extends VectorField {
         }
       }
 
-      vmob.setOpacity(this._opacity);
+      vmob.setStrokeOpacity(this._opacity);
       vmob._markDirty();
     }
 

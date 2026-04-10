@@ -258,7 +258,7 @@ const METHOD_MAP = {
   'set_color': 'setColor',
   'set_fill': 'setFill',
   'set_stroke': 'setStroke',
-  'set_opacity': 'setOpacity',
+  'set_opacity': 'setStrokeOpacity',
   'set_style': 'setStyle',
   'get_center': 'getCenter',
   'get_top': 'getTop',

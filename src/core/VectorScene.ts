@@ -113,7 +113,7 @@ export class VectorScene extends Scene {
         color: isAxis ? axisColor : gridColor,
         strokeWidth: isAxis ? 2 : 1,
       });
-      if (!isAxis) line.setOpacity(0.5);
+      if (!isAxis) line.setStrokeOpacity(0.5);
       grid.add(line);
     }
 
@@ -127,7 +127,7 @@ export class VectorScene extends Scene {
         color: isAxis ? axisColor : gridColor,
         strokeWidth: isAxis ? 2 : 1,
       });
-      if (!isAxis) line.setOpacity(0.5);
+      if (!isAxis) line.setStrokeOpacity(0.5);
       grid.add(line);
     }
 

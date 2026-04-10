@@ -721,7 +721,7 @@ describe('Line', () => {
 });
 
 // ---------------------------------------------------------------------------
-// DashedLine - coverage for setColor, setStrokeWidth, setOpacity, _createCopy
+// DashedLine - coverage for setColor, setStrokeWidth, setStrokeOpacity, _createCopy
 // ---------------------------------------------------------------------------
 describe('DashedLine - propagation and copy', () => {
   it('setColor propagates to all dash children', () => {
@@ -745,9 +745,9 @@ describe('DashedLine - propagation and copy', () => {
     }
   });
 
-  it('setOpacity propagates to all dash children', () => {
+  it('setStrokeOpacity propagates to all dash children', () => {
     const dl = new DashedLine({ start: [0, 0, 0], end: [2, 0, 0] });
-    dl.setOpacity(0.3);
+    dl.setStrokeOpacity(0.3);
     expect(dl.opacity).toBeCloseTo(0.3, 10);
     for (const dash of dl.getDashes()) {
       expect(dash.opacity).toBeCloseTo(0.3, 10);
@@ -766,9 +766,9 @@ describe('DashedLine - propagation and copy', () => {
     expect(ret).toBe(dl);
   });
 
-  it('setOpacity returns this for chaining', () => {
+  it('setStrokeOpacity returns this for chaining', () => {
     const dl = new DashedLine();
-    const ret = dl.setOpacity(0.5);
+    const ret = dl.setStrokeOpacity(0.5);
     expect(ret).toBe(dl);
   });
 

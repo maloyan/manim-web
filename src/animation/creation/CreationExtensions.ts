@@ -112,7 +112,7 @@ export class ShowIncreasingSubsets extends Animation {
     this._originalOpacities = this._submobjects.map((m) => m.opacity);
 
     // Hide all submobjects initially
-    this._submobjects.forEach((m) => m.setOpacity(0));
+    this._submobjects.forEach((m) => m.setStrokeOpacity(0));
   }
 
   interpolate(alpha: number): void {
@@ -120,20 +120,20 @@ export class ShowIncreasingSubsets extends Animation {
 
     for (let i = 0; i < this._submobjects.length; i++) {
       if (i < numToShow) {
-        this._submobjects[i].setOpacity(this._originalOpacities[i]);
+        this._submobjects[i].setStrokeOpacity(this._originalOpacities[i]);
       } else if (i === numToShow && alpha < 1) {
         // Partially show the current one
         const localAlpha = alpha * this._submobjects.length - numToShow;
-        this._submobjects[i].setOpacity(this._originalOpacities[i] * localAlpha);
+        this._submobjects[i].setStrokeOpacity(this._originalOpacities[i] * localAlpha);
       } else {
-        this._submobjects[i].setOpacity(0);
+        this._submobjects[i].setStrokeOpacity(0);
       }
     }
   }
 
   override finish(): void {
     // Show all submobjects
-    this._submobjects.forEach((m, i) => m.setOpacity(this._originalOpacities[i]));
+    this._submobjects.forEach((m, i) => m.setStrokeOpacity(this._originalOpacities[i]));
     super.finish();
   }
 }
@@ -222,7 +222,7 @@ export class ShowPartial extends Animation {
       });
     } else {
       // For non-VMobjects, use opacity
-      this.mobject.setOpacity(alpha);
+      this.mobject.setStrokeOpacity(alpha);
     }
   }
 
@@ -273,7 +273,7 @@ export class ShowSubmobjectsOneByOne extends Animation {
     this._originalOpacities = this._submobjects.map((m) => m.opacity);
 
     // Hide all submobjects initially
-    this._submobjects.forEach((m) => m.setOpacity(0));
+    this._submobjects.forEach((m) => m.setStrokeOpacity(0));
     this._currentIndex = -1;
   }
 
@@ -286,13 +286,13 @@ export class ShowSubmobjectsOneByOne extends Animation {
     if (newIndex !== this._currentIndex) {
       // Hide previous
       if (this._currentIndex >= 0 && this._currentIndex < this._submobjects.length) {
-        this._submobjects[this._currentIndex].setOpacity(0);
+        this._submobjects[this._currentIndex].setStrokeOpacity(0);
       }
 
       // Show current
       this._currentIndex = newIndex;
       if (this._currentIndex >= 0 && this._currentIndex < this._submobjects.length) {
-        this._submobjects[this._currentIndex].setOpacity(
+        this._submobjects[this._currentIndex].setStrokeOpacity(
           this._originalOpacities[this._currentIndex],
         );
       }
@@ -303,9 +303,9 @@ export class ShowSubmobjectsOneByOne extends Animation {
     // Show the last one (or restore all if that's the intended behavior)
     this._submobjects.forEach((m, i) => {
       if (i === this._submobjects.length - 1) {
-        m.setOpacity(this._originalOpacities[i]);
+        m.setStrokeOpacity(this._originalOpacities[i]);
       } else {
-        m.setOpacity(0);
+        m.setStrokeOpacity(0);
       }
     });
     super.finish();

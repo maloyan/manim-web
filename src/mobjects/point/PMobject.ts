@@ -187,8 +187,8 @@ export class PMobject extends Mobject {
    * @param opacity - Opacity value (0-1)
    * @returns this for chaining
    */
-  override setOpacity(opacity: number): this {
-    super.setOpacity(opacity);
+  override setStrokeOpacity(opacity: number): this {
+    super.setStrokeOpacity(opacity);
     for (const point of this._points) {
       point.opacity = opacity;
     }

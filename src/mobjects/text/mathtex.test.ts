@@ -296,18 +296,18 @@ describe('MathTex', () => {
   });
 
   // -----------------------------------------------------------
-  // setOpacity (multi-part propagation)
+  // setStrokeOpacity (multi-part propagation)
   // -----------------------------------------------------------
-  describe('setOpacity', () => {
+  describe('setStrokeOpacity', () => {
     it('should return this for chaining', () => {
       const tex = new MathTex({ latex: 'a' });
-      const result = tex.setOpacity(0.5);
+      const result = tex.setStrokeOpacity(0.5);
       expect(result).toBe(tex);
     });
 
     it('should propagate opacity to multi-part children', () => {
       const tex = new MathTex({ latex: ['a', 'b'] });
-      tex.setOpacity(0.3);
+      tex.setStrokeOpacity(0.3);
       // Children should also have updated opacity
       const partA = tex.getPart(0);
       const partB = tex.getPart(1);
@@ -506,7 +506,7 @@ describe('MathTex', () => {
 
     it('should have correct mesh material with opacity and color', () => {
       const tex = new MathTex({ latex: 'y', color: '#ff0000' });
-      tex.setOpacity(0.5);
+      tex.setStrokeOpacity(0.5);
       const obj = tex.getThreeObject();
       const mesh = obj.children.find((c) => c.type === 'Mesh') as THREE.Mesh;
       expect(mesh).toBeDefined();
@@ -532,7 +532,7 @@ describe('MathTex', () => {
       const obj = tex.getThreeObject();
       const mesh = obj.children.find((c) => c.type === 'Mesh') as THREE.Mesh;
 
-      tex.setOpacity(0.3);
+      tex.setStrokeOpacity(0.3);
       tex._syncToThree();
 
       const material = mesh.material as THREE.MeshBasicMaterial;
