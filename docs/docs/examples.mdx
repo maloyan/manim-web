@@ -5,6 +5,7 @@ sidebar_label: Examples
 
 import PlayerExample from '@site/src/components/examples/PlayerExample';
 import ApplyMatrixArrowsExample from '@site/src/components/examples/ApplyMatrixArrowsExample';
+import ApplyMatrixMethodExample from '@site/src/components/examples/ApplyMatrixMethodExample';
 import ArgMinExample from '@site/src/components/examples/ArgMinExample';
 import BooleanOperationsExample from '@site/src/components/examples/BooleanOperationsExample';
 import BraceAnnotationExample from '@site/src/components/examples/BraceAnnotationExample';
@@ -1073,6 +1074,52 @@ await scene.wait(2);
 </details>
 
 **Learn More:** [**Arrow**](/api/classes/Arrow) · [**NumberPlane**](/api/classes/NumberPlane) · [**ApplyMatrix**](/api/classes/ApplyMatrix)
+
+---
+
+## Apply Matrix Method
+
+Demonstrates the applyMatrix method on Mobject for instant matrix transformations. Shows shearing, rotation, and scaling with aboutEdge — all applied directly without animation.
+
+<ApplyMatrixMethodExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Square,
+  applyMatrix,
+  BLUE,
+  YELLOW,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+
+const square = new Square({ sideLength: 2, color: BLUE, fillOpacity: 0.5 });
+scene.add(square);
+await scene.wait(1);
+
+// Animate the shear transformation
+await scene.play(
+  applyMatrix(square, [
+    [1, 0.5, 0],
+    [0, 1, 0],
+    [0, 0, 1],
+  ], { duration: 2 }),
+);
+
+await scene.wait(2);
+```
+
+</details>
+
+**Learn More:** [**Square**](/api/classes/Square) · [**Circle**](/api/classes/Circle) · [**FadeIn**](/api/classes/FadeIn)
 
 ---
 
@@ -2198,10 +2245,7 @@ const p2: [number, number, number] = [0, 1.5, 2];
 const line1 = new Line3D({ start: origin, end: p1, color: YELLOW });
 const line2 = new Line3D({ start: origin, end: p2, color: GREEN });
 
-const angle = new Angle(
-  { points: [p1, origin, p2] },
-  { radius: 0.8, color: WHITE },
-);
+const angle = new Angle({ points: [p1, origin, p2] }, { radius: 0.8, color: WHITE });
 
 scene.add(axes, line1, line2, angle);
 await scene.wait(Infinity);
