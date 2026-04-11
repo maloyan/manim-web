@@ -9,6 +9,7 @@ import ThreeDLightSourcePositionExample from '@site/src/components/examples/Thre
 import ThreeDSurfacePlotExample from '@site/src/components/examples/ThreeDSurfacePlotExample';
 import ThreeDCameraRotationExample from '@site/src/components/examples/ThreeDCameraRotationExample';
 import ThreeDCameraIllusionRotationExample from '@site/src/components/examples/ThreeDCameraIllusionRotationExample';
+import ThreeDAngleExample from '@site/src/components/examples/ThreeDAngleExample';
 
 3D scene examples with camera controls, lighting, and surfaces.
 
@@ -363,3 +364,56 @@ scene.setCameraOrientation(75 * (Math.PI / 180), 30 * (Math.PI / 180));
 </details>
 
 **Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Circle**](/api/classes/Circle)
+
+## Three D Angle
+
+Displays an Angle arc between two Line3D objects in a 3D scene. The arc is drawn in the plane spanned by the two lines, not restricted to the XY plane. Orbit controls are enabled so you can verify the arc lies in the correct plane.
+
+<ThreeDAngleExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Angle, Line3D, ThreeDAxes, ThreeDScene, WHITE, YELLOW, GREEN } from 'manim-web';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 70 * (Math.PI / 180),
+  theta: -45 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+  enableOrbitControls: true,
+});
+
+const axes = new ThreeDAxes({
+  xRange: [-4, 4, 1],
+  yRange: [-4, 4, 1],
+  zRange: [-3, 3, 1],
+  axisColor: '#ffffff',
+  tipLength: 0.3,
+  tipRadius: 0.12,
+  shaftRadius: 0.008,
+});
+
+const origin: [number, number, number] = [0, 0, 0];
+const p1: [number, number, number] = [2, 0, 0];
+const p2: [number, number, number] = [0, 1.5, 2];
+
+const line1 = new Line3D({ start: origin, end: p1, color: YELLOW });
+const line2 = new Line3D({ start: origin, end: p2, color: GREEN });
+
+const angle = new Angle(
+  { points: [p1, origin, p2] },
+  { radius: 0.8, color: WHITE },
+);
+
+scene.add(axes, line1, line2, angle);
+await scene.wait(Infinity);
+```
+
+</details>
+
+**Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Line3D**](/api/classes/Line3D) · [**Angle**](/api/classes/Angle)
