@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import * as THREE from 'three';
 import { type Vector3Tuple, type MobjectStyle, UP, DOWN, LEFT, RIGHT } from './MobjectTypes';
 import {
@@ -15,6 +16,7 @@ import {
   applyFunctionImpl,
   applyMatrixImpl,
   prepareForNonlinearTransformImpl,
+  resolveAboutPoint,
 } from './MobjectState';
 // AnimateProxy registers itself here to break the circular dependency:
 // Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject
@@ -229,13 +231,21 @@ export abstract class Mobject {
   }
 
   /**
-   * Rotate the mobject around an axis.
-   * Delegates to rotateMobject for the heavy lifting.
+   * Rotate the mobject by angle around an axis.
+   * Accepts aboutPoint or aboutEdge to specify the rotation center.
    */
   rotate(
     angle: number,
-    axisOrOptions?: Vector3Tuple | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple },
+    axisOrOptions?:
+      | Vector3Tuple
+      | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
   ): this {
+    if (axisOrOptions && !Array.isArray(axisOrOptions)) {
+      const resolved = resolveAboutPoint(this, axisOrOptions);
+      if (resolved) {
+        axisOrOptions = { axis: axisOrOptions.axis, aboutPoint: resolved };
+      }
+    }
     rotateMobject(this, angle, axisOrOptions);
     return this;
   }
@@ -244,7 +254,25 @@ export abstract class Mobject {
     return this.rotate(angle, { axis, aboutPoint: [0, 0, 0] });
   }
 
-  flip(axis: Vector3Tuple = [1, 0, 0]): this {
+  flip(
+    axis: Vector3Tuple = [1, 0, 0],
+    options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
+  ): this {
+    const aboutPt = resolveAboutPoint(this, options);
+    if (aboutPt) {
+      applyFunctionImpl(
+        this,
+        (p) => {
+          return [
+            axis[0] !== 0 ? -p[0] : p[0],
+            axis[1] !== 0 ? -p[1] : p[1],
+            axis[2] !== 0 ? -p[2] : p[2],
+          ];
+        },
+        { aboutPoint: aboutPt },
+      );
+      return this;
+    }
     if (axis[0] !== 0) this.scaleVector.x *= -1;
     if (axis[1] !== 0) this.scaleVector.y *= -1;
     if (axis[2] !== 0) this.scaleVector.z *= -1;
@@ -252,7 +280,22 @@ export abstract class Mobject {
     return this;
   }
 
-  scale(factor: number | Vector3Tuple): this {
+  scale(
+    factor: number | Vector3Tuple,
+    options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
+  ): this {
+    const aboutPt = resolveAboutPoint(this, options);
+    if (aboutPt) {
+      const f = typeof factor === 'number' ? [factor, factor, factor] : factor;
+      applyFunctionImpl(
+        this,
+        (p) => {
+          return [p[0] * f[0], p[1] * f[1], p[2] * (f[2] === 0 ? 1 : f[2])];
+        },
+        { aboutPoint: aboutPt },
+      );
+      return this;
+    }
     if (typeof factor === 'number') {
       this.scaleVector.multiplyScalar(factor);
     } else {
@@ -262,6 +305,23 @@ export abstract class Mobject {
     }
     this._markDirty();
     return this;
+  }
+
+  stretch(
+    factor: number,
+    dim: number,
+    options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
+  ): this {
+    if (dim < 0 || dim > 2 || !Number.isInteger(dim)) {
+      throw new Error(`stretch dim must be 0, 1, or 2, got ${dim}`);
+    }
+    const scaleFactors: Vector3Tuple = [1, 1, 1];
+    scaleFactors[dim] = factor;
+    // Always scale about a point so the underlying points are modified
+    // (non-uniform scaling via scaleVector would not affect getPoints()).
+    const opts =
+      options?.aboutPoint || options?.aboutEdge ? options : { aboutPoint: this.getCenter() };
+    return this.scale(scaleFactors, opts);
   }
 
   // ── Hierarchy ────────────────────────────────────────────────────
@@ -544,8 +604,11 @@ export abstract class Mobject {
 
   // ── Point-wise Transforms ────────────────────────────────────────
 
-  applyFunction(fn: (point: number[]) => number[]): this {
-    applyFunctionImpl(this, fn);
+  applyFunction(
+    fn: (point: number[]) => number[],
+    options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
+  ): this {
+    applyFunctionImpl(this, fn, options);
     return this;
   }
 

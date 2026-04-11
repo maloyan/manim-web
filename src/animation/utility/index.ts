@@ -12,6 +12,7 @@ import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { linear } from '../../rate-functions';
+import { resolveAboutPoint } from '../../core/MobjectState';
 
 // ============================================================================
 // Add Animation
@@ -149,6 +150,8 @@ export interface RotatingOptions extends AnimationOptions {
   axis?: Vector3Tuple;
   /** Point to rotate about. Default: mobject center */
   aboutPoint?: Vector3Tuple;
+  /** Edge to rotate about, resolved via bounding box. Mutually exclusive with aboutPoint. */
+  aboutEdge?: Vector3Tuple;
 }
 
 /**
@@ -185,7 +188,8 @@ export class Rotating extends Animation {
     });
     this.angle = options.angle ?? 2 * Math.PI; // Default: TAU (full revolution)
     this.axis = options.axis ?? [0, 0, 1];
-    this.aboutPoint = options.aboutPoint ?? null;
+    const resolved = resolveAboutPoint(mobject, options);
+    this.aboutPoint = resolved ?? null;
   }
 
   /**

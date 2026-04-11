@@ -125,10 +125,95 @@ export function replaceMobjectImpl(mob: MobjectLike, target: MobjectLike, stretc
 }
 
 /**
+ * Compute bounding box from raw control points of all family members.
+ * Falls back to mob.getCenter()/getBoundingBox() when no points are available.
+ */
+function pointsBoundingBox(mob: MobjectLike): {
+  center: Vector3Tuple;
+  width: number;
+  height: number;
+  depth: number;
+} {
+  let minX = Infinity,
+    minY = Infinity,
+    minZ = Infinity;
+  let maxX = -Infinity,
+    maxY = -Infinity,
+    maxZ = -Infinity;
+  let hasPoints = false;
+
+  for (const m of mob.getFamily()) {
+    const asAny = m as unknown as { getPoints?: () => number[][] };
+    if (typeof asAny.getPoints === 'function') {
+      for (const p of asAny.getPoints()) {
+        hasPoints = true;
+        if (p[0] < minX) minX = p[0];
+        if (p[0] > maxX) maxX = p[0];
+        if (p[1] < minY) minY = p[1];
+        if (p[1] > maxY) maxY = p[1];
+        if (p[2] < minZ) minZ = p[2];
+        if (p[2] > maxZ) maxZ = p[2];
+      }
+    }
+  }
+
+  if (!hasPoints) {
+    const center = mob.getCenter();
+    const bounds = mob.getBoundingBox();
+    return { center, ...bounds };
+  }
+
+  return {
+    center: [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2],
+    width: maxX - minX,
+    height: maxY - minY,
+    depth: maxZ - minZ,
+  };
+}
+
+/**
+ * Resolve aboutPoint from options, converting aboutEdge to an actual point
+ * using the mobject's bounding box when needed.
+ */
+export function resolveAboutPoint(
+  mob: MobjectLike,
+  options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
+): Vector3Tuple | undefined {
+  if (options?.aboutPoint && options?.aboutEdge) {
+    throw new Error('Cannot specify both aboutPoint and aboutEdge');
+  }
+  if (options?.aboutPoint) return options.aboutPoint;
+  if (options?.aboutEdge) {
+    const bb = pointsBoundingBox(mob);
+    return [
+      bb.center[0] + (Math.sign(options.aboutEdge[0]) * bb.width) / 2,
+      bb.center[1] + (Math.sign(options.aboutEdge[1]) * bb.height) / 2,
+      bb.center[2] + (Math.sign(options.aboutEdge[2]) * bb.depth) / 2,
+    ];
+  }
+  return undefined;
+}
+
+/**
  * Apply a point-wise function to every VMobject descendant's control points.
+ * When aboutPoint or aboutEdge is provided, points are translated so the anchor
+ * is at the origin before applying fn, then translated back.
  * Uses duck-type check for getPoints/setPoints to avoid circular imports.
  */
-export function applyFunctionImpl(mob: MobjectLike, fn: (point: number[]) => number[]): void {
+export function applyFunctionImpl(
+  mob: MobjectLike,
+  fn: (point: number[]) => number[],
+  options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
+): void {
+  const aboutPt = resolveAboutPoint(mob, options);
+  const wrappedFn = aboutPt
+    ? (p: number[]) => {
+        const translated = [p[0] - aboutPt[0], p[1] - aboutPt[1], p[2] - aboutPt[2]];
+        const result = fn(translated);
+        return [result[0] + aboutPt[0], result[1] + aboutPt[1], result[2] + aboutPt[2]];
+      }
+    : fn;
+
   for (const m of mob.getFamily()) {
     const asAny = m as unknown as {
       getPoints?: () => number[][];
@@ -137,7 +222,7 @@ export function applyFunctionImpl(mob: MobjectLike, fn: (point: number[]) => num
     if (typeof asAny.getPoints === 'function' && typeof asAny.setPoints === 'function') {
       const pts = asAny.getPoints();
       if (pts.length > 0) {
-        asAny.setPoints(pts.map((p) => fn([...p])));
+        asAny.setPoints(pts.map((p) => wrappedFn([...p])));
       }
     }
   }
@@ -152,21 +237,10 @@ export function applyMatrixImpl(
   matrix: number[][],
   options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
 ): void {
-  let aboutPoint: Vector3Tuple;
-  if (options?.aboutPoint) {
-    aboutPoint = options.aboutPoint;
-  } else if (options?.aboutEdge) {
-    const center = mob.getCenter();
-    const bounds = mob.getBoundingBox();
-    aboutPoint = [
-      center[0] + (Math.sign(options.aboutEdge[0]) * bounds.width) / 2,
-      center[1] + (Math.sign(options.aboutEdge[1]) * bounds.height) / 2,
-      center[2] + (Math.sign(options.aboutEdge[2]) * bounds.depth) / 2,
-    ];
-  } else {
-    aboutPoint = [0, 0, 0];
-  }
+  const aboutPoint: Vector3Tuple = resolveAboutPoint(mob, options) ?? [0, 0, 0];
 
+  // aboutPoint is baked into the transform function — do NOT pass options
+  // to applyFunctionImpl, or the translation would be applied twice.
   applyFunctionImpl(mob, (point) => transformPointByMatrix(point, matrix, aboutPoint));
 }
 
