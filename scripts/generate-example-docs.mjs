@@ -28,7 +28,7 @@ const CATEGORIES = {
   'Basic Concepts': ['manim_ce_logo', 'brace_annotation', 'vector_arrow', 'boolean_operations', 'mathtex_svg'],
   'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace', 'sine_curve_unit_circle', 'apply_matrix_arrows', 'rate_functions_comparison', 'easing_functions_showcase'],
   'Plotting': ['sin_cos_plot', 'arg_min', 'graph_area_plot', 'polygon_on_axes', 'heat_diagram_plot'],
-  'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation'],
+  'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'fixed_orientation_mobjects', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation'],
   'Advanced Projects': ['opening_manim', 'export_animation'],
 };
 
@@ -163,6 +163,11 @@ const EXAMPLE_META = {
   fixed_in_frame_mobject_test: {
     description:
       'Demonstrates how to pin 2D text to the screen while the 3D camera is rotated, using addFixedInFrameMobjects. The text stays in the upper-left corner as a HUD overlay on top of ThreeDAxes.',
+    learnMore: ['ThreeDScene', 'ThreeDAxes', 'Text'],
+  },
+  fixed_orientation_mobjects: {
+    description:
+      'Demonstrates how to keep labels readable in a 3D scene using addFixedOrientationMobjects. Unlike fixed-in-frame (HUD), these labels stay at their 3D world position but always face the camera as it orbits.',
     learnMore: ['ThreeDScene', 'ThreeDAxes', 'Text'],
   },
   three_d_light_source_position: {
