@@ -36,6 +36,8 @@ export interface PlayerOptions extends SceneOptions {
   autoPlay?: boolean;
   /** Loop playback. Default false. */
   loop?: boolean;
+  /** Slides mode: arrows play/pause at segment boundaries like a presentation. Default false. */
+  slidesMode?: boolean;
 }
 
 /**
@@ -138,6 +140,8 @@ export class Player {
   private _container: HTMLElement;
   private _loop: boolean;
   private _autoPlay: boolean;
+  private _slidesMode: boolean;
+  private _slidesTargetSegmentIndex: number = -1;
   private _origWidth: number = 0;
   private _origHeight: number = 0;
   private _onFullscreenChange: () => void;
@@ -146,6 +150,7 @@ export class Player {
     this._container = container;
     this._loop = options.loop ?? false;
     this._autoPlay = options.autoPlay ?? false;
+    this._slidesMode = options.slidesMode ?? false;
 
     // Create the underlying scene
     this._scene = new Scene(container, options);
@@ -257,6 +262,12 @@ export class Player {
     this._isPlaying = true;
     this._masterTimeline.play();
     this._ui.setPlaying(true);
+    if (this._slidesMode && this._slidesTargetSegmentIndex < 0) {
+      const current = this._masterTimeline.getCurrentSegment();
+      if (current) {
+        this._slidesTargetSegmentIndex = current.index;
+      }
+    }
     this._startLoop();
   }
 
@@ -284,8 +295,19 @@ export class Player {
     this._ui.updateTime(this._masterTimeline.getCurrentTime(), this._masterTimeline.getDuration());
   }
 
-  /** Jump to the next segment. Pauses playback (YouTube-style). */
+  /** Jump to the next segment. In slidesMode, plays current segment instead. */
   nextSegment(): void {
+    if (this._slidesMode) {
+      const current = this._masterTimeline.getCurrentSegment();
+      if (!current) return;
+      const nextIdx = current.index + 1;
+      // If already at last segment and past its end, do nothing
+      if (nextIdx >= this._masterTimeline.segmentCount && this._masterTimeline.isFinished()) return;
+      // Set the target: pause when we reach the end of the current segment
+      this._slidesTargetSegmentIndex = current.index;
+      if (!this._isPlaying) this.play();
+      return;
+    }
     if (this._isPlaying) this.pause();
     const seg = this._masterTimeline.nextSegment();
     if (seg) {
@@ -297,9 +319,10 @@ export class Player {
     }
   }
 
-  /** Jump to the previous segment. Pauses playback (YouTube-style). */
+  /** Jump to the previous segment. Pauses playback. */
   prevSegment(): void {
     if (this._isPlaying) this.pause();
+    this._slidesTargetSegmentIndex = -1;
     const prev = this._masterTimeline.prevSegment();
     if (prev) {
       this._scene.render();
@@ -400,6 +423,26 @@ export class Player {
         this._masterTimeline.getCurrentTime(),
         this._masterTimeline.getDuration(),
       );
+
+      // In slides mode, auto-pause at the target segment boundary
+      if (this._slidesMode && this._slidesTargetSegmentIndex >= 0) {
+        const segments = this._masterTimeline.getSegments();
+        const targetSeg = segments[this._slidesTargetSegmentIndex];
+        if (targetSeg && this._masterTimeline.getCurrentTime() >= targetSeg.endTime) {
+          this._masterTimeline.seek(targetSeg.endTime);
+          this._scene.render();
+          this._ui.updateTime(
+            this._masterTimeline.getCurrentTime(),
+            this._masterTimeline.getDuration(),
+          );
+          this._slidesTargetSegmentIndex = -1;
+          this._isPlaying = false;
+          this._masterTimeline.pause();
+          this._ui.setPlaying(false);
+          this._stopLoop();
+          return;
+        }
+      }
 
       // Check if finished
       if (this._masterTimeline.isFinished()) {

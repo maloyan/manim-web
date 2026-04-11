@@ -354,6 +354,80 @@ describe('Player', () => {
     expect(player.isPlaying).toBe(false);
   });
 
+  // ---- slidesMode option ----
+
+  it('accepts slidesMode option', () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    expect((p as unknown as { _slidesMode: boolean })._slidesMode).toBe(true);
+    p.dispose();
+    c.remove();
+    const result = createPlayer();
+    player = result.player;
+    container = result.container;
+  });
+
+  it('slidesMode defaults to false', () => {
+    expect((player as unknown as { _slidesMode: boolean })._slidesMode).toBe(false);
+  });
+
+  it('nextSegment in slidesMode plays from current position instead of jumping', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+      await scene.wait(1);
+      await scene.wait(1);
+    });
+
+    // In slides mode, nextSegment should start playing (not jump)
+    player.nextSegment();
+    expect(player.isPlaying).toBe(true);
+    // Should still be at 0 (playing, not jumped)
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0);
+  });
+
+  it('nextSegment in slidesMode does nothing at end of timeline', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+    });
+
+    // Seek to end
+    player.seek(1);
+    player.nextSegment();
+    expect(player.isPlaying).toBe(false);
+  });
+
+  it('prevSegment in slidesMode seeks to previous segment and pauses', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+      await scene.wait(1);
+    });
+
+    // Seek 0.8s into second segment (>0.5 threshold -> goes to start of current)
+    player.seek(1.8);
+    player.prevSegment();
+    expect(player.isPlaying).toBe(false);
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
+  });
+
   // ---- loop option ----
 
   it('accepts loop option without error', () => {
@@ -565,6 +639,45 @@ describe('Player _startLoop render loop', () => {
     flushRaf(20);
 
     expect(mockMob.update).toHaveBeenCalled();
+  });
+
+  it('_startLoop auto-pauses at segment boundary in slidesMode', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(0.5);
+      await scene.wait(0.5);
+    });
+
+    player.play();
+
+    // Flush past the first segment boundary (500ms + buffer)
+    flushRaf(600);
+
+    // In slides mode, should auto-pause at the segment boundary
+    expect(player.isPlaying).toBe(false);
+    // Time should be clamped to the end of the first segment
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.5);
+  });
+
+  it('_startLoop does NOT auto-pause at segment boundary without slidesMode', async () => {
+    await player.sequence(async (scene) => {
+      await scene.wait(0.5);
+      await scene.wait(0.5);
+    });
+
+    player.play();
+
+    // Flush past the first segment boundary
+    flushRaf(600);
+
+    // Without slides mode, should keep playing (or finish naturally)
+    // The timeline total is 1s, 600ms elapsed means it's still going
+    expect(player.isPlaying).toBe(true);
   });
 
   it('_startLoop applies playback rate to dt', async () => {
