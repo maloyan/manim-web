@@ -1,5 +1,6 @@
-import type { MobjectLike, MobjectStyle } from './MobjectTypes';
+import type { MobjectLike, MobjectStyle, Vector3Tuple } from './MobjectTypes';
 import { isVMobjectLike } from './MobjectTypes';
+import { transformPointByMatrix } from '../utils/math';
 
 /** Helper to access protected/private members on MobjectLike at runtime. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -140,6 +141,33 @@ export function applyFunctionImpl(mob: MobjectLike, fn: (point: number[]) => num
       }
     }
   }
+}
+
+/**
+ * Apply a transformation matrix to every VMobject descendant's control points.
+ * Supports 3x3 and 4x4 matrices, with optional aboutPoint/aboutEdge.
+ */
+export function applyMatrixImpl(
+  mob: MobjectLike,
+  matrix: number[][],
+  options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
+): void {
+  let aboutPoint: Vector3Tuple;
+  if (options?.aboutPoint) {
+    aboutPoint = options.aboutPoint;
+  } else if (options?.aboutEdge) {
+    const center = mob.getCenter();
+    const bounds = mob.getBoundingBox();
+    aboutPoint = [
+      center[0] + (Math.sign(options.aboutEdge[0]) * bounds.width) / 2,
+      center[1] + (Math.sign(options.aboutEdge[1]) * bounds.height) / 2,
+      center[2] + (Math.sign(options.aboutEdge[2]) * bounds.depth) / 2,
+    ];
+  } else {
+    aboutPoint = [0, 0, 0];
+  }
+
+  applyFunctionImpl(mob, (point) => transformPointByMatrix(point, matrix, aboutPoint));
 }
 
 /**

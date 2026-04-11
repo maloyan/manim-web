@@ -89,6 +89,40 @@ export function pointToCoords(
  * The z-component uses nullish coalescing (p[2] ?? 0) so that 2D points
  * (without an explicit z) are handled safely.
  */
+/**
+ * Apply a 3x3 or 4x4 transformation matrix to a single point,
+ * relative to an aboutPoint (defaults to origin).
+ *
+ * For 4x4 matrices, performs perspective division by w.
+ * Returns the original point unchanged if the matrix dimensions are invalid.
+ */
+export function transformPointByMatrix(
+  point: number[],
+  matrix: number[][],
+  aboutPoint: number[] = [0, 0, 0],
+): number[] {
+  const x = point[0] - aboutPoint[0];
+  const y = point[1] - aboutPoint[1];
+  const z = point[2] - aboutPoint[2];
+
+  let nx: number, ny: number, nz: number;
+
+  if (matrix.length === 3 && matrix[0].length === 3) {
+    nx = matrix[0][0] * x + matrix[0][1] * y + matrix[0][2] * z;
+    ny = matrix[1][0] * x + matrix[1][1] * y + matrix[1][2] * z;
+    nz = matrix[2][0] * x + matrix[2][1] * y + matrix[2][2] * z;
+  } else if (matrix.length === 4 && matrix[0].length === 4) {
+    const w = matrix[3][0] * x + matrix[3][1] * y + matrix[3][2] * z + matrix[3][3];
+    nx = (matrix[0][0] * x + matrix[0][1] * y + matrix[0][2] * z + matrix[0][3]) / w;
+    ny = (matrix[1][0] * x + matrix[1][1] * y + matrix[1][2] * z + matrix[1][3]) / w;
+    nz = (matrix[2][0] * x + matrix[2][1] * y + matrix[2][2] * z + matrix[2][3]) / w;
+  } else {
+    return point;
+  }
+
+  return [nx + aboutPoint[0], ny + aboutPoint[1], nz + aboutPoint[2]];
+}
+
 export function evalCubicBezier(
   p0: number[],
   p1: number[],

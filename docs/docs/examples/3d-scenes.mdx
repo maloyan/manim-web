@@ -4,10 +4,12 @@ sidebar_label: 3D Scenes
 ---
 
 import FixedInFrameMobjectTestExample from '@site/src/components/examples/FixedInFrameMobjectTestExample';
+import FixedOrientationMobjectsExample from '@site/src/components/examples/FixedOrientationMobjectsExample';
 import ThreeDLightSourcePositionExample from '@site/src/components/examples/ThreeDLightSourcePositionExample';
 import ThreeDSurfacePlotExample from '@site/src/components/examples/ThreeDSurfacePlotExample';
 import ThreeDCameraRotationExample from '@site/src/components/examples/ThreeDCameraRotationExample';
 import ThreeDCameraIllusionRotationExample from '@site/src/components/examples/ThreeDCameraIllusionRotationExample';
+import ThreeDAngleExample from '@site/src/components/examples/ThreeDAngleExample';
 
 3D scene examples with camera controls, lighting, and surfaces.
 
@@ -46,6 +48,61 @@ const text3d = new Text({ text: 'This is a 3D text' });
 scene.addFixedInFrameMobjects(text3d);
 text3d.toCorner(UL);
 scene.add(axes);
+await scene.wait(999999);
+```
+
+</details>
+
+**Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Text**](/api/classes/Text)
+
+---
+
+## Fixed Orientation Mobjects
+
+Demonstrates how to keep labels readable in a 3D scene using addFixedOrientationMobjects. Unlike fixed-in-frame (HUD), these labels stay at their 3D world position but always face the camera as it orbits.
+
+<FixedOrientationMobjectsExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Text, ThreeDAxes, ThreeDScene, UP } from 'manim-web';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 75 * (Math.PI / 180),
+  theta: -45 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+});
+
+const axes = new ThreeDAxes({
+  xRange: [-6, 6, 1],
+  yRange: [-5, 5, 1],
+  zRange: [-4, 4, 1],
+  axisColor: '#ffffff',
+  tipLength: 0.3,
+  tipRadius: 0.12,
+  shaftRadius: 0.008,
+});
+
+// Create a label that sits in 3D space but always faces the camera
+const label = new Text({ text: 'Origin', fontSize: 24 });
+label.moveTo([0, 0.5, 0]);
+
+const xLabel = new Text({ text: 'X', fontSize: 24 });
+xLabel.moveTo([6.5, 0, 0]);
+
+scene.add(axes, label, xLabel);
+
+// Make the labels always face the camera regardless of orbit angle
+scene.addFixedOrientationMobjects(label, xLabel);
+
+// Rotate the camera so the billboard effect is visible
+scene.beginAmbientCameraRotation(0.3);
 await scene.wait(999999);
 ```
 
@@ -307,3 +364,56 @@ scene.setCameraOrientation(75 * (Math.PI / 180), 30 * (Math.PI / 180));
 </details>
 
 **Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Circle**](/api/classes/Circle)
+
+## Three D Angle
+
+Displays an Angle arc between two Line3D objects in a 3D scene. The arc is drawn in the plane spanned by the two lines, not restricted to the XY plane. Orbit controls are enabled so you can verify the arc lies in the correct plane.
+
+<ThreeDAngleExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Angle, Line3D, ThreeDAxes, ThreeDScene, WHITE, YELLOW, GREEN } from 'manim-web';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 70 * (Math.PI / 180),
+  theta: -45 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+  enableOrbitControls: true,
+});
+
+const axes = new ThreeDAxes({
+  xRange: [-4, 4, 1],
+  yRange: [-4, 4, 1],
+  zRange: [-3, 3, 1],
+  axisColor: '#ffffff',
+  tipLength: 0.3,
+  tipRadius: 0.12,
+  shaftRadius: 0.008,
+});
+
+const origin: [number, number, number] = [0, 0, 0];
+const p1: [number, number, number] = [2, 0, 0];
+const p2: [number, number, number] = [0, 1.5, 2];
+
+const line1 = new Line3D({ start: origin, end: p1, color: YELLOW });
+const line2 = new Line3D({ start: origin, end: p2, color: GREEN });
+
+const angle = new Angle(
+  { points: [p1, origin, p2] },
+  { radius: 0.8, color: WHITE },
+);
+
+scene.add(axes, line1, line2, angle);
+await scene.wait(Infinity);
+```
+
+</details>
+
+**Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Line3D**](/api/classes/Line3D) · [**Angle**](/api/classes/Angle)

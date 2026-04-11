@@ -176,6 +176,192 @@ describe('Angle', () => {
     expect(copy.getRadius()).toBe(0.8);
     expect(copy.getPoints().length).toBe(a.getPoints().length);
   });
+
+  // ---- 3D tests (issue #220) ----
+
+  it('arc lies in the plane of the two 3D lines, not the XY plane', () => {
+    // Lines in the XZ plane: from (1,0,0) to origin to (0,0,1)
+    const a = new Angle(
+      {
+        points: [
+          [1, 0, 0],
+          [0, 0, 0],
+          [0, 0, 1],
+        ],
+      },
+      { radius: 1 },
+    );
+    expect(a.getAngleValue()).toBeCloseTo(Math.PI / 2, 5);
+
+    // All arc points should have y ≈ 0 (lie in XZ plane)
+    const pts = a.getPoints();
+    for (const p of pts) {
+      expect(p[1]).toBeCloseTo(0, 5);
+    }
+
+    // Start of arc should be near (1, 0, 0), end near (0, 0, 1)
+    const start = a.pointFromProportion(0);
+    expect(start[0]).toBeCloseTo(1, 3);
+    expect(start[1]).toBeCloseTo(0, 3);
+    expect(start[2]).toBeCloseTo(0, 3);
+
+    const end = a.pointFromProportion(1);
+    expect(end[0]).toBeCloseTo(0, 3);
+    expect(end[1]).toBeCloseTo(0, 3);
+    expect(end[2]).toBeCloseTo(1, 3);
+  });
+
+  it('works with lines in the YZ plane', () => {
+    const a = new Angle(
+      {
+        points: [
+          [0, 1, 0],
+          [0, 0, 0],
+          [0, 0, 1],
+        ],
+      },
+      { radius: 1 },
+    );
+    expect(a.getAngleValue()).toBeCloseTo(Math.PI / 2, 5);
+
+    // All arc points should have x ≈ 0
+    for (const p of a.getPoints()) {
+      expect(p[0]).toBeCloseTo(0, 5);
+    }
+  });
+
+  it('works with arbitrary 3D lines', () => {
+    // Two lines from origin: to (1,1,0) and (0,1,1)
+    const a = new Angle(
+      {
+        points: [
+          [1, 1, 0],
+          [0, 0, 0],
+          [0, 1, 1],
+        ],
+      },
+      { radius: 1 },
+    );
+
+    // Angle between (1,1,0) and (0,1,1): cos(θ) = dot / (|a||b|) = 1/2
+    expect(a.getAngleValue()).toBeCloseTo(Math.PI / 3, 5);
+
+    // Arc anchor points (every 3rd starting from 0) should be on the circle
+    const pts = a.getPoints();
+    for (let i = 0; i < pts.length; i += 3) {
+      const dist = Math.sqrt(pts[i][0] ** 2 + pts[i][1] ** 2 + pts[i][2] ** 2);
+      expect(dist).toBeCloseTo(1, 3);
+    }
+  });
+
+  it('3D arc midpoint lies in the plane of the two directions', () => {
+    const a = new Angle(
+      {
+        points: [
+          [1, 0, 0],
+          [0, 0, 0],
+          [0, 0, 1],
+        ],
+      },
+      { radius: 1 },
+    );
+    const mid = a.getArcMidpoint();
+    // Midpoint of 90° arc in XZ plane should be at 45°: (cos45, 0, sin45)
+    const expected = Math.SQRT2 / 2;
+    expect(mid[0]).toBeCloseTo(expected, 3);
+    expect(mid[1]).toBeCloseTo(0, 5);
+    expect(mid[2]).toBeCloseTo(expected, 3);
+  });
+
+  it('handles parallel directions (0-degree angle) without NaN', () => {
+    const a = new Angle(
+      {
+        points: [
+          [2, 0, 0],
+          [0, 0, 0],
+          [1, 0, 0],
+        ],
+      },
+      { radius: 0.5 },
+    );
+    for (const p of a.getPoints()) {
+      expect(Number.isFinite(p[0])).toBe(true);
+      expect(Number.isFinite(p[1])).toBe(true);
+      expect(Number.isFinite(p[2])).toBe(true);
+    }
+  });
+
+  it('handles anti-parallel directions (180 degrees)', () => {
+    const a = new Angle(
+      {
+        points: [
+          [1, 0, 0],
+          [0, 0, 0],
+          [-1, 0, 0],
+        ],
+      },
+      { radius: 1 },
+    );
+    expect(a.getAngleValue()).toBeCloseTo(Math.PI, 3);
+    for (const p of a.getPoints()) {
+      expect(Number.isFinite(p[0])).toBe(true);
+    }
+  });
+
+  it('3D arc with non-origin vertex', () => {
+    const a = new Angle(
+      {
+        points: [
+          [4, 2, 3],
+          [3, 2, 3],
+          [3, 2, 4],
+        ],
+      },
+      { radius: 1 },
+    );
+    expect(a.getAngleValue()).toBeCloseTo(Math.PI / 2, 5);
+    const start = a.pointFromProportion(0);
+    expect(start[0]).toBeCloseTo(4, 3);
+    expect(start[1]).toBeCloseTo(2, 3);
+    expect(start[2]).toBeCloseTo(3, 3);
+  });
+
+  it('otherAngle in 3D gives reflex arc in the correct plane', () => {
+    const a = new Angle(
+      {
+        points: [
+          [1, 0, 0],
+          [0, 0, 0],
+          [0, 0, 1],
+        ],
+      },
+      { radius: 1, otherAngle: true },
+    );
+    expect(a.getAngleValue()).toBeCloseTo((3 * Math.PI) / 2, 3);
+    for (const p of a.getPoints()) {
+      expect(p[1]).toBeCloseTo(0, 5);
+    }
+  });
+
+  it('copy preserves 3D arc geometry', () => {
+    const a = new Angle(
+      {
+        points: [
+          [1, 0, 0],
+          [0, 0, 0],
+          [0, 0, 1],
+        ],
+      },
+      { radius: 0.8 },
+    );
+    const copy = a.copy();
+    expect(copy.getAngleValue()).toBeCloseTo(a.getAngleValue(), 5);
+
+    // Copy arc points should also lie in XZ plane
+    for (const p of copy.getPoints()) {
+      expect(p[1]).toBeCloseTo(0, 5);
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------

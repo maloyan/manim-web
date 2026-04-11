@@ -44,6 +44,9 @@ export class ThreeDScene extends Scene {
   private _hudCamera: THREE.OrthographicCamera;
   private _fixedMobjects: Set<Mobject> = new Set();
 
+  // Fixed-orientation mobjects (stay in 3D world but always face the camera)
+  private _fixedOrientationMobjects: Set<Mobject> = new Set();
+
   // Ambient camera rotation
   private _ambientRotationRate: number = 0;
   private _lastRenderTime: number = 0;
@@ -383,6 +386,11 @@ export class ThreeDScene extends Scene {
    */
   addFixedInFrameMobjects(...mobjects: Mobject[]): this {
     for (const mob of mobjects) {
+      // Remove from fixed-orientation if present (mutually exclusive)
+      if (this._fixedOrientationMobjects.has(mob)) {
+        this._fixedOrientationMobjects.delete(mob);
+        mob.getThreeObject().quaternion.identity();
+      }
       this._fixedMobjects.add(mob);
       // Ensure the Three.js object is initialized
       const threeObj = mob.getThreeObject();
@@ -405,6 +413,45 @@ export class ThreeDScene extends Scene {
         this._fixedMobjects.delete(mob);
         const threeObj = mob.getThreeObject();
         this._hudScene.remove(threeObj);
+      }
+    }
+    return this;
+  }
+
+  /**
+   * Add mobjects that always face the camera regardless of camera orientation.
+   * Unlike addFixedInFrameMobjects (which pins to screen/HUD), these stay in
+   * the 3D world at their world position but rotate to always face the camera.
+   * Equivalent to Python Manim's add_fixed_orientation_mobjects.
+   * @param mobjects - Mobjects to give fixed orientation
+   * @returns this for chaining
+   */
+  addFixedOrientationMobjects(...mobjects: Mobject[]): this {
+    for (const mob of mobjects) {
+      // Remove from fixed-in-frame if present (mutually exclusive)
+      if (this._fixedMobjects.has(mob)) {
+        this._fixedMobjects.delete(mob);
+        this._hudScene.remove(mob.getThreeObject());
+      }
+      this._fixedOrientationMobjects.add(mob);
+    }
+    this.render();
+    return this;
+  }
+
+  /**
+   * Remove mobjects from fixed-orientation tracking.
+   * The mobject's rotation will be reset to identity.
+   * @param mobjects - Mobjects to remove from fixed orientation
+   * @returns this for chaining
+   */
+  removeFixedOrientationMobjects(...mobjects: Mobject[]): this {
+    for (const mob of mobjects) {
+      if (this._fixedOrientationMobjects.has(mob)) {
+        this._fixedOrientationMobjects.delete(mob);
+        // Reset rotation to identity
+        const threeObj = mob.getThreeObject();
+        threeObj.quaternion.identity();
       }
     }
     return this;
@@ -482,6 +529,15 @@ export class ThreeDScene extends Scene {
       }
     }
 
+    // Apply billboard rotation to fixed-orientation mobjects
+    if (this._fixedOrientationMobjects && this._fixedOrientationMobjects.size > 0) {
+      const camQuat = this._camera3D.getCamera().quaternion;
+      for (const mob of this._fixedOrientationMobjects) {
+        const threeObj = mob.getThreeObject();
+        threeObj.quaternion.copy(camQuat);
+      }
+    }
+
     // Update orbit controls if enabled
     if (this._orbitControls && this._orbitControlsEnabled) {
       this._orbitControls.update();
@@ -528,6 +584,12 @@ export class ThreeDScene extends Scene {
     }
     this._fixedMobjects.clear();
 
+    // Clear fixed-orientation tracking (reset quaternions for consistency)
+    for (const mob of this._fixedOrientationMobjects) {
+      mob.getThreeObject().quaternion.identity();
+    }
+    this._fixedOrientationMobjects.clear();
+
     // Clear any remaining HUD scene children
     while (this._hudScene.children.length > 0) {
       this._hudScene.remove(this._hudScene.children[0]);
@@ -552,6 +614,10 @@ export class ThreeDScene extends Scene {
         this._fixedMobjects.delete(mob);
         const threeObj = mob.getThreeObject();
         this._hudScene.remove(threeObj);
+      }
+      if (this._fixedOrientationMobjects.has(mob)) {
+        this._fixedOrientationMobjects.delete(mob);
+        mob.getThreeObject().quaternion.identity();
       }
     }
     return super.remove(...mobjects);

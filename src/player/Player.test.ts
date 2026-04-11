@@ -1,41 +1,12 @@
 // @vitest-environment happy-dom
+// happy-dom is needed for DOM manipulation (Player creates PlayerUI elements,
+// PlayerController attaches keyboard/mouse listeners to container elements).
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Player, PlayerOptions } from './Player';
 import { PlayerController, PlayerControllerCallbacks } from './PlayerController';
 
 // ---------------------------------------------------------------------------
-// Mock Scene — avoids WebGL / Three.js renderer instantiation
-// ---------------------------------------------------------------------------
-
-function createMockSceneMethods() {
-  return {
-    render: vi.fn(),
-    dispose: vi.fn(),
-    resize: vi.fn().mockReturnThis(),
-    getWidth: vi.fn(() => 800),
-    getHeight: vi.fn(() => 450),
-    add: vi.fn().mockReturnThis(),
-    remove: vi.fn().mockReturnThis(),
-    mobjects: new Set() as Set<unknown>,
-    camera: {},
-    batch: vi.fn((cb: () => void) => cb()),
-    export: vi.fn(async () => new Blob()),
-    setTimeline: vi.fn(),
-    _timeline: null as unknown,
-  };
-}
-
-let mockScene: ReturnType<typeof createMockSceneMethods>;
-
-vi.mock('../core/Scene', () => ({
-  Scene: vi.fn(function MockScene() {
-    Object.assign(this, mockScene);
-    return this;
-  }),
-}));
-
-// ---------------------------------------------------------------------------
-// Helper: create a container and Player
+// Helper: create a container and Player (headless Scene, no WebGL needed)
 // ---------------------------------------------------------------------------
 
 function createContainer(): HTMLElement {
@@ -46,8 +17,27 @@ function createContainer(): HTMLElement {
 
 function createPlayer(opts: PlayerOptions = {}): { player: Player; container: HTMLElement } {
   const container = createContainer();
-  const player = new Player(container, { width: 800, height: 450, ...opts });
+  const player = new Player(container, { width: 800, height: 450, headless: true, ...opts });
   return { player, container };
+}
+
+function createMockAnimation(overrides: { dirty?: boolean; duration?: number } = {}) {
+  const mockMobject = {
+    _dirty: overrides.dirty ?? false,
+    _syncToThree: vi.fn(),
+    opacity: 1,
+    dispose: vi.fn(),
+  };
+  const mockAnimation = {
+    mobject: mockMobject,
+    duration: overrides.duration ?? 1,
+    begin: vi.fn(),
+    reset: vi.fn(),
+    update: vi.fn(),
+    isFinished: vi.fn(() => false),
+    startTime: null as number | null,
+  };
+  return { mockMobject, mockAnimation };
 }
 
 // ---------------------------------------------------------------------------
@@ -60,7 +50,6 @@ describe('Player', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockScene = createMockSceneMethods();
     const result = createPlayer();
     player = result.player;
     container = result.container;
@@ -80,15 +69,16 @@ describe('Player', () => {
   });
 
   it('stores original dimensions from scene', () => {
-    expect(mockScene.getWidth).toHaveBeenCalled();
-    expect(mockScene.getHeight).toHaveBeenCalled();
+    expect((player as any)._origWidth).toBe(800);
+    expect((player as any)._origHeight).toBe(450);
   });
 
   // ---- Disposal ----
 
   it('dispose cleans up scene and stops loop', () => {
+    const disposeSpy = vi.spyOn(player.scene, 'dispose');
     player.dispose();
-    expect(mockScene.dispose).toHaveBeenCalled();
+    expect(disposeSpy).toHaveBeenCalled();
   });
 
   it('dispose can be called multiple times without error', () => {
@@ -111,17 +101,17 @@ describe('Player', () => {
   });
 
   it('sequence calls render and seeks to 0 after recording', async () => {
+    const renderSpy = vi.spyOn(player.scene, 'render');
     await player.sequence(async () => {
       // No-op builder
     });
-    expect(mockScene.render).toHaveBeenCalled();
+    expect(renderSpy).toHaveBeenCalled();
   });
 
   it('sequence with autoPlay starts playback', async () => {
     player.dispose();
     container.remove();
 
-    mockScene = createMockSceneMethods();
     const result = createPlayer({ autoPlay: true });
     player = result.player;
     container = result.container;
@@ -195,10 +185,10 @@ describe('Player', () => {
       await scene.wait(2);
     });
 
-    mockScene.render.mockClear();
+    const renderSpy = vi.spyOn(player.scene, 'render');
     player.seek(1.0);
     expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
-    expect(mockScene.render).toHaveBeenCalled();
+    expect(renderSpy).toHaveBeenCalled();
   });
 
   // ---- nextSegment / prevSegment ----
@@ -326,7 +316,7 @@ describe('Player', () => {
     player.play();
     expect(player.isPlaying).toBe(true);
 
-    mockScene.export.mockResolvedValueOnce(new Blob());
+    vi.spyOn(player.scene, 'export').mockResolvedValueOnce(new Blob());
 
     await player.exportAs('gif');
 
@@ -341,7 +331,7 @@ describe('Player', () => {
 
     player.seek(1.0);
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    mockScene.export.mockRejectedValueOnce(new Error('export failed'));
+    vi.spyOn(player.scene, 'export').mockRejectedValueOnce(new Error('export failed'));
 
     await player.exportAs('webm');
 
@@ -357,11 +347,85 @@ describe('Player', () => {
     player.seek(0.5);
     expect(player.isPlaying).toBe(false);
 
-    mockScene.export.mockResolvedValueOnce(new Blob());
+    vi.spyOn(player.scene, 'export').mockResolvedValueOnce(new Blob());
 
     await player.exportAs('mp4');
 
     expect(player.isPlaying).toBe(false);
+  });
+
+  // ---- slidesMode option ----
+
+  it('accepts slidesMode option', () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    expect((p as unknown as { _slidesMode: boolean })._slidesMode).toBe(true);
+    p.dispose();
+    c.remove();
+    const result = createPlayer();
+    player = result.player;
+    container = result.container;
+  });
+
+  it('slidesMode defaults to false', () => {
+    expect((player as unknown as { _slidesMode: boolean })._slidesMode).toBe(false);
+  });
+
+  it('nextSegment in slidesMode plays from current position instead of jumping', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+      await scene.wait(1);
+      await scene.wait(1);
+    });
+
+    // In slides mode, nextSegment should start playing (not jump)
+    player.nextSegment();
+    expect(player.isPlaying).toBe(true);
+    // Should still be at 0 (playing, not jumped)
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0);
+  });
+
+  it('nextSegment in slidesMode does nothing at end of timeline', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+    });
+
+    // Seek to end
+    player.seek(1);
+    player.nextSegment();
+    expect(player.isPlaying).toBe(false);
+  });
+
+  it('prevSegment in slidesMode seeks to previous segment and pauses', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+      await scene.wait(1);
+    });
+
+    // Seek 0.8s into second segment (>0.5 threshold -> goes to start of current)
+    player.seek(1.8);
+    player.prevSegment();
+    expect(player.isPlaying).toBe(false);
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
   });
 
   // ---- loop option ----
@@ -369,13 +433,11 @@ describe('Player', () => {
   it('accepts loop option without error', () => {
     player.dispose();
     container.remove();
-    mockScene = createMockSceneMethods();
     const { player: p, container: c } = createPlayer({ loop: true });
     expect((p as unknown as { _loop: boolean })._loop).toBe(true);
     p.dispose();
     c.remove();
     // Re-create for afterEach
-    mockScene = createMockSceneMethods();
     const result = createPlayer();
     player = result.player;
     container = result.container;
@@ -386,6 +448,9 @@ describe('Player', () => {
   it('responds to fullscreenchange by resizing scene', async () => {
     await player.sequence(async () => {});
 
+    const resizeSpy = vi.spyOn(player.scene, 'resize');
+    const renderSpy = vi.spyOn(player.scene, 'render');
+
     // Simulate entering fullscreen
     Object.defineProperty(document, 'fullscreenElement', {
       value: container,
@@ -394,8 +459,8 @@ describe('Player', () => {
     });
 
     document.dispatchEvent(new Event('fullscreenchange'));
-    expect(mockScene.resize).toHaveBeenCalled();
-    expect(mockScene.render).toHaveBeenCalled();
+    expect(resizeSpy).toHaveBeenCalled();
+    expect(renderSpy).toHaveBeenCalled();
 
     // Simulate exiting fullscreen
     Object.defineProperty(document, 'fullscreenElement', {
@@ -404,12 +469,12 @@ describe('Player', () => {
       configurable: true,
     });
 
-    mockScene.resize.mockClear();
-    mockScene.render.mockClear();
+    resizeSpy.mockClear();
+    renderSpy.mockClear();
     document.dispatchEvent(new Event('fullscreenchange'));
 
-    expect(mockScene.resize).toHaveBeenCalledWith(800, 450);
-    expect(mockScene.render).toHaveBeenCalled();
+    expect(resizeSpy).toHaveBeenCalledWith(800, 450);
+    expect(renderSpy).toHaveBeenCalled();
   });
 });
 
@@ -428,7 +493,6 @@ describe('Player _startLoop render loop', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockScene = createMockSceneMethods();
 
     // Mock requestAnimationFrame to capture callbacks
     rafCallbacks = [];
@@ -469,13 +533,13 @@ describe('Player _startLoop render loop', () => {
       await scene.wait(2);
     });
 
-    mockScene.render.mockClear();
+    const renderSpy = vi.spyOn(player.scene, 'render');
     player.play();
 
     // The first rAF is scheduled; flush it with enough elapsed time (> 14ms)
     flushRaf(20);
 
-    expect(mockScene.render).toHaveBeenCalled();
+    expect(renderSpy).toHaveBeenCalled();
     // Timeline should have advanced
     expect(player.timeline.getCurrentTime()).toBeGreaterThan(0);
   });
@@ -486,13 +550,13 @@ describe('Player _startLoop render loop', () => {
     });
 
     player.play();
-    mockScene.render.mockClear();
+    const renderSpy = vi.spyOn(player.scene, 'render');
 
     // Flush with only 5ms elapsed — too fast, should skip
     flushRaf(5);
 
     // Render should NOT have been called because elapsed < 14
-    expect(mockScene.render).not.toHaveBeenCalled();
+    expect(renderSpy).not.toHaveBeenCalled();
     // Timeline should still be at 0
     expect(player.timeline.getCurrentTime()).toBe(0);
   });
@@ -504,18 +568,17 @@ describe('Player _startLoop render loop', () => {
 
     player.play();
     player.pause();
-    mockScene.render.mockClear();
+    const renderSpy = vi.spyOn(player.scene, 'render');
 
     // Flush — loop should exit early because _isPlaying is false
     flushRaf(20);
 
-    expect(mockScene.render).not.toHaveBeenCalled();
+    expect(renderSpy).not.toHaveBeenCalled();
   });
 
   it('_startLoop handles finished + loop: seeks to 0 and continues', async () => {
     player.dispose();
     container.remove();
-    mockScene = createMockSceneMethods();
     const result = createPlayer({ loop: true });
     player = result.player;
     container = result.container;
@@ -525,7 +588,6 @@ describe('Player _startLoop render loop', () => {
     });
 
     player.play();
-    mockScene.render.mockClear();
 
     // Flush with enough time to finish the timeline (500ms + more)
     flushRaf(600);
@@ -564,8 +626,8 @@ describe('Player _startLoop render loop', () => {
   });
 
   it('_startLoop updates mobject updaters', async () => {
-    const mockMob = { update: vi.fn() };
-    mockScene.mobjects.add(mockMob);
+    const mockMob = { update: vi.fn(), dispose: vi.fn() };
+    (player.scene.mobjects as Set<unknown>).add(mockMob);
 
     await player.sequence(async (scene) => {
       await scene.wait(2);
@@ -579,6 +641,45 @@ describe('Player _startLoop render loop', () => {
     expect(mockMob.update).toHaveBeenCalled();
   });
 
+  it('_startLoop auto-pauses at segment boundary in slidesMode', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(0.5);
+      await scene.wait(0.5);
+    });
+
+    player.play();
+
+    // Flush past the first segment boundary (500ms + buffer)
+    flushRaf(600);
+
+    // In slides mode, should auto-pause at the segment boundary
+    expect(player.isPlaying).toBe(false);
+    // Time should be clamped to the end of the first segment
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.5);
+  });
+
+  it('_startLoop does NOT auto-pause at segment boundary without slidesMode', async () => {
+    await player.sequence(async (scene) => {
+      await scene.wait(0.5);
+      await scene.wait(0.5);
+    });
+
+    player.play();
+
+    // Flush past the first segment boundary
+    flushRaf(600);
+
+    // Without slides mode, should keep playing (or finish naturally)
+    // The timeline total is 1s, 600ms elapsed means it's still going
+    expect(player.isPlaying).toBe(true);
+  });
+
   it('_startLoop applies playback rate to dt', async () => {
     await player.sequence(async (scene) => {
       await scene.wait(10);
@@ -586,7 +687,6 @@ describe('Player _startLoop render loop', () => {
 
     player.setPlaybackRate(2);
     player.play();
-    mockScene.render.mockClear();
 
     // Flush at 100ms elapsed
     flushRaf(100);
@@ -606,7 +706,6 @@ describe('RecordingScene pass-through methods', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockScene = createMockSceneMethods();
     const result = createPlayer();
     player = result.player;
     container = result.container;
@@ -618,31 +717,36 @@ describe('RecordingScene pass-through methods', () => {
   });
 
   it('add delegates to scene.add', async () => {
+    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
     await player.sequence(async (scene) => {
       scene.add('fake-mobject' as never);
     });
-    expect(mockScene.add).toHaveBeenCalledWith('fake-mobject');
+    expect(addSpy).toHaveBeenCalledWith('fake-mobject');
+    addSpy.mockRestore();
   });
 
   it('remove delegates to scene.remove', async () => {
+    const removeSpy = vi.spyOn(player.scene, 'remove').mockReturnThis();
     await player.sequence(async (scene) => {
       scene.remove('fake-mobject' as never);
     });
-    expect(mockScene.remove).toHaveBeenCalledWith('fake-mobject');
+    expect(removeSpy).toHaveBeenCalledWith('fake-mobject');
+    removeSpy.mockRestore();
   });
 
   it('camera passes through to scene.camera', async () => {
     await player.sequence(async (scene) => {
-      expect(scene.camera).toBe(mockScene.camera);
+      expect(scene.camera).toBe(player.scene.camera);
     });
   });
 
   it('batch delegates to scene.batch', async () => {
+    const batchSpy = vi.spyOn(player.scene, 'batch');
     const callback = vi.fn();
     await player.sequence(async (scene) => {
       scene.batch(callback);
     });
-    expect(mockScene.batch).toHaveBeenCalled();
+    expect(batchSpy).toHaveBeenCalled();
     expect(callback).toHaveBeenCalled();
   });
 
@@ -655,46 +759,23 @@ describe('RecordingScene pass-through methods', () => {
   });
 
   it('play records animation segments into the timeline', async () => {
-    const mockMobject = {
-      _dirty: false,
-      _syncToThree: vi.fn(),
-      opacity: 1,
-    };
-    const mockAnimation = {
-      mobject: mockMobject,
-      duration: 1,
-      begin: vi.fn(),
-      reset: vi.fn(),
-      update: vi.fn(),
-      isFinished: vi.fn(() => false),
-      startTime: null as number | null,
-    };
+    const { mockMobject, mockAnimation } = createMockAnimation();
+    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
 
     await player.sequence(async (scene) => {
       await scene.play(mockAnimation as never);
     });
 
     expect(mockAnimation.begin).toHaveBeenCalled();
-    expect(mockScene.add).toHaveBeenCalledWith(mockMobject);
+    expect(addSpy).toHaveBeenCalledWith(mockMobject);
     expect(player.timeline.segmentCount).toBe(1);
     expect(player.timeline.getDuration()).toBeCloseTo(1.0);
+    addSpy.mockRestore();
   });
 
   it('play syncs dirty mobjects before begin', async () => {
-    const mockMobject = {
-      _dirty: true,
-      _syncToThree: vi.fn(),
-      opacity: 1,
-    };
-    const mockAnimation = {
-      mobject: mockMobject,
-      duration: 0.5,
-      begin: vi.fn(),
-      reset: vi.fn(),
-      update: vi.fn(),
-      isFinished: vi.fn(() => false),
-      startTime: null as number | null,
-    };
+    const { mockMobject, mockAnimation } = createMockAnimation({ dirty: true, duration: 0.5 });
+    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
 
     await player.sequence(async (scene) => {
       await scene.play(mockAnimation as never);
@@ -702,33 +783,24 @@ describe('RecordingScene pass-through methods', () => {
 
     expect(mockMobject._syncToThree).toHaveBeenCalled();
     expect(mockMobject._dirty).toBe(false);
+    addSpy.mockRestore();
   });
 
   it('play does not re-add mobjects already in scene', async () => {
-    const mockMobject = {
-      _dirty: false,
-      _syncToThree: vi.fn(),
-      opacity: 1,
-    };
-    const mockAnimation = {
-      mobject: mockMobject,
-      duration: 1,
-      begin: vi.fn(),
-      reset: vi.fn(),
-      update: vi.fn(),
-      isFinished: vi.fn(() => false),
-      startTime: null as number | null,
-    };
+    const { mockMobject, mockAnimation } = createMockAnimation();
 
     // Pre-add the mobject to the scene's mobjects set
-    mockScene.mobjects.add(mockMobject);
+    (player.scene.mobjects as Set<unknown>).add(mockMobject);
+
+    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
 
     await player.sequence(async (scene) => {
       await scene.play(mockAnimation as never);
     });
 
     // add should NOT be called for this mobject since it's already present
-    expect(mockScene.add).not.toHaveBeenCalledWith(mockMobject);
+    expect(addSpy).not.toHaveBeenCalledWith(mockMobject);
+    addSpy.mockRestore();
   });
 
   it('wait with default duration records 1s segment', async () => {

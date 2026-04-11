@@ -862,6 +862,33 @@ export class Scene {
   }
 
   /**
+   * Run one tick of the simulation: update mobjects, advance the
+   * timeline, update the camera, render, and check for completion.
+   * Shared by the rAF loop, headless setInterval, and background-tab fallback.
+   */
+  private _tickFrame(dt: number): void {
+    // Update all mobjects (run updaters) BEFORE animations,
+    // so animations can override updater-set values (e.g. Create
+    // hiding fill while an updater rebuilds the polygon via become()).
+    for (const mobject of this._mobjects) {
+      mobject.update(dt);
+    }
+
+    // Update timeline (animations override updater state)
+    if (this._timeline) {
+      this._timeline.update(dt);
+      this._currentTime = this._timeline.getCurrentTime();
+    }
+
+    // Update camera frame updaters AFTER animations so camera
+    // updaters see the latest positions set by MoveAlongPath etc.
+    this._camera.updateFrame(dt);
+
+    this._render();
+    this._checkFinished();
+  }
+
+  /**
    * Start the animation render loop with frame rate control.
    * Uses requestAnimationFrame for smooth foreground rendering,
    * plus a setInterval fallback so the timeline still advances
@@ -869,8 +896,30 @@ export class Scene {
    */
   private _startRenderLoop(): void {
     if (this._animationFrameId !== null) return;
+    if (this.isHeadless && this._backgroundTimerId !== null) return;
 
     this._lastFrameTime = performance.now();
+
+    // In headless mode (no DOM), requestAnimationFrame is unavailable.
+    // Use setInterval to drive the loop so animations complete.
+    if (this.isHeadless) {
+      this._backgroundTimerId = setInterval(() => {
+        if (!this._isPlaying || !this._timeline) {
+          return;
+        }
+        try {
+          const now = performance.now();
+          const dt = (now - this._lastFrameTime) / 1000;
+          this._lastFrameTime = now;
+          this._tickFrame(dt);
+        } catch (err) {
+          console.error('[Scene] headless render loop error, stopping:', err);
+          this._stopRenderLoop();
+          this._isPlaying = false;
+        }
+      }, 16);
+      return;
+    }
 
     const loop = (currentTime: number) => {
       // Schedule next frame first (for smoother animations)
@@ -887,32 +936,9 @@ export class Scene {
         return; // Skip this frame, running too fast
       }
 
-      // Calculate delta time
       const dt = elapsed / 1000;
       this._lastFrameTime = currentTime;
-
-      // Update all mobjects (run updaters) BEFORE animations,
-      // so animations can override updater-set values (e.g. Create
-      // hiding fill while an updater rebuilds the polygon via become()).
-      for (const mobject of this._mobjects) {
-        mobject.update(dt);
-      }
-
-      // Update timeline (animations override updater state)
-      if (this._timeline) {
-        this._timeline.update(dt);
-        this._currentTime = this._timeline.getCurrentTime();
-      }
-
-      // Update camera frame updaters AFTER animations so camera
-      // updaters see the latest positions set by MoveAlongPath etc.
-      this._camera.updateFrame(dt);
-
-      // Render frame
-      this._render();
-
-      // Check if finished
-      this._checkFinished();
+      this._tickFrame(dt);
     };
 
     this._animationFrameId = requestAnimationFrame(loop);
@@ -932,15 +958,7 @@ export class Scene {
         if (elapsed > 200) {
           const dt = elapsed / 1000;
           this._lastFrameTime = now;
-          // Same order as main loop: updaters first, then animations
-          for (const mobject of this._mobjects) {
-            mobject.update(dt);
-          }
-          this._timeline.update(dt);
-          this._currentTime = this._timeline.getCurrentTime();
-          this._camera.updateFrame(dt);
-          this._render();
-          this._checkFinished();
+          this._tickFrame(dt);
         }
       }, 100);
     }
@@ -951,7 +969,9 @@ export class Scene {
    */
   private _stopRenderLoop(): void {
     if (this._animationFrameId !== null) {
-      cancelAnimationFrame(this._animationFrameId);
+      if (typeof cancelAnimationFrame !== 'undefined') {
+        cancelAnimationFrame(this._animationFrameId);
+      }
       this._animationFrameId = null;
     }
     if (this._backgroundTimerId !== null) {

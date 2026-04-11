@@ -14,6 +14,7 @@ export interface PlayerUICallbacks {
   onSpeedChange: (rate: number) => void;
   onFullscreen: () => void;
   onExport: (format: string) => void;
+  onSlidesToggle: (enabled: boolean) => void;
 }
 
 export interface PlayerUIOptions {
@@ -33,6 +34,8 @@ export class PlayerUI {
   private _timeDisplay: HTMLElement;
   private _speedSelect: HTMLSelectElement;
   private _fullscreenBtn: HTMLButtonElement;
+  private _slidesBtn: HTMLButtonElement;
+  private _slidesActive: boolean = false;
   private _exportBtn: HTMLButtonElement;
   private _exportMenu: HTMLElement | null = null;
   private _exportMenuBackdrop: HTMLElement | null = null;
@@ -76,6 +79,7 @@ export class PlayerUI {
     this._timeDisplay = this._createTimeDisplay();
     this._speedSelect = this._createSpeedSelect();
     this._fullscreenBtn = this._createFullscreenBtn();
+    this._slidesBtn = this._createSlidesBtn();
     this._exportBtn = this._createExportBtn();
 
     // Assemble
@@ -95,6 +99,7 @@ export class PlayerUI {
     });
     rightGroup.appendChild(this._timeDisplay);
     rightGroup.appendChild(this._speedSelect);
+    rightGroup.appendChild(this._slidesBtn);
     // Export button is wrapped in a positioned container for the dropdown menu
     rightGroup.appendChild(this._exportBtnWrapper!);
     rightGroup.appendChild(this._fullscreenBtn);
@@ -164,6 +169,13 @@ export class PlayerUI {
     if (playing) {
       this._scheduleHide();
     }
+  }
+
+  setSlidesMode(enabled: boolean): void {
+    this._slidesActive = enabled;
+    this._slidesBtn.style.opacity = enabled ? '1' : '0.4';
+    this._slidesBtn.style.background = enabled ? 'rgba(74,158,255,0.25)' : 'none';
+    this._slidesBtn.title = `Slides mode ${enabled ? 'on' : 'off'} (S)`;
   }
 
   setSegments(timeline: MasterTimeline): void {
@@ -489,6 +501,29 @@ export class PlayerUI {
     }
   }
 
+  private _createSlidesBtn(): HTMLButtonElement {
+    const btn = document.createElement('button');
+    btn.innerHTML = SLIDES_ICON;
+    btn.title = 'Slides mode off (S)';
+    applyBtnStyle(btn, '28px', '28px');
+    btn.style.opacity = '0.4';
+    btn.addEventListener('click', () => {
+      this._slidesActive = !this._slidesActive;
+      this.setSlidesMode(this._slidesActive);
+      this._callbacks.onSlidesToggle(this._slidesActive);
+    });
+    // Override the default hover to preserve active background
+    btn.addEventListener('mouseenter', () => {
+      btn.style.background = this._slidesActive
+        ? 'rgba(74,158,255,0.35)'
+        : 'rgba(255,255,255,0.15)';
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.background = this._slidesActive ? 'rgba(74,158,255,0.25)' : 'none';
+    });
+    return btn;
+  }
+
   private _createFullscreenBtn(): HTMLButtonElement {
     const btn = document.createElement('button');
     btn.innerHTML = FULLSCREEN_ICON;
@@ -664,5 +699,7 @@ const PREV_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="current
 const NEXT_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="12" y="3" width="2" height="10"/><path d="M2 3l8 5-8 5V3z"/></svg>`;
 
 const EXPORT_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L8 10M8 10L5 7M8 10L11 7" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12v1h10v-1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`;
+
+const SLIDES_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 14h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6 6l5 3-5 3V6z"/></svg>`;
 
 const FULLSCREEN_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h4v2H4v2H2V2zm8 0h4v4h-2V4h-2V2zM2 10h2v2h2v2H2v-4zm10 2h-2v2h4v-4h-2v2z"/></svg>`;

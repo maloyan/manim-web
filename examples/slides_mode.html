@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Slides Mode Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      color: #ccc;
+    }
+    h1 {
+      margin-bottom: 16px;
+      font-size: 20px;
+      font-weight: 400;
+      color: #fff;
+    }
+    #container {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .info {
+      margin-top: 20px;
+      font-size: 13px;
+      opacity: 0.6;
+      text-align: center;
+      line-height: 1.6;
+    }
+    kbd {
+      background: #333;
+      border: 1px solid #555;
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    .highlight {
+      color: #6cf;
+      opacity: 1;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <h1>Slides Mode Demo</h1>
+  <div id="container"></div>
+  <div class="info">
+    <p class="highlight">slidesMode: true - each arrow press plays one segment, then pauses</p>
+    <br>
+    <kbd>&rarr;</kbd> Play next segment &nbsp;
+    <kbd>&larr;</kbd> Go to previous segment &nbsp;
+    <kbd>Space</kbd> Play/Pause &nbsp;
+    <kbd>F</kbd> Fullscreen
+  </div>
+
+  <script type="module">
+    import {
+      Player,
+      Circle,
+      Square,
+      Triangle,
+      Create,
+      Transform,
+      FadeIn,
+      FadeOut,
+      Indicate,
+      Rotate,
+      BLACK,
+      BLUE,
+      RED,
+      GREEN,
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const player = new Player(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK,
+      slidesMode: true,
+    });
+
+    player.sequence(async (scene) => {
+      // Slide 1: Create a blue circle
+      const circle = new Circle({ radius: 1.5, color: BLUE });
+      await scene.play(new Create(circle));
+
+      // Slide 2: Brief pause
+      await scene.wait(0.5);
+
+      // Slide 3: Transform to red square
+      const square = new Square({ sideLength: 3, color: RED });
+      await scene.play(new Transform(circle, square));
+
+      // Slide 4: Indicate
+      await scene.play(new Indicate(circle));
+
+      // Slide 5: Transform to green triangle
+      const triangle = new Triangle({ color: GREEN });
+      triangle.scale(2);
+      await scene.play(new Transform(circle, triangle));
+
+      // Slide 6: Rotate
+      await scene.play(new Rotate(circle, { angle: Math.PI }));
+
+      // Slide 7: Fade out
+      await scene.play(new FadeOut(circle));
+
+      // Slide 8: Final pause
+      await scene.wait(1);
+    });
+  </script>
+</body>
+</html>
