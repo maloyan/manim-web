@@ -11,6 +11,7 @@ import BraceAnnotationExample from '@site/src/components/examples/BraceAnnotatio
 import EasingFunctionsShowcaseExample from '@site/src/components/examples/EasingFunctionsShowcaseExample';
 import ExportAnimationExample from '@site/src/components/examples/ExportAnimationExample';
 import FixedInFrameMobjectTestExample from '@site/src/components/examples/FixedInFrameMobjectTestExample';
+import FixedOrientationMobjectsExample from '@site/src/components/examples/FixedOrientationMobjectsExample';
 import FollowingGraphCameraExample from '@site/src/components/examples/FollowingGraphCameraExample';
 import GraphAreaPlotExample from '@site/src/components/examples/GraphAreaPlotExample';
 import HeatDiagramPlotExample from '@site/src/components/examples/HeatDiagramPlotExample';
@@ -1837,6 +1838,61 @@ const text3d = new Text({ text: 'This is a 3D text' });
 scene.addFixedInFrameMobjects(text3d);
 text3d.toCorner(UL);
 scene.add(axes);
+await scene.wait(999999);
+```
+
+</details>
+
+**Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Text**](/api/classes/Text)
+
+---
+
+## Fixed Orientation Mobjects
+
+Demonstrates how to keep labels readable in a 3D scene using addFixedOrientationMobjects. Unlike fixed-in-frame (HUD), these labels stay at their 3D world position but always face the camera as it orbits.
+
+<FixedOrientationMobjectsExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Text, ThreeDAxes, ThreeDScene } from 'manim-web';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 75 * (Math.PI / 180),
+  theta: -45 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+});
+
+const axes = new ThreeDAxes({
+  xRange: [-6, 6, 1],
+  yRange: [-5, 5, 1],
+  zRange: [-4, 4, 1],
+  axisColor: '#ffffff',
+  tipLength: 0.3,
+  tipRadius: 0.12,
+  shaftRadius: 0.008,
+});
+
+// Create a label that sits in 3D space but always faces the camera
+const label = new Text({ text: 'Origin', fontSize: 24 });
+label.moveTo([0, 0.5, 0]);
+
+const xLabel = new Text({ text: 'X', fontSize: 24 });
+xLabel.moveTo([6.5, 0, 0]);
+
+scene.add(axes, label, xLabel);
+
+// Make the labels always face the camera regardless of orbit angle
+scene.addFixedOrientationMobjects(label, xLabel);
+
+// Rotate the camera so the billboard effect is visible
+scene.beginAmbientCameraRotation(0.3);
 await scene.wait(999999);
 ```
 
