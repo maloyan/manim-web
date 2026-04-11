@@ -51,52 +51,32 @@ export class PlayerController {
     const tag = (e.target as HTMLElement)?.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
-    switch (e.key) {
-      case ' ':
-      case 'k':
-        e.preventDefault();
-        this._callbacks.onPlayPause();
-        break;
-      case 'ArrowLeft':
-        e.preventDefault();
-        if (e.shiftKey) {
-          // Fine scrub: -1s
-          const t = Math.max(0, this._callbacks.getCurrentTime() - 1);
-          this._callbacks.onSeek(t);
-        } else {
-          this._callbacks.onPrev();
-        }
-        break;
-      case 'ArrowRight':
-        e.preventDefault();
-        if (e.shiftKey) {
-          // Fine scrub: +1s
-          const dur = this._callbacks.getDuration();
-          const t = Math.min(dur, this._callbacks.getCurrentTime() + 1);
-          this._callbacks.onSeek(t);
-        } else {
-          this._callbacks.onNext();
-        }
-        break;
-      case 'f':
-      case 'F':
-        e.preventDefault();
-        this._callbacks.onFullscreen();
-        break;
-      case 's':
-      case 'S':
-        e.preventDefault();
-        this._callbacks.onSlidesToggle();
-        break;
-      case 'Home':
-        e.preventDefault();
-        this._callbacks.onSeek(0);
-        break;
-      case 'End':
-        e.preventDefault();
-        this._callbacks.onSeek(this._callbacks.getDuration());
-        break;
+    const handler = this._getKeyHandler(e.key, e.shiftKey);
+    if (handler) {
+      e.preventDefault();
+      handler();
     }
+  }
+
+  private _getKeyHandler(key: string, shift: boolean): (() => void) | undefined {
+    const c = this._callbacks;
+    const lower = key.toLowerCase();
+
+    if (key === ' ' || lower === 'k') return () => c.onPlayPause();
+    if (lower === 'f') return () => c.onFullscreen();
+    if (lower === 's') return () => c.onSlidesToggle();
+    if (key === 'Home') return () => c.onSeek(0);
+    if (key === 'End') return () => c.onSeek(c.getDuration());
+
+    if (key === 'ArrowLeft') {
+      return shift ? () => c.onSeek(Math.max(0, c.getCurrentTime() - 1)) : () => c.onPrev();
+    }
+    if (key === 'ArrowRight') {
+      return shift
+        ? () => c.onSeek(Math.min(c.getDuration(), c.getCurrentTime() + 1))
+        : () => c.onNext();
+    }
+    return undefined;
   }
 
   dispose(): void {
