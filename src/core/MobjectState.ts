@@ -145,7 +145,7 @@ export function applyFunctionImpl(mob: MobjectLike, fn: (point: number[]) => num
 
 /**
  * Apply a transformation matrix to every VMobject descendant's control points.
- * Supports 3x3 and 4x4 matrices, with optional aboutPoint/aboutEdge.
+ * Supports 2x2 and 3x3 matrices, with optional aboutPoint/aboutEdge.
  */
 export function applyMatrixImpl(
   mob: MobjectLike,
