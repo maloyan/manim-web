@@ -142,7 +142,7 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
         s: string,
       ) => Promise<Record<string, (...args: unknown[]) => unknown>>;
       const mjModule = await importFn('mathjax-full/js/mathjax.js');
-      const texModule = await importFn('mathjax-full/js/input/tex-full.js');
+      const texModule = await importFn('mathjax-full/js/input/tex.js');
       const svgModule = await importFn('mathjax-full/js/output/svg.js');
       const liteAdaptor = await importFn('mathjax-full/js/adaptors/liteAdaptor.js');
       const htmlHandler = await importFn('mathjax-full/js/handlers/html.js');
