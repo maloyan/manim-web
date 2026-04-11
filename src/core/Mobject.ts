@@ -13,6 +13,7 @@ import {
   becomeMobjectImpl,
   replaceMobjectImpl,
   applyFunctionImpl,
+  applyMatrixImpl,
   prepareForNonlinearTransformImpl,
 } from './MobjectState';
 // AnimateProxy registers itself here to break the circular dependency:
@@ -545,6 +546,14 @@ export abstract class Mobject {
 
   applyFunction(fn: (point: number[]) => number[]): this {
     applyFunctionImpl(this, fn);
+    return this;
+  }
+
+  applyMatrix(
+    matrix: number[][],
+    options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
+  ): this {
+    applyMatrixImpl(this, matrix, options);
     return this;
   }
 

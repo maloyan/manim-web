@@ -8,7 +8,7 @@ import { VMobject } from '../../core/VMobject';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { Transform } from './Transform';
-import { lerpPoint } from '../../utils/math';
+import { lerpPoint, transformPointByMatrix } from '../../utils/math';
 import { Arrow, DoubleArrow } from '../../mobjects/geometry/Arrow';
 import type { Complex } from '../movement/Homotopy';
 
@@ -340,59 +340,21 @@ export class ApplyMatrix extends Animation {
         }
 
         let targetPoints: number[][];
+        const ap = this.aboutPoint;
         if (worldMatrix && inverseWorld) {
           targetPoints = startPoints.map((p) => {
             vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
-            const worldResult = this._transformPoint([vec.x, vec.y, vec.z]);
+            const worldResult = transformPointByMatrix([vec.x, vec.y, vec.z], this.matrix, ap);
             vec.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
             return [vec.x, vec.y, vec.z];
           });
         } else {
-          targetPoints = startPoints.map((p) => this._transformPoint(p));
+          targetPoints = startPoints.map((p) => transformPointByMatrix(p, this.matrix, ap));
         }
 
         this._snapshots.push({ mob, startPoints, targetPoints });
       }
     }
-  }
-
-  private _transformPoint(point: number[]): number[] {
-    const x = point[0] - this.aboutPoint[0];
-    const y = point[1] - this.aboutPoint[1];
-    const z = point[2] - this.aboutPoint[2];
-
-    let newX: number, newY: number, newZ: number;
-
-    if (this.matrix.length === 3 && this.matrix[0].length === 3) {
-      newX = this.matrix[0][0] * x + this.matrix[0][1] * y + this.matrix[0][2] * z;
-      newY = this.matrix[1][0] * x + this.matrix[1][1] * y + this.matrix[1][2] * z;
-      newZ = this.matrix[2][0] * x + this.matrix[2][1] * y + this.matrix[2][2] * z;
-    } else if (this.matrix.length === 4 && this.matrix[0].length === 4) {
-      const w =
-        this.matrix[3][0] * x + this.matrix[3][1] * y + this.matrix[3][2] * z + this.matrix[3][3];
-      newX =
-        (this.matrix[0][0] * x +
-          this.matrix[0][1] * y +
-          this.matrix[0][2] * z +
-          this.matrix[0][3]) /
-        w;
-      newY =
-        (this.matrix[1][0] * x +
-          this.matrix[1][1] * y +
-          this.matrix[1][2] * z +
-          this.matrix[1][3]) /
-        w;
-      newZ =
-        (this.matrix[2][0] * x +
-          this.matrix[2][1] * y +
-          this.matrix[2][2] * z +
-          this.matrix[2][3]) /
-        w;
-    } else {
-      return point;
-    }
-
-    return [newX + this.aboutPoint[0], newY + this.aboutPoint[1], newZ + this.aboutPoint[2]];
   }
 
   interpolate(alpha: number): void {
