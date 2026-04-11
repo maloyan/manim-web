@@ -62,6 +62,8 @@ export class Angle extends VMobject {
   private _showValue: boolean;
   private _decimalPlaces: number;
   private _unit: 'radians' | 'degrees';
+  private _u: Vector3Tuple = [1, 0, 0];
+  private _v: Vector3Tuple = [0, 1, 0];
 
   // eslint-disable-next-line complexity
   constructor(input: AngleInput, options: AngleOptions = {}) {
@@ -130,32 +132,55 @@ export class Angle extends VMobject {
 
     this._vertex = [...vertex];
 
-    // Calculate angles from vertex to each point
-    const angle1 = Math.atan2(point1[1] - vertex[1], point1[0] - vertex[0]);
-    const angle2 = Math.atan2(point2[1] - vertex[1], point2[0] - vertex[0]);
+    const dir1 = this._normalize3([
+      point1[0] - vertex[0],
+      point1[1] - vertex[1],
+      point1[2] - vertex[2],
+    ]);
+    const dir2 = this._normalize3([
+      point2[0] - vertex[0],
+      point2[1] - vertex[1],
+      point2[2] - vertex[2],
+    ]);
 
-    // Determine the angle span
-    let deltaAngle = angle2 - angle1;
+    let normal = this._cross3(dir1, dir2);
+    const normalLen = this._length3(normal);
 
-    // Handle quadrant selection
+    if (normalLen < 1e-10) {
+      const arb: Vector3Tuple = Math.abs(dir1[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+      normal = this._cross3(dir1, arb);
+      if (normal[2] < 0) {
+        normal = [-normal[0], -normal[1], -normal[2]];
+      }
+    }
+    normal = this._normalize3(normal);
+
+    if (Math.abs(dir1[2]) < 1e-10 && Math.abs(dir2[2]) < 1e-10 && normal[2] < 0) {
+      normal = [-normal[0], -normal[1], -normal[2]] as Vector3Tuple;
+    }
+
+    this._u = dir1;
+    this._v = this._cross3(normal, dir1);
+
+    const cosA = this._dot3(dir2, this._u);
+    const sinA = this._dot3(dir2, this._v);
+
+    this._startAngle = 0;
+    let deltaAngle = Math.atan2(sinA, cosA);
+
     if (quadrant !== undefined) {
-      // Adjust angle based on quadrant preference
-      const adjustedAngle = this._adjustForQuadrant(angle1, deltaAngle, quadrant);
+      const adjustedAngle = this._adjustForQuadrant(0, deltaAngle, quadrant);
       this._startAngle = adjustedAngle.start;
       this._angleValue = adjustedAngle.delta;
     } else {
-      // Always use the CCW (counterclockwise) arc from line1 to line2.
-      // Normalize deltaAngle to [0, 2π) so the arc never flips side
-      // when the angle crosses 180°.
       if (deltaAngle < 0) {
         deltaAngle += 2 * Math.PI;
       }
 
-      this._startAngle = angle1;
+      this._startAngle = 0;
       this._angleValue = deltaAngle;
 
       if (otherAngle) {
-        // The other angle is the remaining arc (CW direction)
         this._angleValue = deltaAngle - 2 * Math.PI;
       }
     }
@@ -168,6 +193,24 @@ export class Angle extends VMobject {
     const dy = p2[1] - p1[1];
     const dz = p2[2] - p1[2];
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
+  }
+
+  private _dot3(a: Vector3Tuple, b: Vector3Tuple): number {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  }
+
+  private _cross3(a: Vector3Tuple, b: Vector3Tuple): Vector3Tuple {
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  }
+
+  private _length3(v: Vector3Tuple): number {
+    return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+  }
+
+  private _normalize3(v: Vector3Tuple): Vector3Tuple {
+    const len = this._length3(v);
+    if (len < 1e-15) return [0, 0, 0];
+    return [v[0] / len, v[1] / len, v[2] / len];
   }
 
   private _adjustForQuadrant(
@@ -206,10 +249,29 @@ export class Angle extends VMobject {
     }
   }
 
+  private _arcPoint(theta: number): Vector3Tuple {
+    const c = Math.cos(theta);
+    const s = Math.sin(theta);
+    const r = this._radius;
+    return [
+      this._vertex[0] + r * (c * this._u[0] + s * this._v[0]),
+      this._vertex[1] + r * (c * this._u[1] + s * this._v[1]),
+      this._vertex[2] + r * (c * this._u[2] + s * this._v[2]),
+    ];
+  }
+
+  private _arcTangent(theta: number): Vector3Tuple {
+    const c = Math.cos(theta);
+    const s = Math.sin(theta);
+    return [
+      -s * this._u[0] + c * this._v[0],
+      -s * this._u[1] + c * this._v[1],
+      -s * this._u[2] + c * this._v[2],
+    ];
+  }
+
   private _generatePoints(): void {
-    // Create arc points using Arc's algorithm
     const points: number[][] = [];
-    const [cx, cy, cz] = this._vertex;
     const r = this._radius;
 
     const totalAngle = this._angleValue;
@@ -221,27 +283,28 @@ export class Angle extends VMobject {
       const theta1 = this._startAngle + i * segmentAngle;
       const theta2 = this._startAngle + (i + 1) * segmentAngle;
 
-      const x0 = cx + r * Math.cos(theta1);
-      const y0 = cy + r * Math.sin(theta1);
-      const x3 = cx + r * Math.cos(theta2);
-      const y3 = cy + r * Math.sin(theta2);
+      const p0 = this._arcPoint(theta1);
+      const p3 = this._arcPoint(theta2);
+      const t1 = this._arcTangent(theta1);
+      const t2 = this._arcTangent(theta2);
 
-      const dx1 = -Math.sin(theta1);
-      const dy1 = Math.cos(theta1);
-      const x1 = x0 + kappa * r * dx1;
-      const y1 = y0 + kappa * r * dy1;
-
-      const dx2 = -Math.sin(theta2);
-      const dy2 = Math.cos(theta2);
-      const x2 = x3 - kappa * r * dx2;
-      const y2 = y3 - kappa * r * dy2;
+      const p1: Vector3Tuple = [
+        p0[0] + kappa * r * t1[0],
+        p0[1] + kappa * r * t1[1],
+        p0[2] + kappa * r * t1[2],
+      ];
+      const p2: Vector3Tuple = [
+        p3[0] - kappa * r * t2[0],
+        p3[1] - kappa * r * t2[1],
+        p3[2] - kappa * r * t2[2],
+      ];
 
       if (i === 0) {
-        points.push([x0, y0, cz]);
+        points.push([...p0]);
       }
-      points.push([x1, y1, cz]);
-      points.push([x2, y2, cz]);
-      points.push([x3, y3, cz]);
+      points.push([...p1]);
+      points.push([...p2]);
+      points.push([...p3]);
     }
 
     this.setPoints3D(points);
@@ -310,11 +373,7 @@ export class Angle extends VMobject {
    */
   pointFromProportion(alpha: number): Vector3Tuple {
     const angle = this._startAngle + alpha * this._angleValue;
-    return [
-      this._vertex[0] + this._radius * Math.cos(angle),
-      this._vertex[1] + this._radius * Math.sin(angle),
-      this._vertex[2],
-    ];
+    return this._arcPoint(angle);
   }
 
   /**
@@ -322,27 +381,27 @@ export class Angle extends VMobject {
    */
   getArcMidpoint(): Vector3Tuple {
     const midAngle = this._startAngle + this._angleValue / 2;
-    return [
-      this._vertex[0] + this._radius * Math.cos(midAngle),
-      this._vertex[1] + this._radius * Math.sin(midAngle),
-      this._vertex[2],
-    ];
+    return this._arcPoint(midAngle);
   }
 
   protected override _createCopy(): Angle {
-    // Create a simple copy by recreating with three points
     const startAngle = this._startAngle;
     const endAngle = this._startAngle + this._angleValue;
 
+    const cS = Math.cos(startAngle);
+    const sS = Math.sin(startAngle);
+    const cE = Math.cos(endAngle);
+    const sE = Math.sin(endAngle);
+
     const point1: Vector3Tuple = [
-      this._vertex[0] + Math.cos(startAngle),
-      this._vertex[1] + Math.sin(startAngle),
-      this._vertex[2],
+      this._vertex[0] + cS * this._u[0] + sS * this._v[0],
+      this._vertex[1] + cS * this._u[1] + sS * this._v[1],
+      this._vertex[2] + cS * this._u[2] + sS * this._v[2],
     ];
     const point2: Vector3Tuple = [
-      this._vertex[0] + Math.cos(endAngle),
-      this._vertex[1] + Math.sin(endAngle),
-      this._vertex[2],
+      this._vertex[0] + cE * this._u[0] + sE * this._v[0],
+      this._vertex[1] + cE * this._u[1] + sE * this._v[1],
+      this._vertex[2] + cE * this._u[2] + sE * this._v[2],
     ];
 
     const angle = new Angle(
