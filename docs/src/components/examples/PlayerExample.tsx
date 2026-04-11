@@ -64,6 +64,7 @@ function PlayerExampleInner() {
         width,
         height,
         backgroundColor: BLACK,
+        slidesMode: true,
       });
 
       if (disposed) {
