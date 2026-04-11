@@ -9,6 +9,7 @@ export interface PlayerControllerCallbacks {
   onNext: () => void;
   onSeek: (time: number) => void;
   onFullscreen: () => void;
+  onSlidesToggle: () => void;
   getCurrentTime: () => number;
   getDuration: () => number;
 }
@@ -81,6 +82,11 @@ export class PlayerController {
       case 'F':
         e.preventDefault();
         this._callbacks.onFullscreen();
+        break;
+      case 's':
+      case 'S':
+        e.preventDefault();
+        this._callbacks.onSlidesToggle();
         break;
       case 'Home':
         e.preventDefault();

@@ -169,11 +169,15 @@ export class Player {
         onSpeedChange: (r) => this.setPlaybackRate(r),
         onFullscreen: () => this.toggleFullscreen(),
         onExport: (format) => this.exportAs(format),
+        onSlidesToggle: (enabled) => this.setSlidesMode(enabled),
       },
       {
         autoHideMs: options.autoHideMs,
       },
     );
+
+    // Sync initial slides mode state
+    this._ui.setSlidesMode(this._slidesMode);
 
     // Enable scroll-to-scrub
     this._ui.enableScrollScrub(() => this._masterTimeline.getCurrentTime());
@@ -185,6 +189,7 @@ export class Player {
       onNext: () => this.nextSegment(),
       onSeek: (t) => this.seek(t),
       onFullscreen: () => this.toggleFullscreen(),
+      onSlidesToggle: () => this.setSlidesMode(!this._slidesMode),
       getCurrentTime: () => this._masterTimeline.getCurrentTime(),
       getDuration: () => this._masterTimeline.getDuration(),
     });
@@ -336,6 +341,12 @@ export class Player {
   /** Set the playback speed multiplier. */
   setPlaybackRate(rate: number): void {
     this._playbackRate = rate;
+  }
+
+  /** Enable or disable slides (presentation) mode at runtime. */
+  setSlidesMode(enabled: boolean): void {
+    this._slidesMode = enabled;
+    this._ui.setSlidesMode(enabled);
   }
 
   /** Export the animation in the given format (gif, webm, mp4). */
