@@ -4,10 +4,7 @@
  * In the original Manim library, Tex is used for LaTeX rendering.
  * This alias provides the same interface for users familiar with Manim.
  *
- * Supports the same `renderer` option as MathTex:
- * - 'katex'  : KaTeX only (fast)
- * - 'mathjax': MathJax SVG only (full LaTeX support)
- * - 'auto'   : KaTeX first, MathJax fallback (default)
+ * Uses SVG path-based rendering (MathTex), matching Python Manim's behavior.
  */
 
 import { MathTex, MathTexOptions } from './MathTex';
@@ -33,13 +30,6 @@ export type TexOptions = MathTexOptions;
  * const colored = new Tex({
  *   latex: '\\frac{d}{dx}\\sin(x) = \\cos(x)',
  *   color: '#ffff00',
- *   fontSize: 56
- * });
- *
- * // Use MathJax for advanced LaTeX
- * const chem = new Tex({
- *   latex: '\\ce{H2O -> H+ + OH-}',
- *   renderer: 'mathjax'
  * });
  * ```
  */
@@ -59,11 +49,14 @@ export class Tex extends MathTex {
   protected override _createCopy(): Tex {
     return new Tex({
       latex: this._latex,
-      color: this.color,
+      color: this._color,
       fontSize: this._fontSize,
       displayMode: this._displayMode,
       position: [this.position.x, this.position.y, this.position.z],
-      renderer: this._renderer,
+      strokeWidth: this._svgStrokeWidth,
+      fillOpacity: this._svgFillOpacity,
+      height: this._targetHeight,
+      macros: this._macros,
     });
   }
 }

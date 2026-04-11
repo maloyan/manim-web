@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { MathTex } from '../../mobjects/text/MathTex';
+import { MathTexImage } from '../../mobjects/text/MathTexImage';
 
 /**
  * Options for creating a NumberLine
@@ -176,7 +176,7 @@ export class NumberLine extends VMobject {
         const rawText = Number.isInteger(n) ? String(n) : n.toFixed(this._decimalPlaces);
         // Use LaTeX minus sign for negative numbers
         const labelText = rawText.replace(/^-/, '-');
-        const label = new MathTex({
+        const label = new MathTexImage({
           latex: labelText,
           fontSize: this._numberFontSize,
           color: '#ffffff',

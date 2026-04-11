@@ -50,7 +50,7 @@
       Scene,
       Axes,
       FunctionGraph,
-      MathTex,
+      MathTexImage,
       Create,
       Write,
       Transform,
@@ -92,7 +92,7 @@
         axes: axes
       });
 
-      const graphLabel = new MathTex({ latex: 'x^2', fontSize: 32, color: WHITE });
+      const graphLabel = new MathTexImage({ latex: 'x^2', fontSize: 32, color: WHITE });
       graphLabel.shift([4.5, 2, 0]);
 
       const graph2 = new FunctionGraph({
@@ -102,7 +102,7 @@
         axes: axes
       });
 
-      const graphLabel2 = new MathTex({ latex: 'x^3', fontSize: 32, color: WHITE });
+      const graphLabel2 = new MathTexImage({ latex: 'x^3', fontSize: 32, color: WHITE });
       graphLabel2.shift([4.5, 2, 0]);
 
       await graphLabel.waitForRender();

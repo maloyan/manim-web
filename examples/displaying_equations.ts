@@ -1,7 +1,7 @@
 import {
   Scene,
   Text,
-  MathTex,
+  MathTexImage,
   Write,
   ReplacementTransform,
   FadeOut,
@@ -39,7 +39,7 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     color: WHITE,
     fontUrl: FONT_URL,
   });
-  const equation = new MathTex({
+  const equation = new MathTexImage({
     latex: 'd(p, q) = \\sqrt{\\sum_{i=1}^n (q_i - p_i)^2}',
     fontSize: 48,
     color: WHITE,

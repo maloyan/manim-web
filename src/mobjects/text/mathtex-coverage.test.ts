@@ -1,9 +1,9 @@
 // @vitest-environment happy-dom
 /**
- * Additional coverage tests for MathTex, MathJaxRenderer, Code, and MarkupText.
+ * Additional coverage tests for MathTexImage, MathJaxRenderer, Code, and MarkupText.
  *
  * Targets:
- *   - MathTex.ts: constructor options, multi-part, getPart, setColor, copy,
+ *   - MathTexImage.ts: constructor options, multi-part, getPart, setColor, copy,
  *     KaTeX fallback, waitForRender, setRevealProgress, dispose, _syncMaterialToThree
  *   - MathJaxRenderer.ts: renderLatexToSVG pipeline, katexCanRender, isMathJaxLoaded
  *   - Code.ts: remaining uncovered lines (_createThreeObject, _updateMesh,
@@ -14,7 +14,7 @@
 
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import * as THREE from 'three';
-import { MathTex } from './MathTex';
+import { MathTexImage } from './MathTexImage';
 import { katexCanRender, isMathJaxLoaded } from './MathJaxRenderer';
 import { Code } from './Code';
 import { MarkupText } from './MarkupText';
@@ -73,45 +73,45 @@ beforeEach(() => {
 });
 
 // ===========================================================================
-// MathTex additional coverage
+// MathTexImage additional coverage
 // ===========================================================================
 
-describe('MathTex (additional coverage)', () => {
+describe('MathTexImage (additional coverage)', () => {
   // -----------------------------------------------------------------
   // Constructor option branches
   // -----------------------------------------------------------------
   describe('constructor option branches', () => {
     it('should use displayMode: false', () => {
-      const tex = new MathTex({ latex: 'x^2', displayMode: false });
+      const tex = new MathTexImage({ latex: 'x^2', displayMode: false });
       const internal = tex as unknown as { _displayMode: boolean };
       expect(internal._displayMode).toBe(false);
     });
 
     it('should accept _padding option', () => {
-      const tex = new MathTex({ latex: 'x', _padding: 5 });
+      const tex = new MathTexImage({ latex: 'x', _padding: 5 });
       const internal = tex as unknown as { _padding: number };
       expect(internal._padding).toBe(5);
     });
 
     it('should accept renderer: mathjax and skip ensureKatexStyles', () => {
-      const tex = new MathTex({ latex: 'x', renderer: 'mathjax' });
+      const tex = new MathTexImage({ latex: 'x', renderer: 'mathjax' });
       expect(tex.getRenderer()).toBe('mathjax');
     });
 
     it('should not re-render if setting the same latex', () => {
-      const tex = new MathTex({ latex: 'abc' });
+      const tex = new MathTexImage({ latex: 'abc' });
       const ret = tex.setLatex('abc');
       expect(ret).toBe(tex);
     });
 
     it('should not re-render if setting the same fontSize', () => {
-      const tex = new MathTex({ latex: 'abc', fontSize: 48 });
+      const tex = new MathTexImage({ latex: 'abc', fontSize: 48 });
       const ret = tex.setFontSize(48);
       expect(ret).toBe(tex);
     });
 
     it('should not re-render if setting the same renderer', () => {
-      const tex = new MathTex({ latex: 'abc', renderer: 'katex' });
+      const tex = new MathTexImage({ latex: 'abc', renderer: 'katex' });
       const ret = tex.setRenderer('katex');
       expect(ret).toBe(tex);
     });
@@ -122,7 +122,7 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('waitForRender edge cases', () => {
     it('should resolve for single-part when renderPromise is null', async () => {
-      const tex = new MathTex({ latex: 'a' });
+      const tex = new MathTexImage({ latex: 'a' });
       // Manually clear the render promise to test the null path
       const internal = tex as unknown as { _renderState: { renderPromise: Promise<void> | null } };
       internal._renderState.renderPromise = null;
@@ -130,7 +130,7 @@ describe('MathTex (additional coverage)', () => {
     });
 
     it('should resolve for multi-part when arrangePromise is null', async () => {
-      const tex = new MathTex({ latex: ['a', 'b'] });
+      const tex = new MathTexImage({ latex: ['a', 'b'] });
       const internal = tex as unknown as { _arrangePromise: Promise<void> | null };
       // Clear each part's render promise AND the arrange promise
       internal._arrangePromise = null;
@@ -145,14 +145,14 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('_createThreeObject paths', () => {
     it('should create empty group for multi-part', () => {
-      const tex = new MathTex({ latex: ['a', 'b'] });
+      const tex = new MathTexImage({ latex: ['a', 'b'] });
       const obj = tex.getThreeObject();
       expect(obj).toBeDefined();
       expect(obj.type).toBe('Group');
     });
 
     it('should create group with mesh for single-part', () => {
-      const tex = new MathTex({ latex: 'x' });
+      const tex = new MathTexImage({ latex: 'x' });
       const obj = tex.getThreeObject();
       expect(obj.type).toBe('Group');
       const hasMesh = obj.children.some((c) => c.type === 'Mesh');
@@ -165,7 +165,7 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('_syncMaterialToThree texture sync', () => {
     it('should update material map if texture differs', () => {
-      const tex = new MathTex({ latex: 'y' });
+      const tex = new MathTexImage({ latex: 'y' });
       const obj = tex.getThreeObject();
       const mesh = obj.children.find((c) => c.type === 'Mesh') as THREE.Mesh;
       expect(mesh).toBeDefined();
@@ -194,7 +194,7 @@ describe('MathTex (additional coverage)', () => {
     });
 
     it('should update geometry if dimensions changed', () => {
-      const tex = new MathTex({ latex: 'q' });
+      const tex = new MathTexImage({ latex: 'q' });
       const obj = tex.getThreeObject();
       const mesh = obj.children.find((c) => c.type === 'Mesh') as THREE.Mesh;
       expect(mesh).toBeDefined();
@@ -221,7 +221,7 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('setRevealProgress with rendered mesh', () => {
     it('should set mesh invisible for alpha <= 0.001', () => {
-      const tex = new MathTex({ latex: 'test' });
+      const tex = new MathTexImage({ latex: 'test' });
       const obj = tex.getThreeObject();
       const mesh = obj.children.find((c) => c.type === 'Mesh') as THREE.Mesh;
 
@@ -246,7 +246,7 @@ describe('MathTex (additional coverage)', () => {
     });
 
     it('should show mesh and adjust scale for alpha > 0.001', () => {
-      const tex = new MathTex({ latex: 'test' });
+      const tex = new MathTexImage({ latex: 'test' });
       const obj = tex.getThreeObject();
       const mesh = obj.children.find((c) => c.type === 'Mesh') as THREE.Mesh;
 
@@ -271,7 +271,7 @@ describe('MathTex (additional coverage)', () => {
     });
 
     it('should fully reveal mesh at alpha = 1', () => {
-      const tex = new MathTex({ latex: 'a' });
+      const tex = new MathTexImage({ latex: 'a' });
       const obj = tex.getThreeObject();
       const mesh = obj.children.find((c) => c.type === 'Mesh') as THREE.Mesh;
 
@@ -301,7 +301,7 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('dispose with resources', () => {
     it('should dispose texture and mesh geometry when both exist', () => {
-      const tex = new MathTex({ latex: 'a' });
+      const tex = new MathTexImage({ latex: 'a' });
       tex.getThreeObject();
 
       const internal = tex as unknown as {
@@ -324,13 +324,13 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('setColor / setStrokeOpacity on single-part', () => {
     it('setColor should not propagate when not multi-part', () => {
-      const tex = new MathTex({ latex: 'x' });
+      const tex = new MathTexImage({ latex: 'x' });
       tex.setColor('#00ff00');
       expect(tex.color).toBe('#00ff00');
     });
 
     it('setStrokeOpacity should not propagate when not multi-part', () => {
-      const tex = new MathTex({ latex: 'x' });
+      const tex = new MathTexImage({ latex: 'x' });
       tex.setStrokeOpacity(0.7);
       const internal = tex as unknown as { _opacity: number };
       expect(internal._opacity).toBeCloseTo(0.7);
@@ -342,21 +342,21 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('copy preserves all fields', () => {
     it('should preserve displayMode: false in copy', () => {
-      const orig = new MathTex({ latex: 'x', displayMode: false });
-      const cp = orig.copy() as MathTex;
+      const orig = new MathTexImage({ latex: 'x', displayMode: false });
+      const cp = orig.copy() as MathTexImage;
       const internal = cp as unknown as { _displayMode: boolean };
       expect(internal._displayMode).toBe(false);
     });
 
     it('should preserve custom fontSize in copy', () => {
-      const orig = new MathTex({ latex: 'x', fontSize: 96 });
-      const cp = orig.copy() as MathTex;
+      const orig = new MathTexImage({ latex: 'x', fontSize: 96 });
+      const cp = orig.copy() as MathTexImage;
       expect(cp.getFontSize()).toBe(96);
     });
 
     it('copy of multi-part preserves parts', () => {
-      const orig = new MathTex({ latex: ['a', '+', 'b'], color: '#ff0000' });
-      const cp = orig.copy() as MathTex;
+      const orig = new MathTexImage({ latex: ['a', '+', 'b'], color: '#ff0000' });
+      const cp = orig.copy() as MathTexImage;
       expect(cp.getPartCount()).toBe(3);
       expect(cp.getPart(0).getLatex()).toBe('a');
       expect(cp.getPart(1).getLatex()).toBe('+');
@@ -369,19 +369,19 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('_resolveRenderer branches', () => {
     it('auto mode should resolve to katex for simple latex', () => {
-      const tex = new MathTex({ latex: 'x^2', renderer: 'auto' });
+      const tex = new MathTexImage({ latex: 'x^2', renderer: 'auto' });
       // After construction, rendering starts. The _resolveRenderer should
       // pick 'katex' for simple LaTeX that KaTeX can handle.
       expect(tex.getRenderer()).toBe('auto');
     });
 
     it('katex mode should stay katex regardless of LaTeX complexity', () => {
-      const tex = new MathTex({ latex: '\\frac{x}{y}', renderer: 'katex' });
+      const tex = new MathTexImage({ latex: '\\frac{x}{y}', renderer: 'katex' });
       expect(tex.getRenderer()).toBe('katex');
     });
 
     it('mathjax mode should stay mathjax', () => {
-      const tex = new MathTex({ latex: 'x', renderer: 'mathjax' });
+      const tex = new MathTexImage({ latex: 'x', renderer: 'mathjax' });
       expect(tex.getRenderer()).toBe('mathjax');
     });
   });
@@ -391,7 +391,7 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('_startRender error path', () => {
     it('should set isRendering false after error', async () => {
-      const tex = new MathTex({ latex: 'x' });
+      const tex = new MathTexImage({ latex: 'x' });
       // Wait a tick to let render settle
       await new Promise((r) => setTimeout(r, 50));
       // isRendering should eventually become false (either success or error)
@@ -404,14 +404,14 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('_updateMeshGeometry edge cases', () => {
     it('should be a no-op when mesh is null', () => {
-      const tex = new MathTex({ latex: 'x' });
+      const tex = new MathTexImage({ latex: 'x' });
       // Don't call getThreeObject, so mesh is null
       const internal = tex as unknown as { _updateMeshGeometry: () => void };
       expect(() => internal._updateMeshGeometry()).not.toThrow();
     });
 
     it('should update geometry when mesh exists', () => {
-      const tex = new MathTex({ latex: 'x' });
+      const tex = new MathTexImage({ latex: 'x' });
       tex.getThreeObject();
       const internal = tex as unknown as {
         _renderState: { mesh: THREE.Mesh; width: number; height: number };
@@ -431,7 +431,7 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('getCenter', () => {
     it('should return current position', () => {
-      const tex = new MathTex({ latex: 'a', position: [3, 4, 5] });
+      const tex = new MathTexImage({ latex: 'a', position: [3, 4, 5] });
       expect(tex.getCenter()).toEqual([3, 4, 5]);
     });
   });
@@ -441,7 +441,7 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('getDimensions for multi-part', () => {
     it('should compute aggregate bounding box for multi-part', () => {
-      const tex = new MathTex({ latex: ['a', '+', 'b'] });
+      const tex = new MathTexImage({ latex: ['a', '+', 'b'] });
       const [w, h] = tex.getDimensions();
       expect(typeof w).toBe('number');
       expect(typeof h).toBe('number');
@@ -453,7 +453,7 @@ describe('MathTex (additional coverage)', () => {
   // -----------------------------------------------------------------
   describe('texture colorSpace after render', () => {
     it('should set colorSpace to SRGBColorSpace on texture via _renderState', () => {
-      const tex = new MathTex({ latex: 'x^2' });
+      const tex = new MathTexImage({ latex: 'x^2' });
       const obj = tex.getThreeObject();
       const mesh = obj.children.find((c) => c.type === 'Mesh') as THREE.Mesh;
       expect(mesh).toBeDefined();

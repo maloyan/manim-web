@@ -7,12 +7,12 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
+import { MathTexImage } from './MathTexImage';
 import { MathTex } from './MathTex';
-import { MathTexSVG } from './MathTexSVG';
 
-// Helper: create a minimal MathTex prototype mock (single-part mode)
-function createMathTexMock() {
-  const tex = Object.create(MathTex.prototype);
+// Helper: create a minimal MathTexImage prototype mock (single-part mode)
+function createMathTexImageMock() {
+  const tex = Object.create(MathTexImage.prototype);
   tex._renderState = {
     canvas: null,
     texture: null,
@@ -27,9 +27,9 @@ function createMathTexMock() {
   return tex;
 }
 
-// Helper: create a minimal MathTexSVG prototype mock
-function createMathTexSVGMock() {
-  const tex = Object.create(MathTexSVG.prototype);
+// Helper: create a minimal MathTex (SVG) prototype mock
+function createMathTexMock() {
+  const tex = Object.create(MathTex.prototype);
   tex._renderPromise = null;
   tex._renderError = null;
   tex._markDirty = vi.fn();
@@ -37,12 +37,12 @@ function createMathTexSVGMock() {
 }
 
 // ===========================================================================
-// MathTex error propagation
+// MathTexImage error propagation
 // ===========================================================================
 
-describe('MathTex async error propagation', () => {
+describe('MathTexImage async error propagation', () => {
   it('should reject waitForRender when _renderLatex throws an Error', async () => {
-    const tex = createMathTexMock();
+    const tex = createMathTexImageMock();
     tex._renderLatex = vi.fn().mockRejectedValue(new Error('simulated render failure'));
     tex._startRender();
 
@@ -53,7 +53,7 @@ describe('MathTex async error propagation', () => {
   });
 
   it('should set isRendering to false even on error', async () => {
-    const tex = createMathTexMock();
+    const tex = createMathTexImageMock();
     tex._renderLatex = vi.fn().mockRejectedValue(new Error('fail'));
     tex._startRender();
 
@@ -67,7 +67,7 @@ describe('MathTex async error propagation', () => {
   });
 
   it('should wrap non-Error rejection values in a new Error', async () => {
-    const tex = createMathTexMock();
+    const tex = createMathTexImageMock();
     // Reject with a plain string — exercises the `new Error(String(error))` branch
     tex._renderLatex = vi.fn().mockRejectedValue('string error');
     tex._startRender();
@@ -76,7 +76,7 @@ describe('MathTex async error propagation', () => {
   });
 
   it('should propagate errors through multipart waitForRender', async () => {
-    const parent = createMathTexMock();
+    const parent = createMathTexImageMock();
     parent._isMultiPart = true;
     parent._renderState.renderError = new Error('child render failed');
     parent._arrangePromise = Promise.resolve();
@@ -86,11 +86,11 @@ describe('MathTex async error propagation', () => {
 
   it('should capture error in _arrangeParts when child parts fail', async () => {
     // Create a parent mock that simulates multipart mode with failing children
-    const parent = createMathTexMock();
+    const parent = createMathTexImageMock();
     parent._isMultiPart = true;
 
     // Create mock child parts whose waitForRender rejects
-    const failingChild = createMathTexMock();
+    const failingChild = createMathTexImageMock();
     failingChild._renderState.renderPromise = Promise.resolve();
     failingChild._renderState.renderError = new Error('child KaTeX error');
     parent._parts = [failingChild];
@@ -104,11 +104,11 @@ describe('MathTex async error propagation', () => {
   });
 
   it('should wrap non-Error failures in _arrangeParts', async () => {
-    const parent = createMathTexMock();
+    const parent = createMathTexImageMock();
     parent._isMultiPart = true;
 
     // Create a mock child whose waitForRender rejects with a non-Error
-    const failingChild = createMathTexMock();
+    const failingChild = createMathTexImageMock();
     failingChild._renderState.renderPromise = null;
     // Manually override waitForRender to reject with a string
     failingChild.waitForRender = () => Promise.reject('string rejection');
@@ -122,12 +122,12 @@ describe('MathTex async error propagation', () => {
 });
 
 // ===========================================================================
-// MathTexSVG error propagation
+// MathTex (SVG) error propagation
 // ===========================================================================
 
-describe('MathTexSVG async error propagation', () => {
+describe('MathTex async error propagation', () => {
   it('should reject waitForRender when _render throws an Error', async () => {
-    const tex = createMathTexSVGMock();
+    const tex = createMathTexMock();
     tex._render = vi.fn().mockRejectedValue(new Error('simulated SVG render failure'));
     tex._startRender();
 
@@ -138,7 +138,7 @@ describe('MathTexSVG async error propagation', () => {
   });
 
   it('should wrap non-Error rejection values in a new Error', async () => {
-    const tex = createMathTexSVGMock();
+    const tex = createMathTexMock();
     tex._render = vi.fn().mockRejectedValue('plain string SVG error');
     tex._startRender();
 
@@ -148,7 +148,7 @@ describe('MathTexSVG async error propagation', () => {
   });
 
   it('should not throw from waitForRender when no error occurred', async () => {
-    const tex = createMathTexSVGMock();
+    const tex = createMathTexMock();
     tex._renderPromise = Promise.resolve();
     tex._renderError = null;
 

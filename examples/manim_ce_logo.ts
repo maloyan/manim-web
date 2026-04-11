@@ -1,7 +1,7 @@
 import {
   Circle,
   LEFT,
-  MathTex,
+  MathTexImage,
   ORIGIN,
   RIGHT,
   Scene,
@@ -25,7 +25,7 @@ async function manimCELogo(scene: Scene) {
   const logoBlue = '#525893';
   const logoRed = '#e07a5f';
   const logoBlack = '#343434';
-  const dsM = new MathTex({ latex: '\\mathbb{M}', fillColor: logoBlack });
+  const dsM = new MathTexImage({ latex: '\\mathbb{M}', fillColor: logoBlack });
   await dsM.waitForRender();
   dsM.scale(7);
   dsM.shift(addVec(scaleVec(2.25, LEFT), scaleVec(1.5, UP)));

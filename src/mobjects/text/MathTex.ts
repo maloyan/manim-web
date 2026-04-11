@@ -1,309 +1,121 @@
-/* eslint-disable max-lines */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * MathTex - LaTeX rendering for manimweb using KaTeX (default) or MathJax (fallback)
+ * MathTex - Vector-based LaTeX rendering using SVG paths (default).
  *
- * This module provides LaTeX math rendering capabilities by:
- * 1. Using KaTeX to render LaTeX to HTML (fast, limited subset)
- * 2. Falling back to MathJax SVG output for unsupported LaTeX (full LaTeX support)
- * 3. Converting output to canvas via DOM walking / SVG foreignObject
- * 4. Creating a THREE.js textured plane mesh
+ * Unlike MathTexImage (which rasterizes LaTeX to a canvas texture), MathTex
+ * produces real VMobject paths from MathJax SVG output. This enables
+ * path-based animations like Create (stroke-draw reveal), DrawBorderThenFill,
+ * and point-morphing Transform.
  *
- * Renderer selection:
- * - 'katex'  : KaTeX only (fast, limited subset)
- * - 'mathjax': MathJax only (slower, full LaTeX including \usepackage, align, etc.)
- * - 'auto'   : Try KaTeX first; fall back to MathJax if KaTeX throws (default)
+ * This is the default LaTeX renderer, matching Python Manim's behavior.
+ *
+ * Uses renderLatexToSVG() -> svgToVMobjects() pipeline.
  */
 
-import * as THREE from 'three';
-import katex from 'katex';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { ensureKatexStyles, waitForKatexStyles } from './katexStyles';
-import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
+import { VGroup } from '../../core/VGroup';
+import { VMobject } from '../../core/VMobject';
+import type { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { WHITE } from '../../constants/colors';
+import { renderLatexToSVG } from './MathJaxRenderer';
 
-/**
- * Which renderer to use for LaTeX.
- * - 'katex'  : KaTeX only (fast, but limited LaTeX subset)
- * - 'mathjax': MathJax SVG only (slower, full LaTeX support)
- * - 'auto'   : Try KaTeX first; if it throws, fall back to MathJax
- */
-export type TexRenderer = 'katex' | 'mathjax' | 'auto';
-
-/**
- * Options for creating a MathTex object
- */
 export interface MathTexOptions {
-  /** LaTeX string or array of strings for multi-part expressions.
-   *  When an array is provided, each string becomes a separate sub-mobject
-   *  accessible via getPart(index), matching Python Manim's behavior. */
+  /** LaTeX string or array of strings for multi-part expressions. */
   latex: string | string[];
-  /** Color as CSS color string. Default: '#ffffff' */
+  /** Color as CSS color string. Default: WHITE ('#ffffff') */
   color?: string;
-  /** Base font size in pixels. Default: 48 */
+  /** Scale factor (1 = standard math size). Default: 1 */
   fontSize?: number;
   /** Use display mode (block) vs inline mode. Default: true */
   displayMode?: boolean;
-  /** Position in 3D space. Default: [0, 0, 0] */
+  /** Position in 3D space. Default: [0,0,0] */
   position?: Vector3Tuple;
-  /** Internal: padding in pixels around the rendered content. Default: 10 */
-  _padding?: number;
-  /**
-   * Which renderer to use.
-   * - 'katex'  : KaTeX only (fast)
-   * - 'mathjax': MathJax SVG only (full LaTeX support)
-   * - 'auto'   : KaTeX first, MathJax fallback (default)
-   */
-  renderer?: TexRenderer;
+  /** Stroke width for glyph outlines. Default: 2 */
+  strokeWidth?: number;
+  /** Fill opacity for glyph interiors. Default: 1 */
+  fillOpacity?: number;
+  /** Explicit target height in world units. Overrides fontSize scaling. */
+  height?: number;
+  /** Custom LaTeX macros as { name: expansion }. */
+  macros?: Record<string, string>;
 }
 
-/**
- * Internal state for async rendering
- */
-interface RenderState {
-  canvas: HTMLCanvasElement | null;
-  texture: THREE.CanvasTexture | null;
-  mesh: THREE.Mesh | null;
-  width: number;
-  height: number;
-  isRendering: boolean;
-  renderPromise: Promise<void> | null;
-  renderError: Error | null;
-}
-
-/**
- * MathTex - A mobject for rendering LaTeX mathematical expressions
- *
- * Uses KaTeX for LaTeX parsing and renders to a textured plane in Three.js.
- * The rendering is asynchronous but the constructor is synchronous.
- *
- * @example
- * ```typescript
- * // Create a simple equation
- * const equation = new MathTex({ latex: 'E = mc^2' });
- *
- * // Create a colored integral
- * const integral = new MathTex({
- *   latex: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
- *   color: '#00ff00',
- *   fontSize: 64
- * });
- *
- * // Wait for rendering to complete before animating
- * await integral.waitForRender();
- * ```
- */
-export class MathTex extends Mobject {
+export class MathTex extends VGroup {
   protected _latex: string;
   protected _fontSize: number;
   protected _displayMode: boolean;
-  protected _renderState: RenderState;
-  /** User-requested renderer mode */
-  protected _renderer: TexRenderer;
-  /** Which renderer was actually used for the last successful render */
-  protected _activeRenderer: 'katex' | 'mathjax' | null = null;
+  protected _color: string;
+  protected _svgStrokeWidth: number;
+  protected _svgFillOpacity: number;
+  protected _targetHeight: number | undefined;
+  protected _macros: Record<string, string> | undefined;
+  protected _svgViewBoxWidth: number = 1000;
+
   /** Whether this is a multi-part MathTex (created from string[]) */
   protected _isMultiPart: boolean = false;
-  /** Child MathTex parts (only when _isMultiPart is true) */
-  protected _parts: MathTex[] = [];
-  /** Promise that resolves when parts are arranged (multi-part only) */
-  protected _arrangePromise: Promise<void> | null = null;
-  /** Padding in pixels around rendered content */
-  protected _padding: number;
+  /** Child part groups (only when _isMultiPart is true) */
+  protected _parts: VGroup[] = [];
+  /** Promise that resolves when rendering is complete */
+  protected _renderPromise: Promise<void> | null = null;
+  /** Error from rendering, if any */
+  protected _renderError: Error | null = null;
 
   constructor(options: MathTexOptions) {
     super();
 
     const {
       latex,
-      color = '#ffffff',
-      fontSize = 48,
+      color = WHITE,
+      fontSize = 1,
       displayMode = true,
       position = [0, 0, 0],
-      renderer = 'auto',
-      _padding: padding = 10,
+      strokeWidth = 2,
+      fillOpacity = 1,
+      height,
+      macros,
     } = options;
 
     this._fontSize = fontSize;
     this._displayMode = displayMode;
-    this._renderer = renderer;
-    this._padding = padding;
-    this.color = color;
-
-    // Initialize render state
-    this._renderState = {
-      canvas: null,
-      texture: null,
-      mesh: null,
-      width: 0,
-      height: 0,
-      isRendering: false,
-      renderPromise: null,
-      renderError: null,
-    };
+    this._color = color;
+    this._svgStrokeWidth = strokeWidth;
+    this._svgFillOpacity = fillOpacity;
+    this._targetHeight = height;
+    this._macros = macros;
 
     // Set position
     this.position.set(position[0], position[1], position[2]);
 
     if (Array.isArray(latex)) {
-      // Multi-part mode: create child MathTex for each string
+      // Multi-part mode: render the FULL expression as one MathJax call
+      // for correct layout, then split VMobjects into parts by glyph count.
       this._isMultiPart = true;
       this._latex = latex.join('');
-
-      for (const part of latex) {
-        const child = new MathTex({
-          latex: part,
-          color,
-          fontSize,
-          displayMode: false, // inline mode for parts to avoid extra spacing
-          renderer,
-          _padding: 2, // minimal padding for multi-part children
-        });
-        this._parts.push(child);
-        this.add(child);
-      }
-
-      // Arrange parts after they all render
-      this._arrangePromise = this._arrangeParts();
-      this._renderState.renderPromise = this._arrangePromise;
+      this._renderPromise = this._renderMultiPart(latex);
     } else {
-      // Single-string mode: existing behavior
       this._isMultiPart = false;
       this._latex = latex;
-
-      // Ensure KaTeX CSS is loaded (needed for 'katex' and 'auto' modes)
-      if (this._renderer !== 'mathjax') {
-        ensureKatexStyles();
-      }
-
-      // Start async rendering
       this._startRender();
     }
   }
 
   /**
-   * Get the renderer mode
-   */
-  getRenderer(): TexRenderer {
-    return this._renderer;
-  }
-
-  /**
-   * Get which renderer was actually used for the current render.
-   * Returns null if not yet rendered.
-   */
-  getActiveRenderer(): 'katex' | 'mathjax' | null {
-    return this._activeRenderer;
-  }
-
-  /**
-   * Set the renderer mode and re-render.
-   * @param renderer The renderer to use
-   * @returns this for chaining
-   */
-  setRenderer(renderer: TexRenderer): this {
-    if (this._renderer === renderer) return this;
-    this._renderer = renderer;
-    this._startRender();
-    return this;
-  }
-
-  /**
-   * Get the LaTeX string
-   */
-  getLatex(): string {
-    return this._latex;
-  }
-
-  /**
-   * Set the LaTeX string and re-render
-   * @param latex New LaTeX string
-   * @returns this for chaining
-   */
-  setLatex(latex: string): this {
-    if (this._latex === latex) return this;
-    this._latex = latex;
-    this._startRender();
-    return this;
-  }
-
-  /**
-   * Get the font size
-   */
-  getFontSize(): number {
-    return this._fontSize;
-  }
-
-  /**
-   * Set the font size and re-render
-   * @param size New font size in pixels
-   * @returns this for chaining
-   */
-  setFontSize(size: number): this {
-    if (this._fontSize === size) return this;
-    this._fontSize = size;
-    this._startRender();
-    return this;
-  }
-
-  /**
-   * Override setColor — texture is always rendered white, so we only need
-   * to update the material tint via _syncMaterialToThree (no re-render).
-   */
-  override setColor(color: string): this {
-    super.setColor(color);
-    if (this._isMultiPart) {
-      for (const part of this._parts) {
-        part.setColor(color);
-      }
-    }
-    this._markDirty();
-    return this;
-  }
-
-  /**
-   * Override setStrokeOpacity to propagate to multi-part children.
-   */
-  override setStrokeOpacity(opacity: number): this {
-    super.setStrokeOpacity(opacity);
-    if (this._isMultiPart) {
-      for (const part of this._parts) {
-        part.setStrokeOpacity(opacity);
-      }
-    }
-    return this;
-  }
-
-  /**
    * Wait for the LaTeX to finish rendering.
-   * For multi-part MathTex, waits for all parts to render and be arranged.
-   * @returns Promise that resolves when rendering is complete
    */
   async waitForRender(): Promise<void> {
-    if (this._isMultiPart) {
-      // Wait for arrangement (which internally waits for all child renders)
-      if (this._arrangePromise) {
-        await this._arrangePromise;
-      }
-      // Surface any error captured during arrangement
-      if (this._renderState.renderError) {
-        throw this._renderState.renderError;
-      }
-      return;
+    if (this._renderPromise) {
+      await this._renderPromise;
     }
-    if (this._renderState.renderPromise) {
-      await this._renderState.renderPromise;
-    }
-    if (this._renderState.renderError) {
-      throw this._renderState.renderError;
+    if (this._renderError) {
+      throw this._renderError;
     }
   }
 
   /**
-   * Get a sub-part of a multi-part MathTex expression.
-   * Only available when the MathTex was created with a string array.
-   * @param index Zero-based index of the part
-   * @returns The MathTex sub-part at the given index
+   * Get a sub-part of a multi-part expression.
+   * Only available when created with a string array.
+   * Returns a VGroup with setColor() support.
    */
-  getPart(index: number): MathTex {
+  getPart(index: number): VGroup {
     if (!this._isMultiPart) {
       throw new Error('getPart() is only available on multi-part MathTex (created with string[])');
     }
@@ -314,740 +126,320 @@ export class MathTex extends Mobject {
   }
 
   /**
-   * Get the number of parts (1 for single-string, N for multi-part).
+   * Get the number of parts.
    */
   getPartCount(): number {
     return this._isMultiPart ? this._parts.length : 1;
   }
 
   /**
-   * Arrange child parts horizontally after they all render.
-   * Positions parts so their content (minus padding) is seamlessly adjacent.
+   * Get the LaTeX string.
    */
-  private async _arrangeParts(): Promise<void> {
-    // Use allSettled to avoid unhandled rejections when child parts fail
-    // (e.g. KaTeX errors in test environments). If any part failed,
-    // store the first error so the parent's waitForRender() can surface it.
-    const results = await Promise.allSettled(this._parts.map((p) => p.waitForRender()));
-    const firstFailure = results.find((r) => r.status === 'rejected') as
-      | PromiseRejectedResult
-      | undefined;
-    if (firstFailure) {
-      const err = firstFailure.reason;
-      this._renderState.renderError = err instanceof Error ? err : new Error(String(err));
-      return;
-    }
-
-    const SCALE = 0.01;
-
-    // Collect content widths (total width minus padding on each side)
-    const widths = this._parts.map((p) => {
-      const [w] = p.getDimensions();
-      return w;
-    });
-    const contentWidths = this._parts.map((p, i) => {
-      const paddingWorld = p._padding * SCALE;
-      return Math.max(0, widths[i] - 2 * paddingWorld);
-    });
-
-    // Small gap between parts to approximate natural LaTeX inter-expression spacing
-    const INTER_PART_GAP = 0.03;
-
-    // Position parts so content edges are adjacent with small gaps
-    let cx = 0;
-    const positions: number[] = [];
-    for (let i = 0; i < this._parts.length; i++) {
-      if (i > 0) cx += INTER_PART_GAP;
-      positions.push(cx + contentWidths[i] / 2);
-      cx += contentWidths[i];
-    }
-
-    // Center the entire group
-    const totalContentWidth = cx;
-    const centerOffset = totalContentWidth / 2;
-    for (let i = 0; i < this._parts.length; i++) {
-      this._parts[i].position.set(positions[i] - centerOffset, 0, 0);
-      this._parts[i]._markDirty();
-    }
+  getLatex(): string {
+    return this._latex;
   }
 
   /**
-   * Check if rendering is in progress
+   * Get the render error, if any.
+   * Returns null if rendering succeeded or is still in progress.
    */
-  isRendering(): boolean {
-    return this._renderState.isRendering;
+  getRenderError(): Error | null {
+    return this._renderError;
   }
 
   /**
-   * Get the rendered dimensions in world units
-   * @returns [width, height] or [0, 0] if not yet rendered
+   * Override setColor to propagate to all VMobject children (fill + stroke).
    */
-  getDimensions(): [number, number] {
+  override setColor(color: string): this {
+    this._color = color;
     if (this._isMultiPart) {
-      // Compute aggregate dimensions from bounding box of all parts
-      const bbox = this.getBoundingBox();
-      return [bbox.width, bbox.height];
+      for (const part of this._parts) {
+        part.setColor(color);
+      }
+    } else {
+      // Propagate to all VMobject children (the glyph paths)
+      for (const child of this.children) {
+        if (child instanceof VMobject) {
+          child.setColor(color);
+        }
+        // Handle nested VGroups from svgToVMobjects
+        if (child instanceof VGroup) {
+          for (const grandchild of child.children) {
+            if (grandchild instanceof VMobject) {
+              grandchild.setColor(color);
+            }
+          }
+        }
+      }
     }
-    return [this._renderState.width, this._renderState.height];
+    this._markDirty();
+    return this;
   }
 
   /**
-   * Start the async rendering process
+   * Start the async rendering process.
    */
   protected _startRender(): void {
-    this._renderState.isRendering = true;
-    this._renderState.renderPromise = this._renderLatex()
+    this._renderPromise = this._render()
       .then(() => {
-        this._renderState.isRendering = false;
         this._markDirty();
       })
       .catch((error) => {
         console.error('MathTex rendering error:', error);
-        this._renderState.isRendering = false;
-        this._renderState.renderError = error instanceof Error ? error : new Error(String(error));
+        this._renderError = error instanceof Error ? error : new Error(String(error));
       });
   }
 
   /**
-   * Render the LaTeX to a canvas using the selected renderer.
-   *
-   * Renderer selection logic:
-   * - 'katex'  : Use KaTeX directly (throwOnError: false)
-   * - 'mathjax': Use MathJax SVG output, rendered to canvas via Image
-   * - 'auto'   : Try KaTeX with throwOnError: true. If it throws,
-   *              fall back to MathJax.
+   * Render the LaTeX to VMobject paths.
    */
-  protected async _renderLatex(): Promise<void> {
-    const useRenderer = this._resolveRenderer();
-
-    if (useRenderer === 'mathjax') {
-      return this._renderLatexViaMathJax();
-    }
-
-    // KaTeX path (used by both 'katex' and 'auto' after resolution)
-    return this._renderLatexViaKaTeX();
-  }
-
-  /**
-   * Determine which concrete renderer to use for the current LaTeX string.
-   */
-  private _resolveRenderer(): 'katex' | 'mathjax' {
-    if (this._renderer === 'katex') return 'katex';
-    if (this._renderer === 'mathjax') return 'mathjax';
-
-    // 'auto': probe KaTeX
-    if (katexCanRender(this._latex, this._displayMode)) {
-      return 'katex';
-    }
-    return 'mathjax';
-  }
-
-  /**
-   * Parse an SVG dimension attribute that may use "ex" units and convert
-   * to pixels.  MathJax outputs width/height like "5.002ex"; parseFloat
-   * strips the suffix, so we detect "ex" and scale appropriately.
-   */
-  private _parseSvgDimension(attr: string | null, fontSize: number): number {
-    if (!attr) return 0;
-    const value = parseFloat(attr);
-    if (!value || isNaN(value)) return 0;
-    // 1ex ≈ fontSize × 0.5 (x-height approximation)
-    return attr.endsWith('ex') ? value * fontSize * 0.5 : value;
-  }
-
-  /**
-   * Render using MathJax SVG output.  The SVG is painted onto a canvas
-   * texture in the same way the KaTeX path works, keeping the visual
-   * pipeline consistent.
-   */
-  protected async _renderLatexViaMathJax(): Promise<void> {
-    this._activeRenderer = 'mathjax';
-
+  protected async _render(): Promise<void> {
     const result = await renderLatexToSVG(this._latex, {
       displayMode: this._displayMode,
-      color: '#ffffff', // always render white; actual color applied via material tint
-      fontScale: this._fontSize / 48, // normalise against base 48px
+      color: this._color,
+      fontScale: this._fontSize,
+      macros: this._macros,
     });
 
-    // Render the MathJax SVG into a canvas via <img>
-    const svgString = result.svgString;
-
-    // Measure intrinsic size
-    const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
-    tempDiv.style.top = '-9999px';
-    tempDiv.innerHTML = svgString;
-    document.body.appendChild(tempDiv);
-
-    const svgEl = tempDiv.querySelector('svg');
-    if (!svgEl) {
-      document.body.removeChild(tempDiv);
-      console.warn('MathTex: MathJax produced no SVG for:', this._latex);
-      return;
+    const viewBox = result.svgElement.getAttribute?.('viewBox');
+    if (viewBox) {
+      const parts = viewBox.split(/\s+/).map(Number);
+      this._svgViewBoxWidth = parts[2] || 1000;
     }
 
-    // Ensure the SVG has explicit pixel width/height for rasterization.
-    let svgW = this._parseSvgDimension(svgEl.getAttribute('width'), this._fontSize);
-    let svgH = this._parseSvgDimension(svgEl.getAttribute('height'), this._fontSize);
+    const vmobjectGroup = result.vmobjectGroup;
 
-    if ((!svgW || !svgH) && result.width && result.height) {
-      // Fallback: derive pixel size from viewBox-based result dimensions.
-      // result.width/height = viewBox units × fontScale (fontSize/48).
-      // viewBox uses ~1000 units per ex → pixels = result.value * 0.024
-      svgW = result.width * 0.024;
-      svgH = result.height * 0.024;
+    // Restyle children: MathJax glyphs should be filled with visible border
+    this._restyleChildren(vmobjectGroup);
+
+    // Add the VMobject children from the group
+    for (const child of [...vmobjectGroup.children]) {
+      vmobjectGroup.remove(child);
+      this.add(child);
     }
 
-    if (svgW && svgH) {
-      svgEl.setAttribute('width', String(svgW));
-      svgEl.setAttribute('height', String(svgH));
-    }
+    // Scale to target height if specified, otherwise use a sensible default
+    this._scaleToTarget();
 
-    const finalSvgString = new XMLSerializer().serializeToString(svgEl);
-    document.body.removeChild(tempDiv);
-
-    const padding = this._padding;
-    const width = Math.ceil(svgW) + padding * 2;
-    const height = Math.ceil(svgH) + padding * 2;
-
-    if (width <= 0 || height <= 0) {
-      console.warn('MathTex (MathJax): Invalid dimensions', { width, height, latex: this._latex });
-      return;
-    }
-
-    // Rasterize to canvas
-    const scale = 2;
-    const canvas = document.createElement('canvas');
-    canvas.width = width * scale;
-    canvas.height = height * scale;
-    const ctx = canvas.getContext('2d')!;
-    ctx.scale(scale, scale);
-
-    await new Promise<void>((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        ctx.drawImage(img, padding, padding, svgW, svgH);
-        URL.revokeObjectURL(img.src);
-        resolve();
-      };
-      img.onerror = () => {
-        URL.revokeObjectURL(img.src);
-        console.warn('MathTex (MathJax): Failed to rasterize SVG');
-        resolve();
-      };
-      const blob = new Blob([finalSvgString], { type: 'image/svg+xml;charset=utf-8' });
-      img.src = URL.createObjectURL(blob);
-    });
-
-    // Store in render state (same pipeline as KaTeX)
-    this._renderState.canvas = canvas;
-
-    if (this._renderState.texture) {
-      this._renderState.texture.dispose();
-    }
-    this._renderState.texture = new THREE.CanvasTexture(canvas);
-    this._renderState.texture.colorSpace = THREE.SRGBColorSpace;
-    this._renderState.texture.minFilter = THREE.LinearFilter;
-    this._renderState.texture.magFilter = THREE.LinearFilter;
-    this._renderState.texture.needsUpdate = true;
-
-    const scaleFactor = 0.01;
-    this._renderState.width = width * scaleFactor;
-    this._renderState.height = height * scaleFactor;
-
-    if (this._renderState.mesh) {
-      this._updateMeshGeometry();
-      const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
-      material.map = this._renderState.texture;
-      material.needsUpdate = true;
-    }
+    // Set fillOpacity on this VGroup so Create animation detects it has fill
+    // and properly hides it during the stroke-draw phase before fading it in.
+    this.fillOpacity = this._svgFillOpacity;
   }
 
   /**
-   * Render the LaTeX to a canvas by walking the KaTeX DOM
-   * and drawing each text element at its computed CSS position.
+   * Restyle all VMobject children for solid glyph rendering.
    */
-  protected async _renderLatexViaKaTeX(): Promise<void> {
-    if (typeof document === 'undefined') {
-      return;
-    }
-    this._activeRenderer = 'katex';
-
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '-9999px';
-    container.style.fontSize = `${this._fontSize}px`;
-    document.body.appendChild(container);
-
-    try {
-      // Render LaTeX with KaTeX — produces properly laid-out HTML+CSS
-      katex.render(this._latex, container, {
-        displayMode: this._displayMode,
-        throwOnError: false,
-        output: 'html',
-      });
-
-      // Wait for KaTeX CSS to load
-      await waitForKatexStyles();
-
-      // Force style recalculation so browser discovers @font-face rules
-      void container.offsetHeight;
-
-      // Wait a tick for CSS processing and font discovery.
-      // NOTE: use setTimeout instead of requestAnimationFrame — rAF is
-      // suspended in background tabs, causing waitForRender() to hang.
-      await new Promise<void>((r) => setTimeout(r, 0));
-
-      // Explicitly request common KaTeX fonts (triggers download if not cached).
-      // Race against a timeout to avoid hanging if fonts can't load.
-      const fs = `${this._fontSize}px`;
-      const fontTimeout = new Promise<void>((r) => setTimeout(r, 5000));
-      await Promise.race([
-        Promise.all(
-          [
-            document.fonts.load(`${fs} KaTeX_Main`),
-            document.fonts.load(`italic ${fs} KaTeX_Math`),
-            document.fonts.load(`bold ${fs} KaTeX_Main`),
-            document.fonts.load(`${fs} KaTeX_Size1`),
-            document.fonts.load(`${fs} KaTeX_Size2`),
-            document.fonts.load(`${fs} KaTeX_AMS`),
-          ].map((p) =>
-            p.catch((err) => {
-              console.warn('MathTex: KaTeX font failed to load. Rendering may be degraded.', err);
-            }),
-          ),
-        ),
-        fontTimeout,
-      ]);
-
-      // Wait for all fonts to finish loading (with timeout)
-      await Promise.race([document.fonts.ready, fontTimeout]);
-
-      // Measure the rendered content
-      const containerRect = container.getBoundingClientRect();
-      const padding = this._padding;
-      const width = Math.ceil(containerRect.width) + padding * 2;
-      const height = Math.ceil(containerRect.height) + padding * 2;
-
-      if (width <= 0 || height <= 0) {
-        console.warn('MathTex: Invalid dimensions', { width, height, latex: this._latex });
-        return;
+  protected _restyleChildren(group: VGroup): void {
+    const restyle = (mob: Mobject) => {
+      if (mob instanceof VMobject) {
+        mob.fillOpacity = this._svgFillOpacity;
+        mob.strokeWidth = this._svgStrokeWidth;
+        mob.setColor(this._color);
+        // Access _style via any cast since protected access from sibling instances
+        (mob as any)._style.fillOpacity = this._svgFillOpacity;
+        (mob as any)._style.strokeWidth = this._svgStrokeWidth;
       }
-
-      // Walk KaTeX DOM and render each text/SVG element to canvas
-      const canvas = await this._renderDomToCanvas(
-        container,
-        containerRect,
-        width,
-        height,
-        padding,
-      );
-
-      // Store render state
-      this._renderState.canvas = canvas;
-
-      // Create or update texture
-      if (this._renderState.texture) {
-        this._renderState.texture.dispose();
-      }
-      this._renderState.texture = new THREE.CanvasTexture(canvas);
-      this._renderState.texture.colorSpace = THREE.SRGBColorSpace;
-      this._renderState.texture.minFilter = THREE.LinearFilter;
-      this._renderState.texture.magFilter = THREE.LinearFilter;
-      this._renderState.texture.needsUpdate = true;
-
-      // Calculate world dimensions
-      const scaleFactor = 0.01;
-      this._renderState.width = width * scaleFactor;
-      this._renderState.height = height * scaleFactor;
-
-      // Update mesh if it exists
-      if (this._renderState.mesh) {
-        this._updateMeshGeometry();
-        const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
-        material.map = this._renderState.texture;
-        material.needsUpdate = true;
-      }
-    } finally {
-      document.body.removeChild(container);
-    }
-  }
-
-  /**
-   * Walk the KaTeX DOM tree and render text nodes + SVG elements
-   * at their computed CSS positions onto a canvas.
-   */
-  protected async _renderDomToCanvas(
-    container: HTMLElement,
-    containerRect: DOMRect,
-    width: number,
-    height: number,
-    padding: number,
-  ): Promise<HTMLCanvasElement> {
-    const scale = 2;
-    const canvas = document.createElement('canvas');
-    canvas.width = width * scale;
-    canvas.height = height * scale;
-
-    const ctx = canvas.getContext('2d')!;
-    ctx.scale(scale, scale);
-    ctx.fillStyle = '#ffffff'; // always render white; actual color applied via material tint
-
-    // Collect text items, SVG items, and CSS rule items from KaTeX DOM
-    interface TextItem {
-      text: string;
-      x: number;
-      y: number;
-      font: string;
-    }
-    interface SvgItem {
-      svgString: string;
-      x: number;
-      y: number;
-      w: number;
-      h: number;
-    }
-    interface RuleItem {
-      x: number;
-      y: number;
-      w: number;
-      h: number;
-    }
-
-    const textItems: TextItem[] = [];
-    const svgItems: SvgItem[] = [];
-    const ruleItems: RuleItem[] = [];
-
-    // eslint-disable-next-line complexity
-    const collectNodes = (node: Node): void => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.textContent;
-        if (!text || !text.trim()) return;
-        // Skip zero-width/invisible characters (KaTeX uses ZWSP in vlist-s spacing elements)
-        if (/^(?:\u200B|\u200C|\u200D|\uFEFF)+$/.test(text)) return;
-
-        const parent = node.parentElement;
-        if (!parent) return;
-
-        const style = window.getComputedStyle(parent);
-        if (style.display === 'none' || style.visibility === 'hidden') return;
-        if (parseFloat(style.opacity) === 0) return;
-
-        // Get the position of this text node
-        const range = document.createRange();
-        range.selectNodeContents(node);
-        const rects = range.getClientRects();
-        if (rects.length === 0) return;
-
-        // Use the first rect for positioning — skip zero-width rects
-        const r = rects[0];
-        if (r.width < 0.5) return;
-
-        textItems.push({
-          text,
-          x: r.left - containerRect.left + padding,
-          y: r.top - containerRect.top + padding,
-          font: `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
-        });
-        return;
-      }
-
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        const el = node as HTMLElement;
-
-        // Skip the hidden MathML accessibility tree
-        if (el.classList?.contains('katex-mathml')) return;
-
-        // Handle inline SVGs (radical signs, delimiters, etc.)
-        if (el.tagName.toLowerCase() === 'svg') {
-          const svgRect = el.getBoundingClientRect();
-          if (svgRect.width > 0 && svgRect.height > 0) {
-            const clone = el.cloneNode(true) as SVGElement;
-            clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            // Always set explicit width/height from the rendered size
-            clone.setAttribute('width', String(svgRect.width));
-            clone.setAttribute('height', String(svgRect.height));
-            // Preserve the viewBox if present; if not, add one from the original SVG
-            if (!clone.getAttribute('viewBox')) {
-              const origVb = el.getAttribute('viewBox');
-              if (origVb) clone.setAttribute('viewBox', origVb);
-            }
-            // Set color property for currentColor inheritance in standalone SVG
-            // Always render white; actual color applied via material tint
-            clone.setAttribute('color', '#ffffff');
-            clone.setAttribute('style', 'color: #ffffff; overflow: visible;');
-
-            // Replace currentColor in all shape elements (attributes + inline styles)
-            const shapes = clone.querySelectorAll('path, line, rect, circle, polyline, polygon');
-            shapes.forEach((p) => {
-              const fill = p.getAttribute('fill');
-              if (!fill || fill === 'currentColor' || fill === 'inherit') {
-                p.setAttribute('fill', '#ffffff');
-              }
-              const stroke = p.getAttribute('stroke');
-              if (stroke === 'currentColor' || stroke === 'inherit') {
-                p.setAttribute('stroke', '#ffffff');
-              }
-              const inlineStyle = p.getAttribute('style');
-              if (inlineStyle && inlineStyle.includes('currentColor')) {
-                p.setAttribute('style', inlineStyle.replace(/currentColor/g, '#ffffff'));
-              }
-            });
-
-            svgItems.push({
-              svgString: new XMLSerializer().serializeToString(clone),
-              x: svgRect.left - containerRect.left + padding,
-              y: svgRect.top - containerRect.top + padding,
-              w: svgRect.width,
-              h: svgRect.height,
-            });
-          }
-          return;
-        }
-
-        // Capture CSS-rendered visual elements (fraction bars, overlines, etc.)
-        const elStyle = window.getComputedStyle(el);
-        const borderBottom = parseFloat(elStyle.borderBottomWidth) || 0;
-        const borderTop = parseFloat(elStyle.borderTopWidth) || 0;
-        if (borderBottom > 0 || borderTop > 0) {
-          const elRect = el.getBoundingClientRect();
-          if (elRect.width > 0) {
-            const ex = elRect.left - containerRect.left + padding;
-            const ey = elRect.top - containerRect.top + padding;
-            if (borderBottom > 0) {
-              ruleItems.push({
-                x: ex,
-                y: ey + elRect.height - borderBottom,
-                w: elRect.width,
-                h: Math.max(borderBottom, 1),
-              });
-            }
-            if (borderTop > 0) {
-              ruleItems.push({
-                x: ex,
-                y: ey,
-                w: elRect.width,
-                h: Math.max(borderTop, 1),
-              });
-            }
-          }
-        }
-
-        // Capture background-color rules (e.g., KaTeX \rule elements)
-        const bgColor = elStyle.backgroundColor;
-        if (bgColor && bgColor !== 'transparent' && bgColor !== 'rgba(0, 0, 0, 0)') {
-          const elRect = el.getBoundingClientRect();
-          if (elRect.width > 0 && elRect.height > 0) {
-            ruleItems.push({
-              x: elRect.left - containerRect.left + padding,
-              y: elRect.top - containerRect.top + padding,
-              w: elRect.width,
-              h: elRect.height,
-            });
-          }
-        }
-
-        // Recurse into child nodes
-        for (const child of el.childNodes) {
-          collectNodes(child);
+      if ('children' in mob) {
+        for (const child of (mob as any).children) {
+          restyle(child);
         }
       }
     };
-
-    collectNodes(container);
-
-    // Draw layers in correct z-order:
-    // 1. SVG items FIRST (radical signs, delimiters — background decorations)
-    if (svgItems.length > 0) {
-      await Promise.all(
-        svgItems.map((item) => {
-          return new Promise<void>((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-              ctx.drawImage(img, item.x, item.y, item.w, item.h);
-              URL.revokeObjectURL(img.src);
-              resolve();
-            };
-            img.onerror = () => {
-              URL.revokeObjectURL(img.src);
-              resolve();
-            };
-            const blob = new Blob([item.svgString], { type: 'image/svg+xml;charset=utf-8' });
-            img.src = URL.createObjectURL(blob);
-          });
-        }),
-      );
-    }
-
-    // 2. CSS rule items (fraction bars, overlines)
-    for (const item of ruleItems) {
-      ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
-      ctx.fillRect(item.x, item.y, item.w, item.h);
-    }
-
-    // 3. Text items LAST (foreground — actual math content on top)
-    for (const item of textItems) {
-      ctx.font = item.font;
-      ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
-      ctx.textBaseline = 'alphabetic';
-      ctx.textAlign = 'left';
-
-      // Compute the alphabetic baseline from the CSS rect position.
-      // KaTeX uses tight line-heights, so rect.top ≈ baseline - fontBoundingBoxAscent.
-      // Using fontBoundingBoxAscent (constant per font) preserves baseline alignment
-      // for all characters in the same font, while correctly positioning large
-      // operators (like ∑ in KaTeX_Size2) that extend above the em-box.
-      const metrics = ctx.measureText(item.text);
-      const baselineY = item.y + (metrics.fontBoundingBoxAscent ?? 0);
-      ctx.fillText(item.text, item.x, baselineY);
-    }
-
-    return canvas;
+    restyle(group);
   }
 
   /**
-   * Update the mesh geometry to match current dimensions
+   * Scale and center the assembled paths by transforming actual point data.
    */
-  protected _updateMeshGeometry(): void {
-    if (!this._renderState.mesh) return;
+  protected _scaleToTarget(): void {
+    // Collect all VMobject descendants (may be direct children or nested in part VGroups)
+    const vmobjects: VMobject[] = [];
+    const collect = (mob: Mobject) => {
+      if (mob instanceof VMobject && !(mob instanceof VGroup)) {
+        vmobjects.push(mob);
+      }
+      if ('children' in mob) {
+        for (const child of (mob as any).children) {
+          collect(child);
+        }
+      }
+    };
+    collect(this);
 
-    const { width, height } = this._renderState;
-    const geometry = new THREE.PlaneGeometry(width, height);
+    // Compute bounding box from raw point data
+    let minX = Infinity,
+      maxX = -Infinity;
+    let minY = Infinity,
+      maxY = -Infinity;
 
-    // Dispose old geometry
-    this._renderState.mesh.geometry.dispose();
-    this._renderState.mesh.geometry = geometry;
+    for (const vmob of vmobjects) {
+      for (const p of vmob.getPoints()) {
+        if (p[0] < minX) minX = p[0];
+        if (p[0] > maxX) maxX = p[0];
+        if (p[1] < minY) minY = p[1];
+        if (p[1] > maxY) maxY = p[1];
+      }
+    }
+
+    const rawHeight = maxY - minY;
+    if (rawHeight < 0.0001) return;
+
+    let s: number;
+    if (this._targetHeight !== undefined) {
+      // Explicit height: scale bounding box to fit (user intent)
+      s = this._targetHeight / rawHeight;
+    } else {
+      // Scale based on em height for consistent font sizing.
+      // svgToVMobjects scales paths by fontSize / vbWidth, so in raw coords
+      // 1 em = 1000 * fontSize / vbWidth. We want 1 em = 0.5 * fontSize
+      // world units, giving: s = 0.5 * vbWidth / 1000.
+      s = (0.5 * this._svgViewBoxWidth) / 1000;
+    }
+
+    // Center of current bounds
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+
+    // Transform all point data: scale and center at origin
+    for (const vmob of vmobjects) {
+      const pts = vmob.getPoints();
+      const transformed = pts.map((p) => [(p[0] - cx) * s, (p[1] - cy) * s, p[2]]);
+      vmob.setPoints3D(transformed);
+    }
   }
 
   /**
-   * Create the Three.js backing object
+   * Render a multi-part expression by:
+   * 1. Rendering the FULL expression as one MathJax call (correct layout)
+   * 2. Rendering each part separately to count its glyphs
+   * 3. Splitting the full expression's VMobjects into part groups by glyph count
    */
-  protected _createThreeObject(): THREE.Object3D {
-    // Multi-part mode: just return an empty group; children add their own meshes
-    if (this._isMultiPart) {
-      return new THREE.Group();
-    }
+  private async _renderMultiPart(latexParts: string[]): Promise<void> {
+    const fullLatex = latexParts.join('');
 
-    const group = new THREE.Group();
-    const { width, height, texture } = this._renderState;
-
-    // Create geometry (may be placeholder if not yet rendered)
-    const geometry = new THREE.PlaneGeometry(width || 1, height || 0.5);
-
-    // Create material with texture — canvas is always white, material.color tints
-    const material = new THREE.MeshBasicMaterial({
-      map: texture,
-      transparent: true,
-      side: THREE.DoubleSide,
-      opacity: this._opacity,
-      color: new THREE.Color(this.color),
+    // Render the full expression as one unit (correct spacing & layout)
+    const fullResult = await renderLatexToSVG(fullLatex, {
+      displayMode: this._displayMode,
+      color: this._color,
+      fontScale: this._fontSize,
+      macros: this._macros,
     });
+    const viewBox = fullResult.svgElement.getAttribute?.('viewBox');
+    if (viewBox) {
+      const parts = viewBox.split(/\s+/).map(Number);
+      this._svgViewBoxWidth = parts[2] || 1000;
+    }
 
-    // Create mesh inside group so _syncToThree sets group position,
-    // and setRevealProgress can independently set mesh local position
-    const mesh = new THREE.Mesh(geometry, material);
-    this._renderState.mesh = mesh;
-    group.add(mesh);
+    this._restyleChildren(fullResult.vmobjectGroup);
 
-    return group;
-  }
-
-  /**
-   * Sync material properties to Three.js
-   */
-  protected override _syncMaterialToThree(): void {
-    if (this._renderState.mesh) {
-      const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
-      material.opacity = this._opacity;
-      material.color.set(this.color); // tint white texture to desired color
-
-      // Update texture if available
-      if (this._renderState.texture && material.map !== this._renderState.texture) {
-        material.map = this._renderState.texture;
-        material.needsUpdate = true;
-      }
-
-      // Update geometry if dimensions changed
-      const geometry = this._renderState.mesh.geometry as THREE.PlaneGeometry;
-      const params = geometry.parameters;
-      if (params.width !== this._renderState.width || params.height !== this._renderState.height) {
-        this._updateMeshGeometry();
+    // Collect all VMobject children from the full render
+    const allGlyphs: VMobject[] = [];
+    for (const child of [...fullResult.vmobjectGroup.children]) {
+      if (child instanceof VMobject) {
+        allGlyphs.push(child);
       }
     }
+
+    // Render each part separately to count how many glyphs it produces
+    const partGlyphCounts: number[] = [];
+    for (const partLatex of latexParts) {
+      const partResult = await renderLatexToSVG(partLatex, {
+        displayMode: false,
+        color: this._color,
+        fontScale: this._fontSize,
+        macros: this._macros,
+      });
+      let count = 0;
+      for (const child of partResult.vmobjectGroup.children) {
+        if (child instanceof VMobject) count++;
+      }
+      partGlyphCounts.push(count);
+    }
+
+    // Assign glyphs from the full render to parts by count
+    let glyphIdx = 0;
+    for (let i = 0; i < latexParts.length; i++) {
+      const partGroup = new MathTex._PartGroup(this);
+      partGroup._latex = latexParts[i];
+      partGroup._color = this._color;
+
+      const count = partGlyphCounts[i];
+      for (let j = 0; j < count && glyphIdx < allGlyphs.length; j++) {
+        const glyph = allGlyphs[glyphIdx++];
+        fullResult.vmobjectGroup.remove(glyph);
+        partGroup.add(glyph);
+      }
+
+      this._parts.push(partGroup as unknown as MathTex);
+      this.add(partGroup);
+    }
+
+    // If there are leftover glyphs (spacing elements etc.), add to last part
+    while (glyphIdx < allGlyphs.length) {
+      const lastPart = this._parts[this._parts.length - 1];
+      const glyph = allGlyphs[glyphIdx++];
+      fullResult.vmobjectGroup.remove(glyph);
+      lastPart.add(glyph);
+    }
+
+    // Scale and center the full expression
+    this._scaleToTarget();
+
+    // Set fillOpacity on the parent VGroup for Create animation
+    this.fillOpacity = this._svgFillOpacity;
   }
 
   /**
-   * Create a copy of this MathTex
+   * Lightweight VGroup used as a part container in multi-part mode.
+   * Supports setColor() for per-part coloring.
+   */
+  private static _PartGroup = class extends VGroup {
+    _latex: string = '';
+    _color: string = WHITE;
+    constructor(_parent: MathTex) {
+      super();
+    }
+
+    override setColor(color: string): this {
+      this._color = color;
+      for (const child of this.children) {
+        if (child instanceof VMobject) {
+          child.setColor(color);
+        }
+      }
+      this._markDirty();
+      return this;
+    }
+
+    getLatex(): string {
+      return this._latex;
+    }
+  };
+
+  /**
+   * Create a copy of this MathTex.
    */
   protected override _createCopy(): MathTex {
-    const latexValue = this._isMultiPart ? this._parts.map((p) => p._latex) : this._latex;
+    const latexValue = this._isMultiPart
+      ? this._parts.map((p) => (p as any)._latex as string)
+      : this._latex;
     return new MathTex({
       latex: latexValue,
-      color: this.color,
+      color: this._color,
       fontSize: this._fontSize,
       displayMode: this._displayMode,
       position: [this.position.x, this.position.y, this.position.z],
-      renderer: this._renderer,
+      strokeWidth: this._svgStrokeWidth,
+      fillOpacity: this._svgFillOpacity,
+      height: this._targetHeight,
+      macros: this._macros,
     });
   }
-
-  /**
-   * Set reveal progress for Write animation (left-to-right wipe).
-   * @param alpha - Progress from 0 (hidden) to 1 (fully visible)
-   */
-  setRevealProgress(alpha: number): void {
-    if (this._isMultiPart) {
-      // Reveal parts sequentially, each part gets its own slice of the alpha range
-      const n = this._parts.length;
-      for (let i = 0; i < n; i++) {
-        const partStart = i / n;
-        const partEnd = (i + 1) / n;
-        const partAlpha = Math.max(0, Math.min(1, (alpha - partStart) / (partEnd - partStart)));
-        this._parts[i].setRevealProgress(partAlpha);
-      }
-      return;
-    }
-    if (!this._renderState.mesh || !this._renderState.texture) return;
-
-    const a = Math.max(0.001, Math.min(1, alpha));
-
-    if (a <= 0.001) {
-      this._renderState.mesh.visible = false;
-      return;
-    }
-
-    this._renderState.mesh.visible = true;
-
-    // Scale X to reveal left portion, keep left edge fixed
-    this._renderState.mesh.scale.x = a;
-    this._renderState.mesh.position.x = (this._renderState.width * (a - 1)) / 2;
-
-    // Adjust texture to show only revealed portion (prevent squishing)
-    this._renderState.texture.repeat.set(a, 1);
-    this._renderState.texture.offset.set(0, 0);
-    this._renderState.texture.needsUpdate = true;
-  }
-
-  /**
-   * Get the center of this MathTex
-   */
-  override getCenter(): Vector3Tuple {
-    return [this.position.x, this.position.y, this.position.z];
-  }
-
-  /**
-   * Clean up Three.js resources
-   */
-  override dispose(): void {
-    if (this._renderState.texture) {
-      this._renderState.texture.dispose();
-    }
-    if (this._renderState.mesh) {
-      this._renderState.mesh.geometry.dispose();
-      (this._renderState.mesh.material as THREE.Material).dispose();
-    }
-    super.dispose();
-  }
 }
+
+/**
+ * @deprecated Use `MathTex` instead. `MathTexSVG` is a backwards-compatible alias.
+ */
+export const MathTexSVG = MathTex;
+/** @deprecated Use `MathTexOptions` instead. */
+export type MathTexSVGOptions = MathTexOptions;

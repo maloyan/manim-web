@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { DecimalNumber } from './DecimalNumber';
 import { ValueTracker } from '../value-tracker';
-import { MathTex } from './MathTex';
+import { MathTexImage } from './MathTexImage';
 
 /**
  * Options for creating a Variable mobject
@@ -77,10 +77,10 @@ export class Variable extends Mobject {
   protected _valueBuff: number;
 
   /** The label mobject (LaTeX rendered) */
-  protected _labelMobject: MathTex;
+  protected _labelMobject: MathTexImage;
 
   /** The equals sign mobject */
-  protected _equalsMobject: MathTex;
+  protected _equalsMobject: MathTexImage;
 
   /** The value display mobject */
   protected _numberMobject: DecimalNumber;
@@ -119,14 +119,14 @@ export class Variable extends Mobject {
     this._tracker = new ValueTracker(value);
 
     // Create label (rendered as LaTeX for proper math formatting)
-    this._labelMobject = new MathTex({
+    this._labelMobject = new MathTexImage({
       latex: label,
       color: labelColor,
       fontSize: fontSize,
     });
 
     // Create equals sign
-    this._equalsMobject = new MathTex({
+    this._equalsMobject = new MathTexImage({
       latex: '=',
       color: labelColor,
       fontSize: fontSize,
@@ -216,14 +216,14 @@ export class Variable extends Mobject {
   /**
    * Get the label mobject
    */
-  get labelMobject(): MathTex {
+  get labelMobject(): MathTexImage {
     return this._labelMobject;
   }
 
   /**
    * Get the equals sign mobject
    */
-  get equalsMobject(): MathTex {
+  get equalsMobject(): MathTexImage {
     return this._equalsMobject;
   }
 

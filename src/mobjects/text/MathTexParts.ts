@@ -1,15 +1,15 @@
-import { MathTex, MathTexOptions } from './MathTex';
+import { MathTexImage, MathTexImageOptions } from './MathTexImage';
 import { VGroup } from '../../core/VGroup';
 
-export type SingleStringMathTexOptions = Omit<MathTexOptions, 'latex'>;
+export type SingleStringMathTexOptions = Omit<MathTexImageOptions, 'latex'>;
 
 /**
- * SingleStringMathTex - A variant of MathTex for single-string LaTeX
+ * SingleStringMathTex - A variant of MathTexImage for single-string LaTeX
  *
- * Wraps MathTex but enforces that the LaTeX is treated as a single
+ * Wraps MathTexImage but enforces that the LaTeX is treated as a single
  * indivisible expression (no part splitting).
  */
-export class SingleStringMathTex extends MathTex {
+export class SingleStringMathTex extends MathTexImage {
   constructor(latex: string, options: SingleStringMathTexOptions = {}) {
     super({ ...options, latex });
   }
@@ -30,10 +30,10 @@ export interface MathTexPartOptions {
 }
 
 /**
- * MathTexPart - Represents a selectable part of a MathTex expression
+ * MathTexPart - Represents a selectable part of a MathTexImage expression
  *
- * Allows creating MathTex expressions with individually styleable/animatable parts.
- * Each part is a separate MathTex that can be colored or animated independently.
+ * Allows creating MathTexImage expressions with individually styleable/animatable parts.
+ * Each part is a separate MathTexImage that can be colored or animated independently.
  *
  * @example
  * ```typescript
@@ -50,7 +50,7 @@ export interface MathTexPartOptions {
  * ```
  */
 export class MathTexPart extends VGroup {
-  private _parts: MathTex[] = [];
+  private _parts: MathTexImage[] = [];
   private _partStrings: string[] = [];
 
   constructor() {
@@ -68,7 +68,7 @@ export class MathTexPart extends VGroup {
     let xOffset = 0;
 
     for (const partDef of parts) {
-      const tex = new MathTex({
+      const tex = new MathTexImage({
         latex: partDef.latex,
         color: partDef.color,
         fontSize: partDef.fontSize ?? 48,
@@ -98,14 +98,14 @@ export class MathTexPart extends VGroup {
   /**
    * Get a specific part by index
    */
-  getPart(index: number): MathTex | undefined {
+  getPart(index: number): MathTexImage | undefined {
     return this._parts[index];
   }
 
   /**
    * Get all parts
    */
-  getParts(): MathTex[] {
+  getParts(): MathTexImage[] {
     return [...this._parts];
   }
 

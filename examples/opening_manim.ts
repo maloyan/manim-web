@@ -6,7 +6,7 @@ import {
   Transform,
   ApplyPointwiseFunction,
   Text,
-  MathTex,
+  MathTexImage,
   NumberPlane,
   VGroup,
   UP,
@@ -48,7 +48,9 @@ document.getElementById('playBtn').addEventListener('click', async () => {
       color: WHITE,
       fontUrl: FONT_URL,
     });
-    const basel = new MathTex({ latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}' });
+    const basel = new MathTexImage({
+      latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}',
+    });
     await basel.waitForRender?.();
 
     new VGroup(title, basel).arrange(DOWN);

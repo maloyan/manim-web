@@ -5,7 +5,7 @@
  *   - TextExtensions.ts (BulletedList, Title, MarkdownText)
  *   - GlyphVMobject.ts
  *   - TextGlyphGroup.ts
- *   - MathTexSVG.ts
+ *   - MathTex.ts (SVG-based)
  *   - katex-styles.ts (improve from ~79% to 100%)
  */
 import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest';
@@ -53,7 +53,7 @@ beforeAll(() => {
   } as typeof origGetContext;
 });
 
-// ═══════════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════��═════════════════════════
 // 1. Tex (Manim alias for MathTex with \text{} wrapping)
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -96,22 +96,18 @@ describe('Tex', () => {
 
     it('should accept custom color', () => {
       const tex = new Tex({ latex: 'Colored', color: '#ff0000' });
-      expect(tex.color).toBe('#ff0000');
+      // Access internal _color since SVG MathTex stores color there
+      expect((tex as any)._color).toBe('#ff0000');
     });
 
     it('should accept custom fontSize', () => {
       const tex = new Tex({ latex: 'Big', fontSize: 96 });
-      expect(tex.getFontSize()).toBe(96);
+      expect((tex as any)._fontSize).toBe(96);
     });
 
     it('should default color to white', () => {
       const tex = new Tex({ latex: 'White' });
-      expect(tex.color).toBe('#ffffff');
-    });
-
-    it('should accept renderer option', () => {
-      const tex = new Tex({ latex: 'KaTeX', renderer: 'katex' });
-      expect(tex.getRenderer()).toBe('katex');
+      expect((tex as any)._color.toUpperCase()).toBe('#FFFFFF');
     });
   });
 
@@ -127,7 +123,7 @@ describe('Tex', () => {
     it('should preserve color in copy', () => {
       const original = new Tex({ latex: 'Colored', color: '#ff0000' });
       const clone = original.copy();
-      expect(clone.color).toBe('#ff0000');
+      expect((clone as any)._color).toBe('#ff0000');
     });
   });
 
@@ -139,10 +135,8 @@ describe('Tex', () => {
         fontSize: 56,
         displayMode: true,
         position: [1, 2, 3],
-        renderer: 'mathjax',
       });
-      expect(tex.getRenderer()).toBe('mathjax');
-      expect(tex.getFontSize()).toBe(56);
+      expect((tex as any)._fontSize).toBe(56);
     });
   });
 });
@@ -659,7 +653,7 @@ describe('katex-styles', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 4. MathTexSVG (with mocked MathJaxRenderer)
+// 4. MathTex (SVG-based, with mocked MathJaxRenderer)
 // ═══════════════════════════════════════════════════════════════════════════
 
 // We'll dynamically mock MathJaxRenderer after importing VGroup/VMobject
@@ -720,22 +714,22 @@ vi.mock('./MathJaxRenderer', async (importOriginal) => {
   };
 });
 
-describe('MathTexSVG', () => {
-  let MathTexSVG: typeof import('./MathTexSVG').MathTexSVG;
+describe('MathTex (SVG)', () => {
+  let MathTex: typeof import('./MathTex').MathTex;
 
   beforeAll(async () => {
-    const mod = await import('./MathTexSVG');
-    MathTexSVG = mod.MathTexSVG;
+    const mod = await import('./MathTex');
+    MathTex = mod.MathTex;
   });
 
   describe('constructor', () => {
     it('should create with a single latex string', () => {
-      const svg = new MathTexSVG({ latex: 'x^2' });
+      const svg = new MathTex({ latex: 'x^2' });
       expect(svg.getLatex()).toBe('x^2');
     });
 
     it('should create with array of latex strings (multi-part)', () => {
-      const svg = new MathTexSVG({ latex: ['x', '=', '5'] });
+      const svg = new MathTex({ latex: ['x', '=', '5'] });
       expect(svg.getLatex()).toBe('x=5');
       // Parts are populated asynchronously after render completes.
       // Before render, _isMultiPart is true but _parts may be empty.
@@ -743,74 +737,74 @@ describe('MathTexSVG', () => {
     });
 
     it('should default color to white', () => {
-      const svg = new MathTexSVG({ latex: 'a' });
+      const svg = new MathTex({ latex: 'a' });
       // Access protected _color via cast
       expect((svg as any)._color).toBe('#FFFFFF');
     });
 
     it('should accept custom color', () => {
-      const svg = new MathTexSVG({ latex: 'a', color: '#ff0000' });
+      const svg = new MathTex({ latex: 'a', color: '#ff0000' });
       expect((svg as any)._color).toBe('#ff0000');
     });
 
     it('should accept fontSize option', () => {
-      const svg = new MathTexSVG({ latex: 'a', fontSize: 2 });
+      const svg = new MathTex({ latex: 'a', fontSize: 2 });
       expect((svg as any)._fontSize).toBe(2);
     });
 
     it('should accept displayMode option', () => {
-      const svg = new MathTexSVG({ latex: 'a', displayMode: false });
+      const svg = new MathTex({ latex: 'a', displayMode: false });
       expect((svg as any)._displayMode).toBe(false);
     });
 
     it('should accept position option', () => {
-      const svg = new MathTexSVG({ latex: 'a', position: [1, 2, 3] });
+      const svg = new MathTex({ latex: 'a', position: [1, 2, 3] });
       expect(svg.position.x).toBe(1);
       expect(svg.position.y).toBe(2);
       expect(svg.position.z).toBe(3);
     });
 
     it('should accept strokeWidth option', () => {
-      const svg = new MathTexSVG({ latex: 'a', strokeWidth: 4 });
+      const svg = new MathTex({ latex: 'a', strokeWidth: 4 });
       expect((svg as any)._svgStrokeWidth).toBe(4);
     });
 
     it('should accept fillOpacity option', () => {
-      const svg = new MathTexSVG({ latex: 'a', fillOpacity: 0.5 });
+      const svg = new MathTex({ latex: 'a', fillOpacity: 0.5 });
       expect((svg as any)._svgFillOpacity).toBe(0.5);
     });
 
     it('should accept height option', () => {
-      const svg = new MathTexSVG({ latex: 'a', height: 2 });
+      const svg = new MathTex({ latex: 'a', height: 2 });
       expect((svg as any)._targetHeight).toBe(2);
     });
 
     it('should accept macros option', () => {
-      const svg = new MathTexSVG({ latex: '\\myvar', macros: { '\\myvar': 'x' } });
+      const svg = new MathTex({ latex: '\\myvar', macros: { '\\myvar': 'x' } });
       expect((svg as any)._macros).toEqual({ '\\myvar': 'x' });
     });
 
     it('should default to single part for string latex', () => {
-      const svg = new MathTexSVG({ latex: 'y = mx + b' });
+      const svg = new MathTex({ latex: 'y = mx + b' });
       expect(svg.getPartCount()).toBe(1);
     });
   });
 
   describe('getLatex', () => {
     it('should return the latex string', () => {
-      const svg = new MathTexSVG({ latex: 'E = mc^2' });
+      const svg = new MathTex({ latex: 'E = mc^2' });
       expect(svg.getLatex()).toBe('E = mc^2');
     });
   });
 
   describe('getPartCount', () => {
     it('should return 1 for single-part', () => {
-      const svg = new MathTexSVG({ latex: 'x' });
+      const svg = new MathTex({ latex: 'x' });
       expect(svg.getPartCount()).toBe(1);
     });
 
     it('should return correct count for multi-part (before render)', () => {
-      const svg = new MathTexSVG({ latex: ['a', '+', 'b'] });
+      const svg = new MathTex({ latex: ['a', '+', 'b'] });
       // Parts are populated asynchronously during render.
       // Before render completes, _parts is empty but _isMultiPart is true.
       expect((svg as any)._isMultiPart).toBe(true);
@@ -818,13 +812,13 @@ describe('MathTexSVG', () => {
   });
 
   describe('getPart', () => {
-    it('should throw on single-part MathTexSVG', () => {
-      const svg = new MathTexSVG({ latex: 'x' });
-      expect(() => svg.getPart(0)).toThrow('getPart() is only available on multi-part MathTexSVG');
+    it('should throw on single-part MathTex', () => {
+      const svg = new MathTex({ latex: 'x' });
+      expect(() => svg.getPart(0)).toThrow('getPart() is only available on multi-part MathTex');
     });
 
     it('should return parts after multi-part render completes', async () => {
-      const svg = new MathTexSVG({ latex: ['a', 'b'] });
+      const svg = new MathTex({ latex: ['a', 'b'] });
       await svg.waitForRender();
       expect(svg.getPartCount()).toBe(2);
       const part0 = svg.getPart(0);
@@ -834,19 +828,19 @@ describe('MathTexSVG', () => {
     });
 
     it('should throw for negative index after render', async () => {
-      const svg = new MathTexSVG({ latex: ['a', 'b'] });
+      const svg = new MathTex({ latex: ['a', 'b'] });
       await svg.waitForRender();
       expect(() => svg.getPart(-1)).toThrow('out of range');
     });
 
     it('should throw for index >= parts length after render', async () => {
-      const svg = new MathTexSVG({ latex: ['a', 'b'] });
+      const svg = new MathTex({ latex: ['a', 'b'] });
       await svg.waitForRender();
       expect(() => svg.getPart(5)).toThrow('out of range');
     });
 
     it('should have getLatex on parts', async () => {
-      const svg = new MathTexSVG({ latex: ['x', 'y'] });
+      const svg = new MathTex({ latex: ['x', 'y'] });
       await svg.waitForRender();
       const part = svg.getPart(0) as any;
       expect(part.getLatex()).toBe('x');
@@ -855,33 +849,33 @@ describe('MathTexSVG', () => {
 
   describe('setColor', () => {
     it('should update color on single-part', () => {
-      const svg = new MathTexSVG({ latex: 'x' });
+      const svg = new MathTex({ latex: 'x' });
       svg.setColor('#00ff00');
       expect((svg as any)._color).toBe('#00ff00');
     });
 
     it('should return this for chaining', () => {
-      const svg = new MathTexSVG({ latex: 'x' });
+      const svg = new MathTex({ latex: 'x' });
       const result = svg.setColor('#ff0000');
       expect(result).toBe(svg);
     });
 
     it('should propagate color to VMobject children after render', async () => {
-      const svg = new MathTexSVG({ latex: 'x^2' });
+      const svg = new MathTex({ latex: 'x^2' });
       await svg.waitForRender();
       svg.setColor('#00ff00');
       expect((svg as any)._color).toBe('#00ff00');
     });
 
     it('should propagate color to parts in multi-part mode after render', async () => {
-      const svg = new MathTexSVG({ latex: ['a', 'b'] });
+      const svg = new MathTex({ latex: ['a', 'b'] });
       await svg.waitForRender();
       svg.setColor('#ff00ff');
       expect((svg as any)._color).toBe('#ff00ff');
     });
 
     it('should set color on individual part after render', async () => {
-      const svg = new MathTexSVG({ latex: ['x', 'y'] });
+      const svg = new MathTex({ latex: ['x', 'y'] });
       await svg.waitForRender();
       if (svg.getPartCount() > 0) {
         const part = svg.getPart(0);
@@ -894,39 +888,39 @@ describe('MathTexSVG', () => {
 
   describe('waitForRender', () => {
     it('should return a promise', () => {
-      const svg = new MathTexSVG({ latex: 'x' });
+      const svg = new MathTex({ latex: 'x' });
       const result = svg.waitForRender();
       expect(result).toBeInstanceOf(Promise);
     });
 
     it('should return a promise for multi-part', () => {
-      const svg = new MathTexSVG({ latex: ['a', 'b'] });
+      const svg = new MathTex({ latex: ['a', 'b'] });
       const result = svg.waitForRender();
       expect(result).toBeInstanceOf(Promise);
     });
 
     it('should resolve and add children after single-part render', async () => {
-      const svg = new MathTexSVG({ latex: 'x^2' });
+      const svg = new MathTex({ latex: 'x^2' });
       await svg.waitForRender();
       // After render, should have VMobject children from the mock
       expect(svg.children.length).toBeGreaterThan(0);
     });
 
     it('should resolve and set fillOpacity after render', async () => {
-      const svg = new MathTexSVG({ latex: 'y', fillOpacity: 0.8 });
+      const svg = new MathTex({ latex: 'y', fillOpacity: 0.8 });
       await svg.waitForRender();
       expect(svg.fillOpacity).toBe(0.8);
     });
 
     it('should scale to target height after render', async () => {
-      const svg = new MathTexSVG({ latex: 'a', height: 2.0 });
+      const svg = new MathTex({ latex: 'a', height: 2.0 });
       await svg.waitForRender();
       // After render, points should be scaled
       expect(svg.children.length).toBeGreaterThan(0);
     });
 
     it('should handle multi-part render and create parts', async () => {
-      const svg = new MathTexSVG({ latex: ['x', '=', '5'] });
+      const svg = new MathTex({ latex: ['x', '=', '5'] });
       await svg.waitForRender();
       // After multi-part render, should have parts
       expect((svg as any)._isMultiPart).toBe(true);
@@ -934,7 +928,7 @@ describe('MathTexSVG', () => {
     });
 
     it('should allow getPart on multi-part after render', async () => {
-      const svg = new MathTexSVG({ latex: ['a', 'b'] });
+      const svg = new MathTex({ latex: ['a', 'b'] });
       await svg.waitForRender();
       if (svg.getPartCount() > 0) {
         const part = svg.getPart(0);
@@ -945,23 +939,23 @@ describe('MathTexSVG', () => {
 
   describe('copy', () => {
     it('should create an independent copy of single-part', () => {
-      const original = new MathTexSVG({ latex: 'x^2', color: '#ff0000' });
-      const clone = original.copy() as InstanceType<typeof MathTexSVG>;
-      expect(clone).toBeInstanceOf(MathTexSVG);
+      const original = new MathTex({ latex: 'x^2', color: '#ff0000' });
+      const clone = original.copy() as InstanceType<typeof MathTex>;
+      expect(clone).toBeInstanceOf(MathTex);
       expect(clone.getLatex()).toBe('x^2');
       expect((clone as any)._color).toBe('#ff0000');
     });
 
     it('should preserve position in copy', () => {
-      const original = new MathTexSVG({ latex: 'x', position: [1, 2, 3] });
-      const clone = original.copy() as InstanceType<typeof MathTexSVG>;
+      const original = new MathTex({ latex: 'x', position: [1, 2, 3] });
+      const clone = original.copy() as InstanceType<typeof MathTex>;
       expect(clone.position.x).toBeCloseTo(1);
       expect(clone.position.y).toBeCloseTo(2);
       expect(clone.position.z).toBeCloseTo(3);
     });
 
     it('should preserve options in copy', () => {
-      const original = new MathTexSVG({
+      const original = new MathTex({
         latex: 'x',
         fontSize: 2,
         displayMode: false,
@@ -969,7 +963,7 @@ describe('MathTexSVG', () => {
         fillOpacity: 0.7,
         height: 1.5,
       });
-      const clone = original.copy() as InstanceType<typeof MathTexSVG>;
+      const clone = original.copy() as InstanceType<typeof MathTex>;
       expect((clone as any)._fontSize).toBe(2);
       expect((clone as any)._displayMode).toBe(false);
       expect((clone as any)._svgStrokeWidth).toBe(3);
@@ -978,18 +972,18 @@ describe('MathTexSVG', () => {
     });
 
     it('should preserve macros in copy', () => {
-      const original = new MathTexSVG({
+      const original = new MathTex({
         latex: '\\myvar',
         macros: { '\\myvar': 'x' },
       });
-      const clone = original.copy() as InstanceType<typeof MathTexSVG>;
+      const clone = original.copy() as InstanceType<typeof MathTex>;
       expect((clone as any)._macros).toEqual({ '\\myvar': 'x' });
     });
 
     it('should create copy of multi-part that is also multi-part', async () => {
-      const original = new MathTexSVG({ latex: ['x', 'y'] });
+      const original = new MathTex({ latex: ['x', 'y'] });
       await original.waitForRender();
-      const clone = original.copy() as InstanceType<typeof MathTexSVG>;
+      const clone = original.copy() as InstanceType<typeof MathTex>;
       expect((clone as any)._isMultiPart).toBe(true);
       expect(clone.getLatex()).toBe('xy');
     });
@@ -997,14 +991,14 @@ describe('MathTexSVG', () => {
 
   describe('_scaleToTarget', () => {
     it('should scale using fontSize when no explicit height is given', async () => {
-      const svg = new MathTexSVG({ latex: 'x', fontSize: 2 });
+      const svg = new MathTex({ latex: 'x', fontSize: 2 });
       await svg.waitForRender();
       // After render, children should exist and be scaled
       expect(svg.children.length).toBeGreaterThan(0);
     });
 
     it('should use explicit height when provided', async () => {
-      const svg = new MathTexSVG({ latex: 'x', height: 3.0 });
+      const svg = new MathTex({ latex: 'x', height: 3.0 });
       await svg.waitForRender();
       expect(svg.children.length).toBeGreaterThan(0);
     });
@@ -1012,7 +1006,7 @@ describe('MathTexSVG', () => {
 
   describe('_restyleChildren', () => {
     it('should apply fillOpacity and strokeWidth to children after render', async () => {
-      const svg = new MathTexSVG({
+      const svg = new MathTex({
         latex: 'x',
         strokeWidth: 4,
         fillOpacity: 0.8,
@@ -1531,7 +1525,7 @@ describe('TextGlyphGroup', () => {
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 7. MathJaxRenderer (katexCanRender and isMathJaxLoaded)
-//    Note: MathJaxRenderer is mocked globally for MathTexSVG tests above.
+//    Note: MathJaxRenderer is mocked globally for MathTex tests above.
 //    These tests verify the mock's behavior is consistent with expected usage.
 // ═══════════════════════════════════════════════════════════════════════════
 

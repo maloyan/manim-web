@@ -10,7 +10,7 @@
 import * as THREE from 'three';
 import { VGroup } from '../../core/VGroup';
 import { VMobject } from '../../core/VMobject';
-import { MathTex } from '../text/MathTex';
+import { MathTexImage } from '../text/MathTexImage';
 import { Matrix, type MatrixOptions } from './Matrix';
 import { WHITE } from '../../constants/colors';
 import { DEFAULT_STROKE_WIDTH } from '../../constants';
@@ -92,7 +92,7 @@ export function getDetText(matrix: Matrix, options: GetDetTextOptions = {}): VGr
 
   // Add "= determinant" text if provided
   if (determinant !== null) {
-    const detText = new MathTex({
+    const detText = new MathTexImage({
       latex: `= ${determinant}`,
       color: color,
       fontSize: Math.round(48 * initialScaleFactor),

@@ -3,7 +3,7 @@ import {
   Circle,
   Square,
   Text,
-  MathTex,
+  MathTexImage,
   Axes,
   FunctionGraph,
   Create,
@@ -136,7 +136,7 @@ document.getElementById('demo4').addEventListener('click', async () => {
     color: WHITE,
     fontUrl: FONT_URL,
   });
-  const equation = new MathTex({
+  const equation = new MathTexImage({
     latex: 'd(p, q) = \\sqrt{\\sum_{i=1}^n (q_i - p_i)^2}',
     fontSize: 48,
     color: WHITE,
@@ -177,7 +177,7 @@ document.getElementById('demo5').addEventListener('click', async () => {
     axes: axes,
   });
 
-  const graphLabel = new MathTex({ latex: 'x^2', fontSize: 32, color: WHITE });
+  const graphLabel = new MathTexImage({ latex: 'x^2', fontSize: 32, color: WHITE });
   graphLabel.shift([4.5, 2, 0]);
 
   const graph2 = new FunctionGraph({
@@ -187,7 +187,7 @@ document.getElementById('demo5').addEventListener('click', async () => {
     axes: axes,
   });
 
-  const graphLabel2 = new MathTex({ latex: 'x^3', fontSize: 32, color: WHITE });
+  const graphLabel2 = new MathTexImage({ latex: 'x^3', fontSize: 32, color: WHITE });
   graphLabel2.shift([4.5, 2, 0]);
 
   await graphLabel.waitForRender();
