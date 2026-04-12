@@ -16,8 +16,8 @@ async function animate(scene: any) {
   });
 
   // Create Tex labels and wait for rendering
-  const xLabel = new Tex({ latex: '$\\Delta Q$' });
-  const yLabel = new Tex({ latex: 'T[$^\\circ C$]' });
+  const xLabel = new Tex({ latex: '$\\Delta Q$', fontSize: 0.4 });
+  const yLabel = new Tex({ latex: 'T[$^\\circ C$]', fontSize: 0.4 });
   await xLabel.waitForRender();
   await yLabel.waitForRender();
 
