@@ -8,7 +8,7 @@
  * Mobject instances (rasterized).
  */
 import { describe, it, expect } from 'vitest';
-import { MathTex } from './MathTex';
+import { MathTex, MathTexSVG } from './MathTex';
 import { MathTexImage } from './MathTexImage';
 import { Tex } from './Tex';
 import { VGroup } from '../../core/VGroup';
@@ -54,5 +54,16 @@ describe('Issue #228: MathTex defaults to SVG mode', () => {
     expect(tex).toBeInstanceOf(VGroup);
     // The _isMultiPart flag is set synchronously in the constructor
     expect((tex as unknown as { _isMultiPart: boolean })._isMultiPart).toBe(true);
+  });
+
+  it('deprecated MathTexSVG alias should be the same as MathTex', () => {
+    expect(MathTexSVG).toBe(MathTex);
+  });
+
+  it('Tex.copy() should not double-wrap latex in \\text{}', () => {
+    const original = new Tex({ latex: 'Hello' });
+    const copy = original.copy() as Tex;
+    // Both should have the same internal latex (wrapped once)
+    expect(copy.getLatex()).toBe(original.getLatex());
   });
 });

@@ -34,6 +34,9 @@ export type TexOptions = MathTexOptions;
  * ```
  */
 export class Tex extends MathTex {
+  /** Original unwrapped latex, used by _createCopy to avoid double-wrapping */
+  private _originalLatex: string | string[];
+
   constructor(options: TexOptions) {
     // Wrap in \text{...} for text-mode rendering (upright serif, proper word spacing)
     // Split on \\ to handle line breaks, wrap each segment separately
@@ -41,6 +44,7 @@ export class Tex extends MathTex {
     const parts = latexStr.split('\\\\');
     const wrapped = parts.map((p: string) => `\\text{${p.trim()}}`).join(' \\\\ ');
     super({ ...options, latex: wrapped });
+    this._originalLatex = options.latex;
   }
 
   /**
@@ -48,7 +52,7 @@ export class Tex extends MathTex {
    */
   protected override _createCopy(): Tex {
     return new Tex({
-      latex: this._latex,
+      latex: this._originalLatex,
       color: this._color,
       fontSize: this._fontSize,
       displayMode: this._displayMode,
