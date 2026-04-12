@@ -331,7 +331,9 @@ export async function renderLatexToSVG(
     } else {
       const parser = new DOMParser();
       const doc = parser.parseFromString(svgString, 'image/svg+xml');
-      svgElement = doc.documentElement as unknown as SVGElement;
+      // mathjax-full wraps SVG in <mjx-container>; extract the inner <svg>
+      const innerSvg = doc.querySelector('svg');
+      svgElement = (innerSvg || doc.documentElement) as unknown as SVGElement;
     }
   }
 
