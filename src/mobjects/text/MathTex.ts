@@ -29,7 +29,7 @@ export interface MathTexOptions {
   displayMode?: boolean;
   /** Position in 3D space. Default: [0,0,0] */
   position?: Vector3Tuple;
-  /** Stroke width for glyph outlines. Default: 2 */
+  /** Stroke width for glyph outlines. Default: 0.02 */
   strokeWidth?: number;
   /** Fill opacity for glyph interiors. Default: 1 */
   fillOpacity?: number;
@@ -68,7 +68,7 @@ export class MathTex extends VGroup {
       fontSize = 1,
       displayMode = true,
       position = [0, 0, 0],
-      strokeWidth = 2,
+      strokeWidth = 0.02,
       fillOpacity = 1,
       height,
       macros,
@@ -232,12 +232,9 @@ export class MathTex extends VGroup {
   protected _restyleChildren(group: VGroup): void {
     const restyle = (mob: Mobject) => {
       if (mob instanceof VMobject) {
-        mob.fillOpacity = this._svgFillOpacity;
-        mob.strokeWidth = this._svgStrokeWidth;
         mob.setColor(this._color);
-        // Access _style via any cast since protected access from sibling instances
-        (mob as any)._style.fillOpacity = this._svgFillOpacity;
-        (mob as any)._style.strokeWidth = this._svgStrokeWidth;
+        mob.setStrokeWidth(this._svgStrokeWidth);
+        mob.setFillOpacity(this._svgFillOpacity);
       }
       if ('children' in mob) {
         for (const child of (mob as any).children) {

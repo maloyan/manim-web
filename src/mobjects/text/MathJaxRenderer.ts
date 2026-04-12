@@ -144,6 +144,8 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
       const svgModule = await import('mathjax-full/js/output/svg.js');
       const liteAdaptor = await import('mathjax-full/js/adaptors/liteAdaptor.js');
       const htmlHandler = await import('mathjax-full/js/handlers/html.js');
+      // Register all TeX packages (ams, etc.) so environments like pmatrix/bmatrix work
+      await import('mathjax-full/js/input/tex/AllPackages.js');
 
       const adaptor = liteAdaptor.liteAdaptor();
       htmlHandler.RegisterHTMLHandler(adaptor);
@@ -373,7 +375,13 @@ export async function renderLatexToSVG(
   // ------------------------------------------------------------------
   // Convert SVG paths to VMobjects
   // ------------------------------------------------------------------
-  const vmobjectGroup = svgToVMobjects(svgElement, { color, scale: fontScale, flipY: false });
+  const vmobjectGroup = svgToVMobjects(svgElement, {
+    color,
+    scale: fontScale,
+    flipY: false,
+    strokeWidth: 0.02,
+    fillOpacity: 1,
+  });
 
   return {
     svgElement,
