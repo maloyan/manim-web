@@ -11,7 +11,7 @@ import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Line } from '../geometry/Line';
 import { Rectangle } from '../geometry/Rectangle';
-import { MathTex } from '../text/MathTex';
+import { MathTexImage } from '../text/MathTexImage';
 import { DecimalNumber } from '../text/DecimalNumber';
 import { WHITE, YELLOW } from '../../constants/colors';
 
@@ -58,10 +58,10 @@ export interface TableOptions {
  * @example
  * ```typescript
  * // Create a simple 2x2 table of MathTex
- * const t1 = new MathTex({ latex: '1' });
- * const t2 = new MathTex({ latex: '2' });
- * const t3 = new MathTex({ latex: '3' });
- * const t4 = new MathTex({ latex: '4' });
+ * const t1 = new MathTexImage({ latex: '1' });
+ * const t2 = new MathTexImage({ latex: '2' });
+ * const t3 = new MathTexImage({ latex: '3' });
+ * const t4 = new MathTexImage({ latex: '4' });
  * const table = new Table({
  *   data: [[t1, t2], [t3, t4]]
  * });
@@ -624,14 +624,16 @@ export class MathTable extends Table {
   constructor(options: MathTableOptions) {
     const { data, rowLabels, colLabels, fontSize = 36, color = WHITE, ...rest } = options;
 
-    // Convert string[][] to MathTex[][]
-    const mathData = data.map((row) => row.map((latex) => new MathTex({ latex, fontSize, color })));
+    // Convert string[][] to MathTexImage[][]
+    const mathData = data.map((row) =>
+      row.map((latex) => new MathTexImage({ latex, fontSize, color })),
+    );
 
     // Convert row labels
-    const mathRowLabels = rowLabels?.map((latex) => new MathTex({ latex, fontSize, color }));
+    const mathRowLabels = rowLabels?.map((latex) => new MathTexImage({ latex, fontSize, color }));
 
     // Convert column labels
-    const mathColLabels = colLabels?.map((latex) => new MathTex({ latex, fontSize, color }));
+    const mathColLabels = colLabels?.map((latex) => new MathTexImage({ latex, fontSize, color }));
 
     super({
       data: mathData,

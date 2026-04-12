@@ -3,7 +3,7 @@
 
 import {
   Create,
-  MathTex,
+  MathTexImage,
   ReplacementTransform,
   Scene,
   SurroundingRectangle,
@@ -11,7 +11,7 @@ import {
 } from '../src/index.ts';
 
 export async function movingFrameBox(scene) {
-  const text = new MathTex({
+  const text = new MathTexImage({
     latex: ['\\frac{d}{dx}f(x)g(x)=', 'f(x)\\frac{d}{dx}g(x)', '+', 'g(x)\\frac{d}{dx}f(x)'],
   });
   await text.waitForRender();

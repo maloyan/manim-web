@@ -264,11 +264,16 @@ export {
   type ParagraphOptions,
   MarkupText,
   type MarkupTextOptions,
+  // MathTex - SVG vector-based (default, like Python Manim)
   MathTex,
   type MathTexOptions,
-  type TexRenderer,
+  // MathTexSVG - deprecated alias for MathTex (backwards compat)
   MathTexSVG,
   type MathTexSVGOptions,
+  // MathTexImage - rasterized texture-based renderer
+  MathTexImage,
+  type MathTexImageOptions,
+  type TexRenderer,
   Tex,
   type TexOptions,
   ensureKatexStyles,

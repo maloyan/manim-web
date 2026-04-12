@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
-import { MathTex } from '../text/MathTex';
+import { MathTexImage } from '../text/MathTexImage';
 import { WHITE } from '../../constants/colors';
 import { DEFAULT_STROKE_WIDTH } from '../../constants';
 
@@ -39,7 +39,7 @@ export interface MatrixOptions {
   bracketColor?: string;
   /** Bracket stroke width. Default: DEFAULT_STROKE_WIDTH */
   bracketStrokeWidth?: number;
-  /** Element color for auto-generated MathTex. Default: WHITE */
+  /** Element color for auto-generated MathTexImage. Default: WHITE */
   elementColor?: string;
   /** Font size for elements. Default: 48 */
   fontSize?: number;
@@ -200,7 +200,7 @@ export class Matrix extends VGroup {
     // Convert to LaTeX string
     const latex = typeof value === 'number' ? String(value) : value;
 
-    return new MathTex({
+    return new MathTexImage({
       latex,
       color: this._elementColor,
       fontSize: this._fontSize,
@@ -696,7 +696,7 @@ export type MobjectMatrixOptions = MatrixOptions;
  * ```typescript
  * const mobjectMatrix = new MobjectMatrix([
  *   [new Circle(), new Square()],
- *   [new Triangle(), new MathTex({ latex: '\\pi' })]
+ *   [new Triangle(), new MathTexImage({ latex: '\\pi' })]
  * ]);
  * ```
  */

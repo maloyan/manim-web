@@ -1,7 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeAll } from 'vitest';
 import { Variable } from './Variable';
-import { MathTex } from './MathTex';
+import { MathTexImage } from './MathTexImage';
 import { DecimalNumber } from './DecimalNumber';
 import { ValueTracker } from '../value-tracker';
 
@@ -159,12 +159,12 @@ describe('Variable', () => {
   describe('submobject accessors', () => {
     it('should expose labelMobject as MathTex', () => {
       const v = new Variable({ label: 'x' });
-      expect(v.labelMobject).toBeInstanceOf(MathTex);
+      expect(v.labelMobject).toBeInstanceOf(MathTexImage);
     });
 
     it('should expose equalsMobject as MathTex', () => {
       const v = new Variable({ label: 'x' });
-      expect(v.equalsMobject).toBeInstanceOf(MathTex);
+      expect(v.equalsMobject).toBeInstanceOf(MathTexImage);
     });
 
     it('should expose numberMobject as DecimalNumber', () => {

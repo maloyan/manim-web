@@ -6,7 +6,7 @@ import { VGroup } from '../../core/VGroup';
 import { VDict } from '../../core/VDict';
 import { NumberLine, NumberLineOptions } from './NumberLine';
 import { FunctionGraph, FunctionGraphOptions } from './FunctionGraph';
-import { MathTex } from '../../mobjects/text/MathTex';
+import { MathTexImage } from '../../mobjects/text/MathTexImage';
 import { Line } from '../../mobjects/geometry/Line';
 import { DashedLine } from '../../mobjects/geometry/DashedLine';
 import { Dot } from '../../mobjects/geometry/Dot';
@@ -407,11 +407,11 @@ export class Axes extends Group {
     const xLabelMob =
       xLabelInput instanceof Mobject
         ? xLabelInput
-        : new MathTex({ latex: xLabelInput, fontSize: 32, color: '#ffffff' });
+        : new MathTexImage({ latex: xLabelInput, fontSize: 32, color: '#ffffff' });
     const yLabelMob =
       yLabelInput instanceof Mobject
         ? yLabelInput
-        : new MathTex({ latex: yLabelInput, fontSize: 32, color: '#ffffff' });
+        : new MathTexImage({ latex: yLabelInput, fontSize: 32, color: '#ffffff' });
 
     // Position x label at the end of x-axis (UR direction from right end, matching Manim)
     const xEnd = this._xLength / 2;
@@ -453,7 +453,7 @@ export class Axes extends Group {
       color?: string;
       label?: string;
     } = {},
-  ): MathTex {
+  ): MathTexImage {
     // Handle overload: second arg can be a string label or an options object
     let opts = options;
     let label: string | undefined;
@@ -472,7 +472,7 @@ export class Axes extends Group {
     const point = graph.getPointFromX(xVal);
     const pos: Vector3Tuple = point ?? this.coordsToPoint(xVal, 0);
 
-    const labelMob = new MathTex({ latex: labelStr, fontSize: 32, color });
+    const labelMob = new MathTexImage({ latex: labelStr, fontSize: 32, color });
     // Offset by direction (scaled for readability)
     const dx = direction[0] * 0.5;
     const dy = direction[1] * 0.5;

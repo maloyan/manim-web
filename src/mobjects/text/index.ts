@@ -21,11 +21,11 @@ export { MarkupText, type MarkupTextOptions, type StyledTextSegment } from './Ma
 // KaTeX styles helper
 export { ensureKatexStyles, areKatexStylesLoaded } from './katexStyles';
 
-// MathTex - LaTeX rendering (KaTeX default, MathJax fallback)
-export { MathTex, type MathTexOptions, type TexRenderer } from './MathTex';
+// MathTex - SVG vector-based LaTeX rendering (default, like Python Manim)
+export { MathTex, type MathTexOptions, MathTexSVG, type MathTexSVGOptions } from './MathTex';
 
-// MathTexSVG - Vector-based LaTeX rendering (SVG paths, supports Create/DrawBorderThenFill)
-export { MathTexSVG, type MathTexSVGOptions } from './MathTexSVG';
+// MathTexImage - Rasterized LaTeX rendering (KaTeX default, MathJax fallback)
+export { MathTexImage, type MathTexImageOptions, type TexRenderer } from './MathTexImage';
 
 // MathJax renderer (dynamic import, full LaTeX support)
 export {

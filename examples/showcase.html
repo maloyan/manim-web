@@ -57,7 +57,7 @@
     import {
       Scene, Circle, Square, Rectangle, Triangle,
       Line, Arrow, Axes, FunctionGraph,
-      Text, MathTex,
+      Text, MathTexImage,
       FadeIn, FadeOut, Create, Transform, Write, DrawBorderThenFill,
       Rotate, Scale, GrowFromCenter,
       AnimationGroup, LaggedStart,
@@ -111,7 +111,7 @@
       const title = new Text({ text: 'The Pythagorean Theorem', fontSize: 36, color: WHITE });
       title.shift([0, 2.5, 0]);
 
-      const equation = new MathTex({ latex: 'a^2 + b^2 = c^2', fontSize: 64, color: TEAL });
+      const equation = new MathTexImage({ latex: 'a^2 + b^2 = c^2', fontSize: 64, color: TEAL });
 
       const triangle = new Triangle({
         vertices: [[-2, -2, 0], [2, -2, 0], [2, 1, 0]],
@@ -160,10 +160,10 @@
         axes: axes
       });
 
-      const label1 = new MathTex({ latex: '\\sin(x)', fontSize: 32, color: BLUE });
+      const label1 = new MathTexImage({ latex: '\\sin(x)', fontSize: 32, color: BLUE });
       label1.shift([5, 1, 0]);
 
-      const label2 = new MathTex({ latex: '\\cos(x)', fontSize: 32, color: RED });
+      const label2 = new MathTexImage({ latex: '\\cos(x)', fontSize: 32, color: RED });
       label2.shift([5, -0.5, 0]);
 
       await label1.waitForRender();

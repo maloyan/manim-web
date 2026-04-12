@@ -501,7 +501,7 @@ export class Scene {
     const allAnimations = this._collectAllAnimations(animations);
 
     // Force geometry sync so begin() can detect Line2 children for dash-reveal
-    // animations (e.g. MathTexSVG Create). This must happen before begin() but
+    // animations (e.g. MathTex Create). This must happen before begin() but
     // we must NOT add to the scene yet — otherwise the mobject renders at full
     // opacity for one frame before begin() hides it.
     for (const animation of allAnimations) {

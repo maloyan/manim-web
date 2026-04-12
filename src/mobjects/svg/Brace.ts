@@ -3,7 +3,7 @@ import { VMobject } from '../../core/VMobject';
 import { Mobject, Vector3Tuple, DOWN } from '../../core/Mobject';
 import { Group } from '../../core/Group';
 import { Text } from '../text/Text';
-import { MathTex } from '../text/MathTex';
+import { MathTexImage } from '../text/MathTexImage';
 import { Arc } from '../geometry/Arc';
 import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 
@@ -446,17 +446,17 @@ export class Brace extends VMobject {
   }
 
   /**
-   * Create a MathTex label positioned at the tip of the brace.
+   * Create a MathTexImage label positioned at the tip of the brace.
    * Mirrors Manim's Brace.get_tex() API.
    */
   getTex(
     latex: string,
     options: { fontSize?: number; color?: string; buff?: number } = {},
-  ): MathTex {
+  ): MathTexImage {
     const { fontSize = 36, color = WHITE, buff = 0.4 } = options;
     const tip = this.getTip();
     const dir = this.getDirection();
-    const label = new MathTex({ latex, fontSize, color });
+    const label = new MathTexImage({ latex, fontSize, color });
     label.moveTo([tip[0] + dir[0] * buff, tip[1] + dir[1] * buff, tip[2]]);
     return label;
   }
