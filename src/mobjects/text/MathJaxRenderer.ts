@@ -14,6 +14,8 @@
 import katex from 'katex';
 import type { VGroup } from '../../core/VGroup';
 import { svgToVMobjects } from './svgPathParser';
+import { LiteAdaptor } from 'mathjax-full/js/adaptors/liteAdaptor.js';
+import { LiteElement } from 'mathjax-full/js/adaptors/lite/Element';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -107,7 +109,7 @@ interface MathJaxModuleNpm {
   mjModule: MathJaxNpmMjModule;
   texModule: MathJaxNpmTexModule;
   svgModule: MathJaxNpmSvgModule;
-  adaptor: MathJaxAdaptor;
+  adaptor: LiteAdaptor;
 }
 
 type MathJaxModuleState = MathJaxModuleGlobal | MathJaxModuleNpm;
@@ -143,7 +145,7 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
       const liteAdaptor = await import('mathjax-full/js/adaptors/liteAdaptor.js');
       const htmlHandler = await import('mathjax-full/js/handlers/html.js');
 
-      const adaptor = liteAdaptor.liteAdaptor() as unknown as MathJaxAdaptor;
+      const adaptor = liteAdaptor.liteAdaptor();
       htmlHandler.RegisterHTMLHandler(adaptor);
 
       mathjaxModule = {
@@ -316,7 +318,7 @@ export async function renderLatexToSVG(
     const html = MathJax.document('', { InputJax: tex, OutputJax: svg });
 
     const node = html.convert(texString, { display: displayMode });
-    svgString = adaptor.outerHTML(node);
+    svgString = adaptor.outerHTML(node as LiteElement);
 
     // Parse the string into a real SVGElement for downstream use
     if (typeof DOMParser === 'undefined') {
