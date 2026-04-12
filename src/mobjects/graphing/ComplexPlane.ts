@@ -7,6 +7,7 @@ import { Line } from '../geometry';
 import { Circle } from '../geometry';
 import { Text } from '../text';
 import { WHITE } from '../../constants';
+import { resolveExtremalPoint } from '../../core/MobjectState';
 
 /**
  * Complex number representation
@@ -324,11 +325,26 @@ export class ComplexPlane extends NumberPlane {
    * @param func - A function mapping one complex number to another
    * @returns this for chaining
    */
-  applyComplexFunction(func: (z: Complex) => Complex): this {
+  applyComplexFunction(
+    func: (z: Complex) => Complex,
+    options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
+  ): this {
+    const aboutPt = resolveExtremalPoint(this, options);
+
     const transformPoint = (point: number[]): number[] => {
-      const z = this.p2n(point as [number, number, number]);
+      let p = point;
+      if (aboutPt) {
+        p = [point[0] - aboutPt[0], point[1] - aboutPt[1], point[2] - aboutPt[2]];
+      }
+      const z = this.p2n(p as [number, number, number]);
       const w = func(z);
-      return [...this.n2p(w)];
+      const result = [...this.n2p(w)];
+      if (aboutPt) {
+        result[0] += aboutPt[0];
+        result[1] += aboutPt[1];
+        result[2] += aboutPt[2];
+      }
+      return result;
     };
 
     // Transform all VMobject children recursively

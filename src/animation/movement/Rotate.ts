@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
+import { resolveExtremalPoint } from '../../core/MobjectState';
 
 export interface RotateOptions extends AnimationOptions {
   /** Angle to rotate in radians */
@@ -13,6 +14,8 @@ export interface RotateOptions extends AnimationOptions {
   axis?: Vector3Tuple;
   /** Point to rotate about, defaults to mobject center */
   aboutPoint?: Vector3Tuple;
+  /** Edge to rotate about, resolved via bounding box. Mutually exclusive with aboutPoint. */
+  aboutEdge?: Vector3Tuple;
 }
 
 export class Rotate extends Animation {
@@ -41,7 +44,8 @@ export class Rotate extends Animation {
     super(mobject, options);
     this.angle = options.angle;
     this.axis = options.axis ?? [0, 0, 1];
-    this.aboutPoint = options.aboutPoint ?? null;
+    const resolved = resolveExtremalPoint(mobject, options);
+    this.aboutPoint = resolved ?? null;
   }
 
   /**
