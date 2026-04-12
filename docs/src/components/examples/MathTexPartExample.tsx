@@ -5,33 +5,26 @@ async function animate(scene: any) {
   const { MathTex, Create, FadeIn, Indicate, WHITE, RED, BLUE, GREEN, YELLOW } =
     await import('manim-web');
 
-  // Create individually colored equation parts
-  const xSq = new MathTex({ latex: 'x^2', color: RED, fontSize: 1 });
-  xSq.moveTo([-2.2, 0, 0]);
+  // Render as a single equation with multi-part coloring
+  const equation = new MathTex({
+    latex: ['x^2', '+', 'y^2', '=', 'r^2'],
+    color: WHITE,
+    fontSize: 1.5,
+  });
+  await equation.waitForRender();
 
-  const plus = new MathTex({ latex: '+', color: WHITE, fontSize: 1 });
-  plus.moveTo([-1, 0, 0]);
+  // Color individual parts
+  equation.getPart(0).setColor(RED);
+  equation.getPart(2).setColor(BLUE);
+  equation.getPart(4).setColor(GREEN);
 
-  const ySq = new MathTex({ latex: 'y^2', color: BLUE, fontSize: 1 });
-  ySq.moveTo([0.2, 0, 0]);
-
-  const eq = new MathTex({ latex: '=', color: WHITE, fontSize: 1 });
-  eq.moveTo([1.4, 0, 0]);
-
-  const rSq = new MathTex({ latex: 'r^2', color: GREEN, fontSize: 1 });
-  rSq.moveTo([2.6, 0, 0]);
-
-  await scene.play(new Create(xSq, { duration: 0.6 }));
-  await scene.play(new FadeIn(plus, { duration: 0.2 }));
-  await scene.play(new Create(ySq, { duration: 0.6 }));
-  await scene.play(new FadeIn(eq, { duration: 0.2 }));
-  await scene.play(new Create(rSq, { duration: 0.6 }));
-  await scene.wait(0.3);
+  await scene.play(new Create(equation, { duration: 2 }));
+  await scene.wait(0.5);
 
   // Highlight individual parts
-  await scene.play(new Indicate(xSq, { color: YELLOW, duration: 0.6 }));
-  await scene.play(new Indicate(ySq, { color: YELLOW, duration: 0.6 }));
-  await scene.play(new Indicate(rSq, { color: YELLOW, duration: 0.6 }));
+  await scene.play(new Indicate(equation.getPart(0), { color: YELLOW, duration: 0.6 }));
+  await scene.play(new Indicate(equation.getPart(2), { color: YELLOW, duration: 0.6 }));
+  await scene.play(new Indicate(equation.getPart(4), { color: YELLOW, duration: 0.6 }));
   await scene.wait(1);
 }
 

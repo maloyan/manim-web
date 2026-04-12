@@ -17,6 +17,7 @@ async function animate(scene: any) {
     color: WHITE,
     fontSize: 1,
   });
+  await tex1.waitForRender();
   tex1.moveTo([0.5, 1.2, 0]);
   await scene.play(new Create(tex1, { duration: 1.5 }));
 
@@ -29,6 +30,7 @@ async function animate(scene: any) {
     color: BLUE,
     fontSize: 1,
   });
+  await tex2.waitForRender();
   tex2.moveTo([0.5, -0.5, 0]);
   await scene.play(new Create(tex2, { duration: 1.5 }));
   await scene.wait(1.5);
