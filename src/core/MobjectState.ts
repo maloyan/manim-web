@@ -175,7 +175,7 @@ function pointsBoundingBox(mob: MobjectLike): {
  * Resolve aboutPoint from options, converting aboutEdge to an actual point
  * using the mobject's bounding box when needed.
  */
-export function resolveAboutPoint(
+export function resolveExtremalPoint(
   mob: MobjectLike,
   options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
 ): Vector3Tuple | undefined {
@@ -205,7 +205,7 @@ export function applyFunctionImpl(
   fn: (point: number[]) => number[],
   options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
 ): void {
-  const aboutPt = resolveAboutPoint(mob, options);
+  const aboutPt = resolveExtremalPoint(mob, options);
   const wrappedFn = aboutPt
     ? (p: number[]) => {
         const translated = [p[0] - aboutPt[0], p[1] - aboutPt[1], p[2] - aboutPt[2]];
@@ -237,7 +237,7 @@ export function applyMatrixImpl(
   matrix: number[][],
   options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
 ): void {
-  const aboutPoint: Vector3Tuple = resolveAboutPoint(mob, options) ?? [0, 0, 0];
+  const aboutPoint: Vector3Tuple = resolveExtremalPoint(mob, options) ?? [0, 0, 0];
 
   // aboutPoint is baked into the transform function — do NOT pass options
   // to applyFunctionImpl, or the translation would be applied twice.

@@ -7,7 +7,7 @@ import { Line } from '../geometry';
 import { Circle } from '../geometry';
 import { Text } from '../text';
 import { WHITE } from '../../constants';
-import { resolveAboutPoint } from '../../core/MobjectState';
+import { resolveExtremalPoint } from '../../core/MobjectState';
 
 /**
  * Complex number representation
@@ -329,7 +329,7 @@ export class ComplexPlane extends NumberPlane {
     func: (z: Complex) => Complex,
     options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
   ): this {
-    const aboutPt = resolveAboutPoint(this, options);
+    const aboutPt = resolveExtremalPoint(this, options);
 
     const transformPoint = (point: number[]): number[] => {
       let p = point;

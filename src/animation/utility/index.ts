@@ -12,7 +12,7 @@ import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { linear } from '../../rate-functions';
-import { resolveAboutPoint } from '../../core/MobjectState';
+import { resolveExtremalPoint } from '../../core/MobjectState';
 
 // ============================================================================
 // Add Animation
@@ -188,7 +188,7 @@ export class Rotating extends Animation {
     });
     this.angle = options.angle ?? 2 * Math.PI; // Default: TAU (full revolution)
     this.axis = options.axis ?? [0, 0, 1];
-    const resolved = resolveAboutPoint(mobject, options);
+    const resolved = resolveExtremalPoint(mobject, options);
     this.aboutPoint = resolved ?? null;
   }
 

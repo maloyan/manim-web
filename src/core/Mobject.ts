@@ -16,7 +16,7 @@ import {
   applyFunctionImpl,
   applyMatrixImpl,
   prepareForNonlinearTransformImpl,
-  resolveAboutPoint,
+  resolveExtremalPoint,
 } from './MobjectState';
 // AnimateProxy registers itself here to break the circular dependency:
 // Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject
@@ -241,7 +241,7 @@ export abstract class Mobject {
       | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
   ): this {
     if (axisOrOptions && !Array.isArray(axisOrOptions)) {
-      const resolved = resolveAboutPoint(this, axisOrOptions);
+      const resolved = resolveExtremalPoint(this, axisOrOptions);
       if (resolved) {
         axisOrOptions = { axis: axisOrOptions.axis, aboutPoint: resolved };
       }
@@ -258,7 +258,7 @@ export abstract class Mobject {
     axis: Vector3Tuple = [1, 0, 0],
     options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
   ): this {
-    const aboutPt = resolveAboutPoint(this, options);
+    const aboutPt = resolveExtremalPoint(this, options);
     if (aboutPt) {
       applyFunctionImpl(
         this,
@@ -284,7 +284,7 @@ export abstract class Mobject {
     factor: number | Vector3Tuple,
     options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
   ): this {
-    const aboutPt = resolveAboutPoint(this, options);
+    const aboutPt = resolveExtremalPoint(this, options);
     if (aboutPt) {
       const f = typeof factor === 'number' ? [factor, factor, factor] : factor;
       applyFunctionImpl(

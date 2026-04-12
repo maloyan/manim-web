@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
-import { resolveAboutPoint } from '../../core/MobjectState';
+import { resolveExtremalPoint } from '../../core/MobjectState';
 
 export interface ScaleOptions extends AnimationOptions {
   /** Scale factor: number for uniform scale, tuple for per-axis scale */
@@ -45,7 +45,7 @@ export class Scale extends Animation {
   constructor(mobject: Mobject, options: ScaleOptions) {
     super(mobject, options);
     this.scaleFactor = options.scaleFactor;
-    const resolved = resolveAboutPoint(mobject, options);
+    const resolved = resolveExtremalPoint(mobject, options);
     this.aboutPoint = resolved ?? null;
   }
 
