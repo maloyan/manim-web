@@ -12,7 +12,7 @@ async function animate(scene: any) {
   const m0 = new MathTex({
     latex: '\\begin{bmatrix} \\pi & 0 \\\\ -1 & 1 \\end{bmatrix}',
     color: WHITE,
-    fontSize: 40,
+    fontSize: 1,
   });
   m0.moveTo([-3, 1.3, 0]);
 
@@ -20,7 +20,7 @@ async function animate(scene: any) {
   const m1 = new MathTex({
     latex: '\\begin{pmatrix} 2 & 0 \\\\ 12 & -1 \\end{pmatrix}',
     color: WHITE,
-    fontSize: 40,
+    fontSize: 1,
   });
   m1.moveTo([3, 1.3, 0]);
 
@@ -28,7 +28,7 @@ async function animate(scene: any) {
   const m2 = new MathTex({
     latex: '\\left\\{ \\begin{matrix} 3.46 & 2.12 \\\\ 33.22 & 12.33 \\end{matrix} \\right\\}',
     color: WHITE,
-    fontSize: 40,
+    fontSize: 1,
   });
   m2.moveTo([-3, -1.3, 0]);
 
@@ -48,7 +48,7 @@ async function animate(scene: any) {
   cellGroup.add(square);
 
   // Row 1: π (teal), Star (teal)
-  const piTex = new MathTex({ latex: '\\pi', color: TEAL_A, fontSize: 80 });
+  const piTex = new MathTex({ latex: '\\pi', color: TEAL_A, fontSize: 1 });
   piTex.moveTo([-spacing / 2, -spacing / 2, 0]);
   cellGroup.add(piTex);
 
@@ -65,7 +65,7 @@ async function animate(scene: any) {
   const leftAngle = new MathTex({
     latex: '\\Bigg\\langle',
     color: WHITE,
-    fontSize: 40,
+    fontSize: 1,
   });
   leftAngle.moveTo([-(spacing / 2 + 0.8), 0, 0]);
   cellGroup.add(leftAngle);
@@ -73,7 +73,7 @@ async function animate(scene: any) {
   const rightAngle = new MathTex({
     latex: '\\Bigg\\rangle',
     color: WHITE,
-    fontSize: 40,
+    fontSize: 1,
   });
   rightAngle.moveTo([spacing / 2 + 0.8, 0, 0]);
   cellGroup.add(rightAngle);
@@ -96,7 +96,7 @@ async function animate(scene: any) {
   const detTex = new MathTex({
     latex: '\\text{det} \\left( \\begin{bmatrix} 2 & 0 \\\\ -1 & 1 \\end{bmatrix} \\right) = 3',
     color: WHITE,
-    fontSize: 48,
+    fontSize: 1,
   });
   detTex.moveTo([0, 0, 0]);
   await scene.play(new FadeIn(detTex, { duration: 1.5 }));

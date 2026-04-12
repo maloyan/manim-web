@@ -6,19 +6,19 @@ async function animate(scene: any) {
     await import('manim-web');
 
   // Create individually colored equation parts
-  const xSq = new MathTex({ latex: 'x^2', color: RED, fontSize: 48 });
+  const xSq = new MathTex({ latex: 'x^2', color: RED, fontSize: 1 });
   xSq.moveTo([-2.2, 0, 0]);
 
-  const plus = new MathTex({ latex: '+', color: WHITE, fontSize: 48 });
+  const plus = new MathTex({ latex: '+', color: WHITE, fontSize: 1 });
   plus.moveTo([-1, 0, 0]);
 
-  const ySq = new MathTex({ latex: 'y^2', color: BLUE, fontSize: 48 });
+  const ySq = new MathTex({ latex: 'y^2', color: BLUE, fontSize: 1 });
   ySq.moveTo([0.2, 0, 0]);
 
-  const eq = new MathTex({ latex: '=', color: WHITE, fontSize: 48 });
+  const eq = new MathTex({ latex: '=', color: WHITE, fontSize: 1 });
   eq.moveTo([1.4, 0, 0]);
 
-  const rSq = new MathTex({ latex: 'r^2', color: GREEN, fontSize: 48 });
+  const rSq = new MathTex({ latex: 'r^2', color: GREEN, fontSize: 1 });
   rSq.moveTo([2.6, 0, 0]);
 
   await scene.play(new Create(xSq, { duration: 0.6 }));

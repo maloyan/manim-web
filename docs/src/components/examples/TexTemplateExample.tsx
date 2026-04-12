@@ -15,7 +15,7 @@ async function animate(scene: any) {
   const tex1 = new MathTex({
     latex: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
     color: WHITE,
-    fontSize: 36,
+    fontSize: 1,
   });
   tex1.moveTo([0.5, 1.2, 0]);
   await scene.play(new Create(tex1, { duration: 1.5 }));
@@ -27,7 +27,7 @@ async function animate(scene: any) {
   const tex2 = new MathTex({
     latex: '\\sum_{n=1}^{N} \\frac{1}{n^2} = \\frac{\\pi^2}{6}',
     color: BLUE,
-    fontSize: 36,
+    fontSize: 1,
   });
   tex2.moveTo([0.5, -0.5, 0]);
   await scene.play(new Create(tex2, { duration: 1.5 }));
