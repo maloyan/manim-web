@@ -14,6 +14,8 @@
 import katex from 'katex';
 import type { VGroup } from '../../core/VGroup';
 import { svgToVMobjects } from './svgPathParser';
+import { LiteAdaptor } from 'mathjax-full/js/adaptors/liteAdaptor.js';
+import { LiteElement } from 'mathjax-full/js/adaptors/lite/Element';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -107,7 +109,7 @@ interface MathJaxModuleNpm {
   mjModule: MathJaxNpmMjModule;
   texModule: MathJaxNpmTexModule;
   svgModule: MathJaxNpmSvgModule;
-  adaptor: MathJaxAdaptor;
+  adaptor: LiteAdaptor;
 }
 
 type MathJaxModuleState = MathJaxModuleGlobal | MathJaxModuleNpm;
@@ -135,19 +137,15 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
 
   mathjaxLoadPromise = (async () => {
     // Strategy 1: try the npm package "mathjax-full"
+    // it will resolve for local npm installs, but it will not be bundled in browser code.
     try {
-      // Use Function constructor to hide specifiers from Vite's static analysis
-      // eslint-disable-next-line @typescript-eslint/no-implied-eval
-      const importFn = new Function('s', 'return import(s)') as (
-        s: string,
-      ) => Promise<Record<string, (...args: unknown[]) => unknown>>;
-      const mjModule = await importFn('mathjax-full/js/mathjax.js');
-      const texModule = await importFn('mathjax-full/js/input/tex-full.js');
-      const svgModule = await importFn('mathjax-full/js/output/svg.js');
-      const liteAdaptor = await importFn('mathjax-full/js/adaptors/liteAdaptor.js');
-      const htmlHandler = await importFn('mathjax-full/js/handlers/html.js');
+      const mjModule = await import('mathjax-full/js/mathjax.js');
+      const texModule = await import('mathjax-full/js/input/tex.js');
+      const svgModule = await import('mathjax-full/js/output/svg.js');
+      const liteAdaptor = await import('mathjax-full/js/adaptors/liteAdaptor.js');
+      const htmlHandler = await import('mathjax-full/js/handlers/html.js');
 
-      const adaptor = liteAdaptor.liteAdaptor() as unknown as MathJaxAdaptor;
+      const adaptor = liteAdaptor.liteAdaptor();
       htmlHandler.RegisterHTMLHandler(adaptor);
 
       mathjaxModule = {
@@ -320,7 +318,7 @@ export async function renderLatexToSVG(
     const html = MathJax.document('', { InputJax: tex, OutputJax: svg });
 
     const node = html.convert(texString, { display: displayMode });
-    svgString = adaptor.outerHTML(node);
+    svgString = adaptor.outerHTML(node as LiteElement);
 
     // Parse the string into a real SVGElement for downstream use
     if (typeof DOMParser === 'undefined') {
