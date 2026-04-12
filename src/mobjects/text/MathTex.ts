@@ -289,11 +289,10 @@ export class MathTex extends VGroup {
       // Explicit height: scale bounding box to fit (user intent)
       s = this._targetHeight / rawHeight;
     } else {
-      // Scale based on em height for consistent font sizing.
-      // svgToVMobjects scales paths by fontSize / vbWidth, so in raw coords
-      // 1 em = 1000 * fontSize / vbWidth. We want 1 em = 0.5 * fontSize
-      // world units, giving: s = 0.5 * vbWidth / 1000.
-      s = (0.5 * this._svgViewBoxWidth) / 1000;
+      // Scale to a readable size: fontSize acts as a multiplier.
+      // Default height ≈ 1 world unit (readable in standard camera view).
+      const targetHeight = this._fontSize;
+      s = targetHeight / rawHeight;
     }
 
     // Center of current bounds
