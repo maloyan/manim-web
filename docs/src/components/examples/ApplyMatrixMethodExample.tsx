@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Scene, Square, applyMatrix, BLUE, YELLOW } = await import('manim-web');
+  const { Scene, Square, applyMatrix, BLUE } = await import('manim-web');
 
   const square = new Square({ sideLength: 2, color: BLUE, fillOpacity: 0.5 });
   scene.add(square);

@@ -3,7 +3,23 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Scene, Create, FadeIn, FadeOut, Transform, ApplyPointwiseFunction, Text, MathTex, NumberPlane, VGroup, UP, DOWN, UL, BLACK, WHITE } = await import('manim-web');
+  const {
+    Scene,
+    Create,
+    FadeIn,
+    FadeOut,
+    Transform,
+    ApplyPointwiseFunction,
+    Text,
+    MathTexImage,
+    NumberPlane,
+    VGroup,
+    UP,
+    DOWN,
+    UL,
+    BLACK,
+    WHITE,
+  } = await import('manim-web');
 
   const FONT_URL = 'https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/fonts/KaTeX_Main-Regular.ttf';
 
@@ -14,7 +30,9 @@ async function animate(scene: any) {
     color: WHITE,
     fontUrl: FONT_URL,
   });
-  const basel = new MathTex({ latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}' });
+  const basel = new MathTexImage({
+    latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}',
+  });
   await basel.waitForRender?.();
 
   new VGroup(title, basel).arrange(DOWN);

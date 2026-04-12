@@ -9,7 +9,7 @@ async function animate(scene: any) {
     Dot,
     Line,
     VGroup,
-    MathTex,
+    MathTexImage,
     BLACK,
     BLUE,
     RED,
@@ -28,10 +28,10 @@ async function animate(scene: any) {
 
   // --- X labels ---
   const xLabels = [
-    new MathTex({ latex: '\\pi' }),
-    new MathTex({ latex: '2\\pi' }),
-    new MathTex({ latex: '3\\pi' }),
-    new MathTex({ latex: '4\\pi' }),
+    new MathTexImage({ latex: '\\pi' }),
+    new MathTexImage({ latex: '2\\pi' }),
+    new MathTexImage({ latex: '3\\pi' }),
+    new MathTexImage({ latex: '4\\pi' }),
   ];
   for (let i = 0; i < xLabels.length; i++) {
     xLabels[i].nextTo([-1 + 2 * i, 0, 0], DOWN, 0.4);
