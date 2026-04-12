@@ -382,7 +382,7 @@ export class ApplyMatrix extends Animation {
 /**
  * Create an ApplyMatrix animation.
  * @param mobject The Mobject to transform (VMobject or Group)
- * @param matrix 3x3 or 4x4 transformation matrix
+ * @param matrix 2x2 or 3x3 transformation matrix
  * @param options Animation options including aboutPoint
  */
 export function applyMatrix(

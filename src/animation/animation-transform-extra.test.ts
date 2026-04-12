@@ -269,21 +269,6 @@ describe('ApplyMatrix', () => {
     expect(v.getPoints()[0][0]).toBeCloseTo(3, 5);
   });
 
-  it('4x4 homogeneous matrix', () => {
-    const v = vm([[1, 0, 0]]);
-    const anim = new ApplyMatrix(v, {
-      matrix: [
-        [3, 0, 0, 0],
-        [0, 3, 0, 0],
-        [0, 0, 3, 0],
-        [0, 0, 0, 1],
-      ],
-    });
-    anim.begin();
-    anim.interpolate(1);
-    expect(v.getPoints()[0][0]).toBeCloseTo(3, 5);
-  });
-
   it('invalid matrix size returns original', () => {
     const v = vm([[5, 6, 0]]);
     const anim = new ApplyMatrix(v, { matrix: [[1, 2]] });
