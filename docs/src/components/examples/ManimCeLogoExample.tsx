@@ -3,13 +3,26 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Circle, LEFT, MathTex, ORIGIN, RIGHT, Scene, Square, Triangle, UP, VGroup, addVec, scaleVec } = await import('manim-web');
+  const {
+    Circle,
+    LEFT,
+    MathTexImage,
+    ORIGIN,
+    RIGHT,
+    Scene,
+    Square,
+    Triangle,
+    UP,
+    VGroup,
+    addVec,
+    scaleVec,
+  } = await import('manim-web');
 
   const logoGreen = '#87c2a5';
   const logoBlue = '#525893';
   const logoRed = '#e07a5f';
   const logoBlack = '#343434';
-  const dsM = new MathTex({ latex: '\\mathbb{M}', fillColor: logoBlack });
+  const dsM = new MathTexImage({ latex: '\\mathbb{M}', fillColor: logoBlack });
   await dsM.waitForRender();
   dsM.scale(7);
   dsM.shift(addVec(scaleVec(2.25, LEFT), scaleVec(1.5, UP)));

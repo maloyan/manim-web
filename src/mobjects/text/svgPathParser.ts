@@ -485,6 +485,9 @@ export function svgToVMobjects(
     // Skip <defs> — we collected them above
     if (tag === 'defs') return;
 
+    // Skip MathJax error elements (merror produces a background rect)
+    if (el.getAttribute('data-mml-node') === 'merror') return;
+
     // Handle <g> transform: translate and scale
     // SVG transforms apply left-to-right in the attribute string.
     // For "translate(a,b) scale(s)": point p → (a + s*p.x, b + s*p.y)
