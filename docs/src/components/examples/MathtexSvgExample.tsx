@@ -5,7 +5,7 @@ import ManimExample from '../ManimExample';
 async function animate(scene: any) {
   const {
     Scene,
-    MathTexSVG,
+    MathTex,
     Create,
     DrawBorderThenFill,
     FadeIn,
@@ -19,27 +19,27 @@ async function animate(scene: any) {
   } = await import('manim-web');
 
   // Pre-create all equations
-  const equation1 = new MathTexSVG({
+  const equation1 = new MathTex({
     latex: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
     color: WHITE,
     fontSize: 2,
   });
-  const equation2 = new MathTexSVG({
+  const equation2 = new MathTex({
     latex: 'e^{i\\pi} + 1 = 0',
     color: YELLOW,
     fontSize: 2.5,
   });
-  const multiPart = new MathTexSVG({
+  const multiPart = new MathTex({
     latex: ['E', '=', 'mc^2'],
     color: WHITE,
     fontSize: 3,
   });
-  const equation3 = new MathTexSVG({
+  const equation3 = new MathTex({
     latex: '\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}',
     color: GREEN,
     fontSize: 2,
   });
-  const matrix = new MathTexSVG({
+  const matrix = new MathTex({
     latex: 'A = \\begin{pmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{pmatrix}',
     color: WHITE,
     fontSize: 2,

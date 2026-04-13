@@ -3,7 +3,20 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Angle, FadeToColor, LEFT, Line, MathTex, RED, RIGHT, SMALL_BUFF, Scene, ValueTracker, BLACK, WHITE } = await import('manim-web');
+  const {
+    Angle,
+    FadeToColor,
+    LEFT,
+    Line,
+    MathTexImage,
+    RED,
+    RIGHT,
+    SMALL_BUFF,
+    Scene,
+    ValueTracker,
+    BLACK,
+    WHITE,
+  } = await import('manim-web');
 
   const rotation_center = LEFT;
 
@@ -13,7 +26,7 @@ async function animate(scene: any) {
   const line_ref = line_moving.copy();
   line_moving.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
   const a = new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false });
-  const tex = new MathTex({ latex: '\\theta', color: WHITE });
+  const tex = new MathTexImage({ latex: '\\theta', color: WHITE });
   await tex.waitForRender();
   tex.moveTo(
     new Angle(

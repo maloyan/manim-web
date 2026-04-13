@@ -3,9 +3,10 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Create, MathTex, ReplacementTransform, Scene, SurroundingRectangle, Write } = await import('manim-web');
+  const { Create, MathTexImage, ReplacementTransform, Scene, SurroundingRectangle, Write } =
+    await import('manim-web');
 
-  const text = new MathTex({
+  const text = new MathTexImage({
     latex: ['\\frac{d}{dx}f(x)g(x)=', 'f(x)\\frac{d}{dx}g(x)', '+', 'g(x)\\frac{d}{dx}f(x)'],
   });
   await text.waitForRender();

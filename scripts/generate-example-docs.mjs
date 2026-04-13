@@ -147,8 +147,8 @@ const EXAMPLE_META = {
   },
   mathtex_svg: {
     description:
-      'Demonstrates vector-based LaTeX rendering with MathTexSVG. Shows Create (stroke-draw reveal), DrawBorderThenFill, FadeIn, and multi-part expressions with per-part coloring. Unlike raster MathTex, MathTexSVG produces real VMobject paths that support path-based animations.',
-    learnMore: ['MathTexSVG', 'Create', 'DrawBorderThenFill', 'FadeIn', 'FadeOut'],
+      'Demonstrates vector-based LaTeX rendering with MathTex. Shows Create (stroke-draw reveal), DrawBorderThenFill, FadeIn, and multi-part expressions with per-part coloring. MathTex produces real VMobject paths that support path-based animations.',
+    learnMore: ['MathTex', 'Create', 'DrawBorderThenFill', 'FadeIn', 'FadeOut'],
   },
   opening_manim: {
     description:

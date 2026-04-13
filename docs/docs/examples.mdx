@@ -45,7 +45,7 @@ Interactive examples showing what you can build with manim-web. Each example inc
 
 ## Integrated Player
 
-A full-featured playback controller with play/pause, segment navigation, timeline scrubbing, speed control, fullscreen, and export. Toggle slides mode with the slides button or <kbd>S</kbd> key — when active, each <kbd>&rarr;</kbd> press plays one segment then pauses, like a presentation. Use <kbd>Space</kbd> to play/pause, <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> for segments, <kbd>Shift+&larr;/&rarr;</kbd> to scrub, and <kbd>F</kbd> for fullscreen.
+A full-featured playback controller with play/pause, segment navigation, timeline scrubbing, speed control, fullscreen, and export. Use <kbd>Space</kbd> to play/pause, <kbd>&larr;</kbd>/<kbd>&rarr;</kbd> for segments, <kbd>Shift+&larr;/&rarr;</kbd> to scrub, and <kbd>F</kbd> for fullscreen.
 
 <PlayerExample />
 
@@ -129,7 +129,7 @@ Creates the Manim Community Edition logo using a large blackboard-bold M, a circ
 import {
   Circle,
   LEFT,
-  MathTex,
+  MathTexImage,
   ORIGIN,
   RIGHT,
   Scene,
@@ -151,7 +151,7 @@ const logoGreen = '#87c2a5';
 const logoBlue = '#525893';
 const logoRed = '#e07a5f';
 const logoBlack = '#343434';
-const dsM = new MathTex({ latex: '\\mathbb{M}', fillColor: logoBlack });
+const dsM = new MathTexImage({ latex: '\\mathbb{M}', fillColor: logoBlack });
 await dsM.waitForRender();
 dsM.scale(7);
 dsM.shift(addVec(scaleVec(2.25, LEFT), scaleVec(1.5, UP)));
@@ -364,7 +364,7 @@ await scene.play(new FadeIn(difference_text));
 
 ## Mathtex Svg
 
-Demonstrates vector-based LaTeX rendering with MathTexSVG. Shows Create (stroke-draw reveal), DrawBorderThenFill, FadeIn, and multi-part expressions with per-part coloring. Unlike raster MathTex, MathTexSVG produces real VMobject paths that support path-based animations.
+Demonstrates vector-based LaTeX rendering with MathTex. Shows Create (stroke-draw reveal), DrawBorderThenFill, FadeIn, and multi-part expressions with per-part coloring. MathTex produces real VMobject paths that support path-based animations.
 
 <MathtexSvgExample />
 
@@ -374,7 +374,7 @@ Demonstrates vector-based LaTeX rendering with MathTexSVG. Shows Create (stroke-
 ```typescript
 import {
   Scene,
-  MathTexSVG,
+  MathTex,
   Create,
   DrawBorderThenFill,
   FadeIn,
@@ -394,27 +394,27 @@ const scene = new Scene(document.getElementById('container'), {
 });
 
 // Pre-create all equations
-const equation1 = new MathTexSVG({
+const equation1 = new MathTex({
   latex: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
   color: WHITE,
   fontSize: 2,
 });
-const equation2 = new MathTexSVG({
+const equation2 = new MathTex({
   latex: 'e^{i\\pi} + 1 = 0',
   color: YELLOW,
   fontSize: 2.5,
 });
-const multiPart = new MathTexSVG({
+const multiPart = new MathTex({
   latex: ['E', '=', 'mc^2'],
   color: WHITE,
   fontSize: 3,
 });
-const equation3 = new MathTexSVG({
+const equation3 = new MathTex({
   latex: '\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}',
   color: GREEN,
   fontSize: 2,
 });
-const matrix = new MathTexSVG({
+const matrix = new MathTex({
   latex: 'A = \\begin{pmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{pmatrix}',
   color: WHITE,
   fontSize: 2,
@@ -460,7 +460,7 @@ await scene.wait(2);
 
 </details>
 
-**Learn More:** [**MathTexSVG**](/api/classes/MathTexSVG) · [**Create**](/api/classes/Create) · [**DrawBorderThenFill**](/api/classes/DrawBorderThenFill) · [**FadeIn**](/api/classes/FadeIn) · [**FadeOut**](/api/classes/FadeOut)
+**Learn More:** [**MathTex**](/api/classes/MathTex) · [**Create**](/api/classes/Create) · [**DrawBorderThenFill**](/api/classes/DrawBorderThenFill) · [**FadeIn**](/api/classes/FadeIn) · [**FadeOut**](/api/classes/FadeOut)
 
 ---
 
@@ -579,7 +579,7 @@ import {
   FadeToColor,
   LEFT,
   Line,
-  MathTex,
+  MathTexImage,
   RED,
   RIGHT,
   SMALL_BUFF,
@@ -603,7 +603,7 @@ const line_moving = new Line({ start: LEFT, end: RIGHT });
 const line_ref = line_moving.copy();
 line_moving.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
 const a = new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false });
-const tex = new MathTex({ latex: '\\theta', color: WHITE });
+const tex = new MathTexImage({ latex: '\\theta', color: WHITE });
 await tex.waitForRender();
 tex.moveTo(
   new Angle(
@@ -753,7 +753,7 @@ Renders a multi-part LaTeX equation (the product rule), then highlights individu
 ```typescript
 import {
   Create,
-  MathTex,
+  MathTexImage,
   ReplacementTransform,
   Scene,
   SurroundingRectangle,
@@ -765,7 +765,7 @@ const scene = new Scene(document.getElementById('container'), {
   backgroundColor: '#000000',
 });
 
-const text = new MathTex({
+const text = new MathTexImage({
   latex: ['\\frac{d}{dx}f(x)g(x)=', 'f(x)\\frac{d}{dx}g(x)', '+', 'g(x)\\frac{d}{dx}f(x)'],
 });
 await text.waitForRender();
@@ -887,7 +887,7 @@ import {
   Dot,
   Line,
   VGroup,
-  MathTex,
+  MathTexImage,
   BLACK,
   BLUE,
   RED,
@@ -912,10 +912,10 @@ scene.add(xAxis, yAxis);
 
 // --- X labels ---
 const xLabels = [
-  new MathTex({ latex: '\\pi' }),
-  new MathTex({ latex: '2\\pi' }),
-  new MathTex({ latex: '3\\pi' }),
-  new MathTex({ latex: '4\\pi' }),
+  new MathTexImage({ latex: '\\pi' }),
+  new MathTexImage({ latex: '2\\pi' }),
+  new MathTexImage({ latex: '3\\pi' }),
+  new MathTexImage({ latex: '4\\pi' }),
 ];
 for (let i = 0; i < xLabels.length; i++) {
   xLabels[i].nextTo([-1 + 2 * i, 0, 0], DOWN, 0.4);
@@ -1087,13 +1087,7 @@ Demonstrates the applyMatrix method on Mobject for instant matrix transformation
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Scene,
-  Square,
-  applyMatrix,
-  BLUE,
-  YELLOW,
-} from 'manim-web';
+import { Scene, Square, applyMatrix, BLUE } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -1107,11 +1101,15 @@ await scene.wait(1);
 
 // Animate the shear transformation
 await scene.play(
-  applyMatrix(square, [
-    [1, 0.5, 0],
-    [0, 1, 0],
-    [0, 0, 1],
-  ], { duration: 2 }),
+  applyMatrix(
+    square,
+    [
+      [1, 0.5, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+    ],
+    { duration: 2 },
+  ),
 );
 
 await scene.wait(2);
@@ -2316,7 +2314,7 @@ import {
   Transform,
   ApplyPointwiseFunction,
   Text,
-  MathTex,
+  MathTexImage,
   NumberPlane,
   VGroup,
   UP,
@@ -2340,7 +2338,9 @@ const title = new Text({
   color: WHITE,
   fontUrl: FONT_URL,
 });
-const basel = new MathTex({ latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}' });
+const basel = new MathTexImage({
+  latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}',
+});
 await basel.waitForRender?.();
 
 new VGroup(title, basel).arrange(DOWN);
