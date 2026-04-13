@@ -20,6 +20,7 @@
 import * as THREE from 'three';
 import katex from 'katex';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { DEFAULT_FONT_SIZE, SCALE_FACTOR_PER_FONT_POINT } from '../../constants';
 import { ensureKatexStyles, waitForKatexStyles } from './katexStyles';
 import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
 
@@ -41,7 +42,7 @@ export interface MathTexImageOptions {
   latex: string | string[];
   /** Color as CSS color string. Default: '#ffffff' */
   color?: string;
-  /** Base font size in pixels. Default: 48 */
+  /** Font size in points (matching Python Manim semantics). Default: 48 */
   fontSize?: number;
   /** Use display mode (block) vs inline mode. Default: true */
   displayMode?: boolean;
@@ -120,7 +121,7 @@ export class MathTexImage extends Mobject {
     const {
       latex,
       color = '#ffffff',
-      fontSize = 48,
+      fontSize = DEFAULT_FONT_SIZE,
       displayMode = true,
       position = [0, 0, 0],
       renderer = 'auto',
@@ -473,7 +474,7 @@ export class MathTexImage extends Mobject {
     const result = await renderLatexToSVG(this._latex, {
       displayMode: this._displayMode,
       color: '#ffffff', // always render white; actual color applied via material tint
-      fontScale: this._fontSize / 48, // normalise against base 48px
+      fontScale: this._fontSize / DEFAULT_FONT_SIZE,
     });
 
     // Render the MathJax SVG into a canvas via <img>
@@ -500,7 +501,7 @@ export class MathTexImage extends Mobject {
 
     if ((!svgW || !svgH) && result.width && result.height) {
       // Fallback: derive pixel size from viewBox-based result dimensions.
-      // result.width/height = viewBox units × fontScale (fontSize/48).
+      // result.width/height = viewBox units × fontScale (fontSize/DEFAULT_FONT_SIZE).
       // viewBox uses ~1000 units per ex → pixels = result.value * 0.024
       svgW = result.width * 0.024;
       svgH = result.height * 0.024;
@@ -563,7 +564,7 @@ export class MathTexImage extends Mobject {
     this._renderState.texture.magFilter = THREE.LinearFilter;
     this._renderState.texture.needsUpdate = true;
 
-    const scaleFactor = 0.01;
+    const scaleFactor = SCALE_FACTOR_PER_FONT_POINT * 10;
     this._renderState.width = width * scaleFactor;
     this._renderState.height = height * scaleFactor;
 
@@ -673,7 +674,7 @@ export class MathTexImage extends Mobject {
       this._renderState.texture.needsUpdate = true;
 
       // Calculate world dimensions
-      const scaleFactor = 0.01;
+      const scaleFactor = SCALE_FACTOR_PER_FONT_POINT * 10;
       this._renderState.width = width * scaleFactor;
       this._renderState.height = height * scaleFactor;
 

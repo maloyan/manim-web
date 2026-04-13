@@ -16,6 +16,7 @@ import { VGroup } from '../../core/VGroup';
 import { VMobject } from '../../core/VMobject';
 import type { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { WHITE } from '../../constants/colors';
+import { DEFAULT_FONT_SIZE, SCALE_FACTOR_PER_FONT_POINT } from '../../constants';
 import { renderLatexToSVG } from './MathJaxRenderer';
 
 export interface MathTexOptions {
@@ -23,7 +24,7 @@ export interface MathTexOptions {
   latex: string | string[];
   /** Color as CSS color string. Default: WHITE ('#ffffff') */
   color?: string;
-  /** Scale factor (1 = standard math size). Default: 1 */
+  /** Font size in points (matching Python Manim semantics). Default: 48 */
   fontSize?: number;
   /** Use display mode (block) vs inline mode. Default: true */
   displayMode?: boolean;
@@ -65,7 +66,7 @@ export class MathTex extends VGroup {
     const {
       latex,
       color = WHITE,
-      fontSize = 1,
+      fontSize = DEFAULT_FONT_SIZE,
       displayMode = true,
       position = [0, 0, 0],
       strokeWidth = 2,
@@ -289,11 +290,11 @@ export class MathTex extends VGroup {
       // Explicit height: scale bounding box to fit (user intent)
       s = this._targetHeight / rawHeight;
     } else {
-      // Scale based on em height for consistent font sizing.
-      // svgToVMobjects scales paths by fontSize / vbWidth, so in raw coords
-      // 1 em = 1000 * fontSize / vbWidth. We want 1 em = 0.5 * fontSize
-      // world units, giving: s = 0.5 * vbWidth / 1000.
-      s = (0.5 * this._svgViewBoxWidth) / 1000;
+      // Match Python Manim's font-size convention:
+      // SCALE_FACTOR_PER_FONT_POINT = 1 / 960.
+      // svgToVMobjects scales paths by fontSize / vbWidth, so this keeps
+      // world-space size proportional to point size using the same constant.
+      s = (SCALE_FACTOR_PER_FONT_POINT * this._svgViewBoxWidth) / 100;
     }
 
     // Center of current bounds

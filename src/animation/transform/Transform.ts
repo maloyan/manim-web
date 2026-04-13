@@ -224,8 +224,24 @@ export class Transform extends Animation {
    */
   private _beginVGroup(vmobject: VGroup, vtarget: VGroup): void {
     this._isVGroupTransform = true;
-    const srcChildren = vmobject.children.filter((c): c is VMobject => c instanceof VMobject);
-    const tgtChildren = vtarget.children.filter((c): c is VMobject => c instanceof VMobject);
+    const collectLeafVMobjects = (root: VGroup): VMobject[] => {
+      const result: VMobject[] = [];
+      const stack: Mobject[] = [...root.children];
+      while (stack.length > 0) {
+        const node = stack.shift()!;
+        if (node instanceof VGroup) {
+          stack.unshift(...node.children);
+          continue;
+        }
+        if (node instanceof VMobject) {
+          result.push(node);
+        }
+      }
+      return result;
+    };
+
+    const srcChildren = collectLeafVMobjects(vmobject);
+    const tgtChildren = collectLeafVMobjects(vtarget);
     const maxLen = Math.max(srcChildren.length, tgtChildren.length);
 
     for (let i = 0; i < maxLen; i++) {
