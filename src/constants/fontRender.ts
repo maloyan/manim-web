@@ -16,7 +16,7 @@
  * https://github.com/ManimCommunity/manim/issues/4690
  */
 
-export const PT_TO_PX = 4 / 3;
+const PT_TO_PX = 4 / 3;
 const LATEX_DEFAULT_FONT_SIZE_PT = 10;
 export const DEFAULT_FONT_SIZE_PT = 48;
 export const KATEX_REFERENCE_FONT_SIZE_PX = LATEX_DEFAULT_FONT_SIZE_PT * PT_TO_PX;
