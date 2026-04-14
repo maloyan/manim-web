@@ -3,6 +3,7 @@ import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { TextGlyphGroup } from './TextGlyphGroup';
 import type { SkeletonizeOptions } from '../../utils/skeletonize';
+import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONTSIZE_TO_WORLD_SPACE } from '../../constants/fontRender';
 
 /**
  * Options for creating a Text mobject
@@ -34,8 +35,8 @@ export interface TextOptions {
   fontUrl?: string;
 }
 
-/** Scale factor: pixels to world units (100 pixels = 1 world unit) */
-const PIXEL_TO_WORLD = 1 / 100;
+/** Scale factor: at 48px font size, world size is DEFAULT_FONTSIZE_TO_WORLD_SPACE. */
+const PIXEL_TO_WORLD = DEFAULT_FONTSIZE_TO_WORLD_SPACE / DEFAULT_FONT_SIZE_PT;
 
 /** Resolution multiplier for crisp text on retina displays */
 const RESOLUTION_SCALE = 2;

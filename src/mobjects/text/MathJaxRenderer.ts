@@ -30,8 +30,6 @@ export interface MathJaxRenderOptions {
   macros?: Record<string, string>;
   /** Color applied to the output (CSS color string). Default: '#ffffff' */
   color?: string;
-  /** Font scale relative to surrounding text (em). Default: 1 */
-  fontScale?: number;
 }
 
 export interface MathJaxRenderResult {
@@ -240,6 +238,10 @@ export async function preloadMathJax(): Promise<void> {
  * Render a LaTeX string to SVG using MathJax and convert the result
  * into VMobject paths suitable for manim-web animation.
  *
+ * IMPORTANT: The returned VMobject coordinates are raw MathJax SVG font units
+ * (not world units and not normalized to [0, 1]). MathTex applies the final
+ * point->world conversion during `_scaleToTarget()`.
+ *
  * @param texString - The raw LaTeX to render (without delimiters).
  * @param options   - Rendering options.
  * @returns A MathJaxRenderResult containing the SVG element and VMobject group.
@@ -249,7 +251,7 @@ export async function renderLatexToSVG(
   texString: string,
   options: MathJaxRenderOptions = {},
 ): Promise<MathJaxRenderResult> {
-  const { displayMode = true, color = '#ffffff', fontScale = 1, macros = {} } = options;
+  const { displayMode = true, color = '#ffffff', macros = {} } = options;
 
   const mj = await loadMathJax();
 
@@ -359,6 +361,7 @@ export async function renderLatexToSVG(
   });
 
   // Read dimensions from the SVG viewBox (MathJax always sets one)
+  // MathJax renders at 10pt by default → 10 × 1.333 = 13.33 pixels
   const viewBox = svgElement.getAttribute('viewBox');
   let width = 0;
   let height = 0;
@@ -368,16 +371,12 @@ export async function renderLatexToSVG(
     height = parseFloat(parts[3]) || 0;
   }
 
-  // Scale dimensions
-  width *= fontScale;
-  height *= fontScale;
-
   // ------------------------------------------------------------------
   // Convert SVG paths to VMobjects
   // ------------------------------------------------------------------
   const vmobjectGroup = svgToVMobjects(svgElement, {
     color,
-    scale: fontScale,
+    scale: 1,
     flipY: false,
     strokeWidth: 0.02,
     fillOpacity: 1,

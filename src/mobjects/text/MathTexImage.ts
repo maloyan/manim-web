@@ -20,9 +20,11 @@
 import * as THREE from 'three';
 import katex from 'katex';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { DEFAULT_FONT_SIZE, SCALE_FACTOR_PER_FONT_POINT } from '../../constants';
 import { ensureKatexStyles, waitForKatexStyles } from './katexStyles';
 import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
+import { FONT_PT_TO_WORLD, KATEX_REFERENCE_FONT_SIZE_PX } from '../../constants/fontRender';
+
+const DEFAULT_CANVAS_SCALE = 4;
 
 /**
  * Which renderer to use for LaTeX.
@@ -42,7 +44,7 @@ export interface MathTexImageOptions {
   latex: string | string[];
   /** Color as CSS color string. Default: '#ffffff' */
   color?: string;
-  /** Font size in points (matching Python Manim semantics). Default: 48 */
+  /** Base font size in pixels. Default: 48 */
   fontSize?: number;
   /** Use display mode (block) vs inline mode. Default: true */
   displayMode?: boolean;
@@ -121,7 +123,7 @@ export class MathTexImage extends Mobject {
     const {
       latex,
       color = '#ffffff',
-      fontSize = DEFAULT_FONT_SIZE,
+      fontSize = 48,
       displayMode = true,
       position = [0, 0, 0],
       renderer = 'auto',
@@ -346,15 +348,13 @@ export class MathTexImage extends Mobject {
       return;
     }
 
-    const SCALE = 0.01;
-
     // Collect content widths (total width minus padding on each side)
     const widths = this._parts.map((p) => {
       const [w] = p.getDimensions();
       return w;
     });
     const contentWidths = this._parts.map((p, i) => {
-      const paddingWorld = p._padding * SCALE;
+      const paddingWorld = p._padding * p.getFontSize() * FONT_PT_TO_WORLD;
       return Math.max(0, widths[i] - 2 * paddingWorld);
     });
 
@@ -474,7 +474,6 @@ export class MathTexImage extends Mobject {
     const result = await renderLatexToSVG(this._latex, {
       displayMode: this._displayMode,
       color: '#ffffff', // always render white; actual color applied via material tint
-      fontScale: this._fontSize / DEFAULT_FONT_SIZE,
     });
 
     // Render the MathJax SVG into a canvas via <img>
@@ -501,7 +500,6 @@ export class MathTexImage extends Mobject {
 
     if ((!svgW || !svgH) && result.width && result.height) {
       // Fallback: derive pixel size from viewBox-based result dimensions.
-      // result.width/height = viewBox units × fontScale (fontSize/DEFAULT_FONT_SIZE).
       // viewBox uses ~1000 units per ex → pixels = result.value * 0.024
       svgW = result.width * 0.024;
       svgH = result.height * 0.024;
@@ -511,14 +509,11 @@ export class MathTexImage extends Mobject {
       svgEl.setAttribute('width', String(svgW));
       svgEl.setAttribute('height', String(svgH));
     }
-
     const finalSvgString = new XMLSerializer().serializeToString(svgEl);
     document.body.removeChild(tempDiv);
-
     const padding = this._padding;
     const width = Math.ceil(svgW) + padding * 2;
     const height = Math.ceil(svgH) + padding * 2;
-
     if (width <= 0 || height <= 0) {
       console.warn('MathTexImage (MathJax): Invalid dimensions', {
         width,
@@ -527,9 +522,7 @@ export class MathTexImage extends Mobject {
       });
       return;
     }
-
-    // Rasterize to canvas
-    const scale = 2;
+    const scale = DEFAULT_CANVAS_SCALE;
     const canvas = document.createElement('canvas');
     canvas.width = width * scale;
     canvas.height = height * scale;
@@ -564,10 +557,6 @@ export class MathTexImage extends Mobject {
     this._renderState.texture.magFilter = THREE.LinearFilter;
     this._renderState.texture.needsUpdate = true;
 
-    const scaleFactor = SCALE_FACTOR_PER_FONT_POINT * 10;
-    this._renderState.width = width * scaleFactor;
-    this._renderState.height = height * scaleFactor;
-
     if (this._renderState.mesh) {
       this._updateMeshGeometry();
       const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
@@ -579,6 +568,10 @@ export class MathTexImage extends Mobject {
   /**
    * Render the LaTeX to a canvas by walking the KaTeX DOM
    * and drawing each text element at its computed CSS position.
+   *
+   * IMPORTANT: The canvas dimensions are in pixel space, rendered at the
+   * user's fontSize (e.g., fontSize=48 → 48px). The caller must convert
+   * these pixel dimensions to world space using scaleFactor = 0.01.
    */
   protected async _renderLatexViaKaTeX(): Promise<void> {
     if (typeof document === 'undefined') {
@@ -586,11 +579,12 @@ export class MathTexImage extends Mobject {
     }
     this._activeRenderer = 'katex';
 
+    const CANVAS_SCALE = DEFAULT_CANVAS_SCALE;
     const container = document.createElement('div');
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '-9999px';
-    container.style.fontSize = `${this._fontSize}px`;
+    container.style.fontSize = `${KATEX_REFERENCE_FONT_SIZE_PX}px`;
     document.body.appendChild(container);
 
     try {
@@ -658,6 +652,7 @@ export class MathTexImage extends Mobject {
         width,
         height,
         padding,
+        CANVAS_SCALE,
       );
 
       // Store render state
@@ -673,10 +668,10 @@ export class MathTexImage extends Mobject {
       this._renderState.texture.magFilter = THREE.LinearFilter;
       this._renderState.texture.needsUpdate = true;
 
-      // Calculate world dimensions
-      const scaleFactor = SCALE_FACTOR_PER_FONT_POINT * 10;
-      this._renderState.width = width * scaleFactor;
-      this._renderState.height = height * scaleFactor;
+      // Convert measured CSS pixels to world units using the shared 48pt baseline.
+      const worldScale = this._fontSize * FONT_PT_TO_WORLD;
+      this._renderState.width = width * worldScale;
+      this._renderState.height = height * worldScale;
 
       // Update mesh if it exists
       if (this._renderState.mesh) {
@@ -700,15 +695,15 @@ export class MathTexImage extends Mobject {
     width: number,
     height: number,
     padding: number,
+    scale: number = 2,
   ): Promise<HTMLCanvasElement> {
-    const scale = 2;
     const canvas = document.createElement('canvas');
     canvas.width = width * scale;
     canvas.height = height * scale;
 
     const ctx = canvas.getContext('2d')!;
     ctx.scale(scale, scale);
-    ctx.fillStyle = '#ffffff'; // always render white; actual color applied via material tint
+    ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
 
     // Collect text items, SVG items, and CSS rule items from KaTeX DOM
     interface TextItem {
@@ -735,12 +730,10 @@ export class MathTexImage extends Mobject {
     const svgItems: SvgItem[] = [];
     const ruleItems: RuleItem[] = [];
 
-    // eslint-disable-next-line complexity
     const collectNodes = (node: Node): void => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent;
         if (!text || !text.trim()) return;
-        // Skip zero-width/invisible characters (KaTeX uses ZWSP in vlist-s spacing elements)
         if (/^(?:\u200B|\u200C|\u200D|\uFEFF)+$/.test(text)) return;
 
         const parent = node.parentElement;
@@ -750,13 +743,11 @@ export class MathTexImage extends Mobject {
         if (style.display === 'none' || style.visibility === 'hidden') return;
         if (parseFloat(style.opacity) === 0) return;
 
-        // Get the position of this text node
         const range = document.createRange();
         range.selectNodeContents(node);
         const rects = range.getClientRects();
         if (rects.length === 0) return;
 
-        // Use the first rect for positioning — skip zero-width rects
         const r = rects[0];
         if (r.width < 0.5) return;
 
@@ -772,29 +763,22 @@ export class MathTexImage extends Mobject {
       if (node.nodeType === Node.ELEMENT_NODE) {
         const el = node as HTMLElement;
 
-        // Skip the hidden MathML accessibility tree
         if (el.classList?.contains('katex-mathml')) return;
 
-        // Handle inline SVGs (radical signs, delimiters, etc.)
         if (el.tagName.toLowerCase() === 'svg') {
           const svgRect = el.getBoundingClientRect();
           if (svgRect.width > 0 && svgRect.height > 0) {
             const clone = el.cloneNode(true) as SVGElement;
             clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            // Always set explicit width/height from the rendered size
             clone.setAttribute('width', String(svgRect.width));
             clone.setAttribute('height', String(svgRect.height));
-            // Preserve the viewBox if present; if not, add one from the original SVG
             if (!clone.getAttribute('viewBox')) {
               const origVb = el.getAttribute('viewBox');
               if (origVb) clone.setAttribute('viewBox', origVb);
             }
-            // Set color property for currentColor inheritance in standalone SVG
-            // Always render white; actual color applied via material tint
             clone.setAttribute('color', '#ffffff');
             clone.setAttribute('style', 'color: #ffffff; overflow: visible;');
 
-            // Replace currentColor in all shape elements (attributes + inline styles)
             const shapes = clone.querySelectorAll('path, line, rect, circle, polyline, polygon');
             shapes.forEach((p) => {
               const fill = p.getAttribute('fill');
@@ -822,7 +806,6 @@ export class MathTexImage extends Mobject {
           return;
         }
 
-        // Capture CSS-rendered visual elements (fraction bars, overlines, etc.)
         const elStyle = window.getComputedStyle(el);
         const borderBottom = parseFloat(elStyle.borderBottomWidth) || 0;
         const borderTop = parseFloat(elStyle.borderTopWidth) || 0;
@@ -850,7 +833,6 @@ export class MathTexImage extends Mobject {
           }
         }
 
-        // Capture background-color rules (e.g., KaTeX \rule elements)
         const bgColor = elStyle.backgroundColor;
         if (bgColor && bgColor !== 'transparent' && bgColor !== 'rgba(0, 0, 0, 0)') {
           const elRect = el.getBoundingClientRect();
@@ -864,7 +846,6 @@ export class MathTexImage extends Mobject {
           }
         }
 
-        // Recurse into child nodes
         for (const child of el.childNodes) {
           collectNodes(child);
         }
@@ -873,8 +854,6 @@ export class MathTexImage extends Mobject {
 
     collectNodes(container);
 
-    // Draw layers in correct z-order:
-    // 1. SVG items FIRST (radical signs, delimiters — background decorations)
     if (svgItems.length > 0) {
       await Promise.all(
         svgItems.map((item) => {
@@ -896,24 +875,16 @@ export class MathTexImage extends Mobject {
       );
     }
 
-    // 2. CSS rule items (fraction bars, overlines)
     for (const item of ruleItems) {
-      ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(item.x, item.y, item.w, item.h);
     }
 
-    // 3. Text items LAST (foreground — actual math content on top)
     for (const item of textItems) {
       ctx.font = item.font;
-      ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
+      ctx.fillStyle = '#ffffff';
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'left';
-
-      // Compute the alphabetic baseline from the CSS rect position.
-      // KaTeX uses tight line-heights, so rect.top ≈ baseline - fontBoundingBoxAscent.
-      // Using fontBoundingBoxAscent (constant per font) preserves baseline alignment
-      // for all characters in the same font, while correctly positioning large
-      // operators (like ∑ in KaTeX_Size2) that extend above the em-box.
       const metrics = ctx.measureText(item.text);
       const baselineY = item.y + (metrics.fontBoundingBoxAscent ?? 0);
       ctx.fillText(item.text, item.x, baselineY);

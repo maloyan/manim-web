@@ -9,6 +9,7 @@
  *   - katex-styles.ts (improve from ~79% to 100%)
  */
 import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest';
+import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONTSIZE_TO_WORLD_SPACE } from '../../constants/fontRender';
 
 // ---------------------------------------------------------------------------
 // Canvas mock (happy-dom does not support canvas 2D context)
@@ -653,69 +654,40 @@ describe('katex-styles', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 4. MathTex (SVG-based, with mocked MathJaxRenderer)
+// 4. MathTex (SVG-based, using full MathJax renderer)
 // ═══════════════════════════════════════════════════════════════════════════
 
-// We'll dynamically mock MathJaxRenderer after importing VGroup/VMobject
-let _VGroup: typeof import('../../core/VGroup').VGroup;
 let _VMobject: typeof import('../../core/VMobject').VMobject;
 
-// Load VGroup and VMobject first for mock usage
+// Load VMobject for point-based geometry assertions
 beforeAll(async () => {
-  const vgMod = await import('../../core/VGroup');
   const vmMod = await import('../../core/VMobject');
-  _VGroup = vgMod.VGroup;
   _VMobject = vmMod.VMobject;
-});
-
-// Mock MathJaxRenderer to avoid MathJax CDN dependency
-vi.mock('./MathJaxRenderer', async (importOriginal) => {
-  // We need to dynamically import VGroup/VMobject since they're ESM
-  const { VGroup } = await import('../../core/VGroup');
-  const { VMobject } = await import('../../core/VMobject');
-
-  function createMockRenderResult(texString: string) {
-    const vmobjectGroup = new VGroup();
-    // Create one VMobject per character to simulate glyphs
-    const chars = texString.replace(/[\\{}^_]/g, '').trim();
-    for (let i = 0; i < Math.max(1, chars.length); i++) {
-      const vmob = new VMobject();
-      // Add some basic points so scaling works
-      vmob.setPoints3D([
-        [i * 0.1, 0, 0],
-        [i * 0.1 + 0.03, 0, 0],
-        [i * 0.1 + 0.07, 0.1, 0],
-        [i * 0.1 + 0.1, 0.1, 0],
-      ]);
-      vmobjectGroup.add(vmob);
-    }
-    return {
-      svgElement: document.createElementNS('http://www.w3.org/2000/svg', 'svg'),
-      vmobjectGroup,
-      svgString: '<svg></svg>',
-      width: 10,
-      height: 5,
-    };
-  }
-
-  return {
-    renderLatexToSVG: vi.fn(async (texString: string, _options?: any) => {
-      return createMockRenderResult(texString);
-    }),
-    katexCanRender: vi.fn((texString: string, _displayMode?: boolean) => {
-      try {
-        return !texString.includes('\\invalidcommand');
-      } catch {
-        return false;
-      }
-    }),
-    isMathJaxLoaded: vi.fn(() => false),
-    preloadMathJax: vi.fn(async () => {}),
-  };
 });
 
 describe('MathTex (SVG)', () => {
   let MathTex: typeof import('./MathTex').MathTex;
+
+  const getRenderedHeightFromPoints = (svg: { children: unknown[] }): number => {
+    let minY = Number.POSITIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+
+    for (const child of svg.children) {
+      if (!(child instanceof _VMobject)) {
+        continue;
+      }
+      for (const p of child.getPoints()) {
+        if (p[1] < minY) minY = p[1];
+        if (p[1] > maxY) maxY = p[1];
+      }
+    }
+
+    if (!Number.isFinite(minY) || !Number.isFinite(maxY)) {
+      throw new Error('No VMobject points found to measure height');
+    }
+
+    return maxY - minY;
+  };
 
   beforeAll(async () => {
     const mod = await import('./MathTex');
@@ -1001,6 +973,30 @@ describe('MathTex (SVG)', () => {
       const svg = new MathTex({ latex: 'x', height: 3.0 });
       await svg.waitForRender();
       expect(svg.children.length).toBeGreaterThan(0);
+    });
+
+    it('should render x near 0.45em at default 48pt', async () => {
+      const svg = new MathTex({ latex: 'x', fontSize: DEFAULT_FONT_SIZE_PT });
+      await svg.waitForRender();
+
+      const measuredHeight = getRenderedHeightFromPoints(svg);
+      expect(measuredHeight).toBeGreaterThan(0.4 * DEFAULT_FONTSIZE_TO_WORLD_SPACE);
+      expect(measuredHeight).toBeLessThan(0.5 * DEFAULT_FONTSIZE_TO_WORLD_SPACE);
+    });
+
+    it('should render 24pt x at roughly half the 48pt height', async () => {
+      const svg48 = new MathTex({ latex: 'x', fontSize: DEFAULT_FONT_SIZE_PT });
+      const svg24 = new MathTex({ latex: 'x', fontSize: DEFAULT_FONT_SIZE_PT / 2 });
+
+      await svg48.waitForRender();
+      await svg24.waitForRender();
+
+      const h48 = getRenderedHeightFromPoints(svg48);
+      const h24 = getRenderedHeightFromPoints(svg24);
+
+      const ratio = h24 / h48;
+      expect(ratio).toBeGreaterThan(0.45);
+      expect(ratio).toBeLessThan(0.55);
     });
   });
 
@@ -1524,12 +1520,10 @@ describe('TextGlyphGroup', () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 7. MathJaxRenderer (katexCanRender and isMathJaxLoaded)
-//    Note: MathJaxRenderer is mocked globally for MathTex tests above.
-//    These tests verify the mock's behavior is consistent with expected usage.
+// 7. MathJaxRenderer
 // ═══════════════════════════════════════════════════════════════════════════
 
-describe('MathJaxRenderer (mocked)', () => {
+describe('MathJaxRenderer', () => {
   let katexCanRender: typeof import('./MathJaxRenderer').katexCanRender;
   let isMathJaxLoaded: typeof import('./MathJaxRenderer').isMathJaxLoaded;
   let renderLatexToSVG: typeof import('./MathJaxRenderer').renderLatexToSVG;
@@ -1541,7 +1535,7 @@ describe('MathJaxRenderer (mocked)', () => {
     renderLatexToSVG = mod.renderLatexToSVG;
   });
 
-  describe('katexCanRender (mock)', () => {
+  describe('katexCanRender', () => {
     it('should return true for simple LaTeX', () => {
       expect(katexCanRender('x^2')).toBe(true);
     });
@@ -1556,13 +1550,14 @@ describe('MathJaxRenderer (mocked)', () => {
     });
   });
 
-  describe('isMathJaxLoaded (mock)', () => {
-    it('should return false', () => {
-      expect(isMathJaxLoaded()).toBe(false);
+  describe('isMathJaxLoaded', () => {
+    it('should return true after rendering with MathJax', async () => {
+      await renderLatexToSVG('x^2');
+      expect(isMathJaxLoaded()).toBe(true);
     });
   });
 
-  describe('renderLatexToSVG (mock)', () => {
+  describe('renderLatexToSVG', () => {
     it('should return a result with vmobjectGroup', async () => {
       const result = await renderLatexToSVG('x^2');
       expect(result).toBeDefined();
@@ -1575,6 +1570,48 @@ describe('MathJaxRenderer (mocked)', () => {
     it('should create VMobject children in vmobjectGroup', async () => {
       const result = await renderLatexToSVG('abc');
       expect(result.vmobjectGroup.children.length).toBeGreaterThan(0);
+    });
+
+    it('uses raw MathJax path units (no viewBox normalization)', async () => {
+      const result = await renderLatexToSVG('x');
+
+      let minY = Number.POSITIVE_INFINITY;
+      let maxY = Number.NEGATIVE_INFINITY;
+      for (const child of result.vmobjectGroup.children) {
+        if (!(child instanceof _VMobject)) continue;
+        for (const p of child.getPoints()) {
+          if (p[1] < minY) minY = p[1];
+          if (p[1] > maxY) maxY = p[1];
+        }
+      }
+
+      expect(Number.isFinite(minY)).toBe(true);
+      expect(Number.isFinite(maxY)).toBe(true);
+      expect(maxY - minY).toBeGreaterThan(10);
+    });
+
+    it('ignores legacy fontScale option in renderer options', async () => {
+      const base = await renderLatexToSVG('x', { displayMode: true, color: '#ffffff' } as any);
+      const withLegacyScale = await renderLatexToSVG('x', {
+        displayMode: true,
+        color: '#ffffff',
+        fontScale: 2,
+      } as any);
+
+      const getHeight = (res: { vmobjectGroup: { children: unknown[] } }): number => {
+        let minY = Number.POSITIVE_INFINITY;
+        let maxY = Number.NEGATIVE_INFINITY;
+        for (const child of res.vmobjectGroup.children) {
+          if (!(child instanceof _VMobject)) continue;
+          for (const p of child.getPoints()) {
+            if (p[1] < minY) minY = p[1];
+            if (p[1] > maxY) maxY = p[1];
+          }
+        }
+        return maxY - minY;
+      };
+
+      expect(getHeight(withLegacyScale)).toBeCloseTo(getHeight(base), 8);
     });
   });
 });

@@ -464,19 +464,8 @@ export function svgToVMobjects(
   // 2. Recursively walk the SVG tree
   // ------------------------------------------------------------------
 
-  // Convert the SVG coordinate system: MathJax uses large integer units
-  // (typically 1000-unit em-square). We scale down to manim world units.
-  const viewBox = svgElement.getAttribute?.('viewBox');
-  let vbScale = 1;
-  if (viewBox) {
-    const parts = viewBox.split(/\s+/).map(Number);
-    // Use the width to determine a reasonable scale
-    const vbWidth = parts[2] || 1000;
-    // Map the viewBox to roughly ems (MathJax uses ~1000 units per em)
-    vbScale = 1 / vbWidth;
-  }
-
-  const worldScale = scaleFactor * vbScale;
+  // Keep renderer units unchanged here. Caller controls world conversion.
+  const worldScale = scaleFactor;
 
   // eslint-disable-next-line complexity
   function walkElement(el: Element, accTx: number, accTy: number, accScale: number): void {
