@@ -522,6 +522,7 @@ export class MathTexImage extends Mobject {
       });
       return;
     }
+    // Rasterize to canvas
     const scale = DEFAULT_CANVAS_SCALE;
     const canvas = document.createElement('canvas');
     canvas.width = width * scale;
@@ -730,10 +731,12 @@ export class MathTexImage extends Mobject {
     const svgItems: SvgItem[] = [];
     const ruleItems: RuleItem[] = [];
 
+    // eslint-disable-next-line complexity
     const collectNodes = (node: Node): void => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent;
         if (!text || !text.trim()) return;
+        // Skip zero-width/invisible characters (KaTeX uses ZWSP in vlist-s spacing elements)
         if (/^(?:\u200B|\u200C|\u200D|\uFEFF)+$/.test(text)) return;
 
         const parent = node.parentElement;
@@ -743,11 +746,13 @@ export class MathTexImage extends Mobject {
         if (style.display === 'none' || style.visibility === 'hidden') return;
         if (parseFloat(style.opacity) === 0) return;
 
+        // Get the position of this text node
         const range = document.createRange();
         range.selectNodeContents(node);
         const rects = range.getClientRects();
         if (rects.length === 0) return;
 
+        // Use the first rect for positioning — skip zero-width rects
         const r = rects[0];
         if (r.width < 0.5) return;
 
@@ -763,22 +768,29 @@ export class MathTexImage extends Mobject {
       if (node.nodeType === Node.ELEMENT_NODE) {
         const el = node as HTMLElement;
 
+        // Skip the hidden MathML accessibility tree
         if (el.classList?.contains('katex-mathml')) return;
 
+        // Handle inline SVGs (radical signs, delimiters, etc.)
         if (el.tagName.toLowerCase() === 'svg') {
           const svgRect = el.getBoundingClientRect();
           if (svgRect.width > 0 && svgRect.height > 0) {
             const clone = el.cloneNode(true) as SVGElement;
             clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            // Always set explicit width/height from the rendered size
             clone.setAttribute('width', String(svgRect.width));
             clone.setAttribute('height', String(svgRect.height));
+            // Preserve the viewBox if present; if not, add one from the original SVG
             if (!clone.getAttribute('viewBox')) {
               const origVb = el.getAttribute('viewBox');
               if (origVb) clone.setAttribute('viewBox', origVb);
             }
+            // Set color property for currentColor inheritance in standalone SVG
+            // Always render white; actual color applied via material tint
             clone.setAttribute('color', '#ffffff');
             clone.setAttribute('style', 'color: #ffffff; overflow: visible;');
 
+            // Replace currentColor in all shape elements (attributes + inline styles)
             const shapes = clone.querySelectorAll('path, line, rect, circle, polyline, polygon');
             shapes.forEach((p) => {
               const fill = p.getAttribute('fill');
@@ -806,6 +818,7 @@ export class MathTexImage extends Mobject {
           return;
         }
 
+        // Capture CSS-rendered visual elements (fraction bars, overlines, etc.)
         const elStyle = window.getComputedStyle(el);
         const borderBottom = parseFloat(elStyle.borderBottomWidth) || 0;
         const borderTop = parseFloat(elStyle.borderTopWidth) || 0;
@@ -833,6 +846,7 @@ export class MathTexImage extends Mobject {
           }
         }
 
+        // Capture background-color rules (e.g., KaTeX \rule elements)
         const bgColor = elStyle.backgroundColor;
         if (bgColor && bgColor !== 'transparent' && bgColor !== 'rgba(0, 0, 0, 0)') {
           const elRect = el.getBoundingClientRect();
@@ -846,6 +860,7 @@ export class MathTexImage extends Mobject {
           }
         }
 
+        // Recurse into child nodes
         for (const child of el.childNodes) {
           collectNodes(child);
         }
@@ -854,6 +869,8 @@ export class MathTexImage extends Mobject {
 
     collectNodes(container);
 
+    // Draw layers in correct z-order:
+    // 1. SVG items FIRST (radical signs, delimiters — background decorations)
     if (svgItems.length > 0) {
       await Promise.all(
         svgItems.map((item) => {
@@ -875,16 +892,24 @@ export class MathTexImage extends Mobject {
       );
     }
 
+    // 2. CSS rule items (fraction bars, overlines)
     for (const item of ruleItems) {
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
       ctx.fillRect(item.x, item.y, item.w, item.h);
     }
 
+    // 3. Text items LAST (foreground — actual math content on top)
     for (const item of textItems) {
       ctx.font = item.font;
-      ctx.fillStyle = '#ffffff';
+      ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
       ctx.textBaseline = 'alphabetic';
       ctx.textAlign = 'left';
+
+      // Compute the alphabetic baseline from the CSS rect position.
+      // KaTeX uses tight line-heights, so rect.top ≈ baseline - fontBoundingBoxAscent.
+      // Using fontBoundingBoxAscent (constant per font) preserves baseline alignment
+      // for all characters in the same font, while correctly positioning large
+      // operators (like ∑ in KaTeX_Size2) that extend above the em-box.
       const metrics = ctx.measureText(item.text);
       const baselineY = item.y + (metrics.fontBoundingBoxAscent ?? 0);
       ctx.fillText(item.text, item.x, baselineY);
