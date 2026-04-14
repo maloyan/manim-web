@@ -17,7 +17,7 @@
  */
 
 export const PT_TO_PX = 4 / 3;
-export const LATEX_DEFAULT_FONT_SIZE_PT = 10;
+const LATEX_DEFAULT_FONT_SIZE_PT = 10;
 export const DEFAULT_FONT_SIZE_PT = 48;
 export const KATEX_REFERENCE_FONT_SIZE_PX = LATEX_DEFAULT_FONT_SIZE_PT * PT_TO_PX;
 export const MATHJAX_SVG_UNITS_PER_EM = 1000;

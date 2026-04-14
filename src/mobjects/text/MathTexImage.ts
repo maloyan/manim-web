@@ -558,6 +558,11 @@ export class MathTexImage extends Mobject {
     this._renderState.texture.magFilter = THREE.LinearFilter;
     this._renderState.texture.needsUpdate = true;
 
+    // Convert measured pixel dimensions to world units using shared font baseline.
+    const worldScale = this._fontSize * FONT_PT_TO_WORLD;
+    this._renderState.width = width * worldScale;
+    this._renderState.height = height * worldScale;
+
     if (this._renderState.mesh) {
       this._updateMeshGeometry();
       const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
