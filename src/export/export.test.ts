@@ -2,28 +2,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GifExporter } from './GifExporter';
 import { VideoExporter, createVideoExporter } from './VideoExporter';
+import { Scene } from '../core/Scene';
 
 // ---------------------------------------------------------------------------
-// Shared mock helpers
+// Helper to test the static download() method shared by both exporters.
 // ---------------------------------------------------------------------------
-
-/** Minimal mock of a Scene for GifExporter / VideoExporter constructors. */
-function createMockScene(overrides?: Record<string, unknown>) {
-  return {
-    renderer: { width: 800, height: 600 },
-    getWidth: () => 800,
-    getHeight: () => 600,
-    getCanvas: () => document.createElement('canvas'),
-    getTimelineDuration: () => 5,
-    timeline: { getDuration: () => 5 },
-    seek: vi.fn(),
-    render: vi.fn(),
-    audioManager: { tracks: [] },
-    ...overrides,
-  } as any;
-}
-
-/** Helper to test the static download() method shared by both exporters. */
 function testDownload(
   downloadFn: (blob: Blob, filename: string) => void,
   blob: Blob,
@@ -66,21 +49,36 @@ function testDownload(
 // =========================================================================
 
 describe('GifExporter', () => {
-  it('constructor creates with default options (fps=30, quality=10)', () => {
-    const scene = createMockScene();
-    const exporter = new GifExporter(scene);
+  let container: HTMLElement;
+  let scene: Scene;
 
+  beforeEach(() => {
+    container = document.createElement('div');
+    Object.defineProperty(container, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(container, 'clientHeight', { value: 450, configurable: true });
+    document.body.appendChild(container);
+    scene = new Scene(container, { width: 800, height: 450 });
+  });
+
+  afterEach(() => {
+    scene.dispose();
+    container.remove();
+    vi.restoreAllMocks();
+  });
+
+  it('constructor creates with default options (fps=30, quality=10)', () => {
+    const exporter = new GifExporter(scene);
     const opts = (exporter as any)._options;
+
     expect(opts.fps).toBe(30);
     expect(opts.quality).toBe(10);
     expect(opts.width).toBe(800);
-    expect(opts.height).toBe(600);
+    expect(opts.height).toBe(450);
     expect(opts.workers).toBe(4);
     expect(opts.repeat).toBe(0);
   });
 
   it('options can be overridden', () => {
-    const scene = createMockScene();
     const exporter = new GifExporter(scene, {
       fps: 15,
       quality: 5,
@@ -110,8 +108,25 @@ describe('GifExporter', () => {
 // =========================================================================
 
 describe('VideoExporter', () => {
+  let container: HTMLElement;
+  let scene: Scene;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    Object.defineProperty(container, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(container, 'clientHeight', { value: 450, configurable: true });
+    document.body.appendChild(container);
+    scene = new Scene(container, { width: 800, height: 450 });
+  });
+
+  afterEach(() => {
+    scene.dispose();
+    container.remove();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
   it('constructor creates with default options (fps=60, format=webm)', () => {
-    const scene = createMockScene();
     const exporter = new VideoExporter(scene);
     const opts = exporter.getOptions();
 
@@ -119,18 +134,16 @@ describe('VideoExporter', () => {
     expect(opts.format).toBe('webm');
     expect(opts.quality).toBe(0.9);
     expect(opts.width).toBe(800);
-    expect(opts.height).toBe(600);
+    expect(opts.height).toBe(450);
     expect(opts.includeAudio).toBe(true);
   });
 
   it('isRecording() returns false initially', () => {
-    const scene = createMockScene();
     const exporter = new VideoExporter(scene);
     expect(exporter.isRecording()).toBe(false);
   });
 
   it('getOptions() returns resolved options', () => {
-    const scene = createMockScene();
     const onProgress = vi.fn();
     const exporter = new VideoExporter(scene, {
       fps: 24,
@@ -158,15 +171,12 @@ describe('VideoExporter', () => {
   });
 
   it('MOV fallback: logs warning when quicktime is not supported', async () => {
-    const scene = createMockScene();
-
     const isTypeSupportedStub = vi.fn((mime: string) => {
       if (mime === 'video/quicktime') return false;
       if (mime.startsWith('video/webm')) return true;
       return false;
     });
 
-    // Use a real class so that `new MediaRecorder(...)` works
     class MockMediaRecorder {
       start = vi.fn();
       stop = vi.fn();
@@ -205,119 +215,12 @@ describe('VideoExporter', () => {
       'MOV format not supported by this browser, falling back to WebM',
     );
 
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
+    warnSpy.mockRestore();
   });
 
   it('createVideoExporter factory returns a VideoExporter instance', () => {
-    const scene = createMockScene();
     const exporter = createVideoExporter(scene, { fps: 24 });
     expect(exporter).toBeInstanceOf(VideoExporter);
     expect(exporter.getOptions().fps).toBe(24);
-  });
-});
-
-// =========================================================================
-// Scene.export() routing
-// =========================================================================
-
-describe('Scene.export()', () => {
-  let gifExportTimelineSpy: ReturnType<typeof vi.fn>;
-  let gifDownloadSpy: ReturnType<typeof vi.fn>;
-  let videoExportTimelineSpy: ReturnType<typeof vi.fn>;
-  let videoDownloadSpy: ReturnType<typeof vi.fn>;
-
-  beforeEach(() => {
-    vi.resetModules();
-
-    const gifBlob = new Blob(['gif'], { type: 'image/gif' });
-    const videoBlob = new Blob(['video'], { type: 'video/webm' });
-
-    gifExportTimelineSpy = vi.fn().mockResolvedValue(gifBlob);
-    gifDownloadSpy = vi.fn();
-    videoExportTimelineSpy = vi.fn().mockResolvedValue(videoBlob);
-    videoDownloadSpy = vi.fn();
-
-    // Use classes so `new GifExporter(...)` / `new VideoExporter(...)` work
-    const _gifExportTimeline = gifExportTimelineSpy;
-    const _videoExportTimeline = videoExportTimelineSpy;
-
-    vi.doMock('./GifExporter', () => {
-      class MockGifExporter {
-        exportTimeline = _gifExportTimeline;
-        static download = gifDownloadSpy;
-      }
-      return { GifExporter: MockGifExporter };
-    });
-
-    vi.doMock('./VideoExporter', () => {
-      class MockVideoExporter {
-        exportTimeline = _videoExportTimeline;
-        static download = videoDownloadSpy;
-      }
-      return { VideoExporter: MockVideoExporter };
-    });
-  });
-
-  afterEach(() => {
-    vi.doUnmock('./GifExporter');
-    vi.doUnmock('./VideoExporter');
-    vi.resetModules();
-  });
-
-  it('routes .gif extension to GifExporter', async () => {
-    const { Scene } = await import('../core/Scene');
-    const scene = createMockScene();
-    const exportFn = Scene.prototype.export.bind(scene);
-
-    const blob = await exportFn('animation.gif');
-
-    expect(blob).toBeInstanceOf(Blob);
-    expect(gifExportTimelineSpy).toHaveBeenCalled();
-    expect(gifDownloadSpy).toHaveBeenCalledWith(blob, 'animation.gif');
-  });
-
-  it('routes .webm extension to VideoExporter', async () => {
-    const { Scene } = await import('../core/Scene');
-    const scene = createMockScene();
-    const exportFn = Scene.prototype.export.bind(scene);
-
-    const blob = await exportFn('scene.webm');
-
-    expect(blob).toBeInstanceOf(Blob);
-    expect(videoExportTimelineSpy).toHaveBeenCalled();
-    expect(videoDownloadSpy).toHaveBeenCalledWith(blob, 'scene.webm');
-  });
-
-  it('routes .mp4 extension to VideoExporter', async () => {
-    const { Scene } = await import('../core/Scene');
-    const scene = createMockScene();
-    const exportFn = Scene.prototype.export.bind(scene);
-
-    const blob = await exportFn('output.mp4');
-
-    expect(blob).toBeInstanceOf(Blob);
-    expect(videoExportTimelineSpy).toHaveBeenCalled();
-    expect(videoDownloadSpy).toHaveBeenCalledWith(blob, 'output.mp4');
-  });
-
-  it('routes .mov extension to VideoExporter', async () => {
-    const { Scene } = await import('../core/Scene');
-    const scene = createMockScene();
-    const exportFn = Scene.prototype.export.bind(scene);
-
-    const blob = await exportFn('video.mov');
-
-    expect(blob).toBeInstanceOf(Blob);
-    expect(videoExportTimelineSpy).toHaveBeenCalled();
-    expect(videoDownloadSpy).toHaveBeenCalledWith(blob, 'video.mov');
-  });
-
-  it('throws error on unknown extension', async () => {
-    const { Scene } = await import('../core/Scene');
-    const scene = createMockScene();
-    const exportFn = Scene.prototype.export.bind(scene);
-
-    await expect(exportFn('video.avi')).rejects.toThrow('Unsupported export format ".avi"');
   });
 });

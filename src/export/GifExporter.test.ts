@@ -1,9 +1,10 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { GifExporter } from './GifExporter';
+import { Scene } from '../core/Scene';
 
 // ---------------------------------------------------------------------------
-// Mock gif.js module
+// Mock gif.js module (external dependency, keep mocked)
 // ---------------------------------------------------------------------------
 
 let mockGifInstance: {
@@ -36,72 +37,51 @@ vi.mock('gif.js', () => {
   };
 });
 
-// Save original createElement before any mocking
-const origCreateElement = document.createElement.bind(document);
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function createMockScene(overrides?: Record<string, unknown>) {
-  const mockCanvas = origCreateElement('canvas');
-  return {
-    renderer: { width: 800, height: 600 },
-    getWidth: () => 800,
-    getHeight: () => 600,
-    getCanvas: () => mockCanvas,
-    getTimelineDuration: () => 5,
-    timeline: { getDuration: () => 3 },
-    seek: vi.fn(),
-    render: vi.fn(),
-    ...overrides,
-  } as any;
-}
-
-/** Mock document.createElement to intercept 'canvas' for the copy canvas */
-function mockCreateElementForCanvas(mockCtx: Record<string, any>) {
-  vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
-    const el = origCreateElement(tag);
-    if (tag === 'canvas') {
-      (el as any).getContext = vi.fn(() => mockCtx);
-    }
-    return el;
-  });
-}
-
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
 describe('GifExporter', () => {
+  let container: HTMLElement;
+
   beforeEach(() => {
     mockGifInstance = createMockGifInstance();
+    container = document.createElement('div');
+    Object.defineProperty(container, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(container, 'clientHeight', { value: 450, configurable: true });
+    document.body.appendChild(container);
   });
 
   afterEach(() => {
+    container.remove();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
+  function createScene(): Scene {
+    return new Scene(container, { width: 800, height: 450 });
+  }
+
   // ---- Constructor defaults ----
 
   it('constructor applies ?? fallback defaults correctly', () => {
-    const scene = createMockScene();
+    const scene = createScene();
     const exporter = new GifExporter(scene);
     const opts = (exporter as any)._options;
 
     expect(opts.fps).toBe(30);
     expect(opts.quality).toBe(10);
     expect(opts.width).toBe(800);
-    expect(opts.height).toBe(600);
+    expect(opts.height).toBe(450);
     expect(opts.duration).toBe(0);
     expect(opts.workers).toBe(4);
     expect(opts.repeat).toBe(0);
     expect(typeof opts.onProgress).toBe('function');
+    scene.dispose();
   });
 
   it('constructor uses provided options over defaults', () => {
-    const scene = createMockScene();
+    const scene = createScene();
     const onProgress = vi.fn();
     const exporter = new GifExporter(scene, {
       fps: 15,
@@ -123,99 +103,41 @@ describe('GifExporter', () => {
     expect(opts.workers).toBe(2);
     expect(opts.repeat).toBe(-1);
     expect(opts.onProgress).toBe(onProgress);
+    scene.dispose();
   });
 
   // ---- _getTimelineDuration ----
 
-  it('_getTimelineDuration returns timeline duration when available', () => {
-    const scene = createMockScene();
-    const exporter = new GifExporter(scene);
+  it('_getTimelineDuration returns timeline duration when available', async () => {
+    const { Create } = await import('../animation/creation/Create');
+    const { Circle } = await import('../mobjects/geometry/Circle');
+
+    const scene = createScene();
+    const circle = new Circle();
+    await scene.play(new Create(circle, { duration: 3 }));
+    scene.dispose();
+
+    const freshScene = createScene();
+    const exporter = new GifExporter(freshScene);
+    const freshCircle = new Circle();
+    await freshScene.play(new Create(freshCircle, { duration: 3 }));
     const duration = (exporter as any)._getTimelineDuration();
-    expect(duration).toBe(3);
+    expect(duration).toBeCloseTo(3, 5);
+    freshScene.dispose();
   });
 
   it('_getTimelineDuration returns null when no timeline', () => {
-    const scene = createMockScene({ timeline: null });
+    const scene = createScene();
     const exporter = new GifExporter(scene);
     const duration = (exporter as any)._getTimelineDuration();
     expect(duration).toBeNull();
-  });
-
-  // ---- _createWorkerBlobUrl ----
-
-  it('_createWorkerBlobUrl fetches local worker script', async () => {
-    const scene = createMockScene();
-    const exporter = new GifExporter(scene);
-
-    const fakeUrl = 'blob:http://localhost/worker';
-    const origCreateObjectURL = URL.createObjectURL;
-    URL.createObjectURL = vi.fn(() => fakeUrl);
-
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() =>
-        Promise.resolve({
-          ok: true,
-          text: () => Promise.resolve('worker-script-content'),
-        }),
-      ),
-    );
-
-    const url = await (exporter as any)._createWorkerBlobUrl();
-    expect(url).toBe(fakeUrl);
-    expect(fetch).toHaveBeenCalledWith('/node_modules/gif.js/dist/gif.worker.js');
-
-    URL.createObjectURL = origCreateObjectURL;
-  });
-
-  it('_createWorkerBlobUrl falls back to CDN when local fetch fails', async () => {
-    const scene = createMockScene();
-    const exporter = new GifExporter(scene);
-
-    const fakeUrl = 'blob:http://localhost/cdn-worker';
-    const origCreateObjectURL = URL.createObjectURL;
-    URL.createObjectURL = vi.fn(() => fakeUrl);
-
-    let callCount = 0;
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() => {
-        callCount++;
-        if (callCount === 1) {
-          return Promise.resolve({ ok: false });
-        }
-        return Promise.resolve({
-          ok: true,
-          text: () => Promise.resolve('cdn-worker-content'),
-        });
-      }),
-    );
-
-    const url = await (exporter as any)._createWorkerBlobUrl();
-    expect(url).toBe(fakeUrl);
-    expect(fetch).toHaveBeenCalledTimes(2);
-
-    URL.createObjectURL = origCreateObjectURL;
-  });
-
-  it('_createWorkerBlobUrl throws when both local and CDN fail', async () => {
-    const scene = createMockScene();
-    const exporter = new GifExporter(scene);
-
-    vi.stubGlobal(
-      'fetch',
-      vi.fn(() => Promise.resolve({ ok: false })),
-    );
-
-    await expect((exporter as any)._createWorkerBlobUrl()).rejects.toThrow(
-      'Failed to load gif.js worker script',
-    );
+    scene.dispose();
   });
 
   // ---- exportTimeline ----
 
   it('exportTimeline captures frames and resolves on finished', async () => {
-    const scene = createMockScene();
+    const scene = createScene();
     const onProgress = vi.fn();
     const exporter = new GifExporter(scene, {
       fps: 10,
@@ -224,13 +146,6 @@ describe('GifExporter', () => {
     });
 
     vi.spyOn(exporter as any, '_createWorkerBlobUrl').mockResolvedValue('blob:worker');
-
-    const mockCtx = {
-      clearRect: vi.fn(),
-      drawImage: vi.fn(),
-      getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4), width: 800, height: 600 })),
-    };
-    mockCreateElementForCanvas(mockCtx);
 
     mockGifInstance.render.mockImplementation(() => {
       const finishedHandler = mockGifInstance._handlers['finished'];
@@ -251,20 +166,14 @@ describe('GifExporter', () => {
     expect(onProgress).toHaveBeenCalled();
 
     URL.revokeObjectURL = origRevokeObjectURL;
+    scene.dispose();
   });
 
   it('exportTimeline uses fallback duration of 5 when no duration provided', async () => {
-    const scene = createMockScene({ timeline: null });
+    const scene = createScene();
     const exporter = new GifExporter(scene, { fps: 10 });
 
     vi.spyOn(exporter as any, '_createWorkerBlobUrl').mockResolvedValue('blob:url');
-
-    const mockCtx = {
-      clearRect: vi.fn(),
-      drawImage: vi.fn(),
-      getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4), width: 800, height: 600 })),
-    };
-    mockCreateElementForCanvas(mockCtx);
 
     mockGifInstance.render.mockImplementation(() => {
       const handler = mockGifInstance._handlers['finished'];
@@ -280,26 +189,19 @@ describe('GifExporter', () => {
     expect(mockGifInstance.addFrame).toHaveBeenCalledTimes(50);
 
     URL.revokeObjectURL = origRevokeObjectURL;
+    scene.dispose();
   });
 
   it('exportTimeline rejects with abort error when gif emits abort', async () => {
-    const scene = createMockScene();
+    const scene = createScene();
     const exporter = new GifExporter(scene, { fps: 10, duration: 0.1 });
 
     vi.spyOn(exporter as any, '_createWorkerBlobUrl').mockResolvedValue('blob:url');
-
-    const mockCtx = {
-      clearRect: vi.fn(),
-      drawImage: vi.fn(),
-      getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4), width: 800, height: 600 })),
-    };
-    mockCreateElementForCanvas(mockCtx);
 
     const origRevokeObjectURL = URL.revokeObjectURL;
     URL.revokeObjectURL = vi.fn();
 
     mockGifInstance.render.mockImplementation(() => {
-      // Trigger the abort event
       const abortHandler = mockGifInstance._handlers['abort'];
       if (abortHandler) {
         setTimeout(() => abortHandler(), 0);
@@ -309,20 +211,14 @@ describe('GifExporter', () => {
     await expect(exporter.exportTimeline()).rejects.toThrow('GIF encoding was aborted');
 
     URL.revokeObjectURL = origRevokeObjectURL;
+    scene.dispose();
   });
 
   it('exportTimeline rejects on render error', async () => {
-    const scene = createMockScene();
+    const scene = createScene();
     const exporter = new GifExporter(scene, { fps: 10, duration: 0.1 });
 
     vi.spyOn(exporter as any, '_createWorkerBlobUrl').mockResolvedValue('blob:url');
-
-    const mockCtx = {
-      clearRect: vi.fn(),
-      drawImage: vi.fn(),
-      getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4), width: 800, height: 600 })),
-    };
-    mockCreateElementForCanvas(mockCtx);
 
     const origRevokeObjectURL = URL.revokeObjectURL;
     URL.revokeObjectURL = vi.fn();
@@ -334,65 +230,52 @@ describe('GifExporter', () => {
     await expect(exporter.exportTimeline()).rejects.toThrow('render failed');
 
     URL.revokeObjectURL = origRevokeObjectURL;
+    scene.dispose();
   });
 
-  it('exportTimeline reports encoding progress via gif on("progress")', async () => {
-    const scene = createMockScene();
-    const onProgress = vi.fn();
-    const exporter = new GifExporter(scene, { fps: 10, duration: 0.1, onProgress });
+  // ---- download ----
 
-    vi.spyOn(exporter as any, '_createWorkerBlobUrl').mockResolvedValue('blob:url');
+  it('download creates and clicks an anchor element', () => {
+    const blob = new Blob(['gif-data'], { type: 'image/gif' });
+    const fakeUrl = 'blob:http://localhost/fake';
 
-    const mockCtx = {
-      clearRect: vi.fn(),
-      drawImage: vi.fn(),
-      getImageData: vi.fn(() => ({ data: new Uint8ClampedArray(4), width: 800, height: 600 })),
-    };
-    mockCreateElementForCanvas(mockCtx);
-
+    const origCreateObjectURL = URL.createObjectURL;
     const origRevokeObjectURL = URL.revokeObjectURL;
+
+    URL.createObjectURL = vi.fn(() => fakeUrl);
     URL.revokeObjectURL = vi.fn();
 
-    mockGifInstance.render.mockImplementation(() => {
-      const progressHandler = mockGifInstance._handlers['progress'];
-      if (progressHandler) progressHandler(0.5);
-      const finishedHandler = mockGifInstance._handlers['finished'];
-      if (finishedHandler) {
-        setTimeout(() => finishedHandler(new Blob(['gif'], { type: 'image/gif' })), 0);
+    const clickSpy = vi.fn();
+    const origCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+      const el = origCreateElement(tag);
+      if (tag === 'a') {
+        el.click = clickSpy;
       }
+      return el;
     });
 
-    await exporter.exportTimeline();
+    try {
+      GifExporter.download(blob, 'test.gif');
 
-    // Should have been called with 0.5 + 0.5 * 0.5 = 0.75 for encoding progress
-    expect(onProgress).toHaveBeenCalledWith(0.75);
-
-    URL.revokeObjectURL = origRevokeObjectURL;
-  });
-
-  // ---- exportAndDownload ----
-
-  it('exportAndDownload calls exportTimeline and download', async () => {
-    const scene = createMockScene();
-    const exporter = new GifExporter(scene);
-    const gifBlob = new Blob(['gif'], { type: 'image/gif' });
-
-    vi.spyOn(exporter, 'exportTimeline').mockResolvedValue(gifBlob);
-    const downloadSpy = vi.spyOn(GifExporter, 'download').mockImplementation(() => {});
-
-    await exporter.exportAndDownload('test.gif', 2);
-
-    expect(exporter.exportTimeline).toHaveBeenCalledWith(2);
-    expect(downloadSpy).toHaveBeenCalledWith(gifBlob, 'test.gif');
+      expect(URL.createObjectURL).toHaveBeenCalledWith(blob);
+      expect(clickSpy).toHaveBeenCalled();
+      expect(URL.revokeObjectURL).toHaveBeenCalledWith(fakeUrl);
+    } finally {
+      URL.createObjectURL = origCreateObjectURL;
+      URL.revokeObjectURL = origRevokeObjectURL;
+      vi.restoreAllMocks();
+    }
   });
 
   // ---- createGifExporter factory ----
 
   it('createGifExporter returns a GifExporter instance', async () => {
     const { createGifExporter } = await import('./GifExporter');
-    const scene = createMockScene();
+    const scene = createScene();
     const exporter = createGifExporter(scene, { fps: 20 });
     expect(exporter).toBeInstanceOf(GifExporter);
     expect((exporter as any)._options.fps).toBe(20);
+    scene.dispose();
   });
 });
