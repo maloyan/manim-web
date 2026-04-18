@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { Group } from '../../core/Group';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { MathTexImage } from '../text/MathTexImage';
@@ -242,9 +243,21 @@ export class ThreeDAxes extends Group {
 
   /**
    * Build label mobjects for each axis.
-   * Matches Manim CE conventions: strings are rendered as MathTex (italic math),
-   * positioned just past each arrow tip, and the Z label is rotated PI/2 around
-   * the X axis so it stands upright next to the Z arrow.
+   *
+   * Matches Manim CE's per-axis direction vectors from
+   * `CoordinateSystem._get_axis_label` / `ThreeDAxes.get_axis_labels`:
+   *   - x: edge at Manim (xMax, 0, 0), offset direction UR = (1, 1, 0)
+   *   - y: edge at Manim (0, yMax, 0), offset direction UP*0.5 + RIGHT = (1, 0.5, 0)
+   *   - z: edge at Manim (0, 0, zMax), offset direction RIGHT = (1, 0, 0)
+   * Buffer magnitude is `labelBuffer` along the normalized direction, which
+   * approximates Manim's `next_to(..., buff=SMALL_BUFF)` for the small label
+   * sizes used on axes.
+   *
+   * The Z label is *not* rotated here. Manim CE calls `rotate(PI/2, axis=RIGHT)`
+   * because its default MathTex lies in the Manim XY plane (normal +Z_manim);
+   * after rotation the normal becomes -Y_manim. Under our Manim→THREE mapping
+   * that target normal equals +Z_THREE — which is already the default
+   * MathTexImage plane orientation. So the rotation is implicit.
    */
   private _createLabels(xColor: string, yColor: string, zColor: string): void {
     const xInput = this._labelOptions?.x ?? 'x';
@@ -260,18 +273,21 @@ export class ThreeDAxes extends Group {
     const yMax = this._yRange[1];
     const zMax = this._zRange[1];
 
-    // X tip → offset along +X
-    const xPos = this._m2t(xMax + buf, 0, 0);
+    // X label: Manim (xMax, 0, 0) + buf * normalize(1, 1, 0)
+    const xDir = this._normalize3(1, 1, 0);
+    const xManim: [number, number, number] = [xMax + buf * xDir[0], buf * xDir[1], buf * xDir[2]];
+    const xPos = this._m2t(xManim[0], xManim[1], xManim[2]);
     this._xLabel.position.set(xPos[0], xPos[1], xPos[2]);
-    // Y tip → offset along +Y (Manim) = -Z (THREE)
-    const yPos = this._m2t(0, yMax + buf, 0);
+
+    // Y label: Manim (0, yMax, 0) + buf * normalize(1, 0.5, 0)
+    const yDir = this._normalize3(1, 0.5, 0);
+    const yManim: [number, number, number] = [buf * yDir[0], yMax + buf * yDir[1], buf * yDir[2]];
+    const yPos = this._m2t(yManim[0], yManim[1], yManim[2]);
     this._yLabel.position.set(yPos[0], yPos[1], yPos[2]);
-    // Z tip → offset along +Z (Manim) = +Y (THREE).
-    // Note: Manim CE calls `rotate(PI/2, axis=RIGHT)` on the z-label because
-    // in Manim's default coord system (Z up) a bare MathTex sits flat on XY.
-    // In THREE, MathTexImage's plane is already vertical (normal = +Z_THREE),
-    // so no extra rotation is needed — it stands upright next to the Z arrow.
-    const zPos = this._m2t(0, 0, zMax + buf);
+
+    // Z label: Manim (0, 0, zMax) + buf * (1, 0, 0)
+    const zManim: [number, number, number] = [buf, 0, zMax];
+    const zPos = this._m2t(zManim[0], zManim[1], zManim[2]);
     this._zLabel.position.set(zPos[0], zPos[1], zPos[2]);
 
     // Labels live in a dedicated Group so `getAxisLabels()` can return the
@@ -284,6 +300,11 @@ export class ThreeDAxes extends Group {
     this._labelGroup.add(this._xLabel);
     this._labelGroup.add(this._yLabel);
     this._labelGroup.add(this._zLabel);
+  }
+
+  private _normalize3(x: number, y: number, z: number): [number, number, number] {
+    const len = Math.hypot(x, y, z);
+    return len > 0 ? [x / len, y / len, z / len] : [0, 0, 0];
   }
 
   /**
@@ -409,6 +430,59 @@ export class ThreeDAxes extends Group {
    */
   c2pZ(z: number): number {
     return this.coordsToPoint(0, 0, z)[2];
+  }
+
+  /**
+   * Manim CE's `shift_onto_screen` equivalent. Call once the scene/camera
+   * exist (e.g. after `scene.add(axes)` and a first render). Projects each
+   * axis label to normalized device coordinates using the supplied camera and,
+   * if the label sits outside the [-1, 1] viewport box, shifts it back along
+   * the vector to its axis tip until it lies inside.
+   *
+   * Requires runtime access to the camera, which `ThreeDAxes` has no handle
+   * on at construction time — so this is an opt-in method rather than
+   * automatic.
+   *
+   * @param camera - The camera the scene is rendering with (perspective/ortho).
+   * @param margin - Fraction of NDC to keep as padding inside the viewport.
+   *                 Default 0.05 (5% margin).
+   */
+  shiftLabelsOntoScreen(camera: THREE.Camera, margin: number = 0.05): this {
+    camera.updateMatrixWorld();
+    const origin = new THREE.Vector3();
+    this.getThreeObject().localToWorld(origin.set(0, 0, 0));
+
+    for (const label of [this._xLabel, this._yLabel, this._zLabel]) {
+      if (!label) continue;
+      const threeObj = label.getThreeObject();
+      const worldPos = new THREE.Vector3();
+      threeObj.getWorldPosition(worldPos);
+
+      const ndc = worldPos.clone().project(camera);
+      const limit = 1 - margin;
+      if (Math.abs(ndc.x) <= limit && Math.abs(ndc.y) <= limit) continue;
+
+      // Shift along the vector from origin→label (local axis direction) back
+      // toward the axes origin until the projection fits. Bisect over t ∈ [0, 1]
+      // where t=1 keeps the original position and t=0 collapses to origin.
+      const dir = worldPos.clone().sub(origin);
+      let lo = 0;
+      let hi = 1;
+      for (let i = 0; i < 16; i++) {
+        const mid = (lo + hi) / 2;
+        const candidate = origin.clone().add(dir.clone().multiplyScalar(mid));
+        const p = candidate.project(camera);
+        if (Math.abs(p.x) <= limit && Math.abs(p.y) <= limit) {
+          lo = mid;
+        } else {
+          hi = mid;
+        }
+      }
+      const finalWorld = origin.clone().add(dir.clone().multiplyScalar(lo));
+      threeObj.parent?.worldToLocal(finalWorld);
+      label.position.copy(finalWorld);
+    }
+    return this;
   }
 
   /**

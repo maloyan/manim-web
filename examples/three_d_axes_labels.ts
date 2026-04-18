@@ -23,4 +23,12 @@ const axes = new ThreeDAxes({
 });
 
 scene.add(axes);
+
+// Opt-in Manim CE `shift_onto_screen` equivalent: pull any axis label back
+// toward the origin if it would render outside the viewport.
+// Called after the first render so MathTex sizes exist and the camera matrix
+// is up-to-date.
+await scene.wait(0.05);
+axes.shiftLabelsOntoScreen(scene.camera3D.getCamera());
+
 await scene.wait(Infinity);

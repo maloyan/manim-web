@@ -9,6 +9,7 @@
  * - Z label rotated PI/2 around X so it stands upright,
  * - `getAxisLabels(x, y, z)` creates labels on demand with overrides.
  */
+import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import { Group } from '../../core/Group';
 import { Mobject } from '../../core/Mobject';
@@ -49,32 +50,35 @@ describe('ThreeDAxes showLabels', () => {
     expect(labelGroup.children).toContain(axes.getZLabel());
   });
 
-  it('positions labels just past the arrow tip along each axis', () => {
+  it('positions labels using Manim CE direction vectors (UR, UP*0.5+RIGHT, RIGHT)', () => {
+    const buf = 0.4;
     const axes = new ThreeDAxes({
       xRange: [-5, 5, 1],
       yRange: [-5, 5, 1],
       zRange: [-5, 5, 1],
       showLabels: true,
-      labelBuffer: 0.4,
+      labelBuffer: buf,
     });
 
-    // Manim→THREE: (mx, my, mz) → (mx, mz, -my)
-    // X at Manim (5.4, 0, 0) → THREE (5.4, 0, 0)
+    // Helper: Manim→THREE map is (mx, my, mz) → (mx, mz, -my)
+    // X: Manim offset buf * normalize(1, 1, 0) = buf * (1/√2, 1/√2, 0).
+    const sqrt2Inv = 1 / Math.sqrt(2);
     const xPos = axes.getXLabel()!.position;
-    expect(xPos.x).toBeCloseTo(5.4);
+    expect(xPos.x).toBeCloseTo(5 + buf * sqrt2Inv);
     expect(xPos.y).toBeCloseTo(0);
-    expect(xPos.z).toBeCloseTo(0);
+    expect(xPos.z).toBeCloseTo(-buf * sqrt2Inv);
 
-    // Y at Manim (0, 5.4, 0) → THREE (0, 0, -5.4)
+    // Y: Manim offset buf * normalize(1, 0.5, 0) = buf * (1, 0.5, 0)/√1.25.
+    const invLen = 1 / Math.sqrt(1.25);
     const yPos = axes.getYLabel()!.position;
-    expect(yPos.x).toBeCloseTo(0);
+    expect(yPos.x).toBeCloseTo(buf * invLen);
     expect(yPos.y).toBeCloseTo(0);
-    expect(yPos.z).toBeCloseTo(-5.4);
+    expect(yPos.z).toBeCloseTo(-(5 + buf * 0.5 * invLen));
 
-    // Z at Manim (0, 0, 5.4) → THREE (0, 5.4, 0)
+    // Z: Manim offset buf * (1, 0, 0) → THREE (buf, zMax, 0).
     const zPos = axes.getZLabel()!.position;
-    expect(zPos.x).toBeCloseTo(0);
-    expect(zPos.y).toBeCloseTo(5.4);
+    expect(zPos.x).toBeCloseTo(buf);
+    expect(zPos.y).toBeCloseTo(5);
     expect(zPos.z).toBeCloseTo(0);
   });
 
@@ -174,6 +178,66 @@ describe('ThreeDAxes showLabels', () => {
       expect(axes.getXLabel()).not.toBe(oldX);
       expect(group.children).not.toContain(oldX);
       expect(group.children).toContain(axes.getXLabel());
+    });
+  });
+
+  describe('shiftLabelsOntoScreen (Manim CE shift_onto_screen parity)', () => {
+    // Use a tight camera so the far axis tips land outside the viewport.
+    const makeTightCamera = () => {
+      const cam = new THREE.PerspectiveCamera(20, 1, 0.1, 1000);
+      cam.position.set(0, 8, 8);
+      cam.lookAt(0, 0, 0);
+      cam.updateMatrixWorld();
+      return cam;
+    };
+
+    it('is a no-op when labels already fit the viewport', () => {
+      const axes = new ThreeDAxes({
+        xRange: [-1, 1, 1],
+        yRange: [-1, 1, 1],
+        zRange: [-1, 1, 1],
+        showLabels: true,
+      });
+      const cam = new THREE.PerspectiveCamera(80, 1, 0.1, 1000);
+      cam.position.set(0, 6, 6);
+      cam.lookAt(0, 0, 0);
+      cam.updateMatrixWorld();
+      const before = axes.getXLabel()!.position.clone();
+      axes.shiftLabelsOntoScreen(cam);
+      expect(axes.getXLabel()!.position.distanceTo(before)).toBeLessThan(1e-6);
+    });
+
+    it('pulls labels back toward the origin when they overflow the viewport', () => {
+      const axes = new ThreeDAxes({
+        xRange: [-5, 5, 1],
+        yRange: [-5, 5, 1],
+        zRange: [-5, 5, 1],
+        showLabels: true,
+      });
+      const cam = makeTightCamera();
+      const beforeX = axes.getXLabel()!.position.clone();
+      axes.shiftLabelsOntoScreen(cam);
+      const afterX = axes.getXLabel()!.position;
+      // Label moved strictly closer to the origin along the same ray.
+      expect(afterX.length()).toBeLessThan(beforeX.length());
+      // Direction preserved: dot > 0 means still on the +X-ish ray.
+      expect(afterX.dot(beforeX)).toBeGreaterThan(0);
+    });
+
+    it('leaves label NDC within [-limit, limit] after shifting', () => {
+      const axes = new ThreeDAxes({
+        xRange: [-10, 10, 1],
+        yRange: [-10, 10, 1],
+        zRange: [-10, 10, 1],
+        showLabels: true,
+      });
+      const cam = makeTightCamera();
+      const margin = 0.05;
+      axes.shiftLabelsOntoScreen(cam, margin);
+
+      const ndcX = axes.getXLabel()!.position.clone().project(cam);
+      expect(Math.abs(ndcX.x)).toBeLessThanOrEqual(1 - margin + 1e-3);
+      expect(Math.abs(ndcX.y)).toBeLessThanOrEqual(1 - margin + 1e-3);
     });
   });
 });
