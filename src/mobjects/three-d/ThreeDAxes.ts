@@ -35,6 +35,11 @@ export interface ThreeDAxesOptions {
   labelFontSize?: number;
   /** Offset in world units from each axis tip to its label. Default: 0.4 */
   labelBuffer?: number;
+  /**
+   * Whether axis labels rotate to always face the camera (Manim CE's
+   * `add_fixed_orientation_mobjects` behavior). Default: true.
+   */
+  billboardLabels?: boolean;
   /** Whether to show tick marks. Default: true */
   showTicks?: boolean;
   /** Length of tick marks. Default: 0.15 */
@@ -90,6 +95,7 @@ export class ThreeDAxes extends Group {
   private _showLabels: boolean;
   private _labelFontSize: number;
   private _labelBuffer: number;
+  private _billboardLabels: boolean;
   private _xLabel: Mobject | null = null;
   private _yLabel: Mobject | null = null;
   private _zLabel: Mobject | null = null;
@@ -112,6 +118,7 @@ export class ThreeDAxes extends Group {
       labels,
       labelFontSize = 32,
       labelBuffer = 0.4,
+      billboardLabels = true,
       showTicks = true,
       tickLength = 0.15,
       tipLength = 0.2,
@@ -127,6 +134,7 @@ export class ThreeDAxes extends Group {
     this._showLabels = showLabels;
     this._labelFontSize = labelFontSize;
     this._labelBuffer = labelBuffer;
+    this._billboardLabels = billboardLabels;
     this._labelOptions = labels;
 
     const effectiveXColor = xColor ?? axisColor;
@@ -293,6 +301,28 @@ export class ThreeDAxes extends Group {
     this._labelGroup.add(this._xLabel);
     this._labelGroup.add(this._yLabel);
     this._labelGroup.add(this._zLabel);
+
+    if (this._billboardLabels) {
+      this._installBillboardHooks();
+    }
+  }
+
+  /**
+   * Attach an `onBeforeRender` hook to each label mesh that copies the
+   * camera's quaternion at draw time, so labels always face the viewer
+   * regardless of orbit/camera motion. Equivalent to Manim CE's
+   * `add_fixed_orientation_mobjects` but without needing scene context.
+   *
+   * The hook is idempotent — calling this again replaces any prior hook.
+   */
+  private _installBillboardHooks(): void {
+    for (const label of [this._xLabel, this._yLabel, this._zLabel]) {
+      if (!label) continue;
+      const threeObj = label.getThreeObject();
+      threeObj.onBeforeRender = (_renderer, _scene, camera) => {
+        threeObj.quaternion.copy(camera.quaternion);
+      };
+    }
   }
 
   /**
@@ -566,6 +596,7 @@ export class ThreeDAxes extends Group {
       labels: this._labelOptions,
       labelFontSize: this._labelFontSize,
       labelBuffer: this._labelBuffer,
+      billboardLabels: this._billboardLabels,
     });
   }
 }

@@ -78,6 +78,48 @@ describe('ThreeDAxes showLabels', () => {
     expect(zPos.z).toBeCloseTo(0);
   });
 
+  it('installs an onBeforeRender billboard hook on each label by default', () => {
+    const axes = new ThreeDAxes({ showLabels: true });
+    for (const label of [axes.getXLabel(), axes.getYLabel(), axes.getZLabel()]) {
+      expect(label!.getThreeObject().onBeforeRender).toBeInstanceOf(Function);
+    }
+
+    // The hook copies camera.quaternion onto the label's THREE object.
+    const cam = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+    cam.position.set(5, 5, 5);
+    cam.lookAt(0, 0, 0);
+    cam.updateMatrixWorld();
+    const dummyScene = new THREE.Scene();
+    const renderer = {} as THREE.WebGLRenderer;
+    const label = axes.getXLabel()!;
+    const three = label.getThreeObject();
+    three.onBeforeRender!(
+      renderer,
+      dummyScene,
+      cam,
+      three as THREE.Mesh,
+      {} as THREE.Material,
+      null,
+    );
+    expect(three.quaternion.x).toBeCloseTo(cam.quaternion.x);
+    expect(three.quaternion.y).toBeCloseTo(cam.quaternion.y);
+    expect(three.quaternion.z).toBeCloseTo(cam.quaternion.z);
+    expect(three.quaternion.w).toBeCloseTo(cam.quaternion.w);
+  });
+
+  it('skips billboard hook when billboardLabels is false', () => {
+    const axes = new ThreeDAxes({ showLabels: true, billboardLabels: false });
+    for (const label of [axes.getXLabel(), axes.getYLabel(), axes.getZLabel()]) {
+      // Default `onBeforeRender` on a THREE.Object3D is a no-op function; we
+      // only care that we didn't overwrite it.
+      const fn = label!.getThreeObject().onBeforeRender;
+      // The default is a reference-shared no-op function from Object3D's
+      // prototype; calling it does nothing, so its toString shouldn't
+      // reference camera.quaternion.
+      expect(String(fn)).not.toContain('camera.quaternion');
+    }
+  });
+
   it('leaves labels upright (MathTexImage plane already stands vertical in THREE)', () => {
     // Manim CE rotates its z-label PI/2 around X because its native coord
     // system has Z up and Text lies on XY by default. In THREE, MathTexImage's
