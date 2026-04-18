@@ -434,8 +434,9 @@ function removeRegion(code, start, end) {
 function extractCleanCode(tsContent) {
   let code = tsContent;
 
-  // 1. Replace import path '../src/index.ts' -> 'manim-web'
-  code = code.replace(/from\s+['"]\.\.\/src\/index\.ts['"]/g, "from 'manim-web'");
+  // 1. Replace local import paths (e.g. '../src/index.ts' or '../../src/index.ts'
+  //    for examples nested in topical subdirectories) with the package spec.
+  code = code.replace(/from\s+['"](?:\.\.\/)+src\/index\.ts['"]/g, "from 'manim-web'");
 
   // 1b. Replace local font paths with CDN URLs (local paths don't exist in Docusaurus build)
   code = code.replace(
@@ -1007,6 +1008,33 @@ function generateComponentFile(stem, cleanCode) {
 }
 
 // ---------------------------------------------------------------------------
+// File discovery
+// ---------------------------------------------------------------------------
+
+/**
+ * Return every `.ts` example path relative to EXAMPLES_DIR. Recurses one
+ * level into immediate subdirectories (e.g. `3d-scenes/`) but does not
+ * descend further — example folders stay flat and predictable.
+ */
+function collectExampleTsFiles(dir) {
+  const top = readdirSync(dir, { withFileTypes: true });
+  const out = [];
+  for (const entry of top) {
+    if (entry.isFile() && entry.name.endsWith('.ts')) {
+      out.push(entry.name);
+    } else if (entry.isDirectory()) {
+      const subDir = join(dir, entry.name);
+      for (const f of readdirSync(subDir)) {
+        if (f.endsWith('.ts')) {
+          out.push(`${entry.name}/${f}`);
+        }
+      }
+    }
+  }
+  return out.sort();
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -1014,19 +1042,20 @@ function main() {
   mkdirSync(DOCS_DIR, { recursive: true });
   mkdirSync(COMPONENTS_DIR, { recursive: true });
 
-  const tsFiles = readdirSync(EXAMPLES_DIR)
-    .filter((f) => f.endsWith('.ts'))
-    .sort();
+  // Collect .ts files from EXAMPLES_DIR and any immediate subdirectories so
+  // topical folders like `3d-scenes/` still ship to the docs. Each entry is
+  // the example's path relative to EXAMPLES_DIR.
+  const tsFiles = collectExampleTsFiles(EXAMPLES_DIR);
 
   const examples = [];
 
-  for (const file of tsFiles) {
-    const stem = basename(file, '.ts');
-    const htmlFile = `${stem}.html`;
+  for (const relFile of tsFiles) {
+    const stem = basename(relFile, '.ts');
+    const relHtml = relFile.replace(/\.ts$/, '.html');
 
     // Only include examples that have a matching HTML file
-    if (!existsSync(join(EXAMPLES_DIR, htmlFile))) {
-      console.warn(`  Skipping ${file}: no matching ${htmlFile}`);
+    if (!existsSync(join(EXAMPLES_DIR, relHtml))) {
+      console.warn(`  Skipping ${relFile}: no matching ${relHtml}`);
       continue;
     }
 
@@ -1036,7 +1065,7 @@ function main() {
     }
 
     const title = toTitle(stem);
-    const tsContent = readFileSync(join(EXAMPLES_DIR, file), 'utf-8');
+    const tsContent = readFileSync(join(EXAMPLES_DIR, relFile), 'utf-8');
     const meta = EXAMPLE_META[stem] || {};
     const description = meta.description || `Example demonstrating ${title}.`;
     const learnMore = meta.learnMore || [];
@@ -1052,7 +1081,16 @@ function main() {
     writeFileSync(componentPath, componentCode, 'utf-8');
     console.log(`  Generated component: ${componentName}.tsx`);
 
-    examples.push({ stem, htmlFile, title, category, description, learnMore, codeBlock, componentName });
+    examples.push({
+      stem,
+      htmlFile: relHtml,
+      title,
+      category,
+      description,
+      learnMore,
+      codeBlock,
+      componentName,
+    });
   }
 
   // -------------------------------------------------------------------------

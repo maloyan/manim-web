@@ -3,20 +3,13 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
+  const { Angle, Line3D, ThreeDAxes, ValueTracker, WHITE, YELLOW, GREEN } =
+    await import('manim-web');
+
   // Demo for issue #262: a 3D Angle whose arc grows continuously past π to 2π
   // when the rotation plane is pinned via the new `axis` option. Sweeps a
   // projection line around the +Y axis in the XZ plane so the arc should
   // stay coplanar with the two segments at every frame.
-  import {
-    Angle,
-    Line3D,
-    ThreeDAxes,
-    ThreeDScene,
-    ValueTracker,
-    WHITE,
-    YELLOW,
-    GREEN,
-  } from 'manim-web';
 
   const axes = new ThreeDAxes({
     xRange: [-3, 3, 1],

@@ -1,7 +1,3 @@
-// Demo for issue #262: a 3D Angle whose arc grows continuously past π to 2π
-// when the rotation plane is pinned via the new `axis` option. Sweeps a
-// projection line around the +Y axis in the XZ plane so the arc should
-// stay coplanar with the two segments at every frame.
 import {
   Angle,
   Line3D,
@@ -11,7 +7,12 @@ import {
   WHITE,
   YELLOW,
   GREEN,
-} from '../src/index.ts';
+} from '../../src/index.ts';
+
+// Demo for issue #262: a 3D Angle whose arc grows continuously past π to 2π
+// when the rotation plane is pinned via the new `axis` option. Sweeps a
+// projection line around the +Y axis in the XZ plane so the arc should
+// stay coplanar with the two segments at every frame.
 
 const container = document.getElementById('container');
 const scene = new ThreeDScene(container, {

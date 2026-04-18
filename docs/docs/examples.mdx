@@ -4,6 +4,7 @@ sidebar_label: Examples
 ---
 
 import PlayerExample from '@site/src/components/examples/PlayerExample';
+import ThreeDReflexAngleExample from '@site/src/components/examples/ThreeDReflexAngleExample';
 import ApplyMatrixArrowsExample from '@site/src/components/examples/ApplyMatrixArrowsExample';
 import ApplyMatrixMethodExample from '@site/src/components/examples/ApplyMatrixMethodExample';
 import ArgMinExample from '@site/src/components/examples/ArgMinExample';
@@ -36,7 +37,6 @@ import ThreeDAngleExample from '@site/src/components/examples/ThreeDAngleExample
 import ThreeDCameraIllusionRotationExample from '@site/src/components/examples/ThreeDCameraIllusionRotationExample';
 import ThreeDCameraRotationExample from '@site/src/components/examples/ThreeDCameraRotationExample';
 import ThreeDLightSourcePositionExample from '@site/src/components/examples/ThreeDLightSourcePositionExample';
-import ThreeDReflexAngleExample from '@site/src/components/examples/ThreeDReflexAngleExample';
 import ThreeDSurfacePlotExample from '@site/src/components/examples/ThreeDSurfacePlotExample';
 import VectorArrowExample from '@site/src/components/examples/VectorArrowExample';
 
@@ -2307,10 +2307,6 @@ Sweeps a Line3D around a reference axis in the XZ plane while an Angle arc track
 <summary>Source Code</summary>
 
 ```typescript
-// Demo for issue #262: a 3D Angle whose arc grows continuously past π to 2π
-// when the rotation plane is pinned via the new `axis` option. Sweeps a
-// projection line around the +Y axis in the XZ plane so the arc should
-// stay coplanar with the two segments at every frame.
 import {
   Angle,
   Line3D,
@@ -2321,6 +2317,11 @@ import {
   YELLOW,
   GREEN,
 } from 'manim-web';
+
+// Demo for issue #262: a 3D Angle whose arc grows continuously past π to 2π
+// when the rotation plane is pinned via the new `axis` option. Sweeps a
+// projection line around the +Y axis in the XZ plane so the arc should
+// stay coplanar with the two segments at every frame.
 
 const scene = new ThreeDScene(document.getElementById('container'), {
   width: 800,
