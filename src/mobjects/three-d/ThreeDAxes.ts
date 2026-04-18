@@ -86,16 +86,16 @@ export class ThreeDAxes extends Group {
   private _xAxis: Arrow3D;
   private _yAxis: Arrow3D;
   private _zAxis: Arrow3D;
-  private _xRange: [number, number, number];
-  private _yRange: [number, number, number];
-  private _zRange: [number, number, number];
-  private _showTicks: boolean;
-  private _tickLength: number;
+  private _xRange!: [number, number, number];
+  private _yRange!: [number, number, number];
+  private _zRange!: [number, number, number];
+  private _showTicks!: boolean;
+  private _tickLength!: number;
   private _ticks: Line3D[] = [];
-  private _showLabels: boolean;
-  private _labelFontSize: number;
-  private _labelBuffer: number;
-  private _billboardLabels: boolean;
+  private _showLabels!: boolean;
+  private _labelFontSize!: number;
+  private _labelBuffer!: number;
+  private _billboardLabels!: boolean;
   private _xLabel: Mobject | null = null;
   private _yLabel: Mobject | null = null;
   private _zLabel: Mobject | null = null;
@@ -106,87 +106,101 @@ export class ThreeDAxes extends Group {
     super();
     this._disableChildZLayering = true;
 
-    const {
-      xRange = [-6, 6, 1],
-      yRange = [-5, 5, 1],
-      zRange = [-4, 4, 1],
-      axisColor = '#ffffff',
-      xColor,
-      yColor,
-      zColor,
-      showLabels = false,
-      labels,
-      labelFontSize = 32,
-      labelBuffer = 0.4,
-      billboardLabels = true,
-      showTicks = true,
-      tickLength = 0.15,
-      tipLength = 0.2,
-      tipRadius = 0.08,
-      shaftRadius = 0.01,
-    } = options;
+    const ranges = this._initRanges(options);
+    this._initTickConfig(options);
+    this._initLabelConfig(options);
 
-    this._xRange = [...xRange];
-    this._yRange = [...yRange];
-    this._zRange = [...zRange];
-    this._showTicks = showTicks;
-    this._tickLength = tickLength;
-    this._showLabels = showLabels;
-    this._labelFontSize = labelFontSize;
-    this._labelBuffer = labelBuffer;
-    this._billboardLabels = billboardLabels;
-    this._labelOptions = labels;
+    const colors = this._resolveAxisColors(options);
+    const arrowCfg = this._resolveArrowConfig(options);
 
-    const effectiveXColor = xColor ?? axisColor;
-    const effectiveYColor = yColor ?? axisColor;
-    const effectiveZColor = zColor ?? axisColor;
-
-    // Unit_size=1: graph coordinates map directly to visual positions (matching Python manim)
-    // Manim→THREE.js coordinate mapping: (mx, my, mz) → (mx, mz, -my)
-
-    // Create X-axis (Manim +X → THREE.js +X)
-    this._xAxis = new Arrow3D({
-      start: [xRange[0], 0, 0],
-      end: [xRange[1], 0, 0],
-      color: effectiveXColor,
-      tipLength,
-      tipRadius,
-      shaftRadius,
-    });
-
-    // Create Y-axis (Manim +Y → THREE.js -Z)
-    this._yAxis = new Arrow3D({
-      start: [0, 0, -yRange[0]],
-      end: [0, 0, -yRange[1]],
-      color: effectiveYColor,
-      tipLength,
-      tipRadius,
-      shaftRadius,
-    });
-
-    // Create Z-axis (Manim +Z → THREE.js +Y, up)
-    this._zAxis = new Arrow3D({
-      start: [0, zRange[0], 0],
-      end: [0, zRange[1], 0],
-      color: effectiveZColor,
-      tipLength,
-      tipRadius,
-      shaftRadius,
-    });
+    this._xAxis = this._buildAxisArrow(
+      [ranges.x[0], 0, 0],
+      [ranges.x[1], 0, 0],
+      colors.x,
+      arrowCfg,
+    );
+    // Manim +Y maps to THREE -Z.
+    this._yAxis = this._buildAxisArrow(
+      [0, 0, -ranges.y[0]],
+      [0, 0, -ranges.y[1]],
+      colors.y,
+      arrowCfg,
+    );
+    // Manim +Z maps to THREE +Y (up).
+    this._zAxis = this._buildAxisArrow(
+      [0, ranges.z[0], 0],
+      [0, ranges.z[1], 0],
+      colors.z,
+      arrowCfg,
+    );
 
     this.add(this._xAxis);
     this.add(this._yAxis);
     this.add(this._zAxis);
 
-    // Add tick marks if enabled
-    if (showTicks) {
-      this._createTicks(effectiveXColor, effectiveYColor, effectiveZColor);
+    if (this._showTicks) {
+      this._createTicks(colors.x, colors.y, colors.z);
     }
+    if (this._showLabels) {
+      this._createLabels(colors.x, colors.y, colors.z);
+    }
+  }
 
-    // Add axis labels if enabled
-    if (showLabels) {
-      this._createLabels(effectiveXColor, effectiveYColor, effectiveZColor);
-    }
+  private _initRanges(options: ThreeDAxesOptions): {
+    x: [number, number, number];
+    y: [number, number, number];
+    z: [number, number, number];
+  } {
+    const x: [number, number, number] = [...(options.xRange ?? [-6, 6, 1])];
+    const y: [number, number, number] = [...(options.yRange ?? [-5, 5, 1])];
+    const z: [number, number, number] = [...(options.zRange ?? [-4, 4, 1])];
+    this._xRange = x;
+    this._yRange = y;
+    this._zRange = z;
+    return { x, y, z };
+  }
+
+  private _initTickConfig(options: ThreeDAxesOptions): void {
+    this._showTicks = options.showTicks ?? true;
+    this._tickLength = options.tickLength ?? 0.15;
+  }
+
+  private _initLabelConfig(options: ThreeDAxesOptions): void {
+    this._showLabels = options.showLabels ?? false;
+    this._labelFontSize = options.labelFontSize ?? 32;
+    this._labelBuffer = options.labelBuffer ?? 0.4;
+    this._billboardLabels = options.billboardLabels ?? true;
+    this._labelOptions = options.labels;
+  }
+
+  private _resolveAxisColors(options: ThreeDAxesOptions): { x: string; y: string; z: string } {
+    const axisColor = options.axisColor ?? '#ffffff';
+    return {
+      x: options.xColor ?? axisColor,
+      y: options.yColor ?? axisColor,
+      z: options.zColor ?? axisColor,
+    };
+  }
+
+  private _resolveArrowConfig(options: ThreeDAxesOptions): {
+    tipLength: number;
+    tipRadius: number;
+    shaftRadius: number;
+  } {
+    return {
+      tipLength: options.tipLength ?? 0.2,
+      tipRadius: options.tipRadius ?? 0.08,
+      shaftRadius: options.shaftRadius ?? 0.01,
+    };
+  }
+
+  private _buildAxisArrow(
+    start: [number, number, number],
+    end: [number, number, number],
+    color: string,
+    arrow: { tipLength: number; tipRadius: number; shaftRadius: number },
+  ): Arrow3D {
+    return new Arrow3D({ start, end, color, ...arrow });
   }
 
   /**
@@ -569,37 +583,42 @@ export class ThreeDAxes extends Group {
     yLabel?: string | Mobject,
     zLabel?: string | Mobject,
   ): Group {
-    const needsCreate =
-      xLabel !== undefined || yLabel !== undefined || zLabel !== undefined || !this._showLabels;
-
-    if (needsCreate) {
-      // Merge args with construction-time label options (args win).
-      this._labelOptions = {
-        x: xLabel ?? this._labelOptions?.x,
-        y: yLabel ?? this._labelOptions?.y,
-        z: zLabel ?? this._labelOptions?.z,
-      };
-      this._showLabels = true;
-      // Drop any previously created labels so we don't orphan children.
-      if (this._labelGroup) {
-        if (this._xLabel) this._labelGroup.remove(this._xLabel);
-        if (this._yLabel) this._labelGroup.remove(this._yLabel);
-        if (this._zLabel) this._labelGroup.remove(this._zLabel);
-      }
-      this._xLabel = this._yLabel = this._zLabel = null;
-
-      // Recreate with the same per-axis colors used by the arrows.
-      this._createLabels(
-        this._xAxis.color as string,
-        this._yAxis.color as string,
-        this._zAxis.color as string,
-      );
+    const hasOverride = xLabel !== undefined || yLabel !== undefined || zLabel !== undefined;
+    if (hasOverride || !this._showLabels) {
+      this._rebuildLabels(xLabel, yLabel, zLabel);
     }
-
-    // Return the persistent internal Group; adding it to a scene wouldn't
-    // make sense (it's a child of `this`), but callers typically use it to
-    // animate / style the labels collectively.
+    // Persistent internal Group; callers use it to animate/style labels
+    // collectively. Labels remain parented to this axes.
     return this._labelGroup ?? new Group();
+  }
+
+  private _rebuildLabels(
+    xLabel?: string | Mobject,
+    yLabel?: string | Mobject,
+    zLabel?: string | Mobject,
+  ): void {
+    this._labelOptions = {
+      x: xLabel ?? this._labelOptions?.x,
+      y: yLabel ?? this._labelOptions?.y,
+      z: zLabel ?? this._labelOptions?.z,
+    };
+    this._showLabels = true;
+    this._detachExistingLabels();
+    this._createLabels(
+      this._xAxis.color as string,
+      this._yAxis.color as string,
+      this._zAxis.color as string,
+    );
+  }
+
+  private _detachExistingLabels(): void {
+    if (!this._labelGroup) return;
+    if (this._xLabel) this._labelGroup.remove(this._xLabel);
+    if (this._yLabel) this._labelGroup.remove(this._yLabel);
+    if (this._zLabel) this._labelGroup.remove(this._zLabel);
+    this._xLabel = null;
+    this._yLabel = null;
+    this._zLabel = null;
   }
 
   /**
