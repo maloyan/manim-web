@@ -242,22 +242,22 @@ export class ThreeDAxes extends Group {
   }
 
   /**
-   * Build label mobjects for each axis.
+   * Build label mobjects for each axis and place them just past each arrow
+   * tip along the arrow direction.
    *
-   * Matches Manim CE's per-axis direction vectors from
-   * `CoordinateSystem._get_axis_label` / `ThreeDAxes.get_axis_labels`:
-   *   - x: edge at Manim (xMax, 0, 0), offset direction UR = (1, 1, 0)
-   *   - y: edge at Manim (0, yMax, 0), offset direction UP*0.5 + RIGHT = (1, 0.5, 0)
-   *   - z: edge at Manim (0, 0, zMax), offset direction RIGHT = (1, 0, 0)
-   * Buffer magnitude is `labelBuffer` along the normalized direction, which
-   * approximates Manim's `next_to(..., buff=SMALL_BUFF)` for the small label
-   * sizes used on axes.
+   * Note on Manim CE parity: Manim CE's `_get_axis_label` uses 2D screen
+   * direction constants (UR = UP + RIGHT, etc.) which read nicely in 2D Axes
+   * but map into arbitrary 3D offsets under a ThreeDScene camera — e.g. Manim
+   * Y+ ("up" of UP+RIGHT) is scene depth in THREE's coord system, which
+   * visually projects as "down-right of tip" under a phi≈75° camera. We
+   * therefore offset along the axis direction, which keeps each label
+   * visually adjacent to its arrow tip for any camera orientation. The
+   * Manim CE `get_axis_labels(x, y, z)` overloaded entry point remains, so
+   * users can also pass `next_to`-positioned mobjects explicitly.
    *
-   * The Z label is *not* rotated here. Manim CE calls `rotate(PI/2, axis=RIGHT)`
-   * because its default MathTex lies in the Manim XY plane (normal +Z_manim);
-   * after rotation the normal becomes -Y_manim. Under our Manim→THREE mapping
-   * that target normal equals +Z_THREE — which is already the default
-   * MathTexImage plane orientation. So the rotation is implicit.
+   * Manim CE's `rotate(PI/2, axis=RIGHT)` on the z-label is a no-op under
+   * our Manim→THREE mapping: after the rotation the Manim-space normal would
+   * map to +Z_THREE, which is already MathTexImage's default plane normal.
    */
   private _createLabels(xColor: string, yColor: string, zColor: string): void {
     const xInput = this._labelOptions?.x ?? 'x';
@@ -273,21 +273,14 @@ export class ThreeDAxes extends Group {
     const yMax = this._yRange[1];
     const zMax = this._zRange[1];
 
-    // X label: Manim (xMax, 0, 0) + buf * normalize(1, 1, 0)
-    const xDir = this._normalize3(1, 1, 0);
-    const xManim: [number, number, number] = [xMax + buf * xDir[0], buf * xDir[1], buf * xDir[2]];
-    const xPos = this._m2t(xManim[0], xManim[1], xManim[2]);
+    const xPos = this._m2t(xMax + buf, 0, 0);
     this._xLabel.position.set(xPos[0], xPos[1], xPos[2]);
-
-    // Y label: Manim (0, yMax, 0) + buf * normalize(1, 0.5, 0)
-    const yDir = this._normalize3(1, 0.5, 0);
-    const yManim: [number, number, number] = [buf * yDir[0], yMax + buf * yDir[1], buf * yDir[2]];
-    const yPos = this._m2t(yManim[0], yManim[1], yManim[2]);
+    const yPos = this._m2t(0, yMax + buf, 0);
     this._yLabel.position.set(yPos[0], yPos[1], yPos[2]);
-
-    // Z label: Manim (0, 0, zMax) + buf * (1, 0, 0)
-    const zManim: [number, number, number] = [buf, 0, zMax];
-    const zPos = this._m2t(zManim[0], zManim[1], zManim[2]);
+    // Z label: mirror Manim CE's `direction=RIGHT` convention — offset to
+    // the side of the arrow tip (not directly above) so it doesn't sit
+    // on top of the arrow shaft/cone.
+    const zPos = this._m2t(buf, 0, zMax + buf * 0.3);
     this._zLabel.position.set(zPos[0], zPos[1], zPos[2]);
 
     // Labels live in a dedicated Group so `getAxisLabels()` can return the
@@ -300,11 +293,6 @@ export class ThreeDAxes extends Group {
     this._labelGroup.add(this._xLabel);
     this._labelGroup.add(this._yLabel);
     this._labelGroup.add(this._zLabel);
-  }
-
-  private _normalize3(x: number, y: number, z: number): [number, number, number] {
-    const len = Math.hypot(x, y, z);
-    return len > 0 ? [x / len, y / len, z / len] : [0, 0, 0];
   }
 
   /**

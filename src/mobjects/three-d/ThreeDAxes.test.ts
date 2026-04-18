@@ -50,35 +50,31 @@ describe('ThreeDAxes showLabels', () => {
     expect(labelGroup.children).toContain(axes.getZLabel());
   });
 
-  it('positions labels using Manim CE direction vectors (UR, UP*0.5+RIGHT, RIGHT)', () => {
-    const buf = 0.4;
+  it('positions labels just past each arrow tip along the axis direction', () => {
     const axes = new ThreeDAxes({
       xRange: [-5, 5, 1],
       yRange: [-5, 5, 1],
       zRange: [-5, 5, 1],
       showLabels: true,
-      labelBuffer: buf,
+      labelBuffer: 0.4,
     });
 
-    // Helper: Manim→THREE map is (mx, my, mz) → (mx, mz, -my)
-    // X: Manim offset buf * normalize(1, 1, 0) = buf * (1/√2, 1/√2, 0).
-    const sqrt2Inv = 1 / Math.sqrt(2);
+    // Manim→THREE: (mx, my, mz) → (mx, mz, -my)
     const xPos = axes.getXLabel()!.position;
-    expect(xPos.x).toBeCloseTo(5 + buf * sqrt2Inv);
+    expect(xPos.x).toBeCloseTo(5.4);
     expect(xPos.y).toBeCloseTo(0);
-    expect(xPos.z).toBeCloseTo(-buf * sqrt2Inv);
+    expect(xPos.z).toBeCloseTo(0);
 
-    // Y: Manim offset buf * normalize(1, 0.5, 0) = buf * (1, 0.5, 0)/√1.25.
-    const invLen = 1 / Math.sqrt(1.25);
     const yPos = axes.getYLabel()!.position;
-    expect(yPos.x).toBeCloseTo(buf * invLen);
+    expect(yPos.x).toBeCloseTo(0);
     expect(yPos.y).toBeCloseTo(0);
-    expect(yPos.z).toBeCloseTo(-(5 + buf * 0.5 * invLen));
+    expect(yPos.z).toBeCloseTo(-5.4);
 
-    // Z: Manim offset buf * (1, 0, 0) → THREE (buf, zMax, 0).
+    // Z label: offset to the side of the tip (Manim CE RIGHT direction)
+    // so it doesn't sit directly on the arrow.
     const zPos = axes.getZLabel()!.position;
-    expect(zPos.x).toBeCloseTo(buf);
-    expect(zPos.y).toBeCloseTo(5);
+    expect(zPos.x).toBeCloseTo(0.4);
+    expect(zPos.y).toBeCloseTo(5 + 0.4 * 0.3);
     expect(zPos.z).toBeCloseTo(0);
   });
 
