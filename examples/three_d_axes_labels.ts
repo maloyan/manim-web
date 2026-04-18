@@ -7,8 +7,8 @@ const scene = new ThreeDScene(container, {
   backgroundColor: '#191919',
   phi: 75 * (Math.PI / 180),
   theta: -45 * (Math.PI / 180),
-  distance: 20,
-  fov: 30,
+  distance: 24,
+  fov: 35,
   enableOrbitControls: true,
 });
 

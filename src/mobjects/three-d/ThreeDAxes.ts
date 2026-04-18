@@ -1,6 +1,6 @@
 import { Group } from '../../core/Group';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { Text } from '../text/Text';
+import { MathTexImage } from '../text/MathTexImage';
 import { Arrow3D } from './Arrow3D';
 import { Line3D } from './Line3D';
 
@@ -30,7 +30,7 @@ export interface ThreeDAxesOptions {
     y?: string | Mobject;
     z?: string | Mobject;
   };
-  /** Font size used when creating labels from strings. Default: 36 */
+  /** Font size used when creating labels from strings (MathTexImage pixel size). Default: 32 */
   labelFontSize?: number;
   /** Offset in world units from each axis tip to its label. Default: 0.4 */
   labelBuffer?: number;
@@ -92,6 +92,7 @@ export class ThreeDAxes extends Group {
   private _xLabel: Mobject | null = null;
   private _yLabel: Mobject | null = null;
   private _zLabel: Mobject | null = null;
+  private _labelGroup: Group | null = null;
   private _labelOptions: ThreeDAxesOptions['labels'];
 
   constructor(options: ThreeDAxesOptions = {}) {
@@ -108,7 +109,7 @@ export class ThreeDAxes extends Group {
       zColor,
       showLabels = false,
       labels,
-      labelFontSize = 36,
+      labelFontSize = 32,
       labelBuffer = 0.4,
       showTicks = true,
       tickLength = 0.15,
@@ -241,8 +242,9 @@ export class ThreeDAxes extends Group {
 
   /**
    * Build label mobjects for each axis.
-   * Accepts either a string (turned into Text) or a pre-built Mobject per axis.
-   * Labels are positioned just past the arrow tip along each axis.
+   * Matches Manim CE conventions: strings are rendered as MathTex (italic math),
+   * positioned just past each arrow tip, and the Z label is rotated PI/2 around
+   * the X axis so it stands upright next to the Z arrow.
    */
   private _createLabels(xColor: string, yColor: string, zColor: string): void {
     const xInput = this._labelOptions?.x ?? 'x';
@@ -264,22 +266,33 @@ export class ThreeDAxes extends Group {
     // Y tip → offset along +Y (Manim) = -Z (THREE)
     const yPos = this._m2t(0, yMax + buf, 0);
     this._yLabel.position.set(yPos[0], yPos[1], yPos[2]);
-    // Z tip → offset along +Z (Manim) = +Y (THREE)
+    // Z tip → offset along +Z (Manim) = +Y (THREE).
+    // Note: Manim CE calls `rotate(PI/2, axis=RIGHT)` on the z-label because
+    // in Manim's default coord system (Z up) a bare MathTex sits flat on XY.
+    // In THREE, MathTexImage's plane is already vertical (normal = +Z_THREE),
+    // so no extra rotation is needed — it stands upright next to the Z arrow.
     const zPos = this._m2t(0, 0, zMax + buf);
     this._zLabel.position.set(zPos[0], zPos[1], zPos[2]);
 
-    this.add(this._xLabel);
-    this.add(this._yLabel);
-    this.add(this._zLabel);
+    // Labels live in a dedicated Group so `getAxisLabels()` can return the
+    // same Group every time without re-parenting (which would remove the
+    // labels from this axes' children).
+    if (!this._labelGroup) {
+      this._labelGroup = new Group();
+      this.add(this._labelGroup);
+    }
+    this._labelGroup.add(this._xLabel);
+    this._labelGroup.add(this._yLabel);
+    this._labelGroup.add(this._zLabel);
   }
 
   /**
-   * Turn a string into a Text mobject or pass through an existing Mobject.
+   * Turn a string into a MathTexImage mobject or pass through an existing Mobject.
    */
   private _buildLabel(input: string | Mobject, color: string): Mobject {
     if (typeof input === 'string') {
-      return new Text({
-        text: input,
+      return new MathTexImage({
+        latex: input,
         fontSize: this._labelFontSize,
         color,
       });
@@ -420,14 +433,53 @@ export class ThreeDAxes extends Group {
   }
 
   /**
-   * Get all axis label mobjects as a Group. Empty group if no labels.
+   * Get all axis label mobjects as a Group.
+   *
+   * If no labels were created at construction time (showLabels was false)
+   * or any of xLabel/yLabel/zLabel are supplied, labels are created/replaced
+   * on demand and added to this group. Mirrors Manim CE's
+   * `ThreeDAxes.get_axis_labels(x_label, y_label, z_label)`.
+   *
+   * @param xLabel - LaTeX string or Mobject for x-axis label. Default: 'x'
+   * @param yLabel - LaTeX string or Mobject for y-axis label. Default: 'y'
+   * @param zLabel - LaTeX string or Mobject for z-axis label. Default: 'z'
    */
-  getAxisLabels(): Group {
-    const group = new Group();
-    if (this._xLabel) group.add(this._xLabel);
-    if (this._yLabel) group.add(this._yLabel);
-    if (this._zLabel) group.add(this._zLabel);
-    return group;
+  getAxisLabels(
+    xLabel?: string | Mobject,
+    yLabel?: string | Mobject,
+    zLabel?: string | Mobject,
+  ): Group {
+    const needsCreate =
+      xLabel !== undefined || yLabel !== undefined || zLabel !== undefined || !this._showLabels;
+
+    if (needsCreate) {
+      // Merge args with construction-time label options (args win).
+      this._labelOptions = {
+        x: xLabel ?? this._labelOptions?.x,
+        y: yLabel ?? this._labelOptions?.y,
+        z: zLabel ?? this._labelOptions?.z,
+      };
+      this._showLabels = true;
+      // Drop any previously created labels so we don't orphan children.
+      if (this._labelGroup) {
+        if (this._xLabel) this._labelGroup.remove(this._xLabel);
+        if (this._yLabel) this._labelGroup.remove(this._yLabel);
+        if (this._zLabel) this._labelGroup.remove(this._zLabel);
+      }
+      this._xLabel = this._yLabel = this._zLabel = null;
+
+      // Recreate with the same per-axis colors used by the arrows.
+      this._createLabels(
+        this._xAxis.color as string,
+        this._yAxis.color as string,
+        this._zAxis.color as string,
+      );
+    }
+
+    // Return the persistent internal Group; adding it to a scene wouldn't
+    // make sense (it's a child of `this`), but callers typically use it to
+    // animate / style the labels collectively.
+    return this._labelGroup ?? new Group();
   }
 
   /**
