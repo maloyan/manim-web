@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ManimWeb - ThreeDAxes showLabels (issue #263)</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #1a1a2e;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: system-ui, sans-serif;
+        color: #ddd;
+      }
+      h1 {
+        margin: 16px;
+        font-size: 18px;
+      }
+      #container {
+        border: 2px solid #333;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ThreeDAxes with <code>showLabels: true</code> (regression test for #263)</h1>
+    <div id="container"></div>
+    <script type="module" src="./three_d_axes_labels.ts"></script>
+  </body>
+</html>

@@ -1,5 +1,6 @@
 import { Group } from '../../core/Group';
-import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Text } from '../text/Text';
 import { Arrow3D } from './Arrow3D';
 import { Line3D } from './Line3D';
 
@@ -21,8 +22,18 @@ export interface ThreeDAxesOptions {
   yColor?: string;
   /** Color for z-axis (overrides axisColor). Default: same as axisColor */
   zColor?: string;
-  /** Whether to show axis labels (X, Y, Z). Default: false */
+  /** Whether to show axis labels (x, y, z). Default: false */
   showLabels?: boolean;
+  /** Custom label text or Mobjects per axis. String entries become Text mobjects. Defaults: 'x', 'y', 'z' */
+  labels?: {
+    x?: string | Mobject;
+    y?: string | Mobject;
+    z?: string | Mobject;
+  };
+  /** Font size used when creating labels from strings. Default: 36 */
+  labelFontSize?: number;
+  /** Offset in world units from each axis tip to its label. Default: 0.4 */
+  labelBuffer?: number;
   /** Whether to show tick marks. Default: true */
   showTicks?: boolean;
   /** Length of tick marks. Default: 0.15 */
@@ -75,6 +86,13 @@ export class ThreeDAxes extends Group {
   private _showTicks: boolean;
   private _tickLength: number;
   private _ticks: Line3D[] = [];
+  private _showLabels: boolean;
+  private _labelFontSize: number;
+  private _labelBuffer: number;
+  private _xLabel: Mobject | null = null;
+  private _yLabel: Mobject | null = null;
+  private _zLabel: Mobject | null = null;
+  private _labelOptions: ThreeDAxesOptions['labels'];
 
   constructor(options: ThreeDAxesOptions = {}) {
     super();
@@ -88,7 +106,10 @@ export class ThreeDAxes extends Group {
       xColor,
       yColor,
       zColor,
-      // showLabels is accepted by options but not yet implemented
+      showLabels = false,
+      labels,
+      labelFontSize = 36,
+      labelBuffer = 0.4,
       showTicks = true,
       tickLength = 0.15,
       tipLength = 0.2,
@@ -101,6 +122,10 @@ export class ThreeDAxes extends Group {
     this._zRange = [...zRange];
     this._showTicks = showTicks;
     this._tickLength = tickLength;
+    this._showLabels = showLabels;
+    this._labelFontSize = labelFontSize;
+    this._labelBuffer = labelBuffer;
+    this._labelOptions = labels;
 
     const effectiveXColor = xColor ?? axisColor;
     const effectiveYColor = yColor ?? axisColor;
@@ -146,6 +171,11 @@ export class ThreeDAxes extends Group {
     // Add tick marks if enabled
     if (showTicks) {
       this._createTicks(effectiveXColor, effectiveYColor, effectiveZColor);
+    }
+
+    // Add axis labels if enabled
+    if (showLabels) {
+      this._createLabels(effectiveXColor, effectiveYColor, effectiveZColor);
     }
   }
 
@@ -207,6 +237,54 @@ export class ThreeDAxes extends Group {
       this._ticks.push(tick);
       this.add(tick);
     }
+  }
+
+  /**
+   * Build label mobjects for each axis.
+   * Accepts either a string (turned into Text) or a pre-built Mobject per axis.
+   * Labels are positioned just past the arrow tip along each axis.
+   */
+  private _createLabels(xColor: string, yColor: string, zColor: string): void {
+    const xInput = this._labelOptions?.x ?? 'x';
+    const yInput = this._labelOptions?.y ?? 'y';
+    const zInput = this._labelOptions?.z ?? 'z';
+
+    this._xLabel = this._buildLabel(xInput, xColor);
+    this._yLabel = this._buildLabel(yInput, yColor);
+    this._zLabel = this._buildLabel(zInput, zColor);
+
+    const buf = this._labelBuffer;
+    const xMax = this._xRange[1];
+    const yMax = this._yRange[1];
+    const zMax = this._zRange[1];
+
+    // X tip → offset along +X
+    const xPos = this._m2t(xMax + buf, 0, 0);
+    this._xLabel.position.set(xPos[0], xPos[1], xPos[2]);
+    // Y tip → offset along +Y (Manim) = -Z (THREE)
+    const yPos = this._m2t(0, yMax + buf, 0);
+    this._yLabel.position.set(yPos[0], yPos[1], yPos[2]);
+    // Z tip → offset along +Z (Manim) = +Y (THREE)
+    const zPos = this._m2t(0, 0, zMax + buf);
+    this._zLabel.position.set(zPos[0], zPos[1], zPos[2]);
+
+    this.add(this._xLabel);
+    this.add(this._yLabel);
+    this.add(this._zLabel);
+  }
+
+  /**
+   * Turn a string into a Text mobject or pass through an existing Mobject.
+   */
+  private _buildLabel(input: string | Mobject, color: string): Mobject {
+    if (typeof input === 'string') {
+      return new Text({
+        text: input,
+        fontSize: this._labelFontSize,
+        color,
+      });
+    }
+    return input;
   }
 
   /**
@@ -321,6 +399,38 @@ export class ThreeDAxes extends Group {
   }
 
   /**
+   * Get the x-axis label mobject (null if showLabels was false)
+   */
+  getXLabel(): Mobject | null {
+    return this._xLabel;
+  }
+
+  /**
+   * Get the y-axis label mobject (null if showLabels was false)
+   */
+  getYLabel(): Mobject | null {
+    return this._yLabel;
+  }
+
+  /**
+   * Get the z-axis label mobject (null if showLabels was false)
+   */
+  getZLabel(): Mobject | null {
+    return this._zLabel;
+  }
+
+  /**
+   * Get all axis label mobjects as a Group. Empty group if no labels.
+   */
+  getAxisLabels(): Group {
+    const group = new Group();
+    if (this._xLabel) group.add(this._xLabel);
+    if (this._yLabel) group.add(this._yLabel);
+    if (this._zLabel) group.add(this._zLabel);
+    return group;
+  }
+
+  /**
    * Create a copy of this ThreeDAxes
    */
   protected override _createCopy(): ThreeDAxes {
@@ -330,6 +440,10 @@ export class ThreeDAxes extends Group {
       zRange: this._zRange,
       showTicks: this._showTicks,
       tickLength: this._tickLength,
+      showLabels: this._showLabels,
+      labels: this._labelOptions,
+      labelFontSize: this._labelFontSize,
+      labelBuffer: this._labelBuffer,
     });
   }
 }
