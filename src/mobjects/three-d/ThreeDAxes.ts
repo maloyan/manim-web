@@ -449,8 +449,13 @@ export class ThreeDAxes extends Group {
    */
   shiftLabelsOntoScreen(camera: THREE.Camera, margin: number = 0.05): this {
     camera.updateMatrixWorld();
+    // Ensure every label's world matrix is current so projection uses the
+    // live position, not a stale render-cached one.
+    this.getThreeObject().updateMatrixWorld(true);
+
     const origin = new THREE.Vector3();
     this.getThreeObject().localToWorld(origin.set(0, 0, 0));
+    const limit = 1 - margin;
 
     for (const label of [this._xLabel, this._yLabel, this._zLabel]) {
       if (!label) continue;
@@ -459,28 +464,31 @@ export class ThreeDAxes extends Group {
       threeObj.getWorldPosition(worldPos);
 
       const ndc = worldPos.clone().project(camera);
-      const limit = 1 - margin;
       if (Math.abs(ndc.x) <= limit && Math.abs(ndc.y) <= limit) continue;
 
-      // Shift along the vector from origin→label (local axis direction) back
-      // toward the axes origin until the projection fits. Bisect over t ∈ [0, 1]
-      // where t=1 keeps the original position and t=0 collapses to origin.
+      // Bisect t ∈ [0, 1] along origin→label until the projected candidate
+      // fits the viewport. t=1 keeps the original position; t=0 collapses
+      // onto the axes origin.
       const dir = worldPos.clone().sub(origin);
       let lo = 0;
       let hi = 1;
-      for (let i = 0; i < 16; i++) {
+      for (let i = 0; i < 20; i++) {
         const mid = (lo + hi) / 2;
         const candidate = origin.clone().add(dir.clone().multiplyScalar(mid));
-        const p = candidate.project(camera);
-        if (Math.abs(p.x) <= limit && Math.abs(p.y) <= limit) {
+        candidate.project(camera);
+        if (Math.abs(candidate.x) <= limit && Math.abs(candidate.y) <= limit) {
           lo = mid;
         } else {
           hi = mid;
         }
       }
       const finalWorld = origin.clone().add(dir.clone().multiplyScalar(lo));
-      threeObj.parent?.worldToLocal(finalWorld);
-      label.position.copy(finalWorld);
+      const parent = threeObj.parent;
+      if (parent) parent.worldToLocal(finalWorld);
+      // Use moveTo so Mobject._markDirty fires and the next render syncs the
+      // THREE object's position. Direct mutation of `position` would bypass
+      // the dirty flag and leave the on-screen label at the original spot.
+      label.moveTo([finalWorld.x, finalWorld.y, finalWorld.z]);
     }
     return this;
   }
