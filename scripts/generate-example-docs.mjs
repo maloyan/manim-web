@@ -28,7 +28,7 @@ const CATEGORIES = {
   'Basic Concepts': ['manim_ce_logo', 'brace_annotation', 'vector_arrow', 'boolean_operations', 'mathtex_svg'],
   'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace', 'sine_curve_unit_circle', 'apply_matrix_arrows', 'apply_matrix_method', 'rate_functions_comparison', 'easing_functions_showcase'],
   'Plotting': ['sin_cos_plot', 'arg_min', 'graph_area_plot', 'polygon_on_axes', 'heat_diagram_plot'],
-  'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'fixed_orientation_mobjects', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation', 'three_d_angle'],
+  'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'fixed_orientation_mobjects', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation', 'three_d_angle', 'three_d_reflex_angle'],
   'Advanced Projects': ['opening_manim', 'export_animation'],
 };
 
@@ -194,6 +194,11 @@ const EXAMPLE_META = {
     description:
       'Displays an Angle arc between two Line3D objects in a 3D scene. The arc is drawn in the plane spanned by the two lines, not restricted to the XY plane. Orbit controls are enabled so you can verify the arc lies in the correct plane.',
     learnMore: ['ThreeDScene', 'ThreeDAxes', 'Line3D', 'Angle'],
+  },
+  three_d_reflex_angle: {
+    description:
+      'Sweeps a Line3D around a reference axis in the XZ plane while an Angle arc tracks it continuously from 0 to 2π. Uses the Angle `axis` option to pin the rotation plane so the reflex arc grows past π without flipping back across the reference line (fix for issue #262).',
+    learnMore: ['ThreeDScene', 'ThreeDAxes', 'Line3D', 'Angle', 'ValueTracker'],
   },
   apply_matrix_arrows: {
     description:

@@ -36,6 +36,7 @@ import ThreeDAngleExample from '@site/src/components/examples/ThreeDAngleExample
 import ThreeDCameraIllusionRotationExample from '@site/src/components/examples/ThreeDCameraIllusionRotationExample';
 import ThreeDCameraRotationExample from '@site/src/components/examples/ThreeDCameraRotationExample';
 import ThreeDLightSourcePositionExample from '@site/src/components/examples/ThreeDLightSourcePositionExample';
+import ThreeDReflexAngleExample from '@site/src/components/examples/ThreeDReflexAngleExample';
 import ThreeDSurfacePlotExample from '@site/src/components/examples/ThreeDSurfacePlotExample';
 import VectorArrowExample from '@site/src/components/examples/VectorArrowExample';
 
@@ -1637,8 +1638,8 @@ const ax = new Axes({
 });
 
 // Create Tex labels and wait for rendering
-const xLabel = new Tex({ latex: '$\\Delta Q$' });
-const yLabel = new Tex({ latex: 'T[$^\\circ C$]' });
+const xLabel = new Tex({ latex: '$\\Delta Q$', fontSize: 0.4 });
+const yLabel = new Tex({ latex: 'T[$^\\circ C$]', fontSize: 0.4 });
 await xLabel.waitForRender();
 await yLabel.waitForRender();
 
@@ -2293,6 +2294,122 @@ if (new URLSearchParams(window.location.search).has('embed')) {
 </details>
 
 **Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Line3D**](/api/classes/Line3D) · [**Angle**](/api/classes/Angle)
+
+---
+
+## Three D Reflex Angle
+
+Sweeps a Line3D around a reference axis in the XZ plane while an Angle arc tracks it continuously from 0 to 2π. Uses the Angle `axis` option to pin the rotation plane so the reflex arc grows past π without flipping back across the reference line (fix for issue #262).
+
+<ThreeDReflexAngleExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+// Demo for issue #262: a 3D Angle whose arc grows continuously past π to 2π
+// when the rotation plane is pinned via the new `axis` option. Sweeps a
+// projection line around the +Y axis in the XZ plane so the arc should
+// stay coplanar with the two segments at every frame.
+import {
+  Angle,
+  Line3D,
+  ThreeDAxes,
+  ThreeDScene,
+  ValueTracker,
+  WHITE,
+  YELLOW,
+  GREEN,
+} from 'manim-web';
+
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+  phi: 70 * (Math.PI / 180),
+  theta: -40 * (Math.PI / 180),
+  distance: 20,
+  fov: 30,
+  enableOrbitControls: true,
+});
+
+const axes = new ThreeDAxes({
+  xRange: [-3, 3, 1],
+  yRange: [-3, 3, 1],
+  zRange: [-3, 3, 1],
+  axisColor: '#ffffff',
+  tipLength: 0.25,
+  tipRadius: 0.1,
+  shaftRadius: 0.008,
+});
+
+const origin: [number, number, number] = [0, 0, 0];
+const radius = 2;
+const axisVec: [number, number, number] = [0, 1, 0];
+
+const refLine = new Line3D({ start: origin, end: [radius, 0, 0], color: YELLOW });
+
+const theta = new ValueTracker(0);
+
+const sweepEnd = (): [number, number, number] => [
+  radius * Math.cos(theta.getValue()),
+  0,
+  -radius * Math.sin(theta.getValue()),
+];
+
+const sweepLine = new Line3D({ start: origin, end: sweepEnd(), color: GREEN });
+sweepLine.addUpdater((mob) => {
+  (mob as Line3D).setEnd(sweepEnd());
+});
+
+const angle = new Angle(
+  { points: [[radius, 0, 0], origin, sweepEnd()] },
+  { radius: 0.9, color: WHITE, axis: axisVec },
+);
+angle.addUpdater((mob) => {
+  mob.become(
+    new Angle(
+      { points: [[radius, 0, 0], origin, sweepEnd()] },
+      { radius: 0.9, color: WHITE, axis: axisVec },
+    ),
+  );
+});
+
+scene.add(axes, refLine, sweepLine, angle);
+
+// Sweep through the full 2π. Before the fix, the arc mirrors across the
+// reference line past π. With `axis` pinned, it keeps growing.
+await scene.play(theta.animateTo(2 * Math.PI, { duration: 6 }));
+await scene.wait(0.5);
+
+scene.setCameraOrientation(70 * (Math.PI / 180), -40 * (Math.PI / 180));
+
+if (new URLSearchParams(window.location.search).has('embed')) {
+  document
+    .querySelectorAll('.controls, .buttons, h1, #status')
+    .forEach((el) => ((el as HTMLElement).style.display = 'none'));
+  document.documentElement.style.cssText =
+    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000';
+  document.body.style.cssText =
+    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center';
+  const cont = document.getElementById('container');
+  if (cont) {
+    cont.style.cssText =
+      'border:none;border-radius:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center';
+  }
+  const playBtn = document.getElementById('playBtn') as HTMLButtonElement;
+  if (playBtn) {
+    setTimeout(() => playBtn.click(), 500);
+    new MutationObserver(() => {
+      if (!playBtn.disabled) setTimeout(() => playBtn.click(), 2000);
+    }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
+  }
+}
+```
+
+</details>
+
+**Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Line3D**](/api/classes/Line3D) · [**Angle**](/api/classes/Angle) · [**ValueTracker**](/api/classes/ValueTracker)
 
 ---
 
