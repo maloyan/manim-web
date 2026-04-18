@@ -78,45 +78,57 @@ describe('ThreeDAxes showLabels', () => {
     expect(zPos.z).toBeCloseTo(0);
   });
 
-  it('installs an onBeforeRender billboard hook on each label by default', () => {
+  // Helper: find the Mesh nested inside a MathTexImage-style Group.
+  const findMesh = (obj: THREE.Object3D): THREE.Mesh | null => {
+    let found: THREE.Mesh | null = null;
+    obj.traverse((child) => {
+      if (!found && child instanceof THREE.Mesh) found = child;
+    });
+    return found;
+  };
+
+  it('installs an onBeforeRender billboard hook on each label mesh by default', () => {
     const axes = new ThreeDAxes({ showLabels: true });
     for (const label of [axes.getXLabel(), axes.getYLabel(), axes.getZLabel()]) {
-      expect(label!.getThreeObject().onBeforeRender).toBeInstanceOf(Function);
+      const mesh = findMesh(label!.getThreeObject());
+      expect(mesh).not.toBeNull();
+      expect(mesh!.onBeforeRender).toBeInstanceOf(Function);
     }
+  });
 
-    // The hook copies camera.quaternion onto the label's THREE object.
+  it('billboard hook aligns mesh world rotation with the camera', () => {
+    const axes = new ThreeDAxes({ showLabels: true });
+    // Put the axes into a THREE scene so matrixWorld on the mesh resolves.
+    const dummyScene = new THREE.Scene();
+    dummyScene.add(axes.getThreeObject());
+
     const cam = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-    cam.position.set(5, 5, 5);
+    cam.position.set(5, 3, 8);
     cam.lookAt(0, 0, 0);
     cam.updateMatrixWorld();
-    const dummyScene = new THREE.Scene();
+
+    const mesh = findMesh(axes.getXLabel()!.getThreeObject())!;
     const renderer = {} as THREE.WebGLRenderer;
-    const label = axes.getXLabel()!;
-    const three = label.getThreeObject();
-    three.onBeforeRender!(
+    mesh.onBeforeRender!(
       renderer,
       dummyScene,
       cam,
-      three as THREE.Mesh,
-      {} as THREE.Material,
+      mesh.geometry,
+      mesh.material as THREE.Material,
       null,
     );
-    expect(three.quaternion.x).toBeCloseTo(cam.quaternion.x);
-    expect(three.quaternion.y).toBeCloseTo(cam.quaternion.y);
-    expect(three.quaternion.z).toBeCloseTo(cam.quaternion.z);
-    expect(three.quaternion.w).toBeCloseTo(cam.quaternion.w);
+    const meshWorldQuat = new THREE.Quaternion();
+    mesh.getWorldQuaternion(meshWorldQuat);
+    expect(meshWorldQuat.angleTo(cam.quaternion)).toBeLessThan(1e-3);
   });
 
   it('skips billboard hook when billboardLabels is false', () => {
     const axes = new ThreeDAxes({ showLabels: true, billboardLabels: false });
     for (const label of [axes.getXLabel(), axes.getYLabel(), axes.getZLabel()]) {
-      // Default `onBeforeRender` on a THREE.Object3D is a no-op function; we
-      // only care that we didn't overwrite it.
-      const fn = label!.getThreeObject().onBeforeRender;
-      // The default is a reference-shared no-op function from Object3D's
-      // prototype; calling it does nothing, so its toString shouldn't
-      // reference camera.quaternion.
-      expect(String(fn)).not.toContain('camera.quaternion');
+      const mesh = findMesh(label!.getThreeObject());
+      // Default Object3D.onBeforeRender is a reference-shared no-op. It does
+      // NOT mention camera.quaternion in its source.
+      expect(String(mesh!.onBeforeRender)).not.toContain('camera.quaternion');
     }
   });
 

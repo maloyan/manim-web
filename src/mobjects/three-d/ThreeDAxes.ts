@@ -318,10 +318,30 @@ export class ThreeDAxes extends Group {
   private _installBillboardHooks(): void {
     for (const label of [this._xLabel, this._yLabel, this._zLabel]) {
       if (!label) continue;
-      const threeObj = label.getThreeObject();
-      threeObj.onBeforeRender = (_renderer, _scene, camera) => {
-        threeObj.quaternion.copy(camera.quaternion);
-      };
+      const root = label.getThreeObject();
+      // `onBeforeRender` only fires on objects THREE actually rasterizes
+      // (meshes/points/lines). MathTexImage wraps its Mesh inside a Group
+      // from `_createThreeObject()`, so traverse and hook each descendant
+      // Mesh. On each draw, align the mesh with the camera's world
+      // quaternion so the label always faces the viewer. We compensate for
+      // the ancestor chain by factoring out `parent.matrixWorld`'s rotation
+      // so the final world rotation equals `camera.quaternion`.
+      root.traverse((child) => {
+        if (!(child instanceof THREE.Mesh)) return;
+        child.onBeforeRender = (_renderer, _scene, camera) => {
+          const parent = child.parent;
+          if (parent) {
+            parent.updateMatrixWorld(true);
+            const parentWorldQuat = new THREE.Quaternion();
+            parent.getWorldQuaternion(parentWorldQuat);
+            child.quaternion.copy(parentWorldQuat.invert()).multiply(camera.quaternion);
+          } else {
+            child.quaternion.copy(camera.quaternion);
+          }
+          child.updateMatrix();
+          child.updateMatrixWorld(true);
+        };
+      });
     }
   }
 
