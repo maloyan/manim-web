@@ -28,7 +28,7 @@ const CATEGORIES = {
   'Basic Concepts': ['manim_ce_logo', 'brace_annotation', 'vector_arrow', 'boolean_operations', 'mathtex_svg'],
   'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace', 'sine_curve_unit_circle', 'apply_matrix_arrows', 'apply_matrix_method', 'rate_functions_comparison', 'easing_functions_showcase'],
   'Plotting': ['sin_cos_plot', 'arg_min', 'graph_area_plot', 'polygon_on_axes', 'heat_diagram_plot'],
-  'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'fixed_orientation_mobjects', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation', 'three_d_angle'],
+  'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'fixed_orientation_mobjects', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation', 'three_d_angle', 'three_d_reflex_angle'],
   'Advanced Projects': ['opening_manim', 'export_animation'],
 };
 
@@ -194,6 +194,11 @@ const EXAMPLE_META = {
     description:
       'Displays an Angle arc between two Line3D objects in a 3D scene. The arc is drawn in the plane spanned by the two lines, not restricted to the XY plane. Orbit controls are enabled so you can verify the arc lies in the correct plane.',
     learnMore: ['ThreeDScene', 'ThreeDAxes', 'Line3D', 'Angle'],
+  },
+  three_d_reflex_angle: {
+    description:
+      'Sweeps a Line3D around a reference axis in the XZ plane while an Angle arc tracks it continuously from 0 to 2π. Uses the Angle `axis` option to pin the rotation plane so the reflex arc grows past π without flipping back across the reference line (fix for issue #262).',
+    learnMore: ['ThreeDScene', 'ThreeDAxes', 'Line3D', 'Angle', 'ValueTracker'],
   },
   apply_matrix_arrows: {
     description:
@@ -429,8 +434,9 @@ function removeRegion(code, start, end) {
 function extractCleanCode(tsContent) {
   let code = tsContent;
 
-  // 1. Replace import path '../src/index.ts' -> 'manim-web'
-  code = code.replace(/from\s+['"]\.\.\/src\/index\.ts['"]/g, "from 'manim-web'");
+  // 1. Replace local import paths (e.g. '../src/index.ts' or '../../src/index.ts'
+  //    for examples nested in topical subdirectories) with the package spec.
+  code = code.replace(/from\s+['"](?:\.\.\/)+src\/index\.ts['"]/g, "from 'manim-web'");
 
   // 1b. Replace local font paths with CDN URLs (local paths don't exist in Docusaurus build)
   code = code.replace(
@@ -1002,6 +1008,33 @@ function generateComponentFile(stem, cleanCode) {
 }
 
 // ---------------------------------------------------------------------------
+// File discovery
+// ---------------------------------------------------------------------------
+
+/**
+ * Return every `.ts` example path relative to EXAMPLES_DIR. Recurses one
+ * level into immediate subdirectories (e.g. `3d-scenes/`) but does not
+ * descend further — example folders stay flat and predictable.
+ */
+function collectExampleTsFiles(dir) {
+  const top = readdirSync(dir, { withFileTypes: true });
+  const out = [];
+  for (const entry of top) {
+    if (entry.isFile() && entry.name.endsWith('.ts')) {
+      out.push(entry.name);
+    } else if (entry.isDirectory()) {
+      const subDir = join(dir, entry.name);
+      for (const f of readdirSync(subDir)) {
+        if (f.endsWith('.ts')) {
+          out.push(`${entry.name}/${f}`);
+        }
+      }
+    }
+  }
+  return out.sort();
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -1009,19 +1042,20 @@ function main() {
   mkdirSync(DOCS_DIR, { recursive: true });
   mkdirSync(COMPONENTS_DIR, { recursive: true });
 
-  const tsFiles = readdirSync(EXAMPLES_DIR)
-    .filter((f) => f.endsWith('.ts'))
-    .sort();
+  // Collect .ts files from EXAMPLES_DIR and any immediate subdirectories so
+  // topical folders like `3d-scenes/` still ship to the docs. Each entry is
+  // the example's path relative to EXAMPLES_DIR.
+  const tsFiles = collectExampleTsFiles(EXAMPLES_DIR);
 
   const examples = [];
 
-  for (const file of tsFiles) {
-    const stem = basename(file, '.ts');
-    const htmlFile = `${stem}.html`;
+  for (const relFile of tsFiles) {
+    const stem = basename(relFile, '.ts');
+    const relHtml = relFile.replace(/\.ts$/, '.html');
 
     // Only include examples that have a matching HTML file
-    if (!existsSync(join(EXAMPLES_DIR, htmlFile))) {
-      console.warn(`  Skipping ${file}: no matching ${htmlFile}`);
+    if (!existsSync(join(EXAMPLES_DIR, relHtml))) {
+      console.warn(`  Skipping ${relFile}: no matching ${relHtml}`);
       continue;
     }
 
@@ -1031,7 +1065,7 @@ function main() {
     }
 
     const title = toTitle(stem);
-    const tsContent = readFileSync(join(EXAMPLES_DIR, file), 'utf-8');
+    const tsContent = readFileSync(join(EXAMPLES_DIR, relFile), 'utf-8');
     const meta = EXAMPLE_META[stem] || {};
     const description = meta.description || `Example demonstrating ${title}.`;
     const learnMore = meta.learnMore || [];
@@ -1047,7 +1081,16 @@ function main() {
     writeFileSync(componentPath, componentCode, 'utf-8');
     console.log(`  Generated component: ${componentName}.tsx`);
 
-    examples.push({ stem, htmlFile, title, category, description, learnMore, codeBlock, componentName });
+    examples.push({
+      stem,
+      htmlFile: relHtml,
+      title,
+      category,
+      description,
+      learnMore,
+      codeBlock,
+      componentName,
+    });
   }
 
   // -------------------------------------------------------------------------

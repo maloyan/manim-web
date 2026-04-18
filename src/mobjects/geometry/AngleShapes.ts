@@ -24,6 +24,14 @@ export interface AngleOptions {
   decimalPlaces?: number;
   /** Display unit for angle. Default: 'radians' */
   unit?: 'radians' | 'degrees';
+  /**
+   * Rotation axis / plane normal. Fixes the reference plane so the angle
+   * is measured continuously in `[0, 2π)` (or `(-2π, 0]` with `otherAngle`)
+   * as the second direction sweeps around. Without it, the plane is inferred
+   * from `dir1 × dir2`, which flips sign once the angle exceeds π in 3D.
+   * In 2D (both directions in the XY plane) the default is `[0, 0, 1]`.
+   */
+  axis?: Vector3Tuple;
 }
 
 /**
@@ -78,6 +86,7 @@ export class Angle extends VMobject {
       strokeWidth = DEFAULT_STROKE_WIDTH,
       decimalPlaces = 2,
       unit = 'radians',
+      axis,
     } = options;
 
     this._radius = radius;
@@ -143,24 +152,47 @@ export class Angle extends VMobject {
       point2[2] - vertex[2],
     ]);
 
-    let normal = this._cross3(dir1, dir2);
-    const normalLen = this._length3(normal);
+    let normal: Vector3Tuple;
+    if (axis) {
+      const axisLen = this._length3(axis);
+      if (axisLen < 1e-10) {
+        throw new Error('Angle: axis option must be a non-zero vector');
+      }
+      normal = this._normalize3(axis);
+    } else {
+      normal = this._cross3(dir1, dir2);
+      const normalLen = this._length3(normal);
 
-    if (normalLen < 1e-10) {
-      const arb: Vector3Tuple = Math.abs(dir1[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
-      normal = this._cross3(dir1, arb);
-      if (normal[2] < 0) {
-        normal = [-normal[0], -normal[1], -normal[2]];
+      if (normalLen < 1e-10) {
+        const arb: Vector3Tuple = Math.abs(dir1[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+        normal = this._cross3(dir1, arb);
+        if (normal[2] < 0) {
+          normal = [-normal[0], -normal[1], -normal[2]];
+        }
+      }
+      normal = this._normalize3(normal);
+
+      if (Math.abs(dir1[2]) < 1e-10 && Math.abs(dir2[2]) < 1e-10 && normal[2] < 0) {
+        normal = [-normal[0], -normal[1], -normal[2]] as Vector3Tuple;
       }
     }
-    normal = this._normalize3(normal);
 
-    if (Math.abs(dir1[2]) < 1e-10 && Math.abs(dir2[2]) < 1e-10 && normal[2] < 0) {
-      normal = [-normal[0], -normal[1], -normal[2]] as Vector3Tuple;
+    // Project dir1 onto plane perpendicular to `normal` so `_u` is guaranteed
+    // to lie in the reference plane even when the caller-supplied `axis` is
+    // not exactly perpendicular to dir1.
+    const dir1Dot = this._dot3(dir1, normal);
+    let u: Vector3Tuple = [
+      dir1[0] - dir1Dot * normal[0],
+      dir1[1] - dir1Dot * normal[1],
+      dir1[2] - dir1Dot * normal[2],
+    ];
+    if (this._length3(u) < 1e-10) {
+      // dir1 parallel to normal; fall back to any perpendicular vector.
+      const arb: Vector3Tuple = Math.abs(normal[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+      u = this._cross3(normal, arb);
     }
-
-    this._u = dir1;
-    this._v = this._cross3(normal, dir1);
+    this._u = this._normalize3(u);
+    this._v = this._cross3(normal, this._u);
 
     const cosA = this._dot3(dir2, this._u);
     const sinA = this._dot3(dir2, this._v);
