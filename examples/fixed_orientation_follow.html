@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      if (new URLSearchParams(location.search).has('embed'))
+        document.documentElement.classList.add('embed');
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ManimWeb - Fixed Orientation Label Follows Dot</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #1a1a2e;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: system-ui, sans-serif;
+        gap: 12px;
+        padding: 16px;
+        color: #eee;
+      }
+      h1 {
+        font-size: 18px;
+        font-weight: 500;
+      }
+      #container {
+        border: 2px solid #333;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      p {
+        font-size: 13px;
+        color: #aaa;
+        max-width: 640px;
+        text-align: center;
+      }
+      html.embed,
+      html.embed body {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden;
+        background: #000 !important;
+        width: 100%;
+        height: 100%;
+      }
+      html.embed body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      html.embed h1,
+      html.embed p {
+        display: none !important;
+      }
+      html.embed #container {
+        border: none !important;
+        border-radius: 0 !important;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Fixed Orientation Label Follows a Draggable Dot</h1>
+    <div id="container"></div>
+    <p>
+      Drag the dot to move it in 3D. The label <em>r</em> tracks the dot via an updater and always
+      faces the camera. Orbit the camera and the label should stay anchored to the dot in the 3D
+      world, not to the screen.
+    </p>
+
+    <script type="module" src="./fixed_orientation_follow.ts"></script>
+  </body>
+</html>

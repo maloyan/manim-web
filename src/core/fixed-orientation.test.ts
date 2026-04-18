@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { ThreeDScene } from './ThreeDScene';
+import { VGroup } from './VGroup';
 import { Circle } from '../mobjects/geometry/Circle';
 import { Square } from '../mobjects/geometry/Rectangle';
 
@@ -206,6 +207,106 @@ describe('addFixedOrientationMobjects', () => {
     expect(q.y).toBeCloseTo(0, 5);
     expect(q.z).toBeCloseTo(0, 5);
     expect(q.w).toBeCloseTo(1, 5);
+
+    scene.dispose();
+  });
+
+  // Regression: issue #264. A VGroup moved to a non-origin point kept its
+  // visual center stuck relative to the screen because the billboard applied
+  // camera rotation around the group's local origin (0,0,0) rather than the
+  // group's current visual center.
+  //
+  // VGroup.shift translates children's points but leaves this.position at 0,
+  // so the billboard's pivot must come from getCenter(), not threeObject.position.
+  // This helper projects the mobject's visual centroid through its THREE
+  // transforms, which is exactly what the renderer does.
+  const visualCenterWorld = (mob: VGroup): [number, number, number] => {
+    const threeObj = mob.getThreeObject();
+    threeObj.updateMatrixWorld(true);
+    const center = mob.getCenter();
+    const v = new THREE.Vector3(
+      center[0] - mob.position.x,
+      center[1] - mob.position.y,
+      center[2] - mob.position.z,
+    );
+    v.applyMatrix4(threeObj.matrixWorld);
+    return [v.x, v.y, v.z];
+  };
+
+  it('VGroup moved off-origin keeps its world center under camera orbit', () => {
+    const scene = ThreeDScene.createHeadless();
+    const group = new VGroup();
+    group.add(new Circle());
+    // VGroup.moveTo translates children's points, leaving group.position at 0.
+    group.moveTo([2, 3, -1]);
+    scene.add(group);
+    scene.addFixedOrientationMobjects(group);
+
+    expect(group.getCenter()).toEqual([2, 3, -1]);
+
+    scene.setCameraOrientation(Math.PI / 3, Math.PI / 4, 15);
+    scene.render();
+
+    // The visual centroid, after applying the group's THREE transform chain
+    // (now including the billboard's compensating translation + camera
+    // quaternion), must still land on the world anchor.
+    const [x, y, z] = visualCenterWorld(group);
+    expect(x).toBeCloseTo(2, 3);
+    expect(y).toBeCloseTo(3, 3);
+    expect(z).toBeCloseTo(-1, 3);
+
+    // And the group still faces the camera.
+    const threeObj = group.getThreeObject();
+    const cam = scene.camera3D.getCamera();
+    expect(threeObj.quaternion.x).toBeCloseTo(cam.quaternion.x, 3);
+    expect(threeObj.quaternion.y).toBeCloseTo(cam.quaternion.y, 3);
+    expect(threeObj.quaternion.z).toBeCloseTo(cam.quaternion.z, 3);
+    expect(threeObj.quaternion.w).toBeCloseTo(cam.quaternion.w, 3);
+
+    scene.dispose();
+  });
+
+  it('VGroup billboard follows a moving center (updater scenario)', () => {
+    const scene = ThreeDScene.createHeadless();
+    const group = new VGroup();
+    group.add(new Circle());
+    group.moveTo([1, 1, 1]);
+    scene.add(group);
+    scene.addFixedOrientationMobjects(group);
+
+    scene.setCameraOrientation(Math.PI / 3, Math.PI / 4, 15);
+    // Simulate an updater running between frames.
+    group.moveTo([-2, 0.5, 2]);
+    scene.render();
+
+    const [x, y, z] = visualCenterWorld(group);
+    expect(x).toBeCloseTo(-2, 3);
+    expect(y).toBeCloseTo(0.5, 3);
+    expect(z).toBeCloseTo(2, 3);
+
+    scene.dispose();
+  });
+
+  it('removeFixedOrientationMobjects restores the displaced position', () => {
+    const scene = ThreeDScene.createHeadless();
+    const group = new VGroup();
+    group.add(new Circle());
+    group.moveTo([4, 0, 0]);
+    scene.add(group);
+    scene.addFixedOrientationMobjects(group);
+    scene.setCameraOrientation(Math.PI / 3, Math.PI / 4, 15);
+
+    // Billboard has shifted threeObject.position off (0,0,0).
+    const threeObj = group.getThreeObject();
+    expect(threeObj.position.length()).toBeGreaterThan(0);
+
+    scene.removeFixedOrientationMobjects(group);
+
+    // Mobject position was never mutated by the billboard; threeObject must
+    // be restored to it so the next sync starts from a clean slate.
+    expect(threeObj.position.x).toBeCloseTo(group.position.x, 5);
+    expect(threeObj.position.y).toBeCloseTo(group.position.y, 5);
+    expect(threeObj.position.z).toBeCloseTo(group.position.z, 5);
 
     scene.dispose();
   });
