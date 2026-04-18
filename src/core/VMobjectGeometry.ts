@@ -20,21 +20,29 @@ import type { Point } from './VMobjectCurves';
 
 /**
  * Check if a cubic Bezier segment is nearly linear by measuring the maximum
- * distance from handles to the chord (p0 -> p3).
+ * 3D distance from handles to the chord (p0 -> p3). Must handle z so that
+ * arcs in non-XY planes (e.g. Angle in XZ plane) still sample as curves.
  */
 export function isNearlyLinear(p0: number[], p1: number[], p2: number[], p3: number[]): boolean {
-  const dx = p3[0] - p0[0];
-  const dy = p3[1] - p0[1];
-  const len2 = dx * dx + dy * dy;
+  const cx = p3[0] - p0[0];
+  const cy = p3[1] - p0[1];
+  const cz = (p3[2] ?? 0) - (p0[2] ?? 0);
+  const len2 = cx * cx + cy * cy + cz * cz;
   if (len2 < 1e-10) return true; // degenerate segment
 
   const invLen = 1 / Math.sqrt(len2);
-  // Perpendicular distance from p1 to chord
-  const d1 = Math.abs((p1[0] - p0[0]) * -dy + (p1[1] - p0[1]) * dx) * invLen;
-  // Perpendicular distance from p2 to chord
-  const d2 = Math.abs((p2[0] - p0[0]) * -dy + (p2[1] - p0[1]) * dx) * invLen;
+  const perpDist = (q: number[]): number => {
+    const ax = q[0] - p0[0];
+    const ay = q[1] - p0[1];
+    const az = (q[2] ?? 0) - (p0[2] ?? 0);
+    // |a × c| / |c|
+    const rx = ay * cz - az * cy;
+    const ry = az * cx - ax * cz;
+    const rz = ax * cy - ay * cx;
+    return Math.sqrt(rx * rx + ry * ry + rz * rz) * invLen;
+  };
 
-  return Math.max(d1, d2) < 0.01; // < 0.01 world-units off the chord
+  return Math.max(perpDist(p1), perpDist(p2)) < 0.01;
 }
 
 // -----------------------------------------------------------------------
