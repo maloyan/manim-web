@@ -16,17 +16,18 @@
  * https://github.com/ManimCommunity/manim/issues/4690
  */
 
-const PT_TO_PX = 4 / 3;
+export const PT_OVER_PX = 4 / 3;
+
 const LATEX_DEFAULT_FONT_SIZE_PT = 10;
 export const DEFAULT_FONT_SIZE_PT = 48;
-export const KATEX_REFERENCE_FONT_SIZE_PX = LATEX_DEFAULT_FONT_SIZE_PT * PT_TO_PX;
+export const KATEX_REFERENCE_FONT_SIZE_PX = LATEX_DEFAULT_FONT_SIZE_PT * PT_OVER_PX;
 export const MATHJAX_SVG_UNITS_PER_EM = 1000;
 
 /**
  * The convention taken by Manim:
  * How many world units a font of DEFAULT_FONT_SIZE_PT should occupy.
  */
-export const DEFAULT_FONTSIZE_TO_WORLD_SPACE = 0.5 * PT_TO_PX;
+export const DEFAULT_FONTSIZE_TO_WORLD_SPACE = 0.5 * PT_OVER_PX;
 
 /**
  * World units per typographic point.

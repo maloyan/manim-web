@@ -70,7 +70,7 @@ export class MathTex extends VGroup {
     const {
       latex,
       color = WHITE,
-      fontSize = 1,
+      fontSize = DEFAULT_FONT_SIZE_PT,
       displayMode = true,
       position = [0, 0, 0],
       strokeWidth = 2,
