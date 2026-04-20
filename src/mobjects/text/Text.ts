@@ -270,7 +270,7 @@ export class Text extends VMobject {
     const weight =
       typeof this._fontWeight === 'number' ? this._fontWeight.toString() : this._fontWeight;
     const size = Math.round(this._fontSize * RESOLUTION_SCALE);
-    return `${style} ${weight} ${size}px ${this._fontFamily}`;
+    return `${style} ${weight} ${size}pt ${this._fontFamily}`;
   }
 
   /**
