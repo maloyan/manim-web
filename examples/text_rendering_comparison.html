@@ -64,9 +64,12 @@
       MathTexImage,
       Text,
       Line,
+      Rectangle,
       Create,
       FadeIn,
       WHITE,
+      YELLOW,
+      BLUE,
       BLACK,
     } from '../src/index.ts';
 
@@ -78,61 +81,82 @@
     });
 
     function addGridLines(scene) {
-      // Horizontal lines
+      // Grid at 0.1 world unit spacing
+      // At default 48pt font, 1 em = 0.5 world units
+      // So each grid cell is 0.1 world units = 0.2 em
       for (let y = -30; y <= 30; y++) {
         const line = new Line({
           start: [-5, y / 10, 0],
           end: [5, y / 10, 0],
-          color: y % 10 === 0 ? '#333333' : '#222222',
+          color: y % 5 === 0 ? '#444444' : '#222222',
           strokeWidth: 1,
         });
         scene.add(line);
       }
-      // Vertical lines
       for (let x = -50; x <= 50; x++) {
         const line = new Line({
           start: [x / 10, -3, 0],
           end: [x / 10, 3, 0],
-          color: x % 10 === 0 ? '#333333' : '#222222',
+          color: x % 5 === 0 ? '#444444' : '#222222',
           strokeWidth: 1,
         });
         scene.add(line);
       }
     }
 
+    // Add 1em reference square (0.5 world units at default fontSize)
+    function addEmReference(scene, position, color) {
+      const emSize = 0.5; // DEFAULT_FONT_SIZE_IN_WORLD_SPACE
+      const ref = new Rectangle({
+        width: emSize,
+        height: emSize,
+        color: color,
+        strokeWidth: 2,
+        fillOpacity: 0,
+      });
+      ref.moveCenterTo(position);
+      scene.add(ref);
+      return ref;
+    }
+
     document.getElementById('playBtn').addEventListener('click', async () => {
       scene.clear();
       addGridLines(scene);
 
+      // Add 1em reference squares
+      addEmReference(scene, [3, 2, 0], YELLOW);
+      addEmReference(scene, [3, 0, 0], YELLOW);
+      addEmReference(scene, [3, -2, 0], YELLOW);
+
       // Row 1: MathTex (SVG paths, stroke-based)
-      const mathTexLabel = new MathTex({ latex: '\\text{MathTex}', color: WHITE });
+      const mathTexLabel = new MathTex({ latex: '\\text{MathTex}', color: YELLOW });
       await mathTexLabel.waitForRender();
       mathTexLabel.shift([-3, 2, 0]);
       scene.add(mathTexLabel);
 
-      const mathTex = new MathTex({ latex: 'what', color: WHITE });
+      const mathTex = new MathTex({ latex: 'what', color: BLUE });
       await mathTex.waitForRender();
       mathTex.shift([1, 2, 0]);
       await scene.play(new Create(mathTex, { duration: 1 }));
 
       // Row 2: MathTexImage (rasterized texture)
-      const mathTexImageLabel = new MathTex({ latex: '\\text{MathTexImage}', color: WHITE });
+      const mathTexImageLabel = new MathTex({ latex: '\\text{MathTexImage}', color: YELLOW });
       await mathTexImageLabel.waitForRender();
       mathTexImageLabel.shift([-3, 0, 0]);
       scene.add(mathTexImageLabel);
 
-      const mathTexImage = new MathTexImage({ latex: 'what', color: WHITE });
+      const mathTexImage = new MathTexImage({ latex: 'what', color: BLUE });
       await mathTexImage.waitForRender();
       mathTexImage.shift([1, 0, 0]);
       await scene.play(new FadeIn(mathTexImage, { duration: 1 }));
 
       // Row 3: Text (vector text via opentype.js)
-      const textLabel = new MathTex({ latex: '\\text{Text}', color: WHITE });
+      const textLabel = new MathTex({ latex: '\\text{Text}', color: YELLOW });
       await textLabel.waitForRender();
       textLabel.shift([-3, -2, 0]);
       scene.add(textLabel);
 
-      const text = new Text({ text: 'what', color: WHITE });
+      const text = new Text({ text: 'what', color: BLUE });
       await text.loadGlyphs();
       text.shift([1, -2, 0]);
       await scene.play(new Create(text, { duration: 1 }));
