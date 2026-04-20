@@ -69,6 +69,8 @@
       YELLOW,
       BLUE,
       BLACK,
+      TEAL,
+      ORANGE,
     } from '../src/index.ts';
 
     const container = document.getElementById('container');
@@ -104,48 +106,50 @@
       scene.clear();
       addGridLines(scene);
 
-      // MathTex: transform label into content
-      const mathTexLabel = new MathTex({ latex: '\\text{MathTex}', color: YELLOW });
+      // MathTex: transform label into content (top row)
+      const mathTexLabel = new MathTex({ latex: '\\text{MathTex}', color: TEAL });
       await mathTexLabel.waitForRender();
       mathTexLabel.center();
+      mathTexLabel.shift([0, 1.5, 0]);
       scene.add(mathTexLabel);
       await scene.wait(0.3);
 
-      const mathTex = new MathTex({ latex: 'what', color: BLUE });
+      const mathTex = new MathTex({ latex: 'what', color: ORANGE });
       await mathTex.waitForRender();
       mathTex.center();
+      mathTex.shift([0, 1.5, 0]);
       await scene.play(new Transform(mathTexLabel, mathTex, { duration: 1 }));
       scene.remove(mathTexLabel);
       scene.add(mathTex);
-      await scene.wait(0.5);
-      scene.remove(mathTex);
 
-      // MathTexImage: transform label into content
-      const mathTexImageLabel = new MathTex({ latex: '\\text{MathTexImage}', color: YELLOW });
+      // MathTexImage: transform label into content (middle row)
+      const mathTexImageLabel = new MathTex({ latex: '\\text{MathTexImage}', color: TEAL });
       await mathTexImageLabel.waitForRender();
       mathTexImageLabel.center();
+      mathTexImageLabel.shift([0, 0, 0]);
       scene.add(mathTexImageLabel);
       await scene.wait(0.3);
 
-      const mathTexImage = new MathTexImage({ latex: 'what', color: BLUE });
+      const mathTexImage = new MathTexImage({ latex: 'what', color: ORANGE });
       await mathTexImage.waitForRender();
       mathTexImage.center();
+      mathTexImage.shift([0, 0, 0]);
       await scene.play(new Transform(mathTexImageLabel, mathTexImage, { duration: 1 }));
       scene.remove(mathTexImageLabel);
       scene.add(mathTexImage);
-      await scene.wait(0.5);
-      scene.remove(mathTexImage);
 
-      // Text: transform label into content
-      const textLabel = new MathTex({ latex: '\\text{Text}', color: YELLOW });
+      // Text: transform label into content (bottom row)
+      const textLabel = new MathTex({ latex: '\\text{Text}', color: TEAL });
       await textLabel.waitForRender();
       textLabel.center();
+      textLabel.shift([0, -1.5, 0]);
       scene.add(textLabel);
       await scene.wait(0.3);
 
-      const text = new Text({ text: 'what', color: BLUE });
+      const text = new Text({ text: 'what', color: ORANGE });
       await text.loadGlyphs();
       text.center();
+      text.shift([0, -1.5, 0]);
       await scene.play(new Transform(textLabel, text, { duration: 1 }));
       scene.remove(textLabel);
       scene.add(text);
