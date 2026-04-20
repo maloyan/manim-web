@@ -1,6 +1,4 @@
 export * from './colors';
-export { DEFAULT_FONT_SIZE_PT, DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from './fontRender';
-
 // Manim default configuration
 export const DEFAULT_STROKE_WIDTH = 4;
 export const DEFAULT_FONT_SIZE = 48;
