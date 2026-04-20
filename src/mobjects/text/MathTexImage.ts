@@ -26,8 +26,8 @@ import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../co
 
 const DEFAULT_CANVAS_SCALE = 4;
 
-/** Font size in pixels used for KaTeX rendering. */
-const LATEX_DEFAULT_FONT_SIZE_PX = 10;
+/** Font size in points used for LaTeX rendering. */
+const LATEX_DEFAULT_FONT_SIZE_PT = 10;
 
 /** Scale factor from SVG units to points. At 72 DPI, 1pt = 4/3 svg units. */
 const SVG_UNITS_PER_PT = 4 / 3;
@@ -360,12 +360,11 @@ export class MathTexImage extends Mobject {
       return w;
     });
     const contentWidths = this._parts.map((p, i) => {
-      // TODO: investigate why we need to divide by SVG_UNITS_PER_PT here
       const paddingWorld =
         p._padding *
         p.getFontSize() *
         (DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
-          LATEX_DEFAULT_FONT_SIZE_PX /
+          LATEX_DEFAULT_FONT_SIZE_PT /
           DEFAULT_FONT_SIZE_PT /
           SVG_UNITS_PER_PT);
       return Math.max(0, widths[i] - 2 * paddingWorld);
@@ -572,11 +571,10 @@ export class MathTexImage extends Mobject {
     this._renderState.texture.needsUpdate = true;
 
     // Convert measured pixel dimensions to world units using shared font baseline.
-    // TODO: investigate why we need to divide by SVG_UNITS_PER_PT here
     const worldScale =
       this._fontSize *
       (DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
-        LATEX_DEFAULT_FONT_SIZE_PX /
+        LATEX_DEFAULT_FONT_SIZE_PT /
         DEFAULT_FONT_SIZE_PT /
         SVG_UNITS_PER_PT);
     this._renderState.width = width * worldScale;
@@ -609,7 +607,7 @@ export class MathTexImage extends Mobject {
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '-9999px';
-    container.style.fontSize = `${LATEX_DEFAULT_FONT_SIZE_PX}px`;
+    container.style.fontSize = `${LATEX_DEFAULT_FONT_SIZE_PT}pt`;
     document.body.appendChild(container);
 
     try {
@@ -694,11 +692,10 @@ export class MathTexImage extends Mobject {
       this._renderState.texture.needsUpdate = true;
 
       // Convert measured CSS pixels to world units using the shared 48pt baseline.
-      // TODO: investigate why we need to divide by SVG_UNITS_PER_PT here
       const worldScale =
         this._fontSize *
         (DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
-          LATEX_DEFAULT_FONT_SIZE_PX /
+          LATEX_DEFAULT_FONT_SIZE_PT /
           DEFAULT_FONT_SIZE_PT /
           SVG_UNITS_PER_PT);
       this._renderState.width = width * worldScale;

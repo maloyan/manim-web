@@ -82,7 +82,9 @@ export class MathTex extends VGroup {
     this._displayMode = displayMode;
     this._color = color;
     this._svgStrokeWidth = strokeWidth;
+    this.strokeWidth = strokeWidth; // Set parent's property for public access
     this._svgFillOpacity = fillOpacity;
+    this.fillOpacity = fillOpacity; // Set parent's property for public access
     this._targetHeight = height;
     this._macros = macros;
 
