@@ -16,12 +16,11 @@ import { VGroup } from '../../core/VGroup';
 import { VMobject } from '../../core/VMobject';
 import type { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { WHITE } from '../../constants/colors';
-import {
-  DEFAULT_FONTSIZE_TO_WORLD_SPACE,
-  DEFAULT_FONT_SIZE_PT,
-  MATHJAX_SVG_UNITS_PER_EM,
-} from '../../constants/fontRender';
+import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
 import { renderLatexToSVG } from './MathJaxRenderer';
+
+/** MathJax SVG uses ~1000 font units per em. */
+const MATHJAX_SVG_UNITS_PER_EM = 1000;
 
 export interface MathTexOptions {
   /** LaTeX string or array of strings for multi-part expressions. */
@@ -296,7 +295,7 @@ export class MathTex extends VGroup {
     if (rawHeight < 0.0001) return;
 
     const worldPerMathJaxUnit =
-      DEFAULT_FONTSIZE_TO_WORLD_SPACE / (DEFAULT_FONT_SIZE_PT * MATHJAX_SVG_UNITS_PER_EM);
+      DEFAULT_FONT_SIZE_IN_WORLD_SPACE / (DEFAULT_FONT_SIZE_PT * MATHJAX_SVG_UNITS_PER_EM);
     let s = this._fontSize * worldPerMathJaxUnit;
     if (this._targetHeight !== undefined) {
       s = this._targetHeight / rawHeight;

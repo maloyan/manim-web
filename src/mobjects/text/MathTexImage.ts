@@ -22,9 +22,15 @@ import katex from 'katex';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { ensureKatexStyles, waitForKatexStyles } from './katexStyles';
 import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
-import { FONT_PT_TO_WORLD, KATEX_REFERENCE_FONT_SIZE_PX } from '../../constants/fontRender';
+import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
 
 const DEFAULT_CANVAS_SCALE = 4;
+
+/** Font size in pixels used for KaTeX rendering. */
+const LATEX_DEFAULT_FONT_SIZE_PX = 10;
+
+/** Scale factor from SVG units to points. At 72 DPI, 1pt = 4/3 svg units. */
+const SVG_UNITS_PER_PT = 4 / 3;
 
 /**
  * Which renderer to use for LaTeX.
@@ -354,7 +360,14 @@ export class MathTexImage extends Mobject {
       return w;
     });
     const contentWidths = this._parts.map((p, i) => {
-      const paddingWorld = p._padding * p.getFontSize() * FONT_PT_TO_WORLD;
+      // TODO: investigate why we need to divide by SVG_UNITS_PER_PT here
+      const paddingWorld =
+        p._padding *
+        p.getFontSize() *
+        (DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
+          LATEX_DEFAULT_FONT_SIZE_PX /
+          DEFAULT_FONT_SIZE_PT /
+          SVG_UNITS_PER_PT);
       return Math.max(0, widths[i] - 2 * paddingWorld);
     });
 
@@ -559,7 +572,13 @@ export class MathTexImage extends Mobject {
     this._renderState.texture.needsUpdate = true;
 
     // Convert measured pixel dimensions to world units using shared font baseline.
-    const worldScale = this._fontSize * FONT_PT_TO_WORLD;
+    // TODO: investigate why we need to divide by SVG_UNITS_PER_PT here
+    const worldScale =
+      this._fontSize *
+      (DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
+        LATEX_DEFAULT_FONT_SIZE_PX /
+        DEFAULT_FONT_SIZE_PT /
+        SVG_UNITS_PER_PT);
     this._renderState.width = width * worldScale;
     this._renderState.height = height * worldScale;
 
@@ -590,7 +609,7 @@ export class MathTexImage extends Mobject {
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '-9999px';
-    container.style.fontSize = `${KATEX_REFERENCE_FONT_SIZE_PX}px`;
+    container.style.fontSize = `${LATEX_DEFAULT_FONT_SIZE_PX}px`;
     document.body.appendChild(container);
 
     try {
@@ -675,7 +694,13 @@ export class MathTexImage extends Mobject {
       this._renderState.texture.needsUpdate = true;
 
       // Convert measured CSS pixels to world units using the shared 48pt baseline.
-      const worldScale = this._fontSize * FONT_PT_TO_WORLD;
+      // TODO: investigate why we need to divide by SVG_UNITS_PER_PT here
+      const worldScale =
+        this._fontSize *
+        (DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
+          LATEX_DEFAULT_FONT_SIZE_PX /
+          DEFAULT_FONT_SIZE_PT /
+          SVG_UNITS_PER_PT);
       this._renderState.width = width * worldScale;
       this._renderState.height = height * worldScale;
 

@@ -15,7 +15,7 @@ import { renderLatexToSVG } from './MathJaxRenderer';
 import { VGroup } from '../../core/VGroup';
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
-import { DEFAULT_FONTSIZE_TO_WORLD_SPACE } from '../../constants/fontRender';
+import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
 
 describe('Issue #228: MathTex defaults to SVG mode', () => {
   it('MathTex should be an instance of VGroup (SVG path-based)', () => {
@@ -85,7 +85,7 @@ describe('Tex size consistency', () => {
     const vertical = Math.abs(top[1] - bottom[1]);
     const horizontal = Math.abs(right[0] - left[0]);
 
-    expect(horizontal).toBeCloseTo(DEFAULT_FONTSIZE_TO_WORLD_SPACE, 2);
+    expect(horizontal).toBeCloseTo(DEFAULT_FONT_SIZE_IN_WORLD_SPACE, 2);
   });
 
   it('Tex em dash should be approximately 1 em wide', async () => {
@@ -99,13 +99,13 @@ describe('Tex size consistency', () => {
     const width = Math.abs(right[0] - left[0]);
 
     console.log('Tex em dash (—) width:', width);
-    console.log('Expected (DEFAULT_FONTSIZE_TO_WORLD_SPACE):', DEFAULT_FONTSIZE_TO_WORLD_SPACE);
-    console.log('Ratio:', width / DEFAULT_FONTSIZE_TO_WORLD_SPACE);
-    console.log('Scale error:', (width / DEFAULT_FONTSIZE_TO_WORLD_SPACE - 1) * 100, '%');
+    console.log('Expected (DEFAULT_FONT_SIZE_IN_WORLD_SPACE):', DEFAULT_FONT_SIZE_IN_WORLD_SPACE);
+    console.log('Ratio:', width / DEFAULT_FONT_SIZE_IN_WORLD_SPACE);
+    console.log('Scale error:', (width / DEFAULT_FONT_SIZE_IN_WORLD_SPACE - 1) * 100, '%');
 
     // Em dash is exactly 1 em wide by definition
-    // At default fontSize 48pt, 1 em = DEFAULT_FONTSIZE_TO_WORLD_SPACE world units
-    expect(width).toBeCloseTo(DEFAULT_FONTSIZE_TO_WORLD_SPACE, 2);
+    // At default fontSize 48pt, 1 em = DEFAULT_FONT_SIZE_IN_WORLD_SPACE world units
+    expect(width).toBeCloseTo(DEFAULT_FONT_SIZE_IN_WORLD_SPACE, 2);
   });
 });
 
@@ -121,14 +121,14 @@ describe('MathTex stroke width', () => {
     await tex.waitForRender();
 
     // Check that the default stroke width is applied
-    expect(tex.getStrokeWidth()).toBe(2);
+    expect(tex.strokeWidth).toBe(2);
   });
 
   it('should use user-provided strokeWidth when specified', async () => {
     const tex = new MathTex({ latex: 'x', strokeWidth: 5 });
     await tex.waitForRender();
 
-    expect(tex.getStrokeWidth()).toBe(5);
+    expect(tex.strokeWidth).toBe(5);
   });
 
   it('children should have the same strokeWidth', async () => {
@@ -137,7 +137,7 @@ describe('MathTex stroke width', () => {
 
     for (const child of tex.children) {
       if (child instanceof VMobject) {
-        expect(child.getStrokeWidth()).toBe(3);
+        expect(child.strokeWidth).toBe(3);
       }
     }
   });
@@ -155,12 +155,12 @@ describe('MathTex size consistency', () => {
     const width = Math.abs(right[0] - left[0]);
 
     console.log('MathTex em dash (\\text{—}) width:', width);
-    console.log('Expected (DEFAULT_FONTSIZE_TO_WORLD_SPACE):', DEFAULT_FONTSIZE_TO_WORLD_SPACE);
-    console.log('Ratio:', width / DEFAULT_FONTSIZE_TO_WORLD_SPACE);
-    console.log('Scale error:', (width / DEFAULT_FONTSIZE_TO_WORLD_SPACE - 1) * 100, '%');
+    console.log('Expected (DEFAULT_FONT_SIZE_IN_WORLD_SPACE):', DEFAULT_FONT_SIZE_IN_WORLD_SPACE);
+    console.log('Ratio:', width / DEFAULT_FONT_SIZE_IN_WORLD_SPACE);
+    console.log('Scale error:', (width / DEFAULT_FONT_SIZE_IN_WORLD_SPACE - 1) * 100, '%');
 
     // Em dash is exactly 1 em wide by definition
-    // At default fontSize 48pt, 1 em = DEFAULT_FONTSIZE_TO_WORLD_SPACE world units
-    expect(width).toBeCloseTo(DEFAULT_FONTSIZE_TO_WORLD_SPACE, 2);
+    // At default fontSize 48pt, 1 em = DEFAULT_FONT_SIZE_IN_WORLD_SPACE world units
+    expect(width).toBeCloseTo(DEFAULT_FONT_SIZE_IN_WORLD_SPACE, 2);
   });
 });

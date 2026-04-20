@@ -9,7 +9,7 @@
  *   - katex-styles.ts (improve from ~79% to 100%)
  */
 import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest';
-import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONTSIZE_TO_WORLD_SPACE } from '../../constants/fontRender';
+import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
 
 // ---------------------------------------------------------------------------
 // Canvas mock (happy-dom does not support canvas 2D context)
@@ -980,8 +980,8 @@ describe('MathTex (SVG)', () => {
       await svg.waitForRender();
 
       const measuredHeight = getRenderedHeightFromPoints(svg);
-      expect(measuredHeight).toBeGreaterThan(0.4 * DEFAULT_FONTSIZE_TO_WORLD_SPACE);
-      expect(measuredHeight).toBeLessThan(0.5 * DEFAULT_FONTSIZE_TO_WORLD_SPACE);
+      // 'x' is approximately 0.45em tall
+      expect(measuredHeight).toBeCloseTo(0.45 * DEFAULT_FONT_SIZE_IN_WORLD_SPACE, 2);
     });
 
     it('should render 24pt x at roughly half the 48pt height', async () => {

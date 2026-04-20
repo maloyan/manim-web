@@ -3,7 +3,11 @@ import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { TextGlyphGroup } from './TextGlyphGroup';
 import type { SkeletonizeOptions } from '../../utils/skeletonize';
-import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONTSIZE_TO_WORLD_SPACE } from '../../constants/fontRender';
+import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
+
+/** Scale factor from Canvas 2D output to point units.
+ * At 72 DPI, 1pt = 4/3 canvas pixels. */
+const SVG_UNITS_PER_PT = 4 / 3;
 
 /**
  * Options for creating a Text mobject
@@ -11,7 +15,7 @@ import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONTSIZE_TO_WORLD_SPACE } from '../../con
 export interface TextOptions {
   /** The text content to display */
   text: string;
-  /** Font size in pixels. Default: 48 */
+  /** Font size in points. Default: 48 */
   fontSize?: number;
   /** Font family. Default: 'CMU Serif, Georgia, Times New Roman, serif' (Manim-like) */
   fontFamily?: string;
@@ -34,9 +38,6 @@ export interface TextOptions {
   /** URL to a font file (OTF/TTF) for glyph vector extraction. When provided, loadGlyphs() can extract glyph outlines for stroke-draw animation. */
   fontUrl?: string;
 }
-
-/** Scale factor: at 48px font size, world size is DEFAULT_FONTSIZE_TO_WORLD_SPACE. */
-const PIXEL_TO_WORLD = DEFAULT_FONTSIZE_TO_WORLD_SPACE / DEFAULT_FONT_SIZE_PT;
 
 /** Resolution multiplier for crisp text on retina displays */
 const RESOLUTION_SCALE = 2;
@@ -214,7 +215,7 @@ export class Text extends VMobject {
 
   /**
    * Set font size and re-render
-   * @param size - Font size in pixels
+   * @param size - Font size in points
    * @returns this for chaining
    */
   setFontSize(size: number): this {
@@ -370,8 +371,16 @@ export class Text extends VMobject {
     }
 
     // Store world dimensions
-    this._worldWidth = (width / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
-    this._worldHeight = (height / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
+    // Conversion chain: canvas pixels → pt → EM → world space
+    // At 72 DPI, 1pt = SVG_UNITS_PER_PT canvas pixels
+    // 1 EM = DEFAULT_FONT_SIZE_PT at the reference size
+    // 1 EM = DEFAULT_FONT_SIZE_IN_WORLD_SPACE world units at reference
+    const pxToWorld =
+      (1 / SVG_UNITS_PER_PT) * // px → pt
+      (1 / DEFAULT_FONT_SIZE_PT) * // pt → EM
+      DEFAULT_FONT_SIZE_IN_WORLD_SPACE; // EM → world
+    this._worldWidth = (width / RESOLUTION_SCALE) * pxToWorld;
+    this._worldHeight = (height / RESOLUTION_SCALE) * pxToWorld;
 
     // Clear canvas dirty flag
     this._canvasDirty = false;
