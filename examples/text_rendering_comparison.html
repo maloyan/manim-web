@@ -121,6 +121,7 @@
       await scene.play(new Transform(mathTexLabel, mathTex, { duration: 1 }));
       scene.remove(mathTexLabel);
       scene.add(mathTex);
+      await scene.wait(1);
 
       // MathTexImage: transform label into content (middle row)
       const mathTexImageLabel = new MathTex({ latex: '\\text{MathTexImage}', color: TEAL });
@@ -137,6 +138,7 @@
       await scene.play(new Transform(mathTexImageLabel, mathTexImage, { duration: 1 }));
       scene.remove(mathTexImageLabel);
       scene.add(mathTexImage);
+      await scene.wait(1);
 
       // Text: transform label into content (bottom row)
       const textLabel = new MathTex({ latex: '\\text{Text}', color: TEAL });
@@ -153,7 +155,7 @@
       await scene.play(new Transform(textLabel, text, { duration: 1 }));
       scene.remove(textLabel);
       scene.add(text);
-      await scene.wait(0.5);
+      await scene.wait(1);
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
