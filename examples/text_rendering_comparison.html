@@ -64,10 +64,8 @@
       MathTexImage,
       Text,
       Line,
-      Rectangle,
-      Create,
+      Transform,
       FadeIn,
-      WHITE,
       YELLOW,
       BLUE,
       BLACK,
@@ -102,63 +100,56 @@
       }
     }
 
-    // Add 1em reference square (0.5 world units at default fontSize)
-    function addEmReference(scene, position, color) {
-      const emSize = 0.5; // DEFAULT_FONT_SIZE_IN_WORLD_SPACE
-      const ref = new Rectangle({
-        width: emSize,
-        height: emSize,
-        color: color,
-        strokeWidth: 2,
-        fillOpacity: 0,
-      });
-      ref.center();
-      ref.shift(position);
-      scene.add(ref);
-      return ref;
-    }
-
     document.getElementById('playBtn').addEventListener('click', async () => {
       scene.clear();
       addGridLines(scene);
 
-      // Add 1em reference squares
-      addEmReference(scene, [3, 2, 0], YELLOW);
-      addEmReference(scene, [3, 0, 0], YELLOW);
-      addEmReference(scene, [3, -2, 0], YELLOW);
-
-      // Row 1: MathTex (SVG paths, stroke-based)
+      // MathTex: transform label into content
       const mathTexLabel = new MathTex({ latex: '\\text{MathTex}', color: YELLOW });
       await mathTexLabel.waitForRender();
-      mathTexLabel.shift([-3, 2, 0]);
+      mathTexLabel.center();
       scene.add(mathTexLabel);
+      await scene.wait(0.3);
 
       const mathTex = new MathTex({ latex: 'what', color: BLUE });
       await mathTex.waitForRender();
-      mathTex.shift([1, 2, 0]);
-      await scene.play(new Create(mathTex, { duration: 1 }));
+      mathTex.center();
+      await scene.play(new Transform(mathTexLabel, mathTex, { duration: 1 }));
+      scene.remove(mathTexLabel);
+      scene.add(mathTex);
+      await scene.wait(0.5);
+      scene.remove(mathTex);
 
-      // Row 2: MathTexImage (rasterized texture)
+      // MathTexImage: transform label into content
       const mathTexImageLabel = new MathTex({ latex: '\\text{MathTexImage}', color: YELLOW });
       await mathTexImageLabel.waitForRender();
-      mathTexImageLabel.shift([-3, 0, 0]);
+      mathTexImageLabel.center();
       scene.add(mathTexImageLabel);
+      await scene.wait(0.3);
 
       const mathTexImage = new MathTexImage({ latex: 'what', color: BLUE });
       await mathTexImage.waitForRender();
-      mathTexImage.shift([1, 0, 0]);
-      await scene.play(new FadeIn(mathTexImage, { duration: 1 }));
+      mathTexImage.center();
+      await scene.play(new Transform(mathTexImageLabel, mathTexImage, { duration: 1 }));
+      scene.remove(mathTexImageLabel);
+      scene.add(mathTexImage);
+      await scene.wait(0.5);
+      scene.remove(mathTexImage);
 
-      // Row 3: Text (vector text via opentype.js)
+      // Text: transform label into content
       const textLabel = new MathTex({ latex: '\\text{Text}', color: YELLOW });
       await textLabel.waitForRender();
-      textLabel.shift([-3, -2, 0]);
+      textLabel.center();
       scene.add(textLabel);
+      await scene.wait(0.3);
 
       const text = new Text({ text: 'what', color: BLUE });
       await text.loadGlyphs();
-      text.shift([1, -2, 0]);
-      await scene.play(new Create(text, { duration: 1 }));
+      text.center();
+      await scene.play(new Transform(textLabel, text, { duration: 1 }));
+      scene.remove(textLabel);
+      scene.add(text);
+      await scene.wait(0.5);
     });
 
     document.getElementById('resetBtn').addEventListener('click', () => {
