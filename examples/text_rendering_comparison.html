@@ -104,8 +104,29 @@
       scene.clear();
       addGridLines(scene);
 
+      // Create all three text rows first
+      const mathTex = new MathTex({ latex: '\\text{the brown fox}', color: TEAL });
+      await mathTex.waitForRender();
+      mathTex.center();
+      mathTex.shift([0, 1.5, 0]);
+      scene.add(mathTex);
+
+      const mathTexImage = new MathTexImage({ latex: '\\text{the brown fox}', color: TEAL });
+      await mathTexImage.waitForRender();
+      mathTexImage.center();
+      mathTexImage.shift([0, 0, 0]);
+      scene.add(mathTexImage);
+
+      const text = new Text({ text: 'the brown fox', color: TEAL });
+      await text.loadGlyphs();
+      text.center();
+      text.shift([0, -1.5, 0]);
+      scene.add(text);
+
+      await scene.wait(0.5);
+
       // Show the 1em reference size
-      const sizeLabel = new MathTex({ latex: '\\text{1em = 0.5 world units}', color: TEAL });
+      const sizeLabel = new MathTex({ latex: '\\text{1em = 0.5 world units}', color: ORANGE });
       await sizeLabel.waitForRender();
       sizeLabel.center();
       scene.add(sizeLabel);
@@ -125,36 +146,16 @@
       scene.add(emSquare);
       await scene.wait(0.5);
 
-      // MathTex row (Y: 1.5)
-      const mathTex = new MathTex({ latex: '\\text{the brown fox}', color: TEAL });
-      await mathTex.waitForRender();
-      mathTex.center();
-      mathTex.shift([0, 1.5, 0]);
-      scene.add(mathTex);
-
+      // Slide square across each row
       const mathTexLeft = mathTex.getLeft()[0] - 0.25;
       const mathTexRight = mathTex.getRight()[0] + 0.25;
       emSquare.moveTo([mathTexLeft, 1.5, 0]);
       await scene.play(emSquare.animate.moveTo([mathTexRight, 1.5, 0]), { duration: 2 });
 
-      // MathTexImage row (Y: 0)
-      const mathTexImage = new MathTexImage({ latex: '\\text{the brown fox}', color: TEAL });
-      await mathTexImage.waitForRender();
-      mathTexImage.center();
-      mathTexImage.shift([0, 0, 0]);
-      scene.add(mathTexImage);
-
       const mathTexImageLeft = mathTexImage.getLeft()[0] - 0.25;
       const mathTexImageRight = mathTexImage.getRight()[0] + 0.25;
       emSquare.moveTo([mathTexImageLeft, 0, 0]);
       await scene.play(emSquare.animate.moveTo([mathTexImageRight, 0, 0]), { duration: 2 });
-
-      // Text row (Y: -1.5)
-      const text = new Text({ text: 'the brown fox', color: TEAL });
-      await text.loadGlyphs();
-      text.center();
-      text.shift([0, -1.5, 0]);
-      scene.add(text);
 
       const textLeft = text.getLeft()[0] - 0.25;
       const textRight = text.getRight()[0] + 0.25;
