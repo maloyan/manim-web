@@ -81,14 +81,12 @@
     });
 
     function addGridLines(scene) {
-      // Grid at 0.1 world unit spacing
-      // At default 48pt font, 1 em = 0.5 world units
-      // So each grid cell is 0.1 world units = 0.2 em
+      // Grid at 0.1 world unit spacing, major lines every 1 unit
       for (let y = -30; y <= 30; y++) {
         const line = new Line({
           start: [-5, y / 10, 0],
           end: [5, y / 10, 0],
-          color: y % 5 === 0 ? '#444444' : '#222222',
+          color: y % 10 === 0 ? '#444444' : '#222222',
           strokeWidth: 1,
         });
         scene.add(line);
@@ -97,7 +95,7 @@
         const line = new Line({
           start: [x / 10, -3, 0],
           end: [x / 10, 3, 0],
-          color: x % 5 === 0 ? '#444444' : '#222222',
+          color: x % 10 === 0 ? '#444444' : '#222222',
           strokeWidth: 1,
         });
         scene.add(line);
@@ -114,7 +112,8 @@
         strokeWidth: 2,
         fillOpacity: 0,
       });
-      ref.moveCenterTo(position);
+      ref.center();
+      ref.shift(position);
       scene.add(ref);
       return ref;
     }
