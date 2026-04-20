@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Text Rendering Comparison</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    h1 {
+      margin: 20px 0;
+      color: white;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #ff6b6b;
+    }
+  </style>
+</head>
+<body>
+  <h1>Text Rendering Comparison</h1>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="playBtn">Play Animation</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <script type="module">
+    import {
+      Scene,
+      MathTex,
+      MathTexImage,
+      Text,
+      Line,
+      Create,
+      FadeIn,
+      WHITE,
+      BLACK,
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK,
+    });
+
+    function addGridLines(scene) {
+      // Horizontal lines
+      for (let y = -30; y <= 30; y++) {
+        const line = new Line({
+          start: [-5, y / 10, 0],
+          end: [5, y / 10, 0],
+          color: y % 10 === 0 ? '#333333' : '#222222',
+          strokeWidth: 1,
+        });
+        scene.add(line);
+      }
+      // Vertical lines
+      for (let x = -50; x <= 50; x++) {
+        const line = new Line({
+          start: [x / 10, -3, 0],
+          end: [x / 10, 3, 0],
+          color: x % 10 === 0 ? '#333333' : '#222222',
+          strokeWidth: 1,
+        });
+        scene.add(line);
+      }
+    }
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      scene.clear();
+      addGridLines(scene);
+
+      // Row 1: MathTex (SVG paths, stroke-based)
+      const mathTexLabel = new MathTex({ latex: '\\text{MathTex}', color: WHITE });
+      await mathTexLabel.waitForRender();
+      mathTexLabel.shift([-3, 2, 0]);
+      scene.add(mathTexLabel);
+
+      const mathTex = new MathTex({ latex: 'what', color: WHITE });
+      await mathTex.waitForRender();
+      mathTex.shift([1, 2, 0]);
+      await scene.play(new Create(mathTex, { duration: 1 }));
+
+      // Row 2: MathTexImage (rasterized texture)
+      const mathTexImageLabel = new MathTex({ latex: '\\text{MathTexImage}', color: WHITE });
+      await mathTexImageLabel.waitForRender();
+      mathTexImageLabel.shift([-3, 0, 0]);
+      scene.add(mathTexImageLabel);
+
+      const mathTexImage = new MathTexImage({ latex: 'what', color: WHITE });
+      await mathTexImage.waitForRender();
+      mathTexImage.shift([1, 0, 0]);
+      await scene.play(new FadeIn(mathTexImage, { duration: 1 }));
+
+      // Row 3: Text (vector text via opentype.js)
+      const textLabel = new MathTex({ latex: '\\text{Text}', color: WHITE });
+      await textLabel.waitForRender();
+      textLabel.shift([-3, -2, 0]);
+      scene.add(textLabel);
+
+      const text = new Text({ text: 'what', color: WHITE });
+      await text.loadGlyphs();
+      text.shift([1, -2, 0]);
+      await scene.play(new Create(text, { duration: 1 }));
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+    });
+  </script>
+</body>
+</html>

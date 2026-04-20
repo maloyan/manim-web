@@ -72,7 +72,7 @@ export class MathTex extends VGroup {
       fontSize = DEFAULT_FONT_SIZE_PT,
       displayMode = true,
       position = [0, 0, 0],
-      strokeWidth = 2,
+      strokeWidth = 0.00001, // TODO: should be 0, workaround for https://github.com/maloyan/manim-web/issues/258
       fillOpacity = 1,
       height,
       macros,
