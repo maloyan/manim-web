@@ -1,160 +1,160 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Text Rendering Comparison</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      background: #1a1a2e;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      font-family: system-ui, sans-serif;
-    }
-    h1 {
-      margin: 20px 0;
-      color: white;
-    }
-    #container {
-      border: 2px solid #333;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    .controls {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 10px;
-    }
-    button {
-      padding: 10px 20px;
-      background: #e94560;
-      border: none;
-      border-radius: 4px;
-      color: white;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    button:hover {
-      background: #ff6b6b;
-    }
-  </style>
-</head>
-<body>
-  <h1>Text Rendering Comparison</h1>
-  <div id="container"></div>
-  <div class="controls">
-    <button id="playBtn">Play Animation</button>
-    <button id="resetBtn">Reset</button>
-  </div>
-
-  <script type="module">
-    import {
-      Scene,
-      MathTex,
-      MathTexImage,
-      Text,
-      Line,
-      Transform,
-      TEAL,
-      ORANGE,
-      BLACK,
-    } from '../src/index.ts';
-
-    const container = document.getElementById('container');
-    const scene = new Scene(container, {
-      width: 800,
-      height: 450,
-      backgroundColor: BLACK,
-    });
-
-    function addGridLines(scene) {
-      // Grid at 0.1 world unit spacing, major lines every 1 unit
-      for (let y = -30; y <= 30; y++) {
-        const line = new Line({
-          start: [-5, y / 10, 0],
-          end: [5, y / 10, 0],
-          color: y % 10 === 0 ? '#444444' : '#222222',
-          strokeWidth: 1,
-        });
-        scene.add(line);
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ManimWeb - Text Rendering Comparison</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
       }
-      for (let x = -50; x <= 50; x++) {
-        const line = new Line({
-          start: [x / 10, -3, 0],
-          end: [x / 10, 3, 0],
-          color: x % 10 === 0 ? '#444444' : '#222222',
-          strokeWidth: 1,
-        });
-        scene.add(line);
+      body {
+        background: #1a1a2e;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-height: 100vh;
+        font-family: system-ui, sans-serif;
       }
-    }
+      h1 {
+        margin: 20px 0;
+        color: white;
+      }
+      #container {
+        border: 2px solid #333;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .controls {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+      }
+      button {
+        padding: 10px 20px;
+        background: #e94560;
+        border: none;
+        border-radius: 4px;
+        color: white;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        background: #ff6b6b;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Text Rendering Comparison</h1>
+    <div id="container"></div>
+    <div class="controls">
+      <button id="playBtn">Play Animation</button>
+      <button id="resetBtn">Reset</button>
+    </div>
 
-    document.getElementById('playBtn').addEventListener('click', async () => {
-      scene.clear();
-      addGridLines(scene);
+    <script type="module">
+      import {
+        Scene,
+        MathTex,
+        MathTexImage,
+        Text,
+        Line,
+        Transform,
+        FadeIn,
+        FadeOut,
+        TEAL,
+        ORANGE,
+        BLACK,
+      } from '../src/index.ts';
 
-      // MathTex row (Y: 1.5)
-      const mathTexLabel = new MathTex({ latex: '\\text{MathTex}', color: TEAL });
-      await mathTexLabel.waitForRender();
-      mathTexLabel.center();
-      mathTexLabel.shift([0, 1.5, 0]);
-      scene.add(mathTexLabel);
-      await scene.wait(0.3);
+      const container = document.getElementById('container');
+      const scene = new Scene(container, {
+        width: 800,
+        height: 450,
+        backgroundColor: BLACK,
+      });
 
-      const mathTex = new MathTex({ latex: '\\text{the brown fox}', color: ORANGE });
-      await mathTex.waitForRender();
-      mathTex.center();
-      mathTex.shift([0, 1.5, 0]);
-      await scene.play(new Transform(mathTexLabel, mathTex, { duration: 1 }));
-      scene.remove(mathTexLabel);
-      scene.add(mathTex);
-      await scene.wait(0.5);
+      function addGridLines(scene) {
+        // Grid at 0.1 world unit spacing, major lines every 1 unit
+        for (let y = -30; y <= 30; y++) {
+          const line = new Line({
+            start: [-5, y / 10, 0],
+            end: [5, y / 10, 0],
+            color: y % 10 === 0 ? '#444444' : '#222222',
+            strokeWidth: 1,
+          });
+          scene.add(line);
+        }
+        for (let x = -50; x <= 50; x++) {
+          const line = new Line({
+            start: [x / 10, -3, 0],
+            end: [x / 10, 3, 0],
+            color: x % 10 === 0 ? '#444444' : '#222222',
+            strokeWidth: 1,
+          });
+          scene.add(line);
+        }
+      }
 
-      // MathTexImage row (Y: 0)
-      const mathTexImageLabel = new MathTex({ latex: '\\text{MathTexImage}', color: TEAL });
-      await mathTexImageLabel.waitForRender();
-      mathTexImageLabel.center();
-      mathTexImageLabel.shift([0, 0, 0]);
-      scene.add(mathTexImageLabel);
-      await scene.wait(0.3);
+      document.getElementById('playBtn').addEventListener('click', async () => {
+        scene.clear();
+        addGridLines(scene);
 
-      const mathTexImage = new MathTexImage({ latex: '\\text{the brown fox}', color: ORANGE });
-      await mathTexImage.waitForRender();
-      mathTexImage.center();
-      mathTexImage.shift([0, 0, 0]);
-      scene.add(mathTexImage);
-      await scene.wait(0.5);
+        // MathTex row (Y: 1.5)
+        const mathTexLabel = new MathTex({ latex: '\\text{MathTex}', color: TEAL });
+        await mathTexLabel.waitForRender();
+        mathTexLabel.center();
+        mathTexLabel.shift([0, 1.5, 0]);
+        scene.add(mathTexLabel);
+        await scene.wait(1);
 
-      // Text row (Y: -1.5)
-      const textLabel = new MathTex({ latex: '\\text{Text}', color: TEAL });
-      await textLabel.waitForRender();
-      textLabel.center();
-      textLabel.shift([0, -1.5, 0]);
-      scene.add(textLabel);
-      await scene.wait(0.3);
+        const mathTex = new MathTex({ latex: '\\text{the brown fox}', color: ORANGE });
+        await mathTex.waitForRender();
+        mathTex.center();
+        mathTex.shift([0, 1.5, 0]);
+        await scene.play(new Transform(mathTexLabel, mathTex, { duration: 1 }));
+        await scene.wait(1);
 
-      const text = new Text({ text: 'the brown fox', color: ORANGE });
-      await text.loadGlyphs();
-      text.center();
-      text.shift([0, -1.5, 0]);
-      scene.add(text);
-      scene.remove(textLabel);
-      await scene.wait(1);
-    });
+        // MathTexImage row (Y: 0)
+        const mathTexImageLabel = new MathTex({ latex: '\\text{MathTexImage}', color: TEAL });
+        await mathTexImageLabel.waitForRender();
+        mathTexImageLabel.center();
+        mathTexImageLabel.shift([0, 0, 0]);
+        scene.add(mathTexImageLabel);
+        await scene.wait(1);
 
-    document.getElementById('resetBtn').addEventListener('click', () => {
-      scene.clear();
-    });
-  </script>
-</body>
+        const mathTexImage = new MathTexImage({ latex: '\\text{the brown fox}', color: ORANGE });
+        await mathTexImage.waitForRender();
+        mathTexImage.center();
+        mathTexImage.shift([0, 0, 0]);
+        await scene.play(new Transform(mathTexImageLabel, mathTexImage, { duration: 1 }));
+        await scene.wait(1);
+
+        // Text row (Y: -1.5)
+        const textLabel = new MathTex({ latex: '\\text{Text}', color: TEAL });
+        await textLabel.waitForRender();
+        textLabel.center();
+        textLabel.shift([0, -1.5, 0]);
+        scene.add(textLabel);
+        await scene.wait(1);
+
+        const text = new Text({ text: 'the brown fox', color: ORANGE });
+        await text.loadGlyphs();
+        text.center();
+        text.shift([0, -1.5, 0]);
+        await scene.play(new FadeOut(textLabel, { duration: 0.5 }));
+        await scene.play(new FadeIn(text, { duration: 0.5 }));
+        await scene.wait(1);
+      });
+
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        scene.clear();
+      });
+    </script>
+  </body>
 </html>
