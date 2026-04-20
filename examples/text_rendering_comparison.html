@@ -114,7 +114,7 @@
       scene.add(mathTexLabel);
       await scene.wait(0.3);
 
-      const mathTex = new MathTex({ latex: 'what', color: ORANGE });
+      const mathTex = new MathTex({ latex: '\\text{the brown fox}', color: ORANGE });
       await mathTex.waitForRender();
       mathTex.center();
       mathTex.shift([0, 1.5, 0]);
@@ -131,7 +131,7 @@
       scene.add(mathTexImageLabel);
       await scene.wait(0.3);
 
-      const mathTexImage = new MathTexImage({ latex: 'what', color: ORANGE });
+      const mathTexImage = new MathTexImage({ latex: '\\text{the brown fox}', color: ORANGE });
       await mathTexImage.waitForRender();
       mathTexImage.center();
       mathTexImage.shift([0, 0, 0]);
@@ -148,7 +148,7 @@
       scene.add(textLabel);
       await scene.wait(0.3);
 
-      const text = new Text({ text: 'what', color: ORANGE });
+      const text = new Text({ text: 'the brown fox', color: ORANGE });
       await text.loadGlyphs();
       text.center();
       text.shift([0, -1.5, 0]);
