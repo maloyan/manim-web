@@ -64,7 +64,7 @@
       MathTexImage,
       Text,
       Line,
-      Create,
+      Transform,
       TEAL,
       ORANGE,
       BLACK,
@@ -104,14 +104,30 @@
       addGridLines(scene);
 
       // MathTex row (Y: 1.5)
-      const mathTex = new MathTex({ latex: '\\text{the brown fox}', color: TEAL });
+      const mathTexLabel = new MathTex({ latex: '\\text{MathTex}', color: TEAL });
+      await mathTexLabel.waitForRender();
+      mathTexLabel.center();
+      mathTexLabel.shift([0, 1.5, 0]);
+      scene.add(mathTexLabel);
+      await scene.wait(0.3);
+
+      const mathTex = new MathTex({ latex: '\\text{the brown fox}', color: ORANGE });
       await mathTex.waitForRender();
       mathTex.center();
       mathTex.shift([0, 1.5, 0]);
-      await scene.play(new Create(mathTex, { duration: 1 }));
+      await scene.play(new Transform(mathTexLabel, mathTex, { duration: 1 }));
+      scene.remove(mathTexLabel);
+      scene.add(mathTex);
       await scene.wait(0.5);
 
       // MathTexImage row (Y: 0)
+      const mathTexImageLabel = new MathTex({ latex: '\\text{MathTexImage}', color: TEAL });
+      await mathTexImageLabel.waitForRender();
+      mathTexImageLabel.center();
+      mathTexImageLabel.shift([0, 0, 0]);
+      scene.add(mathTexImageLabel);
+      await scene.wait(0.3);
+
       const mathTexImage = new MathTexImage({ latex: '\\text{the brown fox}', color: ORANGE });
       await mathTexImage.waitForRender();
       mathTexImage.center();
@@ -120,11 +136,19 @@
       await scene.wait(0.5);
 
       // Text row (Y: -1.5)
-      const text = new Text({ text: 'the brown fox', color: TEAL });
+      const textLabel = new MathTex({ latex: '\\text{Text}', color: TEAL });
+      await textLabel.waitForRender();
+      textLabel.center();
+      textLabel.shift([0, -1.5, 0]);
+      scene.add(textLabel);
+      await scene.wait(0.3);
+
+      const text = new Text({ text: 'the brown fox', color: ORANGE });
       await text.loadGlyphs();
       text.center();
       text.shift([0, -1.5, 0]);
-      await scene.play(new Create(text, { duration: 1 }));
+      scene.add(text);
+      scene.remove(textLabel);
       await scene.wait(1);
     });
 
