@@ -27,15 +27,6 @@ function composeLocalMatrix(node: VMobject): THREE.Matrix4 {
 }
 
 /**
- * Collect leaf VMobjects in deterministic depth-first (pre-order) order.
- *
- * A "leaf" is any VMobject that is NOT a VGroup container.
- */
-export function collectLeafVMobjects(root: VMobject): VMobject[] {
-  return collectLeafVMobjectSnapshots(root).map((s) => s.leaf);
-}
-
-/**
  * Collect leaf VMobjects and their effective (world) transforms.
  *
  * This is useful when animation logic needs to reason about nested transforms
