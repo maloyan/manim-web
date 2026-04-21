@@ -224,6 +224,23 @@ describe('VMobject._isNearlyLinear', () => {
     const p3 = [1, 0, 0];
     expect((VMobject as any)._isNearlyLinear(p0, p1, p2, p3)).toBe(true);
   });
+
+  it('returns false for a curved segment in the XZ plane (regression)', () => {
+    // Bezier handles bulge in +Z rather than +Y — must not be treated as linear.
+    const p0 = [0, 0, 0];
+    const p1 = [0.33, 0, 1];
+    const p2 = [0.67, 0, 1];
+    const p3 = [1, 0, 0];
+    expect((VMobject as any)._isNearlyLinear(p0, p1, p2, p3)).toBe(false);
+  });
+
+  it('returns false for a curved segment in the YZ plane', () => {
+    const p0 = [0, 0, 0];
+    const p1 = [0, 0.33, 1];
+    const p2 = [0, 0.67, 1];
+    const p3 = [0, 1, 0];
+    expect((VMobject as any)._isNearlyLinear(p0, p1, p2, p3)).toBe(false);
+  });
 });
 
 // ===========================================================================

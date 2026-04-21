@@ -5,6 +5,8 @@ import { Lighting } from './Lighting';
 import { OrbitControls, OrbitControlsOptions } from '../interaction/OrbitControls';
 import { Mobject, Vector3Tuple } from './Mobject';
 
+const BILLBOARD_TMP = new THREE.Vector3();
+
 /**
  * Options for configuring a ThreeDScene.
  */
@@ -389,7 +391,9 @@ export class ThreeDScene extends Scene {
       // Remove from fixed-orientation if present (mutually exclusive)
       if (this._fixedOrientationMobjects.has(mob)) {
         this._fixedOrientationMobjects.delete(mob);
-        mob.getThreeObject().quaternion.identity();
+        const threeObj = mob.getThreeObject();
+        threeObj.quaternion.identity();
+        threeObj.position.copy(mob.position);
       }
       this._fixedMobjects.add(mob);
       // Ensure the Three.js object is initialized
@@ -449,9 +453,10 @@ export class ThreeDScene extends Scene {
     for (const mob of mobjects) {
       if (this._fixedOrientationMobjects.has(mob)) {
         this._fixedOrientationMobjects.delete(mob);
-        // Reset rotation to identity
         const threeObj = mob.getThreeObject();
         threeObj.quaternion.identity();
+        // Restore the position the billboard may have displaced.
+        threeObj.position.copy(mob.position);
       }
     }
     return this;
@@ -529,11 +534,29 @@ export class ThreeDScene extends Scene {
       }
     }
 
-    // Apply billboard rotation to fixed-orientation mobjects
+    // Apply billboard rotation to fixed-orientation mobjects around their
+    // current world center. We can't just set `quaternion = camQuat` on the
+    // threeObject, because for VGroup-like mobjects the visual center lives in
+    // the children's offsets (threeObject.position stays at the intended
+    // origin), so a raw rotation pivots the children around the wrong point
+    // and locks them to screen space (issue #264).
     if (this._fixedOrientationMobjects && this._fixedOrientationMobjects.size > 0) {
       const camQuat = this._camera3D.getCamera().quaternion;
       for (const mob of this._fixedOrientationMobjects) {
         const threeObj = mob.getThreeObject();
+        const center = mob.getCenter();
+        // C_local = C - P, P_new = C - Q * C_local. Equivalent to pivoting
+        // around `center`. For leaf mobjects that set this.position directly,
+        // C_local is zero and P_new == P (position unchanged).
+        const cLocalX = center[0] - mob.position.x;
+        const cLocalY = center[1] - mob.position.y;
+        const cLocalZ = center[2] - mob.position.z;
+        BILLBOARD_TMP.set(cLocalX, cLocalY, cLocalZ).applyQuaternion(camQuat);
+        threeObj.position.set(
+          center[0] - BILLBOARD_TMP.x,
+          center[1] - BILLBOARD_TMP.y,
+          center[2] - BILLBOARD_TMP.z,
+        );
         threeObj.quaternion.copy(camQuat);
       }
     }
@@ -584,9 +607,11 @@ export class ThreeDScene extends Scene {
     }
     this._fixedMobjects.clear();
 
-    // Clear fixed-orientation tracking (reset quaternions for consistency)
+    // Clear fixed-orientation tracking (reset transform for consistency)
     for (const mob of this._fixedOrientationMobjects) {
-      mob.getThreeObject().quaternion.identity();
+      const threeObj = mob.getThreeObject();
+      threeObj.quaternion.identity();
+      threeObj.position.copy(mob.position);
     }
     this._fixedOrientationMobjects.clear();
 
@@ -617,7 +642,9 @@ export class ThreeDScene extends Scene {
       }
       if (this._fixedOrientationMobjects.has(mob)) {
         this._fixedOrientationMobjects.delete(mob);
-        mob.getThreeObject().quaternion.identity();
+        const threeObj = mob.getThreeObject();
+        threeObj.quaternion.identity();
+        threeObj.position.copy(mob.position);
       }
     }
     return super.remove(...mobjects);

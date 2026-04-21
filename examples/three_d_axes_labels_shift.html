@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>shiftLabelsOntoScreen stress test</title>
+    <style>
+      body {
+        margin: 0;
+        background: #191919;
+        color: #ccc;
+        font-family: system-ui, sans-serif;
+      }
+      .row {
+        display: flex;
+        gap: 16px;
+        padding: 16px;
+      }
+      .cell {
+        border: 1px solid #333;
+      }
+      h3 {
+        margin: 8px;
+        font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="row">
+      <div class="cell"><h3>before shift (labels clip)</h3><div id="c1"></div></div>
+      <div class="cell"><h3>after shift</h3><div id="c2"></div></div>
+    </div>
+    <script type="module" src="./three_d_axes_labels_shift.ts"></script>
+  </body>
+</html>

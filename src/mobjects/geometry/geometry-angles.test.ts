@@ -362,6 +362,140 @@ describe('Angle', () => {
       expect(p[1]).toBeCloseTo(0, 5);
     }
   });
+
+  // ---- Issue #262: reflex angle in an arbitrary 3D plane ----
+  //
+  // Uses right-hand rule: with axis = +Y and dir1 = +X, a positive rotation
+  // by θ maps +X to (cos θ, 0, -sin θ). Callers who want the opposite sweep
+  // direction pass the negated axis.
+
+  it('angle ≈ 3π/4 in the XZ plane does not collapse to π/4 (issue #262)', () => {
+    // +X rotated by 3π/4 around +Y lands at (cos, 0, -sin) = (-√2/2, 0, -√2/2).
+    const a = new Angle(
+      {
+        points: [
+          [1, 0, 0],
+          [0, 0, 0],
+          [-Math.SQRT1_2, 0, -Math.SQRT1_2],
+        ],
+      },
+      { radius: 1, axis: [0, 1, 0] },
+    );
+    expect(a.getAngleValue()).toBeCloseTo((3 * Math.PI) / 4, 3);
+    for (const p of a.getPoints()) {
+      expect(p[1]).toBeCloseTo(0, 5);
+    }
+  });
+
+  it('reflex angle 5π/4 in the XZ plane does not flip across line1 (issue #262)', () => {
+    // +X rotated by 5π/4 around +Y = (-√2/2, 0, √2/2).
+    const a = new Angle(
+      {
+        points: [
+          [1, 0, 0],
+          [0, 0, 0],
+          [-Math.SQRT1_2, 0, Math.SQRT1_2],
+        ],
+      },
+      { radius: 1, axis: [0, 1, 0] },
+    );
+    expect(a.getAngleValue()).toBeCloseTo((5 * Math.PI) / 4, 3);
+    for (const p of a.getPoints()) {
+      expect(p[1]).toBeCloseTo(0, 5);
+    }
+  });
+
+  it('axis option pins rotation plane so dir2 sweep stays continuous', () => {
+    const axisVec: [number, number, number] = [0, 1, 0];
+    const dir1: [number, number, number] = [1, 0, 0];
+    const measured: number[] = [];
+    for (let i = 1; i <= 8; i++) {
+      const theta = (i * Math.PI) / 4; // 45° steps around +Y under right-hand rule
+      const dir2: [number, number, number] = [Math.cos(theta), 0, -Math.sin(theta)];
+      const a = new Angle({ points: [dir1, [0, 0, 0], dir2] }, { radius: 1, axis: axisVec });
+      measured.push(a.getAngleValue());
+    }
+    const expected = [
+      Math.PI / 4,
+      Math.PI / 2,
+      (3 * Math.PI) / 4,
+      Math.PI,
+      (5 * Math.PI) / 4,
+      (3 * Math.PI) / 2,
+      (7 * Math.PI) / 4,
+      2 * Math.PI,
+    ];
+    for (let i = 0; i < measured.length; i++) {
+      if (i === measured.length - 1) {
+        // 2π and 0 are equivalent sweeps; either is acceptable.
+        expect(Math.min(Math.abs(measured[i] - expected[i]), Math.abs(measured[i]))).toBeLessThan(
+          1e-3,
+        );
+      } else {
+        expect(measured[i]).toBeCloseTo(expected[i], 3);
+      }
+    }
+  });
+
+  it('negated axis reverses rotation direction', () => {
+    const dir1: [number, number, number] = [1, 0, 0];
+    // +X rotated +π/2 around +Y -> -Z.
+    const dir2: [number, number, number] = [0, 0, -1];
+    const aPos = new Angle({ points: [dir1, [0, 0, 0], dir2] }, { axis: [0, 1, 0] });
+    const aNeg = new Angle({ points: [dir1, [0, 0, 0], dir2] }, { axis: [0, -1, 0] });
+    expect(aPos.getAngleValue()).toBeCloseTo(Math.PI / 2, 3);
+    expect(aNeg.getAngleValue()).toBeCloseTo((3 * Math.PI) / 2, 3);
+  });
+
+  it('axis option still honors otherAngle for reflex arc', () => {
+    // +X → -Z is π/2 around +Y; other side is 3π/2 (kept as absolute).
+    const a = new Angle(
+      {
+        points: [
+          [1, 0, 0],
+          [0, 0, 0],
+          [0, 0, -1],
+        ],
+      },
+      { axis: [0, 1, 0], otherAngle: true },
+    );
+    expect(a.getAngleValue()).toBeCloseTo((3 * Math.PI) / 2, 3);
+  });
+
+  it('non-perpendicular axis is handled by projecting dir1 into the plane', () => {
+    // Axis slightly tilted off +Y; dir1 = +X. Code should project dir1 onto
+    // the plane perpendicular to the axis rather than error.
+    const a = new Angle(
+      {
+        points: [
+          [1, 0, 0],
+          [0, 0, 0],
+          [0, 0, -1],
+        ],
+      },
+      { axis: [0.1, 1, 0] },
+    );
+    const v = a.getAngleValue();
+    expect(Number.isFinite(v)).toBe(true);
+    expect(v).toBeGreaterThan(0);
+    expect(v).toBeLessThan(2 * Math.PI);
+  });
+
+  it('throws on a zero-length axis', () => {
+    expect(
+      () =>
+        new Angle(
+          {
+            points: [
+              [1, 0, 0],
+              [0, 0, 0],
+              [0, 0, 1],
+            ],
+          },
+          { axis: [0, 0, 0] },
+        ),
+    ).toThrow(/axis/);
+  });
 });
 
 // ---------------------------------------------------------------------------

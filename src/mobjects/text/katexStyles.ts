@@ -5,6 +5,33 @@
  */
 
 let stylesPromise: Promise<void> | null = null;
+let fontOverrideInjected = false;
+
+/**
+ * Inject a document-level CSS rule to ensure KaTeX respects font-size.
+ * This is the only way to disable the 1.21 scaling that katex set by default.
+ 
+ * KaTeX's internal spans and font-size classes can override inherited styles,
+ * so we use !important at the .katex root level.
+ *
+ * @see https://katex.org/docs/font
+ */
+function ensureKatexFontOverride(): void {
+  if (fontOverrideInjected) return;
+  if (typeof document === 'undefined') return;
+
+  const existing = document.getElementById('manimweb-katex-font-override');
+  if (existing) {
+    fontOverrideInjected = true;
+    return;
+  }
+
+  const style = document.createElement('style');
+  style.id = 'manimweb-katex-font-override';
+  style.textContent = '.katex { font-size: 1em !important; }';
+  document.head.appendChild(style);
+  fontOverrideInjected = true;
+}
 
 /**
  * Ensure KaTeX styles are loaded in the document.
@@ -14,6 +41,7 @@ let stylesPromise: Promise<void> | null = null;
  * In production, you may want to bundle the CSS directly.
  */
 export function ensureKatexStyles(): void {
+  ensureKatexFontOverride();
   waitForKatexStyles();
 }
 
