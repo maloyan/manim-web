@@ -5,6 +5,10 @@ import {
   DrawBorderThenFill,
   FadeIn,
   FadeOut,
+  Transform,
+  Scale,
+  Shift,
+  Rotate,
   BLACK,
   WHITE,
   RED,
@@ -48,6 +52,43 @@ async function mathtexSvgDemo(scene: Scene) {
     fontSize: 2,
   });
 
+  // Equations for transform demos
+  const pythagoras = new MathTex({
+    latex: 'a^2 + b^2 = c^2',
+    color: WHITE,
+    fontSize: 2.5,
+  });
+  const pythagorasExpanded = new MathTex({
+    latex: 'c = \\sqrt{a^2 + b^2}',
+    color: YELLOW,
+    fontSize: 2.5,
+  });
+  const scalingEq = new MathTex({
+    latex: '\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\epsilon_0}',
+    color: GREEN,
+    fontSize: 2,
+  });
+  const shiftingEq = new MathTex({
+    latex: '\\lim_{x \\to \\infty} f(x)',
+    color: RED,
+    fontSize: 2.5,
+  });
+  const rotatingEq = new MathTex({
+    latex: '\\frac{\\partial f}{\\partial x}',
+    color: BLUE,
+    fontSize: 2.5,
+  });
+  const textBefore = new MathTex({
+    latex: 'x = 1',
+    color: WHITE,
+    fontSize: 3,
+  });
+  const textAfter = new MathTex({
+    latex: 'x = 42',
+    color: YELLOW,
+    fontSize: 3,
+  });
+
   // Render all SVGs in parallel
   await Promise.all([
     equation1.waitForRender(),
@@ -55,6 +96,13 @@ async function mathtexSvgDemo(scene: Scene) {
     multiPart.waitForRender(),
     equation3.waitForRender(),
     matrix.waitForRender(),
+    pythagoras.waitForRender(),
+    pythagorasExpanded.waitForRender(),
+    scalingEq.waitForRender(),
+    shiftingEq.waitForRender(),
+    rotatingEq.waitForRender(),
+    textBefore.waitForRender(),
+    textAfter.waitForRender(),
   ]);
 
   // 1. Create animation - stroke-draw reveal (the main feature)
@@ -84,6 +132,50 @@ async function mathtexSvgDemo(scene: Scene) {
   // 5. 2x2 matrix with subscript indices
   await scene.play(new Create(matrix, { duration: 2 }));
   await scene.wait(2);
+  await scene.play(new FadeOut(matrix));
+
+  // 6. Transform one equation into another
+  await scene.play(new FadeIn(pythagoras));
+  await scene.wait(1);
+  await scene.play(new Transform(pythagoras, pythagorasExpanded, { duration: 2 }));
+  await scene.wait(1);
+  // After Transform, source (pythagoras) visually becomes target, target is removed
+  await scene.play(new FadeOut(pythagoras));
+
+  // 7. Scale animation
+  await scene.play(new FadeIn(scalingEq));
+  await scene.wait(0.5);
+  await scene.play(new Scale(scalingEq, { scaleFactor: 2, duration: 1.5 }));
+  await scene.wait(0.5);
+  await scene.play(new Scale(scalingEq, { scaleFactor: 0.5, duration: 1 }));
+  await scene.wait(0.5);
+  await scene.play(new FadeOut(scalingEq));
+
+  // 8. Shift animation
+  await scene.play(new FadeIn(shiftingEq));
+  await scene.wait(0.5);
+  await scene.play(new Shift(shiftingEq, { direction: [3, 0, 0], duration: 1 }));
+  await scene.wait(0.5);
+  await scene.play(new Shift(shiftingEq, { direction: [-6, 0, 0], duration: 1 }));
+  await scene.wait(0.5);
+  await scene.play(new Shift(shiftingEq, { direction: [3, 2, 0], duration: 1 }));
+  await scene.wait(0.5);
+  await scene.play(new FadeOut(shiftingEq));
+
+  // 9. Rotate animation
+  await scene.play(new FadeIn(rotatingEq));
+  await scene.wait(0.5);
+  await scene.play(new Rotate(rotatingEq, { angle: Math.PI * 2, duration: 2 }));
+  await scene.wait(0.5);
+  await scene.play(new FadeOut(rotatingEq));
+
+  // 10. ReplacementTransform - change text
+  await scene.play(new FadeIn(textBefore));
+  await scene.wait(1);
+  await scene.play(new Transform(textBefore, textAfter, { duration: 1.5 }));
+  await scene.wait(1);
+  // After Transform, textBefore is morphed to look like textAfter
+  await scene.play(new FadeOut(textBefore));
 }
 
 let isAnimating = false;
