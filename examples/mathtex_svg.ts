@@ -29,64 +29,52 @@ async function mathtexSvgDemo(scene: Scene) {
   const equation1 = new MathTex({
     latex: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
     color: WHITE,
-    fontSize: 2,
   });
   const equation2 = new MathTex({
     latex: 'e^{i\\pi} + 1 = 0',
     color: YELLOW,
-    fontSize: 2.5,
   });
   const multiPart = new MathTex({
     latex: ['E', '=', 'mc^2'],
     color: WHITE,
-    fontSize: 3,
   });
   const equation3 = new MathTex({
     latex: '\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}',
     color: GREEN,
-    fontSize: 2,
   });
   const matrix = new MathTex({
     latex: 'A = \\begin{pmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{pmatrix}',
     color: WHITE,
-    fontSize: 2,
   });
 
   // Equations for transform demos
   const pythagoras = new MathTex({
     latex: 'a^2 + b^2 = c^2',
     color: WHITE,
-    fontSize: 2.5,
   });
   const pythagorasExpanded = new MathTex({
     latex: 'c = \\sqrt{a^2 + b^2}',
     color: YELLOW,
-    fontSize: 2.5,
   });
   const scalingEq = new MathTex({
     latex: '\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\epsilon_0}',
     color: GREEN,
-    fontSize: 2,
   });
   const shiftingEq = new MathTex({
     latex: '\\lim_{x \\to \\infty} f(x)',
     color: RED,
-    fontSize: 2.5,
   });
   const rotatingEq = new MathTex({
     latex: '\\frac{\\partial f}{\\partial x}',
     color: BLUE,
-    fontSize: 2.5,
   });
   const textBefore = new MathTex({
     latex: 'x = 1',
     color: WHITE,
-    fontSize: 3,
   });
   const textAfter = new MathTex({
     latex: 'x = 42',
     color: YELLOW,
-    fontSize: 3,
   });
 
   // Render all SVGs in parallel
