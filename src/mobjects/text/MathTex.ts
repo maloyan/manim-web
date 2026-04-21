@@ -33,7 +33,7 @@ export interface MathTexOptions {
   displayMode?: boolean;
   /** Position in 3D space. Default: [0,0,0] */
   position?: Vector3Tuple;
-  /** Stroke width for glyph outlines. Default: 2 */
+  /** Stroke width for glyph outlines. Default: 0 */
   strokeWidth?: number;
   /** Fill opacity for glyph interiors. Default: 1 */
   fillOpacity?: number;
@@ -82,9 +82,9 @@ export class MathTex extends VGroup {
     this._displayMode = displayMode;
     this._color = color;
     this._svgStrokeWidth = strokeWidth;
-    this.strokeWidth = strokeWidth; // Set parent's property for public access
+    this.strokeWidth = strokeWidth;
     this._svgFillOpacity = fillOpacity;
-    this.fillOpacity = fillOpacity; // Set parent's property for public access
+    this.fillOpacity = fillOpacity;
     this._targetHeight = height;
     this._macros = macros;
 
