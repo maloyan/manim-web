@@ -361,7 +361,6 @@ export async function renderLatexToSVG(
   });
 
   // Read dimensions from the SVG viewBox (MathJax always sets one)
-  // MathJax renders at 10pt by default → 10 × 1.333 = 13.33 pixels
   const viewBox = svgElement.getAttribute('viewBox');
   let width = 0;
   let height = 0;
