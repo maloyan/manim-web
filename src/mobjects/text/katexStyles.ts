@@ -9,6 +9,8 @@ let fontOverrideInjected = false;
 
 /**
  * Inject a document-level CSS rule to ensure KaTeX respects font-size.
+ * This is the only way to disable the 1.21 scaling that katex set by default.
+ 
  * KaTeX's internal spans and font-size classes can override inherited styles,
  * so we use !important at the .katex root level.
  *
