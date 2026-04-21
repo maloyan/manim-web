@@ -16,7 +16,11 @@ import { VGroup } from '../../core/VGroup';
 import { VMobject } from '../../core/VMobject';
 import type { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { WHITE } from '../../constants/colors';
+import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
 import { renderLatexToSVG } from './MathJaxRenderer';
+
+/** MathJax SVG uses ~1000 font units per em. */
+const MATHJAX_SVG_UNITS_PER_EM = 1000;
 
 export interface MathTexOptions {
   /** LaTeX string or array of strings for multi-part expressions. */
@@ -29,7 +33,7 @@ export interface MathTexOptions {
   displayMode?: boolean;
   /** Position in 3D space. Default: [0,0,0] */
   position?: Vector3Tuple;
-  /** Stroke width for glyph outlines. Default: 0.02 */
+  /** Stroke width for glyph outlines. Default: 0 */
   strokeWidth?: number;
   /** Fill opacity for glyph interiors. Default: 1 */
   fillOpacity?: number;
@@ -65,10 +69,10 @@ export class MathTex extends VGroup {
     const {
       latex,
       color = WHITE,
-      fontSize = 1,
+      fontSize = DEFAULT_FONT_SIZE_PT,
       displayMode = true,
       position = [0, 0, 0],
-      strokeWidth = 0.02,
+      strokeWidth = 0.00001, // Workaround for https://github.com/maloyan/manim-web/issues/258
       fillOpacity = 1,
       height,
       macros,
@@ -78,7 +82,9 @@ export class MathTex extends VGroup {
     this._displayMode = displayMode;
     this._color = color;
     this._svgStrokeWidth = strokeWidth;
+    this.strokeWidth = strokeWidth;
     this._svgFillOpacity = fillOpacity;
+    this.fillOpacity = fillOpacity;
     this._targetHeight = height;
     this._macros = macros;
 
@@ -197,7 +203,6 @@ export class MathTex extends VGroup {
     const result = await renderLatexToSVG(this._latex, {
       displayMode: this._displayMode,
       color: this._color,
-      fontScale: this._fontSize,
       macros: this._macros,
     });
 
@@ -232,9 +237,12 @@ export class MathTex extends VGroup {
   protected _restyleChildren(group: VGroup): void {
     const restyle = (mob: Mobject) => {
       if (mob instanceof VMobject) {
+        mob.fillOpacity = this._svgFillOpacity;
+        mob.strokeWidth = this._svgStrokeWidth;
         mob.setColor(this._color);
-        mob.setStrokeWidth(this._svgStrokeWidth);
-        mob.setFillOpacity(this._svgFillOpacity);
+        // Access _style via any cast since protected access from sibling instances
+        (mob as any)._style.fillOpacity = this._svgFillOpacity;
+        (mob as any)._style.strokeWidth = this._svgStrokeWidth;
       }
       if ('children' in mob) {
         for (const child of (mob as any).children) {
@@ -246,7 +254,14 @@ export class MathTex extends VGroup {
   }
 
   /**
-   * Scale and center the assembled paths by transforming actual point data.
+   * Scale and center the assembled paths by transforming point data directly.
+   *
+   * Unit flow:
+   * - MathJax path coordinates arrive in font units (~1000 units per em).
+   * - Convert font-size points to world units via DEFAULT_FONT_SIZE_PT baseline.
+   * - Convert MathJax units to em by dividing by MATHJAX_SVG_UNITS_PER_EM.
+   *
+   * This keeps MathTex aligned with Text/MathTexImage behavior at 48pt.
    */
   protected _scaleToTarget(): void {
     // Collect all VMobject descendants (may be direct children or nested in part VGroups)
@@ -281,15 +296,11 @@ export class MathTex extends VGroup {
     const rawHeight = maxY - minY;
     if (rawHeight < 0.0001) return;
 
-    let s: number;
+    const worldPerMathJaxUnit =
+      DEFAULT_FONT_SIZE_IN_WORLD_SPACE / (DEFAULT_FONT_SIZE_PT * MATHJAX_SVG_UNITS_PER_EM);
+    let s = this._fontSize * worldPerMathJaxUnit;
     if (this._targetHeight !== undefined) {
-      // Explicit height: scale bounding box to fit (user intent)
       s = this._targetHeight / rawHeight;
-    } else {
-      // Scale to a readable size: fontSize acts as a multiplier.
-      // Default height ≈ 1 world unit (readable in standard camera view).
-      const targetHeight = this._fontSize;
-      s = targetHeight / rawHeight;
     }
 
     // Center of current bounds
@@ -317,7 +328,6 @@ export class MathTex extends VGroup {
     const fullResult = await renderLatexToSVG(fullLatex, {
       displayMode: this._displayMode,
       color: this._color,
-      fontScale: this._fontSize,
       macros: this._macros,
     });
     const viewBox = fullResult.svgElement.getAttribute?.('viewBox');
@@ -342,7 +352,6 @@ export class MathTex extends VGroup {
       const partResult = await renderLatexToSVG(partLatex, {
         displayMode: false,
         color: this._color,
-        fontScale: this._fontSize,
         macros: this._macros,
       });
       let count = 0;

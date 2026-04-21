@@ -1,5 +1,4 @@
 export * from './colors';
-
 // Manim default configuration
 export const DEFAULT_STROKE_WIDTH = 4;
 export const DEFAULT_FONT_SIZE = 48;

@@ -258,7 +258,7 @@ describe('Text', () => {
       const t = new Text({ text: 'Test' });
       const fs = (t as unknown as TextInternal)._buildFontString();
       // RESOLUTION_SCALE = 2, so 48 * 2 = 96
-      expect(fs).toBe('normal normal 96px CMU Serif, Georgia, Times New Roman, serif');
+      expect(fs).toBe('normal normal 96pt CMU Serif, Georgia, Times New Roman, serif');
     });
 
     it('should include italic when fontStyle is italic', () => {
@@ -283,7 +283,7 @@ describe('Text', () => {
       const t = new Text({ text: 'Test', fontSize: 24 });
       const fs = (t as unknown as TextInternal)._buildFontString();
       // 24 * 2 = 48
-      expect(fs).toContain('48px');
+      expect(fs).toContain('48pt');
     });
 
     it('should include custom font family', () => {

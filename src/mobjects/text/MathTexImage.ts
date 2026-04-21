@@ -22,6 +22,15 @@ import katex from 'katex';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { ensureKatexStyles, waitForKatexStyles } from './katexStyles';
 import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
+import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
+
+const DEFAULT_CANVAS_SCALE = 4;
+
+/** Font size in points used for LaTeX rendering. */
+const LATEX_DEFAULT_FONT_SIZE_PT = 10;
+
+/** Scale factor from SVG units to points. At 72 DPI, 1pt = 4/3 svg units. */
+const SVG_UNITS_PER_PT = 4 / 3;
 
 /**
  * Which renderer to use for LaTeX.
@@ -345,15 +354,19 @@ export class MathTexImage extends Mobject {
       return;
     }
 
-    const SCALE = 0.01;
-
     // Collect content widths (total width minus padding on each side)
     const widths = this._parts.map((p) => {
       const [w] = p.getDimensions();
       return w;
     });
     const contentWidths = this._parts.map((p, i) => {
-      const paddingWorld = p._padding * SCALE;
+      const paddingWorld =
+        p._padding *
+        p.getFontSize() *
+        (DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
+          LATEX_DEFAULT_FONT_SIZE_PT /
+          DEFAULT_FONT_SIZE_PT /
+          SVG_UNITS_PER_PT);
       return Math.max(0, widths[i] - 2 * paddingWorld);
     });
 
@@ -473,7 +486,6 @@ export class MathTexImage extends Mobject {
     const result = await renderLatexToSVG(this._latex, {
       displayMode: this._displayMode,
       color: '#ffffff', // always render white; actual color applied via material tint
-      fontScale: this._fontSize / 48, // normalise against base 48px
     });
 
     // Render the MathJax SVG into a canvas via <img>
@@ -500,7 +512,6 @@ export class MathTexImage extends Mobject {
 
     if ((!svgW || !svgH) && result.width && result.height) {
       // Fallback: derive pixel size from viewBox-based result dimensions.
-      // result.width/height = viewBox units × fontScale (fontSize/48).
       // viewBox uses ~1000 units per ex → pixels = result.value * 0.024
       svgW = result.width * 0.024;
       svgH = result.height * 0.024;
@@ -510,14 +521,11 @@ export class MathTexImage extends Mobject {
       svgEl.setAttribute('width', String(svgW));
       svgEl.setAttribute('height', String(svgH));
     }
-
     const finalSvgString = new XMLSerializer().serializeToString(svgEl);
     document.body.removeChild(tempDiv);
-
     const padding = this._padding;
     const width = Math.ceil(svgW) + padding * 2;
     const height = Math.ceil(svgH) + padding * 2;
-
     if (width <= 0 || height <= 0) {
       console.warn('MathTexImage (MathJax): Invalid dimensions', {
         width,
@@ -526,9 +534,8 @@ export class MathTexImage extends Mobject {
       });
       return;
     }
-
     // Rasterize to canvas
-    const scale = 2;
+    const scale = DEFAULT_CANVAS_SCALE;
     const canvas = document.createElement('canvas');
     canvas.width = width * scale;
     canvas.height = height * scale;
@@ -563,9 +570,15 @@ export class MathTexImage extends Mobject {
     this._renderState.texture.magFilter = THREE.LinearFilter;
     this._renderState.texture.needsUpdate = true;
 
-    const scaleFactor = 0.01;
-    this._renderState.width = width * scaleFactor;
-    this._renderState.height = height * scaleFactor;
+    // Convert measured pixel dimensions to world units using shared font baseline.
+    const worldScale =
+      this._fontSize *
+      (DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
+        LATEX_DEFAULT_FONT_SIZE_PT /
+        DEFAULT_FONT_SIZE_PT /
+        SVG_UNITS_PER_PT);
+    this._renderState.width = width * worldScale;
+    this._renderState.height = height * worldScale;
 
     if (this._renderState.mesh) {
       this._updateMeshGeometry();
@@ -578,6 +591,10 @@ export class MathTexImage extends Mobject {
   /**
    * Render the LaTeX to a canvas by walking the KaTeX DOM
    * and drawing each text element at its computed CSS position.
+   *
+   * IMPORTANT: The canvas dimensions are in pixel space, rendered at the
+   * user's fontSize (e.g., fontSize=48 → 48px). The caller must convert
+   * these pixel dimensions to world space using scaleFactor = 0.01.
    */
   protected async _renderLatexViaKaTeX(): Promise<void> {
     if (typeof document === 'undefined') {
@@ -585,11 +602,12 @@ export class MathTexImage extends Mobject {
     }
     this._activeRenderer = 'katex';
 
+    const CANVAS_SCALE = DEFAULT_CANVAS_SCALE;
     const container = document.createElement('div');
     container.style.position = 'absolute';
     container.style.left = '-9999px';
     container.style.top = '-9999px';
-    container.style.fontSize = `${this._fontSize}px`;
+    container.style.fontSize = `${LATEX_DEFAULT_FONT_SIZE_PT}pt`;
     document.body.appendChild(container);
 
     try {
@@ -657,6 +675,7 @@ export class MathTexImage extends Mobject {
         width,
         height,
         padding,
+        CANVAS_SCALE,
       );
 
       // Store render state
@@ -672,10 +691,15 @@ export class MathTexImage extends Mobject {
       this._renderState.texture.magFilter = THREE.LinearFilter;
       this._renderState.texture.needsUpdate = true;
 
-      // Calculate world dimensions
-      const scaleFactor = 0.01;
-      this._renderState.width = width * scaleFactor;
-      this._renderState.height = height * scaleFactor;
+      // Convert measured CSS pixels to world units using the shared 48pt baseline.
+      const worldScale =
+        this._fontSize *
+        (DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
+          LATEX_DEFAULT_FONT_SIZE_PT /
+          DEFAULT_FONT_SIZE_PT /
+          SVG_UNITS_PER_PT);
+      this._renderState.width = width * worldScale;
+      this._renderState.height = height * worldScale;
 
       // Update mesh if it exists
       if (this._renderState.mesh) {
@@ -699,15 +723,15 @@ export class MathTexImage extends Mobject {
     width: number,
     height: number,
     padding: number,
+    scale: number = 2,
   ): Promise<HTMLCanvasElement> {
-    const scale = 2;
     const canvas = document.createElement('canvas');
     canvas.width = width * scale;
     canvas.height = height * scale;
 
     const ctx = canvas.getContext('2d')!;
     ctx.scale(scale, scale);
-    ctx.fillStyle = '#ffffff'; // always render white; actual color applied via material tint
+    ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
 
     // Collect text items, SVG items, and CSS rule items from KaTeX DOM
     interface TextItem {
