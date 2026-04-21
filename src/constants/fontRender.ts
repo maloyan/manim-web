@@ -1,10 +1,5 @@
 /**
- * LaTeX / Font Rendering Constants
- *
- * Unified text scaling model:
- * - user-facing font size is in points,
- * - all renderers map their internal units to points,
- * - points map to world space with a single baseline.
+ * LaTeX / Text font Rendering Constants
  *
  * Design notes and context:
  * https://github.com/ManimCommunity/manim/issues/4690
@@ -16,9 +11,10 @@ export const DEFAULT_FONT_SIZE_PT = 48;
 /**
  * Length occupied by an 'EM' character in world space when DEFAULT_FONT_SIZE_PT is used.
  *
- * An 'EM' character is the em dash: '—'. This is an arbitrary convention:
- * at fontSize=48pt, the em dash occupies 0.5 world units.
+ * An exact 'EM' character is usually the em dash: '—'.
  *
- * This constant defines the baseline for all font-to-world scaling.
+ * Text, MathTex amd MathTexImage should all have this property at default settings.
+ *
+ * Note that his is an arbitrary convention, but the same one as python manim.
  */
 export const DEFAULT_FONT_SIZE_IN_WORLD_SPACE = 0.5;
