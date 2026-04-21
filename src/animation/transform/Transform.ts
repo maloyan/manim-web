@@ -11,6 +11,10 @@ import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Animation, AnimationOptions } from '../Animation';
 import { lerpPoint } from '../../utils/math';
+import {
+  collectLeafVMobjectSnapshots,
+  worldToParentLocalPosition,
+} from '../../core/MobjectTraversal';
 
 /** Extract style snapshot from a VMobject */
 function captureStyle(m: VMobject): ChildStyle {
@@ -228,51 +232,77 @@ export class Transform extends Animation {
    */
   private _beginVGroup(vmobject: VGroup, vtarget: VGroup): void {
     this._isVGroupTransform = true;
-    const srcChildren = vmobject.children.filter((c): c is VMobject => c instanceof VMobject);
-    const tgtChildren = vtarget.children.filter((c): c is VMobject => c instanceof VMobject);
-    const maxLen = Math.max(srcChildren.length, tgtChildren.length);
+
+    const srcSnapshots = collectLeafVMobjectSnapshots(vmobject);
+    const tgtSnapshots = collectLeafVMobjectSnapshots(vtarget);
+    const maxLen = Math.max(srcSnapshots.length, tgtSnapshots.length);
 
     for (let i = 0; i < maxLen; i++) {
-      const sc = srcChildren[i] as VMobject | undefined;
-      const tc = tgtChildren[i] as VMobject | undefined;
+      const src = srcSnapshots[i];
+      const tgt = tgtSnapshots[i];
 
-      if (sc && tc) {
+      if (src && tgt) {
+        const sc = src.leaf;
+        const tc = tgt.leaf;
+
         const scCopy = sc.copy() as VMobject;
         const tcCopy = tc.copy() as VMobject;
         scCopy.alignPoints(tcCopy);
+
+        this._childRefs.push(sc);
+
         this._childStartPoints.push(scCopy.getPoints());
         this._childTargetPoints.push(tcCopy.getPoints());
-        this._childStartPositions.push(new THREE.Vector3().copy(sc.position));
-        this._childTargetPositions.push(new THREE.Vector3().copy(tc.position));
+
+        this._childStartPositions.push(
+          worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix),
+        );
+        this._childTargetPositions.push(
+          worldToParentLocalPosition(tgt.worldPosition, src.parentWorldMatrix),
+        );
+
         this._childStartStyles.push(captureStyle(sc));
         this._childTargetStyles.push(captureStyle(tc));
+
         sc.setPoints(scCopy.getPoints());
-      } else if (sc) {
+      } else if (src) {
         // Extra source child with no target counterpart — fade out
+        const sc = src.leaf;
+        this._childRefs.push(sc);
+
         this._childStartPoints.push(sc.getPoints());
         this._childTargetPoints.push(sc.getPoints());
-        this._childStartPositions.push(new THREE.Vector3().copy(sc.position));
-        this._childTargetPositions.push(new THREE.Vector3().copy(sc.position));
+
+        const p = worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix);
+        this._childStartPositions.push(p.clone());
+        this._childTargetPositions.push(p);
+
         this._childStartStyles.push(captureStyle(sc));
         this._childTargetStyles.push(captureStyleFaded(sc));
-      } else if (tc) {
+      } else if (tgt) {
         // Extra target child with no source counterpart — fade in
+        const tc = tgt.leaf;
         const tcCopy = tc.copy() as VMobject;
         const placeholder = tcCopy.copy() as VMobject;
         placeholder.opacity = 0;
         placeholder.fillOpacity = 0;
         vmobject.add(placeholder);
+
+        this._childRefs.push(placeholder);
+
         this._childStartPoints.push(tcCopy.getPoints());
         this._childTargetPoints.push(tcCopy.getPoints());
-        this._childStartPositions.push(new THREE.Vector3().copy(tc.position));
-        this._childTargetPositions.push(new THREE.Vector3().copy(tc.position));
+
+        const p = worldToParentLocalPosition(tgt.worldPosition, tgt.parentWorldMatrix);
+        this._childStartPositions.push(p.clone());
+        this._childTargetPositions.push(p);
+
         this._childStartStyles.push(captureStyleFaded(tc));
         this._childTargetStyles.push(captureStyle(tc));
       }
     }
 
-    // Snapshot child references and pre-allocate color objects
-    this._childRefs = vmobject.children.filter((c): c is VMobject => c instanceof VMobject);
+    // Pre-allocate color objects
     for (let i = 0; i < this._childStartStyles.length; i++) {
       const ss = this._childStartStyles[i];
       const ts = this._childTargetStyles[i];
@@ -354,14 +384,9 @@ export class Transform extends Animation {
         child._markDirty();
       }
 
-      // Interpolate group-level transform
-      group.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
-      group.rotation.set(
-        this._startRotation.x + (this._targetRotation.x - this._startRotation.x) * alpha,
-        this._startRotation.y + (this._targetRotation.y - this._startRotation.y) * alpha,
-        this._startRotation.z + (this._targetRotation.z - this._startRotation.z) * alpha,
-      );
-      group.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
+      // Container group transforms are intentionally not interpolated here.
+      // Group/VGroup transform methods typically mutate children directly;
+      // interpolating container transforms as well can double-apply motion.
       group._markDirty();
       return;
     }
@@ -477,6 +502,7 @@ export class Transform extends Animation {
       for (let c = 0; c < this._childTargetPoints.length && c < this._childRefs.length; c++) {
         const child = this._childRefs[c];
         child.setPoints(this._childTargetPoints[c]);
+        child.position.copy(this._childTargetPositions[c]);
         const ts = this._childTargetStyles[c];
         child.opacity = ts.opacity;
         child.fillOpacity = ts.fillOpacity;
@@ -486,9 +512,7 @@ export class Transform extends Animation {
         child._markDirty();
       }
 
-      group.position.copy(this._targetPosition);
-      group.rotation.copy(this._targetRotation);
-      group.scaleVector.copy(this._targetScale);
+      // Keep container transform as-is; leaf VMobjects now represent final visual state.
       group._markDirty();
 
       super.finish();
