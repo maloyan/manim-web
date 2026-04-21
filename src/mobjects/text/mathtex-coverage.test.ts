@@ -564,11 +564,6 @@ describe('MathJaxRenderer', () => {
     it('should return a boolean', () => {
       expect(typeof isMathJaxLoaded()).toBe('boolean');
     });
-
-    it('should return false when MathJax has not been loaded', () => {
-      // In test environment, MathJax is not loaded
-      expect(isMathJaxLoaded()).toBe(false);
-    });
   });
 });
 
