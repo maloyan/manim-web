@@ -94,6 +94,10 @@ export class Transform extends Animation {
   private _childStartPoints: number[][][] = [];
   private _childTargetPoints: number[][][] = [];
 
+  /** Per-child start/target positions for VGroup transforms */
+  private _childStartPositions: THREE.Vector3[] = [];
+  private _childTargetPositions: THREE.Vector3[] = [];
+
   /** Per-child start/target styles for VGroup transforms */
   private _childStartStyles: ChildStyle[] = [];
   private _childTargetStyles: ChildStyle[] = [];
@@ -238,6 +242,8 @@ export class Transform extends Animation {
         scCopy.alignPoints(tcCopy);
         this._childStartPoints.push(scCopy.getPoints());
         this._childTargetPoints.push(tcCopy.getPoints());
+        this._childStartPositions.push(new THREE.Vector3().copy(sc.position));
+        this._childTargetPositions.push(new THREE.Vector3().copy(tc.position));
         this._childStartStyles.push(captureStyle(sc));
         this._childTargetStyles.push(captureStyle(tc));
         sc.setPoints(scCopy.getPoints());
@@ -245,6 +251,8 @@ export class Transform extends Animation {
         // Extra source child with no target counterpart — fade out
         this._childStartPoints.push(sc.getPoints());
         this._childTargetPoints.push(sc.getPoints());
+        this._childStartPositions.push(new THREE.Vector3().copy(sc.position));
+        this._childTargetPositions.push(new THREE.Vector3().copy(sc.position));
         this._childStartStyles.push(captureStyle(sc));
         this._childTargetStyles.push(captureStyleFaded(sc));
       } else if (tc) {
@@ -256,6 +264,8 @@ export class Transform extends Animation {
         vmobject.add(placeholder);
         this._childStartPoints.push(tcCopy.getPoints());
         this._childTargetPoints.push(tcCopy.getPoints());
+        this._childStartPositions.push(new THREE.Vector3().copy(tc.position));
+        this._childTargetPositions.push(new THREE.Vector3().copy(tc.position));
         this._childStartStyles.push(captureStyleFaded(tc));
         this._childTargetStyles.push(captureStyle(tc));
       }
@@ -317,6 +327,13 @@ export class Transform extends Animation {
           interpolated.push(lerpPoint(startPts[i], targetPts[i], alpha));
         }
         child.setPoints(interpolated);
+
+        // Interpolate child position
+        child.position.lerpVectors(
+          this._childStartPositions[c],
+          this._childTargetPositions[c],
+          alpha,
+        );
 
         const ss = this._childStartStyles[c];
         const ts = this._childTargetStyles[c];
