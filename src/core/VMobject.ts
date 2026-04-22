@@ -572,6 +572,63 @@ export class VMobject extends VMobjectRendering {
     ];
   }
 
+  /**
+   * Centers the points around the origin and updates position accordingly.
+   * This is useful when points have been modified directly (e.g., via setPoints3D
+   * or ApplyPointwiseFunction) without updating the position property.
+   *
+   * After calling this method, the visual appearance remains the same, but:
+   * - Points are centered at the origin (0,0,0)
+   * - Position is updated to reflect the visual center
+   *
+   * This enables position-based animations like Swap and CyclicReplace to work
+   * correctly after point modifications.
+   *
+   * @returns this for chaining
+   */
+  centerPointsAroundPosition(): this {
+    if (this._points3D.length === 0) {
+      return this;
+    }
+
+    // Calculate bounding box center of points (without position offset)
+    let minX = Infinity,
+      maxX = -Infinity;
+    let minY = Infinity,
+      maxY = -Infinity;
+    let minZ = Infinity,
+      maxZ = -Infinity;
+    for (const p of this._points3D) {
+      if (p[0] < minX) minX = p[0];
+      if (p[0] > maxX) maxX = p[0];
+      if (p[1] < minY) minY = p[1];
+      if (p[1] > maxY) maxY = p[1];
+      if (p[2] < minZ) minZ = p[2];
+      if (p[2] > maxZ) maxZ = p[2];
+    }
+
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    const centerZ = (minZ + maxZ) / 2;
+
+    // Translate all points by -center
+    for (const p of this._points3D) {
+      p[0] -= centerX;
+      p[1] -= centerY;
+      p[2] -= centerZ;
+    }
+
+    // Update position to compensate
+    this.position.x += centerX;
+    this.position.y += centerY;
+    this.position.z += centerZ;
+
+    this._geometryDirty = true;
+    this._markDirtyUpward();
+
+    return this;
+  }
+
   // -----------------------------------------------------------------------
   // Geometry utility wrappers (delegate to standalone functions)
   // -----------------------------------------------------------------------
