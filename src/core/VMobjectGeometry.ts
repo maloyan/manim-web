@@ -119,14 +119,14 @@ export function sampleBezierOutline(points: number[][], samplesPerSegment: numbe
     for (let t = startT; t <= samples; t++) {
       const u = t / samples;
       const pt = evalCubicBezier(p0, p1, p2, p3, u);
-      result.push([pt[0], pt[1]]);
+      result.push([pt[0], pt[1], pt[2] ?? 0]); // Include Z for 3D support
     }
   }
 
   // Handle non-Bezier (simple line segment) fallback
   if (result.length === 0 && points.length >= 2) {
     for (const p of points) {
-      result.push([p[0], p[1]]);
+      result.push([p[0], p[1], p[2] ?? 0]); // Include Z for 3D support
     }
   }
 
@@ -314,7 +314,7 @@ export function buildEarcutFillGeometry(
     const v = outline[indices[i]];
     positions[i * 3] = v[0];
     positions[i * 3 + 1] = v[1];
-    positions[i * 3 + 2] = 0;
+    positions[i * 3 + 2] = v[2] ?? 0; // Use Z for 3D support
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -387,7 +387,7 @@ function buildEarcutFillGeometryMulti(
 
     for (const idx of indices) {
       const v = allVerts[idx];
-      allPositions.push(v[0], v[1], 0);
+      allPositions.push(v[0], v[1], v[2] ?? 0); // Use Z for 3D support
     }
   }
 
