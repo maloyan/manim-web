@@ -114,22 +114,20 @@ export class ThreeDAxes extends Group {
     const arrowCfg = this._resolveArrowConfig(options);
 
     this._xAxis = this._buildAxisArrow(
-      [ranges.x[0], 0, 0],
-      [ranges.x[1], 0, 0],
+      this._m2t(ranges.x[0], 0, 0),
+      this._m2t(ranges.x[1], 0, 0),
       colors.x,
       arrowCfg,
     );
-    // Manim +Y maps to THREE -Z.
     this._yAxis = this._buildAxisArrow(
-      [0, 0, -ranges.y[0]],
-      [0, 0, -ranges.y[1]],
+      this._m2t(0, ranges.y[0], 0),
+      this._m2t(0, ranges.y[1], 0),
       colors.y,
       arrowCfg,
     );
-    // Manim +Z maps to THREE +Y (up).
     this._zAxis = this._buildAxisArrow(
-      [0, ranges.z[0], 0],
-      [0, ranges.z[1], 0],
+      this._m2t(0, 0, ranges.z[0]),
+      this._m2t(0, 0, ranges.z[1]),
       colors.z,
       arrowCfg,
     );
@@ -204,11 +202,12 @@ export class ThreeDAxes extends Group {
   }
 
   /**
-   * Convert Manim coordinates (mx, my, mz) to THREE.js coordinates.
-   * Manim: X right, Y forward, Z up → THREE.js: X right, Y up, Z backward
+   * Convert graph coordinates to scene coordinates.
+   * ThreeDAxes uses the same right-handed coordinate system as the scene:
+   * X right, Y up, Z toward viewer.
    */
   private _m2t(mx: number, my: number, mz: number): [number, number, number] {
-    return [mx, mz, -my];
+    return [mx, my, mz];
   }
 
   /**
@@ -374,23 +373,21 @@ export class ThreeDAxes extends Group {
   }
 
   /**
-   * Convert graph coordinates (Manim space) to visual point coordinates (THREE.js space).
+   * Convert graph coordinates to visual point coordinates (scene space).
    * With unit_size=1, graph coordinates map directly to visual positions.
-   * Applies Manim→THREE.js mapping: (mx, my, mz) → (mx, mz, -my)
    */
   coordsToPoint(x: number, y: number, z: number): Vector3Tuple {
-    return [x + this.position.x, z + this.position.y, -y + this.position.z];
+    return [x + this.position.x, y + this.position.y, z + this.position.z];
   }
 
   /**
-   * Convert visual point coordinates (THREE.js space) to graph coordinates (Manim space).
-   * Applies inverse THREE.js→Manim mapping: (tx, ty, tz) → (tx, -tz, ty)
+   * Convert visual point coordinates (scene space) to graph coordinates.
    */
   pointToCoords(point: Vector3Tuple): Vector3Tuple {
     const tx = point[0] - this.position.x;
     const ty = point[1] - this.position.y;
     const tz = point[2] - this.position.z;
-    return [tx, -tz, ty];
+    return [tx, ty, tz];
   }
 
   /**

@@ -59,7 +59,6 @@ describe('ThreeDAxes showLabels', () => {
       labelBuffer: 0.4,
     });
 
-    // Manim→THREE: (mx, my, mz) → (mx, mz, -my)
     const xPos = axes.getXLabel()!.position;
     expect(xPos.x).toBeCloseTo(5.4);
     expect(xPos.y).toBeCloseTo(0);
@@ -67,15 +66,15 @@ describe('ThreeDAxes showLabels', () => {
 
     const yPos = axes.getYLabel()!.position;
     expect(yPos.x).toBeCloseTo(0);
-    expect(yPos.y).toBeCloseTo(0);
-    expect(yPos.z).toBeCloseTo(-5.4);
+    expect(yPos.y).toBeCloseTo(5.4);
+    expect(yPos.z).toBeCloseTo(0);
 
-    // Z label: offset to the side of the tip (Manim CE RIGHT direction)
-    // so it doesn't sit directly on the arrow.
+    // Z label: offset to the side of the tip so it doesn't sit directly
+    // on the arrow.
     const zPos = axes.getZLabel()!.position;
     expect(zPos.x).toBeCloseTo(0.4);
-    expect(zPos.y).toBeCloseTo(5 + 0.4 * 0.3);
-    expect(zPos.z).toBeCloseTo(0);
+    expect(zPos.y).toBeCloseTo(0);
+    expect(zPos.z).toBeCloseTo(5 + 0.4 * 0.3);
   });
 
   // Helper: find the Mesh nested inside a MathTexImage-style Group.
@@ -289,5 +288,53 @@ describe('ThreeDAxes showLabels', () => {
       expect(Math.abs(ndcX.x)).toBeLessThanOrEqual(1 - margin + 1e-3);
       expect(Math.abs(ndcX.y)).toBeLessThanOrEqual(1 - margin + 1e-3);
     });
+  });
+});
+
+describe('ThreeDAxes coordsToPoint aligns with scene coordinates (issue #256)', () => {
+  it('coordsToPoint(1, 0, 0) matches Arrow3D end=[1,0,0]', () => {
+    const axes = new ThreeDAxes();
+    const pt = axes.coordsToPoint(1, 0, 0);
+    expect(pt).toEqual([1, 0, 0]);
+  });
+
+  it('coordsToPoint(0, 1, 0) matches Arrow3D end=[0,1,0]', () => {
+    const axes = new ThreeDAxes();
+    const pt = axes.coordsToPoint(0, 1, 0);
+    expect(pt).toEqual([0, 1, 0]);
+  });
+
+  it('coordsToPoint(0, 0, 1) matches Arrow3D end=[0,0,1]', () => {
+    const axes = new ThreeDAxes();
+    const pt = axes.coordsToPoint(0, 0, 1);
+    expect(pt).toEqual([0, 0, 1]);
+  });
+
+  it('pointToCoords is the inverse of coordsToPoint', () => {
+    const axes = new ThreeDAxes();
+    const original: [number, number, number] = [3, -2, 4];
+    const pt = axes.coordsToPoint(...original);
+    const back = axes.pointToCoords(pt);
+    expect(back[0]).toBeCloseTo(original[0]);
+    expect(back[1]).toBeCloseTo(original[1]);
+    expect(back[2]).toBeCloseTo(original[2]);
+  });
+
+  it('c2pX/c2pY/c2pZ return the corresponding component', () => {
+    const axes = new ThreeDAxes();
+    expect(axes.c2pX(5)).toBeCloseTo(5);
+    expect(axes.c2pY(3)).toBeCloseTo(3);
+    expect(axes.c2pZ(-2)).toBeCloseTo(-2);
+  });
+
+  it('axis arrows point along scene basis vectors', () => {
+    const axes = new ThreeDAxes({ xRange: [0, 5, 1], yRange: [0, 5, 1], zRange: [0, 5, 1] });
+    const xEnd = axes.getXAxis().getEnd();
+    const yEnd = axes.getYAxis().getEnd();
+    const zEnd = axes.getZAxis().getEnd();
+
+    expect(xEnd).toEqual([5, 0, 0]);
+    expect(yEnd).toEqual([0, 5, 0]);
+    expect(zEnd).toEqual([0, 0, 5]);
   });
 });
