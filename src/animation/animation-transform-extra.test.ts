@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
-import { VMobject } from '../core/VMobject';
+import { VMobject, CurvesAsSubmobjects } from '../core/VMobject';
+import { Mobject } from '../core/Mobject';
 import { Circle } from '../mobjects/geometry/Circle';
 import {
   ApplyFunction,
@@ -1072,6 +1073,68 @@ describe('Swap', () => {
     expect(m1.position.x).toBeCloseTo(2.5, 3);
     expect(m2.position.x).toBeCloseTo(-1.5, 3);
   });
+
+  it('swaps child-backed VMobject containers after pointwise shifts', () => {
+    const m1 = vgroup(sq());
+    const m2 = vgroup(sq());
+
+    const shiftLeft = new ApplyPointwiseFunction(m1, (p) => [p[0] - 2, p[1], p[2]]);
+    shiftLeft.begin();
+    shiftLeft.finish();
+
+    const shiftRight = new ApplyPointwiseFunction(m2, (p) => [p[0] + 2, p[1], p[2]]);
+    shiftRight.begin();
+    shiftRight.finish();
+
+    // Container has no direct points; visual center comes from descendants.
+    const c1 = (m1.children[0] as VMobject).getCenter();
+    const c2 = (m2.children[0] as VMobject).getCenter();
+    expect(c1[0]).toBeCloseTo(-1.5, 3);
+    expect(c2[0]).toBeCloseTo(2.5, 3);
+
+    const anim = new Swap(m1, m2);
+    anim.begin();
+    anim.finish();
+
+    expect(m1.position.x).toBeCloseTo(2.5, 3);
+    expect(m2.position.x).toBeCloseTo(-1.5, 3);
+  });
+
+  it('swaps CurvesAsSubmobjects (container with no local points)', () => {
+    // Regression: CurvesAsSubmobjects has empty local _points3D but children have points.
+    // centerPointsAroundPosition must scan descendants.
+    const base = new Circle({ radius: 1 });
+    const curves1 = new CurvesAsSubmobjects(base);
+    const curves2 = new CurvesAsSubmobjects(base);
+
+    // Verify container has no local points but children do
+    expect(curves1.getPoints().length).toBe(0);
+    expect(curves1.children.length).toBeGreaterThan(0);
+    expect((curves1.children[0] as VMobject).getPoints().length).toBeGreaterThan(0);
+
+    const shift1 = new ApplyPointwiseFunction(curves1, (p) => [p[0] - 3, p[1], p[2]]);
+    shift1.begin();
+    shift1.finish();
+
+    const shift2 = new ApplyPointwiseFunction(curves2, (p) => [p[0] + 3, p[1], p[2]]);
+    shift2.begin();
+    shift2.finish();
+
+    const anim = new Swap(curves1, curves2);
+    anim.begin();
+    anim.finish();
+
+    // After swap, positions should be exchanged
+    expect(curves1.position.x).toBeGreaterThan(2);
+    expect(curves2.position.x).toBeLessThan(-2);
+  });
+
+  it('throws when autoCenter used with non-VMobject', () => {
+    const m1 = new Mobject();
+    const m2 = new Mobject();
+    const anim = new Swap(m1, m2);
+    expect(() => anim.begin()).toThrow('Swap autoCenter requires VMobject');
+  });
 });
 
 // ── CyclicReplace ──────────────────────────────────────────────────────────
@@ -1186,6 +1249,46 @@ describe('CyclicReplace', () => {
     expect(m1.position.x).toBeCloseTo(2.5, 3);
     expect(m2.position.x).toBeCloseTo(6.5, 3);
     expect(m3.position.x).toBeCloseTo(-1.5, 3);
+  });
+
+  it('cycles child-backed VMobject containers after pointwise shifts', () => {
+    const m1 = vgroup(sq());
+    const m2 = vgroup(sq());
+    const m3 = vgroup(sq());
+
+    const shift1 = new ApplyPointwiseFunction(m1, (p) => [p[0] - 2, p[1], p[2]]);
+    shift1.begin();
+    shift1.finish();
+
+    const shift2 = new ApplyPointwiseFunction(m2, (p) => [p[0] + 2, p[1], p[2]]);
+    shift2.begin();
+    shift2.finish();
+
+    const shift3 = new ApplyPointwiseFunction(m3, (p) => [p[0] + 6, p[1], p[2]]);
+    shift3.begin();
+    shift3.finish();
+
+    const c1 = (m1.children[0] as VMobject).getCenter();
+    const c2 = (m2.children[0] as VMobject).getCenter();
+    const c3 = (m3.children[0] as VMobject).getCenter();
+    expect(c1[0]).toBeCloseTo(-1.5, 3);
+    expect(c2[0]).toBeCloseTo(2.5, 3);
+    expect(c3[0]).toBeCloseTo(6.5, 3);
+
+    const anim = new CyclicReplace([m1, m2, m3]);
+    anim.begin();
+    anim.finish();
+
+    expect(m1.position.x).toBeCloseTo(2.5, 3);
+    expect(m2.position.x).toBeCloseTo(6.5, 3);
+    expect(m3.position.x).toBeCloseTo(-1.5, 3);
+  });
+
+  it('throws when autoCenter used with non-VMobject', () => {
+    const m1 = new Mobject();
+    const m2 = new Mobject();
+    const anim = new CyclicReplace([m1, m2]);
+    expect(() => anim.begin()).toThrow('CyclicReplace autoCenter requires VMobject');
   });
 });
 

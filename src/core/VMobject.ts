@@ -541,64 +541,37 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Get the center of this VMobject based on its points.
+   * Get the center of this VMobject based on its own local points.
    * Uses bounding box center (matching Python Manim's get_center behavior)
    * rather than point centroid, which is inaccurate for Bezier control points.
    */
   override getCenter(): Vector3Tuple {
-    if (this._points3D.length === 0) {
+    const localCenter = VMobject._boundingBoxCenter(this._points3D);
+    if (!localCenter) {
       return [this.position.x, this.position.y, this.position.z];
     }
 
-    let minX = Infinity,
-      maxX = -Infinity;
-    let minY = Infinity,
-      maxY = -Infinity;
-    let minZ = Infinity,
-      maxZ = -Infinity;
-    for (const p of this._points3D) {
-      if (p[0] < minX) minX = p[0];
-      if (p[0] > maxX) maxX = p[0];
-      if (p[1] < minY) minY = p[1];
-      if (p[1] > maxY) maxY = p[1];
-      if (p[2] < minZ) minZ = p[2];
-      if (p[2] > maxZ) maxZ = p[2];
-    }
-
     return [
-      this.position.x + (minX + maxX) / 2,
-      this.position.y + (minY + maxY) / 2,
-      this.position.z + (minZ + maxZ) / 2,
+      this.position.x + localCenter[0],
+      this.position.y + localCenter[1],
+      this.position.z + localCenter[2],
     ];
   }
 
   /**
-   * Centers the points around the origin and updates position accordingly.
-   * This is useful when points have been modified directly (e.g., via setPoints3D
-   * or ApplyPointwiseFunction) without updating the position property.
-   *
-   * After calling this method, the visual appearance remains the same, but:
-   * - Points are centered at the origin (0,0,0)
-   * - Position is updated to reflect the visual center
-   *
-   * This enables position-based animations like Swap and CyclicReplace to work
-   * correctly after point modifications.
-   *
-   * @returns this for chaining
+   * Compute local bounding-box center for a list of points.
    */
-  centerPointsAroundPosition(): this {
-    if (this._points3D.length === 0) {
-      return this;
-    }
+  private static _boundingBoxCenter(points: number[][]): Vector3Tuple | null {
+    if (points.length === 0) return null;
 
-    // Calculate bounding box center of points (without position offset)
     let minX = Infinity,
       maxX = -Infinity;
     let minY = Infinity,
       maxY = -Infinity;
     let minZ = Infinity,
       maxZ = -Infinity;
-    for (const p of this._points3D) {
+
+    for (const p of points) {
       if (p[0] < minX) minX = p[0];
       if (p[0] > maxX) maxX = p[0];
       if (p[1] < minY) minY = p[1];
@@ -607,21 +580,73 @@ export class VMobject extends VMobjectRendering {
       if (p[2] > maxZ) maxZ = p[2];
     }
 
-    const centerX = (minX + maxX) / 2;
-    const centerY = (minY + maxY) / 2;
-    const centerZ = (minZ + maxZ) / 2;
+    return [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2];
+  }
 
-    // Translate all points by -center
-    for (const p of this._points3D) {
-      p[0] -= centerX;
-      p[1] -= centerY;
-      p[2] -= centerZ;
+  /**
+   * Compute local bounding-box center across this VMobject and all descendants
+   * that expose point data.
+   */
+  private _familyPointsCenter(): Vector3Tuple | null {
+    let minX = Infinity,
+      maxX = -Infinity;
+    let minY = Infinity,
+      maxY = -Infinity;
+    let minZ = Infinity,
+      maxZ = -Infinity;
+    let hasPoints = false;
+
+    for (const m of this.getFamily()) {
+      const asAny = m as unknown as { getPoints?: () => number[][] };
+      if (typeof asAny.getPoints !== 'function') continue;
+
+      for (const p of asAny.getPoints()) {
+        hasPoints = true;
+        if (p[0] < minX) minX = p[0];
+        if (p[0] > maxX) maxX = p[0];
+        if (p[1] < minY) minY = p[1];
+        if (p[1] > maxY) maxY = p[1];
+        if (p[2] < minZ) minZ = p[2];
+        if (p[2] > maxZ) maxZ = p[2];
+      }
     }
 
-    // Update position to compensate
-    this.position.x += centerX;
-    this.position.y += centerY;
-    this.position.z += centerZ;
+    if (!hasPoints) return null;
+    return [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2];
+  }
+
+  /**
+   * Centers local geometry around the origin and updates position accordingly.
+   *
+   * This scans all descendant VMobject points (not only this._points3D), so
+   * container-style VMobjects (e.g. MathTex/SVGMobject/CurvesAsSubmobjects)
+   * are also centered correctly.
+   *
+   * @returns this for chaining
+   */
+  centerPointsAroundPosition(): this {
+    const center = this._familyPointsCenter();
+    if (!center) {
+      return this;
+    }
+
+    // Translate descendant geometry by -center in local coordinates.
+    for (const m of this.getFamily()) {
+      if (m instanceof VMobject) {
+        for (const p of m._points3D) {
+          p[0] -= center[0];
+          p[1] -= center[1];
+          p[2] -= center[2];
+        }
+        m._geometryDirty = true;
+        m._markDirty();
+      }
+    }
+
+    // Update root position to compensate so world-space appearance is unchanged.
+    this.position.x += center[0];
+    this.position.y += center[1];
+    this.position.z += center[2];
 
     this._geometryDirty = true;
     this._markDirtyUpward();

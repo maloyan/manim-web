@@ -295,8 +295,14 @@ export class Swap extends Animation {
     super.begin();
 
     if (this.autoCenter) {
-      (this.mobject as VMobject).centerPointsAroundPosition?.();
-      (this.mobject2 as VMobject).centerPointsAroundPosition?.();
+      if (!(this.mobject instanceof VMobject)) {
+        throw new Error(`Swap autoCenter requires VMobject, got ${this.mobject.constructor.name}`);
+      }
+      if (!(this.mobject2 instanceof VMobject)) {
+        throw new Error(`Swap autoCenter requires VMobject, got ${this.mobject2.constructor.name}`);
+      }
+      this.mobject.centerPointsAroundPosition();
+      this.mobject2.centerPointsAroundPosition();
     }
 
     this._startPos1.copy(this.mobject.position);
@@ -389,7 +395,10 @@ export class CyclicReplace extends Animation {
 
     if (this.autoCenter) {
       for (const m of this.mobjects) {
-        (m as VMobject).centerPointsAroundPosition?.();
+        if (!(m instanceof VMobject)) {
+          throw new Error(`CyclicReplace autoCenter requires VMobject, got ${m.constructor.name}`);
+        }
+        m.centerPointsAroundPosition();
       }
     }
 
