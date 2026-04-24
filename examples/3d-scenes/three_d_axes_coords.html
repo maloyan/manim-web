@@ -32,11 +32,12 @@
       width: window.innerWidth,
       height: window.innerHeight,
       backgroundColor: '#191919',
-      phi: 75 * (Math.PI / 180),
-      theta: -45 * (Math.PI / 180),
+      phi: 0.0,
+      theta: -90 * (Math.PI / 180),
       distance: 20,
       fov: 30,
       enableOrbitControls: true,
+      orbitControlsUp: "y",
     });
 
     const axes = new ThreeDAxes({

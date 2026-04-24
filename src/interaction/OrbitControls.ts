@@ -31,6 +31,8 @@ export interface OrbitControlsOptions {
   autoRotate?: boolean;
   /** Auto-rotation speed in degrees per second. Defaults to 2. */
   autoRotateSpeed?: number;
+  /** Vertical rotation axis: 'x', 'y', 'z', or 'camera' (uses camera's up). Defaults to 'camera'. */
+  orbitControlsUp?: 'x' | 'y' | 'z' | 'camera';
 }
 
 /**
@@ -78,6 +80,18 @@ export class OrbitControls {
 
     this._controls.autoRotate = options?.autoRotate ?? false;
     this._controls.autoRotateSpeed = options?.autoRotateSpeed ?? 2;
+
+    // Set vertical rotation axis.
+    // OrbitControls uses camera.up as the orbit "up" reference.
+    const up = options?.orbitControlsUp ?? 'camera';
+    if (up === 'x') {
+      camera.up.set(1, 0, 0);
+    } else if (up === 'y') {
+      camera.up.set(0, 1, 0);
+    } else if (up === 'z') {
+      camera.up.set(0, 0, 1);
+    }
+    // Keep current pose; controls will use this up axis on interaction/update.
   }
 
   /**
