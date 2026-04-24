@@ -258,6 +258,8 @@ export function counterclockwiseTransform(
 export interface SwapOptions extends AnimationOptions {
   /** Path arc angle for the swap, default PI/2 */
   pathArc?: number;
+  /** Auto-center points around position before animation, default true */
+  autoCenter?: boolean;
 }
 
 /**
@@ -271,6 +273,9 @@ export class Swap extends Animation {
   /** Path arc angle */
   readonly pathArc: number;
 
+  /** Auto-center points around position */
+  readonly autoCenter: boolean;
+
   /** Starting positions */
   private _startPos1: THREE.Vector3 = new THREE.Vector3();
   private _startPos2: THREE.Vector3 = new THREE.Vector3();
@@ -283,10 +288,22 @@ export class Swap extends Animation {
     super(mobject1, options);
     this.mobject2 = mobject2;
     this.pathArc = options.pathArc ?? Math.PI / 2;
+    this.autoCenter = options.autoCenter ?? true;
   }
 
   override begin(): void {
     super.begin();
+
+    if (this.autoCenter) {
+      if (!(this.mobject instanceof VMobject)) {
+        throw new Error(`Swap autoCenter requires VMobject, got ${this.mobject.constructor.name}`);
+      }
+      if (!(this.mobject2 instanceof VMobject)) {
+        throw new Error(`Swap autoCenter requires VMobject, got ${this.mobject2.constructor.name}`);
+      }
+      this.mobject.centerPointsAroundPosition();
+      this.mobject2.centerPointsAroundPosition();
+    }
 
     this._startPos1.copy(this.mobject.position);
     this._startPos2.copy(this.mobject2.position);
@@ -339,6 +356,8 @@ export function swap(mobject1: Mobject, mobject2: Mobject, options?: SwapOptions
 export interface CyclicReplaceOptions extends AnimationOptions {
   /** Path arc angle for movement, default PI/2 */
   pathArc?: number;
+  /** Auto-center points around position before animation, default true */
+  autoCenter?: boolean;
 }
 
 /**
@@ -351,6 +370,9 @@ export class CyclicReplace extends Animation {
 
   /** Path arc angle */
   readonly pathArc: number;
+
+  /** Auto-center points around position */
+  readonly autoCenter: boolean;
 
   /** Starting positions */
   private _startPositions: THREE.Vector3[] = [];
@@ -365,10 +387,20 @@ export class CyclicReplace extends Animation {
     super(mobjects[0], options);
     this.mobjects = mobjects;
     this.pathArc = options.pathArc ?? Math.PI / 2;
+    this.autoCenter = options.autoCenter ?? true;
   }
 
   override begin(): void {
     super.begin();
+
+    if (this.autoCenter) {
+      for (const m of this.mobjects) {
+        if (!(m instanceof VMobject)) {
+          throw new Error(`CyclicReplace autoCenter requires VMobject, got ${m.constructor.name}`);
+        }
+        m.centerPointsAroundPosition();
+      }
+    }
 
     // Store starting positions
     this._startPositions = this.mobjects.map((m) => m.position.clone());
