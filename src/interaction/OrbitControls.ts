@@ -51,6 +51,18 @@ export class OrbitControls {
    */
   // eslint-disable-next-line complexity
   constructor(camera: THREE.Camera, canvas: HTMLCanvasElement, options?: OrbitControlsOptions) {
+    // IMPORTANT: ThreeOrbitControls captures an internal basis quaternion
+    // from `camera.up` at construction time. So set the desired up axis
+    // BEFORE constructing controls.
+    const up = options?.orbitControlsUp ?? 'camera';
+    if (up === 'x') {
+      camera.up.set(1, 0, 0);
+    } else if (up === 'y') {
+      camera.up.set(0, 1, 0);
+    } else if (up === 'z') {
+      camera.up.set(0, 0, 1);
+    }
+
     this._controls = new ThreeOrbitControls(camera, canvas);
 
     this._controls.enableDamping = options?.enableDamping ?? true;
@@ -81,17 +93,7 @@ export class OrbitControls {
     this._controls.autoRotate = options?.autoRotate ?? false;
     this._controls.autoRotateSpeed = options?.autoRotateSpeed ?? 2;
 
-    // Set vertical rotation axis.
-    // OrbitControls uses camera.up as the orbit "up" reference.
-    const up = options?.orbitControlsUp ?? 'camera';
-    if (up === 'x') {
-      camera.up.set(1, 0, 0);
-    } else if (up === 'y') {
-      camera.up.set(0, 1, 0);
-    } else if (up === 'z') {
-      camera.up.set(0, 0, 1);
-    }
-    // Keep current pose; controls will use this up axis on interaction/update.
+    // Keep current pose; controls will use the chosen up axis basis.
   }
 
   /**

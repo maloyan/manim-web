@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>OrbitControls basis experiment</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #111; color: #ddd; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    #container { width: 100vw; height: 100vh; }
+    #ui {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 999;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 10px;
+      width: 460px;
+    }
+    #ui button { margin: 2px; }
+    #log { white-space: pre-wrap; font-size: 12px; max-height: 240px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div id="ui">
+    <div><b>Experiment:</b> verify OrbitControls internal basis drift when camera.up changes.</div>
+    <div style="margin-top: 8px;">
+      <button id="dump">Dump state</button>
+      <button id="move">Programmatic move (setCameraOrientation)</button>
+      <button id="rebuild">Rebuild controls._quat from current camera.up</button>
+      <button id="toggleLock">Toggle lock camera.up = X each frame</button>
+    </div>
+    <div id="log" style="margin-top: 8px;"></div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import {
+      ThreeDScene,
+      ThreeDAxes,
+      Dot3D,
+      RED,
+      GREEN,
+      BLUE,
+    } from '../../src/index.ts';
+
+    const logEl = document.getElementById('log');
+    const log = (s) => {
+      logEl.textContent = `${new Date().toLocaleTimeString()} ${s}\n` + logEl.textContent;
+    };
+
+    const scene = new ThreeDScene(document.getElementById('container'), {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      backgroundColor: '#111',
+      phi: 0.7,
+      theta: -1.0,
+      distance: 18,
+      fov: 35,
+      enableOrbitControls: true,
+      orbitControlsUp: 'x', // critical for this experiment
+    });
+
+    const axes = new ThreeDAxes({
+      xRange: [-5, 5, 1],
+      yRange: [-5, 5, 1],
+      zRange: [-5, 5, 1],
+      showLabels: true,
+    });
+
+    const xDot = new Dot3D({ point: [3, 0, 0], color: RED, radius: 0.14 });
+    const yDot = new Dot3D({ point: [0, 3, 0], color: GREEN, radius: 0.14 });
+    const zDot = new Dot3D({ point: [0, 0, 3], color: BLUE, radius: 0.14 });
+
+    scene.add(axes, xDot, yDot, zDot);
+
+    const cam = scene.camera3D.getCamera();
+    const controls = scene.orbitControls.getControls();
+
+    let lockX = false;
+    const Y = new THREE.Vector3(0, 1, 0);
+
+    function fmt(v) {
+      return `[${v.x.toFixed(3)}, ${v.y.toFixed(3)}, ${v.z.toFixed(3)}]`;
+    }
+
+    function dumpState(label) {
+      const up = cam.up.clone().normalize();
+      const qStored = controls._quat?.clone?.() ?? null;
+      const qRef = new THREE.Quaternion().setFromUnitVectors(up, Y);
+
+      let mappedErr = NaN;
+      let quatDelta = NaN;
+
+      if (qStored) {
+        const mapped = up.clone().applyQuaternion(qStored);
+        mappedErr = mapped.distanceTo(Y);
+        quatDelta = qStored.angleTo(qRef);
+      }
+
+      log(`${label}
+cam.up=${fmt(up)}
+storedQuatVsRefAngle=${Number.isFinite(quatDelta) ? quatDelta.toFixed(6) : 'n/a'}
+map(up)->Y error=${Number.isFinite(mappedErr) ? mappedErr.toExponential(3) : 'n/a'}
+pos=${fmt(cam.position)} target=${fmt(controls.target)} lockX=${lockX}`);
+    }
+
+    function rebuildQuatFromCurrentUp() {
+      const up = cam.up.clone().normalize();
+      controls._quat = new THREE.Quaternion().setFromUnitVectors(up, Y);
+      controls._quatInverse = controls._quat.clone().invert();
+      log('Rebuilt controls._quat/_quatInverse from current camera.up');
+      scene.render();
+      dumpState('After rebuild');
+    }
+
+    document.getElementById('dump').onclick = () => dumpState('Dump');
+
+    document.getElementById('move').onclick = () => {
+      const o = scene.getCameraOrientation();
+      scene.setCameraOrientation(o.phi + 0.25, o.theta + 0.35, o.distance);
+      dumpState('After setCameraOrientation');
+    };
+
+    document.getElementById('rebuild').onclick = rebuildQuatFromCurrentUp;
+
+    document.getElementById('toggleLock').onclick = () => {
+      lockX = !lockX;
+      log(`lockX=${lockX}`);
+    };
+
+    const tick = () => {
+      if (lockX) {
+        cam.up.set(1, 0, 0);
+      }
+      requestAnimationFrame(tick);
+    };
+    tick();
+
+    dumpState('Initial');
+
+    window.addEventListener('resize', () => {
+      scene.resize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
