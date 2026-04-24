@@ -114,20 +114,20 @@ export class ThreeDAxes extends Group {
     const arrowCfg = this._resolveArrowConfig(options);
 
     this._xAxis = this._buildAxisArrow(
-      this._m2t(ranges.x[0], 0, 0),
-      this._m2t(ranges.x[1], 0, 0),
+      [ranges.x[0], 0, 0],
+      [ranges.x[1], 0, 0],
       colors.x,
       arrowCfg,
     );
     this._yAxis = this._buildAxisArrow(
-      this._m2t(0, ranges.y[0], 0),
-      this._m2t(0, ranges.y[1], 0),
+      [0, ranges.y[0], 0],
+      [0, ranges.y[1], 0],
       colors.y,
       arrowCfg,
     );
     this._zAxis = this._buildAxisArrow(
-      this._m2t(0, 0, ranges.z[0]),
-      this._m2t(0, 0, ranges.z[1]),
+      [0, 0, ranges.z[0]],
+      [0, 0, ranges.z[1]],
       colors.z,
       arrowCfg,
     );
@@ -206,9 +206,6 @@ export class ThreeDAxes extends Group {
    * ThreeDAxes uses the same right-handed coordinate system as the scene:
    * X right, Y up, Z toward viewer.
    */
-  private _m2t(mx: number, my: number, mz: number): [number, number, number] {
-    return [mx, my, mz];
-  }
 
   /**
    * Create tick marks for all axes using Manim→THREE.js coordinate mapping
@@ -225,8 +222,8 @@ export class ThreeDAxes extends Group {
       if (Math.abs(x - xMin) < 0.001 || Math.abs(x - xMax) < 0.001) continue;
 
       const tick = new Line3D({
-        start: this._m2t(x, 0, -t),
-        end: this._m2t(x, 0, t),
+        start: [x, 0, -t],
+        end: [x, 0, t],
         color: xColor,
       });
       this._ticks.push(tick);
@@ -239,8 +236,8 @@ export class ThreeDAxes extends Group {
       if (Math.abs(y - yMin) < 0.001 || Math.abs(y - yMax) < 0.001) continue;
 
       const tick = new Line3D({
-        start: this._m2t(0, y, -t),
-        end: this._m2t(0, y, t),
+        start: [0, y, -t],
+        end: [0, y, t],
         color: yColor,
       });
       this._ticks.push(tick);
@@ -253,8 +250,8 @@ export class ThreeDAxes extends Group {
       if (Math.abs(z - zMin) < 0.001 || Math.abs(z - zMax) < 0.001) continue;
 
       const tick = new Line3D({
-        start: this._m2t(-t, 0, z),
-        end: this._m2t(t, 0, z),
+        start: [-t, 0, z],
+        end: [t, 0, z],
         color: zColor,
       });
       this._ticks.push(tick);
@@ -294,15 +291,12 @@ export class ThreeDAxes extends Group {
     const yMax = this._yRange[1];
     const zMax = this._zRange[1];
 
-    const xPos = this._m2t(xMax + buf, 0, 0);
-    this._xLabel.position.set(xPos[0], xPos[1], xPos[2]);
-    const yPos = this._m2t(0, yMax + buf, 0);
-    this._yLabel.position.set(yPos[0], yPos[1], yPos[2]);
+    this._xLabel.position.set(xMax + buf, 0, 0);
+    this._yLabel.position.set(0, yMax + buf, 0);
     // Z label: mirror Manim CE's `direction=RIGHT` convention — offset to
     // the side of the arrow tip (not directly above) so it doesn't sit
     // on top of the arrow shaft/cone.
-    const zPos = this._m2t(buf, 0, zMax + buf * 0.3);
-    this._zLabel.position.set(zPos[0], zPos[1], zPos[2]);
+    this._zLabel.position.set(buf, 0, zMax + buf * 0.3);
 
     // Labels live in a dedicated Group so `getAxisLabels()` can return the
     // same Group every time without re-parenting (which would remove the
