@@ -152,7 +152,7 @@ export function sampleBezierOutline(points: number[][], samplesPerSegment: numbe
  * Sample Bezier path into 3D points (preserves z).
  * Same logic as sampleBezierOutline but returns [x, y, z] instead of [x, y].
  */
-export function sampleBezierOutline3D(points: number[][], samplesPerSegment: number): number[][] {
+function sampleBezierOutline3D(points: number[][], samplesPerSegment: number): number[][] {
   const result: number[][] = [];
 
   for (let i = 0; i + 3 < points.length; i += 3) {
@@ -196,7 +196,7 @@ export function sampleBezierOutline3D(points: number[][], samplesPerSegment: num
  * Project 3D outline points to 2D plane for triangulation.
  * Returns both 2D projected points and the plane basis for reconstruction.
  */
-export function projectOutlineToPlane(outline3D: number[][]): {
+function projectOutlineToPlane(outline3D: number[][]): {
   outline2D: number[][];
   origin: number[];
   v1: number[];
