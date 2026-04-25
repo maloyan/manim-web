@@ -26,6 +26,7 @@ export class Camera3D {
   private _fov: number;
   private _position: THREE.Vector3;
   private _lookAt: THREE.Vector3;
+  private _lastTheta: number = 0;
 
   /**
    * Create a new 3D camera.
@@ -124,26 +125,42 @@ export class Camera3D {
   }
 
   /**
-   * Orbit the camera around the look-at point using Python Manim convention.
-   * Manim rotation: R = Rx(-phi) @ Rz(-theta - PI/2), applied to scene points.
-   * Camera position in Manim space: (d*sin(phi)*cos(theta), d*sin(phi)*sin(theta), d*cos(phi))
-   * @param phi - Polar angle from Z axis (0 = top, PI/2 = side, PI = bottom)
-   * @param theta - Azimuthal angle around Z axis
+   * Orbit the camera around the look-at point using spherical coordinates.
+   *
+   * Mathematical convention:
+   *   - theta: rotation around Z axis (azimuthal)
+   *   - phi: distance from Z axis (polar, 0 = on axis)
+   *
+   * Default (phi=0, theta=-π/2): camera at +Z looking at origin.
+   *   - X axis → screen right
+   *   - Y axis → screen up
+   *   - Z axis → depth (pointing toward viewer)
+   *
+   * @param phi - Polar angle from Z axis (0 = on axis, PI/2 = side, PI = opposite)
+   * @param theta - Azimuthal angle around Z axis (radians)
    * @param distance - Optional distance from look-at point
+   * @param gamma - Roll angle (radians)
    * @returns this for chaining
    */
-  orbit(phi: number, theta: number, distance?: number): this {
+  orbit(phi: number, theta: number, distance?: number, gamma: number = 0): this {
     const dist = distance ?? this._position.distanceTo(this._lookAt);
 
-    // Manim rotation matrix: R = Rx(-phi) @ Rz(-theta - PI/2)
-    // Camera at (0,0,d) in rotated frame → world position via R^T:
-    // Manim: (d*sin(phi)*cos(theta), d*sin(phi)*sin(theta), d*cos(phi))
-    // THREE.js mapping (mx, mz, -my):
+    // Store theta for gimbal lock recovery in getOrbitAngles()
+    this._lastTheta = theta;
+
     this._position.x = this._lookAt.x + dist * Math.sin(phi) * Math.cos(theta);
-    this._position.y = this._lookAt.y + dist * Math.cos(phi);
-    this._position.z = this._lookAt.z - dist * Math.sin(phi) * Math.sin(theta);
+    this._position.y = this._lookAt.y + dist * Math.sin(phi) * Math.sin(theta);
+    this._position.z = this._lookAt.z + dist * Math.cos(phi);
 
     this._camera.position.copy(this._position);
+
+    // Up = second row of Rz(γ)·Rx(-φ)·Rz(-θ-90°)
+    this._camera.up.set(
+      -Math.sin(gamma) * Math.sin(theta) - Math.cos(gamma) * Math.cos(theta) * Math.cos(phi),
+      Math.sin(gamma) * Math.cos(theta) - Math.cos(gamma) * Math.sin(theta) * Math.cos(phi),
+      Math.cos(gamma) * Math.sin(phi),
+    );
+
     this._camera.lookAt(this._lookAt);
     return this;
   }
@@ -158,12 +175,14 @@ export class Camera3D {
     const dz = this._position.z - this._lookAt.z;
     const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-    // Inverse of orbit(): dx = d*sin(phi)*cos(theta), -dz = d*sin(phi)*sin(theta)
-    return {
-      phi: Math.acos(dy / distance),
-      theta: Math.atan2(-dz, dx),
-      distance,
-    };
+    const phi = Math.acos(dz / distance);
+
+    // At poles (sin(phi) ≈ 0), atan2(0,0) returns 0, losing azimuth.
+    // Preserve the last known theta to avoid gimbal lock artifacts.
+    const sinPhi = Math.sin(phi);
+    const theta = Math.abs(sinPhi) < 1e-6 ? this._lastTheta : Math.atan2(dy, dx);
+
+    return { phi, theta, distance };
   }
 }
 

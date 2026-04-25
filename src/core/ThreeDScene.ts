@@ -21,6 +21,8 @@ export interface ThreeDSceneOptions extends SceneOptions {
   distance?: number;
   /** Enable orbit controls for user interaction. Defaults to true. */
   enableOrbitControls?: boolean;
+  /** Vertical rotation axis for orbit controls: 'x', 'y', 'z', or 'camera' (uses initial camera.up). Defaults to 'camera' (Three.js default behavior). */
+  orbitControlsUp?: 'x' | 'y' | 'z' | 'camera';
   /** Orbit controls configuration options. */
   orbitControlsOptions?: OrbitControlsOptions;
   /** Whether to set up default lighting. Defaults to true. */
@@ -75,6 +77,7 @@ export class ThreeDScene extends Scene {
       theta = -Math.PI / 4,
       distance = 15,
       enableOrbitControls = true,
+      orbitControlsUp,
       orbitControlsOptions,
       setupLighting = true,
     } = options;
@@ -99,11 +102,22 @@ export class ThreeDScene extends Scene {
     // Set up orbit controls
     this._orbitControlsEnabled = enableOrbitControls;
     if (enableOrbitControls && !this.isHeadless) {
-      this._orbitControls = new OrbitControls(this._camera3D.getCamera(), this.getCanvas(), {
+      const cam = this._camera3D.getCamera();
+      const preservedPos = cam.position.clone();
+      const preservedTarget = this._camera3D.lookAtTarget;
+
+      this._orbitControls = new OrbitControls(cam, this.getCanvas(), {
         enableDamping: true,
         dampingFactor: 0.05,
+        orbitControlsUp,
         ...orbitControlsOptions,
       });
+
+      // Preserve initial view direction (position + target) and resync controls state.
+      cam.position.copy(preservedPos);
+      this._orbitControls.setTarget([preservedTarget.x, preservedTarget.y, preservedTarget.z]);
+      cam.lookAt(preservedTarget);
+      this._orbitControls.update();
 
       // Idle orbit loop: re-render only when user drags while scene isn't animating
       this._orbitControls.addEventListener('start', () => {

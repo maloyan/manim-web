@@ -236,8 +236,8 @@ describe('CameraFrame', () => {
     });
     const cam = frame.getThreeCamera();
     expect(cam.position.x).toBeCloseTo(0, 4);
-    expect(cam.position.y).toBeCloseTo(0, 4);
-    expect(cam.position.z).toBeCloseTo(-10, 4);
+    expect(cam.position.y).toBeCloseTo(-10, 4);
+    expect(cam.position.z).toBeCloseTo(0, 4);
   });
 
   it('camera position updates when theta changes', () => {
@@ -251,7 +251,7 @@ describe('CameraFrame', () => {
     expect(cam.position.z).toBeCloseTo(0, 4);
     frame.setTheta(Math.PI / 2);
     expect(cam.position.x).toBeCloseTo(0, 4);
-    expect(cam.position.z).toBeCloseTo(10, 4);
+    expect(cam.position.y).toBeCloseTo(10, 4);
   });
 
   it('gamma applies roll to the camera up vector', () => {
@@ -265,10 +265,12 @@ describe('CameraFrame', () => {
     expect(up.x === 0 && up.y === 1 && up.z === 0).toBe(false);
   });
 
-  it('gamma=0 leaves up vector as world Y', () => {
+  it('gamma=0 gives correct up vector for default camera', () => {
+    // phi=0, theta=-π/2: camera at +Z looking at origin
+    // up should be (0, 1, 0) - Y points up on screen
     const frame = new CameraFrame(16 / 9, {
       theta: -Math.PI / 2,
-      phi: Math.PI / 4,
+      phi: 0,
       gamma: 0,
       distance: 10,
     });

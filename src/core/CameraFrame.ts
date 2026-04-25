@@ -74,7 +74,8 @@ export class CameraFrame {
     };
 
     this._camera3D = new Camera3D(aspectRatio, cam3dOpts);
-    this._syncPositionFromAngles();
+    this._camera3D.setLookAt([this._center.x, this._center.y, this._center.z]);
+    this._camera3D.orbit(this._phi, this._theta, this._distance, this._gamma);
 
     // Lightweight stub so Animation infrastructure can reference us.
     // We create a minimal concrete Mobject subclass inline.
@@ -112,7 +113,8 @@ export class CameraFrame {
     if (opts.theta !== undefined) this._theta = opts.theta;
     if (opts.phi !== undefined) this._phi = opts.phi;
     if (opts.gamma !== undefined) this._gamma = opts.gamma;
-    this._syncPositionFromAngles();
+    this._camera3D.setLookAt([this._center.x, this._center.y, this._center.z]);
+    this._camera3D.orbit(this._phi, this._theta, this._distance, this._gamma);
     return this;
   }
 
@@ -124,14 +126,14 @@ export class CameraFrame {
   /** Set the theta (azimuthal) angle absolutely. */
   setTheta(value: number): this {
     this._theta = value;
-    this._syncPositionFromAngles();
+    this._camera3D.orbit(this._phi, this._theta, this._distance, this._gamma);
     return this;
   }
 
   /** Increment the theta (azimuthal) angle by delta. */
   incrementTheta(delta: number): this {
     this._theta += delta;
-    this._syncPositionFromAngles();
+    this._camera3D.orbit(this._phi, this._theta, this._distance, this._gamma);
     return this;
   }
 
@@ -143,14 +145,14 @@ export class CameraFrame {
   /** Set the phi (polar) angle absolutely. */
   setPhi(value: number): this {
     this._phi = value;
-    this._syncPositionFromAngles();
+    this._camera3D.orbit(this._phi, this._theta, this._distance, this._gamma);
     return this;
   }
 
   /** Increment the phi (polar) angle by delta. */
   incrementPhi(delta: number): this {
     this._phi += delta;
-    this._syncPositionFromAngles();
+    this._camera3D.orbit(this._phi, this._theta, this._distance, this._gamma);
     return this;
   }
 
@@ -162,14 +164,14 @@ export class CameraFrame {
   /** Set the gamma (roll) angle absolutely. */
   setGamma(value: number): this {
     this._gamma = value;
-    this._syncPositionFromAngles();
+    this._camera3D.orbit(this._phi, this._theta, this._distance, this._gamma);
     return this;
   }
 
   /** Increment the gamma (roll) angle by delta. */
   incrementGamma(delta: number): this {
     this._gamma += delta;
-    this._syncPositionFromAngles();
+    this._camera3D.orbit(this._phi, this._theta, this._distance, this._gamma);
     return this;
   }
 
@@ -185,7 +187,7 @@ export class CameraFrame {
   /** Set the distance from the look-at target. */
   setDistance(value: number): this {
     this._distance = Math.max(0.1, value);
-    this._syncPositionFromAngles();
+    this._camera3D.orbit(this._phi, this._theta, this._distance, this._gamma);
     return this;
   }
 
@@ -209,7 +211,8 @@ export class CameraFrame {
   /** Move the look-at center to a point. Camera position updates accordingly. */
   moveTo(point: Vector3Tuple): this {
     this._center.set(point[0], point[1], point[2]);
-    this._syncPositionFromAngles();
+    this._camera3D.setLookAt([this._center.x, this._center.y, this._center.z]);
+    this._camera3D.orbit(this._phi, this._theta, this._distance, this._gamma);
     return this;
   }
 
@@ -217,42 +220,6 @@ export class CameraFrame {
   setAspectRatio(ratio: number): this {
     this._camera3D.setAspectRatio(ratio);
     return this;
-  }
-
-  // -----------------------------------------------------------------------
-  // Internal sync: angles -> Three.js camera position/orientation
-  // -----------------------------------------------------------------------
-
-  /** Compute camera position from spherical (theta, phi, distance) around _center. */
-  private _syncPositionFromAngles(): void {
-    const x = this._center.x + this._distance * Math.sin(this._phi) * Math.cos(this._theta);
-    const y = this._center.y + this._distance * Math.cos(this._phi);
-    const z = this._center.z + this._distance * Math.sin(this._phi) * Math.sin(this._theta);
-
-    this._camera3D.moveTo([x, y, z]);
-    this._camera3D.setLookAt([this._center.x, this._center.y, this._center.z]);
-
-    // Apply roll (gamma) by rotating the camera's "up" vector
-    if (this._gamma !== 0) {
-      const cam = this._camera3D.getCamera();
-      // The viewing direction (from camera to target)
-      const viewDir = new THREE.Vector3(
-        this._center.x - x,
-        this._center.y - y,
-        this._center.z - z,
-      ).normalize();
-
-      // Default up is world Y
-      const up = new THREE.Vector3(0, 1, 0);
-      // Rotate the up vector around the view direction by gamma
-      up.applyAxisAngle(viewDir, this._gamma);
-      cam.up.copy(up);
-      cam.lookAt(this._center);
-    } else {
-      const cam = this._camera3D.getCamera();
-      cam.up.set(0, 1, 0);
-      cam.lookAt(this._center);
-    }
   }
 
   // -----------------------------------------------------------------------
@@ -280,7 +247,8 @@ export class CameraFrame {
     this._fov = state.fov;
     this._center.set(state.center[0], state.center[1], state.center[2]);
     this._camera3D.setFov(state.fov);
-    this._syncPositionFromAngles();
+    this._camera3D.setLookAt([this._center.x, this._center.y, this._center.z]);
+    this._camera3D.orbit(this._phi, this._theta, this._distance, this._gamma);
   }
 
   // -----------------------------------------------------------------------

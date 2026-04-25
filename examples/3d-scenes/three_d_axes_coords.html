@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ThreeDAxes coordsToPoint alignment</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #191919; display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; overflow: hidden; }
+    #container { width: 100vw; height: 100vh; }
+    .controls-hint { position: fixed; bottom: 20px; left: 20px; color: #888; font-family: monospace; font-size: 14px; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div class="controls-hint">Drag to orbit, scroll to zoom</div>
+  <!-- Use mouse to control camera: left-drag to orbit, right-drag to pan, scroll to zoom -->
+
+  <script type="module">
+    import {
+      ThreeDAxes,
+      Arrow3D,
+      Dot3D,
+      ThreeDScene,
+      Create,
+      Shift,
+      RED,
+      RED_E,
+      GREEN,
+      GREEN_E,
+      BLUE,
+      BLUE_E,
+    } from '../../src/index.ts';
+
+    const scene = new ThreeDScene(document.getElementById('container'), {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      backgroundColor: '#191919',
+      phi: 0.0,
+      theta: -90 * (Math.PI / 180),
+      distance: 20,
+      fov: 30,
+      enableOrbitControls: true,
+      orbitControlsUp: "z",
+    });
+
+    const axes = new ThreeDAxes({
+      xRange: [-5, 5, 1],
+      yRange: [-5, 5, 1],
+      zRange: [-5, 5, 1],
+      xLength: 10,
+      yLength: 10,
+      zLength: 10,
+      showLabels: true,
+    });
+
+    // Fixed arrows showing axis directions
+    const axesX = new Arrow3D({ start: [0, 0, 0], end: [1, 0, 0], color: GREEN });
+    const axesY = new Arrow3D({ start: [0, 0, 0], end: [0, 1, 0], color: RED });
+    const axesZ = new Arrow3D({ start: [0, 0, 0], end: [0, 0, 1], color: BLUE });
+
+    // Balls that animate from origin out to (2,0,0), (0,2,0), (0,0,2)
+    const ballX = new Dot3D({ point: [0, 0, 0], color: GREEN, radius: 0.15 });
+    const ballY = new Dot3D({ point: [0, 0, 0], color: RED, radius: 0.15 });
+    const ballZ = new Dot3D({ point: [0, 0, 0], color: BLUE, radius: 0.15 });
+
+    scene.add(axes, axesX, axesY, axesZ, ballX, ballY, ballZ);
+
+    await scene.play( new Shift(ballX, { direction: [4, 0, 0] }));
+    await scene.play( new Shift(ballY, { direction: [0, 4, 0] }));
+    await scene.play( new Shift(ballZ, { direction: [0, 0, 4] }));
+
+    await scene.wait(Infinity);
+  </script>
+</body>
+</html>

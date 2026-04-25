@@ -119,17 +119,15 @@ export class ThreeDAxes extends Group {
       colors.x,
       arrowCfg,
     );
-    // Manim +Y maps to THREE -Z.
     this._yAxis = this._buildAxisArrow(
-      [0, 0, -ranges.y[0]],
-      [0, 0, -ranges.y[1]],
+      [0, ranges.y[0], 0],
+      [0, ranges.y[1], 0],
       colors.y,
       arrowCfg,
     );
-    // Manim +Z maps to THREE +Y (up).
     this._zAxis = this._buildAxisArrow(
-      [0, ranges.z[0], 0],
-      [0, ranges.z[1], 0],
+      [0, 0, ranges.z[0]],
+      [0, 0, ranges.z[1]],
       colors.z,
       arrowCfg,
     );
@@ -204,12 +202,10 @@ export class ThreeDAxes extends Group {
   }
 
   /**
-   * Convert Manim coordinates (mx, my, mz) to THREE.js coordinates.
-   * Manim: X right, Y forward, Z up → THREE.js: X right, Y up, Z backward
+   * Convert graph coordinates to scene coordinates.
+   * ThreeDAxes uses the same right-handed coordinate system as the scene:
+   * X right, Y up, Z toward viewer.
    */
-  private _m2t(mx: number, my: number, mz: number): [number, number, number] {
-    return [mx, mz, -my];
-  }
 
   /**
    * Create tick marks for all axes using Manim→THREE.js coordinate mapping
@@ -226,8 +222,8 @@ export class ThreeDAxes extends Group {
       if (Math.abs(x - xMin) < 0.001 || Math.abs(x - xMax) < 0.001) continue;
 
       const tick = new Line3D({
-        start: this._m2t(x, 0, -t),
-        end: this._m2t(x, 0, t),
+        start: [x, 0, -t],
+        end: [x, 0, t],
         color: xColor,
       });
       this._ticks.push(tick);
@@ -240,8 +236,8 @@ export class ThreeDAxes extends Group {
       if (Math.abs(y - yMin) < 0.001 || Math.abs(y - yMax) < 0.001) continue;
 
       const tick = new Line3D({
-        start: this._m2t(0, y, -t),
-        end: this._m2t(0, y, t),
+        start: [0, y, -t],
+        end: [0, y, t],
         color: yColor,
       });
       this._ticks.push(tick);
@@ -254,8 +250,8 @@ export class ThreeDAxes extends Group {
       if (Math.abs(z - zMin) < 0.001 || Math.abs(z - zMax) < 0.001) continue;
 
       const tick = new Line3D({
-        start: this._m2t(-t, 0, z),
-        end: this._m2t(t, 0, z),
+        start: [-t, 0, z],
+        end: [t, 0, z],
         color: zColor,
       });
       this._ticks.push(tick);
@@ -295,15 +291,12 @@ export class ThreeDAxes extends Group {
     const yMax = this._yRange[1];
     const zMax = this._zRange[1];
 
-    const xPos = this._m2t(xMax + buf, 0, 0);
-    this._xLabel.position.set(xPos[0], xPos[1], xPos[2]);
-    const yPos = this._m2t(0, yMax + buf, 0);
-    this._yLabel.position.set(yPos[0], yPos[1], yPos[2]);
+    this._xLabel.position.set(xMax + buf, 0, 0);
+    this._yLabel.position.set(0, yMax + buf, 0);
     // Z label: mirror Manim CE's `direction=RIGHT` convention — offset to
     // the side of the arrow tip (not directly above) so it doesn't sit
     // on top of the arrow shaft/cone.
-    const zPos = this._m2t(buf, 0, zMax + buf * 0.3);
-    this._zLabel.position.set(zPos[0], zPos[1], zPos[2]);
+    this._zLabel.position.set(buf, 0, zMax + buf * 0.3);
 
     // Labels live in a dedicated Group so `getAxisLabels()` can return the
     // same Group every time without re-parenting (which would remove the
@@ -374,23 +367,21 @@ export class ThreeDAxes extends Group {
   }
 
   /**
-   * Convert graph coordinates (Manim space) to visual point coordinates (THREE.js space).
+   * Convert graph coordinates to visual point coordinates (scene space).
    * With unit_size=1, graph coordinates map directly to visual positions.
-   * Applies Manim→THREE.js mapping: (mx, my, mz) → (mx, mz, -my)
    */
   coordsToPoint(x: number, y: number, z: number): Vector3Tuple {
-    return [x + this.position.x, z + this.position.y, -y + this.position.z];
+    return [x + this.position.x, y + this.position.y, z + this.position.z];
   }
 
   /**
-   * Convert visual point coordinates (THREE.js space) to graph coordinates (Manim space).
-   * Applies inverse THREE.js→Manim mapping: (tx, ty, tz) → (tx, -tz, ty)
+   * Convert visual point coordinates (scene space) to graph coordinates.
    */
   pointToCoords(point: Vector3Tuple): Vector3Tuple {
     const tx = point[0] - this.position.x;
     const ty = point[1] - this.position.y;
     const tz = point[2] - this.position.z;
-    return [tx, -tz, ty];
+    return [tx, ty, tz];
   }
 
   /**
