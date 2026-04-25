@@ -31,7 +31,7 @@ export interface OrbitControlsOptions {
   autoRotate?: boolean;
   /** Auto-rotation speed in degrees per second. Defaults to 2. */
   autoRotateSpeed?: number;
-  /** Vertical rotation axis: 'x', 'y', 'z', or 'camera' (uses camera's up). Defaults to 'camera'. */
+  /** Vertical rotation axis: 'x', 'y', 'z', or 'camera' (uses camera's initial up). Defaults to 'camera'. */
   orbitControlsUp?: 'x' | 'y' | 'z' | 'camera';
 }
 
@@ -51,17 +51,18 @@ export class OrbitControls {
    */
   // eslint-disable-next-line complexity
   constructor(camera: THREE.Camera, canvas: HTMLCanvasElement, options?: OrbitControlsOptions) {
-    // IMPORTANT: ThreeOrbitControls captures an internal basis quaternion
-    // from `camera.up` at construction time. So set the desired up axis
-    // BEFORE constructing controls.
-    const up = options?.orbitControlsUp ?? 'camera';
-    if (up === 'x') {
+    // Set up axis BEFORE constructing controls. Three.js OrbitControls captures camera.up
+    // into an internal quaternion at construction and never updates it. 'camera' mode uses
+    // the initial camera.up (Three.js default behavior).
+    const mode = options?.orbitControlsUp ?? 'camera';
+    if (mode === 'x') {
       camera.up.set(1, 0, 0);
-    } else if (up === 'y') {
+    } else if (mode === 'y') {
       camera.up.set(0, 1, 0);
-    } else if (up === 'z') {
+    } else if (mode === 'z') {
       camera.up.set(0, 0, 1);
     }
+    // 'camera' mode: leave camera.up unchanged (Three.js default)
 
     this._controls = new ThreeOrbitControls(camera, canvas);
 
@@ -92,8 +93,6 @@ export class OrbitControls {
 
     this._controls.autoRotate = options?.autoRotate ?? false;
     this._controls.autoRotateSpeed = options?.autoRotateSpeed ?? 2;
-
-    // Keep current pose; controls will use the chosen up axis basis.
   }
 
   /**

@@ -21,7 +21,7 @@ export interface ThreeDSceneOptions extends SceneOptions {
   distance?: number;
   /** Enable orbit controls for user interaction. Defaults to true. */
   enableOrbitControls?: boolean;
-  /** Vertical rotation axis for orbit controls: 'x', 'y', 'z', or 'camera'. Defaults to 'camera'. */
+  /** Vertical rotation axis for orbit controls: 'x', 'y', 'z', or 'camera' (uses initial camera.up). Defaults to 'camera' (Three.js default behavior). */
   orbitControlsUp?: 'x' | 'y' | 'z' | 'camera';
   /** Orbit controls configuration options. */
   orbitControlsOptions?: OrbitControlsOptions;

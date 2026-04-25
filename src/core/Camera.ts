@@ -26,6 +26,7 @@ export class Camera3D {
   private _fov: number;
   private _position: THREE.Vector3;
   private _lookAt: THREE.Vector3;
+  private _lastTheta: number = 0;
 
   /**
    * Create a new 3D camera.
@@ -144,6 +145,9 @@ export class Camera3D {
   orbit(phi: number, theta: number, distance?: number, gamma: number = 0): this {
     const dist = distance ?? this._position.distanceTo(this._lookAt);
 
+    // Store theta for gimbal lock recovery in getOrbitAngles()
+    this._lastTheta = theta;
+
     this._position.x = this._lookAt.x + dist * Math.sin(phi) * Math.cos(theta);
     this._position.y = this._lookAt.y + dist * Math.sin(phi) * Math.sin(theta);
     this._position.z = this._lookAt.z + dist * Math.cos(phi);
@@ -171,15 +175,14 @@ export class Camera3D {
     const dz = this._position.z - this._lookAt.z;
     const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-    // Inverse of orbit():
-    // x = d*sin(phi)*cos(theta) -> cos(theta) = x/(d*sin(phi))
-    // y = d*sin(phi)*sin(theta) -> sin(theta) = y/(d*sin(phi))
-    // z = d*cos(phi)           -> cos(phi) = z/d
-    return {
-      phi: Math.acos(dz / distance),
-      theta: Math.atan2(dy, dx),
-      distance,
-    };
+    const phi = Math.acos(dz / distance);
+
+    // At poles (sin(phi) ≈ 0), atan2(0,0) returns 0, losing azimuth.
+    // Preserve the last known theta to avoid gimbal lock artifacts.
+    const sinPhi = Math.sin(phi);
+    const theta = Math.abs(sinPhi) < 1e-6 ? this._lastTheta : Math.atan2(dy, dx);
+
+    return { phi, theta, distance };
   }
 }
 
