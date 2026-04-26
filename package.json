@@ -50,7 +50,7 @@
     "lint:strict": "eslint src/ --max-warnings 106",
     "circular": "madge --circular --extensions ts src/",
     "cpd": "jscpd src/",
-    "test:integration": "npx playwright test",
+    "test:integration": "vitest run tests/",
     "format:check": "prettier --check src/",
     "knip": "knip",
     "release": "standard-version",
@@ -75,7 +75,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@playwright/test": "^1.58.2",
     "@types/earcut": "^3.0.0",
     "@types/katex": "^0.16.8",
     "@types/react": "^19.2.13",
