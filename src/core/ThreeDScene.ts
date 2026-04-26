@@ -21,8 +21,8 @@ export interface ThreeDSceneOptions extends SceneOptions {
   distance?: number;
   /** Enable orbit controls for user interaction. Defaults to true. */
   enableOrbitControls?: boolean;
-  /** Vertical rotation axis for orbit controls: 'x', 'y', 'z', or 'camera' (uses initial camera.up). Defaults to 'camera' (Three.js default behavior). */
-  orbitControlsUp?: 'x' | 'y' | 'z' | 'camera';
+  /** Vertical rotation axis for orbit controls: 'x', 'y', or 'z'. If not provided, camera.up is computed from initial phi/theta via orbit() formula. */
+  orbitControlsUp?: 'x' | 'y' | 'z';
   /** Orbit controls configuration options. */
   orbitControlsOptions?: OrbitControlsOptions;
   /** Whether to set up default lighting. Defaults to true. */
@@ -83,7 +83,7 @@ export class ThreeDScene extends Scene {
     } = options;
 
     // Compute up vector for OrbitControls compatibility
-    // Up is set ONCE and never modified by orbit()
+    // If not specified, orbit() will compute it from phi/theta on first call
     const up: [number, number, number] | undefined =
       orbitControlsUp === 'x'
         ? [1, 0, 0]
@@ -91,7 +91,7 @@ export class ThreeDScene extends Scene {
           ? [0, 1, 0]
           : orbitControlsUp === 'z'
             ? [0, 0, 1]
-            : undefined; // 'camera' or undefined: let orbit() compute on first call
+            : undefined;
 
     // Create 3D camera
     const aspectRatio = this.renderer.width / this.renderer.height;
