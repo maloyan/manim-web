@@ -178,26 +178,46 @@ export class ThreeDScene extends Scene {
   }
 
   /**
-   * Override add to re-enable depth testing for proper 3D occlusion.
-   * The base Scene disables depthTest for 2D render-order layering,
-   * but 3D scenes need depth testing for correct visibility.
+   * Override add for 3D-correct material/render setup (issue #255):
+   *  - depthTest=true on every material (base Scene disables it for 2D layering)
+   *  - depthWrite=!transparent (transparent meshes must not occlude later
+   *    transparent fragments behind them)
+   *  - renderOrder reset to 0 so Three.js sorts transparent objects by camera
+   *    distance instead of add order (base Scene stamps an incrementing
+   *    renderOrder for 2D z-ordering, which defeats 3D depth sort)
+   *
+   * Auto-render is suppressed inside super.add() and run once at the end,
+   * after settings are applied, so the first visible frame is correct.
    */
   add(...mobjects: Mobject[]): this {
-    super.add(...mobjects);
-    for (const mobject of mobjects) {
-      const threeObj = mobject.getThreeObject();
-      threeObj.traverse((child) => {
-        const mesh = child as THREE.Mesh;
-        if (mesh.material) {
-          const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-          for (const m of mats) {
-            m.depthTest = true;
-            m.depthWrite = true;
-          }
-        }
-      });
+    const wasAuto = this._autoRender;
+    this._autoRender = false;
+    const newMobs = new Set(mobjects.filter((m) => !this.mobjects.has(m)));
+    try {
+      super.add(...mobjects);
+      for (const mob of mobjects) ThreeDScene._applyDepthSettings(mob, newMobs.has(mob));
+      if (wasAuto) this._render();
+    } finally {
+      this._autoRender = wasAuto;
     }
     return this;
+  }
+
+  /**
+   * Apply 3D-correct material defaults: depthTest=true,
+   * depthWrite=!transparent, and (on initial add only) renderOrder=0 so
+   * Three.js sorts transparents by camera distance.
+   */
+  private static _applyDepthSettings(mob: Mobject, resetRenderOrder = false): void {
+    mob.getThreeObject().traverse((c) => {
+      if (resetRenderOrder) c.renderOrder = 0;
+      const mat = (c as THREE.Mesh).material;
+      if (!mat) return;
+      (Array.isArray(mat) ? mat : [mat]).forEach((m) => {
+        m.depthTest = true;
+        m.depthWrite = !m.transparent;
+      });
+    });
   }
 
   /**
@@ -438,21 +458,20 @@ export class ThreeDScene extends Scene {
    */
   addFixedInFrameMobjects(...mobjects: Mobject[]): this {
     for (const mob of mobjects) {
+      const threeObj = mob.getThreeObject();
       // Remove from fixed-orientation if present (mutually exclusive)
       if (this._fixedOrientationMobjects.has(mob)) {
         this._fixedOrientationMobjects.delete(mob);
-        const threeObj = mob.getThreeObject();
         threeObj.quaternion.identity();
         threeObj.position.copy(mob.position);
       }
       this._fixedMobjects.add(mob);
-      // Ensure the Three.js object is initialized
-      const threeObj = mob.getThreeObject();
       this._hudScene.add(threeObj);
+      // HUD bypasses Scene.add(), so apply 3D depth/renderOrder defaults
+      // here so transparent fixed-in-frame mobjects render correctly (#255).
+      ThreeDScene._applyDepthSettings(mob, true);
     }
-    if (this._fixedMobjects.size > 0) {
-      this.render();
-    }
+    if (this._fixedMobjects.size > 0) this.render();
     return this;
   }
 
@@ -566,23 +585,16 @@ export class ThreeDScene extends Scene {
       this._lastRenderTime = now;
     }
 
-    // Sync dirty mobjects in the main scene
-    for (const mob of this.mobjects) {
-      if (mob._dirty) {
-        mob._syncToThree();
-        mob._dirty = false;
-      }
-    }
-
-    // Sync fixed (HUD) mobjects
-    if (this._fixedMobjects) {
-      for (const mob of this._fixedMobjects) {
-        if (mob._dirty) {
-          mob._syncToThree();
-          mob._dirty = false;
-        }
-      }
-    }
+    // Sync dirty mobjects (main + HUD): re-applying depth settings so
+    // runtime opacity changes flip depthWrite correctly (issue #255).
+    const syncDirty = (mob: Mobject): void => {
+      if (!mob._dirty) return;
+      mob._syncToThree();
+      ThreeDScene._applyDepthSettings(mob);
+      mob._dirty = false;
+    };
+    for (const mob of this.mobjects) syncDirty(mob);
+    if (this._fixedMobjects) for (const mob of this._fixedMobjects) syncDirty(mob);
 
     // Apply billboard rotation to fixed-orientation mobjects around their
     // current world center. We can't just set `quaternion = camQuat` on the
@@ -625,9 +637,11 @@ export class ThreeDScene extends Scene {
     threeRenderer.autoClear = true;
     threeRenderer.render(this.threeScene, this._camera3D.getCamera());
 
-    // Pass 2: HUD overlay (no clear, composites on top)
+    // Pass 2: HUD overlay (composites on top; depth cleared so HUD has its
+    // own depth buffer independent of the 3D scene)
     if (this._fixedMobjects && this._fixedMobjects.size > 0) {
       threeRenderer.autoClear = false;
+      threeRenderer.clearDepth();
       threeRenderer.render(this._hudScene, this._hudCamera);
       threeRenderer.autoClear = true;
     }

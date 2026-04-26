@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import * as THREE from 'three';
 import { Group } from '../../core/Group';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
@@ -804,6 +805,45 @@ export class PolarPlane extends Group {
    */
   getRadiusLabels(): Group {
     return this._radiusLabels;
+  }
+
+  /**
+   * Pin angle and radius labels to face the camera in a 3D scene.
+   *
+   * When the plane is rotated for 3D use (e.g. `plane.rotation.x = -PI/2`
+   * to lay it flat on the ground) the Text label quads inherit the
+   * rotation and end up facing the wrong way — the canvas texture reads
+   * mirrored to the camera.
+   *
+   * Mirrors the `ThreeDAxes` `billboardLabels` pattern: installs an
+   * `onBeforeRender` hook on each label mesh that compensates for any
+   * ancestor rotation so the mesh's *world* quaternion equals the
+   * camera's every draw. Labels stay in the plane's Mobject hierarchy
+   * (no re-parenting), so `scene.remove(plane)` cleans them up
+   * automatically and there's no scene-graph / Mobject-tree mismatch.
+   *
+   * Idempotent: re-calling replaces any prior hook on the same meshes.
+   */
+  billboardLabels(): this {
+    for (const label of [...this._angleLabels.children, ...this._radiusLabels.children]) {
+      label.getThreeObject().traverse((child) => {
+        if (!(child instanceof THREE.Mesh)) return;
+        child.onBeforeRender = (_renderer, _scene, camera) => {
+          const parent = child.parent;
+          if (parent) {
+            parent.updateMatrixWorld(true);
+            const parentWorldQuat = new THREE.Quaternion();
+            parent.getWorldQuaternion(parentWorldQuat);
+            child.quaternion.copy(parentWorldQuat.invert()).multiply(camera.quaternion);
+          } else {
+            child.quaternion.copy(camera.quaternion);
+          }
+          child.updateMatrix();
+          child.updateMatrixWorld(true);
+        };
+      });
+    }
+    return this;
   }
 
   /**
