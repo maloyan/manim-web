@@ -211,6 +211,27 @@ function projectOutlineToPlane(outline3D: number[][]): {
     };
   }
 
+  // Fast path: when the shape lies in the XY plane (z ≈ 0 everywhere) the
+  // standard basis is already correct, and computing one from scattered
+  // points can pick three nearly-collinear samples for thin glyphs (e.g. the
+  // two horizontal bars of `=`), collapsing v2 onto Z and projecting every
+  // point to the same line.
+  let zMin = outline3D[0][2] ?? 0;
+  let zMax = zMin;
+  for (let i = 1; i < outline3D.length; i++) {
+    const z = outline3D[i][2] ?? 0;
+    if (z < zMin) zMin = z;
+    if (z > zMax) zMax = z;
+  }
+  if (zMax - zMin < 1e-6) {
+    return {
+      outline2D: outline3D.map((p) => [p[0], p[1]]),
+      origin: [0, 0, zMin],
+      v1: [1, 0, 0],
+      v2: [0, 1, 0],
+    };
+  }
+
   // Get plane basis from scattered points
   const indices = selectScatteredPoints(outline3D);
   const scattered = indices.map((i) => outline3D[i]);

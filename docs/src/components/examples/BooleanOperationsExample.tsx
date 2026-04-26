@@ -3,7 +3,31 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { BLUE, Difference, DOWN, Ellipse, Exclusion, FadeIn, GREEN, Group, Intersection, LEFT, MoveToTarget, ORANGE, PINK, RED, RIGHT, Scene, Text, Underline, UP, Union, WHITE, YELLOW, scaleVec } = await import('manim-web');
+  const {
+    BLUE,
+    Difference,
+    DOWN,
+    Ellipse,
+    Exclusion,
+    FadeIn,
+    GREEN,
+    Group,
+    Intersection,
+    LEFT,
+    MoveToTarget,
+    ORANGE,
+    PINK,
+    RED,
+    RIGHT,
+    Scene,
+    Text,
+    Underline,
+    UP,
+    Union,
+    WHITE,
+    YELLOW,
+    scaleVec,
+  } = await import('manim-web');
 
   const ellipse1 = new Ellipse({
     width: 4.0,
@@ -21,7 +45,7 @@ async function animate(scene: any) {
   }).nextTo(ellipse1, UP);
   const ellipse_group = new Group(bool_ops_text, ellipse1, ellipse2).moveTo(scaleVec(3, LEFT));
   // Create underline AFTER group is positioned so it uses the text's final position
-  const underline = new Underline(bool_ops_text, { color: WHITE, strokeWidth: 2, buff: -0.25 });
+  const underline = new Underline(bool_ops_text, { color: WHITE, strokeWidth: 2, buff: 0.05 });
   ellipse_group.add(underline);
   await scene.play(new FadeIn(ellipse_group));
 

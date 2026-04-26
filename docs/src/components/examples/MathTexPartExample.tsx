@@ -9,7 +9,7 @@ async function animate(scene: any) {
   const equation = new MathTex({
     latex: ['x^2', '+', 'y^2', '=', 'r^2'],
     color: WHITE,
-    fontSize: 1.5,
+    fontSize: 60,
   });
   await equation.waitForRender();
 

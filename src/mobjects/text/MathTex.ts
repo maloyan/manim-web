@@ -346,11 +346,14 @@ export class MathTex extends VGroup {
       }
     }
 
-    // Render each part separately to count how many glyphs it produces
+    // Render each part separately to count how many glyphs it produces.
+    // Use the same displayMode as the full render so MathJax produces matching
+    // glyph counts (operators rendered alone in inline mode can drop or add
+    // wrapper paths, throwing off the per-part assignment).
     const partGlyphCounts: number[] = [];
     for (const partLatex of latexParts) {
       const partResult = await renderLatexToSVG(partLatex, {
-        displayMode: false,
+        displayMode: this._displayMode,
         color: this._color,
         macros: this._macros,
       });
