@@ -81,7 +81,7 @@ async function movingZoomedSceneAround(scene: ZoomedScene) {
   // Pop-out animation: display pops from frame position to its shifted position
   await scene.play(scene.getZoomedDisplayPopOutAnimation(), unfoldCamera);
 
-  zoomedCameraText.nextTo(zoomedDisplayFrame, DOWN);
+  zoomedCameraText.nextTo(zoomedDisplay, DOWN);
   await scene.play(new FadeIn(zoomedCameraText, { shift: UP }));
 
   // Scale frame and display non-uniformly

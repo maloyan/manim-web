@@ -10,24 +10,24 @@ async function animate(scene: any) {
   const m0 = new MathTex({
     latex: '\\begin{bmatrix} \\pi & 0 \\\\ -1 & 1 \\end{bmatrix}',
     color: WHITE,
-    fontSize: 1,
+    fontSize: 40,
   });
 
   const m1 = new MathTex({
     latex: '\\begin{pmatrix} 2 & 0 \\\\ 12 & -1 \\end{pmatrix}',
     color: WHITE,
-    fontSize: 1,
+    fontSize: 40,
   });
 
   const m2 = new MathTex({
     latex: '\\left\\{ \\begin{matrix} 3.46 & 2.12 \\\\ 33.22 & 12.33 \\end{matrix} \\right\\}',
     color: WHITE,
-    fontSize: 1,
+    fontSize: 40,
   });
 
-  const piTex = new MathTex({ latex: '\\pi', color: TEAL_A, fontSize: 1 });
-  const leftAngle = new MathTex({ latex: '\\Bigg\\langle', color: WHITE, fontSize: 1 });
-  const rightAngle = new MathTex({ latex: '\\Bigg\\rangle', color: WHITE, fontSize: 1 });
+  const piTex = new MathTex({ latex: '\\pi', color: TEAL_A, fontSize: 80 });
+  const leftAngle = new MathTex({ latex: '\\Bigg\\langle', color: WHITE, fontSize: 40 });
+  const rightAngle = new MathTex({ latex: '\\Bigg\\rangle', color: WHITE, fontSize: 40 });
 
   // Wait for all MathTex renders before positioning
   await Promise.all([
@@ -85,7 +85,7 @@ async function animate(scene: any) {
   const detTex = new MathTex({
     latex: '\\text{det} \\left( \\begin{bmatrix} 2 & 0 \\\\ -1 & 1 \\end{bmatrix} \\right) = 3',
     color: WHITE,
-    fontSize: 1,
+    fontSize: 48,
   });
   await detTex.waitForRender();
   await scene.play(new FadeIn(detTex, { duration: 1.5 }));
