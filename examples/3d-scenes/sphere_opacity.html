@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sphere Opacity Repro (issue #255)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #191919;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      color: #eee;
+      padding: 20px;
+      gap: 12px;
+    }
+    h1 { font-size: 18px; font-weight: 500; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .panel { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .panel .container { width: 280px; height: 220px; border: 1px solid #333; border-radius: 4px; overflow: hidden; }
+    .panel small { color: #aaa; }
+    .row-label { font-size: 14px; color: #ddd; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Sphere opacity over PolarPlane (issue #255 — fixed)</h1>
+
+  <div class="row-label">Sphere added FIRST (the bug case): scene.add(sphere, plane)</div>
+  <div class="grid">
+    <div class="panel"><small>opacity 0.02</small><div id="a02" class="container"></div></div>
+    <div class="panel"><small>opacity 0.3</small><div id="a30" class="container"></div></div>
+    <div class="panel"><small>opacity 0.7</small><div id="a70" class="container"></div></div>
+  </div>
+
+  <div class="row-label">Sphere added SECOND (control): scene.add(plane, sphere)</div>
+  <div class="grid">
+    <div class="panel"><small>opacity 0.02</small><div id="b02" class="container"></div></div>
+    <div class="panel"><small>opacity 0.3</small><div id="b30" class="container"></div></div>
+    <div class="panel"><small>opacity 0.7</small><div id="b70" class="container"></div></div>
+  </div>
+
+  <script type="module" src="./sphere_opacity.ts"></script>
+</body>
+</html>
