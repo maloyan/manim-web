@@ -1,9 +1,46 @@
 import * as THREE from 'three';
 import { Scene, SceneOptions } from './Scene';
-import { Camera3D, Camera3DOptions } from './Camera';
+import { Camera3D } from './Camera';
 import { Lighting } from './Lighting';
 import { OrbitControls, OrbitControlsOptions } from '../interaction/OrbitControls';
 import { Mobject, Vector3Tuple } from './Mobject';
+
+/**
+ * Create a configured 3D camera with initial orientation.
+ * Computes the up vector and sets up orbit angles.
+ */
+function createCamera3D(
+  aspectRatio: number,
+  options: {
+    fov: number;
+    phi: number;
+    theta: number;
+    distance: number;
+    orbitControlsUp?: 'x' | 'y' | 'z';
+  },
+): Camera3D {
+  const { fov, phi, theta, distance, orbitControlsUp } = options;
+
+  // Compute up vector for OrbitControls compatibility
+  const up: [number, number, number] | undefined =
+    orbitControlsUp === 'x'
+      ? [1, 0, 0]
+      : orbitControlsUp === 'y'
+        ? [0, 1, 0]
+        : orbitControlsUp === 'z'
+          ? [0, 0, 1]
+          : undefined;
+
+  const camera = new Camera3D(aspectRatio, {
+    fov,
+    position: [0, 0, distance],
+    up,
+  });
+
+  camera.orbit(phi, theta, distance);
+
+  return camera;
+}
 
 const BILLBOARD_TMP = new THREE.Vector3();
 
@@ -82,28 +119,15 @@ export class ThreeDScene extends Scene {
       setupLighting = true,
     } = options;
 
-    // Compute up vector for OrbitControls compatibility
-    // If not specified, orbit() will compute it from phi/theta on first call
-    const up: [number, number, number] | undefined =
-      orbitControlsUp === 'x'
-        ? [1, 0, 0]
-        : orbitControlsUp === 'y'
-          ? [0, 1, 0]
-          : orbitControlsUp === 'z'
-            ? [0, 0, 1]
-            : undefined;
-
-    // Create 3D camera
+    // Create 3D camera with initial orientation
     const aspectRatio = this.renderer.width / this.renderer.height;
-    const camera3DOptions: Camera3DOptions = {
+    this._camera3D = createCamera3D(aspectRatio, {
       fov,
-      position: [0, 0, distance],
-      up,
-    };
-    this._camera3D = new Camera3D(aspectRatio, camera3DOptions);
-
-    // Set initial camera orientation
-    this._camera3D.orbit(phi, theta, distance);
+      phi,
+      theta,
+      distance,
+      orbitControlsUp,
+    });
 
     // Set up lighting
     this._lighting = new Lighting(this.threeScene);
