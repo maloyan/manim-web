@@ -82,11 +82,23 @@ export class ThreeDScene extends Scene {
       setupLighting = true,
     } = options;
 
+    // Compute up vector for OrbitControls compatibility
+    // Up is set ONCE and never modified by orbit()
+    const up: [number, number, number] | undefined =
+      orbitControlsUp === 'x'
+        ? [1, 0, 0]
+        : orbitControlsUp === 'y'
+          ? [0, 1, 0]
+          : orbitControlsUp === 'z'
+            ? [0, 0, 1]
+            : undefined; // 'camera' or undefined: let orbit() compute on first call
+
     // Create 3D camera
     const aspectRatio = this.renderer.width / this.renderer.height;
     const camera3DOptions: Camera3DOptions = {
       fov,
       position: [0, 0, distance],
+      up,
     };
     this._camera3D = new Camera3D(aspectRatio, camera3DOptions);
 

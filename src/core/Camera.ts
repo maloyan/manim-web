@@ -15,6 +15,8 @@ export interface Camera3DOptions {
   position?: [number, number, number];
   /** Initial look-at target [x, y, z]. Defaults to origin [0, 0, 0]. */
   lookAt?: [number, number, number];
+  /** Fixed up vector [x, y, z]. If provided, orbit() will never modify it. */
+  up?: [number, number, number];
 }
 
 /**
@@ -27,6 +29,7 @@ export class Camera3D {
   private _position: THREE.Vector3;
   private _lookAt: THREE.Vector3;
   private _lastTheta: number = 0;
+  private _up: THREE.Vector3 | null = null;
 
   /**
    * Create a new 3D camera.
@@ -47,6 +50,12 @@ export class Camera3D {
     const lookAt = options?.lookAt ?? [0, 0, 0];
     this._lookAt = new THREE.Vector3(...lookAt);
     this._camera.lookAt(this._lookAt);
+
+    // If up vector is provided, set it once and never modify
+    if (options?.up) {
+      this._up = new THREE.Vector3(...options.up);
+      this._camera.up.copy(this._up);
+    }
   }
 
   /**
@@ -154,12 +163,17 @@ export class Camera3D {
 
     this._camera.position.copy(this._position);
 
-    // Up = second row of Rz(γ)·Rx(-φ)·Rz(-θ-90°)
-    this._camera.up.set(
-      -Math.sin(gamma) * Math.sin(theta) - Math.cos(gamma) * Math.cos(theta) * Math.cos(phi),
-      Math.sin(gamma) * Math.cos(theta) - Math.cos(gamma) * Math.sin(theta) * Math.cos(phi),
-      Math.cos(gamma) * Math.sin(phi),
-    );
+    // Up vector is only set ONCE: either provided at construction or computed on first orbit() call.
+    // This is critical for OrbitControls compatibility - it expects camera.up to remain constant.
+    if (!this._up) {
+      // Up = second row of Rz(γ)·Rx(-φ)·Rz(-θ-90°)
+      this._up = new THREE.Vector3(
+        -Math.sin(gamma) * Math.sin(theta) - Math.cos(gamma) * Math.cos(theta) * Math.cos(phi),
+        Math.sin(gamma) * Math.cos(theta) - Math.cos(gamma) * Math.sin(theta) * Math.cos(phi),
+        Math.cos(gamma) * Math.sin(phi),
+      );
+      this._camera.up.copy(this._up);
+    }
 
     this._camera.lookAt(this._lookAt);
     return this;
