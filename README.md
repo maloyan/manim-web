@@ -31,7 +31,7 @@ The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the bro
         Scene,
         Circle,
         Create,
-    } from "https://cdn.jsdelivr.net/npm/manim-web@0.3.18/dist/manim-web.browser.js";
+    } from "https://cdn.jsdelivr.net/npm/manim-web@latest/dist/manim-web.browser.js";
 
     const options = { width: 500, height: 300 };
     const scene = new Scene(
