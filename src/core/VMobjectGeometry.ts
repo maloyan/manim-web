@@ -11,7 +11,13 @@
 
 import * as THREE from 'three';
 import { triangulatePolygon } from '../utils/triangulate';
-import { evalCubicBezier } from '../utils/math';
+import {
+  evalCubicBezier,
+  selectScatteredPoints,
+  extractVectorsFrom3Points,
+  orthonormalizeBasis,
+  projectToPlane,
+} from '../utils/math';
 import type { Point } from './VMobjectCurves';
 
 // -----------------------------------------------------------------------
@@ -119,14 +125,14 @@ export function sampleBezierOutline(points: number[][], samplesPerSegment: numbe
     for (let t = startT; t <= samples; t++) {
       const u = t / samples;
       const pt = evalCubicBezier(p0, p1, p2, p3, u);
-      result.push([pt[0], pt[1]]);
+      result.push([pt[0], pt[1], pt[2] ?? 0]); // Include Z for 3D support
     }
   }
 
   // Handle non-Bezier (simple line segment) fallback
   if (result.length === 0 && points.length >= 2) {
     for (const p of points) {
-      result.push([p[0], p[1]]);
+      result.push([p[0], p[1], p[2] ?? 0]); // Include Z for 3D support
     }
   }
 
@@ -140,6 +146,92 @@ export function sampleBezierOutline(points: number[][], samplesPerSegment: numbe
   }
 
   return result;
+}
+
+/**
+ * Sample Bezier path into 3D points (preserves z).
+ * Same logic as sampleBezierOutline but returns [x, y, z] instead of [x, y].
+ */
+function sampleBezierOutline3D(points: number[][], samplesPerSegment: number): number[][] {
+  const result: number[][] = [];
+
+  for (let i = 0; i + 3 < points.length; i += 3) {
+    const p0 = points[i];
+    const p1 = points[i + 1];
+    const p2 = points[i + 2];
+    const p3 = points[i + 3];
+
+    const samples = isNearlyLinear(p0, p1, p2, p3) ? 1 : samplesPerSegment;
+
+    const startT = i === 0 ? 0 : 1;
+    for (let t = startT; t <= samples; t++) {
+      const u = t / samples;
+      const pt = evalCubicBezier(p0, p1, p2, p3, u);
+      result.push(pt);
+    }
+  }
+
+  if (result.length === 0 && points.length >= 2) {
+    for (const p of points) {
+      result.push([p[0], p[1], p[2] ?? 0]);
+    }
+  }
+
+  // Remove closing duplicate
+  if (result.length > 1) {
+    const first = result[0];
+    const last = result[result.length - 1];
+    const dx = first[0] - last[0];
+    const dy = first[1] - last[1];
+    const dz = (first[2] ?? 0) - (last[2] ?? 0);
+    if (dx * dx + dy * dy + dz * dz < 1e-8) {
+      result.pop();
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Project 3D outline points to 2D plane for triangulation.
+ * Returns both 2D projected points and the plane basis for reconstruction.
+ */
+function projectOutlineToPlane(outline3D: number[][]): {
+  outline2D: number[][];
+  origin: number[];
+  v1: number[];
+  v2: number[];
+} {
+  if (outline3D.length < 3) {
+    return {
+      outline2D: outline3D.map((p) => [p[0], p[1]]),
+      origin: [0, 0, 0],
+      v1: [1, 0, 0],
+      v2: [0, 1, 0],
+    };
+  }
+
+  // Get plane basis from scattered points
+  const indices = selectScatteredPoints(outline3D);
+  const scattered = indices.map((i) => outline3D[i]);
+  const vectors = extractVectorsFrom3Points(scattered);
+
+  if (!vectors) {
+    return {
+      outline2D: outline3D.map((p) => [p[0], p[1]]),
+      origin: [0, 0, 0],
+      v1: [1, 0, 0],
+      v2: [0, 1, 0],
+    };
+  }
+
+  const { v1, v2 } = orthonormalizeBasis(vectors.v1, vectors.v2);
+  const origin = scattered[0];
+
+  // Project all points to 2D
+  const outline2D = outline3D.map((p) => projectToPlane(p, origin, v1, v2));
+
+  return { outline2D, origin, v1, v2 };
 }
 
 // -----------------------------------------------------------------------
@@ -295,12 +387,15 @@ export function buildEarcutFillGeometry(
     return buildEarcutFillGeometryMulti(points3D, subpathLengths, visiblePoints);
   }
 
-  // Sample Bezier curves into a dense polyline for triangulation.
-  const outline = sampleBezierOutline(points3D, 8);
-  if (outline.length < 3) return null;
+  // Sample Bezier curves into 3D polyline, then project to plane for triangulation
+  const outline3D = sampleBezierOutline3D(points3D, 8);
+  if (outline3D.length < 3) return null;
+
+  // Project to plane and get 2D coordinates for earcut
+  const { outline2D } = projectOutlineToPlane(outline3D);
 
   // Triangulate with earcut
-  const indices = triangulatePolygon(outline);
+  const indices = triangulatePolygon(outline2D);
 
   if (indices.length === 0) {
     // Earcut couldn't triangulate -- fall back to THREE.ShapeGeometry
@@ -308,13 +403,13 @@ export function buildEarcutFillGeometry(
     return new THREE.ShapeGeometry(shape);
   }
 
-  // Create BufferGeometry from earcut output
+  // Create BufferGeometry using original 3D points (not projected 2D)
   const positions = new Float32Array(indices.length * 3);
   for (let i = 0; i < indices.length; i++) {
-    const v = outline[indices[i]];
+    const v = outline3D[indices[i]];
     positions[i * 3] = v[0];
     positions[i * 3 + 1] = v[1];
-    positions[i * 3 + 2] = 0;
+    positions[i * 3 + 2] = v[2] ?? 0;
   }
 
   const geometry = new THREE.BufferGeometry();
@@ -334,29 +429,41 @@ function buildEarcutFillGeometryMulti(
 ): THREE.BufferGeometry | null {
   void visiblePoints; // kept for API compatibility
 
-  // Sample each subpath into a 2D ring
+  // Sample each subpath into 3D rings, collecting all points for plane computation
   let offset = 0;
-  const rings: number[][][] = [];
+  const rings3D: number[][][] = [];
+  const allPoints3D: number[][] = [];
 
   for (const len of subpathLengths) {
     const subPoints = points3D.slice(offset, offset + len);
     offset += len;
 
-    const ring = sampleBezierOutline(subPoints, 8);
+    const ring = sampleBezierOutline3D(subPoints, 8);
     if (ring.length >= 3) {
-      rings.push(ring);
+      rings3D.push(ring);
+      allPoints3D.push(...ring);
     }
   }
 
-  if (rings.length === 0) return null;
+  if (rings3D.length === 0) return null;
+
+  // Compute ONE shared plane basis from all sampled points.
+  // This keeps containment (hole classification) and triangulation in the
+  // same 2D coordinate system even when the whole shape is rotated in 3D.
+  const { origin, v1, v2 } = projectOutlineToPlane(allPoints3D);
+
+  // Project each 3D ring to 2D using the shared plane basis
+  const rings2D: number[][][] = rings3D.map((ring) =>
+    ring.map((p) => projectToPlane(p, origin, v1, v2)),
+  );
 
   // Determine containment: for each ring, check if it's inside another ring.
-  const isHoleOf = new Array<number>(rings.length).fill(-1);
+  const isHoleOf = new Array<number>(rings2D.length).fill(-1);
 
-  for (let i = 0; i < rings.length; i++) {
-    for (let j = 0; j < rings.length; j++) {
+  for (let i = 0; i < rings2D.length; i++) {
+    for (let j = 0; j < rings2D.length; j++) {
       if (i === j) continue;
-      if (pointInPolygon(rings[i][0], rings[j])) {
+      if (pointInPolygon(rings2D[i][0], rings2D[j])) {
         isHoleOf[i] = j;
         break;
       }
@@ -366,14 +473,18 @@ function buildEarcutFillGeometryMulti(
   // Collect outer rings (not holes) and their associated holes
   const allPositions: number[] = [];
 
-  for (let i = 0; i < rings.length; i++) {
+  for (let i = 0; i < rings2D.length; i++) {
     if (isHoleOf[i] >= 0) continue;
 
-    const outerRing = rings[i];
+    const outerRing = rings2D[i];
+    const outerRing3D = rings3D[i];
     const holeRings: number[][][] = [];
-    for (let j = 0; j < rings.length; j++) {
+    const holeRings3D: number[][][] = [];
+
+    for (let j = 0; j < rings2D.length; j++) {
       if (isHoleOf[j] === i) {
-        holeRings.push(rings[j]);
+        holeRings.push(rings2D[j]);
+        holeRings3D.push(rings3D[j]);
       }
     }
 
@@ -381,13 +492,15 @@ function buildEarcutFillGeometryMulti(
     if (indices.length === 0) continue;
 
     const allVerts: number[][] = [...outerRing];
-    for (const hole of holeRings) {
-      allVerts.push(...hole);
+    const allVerts3D: number[][] = [...outerRing3D];
+    for (let h = 0; h < holeRings.length; h++) {
+      allVerts.push(...holeRings[h]);
+      allVerts3D.push(...holeRings3D[h]);
     }
 
     for (const idx of indices) {
-      const v = allVerts[idx];
-      allPositions.push(v[0], v[1], 0);
+      const v = allVerts3D[idx];
+      allPositions.push(v[0], v[1], v[2] ?? 0);
     }
   }
 
