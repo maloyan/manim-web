@@ -9,6 +9,7 @@
  */
 
 import { Mobject, type Vector3Tuple, type MobjectStyle, registerAnimateProxy } from './Mobject';
+import { VGroup } from './VGroup';
 import { Animation, type AnimationOptions } from '../animation/Animation';
 import { type RateFunction, smooth } from '../rate-functions';
 import { Transform } from '../animation/transform/Transform';
@@ -21,6 +22,7 @@ export class AnimateProxy extends Animation {
   private _calls: RecordedCall[] = [];
   private _innerTransform: Transform | null = null;
   private _overrideAnimation: Animation | null = null;
+  private _originalState: Mobject | null = null;
 
   constructor(mobject: Mobject, options: AnimationOptions = {}) {
     super(mobject, {
@@ -166,6 +168,9 @@ export class AnimateProxy extends Animation {
       }
     }
 
+    // Snapshot source so finish() can replay calls on it (see finish()).
+    this._originalState = this._source.copy();
+
     // Standard path: copy mobject, apply all recorded calls, use as Transform target
     const target = this._source.copy();
     for (const [methodName, args] of this._calls) {
@@ -203,6 +208,30 @@ export class AnimateProxy extends Animation {
       this._overrideAnimation.finish();
     } else if (this._innerTransform) {
       this._innerTransform.finish();
+      // Transform writes target points/position back to source, but a leaf
+      // VMobject's geometry-specific logical state (e.g. Circle._centerPoint,
+      // _radius) is never synced — chained animate.shift/scale would then
+      // operate on stale state (issue #252). Revert and replay calls so the
+      // source's full state stays self-consistent.
+      //
+      // Skipped for VGroups: state lives in children, which Transform's VGroup
+      // branch already updates in place — replay would double-shift. This
+      // assumes no current VGroup subclass overrides shift/scale to mutate
+      // parent-level numeric state; one that did would need its own re-sync.
+      if (this._originalState && !(this._source instanceof VGroup)) {
+        this._source.become(this._originalState);
+        for (const [methodName, args] of this._calls) {
+          const method = (this._source as unknown as Record<string, (...a: unknown[]) => unknown>)[
+            methodName
+          ];
+          if (typeof method !== 'function') {
+            throw new Error(
+              `AnimateProxy: method "${methodName}" not found on ${this._source.constructor.name}`,
+            );
+          }
+          method.apply(this._source, args);
+        }
+      }
     }
     super.finish();
   }
