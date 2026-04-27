@@ -12,6 +12,7 @@ import { Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { hungarian, hungarianFromSimilarity } from '../../utils/hungarian';
 import { lerp, lerpPoint } from '../../utils/math';
+import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
 
 /**
  * Compute the bounding box of a VMobject
@@ -112,6 +113,7 @@ interface MatchedPart {
   targetPoints: number[][];
   startOpacity: number;
   targetOpacity: number;
+  alignedSubpathLengths?: number[];
 }
 
 interface FadingPart {
@@ -319,6 +321,7 @@ export class TransformMatchingShapes extends Animation {
         points.push(lerpPoint(part.startPoints[i], part.targetPoints[i], alpha));
       }
       part.source.setPoints(points);
+      part.source.setTransformSubpathLengths(part.alignedSubpathLengths);
       part.source.opacity = lerp(part.startOpacity, part.targetOpacity, alpha);
     }
 
@@ -341,6 +344,7 @@ export class TransformMatchingShapes extends Animation {
     // Finalize matched parts
     for (const part of this._matchedParts) {
       part.source.setPoints(part.targetPoints);
+      part.source.setTransformSubpathLengths(undefined);
       part.source.opacity = part.targetOpacity;
       part.source.color = part.target.color;
     }
@@ -611,18 +615,42 @@ export class TransformMatchingTex extends Animation {
   private _addMatchedPart(source: VMobject, target: VMobject): void {
     const srcCopy = source.copy() as VMobject;
     const tgtCopy = target.copy() as VMobject;
-    srcCopy.alignPoints(tgtCopy);
+    const alignedCompound = alignCompoundPathsForTransform(
+      srcCopy.getPoints(),
+      source.getEffectiveSubpathLengths?.(),
+      tgtCopy.getPoints(),
+      target.getEffectiveSubpathLengths?.(),
+    );
 
-    this._matchedParts.push({
-      source,
-      target,
-      startPoints: srcCopy.getPoints(),
-      targetPoints: tgtCopy.getPoints(),
-      startOpacity: source.opacity,
-      targetOpacity: target.opacity,
-    });
+    if (alignedCompound) {
+      this._matchedParts.push({
+        source,
+        target,
+        startPoints: alignedCompound.srcAlignedPoints,
+        targetPoints: alignedCompound.tgtAlignedPoints,
+        startOpacity: source.opacity,
+        targetOpacity: target.opacity,
+        alignedSubpathLengths: alignedCompound.alignedSubpathLengths,
+      });
 
-    source.setPoints(srcCopy.getPoints());
+      source.setPoints(alignedCompound.srcAlignedPoints);
+      source.setTransformSubpathLengths(alignedCompound.alignedSubpathLengths);
+    } else {
+      srcCopy.alignPoints(tgtCopy);
+
+      this._matchedParts.push({
+        source,
+        target,
+        startPoints: srcCopy.getPoints(),
+        targetPoints: tgtCopy.getPoints(),
+        startOpacity: source.opacity,
+        targetOpacity: target.opacity,
+        alignedSubpathLengths: undefined,
+      });
+
+      source.setPoints(srcCopy.getPoints());
+      source.setTransformSubpathLengths(undefined);
+    }
   }
 
   /**
@@ -631,18 +659,42 @@ export class TransformMatchingTex extends Animation {
   private _addMismatchedPair(source: VMobject, target: VMobject): void {
     const srcCopy = source.copy() as VMobject;
     const tgtCopy = target.copy() as VMobject;
-    srcCopy.alignPoints(tgtCopy);
+    const alignedCompound = alignCompoundPathsForTransform(
+      srcCopy.getPoints(),
+      source.getEffectiveSubpathLengths?.(),
+      tgtCopy.getPoints(),
+      target.getEffectiveSubpathLengths?.(),
+    );
 
-    this._mismatchedPairs.push({
-      source,
-      target,
-      startPoints: srcCopy.getPoints(),
-      targetPoints: tgtCopy.getPoints(),
-      startOpacity: source.opacity,
-      targetOpacity: target.opacity,
-    });
+    if (alignedCompound) {
+      this._mismatchedPairs.push({
+        source,
+        target,
+        startPoints: alignedCompound.srcAlignedPoints,
+        targetPoints: alignedCompound.tgtAlignedPoints,
+        startOpacity: source.opacity,
+        targetOpacity: target.opacity,
+        alignedSubpathLengths: alignedCompound.alignedSubpathLengths,
+      });
 
-    source.setPoints(srcCopy.getPoints());
+      source.setPoints(alignedCompound.srcAlignedPoints);
+      source.setTransformSubpathLengths(alignedCompound.alignedSubpathLengths);
+    } else {
+      srcCopy.alignPoints(tgtCopy);
+
+      this._mismatchedPairs.push({
+        source,
+        target,
+        startPoints: srcCopy.getPoints(),
+        targetPoints: tgtCopy.getPoints(),
+        startOpacity: source.opacity,
+        targetOpacity: target.opacity,
+        alignedSubpathLengths: undefined,
+      });
+
+      source.setPoints(srcCopy.getPoints());
+      source.setTransformSubpathLengths(undefined);
+    }
   }
 
   /**
@@ -678,6 +730,7 @@ export class TransformMatchingTex extends Animation {
         points.push(lerpPoint(part.startPoints[i], part.targetPoints[i], alpha));
       }
       part.source.setPoints(points);
+      part.source.setTransformSubpathLengths(part.alignedSubpathLengths);
       part.source.opacity = lerp(part.startOpacity, part.targetOpacity, alpha);
     }
 
@@ -688,6 +741,7 @@ export class TransformMatchingTex extends Animation {
         points.push(lerpPoint(part.startPoints[i], part.targetPoints[i], alpha));
       }
       part.source.setPoints(points);
+      part.source.setTransformSubpathLengths(part.alignedSubpathLengths);
 
       // Cross-fade effect: fade out then fade in
       if (alpha < 0.5) {
@@ -715,6 +769,7 @@ export class TransformMatchingTex extends Animation {
     // Finalize matched parts
     for (const part of this._matchedParts) {
       part.source.setPoints(part.targetPoints);
+      part.source.setTransformSubpathLengths(undefined);
       part.source.opacity = part.targetOpacity;
       part.source.color = part.target.color;
     }
@@ -722,6 +777,7 @@ export class TransformMatchingTex extends Animation {
     // Finalize mismatched pairs
     for (const part of this._mismatchedPairs) {
       part.source.setPoints(part.targetPoints);
+      part.source.setTransformSubpathLengths(undefined);
       part.source.opacity = part.targetOpacity;
       part.source.color = part.target.color;
     }

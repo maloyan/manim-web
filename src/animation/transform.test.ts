@@ -32,6 +32,41 @@ function vmWithPoints(pts: number[][]) {
 }
 
 describe('Transform', () => {
+  describe('compound path final topology', () => {
+    it('restores target subpath lengths at finish for compound shapes', () => {
+      const source = vmWithPoints([
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 1, 0],
+        [0, 1, 0],
+        [0, 0, 0],
+      ]);
+      const target = vmWithPoints([
+        [0, 0, 0],
+        [2, 0, 0],
+        [2, 2, 0],
+        [0, 2, 0],
+        [0, 0, 0],
+        [0.7, 0.7, 0],
+        [1.3, 0.7, 0],
+        [1.3, 1.3, 0],
+        [0.7, 1.3, 0],
+        [0.7, 0.7, 0],
+      ]);
+
+      (source as VMobject & { getSubpaths?: () => number[] }).getSubpaths = () => [5];
+      (target as VMobject & { getSubpaths?: () => number[] }).getSubpaths = () => [5, 5];
+
+      const t = new Transform(source, target);
+      t.begin();
+      t.interpolate(0.999);
+      expect(source.getEffectiveSubpathLengths()).toEqual([5, 5]);
+      t.interpolate(1);
+      t.finish();
+
+      expect(source.getEffectiveSubpathLengths()).toEqual([5, 5]);
+    });
+  });
   it('stores mobject, target, and defaults to 1s duration', () => {
     const { c1, c2 } = makePair();
     const t = new Transform(c1, c2);

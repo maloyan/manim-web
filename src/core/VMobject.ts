@@ -40,6 +40,9 @@ export class VMobject extends VMobjectRendering {
   /** Number of points visible (for Create animation) */
   protected _visiblePointCount: number | null = null;
 
+  /** Transform-time override for subpath lengths (compound-path metadata) */
+  protected _transformSubpathLengths?: number[];
+
   constructor() {
     super();
     // VMobjects have visible fill by default
@@ -260,6 +263,39 @@ export class VMobject extends VMobjectRendering {
     this._geometryDirty = true;
     this._markDirty();
     return this;
+  }
+
+  // -----------------------------------------------------------------------
+  // Transform subpath metadata
+  // -----------------------------------------------------------------------
+
+  /**
+   * Set transform-time subpath lengths override.
+   * Used by Transform animations to preserve compound-path structure.
+   * @param lengths - Array of subpath lengths, or undefined to clear
+   */
+  setTransformSubpathLengths(lengths: number[] | undefined): void {
+    if (lengths === undefined) {
+      this._transformSubpathLengths = undefined;
+    } else {
+      this._transformSubpathLengths = [...lengths];
+    }
+    this._geometryDirty = true;
+    this._markDirtyUpward();
+  }
+
+  /**
+   * Get effective subpath lengths for rendering.
+   * Returns transform override if present, else falls back to legacy getSubpaths.
+   * @returns Array of subpath lengths, or undefined if not applicable
+   */
+  getEffectiveSubpathLengths(): number[] | undefined {
+    if (this._transformSubpathLengths !== undefined) {
+      return this._transformSubpathLengths;
+    }
+    // Fallback to legacy dynamic property if present
+    const getSubpaths = (this as unknown as { getSubpaths?: () => number[] }).getSubpaths;
+    return getSubpaths?.call(this);
   }
 
   // -----------------------------------------------------------------------
@@ -499,6 +535,9 @@ export class VMobject extends VMobjectRendering {
     // not whatever _createCopy()'s constructor regenerated.
     clone._points3D = this._points3D.map((p) => [...p]);
     clone._visiblePointCount = this._visiblePointCount;
+    if (this._transformSubpathLengths !== undefined) {
+      clone._transformSubpathLengths = [...this._transformSubpathLengths];
+    }
     clone._geometryDirty = true;
     return clone;
   }
@@ -510,6 +549,9 @@ export class VMobject extends VMobjectRendering {
     const vmobject = new VMobject();
     vmobject._points3D = this._points3D.map((p) => [...p]);
     vmobject._visiblePointCount = this._visiblePointCount;
+    if (this._transformSubpathLengths !== undefined) {
+      vmobject._transformSubpathLengths = [...this._transformSubpathLengths];
+    }
     return vmobject;
   }
 

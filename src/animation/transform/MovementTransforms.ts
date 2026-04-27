@@ -8,6 +8,7 @@ import { VMobject } from '../../core/VMobject';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { lerp, lerpPoint } from '../../utils/math';
+import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
 
 // ============================================================================
 // ClockwiseTransform
@@ -55,10 +56,24 @@ export class ClockwiseTransform extends Animation {
 
     const startCopy = vmobject.copy() as VMobject;
     const targetCopy = this.target.copy() as VMobject;
-    startCopy.alignPoints(targetCopy);
 
-    this._startPoints = startCopy.getPoints();
-    this._targetPoints = targetCopy.getPoints();
+    const alignedCompound = alignCompoundPathsForTransform(
+      startCopy.getPoints(),
+      vmobject.getEffectiveSubpathLengths?.(),
+      targetCopy.getPoints(),
+      this.target.getEffectiveSubpathLengths?.(),
+    );
+
+    if (alignedCompound) {
+      this._startPoints = alignedCompound.srcAlignedPoints;
+      this._targetPoints = alignedCompound.tgtAlignedPoints;
+      vmobject.setTransformSubpathLengths(alignedCompound.alignedSubpathLengths);
+    } else {
+      startCopy.alignPoints(targetCopy);
+      this._startPoints = startCopy.getPoints();
+      this._targetPoints = targetCopy.getPoints();
+      vmobject.setTransformSubpathLengths(undefined);
+    }
 
     // Calculate center as midpoint between source and target centers
     const srcCenter = vmobject.getCenter();
@@ -112,6 +127,7 @@ export class ClockwiseTransform extends Animation {
   override finish(): void {
     const vmobject = this.mobject as VMobject;
     vmobject.setPoints(this._targetPoints);
+    vmobject.setTransformSubpathLengths(undefined);
     vmobject.opacity = this._targetOpacity;
     vmobject.color = this.target.color;
     super.finish();
@@ -178,10 +194,24 @@ export class CounterclockwiseTransform extends Animation {
 
     const startCopy = vmobject.copy() as VMobject;
     const targetCopy = this.target.copy() as VMobject;
-    startCopy.alignPoints(targetCopy);
 
-    this._startPoints = startCopy.getPoints();
-    this._targetPoints = targetCopy.getPoints();
+    const alignedCompound = alignCompoundPathsForTransform(
+      startCopy.getPoints(),
+      vmobject.getEffectiveSubpathLengths?.(),
+      targetCopy.getPoints(),
+      this.target.getEffectiveSubpathLengths?.(),
+    );
+
+    if (alignedCompound) {
+      this._startPoints = alignedCompound.srcAlignedPoints;
+      this._targetPoints = alignedCompound.tgtAlignedPoints;
+      vmobject.setTransformSubpathLengths(alignedCompound.alignedSubpathLengths);
+    } else {
+      startCopy.alignPoints(targetCopy);
+      this._startPoints = startCopy.getPoints();
+      this._targetPoints = targetCopy.getPoints();
+      vmobject.setTransformSubpathLengths(undefined);
+    }
 
     const srcCenter = vmobject.getCenter();
     const tgtCenter = this.target.getCenter();
@@ -231,6 +261,7 @@ export class CounterclockwiseTransform extends Animation {
   override finish(): void {
     const vmobject = this.mobject as VMobject;
     vmobject.setPoints(this._targetPoints);
+    vmobject.setTransformSubpathLengths(undefined);
     vmobject.opacity = this._targetOpacity;
     vmobject.color = this.target.color;
     super.finish();

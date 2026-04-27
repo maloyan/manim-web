@@ -20,6 +20,12 @@ import {
 } from '../utils/math';
 import type { Point } from './VMobjectCurves';
 
+export interface CompoundAlignmentResult {
+  srcAlignedPoints: number[][];
+  tgtAlignedPoints: number[][];
+  alignedSubpathLengths: number[];
+}
+
 // -----------------------------------------------------------------------
 // Linearity test
 // -----------------------------------------------------------------------
@@ -276,6 +282,134 @@ export function pointInPolygon(point: number[], ring: number[][]): boolean {
     }
   }
   return inside;
+}
+
+/** Split a flat point array into subpath chunks based on lengths metadata. */
+export function splitBySubpathLengths(points3D: number[][], lengths: number[]): number[][][] {
+  const chunks: number[][][] = [];
+  let offset = 0;
+  for (const len of lengths) {
+    chunks.push(points3D.slice(offset, offset + len));
+    offset += len;
+  }
+  return chunks;
+}
+
+/** Build a degenerate subpath (all points equal) with point count matching reference. */
+export function makeNullSubpathFromReference(
+  referenceSubpath: number[][],
+  anchorPoint: number[],
+): number[][] {
+  const anchor = [anchorPoint[0], anchorPoint[1], anchorPoint[2] ?? 0];
+  return referenceSubpath.map(() => [...anchor]);
+}
+
+/** Equalize point counts for a source/target subpath pair using dense interpolation. */
+export function alignSubpathPairPoints(
+  srcSubpath: number[][],
+  tgtSubpath: number[][],
+): { srcAligned: number[][]; tgtAligned: number[][] } {
+  const maxCount = Math.max(srcSubpath.length, tgtSubpath.length);
+
+  const interpolateToCount = (pts: number[][], targetCount: number): number[][] => {
+    if (pts.length === targetCount) return pts.map((p) => [...p]);
+    if (pts.length === 0)
+      return Array(targetCount)
+        .fill(null)
+        .map(() => [0, 0, 0]);
+    if (pts.length === 1)
+      return Array(targetCount)
+        .fill(null)
+        .map(() => [...pts[0]]);
+
+    const out: number[][] = [];
+    const ratio = (pts.length - 1) / (targetCount - 1);
+    for (let i = 0; i < targetCount; i++) {
+      const t = i * ratio;
+      const idx = Math.floor(t);
+      const frac = t - idx;
+      if (idx >= pts.length - 1) {
+        out.push([...pts[pts.length - 1]]);
+      } else {
+        const p0 = pts[idx];
+        const p1 = pts[idx + 1];
+        out.push([
+          p0[0] + (p1[0] - p0[0]) * frac,
+          p0[1] + (p1[1] - p0[1]) * frac,
+          (p0[2] ?? 0) + ((p1[2] ?? 0) - (p0[2] ?? 0)) * frac,
+        ]);
+      }
+    }
+    return out;
+  };
+
+  return {
+    srcAligned: interpolateToCount(srcSubpath, maxCount),
+    tgtAligned: interpolateToCount(tgtSubpath, maxCount),
+  };
+}
+
+/**
+ * Align two compound paths by subpath index.
+ * Missing subpaths are replaced with null subpaths anchored at prior endpoint.
+ */
+export function alignCompoundPathsForTransform(
+  srcPoints3D: number[][],
+  srcLengths: number[] | undefined,
+  tgtPoints3D: number[][],
+  tgtLengths: number[] | undefined,
+): CompoundAlignmentResult | null {
+  if (!srcLengths || !tgtLengths || (srcLengths.length <= 1 && tgtLengths.length <= 1)) {
+    return null;
+  }
+
+  const srcTotal = srcLengths.reduce((sum, len) => sum + len, 0);
+  if (srcTotal !== srcPoints3D.length) {
+    throw new Error(
+      `alignCompoundPathsForTransform: source subpath lengths sum (${srcTotal}) does not match source point count (${srcPoints3D.length})`,
+    );
+  }
+
+  const tgtTotal = tgtLengths.reduce((sum, len) => sum + len, 0);
+  if (tgtTotal !== tgtPoints3D.length) {
+    throw new Error(
+      `alignCompoundPathsForTransform: target subpath lengths sum (${tgtTotal}) does not match target point count (${tgtPoints3D.length})`,
+    );
+  }
+
+  const srcChunks = splitBySubpathLengths(srcPoints3D, srcLengths);
+  const tgtChunks = splitBySubpathLengths(tgtPoints3D, tgtLengths);
+  const maxSubpaths = Math.max(srcChunks.length, tgtChunks.length);
+
+  const srcAlignedAll: number[][] = [];
+  const tgtAlignedAll: number[][] = [];
+  const alignedLengths: number[] = [];
+
+  let lastAnchor: number[] = srcPoints3D[srcPoints3D.length - 1] ??
+    tgtPoints3D[tgtPoints3D.length - 1] ?? [0, 0, 0];
+
+  for (let i = 0; i < maxSubpaths; i++) {
+    const src = srcChunks[i];
+    const tgt = tgtChunks[i];
+
+    const srcSub = src ?? makeNullSubpathFromReference(tgt ?? [[...lastAnchor]], lastAnchor);
+    const tgtSub = tgt ?? makeNullSubpathFromReference(src ?? [[...lastAnchor]], lastAnchor);
+
+    const { srcAligned, tgtAligned } = alignSubpathPairPoints(srcSub, tgtSub);
+
+    srcAlignedAll.push(...srcAligned);
+    tgtAlignedAll.push(...tgtAligned);
+    alignedLengths.push(srcAligned.length);
+
+    const nextAnchor = srcAligned[srcAligned.length - 1] ?? tgtAligned[tgtAligned.length - 1];
+    if (nextAnchor) lastAnchor = [...nextAnchor];
+  }
+
+  return {
+    srcAlignedPoints: srcAlignedAll,
+    tgtAlignedPoints: tgtAlignedAll,
+    alignedSubpathLengths: alignedLengths,
+  };
 }
 
 // -----------------------------------------------------------------------

@@ -11,6 +11,7 @@ import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Animation, AnimationOptions } from '../Animation';
 import { lerpPoint } from '../../utils/math';
+import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
 import {
   collectLeafVMobjectSnapshots,
   worldToParentLocalPosition,
@@ -46,23 +47,6 @@ interface ChildStyle {
   fillColor: string;
 }
 
-interface CompoundPathVMobject extends VMobject {
-  getSubpaths?: () => number[];
-}
-
-/** Keep compound-path metadata (holes/subpaths) in sync with target geometry. */
-function syncCompoundPathMetadata(target: VMobject, receiver: VMobject): void {
-  const targetCompound = target as CompoundPathVMobject;
-  const receiverCompound = receiver as CompoundPathVMobject;
-
-  if (targetCompound.getSubpaths) {
-    const getSubpaths = targetCompound.getSubpaths.bind(targetCompound);
-    receiverCompound.getSubpaths = () => [...getSubpaths()];
-  } else {
-    delete receiverCompound.getSubpaths;
-  }
-}
-
 /** Reusable scratch color to avoid per-frame allocations in interpolate() */
 const scratchColor = new THREE.Color();
 
@@ -78,6 +62,12 @@ export class Transform extends Animation {
 
   /** Original target points before alignment (used for exact final state) */
   private _finalTargetPoints: number[][] = [];
+
+  /** Exact target subpath lengths to restore at finish() for final hole topology */
+  private _finalTargetSubpathLengths?: number[];
+
+  /** Transform-time aligned subpath lengths for single VMobject morphs */
+  private _alignedSubpathLengths?: number[];
 
   /** Starting style values */
   private _startOpacity: number = 1;
@@ -122,11 +112,11 @@ export class Transform extends Animation {
   private _childStartPositions: THREE.Vector3[] = [];
   private _childTargetPositions: THREE.Vector3[] = [];
 
-  /** Target child refs for copying dynamic properties (getSubpaths) */
-  private _childTargetRefs: (VMobject | undefined)[] = [];
-
   /** Original target points before alignment (for final state) */
   private _childOriginalTargetPoints: number[][][] = [];
+
+  /** Per-child exact target subpath lengths to restore at finish() */
+  private _childFinalTargetSubpathLengths: (number[] | undefined)[] = [];
 
   /** Per-child start/target styles for VGroup transforms */
   private _childStartStyles: ChildStyle[] = [];
@@ -197,10 +187,29 @@ export class Transform extends Animation {
 
       // Keep final triangulation identical to the target by restoring this at finish().
       this._finalTargetPoints = targetCopy.getPoints();
-      startCopy.alignPoints(targetCopy);
+      this._finalTargetSubpathLengths =
+        targetCopy.getEffectiveSubpathLengths?.() ?? vtarget.getEffectiveSubpathLengths?.();
 
-      this._startPoints = startCopy.getPoints();
-      this._targetPoints = targetCopy.getPoints();
+      const srcLengths =
+        startCopy.getEffectiveSubpathLengths?.() ?? vmobject.getEffectiveSubpathLengths?.();
+      const tgtLengths = this._finalTargetSubpathLengths;
+      const alignedCompound = alignCompoundPathsForTransform(
+        startCopy.getPoints(),
+        srcLengths,
+        targetCopy.getPoints(),
+        tgtLengths,
+      );
+
+      if (alignedCompound) {
+        this._startPoints = alignedCompound.srcAlignedPoints;
+        this._targetPoints = alignedCompound.tgtAlignedPoints;
+        this._alignedSubpathLengths = alignedCompound.alignedSubpathLengths;
+      } else {
+        startCopy.alignPoints(targetCopy);
+        this._startPoints = startCopy.getPoints();
+        this._targetPoints = targetCopy.getPoints();
+        this._alignedSubpathLengths = undefined;
+      }
 
       this._startOpacity = vmobject.opacity;
       this._targetOpacity = vtarget.opacity;
@@ -230,6 +239,7 @@ export class Transform extends Animation {
       this._targetScale.copy(vtarget.scaleVector);
 
       vmobject.setPoints(this._startPoints);
+      vmobject.setTransformSubpathLengths(this._alignedSubpathLengths);
     } else {
       // Cross-fade for non-VMobject transforms (e.g., MathTex → MathTex)
       this._useCrossFade = true;
@@ -276,16 +286,40 @@ export class Transform extends Animation {
         const scCopy = sc.copy() as VMobject;
         const tcCopy = tc.copy() as VMobject;
 
-        // Capture ORIGINAL target points BEFORE alignment
+        // Capture ORIGINAL target points and topology BEFORE alignment
         this._childOriginalTargetPoints.push(tc.getPoints());
+        this._childFinalTargetSubpathLengths.push(
+          tcCopy.getEffectiveSubpathLengths?.() ?? tc.getEffectiveSubpathLengths?.(),
+        );
 
-        scCopy.alignPoints(tcCopy);
+        const srcLengths = sc.getEffectiveSubpathLengths?.();
+        const tgtLengths = tc.getEffectiveSubpathLengths?.();
+        const alignedCompound = alignCompoundPathsForTransform(
+          scCopy.getPoints(),
+          srcLengths,
+          tcCopy.getPoints(),
+          tgtLengths,
+        );
+
+        let childStartPoints: number[][];
+        let childTargetPoints: number[][];
+        let childAlignedLengths: number[] | undefined;
+
+        if (alignedCompound) {
+          childStartPoints = alignedCompound.srcAlignedPoints;
+          childTargetPoints = alignedCompound.tgtAlignedPoints;
+          childAlignedLengths = alignedCompound.alignedSubpathLengths;
+        } else {
+          scCopy.alignPoints(tcCopy);
+          childStartPoints = scCopy.getPoints();
+          childTargetPoints = tcCopy.getPoints();
+          childAlignedLengths = undefined;
+        }
 
         this._childRefs.push(sc);
-        this._childTargetRefs.push(tc); // Store target ref for getSubpaths copy
 
-        this._childStartPoints.push(scCopy.getPoints());
-        this._childTargetPoints.push(tcCopy.getPoints());
+        this._childStartPoints.push(childStartPoints);
+        this._childTargetPoints.push(childTargetPoints);
 
         this._childStartPositions.push(
           worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix),
@@ -297,16 +331,17 @@ export class Transform extends Animation {
         this._childStartStyles.push(captureStyle(sc));
         this._childTargetStyles.push(captureStyle(tc));
 
-        sc.setPoints(scCopy.getPoints());
+        sc.setPoints(childStartPoints);
+        sc.setTransformSubpathLengths(childAlignedLengths);
       } else if (src) {
         // Extra source child with no target counterpart — fade out
         const sc = src.leaf;
         this._childRefs.push(sc);
-        this._childTargetRefs.push(undefined); // No target
 
         this._childStartPoints.push(sc.getPoints());
         this._childTargetPoints.push(sc.getPoints());
         this._childOriginalTargetPoints.push(sc.getPoints()); // No change
+        this._childFinalTargetSubpathLengths.push(undefined);
 
         const p = worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix);
         this._childStartPositions.push(p.clone());
@@ -324,12 +359,12 @@ export class Transform extends Animation {
         vmobject.add(placeholder);
 
         this._childRefs.push(placeholder);
-        this._childTargetRefs.push(tc); // Store target ref for getSubpaths copy
 
         const originalPts = tc.getPoints();
         this._childStartPoints.push(originalPts);
         this._childTargetPoints.push(originalPts);
         this._childOriginalTargetPoints.push(originalPts);
+        this._childFinalTargetSubpathLengths.push(tc.getEffectiveSubpathLengths?.());
 
         const p = worldToParentLocalPosition(tgt.worldPosition, tgt.parentWorldMatrix);
         this._childStartPositions.push(p.clone());
@@ -337,6 +372,8 @@ export class Transform extends Animation {
 
         this._childStartStyles.push(captureStyleFaded(tc));
         this._childTargetStyles.push(captureStyle(tc));
+
+        placeholder.setTransformSubpathLengths(tc.getEffectiveSubpathLengths?.());
       }
     }
 
@@ -437,6 +474,7 @@ export class Transform extends Animation {
       interpolatedPoints.push(lerpPoint(this._startPoints[i], this._targetPoints[i], alpha));
     }
     vmobject.setPoints(interpolatedPoints);
+    vmobject.setTransformSubpathLengths(this._alignedSubpathLengths);
 
     vmobject.opacity = this._startOpacity + (this._targetOpacity - this._startOpacity) * alpha;
 
@@ -543,7 +581,6 @@ export class Transform extends Animation {
         c++
       ) {
         const child = this._childRefs[c];
-        const targetChild = this._childTargetRefs[c];
         child.setPoints(this._childOriginalTargetPoints[c]);
         child.position.copy(this._childTargetPositions[c]);
         const ts = this._childTargetStyles[c];
@@ -552,9 +589,7 @@ export class Transform extends Animation {
         child.strokeWidth = ts.strokeWidth;
         child.color = ts.color;
         child.fillColor = ts.fillColor;
-
-        const metadataSource = targetChild ?? child;
-        syncCompoundPathMetadata(metadataSource, child);
+        child.setTransformSubpathLengths(this._childFinalTargetSubpathLengths[c]);
 
         child._markDirty();
       }
@@ -571,13 +606,11 @@ export class Transform extends Animation {
     vmobject.setPoints(
       this._finalTargetPoints.length > 0 ? this._finalTargetPoints : this._targetPoints,
     );
+    vmobject.setTransformSubpathLengths(this._finalTargetSubpathLengths);
     vmobject.opacity = this._targetOpacity;
     vmobject.fillOpacity = this._targetFillOpacity;
     vmobject.strokeWidth = this._targetStrokeWidth;
     vmobject.color = this.target.color;
-
-    // Copy compound-path metadata from target for correct triangulation of holes.
-    syncCompoundPathMetadata(vtarget, vmobject);
 
     // Apply final fill color if it was interpolated separately
     if (this._interpolateFillColor) {

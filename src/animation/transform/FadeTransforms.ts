@@ -7,6 +7,7 @@ import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { Transform } from './Transform';
 import { lerpPoint } from '../../utils/math';
+import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
 
 // ============================================================================
 // FadeTransform
@@ -40,6 +41,9 @@ export class FadeTransform extends Animation {
   /** Target opacity */
   private _targetOpacity: number = 1;
 
+  /** Transform-time subpath lengths override for compound paths */
+  private _alignedSubpathLengths?: number[];
+
   constructor(mobject: VMobject, target: VMobject, options: FadeTransformOptions = {}) {
     super(mobject, options);
     this.target = target;
@@ -55,15 +59,28 @@ export class FadeTransform extends Animation {
     const startCopy = vmobject.copy() as VMobject;
     const targetCopy = this.target.copy() as VMobject;
 
-    // Align the points
-    startCopy.alignPoints(targetCopy);
+    const alignedCompound = alignCompoundPathsForTransform(
+      startCopy.getPoints(),
+      vmobject.getEffectiveSubpathLengths?.(),
+      targetCopy.getPoints(),
+      this.target.getEffectiveSubpathLengths?.(),
+    );
 
-    this._startPoints = startCopy.getPoints();
-    this._targetPoints = targetCopy.getPoints();
+    if (alignedCompound) {
+      this._startPoints = alignedCompound.srcAlignedPoints;
+      this._targetPoints = alignedCompound.tgtAlignedPoints;
+      this._alignedSubpathLengths = alignedCompound.alignedSubpathLengths;
+    } else {
+      startCopy.alignPoints(targetCopy);
+      this._startPoints = startCopy.getPoints();
+      this._targetPoints = targetCopy.getPoints();
+      this._alignedSubpathLengths = undefined;
+    }
     this._startOpacity = vmobject.opacity;
     this._targetOpacity = this.target.opacity;
 
     vmobject.setPoints(this._startPoints);
+    vmobject.setTransformSubpathLengths(this._alignedSubpathLengths);
   }
 
   interpolate(alpha: number): void {
@@ -89,6 +106,7 @@ export class FadeTransform extends Animation {
   override finish(): void {
     const vmobject = this.mobject as VMobject;
     vmobject.setPoints(this._targetPoints);
+    vmobject.setTransformSubpathLengths(undefined);
     vmobject.opacity = this._targetOpacity;
     vmobject.color = this.target.color;
     super.finish();
@@ -129,6 +147,7 @@ export class FadeTransformPieces extends Animation {
     targetPoints: number[][];
     startOpacity: number;
     targetOpacity: number;
+    alignedSubpathLengths?: number[];
   }> = [];
 
   constructor(mobject: VMobject, target: VMobject, options: FadeTransformPiecesOptions = {}) {
@@ -153,27 +172,61 @@ export class FadeTransformPieces extends Animation {
 
         const srcCopy = srcChild.copy() as VMobject;
         const tgtCopy = tgtChild.copy() as VMobject;
-        srcCopy.alignPoints(tgtCopy);
+        const alignedCompound = alignCompoundPathsForTransform(
+          srcCopy.getPoints(),
+          srcChild.getEffectiveSubpathLengths?.(),
+          tgtCopy.getPoints(),
+          tgtChild.getEffectiveSubpathLengths?.(),
+        );
 
-        this._pieceStates.push({
-          startPoints: srcCopy.getPoints(),
-          targetPoints: tgtCopy.getPoints(),
-          startOpacity: srcChild.opacity,
-          targetOpacity: tgtChild.opacity,
-        });
+        if (alignedCompound) {
+          this._pieceStates.push({
+            startPoints: alignedCompound.srcAlignedPoints,
+            targetPoints: alignedCompound.tgtAlignedPoints,
+            startOpacity: srcChild.opacity,
+            targetOpacity: tgtChild.opacity,
+            alignedSubpathLengths: alignedCompound.alignedSubpathLengths,
+          });
+        } else {
+          srcCopy.alignPoints(tgtCopy);
+          this._pieceStates.push({
+            startPoints: srcCopy.getPoints(),
+            targetPoints: tgtCopy.getPoints(),
+            startOpacity: srcChild.opacity,
+            targetOpacity: tgtChild.opacity,
+            alignedSubpathLengths: undefined,
+          });
+        }
       }
     } else {
       // No submobjects, treat as single piece
       const srcCopy = source.copy() as VMobject;
       const tgtCopy = this.target.copy() as VMobject;
-      srcCopy.alignPoints(tgtCopy);
+      const alignedCompound = alignCompoundPathsForTransform(
+        srcCopy.getPoints(),
+        source.getEffectiveSubpathLengths?.(),
+        tgtCopy.getPoints(),
+        this.target.getEffectiveSubpathLengths?.(),
+      );
 
-      this._pieceStates.push({
-        startPoints: srcCopy.getPoints(),
-        targetPoints: tgtCopy.getPoints(),
-        startOpacity: source.opacity,
-        targetOpacity: this.target.opacity,
-      });
+      if (alignedCompound) {
+        this._pieceStates.push({
+          startPoints: alignedCompound.srcAlignedPoints,
+          targetPoints: alignedCompound.tgtAlignedPoints,
+          startOpacity: source.opacity,
+          targetOpacity: this.target.opacity,
+          alignedSubpathLengths: alignedCompound.alignedSubpathLengths,
+        });
+      } else {
+        srcCopy.alignPoints(tgtCopy);
+        this._pieceStates.push({
+          startPoints: srcCopy.getPoints(),
+          targetPoints: tgtCopy.getPoints(),
+          startOpacity: source.opacity,
+          targetOpacity: this.target.opacity,
+          alignedSubpathLengths: undefined,
+        });
+      }
     }
   }
 
@@ -191,6 +244,7 @@ export class FadeTransformPieces extends Animation {
           points.push(lerpPoint(state.startPoints[j], state.targetPoints[j], alpha));
         }
         child.setPoints(points);
+        child.setTransformSubpathLengths(state.alignedSubpathLengths);
 
         // Fade effect
         if (alpha < 0.5) {
@@ -207,6 +261,7 @@ export class FadeTransformPieces extends Animation {
         points.push(lerpPoint(state.startPoints[j], state.targetPoints[j], alpha));
       }
       source.setPoints(points);
+      source.setTransformSubpathLengths(state.alignedSubpathLengths);
 
       if (alpha < 0.5) {
         source.opacity = state.startOpacity * (1 - 2 * alpha);
@@ -225,11 +280,13 @@ export class FadeTransformPieces extends Animation {
         const child = sourceChildren[i] as VMobject;
         const state = this._pieceStates[Math.min(i, this._pieceStates.length - 1)];
         child.setPoints(state.targetPoints);
+        child.setTransformSubpathLengths(undefined);
         child.opacity = state.targetOpacity;
       }
     } else if (this._pieceStates.length > 0) {
       const state = this._pieceStates[0];
       source.setPoints(state.targetPoints);
+      source.setTransformSubpathLengths(undefined);
       source.opacity = state.targetOpacity;
     }
 
