@@ -18,7 +18,7 @@ export default defineConfig({
       formats: ['es'],
     },
     rollupOptions: {
-      external: ['three', 'react', 'react/jsx-runtime', 'vue', 'mathjax-full'],
+      external: ['three', 'react', 'react/jsx-runtime', 'vue', '@mathjax/src'],
       output: {
         globals: {
           three: 'THREE',
