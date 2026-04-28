@@ -8,7 +8,7 @@ import { VMobject } from '../../core/VMobject';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { lerp, lerpPoint } from '../../utils/math';
-import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
+import { alignVmobjectPair } from './TransformPairing';
 
 // ============================================================================
 // ClockwiseTransform
@@ -54,26 +54,10 @@ export class ClockwiseTransform extends Animation {
 
     const vmobject = this.mobject as VMobject;
 
-    const startCopy = vmobject.copy() as VMobject;
-    const targetCopy = this.target.copy() as VMobject;
-
-    const alignedCompound = alignCompoundPathsForTransform(
-      startCopy.getPoints(),
-      vmobject.getEffectiveSubpathLengths?.(),
-      targetCopy.getPoints(),
-      this.target.getEffectiveSubpathLengths?.(),
-    );
-
-    if (alignedCompound) {
-      this._startPoints = alignedCompound.srcAlignedPoints;
-      this._targetPoints = alignedCompound.tgtAlignedPoints;
-      vmobject.setTransformSubpathLengths(alignedCompound.alignedSubpathLengths);
-    } else {
-      startCopy.alignPoints(targetCopy);
-      this._startPoints = startCopy.getPoints();
-      this._targetPoints = targetCopy.getPoints();
-      vmobject.setTransformSubpathLengths(undefined);
-    }
+    const aligned = alignVmobjectPair(vmobject, this.target);
+    this._startPoints = aligned.startPoints;
+    this._targetPoints = aligned.targetPoints;
+    vmobject.setTransformSubpathLengths(aligned.alignedSubpathLengths);
 
     // Calculate center as midpoint between source and target centers
     const srcCenter = vmobject.getCenter();
@@ -192,26 +176,10 @@ export class CounterclockwiseTransform extends Animation {
 
     const vmobject = this.mobject as VMobject;
 
-    const startCopy = vmobject.copy() as VMobject;
-    const targetCopy = this.target.copy() as VMobject;
-
-    const alignedCompound = alignCompoundPathsForTransform(
-      startCopy.getPoints(),
-      vmobject.getEffectiveSubpathLengths?.(),
-      targetCopy.getPoints(),
-      this.target.getEffectiveSubpathLengths?.(),
-    );
-
-    if (alignedCompound) {
-      this._startPoints = alignedCompound.srcAlignedPoints;
-      this._targetPoints = alignedCompound.tgtAlignedPoints;
-      vmobject.setTransformSubpathLengths(alignedCompound.alignedSubpathLengths);
-    } else {
-      startCopy.alignPoints(targetCopy);
-      this._startPoints = startCopy.getPoints();
-      this._targetPoints = targetCopy.getPoints();
-      vmobject.setTransformSubpathLengths(undefined);
-    }
+    const aligned = alignVmobjectPair(vmobject, this.target);
+    this._startPoints = aligned.startPoints;
+    this._targetPoints = aligned.targetPoints;
+    vmobject.setTransformSubpathLengths(aligned.alignedSubpathLengths);
 
     const srcCenter = vmobject.getCenter();
     const tgtCenter = this.target.getCenter();
