@@ -5,6 +5,26 @@ import {
 } from '../../core/MobjectTraversal';
 import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
 
+function sum(values: number[]): number {
+  let out = 0;
+  for (const v of values) out += v;
+  return out;
+}
+
+function assertSubpathLengthsMatchPoints(
+  points: number[][],
+  lengths: number[] | undefined,
+  label: string,
+): void {
+  if (!lengths || lengths.length === 0) return;
+  const total = sum(lengths);
+  if (total !== points.length) {
+    throw new Error(
+      `${label}: subpath lengths sum (${total}) does not match point count (${points.length})`,
+    );
+  }
+}
+
 export interface AlignedTransformPair {
   startPoints: number[][];
   targetPoints: number[][];
@@ -25,10 +45,16 @@ export function alignVmobjectPair(source: VMobject, target: VMobject): AlignedTr
     startCopy.getEffectiveSubpathLengths?.() ?? source.getEffectiveSubpathLengths?.();
   const tgtLengths = finalTargetSubpathLengths;
 
+  const startPointsRaw = startCopy.getPoints();
+  const targetPointsRaw = targetCopy.getPoints();
+
+  assertSubpathLengthsMatchPoints(startPointsRaw, srcLengths, 'alignVmobjectPair(source)');
+  assertSubpathLengthsMatchPoints(targetPointsRaw, tgtLengths, 'alignVmobjectPair(target)');
+
   const alignedCompound = alignCompoundPathsForTransform(
-    startCopy.getPoints(),
+    startPointsRaw,
     srcLengths,
-    targetCopy.getPoints(),
+    targetPointsRaw,
     tgtLengths,
   );
 
@@ -43,9 +69,18 @@ export function alignVmobjectPair(source: VMobject, target: VMobject): AlignedTr
   }
 
   startCopy.alignPoints(targetCopy);
+  const fallbackStartPoints = startCopy.getPoints();
+  const fallbackTargetPoints = targetCopy.getPoints();
+
+  if (fallbackStartPoints.length !== fallbackTargetPoints.length) {
+    throw new Error(
+      `alignVmobjectPair: alignPoints fallback produced mismatched point counts (${fallbackStartPoints.length} vs ${fallbackTargetPoints.length})`,
+    );
+  }
+
   return {
-    startPoints: startCopy.getPoints(),
-    targetPoints: targetCopy.getPoints(),
+    startPoints: fallbackStartPoints,
+    targetPoints: fallbackTargetPoints,
     alignedSubpathLengths: undefined,
     finalTargetPoints,
     finalTargetSubpathLengths,
@@ -67,7 +102,12 @@ export function pairLeafSnapshotsByIndex(
   const pairs: LeafPairByIndex[] = [];
 
   for (let i = 0; i < maxLen; i++) {
-    pairs.push({ source: sourceLeaves[i], target: targetLeaves[i] });
+    const source = sourceLeaves[i];
+    const target = targetLeaves[i];
+    if (!source && !target) {
+      throw new Error(`pairLeafSnapshotsByIndex: invalid empty pair at index ${i}`);
+    }
+    pairs.push({ source, target });
   }
 
   return pairs;

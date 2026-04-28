@@ -11,6 +11,28 @@ function vmWithPoints(pts: number[][]) {
 }
 
 describe('TransformPairing core', () => {
+  it('throws when provided subpath lengths do not match point count', () => {
+    const source = vmWithPoints([
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 1, 0],
+      [0, 1, 0],
+      [0, 0, 0],
+    ]);
+    const target = vmWithPoints([
+      [0, 0, 0],
+      [2, 0, 0],
+      [2, 2, 0],
+      [0, 2, 0],
+      [0, 0, 0],
+    ]);
+
+    (source as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [4];
+
+    expect(() => alignVmobjectPair(source, target)).toThrow(
+      /subpath lengths sum .* does not match point count/i,
+    );
+  });
   it('alignVmobjectPair keeps exact final target topology while returning aligned interpolation points', () => {
     const source = vmWithPoints([
       [0, 0, 0],
