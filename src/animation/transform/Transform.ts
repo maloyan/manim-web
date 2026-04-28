@@ -44,6 +44,20 @@ interface ChildStyle {
   fillColor: string;
 }
 
+interface VGroupLeafState {
+  child: VMobject;
+  startPoints: number[][];
+  targetPoints: number[][];
+  startPosition: THREE.Vector3;
+  targetPosition: THREE.Vector3;
+  finalTargetPoints: number[][];
+  finalTargetSubpathLengths?: number[];
+  startStyle: ChildStyle;
+  targetStyle: ChildStyle;
+  strokeColorPair: { start: THREE.Color; target: THREE.Color; interpolate: boolean };
+  fillColorPair: { start: THREE.Color; target: THREE.Color; interpolate: boolean };
+}
+
 /** Reusable scratch color to avoid per-frame allocations in interpolate() */
 const scratchColor = new THREE.Color();
 
@@ -101,35 +115,8 @@ export class Transform extends Animation {
   /** Whether source and target are both VGroups (per-child interpolation) */
   private _isVGroupTransform: boolean = false;
 
-  /** Per-child start/target points for VGroup transforms */
-  private _childStartPoints: number[][][] = [];
-  private _childTargetPoints: number[][][] = [];
-
-  /** Per-child start/target positions for VGroup transforms */
-  private _childStartPositions: THREE.Vector3[] = [];
-  private _childTargetPositions: THREE.Vector3[] = [];
-
-  /** Original target points before alignment (for final state) */
-  private _childOriginalTargetPoints: number[][][] = [];
-
-  /** Per-child exact target subpath lengths to restore at finish() */
-  private _childFinalTargetSubpathLengths: (number[] | undefined)[] = [];
-
-  /** Per-child start/target styles for VGroup transforms */
-  private _childStartStyles: ChildStyle[] = [];
-  private _childTargetStyles: ChildStyle[] = [];
-
-  /** Per-child pre-allocated THREE.Color pairs for interpolation (avoids per-frame allocation) */
-  private _childColorPairs: { start: THREE.Color; target: THREE.Color; interpolate: boolean }[] =
-    [];
-  private _childFillColorPairs: {
-    start: THREE.Color;
-    target: THREE.Color;
-    interpolate: boolean;
-  }[] = [];
-
-  /** Snapshot of source children references at begin() time */
-  private _childRefs: VMobject[] = [];
+  /** VGroup transform state per leaf-pair */
+  private _vgroupLeafStates: VGroupLeafState[] = [];
 
   constructor(mobject: Mobject, target: Mobject, options: AnimationOptions = {}) {
     super(mobject, options);
@@ -255,88 +242,97 @@ export class Transform extends Animation {
       if (src && tgt) {
         const sc = src.leaf;
         const tc = tgt.leaf;
-
         const aligned = alignVmobjectPair(sc, tc);
-
-        // Capture ORIGINAL target points and topology BEFORE alignment
-        this._childOriginalTargetPoints.push(aligned.finalTargetPoints);
-        this._childFinalTargetSubpathLengths.push(aligned.finalTargetSubpathLengths);
-
-        this._childRefs.push(sc);
-
-        this._childStartPoints.push(aligned.startPoints);
-        this._childTargetPoints.push(aligned.targetPoints);
-
-        this._childStartPositions.push(
-          worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix),
-        );
-        this._childTargetPositions.push(
-          worldToParentLocalPosition(tgt.worldPosition, src.parentWorldMatrix),
-        );
-
-        this._childStartStyles.push(captureStyle(sc));
-        this._childTargetStyles.push(captureStyle(tc));
+        const startStyle = captureStyle(sc);
+        const targetStyle = captureStyle(tc);
 
         sc.setPoints(aligned.startPoints);
         sc.setTransformSubpathLengths(aligned.alignedSubpathLengths);
+
+        this._vgroupLeafStates.push({
+          child: sc,
+          startPoints: aligned.startPoints,
+          targetPoints: aligned.targetPoints,
+          startPosition: worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix),
+          targetPosition: worldToParentLocalPosition(tgt.worldPosition, src.parentWorldMatrix),
+          finalTargetPoints: aligned.finalTargetPoints,
+          finalTargetSubpathLengths: aligned.finalTargetSubpathLengths,
+          startStyle,
+          targetStyle,
+          strokeColorPair: {
+            start: new THREE.Color(startStyle.color),
+            target: new THREE.Color(targetStyle.color),
+            interpolate: startStyle.color !== targetStyle.color,
+          },
+          fillColorPair: {
+            start: new THREE.Color(startStyle.fillColor),
+            target: new THREE.Color(targetStyle.fillColor),
+            interpolate: startStyle.fillColor !== targetStyle.fillColor,
+          },
+        });
       } else if (src) {
-        // Extra source child with no target counterpart — fade out
         const sc = src.leaf;
-        this._childRefs.push(sc);
-
-        this._childStartPoints.push(sc.getPoints());
-        this._childTargetPoints.push(sc.getPoints());
-        this._childOriginalTargetPoints.push(sc.getPoints()); // No change
-        this._childFinalTargetSubpathLengths.push(undefined);
-
         const p = worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix);
-        this._childStartPositions.push(p.clone());
-        this._childTargetPositions.push(p);
+        const startStyle = captureStyle(sc);
+        const targetStyle = captureStyleFaded(sc);
 
-        this._childStartStyles.push(captureStyle(sc));
-        this._childTargetStyles.push(captureStyleFaded(sc));
+        this._vgroupLeafStates.push({
+          child: sc,
+          startPoints: sc.getPoints(),
+          targetPoints: sc.getPoints(),
+          startPosition: p.clone(),
+          targetPosition: p,
+          finalTargetPoints: sc.getPoints(),
+          finalTargetSubpathLengths: undefined,
+          startStyle,
+          targetStyle,
+          strokeColorPair: {
+            start: new THREE.Color(startStyle.color),
+            target: new THREE.Color(targetStyle.color),
+            interpolate: startStyle.color !== targetStyle.color,
+          },
+          fillColorPair: {
+            start: new THREE.Color(startStyle.fillColor),
+            target: new THREE.Color(targetStyle.fillColor),
+            interpolate: startStyle.fillColor !== targetStyle.fillColor,
+          },
+        });
       } else if (tgt) {
-        // Extra target child with no source counterpart — fade in
         const tc = tgt.leaf;
-        const tcCopy = tc.copy() as VMobject;
-        const placeholder = tcCopy.copy() as VMobject;
+        const placeholder = tc.copy() as VMobject;
         placeholder.opacity = 0;
         placeholder.fillOpacity = 0;
         vmobject.add(placeholder);
 
-        this._childRefs.push(placeholder);
-
-        const originalPts = tc.getPoints();
-        this._childStartPoints.push(originalPts);
-        this._childTargetPoints.push(originalPts);
-        this._childOriginalTargetPoints.push(originalPts);
-        this._childFinalTargetSubpathLengths.push(tc.getEffectiveSubpathLengths?.());
-
         const p = worldToParentLocalPosition(tgt.worldPosition, tgt.parentWorldMatrix);
-        this._childStartPositions.push(p.clone());
-        this._childTargetPositions.push(p);
-
-        this._childStartStyles.push(captureStyleFaded(tc));
-        this._childTargetStyles.push(captureStyle(tc));
+        const startStyle = captureStyleFaded(tc);
+        const targetStyle = captureStyle(tc);
+        const originalPts = tc.getPoints();
 
         placeholder.setTransformSubpathLengths(tc.getEffectiveSubpathLengths?.());
-      }
-    }
 
-    // Pre-allocate color objects
-    for (let i = 0; i < this._childStartStyles.length; i++) {
-      const ss = this._childStartStyles[i];
-      const ts = this._childTargetStyles[i];
-      this._childColorPairs.push({
-        start: new THREE.Color(ss.color),
-        target: new THREE.Color(ts.color),
-        interpolate: ss.color !== ts.color,
-      });
-      this._childFillColorPairs.push({
-        start: new THREE.Color(ss.fillColor),
-        target: new THREE.Color(ts.fillColor),
-        interpolate: ss.fillColor !== ts.fillColor,
-      });
+        this._vgroupLeafStates.push({
+          child: placeholder,
+          startPoints: originalPts,
+          targetPoints: originalPts,
+          startPosition: p.clone(),
+          targetPosition: p,
+          finalTargetPoints: originalPts,
+          finalTargetSubpathLengths: tc.getEffectiveSubpathLengths?.(),
+          startStyle,
+          targetStyle,
+          strokeColorPair: {
+            start: new THREE.Color(startStyle.color),
+            target: new THREE.Color(targetStyle.color),
+            interpolate: startStyle.color !== targetStyle.color,
+          },
+          fillColorPair: {
+            start: new THREE.Color(startStyle.fillColor),
+            target: new THREE.Color(targetStyle.fillColor),
+            interpolate: startStyle.fillColor !== targetStyle.fillColor,
+          },
+        });
+      }
     }
 
     // Capture group-level transform properties
@@ -369,40 +365,37 @@ export class Transform extends Animation {
     // VGroup per-child morphing
     if (this._isVGroupTransform) {
       const group = this.mobject as VGroup;
-      for (let c = 0; c < this._childStartPoints.length && c < this._childRefs.length; c++) {
-        const child = this._childRefs[c];
-        const startPts = this._childStartPoints[c];
-        const targetPts = this._childTargetPoints[c];
+      for (const leaf of this._vgroupLeafStates) {
         const interpolated: number[][] = [];
-        for (let i = 0; i < startPts.length; i++) {
-          interpolated.push(lerpPoint(startPts[i], targetPts[i], alpha));
+        for (let i = 0; i < leaf.startPoints.length; i++) {
+          interpolated.push(lerpPoint(leaf.startPoints[i], leaf.targetPoints[i], alpha));
         }
-        child.setPoints(interpolated);
+        leaf.child.setPoints(interpolated);
 
-        // Interpolate child position
-        child.position.lerpVectors(
-          this._childStartPositions[c],
-          this._childTargetPositions[c],
-          alpha,
-        );
+        leaf.child.position.lerpVectors(leaf.startPosition, leaf.targetPosition, alpha);
 
-        const ss = this._childStartStyles[c];
-        const ts = this._childTargetStyles[c];
-        child.opacity = ss.opacity + (ts.opacity - ss.opacity) * alpha;
-        child.fillOpacity = ss.fillOpacity + (ts.fillOpacity - ss.fillOpacity) * alpha;
-        child.strokeWidth = ss.strokeWidth + (ts.strokeWidth - ss.strokeWidth) * alpha;
+        const ss = leaf.startStyle;
+        const ts = leaf.targetStyle;
+        leaf.child.opacity = ss.opacity + (ts.opacity - ss.opacity) * alpha;
+        leaf.child.fillOpacity = ss.fillOpacity + (ts.fillOpacity - ss.fillOpacity) * alpha;
+        leaf.child.strokeWidth = ss.strokeWidth + (ts.strokeWidth - ss.strokeWidth) * alpha;
 
-        const cp = this._childColorPairs[c];
-        if (cp.interpolate) {
-          child.color = '#' + scratchColor.lerpColors(cp.start, cp.target, alpha).getHexString();
+        if (leaf.strokeColorPair.interpolate) {
+          leaf.child.color =
+            '#' +
+            scratchColor
+              .lerpColors(leaf.strokeColorPair.start, leaf.strokeColorPair.target, alpha)
+              .getHexString();
         }
-        const fp = this._childFillColorPairs[c];
-        if (fp.interpolate) {
-          child.fillColor =
-            '#' + scratchColor.lerpColors(fp.start, fp.target, alpha).getHexString();
+        if (leaf.fillColorPair.interpolate) {
+          leaf.child.fillColor =
+            '#' +
+            scratchColor
+              .lerpColors(leaf.fillColorPair.start, leaf.fillColorPair.target, alpha)
+              .getHexString();
         }
 
-        child._markDirty();
+        leaf.child._markDirty();
       }
 
       // Container group transforms are intentionally not interpolated here.
@@ -521,23 +514,18 @@ export class Transform extends Animation {
 
     if (this._isVGroupTransform) {
       const group = this.mobject as VGroup;
-      for (
-        let c = 0;
-        c < this._childOriginalTargetPoints.length && c < this._childRefs.length;
-        c++
-      ) {
-        const child = this._childRefs[c];
-        child.setPoints(this._childOriginalTargetPoints[c]);
-        child.position.copy(this._childTargetPositions[c]);
-        const ts = this._childTargetStyles[c];
-        child.opacity = ts.opacity;
-        child.fillOpacity = ts.fillOpacity;
-        child.strokeWidth = ts.strokeWidth;
-        child.color = ts.color;
-        child.fillColor = ts.fillColor;
-        child.setTransformSubpathLengths(this._childFinalTargetSubpathLengths[c]);
+      for (const leaf of this._vgroupLeafStates) {
+        leaf.child.setPoints(leaf.finalTargetPoints);
+        leaf.child.position.copy(leaf.targetPosition);
+        const ts = leaf.targetStyle;
+        leaf.child.opacity = ts.opacity;
+        leaf.child.fillOpacity = ts.fillOpacity;
+        leaf.child.strokeWidth = ts.strokeWidth;
+        leaf.child.color = ts.color;
+        leaf.child.fillColor = ts.fillColor;
+        leaf.child.setTransformSubpathLengths(leaf.finalTargetSubpathLengths);
 
-        child._markDirty();
+        leaf.child._markDirty();
       }
 
       // Keep container transform as-is; leaf VMobjects now represent final visual state.
