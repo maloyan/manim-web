@@ -33,6 +33,39 @@ function vmWithPoints(pts: number[][]) {
 
 describe('Transform', () => {
   describe('compound path final topology', () => {
+    it('restores exact target points at finish for single-to-compound morph', () => {
+      const source = vmWithPoints([
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 1, 0],
+        [0, 1, 0],
+        [0, 0, 0],
+      ]);
+      const target = vmWithPoints([
+        [0, 0, 0],
+        [2, 0, 0],
+        [2, 2, 0],
+        [0, 2, 0],
+        [0, 0, 0],
+        [0.8, 0.8, 0],
+        [1.2, 0.8, 0],
+        [1.2, 1.2, 0],
+        [0.8, 1.2, 0],
+        [0.8, 0.8, 0],
+      ]);
+
+      (source as VMobject & { getSubpaths?: () => number[] }).getSubpaths = () => [5];
+      (target as VMobject & { getSubpaths?: () => number[] }).getSubpaths = () => [5, 5];
+
+      const t = new Transform(source, target);
+      t.begin();
+      t.interpolate(1);
+      t.finish();
+
+      expect(source.getPoints()).toEqual(target.getPoints());
+      expect(source.getEffectiveSubpathLengths()).toEqual([5, 5]);
+    });
+
     it('restores target subpath lengths at finish for compound shapes', () => {
       const source = vmWithPoints([
         [0, 0, 0],
@@ -60,10 +93,12 @@ describe('Transform', () => {
       const t = new Transform(source, target);
       t.begin();
       t.interpolate(0.999);
-      expect(source.getEffectiveSubpathLengths()).toEqual([5, 5]);
+      // During transform we use dense aligned subpaths for smoother interpolation.
+      expect(source.getEffectiveSubpathLengths()).toEqual([64, 64]);
       t.interpolate(1);
       t.finish();
 
+      // At finish we restore exact target topology metadata.
       expect(source.getEffectiveSubpathLengths()).toEqual([5, 5]);
     });
   });
