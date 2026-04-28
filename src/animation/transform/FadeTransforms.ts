@@ -7,7 +7,7 @@ import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { Transform } from './Transform';
 import { lerpPoint } from '../../utils/math';
-import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
+import { alignVmobjectPair } from './TransformPairing';
 
 // ============================================================================
 // FadeTransform
@@ -55,27 +55,10 @@ export class FadeTransform extends Animation {
 
     const vmobject = this.mobject as VMobject;
 
-    // Create working copies to align
-    const startCopy = vmobject.copy() as VMobject;
-    const targetCopy = this.target.copy() as VMobject;
-
-    const alignedCompound = alignCompoundPathsForTransform(
-      startCopy.getPoints(),
-      vmobject.getEffectiveSubpathLengths?.(),
-      targetCopy.getPoints(),
-      this.target.getEffectiveSubpathLengths?.(),
-    );
-
-    if (alignedCompound) {
-      this._startPoints = alignedCompound.srcAlignedPoints;
-      this._targetPoints = alignedCompound.tgtAlignedPoints;
-      this._alignedSubpathLengths = alignedCompound.alignedSubpathLengths;
-    } else {
-      startCopy.alignPoints(targetCopy);
-      this._startPoints = startCopy.getPoints();
-      this._targetPoints = targetCopy.getPoints();
-      this._alignedSubpathLengths = undefined;
-    }
+    const aligned = alignVmobjectPair(vmobject, this.target);
+    this._startPoints = aligned.startPoints;
+    this._targetPoints = aligned.targetPoints;
+    this._alignedSubpathLengths = aligned.alignedSubpathLengths;
     this._startOpacity = vmobject.opacity;
     this._targetOpacity = this.target.opacity;
 
@@ -170,63 +153,25 @@ export class FadeTransformPieces extends Animation {
         const srcChild = sourceChildren[Math.min(i, sourceChildren.length - 1)] as VMobject;
         const tgtChild = targetChildren[Math.min(i, targetChildren.length - 1)] as VMobject;
 
-        const srcCopy = srcChild.copy() as VMobject;
-        const tgtCopy = tgtChild.copy() as VMobject;
-        const alignedCompound = alignCompoundPathsForTransform(
-          srcCopy.getPoints(),
-          srcChild.getEffectiveSubpathLengths?.(),
-          tgtCopy.getPoints(),
-          tgtChild.getEffectiveSubpathLengths?.(),
-        );
-
-        if (alignedCompound) {
-          this._pieceStates.push({
-            startPoints: alignedCompound.srcAlignedPoints,
-            targetPoints: alignedCompound.tgtAlignedPoints,
-            startOpacity: srcChild.opacity,
-            targetOpacity: tgtChild.opacity,
-            alignedSubpathLengths: alignedCompound.alignedSubpathLengths,
-          });
-        } else {
-          srcCopy.alignPoints(tgtCopy);
-          this._pieceStates.push({
-            startPoints: srcCopy.getPoints(),
-            targetPoints: tgtCopy.getPoints(),
-            startOpacity: srcChild.opacity,
-            targetOpacity: tgtChild.opacity,
-            alignedSubpathLengths: undefined,
-          });
-        }
+        const aligned = alignVmobjectPair(srcChild, tgtChild);
+        this._pieceStates.push({
+          startPoints: aligned.startPoints,
+          targetPoints: aligned.targetPoints,
+          startOpacity: srcChild.opacity,
+          targetOpacity: tgtChild.opacity,
+          alignedSubpathLengths: aligned.alignedSubpathLengths,
+        });
       }
     } else {
       // No submobjects, treat as single piece
-      const srcCopy = source.copy() as VMobject;
-      const tgtCopy = this.target.copy() as VMobject;
-      const alignedCompound = alignCompoundPathsForTransform(
-        srcCopy.getPoints(),
-        source.getEffectiveSubpathLengths?.(),
-        tgtCopy.getPoints(),
-        this.target.getEffectiveSubpathLengths?.(),
-      );
-
-      if (alignedCompound) {
-        this._pieceStates.push({
-          startPoints: alignedCompound.srcAlignedPoints,
-          targetPoints: alignedCompound.tgtAlignedPoints,
-          startOpacity: source.opacity,
-          targetOpacity: this.target.opacity,
-          alignedSubpathLengths: alignedCompound.alignedSubpathLengths,
-        });
-      } else {
-        srcCopy.alignPoints(tgtCopy);
-        this._pieceStates.push({
-          startPoints: srcCopy.getPoints(),
-          targetPoints: tgtCopy.getPoints(),
-          startOpacity: source.opacity,
-          targetOpacity: this.target.opacity,
-          alignedSubpathLengths: undefined,
-        });
-      }
+      const aligned = alignVmobjectPair(source, this.target);
+      this._pieceStates.push({
+        startPoints: aligned.startPoints,
+        targetPoints: aligned.targetPoints,
+        startOpacity: source.opacity,
+        targetOpacity: this.target.opacity,
+        alignedSubpathLengths: aligned.alignedSubpathLengths,
+      });
     }
   }
 

@@ -11,11 +11,8 @@ import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Animation, AnimationOptions } from '../Animation';
 import { lerpPoint } from '../../utils/math';
-import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
-import {
-  collectLeafVMobjectSnapshots,
-  worldToParentLocalPosition,
-} from '../../core/MobjectTraversal';
+import { worldToParentLocalPosition } from '../../core/MobjectTraversal';
+import { alignVmobjectPair, pairLeafSnapshotsByIndex } from './TransformPairing';
 
 /** Extract style snapshot from a VMobject */
 function captureStyle(m: VMobject): ChildStyle {
@@ -182,34 +179,12 @@ export class Transform extends Animation {
       }
 
       // Point-based morphing (single VMobject)
-      const startCopy = vmobject.copy() as VMobject;
-      const targetCopy = vtarget.copy() as VMobject;
-
-      // Keep final triangulation identical to the target by restoring this at finish().
-      this._finalTargetPoints = targetCopy.getPoints();
-      this._finalTargetSubpathLengths =
-        targetCopy.getEffectiveSubpathLengths?.() ?? vtarget.getEffectiveSubpathLengths?.();
-
-      const srcLengths =
-        startCopy.getEffectiveSubpathLengths?.() ?? vmobject.getEffectiveSubpathLengths?.();
-      const tgtLengths = this._finalTargetSubpathLengths;
-      const alignedCompound = alignCompoundPathsForTransform(
-        startCopy.getPoints(),
-        srcLengths,
-        targetCopy.getPoints(),
-        tgtLengths,
-      );
-
-      if (alignedCompound) {
-        this._startPoints = alignedCompound.srcAlignedPoints;
-        this._targetPoints = alignedCompound.tgtAlignedPoints;
-        this._alignedSubpathLengths = alignedCompound.alignedSubpathLengths;
-      } else {
-        startCopy.alignPoints(targetCopy);
-        this._startPoints = startCopy.getPoints();
-        this._targetPoints = targetCopy.getPoints();
-        this._alignedSubpathLengths = undefined;
-      }
+      const aligned = alignVmobjectPair(vmobject, vtarget);
+      this._startPoints = aligned.startPoints;
+      this._targetPoints = aligned.targetPoints;
+      this._alignedSubpathLengths = aligned.alignedSubpathLengths;
+      this._finalTargetPoints = aligned.finalTargetPoints;
+      this._finalTargetSubpathLengths = aligned.finalTargetSubpathLengths;
 
       this._startOpacity = vmobject.opacity;
       this._targetOpacity = vtarget.opacity;
@@ -271,55 +246,26 @@ export class Transform extends Animation {
   private _beginVGroup(vmobject: VGroup, vtarget: VGroup): void {
     this._isVGroupTransform = true;
 
-    const srcSnapshots = collectLeafVMobjectSnapshots(vmobject);
-    const tgtSnapshots = collectLeafVMobjectSnapshots(vtarget);
-    const maxLen = Math.max(srcSnapshots.length, tgtSnapshots.length);
+    const leafPairs = pairLeafSnapshotsByIndex(vmobject, vtarget);
 
-    for (let i = 0; i < maxLen; i++) {
-      const src = srcSnapshots[i];
-      const tgt = tgtSnapshots[i];
+    for (let i = 0; i < leafPairs.length; i++) {
+      const src = leafPairs[i].source;
+      const tgt = leafPairs[i].target;
 
       if (src && tgt) {
         const sc = src.leaf;
         const tc = tgt.leaf;
 
-        const scCopy = sc.copy() as VMobject;
-        const tcCopy = tc.copy() as VMobject;
+        const aligned = alignVmobjectPair(sc, tc);
 
         // Capture ORIGINAL target points and topology BEFORE alignment
-        this._childOriginalTargetPoints.push(tc.getPoints());
-        this._childFinalTargetSubpathLengths.push(
-          tcCopy.getEffectiveSubpathLengths?.() ?? tc.getEffectiveSubpathLengths?.(),
-        );
-
-        const srcLengths = sc.getEffectiveSubpathLengths?.();
-        const tgtLengths = tc.getEffectiveSubpathLengths?.();
-        const alignedCompound = alignCompoundPathsForTransform(
-          scCopy.getPoints(),
-          srcLengths,
-          tcCopy.getPoints(),
-          tgtLengths,
-        );
-
-        let childStartPoints: number[][];
-        let childTargetPoints: number[][];
-        let childAlignedLengths: number[] | undefined;
-
-        if (alignedCompound) {
-          childStartPoints = alignedCompound.srcAlignedPoints;
-          childTargetPoints = alignedCompound.tgtAlignedPoints;
-          childAlignedLengths = alignedCompound.alignedSubpathLengths;
-        } else {
-          scCopy.alignPoints(tcCopy);
-          childStartPoints = scCopy.getPoints();
-          childTargetPoints = tcCopy.getPoints();
-          childAlignedLengths = undefined;
-        }
+        this._childOriginalTargetPoints.push(aligned.finalTargetPoints);
+        this._childFinalTargetSubpathLengths.push(aligned.finalTargetSubpathLengths);
 
         this._childRefs.push(sc);
 
-        this._childStartPoints.push(childStartPoints);
-        this._childTargetPoints.push(childTargetPoints);
+        this._childStartPoints.push(aligned.startPoints);
+        this._childTargetPoints.push(aligned.targetPoints);
 
         this._childStartPositions.push(
           worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix),
@@ -331,8 +277,8 @@ export class Transform extends Animation {
         this._childStartStyles.push(captureStyle(sc));
         this._childTargetStyles.push(captureStyle(tc));
 
-        sc.setPoints(childStartPoints);
-        sc.setTransformSubpathLengths(childAlignedLengths);
+        sc.setPoints(aligned.startPoints);
+        sc.setTransformSubpathLengths(aligned.alignedSubpathLengths);
       } else if (src) {
         // Extra source child with no target counterpart — fade out
         const sc = src.leaf;
