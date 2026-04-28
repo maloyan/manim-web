@@ -63,6 +63,7 @@ function tokenizePath(d: string): Array<{ cmd: string; args: number[] }> {
     const args =
       raw.length > 0
         ? raw
+            .replace(/([0-9])-([0-9])/g, '$1 -$2')
             .split(/[\s,]+/)
             .filter(Boolean)
             .map(Number)
