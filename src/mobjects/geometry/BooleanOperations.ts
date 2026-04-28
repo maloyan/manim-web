@@ -64,7 +64,7 @@ export class BooleanResult extends VMobject {
    * Used by VMobject's fill and stroke renderers to handle
    * disjoint regions without visible bridge lines.
    */
-  getSubpaths(): number[] {
+  getSubpathLengths(): number[] {
     return [...this._subpathLengths];
   }
 

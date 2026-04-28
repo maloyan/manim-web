@@ -286,16 +286,16 @@ export class VMobject extends VMobjectRendering {
 
   /**
    * Get effective subpath lengths for rendering.
-   * Returns transform override if present, else falls back to legacy getSubpaths.
+   * Returns transform override if present, else class-provided subpath lengths.
    * @returns Array of subpath lengths, or undefined if not applicable
    */
   getEffectiveSubpathLengths(): number[] | undefined {
     if (this._transformSubpathLengths !== undefined) {
       return this._transformSubpathLengths;
     }
-    // Fallback to legacy dynamic property if present
-    const getSubpaths = (this as unknown as { getSubpaths?: () => number[] }).getSubpaths;
-    return getSubpaths?.call(this);
+    const getSubpathLengths = (this as unknown as { getSubpathLengths?: () => number[] })
+      .getSubpathLengths;
+    return getSubpathLengths?.call(this);
   }
 
   // -----------------------------------------------------------------------

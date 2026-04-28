@@ -54,8 +54,10 @@ describe('Transform', () => {
         [0.8, 0.8, 0],
       ]);
 
-      (source as VMobject & { getSubpaths?: () => number[] }).getSubpaths = () => [5];
-      (target as VMobject & { getSubpaths?: () => number[] }).getSubpaths = () => [5, 5];
+      (source as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [5];
+      (target as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [
+        5, 5,
+      ];
 
       const t = new Transform(source, target);
       t.begin();
@@ -87,8 +89,10 @@ describe('Transform', () => {
         [0.7, 0.7, 0],
       ]);
 
-      (source as VMobject & { getSubpaths?: () => number[] }).getSubpaths = () => [5];
-      (target as VMobject & { getSubpaths?: () => number[] }).getSubpaths = () => [5, 5];
+      (source as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [5];
+      (target as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [
+        5, 5,
+      ];
 
       const t = new Transform(source, target);
       t.begin();

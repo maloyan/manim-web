@@ -632,8 +632,9 @@ function pathDataToVMobject(
 
   // Attach subpath info so VMobject renders holes correctly
   if (subpathLengths.length > 1) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (vmob as any).getSubpaths = () => [...subpathLengths];
+    (vmob as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [
+      ...subpathLengths,
+    ];
   }
 
   return vmob;

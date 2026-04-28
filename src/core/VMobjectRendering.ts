@@ -205,8 +205,8 @@ export abstract class VMobjectRendering extends Mobject {
     const effectiveLengths = (
       this as unknown as { getEffectiveSubpathLengths?: () => number[] | undefined }
     ).getEffectiveSubpathLengths?.();
-    const getSubpaths = effectiveLengths ? () => effectiveLengths : undefined;
-    return buildEarcutFillGeometry(points3D, this.getVisiblePoints(), getSubpaths);
+    const getSubpathLengths = effectiveLengths ? () => effectiveLengths : undefined;
+    return buildEarcutFillGeometry(points3D, this.getVisiblePoints(), getSubpathLengths);
   }
 
   // -----------------------------------------------------------------------

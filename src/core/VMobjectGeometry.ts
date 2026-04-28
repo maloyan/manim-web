@@ -304,48 +304,74 @@ export function makeNullSubpathFromReference(
   return referenceSubpath.map(() => [...anchor]);
 }
 
-/** Equalize point counts for a source/target subpath pair using dense interpolation. */
+/** Equalize point counts for a source/target subpath pair using arc-length resampling. */
 export function alignSubpathPairPoints(
   srcSubpath: number[][],
   tgtSubpath: number[][],
 ): { srcAligned: number[][]; tgtAligned: number[][] } {
-  const maxCount = Math.max(srcSubpath.length, tgtSubpath.length);
+  const MIN_TRANSFORM_SUBPATH_POINTS = 64;
+  const targetCount = Math.max(srcSubpath.length, tgtSubpath.length, MIN_TRANSFORM_SUBPATH_POINTS);
 
-  const interpolateToCount = (pts: number[][], targetCount: number): number[][] => {
-    if (pts.length === targetCount) return pts.map((p) => [...p]);
+  const distance3 = (a: number[], b: number[]): number => {
+    const dx = (b[0] ?? 0) - (a[0] ?? 0);
+    const dy = (b[1] ?? 0) - (a[1] ?? 0);
+    const dz = (b[2] ?? 0) - (a[2] ?? 0);
+    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+  };
+
+  const interpolateToCount = (pts: number[][], count: number): number[][] => {
+    if (pts.length === count) return pts.map((p) => [...p]);
     if (pts.length === 0)
-      return Array(targetCount)
+      return Array(count)
         .fill(null)
         .map(() => [0, 0, 0]);
     if (pts.length === 1)
-      return Array(targetCount)
+      return Array(count)
         .fill(null)
         .map(() => [...pts[0]]);
 
-    const out: number[][] = [];
-    const ratio = (pts.length - 1) / (targetCount - 1);
-    for (let i = 0; i < targetCount; i++) {
-      const t = i * ratio;
-      const idx = Math.floor(t);
-      const frac = t - idx;
-      if (idx >= pts.length - 1) {
-        out.push([...pts[pts.length - 1]]);
-      } else {
-        const p0 = pts[idx];
-        const p1 = pts[idx + 1];
-        out.push([
-          p0[0] + (p1[0] - p0[0]) * frac,
-          p0[1] + (p1[1] - p0[1]) * frac,
-          (p0[2] ?? 0) + ((p1[2] ?? 0) - (p0[2] ?? 0)) * frac,
-        ]);
-      }
+    const cumulative: number[] = [0];
+    for (let i = 1; i < pts.length; i++) {
+      cumulative.push(cumulative[i - 1] + distance3(pts[i - 1], pts[i]));
     }
+
+    const total = cumulative[cumulative.length - 1];
+    if (total <= 1e-12) {
+      return Array(count)
+        .fill(null)
+        .map(() => [...pts[0]]);
+    }
+
+    const out: number[][] = [];
+    let seg = 0;
+    for (let i = 0; i < count; i++) {
+      const t = count === 1 ? 0 : i / (count - 1);
+      const targetDist = t * total;
+
+      while (seg < cumulative.length - 2 && cumulative[seg + 1] < targetDist) {
+        seg++;
+      }
+
+      const d0 = cumulative[seg];
+      const d1 = cumulative[seg + 1];
+      const p0 = pts[seg];
+      const p1 = pts[seg + 1];
+      const span = d1 - d0;
+      const frac = span <= 1e-12 ? 0 : (targetDist - d0) / span;
+
+      out.push([
+        p0[0] + (p1[0] - p0[0]) * frac,
+        p0[1] + (p1[1] - p0[1]) * frac,
+        (p0[2] ?? 0) + ((p1[2] ?? 0) - (p0[2] ?? 0)) * frac,
+      ]);
+    }
+
     return out;
   };
 
   return {
-    srcAligned: interpolateToCount(srcSubpath, maxCount),
-    tgtAligned: interpolateToCount(tgtSubpath, maxCount),
+    srcAligned: interpolateToCount(srcSubpath, targetCount),
+    tgtAligned: interpolateToCount(tgtSubpath, targetCount),
   };
 }
 
@@ -526,15 +552,15 @@ export function pointsToCurvePath(visiblePoints3D: number[][]): THREE.CurvePath<
  *
  * @param points3D - The visible Bezier control points
  * @param visiblePoints - 2D points for fallback shape
- * @param getSubpaths - Optional function to get subpath lengths for compound paths
+ * @param getSubpathLengths - Optional function to get subpath lengths for compound paths
  * @returns A BufferGeometry or null if too degenerate
  */
 export function buildEarcutFillGeometry(
   points3D: number[][],
   visiblePoints: Point[],
-  getSubpaths?: () => number[],
+  getSubpathLengths?: () => number[],
 ): THREE.BufferGeometry | null {
-  const subpathLengths = getSubpaths?.();
+  const subpathLengths = getSubpathLengths?.();
 
   // For disjoint subpaths (e.g. boolean XOR), split control points FIRST
   // then sample each subpath independently.

@@ -25,11 +25,11 @@ import { Line } from './Line';
 // ---------------------------------------------------------------------------
 
 describe('BooleanResult (base class)', () => {
-  it('getSubpaths returns empty for single-polygon, defensive copies work', () => {
+  it('getSubpathLengths returns empty for single-polygon, defensive copies work', () => {
     const r1 = new Square({ sideLength: 2 });
     const r2 = new Square({ sideLength: 2, center: [1, 0, 0] });
     const u = new Union(r1, r2);
-    expect(u.getSubpaths()).toEqual([]);
+    expect(u.getSubpathLengths()).toEqual([]);
     expect(u).toBeInstanceOf(BooleanResult);
 
     const v1 = u.getResultVertices();
@@ -169,7 +169,7 @@ describe('Exclusion (XOR)', () => {
     const excl = new Exclusion(s1, s2);
     expect(excl.getResultVertices().length).toBeGreaterThanOrEqual(2);
     if (excl.getResultVertices().length > 1) {
-      expect(excl.getSubpaths().length).toBeGreaterThan(0);
+      expect(excl.getSubpathLengths().length).toBeGreaterThan(0);
     }
   });
 
