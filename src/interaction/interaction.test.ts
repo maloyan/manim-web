@@ -1143,6 +1143,117 @@ describe('Draggable in 3D scene', () => {
     scene._canvas.remove();
   });
 
+  it('does not slide along Z when X constraint is hit (issue #260)', () => {
+    const scene = createMock3DScene();
+
+    // Tilt camera so the drag plane is NOT axis-aligned. With this camera,
+    // moving the cursor in screen-space produces deltas in X, Y, and Z.
+    const cam = scene.camera3D.getCamera() as THREE.PerspectiveCamera;
+    cam.position.set(10, 10, 10);
+    cam.lookAt(0, 0, 0);
+    cam.updateMatrixWorld();
+
+    const mob = createMockMobject({ center: [1, 1, 1], bounds: { width: 0.5, height: 0.5 } });
+    const draggable = new Draggable(mob as any, scene as any, {
+      constrainX: [-5, 5],
+      constrainY: [-5, 5],
+    });
+
+    const canvas = scene.getCanvas();
+
+    // Project object center to screen
+    const objVec = new THREE.Vector3(1, 1, 1).project(cam);
+    const startX = ((objVec.x + 1) / 2) * 800;
+    const startY = ((-objVec.y + 1) / 2) * 600;
+
+    fireMouseEvent(canvas, 'mousedown', { clientX: startX, clientY: startY });
+    expect(draggable.isDragging).toBe(true);
+
+    // Drag far enough that X constraint must clamp
+    fireMouseEvent(window as any, 'mousemove', { clientX: startX + 400, clientY: startY });
+
+    const calls = mob.moveTo.mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    const firstPos = calls[0][0];
+
+    // X must be clamped within the constraint
+    expect(firstPos[0]).toBeLessThanOrEqual(5);
+    expect(firstPos[0]).toBeGreaterThanOrEqual(-5);
+    // Z must NOT have slid away from the starting Z (the bug was Z drifting
+    // along the constraint boundary). When clamped, Z stays at last position.
+    expect(firstPos[2]).toBeCloseTo(1, 5);
+
+    draggable.dispose();
+    scene._canvas.remove();
+  });
+
+  it('does not slide along Z when Y constraint is hit (issue #260)', () => {
+    const scene = createMock3DScene();
+    const cam = scene.camera3D.getCamera() as THREE.PerspectiveCamera;
+    cam.position.set(10, 10, 10);
+    cam.lookAt(0, 0, 0);
+    cam.updateMatrixWorld();
+
+    const mob = createMockMobject({ center: [1, 1, 1], bounds: { width: 0.5, height: 0.5 } });
+    const draggable = new Draggable(mob as any, scene as any, {
+      constrainY: [-5, 5],
+    });
+
+    const canvas = scene.getCanvas();
+    const objVec = new THREE.Vector3(1, 1, 1).project(cam);
+    const startX = ((objVec.x + 1) / 2) * 800;
+    const startY = ((-objVec.y + 1) / 2) * 600;
+
+    fireMouseEvent(canvas, 'mousedown', { clientX: startX, clientY: startY });
+
+    // Drag upward enough that Y constraint must clamp
+    fireMouseEvent(window as any, 'mousemove', { clientX: startX, clientY: startY - 400 });
+
+    const calls = mob.moveTo.mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    const firstPos = calls[0][0];
+
+    expect(firstPos[1]).toBeLessThanOrEqual(5);
+    expect(firstPos[1]).toBeGreaterThanOrEqual(-5);
+    // Z must remain at starting Z, no sliding
+    expect(firstPos[2]).toBeCloseTo(1, 5);
+
+    draggable.dispose();
+    scene._canvas.remove();
+  });
+
+  it('still allows free Z motion when no constraint is hit', () => {
+    const scene = createMock3DScene();
+    const cam = scene.camera3D.getCamera() as THREE.PerspectiveCamera;
+    cam.position.set(10, 10, 10);
+    cam.lookAt(0, 0, 0);
+    cam.updateMatrixWorld();
+
+    const mob = createMockMobject({ center: [0, 0, 0], bounds: { width: 0.5, height: 0.5 } });
+    const draggable = new Draggable(mob as any, scene as any, {
+      constrainX: [-5, 5],
+      constrainY: [-5, 5],
+    });
+
+    const canvas = scene.getCanvas();
+    const objVec = new THREE.Vector3(0, 0, 0).project(cam);
+    const startX = ((objVec.x + 1) / 2) * 800;
+    const startY = ((-objVec.y + 1) / 2) * 600;
+
+    fireMouseEvent(canvas, 'mousedown', { clientX: startX, clientY: startY });
+
+    // Small drag well within constraints
+    fireMouseEvent(window as any, 'mousemove', { clientX: startX + 20, clientY: startY - 10 });
+
+    const calls = mob.moveTo.mock.calls;
+    const pos = calls[calls.length - 1][0];
+    // Z should have moved (constraint did not engage)
+    expect(pos[2]).not.toBe(0);
+
+    draggable.dispose();
+    scene._canvas.remove();
+  });
+
   it('hit-tests using 3D distance instead of 2D bounding box', () => {
     const scene = createMock3DScene();
     // Place object at origin

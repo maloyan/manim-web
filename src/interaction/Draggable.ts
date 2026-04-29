@@ -219,13 +219,25 @@ export class Draggable {
 
     let newX = worldPos[0];
     let newY = worldPos[1];
+    let xClamped = false;
+    let yClamped = false;
 
     // Apply constraints
     if (this._options.constrainX) {
-      newX = Math.max(this._options.constrainX[0], Math.min(this._options.constrainX[1], newX));
+      const clamped = Math.max(
+        this._options.constrainX[0],
+        Math.min(this._options.constrainX[1], newX),
+      );
+      xClamped = clamped !== newX;
+      newX = clamped;
     }
     if (this._options.constrainY) {
-      newY = Math.max(this._options.constrainY[0], Math.min(this._options.constrainY[1], newY));
+      const clamped = Math.max(
+        this._options.constrainY[0],
+        Math.min(this._options.constrainY[1], newY),
+      );
+      yClamped = clamped !== newY;
+      newY = clamped;
     }
 
     // Apply snap to grid
@@ -235,7 +247,16 @@ export class Draggable {
       newY = Math.round(newY / grid) * grid;
     }
 
-    const newZ = this._scene instanceof ThreeDScene ? worldPos[2] : this._mobject.position.z;
+    // In 3D, the drag plane is perpendicular to the camera, so cursor motion
+    // produces deltas in all three world axes. When X or Y is clamped by a
+    // constraint, the unclamped Z would otherwise let the object slide along
+    // the constraint boundary. Freeze Z to the last position in that case.
+    let newZ: number;
+    if (this._scene instanceof ThreeDScene) {
+      newZ = xClamped || yClamped ? this._lastPosition[2] : worldPos[2];
+    } else {
+      newZ = this._mobject.position.z;
+    }
     const newPos: Vector3Tuple = [newX, newY, newZ];
     const delta: Vector3Tuple = [
       newPos[0] - this._lastPosition[0],

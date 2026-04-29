@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Draggable constraints in 3D (issue #260)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #191919;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      color: #eee;
+      padding: 20px;
+      gap: 12px;
+    }
+    h1 { font-size: 18px; font-weight: 500; }
+    p { font-size: 13px; color: #aaa; max-width: 720px; text-align: center; }
+    #container { width: 720px; height: 540px; border: 1px solid #333; border-radius: 4px; }
+    .pos { font-family: ui-monospace, monospace; font-size: 13px; color: #8ec07c; }
+  </style>
+</head>
+<body>
+  <h1>Draggable Dot3D with constrainX / constrainY = [-3, 3] (issue #260)</h1>
+  <p>
+    Drag the dot. Try moving it past the [-3, 3] box: it must stop at the
+    boundary, not slide along the camera-facing plane in Z.
+  </p>
+  <div class="pos" id="pos">position: (1.000, 1.000, 1.000)</div>
+  <div id="container"></div>
+
+  <script type="module" src="./draggable_constraints_3d.ts"></script>
+</body>
+</html>
