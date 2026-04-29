@@ -338,3 +338,49 @@ describe('ThreeDAxes coordsToPoint aligns with scene coordinates (issue #256)', 
     expect(zEnd).toEqual([0, 0, 5]);
   });
 });
+
+describe('ThreeDAxes c2p / p2c aliases (issue #257)', () => {
+  it('c2p exists as a function', () => {
+    const axes = new ThreeDAxes();
+    expect(typeof axes.c2p).toBe('function');
+  });
+
+  it('p2c exists as a function', () => {
+    const axes = new ThreeDAxes();
+    expect(typeof axes.p2c).toBe('function');
+  });
+
+  it('c2p produces the same result as coordsToPoint', () => {
+    const axes = new ThreeDAxes();
+    const cases: Array<[number, number, number]> = [
+      [0, 0, 0],
+      [1, 1, 1],
+      [3, -2, 4],
+      [-5, 5, 0],
+    ];
+    for (const [x, y, z] of cases) {
+      expect(axes.c2p(x, y, z)).toEqual(axes.coordsToPoint(x, y, z));
+    }
+  });
+
+  it('p2c produces the same result as pointToCoords', () => {
+    const axes = new ThreeDAxes();
+    const cases: Array<[number, number, number]> = [
+      [0, 0, 0],
+      [1, 2, 3],
+      [-4, 5, -6],
+    ];
+    for (const point of cases) {
+      expect(axes.p2c(point)).toEqual(axes.pointToCoords(point));
+    }
+  });
+
+  it('p2c is the inverse of c2p', () => {
+    const axes = new ThreeDAxes();
+    const original: [number, number, number] = [1, 1, 1];
+    const back = axes.p2c(axes.c2p(...original));
+    expect(back[0]).toBeCloseTo(original[0]);
+    expect(back[1]).toBeCloseTo(original[1]);
+    expect(back[2]).toBeCloseTo(original[2]);
+  });
+});

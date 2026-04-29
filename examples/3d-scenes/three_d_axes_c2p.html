@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ThreeDAxes c2p alias (issue #257)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #191919; display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; overflow: hidden; }
+    #container { width: 100vw; height: 100vh; }
+    .controls-hint { position: fixed; bottom: 20px; left: 20px; color: #888; font-family: monospace; font-size: 14px; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div class="controls-hint">Drag to orbit, scroll to zoom</div>
+
+  <script type="module">
+    import {
+      ThreeDAxes,
+      Vector3D,
+      Dot3D,
+      ThreeDScene,
+      GREEN,
+      RED,
+      BLUE,
+      YELLOW,
+    } from '../../src/index.ts';
+
+    const scene = new ThreeDScene(document.getElementById('container'), {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      backgroundColor: '#191919',
+      phi: 75 * (Math.PI / 180),
+      theta: -45 * (Math.PI / 180),
+      distance: 20,
+      fov: 30,
+      enableOrbitControls: true,
+    });
+
+    const axes = new ThreeDAxes({
+      xRange: [-5, 5, 1],
+      yRange: [-5, 5, 1],
+      zRange: [-5, 5, 1],
+      showLabels: true,
+    });
+
+    // Reproduction from issue #257: this previously threw
+    // "axes.c2p is not a function".
+    const vec = new Vector3D({ end: axes.c2p(1, 1, 1), color: GREEN });
+
+    // Verify c2p matches coordsToPoint by placing dots at the same logical
+    // coordinate using both APIs. They should overlap exactly.
+    const dotC2p = new Dot3D({ point: axes.c2p(2, 1, 3), color: RED, radius: 0.15 });
+    const dotCoords = new Dot3D({ point: axes.coordsToPoint(2, 1, 3), color: BLUE, radius: 0.1 });
+
+    // Demonstrate p2c round-trip: take a scene-space point, convert to graph
+    // coords with p2c, then back with c2p. Should land in the same place.
+    const roundTrip = axes.c2p(...axes.p2c([-2, -1, 2]));
+    const dotRoundTrip = new Dot3D({ point: roundTrip, color: YELLOW, radius: 0.15 });
+
+    scene.add(axes, vec, dotC2p, dotCoords, dotRoundTrip);
+
+    await scene.wait(Infinity);
+  </script>
+</body>
+</html>

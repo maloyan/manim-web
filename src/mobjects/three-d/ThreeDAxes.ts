@@ -375,6 +375,13 @@ export class ThreeDAxes extends Group {
   }
 
   /**
+   * Alias for coordsToPoint (matches Python Manim's c2p shorthand)
+   */
+  c2p(x: number, y: number, z: number): Vector3Tuple {
+    return this.coordsToPoint(x, y, z);
+  }
+
+  /**
    * Convert visual point coordinates (scene space) to graph coordinates.
    */
   pointToCoords(point: Vector3Tuple): Vector3Tuple {
@@ -382,6 +389,13 @@ export class ThreeDAxes extends Group {
     const ty = point[1] - this.position.y;
     const tz = point[2] - this.position.z;
     return [tx, ty, tz];
+  }
+
+  /**
+   * Alias for pointToCoords (matches Python Manim's p2c shorthand)
+   */
+  p2c(point: Vector3Tuple): Vector3Tuple {
+    return this.pointToCoords(point);
   }
 
   /**
