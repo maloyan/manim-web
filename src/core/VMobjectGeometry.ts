@@ -26,6 +26,14 @@ export interface CompoundAlignmentResult {
   alignedSubpathLengths: number[];
 }
 
+/**
+ * Sampling density used for fill triangulation outlines.
+ *
+ * Keep this separate from stroke/path sampling: fill quality for compound
+ * glyphs (holes/subpaths) is much more sensitive to undersampling.
+ */
+const FILL_SAMPLES_PER_SEGMENT = 16;
+
 // -----------------------------------------------------------------------
 // Linearity test
 // -----------------------------------------------------------------------
@@ -160,14 +168,15 @@ export function sampleBezierOutline(points: number[][], samplesPerSegment: numbe
  */
 function sampleBezierOutline3D(points: number[][], samplesPerSegment: number): number[][] {
   const result: number[][] = [];
-
   for (let i = 0; i + 3 < points.length; i += 3) {
     const p0 = points[i];
     const p1 = points[i + 1];
     const p2 = points[i + 2];
     const p3 = points[i + 3];
 
-    const samples = isNearlyLinear(p0, p1, p2, p3) ? 1 : samplesPerSegment;
+    // Important: fill triangulation quality is sensitive to undersampling.
+    // Do NOT use nearly-linear collapse here; always sample uniformly.
+    const samples = samplesPerSegment;
 
     const startT = i === 0 ? 0 : 1;
     for (let t = startT; t <= samples; t++) {
@@ -195,6 +204,9 @@ function sampleBezierOutline3D(points: number[][], samplesPerSegment: number): n
     }
   }
 
+  // Keep sampling deterministic and high-fidelity for fill triangulation.
+  // Unlike stroke/path preview code, fill quality is sensitive to undersampling,
+  // especially for compound glyphs with holes (e.g. MathTex "0", "8").
   return result;
 }
 
@@ -285,7 +297,7 @@ export function pointInPolygon(point: number[], ring: number[][]): boolean {
 }
 
 /** Split a flat point array into subpath chunks based on lengths metadata. */
-export function splitBySubpathLengths(points3D: number[][], lengths: number[]): number[][][] {
+function splitBySubpathLengths(points3D: number[][], lengths: number[]): number[][][] {
   const chunks: number[][][] = [];
   let offset = 0;
   for (const len of lengths) {
@@ -296,7 +308,7 @@ export function splitBySubpathLengths(points3D: number[][], lengths: number[]): 
 }
 
 /** Build a degenerate subpath (all points equal) with point count matching reference. */
-export function makeNullSubpathFromReference(
+function makeNullSubpathFromReference(
   referenceSubpath: number[][],
   anchorPoint: number[],
 ): number[][] {
@@ -305,7 +317,7 @@ export function makeNullSubpathFromReference(
 }
 
 /** Equalize point counts for a source/target subpath pair using arc-length resampling. */
-export function alignSubpathPairPoints(
+function alignSubpathPairPoints(
   srcSubpath: number[][],
   tgtSubpath: number[][],
 ): { srcAligned: number[][]; tgtAligned: number[][] } {
@@ -569,7 +581,7 @@ export function buildEarcutFillGeometry(
   }
 
   // Sample Bezier curves into 3D polyline, then project to plane for triangulation
-  const outline3D = sampleBezierOutline3D(points3D, 8);
+  const outline3D = sampleBezierOutline3D(points3D, FILL_SAMPLES_PER_SEGMENT);
   if (outline3D.length < 3) return null;
 
   // Project to plane and get 2D coordinates for earcut
@@ -619,7 +631,7 @@ function buildEarcutFillGeometryMulti(
     const subPoints = points3D.slice(offset, offset + len);
     offset += len;
 
-    const ring = sampleBezierOutline3D(subPoints, 8);
+    const ring = sampleBezierOutline3D(subPoints, FILL_SAMPLES_PER_SEGMENT);
     if (ring.length >= 3) {
       rings3D.push(ring);
       allPoints3D.push(...ring);

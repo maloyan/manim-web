@@ -40,7 +40,10 @@ export class VMobject extends VMobjectRendering {
   /** Number of points visible (for Create animation) */
   protected _visiblePointCount: number | null = null;
 
-  /** Transform-time override for subpath lengths (compound-path metadata) */
+  /** Base subpath-length metadata (intrinsic topology, e.g. SVG compound paths). */
+  protected _baseSubpathLengths?: number[];
+
+  /** Transform-time override for subpath lengths (compound-path metadata). */
   protected _transformSubpathLengths?: number[];
 
   constructor() {
@@ -270,6 +273,24 @@ export class VMobject extends VMobjectRendering {
   // -----------------------------------------------------------------------
 
   /**
+   * Set base subpath-length metadata for this VMobject.
+   * Represents intrinsic topology (e.g. outer contour + holes from SVG parsing).
+   */
+  setBaseSubpathLengths(lengths: number[] | undefined): void {
+    this._baseSubpathLengths = lengths ? [...lengths] : undefined;
+    this._geometryDirty = true;
+    this._markDirtyUpward();
+  }
+
+  /**
+   * Get base subpath lengths (intrinsic topology metadata).
+   * Subclasses may override this to compute dynamic metadata.
+   */
+  getSubpathLengths(): number[] | undefined {
+    return this._baseSubpathLengths ? [...this._baseSubpathLengths] : undefined;
+  }
+
+  /**
    * Set transform-time subpath lengths override.
    * Used by Transform animations to preserve compound-path structure.
    * @param lengths - Array of subpath lengths, or undefined to clear
@@ -286,16 +307,13 @@ export class VMobject extends VMobjectRendering {
 
   /**
    * Get effective subpath lengths for rendering.
-   * Returns transform override if present, else class-provided subpath lengths.
-   * @returns Array of subpath lengths, or undefined if not applicable
+   * Returns transform override if present, else base/subclass metadata.
    */
   getEffectiveSubpathLengths(): number[] | undefined {
     if (this._transformSubpathLengths !== undefined) {
-      return this._transformSubpathLengths;
+      return [...this._transformSubpathLengths];
     }
-    const getSubpathLengths = (this as unknown as { getSubpathLengths?: () => number[] })
-      .getSubpathLengths;
-    return getSubpathLengths?.call(this);
+    return this.getSubpathLengths?.();
   }
 
   // -----------------------------------------------------------------------

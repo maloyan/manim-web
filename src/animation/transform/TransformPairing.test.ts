@@ -27,7 +27,7 @@ describe('TransformPairing core', () => {
       [0, 0, 0],
     ]);
 
-    (source as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [4];
+    source.setBaseSubpathLengths([4]);
 
     expect(() => alignVmobjectPair(source, target)).toThrow(
       /subpath lengths sum .* does not match point count/i,
@@ -54,8 +54,8 @@ describe('TransformPairing core', () => {
       [0.8, 0.8, 0],
     ]);
 
-    (source as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [5];
-    (target as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [5, 5];
+    source.setBaseSubpathLengths([5]);
+    target.setBaseSubpathLengths([5, 5]);
 
     const aligned = alignVmobjectPair(source, target);
 

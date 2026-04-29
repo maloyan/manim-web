@@ -367,8 +367,8 @@ describe('ClockwiseTransform', () => {
       [0.8, 1.2, 0],
       [0.8, 0.8, 0],
     ]);
-    (s as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [5];
-    (t as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [5, 5];
+    s.setBaseSubpathLengths([5]);
+    t.setBaseSubpathLengths([5, 5]);
 
     const anim = new ClockwiseTransform(s, t);
     anim.begin();
@@ -391,7 +391,7 @@ describe('ClockwiseTransform', () => {
       [0, 2, 0],
       [0, 0, 0],
     ]);
-    (s as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [4];
+    s.setBaseSubpathLengths([4]);
 
     const anim = new ClockwiseTransform(s, t);
     expect(() => anim.begin()).toThrow(/subpath lengths sum .* does not match point count/i);
@@ -466,8 +466,8 @@ describe('CounterclockwiseTransform', () => {
       [0.8, 1.2, 0],
       [0.8, 0.8, 0],
     ]);
-    (s as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [5];
-    (t as VMobject & { getSubpathLengths?: () => number[] }).getSubpathLengths = () => [5, 5];
+    s.setBaseSubpathLengths([5]);
+    t.setBaseSubpathLengths([5, 5]);
 
     const anim = new CounterclockwiseTransform(s, t);
     anim.begin();
