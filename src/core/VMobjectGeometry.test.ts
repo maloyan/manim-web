@@ -104,8 +104,10 @@ describe('buildEarcutFillGeometry plane projection regressions', () => {
     expect(geometry).not.toBeNull();
 
     const positions = geometry!.getAttribute('position').array as Float32Array;
+    const indices = geometry!.getIndex();
     expect(positions.length).toBeGreaterThan(0);
-    expect(positions.length % 9).toBe(0);
+    expect(indices).not.toBeNull();
+    expect(indices!.count % 3).toBe(0);
 
     let minY = Infinity;
     let maxY = -Infinity;
@@ -140,7 +142,7 @@ describe('buildEarcutFillGeometry plane projection regressions', () => {
     const positions = geometry!.getAttribute('position').array as Float32Array;
     expect(positions.length).toBeGreaterThan(0);
 
-    // Gather unique XY vertices used by triangles.
+    // Gather unique XY vertices from the sampled outline vertex buffer.
     const unique = new Set<string>();
     for (let i = 0; i < positions.length; i += 3) {
       const x = positions[i];

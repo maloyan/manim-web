@@ -53,6 +53,9 @@ export abstract class VMobjectRendering extends Mobject {
   /** Cached fill mesh for in-place geometry updates */
   private _cachedFillMesh: THREE.Mesh | null = null;
 
+  /** Cached fill index topology to avoid re-running earcut every frame. */
+  private _cachedFillIndices: number[] | null = null;
+
   /**
    * Per-instance stencil ref for preventing double-blending at Line2 joints
    * when the stroke is partially transparent. Each VMobject gets a unique
@@ -206,7 +209,12 @@ export abstract class VMobjectRendering extends Mobject {
       this as unknown as { getEffectiveSubpathLengths?: () => number[] | undefined }
     ).getEffectiveSubpathLengths?.();
     const getSubpathLengths = effectiveLengths ? () => effectiveLengths : undefined;
-    return buildEarcutFillGeometry(points3D, this.getVisiblePoints(), getSubpathLengths);
+    return buildEarcutFillGeometry(
+      points3D,
+      this.getVisiblePoints(),
+      getSubpathLengths,
+      this._cachedFillIndices ?? undefined,
+    );
   }
 
   // -----------------------------------------------------------------------
@@ -252,6 +260,7 @@ export abstract class VMobjectRendering extends Mobject {
       this._cachedLine2 = null;
       this._cachedLine2Array = [];
       this._cachedFillMesh = null;
+      this._cachedFillIndices = null;
       this._cachedBezierMesh = null;
       this._cachedStrokeMesh = null;
       return;
@@ -297,6 +306,10 @@ export abstract class VMobjectRendering extends Mobject {
     if (this.fillOpacity > 0 && points3D.length >= 4) {
       const fillGeom = this._buildEarcutFillGeometry(points3D);
       if (fillGeom) {
+        const indexAttr = fillGeom.getIndex();
+        this._cachedFillIndices = indexAttr
+          ? Array.from(indexAttr.array as ArrayLike<number>)
+          : null;
         if (this._cachedFillMesh) {
           this._cachedFillMesh.geometry.dispose();
           this._cachedFillMesh.geometry = fillGeom;
@@ -312,6 +325,7 @@ export abstract class VMobjectRendering extends Mobject {
       this._cachedFillMesh.geometry.dispose();
       group.remove(this._cachedFillMesh);
       this._cachedFillMesh = null;
+      this._cachedFillIndices = null;
     }
   }
 
