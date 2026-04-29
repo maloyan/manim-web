@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
-import { VMobject, CurvesAsSubmobjects } from '../core/VMobject';
+import { VMobject } from '../core/VMobject';
+import { CurvesAsSubmobjects } from '../core/VMobjectCurveUtils';
 import { Mobject } from '../core/Mobject';
 import { Circle } from '../mobjects/geometry/Circle';
 import {

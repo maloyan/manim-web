@@ -17,11 +17,11 @@ import type { Point } from './VMobjectCurves';
 import {
   sampleBezierPath,
   buildEarcutFillGeometry,
-  buildMeshStrokeGeometry,
   isClosedPath,
   pointsToShape,
   pointsToCurvePath,
 } from './VMobjectGeometry';
+import { buildMeshStrokeGeometry } from './VMobjectStrokeGeometry';
 
 /**
  * Base class for VMobject that handles all Three.js rendering:
