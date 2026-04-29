@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Mobject, UP, LEFT, RIGHT, UL, UR, DL } from './Mobject';
+import { VMobject } from './VMobject';
 import {
-  VMobject,
   getNumCurves,
   getNthCurve,
   curvesAsSubmobjects,
   CurvesAsSubmobjects,
-} from './VMobject';
+} from './VMobjectCurveUtils';
 import { Group } from './Group';
 import { VGroup } from './VGroup';
 import { VDict, VectorizedPoint } from './VDict';

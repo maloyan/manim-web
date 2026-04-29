@@ -13,7 +13,8 @@
 
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
-import { VMobject, curvesAsSubmobjects, CurvesAsSubmobjects, Point } from './VMobject';
+import { VMobject, Point } from './VMobject';
+import { curvesAsSubmobjects, CurvesAsSubmobjects } from './VMobjectCurveUtils';
 
 // ---------------------------------------------------------------------------
 // Helpers

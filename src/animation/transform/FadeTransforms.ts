@@ -7,6 +7,7 @@ import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { Transform } from './Transform';
 import { lerpPoint } from '../../utils/math';
+import { alignVmobjectPair } from './TransformPairing';
 
 // ============================================================================
 // FadeTransform
@@ -40,6 +41,9 @@ export class FadeTransform extends Animation {
   /** Target opacity */
   private _targetOpacity: number = 1;
 
+  /** Transform-time subpath lengths override for compound paths */
+  private _alignedSubpathLengths?: number[];
+
   constructor(mobject: VMobject, target: VMobject, options: FadeTransformOptions = {}) {
     super(mobject, options);
     this.target = target;
@@ -51,19 +55,15 @@ export class FadeTransform extends Animation {
 
     const vmobject = this.mobject as VMobject;
 
-    // Create working copies to align
-    const startCopy = vmobject.copy() as VMobject;
-    const targetCopy = this.target.copy() as VMobject;
-
-    // Align the points
-    startCopy.alignPoints(targetCopy);
-
-    this._startPoints = startCopy.getPoints();
-    this._targetPoints = targetCopy.getPoints();
+    const aligned = alignVmobjectPair(vmobject, this.target);
+    this._startPoints = aligned.startPoints;
+    this._targetPoints = aligned.targetPoints;
+    this._alignedSubpathLengths = aligned.alignedSubpathLengths;
     this._startOpacity = vmobject.opacity;
     this._targetOpacity = this.target.opacity;
 
     vmobject.setPoints(this._startPoints);
+    vmobject.setTransformSubpathLengths(this._alignedSubpathLengths);
   }
 
   interpolate(alpha: number): void {
@@ -89,6 +89,7 @@ export class FadeTransform extends Animation {
   override finish(): void {
     const vmobject = this.mobject as VMobject;
     vmobject.setPoints(this._targetPoints);
+    vmobject.setTransformSubpathLengths(undefined);
     vmobject.opacity = this._targetOpacity;
     vmobject.color = this.target.color;
     super.finish();
@@ -129,6 +130,7 @@ export class FadeTransformPieces extends Animation {
     targetPoints: number[][];
     startOpacity: number;
     targetOpacity: number;
+    alignedSubpathLengths?: number[];
   }> = [];
 
   constructor(mobject: VMobject, target: VMobject, options: FadeTransformPiecesOptions = {}) {
@@ -151,28 +153,24 @@ export class FadeTransformPieces extends Animation {
         const srcChild = sourceChildren[Math.min(i, sourceChildren.length - 1)] as VMobject;
         const tgtChild = targetChildren[Math.min(i, targetChildren.length - 1)] as VMobject;
 
-        const srcCopy = srcChild.copy() as VMobject;
-        const tgtCopy = tgtChild.copy() as VMobject;
-        srcCopy.alignPoints(tgtCopy);
-
+        const aligned = alignVmobjectPair(srcChild, tgtChild);
         this._pieceStates.push({
-          startPoints: srcCopy.getPoints(),
-          targetPoints: tgtCopy.getPoints(),
+          startPoints: aligned.startPoints,
+          targetPoints: aligned.targetPoints,
           startOpacity: srcChild.opacity,
           targetOpacity: tgtChild.opacity,
+          alignedSubpathLengths: aligned.alignedSubpathLengths,
         });
       }
     } else {
       // No submobjects, treat as single piece
-      const srcCopy = source.copy() as VMobject;
-      const tgtCopy = this.target.copy() as VMobject;
-      srcCopy.alignPoints(tgtCopy);
-
+      const aligned = alignVmobjectPair(source, this.target);
       this._pieceStates.push({
-        startPoints: srcCopy.getPoints(),
-        targetPoints: tgtCopy.getPoints(),
+        startPoints: aligned.startPoints,
+        targetPoints: aligned.targetPoints,
         startOpacity: source.opacity,
         targetOpacity: this.target.opacity,
+        alignedSubpathLengths: aligned.alignedSubpathLengths,
       });
     }
   }
@@ -191,6 +189,7 @@ export class FadeTransformPieces extends Animation {
           points.push(lerpPoint(state.startPoints[j], state.targetPoints[j], alpha));
         }
         child.setPoints(points);
+        child.setTransformSubpathLengths(state.alignedSubpathLengths);
 
         // Fade effect
         if (alpha < 0.5) {
@@ -207,6 +206,7 @@ export class FadeTransformPieces extends Animation {
         points.push(lerpPoint(state.startPoints[j], state.targetPoints[j], alpha));
       }
       source.setPoints(points);
+      source.setTransformSubpathLengths(state.alignedSubpathLengths);
 
       if (alpha < 0.5) {
         source.opacity = state.startOpacity * (1 - 2 * alpha);
@@ -225,11 +225,13 @@ export class FadeTransformPieces extends Animation {
         const child = sourceChildren[i] as VMobject;
         const state = this._pieceStates[Math.min(i, this._pieceStates.length - 1)];
         child.setPoints(state.targetPoints);
+        child.setTransformSubpathLengths(undefined);
         child.opacity = state.targetOpacity;
       }
     } else if (this._pieceStates.length > 0) {
       const state = this._pieceStates[0];
       source.setPoints(state.targetPoints);
+      source.setTransformSubpathLengths(undefined);
       source.opacity = state.targetOpacity;
     }
 

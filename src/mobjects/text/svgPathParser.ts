@@ -631,10 +631,9 @@ function pathDataToVMobject(
   vmob.fillOpacity = fillOpacity;
   vmob.setPoints3D(allPoints);
 
-  // Attach subpath info so VMobject renders holes correctly
+  // Attach intrinsic subpath metadata so compound glyphs (holes) render correctly.
   if (subpathLengths.length > 1) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (vmob as any).getSubpaths = () => [...subpathLengths];
+    vmob.setBaseSubpathLengths(subpathLengths);
   }
 
   return vmob;

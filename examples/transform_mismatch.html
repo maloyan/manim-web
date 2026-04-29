@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Zero</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+
+  <script type="module">
+    import { ThreeDScene, MathTex, FadeIn, BLACK, WHITE } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new ThreeDScene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK,
+      enableOrbitControls: true,
+      orbitControlsUp: 'z',
+      phi: 0,
+      theta: 0,
+    });
+
+    const zero = new MathTex({ latex: '0', color: WHITE });
+    await zero.waitForRender();
+    zero.scale(4);
+    await scene.play(new FadeIn(zero, { duration: 0.5 }));
+  </script>
+</body>
+</html>

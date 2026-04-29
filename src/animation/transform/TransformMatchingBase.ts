@@ -25,6 +25,7 @@
 import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { lerp, lerpPoint } from '../../utils/math';
+import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
 
 export interface TransformMatchingBaseOptions extends AnimationOptions {
   /** Key function to extract identifier for matching */
@@ -40,6 +41,7 @@ interface MatchedPart {
   targetPoints: number[][];
   startOpacity: number;
   targetOpacity: number;
+  alignedSubpathLengths?: number[];
 }
 
 interface FadingPart {
@@ -171,19 +173,44 @@ export abstract class TransformMatchingAbstractBase extends Animation {
   protected _addMatchedPart(source: VMobject, target: VMobject): void {
     const srcCopy = source.copy() as VMobject;
     const tgtCopy = target.copy() as VMobject;
-    srcCopy.alignPoints(tgtCopy);
 
-    this._matchedParts.push({
-      source,
-      target,
-      startPoints: srcCopy.getPoints(),
-      targetPoints: tgtCopy.getPoints(),
-      startOpacity: source.opacity,
-      targetOpacity: target.opacity,
-    });
+    const alignedCompound = alignCompoundPathsForTransform(
+      srcCopy.getPoints(),
+      source.getEffectiveSubpathLengths?.(),
+      tgtCopy.getPoints(),
+      target.getEffectiveSubpathLengths?.(),
+    );
 
-    // Set source to have aligned points
-    source.setPoints(srcCopy.getPoints());
+    if (alignedCompound) {
+      this._matchedParts.push({
+        source,
+        target,
+        startPoints: alignedCompound.srcAlignedPoints,
+        targetPoints: alignedCompound.tgtAlignedPoints,
+        startOpacity: source.opacity,
+        targetOpacity: target.opacity,
+        alignedSubpathLengths: alignedCompound.alignedSubpathLengths,
+      });
+
+      source.setPoints(alignedCompound.srcAlignedPoints);
+      source.setTransformSubpathLengths(alignedCompound.alignedSubpathLengths);
+    } else {
+      srcCopy.alignPoints(tgtCopy);
+
+      this._matchedParts.push({
+        source,
+        target,
+        startPoints: srcCopy.getPoints(),
+        targetPoints: tgtCopy.getPoints(),
+        startOpacity: source.opacity,
+        targetOpacity: target.opacity,
+        alignedSubpathLengths: undefined,
+      });
+
+      // Set source to have aligned points
+      source.setPoints(srcCopy.getPoints());
+      source.setTransformSubpathLengths(undefined);
+    }
   }
 
   override begin(): void {
@@ -199,6 +226,7 @@ export abstract class TransformMatchingAbstractBase extends Animation {
         points.push(lerpPoint(part.startPoints[i], part.targetPoints[i], alpha));
       }
       part.source.setPoints(points);
+      part.source.setTransformSubpathLengths(part.alignedSubpathLengths);
       part.source.opacity = lerp(part.startOpacity, part.targetOpacity, alpha);
     }
 
@@ -221,6 +249,7 @@ export abstract class TransformMatchingAbstractBase extends Animation {
     // Finalize matched parts
     for (const part of this._matchedParts) {
       part.source.setPoints(part.targetPoints);
+      part.source.setTransformSubpathLengths(undefined);
       part.source.opacity = part.targetOpacity;
       part.source.color = part.target.color;
     }

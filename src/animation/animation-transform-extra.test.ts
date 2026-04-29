@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
-import { VMobject, CurvesAsSubmobjects } from '../core/VMobject';
+import { VMobject } from '../core/VMobject';
+import { CurvesAsSubmobjects } from '../core/VMobjectCurveUtils';
 import { Mobject } from '../core/Mobject';
 import { Circle } from '../mobjects/geometry/Circle';
 import {
@@ -347,6 +348,55 @@ describe('FadeTransform', () => {
 // ── ClockwiseTransform ─────────────────────────────────────────────────────
 
 describe('ClockwiseTransform', () => {
+  it('uses shared compound-path alignment metadata during interpolation', () => {
+    const s = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 1, 0],
+      [0, 1, 0],
+      [0, 0, 0],
+    ]);
+    const t = vm([
+      [0, 0, 0],
+      [2, 0, 0],
+      [2, 2, 0],
+      [0, 2, 0],
+      [0, 0, 0],
+      [0.8, 0.8, 0],
+      [1.2, 0.8, 0],
+      [1.2, 1.2, 0],
+      [0.8, 1.2, 0],
+      [0.8, 0.8, 0],
+    ]);
+    s.setBaseSubpathLengths([5]);
+    t.setBaseSubpathLengths([5, 5]);
+
+    const anim = new ClockwiseTransform(s, t);
+    anim.begin();
+
+    expect(s.getEffectiveSubpathLengths()).toEqual([64, 64]);
+  });
+
+  it('throws on malformed source subpath metadata via shared pairing invariants', () => {
+    const s = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 1, 0],
+      [0, 1, 0],
+      [0, 0, 0],
+    ]);
+    const t = vm([
+      [0, 0, 0],
+      [2, 0, 0],
+      [2, 2, 0],
+      [0, 2, 0],
+      [0, 0, 0],
+    ]);
+    s.setBaseSubpathLengths([4]);
+
+    const anim = new ClockwiseTransform(s, t);
+    expect(() => anim.begin()).toThrow(/subpath lengths sum .* does not match point count/i);
+  });
   it('default angle is PI', () => {
     const anim = new ClockwiseTransform(sq(), sq());
     expect(anim.angle).toBeCloseTo(Math.PI, 5);
@@ -397,6 +447,34 @@ describe('ClockwiseTransform', () => {
 // ── CounterclockwiseTransform ──────────────────────────────────────────────
 
 describe('CounterclockwiseTransform', () => {
+  it('uses shared compound-path alignment metadata during interpolation', () => {
+    const s = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 1, 0],
+      [0, 1, 0],
+      [0, 0, 0],
+    ]);
+    const t = vm([
+      [0, 0, 0],
+      [2, 0, 0],
+      [2, 2, 0],
+      [0, 2, 0],
+      [0, 0, 0],
+      [0.8, 0.8, 0],
+      [1.2, 0.8, 0],
+      [1.2, 1.2, 0],
+      [0.8, 1.2, 0],
+      [0.8, 0.8, 0],
+    ]);
+    s.setBaseSubpathLengths([5]);
+    t.setBaseSubpathLengths([5, 5]);
+
+    const anim = new CounterclockwiseTransform(s, t);
+    anim.begin();
+
+    expect(s.getEffectiveSubpathLengths()).toEqual([64, 64]);
+  });
   it('default angle is PI', () => {
     expect(new CounterclockwiseTransform(sq(), sq()).angle).toBeCloseTo(Math.PI, 5);
   });

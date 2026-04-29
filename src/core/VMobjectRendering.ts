@@ -17,11 +17,11 @@ import type { Point } from './VMobjectCurves';
 import {
   sampleBezierPath,
   buildEarcutFillGeometry,
-  buildMeshStrokeGeometry,
   isClosedPath,
   pointsToShape,
   pointsToCurvePath,
 } from './VMobjectGeometry';
+import { buildMeshStrokeGeometry } from './VMobjectStrokeGeometry';
 
 /**
  * Base class for VMobject that handles all Three.js rendering:
@@ -202,8 +202,11 @@ export abstract class VMobjectRendering extends Mobject {
   }
 
   protected _buildEarcutFillGeometry(points3D: number[][]): THREE.BufferGeometry | null {
-    const getSubpaths = (this as unknown as { getSubpaths?: () => number[] }).getSubpaths;
-    return buildEarcutFillGeometry(points3D, this.getVisiblePoints(), getSubpaths?.bind(this));
+    const effectiveLengths = (
+      this as unknown as { getEffectiveSubpathLengths?: () => number[] | undefined }
+    ).getEffectiveSubpathLengths?.();
+    const getSubpathLengths = effectiveLengths ? () => effectiveLengths : undefined;
+    return buildEarcutFillGeometry(points3D, this.getVisiblePoints(), getSubpathLengths);
   }
 
   // -----------------------------------------------------------------------
@@ -317,7 +320,9 @@ export abstract class VMobjectRendering extends Mobject {
   // -----------------------------------------------------------------------
 
   private _updateLine2Stroke(group: THREE.Group, points3D: number[][]): void {
-    const subpathLengths = (this as unknown as { getSubpaths?: () => number[] }).getSubpaths?.();
+    const subpathLengths = (
+      this as unknown as { getEffectiveSubpathLengths?: () => number[] | undefined }
+    ).getEffectiveSubpathLengths?.();
 
     if (subpathLengths && subpathLengths.length > 1) {
       this._updateLine2StrokeMulti(group, points3D, subpathLengths);

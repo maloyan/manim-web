@@ -8,118 +8,17 @@
  */
 
 import { VMobject } from '../../core/VMobject';
-import { Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { hungarian, hungarianFromSimilarity } from '../../utils/hungarian';
 import { lerp, lerpPoint } from '../../utils/math';
-
-/**
- * Compute the bounding box of a VMobject
- */
-function getBoundingBox(vmobject: VMobject): {
-  min: Vector3Tuple;
-  max: Vector3Tuple;
-  center: Vector3Tuple;
-  size: Vector3Tuple;
-} {
-  const points = vmobject.getPoints();
-  if (points.length === 0) {
-    const pos = vmobject.getCenter();
-    return {
-      min: pos,
-      max: pos,
-      center: pos,
-      size: [0, 0, 0],
-    };
-  }
-
-  let minX = Infinity,
-    minY = Infinity,
-    minZ = Infinity;
-  let maxX = -Infinity,
-    maxY = -Infinity,
-    maxZ = -Infinity;
-
-  for (const p of points) {
-    minX = Math.min(minX, p[0]);
-    minY = Math.min(minY, p[1]);
-    minZ = Math.min(minZ, p[2]);
-    maxX = Math.max(maxX, p[0]);
-    maxY = Math.max(maxY, p[1]);
-    maxZ = Math.max(maxZ, p[2]);
-  }
-
-  return {
-    min: [minX, minY, minZ],
-    max: [maxX, maxY, maxZ],
-    center: [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2],
-    size: [maxX - minX, maxY - minY, maxZ - minZ],
-  };
-}
-
-/**
- * Calculate similarity between two shapes based on bounding box and point count.
- * Returns a value in [0, 1] where 1 means identical shape characteristics.
- */
-function shapeSimilarity(a: VMobject, b: VMobject): number {
-  const boxA = getBoundingBox(a);
-  const boxB = getBoundingBox(b);
-
-  // Size similarity (0 to 1)
-  const sizeA = Math.sqrt(boxA.size[0] ** 2 + boxA.size[1] ** 2);
-  const sizeB = Math.sqrt(boxB.size[0] ** 2 + boxB.size[1] ** 2);
-  const maxSize = Math.max(sizeA, sizeB, 0.001);
-  const sizeSimilarity = 1 - Math.abs(sizeA - sizeB) / maxSize;
-
-  // Aspect ratio similarity
-  const aspectA = boxA.size[1] !== 0 ? boxA.size[0] / boxA.size[1] : 1;
-  const aspectB = boxB.size[1] !== 0 ? boxB.size[0] / boxB.size[1] : 1;
-  const maxAspect = Math.max(aspectA, aspectB, 0.001);
-  const aspectSimilarity = 1 - Math.abs(aspectA - aspectB) / maxAspect;
-
-  // Point count similarity
-  const pointsA = a.getPoints().length;
-  const pointsB = b.getPoints().length;
-  const maxPoints = Math.max(pointsA, pointsB, 1);
-  const pointSimilarity = 1 - Math.abs(pointsA - pointsB) / maxPoints;
-
-  // Weighted average
-  return sizeSimilarity * 0.4 + aspectSimilarity * 0.3 + pointSimilarity * 0.3;
-}
-
-/**
- * Calculate Euclidean distance between the centers of two VMobjects.
- * Used as a cost metric for position-based pairing of unmatched parts.
- */
-function centerDistance(a: VMobject, b: VMobject): number {
-  const centerA = getBoundingBox(a).center;
-  const centerB = getBoundingBox(b).center;
-  return Math.sqrt(
-    (centerA[0] - centerB[0]) ** 2 +
-      (centerA[1] - centerB[1]) ** 2 +
-      (centerA[2] - centerB[2]) ** 2,
-  );
-}
-
-// ============================================================================
-// MatchingPart - tracks a matched pair of shapes during animation
-// ============================================================================
-
-interface MatchedPart {
-  source: VMobject;
-  target: VMobject;
-  startPoints: number[][];
-  targetPoints: number[][];
-  startOpacity: number;
-  targetOpacity: number;
-}
-
-interface FadingPart {
-  mobject: VMobject;
-  fadeIn: boolean; // true = fade in, false = fade out
-  startOpacity: number;
-  targetOpacity: number;
-}
+import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
+import {
+  MatchedPart,
+  FadingPart,
+  getBoundingBox,
+  shapeSimilarity,
+  centerDistance,
+} from './TransformMatchingShared';
 
 // ============================================================================
 // TransformMatchingShapes
@@ -319,6 +218,7 @@ export class TransformMatchingShapes extends Animation {
         points.push(lerpPoint(part.startPoints[i], part.targetPoints[i], alpha));
       }
       part.source.setPoints(points);
+      part.source.setTransformSubpathLengths(part.alignedSubpathLengths);
       part.source.opacity = lerp(part.startOpacity, part.targetOpacity, alpha);
     }
 
@@ -341,6 +241,7 @@ export class TransformMatchingShapes extends Animation {
     // Finalize matched parts
     for (const part of this._matchedParts) {
       part.source.setPoints(part.targetPoints);
+      part.source.setTransformSubpathLengths(undefined);
       part.source.opacity = part.targetOpacity;
       part.source.color = part.target.color;
     }
@@ -611,18 +512,42 @@ export class TransformMatchingTex extends Animation {
   private _addMatchedPart(source: VMobject, target: VMobject): void {
     const srcCopy = source.copy() as VMobject;
     const tgtCopy = target.copy() as VMobject;
-    srcCopy.alignPoints(tgtCopy);
+    const alignedCompound = alignCompoundPathsForTransform(
+      srcCopy.getPoints(),
+      source.getEffectiveSubpathLengths?.(),
+      tgtCopy.getPoints(),
+      target.getEffectiveSubpathLengths?.(),
+    );
 
-    this._matchedParts.push({
-      source,
-      target,
-      startPoints: srcCopy.getPoints(),
-      targetPoints: tgtCopy.getPoints(),
-      startOpacity: source.opacity,
-      targetOpacity: target.opacity,
-    });
+    if (alignedCompound) {
+      this._matchedParts.push({
+        source,
+        target,
+        startPoints: alignedCompound.srcAlignedPoints,
+        targetPoints: alignedCompound.tgtAlignedPoints,
+        startOpacity: source.opacity,
+        targetOpacity: target.opacity,
+        alignedSubpathLengths: alignedCompound.alignedSubpathLengths,
+      });
 
-    source.setPoints(srcCopy.getPoints());
+      source.setPoints(alignedCompound.srcAlignedPoints);
+      source.setTransformSubpathLengths(alignedCompound.alignedSubpathLengths);
+    } else {
+      srcCopy.alignPoints(tgtCopy);
+
+      this._matchedParts.push({
+        source,
+        target,
+        startPoints: srcCopy.getPoints(),
+        targetPoints: tgtCopy.getPoints(),
+        startOpacity: source.opacity,
+        targetOpacity: target.opacity,
+        alignedSubpathLengths: undefined,
+      });
+
+      source.setPoints(srcCopy.getPoints());
+      source.setTransformSubpathLengths(undefined);
+    }
   }
 
   /**
@@ -631,18 +556,42 @@ export class TransformMatchingTex extends Animation {
   private _addMismatchedPair(source: VMobject, target: VMobject): void {
     const srcCopy = source.copy() as VMobject;
     const tgtCopy = target.copy() as VMobject;
-    srcCopy.alignPoints(tgtCopy);
+    const alignedCompound = alignCompoundPathsForTransform(
+      srcCopy.getPoints(),
+      source.getEffectiveSubpathLengths?.(),
+      tgtCopy.getPoints(),
+      target.getEffectiveSubpathLengths?.(),
+    );
 
-    this._mismatchedPairs.push({
-      source,
-      target,
-      startPoints: srcCopy.getPoints(),
-      targetPoints: tgtCopy.getPoints(),
-      startOpacity: source.opacity,
-      targetOpacity: target.opacity,
-    });
+    if (alignedCompound) {
+      this._mismatchedPairs.push({
+        source,
+        target,
+        startPoints: alignedCompound.srcAlignedPoints,
+        targetPoints: alignedCompound.tgtAlignedPoints,
+        startOpacity: source.opacity,
+        targetOpacity: target.opacity,
+        alignedSubpathLengths: alignedCompound.alignedSubpathLengths,
+      });
 
-    source.setPoints(srcCopy.getPoints());
+      source.setPoints(alignedCompound.srcAlignedPoints);
+      source.setTransformSubpathLengths(alignedCompound.alignedSubpathLengths);
+    } else {
+      srcCopy.alignPoints(tgtCopy);
+
+      this._mismatchedPairs.push({
+        source,
+        target,
+        startPoints: srcCopy.getPoints(),
+        targetPoints: tgtCopy.getPoints(),
+        startOpacity: source.opacity,
+        targetOpacity: target.opacity,
+        alignedSubpathLengths: undefined,
+      });
+
+      source.setPoints(srcCopy.getPoints());
+      source.setTransformSubpathLengths(undefined);
+    }
   }
 
   /**
@@ -678,6 +627,7 @@ export class TransformMatchingTex extends Animation {
         points.push(lerpPoint(part.startPoints[i], part.targetPoints[i], alpha));
       }
       part.source.setPoints(points);
+      part.source.setTransformSubpathLengths(part.alignedSubpathLengths);
       part.source.opacity = lerp(part.startOpacity, part.targetOpacity, alpha);
     }
 
@@ -688,6 +638,7 @@ export class TransformMatchingTex extends Animation {
         points.push(lerpPoint(part.startPoints[i], part.targetPoints[i], alpha));
       }
       part.source.setPoints(points);
+      part.source.setTransformSubpathLengths(part.alignedSubpathLengths);
 
       // Cross-fade effect: fade out then fade in
       if (alpha < 0.5) {
@@ -715,6 +666,7 @@ export class TransformMatchingTex extends Animation {
     // Finalize matched parts
     for (const part of this._matchedParts) {
       part.source.setPoints(part.targetPoints);
+      part.source.setTransformSubpathLengths(undefined);
       part.source.opacity = part.targetOpacity;
       part.source.color = part.target.color;
     }
@@ -722,6 +674,7 @@ export class TransformMatchingTex extends Animation {
     // Finalize mismatched pairs
     for (const part of this._mismatchedPairs) {
       part.source.setPoints(part.targetPoints);
+      part.source.setTransformSubpathLengths(undefined);
       part.source.opacity = part.targetOpacity;
       part.source.color = part.target.color;
     }

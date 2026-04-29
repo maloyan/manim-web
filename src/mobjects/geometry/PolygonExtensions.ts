@@ -841,7 +841,7 @@ export class Cutout extends VMobject {
   /**
    * Get subpath information
    */
-  getSubpaths(): number[] {
+  getSubpathLengths(): number[] {
     return [...this._subpaths];
   }
 

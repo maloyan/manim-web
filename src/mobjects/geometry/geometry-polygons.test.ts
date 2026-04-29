@@ -447,11 +447,11 @@ describe('Cutout', () => {
     expect(cutout.fillOpacity).toBe(outer.fillOpacity);
   });
 
-  it('getSubpaths returns lengths of outer and inner', () => {
+  it('getSubpathLengths returns lengths of outer and inner', () => {
     const outer = new Circle({ radius: 2 });
     const inner = new Circle({ radius: 1 });
     const cutout = new Cutout({ outerShape: outer, innerShape: inner });
-    const subpaths = cutout.getSubpaths();
+    const subpaths = cutout.getSubpathLengths();
     expect(subpaths.length).toBe(2);
     expect(subpaths[0]).toBe(outer.getPoints().length);
     expect(subpaths[1]).toBe(inner.getPoints().length);
