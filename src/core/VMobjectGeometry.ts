@@ -571,34 +571,35 @@ export function buildEarcutFillGeometry(
   points3D: number[][],
   visiblePoints: Point[],
   getSubpathLengths?: () => number[],
-  previousIndices?: number[],
 ): THREE.BufferGeometry | null {
   const subpathLengths = getSubpathLengths?.();
 
   // For disjoint subpaths (e.g. boolean XOR), split control points FIRST
   // then sample each subpath independently.
   if (subpathLengths && subpathLengths.length > 1) {
-    return buildEarcutFillGeometryMulti(points3D, subpathLengths, visiblePoints, previousIndices);
+    return buildEarcutFillGeometryMulti(points3D, subpathLengths, visiblePoints);
   }
 
+  // Sample Bezier curves into 3D polyline, then project to plane for triangulation
   const outline3D = sampleBezierOutline3D(points3D, FILL_SAMPLES_PER_SEGMENT);
   if (outline3D.length < 3) return null;
 
+  // Project to plane and get 2D coordinates for earcut
   const { outline2D } = projectOutlineToPlane(outline3D);
-  const canReuse =
-    previousIndices &&
-    previousIndices.length > 0 &&
-    Math.max(...previousIndices) < outline2D.length;
-  const indices = canReuse ? previousIndices : triangulatePolygon(outline2D);
+
+  // Triangulate with earcut
+  const indices = triangulatePolygon(outline2D);
 
   if (indices.length === 0) {
+    // Earcut couldn't triangulate -- fall back to THREE.ShapeGeometry
     const shape = pointsToShape(visiblePoints);
     return new THREE.ShapeGeometry(shape);
   }
 
-  const positions = new Float32Array(outline3D.length * 3);
-  for (let i = 0; i < outline3D.length; i++) {
-    const v = outline3D[i];
+  // Create BufferGeometry using original 3D points (not projected 2D)
+  const positions = new Float32Array(indices.length * 3);
+  for (let i = 0; i < indices.length; i++) {
+    const v = outline3D[indices[i]];
     positions[i * 3] = v[0];
     positions[i * 3 + 1] = v[1];
     positions[i * 3 + 2] = v[2] ?? 0;
@@ -606,7 +607,6 @@ export function buildEarcutFillGeometry(
 
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.setIndex(indices);
   return geometry;
 }
 
@@ -619,10 +619,10 @@ function buildEarcutFillGeometryMulti(
   points3D: number[][],
   subpathLengths: number[],
   visiblePoints: Point[],
-  previousIndices?: number[],
 ): THREE.BufferGeometry | null {
   void visiblePoints; // kept for API compatibility
 
+  // Sample each subpath into 3D rings, collecting all points for plane computation
   let offset = 0;
   const rings3D: number[][][] = [];
   const allPoints3D: number[][] = [];
@@ -640,12 +640,19 @@ function buildEarcutFillGeometryMulti(
 
   if (rings3D.length === 0) return null;
 
+  // Compute ONE shared plane basis from all sampled points.
+  // This keeps containment (hole classification) and triangulation in the
+  // same 2D coordinate system even when the whole shape is rotated in 3D.
   const { origin, v1, v2 } = projectOutlineToPlane(allPoints3D);
+
+  // Project each 3D ring to 2D using the shared plane basis
   const rings2D: number[][][] = rings3D.map((ring) =>
     ring.map((p) => projectToPlane(p, origin, v1, v2)),
   );
 
+  // Determine containment: for each ring, check if it's inside another ring.
   const isHoleOf = new Array<number>(rings2D.length).fill(-1);
+
   for (let i = 0; i < rings2D.length; i++) {
     for (let j = 0; j < rings2D.length; j++) {
       if (i === j) continue;
@@ -656,8 +663,8 @@ function buildEarcutFillGeometryMulti(
     }
   }
 
-  const allVerts3D: number[][] = [];
-  const allIndices: number[] = [];
+  // Collect outer rings (not holes) and their associated holes
+  const allPositions: number[] = [];
 
   for (let i = 0; i < rings2D.length; i++) {
     if (isHoleOf[i] >= 0) continue;
@@ -674,39 +681,26 @@ function buildEarcutFillGeometryMulti(
       }
     }
 
-    const ringVerts3D: number[][] = [...outerRing3D];
-    for (let h = 0; h < holeRings3D.length; h++) {
-      ringVerts3D.push(...holeRings3D[h]);
+    const indices = triangulatePolygon(outerRing, holeRings.length > 0 ? holeRings : undefined);
+    if (indices.length === 0) continue;
+
+    const allVerts: number[][] = [...outerRing];
+    const allVerts3D: number[][] = [...outerRing3D];
+    for (let h = 0; h < holeRings.length; h++) {
+      allVerts.push(...holeRings[h]);
+      allVerts3D.push(...holeRings3D[h]);
     }
 
-    const vertBase = allVerts3D.length;
-    allVerts3D.push(...ringVerts3D);
-
-    const ringIndices = triangulatePolygon(outerRing, holeRings.length > 0 ? holeRings : undefined);
-    for (const idx of ringIndices) {
-      allIndices.push(vertBase + idx);
+    for (const idx of indices) {
+      const v = allVerts3D[idx];
+      allPositions.push(v[0], v[1], v[2] ?? 0);
     }
   }
 
-  if (allIndices.length === 0 || allVerts3D.length === 0) return null;
-
-  const canReuse =
-    previousIndices &&
-    previousIndices.length > 0 &&
-    Math.max(...previousIndices) < allVerts3D.length;
-  const indices = canReuse ? previousIndices : allIndices;
-
-  const positions = new Float32Array(allVerts3D.length * 3);
-  for (let i = 0; i < allVerts3D.length; i++) {
-    const v = allVerts3D[i];
-    positions[i * 3] = v[0];
-    positions[i * 3 + 1] = v[1];
-    positions[i * 3 + 2] = v[2] ?? 0;
-  }
+  if (allPositions.length === 0) return null;
 
   const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  geometry.setIndex(indices);
+  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(allPositions), 3));
   return geometry;
 }
 
