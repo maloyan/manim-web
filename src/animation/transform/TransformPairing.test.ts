@@ -91,13 +91,19 @@ describe('TransformPairing core', () => {
 
     expect(pairs.length).toBe(3);
 
-    expect(pairs[0].source?.leaf).toBe(a);
-    expect(pairs[0].target?.leaf).toBe(t0);
+    expect(pairs[0].source.leaf).toBe(a);
+    expect(pairs[0].target.leaf).toBe(t0);
+    expect(pairs[0].sourceIsPlaceholder).toBe(false);
+    expect(pairs[0].targetIsPlaceholder).toBe(false);
 
-    expect(pairs[1].source?.leaf).toBe(b);
-    expect(pairs[1].target).toBeUndefined();
+    expect(pairs[1].source.leaf).toBe(b);
+    expect(pairs[1].sourceIsPlaceholder).toBe(false);
+    expect(pairs[1].targetIsPlaceholder).toBe(true);
+    expect(pairs[1].target.leaf.getPoints()).toEqual([]);
 
-    expect(pairs[2].source?.leaf).toBe(c);
-    expect(pairs[2].target).toBeUndefined();
+    expect(pairs[2].source.leaf).toBe(c);
+    expect(pairs[2].sourceIsPlaceholder).toBe(false);
+    expect(pairs[2].targetIsPlaceholder).toBe(true);
+    expect(pairs[2].target.leaf.getPoints()).toEqual([]);
   });
 });

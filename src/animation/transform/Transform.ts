@@ -12,7 +12,12 @@ import { VGroup } from '../../core/VGroup';
 import { Animation, AnimationOptions } from '../Animation';
 import { lerpPoint } from '../../utils/math';
 import { worldToParentLocalPosition } from '../../core/MobjectTraversal';
-import { alignVmobjectPair, pairLeafSnapshotsByIndex } from './TransformPairing';
+import {
+  alignVmobjectPair,
+  canMorphByPoints,
+  pairLeafSnapshotsByIndex,
+  type LeafPairByIndex,
+} from './TransformPairing';
 
 /** Extract style snapshot from a VMobject */
 function captureStyle(m: VMobject): ChildStyle {
@@ -137,9 +142,9 @@ export class Transform extends Animation {
       const vmobject = this.mobject as VMobject;
       const vtarget = this.target as VMobject;
 
-      // Text objects extend VMobject but render via canvas texture (no geometry
-      // points).  Fall back to cross-fade when both VMobjects lack points.
-      if (vmobject.getPoints().length === 0 && vtarget.getPoints().length === 0) {
+      // Universal rule: only morph when both sides have VMobject points.
+      // Otherwise use cross-fade (covers Text/texture-backed VMobjects).
+      if (!canMorphByPoints(vmobject, vtarget)) {
         this._useCrossFade = true;
         this._startOpacity = this.mobject.opacity;
         this._crossFadeTargetOpacity = this.target.opacity;
@@ -235,104 +240,8 @@ export class Transform extends Animation {
 
     const leafPairs = pairLeafSnapshotsByIndex(vmobject, vtarget);
 
-    for (let i = 0; i < leafPairs.length; i++) {
-      const src = leafPairs[i].source;
-      const tgt = leafPairs[i].target;
-
-      if (src && tgt) {
-        const sc = src.leaf;
-        const tc = tgt.leaf;
-        const aligned = alignVmobjectPair(sc, tc);
-        const startStyle = captureStyle(sc);
-        const targetStyle = captureStyle(tc);
-
-        sc.setPoints(aligned.startPoints);
-        sc.setTransformSubpathLengths(aligned.alignedSubpathLengths);
-
-        this._vgroupLeafStates.push({
-          child: sc,
-          startPoints: aligned.startPoints,
-          targetPoints: aligned.targetPoints,
-          startPosition: worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix),
-          targetPosition: worldToParentLocalPosition(tgt.worldPosition, src.parentWorldMatrix),
-          finalTargetPoints: aligned.finalTargetPoints,
-          finalTargetSubpathLengths: aligned.finalTargetSubpathLengths,
-          startStyle,
-          targetStyle,
-          strokeColorPair: {
-            start: new THREE.Color(startStyle.color),
-            target: new THREE.Color(targetStyle.color),
-            interpolate: startStyle.color !== targetStyle.color,
-          },
-          fillColorPair: {
-            start: new THREE.Color(startStyle.fillColor),
-            target: new THREE.Color(targetStyle.fillColor),
-            interpolate: startStyle.fillColor !== targetStyle.fillColor,
-          },
-        });
-      } else if (src) {
-        const sc = src.leaf;
-        const p = worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix);
-        const startStyle = captureStyle(sc);
-        const targetStyle = captureStyleFaded(sc);
-
-        this._vgroupLeafStates.push({
-          child: sc,
-          startPoints: sc.getPoints(),
-          targetPoints: sc.getPoints(),
-          startPosition: p.clone(),
-          targetPosition: p,
-          finalTargetPoints: sc.getPoints(),
-          finalTargetSubpathLengths: undefined,
-          startStyle,
-          targetStyle,
-          strokeColorPair: {
-            start: new THREE.Color(startStyle.color),
-            target: new THREE.Color(targetStyle.color),
-            interpolate: startStyle.color !== targetStyle.color,
-          },
-          fillColorPair: {
-            start: new THREE.Color(startStyle.fillColor),
-            target: new THREE.Color(targetStyle.fillColor),
-            interpolate: startStyle.fillColor !== targetStyle.fillColor,
-          },
-        });
-      } else if (tgt) {
-        const tc = tgt.leaf;
-        const placeholder = tc.copy() as VMobject;
-        placeholder.opacity = 0;
-        placeholder.fillOpacity = 0;
-        vmobject.add(placeholder);
-
-        const p = worldToParentLocalPosition(tgt.worldPosition, tgt.parentWorldMatrix);
-        const startStyle = captureStyleFaded(tc);
-        const targetStyle = captureStyle(tc);
-        const originalPts = tc.getPoints();
-
-        placeholder.setTransformSubpathLengths(tc.getEffectiveSubpathLengths?.());
-
-        this._vgroupLeafStates.push({
-          child: placeholder,
-          startPoints: originalPts,
-          targetPoints: originalPts,
-          startPosition: p.clone(),
-          targetPosition: p,
-          finalTargetPoints: originalPts,
-          finalTargetSubpathLengths: tc.getEffectiveSubpathLengths?.(),
-          startStyle,
-          targetStyle,
-          strokeColorPair: {
-            start: new THREE.Color(startStyle.color),
-            target: new THREE.Color(targetStyle.color),
-            interpolate: startStyle.color !== targetStyle.color,
-          },
-          fillColorPair: {
-            start: new THREE.Color(startStyle.fillColor),
-            target: new THREE.Color(targetStyle.fillColor),
-            interpolate: startStyle.fillColor !== targetStyle.fillColor,
-          },
-        });
-      }
+    for (const pair of leafPairs) {
+      this._vgroupLeafStates.push(this._buildVGroupLeafState(vmobject, pair));
     }
 
     // Capture group-level transform properties
@@ -342,6 +251,61 @@ export class Transform extends Animation {
     this._targetRotation.copy(vtarget.rotation);
     this._startScale.copy(vmobject.scaleVector);
     this._targetScale.copy(vtarget.scaleVector);
+  }
+
+  private _buildVGroupLeafState(vmobject: VGroup, pair: LeafPairByIndex): VGroupLeafState {
+    const { source: src, target: tgt, sourceIsPlaceholder, targetIsPlaceholder } = pair;
+
+    const sc = src.leaf;
+    const tc = tgt.leaf;
+
+    let child: VMobject = sc;
+    if (sourceIsPlaceholder) {
+      child = tc.copy() as VMobject;
+      child.opacity = 0;
+      child.fillOpacity = 0;
+      vmobject.add(child);
+    }
+
+    const canMorph = canMorphByPoints(sc, tc) && !sourceIsPlaceholder && !targetIsPlaceholder;
+    const aligned = canMorph ? alignVmobjectPair(sc, tc) : undefined;
+
+    const startPoints = aligned?.startPoints ?? child.getPoints();
+    const targetPoints = aligned?.targetPoints ?? child.getPoints();
+    const finalTargetPoints = aligned?.finalTargetPoints ?? child.getPoints();
+    const finalTargetSubpathLengths = aligned?.finalTargetSubpathLengths;
+
+    if (aligned) {
+      child.setPoints(aligned.startPoints);
+      child.setTransformSubpathLengths(aligned.alignedSubpathLengths);
+    } else {
+      child.setTransformSubpathLengths(undefined);
+    }
+
+    const startStyle = sourceIsPlaceholder ? captureStyleFaded(tc) : captureStyle(child);
+    const targetStyle = targetIsPlaceholder ? captureStyleFaded(sc) : captureStyle(tc);
+
+    return {
+      child,
+      startPoints,
+      targetPoints,
+      startPosition: worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix),
+      targetPosition: worldToParentLocalPosition(tgt.worldPosition, src.parentWorldMatrix),
+      finalTargetPoints,
+      finalTargetSubpathLengths,
+      startStyle,
+      targetStyle,
+      strokeColorPair: {
+        start: new THREE.Color(startStyle.color),
+        target: new THREE.Color(targetStyle.color),
+        interpolate: startStyle.color !== targetStyle.color,
+      },
+      fillColorPair: {
+        start: new THREE.Color(startStyle.fillColor),
+        target: new THREE.Color(targetStyle.fillColor),
+        interpolate: startStyle.fillColor !== targetStyle.fillColor,
+      },
+    };
   }
 
   /**
