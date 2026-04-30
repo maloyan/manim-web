@@ -14,8 +14,8 @@
 import katex from 'katex';
 import type { VGroup } from '../../core/VGroup';
 import { svgToVMobjects } from './svgPathParser';
-import { LiteAdaptor } from 'mathjax-full/js/adaptors/liteAdaptor.js';
-import { LiteElement } from 'mathjax-full/js/adaptors/lite/Element';
+import { LiteAdaptor } from '@mathjax/src/js/adaptors/liteAdaptor.js';
+import { LiteElement } from '@mathjax/src/js/adaptors/lite/Element.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -125,7 +125,7 @@ let mathjaxLoadPromise: Promise<MathJaxModuleState> | null = null;
 /**
  * Dynamically load MathJax's SVG output module.
  *
- * We use the "mathjax-full" npm package which provides a programmatic API
+ * We use the "@mathjax/src" npm package which provides a programmatic API
  * without needing the global MathJax bootstrap. If that is not available we
  * fall back to loading via a CDN script tag.
  */
@@ -134,28 +134,31 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
   if (mathjaxLoadPromise) return mathjaxLoadPromise;
 
   mathjaxLoadPromise = (async () => {
-    // Strategy 1: try the npm package "mathjax-full"
+    // Strategy 1: try the npm package "@mathjax/src"
     // it will resolve for local npm installs, but it will not be bundled in browser code.
     try {
-      const mjModule = await import('mathjax-full/js/mathjax.js');
-      const texModule = await import('mathjax-full/js/input/tex.js');
-      const svgModule = await import('mathjax-full/js/output/svg.js');
-      const liteAdaptor = await import('mathjax-full/js/adaptors/liteAdaptor.js');
-      const htmlHandler = await import('mathjax-full/js/handlers/html.js');
-      // Register all TeX packages (ams, etc.) so environments like pmatrix/bmatrix work
-      await import('mathjax-full/js/input/tex/AllPackages.js');
+      const mjModule = await import('@mathjax/src/js/mathjax.js');
+      const texModule = await import('@mathjax/src/js/input/tex.js');
+      const svgModule = await import('@mathjax/src/js/output/svg.js');
+      const { liteAdaptor } = await import('@mathjax/src/js/adaptors/liteAdaptor.js');
+      const { RegisterHTMLHandler } = await import('@mathjax/src/js/handlers/html.js');
+      // Register TeX packages (ams, newcommand, configmacros) so environments like pmatrix/bmatrix work
+      await import('@mathjax/src/js/input/tex/ams/AmsConfiguration.js');
+      await import('@mathjax/src/js/input/tex/newcommand/NewcommandConfiguration.js');
+      await import('@mathjax/src/js/input/tex/configmacros/ConfigMacrosConfiguration.js');
 
-      const adaptor = liteAdaptor.liteAdaptor();
-      htmlHandler.RegisterHTMLHandler(adaptor);
+      const adaptor = liteAdaptor();
+      RegisterHTMLHandler(adaptor);
 
-      mathjaxModule = {
+      const result: MathJaxModuleNpm = {
         mjModule: mjModule as unknown as MathJaxNpmMjModule,
         texModule: texModule as unknown as MathJaxNpmTexModule,
         svgModule: svgModule as unknown as MathJaxNpmSvgModule,
         adaptor,
         strategy: 'npm' as const,
       };
-      return mathjaxModule;
+      mathjaxModule = result;
+      return result;
     } catch {
       // npm package not available -- fall through
     }
@@ -164,8 +167,9 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
     if (typeof window !== 'undefined') {
       const win = window as unknown as WindowWithMathJax;
       if (win.MathJax && win.MathJax.tex2svg) {
-        mathjaxModule = { strategy: 'global' as const, MathJax: win.MathJax };
-        return mathjaxModule;
+        const result: MathJaxModuleGlobal = { strategy: 'global' as const, MathJax: win.MathJax };
+        mathjaxModule = result;
+        return result;
       }
 
       // Load from CDN
@@ -205,8 +209,9 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
         setTimeout(() => reject(new Error('MathJax CDN load timed out')), 15000);
       });
 
-      mathjaxModule = { strategy: 'global' as const, MathJax: win.MathJax };
-      return mathjaxModule;
+      const result: MathJaxModuleGlobal = { strategy: 'global' as const, MathJax: win.MathJax };
+      mathjaxModule = result;
+      return result;
     }
 
     throw new Error('MathJax could not be loaded: no npm package and no browser environment.');
@@ -307,7 +312,7 @@ export async function renderLatexToSVG(
     svgString = svgElement.outerHTML;
   } else {
     // ------------------------------------------------------------------
-    // npm mathjax-full
+    // npm @mathjax/src
     // ------------------------------------------------------------------
     const { mjModule, texModule, svgModule, adaptor } = mj;
     const MathJax = mjModule.mathjax;
@@ -335,9 +340,17 @@ export async function renderLatexToSVG(
     } else {
       const parser = new DOMParser();
       const doc = parser.parseFromString(svgString, 'image/svg+xml');
-      // mathjax-full wraps SVG in <mjx-container>; extract the inner <svg>
+      // @mathjax/src wraps SVG in <mjx-container>; extract the inner <svg>
       const innerSvg = doc.querySelector('svg');
       svgElement = (innerSvg || doc.documentElement) as unknown as SVGElement;
+      if (!svgElement || !('tagName' in svgElement)) {
+        // Create a fallback stub
+        svgElement = {
+          getAttribute: () => null,
+          setAttribute: () => {},
+          querySelectorAll: () => [],
+        } as unknown as SVGElement;
+      }
     }
   }
 
@@ -373,6 +386,9 @@ export async function renderLatexToSVG(
   // ------------------------------------------------------------------
   // Convert SVG paths to VMobjects
   // ------------------------------------------------------------------
+  if (!('tagName' in svgElement)) {
+    throw new Error('svgElement has no tagName');
+  }
   const vmobjectGroup = svgToVMobjects(svgElement, {
     color,
     scale: 1,

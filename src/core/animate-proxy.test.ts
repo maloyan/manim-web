@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Circle } from '../mobjects/geometry/Circle';
+import { Rectangle } from '../mobjects/geometry/Rectangle';
 import { AnimateProxy } from './AnimateProxy';
 import { Animation } from '../animation/Animation';
 import { linear } from '../rate-functions';
@@ -109,6 +110,101 @@ describe('AnimateProxy', () => {
     const startFirstX = startPoints[0]?.[0] ?? 0;
     const endFirstX = endPoints[0]?.[0] ?? 0;
     expect(Math.abs(endFirstX)).toBeGreaterThan(Math.abs(startFirstX) * 1.5);
+  });
+
+  describe('chained animations (issue #252)', () => {
+    it('accumulates consecutive animate.shift on a Circle', () => {
+      const c = new Circle({ radius: 1 });
+      const startCenter = c.getCenter();
+
+      let proxy = c.animate.shift([1, 0, 0]);
+      proxy.begin();
+      proxy.finish();
+      expect(c.getCenter()[0]).toBeCloseTo(startCenter[0] + 1, 2);
+      expect(c.getCircleCenter()[0]).toBeCloseTo(startCenter[0] + 1, 2);
+
+      proxy = c.animate.shift([1, 0, 0]);
+      proxy.begin();
+      proxy.finish();
+      expect(c.getCenter()[0]).toBeCloseTo(startCenter[0] + 2, 2);
+      expect(c.getCircleCenter()[0]).toBeCloseTo(startCenter[0] + 2, 2);
+    });
+
+    it('accumulates consecutive animate.scale on a Circle', () => {
+      const c = new Circle({ radius: 1 });
+
+      let proxy = c.animate.scale(2);
+      proxy.begin();
+      proxy.finish();
+      expect(c.getRadius()).toBeCloseTo(2, 2);
+
+      proxy = c.animate.scale(2);
+      proxy.begin();
+      proxy.finish();
+      expect(c.getRadius()).toBeCloseTo(4, 2);
+    });
+
+    it('keeps logical state in sync with visual state after animate.shift', () => {
+      const c = new Circle({ radius: 1 });
+      const proxy = c.animate.shift([3, 2, 0]);
+      proxy.begin();
+      proxy.finish();
+      // Visual center, logical _centerPoint, and shifted-then-rescaled
+      // points should all agree.
+      const visual = c.getCenter();
+      const logical = c.getCircleCenter();
+      expect(logical[0]).toBeCloseTo(visual[0], 2);
+      expect(logical[1]).toBeCloseTo(visual[1], 2);
+    });
+
+    it('accumulates consecutive animate.shift on a Rectangle', () => {
+      const r = new Rectangle({ width: 2, height: 1 });
+      const startCenter = r.getCenter();
+
+      let proxy = r.animate.shift([1, 0, 0]);
+      proxy.begin();
+      proxy.finish();
+      expect(r.getCenter()[0]).toBeCloseTo(startCenter[0] + 1, 2);
+      expect(r.getWidth()).toBeCloseTo(2, 2);
+
+      proxy = r.animate.shift([1, 0, 0]);
+      proxy.begin();
+      proxy.finish();
+      expect(r.getCenter()[0]).toBeCloseTo(startCenter[0] + 2, 2);
+      expect(r.getWidth()).toBeCloseTo(2, 2);
+    });
+
+    it('accumulates mixed chained calls in a single animation', () => {
+      const c = new Circle({ radius: 1, color: '#ff0000' });
+      const proxy = c.animate.shift([2, 0, 0]).setColor('#00ff00').scale(2);
+      proxy.begin();
+      proxy.finish();
+
+      expect(c.getCenter()[0]).toBeCloseTo(2, 2);
+      expect(c.getCircleCenter()[0]).toBeCloseTo(2, 2);
+      expect(c.getRadius()).toBeCloseTo(2, 2);
+      expect(c.color).toBe('#00ff00');
+    });
+
+    it('accumulates different methods across separate animations', () => {
+      const c = new Circle({ radius: 1 });
+
+      let proxy = c.animate.shift([1, 0, 0]);
+      proxy.begin();
+      proxy.finish();
+
+      proxy = c.animate.scale(2);
+      proxy.begin();
+      proxy.finish();
+
+      proxy = c.animate.shift([1, 0, 0]);
+      proxy.begin();
+      proxy.finish();
+
+      // Started at (0,0,0) r=1 → +x by 1 → scale 2 (about own center) → +x by 1
+      expect(c.getCircleCenter()[0]).toBeCloseTo(2, 2);
+      expect(c.getRadius()).toBeCloseTo(2, 2);
+    });
   });
 
   describe('animation overrides', () => {
