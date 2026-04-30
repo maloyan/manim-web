@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { VMobject } from '../../core/VMobject';
 import {
   collectLeafVMobjectSnapshots,
@@ -87,9 +88,26 @@ export function alignVmobjectPair(source: VMobject, target: VMobject): AlignedTr
   };
 }
 
+export function canMorphByPoints(source: VMobject, target: VMobject): boolean {
+  return source.getPoints().length > 0 && target.getPoints().length > 0;
+}
+
+function makePlaceholderSnapshot(reference?: LeafVMobjectSnapshot): LeafVMobjectSnapshot {
+  return {
+    leaf: new VMobject(),
+    worldMatrix: reference?.worldMatrix.clone() ?? new THREE.Matrix4().identity(),
+    parentWorldMatrix: reference?.parentWorldMatrix.clone() ?? new THREE.Matrix4().identity(),
+    worldPosition: reference?.worldPosition.clone() ?? new THREE.Vector3(),
+    worldRotation: reference?.worldRotation.clone() ?? new THREE.Euler(),
+    worldScale: reference?.worldScale.clone() ?? new THREE.Vector3(1, 1, 1),
+  };
+}
+
 export interface LeafPairByIndex {
-  source?: LeafVMobjectSnapshot;
-  target?: LeafVMobjectSnapshot;
+  source: LeafVMobjectSnapshot;
+  target: LeafVMobjectSnapshot;
+  sourceIsPlaceholder: boolean;
+  targetIsPlaceholder: boolean;
 }
 
 export function pairLeafSnapshotsByIndex(
@@ -107,7 +125,28 @@ export function pairLeafSnapshotsByIndex(
     if (!source && !target) {
       throw new Error(`pairLeafSnapshotsByIndex: invalid empty pair at index ${i}`);
     }
-    pairs.push({ source, target });
+
+    if (source && target) {
+      pairs.push({ source, target, sourceIsPlaceholder: false, targetIsPlaceholder: false });
+      continue;
+    }
+
+    if (source && !target) {
+      pairs.push({
+        source,
+        target: makePlaceholderSnapshot(source),
+        sourceIsPlaceholder: false,
+        targetIsPlaceholder: true,
+      });
+      continue;
+    }
+
+    pairs.push({
+      source: makePlaceholderSnapshot(target),
+      target: target as LeafVMobjectSnapshot,
+      sourceIsPlaceholder: true,
+      targetIsPlaceholder: false,
+    });
   }
 
   return pairs;
