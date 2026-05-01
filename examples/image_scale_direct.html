@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Image Scale Direct Test</title>
+    <style>
+        body { font-family: system-ui, sans-serif; padding: 20px; }
+        .container { border: 1px solid #ccc; display: inline-block; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Image Scale Direct Test</h2>
+    <p>Left: original (height=2). Right: scaled by 2.</p>
+    <div id="container1" class="container"></div>
+    <div id="container2" class="container"></div>
+    
+    <script type="module">
+        import { Scene, ImageMobject } from '../src/index';
+
+        function generateGradientBase64() {
+            const width = 50;
+            const height = 50;
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            const imageData = ctx.createImageData(width, height);
+            
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const i = (y * width + x) * 4;
+                    imageData.data[i] = Math.floor(255 * y / height);
+                    imageData.data[i + 1] = Math.floor(255 * x / width);
+                    imageData.data[i + 2] = 128;
+                    imageData.data[i + 3] = 255;
+                }
+            }
+            ctx.putImageData(imageData, 0, 0);
+            return canvas.toDataURL('image/png');
+        }
+
+        const source = generateGradientBase64();
+
+        // Scene 1: original
+        const scene1 = new Scene(document.getElementById("container1"), { width: 300, height: 200 });
+        const img1 = new ImageMobject({ source, height: 2 });
+        scene1.add(img1);
+
+        // Scene 2: scaled by 2
+        const scene2 = new Scene(document.getElementById("container2"), { width: 300, height: 200 });
+        const img2 = new ImageMobject({ source, height: 2 });
+        img2.scale(2);
+        scene2.add(img2);
+        
+        console.log('img1 scaleVector:', img1.scaleVector);
+        console.log('img2 scaleVector:', img2.scaleVector);
+    </script>
+</body>
+</html>

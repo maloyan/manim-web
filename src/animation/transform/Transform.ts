@@ -19,6 +19,22 @@ import {
   type LeafPairByIndex,
 } from './TransformPairing';
 
+/** Morph mode determines how source transforms into target */
+enum MorphMode {
+  /** Point interpolation for VMobjects with points (Circle, Square, Polygon, etc.) */
+  Point,
+  /** Cross-fade opacity + position interpolation (zero-point VMobjects, non-VMobjects) */
+  Fade,
+  /** Cross-fade + geometry + transform interpolation (ImageMobject, Text, MathTexImage) */
+  Shape,
+}
+
+/** Common interface for mobjects with texture meshes (Text, ImageMobject, MathTexImage) */
+interface TexturedMobject extends Mobject {
+  _source: unknown;
+  _texture: THREE.Texture | null;
+}
+
 /** Extract style snapshot from a VMobject */
 function captureStyle(m: VMobject): ChildStyle {
   return {
@@ -111,8 +127,14 @@ export class Transform extends Animation {
   private _startScale: THREE.Vector3 = new THREE.Vector3(1, 1, 1);
   private _targetScale: THREE.Vector3 = new THREE.Vector3(1, 1, 1);
 
-  /** Whether to use cross-fade instead of point morphing */
-  private _useCrossFade: boolean = false;
+  /** Geometry dimensions for Shape mode (ImageMobject, Text, MathTexImage) */
+  private _startWidth: number = 0;
+  private _startHeight: number = 0;
+  private _targetWidth: number = 0;
+  private _targetHeight: number = 0;
+
+  /** Current morph mode */
+  private _morphMode: MorphMode = MorphMode.Point;
 
   /** Original target opacity before cross-fade zeroes it */
   private _crossFadeTargetOpacity: number = 1;
@@ -126,6 +148,92 @@ export class Transform extends Animation {
   constructor(mobject: Mobject, target: Mobject, options: AnimationOptions = {}) {
     super(mobject, options);
     this.target = target;
+  }
+
+  /** Check if mobject is a Shape mode type (ImageMobject, Text, MathTexImage) */
+  private _isShapeModeType(m: VMobject): boolean {
+    // Check for texture mesh - these use geometry morphing
+    const candidate = m as unknown as { getTextureMesh?: () => THREE.Mesh | null };
+    return typeof candidate.getTextureMesh === 'function';
+  }
+
+  /** Capture position/rotation/scale from source and target mobjects */
+  private _captureTransformProps(): void {
+    this.target._syncToThree();
+    this._startPosition.copy(this.mobject.position);
+    this._targetPosition.copy(this.target.position);
+    this._startRotation.copy(this.mobject.rotation);
+    this._targetRotation.copy(this.target.rotation);
+    this._startScale.copy(this.mobject.scaleVector);
+    this._targetScale.copy(this.target.scaleVector);
+  }
+
+  /** Capture geometry dimensions for Shape mode */
+  private _captureGeometryDimensions(): void {
+    const srcMesh = this.mobject.getThreeObject() as THREE.Mesh;
+    const tgtMesh = this.target.getThreeObject() as THREE.Mesh;
+    const srcGeo = srcMesh.geometry as THREE.PlaneGeometry;
+    const tgtGeo = tgtMesh.geometry as THREE.PlaneGeometry;
+    this._startWidth = srcGeo.parameters.width;
+    this._startHeight = srcGeo.parameters.height;
+    this._targetWidth = tgtGeo.parameters.width;
+    this._targetHeight = tgtGeo.parameters.height;
+  }
+
+  /** Set up cross-fade: add target to scene graph, start it invisible */
+  private _setupCrossFade(): void {
+    this._crossFadeTargetOpacity = this.target.opacity;
+    const sourceObj = this.mobject.getThreeObject();
+    const targetObj = this.target.getThreeObject();
+    if (sourceObj.parent && !targetObj.parent) {
+      sourceObj.parent.add(targetObj);
+    }
+    this.target.setStrokeOpacity(0);
+    this.target._syncToThree();
+  }
+
+  /** Swap texture from target to source mobject */
+  private _swapTexture(): void {
+    const sourceMesh = this.mobject.getThreeObject() as THREE.Mesh;
+    const targetMesh = this.target.getThreeObject() as THREE.Mesh;
+    const srcMat = sourceMesh.material as THREE.MeshBasicMaterial;
+    const tgtMat = targetMesh.material as THREE.MeshBasicMaterial;
+    srcMat.map = tgtMat.map;
+    srcMat.needsUpdate = true;
+    const src = this.mobject as TexturedMobject;
+    const tgt = this.target as TexturedMobject;
+    src._source = tgt._source;
+    src._texture = tgtMat.map;
+  }
+
+  /** Interpolate position for both source and target */
+  private _interpolatePosition(alpha: number): void {
+    this.mobject.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
+    this.target.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
+  }
+
+  /** Interpolate position/rotation/scale for both source and target */
+  private _interpolateTransform(alpha: number): void {
+    this._interpolatePosition(alpha);
+    this.mobject.rotation.set(
+      this._startRotation.x + (this._targetRotation.x - this._startRotation.x) * alpha,
+      this._startRotation.y + (this._targetRotation.y - this._startRotation.y) * alpha,
+      this._startRotation.z + (this._targetRotation.z - this._startRotation.z) * alpha,
+    );
+    this.mobject.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
+    this.target.rotation.set(
+      this._startRotation.x + (this._targetRotation.x - this._startRotation.x) * alpha,
+      this._startRotation.y + (this._targetRotation.y - this._startRotation.y) * alpha,
+      this._startRotation.z + (this._targetRotation.z - this._startRotation.z) * alpha,
+    );
+    this.target.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
+  }
+
+  /** Interpolate opacity cross-fade */
+  private _interpolateCrossFade(alpha: number): void {
+    this.mobject.setStrokeOpacity(this._startOpacity * (1 - alpha));
+    this.target.setStrokeOpacity(this._crossFadeTargetOpacity * alpha);
+    this.target._syncToThree();
   }
 
   /**
@@ -142,25 +250,27 @@ export class Transform extends Animation {
       const vmobject = this.mobject as VMobject;
       const vtarget = this.target as VMobject;
 
-      // Universal rule: only morph when both sides have VMobject points.
-      // Otherwise use cross-fade (covers Text/texture-backed VMobjects).
-      if (!canMorphByPoints(vmobject, vtarget)) {
-        this._useCrossFade = true;
+      // Shape mode: ImageMobject/Text/MathTexImage with geometry morphing
+      if (
+        this._isShapeModeType(vmobject) &&
+        this._isShapeModeType(vtarget) &&
+        vmobject.constructor === vtarget.constructor
+      ) {
+        this._morphMode = MorphMode.Shape;
         this._startOpacity = this.mobject.opacity;
-        this._crossFadeTargetOpacity = this.target.opacity;
+        this._captureTransformProps();
+        this._captureGeometryDimensions();
+        this._setupCrossFade();
+        return;
+      }
 
-        // Capture positions for interpolation during cross-fade
+      // Fade mode: zero-point VMobjects that aren't Shape types
+      if (!canMorphByPoints(vmobject, vtarget)) {
+        this._morphMode = MorphMode.Fade;
+        this._startOpacity = this.mobject.opacity;
         this._startPosition.copy(vmobject.position);
         this._targetPosition.copy(vtarget.position);
-
-        const sourceObj = this.mobject.getThreeObject();
-        const targetObj = this.target.getThreeObject();
-        if (sourceObj.parent && !targetObj.parent) {
-          sourceObj.parent.add(targetObj);
-        }
-
-        this.target.setStrokeOpacity(0);
-        this.target._syncToThree();
+        this._setupCrossFade();
         return;
       }
 
@@ -170,7 +280,8 @@ export class Transform extends Animation {
         return;
       }
 
-      // Point-based morphing (single VMobject)
+      // Point mode: VMobject point interpolation
+      this._morphMode = MorphMode.Point;
       const aligned = alignVmobjectPair(vmobject, vtarget);
       this._startPoints = aligned.startPoints;
       this._targetPoints = aligned.targetPoints;
@@ -185,48 +296,27 @@ export class Transform extends Animation {
       this._startStrokeWidth = vmobject.strokeWidth;
       this._targetStrokeWidth = vtarget.strokeWidth;
 
-      // Capture stroke colors for interpolation
       this._startColor.set(vmobject.color);
       this._targetColor.set(vtarget.color);
       this._interpolateColor = vmobject.color !== vtarget.color;
 
-      // Capture fill colors for interpolation (separate from stroke)
       const sourceFillColor = vmobject.fillColor || vmobject.color;
       const targetFillColor = vtarget.fillColor || vtarget.color;
       this._startFillColor.set(sourceFillColor);
       this._targetFillColor.set(targetFillColor);
       this._interpolateFillColor = sourceFillColor !== targetFillColor;
 
-      // Capture transform properties (position, rotation, scale)
-      this._startPosition.copy(vmobject.position);
-      this._targetPosition.copy(vtarget.position);
-      this._startRotation.copy(vmobject.rotation);
-      this._targetRotation.copy(vtarget.rotation);
-      this._startScale.copy(vmobject.scaleVector);
-      this._targetScale.copy(vtarget.scaleVector);
+      this._captureTransformProps();
 
       vmobject.setPoints(this._startPoints);
       vmobject.setTransformSubpathLengths(this._alignedSubpathLengths);
     } else {
-      // Cross-fade for non-VMobject transforms (e.g., MathTex → MathTex)
-      this._useCrossFade = true;
+      // Fade mode for non-VMobject transforms
+      this._morphMode = MorphMode.Fade;
       this._startOpacity = this.mobject.opacity;
-      this._crossFadeTargetOpacity = this.target.opacity;
-
-      // Capture positions for interpolation during cross-fade
       this._startPosition.copy(this.mobject.position);
       this._targetPosition.copy(this.target.position);
-
-      // Add target to the Three.js scene graph so it renders
-      const sourceObj = this.mobject.getThreeObject();
-      const targetObj = this.target.getThreeObject();
-      if (sourceObj.parent && !targetObj.parent) {
-        sourceObj.parent.add(targetObj);
-      }
-
-      // Start target invisible
-      this.target.setStrokeOpacity(0);
-      this.target._syncToThree();
+      this._setupCrossFade();
     }
   }
 
@@ -312,17 +402,30 @@ export class Transform extends Animation {
    * Interpolate between start and target at the given alpha
    */
   interpolate(alpha: number): void {
-    if (this._useCrossFade) {
-      // Cross-fade: source fades out, target fades in
-      this.mobject.setStrokeOpacity(this._startOpacity * (1 - alpha));
-      this.target.setStrokeOpacity(this._crossFadeTargetOpacity * alpha);
+    // Shape mode: cross-fade + geometry + transform
+    if (this._morphMode === MorphMode.Shape) {
+      const w = this._startWidth + (this._targetWidth - this._startWidth) * alpha;
+      const h = this._startHeight + (this._targetHeight - this._startHeight) * alpha;
 
-      // Move source toward target position for a smooth transition
-      this.mobject.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
+      const sourceMesh = this.mobject.getThreeObject() as THREE.Mesh;
+      sourceMesh.geometry.dispose();
+      sourceMesh.geometry = new THREE.PlaneGeometry(w, h);
+
+      const targetMesh = this.target.getThreeObject() as THREE.Mesh;
+      targetMesh.geometry.dispose();
+      targetMesh.geometry = new THREE.PlaneGeometry(w, h);
+
+      this._interpolateTransform(alpha);
+      this._interpolateCrossFade(alpha);
       this.mobject._markDirty();
+      return;
+    }
 
-      // Target is not in Scene._mobjects, so sync manually
-      this.target._syncToThree();
+    // Fade mode: cross-fade opacity + position
+    if (this._morphMode === MorphMode.Fade) {
+      this._interpolatePosition(alpha);
+      this._interpolateCrossFade(alpha);
+      this.mobject._markDirty();
       return;
     }
 
@@ -422,56 +525,39 @@ export class Transform extends Animation {
    * Ensure the mobject matches the target at the end
    */
   override finish(): void {
-    if (this._useCrossFade) {
-      // Check if both source and target are Text objects with texture meshes
-      const getTexMesh = (m: Mobject): THREE.Mesh | null => {
-        const candidate = m as unknown as { getTextureMesh?: () => THREE.Mesh | null };
-        return typeof candidate.getTextureMesh === 'function' ? candidate.getTextureMesh() : null;
-      };
-      const srcMesh = getTexMesh(this.mobject);
-      const tgtMesh = getTexMesh(this.target);
+    // Shape mode finish
+    if (this._morphMode === MorphMode.Shape) {
+      const mesh = this.mobject.getThreeObject() as THREE.Mesh;
+      mesh.geometry.dispose();
+      mesh.geometry = new THREE.PlaneGeometry(this._targetWidth, this._targetHeight);
 
-      if (srcMesh && tgtMesh) {
-        // Text→Text: swap texture/geometry so source visually becomes target.
-        // This way FadeOut(source) correctly fades the visible text.
-        const srcMat = srcMesh.material as THREE.MeshBasicMaterial;
-        const tgtMat = tgtMesh.material as THREE.MeshBasicMaterial;
-        srcMat.map = tgtMat.map;
-        srcMat.needsUpdate = true;
-        srcMesh.geometry.dispose();
-        srcMesh.geometry = tgtMesh.geometry;
+      this.mobject.position.copy(this._targetPosition);
+      this.mobject.rotation.copy(this._targetRotation);
+      this.mobject.scaleVector.copy(this._targetScale);
 
-        // Position source at target location
-        this.mobject.position.copy(this._targetPosition);
-        this.mobject.setStrokeOpacity(this._crossFadeTargetOpacity);
-        this.mobject._markDirty();
+      this._swapTexture();
+      this.mobject.opacity = this._crossFadeTargetOpacity;
 
-        // Remove target from scene graph
-        const targetObj = this.target.getThreeObject();
-        if (targetObj.parent) targetObj.parent.remove(targetObj);
-      } else {
-        // Non-Text cross-fade: reparent target under source
-        this.mobject.setStrokeOpacity(0);
-        this.target.setStrokeOpacity(this._crossFadeTargetOpacity);
-        this.target._syncToThree();
+      const targetObj = this.target.getThreeObject();
+      if (targetObj.parent) targetObj.parent.remove(targetObj);
 
-        const sourceObj = this.mobject.getThreeObject();
-        const targetObj = this.target.getThreeObject();
-        const srcWorld = new THREE.Vector3();
-        sourceObj.getWorldPosition(srcWorld);
-        const tgtWorld = new THREE.Vector3();
-        targetObj.getWorldPosition(tgtWorld);
-        if (targetObj.parent) {
-          targetObj.parent.remove(targetObj);
-        }
-        (sourceObj as THREE.Group).add(targetObj);
-        targetObj.position.set(
-          tgtWorld.x - srcWorld.x,
-          tgtWorld.y - srcWorld.y,
-          tgtWorld.z - srcWorld.z,
-        );
-      }
+      this.mobject._markDirty();
+      super.finish();
+      return;
+    }
 
+    // Fade mode finish
+    if (this._morphMode === MorphMode.Fade) {
+      this.mobject.position.copy(this._targetPosition);
+      this.mobject.opacity = 0;
+
+      this.target.opacity = this._crossFadeTargetOpacity;
+      this.target._syncToThree();
+
+      const targetObj = this.target.getThreeObject();
+      if (targetObj.parent) targetObj.parent.remove(targetObj);
+
+      this.mobject._markDirty();
       super.finish();
       return;
     }

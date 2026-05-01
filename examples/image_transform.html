@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Image Transform</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #ff6b6b;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div class="controls">
+    <button id="playBtn">Play Animation</button>
+    <button id="resetBtn">Reset</button>
+  </div>
+
+  <script type="module">
+    import {
+      Scene,
+      ImageMobject,
+      FadeIn,
+      Transform,
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: '#1a1a2e'
+    });
+
+    function generateGradientBase64(color1, color2, vertical = false) {
+      const width = 64;
+      const height = 64;
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      const imageData = ctx.createImageData(width, height);
+      
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = (y * width + x) * 4;
+          const t = vertical ? y / height : x / width;
+          imageData.data[i] = Math.floor(color1[0] * (1-t) + color2[0] * t);
+          imageData.data[i + 1] = Math.floor(color1[1] * (1-t) + color2[1] * t);
+          imageData.data[i + 2] = Math.floor(color1[2] * (1-t) + color2[2] * t);
+          imageData.data[i + 3] = 255;
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+      return canvas.toDataURL('image/png');
+    }
+
+    const gradient1 = generateGradientBase64([255, 255, 255], [0, 100, 255]); // white to blue (horizontal)
+    const gradient2 = generateGradientBase64([255, 50, 50], [50, 255, 50], true); // red to green (vertical)
+    const manimLogo = 'https://raw.githubusercontent.com/ManimCommunity/manim/main/logo/cropped.png';
+
+    // Play button handler
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      scene.clear();
+
+      // 1. Fade in gradient image
+      const image = new ImageMobject({ source: gradient1, height: 1.5 });
+      await scene.play(new FadeIn(image));
+      await scene.wait(0.3);
+
+      // 2. Morph to gradient2, 2x bigger (morph geometry + cross-fade)
+      const image2 = new ImageMobject({ source: gradient2, height: 3 });
+      await image2.waitForLoad();
+      await scene.play(new Transform(image, image2));
+      await scene.wait(0.3);
+
+      // 3. Rotate 180°
+      image.generateTarget();
+      image.targetCopy.rotate(Math.PI);
+      await scene.play(new Transform(image, image.targetCopy));
+      await scene.wait(0.3);
+
+      // 4. Morph to manim logo (not rotated)
+      const image3 = new ImageMobject({ source: manimLogo, width: 6 });
+      await image3.waitForLoad();
+      await scene.play(new Transform(image, image3));
+      await scene.wait(0.5);
+    });
+
+    // Reset button handler
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+    });
+  </script>
+</body>
+</html>

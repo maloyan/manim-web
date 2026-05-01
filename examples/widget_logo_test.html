@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Widget Logo Test - ThreeDScene with Z-up</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #191919; display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; overflow: hidden; }
+    #container { width: 600px; height: 400px; border: 2px solid #333; }
+    .controls-hint { position: fixed; bottom: 20px; left: 20px; color: #888; font-family: monospace; font-size: 14px; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+  <div class="controls-hint">Drag to orbit - Z should stay UP</div>
+
+  <script type="module">
+    import {
+      Circle,
+      Square,
+      Triangle,
+      VGroup,
+      ThreeDScene,
+      Create,
+      Scale,
+      Shift,
+      Rotate,
+      LEFT,
+      UP,
+      RIGHT,
+      ORIGIN,
+    } from '../src/index.ts';
+
+    // Mimic what manim-widget does
+    const scene = new ThreeDScene(document.getElementById('container'), {
+      width: 600,
+      height: 400,
+      backgroundColor: '#ece6e2',
+      phi: 0.0,           // Default camera from Python Manim
+      theta: -Math.PI / 2,
+      distance: 5.0,
+      enableOrbitControls: true,
+      orbitControlsUp: 'z',
+    });
+
+    const logoGreen = '#87c2a5';
+    const logoBlue = '#525893';
+    const logoRed = '#e07a5f';
+
+    const circle = new Circle({ color: logoGreen, fillOpacity: 1 }).shift(LEFT);
+    const square = new Square({ color: logoBlue, fillOpacity: 1 }).shift(UP);
+    const triangle = new Triangle({ color: logoRed, fillOpacity: 1 }).shift(RIGHT);
+
+    const logo = new VGroup(triangle, square, circle);
+    logo.moveTo(ORIGIN);
+
+    scene.add(logo);
+    
+    // Match Python example animations exactly
+    // self.play(Create(logo))
+    await scene.play(new Create(logo));
+    
+    // self.play(logo.animate.shift(LEFT).scale(0.5))
+    await scene.play(new Shift(logo, { direction: [-1, 0, 0] }));
+    await scene.play(new Scale(logo, { scaleFactor: 0.5 }));
+    
+    // self.play(logo.animate.shift(RIGHT*3).scale(2))
+    await scene.play(new Shift(logo, { direction: [3, 0, 0] }));
+    await scene.play(new Scale(logo, { scaleFactor: 2 }));
+    
+    // self.play(logo.animate.rotate(TAU/2))
+    await scene.play(new Rotate(logo, { angle: Math.PI }));
+    
+    // self.play(logo.animate.flip())
+    logo.flip();
+    scene.render();
+    await scene.wait(0.5);
+    
+    await scene.wait(Infinity);
+  </script>
+</body>
+</html>
+  </script>
+</body>
+</html>
