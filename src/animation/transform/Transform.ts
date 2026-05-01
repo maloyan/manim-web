@@ -18,6 +18,9 @@ import {
   pairLeafSnapshotsByIndex,
   type LeafPairByIndex,
 } from './TransformPairing';
+import { ImageMobject } from '../../mobjects/image';
+import { Text } from '../../mobjects/text/Text';
+import { MathTexImage } from '../../mobjects/text/MathTexImage';
 
 /** Morph mode determines how source transforms into target */
 enum MorphMode {
@@ -151,10 +154,8 @@ export class Transform extends Animation {
   }
 
   /** Check if mobject is a Shape mode type (ImageMobject, Text, MathTexImage) */
-  private _isShapeModeType(m: VMobject): boolean {
-    // Check for texture mesh - these use geometry morphing
-    const candidate = m as unknown as { getTextureMesh?: () => THREE.Mesh | null };
-    return typeof candidate.getTextureMesh === 'function';
+  private _isShapeModeType(m: Mobject): boolean {
+    return m instanceof ImageMobject || m instanceof Text || m instanceof MathTexImage;
   }
 
   /** Capture position/rotation/scale from source and target mobjects */
@@ -242,6 +243,21 @@ export class Transform extends Animation {
    */
   override begin(): void {
     super.begin();
+
+    // Shape mode: ImageMobject/Text/MathTexImage with geometry morphing
+    // Check first since ImageMobject is NOT a VMobject
+    if (
+      this._isShapeModeType(this.mobject) &&
+      this._isShapeModeType(this.target) &&
+      this.mobject.constructor === this.target.constructor
+    ) {
+      this._morphMode = MorphMode.Shape;
+      this._startOpacity = this.mobject.opacity;
+      this._captureTransformProps();
+      this._captureGeometryDimensions();
+      this._setupCrossFade();
+      return;
+    }
 
     const isSourceVM = this.mobject instanceof VMobject;
     const isTargetVM = this.target instanceof VMobject;
