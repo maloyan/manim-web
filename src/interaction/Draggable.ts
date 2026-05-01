@@ -249,12 +249,11 @@ export class Draggable {
     let newZ: number;
     if (this._scene instanceof ThreeDScene) {
       newZ = xClamped || yClamped ? this._lastPosition[2] : worldPos[2];
+      if (this._options.constrainZ) {
+        newZ = Math.max(this._options.constrainZ[0], Math.min(this._options.constrainZ[1], newZ));
+      }
     } else {
       newZ = this._mobject.position.z;
-    }
-
-    if (this._options.constrainZ) {
-      newZ = Math.max(this._options.constrainZ[0], Math.min(this._options.constrainZ[1], newZ));
     }
 
     // Apply snap to grid

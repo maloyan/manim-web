@@ -1039,8 +1039,9 @@ describe('Drag constraint math', () => {
     fireMouseEvent(window as any, 'mousemove', { clientX: 450, clientY: 350 });
 
     const lastCall = mob.moveTo.mock.calls[mob.moveTo.mock.calls.length - 1];
-    // 2D scene initially uses position.z (5), then constrainZ clamps to range [-1, 1]
-    expect(lastCall[0][2]).toBe(1);
+    // constrainZ is documented as 3D-only; in 2D the mobject's static Z must
+    // not be mutated by the option.
+    expect(lastCall[0][2]).toBe(5);
     draggable.dispose();
   });
 
@@ -1336,6 +1337,70 @@ describe('Draggable in 3D scene', () => {
       expect(call[0][2]).toBeGreaterThanOrEqual(-1);
       expect(call[0][2]).toBeLessThanOrEqual(1);
     }
+
+    draggable.dispose();
+    scene._canvas.remove();
+  });
+
+  it('constrainZ overrides freeze-Z when frozen Z is outside range (issue #261)', () => {
+    // Composes the issue #260 freeze-Z guard with the new Z clamp:
+    // when X clamps and Z freezes to lastPosition[2], the clamp must still
+    // pull Z back inside the user-supplied range.
+    const scene = createMock3DScene();
+    const cam = scene.camera3D.getCamera() as THREE.PerspectiveCamera;
+    cam.position.set(10, 10, 10);
+    cam.lookAt(0, 0, 0);
+    cam.updateMatrixWorld();
+
+    // Initial Z = 0.5 sits outside the tight constrainZ range [-0.4, 0.4].
+    const mob = createMockMobject({ center: [0, 0, 0.5], bounds: { width: 0.5, height: 0.5 } });
+    const draggable = new Draggable(mob as any, scene as any, {
+      constrainX: [-1, 1],
+      constrainZ: [-0.4, 0.4],
+    });
+
+    const canvas = scene.getCanvas();
+    const objVec = new THREE.Vector3(0, 0, 0.5).project(cam);
+    const startX = ((objVec.x + 1) / 2) * 800;
+    const startY = ((-objVec.y + 1) / 2) * 600;
+
+    fireMouseEvent(canvas, 'mousedown', { clientX: startX, clientY: startY });
+    // Drag far enough to clamp X — that triggers the freeze-Z guard.
+    fireMouseEvent(window as any, 'mousemove', { clientX: startX + 800, clientY: startY });
+
+    const calls = mob.moveTo.mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    for (const call of calls) {
+      expect(call[0][2]).toBeGreaterThanOrEqual(-0.4);
+      expect(call[0][2]).toBeLessThanOrEqual(0.4);
+    }
+
+    draggable.dispose();
+    scene._canvas.remove();
+  });
+
+  it('snapToGrid snaps Z in 3D scenes', () => {
+    const scene = createMock3DScene();
+    const cam = scene.camera3D.getCamera() as THREE.PerspectiveCamera;
+    cam.position.set(10, 10, 10);
+    cam.lookAt(0, 0, 0);
+    cam.updateMatrixWorld();
+
+    const mob = createMockMobject({ center: [0, 0, 0], bounds: { width: 0.5, height: 0.5 } });
+    const draggable = new Draggable(mob as any, scene as any, {
+      snapToGrid: 0.5,
+    });
+
+    const canvas = scene.getCanvas();
+    const objVec = new THREE.Vector3(0, 0, 0).project(cam);
+    const startX = ((objVec.x + 1) / 2) * 800;
+    const startY = ((-objVec.y + 1) / 2) * 600;
+
+    fireMouseEvent(canvas, 'mousedown', { clientX: startX, clientY: startY });
+    fireMouseEvent(window as any, 'mousemove', { clientX: startX + 80, clientY: startY - 80 });
+
+    const lastCall = mob.moveTo.mock.calls[mob.moveTo.mock.calls.length - 1];
+    expect((lastCall[0][2] / 0.5) % 1).toBeCloseTo(0, 5);
 
     draggable.dispose();
     scene._canvas.remove();
