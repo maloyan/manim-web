@@ -11,6 +11,8 @@ export interface DraggableOptions {
   constrainX?: [number, number] | null;
   /** Y-axis constraints as [min, max] or null for no constraint */
   constrainY?: [number, number] | null;
+  /** Z-axis constraints as [min, max] or null for no constraint (3D scenes only) */
+  constrainZ?: [number, number] | null;
   /** Callback when drag starts */
   onDragStart?: (mobject: Mobject, position: Vector3Tuple) => void;
   /** Callback during drag with position and delta */
@@ -240,13 +242,6 @@ export class Draggable {
       newY = clamped;
     }
 
-    // Apply snap to grid
-    if (this._options.snapToGrid) {
-      const grid = this._options.snapToGrid;
-      newX = Math.round(newX / grid) * grid;
-      newY = Math.round(newY / grid) * grid;
-    }
-
     // In 3D, the drag plane is perpendicular to the camera, so cursor motion
     // produces deltas in all three world axes. When X or Y is clamped by a
     // constraint, the unclamped Z would otherwise let the object slide along
@@ -256,6 +251,20 @@ export class Draggable {
       newZ = xClamped || yClamped ? this._lastPosition[2] : worldPos[2];
     } else {
       newZ = this._mobject.position.z;
+    }
+
+    if (this._options.constrainZ) {
+      newZ = Math.max(this._options.constrainZ[0], Math.min(this._options.constrainZ[1], newZ));
+    }
+
+    // Apply snap to grid
+    if (this._options.snapToGrid) {
+      const grid = this._options.snapToGrid;
+      newX = Math.round(newX / grid) * grid;
+      newY = Math.round(newY / grid) * grid;
+      if (this._scene instanceof ThreeDScene) {
+        newZ = Math.round(newZ / grid) * grid;
+      }
     }
     const newPos: Vector3Tuple = [newX, newY, newZ];
     const delta: Vector3Tuple = [

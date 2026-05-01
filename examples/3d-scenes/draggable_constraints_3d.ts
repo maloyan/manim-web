@@ -29,6 +29,7 @@ const dot = new Dot3D({ radius: 0.15, color: '#fb4934' }).moveTo(axes.coordsToPo
 makeDraggable(dot, scene, {
   constrainX: [-3, 3],
   constrainY: [-3, 3],
+  constrainZ: [-3, 3],
   onDrag: (_m, pos) => {
     posLabel.textContent = `position: (${pos[0].toFixed(3)}, ${pos[1].toFixed(3)}, ${pos[2].toFixed(3)})`;
   },
