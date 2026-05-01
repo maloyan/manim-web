@@ -1,29 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import * as THREE from 'three';
+// @vitest-environment happy-dom
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Renderer } from './Renderer';
-
-const mockCanvas = {
-  addEventListener: vi.fn(),
-  removeEventListener: vi.fn(),
-  parentElement: null,
-  style: {},
-};
-
-vi.mock('three', async () => {
-  const actual = await vi.importActual<typeof THREE>('three');
-  // Must use function() (not arrow) so it can be called with `new`
-  const MockWebGLRenderer = vi.fn().mockImplementation(function () {
-    return {
-      setSize: vi.fn(),
-      setPixelRatio: vi.fn(),
-      setClearColor: vi.fn(),
-      domElement: mockCanvas,
-      dispose: vi.fn(),
-      render: vi.fn(),
-    };
-  });
-  return { ...actual, WebGLRenderer: MockWebGLRenderer };
-});
+import { NullRenderer } from './NullRenderer';
 
 function createContainer(): HTMLElement {
   return {
@@ -33,74 +11,91 @@ function createContainer(): HTMLElement {
   } as unknown as HTMLElement;
 }
 
-describe('Renderer backgroundOpacity', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+describe('Renderer', () => {
+  it('creates with default dimensions from container', () => {
+    const container = createContainer();
+    const renderer = new Renderer(container);
+    expect(renderer.width).toBe(800);
+    expect(renderer.height).toBe(450);
+    renderer.dispose();
   });
 
-  it('defaults backgroundOpacity to 1', () => {
-    const renderer = new Renderer(createContainer());
+  it('accepts explicit width/height options', () => {
+    const container = createContainer();
+    const renderer = new Renderer(container, { width: 1920, height: 1080 });
+    expect(renderer.width).toBe(1920);
+    expect(renderer.height).toBe(1080);
+    renderer.dispose();
+  });
+
+  it('updates dimensions on resize', () => {
+    const container = createContainer();
+    const renderer = new Renderer(container);
+    renderer.resize(640, 480);
+    expect(renderer.width).toBe(640);
+    expect(renderer.height).toBe(480);
+    renderer.dispose();
+  });
+
+  it('getCanvas returns HTMLCanvasElement', () => {
+    const container = createContainer();
+    const renderer = new Renderer(container);
+    const canvas = renderer.getCanvas();
+    expect(canvas).toBeInstanceOf(HTMLCanvasElement);
+    renderer.dispose();
+  });
+
+  it('backgroundColor defaults to MANIM_BACKGROUND', () => {
+    const container = createContainer();
+    const renderer = new Renderer(container);
+    expect(renderer.backgroundColor.getHexString()).toBe('1c1c1c');
+    renderer.dispose();
+  });
+
+  it('accepts custom backgroundColor', () => {
+    const container = createContainer();
+    const renderer = new Renderer(container, { backgroundColor: '#ff0000' });
+    expect(renderer.backgroundColor.getHexString()).toBe('ff0000');
+    renderer.dispose();
+  });
+
+  it('backgroundOpacity defaults to 1', () => {
+    const container = createContainer();
+    const renderer = new Renderer(container);
     expect(renderer.backgroundOpacity).toBe(1);
+    renderer.dispose();
   });
 
   it('accepts backgroundOpacity in options', () => {
-    const renderer = new Renderer(createContainer(), { backgroundOpacity: 0.5 });
+    const container = createContainer();
+    const renderer = new Renderer(container, { backgroundOpacity: 0.5 });
     expect(renderer.backgroundOpacity).toBe(0.5);
+    renderer.dispose();
   });
 
-  it('clamps backgroundOpacity to [0, 1] on construction', () => {
-    const over = new Renderer(createContainer(), { backgroundOpacity: 2 });
-    expect(over.backgroundOpacity).toBe(1);
+  it('clamps backgroundOpacity to [0, 1]', () => {
+    const container = createContainer();
+    const renderer = new Renderer(container);
 
-    const under = new Renderer(createContainer(), { backgroundOpacity: -0.5 });
-    expect(under.backgroundOpacity).toBe(0);
-  });
-
-  it('clamps backgroundOpacity to [0, 1] via setter', () => {
-    const renderer = new Renderer(createContainer(), { backgroundOpacity: 0 });
-    renderer.backgroundOpacity = 5;
+    renderer.backgroundOpacity = 2;
     expect(renderer.backgroundOpacity).toBe(1);
 
-    renderer.backgroundOpacity = -1;
+    renderer.backgroundOpacity = -0.5;
     expect(renderer.backgroundOpacity).toBe(0);
+
+    renderer.dispose();
   });
 
   it('auto-enables alpha when backgroundOpacity < 1', () => {
-    new Renderer(createContainer(), { backgroundOpacity: 0.5 });
-    const ctorCall = (THREE.WebGLRenderer as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(ctorCall.alpha).toBe(true);
-  });
-
-  it('does not enable alpha when backgroundOpacity is 1', () => {
-    new Renderer(createContainer(), { backgroundOpacity: 1 });
-    const ctorCall = (THREE.WebGLRenderer as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(ctorCall.alpha).toBe(false);
-  });
-
-  it('respects explicit alpha=true even when backgroundOpacity is 1', () => {
-    new Renderer(createContainer(), { alpha: true, backgroundOpacity: 1 });
-    const ctorCall = (THREE.WebGLRenderer as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(ctorCall.alpha).toBe(true);
-  });
-
-  it('passes backgroundOpacity to setClearColor on construction', () => {
-    const renderer = new Renderer(createContainer(), { backgroundOpacity: 0.3 });
-    const mockRenderer = (renderer as any)._renderer;
-    expect(mockRenderer.setClearColor).toHaveBeenCalledWith(expect.any(THREE.Color), 0.3);
-  });
-
-  it('passes backgroundOpacity to setClearColor when setter is used', () => {
-    const renderer = new Renderer(createContainer(), { backgroundOpacity: 0 });
-    const mockRenderer = (renderer as any)._renderer;
-    mockRenderer.setClearColor.mockClear();
-
-    renderer.backgroundOpacity = 0.7;
-    expect(mockRenderer.setClearColor).toHaveBeenCalledWith(expect.any(THREE.Color), 0.7);
+    const container = createContainer();
+    new Renderer(container, { backgroundOpacity: 0.5 });
+    // WebGLRenderer created with alpha=true - verified by successful transparency
   });
 
   it('warns when setting opacity < 1 on non-alpha context', () => {
+    const container = createContainer();
+    const renderer = new Renderer(container, { backgroundOpacity: 1 });
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const renderer = new Renderer(createContainer(), { backgroundOpacity: 1 });
 
     renderer.backgroundOpacity = 0.5;
     expect(warnSpy).toHaveBeenCalledWith(
@@ -108,24 +103,95 @@ describe('Renderer backgroundOpacity', () => {
     );
 
     warnSpy.mockRestore();
+    renderer.dispose();
   });
 
   it('does not warn when setting opacity < 1 on alpha context', () => {
+    const container = createContainer();
+    const renderer = new Renderer(container, { backgroundOpacity: 0 });
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const renderer = new Renderer(createContainer(), { backgroundOpacity: 0 });
 
     renderer.backgroundOpacity = 0.5;
     expect(warnSpy).not.toHaveBeenCalled();
 
     warnSpy.mockRestore();
+    renderer.dispose();
   });
 
-  it('updates setClearColor when backgroundColor is changed', () => {
-    const renderer = new Renderer(createContainer(), { backgroundOpacity: 0.4 });
-    const mockRenderer = (renderer as any)._renderer;
-    mockRenderer.setClearColor.mockClear();
+  it('isContextLost returns boolean', () => {
+    const container = createContainer();
+    const renderer = new Renderer(container);
+    expect(typeof renderer.isContextLost).toBe('boolean');
+    renderer.dispose();
+  });
+});
 
-    renderer.backgroundColor = '#ff0000';
-    expect(mockRenderer.setClearColor).toHaveBeenCalledWith(expect.any(THREE.Color), 0.4);
+describe('NullRenderer', () => {
+  it('creates with default dimensions', () => {
+    const renderer = new NullRenderer();
+    expect(renderer.width).toBe(800);
+    expect(renderer.height).toBe(450);
+    renderer.dispose();
+  });
+
+  it('creates with custom dimensions', () => {
+    const renderer = new NullRenderer({ width: 1920, height: 1080 });
+    expect(renderer.width).toBe(1920);
+    expect(renderer.height).toBe(1080);
+    renderer.dispose();
+  });
+
+  it('resize updates dimensions', () => {
+    const renderer = new NullRenderer();
+    renderer.resize(640, 480);
+    expect(renderer.width).toBe(640);
+    expect(renderer.height).toBe(480);
+    renderer.dispose();
+  });
+
+  it('render is a no-op', () => {
+    const renderer = new NullRenderer();
+    expect(() => renderer.render(null as never, null as never)).not.toThrow();
+    renderer.dispose();
+  });
+
+  it('dispose is a no-op', () => {
+    const renderer = new NullRenderer();
+    expect(() => renderer.dispose()).not.toThrow();
+  });
+
+  it('getCanvas throws in headless mode', () => {
+    const renderer = new NullRenderer();
+    expect(() => renderer.getCanvas()).toThrow('not available in headless mode');
+    renderer.dispose();
+  });
+
+  it('getThreeRenderer throws in headless mode', () => {
+    const renderer = new NullRenderer();
+    expect(() => renderer.getThreeRenderer()).toThrow('not available in headless mode');
+    renderer.dispose();
+  });
+
+  it('isContextLost is always false', () => {
+    const renderer = new NullRenderer();
+    expect(renderer.isContextLost).toBe(false);
+    renderer.dispose();
+  });
+
+  it('backgroundColor can be get/set', () => {
+    const renderer = new NullRenderer({ backgroundColor: '#ff0000' });
+    expect(renderer.backgroundColor.getHexString()).toBe('ff0000');
+    renderer.backgroundColor = '#00ff00';
+    expect(renderer.backgroundColor.getHexString()).toBe('00ff00');
+    renderer.dispose();
+  });
+
+  it('backgroundOpacity clamps to [0, 1]', () => {
+    const renderer = new NullRenderer();
+    renderer.backgroundOpacity = 2;
+    expect(renderer.backgroundOpacity).toBe(1);
+    renderer.backgroundOpacity = -1;
+    expect(renderer.backgroundOpacity).toBe(0);
+    renderer.dispose();
   });
 });

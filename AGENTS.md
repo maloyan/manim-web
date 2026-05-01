@@ -10,7 +10,7 @@ npm run build             # TypeScript compile + Vite build
 npm run typecheck         # Type-check without emitting
 npm test                  # Run unit tests (vitest)
 npm run test:coverage     # Run tests with coverage report
-npm run test:integration  # Run Playwright smoke tests
+npm run test:integration  # Run headless integration tests
 npm run lint              # ESLint
 npm run format:check      # Prettier check
 npm run docs              # Generate example docs + build Docusaurus site
@@ -30,10 +30,11 @@ npm run docs              # Generate example docs + build Docusaurus site
 ## Testing
 
 - Unit tests live alongside source: `src/**/*.test.ts`
+- Integration tests: `tests/integration/**/*.test.ts` (uses headless mode)
 - Use `vitest` with `happy-dom` environment for DOM-dependent tests
 - Add `// @vitest-environment happy-dom` at top of test files that need DOM/canvas
 - Coverage config in `vitest.config.ts` (v8 provider, lcov reporter)
-- Integration smoke test: `tests/integration/smoke.spec.ts`
+- Headless mode: `Scene.createHeadless()` runs scene logic without WebGL/GPU
 
 ## Code Style
 
