@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Draggable constraints in 3D (issue #260)</title>
+  <title>Draggable constraints in 3D (issues #260, #261)</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -23,10 +23,10 @@
   </style>
 </head>
 <body>
-  <h1>Draggable Dot3D with constrainX / constrainY = [-3, 3] (issue #260)</h1>
+  <h1>Draggable Dot3D with constrainX / constrainY / constrainZ = [-3, 3] (issues #260, #261)</h1>
   <p>
-    Drag the dot. Try moving it past the [-3, 3] box: it must stop at the
-    boundary, not slide along the camera-facing plane in Z.
+    Drag the dot. Try moving it past the [-3, 3] cube on any axis: it must
+    stop at the boundary, not slide along the camera-facing plane.
   </p>
   <div class="pos" id="pos">position: (1.000, 1.000, 1.000)</div>
   <div id="container"></div>
