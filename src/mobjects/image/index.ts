@@ -439,9 +439,14 @@ export class ImageMobject extends TexturedMobject {
 
     const material = this._threeObject.material as THREE.MeshBasicMaterial;
     const sourceMaterial = other._threeObject.material as THREE.MeshBasicMaterial;
-    material.map = sourceMaterial.map;
+    const nextTexture = sourceMaterial.map;
+    const previousTexture = this._texture;
+    material.map = nextTexture;
     material.needsUpdate = true;
     this._texture = other._texture;
+    if (previousTexture && previousTexture !== nextTexture) {
+      previousTexture.dispose();
+    }
   }
 
   /**

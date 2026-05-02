@@ -519,9 +519,14 @@ export class Text extends TexturedMobject {
 
     const material = this._mesh.material as THREE.MeshBasicMaterial;
     const sourceMaterial = other._mesh.material as THREE.MeshBasicMaterial;
-    material.map = sourceMaterial.map;
+    const nextTexture = sourceMaterial.map;
+    const previousTexture = this._texture;
+    material.map = nextTexture;
     material.needsUpdate = true;
-    this._texture = sourceMaterial.map;
+    this._texture = nextTexture;
+    if (previousTexture && previousTexture !== nextTexture) {
+      previousTexture.dispose();
+    }
   }
 
   /**

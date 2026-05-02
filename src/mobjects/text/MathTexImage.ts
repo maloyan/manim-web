@@ -1021,9 +1021,14 @@ export class MathTexImage extends TexturedMobject {
 
     const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
     const sourceMaterial = other._renderState.mesh.material as THREE.MeshBasicMaterial;
-    material.map = sourceMaterial.map;
+    const nextTexture = sourceMaterial.map;
+    const previousTexture = this._renderState.texture;
+    material.map = nextTexture;
     material.needsUpdate = true;
     this._renderState.texture = other._renderState.texture;
+    if (previousTexture && previousTexture !== nextTexture) {
+      previousTexture.dispose();
+    }
   }
 
   /**
