@@ -558,6 +558,10 @@ export abstract class Mobject {
     return this._threeObject;
   }
 
+  getDisplayMeshes(): THREE.Mesh[] {
+    return [];
+  }
+
   protected abstract _createThreeObject(): THREE.Object3D;
 
   // ── Family & Updaters ────────────────────────────────────────────

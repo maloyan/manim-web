@@ -490,6 +490,10 @@ export class Text extends VMobject {
     return group;
   }
 
+  override getDisplayMeshes(): THREE.Mesh[] {
+    return this._mesh ? [this._mesh] : [];
+  }
+
   /**
    * Sync material properties to Three.js
    */

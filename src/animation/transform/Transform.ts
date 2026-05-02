@@ -136,6 +136,10 @@ export class Transform extends Animation {
   private _targetWidth: number = 0;
   private _targetHeight: number = 0;
 
+  /** Display meshes used for Shape mode interpolation */
+  private _shapeSourceMesh: THREE.Mesh | null = null;
+  private _shapeTargetMesh: THREE.Mesh | null = null;
+
   /** Current morph mode */
   private _morphMode: MorphMode = MorphMode.Point;
 
@@ -246,8 +250,15 @@ export class Transform extends Animation {
 
     // Shape mode: ImageMobject/Text/MathTexImage with geometry morphing
     // Check first since ImageMobject is NOT a VMobject
-    if (this._isShapeModeType(this.mobject) && this._isShapeModeType(this.target)) {
+    if (
+      this._isShapeModeType(this.mobject) &&
+      this._isShapeModeType(this.target) &&
+      this.mobject.getDisplayMeshes().length === 1 &&
+      this.target.getDisplayMeshes().length === 1
+    ) {
       this._morphMode = MorphMode.Shape;
+      this._shapeSourceMesh = this.mobject.getDisplayMeshes()[0] ?? null;
+      this._shapeTargetMesh = this.target.getDisplayMeshes()[0] ?? null;
       this._startOpacity = this.mobject.opacity;
       this._captureTransformProps();
       this._captureGeometryDimensions();
@@ -405,11 +416,14 @@ export class Transform extends Animation {
       const w = this._startWidth + (this._targetWidth - this._startWidth) * alpha;
       const h = this._startHeight + (this._targetHeight - this._startHeight) * alpha;
 
-      const sourceMesh = this.mobject.getThreeObject() as THREE.Mesh;
+      const sourceMesh = this._shapeSourceMesh;
+      const targetMesh = this._shapeTargetMesh;
+      if (!sourceMesh || !targetMesh) {
+        throw new Error('Transform Shape mode requires singleton display meshes');
+      }
       sourceMesh.geometry.dispose();
       sourceMesh.geometry = new THREE.PlaneGeometry(w, h);
 
-      const targetMesh = this.target.getThreeObject() as THREE.Mesh;
       targetMesh.geometry.dispose();
       targetMesh.geometry = new THREE.PlaneGeometry(w, h);
 

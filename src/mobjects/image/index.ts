@@ -416,6 +416,10 @@ export class ImageMobject extends Mobject {
     return mesh;
   }
 
+  override getDisplayMeshes(): THREE.Mesh[] {
+    return this._threeObject instanceof THREE.Mesh ? [this._threeObject] : [];
+  }
+
   /**
    * Update geometry when dimensions change
    */

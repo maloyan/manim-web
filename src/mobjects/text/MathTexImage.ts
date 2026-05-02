@@ -992,6 +992,13 @@ export class MathTexImage extends Mobject {
     return group;
   }
 
+  override getDisplayMeshes(): THREE.Mesh[] {
+    if (this._isMultiPart) {
+      return this._parts.flatMap((part) => part.getDisplayMeshes());
+    }
+    return this._renderState.mesh ? [this._renderState.mesh] : [];
+  }
+
   /**
    * Sync material properties to Three.js
    */

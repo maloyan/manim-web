@@ -246,6 +246,10 @@ export class Group extends Mobject {
     return group;
   }
 
+  override getDisplayMeshes(): THREE.Mesh[] {
+    return this.children.flatMap((child) => child.getDisplayMeshes());
+  }
+
   /**
    * Create a copy of this Group.
    */
