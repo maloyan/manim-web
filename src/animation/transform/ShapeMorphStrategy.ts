@@ -11,6 +11,12 @@ export class ShapeMorphStrategy {
   private _targetWidth = 0;
   private _targetHeight = 0;
   private _crossFadeTargetOpacity = 1;
+  private _startPosition = new THREE.Vector3();
+  private _targetPosition = new THREE.Vector3();
+  private _startRotation = new THREE.Euler();
+  private _targetRotation = new THREE.Euler();
+  private _startScale = new THREE.Vector3(1, 1, 1);
+  private _targetScale = new THREE.Vector3(1, 1, 1);
 
   begin(_animation: Animation, source: Mobject, target: Mobject): void {
     this._shapeSourceMesh = source.getDisplayMeshes()[0] ?? null;
@@ -18,6 +24,12 @@ export class ShapeMorphStrategy {
     if (!this._shapeSourceMesh) throw new Error('ShapeMorphStrategy requires _shapeSourceMesh');
     if (!this._shapeTargetMesh) throw new Error('ShapeMorphStrategy requires _shapeTargetMesh');
     this._crossFadeTargetOpacity = target.opacity;
+    this._startPosition.copy(source.position);
+    this._targetPosition.copy(target.position);
+    this._startRotation.copy(source.rotation);
+    this._targetRotation.copy(target.rotation);
+    this._startScale.copy(source.scaleVector);
+    this._targetScale.copy(target.scaleVector);
     const srcGeo = this._shapeSourceMesh.geometry as THREE.PlaneGeometry;
     const tgtGeo = this._shapeTargetMesh.geometry as THREE.PlaneGeometry;
     this._startWidth = srcGeo.parameters.width;
@@ -31,7 +43,7 @@ export class ShapeMorphStrategy {
     target._syncToThree();
   }
 
-  interpolate(_animation: Animation, _source: Mobject, _target: Mobject, alpha: number): void {
+  interpolate(_animation: Animation, source: Mobject, target: Mobject, alpha: number): void {
     if (!this._shapeSourceMesh) throw new Error('ShapeMorphStrategy requires _shapeSourceMesh');
     if (!this._shapeTargetMesh) throw new Error('ShapeMorphStrategy requires _shapeTargetMesh');
     const w = this._startWidth + (this._targetWidth - this._startWidth) * alpha;
@@ -40,7 +52,17 @@ export class ShapeMorphStrategy {
     this._shapeSourceMesh.geometry = new THREE.PlaneGeometry(w, h);
     this._shapeTargetMesh.geometry.dispose();
     this._shapeTargetMesh.geometry = new THREE.PlaneGeometry(w, h);
-    _animation.mobject._markDirty();
+    source.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
+    target.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
+    source.rotation.set(
+      this._startRotation.x + (this._targetRotation.x - this._startRotation.x) * alpha,
+      this._startRotation.y + (this._targetRotation.y - this._startRotation.y) * alpha,
+      this._startRotation.z + (this._targetRotation.z - this._startRotation.z) * alpha,
+    );
+    target.rotation.copy(source.rotation);
+    source.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
+    target.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
+    source._markDirty();
   }
 
   finish(_animation: Animation, source: Mobject, target: Mobject): void {

@@ -35,7 +35,8 @@ export class FadeMorphStrategy {
     );
     target.position.copy(source.position);
     source.setStrokeOpacity(this._startOpacity * (1 - alpha));
-    target.setStrokeOpacity(this._targetOpacity * alpha);
+    target.opacity = this._targetOpacity * alpha;
+    target.setStrokeOpacity(target.opacity);
     target._syncToThree();
     source._markDirty();
   }
@@ -43,6 +44,7 @@ export class FadeMorphStrategy {
   finish(_animation: Animation, source: Mobject, target: Mobject): void {
     source.position.set(this._targetPositionX, this._targetPositionY, this._targetPositionZ);
     source.opacity = 0;
+    target.position.set(this._targetPositionX, this._targetPositionY, this._targetPositionZ);
     target.opacity = this._targetOpacity;
     target._syncToThree();
     const targetObj = target.getThreeObject();
