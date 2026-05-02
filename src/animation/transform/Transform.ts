@@ -257,15 +257,6 @@ export class Transform extends Animation {
   override begin(): void {
     super.begin();
 
-    console.log('[Transform.begin]', {
-      source: this.mobject.constructor.name,
-      target: this.target.constructor.name,
-      sourceIsText: this.mobject instanceof Text,
-      targetIsText: this.target instanceof Text,
-      sourceDisplayMeshes: this.mobject.getDisplayMeshes().length,
-      targetDisplayMeshes: this.target.getDisplayMeshes().length,
-    });
-
     // Mesh mode: singleton image-like meshes only
     // Check after Text so Text never reaches this path.
     if (
