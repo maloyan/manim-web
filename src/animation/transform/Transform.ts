@@ -246,11 +246,7 @@ export class Transform extends Animation {
 
     // Shape mode: ImageMobject/Text/MathTexImage with geometry morphing
     // Check first since ImageMobject is NOT a VMobject
-    if (
-      this._isShapeModeType(this.mobject) &&
-      this._isShapeModeType(this.target) &&
-      this.mobject.constructor === this.target.constructor
-    ) {
+    if (this._isShapeModeType(this.mobject) && this._isShapeModeType(this.target)) {
       this._morphMode = MorphMode.Shape;
       this._startOpacity = this.mobject.opacity;
       this._captureTransformProps();
@@ -265,20 +261,6 @@ export class Transform extends Animation {
     if (isSourceVM && isTargetVM) {
       const vmobject = this.mobject as VMobject;
       const vtarget = this.target as VMobject;
-
-      // Shape mode: ImageMobject/Text/MathTexImage with geometry morphing
-      if (
-        this._isShapeModeType(vmobject) &&
-        this._isShapeModeType(vtarget) &&
-        vmobject.constructor === vtarget.constructor
-      ) {
-        this._morphMode = MorphMode.Shape;
-        this._startOpacity = this.mobject.opacity;
-        this._captureTransformProps();
-        this._captureGeometryDimensions();
-        this._setupCrossFade();
-        return;
-      }
 
       // Fade mode: zero-point VMobjects that aren't Shape types
       if (!canMorphByPoints(vmobject, vtarget)) {
