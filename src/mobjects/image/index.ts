@@ -86,6 +86,7 @@ export class ImageMobject extends TexturedMobject {
   protected _imageLoaded: boolean = false;
   protected _naturalWidth: number = 1;
   protected _naturalHeight: number = 1;
+  private _mesh: THREE.Mesh | null = null;
 
   // Promise that resolves when image is loaded
   private _loadPromise: Promise<void>;
@@ -402,8 +403,7 @@ export class ImageMobject extends TexturedMobject {
    */
   protected _createThreeObject(): THREE.Object3D {
     const dims = this._calculateDimensions();
-
-    const geometry = new THREE.PlaneGeometry(dims.width, dims.height);
+    const geometry = new THREE.PlaneGeometry(1, 1);
 
     const material = new THREE.MeshBasicMaterial({
       map: this._texture,
@@ -413,8 +413,12 @@ export class ImageMobject extends TexturedMobject {
     });
 
     const mesh = new THREE.Mesh(geometry, material);
+    mesh.scale.set(dims.width, dims.height, 1);
     mesh.frustumCulled = false;
-    return mesh;
+    this._mesh = mesh;
+    const group = new THREE.Group();
+    group.add(mesh);
+    return group;
   }
 
   override getDisplayMeshLength(): number {
@@ -422,23 +426,32 @@ export class ImageMobject extends TexturedMobject {
   }
 
   override getDisplayMeshes(): THREE.Mesh[] {
+    // Ensure lazy Three.js construction has run so _mesh is populated.
     const object = this.getThreeObject();
-    return object instanceof THREE.Mesh ? [object] : [];
+    if (!(object instanceof THREE.Group)) {
+      throw new Error('ImageMobject.getThreeObject() must return a THREE.Group');
+    }
+    if (!this._mesh) {
+      throw new Error('ImageMobject.getDisplayMeshes requires _mesh');
+    }
+    return [this._mesh];
   }
 
   applyTextureFrom(other: TexturedMobject): void {
     if (!(other instanceof ImageMobject)) {
       throw new Error('ImageMobject.applyTextureFrom requires ImageMobject');
     }
-    if (!(this._threeObject instanceof THREE.Mesh)) {
+    const mesh = this._mesh;
+    const sourceMesh = other.getDisplayMeshes()[0];
+    if (!mesh) {
       throw new Error('ImageMobject.applyTextureFrom requires mesh');
     }
-    if (!(other._threeObject instanceof THREE.Mesh)) {
+    if (!sourceMesh) {
       throw new Error('ImageMobject.applyTextureFrom requires source mesh');
     }
 
-    const material = this._threeObject.material as THREE.MeshBasicMaterial;
-    const sourceMaterial = other._threeObject.material as THREE.MeshBasicMaterial;
+    const material = mesh.material as THREE.MeshBasicMaterial;
+    const sourceMaterial = sourceMesh.material as THREE.MeshBasicMaterial;
     const nextTexture = sourceMaterial.map;
     const previousTexture = this._texture;
     material.map = nextTexture;
@@ -453,18 +466,14 @@ export class ImageMobject extends TexturedMobject {
    * Update geometry when dimensions change
    */
   protected _updateGeometry(): void {
-    if (!(this._threeObject instanceof THREE.Mesh)) return;
+    const mesh = this._mesh;
+    if (!mesh) return;
 
     const dims = this._calculateDimensions();
 
-    // Dispose old geometry
-    this._threeObject.geometry.dispose();
+    mesh.scale.set(dims.width, dims.height, 1);
 
-    // Create new geometry with correct dimensions
-    this._threeObject.geometry = new THREE.PlaneGeometry(dims.width, dims.height);
-
-    // Update material with texture
-    const material = this._threeObject.material as THREE.MeshBasicMaterial;
+    const material = mesh.material as THREE.MeshBasicMaterial;
     if (material && this._texture) {
       material.map = this._texture;
       material.needsUpdate = true;
@@ -477,8 +486,9 @@ export class ImageMobject extends TexturedMobject {
    * Sync material properties to Three.js object
    */
   protected override _syncMaterialToThree(): void {
-    if (this._threeObject instanceof THREE.Mesh) {
-      const material = this._threeObject.material as THREE.MeshBasicMaterial;
+    const mesh = this._mesh;
+    if (mesh) {
+      const material = mesh.material as THREE.MeshBasicMaterial;
       if (material) {
         material.opacity = this._opacity;
         material.transparent = this._opacity < 1;

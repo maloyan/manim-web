@@ -1004,8 +1004,15 @@ export class MathTexImage extends TexturedMobject {
       return this._parts.flatMap((part) => part.getDisplayMeshes());
     }
 
+    // Ensure lazy Three.js construction has run so _renderState.mesh is populated.
     const object = this.getThreeObject();
-    return object instanceof THREE.Mesh ? [object] : [];
+    if (!(object instanceof THREE.Group)) {
+      throw new Error('MathTexImage.getThreeObject() must return a THREE.Group');
+    }
+    if (!(this._renderState.mesh instanceof THREE.Mesh)) {
+      throw new Error('MathTexImage.getDisplayMeshes requires _renderState.mesh');
+    }
+    return [this._renderState.mesh];
   }
 
   applyTextureFrom(other: TexturedMobject): void {

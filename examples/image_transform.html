@@ -105,10 +105,11 @@
         await scene.play(new Transform(image, image2));
         await scene.wait(0.3);
 
-        // 3. Rotate 180°
-        image2.generateTarget();
-        image2.rotate(Math.PI).scale(0.5);
-        await scene.play(new Transform(image, image2));
+        // 3. Rotate 180° + scale down
+        const image2Rotated = new ImageMobject({ source: gradient2, height: 3 });
+        await image2Rotated.waitForLoad();
+        image2Rotated.rotate(Math.PI).scale(0.5);
+        await scene.play(new Transform(image, image2Rotated));
         await scene.wait(0.3);
 
         // 4. Morph to manim logo (not rotated)

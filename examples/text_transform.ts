@@ -32,7 +32,7 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     makeText('Text can rotate', ORANGE, 40),
     makeText('Text can flip', TEAL, 40),
     makeText('Text can flip', TEAL, 40),
-    makeText('Text can scale directly', ORANGE, 40),
+    makeText('Text can scale', ORANGE, 40),
   ];
 
   const a = texts[0];
