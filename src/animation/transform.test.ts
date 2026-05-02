@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+// @vitest-environment happy-dom
+import { describe, it, expect, vi } from 'vitest';
 import * as THREE from 'three';
 import {
   Transform,
@@ -13,6 +14,7 @@ import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
 import { VGroup } from '../core/VGroup';
 import { Circle } from '../mobjects/geometry/Circle';
+import { ImageMobject } from '../mobjects/image';
 
 /** Two circles with distinct styles for point-morphing tests. */
 function makePair() {
@@ -422,6 +424,60 @@ describe('MoveToTarget', () => {
     mt.interpolate(0.5);
     expect(c.opacity).toBeCloseTo(0.65, 5); // 1 + (0.3-1)*0.5
     expect(c.position.x).toBeCloseTo(2.5, 5);
+  });
+
+  it('issue #306: ImageMobject MoveToTarget applies scaling and persists final size', async () => {
+    const mockCanvas2DContext = {
+      imageSmoothingEnabled: false,
+      imageSmoothingQuality: 'low' as const,
+      createImageData: (width: number, height: number) => ({
+        data: new Uint8ClampedArray(width * height * 4),
+        width,
+        height,
+      }),
+      putImageData: () => {},
+      drawImage: () => {},
+    };
+
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string): HTMLElement => {
+        const el = originalCreateElement(tagName);
+        if (tagName.toLowerCase() === 'canvas') {
+          (el as HTMLCanvasElement).getContext = ((contextType: string) =>
+            contextType === '2d' ? mockCanvas2DContext : null) as HTMLCanvasElement['getContext'];
+        }
+        return el;
+      });
+
+    try {
+      const image = new ImageMobject({
+        pixelData: [
+          [0, 255],
+          [255, 0],
+        ],
+        height: 2,
+      });
+
+      await image.waitForLoad();
+      const startWidth = image.getBoundingBox().width;
+
+      const target = image.generateTarget() as ImageMobject;
+      target.scale(2);
+      const expectedWidth = target.getBoundingBox().width;
+
+      const move = new MoveToTarget(image as unknown as MobjectWithTarget);
+      move.begin();
+      move.interpolate(1);
+      move.finish();
+
+      const finalWidth = image.getBoundingBox().width;
+      expect(finalWidth).toBeCloseTo(expectedWidth, 5);
+      expect(finalWidth).toBeGreaterThan(startWidth);
+    } finally {
+      createElementSpy.mockRestore();
+    }
   });
 });
 
