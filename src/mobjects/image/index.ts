@@ -646,7 +646,7 @@ export class ImageMobject extends Mobject {
    * Create a copy of this ImageMobject
    */
   protected override _createCopy(): ImageMobject {
-    return new ImageMobject({
+    const copy = new ImageMobject({
       source: this._source || undefined,
       pixelData: this._pixelData,
       width: this._width,
@@ -657,6 +657,14 @@ export class ImageMobject extends Mobject {
       filters: { ...this._filters },
       doubleSided: this._doubleSided,
     });
+    copy._imageLoaded = this._imageLoaded;
+    copy._naturalWidth = this._naturalWidth;
+    copy._naturalHeight = this._naturalHeight;
+    if (this._texture) {
+      copy._texture = this._texture.clone();
+      copy._markDirty();
+    }
+    return copy;
   }
 
   /**
