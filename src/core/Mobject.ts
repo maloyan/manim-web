@@ -641,13 +641,6 @@ export abstract class Mobject {
     return restoreMobjectStateImpl(this);
   }
 
-  // ── Comparison ───────────────────────────────────────────────────
-
-  /** Check if this mobject has the same content as another. Default: false. */
-  hasSameContentAs(_other: Mobject): boolean {
-    return false;
-  }
-
   // ── Cleanup ──────────────────────────────────────────────────────
 
   dispose(): void {

@@ -13,7 +13,7 @@
     <p>Left: original (height=2). Right: scaled by 2.</p>
     <div id="container1" class="container"></div>
     <div id="container2" class="container"></div>
-    
+
     <script type="module">
         import { Scene, ImageMobject } from '../src/index';
 
@@ -25,7 +25,7 @@
             canvas.height = height;
             const ctx = canvas.getContext('2d');
             const imageData = ctx.createImageData(width, height);
-            
+
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const i = (y * width + x) * 4;
@@ -51,7 +51,7 @@
         const img2 = new ImageMobject({ source, height: 2 });
         img2.scale(2);
         scene2.add(img2);
-        
+
         console.log('img1 scaleVector:', img1.scaleVector);
         console.log('img2 scaleVector:', img2.scaleVector);
     </script>
