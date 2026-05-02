@@ -8,14 +8,12 @@ const scene = new Scene(container, {
 });
 
 let isAnimating = false;
-const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
 
 function makeText(text: string, color: string, fontSize: number) {
   return new Text({
     text,
     fontSize,
     color,
-    fontUrl: FONT_URL,
   });
 }
 
@@ -36,8 +34,6 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     makeText('Text can flip', TEAL, 40),
     makeText('Text can scale directly', ORANGE, 40),
   ];
-
-  await Promise.all(texts.map((t) => t.loadGlyphs()));
 
   const a = texts[0];
   a.getThreeObject();
