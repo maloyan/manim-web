@@ -17,19 +17,23 @@ export class ShapeMorphStrategy {
   private _targetRotation = new THREE.Euler();
   private _startScale = new THREE.Vector3(1, 1, 1);
   private _targetScale = new THREE.Vector3(1, 1, 1);
+  private _sourceCopy: Mobject | null = null;
+  private _targetCopy: Mobject | null = null;
 
   begin(_animation: Animation, source: Mobject, target: Mobject): void {
-    this._shapeSourceMesh = source.getDisplayMeshes()[0] ?? null;
-    this._shapeTargetMesh = target.getDisplayMeshes()[0] ?? null;
+    this._shapeSourceMesh = source.getDisplayMeshes()[0];
+    this._shapeTargetMesh = target.getDisplayMeshes()[0];
     if (!this._shapeSourceMesh) throw new Error('ShapeMorphStrategy requires _shapeSourceMesh');
     if (!this._shapeTargetMesh) throw new Error('ShapeMorphStrategy requires _shapeTargetMesh');
-    this._crossFadeTargetOpacity = target.opacity;
-    this._startPosition.copy(source.position);
-    this._targetPosition.copy(target.position);
-    this._startRotation.copy(source.rotation);
-    this._targetRotation.copy(target.rotation);
-    this._startScale.copy(source.scaleVector);
-    this._targetScale.copy(target.scaleVector);
+    this._sourceCopy = source.copy();
+    this._targetCopy = target.copy();
+    this._crossFadeTargetOpacity = this._targetCopy.opacity;
+    this._startPosition.copy(this._sourceCopy.position);
+    this._targetPosition.copy(this._targetCopy.position);
+    this._startRotation.copy(this._sourceCopy.rotation);
+    this._targetRotation.copy(this._targetCopy.rotation);
+    this._startScale.copy(this._sourceCopy.scaleVector);
+    this._targetScale.copy(this._targetCopy.scaleVector);
     const srcGeo = this._shapeSourceMesh.geometry as THREE.PlaneGeometry;
     const tgtGeo = this._shapeTargetMesh.geometry as THREE.PlaneGeometry;
     this._startWidth = srcGeo.parameters.width;
@@ -39,7 +43,7 @@ export class ShapeMorphStrategy {
     const sourceObj = source.getThreeObject();
     const targetObj = target.getThreeObject();
     if (sourceObj.parent && !targetObj.parent) sourceObj.parent.add(targetObj);
-    target.setStrokeOpacity(0);
+    target.opacity = 0;
     target._syncToThree();
   }
 
@@ -53,7 +57,7 @@ export class ShapeMorphStrategy {
     this._shapeTargetMesh.geometry.dispose();
     this._shapeTargetMesh.geometry = new THREE.PlaneGeometry(w, h);
     source.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
-    target.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
+    target.position.copy(source.position);
     source.rotation.set(
       this._startRotation.x + (this._targetRotation.x - this._startRotation.x) * alpha,
       this._startRotation.y + (this._targetRotation.y - this._startRotation.y) * alpha,
@@ -61,7 +65,12 @@ export class ShapeMorphStrategy {
     );
     target.rotation.copy(source.rotation);
     source.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
-    target.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
+    target.scaleVector.copy(source.scaleVector);
+    source.opacity = this._crossFadeTargetOpacity * (1 - alpha);
+    target.opacity = this._crossFadeTargetOpacity * alpha;
+    source.setStrokeOpacity(source.opacity);
+    target.setStrokeOpacity(target.opacity);
+    target._syncToThree();
     source._markDirty();
   }
 
@@ -74,6 +83,7 @@ export class ShapeMorphStrategy {
     const tgt = target as TexturedMobject;
     src.applyTextureFrom(tgt);
     source.opacity = this._crossFadeTargetOpacity;
+    source.setStrokeOpacity(this._crossFadeTargetOpacity);
     if (this._shapeTargetMesh.parent) this._shapeTargetMesh.parent.remove(this._shapeTargetMesh);
     source._markDirty();
   }

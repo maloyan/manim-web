@@ -2,8 +2,8 @@ import { Mobject } from '../../core/Mobject';
 import { Animation } from '../Animation';
 
 export class FadeMorphStrategy {
-  private _startOpacity = 1;
-  private _targetOpacity = 1;
+  private _sourceCopy: Mobject | null = null;
+  private _targetCopy: Mobject | null = null;
   private _startPositionX = 0;
   private _startPositionY = 0;
   private _startPositionZ = 0;
@@ -12,14 +12,14 @@ export class FadeMorphStrategy {
   private _targetPositionZ = 0;
 
   begin(_animation: Animation, source: Mobject, target: Mobject): void {
-    this._startOpacity = source.opacity;
-    this._targetOpacity = target.opacity;
-    this._startPositionX = source.position.x;
-    this._startPositionY = source.position.y;
-    this._startPositionZ = source.position.z;
-    this._targetPositionX = target.position.x;
-    this._targetPositionY = target.position.y;
-    this._targetPositionZ = target.position.z;
+    this._sourceCopy = source.copy();
+    this._targetCopy = target.copy();
+    this._startPositionX = this._sourceCopy.position.x;
+    this._startPositionY = this._sourceCopy.position.y;
+    this._startPositionZ = this._sourceCopy.position.z;
+    this._targetPositionX = this._targetCopy.position.x;
+    this._targetPositionY = this._targetCopy.position.y;
+    this._targetPositionZ = this._targetCopy.position.z;
     const sourceObj = source.getThreeObject();
     const targetObj = target.getThreeObject();
     if (sourceObj.parent && !targetObj.parent) sourceObj.parent.add(targetObj);
@@ -34,8 +34,8 @@ export class FadeMorphStrategy {
       this._startPositionZ + (this._targetPositionZ - this._startPositionZ) * alpha,
     );
     target.position.copy(source.position);
-    source.setStrokeOpacity(this._startOpacity * (1 - alpha));
-    target.opacity = this._targetOpacity * alpha;
+    source.setStrokeOpacity((this._sourceCopy?.opacity ?? source.opacity) * (1 - alpha));
+    target.opacity = (this._targetCopy?.opacity ?? target.opacity) * alpha;
     target.setStrokeOpacity(target.opacity);
     target._syncToThree();
     source._markDirty();
@@ -45,7 +45,7 @@ export class FadeMorphStrategy {
     source.position.set(this._targetPositionX, this._targetPositionY, this._targetPositionZ);
     source.opacity = 0;
     target.position.set(this._targetPositionX, this._targetPositionY, this._targetPositionZ);
-    target.opacity = this._targetOpacity;
+    target.opacity = this._targetCopy?.opacity ?? target.opacity;
     target._syncToThree();
     const targetObj = target.getThreeObject();
     if (targetObj.parent) targetObj.parent.remove(targetObj);
