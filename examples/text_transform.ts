@@ -37,7 +37,6 @@ document.getElementById('playBtn').addEventListener('click', async () => {
 
   const a = texts[0];
   a.getThreeObject();
-  scene.add(a);
   await scene.play(new Write(a));
   await scene.wait(0.4);
 
