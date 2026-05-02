@@ -1,4 +1,4 @@
-import type * as THREE from 'three';
+import * as THREE from 'three';
 import { Mobject } from './Mobject';
 
 /**
@@ -23,4 +23,26 @@ export abstract class TexturedMobject extends Mobject {
    * Copy texture/material-relevant state from another textured mobject.
    */
   abstract applyTextureFrom(other: TexturedMobject): void;
+
+  /**
+   * Update class-authoritative visual size state so later sync cycles do not
+   * revert display dimensions set during transform finish.
+   */
+  abstract applyVisualSize(width: number, height: number): void;
+
+  /**
+   * Shared texture handoff for transform swaps.
+   * Sets material.map, marks material dirty, and disposes previous texture when replaced.
+   */
+  protected _handoffTextureMap(
+    material: THREE.MeshBasicMaterial,
+    nextTexture: THREE.Texture | null,
+    previousTexture: THREE.Texture | null,
+  ): void {
+    material.map = nextTexture;
+    material.needsUpdate = true;
+    if (previousTexture && previousTexture !== nextTexture) {
+      previousTexture.dispose();
+    }
+  }
 }

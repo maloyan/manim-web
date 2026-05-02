@@ -73,7 +73,7 @@ export interface MathTexImageOptions {
  */
 interface RenderState {
   canvas: HTMLCanvasElement | null;
-  texture: THREE.CanvasTexture | null;
+  texture: THREE.Texture | null;
   mesh: THREE.Mesh | null;
   width: number;
   height: number;
@@ -1026,15 +1026,30 @@ export class MathTexImage extends TexturedMobject {
       throw new Error('MathTexImage.applyTextureFrom requires source mesh');
     }
 
-    const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
-    const sourceMaterial = other._renderState.mesh.material as THREE.MeshBasicMaterial;
+    const material = this._renderState.mesh.material;
+    const sourceMaterial = other._renderState.mesh.material;
+    if (!(material instanceof THREE.MeshBasicMaterial)) {
+      throw new Error('MathTexImage.applyTextureFrom requires MeshBasicMaterial');
+    }
+    if (!(sourceMaterial instanceof THREE.MeshBasicMaterial)) {
+      throw new Error('MathTexImage.applyTextureFrom requires source MeshBasicMaterial');
+    }
+
     const nextTexture = sourceMaterial.map;
     const previousTexture = this._renderState.texture;
-    material.map = nextTexture;
-    material.needsUpdate = true;
-    this._renderState.texture = other._renderState.texture;
-    if (previousTexture && previousTexture !== nextTexture) {
-      previousTexture.dispose();
+    this._handoffTextureMap(material, nextTexture, previousTexture);
+    this._renderState.texture = nextTexture;
+  }
+
+  applyVisualSize(width: number, height: number): void {
+    if (this._isMultiPart) {
+      throw new Error('MathTexImage.applyVisualSize requires single-part MathTexImage');
+    }
+    this._renderState.width = width;
+    this._renderState.height = height;
+    this._updateMeshGeometry();
+    if (this._renderState.mesh) {
+      this._renderState.mesh.scale.set(1, 1, 1);
     }
   }
 

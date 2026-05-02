@@ -1,9 +1,17 @@
 import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
 import { Animation } from '../Animation';
+import { MorphStrategy } from './MorphStrategy';
 import { TexturedMobject } from '../../core/TexturedMobject';
 
-export class ShapeMorphStrategy {
+/**
+ * Morph strategy for textured single-mesh mobjects (Text/Image/MathTexImage).
+ *
+ * Size interpolation uses visual dimensions only:
+ * - geometry is normalized to PlaneGeometry(1, 1) once in begin()
+ * - per-frame width/height are applied via mesh.scale
+ */
+export class ShapeMorphStrategy implements MorphStrategy {
   private _shapeSourceMesh: THREE.Mesh | null = null;
   private _shapeTargetMesh: THREE.Mesh | null = null;
   private _startWidth = 0;
@@ -37,13 +45,42 @@ export class ShapeMorphStrategy {
   private _sourceTextureMobject: TexturedMobject | null = null;
   private _targetTextureMobject: TexturedMobject | null = null;
 
-  begin(_animation: Animation, source: TexturedMobject, target: TexturedMobject): void {
+  /**
+   * Validate textured inputs, force lazy Three object construction, then cache display meshes.
+   */
+  private _initTexturedMeshes(source: Mobject, target: Mobject): void {
+    if (!(source instanceof TexturedMobject)) {
+      throw new Error('ShapeMorphStrategy.begin requires source TexturedMobject');
+    }
+    if (!(target instanceof TexturedMobject)) {
+      throw new Error('ShapeMorphStrategy.begin requires target TexturedMobject');
+    }
     this._sourceTextureMobject = source;
     this._targetTextureMobject = target;
+
+    // Lifecycle requirement: getThreeObject() must run before getDisplayMeshes().
     source.getThreeObject();
     target.getThreeObject();
-    this._shapeSourceMesh = source.getDisplayMeshes()[0];
-    this._shapeTargetMesh = target.getDisplayMeshes()[0];
+
+    const sourceMesh = source.getDisplayMeshes()[0];
+    const targetMesh = target.getDisplayMeshes()[0];
+    if (!(sourceMesh instanceof THREE.Mesh)) {
+      throw new Error('ShapeMorphStrategy.begin requires source display mesh');
+    }
+    if (!(targetMesh instanceof THREE.Mesh)) {
+      throw new Error('ShapeMorphStrategy.begin requires target display mesh');
+    }
+    this._shapeSourceMesh = sourceMesh;
+    this._shapeTargetMesh = targetMesh;
+  }
+
+  begin(_animation: Animation, source: Mobject, target: Mobject): void {
+    this._initTexturedMeshes(source, target);
+    if (!this._shapeSourceMesh) throw new Error('ShapeMorphStrategy requires _shapeSourceMesh');
+    if (!this._shapeTargetMesh) throw new Error('ShapeMorphStrategy requires _shapeTargetMesh');
+    const sourceMesh = this._shapeSourceMesh;
+    const targetMesh = this._shapeTargetMesh;
+
     this._sourceCopy = source.copy();
     this._targetCopy = target.copy();
     this._crossFadeTargetOpacity = this._targetCopy.opacity;
@@ -53,21 +90,21 @@ export class ShapeMorphStrategy {
     this._targetRotation.copy(this._targetCopy.rotation);
     this._startScale.copy(this._sourceCopy.scaleVector);
     this._targetScale.copy(this._targetCopy.scaleVector);
-    const sourceDims = this._getVisualDims(this._shapeSourceMesh, 'source mesh');
-    const targetDims = this._getVisualDims(this._shapeTargetMesh, 'target mesh');
+    const sourceDims = this._getVisualDims(sourceMesh, 'source mesh');
+    const targetDims = this._getVisualDims(targetMesh, 'target mesh');
     this._startWidth = sourceDims.width;
     this._startHeight = sourceDims.height;
     this._targetWidth = targetDims.width;
     this._targetHeight = targetDims.height;
 
     // Use unit geometry + mesh.scale for per-frame size interpolation.
-    this._shapeSourceMesh.geometry.dispose();
-    this._shapeSourceMesh.geometry = new THREE.PlaneGeometry(1, 1);
-    this._shapeTargetMesh.geometry.dispose();
-    this._shapeTargetMesh.geometry = new THREE.PlaneGeometry(1, 1);
+    sourceMesh.geometry.dispose();
+    sourceMesh.geometry = new THREE.PlaneGeometry(1, 1);
+    targetMesh.geometry.dispose();
+    targetMesh.geometry = new THREE.PlaneGeometry(1, 1);
 
-    this._shapeSourceMesh.scale.set(this._startWidth, this._startHeight, 1);
-    this._shapeTargetMesh.scale.set(this._startWidth, this._startHeight, 1);
+    sourceMesh.scale.set(this._startWidth, this._startHeight, 1);
+    targetMesh.scale.set(this._startWidth, this._startHeight, 1);
     const sourceObj = source.getThreeObject();
     const targetObj = target.getThreeObject();
     if (sourceObj.parent && !targetObj.parent) sourceObj.parent.add(targetObj);
@@ -103,11 +140,12 @@ export class ShapeMorphStrategy {
   finish(_animation: Animation, source: Mobject, _target: Mobject): void {
     if (!this._shapeSourceMesh) throw new Error('ShapeMorphStrategy requires _shapeSourceMesh');
     if (!this._shapeTargetMesh) throw new Error('ShapeMorphStrategy requires _shapeTargetMesh');
-    this._shapeSourceMesh.scale.set(this._targetWidth, this._targetHeight, 1);
     if (!this._sourceTextureMobject)
       throw new Error('ShapeMorphStrategy requires source TexturedMobject');
     if (!this._targetTextureMobject)
       throw new Error('ShapeMorphStrategy requires target TexturedMobject');
+
+    this._sourceTextureMobject.applyVisualSize(this._targetWidth, this._targetHeight);
     this._sourceTextureMobject.applyTextureFrom(this._targetTextureMobject);
     source.opacity = this._crossFadeTargetOpacity;
     source.setStrokeOpacity(this._crossFadeTargetOpacity);

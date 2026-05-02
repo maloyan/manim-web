@@ -450,16 +450,26 @@ export class ImageMobject extends TexturedMobject {
       throw new Error('ImageMobject.applyTextureFrom requires source mesh');
     }
 
-    const material = mesh.material as THREE.MeshBasicMaterial;
-    const sourceMaterial = sourceMesh.material as THREE.MeshBasicMaterial;
+    const material = mesh.material;
+    const sourceMaterial = sourceMesh.material;
+    if (!(material instanceof THREE.MeshBasicMaterial)) {
+      throw new Error('ImageMobject.applyTextureFrom requires MeshBasicMaterial');
+    }
+    if (!(sourceMaterial instanceof THREE.MeshBasicMaterial)) {
+      throw new Error('ImageMobject.applyTextureFrom requires source MeshBasicMaterial');
+    }
+
     const nextTexture = sourceMaterial.map;
     const previousTexture = this._texture;
-    material.map = nextTexture;
-    material.needsUpdate = true;
-    this._texture = other._texture;
-    if (previousTexture && previousTexture !== nextTexture) {
-      previousTexture.dispose();
-    }
+    this._handoffTextureMap(material, nextTexture, previousTexture);
+    this._texture = nextTexture;
+  }
+
+  applyVisualSize(width: number, height: number): void {
+    this._width = width;
+    this._height = height;
+    this._scaleToFit = false;
+    this._updateGeometry();
   }
 
   /**

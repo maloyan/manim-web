@@ -517,15 +517,27 @@ export class Text extends TexturedMobject {
       throw new Error('Text.applyTextureFrom requires source _mesh');
     }
 
-    const material = this._mesh.material as THREE.MeshBasicMaterial;
-    const sourceMaterial = other._mesh.material as THREE.MeshBasicMaterial;
+    const material = this._mesh.material;
+    const sourceMaterial = other._mesh.material;
+    if (!(material instanceof THREE.MeshBasicMaterial)) {
+      throw new Error('Text.applyTextureFrom requires MeshBasicMaterial');
+    }
+    if (!(sourceMaterial instanceof THREE.MeshBasicMaterial)) {
+      throw new Error('Text.applyTextureFrom requires source MeshBasicMaterial');
+    }
+
     const nextTexture = sourceMaterial.map;
     const previousTexture = this._texture;
-    material.map = nextTexture;
-    material.needsUpdate = true;
+    this._handoffTextureMap(material, nextTexture, previousTexture);
     this._texture = nextTexture;
-    if (previousTexture && previousTexture !== nextTexture) {
-      previousTexture.dispose();
+  }
+
+  applyVisualSize(width: number, height: number): void {
+    this._worldWidth = width;
+    this._worldHeight = height;
+    this._updateMesh();
+    if (this._mesh) {
+      this._mesh.scale.set(1, 1, 1);
     }
   }
 
