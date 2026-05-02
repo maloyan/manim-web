@@ -246,6 +246,10 @@ export class Group extends Mobject {
     return group;
   }
 
+  override getDisplayMeshLength(): number {
+    return this.children.reduce((sum, child) => sum + child.getDisplayMeshLength(), 0);
+  }
+
   override getDisplayMeshes(): THREE.Mesh[] {
     return this.children.flatMap((child) => child.getDisplayMeshes());
   }

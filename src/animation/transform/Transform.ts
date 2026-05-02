@@ -253,8 +253,11 @@ export class Transform extends Animation {
     if (
       this._isShapeModeType(this.mobject) &&
       this._isShapeModeType(this.target) &&
-      this.mobject.getDisplayMeshes().length === 1 &&
-      this.target.getDisplayMeshes().length === 1
+      // Use mesh-count capability here: shape morph needs exactly one visible
+      // mesh on each side, but we can't depend on Three.js objects being created
+      // yet when begin() runs.
+      this.mobject.getDisplayMeshLength() === 1 &&
+      this.target.getDisplayMeshLength() === 1
     ) {
       this._morphMode = MorphMode.Shape;
       this._shapeSourceMesh = this.mobject.getDisplayMeshes()[0] ?? null;

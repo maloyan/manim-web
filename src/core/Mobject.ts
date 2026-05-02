@@ -558,6 +558,14 @@ export abstract class Mobject {
     return this._threeObject;
   }
 
+  /**
+   * Number of visible display meshes this mobject contributes when rendered.
+   * Used for Transform eligibility checks without forcing Three.js object creation.
+   */
+  getDisplayMeshLength(): number {
+    return 0;
+  }
+
   getDisplayMeshes(): THREE.Mesh[] {
     return [];
   }

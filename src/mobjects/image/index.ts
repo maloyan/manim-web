@@ -416,8 +416,13 @@ export class ImageMobject extends Mobject {
     return mesh;
   }
 
+  override getDisplayMeshLength(): number {
+    return 1;
+  }
+
   override getDisplayMeshes(): THREE.Mesh[] {
-    return this._threeObject instanceof THREE.Mesh ? [this._threeObject] : [];
+    const object = this.getThreeObject();
+    return object instanceof THREE.Mesh ? [object] : [];
   }
 
   /**

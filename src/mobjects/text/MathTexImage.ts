@@ -992,11 +992,19 @@ export class MathTexImage extends Mobject {
     return group;
   }
 
+  override getDisplayMeshLength(): number {
+    return this._isMultiPart
+      ? this._parts.reduce((sum, part) => sum + part.getDisplayMeshLength(), 0)
+      : 1;
+  }
+
   override getDisplayMeshes(): THREE.Mesh[] {
     if (this._isMultiPart) {
       return this._parts.flatMap((part) => part.getDisplayMeshes());
     }
-    return this._renderState.mesh ? [this._renderState.mesh] : [];
+
+    const object = this.getThreeObject();
+    return object instanceof THREE.Mesh ? [object] : [];
   }
 
   /**

@@ -490,8 +490,13 @@ export class Text extends VMobject {
     return group;
   }
 
+  override getDisplayMeshLength(): number {
+    return 1;
+  }
+
   override getDisplayMeshes(): THREE.Mesh[] {
-    return this._mesh ? [this._mesh] : [];
+    const object = this.getThreeObject();
+    return object instanceof THREE.Mesh ? [object] : [];
   }
 
   /**
