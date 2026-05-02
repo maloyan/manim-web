@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
+import { TexturedMobject } from '../../core/TexturedMobject';
 import { TextGlyphGroup } from './TextGlyphGroup';
 import type { SkeletonizeOptions } from '../../utils/skeletonize';
 import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
@@ -102,7 +102,7 @@ async function loadFontFace(url: string): Promise<string> {
   return familyName;
 }
 
-export class Text extends VMobject {
+export class Text extends TexturedMobject {
   protected _text: string;
   protected _fontSize: number;
   protected _fontFamily: string;
@@ -124,7 +124,7 @@ export class Text extends VMobject {
   protected _ctx: CanvasRenderingContext2D | null = null;
 
   /** Three.js texture from canvas */
-  protected _texture: THREE.CanvasTexture | null = null;
+  protected _texture: THREE.Texture | null = null;
 
   /** Plane mesh for displaying the texture */
   protected _mesh: THREE.Mesh | null = null;
@@ -496,7 +496,32 @@ export class Text extends VMobject {
 
   override getDisplayMeshes(): THREE.Mesh[] {
     const object = this.getThreeObject();
-    return object instanceof THREE.Mesh ? [object] : [];
+    if (!(object instanceof THREE.Group)) {
+      throw new Error('Text.getThreeObject() must return a THREE.Group');
+    }
+    if (!this._mesh) {
+      throw new Error('Text.getDisplayMeshes() requires _mesh');
+    }
+
+    return [this._mesh];
+  }
+
+  applyTextureFrom(other: TexturedMobject): void {
+    if (!(other instanceof Text)) {
+      throw new Error('Text.applyTextureFrom requires Text');
+    }
+    if (!this._mesh) {
+      throw new Error('Text.applyTextureFrom requires _mesh');
+    }
+    if (!other._mesh) {
+      throw new Error('Text.applyTextureFrom requires source _mesh');
+    }
+
+    const material = this._mesh.material as THREE.MeshBasicMaterial;
+    const sourceMaterial = other._mesh.material as THREE.MeshBasicMaterial;
+    material.map = sourceMaterial.map;
+    material.needsUpdate = true;
+    this._texture = sourceMaterial.map;
   }
 
   /**

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { TexturedMobject } from '../../core/TexturedMobject';
 
 /**
  * Image filter options for visual effects
@@ -72,7 +73,7 @@ export interface ImageMobjectOptions {
  * });
  * ```
  */
-export class ImageMobject extends Mobject {
+export class ImageMobject extends TexturedMobject {
   protected _source: string;
   protected _pixelData: number[][] | undefined;
   protected _width: number | undefined;
@@ -423,6 +424,24 @@ export class ImageMobject extends Mobject {
   override getDisplayMeshes(): THREE.Mesh[] {
     const object = this.getThreeObject();
     return object instanceof THREE.Mesh ? [object] : [];
+  }
+
+  applyTextureFrom(other: TexturedMobject): void {
+    if (!(other instanceof ImageMobject)) {
+      throw new Error('ImageMobject.applyTextureFrom requires ImageMobject');
+    }
+    if (!(this._threeObject instanceof THREE.Mesh)) {
+      throw new Error('ImageMobject.applyTextureFrom requires mesh');
+    }
+    if (!(other._threeObject instanceof THREE.Mesh)) {
+      throw new Error('ImageMobject.applyTextureFrom requires source mesh');
+    }
+
+    const material = this._threeObject.material as THREE.MeshBasicMaterial;
+    const sourceMaterial = other._threeObject.material as THREE.MeshBasicMaterial;
+    material.map = sourceMaterial.map;
+    material.needsUpdate = true;
+    this._texture = other._texture;
   }
 
   /**

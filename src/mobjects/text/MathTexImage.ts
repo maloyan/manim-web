@@ -19,7 +19,8 @@
 
 import * as THREE from 'three';
 import katex from 'katex';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { TexturedMobject } from '../../core/TexturedMobject';
 import { ensureKatexStyles, waitForKatexStyles } from './katexStyles';
 import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
@@ -105,7 +106,7 @@ interface RenderState {
  * await integral.waitForRender();
  * ```
  */
-export class MathTexImage extends Mobject {
+export class MathTexImage extends TexturedMobject {
   protected _latex: string;
   protected _fontSize: number;
   protected _displayMode: boolean;
@@ -1005,6 +1006,24 @@ export class MathTexImage extends Mobject {
 
     const object = this.getThreeObject();
     return object instanceof THREE.Mesh ? [object] : [];
+  }
+
+  applyTextureFrom(other: TexturedMobject): void {
+    if (!(other instanceof MathTexImage)) {
+      throw new Error('MathTexImage.applyTextureFrom requires MathTexImage');
+    }
+    if (!(this._renderState.mesh instanceof THREE.Mesh)) {
+      throw new Error('MathTexImage.applyTextureFrom requires mesh');
+    }
+    if (!(other._renderState.mesh instanceof THREE.Mesh)) {
+      throw new Error('MathTexImage.applyTextureFrom requires source mesh');
+    }
+
+    const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
+    const sourceMaterial = other._renderState.mesh.material as THREE.MeshBasicMaterial;
+    material.map = sourceMaterial.map;
+    material.needsUpdate = true;
+    this._renderState.texture = other._renderState.texture;
   }
 
   /**

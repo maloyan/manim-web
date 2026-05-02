@@ -642,6 +642,9 @@ export class MarkupText extends Text {
 
     // Parse the markup text
     this._parseMarkup();
+    this._renderToCanvas();
+    this._updateMesh();
+    this._markDirty();
   }
 
   /**

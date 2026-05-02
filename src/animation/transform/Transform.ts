@@ -7,6 +7,7 @@
 
 import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
+import { TexturedMobject } from '../../core/TexturedMobject';
 import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Animation, AnimationOptions } from '../Animation';
@@ -28,14 +29,8 @@ enum MorphMode {
   Point,
   /** Cross-fade opacity + position interpolation (zero-point VMobjects, non-VMobjects) */
   Fade,
-  /** Cross-fade + geometry + transform interpolation (ImageMobject, Text, MathTexImage) */
+  /** Geometry + texture interpolation for singleton image-like meshes */
   Shape,
-}
-
-/** Common interface for mobjects with texture meshes (Text, ImageMobject, MathTexImage) */
-interface TexturedMobject extends Mobject {
-  _source: unknown;
-  _texture: THREE.Texture | null;
 }
 
 /** Extract style snapshot from a VMobject */
@@ -157,11 +152,6 @@ export class Transform extends Animation {
     this.target = target;
   }
 
-  /** Check if mobject is a Shape mode type (ImageMobject, Text, MathTexImage) */
-  private _isShapeModeType(m: Mobject): boolean {
-    return m instanceof ImageMobject || m instanceof Text || m instanceof MathTexImage;
-  }
-
   /** Capture position/rotation/scale from source and target mobjects */
   private _captureTransformProps(): void {
     this.target._syncToThree();
@@ -175,8 +165,11 @@ export class Transform extends Animation {
 
   /** Capture geometry dimensions for Shape mode */
   private _captureGeometryDimensions(): void {
-    const srcMesh = this.mobject.getThreeObject() as THREE.Mesh;
-    const tgtMesh = this.target.getThreeObject() as THREE.Mesh;
+    const srcMesh = this._shapeSourceMesh;
+    const tgtMesh = this._shapeTargetMesh;
+    if (!srcMesh || !tgtMesh) {
+      throw new Error('Transform Shape mode requires singleton display meshes');
+    }
     const srcGeo = srcMesh.geometry as THREE.PlaneGeometry;
     const tgtGeo = tgtMesh.geometry as THREE.PlaneGeometry;
     this._startWidth = srcGeo.parameters.width;
@@ -199,16 +192,32 @@ export class Transform extends Animation {
 
   /** Swap texture from target to source mobject */
   private _swapTexture(): void {
-    const sourceMesh = this.mobject.getThreeObject() as THREE.Mesh;
-    const targetMesh = this.target.getThreeObject() as THREE.Mesh;
-    const srcMat = sourceMesh.material as THREE.MeshBasicMaterial;
-    const tgtMat = targetMesh.material as THREE.MeshBasicMaterial;
-    srcMat.map = tgtMat.map;
-    srcMat.needsUpdate = true;
+    if (!this._shapeSourceMesh) {
+      throw new Error('Transform._swapTexture requires _shapeSourceMesh');
+    }
+    if (!this._shapeTargetMesh) {
+      throw new Error('Transform._swapTexture requires _shapeTargetMesh');
+    }
+
+    const sourceMesh = this._shapeSourceMesh;
+    const targetMesh = this._shapeTargetMesh;
+    const srcMat = sourceMesh.material;
+    const tgtMat = targetMesh.material;
+
+    if (!(srcMat instanceof THREE.MeshBasicMaterial)) {
+      throw new Error(
+        'Transform._swapTexture requires source mesh material to be MeshBasicMaterial',
+      );
+    }
+    if (!(tgtMat instanceof THREE.MeshBasicMaterial)) {
+      throw new Error(
+        'Transform._swapTexture requires target mesh material to be MeshBasicMaterial',
+      );
+    }
+
     const src = this.mobject as TexturedMobject;
     const tgt = this.target as TexturedMobject;
-    src._source = tgt._source;
-    src._texture = tgtMat.map;
+    src.applyTextureFrom(tgt);
   }
 
   /** Interpolate position for both source and target */
@@ -248,20 +257,38 @@ export class Transform extends Animation {
   override begin(): void {
     super.begin();
 
-    // Shape mode: ImageMobject/Text/MathTexImage with geometry morphing
-    // Check first since ImageMobject is NOT a VMobject
+    console.log('[Transform.begin]', {
+      source: this.mobject.constructor.name,
+      target: this.target.constructor.name,
+      sourceIsText: this.mobject instanceof Text,
+      targetIsText: this.target instanceof Text,
+      sourceDisplayMeshes: this.mobject.getDisplayMeshes().length,
+      targetDisplayMeshes: this.target.getDisplayMeshes().length,
+    });
+
+    // Mesh mode: singleton image-like meshes only
+    // Check after Text so Text never reaches this path.
     if (
-      this._isShapeModeType(this.mobject) &&
-      this._isShapeModeType(this.target) &&
-      // Use mesh-count capability here: shape morph needs exactly one visible
-      // mesh on each side, but we can't depend on Three.js objects being created
-      // yet when begin() runs.
+      ((this.mobject instanceof Text && this.target instanceof Text) ||
+        (this.mobject instanceof ImageMobject && this.target instanceof ImageMobject) ||
+        (this.mobject instanceof MathTexImage && this.target instanceof MathTexImage)) &&
       this.mobject.getDisplayMeshLength() === 1 &&
       this.target.getDisplayMeshLength() === 1
     ) {
       this._morphMode = MorphMode.Shape;
-      this._shapeSourceMesh = this.mobject.getDisplayMeshes()[0] ?? null;
-      this._shapeTargetMesh = this.target.getDisplayMeshes()[0] ?? null;
+      this._shapeSourceMesh = this.mobject.getDisplayMeshes()[0];
+      if (!(this._shapeSourceMesh instanceof THREE.Mesh)) {
+        throw new Error(
+          `[Transform.begin] source mesh is not a THREE.Mesh: ${this._shapeSourceMesh}`,
+        );
+      }
+      this._shapeTargetMesh = this.target.getDisplayMeshes()[0];
+      if (!(this._shapeTargetMesh instanceof THREE.Mesh)) {
+        throw new Error(
+          `[Transform.begin] target mesh is not a THREE.Mesh: ${this._shapeTargetMesh}`,
+        );
+      }
+
       this._startOpacity = this.mobject.opacity;
       this._captureTransformProps();
       this._captureGeometryDimensions();
@@ -414,16 +441,20 @@ export class Transform extends Animation {
    * Interpolate between start and target at the given alpha
    */
   interpolate(alpha: number): void {
-    // Shape mode: cross-fade + geometry + transform
+    // Mesh mode: cross-fade + geometry + transform
     if (this._morphMode === MorphMode.Shape) {
+      if (!this._shapeSourceMesh) {
+        throw new Error('Transform.interpolate requires _shapeSourceMesh in Shape mode');
+      }
+      if (!this._shapeTargetMesh) {
+        throw new Error('Transform.interpolate requires _shapeTargetMesh in Shape mode');
+      }
+
       const w = this._startWidth + (this._targetWidth - this._startWidth) * alpha;
       const h = this._startHeight + (this._targetHeight - this._startHeight) * alpha;
 
       const sourceMesh = this._shapeSourceMesh;
       const targetMesh = this._shapeTargetMesh;
-      if (!sourceMesh || !targetMesh) {
-        throw new Error('Transform Shape mode requires singleton display meshes');
-      }
       sourceMesh.geometry.dispose();
       sourceMesh.geometry = new THREE.PlaneGeometry(w, h);
 
@@ -540,11 +571,20 @@ export class Transform extends Animation {
    * Ensure the mobject matches the target at the end
    */
   override finish(): void {
-    // Shape mode finish
+    // Mesh mode finish
     if (this._morphMode === MorphMode.Shape) {
-      const mesh = this.mobject.getThreeObject() as THREE.Mesh;
-      mesh.geometry.dispose();
-      mesh.geometry = new THREE.PlaneGeometry(this._targetWidth, this._targetHeight);
+      if (!this._shapeSourceMesh) {
+        throw new Error('Transform.finish requires _shapeSourceMesh in Shape mode');
+      }
+      if (!this._shapeTargetMesh) {
+        throw new Error('Transform.finish requires _shapeTargetMesh in Shape mode');
+      }
+
+      const sourceMesh = this._shapeSourceMesh;
+      const targetMesh = this._shapeTargetMesh;
+
+      sourceMesh.geometry.dispose();
+      sourceMesh.geometry = new THREE.PlaneGeometry(this._targetWidth, this._targetHeight);
 
       this.mobject.position.copy(this._targetPosition);
       this.mobject.rotation.copy(this._targetRotation);
@@ -553,8 +593,7 @@ export class Transform extends Animation {
       this._swapTexture();
       this.mobject.opacity = this._crossFadeTargetOpacity;
 
-      const targetObj = this.target.getThreeObject();
-      if (targetObj.parent) targetObj.parent.remove(targetObj);
+      if (targetMesh.parent) targetMesh.parent.remove(targetMesh);
 
       this.mobject._markDirty();
       super.finish();
