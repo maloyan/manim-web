@@ -933,4 +933,75 @@ describe('Transform on VGroup (#206)', () => {
       expect(pts[i][1]).toBeCloseTo(startPts[i][1], 3);
     }
   });
+
+  describe('transform sequencing', () => {
+    it('supports chained transforms a->b then b->c on the same source', () => {
+      const a = new Circle({ radius: 1, color: '#ff0000' });
+      a.shift([-2, 0, 0]);
+      const b = new Circle({ radius: 1.5, color: '#00ff00' });
+      b.shift([1, 2, 0]);
+      b.opacity = 0.6;
+      const c = new Circle({ radius: 0.75, color: '#0000ff' });
+      c.shift([4, -1, 0]);
+      c.opacity = 0.25;
+
+      const ab = new Transform(a, b);
+      ab.begin();
+      ab.interpolate(1);
+      ab.finish();
+
+      const bc = new Transform(a, c);
+      bc.begin();
+      bc.interpolate(1);
+      bc.finish();
+
+      expect(a.position.x).toBeCloseTo(c.position.x, 5);
+      expect(a.position.y).toBeCloseTo(c.position.y, 5);
+      expect(a.opacity).toBeCloseTo(c.opacity, 5);
+      expect(a.color).toBe(c.color);
+    });
+
+    it('supports fan-out from identical a seeds: a->b and a->c', () => {
+      const seed = new Circle({ radius: 1, color: '#ffaa00' });
+      seed.shift([-1, -1, 0]);
+      seed.opacity = 0.9;
+
+      const sourceForB = seed.copy() as Circle;
+      const sourceForC = seed.copy() as Circle;
+
+      const b = new Circle({ radius: 2, color: '#00aaff' });
+      b.shift([3, 0, 0]);
+      b.opacity = 0.5;
+
+      const c = new Circle({ radius: 0.5, color: '#aa00ff' });
+      c.shift([0, 3, 0]);
+      c.opacity = 0.2;
+
+      const aToB = new Transform(sourceForB, b);
+      aToB.begin();
+      aToB.interpolate(1);
+      aToB.finish();
+
+      const aToC = new Transform(sourceForC, c);
+      aToC.begin();
+      aToC.interpolate(1);
+      aToC.finish();
+
+      const centerB = sourceForB.getCenter();
+      const centerTargetB = b.getCenter();
+      const centerC = sourceForC.getCenter();
+      const centerTargetC = c.getCenter();
+
+      expect(centerB[0]).toBeCloseTo(centerTargetB[0], 5);
+      expect(centerB[1]).toBeCloseTo(centerTargetB[1], 5);
+      expect(sourceForB.color).toBe(b.color);
+
+      expect(centerC[0]).toBeCloseTo(centerTargetC[0], 5);
+      expect(centerC[1]).toBeCloseTo(centerTargetC[1], 5);
+      expect(sourceForC.color).toBe(c.color);
+
+      expect(centerB[0]).not.toBeCloseTo(centerC[0], 5);
+      expect(centerB[1]).not.toBeCloseTo(centerC[1], 5);
+    });
+  });
 });

@@ -4,6 +4,7 @@
 
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
+import { VGroup } from '../../core/VGroup';
 import { Animation, AnimationOptions } from '../Animation';
 import { ImageMobject } from '../../mobjects/image';
 import { MathTexImage } from '../../mobjects/text/MathTexImage';
@@ -12,6 +13,7 @@ import { FadeMorphStrategy } from './FadeMorphStrategy';
 import { MorphStrategy } from './MorphStrategy';
 import { PointMorphStrategy } from './PointMorphStrategy';
 import { ShapeMorphStrategy } from './ShapeMorphStrategy';
+import { canMorphByPoints } from './TransformPairing';
 
 export class Transform extends Animation {
   readonly target: Mobject;
@@ -35,7 +37,12 @@ export class Transform extends Animation {
       return new ShapeMorphStrategy();
     }
     if (this.mobject instanceof VMobject && this.target instanceof VMobject) {
-      return new PointMorphStrategy();
+      if (
+        (this.mobject instanceof VGroup && this.target instanceof VGroup) ||
+        canMorphByPoints(this.mobject, this.target)
+      ) {
+        return new PointMorphStrategy();
+      }
     }
     return new FadeMorphStrategy();
   }
