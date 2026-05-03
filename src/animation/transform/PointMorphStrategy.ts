@@ -11,6 +11,7 @@ import {
   pairLeafSnapshotsByIndex,
   type LeafPairByIndex,
 } from './TransformPairing';
+import { MorphStrategy } from './MorphStrategy';
 
 interface ChildStyle {
   opacity: number;
@@ -53,7 +54,7 @@ function captureStyleFaded(m: VMobject): ChildStyle {
   };
 }
 
-export class PointMorphStrategy {
+export class PointMorphStrategy implements MorphStrategy {
   private _startPoints: number[][] = [];
   private _targetPoints: number[][] = [];
   private _finalTargetPoints: number[][] = [];

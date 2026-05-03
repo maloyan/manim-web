@@ -532,6 +532,14 @@ export class Text extends TexturedMobject {
     this._texture = nextTexture;
   }
 
+  applyContentFrom(other: TexturedMobject): void {
+    if (!(other instanceof Text)) {
+      throw new Error('Text.applyContentFrom requires Text');
+    }
+    this._text = other._text;
+    this._canvasDirty = false;
+  }
+
   applyVisualSize(width: number, height: number): void {
     this._worldWidth = width;
     this._worldHeight = height;

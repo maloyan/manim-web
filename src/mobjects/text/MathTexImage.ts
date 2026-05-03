@@ -1053,6 +1053,13 @@ export class MathTexImage extends TexturedMobject {
     }
   }
 
+  applyContentFrom(other: TexturedMobject): void {
+    if (!(other instanceof MathTexImage)) {
+      throw new Error('MathTexImage.applyContentFrom requires MathTexImage');
+    }
+    this._latex = other._latex;
+  }
+
   /**
    * Sync material properties to Three.js
    */

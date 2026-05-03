@@ -472,6 +472,14 @@ export class ImageMobject extends TexturedMobject {
     this._updateGeometry();
   }
 
+  applyContentFrom(other: TexturedMobject): void {
+    if (!(other instanceof ImageMobject)) {
+      throw new Error('ImageMobject.applyContentFrom requires ImageMobject');
+    }
+    this._source = other._source;
+    this._pixelData = other._pixelData;
+  }
+
   /**
    * Update geometry when dimensions change
    */

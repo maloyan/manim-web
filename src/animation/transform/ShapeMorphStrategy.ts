@@ -34,6 +34,7 @@ export class ShapeMorphStrategy implements MorphStrategy {
     };
   }
   private _crossFadeTargetOpacity = 1;
+  private _crossFadeStartOpacity = 1;
   private _startPosition = new THREE.Vector3();
   private _targetPosition = new THREE.Vector3();
   private _startRotation = new THREE.Euler();
@@ -83,6 +84,7 @@ export class ShapeMorphStrategy implements MorphStrategy {
 
     this._sourceCopy = source.copy();
     this._targetCopy = target.copy();
+    this._crossFadeStartOpacity = this._sourceCopy.opacity;
     this._crossFadeTargetOpacity = this._targetCopy.opacity;
     this._startPosition.copy(this._sourceCopy.position);
     this._targetPosition.copy(this._targetCopy.position);
@@ -129,7 +131,7 @@ export class ShapeMorphStrategy implements MorphStrategy {
     target.rotation.copy(source.rotation);
     source.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
     target.scaleVector.copy(source.scaleVector);
-    source.opacity = this._crossFadeTargetOpacity * (1 - alpha);
+    source.opacity = this._crossFadeStartOpacity * (1 - alpha);
     target.opacity = this._crossFadeTargetOpacity * alpha;
     source.setStrokeOpacity(source.opacity);
     target.setStrokeOpacity(target.opacity);
@@ -147,6 +149,7 @@ export class ShapeMorphStrategy implements MorphStrategy {
 
     this._sourceTextureMobject.applyVisualSize(this._targetWidth, this._targetHeight);
     this._sourceTextureMobject.applyTextureFrom(this._targetTextureMobject);
+    this._sourceTextureMobject.applyContentFrom(this._targetTextureMobject);
     source.opacity = this._crossFadeTargetOpacity;
     source.setStrokeOpacity(this._crossFadeTargetOpacity);
     const targetObj = this._targetTextureMobject.getThreeObject();

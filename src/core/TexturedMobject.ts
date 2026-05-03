@@ -31,7 +31,12 @@ export abstract class TexturedMobject extends Mobject {
   abstract applyVisualSize(width: number, height: number): void;
 
   /**
-   * Shared texture handoff for transform swaps.
+   * Copy class-authoritative content metadata from another textured mobject so that
+   * future sync cycles and API reads (e.g. getText()) reflect the target's content.
+   */
+  abstract applyContentFrom(other: TexturedMobject): void;
+
+  /**
    * Sets material.map, marks material dirty, and disposes previous texture when replaced.
    */
   protected _handoffTextureMap(

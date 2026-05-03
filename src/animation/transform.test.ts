@@ -15,6 +15,7 @@ import { VMobject } from '../core/VMobject';
 import { VGroup } from '../core/VGroup';
 import { Circle } from '../mobjects/geometry/Circle';
 import { ImageMobject } from '../mobjects/image';
+import { Text } from '../mobjects/text/Text';
 
 /** Two circles with distinct styles for point-morphing tests. */
 function makePair() {
@@ -750,7 +751,7 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
     expect(t.isFinished()).toBe(true);
   });
 
-  it('removes target from scene graph after Text-like cross-fade finish', () => {
+  it('leaves target in scene graph after fade finish so it remains visible', () => {
     class TextLikeMobject extends Mobject {
       private _mesh: THREE.Mesh;
 
@@ -793,8 +794,8 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
 
     t.finish();
 
-    // After finish, target should be removed from scene graph
-    expect(m2.getThreeObject().parent).toBeFalsy();
+    // After finish, target should remain in scene graph so it stays visible
+    expect(m2.getThreeObject().parent).toBeTruthy();
   });
 });
 
@@ -1059,5 +1060,84 @@ describe('Transform on VGroup (#206)', () => {
       expect(centerB[0]).not.toBeCloseTo(centerC[0], 5);
       expect(centerB[1]).not.toBeCloseTo(centerC[1], 5);
     });
+  });
+});
+
+function makeTextCanvasMock() {
+  return {
+    font: '',
+    textBaseline: '',
+    textAlign: 'center' as const,
+    fillStyle: '',
+    strokeStyle: '',
+    globalAlpha: 1,
+    lineWidth: 0,
+    measureText: (_text: string) => ({ width: 100 }),
+    clearRect: () => {},
+    fillText: () => {},
+    strokeText: () => {},
+  };
+}
+
+describe('Text Transform (#305)', () => {
+  it('getText() returns target text after Transform finish', () => {
+    const mockCtx = makeTextCanvasMock();
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string): HTMLElement => {
+        const el = originalCreateElement(tagName);
+        if (tagName.toLowerCase() === 'canvas') {
+          (el as HTMLCanvasElement).getContext = ((contextType: string) =>
+            contextType === '2d' ? mockCtx : null) as HTMLCanvasElement['getContext'];
+        }
+        return el;
+      });
+
+    try {
+      const t1 = new Text({ text: 'A' });
+      const t2 = new Text({ text: 'B' });
+      const tr = new Transform(t1, t2);
+      tr.begin();
+      tr.interpolate(0.5);
+      tr.finish();
+
+      expect(t1.getText()).toBe('B');
+    } finally {
+      createElementSpy.mockRestore();
+    }
+  });
+
+  it('getText() stays as target text after subsequent _markDirty + _syncToThree (#305)', () => {
+    const mockCtx = makeTextCanvasMock();
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string): HTMLElement => {
+        const el = originalCreateElement(tagName);
+        if (tagName.toLowerCase() === 'canvas') {
+          (el as HTMLCanvasElement).getContext = ((contextType: string) =>
+            contextType === '2d' ? mockCtx : null) as HTMLCanvasElement['getContext'];
+        }
+        return el;
+      });
+
+    try {
+      const t1 = new Text({ text: 'A' });
+      const t2 = new Text({ text: 'B' });
+      const tr = new Transform(t1, t2);
+      tr.begin();
+      tr.interpolate(0.5);
+      tr.finish();
+
+      expect(t1.getText()).toBe('B');
+
+      // A subsequent sync cycle must not revert getText() to source text
+      t1._markDirty();
+      t1._syncToThree();
+      expect(t1.getText()).toBe('B');
+    } finally {
+      createElementSpy.mockRestore();
+    }
   });
 });

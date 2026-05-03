@@ -74,8 +74,6 @@ export class FadeMorphStrategy implements MorphStrategy {
     target.position.set(this._targetPositionX, this._targetPositionY, this._targetPositionZ);
     target.opacity = this._targetSnapshot.opacity;
     target._syncToThree();
-    const targetObj = target.getThreeObject();
-    if (targetObj.parent) targetObj.parent.remove(targetObj);
     source._markDirty();
   }
 }

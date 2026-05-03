@@ -81,8 +81,8 @@ export function replacementTransform(
 ): ReplacementTransform {
   return new ReplacementTransform(mobject, target, options);
 }
-export interface MobjectWithTarget extends VMobject {
-  targetCopy: VMobject | null;
+export interface MobjectWithTarget extends Mobject {
+  targetCopy: Mobject | null;
 }
 export class MoveToTarget extends Transform {
   constructor(mobject: MobjectWithTarget, options: AnimationOptions = {}) {
