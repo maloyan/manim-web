@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+// @vitest-environment happy-dom
+import { describe, it, expect, vi } from 'vitest';
 import * as THREE from 'three';
 import {
   Transform,
@@ -13,6 +14,8 @@ import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
 import { VGroup } from '../core/VGroup';
 import { Circle } from '../mobjects/geometry/Circle';
+import { ImageMobject } from '../mobjects/image';
+import { Text } from '../mobjects/text/Text';
 
 /** Two circles with distinct styles for point-morphing tests. */
 function makePair() {
@@ -423,6 +426,60 @@ describe('MoveToTarget', () => {
     expect(c.opacity).toBeCloseTo(0.65, 5); // 1 + (0.3-1)*0.5
     expect(c.position.x).toBeCloseTo(2.5, 5);
   });
+
+  it('issue #306: ImageMobject MoveToTarget applies scaling and persists final size', async () => {
+    const mockCanvas2DContext = {
+      imageSmoothingEnabled: false,
+      imageSmoothingQuality: 'low' as const,
+      createImageData: (width: number, height: number) => ({
+        data: new Uint8ClampedArray(width * height * 4),
+        width,
+        height,
+      }),
+      putImageData: () => {},
+      drawImage: () => {},
+    };
+
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string): HTMLElement => {
+        const el = originalCreateElement(tagName);
+        if (tagName.toLowerCase() === 'canvas') {
+          (el as HTMLCanvasElement).getContext = ((contextType: string) =>
+            contextType === '2d' ? mockCanvas2DContext : null) as HTMLCanvasElement['getContext'];
+        }
+        return el;
+      });
+
+    try {
+      const image = new ImageMobject({
+        pixelData: [
+          [0, 255],
+          [255, 0],
+        ],
+        height: 2,
+      });
+
+      await image.waitForLoad();
+      const startWidth = image.getBoundingBox().width;
+
+      const target = image.generateTarget() as ImageMobject;
+      target.scale(2);
+      const expectedWidth = target.getBoundingBox().width;
+
+      const move = new MoveToTarget(image as unknown as MobjectWithTarget);
+      move.begin();
+      move.interpolate(1);
+      move.finish();
+
+      const finalWidth = image.getBoundingBox().width;
+      expect(finalWidth).toBeCloseTo(expectedWidth, 5);
+      expect(finalWidth).toBeGreaterThan(startWidth);
+    } finally {
+      createElementSpy.mockRestore();
+    }
+  });
 });
 
 describe('factory functions', () => {
@@ -694,7 +751,7 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
     expect(t.isFinished()).toBe(true);
   });
 
-  it('removes target from scene graph after Text-like cross-fade finish', () => {
+  it('leaves target in scene graph after fade finish so it remains visible', () => {
     class TextLikeMobject extends Mobject {
       private _mesh: THREE.Mesh;
 
@@ -737,8 +794,8 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
 
     t.finish();
 
-    // After finish, target should be removed from scene graph
-    expect(m2.getThreeObject().parent).toBeFalsy();
+    // After finish, target should remain in scene graph so it stays visible
+    expect(m2.getThreeObject().parent).toBeTruthy();
   });
 });
 
@@ -931,6 +988,156 @@ describe('Transform on VGroup (#206)', () => {
     for (let i = 0; i < Math.min(startPts.length, pts.length); i++) {
       expect(pts[i][0]).toBeCloseTo(startPts[i][0], 3);
       expect(pts[i][1]).toBeCloseTo(startPts[i][1], 3);
+    }
+  });
+
+  describe('transform sequencing', () => {
+    it('supports chained transforms a->b then b->c on the same source', () => {
+      const a = new Circle({ radius: 1, color: '#ff0000' });
+      a.shift([-2, 0, 0]);
+      const b = new Circle({ radius: 1.5, color: '#00ff00' });
+      b.shift([1, 2, 0]);
+      b.opacity = 0.6;
+      const c = new Circle({ radius: 0.75, color: '#0000ff' });
+      c.shift([4, -1, 0]);
+      c.opacity = 0.25;
+
+      const ab = new Transform(a, b);
+      ab.begin();
+      ab.interpolate(1);
+      ab.finish();
+
+      const bc = new Transform(a, c);
+      bc.begin();
+      bc.interpolate(1);
+      bc.finish();
+
+      expect(a.position.x).toBeCloseTo(c.position.x, 5);
+      expect(a.position.y).toBeCloseTo(c.position.y, 5);
+      expect(a.opacity).toBeCloseTo(c.opacity, 5);
+      expect(a.color).toBe(c.color);
+    });
+
+    it('supports fan-out from identical a seeds: a->b and a->c', () => {
+      const seed = new Circle({ radius: 1, color: '#ffaa00' });
+      seed.shift([-1, -1, 0]);
+      seed.opacity = 0.9;
+
+      const sourceForB = seed.copy() as Circle;
+      const sourceForC = seed.copy() as Circle;
+
+      const b = new Circle({ radius: 2, color: '#00aaff' });
+      b.shift([3, 0, 0]);
+      b.opacity = 0.5;
+
+      const c = new Circle({ radius: 0.5, color: '#aa00ff' });
+      c.shift([0, 3, 0]);
+      c.opacity = 0.2;
+
+      const aToB = new Transform(sourceForB, b);
+      aToB.begin();
+      aToB.interpolate(1);
+      aToB.finish();
+
+      const aToC = new Transform(sourceForC, c);
+      aToC.begin();
+      aToC.interpolate(1);
+      aToC.finish();
+
+      const centerB = sourceForB.getCenter();
+      const centerTargetB = b.getCenter();
+      const centerC = sourceForC.getCenter();
+      const centerTargetC = c.getCenter();
+
+      expect(centerB[0]).toBeCloseTo(centerTargetB[0], 5);
+      expect(centerB[1]).toBeCloseTo(centerTargetB[1], 5);
+      expect(sourceForB.color).toBe(b.color);
+
+      expect(centerC[0]).toBeCloseTo(centerTargetC[0], 5);
+      expect(centerC[1]).toBeCloseTo(centerTargetC[1], 5);
+      expect(sourceForC.color).toBe(c.color);
+
+      expect(centerB[0]).not.toBeCloseTo(centerC[0], 5);
+      expect(centerB[1]).not.toBeCloseTo(centerC[1], 5);
+    });
+  });
+});
+
+function makeTextCanvasMock() {
+  return {
+    font: '',
+    textBaseline: '',
+    textAlign: 'center' as const,
+    fillStyle: '',
+    strokeStyle: '',
+    globalAlpha: 1,
+    lineWidth: 0,
+    measureText: (_text: string) => ({ width: 100 }),
+    clearRect: () => {},
+    fillText: () => {},
+    strokeText: () => {},
+  };
+}
+
+describe('Text Transform (#305)', () => {
+  it('getText() returns target text after Transform finish', () => {
+    const mockCtx = makeTextCanvasMock();
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string): HTMLElement => {
+        const el = originalCreateElement(tagName);
+        if (tagName.toLowerCase() === 'canvas') {
+          (el as HTMLCanvasElement).getContext = ((contextType: string) =>
+            contextType === '2d' ? mockCtx : null) as HTMLCanvasElement['getContext'];
+        }
+        return el;
+      });
+
+    try {
+      const t1 = new Text({ text: 'A' });
+      const t2 = new Text({ text: 'B' });
+      const tr = new Transform(t1, t2);
+      tr.begin();
+      tr.interpolate(0.5);
+      tr.finish();
+
+      expect(t1.getText()).toBe('B');
+    } finally {
+      createElementSpy.mockRestore();
+    }
+  });
+
+  it('getText() stays as target text after subsequent _markDirty + _syncToThree (#305)', () => {
+    const mockCtx = makeTextCanvasMock();
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string): HTMLElement => {
+        const el = originalCreateElement(tagName);
+        if (tagName.toLowerCase() === 'canvas') {
+          (el as HTMLCanvasElement).getContext = ((contextType: string) =>
+            contextType === '2d' ? mockCtx : null) as HTMLCanvasElement['getContext'];
+        }
+        return el;
+      });
+
+    try {
+      const t1 = new Text({ text: 'A' });
+      const t2 = new Text({ text: 'B' });
+      const tr = new Transform(t1, t2);
+      tr.begin();
+      tr.interpolate(0.5);
+      tr.finish();
+
+      expect(t1.getText()).toBe('B');
+
+      // A subsequent sync cycle must not revert getText() to source text
+      t1._markDirty();
+      t1._syncToThree();
+      expect(t1.getText()).toBe('B');
+    } finally {
+      createElementSpy.mockRestore();
     }
   });
 });

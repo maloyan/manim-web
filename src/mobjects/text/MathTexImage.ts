@@ -19,7 +19,8 @@
 
 import * as THREE from 'three';
 import katex from 'katex';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { TexturedMobject } from '../../core/TexturedMobject';
 import { ensureKatexStyles, waitForKatexStyles } from './katexStyles';
 import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
@@ -72,7 +73,7 @@ export interface MathTexImageOptions {
  */
 interface RenderState {
   canvas: HTMLCanvasElement | null;
-  texture: THREE.CanvasTexture | null;
+  texture: THREE.Texture | null;
   mesh: THREE.Mesh | null;
   width: number;
   height: number;
@@ -105,7 +106,7 @@ interface RenderState {
  * await integral.waitForRender();
  * ```
  */
-export class MathTexImage extends Mobject {
+export class MathTexImage extends TexturedMobject {
   protected _latex: string;
   protected _fontSize: number;
   protected _displayMode: boolean;
@@ -990,6 +991,73 @@ export class MathTexImage extends Mobject {
     group.add(mesh);
 
     return group;
+  }
+
+  override getDisplayMeshLength(): number {
+    return this._isMultiPart
+      ? this._parts.reduce((sum, part) => sum + part.getDisplayMeshLength(), 0)
+      : 1;
+  }
+
+  override getDisplayMeshes(): THREE.Mesh[] {
+    if (this._isMultiPart) {
+      return this._parts.flatMap((part) => part.getDisplayMeshes());
+    }
+
+    // Ensure lazy Three.js construction has run so _renderState.mesh is populated.
+    const object = this.getThreeObject();
+    if (!(object instanceof THREE.Group)) {
+      throw new Error('MathTexImage.getThreeObject() must return a THREE.Group');
+    }
+    if (!(this._renderState.mesh instanceof THREE.Mesh)) {
+      throw new Error('MathTexImage.getDisplayMeshes requires _renderState.mesh');
+    }
+    return [this._renderState.mesh];
+  }
+
+  applyTextureFrom(other: TexturedMobject): void {
+    if (!(other instanceof MathTexImage)) {
+      throw new Error('MathTexImage.applyTextureFrom requires MathTexImage');
+    }
+    if (!(this._renderState.mesh instanceof THREE.Mesh)) {
+      throw new Error('MathTexImage.applyTextureFrom requires mesh');
+    }
+    if (!(other._renderState.mesh instanceof THREE.Mesh)) {
+      throw new Error('MathTexImage.applyTextureFrom requires source mesh');
+    }
+
+    const material = this._renderState.mesh.material;
+    const sourceMaterial = other._renderState.mesh.material;
+    if (!(material instanceof THREE.MeshBasicMaterial)) {
+      throw new Error('MathTexImage.applyTextureFrom requires MeshBasicMaterial');
+    }
+    if (!(sourceMaterial instanceof THREE.MeshBasicMaterial)) {
+      throw new Error('MathTexImage.applyTextureFrom requires source MeshBasicMaterial');
+    }
+
+    const nextTexture = sourceMaterial.map;
+    const previousTexture = this._renderState.texture;
+    this._handoffTextureMap(material, nextTexture, previousTexture);
+    this._renderState.texture = nextTexture;
+  }
+
+  applyVisualSize(width: number, height: number): void {
+    if (this._isMultiPart) {
+      throw new Error('MathTexImage.applyVisualSize requires single-part MathTexImage');
+    }
+    this._renderState.width = width;
+    this._renderState.height = height;
+    this._updateMeshGeometry();
+    if (this._renderState.mesh) {
+      this._renderState.mesh.scale.set(1, 1, 1);
+    }
+  }
+
+  applyContentFrom(other: TexturedMobject): void {
+    if (!(other instanceof MathTexImage)) {
+      throw new Error('MathTexImage.applyContentFrom requires MathTexImage');
+    }
+    this._latex = other._latex;
   }
 
   /**

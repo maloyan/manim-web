@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
+import { TexturedMobject } from '../../core/TexturedMobject';
 import { TextGlyphGroup } from './TextGlyphGroup';
 import type { SkeletonizeOptions } from '../../utils/skeletonize';
 import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
@@ -102,7 +102,7 @@ async function loadFontFace(url: string): Promise<string> {
   return familyName;
 }
 
-export class Text extends VMobject {
+export class Text extends TexturedMobject {
   protected _text: string;
   protected _fontSize: number;
   protected _fontFamily: string;
@@ -124,7 +124,7 @@ export class Text extends VMobject {
   protected _ctx: CanvasRenderingContext2D | null = null;
 
   /** Three.js texture from canvas */
-  protected _texture: THREE.CanvasTexture | null = null;
+  protected _texture: THREE.Texture | null = null;
 
   /** Plane mesh for displaying the texture */
   protected _mesh: THREE.Mesh | null = null;
@@ -488,6 +488,65 @@ export class Text extends VMobject {
     group.add(this._mesh);
 
     return group;
+  }
+
+  override getDisplayMeshLength(): number {
+    return 1;
+  }
+
+  override getDisplayMeshes(): THREE.Mesh[] {
+    const object = this.getThreeObject();
+    if (!(object instanceof THREE.Group)) {
+      throw new Error('Text.getThreeObject() must return a THREE.Group');
+    }
+    if (!this._mesh) {
+      throw new Error('Text.getDisplayMeshes() requires _mesh');
+    }
+
+    return [this._mesh];
+  }
+
+  applyTextureFrom(other: TexturedMobject): void {
+    if (!(other instanceof Text)) {
+      throw new Error('Text.applyTextureFrom requires Text');
+    }
+    if (!this._mesh) {
+      throw new Error('Text.applyTextureFrom requires _mesh');
+    }
+    if (!other._mesh) {
+      throw new Error('Text.applyTextureFrom requires source _mesh');
+    }
+
+    const material = this._mesh.material;
+    const sourceMaterial = other._mesh.material;
+    if (!(material instanceof THREE.MeshBasicMaterial)) {
+      throw new Error('Text.applyTextureFrom requires MeshBasicMaterial');
+    }
+    if (!(sourceMaterial instanceof THREE.MeshBasicMaterial)) {
+      throw new Error('Text.applyTextureFrom requires source MeshBasicMaterial');
+    }
+
+    const nextTexture = sourceMaterial.map;
+    const previousTexture = this._texture;
+    this._handoffTextureMap(material, nextTexture, previousTexture);
+    this._texture = nextTexture;
+  }
+
+  applyContentFrom(other: TexturedMobject): void {
+    if (!(other instanceof Text)) {
+      throw new Error('Text.applyContentFrom requires Text');
+    }
+    this._text = other._text;
+    this._canvasDirty = false;
+  }
+
+  applyVisualSize(width: number, height: number): void {
+    this._worldWidth = width;
+    this._worldHeight = height;
+    this._updateMesh();
+    if (this._mesh) {
+      this._mesh.scale.set(1, 1, 1);
+    }
   }
 
   /**

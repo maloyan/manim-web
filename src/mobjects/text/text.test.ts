@@ -825,6 +825,24 @@ describe('Text', () => {
     });
   });
 
+  describe('getDisplayMeshes', () => {
+    it('should return the mesh child when getThreeObject is a group', () => {
+      const t = new Text({ text: 'Mesh' });
+      const meshes = t.getDisplayMeshes();
+      expect(meshes).toHaveLength(1);
+      expect(meshes[0]).toBeInstanceOf(THREE.Mesh);
+    });
+
+    it('should throw when getThreeObject does not return a group', () => {
+      const t = new Text({ text: 'Mesh' });
+      const internal = t as unknown as {
+        getThreeObject(): THREE.Object3D;
+      };
+      internal.getThreeObject = () => new THREE.Mesh();
+      expect(() => t.getDisplayMeshes()).toThrow('Text.getThreeObject() must return a THREE.Group');
+    });
+  });
+
   // ---------------------------------------------------------------------------
   // Texture update on re-render
   // ---------------------------------------------------------------------------
