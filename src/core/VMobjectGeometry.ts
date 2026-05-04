@@ -316,74 +316,50 @@ function makeNullSubpathFromReference(
   return referenceSubpath.map(() => [...anchor]);
 }
 
-/** Equalize point counts for a source/target subpath pair using arc-length resampling. */
+/**
+ * Ping-pong repeat a bezier path to reach target count.
+ * Bezier structure: [anchor] + [handle, handle, anchor] * N
+ * Only extends shorter paths; longer paths unchanged.
+ */
+function pingPongRepeat(pts: number[][], targetCount: number): number[][] {
+  if (pts.length >= targetCount) return pts.map((p) => [...p]);
+  const result = pts.map((p) => [...p]);
+  const numSegs = Math.floor((pts.length - 1) / 3);
+  if (numSegs === 0) {
+    while (result.length < targetCount) result.push([...pts[0]]);
+    return result.slice(0, targetCount);
+  }
+
+  while (result.length < targetCount) {
+    // Forward: skip last anchor (already at current position)
+    for (let i = 1; i < numSegs && result.length < targetCount; i++) {
+      const b = i * 3;
+      result.push([...pts[b + 1]], [...pts[b + 2]], [...pts[b + 3]]);
+    }
+    // Backward: flip handles, skip first anchor
+    for (let i = numSegs - 1; i > 0 && result.length < targetCount; i--) {
+      const b = i * 3;
+      result.push([...pts[b + 2]], [...pts[b + 1]], [...pts[b]]);
+    }
+  }
+  return result.slice(0, targetCount);
+}
+
+/** Equalize point counts using ping-pong on the shorter path only. */
 function alignSubpathPairPoints(
   srcSubpath: number[][],
   tgtSubpath: number[][],
 ): { srcAligned: number[][]; tgtAligned: number[][] } {
-  const MIN_TRANSFORM_SUBPATH_POINTS = 64;
-  const targetCount = Math.max(srcSubpath.length, tgtSubpath.length, MIN_TRANSFORM_SUBPATH_POINTS);
-
-  const distance3 = (a: number[], b: number[]): number => {
-    const dx = (b[0] ?? 0) - (a[0] ?? 0);
-    const dy = (b[1] ?? 0) - (a[1] ?? 0);
-    const dz = (b[2] ?? 0) - (a[2] ?? 0);
-    return Math.sqrt(dx * dx + dy * dy + dz * dz);
-  };
-
-  const interpolateToCount = (pts: number[][], count: number): number[][] => {
-    if (pts.length === count) return pts.map((p) => [...p]);
-    if (pts.length === 0)
-      return Array(count)
-        .fill(null)
-        .map(() => [0, 0, 0]);
-    if (pts.length === 1)
-      return Array(count)
-        .fill(null)
-        .map(() => [...pts[0]]);
-
-    const cumulative: number[] = [0];
-    for (let i = 1; i < pts.length; i++) {
-      cumulative.push(cumulative[i - 1] + distance3(pts[i - 1], pts[i]));
-    }
-
-    const total = cumulative[cumulative.length - 1];
-    if (total <= 1e-12) {
-      return Array(count)
-        .fill(null)
-        .map(() => [...pts[0]]);
-    }
-
-    const out: number[][] = [];
-    let seg = 0;
-    for (let i = 0; i < count; i++) {
-      const t = count === 1 ? 0 : i / (count - 1);
-      const targetDist = t * total;
-
-      while (seg < cumulative.length - 2 && cumulative[seg + 1] < targetDist) {
-        seg++;
-      }
-
-      const d0 = cumulative[seg];
-      const d1 = cumulative[seg + 1];
-      const p0 = pts[seg];
-      const p1 = pts[seg + 1];
-      const span = d1 - d0;
-      const frac = span <= 1e-12 ? 0 : (targetDist - d0) / span;
-
-      out.push([
-        p0[0] + (p1[0] - p0[0]) * frac,
-        p0[1] + (p1[1] - p0[1]) * frac,
-        (p0[2] ?? 0) + ((p1[2] ?? 0) - (p0[2] ?? 0)) * frac,
-      ]);
-    }
-
-    return out;
-  };
-
+  const maxCount = Math.max(srcSubpath.length, tgtSubpath.length);
   return {
-    srcAligned: interpolateToCount(srcSubpath, targetCount),
-    tgtAligned: interpolateToCount(tgtSubpath, targetCount),
+    srcAligned:
+      srcSubpath.length < maxCount
+        ? pingPongRepeat(srcSubpath, maxCount)
+        : srcSubpath.map((p) => [...p]),
+    tgtAligned:
+      tgtSubpath.length < maxCount
+        ? pingPongRepeat(tgtSubpath, maxCount)
+        : tgtSubpath.map((p) => [...p]),
   };
 }
 
