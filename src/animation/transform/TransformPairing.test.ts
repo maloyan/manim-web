@@ -59,9 +59,9 @@ describe('TransformPairing core', () => {
 
     const aligned = alignVmobjectPair(source, target);
 
-    expect(aligned.alignedSubpathLengths).toEqual([64, 64]);
-    expect(aligned.startPoints.length).toBe(128);
-    expect(aligned.targetPoints.length).toBe(128);
+    expect(aligned.alignedSubpathLengths).toEqual([5, 5]);
+    expect(aligned.startPoints.length).toBe(10);
+    expect(aligned.targetPoints.length).toBe(10);
 
     expect(aligned.finalTargetPoints).toEqual(target.getPoints());
     expect(aligned.finalTargetSubpathLengths).toEqual([5, 5]);
@@ -76,6 +76,54 @@ describe('TransformPairing core', () => {
     expect(aligned.startPoints.length).toBe(aligned.targetPoints.length);
     expect(aligned.alignedSubpathLengths).toBeUndefined();
     expect(aligned.finalTargetPoints).toEqual(target.getPoints());
+  });
+
+  it('uses length-sorted subpath pairing heuristic (longest ↔ longest)', () => {
+    const source = vmWithPoints([
+      // short (len=5)
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 1, 0],
+      [0, 1, 0],
+      [0, 0, 0],
+      // long (len=8)
+      [100, 0, 0],
+      [101, 0, 0],
+      [102, 0, 0],
+      [103, 0, 0],
+      [104, 0, 0],
+      [105, 0, 0],
+      [106, 0, 0],
+      [107, 0, 0],
+    ]);
+
+    const target = vmWithPoints([
+      // short (len=5)
+      [1000, 0, 0],
+      [1001, 0, 0],
+      [1001, 1, 0],
+      [1000, 1, 0],
+      [1000, 0, 0],
+      // long (len=8)
+      [2000, 0, 0],
+      [2001, 0, 0],
+      [2002, 0, 0],
+      [2003, 0, 0],
+      [2004, 0, 0],
+      [2005, 0, 0],
+      [2006, 0, 0],
+      [2007, 0, 0],
+    ]);
+
+    source.setBaseSubpathLengths([5, 8]);
+    target.setBaseSubpathLengths([5, 8]);
+
+    const aligned = alignVmobjectPair(source, target);
+
+    // Sorting by descending subpath length should emit long pair first.
+    expect(aligned.alignedSubpathLengths).toEqual([8, 5]);
+    expect(aligned.startPoints[0][0]).toBeCloseTo(100, 5);
+    expect(aligned.targetPoints[0][0]).toBeCloseTo(2000, 5);
   });
 
   it('pairLeafSnapshotsByIndex preserves left-to-right leaf order and unmatched tails', () => {

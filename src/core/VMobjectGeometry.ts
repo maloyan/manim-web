@@ -317,29 +317,21 @@ function makeNullSubpathFromReference(
 }
 
 /**
- * Ping-pong repeat a bezier path to reach target count.
- * Bezier structure: [anchor] + [handle, handle, anchor] * N
- * Only extends shorter paths; longer paths unchanged.
+ * Ping-pong repeat points to reach target count.
+ * Keep endpoints fixed by skipping last point on forward pass
+ * and first point on backward pass.
  */
 function pingPongRepeat(pts: number[][], targetCount: number): number[][] {
   if (pts.length >= targetCount) return pts.map((p) => [...p]);
-  const result = pts.map((p) => [...p]);
-  const numSegs = Math.floor((pts.length - 1) / 3);
-  if (numSegs === 0) {
-    while (result.length < targetCount) result.push([...pts[0]]);
-    return result.slice(0, targetCount);
-  }
+  if (pts.length <= 1) return Array.from({ length: targetCount }, () => [...(pts[0] ?? [0, 0, 0])]);
 
+  const result = pts.map((p) => [...p]);
   while (result.length < targetCount) {
-    // Forward: skip last anchor (already at current position)
-    for (let i = 1; i < numSegs && result.length < targetCount; i++) {
-      const b = i * 3;
-      result.push([...pts[b + 1]], [...pts[b + 2]], [...pts[b + 3]]);
+    for (let i = 1; i < pts.length - 1 && result.length < targetCount; i++) {
+      result.push([...pts[i]]);
     }
-    // Backward: flip handles, skip first anchor
-    for (let i = numSegs - 1; i > 0 && result.length < targetCount; i--) {
-      const b = i * 3;
-      result.push([...pts[b + 2]], [...pts[b + 1]], [...pts[b]]);
+    for (let i = pts.length - 2; i > 0 && result.length < targetCount; i--) {
+      result.push([...pts[i]]);
     }
   }
   return result.slice(0, targetCount);
@@ -363,6 +355,18 @@ function alignSubpathPairPoints(
   };
 }
 
+/** Compute center of all points in array. */
+function computeCenter(points3D: number[][]): number[] {
+  if (points3D.length === 0) return [0, 0, 0];
+  const sum = [0, 0, 0];
+  for (const p of points3D) {
+    sum[0] += p[0] ?? 0;
+    sum[1] += p[1] ?? 0;
+    sum[2] += p[2] ?? 0;
+  }
+  return [sum[0] / points3D.length, sum[1] / points3D.length, sum[2] / points3D.length];
+}
+
 /** Validate subpath lengths match point counts; throw on mismatch. */
 function validateSubpathLengths(points3D: number[][], lengths: number[], label: string): void {
   const total = lengths.reduce((sum, len) => sum + len, 0);
@@ -374,8 +378,14 @@ function validateSubpathLengths(points3D: number[][], lengths: number[], label: 
 }
 
 /**
- * Align two compound paths by subpath index.
- * Missing subpaths are replaced with null subpaths anchored at prior endpoint.
+ * Align two compound paths by matching longest subpaths (outer → outer, holes → holes).
+ *
+ * Heuristic: we sort subpaths by length descending and pair by rank.
+ * This assumes the longest contour is typically the outer boundary, with shorter
+ * contours typically representing holes/interior details. This is intentional but
+ * not mathematically guaranteed for arbitrary SVGs.
+ *
+ * Unmatched subpaths collapse to the other object's center.
  */
 export function alignCompoundPathsForTransform(
   srcPoints3D: number[][],
@@ -390,32 +400,37 @@ export function alignCompoundPathsForTransform(
   validateSubpathLengths(srcPoints3D, srcLengths, 'source');
   validateSubpathLengths(tgtPoints3D, tgtLengths, 'target');
 
-  const srcChunks = splitBySubpathLengths(srcPoints3D, srcLengths);
-  const tgtChunks = splitBySubpathLengths(tgtPoints3D, tgtLengths);
-  const maxSubpaths = Math.max(srcChunks.length, tgtChunks.length);
+  // Split into subpaths and sort by length descending (longest = outer)
+  const srcChunks = splitBySubpathLengths(srcPoints3D, srcLengths)
+    .map((chunk, i) => ({ chunk, len: srcLengths[i], idx: i }))
+    .sort((a, b) => b.len - a.len);
+  const tgtChunks = splitBySubpathLengths(tgtPoints3D, tgtLengths)
+    .map((chunk, i) => ({ chunk, len: tgtLengths[i], idx: i }))
+    .sort((a, b) => b.len - a.len);
+
+  const srcCenter = computeCenter(srcPoints3D);
+  const tgtCenter = computeCenter(tgtPoints3D);
 
   const srcAlignedAll: number[][] = [];
   const tgtAlignedAll: number[][] = [];
   const alignedLengths: number[] = [];
 
-  let lastAnchor: number[] = srcPoints3D[srcPoints3D.length - 1] ??
-    tgtPoints3D[tgtPoints3D.length - 1] ?? [0, 0, 0];
+  const maxSubpaths = Math.max(srcChunks.length, tgtChunks.length);
 
   for (let i = 0; i < maxSubpaths; i++) {
-    const src = srcChunks[i];
-    const tgt = tgtChunks[i];
+    const src = srcChunks[i]?.chunk;
+    const tgt = tgtChunks[i]?.chunk;
 
-    const srcSub = src ?? makeNullSubpathFromReference(tgt ?? [[...lastAnchor]], lastAnchor);
-    const tgtSub = tgt ?? makeNullSubpathFromReference(src ?? [[...lastAnchor]], lastAnchor);
+    // If only source has this subpath, collapse to target center
+    // If only target has this subpath, collapse source to source center
+    const srcSub = src ?? makeNullSubpathFromReference(tgt!, tgtCenter);
+    const tgtSub = tgt ?? makeNullSubpathFromReference(src!, srcCenter);
 
     const { srcAligned, tgtAligned } = alignSubpathPairPoints(srcSub, tgtSub);
 
     srcAlignedAll.push(...srcAligned);
     tgtAlignedAll.push(...tgtAligned);
     alignedLengths.push(srcAligned.length);
-
-    const nextAnchor = srcAligned[srcAligned.length - 1] ?? tgtAligned[tgtAligned.length - 1];
-    if (nextAnchor) lastAnchor = [...nextAnchor];
   }
 
   return {

@@ -631,8 +631,10 @@ function pathDataToVMobject(
   vmob.fillOpacity = fillOpacity;
   vmob.setPoints3D(allPoints);
 
-  // Attach intrinsic subpath metadata so compound glyphs (holes) render correctly.
-  if (subpathLengths.length > 1) {
+  // Attach intrinsic subpath metadata for transform pairing.
+  // Keep this even for single-contour glyphs (e.g. "1" => [N]) so
+  // compound↔simple morphs can still run contour-aware alignment.
+  if (subpathLengths.length > 0) {
     vmob.setBaseSubpathLengths(subpathLengths);
   }
 
