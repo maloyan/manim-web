@@ -19,12 +19,8 @@ import {
   projectToPlane,
 } from '../utils/math';
 import type { Point } from './VMobjectCurves';
-
-export interface CompoundAlignmentResult {
-  srcAlignedPoints: number[][];
-  tgtAlignedPoints: number[][];
-  alignedSubpathLengths: number[];
-}
+export { alignCompoundPathsForTransform } from './VMobjectTransformAlignment';
+export type { CompoundAlignmentResult } from './VMobjectTransformAlignment';
 
 /**
  * Sampling density used for fill triangulation outlines.
@@ -296,159 +292,6 @@ export function pointInPolygon(point: number[], ring: number[][]): boolean {
   return inside;
 }
 
-/** Split a flat point array into subpath chunks based on lengths metadata. */
-function splitBySubpathLengths(points3D: number[][], lengths: number[]): number[][][] {
-  const chunks: number[][][] = [];
-  let offset = 0;
-  for (const len of lengths) {
-    chunks.push(points3D.slice(offset, offset + len));
-    offset += len;
-  }
-  return chunks;
-}
-
-/** Build a degenerate subpath (all points equal) with point count matching reference. */
-function makeNullSubpathFromReference(
-  referenceSubpath: number[][],
-  anchorPoint: number[],
-): number[][] {
-  const anchor = [anchorPoint[0], anchorPoint[1], anchorPoint[2] ?? 0];
-  return referenceSubpath.map(() => [...anchor]);
-}
-
-/** Equalize point counts for a source/target subpath pair using arc-length resampling. */
-function alignSubpathPairPoints(
-  srcSubpath: number[][],
-  tgtSubpath: number[][],
-): { srcAligned: number[][]; tgtAligned: number[][] } {
-  const MIN_TRANSFORM_SUBPATH_POINTS = 64;
-  const targetCount = Math.max(srcSubpath.length, tgtSubpath.length, MIN_TRANSFORM_SUBPATH_POINTS);
-
-  const distance3 = (a: number[], b: number[]): number => {
-    const dx = (b[0] ?? 0) - (a[0] ?? 0);
-    const dy = (b[1] ?? 0) - (a[1] ?? 0);
-    const dz = (b[2] ?? 0) - (a[2] ?? 0);
-    return Math.sqrt(dx * dx + dy * dy + dz * dz);
-  };
-
-  const interpolateToCount = (pts: number[][], count: number): number[][] => {
-    if (pts.length === count) return pts.map((p) => [...p]);
-    if (pts.length === 0)
-      return Array(count)
-        .fill(null)
-        .map(() => [0, 0, 0]);
-    if (pts.length === 1)
-      return Array(count)
-        .fill(null)
-        .map(() => [...pts[0]]);
-
-    const cumulative: number[] = [0];
-    for (let i = 1; i < pts.length; i++) {
-      cumulative.push(cumulative[i - 1] + distance3(pts[i - 1], pts[i]));
-    }
-
-    const total = cumulative[cumulative.length - 1];
-    if (total <= 1e-12) {
-      return Array(count)
-        .fill(null)
-        .map(() => [...pts[0]]);
-    }
-
-    const out: number[][] = [];
-    let seg = 0;
-    for (let i = 0; i < count; i++) {
-      const t = count === 1 ? 0 : i / (count - 1);
-      const targetDist = t * total;
-
-      while (seg < cumulative.length - 2 && cumulative[seg + 1] < targetDist) {
-        seg++;
-      }
-
-      const d0 = cumulative[seg];
-      const d1 = cumulative[seg + 1];
-      const p0 = pts[seg];
-      const p1 = pts[seg + 1];
-      const span = d1 - d0;
-      const frac = span <= 1e-12 ? 0 : (targetDist - d0) / span;
-
-      out.push([
-        p0[0] + (p1[0] - p0[0]) * frac,
-        p0[1] + (p1[1] - p0[1]) * frac,
-        (p0[2] ?? 0) + ((p1[2] ?? 0) - (p0[2] ?? 0)) * frac,
-      ]);
-    }
-
-    return out;
-  };
-
-  return {
-    srcAligned: interpolateToCount(srcSubpath, targetCount),
-    tgtAligned: interpolateToCount(tgtSubpath, targetCount),
-  };
-}
-
-/** Validate subpath lengths match point counts; throw on mismatch. */
-function validateSubpathLengths(points3D: number[][], lengths: number[], label: string): void {
-  const total = lengths.reduce((sum, len) => sum + len, 0);
-  if (total !== points3D.length) {
-    throw new Error(
-      `alignCompoundPathsForTransform: ${label} subpath lengths sum (${total}) does not match ${label} point count (${points3D.length})`,
-    );
-  }
-}
-
-/**
- * Align two compound paths by subpath index.
- * Missing subpaths are replaced with null subpaths anchored at prior endpoint.
- */
-export function alignCompoundPathsForTransform(
-  srcPoints3D: number[][],
-  srcLengths: number[] | undefined,
-  tgtPoints3D: number[][],
-  tgtLengths: number[] | undefined,
-): CompoundAlignmentResult | null {
-  if (!srcLengths || !tgtLengths || (srcLengths.length <= 1 && tgtLengths.length <= 1)) {
-    return null;
-  }
-
-  validateSubpathLengths(srcPoints3D, srcLengths, 'source');
-  validateSubpathLengths(tgtPoints3D, tgtLengths, 'target');
-
-  const srcChunks = splitBySubpathLengths(srcPoints3D, srcLengths);
-  const tgtChunks = splitBySubpathLengths(tgtPoints3D, tgtLengths);
-  const maxSubpaths = Math.max(srcChunks.length, tgtChunks.length);
-
-  const srcAlignedAll: number[][] = [];
-  const tgtAlignedAll: number[][] = [];
-  const alignedLengths: number[] = [];
-
-  let lastAnchor: number[] = srcPoints3D[srcPoints3D.length - 1] ??
-    tgtPoints3D[tgtPoints3D.length - 1] ?? [0, 0, 0];
-
-  for (let i = 0; i < maxSubpaths; i++) {
-    const src = srcChunks[i];
-    const tgt = tgtChunks[i];
-
-    const srcSub = src ?? makeNullSubpathFromReference(tgt ?? [[...lastAnchor]], lastAnchor);
-    const tgtSub = tgt ?? makeNullSubpathFromReference(src ?? [[...lastAnchor]], lastAnchor);
-
-    const { srcAligned, tgtAligned } = alignSubpathPairPoints(srcSub, tgtSub);
-
-    srcAlignedAll.push(...srcAligned);
-    tgtAlignedAll.push(...tgtAligned);
-    alignedLengths.push(srcAligned.length);
-
-    const nextAnchor = srcAligned[srcAligned.length - 1] ?? tgtAligned[tgtAligned.length - 1];
-    if (nextAnchor) lastAnchor = [...nextAnchor];
-  }
-
-  return {
-    srcAlignedPoints: srcAlignedAll,
-    tgtAlignedPoints: tgtAlignedAll,
-    alignedSubpathLengths: alignedLengths,
-  };
-}
-
 // -----------------------------------------------------------------------
 // Shape / CurvePath conversion
 // -----------------------------------------------------------------------
@@ -595,18 +438,7 @@ export function buildEarcutFillGeometry(
     return new THREE.ShapeGeometry(shape);
   }
 
-  // Create BufferGeometry using original 3D points (not projected 2D)
-  const positions = new Float32Array(indices.length * 3);
-  for (let i = 0; i < indices.length; i++) {
-    const v = outline3D[indices[i]];
-    positions[i * 3] = v[0];
-    positions[i * 3 + 1] = v[1];
-    positions[i * 3 + 2] = v[2] ?? 0;
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  return geometry;
+  return buildGeometryFromTriangleIndices(outline3D, indices);
 }
 
 /**
@@ -621,7 +453,7 @@ function buildEarcutFillGeometryMulti(
 ): THREE.BufferGeometry | null {
   void visiblePoints; // kept for API compatibility
 
-  // Sample each subpath into 3D rings, collecting all points for plane computation
+  // Sample each subpath into 3D rings.
   let offset = 0;
   const rings3D: number[][][] = [];
   const allPoints3D: number[][] = [];
@@ -640,8 +472,6 @@ function buildEarcutFillGeometryMulti(
   if (rings3D.length === 0) return null;
 
   // Compute ONE shared plane basis from all sampled points.
-  // This keeps containment (hole classification) and triangulation in the
-  // same 2D coordinate system even when the whole shape is rotated in 3D.
   const { origin, v1, v2 } = projectOutlineToPlane(allPoints3D);
 
   // Project each 3D ring to 2D using the shared plane basis
@@ -649,49 +479,60 @@ function buildEarcutFillGeometryMulti(
     ring.map((p) => projectToPlane(p, origin, v1, v2)),
   );
 
-  // Determine containment: for each ring, check if it's inside another ring.
-  const isHoleOf = new Array<number>(rings2D.length).fill(-1);
-
-  for (let i = 0; i < rings2D.length; i++) {
-    for (let j = 0; j < rings2D.length; j++) {
-      if (i === j) continue;
-      if (pointInPolygon(rings2D[i][0], rings2D[j])) {
-        isHoleOf[i] = j;
-        break;
-      }
+  // Heuristic classification: pick longest ring as primary outer contour.
+  // Treat only rings INSIDE that contour as holes; rings outside stay
+  // independent outers (prevents '=' turning into one bar).
+  let primaryOuterRingIndex = 0;
+  let primaryOuterPerimeter = ringPerimeter2D(rings2D[0]);
+  for (let i = 1; i < rings2D.length; i++) {
+    const perimeter = ringPerimeter2D(rings2D[i]);
+    if (perimeter > primaryOuterPerimeter) {
+      primaryOuterPerimeter = perimeter;
+      primaryOuterRingIndex = i;
     }
   }
 
-  // Collect outer rings (not holes) and their associated holes
   const allPositions: number[] = [];
 
+  const insidePrimaryHoleRings: number[][][] = [];
+  const independentOuterRingIndices: number[] = [];
+
   for (let i = 0; i < rings2D.length; i++) {
-    if (isHoleOf[i] >= 0) continue;
+    if (i === primaryOuterRingIndex) continue;
 
-    const outerRing = rings2D[i];
-    const outerRing3D = rings3D[i];
-    const holeRings: number[][][] = [];
-    const holeRings3D: number[][][] = [];
+    if (pointInPolygon(rings2D[i][0], rings2D[primaryOuterRingIndex])) {
+      insidePrimaryHoleRings.push(rings2D[i]);
+    } else {
+      independentOuterRingIndices.push(i);
+    }
+  }
 
-    for (let j = 0; j < rings2D.length; j++) {
-      if (isHoleOf[j] === i) {
-        holeRings.push(rings2D[j]);
-        holeRings3D.push(rings3D[j]);
+  const primaryIndices = triangulatePolygon(
+    rings2D[primaryOuterRingIndex],
+    insidePrimaryHoleRings.length > 0 ? insidePrimaryHoleRings : undefined,
+  );
+  if (primaryIndices.length > 0) {
+    const primaryVerts3D: number[][] = [...rings3D[primaryOuterRingIndex]];
+    for (let i = 0; i < rings2D.length; i++) {
+      if (i === primaryOuterRingIndex) continue;
+      if (pointInPolygon(rings2D[i][0], rings2D[primaryOuterRingIndex])) {
+        primaryVerts3D.push(...rings3D[i]);
       }
     }
 
-    const indices = triangulatePolygon(outerRing, holeRings.length > 0 ? holeRings : undefined);
+    for (const idx of primaryIndices) {
+      const v = primaryVerts3D[idx];
+      allPositions.push(v[0], v[1], v[2] ?? 0);
+    }
+  }
+
+  for (const ringIndex of independentOuterRingIndices) {
+    const indices = triangulatePolygon(rings2D[ringIndex]);
     if (indices.length === 0) continue;
 
-    const allVerts: number[][] = [...outerRing];
-    const allVerts3D: number[][] = [...outerRing3D];
-    for (let h = 0; h < holeRings.length; h++) {
-      allVerts.push(...holeRings[h]);
-      allVerts3D.push(...holeRings3D[h]);
-    }
-
+    const verts3D = rings3D[ringIndex];
     for (const idx of indices) {
-      const v = allVerts3D[idx];
+      const v = verts3D[idx];
       allPositions.push(v[0], v[1], v[2] ?? 0);
     }
   }
@@ -701,6 +542,36 @@ function buildEarcutFillGeometryMulti(
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(allPositions), 3));
   return geometry;
+}
+
+function buildGeometryFromTriangleIndices(
+  vertices3D: number[][],
+  indices: number[],
+): THREE.BufferGeometry {
+  const positions = new Float32Array(indices.length * 3);
+  for (let i = 0; i < indices.length; i++) {
+    const v = vertices3D[indices[i]];
+    positions[i * 3] = v[0];
+    positions[i * 3 + 1] = v[1];
+    positions[i * 3 + 2] = v[2] ?? 0;
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  return geometry;
+}
+
+function ringPerimeter2D(ring: number[][]): number {
+  if (ring.length < 2) return 0;
+  let perimeter = 0;
+  for (let i = 0; i < ring.length; i++) {
+    const a = ring[i];
+    const b = ring[(i + 1) % ring.length];
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    perimeter += Math.hypot(dx, dy);
+  }
+  return perimeter;
 }
 
 // -----------------------------------------------------------------------
