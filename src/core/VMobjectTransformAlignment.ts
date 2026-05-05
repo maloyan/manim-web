@@ -300,6 +300,9 @@ function signedArea2D(pts: number[][]): number {
 }
 
 function inferSign(chunk: number[][]): 1 | -1 {
+  // Intentional simplification: keep binary orientation bucketing only.
+  // Near-zero/degenerate area is treated as +1 instead of introducing a
+  // neutral/tri-state branch, to keep transform pairing logic simpler.
   return signedArea2D(chunk) < 0 ? -1 : 1;
 }
 
@@ -383,46 +386,24 @@ export function alignCompoundPathsForTransform(
   const srcChunks = makeSignedChunks(srcPoints3D, srcLengths, srcSigns);
   const tgtChunks = makeSignedChunks(tgtPoints3D, tgtLengths, tgtSigns);
 
-  const sameSignPairs =
-    Math.min(
-      srcChunks.filter((c) => c.sign === -1).length,
-      tgtChunks.filter((c) => c.sign === -1).length,
-    ) +
-    Math.min(
-      srcChunks.filter((c) => c.sign === 1).length,
-      tgtChunks.filter((c) => c.sign === 1).length,
-    );
-
-  if (sameSignPairs === 0) {
-    alignChunkListsByLength(
-      srcChunks,
-      tgtChunks,
-      srcCenter,
-      tgtCenter,
-      srcAlignedAll,
-      tgtAlignedAll,
-      alignedLengths,
-    );
-  } else {
-    alignChunkListsByLength(
-      srcChunks.filter((c) => c.sign === -1),
-      tgtChunks.filter((c) => c.sign === -1),
-      srcCenter,
-      tgtCenter,
-      srcAlignedAll,
-      tgtAlignedAll,
-      alignedLengths,
-    );
-    alignChunkListsByLength(
-      srcChunks.filter((c) => c.sign === 1),
-      tgtChunks.filter((c) => c.sign === 1),
-      srcCenter,
-      tgtCenter,
-      srcAlignedAll,
-      tgtAlignedAll,
-      alignedLengths,
-    );
-  }
+  alignChunkListsByLength(
+    srcChunks.filter((c) => c.sign === -1),
+    tgtChunks.filter((c) => c.sign === -1),
+    srcCenter,
+    tgtCenter,
+    srcAlignedAll,
+    tgtAlignedAll,
+    alignedLengths,
+  );
+  alignChunkListsByLength(
+    srcChunks.filter((c) => c.sign === 1),
+    tgtChunks.filter((c) => c.sign === 1),
+    srcCenter,
+    tgtCenter,
+    srcAlignedAll,
+    tgtAlignedAll,
+    alignedLengths,
+  );
 
   return {
     srcAlignedPoints: srcAlignedAll,
