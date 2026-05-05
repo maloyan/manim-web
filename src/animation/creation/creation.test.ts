@@ -95,6 +95,23 @@ class MockMathTexMobject extends Mobject {
   protected _syncToThree(): void {}
 }
 
+class MockPlainMobject extends Mobject {
+  protected _createCopy(): Mobject {
+    const clone = new MockPlainMobject();
+    clone.opacity = this.opacity;
+    clone.strokeWidth = this.strokeWidth;
+    clone.fillOpacity = this.fillOpacity;
+    clone.color = this.color;
+    return clone;
+  }
+
+  protected _createThreeObject() {
+    return new (require('three').Object3D)();
+  }
+
+  protected _syncToThree(): void {}
+}
+
 // =============================================================================
 // Create
 // =============================================================================
@@ -103,7 +120,7 @@ describe('Create', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new MockPlainMobject();
   });
 
   describe('constructor', () => {
@@ -234,21 +251,21 @@ describe('Create', () => {
 
 describe('create() factory', () => {
   it('returns a Create instance', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = create(mob);
     expect(anim).toBeInstanceOf(Create);
     expect(anim.mobject).toBe(mob);
   });
 
   it('passes options through', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = create(mob, { duration: 5, rateFunc: linear });
     expect(anim.duration).toBe(5);
     expect(anim.rateFunc).toBe(linear);
   });
 
   it('default duration is 2', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = create(mob);
     expect(anim.duration).toBe(2);
   });
@@ -262,7 +279,7 @@ describe('DrawBorderThenFill', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new MockPlainMobject();
   });
 
   describe('constructor', () => {
@@ -321,14 +338,14 @@ describe('DrawBorderThenFill', () => {
 
 describe('drawBorderThenFill() factory', () => {
   it('returns a DrawBorderThenFill instance', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = drawBorderThenFill(mob);
     expect(anim).toBeInstanceOf(DrawBorderThenFill);
     expect(anim.mobject).toBe(mob);
   });
 
   it('passes options through', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = drawBorderThenFill(mob, { duration: 4, rateFunc: linear });
     expect(anim.duration).toBe(4);
     expect(anim.rateFunc).toBe(linear);
@@ -343,7 +360,7 @@ describe('Uncreate', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new MockPlainMobject();
   });
 
   describe('constructor', () => {
@@ -450,14 +467,14 @@ describe('Uncreate', () => {
 
 describe('uncreate() factory', () => {
   it('returns an Uncreate instance', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = uncreate(mob);
     expect(anim).toBeInstanceOf(Uncreate);
     expect(anim.mobject).toBe(mob);
   });
 
   it('passes options through', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = uncreate(mob, { duration: 3 });
     expect(anim.duration).toBe(3);
   });
@@ -471,7 +488,7 @@ describe('Write', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new MockPlainMobject();
   });
 
   describe('constructor', () => {
@@ -696,14 +713,14 @@ describe('Write', () => {
 
 describe('write() factory', () => {
   it('returns a Write instance', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = write(mob);
     expect(anim).toBeInstanceOf(Write);
     expect(anim.mobject).toBe(mob);
   });
 
   it('passes options through', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = write(mob, { duration: 2, lagRatio: 0.1 });
     expect(anim.duration).toBe(2);
     expect((anim as any).lagRatio).toBe(0.1);
@@ -716,37 +733,37 @@ describe('write() factory', () => {
 
 describe('Unwrite', () => {
   it('extends Write', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = new Unwrite(mob);
     expect(anim).toBeInstanceOf(Write);
   });
 
   it('sets reverse to true', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = new Unwrite(mob);
     expect((anim as any)._reverse).toBe(true);
   });
 
   it('sets remover to true', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = new Unwrite(mob);
     expect((anim as any)._remover).toBe(true);
   });
 
   it('default duration is 1', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = new Unwrite(mob);
     expect(anim.duration).toBe(1);
   });
 
   it('accepts custom duration', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = new Unwrite(mob, { duration: 3 });
     expect(anim.duration).toBe(3);
   });
 
   it('full lifecycle: opacity goes from original to 0', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     mob.opacity = 1;
     const anim = new Unwrite(mob);
     anim.begin();
@@ -767,14 +784,14 @@ describe('Unwrite', () => {
 
 describe('unwrite() factory', () => {
   it('returns an Unwrite instance', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = unwrite(mob);
     expect(anim).toBeInstanceOf(Unwrite);
     expect(anim.mobject).toBe(mob);
   });
 
   it('passes options through', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = unwrite(mob, { duration: 2 });
     expect(anim.duration).toBe(2);
   });
@@ -887,20 +904,20 @@ describe('AddTextLetterByLetter', () => {
 
   describe('with non-text mobject (no getText/setText)', () => {
     it('does not crash when begin is called on non-text mobject', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new AddTextLetterByLetter(mob);
       expect(() => anim.begin()).not.toThrow();
     });
 
     it('does not crash when interpolate is called on non-text mobject', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new AddTextLetterByLetter(mob);
       anim.begin();
       expect(() => anim.interpolate(0.5)).not.toThrow();
     });
 
     it('does not crash when finish is called on non-text mobject', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new AddTextLetterByLetter(mob);
       anim.begin();
       expect(() => anim.finish()).not.toThrow();
@@ -1027,7 +1044,7 @@ describe('RemoveTextLetterByLetter', () => {
 
   describe('with non-text mobject', () => {
     it('does not crash on begin/interpolate/finish', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new RemoveTextLetterByLetter(mob);
       expect(() => {
         anim.begin();
@@ -1168,7 +1185,7 @@ describe('AddTextWordByWord', () => {
 
   describe('with non-text mobject', () => {
     it('does not crash on begin/interpolate/finish', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new AddTextWordByWord(mob);
       expect(() => {
         anim.begin();
@@ -1201,7 +1218,7 @@ describe('addTextWordByWord() factory', () => {
 describe('ShowIncreasingSubsets', () => {
   describe('constructor', () => {
     it('stores the mobject reference', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new ShowIncreasingSubsets(mob);
       expect(anim.mobject).toBe(mob);
     });
@@ -1209,10 +1226,10 @@ describe('ShowIncreasingSubsets', () => {
 
   describe('begin()', () => {
     it('hides all submobjects initially', () => {
-      const parent = new Mobject();
-      const child1 = new Mobject();
-      const child2 = new Mobject();
-      const child3 = new Mobject();
+      const parent = new MockPlainMobject();
+      const child1 = new MockPlainMobject();
+      const child2 = new MockPlainMobject();
+      const child3 = new MockPlainMobject();
       child1.opacity = 1;
       child2.opacity = 0.8;
       child3.opacity = 0.6;
@@ -1229,9 +1246,9 @@ describe('ShowIncreasingSubsets', () => {
     });
 
     it('stores original opacities', () => {
-      const parent = new Mobject();
-      const child1 = new Mobject();
-      const child2 = new Mobject();
+      const parent = new MockPlainMobject();
+      const child1 = new MockPlainMobject();
+      const child2 = new MockPlainMobject();
       child1.opacity = 0.5;
       child2.opacity = 0.9;
       parent.add(child1);
@@ -1246,11 +1263,11 @@ describe('ShowIncreasingSubsets', () => {
 
   describe('interpolate()', () => {
     it('shows submobjects progressively', () => {
-      const parent = new Mobject();
-      const child1 = new Mobject();
-      const child2 = new Mobject();
-      const child3 = new Mobject();
-      const child4 = new Mobject();
+      const parent = new MockPlainMobject();
+      const child1 = new MockPlainMobject();
+      const child2 = new MockPlainMobject();
+      const child3 = new MockPlainMobject();
+      const child4 = new MockPlainMobject();
       child1.opacity = 1;
       child2.opacity = 1;
       child3.opacity = 1;
@@ -1274,8 +1291,8 @@ describe('ShowIncreasingSubsets', () => {
     });
 
     it('at alpha=0 all are hidden or partially showing first', () => {
-      const parent = new Mobject();
-      const child1 = new Mobject();
+      const parent = new MockPlainMobject();
+      const child1 = new MockPlainMobject();
       child1.opacity = 1;
       parent.add(child1);
 
@@ -1288,9 +1305,9 @@ describe('ShowIncreasingSubsets', () => {
     });
 
     it('at alpha=1 all are fully shown', () => {
-      const parent = new Mobject();
-      const child1 = new Mobject();
-      const child2 = new Mobject();
+      const parent = new MockPlainMobject();
+      const child1 = new MockPlainMobject();
+      const child2 = new MockPlainMobject();
       child1.opacity = 0.7;
       child2.opacity = 0.9;
       parent.add(child1);
@@ -1308,9 +1325,9 @@ describe('ShowIncreasingSubsets', () => {
 
   describe('finish()', () => {
     it('shows all submobjects with their original opacities', () => {
-      const parent = new Mobject();
-      const child1 = new Mobject();
-      const child2 = new Mobject();
+      const parent = new MockPlainMobject();
+      const child1 = new MockPlainMobject();
+      const child2 = new MockPlainMobject();
       child1.opacity = 0.5;
       child2.opacity = 0.8;
       parent.add(child1);
@@ -1325,7 +1342,7 @@ describe('ShowIncreasingSubsets', () => {
     });
 
     it('marks animation as finished', () => {
-      const parent = new Mobject();
+      const parent = new MockPlainMobject();
       const anim = new ShowIncreasingSubsets(parent);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -1336,7 +1353,7 @@ describe('ShowIncreasingSubsets', () => {
 
   describe('with no children', () => {
     it('handles mobject with no children', () => {
-      const parent = new Mobject();
+      const parent = new MockPlainMobject();
       const anim = new ShowIncreasingSubsets(parent);
       expect(() => {
         anim.begin();
@@ -1349,7 +1366,7 @@ describe('ShowIncreasingSubsets', () => {
 
 describe('showIncreasingSubsets() factory', () => {
   it('returns a ShowIncreasingSubsets instance', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = showIncreasingSubsets(mob);
     expect(anim).toBeInstanceOf(ShowIncreasingSubsets);
   });
@@ -1362,14 +1379,14 @@ describe('showIncreasingSubsets() factory', () => {
 describe('ShowPartial', () => {
   describe('constructor', () => {
     it('sets default start and end portions', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob);
       expect(anim.startPortion).toBe(0);
       expect(anim.endPortion).toBe(1);
     });
 
     it('accepts custom portions', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob, { startPortion: 0.2, endPortion: 0.8 });
       expect(anim.startPortion).toBe(0.2);
       expect(anim.endPortion).toBe(0.8);
@@ -1382,7 +1399,7 @@ describe('ShowPartial', () => {
     });
 
     it('detects non-VMobject', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob);
       expect((anim as any)._isVMobject).toBe(false);
     });
@@ -1390,7 +1407,7 @@ describe('ShowPartial', () => {
 
   describe('interpolate() - non-VMobject (opacity fallback)', () => {
     it('at alpha=0: opacity is 0', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob);
       anim.begin();
       anim.interpolate(0);
@@ -1398,7 +1415,7 @@ describe('ShowPartial', () => {
     });
 
     it('at alpha=0.5: opacity is 0.5', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob);
       anim.begin();
       anim.interpolate(0.5);
@@ -1406,7 +1423,7 @@ describe('ShowPartial', () => {
     });
 
     it('at alpha=1: opacity is 1', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob);
       anim.begin();
       anim.interpolate(1);
@@ -1416,7 +1433,7 @@ describe('ShowPartial', () => {
 
   describe('finish()', () => {
     it('marks animation as finished', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -1436,14 +1453,14 @@ describe('ShowPartial', () => {
 
 describe('showPartial() factory', () => {
   it('returns a ShowPartial instance', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = showPartial(mob);
     expect(anim).toBeInstanceOf(ShowPartial);
     expect(anim.mobject).toBe(mob);
   });
 
   it('passes options through', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = showPartial(mob, { startPortion: 0.1, endPortion: 0.9 });
     expect(anim.startPortion).toBe(0.1);
     expect(anim.endPortion).toBe(0.9);
@@ -1457,7 +1474,7 @@ describe('showPartial() factory', () => {
 describe('ShowSubmobjectsOneByOne', () => {
   describe('constructor', () => {
     it('stores the mobject reference', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new ShowSubmobjectsOneByOne(mob);
       expect(anim.mobject).toBe(mob);
     });
@@ -1465,9 +1482,9 @@ describe('ShowSubmobjectsOneByOne', () => {
 
   describe('begin()', () => {
     it('hides all submobjects initially', () => {
-      const parent = new Mobject();
-      const child1 = new Mobject();
-      const child2 = new Mobject();
+      const parent = new MockPlainMobject();
+      const child1 = new MockPlainMobject();
+      const child2 = new MockPlainMobject();
       child1.opacity = 1;
       child2.opacity = 0.8;
       parent.add(child1);
@@ -1483,10 +1500,10 @@ describe('ShowSubmobjectsOneByOne', () => {
 
   describe('interpolate()', () => {
     it('shows only one submobject at a time', () => {
-      const parent = new Mobject();
-      const child1 = new Mobject();
-      const child2 = new Mobject();
-      const child3 = new Mobject();
+      const parent = new MockPlainMobject();
+      const child1 = new MockPlainMobject();
+      const child2 = new MockPlainMobject();
+      const child3 = new MockPlainMobject();
       child1.opacity = 1;
       child2.opacity = 1;
       child3.opacity = 1;
@@ -1517,8 +1534,8 @@ describe('ShowSubmobjectsOneByOne', () => {
     });
 
     it('preserves original opacity when showing', () => {
-      const parent = new Mobject();
-      const child1 = new Mobject();
+      const parent = new MockPlainMobject();
+      const child1 = new MockPlainMobject();
       child1.opacity = 0.6;
       parent.add(child1);
 
@@ -1530,9 +1547,9 @@ describe('ShowSubmobjectsOneByOne', () => {
     });
 
     it('hides previous submobject when showing next', () => {
-      const parent = new Mobject();
-      const child1 = new Mobject();
-      const child2 = new Mobject();
+      const parent = new MockPlainMobject();
+      const child1 = new MockPlainMobject();
+      const child2 = new MockPlainMobject();
       child1.opacity = 1;
       child2.opacity = 1;
       parent.add(child1);
@@ -1555,10 +1572,10 @@ describe('ShowSubmobjectsOneByOne', () => {
 
   describe('finish()', () => {
     it('shows only the last submobject', () => {
-      const parent = new Mobject();
-      const child1 = new Mobject();
-      const child2 = new Mobject();
-      const child3 = new Mobject();
+      const parent = new MockPlainMobject();
+      const child1 = new MockPlainMobject();
+      const child2 = new MockPlainMobject();
+      const child3 = new MockPlainMobject();
       child1.opacity = 1;
       child2.opacity = 1;
       child3.opacity = 0.7;
@@ -1576,7 +1593,7 @@ describe('ShowSubmobjectsOneByOne', () => {
     });
 
     it('marks animation as finished', () => {
-      const parent = new Mobject();
+      const parent = new MockPlainMobject();
       const anim = new ShowSubmobjectsOneByOne(parent);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -1587,7 +1604,7 @@ describe('ShowSubmobjectsOneByOne', () => {
 
   describe('with no children', () => {
     it('handles mobject with no children', () => {
-      const parent = new Mobject();
+      const parent = new MockPlainMobject();
       const anim = new ShowSubmobjectsOneByOne(parent);
       expect(() => {
         anim.begin();
@@ -1600,7 +1617,7 @@ describe('ShowSubmobjectsOneByOne', () => {
 
 describe('showSubmobjectsOneByOne() factory', () => {
   it('returns a ShowSubmobjectsOneByOne instance', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = showSubmobjectsOneByOne(mob);
     expect(anim).toBeInstanceOf(ShowSubmobjectsOneByOne);
   });
@@ -1613,25 +1630,25 @@ describe('showSubmobjectsOneByOne() factory', () => {
 describe('SpiralIn', () => {
   describe('constructor', () => {
     it('sets default scaleFactor to 3', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new SpiralIn(mob);
       expect(anim.scaleFactor).toBe(3);
     });
 
     it('sets default numTurns to 2', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new SpiralIn(mob);
       expect(anim.numTurns).toBe(2);
     });
 
     it('accepts custom scaleFactor', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new SpiralIn(mob, { scaleFactor: 5 });
       expect(anim.scaleFactor).toBe(5);
     });
 
     it('accepts custom numTurns', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new SpiralIn(mob, { numTurns: 4 });
       expect(anim.numTurns).toBe(4);
     });
@@ -1768,14 +1785,14 @@ describe('SpiralIn', () => {
 
 describe('spiralIn() factory', () => {
   it('returns a SpiralIn instance', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = spiralIn(mob);
     expect(anim).toBeInstanceOf(SpiralIn);
     expect(anim.mobject).toBe(mob);
   });
 
   it('passes options through', () => {
-    const mob = new Mobject();
+    const mob = new MockPlainMobject();
     const anim = spiralIn(mob, { scaleFactor: 5, numTurns: 3 });
     expect(anim.scaleFactor).toBe(5);
     expect(anim.numTurns).toBe(3);
@@ -1958,7 +1975,7 @@ describe('TypeWithCursor', () => {
     });
 
     it('does not crash for non-text mobject', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new TypeWithCursor(mob);
       anim.begin();
       expect(() => anim.interpolate(0.5)).not.toThrow();
@@ -2015,7 +2032,7 @@ describe('TypeWithCursor', () => {
     });
 
     it('does not crash for non-text mobject', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new TypeWithCursor(mob);
       anim.begin();
       expect(() => anim.finish()).not.toThrow();
@@ -2231,7 +2248,7 @@ describe('UntypeWithCursor', () => {
     });
 
     it('does not crash for non-text mobject', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new UntypeWithCursor(mob);
       anim.begin();
       expect(() => anim.interpolate(0.5)).not.toThrow();
@@ -2294,7 +2311,7 @@ describe('UntypeWithCursor', () => {
     });
 
     it('does not crash for non-text mobject', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       const anim = new UntypeWithCursor(mob);
       anim.begin();
       expect(() => anim.finish()).not.toThrow();
@@ -2330,7 +2347,7 @@ describe('untypeWithCursor() factory', () => {
 describe('Full lifecycle integration', () => {
   describe('Create full cycle', () => {
     it('opacity goes 0 -> intermediate -> 1 for non-VMobject', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       mob.opacity = 1;
       const anim = new Create(mob);
 
@@ -2351,7 +2368,7 @@ describe('Full lifecycle integration', () => {
 
   describe('Uncreate full cycle', () => {
     it('opacity goes 1 -> intermediate -> 0 for non-VMobject', () => {
-      const mob = new Mobject();
+      const mob = new MockPlainMobject();
       mob.opacity = 1;
       const anim = new Uncreate(mob);
 
@@ -2477,9 +2494,9 @@ describe('Full lifecycle integration', () => {
 
   describe('ShowIncreasingSubsets full cycle', () => {
     it('submobjects appear progressively', () => {
-      const parent = new Mobject();
-      const child1 = new Mobject();
-      const child2 = new Mobject();
+      const parent = new MockPlainMobject();
+      const child1 = new MockPlainMobject();
+      const child2 = new MockPlainMobject();
       child1.opacity = 1;
       child2.opacity = 1;
       parent.add(child1);
@@ -2509,7 +2526,7 @@ import { MasterTimeline } from '../MasterTimeline';
 
 describe('Create with MasterTimeline (opacity fallback path)', () => {
   it('Create(Dot) opacity fades from 0 to 1 in MasterTimeline', () => {
-    const dot = new Mobject();
+    const dot = new MockPlainMobject();
     dot.opacity = 1;
 
     const anim = new Create(dot, { duration: 1, rateFunc: linear });
@@ -2531,9 +2548,9 @@ describe('Create with MasterTimeline (opacity fallback path)', () => {
   });
 
   it('sequential Create animations: dot2 hidden until its segment', () => {
-    const dot1 = new Mobject();
+    const dot1 = new MockPlainMobject();
     dot1.opacity = 1;
-    const dot2 = new Mobject();
+    const dot2 = new MockPlainMobject();
     dot2.opacity = 1;
 
     const anim1 = new Create(dot1, { duration: 1, rateFunc: linear });
@@ -2566,7 +2583,7 @@ describe('Create with MasterTimeline (opacity fallback path)', () => {
   });
 
   it('seek(0) does not corrupt saved opacity for opacity-based Create', () => {
-    const dot = new Mobject();
+    const dot = new MockPlainMobject();
     dot.opacity = 0.8;
 
     const anim = new Create(dot, { duration: 1, rateFunc: linear });

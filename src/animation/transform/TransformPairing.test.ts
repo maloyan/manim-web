@@ -203,6 +203,62 @@ describe('TransformPairing core', () => {
     expect(aligned!.tgtAlignedPoints[0][0]).toBeCloseTo(2000, 5);
   });
 
+  it('does not cross-pair when all subpaths are opposite orientation', () => {
+    const srcA = makeLinearClosedSquare(0, 0, 1, 1);
+    const srcB = makeLinearClosedSquare(2, 0, 3, 1);
+    const tgtA = makeLinearClosedSquare(10, 10, 11, 11);
+    const tgtB = makeLinearClosedSquare(12, 10, 13, 11);
+
+    const src = [...srcA, ...srcB];
+    const tgt = [...tgtA, ...tgtB];
+
+    const aligned = alignCompoundPathsForTransform(
+      src,
+      [srcA.length, srcB.length],
+      tgt,
+      [tgtA.length, tgtB.length],
+      [-1, -1],
+      [1, 1],
+    );
+
+    expect(aligned).not.toBeNull();
+    expect(aligned!.alignedSubpathLengths).toEqual([
+      srcA.length,
+      srcB.length,
+      tgtA.length,
+      tgtB.length,
+    ]);
+
+    const isConstant = (points: number[][]) =>
+      points.every(
+        (p) =>
+          p[0] === points[0][0] && p[1] === points[0][1] && (p[2] ?? 0) === (points[0][2] ?? 0),
+      );
+
+    const L = srcA.length;
+    // First two chunks: (-1) bucket => source real, target placeholders.
+    const firstSrc = aligned!.srcAlignedPoints.slice(0, L);
+    const firstTgt = aligned!.tgtAlignedPoints.slice(0, L);
+    const secondSrc = aligned!.srcAlignedPoints.slice(L, 2 * L);
+    const secondTgt = aligned!.tgtAlignedPoints.slice(L, 2 * L);
+
+    expect(isConstant(firstSrc)).toBe(false);
+    expect(isConstant(firstTgt)).toBe(true);
+    expect(isConstant(secondSrc)).toBe(false);
+    expect(isConstant(secondTgt)).toBe(true);
+
+    // Last two chunks: (+1) bucket => source placeholders, target real.
+    const thirdSrc = aligned!.srcAlignedPoints.slice(2 * L, 3 * L);
+    const thirdTgt = aligned!.tgtAlignedPoints.slice(2 * L, 3 * L);
+    const fourthSrc = aligned!.srcAlignedPoints.slice(3 * L, 4 * L);
+    const fourthTgt = aligned!.tgtAlignedPoints.slice(3 * L, 4 * L);
+
+    expect(isConstant(thirdSrc)).toBe(true);
+    expect(isConstant(thirdTgt)).toBe(false);
+    expect(isConstant(fourthSrc)).toBe(true);
+    expect(isConstant(fourthTgt)).toBe(false);
+  });
+
   it('rotates closed target subpath so first anchor is closest to source first anchor', () => {
     const sourceA = makeLinearClosedSquare(-1, -1, 1, 1);
     const sourceB = makeLinearClosedSquare(5, 5, 6, 6);

@@ -1,4 +1,4 @@
-import { evalCubicBezier, lerpPoint as lerpPoint3D } from '../utils/math';
+import { evalCubicBezier, lerpPoint as lerpPoint3D, signedArea2DFromStride } from '../utils/math';
 
 export interface CompoundAlignmentResult {
   srcAlignedPoints: number[][];
@@ -286,24 +286,11 @@ interface SignedSubpathChunk {
   sign: 1 | -1;
 }
 
-function signedArea2D(pts: number[][]): number {
-  const anchors: number[][] = [];
-  for (let i = 0; i < pts.length; i += 3) anchors.push(pts[i]);
-  if (anchors.length < 3) return 0;
-
-  let area = 0;
-  for (let i = 0; i < anchors.length; i++) {
-    const j = (i + 1) % anchors.length;
-    area += anchors[i][0] * anchors[j][1] - anchors[j][0] * anchors[i][1];
-  }
-  return area / 2;
-}
-
 function inferSign(chunk: number[][]): 1 | -1 {
   // Intentional simplification: keep binary orientation bucketing only.
   // Near-zero/degenerate area is treated as +1 instead of introducing a
   // neutral/tri-state branch, to keep transform pairing logic simpler.
-  return signedArea2D(chunk) < 0 ? -1 : 1;
+  return signedArea2DFromStride(chunk, 3) < 0 ? -1 : 1;
 }
 
 function makeSignedChunks(

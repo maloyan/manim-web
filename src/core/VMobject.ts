@@ -12,7 +12,7 @@
 import * as THREE from 'three';
 import { Vector3Tuple } from './Mobject';
 import { VMobjectRendering } from './VMobjectRendering';
-import { lerp, lerpPoint as lerpPoint3D } from '../utils/math';
+import { lerp, lerpPoint as lerpPoint3D, signedArea2DFromStride } from '../utils/math';
 import type { Point } from './VMobjectCurves';
 
 import {
@@ -333,7 +333,7 @@ export class VMobject extends VMobjectRendering {
         );
       }
       const chunk = this._points3D.slice(offset, offset + len);
-      const area = VMobject._signedArea2D(chunk);
+      const area = signedArea2DFromStride(chunk, 3);
       signs.push(area < 0 ? -1 : 1);
       offset += len;
     }
@@ -435,8 +435,8 @@ export class VMobject extends VMobjectRendering {
 
     // Ensure consistent winding direction between source and target.
     // Opposite winding causes collapsed/twisted intermediate shapes.
-    const srcWinding = VMobject._signedArea2D(this._points3D);
-    const tgtWinding = VMobject._signedArea2D(target._points3D);
+    const srcWinding = signedArea2DFromStride(this._points3D, 3);
+    const tgtWinding = signedArea2DFromStride(target._points3D, 3);
     if (srcWinding * tgtWinding < 0) {
       // Opposite winding — reverse target points (preserve bezier structure)
       target._points3D = VMobject._reverseBezierPath(target._points3D);
@@ -446,27 +446,6 @@ export class VMobject extends VMobjectRendering {
     // squared distance to the source, so corresponding points are
     // geometrically close and the morph looks smooth.
     target._points3D = VMobject._bestRotation(this._points3D, target._points3D);
-  }
-
-  /**
-   * Compute the signed area of a 2D polygon formed by the anchor points.
-   * Positive = counter-clockwise, negative = clockwise.
-   */
-  private static _signedArea2D(pts: number[][]): number {
-    // Use only anchor points (every 3rd starting from 0 for cubic bezier)
-    const stride = 3;
-    const anchors: number[][] = [];
-    for (let i = 0; i < pts.length; i += stride) {
-      anchors.push(pts[i]);
-    }
-    if (anchors.length < 3) return 0;
-    let area = 0;
-    for (let i = 0; i < anchors.length; i++) {
-      const j = (i + 1) % anchors.length;
-      area += anchors[i][0] * anchors[j][1];
-      area -= anchors[j][0] * anchors[i][1];
-    }
-    return area / 2;
   }
 
   /**

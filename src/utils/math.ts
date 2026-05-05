@@ -19,6 +19,29 @@ export function lerpPoint(a: number[], b: number[], t: number): number[] {
 }
 
 /**
+ * Compute signed 2D polygon area from points sampled with a fixed stride.
+ *
+ * Example: cubic Bezier control points use stride=3 to select anchors.
+ * Positive = counter-clockwise, negative = clockwise.
+ */
+export function signedArea2DFromStride(points: number[][], stride = 1): number {
+  const anchors: number[][] = [];
+  for (let i = 0; i < points.length; i += stride) {
+    anchors.push(points[i]);
+  }
+
+  if (anchors.length < 3) return 0;
+
+  let area = 0;
+  for (let i = 0; i < anchors.length; i++) {
+    const j = (i + 1) % anchors.length;
+    area += anchors[i][0] * anchors[j][1] - anchors[j][0] * anchors[i][1];
+  }
+
+  return area / 2;
+}
+
+/**
  * Hermite smoothstep interpolation.
  * Maps t in [0, 1] to a smooth S-curve: 3t^2 - 2t^3.
  * Commonly used for smooth camera movements and animation easing.
