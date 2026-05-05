@@ -38,7 +38,8 @@ function vmWithPoints(pts: number[][]) {
 
 function collectVmobjectLeavesWithPoints(mobject: Mobject): VMobject[] {
   const out: VMobject[] = [];
-  if (mobject instanceof VMobject && mobject.getPoints().length > 0) {
+  const vmChildren = mobject.children.filter((c): c is VMobject => c instanceof VMobject);
+  if (mobject instanceof VMobject && mobject.getPoints().length > 0 && vmChildren.length === 0) {
     out.push(mobject);
   }
   for (const child of mobject.children) {
