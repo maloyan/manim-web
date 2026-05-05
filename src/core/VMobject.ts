@@ -327,14 +327,22 @@ export class VMobject extends VMobjectRendering {
     const signs: Array<1 | -1> = [];
     let offset = 0;
     for (const len of effective) {
-      if (len <= 0 || offset + len > this._points3D.length) return undefined;
+      if (len <= 0 || offset + len > this._points3D.length) {
+        throw new Error(
+          `getSubpathOrientationSigns: invalid subpath at offset ${offset} len ${len} (points=${this._points3D.length})`,
+        );
+      }
       const chunk = this._points3D.slice(offset, offset + len);
       const area = VMobject._signedArea2D(chunk);
       signs.push(area < 0 ? -1 : 1);
       offset += len;
     }
 
-    if (offset !== this._points3D.length) return undefined;
+    if (offset !== this._points3D.length) {
+      throw new Error(
+        `getSubpathOrientationSigns: lengths sum (${offset}) != points length (${this._points3D.length})`,
+      );
+    }
     return signs;
   }
 
