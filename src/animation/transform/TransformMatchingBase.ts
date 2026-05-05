@@ -25,7 +25,7 @@
 import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { lerp, lerpPoint } from '../../utils/math';
-import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
+import { alignCompoundPathsForTransform } from '../../core/VMobjectTransformAlignment';
 
 export interface TransformMatchingBaseOptions extends AnimationOptions {
   /** Key function to extract identifier for matching */

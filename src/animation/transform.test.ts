@@ -129,19 +129,15 @@ describe('Transform', () => {
       let distance: number | undefined;
       const count = Math.min(oneLeaves.length, zeroLeaves.length);
       for (let i = 0; i < count; i++) {
-        try {
-          const aligned = alignVmobjectPair(oneLeaves[i], zeroLeaves[i]);
-          const sourceStart = aligned.startPoints[0];
-          const targetStart = aligned.targetPoints[0];
-          distance = Math.hypot(
-            sourceStart[0] - targetStart[0],
-            sourceStart[1] - targetStart[1],
-            sourceStart[2] - targetStart[2],
-          );
-          break;
-        } catch {
-          // Try next leaf pair.
-        }
+        const aligned = alignVmobjectPair(oneLeaves[i], zeroLeaves[i]);
+        const sourceStart = aligned.startPoints[0];
+        const targetStart = aligned.targetPoints[0];
+        distance = Math.hypot(
+          sourceStart[0] - targetStart[0],
+          sourceStart[1] - targetStart[1],
+          sourceStart[2] - targetStart[2],
+        );
+        break;
       }
 
       expect(distance).toBeDefined();

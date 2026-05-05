@@ -3,7 +3,7 @@ import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Circle } from '../../mobjects/geometry/Circle';
 import { alignVmobjectPair, pairLeafSnapshotsByIndex } from './TransformPairing';
-import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
+import { alignCompoundPathsForTransform } from '../../core/VMobjectTransformAlignment';
 
 function vmWithPoints(pts: number[][]) {
   const vm = new VMobject();

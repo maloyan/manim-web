@@ -343,10 +343,12 @@ export class VMobject extends VMobjectRendering {
    */
   getSubpathOrientationSign(index: number): 1 | -1 {
     const signs = this.getSubpathOrientationSigns();
-    if (signs && index >= 0 && index < signs.length) {
-      return signs[index];
+    if (!signs || index < 0 || index >= signs.length) {
+      throw new RangeError(
+        `getSubpathOrientationSign: index ${index} out of range [0, ${signs?.length ?? 0})`,
+      );
     }
-    return VMobject._signedArea2D(this._points3D) < 0 ? -1 : 1;
+    return signs[index];
   }
 
   // -----------------------------------------------------------------------

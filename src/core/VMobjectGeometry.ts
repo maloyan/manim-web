@@ -19,8 +19,6 @@ import {
   projectToPlane,
 } from '../utils/math';
 import type { Point } from './VMobjectCurves';
-export { alignCompoundPathsForTransform } from './VMobjectTransformAlignment';
-export type { CompoundAlignmentResult } from './VMobjectTransformAlignment';
 
 /**
  * Sampling density used for fill triangulation outlines.
@@ -438,7 +436,18 @@ export function buildEarcutFillGeometry(
     return new THREE.ShapeGeometry(shape);
   }
 
-  return buildGeometryFromTriangleIndices(outline3D, indices);
+  // Create BufferGeometry using original 3D points (not projected 2D)
+  const positions = new Float32Array(indices.length * 3);
+  for (let i = 0; i < indices.length; i++) {
+    const v = outline3D[indices[i]];
+    positions[i * 3] = v[0];
+    positions[i * 3 + 1] = v[1];
+    positions[i * 3 + 2] = v[2] ?? 0;
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  return geometry;
 }
 
 /**
@@ -453,7 +462,7 @@ function buildEarcutFillGeometryMulti(
 ): THREE.BufferGeometry | null {
   void visiblePoints; // kept for API compatibility
 
-  // Sample each subpath into 3D rings.
+  // Sample each subpath into 3D rings, collecting all points for plane computation
   let offset = 0;
   const rings3D: number[][][] = [];
   const allPoints3D: number[][] = [];
@@ -472,6 +481,8 @@ function buildEarcutFillGeometryMulti(
   if (rings3D.length === 0) return null;
 
   // Compute ONE shared plane basis from all sampled points.
+  // This keeps containment (hole classification) and triangulation in the
+  // same 2D coordinate system even when the whole shape is rotated in 3D.
   const { origin, v1, v2 } = projectOutlineToPlane(allPoints3D);
 
   // Project each 3D ring to 2D using the shared plane basis
@@ -479,60 +490,49 @@ function buildEarcutFillGeometryMulti(
     ring.map((p) => projectToPlane(p, origin, v1, v2)),
   );
 
-  // Heuristic classification: pick longest ring as primary outer contour.
-  // Treat only rings INSIDE that contour as holes; rings outside stay
-  // independent outers (prevents '=' turning into one bar).
-  let primaryOuterRingIndex = 0;
-  let primaryOuterPerimeter = ringPerimeter2D(rings2D[0]);
-  for (let i = 1; i < rings2D.length; i++) {
-    const perimeter = ringPerimeter2D(rings2D[i]);
-    if (perimeter > primaryOuterPerimeter) {
-      primaryOuterPerimeter = perimeter;
-      primaryOuterRingIndex = i;
-    }
-  }
-
-  const allPositions: number[] = [];
-
-  const insidePrimaryHoleRings: number[][][] = [];
-  const independentOuterRingIndices: number[] = [];
+  // Determine containment: for each ring, check if it's inside another ring.
+  const isHoleOf = new Array<number>(rings2D.length).fill(-1);
 
   for (let i = 0; i < rings2D.length; i++) {
-    if (i === primaryOuterRingIndex) continue;
-
-    if (pointInPolygon(rings2D[i][0], rings2D[primaryOuterRingIndex])) {
-      insidePrimaryHoleRings.push(rings2D[i]);
-    } else {
-      independentOuterRingIndices.push(i);
+    for (let j = 0; j < rings2D.length; j++) {
+      if (i === j) continue;
+      if (pointInPolygon(rings2D[i][0], rings2D[j])) {
+        isHoleOf[i] = j;
+        break;
+      }
     }
   }
 
-  const primaryIndices = triangulatePolygon(
-    rings2D[primaryOuterRingIndex],
-    insidePrimaryHoleRings.length > 0 ? insidePrimaryHoleRings : undefined,
-  );
-  if (primaryIndices.length > 0) {
-    const primaryVerts3D: number[][] = [...rings3D[primaryOuterRingIndex]];
-    for (let i = 0; i < rings2D.length; i++) {
-      if (i === primaryOuterRingIndex) continue;
-      if (pointInPolygon(rings2D[i][0], rings2D[primaryOuterRingIndex])) {
-        primaryVerts3D.push(...rings3D[i]);
+  // Collect outer rings (not holes) and their associated holes
+  const allPositions: number[] = [];
+
+  for (let i = 0; i < rings2D.length; i++) {
+    if (isHoleOf[i] >= 0) continue;
+
+    const outerRing = rings2D[i];
+    const outerRing3D = rings3D[i];
+    const holeRings: number[][][] = [];
+    const holeRings3D: number[][][] = [];
+
+    for (let j = 0; j < rings2D.length; j++) {
+      if (isHoleOf[j] === i) {
+        holeRings.push(rings2D[j]);
+        holeRings3D.push(rings3D[j]);
       }
     }
 
-    for (const idx of primaryIndices) {
-      const v = primaryVerts3D[idx];
-      allPositions.push(v[0], v[1], v[2] ?? 0);
-    }
-  }
-
-  for (const ringIndex of independentOuterRingIndices) {
-    const indices = triangulatePolygon(rings2D[ringIndex]);
+    const indices = triangulatePolygon(outerRing, holeRings.length > 0 ? holeRings : undefined);
     if (indices.length === 0) continue;
 
-    const verts3D = rings3D[ringIndex];
+    const allVerts: number[][] = [...outerRing];
+    const allVerts3D: number[][] = [...outerRing3D];
+    for (let h = 0; h < holeRings.length; h++) {
+      allVerts.push(...holeRings[h]);
+      allVerts3D.push(...holeRings3D[h]);
+    }
+
     for (const idx of indices) {
-      const v = verts3D[idx];
+      const v = allVerts3D[idx];
       allPositions.push(v[0], v[1], v[2] ?? 0);
     }
   }
@@ -542,36 +542,6 @@ function buildEarcutFillGeometryMulti(
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(allPositions), 3));
   return geometry;
-}
-
-function buildGeometryFromTriangleIndices(
-  vertices3D: number[][],
-  indices: number[],
-): THREE.BufferGeometry {
-  const positions = new Float32Array(indices.length * 3);
-  for (let i = 0; i < indices.length; i++) {
-    const v = vertices3D[indices[i]];
-    positions[i * 3] = v[0];
-    positions[i * 3 + 1] = v[1];
-    positions[i * 3 + 2] = v[2] ?? 0;
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  return geometry;
-}
-
-function ringPerimeter2D(ring: number[][]): number {
-  if (ring.length < 2) return 0;
-  let perimeter = 0;
-  for (let i = 0; i < ring.length; i++) {
-    const a = ring[i];
-    const b = ring[(i + 1) % ring.length];
-    const dx = b[0] - a[0];
-    const dy = b[1] - a[1];
-    perimeter += Math.hypot(dx, dy);
-  }
-  return perimeter;
 }
 
 // -----------------------------------------------------------------------

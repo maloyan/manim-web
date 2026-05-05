@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MathTexImage vs MathTex Transform MRE</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0b0b10;
+        color: #d1d5db;
+        font-family: system-ui, sans-serif;
+      }
+      #container {
+        border: 1px solid #333;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .controls { margin-top: 10px; display: flex; gap: 8px; }
+      button { padding: 8px 12px; }
+      .hint { margin-top: 8px; font-size: 12px; color: #9ca3af; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div id="container"></div>
+      <div class="controls">
+        <button id="playBtn">Play</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+      <div class="hint">Left: MathTexImage(48→144). Right: MathTex(48→144). Same Create + Transform.</div>
+    </div>
+    <script type="module" src="./mathtex_image_scale_probe.ts"></script>
+  </body>
+</html>

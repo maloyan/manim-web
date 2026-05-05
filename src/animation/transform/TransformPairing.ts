@@ -4,7 +4,7 @@ import {
   collectLeafVMobjectSnapshots,
   type LeafVMobjectSnapshot,
 } from '../../core/MobjectTraversal';
-import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
+import { alignCompoundPathsForTransform } from '../../core/VMobjectTransformAlignment';
 
 function sum(values: number[]): number {
   let out = 0;

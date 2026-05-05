@@ -27,17 +27,18 @@ function makeNullSubpathFromReference(
 }
 
 /**
- * Resample a 3D point list to a target count using linear interpolation.
+ * Resample a 3D point list to `targetCount`.
  *
- * This mirrors VMobject._interpolatePointList3D behavior and is used for
- * compound-path pairing so the shorter subpath is resampled to match the
- * longer subpath's point count.
+ * For cubic-Bezier-chain inputs whose target count fits the cubic stride
+ * (`(n-1) % 3 === 0`), uses De Casteljau-style subdivision via
+ * `remapBezierCurveCount` to preserve curve fidelity; otherwise falls back
+ * to piecewise-linear interpolation.
  */
 function resamplePointList3D(points: number[][], targetCount: number): number[][] {
   if (targetCount <= 0) return [];
 
   if (points.length === 0) {
-    return Array.from({ length: targetCount }, () => [0, 0, 0]);
+    throw new Error('resamplePointList3D: empty point list is a metadata bug');
   }
 
   if (targetCount === 1) {
@@ -354,12 +355,23 @@ export function alignCompoundPathsForTransform(
   srcSigns?: Array<1 | -1>,
   tgtSigns?: Array<1 | -1>,
 ): CompoundAlignmentResult | null {
+  // Validate first, then early-return on trivial cases
+  if (srcLengths) validateSubpathLengths(srcPoints3D, srcLengths, 'source');
+  if (tgtLengths) validateSubpathLengths(tgtPoints3D, tgtLengths, 'target');
+  if (srcSigns && srcLengths && srcSigns.length !== srcLengths.length) {
+    throw new Error(
+      `alignCompoundPathsForTransform: srcSigns length (${srcSigns.length}) must match srcLengths length (${srcLengths.length})`,
+    );
+  }
+  if (tgtSigns && tgtLengths && tgtSigns.length !== tgtLengths.length) {
+    throw new Error(
+      `alignCompoundPathsForTransform: tgtSigns length (${tgtSigns.length}) must match tgtLengths length (${tgtLengths.length})`,
+    );
+  }
+
   if (!srcLengths || !tgtLengths || (srcLengths.length <= 1 && tgtLengths.length <= 1)) {
     return null;
   }
-
-  validateSubpathLengths(srcPoints3D, srcLengths, 'source');
-  validateSubpathLengths(tgtPoints3D, tgtLengths, 'target');
 
   const srcCenter = computeCenter(srcPoints3D);
   const tgtCenter = computeCenter(tgtPoints3D);
