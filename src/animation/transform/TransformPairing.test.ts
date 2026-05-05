@@ -238,6 +238,33 @@ describe('TransformPairing core', () => {
     expect(aligned!.tgtAlignedPoints[0][1]).toBeCloseTo(-1, 6);
   });
 
+  it('alignVmobjectPair applies closest-anchor rotation for closed compound subpaths', () => {
+    const sourceA = makeLinearClosedSquare(-1, -1, 1, 1);
+    const sourceB = makeLinearClosedSquare(5, 5, 6, 6);
+    const source = vmWithPoints([...sourceA, ...sourceB]);
+    source.setBaseSubpathLengths([sourceA.length, sourceB.length]);
+
+    const targetA = makeLinearClosedSquare(-1, -1, 1, 1);
+    const targetB = makeLinearClosedSquare(5, 5, 6, 6);
+
+    // Start targetA at a different anchor (one cubic segment shift).
+    const shift = 3;
+    const openLen = targetA.length - 1;
+    const rotatedOpen: number[][] = [];
+    for (let i = 0; i < openLen; i++) rotatedOpen.push([...targetA[(i + shift) % openLen]]);
+    const targetAShifted = [...rotatedOpen, [...rotatedOpen[0]]];
+
+    const target = vmWithPoints([...targetAShifted, ...targetB]);
+    target.setBaseSubpathLengths([targetAShifted.length, targetB.length]);
+
+    const aligned = alignVmobjectPair(source, target);
+
+    expect(aligned.startPoints[0][0]).toBeCloseTo(-1, 6);
+    expect(aligned.startPoints[0][1]).toBeCloseTo(-1, 6);
+    expect(aligned.targetPoints[0][0]).toBeCloseTo(-1, 6);
+    expect(aligned.targetPoints[0][1]).toBeCloseTo(-1, 6);
+  });
+
   it('pairLeafSnapshotsByIndex preserves left-to-right leaf order and unmatched tails', () => {
     const a = new Circle({ radius: 1 });
     const b = new Circle({ radius: 0.8 });

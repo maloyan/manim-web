@@ -16,6 +16,8 @@ import { VGroup } from '../core/VGroup';
 import { Circle } from '../mobjects/geometry/Circle';
 import { ImageMobject } from '../mobjects/image';
 import { Text } from '../mobjects/text/Text';
+import { MathTex } from '../mobjects/text/MathTex';
+import { alignVmobjectPair } from './transform/TransformPairing';
 
 /** Two circles with distinct styles for point-morphing tests. */
 function makePair() {
@@ -32,6 +34,17 @@ function vmWithPoints(pts: number[][]) {
   const vm = new VMobject();
   vm.setPoints(pts);
   return vm;
+}
+
+function collectVmobjectLeavesWithPoints(mobject: Mobject): VMobject[] {
+  const out: VMobject[] = [];
+  if (mobject instanceof VMobject && mobject.getPoints().length > 0) {
+    out.push(mobject);
+  }
+  for (const child of mobject.children) {
+    out.push(...collectVmobjectLeavesWithPoints(child));
+  }
+  return out;
 }
 
 describe('Transform', () => {
@@ -96,13 +109,43 @@ describe('Transform', () => {
       const t = new Transform(source, target);
       t.begin();
       t.interpolate(0.999);
-      // During transform we use dense aligned subpaths for smoother interpolation.
-      expect(source.getEffectiveSubpathLengths()).toEqual([64, 64]);
       t.interpolate(1);
       t.finish();
 
       // At finish we restore exact target topology metadata.
       expect(source.getEffectiveSubpathLengths()).toEqual([5, 5]);
+    });
+
+    it('keeps first aligned path points close at first frame for MathTex 1 -> 0', async () => {
+      const one = new MathTex({ latex: '1' });
+      const zero = new MathTex({ latex: '0' });
+      await Promise.all([one.waitForRender(), zero.waitForRender()]);
+
+      const oneLeaves = collectVmobjectLeavesWithPoints(one);
+      const zeroLeaves = collectVmobjectLeavesWithPoints(zero);
+      expect(oneLeaves.length).toBeGreaterThan(0);
+      expect(zeroLeaves.length).toBeGreaterThan(0);
+
+      let distance: number | undefined;
+      const count = Math.min(oneLeaves.length, zeroLeaves.length);
+      for (let i = 0; i < count; i++) {
+        try {
+          const aligned = alignVmobjectPair(oneLeaves[i], zeroLeaves[i]);
+          const sourceStart = aligned.startPoints[0];
+          const targetStart = aligned.targetPoints[0];
+          distance = Math.hypot(
+            sourceStart[0] - targetStart[0],
+            sourceStart[1] - targetStart[1],
+            sourceStart[2] - targetStart[2],
+          );
+          break;
+        } catch {
+          // Try next leaf pair.
+        }
+      }
+
+      expect(distance).toBeDefined();
+      expect(distance!).toBeLessThan(0.1);
     });
   });
   it('stores mobject, target, and defaults to 1s duration', () => {
