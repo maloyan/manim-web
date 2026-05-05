@@ -52,11 +52,16 @@ export function alignVmobjectPair(source: VMobject, target: VMobject): AlignedTr
   assertSubpathLengthsMatchPoints(startPointsRaw, srcLengths, 'alignVmobjectPair(source)');
   assertSubpathLengthsMatchPoints(targetPointsRaw, tgtLengths, 'alignVmobjectPair(target)');
 
+  const srcSigns = startCopy.getSubpathOrientationSigns?.(srcLengths);
+  const tgtSigns = targetCopy.getSubpathOrientationSigns?.(tgtLengths);
+
   const alignedCompound = alignCompoundPathsForTransform(
     startPointsRaw,
     srcLengths,
     targetPointsRaw,
     tgtLengths,
+    srcSigns,
+    tgtSigns,
   );
 
   if (alignedCompound) {

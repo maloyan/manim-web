@@ -316,6 +316,39 @@ export class VMobject extends VMobjectRendering {
     return this.getSubpathLengths?.();
   }
 
+  /**
+   * Get orientation sign for each subpath: +1 (CCW) or -1 (CW).
+   * Returns undefined when subpath metadata is missing or inconsistent.
+   */
+  getSubpathOrientationSigns(lengths?: number[]): Array<1 | -1> | undefined {
+    const effective = lengths ?? this.getEffectiveSubpathLengths();
+    if (!effective || effective.length === 0) return undefined;
+
+    const signs: Array<1 | -1> = [];
+    let offset = 0;
+    for (const len of effective) {
+      if (len <= 0 || offset + len > this._points3D.length) return undefined;
+      const chunk = this._points3D.slice(offset, offset + len);
+      const area = VMobject._signedArea2D(chunk);
+      signs.push(area < 0 ? -1 : 1);
+      offset += len;
+    }
+
+    if (offset !== this._points3D.length) return undefined;
+    return signs;
+  }
+
+  /**
+   * Get orientation sign for a specific subpath index: +1 (CCW) or -1 (CW).
+   */
+  getSubpathOrientationSign(index: number): 1 | -1 {
+    const signs = this.getSubpathOrientationSigns();
+    if (signs && index >= 0 && index < signs.length) {
+      return signs[index];
+    }
+    return VMobject._signedArea2D(this._points3D) < 0 ? -1 : 1;
+  }
+
   // -----------------------------------------------------------------------
   // Interpolation and alignment
   // -----------------------------------------------------------------------

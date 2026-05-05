@@ -13,6 +13,7 @@ import * as THREE from 'three';
 import { triangulatePolygon } from '../utils/triangulate';
 import {
   evalCubicBezier,
+  lerpPoint as lerpPoint3D,
   selectScatteredPoints,
   extractVectorsFrom3Points,
   orthonormalizeBasis,
@@ -317,42 +318,231 @@ function makeNullSubpathFromReference(
 }
 
 /**
- * Ping-pong repeat points to reach target count.
- * Keep endpoints fixed by skipping last point on forward pass
- * and first point on backward pass.
+ * Resample a 3D point list to a target count using linear interpolation.
+ *
+ * This mirrors VMobject._interpolatePointList3D behavior and is used for
+ * compound-path pairing so the shorter subpath is resampled to match the
+ * longer subpath's point count.
  */
-function pingPongRepeat(pts: number[][], targetCount: number): number[][] {
-  if (pts.length >= targetCount) return pts.map((p) => [...p]);
-  if (pts.length <= 1) return Array.from({ length: targetCount }, () => [...(pts[0] ?? [0, 0, 0])]);
+function resamplePointList3D(points: number[][], targetCount: number): number[][] {
+  if (targetCount <= 0) return [];
 
-  const result = pts.map((p) => [...p]);
-  while (result.length < targetCount) {
-    for (let i = 1; i < pts.length - 1 && result.length < targetCount; i++) {
-      result.push([...pts[i]]);
-    }
-    for (let i = pts.length - 2; i > 0 && result.length < targetCount; i--) {
-      result.push([...pts[i]]);
+  if (points.length === 0) {
+    return Array.from({ length: targetCount }, () => [0, 0, 0]);
+  }
+
+  if (targetCount === 1) {
+    return [[...(points[0] ?? [0, 0, 0])]];
+  }
+
+  if (points.length === targetCount) {
+    return points.map((p) => [...p]);
+  }
+
+  if (points.length === 1) {
+    return Array.from({ length: targetCount }, () => [...points[0]]);
+  }
+
+  if (isCubicBezierChain(points) && targetCount >= 4 && (targetCount - 1) % 3 === 0) {
+    const currentCurveCount = (points.length - 1) / 3;
+    const targetCurveCount = (targetCount - 1) / 3;
+    if (targetCurveCount >= currentCurveCount) {
+      const remapped = remapBezierCurveCount(points, targetCurveCount);
+      if (remapped.length === targetCount) {
+        return remapped;
+      }
     }
   }
-  return result.slice(0, targetCount);
+
+  // Fallback for non-cubic or malformed point arrays.
+  const result: number[][] = [];
+  const ratio = (points.length - 1) / (targetCount - 1);
+
+  for (let i = 0; i < targetCount; i++) {
+    const t = i * ratio;
+    const index = Math.floor(t);
+    const frac = t - index;
+
+    if (index >= points.length - 1) {
+      result.push([...points[points.length - 1]]);
+    } else {
+      result.push(lerpPoint3D(points[index], points[index + 1], frac));
+    }
+  }
+
+  return result;
 }
 
-/** Equalize point counts using ping-pong on the shorter path only. */
+function isCubicBezierChain(points: number[][]): boolean {
+  return points.length >= 4 && (points.length - 1) % 3 === 0;
+}
+
+function evalCubicDerivative(
+  p0: number[],
+  p1: number[],
+  p2: number[],
+  p3: number[],
+  t: number,
+): number[] {
+  const s = 1 - t;
+  const out: number[] = [];
+  const dim = Math.max(p0.length, p1.length, p2.length, p3.length);
+  for (let k = 0; k < dim; k++) {
+    const a = p0[k] ?? 0;
+    const b = p1[k] ?? 0;
+    const c = p2[k] ?? 0;
+    const d = p3[k] ?? 0;
+    out.push(3 * s * s * (b - a) + 6 * s * t * (c - b) + 3 * t * t * (d - c));
+  }
+  return out;
+}
+
+function subdivideCubicCurve(curve: number[][], parts: number): number[][][] {
+  const p0 = curve[0];
+  const p1 = curve[1];
+  const p2 = curve[2];
+  const p3 = curve[3];
+
+  if (parts <= 1) {
+    return [[[...p0], [...p1], [...p2], [...p3]]];
+  }
+
+  const out: number[][][] = [];
+  for (let i = 0; i < parts; i++) {
+    const t0 = i / parts;
+    const t1 = (i + 1) / parts;
+    const dt = t1 - t0;
+
+    const q0 = evalCubicBezier(p0, p1, p2, p3, t0);
+    const q3 = evalCubicBezier(p0, p1, p2, p3, t1);
+    const d0 = evalCubicDerivative(p0, p1, p2, p3, t0);
+    const d1 = evalCubicDerivative(p0, p1, p2, p3, t1);
+
+    const q1 = q0.map((v, k) => v + (dt / 3) * (d0[k] ?? 0));
+    const q2 = q3.map((v, k) => v - (dt / 3) * (d1[k] ?? 0));
+
+    out.push([q0, q1, q2, q3]);
+  }
+
+  return out;
+}
+
+function remapBezierCurveCount(points: number[][], newCurveCount: number): number[][] {
+  const currentCurveCount = (points.length - 1) / 3;
+  if (!Number.isInteger(currentCurveCount) || currentCurveCount <= 0) {
+    return points.map((p) => [...p]);
+  }
+  if (newCurveCount <= currentCurveCount) {
+    return points.map((p) => [...p]);
+  }
+
+  const curves: number[][][] = [];
+  for (let i = 0; i + 3 < points.length; i += 3) {
+    curves.push([points[i], points[i + 1], points[i + 2], points[i + 3]]);
+  }
+
+  const splitFactors = new Array<number>(currentCurveCount).fill(0);
+  for (let i = 0; i < newCurveCount; i++) {
+    const idx = Math.floor((i * currentCurveCount) / newCurveCount);
+    splitFactors[idx] += 1;
+  }
+
+  const out: number[][] = [];
+  for (let i = 0; i < curves.length; i++) {
+    const pieces = subdivideCubicCurve(curves[i], splitFactors[i]);
+    for (let j = 0; j < pieces.length; j++) {
+      const piece = pieces[j];
+      if (out.length === 0) out.push([...piece[0]]);
+      out.push([...piece[1]], [...piece[2]], [...piece[3]]);
+    }
+  }
+
+  return out;
+}
+
+/** @internal Check if point list is closed (first ≈ last). */
+function isClosedSubpathForRotation(points: number[][]): boolean {
+  if (points.length < 2) return false;
+  const a = points[0];
+  const b = points[points.length - 1];
+  const eps = 1e-6;
+  return (
+    Math.abs((a[0] ?? 0) - (b[0] ?? 0)) < eps &&
+    Math.abs((a[1] ?? 0) - (b[1] ?? 0)) < eps &&
+    Math.abs((a[2] ?? 0) - (b[2] ?? 0)) < eps
+  );
+}
+
+/**
+ * Rotate closed cubic-bezier target subpath so its first anchor is the closest
+ * anchor to the source first anchor. Rotation is done by stride=3 to preserve
+ * [anchor, handle, handle, anchor, ...] structure.
+ */
+function rotateClosedTargetToClosestSourceAnchor(
+  srcSubpath: number[][],
+  tgtSubpath: number[][],
+): number[][] {
+  if (!isClosedSubpathForRotation(srcSubpath) || !isClosedSubpathForRotation(tgtSubpath)) {
+    return tgtSubpath.map((p) => [...p]);
+  }
+
+  const n = tgtSubpath.length;
+  const openLen = n - 1;
+  const stride = 3;
+
+  // Only safe for canonical cubic control-point chains.
+  if (openLen <= 0 || openLen % stride !== 0) {
+    return tgtSubpath.map((p) => [...p]);
+  }
+
+  const src0 = srcSubpath[0];
+  const anchorCount = openLen / stride;
+  let bestAnchor = 0;
+  let bestDist2 = Infinity;
+
+  for (let ai = 0; ai < anchorCount; ai++) {
+    const idx = ai * stride;
+    const p = tgtSubpath[idx];
+    const dx = (p[0] ?? 0) - (src0[0] ?? 0);
+    const dy = (p[1] ?? 0) - (src0[1] ?? 0);
+    const dz = (p[2] ?? 0) - (src0[2] ?? 0);
+    const d2 = dx * dx + dy * dy + dz * dz;
+    if (d2 < bestDist2) {
+      bestDist2 = d2;
+      bestAnchor = ai;
+    }
+  }
+
+  const shift = bestAnchor * stride;
+  if (shift === 0) return tgtSubpath.map((p) => [...p]);
+
+  const rotatedOpen: number[][] = [];
+  for (let i = 0; i < openLen; i++) {
+    const srcIdx = (i + shift) % openLen;
+    rotatedOpen.push([...(tgtSubpath[srcIdx] ?? [0, 0, 0])]);
+  }
+  rotatedOpen.push([...rotatedOpen[0]]);
+  return rotatedOpen;
+}
+
+/** Equalize point counts by resampling the shorter subpath only. */
 function alignSubpathPairPoints(
   srcSubpath: number[][],
   tgtSubpath: number[][],
 ): { srcAligned: number[][]; tgtAligned: number[][] } {
   const maxCount = Math.max(srcSubpath.length, tgtSubpath.length);
-  return {
-    srcAligned:
-      srcSubpath.length < maxCount
-        ? pingPongRepeat(srcSubpath, maxCount)
-        : srcSubpath.map((p) => [...p]),
-    tgtAligned:
-      tgtSubpath.length < maxCount
-        ? pingPongRepeat(tgtSubpath, maxCount)
-        : tgtSubpath.map((p) => [...p]),
-  };
+  const srcAligned =
+    srcSubpath.length < maxCount
+      ? resamplePointList3D(srcSubpath, maxCount)
+      : srcSubpath.map((p) => [...p]);
+  const tgtAlignedRaw =
+    tgtSubpath.length < maxCount
+      ? resamplePointList3D(tgtSubpath, maxCount)
+      : tgtSubpath.map((p) => [...p]);
+
+  const tgtAligned = rotateClosedTargetToClosestSourceAnchor(srcAligned, tgtAlignedRaw);
+
+  return { srcAligned, tgtAligned };
 }
 
 /** Compute center of all points in array. */
@@ -377,21 +567,82 @@ function validateSubpathLengths(points3D: number[][], lengths: number[], label: 
   }
 }
 
+interface SignedSubpathChunk {
+  chunk: number[][];
+  len: number;
+  idx: number;
+  sign: 1 | -1;
+}
+
+function signedArea2D(pts: number[][]): number {
+  const anchors: number[][] = [];
+  for (let i = 0; i < pts.length; i += 3) anchors.push(pts[i]);
+  if (anchors.length < 3) return 0;
+
+  let area = 0;
+  for (let i = 0; i < anchors.length; i++) {
+    const j = (i + 1) % anchors.length;
+    area += anchors[i][0] * anchors[j][1] - anchors[j][0] * anchors[i][1];
+  }
+  return area / 2;
+}
+
+function inferSign(chunk: number[][]): 1 | -1 {
+  return signedArea2D(chunk) < 0 ? -1 : 1;
+}
+
+function makeSignedChunks(
+  points3D: number[][],
+  lengths: number[],
+  signs?: Array<1 | -1>,
+): SignedSubpathChunk[] {
+  const chunks = splitBySubpathLengths(points3D, lengths);
+  return chunks.map((chunk, i) => ({
+    chunk,
+    len: lengths[i],
+    idx: i,
+    sign: signs?.[i] ?? inferSign(chunk),
+  }));
+}
+
+function alignChunkListsByLength(
+  srcChunks: Array<{ chunk: number[][]; len: number }>,
+  tgtChunks: Array<{ chunk: number[][]; len: number }>,
+  srcCenter: number[],
+  tgtCenter: number[],
+  srcAlignedAll: number[][],
+  tgtAlignedAll: number[][],
+  alignedLengths: number[],
+): void {
+  const srcSorted = [...srcChunks].sort((a, b) => b.len - a.len);
+  const tgtSorted = [...tgtChunks].sort((a, b) => b.len - a.len);
+  const maxSubpaths = Math.max(srcSorted.length, tgtSorted.length);
+
+  for (let i = 0; i < maxSubpaths; i++) {
+    const src = srcSorted[i]?.chunk;
+    const tgt = tgtSorted[i]?.chunk;
+
+    const srcSub = src ?? makeNullSubpathFromReference(tgt!, tgtCenter);
+    const tgtSub = tgt ?? makeNullSubpathFromReference(src!, srcCenter);
+
+    const { srcAligned, tgtAligned } = alignSubpathPairPoints(srcSub, tgtSub);
+    srcAlignedAll.push(...srcAligned);
+    tgtAlignedAll.push(...tgtAligned);
+    alignedLengths.push(srcAligned.length);
+  }
+}
+
 /**
- * Align two compound paths by matching longest subpaths (outer → outer, holes → holes).
- *
- * Heuristic: we sort subpaths by length descending and pair by rank.
- * This assumes the longest contour is typically the outer boundary, with shorter
- * contours typically representing holes/interior details. This is intentional but
- * not mathematically guaranteed for arbitrary SVGs.
- *
- * Unmatched subpaths collapse to the other object's center.
+ * Align compound paths by orientation buckets, then by descending subpath length.
+ * CW (-1) and CCW (+1) buckets are aligned independently.
  */
 export function alignCompoundPathsForTransform(
   srcPoints3D: number[][],
   srcLengths: number[] | undefined,
   tgtPoints3D: number[][],
   tgtLengths: number[] | undefined,
+  srcSigns?: Array<1 | -1>,
+  tgtSigns?: Array<1 | -1>,
 ): CompoundAlignmentResult | null {
   if (!srcLengths || !tgtLengths || (srcLengths.length <= 1 && tgtLengths.length <= 1)) {
     return null;
@@ -400,14 +651,6 @@ export function alignCompoundPathsForTransform(
   validateSubpathLengths(srcPoints3D, srcLengths, 'source');
   validateSubpathLengths(tgtPoints3D, tgtLengths, 'target');
 
-  // Split into subpaths and sort by length descending (longest = outer)
-  const srcChunks = splitBySubpathLengths(srcPoints3D, srcLengths)
-    .map((chunk, i) => ({ chunk, len: srcLengths[i], idx: i }))
-    .sort((a, b) => b.len - a.len);
-  const tgtChunks = splitBySubpathLengths(tgtPoints3D, tgtLengths)
-    .map((chunk, i) => ({ chunk, len: tgtLengths[i], idx: i }))
-    .sort((a, b) => b.len - a.len);
-
   const srcCenter = computeCenter(srcPoints3D);
   const tgtCenter = computeCenter(tgtPoints3D);
 
@@ -415,22 +658,48 @@ export function alignCompoundPathsForTransform(
   const tgtAlignedAll: number[][] = [];
   const alignedLengths: number[] = [];
 
-  const maxSubpaths = Math.max(srcChunks.length, tgtChunks.length);
+  const srcChunks = makeSignedChunks(srcPoints3D, srcLengths, srcSigns);
+  const tgtChunks = makeSignedChunks(tgtPoints3D, tgtLengths, tgtSigns);
 
-  for (let i = 0; i < maxSubpaths; i++) {
-    const src = srcChunks[i]?.chunk;
-    const tgt = tgtChunks[i]?.chunk;
+  const sameSignPairs =
+    Math.min(
+      srcChunks.filter((c) => c.sign === -1).length,
+      tgtChunks.filter((c) => c.sign === -1).length,
+    ) +
+    Math.min(
+      srcChunks.filter((c) => c.sign === 1).length,
+      tgtChunks.filter((c) => c.sign === 1).length,
+    );
 
-    // If only source has this subpath, collapse to target center
-    // If only target has this subpath, collapse source to source center
-    const srcSub = src ?? makeNullSubpathFromReference(tgt!, tgtCenter);
-    const tgtSub = tgt ?? makeNullSubpathFromReference(src!, srcCenter);
-
-    const { srcAligned, tgtAligned } = alignSubpathPairPoints(srcSub, tgtSub);
-
-    srcAlignedAll.push(...srcAligned);
-    tgtAlignedAll.push(...tgtAligned);
-    alignedLengths.push(srcAligned.length);
+  if (sameSignPairs === 0) {
+    alignChunkListsByLength(
+      srcChunks,
+      tgtChunks,
+      srcCenter,
+      tgtCenter,
+      srcAlignedAll,
+      tgtAlignedAll,
+      alignedLengths,
+    );
+  } else {
+    alignChunkListsByLength(
+      srcChunks.filter((c) => c.sign === -1),
+      tgtChunks.filter((c) => c.sign === -1),
+      srcCenter,
+      tgtCenter,
+      srcAlignedAll,
+      tgtAlignedAll,
+      alignedLengths,
+    );
+    alignChunkListsByLength(
+      srcChunks.filter((c) => c.sign === 1),
+      tgtChunks.filter((c) => c.sign === 1),
+      srcCenter,
+      tgtCenter,
+      srcAlignedAll,
+      tgtAlignedAll,
+      alignedLengths,
+    );
   }
 
   return {
@@ -586,18 +855,7 @@ export function buildEarcutFillGeometry(
     return new THREE.ShapeGeometry(shape);
   }
 
-  // Create BufferGeometry using original 3D points (not projected 2D)
-  const positions = new Float32Array(indices.length * 3);
-  for (let i = 0; i < indices.length; i++) {
-    const v = outline3D[indices[i]];
-    positions[i * 3] = v[0];
-    positions[i * 3 + 1] = v[1];
-    positions[i * 3 + 2] = v[2] ?? 0;
-  }
-
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  return geometry;
+  return buildGeometryFromTriangleIndices(outline3D, indices);
 }
 
 /**
@@ -612,7 +870,7 @@ function buildEarcutFillGeometryMulti(
 ): THREE.BufferGeometry | null {
   void visiblePoints; // kept for API compatibility
 
-  // Sample each subpath into 3D rings, collecting all points for plane computation
+  // Sample each subpath into 3D rings.
   let offset = 0;
   const rings3D: number[][][] = [];
   const allPoints3D: number[][] = [];
@@ -631,8 +889,6 @@ function buildEarcutFillGeometryMulti(
   if (rings3D.length === 0) return null;
 
   // Compute ONE shared plane basis from all sampled points.
-  // This keeps containment (hole classification) and triangulation in the
-  // same 2D coordinate system even when the whole shape is rotated in 3D.
   const { origin, v1, v2 } = projectOutlineToPlane(allPoints3D);
 
   // Project each 3D ring to 2D using the shared plane basis
@@ -640,49 +896,60 @@ function buildEarcutFillGeometryMulti(
     ring.map((p) => projectToPlane(p, origin, v1, v2)),
   );
 
-  // Determine containment: for each ring, check if it's inside another ring.
-  const isHoleOf = new Array<number>(rings2D.length).fill(-1);
-
-  for (let i = 0; i < rings2D.length; i++) {
-    for (let j = 0; j < rings2D.length; j++) {
-      if (i === j) continue;
-      if (pointInPolygon(rings2D[i][0], rings2D[j])) {
-        isHoleOf[i] = j;
-        break;
-      }
+  // Heuristic classification: pick longest ring as primary outer contour.
+  // Treat only rings INSIDE that contour as holes; rings outside stay
+  // independent outers (prevents '=' turning into one bar).
+  let primaryOuterRingIndex = 0;
+  let primaryOuterPerimeter = ringPerimeter2D(rings2D[0]);
+  for (let i = 1; i < rings2D.length; i++) {
+    const perimeter = ringPerimeter2D(rings2D[i]);
+    if (perimeter > primaryOuterPerimeter) {
+      primaryOuterPerimeter = perimeter;
+      primaryOuterRingIndex = i;
     }
   }
 
-  // Collect outer rings (not holes) and their associated holes
   const allPositions: number[] = [];
 
+  const insidePrimaryHoleRings: number[][][] = [];
+  const independentOuterRingIndices: number[] = [];
+
   for (let i = 0; i < rings2D.length; i++) {
-    if (isHoleOf[i] >= 0) continue;
+    if (i === primaryOuterRingIndex) continue;
 
-    const outerRing = rings2D[i];
-    const outerRing3D = rings3D[i];
-    const holeRings: number[][][] = [];
-    const holeRings3D: number[][][] = [];
+    if (pointInPolygon(rings2D[i][0], rings2D[primaryOuterRingIndex])) {
+      insidePrimaryHoleRings.push(rings2D[i]);
+    } else {
+      independentOuterRingIndices.push(i);
+    }
+  }
 
-    for (let j = 0; j < rings2D.length; j++) {
-      if (isHoleOf[j] === i) {
-        holeRings.push(rings2D[j]);
-        holeRings3D.push(rings3D[j]);
+  const primaryIndices = triangulatePolygon(
+    rings2D[primaryOuterRingIndex],
+    insidePrimaryHoleRings.length > 0 ? insidePrimaryHoleRings : undefined,
+  );
+  if (primaryIndices.length > 0) {
+    const primaryVerts3D: number[][] = [...rings3D[primaryOuterRingIndex]];
+    for (let i = 0; i < rings2D.length; i++) {
+      if (i === primaryOuterRingIndex) continue;
+      if (pointInPolygon(rings2D[i][0], rings2D[primaryOuterRingIndex])) {
+        primaryVerts3D.push(...rings3D[i]);
       }
     }
 
-    const indices = triangulatePolygon(outerRing, holeRings.length > 0 ? holeRings : undefined);
+    for (const idx of primaryIndices) {
+      const v = primaryVerts3D[idx];
+      allPositions.push(v[0], v[1], v[2] ?? 0);
+    }
+  }
+
+  for (const ringIndex of independentOuterRingIndices) {
+    const indices = triangulatePolygon(rings2D[ringIndex]);
     if (indices.length === 0) continue;
 
-    const allVerts: number[][] = [...outerRing];
-    const allVerts3D: number[][] = [...outerRing3D];
-    for (let h = 0; h < holeRings.length; h++) {
-      allVerts.push(...holeRings[h]);
-      allVerts3D.push(...holeRings3D[h]);
-    }
-
+    const verts3D = rings3D[ringIndex];
     for (const idx of indices) {
-      const v = allVerts3D[idx];
+      const v = verts3D[idx];
       allPositions.push(v[0], v[1], v[2] ?? 0);
     }
   }
@@ -692,6 +959,36 @@ function buildEarcutFillGeometryMulti(
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(allPositions), 3));
   return geometry;
+}
+
+function buildGeometryFromTriangleIndices(
+  vertices3D: number[][],
+  indices: number[],
+): THREE.BufferGeometry {
+  const positions = new Float32Array(indices.length * 3);
+  for (let i = 0; i < indices.length; i++) {
+    const v = vertices3D[indices[i]];
+    positions[i * 3] = v[0];
+    positions[i * 3 + 1] = v[1];
+    positions[i * 3 + 2] = v[2] ?? 0;
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  return geometry;
+}
+
+function ringPerimeter2D(ring: number[][]): number {
+  if (ring.length < 2) return 0;
+  let perimeter = 0;
+  for (let i = 0; i < ring.length; i++) {
+    const a = ring[i];
+    const b = ring[(i + 1) % ring.length];
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    perimeter += Math.hypot(dx, dy);
+  }
+  return perimeter;
 }
 
 // -----------------------------------------------------------------------

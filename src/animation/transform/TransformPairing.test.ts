@@ -3,11 +3,37 @@ import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Circle } from '../../mobjects/geometry/Circle';
 import { alignVmobjectPair, pairLeafSnapshotsByIndex } from './TransformPairing';
+import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
 
 function vmWithPoints(pts: number[][]) {
   const vm = new VMobject();
   vm.setPoints(pts);
   return vm;
+}
+
+function makeLinearClosedSquare(x0: number, y0: number, x1: number, y1: number): number[][] {
+  const corners = [
+    [x0, y0, 0],
+    [x1, y0, 0],
+    [x1, y1, 0],
+    [x0, y1, 0],
+    [x0, y0, 0],
+  ];
+
+  const pts: number[][] = [];
+  for (let i = 0; i < corners.length - 1; i++) {
+    const a = corners[i];
+    const b = corners[i + 1];
+    if (i === 0) pts.push([...a]);
+    pts.push([a[0] + (b[0] - a[0]) / 3, a[1] + (b[1] - a[1]) / 3, a[2] + (b[2] - a[2]) / 3]);
+    pts.push([
+      a[0] + (2 * (b[0] - a[0])) / 3,
+      a[1] + (2 * (b[1] - a[1])) / 3,
+      a[2] + (2 * (b[2] - a[2])) / 3,
+    ]);
+    pts.push([...b]);
+  }
+  return pts;
 }
 
 describe('TransformPairing core', () => {
@@ -78,7 +104,7 @@ describe('TransformPairing core', () => {
     expect(aligned.finalTargetPoints).toEqual(target.getPoints());
   });
 
-  it('uses length-sorted subpath pairing heuristic (longest ↔ longest)', () => {
+  it('uses length-sorted pairing within orientation buckets', () => {
     const source = vmWithPoints([
       // short (len=5)
       [0, 0, 0],
@@ -124,6 +150,92 @@ describe('TransformPairing core', () => {
     expect(aligned.alignedSubpathLengths).toEqual([8, 5]);
     expect(aligned.startPoints[0][0]).toBeCloseTo(100, 5);
     expect(aligned.targetPoints[0][0]).toBeCloseTo(2000, 5);
+  });
+
+  it('prefers same-orientation pairing even if lengths would suggest cross-pairing', () => {
+    const srcPoints = [
+      // src CW (len=8)
+      [100, 0, 0],
+      [101, 0, 0],
+      [102, 0, 0],
+      [103, 0, 0],
+      [104, 0, 0],
+      [105, 0, 0],
+      [106, 0, 0],
+      [107, 0, 0],
+      // src CCW (len=5)
+      [0, 0, 0],
+      [1, 0, 0],
+      [1, 1, 0],
+      [0, 1, 0],
+      [0, 0, 0],
+    ];
+
+    const tgtPoints = [
+      // tgt CW (len=5)
+      [2000, 0, 0],
+      [2001, 0, 0],
+      [2001, 1, 0],
+      [2000, 1, 0],
+      [2000, 0, 0],
+      // tgt CCW (len=8)
+      [1000, 0, 0],
+      [1001, 0, 0],
+      [1002, 0, 0],
+      [1003, 0, 0],
+      [1004, 0, 0],
+      [1005, 0, 0],
+      [1006, 0, 0],
+      [1007, 0, 0],
+    ];
+
+    const aligned = alignCompoundPathsForTransform(
+      srcPoints,
+      [8, 5],
+      tgtPoints,
+      [5, 8],
+      [-1, 1],
+      [-1, 1],
+    );
+
+    expect(aligned).not.toBeNull();
+    // First pair should be CW↔CW (target near x=2000), not longest↔longest (x=1000)
+    expect(aligned!.tgtAlignedPoints[0][0]).toBeCloseTo(2000, 5);
+  });
+
+  it('rotates closed target subpath so first anchor is closest to source first anchor', () => {
+    const sourceA = makeLinearClosedSquare(-1, -1, 1, 1);
+    const sourceB = makeLinearClosedSquare(5, 5, 6, 6);
+    const sourcePts = [...sourceA, ...sourceB];
+
+    const targetA = makeLinearClosedSquare(-1, -1, 1, 1);
+    const targetB = makeLinearClosedSquare(5, 5, 6, 6);
+
+    // Rotate first target subpath start by one cubic segment (stride=3).
+    const shift = 3;
+    const openLen = targetA.length - 1;
+    const rotatedOpen: number[][] = [];
+    for (let i = 0; i < openLen; i++) {
+      rotatedOpen.push([...targetA[(i + shift) % openLen]]);
+    }
+    const targetAShifted = [...rotatedOpen, [...rotatedOpen[0]]];
+
+    const targetPts = [...targetAShifted, ...targetB];
+
+    const aligned = alignCompoundPathsForTransform(
+      sourcePts,
+      [sourceA.length, sourceB.length],
+      targetPts,
+      [targetAShifted.length, targetB.length],
+      [1, 1],
+      [1, 1],
+    );
+
+    expect(aligned).not.toBeNull();
+    expect(aligned!.srcAlignedPoints[0][0]).toBeCloseTo(-1, 6);
+    expect(aligned!.srcAlignedPoints[0][1]).toBeCloseTo(-1, 6);
+    expect(aligned!.tgtAlignedPoints[0][0]).toBeCloseTo(-1, 6);
+    expect(aligned!.tgtAlignedPoints[0][1]).toBeCloseTo(-1, 6);
   });
 
   it('pairLeafSnapshotsByIndex preserves left-to-right leaf order and unmatched tails', () => {
