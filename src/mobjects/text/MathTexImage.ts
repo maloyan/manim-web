@@ -25,7 +25,7 @@ import { ensureKatexStyles, waitForKatexStyles } from './katexStyles';
 import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
 
-const DEFAULT_CANVAS_SCALE = 4;
+const DEFAULT_CANVAS_SCALE = 16;
 
 /** Font size in points used for LaTeX rendering. */
 const LATEX_DEFAULT_FONT_SIZE_PT = 10;
