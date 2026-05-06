@@ -25,7 +25,7 @@
 import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { lerp, lerpPoint } from '../../utils/math';
-import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
+import { alignCompoundPathsForTransform } from '../../core/VMobjectTransformAlignment';
 
 export interface TransformMatchingBaseOptions extends AnimationOptions {
   /** Key function to extract identifier for matching */
@@ -174,11 +174,15 @@ export abstract class TransformMatchingAbstractBase extends Animation {
     const srcCopy = source.copy() as VMobject;
     const tgtCopy = target.copy() as VMobject;
 
+    const srcLengths = source.getEffectiveSubpathLengths?.();
+    const tgtLengths = target.getEffectiveSubpathLengths?.();
     const alignedCompound = alignCompoundPathsForTransform(
       srcCopy.getPoints(),
-      source.getEffectiveSubpathLengths?.(),
+      srcLengths,
       tgtCopy.getPoints(),
-      target.getEffectiveSubpathLengths?.(),
+      tgtLengths,
+      source.getSubpathOrientationSigns?.(srcLengths),
+      target.getSubpathOrientationSigns?.(tgtLengths),
     );
 
     if (alignedCompound) {

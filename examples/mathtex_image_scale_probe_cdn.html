@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MathTexImage vs MathTex Transform (CDN build)</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #0b0b10;
+        color: #d1d5db;
+        font-family: system-ui, sans-serif;
+      }
+      #container {
+        border: 1px solid #333;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .controls { margin-top: 10px; display: flex; gap: 8px; }
+      button { padding: 8px 12px; }
+      .hint { margin-top: 8px; font-size: 12px; color: #9ca3af; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div id="container"></div>
+      <div class="controls">
+        <button id="playBtn">Play</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+      <div class="hint">CDN/published manim-web build. Left: MathTexImage(48→144), Right: MathTex(48→144), sequential transforms.</div>
+    </div>
+
+    <script type="module">
+      // Change this to test older published versions, e.g. "0.3.19"
+      const MANIM_WEB_VERSION = '0.3.20';
+      const mod = await import(
+        `https://cdn.jsdelivr.net/npm/manim-web@${MANIM_WEB_VERSION}/dist/manim-web.browser.js`
+      );
+
+      const { Scene, MathTexImage, MathTex, Create, Transform, WHITE } = mod;
+
+      const scene = new Scene(document.getElementById('container'), {
+        width: 1000,
+        height: 500,
+        backgroundColor: '#000000',
+      });
+
+      async function run() {
+        scene.clear();
+
+        const imgSmall = new MathTexImage({ latex: '0', fontSize: 48, color: WHITE });
+        const imgBig = new MathTexImage({ latex: '0', fontSize: 144, color: WHITE });
+
+        const texSmall = new MathTex({
+          latex: '0',
+          fontSize: 48,
+          color: WHITE,
+          fillOpacity: 1,
+          strokeOpacity: 1,
+        });
+        const texBig = new MathTex({
+          latex: '0',
+          fontSize: 144,
+          color: WHITE,
+          fillOpacity: 1,
+          strokeOpacity: 1,
+        });
+
+        await Promise.all([
+          imgSmall.waitForRender(),
+          imgBig.waitForRender(),
+          texSmall.waitForRender(),
+          texBig.waitForRender(),
+        ]);
+
+        imgSmall.moveTo([-2.5, 0, 0]);
+        imgBig.moveTo([-2.5, 0, 0]);
+        texSmall.moveTo([2.5, 0, 0]);
+        texBig.moveTo([2.5, 0, 0]);
+
+        await scene.play(new Create(imgSmall, { duration: 1.0 }), new Create(texSmall, { duration: 1.0 }));
+        await scene.play(new Transform(imgSmall, imgBig, { duration: 2.0 }));
+        await scene.wait(0.4);
+        await scene.play(new Transform(texSmall, texBig, { duration: 2.0 }));
+      }
+
+      document.getElementById('playBtn')?.addEventListener('click', () => {
+        void run();
+      });
+      document.getElementById('resetBtn')?.addEventListener('click', () => {
+        scene.clear();
+      });
+    </script>
+  </body>
+</html>

@@ -4,7 +4,7 @@ import {
   collectLeafVMobjectSnapshots,
   type LeafVMobjectSnapshot,
 } from '../../core/MobjectTraversal';
-import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
+import { alignCompoundPathsForTransform } from '../../core/VMobjectTransformAlignment';
 
 function sum(values: number[]): number {
   let out = 0;
@@ -52,11 +52,16 @@ export function alignVmobjectPair(source: VMobject, target: VMobject): AlignedTr
   assertSubpathLengthsMatchPoints(startPointsRaw, srcLengths, 'alignVmobjectPair(source)');
   assertSubpathLengthsMatchPoints(targetPointsRaw, tgtLengths, 'alignVmobjectPair(target)');
 
+  const srcSigns = startCopy.getSubpathOrientationSigns?.(srcLengths);
+  const tgtSigns = targetCopy.getSubpathOrientationSigns?.(tgtLengths);
+
   const alignedCompound = alignCompoundPathsForTransform(
     startPointsRaw,
     srcLengths,
     targetPointsRaw,
     tgtLengths,
+    srcSigns,
+    tgtSigns,
   );
 
   if (alignedCompound) {

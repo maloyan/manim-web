@@ -994,6 +994,18 @@ describe('svgToVMobjects', () => {
       expect(group.submobjects.length).toBe(1);
     });
 
+    it('should keep single-subpath metadata for contour-aware transforms', () => {
+      const svg = createSVG('<svg><path d="M 0 0 L 10 0 L 10 10 Z"/></svg>');
+      const group = svgToVMobjects(svg);
+      expect(group.submobjects.length).toBe(1);
+
+      const vm = group.submobjects[0] as any;
+      const points = vm.getPoints() as number[][];
+      const lengths = vm.getEffectiveSubpathLengths() as number[] | undefined;
+
+      expect(lengths).toEqual([points.length]);
+    });
+
     it('should handle flipY=true (default) flipping Y coordinates', () => {
       const svg = createSVG('<svg><path d="M 0 0 L 10 10"/></svg>');
       const group = svgToVMobjects(svg, { flipY: true });

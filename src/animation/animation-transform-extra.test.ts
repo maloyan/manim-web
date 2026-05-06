@@ -348,7 +348,7 @@ describe('FadeTransform', () => {
 // ── ClockwiseTransform ─────────────────────────────────────────────────────
 
 describe('ClockwiseTransform', () => {
-  it('uses shared compound-path alignment metadata during interpolation', () => {
+  it('preserves compound-path topology metadata during interpolation', () => {
     const s = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -374,7 +374,7 @@ describe('ClockwiseTransform', () => {
     const anim = new ClockwiseTransform(s, t);
     anim.begin();
 
-    expect(s.getEffectiveSubpathLengths()).toEqual([64, 64]);
+    expect(s.getEffectiveSubpathLengths()).toEqual([5, 5]);
   });
 
   it('throws on malformed source subpath metadata via shared pairing invariants', () => {
@@ -447,7 +447,7 @@ describe('ClockwiseTransform', () => {
 // ── CounterclockwiseTransform ──────────────────────────────────────────────
 
 describe('CounterclockwiseTransform', () => {
-  it('uses shared compound-path alignment metadata during interpolation', () => {
+  it('preserves compound-path topology metadata during interpolation', () => {
     const s = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -473,7 +473,7 @@ describe('CounterclockwiseTransform', () => {
     const anim = new CounterclockwiseTransform(s, t);
     anim.begin();
 
-    expect(s.getEffectiveSubpathLengths()).toEqual([64, 64]);
+    expect(s.getEffectiveSubpathLengths()).toEqual([5, 5]);
   });
   it('default angle is PI', () => {
     expect(new CounterclockwiseTransform(sq(), sq()).angle).toBeCloseTo(Math.PI, 5);

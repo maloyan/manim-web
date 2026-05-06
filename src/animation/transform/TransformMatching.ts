@@ -11,7 +11,7 @@ import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { hungarian, hungarianFromSimilarity } from '../../utils/hungarian';
 import { lerp, lerpPoint } from '../../utils/math';
-import { alignCompoundPathsForTransform } from '../../core/VMobjectGeometry';
+import { alignCompoundPathsForTransform } from '../../core/VMobjectTransformAlignment';
 import {
   MatchedPart,
   FadingPart,
@@ -512,11 +512,15 @@ export class TransformMatchingTex extends Animation {
   private _addMatchedPart(source: VMobject, target: VMobject): void {
     const srcCopy = source.copy() as VMobject;
     const tgtCopy = target.copy() as VMobject;
+    const srcLengths = source.getEffectiveSubpathLengths?.();
+    const tgtLengths = target.getEffectiveSubpathLengths?.();
     const alignedCompound = alignCompoundPathsForTransform(
       srcCopy.getPoints(),
-      source.getEffectiveSubpathLengths?.(),
+      srcLengths,
       tgtCopy.getPoints(),
-      target.getEffectiveSubpathLengths?.(),
+      tgtLengths,
+      source.getSubpathOrientationSigns?.(srcLengths),
+      target.getSubpathOrientationSigns?.(tgtLengths),
     );
 
     if (alignedCompound) {
@@ -556,11 +560,15 @@ export class TransformMatchingTex extends Animation {
   private _addMismatchedPair(source: VMobject, target: VMobject): void {
     const srcCopy = source.copy() as VMobject;
     const tgtCopy = target.copy() as VMobject;
+    const srcLengths = source.getEffectiveSubpathLengths?.();
+    const tgtLengths = target.getEffectiveSubpathLengths?.();
     const alignedCompound = alignCompoundPathsForTransform(
       srcCopy.getPoints(),
-      source.getEffectiveSubpathLengths?.(),
+      srcLengths,
       tgtCopy.getPoints(),
-      target.getEffectiveSubpathLengths?.(),
+      tgtLengths,
+      source.getSubpathOrientationSigns?.(srcLengths),
+      target.getSubpathOrientationSigns?.(tgtLengths),
     );
 
     if (alignedCompound) {
