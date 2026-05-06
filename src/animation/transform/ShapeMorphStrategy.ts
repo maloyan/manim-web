@@ -105,6 +105,16 @@ export class ShapeMorphStrategy implements MorphStrategy {
     targetMesh.geometry.dispose();
     targetMesh.geometry = new THREE.PlaneGeometry(1, 1);
 
+    // Keep class-authoritative size state aligned with unit-geometry morph mode.
+    // Without this, some textured mobjects (e.g. MathTexImage) may restore
+    // original geometry dimensions during _syncToThree().
+    if (!this._sourceTextureMobject)
+      throw new Error('ShapeMorphStrategy requires source TexturedMobject');
+    if (!this._targetTextureMobject)
+      throw new Error('ShapeMorphStrategy requires target TexturedMobject');
+    this._sourceTextureMobject.applyVisualSize(1, 1);
+    this._targetTextureMobject.applyVisualSize(1, 1);
+
     sourceMesh.scale.set(this._startWidth, this._startHeight, 1);
     targetMesh.scale.set(this._startWidth, this._startHeight, 1);
     const sourceObj = source.getThreeObject();
