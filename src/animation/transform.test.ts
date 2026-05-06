@@ -10,7 +10,9 @@ import {
   moveToTarget,
   MobjectWithTarget,
 } from './transform/Transform';
+import { ShapeMorphStrategy } from './transform/ShapeMorphStrategy';
 import { Mobject } from '../core/Mobject';
+import { TexturedMobject } from '../core/TexturedMobject';
 import { VMobject } from '../core/VMobject';
 import { VGroup } from '../core/VGroup';
 import { Circle } from '../mobjects/geometry/Circle';
@@ -46,6 +48,65 @@ function collectVmobjectLeavesWithPoints(mobject: Mobject): VMobject[] {
     out.push(...collectVmobjectLeavesWithPoints(child));
   }
   return out;
+}
+
+class SyncingTexturedMobject extends TexturedMobject {
+  private _mesh: THREE.Mesh;
+  private _width: number;
+  private _height: number;
+
+  constructor(width: number, height: number) {
+    super();
+    this._width = width;
+    this._height = height;
+    this._mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(width, height),
+      new THREE.MeshBasicMaterial({ transparent: true }),
+    );
+  }
+
+  protected _createThreeObject(): THREE.Object3D {
+    const group = new THREE.Group();
+    group.add(this._mesh);
+    return group;
+  }
+
+  override getDisplayMeshes(): THREE.Mesh[] {
+    this.getThreeObject();
+    return [this._mesh];
+  }
+
+  override getDisplayMeshLength(): number {
+    return 1;
+  }
+
+  applyTextureFrom(_other: TexturedMobject): void {
+    // no-op for test double
+  }
+
+  applyVisualSize(width: number, height: number): void {
+    this._width = width;
+    this._height = height;
+    this._mesh.geometry.dispose();
+    this._mesh.geometry = new THREE.PlaneGeometry(width, height);
+    this._mesh.scale.set(1, 1, 1);
+  }
+
+  applyContentFrom(_other: TexturedMobject): void {
+    // no-op for test double
+  }
+
+  protected override _syncMaterialToThree(): void {
+    const geometry = this._mesh.geometry as THREE.PlaneGeometry;
+    if (geometry.parameters.width !== this._width || geometry.parameters.height !== this._height) {
+      this._mesh.geometry.dispose();
+      this._mesh.geometry = new THREE.PlaneGeometry(this._width, this._height);
+    }
+  }
+
+  protected override _createCopy(): Mobject {
+    return new SyncingTexturedMobject(this._width, this._height);
+  }
 }
 
 describe('Transform', () => {
@@ -1118,6 +1179,32 @@ function makeTextCanvasMock() {
     strokeText: () => {},
   };
 }
+
+describe('Shape morph non-regression', () => {
+  it('keeps unit-geometry morph setup stable against _syncToThree geometry restores', () => {
+    const source = new SyncingTexturedMobject(1, 0.5);
+    const target = new SyncingTexturedMobject(2, 1);
+    const strategy = new ShapeMorphStrategy();
+
+    strategy.begin({} as never, source, target);
+
+    const sourceMesh = source.getDisplayMeshes()[0];
+    const sourceGeom = sourceMesh.geometry as THREE.PlaneGeometry;
+    expect(sourceGeom.parameters.width).toBeCloseTo(1, 5);
+    expect(sourceGeom.parameters.height).toBeCloseTo(1, 5);
+
+    // Simulate runtime sync right after begin() (this previously reverted geometry).
+    source._syncToThree();
+
+    const sourceGeomAfterSync = sourceMesh.geometry as THREE.PlaneGeometry;
+    expect(sourceGeomAfterSync.parameters.width).toBeCloseTo(1, 5);
+    expect(sourceGeomAfterSync.parameters.height).toBeCloseTo(1, 5);
+
+    strategy.interpolate({} as never, source, target, 0);
+    expect(sourceMesh.scale.x).toBeCloseTo(1, 5);
+    expect(sourceMesh.scale.y).toBeCloseTo(0.5, 5);
+  });
+});
 
 describe('Text Transform (#305)', () => {
   it('getText() returns target text after Transform finish', () => {
