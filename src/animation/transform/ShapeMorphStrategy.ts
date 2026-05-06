@@ -108,6 +108,10 @@ export class ShapeMorphStrategy implements MorphStrategy {
     // Keep class-authoritative size state aligned with unit-geometry morph mode.
     // Without this, some textured mobjects (e.g. MathTexImage) may restore
     // original geometry dimensions during _syncToThree().
+    if (!this._sourceTextureMobject)
+      throw new Error('ShapeMorphStrategy requires source TexturedMobject');
+    if (!this._targetTextureMobject)
+      throw new Error('ShapeMorphStrategy requires target TexturedMobject');
     this._sourceTextureMobject.applyVisualSize(1, 1);
     this._targetTextureMobject.applyVisualSize(1, 1);
 
