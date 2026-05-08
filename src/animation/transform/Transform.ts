@@ -5,7 +5,7 @@
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
-import { Animation, AnimationOptions } from '../Animation';
+import { Animation, AnimationOptions, AnimationScene } from '../Animation';
 import { ImageMobject } from '../../mobjects/image';
 import { MathTexImage } from '../../mobjects/text/MathTexImage';
 import { Text } from '../../mobjects/text/Text';
@@ -73,7 +73,18 @@ export function transform(
   return new Transform(mobject, target, options);
 }
 
-export class ReplacementTransform extends Transform {}
+/**
+ * Like Transform but also swaps `mobject` for `target` in the scene when done.
+ * Matches Python manim's ReplacementTransform: after the animation, the scene
+ * contains `target` and not the original `mobject`.
+ */
+export class ReplacementTransform extends Transform {
+  override cleanUpFromScene(scene: AnimationScene): void {
+    super.cleanUpFromScene(scene);
+    scene.remove(this.mobject);
+    scene.add(this.target);
+  }
+}
 export function replacementTransform(
   mobject: Mobject,
   target: Mobject,

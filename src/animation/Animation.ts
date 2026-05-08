@@ -18,6 +18,15 @@ export interface AnimationOptions {
   shift?: [number, number, number];
 }
 
+/**
+ * Minimal scene surface needed by Animation.cleanUpFromScene().
+ * Declared here (not imported from core/Scene) to avoid a core→animation cycle.
+ */
+export interface AnimationScene {
+  add(...mobjects: Mobject[]): void;
+  remove(...mobjects: Mobject[]): void;
+}
+
 export abstract class Animation {
   /** The mobject being animated */
   readonly mobject: Mobject;
@@ -106,6 +115,18 @@ export abstract class Animation {
    */
   finish(): void {
     this._isFinished = true;
+  }
+
+  /**
+   * Hook called by Scene after the animation finishes, before the next play().
+   * Default: removes `mobject` if `remover` is set (FadeOut, Write({remover:true})).
+   * Override for animations that need to mutate scene membership — e.g.
+   * ReplacementTransform swaps source for target.
+   */
+  cleanUpFromScene(scene: AnimationScene): void {
+    if (this.remover) {
+      scene.remove(this.mobject);
+    }
   }
 
   /**
