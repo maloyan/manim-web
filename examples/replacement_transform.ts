@@ -37,24 +37,38 @@ document.getElementById('playBtn')!.addEventListener('click', async () => {
   scene.clear();
 
   // Plain Transform: morphs visuals but the SOURCE stays in the scene.
-  const a = new Circle({ radius: 1, color: RED }).shift([-2.5, 0, 0]);
-  const aTarget = new Square({ sideLength: 1.5, color: GREEN }).shift([-2.5, 0, 0]);
+  const a = new Circle({ radius: 1.4, color: RED, fillOpacity: 0.9, strokeWidth: 6 }).shift([
+    -3, 0, 0,
+  ]);
+  const aTarget = new Square({
+    sideLength: 2.2,
+    color: GREEN,
+    fillOpacity: 0.9,
+    strokeWidth: 6,
+  }).shift([-3, 0, 0]);
   scene.add(a);
   describe('before Transform');
-  await scene.play(new Transform(a, aTarget));
+  await scene.play(new Transform(a, aTarget, { duration: 1.2 }));
   describe('after  Transform     ');
 
-  await scene.wait(0.4);
+  await scene.wait(0.6);
 
   // ReplacementTransform: source removed, target added (issue #308 fix).
-  const b = new Circle({ radius: 1, color: BLUE }).shift([2.5, 0, 0]);
-  const bTarget = new Square({ sideLength: 1.5, color: YELLOW }).shift([2.5, 0, 0]);
+  const b = new Circle({ radius: 1.4, color: BLUE, fillOpacity: 0.9, strokeWidth: 6 }).shift([
+    3, 0, 0,
+  ]);
+  const bTarget = new Square({
+    sideLength: 2.2,
+    color: YELLOW,
+    fillOpacity: 0.9,
+    strokeWidth: 6,
+  }).shift([3, 0, 0]);
   scene.add(b);
   describe('before ReplacementTx');
-  await scene.play(new ReplacementTransform(b, bTarget));
+  await scene.play(new ReplacementTransform(b, bTarget, { duration: 1.2 }));
   describe('after  ReplacementTx');
 
-  await scene.wait(0.6);
+  await scene.wait(0.8);
 
   busy = false;
   (document.getElementById('playBtn') as HTMLButtonElement).disabled = false;
