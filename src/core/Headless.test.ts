@@ -5,6 +5,8 @@ import { ThreeDScene } from './ThreeDScene';
 import { ZoomedScene } from './ZoomedScene';
 import { Circle } from '../mobjects/geometry/Circle';
 import { FadeIn } from '../animation/fading/FadeIn';
+import { FadeOut } from '../animation/fading/FadeOut';
+import { ReplacementTransform } from '../animation/transform/Transform';
 import { Text } from '../mobjects/text/Text';
 import { Code } from '../mobjects/text/Code';
 import { DecimalNumber } from '../mobjects/text/DecimalNumber';
@@ -137,6 +139,29 @@ describe('Scene headless mode', () => {
     const circle = new Circle();
     scene.add(circle);
     await scene.play(new FadeIn(circle, { duration: 0.1 }));
+    scene.dispose();
+  });
+
+  it('FadeOut still removes mobject after play (remover regression)', async () => {
+    const scene = Scene.createHeadless();
+    const circle = new Circle();
+    scene.add(circle);
+    expect(scene.mobjects.has(circle)).toBe(true);
+    await scene.play(new FadeOut(circle, { duration: 0.1 }));
+    expect(scene.mobjects.has(circle)).toBe(false);
+    scene.dispose();
+  });
+
+  it('ReplacementTransform swaps source for target in scene (issue #308)', async () => {
+    const scene = Scene.createHeadless();
+    const src = new Circle({ radius: 1 });
+    const dst = new Circle({ radius: 2 });
+    scene.add(src);
+    expect(scene.mobjects.has(src)).toBe(true);
+    expect(scene.mobjects.has(dst)).toBe(false);
+    await scene.play(new ReplacementTransform(src, dst, { duration: 0.1 }));
+    expect(scene.mobjects.has(src)).toBe(false);
+    expect(scene.mobjects.has(dst)).toBe(true);
     scene.dispose();
   });
 

@@ -503,6 +503,54 @@ describe('ReplacementTransform', () => {
     rt.finish();
     expect(rt.isFinished()).toBe(true);
   });
+
+  describe('cleanUpFromScene (issue #308)', () => {
+    function makeFakeScene() {
+      const set = new Set<Mobject>();
+      return {
+        set,
+        scene: {
+          add: (...ms: Mobject[]) => ms.forEach((m) => set.add(m)),
+          remove: (...ms: Mobject[]) => ms.forEach((m) => set.delete(m)),
+        },
+      };
+    }
+
+    it('removes source and adds target after the animation', () => {
+      const { c1, c2 } = makePair();
+      const { set, scene } = makeFakeScene();
+      scene.add(c1);
+      const rt = new ReplacementTransform(c1, c2);
+      rt.begin();
+      rt.finish();
+      rt.cleanUpFromScene(scene);
+      expect(set.has(c1)).toBe(false);
+      expect(set.has(c2)).toBe(true);
+    });
+
+    it('plain Transform leaves scene membership unchanged', () => {
+      const { c1, c2 } = makePair();
+      const { set, scene } = makeFakeScene();
+      scene.add(c1);
+      const t = new Transform(c1, c2);
+      t.begin();
+      t.finish();
+      t.cleanUpFromScene(scene);
+      expect(set.has(c1)).toBe(true);
+      expect(set.has(c2)).toBe(false);
+    });
+
+    it('adding target is idempotent if it was already in the scene', () => {
+      const { c1, c2 } = makePair();
+      const { set, scene } = makeFakeScene();
+      scene.add(c1);
+      scene.add(c2);
+      const rt = new ReplacementTransform(c1, c2);
+      rt.cleanUpFromScene(scene);
+      expect(set.has(c1)).toBe(false);
+      expect(set.has(c2)).toBe(true);
+    });
+  });
 });
 
 describe('MoveToTarget', () => {

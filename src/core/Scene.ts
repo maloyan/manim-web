@@ -568,11 +568,10 @@ export class Scene {
       this._playPromiseResolve = resolve;
     });
 
-    // Remove mobjects whose animations have remover=true (e.g. FadeOut)
+    // Let each animation update scene membership (handles `remover`,
+    // and overrides like ReplacementTransform that swap source for target).
     for (const animation of allAnimations) {
-      if (animation.remover) {
-        this.remove(animation.mobject);
-      }
+      animation.cleanUpFromScene(this);
     }
   }
 
