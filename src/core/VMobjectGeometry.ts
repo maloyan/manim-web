@@ -537,14 +537,23 @@ function buildEarcutFillGeometryMulti(
     ring.map((p) => projectToPlane(p, origin, v1, v2)),
   );
 
-  // Classify rings by winding orientation in the shared 2D plane.
-  // CCW (positive area) -> outer; CW (negative area) -> hole.
+  // Classify rings by winding orientation in the shared 2D plane: the
+  // dominant orientation is the outer; the opposite orientation is a hole.
+  //
+  // Use AREA-WEIGHTED majority (sum of signed areas), not count-weighted
+  // majority of the signs. A glyph like "8" has one outer ring and TWO
+  // inner holes — count-majority would say "holes win" and misclassify
+  // the outer (which has by far the largest |area|) as a hole. Summing
+  // signed areas lets the larger outer dominate regardless of how many
+  // holes it has.
+  //
   // Subpaths whose own area is degenerate (e.g. a synthetic subpath
-  // collapsed to a point at alpha=0) take their orientation from the
-  // overall majority sign, then are filtered out as zero-area at
-  // triangulation time anyway (they contribute no triangles).
+  // collapsed to a single point at alpha=0) are classified as outers by
+  // default and contribute zero triangles to triangulation, so they
+  // don't render either way.
   const ringSigns = rings2D.map((ring) => signedArea2DFromStride(ring, 1));
-  const dominantSign = ringSigns.reduce((acc, s) => acc + Math.sign(s), 0) >= 0 ? 1 : -1;
+  const totalSignedArea = ringSigns.reduce((acc, s) => acc + s, 0);
+  const dominantSign = totalSignedArea >= 0 ? 1 : -1;
   const isHole = ringSigns.map((s) => {
     if (Math.abs(s) < 1e-12) return false; // degenerate: treat as outer (renders as nothing)
     return Math.sign(s) === -dominantSign;
