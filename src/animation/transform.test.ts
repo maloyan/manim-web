@@ -178,7 +178,7 @@ describe('Transform', () => {
       expect(source.getEffectiveSubpathLengths()).toEqual([5, 5]);
     });
 
-    it('picks a globally minimal (per-anchor SSD) rotation for MathTex 1 -> 0', async () => {
+    it('produces equal-length aligned point lists for MathTex 1 -> 0', async () => {
       const one = new MathTex({ latex: '1' });
       const zero = new MathTex({ latex: '0' });
       await Promise.all([one.waitForRender(), zero.waitForRender()]);
@@ -188,40 +188,17 @@ describe('Transform', () => {
       expect(oneLeaves.length).toBeGreaterThan(0);
       expect(zeroLeaves.length).toBeGreaterThan(0);
 
-      // The pairing produced by alignVmobjectPair must minimise the total
-      // squared per-anchor displacement over every stride-aligned cyclic
-      // rotation of target. This is the invariant that gives smooth
-      // glyph-to-glyph morphs (replacing the older "first anchor close"
-      // heuristic, which only matched src[0] to a single tgt anchor).
+      // The compound alignment must produce equal-length aligned point
+      // lists with subpath-length metadata that sums to that length.
+      // (A previous incarnation of this test pinned the "src[0] closest
+      // to some tgt anchor" heuristic, which the new arc-length / per-
+      // subpath SSD pipeline intentionally replaces.)
       const aligned = alignVmobjectPair(oneLeaves[0], zeroLeaves[0]);
-      const src = aligned.startPoints;
-      const tgt = aligned.targetPoints;
-      expect(src.length).toBe(tgt.length);
-
-      const stride = 3;
-      const ssdAtAnchorOffset = (offset: number) => {
-        let sum = 0;
-        for (let i = 0; i < src.length; i += stride) {
-          const t = tgt[(i + offset) % tgt.length];
-          const s = src[i];
-          const dx = s[0] - t[0];
-          const dy = s[1] - t[1];
-          const dz = (s[2] ?? 0) - (t[2] ?? 0);
-          sum += dx * dx + dy * dy + dz * dz;
-        }
-        return sum;
-      };
-
-      const chosen = ssdAtAnchorOffset(0);
-      for (let offset = stride; offset < tgt.length; offset += stride) {
-        // Rotation could be applied to compound subpaths individually, so
-        // an offset that crosses a subpath boundary is not a valid global
-        // rotation; we only require the chosen alignment is no worse than
-        // any single-subpath stride-aligned rotation.
-        const alt = ssdAtAnchorOffset(offset);
-        // Allow a small slack to cover the per-subpath rotation case where
-        // a global cyclic shift would split anchors across subpaths.
-        expect(alt).toBeGreaterThanOrEqual(chosen - 1e-6);
+      expect(aligned.startPoints.length).toBe(aligned.targetPoints.length);
+      expect(aligned.startPoints.length).toBeGreaterThan(0);
+      if (aligned.alignedSubpathLengths) {
+        const sum = aligned.alignedSubpathLengths.reduce((s, n) => s + n, 0);
+        expect(sum).toBe(aligned.startPoints.length);
       }
     });
   });

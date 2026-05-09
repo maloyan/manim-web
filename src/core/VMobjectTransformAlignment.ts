@@ -302,16 +302,6 @@ function isStrideClosedCubicSubpath(points: number[][], stride: number): boolean
 }
 
 /**
- * Reverse a cubic-bezier point chain, preserving the
- * [anchor, handle, handle, anchor, handle, handle, ...] structure: simply
- * reversing the array also swaps each pair of handles within its segment,
- * which is correct for cubic Beziers.
- */
-function reverseCubicChain(points: number[][]): number[][] {
-  return [...points].reverse().map((p) => [...p]);
-}
-
-/**
  * Apply a cyclic stride-aligned rotation to a closed cubic-bezier subpath.
  * The "open" portion (length n - 1) is rotated by `shift` (multiple of
  * `stride`); the closing duplicate of the first point is re-appended.
@@ -353,14 +343,19 @@ function ssdForRotation(
 
 /**
  * Rotate a closed cubic-bezier target subpath so the per-anchor squared
- * displacement to source is globally minimised. Considers both forward and
- * reversed orientation (i.e. CW ↔ CCW traversal) since reversing one side
- * is sometimes the cheapest pairing for visually similar but oppositely
- * wound shapes.
+ * displacement to source is globally minimised over every stride-aligned
+ * cyclic rotation.
  *
- * This makes sense ONLY because both subpaths were resampled to a shared
- * arc-length parameterisation upstream; otherwise anchor index `i` is not
- * a meaningful path-fraction and SSD over rotations gives noisy results.
+ * Orientation is NOT searched here: callers (specifically
+ * `alignChunkListsByLength`) bucket subpaths by signed area (CW vs CCW)
+ * before pairing, so within a pair both subpaths already share an
+ * orientation. Searching reversed orientations on top of that can pick a
+ * pairing that minimises raw SSD by zig-zagging anchors against the path
+ * direction — which renders as an "inside out" twist mid-Transform.
+ *
+ * Whole-path SSD is meaningful here ONLY because both subpaths were
+ * resampled to a shared arc-length parameterisation upstream; otherwise
+ * anchor index `i` is not a meaningful path-fraction.
  */
 function rotateClosedTargetForBestAlignment(
   srcSubpath: number[][],
@@ -375,37 +370,19 @@ function rotateClosedTargetForBestAlignment(
   const anchorCount = openLen / stride;
   if (anchorCount <= 1) return clonePoints(tgtSubpath);
 
-  const tgtForward = tgtSubpath;
-  // Reversing a closed chain also rotates the start anchor — the reversed
-  // chain ends with what was the first anchor, so we re-roll it to the
-  // front to recover a canonical "anchor-first" closed form.
-  const tgtReversed = (() => {
-    const rev = reverseCubicChain(tgtSubpath);
-    // rev is closed too (first==last). It already starts with what was the
-    // last anchor of the original path; that's a valid starting anchor.
-    return rev;
-  })();
-
-  let bestSubpath = tgtForward;
   let bestShift = 0;
   let bestSsd = Infinity;
-  let bestReversed = false;
 
-  for (const candidate of [tgtForward, tgtReversed]) {
-    for (let ai = 0; ai < anchorCount; ai++) {
-      const shift = ai * stride;
-      const ssd = ssdForRotation(srcSubpath, candidate, shift, openLen, stride);
-      if (ssd < bestSsd) {
-        bestSsd = ssd;
-        bestShift = shift;
-        bestSubpath = candidate;
-        bestReversed = candidate === tgtReversed;
-      }
+  for (let ai = 0; ai < anchorCount; ai++) {
+    const shift = ai * stride;
+    const ssd = ssdForRotation(srcSubpath, tgtSubpath, shift, openLen, stride);
+    if (ssd < bestSsd) {
+      bestSsd = ssd;
+      bestShift = shift;
     }
   }
-  void bestReversed;
 
-  return rotateClosedSubpath(bestSubpath, bestShift, openLen);
+  return rotateClosedSubpath(tgtSubpath, bestShift, openLen);
 }
 
 /** Equalize point counts by resampling the shorter subpath only. */
@@ -516,6 +493,8 @@ function closestAnchorPoint(subpath: number[][], target: number[]): number[] {
 function alignChunkListsByLength(
   srcChunks: Array<{ chunk: number[][]; len: number }>,
   tgtChunks: Array<{ chunk: number[][]; len: number }>,
+  srcGlobalOuter: number[][] | undefined,
+  tgtGlobalOuter: number[][] | undefined,
   srcCenter: number[],
   tgtCenter: number[],
   srcAlignedAll: number[][],
@@ -526,11 +505,16 @@ function alignChunkListsByLength(
   const tgtSorted = [...tgtChunks].sort((a, b) => b.len - a.len);
   const maxSubpaths = Math.max(srcSorted.length, tgtSorted.length);
 
-  // The "outer" of each side, within this orientation bucket, is the
-  // longest subpath. When pairing leftovers we collapse them onto the
-  // other side's outer at the anchor closest to the leftover's centroid.
-  const srcOuter = srcSorted[0]?.chunk;
-  const tgtOuter = tgtSorted[0]?.chunk;
+  // Use the within-bucket outer when available, else fall back to the
+  // global outer (longest subpath of EITHER orientation). This matters
+  // for an orientation-only-on-one-side case: e.g. `5 -> 6`, where the
+  // CW bucket has src=[] tgt=[inner_6]. Without the global fallback the
+  // synthetic src would collapse to a meaningless mid-shape centroid; the
+  // global fallback makes it collapse to a real boundary anchor of the
+  // source's CCW outer instead, so the hole emerges from the boundary
+  // rather than eating through the body.
+  const srcOuter = srcSorted[0]?.chunk ?? srcGlobalOuter;
+  const tgtOuter = tgtSorted[0]?.chunk ?? tgtGlobalOuter;
 
   for (let i = 0; i < maxSubpaths; i++) {
     const src = srcSorted[i]?.chunk;
@@ -543,10 +527,12 @@ function alignChunkListsByLength(
       srcSub = src;
       tgtSub = tgt;
     } else if (tgt && !src) {
-      // Source-side leftover: tgt has a feature src lacks. Synthesise a
-      // src placeholder that LIVES at a plausible point on src's outer
-      // (closest anchor to the leftover tgt subpath's centroid, expressed
-      // in the same coordinate system).
+      // Source-side leftover: tgt has a feature src lacks (e.g. inner
+      // triangle of "6" when source is "5"). Synthesise a src placeholder
+      // anchored at the point on the src outer closest to where this tgt
+      // feature will end up. At alpha=0 the hole "starts" tangent to
+      // src's outline (zero area, invisible) and grows toward its real
+      // position as alpha increases.
       const tgtCentroid = computeCenter(tgt);
       const collapseTo = srcOuter ? closestAnchorPoint(srcOuter, tgtCentroid) : srcCenter;
       srcSub = makeNullSubpathFromReference(tgt, collapseTo);
@@ -565,6 +551,15 @@ function alignChunkListsByLength(
     tgtAlignedAll.push(...tgtAligned);
     alignedLengths.push(srcAligned.length);
   }
+}
+
+/** Longest subpath chunk across all signs, for cross-bucket fallbacks. */
+function pickGlobalOuter(chunks: SignedSubpathChunk[]): number[][] | undefined {
+  let best: SignedSubpathChunk | undefined;
+  for (const c of chunks) {
+    if (!best || c.len > best.len) best = c;
+  }
+  return best?.chunk;
 }
 
 /**
@@ -607,9 +602,14 @@ export function alignCompoundPathsForTransform(
   const srcChunks = makeSignedChunks(srcPoints3D, srcLengths, srcSigns);
   const tgtChunks = makeSignedChunks(tgtPoints3D, tgtLengths, tgtSigns);
 
+  const srcGlobalOuter = pickGlobalOuter(srcChunks);
+  const tgtGlobalOuter = pickGlobalOuter(tgtChunks);
+
   alignChunkListsByLength(
     srcChunks.filter((c) => c.sign === -1),
     tgtChunks.filter((c) => c.sign === -1),
+    srcGlobalOuter,
+    tgtGlobalOuter,
     srcCenter,
     tgtCenter,
     srcAlignedAll,
@@ -619,6 +619,8 @@ export function alignCompoundPathsForTransform(
   alignChunkListsByLength(
     srcChunks.filter((c) => c.sign === 1),
     tgtChunks.filter((c) => c.sign === 1),
+    srcGlobalOuter,
+    tgtGlobalOuter,
     srcCenter,
     tgtCenter,
     srcAlignedAll,
