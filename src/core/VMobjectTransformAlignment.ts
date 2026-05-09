@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { evalCubicBezier, lerpPoint as lerpPoint3D, signedArea2DFromStride } from '../utils/math';
 
 export interface CompoundAlignmentResult {
@@ -284,7 +285,13 @@ function arcLengthResampleCubicChain(points: number[][], newCurveCount: number):
   }
 
   const info = buildChainArcInfo(points);
-  if (info.totalLen <= 0) return makeDegenerateChain(points[0], newCurveCount);
+  // A degenerate "all points coincide" chain has total perimeter zero in
+  // exact arithmetic; under floating point it picks up ULP noise (~1e-14)
+  // from evaluating the polynomial at non-zero `t`, so we use a small
+  // epsilon to guarantee we return an exact constant chain rather than
+  // walk the noise through arc-length sampling and re-emit slightly
+  // different points at each anchor.
+  if (info.totalLen < 1e-9) return makeDegenerateChain(points[0], newCurveCount);
 
   // Anchor positions and unit tangents at each new arc-length-uniform anchor.
   const anchors: number[][] = [];
@@ -422,24 +429,307 @@ function rotateClosedTargetForBestAlignment(
   return rotateClosedSubpath(tgtSubpath, bestShift, openLen);
 }
 
-/** Equalize point counts by resampling the shorter subpath only. */
+/**
+ * Resample a cubic Bezier chain so its anchor positions land at the
+ * specified arc-length values (instead of arc-length-uniform). Used to
+ * realise an "OT-warped" target: each new anchor sits where the optimal
+ * monotonic correspondence places it relative to the source. Adjacent
+ * anchors that map to the same arc position produce a degenerate
+ * zero-length sub-cubic, which renders as nothing — that's the natural
+ * way DTW expresses "this source anchor doesn't have a corresponding
+ * target anchor moving with it".
+ */
+function resampleCubicChainAtArcs(points: number[][], arcPositions: number[]): number[][] {
+  if (arcPositions.length < 2) return points.map((p) => [...p]);
+  const newCurveCount = arcPositions.length - 1;
+  const currentCurveCount = (points.length - 1) / 3;
+  if (!Number.isInteger(currentCurveCount) || currentCurveCount <= 0) {
+    return points.map((p) => [...p]);
+  }
+  const info = buildChainArcInfo(points);
+  if (info.totalLen <= 0) return makeDegenerateChain(points[0], newCurveCount);
+
+  const anchors: number[][] = [];
+  const tangents: number[][] = [];
+  const locs: { curveIdx: number; t: number }[] = [];
+  for (const arc of arcPositions) {
+    const loc = locateOnChain(info, Math.max(0, Math.min(info.totalLen, arc)));
+    locs.push(loc);
+    const c = info.curves[loc.curveIdx];
+    anchors.push(evalCubicBezier(c[0], c[1], c[2], c[3], loc.t));
+    tangents.push(unitTangentAt(c, loc.t));
+  }
+
+  const out: number[][] = [[...anchors[0]]];
+  for (let i = 0; i < newCurveCount; i++) {
+    const { h1, h2 } = buildSubCubic(
+      info,
+      anchors[i],
+      anchors[i + 1],
+      tangents[i],
+      tangents[i + 1],
+      locs[i],
+      locs[i + 1],
+    );
+    out.push(h1, h2, [...anchors[i + 1]]);
+  }
+  return out;
+}
+
+/**
+ * Run cyclic Dynamic-Time-Warping on two equal-length anchor sequences.
+ * For each cyclic shift `s` of the target, finds the monotonic warping
+ * path between source and shifted target that minimises total squared
+ * distance, then picks the best shift. Returns, for each source anchor
+ * index, the (possibly warped) target anchor index it pairs with.
+ *
+ * Why DTW over plain rotation: rotation is equivalent to choosing a
+ * single cyclic offset and then forcing a 1:1 monotonic bijection. DTW
+ * keeps the monotonic constraint but lets some source anchors "linger"
+ * on the same target index (or vice versa) — i.e. it stretches and
+ * compresses regions of one path against the other to align corresponding
+ * features. For glyph pairs whose features don't naturally fall at the
+ * same arc-length fractions (e.g. MathTex `2` vs `3`), this gives a
+ * substantially smoother visual morph than pure rotation.
+ */
+// eslint-disable-next-line complexity
+function dtwCyclicCorrespondence(srcAnchors: number[][], tgtAnchors: number[][]): number[] {
+  const N = srcAnchors.length;
+  const M = tgtAnchors.length;
+  if (N === 0 || M === 0) return [];
+  if (N === 1) return [0];
+
+  let bestCost = Infinity;
+  let bestSrcToTgt = new Array<number>(N).fill(0);
+
+  // O(N) per shift × O(N·M) DP per shift × O(N) shifts = O(N²·M).
+  // Acceptable at Transform begin for typical N, M ≤ ~60.
+  // Use Float64Array DP table reused across shifts to limit allocation.
+  const dp = new Float64Array((N + 1) * (M + 1));
+  const back = new Uint8Array((N + 1) * (M + 1));
+  const idx = (i: number, j: number) => i * (M + 1) + j;
+
+  for (let shift = 0; shift < M; shift++) {
+    dp.fill(Infinity);
+    dp[idx(0, 0)] = 0;
+    for (let i = 1; i <= N; i++) {
+      const sp = srcAnchors[i - 1];
+      for (let j = 1; j <= M; j++) {
+        const tp = tgtAnchors[(j - 1 + shift) % M];
+        const dx = sp[0] - tp[0];
+        const dy = sp[1] - tp[1];
+        const dz = (sp[2] ?? 0) - (tp[2] ?? 0);
+        const cost = dx * dx + dy * dy + dz * dz;
+        const a = dp[idx(i - 1, j - 1)];
+        const b = dp[idx(i - 1, j)];
+        const c = dp[idx(i, j - 1)];
+        let mv = a;
+        let mi: 0 | 1 | 2 = 0;
+        if (b < mv) {
+          mv = b;
+          mi = 1;
+        }
+        if (c < mv) {
+          mv = c;
+          mi = 2;
+        }
+        dp[idx(i, j)] = cost + mv;
+        back[idx(i, j)] = mi;
+      }
+    }
+
+    const total = dp[idx(N, M)];
+    if (total >= bestCost) continue;
+
+    // Backtrack: collect (i, j) pairs.
+    const pairs: [number, number][] = [];
+    let i = N;
+    let j = M;
+    while (i > 0 && j > 0) {
+      pairs.push([i - 1, (j - 1 + shift) % M]);
+      const dir = back[idx(i, j)];
+      if (dir === 0) {
+        i--;
+        j--;
+      } else if (dir === 1) {
+        i--;
+      } else {
+        j--;
+      }
+    }
+    pairs.reverse();
+
+    // Collapse pairs to a per-source target index using the median tgt
+    // among all tgts paired with each src — preserves monotonicity since
+    // DTW pairs are monotone, and the median of a monotonic-prefix is
+    // monotone in src.
+    const buckets: number[][] = Array.from({ length: N }, () => []);
+    for (const [si, ti] of pairs) buckets[si].push(ti);
+    const srcToTgt = buckets.map((b, s) => {
+      if (b.length === 0) return s % M;
+      b.sort((p, q) => p - q);
+      return b[(b.length - 1) >> 1];
+    });
+
+    bestCost = total;
+    bestSrcToTgt = srcToTgt;
+  }
+
+  return bestSrcToTgt;
+}
+
+/**
+ * Pair two cubic-Bezier subpaths by:
+ *   1. Resampling each side to a shared arc-length-uniform anchor count.
+ *   2. Running cyclic DTW between the two anchor sequences to find the
+ *      monotonic correspondence that minimises total per-anchor displacement.
+ *   3. Re-resampling the target chain with anchors placed at the warped
+ *      arc-length positions chosen by DTW.
+ *
+ * Result: equal-length cubic chains whose anchor `i` pairs source feature
+ * `i` with the target feature DTW judged most similar — instead of forcing
+ * a single uniform cyclic offset across the whole shape.
+ */
+// eslint-disable-next-line complexity
 function alignSubpathPairPoints(
   srcSubpath: number[][],
   tgtSubpath: number[][],
 ): { srcAligned: number[][]; tgtAligned: number[][] } {
   const maxCount = Math.max(srcSubpath.length, tgtSubpath.length);
+
+  // Resample both sides to the same uniform arc-length parameterisation.
   const srcAligned =
     srcSubpath.length < maxCount
       ? resamplePointList3D(srcSubpath, maxCount)
-      : srcSubpath.map((p) => [...p]);
-  const tgtAlignedRaw =
+      : resamplePointList3D(srcSubpath, srcSubpath.length);
+  const tgtUniform =
     tgtSubpath.length < maxCount
       ? resamplePointList3D(tgtSubpath, maxCount)
-      : tgtSubpath.map((p) => [...p]);
+      : resamplePointList3D(tgtSubpath, tgtSubpath.length);
 
-  const tgtAligned = rotateClosedTargetForBestAlignment(srcAligned, tgtAlignedRaw);
+  // Only meaningful for stride-3 closed cubic chains. For anything else
+  // fall back to rotation-only alignment.
+  const stride = 3;
+  if (
+    !isStrideClosedCubicSubpath(srcAligned, stride) ||
+    !isStrideClosedCubicSubpath(tgtUniform, stride) ||
+    srcAligned.length !== tgtUniform.length
+  ) {
+    return {
+      srcAligned,
+      tgtAligned: rotateClosedTargetForBestAlignment(srcAligned, tgtUniform),
+    };
+  }
 
-  return { srcAligned, tgtAligned };
+  const openLen = srcAligned.length - 1;
+  const anchorCount = openLen / stride;
+  if (anchorCount < 4) {
+    return {
+      srcAligned,
+      tgtAligned: rotateClosedTargetForBestAlignment(srcAligned, tgtUniform),
+    };
+  }
+
+  // Extract just the anchors (every stride-th point) from both sides.
+  const srcAnchors: number[][] = [];
+  const tgtAnchors: number[][] = [];
+  for (let i = 0; i < openLen; i += stride) {
+    srcAnchors.push(srcAligned[i]);
+    tgtAnchors.push(tgtUniform[i]);
+  }
+
+  // DTW correspondence: for each src anchor i, the warped tgt anchor.
+  const srcToTgt = dtwCyclicCorrespondence(srcAnchors, tgtAnchors);
+
+  // Compute total target perimeter so we can express the warped tgt
+  // anchors as arc-length positions on the original target chain. The
+  // threshold is `1e-9`, not exactly zero, because evaluating a chain of
+  // degenerate (zero-length) cubics through floating-point math
+  // accumulates noise that comes out as ~1e-14 instead of 0; treating
+  // that noise as a non-degenerate perimeter would re-sample a synthetic
+  // null subpath into points that drift off the centroid by a few ulps,
+  // breaking the "synthetic = constant" invariant downstream callers rely
+  // on (placeholder fades, hole-collapse rendering, etc.).
+  const tgtInfo = buildChainArcInfo(tgtSubpath);
+  if (tgtInfo.totalLen < 1e-9) {
+    return {
+      srcAligned,
+      tgtAligned: rotateClosedTargetForBestAlignment(srcAligned, tgtUniform),
+    };
+  }
+
+  // Warped arc positions. Anchor 0 is whatever DTW picked; we walk the
+  // target perimeter monotonically and unwrap cyclic wraparounds (i.e. if
+  // the next chosen index wraps under the previous one, we treat it as
+  // "+M after" instead of "before").
+  const warpedAnchorArcs: number[] = [];
+  let prevIdx = srcToTgt[0];
+  let cumulativeIdx = prevIdx;
+  warpedAnchorArcs.push((prevIdx / anchorCount) * tgtInfo.totalLen);
+  for (let i = 1; i < anchorCount; i++) {
+    const cur = srcToTgt[i];
+    let unwrap = cur;
+    while (unwrap < prevIdx) unwrap += anchorCount;
+    cumulativeIdx += unwrap - prevIdx;
+    warpedAnchorArcs.push((cumulativeIdx / anchorCount) * tgtInfo.totalLen);
+    prevIdx = unwrap % anchorCount;
+  }
+  // Close the loop by returning to anchor 0 + one full perimeter.
+  warpedAnchorArcs.push(warpedAnchorArcs[0] + tgtInfo.totalLen);
+
+  // Each consecutive arc position must remain within [first, first+L]; if
+  // total drift exceeded one full loop we collapse extras (defensive).
+  for (let i = 1; i < warpedAnchorArcs.length; i++) {
+    if (warpedAnchorArcs[i] < warpedAnchorArcs[i - 1]) {
+      warpedAnchorArcs[i] = warpedAnchorArcs[i - 1];
+    }
+  }
+  const span = warpedAnchorArcs[warpedAnchorArcs.length - 1] - warpedAnchorArcs[0];
+  if (span > 1.5 * tgtInfo.totalLen || span < 0.5 * tgtInfo.totalLen) {
+    // DTW produced a degenerate warping (more than one full loop or less
+    // than half a loop). Fall back to rotation-only alignment, which is
+    // always sensible for closed curves.
+    return {
+      srcAligned,
+      tgtAligned: rotateClosedTargetForBestAlignment(srcAligned, tgtUniform),
+    };
+  }
+
+  // Re-resample tgt with anchors placed at the warped arc positions.
+  // We work modulo the target perimeter so wraparound positions land on
+  // the actual chain.
+  const wrappedArcs = warpedAnchorArcs.map((a) => {
+    let v = a % tgtInfo.totalLen;
+    if (v < 0) v += tgtInfo.totalLen;
+    return v;
+  });
+  // For monotonic resample we need positions in non-decreasing order.
+  // Re-cumulate after the wrap so the resampler can interpret them as a
+  // single sweep around the loop, possibly across the seam.
+  const splitArcs = unwrapArcCycle(wrappedArcs, tgtInfo.totalLen);
+  const tgtWarped = resampleCubicChainAtArcs(tgtSubpath, splitArcs);
+
+  if (tgtWarped.length !== srcAligned.length) {
+    return {
+      srcAligned,
+      tgtAligned: rotateClosedTargetForBestAlignment(srcAligned, tgtUniform),
+    };
+  }
+
+  return { srcAligned, tgtAligned: tgtWarped };
+}
+
+/**
+ * Unwrap a cyclic sequence of arc positions into a monotonic non-decreasing
+ * one by adding the perimeter length wherever the next position appears to
+ * have looped back.
+ */
+function unwrapArcCycle(arcs: number[], perimeter: number): number[] {
+  const out = arcs.slice();
+  for (let i = 1; i < out.length; i++) {
+    while (out[i] < out[i - 1]) out[i] += perimeter;
+  }
+  return out;
 }
 
 /** Compute center of all points in array. */
