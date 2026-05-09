@@ -242,6 +242,61 @@ describe('VMobject._isNearlyLinear', () => {
     const p3 = [0, 1, 0];
     expect((VMobject as any)._isNearlyLinear(p0, p1, p2, p3)).toBe(false);
   });
+
+  // Regression for issue #310: classification must be scale-invariant so that
+  // adaptive sampling produces consistent polyline lengths across scaled
+  // versions of the same shape (e.g. small MathTex "0" → big MathTex "0"
+  // during a Transform). A fixed absolute threshold causes small glyphs to
+  // render as polygons while large copies render as curves.
+  it('classification is invariant under uniform scaling (issue #310)', () => {
+    // Curved segment: a quarter-circle-ish bulge (handle ~25% off-chord).
+    const p0 = [0, 0, 0];
+    const p1 = [0.25, 0.25, 0];
+    const p2 = [0.75, 0.25, 0];
+    const p3 = [1, 0, 0];
+
+    const scaleAll = (s: number, p: number[]) => p.map((v) => v * s);
+    const scaled = (s: number) => [
+      scaleAll(s, p0),
+      scaleAll(s, p1),
+      scaleAll(s, p2),
+      scaleAll(s, p3),
+    ];
+
+    const classify = (s: number) => {
+      const [a, b, c, d] = scaled(s);
+      return (VMobject as any)._isNearlyLinear(a, b, c, d) as boolean;
+    };
+
+    // Same shape at different scales must classify the same.
+    expect(classify(1)).toBe(classify(0.05));
+    expect(classify(1)).toBe(classify(0.005));
+    expect(classify(1)).toBe(classify(10));
+  });
+
+  it('a tiny but visibly curved segment is not classified as linear (issue #310)', () => {
+    // ~25% bulge relative to chord, but chord is only 0.02 world units —
+    // representative of MathTex glyph segment at small font size.
+    const p0 = [0, 0, 0];
+    const p1 = [0.005, 0.005, 0];
+    const p2 = [0.015, 0.005, 0];
+    const p3 = [0.02, 0, 0];
+    expect((VMobject as any)._isNearlyLinear(p0, p1, p2, p3)).toBe(false);
+  });
+
+  it('a clearly linear segment at any scale stays linear (issue #310)', () => {
+    // Handle perpendicular deviation = 0.1% of chord length.
+    const tiny = (s: number) => [
+      [0, 0, 0],
+      [s / 3, s * 0.001, 0],
+      [(2 * s) / 3, -s * 0.001, 0],
+      [s, 0, 0],
+    ];
+    for (const s of [0.001, 0.1, 1, 100]) {
+      const [a, b, c, d] = tiny(s);
+      expect((VMobject as any)._isNearlyLinear(a, b, c, d)).toBe(true);
+    }
+  });
 });
 
 // ===========================================================================

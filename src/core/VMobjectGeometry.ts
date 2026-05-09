@@ -33,18 +33,47 @@ const FILL_SAMPLES_PER_SEGMENT = 16;
 // -----------------------------------------------------------------------
 
 /**
+ * Relative tolerance for the linearity test, expressed as a fraction of the
+ * chord length. A handle whose perpendicular distance to the chord is less
+ * than this fraction of the chord is treated as collinear.
+ *
+ * The threshold MUST be relative (not absolute) so that the same logical
+ * shape sampled at different world-space scales is classified consistently.
+ * A fixed absolute threshold collapses small-scale curves (e.g. a tiny
+ * MathTex glyph) to lines while leaving the large-scale copy curved, which
+ * causes mid-animation polyline-length flips during a `Transform` between
+ * the two — see issue #310.
+ */
+const LINEARITY_REL_TOL = 0.01;
+
+/**
  * Check if a cubic Bezier segment is nearly linear by measuring the maximum
- * 3D distance from handles to the chord (p0 -> p3). Must handle z so that
- * arcs in non-XY planes (e.g. Angle in XZ plane) still sample as curves.
+ * 3D distance from handles to the chord (p0 -> p3), normalised by chord
+ * length. Must handle z so that arcs in non-XY planes (e.g. Angle in XZ
+ * plane) still sample as curves.
  */
 export function isNearlyLinear(p0: number[], p1: number[], p2: number[], p3: number[]): boolean {
   const cx = p3[0] - p0[0];
   const cy = p3[1] - p0[1];
   const cz = (p3[2] ?? 0) - (p0[2] ?? 0);
   const len2 = cx * cx + cy * cy + cz * cz;
-  if (len2 < 1e-10) return true; // degenerate segment
 
-  const invLen = 1 / Math.sqrt(len2);
+  // Handle distances from p0 — used both as the degenerate-chord fallback
+  // and to distinguish a "loop" Bezier (chord ≈ 0 but handles bulge out).
+  const dh = (q: number[]): number => {
+    const dx = q[0] - p0[0];
+    const dy = q[1] - p0[1];
+    const dz = (q[2] ?? 0) - (p0[2] ?? 0);
+    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+  };
+
+  if (len2 < 1e-20) {
+    // Chord is effectively zero. Linear only if the whole control polygon
+    // collapses to a point; otherwise it's a curl/loop that must be sampled.
+    return Math.max(dh(p1), dh(p2)) < 1e-10;
+  }
+
+  const chord = Math.sqrt(len2);
   const perpDist = (q: number[]): number => {
     const ax = q[0] - p0[0];
     const ay = q[1] - p0[1];
@@ -53,10 +82,10 @@ export function isNearlyLinear(p0: number[], p1: number[], p2: number[], p3: num
     const rx = ay * cz - az * cy;
     const ry = az * cx - ax * cz;
     const rz = ax * cy - ay * cx;
-    return Math.sqrt(rx * rx + ry * ry + rz * rz) * invLen;
+    return Math.sqrt(rx * rx + ry * ry + rz * rz) / chord;
   };
 
-  return Math.max(perpDist(p1), perpDist(p2)) < 0.01;
+  return Math.max(perpDist(p1), perpDist(p2)) < LINEARITY_REL_TOL * chord;
 }
 
 // -----------------------------------------------------------------------
