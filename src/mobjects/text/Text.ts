@@ -78,6 +78,13 @@ let fontFaceIdCounter = 0;
 /**
  * Load a font URL as a CSS @font-face rule (cached).
  * Returns the unique font-family name assigned to this URL.
+ *
+ * Why the extra `document.fonts.load(...)` call:
+ * `face.load()` + `document.fonts.add(face)` is enough for `measureText`,
+ * but Canvas 2D's `fillText` font matching is lazy — until the font has
+ * been used in DOM layout or explicitly resolved via `document.fonts.load`,
+ * the first draw after add can fall back to the previous family. This
+ * showed up as wrong-font flickers in `Create`/`Transform` (issue #309).
  */
 async function loadFontFace(url: string): Promise<string> {
   // Font loading unavailable in non-DOM environments
@@ -93,9 +100,11 @@ async function loadFontFace(url: string): Promise<string> {
 
   const familyName = `ManimFont_${fontFaceIdCounter++}`;
   const face = new FontFace(familyName, `url(${url})`);
-  const loadPromise = face.load().then(() => {
+  const loadPromise = (async () => {
+    await face.load();
     document.fonts.add(face);
-  });
+    await document.fonts.load(`1em '${familyName}'`);
+  })();
 
   fontFaceCache.set(url, { familyName, loadPromise });
   await loadPromise;
