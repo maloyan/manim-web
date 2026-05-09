@@ -45,23 +45,27 @@ export function resamplePointList3D(points: number[][], targetCount: number): nu
     return [[...(points[0] ?? [0, 0, 0])]];
   }
 
-  if (points.length === targetCount) {
-    return points.map((p) => [...p]);
-  }
-
   if (points.length === 1) {
     return Array.from({ length: targetCount }, () => [...points[0]]);
   }
 
   if (isCubicBezierChain(points) && targetCount >= 4 && (targetCount - 1) % 3 === 0) {
-    const currentCurveCount = (points.length - 1) / 3;
+    // Always re-parameterise cubic chains to arc-length-uniform anchors,
+    // including when targetCount === points.length. Without this the
+    // pairing in `Transform` keeps whatever non-uniform anchor distribution
+    // the input data happened to have (e.g. MathJax bezier output puts
+    // more anchors near corners), so anchor `i` of source and anchor `i`
+    // of target correspond to different fractions of perimeter, and
+    // mid-frames lerp non-corresponding features into chimeric shapes.
     const targetCurveCount = (targetCount - 1) / 3;
-    if (targetCurveCount >= currentCurveCount) {
-      const remapped = remapBezierCurveCount(points, targetCurveCount);
-      if (remapped.length === targetCount) {
-        return remapped;
-      }
+    const remapped = arcLengthResampleCubicChain(points, targetCurveCount);
+    if (remapped.length === targetCount) {
+      return remapped;
     }
+  }
+
+  if (points.length === targetCount) {
+    return points.map((p) => [...p]);
   }
 
   // Fallback for non-cubic or malformed point arrays.
@@ -163,117 +167,150 @@ function tForArcLength(
 }
 
 /**
- * Subdivide a single cubic Bezier curve into `parts` sub-curves whose
- * sub-curve arc lengths are equal. Uses a per-curve cumulative arc length
- * table; each sub-curve is exact (de Casteljau-style hodograph trick).
+ * Resample a cubic Bezier chain to `newCurveCount` cubics whose anchor
+ * positions lie at arc-length-uniform fractions of the original chain's
+ * total perimeter. Works at any count (including same-as-input).
  *
- * Equal-arc-length splits matter for `Transform`: the i-th anchor of the
- * resampled chain ends up at fraction `i/N` of the source's perimeter
- * rather than fraction `i/N` of an arbitrary `t` parameterisation. That
- * keeps "feature at t≈k" of one shape paired with "feature at t≈k" of the
- * other, which is what makes mid-frames look smooth instead of chimeric.
+ * Why this matters: the `Transform` lerps anchor i of source with anchor
+ * i of target. If anchor i represents a meaningful path-fraction of each
+ * shape (e.g. "~30% around the perimeter"), the lerp pairs corresponding
+ * features and the morph blends smoothly. Without arc-length
+ * re-parameterisation, anchor i represents whatever fraction the upstream
+ * source data (e.g. MathJax) chose to place anchor i at, so anchor i of
+ * "2" might be at the top of the glyph while anchor i of "3" might be at
+ * the side, and the lerp creates a chimeric mid-frame.
+ *
+ * Where new sub-cubics fall entirely within a single original cubic the
+ * result is exact (de Casteljau hodograph subdivision). Where a new
+ * sub-cubic spans multiple original cubics, we approximate via the
+ * standard chord-length-tangent cubic (start/end positions and unit
+ * tangents, handles at chord/3). This approximation is close to the
+ * original path for typical glyph shapes and preserves G1 continuity at
+ * each new anchor.
  */
-function subdivideCubicCurve(curve: number[][], parts: number): number[][][] {
-  const p0 = curve[0];
-  const p1 = curve[1];
-  const p2 = curve[2];
-  const p3 = curve[3];
-
-  if (parts <= 1) {
-    return [[[...p0], [...p1], [...p2], [...p3]]];
-  }
-
-  const table = buildArcLengthTable(p0, p1, p2, p3, Math.max(16, parts * 4));
-  const tValues = new Array<number>(parts + 1);
-  tValues[0] = 0;
-  tValues[parts] = 1;
-  for (let i = 1; i < parts; i++) {
-    tValues[i] = table.total > 0 ? tForArcLength(table, (i / parts) * table.total) : i / parts;
-  }
-
-  const out: number[][][] = [];
-  for (let i = 0; i < parts; i++) {
-    const t0 = tValues[i];
-    const t1 = tValues[i + 1];
-    const dt = t1 - t0;
-
-    const q0 = evalCubicBezier(p0, p1, p2, p3, t0);
-    const q3 = evalCubicBezier(p0, p1, p2, p3, t1);
-    const d0 = evalCubicDerivative(p0, p1, p2, p3, t0);
-    const d1 = evalCubicDerivative(p0, p1, p2, p3, t1);
-
-    const q1 = q0.map((v, k) => v + (dt / 3) * (d0[k] ?? 0));
-    const q2 = q3.map((v, k) => v - (dt / 3) * (d1[k] ?? 0));
-
-    out.push([q0, q1, q2, q3]);
-  }
-
-  return out;
+interface ChainArcInfo {
+  curves: number[][][];
+  tables: ReturnType<typeof buildArcLengthTable>[];
+  cumulative: number[];
+  totalLen: number;
 }
 
-/**
- * Distribute `extra` extra splits across `n` curves whose arc lengths are
- * `lengths`. Each curve must receive at least 1 split (so the total is
- * `n + extra = newCurveCount`). The extra splits are allocated proportional
- * to arc length using a largest-residual rounding scheme.
- */
-function allocateSplitsByArcLength(lengths: number[], newCurveCount: number): number[] {
-  const n = lengths.length;
-  if (n === 0) return [];
-  if (newCurveCount <= n) return new Array(n).fill(1);
-
-  const total = lengths.reduce((s, l) => s + l, 0);
-  const splits = new Array<number>(n).fill(1);
-  const extra = newCurveCount - n;
-
-  if (total <= 0) {
-    // All curves degenerate — distribute evenly.
-    for (let i = 0; i < extra; i++) splits[i % n] += 1;
-    return splits;
-  }
-
-  const desired = lengths.map((len) => (len / total) * extra);
-  const floored = desired.map((d) => Math.floor(d));
-  let assigned = floored.reduce((s, x) => s + x, 0);
-  for (let i = 0; i < n; i++) splits[i] += floored[i];
-
-  // Distribute the remaining `extra - assigned` splits to curves with the
-  // largest fractional residual, breaking ties by index for determinism.
-  const residuals = desired.map((d, i) => ({ i, residual: d - floored[i] }));
-  residuals.sort((a, b) => b.residual - a.residual || a.i - b.i);
-  for (let j = 0; assigned < extra; j++, assigned++) {
-    splits[residuals[j].i] += 1;
-  }
-  return splits;
-}
-
-function remapBezierCurveCount(points: number[][], newCurveCount: number): number[][] {
-  const currentCurveCount = (points.length - 1) / 3;
-  if (!Number.isInteger(currentCurveCount) || currentCurveCount <= 0) {
-    return points.map((p) => [...p]);
-  }
-  if (newCurveCount <= currentCurveCount) {
-    return points.map((p) => [...p]);
-  }
-
+/** Build per-curve arc-length tables and chain-wide cumulative table. */
+function buildChainArcInfo(points: number[][]): ChainArcInfo {
   const curves: number[][][] = [];
-  const lengths: number[] = [];
+  const tables: ReturnType<typeof buildArcLengthTable>[] = [];
+  const cumulative: number[] = [0];
+  let totalLen = 0;
   for (let i = 0; i + 3 < points.length; i += 3) {
     const curve: number[][] = [points[i], points[i + 1], points[i + 2], points[i + 3]];
     curves.push(curve);
-    lengths.push(buildArcLengthTable(curve[0], curve[1], curve[2], curve[3], 16).total);
+    const table = buildArcLengthTable(curve[0], curve[1], curve[2], curve[3], 32);
+    tables.push(table);
+    totalLen += table.total;
+    cumulative.push(totalLen);
+  }
+  return { curves, tables, cumulative, totalLen };
+}
+
+/** Locate `(curveIdx, localT)` for an absolute arc-length on a chain. */
+function locateOnChain(info: ChainArcInfo, arc: number): { curveIdx: number; t: number } {
+  if (arc <= 0) return { curveIdx: 0, t: 0 };
+  if (arc >= info.totalLen) return { curveIdx: info.curves.length - 1, t: 1 };
+  let lo = 0;
+  let hi = info.cumulative.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (info.cumulative[mid] < arc) lo = mid + 1;
+    else hi = mid;
+  }
+  const curveIdx = Math.max(0, lo - 1);
+  const localArc = arc - info.cumulative[curveIdx];
+  return { curveIdx, t: tForArcLength(info.tables[curveIdx], localArc) };
+}
+
+/** Build a degenerate cubic chain consisting of `newCurveCount` zero-length pieces. */
+function makeDegenerateChain(point: number[], newCurveCount: number): number[][] {
+  const out: number[][] = [[...point]];
+  for (let i = 0; i < newCurveCount; i++) out.push([...point], [...point], [...point]);
+  return out;
+}
+
+/** Compute unit tangent at `(curveIdx, t)` of an original chain. */
+function unitTangentAt(curve: number[][], t: number): number[] {
+  const d = evalCubicDerivative(curve[0], curve[1], curve[2], curve[3], t);
+  const dlen = Math.hypot(d[0] ?? 0, d[1] ?? 0, d[2] ?? 0);
+  if (dlen < 1e-12) return d.map(() => 0);
+  return d.map((v) => v / dlen);
+}
+
+/**
+ * Build one new sub-cubic between adjacent anchors. Exact (de Casteljau
+ * hodograph) when the sub-cubic falls entirely within one original cubic;
+ * chord-tangent approximation when it spans original cubic boundaries.
+ */
+function buildSubCubic(
+  info: ChainArcInfo,
+  startAnchor: number[],
+  endAnchor: number[],
+  startTangent: number[],
+  endTangent: number[],
+  sLoc: { curveIdx: number; t: number },
+  eLoc: { curveIdx: number; t: number },
+): { h1: number[]; h2: number[] } {
+  if (sLoc.curveIdx === eLoc.curveIdx) {
+    const c = info.curves[sLoc.curveIdx];
+    const dt = eLoc.t - sLoc.t;
+    const d0 = evalCubicDerivative(c[0], c[1], c[2], c[3], sLoc.t);
+    const d1 = evalCubicDerivative(c[0], c[1], c[2], c[3], eLoc.t);
+    return {
+      h1: startAnchor.map((v, k) => v + (dt / 3) * (d0[k] ?? 0)),
+      h2: endAnchor.map((v, k) => v - (dt / 3) * (d1[k] ?? 0)),
+    };
+  }
+  const dx = (endAnchor[0] ?? 0) - (startAnchor[0] ?? 0);
+  const dy = (endAnchor[1] ?? 0) - (startAnchor[1] ?? 0);
+  const dz = (endAnchor[2] ?? 0) - (startAnchor[2] ?? 0);
+  const k = Math.sqrt(dx * dx + dy * dy + dz * dz) / 3;
+  return {
+    h1: startAnchor.map((v, j) => v + k * (startTangent[j] ?? 0)),
+    h2: endAnchor.map((v, j) => v - k * (endTangent[j] ?? 0)),
+  };
+}
+
+function arcLengthResampleCubicChain(points: number[][], newCurveCount: number): number[][] {
+  const currentCurveCount = (points.length - 1) / 3;
+  if (!Number.isInteger(currentCurveCount) || currentCurveCount <= 0 || newCurveCount <= 0) {
+    return points.map((p) => [...p]);
   }
 
-  const splitFactors = allocateSplitsByArcLength(lengths, newCurveCount);
+  const info = buildChainArcInfo(points);
+  if (info.totalLen <= 0) return makeDegenerateChain(points[0], newCurveCount);
 
-  const out: number[][] = [];
-  for (let i = 0; i < curves.length; i++) {
-    const pieces = subdivideCubicCurve(curves[i], splitFactors[i]);
-    for (let j = 0; j < pieces.length; j++) {
-      const piece = pieces[j];
-      if (out.length === 0) out.push([...piece[0]]);
-      out.push([...piece[1]], [...piece[2]], [...piece[3]]);
-    }
+  // Anchor positions and unit tangents at each new arc-length-uniform anchor.
+  const anchors: number[][] = [];
+  const tangents: number[][] = [];
+  for (let i = 0; i <= newCurveCount; i++) {
+    const arcAt = (i / newCurveCount) * info.totalLen;
+    const loc = locateOnChain(info, arcAt);
+    const c = info.curves[loc.curveIdx];
+    anchors.push(evalCubicBezier(c[0], c[1], c[2], c[3], loc.t));
+    tangents.push(unitTangentAt(c, loc.t));
+  }
+
+  const out: number[][] = [[...anchors[0]]];
+  for (let i = 0; i < newCurveCount; i++) {
+    const sLoc = locateOnChain(info, (i / newCurveCount) * info.totalLen);
+    const eLoc = locateOnChain(info, ((i + 1) / newCurveCount) * info.totalLen);
+    const { h1, h2 } = buildSubCubic(
+      info,
+      anchors[i],
+      anchors[i + 1],
+      tangents[i],
+      tangents[i + 1],
+      sLoc,
+      eLoc,
+    );
+    out.push(h1, h2, [...anchors[i + 1]]);
   }
 
   return out;
