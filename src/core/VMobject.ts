@@ -22,6 +22,7 @@ import {
   sampleBezierPath,
   isClosedPath,
 } from './VMobjectGeometry';
+import { resamplePointList3D } from './VMobjectTransformAlignment';
 
 // Re-export Point type so existing `import { Point } from './VMobject'` keeps working.
 export type { Point } from './VMobjectCurves';
@@ -520,6 +521,12 @@ export class VMobject extends VMobjectRendering {
 
   /**
    * Interpolate a 3D point list to have a specific number of points.
+   *
+   * Delegates to the bezier-aware `resamplePointList3D` so that valid cubic
+   * Bezier chains are densified by de Casteljau subdivision rather than
+   * piecewise-linear interpolation. Linear lerp on cubic control points
+   * silently produces invalid handles (handle = midpoint of two adjacent
+   * controls), which renders as flat polygonal segments mid-`Transform`.
    */
   protected _interpolatePointList3D(points: number[][], targetCount: number): number[][] {
     if (points.length === 0) {
@@ -527,33 +534,7 @@ export class VMobject extends VMobjectRendering {
         .fill(null)
         .map(() => [0, 0, 0]);
     }
-
-    if (points.length === targetCount) {
-      return points.map((p) => [...p]);
-    }
-
-    if (points.length === 1) {
-      return Array(targetCount)
-        .fill(null)
-        .map(() => [...points[0]]);
-    }
-
-    const result: number[][] = [];
-    const ratio = (points.length - 1) / (targetCount - 1);
-
-    for (let i = 0; i < targetCount; i++) {
-      const t = i * ratio;
-      const index = Math.floor(t);
-      const frac = t - index;
-
-      if (index >= points.length - 1) {
-        result.push([...points[points.length - 1]]);
-      } else {
-        result.push(lerpPoint3D(points[index], points[index + 1], frac));
-      }
-    }
-
-    return result;
+    return resamplePointList3D(points, targetCount);
   }
 
   // -----------------------------------------------------------------------

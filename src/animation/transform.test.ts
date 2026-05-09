@@ -178,7 +178,7 @@ describe('Transform', () => {
       expect(source.getEffectiveSubpathLengths()).toEqual([5, 5]);
     });
 
-    it('keeps first aligned path points close at first frame for MathTex 1 -> 0', async () => {
+    it('picks a globally minimal (per-anchor SSD) rotation for MathTex 1 -> 0', async () => {
       const one = new MathTex({ latex: '1' });
       const zero = new MathTex({ latex: '0' });
       await Promise.all([one.waitForRender(), zero.waitForRender()]);
@@ -188,22 +188,41 @@ describe('Transform', () => {
       expect(oneLeaves.length).toBeGreaterThan(0);
       expect(zeroLeaves.length).toBeGreaterThan(0);
 
-      let distance: number | undefined;
-      const count = Math.min(oneLeaves.length, zeroLeaves.length);
-      for (let i = 0; i < count; i++) {
-        const aligned = alignVmobjectPair(oneLeaves[i], zeroLeaves[i]);
-        const sourceStart = aligned.startPoints[0];
-        const targetStart = aligned.targetPoints[0];
-        distance = Math.hypot(
-          sourceStart[0] - targetStart[0],
-          sourceStart[1] - targetStart[1],
-          sourceStart[2] - targetStart[2],
-        );
-        break;
-      }
+      // The pairing produced by alignVmobjectPair must minimise the total
+      // squared per-anchor displacement over every stride-aligned cyclic
+      // rotation of target. This is the invariant that gives smooth
+      // glyph-to-glyph morphs (replacing the older "first anchor close"
+      // heuristic, which only matched src[0] to a single tgt anchor).
+      const aligned = alignVmobjectPair(oneLeaves[0], zeroLeaves[0]);
+      const src = aligned.startPoints;
+      const tgt = aligned.targetPoints;
+      expect(src.length).toBe(tgt.length);
 
-      expect(distance).toBeDefined();
-      expect(distance!).toBeLessThan(0.1);
+      const stride = 3;
+      const ssdAtAnchorOffset = (offset: number) => {
+        let sum = 0;
+        for (let i = 0; i < src.length; i += stride) {
+          const t = tgt[(i + offset) % tgt.length];
+          const s = src[i];
+          const dx = s[0] - t[0];
+          const dy = s[1] - t[1];
+          const dz = (s[2] ?? 0) - (t[2] ?? 0);
+          sum += dx * dx + dy * dy + dz * dz;
+        }
+        return sum;
+      };
+
+      const chosen = ssdAtAnchorOffset(0);
+      for (let offset = stride; offset < tgt.length; offset += stride) {
+        // Rotation could be applied to compound subpaths individually, so
+        // an offset that crosses a subpath boundary is not a valid global
+        // rotation; we only require the chosen alignment is no worse than
+        // any single-subpath stride-aligned rotation.
+        const alt = ssdAtAnchorOffset(offset);
+        // Allow a small slack to cover the per-subpath rotation case where
+        // a global cyclic shift would split anchors across subpaths.
+        expect(alt).toBeGreaterThanOrEqual(chosen - 1e-6);
+      }
     });
   });
   it('stores mobject, target, and defaults to 1s duration', () => {

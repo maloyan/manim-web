@@ -34,7 +34,7 @@ function makeNullSubpathFromReference(
  * `remapBezierCurveCount` to preserve curve fidelity; otherwise falls back
  * to piecewise-linear interpolation.
  */
-function resamplePointList3D(points: number[][], targetCount: number): number[][] {
+export function resamplePointList3D(points: number[][], targetCount: number): number[][] {
   if (targetCount <= 0) return [];
 
   if (points.length === 0) {
@@ -107,6 +107,72 @@ function evalCubicDerivative(
   return out;
 }
 
+/**
+ * Cumulative chord-length table sampling a single cubic Bezier curve.
+ * `samples` chord segments → arrays of length `samples + 1`.
+ */
+function buildArcLengthTable(
+  p0: number[],
+  p1: number[],
+  p2: number[],
+  p3: number[],
+  samples: number,
+): { ts: number[]; ls: number[]; total: number } {
+  const ts = new Array<number>(samples + 1);
+  const ls = new Array<number>(samples + 1);
+  ts[0] = 0;
+  ls[0] = 0;
+  let prev = p0;
+  for (let i = 1; i <= samples; i++) {
+    const t = i / samples;
+    ts[i] = t;
+    const cur = evalCubicBezier(p0, p1, p2, p3, t);
+    const dx = (cur[0] ?? 0) - (prev[0] ?? 0);
+    const dy = (cur[1] ?? 0) - (prev[1] ?? 0);
+    const dz = (cur[2] ?? 0) - (prev[2] ?? 0);
+    ls[i] = ls[i - 1] + Math.sqrt(dx * dx + dy * dy + dz * dz);
+    prev = cur;
+  }
+  return { ts, ls, total: ls[samples] };
+}
+
+/**
+ * Solve for `t ∈ [0, 1]` such that the arc length from `0` to `t` on the
+ * cubic Bezier equals `targetLen`. Linear interpolation between sampled
+ * cumulative-length entries is precise enough for path-morph correspondence.
+ */
+function tForArcLength(
+  table: { ts: number[]; ls: number[]; total: number },
+  targetLen: number,
+): number {
+  const { ts, ls, total } = table;
+  if (total <= 0 || targetLen <= 0) return 0;
+  if (targetLen >= total) return 1;
+  // Binary search for k with ls[k] <= targetLen < ls[k+1].
+  let lo = 0;
+  let hi = ls.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (ls[mid] < targetLen) lo = mid + 1;
+    else hi = mid;
+  }
+  const k = Math.max(0, lo - 1);
+  const seg = ls[k + 1] - ls[k];
+  const frac = seg > 0 ? (targetLen - ls[k]) / seg : 0;
+  return ts[k] + frac * (ts[k + 1] - ts[k]);
+}
+
+/**
+ * Subdivide a single cubic Bezier curve into `parts` sub-curves whose
+ * sub-curve arc lengths are equal. Uses a per-curve cumulative arc length
+ * table; each sub-curve is exact (de Casteljau-style hodograph trick).
+ *
+ * Equal-arc-length splits matter for `Transform`: the i-th anchor of the
+ * resampled chain ends up at fraction `i/N` of the source's perimeter
+ * rather than fraction `i/N` of an arbitrary `t` parameterisation. That
+ * keeps "feature at t≈k" of one shape paired with "feature at t≈k" of the
+ * other, which is what makes mid-frames look smooth instead of chimeric.
+ */
 function subdivideCubicCurve(curve: number[][], parts: number): number[][][] {
   const p0 = curve[0];
   const p1 = curve[1];
@@ -117,10 +183,18 @@ function subdivideCubicCurve(curve: number[][], parts: number): number[][][] {
     return [[[...p0], [...p1], [...p2], [...p3]]];
   }
 
+  const table = buildArcLengthTable(p0, p1, p2, p3, Math.max(16, parts * 4));
+  const tValues = new Array<number>(parts + 1);
+  tValues[0] = 0;
+  tValues[parts] = 1;
+  for (let i = 1; i < parts; i++) {
+    tValues[i] = table.total > 0 ? tForArcLength(table, (i / parts) * table.total) : i / parts;
+  }
+
   const out: number[][][] = [];
   for (let i = 0; i < parts; i++) {
-    const t0 = i / parts;
-    const t1 = (i + 1) / parts;
+    const t0 = tValues[i];
+    const t1 = tValues[i + 1];
     const dt = t1 - t0;
 
     const q0 = evalCubicBezier(p0, p1, p2, p3, t0);
@@ -137,6 +211,42 @@ function subdivideCubicCurve(curve: number[][], parts: number): number[][][] {
   return out;
 }
 
+/**
+ * Distribute `extra` extra splits across `n` curves whose arc lengths are
+ * `lengths`. Each curve must receive at least 1 split (so the total is
+ * `n + extra = newCurveCount`). The extra splits are allocated proportional
+ * to arc length using a largest-residual rounding scheme.
+ */
+function allocateSplitsByArcLength(lengths: number[], newCurveCount: number): number[] {
+  const n = lengths.length;
+  if (n === 0) return [];
+  if (newCurveCount <= n) return new Array(n).fill(1);
+
+  const total = lengths.reduce((s, l) => s + l, 0);
+  const splits = new Array<number>(n).fill(1);
+  const extra = newCurveCount - n;
+
+  if (total <= 0) {
+    // All curves degenerate — distribute evenly.
+    for (let i = 0; i < extra; i++) splits[i % n] += 1;
+    return splits;
+  }
+
+  const desired = lengths.map((len) => (len / total) * extra);
+  const floored = desired.map((d) => Math.floor(d));
+  let assigned = floored.reduce((s, x) => s + x, 0);
+  for (let i = 0; i < n; i++) splits[i] += floored[i];
+
+  // Distribute the remaining `extra - assigned` splits to curves with the
+  // largest fractional residual, breaking ties by index for determinism.
+  const residuals = desired.map((d, i) => ({ i, residual: d - floored[i] }));
+  residuals.sort((a, b) => b.residual - a.residual || a.i - b.i);
+  for (let j = 0; assigned < extra; j++, assigned++) {
+    splits[residuals[j].i] += 1;
+  }
+  return splits;
+}
+
 function remapBezierCurveCount(points: number[][], newCurveCount: number): number[][] {
   const currentCurveCount = (points.length - 1) / 3;
   if (!Number.isInteger(currentCurveCount) || currentCurveCount <= 0) {
@@ -147,15 +257,14 @@ function remapBezierCurveCount(points: number[][], newCurveCount: number): numbe
   }
 
   const curves: number[][][] = [];
+  const lengths: number[] = [];
   for (let i = 0; i + 3 < points.length; i += 3) {
-    curves.push([points[i], points[i + 1], points[i + 2], points[i + 3]]);
+    const curve: number[][] = [points[i], points[i + 1], points[i + 2], points[i + 3]];
+    curves.push(curve);
+    lengths.push(buildArcLengthTable(curve[0], curve[1], curve[2], curve[3], 16).total);
   }
 
-  const splitFactors = new Array<number>(currentCurveCount).fill(0);
-  for (let i = 0; i < newCurveCount; i++) {
-    const idx = Math.floor((i * currentCurveCount) / newCurveCount);
-    splitFactors[idx] += 1;
-  }
+  const splitFactors = allocateSplitsByArcLength(lengths, newCurveCount);
 
   const out: number[][] = [];
   for (let i = 0; i < curves.length; i++) {
@@ -192,50 +301,111 @@ function isStrideClosedCubicSubpath(points: number[][], stride: number): boolean
   return isClosedSubpathForRotation(points) && openLen > 0 && openLen % stride === 0;
 }
 
-function pickClosestAnchorShift(src0: number[], tgtSubpath: number[][], stride: number): number {
-  const openLen = tgtSubpath.length - 1;
-  const anchorCount = openLen / stride;
-  let bestAnchor = 0;
-  let bestDist2 = Infinity;
-
-  for (let ai = 0; ai < anchorCount; ai++) {
-    const p = tgtSubpath[ai * stride];
-    const dx = (p[0] ?? 0) - (src0[0] ?? 0);
-    const dy = (p[1] ?? 0) - (src0[1] ?? 0);
-    const dz = (p[2] ?? 0) - (src0[2] ?? 0);
-    const d2 = dx * dx + dy * dy + dz * dz;
-    if (d2 < bestDist2) {
-      bestDist2 = d2;
-      bestAnchor = ai;
-    }
-  }
-
-  return bestAnchor * stride;
+/**
+ * Reverse a cubic-bezier point chain, preserving the
+ * [anchor, handle, handle, anchor, handle, handle, ...] structure: simply
+ * reversing the array also swaps each pair of handles within its segment,
+ * which is correct for cubic Beziers.
+ */
+function reverseCubicChain(points: number[][]): number[][] {
+  return [...points].reverse().map((p) => [...p]);
 }
 
 /**
- * Rotate closed cubic-bezier target subpath so its first anchor is the closest
- * anchor to the source first anchor. Rotation is done by stride=3 to preserve
- * [anchor, handle, handle, anchor, ...] structure.
+ * Apply a cyclic stride-aligned rotation to a closed cubic-bezier subpath.
+ * The "open" portion (length n - 1) is rotated by `shift` (multiple of
+ * `stride`); the closing duplicate of the first point is re-appended.
  */
-function rotateClosedTargetToClosestSourceAnchor(
+function rotateClosedSubpath(subpath: number[][], shift: number, openLen: number): number[][] {
+  if (shift === 0) return clonePoints(subpath);
+  const rotatedOpen: number[][] = [];
+  for (let i = 0; i < openLen; i++) {
+    rotatedOpen.push([...(subpath[(i + shift) % openLen] ?? [0, 0, 0])]);
+  }
+  rotatedOpen.push([...rotatedOpen[0]]);
+  return rotatedOpen;
+}
+
+/**
+ * Total squared per-anchor distance between two equal-length point chains
+ * for a given stride-aligned cyclic rotation of the second chain. Anchors
+ * are the points at positions `0, stride, 2·stride, ...`; we ignore the
+ * intermediate handle points so handle pair-up doesn't dominate the score.
+ */
+function ssdForRotation(
+  src: number[][],
+  tgt: number[][],
+  shift: number,
+  openLen: number,
+  stride: number,
+): number {
+  let sum = 0;
+  for (let i = 0; i < openLen; i += stride) {
+    const sp = src[i];
+    const tp = tgt[(i + shift) % openLen];
+    const dx = (sp[0] ?? 0) - (tp[0] ?? 0);
+    const dy = (sp[1] ?? 0) - (tp[1] ?? 0);
+    const dz = (sp[2] ?? 0) - (tp[2] ?? 0);
+    sum += dx * dx + dy * dy + dz * dz;
+  }
+  return sum;
+}
+
+/**
+ * Rotate a closed cubic-bezier target subpath so the per-anchor squared
+ * displacement to source is globally minimised. Considers both forward and
+ * reversed orientation (i.e. CW ↔ CCW traversal) since reversing one side
+ * is sometimes the cheapest pairing for visually similar but oppositely
+ * wound shapes.
+ *
+ * This makes sense ONLY because both subpaths were resampled to a shared
+ * arc-length parameterisation upstream; otherwise anchor index `i` is not
+ * a meaningful path-fraction and SSD over rotations gives noisy results.
+ */
+function rotateClosedTargetForBestAlignment(
   srcSubpath: number[][],
   tgtSubpath: number[][],
 ): number[][] {
   const stride = 3;
   if (!isStrideClosedCubicSubpath(srcSubpath, stride)) return clonePoints(tgtSubpath);
   if (!isStrideClosedCubicSubpath(tgtSubpath, stride)) return clonePoints(tgtSubpath);
+  if (srcSubpath.length !== tgtSubpath.length) return clonePoints(tgtSubpath);
 
   const openLen = tgtSubpath.length - 1;
-  const shift = pickClosestAnchorShift(srcSubpath[0], tgtSubpath, stride);
-  if (shift === 0) return clonePoints(tgtSubpath);
+  const anchorCount = openLen / stride;
+  if (anchorCount <= 1) return clonePoints(tgtSubpath);
 
-  const rotatedOpen: number[][] = [];
-  for (let i = 0; i < openLen; i++) {
-    rotatedOpen.push([...(tgtSubpath[(i + shift) % openLen] ?? [0, 0, 0])]);
+  const tgtForward = tgtSubpath;
+  // Reversing a closed chain also rotates the start anchor — the reversed
+  // chain ends with what was the first anchor, so we re-roll it to the
+  // front to recover a canonical "anchor-first" closed form.
+  const tgtReversed = (() => {
+    const rev = reverseCubicChain(tgtSubpath);
+    // rev is closed too (first==last). It already starts with what was the
+    // last anchor of the original path; that's a valid starting anchor.
+    return rev;
+  })();
+
+  let bestSubpath = tgtForward;
+  let bestShift = 0;
+  let bestSsd = Infinity;
+  let bestReversed = false;
+
+  for (const candidate of [tgtForward, tgtReversed]) {
+    for (let ai = 0; ai < anchorCount; ai++) {
+      const shift = ai * stride;
+      const ssd = ssdForRotation(srcSubpath, candidate, shift, openLen, stride);
+      if (ssd < bestSsd) {
+        bestSsd = ssd;
+        bestShift = shift;
+        bestSubpath = candidate;
+        bestReversed = candidate === tgtReversed;
+      }
+    }
   }
-  rotatedOpen.push([...rotatedOpen[0]]);
-  return rotatedOpen;
+  void bestReversed;
+
+  return rotateClosedSubpath(bestSubpath, bestShift, openLen);
 }
 
 /** Equalize point counts by resampling the shorter subpath only. */
@@ -253,7 +423,7 @@ function alignSubpathPairPoints(
       ? resamplePointList3D(tgtSubpath, maxCount)
       : tgtSubpath.map((p) => [...p]);
 
-  const tgtAligned = rotateClosedTargetToClosestSourceAnchor(srcAligned, tgtAlignedRaw);
+  const tgtAligned = rotateClosedTargetForBestAlignment(srcAligned, tgtAlignedRaw);
 
   return { srcAligned, tgtAligned };
 }
@@ -306,6 +476,43 @@ function makeSignedChunks(
   }));
 }
 
+/**
+ * Find the anchor in `subpath` (a closed cubic chain whose anchors sit at
+ * stride-3 positions) that is closest in 3D to `target`. Returns the
+ * anchor's POINT, not its index, so callers can build a "collapse-to"
+ * reference cheaply. Falls back to the centroid if `subpath` lacks anchors.
+ */
+function closestAnchorPoint(subpath: number[][], target: number[]): number[] {
+  const stride = 3;
+  const openLen = Math.max(0, subpath.length - 1);
+  if (openLen <= 0 || openLen % stride !== 0) return computeCenter(subpath);
+
+  let bestIdx = 0;
+  let bestDist2 = Infinity;
+  for (let i = 0; i < openLen; i += stride) {
+    const p = subpath[i];
+    const dx = (p[0] ?? 0) - (target[0] ?? 0);
+    const dy = (p[1] ?? 0) - (target[1] ?? 0);
+    const dz = (p[2] ?? 0) - (target[2] ?? 0);
+    const d2 = dx * dx + dy * dy + dz * dz;
+    if (d2 < bestDist2) {
+      bestDist2 = d2;
+      bestIdx = i;
+    }
+  }
+  return [...(subpath[bestIdx] ?? [0, 0, 0])];
+}
+
+/**
+ * Align two lists of subpaths (within a single CW/CCW orientation bucket)
+ * by descending length. When one side has more subpaths than the other,
+ * the leftover subpath has no real partner — instead of collapsing it to
+ * its own side's centroid (a meaningless mid-shape point that produces a
+ * "floating phantom" mid-Transform), collapse to the closest anchor on the
+ * other side's PAIRED outer subpath. That makes the leftover hole appear
+ * to merge into the outer boundary at the most plausible feature on the
+ * other shape, avoiding chimeric mid-frames.
+ */
 function alignChunkListsByLength(
   srcChunks: Array<{ chunk: number[][]; len: number }>,
   tgtChunks: Array<{ chunk: number[][]; len: number }>,
@@ -319,12 +526,39 @@ function alignChunkListsByLength(
   const tgtSorted = [...tgtChunks].sort((a, b) => b.len - a.len);
   const maxSubpaths = Math.max(srcSorted.length, tgtSorted.length);
 
+  // The "outer" of each side, within this orientation bucket, is the
+  // longest subpath. When pairing leftovers we collapse them onto the
+  // other side's outer at the anchor closest to the leftover's centroid.
+  const srcOuter = srcSorted[0]?.chunk;
+  const tgtOuter = tgtSorted[0]?.chunk;
+
   for (let i = 0; i < maxSubpaths; i++) {
     const src = srcSorted[i]?.chunk;
     const tgt = tgtSorted[i]?.chunk;
 
-    const srcSub = src ?? makeNullSubpathFromReference(tgt!, tgtCenter);
-    const tgtSub = tgt ?? makeNullSubpathFromReference(src!, srcCenter);
+    let srcSub: number[][];
+    let tgtSub: number[][];
+
+    if (src && tgt) {
+      srcSub = src;
+      tgtSub = tgt;
+    } else if (tgt && !src) {
+      // Source-side leftover: tgt has a feature src lacks. Synthesise a
+      // src placeholder that LIVES at a plausible point on src's outer
+      // (closest anchor to the leftover tgt subpath's centroid, expressed
+      // in the same coordinate system).
+      const tgtCentroid = computeCenter(tgt);
+      const collapseTo = srcOuter ? closestAnchorPoint(srcOuter, tgtCentroid) : srcCenter;
+      srcSub = makeNullSubpathFromReference(tgt, collapseTo);
+      tgtSub = tgt;
+    } else {
+      // Target-side leftover (e.g. src "4" inner triangle, tgt "5" has no
+      // hole). Collapse this hole onto a point on tgt's outer.
+      const srcCentroid = computeCenter(src!);
+      const collapseTo = tgtOuter ? closestAnchorPoint(tgtOuter, srcCentroid) : tgtCenter;
+      srcSub = src!;
+      tgtSub = makeNullSubpathFromReference(src!, collapseTo);
+    }
 
     const { srcAligned, tgtAligned } = alignSubpathPairPoints(srcSub, tgtSub);
     srcAlignedAll.push(...srcAligned);
