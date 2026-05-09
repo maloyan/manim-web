@@ -617,6 +617,72 @@ describe('Text', () => {
       const result = await t.loadGlyphs();
       expect(result).toBeNull();
     });
+
+    /**
+     * Regression for issue #309: loadGlyphs must register the FontFace with
+     * document.fonts AND await document.fonts.load(...) before resolving, so
+     * Canvas 2D's `fillText` actually uses the loaded family on its first
+     * draw instead of falling back. Without the explicit `fonts.load` call,
+     * the first Create/Transform frame can render with the wrong font.
+     */
+    it('loadGlyphs awaits document.fonts.load to flush canvas font cache (issue #309)', async () => {
+      const calls: string[] = [];
+      const fakeFace = {
+        family: '',
+        load: vi.fn(async function (this: { family: string }) {
+          calls.push('face.load');
+          return this;
+        }),
+      };
+      const FakeFontFace = vi.fn(function (this: typeof fakeFace, family: string) {
+        Object.assign(this, fakeFace, { family });
+      }) as unknown as typeof FontFace;
+      const fakeFonts = {
+        add: vi.fn(() => {
+          calls.push('fonts.add');
+        }),
+        load: vi.fn(async (spec: string) => {
+          calls.push(`fonts.load:${spec}`);
+          return [];
+        }),
+      };
+
+      const g = globalThis as unknown as {
+        FontFace: typeof FontFace;
+        document: { fonts: typeof fakeFonts };
+      };
+      const origFontFace = g.FontFace;
+      const origFonts = g.document.fonts;
+      g.FontFace = FakeFontFace;
+      g.document.fonts = fakeFonts;
+
+      try {
+        // Use a unique URL so the per-URL cache in Text.ts does not return
+        // a stale entry from an earlier test run.
+        const url = `http://example.com/font-${Date.now()}-${Math.random()}.ttf`;
+        const t = new Text({ text: 'Hi', fontUrl: url });
+        // loadGlyphs also constructs a TextGlyphGroup which calls opentype.load.
+        // We only need to verify the FontFace registration sequence, so we await
+        // a microtask cycle and inspect the call ordering instead of waiting for
+        // opentype (which would fail without a real font URL).
+        const promise = t.loadGlyphs();
+        // Force the promise chain to advance through await points.
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+        // Tear down the awaited opentype.load to avoid hanging the test.
+        promise.catch(() => {});
+
+        expect(calls.indexOf('face.load')).toBeGreaterThanOrEqual(0);
+        expect(calls.indexOf('fonts.add')).toBeGreaterThan(calls.indexOf('face.load'));
+        const loadCallIdx = calls.findIndex((c) => c.startsWith('fonts.load:'));
+        expect(loadCallIdx).toBeGreaterThan(calls.indexOf('fonts.add'));
+        expect(fakeFonts.load).toHaveBeenCalledWith(expect.stringMatching(/^1em '/));
+      } finally {
+        g.FontFace = origFontFace;
+        g.document.fonts = origFonts;
+      }
+    });
   });
 
   // ---------------------------------------------------------------------------
