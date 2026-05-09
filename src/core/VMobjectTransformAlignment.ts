@@ -454,49 +454,34 @@ function makeSignedChunks(
 }
 
 /**
- * Find the anchor in `subpath` (a closed cubic chain whose anchors sit at
- * stride-3 positions) that is closest in 3D to `target`. Returns the
- * anchor's POINT, not its index, so callers can build a "collapse-to"
- * reference cheaply. Falls back to the centroid if `subpath` lacks anchors.
- */
-function closestAnchorPoint(subpath: number[][], target: number[]): number[] {
-  const stride = 3;
-  const openLen = Math.max(0, subpath.length - 1);
-  if (openLen <= 0 || openLen % stride !== 0) return computeCenter(subpath);
-
-  let bestIdx = 0;
-  let bestDist2 = Infinity;
-  for (let i = 0; i < openLen; i += stride) {
-    const p = subpath[i];
-    const dx = (p[0] ?? 0) - (target[0] ?? 0);
-    const dy = (p[1] ?? 0) - (target[1] ?? 0);
-    const dz = (p[2] ?? 0) - (target[2] ?? 0);
-    const d2 = dx * dx + dy * dy + dz * dz;
-    if (d2 < bestDist2) {
-      bestDist2 = d2;
-      bestIdx = i;
-    }
-  }
-  return [...(subpath[bestIdx] ?? [0, 0, 0])];
-}
-
-/**
  * Align two lists of subpaths (within a single CW/CCW orientation bucket)
  * by descending length. When one side has more subpaths than the other,
- * the leftover subpath has no real partner — instead of collapsing it to
- * its own side's centroid (a meaningless mid-shape point that produces a
- * "floating phantom" mid-Transform), collapse to the closest anchor on the
- * other side's PAIRED outer subpath. That makes the leftover hole appear
- * to merge into the outer boundary at the most plausible feature on the
- * other shape, avoiding chimeric mid-frames.
+ * the leftover subpath has no real partner. We synthesise a placeholder
+ * for the missing side as a degenerate ring (every point equal) anchored
+ * at the LEFTOVER SUBPATH'S OWN CENTROID.
+ *
+ * Why the leftover's own centroid (and not, say, the side's overall
+ * centroid or a point on the other side's outer boundary):
+ *
+ * - It's the natural shrink-to / grow-from point. lerp(real_subpath,
+ *   degenerate_at_own_centroid, alpha) is the original subpath scaled
+ *   down by `1-alpha` toward its own centre. The feature appears to
+ *   grow/shrink in place at its real location instead of travelling.
+ * - For typical glyphs the leftover's centroid is well INSIDE the other
+ *   side's outer (e.g. inner-of-6's centroid is inside "5"; inner-of-4's
+ *   centroid is inside "5"), so the synthetic ring sits inside the
+ *   morphing outer at every alpha. That keeps the fill-geometry hole
+ *   classification stable.
+ * - It introduces no boundary numerics. An earlier version anchored the
+ *   placeholder on the OTHER side's outer boundary; for points on or
+ *   near the boundary, any per-frame point-in-polygon test trips on
+ *   floating-point fuzz, so the same subpath flips between "hole of
+ *   outer X" and "separate outer", which makes the rendered fill split
+ *   into disjoint pieces frame-to-frame (visible flicker).
  */
 function alignChunkListsByLength(
   srcChunks: Array<{ chunk: number[][]; len: number }>,
   tgtChunks: Array<{ chunk: number[][]; len: number }>,
-  srcGlobalOuter: number[][] | undefined,
-  tgtGlobalOuter: number[][] | undefined,
-  srcCenter: number[],
-  tgtCenter: number[],
   srcAlignedAll: number[][],
   tgtAlignedAll: number[][],
   alignedLengths: number[],
@@ -504,17 +489,6 @@ function alignChunkListsByLength(
   const srcSorted = [...srcChunks].sort((a, b) => b.len - a.len);
   const tgtSorted = [...tgtChunks].sort((a, b) => b.len - a.len);
   const maxSubpaths = Math.max(srcSorted.length, tgtSorted.length);
-
-  // Use the within-bucket outer when available, else fall back to the
-  // global outer (longest subpath of EITHER orientation). This matters
-  // for an orientation-only-on-one-side case: e.g. `5 -> 6`, where the
-  // CW bucket has src=[] tgt=[inner_6]. Without the global fallback the
-  // synthetic src would collapse to a meaningless mid-shape centroid; the
-  // global fallback makes it collapse to a real boundary anchor of the
-  // source's CCW outer instead, so the hole emerges from the boundary
-  // rather than eating through the body.
-  const srcOuter = srcSorted[0]?.chunk ?? srcGlobalOuter;
-  const tgtOuter = tgtSorted[0]?.chunk ?? tgtGlobalOuter;
 
   for (let i = 0; i < maxSubpaths; i++) {
     const src = srcSorted[i]?.chunk;
@@ -527,23 +501,17 @@ function alignChunkListsByLength(
       srcSub = src;
       tgtSub = tgt;
     } else if (tgt && !src) {
-      // Source-side leftover: tgt has a feature src lacks (e.g. inner
-      // triangle of "6" when source is "5"). Synthesise a src placeholder
-      // anchored at the point on the src outer closest to where this tgt
-      // feature will end up. At alpha=0 the hole "starts" tangent to
-      // src's outline (zero area, invisible) and grows toward its real
-      // position as alpha increases.
-      const tgtCentroid = computeCenter(tgt);
-      const collapseTo = srcOuter ? closestAnchorPoint(srcOuter, tgtCentroid) : srcCenter;
-      srcSub = makeNullSubpathFromReference(tgt, collapseTo);
+      // Source-side leftover (e.g. inner of "6" when src is "5"):
+      // synthesise a degenerate src at tgt's own centroid so the
+      // feature grows in place at its target location.
+      srcSub = makeNullSubpathFromReference(tgt, computeCenter(tgt));
       tgtSub = tgt;
     } else {
-      // Target-side leftover (e.g. src "4" inner triangle, tgt "5" has no
-      // hole). Collapse this hole onto a point on tgt's outer.
-      const srcCentroid = computeCenter(src!);
-      const collapseTo = tgtOuter ? closestAnchorPoint(tgtOuter, srcCentroid) : tgtCenter;
+      // Target-side leftover (e.g. inner of "4" when tgt is "5"):
+      // synthesise a degenerate tgt at src's own centroid so the
+      // feature shrinks in place at its source location.
       srcSub = src!;
-      tgtSub = makeNullSubpathFromReference(src!, collapseTo);
+      tgtSub = makeNullSubpathFromReference(src!, computeCenter(src!));
     }
 
     const { srcAligned, tgtAligned } = alignSubpathPairPoints(srcSub, tgtSub);
@@ -551,15 +519,6 @@ function alignChunkListsByLength(
     tgtAlignedAll.push(...tgtAligned);
     alignedLengths.push(srcAligned.length);
   }
-}
-
-/** Longest subpath chunk across all signs, for cross-bucket fallbacks. */
-function pickGlobalOuter(chunks: SignedSubpathChunk[]): number[][] | undefined {
-  let best: SignedSubpathChunk | undefined;
-  for (const c of chunks) {
-    if (!best || c.len > best.len) best = c;
-  }
-  return best?.chunk;
 }
 
 /**
@@ -592,9 +551,6 @@ export function alignCompoundPathsForTransform(
     return null;
   }
 
-  const srcCenter = computeCenter(srcPoints3D);
-  const tgtCenter = computeCenter(tgtPoints3D);
-
   const srcAlignedAll: number[][] = [];
   const tgtAlignedAll: number[][] = [];
   const alignedLengths: number[] = [];
@@ -602,16 +558,9 @@ export function alignCompoundPathsForTransform(
   const srcChunks = makeSignedChunks(srcPoints3D, srcLengths, srcSigns);
   const tgtChunks = makeSignedChunks(tgtPoints3D, tgtLengths, tgtSigns);
 
-  const srcGlobalOuter = pickGlobalOuter(srcChunks);
-  const tgtGlobalOuter = pickGlobalOuter(tgtChunks);
-
   alignChunkListsByLength(
     srcChunks.filter((c) => c.sign === -1),
     tgtChunks.filter((c) => c.sign === -1),
-    srcGlobalOuter,
-    tgtGlobalOuter,
-    srcCenter,
-    tgtCenter,
     srcAlignedAll,
     tgtAlignedAll,
     alignedLengths,
@@ -619,10 +568,6 @@ export function alignCompoundPathsForTransform(
   alignChunkListsByLength(
     srcChunks.filter((c) => c.sign === 1),
     tgtChunks.filter((c) => c.sign === 1),
-    srcGlobalOuter,
-    tgtGlobalOuter,
-    srcCenter,
-    tgtCenter,
     srcAlignedAll,
     tgtAlignedAll,
     alignedLengths,

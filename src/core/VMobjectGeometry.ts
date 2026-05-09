@@ -17,6 +17,7 @@ import {
   extractVectorsFrom3Points,
   orthonormalizeBasis,
   projectToPlane,
+  signedArea2DFromStride,
 } from '../utils/math';
 import type { Point } from './VMobjectCurves';
 
@@ -481,7 +482,21 @@ export function buildEarcutFillGeometry(
 
 /**
  * Build fill geometry for multi-subpath shapes (compound glyphs).
- * Uses point-in-polygon containment to distinguish holes from disjoint regions.
+ *
+ * Classification strategy: outer-vs-hole is determined by the winding of
+ * each subpath (CCW = outer, CW = hole), the standard SVG/PostScript/PDF
+ * convention. Point-in-polygon containment is used ONLY to assign a hole
+ * to the correct outer ring when several outers exist.
+ *
+ * Why winding (not point-in-polygon) for outer-vs-hole: during a Transform
+ * the control points of each subpath are lerped per-frame, and any point
+ * sampled from the path can land on (or numerically near) another ring's
+ * boundary. Point-in-polygon for a near-boundary point flips between true
+ * and false depending on floating-point fuzz, which makes a subpath flip
+ * between "hole of outer X" and "separate outer", which makes earcut emit
+ * a totally different triangle list, which renders as visible flicker.
+ * Winding is set by the lerp of two equally-wound endpoints, so it is
+ * stable across the entire animation.
  */
 // eslint-disable-next-line complexity
 function buildEarcutFillGeometryMulti(
@@ -491,9 +506,11 @@ function buildEarcutFillGeometryMulti(
 ): THREE.BufferGeometry | null {
   void visiblePoints; // kept for API compatibility
 
-  // Sample each subpath into 3D rings, collecting all points for plane computation
+  // Sample each subpath into 3D rings, collecting all points for plane
+  // computation and remembering the original control polygon for winding.
   let offset = 0;
   const rings3D: number[][][] = [];
+  const ringControlPolygons: number[][][] = [];
   const allPoints3D: number[][] = [];
 
   for (const len of subpathLengths) {
@@ -503,6 +520,7 @@ function buildEarcutFillGeometryMulti(
     const ring = sampleBezierOutline3D(subPoints, FILL_SAMPLES_PER_SEGMENT);
     if (ring.length >= 3) {
       rings3D.push(ring);
+      ringControlPolygons.push(subPoints);
       allPoints3D.push(...ring);
     }
   }
@@ -519,24 +537,48 @@ function buildEarcutFillGeometryMulti(
     ring.map((p) => projectToPlane(p, origin, v1, v2)),
   );
 
-  // Determine containment: for each ring, check if it's inside another ring.
-  const isHoleOf = new Array<number>(rings2D.length).fill(-1);
+  // Classify rings by winding orientation in the shared 2D plane.
+  // CCW (positive area) -> outer; CW (negative area) -> hole.
+  // Subpaths whose own area is degenerate (e.g. a synthetic subpath
+  // collapsed to a point at alpha=0) take their orientation from the
+  // overall majority sign, then are filtered out as zero-area at
+  // triangulation time anyway (they contribute no triangles).
+  const ringSigns = rings2D.map((ring) => signedArea2DFromStride(ring, 1));
+  const dominantSign = ringSigns.reduce((acc, s) => acc + Math.sign(s), 0) >= 0 ? 1 : -1;
+  const isHole = ringSigns.map((s) => {
+    if (Math.abs(s) < 1e-12) return false; // degenerate: treat as outer (renders as nothing)
+    return Math.sign(s) === -dominantSign;
+  });
 
+  // For each hole, find which outer it belongs to. We test the FIRST
+  // anchor of the original control polygon (via the projected ring's
+  // first point) against each outer's polygon. Multiple outers in a
+  // single mobject is rare for glyphs but valid for compound shapes.
+  const isHoleOf = new Array<number>(rings2D.length).fill(-1);
   for (let i = 0; i < rings2D.length; i++) {
+    if (!isHole[i]) continue;
     for (let j = 0; j < rings2D.length; j++) {
-      if (i === j) continue;
+      if (i === j || isHole[j]) continue;
       if (pointInPolygon(rings2D[i][0], rings2D[j])) {
         isHoleOf[i] = j;
         break;
       }
     }
+    // If no containing outer was found (e.g. a hole that has temporarily
+    // wandered outside the morphing outer mid-Transform), drop it from
+    // rendering rather than promoting it to an outer — that would be the
+    // same "separate filled blob" flicker we are eliminating.
   }
+  void ringControlPolygons;
 
   // Collect outer rings (not holes) and their associated holes
   const allPositions: number[] = [];
 
   for (let i = 0; i < rings2D.length; i++) {
-    if (isHoleOf[i] >= 0) continue;
+    // Skip rings classified as holes (they are emitted as part of their
+    // outer ring's earcut call) or as orphan holes (wandered outside any
+    // outer — drop them rather than render as a separate filled blob).
+    if (isHole[i]) continue;
 
     const outerRing = rings2D[i];
     const outerRing3D = rings3D[i];
