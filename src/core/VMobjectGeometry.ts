@@ -95,45 +95,43 @@ export function isNearlyLinear(p0: number[], p1: number[], p2: number[], p3: num
 
 /**
  * Sample Bezier curves for smooth rendering.
- * Uses adaptive sampling: nearly-linear segments (from prepareForNonlinearTransform)
- * use only their endpoints, avoiding expensive per-sample Bezier evaluation.
+ *
+ * Always emits exactly `samplesPerSegment + 1` samples per cubic segment
+ * (minus shared-anchor duplicates between adjacent segments). Earlier
+ * versions used "adaptive" sampling — `isNearlyLinear ? 1 : N` — to skip
+ * per-sample evaluation on segments whose handles were collinear with the
+ * chord. That branch is unsafe during a `Transform`: the linearity test
+ * is computed on the per-frame LERPED control polygon, so as alpha
+ * advances a segment can cross the threshold and the segment's sample
+ * count flips between 1 and N. The polyline length changes frame-to-frame,
+ * the resulting stroke/path geometry is rebuilt with a different vertex
+ * count each time, and the visible result is a flickering edge. Stability
+ * is worth far more than the marginal compute saved on collinear segments.
  *
  * @param points - Bezier control points
- * @param samplesPerSegment - Number of samples per curved Bezier segment
- * @returns Sampled points along the path
+ * @param samplesPerSegment - Number of samples per cubic Bezier segment
  */
 export function sampleBezierPath(points: number[][], samplesPerSegment: number = 4): number[][] {
   const result: number[][] = [];
 
   // Points are stored as: [anchor, handle, handle, anchor, handle, handle, anchor, ...]
-  // Each cubic Bezier segment uses 4 consecutive points
+  // Each cubic Bezier segment uses 4 consecutive points; consecutive
+  // segments share their boundary anchor, so we skip t=0 on segments
+  // after the first.
   for (let i = 0; i + 3 < points.length; i += 3) {
     const p0 = points[i];
     const p1 = points[i + 1];
     const p2 = points[i + 2];
     const p3 = points[i + 3];
 
-    // Adaptive: if handles are close to the chord line, the segment is
-    // nearly linear (common after prepareForNonlinearTransform). Use just
-    // the endpoints to avoid unnecessary Bezier evaluation.
-    const samples = isNearlyLinear(p0, p1, p2, p3) ? 1 : samplesPerSegment;
-
-    for (let t = 0; t <= samples; t++) {
-      const u = t / samples;
-      const pt = evalCubicBezier(p0, p1, p2, p3, u);
-      // Avoid duplicate points
-      if (
-        t === 0 ||
-        result.length === 0 ||
-        Math.abs(pt[0] - result[result.length - 1][0]) > 0.0001 ||
-        Math.abs(pt[1] - result[result.length - 1][1]) > 0.0001
-      ) {
-        result.push(pt);
-      }
+    const startT = i === 0 ? 0 : 1;
+    for (let t = startT; t <= samplesPerSegment; t++) {
+      result.push(evalCubicBezier(p0, p1, p2, p3, t / samplesPerSegment));
     }
   }
 
-  // Handle case where points don't follow Bezier format (simple line segments)
+  // Fallback for inputs that don't follow the cubic Bezier control polygon
+  // shape (e.g. a 2-point line segment).
   if (result.length === 0 && points.length >= 2) {
     return points;
   }
@@ -142,11 +140,11 @@ export function sampleBezierPath(points: number[][], samplesPerSegment: number =
 }
 
 /**
- * Sample the Bezier path into a 2D polyline suitable for earcut triangulation.
+ * Sample the Bezier path into a polyline suitable for earcut triangulation.
  *
- * This is similar to sampleBezierPath but returns [x, y] pairs (no z) and
- * skips duplicate-point de-duplication at segment boundaries (earcut handles
- * that correctly and de-dup can introduce off-by-one for hole indices).
+ * Same stability rationale as `sampleBezierPath`: emit a fixed number of
+ * samples per segment so the polyline length doesn't flicker frame-to-frame
+ * during a `Transform`.
  */
 export function sampleBezierOutline(points: number[][], samplesPerSegment: number): number[][] {
   const result: number[][] = [];
@@ -157,20 +155,18 @@ export function sampleBezierOutline(points: number[][], samplesPerSegment: numbe
     const p2 = points[i + 2];
     const p3 = points[i + 3];
 
-    const samples = isNearlyLinear(p0, p1, p2, p3) ? 1 : samplesPerSegment;
-
     const startT = i === 0 ? 0 : 1; // skip first point of subsequent segments (shared anchor)
-    for (let t = startT; t <= samples; t++) {
-      const u = t / samples;
+    for (let t = startT; t <= samplesPerSegment; t++) {
+      const u = t / samplesPerSegment;
       const pt = evalCubicBezier(p0, p1, p2, p3, u);
-      result.push([pt[0], pt[1], pt[2] ?? 0]); // Include Z for 3D support
+      result.push([pt[0], pt[1], pt[2] ?? 0]);
     }
   }
 
   // Handle non-Bezier (simple line segment) fallback
   if (result.length === 0 && points.length >= 2) {
     for (const p of points) {
-      result.push([p[0], p[1], p[2] ?? 0]); // Include Z for 3D support
+      result.push([p[0], p[1], p[2] ?? 0]);
     }
   }
 

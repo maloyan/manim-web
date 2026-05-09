@@ -362,8 +362,11 @@ describe('VMobject._sampleBezierOutline', () => {
     ]);
     const pts = v.getPoints();
     const outline = (v as any)._sampleBezierOutline(pts, 8) as number[][];
-    // Linear segment should use only 2 samples (start + end)
-    expect(outline.length).toBe(2);
+    // Always emits `samplesPerSegment + 1` samples per segment regardless
+    // of linearity; previously the adaptive collapse made this 2, but
+    // adaptive sampling caused stroke flicker mid-Transform as lerped
+    // segments crossed the linearity threshold. Stability over compute.
+    expect(outline.length).toBe(9);
   });
 
   it('handles fallback for non-bezier points', () => {
@@ -453,9 +456,11 @@ describe('VMobject._sampleBezierPath', () => {
     expect(sampled).toEqual(pts);
   });
 
-  it('uses adaptive sampling (linear segments get fewer samples)', () => {
+  it('emits a fixed sample count per segment regardless of linearity', () => {
     const v = new VMobject();
-    // Linear segment + curved segment
+    // Linear segment + curved segment — both get full sampling now so the
+    // stroke polyline length doesn't flicker mid-Transform when the lerped
+    // segment crosses any linearity threshold.
     v.setPoints([
       [0, 0, 0],
       [1 / 3, 0, 0], // linear handles
@@ -467,8 +472,8 @@ describe('VMobject._sampleBezierPath', () => {
     ]);
     const pts = v.getPoints();
     const sampled = (v as any)._sampleBezierPath(pts, 8) as number[][];
-    // Linear part should produce 2 points, curved part should produce ~9 points
-    expect(sampled.length).toBeGreaterThan(3);
+    // 2 segments * 8 samples + 1 shared anchor = 17 samples.
+    expect(sampled.length).toBe(17);
   });
 });
 
