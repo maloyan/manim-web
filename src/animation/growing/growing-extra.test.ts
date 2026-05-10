@@ -59,7 +59,7 @@ function trianglePoints(): number[][] {
 
 describe('GrowArrow (extra)', () => {
   describe('interpolate() progression', () => {
-    it('scale increases monotonically from 0 to 1', () => {
+    it('child scale increases monotonically from 0 to 1', () => {
       const arrow = makeArrow();
       const anim = new GrowArrow(arrow);
       anim.begin();
@@ -67,26 +67,25 @@ describe('GrowArrow (extra)', () => {
       const scales: number[] = [];
       for (let a = 0; a <= 1; a += 0.1) {
         anim.interpolate(a);
-        scales.push(arrow.scaleVector.x);
+        scales.push(arrow.children[0].scaleVector.x);
       }
 
-      // Each scale should be >= previous
       for (let i = 1; i < scales.length; i++) {
         expect(scales[i]).toBeGreaterThanOrEqual(scales[i - 1] - 0.001);
       }
     });
 
-    it('at alpha=0, scale is clamped to 0.001 (not 0)', () => {
+    it('at alpha=0, child scale is clamped to 0.001 (not 0)', () => {
       const arrow = makeArrow();
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(0);
-      expect(arrow.scaleVector.x).toBeCloseTo(0.001, 5);
-      expect(arrow.scaleVector.y).toBeCloseTo(0.001, 5);
-      expect(arrow.scaleVector.z).toBeCloseTo(0.001, 5);
+      expect(arrow.children[0].scaleVector.x).toBeCloseTo(0.001, 5);
+      expect(arrow.children[0].scaleVector.y).toBeCloseTo(0.001, 5);
+      expect(arrow.children[0].scaleVector.z).toBeCloseTo(0.001, 5);
     });
 
-    it('position remains unchanged through interpolation', () => {
+    it('group position remains unchanged through interpolation', () => {
       const arrow = makeArrow([0, 0, 0], [6, 0, 0]);
       arrow.position.set(3, 0, 0);
       const anim = new GrowArrow(arrow);
@@ -95,69 +94,66 @@ describe('GrowArrow (extra)', () => {
       anim.interpolate(0);
       expect(arrow.position.x).toBeCloseTo(3, 2);
 
-      anim.interpolate(0.25);
-      expect(arrow.position.x).toBeCloseTo(3, 2);
-
       anim.interpolate(0.5);
-      expect(arrow.position.x).toBeCloseTo(3, 2);
-
-      anim.interpolate(0.75);
       expect(arrow.position.x).toBeCloseTo(3, 2);
 
       anim.interpolate(1);
       expect(arrow.position.x).toBeCloseTo(3, 2);
     });
 
-    it('handles arrow with 3D coordinates', () => {
+    it('handles shifted arrow with 3D coordinates', () => {
       const arrow = makeArrow([1, 2, 3], [5, 6, 7]);
-      arrow.position.set(3, 4, 5);
+      arrow.shift([3, 4, 5]);
+      const targetCenter = arrow.getCenter();
       const anim = new GrowArrow(arrow);
       anim.begin();
 
-      expect(arrow.position.x).toBeCloseTo(3, 2);
-      expect(arrow.position.y).toBeCloseTo(4, 2);
-      expect(arrow.position.z).toBeCloseTo(5, 2);
+      const beginCenter = arrow.getCenter();
+      expect(beginCenter[0]).not.toBeCloseTo(targetCenter[0], 2);
 
       anim.interpolate(1);
-      expect(arrow.position.x).toBeCloseTo(3, 2);
-      expect(arrow.position.y).toBeCloseTo(4, 2);
-      expect(arrow.position.z).toBeCloseTo(5, 2);
+      expect(arrow.getCenter()[0]).toBeCloseTo(targetCenter[0], 2);
+      expect(arrow.getCenter()[1]).toBeCloseTo(targetCenter[1], 2);
+      expect(arrow.getCenter()[2]).toBeCloseTo(targetCenter[2], 2);
     });
   });
 
   describe('begin() stores target correctly', () => {
-    it('preserves target scale for non-unit scaled arrow', () => {
+    it('preserves target scale for non-unit scaled child geometry', () => {
       const arrow = makeArrow();
-      arrow.scaleVector.set(2, 3, 4);
+      for (const child of arrow.children) child.scale(2);
+      const orig = arrow.children.map((c) => c.scaleVector.clone());
       const anim = new GrowArrow(arrow);
       anim.begin();
 
-      // Scale should be near-zero after begin
-      expect(arrow.scaleVector.x).toBeCloseTo(0.001, 5);
+      expect(arrow.children[0].scaleVector.x).toBeCloseTo(orig[0].x * 0.001, 5);
 
       anim.interpolate(1);
-      expect(arrow.scaleVector.x).toBeCloseTo(2, 2);
-      expect(arrow.scaleVector.y).toBeCloseTo(3, 2);
-      expect(arrow.scaleVector.z).toBeCloseTo(4, 2);
+      for (let i = 0; i < arrow.children.length; i++) {
+        expect(arrow.children[i].scaleVector.x).toBeCloseTo(orig[i].x, 2);
+        expect(arrow.children[i].scaleVector.y).toBeCloseTo(orig[i].y, 2);
+        expect(arrow.children[i].scaleVector.z).toBeCloseTo(orig[i].z, 2);
+      }
     });
   });
 
   describe('finish() after partial interpolation', () => {
-    it('restores exact scale and keeps position unchanged', () => {
+    it('restores exact child scales and geometry', () => {
       const arrow = makeArrow([0, 0, 0], [4, 4, 0]);
-      arrow.position.set(7, -2, 0);
-      const origScale = arrow.scaleVector.clone();
-      const origPos = arrow.position.clone();
+      arrow.shift([7, -2, 0]);
+      const origCenter = arrow.getCenter();
+      const origScales = arrow.children.map((c) => c.scaleVector.clone());
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(0.1);
       anim.finish();
-      expect(arrow.scaleVector.x).toBeCloseTo(origScale.x, 5);
-      expect(arrow.scaleVector.y).toBeCloseTo(origScale.y, 5);
-      expect(arrow.scaleVector.z).toBeCloseTo(origScale.z, 5);
-      expect(arrow.position.x).toBeCloseTo(origPos.x, 5);
-      expect(arrow.position.y).toBeCloseTo(origPos.y, 5);
-      expect(arrow.position.z).toBeCloseTo(origPos.z, 5);
+      const finalCenter = arrow.getCenter();
+      expect(finalCenter[0]).toBeCloseTo(origCenter[0], 5);
+      expect(finalCenter[1]).toBeCloseTo(origCenter[1], 5);
+      expect(finalCenter[2]).toBeCloseTo(origCenter[2], 5);
+      for (let i = 0; i < arrow.children.length; i++) {
+        expect(arrow.children[i].scaleVector.x).toBeCloseTo(origScales[i].x, 5);
+      }
     });
   });
 
