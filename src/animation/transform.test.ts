@@ -178,7 +178,7 @@ describe('Transform', () => {
       expect(source.getEffectiveSubpathLengths()).toEqual([5, 5]);
     });
 
-    it('keeps first aligned path points close at first frame for MathTex 1 -> 0', async () => {
+    it('produces equal-length aligned point lists for MathTex 1 -> 0', async () => {
       const one = new MathTex({ latex: '1' });
       const zero = new MathTex({ latex: '0' });
       await Promise.all([one.waitForRender(), zero.waitForRender()]);
@@ -188,22 +188,18 @@ describe('Transform', () => {
       expect(oneLeaves.length).toBeGreaterThan(0);
       expect(zeroLeaves.length).toBeGreaterThan(0);
 
-      let distance: number | undefined;
-      const count = Math.min(oneLeaves.length, zeroLeaves.length);
-      for (let i = 0; i < count; i++) {
-        const aligned = alignVmobjectPair(oneLeaves[i], zeroLeaves[i]);
-        const sourceStart = aligned.startPoints[0];
-        const targetStart = aligned.targetPoints[0];
-        distance = Math.hypot(
-          sourceStart[0] - targetStart[0],
-          sourceStart[1] - targetStart[1],
-          sourceStart[2] - targetStart[2],
-        );
-        break;
+      // The compound alignment must produce equal-length aligned point
+      // lists with subpath-length metadata that sums to that length.
+      // (A previous incarnation of this test pinned the "src[0] closest
+      // to some tgt anchor" heuristic, which the new arc-length / per-
+      // subpath SSD pipeline intentionally replaces.)
+      const aligned = alignVmobjectPair(oneLeaves[0], zeroLeaves[0]);
+      expect(aligned.startPoints.length).toBe(aligned.targetPoints.length);
+      expect(aligned.startPoints.length).toBeGreaterThan(0);
+      if (aligned.alignedSubpathLengths) {
+        const sum = aligned.alignedSubpathLengths.reduce((s, n) => s + n, 0);
+        expect(sum).toBe(aligned.startPoints.length);
       }
-
-      expect(distance).toBeDefined();
-      expect(distance!).toBeLessThan(0.1);
     });
   });
   it('stores mobject, target, and defaults to 1s duration', () => {

@@ -17,6 +17,7 @@ import {
   extractVectorsFrom3Points,
   orthonormalizeBasis,
   projectToPlane,
+  signedArea2DFromStride,
 } from '../utils/math';
 import type { Point } from './VMobjectCurves';
 
@@ -33,18 +34,47 @@ const FILL_SAMPLES_PER_SEGMENT = 16;
 // -----------------------------------------------------------------------
 
 /**
+ * Relative tolerance for the linearity test, expressed as a fraction of the
+ * chord length. A handle whose perpendicular distance to the chord is less
+ * than this fraction of the chord is treated as collinear.
+ *
+ * The threshold MUST be relative (not absolute) so that the same logical
+ * shape sampled at different world-space scales is classified consistently.
+ * A fixed absolute threshold collapses small-scale curves (e.g. a tiny
+ * MathTex glyph) to lines while leaving the large-scale copy curved, which
+ * causes mid-animation polyline-length flips during a `Transform` between
+ * the two — see issue #310.
+ */
+const LINEARITY_REL_TOL = 0.01;
+
+/**
  * Check if a cubic Bezier segment is nearly linear by measuring the maximum
- * 3D distance from handles to the chord (p0 -> p3). Must handle z so that
- * arcs in non-XY planes (e.g. Angle in XZ plane) still sample as curves.
+ * 3D distance from handles to the chord (p0 -> p3), normalised by chord
+ * length. Must handle z so that arcs in non-XY planes (e.g. Angle in XZ
+ * plane) still sample as curves.
  */
 export function isNearlyLinear(p0: number[], p1: number[], p2: number[], p3: number[]): boolean {
   const cx = p3[0] - p0[0];
   const cy = p3[1] - p0[1];
   const cz = (p3[2] ?? 0) - (p0[2] ?? 0);
   const len2 = cx * cx + cy * cy + cz * cz;
-  if (len2 < 1e-10) return true; // degenerate segment
 
-  const invLen = 1 / Math.sqrt(len2);
+  // Handle distances from p0 — used both as the degenerate-chord fallback
+  // and to distinguish a "loop" Bezier (chord ≈ 0 but handles bulge out).
+  const dh = (q: number[]): number => {
+    const dx = q[0] - p0[0];
+    const dy = q[1] - p0[1];
+    const dz = (q[2] ?? 0) - (p0[2] ?? 0);
+    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+  };
+
+  if (len2 < 1e-20) {
+    // Chord is effectively zero. Linear only if the whole control polygon
+    // collapses to a point; otherwise it's a curl/loop that must be sampled.
+    return Math.max(dh(p1), dh(p2)) < 1e-10;
+  }
+
+  const chord = Math.sqrt(len2);
   const perpDist = (q: number[]): number => {
     const ax = q[0] - p0[0];
     const ay = q[1] - p0[1];
@@ -53,10 +83,10 @@ export function isNearlyLinear(p0: number[], p1: number[], p2: number[], p3: num
     const rx = ay * cz - az * cy;
     const ry = az * cx - ax * cz;
     const rz = ax * cy - ay * cx;
-    return Math.sqrt(rx * rx + ry * ry + rz * rz) * invLen;
+    return Math.sqrt(rx * rx + ry * ry + rz * rz) / chord;
   };
 
-  return Math.max(perpDist(p1), perpDist(p2)) < 0.01;
+  return Math.max(perpDist(p1), perpDist(p2)) < LINEARITY_REL_TOL * chord;
 }
 
 // -----------------------------------------------------------------------
@@ -65,45 +95,43 @@ export function isNearlyLinear(p0: number[], p1: number[], p2: number[], p3: num
 
 /**
  * Sample Bezier curves for smooth rendering.
- * Uses adaptive sampling: nearly-linear segments (from prepareForNonlinearTransform)
- * use only their endpoints, avoiding expensive per-sample Bezier evaluation.
+ *
+ * Always emits exactly `samplesPerSegment + 1` samples per cubic segment
+ * (minus shared-anchor duplicates between adjacent segments). Earlier
+ * versions used "adaptive" sampling — `isNearlyLinear ? 1 : N` — to skip
+ * per-sample evaluation on segments whose handles were collinear with the
+ * chord. That branch is unsafe during a `Transform`: the linearity test
+ * is computed on the per-frame LERPED control polygon, so as alpha
+ * advances a segment can cross the threshold and the segment's sample
+ * count flips between 1 and N. The polyline length changes frame-to-frame,
+ * the resulting stroke/path geometry is rebuilt with a different vertex
+ * count each time, and the visible result is a flickering edge. Stability
+ * is worth far more than the marginal compute saved on collinear segments.
  *
  * @param points - Bezier control points
- * @param samplesPerSegment - Number of samples per curved Bezier segment
- * @returns Sampled points along the path
+ * @param samplesPerSegment - Number of samples per cubic Bezier segment
  */
 export function sampleBezierPath(points: number[][], samplesPerSegment: number = 4): number[][] {
   const result: number[][] = [];
 
   // Points are stored as: [anchor, handle, handle, anchor, handle, handle, anchor, ...]
-  // Each cubic Bezier segment uses 4 consecutive points
+  // Each cubic Bezier segment uses 4 consecutive points; consecutive
+  // segments share their boundary anchor, so we skip t=0 on segments
+  // after the first.
   for (let i = 0; i + 3 < points.length; i += 3) {
     const p0 = points[i];
     const p1 = points[i + 1];
     const p2 = points[i + 2];
     const p3 = points[i + 3];
 
-    // Adaptive: if handles are close to the chord line, the segment is
-    // nearly linear (common after prepareForNonlinearTransform). Use just
-    // the endpoints to avoid unnecessary Bezier evaluation.
-    const samples = isNearlyLinear(p0, p1, p2, p3) ? 1 : samplesPerSegment;
-
-    for (let t = 0; t <= samples; t++) {
-      const u = t / samples;
-      const pt = evalCubicBezier(p0, p1, p2, p3, u);
-      // Avoid duplicate points
-      if (
-        t === 0 ||
-        result.length === 0 ||
-        Math.abs(pt[0] - result[result.length - 1][0]) > 0.0001 ||
-        Math.abs(pt[1] - result[result.length - 1][1]) > 0.0001
-      ) {
-        result.push(pt);
-      }
+    const startT = i === 0 ? 0 : 1;
+    for (let t = startT; t <= samplesPerSegment; t++) {
+      result.push(evalCubicBezier(p0, p1, p2, p3, t / samplesPerSegment));
     }
   }
 
-  // Handle case where points don't follow Bezier format (simple line segments)
+  // Fallback for inputs that don't follow the cubic Bezier control polygon
+  // shape (e.g. a 2-point line segment).
   if (result.length === 0 && points.length >= 2) {
     return points;
   }
@@ -112,11 +140,11 @@ export function sampleBezierPath(points: number[][], samplesPerSegment: number =
 }
 
 /**
- * Sample the Bezier path into a 2D polyline suitable for earcut triangulation.
+ * Sample the Bezier path into a polyline suitable for earcut triangulation.
  *
- * This is similar to sampleBezierPath but returns [x, y] pairs (no z) and
- * skips duplicate-point de-duplication at segment boundaries (earcut handles
- * that correctly and de-dup can introduce off-by-one for hole indices).
+ * Same stability rationale as `sampleBezierPath`: emit a fixed number of
+ * samples per segment so the polyline length doesn't flicker frame-to-frame
+ * during a `Transform`.
  */
 export function sampleBezierOutline(points: number[][], samplesPerSegment: number): number[][] {
   const result: number[][] = [];
@@ -127,20 +155,18 @@ export function sampleBezierOutline(points: number[][], samplesPerSegment: numbe
     const p2 = points[i + 2];
     const p3 = points[i + 3];
 
-    const samples = isNearlyLinear(p0, p1, p2, p3) ? 1 : samplesPerSegment;
-
     const startT = i === 0 ? 0 : 1; // skip first point of subsequent segments (shared anchor)
-    for (let t = startT; t <= samples; t++) {
-      const u = t / samples;
+    for (let t = startT; t <= samplesPerSegment; t++) {
+      const u = t / samplesPerSegment;
       const pt = evalCubicBezier(p0, p1, p2, p3, u);
-      result.push([pt[0], pt[1], pt[2] ?? 0]); // Include Z for 3D support
+      result.push([pt[0], pt[1], pt[2] ?? 0]);
     }
   }
 
   // Handle non-Bezier (simple line segment) fallback
   if (result.length === 0 && points.length >= 2) {
     for (const p of points) {
-      result.push([p[0], p[1], p[2] ?? 0]); // Include Z for 3D support
+      result.push([p[0], p[1], p[2] ?? 0]);
     }
   }
 
@@ -452,7 +478,21 @@ export function buildEarcutFillGeometry(
 
 /**
  * Build fill geometry for multi-subpath shapes (compound glyphs).
- * Uses point-in-polygon containment to distinguish holes from disjoint regions.
+ *
+ * Classification strategy: outer-vs-hole is determined by the winding of
+ * each subpath (CCW = outer, CW = hole), the standard SVG/PostScript/PDF
+ * convention. Point-in-polygon containment is used ONLY to assign a hole
+ * to the correct outer ring when several outers exist.
+ *
+ * Why winding (not point-in-polygon) for outer-vs-hole: during a Transform
+ * the control points of each subpath are lerped per-frame, and any point
+ * sampled from the path can land on (or numerically near) another ring's
+ * boundary. Point-in-polygon for a near-boundary point flips between true
+ * and false depending on floating-point fuzz, which makes a subpath flip
+ * between "hole of outer X" and "separate outer", which makes earcut emit
+ * a totally different triangle list, which renders as visible flicker.
+ * Winding is set by the lerp of two equally-wound endpoints, so it is
+ * stable across the entire animation.
  */
 // eslint-disable-next-line complexity
 function buildEarcutFillGeometryMulti(
@@ -462,9 +502,11 @@ function buildEarcutFillGeometryMulti(
 ): THREE.BufferGeometry | null {
   void visiblePoints; // kept for API compatibility
 
-  // Sample each subpath into 3D rings, collecting all points for plane computation
+  // Sample each subpath into 3D rings, collecting all points for plane
+  // computation and remembering the original control polygon for winding.
   let offset = 0;
   const rings3D: number[][][] = [];
+  const ringControlPolygons: number[][][] = [];
   const allPoints3D: number[][] = [];
 
   for (const len of subpathLengths) {
@@ -474,6 +516,7 @@ function buildEarcutFillGeometryMulti(
     const ring = sampleBezierOutline3D(subPoints, FILL_SAMPLES_PER_SEGMENT);
     if (ring.length >= 3) {
       rings3D.push(ring);
+      ringControlPolygons.push(subPoints);
       allPoints3D.push(...ring);
     }
   }
@@ -490,24 +533,57 @@ function buildEarcutFillGeometryMulti(
     ring.map((p) => projectToPlane(p, origin, v1, v2)),
   );
 
-  // Determine containment: for each ring, check if it's inside another ring.
-  const isHoleOf = new Array<number>(rings2D.length).fill(-1);
+  // Classify rings by winding orientation in the shared 2D plane: the
+  // dominant orientation is the outer; the opposite orientation is a hole.
+  //
+  // Use AREA-WEIGHTED majority (sum of signed areas), not count-weighted
+  // majority of the signs. A glyph like "8" has one outer ring and TWO
+  // inner holes — count-majority would say "holes win" and misclassify
+  // the outer (which has by far the largest |area|) as a hole. Summing
+  // signed areas lets the larger outer dominate regardless of how many
+  // holes it has.
+  //
+  // Subpaths whose own area is degenerate (e.g. a synthetic subpath
+  // collapsed to a single point at alpha=0) are classified as outers by
+  // default and contribute zero triangles to triangulation, so they
+  // don't render either way.
+  const ringSigns = rings2D.map((ring) => signedArea2DFromStride(ring, 1));
+  const totalSignedArea = ringSigns.reduce((acc, s) => acc + s, 0);
+  const dominantSign = totalSignedArea >= 0 ? 1 : -1;
+  const isHole = ringSigns.map((s) => {
+    if (Math.abs(s) < 1e-12) return false; // degenerate: treat as outer (renders as nothing)
+    return Math.sign(s) === -dominantSign;
+  });
 
+  // For each hole, find which outer it belongs to. We test the FIRST
+  // anchor of the original control polygon (via the projected ring's
+  // first point) against each outer's polygon. Multiple outers in a
+  // single mobject is rare for glyphs but valid for compound shapes.
+  const isHoleOf = new Array<number>(rings2D.length).fill(-1);
   for (let i = 0; i < rings2D.length; i++) {
+    if (!isHole[i]) continue;
     for (let j = 0; j < rings2D.length; j++) {
-      if (i === j) continue;
+      if (i === j || isHole[j]) continue;
       if (pointInPolygon(rings2D[i][0], rings2D[j])) {
         isHoleOf[i] = j;
         break;
       }
     }
+    // If no containing outer was found (e.g. a hole that has temporarily
+    // wandered outside the morphing outer mid-Transform), drop it from
+    // rendering rather than promoting it to an outer — that would be the
+    // same "separate filled blob" flicker we are eliminating.
   }
+  void ringControlPolygons;
 
   // Collect outer rings (not holes) and their associated holes
   const allPositions: number[] = [];
 
   for (let i = 0; i < rings2D.length; i++) {
-    if (isHoleOf[i] >= 0) continue;
+    // Skip rings classified as holes (they are emitted as part of their
+    // outer ring's earcut call) or as orphan holes (wandered outside any
+    // outer — drop them rather than render as a separate filled blob).
+    if (isHole[i]) continue;
 
     const outerRing = rings2D[i];
     const outerRing3D = rings3D[i];
