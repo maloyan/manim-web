@@ -80,12 +80,13 @@ describe('GrowArrow', () => {
       expect(arrow.scaleVector.z).toBeCloseTo(0.001, 5);
     });
 
-    it('moves position to start point', () => {
+    it('does not change position', () => {
       const arrow = new Arrow({ start: [1, 2, 0], end: [3, 4, 0] });
+      arrow.position.set(9, -3, 0);
       const anim = new GrowArrow(arrow);
       anim.begin();
-      expect(arrow.position.x).toBeCloseTo(1, 5);
-      expect(arrow.position.y).toBeCloseTo(2, 5);
+      expect(arrow.position.x).toBeCloseTo(9, 5);
+      expect(arrow.position.y).toBeCloseTo(-3, 5);
     });
   });
 
@@ -108,11 +109,14 @@ describe('GrowArrow', () => {
       expect(arrow.scaleVector.x).toBeCloseTo(origScaleX, 5);
     });
 
-    it('position interpolates from start toward original position', () => {
+    it('does not change position during interpolation', () => {
       const arrow = new Arrow({ start: [0, 0, 0], end: [4, 0, 0] });
       arrow.position.set(10, 1, 0);
       const anim = new GrowArrow(arrow);
       anim.begin();
+      anim.interpolate(0.5);
+      expect(arrow.position.x).toBeCloseTo(10, 5);
+      expect(arrow.position.y).toBeCloseTo(1, 5);
       anim.interpolate(1);
       expect(arrow.position.x).toBeCloseTo(10, 5);
       expect(arrow.position.y).toBeCloseTo(1, 5);
@@ -120,7 +124,7 @@ describe('GrowArrow', () => {
   });
 
   describe('finish()', () => {
-    it('restores original scale and exact original position', () => {
+    it('restores original scale and keeps position unchanged', () => {
       const arrow = new Arrow({ start: [0, 0, 0], end: [4, 0, 0] });
       arrow.position.set(-3, 2, 0);
       const origScale = arrow.scaleVector.clone();

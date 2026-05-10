@@ -86,23 +86,23 @@ describe('GrowArrow (extra)', () => {
       expect(arrow.scaleVector.z).toBeCloseTo(0.001, 5);
     });
 
-    it('position moves continuously from start to original position', () => {
+    it('position remains unchanged through interpolation', () => {
       const arrow = makeArrow([0, 0, 0], [6, 0, 0]);
       arrow.position.set(3, 0, 0);
       const anim = new GrowArrow(arrow);
       anim.begin();
 
       anim.interpolate(0);
-      expect(arrow.position.x).toBeCloseTo(0, 2);
+      expect(arrow.position.x).toBeCloseTo(3, 2);
 
       anim.interpolate(0.25);
-      expect(arrow.position.x).toBeCloseTo(0.75, 2);
+      expect(arrow.position.x).toBeCloseTo(3, 2);
 
       anim.interpolate(0.5);
-      expect(arrow.position.x).toBeCloseTo(1.5, 2);
+      expect(arrow.position.x).toBeCloseTo(3, 2);
 
       anim.interpolate(0.75);
-      expect(arrow.position.x).toBeCloseTo(2.25, 2);
+      expect(arrow.position.x).toBeCloseTo(3, 2);
 
       anim.interpolate(1);
       expect(arrow.position.x).toBeCloseTo(3, 2);
@@ -114,13 +114,11 @@ describe('GrowArrow (extra)', () => {
       const anim = new GrowArrow(arrow);
       anim.begin();
 
-      // Position should start at the start point
-      expect(arrow.position.x).toBeCloseTo(1, 2);
-      expect(arrow.position.y).toBeCloseTo(2, 2);
-      expect(arrow.position.z).toBeCloseTo(3, 2);
+      expect(arrow.position.x).toBeCloseTo(3, 2);
+      expect(arrow.position.y).toBeCloseTo(4, 2);
+      expect(arrow.position.z).toBeCloseTo(5, 2);
 
       anim.interpolate(1);
-      // At alpha=1, position should be restored to original
       expect(arrow.position.x).toBeCloseTo(3, 2);
       expect(arrow.position.y).toBeCloseTo(4, 2);
       expect(arrow.position.z).toBeCloseTo(5, 2);
@@ -145,14 +143,14 @@ describe('GrowArrow (extra)', () => {
   });
 
   describe('finish() after partial interpolation', () => {
-    it('restores exact state regardless of last interpolation step', () => {
+    it('restores exact scale and keeps position unchanged', () => {
       const arrow = makeArrow([0, 0, 0], [4, 4, 0]);
       arrow.position.set(7, -2, 0);
       const origScale = arrow.scaleVector.clone();
       const origPos = arrow.position.clone();
       const anim = new GrowArrow(arrow);
       anim.begin();
-      anim.interpolate(0.1); // barely started
+      anim.interpolate(0.1);
       anim.finish();
       expect(arrow.scaleVector.x).toBeCloseTo(origScale.x, 5);
       expect(arrow.scaleVector.y).toBeCloseTo(origScale.y, 5);

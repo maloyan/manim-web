@@ -21,9 +21,6 @@ export type GrowArrowOptions = AnimationOptions;
  */
 export class GrowArrow extends Animation {
   private _targetScale: THREE.Vector3 = new THREE.Vector3();
-  private _targetPosition: THREE.Vector3 = new THREE.Vector3();
-  private _startPoint: Vector3Tuple = [0, 0, 0];
-  private _endPoint: Vector3Tuple = [0, 0, 0];
 
   constructor(mobject: Arrow, options: GrowArrowOptions = {}) {
     super(mobject, options);
@@ -33,38 +30,21 @@ export class GrowArrow extends Animation {
     super.begin();
 
     const arrow = this.mobject as Arrow;
-
-    // Store the target state
     this._targetScale.copy(arrow.scaleVector);
-    this._targetPosition.copy(arrow.position);
-    this._startPoint = arrow.getStart();
-    this._endPoint = arrow.getEnd();
 
-    // Start at scale 0 (from the start point)
-    arrow.scaleVector.set(0.001, 0.001, 0.001); // Use small value to avoid division issues
-
-    // Position at start point
-    const start = this._startPoint;
-    arrow.position.set(start[0], start[1], start[2]);
+    // Start near zero to avoid degenerate transform issues
+    arrow.scaleVector.set(0.001, 0.001, 0.001);
+    arrow._markDirty();
   }
 
   interpolate(alpha: number): void {
     const arrow = this.mobject as Arrow;
 
-    // Scale from 0 to target
     const scale = Math.max(0.001, alpha);
     arrow.scaleVector.set(
       this._targetScale.x * scale,
       this._targetScale.y * scale,
       this._targetScale.z * scale,
-    );
-
-    // Position interpolates from start point to original target position
-    const start = this._startPoint;
-    arrow.position.set(
-      start[0] + (this._targetPosition.x - start[0]) * alpha,
-      start[1] + (this._targetPosition.y - start[1]) * alpha,
-      start[2] + (this._targetPosition.z - start[2]) * alpha,
     );
 
     arrow._markDirty();
@@ -73,10 +53,6 @@ export class GrowArrow extends Animation {
   override finish(): void {
     const arrow = this.mobject as Arrow;
     arrow.scaleVector.copy(this._targetScale);
-
-    // Restore exact original position
-    arrow.position.copy(this._targetPosition);
-
     arrow._markDirty();
     super.finish();
   }
