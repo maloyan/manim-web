@@ -69,7 +69,7 @@
     "earcut": "^3.0.2",
     "gif.js": "^0.2.0",
     "katex": "^0.16.28",
-    "opentype.js": "^1.3.4",
+    "opentype.js": "^2.0.0",
     "polygon-clipping": "^0.15.7",
     "three": "^0.184.0"
   },
