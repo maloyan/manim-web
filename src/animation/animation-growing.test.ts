@@ -71,72 +71,118 @@ describe('GrowArrow', () => {
   });
 
   describe('begin()', () => {
-    it('sets scale to near-zero', () => {
+    it('sets children scale to near-zero', () => {
       const arrow = makeArrow();
       const anim = new GrowArrow(arrow);
       anim.begin();
-      expect(arrow.scaleVector.x).toBeCloseTo(0.001, 5);
-      expect(arrow.scaleVector.y).toBeCloseTo(0.001, 5);
-      expect(arrow.scaleVector.z).toBeCloseTo(0.001, 5);
+      for (const child of arrow.children) {
+        expect(child.scaleVector.x).toBeCloseTo(0.001, 5);
+        expect(child.scaleVector.y).toBeCloseTo(0.001, 5);
+        expect(child.scaleVector.z).toBeCloseTo(0.001, 5);
+      }
     });
 
-    it('does not change position', () => {
+    it('keeps group position unchanged', () => {
       const arrow = new Arrow({ start: [1, 2, 0], end: [3, 4, 0] });
-      arrow.position.set(9, -3, 0);
+      const before = arrow.position.clone();
       const anim = new GrowArrow(arrow);
       anim.begin();
-      expect(arrow.position.x).toBeCloseTo(9, 5);
-      expect(arrow.position.y).toBeCloseTo(-3, 5);
+      expect(arrow.position.x).toBeCloseTo(before.x, 5);
+      expect(arrow.position.y).toBeCloseTo(before.y, 5);
+      expect(arrow.position.z).toBeCloseTo(before.z, 5);
+    });
+
+    it('aligns shaft start and tip apex at begin for shifted arrow', () => {
+      const arrow = new Arrow({
+        start: [-4, 0, 0],
+        end: [4, 0, 0],
+        tipLength: 0.6,
+        tipWidth: 0.35,
+      });
+      arrow.shift([2, 1, 0]);
+      const anim = new GrowArrow(arrow);
+      anim.begin();
+
+      const shaft = arrow.children[0];
+      const tip = arrow.children[1];
+      const sp = (shaft as VMobject).getPoints()[0];
+      const tp = (tip as VMobject).getPoints()[3];
+
+      const shaftStartWorld: [number, number, number] = [
+        sp[0] * shaft.scaleVector.x + shaft.position.x,
+        sp[1] * shaft.scaleVector.y + shaft.position.y,
+        sp[2] * shaft.scaleVector.z + shaft.position.z,
+      ];
+      const tipApexWorld: [number, number, number] = [
+        tp[0] * tip.scaleVector.x + tip.position.x,
+        tp[1] * tip.scaleVector.y + tip.position.y,
+        tp[2] * tip.scaleVector.z + tip.position.z,
+      ];
+
+      expect(tipApexWorld[0]).toBeCloseTo(shaftStartWorld[0], 5);
+      expect(tipApexWorld[1]).toBeCloseTo(shaftStartWorld[1], 5);
+      expect(tipApexWorld[2]).toBeCloseTo(shaftStartWorld[2], 5);
     });
   });
 
   describe('interpolate()', () => {
-    it('at alpha=0.5 scales to roughly half', () => {
+    it('at alpha=0.5 scales children to roughly half', () => {
       const arrow = makeArrow();
+      const orig = arrow.children.map((c) => c.scaleVector.clone());
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(0.5);
-      expect(arrow.scaleVector.x).toBeCloseTo(0.5, 2);
-      expect(arrow.scaleVector.y).toBeCloseTo(0.5, 2);
+      for (let i = 0; i < arrow.children.length; i++) {
+        expect(arrow.children[i].scaleVector.x).toBeCloseTo(orig[i].x * 0.5, 2);
+        expect(arrow.children[i].scaleVector.y).toBeCloseTo(orig[i].y * 0.5, 2);
+      }
     });
 
-    it('at alpha=1 restores full scale', () => {
+    it('at alpha=1 restores full child scales', () => {
       const arrow = makeArrow();
-      const origScaleX = arrow.scaleVector.x;
+      const orig = arrow.children.map((c) => c.scaleVector.clone());
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(1);
-      expect(arrow.scaleVector.x).toBeCloseTo(origScaleX, 5);
+      for (let i = 0; i < arrow.children.length; i++) {
+        expect(arrow.children[i].scaleVector.x).toBeCloseTo(orig[i].x, 5);
+      }
     });
 
-    it('does not change position during interpolation', () => {
+    it('moves arrow center from start toward target center', () => {
       const arrow = new Arrow({ start: [0, 0, 0], end: [4, 0, 0] });
-      arrow.position.set(10, 1, 0);
+      arrow.shift([10, 1, 0]);
+      const targetCenter = arrow.getCenter();
       const anim = new GrowArrow(arrow);
       anim.begin();
-      anim.interpolate(0.5);
-      expect(arrow.position.x).toBeCloseTo(10, 5);
-      expect(arrow.position.y).toBeCloseTo(1, 5);
+
+      const c0 = arrow.getCenter();
+      expect(c0[0]).toBeLessThan(targetCenter[0]);
+      expect(c0[1]).toBeCloseTo(targetCenter[1], 5);
+
       anim.interpolate(1);
-      expect(arrow.position.x).toBeCloseTo(10, 5);
-      expect(arrow.position.y).toBeCloseTo(1, 5);
+      const c1 = arrow.getCenter();
+      expect(c1[0]).toBeCloseTo(targetCenter[0], 2);
+      expect(c1[1]).toBeCloseTo(targetCenter[1], 2);
     });
   });
 
   describe('finish()', () => {
-    it('restores original scale and keeps position unchanged', () => {
+    it('restores child scales and translated geometry exactly', () => {
       const arrow = new Arrow({ start: [0, 0, 0], end: [4, 0, 0] });
-      arrow.position.set(-3, 2, 0);
-      const origScale = arrow.scaleVector.clone();
-      const origPos = arrow.position.clone();
+      arrow.shift([-3, 2, 0]);
+      const origCenter = arrow.getCenter();
+      const origChildScales = arrow.children.map((c) => c.scaleVector.clone());
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(0.3);
       anim.finish();
-      expect(arrow.scaleVector.x).toBeCloseTo(origScale.x, 5);
-      expect(arrow.scaleVector.y).toBeCloseTo(origScale.y, 5);
-      expect(arrow.position.x).toBeCloseTo(origPos.x, 5);
-      expect(arrow.position.y).toBeCloseTo(origPos.y, 5);
+      const finalCenter = arrow.getCenter();
+      expect(finalCenter[0]).toBeCloseTo(origCenter[0], 5);
+      expect(finalCenter[1]).toBeCloseTo(origCenter[1], 5);
+      for (let i = 0; i < arrow.children.length; i++) {
+        expect(arrow.children[i].scaleVector.x).toBeCloseTo(origChildScales[i].x, 5);
+      }
     });
   });
 

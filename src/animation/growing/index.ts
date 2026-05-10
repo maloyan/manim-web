@@ -20,40 +20,93 @@ export type GrowArrowOptions = AnimationOptions;
  * The arrow extends from start toward end, with the tip growing proportionally.
  */
 export class GrowArrow extends Animation {
-  private _targetScale: THREE.Vector3 = new THREE.Vector3();
+  private _startPoint = new THREE.Vector3();
+  private _parts: {
+    m: Mobject;
+    pos: THREE.Vector3;
+    scale: THREE.Vector3;
+    // A stable local point used to pin each child during growth.
+    // shaft: first point, tip: apex point.
+    // We animate this anchor from arrow start -> original anchor world.
+    anchorLocal: THREE.Vector3;
+  }[] = [];
 
   constructor(mobject: Arrow, options: GrowArrowOptions = {}) {
     super(mobject, options);
+  }
+
+  /**
+   * Pick one meaningful local anchor per arrow child.
+   * Why this exists:
+   * - Scaling around each child's local origin alone makes tip/shaft drift apart.
+   * - We instead keep a semantic anchor (shaft-start or tip-apex) constrained.
+   * - Given anchorLocal, scale, and position we can solve world anchor exactly:
+   *     anchorWorld = anchorLocal * scale + position
+   *   and invert it to place the child at any animation alpha.
+   */
+  private _getAnchorLocal(child: Mobject, index: number): THREE.Vector3 {
+    const pts = (child as unknown as { getPoints?: () => number[][] }).getPoints?.() ?? [];
+    if (pts.length === 0) return new THREE.Vector3();
+    const i = index === 0 ? 0 : Math.min(3, pts.length - 1); // shaft start, tip apex
+    return new THREE.Vector3(pts[i][0], pts[i][1], pts[i][2]);
   }
 
   override begin(): void {
     super.begin();
 
     const arrow = this.mobject as Arrow;
-    this._targetScale.copy(arrow.scaleVector);
+    const shaft = arrow.children[0] as unknown as {
+      getPoints?: () => number[][];
+      position: THREE.Vector3;
+    };
+    const shaftStart = shaft?.getPoints?.()?.[0] ?? arrow.getStart();
+    this._startPoint.set(
+      shaftStart[0] + (shaft?.position?.x ?? 0),
+      shaftStart[1] + (shaft?.position?.y ?? 0),
+      shaftStart[2] + (shaft?.position?.z ?? 0),
+    );
 
-    // Start near zero to avoid degenerate transform issues
-    arrow.scaleVector.set(0.001, 0.001, 0.001);
-    arrow._markDirty();
+    this._parts = arrow.children.map((m, i) => ({
+      m,
+      pos: m.position.clone(),
+      scale: m.scaleVector.clone(),
+      anchorLocal: this._getAnchorLocal(m, i),
+    }));
+
+    this.interpolate(0);
   }
 
   interpolate(alpha: number): void {
-    const arrow = this.mobject as Arrow;
+    const s = Math.max(0.001, alpha);
+    for (const p of this._parts) {
+      const sx = p.scale.x * s;
+      const sy = p.scale.y * s;
+      const sz = p.scale.z * s;
+      p.m.scaleVector.set(sx, sy, sz);
 
-    const scale = Math.max(0.001, alpha);
-    arrow.scaleVector.set(
-      this._targetScale.x * scale,
-      this._targetScale.y * scale,
-      this._targetScale.z * scale,
-    );
-
-    arrow._markDirty();
+      const targetAx = p.anchorLocal.x * p.scale.x + p.pos.x;
+      const targetAy = p.anchorLocal.y * p.scale.y + p.pos.y;
+      const targetAz = p.anchorLocal.z * p.scale.z + p.pos.z;
+      const ax = this._startPoint.x + (targetAx - this._startPoint.x) * alpha;
+      const ay = this._startPoint.y + (targetAy - this._startPoint.y) * alpha;
+      const az = this._startPoint.z + (targetAz - this._startPoint.z) * alpha;
+      p.m.position.set(
+        ax - p.anchorLocal.x * sx,
+        ay - p.anchorLocal.y * sy,
+        az - p.anchorLocal.z * sz,
+      );
+      p.m._markDirty();
+    }
+    this.mobject._markDirty();
   }
 
   override finish(): void {
-    const arrow = this.mobject as Arrow;
-    arrow.scaleVector.copy(this._targetScale);
-    arrow._markDirty();
+    for (const p of this._parts) {
+      p.m.position.copy(p.pos);
+      p.m.scaleVector.copy(p.scale);
+      p.m._markDirty();
+    }
+    this.mobject._markDirty();
     super.finish();
   }
 }
