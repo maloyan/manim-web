@@ -64,6 +64,14 @@ describe('Arrow', () => {
     expect(a.getLength()).toBeCloseTo(10, 10);
   });
 
+  it('putStartAndEndOn updates both endpoints', () => {
+    const a = new Arrow();
+    a.putStartAndEndOn([1, 2, 0], [4, 6, 0]);
+    expect(a.getStart()).toEqual([1, 2, 0]);
+    expect(a.getEnd()).toEqual([4, 6, 0]);
+    expect(a.getLength()).toBeCloseTo(5, 10);
+  });
+
   it('setTipLength / setTipWidth update tip dimensions', () => {
     const a = new Arrow();
     a.setTipLength(0.5);
@@ -77,6 +85,28 @@ describe('Arrow', () => {
     const s = a.getStart();
     s[0] = 999;
     expect(a.getStart()[0]).toBe(1);
+  });
+
+  it('preserves endpoints through tip updates after translation + rotation', () => {
+    const a = new Arrow({ start: [1, 0, 0], end: [4, 0, 0] });
+    a.shift([2, -1, 0]);
+    a.rotate(Math.PI / 2);
+
+    const startBefore = a.getStart();
+    const endBefore = a.getEnd();
+
+    a.setTipLength(0.42);
+    a.setTipWidth(0.17);
+
+    const startAfter = a.getStart();
+    const endAfter = a.getEnd();
+
+    expect(startAfter[0]).toBeCloseTo(startBefore[0], 8);
+    expect(startAfter[1]).toBeCloseTo(startBefore[1], 8);
+    expect(startAfter[2]).toBeCloseTo(startBefore[2], 8);
+    expect(endAfter[0]).toBeCloseTo(endBefore[0], 8);
+    expect(endAfter[1]).toBeCloseTo(endBefore[1], 8);
+    expect(endAfter[2]).toBeCloseTo(endBefore[2], 8);
   });
 });
 
@@ -101,6 +131,36 @@ describe('DoubleArrow', () => {
     da.setEnd([1, 1, 0]);
     expect(da.getStart()).toEqual([-1, -1, 0]);
     expect(da.getEnd()).toEqual([1, 1, 0]);
+  });
+
+  it('putStartAndEndOn updates both endpoints', () => {
+    const da = new DoubleArrow();
+    da.putStartAndEndOn([-2, 0, 0], [2, 0, 0]);
+    expect(da.getStart()).toEqual([-2, 0, 0]);
+    expect(da.getEnd()).toEqual([2, 0, 0]);
+    expect(da.getLength()).toBeCloseTo(4, 10);
+  });
+
+  it('preserves endpoints through tip updates after translation + rotation', () => {
+    const da = new DoubleArrow({ start: [-2, 0, 0], end: [2, 0, 0] });
+    da.shift([1, 3, 0]);
+    da.rotate(Math.PI / 3);
+
+    const startBefore = da.getStart();
+    const endBefore = da.getEnd();
+
+    da.setTipLength(0.5);
+    da.setTipWidth(0.2);
+
+    const startAfter = da.getStart();
+    const endAfter = da.getEnd();
+
+    expect(startAfter[0]).toBeCloseTo(startBefore[0], 8);
+    expect(startAfter[1]).toBeCloseTo(startBefore[1], 8);
+    expect(startAfter[2]).toBeCloseTo(startBefore[2], 8);
+    expect(endAfter[0]).toBeCloseTo(endBefore[0], 8);
+    expect(endAfter[1]).toBeCloseTo(endBefore[1], 8);
+    expect(endAfter[2]).toBeCloseTo(endBefore[2], 8);
   });
 });
 

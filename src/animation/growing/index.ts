@@ -21,6 +21,7 @@ export type GrowArrowOptions = AnimationOptions;
  */
 export class GrowArrow extends Animation {
   private _targetScale: THREE.Vector3 = new THREE.Vector3();
+  private _targetPosition: THREE.Vector3 = new THREE.Vector3();
   private _startPoint: Vector3Tuple = [0, 0, 0];
   private _endPoint: Vector3Tuple = [0, 0, 0];
 
@@ -35,6 +36,7 @@ export class GrowArrow extends Animation {
 
     // Store the target state
     this._targetScale.copy(arrow.scaleVector);
+    this._targetPosition.copy(arrow.position);
     this._startPoint = arrow.getStart();
     this._endPoint = arrow.getEnd();
 
@@ -57,18 +59,12 @@ export class GrowArrow extends Animation {
       this._targetScale.z * scale,
     );
 
-    // Interpolate position from start to proper position
+    // Position interpolates from start point to original target position
     const start = this._startPoint;
-    const end = this._endPoint;
-    const midX = (start[0] + end[0]) / 2;
-    const midY = (start[1] + end[1]) / 2;
-    const midZ = (start[2] + end[2]) / 2;
-
-    // Position interpolates from start to center
     arrow.position.set(
-      start[0] + (midX - start[0]) * alpha,
-      start[1] + (midY - start[1]) * alpha,
-      start[2] + (midZ - start[2]) * alpha,
+      start[0] + (this._targetPosition.x - start[0]) * alpha,
+      start[1] + (this._targetPosition.y - start[1]) * alpha,
+      start[2] + (this._targetPosition.z - start[2]) * alpha,
     );
 
     arrow._markDirty();
@@ -78,10 +74,8 @@ export class GrowArrow extends Animation {
     const arrow = this.mobject as Arrow;
     arrow.scaleVector.copy(this._targetScale);
 
-    // Restore proper position
-    const start = this._startPoint;
-    const end = this._endPoint;
-    arrow.position.set((start[0] + end[0]) / 2, (start[1] + end[1]) / 2, (start[2] + end[2]) / 2);
+    // Restore exact original position
+    arrow.position.copy(this._targetPosition);
 
     arrow._markDirty();
     super.finish();

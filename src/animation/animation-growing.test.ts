@@ -108,27 +108,31 @@ describe('GrowArrow', () => {
       expect(arrow.scaleVector.x).toBeCloseTo(origScaleX, 5);
     });
 
-    it('position interpolates from start toward center', () => {
+    it('position interpolates from start toward original position', () => {
       const arrow = new Arrow({ start: [0, 0, 0], end: [4, 0, 0] });
+      arrow.position.set(10, 1, 0);
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(1);
-      // At alpha=1 position should be at midpoint (0+4)/2 = 2
-      expect(arrow.position.x).toBeCloseTo(2, 2);
+      expect(arrow.position.x).toBeCloseTo(10, 5);
+      expect(arrow.position.y).toBeCloseTo(1, 5);
     });
   });
 
   describe('finish()', () => {
-    it('restores original scale and sets position to midpoint', () => {
+    it('restores original scale and exact original position', () => {
       const arrow = new Arrow({ start: [0, 0, 0], end: [4, 0, 0] });
+      arrow.position.set(-3, 2, 0);
       const origScale = arrow.scaleVector.clone();
+      const origPos = arrow.position.clone();
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(0.3);
       anim.finish();
       expect(arrow.scaleVector.x).toBeCloseTo(origScale.x, 5);
       expect(arrow.scaleVector.y).toBeCloseTo(origScale.y, 5);
-      expect(arrow.position.x).toBeCloseTo(2, 2);
+      expect(arrow.position.x).toBeCloseTo(origPos.x, 5);
+      expect(arrow.position.y).toBeCloseTo(origPos.y, 5);
     });
   });
 

@@ -83,6 +83,26 @@ class ArrowTip extends VMobject {
   }
 }
 
+function perpendicularFromDirection(dirX: number, dirY: number, dirZ: number): Vector3Tuple {
+  const ref: Vector3Tuple = Math.abs(dirZ) < 0.9 ? [0, 0, 1] : [1, 0, 0];
+
+  // ref × dir
+  let px = ref[1] * dirZ - ref[2] * dirY;
+  let py = ref[2] * dirX - ref[0] * dirZ;
+  let pz = ref[0] * dirY - ref[1] * dirX;
+
+  let len = Math.sqrt(px * px + py * py + pz * pz);
+  if (len < 1e-10) {
+    const alt: Vector3Tuple = [0, 1, 0];
+    px = alt[1] * dirZ - alt[2] * dirY;
+    py = alt[2] * dirX - alt[0] * dirZ;
+    pz = alt[0] * dirY - alt[1] * dirX;
+    len = Math.sqrt(px * px + py * py + pz * pz) || 1;
+  }
+
+  return [px / len, py / len, pz / len];
+}
+
 /**
  * Arrow - A line with an arrowhead at the end
  *
@@ -106,8 +126,6 @@ class ArrowTip extends VMobject {
  * ```
  */
 export class Arrow extends Group {
-  private _start: Vector3Tuple;
-  private _end: Vector3Tuple;
   private _tipLength: number;
   private _tipWidth: number;
   private _strokeWidth: number;
@@ -126,24 +144,22 @@ export class Arrow extends Group {
       tipWidth = 0.1,
     } = options;
 
-    this._start = [...start];
-    this._end = [...end];
     this._tipLength = tipLength;
     this._tipWidth = tipWidth;
     this._color = color;
     this._strokeWidth = strokeWidth;
 
-    this._generateParts();
+    this._generateParts(start, end);
   }
 
   /**
    * Generate the arrow parts (shaft line + tip triangle)
    */
-  private _generateParts(): void {
+  private _generateParts(start: Vector3Tuple, end: Vector3Tuple): void {
     this.clear();
 
-    const [x0, y0, z0] = this._start;
-    const [x1, y1, z1] = this._end;
+    const [x0, y0, z0] = start;
+    const [x1, y1, z1] = end;
 
     const dx = x1 - x0;
     const dy = y1 - y0;
@@ -158,19 +174,7 @@ export class Arrow extends Group {
     const dirY = dy / length;
     const dirZ = dz / length;
 
-    let perpX: number, perpY: number, perpZ: number;
-    if (Math.abs(dirZ) > 0.99) {
-      perpX = 1;
-      perpY = 0;
-      perpZ = 0;
-    } else {
-      perpX = -dirY;
-      perpY = dirX;
-      perpZ = 0;
-      const perpLen = Math.sqrt(perpX * perpX + perpY * perpY);
-      perpX /= perpLen;
-      perpY /= perpLen;
-    }
+    const [perpX, perpY, perpZ] = perpendicularFromDirection(dirX, dirY, dirZ);
 
     const tipBaseX = x1 - dirX * this._tipLength;
     const tipBaseY = y1 - dirY * this._tipLength;
@@ -203,41 +207,57 @@ export class Arrow extends Group {
    * Get the start point
    */
   getStart(): Vector3Tuple {
-    return [...this._start];
+    const shaftPts = this._shaft?.getPoints();
+    if (shaftPts && shaftPts.length > 0) {
+      const p = shaftPts[0];
+      return [p[0], p[1], p[2]];
+    }
+    return [0, 0, 0];
   }
 
   /**
-   * Set the start point
+   * Set both start and end points in one canonical operation.
+   */
+  putStartAndEndOn(start: Vector3Tuple, end: Vector3Tuple): this {
+    this._generateParts(start, end);
+    return this;
+  }
+
+  /**
+   * @deprecated Use putStartAndEndOn(start, end) for canonical endpoint updates.
    */
   setStart(point: Vector3Tuple): this {
-    this._start = [...point];
-    this._generateParts();
-    return this;
+    return this.putStartAndEndOn(point, this.getEnd());
   }
 
   /**
    * Get the end point (tip of the arrow)
    */
   getEnd(): Vector3Tuple {
-    return [...this._end];
+    const tipPts = this._tip?.getPoints();
+    if (tipPts && tipPts.length > 3) {
+      const p = tipPts[3];
+      return [p[0], p[1], p[2]];
+    }
+    return [0, 0, 0];
   }
 
   /**
-   * Set the end point (tip of the arrow)
+   * @deprecated Use putStartAndEndOn(start, end) for canonical endpoint updates.
    */
   setEnd(point: Vector3Tuple): this {
-    this._end = [...point];
-    this._generateParts();
-    return this;
+    return this.putStartAndEndOn(this.getStart(), point);
   }
 
   /**
    * Get the length of the arrow (including tip)
    */
   getLength(): number {
-    const dx = this._end[0] - this._start[0];
-    const dy = this._end[1] - this._start[1];
-    const dz = this._end[2] - this._start[2];
+    const start = this.getStart();
+    const end = this.getEnd();
+    const dx = end[0] - start[0];
+    const dy = end[1] - start[1];
+    const dz = end[2] - start[2];
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
 
@@ -253,7 +273,7 @@ export class Arrow extends Group {
    */
   setTipLength(value: number): this {
     this._tipLength = value;
-    this._generateParts();
+    this.putStartAndEndOn(this.getStart(), this.getEnd());
     return this;
   }
 
@@ -269,7 +289,7 @@ export class Arrow extends Group {
    */
   setTipWidth(value: number): this {
     this._tipWidth = value;
-    this._generateParts();
+    this.putStartAndEndOn(this.getStart(), this.getEnd());
     return this;
   }
 
@@ -281,10 +301,12 @@ export class Arrow extends Group {
     if (length === 0) {
       return [1, 0, 0];
     }
+    const start = this.getStart();
+    const end = this.getEnd();
     return [
-      (this._end[0] - this._start[0]) / length,
-      (this._end[1] - this._start[1]) / length,
-      (this._end[2] - this._start[2]) / length,
+      (end[0] - start[0]) / length,
+      (end[1] - start[1]) / length,
+      (end[2] - start[2]) / length,
     ];
   }
 
@@ -292,7 +314,9 @@ export class Arrow extends Group {
    * Get the angle of the arrow in the XY plane (in radians)
    */
   getAngle(): number {
-    return Math.atan2(this._end[1] - this._start[1], this._end[0] - this._start[0]);
+    const start = this.getStart();
+    const end = this.getEnd();
+    return Math.atan2(end[1] - start[1], end[0] - start[0]);
   }
 
   /**
@@ -311,7 +335,6 @@ export class Arrow extends Group {
     const curTipPts = this._tip.getPoints();
     if (curTipPts.length < 4) return;
 
-    const start = shaftPts[0];
     const shaftEnd = shaftPts[shaftPts.length - 1];
     const tipApex = curTipPts[3]; // already at the correct transformed position
 
@@ -325,19 +348,7 @@ export class Arrow extends Group {
     const dirY = dy / len;
     const dirZ = dz / len;
 
-    let perpX: number, perpY: number, perpZ: number;
-    if (Math.abs(dirZ) > 0.99) {
-      perpX = 1;
-      perpY = 0;
-      perpZ = 0;
-    } else {
-      perpX = -dirY;
-      perpY = dirX;
-      perpZ = 0;
-      const perpLen = Math.sqrt(perpX * perpX + perpY * perpY);
-      perpX /= perpLen;
-      perpY /= perpLen;
-    }
+    const [perpX, perpY, perpZ] = perpendicularFromDirection(dirX, dirY, dirZ);
 
     const halfW = this._tipWidth;
     const tipLeft = [
@@ -365,9 +376,6 @@ export class Arrow extends Group {
     addSeg(newPts, tipApex, tipRight, false);
     addSeg(newPts, tipRight, tipLeft, false);
     this._tip.setPoints(newPts);
-
-    this._start = [start[0], start[1], start[2]];
-    this._end = [tipApex[0], tipApex[1], tipApex[2]];
   }
 
   /**
@@ -375,8 +383,8 @@ export class Arrow extends Group {
    */
   protected override _createCopy(): Arrow {
     return new Arrow({
-      start: this._start,
-      end: this._end,
+      start: this.getStart(),
+      end: this.getEnd(),
       tipLength: this._tipLength,
       tipWidth: this._tipWidth,
       color: this.color,
@@ -389,8 +397,6 @@ export class Arrow extends Group {
  * DoubleArrow - An arrow with tips on both ends
  */
 export class DoubleArrow extends Group {
-  private _start: Vector3Tuple;
-  private _end: Vector3Tuple;
   private _tipLength: number;
   private _tipWidth: number;
   private _strokeWidth: number;
@@ -407,21 +413,19 @@ export class DoubleArrow extends Group {
       tipWidth = 0.1,
     } = options;
 
-    this._start = [...start];
-    this._end = [...end];
     this._tipLength = tipLength;
     this._tipWidth = tipWidth;
     this._color = color;
     this._strokeWidth = strokeWidth;
 
-    this._generateParts();
+    this._generateParts(start, end);
   }
 
-  private _generateParts(): void {
+  private _generateParts(start: Vector3Tuple, end: Vector3Tuple): void {
     this.clear();
 
-    const [x0, y0, z0] = this._start;
-    const [x1, y1, z1] = this._end;
+    const [x0, y0, z0] = start;
+    const [x1, y1, z1] = end;
 
     const dx = x1 - x0;
     const dy = y1 - y0;
@@ -436,19 +440,7 @@ export class DoubleArrow extends Group {
     const dirY = dy / length;
     const dirZ = dz / length;
 
-    let perpX: number, perpY: number, perpZ: number;
-    if (Math.abs(dirZ) > 0.99) {
-      perpX = 1;
-      perpY = 0;
-      perpZ = 0;
-    } else {
-      perpX = -dirY;
-      perpY = dirX;
-      perpZ = 0;
-      const perpLen = Math.sqrt(perpX * perpX + perpY * perpY);
-      perpX /= perpLen;
-      perpY /= perpLen;
-    }
+    const [perpX, perpY, perpZ] = perpendicularFromDirection(dirX, dirY, dirZ);
 
     const endTipBaseX = x1 - dirX * this._tipLength;
     const endTipBaseY = y1 - dirY * this._tipLength;
@@ -495,29 +487,74 @@ export class DoubleArrow extends Group {
   }
 
   getStart(): Vector3Tuple {
-    return [...this._start];
+    const kids = this.children;
+    if (kids.length < 3) return [0, 0, 0];
+    const startTip = kids[2] as ArrowTip;
+    const pts = startTip.getPoints();
+    if (pts.length > 3) {
+      const p = pts[3];
+      return [p[0], p[1], p[2]];
+    }
+    return [0, 0, 0];
   }
 
-  setStart(point: Vector3Tuple): this {
-    this._start = [...point];
-    this._generateParts();
+  putStartAndEndOn(start: Vector3Tuple, end: Vector3Tuple): this {
+    this._generateParts(start, end);
     return this;
+  }
+
+  setTipLength(value: number): this {
+    this._tipLength = value;
+    this.putStartAndEndOn(this.getStart(), this.getEnd());
+    return this;
+  }
+
+  getTipLength(): number {
+    return this._tipLength;
+  }
+
+  setTipWidth(value: number): this {
+    this._tipWidth = value;
+    this.putStartAndEndOn(this.getStart(), this.getEnd());
+    return this;
+  }
+
+  getTipWidth(): number {
+    return this._tipWidth;
+  }
+
+  /**
+   * @deprecated Use putStartAndEndOn(start, end) for canonical endpoint updates.
+   */
+  setStart(point: Vector3Tuple): this {
+    return this.putStartAndEndOn(point, this.getEnd());
   }
 
   getEnd(): Vector3Tuple {
-    return [...this._end];
+    const kids = this.children;
+    if (kids.length < 2) return [0, 0, 0];
+    const endTip = kids[1] as ArrowTip;
+    const pts = endTip.getPoints();
+    if (pts.length > 3) {
+      const p = pts[3];
+      return [p[0], p[1], p[2]];
+    }
+    return [0, 0, 0];
   }
 
+  /**
+   * @deprecated Use putStartAndEndOn(start, end) for canonical endpoint updates.
+   */
   setEnd(point: Vector3Tuple): this {
-    this._end = [...point];
-    this._generateParts();
-    return this;
+    return this.putStartAndEndOn(this.getStart(), point);
   }
 
   getLength(): number {
-    const dx = this._end[0] - this._start[0];
-    const dy = this._end[1] - this._start[1];
-    const dz = this._end[2] - this._start[2];
+    const start = this.getStart();
+    const end = this.getEnd();
+    const dx = end[0] - start[0];
+    const dy = end[1] - start[1];
+    const dz = end[2] - start[2];
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
 
@@ -582,19 +619,7 @@ export class DoubleArrow extends Group {
         dyn = dy / len,
         dzn = dz / len;
 
-      let perpX: number, perpY: number, perpZ: number;
-      if (Math.abs(dzn) > 0.99) {
-        perpX = 1;
-        perpY = 0;
-        perpZ = 0;
-      } else {
-        perpX = -dyn;
-        perpY = dxn;
-        perpZ = 0;
-        const pl = Math.sqrt(perpX * perpX + perpY * perpY);
-        perpX /= pl;
-        perpY /= pl;
-      }
+      const [perpX, perpY, perpZ] = perpendicularFromDirection(dxn, dyn, dzn);
 
       const left = [base[0] + perpX * halfW, base[1] + perpY * halfW, base[2] + perpZ * halfW];
       const right = [base[0] - perpX * halfW, base[1] - perpY * halfW, base[2] - perpZ * halfW];
@@ -613,15 +638,12 @@ export class DoubleArrow extends Group {
 
     rebuildTip(shaftEnd, endApex, endTipVM, false);
     rebuildTip(shaftStart, startApex, startTipVM, true);
-
-    this._start = [startApex[0], startApex[1], startApex[2]];
-    this._end = [endApex[0], endApex[1], endApex[2]];
   }
 
   protected override _createCopy(): DoubleArrow {
     return new DoubleArrow({
-      start: this._start,
-      end: this._end,
+      start: this.getStart(),
+      end: this.getEnd(),
       tipLength: this._tipLength,
       tipWidth: this._tipWidth,
       color: this._color,
