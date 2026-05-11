@@ -188,7 +188,17 @@ export class Arrow extends Group {
 
     const [dx, dy, dz] = delta;
     const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
-    if (length === 0) return;
+
+    if (length === 0) {
+      // Important invariant: putStartAndEndOn() must always leave Arrow with
+      // canonical children (shaft + tip), even for degenerate/zero-length input.
+      // Graphing vectors rely on this path and call endpoint helpers on zero vectors.
+      this._shaft = new ArrowShaft([0, 0, 0], this._color, this._strokeWidth);
+      this._tip = new ArrowTip([0, 0, 0], this._tipLength, this._tipWidth, this._color);
+      this.add(this._shaft);
+      this.add(this._tip);
+      return;
+    }
 
     const dirX = dx / length;
     const dirY = dy / length;
