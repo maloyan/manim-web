@@ -76,6 +76,40 @@ describe('Arrow defaults', () => {
     expect(end2[1]).toBe(-3);
     expect(end2[2]).toBe(0);
   });
+
+  it('putStartAndEndOn resets endpoints exactly after prior shift+rotation', () => {
+    const arrow = new Arrow({ start: [0, 0, 0], end: [3, 0, 0] });
+
+    // Put the arrow through prior transforms first.
+    arrow.shift([2, -1, 0]);
+    arrow.rotate(Math.PI / 3);
+
+    const beforeGroup = arrow.position.clone();
+
+    arrow.putStartAndEndOn([-4, 2, 0], [1, -5, 0]);
+
+    const start = arrow.getStart();
+    const end = arrow.getEnd();
+    expect(start[0]).toBe(-4);
+    expect(start[1]).toBe(2);
+    expect(start[2]).toBe(0);
+    expect(end[0]).toBe(1);
+    expect(end[1]).toBe(-5);
+    expect(end[2]).toBe(0);
+
+    // Endpoint update must not mutate Group position.
+    expect(arrow.position.x).toBe(beforeGroup.x);
+    expect(arrow.position.y).toBe(beforeGroup.y);
+    expect(arrow.position.z).toBe(beforeGroup.z);
+
+    // Child placements are the canonical endpoint carriers.
+    expect(arrow.children[0].position.x).toBe(-4);
+    expect(arrow.children[0].position.y).toBe(2);
+    expect(arrow.children[0].position.z).toBe(0);
+    expect(arrow.children[1].position.x).toBe(1);
+    expect(arrow.children[1].position.y).toBe(-5);
+    expect(arrow.children[1].position.z).toBe(0);
+  });
 });
 
 // ── reconstructTip ──────────────────────────────────────────────────────────
