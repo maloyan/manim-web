@@ -19,6 +19,25 @@ function vm(pts: number[][]): VMobject {
 // ── Arrow defaults ──────────────────────────────────────────────────────────
 
 describe('Arrow defaults', () => {
+  it('uses position as center for shaft and tip carriers', () => {
+    const arrow = new Arrow({ start: [-4, 2, 0], end: [1, -5, 0] });
+    const center: [number, number, number] = [(-4 + 1) / 2, (2 + -5) / 2, 0];
+
+    const shaft = arrow.children[0] as VMobject;
+    const tip = arrow.children[1] as VMobject;
+
+    expect(shaft.getCenter()[0]).toBeCloseTo(shaft.position.x, 6);
+    expect(shaft.getCenter()[1]).toBeCloseTo(shaft.position.y, 6);
+    expect(shaft.getCenter()[2]).toBeCloseTo(shaft.position.z, 6);
+
+    expect(tip.getCenter()[0]).toBeCloseTo(tip.position.x, 6);
+    expect(tip.getCenter()[1]).toBeCloseTo(tip.position.y, 6);
+    expect(tip.getCenter()[2]).toBeCloseTo(tip.position.z, 6);
+
+    expect(shaft.position.x).toBeCloseTo(center[0], 6);
+    expect(shaft.position.y).toBeCloseTo(center[1], 6);
+    expect(shaft.position.z).toBeCloseTo(center[2], 6);
+  });
   it('has pointier default tipLength=0.3', () => {
     const arrow = new Arrow();
     expect(arrow.getTipLength()).toBe(0.3);
@@ -122,13 +141,65 @@ describe('Arrow defaults', () => {
     expect(arrow.position.y).toBe(beforeGroup.y);
     expect(arrow.position.z).toBe(beforeGroup.z);
 
-    // Child placements are the canonical endpoint carriers.
-    expect(arrow.children[0].position.x).toBe(-4);
-    expect(arrow.children[0].position.y).toBe(2);
+    // Shaft carrier remains at arrow center.
+    expect(arrow.children[0].position.x).toBe((-4 + 1) / 2);
+    expect(arrow.children[0].position.y).toBe((2 + -5) / 2);
     expect(arrow.children[0].position.z).toBe(0);
-    expect(arrow.children[1].position.x).toBe(1);
-    expect(arrow.children[1].position.y).toBe(-5);
-    expect(arrow.children[1].position.z).toBe(0);
+
+    // Tip carrier is offset forward by half shaft-delta.
+    const dx = 1 - -4;
+    const dy = -5 - 2;
+    const dz = 0;
+    const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    const shaftLength = Math.max(0, length - arrow.getTipLength());
+    const ux = dx / length;
+    const uy = dy / length;
+    const uz = dz / length;
+    const cx = (-4 + 1) / 2;
+    const cy = (2 + -5) / 2;
+    const cz = 0;
+    expect(arrow.children[1].position.x).toBeCloseTo(cx + (ux * shaftLength) / 2, 6);
+    expect(arrow.children[1].position.y).toBeCloseTo(cy + (uy * shaftLength) / 2, 6);
+    expect(arrow.children[1].position.z).toBeCloseTo(cz + (uz * shaftLength) / 2, 6);
+  });
+
+  it('tip center equals tip position after endpoint update', () => {
+    const arrow = new Arrow({ start: [-2, -1, 0], end: [5, 4, 0], tipLength: 0.7 });
+    arrow.putStartAndEndOn([3, -2, 0], [9, 1, 0]);
+
+    const tip = arrow.children[1] as VMobject;
+    const c = tip.getCenter();
+    expect(c[0]).toBeCloseTo(tip.position.x, 6);
+    expect(c[1]).toBeCloseTo(tip.position.y, 6);
+    expect(c[2]).toBeCloseTo(tip.position.z, 6);
+  });
+
+  it('scale should update getStart/getEnd as scaling about arrow center', () => {
+    const arrow = new Arrow({ start: [-2, 1, 0], end: [6, 5, 0] });
+    const center = arrow.getCenter();
+
+    arrow.scale(2);
+
+    const start = arrow.getStart();
+    const end = arrow.getEnd();
+
+    const expectedStart: [number, number, number] = [
+      center[0] + 2 * (-2 - center[0]),
+      center[1] + 2 * (1 - center[1]),
+      center[2] + 2 * (0 - center[2]),
+    ];
+    const expectedEnd: [number, number, number] = [
+      center[0] + 2 * (6 - center[0]),
+      center[1] + 2 * (5 - center[1]),
+      center[2] + 2 * (0 - center[2]),
+    ];
+
+    expect(start[0]).toBeCloseTo(expectedStart[0], 6);
+    expect(start[1]).toBeCloseTo(expectedStart[1], 6);
+    expect(start[2]).toBeCloseTo(expectedStart[2], 6);
+    expect(end[0]).toBeCloseTo(expectedEnd[0], 6);
+    expect(end[1]).toBeCloseTo(expectedEnd[1], 6);
+    expect(end[2]).toBeCloseTo(expectedEnd[2], 6);
   });
 });
 
@@ -234,8 +305,13 @@ describe('ApplyFunction on Group', () => {
 // ── ApplyFunction on Arrow ──────────────────────────────────────────────────
 
 describe('ApplyFunction on Arrow', () => {
-  it('transforms shaft+tip and reconstructs tip', () => {
+  it('transforms shaft+tip local geometry and reconstructs tip', () => {
     const arrow = new Arrow({ start: [0, 0, 0], end: [2, 0, 0] });
+
+    const shaft = arrow.children[0] as VMobject;
+    const tip = arrow.children[1] as VMobject;
+    const shaftBefore = shaft.getPoints().map((p) => [...p]);
+    const tipBefore = tip.getPoints().map((p) => [...p]);
 
     const fn = (p: number[]) => [p[0] + 1, p[1], p[2]];
     const anim = new ApplyFunction(arrow, { func: fn });
@@ -243,17 +319,10 @@ describe('ApplyFunction on Arrow', () => {
     anim.begin();
     anim.finish();
 
-    // ApplyFunction mutates child points; endpoint accessors are child-position based.
-    // Verify transformed/reconstructed tip geometry directly.
-    const shaft = arrow.children[0] as VMobject;
-    const tip = arrow.children[1] as VMobject;
-    const shaftPts = shaft.getPoints();
-    const tipPts = tip.getPoints();
-    // start x=0 becomes 1 after x+1 transform
-    expect(shaftPts[0][0]).toBe(1);
-    // tip apex local x should also shift by +1 (2 -> 3 before reconstruction,
-    // then kept as transformed apex by reconstructTip).
-    expect(tipPts[3][0]).toBe(1);
+    const shaftAfter = shaft.getPoints();
+    const tipAfter = tip.getPoints();
+    expect(shaftAfter[0][0]).toBeCloseTo(shaftBefore[0][0] + 1, 6);
+    expect(tipAfter[3][0]).toBeCloseTo(tipBefore[3][0] + 1, 6);
   });
 });
 

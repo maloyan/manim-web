@@ -92,7 +92,7 @@ describe('GrowArrow', () => {
       expect(arrow.position.z).toBeCloseTo(before.z, 5);
     });
 
-    it('aligns shaft start and tip apex at begin for shifted arrow', () => {
+    it('places shaft/tip centers at arrow start at begin', () => {
       const arrow = new Arrow({
         start: [-4, 0, 0],
         end: [4, 0, 0],
@@ -100,28 +100,20 @@ describe('GrowArrow', () => {
         tipWidth: 0.35,
       });
       arrow.shift([2, 1, 0]);
+      const start = arrow.getStart();
+
       const anim = new GrowArrow(arrow);
       anim.begin();
 
-      const shaft = arrow.children[0];
-      const tip = arrow.children[1];
-      const sp = (shaft as VMobject).getPoints()[0];
-      const tp = (tip as VMobject).getPoints()[3];
+      const shaftCenter = arrow.children[0].getCenter();
+      const tipCenter = arrow.children[1].getCenter();
 
-      const shaftStartWorld: [number, number, number] = [
-        sp[0] * shaft.scaleVector.x + shaft.position.x,
-        sp[1] * shaft.scaleVector.y + shaft.position.y,
-        sp[2] * shaft.scaleVector.z + shaft.position.z,
-      ];
-      const tipApexWorld: [number, number, number] = [
-        tp[0] * tip.scaleVector.x + tip.position.x,
-        tp[1] * tip.scaleVector.y + tip.position.y,
-        tp[2] * tip.scaleVector.z + tip.position.z,
-      ];
-
-      expect(tipApexWorld[0]).toBeCloseTo(shaftStartWorld[0], 5);
-      expect(tipApexWorld[1]).toBeCloseTo(shaftStartWorld[1], 5);
-      expect(tipApexWorld[2]).toBeCloseTo(shaftStartWorld[2], 5);
+      expect(shaftCenter[0]).toBeCloseTo(start[0], 5);
+      expect(shaftCenter[1]).toBeCloseTo(start[1], 5);
+      expect(shaftCenter[2]).toBeCloseTo(start[2], 5);
+      expect(tipCenter[0]).toBeCloseTo(start[0], 5);
+      expect(tipCenter[1]).toBeCloseTo(start[1], 5);
+      expect(tipCenter[2]).toBeCloseTo(start[2], 5);
     });
   });
 
@@ -138,22 +130,48 @@ describe('GrowArrow', () => {
       }
     });
 
-    it('keeps shaft position exactly fixed through interpolation', () => {
+    it('moves shaft center from start to its end center', () => {
       const arrow = new Arrow({ start: [1, 2, 0], end: [6, 2, 0] });
       const shaft = arrow.children[0];
-      const p0 = shaft.position.clone();
+      const endCenter = shaft.getCenter();
+      const start = arrow.getStart();
 
       const anim = new GrowArrow(arrow);
       anim.begin();
+
+      const c0 = shaft.getCenter();
+      expect(c0[0]).toBeCloseTo(start[0], 6);
+
       anim.interpolate(0.25);
-      expect(shaft.position.x).toBe(p0.x);
-      expect(shaft.position.y).toBe(p0.y);
-      expect(shaft.position.z).toBe(p0.z);
+      const c25 = shaft.getCenter();
+      expect(c25[0]).toBeCloseTo(start[0] + (endCenter[0] - start[0]) * 0.25, 6);
 
       anim.interpolate(0.75);
-      expect(shaft.position.x).toBe(p0.x);
-      expect(shaft.position.y).toBe(p0.y);
-      expect(shaft.position.z).toBe(p0.z);
+      const c75 = shaft.getCenter();
+      expect(c75[0]).toBeCloseTo(start[0] + (endCenter[0] - start[0]) * 0.75, 6);
+    });
+
+    it('interpolates tip center toward its offset end-center (not midpoint)', () => {
+      const arrow = new Arrow({ start: [-1, 0, 0], end: [5, 0, 0], tipLength: 1 });
+      const tip = arrow.children[1];
+      const endTipCenter = tip.getCenter();
+      const start = arrow.getStart();
+
+      const anim = new GrowArrow(arrow);
+      anim.begin();
+
+      const c0 = tip.getCenter();
+      expect(c0[0]).toBeCloseTo(start[0], 6);
+
+      anim.interpolate(0.5);
+      const c5 = tip.getCenter();
+      expect(c5[0]).toBeCloseTo(start[0] + (endTipCenter[0] - start[0]) * 0.5, 6);
+
+      anim.interpolate(1);
+      const c1 = tip.getCenter();
+      expect(c1[0]).toBeCloseTo(endTipCenter[0], 6);
+      expect(c1[1]).toBeCloseTo(endTipCenter[1], 6);
+      expect(c1[2]).toBeCloseTo(endTipCenter[2], 6);
     });
 
     it('at alpha=1 restores full child scales', () => {
@@ -167,7 +185,7 @@ describe('GrowArrow', () => {
       }
     });
 
-    it('moves arrow center from start toward target center', () => {
+    it('moves arrow center from start region to target center during interpolation', () => {
       const arrow = new Arrow({ start: [0, 0, 0], end: [4, 0, 0] });
       arrow.shift([10, 1, 0]);
       const targetCenter = arrow.getCenter();
@@ -176,12 +194,11 @@ describe('GrowArrow', () => {
 
       const c0 = arrow.getCenter();
       expect(c0[0]).toBeLessThan(targetCenter[0]);
-      expect(c0[1]).toBeCloseTo(targetCenter[1], 5);
 
       anim.interpolate(1);
       const c1 = arrow.getCenter();
-      expect(c1[0]).toBeCloseTo(targetCenter[0], 2);
-      expect(c1[1]).toBeCloseTo(targetCenter[1], 2);
+      expect(c1[0]).toBeCloseTo(targetCenter[0], 6);
+      expect(c1[1]).toBeCloseTo(targetCenter[1], 6);
     });
   });
 

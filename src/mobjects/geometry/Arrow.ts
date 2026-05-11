@@ -1,4 +1,4 @@
-import { Group } from '../../core/Group';
+import { VGroup } from '../../core/VGroup';
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { WHITE, DEFAULT_STROKE_WIDTH } from '../../constants';
@@ -25,18 +25,48 @@ export interface ArrowOptions {
  * ArrowShaft - The line part of an arrow (internal use)
  */
 class ArrowShaft extends VMobject {
-  constructor(delta: number[], color: string, strokeWidth: number) {
+  constructor(delta: number[], color: string, strokeWidth: number, margin = 0) {
     super();
     this.color = color;
     this.strokeWidth = strokeWidth;
     this.fillOpacity = 0;
 
     const [dx, dy, dz] = delta;
+    const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+    if (len === 0) {
+      this.setPoints3D([
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+      ]);
+      return;
+    }
+
+    if (margin < 0) {
+      throw new Error(`ArrowShaft margin must be >= 0, got ${margin}`);
+    }
+    if (2 * margin > len) {
+      throw new Error(`ArrowShaft margin ${margin} too large for length ${len}`);
+    }
+
+    const dirX = dx / len;
+    const dirY = dy / len;
+    const dirZ = dz / len;
+
+    const sx = -dx / 2 + dirX * margin;
+    const sy = -dy / 2 + dirY * margin;
+    const sz = -dz / 2 + dirZ * margin;
+    const ex = dx / 2 - dirX * margin;
+    const ey = dy / 2 - dirY * margin;
+    const ez = dz / 2 - dirZ * margin;
+
     this.setPoints3D([
-      [0, 0, 0],
-      [dx / 3, dy / 3, dz / 3],
-      [(2 * dx) / 3, (2 * dy) / 3, (2 * dz) / 3],
-      [dx, dy, dz],
+      [sx, sy, sz],
+      [sx + (ex - sx) / 3, sy + (ey - sy) / 3, sz + (ez - sz) / 3],
+      [sx + (2 * (ex - sx)) / 3, sy + (2 * (ey - sy)) / 3, sz + (2 * (ez - sz)) / 3],
+      [ex, ey, ez],
     ]);
   }
 
@@ -151,12 +181,13 @@ function perpendicularFromDirection(dirX: number, dirY: number, dirZ: number): V
  * const bigTip = new Arrow({ tipLength: 0.4, tipWidth: 0.25 });
  * ```
  */
-export class Arrow extends Group {
+export class Arrow extends VGroup {
   private _tipLength: number;
   private _tipWidth: number;
   private _strokeWidth: number;
   private _shaft: ArrowShaft | null = null;
   private _tip: ArrowTip | null = null;
+  private _originToStartLocal: Vector3Tuple = [0, 0, 0];
 
   constructor(options: ArrowOptions = {}) {
     super();
@@ -178,13 +209,23 @@ export class Arrow extends Group {
     this.putStartAndEndOn(start, end);
   }
 
+  private _getShaftDelta(delta: Vector3Tuple): Vector3Tuple {
+    const [dx, dy, dz] = delta;
+    const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (length === 0) return [0, 0, 0];
+
+    const shaftLength = Math.max(0, length - this._tipLength);
+    const inv = 1 / length;
+    return [dx * inv * shaftLength, dy * inv * shaftLength, dz * inv * shaftLength];
+  }
+
   /**
    * Generate the arrow parts (shaft line + tip triangle)
    *
    * Uses delta vector to compute positions directly.
    */
   private _generateParts(delta: Vector3Tuple): void {
-    this.clear();
+    this.remove(...this.children);
 
     const [dx, dy, dz] = delta;
     const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
@@ -195,31 +236,40 @@ export class Arrow extends Group {
       // Graphing vectors rely on this path and call endpoint helpers on zero vectors.
       this._shaft = new ArrowShaft([0, 0, 0], this._color, this._strokeWidth);
       this._tip = new ArrowTip([0, 0, 0], this._tipLength, this._tipWidth, this._color);
+      this._tip.centerPointsAroundPosition();
       this.add(this._shaft);
       this.add(this._tip);
       return;
     }
 
-    const dirX = dx / length;
-    const dirY = dy / length;
-    const dirZ = dz / length;
-
-    const shaftLength = length - this._tipLength;
-    const shaftDelta: Vector3Tuple = [dirX * shaftLength, dirY * shaftLength, dirZ * shaftLength];
-
+    const shaftDelta = this._getShaftDelta(delta);
     this._shaft = new ArrowShaft(shaftDelta, this._color, this._strokeWidth);
     this._tip = new ArrowTip(delta, this._tipLength, this._tipWidth, this._color);
+    this._tip.centerPointsAroundPosition();
 
     this.add(this._shaft);
     this.add(this._tip);
+  }
+
+  private _getUniformShaftScale(): number {
+    const s = this._shaft!.scaleVector;
+    if (!(s.x === s.y && s.y === s.z)) {
+      throw new Error(`Arrow requires uniform shaft scale, got (${s.x}, ${s.y}, ${s.z})`);
+    }
+    return s.x;
   }
 
   /**
    * Get the start point
    */
   getStart(): Vector3Tuple {
-    const pos = this._shaft!.position;
-    return [pos.x, pos.y, pos.z];
+    const center = this._shaft!.position;
+    const u = this._getUniformShaftScale();
+    return [
+      center.x + this._originToStartLocal[0] * u,
+      center.y + this._originToStartLocal[1] * u,
+      center.z + this._originToStartLocal[2] * u,
+    ];
   }
 
   /**
@@ -230,8 +280,23 @@ export class Arrow extends Group {
     const delta: Vector3Tuple = [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
     this._generateParts(delta);
 
-    this._shaft!.moveTo(start);
-    this._tip!.moveTo(end);
+    this._originToStartLocal = [-delta[0] / 2, -delta[1] / 2, -delta[2] / 2];
+
+    const center: Vector3Tuple = [
+      (start[0] + end[0]) / 2,
+      (start[1] + end[1]) / 2,
+      (start[2] + end[2]) / 2,
+    ];
+
+    const shaftDelta = this._getShaftDelta(delta);
+
+    this._shaft!.moveTo(center);
+    this._tip!.moveTo([
+      center[0] + shaftDelta[0] / 2,
+      center[1] + shaftDelta[1] / 2,
+      center[2] + shaftDelta[2] / 2,
+    ]);
+
     return this;
   }
 
@@ -246,8 +311,13 @@ export class Arrow extends Group {
    * Get the end point (tip of the arrow)
    */
   getEnd(): Vector3Tuple {
-    const pos = this._tip!.position;
-    return [pos.x, pos.y, pos.z];
+    const center = this._shaft!.position;
+    const u = this._getUniformShaftScale();
+    return [
+      center.x - this._originToStartLocal[0] * u,
+      center.y - this._originToStartLocal[1] * u,
+      center.z - this._originToStartLocal[2] * u,
+    ];
   }
 
   /**
@@ -258,24 +328,22 @@ export class Arrow extends Group {
   }
 
   /**
-   * Get the center point of the arrow as the midpoint of start/end endpoints.
+   * Get the center point of the arrow.
    */
   override getCenter(): Vector3Tuple {
-    const start = this.getStart();
-    const end = this.getEnd();
-    return [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2, (start[2] + end[2]) / 2];
+    const pos = this._shaft!.position;
+    return [pos.x, pos.y, pos.z];
   }
 
   /**
-   * Get the length of the arrow (including tip)
+   * Get the length of the arrow (including tip).
+   * Requires uniform shaft scaling.
    */
   getLength(): number {
-    const start = this.getStart();
-    const end = this.getEnd();
-    const dx = end[0] - start[0];
-    const dy = end[1] - start[1];
-    const dz = end[2] - start[2];
-    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    const u = this._getUniformShaftScale();
+    const v = this._originToStartLocal;
+    const baseLength = 2 * Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    return baseLength * u;
   }
 
   /**
@@ -413,7 +481,7 @@ export class Arrow extends Group {
 /**
  * DoubleArrow - An arrow with tips on both ends
  */
-export class DoubleArrow extends Group {
+export class DoubleArrow extends VGroup {
   private _tipLength: number;
   private _tipWidth: number;
   private _strokeWidth: number;
@@ -439,7 +507,7 @@ export class DoubleArrow extends Group {
   }
 
   private _generateParts(delta: Vector3Tuple): void {
-    this.clear();
+    this.remove(...this.children);
 
     const [dx, dy, dz] = delta;
     const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
