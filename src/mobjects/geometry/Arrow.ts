@@ -182,11 +182,20 @@ function perpendicularFromDirection(dirX: number, dirY: number, dirZ: number): V
  * ```
  */
 export class Arrow extends VGroup {
+  /** Configured triangle depth measured from apex back toward shaft. */
   private _tipLength: number;
+  /** Configured half-width from tip base-center to either side corner. */
   private _tipWidth: number;
+  /** Shaft stroke width used when regenerating parts. */
   private _strokeWidth: number;
+  /** Internal shaft child (always present after putStartAndEndOn, including zero-length). */
   private _shaft: ArrowShaft | null = null;
+  /** Internal tip child (always present after putStartAndEndOn, including zero-length). */
   private _tip: ArrowTip | null = null;
+  /**
+   * Canonical local vector from arrow center to start endpoint at unit shaft scale.
+   * End endpoint is the negation of this vector.
+   */
   private _originToStartLocal: Vector3Tuple = [0, 0, 0];
 
   constructor(options: ArrowOptions = {}) {
@@ -209,6 +218,12 @@ export class Arrow extends VGroup {
     this.putStartAndEndOn(start, end);
   }
 
+  /**
+   * Convert full arrow delta to shaft delta by removing tip length along direction.
+   *
+   * Convention: tip geometry is built from full `delta`, shaft geometry from
+   * `max(0, |delta| - tipLength)` in the same direction.
+   */
   private _getShaftDelta(delta: Vector3Tuple): Vector3Tuple {
     const [dx, dy, dz] = delta;
     const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
@@ -220,9 +235,13 @@ export class Arrow extends VGroup {
   }
 
   /**
-   * Generate the arrow parts (shaft line + tip triangle)
+   * Regenerate canonical children from endpoint delta.
    *
-   * Uses delta vector to compute positions directly.
+   * Conventions:
+   * - Always rebuilds children (no in-place geometry mutation).
+   * - Zero-length still yields canonical shaft+tip children.
+   * - Tip local geometry is centered via centerPointsAroundPosition(), so
+   *   `tip.getCenter() === tip.position` for the child object itself.
    */
   private _generateParts(delta: Vector3Tuple): void {
     this.remove(...this.children);
@@ -274,7 +293,12 @@ export class Arrow extends VGroup {
 
   /**
    * Set both start and end points in one canonical operation.
-   * Does not modify the group's own position.
+   *
+   * Conventions:
+   * - Regenerates shaft/tip from delta every call.
+   * - Does not mutate this VGroup's own position.
+   * - Places shaft carrier at geometric midpoint.
+   * - Places tip carrier at midpoint + shaftDelta/2 (forward along direction).
    */
   putStartAndEndOn(start: Vector3Tuple, end: Vector3Tuple): this {
     const delta: Vector3Tuple = [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
