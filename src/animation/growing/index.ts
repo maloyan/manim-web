@@ -21,92 +21,81 @@ export type GrowArrowOptions = AnimationOptions;
  */
 export class GrowArrow extends Animation {
   private _startPoint = new THREE.Vector3();
-  private _parts: {
-    m: Mobject;
-    pos: THREE.Vector3;
-    scale: THREE.Vector3;
-    // A stable local point used to pin each child during growth.
-    // shaft: first point, tip: apex point.
-    // We animate this anchor from arrow start -> original anchor world.
-    anchorLocal: THREE.Vector3;
-  }[] = [];
+  private _shaft: Mobject | null = null;
+  private _tip: Mobject | null = null;
+
+  // Target values captured at begin() so interpolation is absolute (not incremental).
+  private _shaftTargetScale = new THREE.Vector3();
+  private _tipTargetScale = new THREE.Vector3();
+  private _tipTargetPos = new THREE.Vector3();
+  private _shaftFixedPos = new THREE.Vector3();
 
   constructor(mobject: Arrow, options: GrowArrowOptions = {}) {
     super(mobject, options);
   }
 
-  /**
-   * Pick one meaningful local anchor per arrow child.
-   * Why this exists:
-   * - Scaling around each child's local origin alone makes tip/shaft drift apart.
-   * - We instead keep a semantic anchor (shaft-start or tip-apex) constrained.
-   * - Given anchorLocal, scale, and position we can solve world anchor exactly:
-   *     anchorWorld = anchorLocal * scale + position
-   *   and invert it to place the child at any animation alpha.
-   */
-  private _getAnchorLocal(child: Mobject, index: number): THREE.Vector3 {
-    const pts = (child as unknown as { getPoints?: () => number[][] }).getPoints?.() ?? [];
-    if (pts.length === 0) return new THREE.Vector3();
-    const i = index === 0 ? 0 : Math.min(3, pts.length - 1); // shaft start, tip apex
-    return new THREE.Vector3(pts[i][0], pts[i][1], pts[i][2]);
+  private _assertExactVec3(actual: THREE.Vector3, expected: THREE.Vector3, label: string): void {
+    if (actual.x !== expected.x || actual.y !== expected.y || actual.z !== expected.z) {
+      throw new Error(
+        `GrowArrow invariant failed: ${label} expected (${expected.x}, ${expected.y}, ${expected.z}) got (${actual.x}, ${actual.y}, ${actual.z})`,
+      );
+    }
   }
 
   override begin(): void {
     super.begin();
 
     const arrow = this.mobject as Arrow;
-    const shaft = arrow.children[0] as unknown as {
-      getPoints?: () => number[][];
-      position: THREE.Vector3;
-    };
-    const shaftStart = shaft?.getPoints?.()?.[0] ?? arrow.getStart();
-    this._startPoint.set(
-      shaftStart[0] + (shaft?.position?.x ?? 0),
-      shaftStart[1] + (shaft?.position?.y ?? 0),
-      shaftStart[2] + (shaft?.position?.z ?? 0),
-    );
+    const [sx, sy, sz] = arrow.getStart();
+    this._startPoint.set(sx, sy, sz);
 
-    this._parts = arrow.children.map((m, i) => ({
-      m,
-      pos: m.position.clone(),
-      scale: m.scaleVector.clone(),
-      anchorLocal: this._getAnchorLocal(m, i),
-    }));
+    this._shaft = arrow.children[0] ?? null;
+    this._tip = arrow.children[1] ?? null;
+
+    this._shaftTargetScale.copy(this._shaft!.scaleVector);
+    this._tipTargetScale.copy(this._tip!.scaleVector);
+    this._tipTargetPos.copy(this._tip!.position);
+    this._shaftFixedPos.copy(this._shaft!.position);
 
     this.interpolate(0);
   }
 
   interpolate(alpha: number): void {
     const s = Math.max(0.001, alpha);
-    for (const p of this._parts) {
-      const sx = p.scale.x * s;
-      const sy = p.scale.y * s;
-      const sz = p.scale.z * s;
-      p.m.scaleVector.set(sx, sy, sz);
 
-      const targetAx = p.anchorLocal.x * p.scale.x + p.pos.x;
-      const targetAy = p.anchorLocal.y * p.scale.y + p.pos.y;
-      const targetAz = p.anchorLocal.z * p.scale.z + p.pos.z;
-      const ax = this._startPoint.x + (targetAx - this._startPoint.x) * alpha;
-      const ay = this._startPoint.y + (targetAy - this._startPoint.y) * alpha;
-      const az = this._startPoint.z + (targetAz - this._startPoint.z) * alpha;
-      p.m.position.set(
-        ax - p.anchorLocal.x * sx,
-        ay - p.anchorLocal.y * sy,
-        az - p.anchorLocal.z * sz,
-      );
-      p.m._markDirty();
-    }
+    this._shaft!.scaleVector.set(
+      this._shaftTargetScale.x * s,
+      this._shaftTargetScale.y * s,
+      this._shaftTargetScale.z * s,
+    );
+    // Keep shaft position fixed; growth comes only from scaling.
+    this._shaft!._markDirty();
+
+    this._tip!.scaleVector.set(
+      this._tipTargetScale.x * s,
+      this._tipTargetScale.y * s,
+      this._tipTargetScale.z * s,
+    );
+    this._tip!.position.set(
+      this._startPoint.x + (this._tipTargetPos.x - this._startPoint.x) * alpha,
+      this._startPoint.y + (this._tipTargetPos.y - this._startPoint.y) * alpha,
+      this._startPoint.z + (this._tipTargetPos.z - this._startPoint.z) * alpha,
+    );
+    this._tip!._markDirty();
+
     this.mobject._markDirty();
   }
 
   override finish(): void {
-    for (const p of this._parts) {
-      p.m.position.copy(p.pos);
-      p.m.scaleVector.copy(p.scale);
-      p.m._markDirty();
-    }
-    this.mobject._markDirty();
+    // Canonical animation completion: force end state via alpha=1,
+    // then assert invariants (no separate restore path).
+    this.interpolate(1);
+
+    this._assertExactVec3(this._shaft!.position, this._shaftFixedPos, 'shaft position fixed');
+    this._assertExactVec3(this._shaft!.scaleVector, this._shaftTargetScale, 'shaft final scale');
+    this._assertExactVec3(this._tip!.position, this._tipTargetPos, 'tip final position');
+    this._assertExactVec3(this._tip!.scaleVector, this._tipTargetScale, 'tip final scale');
+
     super.finish();
   }
 }

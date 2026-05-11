@@ -25,26 +25,23 @@ export interface ArrowOptions {
  * ArrowShaft - The line part of an arrow (internal use)
  */
 class ArrowShaft extends VMobject {
-  constructor(start: number[], end: number[], color: string, strokeWidth: number) {
+  constructor(delta: number[], color: string, strokeWidth: number) {
     super();
     this.color = color;
     this.strokeWidth = strokeWidth;
     this.fillOpacity = 0;
 
-    const dx = end[0] - start[0];
-    const dy = end[1] - start[1];
-    const dz = end[2] - start[2];
-
+    const [dx, dy, dz] = delta;
     this.setPoints3D([
-      [...start],
-      [start[0] + dx / 3, start[1] + dy / 3, start[2] + dz / 3],
-      [start[0] + (2 * dx) / 3, start[1] + (2 * dy) / 3, start[2] + (2 * dz) / 3],
-      [...end],
+      [0, 0, 0],
+      [dx / 3, dy / 3, dz / 3],
+      [(2 * dx) / 3, (2 * dy) / 3, (2 * dz) / 3],
+      [dx, dy, dz],
     ]);
   }
 
   protected _createCopy(): ArrowShaft {
-    return new ArrowShaft([0, 0, 0], [1, 0, 0], this.color, this.strokeWidth);
+    return new ArrowShaft([1, 0, 0], this.color, this.strokeWidth);
   }
 }
 
@@ -52,22 +49,51 @@ class ArrowShaft extends VMobject {
  * ArrowTip - The triangular tip of an arrow (internal use)
  */
 class ArrowTip extends VMobject {
-  constructor(tipPoint: number[], tipLeft: number[], tipRight: number[], color: string) {
+  constructor(delta: number[], tipLength: number, tipWidth: number, color: string) {
     super();
     this.color = color;
     this.fillOpacity = 1;
     this.strokeWidth = 0;
 
-    const addLineSegment = (points: number[][], p0: number[], p1: number[], isFirst: boolean) => {
-      const dx = p1[0] - p0[0];
-      const dy = p1[1] - p0[1];
-      const dz = p1[2] - p0[2];
+    const [dx, dy, dz] = delta;
+    const len = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (len === 0) {
+      this.setPoints3D([
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0],
+      ]);
+      return;
+    }
 
-      if (isFirst) {
-        points.push([...p0]);
-      }
-      points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-      points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
+    const dirX = dx / len;
+    const dirY = dy / len;
+    const dirZ = dz / len;
+    const [perpX, perpY, perpZ] = perpendicularFromDirection(dirX, dirY, dirZ);
+
+    const baseCenter: Vector3Tuple = [-dirX * tipLength, -dirY * tipLength, -dirZ * tipLength];
+    const widthOffset = tipWidth;
+    const tipPoint: Vector3Tuple = [0, 0, 0];
+    const tipLeft: Vector3Tuple = [
+      baseCenter[0] + perpX * widthOffset,
+      baseCenter[1] + perpY * widthOffset,
+      baseCenter[2] + perpZ * widthOffset,
+    ];
+    const tipRight: Vector3Tuple = [
+      baseCenter[0] - perpX * widthOffset,
+      baseCenter[1] - perpY * widthOffset,
+      baseCenter[2] - perpZ * widthOffset,
+    ];
+
+    const addLineSegment = (points: number[][], p0: number[], p1: number[], isFirst: boolean) => {
+      const sdx = p1[0] - p0[0];
+      const sdy = p1[1] - p0[1];
+      const sdz = p1[2] - p0[2];
+
+      if (isFirst) points.push([...p0]);
+      points.push([p0[0] + sdx / 3, p0[1] + sdy / 3, p0[2] + sdz / 3]);
+      points.push([p0[0] + (2 * sdx) / 3, p0[1] + (2 * sdy) / 3, p0[2] + (2 * sdz) / 3]);
       points.push([...p1]);
     };
 
@@ -79,7 +105,7 @@ class ArrowTip extends VMobject {
   }
 
   protected _createCopy(): ArrowTip {
-    return new ArrowTip([0, 0, 0], [0, 0, 0], [0, 0, 0], this.color);
+    return new ArrowTip([1, 0, 0], 0.3, 0.1, this.color);
   }
 }
 
@@ -149,57 +175,32 @@ export class Arrow extends Group {
     this._color = color;
     this._strokeWidth = strokeWidth;
 
-    this._generateParts(start, end);
+    this.putStartAndEndOn(start, end);
   }
 
   /**
    * Generate the arrow parts (shaft line + tip triangle)
+   *
+   * Uses delta vector to compute positions directly.
    */
-  private _generateParts(start: Vector3Tuple, end: Vector3Tuple): void {
+  private _generateParts(delta: Vector3Tuple): void {
     this.clear();
 
-    const [x0, y0, z0] = start;
-    const [x1, y1, z1] = end;
-
-    const dx = x1 - x0;
-    const dy = y1 - y0;
-    const dz = z1 - z0;
+    const [dx, dy, dz] = delta;
     const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-    if (length === 0) {
-      return;
-    }
+    if (length === 0) return;
 
     const dirX = dx / length;
     const dirY = dy / length;
     const dirZ = dz / length;
 
-    const [perpX, perpY, perpZ] = perpendicularFromDirection(dirX, dirY, dirZ);
+    const shaftLength = length - this._tipLength;
+    const shaftDelta: Vector3Tuple = [dirX * shaftLength, dirY * shaftLength, dirZ * shaftLength];
 
-    const tipBaseX = x1 - dirX * this._tipLength;
-    const tipBaseY = y1 - dirY * this._tipLength;
-    const tipBaseZ = z1 - dirZ * this._tipLength;
+    this._shaft = new ArrowShaft(shaftDelta, this._color, this._strokeWidth);
+    this._tip = new ArrowTip(delta, this._tipLength, this._tipWidth, this._color);
 
-    const tipLeft = [
-      tipBaseX + perpX * this._tipWidth,
-      tipBaseY + perpY * this._tipWidth,
-      tipBaseZ + perpZ * this._tipWidth,
-    ];
-    const tipRight = [
-      tipBaseX - perpX * this._tipWidth,
-      tipBaseY - perpY * this._tipWidth,
-      tipBaseZ - perpZ * this._tipWidth,
-    ];
-
-    this._shaft = new ArrowShaft(
-      [x0, y0, z0],
-      [tipBaseX, tipBaseY, tipBaseZ],
-      this._color,
-      this._strokeWidth,
-    );
     this.add(this._shaft);
-
-    this._tip = new ArrowTip([x1, y1, z1], tipLeft, tipRight, this._color);
     this.add(this._tip);
   }
 
@@ -207,19 +208,20 @@ export class Arrow extends Group {
    * Get the start point
    */
   getStart(): Vector3Tuple {
-    const shaftPts = this._shaft?.getPoints();
-    if (shaftPts && shaftPts.length > 0) {
-      const p = shaftPts[0];
-      return [p[0], p[1], p[2]];
-    }
-    return [0, 0, 0];
+    const pos = this._shaft!.position;
+    return [pos.x, pos.y, pos.z];
   }
 
   /**
    * Set both start and end points in one canonical operation.
+   * Does not modify the group's own position.
    */
   putStartAndEndOn(start: Vector3Tuple, end: Vector3Tuple): this {
-    this._generateParts(start, end);
+    const delta: Vector3Tuple = [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
+    this._generateParts(delta);
+
+    this._shaft!.moveTo(start);
+    this._tip!.moveTo(end);
     return this;
   }
 
@@ -234,12 +236,8 @@ export class Arrow extends Group {
    * Get the end point (tip of the arrow)
    */
   getEnd(): Vector3Tuple {
-    const tipPts = this._tip?.getPoints();
-    if (tipPts && tipPts.length > 3) {
-      const p = tipPts[3];
-      return [p[0], p[1], p[2]];
-    }
-    return [0, 0, 0];
+    const pos = this._tip!.position;
+    return [pos.x, pos.y, pos.z];
   }
 
   /**
@@ -418,88 +416,58 @@ export class DoubleArrow extends Group {
     this._color = color;
     this._strokeWidth = strokeWidth;
 
-    this._generateParts(start, end);
+    this.putStartAndEndOn(start, end);
   }
 
-  private _generateParts(start: Vector3Tuple, end: Vector3Tuple): void {
+  private _generateParts(delta: Vector3Tuple): void {
     this.clear();
 
-    const [x0, y0, z0] = start;
-    const [x1, y1, z1] = end;
-
-    const dx = x1 - x0;
-    const dy = y1 - y0;
-    const dz = z1 - z0;
+    const [dx, dy, dz] = delta;
     const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-    if (length === 0) {
-      return;
-    }
+    if (length === 0) return;
 
     const dirX = dx / length;
     const dirY = dy / length;
     const dirZ = dz / length;
 
-    const [perpX, perpY, perpZ] = perpendicularFromDirection(dirX, dirY, dirZ);
+    const shaftLength = length - 2 * this._tipLength;
+    const shaftDelta: Vector3Tuple = [dirX * shaftLength, dirY * shaftLength, dirZ * shaftLength];
 
-    const endTipBaseX = x1 - dirX * this._tipLength;
-    const endTipBaseY = y1 - dirY * this._tipLength;
-    const endTipBaseZ = z1 - dirZ * this._tipLength;
+    const shaft = new ArrowShaft(shaftDelta, this._color, this._strokeWidth);
+    const endTip = new ArrowTip(delta, this._tipLength, this._tipWidth, this._color);
+    const startTip = new ArrowTip([-dx, -dy, -dz], this._tipLength, this._tipWidth, this._color);
 
-    const startTipBaseX = x0 + dirX * this._tipLength;
-    const startTipBaseY = y0 + dirY * this._tipLength;
-    const startTipBaseZ = z0 + dirZ * this._tipLength;
-
-    const endTipLeft = [
-      endTipBaseX + perpX * this._tipWidth,
-      endTipBaseY + perpY * this._tipWidth,
-      endTipBaseZ + perpZ * this._tipWidth,
-    ];
-    const endTipRight = [
-      endTipBaseX - perpX * this._tipWidth,
-      endTipBaseY - perpY * this._tipWidth,
-      endTipBaseZ - perpZ * this._tipWidth,
-    ];
-    const startTipLeft = [
-      startTipBaseX + perpX * this._tipWidth,
-      startTipBaseY + perpY * this._tipWidth,
-      startTipBaseZ + perpZ * this._tipWidth,
-    ];
-    const startTipRight = [
-      startTipBaseX - perpX * this._tipWidth,
-      startTipBaseY - perpY * this._tipWidth,
-      startTipBaseZ - perpZ * this._tipWidth,
-    ];
-
-    const shaft = new ArrowShaft(
-      [startTipBaseX, startTipBaseY, startTipBaseZ],
-      [endTipBaseX, endTipBaseY, endTipBaseZ],
-      this._color,
-      this._strokeWidth,
-    );
     this.add(shaft);
-
-    const endTip = new ArrowTip([x1, y1, z1], endTipLeft, endTipRight, this._color);
     this.add(endTip);
-
-    const startTip = new ArrowTip([x0, y0, z0], startTipRight, startTipLeft, this._color);
     this.add(startTip);
   }
 
   getStart(): Vector3Tuple {
-    const kids = this.children;
-    if (kids.length < 3) return [0, 0, 0];
-    const startTip = kids[2] as ArrowTip;
-    const pts = startTip.getPoints();
-    if (pts.length > 3) {
-      const p = pts[3];
-      return [p[0], p[1], p[2]];
-    }
-    return [0, 0, 0];
+    const startTip = this.children[2] as ArrowTip;
+    const pos = startTip.position;
+    return [pos.x, pos.y, pos.z];
   }
 
   putStartAndEndOn(start: Vector3Tuple, end: Vector3Tuple): this {
-    this._generateParts(start, end);
+    const delta: Vector3Tuple = [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
+    this._generateParts(delta);
+
+    const length = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]);
+    if (length === 0) return this;
+
+    const dirX = delta[0] / length;
+    const dirY = delta[1] / length;
+    const dirZ = delta[2] / length;
+
+    const shaftStart: Vector3Tuple = [
+      start[0] + dirX * this._tipLength,
+      start[1] + dirY * this._tipLength,
+      start[2] + dirZ * this._tipLength,
+    ];
+
+    (this.children[0] as ArrowShaft).moveTo(shaftStart);
+    (this.children[1] as ArrowTip).moveTo(end);
+    (this.children[2] as ArrowTip).moveTo(start);
     return this;
   }
 
@@ -531,15 +499,9 @@ export class DoubleArrow extends Group {
   }
 
   getEnd(): Vector3Tuple {
-    const kids = this.children;
-    if (kids.length < 2) return [0, 0, 0];
-    const endTip = kids[1] as ArrowTip;
-    const pts = endTip.getPoints();
-    if (pts.length > 3) {
-      const p = pts[3];
-      return [p[0], p[1], p[2]];
-    }
-    return [0, 0, 0];
+    const endTip = this.children[1] as ArrowTip;
+    const pos = endTip.position;
+    return [pos.x, pos.y, pos.z];
   }
 
   /**

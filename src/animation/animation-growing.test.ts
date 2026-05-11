@@ -138,6 +138,24 @@ describe('GrowArrow', () => {
       }
     });
 
+    it('keeps shaft position exactly fixed through interpolation', () => {
+      const arrow = new Arrow({ start: [1, 2, 0], end: [6, 2, 0] });
+      const shaft = arrow.children[0];
+      const p0 = shaft.position.clone();
+
+      const anim = new GrowArrow(arrow);
+      anim.begin();
+      anim.interpolate(0.25);
+      expect(shaft.position.x).toBe(p0.x);
+      expect(shaft.position.y).toBe(p0.y);
+      expect(shaft.position.z).toBe(p0.z);
+
+      anim.interpolate(0.75);
+      expect(shaft.position.x).toBe(p0.x);
+      expect(shaft.position.y).toBe(p0.y);
+      expect(shaft.position.z).toBe(p0.z);
+    });
+
     it('at alpha=1 restores full child scales', () => {
       const arrow = makeArrow();
       const orig = arrow.children.map((c) => c.scaleVector.clone());
@@ -168,21 +186,35 @@ describe('GrowArrow', () => {
   });
 
   describe('finish()', () => {
-    it('restores child scales and translated geometry exactly', () => {
+    it('forces canonical alpha=1 end state', () => {
       const arrow = new Arrow({ start: [0, 0, 0], end: [4, 0, 0] });
       arrow.shift([-3, 2, 0]);
-      const origCenter = arrow.getCenter();
-      const origChildScales = arrow.children.map((c) => c.scaleVector.clone());
+
+      const shaft = arrow.children[0];
+      const tip = arrow.children[1];
+      const shaftPos = shaft.position.clone();
+      const shaftScale = shaft.scaleVector.clone();
+      const tipPos = tip.position.clone();
+      const tipScale = tip.scaleVector.clone();
+
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(0.3);
       anim.finish();
-      const finalCenter = arrow.getCenter();
-      expect(finalCenter[0]).toBeCloseTo(origCenter[0], 5);
-      expect(finalCenter[1]).toBeCloseTo(origCenter[1], 5);
-      for (let i = 0; i < arrow.children.length; i++) {
-        expect(arrow.children[i].scaleVector.x).toBeCloseTo(origChildScales[i].x, 5);
-      }
+
+      expect(shaft.position.x).toBe(shaftPos.x);
+      expect(shaft.position.y).toBe(shaftPos.y);
+      expect(shaft.position.z).toBe(shaftPos.z);
+      expect(shaft.scaleVector.x).toBe(shaftScale.x);
+      expect(shaft.scaleVector.y).toBe(shaftScale.y);
+      expect(shaft.scaleVector.z).toBe(shaftScale.z);
+
+      expect(tip.position.x).toBe(tipPos.x);
+      expect(tip.position.y).toBe(tipPos.y);
+      expect(tip.position.z).toBe(tipPos.z);
+      expect(tip.scaleVector.x).toBe(tipScale.x);
+      expect(tip.scaleVector.y).toBe(tipScale.y);
+      expect(tip.scaleVector.z).toBe(tipScale.z);
     });
   });
 
