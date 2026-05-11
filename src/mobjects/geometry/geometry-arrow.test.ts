@@ -77,6 +77,26 @@ describe('Arrow defaults', () => {
     expect(end2[2]).toBe(0);
   });
 
+  it('getCenter is the midpoint of start/end for non-trivial coordinates', () => {
+    const start: [number, number, number] = [-3.25, 4.5, 1.75];
+    const end: [number, number, number] = [8.125, -2.75, 6.5];
+    const arrow = new Arrow({ start, end });
+
+    const center = arrow.getCenter();
+    expect(center[0]).toBe((start[0] + end[0]) / 2);
+    expect(center[1]).toBe((start[1] + end[1]) / 2);
+    expect(center[2]).toBe((start[2] + end[2]) / 2);
+
+    const start2: [number, number, number] = [12.2, -9.4, -3.3];
+    const end2: [number, number, number] = [-7.6, 5.8, 2.1];
+    arrow.putStartAndEndOn(start2, end2);
+
+    const center2 = arrow.getCenter();
+    expect(center2[0]).toBe((start2[0] + end2[0]) / 2);
+    expect(center2[1]).toBe((start2[1] + end2[1]) / 2);
+    expect(center2[2]).toBe((start2[2] + end2[2]) / 2);
+  });
+
   it('putStartAndEndOn resets endpoints exactly after prior shift+rotation', () => {
     const arrow = new Arrow({ start: [0, 0, 0], end: [3, 0, 0] });
 

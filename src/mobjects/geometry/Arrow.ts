@@ -258,6 +258,15 @@ export class Arrow extends Group {
   }
 
   /**
+   * Get the center point of the arrow as the midpoint of start/end endpoints.
+   */
+  override getCenter(): Vector3Tuple {
+    const start = this.getStart();
+    const end = this.getEnd();
+    return [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2, (start[2] + end[2]) / 2];
+  }
+
+  /**
    * Get the length of the arrow (including tip)
    */
   getLength(): number {
