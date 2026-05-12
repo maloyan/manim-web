@@ -1,5 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Mobject, UP, LEFT, RIGHT, UL, UR, DL } from './Mobject';
+import { Mobject, UP, LEFT, RIGHT, UL, UR, DL, registerAnimateProxy } from './Mobject';
+import { Scene } from './Scene';
+import { AnimateProxy } from './AnimateProxy';
+
+// Register animate proxy for tests using animate API
+registerAnimateProxy((mobject) => new AnimateProxy(mobject));
 import { VMobject } from './VMobject';
 import {
   getNumCurves,
@@ -1818,6 +1823,22 @@ describe('VGroup - extended coverage', () => {
     vg.scale([2, 3, 1]);
     expect(a.scaleVector.x).toBe(2);
     expect(a.scaleVector.y).toBe(3);
+  });
+
+  it('animate.scale ends with correct scaleVector', async () => {
+    const scene = Scene.createHeadless({ width: 800, height: 450 });
+
+    const a = new VMobject();
+    a.scaleVector.set(1, 1, 1);
+    const vg = new VGroup(a);
+    scene.add(vg);
+
+    await scene.play(vg.animate.scale(2));
+
+    // After animate.scale, child should have correct scaleVector
+    expect(a.scaleVector.x).toBe(2);
+    expect(a.scaleVector.y).toBe(2);
+    expect(a.scaleVector.z).toBe(2);
   });
 
   it('setColor propagates to children', () => {

@@ -26,6 +26,8 @@ interface VGroupLeafState {
   targetPoints: number[][];
   startPosition: THREE.Vector3;
   targetPosition: THREE.Vector3;
+  startScale: THREE.Vector3;
+  targetScale: THREE.Vector3;
   finalTargetPoints: number[][];
   finalTargetSubpathLengths?: number[];
   startStyle: ChildStyle;
@@ -151,12 +153,24 @@ export class PointMorphStrategy implements MorphStrategy {
     } else child.setTransformSubpathLengths(undefined);
     const startStyle = sourceIsPlaceholder ? captureStyleFaded(tc) : captureStyle(child);
     const targetStyle = targetIsPlaceholder ? captureStyleFaded(sc) : captureStyle(tc);
+    const startScale = new THREE.Vector3(
+      src.leaf.scaleVector.x,
+      src.leaf.scaleVector.y,
+      src.leaf.scaleVector.z,
+    );
+    const targetScale = new THREE.Vector3(
+      tgt.leaf.scaleVector.x,
+      tgt.leaf.scaleVector.y,
+      tgt.leaf.scaleVector.z,
+    );
     return {
       child,
       startPoints,
       targetPoints,
       startPosition: worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix),
       targetPosition: worldToParentLocalPosition(tgt.worldPosition, src.parentWorldMatrix),
+      startScale,
+      targetScale,
       finalTargetPoints,
       finalTargetSubpathLengths,
       startStyle,
@@ -181,6 +195,7 @@ export class PointMorphStrategy implements MorphStrategy {
           interpolated.push(lerpPoint(leaf.startPoints[i], leaf.targetPoints[i], alpha));
         leaf.child.setPoints(interpolated);
         leaf.child.position.lerpVectors(leaf.startPosition, leaf.targetPosition, alpha);
+        leaf.child.scaleVector.lerpVectors(leaf.startScale, leaf.targetScale, alpha);
         const ss = leaf.startStyle,
           ts = leaf.targetStyle;
         leaf.child.opacity = ss.opacity + (ts.opacity - ss.opacity) * alpha;
@@ -238,6 +253,7 @@ export class PointMorphStrategy implements MorphStrategy {
       for (const leaf of this._vgroupLeafStates) {
         leaf.child.setPoints(leaf.finalTargetPoints);
         leaf.child.position.copy(leaf.targetPosition);
+        leaf.child.scaleVector.copy(leaf.targetScale);
         const ts = leaf.targetStyle;
         leaf.child.opacity = ts.opacity;
         leaf.child.fillOpacity = ts.fillOpacity;
