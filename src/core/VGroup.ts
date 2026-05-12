@@ -203,20 +203,41 @@ export class VGroup extends VMobject {
   }
 
   /**
-   * Rotate all children around an axis.
+   * Rotate all children around a shared pivot.
+   *
+   * By default this uses the VGroup center as pivot, matching container-style
+   * behavior used by moveTo/scale on VGroup.
+   *
    * @param angle - Rotation angle in radians
-   * @param axis - Axis of rotation [x, y, z], defaults to Z axis
+   * @param axisOrOptions - Axis tuple or options with axis/aboutPoint/aboutEdge
    * @returns this for chaining
    */
-  override rotate(angle: number, axis: Vector3Tuple = [0, 0, 1]): this {
-    // Apply to group's own rotation
-    super.rotate(angle, axis);
+  override rotate(
+    angle: number,
+    axisOrOptions?:
+      | Vector3Tuple
+      | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
+  ): this {
+    let axis: Vector3Tuple = [0, 0, 1];
+    let aboutPoint: Vector3Tuple | undefined;
 
-    // Also rotate each child
-    for (const child of this.children) {
-      child.rotate(angle, axis);
+    if (axisOrOptions) {
+      if (Array.isArray(axisOrOptions)) {
+        axis = axisOrOptions;
+      } else {
+        axis = axisOrOptions.axis ?? [0, 0, 1];
+        aboutPoint =
+          axisOrOptions.aboutPoint ??
+          (axisOrOptions.aboutEdge ? this._getEdgeInDirection(axisOrOptions.aboutEdge) : undefined);
+      }
     }
 
+    const pivot = aboutPoint ?? this.getCenter();
+    for (const child of this.children) {
+      child.rotate(angle, { axis, aboutPoint: pivot });
+    }
+
+    this._markDirty();
     return this;
   }
 

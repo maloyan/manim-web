@@ -24,8 +24,8 @@ export class GrowArrow extends Animation {
   private _endTipPos = new THREE.Vector3();
   private _endShaftScale = new THREE.Vector3();
   private _endTipScale = new THREE.Vector3();
-  private _shaftCenterOffset = new THREE.Vector3();
-  private _tipCenterOffset = new THREE.Vector3();
+  private _endShaftCenter = new THREE.Vector3();
+  private _endTipCenter = new THREE.Vector3();
 
   constructor(mobject: Arrow, options: GrowArrowOptions = {}) {
     super(mobject, options);
@@ -48,11 +48,11 @@ export class GrowArrow extends Animation {
 
     {
       const c = shaft.getCenter();
-      this._shaftCenterOffset.set(c[0] - sx, c[1] - sy, c[2] - sz);
+      this._endShaftCenter.set(c[0], c[1], c[2]);
     }
     {
       const c = tip.getCenter();
-      this._tipCenterOffset.set(c[0] - sx, c[1] - sy, c[2] - sz);
+      this._endTipCenter.set(c[0], c[1], c[2]);
     }
 
     this.interpolate(0);
@@ -73,29 +73,25 @@ export class GrowArrow extends Animation {
     );
     tip.scaleVector.set(this._endTipScale.x * s, this._endTipScale.y * s, this._endTipScale.z * s);
 
-    const desiredShaftCenter: [number, number, number] = [
-      this._start.x + this._shaftCenterOffset.x * alpha,
-      this._start.y + this._shaftCenterOffset.y * alpha,
-      this._start.z + this._shaftCenterOffset.z * alpha,
-    ];
-    const shaftCenter = shaft.getCenter();
-    shaft.shift([
-      desiredShaftCenter[0] - shaftCenter[0],
-      desiredShaftCenter[1] - shaftCenter[1],
-      desiredShaftCenter[2] - shaftCenter[2],
-    ]);
+    const shaftTargetCenter = new THREE.Vector3().lerpVectors(
+      this._start,
+      this._endShaftCenter,
+      alpha,
+    );
+    {
+      const c = shaft.getCenter();
+      shaft.shift([
+        shaftTargetCenter.x - c[0],
+        shaftTargetCenter.y - c[1],
+        shaftTargetCenter.z - c[2],
+      ]);
+    }
 
-    const desiredTipCenter: [number, number, number] = [
-      this._start.x + this._tipCenterOffset.x * alpha,
-      this._start.y + this._tipCenterOffset.y * alpha,
-      this._start.z + this._tipCenterOffset.z * alpha,
-    ];
-    const tipCenter = tip.getCenter();
-    tip.shift([
-      desiredTipCenter[0] - tipCenter[0],
-      desiredTipCenter[1] - tipCenter[1],
-      desiredTipCenter[2] - tipCenter[2],
-    ]);
+    const tipTargetCenter = new THREE.Vector3().lerpVectors(this._start, this._endTipCenter, alpha);
+    {
+      const c = tip.getCenter();
+      tip.shift([tipTargetCenter.x - c[0], tipTargetCenter.y - c[1], tipTargetCenter.z - c[2]]);
+    }
 
     shaft._markDirty();
     tip._markDirty();

@@ -1785,19 +1785,25 @@ describe('VGroup - extended coverage', () => {
     // should have shifted to align
   });
 
-  it('rotate delegates to children and self', () => {
+  it('rotate rotates children about group center by default', () => {
     const a = new VMobject();
-    a.setPoints([
-      [1, 0, 0],
-      [1, 0, 0],
-      [1, 0, 0],
-      [1, 0, 0],
-    ]);
-    const vg = new VGroup(a);
-    vg.rotate(Math.PI / 2);
-    // child should have been rotated
-  });
+    a.position.set(1, 0, 0);
+    const b = new VMobject();
+    b.position.set(-1, 0, 0);
 
+    const vg = new VGroup(a, b);
+    const center = vg.getCenter();
+
+    vg.rotate(Math.PI);
+
+    expect(vg.getCenter()[0]).toBeCloseTo(center[0], 6);
+    expect(vg.getCenter()[1]).toBeCloseTo(center[1], 6);
+
+    expect(a.position.x).toBeCloseTo(-1, 6);
+    expect(a.position.y).toBeCloseTo(0, 6);
+    expect(b.position.x).toBeCloseTo(1, 6);
+    expect(b.position.y).toBeCloseTo(0, 6);
+  });
   it('scale scales children about group center', () => {
     const a = new VMobject();
     a.position.set(0, 0, 0);
