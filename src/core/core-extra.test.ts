@@ -1830,6 +1830,46 @@ describe('VGroup - extended coverage', () => {
     expect(vg.scaleVector.y).toBe(3);
   });
 
+  it('getBounds reflects transformed+scaled VGroup without normalizeTransform', () => {
+    const line = new Line({ start: [0, 0, 0], end: [2, 0, 0] });
+    const vg = new VGroup(line);
+
+    vg.shift([3, 1, 0]);
+    const shifted = vg.getBounds();
+    const shiftedWidth = shifted.max.x - shifted.min.x;
+
+    vg.scale(2);
+    const scaled = vg.getBounds();
+    const scaledWidth = scaled.max.x - scaled.min.x;
+
+    // Query should be non-mutating: scale remains on group anchor.
+    expect(vg.scaleVector.x).toBe(2);
+    expect(vg.scaleVector.y).toBe(2);
+    expect(vg.scaleVector.z).toBe(2);
+
+    // Bounds should still reflect world transform correctly.
+    expect(scaledWidth).toBeCloseTo(shiftedWidth * 2, 6);
+  });
+
+  it('normalizeTransform forwards VGroup scale to children and resets group scale', () => {
+    const line = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    const vg = new VGroup(line);
+
+    vg.scale(2);
+    expect(vg.scaleVector.x).toBe(2);
+    expect(vg.scaleVector.y).toBe(2);
+    expect(vg.scaleVector.z).toBe(2);
+
+    vg.normalizeTransform();
+
+    expect(vg.scaleVector.x).toBe(1);
+    expect(vg.scaleVector.y).toBe(1);
+    expect(vg.scaleVector.z).toBe(1);
+    expect(line.scaleVector.x).toBe(2);
+    expect(line.scaleVector.y).toBe(2);
+    expect(line.scaleVector.z).toBe(2);
+  });
+
   it('center should be geometric from child bounds, not mean of child centers', () => {
     const wide = new Line({ start: [0, 0, 0], end: [4, 0, 0] }); // center x=2
     const narrow = new Line({ start: [10, 0, 0], end: [11, 0, 0] }); // center x=10.5

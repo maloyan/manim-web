@@ -227,6 +227,17 @@ export class VGroup extends VMobject {
       this._markDirty();
     }
 
+    const sx = this.scaleVector.x;
+    const sy = this.scaleVector.y;
+    const sz = this.scaleVector.z;
+    if (sx !== 1 || sy !== 1 || sz !== 1) {
+      for (const child of this.children) {
+        child.scale([sx, sy, sz]);
+      }
+      this.scaleVector.set(1, 1, 1);
+      this._markDirty();
+    }
+
     return this;
   }
 

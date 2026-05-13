@@ -393,7 +393,6 @@ export abstract class Mobject {
     min: { x: number; y: number; z: number };
     max: { x: number; y: number; z: number };
   } {
-    this.normalizeTransform();
     const obj = this.getThreeObject();
     const box = new THREE.Box3().setFromObject(obj);
     if (box.isEmpty()) {
