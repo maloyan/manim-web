@@ -15,9 +15,7 @@ async function threeDSurfacePlot(scene: ThreeDScene) {
   const sigma = 0.4;
   const mu = [0.0, 0.0];
 
-  // Gaussian surface: parametric function mapping (u,v) to 3D point
-  // Surface3D func returns [x, y, z] used directly as THREE.js coordinates.
-  // Manim Z-up -> THREE.js Y-up: return [manimX, manimZ, -manimY]
+  // Gaussian surface: Z-up Manim convention — height is along z.
   const gaussSurface = new Surface3D({
     func: (u: number, v: number) => {
       const x = u;
@@ -26,8 +24,7 @@ async function threeDSurfacePlot(scene: ThreeDScene) {
       const dy = y - mu[1];
       const d = Math.sqrt(dx * dx + dy * dy);
       const z = Math.exp(-(d * d) / (2.0 * sigma * sigma));
-      // Manim coords (x, y, z) -> THREE.js coords (x, z, -y)
-      return [x, z, -y];
+      return [x, y, z];
     },
     uRange: [-2, 2],
     vRange: [-2, 2],
