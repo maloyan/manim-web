@@ -8,6 +8,7 @@ import {
   getEdgeInDirectionImpl,
   toEdgeImpl,
 } from './MobjectPositioning';
+import { assertIsPlainOptions } from '../utils/validation';
 import {
   saveMobjectStateImpl,
   restoreMobjectStateImpl,
@@ -240,7 +241,14 @@ export abstract class Mobject {
       | Vector3Tuple
       | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
   ): this {
+    if (typeof angle !== 'number' || !isFinite(angle)) {
+      throw new TypeError('Mobject.rotate: angle must be a finite number');
+    }
+
     if (axisOrOptions && !Array.isArray(axisOrOptions)) {
+      // Validate that the options-like argument is a plain config and not
+      // an accidental Mobject/Animation instance (common user mistake).
+      assertIsPlainOptions(axisOrOptions, 'Mobject.rotate');
       const resolved = resolveExtremalPoint(this, axisOrOptions);
       if (resolved) {
         axisOrOptions = { axis: axisOrOptions.axis, aboutPoint: resolved };

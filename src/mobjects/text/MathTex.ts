@@ -18,6 +18,7 @@ import type { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { WHITE } from '../../constants/colors';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
 import { renderLatexToSVG } from './MathJaxRenderer';
+import { assertIsPlainOptions, assertLatexOption } from '../../utils/validation';
 
 /** MathJax SVG uses ~1000 font units per em. */
 const MATHJAX_SVG_UNITS_PER_EM = 1000;
@@ -66,8 +67,11 @@ export class MathTex extends VGroup {
   constructor(options: MathTexOptions) {
     super();
 
+    // Validate options up-front to surface common errors early
+    assertIsPlainOptions(options, 'MathTex');
+    const latex = assertLatexOption(options, 'latex', 'MathTex');
+
     const {
-      latex,
       color = WHITE,
       fontSize = DEFAULT_FONT_SIZE_PT,
       displayMode = true,
@@ -99,7 +103,7 @@ export class MathTex extends VGroup {
       this._renderPromise = this._renderMultiPart(latex);
     } else {
       this._isMultiPart = false;
-      this._latex = latex;
+      this._latex = latex as string;
       this._startRender();
     }
   }
