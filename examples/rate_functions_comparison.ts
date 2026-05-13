@@ -6,6 +6,7 @@ import {
   Shift,
   AnimationGroup,
   RIGHT,
+  LEFT,
   BLACK,
   BLUE,
   RED,
@@ -47,10 +48,10 @@ const rateFunctions: Array<{
 ];
 
 const ROW_COUNT = rateFunctions.length;
-const TOP_Y = 2.0;
-const ROW_SPACING = 0.7;
-const START_X = -2.5;
-const SHIFT_DISTANCE = 5.0;
+const TOP_Y = 2.4;
+const ROW_SPACING = 0.85;
+const START_X = -1.5;
+const SHIFT_DISTANCE = 5.5;
 
 document.getElementById('playBtn').addEventListener('click', async () => {
   if (isAnimating) return;
@@ -66,14 +67,6 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     const y = TOP_Y - i * ROW_SPACING;
     const { name, color } = rateFunctions[i];
 
-    // Label on the left
-    const label = new Text({
-      text: name,
-      fontSize: 20,
-      color: WHITE,
-    });
-    label.moveTo([START_X - 2.0, y, 0]);
-
     // Track line (faint guide)
     const trackLine = new Line({
       start: [START_X, y, 0],
@@ -81,6 +74,14 @@ document.getElementById('playBtn').addEventListener('click', async () => {
       color: '#333333',
       strokeWidth: 1,
     });
+
+    // Label on the left, right-edge aligned just before track start
+    const label = new Text({
+      text: name,
+      fontSize: 28,
+      color: WHITE,
+    });
+    label.nextTo(trackLine, LEFT, 0.2);
 
     // Dot at the start position
     const dot = new Dot({
