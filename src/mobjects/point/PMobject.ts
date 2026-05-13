@@ -133,7 +133,7 @@ export class PMobject extends Mobject {
   }
 
   /**
-   * Get all points
+   * Get all points (local-space, not transformed)
    * @returns Copy of the points array
    */
   getPoints(): PointData[] {

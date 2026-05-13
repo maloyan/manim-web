@@ -102,7 +102,7 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Get all points defining this VMobject as 3D arrays
+   * Get all points defining this VMobject as 3D arrays (local-space)
    * @returns Copy of the points array
    */
   getPoints(): number[][] {

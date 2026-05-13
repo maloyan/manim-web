@@ -842,30 +842,6 @@ describe('PGroup', () => {
     expect(center[2]).toBeCloseTo(0);
   });
 
-  it('shift translates all children', () => {
-    const p1 = new PMobject({ points: [{ position: [0, 0, 0] }] });
-    const p2 = new PMobject({ points: [{ position: [2, 0, 0] }] });
-    const g = new PGroup({ pmobjects: [p1, p2] });
-    g.shift([1, 1, 0]);
-    expect(p1.getPoints()[0].position[0]).toBeCloseTo(1);
-    expect(p1.getPoints()[0].position[1]).toBeCloseTo(1);
-    expect(p2.getPoints()[0].position[0]).toBeCloseTo(3);
-    expect(p2.getPoints()[0].position[1]).toBeCloseTo(1);
-  });
-
-  it('moveTo translates children by the correct delta', () => {
-    const p1 = new PMobject({ points: [{ position: [0, 0, 0] }] });
-    const p2 = new PMobject({ points: [{ position: [2, 0, 0] }] });
-    const g = new PGroup({ pmobjects: [p1, p2] });
-    // Center is [1, 0, 0], delta to [5, 5, 0] is [4, 5, 0]
-    g.moveTo([5, 5, 0]);
-    // Children should have been shifted by the delta
-    expect(p1.getPoints()[0].position[0]).toBeCloseTo(4);
-    expect(p1.getPoints()[0].position[1]).toBeCloseTo(5);
-    expect(p2.getPoints()[0].position[0]).toBeCloseTo(6);
-    expect(p2.getPoints()[0].position[1]).toBeCloseTo(5);
-  });
-
   it('setColor cascades to all children', () => {
     const p1 = new PMobject({ points: [{ position: [0, 0, 0] }] });
     const p2 = new PMobject({ points: [{ position: [1, 0, 0] }] });

@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { Mobject, Vector3Tuple, RIGHT } from './Mobject';
 import { VMobject, Point } from './VMobject';
+import { normalizeContainerTransform } from './normalizeContainerTransform';
 
 /**
  * VGroup is a specialized group for VMobjects.
@@ -158,54 +159,19 @@ export class VGroup extends VMobject {
    * This keeps VGroup semantics child-driven and avoids double-counting.
    */
   override normalizeTransform(): this {
-    const sx = this.scaleVector.x;
-    const sy = this.scaleVector.y;
-    const sz = this.scaleVector.z;
-    if (sx !== 1 || sy !== 1 || sz !== 1) {
-      for (const child of this.children) {
-        child.position.set(child.position.x * sx, child.position.y * sy, child.position.z * sz);
-        child.scale([sx, sy, sz]);
-      }
-      this.scaleVector.set(1, 1, 1);
-      this._markDirty();
-    }
-
-    const rx = this.rotation.x;
-    const ry = this.rotation.y;
-    const rz = this.rotation.z;
-    if (rx !== 0 || ry !== 0 || rz !== 0) {
-      const rot = new THREE.Euler(rx, ry, rz, this.rotation.order);
-      for (const child of this.children) {
-        child.position.applyEuler(rot);
-        if (rx !== 0) child.rotate(rx, [1, 0, 0]);
-        if (ry !== 0) child.rotate(ry, [0, 1, 0]);
-        if (rz !== 0) child.rotate(rz, [0, 0, 1]);
-      }
-      this.rotation.set(0, 0, 0);
-      this._markDirty();
-    }
-
-    const dx = this.position.x;
-    const dy = this.position.y;
-    const dz = this.position.z;
-    if (dx !== 0 || dy !== 0 || dz !== 0) {
-      if (!this._warnedAboutDirectPosition) {
-        console.warn(
-          '[manim-web] Direct VGroup.position mutation detected; forwarding translation to children. Use moveTo()/shift() on VGroup.',
-        );
-        this._warnedAboutDirectPosition = true;
-      }
-      for (const child of this.children) {
+    normalizeContainerTransform(this, {
+      beforeTranslate: () => {
+        if (!this._warnedAboutDirectPosition) {
+          console.warn(
+            '[manim-web] Direct VGroup.position mutation detected; forwarding translation to children. Use moveTo()/shift() on VGroup.',
+          );
+          this._warnedAboutDirectPosition = true;
+        }
+      },
+      translateChild: (child, dx, dy, dz) => {
         child.shift([dx, dy, dz]);
-      }
-      this.position.set(0, 0, 0);
-      this._markDirty();
-    }
-
-    for (const child of this.children) {
-      child.normalizeTransform();
-    }
-
+      },
+    });
     return this;
   }
 
