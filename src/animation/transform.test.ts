@@ -1004,7 +1004,7 @@ describe('Transform on VGroup (#206)', () => {
     }).not.toThrow();
   });
 
-  it('keeps VGroup transform anchors at origin during transform', () => {
+  it('keeps VGroup transform anchors at identity during transform', () => {
     const circle = new Circle({ radius: 1 });
     const group = new VGroup(circle);
 
@@ -1015,9 +1015,12 @@ describe('Transform on VGroup (#206)', () => {
     t.begin();
     t.interpolate(1);
 
-    expect(group.position.x).toBeCloseTo(0, 6);
-    expect(group.position.y).toBeCloseTo(0, 6);
-    expect(group.position.z).toBeCloseTo(0, 6);
+    expect(group.position.x).toBe(0);
+    expect(group.position.y).toBe(0);
+    expect(group.position.z).toBe(0);
+    expect(group.scaleVector.x).toBe(1);
+    expect(group.scaleVector.y).toBe(1);
+    expect(group.scaleVector.z).toBe(1);
   });
 
   it('finish sets children to target state (points and style)', () => {
