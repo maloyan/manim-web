@@ -1783,17 +1783,32 @@ describe('VGroup - extended coverage', () => {
     // should have shifted to align
   });
 
-  it('rotate delegates to children and self', () => {
-    const a = new VMobject();
-    a.setPoints([
-      [1, 0, 0],
-      [1, 0, 0],
-      [1, 0, 0],
-      [1, 0, 0],
-    ]);
-    const vg = new VGroup(a);
+  it('rotate stores on VGroup, then normalizeTransform forwards to children', () => {
+    const line = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    const dot = new Dot({ point: [2, 0, 0], radius: 0 });
+    const vg = new VGroup(line, dot);
+
+    const startBefore = line.getStart();
+    const endBefore = line.getEnd();
     vg.rotate(Math.PI / 2);
-    // child should have been rotated
+
+    // Rotation is stored on group transform before normalization.
+    expect(vg.rotation.z).toBeCloseTo(Math.PI / 2, 6);
+
+    vg.normalizeTransform();
+
+    // Group anchor is canonical after normalization.
+    expect(vg.rotation.x).toBe(0);
+    expect(vg.rotation.y).toBe(0);
+    expect(vg.rotation.z).toBe(0);
+
+    // Child geometry reflects forwarded rotation.
+    const startAfter = line.getStart();
+    const endAfter = line.getEnd();
+    expect(startAfter[0]).not.toBeCloseTo(startBefore[0], 4);
+    expect(startAfter[1]).not.toBeCloseTo(startBefore[1], 4);
+    expect(endAfter[0]).not.toBeCloseTo(endBefore[0], 4);
+    expect(endAfter[1]).not.toBeCloseTo(endBefore[1], 4);
   });
 
   it('scale updates vgroup scale vector', () => {

@@ -193,7 +193,7 @@ export class VGroup extends VMobject {
   }
 
   /**
-   * Normalize group transform by forwarding direct group translation to children.
+   * Normalize group transform by forwarding direct group translation/rotation to children.
    * This keeps VGroup semantics child-driven and avoids double-counting.
    */
   override normalizeTransform(): this {
@@ -213,6 +213,20 @@ export class VGroup extends VMobject {
       this.position.set(0, 0, 0);
       this._markDirty();
     }
+
+    const rx = this.rotation.x;
+    const ry = this.rotation.y;
+    const rz = this.rotation.z;
+    if (rx !== 0 || ry !== 0 || rz !== 0) {
+      for (const child of this.children) {
+        if (rx !== 0) child.rotate(rx, [1, 0, 0]);
+        if (ry !== 0) child.rotate(ry, [0, 1, 0]);
+        if (rz !== 0) child.rotate(rz, [0, 0, 1]);
+      }
+      this.rotation.set(0, 0, 0);
+      this._markDirty();
+    }
+
     return this;
   }
 
@@ -259,24 +273,6 @@ export class VGroup extends VMobject {
       target[2] - currentCenter[2],
     ];
     return this.shift(delta);
-  }
-
-  /**
-   * Rotate all children around an axis.
-   * @param angle - Rotation angle in radians
-   * @param axis - Axis of rotation [x, y, z], defaults to Z axis
-   * @returns this for chaining
-   */
-  override rotate(angle: number, axis: Vector3Tuple = [0, 0, 1]): this {
-    // Apply to group's own rotation
-    super.rotate(angle, axis);
-
-    // Also rotate each child
-    for (const child of this.children) {
-      child.rotate(angle, axis);
-    }
-
-    return this;
   }
 
   /**
