@@ -8,7 +8,7 @@ import {
   getEdgeInDirectionImpl,
   toEdgeImpl,
 } from './MobjectPositioning';
-import { assertIsPlainOptions } from '../utils/validation';
+import typia from 'typia';
 import {
   saveMobjectStateImpl,
   restoreMobjectStateImpl,
@@ -246,9 +246,10 @@ export abstract class Mobject {
     }
 
     if (axisOrOptions && !Array.isArray(axisOrOptions)) {
-      // Validate that the options-like argument is a plain config and not
-      // an accidental Mobject/Animation instance (common user mistake).
-      assertIsPlainOptions(axisOrOptions, 'Mobject.rotate');
+      // Validate options using typia (ensures shape and types).
+      typia.assert<{ axis?: Vector3Tuple; aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple }>(
+        axisOrOptions,
+      );
       const resolved = resolveExtremalPoint(this, axisOrOptions);
       if (resolved) {
         axisOrOptions = { axis: axisOrOptions.axis, aboutPoint: resolved };

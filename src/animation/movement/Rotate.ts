@@ -5,7 +5,7 @@
 import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
-import { assertIsPlainOptions, assertNumberOption } from '../../utils/validation';
+import typia from 'typia';
 import { resolveExtremalPoint } from '../../core/MobjectState';
 
 export interface RotateOptions extends AnimationOptions {
@@ -42,10 +42,10 @@ export class Rotate extends Animation {
   private _aboutPointVector: THREE.Vector3 | null = null;
 
   constructor(mobject: Mobject, options: RotateOptions) {
-    // Validate options shape early to surface common user mistakes
-    assertIsPlainOptions(options, 'Rotate');
+    // Validate options via typia (asserts required fields like `angle`).
+    typia.assert<RotateOptions>(options);
     super(mobject, options);
-    this.angle = assertNumberOption(options, 'angle', 'Rotate');
+    this.angle = options.angle;
     this.axis = options.axis ?? [0, 0, 1];
     const resolved = resolveExtremalPoint(mobject, options);
     this.aboutPoint = resolved ?? null;
@@ -133,6 +133,6 @@ export function rotate(
     throw new TypeError('rotate(): angle must be a finite number');
   }
   // Validate helper options briefly
-  assertIsPlainOptions(options, 'rotate');
+  if (options) typia.assert<Omit<RotateOptions, 'angle'>>(options);
   return new Rotate(mobject, { ...options, angle });
 }

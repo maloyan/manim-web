@@ -17,8 +17,8 @@ import { VMobject } from '../../core/VMobject';
 import type { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { WHITE } from '../../constants/colors';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
+import typia from 'typia';
 import { renderLatexToSVG } from './MathJaxRenderer';
-import { assertIsPlainOptions, assertLatexOption } from '../../utils/validation';
 
 /** MathJax SVG uses ~1000 font units per em. */
 const MATHJAX_SVG_UNITS_PER_EM = 1000;
@@ -67,9 +67,9 @@ export class MathTex extends VGroup {
   constructor(options: MathTexOptions) {
     super();
 
-    // Validate options up-front to surface common errors early
-    assertIsPlainOptions(options, 'MathTex');
-    const latex = assertLatexOption(options, 'latex', 'MathTex');
+    // Validate options via typia and read required latex field
+    typia.assert<MathTexOptions>(options);
+    const latex = options.latex;
 
     const {
       color = WHITE,

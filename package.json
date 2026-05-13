@@ -56,6 +56,7 @@
     "release": "standard-version",
     "release:minor": "standard-version --release-as minor",
     "release:major": "standard-version --release-as major",
+    "typia:setup": "ts-patch install",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -71,6 +72,7 @@
     "katex": "^0.16.28",
     "opentype.js": "^1.3.4",
     "polygon-clipping": "^0.15.7",
+    "typia": "^12.1.1",
     "three": "^0.184.0"
   },
   "devDependencies": {
@@ -91,9 +93,11 @@
     "madge": "^8.0.0",
     "prettier": "^3.8.1",
     "standard-version": "^9.5.0",
+    "ts-patch": "^3.3.0",
     "typedoc": "^0.28.16",
     "typescript": "^5.3.0",
     "typescript-eslint": "^8.54.0",
+    "@typia/unplugin": "^12.1.1",
     "vite": "^8.0.8",
     "vite-plugin-dts": "^5.0.0",
     "vitest": "^4.0.18",
