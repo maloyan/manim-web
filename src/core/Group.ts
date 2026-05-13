@@ -78,28 +78,62 @@ export class Group extends Mobject {
   }
 
   /**
-   * Get the center of the group (average of all children centers).
-   * Children maintain world-space coordinates, so no group position offset
-   * is added (shift/moveTo only update children, not group position).
+   * Get axis-aligned bounds that enclose all children.
+   */
+  getChildrenBounds(): {
+    min: { x: number; y: number; z: number };
+    max: { x: number; y: number; z: number };
+  } {
+    if (this.children.length === 0) {
+      return {
+        min: { x: this.position.x, y: this.position.y, z: this.position.z },
+        max: { x: this.position.x, y: this.position.y, z: this.position.z },
+      };
+    }
+
+    let minX = Infinity,
+      minY = Infinity,
+      minZ = Infinity;
+    let maxX = -Infinity,
+      maxY = -Infinity,
+      maxZ = -Infinity;
+
+    let includedChild = false;
+    for (const child of this.children) {
+      const isEmptyContainer = 'getChildrenBounds' in child && child.children.length === 0;
+      if (isEmptyContainer) {
+        continue;
+      }
+      const b = child.getBounds();
+      minX = Math.min(minX, b.min.x);
+      minY = Math.min(minY, b.min.y);
+      minZ = Math.min(minZ, b.min.z);
+      maxX = Math.max(maxX, b.max.x);
+      maxY = Math.max(maxY, b.max.y);
+      maxZ = Math.max(maxZ, b.max.z);
+      includedChild = true;
+    }
+
+    if (!includedChild) {
+      return {
+        min: { x: this.position.x, y: this.position.y, z: this.position.z },
+        max: { x: this.position.x, y: this.position.y, z: this.position.z },
+      };
+    }
+
+    return {
+      min: { x: minX, y: minY, z: minZ },
+      max: { x: maxX, y: maxY, z: maxZ },
+    };
+  }
+
+  /**
+   * Get the center of the group from the bounding box of all children.
    * @returns Center position as [x, y, z]
    */
   override getCenter(): Vector3Tuple {
-    if (this.children.length === 0) {
-      return [this.position.x, this.position.y, this.position.z];
-    }
-
-    let sumX = 0,
-      sumY = 0,
-      sumZ = 0;
-    for (const child of this.children) {
-      const center = child.getCenter();
-      sumX += center[0];
-      sumY += center[1];
-      sumZ += center[2];
-    }
-
-    const count = this.children.length;
-    return [sumX / count, sumY / count, sumZ / count];
+    const b = this.getChildrenBounds();
+    return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
   }
 
   /**

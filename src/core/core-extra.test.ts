@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Mobject, UP, LEFT, RIGHT, UL, UR, DL } from './Mobject';
 import { VMobject } from './VMobject';
+import { PointMobject } from '../mobjects/point';
 import {
   getNumCurves,
   getNthCurve,
@@ -10,6 +11,8 @@ import {
 import { Group } from './Group';
 import { VGroup } from './VGroup';
 import { VDict, VectorizedPoint } from './VDict';
+import { Line } from '../mobjects/geometry/Line';
+import { Dot } from '../mobjects/geometry/Dot';
 import {
   serializeMobject,
   deserializeMobject,
@@ -942,13 +945,11 @@ describe('Mobject - extended coverage', () => {
   });
 
   // getBounds fallback (no _threeObject)
-  it('getBounds returns position-based fallback when no three object', () => {
+  it('getBounds throws when no three object', () => {
     const vm = new VMobject();
     vm.position.set(5, 5, 5);
-    // Access bounds without creating three object
-    const bounds = vm.getBounds();
-    expect(bounds.min.x).toBeDefined();
-    expect(bounds.max.x).toBeDefined();
+    // Access bounds without creating three object throws
+    expect(() => vm.getBounds()).toThrow(/empty Three\.js bounds/);
   });
 
   // nextTo with point target
@@ -1492,14 +1493,17 @@ describe('Group - extended coverage', () => {
     expect(g.getCenter()).toEqual([5, 6, 7]);
   });
 
-  it('getCenter with children returns average of children centers', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    const b = new VMobject();
-    b.position.set(2, 0, 0);
+  it('getCenter with children returns geometric center from child bounds', () => {
+    const a = new Dot({ point: [0, 0, 0] });
+    const b = new Dot({ point: [2, 0, 0] });
     const g = new Group(a, b);
     const center = g.getCenter();
     expect(center[0]).toBeCloseTo(1, 0);
+  });
+
+  it('Group getCenter throws when a child has empty Three.js bounds', () => {
+    const g = new Group(new VMobject());
+    expect(() => g.getCenter()).toThrow(/empty Three\.js bounds/);
   });
 
   it('shift shifts all children', () => {
@@ -1516,10 +1520,8 @@ describe('Group - extended coverage', () => {
   });
 
   it('moveTo with point moves group center', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    const b = new VMobject();
-    b.position.set(2, 0, 0);
+    const a = new PointMobject({ position: [0, 0, 0] });
+    const b = new PointMobject({ position: [2, 0, 0] });
     const g = new Group(a, b);
     g.moveTo([5, 5, 0]);
     const center = g.getCenter();
@@ -1528,10 +1530,8 @@ describe('Group - extended coverage', () => {
   });
 
   it('moveTo with Mobject target centers on it', () => {
-    const target = new VMobject();
-    target.position.set(10, 10, 0);
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
+    const target = new PointMobject({ position: [10, 10, 0] });
+    const a = new PointMobject({ position: [0, 0, 0] });
     const g = new Group(a);
     g.moveTo(target);
     const center = g.getCenter();
@@ -1541,10 +1541,8 @@ describe('Group - extended coverage', () => {
   });
 
   it('moveTo with Mobject + alignedEdge aligns edges', () => {
-    const target = new VMobject();
-    target.position.set(5, 5, 0);
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
+    const target = new PointMobject({ position: [5, 5, 0] });
+    const a = new PointMobject({ position: [0, 0, 0] });
     const g = new Group(a);
     g.moveTo(target, UL);
     // should shift to align upper-left edges
@@ -1731,18 +1729,21 @@ describe('VGroup - extended coverage', () => {
 
   it('getCenter with no children returns group position', () => {
     const vg = new VGroup();
-    vg.position.set(5, 6, 7);
-    expect(vg.getCenter()).toEqual([5, 6, 7]);
+    // Empty VGroup: after normalizeTransform, position resets
+    expect(vg.getCenter()).toEqual([0, 0, 0]);
   });
 
   it('getCenter with children includes position offset', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    const b = new VMobject();
-    b.position.set(2, 0, 0);
+    const a = new Dot({ point: [0, 0, 0] });
+    const b = new Dot({ point: [2, 0, 0] });
     const vg = new VGroup(a, b);
     const center = vg.getCenter();
     expect(center[0]).toBeCloseTo(1, 0);
+  });
+
+  it('getCenter throws when a child has empty Three.js bounds', () => {
+    const vg = new VGroup(new VMobject());
+    expect(() => vg.getCenter()).toThrow(/empty Three\.js bounds/);
   });
 
   it('shift shifts children, not group position', () => {
@@ -1754,10 +1755,8 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('moveTo with point moves VGroup center', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    const b = new VMobject();
-    b.position.set(2, 0, 0);
+    const a = new Dot({ point: [0, 0, 0] });
+    const b = new Dot({ point: [2, 0, 0] });
     const vg = new VGroup(a, b);
     vg.moveTo([10, 10, 0]);
     const center = vg.getCenter();
@@ -1766,9 +1765,8 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('moveTo with Mobject target', () => {
-    const target = new VMobject();
-    target.position.set(5, 5, 0);
-    const a = new VMobject();
+    const target = new PointMobject({ position: [5, 5, 0] });
+    const a = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a);
     vg.moveTo(target);
     const center = vg.getCenter();
@@ -1777,9 +1775,8 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('moveTo with Mobject + alignedEdge', () => {
-    const target = new VMobject();
-    target.position.set(5, 5, 0);
-    const a = new VMobject();
+    const target = new PointMobject({ position: [5, 5, 0] });
+    const a = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a);
     vg.moveTo(target, UL);
     // should have shifted to align
@@ -1799,11 +1796,9 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('scale scales children about group center', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
+    const a = new PointMobject({ position: [0, 0, 0] });
     a.scaleVector.set(1, 1, 1);
-    const b = new VMobject();
-    b.position.set(4, 0, 0);
+    const b = new PointMobject({ position: [4, 0, 0] });
     b.scaleVector.set(1, 1, 1);
     const vg = new VGroup(a, b);
     vg.scale(2);
@@ -1813,11 +1808,44 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('scale with tuple scales non-uniformly', () => {
-    const a = new VMobject();
+    const a = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a);
     vg.scale([2, 3, 1]);
     expect(a.scaleVector.x).toBe(2);
     expect(a.scaleVector.y).toBe(3);
+  });
+
+  it('center should be geometric from child bounds, not mean of child centers', () => {
+    const wide = new Line({ start: [0, 0, 0], end: [4, 0, 0] }); // center x=2
+    const narrow = new Line({ start: [10, 0, 0], end: [11, 0, 0] }); // center x=10.5
+    const vg = new VGroup(wide, narrow);
+
+    // Mean of centers would be 6.25, but bbox center is (0 + 11) / 2 = 5.5.
+    expect(vg.getCenter()[0]).toBeCloseTo(5.5, 6);
+  });
+
+  it('scale result should be invariant to translating group vs children', () => {
+    // Setup A: translate children directly.
+    const lineA = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    lineA.position.x = 1;
+    const pointA = new Dot({ point: [1, 0, 0], radius: 0 });
+    const gA = new VGroup(lineA, pointA);
+
+    // Setup B: equivalent world placement via group translation.
+    const lineB = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    const pointB = new Dot({ point: [0, 0, 0], radius: 0 });
+    const gB = new VGroup(lineB, pointB);
+    gB.position.x = 1;
+
+    gA.scale(2);
+    gB.scale(2);
+
+    const worldCenterX = (group: VGroup): number => group.getCenter()[0] + group.position.x;
+    const worldX = (mob: VMobject, group: VGroup): number => mob.getCenter()[0] + group.position.x;
+
+    expect(worldCenterX(gB)).toBeCloseTo(worldCenterX(gA), 6);
+    expect(worldX(lineB, gB)).toBeCloseTo(worldX(lineA, gA), 6);
+    expect(worldX(pointB, gB)).toBeCloseTo(worldX(pointA, gA), 6);
   });
 
   it('setColor propagates to children', () => {
@@ -1906,12 +1934,9 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('arrange positions children in a row', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    const b = new VMobject();
-    b.position.set(0, 0, 0);
-    const c = new VMobject();
-    c.position.set(0, 0, 0);
+    const a = new PointMobject({ position: [0, 0, 0] });
+    const b = new PointMobject({ position: [0, 0, 0] });
+    const c = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a, b, c);
     vg.arrange(RIGHT, 0.5);
     // b should be to the right of a, c to the right of b
@@ -1926,21 +1951,15 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('arrange with center=false does not recenter', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    const b = new VMobject();
-    b.position.set(0, 0, 0);
+    const a = new PointMobject({ position: [0, 0, 0] });
+    const b = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a, b);
     vg.arrange(RIGHT, 0.5, false);
     // should not throw
   });
 
   it('arrangeInGrid positions children in grid', () => {
-    const items = Array.from({ length: 6 }, () => {
-      const vm = new VMobject();
-      vm.position.set(0, 0, 0);
-      return vm;
-    });
+    const items = Array.from({ length: 6 }, () => new PointMobject({ position: [0, 0, 0] }));
     const vg = new VGroup(...items);
     vg.arrangeInGrid(2, 3);
     // Should not throw and children should be repositioned
@@ -1952,19 +1971,19 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('arrangeInGrid auto-calculates rows/cols', () => {
-    const items = Array.from({ length: 9 }, () => new VMobject());
+    const items = Array.from({ length: 9 }, () => new PointMobject({ position: [0, 0, 0] }));
     const vg = new VGroup(...items);
     vg.arrangeInGrid(); // auto: sqrt(9)=3, so 3x3
   });
 
   it('arrangeInGrid with only rows specified', () => {
-    const items = Array.from({ length: 6 }, () => new VMobject());
+    const items = Array.from({ length: 6 }, () => new PointMobject({ position: [0, 0, 0] }));
     const vg = new VGroup(...items);
     vg.arrangeInGrid(2); // 2 rows, auto cols
   });
 
   it('arrangeInGrid with only cols specified', () => {
-    const items = Array.from({ length: 6 }, () => new VMobject());
+    const items = Array.from({ length: 6 }, () => new PointMobject({ position: [0, 0, 0] }));
     const vg = new VGroup(...items);
     vg.arrangeInGrid(undefined, 3); // auto rows, 3 cols
   });

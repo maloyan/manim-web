@@ -4,6 +4,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { VMobject } from '../../core/VMobject';
+import { PointMobject } from '../../mobjects/point';
 import { Arrow } from '../../mobjects/geometry/Arrow';
 import {
   GrowArrow,
@@ -22,8 +23,8 @@ import {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeMobject(): VMobject {
-  return new VMobject();
+function makeMobject(): PointMobject {
+  return new PointMobject({ position: [0, 0, 0] });
 }
 
 function makeVMobject(pts?: number[][]): VMobject {

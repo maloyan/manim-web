@@ -20,6 +20,7 @@
 import { describe, it, expect } from 'vitest';
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
+import { PointMobject } from '../../mobjects/point';
 import {
   Create,
   create,
@@ -718,22 +719,21 @@ describe('ShowPartial', () => {
 
 describe('SpiralIn', () => {
   it('constructor defaults', () => {
-    const m = new VMobject(); // Use VMobject (concrete subclass)
+    const m = new PointMobject({ position: [0, 0, 0] });
     const anim = new SpiralIn(m);
     expect(anim.scaleFactor).toBe(3);
     expect(anim.numTurns).toBe(2);
   });
 
   it('accepts custom options', () => {
-    const m = new VMobject();
+    const m = new PointMobject({ position: [0, 0, 0] });
     const anim = new SpiralIn(m, { scaleFactor: 5, numTurns: 3 });
     expect(anim.scaleFactor).toBe(5);
     expect(anim.numTurns).toBe(3);
   });
 
   it('begin scales up and moves to center', () => {
-    const m = new VMobject();
-    m.position.set(2, 3, 0);
+    const m = new PointMobject({ position: [2, 3, 0] });
     const origScale = m.scaleVector.x;
     const anim = new SpiralIn(m);
     anim.begin();
@@ -742,8 +742,7 @@ describe('SpiralIn', () => {
   });
 
   it('interpolate moves mobject towards target', () => {
-    const m = new VMobject();
-    m.position.set(2, 0, 0);
+    const m = new PointMobject({ position: [2, 0, 0] });
     const anim = new SpiralIn(m);
     anim.begin();
     anim.interpolate(0.5);
@@ -753,8 +752,7 @@ describe('SpiralIn', () => {
   });
 
   it('finish restores target position and scale', () => {
-    const m = new VMobject();
-    m.position.set(2, 3, 0);
+    const m = new PointMobject({ position: [2, 3, 0] });
     m.scaleVector.set(1, 1, 1);
     const anim = new SpiralIn(m);
     anim.begin();
@@ -767,10 +765,10 @@ describe('SpiralIn', () => {
 
   it('works with children', () => {
     const parent = new VMobject();
-    const c1 = new VMobject();
-    c1.position.set(1, 0, 0);
-    const c2 = new VMobject();
-    c2.position.set(-1, 0, 0);
+    const c1 = new PointMobject({ position: [0, 0, 0] });
+    c1.moveTo([1, 0, 0]);
+    const c2 = new PointMobject({ position: [0, 0, 0] });
+    c2.moveTo([-1, 0, 0]);
     parent.add(c1, c2);
 
     const anim = new SpiralIn(parent);
@@ -782,7 +780,7 @@ describe('SpiralIn', () => {
   });
 
   it('factory function works', () => {
-    const m = new VMobject();
+    const m = new PointMobject({ position: [0, 0, 0] });
     const anim = spiralIn(m, { scaleFactor: 2, numTurns: 1 });
     expect(anim).toBeInstanceOf(SpiralIn);
     expect(anim.scaleFactor).toBe(2);

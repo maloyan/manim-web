@@ -12,6 +12,8 @@ import { VMobject, Point } from './VMobject';
  * Operations apply to all children, and paths can be combined.
  */
 export class VGroup extends VMobject {
+  private _warnedAboutDirectPosition = false;
+
   /**
    * Create a new VGroup containing the given mobjects.
    * Accepts both VMobjects and general Mobjects (e.g., Axes, Group).
@@ -131,30 +133,87 @@ export class VGroup extends VMobject {
   }
 
   /**
-   * Get the center of the group (average of all children centers).
+   * Get axis-aligned bounds that enclose all children.
+   */
+  getChildrenBounds(): {
+    min: { x: number; y: number; z: number };
+    max: { x: number; y: number; z: number };
+  } {
+    this.normalizeTransform();
+    if (this.children.length === 0) {
+      return {
+        min: { x: this.position.x, y: this.position.y, z: this.position.z },
+        max: { x: this.position.x, y: this.position.y, z: this.position.z },
+      };
+    }
+
+    let minX = Infinity,
+      minY = Infinity,
+      minZ = Infinity;
+    let maxX = -Infinity,
+      maxY = -Infinity,
+      maxZ = -Infinity;
+
+    let includedChild = false;
+    for (const child of this.children) {
+      const isEmptyContainer = 'getChildrenBounds' in child && child.children.length === 0;
+      if (isEmptyContainer) {
+        continue;
+      }
+      const b = child.getBounds();
+      minX = Math.min(minX, b.min.x);
+      minY = Math.min(minY, b.min.y);
+      minZ = Math.min(minZ, b.min.z);
+      maxX = Math.max(maxX, b.max.x);
+      maxY = Math.max(maxY, b.max.y);
+      maxZ = Math.max(maxZ, b.max.z);
+      includedChild = true;
+    }
+
+    if (!includedChild) {
+      return {
+        min: { x: this.position.x, y: this.position.y, z: this.position.z },
+        max: { x: this.position.x, y: this.position.y, z: this.position.z },
+      };
+    }
+
+    return {
+      min: { x: minX, y: minY, z: minZ },
+      max: { x: maxX, y: maxY, z: maxZ },
+    };
+  }
+
+  /**
+   * Get the center of the group from the bounding box of all children.
    * @returns Center position as [x, y, z]
    */
   override getCenter(): Vector3Tuple {
-    if (this.children.length === 0) {
-      return [this.position.x, this.position.y, this.position.z];
-    }
+    const b = this.getChildrenBounds();
+    return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
+  }
 
-    let sumX = 0,
-      sumY = 0,
-      sumZ = 0;
-    for (const child of this.children) {
-      const center = child.getCenter();
-      sumX += center[0];
-      sumY += center[1];
-      sumZ += center[2];
+  /**
+   * Normalize group transform by forwarding direct group translation to children.
+   * This keeps VGroup semantics child-driven and avoids double-counting.
+   */
+  override normalizeTransform(): this {
+    const dx = this.position.x;
+    const dy = this.position.y;
+    const dz = this.position.z;
+    if (dx !== 0 || dy !== 0 || dz !== 0) {
+      if (!this._warnedAboutDirectPosition) {
+        console.warn(
+          '[manim-web] Direct VGroup.position mutation detected; forwarding translation to children. Use moveTo()/shift() on VGroup.',
+        );
+        this._warnedAboutDirectPosition = true;
+      }
+      for (const child of this.children) {
+        child.shift([dx, dy, dz]);
+      }
+      this.position.set(0, 0, 0);
+      this._markDirty();
     }
-
-    const count = this.children.length;
-    return [
-      this.position.x + sumX / count,
-      this.position.y + sumY / count,
-      this.position.z + sumZ / count,
-    ];
+    return this;
   }
 
   /**

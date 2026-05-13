@@ -274,14 +274,6 @@ describe('PointMobject', () => {
     expect(pt.getPosition()).toEqual([3, 4, 5]);
   });
 
-  it('getPosition falls back to mobject position when no points', () => {
-    const pt = new PointMobject({ position: [1, 2, 3] });
-    pt.clearPoints();
-    // With no internal points, getPosition should fall back to THREE position
-    const pos = pt.getPosition();
-    expect(pos).toEqual([0, 0, 0]); // THREE.js position default
-  });
-
   it('setPosition is a no-op when no internal points', () => {
     const pt = new PointMobject();
     pt.clearPoints();

@@ -393,17 +393,15 @@ export abstract class Mobject {
     min: { x: number; y: number; z: number };
     max: { x: number; y: number; z: number };
   } {
-    if (this._threeObject) {
-      const box = new THREE.Box3().setFromObject(this._threeObject);
-      return {
-        min: { x: box.min.x, y: box.min.y, z: box.min.z },
-        max: { x: box.max.x, y: box.max.y, z: box.max.z },
-      };
+    const obj = this.getThreeObject();
+    const box = new THREE.Box3().setFromObject(obj);
+    if (box.isEmpty()) {
+      const ctor = (this.constructor as { name?: string } | undefined)?.name ?? 'UnknownMobject';
+      throw new Error(`Mobject.getBounds(): ${ctor} (${this.id}) produced empty Three.js bounds.`);
     }
-    const c = this.getCenter();
     return {
-      min: { x: c[0] - 0.5, y: c[1] - 0.5, z: c[2] - 0.5 },
-      max: { x: c[0] + 0.5, y: c[1] + 0.5, z: c[2] + 0.5 },
+      min: { x: box.min.x, y: box.min.y, z: box.min.z },
+      max: { x: box.max.x, y: box.max.y, z: box.max.z },
     };
   }
 
@@ -515,6 +513,19 @@ export abstract class Mobject {
   }
 
   // ── Three.js Sync ────────────────────────────────────────────────
+
+  /**
+   * Normalize local transform into object-specific canonical representation.
+   *
+   * Subclasses may override this to fold transient transforms into their
+   * canonical state (e.g. forwarding container translation to children).
+   * Call this before geometry queries like getCenter()/getBounds().
+   *
+   * Base implementation is a no-op.
+   */
+  normalizeTransform(): this {
+    return this;
+  }
 
   _syncToThree(): void {
     if (!this._dirty) return;
