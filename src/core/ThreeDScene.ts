@@ -186,8 +186,10 @@ export class ThreeDScene extends Scene {
    *    distance instead of add order (base Scene stamps an incrementing
    *    renderOrder for 2D z-ordering, which defeats 3D depth sort)
    *
-   * Auto-render is suppressed inside super.add() and run once at the end,
+   * Auto-render is suppressed inside super.add() and scheduled once at the end,
    * after settings are applied, so the first visible frame is correct.
+   * Render is deferred via the scheduler (issue #317) so a chained `play()`
+   * can suppress it and avoid a pre-animation flash.
    */
   add(...mobjects: Mobject[]): this {
     const wasAuto = this._autoRender;
@@ -196,10 +198,12 @@ export class ThreeDScene extends Scene {
     try {
       super.add(...mobjects);
       for (const mob of mobjects) ThreeDScene._applyDepthSettings(mob, newMobs.has(mob));
-      if (wasAuto) this._render();
     } finally {
       this._autoRender = wasAuto;
     }
+    // Schedule the post-settings render via the deferred path so it inherits
+    // the same play()/wait() suppression as the base Scene.add().
+    this._scheduleRender();
     return this;
   }
 
