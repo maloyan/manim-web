@@ -145,14 +145,20 @@ describe('PMobject', () => {
     expect(pts[1].opacity).toBe(0.3);
   });
 
-  it('shift translates all points and position', () => {
+  it('shift translates transform but preserves local point data', () => {
     const pm = new PMobject({
       points: [{ position: [1, 2, 3] }, { position: [4, 5, 6] }],
     });
     pm.shift([10, 20, 30]);
+
     const pts = pm.getPoints();
-    expect(pts[0].position).toEqual([11, 22, 33]);
-    expect(pts[1].position).toEqual([14, 25, 36]);
+    expect(pts[0].position).toEqual([1, 2, 3]);
+    expect(pts[1].position).toEqual([4, 5, 6]);
+
+    const c = pm.getCenter();
+    expect(c[0]).toBeCloseTo(12.5);
+    expect(c[1]).toBeCloseTo(23.5);
+    expect(c[2]).toBeCloseTo(34.5);
   });
 
   it('copy creates an independent PMobject with same properties', () => {

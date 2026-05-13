@@ -270,10 +270,10 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Fold local scaleVector into points and reset scaleVector to identity.
+   * Fold local scaleVector into canonical child/point state and reset scaleVector.
    *
-   * This keeps VMobject geometry canonical in point-space while still
-   * supporting transient transform composition on Mobject.
+   * Matches VGroup normalization semantics: propagate scale to children,
+   * then clear parent scale anchor.
    */
   override normalizeTransform(): this {
     const sx = this.scaleVector.x;
@@ -287,6 +287,11 @@ export class VMobject extends VMobjectRendering {
       p[0] *= sx;
       p[1] *= sy;
       p[2] *= sz;
+    }
+
+    for (const child of this.children) {
+      child.position.set(child.position.x * sx, child.position.y * sy, child.position.z * sz);
+      child.scale([sx, sy, sz]);
     }
 
     this.scaleVector.set(1, 1, 1);

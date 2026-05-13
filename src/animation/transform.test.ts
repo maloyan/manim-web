@@ -1004,7 +1004,7 @@ describe('Transform on VGroup (#206)', () => {
     }).not.toThrow();
   });
 
-  it('keeps VGroup transform anchors at identity during transform', () => {
+  it('keeps VGroup anchors identity and still reaches scaled child geometry', () => {
     const circle = new Circle({ radius: 1 });
     const group = new VGroup(circle);
 
@@ -1021,6 +1021,15 @@ describe('Transform on VGroup (#206)', () => {
     expect(group.scaleVector.x).toBe(1);
     expect(group.scaleVector.y).toBe(1);
     expect(group.scaleVector.z).toBe(1);
+
+    const sourceBounds = circle.getBounds();
+    const targetChild = target.children[0] as Circle;
+    const targetBounds = targetChild.getBounds();
+
+    expect(sourceBounds.min.x).toBeCloseTo(targetBounds.min.x, 6);
+    expect(sourceBounds.max.x).toBeCloseTo(targetBounds.max.x, 6);
+    expect(sourceBounds.min.y).toBeCloseTo(targetBounds.min.y, 6);
+    expect(sourceBounds.max.y).toBeCloseTo(targetBounds.max.y, 6);
   });
 
   it('finish sets children to target state (points and style)', () => {

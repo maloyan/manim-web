@@ -56,6 +56,10 @@ export interface MobjectLike {
   _markDirty(): void;
   getThreeObject(): THREE.Object3D;
   getCenter(): Vector3Tuple;
+  getBounds(): {
+    min: { x: number; y: number; z: number };
+    max: { x: number; y: number; z: number };
+  };
   getBoundingBox(): { width: number; height: number; depth: number };
   moveTo(target: Vector3Tuple | MobjectLike, alignedEdge?: Vector3Tuple): MobjectLike;
   rotate(

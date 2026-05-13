@@ -135,7 +135,10 @@ export class PointMorphStrategy implements MorphStrategy {
   }
   private _beginVGroup(source: VGroup, target: VGroup): void {
     this._isVGroupTransform = true;
+    source.normalizeTransform();
+    target.normalizeTransform();
     assertGroupAnchorsAtIdentity(source, 'begin/source');
+    assertGroupAnchorsAtIdentity(target, 'begin/target');
     for (const pair of pairLeafSnapshotsByIndex(source, target))
       this._vgroupLeafStates.push(this._build(source, pair));
     this._startPosition.copy(source.position);

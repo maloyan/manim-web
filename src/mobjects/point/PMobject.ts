@@ -227,13 +227,9 @@ export class PMobject extends Mobject {
    * @returns this for chaining
    */
   override shift(delta: Vector3Tuple): this {
-    super.shift(delta);
-    for (const point of this._points) {
-      point.position[0] += delta[0];
-      point.position[1] += delta[1];
-      point.position[2] += delta[2];
-    }
-    return this;
+    // PMobject point coordinates are local-space geometry; translating should
+    // move the mobject transform, not rewrite local point data.
+    return super.shift(delta);
   }
 
   /**

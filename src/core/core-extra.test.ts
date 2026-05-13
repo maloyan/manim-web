@@ -1506,6 +1506,107 @@ describe('Group - extended coverage', () => {
     expect(() => g.getCenter()).toThrow(/empty Three\.js bounds/);
   });
 
+  it('Group getBounds uses descendant geometry', () => {
+    const a = new Dot({ point: [0, 0, 0] });
+    const b = new Dot({ point: [2, 0, 0] });
+    const g = new Group(new Group(a, b));
+
+    const bounds = g.getBounds();
+    const centerX = (bounds.min.x + bounds.max.x) / 2;
+    expect(centerX).toBeCloseTo(1, 6);
+    expect(bounds.min.x).toBeLessThan(0);
+    expect(bounds.max.x).toBeGreaterThan(2);
+  });
+
+  it('Group getBounds throws on empty container tree', () => {
+    const g = new Group(new Group());
+    expect(() => g.getBounds()).toThrow(/empty Three\.js bounds/);
+  });
+
+  it('Group getBounds is stable before and after normalizeTransform with translation/scale/rotation', () => {
+    const a = new Dot({ point: [0, 0, 0] });
+    const b = new Dot({ point: [2, 1, 0] });
+    const g = new Group(a, b);
+
+    g.shift([3, -2, 0]);
+    g.scale(1.7);
+    g.rotate(Math.PI / 5);
+
+    const before = g.getBounds();
+    const beforeCenter = [
+      (before.min.x + before.max.x) / 2,
+      (before.min.y + before.max.y) / 2,
+      (before.min.z + before.max.z) / 2,
+    ] as const;
+    const beforeSize = [
+      before.max.x - before.min.x,
+      before.max.y - before.min.y,
+      before.max.z - before.min.z,
+    ] as const;
+
+    g.normalizeTransform();
+
+    const after = g.getBounds();
+    const afterCenter = [
+      (after.min.x + after.max.x) / 2,
+      (after.min.y + after.max.y) / 2,
+      (after.min.z + after.max.z) / 2,
+    ] as const;
+    const afterSize = [
+      after.max.x - after.min.x,
+      after.max.y - after.min.y,
+      after.max.z - after.min.z,
+    ] as const;
+
+    expect(afterCenter[0]).toBeCloseTo(beforeCenter[0], 6);
+    expect(afterCenter[1]).toBeCloseTo(beforeCenter[1], 6);
+
+    expect(afterSize[0]).toBeCloseTo(beforeSize[0], 6);
+    expect(afterSize[1]).toBeCloseTo(beforeSize[1], 6);
+
+    // Z thickness can vary slightly from triangulation/normal update details;
+    // lock planar bbox invariance for this transform-normalization regression.
+    expect(afterCenter[2]).toBeCloseTo(beforeCenter[2], 1);
+    expect(afterSize[2]).toBeGreaterThan(0);
+    expect(beforeSize[2]).toBeGreaterThan(0);
+  });
+
+  it('Group normalizeTransform applies parent transforms in S->R->T order', () => {
+    const p = new PointMobject({ position: [1, 0, 0] });
+    const g = new Group(p);
+
+    // Set parent anchors directly, then normalize into child state.
+    g.scaleVector.set(2, 2, 2);
+    g.rotation.set(0, 0, Math.PI / 2);
+    g.position.set(3, 0, 0);
+
+    g.normalizeTransform();
+
+    const pos = p.getPosition();
+    expect(pos[0]).toBeCloseTo(3, 6);
+    expect(pos[1]).toBeCloseTo(2, 6);
+    expect(pos[2]).toBeCloseTo(0, 6);
+
+    // Order lock: must not match other composition orders.
+    expect(pos[0]).not.toBeCloseTo(8, 6); // T->R->S on [1,0,0]
+    expect(pos[1]).not.toBeCloseTo(0, 6);
+
+    expect(g.position.x).toBe(0);
+    expect(g.position.y).toBe(0);
+    expect(g.position.z).toBe(0);
+    expect(g.rotation.x).toBe(0);
+    expect(g.rotation.y).toBe(0);
+    expect(g.rotation.z).toBe(0);
+    expect(g.scaleVector.x).toBe(1);
+    expect(g.scaleVector.y).toBe(1);
+    expect(g.scaleVector.z).toBe(1);
+  });
+
+  it('Group getCenter handles nested empty containers', () => {
+    const g = new Group(new VGroup(new VGroup()));
+    expect(g.getCenter()).toEqual([0, 0, 0]);
+  });
+
   it('shift shifts all children', () => {
     const a = new VMobject();
     a.position.set(0, 0, 0);
@@ -1738,8 +1839,13 @@ describe('VGroup - extended coverage', () => {
     const a = new Dot({ point: [0, 0, 0] });
     const b = new Dot({ point: [2, 0, 0] });
     const vg = new VGroup(a, b);
+
+    const bounds = vg.getBounds();
+    const bboxCenterX = (bounds.min.x + bounds.max.x) / 2;
+    expect(bboxCenterX).toBeCloseTo(1, 0);
+
     const center = vg.getCenter();
-    expect(center[0]).toBeCloseTo(1, 0);
+    expect(center[0]).toBeCloseTo(bboxCenterX, 6);
   });
 
   it('getCenter throws when a child has empty Three.js bounds', () => {
@@ -1853,6 +1959,7 @@ describe('VGroup - extended coverage', () => {
 
   it('normalizeTransform forwards VGroup scale to children and resets group scale', () => {
     const line = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    line.position.set(3, 0, 0);
     const vg = new VGroup(line);
 
     vg.scale(2);
@@ -1868,6 +1975,40 @@ describe('VGroup - extended coverage', () => {
     expect(line.scaleVector.x).toBe(2);
     expect(line.scaleVector.y).toBe(2);
     expect(line.scaleVector.z).toBe(2);
+    expect(line.position.x).toBe(6);
+    expect(line.position.y).toBe(0);
+    expect(line.position.z).toBe(0);
+  });
+
+  it('VMobject normalizeTransform forwards scale to children and resets parent scale', () => {
+    const parent = new VMobject();
+    parent.setPoints([
+      [0, 0, 0],
+      [1 / 3, 0, 0],
+      [2 / 3, 0, 0],
+      [1, 0, 0],
+    ]);
+
+    const child = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    child.position.set(2, 1, 0);
+    parent.add(child);
+
+    parent.scale(2);
+    expect(parent.scaleVector.x).toBe(2);
+    expect(parent.scaleVector.y).toBe(2);
+    expect(parent.scaleVector.z).toBe(2);
+
+    parent.normalizeTransform();
+
+    expect(parent.scaleVector.x).toBe(1);
+    expect(parent.scaleVector.y).toBe(1);
+    expect(parent.scaleVector.z).toBe(1);
+    expect(child.scaleVector.x).toBe(2);
+    expect(child.scaleVector.y).toBe(2);
+    expect(child.scaleVector.z).toBe(2);
+    expect(child.position.x).toBe(4);
+    expect(child.position.y).toBe(2);
+    expect(child.position.z).toBe(0);
   });
 
   it('center should be geometric from child bounds, not mean of child centers', () => {

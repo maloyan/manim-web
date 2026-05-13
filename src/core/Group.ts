@@ -77,63 +77,68 @@ export class Group extends Mobject {
     return this;
   }
 
-  /**
-   * Get axis-aligned bounds that enclose all children.
-   */
-  getChildrenBounds(): {
-    min: { x: number; y: number; z: number };
-    max: { x: number; y: number; z: number };
-  } {
+  override getCenter(): Vector3Tuple {
     if (this.children.length === 0) {
-      return {
-        min: { x: this.position.x, y: this.position.y, z: this.position.z },
-        max: { x: this.position.x, y: this.position.y, z: this.position.z },
-      };
+      return [this.position.x, this.position.y, this.position.z];
     }
 
-    let minX = Infinity,
-      minY = Infinity,
-      minZ = Infinity;
-    let maxX = -Infinity,
-      maxY = -Infinity,
-      maxZ = -Infinity;
-
-    let includedChild = false;
-    for (const child of this.children) {
-      const isEmptyContainer = 'getChildrenBounds' in child && child.children.length === 0;
-      if (isEmptyContainer) {
-        continue;
-      }
-      const b = child.getBounds();
-      minX = Math.min(minX, b.min.x);
-      minY = Math.min(minY, b.min.y);
-      minZ = Math.min(minZ, b.min.z);
-      maxX = Math.max(maxX, b.max.x);
-      maxY = Math.max(maxY, b.max.y);
-      maxZ = Math.max(maxZ, b.max.z);
-      includedChild = true;
-    }
-
-    if (!includedChild) {
-      return {
-        min: { x: this.position.x, y: this.position.y, z: this.position.z },
-        max: { x: this.position.x, y: this.position.y, z: this.position.z },
-      };
-    }
-
-    return {
-      min: { x: minX, y: minY, z: minZ },
-      max: { x: maxX, y: maxY, z: maxZ },
+    const isEmptyContainer = (mob: Mobject): boolean => {
+      const candidate = mob as unknown as { isEmpty?: () => boolean };
+      return typeof candidate.isEmpty === 'function' && candidate.isEmpty();
     };
+    const hasNonEmptyChild = this.children.some((child) => !isEmptyContainer(child));
+    if (!hasNonEmptyChild) {
+      return [this.position.x, this.position.y, this.position.z];
+    }
+
+    const b = this.getBounds();
+    return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
   }
 
-  /**
-   * Get the center of the group from the bounding box of all children.
-   * @returns Center position as [x, y, z]
-   */
-  override getCenter(): Vector3Tuple {
-    const b = this.getChildrenBounds();
-    return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
+  override normalizeTransform(): this {
+    const sx = this.scaleVector.x;
+    const sy = this.scaleVector.y;
+    const sz = this.scaleVector.z;
+    if (sx !== 1 || sy !== 1 || sz !== 1) {
+      for (const child of this.children) {
+        child.position.set(child.position.x * sx, child.position.y * sy, child.position.z * sz);
+        child.scale([sx, sy, sz]);
+      }
+      this.scaleVector.set(1, 1, 1);
+      this._markDirty();
+    }
+
+    const rx = this.rotation.x;
+    const ry = this.rotation.y;
+    const rz = this.rotation.z;
+    if (rx !== 0 || ry !== 0 || rz !== 0) {
+      const rot = new THREE.Euler(rx, ry, rz, this.rotation.order);
+      for (const child of this.children) {
+        child.position.applyEuler(rot);
+        if (rx !== 0) child.rotate(rx, [1, 0, 0]);
+        if (ry !== 0) child.rotate(ry, [0, 1, 0]);
+        if (rz !== 0) child.rotate(rz, [0, 0, 1]);
+      }
+      this.rotation.set(0, 0, 0);
+      this._markDirty();
+    }
+
+    const dx = this.position.x;
+    const dy = this.position.y;
+    const dz = this.position.z;
+    if (dx !== 0 || dy !== 0 || dz !== 0) {
+      for (const child of this.children) {
+        child.position.set(child.position.x + dx, child.position.y + dy, child.position.z + dz);
+      }
+      this.position.set(0, 0, 0);
+      this._markDirty();
+    }
+
+    for (const child of this.children) {
+      child.normalizeTransform();
+    }
+
+    return this;
   }
 
   /**
