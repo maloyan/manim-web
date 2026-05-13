@@ -320,19 +320,24 @@ describe('Moving Group To Destination', () => {
     expect(center[1]).toBeCloseTo(0, 4);
   });
 
-  it('VGroup.scale scales children about group center', () => {
+  it('VGroup.scale updates group transform without mutating child anchors', () => {
     const d1 = new Dot({ point: [-1, 0, 0] });
     const d2 = new Dot({ point: [1, 0, 0] });
     const group = new VGroup(d1, d2);
     const centerBefore = group.getCenter();
     group.scale(2);
     const centerAfter = group.getCenter();
-    // Center should remain roughly the same
+
+    // Group center remains stable
     expect(centerAfter[0]).toBeCloseTo(centerBefore[0], 3);
     expect(centerAfter[1]).toBeCloseTo(centerBefore[1], 3);
-    // Spread should double
+
+    // Group carries scale; child anchors stay unchanged in local geometry
+    expect(group.scaleVector.x).toBeCloseTo(2, 6);
+    expect(group.scaleVector.y).toBeCloseTo(2, 6);
+    expect(group.scaleVector.z).toBeCloseTo(2, 6);
     const spread = d2.getCenter()[0] - d1.getCenter()[0];
-    expect(spread).toBeCloseTo(4, 3);
+    expect(spread).toBeCloseTo(2, 3);
   });
 
   it('subVec computes direction from one point to another', () => {
