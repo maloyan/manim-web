@@ -206,11 +206,7 @@ export class Group extends Mobject {
    * @returns this for chaining
    */
   override scale(factor: number | Vector3Tuple): this {
-    for (const child of this.children) {
-      child.scale(factor);
-    }
-    this._markDirty();
-    return this;
+    return super.scale(factor);
   }
 
   /**

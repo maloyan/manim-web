@@ -269,6 +269,32 @@ export class VMobject extends VMobjectRendering {
     return this;
   }
 
+  /**
+   * Fold local scaleVector into points and reset scaleVector to identity.
+   *
+   * This keeps VMobject geometry canonical in point-space while still
+   * supporting transient transform composition on Mobject.
+   */
+  override normalizeTransform(): this {
+    const sx = this.scaleVector.x;
+    const sy = this.scaleVector.y;
+    const sz = this.scaleVector.z;
+    if (sx === 1 && sy === 1 && sz === 1) {
+      return this;
+    }
+
+    for (const p of this._points3D) {
+      p[0] *= sx;
+      p[1] *= sy;
+      p[2] *= sz;
+    }
+
+    this.scaleVector.set(1, 1, 1);
+    this._geometryDirty = true;
+    this._markDirtyUpward();
+    return this;
+  }
+
   // -----------------------------------------------------------------------
   // Transform subpath metadata
   // -----------------------------------------------------------------------

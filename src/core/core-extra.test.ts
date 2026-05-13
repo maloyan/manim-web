@@ -1556,21 +1556,22 @@ describe('Group - extended coverage', () => {
     // child should have been rotated
   });
 
-  it('scale scales all children', () => {
+  it('scale updates group scale vector', () => {
     const a = new VMobject();
-    a.scaleVector.set(1, 1, 1);
     const g = new Group(a);
     g.scale(2);
-    expect(a.scaleVector.x).toBe(2);
-    expect(a.scaleVector.y).toBe(2);
+    expect(g.scaleVector.x).toBe(2);
+    expect(g.scaleVector.y).toBe(2);
+    expect(a.scaleVector.x).toBe(1);
   });
 
-  it('scale with tuple scales children non-uniformly', () => {
+  it('scale with tuple updates group scale vector non-uniformly', () => {
     const a = new VMobject();
     const g = new Group(a);
     g.scale([2, 3, 4]);
-    expect(a.scaleVector.x).toBe(2);
-    expect(a.scaleVector.y).toBe(3);
+    expect(g.scaleVector.x).toBe(2);
+    expect(g.scaleVector.y).toBe(3);
+    expect(g.scaleVector.z).toBe(4);
   });
 
   it('setColor propagates to all children', () => {
@@ -1795,24 +1796,23 @@ describe('VGroup - extended coverage', () => {
     // child should have been rotated
   });
 
-  it('scale scales children about group center', () => {
+  it('scale updates vgroup scale vector', () => {
     const a = new PointMobject({ position: [0, 0, 0] });
-    a.scaleVector.set(1, 1, 1);
     const b = new PointMobject({ position: [4, 0, 0] });
-    b.scaleVector.set(1, 1, 1);
     const vg = new VGroup(a, b);
     vg.scale(2);
-    // Each child's own size is scaled by 2
-    expect(a.scaleVector.x).toBe(2);
-    expect(b.scaleVector.x).toBe(2);
+    expect(vg.scaleVector.x).toBe(2);
+    expect(vg.scaleVector.y).toBe(2);
+    expect(a.scaleVector.x).toBe(1);
+    expect(b.scaleVector.x).toBe(1);
   });
 
-  it('scale with tuple scales non-uniformly', () => {
+  it('scale with tuple updates vgroup scale vector non-uniformly', () => {
     const a = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a);
     vg.scale([2, 3, 1]);
-    expect(a.scaleVector.x).toBe(2);
-    expect(a.scaleVector.y).toBe(3);
+    expect(vg.scaleVector.x).toBe(2);
+    expect(vg.scaleVector.y).toBe(3);
   });
 
   it('center should be geometric from child bounds, not mean of child centers', () => {
