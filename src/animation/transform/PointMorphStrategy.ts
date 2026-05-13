@@ -34,6 +34,14 @@ interface VGroupLeafState {
   fillColorPair: { start: THREE.Color; target: THREE.Color; interpolate: boolean };
 }
 const scratchColor = new THREE.Color();
+function assertGroupPositionAtOrigin(group: VGroup, phase: string): void {
+  const { x, y, z } = group.position;
+  if (x !== 0 || y !== 0 || z !== 0) {
+    throw new Error(
+      `PointMorphStrategy(${phase}): VGroup.position must stay exactly [0, 0, 0], got [${x}, ${y}, ${z}]`,
+    );
+  }
+}
 
 function captureStyle(m: VMobject): ChildStyle {
   return {
@@ -119,6 +127,8 @@ export class PointMorphStrategy implements MorphStrategy {
   }
   private _beginVGroup(source: VGroup, target: VGroup): void {
     this._isVGroupTransform = true;
+    assertGroupPositionAtOrigin(source, 'begin/source');
+    assertGroupPositionAtOrigin(target, 'begin/target');
     for (const pair of pairLeafSnapshotsByIndex(source, target))
       this._vgroupLeafStates.push(this._build(source, pair));
     this._startPosition.copy(source.position);
@@ -175,6 +185,8 @@ export class PointMorphStrategy implements MorphStrategy {
   }
   interpolate(_animation: Animation, source: Mobject, _target: Mobject, alpha: number): void {
     if (this._isVGroupTransform) {
+      const group = source as VGroup;
+      assertGroupPositionAtOrigin(group, `interpolate@${alpha.toFixed(3)}`);
       for (const leaf of this._vgroupLeafStates) {
         const interpolated: number[][] = [];
         for (let i = 0; i < leaf.startPoints.length; i++)
@@ -235,6 +247,7 @@ export class PointMorphStrategy implements MorphStrategy {
   finish(_animation: Animation, source: Mobject, target: Mobject): void {
     if (this._isVGroupTransform) {
       const group = source as VGroup;
+      assertGroupPositionAtOrigin(group, 'finish/source');
       for (const leaf of this._vgroupLeafStates) {
         leaf.child.setPoints(leaf.finalTargetPoints);
         leaf.child.position.copy(leaf.targetPosition);

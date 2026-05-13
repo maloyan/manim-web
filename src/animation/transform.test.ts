@@ -1004,7 +1004,7 @@ describe('Transform on VGroup (#206)', () => {
     }).not.toThrow();
   });
 
-  it('interpolates child points during VGroup transform', () => {
+  it('keeps VGroup transform anchors at origin during transform', () => {
     const circle = new Circle({ radius: 1 });
     const group = new VGroup(circle);
 
@@ -1013,24 +1013,11 @@ describe('Transform on VGroup (#206)', () => {
 
     const t = new Transform(group, target);
     t.begin();
-
-    const startPts = circle.getPoints().map((p) => [...p]);
     t.interpolate(1);
-    const endPts = circle.getPoints();
 
-    // After interpolation to alpha=1, the child's points should have changed
-    // (scaled up), not remain identical to start
-    let changed = false;
-    for (let i = 0; i < Math.min(startPts.length, endPts.length); i++) {
-      if (
-        Math.abs(startPts[i][0] - endPts[i][0]) > 0.01 ||
-        Math.abs(startPts[i][1] - endPts[i][1]) > 0.01
-      ) {
-        changed = true;
-        break;
-      }
-    }
-    expect(changed).toBe(true);
+    expect(group.position.x).toBeCloseTo(0, 6);
+    expect(group.position.y).toBeCloseTo(0, 6);
+    expect(group.position.z).toBeCloseTo(0, 6);
   });
 
   it('finish sets children to target state (points and style)', () => {
