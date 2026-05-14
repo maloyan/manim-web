@@ -10,6 +10,7 @@ const scene = new ThreeDScene(container, {
   distance: 24,
   fov: 35,
   enableOrbitControls: true,
+  orbitControlsUp: 'z',
 });
 
 const axes = new ThreeDAxes({

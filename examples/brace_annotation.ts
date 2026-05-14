@@ -19,7 +19,7 @@ async function braceAnnotation(scene: Scene) {
       .rotate(Math.PI / 2)
       .getUnitVector(),
   });
-  const b2text = b2.getTex('x-x_1');
+  const b2text = b2.getTex('x-x_1', { fontSize: 48 });
   scene.add(line, dot, dot2, b1, b2, b1text, b2text);
 }
 

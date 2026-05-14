@@ -1,4 +1,4 @@
-import { Text, ThreeDAxes, ThreeDScene } from '../src/index.ts';
+import { GOLD, Text, ThreeDAxes, ThreeDScene } from '../src/index.ts';
 
 const container = document.getElementById('container');
 const scene = new ThreeDScene(container, {
@@ -9,6 +9,7 @@ const scene = new ThreeDScene(container, {
   theta: -45 * (Math.PI / 180),
   distance: 20,
   fov: 30,
+  orbitControlsUp: 'z',
 });
 
 async function fixedOrientationMobjectsExample(scene: ThreeDScene) {
@@ -22,12 +23,14 @@ async function fixedOrientationMobjectsExample(scene: ThreeDScene) {
     shaftRadius: 0.008,
   });
 
-  // Create a label that sits in 3D space but always faces the camera
-  const label = new Text({ text: 'Origin', fontSize: 24 });
-  label.moveTo([0, 0.5, 0]);
+  // Create a label that sits in 3D space but always faces the camera.
+  // Small XY offset + GOLD tint so the text reads against the white axis lines
+  // without floating away from the origin it labels.
+  const label = new Text({ text: 'Origin', fontSize: 32, color: GOLD });
+  label.moveTo([0.4, 0.4, 0.3]);
 
-  const xLabel = new Text({ text: 'X', fontSize: 24 });
-  xLabel.moveTo([6.5, 0, 0]);
+  const xLabel = new Text({ text: 'X', fontSize: 32, color: GOLD });
+  xLabel.moveTo([6.8, 0, 0.4]);
 
   scene.add(axes, label, xLabel);
 
