@@ -24,6 +24,7 @@ const scene = new ThreeDScene(container, {
   distance: 20,
   fov: 30,
   enableOrbitControls: true,
+  orbitControlsUp: 'z',
 });
 
 let isAnimating = false;

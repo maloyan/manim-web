@@ -11,6 +11,7 @@ async function makeScene(id: string, shift: boolean) {
     // Deliberately tight: camera close + narrow FOV so default axis tips clip.
     distance: 12,
     fov: 25,
+    orbitControlsUp: 'z',
   });
 
   const axes = new ThreeDAxes({

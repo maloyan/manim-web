@@ -9,6 +9,7 @@ const scene = new ThreeDScene(container, {
   theta: 30 * (Math.PI / 180),
   distance: 20,
   fov: 30,
+  orbitControlsUp: 'z',
 });
 
 async function threeDCameraIllusionRotation(scene: ThreeDScene) {
