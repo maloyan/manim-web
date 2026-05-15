@@ -90,6 +90,8 @@
       await scene.nextSlide();
       await scene.play(new Transform(square, circle));
       await scene.play(new FadeOut(circle));
+    }).catch((err) => {
+      console.error('sequence() failed:', err);
     });
   </script>
 </body>

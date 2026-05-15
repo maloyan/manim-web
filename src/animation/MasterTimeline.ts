@@ -30,19 +30,26 @@ export interface Segment {
 
 export interface Slide {
   /** Index in the slides array */
-  index: number;
+  readonly index: number;
   /** First segment in this slide */
-  startSegmentIndex: number;
+  readonly startSegmentIndex: number;
   /** Last segment in this slide (inclusive) */
-  endSegmentIndex: number;
+  readonly endSegmentIndex: number;
   /** = segments[startSegmentIndex].startTime */
-  startTime: number;
+  readonly startTime: number;
   /** = segments[endSegmentIndex].endTime */
-  endTime: number;
-  /** Replay this slide until the user presses → in slidesMode. */
-  loop: boolean;
-  /** Advance to the next slide automatically when this slide finishes. */
-  autoNext: boolean;
+  readonly endTime: number;
+  /**
+   * Replay this slide in slidesMode until the user navigates away
+   * (→, ←, public seek out of the slide, or setSlidesMode(false)).
+   * Wins over `autoNext` when both are set.
+   */
+  readonly loop: boolean;
+  /**
+   * Auto-advance to the next slide when this slide finishes (slidesMode only).
+   * Ignored if `loop` is also true. Final autoNext slide pauses normally.
+   */
+  readonly autoNext: boolean;
 }
 
 export interface SlideOptions {
@@ -213,19 +220,40 @@ export class MasterTimeline extends Timeline {
 
   /**
    * Record a slide boundary: the next segment added will start a new slide
-   * with the given options. Mirrors manim-slides' `next_slide(...)` — the
+   * with the given options. Inspired by manim-slides' `next_slide(...)` — the
    * options configure the slide that *follows* this call.
    *
    * If no boundary is ever recorded, every segment becomes its own slide
    * (per-play behavior, used by existing slidesMode callers).
+   *
+   * Calling `beginSlide()` twice at the same segment index (i.e. with no
+   * intervening play/wait) drops the earlier call's options, since an
+   * empty slide cannot carry options into anything that will play. We warn
+   * to surface the likely user error.
    */
   beginSlide(opts: SlideOptions = {}): void {
-    this._slideBoundaries.push({ atSegmentIndex: this._segments.length, opts });
+    const atSegmentIndex = this._segments.length;
+    const last = this._slideBoundaries[this._slideBoundaries.length - 1];
+    if (
+      last &&
+      last.atSegmentIndex === atSegmentIndex &&
+      (last.opts.loop || last.opts.autoNext) &&
+      typeof console !== 'undefined'
+    ) {
+      console.warn(
+        'MasterTimeline.beginSlide: consecutive nextSlide() calls with no play()/wait() between them — previous opts ' +
+          JSON.stringify(last.opts) +
+          ' will be dropped.',
+      );
+    }
+    this._slideBoundaries.push({ atSegmentIndex, opts });
   }
 
   /**
-   * Build the _slides array from recorded segments and slide boundaries.
-   * Call once at the end of recording (after the sequence builder finishes).
+   * Build the `_slides` array from recorded segments and slide boundaries.
+   * Call once after the recording builder finishes; idempotent — calling
+   * twice with the same `_segments` / `_slideBoundaries` produces the same
+   * `_slides`.
    *
    * - No boundaries recorded: each segment is its own slide.
    * - Otherwise: segments before the first boundary form an implicit slide 0
@@ -234,6 +262,9 @@ export class MasterTimeline extends Timeline {
    *
    * Empty slides (consecutive boundaries with no plays between them) are
    * skipped — they have no animations and no duration to occupy.
+   *
+   * Throws if any slide carries `loop: true` but has zero total duration,
+   * since the player would rewind every frame.
    */
   finalizeSlides(): void {
     this._slides = [];
@@ -242,21 +273,14 @@ export class MasterTimeline extends Timeline {
     if (this._slideBoundaries.length === 0) {
       // Auto-boundary: each segment becomes its own slide with default opts.
       for (const seg of this._segments) {
-        this._slides.push({
-          index: this._slides.length,
-          startSegmentIndex: seg.index,
-          endSegmentIndex: seg.index,
-          startTime: seg.startTime,
-          endTime: seg.endTime,
-          loop: false,
-          autoNext: false,
-        });
+        this._slides.push(this._buildSlide(seg.index, seg.index, {}));
       }
       return;
     }
 
     // Manual boundary mode. Synthesise a leading boundary at index 0 if the
-    // first user boundary is later, so plays before it form slide 0.
+    // first user boundary is later, so plays before it form slide 0 with
+    // default opts.
     const boundaries = [...this._slideBoundaries];
     if (boundaries[0].atSegmentIndex > 0) {
       boundaries.unshift({ atSegmentIndex: 0, opts: {} });
@@ -269,25 +293,40 @@ export class MasterTimeline extends Timeline {
       const start = boundaries[i].atSegmentIndex;
       const end = boundaries[i + 1].atSegmentIndex - 1;
       if (end < start) continue; // empty slide — skip
-      const opts = boundaries[i].opts;
-      const startSeg = this._segments[start];
-      const endSeg = this._segments[end];
-      const loop = opts.loop ?? false;
-      if (loop && endSeg.endTime <= startSeg.startTime) {
-        throw new Error(
-          'MasterTimeline.finalizeSlides: cannot loop a zero-duration slide (would rewind every frame).',
-        );
-      }
-      this._slides.push({
-        index: this._slides.length,
-        startSegmentIndex: start,
-        endSegmentIndex: end,
-        startTime: startSeg.startTime,
-        endTime: endSeg.endTime,
-        loop,
-        autoNext: opts.autoNext ?? false,
-      });
+      this._slides.push(this._buildSlide(start, end, boundaries[i].opts));
     }
+  }
+
+  /**
+   * Single construction site for Slide: enforces invariants, normalises opts
+   * (`loop` wins over `autoNext`), and validates zero-duration loops.
+   */
+  private _buildSlide(start: number, end: number, opts: SlideOptions): Slide {
+    const startSeg = this._segments[start];
+    const endSeg = this._segments[end];
+    if (!startSeg || !endSeg || end < start) {
+      throw new Error(
+        `MasterTimeline._buildSlide: invalid segment range [${start}..${end}] for ${this._segments.length} segments.`,
+      );
+    }
+    const loop = opts.loop ?? false;
+    if (loop && endSeg.endTime <= startSeg.startTime) {
+      throw new Error(
+        'MasterTimeline.finalizeSlides: cannot loop a zero-duration slide (would rewind every frame).',
+      );
+    }
+    // Normalize: loop wins over autoNext so the runtime branch and the type
+    // tell the same story.
+    const autoNext = loop ? false : (opts.autoNext ?? false);
+    return {
+      index: this._slides.length,
+      startSegmentIndex: start,
+      endSegmentIndex: end,
+      startTime: startSeg.startTime,
+      endTime: endSeg.endTime,
+      loop,
+      autoNext,
+    };
   }
 
   /**
@@ -305,7 +344,8 @@ export class MasterTimeline extends Timeline {
   }
 
   /**
-   * Get the slide active at the given time.
+   * Get the slide active at the given time. Returns `null` if `time` is
+   * before the first slide's startTime or no slides exist.
    */
   getSlideAtTime(time: number): Slide | null {
     for (let i = this._slides.length - 1; i >= 0; i--) {
@@ -313,7 +353,7 @@ export class MasterTimeline extends Timeline {
         return this._slides[i];
       }
     }
-    return this._slides[0] ?? null;
+    return null;
   }
 
   /**

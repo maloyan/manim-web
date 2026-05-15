@@ -1036,6 +1036,104 @@ describe('Player _startLoop render loop', () => {
     expect(t).toBeLessThanOrEqual(0.5);
   });
 
+  it('public seek inside the current target slide preserves loop+target state', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ loop: true });
+      await scene.wait(1);
+      await scene.nextSlide();
+      await scene.wait(0.5);
+    });
+
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+      _slidesTargetSlideIndex: number;
+    };
+    internal._activeLoopSlideIndex = 0;
+    internal._slidesTargetSlideIndex = 0;
+
+    // Scrub within slide 0's range (0..1) — must NOT silently kill the loop.
+    player.seek(0.4);
+    expect(internal._activeLoopSlideIndex).toBe(0);
+    expect(internal._slidesTargetSlideIndex).toBe(0);
+
+    // Scrub outside the target slide — clears state.
+    player.seek(1.2);
+    expect(internal._activeLoopSlideIndex).toBeNull();
+    expect(internal._slidesTargetSlideIndex).toBe(-1);
+  });
+
+  it('autoPlay + slidesMode + autoNext walks through the whole deck', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true, autoPlay: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ autoNext: true });
+      await scene.wait(0.2);
+      await scene.nextSlide({ autoNext: true });
+      await scene.wait(0.2);
+      await scene.nextSlide();
+      await scene.wait(0.2);
+    });
+
+    // autoPlay armed the player; flush enough to traverse 0.6s.
+    for (let i = 0; i < 100; i++) flushRaf(100 + i * 20);
+
+    expect(player.isPlaying).toBe(false);
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.6);
+  });
+
+  it('non-slidesMode navigation steps by segment, not by slide', async () => {
+    // No slidesMode → nextSegment/prevSegment must move one segment at a time
+    // even when the timeline has multi-play slides.
+    await player.sequence(async (scene) => {
+      await scene.nextSlide();
+      await scene.wait(0.5);
+      await scene.wait(0.5); // same multi-play slide as the wait above
+      await scene.nextSlide();
+      await scene.wait(0.5);
+    });
+
+    // Should have 2 slides, 3 segments.
+    expect(player.timeline.slideCount).toBe(2);
+    expect(player.timeline.segmentCount).toBe(3);
+
+    player.nextSegment();
+    // Advanced to segment 1's start (0.5s) — within slide 0, not slide 1.
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.5);
+    player.nextSegment();
+    // Advanced to segment 2's start (1.0s) — start of slide 1.
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
+  });
+
+  it('_startLoop disarms stale _slidesTargetSlideIndex instead of asserting', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(0.3);
+    });
+    const internal = player as unknown as { _slidesTargetSlideIndex: number };
+    // Point at a slide that does not exist.
+    internal._slidesTargetSlideIndex = 99;
+    player.play();
+    flushRaf(400);
+
+    // Should have self-healed rather than throwing or freezing playback.
+    expect(internal._slidesTargetSlideIndex).toBe(-1);
+  });
+
   it('multi-play slide is treated as a single slide for navigation', async () => {
     player.dispose();
     container.remove();

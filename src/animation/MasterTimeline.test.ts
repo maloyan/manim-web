@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import * as THREE from 'three';
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
@@ -228,6 +228,43 @@ describe('MasterTimeline', () => {
       tl.finalizeSlides();
       const second = JSON.parse(JSON.stringify(tl.getSlides()));
       expect(second).toEqual(first);
+    });
+
+    it('finalizeSlides on a completely empty timeline produces no slides', () => {
+      tl.finalizeSlides();
+      expect(tl.slideCount).toBe(0);
+      expect(tl.getCurrentSlide()).toBeNull();
+    });
+
+    it('getSlideAtTime returns null before the first slide', () => {
+      const mob = new TestMobject();
+      tl.beginSlide();
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+      // First slide starts at 0, but we manufacture a pathological pre-slide
+      // time by querying a negative value.
+      expect(tl.getSlideAtTime(-1)).toBeNull();
+    });
+
+    it('warns on consecutive beginSlide calls that drop non-default opts', () => {
+      const mob = new TestMobject();
+      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      tl.beginSlide({ loop: true });
+      tl.beginSlide(); // drops { loop: true } silently — should warn
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+      expect(spy).toHaveBeenCalledOnce();
+      spy.mockRestore();
+    });
+
+    it('normalises autoNext to false when loop is true', () => {
+      const mob = new TestMobject();
+      tl.beginSlide({ loop: true, autoNext: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+      const slide = tl.getSlides()[0];
+      expect(slide.loop).toBe(true);
+      expect(slide.autoNext).toBe(false);
     });
 
     it('getCurrentSlide returns slide containing the current time', () => {
