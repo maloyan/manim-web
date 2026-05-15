@@ -8,7 +8,13 @@
  * Supports animation overrides via `overrideAnimation` / `getAnimationOverride`.
  */
 
-import { Mobject, type Vector3Tuple, type MobjectStyle, registerAnimateProxy } from './Mobject';
+import {
+  Mobject,
+  type Vector3Tuple,
+  type MobjectStyle,
+  type AxisOrOptions,
+  registerAnimateProxy,
+} from './Mobject';
 import { VGroup } from './VGroup';
 import { Animation, type AnimationOptions } from '../animation/Animation';
 import { type RateFunction, smooth } from '../rate-functions';
@@ -58,10 +64,7 @@ export class AnimateProxy extends Animation {
     return this;
   }
 
-  rotate(
-    angle: number,
-    axisOrOptions?: Vector3Tuple | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple },
-  ): this {
+  rotate(angle: number, axisOrOptions?: Vector3Tuple | AxisOrOptions): this {
     this._calls.push(['rotate', axisOrOptions ? [angle, axisOrOptions] : [angle]]);
     return this;
   }

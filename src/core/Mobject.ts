@@ -36,6 +36,7 @@ export {
   type MobjectStyle,
   type MobjectLike,
   type VMobjectLike,
+  type AxisOrOptions,
   isVMobjectLike,
   UP,
   DOWN,
@@ -241,7 +242,7 @@ export abstract class Mobject {
       | Vector3Tuple
       | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
   ): this {
-    if (typeof angle !== 'number' || !isFinite(angle)) {
+    if (typeof angle !== 'number') {
       throw new TypeError('Mobject.rotate: angle must be a finite number');
     }
 

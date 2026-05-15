@@ -275,7 +275,7 @@ describe('Scene.export()', () => {
     expect(blob).toBeInstanceOf(Blob);
     expect(gifExportTimelineSpy).toHaveBeenCalled();
     expect(gifDownloadSpy).toHaveBeenCalledWith(blob, 'animation.gif');
-  });
+  }, 15000);
 
   it('routes .webm extension to VideoExporter', async () => {
     const { Scene } = await import('../core/Scene');

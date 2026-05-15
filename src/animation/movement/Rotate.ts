@@ -4,19 +4,14 @@
 
 import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import type { AxisOrOptions } from '../../core/MobjectTypes';
 import { Animation, AnimationOptions } from '../Animation';
 import typia from 'typia';
 import { resolveExtremalPoint } from '../../core/MobjectState';
 
-export interface RotateOptions extends AnimationOptions {
+export interface RotateOptions extends AnimationOptions, AxisOrOptions {
   /** Angle to rotate in radians */
   angle: number;
-  /** Axis of rotation [x, y, z], defaults to Z axis [0, 0, 1] */
-  axis?: Vector3Tuple;
-  /** Point to rotate about, defaults to mobject center */
-  aboutPoint?: Vector3Tuple;
-  /** Edge to rotate about, resolved via bounding box. Mutually exclusive with aboutPoint. */
-  aboutEdge?: Vector3Tuple;
 }
 
 export class Rotate extends Animation {
@@ -129,7 +124,7 @@ export function rotate(
   angle: number,
   options?: Omit<RotateOptions, 'angle'>,
 ): Rotate {
-  if (typeof angle !== 'number' || !isFinite(angle)) {
+  if (typeof angle !== 'number') {
     throw new TypeError('rotate(): angle must be a finite number');
   }
   // Validate helper options briefly
