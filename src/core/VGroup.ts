@@ -161,10 +161,20 @@ export class VGroup extends VMobject {
    * Shift all children by the given delta.
    * Only shifts children's internal positions, not the group's own position,
    * to avoid double-counting in THREE.js hierarchy.
+   *
+   * When the group has no children yet (e.g. MathTex / Tex whose glyphs are
+   * still being rendered asynchronously — issue #318), shift the group's
+   * own `position` instead so the translation is not silently dropped.
+   * THREE.js propagates the parent position to children that get added
+   * later, and `getCenter()` already adds `this.position` to the children
+   * average, so subsequent shifts on the populated group stay consistent.
    * @param delta - Translation vector [x, y, z]
    * @returns this for chaining
    */
   override shift(delta: Vector3Tuple): this {
+    if (this.children.length === 0) {
+      return super.shift(delta);
+    }
     for (const child of this.children) {
       child.shift(delta);
     }
