@@ -41,12 +41,10 @@ function createContainer(): HTMLElement {
 /**
  * Create a minimal mock MasterTimeline for setSegments().
  */
-function createMockTimeline(
-  segments: Array<{ index: number; startTime: number }>,
-  duration: number,
-) {
+function createMockTimeline(slides: Array<{ index: number; startTime: number }>, duration: number) {
   return {
-    getSegments: () => segments,
+    getSegments: () => slides,
+    getSlides: () => slides,
     getDuration: () => duration,
   } as any;
 }

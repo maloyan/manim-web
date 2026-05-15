@@ -113,28 +113,137 @@ describe('MasterTimeline', () => {
       expect(tl.getDuration()).toBe(1);
       expect(tl.length).toBe(1); // one scheduled animation on base Timeline
     });
+  });
 
-    it('defaults segment.loop to false', () => {
+  // ---------------------------------------------------------------------------
+  // slides (beginSlide / finalizeSlides / getSlides)
+  // ---------------------------------------------------------------------------
+  describe('slides', () => {
+    it('auto-boundary: one slide per segment when no beginSlide() was called', () => {
       const mob = new TestMobject();
-      const anim = new TestAnimation(mob, { duration: 1 });
-      const seg = tl.addSegment([anim]);
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.addWaitSegment(0.5);
+      tl.finalizeSlides();
 
-      expect(seg.loop).toBe(false);
+      const slides = tl.getSlides();
+      expect(slides).toHaveLength(3);
+      slides.forEach((s, i) => {
+        expect(s.startSegmentIndex).toBe(i);
+        expect(s.endSegmentIndex).toBe(i);
+        expect(s.loop).toBe(false);
+        expect(s.autoNext).toBe(false);
+      });
     });
 
-    it('stores segment.loop=true when opts.loop is true', () => {
+    it('beginSlide before any segment makes slide 0 use those opts', () => {
       const mob = new TestMobject();
-      const anim = new TestAnimation(mob, { duration: 1 });
-      const seg = tl.addSegment([anim], { loop: true });
+      tl.beginSlide({ loop: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
 
-      expect(seg.loop).toBe(true);
+      const slides = tl.getSlides();
+      expect(slides).toHaveLength(1);
+      expect(slides[0].loop).toBe(true);
+      expect(slides[0].autoNext).toBe(false);
     });
 
-    it('throws when adding a zero-duration looping segment', () => {
+    it('beginSlide mid-recording groups subsequent segments into one slide', () => {
       const mob = new TestMobject();
-      const anim = new TestAnimation(mob, { duration: 0 });
+      // slide 0: 1 segment
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      // slide 1 (loop, 2 segments)
+      tl.beginSlide({ loop: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      // slide 2: 1 segment
+      tl.beginSlide({ autoNext: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
 
-      expect(() => tl.addSegment([anim], { loop: true })).toThrow(/zero-duration/);
+      const slides = tl.getSlides();
+      expect(slides).toHaveLength(3);
+      expect(slides[0]).toMatchObject({
+        startSegmentIndex: 0,
+        endSegmentIndex: 0,
+        startTime: 0,
+        endTime: 1,
+        loop: false,
+        autoNext: false,
+      });
+      expect(slides[1]).toMatchObject({
+        startSegmentIndex: 1,
+        endSegmentIndex: 2,
+        startTime: 1,
+        endTime: 3,
+        loop: true,
+        autoNext: false,
+      });
+      expect(slides[2]).toMatchObject({
+        startSegmentIndex: 3,
+        endSegmentIndex: 3,
+        startTime: 3,
+        endTime: 4,
+        loop: false,
+        autoNext: true,
+      });
+    });
+
+    it('back-to-back beginSlide calls without segments are skipped', () => {
+      const mob = new TestMobject();
+      tl.beginSlide({ loop: true });
+      tl.beginSlide({ autoNext: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+
+      // Only the final boundary owns the segment.
+      const slides = tl.getSlides();
+      expect(slides).toHaveLength(1);
+      expect(slides[0].autoNext).toBe(true);
+      expect(slides[0].loop).toBe(false);
+    });
+
+    it('finalizeSlides with no segments leaves slides empty', () => {
+      tl.beginSlide({ loop: true });
+      tl.finalizeSlides();
+      expect(tl.getSlides()).toHaveLength(0);
+      expect(tl.slideCount).toBe(0);
+    });
+
+    it('throws if a multi-play slide is marked loop with zero total duration', () => {
+      // Synthetic: a beginSlide(loop:true) that wraps a single zero-duration
+      // wait would be a tight-loop trap.
+      tl.beginSlide({ loop: true });
+      tl.addWaitSegment(0); // zero-duration
+      expect(() => tl.finalizeSlides()).toThrow(/zero-duration/);
+    });
+
+    it('finalizeSlides is idempotent: calling twice produces the same slide list', () => {
+      const mob = new TestMobject();
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.beginSlide({ loop: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+      const first = JSON.parse(JSON.stringify(tl.getSlides()));
+      tl.finalizeSlides();
+      const second = JSON.parse(JSON.stringify(tl.getSlides()));
+      expect(second).toEqual(first);
+    });
+
+    it('getCurrentSlide returns slide containing the current time', () => {
+      const mob = new TestMobject();
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.beginSlide({ loop: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+
+      tl.seek(0.5);
+      expect(tl.getCurrentSlide()?.index).toBe(0);
+      tl.seek(1.5);
+      expect(tl.getCurrentSlide()?.index).toBe(1);
+      tl.seek(2.5);
+      expect(tl.getCurrentSlide()?.index).toBe(1);
     });
   });
 
@@ -166,11 +275,6 @@ describe('MasterTimeline', () => {
       expect(waitSeg.startTime).toBe(1);
       expect(waitSeg.endTime).toBe(1.5);
       expect(tl.getDuration()).toBe(1.5);
-    });
-
-    it('defaults wait segment loop to false', () => {
-      const seg = tl.addWaitSegment(1);
-      expect(seg.loop).toBe(false);
     });
   });
 
