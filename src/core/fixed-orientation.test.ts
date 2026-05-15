@@ -287,6 +287,33 @@ describe('addFixedOrientationMobjects', () => {
     scene.dispose();
   });
 
+  it('VGroup pre-shifted while empty, then populated, still billboards correctly (#318/#264)', () => {
+    const scene = ThreeDScene.createHeadless();
+    const group = new VGroup();
+    // Empty pre-shift (issue #318 path): the translation is recorded on
+    // group.position rather than a child. Adding the child later should
+    // not break the billboard, which reads mob.getCenter() rather than
+    // threeObject.position.
+    group.moveTo([2, 3, -1]);
+    group.add(new Circle());
+    scene.add(group);
+    scene.addFixedOrientationMobjects(group);
+
+    expect(group.getCenter()[0]).toBeCloseTo(2, 5);
+    expect(group.getCenter()[1]).toBeCloseTo(3, 5);
+    expect(group.getCenter()[2]).toBeCloseTo(-1, 5);
+
+    scene.setCameraOrientation(Math.PI / 3, Math.PI / 4, 15);
+    scene.render();
+
+    const [x, y, z] = visualCenterWorld(group);
+    expect(x).toBeCloseTo(2, 3);
+    expect(y).toBeCloseTo(3, 3);
+    expect(z).toBeCloseTo(-1, 3);
+
+    scene.dispose();
+  });
+
   it('removeFixedOrientationMobjects restores the displaced position', () => {
     const scene = ThreeDScene.createHeadless();
     const group = new VGroup();

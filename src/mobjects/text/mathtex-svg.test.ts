@@ -132,6 +132,56 @@ describe('MathTex stroke width', () => {
   });
 });
 
+describe('Issue #318: translations before waitForRender are not silently dropped', () => {
+  it('shift() before render persists after render', async () => {
+    const tex = new MathTex({ latex: '0', fillOpacity: 1 });
+    tex.shift([-8, 0, 0]);
+    expect(tex.position.x).toBe(-8);
+    await tex.waitForRender();
+    expect(tex.position.x).toBe(-8);
+    const center = tex.getCenter();
+    expect(center[0]).toBeCloseTo(-8, 3);
+  });
+
+  it('moveTo([target]) before render places the rendered glyph at target', async () => {
+    const tex = new MathTex({ latex: 'x' });
+    tex.moveTo([3, 2, 0]);
+    await tex.waitForRender();
+    const center = tex.getCenter();
+    expect(center[0]).toBeCloseTo(3, 2);
+    expect(center[1]).toBeCloseTo(2, 2);
+  });
+
+  it('shift() before render combines with shift() after render', async () => {
+    const tex = new MathTex({ latex: 'a' });
+    tex.shift([-5, 0, 0]); // pre-render: lands on this.position
+    await tex.waitForRender();
+    tex.shift([1, 0, 0]); // post-render: lands on each child
+    const center = tex.getCenter();
+    expect(center[0]).toBeCloseTo(-4, 2);
+  });
+
+  it('shift() before render keeps this.position when subsequent scale() runs', async () => {
+    const tex = new MathTex({ latex: 'x' });
+    tex.shift([-3, 0, 0]);
+    await tex.waitForRender();
+    tex.scale(2);
+    // The pre-render shift is recorded on the parent's position; subsequent
+    // VGroup.scale operates on children and must not clobber that.
+    expect(tex.position.x).toBe(-3);
+  });
+
+  it('multi-part MathTex shift before render persists on this.position', async () => {
+    const tex = new MathTex({ latex: ['x', '=', '5'] });
+    tex.shift([2, 1, 0]);
+    expect(tex.position.x).toBe(2);
+    expect(tex.position.y).toBe(1);
+    await tex.waitForRender();
+    expect(tex.position.x).toBe(2);
+    expect(tex.position.y).toBe(1);
+  });
+});
+
 describe('MathTex size consistency', () => {
   it('MathTex em dash should be approximately 1 em wide', async () => {
     // Em dash in math mode: use \text{—} with actual em dash character (U+2014)
