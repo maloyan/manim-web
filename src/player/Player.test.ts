@@ -428,6 +428,125 @@ describe('Player', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
   });
 
+  // ---- per-slide loop ----
+
+  it('public seek clears _activeLoopSegmentIndex', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+      await scene.wait(1);
+    });
+
+    const internal = player as unknown as { _activeLoopSegmentIndex: number | null };
+    internal._activeLoopSegmentIndex = 0;
+    player.seek(0.5);
+    expect(internal._activeLoopSegmentIndex).toBeNull();
+  });
+
+  it('setSlidesMode(false) clears active loop state', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+    });
+
+    const internal = player as unknown as {
+      _activeLoopSegmentIndex: number | null;
+      _slidesTargetSegmentIndex: number;
+    };
+    internal._activeLoopSegmentIndex = 0;
+    internal._slidesTargetSegmentIndex = 0;
+    player.setSlidesMode(false);
+    expect(internal._activeLoopSegmentIndex).toBeNull();
+    expect(internal._slidesTargetSegmentIndex).toBe(-1);
+  });
+
+  it('prevSegment from inside an active loop always exits to previous slide', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+      await scene.wait(1);
+    });
+
+    const segs = player.timeline.getSegments();
+    (segs[1] as { loop: boolean }).loop = true;
+    // Test the phase-independent behavior: even >0.5s into the loop cycle,
+    // ← should go to the previous slide (not restart the loop).
+    player.seek(1.6);
+    const internal = player as unknown as {
+      _activeLoopSegmentIndex: number | null;
+      _slidesTargetSegmentIndex: number;
+    };
+    internal._activeLoopSegmentIndex = 1;
+
+    player.prevSegment();
+    expect(internal._activeLoopSegmentIndex).toBeNull();
+    expect(internal._slidesTargetSegmentIndex).toBe(-1);
+    // Lands at segment 0's start regardless of where we were in the loop.
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0);
+  });
+
+  it('public seek out of an active loop clears both loop and target state', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+      await scene.wait(1);
+    });
+
+    const internal = player as unknown as {
+      _activeLoopSegmentIndex: number | null;
+      _slidesTargetSegmentIndex: number;
+    };
+    internal._activeLoopSegmentIndex = 0;
+    internal._slidesTargetSegmentIndex = 0;
+    // Seek FAR past the loop segment — if the target stayed at 0, the next
+    // render tick would snap back into the old loop.
+    player.seek(1.5);
+    expect(internal._activeLoopSegmentIndex).toBeNull();
+    expect(internal._slidesTargetSegmentIndex).toBe(-1);
+  });
+
+  it('sequence() resets active loop state', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    const internal = player as unknown as {
+      _activeLoopSegmentIndex: number | null;
+      _slidesTargetSegmentIndex: number;
+    };
+    internal._activeLoopSegmentIndex = 0;
+    internal._slidesTargetSegmentIndex = 0;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+    });
+
+    expect(internal._activeLoopSegmentIndex).toBeNull();
+    expect(internal._slidesTargetSegmentIndex).toBe(-1);
+  });
+
   // ---- loop option ----
 
   it('accepts loop option without error', () => {
@@ -664,6 +783,131 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(0.5);
   });
 
+  it('_startLoop rewinds and keeps playing on looped segment boundary in slidesMode', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(0.5);
+      await scene.wait(0.5);
+    });
+    // Mark segment 0 as looping
+    (player.timeline.getSegments()[0] as { loop: boolean }).loop = true;
+
+    player.play();
+    flushRaf(600); // past segment 0's endTime
+
+    // Loop should have rewound, NOT paused
+    expect(player.isPlaying).toBe(true);
+    const t = player.timeline.getCurrentTime();
+    expect(t).toBeGreaterThanOrEqual(0);
+    expect(t).toBeLessThan(0.5);
+    const internal = player as unknown as { _activeLoopSegmentIndex: number | null };
+    expect(internal._activeLoopSegmentIndex).toBe(0);
+  });
+
+  it('_startLoop rewinds when loop is the final segment (re-plays the underlying timeline)', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(0.3);
+    });
+    // Mark only segment (the final one) as looping
+    (player.timeline.getSegments()[0] as { loop: boolean }).loop = true;
+
+    player.play();
+    flushRaf(400); // past timeline duration
+
+    expect(player.isPlaying).toBe(true);
+    // The masterTimeline must be playing again after seek-back, otherwise
+    // currentTime would freeze at 0 and the next update would no-op.
+    expect(player.timeline.isPlaying()).toBe(true);
+
+    // Advance another frame: time should keep moving forward from the rewind.
+    const before = player.timeline.getCurrentTime();
+    flushRaf(420);
+    // Strictly greater: a frozen-time bug (timeline left paused) would pass `>=`.
+    expect(player.timeline.getCurrentTime()).toBeGreaterThan(before);
+  });
+
+  it('nextSegment from active loop advances to next segment and keeps playing', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(0.5);
+      await scene.wait(0.5);
+    });
+    (player.timeline.getSegments()[0] as { loop: boolean }).loop = true;
+
+    player.play();
+    flushRaf(600); // triggers rewind: _activeLoopSegmentIndex = 0
+
+    const internal = player as unknown as {
+      _activeLoopSegmentIndex: number | null;
+      _slidesTargetSegmentIndex: number;
+    };
+    expect(internal._activeLoopSegmentIndex).toBe(0);
+
+    player.nextSegment();
+    expect(internal._activeLoopSegmentIndex).toBeNull();
+    expect(internal._slidesTargetSegmentIndex).toBe(1);
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.5);
+    expect(player.isPlaying).toBe(true);
+  });
+
+  it('nextSegment on a final loop segment seeks to endTime and pauses', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(0.3);
+    });
+    (player.timeline.getSegments()[0] as { loop: boolean }).loop = true;
+
+    player.play();
+    flushRaf(400);
+
+    const internal = player as unknown as { _activeLoopSegmentIndex: number | null };
+    expect(internal._activeLoopSegmentIndex).toBe(0);
+
+    player.nextSegment();
+    expect(internal._activeLoopSegmentIndex).toBeNull();
+    expect(player.isPlaying).toBe(false);
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.3);
+  });
+
+  it('_startLoop ignores loop flag when slidesMode is OFF', async () => {
+    await player.sequence(async (scene) => {
+      await scene.wait(0.3);
+      await scene.wait(0.5);
+    });
+    (player.timeline.getSegments()[0] as { loop: boolean }).loop = true;
+
+    player.play();
+    flushRaf(400);
+
+    // Without slides mode, the loop flag is a no-op: playback advances past
+    // segment 0 normally.
+    expect(player.isPlaying).toBe(true);
+    expect(player.timeline.getCurrentTime()).toBeGreaterThan(0.3);
+    const internal = player as unknown as { _activeLoopSegmentIndex: number | null };
+    expect(internal._activeLoopSegmentIndex).toBeNull();
+  });
+
   it('_startLoop does NOT auto-pause at segment boundary without slidesMode', async () => {
     await player.sequence(async (scene) => {
       await scene.wait(0.5);
@@ -810,6 +1054,38 @@ describe('RecordingScene pass-through methods', () => {
 
     expect(player.timeline.getDuration()).toBeCloseTo(1.0);
     expect(player.timeline.segmentCount).toBe(1);
+  });
+
+  it('loopPlay records a segment with loop=true', async () => {
+    const { mockAnimation } = createMockAnimation();
+    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
+
+    await player.sequence(async (scene) => {
+      await scene.loopPlay(mockAnimation as never);
+    });
+
+    expect(player.timeline.segmentCount).toBe(1);
+    expect(player.timeline.getSegments()[0].loop).toBe(true);
+    addSpy.mockRestore();
+  });
+
+  it('play records a segment with loop=false (default)', async () => {
+    const { mockAnimation } = createMockAnimation();
+    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
+
+    await player.sequence(async (scene) => {
+      await scene.play(mockAnimation as never);
+    });
+
+    expect(player.timeline.getSegments()[0].loop).toBe(false);
+    addSpy.mockRestore();
+  });
+
+  it('loopPlay with no animations is a no-op', async () => {
+    await player.sequence(async (scene) => {
+      await scene.loopPlay();
+    });
+    expect(player.timeline.segmentCount).toBe(0);
   });
 });
 
