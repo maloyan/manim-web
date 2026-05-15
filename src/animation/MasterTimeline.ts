@@ -18,6 +18,18 @@ export interface Segment {
   animations: Animation[];
   /** Whether this is a wait/pause segment */
   isWait: boolean;
+  /**
+   * Whether this segment should loop while paused on it in slides mode.
+   * When true and the player reaches endTime in slidesMode, it seeks
+   * back to startTime and keeps playing until the user advances.
+   * Ignored outside slidesMode.
+   */
+  loop: boolean;
+}
+
+export interface SegmentOptions {
+  /** Loop this segment in slides mode. See Segment.loop. */
+  loop?: boolean;
 }
 
 export class MasterTimeline extends Timeline {
@@ -124,11 +136,17 @@ export class MasterTimeline extends Timeline {
    * Add a segment containing one or more parallel animations.
    * Returns the segment's start time (for the recorder to resolve).
    */
-  addSegment(animations: Animation[]): Segment {
+  addSegment(animations: Animation[], opts: SegmentOptions = {}): Segment {
     const startTime = this.getDuration();
     this.addParallel(animations, startTime);
 
     const maxDuration = Math.max(...animations.map((a) => a.duration));
+    const loop = opts.loop ?? false;
+    if (loop && maxDuration <= 0) {
+      throw new Error(
+        'MasterTimeline.addSegment: cannot loop a zero-duration segment (would rewind every frame).',
+      );
+    }
     const segmentIndex = this._segments.length;
     const segment: Segment = {
       index: segmentIndex,
@@ -136,6 +154,7 @@ export class MasterTimeline extends Timeline {
       endTime: startTime + maxDuration,
       animations,
       isWait: false,
+      loop,
     };
     this._segments.push(segment);
 
@@ -168,6 +187,7 @@ export class MasterTimeline extends Timeline {
       endTime: startTime + duration,
       animations: [],
       isWait: true,
+      loop: false,
     };
     this._segments.push(segment);
     return segment;

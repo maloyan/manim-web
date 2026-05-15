@@ -113,6 +113,29 @@ describe('MasterTimeline', () => {
       expect(tl.getDuration()).toBe(1);
       expect(tl.length).toBe(1); // one scheduled animation on base Timeline
     });
+
+    it('defaults segment.loop to false', () => {
+      const mob = new TestMobject();
+      const anim = new TestAnimation(mob, { duration: 1 });
+      const seg = tl.addSegment([anim]);
+
+      expect(seg.loop).toBe(false);
+    });
+
+    it('stores segment.loop=true when opts.loop is true', () => {
+      const mob = new TestMobject();
+      const anim = new TestAnimation(mob, { duration: 1 });
+      const seg = tl.addSegment([anim], { loop: true });
+
+      expect(seg.loop).toBe(true);
+    });
+
+    it('throws when adding a zero-duration looping segment', () => {
+      const mob = new TestMobject();
+      const anim = new TestAnimation(mob, { duration: 0 });
+
+      expect(() => tl.addSegment([anim], { loop: true })).toThrow(/zero-duration/);
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -143,6 +166,11 @@ describe('MasterTimeline', () => {
       expect(waitSeg.startTime).toBe(1);
       expect(waitSeg.endTime).toBe(1.5);
       expect(tl.getDuration()).toBe(1.5);
+    });
+
+    it('defaults wait segment loop to false', () => {
+      const seg = tl.addWaitSegment(1);
+      expect(seg.loop).toBe(false);
     });
   });
 

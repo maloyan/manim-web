@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Slides Mode with Looping Slide</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      color: #ccc;
+    }
+    h1 {
+      margin-bottom: 16px;
+      font-size: 20px;
+      font-weight: 400;
+      color: #fff;
+    }
+    #container {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .info {
+      margin-top: 20px;
+      font-size: 13px;
+      opacity: 0.6;
+      text-align: center;
+      line-height: 1.6;
+    }
+    kbd {
+      background: #333;
+      border: 1px solid #555;
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    .highlight {
+      color: #6cf;
+      opacity: 1;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <h1>Slides Mode with Looping Slide</h1>
+  <div id="container"></div>
+  <div class="info">
+    <p class="highlight">Slide 2 keeps rotating until you press &rarr;</p>
+    <br>
+    <kbd>&rarr;</kbd> Next slide &nbsp;
+    <kbd>&larr;</kbd> Previous slide &nbsp;
+    <kbd>Space</kbd> Play/Pause &nbsp;
+    <kbd>F</kbd> Fullscreen
+  </div>
+
+  <script type="module">
+    import {
+      Player,
+      Circle,
+      Square,
+      Create,
+      Rotate,
+      Transform,
+      FadeOut,
+      BLACK,
+      BLUE,
+      RED,
+    } from '../src/index.ts';
+    import { linear } from '../src/rate-functions/index.ts';
+
+    const container = document.getElementById('container');
+    const player = new Player(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK,
+      slidesMode: true,
+    });
+    // Expose for manual testing in devtools.
+    window.player = player;
+
+    player.sequence(async (scene) => {
+      // Slide 1: create blue square
+      const square = new Square({ sideLength: 2, color: BLUE });
+      await scene.play(new Create(square));
+
+      // Slide 2: looping rotation — full turn, linear, so each cycle is seamless.
+      // The slide replays until the user presses → to advance.
+      await scene.loopPlay(
+        new Rotate(square, { angle: Math.PI * 2, duration: 2, rateFunc: linear }),
+      );
+
+      // Slide 3: transform to red circle
+      const circle = new Circle({ radius: 1.5, color: RED });
+      await scene.play(new Transform(square, circle));
+
+      // Slide 4: fade out
+      await scene.play(new FadeOut(square));
+    });
+  </script>
+</body>
+</html>
