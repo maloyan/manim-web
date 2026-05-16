@@ -1,6 +1,14 @@
 /* eslint-disable max-lines */
 import * as THREE from 'three';
-import { type Vector3Tuple, type MobjectStyle, UP, DOWN, LEFT, RIGHT } from './MobjectTypes';
+import {
+  type Vector3Tuple,
+  type MobjectStyle,
+  type AxisOrOptions,
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT,
+} from './MobjectTypes';
 import {
   rotateMobject,
   getCenterImpl,
@@ -236,21 +244,14 @@ export abstract class Mobject {
    * Rotate the mobject by angle around an axis.
    * Accepts aboutPoint or aboutEdge to specify the rotation center.
    */
-  rotate(
-    angle: number,
-    axisOrOptions?:
-      | Vector3Tuple
-      | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
-  ): this {
+  rotate(angle: number, axisOrOptions?: Vector3Tuple | AxisOrOptions): this {
     if (typeof angle !== 'number') {
-      throw new TypeError('Mobject.rotate: angle must be a finite number');
+      throw new TypeError('Mobject.rotate: angle must be a number');
     }
 
     if (axisOrOptions && !Array.isArray(axisOrOptions)) {
       // Validate options using typia (ensures shape and types).
-      typia.assert<{ axis?: Vector3Tuple; aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple }>(
-        axisOrOptions,
-      );
+      typia.assert<AxisOrOptions>(axisOrOptions);
       const resolved = resolveExtremalPoint(this, axisOrOptions);
       if (resolved) {
         axisOrOptions = { axis: axisOrOptions.axis, aboutPoint: resolved };

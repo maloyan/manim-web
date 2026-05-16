@@ -125,7 +125,7 @@ export function rotate(
   options?: Omit<RotateOptions, 'angle'>,
 ): Rotate {
   if (typeof angle !== 'number') {
-    throw new TypeError('rotate(): angle must be a finite number');
+    throw new TypeError('rotate(): angle must be a number');
   }
   // Validate helper options briefly
   if (options) typia.assert<Omit<RotateOptions, 'angle'>>(options);
