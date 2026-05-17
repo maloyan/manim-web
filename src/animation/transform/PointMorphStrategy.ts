@@ -136,17 +136,18 @@ export class PointMorphStrategy implements MorphStrategy {
   private _beginVGroup(source: VGroup, target: VGroup): void {
     this._isVGroupTransform = true;
     source.normalizeTransform();
-    target.normalizeTransform();
+    const normalizedTarget = target.copy() as VGroup;
+    normalizedTarget.normalizeTransform();
     assertGroupAnchorsAtIdentity(source, 'begin/source');
-    assertGroupAnchorsAtIdentity(target, 'begin/target');
-    for (const pair of pairLeafSnapshotsByIndex(source, target))
+    assertGroupAnchorsAtIdentity(normalizedTarget, 'begin/target');
+    for (const pair of pairLeafSnapshotsByIndex(source, normalizedTarget))
       this._vgroupLeafStates.push(this._build(source, pair));
     this._startPosition.copy(source.position);
-    this._targetPosition.copy(target.position);
+    this._targetPosition.copy(normalizedTarget.position);
     this._startRotation.copy(source.rotation);
-    this._targetRotation.copy(target.rotation);
+    this._targetRotation.copy(normalizedTarget.rotation);
     this._startScale.copy(source.scaleVector);
-    this._targetScale.copy(target.scaleVector);
+    this._targetScale.copy(normalizedTarget.scaleVector);
   }
   private _build(group: VGroup, pair: LeafPairByIndex): VGroupLeafState {
     const { source: src, target: tgt, sourceIsPlaceholder, targetIsPlaceholder } = pair;
@@ -196,7 +197,7 @@ export class PointMorphStrategy implements MorphStrategy {
   interpolate(_animation: Animation, source: Mobject, _target: Mobject, alpha: number): void {
     if (this._isVGroupTransform) {
       const group = source as VGroup;
-      assertGroupAnchorsAtIdentity(group, `interpolate@${alpha.toFixed(3)}`);
+      assertGroupAnchorsAtIdentity(group, 'interpolate');
       for (const leaf of this._vgroupLeafStates) {
         const interpolated: number[][] = [];
         for (let i = 0; i < leaf.startPoints.length; i++)

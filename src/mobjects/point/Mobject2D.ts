@@ -283,7 +283,7 @@ export class Mobject2D extends PMobject {
    * Get the center of the region
    */
   override getCenter(): Vector3Tuple {
-    return [...this._center2D];
+    return this._localToWorld(this._center2D);
   }
 
   /**
@@ -291,13 +291,12 @@ export class Mobject2D extends PMobject {
    * @param point - Target center position [x, y, z]
    */
   override moveTo(point: Vector3Tuple): this {
+    const currentCenter = this.getCenter();
     const delta: Vector3Tuple = [
-      point[0] - this._center2D[0],
-      point[1] - this._center2D[1],
-      point[2] - this._center2D[2],
+      point[0] - currentCenter[0],
+      point[1] - currentCenter[1],
+      point[2] - currentCenter[2],
     ];
-
-    this._center2D = [...point];
     return this.shift(delta);
   }
 
@@ -307,23 +306,7 @@ export class Mobject2D extends PMobject {
    * @returns this for chaining
    */
   override shift(delta: Vector3Tuple): this {
-    this._center2D[0] += delta[0];
-    this._center2D[1] += delta[1];
-    this._center2D[2] += delta[2];
-
-    // Shift the actual points
-    for (const point of this._points) {
-      point.position[0] += delta[0];
-      point.position[1] += delta[1];
-      point.position[2] += delta[2];
-    }
-
-    this.position.x += delta[0];
-    this.position.y += delta[1];
-    this.position.z += delta[2];
-    this._markDirty();
-
-    return this;
+    return super.shift(delta);
   }
 
   /**
@@ -340,7 +323,7 @@ export class Mobject2D extends PMobject {
    */
   protected override _createCopy(): Mobject2D {
     return new Mobject2D({
-      center: this._center2D,
+      center: [...this._center2D],
       width: this._width,
       height: this._height,
       numPointsX: this._numPointsX,

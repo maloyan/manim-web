@@ -279,22 +279,26 @@ export class VMobject extends VMobjectRendering {
     const sx = this.scaleVector.x;
     const sy = this.scaleVector.y;
     const sz = this.scaleVector.z;
-    if (sx === 1 && sy === 1 && sz === 1) {
-      return this;
-    }
 
-    for (const p of this._points3D) {
-      p[0] *= sx;
-      p[1] *= sy;
-      p[2] *= sz;
+    if (!(sx === 1 && sy === 1 && sz === 1)) {
+      for (const p of this._points3D) {
+        p[0] *= sx;
+        p[1] *= sy;
+        p[2] *= sz;
+      }
+
+      for (const child of this.children) {
+        child.position.set(child.position.x * sx, child.position.y * sy, child.position.z * sz);
+        child.scale([sx, sy, sz]);
+      }
+
+      this.scaleVector.set(1, 1, 1);
     }
 
     for (const child of this.children) {
-      child.position.set(child.position.x * sx, child.position.y * sy, child.position.z * sz);
-      child.scale([sx, sy, sz]);
+      child.normalizeTransform();
     }
 
-    this.scaleVector.set(1, 1, 1);
     this._markDirtyUpward();
     return this;
   }

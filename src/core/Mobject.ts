@@ -291,17 +291,10 @@ export abstract class Mobject {
     factor: number | Vector3Tuple,
     options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
   ): this {
-    const aboutPt = resolveExtremalPoint(this, options);
-    if (aboutPt) {
-      const f = typeof factor === 'number' ? [factor, factor, factor] : factor;
-      applyFunctionImpl(
-        this,
-        (p) => {
-          return [p[0] * f[0], p[1] * f[1], p[2] * (f[2] === 0 ? 1 : f[2])];
-        },
-        { aboutPoint: aboutPt },
+    if (options?.aboutPoint || options?.aboutEdge) {
+      throw new Error(
+        'Mobject.scale(): aboutPoint/aboutEdge is not supported in deferred-transform mode. Use applyFunction/applyMatrix or normalize first.',
       );
-      return this;
     }
     if (typeof factor === 'number') {
       this.scaleVector.multiplyScalar(factor);
@@ -322,13 +315,14 @@ export abstract class Mobject {
     if (dim < 0 || dim > 2 || !Number.isInteger(dim)) {
       throw new Error(`stretch dim must be 0, 1, or 2, got ${dim}`);
     }
+    if (options?.aboutPoint || options?.aboutEdge) {
+      throw new Error(
+        'Mobject.stretch(): aboutPoint/aboutEdge is not supported in deferred-transform mode. Use applyFunction/applyMatrix or normalize first.',
+      );
+    }
     const scaleFactors: Vector3Tuple = [1, 1, 1];
     scaleFactors[dim] = factor;
-    // Always scale about a point so the underlying points are modified
-    // (non-uniform scaling via scaleVector would not affect getPoints()).
-    const opts =
-      options?.aboutPoint || options?.aboutEdge ? options : { aboutPoint: this.getCenter() };
-    return this.scale(scaleFactors, opts);
+    return this.scale(scaleFactors);
   }
 
   // ── Hierarchy ────────────────────────────────────────────────────

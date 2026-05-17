@@ -1023,6 +1023,7 @@ describe('Transform on VGroup (#206)', () => {
     expect(group.scaleVector.z).toBe(1);
 
     const sourceBounds = circle.getBounds();
+    target.normalizeTransform();
     const targetChild = target.children[0] as Circle;
     const targetBounds = targetChild.getBounds();
 

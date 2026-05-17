@@ -1987,7 +1987,7 @@ describe('VGroup - extended coverage', () => {
     expect(line.position.z).toBe(0);
   });
 
-  it('VMobject normalizeTransform forwards scale to children and resets parent scale', () => {
+  it('VMobject normalizeTransform canonicalizes subtree and resets parent scale', () => {
     const parent = new VMobject();
     parent.setPoints([
       [0, 0, 0],
@@ -2010,9 +2010,9 @@ describe('VGroup - extended coverage', () => {
     expect(parent.scaleVector.x).toBe(1);
     expect(parent.scaleVector.y).toBe(1);
     expect(parent.scaleVector.z).toBe(1);
-    expect(child.scaleVector.x).toBe(2);
-    expect(child.scaleVector.y).toBe(2);
-    expect(child.scaleVector.z).toBe(2);
+    expect(child.scaleVector.x).toBe(1);
+    expect(child.scaleVector.y).toBe(1);
+    expect(child.scaleVector.z).toBe(1);
     expect(child.position.x).toBe(4);
     expect(child.position.y).toBe(2);
     expect(child.position.z).toBe(0);
