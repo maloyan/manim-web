@@ -295,7 +295,6 @@ export class VMobject extends VMobjectRendering {
     }
 
     this.scaleVector.set(1, 1, 1);
-    this._geometryDirty = true;
     this._markDirtyUpward();
     return this;
   }
@@ -310,7 +309,6 @@ export class VMobject extends VMobjectRendering {
    */
   setBaseSubpathLengths(lengths: number[] | undefined): void {
     this._baseSubpathLengths = lengths ? [...lengths] : undefined;
-    this._geometryDirty = true;
     this._markDirtyUpward();
   }
 
@@ -333,7 +331,6 @@ export class VMobject extends VMobjectRendering {
     } else {
       this._transformSubpathLengths = [...lengths];
     }
-    this._geometryDirty = true;
     this._markDirtyUpward();
   }
 
@@ -742,7 +739,6 @@ export class VMobject extends VMobjectRendering {
     this.position.y += center[1];
     this.position.z += center[2];
 
-    this._geometryDirty = true;
     this._markDirtyUpward();
 
     return this;
