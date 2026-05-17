@@ -28,15 +28,17 @@ function applyScale(container: ContainerLike): void {
   container._markDirty();
 }
 
+const SCRATCH_EULER = new THREE.Euler();
+
 function applyRotation(container: ContainerLike): void {
   const rx = container.rotation.x;
   const ry = container.rotation.y;
   const rz = container.rotation.z;
   if (rx === 0 && ry === 0 && rz === 0) return;
 
-  const rot = new THREE.Euler(rx, ry, rz, container.rotation.order);
+  SCRATCH_EULER.set(rx, ry, rz, container.rotation.order);
   for (const child of container.children) {
-    child.position.applyEuler(rot);
+    child.position.applyEuler(SCRATCH_EULER);
     if (rx !== 0) child.rotate(rx, [1, 0, 0]);
     if (ry !== 0) child.rotate(ry, [0, 1, 0]);
     if (rz !== 0) child.rotate(rz, [0, 0, 1]);

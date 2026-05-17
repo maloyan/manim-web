@@ -13,7 +13,7 @@ import { normalizeContainerTransform } from './normalizeContainerTransform';
  * Operations apply to all children, and paths can be combined.
  */
 export class VGroup extends VMobject {
-  private _warnedAboutDirectPosition = false;
+  private _directPositionWarningCount = 0;
 
   /**
    * True when this VGroup (recursively) has no renderable geometry.
@@ -24,7 +24,13 @@ export class VGroup extends VMobject {
     }
     return this.children.every((child) => {
       const candidate = child as unknown as { isEmpty?: () => boolean };
-      return typeof candidate.isEmpty === 'function' ? candidate.isEmpty() : false;
+      if (typeof candidate.isEmpty === 'function') {
+        return candidate.isEmpty();
+      }
+      if (child instanceof VMobject) {
+        return child.getPoints().length === 0;
+      }
+      return false;
     });
   }
 
@@ -147,7 +153,7 @@ export class VGroup extends VMobject {
   }
 
   override getCenter(): Vector3Tuple {
-    if (this.children.length === 0 || this.isEmpty()) {
+    if (this.isEmpty()) {
       return [this.position.x, this.position.y, this.position.z];
     }
     const b = this.getBounds();
@@ -161,11 +167,11 @@ export class VGroup extends VMobject {
   override normalizeTransform(): this {
     normalizeContainerTransform(this, {
       beforeTranslate: () => {
-        if (!this._warnedAboutDirectPosition) {
+        this._directPositionWarningCount += 1;
+        if (this._directPositionWarningCount <= 3 || this._directPositionWarningCount % 25 === 0) {
           console.warn(
-            '[manim-web] Direct VGroup.position mutation detected; forwarding translation to children. Use moveTo()/shift() on VGroup.',
+            `[manim-web] Direct VGroup.position mutation detected; forwarding translation to children. Use moveTo()/shift() on VGroup. (count=${this._directPositionWarningCount})`,
           );
-          this._warnedAboutDirectPosition = true;
         }
       },
       translateChild: (child, dx, dy, dz) => {

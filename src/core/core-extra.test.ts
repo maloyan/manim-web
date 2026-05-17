@@ -1848,9 +1848,9 @@ describe('VGroup - extended coverage', () => {
     expect(center[0]).toBeCloseTo(bboxCenterX, 6);
   });
 
-  it('getCenter throws when a child has empty Three.js bounds', () => {
+  it('getCenter with only empty VMobject children returns group position', () => {
     const vg = new VGroup(new VMobject());
-    expect(() => vg.getCenter()).toThrow(/empty Three\.js bounds/);
+    expect(vg.getCenter()).toEqual([0, 0, 0]);
   });
 
   it('shift shifts children, not group position', () => {
