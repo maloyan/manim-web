@@ -23,6 +23,13 @@ import {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let animateProxyFactory: ((mobject: Mobject) => any) | null = null;
 
+const SCRATCH_EULER = new THREE.Euler();
+
+interface NormalizeContainerOptions {
+  beforeTranslate?: () => void;
+  translateChild?: (child: Mobject, dx: number, dy: number, dz: number) => void;
+}
+
 /** @internal Called by AnimateProxy module to register the factory. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function registerAnimateProxy(factory: (mobject: Mobject) => any): void {
@@ -525,6 +532,60 @@ export abstract class Mobject {
    */
   normalizeTransform(): this {
     return this;
+  }
+
+  /**
+   * Normalize this object as a container: forward parent S/R/T anchors into
+   * children, reset parent anchors, then recurse into children.
+   */
+  protected _normalizeContainerTransform(options?: NormalizeContainerOptions): void {
+    const sx = this.scaleVector.x;
+    const sy = this.scaleVector.y;
+    const sz = this.scaleVector.z;
+    if (sx !== 1 || sy !== 1 || sz !== 1) {
+      for (const child of this.children) {
+        child.position.set(child.position.x * sx, child.position.y * sy, child.position.z * sz);
+        child.scale([sx, sy, sz]);
+      }
+      this.scaleVector.set(1, 1, 1);
+      this._markDirty();
+    }
+
+    const rx = this.rotation.x;
+    const ry = this.rotation.y;
+    const rz = this.rotation.z;
+    if (rx !== 0 || ry !== 0 || rz !== 0) {
+      SCRATCH_EULER.set(rx, ry, rz, this.rotation.order);
+      for (const child of this.children) {
+        child.position.applyEuler(SCRATCH_EULER);
+        if (rx !== 0) child.rotate(rx, [1, 0, 0]);
+        if (ry !== 0) child.rotate(ry, [0, 1, 0]);
+        if (rz !== 0) child.rotate(rz, [0, 0, 1]);
+      }
+      this.rotation.set(0, 0, 0);
+      this._markDirty();
+    }
+
+    const dx = this.position.x;
+    const dy = this.position.y;
+    const dz = this.position.z;
+    if (dx !== 0 || dy !== 0 || dz !== 0) {
+      options?.beforeTranslate?.();
+      const translateChild =
+        options?.translateChild ??
+        ((child: Mobject, tx: number, ty: number, tz: number) => {
+          child.position.set(child.position.x + tx, child.position.y + ty, child.position.z + tz);
+        });
+      for (const child of this.children) {
+        translateChild(child, dx, dy, dz);
+      }
+      this.position.set(0, 0, 0);
+      this._markDirty();
+    }
+
+    for (const child of this.children) {
+      child.normalizeTransform();
+    }
   }
 
   _syncToThree(): void {

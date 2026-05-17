@@ -5,7 +5,6 @@
 
 import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from './Mobject';
-import { normalizeContainerTransform } from './normalizeContainerTransform';
 
 /**
  * A Group is a Mobject that contains other Mobjects.
@@ -97,11 +96,7 @@ export class Group extends Mobject {
   }
 
   override normalizeTransform(): this {
-    normalizeContainerTransform(this, {
-      translateChild: (child, dx, dy, dz) => {
-        child.position.set(child.position.x + dx, child.position.y + dy, child.position.z + dz);
-      },
-    });
+    this._normalizeContainerTransform();
     return this;
   }
 

@@ -6,7 +6,6 @@
 import * as THREE from 'three';
 import { Mobject, Vector3Tuple, RIGHT } from './Mobject';
 import { VMobject, Point } from './VMobject';
-import { normalizeContainerTransform } from './normalizeContainerTransform';
 
 /**
  * VGroup is a specialized group for VMobjects.
@@ -165,7 +164,7 @@ export class VGroup extends VMobject {
    * This keeps VGroup semantics child-driven and avoids double-counting.
    */
   override normalizeTransform(): this {
-    normalizeContainerTransform(this, {
+    this._normalizeContainerTransform({
       beforeTranslate: () => {
         this._directPositionWarningCount += 1;
         if (this._directPositionWarningCount <= 3 || this._directPositionWarningCount % 25 === 0) {
