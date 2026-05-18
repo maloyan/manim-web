@@ -240,5 +240,14 @@ export class AnimateProxy extends Animation {
   }
 }
 
-// Register with Mobject to break circular dependency
-registerAnimateProxy((mobject: Mobject) => new AnimateProxy(mobject));
+// Register with Mobject to break the Mobject -> AnimateProxy -> Transform ->
+// VGroup -> Mobject cycle.
+let registered = false;
+export function ensureAnimateProxyRegistered(): void {
+  if (registered) return;
+  registerAnimateProxy((mobject: Mobject) => new AnimateProxy(mobject));
+  registered = true;
+}
+
+// Eager registration for callers that import AnimateProxy directly.
+ensureAnimateProxyRegistered();

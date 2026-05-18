@@ -11,6 +11,14 @@ import { MANIM_BACKGROUND } from '../constants/colors';
 import { VMobject } from './VMobject';
 import { SceneStateManager, SceneSnapshot } from './StateManager';
 import { AudioManager, type AddSoundOptions, type AudioTrack } from './AudioManager';
+import { ensureAnimateProxyRegistered } from './AnimateProxy';
+
+// AnimateProxy self-registers with Mobject via a top-level side effect
+// (see AnimateProxy.ts) to avoid the Mobject -> AnimateProxy -> Transform ->
+// VGroup -> Mobject cycle. Touching the export here forces module evaluation
+// so `mobject.animate` works even when callers import Scene without ever
+// referencing AnimateProxy directly (e.g. Scene.createHeadless() in tests).
+ensureAnimateProxyRegistered();
 
 /**
  * Options for scene.export() convenience method.
