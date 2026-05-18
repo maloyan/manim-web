@@ -1,5 +1,6 @@
 import { Vector3Tuple } from '../../core/Mobject';
 import { Arrow } from '../geometry';
+import { crossVec, dotVec, lengthVec } from '../../utils/vectors';
 
 /**
  * Options for creating a VectorFieldVector
@@ -61,9 +62,7 @@ export class VectorFieldVector extends Arrow {
     } = options;
 
     // Calculate the actual direction vector
-    const dirLength = Math.sqrt(
-      direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2],
-    );
+    const dirLength = lengthVec(direction);
 
     // Apply max length constraint
     let scaledDirection = [...direction] as Vector3Tuple;
@@ -112,9 +111,7 @@ export class VectorFieldVector extends Arrow {
     this._direction = [...direction];
 
     // Recalculate length
-    const dirLength = Math.sqrt(
-      direction[0] * direction[0] + direction[1] * direction[1] + direction[2] * direction[2],
-    );
+    const dirLength = lengthVec(direction);
 
     // Apply max length constraint
     let scaledDirection = [...direction] as Vector3Tuple;
@@ -144,11 +141,7 @@ export class VectorFieldVector extends Arrow {
    * Get the magnitude (length) of the vector
    */
   getMagnitude(): number {
-    return Math.sqrt(
-      this._direction[0] * this._direction[0] +
-        this._direction[1] * this._direction[1] +
-        this._direction[2] * this._direction[2],
-    );
+    return lengthVec(this._direction);
   }
 
   /**
@@ -258,7 +251,7 @@ export class VectorFieldVector extends Arrow {
    */
   dot(other: VectorFieldVector | Vector3Tuple): number {
     const dir = Array.isArray(other) ? other : other.getDirection();
-    return this._direction[0] * dir[0] + this._direction[1] * dir[1] + this._direction[2] * dir[2];
+    return dotVec(this._direction, dir);
   }
 
   /**
@@ -266,11 +259,7 @@ export class VectorFieldVector extends Arrow {
    */
   cross(other: VectorFieldVector | Vector3Tuple): Vector3Tuple {
     const dir = Array.isArray(other) ? other : other.getDirection();
-    return [
-      this._direction[1] * dir[2] - this._direction[2] * dir[1],
-      this._direction[2] * dir[0] - this._direction[0] * dir[2],
-      this._direction[0] * dir[1] - this._direction[1] * dir[0],
-    ];
+    return crossVec(this._direction, dir);
   }
 
   /**

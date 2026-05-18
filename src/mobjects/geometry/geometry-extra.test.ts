@@ -372,6 +372,34 @@ describe('CubicBezier', () => {
     expect(straight.curvatureAtT(0.5)).toBeCloseTo(0, 10);
   });
 
+  // Regression for issue #340: the old 2D-only formula
+  // `|d1[0]*d2[1] - d1[1]*d2[0]| / |d1|^3` ignored the X/Y components of
+  // the 3D cross product, so the same curve rotated out of XY returned the
+  // wrong curvature. With the 3D cross both should agree.
+  it('curvatureAtT is invariant under rotation into the XZ plane', () => {
+    const xy = new CubicBezier({
+      points: [
+        [0, 0, 0],
+        [1, 1, 0],
+        [2, 1, 0],
+        [3, 0, 0],
+      ],
+    });
+    const xz = new CubicBezier({
+      points: [
+        [0, 0, 0],
+        [1, 0, 1],
+        [2, 0, 1],
+        [3, 0, 0],
+      ],
+    });
+    for (const t of [0.1, 0.25, 0.5, 0.75, 0.9]) {
+      expect(xz.curvatureAtT(t)).toBeCloseTo(xy.curvatureAtT(t), 10);
+    }
+    // And both should be nonzero (the curve is genuinely curved).
+    expect(xz.curvatureAtT(0.5)).toBeGreaterThan(0);
+  });
+
   it('getApproximateLength for straight line equals 3', () => {
     const straight = new CubicBezier({
       points: [

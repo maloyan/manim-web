@@ -1,6 +1,12 @@
 /**
  * Shared math utility functions used across the codebase.
+ *
+ * For low-level 3-vector ops (dot, cross, length, normalize, perpendicular,
+ * orthonormal frame, 2D orientation), prefer `src/utils/vectors.ts`. The
+ * helpers in this file build on top of that module.
  */
+
+import { dotVec, lengthVec, normalizeVec } from './vectors';
 
 /**
  * Linear interpolation between two numbers.
@@ -235,13 +241,12 @@ export function projectToPlane(
   v1: number[],
   v2: number[],
 ): [number, number] {
-  const dx = point[0] - origin[0];
-  const dy = point[1] - origin[1];
-  const dz = (point[2] ?? 0) - (origin[2] ?? 0);
-  // Dot products with basis vectors
-  const u = dx * v1[0] + dy * v1[1] + dz * v1[2];
-  const v = dx * v2[0] + dy * v2[1] + dz * v2[2];
-  return [u, v];
+  const d: [number, number, number] = [
+    point[0] - origin[0],
+    point[1] - origin[1],
+    (point[2] ?? 0) - (origin[2] ?? 0),
+  ];
+  return [dotVec(d, v1), dotVec(d, v2)];
 }
 
 /**
@@ -257,25 +262,31 @@ export function orthonormalizeBasis(
   v1: number[];
   v2: number[];
 } {
-  const len1 = Math.sqrt(v1[0] ** 2 + v1[1] ** 2 + v1[2] ** 2);
-  if (len1 < 1e-10) {
+  if (lengthVec(v1) < 1e-10) {
     return { v1: [1, 0, 0], v2: [0, 1, 0] };
   }
-  const u1 = [v1[0] / len1, v1[1] / len1, v1[2] / len1];
+  const u1 = normalizeVec(v1);
 
-  // v2' = v2 - (v2·u1) * u1
-  const dot = v2[0] * u1[0] + v2[1] * u1[1] + v2[2] * u1[2];
-  const v2p = [v2[0] - dot * u1[0], v2[1] - dot * u1[1], v2[2] - dot * u1[2]];
+  // v2' = v2 − (v2·u1) * u1
+  const d = dotVec(v2, u1);
+  const v2p: [number, number, number] = [
+    v2[0] - d * u1[0],
+    v2[1] - d * u1[1],
+    (v2[2] ?? 0) - d * u1[2],
+  ];
 
-  const len2 = Math.sqrt(v2p[0] ** 2 + v2p[1] ** 2 + v2p[2] ** 2);
-  if (len2 < 1e-10) {
-    // v1 and v2 were collinear, pick perpendicular
+  if (lengthVec(v2p) < 1e-10) {
+    // v1 and v2 collinear. Pick a world basis vector that is NOT close to
+    // u1, then Gram–Schmidt against u1. The Z-biased choice below is the
+    // pre-existing behaviour; many callers rely on the fallback landing in
+    // the same plane the geometry actually lies in, so this is intentionally
+    // not routed through `unitPerpendicularTo` (which would pick the world
+    // basis vector with the smallest |dot|, e.g. X for a YZ-plane input).
     const perp = Math.abs(u1[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
-    const perpDot = perp[0] * u1[0] + perp[1] * u1[1] + perp[2] * u1[2];
+    const perpDot = dotVec(perp, u1);
     const u2 = [perp[0] - perpDot * u1[0], perp[1] - perpDot * u1[1], perp[2] - perpDot * u1[2]];
-    const u2len = Math.sqrt(u2[0] ** 2 + u2[1] ** 2 + u2[2] ** 2);
-    return { v1: u1, v2: [u2[0] / u2len, u2[1] / u2len, u2[2] / u2len] };
+    return { v1: u1, v2: normalizeVec(u2) };
   }
 
-  return { v1: u1, v2: [v2p[0] / len2, v2p[1] / len2, v2p[2] / len2] };
+  return { v1: u1, v2: normalizeVec(v2p) };
 }

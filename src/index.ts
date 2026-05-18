@@ -959,7 +959,19 @@ export {
 } from './export';
 
 // Vector math utilities
-export { scaleVec, addVec, subVec, linspace } from './utils/vectors';
+export {
+  scaleVec,
+  addVec,
+  subVec,
+  linspace,
+  dotVec,
+  crossVec,
+  lengthVec,
+  normalizeVec,
+  unitPerpendicularTo,
+  orthonormalFrame,
+  orientation2D,
+} from './utils/vectors';
 
 // Player
 export { Player, type PlayerOptions } from './player';

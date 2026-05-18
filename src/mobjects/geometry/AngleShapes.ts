@@ -3,6 +3,7 @@ import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, WHITE, DEFAULT_STROKE_WIDTH } from '../../constants';
 import { Line } from './Line';
+import { crossVec, dotVec, lengthVec, normalizeVec } from '../../utils/vectors';
 
 /**
  * Options for creating an Angle
@@ -141,12 +142,12 @@ export class Angle extends VMobject {
 
     this._vertex = [...vertex];
 
-    const dir1 = this._normalize3([
+    const dir1 = normalizeVec([
       point1[0] - vertex[0],
       point1[1] - vertex[1],
       point1[2] - vertex[2],
     ]);
-    const dir2 = this._normalize3([
+    const dir2 = normalizeVec([
       point2[0] - vertex[0],
       point2[1] - vertex[1],
       point2[2] - vertex[2],
@@ -154,23 +155,21 @@ export class Angle extends VMobject {
 
     let normal: Vector3Tuple;
     if (axis) {
-      const axisLen = this._length3(axis);
-      if (axisLen < 1e-10) {
+      if (lengthVec(axis) < 1e-10) {
         throw new Error('Angle: axis option must be a non-zero vector');
       }
-      normal = this._normalize3(axis);
+      normal = normalizeVec(axis);
     } else {
-      normal = this._cross3(dir1, dir2);
-      const normalLen = this._length3(normal);
+      normal = crossVec(dir1, dir2);
 
-      if (normalLen < 1e-10) {
+      if (lengthVec(normal) < 1e-10) {
         const arb: Vector3Tuple = Math.abs(dir1[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
-        normal = this._cross3(dir1, arb);
+        normal = crossVec(dir1, arb);
         if (normal[2] < 0) {
           normal = [-normal[0], -normal[1], -normal[2]];
         }
       }
-      normal = this._normalize3(normal);
+      normal = normalizeVec(normal);
 
       if (Math.abs(dir1[2]) < 1e-10 && Math.abs(dir2[2]) < 1e-10 && normal[2] < 0) {
         normal = [-normal[0], -normal[1], -normal[2]] as Vector3Tuple;
@@ -180,22 +179,22 @@ export class Angle extends VMobject {
     // Project dir1 onto plane perpendicular to `normal` so `_u` is guaranteed
     // to lie in the reference plane even when the caller-supplied `axis` is
     // not exactly perpendicular to dir1.
-    const dir1Dot = this._dot3(dir1, normal);
+    const dir1Dot = dotVec(dir1, normal);
     let u: Vector3Tuple = [
       dir1[0] - dir1Dot * normal[0],
       dir1[1] - dir1Dot * normal[1],
       dir1[2] - dir1Dot * normal[2],
     ];
-    if (this._length3(u) < 1e-10) {
+    if (lengthVec(u) < 1e-10) {
       // dir1 parallel to normal; fall back to any perpendicular vector.
       const arb: Vector3Tuple = Math.abs(normal[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
-      u = this._cross3(normal, arb);
+      u = crossVec(normal, arb);
     }
-    this._u = this._normalize3(u);
-    this._v = this._cross3(normal, this._u);
+    this._u = normalizeVec(u);
+    this._v = crossVec(normal, this._u);
 
-    const cosA = this._dot3(dir2, this._u);
-    const sinA = this._dot3(dir2, this._v);
+    const cosA = dotVec(dir2, this._u);
+    const sinA = dotVec(dir2, this._v);
 
     this._startAngle = 0;
     let deltaAngle = Math.atan2(sinA, cosA);
@@ -225,24 +224,6 @@ export class Angle extends VMobject {
     const dy = p2[1] - p1[1];
     const dz = p2[2] - p1[2];
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
-  }
-
-  private _dot3(a: Vector3Tuple, b: Vector3Tuple): number {
-    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-  }
-
-  private _cross3(a: Vector3Tuple, b: Vector3Tuple): Vector3Tuple {
-    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-  }
-
-  private _length3(v: Vector3Tuple): number {
-    return Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-  }
-
-  private _normalize3(v: Vector3Tuple): Vector3Tuple {
-    const len = this._length3(v);
-    if (len < 1e-15) return [0, 0, 0];
-    return [v[0] / len, v[1] / len, v[2] / len];
   }
 
   private _adjustForQuadrant(
