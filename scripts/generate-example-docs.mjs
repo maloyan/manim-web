@@ -28,7 +28,7 @@ const CATEGORIES = {
   'Basic Concepts': ['manim_ce_logo', 'brace_annotation', 'vector_arrow', 'boolean_operations', 'mathtex_svg'],
   'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace', 'sine_curve_unit_circle', 'apply_matrix_arrows', 'apply_matrix_method', 'rate_functions_comparison', 'easing_functions_showcase'],
   'Plotting': ['sin_cos_plot', 'arg_min', 'graph_area_plot', 'polygon_on_axes', 'heat_diagram_plot'],
-  'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'fixed_orientation_mobjects', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation', 'three_d_angle', 'three_d_reflex_angle'],
+  'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'fixed_orientation_mobjects', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation', 'three_d_angle', 'three_d_reflex_angle', 'split_screen_camera', 'picture_in_picture_camera', 'quad_view_camera'],
   'Advanced Projects': ['opening_manim', 'export_animation'],
 };
 
@@ -214,6 +214,21 @@ const EXAMPLE_META = {
     description:
       'Compares eight easing functions side by side. Colored dots shift right simultaneously using different rate functions — smooth, sine, back, elastic, bounce, circ, smoothstep, and exponential — to visualize how each one affects animation timing.',
     learnMore: ['Shift', 'AnimationGroup'],
+  },
+  split_screen_camera: {
+    description:
+      'Renders the same scene through two Camera2D instances side by side via SplitScreenCamera. The left pane is centered on a circle; the right pane zooms in on a square. Each viewport gets its own aspect ratio at render time. Demonstrates Scene.useMultiCamera() for split-screen layouts.',
+    learnMore: ['Scene', 'Camera2D', 'SplitScreenCamera', 'MultiCamera'],
+  },
+  picture_in_picture_camera: {
+    description:
+      'Main camera shows the full scene while a small picture-in-picture inset follows an orbiting dot at higher zoom. Uses MultiCamera.setupPictureInPicture() and an updater to keep the inset camera tracking the target.',
+    learnMore: ['Scene', 'Camera2D', 'MultiCamera', 'ValueTracker'],
+  },
+  quad_view_camera: {
+    description:
+      'Four simultaneous viewports of the same scene — one overview plus three close-ups — composed with MultiCamera.setupQuadView(). A ball animates between regions, visible at full detail in whichever quadrant currently frames it.',
+    learnMore: ['Scene', 'Camera2D', 'MultiCamera', 'ValueTracker'],
   },
 };
 
