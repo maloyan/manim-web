@@ -12,8 +12,6 @@ import { VMobject, Point } from './VMobject';
  * Operations apply to all children, and paths can be combined.
  */
 export class VGroup extends VMobject {
-  private _directPositionWarningCount = 0;
-
   /**
    * True when this VGroup (recursively) has no renderable geometry.
    */
@@ -165,14 +163,6 @@ export class VGroup extends VMobject {
    */
   override normalizeTransform(): this {
     this._normalizeContainerTransform({
-      beforeTranslate: () => {
-        this._directPositionWarningCount += 1;
-        if (this._directPositionWarningCount <= 3 || this._directPositionWarningCount % 25 === 0) {
-          console.warn(
-            `[manim-web] Direct VGroup.position mutation detected; forwarding translation to children. Use moveTo()/shift() on VGroup. (count=${this._directPositionWarningCount})`,
-          );
-        }
-      },
       translateChild: (child, dx, dy, dz) => {
         child.shift([dx, dy, dz]);
       },

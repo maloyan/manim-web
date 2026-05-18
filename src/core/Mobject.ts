@@ -1,14 +1,6 @@
 /* eslint-disable max-lines */
 import * as THREE from 'three';
-import {
-  type Vector3Tuple,
-  type MobjectStyle,
-  UP,
-  DOWN,
-  LEFT,
-  RIGHT,
-  isVMobjectLike,
-} from './MobjectTypes';
+import { type Vector3Tuple, type MobjectStyle, UP, DOWN, LEFT, RIGHT } from './MobjectTypes';
 import {
   rotateMobject,
   getCenterImpl,
@@ -35,7 +27,6 @@ let animateProxyFactory: ((mobject: Mobject) => any) | null = null;
 const SCRATCH_EULER = new THREE.Euler();
 
 interface NormalizeContainerOptions {
-  beforeTranslate?: () => void;
   translateChild?: (child: Mobject, dx: number, dy: number, dz: number) => void;
 }
 
@@ -595,9 +586,6 @@ export abstract class Mobject {
     SCRATCH_EULER.set(rx, ry, rz, this.rotation.order);
 
     for (const child of this.children) {
-      if (isVMobjectLike(child) && child._points3D.length > 0) {
-        child.position.applyEuler(SCRATCH_EULER);
-      }
       for (const axis of this.rotation.order) {
         const eulerAxis = axis as 'X' | 'Y' | 'Z';
         const angle = eulerAxis === 'X' ? rx : eulerAxis === 'Y' ? ry : rz;
@@ -619,7 +607,6 @@ export abstract class Mobject {
     const dz = this.position.z;
     if (dx === 0 && dy === 0 && dz === 0) return;
 
-    options?.beforeTranslate?.();
     const translateChild =
       options?.translateChild ??
       ((child: Mobject, tx: number, ty: number, tz: number) => {
