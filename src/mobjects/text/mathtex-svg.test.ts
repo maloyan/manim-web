@@ -7,7 +7,7 @@
  * verifies that MathTex and Tex are VGroup instances (SVG-based), not plain
  * Mobject instances (rasterized).
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { MathTex, MathTexSVG } from './MathTex';
 import { MathTexImage } from './MathTexImage';
 import { Tex } from './Tex';
@@ -16,6 +16,46 @@ import { VGroup } from '../../core/VGroup';
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
+
+/**
+ * MathTexImage's KaTeX path renders into a 2D canvas. happy-dom returns null
+ * from `canvas.getContext('2d')`, which leaks a `MathTexImage rendering error`
+ * log even though the renderer falls back to MathJax. Stub the 2D context to
+ * keep stderr clean.
+ */
+beforeAll(() => {
+  const proto = HTMLCanvasElement.prototype as HTMLCanvasElement & {
+    getContext: (type: string, ...rest: unknown[]) => unknown;
+  };
+  const orig = proto.getContext;
+  proto.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
+    if (type === '2d') {
+      return {
+        scale: () => {},
+        clearRect: () => {},
+        fillRect: () => {},
+        fillText: () => {},
+        beginPath: () => {},
+        closePath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        fill: () => {},
+        stroke: () => {},
+        measureText: (t: string) => ({
+          width: t.length * 10,
+          fontBoundingBoxAscent: 30,
+        }),
+        drawImage: () => {},
+        font: '',
+        fillStyle: '',
+        globalAlpha: 1,
+        textBaseline: 'alphabetic',
+        textAlign: 'left',
+      } as unknown as CanvasRenderingContext2D;
+    }
+    return orig.call(this, type, ...(args as []));
+  } as typeof proto.getContext;
+});
 
 describe('Issue #228: MathTex defaults to SVG mode', () => {
   it('MathTex should be an instance of VGroup (SVG path-based)', () => {
