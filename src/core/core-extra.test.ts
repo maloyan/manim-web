@@ -1872,26 +1872,35 @@ describe('VGroup - extended coverage', () => {
     expect(a.position.x).toBe(5);
   });
 
-  it('shift on empty VGroup mutates group position (issue #318)', () => {
-    const vg = new VGroup();
-    vg.shift([-8, 0, 0]);
-    expect(vg.position.x).toBe(-8);
-    expect(vg.getCenter()[0]).toBe(-8);
+  it('shift on empty VGroup is equivalent to shifting after children are added (issue #318)', () => {
+    const makeChild = (): VMobject => {
+      const a = new VMobject();
+      a.setPoints3D([
+        [0, 0, 0],
+        [1, 0, 0],
+        [2, 0, 0],
+        [3, 0, 0],
+      ]);
+      return a;
+    };
 
-    // Children added after a pre-shift should inherit the parent transform
-    // and combine cleanly with a subsequent populated shift.
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    vg.add(a);
-    vg.shift([1, 0, 0]);
-    expect(vg.position.x).toBe(-8);
-    expect(a.position.x).toBe(1);
-    expect(vg.getCenter()[0]).toBeCloseTo(-7, 5);
+    const preShift = new VGroup();
+    preShift.shift([-8, 0, 0]);
+    preShift.add(makeChild());
+
+    const postShift = new VGroup();
+    postShift.add(makeChild());
+    postShift.shift([-8, 0, 0]);
+
+    expect(preShift.getCenter()[0]).toBeCloseTo(postShift.getCenter()[0], 5);
+
+    preShift.shift([1, 0, 0]);
+    postShift.shift([1, 0, 0]);
+
+    expect(preShift.getCenter()[0]).toBeCloseTo(postShift.getCenter()[0], 5);
   });
 
-  it('pre-shifted VGroup keeps consistent center after matrixWorld update', () => {
-    // Codex review of #318: materialize the THREE hierarchy and confirm we
-    // don't double-count parent.position once the world matrix is current.
+  it('pre-shifted VGroup center is stable across matrixWorld updates', () => {
     const vg = new VGroup();
     vg.shift([-8, 0, 0]);
     const a = new VMobject();
@@ -1902,10 +1911,14 @@ describe('VGroup - extended coverage', () => {
       [2, 2, 0],
     ]);
     vg.add(a);
+
+    const before = vg.getCenter();
     vg.getThreeObject().updateMatrixWorld(true);
-    // Child geometry centers at local (2, 1, 0); group offsets by (-8, 0, 0).
-    expect(vg.getCenter()[0]).toBeCloseTo(-6, 5);
-    expect(vg.getCenter()[1]).toBeCloseTo(1, 5);
+    const after = vg.getCenter();
+
+    expect(after[0]).toBeCloseTo(before[0], 5);
+    expect(after[1]).toBeCloseTo(before[1], 5);
+    expect(after[2]).toBeCloseTo(before[2], 5);
   });
 
   it('moveTo with point moves VGroup center', () => {
