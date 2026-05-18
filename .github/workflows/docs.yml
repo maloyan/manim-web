@@ -8,6 +8,13 @@ on:
       - 'src/**'
       - 'examples/**'
       - 'scripts/generate-example-docs.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - 'vite.browser.config.ts'
+      - 'tsconfig.json'
+      - 'tsconfig.typedoc.json'
+      - '.github/workflows/docs.yml'
   workflow_dispatch:
 
 permissions:
@@ -32,6 +39,9 @@ jobs:
       - name: Install root dependencies
         run: npm ci
 
+      - name: Build manim-web library (applies typia transform)
+        run: npm run build
+
       - name: Generate example docs
         run: node scripts/generate-example-docs.mjs
 
@@ -42,6 +52,9 @@ jobs:
       - name: Build Docusaurus site
         run: npm run build
         working-directory: docs
+
+      - name: Assert typia transform applied in docs bundle
+        run: bash scripts/assert-docs-typia-transform.sh
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
