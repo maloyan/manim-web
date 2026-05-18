@@ -1630,6 +1630,16 @@ describe('Group - extended coverage', () => {
     expect(center[1]).toBeCloseTo(5, 0);
   });
 
+  it('scale then moveTo keeps Group center on target', () => {
+    const g = new Group(new PointMobject({ position: [1, 0, 0] }));
+    g.scale(2);
+    g.moveTo([5, 0, 0]);
+    const center = g.getCenter();
+    expect(center[0]).toBeCloseTo(5, 6);
+    expect(center[1]).toBeCloseTo(0, 6);
+    expect(center[2]).toBeCloseTo(0, 6);
+  });
+
   it('moveTo with Mobject target centers on it', () => {
     const target = new PointMobject({ position: [10, 10, 0] });
     const a = new PointMobject({ position: [0, 0, 0] });
@@ -1871,6 +1881,16 @@ describe('VGroup - extended coverage', () => {
     expect(center[1]).toBeCloseTo(10, 0);
   });
 
+  it('scale then moveTo keeps VGroup center on target', () => {
+    const vg = new VGroup(new PointMobject({ position: [1, 0, 0] }));
+    vg.scale(2);
+    vg.moveTo([5, 0, 0]);
+    const center = vg.getCenter();
+    expect(center[0]).toBeCloseTo(5, 6);
+    expect(center[1]).toBeCloseTo(0, 6);
+    expect(center[2]).toBeCloseTo(0, 6);
+  });
+
   it('moveTo with Mobject target', () => {
     const target = new PointMobject({ position: [5, 5, 0] });
     const a = new PointMobject({ position: [0, 0, 0] });
@@ -1894,8 +1914,6 @@ describe('VGroup - extended coverage', () => {
     const dot = new Dot({ point: [2, 0, 0], radius: 0 });
     const vg = new VGroup(line, dot);
 
-    const startBefore = line.getStart();
-    const endBefore = line.getEnd();
     vg.rotate(Math.PI / 2);
 
     // Rotation is stored on group transform before normalization.
@@ -1908,13 +1926,30 @@ describe('VGroup - extended coverage', () => {
     expect(vg.rotation.y).toBe(0);
     expect(vg.rotation.z).toBe(0);
 
-    // Child geometry reflects forwarded rotation.
-    const startAfter = line.getStart();
-    const endAfter = line.getEnd();
-    expect(startAfter[0]).not.toBeCloseTo(startBefore[0], 4);
-    expect(startAfter[1]).not.toBeCloseTo(startBefore[1], 4);
-    expect(endAfter[0]).not.toBeCloseTo(endBefore[0], 4);
-    expect(endAfter[1]).not.toBeCloseTo(endBefore[1], 4);
+    const dotCenter = dot.getCenter();
+    expect(dotCenter[0]).toBeCloseTo(0, 6);
+    expect(dotCenter[1]).toBeCloseTo(2, 6);
+  });
+
+  it('normalizeTransform respects non-XYZ Euler order for VGroup rotation', () => {
+    const sourceLine = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    const sourceGroup = new VGroup(sourceLine);
+    sourceGroup.rotation.order = 'YXZ';
+    sourceGroup.rotation.set(0.4, 0.7, 0.2, 'YXZ');
+
+    const xyzLine = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    const xyzGroup = new VGroup(xyzLine);
+    xyzGroup.rotation.order = 'XYZ';
+    xyzGroup.rotation.set(0.4, 0.7, 0.2, 'XYZ');
+
+    sourceGroup.normalizeTransform();
+    xyzGroup.normalizeTransform();
+
+    const sourceEnd = sourceLine.getEnd();
+    const xyzEnd = xyzLine.getEnd();
+    expect(Math.abs(sourceEnd[0] - xyzEnd[0]) + Math.abs(sourceEnd[1] - xyzEnd[1])).toBeGreaterThan(
+      1e-4,
+    );
   });
 
   it('scale updates vgroup scale vector', () => {

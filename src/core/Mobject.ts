@@ -1,6 +1,14 @@
 /* eslint-disable max-lines */
 import * as THREE from 'three';
-import { type Vector3Tuple, type MobjectStyle, UP, DOWN, LEFT, RIGHT } from './MobjectTypes';
+import {
+  type Vector3Tuple,
+  type MobjectStyle,
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT,
+  isVMobjectLike,
+} from './MobjectTypes';
 import {
   rotateMobject,
   getCenterImpl,
@@ -18,6 +26,7 @@ import {
   prepareForNonlinearTransformImpl,
   resolveExtremalPoint,
 } from './MobjectState';
+import { axisVectorFromEulerKey } from '../utils/axis';
 // AnimateProxy registers itself here to break the circular dependency:
 // Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -533,6 +542,13 @@ export abstract class Mobject {
    * children, reset parent anchors, then recurse into children.
    */
   protected _normalizeContainerTransform(options?: NormalizeContainerOptions): void {
+    if (!this._hasDeferredAnchors() || this.children.length === 0) {
+      for (const child of this.children) {
+        child.normalizeTransform();
+      }
+      return;
+    }
+
     this._normalizeContainerScale();
     this._normalizeContainerRotation();
     this._normalizeContainerTranslation(options);
@@ -540,6 +556,20 @@ export abstract class Mobject {
     for (const child of this.children) {
       child.normalizeTransform();
     }
+  }
+
+  protected _hasDeferredAnchors(): boolean {
+    return (
+      this.position.x !== 0 ||
+      this.position.y !== 0 ||
+      this.position.z !== 0 ||
+      this.rotation.x !== 0 ||
+      this.rotation.y !== 0 ||
+      this.rotation.z !== 0 ||
+      this.scaleVector.x !== 1 ||
+      this.scaleVector.y !== 1 ||
+      this.scaleVector.z !== 1
+    );
   }
 
   private _normalizeContainerScale(): void {
@@ -563,11 +593,21 @@ export abstract class Mobject {
     if (rx === 0 && ry === 0 && rz === 0) return;
 
     SCRATCH_EULER.set(rx, ry, rz, this.rotation.order);
+
     for (const child of this.children) {
-      child.position.applyEuler(SCRATCH_EULER);
-      if (rx !== 0) child.rotate(rx, [1, 0, 0]);
-      if (ry !== 0) child.rotate(ry, [0, 1, 0]);
-      if (rz !== 0) child.rotate(rz, [0, 0, 1]);
+      if (isVMobjectLike(child) && child._points3D.length > 0) {
+        child.position.applyEuler(SCRATCH_EULER);
+      }
+      for (const axis of this.rotation.order) {
+        const eulerAxis = axis as 'X' | 'Y' | 'Z';
+        const angle = eulerAxis === 'X' ? rx : eulerAxis === 'Y' ? ry : rz;
+        if (angle !== 0) {
+          child.rotate(angle, {
+            axis: axisVectorFromEulerKey(eulerAxis),
+            aboutPoint: [0, 0, 0],
+          });
+        }
+      }
     }
     this.rotation.set(0, 0, 0);
     this._markDirty();

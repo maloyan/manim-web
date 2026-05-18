@@ -109,6 +109,8 @@ export class Group extends Mobject {
    * @returns this for chaining
    */
   override shift(delta: Vector3Tuple): this {
+    this.normalizeTransform();
+
     for (const child of this.children) {
       child.shift(delta);
     }

@@ -188,6 +188,8 @@ export class VGroup extends VMobject {
    * @returns this for chaining
    */
   override shift(delta: Vector3Tuple): this {
+    this.normalizeTransform();
+
     for (const child of this.children) {
       child.shift(delta);
     }
@@ -202,6 +204,8 @@ export class VGroup extends VMobject {
    * @returns this for chaining
    */
   override moveTo(target: Vector3Tuple | Mobject, alignedEdge?: Vector3Tuple): this {
+    this.normalizeTransform();
+
     if (!Array.isArray(target)) {
       // Mobject target: delegate to base which uses shift
       if (alignedEdge) {
