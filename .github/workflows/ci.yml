@@ -16,7 +16,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-package-lock
-      - run: npx ts-patch install
       - name: ESLint (errors block, warnings tracked)
         run: npx eslint src/ --max-warnings 0
 
@@ -29,7 +28,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-package-lock
-      - run: npx ts-patch install
       - name: TypeScript type checking
         run: npm run typecheck
 
@@ -42,7 +40,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-package-lock
-      - run: npx ts-patch install
       - name: Run tests with coverage
         run: npx vitest run --coverage
       - name: Upload coverage to Codecov
@@ -60,7 +57,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-package-lock
-      - run: npx ts-patch install
       - name: Check for dead exports (knip)
         run: npx knip
 
@@ -73,7 +69,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-package-lock
-      - run: npx ts-patch install
       - name: Check for circular imports (madge)
         run: npx madge --circular --extensions ts src/
 
@@ -86,6 +81,5 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-package-lock
-      - run: npx ts-patch install
       - name: Check formatting
         run: npm run format:check

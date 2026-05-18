@@ -57,7 +57,7 @@
     "release:minor": "standard-version --release-as minor",
     "release:major": "standard-version --release-as major",
     "typia:setup": "ts-patch install",
-    "prepare": "husky"
+    "prepare": "husky && ts-patch install"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -70,7 +70,7 @@
     "earcut": "^3.0.2",
     "gif.js": "^0.2.0",
     "katex": "^0.16.28",
-    "opentype.js": "^1.3.4",
+    "opentype.js": "^2.0.0",
     "polygon-clipping": "^0.15.7",
     "typia": "^12.1.1",
     "three": "^0.184.0"
@@ -89,7 +89,7 @@
     "husky": "^9.1.7",
     "jscpd": "^4.0.8",
     "knip": "^6.1.0",
-    "lint-staged": "^16.2.7",
+    "lint-staged": "^17.0.4",
     "madge": "^8.0.0",
     "prettier": "^3.8.1",
     "standard-version": "^9.5.0",

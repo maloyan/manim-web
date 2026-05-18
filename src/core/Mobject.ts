@@ -249,12 +249,15 @@ export abstract class Mobject {
       throw new TypeError('Mobject.rotate: angle must be a number');
     }
 
-    if (axisOrOptions && !Array.isArray(axisOrOptions)) {
-      // Validate options using typia (ensures shape and types).
-      typia.assert<AxisOrOptions>(axisOrOptions);
-      const resolved = resolveExtremalPoint(this, axisOrOptions);
-      if (resolved) {
-        axisOrOptions = { axis: axisOrOptions.axis, aboutPoint: resolved };
+    if (axisOrOptions !== undefined) {
+      if (Array.isArray(axisOrOptions)) {
+        typia.assert<Vector3Tuple>(axisOrOptions);
+      } else {
+        typia.assert<AxisOrOptions>(axisOrOptions);
+        const resolved = resolveExtremalPoint(this, axisOrOptions);
+        if (resolved) {
+          axisOrOptions = { axis: axisOrOptions.axis, aboutPoint: resolved };
+        }
       }
     }
     rotateMobject(this, angle, axisOrOptions);
