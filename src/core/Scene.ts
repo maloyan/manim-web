@@ -12,6 +12,7 @@ import { VMobject } from './VMobject';
 import { SceneStateManager, SceneSnapshot } from './StateManager';
 import { AudioManager, type AddSoundOptions, type AudioTrack } from './AudioManager';
 import { ensureAnimateProxyRegistered } from './AnimateProxy';
+import type { MultiCamera } from './CameraExtensions';
 
 // AnimateProxy self-registers with Mobject via a top-level side effect
 // (see AnimateProxy.ts) to avoid the Mobject -> AnimateProxy -> Transform ->
@@ -123,6 +124,11 @@ export class Scene {
   // Audio manager (lazy – created on first access)
   private _audioManager: AudioManager | null = null;
 
+  // Optional multi-camera renderer. When set, `_render()` delegates to it
+  // instead of the single-camera path. Default-camera object stays alive
+  // for API compatibility and as a fallback when this is cleared.
+  private _multiCamera: MultiCamera | null = null;
+
   /**
    * Create a new Scene.
    * @param container - DOM element to render into, or null for headless mode
@@ -221,6 +227,32 @@ export class Scene {
    */
   get renderer(): IRenderer {
     return this._renderer;
+  }
+
+  /**
+   * Get the active MultiCamera, or null if single-camera rendering is in use.
+   */
+  get multiCamera(): MultiCamera | null {
+    return this._multiCamera;
+  }
+
+  /**
+   * Attach (or detach) a MultiCamera for split-screen, picture-in-picture, or
+   * quad-view rendering. Pass `null` to revert to single-camera rendering.
+   * Has no effect in headless mode (the NullRenderer cannot scissor viewports).
+   * @param mc - MultiCamera instance, or null to restore the default render path
+   * @returns this for chaining
+   */
+  useMultiCamera(mc: MultiCamera | null): this {
+    this._multiCamera = mc;
+    // When detaching, restore the default camera's aspect to the full canvas
+    // in case a MultiCamera entry previously mutated it.
+    if (mc === null) {
+      const aspectRatio = this._renderer.width / this._renderer.height;
+      this._camera.setAspectRatio(aspectRatio);
+    }
+    this._render();
+    return this;
   }
 
   /**
@@ -866,7 +898,44 @@ export class Scene {
       this._updateFrustum();
     }
 
-    this._renderer.render(this._threeScene, this._camera.getCamera());
+    if (this._multiCamera !== null && !this.isHeadless) {
+      this._renderMultiCamera();
+    } else {
+      this._renderer.render(this._threeScene, this._camera.getCamera());
+    }
+  }
+
+  /**
+   * Render via the attached MultiCamera. Clears the full canvas first so
+   * arbitrary viewport layouts (e.g. picture-in-picture) don't leak stale
+   * pixels, and restores renderer state via try/finally even if a camera
+   * render throws.
+   */
+  protected _renderMultiCamera(): void {
+    const mc = this._multiCamera;
+    if (mc === null) return;
+    const threeRenderer = this._renderer.getThreeRenderer();
+    // Skip if the WebGL context is gone — Renderer.render() guards this for
+    // the default path, so we mirror that behavior here.
+    if (threeRenderer.getContext().isContextLost()) return;
+
+    const width = this._renderer.width;
+    const height = this._renderer.height;
+
+    // Clear the full canvas before per-viewport rendering so areas not
+    // covered by any viewport (or transparent regions) don't show stale pixels.
+    threeRenderer.setScissorTest(false);
+    threeRenderer.setViewport(0, 0, width, height);
+    threeRenderer.clear();
+
+    try {
+      mc.render(threeRenderer, this._threeScene, width, height);
+    } finally {
+      // Always restore full viewport / disabled scissor so the next render
+      // (single-camera fallback, screenshot, etc.) starts from a clean state.
+      threeRenderer.setScissorTest(false);
+      threeRenderer.setViewport(0, 0, width, height);
+    }
   }
 
   /**
@@ -957,6 +1026,12 @@ export class Scene {
     // Update camera frame updaters AFTER animations so camera
     // updaters see the latest positions set by MoveAlongPath etc.
     this._camera.updateFrame(dt);
+
+    // Advance any animatable cameras (MovingCamera, ThreeDCamera) attached
+    // to a MultiCamera so their per-frame interpolation continues to tick.
+    if (this._multiCamera !== null) {
+      this._multiCamera.update(dt);
+    }
 
     this._render();
     this._checkFinished();
