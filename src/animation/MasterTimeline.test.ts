@@ -193,17 +193,25 @@ describe('MasterTimeline', () => {
     });
 
     it('back-to-back beginSlide calls without segments are skipped', () => {
-      const mob = new TestMobject();
-      tl.beginSlide({ loop: true });
-      tl.beginSlide({ autoNext: true });
-      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
-      tl.finalizeSlides();
+      // Silence the expected `MasterTimeline.beginSlide: consecutive
+      // nextSlide() calls ...` warn — this test exercises the path.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const mob = new TestMobject();
+        tl.beginSlide({ loop: true });
+        tl.beginSlide({ autoNext: true });
+        tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+        tl.finalizeSlides();
 
-      // Only the final boundary owns the segment.
-      const slides = tl.getSlides();
-      expect(slides).toHaveLength(1);
-      expect(slides[0].autoNext).toBe(true);
-      expect(slides[0].loop).toBe(false);
+        // Only the final boundary owns the segment.
+        const slides = tl.getSlides();
+        expect(slides).toHaveLength(1);
+        expect(slides[0].autoNext).toBe(true);
+        expect(slides[0].loop).toBe(false);
+        expect(warnSpy).toHaveBeenCalled();
+      } finally {
+        warnSpy.mockRestore();
+      }
     });
 
     it('finalizeSlides with no segments leaves slides empty', () => {

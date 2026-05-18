@@ -655,23 +655,36 @@ describe('Text', () => {
       const origFonts = g.document.fonts;
       g.FontFace = FakeFontFace;
       g.document.fonts = fakeFonts;
+      // Stub fetch via vi.stubGlobal so TextGlyphGroup's font fetch resolves
+      // immediately with an empty buffer instead of attempting a real network
+      // request to the bogus URL below (which would leak as a happy-dom
+      // teardown AbortError). Use a plain object that quacks like Response —
+      // happy-dom's Response constructor registers async tasks on the frame.
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => ({
+          ok: true,
+          status: 200,
+          arrayBuffer: async () => new ArrayBuffer(0),
+        })),
+      );
 
       try {
         // Use a unique URL so the per-URL cache in Text.ts does not return
         // a stale entry from an earlier test run.
         const url = `http://example.com/font-${Date.now()}-${Math.random()}.ttf`;
         const t = new Text({ text: 'Hi', fontUrl: url });
-        // loadGlyphs also constructs a TextGlyphGroup which calls opentype.load.
-        // We only need to verify the FontFace registration sequence, so we await
-        // a microtask cycle and inspect the call ordering instead of waiting for
-        // opentype (which would fail without a real font URL).
-        const promise = t.loadGlyphs();
-        // Force the promise chain to advance through await points.
+        // loadGlyphs constructs a TextGlyphGroup which fetches the font and
+        // hands the bytes to opentype.parse. Our fetch stub returns an empty
+        // buffer, so opentype.parse rejects — attach `.catch` eagerly so the
+        // rejection is handled before any microtask flush surfaces it as an
+        // unhandled rejection. We only verify the FontFace registration
+        // sequence; TextGlyphGroup's failure is incidental.
+        const promise = t.loadGlyphs().catch(() => {});
         await Promise.resolve();
         await Promise.resolve();
         await Promise.resolve();
-        // Tear down the awaited opentype.load to avoid hanging the test.
-        promise.catch(() => {});
+        await promise;
 
         expect(calls.indexOf('face.load')).toBeGreaterThanOrEqual(0);
         expect(calls.indexOf('fonts.add')).toBeGreaterThan(calls.indexOf('face.load'));
@@ -681,6 +694,7 @@ describe('Text', () => {
       } finally {
         g.FontFace = origFontFace;
         g.document.fonts = origFonts;
+        vi.unstubAllGlobals();
       }
     });
   });

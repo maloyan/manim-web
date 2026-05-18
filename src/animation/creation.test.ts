@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import * as THREE from 'three';
+import { describe, it, expect } from 'vitest';
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
 import { Group } from '../core/Group';
@@ -76,22 +77,21 @@ describe('Create', () => {
   });
 
   describe('Group with per-child opacities (opacity fallback)', () => {
-    // These tests intentionally add bare `new Mobject()` children to a Group.
-    // The abstract `_createCopy` is missing on those children, so when
-    // Group.copy() iterates them via Mobject.copy() the catch-and-warn in
-    // Animation.begin() fires. The warn is expected here — silence it.
-    let warnSpy: ReturnType<typeof vi.spyOn>;
-    beforeEach(() => {
-      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    });
-    afterEach(() => {
-      warnSpy.mockRestore();
-    });
+    // Concrete Mobject subclass so Group.copy() can iterate children without
+    // tripping the missing-`_createCopy` warn fallback in Animation.begin().
+    class TestMobject extends Mobject {
+      protected _createThreeObject(): THREE.Object3D {
+        return new THREE.Object3D();
+      }
+      protected _createCopy(): Mobject {
+        return new TestMobject();
+      }
+    }
 
     it('preserves per-child opacities after finish (#109)', () => {
       const group = new Group();
-      const child1 = new Mobject();
-      const child2 = new Mobject();
+      const child1 = new TestMobject();
+      const child2 = new TestMobject();
       child1.setStrokeOpacity(1);
       child2.setStrokeOpacity(0); // e.g. background line with opacity 0
       group.add(child1);
@@ -113,8 +113,8 @@ describe('Create', () => {
 
     it('scales children proportionally during interpolation', () => {
       const group = new Group();
-      const child1 = new Mobject();
-      const child2 = new Mobject();
+      const child1 = new TestMobject();
+      const child2 = new TestMobject();
       child1.setStrokeOpacity(1);
       child2.setStrokeOpacity(0.4);
       group.add(child1);

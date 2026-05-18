@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { NumberLine, UnitInterval } from './NumberLine';
 import { FunctionGraph } from './FunctionGraph';
 import { Axes } from './Axes';
@@ -503,21 +503,30 @@ describe('FunctionGraph – uncovered branches', () => {
   });
 
   it('getPointFromX edge cases: throws, axes transform, Infinity', () => {
-    const fg1 = new FunctionGraph({
-      func: (x) => {
-        if (x > 0) throw new Error('boom');
-        return x;
-      },
-      xRange: [-5, 5],
-    });
-    expect(fg1.getPointFromX(2)).toBeNull();
-    const fg2 = new FunctionGraph({ func: () => Infinity, xRange: [-5, 5] });
-    expect(fg2.getPointFromX(0)).toBeNull();
-    const axes = new Axes({ xRange: [-5, 5, 1], yRange: [-5, 5, 1], xLength: 10, yLength: 10 });
-    const fg3 = new FunctionGraph({ func: (x) => x * 2, axes });
-    const pt = fg3.getPointFromX(1);
-    expect(pt).not.toBeNull();
-    expect(tupleCloseTo(pt!, axes.coordsToPoint(1, 2))).toBe(true);
+    // Silence the expected `FunctionGraph: user function threw` /
+    // `function threw N/M times` warns — this test deliberately exercises
+    // that recovery path.
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const fg1 = new FunctionGraph({
+        func: (x) => {
+          if (x > 0) throw new Error('boom');
+          return x;
+        },
+        xRange: [-5, 5],
+      });
+      expect(fg1.getPointFromX(2)).toBeNull();
+      const fg2 = new FunctionGraph({ func: () => Infinity, xRange: [-5, 5] });
+      expect(fg2.getPointFromX(0)).toBeNull();
+      const axes = new Axes({ xRange: [-5, 5, 1], yRange: [-5, 5, 1], xLength: 10, yLength: 10 });
+      const fg3 = new FunctionGraph({ func: (x) => x * 2, axes });
+      const pt = fg3.getPointFromX(1);
+      expect(pt).not.toBeNull();
+      expect(tupleCloseTo(pt!, axes.coordsToPoint(1, 2))).toBe(true);
+      expect(warnSpy).toHaveBeenCalled();
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 
   it('multiple discontinuities split the range', () => {

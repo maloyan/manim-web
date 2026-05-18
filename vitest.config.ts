@@ -12,7 +12,7 @@ export default defineConfig({
   test: {
     pool: 'threads',
     include: ['src/**/*.test.ts'],
-    setupFiles: ['./src/test-setup/happy-dom-patches.ts'],
+    setupFiles: ['./src/test-setup/vitest-setup.ts'],
     environmentOptions: {
       happyDOM: {
         settings: {

@@ -87,8 +87,16 @@ let fontFaceIdCounter = 0;
  * showed up as wrong-font flickers in `Create`/`Transform` (issue #309).
  */
 async function loadFontFace(url: string): Promise<string> {
-  // Font loading unavailable in non-DOM environments
-  if (typeof document === 'undefined' || typeof FontFace === 'undefined') {
+  // Font loading unavailable in non-DOM environments or DOM emulators that
+  // omit the CSS Font Loading API (e.g. happy-dom). Probe the specific
+  // members used below — a partial mock that has `.fonts` but not `.load`
+  // or `.add` would otherwise crash.
+  if (
+    typeof document === 'undefined' ||
+    typeof FontFace === 'undefined' ||
+    typeof document.fonts?.add !== 'function' ||
+    typeof document.fonts?.load !== 'function'
+  ) {
     return '';
   }
 
@@ -601,10 +609,16 @@ export class Text extends TexturedMobject {
     // Load the font URL as a CSS @font-face (cached across all Text instances)
     // so the Canvas 2D renderer uses the same font file as the opentype.js glyph strokes.
     const familyName = await loadFontFace(this._fontUrl);
-    this._fontFamily = `'${familyName}'`;
-    this._canvasDirty = true;
-    this._renderToCanvas();
-    this._updateMesh();
+    // `loadFontFace` returns '' when the CSS Font Loading API is unavailable
+    // (non-DOM, or DOM emulator without `document.fonts`); keep the existing
+    // _fontFamily in that case so the canvas renderer doesn't try to use the
+    // empty family `''`.
+    if (familyName) {
+      this._fontFamily = `'${familyName}'`;
+      this._canvasDirty = true;
+      this._renderToCanvas();
+      this._updateMesh();
+    }
 
     this._glyphGroup = new TextGlyphGroup({
       text: this._text,

@@ -7,7 +7,7 @@
  * verifies that MathTex and Tex are VGroup instances (SVG-based), not plain
  * Mobject instances (rasterized).
  */
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { MathTex, MathTexSVG } from './MathTex';
 import { MathTexImage } from './MathTexImage';
 import { Tex } from './Tex';
@@ -19,16 +19,18 @@ import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
 
 /**
  * MathTexImage's KaTeX path renders into a 2D canvas. happy-dom returns null
- * from `canvas.getContext('2d')`, which leaks a `MathTexImage rendering error`
- * log even though the renderer falls back to MathJax. Stub the 2D context to
- * keep stderr clean.
+ * from `canvas.getContext('2d')`, which surfaces as a render error and
+ * (under the strict console policy) fails the test. Stub the 2D context here
+ * so the renderer can produce a canvas-backed texture. Restore in afterAll
+ * so the stub does not leak into later files if Vitest worker isolation is
+ * ever relaxed.
  */
+const canvasProto = HTMLCanvasElement.prototype as HTMLCanvasElement & {
+  getContext: (type: string, ...rest: unknown[]) => unknown;
+};
+const origGetContext = canvasProto.getContext;
 beforeAll(() => {
-  const proto = HTMLCanvasElement.prototype as HTMLCanvasElement & {
-    getContext: (type: string, ...rest: unknown[]) => unknown;
-  };
-  const orig = proto.getContext;
-  proto.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
+  canvasProto.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
     if (type === '2d') {
       return {
         scale: () => {},
@@ -53,8 +55,11 @@ beforeAll(() => {
         textAlign: 'left',
       } as unknown as CanvasRenderingContext2D;
     }
-    return orig.call(this, type, ...(args as []));
-  } as typeof proto.getContext;
+    return origGetContext.call(this, type, ...(args as []));
+  } as typeof canvasProto.getContext;
+});
+afterAll(() => {
+  canvasProto.getContext = origGetContext;
 });
 
 describe('Issue #228: MathTex defaults to SVG mode', () => {

@@ -78,8 +78,15 @@ export class TextGlyphGroup extends VGroup {
    * Load font and build GlyphVMobject children.
    */
   private async _loadAndBuild(): Promise<void> {
-    // Load font via opentype.js
-    const font = await opentype.load(this._fontUrl);
+    // Load font via opentype.js. `opentype.load` is deprecated as of 2.x —
+    // migrate to `opentype.parse(buffer)` per
+    // https://github.com/opentypejs/opentype.js/issues/675.
+    const response = await fetch(this._fontUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch font ${this._fontUrl}: ${response.status}`);
+    }
+    const buffer = await response.arrayBuffer();
+    const font = opentype.parse(buffer);
 
     const scale = this._fontSize / font.unitsPerEm;
     let xCursor = 0; // in pixels

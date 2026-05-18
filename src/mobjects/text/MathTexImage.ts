@@ -540,7 +540,10 @@ export class MathTexImage extends TexturedMobject {
     const canvas = document.createElement('canvas');
     canvas.width = width * scale;
     canvas.height = height * scale;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      throw new Error('MathTexImage: 2D canvas context unavailable in this environment');
+    }
     ctx.scale(scale, scale);
 
     await new Promise<void>((resolve) => {
@@ -632,31 +635,44 @@ export class MathTexImage extends TexturedMobject {
 
       // Explicitly request common KaTeX fonts (triggers download if not cached).
       // Race against a timeout to avoid hanging if fonts can't load.
-      const fs = `${this._fontSize}px`;
-      const fontTimeout = new Promise<void>((r) => setTimeout(r, 5000));
-      await Promise.race([
-        Promise.all(
-          [
-            document.fonts.load(`${fs} KaTeX_Main`),
-            document.fonts.load(`italic ${fs} KaTeX_Math`),
-            document.fonts.load(`bold ${fs} KaTeX_Main`),
-            document.fonts.load(`${fs} KaTeX_Size1`),
-            document.fonts.load(`${fs} KaTeX_Size2`),
-            document.fonts.load(`${fs} KaTeX_AMS`),
-          ].map((p) =>
-            p.catch((err) => {
-              console.warn(
-                'MathTexImage: KaTeX font failed to load. Rendering may be degraded.',
-                err,
-              );
-            }),
+      // `document.fonts` is the CSS Font Loading API — implemented in real
+      // browsers but absent in some DOM emulators (e.g. happy-dom). Skip the
+      // wait there since there is nothing to load anyway. Probe the
+      // specific members used below so a partial mock cannot crash us. Use
+      // a thenable check for `.ready` instead of `instanceof Promise` so
+      // cross-realm mocks still pass.
+      const fontsApi = document.fonts as { load?: unknown; ready?: { then?: unknown } } | undefined;
+      if (
+        fontsApi &&
+        typeof fontsApi.load === 'function' &&
+        typeof fontsApi.ready?.then === 'function'
+      ) {
+        const fs = `${this._fontSize}px`;
+        const fontTimeout = new Promise<void>((r) => setTimeout(r, 5000));
+        await Promise.race([
+          Promise.all(
+            [
+              document.fonts.load(`${fs} KaTeX_Main`),
+              document.fonts.load(`italic ${fs} KaTeX_Math`),
+              document.fonts.load(`bold ${fs} KaTeX_Main`),
+              document.fonts.load(`${fs} KaTeX_Size1`),
+              document.fonts.load(`${fs} KaTeX_Size2`),
+              document.fonts.load(`${fs} KaTeX_AMS`),
+            ].map((p) =>
+              p.catch((err) => {
+                console.warn(
+                  'MathTexImage: KaTeX font failed to load. Rendering may be degraded.',
+                  err,
+                );
+              }),
+            ),
           ),
-        ),
-        fontTimeout,
-      ]);
+          fontTimeout,
+        ]);
 
-      // Wait for all fonts to finish loading (with timeout)
-      await Promise.race([document.fonts.ready, fontTimeout]);
+        // Wait for all fonts to finish loading (with timeout)
+        await Promise.race([document.fonts.ready, fontTimeout]);
+      }
 
       // Measure the rendered content
       const containerRect = container.getBoundingClientRect();
@@ -730,7 +746,17 @@ export class MathTexImage extends TexturedMobject {
     canvas.width = width * scale;
     canvas.height = height * scale;
 
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      // 2D context unavailable (e.g. happy-dom in tests, or a browser
+      // configuration where canvas is disabled). Surface as a render error
+      // so `_startRender` records `renderError` and `waitForRender()`
+      // rejects — silently returning a blank canvas would turn an
+      // unrenderable equation into an invisible one. There is no automatic
+      // MathJax retry; callers that want a fallback must re-instantiate
+      // with `renderer: 'mathjax'`.
+      throw new Error('MathTexImage: 2D canvas context unavailable in this environment');
+    }
     ctx.scale(scale, scale);
     ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
 

@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import {
   VMobjectFromSVGPath,
   SVGMobject,
@@ -412,8 +412,16 @@ describe('SVGMobject', () => {
   });
 
   it('warns and returns empty when no SVG element found', () => {
-    const svg = new SVGMobject({ svgString: '<div>not svg</div>' });
-    expect(svg.children.length).toBe(0);
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const svg = new SVGMobject({ svgString: '<div>not svg</div>' });
+      expect(svg.children.length).toBe(0);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('SVGMobject: No SVG element found'),
+      );
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 
   it('getSubpaths returns VMobject children', () => {
