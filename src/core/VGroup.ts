@@ -231,14 +231,24 @@ export class VGroup extends VMobject {
   }
 
   /**
-   * Scale all children about the group's center.
-   * Each child's size is scaled, and their positions are repositioned
-   * relative to the group center — matching Manim Python behavior.
-   * Does not change the group's own scaleVector.
+   * Scale this group.
+   *
+   * For populated groups, scale each child about the group's center by
+   * modifying child geometry and positions — matching Manim Python behavior.
+   *
+   * For empty groups (e.g. MathTex / Tex whose glyphs are still being
+   * rendered asynchronously — issue #324), record the scale on the group's
+   * own `scaleVector`. Three.js then applies the parent transform to any
+   * children added later. MathTex / Tex bake this pending scale into glyph
+   * geometry once their async render finishes, so downstream callers see a
+   * consistent coordinate frame regardless of which mode produced the scale.
    * @param factor - Scale factor (number for uniform, tuple for non-uniform)
    * @returns this for chaining
    */
   override scale(factor: number | Vector3Tuple): this {
+    if (this.children.length === 0) {
+      return super.scale(factor);
+    }
     const center = this.getCenter();
     const fx = typeof factor === 'number' ? factor : factor[0];
     const fy = typeof factor === 'number' ? factor : factor[1];

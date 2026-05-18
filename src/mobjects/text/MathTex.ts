@@ -230,6 +230,10 @@ export class MathTex extends VGroup {
     // Scale to target height if specified, otherwise use a sensible default
     this._scaleToTarget();
 
+    // Bake any pre-render scale() call into glyph geometry so subsequent
+    // transforms operate in a consistent coordinate frame (#324).
+    this._consumePendingScale();
+
     // Set fillOpacity on this VGroup so Create animation detects it has fill
     // and properly hides it during the stroke-draw phase before fading it in.
     this.fillOpacity = this._svgFillOpacity;
@@ -320,6 +324,37 @@ export class MathTex extends VGroup {
   }
 
   /**
+   * Bake any pending parent `scaleVector` (e.g. from a pre-render `scale()`)
+   * into descendant geometry so post-render `shift`/`moveTo` operate in the
+   * same coordinate frame as the rendered glyphs. Without this step the
+   * parent's Three.js scale would silently multiply any later child-frame
+   * translations, producing a mismatch between `getCenter()` and the
+   * rendered position. See issue #324.
+   */
+  protected _consumePendingScale(): void {
+    const sx = this.scaleVector.x;
+    const sy = this.scaleVector.y;
+    const sz = this.scaleVector.z;
+    if (sx === 1 && sy === 1 && sz === 1) return;
+
+    const visit = (mob: Mobject) => {
+      mob.position.set(mob.position.x * sx, mob.position.y * sy, mob.position.z * sz);
+      if (mob instanceof VMobject && !(mob instanceof VGroup)) {
+        const pts = mob.getPoints();
+        const scaled = pts.map((p) => [p[0] * sx, p[1] * sy, p[2] * sz]);
+        mob.setPoints3D(scaled);
+      }
+      if ('children' in mob) {
+        for (const child of (mob as any).children) visit(child);
+      }
+      mob._markDirty();
+    };
+    for (const child of this.children) visit(child);
+    this.scaleVector.set(1, 1, 1);
+    this._markDirty();
+  }
+
+  /**
    * Render a multi-part expression by:
    * 1. Rendering the FULL expression as one MathJax call (correct layout)
    * 2. Rendering each part separately to count its glyphs
@@ -396,6 +431,10 @@ export class MathTex extends VGroup {
 
     // Scale and center the full expression
     this._scaleToTarget();
+
+    // Bake any pre-render scale() call into glyph geometry so subsequent
+    // transforms operate in a consistent coordinate frame (#324).
+    this._consumePendingScale();
 
     // Set fillOpacity on the parent VGroup for Create animation
     this.fillOpacity = this._svgFillOpacity;
