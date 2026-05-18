@@ -31,7 +31,7 @@ export interface OrbitControlsOptions {
   autoRotate?: boolean;
   /** Auto-rotation speed in degrees per second. Defaults to 2. */
   autoRotateSpeed?: number;
-  /** Vertical rotation axis: 'x', 'y', 'z', or 'camera' (uses camera's initial up). Defaults to 'camera'. */
+  /** Vertical rotation axis: 'x', 'y', 'z', or 'camera' (uses camera's initial up). Defaults to 'z'. */
   orbitControlsUp?: 'x' | 'y' | 'z' | 'camera';
 }
 
@@ -54,7 +54,7 @@ export class OrbitControls {
     // Set up axis BEFORE constructing controls. Three.js OrbitControls captures camera.up
     // into an internal quaternion at construction and never updates it. 'camera' mode uses
     // the initial camera.up (Three.js default behavior).
-    const mode = options?.orbitControlsUp ?? 'camera';
+    const mode = options?.orbitControlsUp ?? 'z';
     if (mode === 'x') {
       camera.up.set(1, 0, 0);
     } else if (mode === 'y') {
