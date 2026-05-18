@@ -83,3 +83,26 @@ jobs:
       - run: npm install --no-package-lock
       - name: Check formatting
         run: npm run format:check
+
+  docs-build:
+    name: Docs build (verify typia transform)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install root dependencies
+        run: npm ci
+      - name: Build manim-web library (applies typia transform)
+        run: npm run build
+      - name: Generate example docs
+        run: node scripts/generate-example-docs.mjs
+      - name: Install docs dependencies
+        run: npm ci
+        working-directory: docs
+      - name: Build Docusaurus site
+        run: npm run build
+        working-directory: docs
+      - name: Assert typia transform applied in docs bundle
+        run: bash scripts/assert-docs-typia-transform.sh
