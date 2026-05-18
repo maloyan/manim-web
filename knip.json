@@ -3,6 +3,7 @@
   "project": ["src/**/*.ts", "src/**/*.tsx"],
   "ignore": ["src/core/SceneExtensions.ts"],
   "ignoreDependencies": ["@types/katex", "typedoc"],
+  "ignoreUnresolved": ["typia/lib/transform"],
   "ignoreExportsUsedInFile": {
     "interface": true,
     "type": true
