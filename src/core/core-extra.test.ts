@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Mobject, UP, LEFT, RIGHT, UL, UR, DL } from './Mobject';
+import { axisVectorFromEulerKey } from '../utils/axis';
 import { VMobject } from './VMobject';
 import { PointMobject } from '../mobjects/point';
 import {
@@ -1950,6 +1951,49 @@ describe('VGroup - extended coverage', () => {
     expect(Math.abs(sourceEnd[0] - xyzEnd[0]) + Math.abs(sourceEnd[1] - xyzEnd[1])).toBeGreaterThan(
       1e-4,
     );
+  });
+
+  it('normalizeTransform bakes ordered Euler rotation to PointMobject child', () => {
+    const point = new PointMobject({ position: [1, 2, 3] });
+    const group = new VGroup(point);
+    group.rotation.order = 'ZXY';
+    group.rotation.set(0.3, -0.5, 0.2, 'ZXY');
+
+    const expected = new PointMobject({ position: [1, 2, 3] });
+    const angles: Record<'X' | 'Y' | 'Z', number> = { X: 0.3, Y: -0.5, Z: 0.2 };
+    for (const axis of group.rotation.order) {
+      const angle = angles[axis as 'X' | 'Y' | 'Z'];
+      if (angle === 0) continue;
+      expected.rotate(angle, {
+        axis: axisVectorFromEulerKey(axis as 'X' | 'Y' | 'Z'),
+        aboutPoint: [0, 0, 0],
+      });
+    }
+
+    group.normalizeTransform();
+
+    const actualPos = point.getPosition();
+    const expectedPos = expected.getPosition();
+    expect(actualPos[0]).toBeCloseTo(expectedPos[0], 6);
+    expect(actualPos[1]).toBeCloseTo(expectedPos[1], 6);
+    expect(actualPos[2]).toBeCloseTo(expectedPos[2], 6);
+  });
+
+  it('normalizeTransform is idempotent for deferred rotation on VGroup', () => {
+    const point = new PointMobject({ position: [1, 2, 3] });
+    const group = new VGroup(point);
+    group.rotation.order = 'YXZ';
+    group.rotation.set(0.4, 0.2, -0.1, 'YXZ');
+
+    group.normalizeTransform();
+    const afterFirst = point.getPosition();
+
+    group.normalizeTransform();
+    const afterSecond = point.getPosition();
+
+    expect(afterSecond[0]).toBeCloseTo(afterFirst[0], 6);
+    expect(afterSecond[1]).toBeCloseTo(afterFirst[1], 6);
+    expect(afterSecond[2]).toBeCloseTo(afterFirst[2], 6);
   });
 
   it('scale updates vgroup scale vector', () => {

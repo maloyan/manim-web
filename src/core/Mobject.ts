@@ -586,19 +586,23 @@ export abstract class Mobject {
     SCRATCH_EULER.set(rx, ry, rz, this.rotation.order);
 
     for (const child of this.children) {
-      for (const axis of this.rotation.order) {
-        const eulerAxis = axis as 'X' | 'Y' | 'Z';
-        const angle = eulerAxis === 'X' ? rx : eulerAxis === 'Y' ? ry : rz;
-        if (angle !== 0) {
-          child.rotate(angle, {
-            axis: axisVectorFromEulerKey(eulerAxis),
-            aboutPoint: [0, 0, 0],
-          });
-        }
-      }
+      this._applyEulerSteps(child, rx, ry, rz);
     }
     this.rotation.set(0, 0, 0);
     this._markDirty();
+  }
+
+  private _applyEulerSteps(child: Mobject, rx: number, ry: number, rz: number): void {
+    for (const axis of this.rotation.order) {
+      const eulerAxis = axis as 'X' | 'Y' | 'Z';
+      const angle = eulerAxis === 'X' ? rx : eulerAxis === 'Y' ? ry : rz;
+      if (angle !== 0) {
+        child.rotate(angle, {
+          axis: axisVectorFromEulerKey(eulerAxis),
+          aboutPoint: [0, 0, 0],
+        });
+      }
+    }
   }
 
   private _normalizeContainerTranslation(options?: NormalizeContainerOptions): void {
