@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
 import { Group } from '../core/Group';
@@ -76,6 +76,18 @@ describe('Create', () => {
   });
 
   describe('Group with per-child opacities (opacity fallback)', () => {
+    // These tests intentionally add bare `new Mobject()` children to a Group.
+    // The abstract `_createCopy` is missing on those children, so when
+    // Group.copy() iterates them via Mobject.copy() the catch-and-warn in
+    // Animation.begin() fires. The warn is expected here — silence it.
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+    beforeEach(() => {
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+
     it('preserves per-child opacities after finish (#109)', () => {
       const group = new Group();
       const child1 = new Mobject();

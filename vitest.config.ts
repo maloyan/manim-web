@@ -12,6 +12,15 @@ export default defineConfig({
   test: {
     pool: 'threads',
     include: ['src/**/*.test.ts'],
+    setupFiles: ['./src/test-setup/happy-dom-patches.ts'],
+    environmentOptions: {
+      happyDOM: {
+        settings: {
+          disableCSSFileLoading: true,
+          handleDisabledFileLoadingAsSuccess: true,
+        },
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],

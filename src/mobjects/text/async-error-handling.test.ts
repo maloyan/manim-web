@@ -6,7 +6,7 @@
  * render/load operations fail, instead of silently resolving.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MathTexImage } from './MathTexImage';
 import { MathTex } from './MathTex';
 
@@ -41,38 +41,52 @@ function createMathTexMock() {
 // ===========================================================================
 
 describe('MathTexImage async error propagation', () => {
-  it('should reject waitForRender when _renderLatex throws an Error', async () => {
-    const tex = createMathTexImageMock();
-    tex._renderLatex = vi.fn().mockRejectedValue(new Error('simulated render failure'));
-    tex._startRender();
+  describe('paths that intentionally log to console.error', () => {
+    // These tests deliberately reject from _renderLatex to exercise the
+    // catch path in _startRender, which logs `MathTexImage rendering error:`
+    // via console.error. Scope the spy so the multipart tests below still
+    // surface unexpected logs.
+    let errorSpy: ReturnType<typeof vi.spyOn>;
+    beforeEach(() => {
+      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+    afterEach(() => {
+      errorSpy.mockRestore();
+    });
 
-    await expect(tex.waitForRender()).rejects.toThrow('simulated render failure');
-    // renderError should be the original Error instance (instanceof branch)
-    expect(tex._renderState.renderError).toBeInstanceOf(Error);
-    expect(tex._renderState.renderError.message).toBe('simulated render failure');
-  });
+    it('should reject waitForRender when _renderLatex throws an Error', async () => {
+      const tex = createMathTexImageMock();
+      tex._renderLatex = vi.fn().mockRejectedValue(new Error('simulated render failure'));
+      tex._startRender();
 
-  it('should set isRendering to false even on error', async () => {
-    const tex = createMathTexImageMock();
-    tex._renderLatex = vi.fn().mockRejectedValue(new Error('fail'));
-    tex._startRender();
+      await expect(tex.waitForRender()).rejects.toThrow('simulated render failure');
+      // renderError should be the original Error instance (instanceof branch)
+      expect(tex._renderState.renderError).toBeInstanceOf(Error);
+      expect(tex._renderState.renderError.message).toBe('simulated render failure');
+    });
 
-    try {
-      await tex.waitForRender();
-    } catch {
-      // expected
-    }
+    it('should set isRendering to false even on error', async () => {
+      const tex = createMathTexImageMock();
+      tex._renderLatex = vi.fn().mockRejectedValue(new Error('fail'));
+      tex._startRender();
 
-    expect(tex.isRendering()).toBe(false);
-  });
+      try {
+        await tex.waitForRender();
+      } catch {
+        // expected
+      }
 
-  it('should wrap non-Error rejection values in a new Error', async () => {
-    const tex = createMathTexImageMock();
-    // Reject with a plain string — exercises the `new Error(String(error))` branch
-    tex._renderLatex = vi.fn().mockRejectedValue('string error');
-    tex._startRender();
+      expect(tex.isRendering()).toBe(false);
+    });
 
-    await expect(tex.waitForRender()).rejects.toThrow('string error');
+    it('should wrap non-Error rejection values in a new Error', async () => {
+      const tex = createMathTexImageMock();
+      // Reject with a plain string — exercises the `new Error(String(error))` branch
+      tex._renderLatex = vi.fn().mockRejectedValue('string error');
+      tex._startRender();
+
+      await expect(tex.waitForRender()).rejects.toThrow('string error');
+    });
   });
 
   it('should propagate errors through multipart waitForRender', async () => {
@@ -126,25 +140,39 @@ describe('MathTexImage async error propagation', () => {
 // ===========================================================================
 
 describe('MathTex async error propagation', () => {
-  it('should reject waitForRender when _render throws an Error', async () => {
-    const tex = createMathTexMock();
-    tex._render = vi.fn().mockRejectedValue(new Error('simulated SVG render failure'));
-    tex._startRender();
+  describe('paths that intentionally log to console.error', () => {
+    // Silence the expected `MathTex rendering error:` console.error from
+    // the catch path so test output stays clean. Scoped to error-triggering
+    // tests only — the "no error" case below must still surface unexpected
+    // console.error calls.
+    let errorSpy: ReturnType<typeof vi.spyOn>;
+    beforeEach(() => {
+      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+    afterEach(() => {
+      errorSpy.mockRestore();
+    });
 
-    await expect(tex.waitForRender()).rejects.toThrow('simulated SVG render failure');
-    // _renderError should be the original Error instance
-    expect(tex._renderError).toBeInstanceOf(Error);
-    expect(tex._renderError.message).toBe('simulated SVG render failure');
-  });
+    it('should reject waitForRender when _render throws an Error', async () => {
+      const tex = createMathTexMock();
+      tex._render = vi.fn().mockRejectedValue(new Error('simulated SVG render failure'));
+      tex._startRender();
 
-  it('should wrap non-Error rejection values in a new Error', async () => {
-    const tex = createMathTexMock();
-    tex._render = vi.fn().mockRejectedValue('plain string SVG error');
-    tex._startRender();
+      await expect(tex.waitForRender()).rejects.toThrow('simulated SVG render failure');
+      // _renderError should be the original Error instance
+      expect(tex._renderError).toBeInstanceOf(Error);
+      expect(tex._renderError.message).toBe('simulated SVG render failure');
+    });
 
-    await expect(tex.waitForRender()).rejects.toThrow('plain string SVG error');
-    // Should be wrapped in a real Error
-    expect(tex._renderError).toBeInstanceOf(Error);
+    it('should wrap non-Error rejection values in a new Error', async () => {
+      const tex = createMathTexMock();
+      tex._render = vi.fn().mockRejectedValue('plain string SVG error');
+      tex._startRender();
+
+      await expect(tex.waitForRender()).rejects.toThrow('plain string SVG error');
+      // Should be wrapped in a real Error
+      expect(tex._renderError).toBeInstanceOf(Error);
+    });
   });
 
   it('should not throw from waitForRender when no error occurred', async () => {

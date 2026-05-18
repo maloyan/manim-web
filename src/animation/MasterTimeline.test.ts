@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as THREE from 'three';
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
@@ -16,6 +16,9 @@ class TestMobject extends Mobject {
     return new THREE.Object3D();
   }
   protected _syncToThree(): void {}
+  protected _createCopy(): Mobject {
+    return new TestMobject();
+  }
 }
 
 /** Concrete Animation that tracks interpolation calls. */
@@ -962,13 +965,13 @@ describe('MasterTimeline', () => {
 // =============================================================================
 
 describe('Animation _captureMinimalState and reset', () => {
-  /** Mobject whose copy() always throws, forcing the minimal-state fallback. */
+  /** Mobject whose _createCopy() throws, forcing the catch+warn fallback. */
   class NoCopyMobject extends Mobject {
     protected _createThreeObject(): THREE.Object3D {
       return new THREE.Object3D();
     }
     protected _syncToThree(): void {}
-    override copy(): Mobject {
+    protected _createCopy(): Mobject {
       throw new Error('copy not supported');
     }
   }
@@ -982,44 +985,18 @@ describe('Animation _captureMinimalState and reset', () => {
     }
   }
 
-  it('falls back to _captureMinimalState when copy() throws', () => {
-    const mob = new NoCopyMobject();
-    mob.opacity = 0.8;
-    mob.color = '#00ff00';
-
-    const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
-    // begin() should not throw even though copy() does
-    expect(() => anim.begin()).not.toThrow();
-
-    // The snapshot should have been captured
-    const snapshot = (anim as any)._preAnimationState;
-    expect(snapshot).not.toBeNull();
-    expect(snapshot.opacity).toBe(0.8);
-    expect(snapshot.color).toBe('#00ff00');
-  });
-
-  it('reset() restores mobject from minimal snapshot', () => {
-    const mob = new NoCopyMobject();
-    mob.opacity = 1;
-    mob.color = '#ffffff';
-    mob.strokeWidth = 2;
-    mob.fillOpacity = 0.5;
-
-    const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
-    anim.begin();
-
-    // Simulate the animation mutating the mobject
-    anim.interpolate(0.5);
-    expect(mob.opacity).toBe(0.5);
-    expect(mob.color).toBe('#ff0000');
-
-    // Reset should restore original values
-    anim.reset();
-    expect(mob.opacity).toBe(1);
-    expect(mob.color).toBe('#ffffff');
-    expect(mob.strokeWidth).toBe(2);
-    expect(mob.fillOpacity).toBe(0.5);
-  });
+  // Silence the expected `Animation.begin(): mobject.copy() failed` warn —
+  // scoped to the NoCopyMobject-using tests below, since the VMobject test
+  // and any future additions should still surface unexpected warnings.
+  function silenceCopyWarn(): void {
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+    beforeEach(() => {
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+  }
 
   it('reset() restores VMobject points when saved state is a VMobject copy', () => {
     const mob = new VMobject();
@@ -1056,38 +1033,81 @@ describe('Animation _captureMinimalState and reset', () => {
     ]);
   });
 
-  it('reset() clears _startTime, _isFinished, and _hasBegun', () => {
-    const mob = new NoCopyMobject();
-    const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+  describe('with NoCopyMobject (deliberately throws from _createCopy)', () => {
+    silenceCopyWarn();
 
-    anim.begin();
-    anim.update(0, 0);
-    anim.update(0, 1.5); // past duration
-    expect(anim.isFinished()).toBe(true);
+    it('falls back to _captureMinimalState when copy() throws', () => {
+      const mob = new NoCopyMobject();
+      mob.opacity = 0.8;
+      mob.color = '#00ff00';
 
-    anim.reset();
-    expect(anim.isFinished()).toBe(false);
-    expect(anim.startTime).toBeNull();
-    expect((anim as any)._hasBegun).toBe(false);
-  });
+      const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+      // begin() should not throw even though copy() does
+      expect(() => anim.begin()).not.toThrow();
 
-  it('begin() only captures snapshot on the first call', () => {
-    const mob = new NoCopyMobject();
-    mob.opacity = 0.9;
+      // The snapshot should have been captured
+      const snapshot = (anim as any)._preAnimationState;
+      expect(snapshot).not.toBeNull();
+      expect(snapshot.opacity).toBe(0.8);
+      expect(snapshot.color).toBe('#00ff00');
+    });
 
-    const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
-    anim.begin();
+    it('reset() restores mobject from minimal snapshot', () => {
+      const mob = new NoCopyMobject();
+      mob.opacity = 1;
+      mob.color = '#ffffff';
+      mob.strokeWidth = 2;
+      mob.fillOpacity = 0.5;
 
-    const firstSnapshot = (anim as any)._preAnimationState;
-    expect(firstSnapshot.opacity).toBe(0.9);
+      const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+      anim.begin();
 
-    // Mutate and call begin again - snapshot should NOT be overwritten
-    mob.opacity = 0.1;
-    anim.reset();
-    anim.begin();
+      // Simulate the animation mutating the mobject
+      anim.interpolate(0.5);
+      expect(mob.opacity).toBe(0.5);
+      expect(mob.color).toBe('#ff0000');
 
-    const secondSnapshot = (anim as any)._preAnimationState;
-    expect(secondSnapshot).toBe(firstSnapshot); // same reference
-    expect(secondSnapshot.opacity).toBe(0.9); // original value
+      // Reset should restore original values
+      anim.reset();
+      expect(mob.opacity).toBe(1);
+      expect(mob.color).toBe('#ffffff');
+      expect(mob.strokeWidth).toBe(2);
+      expect(mob.fillOpacity).toBe(0.5);
+    });
+
+    it('reset() clears _startTime, _isFinished, and _hasBegun', () => {
+      const mob = new NoCopyMobject();
+      const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+
+      anim.begin();
+      anim.update(0, 0);
+      anim.update(0, 1.5); // past duration
+      expect(anim.isFinished()).toBe(true);
+
+      anim.reset();
+      expect(anim.isFinished()).toBe(false);
+      expect(anim.startTime).toBeNull();
+      expect((anim as any)._hasBegun).toBe(false);
+    });
+
+    it('begin() only captures snapshot on the first call', () => {
+      const mob = new NoCopyMobject();
+      mob.opacity = 0.9;
+
+      const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+      anim.begin();
+
+      const firstSnapshot = (anim as any)._preAnimationState;
+      expect(firstSnapshot.opacity).toBe(0.9);
+
+      // Mutate and call begin again - snapshot should NOT be overwritten
+      mob.opacity = 0.1;
+      anim.reset();
+      anim.begin();
+
+      const secondSnapshot = (anim as any)._preAnimationState;
+      expect(secondSnapshot).toBe(firstSnapshot); // same reference
+      expect(secondSnapshot.opacity).toBe(0.9); // original value
+    });
   });
 });
