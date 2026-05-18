@@ -367,9 +367,10 @@ function removeBoilerplateLines(lines) {
     if (/^setAnimating\(/.test(trimmed)) return false;
     if (trimmed === 'scene.clear();') return false;
 
-    // try/catch wrapper lines
+    // try/catch/finally wrapper lines
     if (trimmed === 'try {') return false;
     if (/^\}\s*catch\s*\(/.test(trimmed)) return false;
+    if (/^\}\s*finally\s*\{$/.test(trimmed)) return false;
     if (/^console\.error\(/.test(trimmed)) return false;
 
     // status / log boilerplate
