@@ -1,6 +1,7 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { crossVec, lengthVec, normalizeVec } from '../../utils/vectors';
 
 /**
  * Control points for a cubic Bezier curve
@@ -175,15 +176,10 @@ export class CubicBezier extends VMobject {
    */
   normalizedTangentAtT(t: number): Vector3Tuple {
     const tangent = this.tangentAtT(t);
-    const length = Math.sqrt(
-      tangent[0] * tangent[0] + tangent[1] * tangent[1] + tangent[2] * tangent[2],
-    );
-
-    if (length < 1e-10) {
+    if (lengthVec(tangent) < 1e-10) {
       return [1, 0, 0]; // Default direction for degenerate case
     }
-
-    return [tangent[0] / length, tangent[1] / length, tangent[2] / length];
+    return normalizeVec(tangent);
   }
 
   /**
@@ -227,16 +223,14 @@ export class CubicBezier extends VMobject {
     const d1 = this.tangentAtT(t);
     const d2 = this.secondDerivativeAtT(t);
 
-    // Curvature = |d1 x d2| / |d1|^3
-    // For 2D (in XY plane): cross product gives scalar in Z direction
-    const crossZ = d1[0] * d2[1] - d1[1] * d2[0];
-    const d1Mag = Math.sqrt(d1[0] * d1[0] + d1[1] * d1[1] + d1[2] * d1[2]);
-
+    // Curvature = |d1 × d2| / |d1|^3. Use the full 3D cross so curves in
+    // any plane (not just XY) get the right magnitude.
+    const d1Mag = lengthVec(d1);
     if (d1Mag < 1e-10) {
       return 0;
     }
 
-    return Math.abs(crossZ) / (d1Mag * d1Mag * d1Mag);
+    return lengthVec(crossVec(d1, d2)) / (d1Mag * d1Mag * d1Mag);
   }
 
   /**
@@ -265,11 +259,11 @@ export class CubicBezier extends VMobject {
       const t = i / numSamples;
       const point = this.pointAtT(t);
 
-      const dx = point[0] - prevPoint[0];
-      const dy = point[1] - prevPoint[1];
-      const dz = point[2] - prevPoint[2];
-
-      length += Math.sqrt(dx * dx + dy * dy + dz * dz);
+      length += lengthVec([
+        point[0] - prevPoint[0],
+        point[1] - prevPoint[1],
+        point[2] - prevPoint[2],
+      ]);
       prevPoint = point;
     }
 

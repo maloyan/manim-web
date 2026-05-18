@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { lerp, lerpPoint, smoothstep, coordsToPoint, pointToCoords, evalCubicBezier } from './math';
+import {
+  lerp,
+  lerpPoint,
+  smoothstep,
+  coordsToPoint,
+  pointToCoords,
+  evalCubicBezier,
+  orthonormalizeBasis,
+} from './math';
+import { dotVec, lengthVec } from './vectors';
 
 describe('lerp', () => {
   it('returns a at t=0', () => {
@@ -151,5 +160,35 @@ describe('evalCubicBezier', () => {
     // At t=0.5, should be roughly on the unit circle arc
     const dist = Math.sqrt(mid[0] * mid[0] + mid[1] * mid[1]);
     expect(dist).toBeCloseTo(1, 2);
+  });
+});
+
+describe('orthonormalizeBasis', () => {
+  it('returns orthonormal basis for two non-parallel vectors', () => {
+    const { v1, v2 } = orthonormalizeBasis([2, 0, 0], [1, 3, 0]);
+    expect(lengthVec(v1)).toBeCloseTo(1, 10);
+    expect(lengthVec(v2)).toBeCloseTo(1, 10);
+    expect(Math.abs(dotVec(v1, v2))).toBeLessThan(1e-10);
+  });
+
+  // Regression: when v1 and v2 are collinear (or v2 is zero), the fallback
+  // must pick a v2 that lies in the SAME plane as the input geometry — not
+  // an arbitrary world basis. YZ-plane shapes used to silently project onto
+  // X if the fallback picked the world axis with the smallest |dot|.
+  it('collinear fallback for a YZ-plane v1 stays in the YZ plane', () => {
+    const { v1, v2 } = orthonormalizeBasis([0, 1, 1], [0, 0, 0]);
+    expect(lengthVec(v1)).toBeCloseTo(1, 10);
+    expect(lengthVec(v2)).toBeCloseTo(1, 10);
+    expect(Math.abs(dotVec(v1, v2))).toBeLessThan(1e-10);
+    // v2 must have no X component — i.e. it lives in the YZ plane that the
+    // caller's geometry actually occupies.
+    expect(Math.abs(v2[0])).toBeLessThan(1e-10);
+  });
+
+  it('collinear fallback for a Z-aligned v1 picks an X-axis v2', () => {
+    const { v2 } = orthonormalizeBasis([0, 0, 1], [0, 0, 2]);
+    // |u1[2]| ≥ 0.9 → fallback flips to the [1,0,0] world basis.
+    expect(Math.abs(v2[0])).toBeCloseTo(1, 10);
+    expect(Math.abs(v2[2])).toBeLessThan(1e-10);
   });
 });
