@@ -77,6 +77,10 @@ class MockTextMobject extends Mobject {
   }
 
   protected _syncToThree(): void {}
+
+  protected _createCopy(): Mobject {
+    return new MockTextMobject(this._text);
+  }
 }
 
 /** Mock MathTex-like with setRevealProgress */
@@ -96,6 +100,10 @@ class MockMathTexMobject extends Mobject {
   }
 
   protected _syncToThree(): void {}
+
+  protected _createCopy(): Mobject {
+    return new MockMathTexMobject();
+  }
 }
 
 /** Create a VMobject with points */

@@ -7,7 +7,7 @@
  * verifies that MathTex and Tex are VGroup instances (SVG-based), not plain
  * Mobject instances (rasterized).
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { MathTex, MathTexSVG } from './MathTex';
 import { MathTexImage } from './MathTexImage';
 import { Tex } from './Tex';
@@ -16,6 +16,51 @@ import { VGroup } from '../../core/VGroup';
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
+
+/**
+ * MathTexImage's KaTeX path renders into a 2D canvas. happy-dom returns null
+ * from `canvas.getContext('2d')`, which surfaces as a render error and
+ * (under the strict console policy) fails the test. Stub the 2D context here
+ * so the renderer can produce a canvas-backed texture. Restore in afterAll
+ * so the stub does not leak into later files if Vitest worker isolation is
+ * ever relaxed.
+ */
+const canvasProto = HTMLCanvasElement.prototype as HTMLCanvasElement & {
+  getContext: (type: string, ...rest: unknown[]) => unknown;
+};
+const origGetContext = canvasProto.getContext;
+beforeAll(() => {
+  canvasProto.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
+    if (type === '2d') {
+      return {
+        scale: () => {},
+        clearRect: () => {},
+        fillRect: () => {},
+        fillText: () => {},
+        beginPath: () => {},
+        closePath: () => {},
+        moveTo: () => {},
+        lineTo: () => {},
+        fill: () => {},
+        stroke: () => {},
+        measureText: (t: string) => ({
+          width: t.length * 10,
+          fontBoundingBoxAscent: 30,
+        }),
+        drawImage: () => {},
+        font: '',
+        fillStyle: '',
+        globalAlpha: 1,
+        textBaseline: 'alphabetic',
+        textAlign: 'left',
+      } as unknown as CanvasRenderingContext2D;
+    }
+    return origGetContext.call(this, type, ...(args as []));
+  } as typeof canvasProto.getContext;
+});
+afterAll(() => {
+  canvasProto.getContext = origGetContext;
+});
 
 describe('Issue #228: MathTex defaults to SVG mode', () => {
   it('MathTex should be an instance of VGroup (SVG path-based)', () => {
@@ -129,6 +174,56 @@ describe('MathTex stroke width', () => {
         expect(child.strokeWidth).toBe(3);
       }
     }
+  });
+});
+
+describe('Issue #318: translations before waitForRender are not silently dropped', () => {
+  it('shift() before render persists after render', async () => {
+    const tex = new MathTex({ latex: '0', fillOpacity: 1 });
+    tex.shift([-8, 0, 0]);
+    expect(tex.position.x).toBe(-8);
+    await tex.waitForRender();
+    expect(tex.position.x).toBe(-8);
+    const center = tex.getCenter();
+    expect(center[0]).toBeCloseTo(-8, 3);
+  });
+
+  it('moveTo([target]) before render places the rendered glyph at target', async () => {
+    const tex = new MathTex({ latex: 'x' });
+    tex.moveTo([3, 2, 0]);
+    await tex.waitForRender();
+    const center = tex.getCenter();
+    expect(center[0]).toBeCloseTo(3, 2);
+    expect(center[1]).toBeCloseTo(2, 2);
+  });
+
+  it('shift() before render combines with shift() after render', async () => {
+    const tex = new MathTex({ latex: 'a' });
+    tex.shift([-5, 0, 0]); // pre-render: lands on this.position
+    await tex.waitForRender();
+    tex.shift([1, 0, 0]); // post-render: lands on each child
+    const center = tex.getCenter();
+    expect(center[0]).toBeCloseTo(-4, 2);
+  });
+
+  it('shift() before render keeps this.position when subsequent scale() runs', async () => {
+    const tex = new MathTex({ latex: 'x' });
+    tex.shift([-3, 0, 0]);
+    await tex.waitForRender();
+    tex.scale(2);
+    // The pre-render shift is recorded on the parent's position; subsequent
+    // VGroup.scale operates on children and must not clobber that.
+    expect(tex.position.x).toBe(-3);
+  });
+
+  it('multi-part MathTex shift before render persists on this.position', async () => {
+    const tex = new MathTex({ latex: ['x', '=', '5'] });
+    tex.shift([2, 1, 0]);
+    expect(tex.position.x).toBe(2);
+    expect(tex.position.y).toBe(1);
+    await tex.waitForRender();
+    expect(tex.position.x).toBe(2);
+    expect(tex.position.y).toBe(1);
   });
 });
 

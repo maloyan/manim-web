@@ -428,6 +428,124 @@ describe('Player', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
   });
 
+  // ---- per-slide loop ----
+
+  it('public seek clears _activeLoopSlideIndex', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+      await scene.wait(1);
+    });
+
+    const internal = player as unknown as { _activeLoopSlideIndex: number | null };
+    internal._activeLoopSlideIndex = 0;
+    player.seek(0.5);
+    expect(internal._activeLoopSlideIndex).toBeNull();
+  });
+
+  it('setSlidesMode(false) clears active loop state', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+    });
+
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+      _slidesTargetSlideIndex: number;
+    };
+    internal._activeLoopSlideIndex = 0;
+    internal._slidesTargetSlideIndex = 0;
+    player.setSlidesMode(false);
+    expect(internal._activeLoopSlideIndex).toBeNull();
+    expect(internal._slidesTargetSlideIndex).toBe(-1);
+  });
+
+  it('prevSegment from inside an active loop always exits to previous slide', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+      await scene.nextSlide({ loop: true });
+      await scene.wait(1);
+    });
+
+    // Test the phase-independent behavior: even >0.5s into the loop cycle,
+    // ← should go to the previous slide (not restart the loop).
+    player.seek(1.6);
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+      _slidesTargetSlideIndex: number;
+    };
+    internal._activeLoopSlideIndex = 1;
+
+    player.prevSegment();
+    expect(internal._activeLoopSlideIndex).toBeNull();
+    expect(internal._slidesTargetSlideIndex).toBe(-1);
+    // Lands at slide 0's start regardless of where we were in the loop.
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0);
+  });
+
+  it('public seek out of an active loop clears both loop and target state', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+      await scene.wait(1);
+    });
+
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+      _slidesTargetSlideIndex: number;
+    };
+    internal._activeLoopSlideIndex = 0;
+    internal._slidesTargetSlideIndex = 0;
+    // Seek FAR past the loop segment — if the target stayed at 0, the next
+    // render tick would snap back into the old loop.
+    player.seek(1.5);
+    expect(internal._activeLoopSlideIndex).toBeNull();
+    expect(internal._slidesTargetSlideIndex).toBe(-1);
+  });
+
+  it('sequence() resets active loop state', async () => {
+    player.dispose();
+    container.remove();
+    const { player: p, container: c } = createPlayer({ slidesMode: true });
+    player = p;
+    container = c;
+
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+      _slidesTargetSlideIndex: number;
+    };
+    internal._activeLoopSlideIndex = 0;
+    internal._slidesTargetSlideIndex = 0;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+    });
+
+    expect(internal._activeLoopSlideIndex).toBeNull();
+    expect(internal._slidesTargetSlideIndex).toBe(-1);
+  });
+
   // ---- loop option ----
 
   it('accepts loop option without error', () => {
@@ -664,6 +782,387 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(0.5);
   });
 
+  it('_startLoop rewinds and keeps playing on looped slide boundary in slidesMode', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ loop: true });
+      await scene.wait(0.5);
+      await scene.nextSlide();
+      await scene.wait(0.5);
+    });
+
+    player.play();
+    flushRaf(600); // past slide 0's endTime
+
+    // Loop should have rewound, NOT paused
+    expect(player.isPlaying).toBe(true);
+    const t = player.timeline.getCurrentTime();
+    expect(t).toBeGreaterThanOrEqual(0);
+    expect(t).toBeLessThan(0.5);
+    const internal = player as unknown as { _activeLoopSlideIndex: number | null };
+    expect(internal._activeLoopSlideIndex).toBe(0);
+  });
+
+  it('_startLoop rewinds when loop is the final slide (re-plays the underlying timeline)', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ loop: true });
+      await scene.wait(0.3);
+    });
+
+    player.play();
+    flushRaf(400); // past timeline duration
+
+    expect(player.isPlaying).toBe(true);
+    // The masterTimeline must be playing again after seek-back, otherwise
+    // currentTime would freeze at 0 and the next update would no-op.
+    expect(player.timeline.isPlaying()).toBe(true);
+
+    // Advance another frame: time should keep moving forward from the rewind.
+    const before = player.timeline.getCurrentTime();
+    flushRaf(420);
+    // Strictly greater: a frozen-time bug (timeline left paused) would pass `>=`.
+    expect(player.timeline.getCurrentTime()).toBeGreaterThan(before);
+  });
+
+  it('nextSegment from active loop advances to next slide and keeps playing', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ loop: true });
+      await scene.wait(0.5);
+      await scene.nextSlide();
+      await scene.wait(0.5);
+    });
+
+    player.play();
+    flushRaf(600); // triggers rewind: _activeLoopSlideIndex = 0
+
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+      _slidesTargetSlideIndex: number;
+    };
+    expect(internal._activeLoopSlideIndex).toBe(0);
+
+    player.nextSegment();
+    expect(internal._activeLoopSlideIndex).toBeNull();
+    expect(internal._slidesTargetSlideIndex).toBe(1);
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.5);
+    expect(player.isPlaying).toBe(true);
+  });
+
+  it('nextSegment on a final loop slide seeks to endTime and pauses', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ loop: true });
+      await scene.wait(0.3);
+    });
+
+    player.play();
+    flushRaf(400);
+
+    const internal = player as unknown as { _activeLoopSlideIndex: number | null };
+    expect(internal._activeLoopSlideIndex).toBe(0);
+
+    player.nextSegment();
+    expect(internal._activeLoopSlideIndex).toBeNull();
+    expect(player.isPlaying).toBe(false);
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.3);
+  });
+
+  it('_startLoop ignores loop flag when slidesMode is OFF', async () => {
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ loop: true });
+      await scene.wait(0.3);
+      await scene.nextSlide();
+      await scene.wait(0.5);
+    });
+
+    player.play();
+    flushRaf(400);
+
+    // Without slides mode, the loop flag is a no-op: playback advances past
+    // slide 0 normally.
+    expect(player.isPlaying).toBe(true);
+    expect(player.timeline.getCurrentTime()).toBeGreaterThan(0.3);
+    const internal = player as unknown as { _activeLoopSlideIndex: number | null };
+    expect(internal._activeLoopSlideIndex).toBeNull();
+  });
+
+  it('_startLoop auto-advances to next slide when current slide has autoNext', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ autoNext: true });
+      await scene.wait(0.3);
+      await scene.nextSlide();
+      await scene.wait(0.3);
+    });
+
+    player.play();
+    // Past slide 0's endTime — autoNext should seek to slide 1 start and keep playing.
+    flushRaf(400);
+
+    expect(player.isPlaying).toBe(true);
+    const internal = player as unknown as { _slidesTargetSlideIndex: number };
+    expect(internal._slidesTargetSlideIndex).toBe(1);
+    // Time should be inside slide 1's range (slide 0 was 0..0.3, slide 1 is 0.3..0.6)
+    const t = player.timeline.getCurrentTime();
+    expect(t).toBeGreaterThanOrEqual(0.3);
+    expect(t).toBeLessThanOrEqual(0.6);
+  });
+
+  it('_startLoop pauses normally when autoNext is on the final slide', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ autoNext: true });
+      await scene.wait(0.3);
+    });
+
+    player.play();
+    flushRaf(400);
+
+    expect(player.isPlaying).toBe(false);
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.3);
+  });
+
+  it('loop wins over autoNext when both are set on a slide', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ loop: true, autoNext: true });
+      await scene.wait(0.3);
+      await scene.nextSlide();
+      await scene.wait(0.3);
+    });
+
+    player.play();
+    flushRaf(400);
+
+    // Loop rewound, did not advance to slide 1.
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+      _slidesTargetSlideIndex: number;
+    };
+    expect(internal._activeLoopSlideIndex).toBe(0);
+    expect(internal._slidesTargetSlideIndex).toBe(0);
+    expect(player.isPlaying).toBe(true);
+  });
+
+  it('chained autoNext slides advance through the whole chain', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ autoNext: true });
+      await scene.wait(0.2);
+      await scene.nextSlide({ autoNext: true });
+      await scene.wait(0.2);
+      await scene.nextSlide();
+      await scene.wait(0.2);
+    });
+
+    player.play();
+    // Play long enough for slide 0 → slide 1 → slide 2; each is 0.2s.
+    for (let i = 0; i < 100; i++) flushRaf(100 + i * 20);
+
+    expect(player.isPlaying).toBe(false);
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.6);
+  });
+
+  it('autoNext into a looping slide rewinds rather than pausing', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ autoNext: true });
+      await scene.wait(0.2);
+      await scene.nextSlide({ loop: true });
+      await scene.wait(0.3);
+    });
+
+    player.play();
+    // Slide 0 autoNexts into slide 1, then slide 1 should loop.
+    for (let i = 0; i < 100; i++) flushRaf(100 + i * 20);
+
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+      _slidesTargetSlideIndex: number;
+    };
+    expect(internal._activeLoopSlideIndex).toBe(1);
+    expect(internal._slidesTargetSlideIndex).toBe(1);
+    expect(player.isPlaying).toBe(true);
+    // Time stays bounded inside slide 1 [0.2, 0.5]
+    const t = player.timeline.getCurrentTime();
+    expect(t).toBeGreaterThanOrEqual(0.2);
+    expect(t).toBeLessThanOrEqual(0.5);
+  });
+
+  it('public seek inside the current target slide preserves loop+target state', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ loop: true });
+      await scene.wait(1);
+      await scene.nextSlide();
+      await scene.wait(0.5);
+    });
+
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+      _slidesTargetSlideIndex: number;
+    };
+    internal._activeLoopSlideIndex = 0;
+    internal._slidesTargetSlideIndex = 0;
+
+    // Scrub within slide 0's range (0..1) — must NOT silently kill the loop.
+    player.seek(0.4);
+    expect(internal._activeLoopSlideIndex).toBe(0);
+    expect(internal._slidesTargetSlideIndex).toBe(0);
+
+    // Scrub outside the target slide — clears state.
+    player.seek(1.2);
+    expect(internal._activeLoopSlideIndex).toBeNull();
+    expect(internal._slidesTargetSlideIndex).toBe(-1);
+  });
+
+  it('autoPlay + slidesMode + autoNext walks through the whole deck', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true, autoPlay: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ autoNext: true });
+      await scene.wait(0.2);
+      await scene.nextSlide({ autoNext: true });
+      await scene.wait(0.2);
+      await scene.nextSlide();
+      await scene.wait(0.2);
+    });
+
+    // autoPlay armed the player; flush enough to traverse 0.6s.
+    for (let i = 0; i < 100; i++) flushRaf(100 + i * 20);
+
+    expect(player.isPlaying).toBe(false);
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.6);
+  });
+
+  it('non-slidesMode navigation steps by segment, not by slide', async () => {
+    // No slidesMode → nextSegment/prevSegment must move one segment at a time
+    // even when the timeline has multi-play slides.
+    await player.sequence(async (scene) => {
+      await scene.nextSlide();
+      await scene.wait(0.5);
+      await scene.wait(0.5); // same multi-play slide as the wait above
+      await scene.nextSlide();
+      await scene.wait(0.5);
+    });
+
+    // Should have 2 slides, 3 segments.
+    expect(player.timeline.slideCount).toBe(2);
+    expect(player.timeline.segmentCount).toBe(3);
+
+    player.nextSegment();
+    // Advanced to segment 1's start (0.5s) — within slide 0, not slide 1.
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.5);
+    player.nextSegment();
+    // Advanced to segment 2's start (1.0s) — start of slide 1.
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
+  });
+
+  it('_startLoop disarms stale _slidesTargetSlideIndex instead of asserting', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.wait(0.3);
+    });
+    const internal = player as unknown as { _slidesTargetSlideIndex: number };
+    // Point at a slide that does not exist.
+    internal._slidesTargetSlideIndex = 99;
+    player.play();
+    flushRaf(400);
+
+    // Should have self-healed rather than throwing or freezing playback.
+    expect(internal._slidesTargetSlideIndex).toBe(-1);
+  });
+
+  it('multi-play slide is treated as a single slide for navigation', async () => {
+    player.dispose();
+    container.remove();
+    const result = createPlayer({ slidesMode: true });
+    player = result.player;
+    container = result.container;
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide();
+      await scene.wait(0.2);
+      await scene.wait(0.2); // same slide
+      await scene.nextSlide();
+      await scene.wait(0.2);
+    });
+
+    expect(player.timeline.slideCount).toBe(2);
+    const [s0, s1] = player.timeline.getSlides();
+    expect(s0.startSegmentIndex).toBe(0);
+    expect(s0.endSegmentIndex).toBe(1);
+    expect(s0.endTime).toBeCloseTo(0.4);
+    expect(s1.startSegmentIndex).toBe(2);
+
+    // Play through slide 0 — should pause at endTime of slide 0 (= 0.4)
+    player.play();
+    flushRaf(500);
+    expect(player.isPlaying).toBe(false);
+    expect(player.timeline.getCurrentTime()).toBeCloseTo(0.4);
+  });
+
   it('_startLoop does NOT auto-pause at segment boundary without slidesMode', async () => {
     await player.sequence(async (scene) => {
       await scene.wait(0.5);
@@ -810,6 +1309,56 @@ describe('RecordingScene pass-through methods', () => {
 
     expect(player.timeline.getDuration()).toBeCloseTo(1.0);
     expect(player.timeline.segmentCount).toBe(1);
+  });
+
+  it('nextSlide({loop:true}) before play() produces a looping slide', async () => {
+    const { mockAnimation } = createMockAnimation();
+    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide({ loop: true });
+      await scene.play(mockAnimation as never);
+    });
+
+    expect(player.timeline.slideCount).toBe(1);
+    expect(player.timeline.getSlides()[0].loop).toBe(true);
+    addSpy.mockRestore();
+  });
+
+  it('default play() produces a slide with loop=false, autoNext=false', async () => {
+    const { mockAnimation } = createMockAnimation();
+    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
+
+    await player.sequence(async (scene) => {
+      await scene.play(mockAnimation as never);
+    });
+
+    const slide = player.timeline.getSlides()[0];
+    expect(slide.loop).toBe(false);
+    expect(slide.autoNext).toBe(false);
+    addSpy.mockRestore();
+  });
+
+  it('nextSlide() inside sequence groups subsequent plays into one slide', async () => {
+    const a1 = createMockAnimation();
+    const a2 = createMockAnimation();
+    const a3 = createMockAnimation();
+    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
+
+    await player.sequence(async (scene) => {
+      await scene.nextSlide();
+      await scene.play(a1.mockAnimation as never);
+      await scene.play(a2.mockAnimation as never);
+      await scene.nextSlide();
+      await scene.play(a3.mockAnimation as never);
+    });
+
+    expect(player.timeline.slideCount).toBe(2);
+    expect(player.timeline.segmentCount).toBe(3);
+    const [s0, s1] = player.timeline.getSlides();
+    expect(s0.endSegmentIndex - s0.startSegmentIndex).toBe(1); // 2 segments
+    expect(s1.endSegmentIndex - s1.startSegmentIndex).toBe(0); // 1 segment
+    addSpy.mockRestore();
   });
 });
 

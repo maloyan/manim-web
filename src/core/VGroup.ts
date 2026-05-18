@@ -174,12 +174,18 @@ export class VGroup extends VMobject {
    * Shift all children by the given delta.
    * Only shifts children's internal positions, not the group's own position,
    * to avoid double-counting in THREE.js hierarchy.
+   *
+   * When the group has no children yet (e.g. async-rendered text glyphs),
+   * store translation on the group so it is not dropped.
    * @param delta - Translation vector [x, y, z]
    * @returns this for chaining
    */
   override shift(delta: Vector3Tuple): this {
-    this.normalizeTransform();
+    if (this.children.length === 0) {
+      return super.shift(delta);
+    }
 
+    this.normalizeTransform();
     for (const child of this.children) {
       child.shift(delta);
     }

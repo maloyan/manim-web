@@ -1,7 +1,9 @@
-import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
+import UnpluginTypia from '@typia/unplugin/vite';
+import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  plugins: [UnpluginTypia()],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -10,6 +12,15 @@ export default defineConfig({
   test: {
     pool: 'threads',
     include: ['src/**/*.test.ts'],
+    setupFiles: ['./src/test-setup/vitest-setup.ts'],
+    environmentOptions: {
+      happyDOM: {
+        settings: {
+          disableCSSFileLoading: true,
+          handleDisabledFileLoadingAsSuccess: true,
+        },
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov'],

@@ -2,6 +2,7 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { orientation2D } from '../../utils/vectors';
 
 /**
  * Options for creating a RoundedRectangle
@@ -983,16 +984,11 @@ export class ConvexHull extends VMobject {
     // Graham scan
     const hull: Vector3Tuple[] = [pivot];
 
-    // Cross product to determine turn direction
-    const cross = (o: Vector3Tuple, a: Vector3Tuple, b: Vector3Tuple): number => {
-      return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
-    };
-
     for (const item of filtered) {
       // Remove points that make clockwise turn
       while (
         hull.length > 1 &&
-        cross(hull[hull.length - 2], hull[hull.length - 1], item.point) <= 0
+        orientation2D(hull[hull.length - 2], hull[hull.length - 1], item.point) <= 0
       ) {
         hull.pop();
       }
@@ -1104,20 +1100,15 @@ export class ConvexHull extends VMobject {
       return false;
     }
 
-    // Use cross product to check if point is on the same side of all edges
+    // Same-side test via the 2D orientation predicate.
     const n = this._hullVertices.length;
 
     for (let i = 0; i < n; i++) {
       const j = (i + 1) % n;
-      const edge = [
-        this._hullVertices[j][0] - this._hullVertices[i][0],
-        this._hullVertices[j][1] - this._hullVertices[i][1],
-      ];
-      const toPoint = [point[0] - this._hullVertices[i][0], point[1] - this._hullVertices[i][1]];
-      const cross = edge[0] * toPoint[1] - edge[1] * toPoint[0];
-
-      // If the point is on the right side of any edge, it's outside
-      if (cross < 0) {
+      // orientation2D(vi, vj, point) > 0 means `point` is CCW of edge vi→vj.
+      // Hull is CCW (Graham scan above), so a negative value means `point`
+      // is on the outside.
+      if (orientation2D(this._hullVertices[i], this._hullVertices[j], point) < 0) {
         return false;
       }
     }

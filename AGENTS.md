@@ -41,3 +41,33 @@ npm run docs              # Generate example docs + build Docusaurus site
 - Max 500 lines per file (eslint `max-lines` rule)
 - No `any` types (`@typescript-eslint/no-explicit-any`) — use proper types, never `eslint-disable`
 - camelCase naming convention for methods/properties
+
+## Geometry conventions
+
+Low-level 3-vector math lives in **`src/utils/vectors.ts`**: `dotVec`, `crossVec`,
+`lengthVec`, `normalizeVec`, `unitPerpendicularTo`, `orthonormalFrame`,
+`orientation2D`, `addVec`, `subVec`, `scaleVec`. Higher-level plane / basis
+helpers live in `src/utils/math.ts` and are built on top of those.
+
+- **Never inline component arithmetic for cross/dot/length/normalize.** If you
+  catch yourself writing `a[1] * b[2] - a[2] * b[1]` or
+  `Math.sqrt(dx*dx + dy*dy + dz*dz)`, import the helper instead. New helpers
+  belong in `vectors.ts` so every call site shares one implementation.
+- **No axis-equal-to-Z special cases.** Do not branch on
+  `Math.abs(v[2]) < eps`, "is this the Z axis?", or "is the plane the XY
+  plane?" to pick a basis. Use `orthonormalFrame(normal)` — it gives you a
+  right-handed `{u, v, n}` for any normal.
+  *Exception:* `orthonormalizeBasis` in `src/utils/math.ts` keeps a
+  Z-biased fallback for its collinear-input branch. Callers (fill
+  triangulation in particular) rely on the fallback landing in the same
+  plane the geometry occupies — see the regression test in
+  `src/utils/math.test.ts`. Don't remove that fallback without first
+  rewriting `selectScatteredPoints` so collinear triples can't reach it.
+- **No plane-in-special-configuration shortcuts.** Curvature, perpendicular
+  distance, projection etc. should be written with the full 3D cross / dot
+  product, not their 2D restrictions. The 2D form is fine for genuinely
+  2D problems (e.g. a Graham scan); document the assumption and use
+  `orientation2D` rather than rolling another inline cross.
+- **Prefer vector / matrix products to component arithmetic.** Use
+  `transformPointByMatrix`, `crossVec`, `dotVec`, etc. so geometric intent is
+  visible in the code.

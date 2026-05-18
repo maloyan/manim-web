@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import { ComplexPlane, PolarPlane } from './ComplexPlane';
+import { Text } from '../text';
+import { Mobject } from '../../core/Mobject';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -856,6 +858,162 @@ describe('ComplexPlane with canvas mock', () => {
     it('should handle non-integer radius for radius labels', () => {
       const pp = new PolarPlane({ radius: 2.5, radialDivisions: 3 });
       expect(pp.getRadiusLabels().children.length).toBe(3);
+    });
+  });
+
+  describe('PolarPlane custom labels (issue #342)', () => {
+    it('uses custom angle label strings, rendered as Text in division order', () => {
+      const pp = new PolarPlane({
+        angularDivisions: 4,
+        labelFontSize: 20,
+        angleLabels: ['E', 'N', 'W', 'S'],
+      });
+      const labels = pp.getAngleLabels().children;
+      expect(labels.length).toBe(4);
+      // Verify the actual rendered text — would catch a regression that
+      // fell back to default π-formatting.
+      expect(labels.map((m) => (m as Text).getText())).toEqual(['E', 'N', 'W', 'S']);
+      // Strings render via Text at full labelFontSize.
+      for (const m of labels) expect((m as Text & { _fontSize: number })._fontSize).toBe(20);
+    });
+
+    it('uses custom radius label strings at labelFontSize * 0.8', () => {
+      const pp = new PolarPlane({
+        radialDivisions: 3,
+        labelFontSize: 20,
+        radiusLabels: ['A', 'B', 'C'],
+      });
+      const labels = pp.getRadiusLabels().children;
+      expect(labels.length).toBe(3);
+      expect(labels.map((m) => (m as Text).getText())).toEqual(['A', 'B', 'C']);
+      // Radius labels render slightly smaller than angle labels (preserves
+      // the default-rendering size convention).
+      for (const m of labels) expect((m as Text & { _fontSize: number })._fontSize).toBe(20 * 0.8);
+    });
+
+    it('preserves a non-Text Mobject override identity (no re-wrapping)', () => {
+      // Use a non-Text Mobject to confirm the resolver does not rewrap into Text.
+      // Mobject is abstract — use a minimal concrete shim.
+      class StubMobject extends Mobject {
+        protected override _createCopy(): Mobject {
+          return new StubMobject();
+        }
+      }
+      const stubs = [new StubMobject(), new StubMobject(), new StubMobject(), new StubMobject()];
+      const pp = new PolarPlane({ angularDivisions: 4, angleLabels: stubs });
+      const labels = pp.getAngleLabels().children;
+      for (let i = 0; i < 4; i++) {
+        expect(labels[i]).toBe(stubs[i]);
+        expect(labels[i]).toBeInstanceOf(StubMobject);
+      }
+    });
+
+    it('accepts pre-built Mobject entries (used as-is, reparented)', () => {
+      const custom = new Text({ text: 'τ/4', fontSize: 30, color: '#ff00ff' });
+      const pp = new PolarPlane({
+        angularDivisions: 4,
+        angleLabels: [custom, 'N', 'W', 'S'],
+      });
+      expect(pp.getAngleLabels().children.length).toBe(4);
+      // Custom mobject reparented into the angle-labels group at index 0.
+      expect(pp.getAngleLabels().children[0]).toBe(custom);
+    });
+
+    it('throws when angleLabels length mismatches angularDivisions', () => {
+      expect(() => new PolarPlane({ angularDivisions: 4, angleLabels: ['E', 'N', 'W'] })).toThrow(
+        /angleLabels length \(3\) must equal angularDivisions \(4\)/,
+      );
+    });
+
+    it('throws when radiusLabels length mismatches radialDivisions', () => {
+      expect(() => new PolarPlane({ radialDivisions: 3, radiusLabels: ['A', 'B'] })).toThrow(
+        /radiusLabels length \(2\) must equal radialDivisions \(3\)/,
+      );
+    });
+
+    it('throws when the same Mobject instance appears in multiple slots', () => {
+      const shared = new Text({ text: 'X' });
+      // Reusing the same instance would silently leave one slot empty after
+      // Group.add() reparents — detect at construction instead.
+      expect(
+        () =>
+          new PolarPlane({
+            angularDivisions: 4,
+            angleLabels: [shared, 'N', shared, 'S'] as (string | Mobject)[],
+          }),
+      ).toThrow(/same Mobject instance more than once \(slot 2\)/);
+    });
+
+    it('snapshots input arrays — post-construction mutation does not affect copy', () => {
+      const labels = ['E', 'N', 'W', 'S'];
+      const pp = new PolarPlane({ angularDivisions: 4, angleLabels: labels });
+      labels[0] = 'MUTATED';
+      const cp = pp.copy() as PolarPlane;
+      // If snapshotting were broken, the copy's first slot would render 'MUTATED'.
+      expect((cp.getAngleLabels().children[0] as Text).getText()).toBe('E');
+    });
+
+    it('copy() produces independent custom-label mobjects', () => {
+      const pp = new PolarPlane({
+        angularDivisions: 4,
+        radialDivisions: 2,
+        angleLabels: ['E', 'N', 'W', 'S'],
+        radiusLabels: ['A', 'B'],
+      });
+      const cp = pp.copy() as PolarPlane;
+
+      expect(cp).toBeInstanceOf(PolarPlane);
+      expect(cp).not.toBe(pp);
+      expect(cp.getAngleLabels().children.length).toBe(4);
+      expect(cp.getRadiusLabels().children.length).toBe(2);
+
+      // Original and copy own distinct label mobject instances.
+      for (let i = 0; i < 4; i++) {
+        expect(cp.getAngleLabels().children[i]).not.toBe(pp.getAngleLabels().children[i]);
+      }
+      for (let i = 0; i < 2; i++) {
+        expect(cp.getRadiusLabels().children[i]).not.toBe(pp.getRadiusLabels().children[i]);
+      }
+    });
+
+    it('copy() with Mobject overrides deep-copies the override entries', () => {
+      const custom = new Text({ text: 'τ/4', fontSize: 30 });
+      const pp = new PolarPlane({
+        angularDivisions: 4,
+        angleLabels: [custom, 'N', 'W', 'S'],
+      });
+      const cp = pp.copy() as PolarPlane;
+      // The copy must not share the same Mobject instance as the original.
+      expect(cp.getAngleLabels().children[0]).not.toBe(custom);
+      expect(pp.getAngleLabels().children[0]).toBe(custom);
+    });
+
+    it('overrides respect azimuthOffset by placing index 0 at the offset angle', () => {
+      const pp = new PolarPlane({
+        angularDivisions: 4,
+        azimuthOffset: Math.PI / 2,
+        angleLabels: ['N', 'W', 'S', 'E'],
+      });
+      const first = pp.getAngleLabels().children[0];
+      // With azimuthOffset = PI/2, index 0 is placed near +y (x ~ 0, y > 0).
+      expect(Math.abs(first.position.x)).toBeLessThan(1e-6);
+      expect(first.position.y).toBeGreaterThan(0);
+    });
+
+    it('radius label positions track ((i+1)/radialDivisions) * radius along +x', () => {
+      const pp = new PolarPlane({
+        radius: 3,
+        size: 6, // scaleFactor = 6 / (2*3) = 1
+        radialDivisions: 3,
+        radiusLabels: ['A', 'B', 'C'],
+      });
+      const labels = pp.getRadiusLabels().children;
+      // visualR_i = (i/3) * 3 * scaleFactor = i for i in {1,2,3}
+      expect(closeTo(labels[0].position.x, 1)).toBe(true);
+      expect(closeTo(labels[1].position.x, 2)).toBe(true);
+      expect(closeTo(labels[2].position.x, 3)).toBe(true);
+      // Each placed slightly below the x-axis (matches default convention).
+      for (const l of labels) expect(closeTo(l.position.y, -0.2)).toBe(true);
     });
   });
 });

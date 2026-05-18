@@ -23,11 +23,10 @@
  */
 
 import { Scene, SceneOptions } from '../core/Scene';
-import { Animation } from '../animation/Animation';
-import { AnimationGroup } from '../animation/AnimationGroup';
 import { MasterTimeline } from '../animation/MasterTimeline';
 import { PlayerUI } from './PlayerUI';
 import { PlayerController } from './PlayerController';
+import { RecordingScene } from './RecordingScene';
 
 export interface PlayerOptions extends SceneOptions {
   /** Auto-hide controls after this many ms. 0 = never. Default 2500. */
@@ -36,96 +35,8 @@ export interface PlayerOptions extends SceneOptions {
   autoPlay?: boolean;
   /** Loop playback. Default false. */
   loop?: boolean;
-  /** Slides mode: arrows play/pause at segment boundaries like a presentation. Default false. */
+  /** Slides mode: arrows play/pause at slide boundaries like a presentation. Default false. */
   slidesMode?: boolean;
-}
-
-/**
- * A recording-scene proxy that captures play/wait calls
- * without actually running animations. Used by Player.sequence().
- */
-class RecordingScene {
-  private _realScene: Scene;
-  private _masterTimeline: MasterTimeline;
-
-  constructor(scene: Scene, masterTimeline: MasterTimeline) {
-    this._realScene = scene;
-    this._masterTimeline = masterTimeline;
-  }
-
-  /** Proxy for scene.play() — records animations into the master timeline. */
-  async play(...animations: Animation[]): Promise<void> {
-    if (animations.length === 0) return;
-
-    // Collect all nested animations for scene.add + begin()
-    const allAnimations = this._collectAll(animations);
-
-    // Sync geometry so begin() can detect children
-    for (const anim of allAnimations) {
-      if (anim.mobject._dirty) {
-        anim.mobject._syncToThree();
-        anim.mobject._dirty = false;
-      }
-    }
-
-    // Record segment BEFORE begin() so addSegment captures the correct
-    // pre-animation opacity. begin() may modify mobject opacity (e.g.
-    // Create's opacity fallback sets it to 0), which would corrupt the
-    // saved value used for visibility restoration during seek/playback.
-    this._masterTimeline.addSegment(animations);
-
-    // Initialize top-level animations
-    for (const anim of animations) {
-      anim.begin();
-    }
-
-    // Add to real scene (so they're visible when we seek)
-    for (const anim of allAnimations) {
-      if (!this._realScene.mobjects.has(anim.mobject)) {
-        this._realScene.add(anim.mobject);
-        // Mark as animation-introduced so MasterTimeline hides it
-        // until its segment starts (scene.add sets createdAtBeginning=true
-        // which would bypass the hiding logic in MasterTimeline.update).
-        anim.mobject.createdAtBeginning = false;
-      }
-    }
-  }
-
-  /** Proxy for scene.wait() — records a wait segment. */
-  async wait(duration: number = 1): Promise<void> {
-    this._masterTimeline.addWaitSegment(duration);
-  }
-
-  /** Pass-through: add mobjects directly to the scene. */
-  add(...args: Parameters<Scene['add']>): ReturnType<Scene['add']> {
-    return this._realScene.add(...args);
-  }
-
-  /** Pass-through: remove mobjects from the scene. */
-  remove(...args: Parameters<Scene['remove']>): ReturnType<Scene['remove']> {
-    return this._realScene.remove(...args);
-  }
-
-  /** Pass-through: access the camera. */
-  get camera() {
-    return this._realScene.camera;
-  }
-
-  /** Pass-through: batch updates. */
-  batch(callback: () => void): void {
-    this._realScene.batch(callback);
-  }
-
-  private _collectAll(animations: Animation[]): Animation[] {
-    const result: Animation[] = [];
-    for (const anim of animations) {
-      result.push(anim);
-      if (anim instanceof AnimationGroup) {
-        result.push(...this._collectAll(anim.animations));
-      }
-    }
-    return result;
-  }
 }
 
 export class Player {
@@ -141,7 +52,17 @@ export class Player {
   private _loop: boolean;
   private _autoPlay: boolean;
   private _slidesMode: boolean;
-  private _slidesTargetSegmentIndex: number = -1;
+  /**
+   * Index of the slide that slidesMode playback should stop (or loop / advance)
+   * at when its endTime is reached. -1 means no target armed.
+   */
+  private _slidesTargetSlideIndex: number = -1;
+  /**
+   * Index of the slide currently being looped in slidesMode, or null if no
+   * loop is active. When set, the player rewinds to the slide's startTime
+   * on every endTime crossing and keeps playing until the user advances.
+   */
+  private _activeLoopSlideIndex: number | null = null;
   private _origWidth: number = 0;
   private _origHeight: number = 0;
   private _onFullscreenChange: () => void;
@@ -223,10 +144,15 @@ export class Player {
   async sequence(builder: (scene: RecordingScene) => Promise<void>): Promise<void> {
     // Reset
     this._masterTimeline = new MasterTimeline();
+    this._activeLoopSlideIndex = null;
+    this._slidesTargetSlideIndex = -1;
 
     // Record
     const recorder = new RecordingScene(this._scene, this._masterTimeline);
     await builder(recorder);
+
+    // Build the slide list from recorded segments + slide boundaries.
+    this._masterTimeline.finalizeSlides();
 
     // Set the master timeline on the scene
     this._scene.setTimeline(this._masterTimeline);
@@ -267,10 +193,10 @@ export class Player {
     this._isPlaying = true;
     this._masterTimeline.play();
     this._ui.setPlaying(true);
-    if (this._slidesMode && this._slidesTargetSegmentIndex < 0) {
-      const current = this._masterTimeline.getCurrentSegment();
+    if (this._slidesMode && this._slidesTargetSlideIndex < 0) {
+      const current = this._masterTimeline.getCurrentSlide();
       if (current) {
-        this._slidesTargetSegmentIndex = current.index;
+        this._slidesTargetSlideIndex = current.index;
       }
     }
     this._startLoop();
@@ -293,24 +219,44 @@ export class Player {
     }
   }
 
-  /** Seek to a specific time in seconds. */
+  /**
+   * Seek to a specific time in seconds. If the new time stays inside the
+   * currently-targeted slide (slidesMode), the loop / target armed state is
+   * preserved — scrubbing within a looping slide should not silently kill
+   * the loop. Seeking outside the targeted slide drops both states so the
+   * next render tick doesn't snap back to the old slide.
+   */
   seek(time: number): void {
+    if (this._slidesMode && this._slidesTargetSlideIndex >= 0) {
+      const slides = this._masterTimeline.getSlides();
+      const targetSlide = slides[this._slidesTargetSlideIndex];
+      const insideTarget =
+        !!targetSlide && time >= targetSlide.startTime && time < targetSlide.endTime;
+      if (!insideTarget) {
+        this._activeLoopSlideIndex = null;
+        this._slidesTargetSlideIndex = -1;
+      }
+    } else {
+      this._activeLoopSlideIndex = null;
+      this._slidesTargetSlideIndex = -1;
+    }
     this._masterTimeline.seek(time);
     this._scene.render();
     this._ui.updateTime(this._masterTimeline.getCurrentTime(), this._masterTimeline.getDuration());
   }
 
-  /** Jump to the next segment. In slidesMode, plays current segment instead. */
+  /**
+   * Jump to the next navigable unit.
+   *
+   * - **slidesMode**: navigates by Slide. Plays through the current slide
+   *   to its end, then pauses (or rewinds / auto-advances per the slide's
+   *   `loop` / `autoNext` flags). Multi-play slides are atomic units.
+   * - **non-slidesMode**: navigates by Segment — one `play()`/`wait()` per
+   *   press, preserving the original per-segment UX.
+   */
   nextSegment(): void {
     if (this._slidesMode) {
-      const current = this._masterTimeline.getCurrentSegment();
-      if (!current) return;
-      const nextIdx = current.index + 1;
-      // If already at last segment and past its end, do nothing
-      if (nextIdx >= this._masterTimeline.segmentCount && this._masterTimeline.isFinished()) return;
-      // Set the target: pause when we reach the end of the current segment
-      this._slidesTargetSegmentIndex = current.index;
-      if (!this._isPlaying) this.play();
+      this._slidesModeNext();
       return;
     }
     if (this._isPlaying) this.pause();
@@ -324,10 +270,23 @@ export class Player {
     }
   }
 
-  /** Jump to the previous segment. Pauses playback. */
+  /** Alias for nextSegment. In slidesMode navigates by slide; otherwise by segment. */
+  nextSlide(): void {
+    this.nextSegment();
+  }
+
+  /** Alias for prevSegment. In slidesMode navigates by slide; otherwise by segment. */
+  prevSlide(): void {
+    this.prevSegment();
+  }
+
+  /** Jump to the previous navigable unit. Same per-mode semantics as nextSegment. */
   prevSegment(): void {
+    if (this._slidesMode) {
+      this._slidesModePrev();
+      return;
+    }
     if (this._isPlaying) this.pause();
-    this._slidesTargetSegmentIndex = -1;
     const prev = this._masterTimeline.prevSegment();
     if (prev) {
       this._scene.render();
@@ -336,6 +295,81 @@ export class Player {
         this._masterTimeline.getDuration(),
       );
     }
+  }
+
+  private _slidesModeNext(): void {
+    const slides = this._masterTimeline.getSlides();
+    // Exiting an active loop: snap to the next slide (or end the deck if last).
+    if (this._activeLoopSlideIndex !== null) {
+      const loopIdx = this._activeLoopSlideIndex;
+      const loopSlide = slides[loopIdx];
+      this._activeLoopSlideIndex = null;
+      if (!loopSlide) {
+        this._slidesTargetSlideIndex = -1;
+        return;
+      }
+      const nextIdx = loopIdx + 1;
+      const nextSlide = slides[nextIdx];
+      if (!nextSlide) {
+        // Final loop: land on its endTime and pause normally.
+        this._masterTimeline.seek(loopSlide.endTime);
+        this._slidesTargetSlideIndex = -1;
+        this._isPlaying = false;
+        this._masterTimeline.pause();
+        this._ui.setPlaying(false);
+        this._stopLoop();
+        this._scene.render();
+        this._ui.updateTime(
+          this._masterTimeline.getCurrentTime(),
+          this._masterTimeline.getDuration(),
+        );
+        return;
+      }
+      this._masterTimeline.seek(nextSlide.startTime);
+      this._slidesTargetSlideIndex = nextIdx;
+      if (!this._isPlaying) this.play();
+      else this._masterTimeline.play();
+      return;
+    }
+    const current = this._masterTimeline.getCurrentSlide();
+    if (!current) return;
+    const nextIdx = current.index + 1;
+    if (nextIdx >= slides.length && this._masterTimeline.isFinished()) return;
+    // Set the target: pause / loop / advance when we reach the end of the
+    // current slide. Same target whether we're playing through or just armed.
+    this._slidesTargetSlideIndex = current.index;
+    if (!this._isPlaying) this.play();
+  }
+
+  private _slidesModePrev(): void {
+    if (this._isPlaying) this.pause();
+    const slides = this._masterTimeline.getSlides();
+    // From an active loop, ← always exits to the previous slide rather than
+    // the >0.5s phase-dependent restart-current behavior — the user is
+    // conceptually on the looping slide rather than at a specific offset.
+    if (this._activeLoopSlideIndex !== null) {
+      const loopIdx = this._activeLoopSlideIndex;
+      this._activeLoopSlideIndex = null;
+      this._slidesTargetSlideIndex = -1;
+      const targetSlide = slides[Math.max(0, loopIdx - 1)] ?? slides[0];
+      if (!targetSlide) return;
+      this._masterTimeline.seek(targetSlide.startTime);
+      this._scene.render();
+      this._ui.updateTime(
+        this._masterTimeline.getCurrentTime(),
+        this._masterTimeline.getDuration(),
+      );
+      return;
+    }
+    this._slidesTargetSlideIndex = -1;
+    const current = this._masterTimeline.getCurrentSlide();
+    if (!current) return;
+    const elapsed = this._masterTimeline.getCurrentTime() - current.startTime;
+    // Well into the current slide → restart it; otherwise step to previous.
+    const target = elapsed > 0.5 ? current : (slides[current.index - 1] ?? current);
+    this._masterTimeline.seek(target.startTime);
+    this._scene.render();
+    this._ui.updateTime(this._masterTimeline.getCurrentTime(), this._masterTimeline.getDuration());
   }
 
   /** Set the playback speed multiplier. */
@@ -347,6 +381,10 @@ export class Player {
   setSlidesMode(enabled: boolean): void {
     this._slidesMode = enabled;
     this._ui.setSlidesMode(enabled);
+    if (!enabled) {
+      this._activeLoopSlideIndex = null;
+      this._slidesTargetSlideIndex = -1;
+    }
   }
 
   /** Export the animation in the given format (gif, webm, mp4). */
@@ -435,18 +473,54 @@ export class Player {
         this._masterTimeline.getDuration(),
       );
 
-      // In slides mode, auto-pause at the target segment boundary
-      if (this._slidesMode && this._slidesTargetSegmentIndex >= 0) {
-        const segments = this._masterTimeline.getSegments();
-        const targetSeg = segments[this._slidesTargetSegmentIndex];
-        if (targetSeg && this._masterTimeline.getCurrentTime() >= targetSeg.endTime) {
-          this._masterTimeline.seek(targetSeg.endTime);
+      // In slides mode, branch on the active slide's flags at its endTime.
+      // loop wins over autoNext (a looping slide never reaches its end naturally).
+      if (this._slidesMode && this._slidesTargetSlideIndex >= 0) {
+        const slides = this._masterTimeline.getSlides();
+        const targetSlide = slides[this._slidesTargetSlideIndex];
+        if (!targetSlide) {
+          // Stale index after a re-record / slidesMode toggle. Disarm rather
+          // than silently letting playback drift past every slide boundary.
+          this._slidesTargetSlideIndex = -1;
+          this._activeLoopSlideIndex = null;
+        } else if (this._masterTimeline.getCurrentTime() >= targetSlide.endTime) {
+          if (targetSlide.loop) {
+            // Rewind and keep playing. play() is required because Timeline.update
+            // self-pauses when currentTime crosses the timeline duration (i.e.
+            // when the looping slide is the final slide).
+            this._masterTimeline.seek(targetSlide.startTime);
+            this._masterTimeline.play();
+            this._activeLoopSlideIndex = targetSlide.index;
+            this._scene.render();
+            this._ui.updateTime(
+              this._masterTimeline.getCurrentTime(),
+              this._masterTimeline.getDuration(),
+            );
+            return;
+          }
+          const nextIdx = targetSlide.index + 1;
+          if (targetSlide.autoNext && nextIdx < slides.length) {
+            // Advance to the next slide and keep playing through it.
+            const nextSlide = slides[nextIdx];
+            this._masterTimeline.seek(nextSlide.startTime);
+            this._masterTimeline.play();
+            this._slidesTargetSlideIndex = nextIdx;
+            this._scene.render();
+            this._ui.updateTime(
+              this._masterTimeline.getCurrentTime(),
+              this._masterTimeline.getDuration(),
+            );
+            return;
+          }
+          // Default: pause at the slide boundary. (Final autoNext slide
+          // also falls through here — there is nothing to advance to.)
+          this._masterTimeline.seek(targetSlide.endTime);
           this._scene.render();
           this._ui.updateTime(
             this._masterTimeline.getCurrentTime(),
             this._masterTimeline.getDuration(),
           );
-          this._slidesTargetSegmentIndex = -1;
+          this._slidesTargetSlideIndex = -1;
           this._isPlaying = false;
           this._masterTimeline.pause();
           this._ui.setPlaying(false);

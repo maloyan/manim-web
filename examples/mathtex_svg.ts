@@ -14,7 +14,8 @@ import {
   RED,
   BLUE,
   GREEN,
-  YELLOW,
+  TEAL,
+  GOLD,
 } from '../src/index.ts';
 
 const container = document.getElementById('container');
@@ -32,7 +33,7 @@ async function mathtexSvgDemo(scene: Scene) {
   });
   const equation2 = new MathTex({
     latex: 'e^{i\\pi} + 1 = 0',
-    color: YELLOW,
+    color: GOLD,
   });
   const multiPart = new MathTex({
     latex: ['E', '=', 'mc^2'],
@@ -54,7 +55,7 @@ async function mathtexSvgDemo(scene: Scene) {
   });
   const pythagorasExpanded = new MathTex({
     latex: 'c = \\sqrt{a^2 + b^2}',
-    color: YELLOW,
+    color: TEAL,
   });
   const scalingEq = new MathTex({
     latex: '\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\epsilon_0}',
@@ -74,7 +75,7 @@ async function mathtexSvgDemo(scene: Scene) {
   });
   const textAfter = new MathTex({
     latex: 'x = 42',
-    color: YELLOW,
+    color: GOLD,
   });
 
   // Render all SVGs in parallel

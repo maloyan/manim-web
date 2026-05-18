@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as THREE from 'three';
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
@@ -16,6 +16,9 @@ class TestMobject extends Mobject {
     return new THREE.Object3D();
   }
   protected _syncToThree(): void {}
+  protected _createCopy(): Mobject {
+    return new TestMobject();
+  }
 }
 
 /** Concrete Animation that tracks interpolation calls. */
@@ -112,6 +115,183 @@ describe('MasterTimeline', () => {
 
       expect(tl.getDuration()).toBe(1);
       expect(tl.length).toBe(1); // one scheduled animation on base Timeline
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // slides (beginSlide / finalizeSlides / getSlides)
+  // ---------------------------------------------------------------------------
+  describe('slides', () => {
+    it('auto-boundary: one slide per segment when no beginSlide() was called', () => {
+      const mob = new TestMobject();
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.addWaitSegment(0.5);
+      tl.finalizeSlides();
+
+      const slides = tl.getSlides();
+      expect(slides).toHaveLength(3);
+      slides.forEach((s, i) => {
+        expect(s.startSegmentIndex).toBe(i);
+        expect(s.endSegmentIndex).toBe(i);
+        expect(s.loop).toBe(false);
+        expect(s.autoNext).toBe(false);
+      });
+    });
+
+    it('beginSlide before any segment makes slide 0 use those opts', () => {
+      const mob = new TestMobject();
+      tl.beginSlide({ loop: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+
+      const slides = tl.getSlides();
+      expect(slides).toHaveLength(1);
+      expect(slides[0].loop).toBe(true);
+      expect(slides[0].autoNext).toBe(false);
+    });
+
+    it('beginSlide mid-recording groups subsequent segments into one slide', () => {
+      const mob = new TestMobject();
+      // slide 0: 1 segment
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      // slide 1 (loop, 2 segments)
+      tl.beginSlide({ loop: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      // slide 2: 1 segment
+      tl.beginSlide({ autoNext: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+
+      const slides = tl.getSlides();
+      expect(slides).toHaveLength(3);
+      expect(slides[0]).toMatchObject({
+        startSegmentIndex: 0,
+        endSegmentIndex: 0,
+        startTime: 0,
+        endTime: 1,
+        loop: false,
+        autoNext: false,
+      });
+      expect(slides[1]).toMatchObject({
+        startSegmentIndex: 1,
+        endSegmentIndex: 2,
+        startTime: 1,
+        endTime: 3,
+        loop: true,
+        autoNext: false,
+      });
+      expect(slides[2]).toMatchObject({
+        startSegmentIndex: 3,
+        endSegmentIndex: 3,
+        startTime: 3,
+        endTime: 4,
+        loop: false,
+        autoNext: true,
+      });
+    });
+
+    it('back-to-back beginSlide calls without segments are skipped', () => {
+      // Silence the expected `MasterTimeline.beginSlide: consecutive
+      // nextSlide() calls ...` warn — this test exercises the path.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const mob = new TestMobject();
+        tl.beginSlide({ loop: true });
+        tl.beginSlide({ autoNext: true });
+        tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+        tl.finalizeSlides();
+
+        // Only the final boundary owns the segment.
+        const slides = tl.getSlides();
+        expect(slides).toHaveLength(1);
+        expect(slides[0].autoNext).toBe(true);
+        expect(slides[0].loop).toBe(false);
+        expect(warnSpy).toHaveBeenCalled();
+      } finally {
+        warnSpy.mockRestore();
+      }
+    });
+
+    it('finalizeSlides with no segments leaves slides empty', () => {
+      tl.beginSlide({ loop: true });
+      tl.finalizeSlides();
+      expect(tl.getSlides()).toHaveLength(0);
+      expect(tl.slideCount).toBe(0);
+    });
+
+    it('throws if a multi-play slide is marked loop with zero total duration', () => {
+      // Synthetic: a beginSlide(loop:true) that wraps a single zero-duration
+      // wait would be a tight-loop trap.
+      tl.beginSlide({ loop: true });
+      tl.addWaitSegment(0); // zero-duration
+      expect(() => tl.finalizeSlides()).toThrow(/zero-duration/);
+    });
+
+    it('finalizeSlides is idempotent: calling twice produces the same slide list', () => {
+      const mob = new TestMobject();
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.beginSlide({ loop: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+      const first = JSON.parse(JSON.stringify(tl.getSlides()));
+      tl.finalizeSlides();
+      const second = JSON.parse(JSON.stringify(tl.getSlides()));
+      expect(second).toEqual(first);
+    });
+
+    it('finalizeSlides on a completely empty timeline produces no slides', () => {
+      tl.finalizeSlides();
+      expect(tl.slideCount).toBe(0);
+      expect(tl.getCurrentSlide()).toBeNull();
+    });
+
+    it('getSlideAtTime returns null before the first slide', () => {
+      const mob = new TestMobject();
+      tl.beginSlide();
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+      // First slide starts at 0, but we manufacture a pathological pre-slide
+      // time by querying a negative value.
+      expect(tl.getSlideAtTime(-1)).toBeNull();
+    });
+
+    it('warns on consecutive beginSlide calls that drop non-default opts', () => {
+      const mob = new TestMobject();
+      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      tl.beginSlide({ loop: true });
+      tl.beginSlide(); // drops { loop: true } silently — should warn
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+      expect(spy).toHaveBeenCalledOnce();
+      spy.mockRestore();
+    });
+
+    it('normalises autoNext to false when loop is true', () => {
+      const mob = new TestMobject();
+      tl.beginSlide({ loop: true, autoNext: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+      const slide = tl.getSlides()[0];
+      expect(slide.loop).toBe(true);
+      expect(slide.autoNext).toBe(false);
+    });
+
+    it('getCurrentSlide returns slide containing the current time', () => {
+      const mob = new TestMobject();
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.beginSlide({ loop: true });
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
+      tl.finalizeSlides();
+
+      tl.seek(0.5);
+      expect(tl.getCurrentSlide()?.index).toBe(0);
+      tl.seek(1.5);
+      expect(tl.getCurrentSlide()?.index).toBe(1);
+      tl.seek(2.5);
+      expect(tl.getCurrentSlide()?.index).toBe(1);
     });
   });
 
@@ -793,13 +973,13 @@ describe('MasterTimeline', () => {
 // =============================================================================
 
 describe('Animation _captureMinimalState and reset', () => {
-  /** Mobject whose copy() always throws, forcing the minimal-state fallback. */
+  /** Mobject whose _createCopy() throws, forcing the catch+warn fallback. */
   class NoCopyMobject extends Mobject {
     protected _createThreeObject(): THREE.Object3D {
       return new THREE.Object3D();
     }
     protected _syncToThree(): void {}
-    override copy(): Mobject {
+    protected _createCopy(): Mobject {
       throw new Error('copy not supported');
     }
   }
@@ -813,44 +993,18 @@ describe('Animation _captureMinimalState and reset', () => {
     }
   }
 
-  it('falls back to _captureMinimalState when copy() throws', () => {
-    const mob = new NoCopyMobject();
-    mob.opacity = 0.8;
-    mob.color = '#00ff00';
-
-    const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
-    // begin() should not throw even though copy() does
-    expect(() => anim.begin()).not.toThrow();
-
-    // The snapshot should have been captured
-    const snapshot = (anim as any)._preAnimationState;
-    expect(snapshot).not.toBeNull();
-    expect(snapshot.opacity).toBe(0.8);
-    expect(snapshot.color).toBe('#00ff00');
-  });
-
-  it('reset() restores mobject from minimal snapshot', () => {
-    const mob = new NoCopyMobject();
-    mob.opacity = 1;
-    mob.color = '#ffffff';
-    mob.strokeWidth = 2;
-    mob.fillOpacity = 0.5;
-
-    const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
-    anim.begin();
-
-    // Simulate the animation mutating the mobject
-    anim.interpolate(0.5);
-    expect(mob.opacity).toBe(0.5);
-    expect(mob.color).toBe('#ff0000');
-
-    // Reset should restore original values
-    anim.reset();
-    expect(mob.opacity).toBe(1);
-    expect(mob.color).toBe('#ffffff');
-    expect(mob.strokeWidth).toBe(2);
-    expect(mob.fillOpacity).toBe(0.5);
-  });
+  // Silence the expected `Animation.begin(): mobject.copy() failed` warn —
+  // scoped to the NoCopyMobject-using tests below, since the VMobject test
+  // and any future additions should still surface unexpected warnings.
+  function silenceCopyWarn(): void {
+    let warnSpy: ReturnType<typeof vi.spyOn>;
+    beforeEach(() => {
+      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+    afterEach(() => {
+      warnSpy.mockRestore();
+    });
+  }
 
   it('reset() restores VMobject points when saved state is a VMobject copy', () => {
     const mob = new VMobject();
@@ -887,38 +1041,81 @@ describe('Animation _captureMinimalState and reset', () => {
     ]);
   });
 
-  it('reset() clears _startTime, _isFinished, and _hasBegun', () => {
-    const mob = new NoCopyMobject();
-    const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+  describe('with NoCopyMobject (deliberately throws from _createCopy)', () => {
+    silenceCopyWarn();
 
-    anim.begin();
-    anim.update(0, 0);
-    anim.update(0, 1.5); // past duration
-    expect(anim.isFinished()).toBe(true);
+    it('falls back to _captureMinimalState when copy() throws', () => {
+      const mob = new NoCopyMobject();
+      mob.opacity = 0.8;
+      mob.color = '#00ff00';
 
-    anim.reset();
-    expect(anim.isFinished()).toBe(false);
-    expect(anim.startTime).toBeNull();
-    expect((anim as any)._hasBegun).toBe(false);
-  });
+      const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+      // begin() should not throw even though copy() does
+      expect(() => anim.begin()).not.toThrow();
 
-  it('begin() only captures snapshot on the first call', () => {
-    const mob = new NoCopyMobject();
-    mob.opacity = 0.9;
+      // The snapshot should have been captured
+      const snapshot = (anim as any)._preAnimationState;
+      expect(snapshot).not.toBeNull();
+      expect(snapshot.opacity).toBe(0.8);
+      expect(snapshot.color).toBe('#00ff00');
+    });
 
-    const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
-    anim.begin();
+    it('reset() restores mobject from minimal snapshot', () => {
+      const mob = new NoCopyMobject();
+      mob.opacity = 1;
+      mob.color = '#ffffff';
+      mob.strokeWidth = 2;
+      mob.fillOpacity = 0.5;
 
-    const firstSnapshot = (anim as any)._preAnimationState;
-    expect(firstSnapshot.opacity).toBe(0.9);
+      const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+      anim.begin();
 
-    // Mutate and call begin again - snapshot should NOT be overwritten
-    mob.opacity = 0.1;
-    anim.reset();
-    anim.begin();
+      // Simulate the animation mutating the mobject
+      anim.interpolate(0.5);
+      expect(mob.opacity).toBe(0.5);
+      expect(mob.color).toBe('#ff0000');
 
-    const secondSnapshot = (anim as any)._preAnimationState;
-    expect(secondSnapshot).toBe(firstSnapshot); // same reference
-    expect(secondSnapshot.opacity).toBe(0.9); // original value
+      // Reset should restore original values
+      anim.reset();
+      expect(mob.opacity).toBe(1);
+      expect(mob.color).toBe('#ffffff');
+      expect(mob.strokeWidth).toBe(2);
+      expect(mob.fillOpacity).toBe(0.5);
+    });
+
+    it('reset() clears _startTime, _isFinished, and _hasBegun', () => {
+      const mob = new NoCopyMobject();
+      const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+
+      anim.begin();
+      anim.update(0, 0);
+      anim.update(0, 1.5); // past duration
+      expect(anim.isFinished()).toBe(true);
+
+      anim.reset();
+      expect(anim.isFinished()).toBe(false);
+      expect(anim.startTime).toBeNull();
+      expect((anim as any)._hasBegun).toBe(false);
+    });
+
+    it('begin() only captures snapshot on the first call', () => {
+      const mob = new NoCopyMobject();
+      mob.opacity = 0.9;
+
+      const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+      anim.begin();
+
+      const firstSnapshot = (anim as any)._preAnimationState;
+      expect(firstSnapshot.opacity).toBe(0.9);
+
+      // Mutate and call begin again - snapshot should NOT be overwritten
+      mob.opacity = 0.1;
+      anim.reset();
+      anim.begin();
+
+      const secondSnapshot = (anim as any)._preAnimationState;
+      expect(secondSnapshot).toBe(firstSnapshot); // same reference
+      expect(secondSnapshot.opacity).toBe(0.9); // original value
+    });
   });
 });

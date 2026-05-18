@@ -432,6 +432,10 @@ describe('Transform', () => {
         protected _createThreeObject(): THREE.Object3D {
           return new THREE.Group();
         }
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        protected _createCopy(): Mobject {
+          return new SimpleMobject();
+        }
       }
       const m1 = new SimpleMobject();
       const m2 = new SimpleMobject();
@@ -730,6 +734,10 @@ describe('cross-fade finish()', () => {
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Group();
       }
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      protected _createCopy(): Mobject {
+        return new SimpleMobject();
+      }
     }
     const m1 = new SimpleMobject();
     const m2 = new SimpleMobject();
@@ -782,6 +790,10 @@ describe('cross-fade finish()', () => {
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Group();
       }
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      protected _createCopy(): Mobject {
+        return new SimpleMobject();
+      }
     }
     const m1 = new SimpleMobject();
     const m2 = new SimpleMobject();
@@ -804,6 +816,10 @@ describe('cross-fade finish()', () => {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Group();
+      }
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      protected _createCopy(): Mobject {
+        return new SimpleMobject();
       }
     }
     const m1 = new SimpleMobject();
@@ -871,6 +887,11 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
       getTextureMesh(): THREE.Mesh | null {
         return this._mesh;
       }
+
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      protected _createCopy(): Mobject {
+        return new TextLikeMobject();
+      }
     }
 
     const m1 = new TextLikeMobject();
@@ -920,6 +941,11 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
 
       getTextureMesh(): THREE.Mesh | null {
         return this._mesh;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      protected _createCopy(): Mobject {
+        return new TextLikeMobject();
       }
     }
 

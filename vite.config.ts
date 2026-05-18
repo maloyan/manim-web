@@ -1,9 +1,11 @@
-import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import UnpluginTypia from '@typia/unplugin/vite';
+import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 
 export default defineConfig({
   plugins: [
+    UnpluginTypia(),
     dts({
       insertTypesEntry: true,
     }),

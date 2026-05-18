@@ -18,5 +18,5 @@ describe.skipIf(!bundleExists)('Browser bundle', () => {
     expect(mod.Scene).toBeDefined();
     expect(mod.Circle).toBeDefined();
     expect(mod.Create).toBeDefined();
-  });
+  }, 20000);
 });

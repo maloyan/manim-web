@@ -6,6 +6,7 @@
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
 import { RateFunction, smooth } from '../rate-functions';
+import typia from 'typia';
 
 export type { RateFunction };
 
@@ -60,6 +61,8 @@ export abstract class Animation {
   private _preAnimationState: Mobject | null = null;
 
   constructor(mobject: Mobject, options: AnimationOptions = {}) {
+    // Validate options via typia to generate runtime assertions.
+    typia.assert<AnimationOptions>(options);
     this.mobject = mobject;
     this.duration = options.duration ?? 1;
     this.rateFunc = options.rateFunc ?? smooth;
@@ -73,17 +76,29 @@ export abstract class Animation {
    */
   begin(): void {
     if (!this._preAnimationState) {
-      try {
-        this._preAnimationState = this.mobject.copy();
-      } catch (err) {
-        // Some mobjects (test mocks, minimal subclasses) don't support copy().
-        // Fall back to a lightweight property-only snapshot.
-        console.warn(
-          'Animation.begin(): mobject.copy() failed, using minimal state snapshot. ' +
-            'Backward seeking may not fully restore this mobject.',
-          err,
-        );
+      // Some mobjects (test mocks, minimal subclasses) don't implement the
+      // abstract `_createCopy()` at all — TypeScript catches this at compile
+      // time, so it's only reachable from test mocks. Detect via prototype
+      // lookup and fall back silently rather than triggering copy()'s throw
+      // and the noisy warning. Errors thrown _from inside_ a real
+      // `_createCopy` are still surfaced loudly below.
+      const hasCreateCopy =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        typeof (this.mobject as any)._createCopy === 'function';
+      if (!hasCreateCopy) {
         this._preAnimationState = this._captureMinimalState();
+      } else {
+        try {
+          this._preAnimationState = this.mobject.copy();
+        } catch (err) {
+          // Real failure inside a subclass's copy — still loud.
+          console.warn(
+            'Animation.begin(): mobject.copy() failed, using minimal state snapshot. ' +
+              'Backward seeking may not fully restore this mobject.',
+            err,
+          );
+          this._preAnimationState = this._captureMinimalState();
+        }
       }
     }
     this._hasBegun = true;

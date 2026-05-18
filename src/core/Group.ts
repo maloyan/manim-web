@@ -4,7 +4,7 @@
  */
 
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from './Mobject';
+import { Mobject, Vector3Tuple, AxisOrOptions } from './Mobject';
 
 /**
  * A Group is a Mobject that contains other Mobjects.
@@ -154,10 +154,7 @@ export class Group extends Mobject {
    * @param axis - Axis of rotation [x, y, z], defaults to Z axis
    * @returns this for chaining
    */
-  override rotate(
-    angle: number,
-    axisOrOptions?: Vector3Tuple | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple },
-  ): this {
+  override rotate(angle: number, axisOrOptions?: Vector3Tuple | AxisOrOptions): this {
     for (const child of this.children) {
       child.rotate(angle, axisOrOptions);
     }

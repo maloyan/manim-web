@@ -316,13 +316,18 @@ export class Code extends VMobject {
     // Create highlight geometry
     const geometry = new THREE.PlaneGeometry(highlightWidth, highlightHeight);
 
-    // Parse color
-    const threeColor = new THREE.Color(color);
+    // Parse color: extract alpha, then strip it before handing to THREE.Color
+    // (THREE.Color logs `Alpha component of rgba(...) will be ignored` otherwise).
     let alpha = 0.3;
-    const rgbaMatch = color.match(/rgba?\([\d.]+,\s*[\d.]+,\s*[\d.]+(?:,\s*([\d.]+))?\)/);
-    if (rgbaMatch && rgbaMatch[1]) {
-      alpha = parseFloat(rgbaMatch[1]);
+    let rgbColor = color;
+    const rgbaMatch = color.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/);
+    if (rgbaMatch) {
+      if (rgbaMatch[4] !== undefined) {
+        alpha = parseFloat(rgbaMatch[4]);
+      }
+      rgbColor = `rgb(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]})`;
     }
+    const threeColor = new THREE.Color(rgbColor);
 
     const material = new THREE.MeshBasicMaterial({
       color: threeColor,

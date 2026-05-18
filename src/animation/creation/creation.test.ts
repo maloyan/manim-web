@@ -64,6 +64,10 @@ class MockTextMobject extends Mobject {
   }
 
   protected _syncToThree(): void {}
+
+  protected _createCopy(): Mobject {
+    return new MockTextMobject(this._text);
+  }
 }
 
 // =============================================================================
@@ -94,6 +98,10 @@ class MockMathTexMobject extends Mobject {
   }
 
   protected _syncToThree(): void {}
+
+  protected _createCopy(): Mobject {
+    return new MockMathTexMobject();
+  }
 }
 
 class MockPlainMobject extends Mobject {

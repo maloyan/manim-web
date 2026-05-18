@@ -9,6 +9,7 @@ const scene = new ThreeDScene(container, {
   theta: 30 * (Math.PI / 180),
   distance: 20,
   fov: 30,
+  orbitControlsUp: 'z',
 });
 
 async function threeDCameraIllusionRotation(scene: ThreeDScene) {
@@ -23,11 +24,6 @@ async function threeDCameraIllusionRotation(scene: ThreeDScene) {
   });
 
   const circle = new Circle({ radius: 1, color: '#FC6255' });
-  // Circle points are in Manim x-y plane but VMobject renders them
-  // directly in THREE.js coords. Rotate -90° around X to lay flat
-  // on the ground plane (THREE.js x-z = Manim x-y).
-  circle.rotation.x = -Math.PI / 2;
-
   scene.add(circle, axes);
 
   // Begin 3D illusion camera rotation (theta rotates at 2 rad/s,

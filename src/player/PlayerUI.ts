@@ -180,11 +180,13 @@ export class PlayerUI {
 
   setSegments(timeline: MasterTimeline): void {
     this._segmentMarkers.innerHTML = '';
-    const segments = timeline.getSegments();
+    // Draw markers at slide boundaries — those are the units that prev/next
+    // navigation operates on.
+    const slides = timeline.getSlides();
     const duration = timeline.getDuration();
     if (duration <= 0) return;
 
-    for (const seg of segments) {
+    for (const seg of slides) {
       if (seg.index === 0) continue; // no marker at 0
       const pct = (seg.startTime / duration) * 100;
       const marker = el('div', {

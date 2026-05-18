@@ -5,6 +5,15 @@ import * as THREE from 'three';
  */
 export type Vector3Tuple = [number, number, number];
 
+/**
+ * Options for rotation and other operations that can accept an axis or a full options object
+ */
+export type AxisOrOptions = {
+  axis?: Vector3Tuple;
+  aboutPoint?: Vector3Tuple;
+  aboutEdge?: Vector3Tuple;
+};
+
 // Direction constants (matching Manim's coordinate system)
 export const UP: Vector3Tuple = [0, 1, 0];
 export const DOWN: Vector3Tuple = [0, -1, 0];
@@ -62,10 +71,7 @@ export interface MobjectLike {
   };
   getBoundingBox(): { width: number; height: number; depth: number };
   moveTo(target: Vector3Tuple | MobjectLike, alignedEdge?: Vector3Tuple): MobjectLike;
-  rotate(
-    angle: number,
-    axisOrOptions?: Vector3Tuple | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple },
-  ): MobjectLike;
+  rotate(angle: number, axisOrOptions?: Vector3Tuple | AxisOrOptions): MobjectLike;
   copy(): MobjectLike;
   restoreState(): boolean;
   getFamily(): MobjectLike[];

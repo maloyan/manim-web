@@ -1,4 +1,4 @@
-import { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text } from '../src/index.ts';
+import { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text, YELLOW } from '../src/index.ts';
 
 const container = document.getElementById('container');
 const scene = new Scene(container, {
@@ -8,7 +8,7 @@ const scene = new Scene(container, {
 });
 
 async function vectorArrow(scene: Scene) {
-  const dot = new Dot({ point: ORIGIN });
+  const dot = new Dot({ point: ORIGIN, radius: 0.12, color: YELLOW });
   const arrow = new Arrow({ start: ORIGIN, end: [2, 2, 0] });
   const numberplane = new NumberPlane();
   const originText = new Text({ text: '(0, 0)' }).nextTo(dot, DOWN);

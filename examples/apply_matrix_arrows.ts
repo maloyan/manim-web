@@ -26,7 +26,7 @@ async function applyMatrixArrows(scene: Scene) {
 
   scene.add(arrow1, arrow2, arrow3);
 
-  const label = new Text({ text: 'Before shear', fontSize: 24, color: '#ffffff' });
+  const label = new Text({ text: 'Before shear', fontSize: 48, color: '#ffffff' });
   label.moveTo([0, 3.2, 0]);
   scene.add(label);
 
@@ -51,7 +51,7 @@ async function applyMatrixArrows(scene: Scene) {
   scene.remove(label);
   const label2 = new Text({
     text: 'After shear — tips reconstructed',
-    fontSize: 24,
+    fontSize: 48,
     color: '#ffffff',
   });
   label2.moveTo([0, 3.2, 0]);

@@ -19,6 +19,7 @@ import {
   projectToPlane,
   signedArea2DFromStride,
 } from '../utils/math';
+import { crossVec, lengthVec } from '../utils/vectors';
 import type { Point } from './VMobjectCurves';
 
 /**
@@ -54,37 +55,23 @@ const LINEARITY_REL_TOL = 0.01;
  * plane) still sample as curves.
  */
 export function isNearlyLinear(p0: number[], p1: number[], p2: number[], p3: number[]): boolean {
-  const cx = p3[0] - p0[0];
-  const cy = p3[1] - p0[1];
-  const cz = (p3[2] ?? 0) - (p0[2] ?? 0);
-  const len2 = cx * cx + cy * cy + cz * cz;
+  const c: [number, number, number] = [p3[0] - p0[0], p3[1] - p0[1], (p3[2] ?? 0) - (p0[2] ?? 0)];
 
   // Handle distances from p0 — used both as the degenerate-chord fallback
   // and to distinguish a "loop" Bezier (chord ≈ 0 but handles bulge out).
-  const dh = (q: number[]): number => {
-    const dx = q[0] - p0[0];
-    const dy = q[1] - p0[1];
-    const dz = (q[2] ?? 0) - (p0[2] ?? 0);
-    return Math.sqrt(dx * dx + dy * dy + dz * dz);
-  };
+  const dh = (q: number[]): number =>
+    lengthVec([q[0] - p0[0], q[1] - p0[1], (q[2] ?? 0) - (p0[2] ?? 0)]);
 
-  if (len2 < 1e-20) {
+  const chord = lengthVec(c);
+  if (chord < 1e-10) {
     // Chord is effectively zero. Linear only if the whole control polygon
     // collapses to a point; otherwise it's a curl/loop that must be sampled.
     return Math.max(dh(p1), dh(p2)) < 1e-10;
   }
 
-  const chord = Math.sqrt(len2);
-  const perpDist = (q: number[]): number => {
-    const ax = q[0] - p0[0];
-    const ay = q[1] - p0[1];
-    const az = (q[2] ?? 0) - (p0[2] ?? 0);
-    // |a × c| / |c|
-    const rx = ay * cz - az * cy;
-    const ry = az * cx - ax * cz;
-    const rz = ax * cy - ay * cx;
-    return Math.sqrt(rx * rx + ry * ry + rz * rz) / chord;
-  };
+  // |a × c| / |c| is the perpendicular distance from q to the chord.
+  const perpDist = (q: number[]): number =>
+    lengthVec(crossVec([q[0] - p0[0], q[1] - p0[1], (q[2] ?? 0) - (p0[2] ?? 0)], c)) / chord;
 
   return Math.max(perpDist(p1), perpDist(p2)) < LINEARITY_REL_TOL * chord;
 }

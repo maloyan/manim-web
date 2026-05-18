@@ -1,6 +1,14 @@
 /* eslint-disable max-lines */
 import * as THREE from 'three';
-import { type Vector3Tuple, type MobjectStyle, UP, DOWN, LEFT, RIGHT } from './MobjectTypes';
+import {
+  type Vector3Tuple,
+  type MobjectStyle,
+  type AxisOrOptions,
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT,
+} from './MobjectTypes';
 import {
   rotateMobject,
   getCenterImpl,
@@ -8,6 +16,7 @@ import {
   getEdgeInDirectionImpl,
   toEdgeImpl,
 } from './MobjectPositioning';
+import typia from 'typia';
 import {
   saveMobjectStateImpl,
   restoreMobjectStateImpl,
@@ -42,6 +51,7 @@ export {
   type MobjectStyle,
   type MobjectLike,
   type VMobjectLike,
+  type AxisOrOptions,
   isVMobjectLike,
   UP,
   DOWN,
@@ -241,16 +251,20 @@ export abstract class Mobject {
    * Rotate the mobject by angle around an axis.
    * Accepts aboutPoint or aboutEdge to specify the rotation center.
    */
-  rotate(
-    angle: number,
-    axisOrOptions?:
-      | Vector3Tuple
-      | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
-  ): this {
-    if (axisOrOptions && !Array.isArray(axisOrOptions)) {
-      const resolved = resolveExtremalPoint(this, axisOrOptions);
-      if (resolved) {
-        axisOrOptions = { axis: axisOrOptions.axis, aboutPoint: resolved };
+  rotate(angle: number, axisOrOptions?: Vector3Tuple | AxisOrOptions): this {
+    if (typeof angle !== 'number') {
+      throw new TypeError('Mobject.rotate: angle must be a number');
+    }
+
+    if (axisOrOptions !== undefined) {
+      if (Array.isArray(axisOrOptions)) {
+        typia.assert<Vector3Tuple>(axisOrOptions);
+      } else {
+        typia.assert<AxisOrOptions>(axisOrOptions);
+        const resolved = resolveExtremalPoint(this, axisOrOptions);
+        if (resolved) {
+          axisOrOptions = { axis: axisOrOptions.axis, aboutPoint: resolved };
+        }
       }
     }
     rotateMobject(this, angle, axisOrOptions);

@@ -531,7 +531,13 @@ export {
 // Animations
 export { Animation, type AnimationOptions, type RateFunction } from './animation/Animation';
 export { Timeline, type PositionParam } from './animation/Timeline';
-export { MasterTimeline, masterTimeline, type Segment } from './animation/MasterTimeline';
+export {
+  MasterTimeline,
+  masterTimeline,
+  type Segment,
+  type Slide,
+  type SlideOptions,
+} from './animation/MasterTimeline';
 
 // Animation types
 export { FadeIn, fadeIn, FadeOut, fadeOut } from './animation/fading';
@@ -953,7 +959,19 @@ export {
 } from './export';
 
 // Vector math utilities
-export { scaleVec, addVec, subVec, linspace } from './utils/vectors';
+export {
+  scaleVec,
+  addVec,
+  subVec,
+  linspace,
+  dotVec,
+  crossVec,
+  lengthVec,
+  normalizeVec,
+  unitPerpendicularTo,
+  orthonormalFrame,
+  orientation2D,
+} from './utils/vectors';
 
 // Player
 export { Player, type PlayerOptions } from './player';

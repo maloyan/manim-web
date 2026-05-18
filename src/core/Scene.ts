@@ -98,6 +98,14 @@ export class Scene {
   // Performance optimization: auto-render control
   protected _autoRender: boolean = true;
 
+  // Deferred auto-render: `add()` schedules a render via microtask instead of
+  // rendering eagerly, so a subsequent `play()` can suppress it and avoid a
+  // visible flash of the pre-animation state. See issue #317.
+  private _pendingRender: boolean = false;
+  // When true, scheduled renders are suppressed and no microtask is queued.
+  // Set by `play()`/`wait()` during their setup phase.
+  private _suppressAutoRender: boolean = false;
+
   // Z-ordering: assign increasing renderOrder to each added mobject
   private _renderOrderCounter: number = 0;
 
@@ -342,9 +350,8 @@ export class Scene {
         child.renderOrder = fgRo;
       });
     }
-    if (this._autoRender) {
-      this._render();
-    }
+    // Deferred render so a chained `play()` can suppress it (issue #317).
+    this._scheduleRender();
     return this;
   }
 
@@ -387,9 +394,9 @@ export class Scene {
         mobject.createdAtBeginning = true;
       }
     }
-    if (this._autoRender) {
-      this._render();
-    }
+    // Defer the auto-render via microtask so a chained `play()` can suppress
+    // it and avoid a one-frame flash of the pre-animation state (issue #317).
+    this._scheduleRender();
     return this;
   }
 
@@ -500,67 +507,80 @@ export class Scene {
     // AnimationGroup.begin() handles calling begin() on its own children.
     const allAnimations = this._collectAllAnimations(animations);
 
-    // Wait for any async renders (e.g. SVG-based MathTex) to complete before
-    // starting animations. Without this, Create/DrawBorderThenFill would
-    // animate an empty mobject because SVG paths haven't loaded yet.
-    const renderPromises: Promise<void>[] = [];
-    const collectRenders = (mobject: Mobject) => {
-      const asyncMob = mobject as Mobject & { waitForRender?: () => Promise<void> };
-      if (typeof asyncMob.waitForRender === 'function') {
-        renderPromises.push(asyncMob.waitForRender().catch(() => {}));
+    // Suppress any auto-render that `add()` (called by the user before play,
+    // or by us below) might have scheduled. Otherwise the mobject would be
+    // rendered at full opacity for one microtask before begin() hides it
+    // (issue #317). Suppression is released once the render loop is running.
+    this._cancelPendingRender();
+    this._suppressAutoRender = true;
+    try {
+      // Wait for any async renders (e.g. SVG-based MathTex) to complete before
+      // starting animations. Without this, Create/DrawBorderThenFill would
+      // animate an empty mobject because SVG paths haven't loaded yet.
+      const renderPromises: Promise<void>[] = [];
+      const collectRenders = (mobject: Mobject) => {
+        const asyncMob = mobject as Mobject & { waitForRender?: () => Promise<void> };
+        if (typeof asyncMob.waitForRender === 'function') {
+          renderPromises.push(asyncMob.waitForRender().catch(() => {}));
+        }
+        for (const child of mobject.children) {
+          collectRenders(child);
+        }
+      };
+      for (const anim of allAnimations) {
+        collectRenders(anim.mobject);
       }
-      for (const child of mobject.children) {
-        collectRenders(child);
+      if (renderPromises.length > 0) {
+        await Promise.all(renderPromises);
       }
-    };
-    for (const anim of allAnimations) {
-      collectRenders(anim.mobject);
-    }
-    if (renderPromises.length > 0) {
-      await Promise.all(renderPromises);
-    }
 
-    // Force geometry sync so begin() can detect Line2 children for dash-reveal
-    // animations (e.g. MathTex Create). This must happen before begin() but
-    // we must NOT add to the scene yet — otherwise the mobject renders at full
-    // opacity for one frame before begin() hides it.
-    for (const animation of allAnimations) {
-      if (animation.mobject._dirty) {
-        animation.mobject._syncToThree();
-        animation.mobject._dirty = false;
+      // Force geometry sync so begin() can detect Line2 children for dash-reveal
+      // animations (e.g. MathTex Create). This must happen before begin() but
+      // we must NOT add to the scene yet — otherwise the mobject renders at full
+      // opacity for one frame before begin() hides it.
+      for (const animation of allAnimations) {
+        if (animation.mobject._dirty) {
+          animation.mobject._syncToThree();
+          animation.mobject._dirty = false;
+        }
       }
-    }
 
-    // Initialize only top-level animations to avoid double begin() on AnimationGroup children
-    for (const animation of animations) {
-      animation.begin();
-    }
-
-    // Add animated mobjects to scene AFTER begin() so they appear in their
-    // initial animation state (e.g. hidden for Create, zero opacity for FadeIn).
-    for (const animation of allAnimations) {
-      if (!this._mobjects.has(animation.mobject)) {
-        this.add(animation.mobject);
+      // Initialize only top-level animations to avoid double begin() on AnimationGroup children
+      for (const animation of animations) {
+        animation.begin();
       }
+
+      // Add animated mobjects to scene AFTER begin() so they appear in their
+      // initial animation state (e.g. hidden for Create, zero opacity for FadeIn).
+      for (const animation of allAnimations) {
+        if (!this._mobjects.has(animation.mobject)) {
+          this.add(animation.mobject);
+        }
+      }
+
+      // Play all animations in parallel (Manim behavior)
+      this._timeline = new Timeline();
+      this._timeline.addParallel(animations);
+
+      // Start playback
+      this._timeline.play();
+      this._isPlaying = true;
+      this._currentTime = 0;
+
+      // Start audio playback if audio has been loaded
+      if (this._audioManager) {
+        this._audioManager.seek(0);
+        this._audioManager.play();
+      }
+
+      // Start render loop if not already running
+      this._startRenderLoop();
+    } finally {
+      // Render loop owns rendering from here on; release suppression so any
+      // post-play `add()` (or async render resolution) renders normally.
+      this._suppressAutoRender = false;
+      this._cancelPendingRender();
     }
-
-    // Play all animations in parallel (Manim behavior)
-    this._timeline = new Timeline();
-    this._timeline.addParallel(animations);
-
-    // Start playback
-    this._timeline.play();
-    this._isPlaying = true;
-    this._currentTime = 0;
-
-    // Start audio playback if audio has been loaded
-    if (this._audioManager) {
-      this._audioManager.seek(0);
-      this._audioManager.play();
-    }
-
-    // Start render loop if not already running
-    this._startRenderLoop();
 
     // Wait for all animations to finish (or dispose cancels)
     if (this._disposed) return;
@@ -593,6 +613,10 @@ export class Scene {
    */
   async wait(duration: number = 1): Promise<void> {
     if (this._disposed) return;
+    // wait() will render the initial frame itself (either once or via its
+    // own rAF loop); drop any pending add()-scheduled render so we don't
+    // render twice on entry.
+    this._cancelPendingRender();
     return new Promise((resolve) => {
       const startTime = performance.now();
       let lastFrameTime = startTime;
@@ -769,9 +793,9 @@ export class Scene {
         asyncMob
           .waitForRender()
           .then(() => {
-            if (this._autoRender) {
-              this._render();
-            }
+            // Route through the scheduler so a play()/wait() in flight can
+            // suppress this render and avoid a pre-animation flash (#317).
+            this._scheduleRender();
           })
           .catch((err) => {
             console.warn('Scene: async mobject render failed for', asyncMob, err);
@@ -793,6 +817,29 @@ export class Scene {
       if (mob.hasUpdaters()) return true;
     }
     return false;
+  }
+
+  /**
+   * Queue a render to run on the next microtask. Multiple calls within the
+   * same tick coalesce. If `_cancelPendingRender()` is called or
+   * `_suppressAutoRender` is set before the microtask fires, the render is
+   * skipped. Used by `add()` so a chained `play()` can suppress the
+   * pre-animation flash described in issue #317.
+   */
+  protected _scheduleRender(): void {
+    if (!this._autoRender || this._disposed || this._suppressAutoRender) return;
+    if (this._pendingRender) return;
+    this._pendingRender = true;
+    queueMicrotask(() => {
+      if (!this._pendingRender) return;
+      this._pendingRender = false;
+      if (this._suppressAutoRender || this._disposed) return;
+      this._render();
+    });
+  }
+
+  protected _cancelPendingRender(): void {
+    this._pendingRender = false;
   }
 
   /**

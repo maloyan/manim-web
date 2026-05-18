@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Slides Mode (loop / autoNext / multi-play)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      color: #ccc;
+    }
+    h1 { margin-bottom: 16px; font-size: 20px; font-weight: 400; color: #fff; }
+    #container { border-radius: 8px; overflow: hidden; }
+    .info { margin-top: 20px; font-size: 13px; opacity: 0.6; text-align: center; line-height: 1.7; max-width: 720px; }
+    kbd { background: #333; border: 1px solid #555; border-radius: 3px; padding: 1px 6px; font-size: 12px; font-family: monospace; }
+    .highlight { color: #6cf; opacity: 1; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <h1>Slides Mode: <code>nextSlide({ loop, autoNext })</code></h1>
+  <div id="container"></div>
+  <div class="info">
+    <p class="highlight">Mirrors manim-slides' <code>next_slide(loop, auto_next)</code>.</p>
+    <br>
+    <p>Slide 1: a normal play. Press <kbd>&rarr;</kbd> to advance.</p>
+    <p>Slide 2 (<code>loop: true</code>): rotation replays until you press <kbd>&rarr;</kbd>.</p>
+    <p>Slide 3 (<code>autoNext: true</code>, multi-play): two plays in one slide, advances automatically when done.</p>
+    <p>Slide 4: final fade out.</p>
+    <br>
+    <kbd>&rarr;</kbd> Next slide &nbsp;
+    <kbd>&larr;</kbd> Previous slide &nbsp;
+    <kbd>Space</kbd> Play/Pause &nbsp;
+    <kbd>F</kbd> Fullscreen
+  </div>
+
+  <script type="module">
+    import {
+      Player,
+      Circle,
+      Square,
+      Create,
+      Rotate,
+      Transform,
+      FadeIn,
+      Indicate,
+      FadeOut,
+      BLACK,
+      BLUE,
+      RED,
+      YELLOW,
+    } from '../src/index.ts';
+    import { linear } from '../src/rate-functions/index.ts';
+
+    const container = document.getElementById('container');
+    const player = new Player(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK,
+      slidesMode: true,
+    });
+    window.player = player;
+
+    const square = new Square({ sideLength: 2, color: BLUE });
+    const circle = new Circle({ radius: 1.5, color: RED });
+    const label = new Square({ sideLength: 0.6, color: YELLOW });
+
+    player.sequence(async (scene) => {
+      // Slide 1
+      await scene.play(new Create(square));
+
+      // Slide 2 (loop)
+      await scene.nextSlide({ loop: true });
+      await scene.play(
+        new Rotate(square, { angle: Math.PI * 2, duration: 2, rateFunc: linear }),
+      );
+
+      // Slide 3 (multi-play + autoNext)
+      await scene.nextSlide({ autoNext: true });
+      await scene.play(new FadeIn(label));
+      await scene.play(new Indicate(label));
+
+      // Slide 4 (normal)
+      await scene.nextSlide();
+      await scene.play(new Transform(square, circle));
+      await scene.play(new FadeOut(circle));
+    }).catch((err) => {
+      console.error('sequence() failed:', err);
+    });
+  </script>
+</body>
+</html>
