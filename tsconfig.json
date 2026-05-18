@@ -19,11 +19,6 @@
     "sourceMap": true,
     "outDir": "dist",
     "baseUrl": ".",
-    "plugins": [
-      {
-        "transform": "typia/lib/transform"
-      }
-    ],
     "paths": {
       "@/*": ["src/*"]
     },
