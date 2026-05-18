@@ -6,6 +6,7 @@
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
 import { RateFunction, smooth } from '../rate-functions';
+import typia from 'typia';
 
 export type { RateFunction };
 
@@ -60,6 +61,8 @@ export abstract class Animation {
   private _preAnimationState: Mobject | null = null;
 
   constructor(mobject: Mobject, options: AnimationOptions = {}) {
+    // Validate options via typia to generate runtime assertions.
+    typia.assert<AnimationOptions>(options);
     this.mobject = mobject;
     this.duration = options.duration ?? 1;
     this.rateFunc = options.rateFunc ?? smooth;

@@ -5,7 +5,7 @@ let mod: typeof import('./index');
 describe('Issue #131: Missing graphing exports from main index', () => {
   beforeAll(async () => {
     mod = await import('./index');
-  }, 20000);
+  }, 60000);
 
   it('should export VectorField from main index', () => {
     expect(mod.VectorField).toBeDefined();

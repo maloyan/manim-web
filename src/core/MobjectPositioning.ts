@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { MobjectLike, Vector3Tuple } from './MobjectTypes';
+import type { MobjectLike, Vector3Tuple, AxisOrOptions } from './MobjectTypes';
 import { isVMobjectLike } from './MobjectTypes';
 
 // Performance optimization: Object pooling for temporary vectors
@@ -16,7 +16,7 @@ const tempQuaternion2: THREE.Quaternion = new THREE.Quaternion();
 export function rotateMobject(
   mob: MobjectLike,
   angle: number,
-  axisOrOptions?: Vector3Tuple | { axis?: Vector3Tuple; aboutPoint?: Vector3Tuple },
+  axisOrOptions?: Vector3Tuple | AxisOrOptions,
 ): void {
   let axis: Vector3Tuple = [0, 0, 1];
   let aboutPoint: Vector3Tuple | undefined;

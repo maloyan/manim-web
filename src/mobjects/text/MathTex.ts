@@ -17,6 +17,7 @@ import { VMobject } from '../../core/VMobject';
 import type { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { WHITE } from '../../constants/colors';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
+import typia from 'typia';
 import { renderLatexToSVG } from './MathJaxRenderer';
 
 /** MathJax SVG uses ~1000 font units per em. */
@@ -66,8 +67,11 @@ export class MathTex extends VGroup {
   constructor(options: MathTexOptions) {
     super();
 
+    // Validate options via typia and read required latex field
+    typia.assert<MathTexOptions>(options);
+    const latex = options.latex;
+
     const {
-      latex,
       color = WHITE,
       fontSize = DEFAULT_FONT_SIZE_PT,
       displayMode = true,
@@ -99,7 +103,7 @@ export class MathTex extends VGroup {
       this._renderPromise = this._renderMultiPart(latex);
     } else {
       this._isMultiPart = false;
-      this._latex = latex;
+      this._latex = latex as string;
       this._startRender();
     }
   }
