@@ -10,7 +10,7 @@
  * `linspace`) which the Python → TypeScript converter emits.
  */
 
-import type { Vector3Tuple } from '../core/Mobject';
+import type { Vector3Tuple } from '../core/MobjectTypes';
 
 /**
  * Scale a direction vector by a scalar.
