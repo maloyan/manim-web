@@ -508,6 +508,26 @@ export interface PolarPlaneOptions {
   labelColor?: string;
   /** Azimuth offset angle in radians (0 = right). Default: 0 */
   azimuthOffset?: number;
+  /**
+   * Custom angle labels. Length must equal {@link angularDivisions}.
+   * - `string` entries render via {@link Text} with `labelFontSize` / `labelColor`.
+   * - `Mobject` entries are used as-is (caller owns styling); they are positioned
+   *   by the plane and reparented into the angle-labels group.
+   *
+   * Entries are placed in division order starting at `azimuthOffset` and rotating
+   * counter-clockwise — index 0 is the first division, not a fixed compass point.
+   */
+  angleLabels?: (string | Mobject)[];
+  /**
+   * Custom radius labels. Length must equal {@link radialDivisions}.
+   * - `string` entries render via {@link Text} at `labelFontSize * 0.8`
+   *   (matches default radius-label sizing).
+   * - `Mobject` entries are used as-is; they are positioned along the
+   *   positive x-axis and reparented into the radius-labels group.
+   *
+   * Index `i` corresponds to radius `((i + 1) / radialDivisions) * radius`.
+   */
+  radiusLabels?: (string | Mobject)[];
 }
 
 /**
@@ -541,6 +561,8 @@ export class PolarPlane extends Group {
   private _labelFontSize: number;
   private _labelColor: string;
   private _azimuthOffset: number;
+  private _angleLabelOverrides?: (string | Mobject)[];
+  private _radiusLabelOverrides?: (string | Mobject)[];
 
   private _concentricCircles: Group;
   private _radialLines: Group;
@@ -564,7 +586,25 @@ export class PolarPlane extends Group {
       labelFontSize = 20,
       labelColor = WHITE,
       azimuthOffset = 0,
+      angleLabels,
+      radiusLabels,
     } = options;
+
+    if (angleLabels !== undefined && angleLabels.length !== angularDivisions) {
+      throw new Error(
+        `PolarPlane: angleLabels length (${angleLabels.length}) must equal angularDivisions (${angularDivisions})`,
+      );
+    }
+    if (radiusLabels !== undefined && radiusLabels.length !== radialDivisions) {
+      throw new Error(
+        `PolarPlane: radiusLabels length (${radiusLabels.length}) must equal radialDivisions (${radialDivisions})`,
+      );
+    }
+    // Reject duplicate Mobject instances — `Group.add()` reparents, so the
+    // same Mobject appearing in multiple slots would silently leave only the
+    // final slot populated.
+    PolarPlane._assertUniqueMobjects(angleLabels, 'angleLabels');
+    PolarPlane._assertUniqueMobjects(radiusLabels, 'radiusLabels');
 
     this._radius = radius;
     this._size = size;
@@ -578,6 +618,8 @@ export class PolarPlane extends Group {
     this._labelFontSize = labelFontSize;
     this._labelColor = labelColor;
     this._azimuthOffset = azimuthOffset;
+    this._angleLabelOverrides = angleLabels ? [...angleLabels] : undefined;
+    this._radiusLabelOverrides = radiusLabels ? [...radiusLabels] : undefined;
 
     this._concentricCircles = new Group();
     this._radialLines = new Group();
@@ -653,17 +695,21 @@ export class PolarPlane extends Group {
     if (this._includeAngleLabels) {
       for (let i = 0; i < this._angularDivisions; i++) {
         const angle = this._azimuthOffset + (i / this._angularDivisions) * 2 * Math.PI;
-        const normalizedAngle = ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-        const labelText = this._formatAngleLabel(normalizedAngle);
-
         const labelX = (outerRadius + labelOffset) * Math.cos(angle);
         const labelY = (outerRadius + labelOffset) * Math.sin(angle);
 
-        const label = new Text({
-          text: labelText,
-          fontSize: this._labelFontSize,
-          color: this._labelColor,
-        });
+        const override = this._angleLabelOverrides?.[i];
+        const label =
+          override !== undefined
+            ? this._resolveLabelSpec(override, this._labelFontSize)
+            : (() => {
+                const normalized = ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+                return new Text({
+                  text: this._formatAngleLabel(normalized),
+                  fontSize: this._labelFontSize,
+                  color: this._labelColor,
+                });
+              })();
         label.moveTo([labelX, labelY, 0]);
 
         this._angleLabels.add(label);
@@ -675,19 +721,67 @@ export class PolarPlane extends Group {
       for (let i = 1; i <= this._radialDivisions; i++) {
         const r = (i / this._radialDivisions) * this._radius;
         const visualR = r * scaleFactor;
-        const labelText = Number.isInteger(r) ? `${r}` : r.toFixed(1);
 
-        const label = new Text({
-          text: labelText,
-          fontSize: this._labelFontSize * 0.8,
-          color: this._labelColor,
-        });
+        const override = this._radiusLabelOverrides?.[i - 1];
+        const label =
+          override !== undefined
+            ? this._resolveLabelSpec(override, this._labelFontSize * 0.8)
+            : new Text({
+                text: Number.isInteger(r) ? `${r}` : r.toFixed(1),
+                fontSize: this._labelFontSize * 0.8,
+                color: this._labelColor,
+              });
         // Position radius labels along the positive x-axis, slightly below
         label.moveTo([visualR, -0.2, 0]);
 
         this._radiusLabels.add(label);
       }
     }
+  }
+
+  /**
+   * Resolve a label override spec into a Mobject.
+   *
+   * Strings render via {@link Text} at the given fontSize and the plane's
+   * `labelColor`. Mobjects are used as-is — callers own their styling.
+   * The returned Mobject will be {@link moveTo}'d and reparented into the
+   * appropriate label group.
+   */
+  /**
+   * Throw if the same Mobject instance appears in more than one slot.
+   *
+   * `Group.add()` reparents the Mobject into the new container, so the same
+   * instance reused across slots would silently end up at only one position
+   * (the last slot). Detect this at construction so callers fail loudly
+   * instead of debugging a missing label.
+   */
+  private static _assertUniqueMobjects(
+    labels: (string | Mobject)[] | undefined,
+    optionName: string,
+  ): void {
+    if (!labels) return;
+    const seen = new Set<Mobject>();
+    for (let i = 0; i < labels.length; i++) {
+      const spec = labels[i];
+      if (typeof spec === 'string') continue;
+      if (seen.has(spec)) {
+        throw new Error(
+          `PolarPlane: ${optionName} contains the same Mobject instance more than once (slot ${i}). Each Mobject slot needs its own instance.`,
+        );
+      }
+      seen.add(spec);
+    }
+  }
+
+  private _resolveLabelSpec(spec: string | Mobject, fontSize: number): Mobject {
+    if (typeof spec === 'string') {
+      return new Text({
+        text: spec,
+        fontSize,
+        color: this._labelColor,
+      });
+    }
+    return spec;
   }
 
   /**
@@ -911,6 +1005,8 @@ export class PolarPlane extends Group {
       labelFontSize: this._labelFontSize,
       labelColor: this._labelColor,
       azimuthOffset: this._azimuthOffset,
+      angleLabels: this._angleLabelOverrides?.map((s) => (typeof s === 'string' ? s : s.copy())),
+      radiusLabels: this._radiusLabelOverrides?.map((s) => (typeof s === 'string' ? s : s.copy())),
     });
   }
 }

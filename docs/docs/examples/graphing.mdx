@@ -11,6 +11,7 @@ import HeatDiagramPlotExample from '@site/src/components/examples/HeatDiagramPlo
 import FollowingGraphCameraExample from '@site/src/components/examples/FollowingGraphCameraExample';
 import MovingZoomedSceneAroundExample from '@site/src/components/examples/MovingZoomedSceneAroundExample';
 import StreamLinesContinuousMotionExample from '@site/src/components/examples/StreamLinesContinuousMotionExample';
+import PolarPlaneCustomLabelsExample from '@site/src/components/examples/PolarPlaneCustomLabelsExample';
 
 Coordinate systems, function plotting, and data visualization examples.
 
@@ -559,9 +560,9 @@ scene.add(streamLines);
 
 // Start continuous flowing animation
 streamLines.startAnimation({
-  warmUp: true,     // randomize initial phases
-  flowSpeed: 1.5,   // speed multiplier
-  timeWidth: 0.3,   // visible window fraction
+  warmUp: true, // randomize initial phases
+  flowSpeed: 1.5, // speed multiplier
+  timeWidth: 0.3, // visible window fraction
 });
 
 await scene.wait(10);
@@ -573,3 +574,62 @@ streamLines.endAnimation();
 </details>
 
 **Learn More:** [**StreamLines**](/api/classes/StreamLines) · [**NumberPlane**](/api/classes/NumberPlane)
+
+---
+
+## Polar Plane with Custom Labels
+
+Renders a `PolarPlane` with custom τ-based angle labels and `r₁/r₂/r₃` radius labels.
+The `angleLabels` and `radiusLabels` options accept arrays of `string` (rendered as `Text`)
+or pre-built `Mobject` instances (used as-is — useful for `MathTex` / LaTeX rendering).
+Array length must match `angularDivisions` / `radialDivisions`.
+
+<PolarPlaneCustomLabelsExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, PolarPlane, MathTex, BLACK } from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 600,
+  height: 600,
+  backgroundColor: BLACK,
+});
+
+const angleLatex = [
+  '0',
+  '\\tau/12',
+  '\\tau/6',
+  '\\tau/4',
+  '\\tau/3',
+  '5\\tau/12',
+  '\\tau/2',
+  '7\\tau/12',
+  '2\\tau/3',
+  '3\\tau/4',
+  '5\\tau/6',
+  '11\\tau/12',
+];
+const angleLabels = angleLatex.map((latex) => new MathTex({ latex, fontSize: 28 }));
+const radiusLabels = ['r_1', 'r_2', 'r_3'].map((latex) => new MathTex({ latex, fontSize: 24 }));
+
+// Wait for LaTeX rendering so PolarPlane can place labels using real glyph bounds.
+await Promise.all([...angleLabels, ...radiusLabels].map((l) => l.waitForRender()));
+
+scene.add(
+  new PolarPlane({
+    radius: 3,
+    size: 6,
+    angularDivisions: 12,
+    radialDivisions: 3,
+    angleLabels,
+    radiusLabels,
+  }),
+);
+```
+
+</details>
+
+**Learn More:** [**PolarPlane**](/api/classes/PolarPlane) · [**MathTex**](/api/classes/MathTex)
