@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.4.0] (Unreleased)
+
+### ⚠️ Breaking
+
+- `PMobject.getPoints()` now returns world-space points.
+  - Use `getLocalPoints()` for local/object-space points.
+- `Mobject.scale()` / `stretch()` now throw with `aboutPoint`/`aboutEdge` in deferred-transform mode.
+- Group/VGroup normalization unified under `normalizeTransform()`.
+  - Removed `src/core/normalizeContainerTransform.ts`.
+
+### Changed
+
+- VGroup normalization/child-forwarding aligned with container normalize path.
+- Ordered Euler rotation bake in normalization is now covered by regression tests.
+- Axis mapping shared via `src/utils/axis.ts` (runtime + tests).
+- `PointMorphStrategy` normalizes a copy target and removes hot-path string formatting.
+
+### Fixed
+
+- Centralized VMobject geometry-dirty propagation.
+- Added/updated coverage for async pre-render text transform flows.
+- Locked transform/container semantics with expanded tests.
+
 ### [0.3.16](https://github.com/maloyan/manim-js/compare/v0.3.13...v0.3.16) (2026-03-16)
 
 
