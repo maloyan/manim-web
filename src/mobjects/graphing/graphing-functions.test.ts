@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { FunctionGraph } from './FunctionGraph';
 import { ParametricFunction } from './ParametricFunction';
 import { VectorFieldVector } from './Vector';
@@ -223,14 +223,22 @@ describe('ParametricFunction', () => {
     });
 
     it('should return null when function throws', () => {
-      const pf = new ParametricFunction({
-        func: () => {
-          throw new Error('oops');
-        },
-        tRange: [0, 1],
-      });
-      const pt = pf.getPointFromT(0.5);
-      expect(pt).toBeNull();
+      // Silence the expected `ParametricFunction: user function threw` /
+      // `function threw N/M times` warns — the test exercises the recovery.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const pf = new ParametricFunction({
+          func: () => {
+            throw new Error('oops');
+          },
+          tRange: [0, 1],
+        });
+        const pt = pf.getPointFromT(0.5);
+        expect(pt).toBeNull();
+        expect(warnSpy).toHaveBeenCalled();
+      } finally {
+        warnSpy.mockRestore();
+      }
     });
 
     it('getPointFromT at t=PI/2 for unit circle', () => {
@@ -316,15 +324,22 @@ describe('ParametricFunction', () => {
     });
 
     it('should handle function that throws for some values', () => {
-      const pf = new ParametricFunction({
-        func: (t) => {
-          if (t > 0.3 && t < 0.7) throw new Error('domain error');
-          return [t, t];
-        },
-        tRange: [0, 1],
-        numSamples: 20,
-      });
-      expect(pf.getPoints().length).toBeGreaterThan(0);
+      // Silence the expected per-sample `user function threw` warns.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const pf = new ParametricFunction({
+          func: (t) => {
+            if (t > 0.3 && t < 0.7) throw new Error('domain error');
+            return [t, t];
+          },
+          tRange: [0, 1],
+          numSamples: 20,
+        });
+        expect(pf.getPoints().length).toBeGreaterThan(0);
+        expect(warnSpy).toHaveBeenCalled();
+      } finally {
+        warnSpy.mockRestore();
+      }
     });
 
     it('should produce empty points when all samples are invalid', () => {

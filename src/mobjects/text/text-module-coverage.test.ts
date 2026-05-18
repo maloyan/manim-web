@@ -8,7 +8,7 @@
  *   - MathTex.ts (SVG-based)
  *   - katex-styles.ts (improve from ~79% to 100%)
  */
-import { describe, it, expect, beforeEach, vi, beforeAll } from 'vitest';
+import { describe, it, expect, beforeEach, vi, beforeAll, afterAll } from 'vitest';
 import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
 
 // ---------------------------------------------------------------------------
@@ -1371,18 +1371,35 @@ vi.mock('opentype.js', () => {
   const nullGlyph = createMockGlyphObj('.notdef', 0, 250);
   nullGlyph.getPath = () => ({ commands: [] });
 
+  const mockFont = {
+    unitsPerEm: 1000,
+    charToGlyph: (char: string) => {
+      if (char === '\uFFFD') return nullGlyph; // unknown char
+      return createMockGlyphObj(char, char.charCodeAt(0), 500);
+    },
+    getKerningValue: vi.fn(() => -10), // some kerning
+  };
+
   return {
     default: {
-      load: vi.fn(async (_url: string) => ({
-        unitsPerEm: 1000,
-        charToGlyph: (char: string) => {
-          if (char === '\uFFFD') return nullGlyph; // unknown char
-          return createMockGlyphObj(char, char.charCodeAt(0), 500);
-        },
-        getKerningValue: vi.fn(() => -10), // some kerning
-      })),
+      // legacy API (deprecated, still mocked for completeness)
+      load: vi.fn(async (_url: string) => mockFont),
+      // current API \u2014 TextGlyphGroup now does fetch + parse(buffer)
+      parse: vi.fn((_buffer: ArrayBuffer) => mockFont),
     },
   };
+});
+
+// Stub `fetch` so TextGlyphGroup._loadAndBuild gets an ArrayBuffer to hand to
+// opentype.parse. Returns an empty buffer because the mock's `parse` ignores it.
+const originalFetch = globalThis.fetch;
+beforeAll(() => {
+  globalThis.fetch = vi.fn(
+    async () => new Response(new ArrayBuffer(0), { status: 200 }),
+  ) as unknown as typeof fetch;
+});
+afterAll(() => {
+  globalThis.fetch = originalFetch;
 });
 
 describe('TextGlyphGroup', () => {

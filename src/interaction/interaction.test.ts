@@ -99,7 +99,10 @@ function createMockScene(
     camera: {
       frameWidth,
       frameHeight,
-      getCamera: vi.fn(() => ({})),
+      // Return a real PerspectiveCamera so THREE.Raycaster's
+      // `Unsupported camera type` warn does not fire when SelectionManager
+      // raycasts against an empty area.
+      getCamera: vi.fn(() => new THREE.PerspectiveCamera(50, 1, 0.1, 1000)),
     },
     mobjects: mobjectsSet,
     threeScene: {
