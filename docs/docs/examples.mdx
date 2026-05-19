@@ -26,13 +26,16 @@ import MovingFrameBoxExample from '@site/src/components/examples/MovingFrameBoxE
 import MovingGroupToDestinationExample from '@site/src/components/examples/MovingGroupToDestinationExample';
 import MovingZoomedSceneAroundExample from '@site/src/components/examples/MovingZoomedSceneAroundExample';
 import OpeningManimExample from '@site/src/components/examples/OpeningManimExample';
+import PictureInPictureCameraExample from '@site/src/components/examples/PictureInPictureCameraExample';
 import PointMovingOnShapesExample from '@site/src/components/examples/PointMovingOnShapesExample';
 import PointWithTraceExample from '@site/src/components/examples/PointWithTraceExample';
 import PolygonOnAxesExample from '@site/src/components/examples/PolygonOnAxesExample';
+import QuadViewCameraExample from '@site/src/components/examples/QuadViewCameraExample';
 import RateFunctionsComparisonExample from '@site/src/components/examples/RateFunctionsComparisonExample';
 import RotationUpdaterExample from '@site/src/components/examples/RotationUpdaterExample';
 import SinCosPlotExample from '@site/src/components/examples/SinCosPlotExample';
 import SineCurveUnitCircleExample from '@site/src/components/examples/SineCurveUnitCircleExample';
+import SplitScreenCameraExample from '@site/src/components/examples/SplitScreenCameraExample';
 import ThreeDAngleExample from '@site/src/components/examples/ThreeDAngleExample';
 import ThreeDCameraIllusionRotationExample from '@site/src/components/examples/ThreeDCameraIllusionRotationExample';
 import ThreeDCameraRotationExample from '@site/src/components/examples/ThreeDCameraRotationExample';
@@ -199,7 +202,7 @@ const b2 = new Brace(line, {
     .rotate(Math.PI / 2)
     .getUnitVector(),
 });
-const b2text = b2.getTex('x-x_1');
+const b2text = b2.getTex('x-x_1', { fontSize: 48 });
 scene.add(line, dot, dot2, b1, b2, b1text, b2text);
 ```
 
@@ -219,7 +222,7 @@ Displays a vector arrow on a coordinate plane with labeled origin and tip points
 <summary>Source Code</summary>
 
 ```typescript
-import { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text } from 'manim-web';
+import { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text, YELLOW } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -227,7 +230,7 @@ const scene = new Scene(document.getElementById('container'), {
   backgroundColor: '#000000',
 });
 
-const dot = new Dot({ point: ORIGIN });
+const dot = new Dot({ point: ORIGIN, radius: 0.12, color: YELLOW });
 const arrow = new Arrow({ start: ORIGIN, end: [2, 2, 0] });
 const numberplane = new NumberPlane();
 const originText = new Text({ text: '(0, 0)' }).nextTo(dot, DOWN);
@@ -299,7 +302,7 @@ const bool_ops_text = new Text({
 }).nextTo(ellipse1, UP);
 const ellipse_group = new Group(bool_ops_text, ellipse1, ellipse2).moveTo(scaleVec(3, LEFT));
 // Create underline AFTER group is positioned so it uses the text's final position
-const underline = new Underline(bool_ops_text, { color: WHITE, strokeWidth: 2, buff: -0.25 });
+const underline = new Underline(bool_ops_text, { color: WHITE, strokeWidth: 2, buff: 0.05 });
 ellipse_group.add(underline);
 await scene.play(new FadeIn(ellipse_group));
 
@@ -380,12 +383,17 @@ import {
   DrawBorderThenFill,
   FadeIn,
   FadeOut,
+  Transform,
+  Scale,
+  Shift,
+  Rotate,
   BLACK,
   WHITE,
   RED,
   BLUE,
   GREEN,
-  YELLOW,
+  TEAL,
+  GOLD,
 } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
@@ -398,27 +406,52 @@ const scene = new Scene(document.getElementById('container'), {
 const equation1 = new MathTex({
   latex: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
   color: WHITE,
-  fontSize: 2,
 });
 const equation2 = new MathTex({
   latex: 'e^{i\\pi} + 1 = 0',
-  color: YELLOW,
-  fontSize: 2.5,
+  color: GOLD,
 });
 const multiPart = new MathTex({
   latex: ['E', '=', 'mc^2'],
   color: WHITE,
-  fontSize: 3,
 });
 const equation3 = new MathTex({
   latex: '\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}',
   color: GREEN,
-  fontSize: 2,
 });
 const matrix = new MathTex({
   latex: 'A = \\begin{pmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{pmatrix}',
   color: WHITE,
-  fontSize: 2,
+});
+
+// Equations for transform demos
+const pythagoras = new MathTex({
+  latex: 'a^2 + b^2 = c^2',
+  color: WHITE,
+});
+const pythagorasExpanded = new MathTex({
+  latex: 'c = \\sqrt{a^2 + b^2}',
+  color: TEAL,
+});
+const scalingEq = new MathTex({
+  latex: '\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\epsilon_0}',
+  color: GREEN,
+});
+const shiftingEq = new MathTex({
+  latex: '\\lim_{x \\to \\infty} f(x)',
+  color: RED,
+});
+const rotatingEq = new MathTex({
+  latex: '\\frac{\\partial f}{\\partial x}',
+  color: BLUE,
+});
+const textBefore = new MathTex({
+  latex: 'x = 1',
+  color: WHITE,
+});
+const textAfter = new MathTex({
+  latex: 'x = 42',
+  color: GOLD,
 });
 
 // Render all SVGs in parallel
@@ -428,6 +461,13 @@ await Promise.all([
   multiPart.waitForRender(),
   equation3.waitForRender(),
   matrix.waitForRender(),
+  pythagoras.waitForRender(),
+  pythagorasExpanded.waitForRender(),
+  scalingEq.waitForRender(),
+  shiftingEq.waitForRender(),
+  rotatingEq.waitForRender(),
+  textBefore.waitForRender(),
+  textAfter.waitForRender(),
 ]);
 
 // 1. Create animation - stroke-draw reveal (the main feature)
@@ -457,6 +497,50 @@ await scene.play(new FadeOut(equation3));
 // 5. 2x2 matrix with subscript indices
 await scene.play(new Create(matrix, { duration: 2 }));
 await scene.wait(2);
+await scene.play(new FadeOut(matrix));
+
+// 6. Transform one equation into another
+await scene.play(new FadeIn(pythagoras));
+await scene.wait(1);
+await scene.play(new Transform(pythagoras, pythagorasExpanded, { duration: 2 }));
+await scene.wait(1);
+// After Transform, source (pythagoras) visually becomes target, target is removed
+await scene.play(new FadeOut(pythagoras));
+
+// 7. Scale animation
+await scene.play(new FadeIn(scalingEq));
+await scene.wait(0.5);
+await scene.play(new Scale(scalingEq, { scaleFactor: 2, duration: 1.5 }));
+await scene.wait(0.5);
+await scene.play(new Scale(scalingEq, { scaleFactor: 0.5, duration: 1 }));
+await scene.wait(0.5);
+await scene.play(new FadeOut(scalingEq));
+
+// 8. Shift animation
+await scene.play(new FadeIn(shiftingEq));
+await scene.wait(0.5);
+await scene.play(new Shift(shiftingEq, { direction: [3, 0, 0], duration: 1 }));
+await scene.wait(0.5);
+await scene.play(new Shift(shiftingEq, { direction: [-6, 0, 0], duration: 1 }));
+await scene.wait(0.5);
+await scene.play(new Shift(shiftingEq, { direction: [3, 2, 0], duration: 1 }));
+await scene.wait(0.5);
+await scene.play(new FadeOut(shiftingEq));
+
+// 9. Rotate animation
+await scene.play(new FadeIn(rotatingEq));
+await scene.wait(0.5);
+await scene.play(new Rotate(rotatingEq, { angle: Math.PI * 2, duration: 2 }));
+await scene.wait(0.5);
+await scene.play(new FadeOut(rotatingEq));
+
+// 10. ReplacementTransform - change text
+await scene.play(new FadeIn(textBefore));
+await scene.wait(1);
+await scene.play(new Transform(textBefore, textAfter, { duration: 1.5 }));
+await scene.wait(1);
+// After Transform, textBefore is morphed to look like textAfter
+await scene.play(new FadeOut(textBefore));
 ```
 
 </details>
@@ -1038,7 +1122,7 @@ const arrow3 = new Arrow({ start: [-1, 1, 0], end: [1, -1, 0], color: RED_C });
 
 scene.add(arrow1, arrow2, arrow3);
 
-const label = new Text({ text: 'Before shear', fontSize: 24, color: '#ffffff' });
+const label = new Text({ text: 'Before shear', fontSize: 48, color: '#ffffff' });
 label.moveTo([0, 3.2, 0]);
 scene.add(label);
 
@@ -1063,7 +1147,7 @@ await scene.play(
 scene.remove(label);
 const label2 = new Text({
   text: 'After shear — tips reconstructed',
-  fontSize: 24,
+  fontSize: 48,
   color: '#ffffff',
 });
 label2.moveTo([0, 3.2, 0]);
@@ -1140,6 +1224,7 @@ import {
   Shift,
   AnimationGroup,
   RIGHT,
+  LEFT,
   BLACK,
   BLUE,
   RED,
@@ -1178,10 +1263,10 @@ const rateFunctions: Array<{
 ];
 
 const ROW_COUNT = rateFunctions.length;
-const TOP_Y = 2.0;
-const ROW_SPACING = 0.7;
-const START_X = -2.5;
-const SHIFT_DISTANCE = 5.0;
+const TOP_Y = 2.4;
+const ROW_SPACING = 0.85;
+const START_X = -1.5;
+const SHIFT_DISTANCE = 5.5;
 
 const dots: Dot[] = [];
 const shiftDirection = scaleVec(SHIFT_DISTANCE, RIGHT) as [number, number, number];
@@ -1190,14 +1275,6 @@ for (let i = 0; i < ROW_COUNT; i++) {
   const y = TOP_Y - i * ROW_SPACING;
   const { name, color } = rateFunctions[i];
 
-  // Label on the left
-  const label = new Text({
-    text: name,
-    fontSize: 20,
-    color: WHITE,
-  });
-  label.moveTo([START_X - 2.0, y, 0]);
-
   // Track line (faint guide)
   const trackLine = new Line({
     start: [START_X, y, 0],
@@ -1205,6 +1282,14 @@ for (let i = 0; i < ROW_COUNT; i++) {
     color: '#333333',
     strokeWidth: 1,
   });
+
+  // Label on the left, right-edge aligned just before track start
+  const label = new Text({
+    text: name,
+    fontSize: 28,
+    color: WHITE,
+  });
+  label.nextTo(trackLine, LEFT, 0.2);
 
   // Dot at the start position
   const dot = new Dot({
@@ -1252,6 +1337,7 @@ import {
   Shift,
   AnimationGroup,
   RIGHT,
+  LEFT,
   BLACK,
   BLUE,
   RED,
@@ -1294,10 +1380,10 @@ const rateFunctions: Array<{
 ];
 
 const ROW_COUNT = rateFunctions.length;
-const TOP_Y = 2.5;
-const ROW_SPACING = 0.65;
-const START_X = -2.2;
-const SHIFT_DISTANCE = 5.0;
+const TOP_Y = 3.0;
+const ROW_SPACING = 0.75;
+const START_X = -1.2;
+const SHIFT_DISTANCE = 5.5;
 
 const dots: Dot[] = [];
 const shiftDirection = scaleVec(SHIFT_DISTANCE, RIGHT) as [number, number, number];
@@ -1306,14 +1392,6 @@ for (let i = 0; i < ROW_COUNT; i++) {
   const y = TOP_Y - i * ROW_SPACING;
   const { name, color } = rateFunctions[i];
 
-  // Label on the left
-  const label = new Text({
-    text: name,
-    fontSize: 18,
-    color: WHITE,
-  });
-  label.moveTo([START_X - 2.3, y, 0]);
-
   // Track line (faint guide)
   const trackLine = new Line({
     start: [START_X, y, 0],
@@ -1321,6 +1399,14 @@ for (let i = 0; i < ROW_COUNT; i++) {
     color: '#333333',
     strokeWidth: 1,
   });
+
+  // Label on the left, right-edge aligned just before track start
+  const label = new Text({
+    text: name,
+    fontSize: 26,
+    color: WHITE,
+  });
+  label.nextTo(trackLine, LEFT, 0.2);
 
   // Dot at the start position
   const dot = new Dot({
@@ -1817,7 +1903,7 @@ scene.activateZooming();
 // Pop-out animation: display pops from frame position to its shifted position
 await scene.play(scene.getZoomedDisplayPopOutAnimation(), unfoldCamera);
 
-zoomedCameraText.nextTo(zoomedDisplayFrame, DOWN);
+zoomedCameraText.nextTo(zoomedDisplay, DOWN);
 await scene.play(new FadeIn(zoomedCameraText, { shift: UP }));
 
 // Scale frame and display non-uniformly
@@ -1870,6 +1956,7 @@ const scene = new ThreeDScene(document.getElementById('container'), {
   theta: -45 * (Math.PI / 180),
   distance: 20,
   fov: 30,
+  orbitControlsUp: 'z',
 });
 
 const axes = new ThreeDAxes({
@@ -1904,7 +1991,7 @@ Demonstrates how to keep labels readable in a 3D scene using addFixedOrientation
 <summary>Source Code</summary>
 
 ```typescript
-import { Text, ThreeDAxes, ThreeDScene } from 'manim-web';
+import { GOLD, Text, ThreeDAxes, ThreeDScene } from 'manim-web';
 
 const scene = new ThreeDScene(document.getElementById('container'), {
   width: 800,
@@ -1914,6 +2001,7 @@ const scene = new ThreeDScene(document.getElementById('container'), {
   theta: -45 * (Math.PI / 180),
   distance: 20,
   fov: 30,
+  orbitControlsUp: 'z',
 });
 
 const axes = new ThreeDAxes({
@@ -1926,12 +2014,14 @@ const axes = new ThreeDAxes({
   shaftRadius: 0.008,
 });
 
-// Create a label that sits in 3D space but always faces the camera
-const label = new Text({ text: 'Origin', fontSize: 24 });
-label.moveTo([0, 0.5, 0]);
+// Create a label that sits in 3D space but always faces the camera.
+// Small XY offset + GOLD tint so the text reads against the white axis lines
+// without floating away from the origin it labels.
+const label = new Text({ text: 'Origin', fontSize: 32, color: GOLD });
+label.moveTo([0.4, 0.4, 0.3]);
 
-const xLabel = new Text({ text: 'X', fontSize: 24 });
-xLabel.moveTo([6.5, 0, 0]);
+const xLabel = new Text({ text: 'X', fontSize: 32, color: GOLD });
+xLabel.moveTo([6.8, 0, 0.4]);
 
 scene.add(axes, label, xLabel);
 
@@ -1969,6 +2059,7 @@ const scene = new ThreeDScene(document.getElementById('container'), {
   theta: 30 * (Math.PI / 180),
   distance: 20,
   fov: 30,
+  orbitControlsUp: 'z',
 });
 
 const axes = new ThreeDAxes({
@@ -2032,14 +2123,13 @@ const scene = new ThreeDScene(document.getElementById('container'), {
   theta: -30 * (Math.PI / 180),
   distance: 20,
   fov: 30,
+  orbitControlsUp: 'z',
 });
 
 const sigma = 0.4;
 const mu = [0.0, 0.0];
 
-// Gaussian surface: parametric function mapping (u,v) to 3D point
-// Surface3D func returns [x, y, z] used directly as THREE.js coordinates.
-// Manim Z-up -> THREE.js Y-up: return [manimX, manimZ, -manimY]
+// Gaussian surface: Z-up Manim convention — height is along z.
 const gaussSurface = new Surface3D({
   func: (u: number, v: number) => {
     const x = u;
@@ -2048,8 +2138,7 @@ const gaussSurface = new Surface3D({
     const dy = y - mu[1];
     const d = Math.sqrt(dx * dx + dy * dy);
     const z = Math.exp(-(d * d) / (2.0 * sigma * sigma));
-    // Manim coords (x, y, z) -> THREE.js coords (x, z, -y)
-    return [x, z, -y];
+    return [x, y, z];
   },
   uRange: [-2, 2],
   vRange: [-2, 2],
@@ -2103,6 +2192,7 @@ const scene = new ThreeDScene(document.getElementById('container'), {
   theta: 30 * (Math.PI / 180),
   distance: 20,
   fov: 30,
+  orbitControlsUp: 'z',
 });
 
 const axes = new ThreeDAxes({
@@ -2116,11 +2206,6 @@ const axes = new ThreeDAxes({
 });
 
 const circle = new Circle({ radius: 1, color: '#FC6255' });
-// Circle points are in Manim x-y plane but VMobject renders them
-// directly in THREE.js coords. Rotate -90° around X to lay flat
-// on the ground plane (THREE.js x-z = Manim x-y).
-circle.rotation.x = -Math.PI / 2;
-
 scene.add(circle, axes);
 
 // Begin ambient camera rotation (theta rotates at 0.1 rad/s)
@@ -2166,6 +2251,7 @@ const scene = new ThreeDScene(document.getElementById('container'), {
   theta: 30 * (Math.PI / 180),
   distance: 20,
   fov: 30,
+  orbitControlsUp: 'z',
 });
 
 const axes = new ThreeDAxes({
@@ -2179,11 +2265,6 @@ const axes = new ThreeDAxes({
 });
 
 const circle = new Circle({ radius: 1, color: '#FC6255' });
-// Circle points are in Manim x-y plane but VMobject renders them
-// directly in THREE.js coords. Rotate -90° around X to lay flat
-// on the ground plane (THREE.js x-z = Manim x-y).
-circle.rotation.x = -Math.PI / 2;
-
 scene.add(circle, axes);
 
 // Begin 3D illusion camera rotation (theta rotates at 2 rad/s,
@@ -2225,6 +2306,7 @@ const scene = new ThreeDScene(document.getElementById('container'), {
   distance: 20,
   fov: 30,
   enableOrbitControls: true,
+  orbitControlsUp: 'z',
 });
 
 const axes = new ThreeDAxes({
@@ -2332,6 +2414,7 @@ const scene = new ThreeDScene(document.getElementById('container'), {
   distance: 20,
   fov: 30,
   enableOrbitControls: true,
+  orbitControlsUp: 'z',
 });
 
 const axes = new ThreeDAxes({
@@ -2411,6 +2494,300 @@ if (new URLSearchParams(window.location.search).has('embed')) {
 </details>
 
 **Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Line3D**](/api/classes/Line3D) · [**Angle**](/api/classes/Angle) · [**ValueTracker**](/api/classes/ValueTracker)
+
+---
+
+## Split Screen Camera
+
+Renders the same scene through two Camera2D instances side by side via SplitScreenCamera. The left pane is centered on a circle; the right pane zooms in on a square. Each viewport gets its own aspect ratio at render time. Demonstrates Scene.useMultiCamera() for split-screen layouts.
+
+<SplitScreenCameraExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  BLUE,
+  Camera2D,
+  Circle,
+  Create,
+  RED,
+  Scene,
+  SplitScreenCamera,
+  Square,
+  YELLOW,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#1a1a2e',
+});
+
+// Two independent Camera2D instances framing the same scene from
+// different positions / zoom levels. MultiCamera resets each camera's
+// aspect ratio at render time to match its viewport, so what matters
+// here is the frameHeight (vertical extent) and the world position.
+const leftCamera = new Camera2D({ frameWidth: 14, frameHeight: 8, position: [-3, 0, 10] });
+const rightCamera = new Camera2D({ frameWidth: 6, frameHeight: 8, position: [3, 0, 10] });
+
+const split = new SplitScreenCamera({
+  leftCamera,
+  rightCamera,
+  split: 'horizontal',
+  splitRatio: 0.5,
+});
+scene.useMultiCamera(split.getMultiCamera());
+
+const circle = new Circle({ radius: 1, color: RED, strokeWidth: 4 });
+circle.shift([-3, 0, 0]);
+const square = new Square({ sideLength: 1.5, color: BLUE, strokeWidth: 4 });
+square.shift([3, 0, 0]);
+const marker = new Circle({ radius: 0.15, color: YELLOW, strokeWidth: 3 });
+
+scene.add(marker);
+await scene.play(new Create(circle));
+await scene.play(new Create(square));
+await scene.wait(0.8);
+
+scene.useMultiCamera(null);
+
+if (new URLSearchParams(window.location.search).has('embed')) {
+  document
+    .querySelectorAll('.controls, .buttons, h1, #status')
+    .forEach((el) => (el.style.display = 'none'));
+  document.documentElement.style.cssText =
+    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000';
+  document.body.style.cssText =
+    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center';
+  const cont = document.getElementById('container');
+  if (cont) {
+    cont.style.cssText =
+      'border:none;border-radius:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center';
+  }
+  const playBtn = document.getElementById('playBtn');
+  if (playBtn) {
+    setTimeout(() => playBtn.click(), 500);
+    new MutationObserver(() => {
+      if (!playBtn.disabled) setTimeout(() => playBtn.click(), 2000);
+    }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
+  }
+}
+```
+
+</details>
+
+**Learn More:** [**Scene**](/api/classes/Scene) · [**Camera2D**](/api/classes/Camera2D) · [**SplitScreenCamera**](/api/classes/SplitScreenCamera) · [**MultiCamera**](/api/classes/MultiCamera)
+
+---
+
+## Picture In Picture Camera
+
+Main camera shows the full scene while a small picture-in-picture inset follows an orbiting dot at higher zoom. Uses MultiCamera.setupPictureInPicture() and an updater to keep the inset camera tracking the target.
+
+<PictureInPictureCameraExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Camera2D,
+  Circle,
+  Create,
+  GREEN,
+  MultiCamera,
+  PURPLE,
+  Scene,
+  Square,
+  Triangle,
+  ValueTracker,
+  YELLOW,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#1a1a2e',
+});
+
+// Main camera: wide overview of the whole scene.
+const mainCamera = new Camera2D({ frameWidth: 14, frameHeight: 8, position: [0, 0, 10] });
+
+// PiP camera: zoomed-in inset that follows a moving target.
+const pipCamera = new Camera2D({ frameWidth: 4, frameHeight: 4, position: [0, 0, 10] });
+
+const mc = new MultiCamera();
+mc.setupPictureInPicture(mainCamera, pipCamera, 'top-right', 0.3);
+scene.useMultiCamera(mc);
+
+const square = new Square({ sideLength: 1.5, color: PURPLE, strokeWidth: 4 });
+const triangle = new Triangle({ color: GREEN, strokeWidth: 4 });
+triangle.shift([-4, 1, 0]);
+const orbiter = new Circle({ radius: 0.35, color: YELLOW, strokeWidth: 4 });
+
+// ValueTracker drives the orbiter; the PiP camera follows it via updater.
+const t = new ValueTracker(0);
+orbiter.addUpdater(() => {
+  const a = t.getValue();
+  orbiter.moveTo([3 * Math.cos(a), 2 * Math.sin(a), 0]);
+  const p = orbiter.getCenter();
+  pipCamera.position.set(p[0], p[1], 10);
+});
+scene.add(t, square, triangle, orbiter);
+
+await scene.play(new Create(square));
+await scene.play(new Create(triangle));
+await scene.play(new Create(orbiter));
+await scene.play(t.animateTo(Math.PI * 4, { duration: 4 }));
+await scene.wait(0.5);
+
+scene.useMultiCamera(null);
+
+if (new URLSearchParams(window.location.search).has('embed')) {
+  document
+    .querySelectorAll('.controls, .buttons, h1, #status')
+    .forEach((el) => (el.style.display = 'none'));
+  document.documentElement.style.cssText =
+    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000';
+  document.body.style.cssText =
+    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center';
+  const cont = document.getElementById('container');
+  if (cont) {
+    cont.style.cssText =
+      'border:none;border-radius:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center';
+  }
+  const playBtn = document.getElementById('playBtn');
+  if (playBtn) {
+    setTimeout(() => playBtn.click(), 500);
+    new MutationObserver(() => {
+      if (!playBtn.disabled) setTimeout(() => playBtn.click(), 2000);
+    }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
+  }
+}
+```
+
+</details>
+
+**Learn More:** [**Scene**](/api/classes/Scene) · [**Camera2D**](/api/classes/Camera2D) · [**MultiCamera**](/api/classes/MultiCamera) · [**ValueTracker**](/api/classes/ValueTracker)
+
+---
+
+## Quad View Camera
+
+Four simultaneous viewports of the same scene — one overview plus three close-ups — composed with MultiCamera.setupQuadView(). A ball animates between regions, visible at full detail in whichever quadrant currently frames it.
+
+<QuadViewCameraExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  BLUE,
+  Camera2D,
+  Circle,
+  Create,
+  GREEN,
+  MultiCamera,
+  ORANGE,
+  RED,
+  Scene,
+  Square,
+  Triangle,
+  ValueTracker,
+  YELLOW,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#1a1a2e',
+});
+
+// Four Camera2D instances framing the same scene at different positions
+// and zoom levels — a "control room" layout. setupQuadView() places them
+// in viewport order [top-left, top-right, bottom-left, bottom-right] on
+// the canvas, so the variable names below describe the on-screen pane,
+// not the world region the camera looks at.
+const overviewPane = new Camera2D({ frameWidth: 14, frameHeight: 8, position: [0, 0, 10] });
+const circlePane = new Camera2D({ frameWidth: 4, frameHeight: 4, position: [-3, 2, 10] });
+const squarePane = new Camera2D({ frameWidth: 4, frameHeight: 4, position: [3, 2, 10] });
+const trianglePane = new Camera2D({ frameWidth: 6, frameHeight: 4, position: [0, -2, 10] });
+
+const mc = new MultiCamera();
+mc.setupQuadView([overviewPane, circlePane, squarePane, trianglePane]);
+scene.useMultiCamera(mc);
+
+const circle = new Circle({ radius: 0.9, color: RED, strokeWidth: 4 });
+circle.shift([-3, 2, 0]);
+const square = new Square({ sideLength: 1.4, color: BLUE, strokeWidth: 4 });
+square.shift([3, 2, 0]);
+const triangle = new Triangle({ color: GREEN, strokeWidth: 4 });
+triangle.shift([0, -2, 0]);
+const ball = new Circle({ radius: 0.25, color: YELLOW, strokeWidth: 3 });
+
+// Animate a "ball" bouncing between the three regions; each quad-view
+// close-up shows the ball passing through its quadrant in detail.
+const t = new ValueTracker(0);
+ball.addUpdater(() => {
+  const a = t.getValue();
+  const path: Array<[number, number]> = [
+    [-3, 2],
+    [3, 2],
+    [0, -2],
+    [-3, 2],
+  ];
+  const seg = Math.floor(a) % (path.length - 1);
+  const f = a - Math.floor(a);
+  const [x0, y0] = path[seg];
+  const [x1, y1] = path[seg + 1];
+  ball.moveTo([x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, 0]);
+});
+scene.add(t);
+
+// Highlight marker that stays at world origin so the overview pane has
+// a visible reference point too.
+const marker = new Circle({ radius: 0.12, color: ORANGE, strokeWidth: 2 });
+scene.add(marker);
+
+scene.add(circle, square, triangle, ball);
+await scene.play(new Create(circle));
+await scene.play(new Create(square));
+await scene.play(new Create(triangle));
+await scene.play(new Create(ball));
+await scene.play(t.animateTo(3, { duration: 4 }));
+await scene.wait(0.5);
+
+scene.useMultiCamera(null);
+
+if (new URLSearchParams(window.location.search).has('embed')) {
+  document
+    .querySelectorAll('.controls, .buttons, h1, #status')
+    .forEach((el) => (el.style.display = 'none'));
+  document.documentElement.style.cssText =
+    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000';
+  document.body.style.cssText =
+    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center';
+  const cont = document.getElementById('container');
+  if (cont) {
+    cont.style.cssText =
+      'border:none;border-radius:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center';
+  }
+  const playBtn = document.getElementById('playBtn');
+  if (playBtn) {
+    setTimeout(() => playBtn.click(), 500);
+    new MutationObserver(() => {
+      if (!playBtn.disabled) setTimeout(() => playBtn.click(), 2000);
+    }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
+  }
+}
+```
+
+</details>
+
+**Learn More:** [**Scene**](/api/classes/Scene) · [**Camera2D**](/api/classes/Camera2D) · [**MultiCamera**](/api/classes/MultiCamera) · [**ValueTracker**](/api/classes/ValueTracker)
 
 ---
 
@@ -2545,6 +2922,8 @@ import {
   Create,
   Transform,
   FadeOut,
+  Animation,
+  Timeline,
   BLACK,
   BLUE,
   GREEN,
@@ -2578,19 +2957,45 @@ function setButtonsDisabled(disabled: boolean) {
     .forEach((btn) => (btn.disabled = disabled));
 }
 
+// Build the same three animations Play and Export share.
+// Each call returns a fresh set against a freshly populated scene
+// — animations are stateful (begin() snapshots opacities), so reusing
+// instances across runs would replay against stale state.
+function buildAnimations(): Animation[] {
+  scene.clear();
+  const square = new Square({ sideLength: 2.5, color: BLUE, fillOpacity: 0.5 });
+  const circle = new Circle({ radius: 1.25, color: GREEN, fillOpacity: 0.5 });
+  return [
+    new Create(square, { duration: 1 }),
+    new Transform(square, circle, { duration: 1 }),
+    new FadeOut(square, { duration: 1 }),
+  ];
+}
+
+// Wire animations into the scene's timeline sequentially without
+// starting playback. We avoid Succession here because it would call
+// begin() on every child up front — Transform.begin() would then
+// snapshot the fillOpacity that Create.begin() just zeroed, leaving
+// the square invisible after the morph. Timeline drives each begin()
+// lazily inside _updateAnimationsAtTime as forward-seeking crosses
+// each animation's start time, which is what GifExporter does.
+function installTimeline(anims: Animation[]): number {
+  scene.add(anims[0].mobject);
+  const timeline = new Timeline();
+  for (const anim of anims) timeline.add(anim, '>');
+  scene.setTimeline(timeline);
+  return timeline.getDuration();
+}
+
 // Play animation
 document.getElementById('playBtn')!.addEventListener('click', async () => {
   if (isAnimating) return;
   isAnimating = true;
   setButtonsDisabled(true);
 
-  scene.clear();
-  const square = new Square({ sideLength: 2.5, color: BLUE, fillOpacity: 0.5 });
-  const circle = new Circle({ radius: 1.25, color: GREEN, fillOpacity: 0.5 });
-
-  await scene.play(new Create(square));
-  await scene.play(new Transform(square, circle));
-  await scene.play(new FadeOut(square));
+  for (const anim of buildAnimations()) {
+    await scene.play(anim);
+  }
 
   isAnimating = false;
   setButtonsDisabled(false);
@@ -2603,9 +3008,11 @@ document.getElementById('exportGifBtn')!.addEventListener('click', async () => {
   setButtonsDisabled(true);
 
   try {
+    const duration = installTimeline(buildAnimations());
     await scene.export('animation.gif', {
       fps: 15,
       quality: 10,
+      duration,
       onProgress: (p) => showProgress(p, 'Exporting GIF'),
     });
   } catch (err) {
@@ -2624,8 +3031,10 @@ document.getElementById('exportWebmBtn')!.addEventListener('click', async () => 
   setButtonsDisabled(true);
 
   try {
+    const duration = installTimeline(buildAnimations());
     await scene.export('animation.webm', {
       fps: 30,
+      duration,
       onProgress: (p) => showProgress(p, 'Exporting WebM'),
     });
   } catch (err) {

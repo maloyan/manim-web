@@ -79,6 +79,7 @@ function createScene(container: HTMLElement, manim: any) {
     distance: 20,
     fov: 30,
     enableOrbitControls: true,
+    orbitControlsUp: 'z',
   });
 }
 
