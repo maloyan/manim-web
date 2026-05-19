@@ -177,6 +177,50 @@ describe('Scene.useMultiCamera (issue #358)', () => {
     expect(ticks).toEqual([0.016]);
   });
 
+  it('setViewportBorder merges border style into the viewport', () => {
+    const mc = new MultiCamera({
+      cameras: [{ camera: new Camera2D(), viewport: { x: 0, y: 0, width: 1, height: 1 } }],
+    });
+    mc.setViewportBorder(0, { borderColor: '#ff0000', borderWidth: 3 });
+    const vp = mc.cameras[0].viewport;
+    expect(vp.borderColor).toBe('#ff0000');
+    expect(vp.borderWidth).toBe(3);
+    // Passing null clears the field.
+    mc.setViewportBorder(0, { borderWidth: null });
+    expect(mc.cameras[0].viewport.borderWidth).toBeUndefined();
+    expect(mc.cameras[0].viewport.borderColor).toBe('#ff0000');
+  });
+
+  it('setViewportBorder is a no-op for out-of-range indices', () => {
+    const mc = new MultiCamera({
+      cameras: [{ camera: new Camera2D(), viewport: { x: 0, y: 0, width: 1, height: 1 } }],
+    });
+    expect(() => mc.setViewportBorder(7, { borderWidth: 2 })).not.toThrow();
+    expect(mc.cameras[0].viewport.borderWidth).toBeUndefined();
+  });
+
+  it('render() draws a border pass only when a viewport requests one', () => {
+    const fake = makeFakeThreeRenderer();
+    const threeScene = new THREE.Scene();
+    const mcNoBorders = new MultiCamera({
+      cameras: [{ camera: new Camera2D(), viewport: { x: 0, y: 0, width: 1, height: 1 } }],
+    });
+    mcNoBorders.render(fake, threeScene, 800, 450);
+    // One render call for the only camera; no second pass for borders.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((fake as any).render).toHaveBeenCalledTimes(1);
+
+    const fake2 = makeFakeThreeRenderer();
+    const mcWithBorder = new MultiCamera({
+      cameras: [{ camera: new Camera2D(), viewport: { x: 0, y: 0, width: 1, height: 1 } }],
+    });
+    mcWithBorder.setViewportBorder(0, { borderColor: '#ff0000', borderWidth: 2 });
+    mcWithBorder.render(fake2, threeScene, 800, 450);
+    // One pass for the scene + one pass for the border overlay.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect((fake2 as any).render).toHaveBeenCalledTimes(2);
+  });
+
   it('non-headless _render skips MultiCamera when WebGL context is lost', () => {
     const scene = Scene.createHeadless();
     installFakeRenderer(scene);

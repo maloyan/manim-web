@@ -18,12 +18,24 @@ const scene = new Scene(container, {
 });
 
 async function splitScreenCameraExample(scene: Scene) {
-  // Two independent Camera2D instances framing the same scene from
-  // different positions / zoom levels. MultiCamera resets each camera's
-  // aspect ratio at render time to match its viewport, so what matters
-  // here is the frameHeight (vertical extent) and the world position.
-  const leftCamera = new Camera2D({ frameWidth: 14, frameHeight: 8, position: [-3, 0, 10] });
-  const rightCamera = new Camera2D({ frameWidth: 6, frameHeight: 8, position: [3, 0, 10] });
+  // Two independent Camera2D instances framing the same scene at
+  // different zoom levels. With `aspectMode: 'contain'` the per-camera
+  // frameWidth/frameHeight is honoured at render time (the viewport
+  // letterboxes if it doesn't match), so the zoom intent — wide
+  // overview on the left, tight zoom on the right — actually shows up
+  // on screen.
+  const leftCamera = new Camera2D({
+    frameWidth: 14,
+    frameHeight: 8,
+    position: [-3, 0, 10],
+    aspectMode: 'contain',
+  });
+  const rightCamera = new Camera2D({
+    frameWidth: 4,
+    frameHeight: 4,
+    position: [3, 0, 10],
+    aspectMode: 'contain',
+  });
 
   const split = new SplitScreenCamera({
     leftCamera,
@@ -31,7 +43,12 @@ async function splitScreenCameraExample(scene: Scene) {
     split: 'horizontal',
     splitRatio: 0.5,
   });
-  scene.useMultiCamera(split.getMultiCamera());
+  const mc = split.getMultiCamera();
+  // Draw a thin border around each pane so the split is visible even
+  // when one side renders the scene background edge-to-edge.
+  mc.setViewportBorder(0, { borderColor: '#888888', borderWidth: 2 });
+  mc.setViewportBorder(1, { borderColor: '#888888', borderWidth: 2 });
+  scene.useMultiCamera(mc);
 
   const circle = new Circle({ radius: 1, color: RED, strokeWidth: 4 });
   circle.shift([-3, 0, 0]);
