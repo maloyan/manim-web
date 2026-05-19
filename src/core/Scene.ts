@@ -70,6 +70,13 @@ export interface SceneOptions {
   backgroundOpacity?: number;
   /** Enable headless mode (no WebGL renderer). Useful for testing scene logic without a DOM. */
   headless?: boolean;
+  /**
+   * Automatically resize the canvas when its container (or the window, on
+   * mobile rotation) changes size. Only active when both `width` and `height`
+   * are omitted — passing either dimension is treated as a request for a
+   * pinned canvas size, so auto-resize stays off. Defaults to true.
+   */
+  autoResize?: boolean;
 }
 
 /**
@@ -129,11 +136,21 @@ export class Scene {
   // for API compatibility and as a fallback when this is cleared.
   private _multiCamera: MultiCamera | null = null;
 
+  // Auto-resize: ResizeObserver on container + window listeners (orientationchange
+  // fallback for mobile browsers where ResizeObserver lags behind rotation).
+  // Listeners are coalesced via requestAnimationFrame to fire at most once per
+  // frame. Detached in `dispose()`.
+  private _container: HTMLElement | null = null;
+  private _resizeObserver: ResizeObserver | null = null;
+  private _resizeRafId: number | null = null;
+  private _onWindowResize: (() => void) | null = null;
+
   /**
    * Create a new Scene.
    * @param container - DOM element to render into, or null for headless mode
    * @param options - Scene configuration options
    */
+  // eslint-disable-next-line complexity
   constructor(container: HTMLElement | null, options: SceneOptions = {}) {
     const {
       width,
@@ -146,6 +163,7 @@ export class Scene {
       autoRender = true,
       backgroundOpacity = 1,
       headless = false,
+      autoResize = true,
     } = options;
 
     // Initialize performance options
@@ -179,6 +197,7 @@ export class Scene {
         antialias: true,
       };
       this._renderer = new Renderer(container, rendererOptions);
+      this._container = container;
     }
 
     // Create camera with Manim-style frame dimensions
@@ -206,6 +225,12 @@ export class Scene {
 
     // Initial render
     this._render();
+
+    // Install auto-resize observer. Only when neither width nor height was
+    // pinned by the caller — explicit dimensions are treated as a fixed canvas.
+    if (autoResize && !headless && this._container && width == null && height == null) {
+      this._installAutoResize();
+    }
   }
 
   /**
@@ -1195,6 +1220,60 @@ export class Scene {
   }
 
   /**
+   * Install ResizeObserver on the container and a window resize/orientation
+   * fallback. All triggers funnel through a single rAF-debounced measurement
+   * so a rotation that fires multiple events resizes once per frame.
+   */
+  private _installAutoResize(): void {
+    if (typeof window === 'undefined' || !this._container) return;
+
+    const measure = () => {
+      this._resizeRafId = null;
+      if (this._disposed || !this._container) return;
+      const w = Math.round(this._container.clientWidth);
+      const h = Math.round(this._container.clientHeight);
+      // Guard against zero-sized (detached / display:none) containers and
+      // skip when dimensions did not actually change to avoid render churn.
+      if (w <= 0 || h <= 0) return;
+      if (w === this._renderer.width && h === this._renderer.height) return;
+      this.resize(w, h);
+    };
+
+    const schedule = () => {
+      if (this._resizeRafId !== null) return;
+      this._resizeRafId = requestAnimationFrame(measure);
+    };
+
+    if (typeof ResizeObserver !== 'undefined') {
+      this._resizeObserver = new ResizeObserver(schedule);
+      this._resizeObserver.observe(this._container);
+    }
+
+    // Window resize covers browsers without ResizeObserver; orientationchange
+    // is a belt-and-suspenders trigger for older mobile browsers where the
+    // observer can lag behind device rotation.
+    this._onWindowResize = schedule;
+    window.addEventListener('resize', this._onWindowResize);
+    window.addEventListener('orientationchange', this._onWindowResize);
+  }
+
+  private _disposeAutoResize(): void {
+    if (this._resizeRafId !== null) {
+      cancelAnimationFrame(this._resizeRafId);
+      this._resizeRafId = null;
+    }
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
+    }
+    if (this._onWindowResize && typeof window !== 'undefined') {
+      window.removeEventListener('resize', this._onWindowResize);
+      window.removeEventListener('orientationchange', this._onWindowResize);
+    }
+    this._onWindowResize = null;
+  }
+
+  /**
    * Get the canvas element.
    * @returns The HTMLCanvasElement used for rendering
    */
@@ -1427,6 +1506,9 @@ export class Scene {
   dispose(): void {
     if (this._disposed) return;
     this._disposed = true;
+
+    // Detach auto-resize observer/listeners
+    this._disposeAutoResize();
 
     // Stop playback
     this._stopRenderLoop();

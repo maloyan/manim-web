@@ -55,6 +55,10 @@ export class Renderer implements IRenderer {
   private _backgroundOpacity: number;
   private _alpha: boolean;
   private _contextLost: boolean = false;
+  // True when pixelRatio was auto-derived from window.devicePixelRatio.
+  // When false the caller pinned a specific ratio (e.g. 1 for export); we
+  // must not override it on resize.
+  private _autoPixelRatio: boolean;
 
   /**
    * Create a new Renderer and append it to the container.
@@ -76,6 +80,7 @@ export class Renderer implements IRenderer {
       preserveDrawingBuffer = true, // Needed for video/image export
       canvas,
     } = options;
+    this._autoPixelRatio = options.pixelRatio == null;
 
     this._backgroundOpacity = Math.max(0, Math.min(1, backgroundOpacity));
     // Enable alpha channel if background is semi-transparent or explicitly requested
@@ -188,12 +193,19 @@ export class Renderer implements IRenderer {
 
   /**
    * Handle resize events.
+   * Re-applies the device pixel ratio so DPR changes (e.g. screen rotation
+   * moving the canvas between displays) do not leave a blurry buffer.
    * @param width - New width in pixels
    * @param height - New height in pixels
    */
   resize(width: number, height: number): void {
     this._width = width;
     this._height = height;
+    // Only re-derive devicePixelRatio when no explicit pixelRatio was pinned.
+    // Otherwise rotation could clobber a caller-forced ratio (e.g. 1 for export).
+    if (this._autoPixelRatio && typeof window !== 'undefined') {
+      this._renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    }
     this._renderer.setSize(width, height);
   }
 

@@ -68,7 +68,22 @@ describe('Player', () => {
     expect(player.isPlaying).toBe(false);
   });
 
-  it('stores original dimensions from scene', () => {
+  it('captures original dimensions when toggleFullscreen is called (issue #360)', () => {
+    // Pre-toggle: _orig stays at construction default (0) — captured lazily
+    // so any auto-resize before fullscreen is not snapshotted.
+    expect((player as any)._origWidth).toBe(0);
+    expect((player as any)._origHeight).toBe(0);
+
+    // happy-dom does not implement requestFullscreen; stub it to a no-op so
+    // toggleFullscreen() runs to completion.
+    (container as any).requestFullscreen = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(document, 'fullscreenElement', {
+      value: null,
+      configurable: true,
+    });
+
+    player.toggleFullscreen();
+
     expect((player as any)._origWidth).toBe(800);
     expect((player as any)._origHeight).toBe(450);
   });
@@ -568,6 +583,15 @@ describe('Player', () => {
 
     const resizeSpy = vi.spyOn(player.scene, 'resize');
     const renderSpy = vi.spyOn(player.scene, 'render');
+
+    // toggleFullscreen() snapshots the pre-fullscreen size before the request.
+    Object.defineProperty(document, 'fullscreenElement', {
+      value: null,
+      writable: true,
+      configurable: true,
+    });
+    (container as any).requestFullscreen = vi.fn().mockResolvedValue(undefined);
+    player.toggleFullscreen();
 
     // Simulate entering fullscreen
     Object.defineProperty(document, 'fullscreenElement', {
