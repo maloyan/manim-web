@@ -26,6 +26,9 @@ import ApplyPointwiseFunctionToCenterExample from '@site/src/components/examples
 import LabeledPolygramExample from '@site/src/components/examples/LabeledPolygramExample';
 import RateFunctionsComparisonExample from '@site/src/components/examples/RateFunctionsComparisonExample';
 import EasingFunctionsShowcaseExample from '@site/src/components/examples/EasingFunctionsShowcaseExample';
+import SplitScreenCameraExample from '@site/src/components/examples/SplitScreenCameraExample';
+import PictureInPictureCameraExample from '@site/src/components/examples/PictureInPictureCameraExample';
+import QuadViewCameraExample from '@site/src/components/examples/QuadViewCameraExample';
 
 Interactive 2D animation examples built with manim-web.
 
@@ -1651,4 +1654,275 @@ await scene.play(new Create(circle, { duration: 0.8 }));
 </details>
 
 **Learn More:** [**LabeledPolygram**](/api/classes/LabeledPolygram) · [**Polygram**](/api/classes/Polygram) · [**Polygon**](/api/classes/Polygon) · [**FadeIn**](/api/classes/FadeIn)
+
+---
+
+## Multi-Camera Composition
+
+The next three examples build on `Scene.useMultiCamera()` to render the same
+2D scene through several `Camera2D` viewports at once. Two ergonomics knobs
+worth knowing about:
+
+- `aspectMode: 'contain'` on each `Camera2D` keeps the per-camera
+  `frameWidth` / `frameHeight` honoured at render time. Without it,
+  `MultiCamera` would stretch each camera's width to match its
+  viewport aspect and the zoom intent would be silently lost.
+- `MultiCamera.setViewportBorder(index, { borderColor, borderWidth })`
+  draws a pixel-space outline around a viewport so the camera regions
+  are visible to the viewer.
+
+### Split Screen Camera
+
+Renders the same scene through two `Camera2D` instances side by side via
+`SplitScreenCamera`. The left pane shows the wide world; the right pane is
+tightly zoomed on the square. Each viewport gets a thin grey border so the
+split is visible against the dark background.
+
+<SplitScreenCameraExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  BLUE,
+  Camera2D,
+  Circle,
+  Create,
+  RED,
+  Scene,
+  SplitScreenCamera,
+  Square,
+  YELLOW,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#1a1a2e',
+});
+
+const leftCamera = new Camera2D({
+  frameWidth: 14,
+  frameHeight: 8,
+  position: [-3, 0, 10],
+  aspectMode: 'contain',
+});
+const rightCamera = new Camera2D({
+  frameWidth: 4,
+  frameHeight: 4,
+  position: [3, 0, 10],
+  aspectMode: 'contain',
+});
+
+const split = new SplitScreenCamera({
+  leftCamera,
+  rightCamera,
+  split: 'horizontal',
+  splitRatio: 0.5,
+});
+const mc = split.getMultiCamera();
+mc.setViewportBorder(0, { borderColor: '#888888', borderWidth: 2 });
+mc.setViewportBorder(1, { borderColor: '#888888', borderWidth: 2 });
+scene.useMultiCamera(mc);
+
+const circle = new Circle({ radius: 1, color: RED, strokeWidth: 4 });
+circle.shift([-3, 0, 0]);
+const square = new Square({ sideLength: 1.5, color: BLUE, strokeWidth: 4 });
+square.shift([3, 0, 0]);
+const marker = new Circle({ radius: 0.15, color: YELLOW, strokeWidth: 3 });
+
+scene.add(marker);
+await scene.play(new Create(circle));
+await scene.play(new Create(square));
+await scene.wait(0.8);
+
+scene.useMultiCamera(null);
+```
+
+</details>
+
+**Learn More:** [**Scene**](/api/classes/Scene) · [**Camera2D**](/api/classes/Camera2D) · [**SplitScreenCamera**](/api/classes/SplitScreenCamera) · [**MultiCamera**](/api/classes/MultiCamera)
+
+### Picture In Picture Camera
+
+Main camera shows the full scene while a small picture-in-picture inset
+follows an orbiting dot at higher zoom. A yellow border highlights the
+inset so the PiP region is unmissable.
+
+<PictureInPictureCameraExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Camera2D,
+  Circle,
+  Create,
+  GREEN,
+  MultiCamera,
+  PURPLE,
+  Scene,
+  Square,
+  Triangle,
+  ValueTracker,
+  YELLOW,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#1a1a2e',
+});
+
+const mainCamera = new Camera2D({ frameWidth: 14, frameHeight: 8, position: [0, 0, 10] });
+const pipCamera = new Camera2D({
+  frameWidth: 4,
+  frameHeight: 4,
+  position: [0, 0, 10],
+  aspectMode: 'contain',
+});
+
+const mc = new MultiCamera();
+mc.setupPictureInPicture(mainCamera, pipCamera, 'top-right', 0.3);
+mc.setViewportBorder(1, { borderColor: '#ffd54f', borderWidth: 3 });
+scene.useMultiCamera(mc);
+
+const square = new Square({ sideLength: 1.5, color: PURPLE, strokeWidth: 4 });
+const triangle = new Triangle({ color: GREEN, strokeWidth: 4 });
+triangle.shift([-4, 1, 0]);
+const orbiter = new Circle({ radius: 0.35, color: YELLOW, strokeWidth: 4 });
+
+const t = new ValueTracker(0);
+orbiter.addUpdater(() => {
+  const a = t.getValue();
+  orbiter.moveTo([3 * Math.cos(a), 2 * Math.sin(a), 0]);
+  const p = orbiter.getCenter();
+  pipCamera.position.set(p[0], p[1], 10);
+});
+scene.add(t, square, triangle, orbiter);
+
+await scene.play(new Create(square));
+await scene.play(new Create(triangle));
+await scene.play(new Create(orbiter));
+await scene.play(t.animateTo(Math.PI * 4, { duration: 4 }));
+await scene.wait(0.5);
+
+scene.useMultiCamera(null);
+```
+
+</details>
+
+**Learn More:** [**Scene**](/api/classes/Scene) · [**Camera2D**](/api/classes/Camera2D) · [**MultiCamera**](/api/classes/MultiCamera) · [**ValueTracker**](/api/classes/ValueTracker)
+
+### Quad View Camera
+
+Four simultaneous viewports of the same scene — one overview plus three
+close-ups — composed with `MultiCamera.setupQuadView()`. Each pane gets
+its own border tint so the four-cell grid is unmistakable.
+
+<QuadViewCameraExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  BLUE,
+  Camera2D,
+  Circle,
+  Create,
+  GREEN,
+  MultiCamera,
+  ORANGE,
+  RED,
+  Scene,
+  Square,
+  Triangle,
+  ValueTracker,
+  YELLOW,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#1a1a2e',
+});
+
+const overviewPane = new Camera2D({
+  frameWidth: 14,
+  frameHeight: 8,
+  position: [0, 0, 10],
+  aspectMode: 'contain',
+});
+const circlePane = new Camera2D({
+  frameWidth: 4,
+  frameHeight: 4,
+  position: [-3, 2, 10],
+  aspectMode: 'contain',
+});
+const squarePane = new Camera2D({
+  frameWidth: 4,
+  frameHeight: 4,
+  position: [3, 2, 10],
+  aspectMode: 'contain',
+});
+const trianglePane = new Camera2D({
+  frameWidth: 6,
+  frameHeight: 4,
+  position: [0, -2, 10],
+  aspectMode: 'contain',
+});
+
+const mc = new MultiCamera();
+mc.setupQuadView([overviewPane, circlePane, squarePane, trianglePane]);
+mc.setViewportBorder(0, { borderColor: '#888888', borderWidth: 2 });
+mc.setViewportBorder(1, { borderColor: '#ef5350', borderWidth: 2 });
+mc.setViewportBorder(2, { borderColor: '#42a5f5', borderWidth: 2 });
+mc.setViewportBorder(3, { borderColor: '#66bb6a', borderWidth: 2 });
+scene.useMultiCamera(mc);
+
+const circle = new Circle({ radius: 0.9, color: RED, strokeWidth: 4 });
+circle.shift([-3, 2, 0]);
+const square = new Square({ sideLength: 1.4, color: BLUE, strokeWidth: 4 });
+square.shift([3, 2, 0]);
+const triangle = new Triangle({ color: GREEN, strokeWidth: 4 });
+triangle.shift([0, -2, 0]);
+const ball = new Circle({ radius: 0.25, color: YELLOW, strokeWidth: 3 });
+
+const t = new ValueTracker(0);
+ball.addUpdater(() => {
+  const a = t.getValue();
+  const path: Array<[number, number]> = [
+    [-3, 2],
+    [3, 2],
+    [0, -2],
+    [-3, 2],
+  ];
+  const seg = Math.floor(a) % (path.length - 1);
+  const f = a - Math.floor(a);
+  const [x0, y0] = path[seg];
+  const [x1, y1] = path[seg + 1];
+  ball.moveTo([x0 + (x1 - x0) * f, y0 + (y1 - y0) * f, 0]);
+});
+scene.add(t);
+
+const marker = new Circle({ radius: 0.12, color: ORANGE, strokeWidth: 2 });
+scene.add(marker);
+
+scene.add(circle, square, triangle, ball);
+await scene.play(new Create(circle));
+await scene.play(new Create(square));
+await scene.play(new Create(triangle));
+await scene.play(new Create(ball));
+await scene.play(t.animateTo(3, { duration: 4 }));
+await scene.wait(0.5);
+
+scene.useMultiCamera(null);
+```
+
+</details>
+
+**Learn More:** [**Scene**](/api/classes/Scene) · [**Camera2D**](/api/classes/Camera2D) · [**MultiCamera**](/api/classes/MultiCamera) · [**ValueTracker**](/api/classes/ValueTracker)
 

@@ -20,11 +20,22 @@ async function animate(scene: any) {
   // Main camera: wide overview of the whole scene.
   const mainCamera = new Camera2D({ frameWidth: 14, frameHeight: 8, position: [0, 0, 10] });
 
-  // PiP camera: zoomed-in inset that follows a moving target.
-  const pipCamera = new Camera2D({ frameWidth: 4, frameHeight: 4, position: [0, 0, 10] });
+  // PiP camera: zoomed-in inset that follows a moving target. `contain`
+  // keeps the requested 4×4 frame fully visible inside the PiP square
+  // viewport instead of letting MultiCamera stretch its width.
+  const pipCamera = new Camera2D({
+    frameWidth: 4,
+    frameHeight: 4,
+    position: [0, 0, 10],
+    aspectMode: 'contain',
+  });
 
   const mc = new MultiCamera();
   mc.setupPictureInPicture(mainCamera, pipCamera, 'top-right', 0.3);
+  // Index 0 is the main viewport, index 1 is the PiP inset (per
+  // setupPictureInPicture's add order). Highlight the PiP so users can
+  // see where the inset camera is framing.
+  mc.setViewportBorder(1, { borderColor: '#ffd54f', borderWidth: 3 });
   scene.useMultiCamera(mc);
 
   const square = new Square({ sideLength: 1.5, color: PURPLE, strokeWidth: 4 });

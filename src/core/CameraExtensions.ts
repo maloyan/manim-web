@@ -519,6 +519,15 @@ export interface CameraViewport {
   width: number;
   /** Height as fraction of canvas height (0-1). */
   height: number;
+  /**
+   * Optional border color (any THREE.Color input — `#rrggbb`, named, or
+   * 0xrrggbb). When set together with `borderWidth > 0`, MultiCamera
+   * draws a rectangle outline around the viewport in canvas-pixel space
+   * after the scene render. Off by default.
+   */
+  borderColor?: number | string;
+  /** Optional border thickness in canvas pixels. Defaults to 0 (no border). */
+  borderWidth?: number;
 }
 
 /**
@@ -607,6 +616,7 @@ export class MultiCamera {
     viewport: CameraViewport,
     label?: string,
   ): number {
+    // Shallow clone preserves optional borderColor / borderWidth fields.
     const entry: CameraEntry = {
       camera,
       viewport: { ...viewport },
@@ -615,6 +625,27 @@ export class MultiCamera {
     };
     this._cameras.push(entry);
     return this._cameras.length - 1;
+  }
+
+  /**
+   * Update the border style of an existing viewport. Passing `null` for
+   * either field disables that side of the configuration (e.g. setting
+   * `borderWidth` to 0 turns the border off).
+   * @param index - Camera index
+   * @param style - Partial border style; merged into the existing viewport
+   * @returns this for chaining
+   */
+  setViewportBorder(
+    index: number,
+    style: { borderColor?: number | string | null; borderWidth?: number | null },
+  ): this {
+    const entry = this._cameras[index];
+    if (!entry) return this;
+    if (style.borderColor === null) delete entry.viewport.borderColor;
+    else if (style.borderColor !== undefined) entry.viewport.borderColor = style.borderColor;
+    if (style.borderWidth === null) delete entry.viewport.borderWidth;
+    else if (style.borderWidth !== undefined) entry.viewport.borderWidth = style.borderWidth;
+    return this;
   }
 
   /**
@@ -845,6 +876,90 @@ export class MultiCamera {
 
     // Reset viewport to full canvas
     renderer.setViewport(0, 0, canvasWidth, canvasHeight);
+
+    // Second pass: draw any viewport borders requested by the caller.
+    // Done after the main render so borders sit on top of all panes and
+    // can't be clipped by the next viewport's clear.
+    this._renderBorders(renderer, canvasWidth, canvasHeight);
+  }
+
+  /**
+   * Lazy-initialized scene + camera + line geometry used to draw viewport
+   * borders. Borders are rendered as a single screen-space pass after the
+   * main multi-camera render.
+   */
+  private _borderScene: THREE.Scene | null = null;
+  private _borderCamera: THREE.OrthographicCamera | null = null;
+
+  private _renderBorders(
+    renderer: THREE.WebGLRenderer,
+    canvasWidth: number,
+    canvasHeight: number,
+  ): void {
+    const bordered = this._cameras.filter(
+      (e) => e.enabled && (e.viewport.borderWidth ?? 0) > 0 && e.viewport.borderColor != null,
+    );
+    if (bordered.length === 0) return;
+
+    if (!this._borderScene) this._borderScene = new THREE.Scene();
+    if (!this._borderCamera) {
+      // Pixel-space ortho: (0,0) bottom-left, (W,H) top-right. WebGL's
+      // viewport / scissor coordinates use the same origin, so x/y/width/
+      // height from the viewport map straight through.
+      this._borderCamera = new THREE.OrthographicCamera(0, canvasWidth, canvasHeight, 0, -1, 1);
+    } else {
+      this._borderCamera.left = 0;
+      this._borderCamera.right = canvasWidth;
+      this._borderCamera.top = canvasHeight;
+      this._borderCamera.bottom = 0;
+      this._borderCamera.updateProjectionMatrix();
+    }
+
+    const borderScene = this._borderScene;
+    // Drop any leftovers from the previous frame.
+    while (borderScene.children.length > 0) {
+      const child = borderScene.children.pop();
+      if (child && (child as THREE.Mesh).geometry) {
+        (child as THREE.Mesh).geometry.dispose();
+      }
+      if (child && (child as THREE.Mesh).material) {
+        const mat = (child as THREE.Mesh).material;
+        if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+        else mat.dispose();
+      }
+    }
+
+    for (const entry of bordered) {
+      const vp = entry.viewport;
+      const px = Math.floor(vp.x * canvasWidth);
+      const py = Math.floor(vp.y * canvasHeight);
+      const pw = Math.floor(vp.width * canvasWidth);
+      const ph = Math.floor(vp.height * canvasHeight);
+      const bw = vp.borderWidth ?? 0;
+      // Draw the border as four filled rectangles (top/bottom/left/right
+      // strips) inside the viewport. This works on every WebGL driver
+      // regardless of `gl.lineWidth` clamping (which silently ignores
+      // values > 1 on most platforms).
+      const color = new THREE.Color(vp.borderColor as THREE.ColorRepresentation);
+      const mat = new THREE.MeshBasicMaterial({ color, depthTest: false, depthWrite: false });
+      const strips: Array<[number, number, number, number]> = [
+        [px, py + ph - bw, pw, bw], // top
+        [px, py, pw, bw], // bottom
+        [px, py, bw, ph], // left
+        [px + pw - bw, py, bw, ph], // right
+      ];
+      for (const [sx, sy, sw, sh] of strips) {
+        if (sw <= 0 || sh <= 0) continue;
+        const geom = new THREE.PlaneGeometry(sw, sh);
+        const mesh = new THREE.Mesh(geom, mat);
+        mesh.position.set(sx + sw / 2, sy + sh / 2, 0);
+        borderScene.add(mesh);
+      }
+    }
+
+    renderer.autoClear = false;
+    renderer.render(borderScene, this._borderCamera);
+    renderer.autoClear = true;
   }
 
   /**

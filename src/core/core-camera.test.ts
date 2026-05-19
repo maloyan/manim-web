@@ -461,3 +461,79 @@ describe('Camera2D frame interaction', () => {
     cam.updateFrame(0.016);
   });
 });
+
+describe('Camera2D aspectMode', () => {
+  it("defaults to 'fill' for back-compat", () => {
+    const cam = new Camera2D({ frameWidth: 14, frameHeight: 8 });
+    expect(cam.aspectMode).toBe('fill');
+    cam.setAspectRatio(2); // viewport aspect 2:1
+    // fill mode: keep frameHeight, recompute frameWidth
+    expect(cam.frameHeight).toBe(8);
+    expect(cam.frameWidth).toBeCloseTo(16);
+  });
+
+  it("'contain' mode preserves user frame when viewport is wider", () => {
+    const cam = new Camera2D({
+      frameWidth: 6,
+      frameHeight: 8,
+      aspectMode: 'contain',
+    });
+    // Viewport aspect (2) > base aspect (0.75) -> pad width, keep height.
+    cam.setAspectRatio(2);
+    expect(cam.frameHeight).toBe(8);
+    expect(cam.frameWidth).toBeCloseTo(16);
+  });
+
+  it("'contain' mode preserves user frame when viewport is taller", () => {
+    const cam = new Camera2D({
+      frameWidth: 14,
+      frameHeight: 4,
+      aspectMode: 'contain',
+    });
+    // Viewport aspect (0.5) < base aspect (3.5) -> pad height, keep width.
+    cam.setAspectRatio(0.5);
+    expect(cam.frameWidth).toBe(14);
+    expect(cam.frameHeight).toBeCloseTo(28);
+  });
+
+  it("'contain' mode keeps the user's base dims across repeated setAspectRatio calls", () => {
+    const cam = new Camera2D({
+      frameWidth: 6,
+      frameHeight: 4,
+      aspectMode: 'contain',
+    });
+    // Two different viewport aspects in a row — base dims must not drift.
+    cam.setAspectRatio(2);
+    cam.setAspectRatio(0.5);
+    // Final pass is "tall viewport" -> width pinned to 6, height grown.
+    expect(cam.frameWidth).toBe(6);
+    expect(cam.frameHeight).toBeCloseTo(12);
+  });
+
+  it('mutating frameWidth/frameHeight updates the base for contain mode', () => {
+    const cam = new Camera2D({
+      frameWidth: 6,
+      frameHeight: 4,
+      aspectMode: 'contain',
+    });
+    cam.frameWidth = 10; // user re-states intent
+    cam.setAspectRatio(2); // 2 > 10/4=2.5? no, 2 < 2.5 -> pad height
+    expect(cam.frameWidth).toBe(10);
+    expect(cam.frameHeight).toBeCloseTo(5);
+  });
+
+  it('switching aspectMode re-applies the projection immediately', () => {
+    const cam = new Camera2D({
+      frameWidth: 6,
+      frameHeight: 4,
+      aspectMode: 'fill',
+    });
+    cam.setAspectRatio(2); // fill mode: keep height (4), width -> 8
+    expect(cam.frameWidth).toBeCloseTo(8);
+    cam.aspectMode = 'contain';
+    // After the switch, contain mode reuses current aspect (8/4=2) against
+    // the user's base (6/4=1.5). 2 > 1.5 -> pad width.
+    expect(cam.frameHeight).toBe(4);
+    expect(cam.frameWidth).toBeCloseTo(8);
+  });
+});

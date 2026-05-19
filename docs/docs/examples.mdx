@@ -2525,12 +2525,24 @@ const scene = new Scene(document.getElementById('container'), {
   backgroundColor: '#1a1a2e',
 });
 
-// Two independent Camera2D instances framing the same scene from
-// different positions / zoom levels. MultiCamera resets each camera's
-// aspect ratio at render time to match its viewport, so what matters
-// here is the frameHeight (vertical extent) and the world position.
-const leftCamera = new Camera2D({ frameWidth: 14, frameHeight: 8, position: [-3, 0, 10] });
-const rightCamera = new Camera2D({ frameWidth: 6, frameHeight: 8, position: [3, 0, 10] });
+// Two independent Camera2D instances framing the same scene at
+// different zoom levels. With `aspectMode: 'contain'` the per-camera
+// frameWidth/frameHeight is honoured at render time (the viewport
+// letterboxes if it doesn't match), so the zoom intent — wide
+// overview on the left, tight zoom on the right — actually shows up
+// on screen.
+const leftCamera = new Camera2D({
+  frameWidth: 14,
+  frameHeight: 8,
+  position: [-3, 0, 10],
+  aspectMode: 'contain',
+});
+const rightCamera = new Camera2D({
+  frameWidth: 4,
+  frameHeight: 4,
+  position: [3, 0, 10],
+  aspectMode: 'contain',
+});
 
 const split = new SplitScreenCamera({
   leftCamera,
@@ -2538,7 +2550,12 @@ const split = new SplitScreenCamera({
   split: 'horizontal',
   splitRatio: 0.5,
 });
-scene.useMultiCamera(split.getMultiCamera());
+const mc = split.getMultiCamera();
+// Draw a thin border around each pane so the split is visible even
+// when one side renders the scene background edge-to-edge.
+mc.setViewportBorder(0, { borderColor: '#888888', borderWidth: 2 });
+mc.setViewportBorder(1, { borderColor: '#888888', borderWidth: 2 });
+scene.useMultiCamera(mc);
 
 const circle = new Circle({ radius: 1, color: RED, strokeWidth: 4 });
 circle.shift([-3, 0, 0]);
@@ -2615,11 +2632,22 @@ const scene = new Scene(document.getElementById('container'), {
 // Main camera: wide overview of the whole scene.
 const mainCamera = new Camera2D({ frameWidth: 14, frameHeight: 8, position: [0, 0, 10] });
 
-// PiP camera: zoomed-in inset that follows a moving target.
-const pipCamera = new Camera2D({ frameWidth: 4, frameHeight: 4, position: [0, 0, 10] });
+// PiP camera: zoomed-in inset that follows a moving target. `contain`
+// keeps the requested 4×4 frame fully visible inside the PiP square
+// viewport instead of letting MultiCamera stretch its width.
+const pipCamera = new Camera2D({
+  frameWidth: 4,
+  frameHeight: 4,
+  position: [0, 0, 10],
+  aspectMode: 'contain',
+});
 
 const mc = new MultiCamera();
 mc.setupPictureInPicture(mainCamera, pipCamera, 'top-right', 0.3);
+// Index 0 is the main viewport, index 1 is the PiP inset (per
+// setupPictureInPicture's add order). Highlight the PiP so users can
+// see where the inset camera is framing.
+mc.setViewportBorder(1, { borderColor: '#ffd54f', borderWidth: 3 });
 scene.useMultiCamera(mc);
 
 const square = new Square({ sideLength: 1.5, color: PURPLE, strokeWidth: 4 });
@@ -2711,13 +2739,41 @@ const scene = new Scene(document.getElementById('container'), {
 // in viewport order [top-left, top-right, bottom-left, bottom-right] on
 // the canvas, so the variable names below describe the on-screen pane,
 // not the world region the camera looks at.
-const overviewPane = new Camera2D({ frameWidth: 14, frameHeight: 8, position: [0, 0, 10] });
-const circlePane = new Camera2D({ frameWidth: 4, frameHeight: 4, position: [-3, 2, 10] });
-const squarePane = new Camera2D({ frameWidth: 4, frameHeight: 4, position: [3, 2, 10] });
-const trianglePane = new Camera2D({ frameWidth: 6, frameHeight: 4, position: [0, -2, 10] });
+// `contain` keeps each pane's requested frame fully visible in its
+// quad-cell viewport instead of letting MultiCamera stretch widths.
+const overviewPane = new Camera2D({
+  frameWidth: 14,
+  frameHeight: 8,
+  position: [0, 0, 10],
+  aspectMode: 'contain',
+});
+const circlePane = new Camera2D({
+  frameWidth: 4,
+  frameHeight: 4,
+  position: [-3, 2, 10],
+  aspectMode: 'contain',
+});
+const squarePane = new Camera2D({
+  frameWidth: 4,
+  frameHeight: 4,
+  position: [3, 2, 10],
+  aspectMode: 'contain',
+});
+const trianglePane = new Camera2D({
+  frameWidth: 6,
+  frameHeight: 4,
+  position: [0, -2, 10],
+  aspectMode: 'contain',
+});
 
 const mc = new MultiCamera();
 mc.setupQuadView([overviewPane, circlePane, squarePane, trianglePane]);
+// Highlight every cell so the four-pane grid is obvious. Different
+// tints make the close-up panes easy to tell apart at a glance.
+mc.setViewportBorder(0, { borderColor: '#888888', borderWidth: 2 });
+mc.setViewportBorder(1, { borderColor: '#ef5350', borderWidth: 2 });
+mc.setViewportBorder(2, { borderColor: '#42a5f5', borderWidth: 2 });
+mc.setViewportBorder(3, { borderColor: '#66bb6a', borderWidth: 2 });
 scene.useMultiCamera(mc);
 
 const circle = new Circle({ radius: 0.9, color: RED, strokeWidth: 4 });

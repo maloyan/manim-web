@@ -201,6 +201,19 @@ export class Camera3D {
 }
 
 /**
+ * How `Camera2D.setAspectRatio` reconciles the user-set frame with the
+ * viewport's pixel aspect.
+ *
+ * - `'fill'` (default): keep `frameHeight`, recompute `frameWidth` from
+ *   the viewport aspect. Frame is cropped horizontally on wider viewports
+ *   and over-shows on narrower ones. Back-compatible.
+ * - `'contain'`: keep both base `frameWidth` and `frameHeight`. Grow
+ *   whichever dimension is needed to letterbox so the user's full
+ *   frame is always visible (no cropping of the intended view).
+ */
+export type Camera2DAspectMode = 'fill' | 'contain';
+
+/**
  * Options for configuring a Camera2D.
  */
 export interface CameraOptions {
@@ -210,6 +223,14 @@ export interface CameraOptions {
   frameHeight?: number;
   /** Initial camera position [x, y, z]. Defaults to [0, 0, 10]. */
   position?: [number, number, number];
+  /**
+   * Behaviour of `setAspectRatio` when the viewport aspect doesn't match
+   * this camera's frame. Defaults to `'fill'` for back-compat — set to
+   * `'contain'` (recommended for multi-camera layouts) to make per-camera
+   * `frameWidth`/`frameHeight` zoom intent survive the per-viewport
+   * aspect adjustment.
+   */
+  aspectMode?: Camera2DAspectMode;
 }
 
 /**
@@ -220,6 +241,14 @@ export class Camera2D {
   private _camera: THREE.OrthographicCamera;
   private _frameWidth: number;
   private _frameHeight: number;
+  /**
+   * The frame dimensions the user *asked for*, preserved across
+   * `setAspectRatio` calls when `_aspectMode === 'contain'`. Updated
+   * whenever the user mutates `frameWidth`/`frameHeight` directly.
+   */
+  private _userFrameWidth: number;
+  private _userFrameHeight: number;
+  private _aspectMode: Camera2DAspectMode;
   private _frame: Camera2DFrame | null = null;
 
   /**
@@ -227,10 +256,18 @@ export class Camera2D {
    * @param options - Camera configuration options
    */
   constructor(options: CameraOptions = {}) {
-    const { frameWidth = 14, frameHeight = 8, position = [0, 0, 10] } = options;
+    const {
+      frameWidth = 14,
+      frameHeight = 8,
+      position = [0, 0, 10],
+      aspectMode = 'fill',
+    } = options;
 
     this._frameWidth = frameWidth;
     this._frameHeight = frameHeight;
+    this._userFrameWidth = frameWidth;
+    this._userFrameHeight = frameHeight;
+    this._aspectMode = aspectMode;
 
     // OrthographicCamera(left, right, top, bottom, near, far)
     const halfWidth = frameWidth / 2;
@@ -261,6 +298,7 @@ export class Camera2D {
    */
   set frameWidth(width: number) {
     this._frameWidth = width;
+    this._userFrameWidth = width;
     this._updateProjection();
   }
 
@@ -276,7 +314,26 @@ export class Camera2D {
    */
   set frameHeight(height: number) {
     this._frameHeight = height;
+    this._userFrameHeight = height;
     this._updateProjection();
+  }
+
+  /**
+   * Get the current aspect-mode (see {@link Camera2DAspectMode}).
+   */
+  get aspectMode(): Camera2DAspectMode {
+    return this._aspectMode;
+  }
+
+  /**
+   * Set the aspect-mode. Re-applies the current aspect ratio so the
+   * projection updates immediately.
+   */
+  set aspectMode(mode: Camera2DAspectMode) {
+    if (mode === this._aspectMode) return;
+    this._aspectMode = mode;
+    const currentAspect = this._frameWidth / this._frameHeight;
+    this.setAspectRatio(currentAspect);
   }
 
   /**
@@ -309,8 +366,24 @@ export class Camera2D {
    * @param aspectRatio - Width / height ratio
    */
   setAspectRatio(aspectRatio: number): void {
-    // Keep frame height, adjust width to match aspect ratio
-    this._frameWidth = this._frameHeight * aspectRatio;
+    if (this._aspectMode === 'contain') {
+      // Letterbox: keep the user's base frame fully visible. Grow whichever
+      // dimension is needed so the rendered frame matches the viewport
+      // aspect without cropping either side of the user's box.
+      const baseAspect = this._userFrameWidth / this._userFrameHeight;
+      if (aspectRatio >= baseAspect) {
+        // Viewport wider than user's frame -> pad width.
+        this._frameHeight = this._userFrameHeight;
+        this._frameWidth = this._userFrameHeight * aspectRatio;
+      } else {
+        // Viewport taller than user's frame -> pad height.
+        this._frameWidth = this._userFrameWidth;
+        this._frameHeight = this._userFrameWidth / aspectRatio;
+      }
+    } else {
+      // 'fill' (legacy): keep frame height, recompute width.
+      this._frameWidth = this._frameHeight * aspectRatio;
+    }
     this._updateProjection();
   }
 

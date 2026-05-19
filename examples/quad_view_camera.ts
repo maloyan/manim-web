@@ -27,13 +27,41 @@ async function quadViewExample(scene: Scene) {
   // in viewport order [top-left, top-right, bottom-left, bottom-right] on
   // the canvas, so the variable names below describe the on-screen pane,
   // not the world region the camera looks at.
-  const overviewPane = new Camera2D({ frameWidth: 14, frameHeight: 8, position: [0, 0, 10] });
-  const circlePane = new Camera2D({ frameWidth: 4, frameHeight: 4, position: [-3, 2, 10] });
-  const squarePane = new Camera2D({ frameWidth: 4, frameHeight: 4, position: [3, 2, 10] });
-  const trianglePane = new Camera2D({ frameWidth: 6, frameHeight: 4, position: [0, -2, 10] });
+  // `contain` keeps each pane's requested frame fully visible in its
+  // quad-cell viewport instead of letting MultiCamera stretch widths.
+  const overviewPane = new Camera2D({
+    frameWidth: 14,
+    frameHeight: 8,
+    position: [0, 0, 10],
+    aspectMode: 'contain',
+  });
+  const circlePane = new Camera2D({
+    frameWidth: 4,
+    frameHeight: 4,
+    position: [-3, 2, 10],
+    aspectMode: 'contain',
+  });
+  const squarePane = new Camera2D({
+    frameWidth: 4,
+    frameHeight: 4,
+    position: [3, 2, 10],
+    aspectMode: 'contain',
+  });
+  const trianglePane = new Camera2D({
+    frameWidth: 6,
+    frameHeight: 4,
+    position: [0, -2, 10],
+    aspectMode: 'contain',
+  });
 
   const mc = new MultiCamera();
   mc.setupQuadView([overviewPane, circlePane, squarePane, trianglePane]);
+  // Highlight every cell so the four-pane grid is obvious. Different
+  // tints make the close-up panes easy to tell apart at a glance.
+  mc.setViewportBorder(0, { borderColor: '#888888', borderWidth: 2 });
+  mc.setViewportBorder(1, { borderColor: '#ef5350', borderWidth: 2 });
+  mc.setViewportBorder(2, { borderColor: '#42a5f5', borderWidth: 2 });
+  mc.setViewportBorder(3, { borderColor: '#66bb6a', borderWidth: 2 });
   scene.useMultiCamera(mc);
 
   const circle = new Circle({ radius: 0.9, color: RED, strokeWidth: 4 });

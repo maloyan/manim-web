@@ -66,7 +66,13 @@ export {
   type MobjectState,
   type SceneSnapshot,
 } from './core/StateManager';
-export { Camera2D, type CameraOptions, Camera3D, type Camera3DOptions } from './core/Camera';
+export {
+  Camera2D,
+  type CameraOptions,
+  type Camera2DAspectMode,
+  Camera3D,
+  type Camera3DOptions,
+} from './core/Camera';
 export { Camera2DFrame } from './core/Camera2DFrame';
 export {
   MovingCamera,
