@@ -10,14 +10,9 @@ import { PGroup, PointMobject, PointCloudDot, Mobject1D, Mobject2D } from '../mo
 //   lines 1250-1256 (dispose with _threeObject mesh materials)
 // ---------------------------------------------------------------------------
 describe('Mobject coverage gaps', () => {
-  it('getBounds without _threeObject uses fallback (lines 662-663)', () => {
+  it('getBounds throws when no three object (lines 662-663)', () => {
     const m = new VMobject();
-    const bounds = m.getBounds();
-    expect(bounds.min).toBeDefined();
-    expect(bounds.max).toBeDefined();
-    // Fallback should use center +/- 0.5
-    expect(bounds.min.x).toBeCloseTo(-0.5, 5);
-    expect(bounds.max.x).toBeCloseTo(0.5, 5);
+    expect(() => m.getBounds()).toThrow(/empty Three\.js bounds/);
   });
 
   it('dispose with THREE.js mesh objects (lines 1250-1256)', () => {

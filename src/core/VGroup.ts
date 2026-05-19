@@ -13,6 +13,25 @@ import { VMobject, Point } from './VMobject';
  */
 export class VGroup extends VMobject {
   /**
+   * True when this VGroup (recursively) has no renderable geometry.
+   */
+  isEmpty(): boolean {
+    if (this.children.length === 0) {
+      return true;
+    }
+    return this.children.every((child) => {
+      const candidate = child as unknown as { isEmpty?: () => boolean };
+      if (typeof candidate.isEmpty === 'function') {
+        return candidate.isEmpty();
+      }
+      if (child instanceof VMobject) {
+        return child.getPoints().length === 0;
+      }
+      return false;
+    });
+  }
+
+  /**
    * Create a new VGroup containing the given mobjects.
    * Accepts both VMobjects and general Mobjects (e.g., Axes, Group).
    * @param mobjects - Mobjects to add to the group
@@ -130,31 +149,25 @@ export class VGroup extends VMobject {
     return this;
   }
 
-  /**
-   * Get the center of the group (average of all children centers).
-   * @returns Center position as [x, y, z]
-   */
   override getCenter(): Vector3Tuple {
-    if (this.children.length === 0) {
+    if (this.isEmpty()) {
       return [this.position.x, this.position.y, this.position.z];
     }
+    const b = this.getBounds();
+    return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
+  }
 
-    let sumX = 0,
-      sumY = 0,
-      sumZ = 0;
-    for (const child of this.children) {
-      const center = child.getCenter();
-      sumX += center[0];
-      sumY += center[1];
-      sumZ += center[2];
-    }
-
-    const count = this.children.length;
-    return [
-      this.position.x + sumX / count,
-      this.position.y + sumY / count,
-      this.position.z + sumZ / count,
-    ];
+  /**
+   * Normalize group transform by forwarding direct group translation/rotation to children.
+   * This keeps VGroup semantics child-driven and avoids double-counting.
+   */
+  override normalizeTransform(): this {
+    this._normalizeContainerTransform({
+      translateChild: (child, dx, dy, dz) => {
+        child.shift([dx, dy, dz]);
+      },
+    });
+    return this;
   }
 
   /**
@@ -162,12 +175,8 @@ export class VGroup extends VMobject {
    * Only shifts children's internal positions, not the group's own position,
    * to avoid double-counting in THREE.js hierarchy.
    *
-   * When the group has no children yet (e.g. MathTex / Tex whose glyphs are
-   * still being rendered asynchronously — issue #318), shift the group's
-   * own `position` instead so the translation is not silently dropped.
-   * THREE.js propagates the parent position to children that get added
-   * later, and `getCenter()` already adds `this.position` to the children
-   * average, so subsequent shifts on the populated group stay consistent.
+   * When the group has no children yet (e.g. async-rendered text glyphs),
+   * store translation on the group so it is not dropped.
    * @param delta - Translation vector [x, y, z]
    * @returns this for chaining
    */
@@ -175,6 +184,8 @@ export class VGroup extends VMobject {
     if (this.children.length === 0) {
       return super.shift(delta);
     }
+
+    this.normalizeTransform();
     for (const child of this.children) {
       child.shift(delta);
     }
@@ -189,6 +200,8 @@ export class VGroup extends VMobject {
    * @returns this for chaining
    */
   override moveTo(target: Vector3Tuple | Mobject, alignedEdge?: Vector3Tuple): this {
+    this.normalizeTransform();
+
     if (!Array.isArray(target)) {
       // Mobject target: delegate to base which uses shift
       if (alignedEdge) {
@@ -210,63 +223,6 @@ export class VGroup extends VMobject {
       target[2] - currentCenter[2],
     ];
     return this.shift(delta);
-  }
-
-  /**
-   * Rotate all children around an axis.
-   * @param angle - Rotation angle in radians
-   * @param axis - Axis of rotation [x, y, z], defaults to Z axis
-   * @returns this for chaining
-   */
-  override rotate(angle: number, axis: Vector3Tuple = [0, 0, 1]): this {
-    // Apply to group's own rotation
-    super.rotate(angle, axis);
-
-    // Also rotate each child
-    for (const child of this.children) {
-      child.rotate(angle, axis);
-    }
-
-    return this;
-  }
-
-  /**
-   * Scale this group.
-   *
-   * For populated groups, scale each child about the group's center by
-   * modifying child geometry and positions — matching Manim Python behavior.
-   *
-   * For empty groups (e.g. MathTex / Tex whose glyphs are still being
-   * rendered asynchronously — issue #324), record the scale on the group's
-   * own `scaleVector`. Three.js then applies the parent transform to any
-   * children added later. MathTex / Tex bake this pending scale into glyph
-   * geometry once their async render finishes, so downstream callers see a
-   * consistent coordinate frame regardless of which mode produced the scale.
-   * @param factor - Scale factor (number for uniform, tuple for non-uniform)
-   * @returns this for chaining
-   */
-  override scale(factor: number | Vector3Tuple): this {
-    if (this.children.length === 0) {
-      return super.scale(factor);
-    }
-    const center = this.getCenter();
-    const fx = typeof factor === 'number' ? factor : factor[0];
-    const fy = typeof factor === 'number' ? factor : factor[1];
-    const fz = typeof factor === 'number' ? factor : factor[2];
-
-    for (const child of this.children) {
-      const cc = child.getCenter();
-      // Scale child's own size (about its own center)
-      child.scale(factor);
-      // Reposition child about the group center
-      child.moveTo([
-        center[0] + (cc[0] - center[0]) * fx,
-        center[1] + (cc[1] - center[1]) * fy,
-        center[2] + (cc[2] - center[2]) * fz,
-      ]);
-    }
-
-    return this;
   }
 
   /**

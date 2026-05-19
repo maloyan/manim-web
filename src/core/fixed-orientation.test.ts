@@ -242,7 +242,10 @@ describe('addFixedOrientationMobjects', () => {
     scene.add(group);
     scene.addFixedOrientationMobjects(group);
 
-    expect(group.getCenter()).toEqual([2, 3, -1]);
+    const center = group.getCenter();
+    expect(center[0]).toBeCloseTo(2, 12);
+    expect(center[1]).toBeCloseTo(3, 12);
+    expect(center[2]).toBeCloseTo(-1, 12);
 
     scene.setCameraOrientation(Math.PI / 3, Math.PI / 4, 15);
     scene.render();

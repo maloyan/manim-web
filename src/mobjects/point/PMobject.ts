@@ -133,10 +133,36 @@ export class PMobject extends Mobject {
   }
 
   /**
-   * Get all points
-   * @returns Copy of the points array
+   * Get all points in world coordinates.
+   * @returns Copy of the transformed points array
    */
   getPoints(): PointData[] {
+    return this._points.map((p) => ({
+      position: this._localToWorld(p.position),
+      color: p.color,
+      opacity: p.opacity,
+    }));
+  }
+
+  protected _localToWorld(local: Vector3Tuple): Vector3Tuple {
+    const euler = new THREE.Euler(
+      this.rotation.x,
+      this.rotation.y,
+      this.rotation.z,
+      this.rotation.order,
+    );
+    const v = new THREE.Vector3(local[0], local[1], local[2]);
+    v.multiply(this.scaleVector);
+    v.applyEuler(euler);
+    v.add(this.position);
+    return [v.x, v.y, v.z];
+  }
+
+  /**
+   * Get all points in local coordinates.
+   * @returns Copy of the local points array
+   */
+  getLocalPoints(): PointData[] {
     return this._points.map((p) => ({
       position: [...p.position] as Vector3Tuple,
       color: p.color,
@@ -227,13 +253,9 @@ export class PMobject extends Mobject {
    * @returns this for chaining
    */
   override shift(delta: Vector3Tuple): this {
-    super.shift(delta);
-    for (const point of this._points) {
-      point.position[0] += delta[0];
-      point.position[1] += delta[1];
-      point.position[2] += delta[2];
-    }
-    return this;
+    // PMobject point coordinates are local-space geometry; translating should
+    // move the mobject transform, not rewrite local point data.
+    return super.shift(delta);
   }
 
   /**
@@ -309,7 +331,7 @@ export class PMobject extends Mobject {
    */
   protected override _createCopy(): PMobject {
     return new PMobject({
-      points: this.getPoints(),
+      points: this.getLocalPoints(),
       color: this.color,
       opacity: this._opacity,
       pointSize: this._pointSize,

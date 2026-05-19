@@ -40,11 +40,13 @@ export class PointMobject extends PMobject {
     const { position = [0, 0, 0], color = WHITE, opacity = 1, size = 8 } = options;
 
     super({
-      points: [{ position, color, opacity }],
+      points: [{ position: [0, 0, 0], color, opacity }],
       color,
       opacity,
       pointSize: size,
     });
+
+    this.position.set(...position);
   }
 
   /**
@@ -52,9 +54,6 @@ export class PointMobject extends PMobject {
    * @returns Position as [x, y, z]
    */
   getPosition(): Vector3Tuple {
-    if (this._points.length > 0) {
-      return [...this._points[0].position] as Vector3Tuple;
-    }
     return [this.position.x, this.position.y, this.position.z];
   }
 
@@ -64,10 +63,8 @@ export class PointMobject extends PMobject {
    * @returns this for chaining
    */
   setPosition(position: Vector3Tuple): this {
-    if (this._points.length > 0) {
-      this._points[0].position = [...position];
-      this._markDirty();
-    }
+    this.position.set(...position);
+    this._markDirty();
     return this;
   }
 

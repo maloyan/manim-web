@@ -129,14 +129,14 @@ export class Mobject1D extends PMobject {
    * Get the start point
    */
   getStart(): Vector3Tuple {
-    return [...this._start];
+    return this._localToWorld(this._start);
   }
 
   /**
    * Get the end point
    */
   getEnd(): Vector3Tuple {
-    return [...this._end];
+    return this._localToWorld(this._end);
   }
 
   /**
@@ -201,11 +201,12 @@ export class Mobject1D extends PMobject {
    * Get the center of the line segment
    */
   override getCenter(): Vector3Tuple {
-    return [
+    const local: Vector3Tuple = [
       (this._start[0] + this._end[0]) / 2,
       (this._start[1] + this._end[1]) / 2,
       (this._start[2] + this._end[2]) / 2,
     ];
+    return this._localToWorld(local);
   }
 
   /**
@@ -219,14 +220,6 @@ export class Mobject1D extends PMobject {
       point[1] - currentCenter[1],
       point[2] - currentCenter[2],
     ];
-
-    this._start[0] += delta[0];
-    this._start[1] += delta[1];
-    this._start[2] += delta[2];
-    this._end[0] += delta[0];
-    this._end[1] += delta[1];
-    this._end[2] += delta[2];
-
     return this.shift(delta);
   }
 
@@ -236,28 +229,7 @@ export class Mobject1D extends PMobject {
    * @returns this for chaining
    */
   override shift(delta: Vector3Tuple): this {
-    // Update internal endpoints (but don't double-shift since super.shift updates _points)
-    // Actually we need to regenerate since _generatePoints uses _start/_end
-    this._start[0] += delta[0];
-    this._start[1] += delta[1];
-    this._start[2] += delta[2];
-    this._end[0] += delta[0];
-    this._end[1] += delta[1];
-    this._end[2] += delta[2];
-
-    // Shift the actual points
-    for (const point of this._points) {
-      point.position[0] += delta[0];
-      point.position[1] += delta[1];
-      point.position[2] += delta[2];
-    }
-
-    this.position.x += delta[0];
-    this.position.y += delta[1];
-    this.position.z += delta[2];
-    this._markDirty();
-
-    return this;
+    return super.shift(delta);
   }
 
   /**
@@ -274,8 +246,8 @@ export class Mobject1D extends PMobject {
    */
   protected override _createCopy(): Mobject1D {
     const copy = new Mobject1D({
-      start: this._start,
-      end: this._end,
+      start: [...this._start],
+      end: [...this._end],
       numPoints: this._numPointsConfig,
       density: this._density,
       color: this.color,

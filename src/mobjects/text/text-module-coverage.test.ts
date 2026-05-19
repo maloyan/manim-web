@@ -1011,6 +1011,34 @@ describe('MathTex (SVG)', () => {
       expect(svg.fillOpacity).toBe(0.8);
     });
   });
+
+  it('scales MathTex VMobject points after normalizeTransform', async () => {
+    const svg = new MathTex({ latex: 'x' });
+    await svg.waitForRender();
+
+    const leaf = svg.children.find(
+      (child): child is InstanceType<typeof _VMobject> =>
+        child instanceof _VMobject && child.getPoints().length > 0,
+    );
+
+    expect(leaf).toBeDefined();
+    if (!leaf) return;
+
+    const before = leaf.getPoints().map((p) => [...p]);
+    leaf.scale(2);
+    leaf.normalizeTransform();
+    const after = leaf.getPoints();
+
+    expect(after.length).toBe(before.length);
+    for (let i = 0; i < before.length; i++) {
+      expect(after[i][0]).toBeCloseTo(before[i][0] * 2, 5);
+      expect(after[i][1]).toBeCloseTo(before[i][1] * 2, 5);
+      expect(after[i][2]).toBeCloseTo(before[i][2] * 2, 5);
+    }
+    expect(leaf.scaleVector.x).toBeCloseTo(1, 6);
+    expect(leaf.scaleVector.y).toBeCloseTo(1, 6);
+    expect(leaf.scaleVector.z).toBeCloseTo(1, 6);
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════

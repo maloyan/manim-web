@@ -34,6 +34,22 @@ interface VGroupLeafState {
   fillColorPair: { start: THREE.Color; target: THREE.Color; interpolate: boolean };
 }
 const scratchColor = new THREE.Color();
+function assertGroupAnchorsAtIdentity(group: VGroup, phase: string): void {
+  const { x, y, z } = group.position;
+  if (x !== 0 || y !== 0 || z !== 0) {
+    throw new Error(
+      `PointMorphStrategy(${phase}): VGroup.position must stay exactly [0, 0, 0], got [${x}, ${y}, ${z}]`,
+    );
+  }
+  const sx = group.scaleVector.x;
+  const sy = group.scaleVector.y;
+  const sz = group.scaleVector.z;
+  if (sx !== 1 || sy !== 1 || sz !== 1) {
+    throw new Error(
+      `PointMorphStrategy(${phase}): VGroup.scaleVector must stay exactly [1, 1, 1], got [${sx}, ${sy}, ${sz}]`,
+    );
+  }
+}
 
 function captureStyle(m: VMobject): ChildStyle {
   return {
@@ -119,14 +135,19 @@ export class PointMorphStrategy implements MorphStrategy {
   }
   private _beginVGroup(source: VGroup, target: VGroup): void {
     this._isVGroupTransform = true;
-    for (const pair of pairLeafSnapshotsByIndex(source, target))
+    source.normalizeTransform();
+    const normalizedTarget = target.copy() as VGroup;
+    normalizedTarget.normalizeTransform();
+    assertGroupAnchorsAtIdentity(source, 'begin/source');
+    assertGroupAnchorsAtIdentity(normalizedTarget, 'begin/target');
+    for (const pair of pairLeafSnapshotsByIndex(source, normalizedTarget))
       this._vgroupLeafStates.push(this._build(source, pair));
     this._startPosition.copy(source.position);
-    this._targetPosition.copy(target.position);
+    this._targetPosition.copy(normalizedTarget.position);
     this._startRotation.copy(source.rotation);
-    this._targetRotation.copy(target.rotation);
+    this._targetRotation.copy(normalizedTarget.rotation);
     this._startScale.copy(source.scaleVector);
-    this._targetScale.copy(target.scaleVector);
+    this._targetScale.copy(normalizedTarget.scaleVector);
   }
   private _build(group: VGroup, pair: LeafPairByIndex): VGroupLeafState {
     const { source: src, target: tgt, sourceIsPlaceholder, targetIsPlaceholder } = pair;
@@ -175,6 +196,8 @@ export class PointMorphStrategy implements MorphStrategy {
   }
   interpolate(_animation: Animation, source: Mobject, _target: Mobject, alpha: number): void {
     if (this._isVGroupTransform) {
+      const group = source as VGroup;
+      assertGroupAnchorsAtIdentity(group, 'interpolate');
       for (const leaf of this._vgroupLeafStates) {
         const interpolated: number[][] = [];
         for (let i = 0; i < leaf.startPoints.length; i++)
@@ -235,6 +258,7 @@ export class PointMorphStrategy implements MorphStrategy {
   finish(_animation: Animation, source: Mobject, target: Mobject): void {
     if (this._isVGroupTransform) {
       const group = source as VGroup;
+      assertGroupAnchorsAtIdentity(group, 'finish/source');
       for (const leaf of this._vgroupLeafStates) {
         leaf.child.setPoints(leaf.finalTargetPoints);
         leaf.child.position.copy(leaf.targetPosition);

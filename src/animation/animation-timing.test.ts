@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Animation, AnimationOptions } from './Animation';
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
+import { PointMobject } from '../mobjects/point/PointMobject';
 import { Timeline } from './Timeline';
 import { LaggedStart, laggedStart } from './LaggedStart';
 import { UpdateFromFunc, updateFromFunc } from './UpdateFromFunc';
@@ -455,7 +456,7 @@ describe('MoveAlongPath', () => {
   });
 
   it('moves along straight path at alpha 0, 0.5, 1', () => {
-    const mob = new ConcreteMobject();
+    const mob = new PointMobject({ position: [0, 0, 0] });
     const a = new MoveAlongPath(mob, { path: straightPath(), rateFunc: linear });
     a.begin();
     a.interpolate(0);
@@ -468,7 +469,7 @@ describe('MoveAlongPath', () => {
   });
 
   it('works with two-segment path', () => {
-    const mob = new ConcreteMobject();
+    const mob = new PointMobject({ position: [0, 0, 0] });
     const a = new MoveAlongPath(mob, { path: twoSegPath(), rateFunc: linear });
     a.begin();
     a.interpolate(0);
@@ -482,7 +483,7 @@ describe('MoveAlongPath', () => {
   });
 
   it('finish sets position to path end', () => {
-    const mob = new ConcreteMobject();
+    const mob = new PointMobject({ position: [0, 0, 0] });
     const a = new MoveAlongPath(mob, { path: straightPath(), rateFunc: linear });
     a.begin();
     a.finish();
@@ -490,7 +491,7 @@ describe('MoveAlongPath', () => {
   });
 
   it('handles path with fewer than 4 points without throwing', () => {
-    const mob = new ConcreteMobject();
+    const mob = new PointMobject({ position: [0, 0, 0] });
     const p = new VMobject();
     p.setPoints([
       [0, 0, 0],

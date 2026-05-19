@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls as ThreeOrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { axisVector } from '../utils/axis';
 
 /**
  * Options for configuring OrbitControls.
@@ -55,14 +56,10 @@ export class OrbitControls {
     // into an internal quaternion at construction and never updates it. 'camera' mode uses
     // the initial camera.up (Three.js default behavior).
     const mode = options?.orbitControlsUp ?? 'z';
-    if (mode === 'x') {
-      camera.up.set(1, 0, 0);
-    } else if (mode === 'y') {
-      camera.up.set(0, 1, 0);
-    } else if (mode === 'z') {
-      camera.up.set(0, 0, 1);
-    }
     // 'camera' mode: leave camera.up unchanged (Three.js default)
+    if (mode !== 'camera') {
+      camera.up.set(...axisVector(mode));
+    }
 
     this._controls = new ThreeOrbitControls(camera, canvas);
 

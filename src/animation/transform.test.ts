@@ -1030,7 +1030,7 @@ describe('Transform on VGroup (#206)', () => {
     }).not.toThrow();
   });
 
-  it('interpolates child points during VGroup transform', () => {
+  it('keeps VGroup anchors identity and still reaches scaled child geometry', () => {
     const circle = new Circle({ radius: 1 });
     const group = new VGroup(circle);
 
@@ -1039,24 +1039,24 @@ describe('Transform on VGroup (#206)', () => {
 
     const t = new Transform(group, target);
     t.begin();
-
-    const startPts = circle.getPoints().map((p) => [...p]);
     t.interpolate(1);
-    const endPts = circle.getPoints();
 
-    // After interpolation to alpha=1, the child's points should have changed
-    // (scaled up), not remain identical to start
-    let changed = false;
-    for (let i = 0; i < Math.min(startPts.length, endPts.length); i++) {
-      if (
-        Math.abs(startPts[i][0] - endPts[i][0]) > 0.01 ||
-        Math.abs(startPts[i][1] - endPts[i][1]) > 0.01
-      ) {
-        changed = true;
-        break;
-      }
-    }
-    expect(changed).toBe(true);
+    expect(group.position.x).toBe(0);
+    expect(group.position.y).toBe(0);
+    expect(group.position.z).toBe(0);
+    expect(group.scaleVector.x).toBe(1);
+    expect(group.scaleVector.y).toBe(1);
+    expect(group.scaleVector.z).toBe(1);
+
+    const sourceBounds = circle.getBounds();
+    target.normalizeTransform();
+    const targetChild = target.children[0] as Circle;
+    const targetBounds = targetChild.getBounds();
+
+    expect(sourceBounds.min.x).toBeCloseTo(targetBounds.min.x, 6);
+    expect(sourceBounds.max.x).toBeCloseTo(targetBounds.max.x, 6);
+    expect(sourceBounds.min.y).toBeCloseTo(targetBounds.min.y, 6);
+    expect(sourceBounds.max.y).toBeCloseTo(targetBounds.max.y, 6);
   });
 
   it('finish sets children to target state (points and style)', () => {

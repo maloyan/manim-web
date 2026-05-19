@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
+import { PointMobject } from '../../mobjects/point/PointMobject';
 import { linear } from '../../rate-functions';
 import {
   Add,
@@ -425,10 +426,9 @@ describe('Rotating', () => {
     });
 
     it('uses mobject center when no aboutPoint given', () => {
-      // Assign a _threeObject so getCenter() works on abstract Mobject
-      mob._threeObject = new THREE.Group();
-      mob.position.set(1, 2, 0);
-      const anim = new Rotating(mob);
+      // Use PointMobject to have valid bounds for getCenter()
+      const p = new PointMobject({ position: [1, 2, 0] });
+      const anim = new Rotating(p);
       // Should not throw - it calls getCenter() internally
       expect(() => anim.begin()).not.toThrow();
     });

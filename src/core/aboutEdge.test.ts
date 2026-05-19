@@ -19,48 +19,33 @@ function makeUnitSquare(): VMobject {
 }
 
 describe('scale with aboutPoint and aboutEdge (#218)', () => {
-  it('scales about a specific point', () => {
+  it('throws for aboutPoint in deferred-transform mode', () => {
     const vm = makeUnitSquare();
-    // Scale by 2 about the right edge center [1, 0, 0]
-    // Point [-1,-1,0]: (-1-1)*2+1 = -3, (-1-0)*2+0 = -2
-    vm.scale(2, { aboutPoint: [1, 0, 0] });
-    const pts = vm.getPoints();
-    expect(pts[0][0]).toBeCloseTo(-3);
-    expect(pts[0][1]).toBeCloseTo(-2);
-    // Point [1,-1,0]: (1-1)*2+1 = 1, (-1-0)*2+0 = -2
-    expect(pts[3][0]).toBeCloseTo(1);
-    expect(pts[3][1]).toBeCloseTo(-2);
+    expect(() => vm.scale(2, { aboutPoint: [1, 0, 0] })).toThrow();
   });
 
-  it('scales about an edge (RIGHT)', () => {
+  it('throws for aboutEdge in deferred-transform mode', () => {
     const vm = makeUnitSquare();
-    // aboutEdge [1,0,0] resolves to right edge center [1,0,0]
-    vm.scale(2, { aboutEdge: [1, 0, 0] });
-    const pts = vm.getPoints();
-    expect(pts[0][0]).toBeCloseTo(-3);
-    expect(pts[0][1]).toBeCloseTo(-2);
-    expect(pts[3][0]).toBeCloseTo(1);
-    expect(pts[3][1]).toBeCloseTo(-2);
+    expect(() => vm.scale(2, { aboutEdge: [1, 0, 0] })).toThrow();
   });
 
-  it('scales about an edge (UP)', () => {
+  it('still supports plain scale via transform anchor after normalize', () => {
     const vm = makeUnitSquare();
-    // aboutEdge [0,1,0] resolves to top edge center [0,1,0]
-    vm.scale(3, { aboutEdge: [0, 1, 0] });
+    vm.scale(3);
+    vm.normalizeTransform();
     const pts = vm.getPoints();
-    // [-1,-1,0]: (-1-0)*3+0 = -3, (-1-1)*3+1 = -5
     expect(pts[0][0]).toBeCloseTo(-3);
-    expect(pts[0][1]).toBeCloseTo(-5);
-    // [1,1,0]: (1-0)*3+0 = 3, (1-1)*3+1 = 1 (fixed along y)
+    expect(pts[0][1]).toBeCloseTo(-3);
     expect(pts[2][0]).toBeCloseTo(3);
-    expect(pts[2][1]).toBeCloseTo(1);
+    expect(pts[2][1]).toBeCloseTo(3);
   });
 });
 
 describe('stretch with aboutPoint and aboutEdge (#218)', () => {
-  it('stretches along x axis', () => {
+  it('stretches along x axis after normalize', () => {
     const vm = makeUnitSquare();
     vm.stretch(2, 0);
+    vm.normalizeTransform();
     const pts = vm.getPoints();
     // x doubles, y unchanged
     expect(pts[0][0]).toBeCloseTo(-2);
@@ -69,30 +54,14 @@ describe('stretch with aboutPoint and aboutEdge (#218)', () => {
     expect(pts[2][1]).toBeCloseTo(1);
   });
 
-  it('stretches along y axis about a point', () => {
+  it('throws for aboutPoint in deferred-transform mode', () => {
     const vm = makeUnitSquare();
-    // Stretch y by 3 about top edge [0,1,0]
-    vm.stretch(3, 1, { aboutPoint: [0, 1, 0] });
-    const pts = vm.getPoints();
-    // [-1,-1,0]: y = (-1-1)*3+1 = -5
-    expect(pts[0][1]).toBeCloseTo(-5);
-    // [1,1,0]: y = (1-1)*3+1 = 1 (fixed)
-    expect(pts[2][1]).toBeCloseTo(1);
-    // x unchanged
-    expect(pts[0][0]).toBeCloseTo(-1);
+    expect(() => vm.stretch(3, 1, { aboutPoint: [0, 1, 0] })).toThrow();
   });
 
-  it('stretches about an edge', () => {
+  it('throws for aboutEdge in deferred-transform mode', () => {
     const vm = makeUnitSquare();
-    // Stretch x by 2 about right edge [1,0,0] -> resolves to [1,0,0]
-    vm.stretch(2, 0, { aboutEdge: [1, 0, 0] });
-    const pts = vm.getPoints();
-    // [-1,-1,0]: x = (-1-1)*2+1 = -3, y unchanged = -1
-    expect(pts[0][0]).toBeCloseTo(-3);
-    expect(pts[0][1]).toBeCloseTo(-1);
-    // [1,1,0]: x = (1-1)*2+1 = 1 (fixed), y unchanged = 1
-    expect(pts[2][0]).toBeCloseTo(1);
-    expect(pts[2][1]).toBeCloseTo(1);
+    expect(() => vm.stretch(2, 0, { aboutEdge: [1, 0, 0] })).toThrow();
   });
 
   it('throws when both aboutPoint and aboutEdge are specified', () => {

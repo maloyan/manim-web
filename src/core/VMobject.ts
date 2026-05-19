@@ -102,7 +102,7 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Get all points defining this VMobject as 3D arrays
+   * Get all points defining this VMobject as 3D arrays (local-space)
    * @returns Copy of the points array
    */
   getPoints(): number[][] {
@@ -269,6 +269,40 @@ export class VMobject extends VMobjectRendering {
     return this;
   }
 
+  /**
+   * Fold local scaleVector into canonical child/point state and reset scaleVector.
+   *
+   * Matches VGroup normalization semantics: propagate scale to children,
+   * then clear parent scale anchor.
+   */
+  override normalizeTransform(): this {
+    const sx = this.scaleVector.x;
+    const sy = this.scaleVector.y;
+    const sz = this.scaleVector.z;
+
+    if (!(sx === 1 && sy === 1 && sz === 1)) {
+      for (const p of this._points3D) {
+        p[0] *= sx;
+        p[1] *= sy;
+        p[2] *= sz;
+      }
+
+      for (const child of this.children) {
+        child.position.set(child.position.x * sx, child.position.y * sy, child.position.z * sz);
+        child.scale([sx, sy, sz]);
+      }
+
+      this.scaleVector.set(1, 1, 1);
+    }
+
+    for (const child of this.children) {
+      child.normalizeTransform();
+    }
+
+    this._markDirtyUpward();
+    return this;
+  }
+
   // -----------------------------------------------------------------------
   // Transform subpath metadata
   // -----------------------------------------------------------------------
@@ -279,7 +313,6 @@ export class VMobject extends VMobjectRendering {
    */
   setBaseSubpathLengths(lengths: number[] | undefined): void {
     this._baseSubpathLengths = lengths ? [...lengths] : undefined;
-    this._geometryDirty = true;
     this._markDirtyUpward();
   }
 
@@ -302,7 +335,6 @@ export class VMobject extends VMobjectRendering {
     } else {
       this._transformSubpathLengths = [...lengths];
     }
-    this._geometryDirty = true;
     this._markDirtyUpward();
   }
 
@@ -711,7 +743,6 @@ export class VMobject extends VMobjectRendering {
     this.position.y += center[1];
     this.position.z += center[2];
 
-    this._geometryDirty = true;
     this._markDirtyUpward();
 
     return this;

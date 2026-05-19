@@ -77,29 +77,27 @@ export class Group extends Mobject {
     return this;
   }
 
-  /**
-   * Get the center of the group (average of all children centers).
-   * Children maintain world-space coordinates, so no group position offset
-   * is added (shift/moveTo only update children, not group position).
-   * @returns Center position as [x, y, z]
-   */
   override getCenter(): Vector3Tuple {
     if (this.children.length === 0) {
       return [this.position.x, this.position.y, this.position.z];
     }
 
-    let sumX = 0,
-      sumY = 0,
-      sumZ = 0;
-    for (const child of this.children) {
-      const center = child.getCenter();
-      sumX += center[0];
-      sumY += center[1];
-      sumZ += center[2];
+    const isEmptyContainer = (mob: Mobject): boolean => {
+      const candidate = mob as unknown as { isEmpty?: () => boolean };
+      return typeof candidate.isEmpty === 'function' && candidate.isEmpty();
+    };
+    const hasNonEmptyChild = this.children.some((child) => !isEmptyContainer(child));
+    if (!hasNonEmptyChild) {
+      return [this.position.x, this.position.y, this.position.z];
     }
 
-    const count = this.children.length;
-    return [sumX / count, sumY / count, sumZ / count];
+    const b = this.getBounds();
+    return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
+  }
+
+  override normalizeTransform(): this {
+    this._normalizeContainerTransform();
+    return this;
   }
 
   /**
@@ -111,6 +109,8 @@ export class Group extends Mobject {
    * @returns this for chaining
    */
   override shift(delta: Vector3Tuple): this {
+    this.normalizeTransform();
+
     for (const child of this.children) {
       child.shift(delta);
     }
@@ -169,11 +169,7 @@ export class Group extends Mobject {
    * @returns this for chaining
    */
   override scale(factor: number | Vector3Tuple): this {
-    for (const child of this.children) {
-      child.scale(factor);
-    }
-    this._markDirty();
-    return this;
+    return super.scale(factor);
   }
 
   /**

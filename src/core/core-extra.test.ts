@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Mobject, UP, LEFT, RIGHT, UL, UR, DL } from './Mobject';
+import { axisVectorFromEulerKey } from '../utils/axis';
 import { VMobject } from './VMobject';
+import { PointMobject } from '../mobjects/point';
 import {
   getNumCurves,
   getNthCurve,
@@ -10,6 +12,8 @@ import {
 import { Group } from './Group';
 import { VGroup } from './VGroup';
 import { VDict, VectorizedPoint } from './VDict';
+import { Line } from '../mobjects/geometry/Line';
+import { Dot } from '../mobjects/geometry/Dot';
 import {
   serializeMobject,
   deserializeMobject,
@@ -942,13 +946,11 @@ describe('Mobject - extended coverage', () => {
   });
 
   // getBounds fallback (no _threeObject)
-  it('getBounds returns position-based fallback when no three object', () => {
+  it('getBounds throws when no three object', () => {
     const vm = new VMobject();
     vm.position.set(5, 5, 5);
-    // Access bounds without creating three object
-    const bounds = vm.getBounds();
-    expect(bounds.min.x).toBeDefined();
-    expect(bounds.max.x).toBeDefined();
+    // Access bounds without creating three object throws
+    expect(() => vm.getBounds()).toThrow(/empty Three\.js bounds/);
   });
 
   // nextTo with point target
@@ -1492,14 +1494,118 @@ describe('Group - extended coverage', () => {
     expect(g.getCenter()).toEqual([5, 6, 7]);
   });
 
-  it('getCenter with children returns average of children centers', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    const b = new VMobject();
-    b.position.set(2, 0, 0);
+  it('getCenter with children returns geometric center from child bounds', () => {
+    const a = new Dot({ point: [0, 0, 0] });
+    const b = new Dot({ point: [2, 0, 0] });
     const g = new Group(a, b);
     const center = g.getCenter();
     expect(center[0]).toBeCloseTo(1, 0);
+  });
+
+  it('Group getCenter throws when a child has empty Three.js bounds', () => {
+    const g = new Group(new VMobject());
+    expect(() => g.getCenter()).toThrow(/empty Three\.js bounds/);
+  });
+
+  it('Group getBounds uses descendant geometry', () => {
+    const a = new Dot({ point: [0, 0, 0] });
+    const b = new Dot({ point: [2, 0, 0] });
+    const g = new Group(new Group(a, b));
+
+    const bounds = g.getBounds();
+    const centerX = (bounds.min.x + bounds.max.x) / 2;
+    expect(centerX).toBeCloseTo(1, 6);
+    expect(bounds.min.x).toBeLessThan(0);
+    expect(bounds.max.x).toBeGreaterThan(2);
+  });
+
+  it('Group getBounds throws on empty container tree', () => {
+    const g = new Group(new Group());
+    expect(() => g.getBounds()).toThrow(/empty Three\.js bounds/);
+  });
+
+  it('Group getBounds is stable before and after normalizeTransform with translation/scale/rotation', () => {
+    const a = new Dot({ point: [0, 0, 0] });
+    const b = new Dot({ point: [2, 1, 0] });
+    const g = new Group(a, b);
+
+    g.shift([3, -2, 0]);
+    g.scale(1.7);
+    g.rotate(Math.PI / 5);
+
+    const before = g.getBounds();
+    const beforeCenter = [
+      (before.min.x + before.max.x) / 2,
+      (before.min.y + before.max.y) / 2,
+      (before.min.z + before.max.z) / 2,
+    ] as const;
+    const beforeSize = [
+      before.max.x - before.min.x,
+      before.max.y - before.min.y,
+      before.max.z - before.min.z,
+    ] as const;
+
+    g.normalizeTransform();
+
+    const after = g.getBounds();
+    const afterCenter = [
+      (after.min.x + after.max.x) / 2,
+      (after.min.y + after.max.y) / 2,
+      (after.min.z + after.max.z) / 2,
+    ] as const;
+    const afterSize = [
+      after.max.x - after.min.x,
+      after.max.y - after.min.y,
+      after.max.z - after.min.z,
+    ] as const;
+
+    expect(afterCenter[0]).toBeCloseTo(beforeCenter[0], 6);
+    expect(afterCenter[1]).toBeCloseTo(beforeCenter[1], 6);
+
+    expect(afterSize[0]).toBeCloseTo(beforeSize[0], 6);
+    expect(afterSize[1]).toBeCloseTo(beforeSize[1], 6);
+
+    // Z thickness can vary slightly from triangulation/normal update details;
+    // lock planar bbox invariance for this transform-normalization regression.
+    expect(afterCenter[2]).toBeCloseTo(beforeCenter[2], 1);
+    expect(afterSize[2]).toBeGreaterThan(0);
+    expect(beforeSize[2]).toBeGreaterThan(0);
+  });
+
+  it('Group normalizeTransform applies parent transforms in S->R->T order', () => {
+    const p = new PointMobject({ position: [1, 0, 0] });
+    const g = new Group(p);
+
+    // Set parent anchors directly, then normalize into child state.
+    g.scaleVector.set(2, 2, 2);
+    g.rotation.set(0, 0, Math.PI / 2);
+    g.position.set(3, 0, 0);
+
+    g.normalizeTransform();
+
+    const pos = p.getPosition();
+    expect(pos[0]).toBeCloseTo(3, 6);
+    expect(pos[1]).toBeCloseTo(2, 6);
+    expect(pos[2]).toBeCloseTo(0, 6);
+
+    // Order lock: must not match other composition orders.
+    expect(pos[0]).not.toBeCloseTo(8, 6); // T->R->S on [1,0,0]
+    expect(pos[1]).not.toBeCloseTo(0, 6);
+
+    expect(g.position.x).toBe(0);
+    expect(g.position.y).toBe(0);
+    expect(g.position.z).toBe(0);
+    expect(g.rotation.x).toBe(0);
+    expect(g.rotation.y).toBe(0);
+    expect(g.rotation.z).toBe(0);
+    expect(g.scaleVector.x).toBe(1);
+    expect(g.scaleVector.y).toBe(1);
+    expect(g.scaleVector.z).toBe(1);
+  });
+
+  it('Group getCenter handles nested empty containers', () => {
+    const g = new Group(new VGroup(new VGroup()));
+    expect(g.getCenter()).toEqual([0, 0, 0]);
   });
 
   it('shift shifts all children', () => {
@@ -1516,10 +1622,8 @@ describe('Group - extended coverage', () => {
   });
 
   it('moveTo with point moves group center', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    const b = new VMobject();
-    b.position.set(2, 0, 0);
+    const a = new PointMobject({ position: [0, 0, 0] });
+    const b = new PointMobject({ position: [2, 0, 0] });
     const g = new Group(a, b);
     g.moveTo([5, 5, 0]);
     const center = g.getCenter();
@@ -1527,11 +1631,19 @@ describe('Group - extended coverage', () => {
     expect(center[1]).toBeCloseTo(5, 0);
   });
 
+  it('scale then moveTo keeps Group center on target', () => {
+    const g = new Group(new PointMobject({ position: [1, 0, 0] }));
+    g.scale(2);
+    g.moveTo([5, 0, 0]);
+    const center = g.getCenter();
+    expect(center[0]).toBeCloseTo(5, 6);
+    expect(center[1]).toBeCloseTo(0, 6);
+    expect(center[2]).toBeCloseTo(0, 6);
+  });
+
   it('moveTo with Mobject target centers on it', () => {
-    const target = new VMobject();
-    target.position.set(10, 10, 0);
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
+    const target = new PointMobject({ position: [10, 10, 0] });
+    const a = new PointMobject({ position: [0, 0, 0] });
     const g = new Group(a);
     g.moveTo(target);
     const center = g.getCenter();
@@ -1541,10 +1653,8 @@ describe('Group - extended coverage', () => {
   });
 
   it('moveTo with Mobject + alignedEdge aligns edges', () => {
-    const target = new VMobject();
-    target.position.set(5, 5, 0);
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
+    const target = new PointMobject({ position: [5, 5, 0] });
+    const a = new PointMobject({ position: [0, 0, 0] });
     const g = new Group(a);
     g.moveTo(target, UL);
     // should shift to align upper-left edges
@@ -1558,21 +1668,22 @@ describe('Group - extended coverage', () => {
     // child should have been rotated
   });
 
-  it('scale scales all children', () => {
+  it('scale updates group scale vector', () => {
     const a = new VMobject();
-    a.scaleVector.set(1, 1, 1);
     const g = new Group(a);
     g.scale(2);
-    expect(a.scaleVector.x).toBe(2);
-    expect(a.scaleVector.y).toBe(2);
+    expect(g.scaleVector.x).toBe(2);
+    expect(g.scaleVector.y).toBe(2);
+    expect(a.scaleVector.x).toBe(1);
   });
 
-  it('scale with tuple scales children non-uniformly', () => {
+  it('scale with tuple updates group scale vector non-uniformly', () => {
     const a = new VMobject();
     const g = new Group(a);
     g.scale([2, 3, 4]);
-    expect(a.scaleVector.x).toBe(2);
-    expect(a.scaleVector.y).toBe(3);
+    expect(g.scaleVector.x).toBe(2);
+    expect(g.scaleVector.y).toBe(3);
+    expect(g.scaleVector.z).toBe(4);
   });
 
   it('setColor propagates to all children', () => {
@@ -1731,18 +1842,26 @@ describe('VGroup - extended coverage', () => {
 
   it('getCenter with no children returns group position', () => {
     const vg = new VGroup();
-    vg.position.set(5, 6, 7);
-    expect(vg.getCenter()).toEqual([5, 6, 7]);
+    // Empty VGroup: after normalizeTransform, position resets
+    expect(vg.getCenter()).toEqual([0, 0, 0]);
   });
 
   it('getCenter with children includes position offset', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    const b = new VMobject();
-    b.position.set(2, 0, 0);
+    const a = new Dot({ point: [0, 0, 0] });
+    const b = new Dot({ point: [2, 0, 0] });
     const vg = new VGroup(a, b);
+
+    const bounds = vg.getBounds();
+    const bboxCenterX = (bounds.min.x + bounds.max.x) / 2;
+    expect(bboxCenterX).toBeCloseTo(1, 0);
+
     const center = vg.getCenter();
-    expect(center[0]).toBeCloseTo(1, 0);
+    expect(center[0]).toBeCloseTo(bboxCenterX, 6);
+  });
+
+  it('getCenter with only empty VMobject children returns group position', () => {
+    const vg = new VGroup(new VMobject());
+    expect(vg.getCenter()).toEqual([0, 0, 0]);
   });
 
   it('shift shifts children, not group position', () => {
@@ -1753,26 +1872,35 @@ describe('VGroup - extended coverage', () => {
     expect(a.position.x).toBe(5);
   });
 
-  it('shift on empty VGroup mutates group position (issue #318)', () => {
-    const vg = new VGroup();
-    vg.shift([-8, 0, 0]);
-    expect(vg.position.x).toBe(-8);
-    expect(vg.getCenter()[0]).toBe(-8);
+  it('shift on empty VGroup is equivalent to shifting after children are added (issue #318)', () => {
+    const makeChild = (): VMobject => {
+      const a = new VMobject();
+      a.setPoints3D([
+        [0, 0, 0],
+        [1, 0, 0],
+        [2, 0, 0],
+        [3, 0, 0],
+      ]);
+      return a;
+    };
 
-    // Children added after a pre-shift should inherit the parent transform
-    // and combine cleanly with a subsequent populated shift.
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    vg.add(a);
-    vg.shift([1, 0, 0]);
-    expect(vg.position.x).toBe(-8);
-    expect(a.position.x).toBe(1);
-    expect(vg.getCenter()[0]).toBeCloseTo(-7, 5);
+    const preShift = new VGroup();
+    preShift.shift([-8, 0, 0]);
+    preShift.add(makeChild());
+
+    const postShift = new VGroup();
+    postShift.add(makeChild());
+    postShift.shift([-8, 0, 0]);
+
+    expect(preShift.getCenter()[0]).toBeCloseTo(postShift.getCenter()[0], 5);
+
+    preShift.shift([1, 0, 0]);
+    postShift.shift([1, 0, 0]);
+
+    expect(preShift.getCenter()[0]).toBeCloseTo(postShift.getCenter()[0], 5);
   });
 
-  it('pre-shifted VGroup keeps consistent center after matrixWorld update', () => {
-    // Codex review of #318: materialize the THREE hierarchy and confirm we
-    // don't double-count parent.position once the world matrix is current.
+  it('pre-shifted VGroup center is stable across matrixWorld updates', () => {
     const vg = new VGroup();
     vg.shift([-8, 0, 0]);
     const a = new VMobject();
@@ -1783,17 +1911,19 @@ describe('VGroup - extended coverage', () => {
       [2, 2, 0],
     ]);
     vg.add(a);
+
+    const before = vg.getCenter();
     vg.getThreeObject().updateMatrixWorld(true);
-    // Child geometry centers at local (2, 1, 0); group offsets by (-8, 0, 0).
-    expect(vg.getCenter()[0]).toBeCloseTo(-6, 5);
-    expect(vg.getCenter()[1]).toBeCloseTo(1, 5);
+    const after = vg.getCenter();
+
+    expect(after[0]).toBeCloseTo(before[0], 5);
+    expect(after[1]).toBeCloseTo(before[1], 5);
+    expect(after[2]).toBeCloseTo(before[2], 5);
   });
 
   it('moveTo with point moves VGroup center', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    const b = new VMobject();
-    b.position.set(2, 0, 0);
+    const a = new Dot({ point: [0, 0, 0] });
+    const b = new Dot({ point: [2, 0, 0] });
     const vg = new VGroup(a, b);
     vg.moveTo([10, 10, 0]);
     const center = vg.getCenter();
@@ -1801,10 +1931,19 @@ describe('VGroup - extended coverage', () => {
     expect(center[1]).toBeCloseTo(10, 0);
   });
 
+  it('scale then moveTo keeps VGroup center on target', () => {
+    const vg = new VGroup(new PointMobject({ position: [1, 0, 0] }));
+    vg.scale(2);
+    vg.moveTo([5, 0, 0]);
+    const center = vg.getCenter();
+    expect(center[0]).toBeCloseTo(5, 6);
+    expect(center[1]).toBeCloseTo(0, 6);
+    expect(center[2]).toBeCloseTo(0, 6);
+  });
+
   it('moveTo with Mobject target', () => {
-    const target = new VMobject();
-    target.position.set(5, 5, 0);
-    const a = new VMobject();
+    const target = new PointMobject({ position: [5, 5, 0] });
+    const a = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a);
     vg.moveTo(target);
     const center = vg.getCenter();
@@ -1813,47 +1952,231 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('moveTo with Mobject + alignedEdge', () => {
-    const target = new VMobject();
-    target.position.set(5, 5, 0);
-    const a = new VMobject();
+    const target = new PointMobject({ position: [5, 5, 0] });
+    const a = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a);
     vg.moveTo(target, UL);
     // should have shifted to align
   });
 
-  it('rotate delegates to children and self', () => {
-    const a = new VMobject();
-    a.setPoints([
-      [1, 0, 0],
-      [1, 0, 0],
-      [1, 0, 0],
-      [1, 0, 0],
-    ]);
-    const vg = new VGroup(a);
+  it('rotate stores on VGroup, then normalizeTransform forwards to children', () => {
+    const line = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    const dot = new Dot({ point: [2, 0, 0], radius: 0 });
+    const vg = new VGroup(line, dot);
+
     vg.rotate(Math.PI / 2);
-    // child should have been rotated
+
+    // Rotation is stored on group transform before normalization.
+    expect(vg.rotation.z).toBeCloseTo(Math.PI / 2, 6);
+
+    vg.normalizeTransform();
+
+    // Group anchor is canonical after normalization.
+    expect(vg.rotation.x).toBe(0);
+    expect(vg.rotation.y).toBe(0);
+    expect(vg.rotation.z).toBe(0);
+
+    const dotCenter = dot.getCenter();
+    expect(dotCenter[0]).toBeCloseTo(0, 6);
+    expect(dotCenter[1]).toBeCloseTo(2, 6);
   });
 
-  it('scale scales children about group center', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    a.scaleVector.set(1, 1, 1);
-    const b = new VMobject();
-    b.position.set(4, 0, 0);
-    b.scaleVector.set(1, 1, 1);
+  it('normalizeTransform respects non-XYZ Euler order for VGroup rotation', () => {
+    const sourceLine = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    const sourceGroup = new VGroup(sourceLine);
+    sourceGroup.rotation.order = 'YXZ';
+    sourceGroup.rotation.set(0.4, 0.7, 0.2, 'YXZ');
+
+    const xyzLine = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    const xyzGroup = new VGroup(xyzLine);
+    xyzGroup.rotation.order = 'XYZ';
+    xyzGroup.rotation.set(0.4, 0.7, 0.2, 'XYZ');
+
+    sourceGroup.normalizeTransform();
+    xyzGroup.normalizeTransform();
+
+    const sourceEnd = sourceLine.getEnd();
+    const xyzEnd = xyzLine.getEnd();
+    expect(Math.abs(sourceEnd[0] - xyzEnd[0]) + Math.abs(sourceEnd[1] - xyzEnd[1])).toBeGreaterThan(
+      1e-4,
+    );
+  });
+
+  it('normalizeTransform bakes ordered Euler rotation to PointMobject child', () => {
+    const point = new PointMobject({ position: [1, 2, 3] });
+    const group = new VGroup(point);
+    group.rotation.order = 'ZXY';
+    group.rotation.set(0.3, -0.5, 0.2, 'ZXY');
+
+    const expected = new PointMobject({ position: [1, 2, 3] });
+    const angles: Record<'X' | 'Y' | 'Z', number> = { X: 0.3, Y: -0.5, Z: 0.2 };
+    for (const axis of group.rotation.order) {
+      const angle = angles[axis as 'X' | 'Y' | 'Z'];
+      if (angle === 0) continue;
+      expected.rotate(angle, {
+        axis: axisVectorFromEulerKey(axis as 'X' | 'Y' | 'Z'),
+        aboutPoint: [0, 0, 0],
+      });
+    }
+
+    group.normalizeTransform();
+
+    const actualPos = point.getPosition();
+    const expectedPos = expected.getPosition();
+    expect(actualPos[0]).toBeCloseTo(expectedPos[0], 6);
+    expect(actualPos[1]).toBeCloseTo(expectedPos[1], 6);
+    expect(actualPos[2]).toBeCloseTo(expectedPos[2], 6);
+  });
+
+  it('normalizeTransform is idempotent for deferred rotation on VGroup', () => {
+    const point = new PointMobject({ position: [1, 2, 3] });
+    const group = new VGroup(point);
+    group.rotation.order = 'YXZ';
+    group.rotation.set(0.4, 0.2, -0.1, 'YXZ');
+
+    group.normalizeTransform();
+    const afterFirst = point.getPosition();
+
+    group.normalizeTransform();
+    const afterSecond = point.getPosition();
+
+    expect(afterSecond[0]).toBeCloseTo(afterFirst[0], 6);
+    expect(afterSecond[1]).toBeCloseTo(afterFirst[1], 6);
+    expect(afterSecond[2]).toBeCloseTo(afterFirst[2], 6);
+  });
+
+  it('scale updates vgroup scale vector', () => {
+    const a = new PointMobject({ position: [0, 0, 0] });
+    const b = new PointMobject({ position: [4, 0, 0] });
     const vg = new VGroup(a, b);
     vg.scale(2);
-    // Each child's own size is scaled by 2
-    expect(a.scaleVector.x).toBe(2);
-    expect(b.scaleVector.x).toBe(2);
+    expect(vg.scaleVector.x).toBe(2);
+    expect(vg.scaleVector.y).toBe(2);
+    expect(a.scaleVector.x).toBe(1);
+    expect(b.scaleVector.x).toBe(1);
   });
 
-  it('scale with tuple scales non-uniformly', () => {
-    const a = new VMobject();
+  it('scale with tuple updates vgroup scale vector non-uniformly', () => {
+    const a = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a);
     vg.scale([2, 3, 1]);
-    expect(a.scaleVector.x).toBe(2);
-    expect(a.scaleVector.y).toBe(3);
+    expect(vg.scaleVector.x).toBe(2);
+    expect(vg.scaleVector.y).toBe(3);
+  });
+
+  it('getBounds reflects transformed+scaled VGroup without normalizeTransform', () => {
+    const line = new Line({ start: [0, 0, 0], end: [2, 0, 0] });
+    const vg = new VGroup(line);
+
+    vg.shift([3, 1, 0]);
+    const shifted = vg.getBounds();
+    const shiftedWidth = shifted.max.x - shifted.min.x;
+
+    vg.scale(2);
+    const scaled = vg.getBounds();
+    const scaledWidth = scaled.max.x - scaled.min.x;
+
+    // Query should be non-mutating: scale remains on group anchor.
+    expect(vg.scaleVector.x).toBe(2);
+    expect(vg.scaleVector.y).toBe(2);
+    expect(vg.scaleVector.z).toBe(2);
+
+    // Bounds should still reflect world transform correctly.
+    expect(scaledWidth).toBeCloseTo(shiftedWidth * 2, 6);
+  });
+
+  it('normalizeTransform forwards VGroup scale to children and resets group scale', () => {
+    const line = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    line.position.set(3, 0, 0);
+    const vg = new VGroup(line);
+
+    vg.scale(2);
+    expect(vg.scaleVector.x).toBe(2);
+    expect(vg.scaleVector.y).toBe(2);
+    expect(vg.scaleVector.z).toBe(2);
+
+    vg.normalizeTransform();
+
+    expect(vg.scaleVector.x).toBe(1);
+    expect(vg.scaleVector.y).toBe(1);
+    expect(vg.scaleVector.z).toBe(1);
+    expect(line.scaleVector.x).toBe(1);
+    expect(line.scaleVector.y).toBe(1);
+    expect(line.scaleVector.z).toBe(1);
+    const pts = line.getPoints();
+    expect(pts[0][0]).toBeCloseTo(0);
+    expect(pts[0][1]).toBeCloseTo(0);
+    expect(pts[0][2]).toBeCloseTo(0);
+    expect(pts[3][0]).toBeCloseTo(2);
+    expect(pts[3][1]).toBeCloseTo(0);
+    expect(pts[3][2]).toBeCloseTo(0);
+    expect(line.position.x).toBe(6);
+    expect(line.position.y).toBe(0);
+    expect(line.position.z).toBe(0);
+  });
+
+  it('VMobject normalizeTransform canonicalizes subtree and resets parent scale', () => {
+    const parent = new VMobject();
+    parent.setPoints([
+      [0, 0, 0],
+      [1 / 3, 0, 0],
+      [2 / 3, 0, 0],
+      [1, 0, 0],
+    ]);
+
+    const child = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    child.position.set(2, 1, 0);
+    parent.add(child);
+
+    parent.scale(2);
+    expect(parent.scaleVector.x).toBe(2);
+    expect(parent.scaleVector.y).toBe(2);
+    expect(parent.scaleVector.z).toBe(2);
+
+    parent.normalizeTransform();
+
+    expect(parent.scaleVector.x).toBe(1);
+    expect(parent.scaleVector.y).toBe(1);
+    expect(parent.scaleVector.z).toBe(1);
+    expect(child.scaleVector.x).toBe(1);
+    expect(child.scaleVector.y).toBe(1);
+    expect(child.scaleVector.z).toBe(1);
+    expect(child.position.x).toBe(4);
+    expect(child.position.y).toBe(2);
+    expect(child.position.z).toBe(0);
+  });
+
+  it('center should be geometric from child bounds, not mean of child centers', () => {
+    const wide = new Line({ start: [0, 0, 0], end: [4, 0, 0] }); // center x=2
+    const narrow = new Line({ start: [10, 0, 0], end: [11, 0, 0] }); // center x=10.5
+    const vg = new VGroup(wide, narrow);
+
+    // Mean of centers would be 6.25, but bbox center is (0 + 11) / 2 = 5.5.
+    expect(vg.getCenter()[0]).toBeCloseTo(5.5, 6);
+  });
+
+  it('scale result should be invariant to translating group vs children', () => {
+    // Setup A: translate children directly.
+    const lineA = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    lineA.position.x = 1;
+    const pointA = new Dot({ point: [1, 0, 0], radius: 0 });
+    const gA = new VGroup(lineA, pointA);
+
+    // Setup B: equivalent world placement via group translation.
+    const lineB = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    const pointB = new Dot({ point: [0, 0, 0], radius: 0 });
+    const gB = new VGroup(lineB, pointB);
+    gB.position.x = 1;
+
+    gA.scale(2);
+    gB.scale(2);
+
+    const worldCenterX = (group: VGroup): number => group.getCenter()[0] + group.position.x;
+    const worldX = (mob: VMobject, group: VGroup): number => mob.getCenter()[0] + group.position.x;
+
+    expect(worldCenterX(gB)).toBeCloseTo(worldCenterX(gA), 6);
+    expect(worldX(lineB, gB)).toBeCloseTo(worldX(lineA, gA), 6);
+    expect(worldX(pointB, gB)).toBeCloseTo(worldX(pointA, gA), 6);
   });
 
   it('setColor propagates to children', () => {
@@ -1942,12 +2265,9 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('arrange positions children in a row', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    const b = new VMobject();
-    b.position.set(0, 0, 0);
-    const c = new VMobject();
-    c.position.set(0, 0, 0);
+    const a = new PointMobject({ position: [0, 0, 0] });
+    const b = new PointMobject({ position: [0, 0, 0] });
+    const c = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a, b, c);
     vg.arrange(RIGHT, 0.5);
     // b should be to the right of a, c to the right of b
@@ -1962,21 +2282,15 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('arrange with center=false does not recenter', () => {
-    const a = new VMobject();
-    a.position.set(0, 0, 0);
-    const b = new VMobject();
-    b.position.set(0, 0, 0);
+    const a = new PointMobject({ position: [0, 0, 0] });
+    const b = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a, b);
     vg.arrange(RIGHT, 0.5, false);
     // should not throw
   });
 
   it('arrangeInGrid positions children in grid', () => {
-    const items = Array.from({ length: 6 }, () => {
-      const vm = new VMobject();
-      vm.position.set(0, 0, 0);
-      return vm;
-    });
+    const items = Array.from({ length: 6 }, () => new PointMobject({ position: [0, 0, 0] }));
     const vg = new VGroup(...items);
     vg.arrangeInGrid(2, 3);
     // Should not throw and children should be repositioned
@@ -1988,19 +2302,19 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('arrangeInGrid auto-calculates rows/cols', () => {
-    const items = Array.from({ length: 9 }, () => new VMobject());
+    const items = Array.from({ length: 9 }, () => new PointMobject({ position: [0, 0, 0] }));
     const vg = new VGroup(...items);
     vg.arrangeInGrid(); // auto: sqrt(9)=3, so 3x3
   });
 
   it('arrangeInGrid with only rows specified', () => {
-    const items = Array.from({ length: 6 }, () => new VMobject());
+    const items = Array.from({ length: 6 }, () => new PointMobject({ position: [0, 0, 0] }));
     const vg = new VGroup(...items);
     vg.arrangeInGrid(2); // 2 rows, auto cols
   });
 
   it('arrangeInGrid with only cols specified', () => {
-    const items = Array.from({ length: 6 }, () => new VMobject());
+    const items = Array.from({ length: 6 }, () => new PointMobject({ position: [0, 0, 0] }));
     const vg = new VGroup(...items);
     vg.arrangeInGrid(undefined, 3); // auto rows, 3 cols
   });

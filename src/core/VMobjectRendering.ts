@@ -182,6 +182,15 @@ export abstract class VMobjectRendering extends Mobject {
     this._markDirty();
   }
 
+  /**
+   * VMobject-level upward dirty propagation must also mark geometry dirty.
+   * This keeps geometry invalidation centralized for point/curve mutations.
+   */
+  override _markDirtyUpward(): void {
+    this._geometryDirty = true;
+    super._markDirtyUpward();
+  }
+
   // -----------------------------------------------------------------------
   // Abstract point-access methods required by the rendering pipeline.
   // -----------------------------------------------------------------------

@@ -27,10 +27,17 @@ import {
   prepareForNonlinearTransformImpl,
   resolveExtremalPoint,
 } from './MobjectState';
+import { axisVectorFromEulerKey } from '../utils/axis';
 // AnimateProxy registers itself here to break the circular dependency:
 // Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let animateProxyFactory: ((mobject: Mobject) => any) | null = null;
+
+const SCRATCH_EULER = new THREE.Euler();
+
+interface NormalizeContainerOptions {
+  translateChild?: (child: Mobject, dx: number, dy: number, dz: number) => void;
+}
 
 /** @internal Called by AnimateProxy module to register the factory. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -298,17 +305,10 @@ export abstract class Mobject {
     factor: number | Vector3Tuple,
     options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
   ): this {
-    const aboutPt = resolveExtremalPoint(this, options);
-    if (aboutPt) {
-      const f = typeof factor === 'number' ? [factor, factor, factor] : factor;
-      applyFunctionImpl(
-        this,
-        (p) => {
-          return [p[0] * f[0], p[1] * f[1], p[2] * (f[2] === 0 ? 1 : f[2])];
-        },
-        { aboutPoint: aboutPt },
+    if (options?.aboutPoint || options?.aboutEdge) {
+      throw new Error(
+        'Mobject.scale(): aboutPoint/aboutEdge is not supported in deferred-transform mode. Use applyFunction/applyMatrix or normalize first.',
       );
-      return this;
     }
     if (typeof factor === 'number') {
       this.scaleVector.multiplyScalar(factor);
@@ -329,13 +329,14 @@ export abstract class Mobject {
     if (dim < 0 || dim > 2 || !Number.isInteger(dim)) {
       throw new Error(`stretch dim must be 0, 1, or 2, got ${dim}`);
     }
+    if (options?.aboutPoint || options?.aboutEdge) {
+      throw new Error(
+        'Mobject.stretch(): aboutPoint/aboutEdge is not supported in deferred-transform mode. Use applyFunction/applyMatrix or normalize first.',
+      );
+    }
     const scaleFactors: Vector3Tuple = [1, 1, 1];
     scaleFactors[dim] = factor;
-    // Always scale about a point so the underlying points are modified
-    // (non-uniform scaling via scaleVector would not affect getPoints()).
-    const opts =
-      options?.aboutPoint || options?.aboutEdge ? options : { aboutPoint: this.getCenter() };
-    return this.scale(scaleFactors, opts);
+    return this.scale(scaleFactors);
   }
 
   // ── Hierarchy ────────────────────────────────────────────────────
@@ -407,17 +408,15 @@ export abstract class Mobject {
     min: { x: number; y: number; z: number };
     max: { x: number; y: number; z: number };
   } {
-    if (this._threeObject) {
-      const box = new THREE.Box3().setFromObject(this._threeObject);
-      return {
-        min: { x: box.min.x, y: box.min.y, z: box.min.z },
-        max: { x: box.max.x, y: box.max.y, z: box.max.z },
-      };
+    const obj = this.getThreeObject();
+    const box = new THREE.Box3().setFromObject(obj);
+    if (box.isEmpty()) {
+      const ctor = (this.constructor as { name?: string } | undefined)?.name ?? 'UnknownMobject';
+      throw new Error(`Mobject.getBounds(): ${ctor} (${this.id}) produced empty Three.js bounds.`);
     }
-    const c = this.getCenter();
     return {
-      min: { x: c[0] - 0.5, y: c[1] - 0.5, z: c[2] - 0.5 },
-      max: { x: c[0] + 0.5, y: c[1] + 0.5, z: c[2] + 0.5 },
+      min: { x: box.min.x, y: box.min.y, z: box.min.z },
+      max: { x: box.max.x, y: box.max.y, z: box.max.z },
     };
   }
 
@@ -529,6 +528,114 @@ export abstract class Mobject {
   }
 
   // ── Three.js Sync ────────────────────────────────────────────────
+
+  /**
+   * Normalize local transform into object-specific canonical representation.
+   *
+   * Subclasses may override this to fold transient transforms into their
+   * canonical state (e.g. forwarding container translation to children).
+   * Call this before geometry queries like getCenter()/getBounds().
+   *
+   * Base implementation is a no-op.
+   */
+  normalizeTransform(): this {
+    return this;
+  }
+
+  /**
+   * Normalize this object as a container: forward parent S/R/T anchors into
+   * children, reset parent anchors, then recurse into children.
+   */
+  protected _normalizeContainerTransform(options?: NormalizeContainerOptions): void {
+    if (!this._hasDeferredAnchors() || this.children.length === 0) {
+      for (const child of this.children) {
+        child.normalizeTransform();
+      }
+      return;
+    }
+
+    this._normalizeContainerScale();
+    this._normalizeContainerRotation();
+    this._normalizeContainerTranslation(options);
+
+    for (const child of this.children) {
+      child.normalizeTransform();
+    }
+  }
+
+  protected _hasDeferredAnchors(): boolean {
+    return (
+      this.position.x !== 0 ||
+      this.position.y !== 0 ||
+      this.position.z !== 0 ||
+      this.rotation.x !== 0 ||
+      this.rotation.y !== 0 ||
+      this.rotation.z !== 0 ||
+      this.scaleVector.x !== 1 ||
+      this.scaleVector.y !== 1 ||
+      this.scaleVector.z !== 1
+    );
+  }
+
+  private _normalizeContainerScale(): void {
+    const sx = this.scaleVector.x;
+    const sy = this.scaleVector.y;
+    const sz = this.scaleVector.z;
+    if (sx === 1 && sy === 1 && sz === 1) return;
+
+    for (const child of this.children) {
+      child.position.set(child.position.x * sx, child.position.y * sy, child.position.z * sz);
+      child.scale([sx, sy, sz]);
+    }
+    this.scaleVector.set(1, 1, 1);
+    this._markDirty();
+  }
+
+  private _normalizeContainerRotation(): void {
+    const rx = this.rotation.x;
+    const ry = this.rotation.y;
+    const rz = this.rotation.z;
+    if (rx === 0 && ry === 0 && rz === 0) return;
+
+    SCRATCH_EULER.set(rx, ry, rz, this.rotation.order);
+
+    for (const child of this.children) {
+      this._applyEulerSteps(child, rx, ry, rz);
+    }
+    this.rotation.set(0, 0, 0);
+    this._markDirty();
+  }
+
+  private _applyEulerSteps(child: Mobject, rx: number, ry: number, rz: number): void {
+    for (const axis of this.rotation.order) {
+      const eulerAxis = axis as 'X' | 'Y' | 'Z';
+      const angle = eulerAxis === 'X' ? rx : eulerAxis === 'Y' ? ry : rz;
+      if (angle !== 0) {
+        child.rotate(angle, {
+          axis: axisVectorFromEulerKey(eulerAxis),
+          aboutPoint: [0, 0, 0],
+        });
+      }
+    }
+  }
+
+  private _normalizeContainerTranslation(options?: NormalizeContainerOptions): void {
+    const dx = this.position.x;
+    const dy = this.position.y;
+    const dz = this.position.z;
+    if (dx === 0 && dy === 0 && dz === 0) return;
+
+    const translateChild =
+      options?.translateChild ??
+      ((child: Mobject, tx: number, ty: number, tz: number) => {
+        child.position.set(child.position.x + tx, child.position.y + ty, child.position.z + tz);
+      });
+    for (const child of this.children) {
+      translateChild(child, dx, dy, dz);
+    }
+    this.position.set(0, 0, 0);
+    this._markDirty();
+  }
 
   _syncToThree(): void {
     if (!this._dirty) return;

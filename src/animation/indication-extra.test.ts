@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
+import { PointMobject } from '../mobjects/point/PointMobject';
 import { ApplyWave } from './indication/ApplyWave';
 import { applyWave } from './indication/ApplyWave';
 import { Circumscribe } from './indication/Circumscribe';
@@ -93,7 +94,7 @@ describe('ApplyWave', () => {
 
   describe('non-VMobject position wave (horizontal)', () => {
     it('begin stores original position', () => {
-      const m = new ConcreteMobject();
+      const m = new PointMobject({ position: [0, 0, 0] });
       m.position.set(1, 2, 3);
       const anim = new ApplyWave(m);
       anim.begin();
@@ -103,7 +104,7 @@ describe('ApplyWave', () => {
     });
 
     it('at alpha=0 position is unchanged (envelope=0)', () => {
-      const m = new ConcreteMobject();
+      const m = new PointMobject({ position: [0, 0, 0] });
       m.position.set(0, 5, 0);
       const anim = new ApplyWave(m);
       anim.begin();
@@ -112,7 +113,7 @@ describe('ApplyWave', () => {
     });
 
     it('at alpha=0.5 envelope is max (sin(PI/2)=1)', () => {
-      const m = new ConcreteMobject();
+      const m = new PointMobject({ position: [0, 0, 0] });
       m.position.set(0, 0, 0);
       const anim = new ApplyWave(m);
       anim.begin();
@@ -124,7 +125,7 @@ describe('ApplyWave', () => {
     });
 
     it('at alpha=1 envelope is ~0 (sin(PI)~0)', () => {
-      const m = new ConcreteMobject();
+      const m = new PointMobject({ position: [0, 0, 0] });
       m.position.set(0, 0, 0);
       const anim = new ApplyWave(m);
       anim.begin();
@@ -136,7 +137,7 @@ describe('ApplyWave', () => {
 
   describe('non-VMobject position wave (vertical)', () => {
     it('displaces x instead of y for vertical direction', () => {
-      const m = new ConcreteMobject();
+      const m = new PointMobject({ position: [0, 0, 0] });
       m.position.set(0, 0, 0);
       const anim = new ApplyWave(m, { direction: 'vertical' });
       anim.begin();
@@ -265,7 +266,7 @@ describe('ApplyWave', () => {
 
   describe('finish restores non-VMobject position', () => {
     it('restores original position after animation', () => {
-      const m = new ConcreteMobject();
+      const m = new PointMobject({ position: [0, 0, 0] });
       m.position.set(3, 7, 2);
       const anim = new ApplyWave(m);
       anim.begin();
@@ -279,14 +280,14 @@ describe('ApplyWave', () => {
 
   describe('custom amplitude affects displacement magnitude', () => {
     it('larger amplitude produces larger displacement', () => {
-      const m1 = new ConcreteMobject();
+      const m1 = new PointMobject({ position: [0, 0, 0] });
       m1.position.set(0, 0, 0);
       const anim1 = new ApplyWave(m1, { amplitude: 0.2 });
       anim1.begin();
       anim1.interpolate(0.25);
       const y1 = m1.position.y;
 
-      const m2 = new ConcreteMobject();
+      const m2 = new PointMobject({ position: [0, 0, 0] });
       m2.position.set(0, 0, 0);
       const anim2 = new ApplyWave(m2, { amplitude: 1.0 });
       anim2.begin();

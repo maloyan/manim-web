@@ -152,13 +152,8 @@ function rotateWithThreeJS(
  * Get the center point of a mobject.
  */
 export function getCenterImpl(mob: MobjectLike): Vector3Tuple {
-  const obj = mob.getThreeObject();
-  tempBox3.setFromObject(obj);
-  if (!tempBox3.isEmpty()) {
-    tempBox3.getCenter(tempVec3);
-    return [tempVec3.x, tempVec3.y, tempVec3.z];
-  }
-  return [mob.position.x, mob.position.y, mob.position.z];
+  const b = mob.getBounds();
+  return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
 }
 
 /**

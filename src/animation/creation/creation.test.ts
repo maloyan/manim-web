@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { linear } from '../../rate-functions';
+import { PointMobject } from '../../mobjects/point';
 import {
   Create,
   create,
@@ -1664,7 +1665,7 @@ describe('SpiralIn', () => {
 
   describe('begin()', () => {
     it('scales up the mobject by scaleFactor when no children', () => {
-      const mob = new VMobject();
+      const mob = new PointMobject({ position: [0, 0, 0] });
       mob.scaleVector.set(1, 1, 1);
       const anim = new SpiralIn(mob, { scaleFactor: 3 });
       anim.begin();
@@ -1676,8 +1677,7 @@ describe('SpiralIn', () => {
     });
 
     it('moves mobject to center point when no children', () => {
-      const mob = new VMobject();
-      mob.position.set(2, 3, 0);
+      const mob = new PointMobject({ position: [2, 3, 0] });
       const anim = new SpiralIn(mob, { scaleFactor: 2 });
       anim.begin();
 
@@ -1692,8 +1692,7 @@ describe('SpiralIn', () => {
 
   describe('interpolate()', () => {
     it('at alpha=0: mobject is at center, scaled up', () => {
-      const mob = new VMobject();
-      mob.position.set(0, 0, 0);
+      const mob = new PointMobject({ position: [0, 0, 0] });
       mob.scaleVector.set(1, 1, 1);
       const anim = new SpiralIn(mob, { scaleFactor: 3, numTurns: 1 });
       anim.begin();
@@ -1705,8 +1704,7 @@ describe('SpiralIn', () => {
     });
 
     it('at alpha=1: mobject is at target position and scale', () => {
-      const mob = new VMobject();
-      mob.position.set(2, 0, 0);
+      const mob = new PointMobject({ position: [2, 0, 0] });
       mob.scaleVector.set(1, 1, 1);
       const anim = new SpiralIn(mob, { scaleFactor: 3, numTurns: 1 });
 
@@ -1723,8 +1721,7 @@ describe('SpiralIn', () => {
     });
 
     it('at alpha=0.5: intermediate state', () => {
-      const mob = new VMobject();
-      mob.position.set(0, 0, 0);
+      const mob = new PointMobject({ position: [0, 0, 0] });
       mob.scaleVector.set(1, 1, 1);
       const anim = new SpiralIn(mob, { scaleFactor: 2, numTurns: 1 });
       anim.begin();
@@ -1737,8 +1734,8 @@ describe('SpiralIn', () => {
 
   describe('finish()', () => {
     it('restores target position and scale', () => {
-      const mob = new VMobject();
-      mob.position.set(3, 4, 0);
+      const mob = new PointMobject({ position: [0, 0, 0] });
+      mob.moveTo([3, 4, 0]);
       mob.scaleVector.set(1, 1, 1);
       const anim = new SpiralIn(mob, { scaleFactor: 2 });
 
@@ -1753,7 +1750,8 @@ describe('SpiralIn', () => {
     });
 
     it('marks animation as finished', () => {
-      const mob = new VMobject();
+      const mob = new PointMobject({ position: [0, 0, 0] });
+      mob.moveTo([1, 2, 0]);
       const anim = new SpiralIn(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -1765,11 +1763,11 @@ describe('SpiralIn', () => {
   describe('with children', () => {
     it('animates children when present', () => {
       const parent = new VMobject();
-      const child1 = new VMobject();
-      const child2 = new VMobject();
-      child1.position.set(1, 0, 0);
+      const child1 = new PointMobject({ position: [0, 0, 0] });
+      child1.moveTo([1, 0, 0]);
+      const child2 = new PointMobject({ position: [0, 0, 0] });
+      child2.moveTo([-1, 0, 0]);
       child1.scaleVector.set(1, 1, 1);
-      child2.position.set(-1, 0, 0);
       child2.scaleVector.set(1, 1, 1);
       parent.add(child1);
       parent.add(child2);

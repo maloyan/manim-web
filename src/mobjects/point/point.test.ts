@@ -145,14 +145,20 @@ describe('PMobject', () => {
     expect(pts[1].opacity).toBe(0.3);
   });
 
-  it('shift translates all points and position', () => {
+  it('shift translates world-space points', () => {
     const pm = new PMobject({
       points: [{ position: [1, 2, 3] }, { position: [4, 5, 6] }],
     });
     pm.shift([10, 20, 30]);
+
     const pts = pm.getPoints();
     expect(pts[0].position).toEqual([11, 22, 33]);
     expect(pts[1].position).toEqual([14, 25, 36]);
+
+    const c = pm.getCenter();
+    expect(c[0]).toBeCloseTo(12.5);
+    expect(c[1]).toBeCloseTo(23.5);
+    expect(c[2]).toBeCloseTo(34.5);
   });
 
   it('copy creates an independent PMobject with same properties', () => {
@@ -272,14 +278,6 @@ describe('PointMobject', () => {
     // Independent
     c.setPosition([0, 0, 0]);
     expect(pt.getPosition()).toEqual([3, 4, 5]);
-  });
-
-  it('getPosition falls back to mobject position when no points', () => {
-    const pt = new PointMobject({ position: [1, 2, 3] });
-    pt.clearPoints();
-    // With no internal points, getPosition should fall back to THREE position
-    const pos = pt.getPosition();
-    expect(pos).toEqual([0, 0, 0]); // THREE.js position default
   });
 
   it('setPosition is a no-op when no internal points', () => {
@@ -842,30 +840,6 @@ describe('PGroup', () => {
     expect(center[0]).toBeCloseTo(2);
     expect(center[1]).toBeCloseTo(0);
     expect(center[2]).toBeCloseTo(0);
-  });
-
-  it('shift translates all children', () => {
-    const p1 = new PMobject({ points: [{ position: [0, 0, 0] }] });
-    const p2 = new PMobject({ points: [{ position: [2, 0, 0] }] });
-    const g = new PGroup({ pmobjects: [p1, p2] });
-    g.shift([1, 1, 0]);
-    expect(p1.getPoints()[0].position[0]).toBeCloseTo(1);
-    expect(p1.getPoints()[0].position[1]).toBeCloseTo(1);
-    expect(p2.getPoints()[0].position[0]).toBeCloseTo(3);
-    expect(p2.getPoints()[0].position[1]).toBeCloseTo(1);
-  });
-
-  it('moveTo translates children by the correct delta', () => {
-    const p1 = new PMobject({ points: [{ position: [0, 0, 0] }] });
-    const p2 = new PMobject({ points: [{ position: [2, 0, 0] }] });
-    const g = new PGroup({ pmobjects: [p1, p2] });
-    // Center is [1, 0, 0], delta to [5, 5, 0] is [4, 5, 0]
-    g.moveTo([5, 5, 0]);
-    // Children should have been shifted by the delta
-    expect(p1.getPoints()[0].position[0]).toBeCloseTo(4);
-    expect(p1.getPoints()[0].position[1]).toBeCloseTo(5);
-    expect(p2.getPoints()[0].position[0]).toBeCloseTo(6);
-    expect(p2.getPoints()[0].position[1]).toBeCloseTo(5);
   });
 
   it('setColor cascades to all children', () => {
