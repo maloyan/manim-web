@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Responsive Canvas (issue #360)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      background: #1a1a2e;
+      font-family: system-ui, sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      padding: 12px 16px;
+      background: #0f0f1e;
+      border-bottom: 1px solid #2a2a3e;
+    }
+    header h1 { font-size: 16px; font-weight: 600; }
+    header p  { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+    /* The container fills the viewport. Rotating a mobile device, dragging
+       the browser window, or DevTools resizing all change its size and the
+       canvas should follow. */
+    #container {
+      flex: 1;
+      width: 100%;
+      min-height: 0;
+      background: #1C1C1C;
+    }
+    .badge {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      padding: 6px 10px;
+      font-family: ui-monospace, monospace;
+      font-size: 11px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Responsive canvas demo (issue #360)</h1>
+    <p>Resize the window or rotate your device. The canvas should follow without a reload.</p>
+  </header>
+  <div id="container"></div>
+  <div id="badge" class="badge">–</div>
+
+  <script type="module">
+    import { Scene, Circle, Square, Create, FadeIn } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const badge = document.getElementById('badge');
+
+    // No explicit width/height — Scene auto-installs ResizeObserver +
+    // window/orientationchange fallback.
+    const scene = new Scene(container, {
+      backgroundColor: '#1C1C1C',
+    });
+
+    const circle = new Circle({ radius: 1.5, color: '#e94560' });
+    const square = new Square({ sideLength: 2, color: '#5cdb95' }).shift([3, 0, 0]);
+
+    await scene.play(new Create(circle));
+    await scene.play(new FadeIn(square));
+
+    const report = () => {
+      const c = scene.renderer.getCanvas();
+      badge.textContent = `canvas: ${c.width}x${c.height}  css: ${c.clientWidth}x${c.clientHeight}`;
+    };
+    report();
+    window.addEventListener('resize', report);
+    window.addEventListener('orientationchange', report);
+    new ResizeObserver(report).observe(container);
+  </script>
+</body>
+</html>

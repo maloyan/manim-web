@@ -115,17 +115,14 @@ export class Player {
       getDuration: () => this._masterTimeline.getDuration(),
     });
 
-    // Track original dimensions for fullscreen restore
-    this._origWidth = this._scene.getWidth();
-    this._origHeight = this._scene.getHeight();
-
-    // Resize scene when entering/leaving fullscreen
+    // Resize scene when entering/leaving fullscreen. Restore dimensions are
+    // captured synchronously in `toggleFullscreen()` before `requestFullscreen`
+    // — capturing here would race with auto-resize and could snapshot the
+    // post-fullscreen layout as the "original".
     this._onFullscreenChange = () => {
       if (document.fullscreenElement === this._container) {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        this._scene.resize(w, h);
-      } else {
+        this._scene.resize(window.innerWidth, window.innerHeight);
+      } else if (this._origWidth > 0 && this._origHeight > 0) {
         this._scene.resize(this._origWidth, this._origHeight);
       }
       this._scene.render();
@@ -419,8 +416,17 @@ export class Player {
     if (document.fullscreenElement === this._container) {
       document.exitFullscreen();
     } else {
+      // Capture restore dimensions synchronously, before requesting
+      // fullscreen. Doing it inside the fullscreenchange handler would race
+      // with auto-resize observers that may already see the fullscreen
+      // layout by the time the event fires.
+      this._origWidth = this._scene.getWidth();
+      this._origHeight = this._scene.getHeight();
       this._container.requestFullscreen().catch(() => {
-        // Fullscreen may be blocked by browser policy
+        // Fullscreen may be blocked by browser policy; discard the snapshot
+        // so a subsequent toggle does not restore to a stale size.
+        this._origWidth = 0;
+        this._origHeight = 0;
       });
     }
   }

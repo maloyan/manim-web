@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as THREE from 'three';
 import { Renderer } from './Renderer';
 
@@ -127,5 +127,47 @@ describe('Renderer backgroundOpacity', () => {
 
     renderer.backgroundColor = '#ff0000';
     expect(mockRenderer.setClearColor).toHaveBeenCalledWith(expect.any(THREE.Color), 0.4);
+  });
+});
+
+describe('Renderer.resize() pixel-ratio handling (issue #360)', () => {
+  // Node env has no `window`; stub one so the resize DPR refresh runs.
+  const originalWindow = (globalThis as { window?: unknown }).window;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    (globalThis as { window?: { devicePixelRatio: number } }).window = {
+      devicePixelRatio: 2,
+    };
+  });
+
+  afterEach(() => {
+    if (originalWindow === undefined) {
+      delete (globalThis as { window?: unknown }).window;
+    } else {
+      (globalThis as { window?: unknown }).window = originalWindow;
+    }
+  });
+
+  it('refreshes devicePixelRatio on resize when no explicit pixelRatio was set', () => {
+    const renderer = new Renderer(createContainer());
+    const mock = (renderer as any)._renderer;
+    mock.setPixelRatio.mockClear();
+
+    renderer.resize(1000, 600);
+
+    expect(mock.setPixelRatio).toHaveBeenCalledTimes(1);
+    expect(mock.setSize).toHaveBeenCalledWith(1000, 600);
+  });
+
+  it('does NOT overwrite an explicit pixelRatio on resize', () => {
+    const renderer = new Renderer(createContainer(), { pixelRatio: 1 });
+    const mock = (renderer as any)._renderer;
+    mock.setPixelRatio.mockClear();
+
+    renderer.resize(1000, 600);
+
+    expect(mock.setPixelRatio).not.toHaveBeenCalled();
+    expect(mock.setSize).toHaveBeenCalledWith(1000, 600);
   });
 });
