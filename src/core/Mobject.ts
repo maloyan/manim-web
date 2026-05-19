@@ -667,6 +667,16 @@ export abstract class Mobject {
     return restoreMobjectStateImpl(this);
   }
 
+  // ── Scene context ────────────────────────────────────────────────
+
+  /**
+   * Hook for the Scene to propagate renderer dimensions and camera frame
+   * width to mobjects that need them (e.g. shader-resolution uniforms).
+   * Default is a no-op; subclasses override as needed.
+   * @internal
+   */
+  _setSceneContext(_rendererWidth: number, _rendererHeight: number, _frameWidth: number): void {}
+
   // ── Cleanup ──────────────────────────────────────────────────────
 
   dispose(): void {

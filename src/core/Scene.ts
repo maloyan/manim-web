@@ -468,13 +468,7 @@ export class Scene {
    * renderer dimensions instead of the class-level statics.
    */
   private _setSceneContextRecursive(mobject: Mobject): void {
-    if (mobject instanceof VMobject) {
-      mobject._setSceneContext(
-        this._renderer.width,
-        this._renderer.height,
-        this._camera.frameWidth,
-      );
-    }
+    mobject._setSceneContext(this._renderer.width, this._renderer.height, this._camera.frameWidth);
     for (const child of mobject.children) {
       this._setSceneContextRecursive(child);
     }
