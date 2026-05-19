@@ -848,13 +848,19 @@ export class MultiCamera {
   }
 
   /**
-   * Update all cameras that support animation.
+   * Update all cameras that support animation. Advances per-camera
+   * animation state (MovingCamera/ThreeDCamera) and runs any frame
+   * updaters attached to Camera2D entries so secondary cameras can
+   * follow targets the same way `scene.camera.frame` does.
    * @param dt - Delta time in seconds
    */
   update(dt: number): void {
     for (const entry of this._cameras) {
-      if (entry.camera instanceof MovingCamera || entry.camera instanceof ThreeDCamera) {
-        entry.camera.update(dt);
+      const cam = entry.camera;
+      if (cam instanceof MovingCamera || cam instanceof ThreeDCamera) {
+        cam.update(dt);
+      } else if (cam instanceof Camera2D) {
+        cam.updateFrame(dt);
       }
     }
   }

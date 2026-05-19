@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import * as THREE from 'three';
 import { Scene, SceneOptions } from './Scene';
 import { Camera3D } from './Camera';
@@ -552,6 +553,14 @@ export class ThreeDScene extends Scene {
   protected override _render(): void {
     // Guard: super() calls _render() before our fields are initialized
     if (!this._camera3D || this._disposed) return;
+
+    // If a MultiCamera is attached, delegate to it. The 3D-specific HUD /
+    // billboard / orbit-update passes below assume a single primary camera,
+    // so multi-camera renders use the same path as the base Scene.
+    if (this.multiCamera !== null && !this.isHeadless) {
+      this._renderMultiCamera();
+      return;
+    }
 
     // Advance ambient camera rotation
     if (this._ambientRotationRate !== 0) {
