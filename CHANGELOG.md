@@ -1,6 +1,10 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+All notable changes to this project will be documented in this file. This file
+is **auto-generated** by [`standard-version`](https://github.com/conventional-changelog/standard-version)
+from the Conventional Commits history; do not hand-edit the generated release
+sections below. For commit conventions, breaking-change markers, and the
+release process see [`AGENTS.md`](./AGENTS.md#commits-changelog--releases).
 
 ### [0.3.16](https://github.com/maloyan/manim-js/compare/v0.3.13...v0.3.16) (2026-03-16)
 

@@ -71,3 +71,96 @@ helpers live in `src/utils/math.ts` and are built on top of those.
 - **Prefer vector / matrix products to component arithmetic.** Use
   `transformPointByMatrix`, `crossVec`, `dotVec`, etc. so geometric intent is
   visible in the code.
+
+## Commits, Changelog & Releases
+
+`CHANGELOG.md` is **generated**, not hand-written. It is produced by
+[`standard-version`](https://github.com/conventional-changelog/standard-version)
+from the [Conventional Commits](https://www.conventionalcommits.org/) history,
+using the type → section mapping in `.versionrc.json`. Commit subject lines are
+therefore user-facing release notes — write them as such.
+
+### Commit message format
+
+```
+<type>(<scope>): <imperative subject>
+
+<optional body>
+
+<optional footer(s)>
+```
+
+Allowed `<type>` values and where they land in `CHANGELOG.md`:
+
+| Type       | Section in CHANGELOG | Notes                                |
+| ---------- | -------------------- | ------------------------------------ |
+| `feat`     | Features             | Triggers a **minor** version bump    |
+| `fix`      | Bug Fixes            | Triggers a **patch** bump            |
+| `perf`     | Performance          | Patch bump                           |
+| `refactor` | Refactoring          | Patch bump                           |
+| `docs`     | Documentation        | Patch bump                           |
+| `test`     | Tests                | Patch bump                           |
+| `chore`    | *(hidden)*           | Still counts toward release if cut   |
+
+`<scope>` should be the issue number for work tied to a tracked issue:
+`fix(#344): ...`, `feat(#358): ...`. For tooling commits use a topical scope
+(`chore(deps-dev): ...`, `fix(ci): ...`).
+
+The subject must be short, imperative, and stand alone in release notes
+(`add multi-camera example scenes`, not `WIP changes`). It is the *only* part
+of the commit that downstream consumers reliably see.
+
+### Breaking changes
+
+A commit is breaking iff it changes the public API or runtime behaviour in a
+way users must adapt to. Mark it **both** ways:
+
+1. Append `!` after the type/scope: `feat(scene)!: drop legacy add() overload`.
+2. Add a `BREAKING CHANGE:` footer with a one-paragraph migration note:
+
+   ```
+   feat(scene)!: drop legacy add() overload
+
+   BREAKING CHANGE: Scene.add() no longer accepts a raw THREE.Object3D. Wrap
+   it in a Mobject (see docs/migration/0.4.md) before passing it in.
+   ```
+
+`standard-version` bumps to a **major** version when it sees `!` or
+`BREAKING CHANGE:`. The footer text is what users will read — make it
+actionable.
+
+### PR titles → CHANGELOG
+
+The repo allows squash merging. When squashing, **leave the squash commit
+subject equal to the PR title** — don't retype it in the merge dialog. PR
+titles must therefore also follow Conventional Commits; treat the PR title
+as the release-notes entry it will become.
+
+### Release process
+
+Releases are cut locally, then finished by CI:
+
+1. From a clean `main` (or release branch), run the appropriate script:
+   - `npm run release` — auto-detects bump from commits since the last tag.
+   - `npm run release:minor` / `npm run release:major` — force a bump (rare;
+     only when the commit history under-states the change).
+2. `standard-version` updates `package.json` and regenerates the relevant
+   section of `CHANGELOG.md`. **Review the generated diff.** If a subject
+   line reads badly as a release note, do **not** rewrite the already-merged
+   commit on `main`; instead add a short clarifying note immediately above
+   the generated release section, and fix the habit at the source (PR title
+   review) for next time.
+3. Push the release commit (and the tag `standard-version` created) to
+   `origin/main`.
+4. `.github/workflows/release.yml` fires on the `package.json` change. It
+   creates the tag if missing, opens a GitHub Release, and publishes to npm.
+
+Caveats agents should know:
+
+- **GitHub Release notes** are built from `git log`, *not* from
+  `CHANGELOG.md` — bad commit subjects show up in two places, not one.
+- **Never hand-edit generated release entries** in `CHANGELOG.md`. Fix the
+  underlying commit message and regenerate, or add a note above the
+  generated section.
+- **Don't run `npm run release`** as part of a feature PR. Version bumps are
+  a separate, deliberate commit on `main`.
