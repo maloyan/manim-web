@@ -3,9 +3,10 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text } = await import('manim-web');
+  const { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text, YELLOW } =
+    await import('manim-web');
 
-  const dot = new Dot({ point: ORIGIN });
+  const dot = new Dot({ point: ORIGIN, radius: 0.12, color: YELLOW });
   const arrow = new Arrow({ start: ORIGIN, end: [2, 2, 0] });
   const numberplane = new NumberPlane();
   const originText = new Text({ text: '(0, 0)' }).nextTo(dot, DOWN);

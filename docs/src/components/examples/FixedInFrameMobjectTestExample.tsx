@@ -30,6 +30,7 @@ function createScene(container: HTMLElement, manim: any) {
     theta: -45 * (Math.PI / 180),
     distance: 20,
     fov: 30,
+    orbitControlsUp: 'z',
   });
 }
 

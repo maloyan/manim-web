@@ -10,39 +10,69 @@ async function animate(scene: any) {
     DrawBorderThenFill,
     FadeIn,
     FadeOut,
+    Transform,
+    Scale,
+    Shift,
+    Rotate,
     BLACK,
     WHITE,
     RED,
     BLUE,
     GREEN,
-    YELLOW,
+    TEAL,
+    GOLD,
   } = await import('manim-web');
 
   // Pre-create all equations
   const equation1 = new MathTex({
     latex: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
     color: WHITE,
-    fontSize: 2,
   });
   const equation2 = new MathTex({
     latex: 'e^{i\\pi} + 1 = 0',
-    color: YELLOW,
-    fontSize: 2.5,
+    color: GOLD,
   });
   const multiPart = new MathTex({
     latex: ['E', '=', 'mc^2'],
     color: WHITE,
-    fontSize: 3,
   });
   const equation3 = new MathTex({
     latex: '\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}',
     color: GREEN,
-    fontSize: 2,
   });
   const matrix = new MathTex({
     latex: 'A = \\begin{pmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{pmatrix}',
     color: WHITE,
-    fontSize: 2,
+  });
+
+  // Equations for transform demos
+  const pythagoras = new MathTex({
+    latex: 'a^2 + b^2 = c^2',
+    color: WHITE,
+  });
+  const pythagorasExpanded = new MathTex({
+    latex: 'c = \\sqrt{a^2 + b^2}',
+    color: TEAL,
+  });
+  const scalingEq = new MathTex({
+    latex: '\\nabla \\cdot \\mathbf{E} = \\frac{\\rho}{\\epsilon_0}',
+    color: GREEN,
+  });
+  const shiftingEq = new MathTex({
+    latex: '\\lim_{x \\to \\infty} f(x)',
+    color: RED,
+  });
+  const rotatingEq = new MathTex({
+    latex: '\\frac{\\partial f}{\\partial x}',
+    color: BLUE,
+  });
+  const textBefore = new MathTex({
+    latex: 'x = 1',
+    color: WHITE,
+  });
+  const textAfter = new MathTex({
+    latex: 'x = 42',
+    color: GOLD,
   });
 
   // Render all SVGs in parallel
@@ -52,6 +82,13 @@ async function animate(scene: any) {
     multiPart.waitForRender(),
     equation3.waitForRender(),
     matrix.waitForRender(),
+    pythagoras.waitForRender(),
+    pythagorasExpanded.waitForRender(),
+    scalingEq.waitForRender(),
+    shiftingEq.waitForRender(),
+    rotatingEq.waitForRender(),
+    textBefore.waitForRender(),
+    textAfter.waitForRender(),
   ]);
 
   // 1. Create animation - stroke-draw reveal (the main feature)
@@ -81,6 +118,50 @@ async function animate(scene: any) {
   // 5. 2x2 matrix with subscript indices
   await scene.play(new Create(matrix, { duration: 2 }));
   await scene.wait(2);
+  await scene.play(new FadeOut(matrix));
+
+  // 6. Transform one equation into another
+  await scene.play(new FadeIn(pythagoras));
+  await scene.wait(1);
+  await scene.play(new Transform(pythagoras, pythagorasExpanded, { duration: 2 }));
+  await scene.wait(1);
+  // After Transform, source (pythagoras) visually becomes target, target is removed
+  await scene.play(new FadeOut(pythagoras));
+
+  // 7. Scale animation
+  await scene.play(new FadeIn(scalingEq));
+  await scene.wait(0.5);
+  await scene.play(new Scale(scalingEq, { scaleFactor: 2, duration: 1.5 }));
+  await scene.wait(0.5);
+  await scene.play(new Scale(scalingEq, { scaleFactor: 0.5, duration: 1 }));
+  await scene.wait(0.5);
+  await scene.play(new FadeOut(scalingEq));
+
+  // 8. Shift animation
+  await scene.play(new FadeIn(shiftingEq));
+  await scene.wait(0.5);
+  await scene.play(new Shift(shiftingEq, { direction: [3, 0, 0], duration: 1 }));
+  await scene.wait(0.5);
+  await scene.play(new Shift(shiftingEq, { direction: [-6, 0, 0], duration: 1 }));
+  await scene.wait(0.5);
+  await scene.play(new Shift(shiftingEq, { direction: [3, 2, 0], duration: 1 }));
+  await scene.wait(0.5);
+  await scene.play(new FadeOut(shiftingEq));
+
+  // 9. Rotate animation
+  await scene.play(new FadeIn(rotatingEq));
+  await scene.wait(0.5);
+  await scene.play(new Rotate(rotatingEq, { angle: Math.PI * 2, duration: 2 }));
+  await scene.wait(0.5);
+  await scene.play(new FadeOut(rotatingEq));
+
+  // 10. ReplacementTransform - change text
+  await scene.play(new FadeIn(textBefore));
+  await scene.wait(1);
+  await scene.play(new Transform(textBefore, textAfter, { duration: 1.5 }));
+  await scene.wait(1);
+  // After Transform, textBefore is morphed to look like textAfter
+  await scene.play(new FadeOut(textBefore));
 }
 
 export default function MathtexSvgExample() {

@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Text, ThreeDAxes } = await import('manim-web');
+  const { GOLD, Text, ThreeDAxes } = await import('manim-web');
 
   const axes = new ThreeDAxes({
     xRange: [-6, 6, 1],
@@ -15,12 +15,14 @@ async function animate(scene: any) {
     shaftRadius: 0.008,
   });
 
-  // Create a label that sits in 3D space but always faces the camera
-  const label = new Text({ text: 'Origin', fontSize: 24 });
-  label.moveTo([0, 0.5, 0]);
+  // Create a label that sits in 3D space but always faces the camera.
+  // Small XY offset + GOLD tint so the text reads against the white axis lines
+  // without floating away from the origin it labels.
+  const label = new Text({ text: 'Origin', fontSize: 32, color: GOLD });
+  label.moveTo([0.4, 0.4, 0.3]);
 
-  const xLabel = new Text({ text: 'X', fontSize: 24 });
-  xLabel.moveTo([6.5, 0, 0]);
+  const xLabel = new Text({ text: 'X', fontSize: 32, color: GOLD });
+  xLabel.moveTo([6.8, 0, 0.4]);
 
   scene.add(axes, label, xLabel);
 
@@ -41,6 +43,7 @@ function createScene(container: HTMLElement, manim: any) {
     theta: -45 * (Math.PI / 180),
     distance: 20,
     fov: 30,
+    orbitControlsUp: 'z',
   });
 }
 
