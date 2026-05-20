@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - Log Callback (onLog)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 24px;
+      font-family: system-ui, sans-serif;
+      color: #eee;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    #panel {
+      width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    h1 { font-size: 16px; font-weight: 600; }
+    p { font-size: 12px; color: #aaa; line-height: 1.5; }
+    #log {
+      flex: 1;
+      min-height: 360px;
+      background: #11111c;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 10px;
+      font-family: ui-monospace, monospace;
+      font-size: 11px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .entry { padding: 2px 0; border-bottom: 1px solid #222; }
+    .debug { color: #6c7a89; }
+    .info  { color: #4aa3df; }
+    .warn  { color: #f5c542; }
+    .error { color: #e94560; }
+    button {
+      padding: 10px 16px;
+      background: #e94560;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    button:hover { background: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+
+  <div id="panel">
+    <h1>onLog() — log message callback</h1>
+    <p>
+      Every <code>logger</code> call is forwarded to listeners registered with
+      <code>onLog()</code>. Entries are sanitized and JSON-serializable, so they
+      can be POSTed to a server — handy for AI agents that need to read errors.
+    </p>
+    <button id="runBtn">Run animation &amp; emit logs</button>
+    <div id="log"></div>
+  </div>
+
+  <script type="module">
+    import { Scene, Circle, Create, logger, onLog } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const logEl = document.getElementById('log');
+
+    const scene = new Scene(container, {
+      width: 520,
+      height: 400,
+      backgroundColor: '#1a1a2e',
+    });
+
+    // --- Subscribe to log messages -----------------------------------------
+    // entry = { level, message, timestamp } — fully JSON-serializable.
+    const unsubscribe = onLog((entry) => {
+      const line = document.createElement('div');
+      line.className = `entry ${entry.level}`;
+      const time = new Date(entry.timestamp).toLocaleTimeString();
+      line.textContent = `[${time}] ${entry.level.toUpperCase()} ${entry.message}`;
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+
+      // For AI agents / remote collection, forward it instead:
+      // fetch('/__log', { method: 'POST', body: JSON.stringify(entry) });
+    });
+
+    // Stop receiving entries when the page unloads.
+    window.addEventListener('beforeunload', unsubscribe);
+
+    document.getElementById('runBtn').addEventListener('click', async () => {
+      scene.clear();
+      logEl.textContent = '';
+
+      logger.info('starting animation');
+      logger.debug('debug lines are filtered out unless LOG_LEVEL=debug');
+
+      const c = new Circle({ radius: 1.2, color: '#e94560', strokeWidth: 4 });
+      scene.add(c);
+      await scene.play(new Create(c));
+
+      logger.warn('animation finished, scene still has', 1, 'mobject');
+      logger.error(new Error('example error so agents can see stack capture'));
+    });
+  </script>
+</body>
+</html>

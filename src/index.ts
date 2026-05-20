@@ -991,3 +991,6 @@ export {
   resetFeatureFlags,
   getFeatureFlags,
 } from './utils/featureFlags';
+
+// Logging
+export { logger, onLog, type LogEntry, type LogLevel, type LogListener } from './utils/logger';
