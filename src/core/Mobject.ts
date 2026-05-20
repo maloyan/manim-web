@@ -403,6 +403,14 @@ export abstract class Mobject {
 
   // ── Positioning & Bounding Box ───────────────────────────────────
 
+  /**
+   * Whether this mobject has no renderable geometry.
+   * Base default is conservative: non-empty unless specialized subclasses decide otherwise.
+   */
+  isEmpty(): boolean {
+    return false;
+  }
+
   getCenter(): Vector3Tuple {
     return getCenterImpl(this);
   }

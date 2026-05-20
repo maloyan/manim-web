@@ -15,20 +15,8 @@ export class VGroup extends VMobject {
   /**
    * True when this VGroup (recursively) has no renderable geometry.
    */
-  isEmpty(): boolean {
-    if (this.children.length === 0) {
-      return true;
-    }
-    return this.children.every((child) => {
-      const candidate = child as unknown as { isEmpty?: () => boolean };
-      if (typeof candidate.isEmpty === 'function') {
-        return candidate.isEmpty();
-      }
-      if (child instanceof VMobject) {
-        return child.getPoints().length === 0;
-      }
-      return false;
-    });
+  override isEmpty(): boolean {
+    return this.children.length === 0 || this.children.every((child) => child.isEmpty());
   }
 
   /**

@@ -55,6 +55,13 @@ export class VMobject extends VMobjectRendering {
     this._style.strokeOpacity = 1;
   }
 
+  override isEmpty(): boolean {
+    if (this.getPoints().length > 0) {
+      return false;
+    }
+    return this.children.every((child) => child.isEmpty());
+  }
+
   // -----------------------------------------------------------------------
   // Point access
   // -----------------------------------------------------------------------
