@@ -122,6 +122,26 @@ Have existing Manim scripts? Convert them:
 node tools/py2ts.cjs input.py -o output.ts
 ```
 
+## Logging
+
+manim-web logs through a small structured logger. Subscribe to log messages
+with `onLog` — useful for surfacing errors in your UI or forwarding them to a
+server (handy for AI agents that write and debug scenes):
+
+```ts
+import { onLog } from 'manim-web';
+
+const unsubscribe = onLog((entry) => {
+  // entry = { level, message, timestamp } — always JSON-serializable
+  fetch('/__log', { method: 'POST', body: JSON.stringify(entry) });
+});
+
+unsubscribe(); // stop receiving log messages
+```
+
+Forwarded messages are sanitized (tokens, keys, and emails are redacted) and
+respect the `LOG_LEVEL` environment variable (`debug` | `info` | `warn` | `error`).
+
 ## Contributing
 
 ```bash
