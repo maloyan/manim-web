@@ -1981,6 +1981,19 @@ describe('VGroup - extended coverage', () => {
     expect(dotCenter[1]).toBeCloseTo(2, 6);
   });
 
+  it('normalizeTransform rotates VMobject child position offsets when baking VGroup rotation', () => {
+    const line = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
+    line.shift([2, 0, 0]);
+    const group = new VGroup(line);
+
+    group.rotate(Math.PI / 2);
+    group.normalizeTransform();
+
+    expect(line.position.x).toBeCloseTo(0, 6);
+    expect(line.position.y).toBeCloseTo(2, 6);
+    expect(line.position.z).toBeCloseTo(0, 6);
+  });
+
   it('normalizeTransform respects non-XYZ Euler order for VGroup rotation', () => {
     const sourceLine = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
     const sourceGroup = new VGroup(sourceLine);
