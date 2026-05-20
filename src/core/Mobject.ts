@@ -4,6 +4,7 @@ import {
   type Vector3Tuple,
   type MobjectStyle,
   type AxisOrOptions,
+  isVMobjectLike,
   UP,
   DOWN,
   LEFT,
@@ -34,6 +35,8 @@ import { axisVectorFromEulerKey } from '../utils/axis';
 let animateProxyFactory: ((mobject: Mobject) => any) | null = null;
 
 const SCRATCH_EULER = new THREE.Euler();
+const SCRATCH_CHILD_POS = new THREE.Vector3();
+const SCRATCH_CHILD_QUATERNION = new THREE.Quaternion();
 
 interface NormalizeContainerOptions {
   translateChild?: (child: Mobject, dx: number, dy: number, dz: number) => void;
@@ -611,8 +614,26 @@ export abstract class Mobject {
       const eulerAxis = axis as 'X' | 'Y' | 'Z';
       const angle = eulerAxis === 'X' ? rx : eulerAxis === 'Y' ? ry : rz;
       if (angle !== 0) {
+        const rotationAxis = axisVectorFromEulerKey(eulerAxis);
+
+        // VMobject rotation transforms points directly and does not rotate child.position.
+        // During container normalization we must also bake the positional offset.
+        if (isVMobjectLike(child) && child._points3D.length > 0) {
+          SCRATCH_CHILD_POS.set(child.position.x, child.position.y, child.position.z);
+          SCRATCH_CHILD_QUATERNION.setFromAxisAngle(
+            SCRATCH_CHILD_POS.set(rotationAxis[0], rotationAxis[1], rotationAxis[2]).normalize(),
+            angle,
+          );
+          SCRATCH_CHILD_POS.set(
+            child.position.x,
+            child.position.y,
+            child.position.z,
+          ).applyQuaternion(SCRATCH_CHILD_QUATERNION);
+          child.position.set(SCRATCH_CHILD_POS.x, SCRATCH_CHILD_POS.y, SCRATCH_CHILD_POS.z);
+        }
+
         child.rotate(angle, {
-          axis: axisVectorFromEulerKey(eulerAxis),
+          axis: rotationAxis,
           aboutPoint: [0, 0, 0],
         });
       }
