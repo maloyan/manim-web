@@ -1994,6 +1994,24 @@ describe('VGroup - extended coverage', () => {
     expect(line.position.z).toBeCloseTo(0, 6);
   });
 
+  it('VGroup isEmpty treats point-less VMobject containers with renderable descendants as non-empty', () => {
+    const container = new VMobject();
+    const line = new Line({ start: [0, 0, 0], end: [2, 0, 0] });
+    container.add(line);
+
+    const group = new VGroup(container);
+    expect(group.isEmpty()).toBe(false);
+
+    const before = group.getCenter();
+    expect(before[0]).toBeCloseTo(1, 6);
+    expect(before[1]).toBeCloseTo(0, 6);
+
+    group.moveTo([4, 3, 0]);
+    const after = group.getCenter();
+    expect(after[0]).toBeCloseTo(4, 6);
+    expect(after[1]).toBeCloseTo(3, 6);
+  });
+
   it('normalizeTransform respects non-XYZ Euler order for VGroup rotation', () => {
     const sourceLine = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
     const sourceGroup = new VGroup(sourceLine);
