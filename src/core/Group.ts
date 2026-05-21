@@ -77,17 +77,12 @@ export class Group extends Mobject {
     return this;
   }
 
+  override isEmpty(): boolean {
+    return this.children.length === 0 || this.children.every((child) => child.isEmpty());
+  }
+
   override getCenter(): Vector3Tuple {
     if (this.children.length === 0) {
-      return [this.position.x, this.position.y, this.position.z];
-    }
-
-    const isEmptyContainer = (mob: Mobject): boolean => {
-      const candidate = mob as unknown as { isEmpty?: () => boolean };
-      return typeof candidate.isEmpty === 'function' && candidate.isEmpty();
-    };
-    const hasNonEmptyChild = this.children.some((child) => !isEmptyContainer(child));
-    if (!hasNonEmptyChild) {
       return [this.position.x, this.position.y, this.position.z];
     }
 

@@ -1603,9 +1603,9 @@ describe('Group - extended coverage', () => {
     expect(g.scaleVector.z).toBe(1);
   });
 
-  it('Group getCenter handles nested empty containers', () => {
+  it('Group getCenter throws on nested empty containers', () => {
     const g = new Group(new VGroup(new VGroup()));
-    expect(g.getCenter()).toEqual([0, 0, 0]);
+    expect(() => g.getCenter()).toThrow(/empty Three\.js bounds/);
   });
 
   it('shift shifts all children', () => {
