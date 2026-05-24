@@ -68,7 +68,7 @@
     "@mathjax/src": "^4.1.1",
     "earcut": "^3.0.2",
     "gif.js": "^0.2.0",
-    "katex": "^0.16.28",
+    "katex": "^0.17.0",
     "opentype.js": "^2.0.0",
     "polygon-clipping": "^0.15.7",
     "typia": "^12.1.1",
