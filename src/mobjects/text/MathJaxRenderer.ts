@@ -14,8 +14,10 @@
 import katex from 'katex';
 import type { VGroup } from '../../core/VGroup';
 import { svgToVMobjects } from './svgPathParser';
-import { LiteAdaptor } from '@mathjax/src/js/adaptors/liteAdaptor.js';
-import { LiteElement } from '@mathjax/src/js/adaptors/lite/Element.js';
+// Type-only imports so MathJax never enters the main module graph. The
+// runtime values arrive lazily through `./MathJaxBundle.js`.
+import type { LiteAdaptor } from '@mathjax/src/js/adaptors/liteAdaptor.js';
+import type { LiteElement } from '@mathjax/src/js/adaptors/lite/Element.js';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -83,31 +85,36 @@ interface MathJaxModuleGlobal {
 /** Generic callable constructor for dynamic MathJax classes */
 type MathJaxConstructor = new (options: Record<string, unknown>) => Record<string, unknown>;
 
-interface MathJaxNpmMjModule {
-  mathjax: {
-    document: (
-      content: string,
-      options: Record<string, unknown>,
-    ) => {
-      convert: (input: string, options: Record<string, unknown>) => unknown;
-    };
+interface MathJaxSingleton {
+  document: (
+    content: string,
+    options: Record<string, unknown>,
+  ) => {
+    convert: (input: string, options: Record<string, unknown>) => unknown;
   };
-}
-
-interface MathJaxNpmTexModule {
-  TeX: MathJaxConstructor;
-}
-
-interface MathJaxNpmSvgModule {
-  SVG: MathJaxConstructor;
+  /** Internal registry the npm path uses to assert handler registration. */
+  handlers?: { [Symbol.iterator]?: () => Iterator<unknown> };
 }
 
 interface MathJaxModuleNpm {
   strategy: 'npm';
-  mjModule: MathJaxNpmMjModule;
-  texModule: MathJaxNpmTexModule;
-  svgModule: MathJaxNpmSvgModule;
+  mathjax: MathJaxSingleton;
+  TeX: MathJaxConstructor;
+  SVG: MathJaxConstructor;
   adaptor: LiteAdaptor;
+}
+
+/**
+ * Thrown when the npm-path `mathjax` singleton produced by `RegisterHTMLHandler`
+ * does not share its handler list with the `mathjax.document(...)` callsite.
+ * This typically means the downstream bundler (e.g. esm.sh) re-bundled
+ * `@mathjax/src` into separate copies. The error triggers the CDN fallback.
+ */
+export class MathJaxSingletonMismatchError extends Error {
+  constructor(message = 'MathJax singletons split during bundling') {
+    super(message);
+    this.name = 'MathJaxSingletonMismatchError';
+  }
 }
 
 type MathJaxModuleState = MathJaxModuleGlobal | MathJaxModuleNpm;
@@ -123,6 +130,29 @@ let mathjaxModule: MathJaxModuleState | null = null;
 let mathjaxLoadPromise: Promise<MathJaxModuleState> | null = null;
 
 /**
+ * Probe whether `RegisterHTMLHandler` actually populated the `mathjax`
+ * singleton we will later call `.document(...)` on. Returns true when at
+ * least one handler is registered.
+ */
+function hasRegisteredHandler(mathjax: MathJaxSingleton): boolean {
+  const handlers = mathjax.handlers;
+  if (!handlers) return false;
+  // HandlerList exposes `Symbol.iterator`; counting via iteration covers
+  // both real lists and any test stubs that match the same shape.
+  if (typeof handlers[Symbol.iterator] === 'function') {
+    for (const item of handlers as Iterable<unknown>) {
+      void item;
+      return true;
+    }
+    return false;
+  }
+  // Last-ditch structural check for an `items` array if the iterator shape
+  // ever changes upstream.
+  const items = (handlers as { items?: unknown[] }).items;
+  return Array.isArray(items) && items.length > 0;
+}
+
+/**
  * Dynamically load MathJax's SVG output module.
  *
  * We use the "@mathjax/src" npm package which provides a programmatic API
@@ -134,33 +164,36 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
   if (mathjaxLoadPromise) return mathjaxLoadPromise;
 
   mathjaxLoadPromise = (async () => {
-    // Strategy 1: try the npm package "@mathjax/src"
-    // it will resolve for local npm installs, but it will not be bundled in browser code.
+    // Strategy 1: load `@mathjax/src` through a single internal wrapper
+    // module. Collapsing every `@mathjax/src` access into one dynamic import
+    // forces downstream bundlers (esm.sh, CDNs) to emit a single chunk, which
+    // keeps the `mathjax` singleton unique. See ./MathJaxBundle.ts and #396.
     try {
-      const mjModule = await import('@mathjax/src/js/mathjax.js');
-      const texModule = await import('@mathjax/src/js/input/tex.js');
-      const svgModule = await import('@mathjax/src/js/output/svg.js');
-      const { liteAdaptor } = await import('@mathjax/src/js/adaptors/liteAdaptor.js');
-      const { RegisterHTMLHandler } = await import('@mathjax/src/js/handlers/html.js');
-      // Register TeX packages (ams, newcommand, configmacros) so environments like pmatrix/bmatrix work
-      await import('@mathjax/src/js/input/tex/ams/AmsConfiguration.js');
-      await import('@mathjax/src/js/input/tex/newcommand/NewcommandConfiguration.js');
-      await import('@mathjax/src/js/input/tex/configmacros/ConfigMacrosConfiguration.js');
+      const bundle = await import('./MathJaxBundle.js');
 
-      const adaptor = liteAdaptor();
-      RegisterHTMLHandler(adaptor);
+      const adaptor = bundle.liteAdaptor();
+      bundle.RegisterHTMLHandler(adaptor);
+
+      // Verify the handler landed on the same `mathjax` singleton we will
+      // later call `.document()` on. If the bundler split the chunk we will
+      // observe an empty handler list here and fall through to the CDN path
+      // instead of caching a broken state.
+      const mathjax = bundle.mathjax as unknown as MathJaxSingleton;
+      if (!hasRegisteredHandler(mathjax)) {
+        throw new MathJaxSingletonMismatchError();
+      }
 
       const result: MathJaxModuleNpm = {
-        mjModule: mjModule as unknown as MathJaxNpmMjModule,
-        texModule: texModule as unknown as MathJaxNpmTexModule,
-        svgModule: svgModule as unknown as MathJaxNpmSvgModule,
+        mathjax,
+        TeX: bundle.TeX as unknown as MathJaxConstructor,
+        SVG: bundle.SVG as unknown as MathJaxConstructor,
         adaptor,
         strategy: 'npm' as const,
       };
       mathjaxModule = result;
       return result;
     } catch {
-      // npm package not available -- fall through
+      // Bundle missing or singleton split -- fall through to CDN strategy.
     }
 
     // Strategy 2: global MathJax loaded via <script> tag (CDN fallback)
@@ -314,10 +347,7 @@ export async function renderLatexToSVG(
     // ------------------------------------------------------------------
     // npm @mathjax/src
     // ------------------------------------------------------------------
-    const { mjModule, texModule, svgModule, adaptor } = mj;
-    const MathJax = mjModule.mathjax;
-    const TeX = texModule.TeX;
-    const SVG = svgModule.SVG;
+    const { mathjax: MathJax, TeX, SVG, adaptor } = mj;
 
     const tex = new TeX({
       packages: ['base', 'ams', 'newcommand', 'configmacros'],
