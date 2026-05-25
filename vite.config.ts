@@ -20,7 +20,13 @@ export default defineConfig({
       formats: ['es'],
     },
     rollupOptions: {
-      external: ['three', 'react', 'react/jsx-runtime', 'vue', '@mathjax/src'],
+      // NOTE: `@mathjax/src` MUST be bundled (not externalized). Splitting the
+      // five submodules it exposes (mathjax, tex, svg, liteAdaptor, html) over
+      // separate dynamic-import targets makes downstream re-bundlers (e.g.
+      // esm.sh) duplicate the `mathjax` singleton and breaks MathTex (#396).
+      // `./mobjects/text/MathJaxBundle.ts` concentrates the imports so Vite
+      // emits a single MathJax chunk.
+      external: ['three', 'react', 'react/jsx-runtime', 'vue'],
       output: {
         globals: {
           three: 'THREE',
