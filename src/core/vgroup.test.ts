@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
+import { UL, RIGHT } from './Mobject';
 import { VMobject } from './VMobject';
 import { Group } from './Group';
 import { VGroup } from './VGroup';
 import { Line } from '../mobjects/geometry/Line';
 import { Dot } from '../mobjects/geometry/Dot';
 import { PointMobject } from '../mobjects/point';
-import { axisVectorFromEulerKey } from '../utils/math';
+import { axisVectorFromEulerKey } from '../utils/axis';
 
 describe('VGroup - extended coverage', () => {
   it('constructs empty', () => {
