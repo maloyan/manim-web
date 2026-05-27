@@ -38,10 +38,6 @@ const SCRATCH_EULER = new THREE.Euler();
 const SCRATCH_CHILD_POS = new THREE.Vector3();
 const SCRATCH_CHILD_QUATERNION = new THREE.Quaternion();
 
-interface NormalizeContainerOptions {
-  translateChild?: (child: Mobject, dx: number, dy: number, dz: number) => void;
-}
-
 /** @internal Called by AnimateProxy module to register the factory. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function registerAnimateProxy(factory: (mobject: Mobject) => any): void {
@@ -411,10 +407,15 @@ export abstract class Mobject {
     return false;
   }
 
+  /** @pre !this.isEmpty() */
   getCenter(): Vector3Tuple {
     return getCenterImpl(this);
   }
 
+  /**
+   * @pre !this.isEmpty()
+   * @post result.min <= result.max component-wise
+   */
   getBounds(): {
     min: { x: number; y: number; z: number };
     max: { x: number; y: number; z: number };
@@ -554,24 +555,56 @@ export abstract class Mobject {
   }
 
   /**
-   * Normalize this object as a container: forward parent S/R/T anchors into
-   * children, reset parent anchors, then recurse into children.
+   * Normalize this object as a container in one pass:
+   * - push parent scale/rotation into children,
+   * - recurse children,
+   * - recenter children around local bbox center,
+   * - set parent position to that center (accumulated with prior position),
+   * - enforce parent rotation/scale identity.
+   *
+   * Throws when container is empty.
    */
-  protected _normalizeContainerTransform(options?: NormalizeContainerOptions): void {
-    if (!this._hasDeferredAnchors() || this.children.length === 0) {
-      for (const child of this.children) {
-        child.normalizeTransform();
-      }
-      return;
+  protected _normalizeContainerTransform(): void {
+    if (this.children.length === 0 || this.isEmpty()) {
+      const ctor = (this.constructor as { name?: string } | undefined)?.name ?? 'UnknownMobject';
+      throw new Error(`normalizeTransform(): ${ctor} (${this.id}) is empty`);
     }
 
+    const basePosition = new THREE.Vector3(this.position.x, this.position.y, this.position.z);
+
+    // Keep translation on the parent; only push S/R into children.
     this._normalizeContainerScale();
     this._normalizeContainerRotation();
-    this._normalizeContainerTranslation(options);
 
     for (const child of this.children) {
       child.normalizeTransform();
     }
+
+    const bounds = this.getBounds();
+    const worldCenter = new THREE.Vector3(
+      (bounds.min.x + bounds.max.x) / 2,
+      (bounds.min.y + bounds.max.y) / 2,
+      (bounds.min.z + bounds.max.z) / 2,
+    );
+
+    const localCenter = new THREE.Vector3(
+      worldCenter.x - this.position.x,
+      worldCenter.y - this.position.y,
+      worldCenter.z - this.position.z,
+    );
+
+    for (const child of this.children) {
+      child.shift([-localCenter.x, -localCenter.y, -localCenter.z]);
+    }
+
+    this.position.set(
+      basePosition.x + localCenter.x,
+      basePosition.y + localCenter.y,
+      basePosition.z + localCenter.z,
+    );
+    this.rotation.set(0, 0, 0);
+    this.scaleVector.set(1, 1, 1);
+    this._markDirty();
   }
 
   protected _hasDeferredAnchors(): boolean {
@@ -646,24 +679,6 @@ export abstract class Mobject {
         });
       }
     }
-  }
-
-  private _normalizeContainerTranslation(options?: NormalizeContainerOptions): void {
-    const dx = this.position.x;
-    const dy = this.position.y;
-    const dz = this.position.z;
-    if (dx === 0 && dy === 0 && dz === 0) return;
-
-    const translateChild =
-      options?.translateChild ??
-      ((child: Mobject, tx: number, ty: number, tz: number) => {
-        child.position.set(child.position.x + tx, child.position.y + ty, child.position.z + tz);
-      });
-    for (const child of this.children) {
-      translateChild(child, dx, dy, dz);
-    }
-    this.position.set(0, 0, 0);
-    this._markDirty();
   }
 
   _syncToThree(): void {

@@ -146,15 +146,11 @@ export class VGroup extends VMobject {
   }
 
   /**
-   * Normalize group transform by forwarding direct group translation/rotation to children.
-   * This keeps VGroup semantics child-driven and avoids double-counting.
+   * Normalize VGroup transform into canonical container form.
+   * Parent ends with identity rotation/scale and position at bbox center of children.
    */
   override normalizeTransform(): this {
-    this._normalizeContainerTransform({
-      translateChild: (child, dx, dy, dz) => {
-        child.shift([dx, dy, dz]);
-      },
-    });
+    this._normalizeContainerTransform();
     return this;
   }
 

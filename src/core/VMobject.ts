@@ -297,35 +297,77 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Fold local scaleVector into canonical child/point state and reset scaleVector.
+   * Bring this VMobject into canonical form without moving any geometry.
    *
-   * Matches VGroup normalization semantics: propagate scale to children,
-   * then clear parent scale anchor.
+   * @pre  Any combination of position / rotation / scaleVector may be set.
+   * @post !this.isEmpty() => localToWorld(pts[i]) is identical to its pre-call value for every point.
+   * @post !this.isEmpty() => position === world-space bbox center of the points.
+   * @post !this.isEmpty() => getPoints() are centered around the local origin (bbox center === [0,0,0]).
+   * @post rotation === Euler(0,0,0), scaleVector === Vector3(1,1,1).
+   * @post children are recursively normalized.
    */
   override normalizeTransform(): this {
-    const sx = this.scaleVector.x;
-    const sy = this.scaleVector.y;
-    const sz = this.scaleVector.z;
+    if (!this.isEmpty()) {
+      // Bake scale into points
+      const sx = this.scaleVector.x,
+        sy = this.scaleVector.y,
+        sz = this.scaleVector.z;
+      if (sx !== 1 || sy !== 1 || sz !== 1) {
+        for (const p of this._points3D) {
+          p[0] *= sx;
+          p[1] *= sy;
+          p[2] *= sz;
+        }
+        this.scaleVector.set(1, 1, 1);
+      }
 
-    if (!(sx === 1 && sy === 1 && sz === 1)) {
+      // Bake rotation into points
+      const rx = this.rotation.x,
+        ry = this.rotation.y,
+        rz = this.rotation.z;
+      if (rx !== 0 || ry !== 0 || rz !== 0) {
+        const mat = new THREE.Matrix4().makeRotationFromEuler(this.rotation);
+        const v = new THREE.Vector3();
+        for (const p of this._points3D) {
+          v.set(p[0], p[1], p[2]).applyMatrix4(mat);
+          p[0] = v.x;
+          p[1] = v.y;
+          p[2] = v.z;
+        }
+        this.rotation.set(0, 0, 0);
+      }
+
+      // Recenter points around origin; absorb offset into position
+      let minX = Infinity,
+        minY = Infinity,
+        minZ = Infinity;
+      let maxX = -Infinity,
+        maxY = -Infinity,
+        maxZ = -Infinity;
       for (const p of this._points3D) {
-        p[0] *= sx;
-        p[1] *= sy;
-        p[2] *= sz;
+        if (p[0] < minX) minX = p[0];
+        if (p[0] > maxX) maxX = p[0];
+        if (p[1] < minY) minY = p[1];
+        if (p[1] > maxY) maxY = p[1];
+        if (p[2] < minZ) minZ = p[2];
+        if (p[2] > maxZ) maxZ = p[2];
       }
-
-      for (const child of this.children) {
-        child.position.set(child.position.x * sx, child.position.y * sy, child.position.z * sz);
-        child.scale([sx, sy, sz]);
+      const cx = (minX + maxX) / 2,
+        cy = (minY + maxY) / 2,
+        cz = (minZ + maxZ) / 2;
+      if (cx !== 0 || cy !== 0 || cz !== 0) {
+        for (const p of this._points3D) {
+          p[0] -= cx;
+          p[1] -= cy;
+          p[2] -= cz;
+        }
+        this.position.x += cx;
+        this.position.y += cy;
+        this.position.z += cz;
       }
-
-      this.scaleVector.set(1, 1, 1);
     }
 
-    for (const child of this.children) {
-      child.normalizeTransform();
-    }
-
+    for (const child of this.children) child.normalizeTransform();
     this._markDirtyUpward();
     return this;
   }
