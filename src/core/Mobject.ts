@@ -680,6 +680,34 @@ export abstract class Mobject {
   }
 
   /**
+   * Compose this mobject's world matrix by walking the parent chain.
+   *
+   * Each ancestor's local transform is `T · R · S` (translation × rotation × scale),
+   * built via `THREE.Matrix4.compose`; the result is `parent.worldMatrix · localMatrix`.
+   *
+   * The render-only z-layering offset applied in `_syncToThree`
+   * (`idx * 0.01` for non-first children) is intentionally **not** included —
+   * it's a 2D display hack, not part of the mathematical world coordinate.
+   *
+   * @returns A fresh `Matrix4` holding the world transform of this mobject.
+   */
+  _computeWorldMatrix(): THREE.Matrix4 {
+    const matrix = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    q.setFromEuler(this.rotation);
+    matrix.compose(this.position, q, this.scaleVector);
+
+    for (let ancestor: Mobject | null = this.parent; ancestor; ancestor = ancestor.parent) {
+      const parentMatrix = new THREE.Matrix4();
+      q.setFromEuler(ancestor.rotation);
+      parentMatrix.compose(ancestor.position, q, ancestor.scaleVector);
+      matrix.premultiply(parentMatrix);
+    }
+
+    return matrix;
+  }
+
+  /**
    * Number of visible display meshes this mobject contributes when rendered.
    * Used for Transform eligibility checks without forcing Three.js object creation.
    */

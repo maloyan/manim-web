@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { PMobject, PointMobject, PointCloudDot, Mobject1D, Mobject2D, PGroup } from './index';
+import { Group } from '../../core/Group';
+import { VMobject } from '../../core/VMobject';
 
 describe('PMobject', () => {
   it('constructs with default options (no points)', () => {
@@ -159,6 +161,98 @@ describe('PMobject', () => {
     expect(c[0]).toBeCloseTo(12.5);
     expect(c[1]).toBeCloseTo(23.5);
     expect(c[2]).toBeCloseTo(34.5);
+  });
+
+  // ── #392: getPoints() must include parent-chain transforms ──────────────
+  describe('getPoints respects parent transforms (#392)', () => {
+    it('applies parent Group scale', () => {
+      const pm = new PMobject().addPoint({ position: [1, 0, 0] });
+      const g = new Group(pm);
+      g.scale(2);
+      const pts = pm.getPoints();
+      expect(pts[0].position[0]).toBeCloseTo(2);
+      expect(pts[0].position[1]).toBeCloseTo(0);
+      expect(pts[0].position[2]).toBeCloseTo(0);
+    });
+
+    it('applies parent Group shift', () => {
+      const pm = new PMobject().addPoint({ position: [1, 0, 0] });
+      const g = new Group(pm);
+      g.shift([10, 20, 30]);
+      const pts = pm.getPoints();
+      expect(pts[0].position).toEqual([11, 20, 30]);
+    });
+
+    it('applies parent Group rotate (z-axis)', () => {
+      const pm = new PMobject().addPoint({ position: [1, 0, 0] });
+      const g = new Group(pm);
+      g.rotate(Math.PI / 2, [0, 0, 1]); // 90° about z
+      const pts = pm.getPoints();
+      expect(pts[0].position[0]).toBeCloseTo(0);
+      expect(pts[0].position[1]).toBeCloseTo(1);
+      expect(pts[0].position[2]).toBeCloseTo(0);
+    });
+
+    it('applies nested parent chain (scale outer, shift inner, child shift)', () => {
+      const pm = new PMobject().addPoint({ position: [1, 0, 0] });
+      pm.shift([1, 0, 0]); // local-with-self → [2,0,0]
+      const inner = new Group(pm);
+      inner.shift([0, 1, 0]); // → [2,1,0]
+      const outer = new Group(inner);
+      outer.scale(3); // → [6,3,0]
+      const pts = pm.getPoints();
+      expect(pts[0].position[0]).toBeCloseTo(6);
+      expect(pts[0].position[1]).toBeCloseTo(3);
+      expect(pts[0].position[2]).toBeCloseTo(0);
+    });
+
+    it('combined nested rotation + scale + translation order is correct', () => {
+      const pm = new PMobject().addPoint({ position: [1, 0, 0] });
+      const inner = new Group(pm);
+      inner.rotate(Math.PI / 2, [0, 0, 1]); // local [1,0,0] → [0,1,0]
+      const outer = new Group(inner);
+      outer.scale(2); // → [0,2,0]
+      outer.shift([5, 0, 0]); // outer transform is T·R·S; shift adds to translation: → [5,2,0]
+      const pts = pm.getPoints();
+      expect(pts[0].position[0]).toBeCloseTo(5);
+      expect(pts[0].position[1]).toBeCloseTo(2);
+      expect(pts[0].position[2]).toBeCloseTo(0);
+    });
+
+    it('getLocalPoints stays local regardless of parent transforms', () => {
+      const pm = new PMobject().addPoint({ position: [1, 2, 3] });
+      const g = new Group(pm);
+      g.scale(5).shift([10, 10, 10]);
+      const local = pm.getLocalPoints();
+      expect(local[0].position).toEqual([1, 2, 3]);
+    });
+
+    it('with no parent, getPoints matches self-transform (back-compat)', () => {
+      const pm = new PMobject().addPoint({ position: [1, 0, 0] });
+      pm.shift([10, 20, 30]);
+      expect(pm.getPoints()[0].position).toEqual([11, 20, 30]);
+    });
+
+    it('matches renderer matrixWorld for nested Group transforms', () => {
+      const pm = new PMobject().addPoint({ position: [1, 2, 3] });
+      const inner = new Group(pm);
+      inner.scale(2);
+      const outer = new Group(inner);
+      outer.shift([5, 0, 0]);
+      outer.rotate(Math.PI / 4, [0, 0, 1]);
+
+      // Drive the renderer to compute matrixWorld.
+      const obj = outer.getThreeObject();
+      obj.updateMatrixWorld(true);
+
+      const expectedWorld = new THREE.Vector3(1, 2, 3).applyMatrix4(
+        pm.getThreeObject().matrixWorld,
+      );
+      const got = pm.getPoints()[0].position;
+      expect(got[0]).toBeCloseTo(expectedWorld.x);
+      expect(got[1]).toBeCloseTo(expectedWorld.y);
+      expect(got[2]).toBeCloseTo(expectedWorld.z);
+    });
   });
 
   it('copy creates an independent PMobject with same properties', () => {

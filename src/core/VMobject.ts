@@ -102,11 +102,31 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Get all points defining this VMobject as 3D arrays (local-space)
+   * Get all points defining this VMobject as 3D arrays (local-space).
+   *
+   * For coordinates after the full parent S/R/T chain, use {@link getWorldPoints}.
    * @returns Copy of the points array
    */
   getPoints(): number[][] {
     return this._points3D.map((p) => [...p]);
+  }
+
+  /**
+   * Get all points defining this VMobject in world coordinates.
+   *
+   * Composes this VMobject's transform with every ancestor's transform
+   * (via {@link _computeWorldMatrix}). The render-only z-layering offset
+   * applied in `_syncToThree` is intentionally excluded.
+   *
+   * @returns Copy of the points array, projected into world space
+   */
+  getWorldPoints(): number[][] {
+    const worldMatrix = this._computeWorldMatrix();
+    const scratch = new THREE.Vector3();
+    return this._points3D.map((p) => {
+      scratch.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
+      return [scratch.x, scratch.y, scratch.z];
+    });
   }
 
   /**

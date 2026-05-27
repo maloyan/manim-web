@@ -2642,6 +2642,51 @@ describe('VMobject.setPoints / getPoints', () => {
   });
 });
 
+describe('VMobject.getWorldPoints (#392)', () => {
+  it('returns local-space points when there is no parent and no self-transform', () => {
+    const v = new VMobject();
+    v.setPoints([
+      [1, 0, 0],
+      [0, 1, 0],
+    ]);
+    expect(v.getWorldPoints()).toEqual([
+      [1, 0, 0],
+      [0, 1, 0],
+    ]);
+  });
+
+  it('applies self-transform when no parent', () => {
+    const v = new VMobject();
+    v.setPoints([[1, 0, 0]]);
+    v.position.set(10, 20, 30);
+    const pts = v.getWorldPoints();
+    expect(pts[0][0]).toBeCloseTo(11);
+    expect(pts[0][1]).toBeCloseTo(20);
+    expect(pts[0][2]).toBeCloseTo(30);
+  });
+
+  it('applies parent Group transforms (scale + shift)', () => {
+    const v = new VMobject();
+    v.setPoints([[1, 0, 0]]);
+    const g = new Group(v);
+    g.scale(2);
+    g.shift([0, 5, 0]);
+    const pts = v.getWorldPoints();
+    expect(pts[0][0]).toBeCloseTo(2);
+    expect(pts[0][1]).toBeCloseTo(5);
+    expect(pts[0][2]).toBeCloseTo(0);
+  });
+
+  it('does not mutate getPoints (which stays local)', () => {
+    const v = new VMobject();
+    v.setPoints([[1, 0, 0]]);
+    const g = new Group(v);
+    g.scale(2);
+    expect(v.getPoints()).toEqual([[1, 0, 0]]); // local
+    expect(v.getWorldPoints()[0][0]).toBeCloseTo(2); // world
+  });
+});
+
 describe('VMobject.setPoints3D', () => {
   it('is an alias for setPoints with number[][]', () => {
     const v = new VMobject();
