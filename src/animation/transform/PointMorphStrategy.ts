@@ -24,10 +24,11 @@ interface VGroupLeafState {
   child: VMobject;
   startPoints: number[][];
   targetPoints: number[][];
-  // Both positions are expressed in source-Arrow-local space (using src.parentWorldMatrix).
-  // startPosition  = source_child.localPos  (= worldToParentLocal(src.worldPos,  src.parentWorldMatrix))
-  // targetPosition = P_target - P_source + target_child.localPos
-  //                = worldToParentLocal(tgt.worldPos, src.parentWorldMatrix)
+  // Both positions are absolute coordinates in the source group's parent-local frame,
+  // computed via worldToParentLocal(*.worldPos, src.parentWorldMatrix).
+  // startPosition  = worldToParentLocal(src.worldPos,  src.parentWorldMatrix)
+  // targetPosition = worldToParentLocal(tgt.worldPos,  src.parentWorldMatrix)
+  //   (intentionally uses src.parentWorldMatrix so both are in the same frame)
   startPosition: THREE.Vector3;
   targetPosition: THREE.Vector3;
   finalTargetPoints: number[][];
@@ -121,6 +122,15 @@ export class PointMorphStrategy implements MorphStrategy {
     source.setPoints(this._startPoints);
     source.setTransformSubpathLengths(this._alignedSubpathLengths);
   }
+  /**
+   * @pre  source and target each contain ≥ 1 leaf VMobject.
+   * @side-effect source.normalizeTransform() is called in place:
+   *              world-space geometry is unchanged, but local points are recentered
+   *              around the origin and source.position is set to the bbox center.
+   * @post this._vgroupLeafStates pairs every source leaf with a corresponding
+   *       target leaf (or a faded placeholder), with positions expressed in
+   *       source's parent-local coordinate system.
+   */
   private _beginVGroup(source: VGroup, target: VGroup): void {
     this._isVGroupTransform = true;
     source.normalizeTransform();
@@ -183,7 +193,6 @@ export class PointMorphStrategy implements MorphStrategy {
   }
   interpolate(_animation: Animation, source: Mobject, _target: Mobject, alpha: number): void {
     if (this._isVGroupTransform) {
-      const group = source as VGroup;
       // group.position is NOT lerped: leaf positions already encode the group translation delta
       // (targetPosition = P_target - P_source + target_child.localPos), so lerping them
       // implicitly moves the group without needing to touch group.position mid-animation.
@@ -245,10 +254,21 @@ export class PointMorphStrategy implements MorphStrategy {
     vmobject._markDirty();
   }
   /**
-   * @post source.position === target.position
-   * @post source.rotation === target.rotation, source.scaleVector === target.scaleVector
-   * @post for every leaf child i: source.children[i].position === target.children[i].position
-   * @post for every leaf child i: source.children[i].getPoints() deep-equals target.children[i].getPoints()
+   * VMobject path:
+   *   @post source.getPoints() === target's original (pre-normalization) points
+   *   @post source.{color, fillColor, opacity, fillOpacity, strokeWidth} === target's captured-at-begin values
+   *   @post source.{position, rotation, scaleVector} === target's captured-at-begin values
+   *   @post source.getEffectiveSubpathLengths() matches target's topology
+   *
+   * VGroup path:
+   *   @post source.position === normalizedTarget.position
+   *         (normalizedTarget is target.copy() after normalizeTransform(), built during begin())
+   *   @post for every leaf i: source.children[i].position === target.children[i]'s position
+   *         re-expressed in source's post-animation local frame
+   *   @post for every leaf i: source.children[i].getPoints() === the original pre-normalization
+   *         geometry of target.children[i] (i.e. finalTargetPoints, not the aligned interpolation copy)
+   *   @post for every leaf i: source.children[i].{color, fillColor, opacity, fillOpacity, strokeWidth}
+   *         === target.children[i]'s captured-at-begin style
    */
   finish(_animation: Animation, source: Mobject, target: Mobject): void {
     if (this._isVGroupTransform) {

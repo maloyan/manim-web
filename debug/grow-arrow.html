@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GrowArrow Debug</title>
+  </head>
+  <body>
+    <div id="container"></div>
+    <button id="playBtn">Play</button>
+    <button id="resetBtn">Reset</button>
+
+    <script type="module">
+      import { Scene, Arrow, GrowArrow } from '../src/index.ts';
+
+      const tipPoints = [
+        [1.8799999999999997, 0.0, 0.0],
+        [1.763333333333333, 0.058333333333333355, 0.0],
+        [1.6466666666666665, 0.1166666666666667, 0.0],
+        [1.5299999999999998, 0.17500000000000004, 0.0],
+        [1.5299999999999998, 0.0583333333333334, 0.0],
+        [1.5299999999999998, -0.05833333333333327, 0.0],
+        [1.5299999999999998, -0.17499999999999993, 0.0],
+        [1.6466666666666663, -0.11666666666666664, 0.0],
+        [1.763333333333333, -0.05833333333333332, 0.0],
+        [1.8799999999999997, 0.0, 0.0],
+      ];
+
+      const shaftPoints = [
+        [0.11999999999999997, 0.0, 0.0],
+        [0.5899999999999997, 1.8503717077085932e-17, 0.0],
+        [1.0599999999999996, 3.700743415417187e-17, 0.0],
+        [1.5299999999999998, 5.551115123125783e-17, 0.0],
+      ];
+
+      const container = document.getElementById('container');
+      const scene = new Scene(container, {
+        width: 800,
+        height: 450,
+        backgroundColor: '#1a1a2e',
+      });
+
+      const fmt = (p) => {
+        const a = Array.isArray(p)
+          ? [Number(p[0] ?? 0), Number(p[1] ?? 0), Number(p[2] ?? 0)]
+          : [Number(p?.x ?? 0), Number(p?.y ?? 0), Number(p?.z ?? 0)];
+        return `[${a.map((v) => Number(v).toFixed(6)).join(', ')}]`;
+      };
+
+      const logPartPositions = (label, arrow) => {
+        console.log(`--- ${label} ---`);
+        console.log(
+          'arrow.position',
+          fmt(arrow.position),
+          'center',
+          fmt(arrow.getCenter?.() ?? [0, 0, 0]),
+        );
+        (arrow.children ?? []).forEach((part, i) => {
+          console.log(
+            `child[${i}].position`,
+            fmt(part.position),
+            'center',
+            fmt(part.getCenter?.() ?? [0, 0, 0]),
+          );
+          (part.children ?? []).forEach((sub, j) => {
+            console.log(
+              `child[${i}].child[${j}].position`,
+              fmt(sub.position),
+              'center',
+              fmt(sub.getCenter?.() ?? [0, 0, 0]),
+            );
+          });
+        });
+      };
+
+      document.getElementById('playBtn').addEventListener('click', async () => {
+        scene.clear();
+
+        // Single test case: player-like patched Arrow
+        const arrow = new Arrow({ color: '#e94560' });
+        const shaft = arrow.children[0];
+        const tip = arrow.children[1];
+        shaft.setPoints3D(shaftPoints);
+        tip.setPoints3D(tipPoints);
+        arrow._start = [...shaftPoints[0]];
+        arrow._end = [...tipPoints[0]];
+
+        // Recenter local geometry on all VMobject parts, preserve world appearance.
+        //const centerBefore = arrow.getCenter();
+        //for (const part of arrow.children ?? []) {
+        //  if (typeof part.centerPointsAroundPosition === 'function') {
+        //    part.shift(arrow._end);
+        //  }
+        //}
+        console.log(arrow.position);
+        arrow.position['x'] -= arrow._end[0];
+        arrow.position['y'] -= arrow._end[1];
+        arrow.position['z'] -= arrow._end[2];
+        console.log(arrow.position);
+
+        arrow._start = [0, 0, 0];
+        arrow._end = [...tipPoints[0]];
+
+        //const centerAfter = arrow.getCenter();
+        //arrow.shift([
+        //  centerBefore[0] - centerAfter[0],
+        //  centerBefore[1] - centerAfter[1],
+        //  centerBefore[2] - centerAfter[2],
+        //]);
+
+        logPartPositions('arrow (before)', arrow);
+        await scene.play(new GrowArrow(arrow));
+        logPartPositions('arrow (after)', arrow);
+      });
+
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        scene.clear();
+      });
+    </script>
+  </body>
+</html>

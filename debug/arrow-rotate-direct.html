@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arrow Rotate Direct</title>
+</head>
+<body>
+  <div id="container"></div>
+  <button id="playBtn">Rotate (no anim)</button>
+  <button id="resetBtn">Reset</button>
+
+  <script type="module">
+    import { Scene, Arrow, ORIGIN, RIGHT } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: '#1a1a2e'
+    });
+
+    document.getElementById('playBtn').addEventListener('click', async () => {
+      scene.clear();
+      const radius = 2.6;
+      const arrow = new Arrow({
+        start: [0, 0, 0],
+        end: [radius, 0, 0],
+        color: '#7dd3fc',
+        strokeWidth: 3,
+      });
+
+      // Add to scene
+      scene.add(arrow);
+
+      const shaft = arrow.children[0];
+      const tip = arrow.children[1];
+
+      console.log('Before rotate:', {
+        shaftRot: shaft.rotation.toArray(),
+        tipRot: tip.rotation.toArray(),
+        arrowRot: arrow.rotation.toArray(),
+      });
+
+      // Rotate shaft and tip like VGroup.rotate does
+      const angle = Math.PI;
+      const axis = [0, 0, 1];
+      const pivot = arrow.getCenter();
+      shaft.rotate(angle, { axis, aboutPoint: pivot });
+      tip.rotate(angle, { axis, aboutPoint: pivot });
+
+      console.log('After rotate:', {
+        shaftRot: shaft.rotation.toArray(),
+        tipRot: tip.rotation.toArray(),
+        arrowRot: arrow.rotation.toArray(),
+      });
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MathTexImage add-only scale MRE</title>
+</head>
+<body>
+  <div id="container"></div>
+  <button id="playBtn">Play</button>
+  <button id="dirtyBtn">Mark dirty again</button>
+  <button id="resetBtn">Reset</button>
+
+  <script type="module">
+    import { Scene, MathTexImage } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 900,
+      height: 450,
+      backgroundColor: '#111827',
+    });
+
+    // Signed corners representing a square with scale=2 around origin.
+    // [top_left, top_right, bottom_right, bottom_left]
+    const corners = [
+      [-2,  2, 0],
+      [ 2,  2, 0],
+      [ 2, -2, 0],
+      [-2, -2, 0],
+    ];
+
+    function applyTransformWithHardcodedScale(mob, [topLeft, topRight, bottomRight, bottomLeft]) {
+      mob.centerPointsAroundPosition?.();
+
+      // Player-style center from opposite corners.
+      const center = [
+        (topLeft[0] + bottomRight[0]) / 2,
+        (topLeft[1] + bottomRight[1]) / 2,
+        (topLeft[2] + bottomRight[2]) / 2,
+      ];
+
+      // Hardcoded test: force visible 2x scale.
+      mob.scaleVector.set(2, 2, mob.scaleVector.z ?? 1);
+
+      // Move to center.
+      const current = mob.getCenter?.() ?? [0, 0, 0];
+      mob.shift?.([
+        center[0] - current[0],
+        center[1] - current[1],
+        center[2] - current[2],
+      ]);
+
+      mob._markDirty?.();
+
+      console.log('topRight', topRight, 'bottomLeft', bottomLeft); // keep args used/readable
+    }
+
+    let lastMob = null;
+
+    async function run() {
+      scene.clear();
+
+      // Emulate player add path for MathTexSource.
+      const mob = new MathTexImage({ latex: 'b', renderer: 'katex', color: '#ffaa66' });
+      lastMob = mob;
+      mob._pendingTransform = corners;
+
+      // New check: set scale before add.
+      mob.scaleVector.set(2, 2, mob.scaleVector.z ?? 1);
+      mob._markDirty?.();
+
+      scene.add(mob);
+      await (mob.waitForRender?.() ?? Promise.resolve());
+
+      const beforeCenter = mob.getCenter?.();
+      const beforeBox = mob.getBoundingBox?.();
+
+      // Keep player-like center placement, but no post-add scale set.
+      const [topLeft, , bottomRight] = mob._pendingTransform;
+      const center = [
+        (topLeft[0] + bottomRight[0]) / 2,
+        (topLeft[1] + bottomRight[1]) / 2,
+        (topLeft[2] + bottomRight[2]) / 2,
+      ];
+      const current = mob.getCenter?.() ?? [0, 0, 0];
+      mob.shift?.([center[0] - current[0], center[1] - current[1], center[2] - current[2]]);
+      mob._markDirty?.();
+      delete mob._pendingTransform;
+
+      const afterCenter = mob.getCenter?.();
+      const afterBox = mob.getBoundingBox?.();
+
+      console.log('before center', beforeCenter, 'before bbox', beforeBox);
+      console.log('after center', afterCenter, 'after bbox', afterBox, 'scaleVector', mob.scaleVector);
+      console.log('If visual still unchanged now, click "Mark dirty again".');
+    }
+
+    function markDirtyAgain() {
+      if (!lastMob) return;
+      lastMob._markDirty?.();
+      console.log('Called _markDirty() again; check if visual updates now.');
+    }
+
+    document.getElementById('playBtn').addEventListener('click', run);
+    document.getElementById('dirtyBtn').addEventListener('click', markDirtyAgain);
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      scene.clear();
+      lastMob = null;
+    });
+  </script>
+</body>
+</html>

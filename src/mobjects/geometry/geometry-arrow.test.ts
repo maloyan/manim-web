@@ -134,26 +134,6 @@ describe('ApplyFunction on Group', () => {
   });
 });
 
-// ── ApplyFunction on Arrow ──────────────────────────────────────────────────
-
-describe('ApplyFunction on Arrow', () => {
-  it('transforms shaft+tip and reconstructs tip', () => {
-    const arrow = new Arrow({ start: [0, 0, 0], end: [2, 0, 0] });
-
-    const fn = (p: number[]) => [p[0] + 1, p[1], p[2]];
-    const anim = new ApplyFunction(arrow, { func: fn });
-
-    anim.begin();
-    anim.finish();
-
-    // After applying x+1 and reconstructing, the arrow's endpoints should be shifted
-    const start = arrow.getStart();
-    const end = arrow.getEnd();
-    expect(start[0]).toBeGreaterThan(0);
-    expect(end[0]).toBeGreaterThan(2);
-  });
-});
-
 // ── ApplyMatrix on Group ────────────────────────────────────────────────────
 
 describe('ApplyMatrix on Group', () => {

@@ -34,6 +34,10 @@ export class VGroup extends VMobject {
     for (const mobject of mobjects) {
       this.add(mobject);
     }
+
+    if (!this.isEmpty()) {
+      this.normalizeTransform();
+    }
   }
 
   /**
@@ -146,34 +150,13 @@ export class VGroup extends VMobject {
   }
 
   /**
-   * Normalize VGroup transform into canonical container form.
-   * Parent ends with identity rotation/scale and position at bbox center of children.
+   * @pre  !this.isEmpty()
+   * @post this.rotation == (0,0,0) && this.scaleVector == (1,1,1)
+   * @post this.position == world-space bbox center of all descendants
+   * @post world-space geometry of every descendant is unchanged
    */
   override normalizeTransform(): this {
     this._normalizeContainerTransform();
-    return this;
-  }
-
-  /**
-   * Shift all children by the given delta.
-   * Only shifts children's internal positions, not the group's own position,
-   * to avoid double-counting in THREE.js hierarchy.
-   *
-   * When the group has no children yet (e.g. async-rendered text glyphs),
-   * store translation on the group so it is not dropped.
-   * @param delta - Translation vector [x, y, z]
-   * @returns this for chaining
-   */
-  override shift(delta: Vector3Tuple): this {
-    if (this.children.length === 0) {
-      return super.shift(delta);
-    }
-
-    this.normalizeTransform();
-    for (const child of this.children) {
-      child.shift(delta);
-    }
-    this._markDirty();
     return this;
   }
 

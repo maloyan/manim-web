@@ -1592,9 +1592,9 @@ describe('Group - extended coverage', () => {
     expect(pos[0]).not.toBeCloseTo(8, 6); // T->R->S on [1,0,0]
     expect(pos[1]).not.toBeCloseTo(0, 6);
 
-    expect(g.position.x).toBe(0);
-    expect(g.position.y).toBe(0);
-    expect(g.position.z).toBe(0);
+    expect(g.position.x).toBeCloseTo(3, 6);
+    expect(g.position.y).toBeCloseTo(2, 6);
+    expect(g.position.z).toBeCloseTo(0, 6);
     expect(g.rotation.x).toBe(0);
     expect(g.rotation.y).toBe(0);
     expect(g.rotation.z).toBe(0);
@@ -1608,17 +1608,19 @@ describe('Group - extended coverage', () => {
     expect(() => g.getCenter()).toThrow(/empty Three\.js bounds/);
   });
 
-  it('shift shifts all children', () => {
+  it('shift moves group position', () => {
     const a = new VMobject();
     a.position.set(0, 0, 0);
     const b = new VMobject();
     b.position.set(2, 0, 0);
     const g = new Group(a, b);
     g.shift([1, 1, 0]);
-    expect(a.position.x).toBe(1);
-    expect(a.position.y).toBe(1);
-    expect(b.position.x).toBe(3);
-    expect(b.position.y).toBe(1);
+    // Group.shift moves g.position; children retain their local offsets.
+    // World positions shift by delta via THREE.js hierarchy.
+    expect(g.position.x).toBe(1);
+    expect(g.position.y).toBe(1);
+    expect(a.position.x).toBe(0);
+    expect(b.position.x).toBe(2);
   });
 
   it('moveTo with point moves group center', () => {
@@ -1864,12 +1866,14 @@ describe('VGroup - extended coverage', () => {
     expect(vg.getCenter()).toEqual([0, 0, 0]);
   });
 
-  it('shift shifts children, not group position', () => {
+  it('shift moves vgroup position', () => {
     const a = new VMobject();
     a.position.set(0, 0, 0);
     const vg = new VGroup(a);
     vg.shift([5, 0, 0]);
-    expect(a.position.x).toBe(5);
+    // VGroup.shift moves vg.position; child retains its local offset.
+    expect(vg.position.x).toBe(5);
+    expect(a.position.x).toBe(0);
   });
 
   it('shift on empty VGroup is equivalent to shifting after children are added (issue #318)', () => {
@@ -1977,8 +1981,8 @@ describe('VGroup - extended coverage', () => {
     expect(vg.rotation.z).toBe(0);
 
     const dotCenter = dot.getCenter();
-    expect(dotCenter[0]).toBeCloseTo(0, 6);
-    expect(dotCenter[1]).toBeCloseTo(2, 6);
+    expect(dotCenter[0]).toBeCloseTo(1, 6);
+    expect(dotCenter[1]).toBeCloseTo(1, 6);
   });
 
   it('normalizeTransform rotates VMobject child position offsets when baking VGroup rotation', () => {

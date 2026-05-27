@@ -555,14 +555,11 @@ export abstract class Mobject {
   }
 
   /**
-   * Normalize this object as a container in one pass:
-   * - push parent scale/rotation into children,
-   * - recurse children,
-   * - recenter children around local bbox center,
-   * - set parent position to that center (accumulated with prior position),
-   * - enforce parent rotation/scale identity.
-   *
-   * Throws when container is empty.
+   * @pre  !this.isEmpty()
+   * @post this.rotation == (0,0,0) && this.scaleVector == (1,1,1)
+   * @post this.position == world-space bbox center of all descendants
+   * @post world-space geometry of every descendant is unchanged
+   *       (visual result is identical before and after)
    */
   protected _normalizeContainerTransform(): void {
     if (this.children.length === 0 || this.isEmpty()) {
@@ -605,20 +602,6 @@ export abstract class Mobject {
     this.rotation.set(0, 0, 0);
     this.scaleVector.set(1, 1, 1);
     this._markDirty();
-  }
-
-  protected _hasDeferredAnchors(): boolean {
-    return (
-      this.position.x !== 0 ||
-      this.position.y !== 0 ||
-      this.position.z !== 0 ||
-      this.rotation.x !== 0 ||
-      this.rotation.y !== 0 ||
-      this.rotation.z !== 0 ||
-      this.scaleVector.x !== 1 ||
-      this.scaleVector.y !== 1 ||
-      this.scaleVector.z !== 1
-    );
   }
 
   private _normalizeContainerScale(): void {

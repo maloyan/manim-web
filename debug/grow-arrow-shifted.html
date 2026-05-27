@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GrowArrow Shifted Debug</title>
+  </head>
+  <body>
+    <div id="container"></div>
+    <button id="playBtn">Play</button>
+    <button id="resetBtn">Reset</button>
+
+    <script type="module">
+      import { Scene, Arrow, GrowArrow, Create } from '../src/index.ts';
+
+      const container = document.getElementById('container');
+      const scene = new Scene(container, {
+        width: 800,
+        height: 450,
+        backgroundColor: '#1a1a2e',
+      });
+
+      document.getElementById('playBtn').addEventListener('click', async () => {
+        scene.clear();
+        const arrow = new Arrow({
+          start: [0, 0, 0],
+          end: [0, 4, 0],
+          color: '#ff6b6b',
+          strokeWidth: 3,
+          tipLength: 0.6,
+          tipWidth: 0.3,
+        });
+
+        // Shift arrow to non-zero position
+        //arrow.shift([2, 1, 0]);
+
+        // Color shaft and tip differently for visibility
+        if (arrow.children[0]) arrow.children[0].setColor('#4ecdc4'); // shaft
+        if (arrow.children[1]) arrow.children[1].setColor('#ffd93d'); // tip
+
+        //scene.add(arrow);
+
+        console.log('before center:', arrow.getCenter());
+        await scene.play(new Create(arrow, { duration: 4 }));
+        console.log('after center:', arrow.getCenter());
+      });
+
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        scene.clear();
+      });
+    </script>
+  </body>
+</html>

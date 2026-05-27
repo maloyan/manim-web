@@ -21,6 +21,10 @@ export class Group extends Mobject {
     for (const mobject of mobjects) {
       this.add(mobject);
     }
+
+    if (!this.isEmpty()) {
+      this.normalizeTransform();
+    }
   }
 
   /**
@@ -90,26 +94,14 @@ export class Group extends Mobject {
     return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
   }
 
+  /**
+   * @pre  !this.isEmpty()
+   * @post this.rotation == (0,0,0) && this.scaleVector == (1,1,1)
+   * @post this.position == world-space bbox center of all descendants
+   * @post world-space geometry of every descendant is unchanged
+   */
   override normalizeTransform(): this {
     this._normalizeContainerTransform();
-    return this;
-  }
-
-  /**
-   * Shift all children by the given delta.
-   * Only children are shifted (they maintain world-space coordinates).
-   * The group's own position is NOT updated to avoid double-counting
-   * when getCenter() computes the average of children centers.
-   * @param delta - Translation vector [x, y, z]
-   * @returns this for chaining
-   */
-  override shift(delta: Vector3Tuple): this {
-    this.normalizeTransform();
-
-    for (const child of this.children) {
-      child.shift(delta);
-    }
-    this._markDirty();
     return this;
   }
 
