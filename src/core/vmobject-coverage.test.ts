@@ -2,7 +2,7 @@
  * Additional VMobject coverage tests.
  *
  * Targets testable pure-computation methods and edge cases not covered
- * by core.test.ts and core-extra.test.ts, bringing VMobject.ts coverage
+ * by core.test.ts and vmobject.test.ts, bringing VMobject.ts coverage
  * above 54%.
  *
  * Focus: setPoints variants, _pointsToShape, _pointsToCurvePath,
