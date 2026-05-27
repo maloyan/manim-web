@@ -134,27 +134,39 @@ export class PMobject extends Mobject {
 
   /**
    * Get all points in world coordinates.
+   *
+   * Applies this mobject's own transform **and** every ancestor transform in the
+   * parent chain (Group/PGroup/etc.). The render-only z-layering offset added
+   * by `_syncToThree` is intentionally excluded.
+   *
+   * For untransformed local-space coordinates, use {@link getLocalPoints}.
+   *
    * @returns Copy of the transformed points array
    */
   getPoints(): PointData[] {
-    return this._points.map((p) => ({
-      position: this._localToWorld(p.position),
-      color: p.color,
-      opacity: p.opacity,
-    }));
+    // Compute the world matrix once and reuse it for every point.
+    const worldMatrix = this._computeWorldMatrix();
+    const scratch = new THREE.Vector3();
+    return this._points.map((p) => {
+      scratch.set(p.position[0], p.position[1], p.position[2]).applyMatrix4(worldMatrix);
+      return {
+        position: [scratch.x, scratch.y, scratch.z] as Vector3Tuple,
+        color: p.color,
+        opacity: p.opacity,
+      };
+    });
   }
 
+  /**
+   * Project a single local-space point into world space, walking the parent chain.
+   *
+   * Equivalent to applying {@link _computeWorldMatrix} to `local`. Kept for
+   * backwards compatibility with subclasses; prefer caching the world matrix
+   * when transforming many points.
+   */
   protected _localToWorld(local: Vector3Tuple): Vector3Tuple {
-    const euler = new THREE.Euler(
-      this.rotation.x,
-      this.rotation.y,
-      this.rotation.z,
-      this.rotation.order,
-    );
-    const v = new THREE.Vector3(local[0], local[1], local[2]);
-    v.multiply(this.scaleVector);
-    v.applyEuler(euler);
-    v.add(this.position);
+    const worldMatrix = this._computeWorldMatrix();
+    const v = new THREE.Vector3(local[0], local[1], local[2]).applyMatrix4(worldMatrix);
     return [v.x, v.y, v.z];
   }
 
