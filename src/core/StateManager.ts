@@ -110,7 +110,7 @@ export function serializeMobject(mob: Mobject): MobjectState {
   // VMobject-specific properties
   if (mob instanceof VMobject) {
     state.points2D = mob.points.map((p) => ({ x: p.x, y: p.y }));
-    state.points3D = mob.getPoints().map((p) => [...p]);
+    state.points3D = mob.getLocalPoints().map((p) => [...p]);
     state.visiblePointCount = mob.getVisiblePointCount();
   }
 

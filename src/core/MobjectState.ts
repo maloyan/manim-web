@@ -1,5 +1,5 @@
 import type { MobjectLike, MobjectStyle, Vector3Tuple } from './MobjectTypes';
-import { isVMobjectLike } from './MobjectTypes';
+import { isVMobject } from './MobjectTypes';
 import { transformPointByMatrix } from '../utils/math';
 
 /** Helper to access protected/private members on MobjectLike at runtime. */
@@ -59,9 +59,9 @@ export function restoreMobjectStateImpl(mob: MobjectLike): boolean {
   // Restore transform and visual properties
   copyMobjectProperties(mob, saved);
 
-  // Restore VMobject points if applicable (type-safe duck-typing)
-  if (isVMobjectLike(mob) && isVMobjectLike(saved)) {
-    const pts = saved.getPoints();
+  // Restore VMobject points if applicable
+  if (isVMobject(mob) && isVMobject(saved)) {
+    const pts = saved.getLocalPoints();
     if (pts && pts.length > 0) {
       mob.setPoints(pts);
     }
@@ -91,7 +91,7 @@ export function becomeMobjectImpl(mob: MobjectLike, other: MobjectLike): void {
   copyMobjectProperties(mob, other);
 
   // If both are VMobjects, copy points
-  if (isVMobjectLike(mob) && isVMobjectLike(other)) {
+  if (isVMobject(mob) && isVMobject(other)) {
     mob._points3D = other._points3D.map((p: number[]) => [...p]);
     mob._visiblePointCount = other._visiblePointCount;
     mob._geometryDirty = true;
@@ -143,17 +143,15 @@ function pointsBoundingBox(mob: MobjectLike): {
   let hasPoints = false;
 
   for (const m of mob.getFamily()) {
-    const asAny = m as unknown as { getPoints?: () => number[][] };
-    if (typeof asAny.getPoints === 'function') {
-      for (const p of asAny.getPoints()) {
-        hasPoints = true;
-        if (p[0] < minX) minX = p[0];
-        if (p[0] > maxX) maxX = p[0];
-        if (p[1] < minY) minY = p[1];
-        if (p[1] > maxY) maxY = p[1];
-        if (p[2] < minZ) minZ = p[2];
-        if (p[2] > maxZ) maxZ = p[2];
-      }
+    if (!isVMobject(m)) continue;
+    for (const p of m.getLocalPoints()) {
+      hasPoints = true;
+      if (p[0] < minX) minX = p[0];
+      if (p[0] > maxX) maxX = p[0];
+      if (p[1] < minY) minY = p[1];
+      if (p[1] > maxY) maxY = p[1];
+      if (p[2] < minZ) minZ = p[2];
+      if (p[2] > maxZ) maxZ = p[2];
     }
   }
 
@@ -205,27 +203,8 @@ export function applyFunctionImpl(
   fn: (point: number[]) => number[],
   options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
 ): void {
-  const aboutPt = resolveExtremalPoint(mob, options);
-  const wrappedFn = aboutPt
-    ? (p: number[]) => {
-        const translated = [p[0] - aboutPt[0], p[1] - aboutPt[1], p[2] - aboutPt[2]];
-        const result = fn(translated);
-        return [result[0] + aboutPt[0], result[1] + aboutPt[1], result[2] + aboutPt[2]];
-      }
-    : fn;
-
-  for (const m of mob.getFamily()) {
-    const asAny = m as unknown as {
-      getPoints?: () => number[][];
-      setPoints?: (pts: number[][]) => void;
-    };
-    if (typeof asAny.getPoints === 'function' && typeof asAny.setPoints === 'function') {
-      const pts = asAny.getPoints();
-      if (pts.length > 0) {
-        asAny.setPoints(pts.map((p) => wrappedFn([...p])));
-      }
-    }
-  }
+  const aboutPt = resolveExtremalPoint(mob, options) ?? [0, 0, 0];
+  mob.applyFunctionAboutPoint((pts) => pts.map((p) => fn([...p])), aboutPt);
 }
 
 /**
@@ -266,38 +245,33 @@ function evalBezier(p0: number[], p1: number[], p2: number[], p3: number[], t: n
  */
 export function prepareForNonlinearTransformImpl(mob: MobjectLike, numPieces: number): void {
   for (const m of mob.getFamily()) {
-    const asAny = m as unknown as {
-      getPoints?: () => number[][];
-      setPoints?: (pts: number[][]) => void;
-    };
-    if (typeof asAny.getPoints === 'function' && typeof asAny.setPoints === 'function') {
-      const pts = asAny.getPoints();
-      if (pts.length < 4) continue;
-      const newPoints: number[][] = [];
-      // Process each cubic Bezier segment (groups of 4 points: anchor, handle, handle, anchor)
-      for (let i = 0; i + 3 < pts.length; i += 3) {
-        const p0 = pts[i],
-          p1 = pts[i + 1],
-          p2 = pts[i + 2],
-          p3 = pts[i + 3];
-        for (let j = 0; j < numPieces; j++) {
-          const tStart = j / numPieces;
-          const tEnd = (j + 1) / numPieces;
-          // Evaluate de Casteljau at tStart and tEnd for sub-curve anchors
-          const start = evalBezier(p0, p1, p2, p3, tStart);
-          const end = evalBezier(p0, p1, p2, p3, tEnd);
-          // Approximate sub-curve handles by evaluating at 1/3 and 2/3 within sub-interval
-          const t1 = tStart + (tEnd - tStart) / 3;
-          const t2 = tStart + (2 * (tEnd - tStart)) / 3;
-          const h1 = evalBezier(p0, p1, p2, p3, t1);
-          const h2 = evalBezier(p0, p1, p2, p3, t2);
-          if (j === 0 && i === 0) {
-            newPoints.push(start);
-          }
-          newPoints.push(h1, h2, end);
+    if (!isVMobject(m)) continue;
+    const pts = m.getLocalPoints();
+    if (pts.length < 4) continue;
+    const newPoints: number[][] = [];
+    // Process each cubic Bezier segment (groups of 4 points: anchor, handle, handle, anchor)
+    for (let i = 0; i + 3 < pts.length; i += 3) {
+      const p0 = pts[i],
+        p1 = pts[i + 1],
+        p2 = pts[i + 2],
+        p3 = pts[i + 3];
+      for (let j = 0; j < numPieces; j++) {
+        const tStart = j / numPieces;
+        const tEnd = (j + 1) / numPieces;
+        // Evaluate de Casteljau at tStart and tEnd for sub-curve anchors
+        const start = evalBezier(p0, p1, p2, p3, tStart);
+        const end = evalBezier(p0, p1, p2, p3, tEnd);
+        // Approximate sub-curve handles by evaluating at 1/3 and 2/3 within sub-interval
+        const t1 = tStart + (tEnd - tStart) / 3;
+        const t2 = tStart + (2 * (tEnd - tStart)) / 3;
+        const h1 = evalBezier(p0, p1, p2, p3, t1);
+        const h2 = evalBezier(p0, p1, p2, p3, t2);
+        if (j === 0 && i === 0) {
+          newPoints.push(start);
         }
+        newPoints.push(h1, h2, end);
       }
-      asAny.setPoints(newPoints);
     }
+    m.setPoints(newPoints);
   }
 }

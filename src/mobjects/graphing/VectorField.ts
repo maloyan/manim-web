@@ -1048,7 +1048,7 @@ export class StreamLines extends VectorField {
     for (let i = 0; i < numLines; i++) {
       const vmob = this._streamlineVMobjects[i];
       if (vmob) {
-        this._savedOriginalPoints.push(vmob.getPoints());
+        this._savedOriginalPoints.push(vmob.getLocalPoints());
       } else {
         this._savedOriginalPoints.push([]);
       }

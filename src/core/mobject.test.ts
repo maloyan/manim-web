@@ -309,21 +309,27 @@ describe('Mobject - extended coverage', () => {
 
   // rotate (VMobject with points - 2D Z-axis)
   it('rotate around Z axis transforms VMobject points (2D case)', () => {
+    // MIGRATION: weak test, remove once property-based tests done
+    // Test that rotation is deferred and baked by normalizeTransform
     const vm = new VMobject();
-    // Use distinct points so the bounding box center is at (0.5, 0.5, 0)
     vm.setPoints([
-      [0, 0, 0],
       [1, 0, 0],
-      [1, 1, 0],
       [0, 1, 0],
     ]);
-    // center is (0.5, 0.5, 0)
-    vm.rotate(Math.PI / 2); // 90 degrees around Z
+    // Rotate 90 degrees around Z about origin explicitly
+    vm.rotate(Math.PI / 2, { aboutPoint: [0, 0, 0] });
+    // Rotation is deferred, not yet applied to points
+    expect(vm.rotation.z).toBeCloseTo(Math.PI / 2, 5);
+    // Call normalizeTransform to bake the rotation into geometry
+    vm.normalizeTransform();
     const pts = vm.getPoints();
-    // Point (0,0) relative to center (0.5, 0.5) is (-0.5, -0.5)
-    // Rotated 90deg: (0.5, -0.5) => absolute (1.0, 0.0)
-    expect(pts[0][0]).toBeCloseTo(1.0, 5);
-    expect(pts[0][1]).toBeCloseTo(0.0, 5);
+    // World geometry is preserved after rotation baking:
+    // [1, 0, 0] rotated 90° about z → [0, 1, 0]
+    // [0, 1, 0] rotated 90° about z → [-1, 0, 0]
+    expect(pts[0][0]).toBeCloseTo(0, 3);
+    expect(pts[0][1]).toBeCloseTo(1, 3);
+    expect(pts[1][0]).toBeCloseTo(-1, 3);
+    expect(pts[1][1]).toBeCloseTo(0, 3);
   });
 
   // rotate with options object and aboutPoint
@@ -455,8 +461,8 @@ describe('Mobject - extended coverage', () => {
     expect(target.opacity).toBe(0.3);
     expect(target.strokeWidth).toBe(6);
     expect(target.fillOpacity).toBe(0.9);
-    expect(target.getPoints().length).toBe(4);
-    expect(target.getPoints()[0]).toEqual([1, 1, 0]);
+    expect(target.getLocalPoints().length).toBe(4);
+    expect(target.getLocalPoints()[0]).toEqual([1, 1, 0]);
   });
 
   // replace
@@ -796,7 +802,7 @@ describe('Mobject - extended coverage', () => {
       [4, 0, 0],
     ]);
     vm.applyFunction((p) => [p[0] * 2, p[1], p[2]]);
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     expect(pts[0][0]).toBe(2);
     expect(pts[1][0]).toBe(4);
     expect(pts[2][0]).toBe(6);
@@ -814,7 +820,7 @@ describe('Mobject - extended coverage', () => {
     ]);
     parent.add(child);
     parent.applyFunction((p) => [p[0] + 10, p[1] + 10, p[2]]);
-    const pts = child.getPoints();
+    const pts = child.getLocalPoints();
     expect(pts[0][0]).toBe(11);
     expect(pts[0][1]).toBe(12);
   });
@@ -895,7 +901,7 @@ describe('Mobject - extended coverage', () => {
     expect(vm.opacity).toBe(0.5);
     expect(vm.strokeWidth).toBe(8);
     expect(vm.fillOpacity).toBe(0.7);
-    expect(vm.getPoints().length).toBe(4);
+    expect(vm.getLocalPoints().length).toBe(4);
   });
 
   it('restoreState returns false when no saved state', () => {

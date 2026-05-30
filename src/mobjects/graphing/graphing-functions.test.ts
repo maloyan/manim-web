@@ -161,7 +161,7 @@ describe('FunctionGraph', () => {
   describe('points generation', () => {
     it('should generate non-empty points for a simple function', () => {
       const fg = new FunctionGraph({ func: (x) => x, xRange: [-1, 1], numSamples: 10 });
-      const pts = fg.getPoints();
+      const pts = fg.getLocalPoints();
       expect(pts.length).toBeGreaterThan(0);
     });
 
@@ -173,7 +173,7 @@ describe('FunctionGraph', () => {
         discontinuities: [0],
       });
       // Just verify it constructs without error and has some points
-      expect(fg.getPoints().length).toBeGreaterThan(0);
+      expect(fg.getLocalPoints().length).toBeGreaterThan(0);
     });
   });
 });
@@ -286,7 +286,7 @@ describe('ParametricFunction', () => {
         tRange: [0, 1],
         numSamples: 10,
       });
-      expect(pf.getPoints().length).toBeGreaterThan(0);
+      expect(pf.getLocalPoints().length).toBeGreaterThan(0);
     });
 
     it('should generate points for a circle', () => {
@@ -295,7 +295,7 @@ describe('ParametricFunction', () => {
         tRange: [0, 2 * Math.PI],
         numSamples: 50,
       });
-      expect(pf.getPoints().length).toBeGreaterThan(0);
+      expect(pf.getLocalPoints().length).toBeGreaterThan(0);
     });
 
     it('should skip invalid points gracefully', () => {
@@ -308,7 +308,7 @@ describe('ParametricFunction', () => {
         numSamples: 20,
       });
       // Should still produce some points
-      expect(pf.getPoints().length).toBeGreaterThan(0);
+      expect(pf.getLocalPoints().length).toBeGreaterThan(0);
     });
 
     it('should handle Infinity values by skipping them', () => {
@@ -320,7 +320,7 @@ describe('ParametricFunction', () => {
         tRange: [0, 1],
         numSamples: 20,
       });
-      expect(pf.getPoints().length).toBeGreaterThan(0);
+      expect(pf.getLocalPoints().length).toBeGreaterThan(0);
     });
 
     it('should handle function that throws for some values', () => {
@@ -335,7 +335,7 @@ describe('ParametricFunction', () => {
           tRange: [0, 1],
           numSamples: 20,
         });
-        expect(pf.getPoints().length).toBeGreaterThan(0);
+        expect(pf.getLocalPoints().length).toBeGreaterThan(0);
         expect(warnSpy).toHaveBeenCalled();
       } finally {
         warnSpy.mockRestore();
@@ -348,7 +348,7 @@ describe('ParametricFunction', () => {
         tRange: [0, 1],
         numSamples: 10,
       });
-      expect(pf.getPoints().length).toBe(0);
+      expect(pf.getLocalPoints().length).toBe(0);
     });
 
     it('should produce Bezier points for exactly 2 valid samples', () => {
@@ -359,7 +359,7 @@ describe('ParametricFunction', () => {
         tRange: [0, 1],
         numSamples: 2,
       });
-      const pts = pf.getPoints();
+      const pts = pf.getLocalPoints();
       // 2 points -> 1 Bezier segment -> 4 control points
       expect(pts.length).toBe(4);
     });
@@ -379,7 +379,7 @@ describe('ParametricFunction', () => {
         axes,
       });
       // With axes, points should be transformed through coordsToPoint
-      const pts = pf.getPoints();
+      const pts = pf.getLocalPoints();
       expect(pts.length).toBeGreaterThan(0);
     });
 
@@ -444,7 +444,7 @@ describe('ParametricFunction', () => {
       });
       const result = pf.setAxes(axes);
       expect(result).toBe(pf); // chainable
-      expect(pf.getPoints().length).toBeGreaterThan(0);
+      expect(pf.getLocalPoints().length).toBeGreaterThan(0);
     });
 
     it('should clear axes when set to null', () => {

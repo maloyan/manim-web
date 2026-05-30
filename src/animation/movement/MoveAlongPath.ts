@@ -96,7 +96,7 @@ export class MoveAlongPath extends Animation {
     super.begin();
 
     // Get path points
-    this._pathPoints = this.path.getPoints();
+    this._pathPoints = this.path.getLocalPoints();
 
     // Calculate number of cubic Bezier segments
     // Points are: anchor1, handle1, handle2, anchor2, handle3, handle4, anchor3, ...

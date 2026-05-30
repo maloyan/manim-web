@@ -128,9 +128,9 @@ describe('Camera2DFrame', () => {
 
   it('copy preserves points', () => {
     const frame = new Camera2DFrame(camera, true);
-    const originalPoints = frame.getPoints();
+    const originalPoints = frame.getLocalPoints();
     const copy = frame.copy() as Camera2DFrame;
-    const copyPoints = copy.getPoints();
+    const copyPoints = copy.getLocalPoints();
     expect(copyPoints.length).toBe(originalPoints.length);
   });
 });

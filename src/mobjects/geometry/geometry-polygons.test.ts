@@ -453,8 +453,8 @@ describe('Cutout', () => {
     const cutout = new Cutout({ outerShape: outer, innerShape: inner });
     const subpaths = cutout.getSubpathLengths();
     expect(subpaths.length).toBe(2);
-    expect(subpaths[0]).toBe(outer.getPoints().length);
-    expect(subpaths[1]).toBe(inner.getPoints().length);
+    expect(subpaths[0]).toBe(outer.getLocalPoints().length);
+    expect(subpaths[1]).toBe(inner.getLocalPoints().length);
   });
 
   it('accepts custom color overrides', () => {

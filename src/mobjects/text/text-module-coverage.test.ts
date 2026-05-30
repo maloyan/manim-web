@@ -676,7 +676,7 @@ describe('MathTex (SVG)', () => {
       if (!(child instanceof _VMobject)) {
         continue;
       }
-      for (const p of child.getPoints()) {
+      for (const p of child.getLocalPoints()) {
         if (p[1] < minY) minY = p[1];
         if (p[1] > maxY) maxY = p[1];
       }
@@ -1018,16 +1018,16 @@ describe('MathTex (SVG)', () => {
 
     const leaf = svg.children.find(
       (child): child is InstanceType<typeof _VMobject> =>
-        child instanceof _VMobject && child.getPoints().length > 0,
+        child instanceof _VMobject && child.getLocalPoints().length > 0,
     );
 
     expect(leaf).toBeDefined();
     if (!leaf) return;
 
-    const before = leaf.getPoints().map((p) => [...p]);
+    const before = leaf.getLocalPoints().map((p) => [...p]);
     leaf.scale(2);
     leaf.normalizeTransform();
-    const after = leaf.getPoints();
+    const after = leaf.getLocalPoints();
 
     expect(after.length).toBe(before.length);
     for (let i = 0; i < before.length; i++) {
@@ -1100,7 +1100,7 @@ describe('GlyphVMobject', () => {
         font: font as any,
         fontSize: 48,
       });
-      expect(vmob.getPoints().length).toBeGreaterThan(0);
+      expect(vmob.getLocalPoints().length).toBeGreaterThan(0);
     });
 
     it('should handle quadratic Bezier (Q) commands', () => {
@@ -1116,7 +1116,7 @@ describe('GlyphVMobject', () => {
         font: font as any,
         fontSize: 48,
       });
-      expect(vmob.getPoints().length).toBeGreaterThan(0);
+      expect(vmob.getLocalPoints().length).toBeGreaterThan(0);
     });
 
     it('should handle cubic Bezier (C) commands', () => {
@@ -1132,7 +1132,7 @@ describe('GlyphVMobject', () => {
         font: font as any,
         fontSize: 48,
       });
-      expect(vmob.getPoints().length).toBeGreaterThan(0);
+      expect(vmob.getLocalPoints().length).toBeGreaterThan(0);
     });
 
     it('should handle multi-contour glyphs (multiple M commands)', () => {
@@ -1157,7 +1157,7 @@ describe('GlyphVMobject', () => {
         font: font as any,
         fontSize: 48,
       });
-      expect(vmob.getPoints().length).toBeGreaterThan(0);
+      expect(vmob.getLocalPoints().length).toBeGreaterThan(0);
     });
 
     it('should accept custom color', () => {
@@ -1212,7 +1212,7 @@ describe('GlyphVMobject', () => {
         font: font as any,
         fontSize: 48,
       });
-      expect(vmob.getPoints().length).toBeGreaterThan(0);
+      expect(vmob.getLocalPoints().length).toBeGreaterThan(0);
     });
   });
 
@@ -1624,7 +1624,7 @@ describe('MathJaxRenderer', () => {
       let maxY = Number.NEGATIVE_INFINITY;
       for (const child of result.vmobjectGroup.children) {
         if (!(child instanceof _VMobject)) continue;
-        for (const p of child.getPoints()) {
+        for (const p of child.getLocalPoints()) {
           if (p[1] < minY) minY = p[1];
           if (p[1] > maxY) maxY = p[1];
         }
@@ -1648,7 +1648,7 @@ describe('MathJaxRenderer', () => {
         let maxY = Number.NEGATIVE_INFINITY;
         for (const child of res.vmobjectGroup.children) {
           if (!(child instanceof _VMobject)) continue;
-          for (const p of child.getPoints()) {
+          for (const p of child.getLocalPoints()) {
             if (p[1] < minY) minY = p[1];
             if (p[1] > maxY) maxY = p[1];
           }

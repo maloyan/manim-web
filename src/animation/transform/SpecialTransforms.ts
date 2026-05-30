@@ -313,7 +313,7 @@ export class TransformAnimations extends Animation {
     const anim2Mobject = this.animation2.mobject as VMobject;
 
     // Store original state
-    this._originalPoints = vmobject.getPoints();
+    this._originalPoints = vmobject.getLocalPoints();
     this._originalOpacity = vmobject.opacity;
     this._originalFillOpacity = vmobject.fillOpacity;
 
@@ -332,12 +332,12 @@ export class TransformAnimations extends Animation {
     anim1Mobject.fillOpacity = this._originalFillOpacity;
 
     // Initialize animation2 and capture its states
-    this._anim2StartPoints = anim2Mobject.getPoints();
+    this._anim2StartPoints = anim2Mobject.getLocalPoints();
     this.animation2.begin();
 
     // Run animation2 to end
     this.animation2.interpolate(1);
-    this._anim2EndPoints = anim2Mobject.getPoints();
+    this._anim2EndPoints = anim2Mobject.getLocalPoints();
 
     // Reset animation2
     anim2Mobject.setPoints(this._anim2StartPoints);
@@ -360,13 +360,13 @@ export class TransformAnimations extends Animation {
     anim1Mobject.setPoints([...this._originalPoints]);
     anim1Mobject.opacity = this._originalOpacity;
     this.animation1.interpolate(alpha);
-    const anim1Points = anim1Mobject.getPoints();
+    const anim1Points = anim1Mobject.getLocalPoints();
     const anim1Opacity = anim1Mobject.opacity;
 
     // Run animation2 at current alpha
     anim2Mobject.setPoints(this._anim2StartPoints);
     this.animation2.interpolate(alpha);
-    const anim2Points = anim2Mobject.getPoints();
+    const anim2Points = anim2Mobject.getLocalPoints();
     const anim2Opacity = anim2Mobject.opacity;
 
     // Blend between animation1 and animation2 results based on transformAlpha

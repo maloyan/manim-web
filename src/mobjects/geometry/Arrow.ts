@@ -303,12 +303,12 @@ export class Arrow extends Group {
   reconstructTip(): void {
     if (!this._shaft || !this._tip) return;
 
-    const shaftPts = this._shaft.getPoints();
+    const shaftPts = this._shaft.getLocalPoints();
     if (shaftPts.length < 4) return;
 
     // The tip's transformed apex is at Bezier index 3
     // (segment 0: tipLeft→tipPoint, so index 3 = tipPoint)
-    const curTipPts = this._tip.getPoints();
+    const curTipPts = this._tip.getLocalPoints();
     if (curTipPts.length < 4) return;
 
     const start = shaftPts[0];
@@ -534,10 +534,10 @@ export class DoubleArrow extends Group {
     const startTipMob = kids[2];
 
     // Duck-type check
-    type VMobLike = { getPoints(): number[][]; setPoints(p: number[][]): void };
+    type VMobLike = { getLocalPoints(): number[][]; setPoints(p: number[][]): void };
     const asVMob = (m: unknown): VMobLike | null => {
       const o = m as Record<string, unknown>;
-      return typeof o.getPoints === 'function' && typeof o.setPoints === 'function'
+      return typeof o.getLocalPoints === 'function' && typeof o.setPoints === 'function'
         ? (o as unknown as VMobLike)
         : null;
     };
@@ -546,11 +546,11 @@ export class DoubleArrow extends Group {
     const startTipVM = asVMob(startTipMob);
     if (!shaftVM || !endTipVM || !startTipVM) return;
 
-    const shaftPts = shaftVM.getPoints();
+    const shaftPts = shaftVM.getLocalPoints();
     if (shaftPts.length < 4) return;
 
-    const endTipCurPts = endTipVM.getPoints();
-    const startTipCurPts = startTipVM.getPoints();
+    const endTipCurPts = endTipVM.getLocalPoints();
+    const startTipCurPts = startTipVM.getLocalPoints();
     if (endTipCurPts.length < 4 || startTipCurPts.length < 4) return;
 
     const shaftStart = shaftPts[0];

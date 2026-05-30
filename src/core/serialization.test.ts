@@ -125,7 +125,7 @@ describe('deserializeMobject', () => {
     const state = serializeMobject(vm);
     vm.setPoints([[10, 10, 10]]);
     deserializeMobject(vm, state);
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     expect(pts.length).toBe(4);
     expect(pts[0]).toEqual([0, 0, 0]);
     expect(pts[3]).toEqual([0, 1, 0]);
@@ -150,8 +150,8 @@ describe('deserializeMobject', () => {
     expect(vm2.opacity).toBeCloseTo(0.42);
     expect(vm2.strokeWidth).toBe(6);
     expect(vm2.fillOpacity).toBe(0.8);
-    expect(vm2.getPoints().length).toBe(4);
-    expect(vm2.getPoints()[0]).toEqual([0, 0, 0]);
+    expect(vm2.getLocalPoints().length).toBe(4);
+    expect(vm2.getLocalPoints()[0]).toEqual([0, 0, 0]);
   });
 
   it('round-trip preserves children', () => {
@@ -169,7 +169,7 @@ describe('deserializeMobject', () => {
     deserializeMobject(parent, state);
     expect(child.position.x).toBe(3);
     expect(child.position.y).toBe(4);
-    expect(child.getPoints().length).toBe(2);
+    expect(child.getLocalPoints().length).toBe(2);
   });
 });
 

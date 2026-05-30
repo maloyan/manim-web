@@ -1,152 +1,10 @@
 import * as THREE from 'three';
-import type { MobjectLike, Vector3Tuple, AxisOrOptions } from './MobjectTypes';
-import { isVMobjectLike } from './MobjectTypes';
+import type { MobjectLike, Vector3Tuple } from './MobjectTypes';
 
 // Performance optimization: Object pooling for temporary vectors
 // These are shared to avoid allocation in hot paths
 const tempVec3: THREE.Vector3 = new THREE.Vector3();
 const tempBox3: THREE.Box3 = new THREE.Box3();
-const tempQuaternion: THREE.Quaternion = new THREE.Quaternion();
-const tempQuaternion2: THREE.Quaternion = new THREE.Quaternion();
-
-/**
- * Rotate a mobject around an axis.
- * Uses object pooling to avoid allocations in hot paths.
- */
-export function rotateMobject(
-  mob: MobjectLike,
-  angle: number,
-  axisOrOptions?: Vector3Tuple | AxisOrOptions,
-): void {
-  let axis: Vector3Tuple = [0, 0, 1];
-  let aboutPoint: Vector3Tuple | undefined;
-
-  if (axisOrOptions) {
-    if (Array.isArray(axisOrOptions)) {
-      axis = axisOrOptions;
-    } else {
-      axis = axisOrOptions.axis ?? [0, 0, 1];
-      aboutPoint = axisOrOptions.aboutPoint;
-    }
-  }
-
-  // For VMobjects with point data, transform points directly (Manim Python behavior)
-  if (isVMobjectLike(mob) && mob._points3D.length > 0) {
-    rotateVMobjectPoints(mob, angle, axis, aboutPoint);
-  } else {
-    // Non-VMobject fallback: use Three.js transform
-    rotateWithThreeJS(mob, angle, axis, aboutPoint);
-  }
-}
-
-/**
- * Rotate VMobject points directly (Manim Python behavior).
- */
-function rotateVMobjectPoints(
-  mob: MobjectLike,
-  angle: number,
-  axis: Vector3Tuple,
-  aboutPoint: Vector3Tuple | undefined,
-): void {
-  // Cast is safe here: caller checks isVMobjectLike
-  const vmob = mob as MobjectLike & { _points3D: number[][]; _geometryDirty: boolean };
-  const points: number[][] = vmob._points3D;
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-
-  // When no aboutPoint specified, rotate around center of points bounding box
-  if (!aboutPoint) {
-    let minX = Infinity,
-      maxX = -Infinity;
-    let minY = Infinity,
-      maxY = -Infinity;
-    let minZ = Infinity,
-      maxZ = -Infinity;
-    for (const p of points) {
-      if (p[0] < minX) minX = p[0];
-      if (p[0] > maxX) maxX = p[0];
-      if (p[1] < minY) minY = p[1];
-      if (p[1] > maxY) maxY = p[1];
-      if (p[2] < minZ) minZ = p[2];
-      if (p[2] > maxZ) maxZ = p[2];
-    }
-    aboutPoint = [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2];
-  }
-
-  const cx = aboutPoint[0];
-  const cy = aboutPoint[1];
-  const cz = aboutPoint[2];
-
-  // Check if rotating around Z axis (2D case - by far most common)
-  if (axis[0] === 0 && axis[1] === 0 && axis[2] !== 0) {
-    // 2D rotation: transform each point around center
-    for (const point of points) {
-      const dx = point[0] - cx;
-      const dy = point[1] - cy;
-      point[0] = cx + dx * cos - dy * sin;
-      point[1] = cy + dx * sin + dy * cos;
-    }
-  } else {
-    // 3D rotation: use quaternion
-    tempVec3.set(axis[0], axis[1], axis[2]).normalize();
-    tempQuaternion.setFromAxisAngle(tempVec3, angle);
-
-    for (const point of points) {
-      tempVec3.set(point[0] - cx, point[1] - cy, point[2] - cz);
-      tempVec3.applyQuaternion(tempQuaternion);
-      point[0] = cx + tempVec3.x;
-      point[1] = cy + tempVec3.y;
-      point[2] = cz + tempVec3.z;
-    }
-  }
-
-  vmob._geometryDirty = true;
-  mob._markDirty();
-
-  // Recursively rotate children
-  for (const child of mob.children) {
-    child.rotate(angle, { axis, aboutPoint });
-  }
-}
-
-/**
- * Non-VMobject fallback: rotate using Three.js transforms.
- */
-function rotateWithThreeJS(
-  mob: MobjectLike,
-  angle: number,
-  axis: Vector3Tuple,
-  aboutPoint: Vector3Tuple | undefined,
-): void {
-  if (aboutPoint) {
-    const dx = mob.position.x - aboutPoint[0];
-    const dy = mob.position.y - aboutPoint[1];
-    const dz = mob.position.z - aboutPoint[2];
-
-    tempVec3.set(axis[0], axis[1], axis[2]).normalize();
-    tempQuaternion.setFromAxisAngle(tempVec3, angle);
-
-    tempVec3.set(dx, dy, dz);
-    tempVec3.applyQuaternion(tempQuaternion);
-
-    mob.position.set(
-      aboutPoint[0] + tempVec3.x,
-      aboutPoint[1] + tempVec3.y,
-      aboutPoint[2] + tempVec3.z,
-    );
-
-    tempQuaternion2.setFromEuler(mob.rotation);
-    tempQuaternion2.multiply(tempQuaternion);
-    mob.rotation.setFromQuaternion(tempQuaternion2);
-  } else {
-    tempVec3.set(axis[0], axis[1], axis[2]).normalize();
-    tempQuaternion.setFromAxisAngle(tempVec3, angle);
-    tempQuaternion2.setFromEuler(mob.rotation);
-    tempQuaternion2.multiply(tempQuaternion);
-    mob.rotation.setFromQuaternion(tempQuaternion2);
-  }
-  mob._markDirty();
-}
 
 /**
  * Get the center point of a mobject.
@@ -165,7 +23,9 @@ export function getBoundingBoxImpl(mob: MobjectLike): {
   height: number;
   depth: number;
 } {
-  const obj = mob.getThreeObject();
+  // Same world-matrix sync as getBounds() (unlike getBounds, returns zero size
+  // for empty mobjects rather than throwing).
+  const obj = mob._syncWorldMatrices();
   tempBox3.setFromObject(obj);
   tempBox3.getSize(tempVec3);
   return { width: tempVec3.x, height: tempVec3.y, depth: tempVec3.z };

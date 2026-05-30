@@ -75,7 +75,7 @@ describe('VMobject.setPoints with Point[] (2D format)', () => {
     ];
     v.setPoints(pts);
 
-    const result = v.getPoints();
+    const result = v.getLocalPoints();
     expect(result).toHaveLength(4);
     expect(result[0]).toEqual([1, 2, 0]);
     expect(result[3]).toEqual([7, 8, 0]);
@@ -84,7 +84,7 @@ describe('VMobject.setPoints with Point[] (2D format)', () => {
   it('handles empty Point array', () => {
     const v = new VMobject();
     v.setPoints([] as Point[]);
-    expect(v.getPoints()).toHaveLength(0);
+    expect(v.getLocalPoints()).toHaveLength(0);
     expect(v.numPoints).toBe(0);
   });
 });
@@ -342,7 +342,7 @@ describe('VMobject._pointInPolygon', () => {
 describe('VMobject._sampleBezierOutline', () => {
   it('samples a curved segment with multiple points', () => {
     const v = makeSimpleBezier();
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     const outline = (v as any)._sampleBezierOutline(pts, 8) as number[][];
     // Should have multiple sampled points
     expect(outline.length).toBeGreaterThan(2);
@@ -360,7 +360,7 @@ describe('VMobject._sampleBezierOutline', () => {
       [2 / 3, 0, 0],
       [1, 0, 0],
     ]);
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     const outline = (v as any)._sampleBezierOutline(pts, 8) as number[][];
     // Always emits `samplesPerSegment + 1` samples per segment regardless
     // of linearity; previously the adaptive collapse made this 2, but
@@ -376,7 +376,7 @@ describe('VMobject._sampleBezierOutline', () => {
       [0, 0, 0],
       [1, 1, 0],
     ]);
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     const outline = (v as any)._sampleBezierOutline(pts, 8) as number[][];
     // Should use fallback: just return the input points as [x, y]
     expect(outline.length).toBe(2);
@@ -391,7 +391,7 @@ describe('VMobject._sampleBezierOutline', () => {
       [1, 1, 0],
       [0, 0, 0], // closes back to start
     ]);
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     const outline = (v as any)._sampleBezierOutline(pts, 8) as number[][];
     // Last point should NOT be a duplicate of first
     const first = outline[0];
@@ -409,7 +409,7 @@ describe('VMobject._sampleBezierOutline', () => {
 describe('VMobject._buildEarcutFillGeometry', () => {
   it('returns BufferGeometry for a valid polygon', () => {
     const v = makeSquare();
-    const pts3D = v.getPoints();
+    const pts3D = v.getLocalPoints();
     const geom = (v as any)._buildEarcutFillGeometry(pts3D);
     expect(geom).not.toBeNull();
     expect(geom).toBeInstanceOf(THREE.BufferGeometry);
@@ -421,7 +421,7 @@ describe('VMobject._buildEarcutFillGeometry', () => {
       [0, 0, 0],
       [1, 0, 0],
     ]);
-    const pts3D = v.getPoints();
+    const pts3D = v.getLocalPoints();
     const geom = (v as any)._buildEarcutFillGeometry(pts3D);
     // Not enough points for triangulation
     expect(geom).toBeNull();
@@ -435,7 +435,7 @@ describe('VMobject._buildEarcutFillGeometry', () => {
 describe('VMobject._sampleBezierPath', () => {
   it('returns sampled points for valid bezier', () => {
     const v = makeMultiSegmentBezier();
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     const sampled = (v as any)._sampleBezierPath(pts, 4) as number[][];
     expect(sampled.length).toBeGreaterThan(2);
     // First point should match first anchor
@@ -450,7 +450,7 @@ describe('VMobject._sampleBezierPath', () => {
       [0, 0, 0],
       [1, 1, 0],
     ]);
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     const sampled = (v as any)._sampleBezierPath(pts, 4) as number[][];
     // Fallback: just returns input points
     expect(sampled).toEqual(pts);
@@ -470,7 +470,7 @@ describe('VMobject._sampleBezierPath', () => {
       [1.67, 1, 0],
       [2, 0, 0],
     ]);
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     const sampled = (v as any)._sampleBezierPath(pts, 8) as number[][];
     // 2 segments * 8 samples + 1 shared anchor = 17 samples.
     expect(sampled.length).toBe(17);
@@ -484,13 +484,13 @@ describe('VMobject._sampleBezierPath', () => {
 describe('VMobject._isClosedPath', () => {
   it('returns true for closed path', () => {
     const v = makeSquare();
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     expect((v as any)._isClosedPath(pts)).toBe(true);
   });
 
   it('returns false for open path', () => {
     const v = makeSimpleBezier();
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     expect((v as any)._isClosedPath(pts)).toBe(false);
   });
 
@@ -501,7 +501,7 @@ describe('VMobject._isClosedPath', () => {
       [1, 0, 0],
       [1, 1, 0],
     ]);
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     expect((v as any)._isClosedPath(pts)).toBe(false);
   });
 });
@@ -515,10 +515,10 @@ describe('VMobject._createCopy', () => {
     const v = makeSimpleBezier();
     const copy = (v as any)._createCopy() as VMobject;
     expect(copy).toBeInstanceOf(VMobject);
-    expect(copy.getPoints()).toEqual(v.getPoints());
+    expect(copy.getLocalPoints()).toEqual(v.getLocalPoints());
     // Verify deep copy (modifying copy shouldn't affect original)
-    copy.getPoints()[0][0] = 999;
-    expect(v.getPoints()[0][0]).toBe(0);
+    copy.getLocalPoints()[0][0] = 999;
+    expect(v.getLocalPoints()[0][0]).toBe(0);
   });
 
   it('copies visiblePointCount', () => {
@@ -602,7 +602,7 @@ describe('VMobject.setPoints3D', () => {
     ];
     v1.setPoints(pts);
     v2.setPoints3D(pts);
-    expect(v1.getPoints()).toEqual(v2.getPoints());
+    expect(v1.getLocalPoints()).toEqual(v2.getLocalPoints());
   });
 });
 
@@ -639,7 +639,7 @@ describe('VMobject.addPoints', () => {
     v.setPoints([[0, 0, 0]]);
     v.addPoints({ x: 1, y: 2 }, { x: 3, y: 4 });
     expect(v.numPoints).toBe(3);
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     expect(pts[1]).toEqual([1, 2, 0]);
     expect(pts[2]).toEqual([3, 4, 0]);
   });
@@ -909,7 +909,7 @@ describe('VMobject.setPointsAsCorners', () => {
       [0, 0, 0],
       [3, 0, 6],
     ]);
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     expect(pts).toHaveLength(4); // anchor + 2 handles + anchor
     // Check z interpolation
     expect(pts[1][2]).toBeCloseTo(2); // 1/3 of 6

@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { WHITE } from '../../constants';
@@ -74,14 +75,14 @@ export class Line extends VMobject {
   }
 
   /**
-   * Get the start point (derived from transformed _points3D when available)
+   * Get the start point in world coordinates.
+   * @post result === worldMatrix * _points3D[0]
    */
   getStart(): Vector3Tuple {
-    if (this._points3D.length >= 4) {
-      const p = this._points3D[0];
-      return [p[0], p[1], p[2]];
-    }
-    return [...this._start];
+    const localPt = this._points3D.length >= 4 ? this._points3D[0] : this._start;
+    const worldMatrix = this._computeWorldMatrix();
+    const v = new THREE.Vector3(localPt[0], localPt[1], localPt[2]).applyMatrix4(worldMatrix);
+    return [v.x, v.y, v.z];
   }
 
   /**
@@ -94,14 +95,15 @@ export class Line extends VMobject {
   }
 
   /**
-   * Get the end point (derived from transformed _points3D when available)
+   * Get the end point in world coordinates.
+   * @post result === worldMatrix * _points3D[last]
    */
   getEnd(): Vector3Tuple {
-    if (this._points3D.length >= 4) {
-      const p = this._points3D[this._points3D.length - 1];
-      return [p[0], p[1], p[2]];
-    }
-    return [...this._end];
+    const localPt =
+      this._points3D.length >= 4 ? this._points3D[this._points3D.length - 1] : this._end;
+    const worldMatrix = this._computeWorldMatrix();
+    const v = new THREE.Vector3(localPt[0], localPt[1], localPt[2]).applyMatrix4(worldMatrix);
+    return [v.x, v.y, v.z];
   }
 
   /**

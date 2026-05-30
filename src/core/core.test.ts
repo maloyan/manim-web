@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Mobject } from './Mobject';
 import { VMobject } from './VMobject';
 import { VGroup } from './VGroup';
+import { PMobject } from '../mobjects/point/PMobject';
 import { RED, DEFAULT_STROKE_WIDTH } from '../constants';
 
 describe('Mobject', () => {
@@ -68,9 +69,10 @@ describe('Mobject', () => {
   });
 
   it('moveTo sets absolute position', () => {
-    const m = new Mobject();
+    const m = new PMobject();
     m.shift([5, 5, 0]);
     m.moveTo([0, 0, 0]);
+    // After moveTo, position should be target (world-space center matches position for empty PMobject)
     expect(m.position.x).toBe(0);
     expect(m.position.y).toBe(0);
     expect(m.position.z).toBe(0);

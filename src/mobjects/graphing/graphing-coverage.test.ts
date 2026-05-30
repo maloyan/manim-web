@@ -132,8 +132,8 @@ describe('ImplicitFunction coverage gaps', () => {
       minDepth: 4,
     });
     expect(implFunc).toBeDefined();
-    // Verify it generates points without error (VMobject has getPoints())
-    const points = implFunc.getPoints();
+    // Verify it generates points without error (VMobject has getLocalPoints())
+    const points = implFunc.getLocalPoints();
     expect(points).toBeDefined();
   });
 
@@ -146,7 +146,7 @@ describe('ImplicitFunction coverage gaps', () => {
       minDepth: 4,
     });
     expect(implFunc).toBeDefined();
-    const points = implFunc.getPoints();
+    const points = implFunc.getLocalPoints();
     expect(points).toBeDefined();
   });
 });

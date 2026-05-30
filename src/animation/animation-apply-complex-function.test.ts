@@ -28,7 +28,7 @@ describe('ApplyComplexFunction', () => {
     });
     anim.begin();
     anim.interpolate(1);
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     expect(pts[0][0]).toBeCloseTo(0, 5);
     expect(pts[0][1]).toBeCloseTo(2, 5);
     expect(pts[0][2]).toBeCloseTo(0, 5); // z preserved
@@ -43,13 +43,13 @@ describe('ApplyComplexFunction', () => {
     anim.begin();
 
     anim.interpolate(0);
-    expect(v.getPoints()[0][0]).toBeCloseTo(2, 5); // start
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(2, 5); // start
 
     anim.interpolate(0.5);
-    expect(v.getPoints()[0][0]).toBeCloseTo(3, 5); // midpoint: lerp(2, 4, 0.5) = 3
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(3, 5); // midpoint: lerp(2, 4, 0.5) = 3
 
     anim.interpolate(1);
-    expect(v.getPoints()[0][0]).toBeCloseTo(4, 5); // end
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(4, 5); // end
   });
 
   it('preserves z coordinate', () => {
@@ -59,7 +59,7 @@ describe('ApplyComplexFunction', () => {
     });
     anim.begin();
     anim.interpolate(1);
-    expect(v.getPoints()[0][2]).toBeCloseTo(5, 5);
+    expect(v.getLocalPoints()[0][2]).toBeCloseTo(5, 5);
   });
 
   it('handles multiple points', () => {
@@ -74,7 +74,7 @@ describe('ApplyComplexFunction', () => {
     });
     anim.begin();
     anim.interpolate(1);
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     expect(pts[0][0]).toBeCloseTo(0, 5); // 1+0i => 0+1i
     expect(pts[0][1]).toBeCloseTo(1, 5);
     expect(pts[1][0]).toBeCloseTo(-1, 5); // 0+1i => -1+0i
@@ -90,7 +90,7 @@ describe('ApplyComplexFunction', () => {
     });
     anim.begin();
     anim.finish();
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     expect(pts[0][0]).toBeCloseTo(6, 5);
     expect(pts[0][1]).toBeCloseTo(8, 5);
   });
@@ -102,7 +102,7 @@ describe('ApplyComplexFunction', () => {
     });
     anim.begin();
     anim.interpolate(1);
-    const pts = v.getPoints();
+    const pts = v.getLocalPoints();
     expect(pts[0][0]).toBeCloseTo(1, 5);
     expect(pts[0][1]).toBeCloseTo(2, 5);
     expect(pts[0][2]).toBeCloseTo(3, 5);
@@ -122,8 +122,8 @@ describe('ApplyComplexFunction', () => {
     });
     anim.begin();
     anim.interpolate(1);
-    expect(v.getPoints()[0][0]).toBeCloseTo(3, 5);
-    expect(v.getPoints()[0][1]).toBeCloseTo(-4, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(3, 5);
+    expect(v.getLocalPoints()[0][1]).toBeCloseTo(-4, 5);
   });
 
   it('works with custom duration', () => {

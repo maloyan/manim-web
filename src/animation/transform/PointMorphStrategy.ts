@@ -159,9 +159,9 @@ export class PointMorphStrategy implements MorphStrategy {
     }
     const canMorph = canMorphByPoints(sc, tc) && !sourceIsPlaceholder && !targetIsPlaceholder;
     const aligned = canMorph ? alignVmobjectPair(sc, tc) : undefined;
-    const startPoints = aligned?.startPoints ?? child.getPoints();
-    const targetPoints = aligned?.targetPoints ?? child.getPoints();
-    const finalTargetPoints = aligned?.finalTargetPoints ?? child.getPoints();
+    const startPoints = aligned?.startPoints ?? child.getLocalPoints();
+    const targetPoints = aligned?.targetPoints ?? child.getLocalPoints();
+    const finalTargetPoints = aligned?.finalTargetPoints ?? child.getLocalPoints();
     const finalTargetSubpathLengths = aligned?.finalTargetSubpathLengths;
     if (aligned) {
       child.setPoints(aligned.startPoints);
@@ -255,7 +255,7 @@ export class PointMorphStrategy implements MorphStrategy {
   }
   /**
    * VMobject path:
-   *   @post source.getPoints() === target's original (pre-normalization) points
+   *   @post source.getLocalPoints() === target's original (pre-normalization) points
    *   @post source.{color, fillColor, opacity, fillOpacity, strokeWidth} === target's captured-at-begin values
    *   @post source.{position, rotation, scaleVector} === target's captured-at-begin values
    *   @post source.getEffectiveSubpathLengths() matches target's topology
@@ -265,7 +265,7 @@ export class PointMorphStrategy implements MorphStrategy {
    *         (normalizedTarget is target.copy() after normalizeTransform(), built during begin())
    *   @post for every leaf i: source.children[i].position === target.children[i]'s position
    *         re-expressed in source's post-animation local frame
-   *   @post for every leaf i: source.children[i].getPoints() === the original pre-normalization
+   *   @post for every leaf i: source.children[i].getLocalPoints() === the original pre-normalization
    *         geometry of target.children[i] (i.e. finalTargetPoints, not the aligned interpolation copy)
    *   @post for every leaf i: source.children[i].{color, fillColor, opacity, fillOpacity, strokeWidth}
    *         === target.children[i]'s captured-at-begin style

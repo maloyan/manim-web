@@ -240,7 +240,7 @@ describe('deserializeMobject - additional branches', () => {
       children: [],
     };
     deserializeMobject(vm, state);
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     expect(pts.length).toBe(2);
     expect(pts[0][0]).toBe(1);
     expect(pts[0][1]).toBe(2);
@@ -593,7 +593,7 @@ describe('VMobject._interpolatePointList3D edge cases', () => {
     // v1 should now have the same count as v2
     expect(v1.numPoints).toBe(v2.numPoints);
     // All points should be at origin
-    const pts = v1.getPoints();
+    const pts = v1.getLocalPoints();
     for (const p of pts) {
       expect(p[0]).toBe(0);
       expect(p[1]).toBe(0);
@@ -614,7 +614,7 @@ describe('VMobject._interpolatePointList3D edge cases', () => {
     v1.alignPoints(v2);
     expect(v1.numPoints).toBe(v2.numPoints);
     // All points should be at [5, 5, 0]
-    const pts = v1.getPoints();
+    const pts = v1.getLocalPoints();
     for (const p of pts) {
       expect(p[0]).toBe(5);
       expect(p[1]).toBe(5);
@@ -745,7 +745,7 @@ describe('VMobject.setPoints with Point[] format', () => {
       { x: 1, y: 2 },
       { x: 3, y: 4 },
     ]);
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     expect(pts.length).toBe(2);
     expect(pts[0]).toEqual([1, 2, 0]);
     expect(pts[1]).toEqual([3, 4, 0]);
@@ -772,7 +772,7 @@ describe('VMobject.addPointsAsCorners - edge cases', () => {
       [1, 0, 5],
     ]);
     vm.addPointsAsCorners([[2, 0, 10]]);
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     const lastPt = pts[pts.length - 1];
     expect(lastPt[2]).toBeCloseTo(10);
   });
@@ -783,7 +783,7 @@ describe('VMobject.setPointsAsCorners - edge cases', () => {
     const vm = new VMobject();
     vm.setPointsAsCorners([[5, 5, 0]]);
     expect(vm.numPoints).toBe(1);
-    expect(vm.getPoints()[0]).toEqual([5, 5, 0]);
+    expect(vm.getLocalPoints()[0]).toEqual([5, 5, 0]);
   });
 
   it('handles empty corners array', () => {
@@ -800,7 +800,7 @@ describe('VMobject.setPointsAsCorners - edge cases', () => {
     ]);
     // Should create: anchor, handle1, handle2, anchor = 4 points
     expect(vm.numPoints).toBe(4);
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     expect(pts[0]).toEqual([0, 0, 0]);
     expect(pts[1][0]).toBeCloseTo(1); // handle1 at 1/3
     expect(pts[2][0]).toBeCloseTo(2); // handle2 at 2/3
@@ -833,7 +833,7 @@ describe('VMobject.addPoints', () => {
     const vm = new VMobject();
     vm.addPoints({ x: 1, y: 2 }, { x: 3, y: 4 });
     expect(vm.numPoints).toBe(2);
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     expect(pts[0]).toEqual([1, 2, 0]);
   });
 });

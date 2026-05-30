@@ -4,6 +4,7 @@ import { VMobject } from '../core/VMobject';
 import { CurvesAsSubmobjects } from '../core/VMobjectCurveUtils';
 import { Mobject } from '../core/Mobject';
 import { Circle } from '../mobjects/geometry/Circle';
+import { Dot } from '../mobjects/geometry/Dot';
 import {
   ApplyFunction,
   applyFunction,
@@ -45,6 +46,7 @@ import {
 } from './transform/TransformMatching';
 import { ApplyPointwiseFunction, applyPointwiseFunction } from './transform/ApplyPointwiseFunction';
 import { hungarian, hungarianFromSimilarity } from '../utils/hungarian';
+import { Group } from '../core/Group';
 
 // Helpers
 function vm(pts: number[][]): VMobject {
@@ -176,12 +178,12 @@ describe('ApplyFunction', () => {
     const anim = new ApplyFunction(v, { func: (p) => [p[0] + 4, p[1] + 4, p[2]] });
     anim.begin();
     anim.interpolate(0);
-    expect(v.getPoints()[0][0]).toBeCloseTo(0, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(0, 5);
     anim.interpolate(0.5);
-    expect(v.getPoints()[0][0]).toBeCloseTo(2, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(2, 5);
     anim.interpolate(1);
-    expect(v.getPoints()[0][0]).toBeCloseTo(4, 5);
-    expect(v.getPoints()[1][0]).toBeCloseTo(6, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(4, 5);
+    expect(v.getLocalPoints()[1][0]).toBeCloseTo(6, 5);
   });
 
   it('finish sets final points', () => {
@@ -189,8 +191,8 @@ describe('ApplyFunction', () => {
     const anim = new ApplyFunction(v, { func: (p) => [p[0] + 10, p[1] + 20, p[2]] });
     anim.begin();
     anim.finish();
-    expect(v.getPoints()[0][0]).toBeCloseTo(10, 5);
-    expect(v.getPoints()[0][1]).toBeCloseTo(20, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(10, 5);
+    expect(v.getLocalPoints()[0][1]).toBeCloseTo(20, 5);
   });
 
   it('rotation function', () => {
@@ -198,8 +200,8 @@ describe('ApplyFunction', () => {
     const anim = new ApplyFunction(v, { func: (p) => [-p[1], p[0], p[2]] });
     anim.begin();
     anim.interpolate(1);
-    expect(v.getPoints()[0][0]).toBeCloseTo(0, 5);
-    expect(v.getPoints()[0][1]).toBeCloseTo(1, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(0, 5);
+    expect(v.getLocalPoints()[0][1]).toBeCloseTo(1, 5);
   });
 
   it('factory creates ApplyFunction', () => {
@@ -222,8 +224,8 @@ describe('ApplyMatrix', () => {
     });
     anim.begin();
     anim.interpolate(1);
-    expect(v.getPoints()[0][0]).toBeCloseTo(3, 5);
-    expect(v.getPoints()[0][1]).toBeCloseTo(4, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(3, 5);
+    expect(v.getLocalPoints()[0][1]).toBeCloseTo(4, 5);
   });
 
   it('3x3 scaling', () => {
@@ -237,8 +239,8 @@ describe('ApplyMatrix', () => {
     });
     anim.begin();
     anim.interpolate(1);
-    expect(v.getPoints()[0][0]).toBeCloseTo(2, 5);
-    expect(v.getPoints()[0][1]).toBeCloseTo(4, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(2, 5);
+    expect(v.getLocalPoints()[0][1]).toBeCloseTo(4, 5);
   });
 
   it('3x3 rotation 90deg', () => {
@@ -252,8 +254,8 @@ describe('ApplyMatrix', () => {
     });
     anim.begin();
     anim.interpolate(1);
-    expect(v.getPoints()[0][0]).toBeCloseTo(0, 5);
-    expect(v.getPoints()[0][1]).toBeCloseTo(1, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(0, 5);
+    expect(v.getLocalPoints()[0][1]).toBeCloseTo(1, 5);
   });
 
   it('aboutPoint shifts the pivot', () => {
@@ -268,7 +270,7 @@ describe('ApplyMatrix', () => {
     });
     anim.begin();
     anim.interpolate(1);
-    expect(v.getPoints()[0][0]).toBeCloseTo(3, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(3, 5);
   });
 
   it('invalid matrix size returns original', () => {
@@ -276,8 +278,8 @@ describe('ApplyMatrix', () => {
     const anim = new ApplyMatrix(v, { matrix: [[1, 2]] });
     anim.begin();
     anim.interpolate(1);
-    expect(v.getPoints()[0][0]).toBeCloseTo(5, 5);
-    expect(v.getPoints()[0][1]).toBeCloseTo(6, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(5, 5);
+    expect(v.getLocalPoints()[0][1]).toBeCloseTo(6, 5);
   });
 
   it('factory creates ApplyMatrix', () => {
@@ -423,15 +425,15 @@ describe('ClockwiseTransform', () => {
     const anim = new ClockwiseTransform(s, t);
     anim.begin();
     anim.interpolate(0.5);
-    expect(s.getPoints().length).toBe(4);
+    expect(s.getLocalPoints().length).toBe(4);
   });
 
   it('finish sets target opacity', () => {
-    const s = vm([[0, 0, 0]]);
+    const s = new Dot({ point: [0, 0, 0] });
     s.opacity = 0.5;
-    const t = vm([[4, 0, 0]]);
+    const t = new Dot({ point: [4, 0, 0] });
     t.opacity = 0.9;
-    const anim = new ClockwiseTransform(s, t);
+    const anim = new ClockwiseTransform(s as any, t as any);
     anim.begin();
     anim.finish();
     expect(s.opacity).toBeCloseTo(0.9, 5);
@@ -495,15 +497,15 @@ describe('CounterclockwiseTransform', () => {
     const anim = new CounterclockwiseTransform(s, t);
     anim.begin();
     anim.interpolate(0.5);
-    expect(s.getPoints().length).toBe(4);
+    expect(s.getLocalPoints().length).toBe(4);
   });
 
   it('finish sets target opacity', () => {
-    const s = vm([[0, 0, 0]]);
+    const s = new Dot({ point: [0, 0, 0] });
     s.opacity = 1;
-    const t = vm([[5, 5, 0]]);
+    const t = new Dot({ point: [5, 5, 0] });
     t.opacity = 0.3;
-    const anim = new CounterclockwiseTransform(s, t);
+    const anim = new CounterclockwiseTransform(s as any, t as any);
     anim.begin();
     anim.finish();
     expect(s.opacity).toBeCloseTo(0.3, 5);
@@ -538,7 +540,7 @@ describe('TransformFromCopy', () => {
       [0, 0, 0],
       [1, 0, 0],
     ]);
-    const orig = src.getPoints().map((p) => [...p]);
+    const orig = src.getLocalPoints().map((p) => [...p]);
     const anim = new TransformFromCopy(
       src,
       vm([
@@ -548,7 +550,7 @@ describe('TransformFromCopy', () => {
     );
     anim.begin();
     anim.interpolate(0.5);
-    expect(src.getPoints()[0][0]).toBeCloseTo(orig[0][0], 5);
+    expect(src.getLocalPoints()[0][0]).toBeCloseTo(orig[0][0], 5);
   });
 
   it('factory creates TransformFromCopy', () => {
@@ -576,12 +578,12 @@ describe('ApplyPointwiseFunction', () => {
     const anim = new ApplyPointwiseFunction(v, (p) => [p[0] + 10, p[1] + 20, p[2]]);
     anim.begin();
     anim.interpolate(0);
-    expect(v.getPoints()[0][0]).toBeCloseTo(1, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(1, 5);
     anim.interpolate(0.5);
-    expect(v.getPoints()[0][0]).toBeCloseTo(6, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(6, 5);
     anim.interpolate(1);
-    expect(v.getPoints()[0][0]).toBeCloseTo(11, 5);
-    expect(v.getPoints()[0][1]).toBeCloseTo(22, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(11, 5);
+    expect(v.getLocalPoints()[0][1]).toBeCloseTo(22, 5);
   });
 
   it('finish sets target points', () => {
@@ -589,7 +591,7 @@ describe('ApplyPointwiseFunction', () => {
     const anim = new ApplyPointwiseFunction(v, (p) => [-p[0], -p[1], p[2]]);
     anim.begin();
     anim.finish();
-    expect(v.getPoints()[0][0]).toBeCloseTo(-2, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(-2, 5);
   });
 
   it('skips VMobjects with zero points', () => {
@@ -597,7 +599,7 @@ describe('ApplyPointwiseFunction', () => {
     const anim = new ApplyPointwiseFunction(v, (p) => [p[0] + 1, p[1], p[2]]);
     anim.begin();
     anim.interpolate(0.5);
-    expect(v.getPoints().length).toBe(0);
+    expect(v.getLocalPoints().length).toBe(0);
   });
 
   it('applies to children in a group', () => {
@@ -606,8 +608,8 @@ describe('ApplyPointwiseFunction', () => {
     const anim = new ApplyPointwiseFunction(vgroup(c1, c2), (p) => [p[0] + 5, p[1] + 5, p[2]]);
     anim.begin();
     anim.interpolate(1);
-    expect(c1.getPoints()[0][0]).toBeCloseTo(5, 5);
-    expect(c2.getPoints()[0][0]).toBeCloseTo(6, 5);
+    expect(c1.getLocalPoints()[0][0]).toBeCloseTo(5, 5);
+    expect(c2.getLocalPoints()[0][0]).toBeCloseTo(6, 5);
   });
 
   it('scaling function on 3D point', () => {
@@ -615,9 +617,9 @@ describe('ApplyPointwiseFunction', () => {
     const anim = new ApplyPointwiseFunction(v, (p) => [p[0] * 3, p[1] * 3, p[2] * 3]);
     anim.begin();
     anim.interpolate(1);
-    expect(v.getPoints()[0][0]).toBeCloseTo(6, 5);
-    expect(v.getPoints()[0][1]).toBeCloseTo(9, 5);
-    expect(v.getPoints()[0][2]).toBeCloseTo(3, 5);
+    expect(v.getLocalPoints()[0][0]).toBeCloseTo(6, 5);
+    expect(v.getLocalPoints()[0][1]).toBeCloseTo(9, 5);
+    expect(v.getLocalPoints()[0][2]).toBeCloseTo(3, 5);
   });
 
   it('factory creates ApplyPointwiseFunction', () => {
@@ -675,7 +677,7 @@ describe('TransformMatchingShapes', () => {
     let called = 0;
     const keyFn = (v: VMobject) => {
       called++;
-      const p = v.getPoints();
+      const p = v.getLocalPoints();
       return p.length > 0 ? `y=${p[0][1]}` : '';
     };
     const src = vgroup(
@@ -757,7 +759,7 @@ describe('TransformMatchingTex', () => {
 
   it('children with same key get matched', () => {
     const keyFn = (v: VMobject) => {
-      const p = v.getPoints();
+      const p = v.getLocalPoints();
       return p.length > 0 ? `${p[0][1].toFixed(0)}` : '';
     };
     const src = vgroup(
@@ -789,7 +791,7 @@ describe('TransformMatchingTex', () => {
 
   it('transformMismatches pairs unmatched via Hungarian', () => {
     const keyFn = (v: VMobject) => {
-      const p = v.getPoints();
+      const p = v.getLocalPoints();
       return `u_${p[0]?.[0]}_${p[0]?.[1]}`;
     };
     const src = vgroup(
@@ -825,7 +827,7 @@ describe('TransformMatchingTex', () => {
       [1, 0, 0],
     ]);
     c1.opacity = 1;
-    const keyFn = (v: VMobject) => `k_${v.getPoints()[0]?.[0]}`;
+    const keyFn = (v: VMobject) => `k_${v.getLocalPoints()[0]?.[0]}`;
     const anim = new TransformMatchingTex(
       vgroup(c1),
       vgroup(
@@ -1186,9 +1188,9 @@ describe('Swap', () => {
     const curves2 = new CurvesAsSubmobjects(base);
 
     // Verify container has no local points but children do
-    expect(curves1.getPoints().length).toBe(0);
+    expect(curves1.getLocalPoints().length).toBe(0);
     expect(curves1.children.length).toBeGreaterThan(0);
-    expect((curves1.children[0] as VMobject).getPoints().length).toBeGreaterThan(0);
+    expect((curves1.children[0] as VMobject).getLocalPoints().length).toBeGreaterThan(0);
 
     const shift1 = new ApplyPointwiseFunction(curves1, (p) => [p[0] - 3, p[1], p[2]]);
     shift1.begin();
@@ -1704,7 +1706,8 @@ describe('TransformMatchingShapes - fade-in with parent', () => {
 
 describe('TransformMatchingTex - mismatch cross-fade', () => {
   it('cross-fades mismatched pairs at alpha < 0.5 and >= 0.5', () => {
-    const keyFn = (v: VMobject) => `unique_${v.getPoints()[0]?.[0]}_${v.getPoints()[0]?.[1]}`;
+    const keyFn = (v: VMobject) =>
+      `unique_${v.getLocalPoints()[0]?.[0]}_${v.getLocalPoints()[0]?.[1]}`;
     const srcChild = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -1769,7 +1772,7 @@ describe('TransformMatchingTex - mismatch cross-fade', () => {
   });
 
   it('finish finalizes mismatched pairs', () => {
-    const keyFn = (v: VMobject) => `u_${v.getPoints()[0]?.[0]}`;
+    const keyFn = (v: VMobject) => `u_${v.getLocalPoints()[0]?.[0]}`;
     const srcChild = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -1822,7 +1825,7 @@ describe('TransformMatchingTex - asymmetric transformMismatches', () => {
     t1.opacity = 1;
 
     const keyFn = (v: VMobject) => {
-      const p = v.getPoints();
+      const p = v.getLocalPoints();
       return `k_${p[0]?.[0]}_${p[0]?.[1]}`;
     };
 
@@ -1869,7 +1872,7 @@ describe('TransformMatchingTex - asymmetric transformMismatches', () => {
     t3.opacity = 0.7;
 
     const keyFn = (v: VMobject) => {
-      const p = v.getPoints();
+      const p = v.getLocalPoints();
       return `k_${p[0]?.[0]}_${p[0]?.[1]}`;
     };
 
@@ -1920,7 +1923,7 @@ describe('TransformMatchingTex - finish with fade parts (lines 729, 733)', () =>
     t2.opacity = 0.7;
 
     const keyFn = (v: VMobject) => {
-      const p = v.getPoints();
+      const p = v.getLocalPoints();
       return `unique_${p[0]?.[0]}_${p[0]?.[1]}_${p[1]?.[0]}`;
     };
 
@@ -1994,5 +1997,103 @@ describe('TransformMatchingTex - empty VMobject getBoundingBox (lines 22-23)', (
     anim.interpolate(0.5);
     anim.finish();
     expect(anim.isFinished()).toBe(true);
+  });
+});
+
+// ── ApplyFunction on Group ──────────────────────────────────────────────────
+
+describe('ApplyFunction on Group', () => {
+  it('transforms VMobject children within a Group', () => {
+    const child1 = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+      [2, 0, 0],
+      [3, 0, 0],
+    ]);
+    const child2 = vm([
+      [0, 1, 0],
+      [1, 1, 0],
+      [2, 1, 0],
+      [3, 1, 0],
+    ]);
+    const group = new Group(child1, child2);
+
+    const fn = (p: number[]) => [p[0] * 2, p[1] * 2, p[2]];
+    const anim = new ApplyFunction(group, { func: fn });
+
+    anim.begin();
+    anim.finish();
+
+    // MIGRATION: weak test, remove once property-based tests done.
+    // getLocalPoints() returns local _points3D; use getPoints() for world-space assertions.
+    const pts1 = child1.getPoints();
+    expect(pts1[0][0]).toBeCloseTo(0);
+    expect(pts1[1][0]).toBeCloseTo(2);
+    expect(pts1[3][0]).toBeCloseTo(6);
+
+    const pts2 = child2.getPoints();
+    expect(pts2[0][1]).toBeCloseTo(2);
+    expect(pts2[3][0]).toBeCloseTo(6);
+    expect(pts2[3][1]).toBeCloseTo(2);
+  });
+
+  it('factory function accepts Mobject', () => {
+    const child = vm([
+      [0, 0, 0],
+      [1, 0, 0],
+      [2, 0, 0],
+      [3, 0, 0],
+    ]);
+    const group = new Group(child);
+    const anim = applyFunction(group, (p) => [p[0], p[1] + 1, p[2]]);
+    expect(anim).toBeInstanceOf(ApplyFunction);
+  });
+});
+
+// ── ApplyMatrix on Group ────────────────────────────────────────────────────
+
+describe('ApplyMatrix on Group', () => {
+  it('applies 3x3 matrix to all VMobject children', () => {
+    const child = vm([
+      [1, 0, 0],
+      [2, 0, 0],
+      [3, 0, 0],
+      [4, 0, 0],
+    ]);
+    const group = new Group(child);
+
+    const matrix = [
+      [2, 0, 0],
+      [0, 2, 0],
+      [0, 0, 1],
+    ];
+    const anim = new ApplyMatrix(group, { matrix });
+
+    anim.begin();
+    anim.finish();
+
+    // MIGRATION: weak test, remove once property-based tests done.
+    // getLocalPoints() returns local _points3D; use getPoints() for world-space assertions.
+    const pts = child.getPoints();
+    expect(pts[0][0]).toBeCloseTo(2);
+    expect(pts[1][0]).toBeCloseTo(4);
+    expect(pts[3][0]).toBeCloseTo(8);
+  });
+
+  it('factory function accepts Mobject', () => {
+    const group = new Group(
+      vm([
+        [0, 0, 0],
+        [1, 0, 0],
+        [2, 0, 0],
+        [3, 0, 0],
+      ]),
+    );
+    const anim = applyMatrix(group, [
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+    ]);
+    expect(anim).toBeInstanceOf(ApplyMatrix);
   });
 });

@@ -150,49 +150,6 @@ export class VGroup extends VMobject {
   }
 
   /**
-   * @pre  !this.isEmpty()
-   * @post this.rotation == (0,0,0) && this.scaleVector == (1,1,1)
-   * @post this.position == world-space bbox center of all descendants
-   * @post world-space geometry of every descendant is unchanged
-   */
-  override normalizeTransform(): this {
-    this._normalizeContainerTransform();
-    return this;
-  }
-
-  /**
-   * Move the group center to the given point, or align with another Mobject.
-   * @param target - Target position [x, y, z] or Mobject to align with
-   * @param alignedEdge - Optional edge direction to align (e.g., UL aligns upper-left edges)
-   * @returns this for chaining
-   */
-  override moveTo(target: Vector3Tuple | Mobject, alignedEdge?: Vector3Tuple): this {
-    this.normalizeTransform();
-
-    if (!Array.isArray(target)) {
-      // Mobject target: delegate to base which uses shift
-      if (alignedEdge) {
-        const targetEdge = target._getEdgeInDirection(alignedEdge);
-        const thisEdge = this._getEdgeInDirection(alignedEdge);
-        return this.shift([
-          targetEdge[0] - thisEdge[0],
-          targetEdge[1] - thisEdge[1],
-          targetEdge[2] - thisEdge[2],
-        ]);
-      }
-      const targetCenter = target.getCenter();
-      return this.moveTo(targetCenter);
-    }
-    const currentCenter = this.getCenter();
-    const delta: Vector3Tuple = [
-      target[0] - currentCenter[0],
-      target[1] - currentCenter[1],
-      target[2] - currentCenter[2],
-    ];
-    return this.shift(delta);
-  }
-
-  /**
    * Set the color of all children.
    * @param color - CSS color string
    * @returns this for chaining
@@ -386,7 +343,7 @@ export class VGroup extends VMobject {
     const allPoints: number[][] = [];
     for (const child of this.children) {
       if (child instanceof VMobject) {
-        allPoints.push(...child.getPoints());
+        allPoints.push(...child.getLocalPoints());
       }
     }
     return allPoints;
@@ -492,7 +449,7 @@ export class VGroup extends VMobject {
   /**
    * Get all 3D points from the VGroup.
    */
-  override getPoints(): number[][] {
+  override getLocalPoints(): number[][] {
     return this.getCombinedPoints();
   }
 }

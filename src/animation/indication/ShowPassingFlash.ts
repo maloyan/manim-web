@@ -67,7 +67,7 @@ export class ShowPassingFlash extends Animation {
     // Get path points from VMobject or use bounding box
     if (this._isVMobject) {
       const vmob = this.mobject as VMobject;
-      this._pathPoints = vmob.getPoints();
+      this._pathPoints = vmob.getLocalPoints();
 
       // Sample Bezier path for smoother flash
       this._pathPoints = this._samplePath(this._pathPoints);

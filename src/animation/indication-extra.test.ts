@@ -177,12 +177,12 @@ describe('ApplyWave', () => {
 
     it('begin stores original points', () => {
       const vm = makeVMobject();
-      const originalPoints = vm.getPoints().map((p) => [...p]);
+      const originalPoints = vm.getLocalPoints().map((p) => [...p]);
       const anim = new ApplyWave(vm);
       anim.begin();
       // At alpha=0 envelope=0, points should be unchanged
       anim.interpolate(0);
-      const currentPoints = vm.getPoints();
+      const currentPoints = vm.getLocalPoints();
       for (let i = 0; i < originalPoints.length; i++) {
         expect(currentPoints[i][0]).toBeCloseTo(originalPoints[i][0], 4);
         expect(currentPoints[i][1]).toBeCloseTo(originalPoints[i][1], 4);
@@ -192,12 +192,12 @@ describe('ApplyWave', () => {
 
     it('horizontal wave displaces y coordinates', () => {
       const vm = makeVMobject();
-      const originalPoints = vm.getPoints().map((p) => [...p]);
+      const originalPoints = vm.getLocalPoints().map((p) => [...p]);
       // Use wavelength=1.0 to avoid sin hitting exact zeros at boundary points
       const anim = new ApplyWave(vm, { direction: 'horizontal', wavelength: 1.0 });
       anim.begin();
       anim.interpolate(0.3);
-      const currentPoints = vm.getPoints();
+      const currentPoints = vm.getLocalPoints();
       // At least some y coordinates should differ (envelope is non-zero)
       let anyDifferent = false;
       for (let i = 0; i < originalPoints.length; i++) {
@@ -215,12 +215,12 @@ describe('ApplyWave', () => {
 
     it('vertical wave displaces x coordinates', () => {
       const vm = makeVMobject();
-      const originalPoints = vm.getPoints().map((p) => [...p]);
+      const originalPoints = vm.getLocalPoints().map((p) => [...p]);
       // Use wavelength=1.0 to avoid sin hitting exact zeros at boundary points
       const anim = new ApplyWave(vm, { direction: 'vertical', wavelength: 1.0 });
       anim.begin();
       anim.interpolate(0.3);
-      const currentPoints = vm.getPoints();
+      const currentPoints = vm.getLocalPoints();
       let anyDifferent = false;
       for (let i = 0; i < originalPoints.length; i++) {
         if (Math.abs(currentPoints[i][0] - originalPoints[i][0]) > 0.001) {
@@ -237,11 +237,11 @@ describe('ApplyWave', () => {
 
     it('ripple mode displaces both x and y based on radial distance', () => {
       const vm = makeVMobject();
-      const originalPoints = vm.getPoints().map((p) => [...p]);
+      const originalPoints = vm.getLocalPoints().map((p) => [...p]);
       const anim = new ApplyWave(vm, { ripples: true });
       anim.begin();
       anim.interpolate(0.5);
-      const currentPoints = vm.getPoints();
+      const currentPoints = vm.getLocalPoints();
       // z coordinates should remain unchanged
       for (let i = 0; i < originalPoints.length; i++) {
         expect(currentPoints[i][2]).toBeCloseTo(originalPoints[i][2], 5);
@@ -250,12 +250,12 @@ describe('ApplyWave', () => {
 
     it('finish restores original points', () => {
       const vm = makeVMobject();
-      const originalPoints = vm.getPoints().map((p) => [...p]);
+      const originalPoints = vm.getLocalPoints().map((p) => [...p]);
       const anim = new ApplyWave(vm);
       anim.begin();
       anim.interpolate(0.5);
       anim.finish();
-      const restoredPoints = vm.getPoints();
+      const restoredPoints = vm.getLocalPoints();
       for (let i = 0; i < originalPoints.length; i++) {
         expect(restoredPoints[i][0]).toBeCloseTo(originalPoints[i][0], 5);
         expect(restoredPoints[i][1]).toBeCloseTo(originalPoints[i][1], 5);

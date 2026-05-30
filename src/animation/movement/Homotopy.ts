@@ -97,7 +97,7 @@ export class Homotopy extends Animation {
 
     if (this.mobject instanceof VMobject) {
       this._isVMobject = true;
-      this._originalPoints = (this.mobject as VMobject).getPoints();
+      this._originalPoints = (this.mobject as VMobject).getLocalPoints();
     } else {
       this._isVMobject = false;
       this._originalPoints = null;
@@ -165,7 +165,7 @@ export class ComplexHomotopy extends Animation {
 
     if (this.mobject instanceof VMobject) {
       this._isVMobject = true;
-      this._originalPoints = (this.mobject as VMobject).getPoints();
+      this._originalPoints = (this.mobject as VMobject).getLocalPoints();
     } else {
       this._isVMobject = false;
       this._originalPoints = null;
@@ -235,7 +235,7 @@ export class SmoothedVectorizedHomotopy extends Animation {
     super.begin();
 
     const vmobject = this.mobject as VMobject;
-    this._originalPoints = vmobject.getPoints();
+    this._originalPoints = vmobject.getLocalPoints();
 
     // Compute anchor indices (every 3rd point starting from 0)
     // Points format: [anchor1, handle1, handle2, anchor2, handle3, handle4, anchor3, ...]
@@ -451,7 +451,7 @@ export class PhaseFlow extends Animation {
 
     if (this.mobject instanceof VMobject) {
       this._isVMobject = true;
-      this._originalPoints = (this.mobject as VMobject).getPoints();
+      this._originalPoints = (this.mobject as VMobject).getLocalPoints();
     } else {
       this._isVMobject = false;
       this._originalPoints = null;

@@ -427,9 +427,9 @@ describe('ApplyPointwiseFunction', () => {
       anim.begin();
       // After begin, the snapshots are created internally.
       // We verify by interpolating that points change.
-      const pointsBefore = vm.getPoints();
+      const pointsBefore = vm.getLocalPoints();
       anim.interpolate(0);
-      const pointsAt0 = vm.getPoints();
+      const pointsAt0 = vm.getLocalPoints();
       // At alpha=0 points should be the same as start
       for (let i = 0; i < pointsBefore.length; i++) {
         expect(pointsAt0[i][0]).toBeCloseTo(pointsBefore[i][0], 3);
@@ -448,11 +448,11 @@ describe('ApplyPointwiseFunction', () => {
         [0.66, 0.66, 0],
         [1, 1, 0],
       ]);
-      const origPts = vm.getPoints();
+      const origPts = vm.getLocalPoints();
       const anim = new ApplyPointwiseFunction(vm, fn);
       anim.begin();
       anim.interpolate(0.5);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       // Each x should be start_x + 0.5 * 2 = start_x + 1
       for (let i = 0; i < origPts.length; i++) {
         expect(pts[i][0]).toBeCloseTo(origPts[i][0] + 1, 2);
@@ -468,11 +468,11 @@ describe('ApplyPointwiseFunction', () => {
         [1.66, 1, 0],
         [2, 1, 0],
       ]);
-      const origPts = vm.getPoints();
+      const origPts = vm.getLocalPoints();
       const anim = new ApplyPointwiseFunction(vm, fn);
       anim.begin();
       anim.interpolate(1);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       for (let i = 0; i < origPts.length; i++) {
         expect(pts[i][0]).toBeCloseTo(origPts[i][0] * 3, 2);
         expect(pts[i][1]).toBeCloseTo(origPts[i][1] * 3, 2);
@@ -489,12 +489,12 @@ describe('ApplyPointwiseFunction', () => {
         [2, 2, 0],
         [3, 3, 0],
       ]);
-      const origPts = vm.getPoints();
+      const origPts = vm.getLocalPoints();
       const anim = new ApplyPointwiseFunction(vm, fn);
       anim.begin();
       anim.interpolate(0.3);
       anim.finish();
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       for (let i = 0; i < origPts.length; i++) {
         expect(pts[i][0]).toBeCloseTo(origPts[i][0] + 5, 2);
         expect(pts[i][1]).toBeCloseTo(origPts[i][1] - 3, 2);

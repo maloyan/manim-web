@@ -496,12 +496,12 @@ describe('ImplicitFunction', () => {
   it('should create circle and have non-empty points', () => {
     const c = new ImplicitFunction({ func: circleFunc });
     expect(c).toBeDefined();
-    expect(c.getPoints().length).toBeGreaterThan(0);
+    expect(c.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('should have points near the unit circle', () => {
     const c = new ImplicitFunction({ func: circleFunc, minDepth: 5, maxDepth: 7 });
-    const pts = c.getPoints();
+    const pts = c.getLocalPoints();
     let found = false;
     for (let i = 0; i < pts.length; i += 3) {
       const d = Math.sqrt(pts[i][0] ** 2 + pts[i][1] ** 2);
@@ -538,8 +538,8 @@ describe('ImplicitFunction', () => {
       minDepth: 3,
       maxDepth: 7,
     });
-    expect(low.getPoints().length).toBeGreaterThan(0);
-    expect(high.getPoints().length).toBeGreaterThan(low.getPoints().length);
+    expect(low.getLocalPoints().length).toBeGreaterThan(0);
+    expect(high.getLocalPoints().length).toBeGreaterThan(low.getLocalPoints().length);
   });
 
   it('different equations produce different point sets', () => {
@@ -557,9 +557,9 @@ describe('ImplicitFunction', () => {
       minDepth: 4,
       maxDepth: 6,
     });
-    expect(circle.getPoints().length).toBeGreaterThan(0);
-    expect(line.getPoints().length).toBeGreaterThan(0);
-    expect(circle.getPoints().length).not.toBe(line.getPoints().length);
+    expect(circle.getLocalPoints().length).toBeGreaterThan(0);
+    expect(line.getLocalPoints().length).toBeGreaterThan(0);
+    expect(circle.getLocalPoints().length).not.toBe(line.getLocalPoints().length);
   });
 
   it('hyperbola and sine curve produce points', () => {
@@ -570,7 +570,7 @@ describe('ImplicitFunction', () => {
       minDepth: 4,
       maxDepth: 6,
     });
-    expect(hyp.getPoints().length).toBeGreaterThan(0);
+    expect(hyp.getLocalPoints().length).toBeGreaterThan(0);
     const sine = new ImplicitFunction({
       func: (x, y) => y - Math.sin(x),
       xRange: [-3, 3],
@@ -578,7 +578,7 @@ describe('ImplicitFunction', () => {
       minDepth: 4,
       maxDepth: 7,
     });
-    expect(sine.getPoints().length).toBeGreaterThan(0);
+    expect(sine.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('no-solution equation has no points', () => {
@@ -589,7 +589,7 @@ describe('ImplicitFunction', () => {
       minDepth: 3,
       maxDepth: 5,
     });
-    expect(ns.getPoints().length).toBe(0);
+    expect(ns.getLocalPoints().length).toBe(0);
   });
 
   it('styling defaults and custom', () => {
@@ -609,9 +609,9 @@ describe('ImplicitFunction', () => {
       minDepth: 4,
       maxDepth: 6,
     });
-    const before = imp.getPoints().length;
+    const before = imp.getLocalPoints().length;
     expect(imp.setFunction((x, y) => y - x)).toBe(imp);
-    const after = imp.getPoints().length;
+    const after = imp.getLocalPoints().length;
     expect(after).toBeGreaterThan(0);
     expect(after).not.toBe(before);
   });
@@ -650,7 +650,7 @@ describe('ImplicitFunction', () => {
       minDepth: 3,
       maxDepth: 3,
     });
-    expect(imp.getPoints().length).toBeGreaterThan(0);
+    expect(imp.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('handles saddle point case 5 center <= 0 branch', () => {
@@ -665,7 +665,7 @@ describe('ImplicitFunction', () => {
       minDepth: 2,
       maxDepth: 2,
     });
-    expect(imp.getPoints().length).toBeGreaterThan(0);
+    expect(imp.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('handles saddle point case 10 center > 0 branch', () => {
@@ -680,7 +680,7 @@ describe('ImplicitFunction', () => {
       minDepth: 2,
       maxDepth: 2,
     });
-    expect(imp.getPoints().length).toBeGreaterThan(0);
+    expect(imp.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('handles saddle point case 10 center <= 0 branch', () => {
@@ -695,7 +695,7 @@ describe('ImplicitFunction', () => {
       minDepth: 2,
       maxDepth: 2,
     });
-    expect(imp.getPoints().length).toBeGreaterThan(0);
+    expect(imp.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('handles _interpolateEdge near-zero division', () => {

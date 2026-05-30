@@ -80,7 +80,7 @@ export interface BraceLabelOptions extends BraceOptions {
 function getMobjectKeyPoints(mobject: Mobject): number[][] {
   // If it's a VMobject with accessible points, use those
   if (mobject instanceof VMobject) {
-    const pts = (mobject as VMobject).getPoints();
+    const pts = (mobject as VMobject).getLocalPoints();
     if (pts.length > 0) return pts;
   }
   // Fallback: use bounding box corners from the mobject

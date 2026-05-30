@@ -1032,7 +1032,7 @@ describe('Animation _captureMinimalState and reset', () => {
 
     // Reset should restore original points
     anim.reset();
-    const restored = mob.getPoints();
+    const restored = mob.getLocalPoints();
     expect(restored).toEqual([
       [0, 0, 0],
       [1, 0, 0],

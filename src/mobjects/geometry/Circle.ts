@@ -108,11 +108,22 @@ export class Circle extends VMobject {
     this.setPoints3D(points);
   }
 
+  private _getUniformScaleFactor(): number {
+    const sx = this.scaleVector.x;
+    const sy = this.scaleVector.y;
+    const sz = this.scaleVector.z;
+    const eps = 1e-9;
+    if (Math.abs(sx - sy) > eps || Math.abs(sx - sz) > eps) {
+      throw new Error('Circle requires uniform scale (x == y == z) to derive radius.');
+    }
+    return sx;
+  }
+
   /**
-   * Get the radius of the circle
+   * Get the radius of the circle (includes deferred uniform scale).
    */
   getRadius(): number {
-    return this._radius;
+    return this._radius * this._getUniformScaleFactor();
   }
 
   /**
@@ -140,32 +151,19 @@ export class Circle extends VMobject {
   }
 
   /**
-   * Scale the circle by changing its actual radius (not scaleVector).
-   * Scales about the circle's own center so the center stays put.
-   */
-  override scale(factor: number | Vector3Tuple): this {
-    if (typeof factor === 'number') {
-      this._radius *= factor;
-      this._generatePoints();
-      this._markDirty();
-      return this;
-    }
-    // For non-uniform scaling, fall back to base
-    return super.scale(factor);
-  }
-
-  /**
-   * Get the circumference of the circle
+   * Get the circumference of the circle.
    */
   getCircumference(): number {
-    return 2 * Math.PI * this._radius;
+    const r = this.getRadius();
+    return 2 * Math.PI * r;
   }
 
   /**
-   * Get the area of the circle
+   * Get the area of the circle.
    */
   getArea(): number {
-    return Math.PI * this._radius * this._radius;
+    const r = this.getRadius();
+    return Math.PI * r * r;
   }
 
   /**
@@ -173,11 +171,18 @@ export class Circle extends VMobject {
    * @param angle Angle in radians from the positive x-axis
    */
   pointAtAngle(angle: number): Vector3Tuple {
+    const r = this.getRadius();
     return [
-      this.position.x + this._radius * Math.cos(angle),
-      this.position.y + this._radius * Math.sin(angle),
+      this.position.x + r * Math.cos(angle),
+      this.position.y + r * Math.sin(angle),
       this.position.z,
     ];
+  }
+
+  override normalizeTransform(): this {
+    this._radius *= this._getUniformScaleFactor();
+    super.normalizeTransform();
+    return this;
   }
 
   /**

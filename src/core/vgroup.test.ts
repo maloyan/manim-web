@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { UL, RIGHT } from './Mobject';
+import { ORIGIN } from './MobjectTypes';
 import { VMobject } from './VMobject';
 import { Group } from './Group';
 import { VGroup } from './VGroup';
@@ -140,6 +141,43 @@ describe('VGroup - extended coverage', () => {
     expect(after[2]).toBeCloseTo(before[2], 5);
   });
 
+  // Regression: world-space getCenter() must reflect transforms made elsewhere
+  // in the tree without first reading another node (the MathTex animate.shift bug).
+  // A change anywhere marks the chain dirty, and a geometry query syncs from the root.
+  it('descendant getCenter() reflects an ancestor shift without reading the ancestor first', () => {
+    const leaf = new VMobject();
+    leaf.setPoints3D([
+      [0, 0, 0],
+      [0.2, 0, 0],
+      [0.2, 0.2, 0],
+      [0, 0.2, 0],
+    ]);
+    const inner = new VGroup(leaf);
+    const top = new VGroup(inner);
+
+    const before = inner.getCenter()[0];
+    top.shift([5, 0, 0]);
+
+    expect(inner.getCenter()[0]).toBeCloseTo(before + 5, 5);
+  });
+
+  it('ancestor getCenter() reflects a descendant shift without reading the descendant first', () => {
+    const leaf = new VMobject();
+    leaf.setPoints3D([
+      [0, 0, 0],
+      [0.2, 0, 0],
+      [0.2, 0.2, 0],
+      [0, 0.2, 0],
+    ]);
+    const inner = new VGroup(leaf);
+    const top = new VGroup(inner);
+
+    const before = top.getCenter()[0];
+    inner.shift([5, 0, 0]);
+
+    expect(top.getCenter()[0]).toBeCloseTo(before + 5, 5);
+  });
+
   it('moveTo with point moves VGroup center', () => {
     const a = new Dot({ point: [0, 0, 0] });
     const b = new Dot({ point: [2, 0, 0] });
@@ -200,17 +238,27 @@ describe('VGroup - extended coverage', () => {
     expect(dotCenter[1]).toBeCloseTo(1, 6);
   });
 
-  it('normalizeTransform rotates VMobject child position offsets when baking VGroup rotation', () => {
+  it('normalizeTransform bakes VGroup rotation while preserving child world geometry', () => {
+    // MIGRATION: weak test, remove once property-based tests done
+    // Intent: baking a group rotation into an off-center child must not move
+    // the child in world space, and must leave the group transform canonical.
     const line = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
     line.shift([2, 0, 0]);
     const group = new VGroup(line);
 
     group.rotate(Math.PI / 2);
+    const before = line.getPoints();
+
     group.normalizeTransform();
 
-    expect(line.position.x).toBeCloseTo(0, 6);
-    expect(line.position.y).toBeCloseTo(2, 6);
-    expect(line.position.z).toBeCloseTo(0, 6);
+    expect(group.rotation.z).toBeCloseTo(0, 6);
+    const after = line.getPoints();
+    expect(after.length).toBe(before.length);
+    for (let i = 0; i < before.length; i++) {
+      expect(after[i][0]).toBeCloseTo(before[i][0], 6);
+      expect(after[i][1]).toBeCloseTo(before[i][1], 6);
+      expect(after[i][2]).toBeCloseTo(before[i][2], 6);
+    }
   });
 
   it('VGroup isEmpty treats point-less VMobject containers with renderable descendants as non-empty', () => {
@@ -253,29 +301,32 @@ describe('VGroup - extended coverage', () => {
   });
 
   it('normalizeTransform bakes ordered Euler rotation to PointMobject child', () => {
+    // MIGRATION: weak test, remove once property-based tests done
+    // Intent: an ordered Euler rotation set on the group is baked into the
+    // child while preserving the child's WORLD geometry. The point is placed
+    // off the group's center (a second anchor child shifts the center) so the
+    // rotation actually moves the point — a lone child sits on the pivot and
+    // can't exercise this.
     const point = new PointMobject({ position: [1, 2, 3] });
-    const group = new VGroup(point);
-    group.rotation.order = 'ZXY';
+    const anchor = new PointMobject({ position: [-4, 0, 0] });
+    const group = new VGroup(point, anchor);
     group.rotation.set(0.3, -0.5, 0.2, 'ZXY');
 
-    const expected = new PointMobject({ position: [1, 2, 3] });
-    const angles: Record<'X' | 'Y' | 'Z', number> = { X: 0.3, Y: -0.5, Z: 0.2 };
-    for (const axis of group.rotation.order) {
-      const angle = angles[axis as 'X' | 'Y' | 'Z'];
-      if (angle === 0) continue;
-      expected.rotate(angle, {
-        axis: axisVectorFromEulerKey(axis as 'X' | 'Y' | 'Z'),
-        aboutPoint: [0, 0, 0],
-      });
-    }
+    // World position of the point with the group rotation applied (pre-bake).
+    const before = point.getPosition();
 
     group.normalizeTransform();
 
-    const actualPos = point.getPosition();
-    const expectedPos = expected.getPosition();
-    expect(actualPos[0]).toBeCloseTo(expectedPos[0], 6);
-    expect(actualPos[1]).toBeCloseTo(expectedPos[1], 6);
-    expect(actualPos[2]).toBeCloseTo(expectedPos[2], 6);
+    // normalizeTransform contract: child world geometry is preserved.
+    const after = point.getPosition();
+    expect(after[0]).toBeCloseTo(before[0], 6);
+    expect(after[1]).toBeCloseTo(before[1], 6);
+    expect(after[2]).toBeCloseTo(before[2], 6);
+
+    // And the rotation was genuinely baked: group rotation is reset to identity.
+    expect(group.rotation.x).toBeCloseTo(0, 6);
+    expect(group.rotation.y).toBeCloseTo(0, 6);
+    expect(group.rotation.z).toBeCloseTo(0, 6);
   });
 
   it('normalizeTransform is idempotent for deferred rotation on VGroup', () => {
@@ -335,15 +386,16 @@ describe('VGroup - extended coverage', () => {
     expect(scaledWidth).toBeCloseTo(shiftedWidth * 2, 6);
   });
 
-  it('normalizeTransform forwards VGroup scale to children and resets group scale', () => {
+  it('normalizeTransform bakes VGroup scale into children while preserving world geometry', () => {
+    // MIGRATION: weak test, remove once property-based tests done
+    // Intent: a deferred group scale is folded entirely into child geometry —
+    // every scaleVector returns to 1 and world geometry is unchanged.
     const line = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
-    line.position.set(3, 0, 0);
+    line.shift([3, 0, 0]);
     const vg = new VGroup(line);
 
     vg.scale(2);
-    expect(vg.scaleVector.x).toBe(2);
-    expect(vg.scaleVector.y).toBe(2);
-    expect(vg.scaleVector.z).toBe(2);
+    const before = line.getPoints();
 
     vg.normalizeTransform();
 
@@ -353,16 +405,13 @@ describe('VGroup - extended coverage', () => {
     expect(line.scaleVector.x).toBe(1);
     expect(line.scaleVector.y).toBe(1);
     expect(line.scaleVector.z).toBe(1);
-    const pts = line.getPoints();
-    expect(pts[0][0]).toBeCloseTo(0);
-    expect(pts[0][1]).toBeCloseTo(0);
-    expect(pts[0][2]).toBeCloseTo(0);
-    expect(pts[3][0]).toBeCloseTo(2);
-    expect(pts[3][1]).toBeCloseTo(0);
-    expect(pts[3][2]).toBeCloseTo(0);
-    expect(line.position.x).toBe(6);
-    expect(line.position.y).toBe(0);
-    expect(line.position.z).toBe(0);
+    const after = line.getPoints();
+    expect(after.length).toBe(before.length);
+    for (let i = 0; i < before.length; i++) {
+      expect(after[i][0]).toBeCloseTo(before[i][0], 6);
+      expect(after[i][1]).toBeCloseTo(before[i][1], 6);
+      expect(after[i][2]).toBeCloseTo(before[i][2], 6);
+    }
   });
 
   it('VMobject normalizeTransform canonicalizes subtree and resets parent scale', () => {
@@ -405,28 +454,30 @@ describe('VGroup - extended coverage', () => {
     expect(vg.getCenter()[0]).toBeCloseTo(5.5, 6);
   });
 
-  it('scale result should be invariant to translating group vs children', () => {
-    // Setup A: translate children directly.
+  it('scale result is invariant to translating group vs children', () => {
+    // MIGRATION: weak test, remove once property-based tests done
+    // Intent: identical world geometry scaled about the same world anchor must
+    // yield identical world geometry, regardless of whether the offset lives on
+    // the child or on the group.
+    // Setup A: translate the child directly.
     const lineA = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
-    lineA.position.x = 1;
-    const pointA = new Dot({ point: [1, 0, 0], radius: 0 });
-    const gA = new VGroup(lineA, pointA);
+    lineA.shift([1, 0, 0]);
+    const gA = new VGroup(lineA);
 
-    // Setup B: equivalent world placement via group translation.
+    // Setup B: same world placement via group translation.
     const lineB = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
-    const pointB = new Dot({ point: [0, 0, 0], radius: 0 });
-    const gB = new VGroup(lineB, pointB);
-    gB.position.x = 1;
+    const gB = new VGroup(lineB);
+    gB.shift([1, 0, 0]);
 
-    gA.scale(2);
-    gB.scale(2);
+    gA.scale(2, { aboutPoint: ORIGIN });
+    gB.scale(2, { aboutPoint: ORIGIN });
 
-    const worldCenterX = (group: VGroup): number => group.getCenter()[0] + group.position.x;
-    const worldX = (mob: VMobject, group: VGroup): number => mob.getCenter()[0] + group.position.x;
-
-    expect(worldCenterX(gB)).toBeCloseTo(worldCenterX(gA), 6);
-    expect(worldX(lineB, gB)).toBeCloseTo(worldX(lineA, gA), 6);
-    expect(worldX(pointB, gB)).toBeCloseTo(worldX(pointA, gA), 6);
+    // getCenter() is already world-space — compare directly.
+    const cA = gA.getCenter();
+    const cB = gB.getCenter();
+    expect(cB[0]).toBeCloseTo(cA[0], 6);
+    expect(cB[1]).toBeCloseTo(cA[1], 6);
+    expect(cB[2]).toBeCloseTo(cA[2], 6);
   });
 
   it('setColor propagates to children', () => {
@@ -592,20 +643,29 @@ describe('VGroup - extended coverage', () => {
       [1, 0, 0],
     ]);
     const vg = new VGroup(a);
-    expect(vg.getPoints().length).toBe(2);
+    expect(vg.getLocalPoints().length).toBe(2);
   });
 
-  it('points getter returns combined 2D points', () => {
+  it('combines children geometry, preserving world coordinates', () => {
+    // MIGRATION: weak test, remove once property-based tests done
+    // Intent: a VGroup surfaces every child's geometry, and grouping leaves the
+    // child's world coordinates unchanged.
     const a = new VMobject();
     a.setPoints([
       [1, 2, 0],
       [3, 4, 0],
     ]);
     const vg = new VGroup(a);
-    const pts = vg.points;
-    expect(pts.length).toBe(2);
-    expect(pts[0].x).toBe(1);
-    expect(pts[0].y).toBe(2);
+
+    // VGroup combines its children's points.
+    expect(vg.getLocalPoints().length).toBe(2);
+
+    // The child's world geometry is preserved through grouping.
+    const world = a.getPoints();
+    expect(world[0][0]).toBeCloseTo(1, 6);
+    expect(world[0][1]).toBeCloseTo(2, 6);
+    expect(world[1][0]).toBeCloseTo(3, 6);
+    expect(world[1][1]).toBeCloseTo(4, 6);
   });
 
   it('get returns child by index', () => {

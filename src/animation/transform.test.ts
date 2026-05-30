@@ -41,7 +41,11 @@ function vmWithPoints(pts: number[][]) {
 function collectVmobjectLeavesWithPoints(mobject: Mobject): VMobject[] {
   const out: VMobject[] = [];
   const vmChildren = mobject.children.filter((c): c is VMobject => c instanceof VMobject);
-  if (mobject instanceof VMobject && mobject.getPoints().length > 0 && vmChildren.length === 0) {
+  if (
+    mobject instanceof VMobject &&
+    mobject.getLocalPoints().length > 0 &&
+    vmChildren.length === 0
+  ) {
     out.push(mobject);
   }
   for (const child of mobject.children) {
@@ -140,7 +144,7 @@ describe('Transform', () => {
       t.interpolate(1);
       t.finish();
 
-      expect(source.getPoints()).toEqual(target.getPoints());
+      expect(source.getLocalPoints()).toEqual(target.getLocalPoints());
       expect(source.getEffectiveSubpathLengths()).toEqual([5, 5]);
     });
 
@@ -218,10 +222,10 @@ describe('Transform', () => {
   describe('begin() with two VMobjects (point morphing)', () => {
     it('captures start and target points', () => {
       const { c1, c2 } = makePair();
-      const startLen = c1.getPoints().length;
+      const startLen = c1.getLocalPoints().length;
       const t = new Transform(c1, c2);
       t.begin();
-      expect(c1.getPoints().length).toBeGreaterThan(0);
+      expect(c1.getLocalPoints().length).toBeGreaterThan(0);
       expect(startLen).toBeGreaterThan(0);
     });
 
@@ -239,11 +243,11 @@ describe('Transform', () => {
   describe('interpolate() – point morphing', () => {
     it('at alpha 0 points stay at start', () => {
       const { c1, c2 } = makePair();
-      const startPts = c1.getPoints().map((p) => [...p]);
+      const startPts = c1.getLocalPoints().map((p) => [...p]);
       const t = new Transform(c1, c2);
       t.begin();
       t.interpolate(0);
-      const pts = c1.getPoints();
+      const pts = c1.getLocalPoints();
       const n = Math.min(pts.length, startPts.length);
       for (let i = 0; i < n; i++) {
         expect(pts[i][0]).toBeCloseTo(startPts[i][0], 3);
@@ -257,7 +261,7 @@ describe('Transform', () => {
       const t = new Transform(c1, c2);
       t.begin();
       t.interpolate(1);
-      const pts = c1.getPoints();
+      const pts = c1.getLocalPoints();
       expect(pts.length).toBeGreaterThan(0);
       expect(typeof pts[pts.length - 1][0]).toBe('number');
     });
@@ -278,7 +282,7 @@ describe('Transform', () => {
       const t = new Transform(vm1, vm2);
       t.begin();
       t.interpolate(0.5);
-      const pts = vm1.getPoints();
+      const pts = vm1.getLocalPoints();
       expect(pts[0][0]).toBeCloseTo(1, 5);
       expect(pts[0][1]).toBeCloseTo(0, 5);
       expect(pts[1][0]).toBeCloseTo(5, 5);
@@ -698,13 +702,13 @@ describe('edge cases', () => {
     const t = new Transform(vm1, vm2);
     t.begin();
     t.interpolate(0);
-    expect(vm1.getPoints()[0][0]).toBeCloseTo(0, 5);
-    expect(vm1.getPoints()[0][1]).toBeCloseTo(0, 5);
+    expect(vm1.getLocalPoints()[0][0]).toBeCloseTo(0, 5);
+    expect(vm1.getLocalPoints()[0][1]).toBeCloseTo(0, 5);
     t.interpolate(1);
-    expect(vm1.getPoints()[0][0]).toBeCloseTo(2, 5);
-    expect(vm1.getPoints()[0][1]).toBeCloseTo(2, 5);
-    expect(vm1.getPoints()[2][0]).toBeCloseTo(3, 5);
-    expect(vm1.getPoints()[2][1]).toBeCloseTo(3, 5);
+    expect(vm1.getLocalPoints()[0][0]).toBeCloseTo(2, 5);
+    expect(vm1.getLocalPoints()[0][1]).toBeCloseTo(2, 5);
+    expect(vm1.getLocalPoints()[2][0]).toBeCloseTo(3, 5);
+    expect(vm1.getLocalPoints()[2][1]).toBeCloseTo(3, 5);
   });
 
   it('multiple interpolate calls update progressively', () => {
@@ -1073,8 +1077,8 @@ describe('Transform on VGroup (#206)', () => {
     t.finish();
 
     // Points should match target
-    const childPts = circle.getPoints();
-    const targetPts = targetCircle.getPoints();
+    const childPts = circle.getLocalPoints();
+    const targetPts = targetCircle.getLocalPoints();
     expect(childPts.length).toBe(targetPts.length);
 
     // Style should match target
@@ -1152,9 +1156,9 @@ describe('Transform on VGroup (#206)', () => {
     const t = new Transform(group, target);
     t.begin();
 
-    const startPts = circle.getPoints().map((p) => [...p]);
+    const startPts = circle.getLocalPoints().map((p) => [...p]);
     t.interpolate(0);
-    const pts = circle.getPoints();
+    const pts = circle.getLocalPoints();
 
     for (let i = 0; i < Math.min(startPts.length, pts.length); i++) {
       expect(pts[i][0]).toBeCloseTo(startPts[i][0], 3);

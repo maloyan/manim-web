@@ -38,7 +38,10 @@ class TestAnimation extends Animation {
 }
 
 function anim(duration = 1): TestAnimation {
-  return new TestAnimation(new Mobject(), { duration, rateFunc: linear });
+  return new TestAnimation(new PointMobject({ position: [0, 0, 0] }), {
+    duration,
+    rateFunc: linear,
+  });
 }
 
 // --- Timeline ---
@@ -269,14 +272,14 @@ describe('LaggedStart', () => {
 
 describe('UpdateFromFunc', () => {
   it('calls function with mobject and alpha', () => {
-    const mob = new Mobject();
+    const mob = new PointMobject({ position: [0, 0, 0] });
     const fn = vi.fn();
     new UpdateFromFunc(mob, fn).interpolate(0.5);
     expect(fn).toHaveBeenCalledWith(mob, 0.5);
   });
 
   it('calls at boundary alphas 0 and 1', () => {
-    const mob = new Mobject();
+    const mob = new PointMobject({ position: [0, 0, 0] });
     const fn = vi.fn();
     const a = new UpdateFromFunc(mob, fn);
     a.interpolate(0);
@@ -286,7 +289,7 @@ describe('UpdateFromFunc', () => {
   });
 
   it('modifies mobject through function', () => {
-    const mob = new Mobject();
+    const mob = new PointMobject({ position: [0, 0, 0] });
     const a = new UpdateFromFunc(mob, (m, alpha) => m.position.set(alpha * 10, 0, 0));
     a.interpolate(0.3);
     expect(mob.position.x).toBeCloseTo(3, 5);
@@ -296,19 +299,24 @@ describe('UpdateFromFunc', () => {
 
   it('tracks calls with increasing alpha', () => {
     const alphas: number[] = [];
-    const a = new UpdateFromFunc(new Mobject(), (_m, alpha) => alphas.push(alpha));
+    const a = new UpdateFromFunc(new PointMobject({ position: [0, 0, 0] }), (_m, alpha) =>
+      alphas.push(alpha),
+    );
     [0, 0.25, 0.5, 0.75, 1].forEach((v) => a.interpolate(v));
     expect(alphas).toEqual([0, 0.25, 0.5, 0.75, 1]);
   });
 
   it('respects custom duration and rateFunc', () => {
-    const a = new UpdateFromFunc(new Mobject(), vi.fn(), { duration: 5, rateFunc: linear });
+    const a = new UpdateFromFunc(new PointMobject({ position: [0, 0, 0] }), vi.fn(), {
+      duration: 5,
+      rateFunc: linear,
+    });
     expect(a.duration).toBe(5);
     expect(a.rateFunc).toBe(linear);
   });
 
   it('factory returns instance and passes options', () => {
-    const a = updateFromFunc(new Mobject(), vi.fn(), { duration: 3 });
+    const a = updateFromFunc(new PointMobject({ position: [0, 0, 0] }), vi.fn(), { duration: 3 });
     expect(a).toBeInstanceOf(UpdateFromFunc);
     expect(a.duration).toBe(3);
   });
@@ -318,14 +326,14 @@ describe('UpdateFromFunc', () => {
 
 describe('UpdateFromAlphaFunc', () => {
   it('calls function with mobject and alpha', () => {
-    const mob = new Mobject();
+    const mob = new PointMobject({ position: [0, 0, 0] });
     const fn = vi.fn();
     new UpdateFromAlphaFunc(mob, fn).interpolate(0.7);
     expect(fn).toHaveBeenCalledWith(mob, 0.7);
   });
 
   it('applies side effects to mobject', () => {
-    const mob = new Mobject();
+    const mob = new PointMobject({ position: [0, 0, 0] });
     new UpdateFromAlphaFunc(mob, (m, a) => m.position.set(0, a * 5, 0)).interpolate(0.4);
     expect(mob.position.y).toBeCloseTo(2, 5);
   });
@@ -333,10 +341,14 @@ describe('UpdateFromAlphaFunc', () => {
   it('receives rate-function-adjusted alpha via update()', () => {
     const received: number[] = [];
     const customRate = (t: number) => t * t;
-    const a = new UpdateFromAlphaFunc(new Mobject(), (_m, alpha) => received.push(alpha), {
-      duration: 1,
-      rateFunc: customRate,
-    });
+    const a = new UpdateFromAlphaFunc(
+      new PointMobject({ position: [0, 0, 0] }),
+      (_m, alpha) => received.push(alpha),
+      {
+        duration: 1,
+        rateFunc: customRate,
+      },
+    );
     a.update(0, 0); // rawAlpha=0, rate(0)=0
     a.update(0, 0.5); // rawAlpha=0.5, rate(0.5)=0.25
     expect(received[0]).toBeCloseTo(0, 5);
@@ -344,7 +356,9 @@ describe('UpdateFromAlphaFunc', () => {
   });
 
   it('factory returns instance and passes options', () => {
-    const a = updateFromAlphaFunc(new Mobject(), vi.fn(), { duration: 4 });
+    const a = updateFromAlphaFunc(new PointMobject({ position: [0, 0, 0] }), vi.fn(), {
+      duration: 4,
+    });
     expect(a).toBeInstanceOf(UpdateFromAlphaFunc);
     expect(a.duration).toBe(4);
   });
@@ -354,8 +368,8 @@ describe('UpdateFromAlphaFunc', () => {
 
 describe('maintainPositionRelativeTo', () => {
   it('computes initial offset and applies it when leader moves', () => {
-    const follower = new Mobject();
-    const leader = new Mobject();
+    const follower = new PointMobject({ position: [0, 0, 0] });
+    const leader = new PointMobject({ position: [0, 0, 0] });
     follower.position.set(3, 0, 0);
     leader.position.set(1, 0, 0);
     const updater = maintainPositionRelativeTo(follower, leader);
@@ -366,8 +380,8 @@ describe('maintainPositionRelativeTo', () => {
   });
 
   it('preserves 3D offset', () => {
-    const follower = new Mobject();
-    const leader = new Mobject();
+    const follower = new PointMobject({ position: [0, 0, 0] });
+    const leader = new PointMobject({ position: [0, 0, 0] });
     follower.position.set(1, 2, 3);
     const updater = maintainPositionRelativeTo(follower, leader);
     leader.position.set(10, 20, 30);
@@ -378,8 +392,8 @@ describe('maintainPositionRelativeTo', () => {
   });
 
   it('works with zero offset (both at origin)', () => {
-    const follower = new Mobject();
-    const leader = new Mobject();
+    const follower = new PointMobject({ position: [0, 0, 0] });
+    const leader = new PointMobject({ position: [0, 0, 0] });
     const updater = maintainPositionRelativeTo(follower, leader);
     leader.position.set(5, 5, 5);
     updater(follower, 0);
@@ -389,8 +403,8 @@ describe('maintainPositionRelativeTo', () => {
   });
 
   it('maintains offset across multiple updates', () => {
-    const follower = new Mobject();
-    const leader = new Mobject();
+    const follower = new PointMobject({ position: [0, 0, 0] });
+    const leader = new PointMobject({ position: [0, 0, 0] });
     follower.position.set(2, 0, 0);
     const updater = maintainPositionRelativeTo(follower, leader);
 
@@ -408,8 +422,8 @@ describe('maintainPositionRelativeTo', () => {
   });
 
   it('can be used with addUpdater', () => {
-    const follower = new Mobject();
-    const leader = new Mobject();
+    const follower = new PointMobject({ position: [0, 0, 0] });
+    const leader = new PointMobject({ position: [0, 0, 0] });
     follower.addUpdater(maintainPositionRelativeTo(follower, leader));
     expect(follower.hasUpdaters()).toBe(true);
     expect(follower.getUpdaters()).toHaveLength(1);
@@ -446,13 +460,19 @@ describe('MoveAlongPath', () => {
 
   it('stores path and rotateAlongPath from options', () => {
     const path = straightPath();
-    const a = new MoveAlongPath(new Mobject(), { path, rotateAlongPath: true });
+    const a = new MoveAlongPath(new PointMobject({ position: [0, 0, 0] }), {
+      path,
+      rotateAlongPath: true,
+    });
     expect(a.path).toBe(path);
     expect(a.rotateAlongPath).toBe(true);
   });
 
   it('rotateAlongPath defaults to false', () => {
-    expect(new MoveAlongPath(new Mobject(), { path: straightPath() }).rotateAlongPath).toBe(false);
+    expect(
+      new MoveAlongPath(new PointMobject({ position: [0, 0, 0] }), { path: straightPath() })
+        .rotateAlongPath,
+    ).toBe(false);
   });
 
   it('moves along straight path at alpha 0, 0.5, 1', () => {
@@ -504,7 +524,7 @@ describe('MoveAlongPath', () => {
 
   describe('moveAlongPath factory', () => {
     it('returns MoveAlongPath with correct options', () => {
-      const a = moveAlongPath(new Mobject(), straightPath(), {
+      const a = moveAlongPath(new PointMobject({ position: [0, 0, 0] }), straightPath(), {
         duration: 3,
         rotateAlongPath: true,
       });

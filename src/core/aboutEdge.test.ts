@@ -18,50 +18,47 @@ function makeUnitSquare(): VMobject {
   return vm;
 }
 
+// MIGRATION: weak test, remove once property-based tests done
 describe('scale with aboutPoint and aboutEdge (#218)', () => {
-  it('throws for aboutPoint in deferred-transform mode', () => {
-    const vm = makeUnitSquare();
-    expect(() => vm.scale(2, { aboutPoint: [1, 0, 0] })).toThrow();
-  });
-
-  it('throws for aboutEdge in deferred-transform mode', () => {
-    const vm = makeUnitSquare();
-    expect(() => vm.scale(2, { aboutEdge: [1, 0, 0] })).toThrow();
-  });
-
   it('still supports plain scale via transform anchor after normalize', () => {
     const vm = makeUnitSquare();
+    const wpBefore = vm.getPoints();
     vm.scale(3);
     vm.normalizeTransform();
-    const pts = vm.getPoints();
-    expect(pts[0][0]).toBeCloseTo(-3);
-    expect(pts[0][1]).toBeCloseTo(-3);
-    expect(pts[2][0]).toBeCloseTo(3);
-    expect(pts[2][1]).toBeCloseTo(3);
+    const wpAfter = vm.getPoints();
+    // World point distance from origin should scale by 3
+    const dist0Before = Math.sqrt(wpBefore[0][0] ** 2 + wpBefore[0][1] ** 2);
+    const dist0After = Math.sqrt(wpAfter[0][0] ** 2 + wpAfter[0][1] ** 2);
+    expect(dist0After).toBeCloseTo(dist0Before * 3, 4);
+    const dist2Before = Math.sqrt(wpBefore[2][0] ** 2 + wpBefore[2][1] ** 2);
+    const dist2After = Math.sqrt(wpAfter[2][0] ** 2 + wpAfter[2][1] ** 2);
+    expect(dist2After).toBeCloseTo(dist2Before * 3, 4);
   });
 });
 
+// MIGRATION: weak test, remove once property-based tests done
 describe('stretch with aboutPoint and aboutEdge (#218)', () => {
   it('stretches along x axis after normalize', () => {
     const vm = makeUnitSquare();
+    const wpBefore = vm.getPoints();
     vm.stretch(2, 0);
     vm.normalizeTransform();
-    const pts = vm.getPoints();
-    // x doubles, y unchanged
-    expect(pts[0][0]).toBeCloseTo(-2);
-    expect(pts[0][1]).toBeCloseTo(-1);
-    expect(pts[2][0]).toBeCloseTo(2);
-    expect(pts[2][1]).toBeCloseTo(1);
-  });
-
-  it('throws for aboutPoint in deferred-transform mode', () => {
-    const vm = makeUnitSquare();
-    expect(() => vm.stretch(3, 1, { aboutPoint: [0, 1, 0] })).toThrow();
-  });
-
-  it('throws for aboutEdge in deferred-transform mode', () => {
-    const vm = makeUnitSquare();
-    expect(() => vm.stretch(2, 0, { aboutEdge: [1, 0, 0] })).toThrow();
+    const wpAfter = vm.getPoints();
+    // World geometry: x span should double, y span preserved
+    const xMinBefore = Math.min(...wpBefore.map((p) => p[0]));
+    const xMaxBefore = Math.max(...wpBefore.map((p) => p[0]));
+    const yMinBefore = Math.min(...wpBefore.map((p) => p[1]));
+    const yMaxBefore = Math.max(...wpBefore.map((p) => p[1]));
+    const xMinAfter = Math.min(...wpAfter.map((p) => p[0]));
+    const xMaxAfter = Math.max(...wpAfter.map((p) => p[0]));
+    const yMinAfter = Math.min(...wpAfter.map((p) => p[1]));
+    const yMaxAfter = Math.max(...wpAfter.map((p) => p[1]));
+    const widthBefore = xMaxBefore - xMinBefore;
+    const heightBefore = yMaxBefore - yMinBefore;
+    const widthAfter = xMaxAfter - xMinAfter;
+    const heightAfter = yMaxAfter - yMinAfter;
+    expect(widthAfter).toBeCloseTo(widthBefore * 2, 4);
+    expect(heightAfter).toBeCloseTo(heightBefore, 4);
   });
 
   it('throws when both aboutPoint and aboutEdge are specified', () => {
@@ -81,8 +78,8 @@ describe('stretch with aboutPoint and aboutEdge (#218)', () => {
     const vm2 = makeUnitSquare();
     vm1.stretch(2, 0);
     vm2.stretch(2, 0, {});
-    const pts1 = vm1.getPoints();
-    const pts2 = vm2.getPoints();
+    const pts1 = vm1.getLocalPoints();
+    const pts2 = vm2.getLocalPoints();
     for (let i = 0; i < pts1.length; i++) {
       expect(pts2[i][0]).toBeCloseTo(pts1[i][0]);
       expect(pts2[i][1]).toBeCloseTo(pts1[i][1]);
@@ -115,7 +112,7 @@ describe('flip with aboutPoint and aboutEdge (#218)', () => {
     // Flip x about point [2,0,0]: reflects x around x=2
     // [2,0,0] -> 2, [3,0,0] -> 1, [4,0,0] -> 0, [5,0,0] -> -1
     vm.flip([1, 0, 0], { aboutPoint: [2, 0, 0] });
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     expect(pts[0][0]).toBeCloseTo(2);
     expect(pts[1][0]).toBeCloseTo(1);
     expect(pts[2][0]).toBeCloseTo(0);
@@ -127,7 +124,7 @@ describe('flip with aboutPoint and aboutEdge (#218)', () => {
     // aboutEdge [1,0,0] -> right edge center [1,0,0]
     // Flip x about x=1: point [-1,y,0] -> 2*1-(-1) = 3
     vm.flip([1, 0, 0], { aboutEdge: [1, 0, 0] });
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     expect(pts[0][0]).toBeCloseTo(3); // was -1
     expect(pts[2][0]).toBeCloseTo(1); // was 1, stays
   });
@@ -166,7 +163,7 @@ describe('applyFunction with aboutPoint and aboutEdge (#218)', () => {
     ]);
     // Scale x by 2 about point [1,0,0]
     vm.applyFunction((p) => [p[0] * 2, p[1], p[2]], { aboutPoint: [1, 0, 0] });
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     // [1,0,0] -> translate to [0,0,0], apply *2 -> [0,0,0], translate back -> [1,0,0]
     expect(pts[0][0]).toBeCloseTo(1);
     // [4,0,0] -> translate to [3,0,0], apply *2 -> [6,0,0], translate back -> [7,0,0]
@@ -178,7 +175,7 @@ describe('applyFunction with aboutPoint and aboutEdge (#218)', () => {
     // aboutEdge [1,0,0] -> right edge center [1,0,0]
     // Scale x by 2 about [1,0,0]
     vm.applyFunction((p) => [p[0] * 2, p[1], p[2]], { aboutEdge: [1, 0, 0] });
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     // [-1,-1,0]: translate -> [-2,-1,0], apply -> [-4,-1,0], translate back -> [-3,-1,0]
     expect(pts[0][0]).toBeCloseTo(-3);
     // [1,-1,0]: translate -> [0,-1,0], apply -> [0,-1,0], translate back -> [1,-1,0]

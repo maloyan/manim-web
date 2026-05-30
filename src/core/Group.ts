@@ -4,7 +4,7 @@
  */
 
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple, AxisOrOptions } from './Mobject';
+import { Mobject, Vector3Tuple } from './Mobject';
 
 /**
  * A Group is a Mobject that contains other Mobjects.
@@ -92,71 +92,6 @@ export class Group extends Mobject {
 
     const b = this.getBounds();
     return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
-  }
-
-  /**
-   * @pre  !this.isEmpty()
-   * @post this.rotation == (0,0,0) && this.scaleVector == (1,1,1)
-   * @post this.position == world-space bbox center of all descendants
-   * @post world-space geometry of every descendant is unchanged
-   */
-  override normalizeTransform(): this {
-    this._normalizeContainerTransform();
-    return this;
-  }
-
-  /**
-   * Move the group center to the given point, or align with another Mobject.
-   * @param target - Target position [x, y, z] or Mobject to align with
-   * @param alignedEdge - Optional edge direction to align (e.g., UL aligns upper-left edges)
-   * @returns this for chaining
-   */
-  override moveTo(target: Vector3Tuple | Mobject, alignedEdge?: Vector3Tuple): this {
-    if (!Array.isArray(target)) {
-      if (alignedEdge) {
-        const targetEdge = target._getEdgeInDirection(alignedEdge);
-        const thisEdge = this._getEdgeInDirection(alignedEdge);
-        return this.shift([
-          targetEdge[0] - thisEdge[0],
-          targetEdge[1] - thisEdge[1],
-          targetEdge[2] - thisEdge[2],
-        ]);
-      }
-      const targetCenter = target.getCenter();
-      return this.moveTo(targetCenter);
-    }
-    const currentCenter = this.getCenter();
-    const delta: Vector3Tuple = [
-      target[0] - currentCenter[0],
-      target[1] - currentCenter[1],
-      target[2] - currentCenter[2],
-    ];
-    return this.shift(delta);
-  }
-
-  /**
-   * Rotate all children around an axis.
-   * Only children are rotated to avoid double-counting with Three.js hierarchy.
-   * @param angle - Rotation angle in radians
-   * @param axis - Axis of rotation [x, y, z], defaults to Z axis
-   * @returns this for chaining
-   */
-  override rotate(angle: number, axisOrOptions?: Vector3Tuple | AxisOrOptions): this {
-    for (const child of this.children) {
-      child.rotate(angle, axisOrOptions);
-    }
-    this._markDirty();
-    return this;
-  }
-
-  /**
-   * Scale all children.
-   * Only children are scaled to avoid double-counting with Three.js hierarchy.
-   * @param factor - Scale factor (number for uniform, tuple for non-uniform)
-   * @returns this for chaining
-   */
-  override scale(factor: number | Vector3Tuple): this {
-    return super.scale(factor);
   }
 
   /**

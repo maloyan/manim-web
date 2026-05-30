@@ -65,15 +65,6 @@ export class Dot extends Circle {
   }
 
   /**
-   * Move the dot to a new position
-   * @param point Target position [x, y, z]
-   */
-  moveTo(point: Vector3Tuple): this {
-    this.position.set(point[0], point[1], point[2]);
-    return this;
-  }
-
-  /**
    * Get the position of the dot
    */
   getPoint(): Vector3Tuple {

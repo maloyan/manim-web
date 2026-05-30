@@ -201,7 +201,7 @@ export abstract class Animation {
 
       // Restore VMobject points if applicable
       if (this.mobject instanceof VMobject && saved instanceof VMobject) {
-        const pts = saved.getPoints();
+        const pts = saved.getLocalPoints();
         if (pts && pts.length > 0) {
           this.mobject.setPoints(pts);
         }

@@ -82,7 +82,7 @@ export class BooleanResult extends VMobject {
    * nextTo(), and other layout helpers work correctly.
    */
   protected _centerOnPoints(): void {
-    const pts = this.getPoints();
+    const pts = this.getLocalPoints();
     if (pts.length === 0) return;
 
     let cx = 0,
@@ -584,7 +584,7 @@ export function exclusion(
  * @returns Array of 2D vertices approximating the path
  */
 function sampleVMobjectToPolygon(vmobject: VMobject, samplesPerSegment: number): Vertex2D[] {
-  const points3D = vmobject.getPoints();
+  const points3D = vmobject.getLocalPoints();
   if (points3D.length === 0) return [];
 
   // Apply the mobject's world-space position offset so that shapes

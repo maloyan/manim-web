@@ -16,7 +16,7 @@ import { getNumCurvesFromPoints } from './VMobjectCurves';
  * @returns Number of curve segments
  */
 export function getNumCurves(vmobject: VMobject): number {
-  return getNumCurvesFromPoints(vmobject.getPoints());
+  return getNumCurvesFromPoints(vmobject.getLocalPoints());
 }
 
 /**
@@ -26,7 +26,7 @@ export function getNumCurves(vmobject: VMobject): number {
  * @returns A new VMobject containing just that curve segment
  */
 export function getNthCurve(vmobject: VMobject, n: number): VMobject {
-  const points = vmobject.getPoints();
+  const points = vmobject.getLocalPoints();
   const numCurves = getNumCurvesFromPoints(points);
 
   if (n < 0 || n >= numCurves) {
@@ -70,7 +70,7 @@ export function getNthCurve(vmobject: VMobject, n: number): VMobject {
  * ```
  */
 export function curvesAsSubmobjects(vmobject: VMobject): VMobject {
-  const numCurves = getNumCurvesFromPoints(vmobject.getPoints());
+  const numCurves = getNumCurvesFromPoints(vmobject.getLocalPoints());
 
   const parent = new VMobject();
 
@@ -152,7 +152,7 @@ export class CurvesAsSubmobjects extends VMobject {
     this.scaleVector.copy(vmobject.scaleVector);
 
     // Extract each curve as a child
-    const numCurves = getNumCurvesFromPoints(vmobject.getPoints());
+    const numCurves = getNumCurvesFromPoints(vmobject.getLocalPoints());
     for (let i = 0; i < numCurves; i++) {
       const curve = getNthCurve(vmobject, i);
       this.add(curve);

@@ -83,7 +83,7 @@ export class ApplyWave extends Animation {
 
     if (this._isVMobject) {
       const vmob = this.mobject as VMobject;
-      this._originalPoints = vmob.getPoints().map((p) => [...p]);
+      this._originalPoints = vmob.getLocalPoints().map((p) => [...p]);
 
       // Calculate bounds
       if (this._originalPoints.length > 0) {
