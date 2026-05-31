@@ -351,116 +351,84 @@ export class SmoothedVectorizedHomotopy extends Animation {
         // Already processed as anchor
         continue;
       }
-
-      const originalHandle = this._originalPoints[i];
-
-      // Find the nearest anchors before and after this handle
-      let prevAnchorIdx = -1;
-      let nextAnchorIdx = -1;
-
-      for (const anchorIdx of this._anchorIndices) {
-        if (anchorIdx < i) {
-          prevAnchorIdx = anchorIdx;
-        }
-        if (anchorIdx > i && nextAnchorIdx === -1) {
-          nextAnchorIdx = anchorIdx;
-          break;
-        }
-      }
-
-      // Transform the handle
-      // If we have both anchors, interpolate based on relative position
-      if (prevAnchorIdx >= 0 && nextAnchorIdx >= 0) {
-        const prevData = anchorTransforms.get(prevAnchorIdx)!;
-        const nextData = anchorTransforms.get(nextAnchorIdx)!;
-
-        // Compute the relative offset from the previous anchor in original space
-        const origOffset = [
-          originalHandle[0] - prevData.original[0],
-          originalHandle[1] - prevData.original[1],
-          originalHandle[2] - prevData.original[2],
-        ];
-
-        // Compute the local transformation at this point
-        const localTransform = this.homotopyFunc(
-          originalHandle[0],
-          originalHandle[1],
-          originalHandle[2],
-          alpha,
-        );
-
-        // Compute how the transformation changes between the two anchors
-        // and blend based on position
-        const t = (i - prevAnchorIdx) / (nextAnchorIdx - prevAnchorIdx);
-
-        // Use the direct transformation with smoothing
-        const blendedX =
-          (1 - t) * (prevData.transformed[0] + origOffset[0]) +
-          t *
-            (nextData.transformed[0] +
-              origOffset[0] -
-              (nextData.original[0] - prevData.original[0]));
-        const blendedY =
-          (1 - t) * (prevData.transformed[1] + origOffset[1]) +
-          t *
-            (nextData.transformed[1] +
-              origOffset[1] -
-              (nextData.original[1] - prevData.original[1]));
-        const blendedZ =
-          (1 - t) * (prevData.transformed[2] + origOffset[2]) +
-          t *
-            (nextData.transformed[2] +
-              origOffset[2] -
-              (nextData.original[2] - prevData.original[2]));
-
-        // Blend between the simple transformation and the smoothed transformation
-        // to maintain curve quality while still following the homotopy
-        const smoothFactor = 0.5;
-        newPoints[i] = [
-          localTransform[0] * (1 - smoothFactor) + blendedX * smoothFactor,
-          localTransform[1] * (1 - smoothFactor) + blendedY * smoothFactor,
-          localTransform[2] * (1 - smoothFactor) + blendedZ * smoothFactor,
-        ];
-      } else if (prevAnchorIdx >= 0) {
-        // Only have previous anchor
-        const prevData = anchorTransforms.get(prevAnchorIdx)!;
-        const origOffset = [
-          originalHandle[0] - prevData.original[0],
-          originalHandle[1] - prevData.original[1],
-          originalHandle[2] - prevData.original[2],
-        ];
-        newPoints[i] = [
-          prevData.transformed[0] + origOffset[0],
-          prevData.transformed[1] + origOffset[1],
-          prevData.transformed[2] + origOffset[2],
-        ];
-      } else if (nextAnchorIdx >= 0) {
-        // Only have next anchor
-        const nextData = anchorTransforms.get(nextAnchorIdx)!;
-        const origOffset = [
-          originalHandle[0] - nextData.original[0],
-          originalHandle[1] - nextData.original[1],
-          originalHandle[2] - nextData.original[2],
-        ];
-        newPoints[i] = [
-          nextData.transformed[0] + origOffset[0],
-          nextData.transformed[1] + origOffset[1],
-          nextData.transformed[2] + origOffset[2],
-        ];
-      } else {
-        // No anchors found, just transform directly
-        newPoints[i] = this.homotopyFunc(
-          originalHandle[0],
-          originalHandle[1],
-          originalHandle[2],
-          alpha,
-        );
-      }
+      newPoints[i] = this._transformHandle(i, alpha, anchorTransforms);
     }
 
     // newPoints are in world space; convert back to local for storage.
     const { inverseWorld } = this._frame;
     vmobject.setPoints3D(newPoints.map((p) => applyMatrix(inverseWorld, p)));
+  }
+
+  /**
+   * Transform a single handle point at index `i`, keeping it smooth relative to
+   * the anchors that bracket it. Operates entirely in world space (the frame
+   * `_originalPoints` and `anchorTransforms` were captured in).
+   */
+  private _transformHandle(
+    i: number,
+    alpha: number,
+    anchorTransforms: Map<number, { original: number[]; transformed: number[] }>,
+  ): number[] {
+    const originalHandle = this._originalPoints![i];
+
+    // Find the nearest anchors before and after this handle
+    let prevAnchorIdx = -1;
+    let nextAnchorIdx = -1;
+    for (const anchorIdx of this._anchorIndices) {
+      if (anchorIdx < i) {
+        prevAnchorIdx = anchorIdx;
+      }
+      if (anchorIdx > i && nextAnchorIdx === -1) {
+        nextAnchorIdx = anchorIdx;
+        break;
+      }
+    }
+
+    // Both anchors: blend the direct transform with a smoothed interpolation.
+    if (prevAnchorIdx >= 0 && nextAnchorIdx >= 0) {
+      const prevData = anchorTransforms.get(prevAnchorIdx)!;
+      const nextData = anchorTransforms.get(nextAnchorIdx)!;
+
+      const origOffset = [
+        originalHandle[0] - prevData.original[0],
+        originalHandle[1] - prevData.original[1],
+        originalHandle[2] - prevData.original[2],
+      ];
+      const localTransform = this.homotopyFunc(
+        originalHandle[0],
+        originalHandle[1],
+        originalHandle[2],
+        alpha,
+      );
+
+      // Blend based on relative position between the two anchors.
+      const t = (i - prevAnchorIdx) / (nextAnchorIdx - prevAnchorIdx);
+      const blended = [0, 1, 2].map(
+        (k) =>
+          (1 - t) * (prevData.transformed[k] + origOffset[k]) +
+          t *
+            (nextData.transformed[k] +
+              origOffset[k] -
+              (nextData.original[k] - prevData.original[k])),
+      );
+
+      // Mix the direct transformation with the smoothed one to keep curve quality.
+      const smoothFactor = 0.5;
+      return [0, 1, 2].map(
+        (k) => localTransform[k] * (1 - smoothFactor) + blended[k] * smoothFactor,
+      );
+    }
+
+    // Only one anchor: carry the handle's original offset onto the moved anchor.
+    const anchorData = anchorTransforms.get(prevAnchorIdx >= 0 ? prevAnchorIdx : nextAnchorIdx);
+    if (anchorData) {
+      return [0, 1, 2].map(
+        (k) => anchorData.transformed[k] + (originalHandle[k] - anchorData.original[k]),
+      );
+    }
+
+    // No anchors found, just transform directly.
+    return this.homotopyFunc(originalHandle[0], originalHandle[1], originalHandle[2], alpha);
   }
 
   /**
