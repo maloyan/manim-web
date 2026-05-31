@@ -199,8 +199,9 @@ export class Annulus extends VMobject {
   /**
    * Create a copy of this Annulus
    */
-  protected override _createCopy(): Annulus {
-    return new Annulus({
+  override copy(): Annulus {
+    this.normalizeTransform();
+    const clone = new Annulus({
       innerRadius: this._innerRadius,
       outerRadius: this._outerRadius,
       center: this._centerPoint,
@@ -209,5 +210,7 @@ export class Annulus extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

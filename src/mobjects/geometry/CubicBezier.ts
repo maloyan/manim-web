@@ -317,11 +317,14 @@ export class CubicBezier extends VMobject {
   /**
    * Create a copy of this CubicBezier
    */
-  protected override _createCopy(): CubicBezier {
-    return new CubicBezier({
+  override copy(): CubicBezier {
+    this.normalizeTransform();
+    const clone = new CubicBezier({
       points: this.getControlPoints(),
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

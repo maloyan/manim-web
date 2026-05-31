@@ -222,13 +222,16 @@ export class ArcPolygon extends VMobject {
   /**
    * Create a copy of this ArcPolygon
    */
-  protected override _createCopy(): ArcPolygon {
-    return new ArcPolygon({
+  override copy(): ArcPolygon {
+    this.normalizeTransform();
+    const clone = new ArcPolygon({
       vertices: this._vertices,
       arcConfigs: this._arcConfigs,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

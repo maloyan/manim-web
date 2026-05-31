@@ -502,23 +502,69 @@ export abstract class Mobject {
 
   // ── Copy / Become / Replace ──────────────────────────────────────
 
-  copy(): Mobject {
-    const clone = this._createCopy();
-    if (clone === this) return clone;
-    clone.position.copy(this.position);
-    clone.rotation.copy(this.rotation);
-    clone.scaleVector.copy(this.scaleVector);
+  /**
+   * Check if this mobject's transform is normalized (rotation=0, scale=1).
+   * @post result === (rotation.x==0 && rotation.y==0 && rotation.z==0 && scaleVector===[1,1,1])
+   */
+  isTransformNormalized(): boolean {
+    return (
+      this.rotation.x === 0 &&
+      this.rotation.y === 0 &&
+      this.rotation.z === 0 &&
+      this.scaleVector.x === 1 &&
+      this.scaleVector.y === 1 &&
+      this.scaleVector.z === 1
+    );
+  }
+
+  /**
+   * Copy position, color, and standard properties onto `clone`.
+   * Requires this.isTransformNormalized() — rotation/scale must be baked before copy.
+   * Every copy() implementation MUST call this to preserve position/color/opacity/style/etc.
+   *
+   * @pre this.isTransformNormalized()  // rotation and scale must be at identity
+   * @internal Convention: forgetting this call silently loses position/color/style.
+   */
+  protected _copyBaseAttributesInto(clone: Mobject, copyPosition: boolean = true): void {
+    if (!this.isTransformNormalized()) {
+      throw new Error(
+        `${this.constructor.name}.copy(): transform must be normalized before copying. ` +
+          `Call normalizeTransform() first to bake rotation/scale into geometry.`,
+      );
+    }
+    if (copyPosition) {
+      clone.position.copy(this.position);
+    }
     clone.color = this.color;
     clone._opacity = this._opacity;
     clone.strokeWidth = this.strokeWidth;
     clone.fillOpacity = this.fillOpacity;
     clone._style = { ...this._style };
-    for (const child of this.children) clone.add(child.copy());
-    clone._markDirty();
+  }
+
+  /**
+   * Deep-copy this mobject: position, color, and (for composites) children.
+   * Every concrete subclass MUST implement copy() with its own return type.
+   * Call {@link _copyBaseAttributesInto} to handle standard properties.
+   *
+   * Leaf classes: construct new instance, call helper, return.
+   * Self-building composites: construct new instance (rebuilds children), call helper, return.
+   * Point-morphing classes: construct, call helper, overwrite _points3D, return.
+   *
+   * @post typeof result === typeof this  (strongly typed, no casts)
+   */
+  copy(): Mobject {
+    this.normalizeTransform();
+    const clone = this._createCopy();
+    this._copyBaseAttributesInto(clone);
     return clone;
   }
 
-  protected abstract _createCopy(): Mobject;
+  protected _createCopy(): Mobject {
+    throw new Error(
+      `${this.constructor.name}: either implement _createCopy() or override copy() with full implementation`,
+    );
+  }
 
   become(other: Mobject): this {
     becomeMobjectImpl(this, other);

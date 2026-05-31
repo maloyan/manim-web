@@ -397,7 +397,8 @@ export class Angle extends VMobject {
     return this._arcPoint(midAngle);
   }
 
-  protected override _createCopy(): Angle {
+  override copy(): Angle {
+    this.normalizeTransform();
     const startAngle = this._startAngle;
     const endAngle = this._startAngle + this._angleValue;
 
@@ -417,7 +418,7 @@ export class Angle extends VMobject {
       this._vertex[2] + cE * this._u[2] + sE * this._v[2],
     ];
 
-    const angle = new Angle(
+    const clone = new Angle(
       { points: [point1, this._vertex, point2] },
       {
         radius: this._radius,
@@ -428,8 +429,9 @@ export class Angle extends VMobject {
         unit: this._unit,
       },
     );
-    angle._label = this._label;
-    return angle;
+    this._copyBaseAttributesInto(clone, false);
+    clone._label = this._label;
+    return clone;
   }
 }
 
@@ -607,7 +609,8 @@ export class RightAngle extends VMobject {
     return [...this._vertex];
   }
 
-  protected override _createCopy(): RightAngle {
+  override copy(): RightAngle {
+    this.normalizeTransform();
     const point1: Vector3Tuple = [
       this._vertex[0] + Math.cos(this._angle1),
       this._vertex[1] + Math.sin(this._angle1),
@@ -619,7 +622,7 @@ export class RightAngle extends VMobject {
       this._vertex[2],
     ];
 
-    return new RightAngle(
+    const clone = new RightAngle(
       { points: [point1, this._vertex, point2] },
       {
         size: this._size,
@@ -627,6 +630,8 @@ export class RightAngle extends VMobject {
         strokeWidth: this.strokeWidth,
       },
     );
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -801,8 +806,9 @@ export class Elbow extends VMobject {
     return this;
   }
 
-  protected override _createCopy(): Elbow {
-    return new Elbow({
+  override copy(): Elbow {
+    this.normalizeTransform();
+    const clone = new Elbow({
       width: this._width,
       height: this._height,
       angle: this._angle,
@@ -810,6 +816,8 @@ export class Elbow extends VMobject {
       strokeWidth: this.strokeWidth,
       position: this._cornerPosition,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -1091,13 +1099,16 @@ export class TangentLine extends VMobject {
     return this;
   }
 
-  protected override _createCopy(): TangentLine {
-    return new TangentLine(this._vmobject, {
+  override copy(): TangentLine {
+    this.normalizeTransform();
+    const clone = new TangentLine(this._vmobject, {
       t: this._t,
       length: this._length,
       color: this.color,
       strokeWidth: this.strokeWidth,
       dT: this._dT,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

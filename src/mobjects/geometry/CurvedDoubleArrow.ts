@@ -283,8 +283,9 @@ export class CurvedDoubleArrow extends VMobject {
   /**
    * Create a copy of this CurvedDoubleArrow
    */
-  protected override _createCopy(): CurvedDoubleArrow {
-    return new CurvedDoubleArrow({
+  override copy(): CurvedDoubleArrow {
+    this.normalizeTransform();
+    const clone = new CurvedDoubleArrow({
       startPoint: this._startPoint,
       endPoint: this._endPoint,
       angle: this._angle,
@@ -294,5 +295,7 @@ export class CurvedDoubleArrow extends VMobject {
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

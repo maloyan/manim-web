@@ -263,8 +263,9 @@ export class AnnularSector extends VMobject {
   /**
    * Create a copy of this AnnularSector
    */
-  protected override _createCopy(): AnnularSector {
-    return new AnnularSector({
+  override copy(): AnnularSector {
+    this.normalizeTransform();
+    const clone = new AnnularSector({
       innerRadius: this._innerRadius,
       outerRadius: this._outerRadius,
       startAngle: this._startAngle,
@@ -275,5 +276,7 @@ export class AnnularSector extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

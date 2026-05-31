@@ -211,8 +211,9 @@ export class Ellipse extends VMobject {
   /**
    * Create a copy of this Ellipse
    */
-  protected override _createCopy(): Ellipse {
-    return new Ellipse({
+  override copy(): Ellipse {
+    this.normalizeTransform();
+    const clone = new Ellipse({
       width: this._width,
       height: this._height,
       center: this._centerPoint,
@@ -221,5 +222,7 @@ export class Ellipse extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

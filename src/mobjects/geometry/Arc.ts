@@ -248,8 +248,9 @@ export class Arc extends TipableVMobject {
   /**
    * Create a copy of this Arc
    */
-  protected override _createCopy(): Arc {
-    return new Arc({
+  override copy(): Arc {
+    this.normalizeTransform();
+    const clone = new Arc({
       radius: this._radius,
       startAngle: this._startAngle,
       angle: this._angle,
@@ -258,5 +259,7 @@ export class Arc extends TipableVMobject {
       numComponents: this._numComponents,
       center: this._arcCenter,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

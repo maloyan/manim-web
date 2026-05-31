@@ -122,6 +122,7 @@ export class Circle extends VMobject {
 
   /**
    * Get the radius of the circle (includes deferred uniform scale).
+   * @post isTransformNormalized() => result === this._radius  // when scale is 1
    */
   getRadius(): number {
     return this._radius * this._getUniformScaleFactor();
@@ -197,10 +198,11 @@ export class Circle extends VMobject {
   }
 
   /**
-   * Create a copy of this Circle
+   * Copy this Circle.
    */
-  protected override _createCopy(): Circle {
-    return new Circle({
+  override copy(): Circle {
+    this.normalizeTransform();
+    const clone = new Circle({
       radius: this._radius,
       numPoints: this._numPoints,
       center: this.getCircleCenter(),
@@ -208,5 +210,7 @@ export class Circle extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

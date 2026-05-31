@@ -205,7 +205,7 @@ describe('LabeledLine', () => {
         labelFontSize: 24,
         labelColor: '#123456',
       });
-      const copy = (ll as any)._createCopy() as LabeledLine;
+      const copy = ll.copy() as LabeledLine;
       expect(copy).toBeInstanceOf(LabeledLine);
       expect(copy.getLabel().getText()).toBe('copy test');
     });
@@ -318,7 +318,7 @@ describe('LabeledArrow', () => {
         tipLength: 0.3,
         tipWidth: 0.2,
       });
-      const copy = (la as any)._createCopy() as LabeledArrow;
+      const copy = la.copy() as LabeledArrow;
       expect(copy).toBeInstanceOf(LabeledArrow);
       expect(copy.getLabel().getText()).toBe('copy');
     });
@@ -435,7 +435,7 @@ describe('LabeledDot', () => {
         point: [1, 2, 0],
         labelDirection: 'DR',
       });
-      const copy = (ld as any)._createCopy() as LabeledDot;
+      const copy = ld.copy() as LabeledDot;
       expect(copy).toBeInstanceOf(LabeledDot);
       expect(copy.getLabel().getText()).toBe('copy');
     });
@@ -603,14 +603,14 @@ describe('AnnotationDot', () => {
         outlineColor: '#ff0000',
         radius: 0.15,
       });
-      const copy = (ad as any)._createCopy() as AnnotationDot;
+      const copy = ad.copy() as AnnotationDot;
       expect(copy).toBeInstanceOf(AnnotationDot);
       expect(copy.getLabel()!.getText()).toBe('copy');
     });
 
     it('produces copy without label', () => {
       const ad = new AnnotationDot({ showOutline: false });
-      const copy = (ad as any)._createCopy() as AnnotationDot;
+      const copy = ad.copy() as AnnotationDot;
       expect(copy).toBeInstanceOf(AnnotationDot);
       expect(copy.getLabel()).toBeNull();
     });
@@ -839,7 +839,7 @@ describe('LabeledPolygram', () => {
         labelFontSize: 20,
         precision: 0.1,
       });
-      const copy = (lp as any)._createCopy() as LabeledPolygram;
+      const copy = lp.copy() as LabeledPolygram;
       expect(copy).toBeInstanceOf(LabeledPolygram);
       expect(copy.getLabel().getText()).toBe('copy test');
       expect(copy.pole[0]).toBeCloseTo(lp.pole[0], 0);

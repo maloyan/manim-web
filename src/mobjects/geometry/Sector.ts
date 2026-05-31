@@ -223,8 +223,9 @@ export class Sector extends VMobject {
   /**
    * Create a copy of this Sector
    */
-  protected override _createCopy(): Sector {
-    return new Sector({
+  override copy(): Sector {
+    this.normalizeTransform();
+    const clone = new Sector({
       radius: this._radius,
       startAngle: this._startAngle,
       angle: this._angle,
@@ -234,5 +235,7 @@ export class Sector extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

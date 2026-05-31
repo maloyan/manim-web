@@ -244,8 +244,9 @@ export class ArrowTriangleTip extends ArrowTip {
     this.setPoints3D(points);
   }
 
-  protected override _createCopy(): ArrowTriangleTip {
-    return new ArrowTriangleTip({
+  override copy(): ArrowTriangleTip {
+    this.normalizeTransform();
+    const clone = new ArrowTriangleTip({
       length: this._length,
       width: this._width,
       color: this.color,
@@ -254,6 +255,8 @@ export class ArrowTriangleTip extends ArrowTip {
       position: this._position,
       direction: this._direction,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -276,8 +279,9 @@ export class ArrowTriangleFilledTip extends ArrowTriangleTip {
     super({ ...options, fillOpacity: options.fillOpacity ?? 1 });
   }
 
-  protected override _createCopy(): ArrowTriangleFilledTip {
-    return new ArrowTriangleFilledTip({
+  override copy(): ArrowTriangleFilledTip {
+    this.normalizeTransform();
+    const clone = new ArrowTriangleFilledTip({
       length: this._length,
       width: this._width,
       color: this.color,
@@ -286,6 +290,8 @@ export class ArrowTriangleFilledTip extends ArrowTriangleTip {
       position: this._position,
       direction: this._direction,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -363,8 +369,9 @@ export class ArrowCircleTip extends ArrowTip {
     this.setPoints3D(points);
   }
 
-  protected override _createCopy(): ArrowCircleTip {
-    return new ArrowCircleTip({
+  override copy(): ArrowCircleTip {
+    this.normalizeTransform();
+    const clone = new ArrowCircleTip({
       length: this._length,
       width: this._width,
       color: this.color,
@@ -374,6 +381,8 @@ export class ArrowCircleTip extends ArrowTip {
       direction: this._direction,
       numSegments: this._numSegments,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -396,8 +405,9 @@ export class ArrowCircleFilledTip extends ArrowCircleTip {
     super({ ...options, fillOpacity: options.fillOpacity ?? 1 });
   }
 
-  protected override _createCopy(): ArrowCircleFilledTip {
-    return new ArrowCircleFilledTip({
+  override copy(): ArrowCircleFilledTip {
+    this.normalizeTransform();
+    const clone = new ArrowCircleFilledTip({
       length: this._length,
       width: this._width,
       color: this.color,
@@ -406,6 +416,8 @@ export class ArrowCircleFilledTip extends ArrowCircleTip {
       position: this._position,
       direction: this._direction,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -492,8 +504,9 @@ export class ArrowSquareTip extends ArrowTip {
     this.setPoints3D(points);
   }
 
-  protected override _createCopy(): ArrowSquareTip {
-    return new ArrowSquareTip({
+  override copy(): ArrowSquareTip {
+    this.normalizeTransform();
+    const clone = new ArrowSquareTip({
       length: this._length,
       width: this._width,
       color: this.color,
@@ -502,6 +515,8 @@ export class ArrowSquareTip extends ArrowTip {
       position: this._position,
       direction: this._direction,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -524,8 +539,9 @@ export class ArrowSquareFilledTip extends ArrowSquareTip {
     super({ ...options, fillOpacity: options.fillOpacity ?? 1 });
   }
 
-  protected override _createCopy(): ArrowSquareFilledTip {
-    return new ArrowSquareFilledTip({
+  override copy(): ArrowSquareFilledTip {
+    this.normalizeTransform();
+    const clone = new ArrowSquareFilledTip({
       length: this._length,
       width: this._width,
       color: this.color,
@@ -534,6 +550,8 @@ export class ArrowSquareFilledTip extends ArrowSquareTip {
       position: this._position,
       direction: this._direction,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -629,8 +647,9 @@ export class StealthTip extends ArrowTip {
     return this;
   }
 
-  protected override _createCopy(): StealthTip {
-    return new StealthTip({
+  override copy(): StealthTip {
+    this.normalizeTransform();
+    const clone = new StealthTip({
       length: this._length,
       width: this._width,
       color: this.color,
@@ -640,5 +659,7 @@ export class StealthTip extends ArrowTip {
       direction: this._direction,
       backAngle: this._backAngle,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

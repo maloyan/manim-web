@@ -171,13 +171,16 @@ export class ArcBetweenPoints extends Arc {
   /**
    * Create a copy of this ArcBetweenPoints
    */
-  protected override _createCopy(): ArcBetweenPoints {
-    return new ArcBetweenPoints({
+  override copy(): ArcBetweenPoints {
+    this.normalizeTransform();
+    const clone = new ArcBetweenPoints({
       start: this._startPoint,
       end: this._endPoint,
       angle: this._angle,
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

@@ -257,8 +257,9 @@ export class RoundedRectangle extends VMobject {
   /**
    * Create a copy of this RoundedRectangle
    */
-  protected override _createCopy(): RoundedRectangle {
-    return new RoundedRectangle({
+  override copy(): RoundedRectangle {
+    this.normalizeTransform();
+    const clone = new RoundedRectangle({
       width: this._width,
       height: this._height,
       cornerRadius: this._cornerRadius,
@@ -267,6 +268,8 @@ export class RoundedRectangle extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -440,8 +443,9 @@ export class Star extends VMobject {
   /**
    * Create a copy of this Star
    */
-  protected override _createCopy(): Star {
-    return new Star({
+  override copy(): Star {
+    this.normalizeTransform();
+    const clone = new Star({
       numPoints: this._numPoints,
       outerRadius: this._outerRadius,
       innerRadius: this._innerRadius,
@@ -451,6 +455,8 @@ export class Star extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -744,8 +750,9 @@ export class RegularPolygram extends VMobject {
   /**
    * Create a copy of this RegularPolygram
    */
-  protected override _createCopy(): RegularPolygram {
-    return new RegularPolygram({
+  override copy(): RegularPolygram {
+    this.normalizeTransform();
+    const clone = new RegularPolygram({
       numVertices: this._numVertices,
       density: this._density,
       radius: this._radius,
@@ -755,6 +762,8 @@ export class RegularPolygram extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -863,14 +872,17 @@ export class Cutout extends VMobject {
   /**
    * Create a copy of this Cutout
    */
-  protected override _createCopy(): Cutout {
-    return new Cutout({
+  override copy(): Cutout {
+    this.normalizeTransform();
+    const clone = new Cutout({
       outerShape: this._outerShape.copy() as VMobject,
       innerShape: this._innerShape.copy() as VMobject,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -1119,12 +1131,15 @@ export class ConvexHull extends VMobject {
   /**
    * Create a copy of this ConvexHull
    */
-  protected override _createCopy(): ConvexHull {
-    return new ConvexHull({
+  override copy(): ConvexHull {
+    this.normalizeTransform();
+    const clone = new ConvexHull({
       points: this._inputPoints,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

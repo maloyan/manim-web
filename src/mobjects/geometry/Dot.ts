@@ -79,19 +79,19 @@ export class Dot extends Circle {
   }
 
   /**
-   * Create a copy of this Dot
+   * Copy this Dot.
    */
-  protected override _createCopy(): Dot {
-    return new Dot({
+  override copy(): Dot {
+    this.normalizeTransform();
+    const clone = new Dot({
       point: this.getPoint(),
-      // Raw radius, NOT getRadius(): base copy() also copies scaleVector onto the
-      // clone, and getRadius() already folds the scale in — seeding with the
-      // scaled radius would double-apply it (r·s·s). Matches Circle._createCopy.
       radius: this._radius,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -116,13 +116,16 @@ export class SmallDot extends Dot {
   /**
    * Create a copy of this SmallDot
    */
-  protected override _createCopy(): SmallDot {
-    return new SmallDot({
+  override copy(): SmallDot {
+    this.normalizeTransform();
+    const clone = new SmallDot({
       point: this.getPoint(),
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -147,12 +150,15 @@ export class LargeDot extends Dot {
   /**
    * Create a copy of this LargeDot
    */
-  protected override _createCopy(): LargeDot {
-    return new LargeDot({
+  override copy(): LargeDot {
+    this.normalizeTransform();
+    const clone = new LargeDot({
       point: this.getPoint(),
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }

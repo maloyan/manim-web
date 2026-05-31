@@ -667,18 +667,22 @@ export class VMobject extends VMobjectRendering {
   // -----------------------------------------------------------------------
 
   /**
-   * Create a copy of this VMobject.
-   * Subclasses override _createCopy() to produce an instance of the right
-   * concrete type (Circle, Square, etc.), but those constructors typically
-   * regenerate points from their own parameters (radius, sideLength, ...).
-   * After a Transform animation has morphed the point data, the regenerated
-   * points no longer match the actual visual state.  We therefore always
-   * overwrite the clone's _points3D with the source's current data.
+   * Copy this VMobject, preserving point data state after morphs/transforms.
+   *
+   * For subclasses (Circle, Square, etc.): constructors regenerate points from
+   * parameters (radius, sideLength, ...). After a Transform animation has morphed
+   * the data, the regenerated points no longer match the visual state. Subclasses
+   * must override copy(), build a new instance with their constructor params, call
+   * _copyBaseAttributesInto, and then overwrite _points3D with the current state.
+   *
+   * For direct VMobject (rare): just builds and copies.
    */
   override copy(): VMobject {
-    const clone = super.copy() as VMobject;
+    this.normalizeTransform();
+    const clone = new VMobject();
+    this._copyBaseAttributesInto(clone);
     // Overwrite points so they reflect current (possibly morphed) state,
-    // not whatever _createCopy()'s constructor regenerated.
+    // not whatever the constructor regenerated.
     clone._points3D = this._points3D.map((p) => [...p]);
     clone._visiblePointCount = this._visiblePointCount;
     if (this._transformSubpathLengths !== undefined) {
@@ -686,19 +690,6 @@ export class VMobject extends VMobjectRendering {
     }
     clone._geometryDirty = true;
     return clone;
-  }
-
-  /**
-   * Create a copy of this VMobject
-   */
-  protected override _createCopy(): VMobject {
-    const vmobject = new VMobject();
-    vmobject._points3D = this._points3D.map((p) => [...p]);
-    vmobject._visiblePointCount = this._visiblePointCount;
-    if (this._transformSubpathLengths !== undefined) {
-      vmobject._transformSubpathLengths = [...this._transformSubpathLengths];
-    }
-    return vmobject;
   }
 
   // -----------------------------------------------------------------------

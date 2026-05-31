@@ -230,8 +230,9 @@ export class Rectangle extends VMobject {
   /**
    * Create a copy of this Rectangle
    */
-  protected override _createCopy(): Rectangle {
-    return new Rectangle({
+  override copy(): Rectangle {
+    this.normalizeTransform();
+    const clone = new Rectangle({
       width: this._width,
       height: this._height,
       center: this._centerPoint,
@@ -239,6 +240,8 @@ export class Rectangle extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
 
@@ -270,13 +273,16 @@ export class Square extends Rectangle {
   /**
    * Create a copy of this Square
    */
-  protected override _createCopy(): Square {
-    return new Square({
+  override copy(): Square {
+    this.normalizeTransform();
+    const clone = new Square({
       sideLength: this.getWidth(),
       center: this.getRectCenter(),
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, false);
+    return clone;
   }
 }
