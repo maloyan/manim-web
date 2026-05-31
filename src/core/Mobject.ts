@@ -428,8 +428,6 @@ export abstract class Mobject {
     factor: number | Vector3Tuple,
     options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
   ): this {
-    const aboutPointWorld = resolveExtremalPoint(this, options);
-
     const sx = typeof factor === 'number' ? factor : factor[0];
     const sy = typeof factor === 'number' ? factor : factor[1];
     const sz = typeof factor === 'number' ? factor : factor[2] === 0 ? 1 : factor[2];
@@ -441,13 +439,12 @@ export abstract class Mobject {
 
     // aboutPoint/aboutEdge are WORLD-space anchors.
     // position is parent-local, so convert anchor into parent-local space first.
-    if (aboutPointWorld) {
-      const anchorLocal = this._worldToParentLocal(aboutPointWorld);
+    const aboutPointWorld = resolveExtremalPoint(this, options) ?? this.getCenter();
+    const anchorLocal = this._worldToParentLocal(aboutPointWorld);
 
-      this.position.x = anchorLocal[0] + sx * (this.position.x - anchorLocal[0]);
-      this.position.y = anchorLocal[1] + sy * (this.position.y - anchorLocal[1]);
-      this.position.z = anchorLocal[2] + sz * (this.position.z - anchorLocal[2]);
-    }
+    this.position.x = anchorLocal[0] + sx * (this.position.x - anchorLocal[0]);
+    this.position.y = anchorLocal[1] + sy * (this.position.y - anchorLocal[1]);
+    this.position.z = anchorLocal[2] + sz * (this.position.z - anchorLocal[2]);
 
     this._markDirty();
     return this;
