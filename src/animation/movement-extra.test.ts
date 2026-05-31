@@ -266,6 +266,24 @@ describe('Homotopy', () => {
       anim.interpolate(0.5);
       expect(vm.getLocalPoints().length).toBe(0);
     });
+
+    it('applies the homotopy in world space when the mobject carries a transform', () => {
+      // MIGRATION: example-based regression. Intent: the homotopy function sees the
+      // coordinates the mobject actually occupies (world space), not its raw local
+      // points. A point at local (0,0,0) shifted to world (5,0,0), fed through a
+      // world-space scale-about-origin f(x)=2x, must land at world (10,0,0) — local
+      // application would scale (0,0,0) and leave it at world (5,0,0). Replace with a
+      // property test later.
+      const vm = makeVMobject([[0, 0, 0]]);
+      vm.shift([5, 0, 0]); // local origin now sits at world (5,0,0)
+      const fn: HomotopyFunction = (x, y, z, _t) => [x * 2, y, z];
+      const anim = new Homotopy(vm, { homotopyFunc: fn });
+      anim.begin();
+      anim.interpolate(1);
+      const world = vm.getPoints();
+      expect(world[0][0]).toBeCloseTo(10, 5);
+      expect(world[0][1]).toBeCloseTo(0, 5);
+    });
   });
 
   describe('homotopy() factory', () => {
@@ -998,6 +1016,25 @@ describe('MoveAlongPath', () => {
       // Midpoint of a straight line from 0 to 6 is 3
       expect(m.position.x).toBeCloseTo(3, 3);
       expect(m.position.y).toBeCloseTo(0, 3);
+    });
+
+    it('follows the path at its real (world) location when the path is shifted', () => {
+      // MIGRATION: example-based regression. Intent: MoveAlongPath samples the path
+      // in WORLD space. A path carrying its own transform (here shifted up by 10)
+      // must be followed where it actually sits, not orbiting its untransformed
+      // local origin. Replace with a property test later.
+      const path = straightLinePath();
+      path.shift([0, 10, 0]); // move the whole path off its local origin
+      const m = makeVMobject();
+      const anim = new MoveAlongPath(m, { path });
+      anim.begin();
+
+      anim.interpolate(0); // start of the world-space path: (0, 10, 0)
+      expect(m.position.y).toBeCloseTo(10, 3);
+
+      anim.interpolate(1); // end of the world-space path: (6, 10, 0)
+      expect(m.position.x).toBeCloseTo(6, 3);
+      expect(m.position.y).toBeCloseTo(10, 3);
     });
   });
 

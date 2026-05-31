@@ -240,10 +240,14 @@ export abstract class Mobject {
   /**
    * Move to target position in world space.
    *
-   * Computes delta from current world-space center and applies via shift()
-   * to preserve world-space geometry. For alignedEdge, computes target world
-   * position from edge difference + current center.
+   * Computes the delta from the current world-space center, converts it into this
+   * node's parent-local frame (the frame `shift()`/`position` live in), and applies
+   * it so the world-space center lands on the target. The parent-local conversion
+   * is what makes this correct when the node is parented under a scaled/rotated
+   * parent — a raw world delta fed to shift() would be scaled/rotated by the parent.
+   * For an unparented node the conversion is the identity, so behavior is unchanged.
    *
+   * @post result world center === target (within the parent's representable frame)
    * @pre  !this.isEmpty()
    *       if needed (e.g., VGroup).
    */
@@ -271,11 +275,16 @@ export abstract class Mobject {
       ];
     }
 
-    // 4. Compute world-space delta from current center
+    // 4. Convert both endpoints into the parent-local frame and take their
+    // difference. The translation parts cancel, leaving the world delta mapped
+    // through the parent's inverse linear transform — exactly the parent-local
+    // delta that shift() must apply for the world center to land on targetPos.
+    const targetLocal = this._worldToParentLocal(targetPos);
+    const currentLocal = this._worldToParentLocal(currentCenter);
     const delta: Vector3Tuple = [
-      targetPos[0] - currentCenter[0],
-      targetPos[1] - currentCenter[1],
-      targetPos[2] - currentCenter[2],
+      targetLocal[0] - currentLocal[0],
+      targetLocal[1] - currentLocal[1],
+      targetLocal[2] - currentLocal[2],
     ];
 
     // 5. Apply shift (preserves world-space positions)

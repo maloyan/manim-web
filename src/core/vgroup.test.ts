@@ -668,6 +668,57 @@ describe('VGroup - extended coverage', () => {
     expect(world[1][1]).toBeCloseTo(4, 6);
   });
 
+  it('setPoints distributes across children, round-tripping with getLocalPoints', () => {
+    // MIGRATION: example-based regression. Intent: a VGroup holds no points of its
+    // own — getLocalPoints aggregates its children, so the matching setter must
+    // partition the array back across those children (read-modify-write must round
+    // trip), not silently write onto an empty container. Replace with a property
+    // test later.
+    const a = new VMobject();
+    a.setPoints([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    const b = new VMobject();
+    b.setPoints([
+      [2, 0, 0],
+      [3, 0, 0],
+    ]);
+    const vg = new VGroup(a, b);
+
+    // Capture each child's own points (the VGroup constructor may have rebaked
+    // them via normalizeTransform, so compare against the post-construction state).
+    const aBefore = a.getLocalPoints();
+    const bBefore = b.getLocalPoints();
+
+    // Read every point, shift each by +10 in x, write the whole array back.
+    const moved = vg.getLocalPoints().map((p) => [p[0] + 10, p[1], p[2]]);
+    vg.setPoints(moved);
+
+    const after = vg.getLocalPoints();
+    expect(after.length).toBe(moved.length);
+    for (let i = 0; i < moved.length; i++) {
+      expect(after[i][0]).toBeCloseTo(moved[i][0], 6);
+    }
+    // The update actually reached the children, partitioned in order — not a
+    // silent no-op writing onto the empty container.
+    expect(a.getLocalPoints()[0][0]).toBeCloseTo(aBefore[0][0] + 10, 6);
+    expect(b.getLocalPoints()[0][0]).toBeCloseTo(bBefore[0][0] + 10, 6);
+  });
+
+  it('setPoints rejects an array that does not match the children point count', () => {
+    // MIGRATION: example-based regression. Intent: because a VGroup partitions the
+    // array across its children, a mismatched length is unrecoverable and must throw
+    // rather than corrupt the partition. Replace with a property test later.
+    const a = new VMobject();
+    a.setPoints([
+      [0, 0, 0],
+      [1, 0, 0],
+    ]);
+    const vg = new VGroup(a);
+    expect(() => vg.setPoints([[0, 0, 0]])).toThrow();
+  });
+
   it('get returns child by index', () => {
     const a = new VMobject();
     const b = new VMobject();

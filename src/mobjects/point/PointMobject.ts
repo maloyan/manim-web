@@ -52,8 +52,8 @@ export class PointMobject extends PMobject {
   /**
    * Get the world-space position of the point.
    *
-   * Applies all ancestor transforms in the parent chain, matching the behavior
-   * of getLocalPoints(). For local-space coordinates, use the `position` field directly.
+   * Applies this node's transform and all ancestor transforms (via getPoints()).
+   * For local-space coordinates, use the `position` field directly.
    *
    * @returns World position as [x, y, z]
    */

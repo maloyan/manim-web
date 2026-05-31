@@ -598,6 +598,28 @@ describe('Mobject - extended coverage', () => {
     // Should have shifted to align upper-left edges
   });
 
+  it('moveTo lands the world center on the target even under a scaled+rotated parent', () => {
+    // MIGRATION: example-based regression. Intent: moveTo targets a WORLD position.
+    // When the mobject sits under a parent that scales/rotates it, the shift must be
+    // expressed in the parent-local frame, so the child's world center still lands
+    // exactly on the target (not target/scale, nor a rotated offset). Replace with a
+    // property test later.
+    const child = new VMobject();
+    child.setPoints3D([
+      [-1, -1, 0],
+      [1, 1, 0],
+    ]); // geometry centered at the local origin
+    const parent = new VGroup(child);
+    parent.scale(2);
+    parent.rotate(Math.PI / 3);
+
+    child.moveTo([4, -3, 0]);
+
+    const c = child.getCenter();
+    expect(c[0]).toBeCloseTo(4, 6);
+    expect(c[1]).toBeCloseTo(-3, 6);
+  });
+
   // getEdge and convenience getters
   it('getEdge returns edge in direction', () => {
     const vm = new VMobject();

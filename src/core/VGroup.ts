@@ -458,4 +458,44 @@ export class VGroup extends VMobject {
   override getLocalPoints(): number[][] {
     return this.getCombinedPoints();
   }
+
+  /**
+   * Distribute a flat point array back onto the children.
+   *
+   * A VGroup stores no geometry of its own — {@link getLocalPoints} aggregates the
+   * children. The inherited VMobject.setPoints would write to the container's
+   * unused `_points3D`, so a read-modify-write (Homotopy, ApplyPointwiseFunction,
+   * ApplyWave, …) on a VGroup would be a silent no-op. This override partitions the
+   * array in the same order getCombinedPoints concatenated it and assigns each slice
+   * to its child, so the round-trip actually moves the children.
+   *
+   * @pre  points.length === sum over VMobject children of child.getLocalPoints().length
+   * @post for each child i: child.getLocalPoints() === the i-th slice of points
+   */
+  override setPoints(points: Point[] | number[][]): this {
+    const pts3D: number[][] =
+      points.length === 0
+        ? []
+        : Array.isArray(points[0])
+          ? (points as number[][]).map((p) => [p[0], p[1], p[2] ?? 0])
+          : (points as Point[]).map((p) => [p.x, p.y, 0]);
+
+    const vChildren = this.children.filter((c) => c instanceof VMobject) as VMobject[];
+    const counts = vChildren.map((c) => c.getLocalPoints().length);
+    const total = counts.reduce((n, c) => n + c, 0);
+    if (pts3D.length !== total) {
+      throw new Error(
+        `VGroup.setPoints: expected ${total} points (sum of children's point counts), got ${pts3D.length}. ` +
+          `A VGroup holds no points of its own; the array must partition across its children.`,
+      );
+    }
+
+    let offset = 0;
+    for (let i = 0; i < vChildren.length; i++) {
+      vChildren[i].setPoints(pts3D.slice(offset, offset + counts[i]));
+      offset += counts[i];
+    }
+    this._markDirtyUpward();
+    return this;
+  }
 }
