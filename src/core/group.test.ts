@@ -75,9 +75,13 @@ describe('Group - extended coverage', () => {
     expect(center[0]).toBeCloseTo(1, 0);
   });
 
-  it('Group getCenter throws when a child has empty Three.js bounds', () => {
+  it('Group getCenter returns position when every child is empty', () => {
+    // MIGRATION: example-based regression. Intent: a group whose only child has no
+    // geometry has no bounds, so getCenter falls back to position (matching VGroup)
+    // rather than throwing. Replace with a property test later.
     const g = new Group(new VMobject());
-    expect(() => g.getCenter()).toThrow(/empty Three\.js bounds/);
+    g.shift([3, -2, 0]);
+    expect(g.getCenter()).toEqual([3, -2, 0]);
   });
 
   it('Group getBounds uses descendant geometry', () => {
@@ -139,9 +143,29 @@ describe('Group - extended coverage', () => {
     expect(afterSize[1]).toBeGreaterThan(0);
   });
 
-  it('Group getCenter throws on nested empty containers', () => {
+  it('Group getCenter returns position on nested empty containers', () => {
+    // MIGRATION: example-based regression. Intent: nested empty containers still
+    // have no geometry, so getCenter falls back to position. Replace with a
+    // property test later.
     const g = new Group(new VGroup(new VGroup()));
-    expect(() => g.getCenter()).toThrow(/empty Three\.js bounds/);
+    g.shift([1, 4, 0]);
+    expect(g.getCenter()).toEqual([1, 4, 0]);
+  });
+
+  it('empty group getCenter is world-space: follows a transformed parent', () => {
+    // MIGRATION: example-based regression. Intent: getCenter() is world-space even
+    // with no geometry — the parent-local position is lifted through the parent's
+    // transform, so an empty child tracks its parent rather than reporting a raw
+    // local offset. Replace with a property test later.
+    const empty = new Group(new VMobject()); // no geometry => isEmpty()
+    const parent = new Group(empty);
+    empty.shift([1, 0, 0]); // parent-local position
+    const before = empty.getCenter();
+    expect(before[0]).toBeCloseTo(1, 6); // parent untransformed
+
+    parent.shift([10, 0, 0]);
+    const after = empty.getCenter();
+    expect(after[0]).toBeCloseTo(before[0] + 10, 6); // moved into world space with the parent
   });
 
   it('shift moves group position', () => {

@@ -60,6 +60,34 @@ describe('Circle', () => {
     expect(c.getCircleCenter()).toEqual([3, 4, 0]);
   });
 
+  it('setRadius takes the visible radius even when scaled', () => {
+    // MIGRATION: example-based regression. Intent: setRadius/getRadius both speak
+    // the *visible* radius (scale folded in), so setRadius(getRadius()) is a no-op.
+    // Replace with a property test (round-trip over arbitrary radius+scale) later.
+    const c = new Circle({ radius: 2 });
+    c.scale(1.5); // visible radius is now 3
+    c.setRadius(5);
+    expect(c.getRadius()).toBeCloseTo(5, 10);
+
+    // Round-trip: re-setting the current visible radius changes nothing.
+    const r = c.getRadius();
+    c.setRadius(r);
+    expect(c.getRadius()).toBeCloseTo(r, 10);
+  });
+
+  it('setCircleCenter is reflected in rendered world bounds', () => {
+    // MIGRATION: example-based regression. Intent: setCircleCenter behaves like
+    // moveTo for rendering — the new center must survive a re-sync (the fix marks
+    // the node dirty). Observed through getBounds (world-space) rather than the
+    // internal dirty flag. Replace with a render-level property test later.
+    const c = new Circle({ radius: 1, center: [0, 0, 0] });
+    c.getBounds(); // force a full sync so the node is clean
+    c.setCircleCenter([5, 0, 0]);
+    const b = c.getBounds();
+    expect((b.min.x + b.max.x) / 2).toBeCloseTo(5, 6);
+    expect((b.min.y + b.max.y) / 2).toBeCloseTo(0, 6);
+  });
+
   it('scale multiplies radius', () => {
     const c = new Circle({ radius: 2 });
     c.scale(3);

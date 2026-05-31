@@ -39,7 +39,8 @@ export interface CircleOptions {
  * ```
  */
 export class Circle extends VMobject {
-  private _radius: number;
+  /** Raw radius before deferred scale; subclasses (Dot) read it for copy. */
+  protected _radius: number;
   private _numPoints: number;
 
   constructor(options: CircleOptions = {}) {
@@ -127,10 +128,16 @@ export class Circle extends VMobject {
   }
 
   /**
-   * Set the radius of the circle
+   * Set the radius of the circle.
+   *
+   * `value` is the visible radius (scale included), to match {@link getRadius}.
+   * The deferred uniform scale is divided back out before storing so the two
+   * stay consistent — i.e. setRadius(getRadius()) is a no-op.
+   *
+   * @post getRadius() === value
    */
   setRadius(value: number): this {
-    this._radius = value;
+    this._radius = value / this._getUniformScaleFactor();
     this._generatePoints();
     return this;
   }
@@ -143,10 +150,14 @@ export class Circle extends VMobject {
   }
 
   /**
-   * Set the center of the circle
+   * Set the center of the circle.
+   * @post getCircleCenter() === value
    */
   setCircleCenter(value: Vector3Tuple): this {
     this.position.set(value[0], value[1], value[2]);
+    // Every other position mutator (moveTo/shift/...) marks dirty; without this
+    // the clean-subtree invariant skips re-sync and the circle renders stale.
+    this._markDirty();
     return this;
   }
 

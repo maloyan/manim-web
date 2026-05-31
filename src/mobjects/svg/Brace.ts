@@ -1,6 +1,7 @@
 /* eslint-disable max-lines */
 import { VMobject } from '../../core/VMobject';
 import { Mobject, Vector3Tuple, DOWN } from '../../core/Mobject';
+import { isVMobject } from '../../core/MobjectTypes';
 import { Group } from '../../core/Group';
 import { Text } from '../text/Text';
 import { MathTexImage } from '../text/MathTexImage';
@@ -74,13 +75,18 @@ export interface BraceLabelOptions extends BraceOptions {
 }
 
 /**
- * Get key points from a mobject for brace placement.
- * Uses actual VMobject points when available, falls back to bounding box corners.
+ * Get key points from a mobject for brace placement, in WORLD space.
+ *
+ * Must be world-space: _generateBracePoints projects these against the
+ * world-space this.mobject.getCenter() and lays the brace out in world
+ * coordinates. getLocalPoints() (raw _points3D) would mix frames and mis-size
+ * the brace for any shifted/scaled/parented target. The bbox fallback below is
+ * already world-space (getCenter()/getBoundingBox()), so both branches agree.
  */
 function getMobjectKeyPoints(mobject: Mobject): number[][] {
-  // If it's a VMobject with accessible points, use those
-  if (mobject instanceof VMobject) {
-    const pts = (mobject as VMobject).getLocalPoints();
+  // If it's a VMobject with accessible points, use those (world-space).
+  if (isVMobject(mobject)) {
+    const pts = mobject.getPoints();
     if (pts.length > 0) return pts;
   }
   // Fallback: use bounding box corners from the mobject

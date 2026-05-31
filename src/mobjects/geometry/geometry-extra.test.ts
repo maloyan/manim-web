@@ -533,6 +533,17 @@ describe('Dot', () => {
     });
     expect(d.getPoint()).toEqual([5, 6, 7]);
   });
+
+  it('copy preserves the visible radius after scaling', () => {
+    // MIGRATION: example-based regression. Intent: copying a scaled Dot yields a
+    // visually identical Dot — the scale must not be applied twice (seeding the
+    // clone with getRadius() while base copy() also copies scaleVector). Replace
+    // with a property test (copy preserves getRadius under arbitrary scale) later.
+    const d = new Dot({ radius: 0.1 });
+    d.scale(3);
+    const c = d.copy() as Dot;
+    expect(c.getRadius()).toBeCloseTo(d.getRadius(), 10);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -745,6 +756,41 @@ describe('Line', () => {
     l.clearPoints();
     expect(l.getStart()).toEqual([1, 2, 0]);
     expect(l.getEnd()).toEqual([3, 4, 0]);
+  });
+
+  it('derived getters stay consistent with world-space getStart/getEnd under a transform', () => {
+    // MIGRATION: example-based regression. Intent: length/midpoint/direction/angle/
+    // pointAlongPath all derive from the world-space endpoints, so they must agree
+    // with getStart()/getEnd() after the line is rotated/scaled/shifted (not read
+    // raw local points). Replace with a property test over random transforms later.
+    const l = new Line({ start: [-1, 0, 0], end: [1, 2, 0] });
+    l.rotate(Math.PI / 6);
+    l.scale(2);
+    l.shift([3, -1, 0]);
+
+    const s = l.getStart();
+    const e = l.getEnd();
+    const dist = Math.hypot(e[0] - s[0], e[1] - s[1], e[2] - s[2]);
+
+    expect(l.getLength()).toBeCloseTo(dist, 6);
+
+    const mid = l.getMidpoint();
+    expect(mid[0]).toBeCloseTo((s[0] + e[0]) / 2, 6);
+    expect(mid[1]).toBeCloseTo((s[1] + e[1]) / 2, 6);
+    expect(mid[2]).toBeCloseTo((s[2] + e[2]) / 2, 6);
+
+    expect(l.getAngle()).toBeCloseTo(Math.atan2(e[1] - s[1], e[0] - s[0]), 6);
+
+    const dir = l.getDirection();
+    expect(dir[0]).toBeCloseTo((e[0] - s[0]) / dist, 6);
+    expect(dir[1]).toBeCloseTo((e[1] - s[1]) / dist, 6);
+
+    const p0 = l.pointAlongPath(0);
+    const p1 = l.pointAlongPath(1);
+    expect(p0[0]).toBeCloseTo(s[0], 6);
+    expect(p0[1]).toBeCloseTo(s[1], 6);
+    expect(p1[0]).toBeCloseTo(e[0], 6);
+    expect(p1[1]).toBeCloseTo(e[1], 6);
   });
 });
 

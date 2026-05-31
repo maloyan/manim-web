@@ -375,6 +375,20 @@ export abstract class Mobject {
     return [v.x, v.y, v.z];
   }
 
+  /**
+   * Convert a point expressed in this node's parent-local frame (the frame of
+   * `this.position`) into WORLD space — the inverse of {@link _worldToParentLocal}.
+   *
+   * @post this.parent === null => result === p
+   * @post this.parent !== null => result === parent._computeWorldMatrix() * p
+   */
+  protected _parentLocalToWorld(p: Vector3Tuple): Vector3Tuple {
+    if (!this.parent) return p;
+    const parentWorld = this.parent._computeWorldMatrix();
+    const v = new THREE.Vector3(p[0], p[1], p[2]).applyMatrix4(parentWorld);
+    return [v.x, v.y, v.z];
+  }
+
   flip(
     axis: Vector3Tuple = [1, 0, 0],
     options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
@@ -526,12 +540,14 @@ export abstract class Mobject {
   /**
    * Get center in world coordinates.
    *
-   * @post result === this.getLocalCenter()  // when this.parent === null
-   * @post result[i] === (worldBbox.min[i] + worldBbox.max[i]) / 2
+   * @post this.isEmpty() => result === this._parentLocalToWorld([position.x, position.y, position.z])
+   * @post !this.isEmpty() => result[i] === (worldBbox.min[i] + worldBbox.max[i]) / 2
    */
   getCenter(): Vector3Tuple {
+    // No geometry to bound: fall back to this node's own world position. position
+    // is parent-local, so lift it to world to stay consistent with the bbox branch.
     if (this.isEmpty()) {
-      return [this.position.x, this.position.y, this.position.z];
+      return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
     }
     return getCenterImpl(this);
   }

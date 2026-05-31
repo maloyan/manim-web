@@ -141,9 +141,15 @@ export class VGroup extends VMobject {
     return this;
   }
 
+  /**
+   * @post this.isEmpty() => result === this._parentLocalToWorld([position.x, position.y, position.z])
+   * @post !this.isEmpty() => result[i] === (worldBbox.min[i] + worldBbox.max[i]) / 2
+   */
   override getCenter(): Vector3Tuple {
+    // position is parent-local; lift to world so the empty fallback matches the
+    // world-space bbox branch (and the base Mobject.getCenter convention).
     if (this.isEmpty()) {
-      return [this.position.x, this.position.y, this.position.z];
+      return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
     }
     const b = this.getBounds();
     return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];

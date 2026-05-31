@@ -116,57 +116,59 @@ export class Line extends VMobject {
   }
 
   /**
-   * Get the length of the line
+   * Get the length of the line (world-space, consistent with getStart/getEnd).
+   * @post result === dist(getStart(), getEnd())
    */
   getLength(): number {
-    const dx = this._end[0] - this._start[0];
-    const dy = this._end[1] - this._start[1];
-    const dz = this._end[2] - this._start[2];
+    const s = this.getStart();
+    const e = this.getEnd();
+    const dx = e[0] - s[0];
+    const dy = e[1] - s[1];
+    const dz = e[2] - s[2];
     return Math.sqrt(dx * dx + dy * dy + dz * dz);
   }
 
   /**
-   * Get the midpoint of the line
+   * Get the midpoint of the line (world-space).
+   * @post result === (getStart() + getEnd()) / 2
    */
   getMidpoint(): Vector3Tuple {
-    return [
-      (this._start[0] + this._end[0]) / 2,
-      (this._start[1] + this._end[1]) / 2,
-      (this._start[2] + this._end[2]) / 2,
-    ];
+    const s = this.getStart();
+    const e = this.getEnd();
+    return [(s[0] + e[0]) / 2, (s[1] + e[1]) / 2, (s[2] + e[2]) / 2];
   }
 
   /**
-   * Get the direction vector of the line (normalized)
+   * Get the direction vector of the line (normalized, world-space).
+   * @post result === normalize(getEnd() - getStart())
    */
   getDirection(): Vector3Tuple {
+    const s = this.getStart();
+    const e = this.getEnd();
     const length = this.getLength();
     if (length === 0) {
       return [1, 0, 0];
     }
-    return [
-      (this._end[0] - this._start[0]) / length,
-      (this._end[1] - this._start[1]) / length,
-      (this._end[2] - this._start[2]) / length,
-    ];
+    return [(e[0] - s[0]) / length, (e[1] - s[1]) / length, (e[2] - s[2]) / length];
   }
 
   /**
-   * Get the angle of the line in the XY plane (in radians)
+   * Get the angle of the line in the XY plane (in radians, world-space).
    */
   getAngle(): number {
-    return Math.atan2(this._end[1] - this._start[1], this._end[0] - this._start[0]);
+    const s = this.getStart();
+    const e = this.getEnd();
+    return Math.atan2(e[1] - s[1], e[0] - s[0]);
   }
 
   /**
-   * Get a point along the line at parameter t (0 = start, 1 = end)
+   * Get a point along the line at parameter t (0 = start, 1 = end), world-space.
+   * @post pointAlongPath(0) === getStart() && pointAlongPath(1) === getEnd()
    */
   pointAlongPath(t: number): Vector3Tuple {
-    return [
-      this._start[0] + (this._end[0] - this._start[0]) * t,
-      this._start[1] + (this._end[1] - this._start[1]) * t,
-      this._start[2] + (this._end[2] - this._start[2]) * t,
-    ];
+    const s = this.getStart();
+    const e = this.getEnd();
+    return [s[0] + (e[0] - s[0]) * t, s[1] + (e[1] - s[1]) * t, s[2] + (e[2] - s[2]) * t];
   }
 
   /**

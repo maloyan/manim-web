@@ -85,9 +85,19 @@ export class Group extends Mobject {
     return this.children.length === 0 || this.children.every((child) => child.isEmpty());
   }
 
+  /**
+   * Center in world coordinates (bbox midpoint of descendant geometry).
+   *
+   * @post this.isEmpty() => result === this._parentLocalToWorld([position.x, position.y, position.z])
+   * @post !this.isEmpty() => result[i] === (worldBbox.min[i] + worldBbox.max[i]) / 2
+   */
   override getCenter(): Vector3Tuple {
-    if (this.children.length === 0) {
-      return [this.position.x, this.position.y, this.position.z];
+    // isEmpty() (not children.length): a group with only empty children (async
+    // Text/MathTex glyph containers, nested empty VGroups) has no geometry, so
+    // getBounds() would throw "empty Three.js bounds". position is parent-local,
+    // so lift it to world to stay consistent with the bbox branch.
+    if (this.isEmpty()) {
+      return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
     }
 
     const b = this.getBounds();

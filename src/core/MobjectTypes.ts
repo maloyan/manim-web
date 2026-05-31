@@ -90,6 +90,7 @@ export interface VMobjectLike {
   _geometryDirty: boolean;
   setPoints(points: number[][] | { x: number; y: number }[]): void;
   getLocalPoints(): number[][];
+  getPoints(): number[][];
 }
 
 /**
