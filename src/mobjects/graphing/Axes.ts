@@ -137,6 +137,13 @@ export class Axes extends Group {
     };
     this.yAxis = new NumberLine(yConfig);
     this.yAxis.rotate(Math.PI / 2);
+    // Bake the +90° rotation into the line geometry and the label child positions
+    // now (eager), so the label-repositioning loop below reads already-rotated
+    // positions. #417 made rotation deferred; without this normalize the rotation
+    // would otherwise linger on the live transform (never re-normalized in the
+    // render path) and the labels — authored against the pre-#417 eager-rotation
+    // contract — would render as a stray horizontal row instead of a column.
+    this.yAxis.normalizeTransform();
 
     // Counter-rotate y-axis number labels so text stays horizontal,
     // and reposition them to the left of the axis

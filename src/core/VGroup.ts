@@ -275,11 +275,58 @@ export class VGroup extends VMobject {
     }
 
     if (originalCenter) {
-      this.moveTo(originalCenter);
+      this._recenterChildrenTo(originalCenter);
     }
 
     this._markDirty();
     return this;
+  }
+
+  /**
+   * Recenter the arrangement by shifting the CHILDREN so the group's bbox
+   * center returns to `originalCenter`, leaving the container's own `position`
+   * untouched.
+   *
+   * Background: #417 removed VGroup's `moveTo`/`shift` child-shifting overrides,
+   * so `this.moveTo(...)` now moves only the container's `position` and leaves
+   * children in place. Arrange used `moveTo` to recenter, which silently became
+   * a no-op on the children — breaking callers that add the children directly
+   * (e.g. opening_manim) or rely on the children being physically centered.
+   * Shifting the children restores the pre-#417 arrange contract.
+   *
+   * Frame note: `getCenter()` returns WORLD coordinates, but `child.shift()`
+   * applies its delta in the child's PARENT-local frame — which is this VGroup's
+   * own local frame. We therefore map both world endpoints into that frame (via a
+   * child's world→parent-local conversion, which all children share) before
+   * taking the difference. For an identity, parentless VGroup the conversion is
+   * the identity, so this matches the previous world-delta behavior; for a
+   * transformed/nested VGroup it stays correct (the delta is no longer scaled or
+   * rotated by the group's transform).
+   */
+  private _recenterChildrenTo(originalCenter: Vector3Tuple): void {
+    const cur = this.getCenter();
+    const worldDelta: Vector3Tuple = [
+      originalCenter[0] - cur[0],
+      originalCenter[1] - cur[1],
+      originalCenter[2] - cur[2],
+    ];
+    if (worldDelta[0] === 0 && worldDelta[1] === 0 && worldDelta[2] === 0) return;
+
+    // The children's parent-local frame IS this group's local frame, so this
+    // group's world matrix maps child-local → world. Invert it and apply to both
+    // world endpoints, then difference them: the translation parts cancel,
+    // leaving the world delta mapped through this group's inverse linear
+    // transform. For an identity, parentless group the inverse is identity, so
+    // this reduces to the world delta (matching the prior behavior).
+    const invWorld = this._computeWorldMatrix().clone().invert();
+    const originalLocal = new THREE.Vector3(...originalCenter).applyMatrix4(invWorld);
+    const curLocal = new THREE.Vector3(...cur).applyMatrix4(invWorld);
+    const delta: Vector3Tuple = [
+      originalLocal.x - curLocal.x,
+      originalLocal.y - curLocal.y,
+      originalLocal.z - curLocal.z,
+    ];
+    for (const child of this.children) child.shift(delta);
   }
 
   /**
@@ -334,8 +381,8 @@ export class VGroup extends VMobject {
       child.moveTo([x, y, child.position.z]);
     }
 
-    // Recenter to original position
-    this.moveTo(originalCenter);
+    // Recenter to original position by shifting children (not the container).
+    this._recenterChildrenTo(originalCenter);
 
     this._markDirty();
     return this;

@@ -872,6 +872,12 @@ export class MarkupText extends Text {
     const lines: StyledTextSegment[][] = [[]];
     let lineIdx = 0;
 
+    // `_styledSegments` is undefined while the base `Text` constructor runs
+    // `_renderToCanvas` (subclass field initializers run after `super()`), and the
+    // copy path forces an early render before `_parseMarkup` populates it. Treat an
+    // unpopulated list as empty so an early render is a harmless no-op.
+    if (!this._styledSegments) return lines;
+
     for (const seg of this._styledSegments) {
       const parts = seg.text.split('\n');
       for (let i = 0; i < parts.length; i++) {
@@ -1107,6 +1113,7 @@ export class MarkupText extends Text {
       textAlign: this._textAlign,
     });
     copy._codeFontFamily = this._codeFontFamily;
+    this._carryVisualSizeTo(copy);
     return copy;
   }
 }

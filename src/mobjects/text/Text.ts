@@ -150,6 +150,17 @@ export class Text extends TexturedMobject {
   protected _worldWidth: number = 0;
   protected _worldHeight: number = 0;
 
+  /**
+   * Persistent scale factors baked by `_bakeFallbackScale` for the cases the
+   * size-bake path cannot handle: scaled before the canvas produced dimensions
+   * (headless/no-DOM), or a non-uniform scale on a Z-rotated mesh. Applied to the
+   * PlaneGeometry size so the factor survives a later canvas re-render (which
+   * recomputes `_worldWidth`/`_worldHeight`) and a later `applyVisualSize`. Reset
+   * to 1 by `applyVisualSize`, whose explicit size already carries the scale.
+   */
+  protected _bakedScaleX: number = 1;
+  protected _bakedScaleY: number = 1;
+
   constructor(options: TextOptions) {
     super();
 
@@ -465,8 +476,10 @@ export class Text extends TexturedMobject {
     this._mesh.geometry.dispose();
 
     // Create new geometry with updated dimensions
-    const geometry = new THREE.PlaneGeometry(this._worldWidth, this._worldHeight);
-    this._mesh.geometry = geometry;
+    this._mesh.geometry = new THREE.PlaneGeometry(
+      this._worldWidth * this._bakedScaleX,
+      this._worldHeight * this._bakedScaleY,
+    );
   }
 
   /**
@@ -496,8 +509,11 @@ export class Text extends TexturedMobject {
       depthWrite: false,
     });
 
-    // Create plane geometry sized to match text
-    const geometry = new THREE.PlaneGeometry(this._worldWidth, this._worldHeight);
+    // Create plane geometry sized to match text (folding in any baked fallback scale)
+    const geometry = new THREE.PlaneGeometry(
+      this._worldWidth * this._bakedScaleX,
+      this._worldHeight * this._bakedScaleY,
+    );
 
     // Create mesh
     this._mesh = new THREE.Mesh(geometry, material);
@@ -557,13 +573,58 @@ export class Text extends TexturedMobject {
     this._canvasDirty = false;
   }
 
+  /**
+   * Current persistent visual size for scale-baking. The plane geometry is sized
+   * to `[_worldWidth, _worldHeight]`, so returning those keeps `getBounds()`
+   * consistent after `_bakeOwnGeometry` folds `scaleVector` into them and the
+   * base normalize resets `scaleVector` to 1. Null before the canvas produced
+   * dimensions (headless/no-DOM) so a pre-render scale is not silently lost via
+   * a 0×0 bake — see `_bakeOwnGeometry`'s mesh.scale fallback.
+   */
+  protected override _currentVisualSize(): [number, number] | null {
+    // Force lazy Three.js construction first. `_createThreeObject` re-runs
+    // `_renderToCanvas`, which RECOMPUTES `_worldWidth`/`_worldHeight` from the
+    // canvas. If we read the size before the mesh exists, `applyVisualSize`
+    // would bake a scaled size that the later mesh build immediately clobbers,
+    // silently dropping the scale. Building the mesh now makes the recompute
+    // happen before we read the size, so the bake sticks.
+    this.getThreeObject();
+    if (!this._worldWidth || !this._worldHeight) return null;
+    // Report the actual geometry size, folding in any durable fallback factor so
+    // a subsequent size-bake composes with (not ignores) the prior fallback bake.
+    return [this._worldWidth * this._bakedScaleX, this._worldHeight * this._bakedScaleY];
+  }
+
   applyVisualSize(width: number, height: number): void {
     this._worldWidth = width;
     this._worldHeight = height;
+    // The explicit size now carries the full scale; drop any earlier fallback
+    // factor so geometry/_currentVisualSize do not double-apply it.
+    this._bakedScaleX = 1;
+    this._bakedScaleY = 1;
     this._updateMesh();
     if (this._mesh) {
       this._mesh.scale.set(1, 1, 1);
     }
+    // The baked `_worldWidth`/`_worldHeight` are now authoritative. Clear any
+    // pending canvas-dirty flag so a later `_syncMaterialToThree` does not
+    // re-render and RECOMPUTE the size from the unscaled canvas, silently
+    // dropping the just-baked scale (e.g. a `getBounds()` after a scale+normalize
+    // on a subclass whose normalize left `_canvasDirty` set, such as Paragraph).
+    this._canvasDirty = false;
+  }
+
+  /**
+   * Durable fallback bake (overrides `TexturedMobject`): persist the scale factor
+   * into `_bakedScale{X,Y}` instead of `mesh.scale`. Applied to the PlaneGeometry
+   * size, so it survives a later canvas re-render (which recomputes
+   * `_worldWidth`/`_worldHeight`) and a later `applyVisualSize`. Idempotent: the
+   * caller resets `scaleVector`→1 after this returns.
+   */
+  protected override _bakeFallbackScale(sx: number, sy: number): void {
+    this._bakedScaleX *= sx;
+    this._bakedScaleY *= sy;
+    this._updateMesh();
   }
 
   /**
@@ -651,7 +712,7 @@ export class Text extends TexturedMobject {
    * Create a copy of this Text mobject
    */
   protected override _createCopy(): Text {
-    return new Text({
+    const copy = new Text({
       text: this._text,
       fontSize: this._fontSize,
       fontFamily: this._fontFamily,
@@ -665,6 +726,37 @@ export class Text extends TexturedMobject {
       textAlign: this._textAlign,
       fontUrl: this._fontUrl,
     });
+    this._carryVisualSizeTo(copy);
+    return copy;
+  }
+
+  /**
+   * Copy this Text's normalized visual-size state onto a freshly-constructed copy.
+   *
+   * After `normalizeTransform()`, a scaled Text has `scaleVector` reset to 1 and
+   * its scale folded into `_worldWidth`/`_worldHeight` (and `_bakedScale{X,Y}` for
+   * the non-durable edge cases). A subclass `_createCopy` rebuilds the copy from
+   * `text`+`fontSize`, so its constructor re-measures to the UNSCALED size — the
+   * copy would shrink back. This builds the copy's mesh first (so
+   * `_createThreeObject`'s canvas re-render recomputes the size before we overwrite
+   * it), then applies the source's persistent size to the geometry.
+   *
+   * Robust whether or not the source was normalized: for an unscaled, unnormalized
+   * Text this just re-copies the already-equal size, a no-op. Shared by
+   * `MarkupText`/`Paragraph`, which override `_createCopy` without calling super.
+   */
+  protected _carryVisualSizeTo(copy: Text): void {
+    copy.getThreeObject();
+    copy._worldWidth = this._worldWidth;
+    copy._worldHeight = this._worldHeight;
+    copy._bakedScaleX = this._bakedScaleX;
+    copy._bakedScaleY = this._bakedScaleY;
+    copy._updateMesh();
+    // The copy's canvas was just rendered by `getThreeObject()`; clear the dirty
+    // flag so a later `_syncMaterialToThree` does not re-render and RECOMPUTE
+    // `_worldWidth`/`_worldHeight` from the unscaled canvas, clobbering the size
+    // we just carried over.
+    copy._canvasDirty = false;
   }
 
   /**
