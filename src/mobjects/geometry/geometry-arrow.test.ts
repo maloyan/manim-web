@@ -22,6 +22,55 @@ describe('Arrow defaults', () => {
   });
 });
 
+// ── reconstructTip ──────────────────────────────────────────────────────────
+
+describe('Arrow.reconstructTip', () => {
+  it('rebuilds clean triangle shape while preserving apex position', () => {
+    const arrow = new Arrow({ start: [0, 0, 0], end: [2, 0, 0] });
+
+    // The tip child is children[1]
+    const tip = arrow.children[1] as VMobject;
+    const tipPtsBefore = tip.getLocalPoints();
+    // Tip apex is at Bezier index 3
+    const apexBefore = tipPtsBefore[3];
+
+    // Reconstruct (no-op on clean arrow — apex should stay the same)
+    arrow.reconstructTip();
+
+    const tipPtsAfter = tip.getLocalPoints();
+    const apexAfter = tipPtsAfter[3];
+    expect(apexAfter[0]).toBeCloseTo(apexBefore[0], 5);
+    expect(apexAfter[1]).toBeCloseTo(apexBefore[1], 5);
+
+    // The end point should match the apex
+    const end = arrow.getEnd();
+    expect(end[0]).toBeCloseTo(apexAfter[0], 5);
+    expect(end[1]).toBeCloseTo(apexAfter[1], 5);
+  });
+
+  it('preserves tip dimensions after reconstruction', () => {
+    const arrow = new Arrow({
+      start: [0, 0, 0],
+      end: [3, 0, 0],
+      tipLength: 0.5,
+      tipWidth: 0.2,
+    });
+
+    // Reconstruct (should be a no-op on undistorted arrow)
+    arrow.reconstructTip();
+
+    expect(arrow.getTipLength()).toBe(0.5);
+    expect(arrow.getTipWidth()).toBe(0.2);
+  });
+});
+
+describe('DoubleArrow.reconstructTips', () => {
+  it('exists and can be called without error', () => {
+    const da = new DoubleArrow({ start: [0, 0, 0], end: [3, 0, 0] });
+    expect(() => da.reconstructTips()).not.toThrow();
+  });
+});
+
 // ── ApplyMatrix on Arrow ────────────────────────────────────────────────────
 
 describe('ApplyMatrix on Arrow with non-uniform matrix', () => {

@@ -735,6 +735,12 @@ export abstract class Mobject {
   getBoundingBox(): { width: number; height: number; depth: number } {
     return getBoundingBoxImpl(this);
   }
+  getWidth(): number {
+    return this.getBoundingBox().width;
+  }
+  getHeight(): number {
+    return this.getBoundingBox().height;
+  }
   /** @deprecated Use getBoundingBox() instead. */
   _getBoundingBox(): { width: number; height: number; depth: number } {
     return this.getBoundingBox();

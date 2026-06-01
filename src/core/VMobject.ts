@@ -114,9 +114,9 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Own points in world coordinates.
-   *
-   * Does not include children's points — use getAllPoints() for that.
+   * Own points in world coordinates (full ancestor S/R/T chain; render-only
+   * z-layering offset excluded). Children's points are not included — use
+   * {@link getAllPoints} for the full subtree.
    *
    * @post result[i] === worldMatrix * _points3D[i]
    * @post this.parent === null => result === getLocalPoints()
@@ -784,14 +784,6 @@ export class VMobject extends VMobjectRendering {
       (bounds.min.y + bounds.max.y) / 2,
       (bounds.min.z + bounds.max.z) / 2,
     ];
-  }
-
-  getWidth(): number {
-    return this.getBoundingBox().width;
-  }
-
-  getHeight(): number {
-    return this.getBoundingBox().height;
   }
 
   /**

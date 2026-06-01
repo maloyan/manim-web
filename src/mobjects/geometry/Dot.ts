@@ -84,6 +84,9 @@ export class Dot extends Circle {
   override copy(): Dot {
     const clone = new Dot({
       point: this.getPoint(),
+      // Raw radius, NOT getRadius(): copy() also copies scaleVector onto the
+      // clone, and getRadius() already folds the scale in — seeding with the
+      // scaled radius would double-apply it (r·s·s). Matches Circle.copy().
       radius: this._radius,
       color: this.color,
       fillOpacity: this.fillOpacity,
