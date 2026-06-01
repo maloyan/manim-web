@@ -4,7 +4,7 @@
  */
 
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple, AxisOrOptions } from './Mobject';
+import { Mobject, Vector3Tuple } from './Mobject';
 
 /**
  * A Group is a Mobject that contains other Mobjects.
@@ -20,6 +20,10 @@ export class Group extends Mobject {
 
     for (const mobject of mobjects) {
       this.add(mobject);
+    }
+
+    if (!this.isEmpty()) {
+      this.normalizeTransform();
     }
   }
 
@@ -77,99 +81,27 @@ export class Group extends Mobject {
     return this;
   }
 
-  override getCenter(): Vector3Tuple {
-    if (this.children.length === 0) {
-      return [this.position.x, this.position.y, this.position.z];
-    }
+  override isEmpty(): boolean {
+    return this.children.length === 0 || this.children.every((child) => child.isEmpty());
+  }
 
-    const isEmptyContainer = (mob: Mobject): boolean => {
-      const candidate = mob as unknown as { isEmpty?: () => boolean };
-      return typeof candidate.isEmpty === 'function' && candidate.isEmpty();
-    };
-    const hasNonEmptyChild = this.children.some((child) => !isEmptyContainer(child));
-    if (!hasNonEmptyChild) {
-      return [this.position.x, this.position.y, this.position.z];
+  /**
+   * Center in world coordinates (bbox midpoint of descendant geometry).
+   *
+   * @post this.isEmpty() => result === this._parentLocalToWorld([position.x, position.y, position.z])
+   * @post !this.isEmpty() => result[i] === (worldBbox.min[i] + worldBbox.max[i]) / 2
+   */
+  override getCenter(): Vector3Tuple {
+    // isEmpty() (not children.length): a group with only empty children (async
+    // Text/MathTex glyph containers, nested empty VGroups) has no geometry, so
+    // getBounds() would throw "empty Three.js bounds". position is parent-local,
+    // so lift it to world to stay consistent with the bbox branch.
+    if (this.isEmpty()) {
+      return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
     }
 
     const b = this.getBounds();
     return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
-  }
-
-  override normalizeTransform(): this {
-    this._normalizeContainerTransform();
-    return this;
-  }
-
-  /**
-   * Shift all children by the given delta.
-   * Only children are shifted (they maintain world-space coordinates).
-   * The group's own position is NOT updated to avoid double-counting
-   * when getCenter() computes the average of children centers.
-   * @param delta - Translation vector [x, y, z]
-   * @returns this for chaining
-   */
-  override shift(delta: Vector3Tuple): this {
-    this.normalizeTransform();
-
-    for (const child of this.children) {
-      child.shift(delta);
-    }
-    this._markDirty();
-    return this;
-  }
-
-  /**
-   * Move the group center to the given point, or align with another Mobject.
-   * @param target - Target position [x, y, z] or Mobject to align with
-   * @param alignedEdge - Optional edge direction to align (e.g., UL aligns upper-left edges)
-   * @returns this for chaining
-   */
-  override moveTo(target: Vector3Tuple | Mobject, alignedEdge?: Vector3Tuple): this {
-    if (!Array.isArray(target)) {
-      if (alignedEdge) {
-        const targetEdge = target._getEdgeInDirection(alignedEdge);
-        const thisEdge = this._getEdgeInDirection(alignedEdge);
-        return this.shift([
-          targetEdge[0] - thisEdge[0],
-          targetEdge[1] - thisEdge[1],
-          targetEdge[2] - thisEdge[2],
-        ]);
-      }
-      const targetCenter = target.getCenter();
-      return this.moveTo(targetCenter);
-    }
-    const currentCenter = this.getCenter();
-    const delta: Vector3Tuple = [
-      target[0] - currentCenter[0],
-      target[1] - currentCenter[1],
-      target[2] - currentCenter[2],
-    ];
-    return this.shift(delta);
-  }
-
-  /**
-   * Rotate all children around an axis.
-   * Only children are rotated to avoid double-counting with Three.js hierarchy.
-   * @param angle - Rotation angle in radians
-   * @param axis - Axis of rotation [x, y, z], defaults to Z axis
-   * @returns this for chaining
-   */
-  override rotate(angle: number, axisOrOptions?: Vector3Tuple | AxisOrOptions): this {
-    for (const child of this.children) {
-      child.rotate(angle, axisOrOptions);
-    }
-    this._markDirty();
-    return this;
-  }
-
-  /**
-   * Scale all children.
-   * Only children are scaled to avoid double-counting with Three.js hierarchy.
-   * @param factor - Scale factor (number for uniform, tuple for non-uniform)
-   * @returns this for chaining
-   */
-  override scale(factor: number | Vector3Tuple): this {
-    return super.scale(factor);
   }
 
   /**

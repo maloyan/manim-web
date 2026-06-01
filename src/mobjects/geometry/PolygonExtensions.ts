@@ -820,8 +820,8 @@ export class Cutout extends VMobject {
    */
   private _generatePoints(): void {
     // Get points from both shapes
-    const outerPoints = this._outerShape.getPoints();
-    const innerPoints = this._innerShape.getPoints();
+    const outerPoints = this._outerShape.getLocalPoints();
+    const innerPoints = this._innerShape.getLocalPoints();
 
     // Reverse the inner path to create the cutout effect with even-odd fill rule
     const reversedInnerPoints = [...innerPoints].reverse();

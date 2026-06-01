@@ -293,7 +293,7 @@ export class MathTex extends VGroup {
       maxY = -Infinity;
 
     for (const vmob of vmobjects) {
-      for (const p of vmob.getPoints()) {
+      for (const p of vmob.getLocalPoints()) {
         if (p[0] < minX) minX = p[0];
         if (p[0] > maxX) maxX = p[0];
         if (p[1] < minY) minY = p[1];
@@ -317,7 +317,7 @@ export class MathTex extends VGroup {
 
     // Transform all point data: scale and center at origin
     for (const vmob of vmobjects) {
-      const pts = vmob.getPoints();
+      const pts = vmob.getLocalPoints();
       const transformed = pts.map((p) => [(p[0] - cx) * s, (p[1] - cy) * s, p[2]]);
       vmob.setPoints3D(transformed);
     }
@@ -340,7 +340,7 @@ export class MathTex extends VGroup {
     const visit = (mob: Mobject) => {
       mob.position.set(mob.position.x * sx, mob.position.y * sy, mob.position.z * sz);
       if (mob instanceof VMobject && !(mob instanceof VGroup)) {
-        const pts = mob.getPoints();
+        const pts = mob.getLocalPoints();
         const scaled = pts.map((p) => [p[0] * sx, p[1] * sy, p[2] * sz]);
         mob.setPoints3D(scaled);
       }

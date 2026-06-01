@@ -41,8 +41,6 @@ export interface DotOptions {
  * ```
  */
 export class Dot extends Circle {
-  private _point: Vector3Tuple;
-
   constructor(options: DotOptions = {}) {
     const {
       point: rawPoint = [0, 0, 0],
@@ -57,7 +55,6 @@ export class Dot extends Circle {
       Array.isArray(rawPoint[0]) ? rawPoint[0] : rawPoint
     ) as Vector3Tuple;
 
-    // Initialize as a filled circle at the specified point
     super({
       radius,
       color,
@@ -65,37 +62,13 @@ export class Dot extends Circle {
       strokeWidth,
       center: point,
     });
-
-    this._point = [...point];
-  }
-
-  /**
-   * Shift the dot by updating its internal point and Circle center.
-   * Does not change Mobject.position to avoid double-counting in THREE.js hierarchy.
-   */
-  override shift(delta: Vector3Tuple): this {
-    this._point[0] += delta[0];
-    this._point[1] += delta[1];
-    this._point[2] += delta[2];
-    // Delegate to Circle.shift which updates _centerPoint and regenerates bezier
-    return super.shift(delta);
-  }
-
-  /**
-   * Move the dot to a new position
-   * @param point Target position [x, y, z]
-   */
-  moveTo(point: Vector3Tuple): this {
-    this._point = [...point];
-    this.setCircleCenter(point);
-    return this;
   }
 
   /**
    * Get the position of the dot
    */
   getPoint(): Vector3Tuple {
-    return [...this._point];
+    return [this.position.x, this.position.y, this.position.z];
   }
 
   /**
@@ -110,8 +83,11 @@ export class Dot extends Circle {
    */
   protected override _createCopy(): Dot {
     return new Dot({
-      point: this._point,
-      radius: this.getRadius(),
+      point: this.getPoint(),
+      // Raw radius, NOT getRadius(): base copy() also copies scaleVector onto the
+      // clone, and getRadius() already folds the scale in — seeding with the
+      // scaled radius would double-apply it (r·s·s). Matches Circle._createCopy.
+      radius: this._radius,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,

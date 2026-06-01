@@ -3,10 +3,45 @@
  * point-wise transformations over time.
  */
 
+import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { flowPoint } from '../../utils/ode';
+
+/**
+ * A captured world transform: the mobject's world matrix and its inverse.
+ * Used to run point-wise functions in world space — points are stored in
+ * local space, but the user's function (and any vector field) operates on
+ * the coordinates the object actually occupies on screen.
+ */
+interface WorldFrame {
+  worldMatrix: THREE.Matrix4;
+  inverseWorld: THREE.Matrix4;
+}
+
+/**
+ * Capture a mobject's world transform at the moment an animation begins.
+ *
+ * Uses `_computeWorldMatrix()` — the same matrix `VMobject.getPoints()` applies
+ * — so lifting a local point here and reading it back via `getPoints()` round
+ * trips exactly. (This is preferable to the Three.js `matrixWorld`, which also
+ * folds in the render-only z-layering offset and requires the object to be
+ * realised.) For an untransformed, unparented mobject this is identity, so
+ * world === local and the conversion is a no-op.
+ *
+ * @post result.worldMatrix · result.inverseWorld === identity (up to fp error)
+ */
+function captureWorldFrame(mob: Mobject): WorldFrame {
+  const worldMatrix = mob._computeWorldMatrix();
+  return { worldMatrix, inverseWorld: worldMatrix.clone().invert() };
+}
+
+/** Apply a Matrix4 to a tuple, returning a new tuple. */
+function applyMatrix(m: THREE.Matrix4, p: number[]): [number, number, number] {
+  const v = new THREE.Vector3(p[0], p[1], p[2]).applyMatrix4(m);
+  return [v.x, v.y, v.z];
+}
 
 /**
  * Type for a 3D homotopy function
@@ -78,8 +113,11 @@ export class Homotopy extends Animation {
   /** The homotopy function */
   readonly homotopyFunc: HomotopyFunction;
 
-  /** Original points stored at animation start */
+  /** Original points (local frame) stored at animation start */
   private _originalPoints: number[][] | null = null;
+
+  /** World transform captured at begin(), so the function runs in world space */
+  private _frame: WorldFrame | null = null;
 
   /** Whether the mobject is a VMobject */
   private _isVMobject: boolean = false;
@@ -97,19 +135,26 @@ export class Homotopy extends Animation {
 
     if (this.mobject instanceof VMobject) {
       this._isVMobject = true;
-      this._originalPoints = (this.mobject as VMobject).getPoints();
+      this._originalPoints = (this.mobject as VMobject).getLocalPoints();
+      this._frame = captureWorldFrame(this.mobject);
     } else {
       this._isVMobject = false;
       this._originalPoints = null;
+      this._frame = null;
     }
   }
 
   /**
-   * Apply the homotopy at the given progress value
+   * Apply the homotopy at the given progress value.
+   *
+   * The function is evaluated in WORLD space: stored points are local, so each
+   * is lifted through the world matrix before the call and pushed back through
+   * its inverse afterwards. For an untransformed mobject world === local, so
+   * this reduces to the plain transform.
    */
   interpolate(alpha: number): void {
-    if (!this._isVMobject || !this._originalPoints) {
-      // For non-VMobjects, we can only transform the position
+    if (!this._isVMobject || !this._originalPoints || !this._frame) {
+      // For non-VMobjects, we can only transform the position (already world-space)
       const pos = this.mobject.position;
       const [newX, newY, newZ] = this.homotopyFunc(pos.x, pos.y, pos.z, alpha);
       this.mobject.position.set(newX, newY, newZ);
@@ -117,13 +162,15 @@ export class Homotopy extends Animation {
       return;
     }
 
-    // Transform all points on the VMobject
+    // Transform all points on the VMobject in world space
     const vmobject = this.mobject as VMobject;
+    const { worldMatrix, inverseWorld } = this._frame;
     const newPoints: number[][] = [];
 
     for (const point of this._originalPoints) {
-      const [newX, newY, newZ] = this.homotopyFunc(point[0], point[1], point[2], alpha);
-      newPoints.push([newX, newY, newZ]);
+      const [wx, wy, wz] = applyMatrix(worldMatrix, point);
+      const moved = this.homotopyFunc(wx, wy, wz, alpha);
+      newPoints.push(applyMatrix(inverseWorld, moved));
     }
 
     vmobject.setPoints3D(newPoints);
@@ -146,8 +193,11 @@ export class ComplexHomotopy extends Animation {
   /** The complex homotopy function */
   readonly complexFunc: ComplexHomotopyFunction;
 
-  /** Original points stored at animation start */
+  /** Original points (local frame) stored at animation start */
   private _originalPoints: number[][] | null = null;
+
+  /** World transform captured at begin(), so the function runs in world space */
+  private _frame: WorldFrame | null = null;
 
   /** Whether the mobject is a VMobject */
   private _isVMobject: boolean = false;
@@ -165,19 +215,25 @@ export class ComplexHomotopy extends Animation {
 
     if (this.mobject instanceof VMobject) {
       this._isVMobject = true;
-      this._originalPoints = (this.mobject as VMobject).getPoints();
+      this._originalPoints = (this.mobject as VMobject).getLocalPoints();
+      this._frame = captureWorldFrame(this.mobject);
     } else {
       this._isVMobject = false;
       this._originalPoints = null;
+      this._frame = null;
     }
   }
 
   /**
-   * Apply the complex homotopy at the given progress value
+   * Apply the complex homotopy at the given progress value.
+   *
+   * The complex plane is interpreted in WORLD space: each local point is
+   * lifted through the world matrix, treated as z = x + iy, mapped, then
+   * pushed back through the inverse. World === local when untransformed.
    */
   interpolate(alpha: number): void {
-    if (!this._isVMobject || !this._originalPoints) {
-      // For non-VMobjects, transform the position in the complex plane
+    if (!this._isVMobject || !this._originalPoints || !this._frame) {
+      // For non-VMobjects, transform the position in the complex plane (world-space)
       const pos = this.mobject.position;
       const z: Complex = { re: pos.x, im: pos.y };
       const result = this.complexFunc(z, alpha);
@@ -186,14 +242,15 @@ export class ComplexHomotopy extends Animation {
       return;
     }
 
-    // Transform all points treating (x, y) as complex numbers
+    // Transform all points treating (x, y) as complex numbers, in world space
     const vmobject = this.mobject as VMobject;
+    const { worldMatrix, inverseWorld } = this._frame;
     const newPoints: number[][] = [];
 
     for (const point of this._originalPoints) {
-      const z: Complex = { re: point[0], im: point[1] };
-      const result = this.complexFunc(z, alpha);
-      newPoints.push([result.re, result.im, point[2]]);
+      const [wx, wy, wz] = applyMatrix(worldMatrix, point);
+      const result = this.complexFunc({ re: wx, im: wy }, alpha);
+      newPoints.push(applyMatrix(inverseWorld, [result.re, result.im, wz]));
     }
 
     vmobject.setPoints3D(newPoints);
@@ -217,8 +274,15 @@ export class SmoothedVectorizedHomotopy extends Animation {
   /** The homotopy function */
   readonly homotopyFunc: HomotopyFunction;
 
-  /** Original points stored at animation start */
+  /**
+   * Original points in WORLD space, stored at animation start. The smoothing
+   * algorithm runs entirely in world space (the frame the user's function
+   * expects) and results are converted back to local before writing.
+   */
   private _originalPoints: number[][] | null = null;
+
+  /** World transform captured at begin(), used to convert results back to local */
+  private _frame: WorldFrame | null = null;
 
   /** Cached anchor indices for faster lookups */
   private _anchorIndices: number[] = [];
@@ -235,7 +299,12 @@ export class SmoothedVectorizedHomotopy extends Animation {
     super.begin();
 
     const vmobject = this.mobject as VMobject;
-    this._originalPoints = vmobject.getPoints();
+    this._frame = captureWorldFrame(vmobject);
+    // Store originals already lifted to world space; the smoothing math below
+    // (anchor transforms blended with point offsets) is only coherent when
+    // every quantity lives in the same frame.
+    const { worldMatrix } = this._frame;
+    this._originalPoints = vmobject.getLocalPoints().map((p) => applyMatrix(worldMatrix, p));
 
     // Compute anchor indices (every 3rd point starting from 0)
     // Points format: [anchor1, handle1, handle2, anchor2, handle3, handle4, anchor3, ...]
@@ -256,7 +325,7 @@ export class SmoothedVectorizedHomotopy extends Animation {
    * to maintain relative positions to their anchors.
    */
   interpolate(alpha: number): void {
-    if (!this._originalPoints || this._originalPoints.length === 0) {
+    if (!this._originalPoints || this._originalPoints.length === 0 || !this._frame) {
       return;
     }
 
@@ -282,114 +351,84 @@ export class SmoothedVectorizedHomotopy extends Animation {
         // Already processed as anchor
         continue;
       }
+      newPoints[i] = this._transformHandle(i, alpha, anchorTransforms);
+    }
 
-      const originalHandle = this._originalPoints[i];
+    // newPoints are in world space; convert back to local for storage.
+    const { inverseWorld } = this._frame;
+    vmobject.setPoints3D(newPoints.map((p) => applyMatrix(inverseWorld, p)));
+  }
 
-      // Find the nearest anchors before and after this handle
-      let prevAnchorIdx = -1;
-      let nextAnchorIdx = -1;
+  /**
+   * Transform a single handle point at index `i`, keeping it smooth relative to
+   * the anchors that bracket it. Operates entirely in world space (the frame
+   * `_originalPoints` and `anchorTransforms` were captured in).
+   */
+  private _transformHandle(
+    i: number,
+    alpha: number,
+    anchorTransforms: Map<number, { original: number[]; transformed: number[] }>,
+  ): number[] {
+    const originalHandle = this._originalPoints![i];
 
-      for (const anchorIdx of this._anchorIndices) {
-        if (anchorIdx < i) {
-          prevAnchorIdx = anchorIdx;
-        }
-        if (anchorIdx > i && nextAnchorIdx === -1) {
-          nextAnchorIdx = anchorIdx;
-          break;
-        }
+    // Find the nearest anchors before and after this handle
+    let prevAnchorIdx = -1;
+    let nextAnchorIdx = -1;
+    for (const anchorIdx of this._anchorIndices) {
+      if (anchorIdx < i) {
+        prevAnchorIdx = anchorIdx;
       }
-
-      // Transform the handle
-      // If we have both anchors, interpolate based on relative position
-      if (prevAnchorIdx >= 0 && nextAnchorIdx >= 0) {
-        const prevData = anchorTransforms.get(prevAnchorIdx)!;
-        const nextData = anchorTransforms.get(nextAnchorIdx)!;
-
-        // Compute the relative offset from the previous anchor in original space
-        const origOffset = [
-          originalHandle[0] - prevData.original[0],
-          originalHandle[1] - prevData.original[1],
-          originalHandle[2] - prevData.original[2],
-        ];
-
-        // Compute the local transformation at this point
-        const localTransform = this.homotopyFunc(
-          originalHandle[0],
-          originalHandle[1],
-          originalHandle[2],
-          alpha,
-        );
-
-        // Compute how the transformation changes between the two anchors
-        // and blend based on position
-        const t = (i - prevAnchorIdx) / (nextAnchorIdx - prevAnchorIdx);
-
-        // Use the direct transformation with smoothing
-        const blendedX =
-          (1 - t) * (prevData.transformed[0] + origOffset[0]) +
-          t *
-            (nextData.transformed[0] +
-              origOffset[0] -
-              (nextData.original[0] - prevData.original[0]));
-        const blendedY =
-          (1 - t) * (prevData.transformed[1] + origOffset[1]) +
-          t *
-            (nextData.transformed[1] +
-              origOffset[1] -
-              (nextData.original[1] - prevData.original[1]));
-        const blendedZ =
-          (1 - t) * (prevData.transformed[2] + origOffset[2]) +
-          t *
-            (nextData.transformed[2] +
-              origOffset[2] -
-              (nextData.original[2] - prevData.original[2]));
-
-        // Blend between the simple transformation and the smoothed transformation
-        // to maintain curve quality while still following the homotopy
-        const smoothFactor = 0.5;
-        newPoints[i] = [
-          localTransform[0] * (1 - smoothFactor) + blendedX * smoothFactor,
-          localTransform[1] * (1 - smoothFactor) + blendedY * smoothFactor,
-          localTransform[2] * (1 - smoothFactor) + blendedZ * smoothFactor,
-        ];
-      } else if (prevAnchorIdx >= 0) {
-        // Only have previous anchor
-        const prevData = anchorTransforms.get(prevAnchorIdx)!;
-        const origOffset = [
-          originalHandle[0] - prevData.original[0],
-          originalHandle[1] - prevData.original[1],
-          originalHandle[2] - prevData.original[2],
-        ];
-        newPoints[i] = [
-          prevData.transformed[0] + origOffset[0],
-          prevData.transformed[1] + origOffset[1],
-          prevData.transformed[2] + origOffset[2],
-        ];
-      } else if (nextAnchorIdx >= 0) {
-        // Only have next anchor
-        const nextData = anchorTransforms.get(nextAnchorIdx)!;
-        const origOffset = [
-          originalHandle[0] - nextData.original[0],
-          originalHandle[1] - nextData.original[1],
-          originalHandle[2] - nextData.original[2],
-        ];
-        newPoints[i] = [
-          nextData.transformed[0] + origOffset[0],
-          nextData.transformed[1] + origOffset[1],
-          nextData.transformed[2] + origOffset[2],
-        ];
-      } else {
-        // No anchors found, just transform directly
-        newPoints[i] = this.homotopyFunc(
-          originalHandle[0],
-          originalHandle[1],
-          originalHandle[2],
-          alpha,
-        );
+      if (anchorIdx > i && nextAnchorIdx === -1) {
+        nextAnchorIdx = anchorIdx;
+        break;
       }
     }
 
-    vmobject.setPoints3D(newPoints);
+    // Both anchors: blend the direct transform with a smoothed interpolation.
+    if (prevAnchorIdx >= 0 && nextAnchorIdx >= 0) {
+      const prevData = anchorTransforms.get(prevAnchorIdx)!;
+      const nextData = anchorTransforms.get(nextAnchorIdx)!;
+
+      const origOffset = [
+        originalHandle[0] - prevData.original[0],
+        originalHandle[1] - prevData.original[1],
+        originalHandle[2] - prevData.original[2],
+      ];
+      const localTransform = this.homotopyFunc(
+        originalHandle[0],
+        originalHandle[1],
+        originalHandle[2],
+        alpha,
+      );
+
+      // Blend based on relative position between the two anchors.
+      const t = (i - prevAnchorIdx) / (nextAnchorIdx - prevAnchorIdx);
+      const blended = [0, 1, 2].map(
+        (k) =>
+          (1 - t) * (prevData.transformed[k] + origOffset[k]) +
+          t *
+            (nextData.transformed[k] +
+              origOffset[k] -
+              (nextData.original[k] - prevData.original[k])),
+      );
+
+      // Mix the direct transformation with the smoothed one to keep curve quality.
+      const smoothFactor = 0.5;
+      return [0, 1, 2].map(
+        (k) => localTransform[k] * (1 - smoothFactor) + blended[k] * smoothFactor,
+      );
+    }
+
+    // Only one anchor: carry the handle's original offset onto the moved anchor.
+    const anchorData = anchorTransforms.get(prevAnchorIdx >= 0 ? prevAnchorIdx : nextAnchorIdx);
+    if (anchorData) {
+      return [0, 1, 2].map(
+        (k) => anchorData.transformed[k] + (originalHandle[k] - anchorData.original[k]),
+      );
+    }
+
+    // No anchors found, just transform directly.
+    return this.homotopyFunc(originalHandle[0], originalHandle[1], originalHandle[2], alpha);
   }
 
   /**
@@ -424,8 +463,11 @@ export class PhaseFlow extends Animation {
   /** Virtual time to flow through */
   readonly virtualTime: number;
 
-  /** Original points stored at animation start */
+  /** Original points (local frame) stored at animation start */
   private _originalPoints: number[][] | null = null;
+
+  /** World transform captured at begin(), so the flow runs in world space */
+  private _frame: WorldFrame | null = null;
 
   /** Original position for non-VMobject mobjects */
   private _originalPosition: [number, number, number] | null = null;
@@ -451,10 +493,12 @@ export class PhaseFlow extends Animation {
 
     if (this.mobject instanceof VMobject) {
       this._isVMobject = true;
-      this._originalPoints = (this.mobject as VMobject).getPoints();
+      this._originalPoints = (this.mobject as VMobject).getLocalPoints();
+      this._frame = captureWorldFrame(this.mobject);
     } else {
       this._isVMobject = false;
       this._originalPoints = null;
+      this._frame = null;
       const pos = this.mobject.position;
       this._originalPosition = [pos.x, pos.y, pos.z];
     }
@@ -462,14 +506,17 @@ export class PhaseFlow extends Animation {
 
   /**
    * Apply the phase flow at the given progress value.
+   *
    * Each point is flowed from its original position for alpha * virtualTime
-   * using RK4 integration from the ODE solver utility.
+   * using RK4 integration. The vector field is sampled in WORLD space: local
+   * points are lifted through the world matrix, flowed, then pushed back
+   * through the inverse. World === local when untransformed.
    */
   interpolate(alpha: number): void {
     const flowTime = alpha * this.virtualTime;
 
-    if (!this._isVMobject || !this._originalPoints) {
-      // For non-VMobjects, flow the position from the stored original
+    if (!this._isVMobject || !this._originalPoints || !this._frame) {
+      // For non-VMobjects, flow the position from the stored original (world-space)
       const start =
         this._originalPosition ??
         ([this.mobject.position.x, this.mobject.position.y, this.mobject.position.z] as [
@@ -488,18 +535,19 @@ export class PhaseFlow extends Animation {
       return;
     }
 
-    // Flow all points on the VMobject from their original positions
+    // Flow all points on the VMobject from their original positions, in world space
     const vmobject = this.mobject as VMobject;
+    const { worldMatrix, inverseWorld } = this._frame;
     const newPoints: number[][] = [];
 
     for (const point of this._originalPoints) {
       const flowed = flowPoint(
         this.vectorField,
-        [point[0], point[1], point[2]],
+        applyMatrix(worldMatrix, point),
         flowTime,
         this._integrationSteps,
       );
-      newPoints.push(flowed);
+      newPoints.push(applyMatrix(inverseWorld, flowed));
     }
 
     vmobject.setPoints3D(newPoints);

@@ -100,7 +100,7 @@ describe('Point module coverage gaps', () => {
       end: [2, 0, 0],
       numPoints: 1,
     });
-    const points = m1d.getPoints();
+    const points = m1d.getLocalPoints();
     expect(points.length).toBe(1);
     // t=0.5 means point should be at midpoint [1, 0, 0]
     expect(points[0].position[0]).toBeCloseTo(1, 5);
@@ -115,7 +115,7 @@ describe('Point module coverage gaps', () => {
       numPointsY: 2,
       distribution: 'grid',
     });
-    const points = m2d.getPoints();
+    const points = m2d.getLocalPoints();
     // With xCount=1, tx = 0.5 so x should be at center
     expect(points.length).toBe(2);
   });
@@ -129,7 +129,7 @@ describe('Point module coverage gaps', () => {
       numPointsY: 1,
       distribution: 'grid',
     });
-    const points = m2d.getPoints();
+    const points = m2d.getLocalPoints();
     expect(points.length).toBe(2);
   });
 

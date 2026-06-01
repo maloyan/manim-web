@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Mobject } from '../core/Mobject';
+import { PointMobject } from '../mobjects/point/PointMobject';
 import { VMobject } from '../core/VMobject';
 import { Animation, AnimationOptions } from './Animation';
 import { MoveAlongPath } from './movement/MoveAlongPath';
@@ -27,7 +28,7 @@ class TestAnimation extends Animation {
 }
 
 function makeMob(): Mobject {
-  return new Mobject();
+  return new PointMobject({ position: [0, 0, 0] });
 }
 
 function makeAnim(duration = 1): TestAnimation {

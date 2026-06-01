@@ -136,7 +136,7 @@ export class Camera2DFrame extends VMobject {
     copy.opacity = this.opacity;
     copy.fillOpacity = this.fillOpacity;
     copy.strokeWidth = this.strokeWidth;
-    const pts = this.getPoints();
+    const pts = this.getLocalPoints();
     if (pts.length > 0) copy.setPoints3D(pts);
     return copy;
   }

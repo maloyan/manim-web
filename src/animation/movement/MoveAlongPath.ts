@@ -95,7 +95,10 @@ export class MoveAlongPath extends Animation {
   override begin(): void {
     super.begin();
 
-    // Get path points
+    // Get path points in WORLD space: the moving mobject's position is set to
+    // these samples, so a path that carries its own transform (e.g. a Circle
+    // shifted/scaled away from the origin) must be followed at its real location.
+    // getLocalPoints() would orbit the path's untransformed origin instead.
     this._pathPoints = this.path.getPoints();
 
     // Calculate number of cubic Bezier segments

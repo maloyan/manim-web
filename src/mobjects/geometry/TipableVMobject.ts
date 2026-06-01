@@ -110,7 +110,7 @@ export abstract class TipableVMobject extends VMobject {
    * Get the start point of the curve (for tip positioning)
    */
   getStart(): number[] {
-    const points = this.getPoints();
+    const points = this.getLocalPoints();
     return points.length > 0 ? [...points[0]] : [0, 0, 0];
   }
 
@@ -118,7 +118,7 @@ export abstract class TipableVMobject extends VMobject {
    * Get the end point of the curve (for tip positioning)
    */
   getEnd(): number[] {
-    const points = this.getPoints();
+    const points = this.getLocalPoints();
     return points.length > 0 ? [...points[points.length - 1]] : [1, 0, 0];
   }
 
@@ -126,7 +126,7 @@ export abstract class TipableVMobject extends VMobject {
    * Get the unit tangent vector at the end of the curve
    */
   protected _getEndTangent(): number[] {
-    const points = this.getPoints();
+    const points = this.getLocalPoints();
     if (points.length < 2) return [1, 0, 0];
 
     const end = points[points.length - 1];
@@ -145,7 +145,7 @@ export abstract class TipableVMobject extends VMobject {
    * Get the unit tangent vector at the start of the curve
    */
   protected _getStartTangent(): number[] {
-    const points = this.getPoints();
+    const points = this.getLocalPoints();
     if (points.length < 2) return [-1, 0, 0];
 
     const start = points[0];
@@ -222,7 +222,7 @@ export abstract class TipableVMobject extends VMobject {
    * Get the length of the curve (approximate)
    */
   getLength(): number {
-    const points = this.getPoints();
+    const points = this.getLocalPoints();
     if (points.length < 2) return 0;
 
     let length = 0;

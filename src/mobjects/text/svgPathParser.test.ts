@@ -1000,7 +1000,7 @@ describe('svgToVMobjects', () => {
       expect(group.submobjects.length).toBe(1);
 
       const vm = group.submobjects[0] as any;
-      const points = vm.getPoints() as number[][];
+      const points = vm.getLocalPoints() as number[][];
       const lengths = vm.getEffectiveSubpathLengths() as number[] | undefined;
 
       expect(lengths).toEqual([points.length]);
@@ -1031,8 +1031,8 @@ describe('svgToVMobjects', () => {
       const svgNoScale = createSVG('<svg>' + '<path d="M 0 0 L 100 0"/>' + '</svg>');
       const groupUnscaled = svgToVMobjects(svgNoScale, { flipY: false, scale: 1 });
 
-      const ptsScaled = (groupScaled.submobjects[0] as any).getPoints();
-      const ptsUnscaled = (groupUnscaled.submobjects[0] as any).getPoints();
+      const ptsScaled = (groupScaled.submobjects[0] as any).getLocalPoints();
+      const ptsUnscaled = (groupUnscaled.submobjects[0] as any).getLocalPoints();
 
       // The endpoint x of scaled should be half of unscaled
       const endScaled = ptsScaled[ptsScaled.length - 1][0];
@@ -1061,8 +1061,8 @@ describe('svgToVMobjects', () => {
       const grpScale = svgToVMobjects(svgWithScale, { flipY: false, scale: 1 });
       const grpNoScale = svgToVMobjects(svgTranslateOnly, { flipY: false, scale: 1 });
 
-      const endScale = (grpScale.submobjects[0] as any).getPoints();
-      const endNoScale = (grpNoScale.submobjects[0] as any).getPoints();
+      const endScale = (grpScale.submobjects[0] as any).getLocalPoints();
+      const endNoScale = (grpNoScale.submobjects[0] as any).getLocalPoints();
 
       // With scale: endpoint x = 100 + 0.5*200 = 200
       // Without scale: endpoint x = 100 + 200 = 300
@@ -1088,8 +1088,8 @@ describe('svgToVMobjects', () => {
       const grpNested = svgToVMobjects(svg, { flipY: false, scale: 1 });
       const grpFlat = svgToVMobjects(svgFlat, { flipY: false, scale: 1 });
 
-      const endNested = (grpNested.submobjects[0] as any).getPoints();
-      const endFlat = (grpFlat.submobjects[0] as any).getPoints();
+      const endNested = (grpNested.submobjects[0] as any).getLocalPoints();
+      const endFlat = (grpFlat.submobjects[0] as any).getLocalPoints();
 
       // Nested scale 0.5*0.5 = 0.25
       expect(endNested[endNested.length - 1][0]).toBeCloseTo(
@@ -1114,8 +1114,8 @@ describe('svgToVMobjects', () => {
       const grpScale = svgToVMobjects(svg, { flipY: false, scale: 1 });
       const grpNoScale = svgToVMobjects(svgNoScale, { flipY: false, scale: 1 });
 
-      const endScale = (grpScale.submobjects[0] as any).getPoints();
-      const endNoScale = (grpNoScale.submobjects[0] as any).getPoints();
+      const endScale = (grpScale.submobjects[0] as any).getLocalPoints();
+      const endNoScale = (grpNoScale.submobjects[0] as any).getLocalPoints();
 
       expect(endScale[endScale.length - 1][0]).toBeCloseTo(
         endNoScale[endNoScale.length - 1][0] * 0.5,
@@ -1143,8 +1143,8 @@ describe('svgToVMobjects', () => {
       const grpScale = svgToVMobjects(svg, { flipY: false, scale: 1 });
       const grpNoScale = svgToVMobjects(svgNoScale, { flipY: false, scale: 1 });
 
-      const startScale = (grpScale.submobjects[0] as any).getPoints()[0][0];
-      const startNoScale = (grpNoScale.submobjects[0] as any).getPoints()[0][0];
+      const startScale = (grpScale.submobjects[0] as any).getLocalPoints()[0][0];
+      const startNoScale = (grpNoScale.submobjects[0] as any).getLocalPoints()[0][0];
 
       // With scale(0.5): start x = 0.5*100 + 0.5*0 = 50
       // Without scale: start x = 100 + 0 = 100
@@ -1171,8 +1171,8 @@ describe('svgToVMobjects', () => {
       expect(group.submobjects.length).toBe(2);
 
       // The superscript glyph should be smaller than the base glyph
-      const basePts = (group.submobjects[0] as any).getPoints();
-      const supPts = (group.submobjects[1] as any).getPoints();
+      const basePts = (group.submobjects[0] as any).getLocalPoints();
+      const supPts = (group.submobjects[1] as any).getLocalPoints();
 
       // Compute bounding box widths
       const baseXs = basePts.map((p: number[]) => p[0]);

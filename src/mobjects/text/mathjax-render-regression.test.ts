@@ -10,7 +10,7 @@ function getRawHeightFromVmobjectGroup(group: { children: unknown[] }): number {
 
   for (const child of group.children) {
     if (!(child instanceof VMobject)) continue;
-    for (const p of child.getPoints()) {
+    for (const p of child.getLocalPoints()) {
       if (p[1] < minY) minY = p[1];
       if (p[1] > maxY) maxY = p[1];
     }

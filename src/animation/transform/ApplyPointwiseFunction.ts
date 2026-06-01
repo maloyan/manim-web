@@ -18,13 +18,13 @@ export interface ApplyPointwiseFunctionOptions extends AnimationOptions {
 }
 
 interface VMobjectLike {
-  getPoints(): number[][];
+  getLocalPoints(): number[][];
   setPoints(pts: number[][]): void;
 }
 
 function isVMobjectLike(m: unknown): m is VMobjectLike {
   const obj = m as Record<string, unknown>;
-  return typeof obj.getPoints === 'function' && typeof obj.setPoints === 'function';
+  return typeof obj.getLocalPoints === 'function' && typeof obj.setPoints === 'function';
 }
 
 /**
@@ -61,7 +61,7 @@ export class ApplyPointwiseFunction extends Animation {
 
     for (const mob of this.mobject.getFamily()) {
       if (isVMobjectLike(mob)) {
-        const startPoints = mob.getPoints();
+        const startPoints = mob.getLocalPoints();
         if (startPoints.length === 0) continue;
 
         // Get the Three.js object to transform local ↔ world space.

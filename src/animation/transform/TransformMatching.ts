@@ -195,14 +195,14 @@ export class TransformMatchingShapes extends Animation {
     this._matchedParts.push({
       source,
       target,
-      startPoints: srcCopy.getPoints(),
-      targetPoints: tgtCopy.getPoints(),
+      startPoints: srcCopy.getLocalPoints(),
+      targetPoints: tgtCopy.getLocalPoints(),
       startOpacity: source.opacity,
       targetOpacity: target.opacity,
     });
 
     // Set source to have aligned points
-    source.setPoints(srcCopy.getPoints());
+    source.setPoints(srcCopy.getLocalPoints());
   }
 
   override begin(): void {
@@ -300,7 +300,7 @@ function defaultTexKey(vmobject: VMobject): string {
   // For VGroup children, try to identify by position and size
   const box = getBoundingBox(vmobject);
   const sizeKey = `${box.size[0].toFixed(2)}_${box.size[1].toFixed(2)}`;
-  const pointCount = vmobject.getPoints().length;
+  const pointCount = vmobject.getLocalPoints().length;
 
   return `shape_${sizeKey}_${pointCount}`;
 }
@@ -515,9 +515,9 @@ export class TransformMatchingTex extends Animation {
     const srcLengths = source.getEffectiveSubpathLengths?.();
     const tgtLengths = target.getEffectiveSubpathLengths?.();
     const alignedCompound = alignCompoundPathsForTransform(
-      srcCopy.getPoints(),
+      srcCopy.getLocalPoints(),
       srcLengths,
-      tgtCopy.getPoints(),
+      tgtCopy.getLocalPoints(),
       tgtLengths,
       source.getSubpathOrientationSigns?.(srcLengths),
       target.getSubpathOrientationSigns?.(tgtLengths),
@@ -542,14 +542,14 @@ export class TransformMatchingTex extends Animation {
       this._matchedParts.push({
         source,
         target,
-        startPoints: srcCopy.getPoints(),
-        targetPoints: tgtCopy.getPoints(),
+        startPoints: srcCopy.getLocalPoints(),
+        targetPoints: tgtCopy.getLocalPoints(),
         startOpacity: source.opacity,
         targetOpacity: target.opacity,
         alignedSubpathLengths: undefined,
       });
 
-      source.setPoints(srcCopy.getPoints());
+      source.setPoints(srcCopy.getLocalPoints());
       source.setTransformSubpathLengths(undefined);
     }
   }
@@ -563,9 +563,9 @@ export class TransformMatchingTex extends Animation {
     const srcLengths = source.getEffectiveSubpathLengths?.();
     const tgtLengths = target.getEffectiveSubpathLengths?.();
     const alignedCompound = alignCompoundPathsForTransform(
-      srcCopy.getPoints(),
+      srcCopy.getLocalPoints(),
       srcLengths,
-      tgtCopy.getPoints(),
+      tgtCopy.getLocalPoints(),
       tgtLengths,
       source.getSubpathOrientationSigns?.(srcLengths),
       target.getSubpathOrientationSigns?.(tgtLengths),
@@ -590,14 +590,14 @@ export class TransformMatchingTex extends Animation {
       this._mismatchedPairs.push({
         source,
         target,
-        startPoints: srcCopy.getPoints(),
-        targetPoints: tgtCopy.getPoints(),
+        startPoints: srcCopy.getLocalPoints(),
+        targetPoints: tgtCopy.getLocalPoints(),
         startOpacity: source.opacity,
         targetOpacity: target.opacity,
         alignedSubpathLengths: undefined,
       });
 
-      source.setPoints(srcCopy.getPoints());
+      source.setPoints(srcCopy.getLocalPoints());
       source.setTransformSubpathLengths(undefined);
     }
   }

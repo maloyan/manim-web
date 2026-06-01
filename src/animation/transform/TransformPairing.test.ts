@@ -89,7 +89,7 @@ describe('TransformPairing core', () => {
     expect(aligned.startPoints.length).toBe(10);
     expect(aligned.targetPoints.length).toBe(10);
 
-    expect(aligned.finalTargetPoints).toEqual(target.getPoints());
+    expect(aligned.finalTargetPoints).toEqual(target.getLocalPoints());
     expect(aligned.finalTargetSubpathLengths).toEqual([5, 5]);
   });
 
@@ -101,7 +101,7 @@ describe('TransformPairing core', () => {
 
     expect(aligned.startPoints.length).toBe(aligned.targetPoints.length);
     expect(aligned.alignedSubpathLengths).toBeUndefined();
-    expect(aligned.finalTargetPoints).toEqual(target.getPoints());
+    expect(aligned.finalTargetPoints).toEqual(target.getLocalPoints());
   });
 
   it('uses length-sorted pairing within orientation buckets', () => {
@@ -342,11 +342,11 @@ describe('TransformPairing core', () => {
     expect(pairs[1].source.leaf).toBe(b);
     expect(pairs[1].sourceIsPlaceholder).toBe(false);
     expect(pairs[1].targetIsPlaceholder).toBe(true);
-    expect(pairs[1].target.leaf.getPoints()).toEqual([]);
+    expect(pairs[1].target.leaf.getLocalPoints()).toEqual([]);
 
     expect(pairs[2].source.leaf).toBe(c);
     expect(pairs[2].sourceIsPlaceholder).toBe(false);
     expect(pairs[2].targetIsPlaceholder).toBe(true);
-    expect(pairs[2].target.leaf.getPoints()).toEqual([]);
+    expect(pairs[2].target.leaf.getLocalPoints()).toEqual([]);
   });
 });

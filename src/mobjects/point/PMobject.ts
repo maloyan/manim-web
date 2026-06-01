@@ -7,6 +7,7 @@
 import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { WHITE } from '../../constants';
+import { computePointBounds } from '../../core/PointBounds';
 
 /**
  * A single point with position, color, and opacity.
@@ -133,18 +134,30 @@ export class PMobject extends Mobject {
   }
 
   /**
-   * Get all points in world coordinates.
+   * Get all points in world coordinates as number[][] (consistent with VMobject).
    *
    * Applies this mobject's own transform **and** every ancestor transform in the
    * parent chain (Group/PGroup/etc.). The render-only z-layering offset added
    * by `_syncToThree` is intentionally excluded.
    *
    * For untransformed local-space coordinates, use {@link getLocalPoints}.
-   *
-   * @returns Copy of the transformed points array
+   * For world points with color/opacity, use {@link getPointsData}.
    */
-  getPoints(): PointData[] {
-    // Compute the world matrix once and reuse it for every point.
+  getPoints(): number[][] {
+    const worldMatrix = this._computeWorldMatrix();
+    const scratch = new THREE.Vector3();
+    return this._points.map((p) => {
+      scratch.set(p.position[0], p.position[1], p.position[2]).applyMatrix4(worldMatrix);
+      return [scratch.x, scratch.y, scratch.z];
+    });
+  }
+
+  /**
+   * Get all points in world coordinates as PointData[] (with color and opacity).
+   *
+   * For untransformed local-space coordinates, use {@link getLocalPoints}.
+   */
+  getPointsData(): PointData[] {
     const worldMatrix = this._computeWorldMatrix();
     const scratch = new THREE.Vector3();
     return this._points.map((p) => {
@@ -159,15 +172,40 @@ export class PMobject extends Mobject {
 
   /**
    * Project a single local-space point into world space, walking the parent chain.
-   *
-   * Equivalent to applying {@link _computeWorldMatrix} to `local`. Kept for
-   * backwards compatibility with subclasses; prefer caching the world matrix
-   * when transforming many points.
    */
   protected _localToWorld(local: Vector3Tuple): Vector3Tuple {
     const worldMatrix = this._computeWorldMatrix();
     const v = new THREE.Vector3(local[0], local[1], local[2]).applyMatrix4(worldMatrix);
     return [v.x, v.y, v.z];
+  }
+
+  /**
+   * @pre  fn(pts).length === pts.length
+   * @post getPoints()[i] === fn(old.getPoints().map(p => p - aboutPoint))[i] + aboutPoint
+   */
+  protected override _applyFunctionAboutPoint(
+    fn: (pts: number[][]) => number[][],
+    aboutPoint: number[],
+  ): void {
+    const pts = this.getPoints();
+    if (pts.length === 0) return;
+    const shifted = pts.map((p) => [
+      p[0] - aboutPoint[0],
+      p[1] - aboutPoint[1],
+      p[2] - aboutPoint[2],
+    ]);
+    const worldResult = fn(shifted).map((p) => [
+      p[0] + aboutPoint[0],
+      p[1] + aboutPoint[1],
+      p[2] + aboutPoint[2],
+    ]);
+    const inverseWorld = this._computeWorldMatrix().clone().invert();
+    const scratch = new THREE.Vector3();
+    worldResult.forEach((p, i) => {
+      scratch.set(p[0], p[1], p[2]).applyMatrix4(inverseWorld);
+      this._points[i].position = [scratch.x, scratch.y, scratch.z];
+    });
+    this._markDirty();
   }
 
   /**
@@ -234,40 +272,87 @@ export class PMobject extends Mobject {
   }
 
   /**
-   * Get the center of all points
-   * @returns Center position as [x, y, z]
+   * Get world-space center from world-point bounds.
    */
   override getCenter(): Vector3Tuple {
-    if (this._points.length === 0) {
-      return [this.position.x, this.position.y, this.position.z];
+    const worldPoints = this.getPoints();
+    const bounds = computePointBounds(worldPoints);
+    if (!bounds) {
+      return this._localToWorld([0, 0, 0]);
     }
-
-    let sumX = 0,
-      sumY = 0,
-      sumZ = 0;
-    for (const point of this._points) {
-      sumX += point.position[0];
-      sumY += point.position[1];
-      sumZ += point.position[2];
-    }
-
-    const count = this._points.length;
     return [
-      this.position.x + sumX / count,
-      this.position.y + sumY / count,
-      this.position.z + sumZ / count,
+      (bounds.min.x + bounds.max.x) / 2,
+      (bounds.min.y + bounds.max.y) / 2,
+      (bounds.min.z + bounds.max.z) / 2,
     ];
   }
 
   /**
-   * Shift all points by a delta
-   * @param delta - Translation vector [x, y, z]
-   * @returns this for chaining
+   * Get center in parent coordinates by averaging points after this node's own transform.
    */
-  override shift(delta: Vector3Tuple): this {
-    // PMobject point coordinates are local-space geometry; translating should
-    // move the mobject transform, not rewrite local point data.
-    return super.shift(delta);
+  override getLocalCenter(): Vector3Tuple {
+    if (this._points.length === 0) {
+      return [this.position.x, this.position.y, this.position.z];
+    }
+
+    const localMatrix = new THREE.Matrix4();
+    const q = new THREE.Quaternion().setFromEuler(this.rotation);
+    localMatrix.compose(this.position, q, this.scaleVector);
+
+    const scratch = new THREE.Vector3();
+    let sumX = 0;
+    let sumY = 0;
+    let sumZ = 0;
+
+    for (const point of this._points) {
+      scratch
+        .set(point.position[0], point.position[1], point.position[2])
+        .applyMatrix4(localMatrix);
+      sumX += scratch.x;
+      sumY += scratch.y;
+      sumZ += scratch.z;
+    }
+
+    const count = this._points.length;
+    return [sumX / count, sumY / count, sumZ / count];
+  }
+
+  protected override _bakeOwnGeometry(): void {
+    if (this._points.length === 0) return;
+
+    const sx = this.scaleVector.x;
+    const sy = this.scaleVector.y;
+    const sz = this.scaleVector.z;
+    if (sx !== 1 || sy !== 1 || sz !== 1) {
+      for (const point of this._points) {
+        point.position[0] *= sx;
+        point.position[1] *= sy;
+        point.position[2] *= sz;
+      }
+    }
+
+    const rx = this.rotation.x;
+    const ry = this.rotation.y;
+    const rz = this.rotation.z;
+    if (rx !== 0 || ry !== 0 || rz !== 0) {
+      const mat = new THREE.Matrix4().makeRotationFromEuler(this.rotation);
+      const v = new THREE.Vector3();
+      for (const point of this._points) {
+        v.set(point.position[0], point.position[1], point.position[2]).applyMatrix4(mat);
+        point.position[0] = v.x;
+        point.position[1] = v.y;
+        point.position[2] = v.z;
+      }
+    }
+  }
+
+  protected override _recenterLocalGeometry(localCenter: THREE.Vector3): void {
+    for (const point of this._points) {
+      point.position[0] -= localCenter.x;
+      point.position[1] -= localCenter.y;
+      point.position[2] -= localCenter.z;
+    }
+    super._recenterLocalGeometry(localCenter);
   }
 
   /**

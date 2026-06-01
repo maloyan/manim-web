@@ -39,7 +39,7 @@ export function getBoundingBox(vmobject: VMobject): {
   center: Vector3Tuple;
   size: Vector3Tuple;
 } {
-  const points = vmobject.getPoints();
+  const points = vmobject.getLocalPoints();
   if (points.length === 0) {
     const pos = vmobject.getCenter();
     return {
@@ -95,8 +95,8 @@ export function shapeSimilarity(a: VMobject, b: VMobject): number {
   const aspectSimilarity = 1 - Math.abs(aspectA - aspectB) / maxAspect;
 
   // Point count similarity
-  const pointsA = a.getPoints().length;
-  const pointsB = b.getPoints().length;
+  const pointsA = a.getLocalPoints().length;
+  const pointsB = b.getLocalPoints().length;
   const maxPoints = Math.max(pointsA, pointsB, 1);
   const pointSimilarity = 1 - Math.abs(pointsA - pointsB) / maxPoints;
 

@@ -65,6 +65,8 @@ describe('MathTex animate.shift() regression (issue #251)', () => {
 
     await scene.play(tex.animate.shift(RIGHT));
 
+    // Read each part directly (no tex.getCenter() first): part world coords must
+    // already reflect the parent shift, without a sibling/parent read forcing a sync.
     const finalPartCenters = [
       tex.getPart(0).getCenter(),
       tex.getPart(1).getCenter(),

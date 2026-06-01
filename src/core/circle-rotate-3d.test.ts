@@ -18,6 +18,7 @@ describe('Circle rotate in 3D', () => {
 
     // Rotate around X axis
     circle.rotate(Math.PI / 12, { axis: [1, 0, 0] });
+    circle.normalizeTransform();
 
     // Verify points were transformed (Z values change)
     const pointsAfter = circle.getPoints();

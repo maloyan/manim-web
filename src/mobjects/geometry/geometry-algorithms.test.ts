@@ -50,7 +50,7 @@ describe('Union', () => {
     const vertices = u.getResultVertices();
     expect(vertices.length).toBe(1);
     expect(vertices[0].length).toBeGreaterThanOrEqual(4);
-    expect(u.getPoints().length).toBeGreaterThan(0);
+    expect(u.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('union of identical shapes returns single polygon', () => {
@@ -128,7 +128,7 @@ describe('Difference', () => {
     const s2 = new Square({ sideLength: 2, center: [1, 0, 0] });
     const diff = new Difference(s1, s2);
     expect(diff.getResultVertices().length).toBeGreaterThanOrEqual(1);
-    expect(diff.getPoints().length).toBeGreaterThan(0);
+    expect(diff.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('difference with non-overlapping shape returns original', () => {
@@ -186,7 +186,7 @@ describe('BooleanOperations with circles', () => {
     const c2 = new Circle({ radius: 1, center: [1, 0, 0] });
     const u = new Union(c1, c2);
     expect(u.getResultVertices().length).toBeGreaterThanOrEqual(1);
-    expect(u.getPoints().length).toBeGreaterThan(0);
+    expect(u.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('intersection of overlapping circles produces lens, non-overlapping is empty', () => {
@@ -211,7 +211,7 @@ describe('BooleanOperations with mixed shapes and edge cases', () => {
     const c = new Circle({ radius: 0.5 });
     const d = new Difference(r, c);
     expect(d.getResultVertices().length).toBeGreaterThanOrEqual(1);
-    expect(d.getPoints().length).toBeGreaterThan(0);
+    expect(d.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('handles shifted shapes correctly', () => {
@@ -292,7 +292,7 @@ describe('SurroundingRectangle', () => {
     expect(sr.getCornerRadius()).toBe(0);
     expect(sr.color.toLowerCase()).toBe('#ffff00');
     expect(sr.fillOpacity).toBe(0);
-    expect(sr.getPoints().length).toBeGreaterThan(0);
+    expect(sr.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('getTargetMobject returns the original target', () => {
@@ -305,7 +305,7 @@ describe('SurroundingRectangle', () => {
     const sr = new SurroundingRectangle(target);
     sr.setBuff(0.5);
     expect(sr.getBuff()).toBe(0.5);
-    expect(sr.getPoints().length).toBeGreaterThan(0);
+    expect(sr.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('setCornerRadius produces more points for rounded vs sharp', () => {
@@ -313,23 +313,23 @@ describe('SurroundingRectangle', () => {
     const sr = new SurroundingRectangle(target);
     sr.setCornerRadius(0.3);
     expect(sr.getCornerRadius()).toBe(0.3);
-    const roundedCount = sr.getPoints().length;
+    const roundedCount = sr.getLocalPoints().length;
     sr.setCornerRadius(0);
-    const sharpCount = sr.getPoints().length;
+    const sharpCount = sr.getLocalPoints().length;
     expect(roundedCount).toBeGreaterThan(sharpCount);
   });
 
   it('sharp corners produce at least 13 points', () => {
     const target = new Rectangle({ width: 4, height: 2 });
     const sr = new SurroundingRectangle(target, { cornerRadius: 0 });
-    expect(sr.getPoints().length).toBeGreaterThanOrEqual(13);
+    expect(sr.getLocalPoints().length).toBeGreaterThanOrEqual(13);
   });
 
   it('rounded corners produce more points than sharp corners', () => {
     const target = new Rectangle({ width: 4, height: 2 });
     const sharp = new SurroundingRectangle(target, { cornerRadius: 0 });
     const rounded = new SurroundingRectangle(target, { cornerRadius: 0.3 });
-    expect(rounded.getPoints().length).toBeGreaterThan(sharp.getPoints().length);
+    expect(rounded.getLocalPoints().length).toBeGreaterThan(sharp.getLocalPoints().length);
   });
 
   it('respects custom color and works with Circle target', () => {
@@ -339,7 +339,7 @@ describe('SurroundingRectangle', () => {
     );
 
     const circle = new Circle({ radius: 2 });
-    expect(new SurroundingRectangle(circle).getPoints().length).toBeGreaterThan(0);
+    expect(new SurroundingRectangle(circle).getLocalPoints().length).toBeGreaterThan(0);
   });
 });
 
@@ -471,10 +471,10 @@ describe('SurroundingRectangle copy and updater', () => {
   it('tracking updater regenerates when target moves', () => {
     const target = new Rectangle({ width: 4, height: 2 });
     const sr = new SurroundingRectangle(target);
-    const ptsBefore = sr.getPoints().length;
+    const ptsBefore = sr.getLocalPoints().length;
     target.shift([2, 0, 0]);
     sr.update(0);
-    expect(sr.getPoints().length).toBe(ptsBefore);
+    expect(sr.getLocalPoints().length).toBe(ptsBefore);
   });
 });
 

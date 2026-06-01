@@ -359,7 +359,7 @@ export class ComplexPlane extends NumberPlane {
   private _transformChildren(group: Mobject, transformFn: (p: number[]) => number[]): void {
     for (const child of group.children || []) {
       if (child instanceof VMobject) {
-        const points = child.getPoints();
+        const points = child.getLocalPoints();
         if (points.length > 0) {
           const newPoints = points.map(transformFn);
           child.setPoints3D(newPoints);

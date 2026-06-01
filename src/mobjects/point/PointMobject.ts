@@ -50,37 +50,32 @@ export class PointMobject extends PMobject {
   }
 
   /**
-   * Get the position of the point
-   * @returns Position as [x, y, z]
+   * Get the world-space position of the point.
+   *
+   * Applies this node's transform and all ancestor transforms (via getPoints()).
+   * For local-space coordinates, use the `position` field directly.
+   *
+   * @returns World position as [x, y, z]
    */
   getPosition(): Vector3Tuple {
-    return [this.position.x, this.position.y, this.position.z];
+    const pts = this.getPoints();
+    if (pts.length === 0) return [this.position.x, this.position.y, this.position.z];
+    return pts[0] as Vector3Tuple;
   }
 
   /**
-   * Set the position of the point
-   * @param position - New position [x, y, z]
+   * Set the local-space position of the point.
+   *
+   * Updates this mobject's position field only; does not modify parent transforms.
+   * To move the point in world space, use moveTo().
+   *
+   * @param position - New local position [x, y, z]
    * @returns this for chaining
    */
   setPosition(position: Vector3Tuple): this {
     this.position.set(...position);
     this._markDirty();
     return this;
-  }
-
-  /**
-   * Get the center (same as position for a single point)
-   */
-  override getCenter(): Vector3Tuple {
-    return this.getPosition();
-  }
-
-  /**
-   * Move the point to a new position
-   * @param point - Target position [x, y, z]
-   */
-  override moveTo(point: Vector3Tuple): this {
-    return this.setPosition(point);
   }
 
   /**

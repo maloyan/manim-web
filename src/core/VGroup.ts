@@ -15,20 +15,8 @@ export class VGroup extends VMobject {
   /**
    * True when this VGroup (recursively) has no renderable geometry.
    */
-  isEmpty(): boolean {
-    if (this.children.length === 0) {
-      return true;
-    }
-    return this.children.every((child) => {
-      const candidate = child as unknown as { isEmpty?: () => boolean };
-      if (typeof candidate.isEmpty === 'function') {
-        return candidate.isEmpty();
-      }
-      if (child instanceof VMobject) {
-        return child.getPoints().length === 0;
-      }
-      return false;
-    });
+  override isEmpty(): boolean {
+    return this.children.length === 0 || this.children.every((child) => child.isEmpty());
   }
 
   /**
@@ -45,6 +33,10 @@ export class VGroup extends VMobject {
 
     for (const mobject of mobjects) {
       this.add(mobject);
+    }
+
+    if (!this.isEmpty()) {
+      this.normalizeTransform();
     }
   }
 
@@ -149,80 +141,18 @@ export class VGroup extends VMobject {
     return this;
   }
 
+  /**
+   * @post this.isEmpty() => result === this._parentLocalToWorld([position.x, position.y, position.z])
+   * @post !this.isEmpty() => result[i] === (worldBbox.min[i] + worldBbox.max[i]) / 2
+   */
   override getCenter(): Vector3Tuple {
+    // position is parent-local; lift to world so the empty fallback matches the
+    // world-space bbox branch (and the base Mobject.getCenter convention).
     if (this.isEmpty()) {
-      return [this.position.x, this.position.y, this.position.z];
+      return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
     }
     const b = this.getBounds();
     return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
-  }
-
-  /**
-   * Normalize group transform by forwarding direct group translation/rotation to children.
-   * This keeps VGroup semantics child-driven and avoids double-counting.
-   */
-  override normalizeTransform(): this {
-    this._normalizeContainerTransform({
-      translateChild: (child, dx, dy, dz) => {
-        child.shift([dx, dy, dz]);
-      },
-    });
-    return this;
-  }
-
-  /**
-   * Shift all children by the given delta.
-   * Only shifts children's internal positions, not the group's own position,
-   * to avoid double-counting in THREE.js hierarchy.
-   *
-   * When the group has no children yet (e.g. async-rendered text glyphs),
-   * store translation on the group so it is not dropped.
-   * @param delta - Translation vector [x, y, z]
-   * @returns this for chaining
-   */
-  override shift(delta: Vector3Tuple): this {
-    if (this.children.length === 0) {
-      return super.shift(delta);
-    }
-
-    this.normalizeTransform();
-    for (const child of this.children) {
-      child.shift(delta);
-    }
-    this._markDirty();
-    return this;
-  }
-
-  /**
-   * Move the group center to the given point, or align with another Mobject.
-   * @param target - Target position [x, y, z] or Mobject to align with
-   * @param alignedEdge - Optional edge direction to align (e.g., UL aligns upper-left edges)
-   * @returns this for chaining
-   */
-  override moveTo(target: Vector3Tuple | Mobject, alignedEdge?: Vector3Tuple): this {
-    this.normalizeTransform();
-
-    if (!Array.isArray(target)) {
-      // Mobject target: delegate to base which uses shift
-      if (alignedEdge) {
-        const targetEdge = target._getEdgeInDirection(alignedEdge);
-        const thisEdge = this._getEdgeInDirection(alignedEdge);
-        return this.shift([
-          targetEdge[0] - thisEdge[0],
-          targetEdge[1] - thisEdge[1],
-          targetEdge[2] - thisEdge[2],
-        ]);
-      }
-      const targetCenter = target.getCenter();
-      return this.moveTo(targetCenter);
-    }
-    const currentCenter = this.getCenter();
-    const delta: Vector3Tuple = [
-      target[0] - currentCenter[0],
-      target[1] - currentCenter[1],
-      target[2] - currentCenter[2],
-    ];
-    return this.shift(delta);
   }
 
   /**
@@ -419,7 +349,7 @@ export class VGroup extends VMobject {
     const allPoints: number[][] = [];
     for (const child of this.children) {
       if (child instanceof VMobject) {
-        allPoints.push(...child.getPoints());
+        allPoints.push(...child.getLocalPoints());
       }
     }
     return allPoints;
@@ -525,7 +455,47 @@ export class VGroup extends VMobject {
   /**
    * Get all 3D points from the VGroup.
    */
-  override getPoints(): number[][] {
+  override getLocalPoints(): number[][] {
     return this.getCombinedPoints();
+  }
+
+  /**
+   * Distribute a flat point array back onto the children.
+   *
+   * A VGroup stores no geometry of its own — {@link getLocalPoints} aggregates the
+   * children. The inherited VMobject.setPoints would write to the container's
+   * unused `_points3D`, so a read-modify-write (Homotopy, ApplyPointwiseFunction,
+   * ApplyWave, …) on a VGroup would be a silent no-op. This override partitions the
+   * array in the same order getCombinedPoints concatenated it and assigns each slice
+   * to its child, so the round-trip actually moves the children.
+   *
+   * @pre  points.length === sum over VMobject children of child.getLocalPoints().length
+   * @post for each child i: child.getLocalPoints() === the i-th slice of points
+   */
+  override setPoints(points: Point[] | number[][]): this {
+    const pts3D: number[][] =
+      points.length === 0
+        ? []
+        : Array.isArray(points[0])
+          ? (points as number[][]).map((p) => [p[0], p[1], p[2] ?? 0])
+          : (points as Point[]).map((p) => [p.x, p.y, 0]);
+
+    const vChildren = this.children.filter((c) => c instanceof VMobject) as VMobject[];
+    const counts = vChildren.map((c) => c.getLocalPoints().length);
+    const total = counts.reduce((n, c) => n + c, 0);
+    if (pts3D.length !== total) {
+      throw new Error(
+        `VGroup.setPoints: expected ${total} points (sum of children's point counts), got ${pts3D.length}. ` +
+          `A VGroup holds no points of its own; the array must partition across its children.`,
+      );
+    }
+
+    let offset = 0;
+    for (let i = 0; i < vChildren.length; i++) {
+      vChildren[i].setPoints(pts3D.slice(offset, offset + counts[i]));
+      offset += counts[i];
+    }
+    this._markDirtyUpward();
+    return this;
   }
 }

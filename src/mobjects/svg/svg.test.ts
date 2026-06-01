@@ -739,6 +739,18 @@ describe('Brace', () => {
     expect(brace.mobject).toBe(rect);
   });
 
+  it('tracks a shifted target in world space', () => {
+    // MIGRATION: example-based regression. Intent: the brace is laid out around the
+    // target's *world* geometry, so its tip follows a shifted mobject instead of
+    // sticking near the local origin (the key-points and the center must share one
+    // frame). Replace with a property test (tip near target world edge) later.
+    const rect = new Rectangle({ width: 4, height: 2, center: [5, 0, 0] });
+    const brace = new Brace(rect, { direction: DOWN });
+    const tip = brace.getTip();
+    expect(tip[0]).toBeCloseTo(5, 0); // under the rectangle's world center, not 0
+    expect(tip[1]).toBeLessThan(0);
+  });
+
   it('stores braceDirection', () => {
     const rect = new Rectangle({ width: 2, height: 1 });
     const brace = new Brace(rect, { direction: [0, -1, 0] });

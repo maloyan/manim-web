@@ -72,6 +72,35 @@ helpers live in `src/utils/math.ts` and are built on top of those.
   `transformPointByMatrix`, `crossVec`, `dotVec`, etc. so geometric intent is
   visible in the code.
 
+### JSDoc contracts (`@pre` / `@post` / `@inv` / `@note`)
+
+- `@pre` and `@post` must be boolean expressions or typed signatures — no prose verbs like "updated" or "unchanged"
+- Use `===`, `!==`, `=>` (logical implication), and `old.x` to refer to pre-call values
+- Type constraints on parameters go in `@pre`, not in the description
+- `@note` is for implementation gotchas only — never a disguised `@pre` or `@post`
+
+```typescript
+// Good
+// @pre  !this.isEmpty()
+// @pre  fn(pts).length === pts.length
+// @post getWorldPoints()[i] === old.getWorldPoints().map(fn)[i]
+
+// Bad — prose, not checkable
+// @post own points updated; parent transforms unchanged
+
+// Bad — @note disguising a @pre
+// @note Caller must check isEmpty() before calling this
+// should be: @pre !this.isEmpty()
+
+// Bad — restates what the TS type already says
+// @pre  fn !== null
+// @pre  fn: (pts: number[][]) => number[][]
+
+// Bad — prose sentence, not a boolean expression
+// @pre  normalizeTransform() is only meaningful when !this.isEmpty()
+// should be: @pre !this.isEmpty()
+```
+
 ## Commits, Changelog & Releases
 
 `CHANGELOG.md` is **generated**, not hand-written. It is produced by

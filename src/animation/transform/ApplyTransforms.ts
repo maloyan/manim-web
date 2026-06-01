@@ -9,7 +9,6 @@ import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { Transform } from './Transform';
 import { lerpPoint, transformPointByMatrix } from '../../utils/math';
-import { Arrow, DoubleArrow } from '../../mobjects/geometry/Arrow';
 import type { Complex } from '../movement/Homotopy';
 
 // ============================================================================
@@ -17,26 +16,19 @@ import type { Complex } from '../movement/Homotopy';
 // ============================================================================
 
 interface VMobjectLike {
-  getPoints(): number[][];
+  getLocalPoints(): number[][];
   setPoints(pts: number[][]): void;
 }
 
 function isVMobjectLike(m: unknown): m is VMobjectLike {
   const obj = m as Record<string, unknown>;
-  return typeof obj.getPoints === 'function' && typeof obj.setPoints === 'function';
+  return typeof obj.getLocalPoints === 'function' && typeof obj.setPoints === 'function';
 }
 
 interface ChildSnapshot {
   mob: VMobjectLike;
   startPoints: number[][];
   targetPoints: number[][];
-}
-
-function reconstructArrowTips(mobject: Mobject): void {
-  for (const mob of mobject.getFamily()) {
-    if (mob instanceof Arrow) mob.reconstructTip();
-    else if (mob instanceof DoubleArrow) mob.reconstructTips();
-  }
 }
 
 // ============================================================================
@@ -69,7 +61,7 @@ export class ApplyFunction extends Animation {
 
     for (const mob of this.mobject.getFamily()) {
       if (isVMobjectLike(mob)) {
-        const startPoints = mob.getPoints();
+        const startPoints = mob.getLocalPoints();
         if (startPoints.length === 0) continue;
 
         const threeObj = (mob as Mobject)._threeObject;
@@ -107,7 +99,6 @@ export class ApplyFunction extends Animation {
       }
       snap.mob.setPoints(interpolated);
     }
-    reconstructArrowTips(this.mobject);
     this.mobject._markDirtyUpward();
   }
 
@@ -115,7 +106,6 @@ export class ApplyFunction extends Animation {
     for (const snap of this._snapshots) {
       snap.mob.setPoints(snap.targetPoints);
     }
-    reconstructArrowTips(this.mobject);
     this.mobject._markDirtyUpward();
     super.finish();
   }
@@ -167,7 +157,7 @@ export class ApplyComplexFunction extends Animation {
 
     for (const mob of this.mobject.getFamily()) {
       if (isVMobjectLike(mob)) {
-        const startPoints = mob.getPoints();
+        const startPoints = mob.getLocalPoints();
         if (startPoints.length === 0) continue;
 
         const threeObj = (mob as Mobject)._threeObject;
@@ -210,7 +200,6 @@ export class ApplyComplexFunction extends Animation {
       }
       snap.mob.setPoints(interpolated);
     }
-    reconstructArrowTips(this.mobject);
     this.mobject._markDirtyUpward();
   }
 
@@ -218,7 +207,6 @@ export class ApplyComplexFunction extends Animation {
     for (const snap of this._snapshots) {
       snap.mob.setPoints(snap.targetPoints);
     }
-    reconstructArrowTips(this.mobject);
     this.mobject._markDirtyUpward();
     super.finish();
   }
@@ -326,7 +314,7 @@ export class ApplyMatrix extends Animation {
 
     for (const mob of this.mobject.getFamily()) {
       if (isVMobjectLike(mob)) {
-        const startPoints = mob.getPoints();
+        const startPoints = mob.getLocalPoints();
         if (startPoints.length === 0) continue;
 
         const threeObj = (mob as Mobject)._threeObject;
@@ -365,7 +353,6 @@ export class ApplyMatrix extends Animation {
       }
       snap.mob.setPoints(interpolated);
     }
-    reconstructArrowTips(this.mobject);
     this.mobject._markDirtyUpward();
   }
 
@@ -373,7 +360,6 @@ export class ApplyMatrix extends Animation {
     for (const snap of this._snapshots) {
       snap.mob.setPoints(snap.targetPoints);
     }
-    reconstructArrowTips(this.mobject);
     this.mobject._markDirtyUpward();
     super.finish();
   }

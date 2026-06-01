@@ -190,19 +190,19 @@ describe('Homotopy', () => {
       const anim = new Homotopy(vm, { homotopyFunc: fn });
       anim.begin();
       // After begin, points should still be accessible
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       expect(pts.length).toBe(4);
     });
 
     it('interpolate transforms all VMobject points', () => {
       const vm = makeVMobject(quadPoints());
-      const origPts = vm.getPoints();
+      const origPts = vm.getLocalPoints();
       // Shift all points by t in x
       const fn: HomotopyFunction = (x, y, z, t) => [x + t, y, z];
       const anim = new Homotopy(vm, { homotopyFunc: fn });
       anim.begin();
       anim.interpolate(1);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       for (let i = 0; i < origPts.length; i++) {
         expect(pts[i][0]).toBeCloseTo(origPts[i][0] + 1, 5);
         expect(pts[i][1]).toBeCloseTo(origPts[i][1], 5);
@@ -212,13 +212,13 @@ describe('Homotopy', () => {
 
     it('interpolate at alpha=0.5 transforms halfway', () => {
       const vm = makeVMobject(quadPoints());
-      const origPts = vm.getPoints();
+      const origPts = vm.getLocalPoints();
       // Scale all x by (1 + t)
       const fn: HomotopyFunction = (x, y, z, t) => [x * (1 + t), y, z];
       const anim = new Homotopy(vm, { homotopyFunc: fn });
       anim.begin();
       anim.interpolate(0.5);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       for (let i = 0; i < origPts.length; i++) {
         expect(pts[i][0]).toBeCloseTo(origPts[i][0] * 1.5, 5);
       }
@@ -226,7 +226,7 @@ describe('Homotopy', () => {
 
     it('uses original points for each interpolation call (not cumulative)', () => {
       const vm = makeVMobject(quadPoints());
-      const origPts = vm.getPoints();
+      const origPts = vm.getLocalPoints();
       const fn: HomotopyFunction = (x, y, z, t) => [x + t * 10, y, z];
       const anim = new Homotopy(vm, { homotopyFunc: fn });
       anim.begin();
@@ -234,7 +234,7 @@ describe('Homotopy', () => {
       anim.interpolate(0.5);
       anim.interpolate(0.5);
       anim.interpolate(0.5);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       // Should still be shifted by 5 (not 15) since it uses originals
       for (let i = 0; i < origPts.length; i++) {
         expect(pts[i][0]).toBeCloseTo(origPts[i][0] + 5, 5);
@@ -243,13 +243,13 @@ describe('Homotopy', () => {
 
     it('finish ensures exact final transform', () => {
       const vm = makeVMobject(quadPoints());
-      const origPts = vm.getPoints();
+      const origPts = vm.getLocalPoints();
       const fn: HomotopyFunction = (x, y, z, _t) => [x + 100, y + 200, z + 300];
       const anim = new Homotopy(vm, { homotopyFunc: fn });
       anim.begin();
       anim.interpolate(0.3);
       anim.finish();
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       for (let i = 0; i < origPts.length; i++) {
         expect(pts[i][0]).toBeCloseTo(origPts[i][0] + 100, 5);
         expect(pts[i][1]).toBeCloseTo(origPts[i][1] + 200, 5);
@@ -264,7 +264,25 @@ describe('Homotopy', () => {
       anim.begin();
       // VMobject with no points should still work (nothing to transform)
       anim.interpolate(0.5);
-      expect(vm.getPoints().length).toBe(0);
+      expect(vm.getLocalPoints().length).toBe(0);
+    });
+
+    it('applies the homotopy in world space when the mobject carries a transform', () => {
+      // MIGRATION: example-based regression. Intent: the homotopy function sees the
+      // coordinates the mobject actually occupies (world space), not its raw local
+      // points. A point at local (0,0,0) shifted to world (5,0,0), fed through a
+      // world-space scale-about-origin f(x)=2x, must land at world (10,0,0) — local
+      // application would scale (0,0,0) and leave it at world (5,0,0). Replace with a
+      // property test later.
+      const vm = makeVMobject([[0, 0, 0]]);
+      vm.shift([5, 0, 0]); // local origin now sits at world (5,0,0)
+      const fn: HomotopyFunction = (x, y, z, _t) => [x * 2, y, z];
+      const anim = new Homotopy(vm, { homotopyFunc: fn });
+      anim.begin();
+      anim.interpolate(1);
+      const world = vm.getPoints();
+      expect(world[0][0]).toBeCloseTo(10, 5);
+      expect(world[0][1]).toBeCloseTo(0, 5);
     });
   });
 
@@ -384,7 +402,7 @@ describe('ComplexHomotopy', () => {
       const fn: ComplexHomotopyFunction = (z, _t) => z;
       const anim = new ComplexHomotopy(vm, { complexFunc: fn });
       anim.begin();
-      expect(vm.getPoints().length).toBe(4);
+      expect(vm.getLocalPoints().length).toBe(4);
     });
 
     it('transforms all points as complex numbers', () => {
@@ -402,7 +420,7 @@ describe('ComplexHomotopy', () => {
       const anim = new ComplexHomotopy(vm, { complexFunc: fn });
       anim.begin();
       anim.interpolate(1);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       expect(pts[0][0]).toBeCloseTo(2, 5); // 1 * 2
       expect(pts[0][1]).toBeCloseTo(0, 5);
       expect(pts[1][0]).toBeCloseTo(0, 5); // 0 * 2
@@ -427,7 +445,7 @@ describe('ComplexHomotopy', () => {
       const anim = new ComplexHomotopy(vm, { complexFunc: fn });
       anim.begin();
       anim.interpolate(1);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       expect(pts[0][2]).toBeCloseTo(5, 5);
       expect(pts[1][2]).toBeCloseTo(10, 5);
       expect(pts[2][2]).toBeCloseTo(15, 5);
@@ -449,7 +467,7 @@ describe('ComplexHomotopy', () => {
       anim.begin();
       anim.interpolate(0.5);
       anim.interpolate(0.5);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       // Should be original + 50, not original + 100
       expect(pts[0][0]).toBeCloseTo(51, 5);
       expect(pts[1][0]).toBeCloseTo(52, 5);
@@ -461,7 +479,7 @@ describe('ComplexHomotopy', () => {
       const anim = new ComplexHomotopy(vm, { complexFunc: fn });
       anim.begin();
       anim.interpolate(0.5);
-      expect(vm.getPoints().length).toBe(0);
+      expect(vm.getLocalPoints().length).toBe(0);
     });
 
     it('finish applies exact final transform', () => {
@@ -474,7 +492,7 @@ describe('ComplexHomotopy', () => {
       anim.begin();
       anim.interpolate(0.1);
       anim.finish();
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       expect(pts[0][0]).toBeCloseTo(10, 5);
       expect(pts[0][1]).toBeCloseTo(20, 5);
     });
@@ -534,7 +552,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
       anim.begin();
       // Points should still be there
-      expect(vm.getPoints().length).toBe(7);
+      expect(vm.getLocalPoints().length).toBe(7);
     });
   });
 
@@ -546,17 +564,17 @@ describe('SmoothedVectorizedHomotopy', () => {
       anim.begin();
       // Should not throw
       anim.interpolate(0.5);
-      expect(vm.getPoints().length).toBe(0);
+      expect(vm.getLocalPoints().length).toBe(0);
     });
 
     it('identity homotopy preserves points', () => {
       const vm = makeVMobject(twoSegmentPoints());
-      const origPts = vm.getPoints();
+      const origPts = vm.getLocalPoints();
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
       anim.begin();
       anim.interpolate(0.5);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       expect(pts.length).toBe(origPts.length);
       for (let i = 0; i < origPts.length; i++) {
         expect(pts[i][0]).toBeCloseTo(origPts[i][0], 3);
@@ -572,7 +590,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
       anim.begin();
       anim.interpolate(1);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       // Anchor 0 (index 0): should be at 0 + 10 = 10
       expect(pts[0][0]).toBeCloseTo(10, 3);
       // Anchor 1 (index 3): should be at 1 + 10 = 11
@@ -583,13 +601,13 @@ describe('SmoothedVectorizedHomotopy', () => {
 
     it('transforms handles with smoothing', () => {
       const vm = makeVMobject(twoSegmentPoints());
-      const origPts = vm.getPoints();
+      const origPts = vm.getLocalPoints();
       // Simple translation - handles should move similarly
       const fn: HomotopyFunction = (x, y, z, t) => [x + t * 5, y + t * 5, z];
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
       anim.begin();
       anim.interpolate(1);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       // Handles (indices 1, 2, 4, 5) should also have moved
       for (let i = 0; i < pts.length; i++) {
         // All points should have x roughly increased by 5
@@ -604,7 +622,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
       anim.begin();
       anim.interpolate(1);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       // Anchor 0 at (0,0,0): scaled to (0,0,0)
       expect(pts[0][0]).toBeCloseTo(0, 3);
       // Anchor 1 at (0,1,0): scaled to (0,2,0)
@@ -617,7 +635,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
       anim.begin();
       anim.interpolate(1);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       // All anchors shifted by 1
       expect(pts[0][0]).toBeCloseTo(1, 3);
       expect(pts[3][0]).toBeCloseTo(2, 3);
@@ -627,13 +645,13 @@ describe('SmoothedVectorizedHomotopy', () => {
 
     it('interpolate uses originals (not cumulative)', () => {
       const vm = makeVMobject(twoSegmentPoints());
-      const origPts = vm.getPoints();
+      const origPts = vm.getLocalPoints();
       const fn: HomotopyFunction = (x, y, z, t) => [x + t * 100, y, z];
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
       anim.begin();
       anim.interpolate(0.5);
       anim.interpolate(0.5);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       // Anchor 0 should be at 50 (from original 0 + 0.5*100)
       expect(pts[0][0]).toBeCloseTo(50, 3);
     });
@@ -652,7 +670,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       anim.begin();
       // Should not throw
       anim.interpolate(0.5);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       expect(pts.length).toBe(5);
     });
   });
@@ -665,7 +683,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       anim.begin();
       anim.interpolate(0.3);
       anim.finish();
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       // Anchor 0 should be at 100
       expect(pts[0][0]).toBeCloseTo(100, 3);
     });
@@ -832,7 +850,7 @@ describe('PhaseFlow', () => {
       const anim = new PhaseFlow(vm, { vectorField: vf, virtualTime: 2 });
       anim.begin();
       anim.interpolate(1);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       expect(pts[0][0]).toBeCloseTo(3, 2); // 1 + 2
       expect(pts[1][0]).toBeCloseTo(2, 2); // 0 + 2
       expect(pts[2][0]).toBeCloseTo(1, 2); // -1 + 2
@@ -854,7 +872,7 @@ describe('PhaseFlow', () => {
       });
       anim.begin();
       anim.interpolate(1);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       // (1,0) -> (0,1), (2,0) -> (0,2), (3,0) -> (0,3), (4,0) -> (0,4)
       expect(pts[0][0]).toBeCloseTo(0, 1);
       expect(pts[0][1]).toBeCloseTo(1, 1);
@@ -874,7 +892,7 @@ describe('PhaseFlow', () => {
       anim.begin();
       anim.interpolate(0.5);
       anim.interpolate(0.5);
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       // From original, not cumulative
       expect(pts[0][0]).toBeCloseTo(50, 1);
       expect(pts[1][0]).toBeCloseTo(51, 1);
@@ -886,7 +904,7 @@ describe('PhaseFlow', () => {
       const anim = new PhaseFlow(vm, { vectorField: vf });
       anim.begin();
       anim.interpolate(0.5);
-      expect(vm.getPoints().length).toBe(0);
+      expect(vm.getLocalPoints().length).toBe(0);
     });
 
     it('finish applies exact final flow', () => {
@@ -896,7 +914,7 @@ describe('PhaseFlow', () => {
       anim.begin();
       anim.interpolate(0.1);
       anim.finish();
-      const pts = vm.getPoints();
+      const pts = vm.getLocalPoints();
       // All points should have moved 10 in x
       expect(pts[0][0]).toBeCloseTo(10, 1);
       expect(pts[1][0]).toBeCloseTo(11, 1);
@@ -998,6 +1016,25 @@ describe('MoveAlongPath', () => {
       // Midpoint of a straight line from 0 to 6 is 3
       expect(m.position.x).toBeCloseTo(3, 3);
       expect(m.position.y).toBeCloseTo(0, 3);
+    });
+
+    it('follows the path at its real (world) location when the path is shifted', () => {
+      // MIGRATION: example-based regression. Intent: MoveAlongPath samples the path
+      // in WORLD space. A path carrying its own transform (here shifted up by 10)
+      // must be followed where it actually sits, not orbiting its untransformed
+      // local origin. Replace with a property test later.
+      const path = straightLinePath();
+      path.shift([0, 10, 0]); // move the whole path off its local origin
+      const m = makeVMobject();
+      const anim = new MoveAlongPath(m, { path });
+      anim.begin();
+
+      anim.interpolate(0); // start of the world-space path: (0, 10, 0)
+      expect(m.position.y).toBeCloseTo(10, 3);
+
+      anim.interpolate(1); // end of the world-space path: (6, 10, 0)
+      expect(m.position.x).toBeCloseTo(6, 3);
+      expect(m.position.y).toBeCloseTo(10, 3);
     });
   });
 

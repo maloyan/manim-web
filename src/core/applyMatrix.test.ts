@@ -17,7 +17,7 @@ describe('applyMatrix', () => {
       [0, 0, 1],
     ];
     vm.applyMatrix(identity);
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     expect(pts[0][0]).toBeCloseTo(1);
     expect(pts[0][1]).toBeCloseTo(2);
     expect(pts[3][0]).toBeCloseTo(7);
@@ -38,7 +38,7 @@ describe('applyMatrix', () => {
       [0, 0, 1],
     ];
     vm.applyMatrix(scaleMatrix);
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     expect(pts[0][0]).toBeCloseTo(2);
     expect(pts[1][0]).toBeCloseTo(4);
     expect(pts[2][0]).toBeCloseTo(6);
@@ -59,7 +59,7 @@ describe('applyMatrix', () => {
       [0, 0, 1],
     ];
     vm.applyMatrix(rotMatrix);
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     // [1,0,0] -> [0,1,0]
     expect(pts[0][0]).toBeCloseTo(0);
     expect(pts[0][1]).toBeCloseTo(1);
@@ -83,7 +83,7 @@ describe('applyMatrix', () => {
       [0, 0, 1],
     ];
     vm.applyMatrix(scaleMatrix, { aboutPoint: [1, 0, 0] });
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     expect(pts[0][0]).toBeCloseTo(1); // fixed point
     expect(pts[1][0]).toBeCloseTo(3); // (2-1)*2+1 = 3
     expect(pts[2][0]).toBeCloseTo(5); // (3-1)*2+1 = 5
@@ -106,7 +106,7 @@ describe('applyMatrix', () => {
       [0, 0, 1],
     ];
     vm.applyMatrix(scaleMatrix, { aboutEdge: [1, 0, 0] });
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     // Right edge center is [1,0,0], so points are transformed about that
     // [-1,-1,0] -> (-1-1)*2+1 = -3, (-1-0)*2+0 = -2 -> [-3,-2,0]
     expect(pts[0][0]).toBeCloseTo(-3);
@@ -131,6 +131,8 @@ describe('applyMatrix', () => {
       [0, 0, 1],
     ];
     group.applyMatrix(scaleMatrix);
+    // MIGRATION: weak test, remove once property-based tests done.
+    // getLocalPoints() returns local _points3D; use getPoints() for world-space assertions.
     const pts = child.getPoints();
     expect(pts[0][0]).toBeCloseTo(2);
     expect(pts[1][0]).toBeCloseTo(4);
@@ -150,7 +152,7 @@ describe('applyMatrix', () => {
       [0, 3],
     ];
     vm.applyMatrix(matrix2);
-    const pts = vm.getPoints();
+    const pts = vm.getLocalPoints();
     expect(pts[0][0]).toBeCloseTo(2);
     expect(pts[0][1]).toBeCloseTo(0);
     expect(pts[1][0]).toBeCloseTo(4);

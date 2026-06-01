@@ -62,8 +62,10 @@ export interface MobjectLike {
   __savedMobjectState: unknown;
   _threeObject: THREE.Object3D | null;
   _dirty: boolean;
+  _isVMobject: boolean;
   _markDirty(): void;
   getThreeObject(): THREE.Object3D;
+  _syncWorldMatrices(): THREE.Object3D;
   getCenter(): Vector3Tuple;
   getBounds(): {
     min: { x: number; y: number; z: number };
@@ -75,6 +77,7 @@ export interface MobjectLike {
   copy(): MobjectLike;
   restoreState(): boolean;
   getFamily(): MobjectLike[];
+  applyFunctionAboutPoint(fn: (pts: number[][]) => number[][], aboutPoint?: number[]): MobjectLike;
 }
 
 /**
@@ -86,6 +89,7 @@ export interface VMobjectLike {
   _visiblePointCount: number | null;
   _geometryDirty: boolean;
   setPoints(points: number[][] | { x: number; y: number }[]): void;
+  getLocalPoints(): number[][];
   getPoints(): number[][];
 }
 
@@ -94,4 +98,11 @@ export interface VMobjectLike {
  */
 export function isVMobjectLike(m: MobjectLike): m is MobjectLike & VMobjectLike {
   return '_points3D' in m;
+}
+
+/**
+ * Type guard to check if a MobjectLike is a VMobject (has Bezier curves).
+ */
+export function isVMobject(m: MobjectLike): m is MobjectLike & VMobjectLike {
+  return m._isVMobject;
 }

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
+import * as THREE from 'three';
 import { ComplexPlane, PolarPlane } from './ComplexPlane';
 import { Text } from '../text';
 import { Mobject } from '../../core/Mobject';
@@ -897,6 +898,16 @@ describe('ComplexPlane with canvas mock', () => {
       class StubMobject extends Mobject {
         protected override _createCopy(): Mobject {
           return new StubMobject();
+        }
+        protected override _createThreeObject(): THREE.Object3D {
+          return new THREE.Group();
+        }
+        override getCenter(): [number, number, number] {
+          const obj = this.getThreeObject();
+          obj.updateWorldMatrix(true, false);
+          const v = new THREE.Vector3(this.position.x, this.position.y, this.position.z);
+          v.applyMatrix4(obj.matrixWorld);
+          return [v.x, v.y, v.z];
         }
       }
       const stubs = [new StubMobject(), new StubMobject(), new StubMobject(), new StubMobject()];

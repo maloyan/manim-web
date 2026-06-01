@@ -72,7 +72,7 @@ export class DashedVMobject extends Group {
     this._dashSegments = [];
 
     // Get the source points
-    const sourcePoints = this._sourceVMobject.getPoints();
+    const sourcePoints = this._sourceVMobject.getLocalPoints();
     if (sourcePoints.length < 2) {
       return;
     }

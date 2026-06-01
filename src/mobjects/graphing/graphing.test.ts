@@ -531,12 +531,12 @@ describe('FunctionGraph – uncovered branches', () => {
 
   it('multiple discontinuities split the range', () => {
     const fg = new FunctionGraph({ func: (x) => x, xRange: [-5, 5], discontinuities: [-2, 0, 2] });
-    expect(fg.getPoints().length).toBeGreaterThan(0);
+    expect(fg.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('2-point segment uses simple Bezier line', () => {
     // Very narrow range with few samples produces exactly 2 points in a segment
     const fg = new FunctionGraph({ func: (x) => x, xRange: [0, 0.01], numSamples: 2 });
-    expect(fg.getPoints().length).toBe(4); // 2 points -> 1 cubic Bezier (4 control points)
+    expect(fg.getLocalPoints().length).toBe(4); // 2 points -> 1 cubic Bezier (4 control points)
   });
 });

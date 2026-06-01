@@ -11,6 +11,7 @@
 
 import * as THREE from 'three';
 import { Vector3Tuple } from './Mobject';
+import { isVMobject } from './MobjectTypes';
 import { VMobjectRendering } from './VMobjectRendering';
 import { lerp, lerpPoint as lerpPoint3D, signedArea2DFromStride } from '../utils/math';
 import type { Point } from './VMobjectCurves';
@@ -23,6 +24,7 @@ import {
   isClosedPath,
 } from './VMobjectGeometry';
 import { resamplePointList3D } from './VMobjectTransformAlignment';
+import { computePointBounds } from './PointBounds';
 
 // Re-export Point type so existing `import { Point } from './VMobject'` keeps working.
 export type { Point } from './VMobjectCurves';
@@ -49,10 +51,18 @@ export class VMobject extends VMobjectRendering {
 
   constructor() {
     super();
+    this._isVMobject = true;
     // VMobjects have visible fill by default
     this.fillOpacity = 0.5;
     this._style.fillOpacity = 0.5;
     this._style.strokeOpacity = 1;
+  }
+
+  override isEmpty(): boolean {
+    if (this.getLocalPoints().length > 0) {
+      return false;
+    }
+    return this.children.every((child) => child.isEmpty());
   }
 
   // -----------------------------------------------------------------------
@@ -102,31 +112,64 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Get all points defining this VMobject as 3D arrays (local-space).
+   * Get all points defining this VMobject as 3D arrays in local (parent) space.
    *
-   * For coordinates after the full parent S/R/T chain, use {@link getWorldPoints}.
+   * These are the raw `_points3D` values — no ancestor transforms applied.
+   * For world-space coordinates (full parent S/R/T chain), use {@link getPoints}.
+   *
+   * @post result[i] === _points3D[i]  (copy, not reference)
    * @returns Copy of the points array
    */
-  getPoints(): number[][] {
+  getLocalPoints(): number[][] {
     return this._points3D.map((p) => [...p]);
   }
 
   /**
    * Get all points defining this VMobject in world coordinates.
    *
-   * Composes this VMobject's transform with every ancestor's transform
-   * (via {@link _computeWorldMatrix}). The render-only z-layering offset
-   * applied in `_syncToThree` is intentionally excluded.
+   * Composes this node's transform with every ancestor's (via {@link _computeWorldMatrix}).
+   * The render-only z-layering offset applied in `_syncToThree` is excluded.
+   * For local (parent-space) coordinates, use {@link getLocalPoints}.
    *
-   * @returns Copy of the points array, projected into world space
+   * @post result[i] === worldMatrix * _points3D[i]
+   * @post this.parent === null => result === getLocalPoints()
    */
-  getWorldPoints(): number[][] {
+  getPoints(): number[][] {
     const worldMatrix = this._computeWorldMatrix();
     const scratch = new THREE.Vector3();
     return this._points3D.map((p) => {
       scratch.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
       return [scratch.x, scratch.y, scratch.z];
     });
+  }
+
+  /**
+   * @pre  fn(pts).length === pts.length
+   * @post getPoints()[i] === fn(old.getPoints().map(p => p - aboutPoint))[i] + aboutPoint
+   */
+  protected override _applyFunctionAboutPoint(
+    fn: (pts: number[][]) => number[][],
+    aboutPoint: number[],
+  ): void {
+    const pts = this.getPoints();
+    if (pts.length === 0) return;
+    const shifted = pts.map((p) => [
+      p[0] - aboutPoint[0],
+      p[1] - aboutPoint[1],
+      p[2] - aboutPoint[2],
+    ]);
+    const worldResult = fn(shifted).map((p) => [
+      p[0] + aboutPoint[0],
+      p[1] + aboutPoint[1],
+      p[2] + aboutPoint[2],
+    ]);
+    const inverseWorld = this._computeWorldMatrix().clone().invert();
+    const scratch = new THREE.Vector3();
+    const localPts = worldResult.map((p) => {
+      scratch.set(p[0], p[1], p[2]).applyMatrix4(inverseWorld);
+      return [scratch.x, scratch.y, scratch.z];
+    });
+    this.setPoints(localPts);
   }
 
   /**
@@ -290,37 +333,67 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Fold local scaleVector into canonical child/point state and reset scaleVector.
+   * Bring this VMobject into canonical form without moving any geometry.
    *
-   * Matches VGroup normalization semantics: propagate scale to children,
-   * then clear parent scale anchor.
+   * @post !this.isEmpty() => old.getPoints()[i] === this.getPoints()[i]
+   * @post !this.isEmpty() => this.position === world-space bbox center of _points3D
+   * @post !this.isEmpty() => _points3D bbox center === [0,0,0]
+   * @post this.rotation === Euler(0,0,0) && this.scaleVector === Vector3(1,1,1)
+   * @post child.rotation === Euler(0,0,0) && child.scaleVector === Vector3(1,1,1)  // for every descendant
    */
   override normalizeTransform(): this {
-    const sx = this.scaleVector.x;
-    const sy = this.scaleVector.y;
-    const sz = this.scaleVector.z;
+    super.normalizeTransform();
+    this._markDirtyUpward();
+    return this;
+  }
 
-    if (!(sx === 1 && sy === 1 && sz === 1)) {
+  /**
+   * Bake scale and rotation into `_points3D` before children are propagated.
+   * @post _points3D[i] === old.scaleVector * (old.rotation * old._points3D[i])
+   * @post this.scaleVector === old.scaleVector && this.rotation === old.rotation  // caller resets these
+   * @note no-op when _points3D.length === 0 (e.g. VGroup)
+   */
+  protected override _bakeOwnGeometry(): void {
+    if (this._points3D.length === 0) return;
+
+    const sx = this.scaleVector.x,
+      sy = this.scaleVector.y,
+      sz = this.scaleVector.z;
+    if (sx !== 1 || sy !== 1 || sz !== 1) {
       for (const p of this._points3D) {
         p[0] *= sx;
         p[1] *= sy;
         p[2] *= sz;
       }
+    }
 
-      for (const child of this.children) {
-        child.position.set(child.position.x * sx, child.position.y * sy, child.position.z * sz);
-        child.scale([sx, sy, sz]);
+    const rx = this.rotation.x,
+      ry = this.rotation.y,
+      rz = this.rotation.z;
+    if (rx !== 0 || ry !== 0 || rz !== 0) {
+      const mat = new THREE.Matrix4().makeRotationFromEuler(this.rotation);
+      const v = new THREE.Vector3();
+      for (const p of this._points3D) {
+        v.set(p[0], p[1], p[2]).applyMatrix4(mat);
+        p[0] = v.x;
+        p[1] = v.y;
+        p[2] = v.z;
       }
-
-      this.scaleVector.set(1, 1, 1);
     }
+  }
 
-    for (const child of this.children) {
-      child.normalizeTransform();
+  /**
+   * Shift `_points3D` by `-localCenter`, then delegate to super to shift children.
+   * @pre  localCenter === this.getLocalCenter() - this.position
+   * @post _points3D[i] === old._points3D[i] - localCenter
+   */
+  protected override _recenterLocalGeometry(localCenter: THREE.Vector3): void {
+    for (const p of this._points3D) {
+      p[0] -= localCenter.x;
+      p[1] -= localCenter.y;
+      p[2] -= localCenter.z;
     }
-
-    this._markDirtyUpward();
-    return this;
+    super._recenterLocalGeometry(localCenter);
   }
 
   // -----------------------------------------------------------------------
@@ -656,46 +729,20 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Get the center of this VMobject based on its own local points.
-   * Uses bounding box center (matching Python Manim's get_center behavior)
-   * rather than point centroid, which is inaccurate for Bezier control points.
+   * Get world-space center from world-point bounds.
    */
   override getCenter(): Vector3Tuple {
-    const localCenter = VMobject._boundingBoxCenter(this._points3D);
-    if (!localCenter) {
+    const worldPoints = this.getPoints();
+    const bounds = computePointBounds(worldPoints);
+    if (!bounds) {
       return [this.position.x, this.position.y, this.position.z];
     }
 
     return [
-      this.position.x + localCenter[0],
-      this.position.y + localCenter[1],
-      this.position.z + localCenter[2],
+      (bounds.min.x + bounds.max.x) / 2,
+      (bounds.min.y + bounds.max.y) / 2,
+      (bounds.min.z + bounds.max.z) / 2,
     ];
-  }
-
-  /**
-   * Compute local bounding-box center for a list of points.
-   */
-  private static _boundingBoxCenter(points: number[][]): Vector3Tuple | null {
-    if (points.length === 0) return null;
-
-    let minX = Infinity,
-      maxX = -Infinity;
-    let minY = Infinity,
-      maxY = -Infinity;
-    let minZ = Infinity,
-      maxZ = -Infinity;
-
-    for (const p of points) {
-      if (p[0] < minX) minX = p[0];
-      if (p[0] > maxX) maxX = p[0];
-      if (p[1] < minY) minY = p[1];
-      if (p[1] > maxY) maxY = p[1];
-      if (p[2] < minZ) minZ = p[2];
-      if (p[2] > maxZ) maxZ = p[2];
-    }
-
-    return [(minX + maxX) / 2, (minY + maxY) / 2, (minZ + maxZ) / 2];
   }
 
   /**
@@ -712,10 +759,8 @@ export class VMobject extends VMobjectRendering {
     let hasPoints = false;
 
     for (const m of this.getFamily()) {
-      const asAny = m as unknown as { getPoints?: () => number[][] };
-      if (typeof asAny.getPoints !== 'function') continue;
-
-      for (const p of asAny.getPoints()) {
+      if (!isVMobject(m)) continue;
+      for (const p of m.getLocalPoints()) {
         hasPoints = true;
         if (p[0] < minX) minX = p[0];
         if (p[0] > maxX) maxX = p[0];

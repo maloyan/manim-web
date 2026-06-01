@@ -38,7 +38,7 @@ export function alignVmobjectPair(source: VMobject, target: VMobject): AlignedTr
   const startCopy = source.copy() as VMobject;
   const targetCopy = target.copy() as VMobject;
 
-  const finalTargetPoints = targetCopy.getPoints();
+  const finalTargetPoints = targetCopy.getLocalPoints();
   const finalTargetSubpathLengths =
     targetCopy.getEffectiveSubpathLengths?.() ?? target.getEffectiveSubpathLengths?.();
 
@@ -46,8 +46,8 @@ export function alignVmobjectPair(source: VMobject, target: VMobject): AlignedTr
     startCopy.getEffectiveSubpathLengths?.() ?? source.getEffectiveSubpathLengths?.();
   const tgtLengths = finalTargetSubpathLengths;
 
-  const startPointsRaw = startCopy.getPoints();
-  const targetPointsRaw = targetCopy.getPoints();
+  const startPointsRaw = startCopy.getLocalPoints();
+  const targetPointsRaw = targetCopy.getLocalPoints();
 
   assertSubpathLengthsMatchPoints(startPointsRaw, srcLengths, 'alignVmobjectPair(source)');
   assertSubpathLengthsMatchPoints(targetPointsRaw, tgtLengths, 'alignVmobjectPair(target)');
@@ -75,8 +75,8 @@ export function alignVmobjectPair(source: VMobject, target: VMobject): AlignedTr
   }
 
   startCopy.alignPoints(targetCopy);
-  const fallbackStartPoints = startCopy.getPoints();
-  const fallbackTargetPoints = targetCopy.getPoints();
+  const fallbackStartPoints = startCopy.getLocalPoints();
+  const fallbackTargetPoints = targetCopy.getLocalPoints();
 
   if (fallbackStartPoints.length !== fallbackTargetPoints.length) {
     throw new Error(
@@ -94,7 +94,7 @@ export function alignVmobjectPair(source: VMobject, target: VMobject): AlignedTr
 }
 
 export function canMorphByPoints(source: VMobject, target: VMobject): boolean {
-  return source.getPoints().length > 0 && target.getPoints().length > 0;
+  return source.getLocalPoints().length > 0 && target.getLocalPoints().length > 0;
 }
 
 function makePlaceholderSnapshot(reference?: LeafVMobjectSnapshot): LeafVMobjectSnapshot {

@@ -884,7 +884,7 @@ export class TangentLine extends VMobject {
   }
 
   private _generatePoints(): void {
-    const points3D = this._vmobject.getPoints();
+    const points3D = this._vmobject.getLocalPoints();
     if (points3D.length < 2) {
       // Fallback: create a simple horizontal line
       this._tangentPoint = [0, 0, 0];

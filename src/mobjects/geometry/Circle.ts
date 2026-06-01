@@ -39,9 +39,9 @@ export interface CircleOptions {
  * ```
  */
 export class Circle extends VMobject {
-  private _radius: number;
+  /** Raw radius before deferred scale; subclasses (Dot) read it for copy. */
+  protected _radius: number;
   private _numPoints: number;
-  private _centerPoint: Vector3Tuple;
 
   constructor(options: CircleOptions = {}) {
     super();
@@ -57,13 +57,14 @@ export class Circle extends VMobject {
 
     this._radius = radius;
     this._numPoints = numPoints;
-    this._centerPoint = [...center];
 
     this.setColor(color);
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
 
+    // Points are always centered at origin; this.position encodes the center.
     this._generatePoints();
+    this.position.set(center[0], center[1], center[2]);
   }
 
   /**
@@ -75,58 +76,68 @@ export class Circle extends VMobject {
     // k = (4/3) * tan(pi/8) = (4/3) * (sqrt(2) - 1)
     const kappa = (4 / 3) * (Math.SQRT2 - 1);
     const r = this._radius;
-    const [cx, cy, cz] = this._centerPoint;
 
-    // Generate 4 cubic Bezier segments for a complete circle
-    // Each segment spans 90 degrees
-    // Points format: anchor, handle, handle, anchor, handle, handle, ...
+    // Points are always at origin; this.position encodes the actual center.
     const points: number[][] = [];
 
-    // Right point (0 degrees)
-    const p0: number[] = [cx + r, cy, cz];
-    // Top point (90 degrees)
-    const p1: number[] = [cx, cy + r, cz];
-    // Left point (180 degrees)
-    const p2: number[] = [cx - r, cy, cz];
-    // Bottom point (270 degrees)
-    const p3: number[] = [cx, cy - r, cz];
+    const p0: number[] = [r, 0, 0];
+    const p1: number[] = [0, r, 0];
+    const p2: number[] = [-r, 0, 0];
+    const p3: number[] = [0, -r, 0];
 
     // Segment 1: Right to Top
     points.push(p0);
-    points.push([cx + r, cy + r * kappa, cz]);
-    points.push([cx + r * kappa, cy + r, cz]);
+    points.push([r, r * kappa, 0]);
+    points.push([r * kappa, r, 0]);
     points.push(p1);
 
     // Segment 2: Top to Left
-    points.push([cx - r * kappa, cy + r, cz]);
-    points.push([cx - r, cy + r * kappa, cz]);
+    points.push([-r * kappa, r, 0]);
+    points.push([-r, r * kappa, 0]);
     points.push(p2);
 
     // Segment 3: Left to Bottom
-    points.push([cx - r, cy - r * kappa, cz]);
-    points.push([cx - r * kappa, cy - r, cz]);
+    points.push([-r, -r * kappa, 0]);
+    points.push([-r * kappa, -r, 0]);
     points.push(p3);
 
     // Segment 4: Bottom to Right (close the circle)
-    points.push([cx + r * kappa, cy - r, cz]);
-    points.push([cx + r, cy - r * kappa, cz]);
-    points.push([...p0]); // Close back to start
+    points.push([r * kappa, -r, 0]);
+    points.push([r, -r * kappa, 0]);
+    points.push([...p0]);
 
     this.setPoints3D(points);
   }
 
-  /**
-   * Get the radius of the circle
-   */
-  getRadius(): number {
-    return this._radius;
+  private _getUniformScaleFactor(): number {
+    const sx = this.scaleVector.x;
+    const sy = this.scaleVector.y;
+    const sz = this.scaleVector.z;
+    const eps = 1e-9;
+    if (Math.abs(sx - sy) > eps || Math.abs(sx - sz) > eps) {
+      throw new Error('Circle requires uniform scale (x == y == z) to derive radius.');
+    }
+    return sx;
   }
 
   /**
-   * Set the radius of the circle
+   * Get the radius of the circle (includes deferred uniform scale).
+   */
+  getRadius(): number {
+    return this._radius * this._getUniformScaleFactor();
+  }
+
+  /**
+   * Set the radius of the circle.
+   *
+   * `value` is the visible radius (scale included), to match {@link getRadius}.
+   * The deferred uniform scale is divided back out before storing so the two
+   * stay consistent — i.e. setRadius(getRadius()) is a no-op.
+   *
+   * @post getRadius() === value
    */
   setRadius(value: number): this {
-    this._radius = value;
+    this._radius = value / this._getUniformScaleFactor();
     this._generatePoints();
     return this;
   }
@@ -135,58 +146,35 @@ export class Circle extends VMobject {
    * Get the center of the circle
    */
   getCircleCenter(): Vector3Tuple {
-    return [...this._centerPoint];
+    return [this.position.x, this.position.y, this.position.z];
   }
 
   /**
-   * Set the center of the circle
+   * Set the center of the circle.
+   * @post getCircleCenter() === value
    */
   setCircleCenter(value: Vector3Tuple): this {
-    this._centerPoint = [...value];
-    this._generatePoints();
-    return this;
-  }
-
-  /**
-   * Scale the circle by changing its actual radius (not scaleVector).
-   * Scales about the circle's own center so the center stays put.
-   */
-  override scale(factor: number | Vector3Tuple): this {
-    if (typeof factor === 'number') {
-      this._radius *= factor;
-      this._generatePoints();
-      this._markDirty();
-      return this;
-    }
-    // For non-uniform scaling, fall back to base
-    return super.scale(factor);
-  }
-
-  /**
-   * Shift the circle by updating its center point and regenerating geometry.
-   * Does not change Mobject.position to avoid double-counting in THREE.js hierarchy.
-   */
-  override shift(delta: Vector3Tuple): this {
-    this._centerPoint[0] += delta[0];
-    this._centerPoint[1] += delta[1];
-    this._centerPoint[2] += delta[2];
-    this._generatePoints();
+    this.position.set(value[0], value[1], value[2]);
+    // Every other position mutator (moveTo/shift/...) marks dirty; without this
+    // the clean-subtree invariant skips re-sync and the circle renders stale.
     this._markDirty();
     return this;
   }
 
   /**
-   * Get the circumference of the circle
+   * Get the circumference of the circle.
    */
   getCircumference(): number {
-    return 2 * Math.PI * this._radius;
+    const r = this.getRadius();
+    return 2 * Math.PI * r;
   }
 
   /**
-   * Get the area of the circle
+   * Get the area of the circle.
    */
   getArea(): number {
-    return Math.PI * this._radius * this._radius;
+    const r = this.getRadius();
+    return Math.PI * r * r;
   }
 
   /**
@@ -194,11 +182,18 @@ export class Circle extends VMobject {
    * @param angle Angle in radians from the positive x-axis
    */
   pointAtAngle(angle: number): Vector3Tuple {
+    const r = this.getRadius();
     return [
-      this._centerPoint[0] + this._radius * Math.cos(angle),
-      this._centerPoint[1] + this._radius * Math.sin(angle),
-      this._centerPoint[2],
+      this.position.x + r * Math.cos(angle),
+      this.position.y + r * Math.sin(angle),
+      this.position.z,
     ];
+  }
+
+  override normalizeTransform(): this {
+    this._radius *= this._getUniformScaleFactor();
+    super.normalizeTransform();
+    return this;
   }
 
   /**
@@ -208,7 +203,7 @@ export class Circle extends VMobject {
     return new Circle({
       radius: this._radius,
       numPoints: this._numPoints,
-      center: this._centerPoint,
+      center: this.getCircleCenter(),
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,

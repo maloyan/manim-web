@@ -29,14 +29,14 @@ describe('Angle', () => {
       ],
     });
     expect(a).toBeDefined();
-    expect(a.getPoints().length).toBeGreaterThan(0);
+    expect(a.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('constructs from two lines', () => {
     const l1 = new Line({ start: [0, 0, 0], end: [2, 0, 0] });
     const l2 = new Line({ start: [0, 0, 0], end: [0, 2, 0] });
     const a = new Angle({ line1: l1, line2: l2 });
-    expect(a.getPoints().length).toBeGreaterThan(0);
+    expect(a.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('default radius is 0.5 and color is WHITE', () => {
@@ -69,10 +69,10 @@ describe('Angle', () => {
 
   it('setRadius regenerates points', () => {
     const a = new Angle({ points: PTS_90 });
-    const n = a.getPoints().length;
+    const n = a.getLocalPoints().length;
     a.setRadius(2);
     expect(a.getRadius()).toBe(2);
-    expect(a.getPoints().length).toBe(n);
+    expect(a.getLocalPoints().length).toBe(n);
   });
 
   it('getLabel returns null when showValue is false', () => {
@@ -150,31 +150,37 @@ describe('Angle', () => {
   });
 
   it('quadrant 2: positive adjusts, negative passes through', () => {
-    expect(new Angle({ points: PTS_90 }, { quadrant: 2 }).getPoints().length).toBeGreaterThan(0);
-    expect(new Angle({ points: PTS_90_REV }, { quadrant: 2 }).getPoints().length).toBeGreaterThan(
+    expect(new Angle({ points: PTS_90 }, { quadrant: 2 }).getLocalPoints().length).toBeGreaterThan(
       0,
     );
+    expect(
+      new Angle({ points: PTS_90_REV }, { quadrant: 2 }).getLocalPoints().length,
+    ).toBeGreaterThan(0);
   });
 
   it('quadrant 3: positive adjusts, negative passes through', () => {
-    expect(new Angle({ points: PTS_90 }, { quadrant: 3 }).getPoints().length).toBeGreaterThan(0);
-    expect(new Angle({ points: PTS_90_REV }, { quadrant: 3 }).getPoints().length).toBeGreaterThan(
+    expect(new Angle({ points: PTS_90 }, { quadrant: 3 }).getLocalPoints().length).toBeGreaterThan(
       0,
     );
+    expect(
+      new Angle({ points: PTS_90_REV }, { quadrant: 3 }).getLocalPoints().length,
+    ).toBeGreaterThan(0);
   });
 
   it('quadrant 4: negative adjusts, positive passes through', () => {
-    expect(new Angle({ points: PTS_90_REV }, { quadrant: 4 }).getPoints().length).toBeGreaterThan(
+    expect(
+      new Angle({ points: PTS_90_REV }, { quadrant: 4 }).getLocalPoints().length,
+    ).toBeGreaterThan(0);
+    expect(new Angle({ points: PTS_90 }, { quadrant: 4 }).getLocalPoints().length).toBeGreaterThan(
       0,
     );
-    expect(new Angle({ points: PTS_90 }, { quadrant: 4 }).getPoints().length).toBeGreaterThan(0);
   });
 
   it('_createCopy produces an equivalent Angle', () => {
     const a = new Angle({ points: PTS_90 }, { radius: 0.8 });
     const copy = a.copy();
     expect(copy.getRadius()).toBe(0.8);
-    expect(copy.getPoints().length).toBe(a.getPoints().length);
+    expect(copy.getLocalPoints().length).toBe(a.getLocalPoints().length);
   });
 
   // ---- 3D tests (issue #220) ----
@@ -194,7 +200,7 @@ describe('Angle', () => {
     expect(a.getAngleValue()).toBeCloseTo(Math.PI / 2, 5);
 
     // All arc points should have y ≈ 0 (lie in XZ plane)
-    const pts = a.getPoints();
+    const pts = a.getLocalPoints();
     for (const p of pts) {
       expect(p[1]).toBeCloseTo(0, 5);
     }
@@ -225,7 +231,7 @@ describe('Angle', () => {
     expect(a.getAngleValue()).toBeCloseTo(Math.PI / 2, 5);
 
     // All arc points should have x ≈ 0
-    for (const p of a.getPoints()) {
+    for (const p of a.getLocalPoints()) {
       expect(p[0]).toBeCloseTo(0, 5);
     }
   });
@@ -247,7 +253,7 @@ describe('Angle', () => {
     expect(a.getAngleValue()).toBeCloseTo(Math.PI / 3, 5);
 
     // Arc anchor points (every 3rd starting from 0) should be on the circle
-    const pts = a.getPoints();
+    const pts = a.getLocalPoints();
     for (let i = 0; i < pts.length; i += 3) {
       const dist = Math.sqrt(pts[i][0] ** 2 + pts[i][1] ** 2 + pts[i][2] ** 2);
       expect(dist).toBeCloseTo(1, 3);
@@ -284,7 +290,7 @@ describe('Angle', () => {
       },
       { radius: 0.5 },
     );
-    for (const p of a.getPoints()) {
+    for (const p of a.getLocalPoints()) {
       expect(Number.isFinite(p[0])).toBe(true);
       expect(Number.isFinite(p[1])).toBe(true);
       expect(Number.isFinite(p[2])).toBe(true);
@@ -303,7 +309,7 @@ describe('Angle', () => {
       { radius: 1 },
     );
     expect(a.getAngleValue()).toBeCloseTo(Math.PI, 3);
-    for (const p of a.getPoints()) {
+    for (const p of a.getLocalPoints()) {
       expect(Number.isFinite(p[0])).toBe(true);
     }
   });
@@ -338,7 +344,7 @@ describe('Angle', () => {
       { radius: 1, otherAngle: true },
     );
     expect(a.getAngleValue()).toBeCloseTo((3 * Math.PI) / 2, 3);
-    for (const p of a.getPoints()) {
+    for (const p of a.getLocalPoints()) {
       expect(p[1]).toBeCloseTo(0, 5);
     }
   });
@@ -358,7 +364,7 @@ describe('Angle', () => {
     expect(copy.getAngleValue()).toBeCloseTo(a.getAngleValue(), 5);
 
     // Copy arc points should also lie in XZ plane
-    for (const p of copy.getPoints()) {
+    for (const p of copy.getLocalPoints()) {
       expect(p[1]).toBeCloseTo(0, 5);
     }
   });
@@ -382,7 +388,7 @@ describe('Angle', () => {
       { radius: 1, axis: [0, 1, 0] },
     );
     expect(a.getAngleValue()).toBeCloseTo((3 * Math.PI) / 4, 3);
-    for (const p of a.getPoints()) {
+    for (const p of a.getLocalPoints()) {
       expect(p[1]).toBeCloseTo(0, 5);
     }
   });
@@ -400,7 +406,7 @@ describe('Angle', () => {
       { radius: 1, axis: [0, 1, 0] },
     );
     expect(a.getAngleValue()).toBeCloseTo((5 * Math.PI) / 4, 3);
-    for (const p of a.getPoints()) {
+    for (const p of a.getLocalPoints()) {
       expect(p[1]).toBeCloseTo(0, 5);
     }
   });
@@ -505,13 +511,13 @@ describe('RightAngle', () => {
   it('constructs from three points', () => {
     const ra = new RightAngle({ points: PTS_90 });
     expect(ra).toBeDefined();
-    expect(ra.getPoints().length).toBeGreaterThan(0);
+    expect(ra.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('constructs from two lines', () => {
     const l1 = new Line({ start: [0, 0, 0], end: [2, 0, 0] });
     const l2 = new Line({ start: [0, 0, 0], end: [0, 2, 0] });
-    expect(new RightAngle({ line1: l1, line2: l2 }).getPoints().length).toBeGreaterThan(0);
+    expect(new RightAngle({ line1: l1, line2: l2 }).getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('default size is 0.3 and color is BLUE', () => {
@@ -532,11 +538,11 @@ describe('RightAngle', () => {
     const ra = new RightAngle({ points: PTS_90 });
     ra.setSize(0.5);
     expect(ra.getSize()).toBe(0.5);
-    expect(ra.getPoints().length).toBeGreaterThan(0);
+    expect(ra.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('has 7 points (two line segments as cubic beziers)', () => {
-    expect(new RightAngle({ points: PTS_90 }).getPoints().length).toBe(7);
+    expect(new RightAngle({ points: PTS_90 }).getLocalPoints().length).toBe(7);
   });
 
   it('copy creates equivalent right angle', () => {
@@ -570,7 +576,7 @@ describe('Elbow', () => {
   it('constructs with defaults', () => {
     const e = new Elbow();
     expect(e).toBeDefined();
-    expect(e.getPoints().length).toBeGreaterThan(0);
+    expect(e.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('default width, height, angle, and color', () => {
@@ -592,7 +598,7 @@ describe('Elbow', () => {
     const e = new Elbow();
     e.setWidth(5);
     expect(e.getWidth()).toBe(5);
-    expect(e.getPoints().length).toBeGreaterThan(0);
+    expect(e.getLocalPoints().length).toBeGreaterThan(0);
     e.setHeight(4);
     expect(e.getHeight()).toBe(4);
     e.setAngle(Math.PI / 3);
@@ -607,7 +613,7 @@ describe('Elbow', () => {
   });
 
   it('has 7 points (two line segments)', () => {
-    expect(new Elbow().getPoints().length).toBe(7);
+    expect(new Elbow().getLocalPoints().length).toBe(7);
   });
 
   it('copy creates equivalent elbow', () => {
@@ -625,7 +631,7 @@ describe('TangentLine', () => {
   it('constructs on a circle', () => {
     const t = new TangentLine(new Circle({ radius: 2 }));
     expect(t).toBeDefined();
-    expect(t.getPoints().length).toBeGreaterThan(0);
+    expect(t.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('default t is 0.5, default length is 2', () => {
@@ -674,7 +680,7 @@ describe('TangentLine', () => {
   });
 
   it('has 4 points (single cubic bezier segment)', () => {
-    expect(new TangentLine(new Circle()).getPoints().length).toBe(4);
+    expect(new TangentLine(new Circle()).getLocalPoints().length).toBe(4);
   });
 
   it('copy creates equivalent tangent line', () => {
@@ -694,7 +700,7 @@ describe('TangentLine', () => {
     const t = new TangentLine(new VMobject());
     expect(t.getTangentPoint()).toEqual([0, 0, 0]);
     expect(t.getTangentDirection()).toEqual([1, 0, 0]);
-    expect(t.getPoints().length).toBe(4);
+    expect(t.getLocalPoints().length).toBe(4);
   });
 
   it('handles VMobject with 2-3 points (linear interpolation)', () => {
@@ -705,7 +711,7 @@ describe('TangentLine', () => {
       [2, 0, 0],
     ]);
     const t = new TangentLine(vm, { t: 0.5 });
-    expect(t.getPoints().length).toBe(4);
+    expect(t.getLocalPoints().length).toBe(4);
     expect(t.getTangentPoint()[0]).toBeCloseTo(1, 1);
   });
 

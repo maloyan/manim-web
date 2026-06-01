@@ -22,13 +22,13 @@ export interface ApplyPointwiseFunctionToCenterOptions extends AnimationOptions 
 }
 
 interface VMobjectLike {
-  getPoints(): number[][];
+  getLocalPoints(): number[][];
   setPoints(pts: number[][]): void;
 }
 
 function isVMobjectLike(m: unknown): m is VMobjectLike {
   const obj = m as Record<string, unknown>;
-  return typeof obj.getPoints === 'function' && typeof obj.setPoints === 'function';
+  return typeof obj.getLocalPoints === 'function' && typeof obj.setPoints === 'function';
 }
 
 /**
@@ -65,14 +65,13 @@ export class ApplyPointwiseFunctionToCenter extends Animation {
 
     for (const mob of this.mobject.getFamily()) {
       if (isVMobjectLike(mob)) {
-        const startPoints = mob.getPoints();
+        const startPoints = mob.getLocalPoints();
         if (startPoints.length === 0) continue;
 
-        // Get the center of this particular mobject
-        const center = (mob as Mobject).getCenter();
+        const mobObj = mob as Mobject;
 
         // Get the Three.js object to transform local <-> world space.
-        const threeObj = (mob as Mobject)._threeObject;
+        const threeObj = mobObj._threeObject;
         let worldMatrix: THREE.Matrix4 | null = null;
         let inverseWorld: THREE.Matrix4 | null = null;
 
@@ -81,6 +80,8 @@ export class ApplyPointwiseFunctionToCenter extends Animation {
           worldMatrix = threeObj.matrixWorld;
           inverseWorld = worldMatrix.clone().invert();
         }
+
+        const center = mobObj.getCenter();
 
         let targetPoints: number[][];
         if (worldMatrix && inverseWorld) {

@@ -100,11 +100,12 @@ describe('AnimateProxy', () => {
     // Circle.scale(number) regenerates points with new radius.
     // Transform interpolates the point geometry, so at alpha=1
     // the points should match a circle with double the radius.
-    const startPoints = circle.getPoints();
+    const startPoints = circle.getLocalPoints();
     const proxy = circle.animate.scale(2);
     proxy.begin();
     proxy.interpolate(1);
-    const endPoints = circle.getPoints();
+    circle.normalizeTransform();
+    const endPoints = circle.getLocalPoints();
     // The points should have moved outward (larger radius).
     // Check that at least one point coordinate changed significantly.
     const startFirstX = startPoints[0]?.[0] ?? 0;

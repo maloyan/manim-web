@@ -177,9 +177,9 @@ export abstract class TransformMatchingAbstractBase extends Animation {
     const srcLengths = source.getEffectiveSubpathLengths?.();
     const tgtLengths = target.getEffectiveSubpathLengths?.();
     const alignedCompound = alignCompoundPathsForTransform(
-      srcCopy.getPoints(),
+      srcCopy.getLocalPoints(),
       srcLengths,
-      tgtCopy.getPoints(),
+      tgtCopy.getLocalPoints(),
       tgtLengths,
       source.getSubpathOrientationSigns?.(srcLengths),
       target.getSubpathOrientationSigns?.(tgtLengths),
@@ -204,15 +204,15 @@ export abstract class TransformMatchingAbstractBase extends Animation {
       this._matchedParts.push({
         source,
         target,
-        startPoints: srcCopy.getPoints(),
-        targetPoints: tgtCopy.getPoints(),
+        startPoints: srcCopy.getLocalPoints(),
+        targetPoints: tgtCopy.getLocalPoints(),
         startOpacity: source.opacity,
         targetOpacity: target.opacity,
         alignedSubpathLengths: undefined,
       });
 
       // Set source to have aligned points
-      source.setPoints(srcCopy.getPoints());
+      source.setPoints(srcCopy.getLocalPoints());
       source.setTransformSubpathLengths(undefined);
     }
   }

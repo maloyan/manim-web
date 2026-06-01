@@ -78,6 +78,9 @@ export function collectLeafVMobjectSnapshots(root: VMobject): LeafVMobjectSnapsh
 
 /**
  * Project a world-space position into a node's parent-local coordinates.
+ * @pre  parentWorldMatrix === parent.matrixWorld (up-to-date)
+ * @post result === parentWorldMatrix⁻¹ * worldPosition
+ *       i.e. the same value you'd find in node.position after a normalizeTransform()
  */
 export function worldToParentLocalPosition(
   worldPosition: THREE.Vector3,

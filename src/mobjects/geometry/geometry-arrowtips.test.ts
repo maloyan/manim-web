@@ -17,7 +17,7 @@ describe('ArrowTriangleTip', () => {
   it('constructs with defaults', () => {
     const tip = new ArrowTriangleTip();
     expect(tip).toBeDefined();
-    expect(tip.getPoints().length).toBeGreaterThan(0);
+    expect(tip.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('default length is 0.3 and width is 0.1', () => {
@@ -67,14 +67,14 @@ describe('ArrowTriangleTip', () => {
 
   it('has 10 points (triangle: 3 segments, each 3 controls + 1 anchor)', () => {
     const tip = new ArrowTriangleTip();
-    expect(tip.getPoints().length).toBe(10);
+    expect(tip.getLocalPoints().length).toBe(10);
   });
 
   it('setLength regenerates points', () => {
     const tip = new ArrowTriangleTip();
     tip.setLength(0.6);
     expect(tip.getLength()).toBe(0.6);
-    expect(tip.getPoints().length).toBeGreaterThan(0);
+    expect(tip.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('setWidth regenerates points', () => {
@@ -113,7 +113,7 @@ describe('ArrowTriangleFilledTip', () => {
 
   it('has same point structure as unfilled triangle', () => {
     const tip = new ArrowTriangleFilledTip();
-    expect(tip.getPoints().length).toBe(10);
+    expect(tip.getLocalPoints().length).toBe(10);
   });
 
   it('custom fillOpacity overrides default', () => {
@@ -126,7 +126,7 @@ describe('ArrowCircleTip', () => {
   it('constructs with defaults', () => {
     const tip = new ArrowCircleTip();
     expect(tip).toBeDefined();
-    expect(tip.getPoints().length).toBeGreaterThan(0);
+    expect(tip.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('default fillOpacity is 0 (unfilled)', () => {
@@ -136,12 +136,12 @@ describe('ArrowCircleTip', () => {
 
   it('has 8 segments by default (8*3+1 = 25 points)', () => {
     const tip = new ArrowCircleTip();
-    expect(tip.getPoints().length).toBe(25);
+    expect(tip.getLocalPoints().length).toBe(25);
   });
 
   it('custom numSegments changes point count', () => {
     const tip = new ArrowCircleTip({ numSegments: 4 });
-    expect(tip.getPoints().length).toBe(13);
+    expect(tip.getLocalPoints().length).toBe(13);
   });
 
   it('copy preserves properties', () => {
@@ -168,7 +168,7 @@ describe('ArrowSquareTip', () => {
   it('constructs with defaults', () => {
     const tip = new ArrowSquareTip();
     expect(tip).toBeDefined();
-    expect(tip.getPoints().length).toBeGreaterThan(0);
+    expect(tip.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('default fillOpacity is 0', () => {
@@ -178,7 +178,7 @@ describe('ArrowSquareTip', () => {
 
   it('has 13 points (4 sides: anchor + 4*3)', () => {
     const tip = new ArrowSquareTip();
-    expect(tip.getPoints().length).toBe(13);
+    expect(tip.getLocalPoints().length).toBe(13);
   });
 
   it('custom options are applied', () => {
@@ -211,7 +211,7 @@ describe('StealthTip', () => {
   it('constructs with defaults', () => {
     const tip = new StealthTip();
     expect(tip).toBeDefined();
-    expect(tip.getPoints().length).toBeGreaterThan(0);
+    expect(tip.getLocalPoints().length).toBeGreaterThan(0);
   });
 
   it('default fillOpacity is 1 (filled)', () => {
@@ -239,7 +239,7 @@ describe('StealthTip', () => {
 
   it('has 13 points (4 sides of stealth shape)', () => {
     const tip = new StealthTip();
-    expect(tip.getPoints().length).toBe(13);
+    expect(tip.getLocalPoints().length).toBe(13);
   });
 
   it('copy creates equivalent tip', () => {
