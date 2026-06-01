@@ -1,4 +1,3 @@
-import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Rectangle } from '../geometry/Rectangle';
@@ -665,11 +664,8 @@ export class SampleSpace extends VGroup {
     }
   }
 
-  /**
-   * Create a copy of this SampleSpace.
-   */
-  protected override _createCopy(): VMobject {
-    return new SampleSpace({
+  override copy(): SampleSpace {
+    const copy = new SampleSpace({
       width: this._ssWidth,
       height: this._ssHeight,
       color: this._outline.color,
@@ -678,5 +674,7 @@ export class SampleSpace extends VGroup {
       center: this._ssCenter,
       fontSize: this._fontSize,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

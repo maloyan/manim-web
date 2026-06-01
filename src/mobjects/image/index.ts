@@ -694,10 +694,7 @@ export class ImageMobject extends TexturedMobject {
     };
   }
 
-  /**
-   * Create a copy of this ImageMobject
-   */
-  protected override _createCopy(): ImageMobject {
+  override copy(): ImageMobject {
     const copy = new ImageMobject({
       source: this._source || undefined,
       pixelData: this._pixelData,
@@ -716,6 +713,7 @@ export class ImageMobject extends TexturedMobject {
       copy._texture = this._texture.clone();
       copy._markDirty();
     }
+    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
     return copy;
   }
 

@@ -143,13 +143,16 @@ export class ConvexHull3D extends Mobject {
   /**
    * Create a copy of this ConvexHull3D
    */
-  protected override _createCopy(): ConvexHull3D {
-    return new ConvexHull3D({
+  override copy(): ConvexHull3D {
+    this.normalizeTransform();
+    const copy = new ConvexHull3D({
       points: this._points.map((p) => [...p] as Vector3Tuple),
       color: this.color,
       opacity: this._opacity,
       wireframe: this._wireframe,
       center: [...this._centerPoint],
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

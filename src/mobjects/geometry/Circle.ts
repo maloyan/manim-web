@@ -201,7 +201,6 @@ export class Circle extends VMobject {
    * Copy this Circle.
    */
   override copy(): Circle {
-    this.normalizeTransform();
     const clone = new Circle({
       radius: this._radius,
       numPoints: this._numPoints,
@@ -210,7 +209,7 @@ export class Circle extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }

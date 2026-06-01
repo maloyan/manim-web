@@ -293,8 +293,8 @@ export class MandelbrotSet extends Mobject {
   // Copy
   // -----------------------------------------------------------------------
 
-  protected override _createCopy(): MandelbrotSet {
-    return new MandelbrotSet({
+  override copy(): MandelbrotSet {
+    const copy = new MandelbrotSet({
       width: this._width,
       height: this._height,
       center: [...this._center],
@@ -304,6 +304,8 @@ export class MandelbrotSet extends Mobject {
       lightness: this._lightness,
       opacity: this._opacity,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 
   // -----------------------------------------------------------------------

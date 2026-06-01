@@ -1,3 +1,25 @@
+/**
+ * CPU-side bounding-box utilities for VMobject geometry.
+ *
+ * Mobjects use two different strategies to compute bounding boxes.
+ *
+ * Most mobjects (Sphere, Cube, Image, PMobject, ...) delegate to Three.js
+ * via Box3.setFromObject(). Their geometries are standard BufferGeometry
+ * subclasses, so computeBoundingBox() can read vertex positions from the
+ * 'position' attribute on the CPU.
+ *
+ * VMobjects use the point-math utilities in this file instead. Their stroke
+ * rendering relies on Line2 (three/examples/jsm/lines), whose LineGeometry
+ * stores endpoints in instanceStart/instanceEnd rather than 'position'.
+ * computeBoundingBox() therefore finds no position data and leaves
+ * boundingBox null.
+ *
+ * The control points are available on the CPU; this is a gap in the Line2
+ * extras as of three.js 0.184, not a fundamental constraint. If a future
+ * release fixes this, VMobject.getBounds() can be removed and
+ * Mobject.getBounds() will work uniformly for all types.
+ */
+
 export interface PointBounds {
   min: { x: number; y: number; z: number };
   max: { x: number; y: number; z: number };

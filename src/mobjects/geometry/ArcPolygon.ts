@@ -223,7 +223,6 @@ export class ArcPolygon extends VMobject {
    * Create a copy of this ArcPolygon
    */
   override copy(): ArcPolygon {
-    this.normalizeTransform();
     const clone = new ArcPolygon({
       vertices: this._vertices,
       arcConfigs: this._arcConfigs,
@@ -231,7 +230,7 @@ export class ArcPolygon extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }

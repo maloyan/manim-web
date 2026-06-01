@@ -25,7 +25,7 @@ import { Line } from './Line';
 import { VMobject } from '../../core/VMobject';
 
 // ---------------------------------------------------------------------------
-// Arrow — coverage gaps: lines 374-376 (z-direction perpendicular), 442 (_createCopy DoubleArrow)
+// Arrow — coverage gaps: lines 374-376 (z-direction perpendicular), 442 (_copy DoubleArrow)
 // ---------------------------------------------------------------------------
 describe('Arrow coverage gaps', () => {
   it('DoubleArrow with z-direction uses x-axis perpendicular (lines 374-376)', () => {
@@ -39,7 +39,7 @@ describe('Arrow coverage gaps', () => {
     expect(da.getEnd()).toEqual([0, 0, 5]);
   });
 
-  it('DoubleArrow.copy() covers _createCopy (line 442)', () => {
+  it('DoubleArrow.copy() covers _copy (line 442)', () => {
     const da = new DoubleArrow({
       start: [0, 0, 0],
       end: [3, 4, 0],
@@ -62,11 +62,11 @@ describe('Arrow coverage gaps', () => {
 
 // ---------------------------------------------------------------------------
 // ArrowTips — coverage gaps: lines 40 (getPerpendicular z-direction),
-//   280 (ArrowTriangleFilledTip._createCopy), 415 (ArrowCircleFilledTip._createCopy),
-//   535 (ArrowSquareFilledTip._createCopy)
+//   280 (ArrowTriangleFilledTip._copy), 415 (ArrowCircleFilledTip._copy),
+//   535 (ArrowSquareFilledTip._copy)
 // ---------------------------------------------------------------------------
 describe('ArrowTips coverage gaps', () => {
-  it('ArrowTriangleFilledTip._createCopy (line 280)', () => {
+  it('ArrowTriangleFilledTip._copy (line 280)', () => {
     const tip = new ArrowTriangleFilledTip({
       position: [1, 0, 0],
       direction: [1, 0, 0],
@@ -76,7 +76,7 @@ describe('ArrowTips coverage gaps', () => {
     expect(copy).not.toBe(tip);
   });
 
-  it('ArrowCircleFilledTip._createCopy (line 415)', () => {
+  it('ArrowCircleFilledTip._copy (line 415)', () => {
     const tip = new ArrowCircleFilledTip({
       position: [1, 0, 0],
       direction: [1, 0, 0],
@@ -86,7 +86,7 @@ describe('ArrowTips coverage gaps', () => {
     expect(copy).not.toBe(tip);
   });
 
-  it('ArrowSquareFilledTip._createCopy (line 535)', () => {
+  it('ArrowSquareFilledTip._copy (line 535)', () => {
     const tip = new ArrowSquareFilledTip({
       position: [1, 0, 0],
       direction: [1, 0, 0],
@@ -109,7 +109,7 @@ describe('ArrowTips coverage gaps', () => {
 
 // ---------------------------------------------------------------------------
 // CubicBezier — coverage gaps: line 187 (normalizedTangentAtT degenerate),
-//   line 240 (curvatureAtT degenerate), line 331 (_createCopy)
+//   line 240 (curvatureAtT degenerate), line 331 (_copy)
 // ---------------------------------------------------------------------------
 describe('CubicBezier coverage gaps', () => {
   it('normalizedTangentAtT returns [1,0,0] for degenerate tangent (line 187)', () => {
@@ -139,7 +139,7 @@ describe('CubicBezier coverage gaps', () => {
     expect(curvature).toBe(0);
   });
 
-  it('copy() covers _createCopy (line 331)', () => {
+  it('copy() covers _copy (line 331)', () => {
     const cb = new CubicBezier({
       points: [
         [0, 0, 0],
@@ -157,7 +157,7 @@ describe('CubicBezier coverage gaps', () => {
 
 // ---------------------------------------------------------------------------
 // Polygon — coverage gaps: line 169 (setVertex out of bounds), line 181 (empty getCentroid),
-//   line 234 (getPerimeter < 2 vertices), line 257 (_createCopy)
+//   line 234 (getPerimeter < 2 vertices), line 257 (_copy)
 // ---------------------------------------------------------------------------
 describe('Polygon coverage gaps', () => {
   it('setVertex throws for out-of-bounds index (line 169)', () => {
@@ -172,7 +172,7 @@ describe('Polygon coverage gaps', () => {
     expect(() => p.setVertex(5, [0, 0, 0])).toThrow('out of bounds');
   });
 
-  it('copy() covers _createCopy (line 257)', () => {
+  it('copy() covers _copy (line 257)', () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -192,10 +192,10 @@ describe('Polygon coverage gaps', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Rectangle — coverage gaps: line 232 (_createCopy Rectangle), line 274 (_createCopy Square)
+// Rectangle — coverage gaps: line 232 (_copy Rectangle), line 274 (_copy Square)
 // ---------------------------------------------------------------------------
 describe('Rectangle coverage gaps', () => {
-  it('Rectangle.copy() covers _createCopy (line 232)', () => {
+  it('Rectangle.copy() covers _copy (line 232)', () => {
     const r = new Rectangle({ width: 3, height: 2 });
     const copy = r.copy();
     expect(copy).toBeInstanceOf(Rectangle);
@@ -204,7 +204,7 @@ describe('Rectangle coverage gaps', () => {
     expect(copy.getHeight()).toBe(2);
   });
 
-  it('Square.copy() covers _createCopy (line 274)', () => {
+  it('Square.copy() covers _copy (line 274)', () => {
     const s = new Square({ sideLength: 3 });
     const copy = s.copy();
     expect(copy).toBeInstanceOf(Square);
@@ -214,30 +214,30 @@ describe('Rectangle coverage gaps', () => {
 });
 
 // ---------------------------------------------------------------------------
-// ArcShapes — coverage gaps depend on exact lines; cover _createCopy and edge cases
+// ArcShapes — coverage gaps depend on exact lines; cover _copy and edge cases
 // ---------------------------------------------------------------------------
 describe('ArcShapes coverage gaps', () => {
-  it('Ellipse.copy() covers _createCopy', () => {
+  it('Ellipse.copy() covers _copy', () => {
     const e = new Ellipse({ width: 4, height: 2 });
     const copy = e.copy();
     expect(copy).toBeInstanceOf(Ellipse);
     expect(copy.getWidth()).toBe(4);
   });
 
-  it('Annulus.copy() covers _createCopy', () => {
+  it('Annulus.copy() covers _copy', () => {
     const a = new Annulus({ innerRadius: 0.5, outerRadius: 1.5 });
     const copy = a.copy();
     expect(copy).toBeInstanceOf(Annulus);
     expect(copy.getInnerRadius()).toBe(0.5);
   });
 
-  it('AnnularSector.copy() covers _createCopy', () => {
+  it('AnnularSector.copy() covers _copy', () => {
     const s = new AnnularSector({ innerRadius: 0.5, outerRadius: 1, angle: Math.PI / 3 });
     const copy = s.copy();
     expect(copy).toBeInstanceOf(AnnularSector);
   });
 
-  it('Sector.copy() covers _createCopy', () => {
+  it('Sector.copy() covers _copy', () => {
     const s = new Sector({ radius: 1, angle: Math.PI / 4 });
     const copy = s.copy();
     expect(copy).toBeInstanceOf(Sector);
@@ -261,7 +261,7 @@ describe('ArcShapes coverage gaps', () => {
     expect(copy.getVertices().length).toBe(3);
   });
 
-  it('CurvedArrow.copy() covers _createCopy', () => {
+  it('CurvedArrow.copy() covers _copy', () => {
     const ca = new CurvedArrow({
       startPoint: [-1, 0, 0],
       endPoint: [1, 0, 0],
@@ -272,7 +272,7 @@ describe('ArcShapes coverage gaps', () => {
     expect(copy.getStartPoint()).toEqual([-1, 0, 0]);
   });
 
-  it('CurvedDoubleArrow.copy() covers _createCopy', () => {
+  it('CurvedDoubleArrow.copy() covers _copy', () => {
     const cda = new CurvedDoubleArrow({
       startPoint: [-1, 0, 0],
       endPoint: [1, 0, 0],
@@ -282,7 +282,7 @@ describe('ArcShapes coverage gaps', () => {
     expect(copy).toBeInstanceOf(CurvedDoubleArrow);
   });
 
-  it('TangentialArc.copy() covers _createCopy', () => {
+  it('TangentialArc.copy() covers _copy', () => {
     const ta = new TangentialArc({
       start: [0, 0, 0],
       direction: [1, 0, 0],
@@ -314,7 +314,7 @@ describe('ArcShapes coverage gaps', () => {
 
 // ---------------------------------------------------------------------------
 // ArcBetweenPoints — coverage gaps: lines 94-99 (degenerate angle),
-//   120 (coincident points), 179 (_createCopy)
+//   120 (coincident points), 179 (_copy)
 // ---------------------------------------------------------------------------
 describe('ArcBetweenPoints coverage gaps', () => {
   it('degenerate case: very small angle (lines 94-99)', () => {
@@ -336,7 +336,7 @@ describe('ArcBetweenPoints coverage gaps', () => {
     expect(arc).toBeDefined();
   });
 
-  it('copy() covers _createCopy (line 179)', () => {
+  it('copy() covers _copy (line 179)', () => {
     const arc = new ArcBetweenPoints({
       start: [-1, 0, 0],
       end: [1, 0, 0],
@@ -351,7 +351,7 @@ describe('ArcBetweenPoints coverage gaps', () => {
 
 // ---------------------------------------------------------------------------
 // DashedVMobject — coverage gaps: line 83 (empty points), line 91 (nSeg <1),
-//   line 310 (_createCopy)
+//   line 310 (_copy)
 // ---------------------------------------------------------------------------
 describe('DashedVMobject coverage gaps', () => {
   it('DashedVMobject with empty VMobject handles gracefully (line 83)', () => {
@@ -361,7 +361,7 @@ describe('DashedVMobject coverage gaps', () => {
     expect(dashed).toBeDefined();
   });
 
-  it('DashedVMobject.copy() covers _createCopy (line 310)', () => {
+  it('DashedVMobject.copy() covers _copy (line 310)', () => {
     const line = new Line({ start: [0, 0, 0], end: [3, 0, 0] });
     const dashed = new DashedVMobject({ vmobject: line });
     const copy = dashed.copy();

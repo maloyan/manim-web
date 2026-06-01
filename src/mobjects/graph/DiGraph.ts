@@ -85,16 +85,15 @@ export class DiGraph extends GenericGraph {
     return this.getInNeighbors(v).length;
   }
 
-  /**
-   * Create a copy of this digraph
-   */
-  protected override _createCopy(): DiGraph {
-    return new DiGraph({
+  override copy(): DiGraph {
+    const copy = new DiGraph({
       vertices: [...this._vertices],
       edges: this._edges.map((e) => [...e] as EdgeTuple),
       layout: { ...this._layoutConfig },
       vertexStyle: { ...this._vertexStyle },
       edgeStyle: { ...this._edgeStyle },
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

@@ -126,16 +126,13 @@ export class Camera2DFrame extends VMobject {
 
   // ── Copy / clone ──────────────────────────────────────────────
 
-  protected override _createCopy(): Camera2DFrame {
+  override copy(): Camera2DFrame {
     const copy = new Camera2DFrame(this._camera, false);
+    this._copyBaseAttributesInto(copy);
     copy._baseFrameWidth = this._baseFrameWidth;
     copy._baseFrameHeight = this._baseFrameHeight;
-    copy.position.copy(this.position);
     copy.scaleVector.copy(this.scaleVector);
     copy.rotation.copy(this.rotation);
-    copy.opacity = this.opacity;
-    copy.fillOpacity = this.fillOpacity;
-    copy.strokeWidth = this.strokeWidth;
     const pts = this.getLocalPoints();
     if (pts.length > 0) copy.setPoints3D(pts);
     return copy;

@@ -1088,7 +1088,7 @@ describe('NumberPlane', () => {
     });
   });
 
-  describe('_createCopy via copy()', () => {
+  describe('copy() via copy()', () => {
     it('should produce an independent NumberPlane', () => {
       const plane = new NumberPlane({
         xRange: [-3, 3, 1],

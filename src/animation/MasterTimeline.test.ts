@@ -16,7 +16,7 @@ class TestMobject extends Mobject {
     return new THREE.Object3D();
   }
   protected _syncToThree(): void {}
-  protected _createCopy(): Mobject {
+  override copy(): Mobject {
     return new TestMobject();
   }
 }
@@ -973,13 +973,13 @@ describe('MasterTimeline', () => {
 // =============================================================================
 
 describe('Animation _captureMinimalState and reset', () => {
-  /** Mobject whose _createCopy() throws, forcing the catch+warn fallback. */
+  /** Mobject whose copy() throws, forcing the catch+warn fallback. */
   class NoCopyMobject extends Mobject {
     protected _createThreeObject(): THREE.Object3D {
       return new THREE.Object3D();
     }
     protected _syncToThree(): void {}
-    protected _createCopy(): Mobject {
+    override copy(): Mobject {
       throw new Error('copy not supported');
     }
   }
@@ -1041,7 +1041,7 @@ describe('Animation _captureMinimalState and reset', () => {
     ]);
   });
 
-  describe('with NoCopyMobject (deliberately throws from _createCopy)', () => {
+  describe('with NoCopyMobject (deliberately throws from copy)', () => {
     silenceCopyWarn();
 
     it('falls back to _captureMinimalState when copy() throws', () => {

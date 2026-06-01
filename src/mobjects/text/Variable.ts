@@ -314,11 +314,9 @@ export class Variable extends Mobject {
     await this._arrangeSubmobjects();
   }
 
-  /**
-   * Create a copy of this Variable
-   */
-  protected _createCopy(): Variable {
-    return new Variable({
+  override copy(): Variable {
+    this.normalizeTransform();
+    const copy = new Variable({
       label: this._label,
       value: this._value,
       numDecimalPlaces: this._numDecimalPlaces,
@@ -330,6 +328,8 @@ export class Variable extends Mobject {
       labelBuff: this._labelBuff,
       valueBuff: this._valueBuff,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 
   /**

@@ -133,7 +133,6 @@ export class Polygram extends VMobject {
   }
 
   override copy(): Polygram {
-    this.normalizeTransform();
     // Strip closing vertices for the constructor (it auto-closes)
     const groups = this._vertexGroups.map((group) => {
       const stripped = group.map((v) => [...v] as Vector3Tuple);
@@ -154,7 +153,7 @@ export class Polygram extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }

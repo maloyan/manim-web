@@ -1110,12 +1110,9 @@ export class MathTexImage extends TexturedMobject {
     }
   }
 
-  /**
-   * Create a copy of this MathTexImage
-   */
-  protected override _createCopy(): MathTexImage {
+  override copy(): MathTexImage {
     const latexValue = this._isMultiPart ? this._parts.map((p) => p._latex) : this._latex;
-    return new MathTexImage({
+    const copy = new MathTexImage({
       latex: latexValue,
       color: this.color,
       fontSize: this._fontSize,
@@ -1123,6 +1120,8 @@ export class MathTexImage extends TexturedMobject {
       position: [this.position.x, this.position.y, this.position.z],
       renderer: this._renderer,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 
   /**

@@ -155,17 +155,17 @@ export class Cube extends Mobject {
     return Math.pow(this._sideLength, 3);
   }
 
-  /**
-   * Create a copy of this Cube
-   */
-  protected override _createCopy(): Cube {
-    return new Cube({
+  override copy(): Cube {
+    this.normalizeTransform();
+    const copy = new Cube({
       sideLength: this._sideLength,
       center: this._centerPoint,
       color: this.color,
       opacity: this._opacity,
       wireframe: this._wireframe,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -368,11 +368,9 @@ export class Box3D extends Mobject {
     return this._width * this._height * this._depth;
   }
 
-  /**
-   * Create a copy of this Box3D
-   */
-  protected override _createCopy(): Box3D {
-    return new Box3D({
+  override copy(): Box3D {
+    this.normalizeTransform();
+    const copy = new Box3D({
       width: this._width,
       height: this._height,
       depth: this._depth,
@@ -381,5 +379,7 @@ export class Box3D extends Mobject {
       opacity: this._opacity,
       wireframe: this._wireframe,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

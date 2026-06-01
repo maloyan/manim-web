@@ -315,11 +315,8 @@ export class VectorField extends Group {
     return this;
   }
 
-  /**
-   * Create a copy of this VectorField
-   */
-  protected override _createCopy(): VectorField {
-    return new VectorField({
+  override copy(): VectorField {
+    const copy = new VectorField({
       func: this._func,
       xRange: this._xRange,
       yRange: this._yRange,
@@ -330,6 +327,8 @@ export class VectorField extends Group {
       strokeWidth: this._strokeWidth,
       opacity: this._opacity,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -474,11 +473,8 @@ export class ArrowVectorField extends VectorField {
     return this._maxArrowLength;
   }
 
-  /**
-   * Create a copy of this ArrowVectorField
-   */
-  protected override _createCopy(): ArrowVectorField {
-    return new ArrowVectorField({
+  override copy(): ArrowVectorField {
+    const copy = new ArrowVectorField({
       func: this._func,
       xRange: this._xRange,
       yRange: this._yRange,
@@ -492,6 +488,8 @@ export class ArrowVectorField extends VectorField {
       maxArrowLength: this._maxArrowLength,
       normalizeArrows: this._normalizeArrows,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -1157,11 +1155,8 @@ export class StreamLines extends VectorField {
     return this;
   }
 
-  /**
-   * Create a copy of this StreamLines
-   */
-  protected override _createCopy(): StreamLines {
-    return new StreamLines({
+  override copy(): StreamLines {
+    const copy = new StreamLines({
       func: this._func,
       xRange: this._xRange,
       yRange: this._yRange,
@@ -1185,5 +1180,7 @@ export class StreamLines extends VectorField {
       padding: this._padding,
       nRepeats: this._nRepeats,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

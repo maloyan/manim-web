@@ -188,13 +188,16 @@ export class Line3D extends Mobject {
     ];
   }
 
-  protected override _createCopy(): Line3D {
-    return new Line3D({
+  override copy(): Line3D {
+    this.normalizeTransform();
+    const copy = new Line3D({
       start: this._start,
       end: this._end,
       color: this.color,
       lineWidth: this.strokeWidth,
       opacity: this._opacity,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

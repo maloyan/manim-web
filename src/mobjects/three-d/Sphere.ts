@@ -197,11 +197,9 @@ export class Sphere extends Mobject {
     return [x + this.position.x, y + this.position.y, z + this.position.z];
   }
 
-  /**
-   * Create a copy of this Sphere
-   */
-  protected override _createCopy(): Sphere {
-    return new Sphere({
+  override copy(): Sphere {
+    this.normalizeTransform();
+    const copy = new Sphere({
       radius: this._radius,
       center: this._centerPoint,
       color: this.color,
@@ -209,5 +207,7 @@ export class Sphere extends Mobject {
       resolution: this._resolution,
       wireframe: this._wireframe,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

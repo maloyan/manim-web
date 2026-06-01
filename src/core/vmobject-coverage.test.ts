@@ -7,7 +7,7 @@
  *
  * Focus: setPoints variants, _pointsToShape, _pointsToCurvePath,
  * _buildEarcutFillGeometry, _isNearlyLinear, _sampleBezierOutline,
- * _pointInPolygon, _createCopy, _interpolatePointList3D edge cases,
+ * _pointInPolygon, _copy, _interpolatePointList3D edge cases,
  * visiblePointCount clamping, and shaderCurves getter/setter.
  */
 
@@ -15,6 +15,13 @@ import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { VMobject, Point } from './VMobject';
 import { curvesAsSubmobjects, CurvesAsSubmobjects } from './VMobjectCurveUtils';
+import {
+  isNearlyLinear,
+  pointInPolygon,
+  sampleBezierOutline,
+  sampleBezierPath,
+  isClosedPath,
+} from './VMobjectGeometry';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -202,7 +209,7 @@ describe('VMobject._isNearlyLinear', () => {
     const p1 = [1 / 3, 0, 0]; // on chord
     const p2 = [2 / 3, 0, 0]; // on chord
     const p3 = [1, 0, 0];
-    expect((VMobject as any)._isNearlyLinear(p0, p1, p2, p3)).toBe(true);
+    expect(isNearlyLinear(p0, p1, p2, p3)).toBe(true);
   });
 
   it('returns false for a curved segment', () => {
@@ -210,12 +217,12 @@ describe('VMobject._isNearlyLinear', () => {
     const p1 = [0.33, 1, 0]; // far from chord
     const p2 = [0.67, 1, 0]; // far from chord
     const p3 = [1, 0, 0];
-    expect((VMobject as any)._isNearlyLinear(p0, p1, p2, p3)).toBe(false);
+    expect(isNearlyLinear(p0, p1, p2, p3)).toBe(false);
   });
 
   it('returns true for degenerate segment (all points at same position)', () => {
     const p = [5, 5, 0];
-    expect((VMobject as any)._isNearlyLinear(p, p, p, p)).toBe(true);
+    expect(isNearlyLinear(p, p, p, p)).toBe(true);
   });
 
   it('returns true when handles are very close to chord', () => {
@@ -223,7 +230,7 @@ describe('VMobject._isNearlyLinear', () => {
     const p1 = [1 / 3, 0.005, 0]; // slightly off chord
     const p2 = [2 / 3, -0.005, 0]; // slightly off chord
     const p3 = [1, 0, 0];
-    expect((VMobject as any)._isNearlyLinear(p0, p1, p2, p3)).toBe(true);
+    expect(isNearlyLinear(p0, p1, p2, p3)).toBe(true);
   });
 
   it('returns false for a curved segment in the XZ plane (regression)', () => {
@@ -232,7 +239,7 @@ describe('VMobject._isNearlyLinear', () => {
     const p1 = [0.33, 0, 1];
     const p2 = [0.67, 0, 1];
     const p3 = [1, 0, 0];
-    expect((VMobject as any)._isNearlyLinear(p0, p1, p2, p3)).toBe(false);
+    expect(isNearlyLinear(p0, p1, p2, p3)).toBe(false);
   });
 
   it('returns false for a curved segment in the YZ plane', () => {
@@ -240,7 +247,7 @@ describe('VMobject._isNearlyLinear', () => {
     const p1 = [0, 0.33, 1];
     const p2 = [0, 0.67, 1];
     const p3 = [0, 1, 0];
-    expect((VMobject as any)._isNearlyLinear(p0, p1, p2, p3)).toBe(false);
+    expect(isNearlyLinear(p0, p1, p2, p3)).toBe(false);
   });
 
   // Regression for issue #310: classification must be scale-invariant so that
@@ -265,7 +272,7 @@ describe('VMobject._isNearlyLinear', () => {
 
     const classify = (s: number) => {
       const [a, b, c, d] = scaled(s);
-      return (VMobject as any)._isNearlyLinear(a, b, c, d) as boolean;
+      return isNearlyLinear(a, b, c, d) as boolean;
     };
 
     // Same shape at different scales must classify the same.
@@ -281,7 +288,7 @@ describe('VMobject._isNearlyLinear', () => {
     const p1 = [0.005, 0.005, 0];
     const p2 = [0.015, 0.005, 0];
     const p3 = [0.02, 0, 0];
-    expect((VMobject as any)._isNearlyLinear(p0, p1, p2, p3)).toBe(false);
+    expect(isNearlyLinear(p0, p1, p2, p3)).toBe(false);
   });
 
   it('a clearly linear segment at any scale stays linear (issue #310)', () => {
@@ -294,7 +301,7 @@ describe('VMobject._isNearlyLinear', () => {
     ];
     for (const s of [0.001, 0.1, 1, 100]) {
       const [a, b, c, d] = tiny(s);
-      expect((VMobject as any)._isNearlyLinear(a, b, c, d)).toBe(true);
+      expect(isNearlyLinear(a, b, c, d)).toBe(true);
     }
   });
 });
@@ -313,15 +320,15 @@ describe('VMobject._pointInPolygon', () => {
   ];
 
   it('returns true for point inside polygon', () => {
-    expect((VMobject as any)._pointInPolygon([0.5, 0.5], square)).toBe(true);
+    expect(pointInPolygon([0.5, 0.5], square)).toBe(true);
   });
 
   it('returns false for point outside polygon', () => {
-    expect((VMobject as any)._pointInPolygon([2, 2], square)).toBe(false);
+    expect(pointInPolygon([2, 2], square)).toBe(false);
   });
 
   it('returns false for point far outside', () => {
-    expect((VMobject as any)._pointInPolygon([-1, -1], square)).toBe(false);
+    expect(pointInPolygon([-1, -1], square)).toBe(false);
   });
 
   it('works with triangle', () => {
@@ -330,8 +337,8 @@ describe('VMobject._pointInPolygon', () => {
       [2, 0],
       [1, 2],
     ];
-    expect((VMobject as any)._pointInPolygon([1, 0.5], triangle)).toBe(true);
-    expect((VMobject as any)._pointInPolygon([0, 2], triangle)).toBe(false);
+    expect(pointInPolygon([1, 0.5], triangle)).toBe(true);
+    expect(pointInPolygon([0, 2], triangle)).toBe(false);
   });
 });
 
@@ -343,7 +350,7 @@ describe('VMobject._sampleBezierOutline', () => {
   it('samples a curved segment with multiple points', () => {
     const v = makeSimpleBezier();
     const pts = v.getLocalPoints();
-    const outline = (v as any)._sampleBezierOutline(pts, 8) as number[][];
+    const outline = sampleBezierOutline(pts, 8) as number[][];
     // Should have multiple sampled points
     expect(outline.length).toBeGreaterThan(2);
     // First point should be start
@@ -361,7 +368,7 @@ describe('VMobject._sampleBezierOutline', () => {
       [1, 0, 0],
     ]);
     const pts = v.getLocalPoints();
-    const outline = (v as any)._sampleBezierOutline(pts, 8) as number[][];
+    const outline = sampleBezierOutline(pts, 8) as number[][];
     // Always emits `samplesPerSegment + 1` samples per segment regardless
     // of linearity; previously the adaptive collapse made this 2, but
     // adaptive sampling caused stroke flicker mid-Transform as lerped
@@ -377,7 +384,7 @@ describe('VMobject._sampleBezierOutline', () => {
       [1, 1, 0],
     ]);
     const pts = v.getLocalPoints();
-    const outline = (v as any)._sampleBezierOutline(pts, 8) as number[][];
+    const outline = sampleBezierOutline(pts, 8) as number[][];
     // Should use fallback: just return the input points as [x, y]
     expect(outline.length).toBe(2);
   });
@@ -392,7 +399,7 @@ describe('VMobject._sampleBezierOutline', () => {
       [0, 0, 0], // closes back to start
     ]);
     const pts = v.getLocalPoints();
-    const outline = (v as any)._sampleBezierOutline(pts, 8) as number[][];
+    const outline = sampleBezierOutline(pts, 8) as number[][];
     // Last point should NOT be a duplicate of first
     const first = outline[0];
     const last = outline[outline.length - 1];
@@ -436,7 +443,7 @@ describe('VMobject._sampleBezierPath', () => {
   it('returns sampled points for valid bezier', () => {
     const v = makeMultiSegmentBezier();
     const pts = v.getLocalPoints();
-    const sampled = (v as any)._sampleBezierPath(pts, 4) as number[][];
+    const sampled = sampleBezierPath(pts, 4) as number[][];
     expect(sampled.length).toBeGreaterThan(2);
     // First point should match first anchor
     expect(sampled[0][0]).toBeCloseTo(-2);
@@ -451,7 +458,7 @@ describe('VMobject._sampleBezierPath', () => {
       [1, 1, 0],
     ]);
     const pts = v.getLocalPoints();
-    const sampled = (v as any)._sampleBezierPath(pts, 4) as number[][];
+    const sampled = sampleBezierPath(pts, 4) as number[][];
     // Fallback: just returns input points
     expect(sampled).toEqual(pts);
   });
@@ -471,7 +478,7 @@ describe('VMobject._sampleBezierPath', () => {
       [2, 0, 0],
     ]);
     const pts = v.getLocalPoints();
-    const sampled = (v as any)._sampleBezierPath(pts, 8) as number[][];
+    const sampled = sampleBezierPath(pts, 8) as number[][];
     // 2 segments * 8 samples + 1 shared anchor = 17 samples.
     expect(sampled.length).toBe(17);
   });
@@ -485,13 +492,13 @@ describe('VMobject._isClosedPath', () => {
   it('returns true for closed path', () => {
     const v = makeSquare();
     const pts = v.getLocalPoints();
-    expect((v as any)._isClosedPath(pts)).toBe(true);
+    expect(isClosedPath(pts)).toBe(true);
   });
 
   it('returns false for open path', () => {
     const v = makeSimpleBezier();
     const pts = v.getLocalPoints();
-    expect((v as any)._isClosedPath(pts)).toBe(false);
+    expect(isClosedPath(pts)).toBe(false);
   });
 
   it('returns false for fewer than 4 points', () => {
@@ -502,18 +509,18 @@ describe('VMobject._isClosedPath', () => {
       [1, 1, 0],
     ]);
     const pts = v.getLocalPoints();
-    expect((v as any)._isClosedPath(pts)).toBe(false);
+    expect(isClosedPath(pts)).toBe(false);
   });
 });
 
 // ===========================================================================
-// _createCopy
+// _copy
 // ===========================================================================
 
-describe('VMobject._createCopy', () => {
+describe('VMobject.copy()', () => {
   it('produces a deep copy of points', () => {
     const v = makeSimpleBezier();
-    const copy = (v as any)._createCopy() as VMobject;
+    const copy = v.copy();
     expect(copy).toBeInstanceOf(VMobject);
     expect(copy.getLocalPoints()).toEqual(v.getLocalPoints());
     // Verify deep copy (modifying copy shouldn't affect original)
@@ -524,7 +531,7 @@ describe('VMobject._createCopy', () => {
   it('copies visiblePointCount', () => {
     const v = makeSimpleBezier();
     v.visiblePointCount = 2;
-    const copy = (v as any)._createCopy() as VMobject;
+    const copy = v.copy();
     expect(copy.visiblePointCount).toBe(2);
   });
 });

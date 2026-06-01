@@ -101,6 +101,15 @@ helpers live in `src/utils/math.ts` and are built on top of those.
 // should be: @pre !this.isEmpty()
 ```
 
+> **Code-quality push (in progress).** We are actively tightening these
+> invariants and will soon back them with **property-based tests** that exercise
+> each `@pre`/`@post` over generated inputs. When adding or changing a method,
+> write its contract as checkable boolean expressions now so it is ready to be
+> turned into a property. Some existing example-based tests are marked
+> `MIGRATION:` — they are weak placeholders to be replaced once the
+> property-based suite lands; prefer asserting on observable invariants (world
+> geometry, bounds) over internal attributes (raw `position`, `_points3D`).
+
 ## Commits, Changelog & Releases
 
 `CHANGELOG.md` is **generated**, not hand-written. It is produced by

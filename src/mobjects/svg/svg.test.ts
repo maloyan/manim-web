@@ -441,7 +441,7 @@ describe('SVGMobject', () => {
     const copy = orig.copy() as SVGMobject;
     expect(copy).not.toBe(orig);
     expect(copy).toBeInstanceOf(SVGMobject);
-    // _createCopy re-parses SVG, then Mobject.copy() also deep-copies children
+    // _copy re-parses SVG, then Mobject.copy() also deep-copies children
     expect(copy.children.length).toBeGreaterThanOrEqual(orig.children.length);
   });
 

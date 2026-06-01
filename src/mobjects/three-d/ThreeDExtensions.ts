@@ -234,11 +234,9 @@ export class Prism extends Mobject {
     return this.getBaseArea() * this._height;
   }
 
-  /**
-   * Create a copy of this Prism
-   */
-  protected override _createCopy(): Prism {
-    return new Prism({
+  override copy(): Prism {
+    this.normalizeTransform();
+    const copy = new Prism({
       sides: this._sides,
       radius: this._radius,
       height: this._height,
@@ -247,6 +245,8 @@ export class Prism extends Mobject {
       opacity: this._opacity,
       wireframe: this._wireframe,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -524,11 +524,9 @@ export class Dot3D extends Mobject {
     return this;
   }
 
-  /**
-   * Create a copy of this Dot3D
-   */
-  protected override _createCopy(): Dot3D {
-    return new Dot3D({
+  override copy(): Dot3D {
+    this.normalizeTransform();
+    const copy = new Dot3D({
       radius: this._radius,
       point: this._pointPosition,
       color: this.color,
@@ -538,6 +536,8 @@ export class Dot3D extends Mobject {
       glowRadius: this._glowRadius,
       resolution: this._resolution,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -779,10 +779,8 @@ export class ThreeDVMobject extends VMobject {
     };
   }
 
-  /**
-   * Create a copy of this ThreeDVMobject
-   */
-  protected override _createCopy(): ThreeDVMobject {
+  override copy(): ThreeDVMobject {
+    this.normalizeTransform();
     const copy = new ThreeDVMobject({
       points: this._points3D.map((p) => [...p]),
       color: this.color,
@@ -791,6 +789,7 @@ export class ThreeDVMobject extends VMobject {
       strokeWidth: this.strokeWidth,
       closePath: this._closePath,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
   }
 }

@@ -645,11 +645,8 @@ export class BarChart extends Group {
     return this;
   }
 
-  /**
-   * Create a copy of this BarChart
-   */
-  protected override _createCopy(): BarChart {
-    return new BarChart({
+  override copy(): BarChart {
+    const copy = new BarChart({
       values: this.getValues(),
       barWidth: this._barWidth,
       barGap: this._barGap,
@@ -669,5 +666,7 @@ export class BarChart extends Group {
       seriesNames: [...this._seriesNames],
       showLegend: this._showLegend,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

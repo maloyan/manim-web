@@ -171,15 +171,14 @@ export class Line extends VMobject {
     return [s[0] + (e[0] - s[0]) * t, s[1] + (e[1] - s[1]) * t, s[2] + (e[2] - s[2]) * t];
   }
 
-  /**
-   * Create a copy of this Line
-   */
-  protected override _createCopy(): Line {
-    return new Line({
+  override copy(): Line {
+    const copy = new Line({
       start: this._start,
       end: this._end,
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

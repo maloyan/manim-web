@@ -320,7 +320,7 @@ class CameraFrameStub extends Mobject {
     // intentional no-op
   }
 
-  protected _createCopy(): CameraFrameStub {
+  override copy(): CameraFrameStub {
     return new CameraFrameStub();
   }
 }

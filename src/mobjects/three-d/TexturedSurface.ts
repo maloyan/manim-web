@@ -529,8 +529,9 @@ export class TexturedSurface extends Mobject {
    * Create a copy of this TexturedSurface.
    * Note: The copy will reload textures independently.
    */
-  protected override _createCopy(): TexturedSurface {
-    return new TexturedSurface({
+  override copy(): TexturedSurface {
+    this.normalizeTransform();
+    const copy = new TexturedSurface({
       surface: this._surface,
       textureUrl: this._textureUrl,
       darkTextureUrl: this._darkTextureUrl ?? undefined,
@@ -540,6 +541,8 @@ export class TexturedSurface extends Mobject {
       textureOffset: this._textureOffset,
       doubleSided: this._doubleSided,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 

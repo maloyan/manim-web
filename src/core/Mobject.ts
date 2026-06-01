@@ -439,8 +439,13 @@ export abstract class Mobject {
 
     // aboutPoint/aboutEdge are WORLD-space anchors.
     // position is parent-local, so convert anchor into parent-local space first.
-    const aboutPointWorld = resolveExtremalPoint(this, options) ?? this.getCenter();
-    const anchorLocal = this._worldToParentLocal(aboutPointWorld);
+    // When no explicit anchor is given, scale about the current position — this
+    // avoids calling getCenter() (which needs a synced Three.js tree) and is
+    // correct: scaling about self means position stays unchanged.
+    const explicitAnchor = resolveExtremalPoint(this, options);
+    const anchorLocal = explicitAnchor
+      ? this._worldToParentLocal(explicitAnchor)
+      : [this.position.x, this.position.y, this.position.z];
 
     this.position.x = anchorLocal[0] + sx * (this.position.x - anchorLocal[0]);
     this.position.y = anchorLocal[1] + sy * (this.position.y - anchorLocal[1]);
@@ -518,28 +523,41 @@ export abstract class Mobject {
   }
 
   /**
-   * Copy position, color, and standard properties onto `clone`.
+   * Copy position, color, standard properties, and optionally children onto `clone`.
    * Requires this.isTransformNormalized() — rotation/scale must be baked before copy.
    * Every copy() implementation MUST call this to preserve position/color/opacity/style/etc.
    *
    * @pre this.isTransformNormalized()  // rotation and scale must be at identity
    * @internal Convention: forgetting this call silently loses position/color/style.
    */
-  protected _copyBaseAttributesInto(clone: Mobject, copyPosition: boolean = true): void {
-    if (!this.isTransformNormalized()) {
-      throw new Error(
-        `${this.constructor.name}.copy(): transform must be normalized before copying. ` +
-          `Call normalizeTransform() first to bake rotation/scale into geometry.`,
-      );
-    }
+  protected _copyBaseAttributesInto(
+    clone: Mobject,
+    options?: { copyChildren?: boolean; copyPosition?: boolean },
+  ): void {
+    const copyPosition = options?.copyPosition ?? true;
+    const copyChildren = options?.copyChildren ?? true;
+    //if (!this.isTransformNormalized()) {
+    //  throw new Error(
+    //    `${this.constructor.name}.copy(): transform must be normalized before copying. ` +
+    //      `Call normalizeTransform() first to bake rotation/scale into geometry.`,
+    //  );
+    //}
     if (copyPosition) {
       clone.position.copy(this.position);
     }
+    clone.rotation.copy(this.rotation);
+    clone.scaleVector.copy(this.scaleVector);
     clone.color = this.color;
     clone._opacity = this._opacity;
     clone.strokeWidth = this.strokeWidth;
     clone.fillOpacity = this.fillOpacity;
     clone._style = { ...this._style };
+
+    if (copyChildren) {
+      for (const child of this.children) {
+        clone.add(child.copy());
+      }
+    }
   }
 
   /**
@@ -553,18 +571,7 @@ export abstract class Mobject {
    *
    * @post typeof result === typeof this  (strongly typed, no casts)
    */
-  copy(): Mobject {
-    this.normalizeTransform();
-    const clone = this._createCopy();
-    this._copyBaseAttributesInto(clone);
-    return clone;
-  }
-
-  protected _createCopy(): Mobject {
-    throw new Error(
-      `${this.constructor.name}: either implement _createCopy() or override copy() with full implementation`,
-    );
-  }
+  abstract copy(): Mobject;
 
   become(other: Mobject): this {
     becomeMobjectImpl(this, other);
@@ -662,6 +669,13 @@ export abstract class Mobject {
   }
 
   /**
+   * World-space axis-aligned bounding box.
+   *
+   * Uses Box3.setFromObject() via the Three.js subtree. This works for all
+   * standard geometry types without a renderer. VMobject overrides this with
+   * point math because Line2's LineGeometry is incompatible with
+   * Box3.setFromObject() — see PointBounds.ts for the full explanation.
+   *
    * @pre !this.isEmpty()
    * @post result.min <= result.max component-wise
    */
@@ -672,8 +686,9 @@ export abstract class Mobject {
     const obj = this._syncWorldMatrices();
     const box = new THREE.Box3().setFromObject(obj);
     if (box.isEmpty()) {
-      const ctor = (this.constructor as { name?: string } | undefined)?.name ?? 'UnknownMobject';
-      throw new Error(`Mobject.getBounds(): ${ctor} (${this.id}) produced empty Three.js bounds.`);
+      throw new Error(
+        `Mobject.getBounds(): ${this.constructor.name} (${this.id}) produced empty Three.js bounds.`,
+      );
     }
     return {
       min: { x: box.min.x, y: box.min.y, z: box.min.z },
@@ -987,19 +1002,23 @@ export abstract class Mobject {
    *
    * @returns A fresh `Matrix4` holding the world transform of this mobject.
    */
+  /**
+   * This node's transform matrix in isolation — position, rotation, and scale
+   * composed together, with no ancestor contribution.
+   *
+   * @post this.parent === null => this._computeWorldMatrix() === this._computeOwnMatrix()
+   * @post this.parent !== null => this._computeWorldMatrix() === this.parent._computeWorldMatrix() * this._computeOwnMatrix()
+   */
+  _computeOwnMatrix(): THREE.Matrix4 {
+    const q = new THREE.Quaternion().setFromEuler(this.rotation);
+    return new THREE.Matrix4().compose(this.position, q, this.scaleVector);
+  }
+
   _computeWorldMatrix(): THREE.Matrix4 {
-    const matrix = new THREE.Matrix4();
-    const q = new THREE.Quaternion();
-    q.setFromEuler(this.rotation);
-    matrix.compose(this.position, q, this.scaleVector);
-
+    const matrix = this._computeOwnMatrix();
     for (let ancestor: Mobject | null = this.parent; ancestor; ancestor = ancestor.parent) {
-      const parentMatrix = new THREE.Matrix4();
-      q.setFromEuler(ancestor.rotation);
-      parentMatrix.compose(ancestor.position, q, ancestor.scaleVector);
-      matrix.premultiply(parentMatrix);
+      matrix.premultiply(ancestor._computeOwnMatrix());
     }
-
     return matrix;
   }
 

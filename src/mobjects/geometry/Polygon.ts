@@ -250,7 +250,6 @@ export class Polygon extends VMobject {
    * Create a copy of this Polygon
    */
   override copy(): Polygon {
-    this.normalizeTransform();
     const clone = new Polygon({
       vertices: this._vertices,
       closed: this._closed,
@@ -258,7 +257,7 @@ export class Polygon extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }

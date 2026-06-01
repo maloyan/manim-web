@@ -43,8 +43,10 @@ class ArrowShaft extends VMobject {
     ]);
   }
 
-  protected _createCopy(): ArrowShaft {
-    return new ArrowShaft([0, 0, 0], [1, 0, 0], this.color, this.strokeWidth);
+  override copy(): ArrowShaft {
+    const copy = new ArrowShaft([0, 0, 0], [1, 0, 0], this.color, this.strokeWidth);
+    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    return copy;
   }
 }
 
@@ -78,8 +80,10 @@ class ArrowTip extends VMobject {
     this.setPoints3D(points);
   }
 
-  protected _createCopy(): ArrowTip {
-    return new ArrowTip([0, 0, 0], [0, 0, 0], [0, 0, 0], this.color);
+  override copy(): ArrowTip {
+    const copy = new ArrowTip([0, 0, 0], [0, 0, 0], [0, 0, 0], this.color);
+    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    return copy;
   }
 }
 
@@ -370,11 +374,8 @@ export class Arrow extends Group {
     this._end = [tipApex[0], tipApex[1], tipApex[2]];
   }
 
-  /**
-   * Create a copy of this Arrow
-   */
-  protected override _createCopy(): Arrow {
-    return new Arrow({
+  override copy(): Arrow {
+    const copy = new Arrow({
       start: this._start,
       end: this._end,
       tipLength: this._tipLength,
@@ -382,6 +383,8 @@ export class Arrow extends Group {
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -618,8 +621,8 @@ export class DoubleArrow extends Group {
     this._end = [endApex[0], endApex[1], endApex[2]];
   }
 
-  protected override _createCopy(): DoubleArrow {
-    return new DoubleArrow({
+  override copy(): DoubleArrow {
+    const copy = new DoubleArrow({
       start: this._start,
       end: this._end,
       tipLength: this._tipLength,
@@ -627,6 +630,8 @@ export class DoubleArrow extends Group {
       color: this._color,
       strokeWidth: this._strokeWidth,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 

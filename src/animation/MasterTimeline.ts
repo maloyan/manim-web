@@ -486,7 +486,7 @@ class DummyMobject extends Mobject {
     return DummyMobject._instance;
   }
 
-  protected _createCopy(): Mobject {
+  override copy(): Mobject {
     return new DummyMobject();
   }
 

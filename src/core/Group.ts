@@ -86,22 +86,37 @@ export class Group extends Mobject {
   }
 
   /**
-   * Center in world coordinates (bbox midpoint of descendant geometry).
+   * World-space center as the midpoint of the union of all children's bounding boxes.
+   *
+   * Each child computes its own bounding box via getBounds(), which routes to
+   * the correct strategy automatically: VMobjects use point math, all other
+   * types use Box3.setFromObject(). See PointBounds.ts for the full explanation.
    *
    * @post this.isEmpty() => result === this._parentLocalToWorld([position.x, position.y, position.z])
    * @post !this.isEmpty() => result[i] === (worldBbox.min[i] + worldBbox.max[i]) / 2
    */
   override getCenter(): Vector3Tuple {
-    // isEmpty() (not children.length): a group with only empty children (async
-    // Text/MathTex glyph containers, nested empty VGroups) has no geometry, so
-    // getBounds() would throw "empty Three.js bounds". position is parent-local,
-    // so lift it to world to stay consistent with the bbox branch.
     if (this.isEmpty()) {
       return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
     }
 
-    const b = this.getBounds();
-    return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
+    const bounds = new THREE.Box3();
+    const tempBox = new THREE.Box3();
+    const tempMin = new THREE.Vector3();
+    const tempMax = new THREE.Vector3();
+
+    for (const child of this.children) {
+      if (child.isEmpty()) continue;
+      const b = child.getBounds();
+      tempBox.set(tempMin.set(b.min.x, b.min.y, b.min.z), tempMax.set(b.max.x, b.max.y, b.max.z));
+      bounds.union(tempBox);
+    }
+
+    if (bounds.isEmpty()) {
+      return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
+    }
+    bounds.getCenter(tempMin);
+    return [tempMin.x, tempMin.y, tempMin.z];
   }
 
   /**
@@ -182,9 +197,11 @@ export class Group extends Mobject {
   /**
    * Create a copy of this Group.
    */
-  protected override _createCopy(): Group {
-    // Create an empty group; children are copied in Mobject.copy()
-    return new Group();
+  override copy(): Group {
+    this.normalizeTransform();
+    const copy = new Group();
+    this._copyBaseAttributesInto(copy);
+    return copy;
   }
 
   /**

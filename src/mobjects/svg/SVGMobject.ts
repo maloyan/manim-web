@@ -549,14 +549,16 @@ export class VMobjectFromSVGPath extends VMobject {
     }
   }
 
-  protected _createCopy(): VMobjectFromSVGPath {
-    return new VMobjectFromSVGPath({
+  override copy(): VMobjectFromSVGPath {
+    const copy = new VMobjectFromSVGPath({
       pathData: this._pathData,
       color: this.color,
       strokeWidth: this.strokeWidth,
       fillColor: this.fillColor,
       fillOpacity: this.fillOpacity,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -842,10 +844,12 @@ export class SVGMobject extends VGroup {
     return this.children.filter((c) => c instanceof VMobject) as VMobject[];
   }
 
-  protected _createCopy(): SVGMobject {
-    return new SVGMobject({
+  override copy(): SVGMobject {
+    const copy = new SVGMobject({
       svgString: this._svgString,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 

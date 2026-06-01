@@ -78,15 +78,14 @@ export class PointMobject extends PMobject {
     return this;
   }
 
-  /**
-   * Create a copy of this PointMobject
-   */
-  protected override _createCopy(): PointMobject {
-    return new PointMobject({
+  override copy(): PointMobject {
+    const copy = new PointMobject({
       position: this.getPosition(),
       color: this.color,
       opacity: this._opacity,
       size: this._pointSize,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

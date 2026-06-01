@@ -433,8 +433,8 @@ export class NewtonFractal extends Mobject {
   // Copy
   // -----------------------------------------------------------------------
 
-  protected override _createCopy(): NewtonFractal {
-    return new NewtonFractal({
+  override copy(): NewtonFractal {
+    const copy = new NewtonFractal({
       width: this._width,
       height: this._height,
       center: [...this._center],
@@ -446,6 +446,8 @@ export class NewtonFractal extends Mobject {
       lightness: this._lightness,
       opacity: this._opacity,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 
   // -----------------------------------------------------------------------

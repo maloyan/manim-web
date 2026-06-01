@@ -131,21 +131,16 @@ class ZoomedDisplay extends Mobject {
     super._syncToThree();
   }
 
-  protected _createCopy(): Mobject {
-    // ZoomedDisplay holds a render-target-backed mesh and cannot be
-    // meaningfully deep-cloned.  Return a lightweight Mobject stand-in
-    // so Animation.begin() can snapshot pre-animation state.
-    // CRITICAL: never return `this` -- Mobject.copy() iterates children
-    // and adds copies back to clone, causing an infinite loop when
-    // clone === this.
-    return new (class extends Mobject {
-      protected _createThreeObject() {
-        return new THREE.Group();
-      }
-      protected _createCopy() {
-        return new (this.constructor as new () => Mobject)();
-      }
-    })();
+  override copy(): ZoomedDisplay {
+    const copy = new ZoomedDisplay(
+      this._width,
+      this._height,
+      null,
+      this.displayFrame.color,
+      this.displayFrame.strokeWidth,
+    );
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 
   getWidth(): number {

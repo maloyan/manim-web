@@ -65,7 +65,7 @@ class MockTextMobject extends Mobject {
 
   protected _syncToThree(): void {}
 
-  protected _createCopy(): Mobject {
+  override copy(): Mobject {
     return new MockTextMobject(this._text);
   }
 }
@@ -99,13 +99,13 @@ class MockMathTexMobject extends Mobject {
 
   protected _syncToThree(): void {}
 
-  protected _createCopy(): Mobject {
+  override copy(): Mobject {
     return new MockMathTexMobject();
   }
 }
 
 class MockPlainMobject extends Mobject {
-  protected _createCopy(): Mobject {
+  override copy(): Mobject {
     const clone = new MockPlainMobject();
     clone.opacity = this.opacity;
     clone.strokeWidth = this.strokeWidth;

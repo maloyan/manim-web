@@ -246,8 +246,9 @@ export class Tetrahedron extends Polyhedron {
     return (Math.sqrt(2) / 12) * Math.pow(this._sideLength, 3);
   }
 
-  protected override _createCopy(): Tetrahedron {
-    return new Tetrahedron({
+  override copy(): Tetrahedron {
+    this.normalizeTransform();
+    const copy = new Tetrahedron({
       sideLength: this._sideLength,
       center: this._centerPoint,
       color: this.color,
@@ -255,6 +256,8 @@ export class Tetrahedron extends Polyhedron {
       wireframe: this._wireframe,
       detail: this._detail,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -321,8 +324,9 @@ export class Octahedron extends Polyhedron {
     return (Math.sqrt(2) / 3) * Math.pow(this._sideLength, 3);
   }
 
-  protected override _createCopy(): Octahedron {
-    return new Octahedron({
+  override copy(): Octahedron {
+    this.normalizeTransform();
+    const copy = new Octahedron({
       sideLength: this._sideLength,
       center: this._centerPoint,
       color: this.color,
@@ -330,6 +334,8 @@ export class Octahedron extends Polyhedron {
       wireframe: this._wireframe,
       detail: this._detail,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -396,8 +402,9 @@ export class Icosahedron extends Polyhedron {
     return (5 / 12) * (3 + Math.sqrt(5)) * Math.pow(this._sideLength, 3);
   }
 
-  protected override _createCopy(): Icosahedron {
-    return new Icosahedron({
+  override copy(): Icosahedron {
+    this.normalizeTransform();
+    const copy = new Icosahedron({
       sideLength: this._sideLength,
       center: this._centerPoint,
       color: this.color,
@@ -405,6 +412,8 @@ export class Icosahedron extends Polyhedron {
       wireframe: this._wireframe,
       detail: this._detail,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -473,8 +482,9 @@ export class Dodecahedron extends Polyhedron {
     return (1 / 4) * (15 + 7 * Math.sqrt(5)) * Math.pow(this._sideLength, 3);
   }
 
-  protected override _createCopy(): Dodecahedron {
-    return new Dodecahedron({
+  override copy(): Dodecahedron {
+    this.normalizeTransform();
+    const copy = new Dodecahedron({
       sideLength: this._sideLength,
       center: this._centerPoint,
       color: this.color,
@@ -482,5 +492,7 @@ export class Dodecahedron extends Polyhedron {
       wireframe: this._wireframe,
       detail: this._detail,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

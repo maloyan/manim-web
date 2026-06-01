@@ -250,7 +250,6 @@ export class LabeledLine extends VGroup {
    * Create a copy of this LabeledLine
    */
   override copy(): LabeledLine {
-    this.normalizeTransform();
     const clone = new LabeledLine({
       start: this._line.getStart(),
       end: this._line.getEnd(),
@@ -263,7 +262,7 @@ export class LabeledLine extends VGroup {
       color: this._line.color,
       strokeWidth: this._line.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -475,7 +474,6 @@ export class LabeledArrow extends VGroup {
    * Create a copy of this LabeledArrow
    */
   override copy(): LabeledArrow {
-    this.normalizeTransform();
     const clone = new LabeledArrow({
       start: this._arrow.getStart(),
       end: this._arrow.getEnd(),
@@ -490,7 +488,7 @@ export class LabeledArrow extends VGroup {
       tipLength: this._arrow.getTipLength(),
       tipWidth: this._arrow.getTipWidth(),
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -662,7 +660,6 @@ export class LabeledDot extends VGroup {
    * Create a copy of this LabeledDot
    */
   override copy(): LabeledDot {
-    this.normalizeTransform();
     const clone = new LabeledDot({
       point: this._dot.getPoint(),
       label: this._label.getText(),
@@ -675,7 +672,7 @@ export class LabeledDot extends VGroup {
       fillOpacity: this._dot.fillOpacity,
       strokeWidth: this._dot.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -922,7 +919,6 @@ export class AnnotationDot extends VGroup {
    * Create a copy of this AnnotationDot
    */
   override copy(): AnnotationDot {
-    this.normalizeTransform();
     const clone = new AnnotationDot({
       point: this._dot.getPoint(),
       label: this._label?.getText(),
@@ -939,7 +935,7 @@ export class AnnotationDot extends VGroup {
       fillOpacity: this._dot.fillOpacity,
       strokeWidth: this._dot.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -1091,7 +1087,6 @@ export class LabeledPolygram extends VGroup {
    * Create a copy of this LabeledPolygram
    */
   override copy(): LabeledPolygram {
-    this.normalizeTransform();
     const groups = this._polygram.getVertexGroups().map((group) => {
       // Remove closing vertex if present
       if (group.length > 1) {
@@ -1114,7 +1109,7 @@ export class LabeledPolygram extends VGroup {
       fillOpacity: this._polygram.fillOpacity,
       strokeWidth: this._polygram.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }

@@ -26,8 +26,10 @@ class GroupMobject extends Mobject {
     return new THREE.Group();
   }
 
-  protected _createCopy(): Mobject {
-    return new GroupMobject();
+  override copy(): Mobject {
+    const clone = new GroupMobject();
+    this._copyBaseAttributesInto(clone);
+    return clone;
   }
 }
 

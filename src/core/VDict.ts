@@ -201,27 +201,12 @@ export class VDict extends VGroup {
   }
 
   /**
-   * Create a copy of this VDict.
-   */
-  protected override _createCopy(): VMobject {
-    return new VDict();
-  }
-
-  /**
    * Override copy to properly handle the dictionary mapping.
    */
-  override copy(): VMobject {
+  override copy(): VDict {
     const clone = new VDict();
 
-    // Copy base properties
-    clone.position.copy(this.position);
-    clone.rotation.copy(this.rotation);
-    clone.scaleVector.copy(this.scaleVector);
-    clone.color = this.color;
-    clone._opacity = this._opacity;
-    clone.strokeWidth = this.strokeWidth;
-    clone.fillOpacity = this.fillOpacity;
-    clone._style = { ...this._style };
+    this._copyBaseAttributesInto(clone, { copyChildren: false });
 
     // Deep copy children with their names
     for (const [name, vmobject] of this._dict.entries()) {
@@ -397,14 +382,9 @@ export class VectorizedPoint extends VMobject {
   /**
    * Create a copy of this VectorizedPoint.
    */
-  protected override _createCopy(): VMobject {
-    return new VectorizedPoint(this.getLocation());
-  }
-
-  /**
-   * Copy this VectorizedPoint.
-   */
   override copy(): VMobject {
-    return this._createCopy();
+    const copy = new VectorizedPoint(this.getLocation());
+    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    return copy;
   }
 }

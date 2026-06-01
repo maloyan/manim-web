@@ -467,14 +467,11 @@ export class MathTex extends VGroup {
     }
   };
 
-  /**
-   * Create a copy of this MathTex.
-   */
-  protected override _createCopy(): MathTex {
+  override copy(): MathTex {
     const latexValue = this._isMultiPart
       ? this._parts.map((p) => (p as any)._latex as string)
       : this._latex;
-    return new MathTex({
+    const copy = new MathTex({
       latex: latexValue,
       color: this._color,
       fontSize: this._fontSize,
@@ -485,6 +482,8 @@ export class MathTex extends VGroup {
       height: this._targetHeight,
       macros: this._macros,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: true });
+    return copy;
   }
 }
 

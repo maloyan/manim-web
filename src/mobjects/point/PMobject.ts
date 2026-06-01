@@ -423,16 +423,15 @@ export class PMobject extends Mobject {
     }
   }
 
-  /**
-   * Create a copy of this PMobject
-   */
-  protected override _createCopy(): PMobject {
-    return new PMobject({
+  override copy(): PMobject {
+    const copy = new PMobject({
       points: this.getLocalPoints(),
       color: this.color,
       opacity: this._opacity,
       pointSize: this._pointSize,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 
   /**

@@ -246,11 +246,9 @@ export class BulletedList extends VMobject {
     return group;
   }
 
-  /**
-   * Create a copy of this BulletedList
-   */
-  protected override _createCopy(): BulletedList {
-    return new BulletedList({
+  override copy(): BulletedList {
+    this.normalizeTransform();
+    const copy = new BulletedList({
       items: [...this._items],
       bulletChar: this._bulletChar,
       fontSize: this._fontSize,
@@ -263,6 +261,8 @@ export class BulletedList extends VMobject {
       indentLevels: [...this._indentLevels],
       bulletBuffer: this._bulletBuffer,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -486,11 +486,9 @@ export class Title extends VMobject {
     return group;
   }
 
-  /**
-   * Create a copy of this Title
-   */
-  protected override _createCopy(): Title {
-    return new Title({
+  override copy(): Title {
+    this.normalizeTransform();
+    const copy = new Title({
       text: this._titleText,
       fontSize: this._fontSize,
       fontFamily: this._fontFamily,
@@ -504,6 +502,8 @@ export class Title extends VMobject {
       underlineBuffer: this._underlineBuffer,
       yPosition: this._yPosition,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -932,11 +932,9 @@ export class MarkdownText extends VMobject {
     return group;
   }
 
-  /**
-   * Create a copy of this MarkdownText
-   */
-  protected override _createCopy(): MarkdownText {
-    return new MarkdownText({
+  override copy(): MarkdownText {
+    this.normalizeTransform();
+    const copy = new MarkdownText({
       text: this._markdownText,
       fontSize: this._fontSize,
       fontFamily: this._fontFamily,
@@ -948,5 +946,7 @@ export class MarkdownText extends VMobject {
       bulletChar: this._bulletChar,
       headerSizes: [...this._headerSizes],
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

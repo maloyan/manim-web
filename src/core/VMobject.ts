@@ -10,19 +10,12 @@
  */
 
 import * as THREE from 'three';
-import { Vector3Tuple } from './Mobject';
+import { Mobject, Vector3Tuple } from './Mobject';
 import { isVMobject } from './MobjectTypes';
 import { VMobjectRendering } from './VMobjectRendering';
 import { lerp, lerpPoint as lerpPoint3D, signedArea2DFromStride } from '../utils/math';
 import type { Point } from './VMobjectCurves';
 
-import {
-  isNearlyLinear,
-  pointInPolygon,
-  sampleBezierOutline,
-  sampleBezierPath,
-  isClosedPath,
-} from './VMobjectGeometry';
 import { resamplePointList3D } from './VMobjectTransformAlignment';
 import { computePointBounds } from './PointBounds';
 
@@ -112,24 +105,18 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Get all points defining this VMobject as 3D arrays in local (parent) space.
+   * Own points in parent-local space — raw _points3D, no ancestor transforms.
    *
-   * These are the raw `_points3D` values — no ancestor transforms applied.
-   * For world-space coordinates (full parent S/R/T chain), use {@link getPoints}.
-   *
-   * @post result[i] === _points3D[i]  (copy, not reference)
-   * @returns Copy of the points array
+   * @post result[i] === _points3D[i]
    */
   getLocalPoints(): number[][] {
     return this._points3D.map((p) => [...p]);
   }
 
   /**
-   * Get all points defining this VMobject in world coordinates.
+   * Own points in world coordinates.
    *
-   * Composes this node's transform with every ancestor's (via {@link _computeWorldMatrix}).
-   * The render-only z-layering offset applied in `_syncToThree` is excluded.
-   * For local (parent-space) coordinates, use {@link getLocalPoints}.
+   * Does not include children's points — use getAllPoints() for that.
    *
    * @post result[i] === worldMatrix * _points3D[i]
    * @post this.parent === null => result === getLocalPoints()
@@ -141,6 +128,24 @@ export class VMobject extends VMobjectRendering {
       scratch.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
       return [scratch.x, scratch.y, scratch.z];
     });
+  }
+
+  /**
+   * World-space points from this node and all VMobject descendants recursively.
+   *
+   * Equivalent to Python manim's get_all_points(). Use this for bounding-box
+   * and center queries that must cover the full subtree.
+   *
+   * @post result === flatMap(this + vmobjectDescendants, m => m.getPoints())
+   */
+  getAllPoints(): number[][] {
+    const result: number[][] = [];
+    const collect = (mob: Mobject) => {
+      if (mob instanceof VMobject) result.push(...mob.getPoints());
+      for (const child of mob.children) collect(child);
+    };
+    collect(this);
+    return result;
   }
 
   /**
@@ -662,6 +667,19 @@ export class VMobject extends VMobjectRendering {
     return resamplePointList3D(points, targetCount);
   }
 
+  protected _copyBaseAttributesInto(
+    clone: VMobject,
+    options?: { copyChildren?: boolean; copyPosition?: boolean },
+  ): void {
+    super._copyBaseAttributesInto(clone, options);
+    clone._points3D = this._points3D.map((p) => [...p]);
+    clone._visiblePointCount = this._visiblePointCount;
+    if (this._transformSubpathLengths !== undefined) {
+      clone._transformSubpathLengths = [...this._transformSubpathLengths];
+    }
+    clone._geometryDirty = true;
+  }
+
   // -----------------------------------------------------------------------
   // Copy / clone
   // -----------------------------------------------------------------------
@@ -678,17 +696,10 @@ export class VMobject extends VMobjectRendering {
    * For direct VMobject (rare): just builds and copies.
    */
   override copy(): VMobject {
-    this.normalizeTransform();
     const clone = new VMobject();
     this._copyBaseAttributesInto(clone);
     // Overwrite points so they reflect current (possibly morphed) state,
     // not whatever the constructor regenerated.
-    clone._points3D = this._points3D.map((p) => [...p]);
-    clone._visiblePointCount = this._visiblePointCount;
-    if (this._transformSubpathLengths !== undefined) {
-      clone._transformSubpathLengths = [...this._transformSubpathLengths];
-    }
-    clone._geometryDirty = true;
     return clone;
   }
 
@@ -720,10 +731,49 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Get world-space center from world-point bounds.
+   * World-space bounding box computed from bezier control points.
+   *
+   * Overrides Mobject.getBounds() to avoid Box3.setFromObject(), which does
+   * not work for Line2 geometries. See PointBounds.ts for the full explanation.
+   *
+   * @pre !this.isEmpty()
+   * @post result.min <= result.max component-wise
+   */
+  override getBounds(): {
+    min: { x: number; y: number; z: number };
+    max: { x: number; y: number; z: number };
+  } {
+    const box = new THREE.Box3();
+    const tempBox = new THREE.Box3();
+    const tempMin = new THREE.Vector3();
+    const tempMax = new THREE.Vector3();
+    for (const p of this.getAllPoints()) box.expandByPoint(tempMin.set(p[0], p[1], p[2]));
+    // Non-VMobject children use Three.js path.
+    for (const child of this.children) {
+      if (!(child instanceof VMobject)) {
+        const b = child.getBounds();
+        box.union(
+          tempBox.set(
+            tempMin.set(b.min.x, b.min.y, b.min.z),
+            tempMax.set(b.max.x, b.max.y, b.max.z),
+          ),
+        );
+      }
+    }
+    if (box.isEmpty()) {
+      throw new Error(`VMobject.getBounds(): ${this.constructor.name} (${this.id}) has no points.`);
+    }
+    return {
+      min: { x: box.min.x, y: box.min.y, z: box.min.z },
+      max: { x: box.max.x, y: box.max.y, z: box.max.z },
+    };
+  }
+
+  /**
+   * World-space center derived from getAllPoints().
    */
   override getCenter(): Vector3Tuple {
-    const worldPoints = this.getPoints();
+    const worldPoints = this.getAllPoints();
     const bounds = computePointBounds(worldPoints);
     if (!bounds) {
       return [this.position.x, this.position.y, this.position.z];
@@ -734,6 +784,14 @@ export class VMobject extends VMobjectRendering {
       (bounds.min.y + bounds.max.y) / 2,
       (bounds.min.z + bounds.max.z) / 2,
     ];
+  }
+
+  getWidth(): number {
+    return this.getBoundingBox().width;
+  }
+
+  getHeight(): number {
+    return this.getBoundingBox().height;
   }
 
   /**
@@ -802,40 +860,6 @@ export class VMobject extends VMobjectRendering {
     this._markDirtyUpward();
 
     return this;
-  }
-
-  // -----------------------------------------------------------------------
-  // Geometry utility wrappers (delegate to standalone functions)
-  // -----------------------------------------------------------------------
-
-  /** @internal Check if a Bezier segment is nearly linear. */
-  protected static _isNearlyLinear(
-    p0: number[],
-    p1: number[],
-    p2: number[],
-    p3: number[],
-  ): boolean {
-    return isNearlyLinear(p0, p1, p2, p3);
-  }
-
-  /** @internal Ray-casting point-in-polygon test. */
-  protected static _pointInPolygon(point: number[], ring: number[][]): boolean {
-    return pointInPolygon(point, ring);
-  }
-
-  /** @internal Sample Bezier outline for earcut triangulation. */
-  protected _sampleBezierOutline(points: number[][], samplesPerSegment: number): number[][] {
-    return sampleBezierOutline(points, samplesPerSegment);
-  }
-
-  /** @internal Sample Bezier path for stroke rendering. */
-  protected _sampleBezierPath(points: number[][], samplesPerSegment?: number): number[][] {
-    return sampleBezierPath(points, samplesPerSegment);
-  }
-
-  /** @internal Check if Bezier control points form a closed path. */
-  protected _isClosedPath(points3D: number[][]): boolean {
-    return isClosedPath(points3D);
   }
 
   // -----------------------------------------------------------------------

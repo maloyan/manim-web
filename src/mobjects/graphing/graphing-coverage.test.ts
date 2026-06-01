@@ -36,7 +36,7 @@ beforeAll(() => {
 });
 
 // ---------------------------------------------------------------------------
-// Axes — coverage gaps: lines 734-735 (vertexDotStyle.strokeColor), 763 (_createCopy)
+// Axes — coverage gaps: lines 734-735 (vertexDotStyle.strokeColor), 763 (_copy)
 // ---------------------------------------------------------------------------
 describe('Axes coverage gaps', () => {
   it('plotLineGraph with vertexDotStyle.strokeColor covers lines 734-735', () => {
@@ -55,7 +55,7 @@ describe('Axes coverage gaps', () => {
     expect(dots).toBeDefined();
   });
 
-  it('copy() covers _createCopy (line 763)', () => {
+  it('copy() covers _copy (line 763)', () => {
     const axes = new Axes({ xRange: [0, 5, 1], yRange: [0, 5, 1] });
     const copy = axes.copy();
     expect(copy).toBeInstanceOf(Axes);
@@ -64,7 +64,7 @@ describe('Axes coverage gaps', () => {
 });
 
 // ---------------------------------------------------------------------------
-// BarChart — coverage gaps: line 460 (getValuesFlat multi-series), line 640 (_createCopy)
+// BarChart — coverage gaps: line 460 (getValuesFlat multi-series), line 640 (_copy)
 // ---------------------------------------------------------------------------
 describe('BarChart coverage gaps', () => {
   it('getValuesFlat with multi-series returns flat array (line 460)', () => {
@@ -80,7 +80,7 @@ describe('BarChart coverage gaps', () => {
     expect(flat).toEqual([1, 2, 3, 4]);
   });
 
-  it('copy() covers _createCopy (line 640)', () => {
+  it('copy() covers _copy (line 640)', () => {
     const chart = new BarChart({ values: [1, 2, 3] });
     const copy = chart.copy();
     expect(copy).toBeInstanceOf(BarChart);

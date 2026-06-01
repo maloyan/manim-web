@@ -142,20 +142,6 @@ export class VGroup extends VMobject {
   }
 
   /**
-   * @post this.isEmpty() => result === this._parentLocalToWorld([position.x, position.y, position.z])
-   * @post !this.isEmpty() => result[i] === (worldBbox.min[i] + worldBbox.max[i]) / 2
-   */
-  override getCenter(): Vector3Tuple {
-    // position is parent-local; lift to world so the empty fallback matches the
-    // world-space bbox branch (and the base Mobject.getCenter convention).
-    if (this.isEmpty()) {
-      return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
-    }
-    const b = this.getBounds();
-    return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
-  }
-
-  /**
    * Set the color of all children.
    * @param color - CSS color string
    * @returns this for chaining
@@ -378,12 +364,11 @@ export class VGroup extends VMobject {
     return group;
   }
 
-  /**
-   * Create a copy of this VGroup.
-   */
-  protected override _createCopy(): VMobject {
-    // Create an empty group; children are copied in Mobject.copy()
-    return new VGroup();
+  override copy(): VGroup {
+    this.normalizeTransform();
+    const copy = new VGroup();
+    this._copyBaseAttributesInto(copy);
+    return copy;
   }
 
   /**
@@ -453,10 +438,29 @@ export class VGroup extends VMobject {
   }
 
   /**
-   * Get all 3D points from the VGroup.
+   * Local-space points aggregated from all VMobject children.
+   *
+   * @post result === flatMap(vmobjectChildren, c => c.getLocalPoints())
    */
   override getLocalPoints(): number[][] {
     return this.getCombinedPoints();
+  }
+
+  /**
+   * World-space points from this VGroup and all VMobject descendants.
+   *
+   * @post result === flatMap(allVMobjectDescendants, c => c.getPoints())
+   */
+  override getAllPoints(): number[][] {
+    const result: number[][] = [];
+    const collect = (mob: Mobject) => {
+      if (mob instanceof VMobject && !(mob instanceof VGroup)) {
+        result.push(...mob.getPoints());
+      }
+      for (const child of mob.children) collect(child);
+    };
+    for (const child of this.children) collect(child);
+    return result;
   }
 
   /**

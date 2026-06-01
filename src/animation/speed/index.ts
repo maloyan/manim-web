@@ -29,7 +29,7 @@ class SpeedWrapperMobject extends Mobject {
     return new THREE.Group();
   }
 
-  protected _createCopy(): Mobject {
+  override copy(): Mobject {
     return new SpeedWrapperMobject();
   }
 }

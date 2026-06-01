@@ -303,7 +303,7 @@ describe('Arc – uncovered branches', () => {
     expect(start[1]).toBeCloseTo(4, 10);
   });
 
-  it('_createCopy returns independent copy', () => {
+  it('copy() returns independent copy', () => {
     const a = new Arc({
       radius: 3,
       startAngle: Math.PI / 4,

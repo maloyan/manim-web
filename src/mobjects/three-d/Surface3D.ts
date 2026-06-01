@@ -391,8 +391,9 @@ export class Surface3D extends Mobject {
   /**
    * Create a copy of this Surface3D
    */
-  protected override _createCopy(): Surface3D {
-    return new Surface3D({
+  override copy(): Surface3D {
+    this.normalizeTransform();
+    const copy = new Surface3D({
       func: this._func,
       uRange: this._uRange,
       vRange: this._vRange,
@@ -405,5 +406,7 @@ export class Surface3D extends Mobject {
       doubleSided: this._doubleSided,
       checkerboardColors: this._checkerboardColors,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

@@ -238,11 +238,9 @@ export class Torus extends Mobject {
     return [x + this.position.x, y + this.position.y, z + this.position.z];
   }
 
-  /**
-   * Create a copy of this Torus
-   */
-  protected override _createCopy(): Torus {
-    return new Torus({
+  override copy(): Torus {
+    this.normalizeTransform();
+    const copy = new Torus({
       radius: this._radius,
       tubeRadius: this._tubeRadius,
       center: this._centerPoint,
@@ -253,5 +251,7 @@ export class Torus extends Mobject {
       arc: this._arc,
       wireframe: this._wireframe,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

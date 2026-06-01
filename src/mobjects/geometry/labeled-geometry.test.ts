@@ -5,14 +5,14 @@
  * Coverage for:
  * - directionToVector (all 8 directions)
  * - LabeledLine: constructor, getLine, getLabel, setLabelText,
- *   setLabelPosition, setLabelOffset, setEndpoints, _createCopy
+ *   setLabelPosition, setLabelOffset, setEndpoints, _copy
  * - LabeledArrow: constructor, getArrow, getLabel, setLabelText,
- *   setLabelPosition, setLabelOffset, setEndpoints, _createCopy
+ *   setLabelPosition, setLabelOffset, setEndpoints, _copy
  * - LabeledDot: constructor, getDot, getLabel, moveTo, setLabelText,
- *   setLabelDirection, setLabelOffset, getPoint, _createCopy
+ *   setLabelDirection, setLabelOffset, getPoint, _copy
  * - AnnotationDot: constructor, getDot, getOutline, getLabel, moveTo,
  *   setLabelText (with/without existing label), setLabelDirection,
- *   setLabelOffset, getPoint, setShowOutline, _createCopy
+ *   setLabelOffset, getPoint, setShowOutline, _copy
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -192,7 +192,7 @@ describe('LabeledLine', () => {
     });
   });
 
-  describe('_createCopy', () => {
+  describe('copy()', () => {
     it('creates a deep copy', () => {
       const ll = new LabeledLine({
         label: 'copy test',
@@ -308,7 +308,7 @@ describe('LabeledArrow', () => {
     });
   });
 
-  describe('_createCopy', () => {
+  describe('copy()', () => {
     it('produces a LabeledArrow copy', () => {
       const la = new LabeledArrow({
         label: 'copy',
@@ -428,7 +428,7 @@ describe('LabeledDot', () => {
     });
   });
 
-  describe('_createCopy', () => {
+  describe('copy()', () => {
     it('produces a LabeledDot copy', () => {
       const ld = new LabeledDot({
         label: 'copy',
@@ -593,7 +593,7 @@ describe('AnnotationDot', () => {
     });
   });
 
-  describe('_createCopy', () => {
+  describe('copy()', () => {
     it('produces an AnnotationDot copy with label', () => {
       const ad = new AnnotationDot({
         point: [1, 2, 0],
@@ -822,7 +822,7 @@ describe('LabeledPolygram', () => {
     });
   });
 
-  describe('_createCopy', () => {
+  describe('copy()', () => {
     it('produces a LabeledPolygram copy', () => {
       const lp = new LabeledPolygram({
         vertexGroups: [

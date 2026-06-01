@@ -468,7 +468,7 @@ describe('CubicBezier', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Dot - coverage for getPoint, setPoint, _createCopy
+// Dot - coverage for getPoint, setPoint, _copy
 // ---------------------------------------------------------------------------
 describe('Dot', () => {
   it('constructs with default options', () => {
@@ -547,7 +547,7 @@ describe('Dot', () => {
 });
 
 // ---------------------------------------------------------------------------
-// SmallDot - coverage for construction and _createCopy
+// SmallDot - coverage for construction and _copy
 // ---------------------------------------------------------------------------
 describe('SmallDot', () => {
   it('constructs with radius 0.04', () => {
@@ -575,7 +575,7 @@ describe('SmallDot', () => {
 });
 
 // ---------------------------------------------------------------------------
-// LargeDot - coverage for construction and _createCopy
+// LargeDot - coverage for construction and _copy
 // ---------------------------------------------------------------------------
 describe('LargeDot', () => {
   it('constructs with radius 0.16', () => {
@@ -609,7 +609,7 @@ describe('LargeDot', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Line - coverage for constructor, getters, setters, and _createCopy
+// Line - coverage for constructor, getters, setters, and _copy
 // ---------------------------------------------------------------------------
 describe('Line', () => {
   it('constructs with default options', () => {
@@ -795,7 +795,7 @@ describe('Line', () => {
 });
 
 // ---------------------------------------------------------------------------
-// DashedLine - coverage for setColor, setStrokeWidth, setStrokeOpacity, _createCopy
+// DashedLine - coverage for setColor, setStrokeWidth, setStrokeOpacity, _copy
 // ---------------------------------------------------------------------------
 describe('DashedLine - propagation and copy', () => {
   it('setColor propagates to all dash children', () => {

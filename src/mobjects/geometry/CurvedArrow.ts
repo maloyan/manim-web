@@ -270,7 +270,6 @@ export class CurvedArrow extends VMobject {
    * Create a copy of this CurvedArrow
    */
   override copy(): CurvedArrow {
-    this.normalizeTransform();
     const clone = new CurvedArrow({
       startPoint: this._startPoint,
       endPoint: this._endPoint,
@@ -281,7 +280,7 @@ export class CurvedArrow extends VMobject {
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }

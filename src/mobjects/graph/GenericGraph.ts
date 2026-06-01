@@ -671,13 +671,15 @@ export class GenericGraph extends Mobject {
   /**
    * Create a copy of this graph
    */
-  protected _createCopy(): GenericGraph {
-    return new GenericGraph({
+  override copy(): GenericGraph {
+    const copy = new GenericGraph({
       vertices: [...this._vertices],
       edges: this._edges.map((e) => [...e] as EdgeTuple),
       layout: { ...this._layoutConfig },
       vertexStyle: { ...this._vertexStyle },
       edgeStyle: { ...this._edgeStyle },
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

@@ -577,11 +577,8 @@ export class Code extends VMobject {
     return [this.position.x, this.position.y, this.position.z];
   }
 
-  /**
-   * Create a copy of this Code mobject
-   */
-  protected override _createCopy(): Code {
-    return new Code({
+  override copy(): Code {
+    const copy = new Code({
       code: this._code,
       language: this._language,
       lineNumbers: this._lineNumbers,
@@ -594,6 +591,8 @@ export class Code extends VMobject {
       backgroundRadius: this._backgroundRadius,
       lineHeight: this._lineHeight,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 
   /**

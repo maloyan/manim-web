@@ -262,11 +262,9 @@ export class VectorFieldVector extends Arrow {
     return crossVec(this._direction, dir);
   }
 
-  /**
-   * Create a copy of this VectorFieldVector
-   */
-  protected override _createCopy(): Arrow {
-    return new VectorFieldVector({
+  override copy(): VectorFieldVector {
+    this.normalizeTransform();
+    const copy = new VectorFieldVector({
       direction: this._direction,
       startPoint: this._startPoint,
       color: this.color,
@@ -274,5 +272,7 @@ export class VectorFieldVector extends Arrow {
       tipLength: this.getTipLength(),
       maxLength: this._maxLength,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

@@ -647,11 +647,9 @@ export class Text extends TexturedMobject {
     return [this.position.x, this.position.y, this.position.z];
   }
 
-  /**
-   * Create a copy of this Text mobject
-   */
-  protected override _createCopy(): Text {
-    return new Text({
+  override copy(): Text {
+    this.normalizeTransform();
+    const copy = new Text({
       text: this._text,
       fontSize: this._fontSize,
       fontFamily: this._fontFamily,
@@ -665,6 +663,8 @@ export class Text extends TexturedMobject {
       textAlign: this._textAlign,
       fontUrl: this._fontUrl,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 
   /**

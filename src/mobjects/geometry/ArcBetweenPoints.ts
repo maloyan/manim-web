@@ -172,7 +172,6 @@ export class ArcBetweenPoints extends Arc {
    * Create a copy of this ArcBetweenPoints
    */
   override copy(): ArcBetweenPoints {
-    this.normalizeTransform();
     const clone = new ArcBetweenPoints({
       start: this._startPoint,
       end: this._endPoint,
@@ -180,7 +179,7 @@ export class ArcBetweenPoints extends Arc {
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }

@@ -198,11 +198,10 @@ export class PGroup extends Mobject {
     return group;
   }
 
-  /**
-   * Create a copy of this PGroup
-   */
-  protected override _createCopy(): PGroup {
-    return new PGroup();
+  override copy(): PGroup {
+    const copy = new PGroup();
+    this._copyBaseAttributesInto(copy);
+    return copy;
   }
 
   /**

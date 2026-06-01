@@ -563,16 +563,12 @@ export class Table extends VGroup {
     return this;
   }
 
-  /**
-   * Create a copy of this Table
-   */
-  protected override _createCopy(): VMobject {
-    // Deep copy data
+  override copy(): Table {
     const dataCopy = this._data.map((row) => row.map((entry) => entry.copy()));
     const rowLabelsCopy = this._rowLabels.map((label) => label.copy());
     const colLabelsCopy = this._colLabels.map((label) => label.copy());
 
-    return new Table({
+    const copy = new Table({
       data: dataCopy,
       rowLabels: rowLabelsCopy,
       colLabels: colLabelsCopy,
@@ -583,6 +579,8 @@ export class Table extends VGroup {
       lineColor: this._lineColor,
       lineStrokeWidth: this._lineStrokeWidth,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 

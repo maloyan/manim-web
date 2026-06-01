@@ -82,7 +82,6 @@ export class Dot extends Circle {
    * Copy this Dot.
    */
   override copy(): Dot {
-    this.normalizeTransform();
     const clone = new Dot({
       point: this.getPoint(),
       radius: this._radius,
@@ -90,7 +89,7 @@ export class Dot extends Circle {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -117,14 +116,13 @@ export class SmallDot extends Dot {
    * Create a copy of this SmallDot
    */
   override copy(): SmallDot {
-    this.normalizeTransform();
     const clone = new SmallDot({
       point: this.getPoint(),
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -151,14 +149,13 @@ export class LargeDot extends Dot {
    * Create a copy of this LargeDot
    */
   override copy(): LargeDot {
-    this.normalizeTransform();
     const clone = new LargeDot({
       point: this.getPoint(),
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }

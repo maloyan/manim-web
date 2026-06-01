@@ -372,9 +372,9 @@ describe('VDict - additional coverage', () => {
     expect(clone.opacity).toBe(0.5);
   });
 
-  it('_createCopy returns empty VDict', () => {
+  it('copy() returns empty VDict', () => {
     const d = new VDict({ item: makeVM() });
-    // _createCopy is called internally by copy
+    // _copy is called internally by copy
     const copy = d.copy() as VDict;
     // The copy method properly copies dict entries
     expect(copy.size).toBe(1);
@@ -881,8 +881,8 @@ describe('VMobject.getVisiblePoints / getVisiblePoints3D', () => {
   });
 });
 
-describe('VMobject copy and createCopy', () => {
-  it('_createCopy preserves points and visiblePointCount', () => {
+describe('VMobject copy and copy', () => {
+  it('copy() preserves points and visiblePointCount', () => {
     const vm = makeVM();
     vm.visiblePointCount = 2;
     const copy = vm.copy() as VMobject;

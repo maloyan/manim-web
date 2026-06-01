@@ -333,8 +333,9 @@ export class Arrow3D extends Mobject {
   /**
    * Create a copy of this Arrow3D
    */
-  protected override _createCopy(): Arrow3D {
-    return new Arrow3D({
+  override copy(): Arrow3D {
+    this.normalizeTransform();
+    const copy = new Arrow3D({
       start: this._start,
       end: this._end,
       color: this.color,
@@ -344,6 +345,8 @@ export class Arrow3D extends Mobject {
       shaftRadius: this._shaftRadius,
       radialSegments: this._radialSegments,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 

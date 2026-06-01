@@ -197,11 +197,8 @@ export class PointCloudDot extends PMobject {
     return this;
   }
 
-  /**
-   * Create a copy of this PointCloudDot
-   */
-  protected override _createCopy(): PointCloudDot {
-    return new PointCloudDot({
+  override copy(): PointCloudDot {
+    const copy = new PointCloudDot({
       center: this._center,
       radius: this._radius,
       numParticles: this._numParticles,
@@ -210,5 +207,7 @@ export class PointCloudDot extends PMobject {
       particleSize: this._pointSize,
       distribution: this._distribution,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

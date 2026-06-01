@@ -245,7 +245,6 @@ export class ArrowTriangleTip extends ArrowTip {
   }
 
   override copy(): ArrowTriangleTip {
-    this.normalizeTransform();
     const clone = new ArrowTriangleTip({
       length: this._length,
       width: this._width,
@@ -255,7 +254,7 @@ export class ArrowTriangleTip extends ArrowTip {
       position: this._position,
       direction: this._direction,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -280,7 +279,6 @@ export class ArrowTriangleFilledTip extends ArrowTriangleTip {
   }
 
   override copy(): ArrowTriangleFilledTip {
-    this.normalizeTransform();
     const clone = new ArrowTriangleFilledTip({
       length: this._length,
       width: this._width,
@@ -290,7 +288,7 @@ export class ArrowTriangleFilledTip extends ArrowTriangleTip {
       position: this._position,
       direction: this._direction,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -370,7 +368,6 @@ export class ArrowCircleTip extends ArrowTip {
   }
 
   override copy(): ArrowCircleTip {
-    this.normalizeTransform();
     const clone = new ArrowCircleTip({
       length: this._length,
       width: this._width,
@@ -381,7 +378,7 @@ export class ArrowCircleTip extends ArrowTip {
       direction: this._direction,
       numSegments: this._numSegments,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -406,7 +403,6 @@ export class ArrowCircleFilledTip extends ArrowCircleTip {
   }
 
   override copy(): ArrowCircleFilledTip {
-    this.normalizeTransform();
     const clone = new ArrowCircleFilledTip({
       length: this._length,
       width: this._width,
@@ -416,7 +412,7 @@ export class ArrowCircleFilledTip extends ArrowCircleTip {
       position: this._position,
       direction: this._direction,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -505,7 +501,6 @@ export class ArrowSquareTip extends ArrowTip {
   }
 
   override copy(): ArrowSquareTip {
-    this.normalizeTransform();
     const clone = new ArrowSquareTip({
       length: this._length,
       width: this._width,
@@ -515,7 +510,7 @@ export class ArrowSquareTip extends ArrowTip {
       position: this._position,
       direction: this._direction,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -540,7 +535,6 @@ export class ArrowSquareFilledTip extends ArrowSquareTip {
   }
 
   override copy(): ArrowSquareFilledTip {
-    this.normalizeTransform();
     const clone = new ArrowSquareFilledTip({
       length: this._length,
       width: this._width,
@@ -550,7 +544,7 @@ export class ArrowSquareFilledTip extends ArrowSquareTip {
       position: this._position,
       direction: this._direction,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -648,7 +642,6 @@ export class StealthTip extends ArrowTip {
   }
 
   override copy(): StealthTip {
-    this.normalizeTransform();
     const clone = new StealthTip({
       length: this._length,
       width: this._width,
@@ -659,7 +652,7 @@ export class StealthTip extends ArrowTip {
       direction: this._direction,
       backAngle: this._backAngle,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }

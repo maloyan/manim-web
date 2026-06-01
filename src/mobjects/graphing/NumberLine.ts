@@ -337,11 +337,8 @@ export class NumberLine extends VMobject {
     return [...this._numberLabels];
   }
 
-  /**
-   * Create a copy of this NumberLine
-   */
-  protected override _createCopy(): NumberLine {
-    return new NumberLine({
+  override copy(): NumberLine {
+    const copy = new NumberLine({
       xRange: this._xRange,
       length: this._length,
       color: this.color,
@@ -355,6 +352,8 @@ export class NumberLine extends VMobject {
       decimalPlaces: this._decimalPlaces,
       numberFontSize: this._numberFontSize,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -430,12 +429,9 @@ export class UnitInterval extends NumberLine {
     });
   }
 
-  /**
-   * Create a copy of this UnitInterval
-   */
-  protected override _createCopy(): UnitInterval {
+  override copy(): UnitInterval {
     const xRange = this.getXRange();
-    return new UnitInterval({
+    const copy = new UnitInterval({
       length: this.getLength(),
       color: this.color,
       strokeWidth: this.strokeWidth,
@@ -443,5 +439,7 @@ export class UnitInterval extends NumberLine {
       tickSize: this.getTickSize(),
       numDecimalPlaces: xRange[2] === 0.1 ? 1 : xRange[2] === 0.25 ? 2 : 0,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

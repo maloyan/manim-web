@@ -252,8 +252,8 @@ export class GlyphVMobject extends VMobject {
     }
   }
 
-  protected override _createCopy(): GlyphVMobject {
-    return new GlyphVMobject({
+  override copy(): GlyphVMobject {
+    const copy = new GlyphVMobject({
       glyph: this._glyph,
       font: null as unknown as Font, // font reference not needed for copy since points are already built
       fontSize: this._glyphFontSize,
@@ -262,5 +262,7 @@ export class GlyphVMobject extends VMobject {
       useSkeletonStroke: this._useSkeletonStroke,
       skeletonOptions: { ...this._skeletonOptions },
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

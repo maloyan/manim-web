@@ -10,9 +10,9 @@ import { PGroup, PointMobject, PointCloudDot, Mobject1D, Mobject2D } from '../mo
 //   lines 1250-1256 (dispose with _threeObject mesh materials)
 // ---------------------------------------------------------------------------
 describe('Mobject coverage gaps', () => {
-  it('getBounds throws when no three object (lines 662-663)', () => {
+  it('getBounds throws for empty VMobject', () => {
     const m = new VMobject();
-    expect(() => m.getBounds()).toThrow(/empty Three\.js bounds/);
+    expect(() => m.getBounds()).toThrow(/has no points/);
   });
 
   it('dispose with THREE.js mesh objects (lines 1250-1256)', () => {
@@ -73,7 +73,7 @@ describe('Matrix coverage gaps', () => {
     expect(m.numCols).toBe(2);
   });
 
-  it('IntegerMatrix.copy() covers _createCopy', () => {
+  it('IntegerMatrix.copy() covers _copy', () => {
     const m = new IntegerMatrix([
       [1, 2],
       [3, 4],
@@ -82,7 +82,7 @@ describe('Matrix coverage gaps', () => {
     expect(copy).toBeDefined();
   });
 
-  it('DecimalMatrix.copy() covers _createCopy', () => {
+  it('DecimalMatrix.copy() covers _copy', () => {
     const m = new DecimalMatrix([[1.234, 5.678]], { numDecimalPlaces: 2 });
     const copy = m.copy();
     expect(copy).toBeDefined();

@@ -254,11 +254,8 @@ export class DashedLine extends VMobject {
     return this;
   }
 
-  /**
-   * Create a copy of this DashedLine
-   */
-  protected override _createCopy(): DashedLine {
-    return new DashedLine({
+  override copy(): DashedLine {
+    const copy = new DashedLine({
       start: this._start,
       end: this._end,
       dashLength: this._dashLength,
@@ -266,5 +263,7 @@ export class DashedLine extends VMobject {
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

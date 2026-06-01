@@ -1092,7 +1092,7 @@ export class MarkupText extends Text {
   // Copy
   // -----------------------------------------------------------------------
 
-  protected override _createCopy(): MarkupText {
+  override copy(): MarkupText {
     const copy = new MarkupText({
       text: this._text,
       fontSize: this._fontSize,
@@ -1107,6 +1107,7 @@ export class MarkupText extends Text {
       textAlign: this._textAlign,
     });
     copy._codeFontFamily = this._codeFontFamily;
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
   }
 }

@@ -398,7 +398,6 @@ export class Angle extends VMobject {
   }
 
   override copy(): Angle {
-    this.normalizeTransform();
     const startAngle = this._startAngle;
     const endAngle = this._startAngle + this._angleValue;
 
@@ -429,7 +428,7 @@ export class Angle extends VMobject {
         unit: this._unit,
       },
     );
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     clone._label = this._label;
     return clone;
   }
@@ -610,7 +609,6 @@ export class RightAngle extends VMobject {
   }
 
   override copy(): RightAngle {
-    this.normalizeTransform();
     const point1: Vector3Tuple = [
       this._vertex[0] + Math.cos(this._angle1),
       this._vertex[1] + Math.sin(this._angle1),
@@ -630,7 +628,7 @@ export class RightAngle extends VMobject {
         strokeWidth: this.strokeWidth,
       },
     );
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -807,7 +805,6 @@ export class Elbow extends VMobject {
   }
 
   override copy(): Elbow {
-    this.normalizeTransform();
     const clone = new Elbow({
       width: this._width,
       height: this._height,
@@ -816,7 +813,7 @@ export class Elbow extends VMobject {
       strokeWidth: this.strokeWidth,
       position: this._cornerPosition,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }
@@ -1100,7 +1097,6 @@ export class TangentLine extends VMobject {
   }
 
   override copy(): TangentLine {
-    this.normalizeTransform();
     const clone = new TangentLine(this._vmobject, {
       t: this._t,
       length: this._length,
@@ -1108,7 +1104,7 @@ export class TangentLine extends VMobject {
       strokeWidth: this.strokeWidth,
       dT: this._dT,
     });
-    this._copyBaseAttributesInto(clone, false);
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
 }

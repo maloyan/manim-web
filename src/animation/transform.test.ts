@@ -108,8 +108,10 @@ class SyncingTexturedMobject extends TexturedMobject {
     }
   }
 
-  protected override _createCopy(): Mobject {
-    return new SyncingTexturedMobject(this._width, this._height);
+  override copy(): Mobject {
+    const clone = new SyncingTexturedMobject(this._width, this._height);
+    this._copyBaseAttributesInto(clone);
+    return clone;
   }
 }
 
@@ -436,8 +438,7 @@ describe('Transform', () => {
         protected _createThreeObject(): THREE.Object3D {
           return new THREE.Group();
         }
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        protected _createCopy(): Mobject {
+        override copy(): Mobject {
           return new SimpleMobject();
         }
       }
@@ -738,8 +739,7 @@ describe('cross-fade finish()', () => {
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Group();
       }
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      protected _createCopy(): Mobject {
+      override copy(): Mobject {
         return new SimpleMobject();
       }
     }
@@ -794,8 +794,7 @@ describe('cross-fade finish()', () => {
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Group();
       }
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      protected _createCopy(): Mobject {
+      override copy(): Mobject {
         return new SimpleMobject();
       }
     }
@@ -821,8 +820,7 @@ describe('cross-fade finish()', () => {
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Group();
       }
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      protected _createCopy(): Mobject {
+      override copy(): Mobject {
         return new SimpleMobject();
       }
     }
@@ -892,8 +890,7 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
         return this._mesh;
       }
 
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      protected _createCopy(): Mobject {
+      override copy(): Mobject {
         return new TextLikeMobject();
       }
     }
@@ -948,7 +945,7 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
       }
 
       // eslint-disable-next-line @typescript-eslint/naming-convention
-      protected _createCopy(): Mobject {
+      override copy(): Mobject {
         return new TextLikeMobject();
       }
     }

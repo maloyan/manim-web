@@ -1186,7 +1186,7 @@ describe('CurvesAsSubmobjects class', () => {
     expect(cas.scaleVector.y).toBe(3);
   });
 
-  it('_createCopy returns a CurvesAsSubmobjects', () => {
+  it('copy() returns a CurvesAsSubmobjects', () => {
     const v = new VMobject();
     v.setPoints([
       [0, 0, 0],

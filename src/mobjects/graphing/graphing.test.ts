@@ -416,7 +416,7 @@ describe('NumberLine – uncovered branches', () => {
     expect(nl.numberToPoint(5)[0]).toBe(nl.position.x);
   });
 
-  it('_createCopy returns independent copy', () => {
+  it('copy() returns independent copy', () => {
     const nl = new NumberLine({
       xRange: [0, 5, 1],
       length: 8,
@@ -445,7 +445,7 @@ describe('UnitInterval – uncovered branches', () => {
     expect(closeTo(copy.getXRange()[2], 0.5)).toBe(true);
   });
 
-  it('_createCopy for numDecimalPlaces=1 and =2', () => {
+  it('copy() for numDecimalPlaces=1 and =2', () => {
     const u1 = new UnitInterval({ numDecimalPlaces: 1 });
     expect(closeTo((u1.copy() as UnitInterval).getXRange()[2], 0.1)).toBe(true);
     const u2 = new UnitInterval({ length: 8, tickSize: 0.3, numDecimalPlaces: 2 });
@@ -481,7 +481,7 @@ describe('FunctionGraph – uncovered branches', () => {
     expect(closeTo(pt![0], 2)).toBe(true);
   });
 
-  it('_createCopy preserves all options including axes', () => {
+  it('copy() preserves all options including axes', () => {
     const axes = new Axes();
     const fg = new FunctionGraph({
       func: (x) => x * x,

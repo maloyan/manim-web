@@ -414,7 +414,7 @@ describe('PolarPlane', () => {
     });
   });
 
-  describe('_createCopy via copy()', () => {
+  describe('copy() via copy()', () => {
     it('copy should produce an independent PolarPlane', () => {
       const pp = new PolarPlane({
         radius: 4,
@@ -692,7 +692,7 @@ describe('ComplexPlane with canvas mock', () => {
     });
   });
 
-  describe('_createCopy via copy()', () => {
+  describe('copy() via copy()', () => {
     it('should produce an independent ComplexPlane', () => {
       const plane = new ComplexPlane({
         xRange: [-3, 3, 1],
@@ -799,7 +799,7 @@ describe('ComplexPlane with canvas mock', () => {
       expect(pp.getAngleLabels().children.length).toBe(4);
     });
 
-    it('_createCopy with labels should produce independent copy', () => {
+    it('copy() with labels should produce independent copy', () => {
       const pp = new PolarPlane({
         radius: 5,
         size: 10,
@@ -896,7 +896,7 @@ describe('ComplexPlane with canvas mock', () => {
       // Use a non-Text Mobject to confirm the resolver does not rewrap into Text.
       // Mobject is abstract — use a minimal concrete shim.
       class StubMobject extends Mobject {
-        protected override _createCopy(): Mobject {
+        override copy(): Mobject {
           return new StubMobject();
         }
         protected override _createThreeObject(): THREE.Object3D {
