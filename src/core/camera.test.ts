@@ -1023,3 +1023,86 @@ describe('MultiCamera', () => {
     });
   });
 });
+
+// ============================================================
+// Camera3D — live orbit-angle sync (issue #425)
+// ============================================================
+// OrbitControls mutates the live Three.js camera position directly. getOrbitAngles()
+// (and the public position getter / orbit() default distance) must reflect that live
+// position, not a stale internal cache.
+describe('Camera3D orbit angle sync (#425)', () => {
+  // Place the live camera at given spherical coords relative to lookAt, the way
+  // OrbitControls would by writing straight to camera.position.
+  const setLivePosition = (
+    cam: Camera3D,
+    phi: number,
+    theta: number,
+    distance: number,
+    lookAt: [number, number, number] = [0, 0, 0],
+  ): void => {
+    cam
+      .getCamera()
+      .position.set(
+        lookAt[0] + distance * Math.sin(phi) * Math.cos(theta),
+        lookAt[1] + distance * Math.sin(phi) * Math.sin(theta),
+        lookAt[2] + distance * Math.cos(phi),
+      );
+  };
+
+  it('getOrbitAngles reflects live camera position after external mutation', () => {
+    const cam = new Camera3D();
+    // Simulate OrbitControls dragging the live camera to new angles.
+    setLivePosition(cam, Math.PI / 2, Math.PI / 6, 5);
+
+    const o = cam.getOrbitAngles();
+    expect(o.phi).toBeCloseTo(Math.PI / 2);
+    expect(o.theta).toBeCloseTo(Math.PI / 6);
+    expect(o.distance).toBeCloseTo(5);
+  });
+
+  it('position getter reflects live camera position', () => {
+    const cam = new Camera3D();
+    cam.getCamera().position.set(1, 2, 3);
+    const p = cam.position;
+    expect(p.x).toBeCloseTo(1);
+    expect(p.y).toBeCloseTo(2);
+    expect(p.z).toBeCloseTo(3);
+  });
+
+  it('orbit() without explicit distance preserves live (zoomed) distance', () => {
+    const cam = new Camera3D(16 / 9, { position: [0, 0, 10] });
+    // OrbitControls zooms in to distance 4.
+    setLivePosition(cam, Math.PI / 2, 0, 4);
+    // Programmatic re-orient with no distance should keep the live radius, not jump to 10.
+    cam.orbit(Math.PI / 2, Math.PI / 2);
+    expect(cam.getOrbitAngles().distance).toBeCloseTo(4);
+  });
+
+  it('gimbal fallback preserves the last live (non-pole) theta', () => {
+    const cam = new Camera3D();
+    // A normal (non-pole) drag establishes theta.
+    setLivePosition(cam, Math.PI / 2, Math.PI / 3, 6);
+    expect(cam.getOrbitAngles().theta).toBeCloseTo(Math.PI / 3);
+    // Drag straight to the pole (sin(phi) ~ 0): theta is undefined, fall back to last live theta.
+    setLivePosition(cam, 0, 0, 6);
+    expect(cam.getOrbitAngles().theta).toBeCloseTo(Math.PI / 3);
+  });
+
+  it('returns finite values when camera coincides with lookAt (distance 0)', () => {
+    const cam = new Camera3D();
+    cam.getCamera().position.set(0, 0, 0); // exactly at the origin lookAt
+    const o = cam.getOrbitAngles();
+    expect(Number.isNaN(o.phi)).toBe(false);
+    expect(Number.isNaN(o.theta)).toBe(false);
+    expect(o.distance).toBe(0);
+  });
+
+  it('works with a non-origin lookAt target', () => {
+    const cam = new Camera3D(16 / 9, { lookAt: [1, 2, 3] });
+    setLivePosition(cam, Math.PI / 2, Math.PI / 4, 7, [1, 2, 3]);
+    const o = cam.getOrbitAngles();
+    expect(o.phi).toBeCloseTo(Math.PI / 2);
+    expect(o.theta).toBeCloseTo(Math.PI / 4);
+    expect(o.distance).toBeCloseTo(7);
+  });
+});
