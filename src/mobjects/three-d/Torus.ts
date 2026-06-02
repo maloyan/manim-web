@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Options for creating a Torus
@@ -49,7 +50,7 @@ export interface TorusOptions {
  * });
  * ```
  */
-export class Torus extends Mobject {
+export class Torus extends Mobject3D {
   private _radius: number;
   private _tubeRadius: number;
   private _radialSegments: number;

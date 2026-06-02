@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ParametricGeometry } from 'three/examples/jsm/geometries/ParametricGeometry.js';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 import { Surface3D } from './Surface3D';
 
 /**
@@ -86,7 +87,7 @@ export interface TexturedSphereOptions {
  * });
  * ```
  */
-export class TexturedSurface extends Mobject {
+export class TexturedSurface extends Mobject3D {
   /** The underlying parametric surface providing geometry */
   private _surface: Surface3D;
 

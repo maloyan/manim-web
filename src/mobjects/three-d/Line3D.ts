@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 import { VMobject } from '../../core/VMobject';
 
 /**
@@ -32,7 +33,7 @@ export interface Line3DOptions {
  * const line = new Line3D({ end: [1, 1, 1], lineWidth: 8 });
  * ```
  */
-export class Line3D extends Mobject {
+export class Line3D extends Mobject3D {
   protected _start: Vector3Tuple;
   protected _end: Vector3Tuple;
   // Default resolution comes from the VMobject class statics, which Scene

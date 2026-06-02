@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 import { VMobject } from '../../core/VMobject';
 
 /**
@@ -45,7 +46,7 @@ export interface PrismOptions {
  * });
  * ```
  */
-export class Prism extends Mobject {
+export class Prism extends Mobject3D {
   private _sides: number;
   private _radius: number;
   private _height: number;
@@ -298,7 +299,7 @@ export interface Dot3DOptions {
  * });
  * ```
  */
-export class Dot3D extends Mobject {
+export class Dot3D extends Mobject3D {
   private _radius: number;
   private _pointPosition: Vector3Tuple;
   private _glow: boolean;

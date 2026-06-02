@@ -34,6 +34,17 @@ npm run docs              # Generate example docs + build Docusaurus site
 - Add `// @vitest-environment happy-dom` at top of test files that need DOM/canvas
 - Coverage config in `vitest.config.ts` (v8 provider, lcov reporter)
 - Integration smoke test: `tests/integration/smoke.spec.ts`
+- **Keep example-based tests few.** We are migrating to property-based tests
+  soon (see the code-quality note below), so don't enumerate many cases by
+  hand. Write the smallest set that pins the behavior — one or two
+  representatives is usually enough — and state the **property** the examples
+  stand in for as a `// MIGRATION:` comment, so it can be lifted into a
+  generated property later. Example:
+  ```typescript
+  // MIGRATION: example for the property
+  //   ∀ 3D mesh m, m.normalizeTransform() leaves rotation/scaleVector unchanged.
+  // Replace with a property test once the suite lands.
+  ```
 
 ## Code Style
 

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ConvexGeometry } from 'three/examples/jsm/geometries/ConvexGeometry.js';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Options for creating a ConvexHull3D
@@ -37,7 +38,7 @@ export interface ConvexHull3DOptions {
  * });
  * ```
  */
-export class ConvexHull3D extends Mobject {
+export class ConvexHull3D extends Mobject3D {
   private _points: Vector3Tuple[];
   private _wireframe: boolean;
   private _centerPoint: Vector3Tuple;

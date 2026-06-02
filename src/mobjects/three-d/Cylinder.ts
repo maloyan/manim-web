@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Options for creating a Cylinder
@@ -54,7 +55,7 @@ export interface CylinderOptions {
  * });
  * ```
  */
-export class Cylinder extends Mobject {
+export class Cylinder extends Mobject3D {
   protected _radiusTop: number;
   protected _radiusBottom: number;
   protected _height: number;

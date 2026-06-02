@@ -5,6 +5,9 @@
  * that can be rendered in a 3D scene with proper lighting and materials.
  */
 
+// Shared 3D mesh base class
+export { Mobject3D } from './Mobject3D';
+
 // Basic 3D primitives
 export { Sphere, type SphereOptions } from './Sphere';
 export { Cube, Box3D, type CubeOptions, type Box3DOptions } from './Cube';

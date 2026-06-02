@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Options for creating a Cube
@@ -39,7 +40,7 @@ export interface CubeOptions {
  * });
  * ```
  */
-export class Cube extends Mobject {
+export class Cube extends Mobject3D {
   private _sideLength: number;
   private _wireframe: boolean;
   private _centerPoint: Vector3Tuple;
@@ -209,7 +210,7 @@ export interface Box3DOptions {
  * });
  * ```
  */
-export class Box3D extends Mobject {
+export class Box3D extends Mobject3D {
   private _width: number;
   private _height: number;
   private _depth: number;

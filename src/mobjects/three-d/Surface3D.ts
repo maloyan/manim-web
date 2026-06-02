@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ParametricGeometry } from 'three/examples/jsm/geometries/ParametricGeometry.js';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Options for creating a Surface3D
@@ -65,7 +66,7 @@ export interface Surface3DOptions {
  * });
  * ```
  */
-export class Surface3D extends Mobject {
+export class Surface3D extends Mobject3D {
   protected _func: (u: number, v: number) => Vector3Tuple;
   protected _uRange: [number, number];
   protected _vRange: [number, number];

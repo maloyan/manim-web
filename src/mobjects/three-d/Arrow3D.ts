@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Options for creating an Arrow3D
@@ -44,7 +45,7 @@ export interface Arrow3DOptions {
  * });
  * ```
  */
-export class Arrow3D extends Mobject {
+export class Arrow3D extends Mobject3D {
   private _start: Vector3Tuple;
   private _end: Vector3Tuple;
   private _tipLength: number;

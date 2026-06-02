@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Base options for all polyhedra
@@ -31,7 +32,7 @@ export interface PolyhedronOptions {
  * const tetra = new Tetrahedron({ sideLength: 2, color: '#ff0000' });
  * ```
  */
-export abstract class Polyhedron extends Mobject {
+export abstract class Polyhedron extends Mobject3D {
   protected _sideLength: number;
   protected _wireframe: boolean;
   protected _centerPoint: Vector3Tuple;

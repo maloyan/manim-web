@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Options for creating a Sphere
@@ -41,7 +42,7 @@ export interface SphereOptions {
  * });
  * ```
  */
-export class Sphere extends Mobject {
+export class Sphere extends Mobject3D {
   private _radius: number;
   private _resolution: number;
   private _wireframe: boolean;
