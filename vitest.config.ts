@@ -10,16 +10,7 @@ export default defineConfig({
     },
   },
   test: {
-    // The suite accumulates heap across files within a reused worker (a real
-    // leak — see .debug/OOM-leak.md). Until that is fixed, run in `forks`
-    // (child processes reclaim memory better than reused worker threads) and
-    // raise each fork's V8 heap via execArgv so its file slice fits. Cap
-    // parallelism so total RAM stays within a CI runner's budget.
-    // NB: Vitest 4 removed `poolOptions`; pool tuning is top-level now.
-    pool: 'forks',
-    maxWorkers: 2,
-    minWorkers: 1,
-    execArgv: ['--max-old-space-size=4096'],
+    pool: 'threads',
     include: ['src/**/*.test.ts'],
     setupFiles: ['./src/test-setup/vitest-setup.ts'],
     environmentOptions: {

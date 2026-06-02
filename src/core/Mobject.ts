@@ -524,24 +524,26 @@ export abstract class Mobject {
 
   /**
    * Copy position, color, standard properties, and optionally children onto `clone`.
-   * Requires this.isTransformNormalized() — rotation/scale must be baked before copy.
    * Every copy() implementation MUST call this to preserve position/color/opacity/style/etc.
    *
-   * @pre this.isTransformNormalized()  // rotation and scale must be at identity
+   * @post this is unchanged  // copying reads from the source; it must never mutate it
    * @internal Convention: forgetting this call silently loses position/color/style.
    */
   protected _copyBaseAttributesInto(
     clone: Mobject,
     options?: { copyChildren?: boolean; copyPosition?: boolean },
   ): void {
+    // `clone` must be a fresh, distinct instance. Passing `this` makes the
+    // child-copy loop below iterate this.children while pushing onto it — an
+    // infinite loop that allocates until the heap is exhausted. Fail fast.
+    if (clone === this) {
+      throw new Error(
+        `${this.constructor.name}._copyBaseAttributesInto(): clone must be a distinct instance, not the source itself.`,
+      );
+    }
+
     const copyPosition = options?.copyPosition ?? true;
     const copyChildren = options?.copyChildren ?? true;
-    //if (!this.isTransformNormalized()) {
-    //  throw new Error(
-    //    `${this.constructor.name}.copy(): transform must be normalized before copying. ` +
-    //      `Call normalizeTransform() first to bake rotation/scale into geometry.`,
-    //  );
-    //}
     if (copyPosition) {
       clone.position.copy(this.position);
     }
@@ -554,7 +556,9 @@ export abstract class Mobject {
     clone._style = { ...this._style };
 
     if (copyChildren) {
-      for (const child of this.children) {
+      // Snapshot the source list: copying onto `clone` may mutate a shared
+      // array in edge cases, and a snapshot guarantees this loop terminates.
+      for (const child of [...this.children]) {
         clone.add(child.copy());
       }
     }

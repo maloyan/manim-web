@@ -64,27 +64,20 @@ export class ApplyFunction extends Animation {
         const startPoints = mob.getLocalPoints();
         if (startPoints.length === 0) continue;
 
-        const threeObj = (mob as Mobject)._threeObject;
-        let worldMatrix: THREE.Matrix4 | null = null;
-        let inverseWorld: THREE.Matrix4 | null = null;
+        // Use the mobject's logical world matrix (position/rotation/scale plus
+        // ancestors), not _threeObject.matrixWorld: the Three.js node is only
+        // populated during _syncToThree, so a dirty/unsynced mobject reports an
+        // identity matrix and drops the position offset baked into
+        // getLocalPoints() — getPoints() composes this same matrix.
+        const worldMatrix = (mob as Mobject)._computeWorldMatrix();
+        const inverseWorld = worldMatrix.clone().invert();
 
-        if (threeObj) {
-          threeObj.updateWorldMatrix(true, false);
-          worldMatrix = threeObj.matrixWorld;
-          inverseWorld = worldMatrix.clone().invert();
-        }
-
-        let targetPoints: number[][];
-        if (worldMatrix && inverseWorld) {
-          targetPoints = startPoints.map((p) => {
-            vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
-            const worldResult = this.func([vec.x, vec.y, vec.z]);
-            vec.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
-            return [vec.x, vec.y, vec.z];
-          });
-        } else {
-          targetPoints = startPoints.map((p) => this.func([...p]));
-        }
+        const targetPoints = startPoints.map((p) => {
+          vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
+          const worldResult = this.func([vec.x, vec.y, vec.z]);
+          vec.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld);
+          return [vec.x, vec.y, vec.z];
+        });
 
         this._snapshots.push({ mob, startPoints, targetPoints });
       }
@@ -160,32 +153,18 @@ export class ApplyComplexFunction extends Animation {
         const startPoints = mob.getLocalPoints();
         if (startPoints.length === 0) continue;
 
-        const threeObj = (mob as Mobject)._threeObject;
-        let worldMatrix: THREE.Matrix4 | null = null;
-        let inverseWorld: THREE.Matrix4 | null = null;
+        // See ApplyFunction.begin(): use the logical world matrix, not
+        // _threeObject.matrixWorld, so an unsynced mobject keeps its offset.
+        const worldMatrix = (mob as Mobject)._computeWorldMatrix();
+        const inverseWorld = worldMatrix.clone().invert();
 
-        if (threeObj) {
-          threeObj.updateWorldMatrix(true, false);
-          worldMatrix = threeObj.matrixWorld;
-          inverseWorld = worldMatrix.clone().invert();
-        }
-
-        let targetPoints: number[][];
-        if (worldMatrix && inverseWorld) {
-          targetPoints = startPoints.map((p) => {
-            vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
-            const z: Complex = { re: vec.x, im: vec.y };
-            const result = this.func(z);
-            vec.set(result.re, result.im, vec.z).applyMatrix4(inverseWorld!);
-            return [vec.x, vec.y, vec.z];
-          });
-        } else {
-          targetPoints = startPoints.map((p) => {
-            const z: Complex = { re: p[0], im: p[1] };
-            const result = this.func(z);
-            return [result.re, result.im, p[2]];
-          });
-        }
+        const targetPoints = startPoints.map((p) => {
+          vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
+          const z: Complex = { re: vec.x, im: vec.y };
+          const result = this.func(z);
+          vec.set(result.re, result.im, vec.z).applyMatrix4(inverseWorld);
+          return [vec.x, vec.y, vec.z];
+        });
 
         this._snapshots.push({ mob, startPoints, targetPoints });
       }
@@ -317,28 +296,18 @@ export class ApplyMatrix extends Animation {
         const startPoints = mob.getLocalPoints();
         if (startPoints.length === 0) continue;
 
-        const threeObj = (mob as Mobject)._threeObject;
-        let worldMatrix: THREE.Matrix4 | null = null;
-        let inverseWorld: THREE.Matrix4 | null = null;
+        // See ApplyFunction.begin(): use the logical world matrix, not
+        // _threeObject.matrixWorld, so an unsynced mobject keeps its offset.
+        const worldMatrix = (mob as Mobject)._computeWorldMatrix();
+        const inverseWorld = worldMatrix.clone().invert();
 
-        if (threeObj) {
-          threeObj.updateWorldMatrix(true, false);
-          worldMatrix = threeObj.matrixWorld;
-          inverseWorld = worldMatrix.clone().invert();
-        }
-
-        let targetPoints: number[][];
         const ap = this.aboutPoint;
-        if (worldMatrix && inverseWorld) {
-          targetPoints = startPoints.map((p) => {
-            vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
-            const worldResult = transformPointByMatrix([vec.x, vec.y, vec.z], this.matrix, ap);
-            vec.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
-            return [vec.x, vec.y, vec.z];
-          });
-        } else {
-          targetPoints = startPoints.map((p) => transformPointByMatrix(p, this.matrix, ap));
-        }
+        const targetPoints = startPoints.map((p) => {
+          vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
+          const worldResult = transformPointByMatrix([vec.x, vec.y, vec.z], this.matrix, ap);
+          vec.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld);
+          return [vec.x, vec.y, vec.z];
+        });
 
         this._snapshots.push({ mob, startPoints, targetPoints });
       }

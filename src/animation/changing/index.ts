@@ -244,7 +244,7 @@ export class TracedPath extends VMobject {
       minDistanceToNewPoint: this._minDistanceToNewPoint,
       maxPoints: this._maxPoints,
     });
-    copy._copyBaseAttributesInto(this);
+    this._copyBaseAttributesInto(copy);
     // Copy current path data
     copy._pathData = this._pathData.map((d) => ({ point: [...d.point], time: d.time }));
     copy._elapsedTime = this._elapsedTime;

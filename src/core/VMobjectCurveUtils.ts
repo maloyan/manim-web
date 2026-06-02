@@ -212,7 +212,7 @@ export class CurvesAsSubmobjects extends VMobject {
    */
   override copy(): VMobject {
     const copy = new CurvesAsSubmobjects();
-    this._copyBaseAttributesInto(this);
+    this._copyBaseAttributesInto(copy);
     copy._source = this._source;
     return copy;
   }
