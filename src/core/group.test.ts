@@ -343,4 +343,21 @@ describe('Group - extended coverage', () => {
     const obj = g.getThreeObject();
     expect(obj).toBeDefined();
   });
+
+  it('copy() does not mutate the source rotation/scale', () => {
+    // MIGRATION: example-based regression. Intent: copy() honors the
+    // `@post this is unchanged` contract on _copyBaseAttributesInto — the
+    // source keeps its rotation/scale and the clone carries the same transform.
+    // Replace with a property test later.
+    const g = new Group(new Dot(), new Dot());
+    g.rotation.z = 0.785;
+    g.scaleVector.x = 2;
+    const copy = g.copy();
+    // Source is unchanged...
+    expect(g.rotation.z).toBeCloseTo(0.785);
+    expect(g.scaleVector.x).toBeCloseTo(2);
+    // ...and the clone carries the same transform.
+    expect(copy.rotation.z).toBeCloseTo(0.785);
+    expect(copy.scaleVector.x).toBeCloseTo(2);
+  });
 });

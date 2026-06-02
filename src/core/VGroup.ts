@@ -412,7 +412,6 @@ export class VGroup extends VMobject {
   }
 
   override copy(): VGroup {
-    this.normalizeTransform();
     const copy = new VGroup();
     this._copyBaseAttributesInto(copy);
     return copy;

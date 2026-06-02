@@ -836,4 +836,19 @@ describe('VGroup - extended coverage', () => {
       expect(a.getCenter()[0] + c.getCenter()[0]).toBeCloseTo(2 * after[0], 6);
     });
   });
+
+  it('copy() does not mutate the source rotation/scale', () => {
+    // MIGRATION: example-based regression. Intent: copy() honors the
+    // `@post this is unchanged` contract on _copyBaseAttributesInto — the
+    // source keeps its rotation/scale and the clone carries the same transform.
+    // Replace with a property test later.
+    const vg = new VGroup(new Dot(), new Dot());
+    vg.rotation.z = 0.785;
+    vg.scaleVector.x = 2;
+    const copy = vg.copy();
+    expect(vg.rotation.z).toBeCloseTo(0.785);
+    expect(vg.scaleVector.x).toBeCloseTo(2);
+    expect(copy.rotation.z).toBeCloseTo(0.785);
+    expect(copy.scaleVector.x).toBeCloseTo(2);
+  });
 });

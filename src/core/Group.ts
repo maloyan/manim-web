@@ -198,7 +198,6 @@ export class Group extends Mobject {
    * Create a copy of this Group.
    */
   override copy(): Group {
-    this.normalizeTransform();
     const copy = new Group();
     this._copyBaseAttributesInto(copy);
     return copy;

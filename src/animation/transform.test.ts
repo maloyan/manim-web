@@ -439,7 +439,9 @@ describe('Transform', () => {
           return new THREE.Group();
         }
         override copy(): Mobject {
-          return new SimpleMobject();
+          const clone = new SimpleMobject();
+          this._copyBaseAttributesInto(clone);
+          return clone;
         }
       }
       const m1 = new SimpleMobject();
@@ -740,7 +742,9 @@ describe('cross-fade finish()', () => {
         return new THREE.Group();
       }
       override copy(): Mobject {
-        return new SimpleMobject();
+        const clone = new SimpleMobject();
+        this._copyBaseAttributesInto(clone);
+        return clone;
       }
     }
     const m1 = new SimpleMobject();
@@ -795,7 +799,9 @@ describe('cross-fade finish()', () => {
         return new THREE.Group();
       }
       override copy(): Mobject {
-        return new SimpleMobject();
+        const clone = new SimpleMobject();
+        this._copyBaseAttributesInto(clone);
+        return clone;
       }
     }
     const m1 = new SimpleMobject();
@@ -821,7 +827,9 @@ describe('cross-fade finish()', () => {
         return new THREE.Group();
       }
       override copy(): Mobject {
-        return new SimpleMobject();
+        const clone = new SimpleMobject();
+        this._copyBaseAttributesInto(clone);
+        return clone;
       }
     }
     const m1 = new SimpleMobject();
@@ -891,7 +899,9 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
       }
 
       override copy(): Mobject {
-        return new TextLikeMobject();
+        const clone = new TextLikeMobject();
+        this._copyBaseAttributesInto(clone);
+        return clone;
       }
     }
 
@@ -946,7 +956,9 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
 
       // eslint-disable-next-line @typescript-eslint/naming-convention
       override copy(): Mobject {
-        return new TextLikeMobject();
+        const clone = new TextLikeMobject();
+        this._copyBaseAttributesInto(clone);
+        return clone;
       }
     }
 
