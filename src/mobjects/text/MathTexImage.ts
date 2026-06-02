@@ -105,6 +105,17 @@ interface RenderState {
  * // Wait for rendering to complete before animating
  * await integral.waitForRender();
  * ```
+ *
+ * @note Scale a MathTexImage only AFTER `waitForRender()`. Scaling after render
+ * takes the DURABLE size-bake path: `normalizeTransform()` folds the scale into
+ * `_renderState.width/height` via `applyVisualSize` (mesh.scale reset to 1), so
+ * the size survives a later `setRevealProgress()`/`applyVisualSize`. Scaling
+ * BEFORE render (no measured size yet) instead relies on the inherited
+ * `_bakeFallbackScale` writing into `mesh.scale` — a NON-DURABLE path that a
+ * later reveal or `applyVisualSize` may reset. A non-uniform scale of a
+ * Z-rotated MathTexImage is likewise unsupported (it also takes the
+ * non-durable `mesh.scale` fallback). These edge cases are out of scope; all
+ * real usage (including the manim_ce_logo) scales after render.
  */
 export class MathTexImage extends TexturedMobject {
   protected _latex: string;
@@ -123,6 +134,16 @@ export class MathTexImage extends TexturedMobject {
   protected _arrangePromise: Promise<void> | null = null;
   /** Padding in pixels around rendered content */
   protected _padding: number;
+  /**
+   * Absolute visual size `[width, height]` (world units) that a `copy()` of an
+   * already-sized MathTexImage must reproduce, overriding the natural size the
+   * copy's fresh async re-render measures. Set by `_createCopy` from the source's
+   * current `_renderState` size (which, after a scale+normalize, carries the baked
+   * scale via `applyVisualSize`); applied once in `_startRender`'s post-render
+   * callback and then cleared. Null for normal (non-copy) instances, so the
+   * standard render/reveal path is untouched.
+   */
+  protected _visualSizeOverride: [number, number] | null = null;
 
   constructor(options: MathTexImageOptions) {
     super();
@@ -420,6 +441,14 @@ export class MathTexImage extends TexturedMobject {
     this._renderState.renderPromise = this._renderLatex()
       .then(() => {
         this._renderState.isRendering = false;
+        // A copy of an already-sized instance must keep that size: the fresh
+        // re-render above measured the UNSCALED natural size, so re-apply the
+        // carried absolute size (which carries any baked scale) and clear it.
+        if (this._visualSizeOverride) {
+          const [w, h] = this._visualSizeOverride;
+          this._visualSizeOverride = null;
+          this.applyVisualSize(w, h);
+        }
         this._markDirty();
       })
       .catch((error) => {
@@ -1067,6 +1096,24 @@ export class MathTexImage extends TexturedMobject {
     this._renderState.texture = nextTexture;
   }
 
+  /**
+   * Own display mesh only in single-part mode; multi-part delegates to child parts.
+   */
+  protected override _ownsDisplayMesh(): boolean {
+    return !this._isMultiPart;
+  }
+
+  /**
+   * Current persistent visual size for scale-baking. Null when multi-part (parts
+   * bake their own size) or before the first render produced dimensions.
+   */
+  protected override _currentVisualSize(): [number, number] | null {
+    if (this._isMultiPart) return null;
+    const { width, height } = this._renderState;
+    if (!width || !height) return null;
+    return [width, height];
+  }
+
   applyVisualSize(width: number, height: number): void {
     if (this._isMultiPart) {
       throw new Error('MathTexImage.applyVisualSize requires single-part MathTexImage');
@@ -1121,6 +1168,19 @@ export class MathTexImage extends TexturedMobject {
       renderer: this._renderer,
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
+    // Preserve the normalized visual size. After a scale+normalize, a single-part
+    // MathTexImage folds its scale into `_renderState.width/height` via
+    // `applyVisualSize` (mesh.scale reset to 1). The copy kicks off a fresh async
+    // render that measures the UNSCALED natural size, so without this it would
+    // shrink. Carry the current absolute size as an override applied once the
+    // copy's re-render settles (multi-part parts carry their own size when copied
+    // recursively by `Mobject.copy()`). Also apply it eagerly so a synchronous
+    // bounds read before the render settles already reflects the size.
+    if (!this._isMultiPart && this._renderState.width && this._renderState.height) {
+      copy._visualSizeOverride = [this._renderState.width, this._renderState.height];
+      copy.getThreeObject();
+      copy.applyVisualSize(this._renderState.width, this._renderState.height);
+    }
     return copy;
   }
 

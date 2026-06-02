@@ -761,4 +761,79 @@ describe('VGroup - extended coverage', () => {
     const obj = vg.getThreeObject();
     expect(obj).toBeDefined();
   });
+
+  // Regression for #417: arrange/arrangeInGrid must recenter by shifting the
+  // CHILDREN (not the container) so adding the children directly stays centered.
+  describe('arrange recenters children, not the container (#417 regression)', () => {
+    const makeDot = () => new Dot({ position: [0, 0, 0] });
+
+    it('arrange shifts children so their combined center returns to origin', () => {
+      const a = makeDot();
+      const b = makeDot();
+      const c = makeDot();
+      const vg = new VGroup(a, b, c);
+      vg.arrange(RIGHT, 0.5);
+
+      // Container position stays at origin — the offset lives on the children.
+      expect(vg.position.x).toBeCloseTo(0, 6);
+      expect(vg.position.y).toBeCloseTo(0, 6);
+
+      // Children are physically centered around the group origin.
+      const centerX = (a.getCenter()[0] + c.getCenter()[0]) / 2;
+      expect(centerX).toBeCloseTo(0, 6);
+      // Outer children are symmetric about origin.
+      expect(a.getCenter()[0]).toBeCloseTo(-c.getCenter()[0], 6);
+    });
+
+    it('arrange(DOWN) keeps the pair vertically centered on the children', () => {
+      const a = makeDot();
+      const b = makeDot();
+      const vg = new VGroup(a, b);
+      vg.arrange([0, -1, 0], 0.5);
+      expect(vg.position.y).toBeCloseTo(0, 6);
+      const midY = (a.getCenter()[1] + b.getCenter()[1]) / 2;
+      expect(midY).toBeCloseTo(0, 6);
+    });
+
+    it('arrangeInGrid recenters children around the group origin', () => {
+      const items = Array.from({ length: 4 }, makeDot);
+      const vg = new VGroup(...items);
+      vg.arrangeInGrid(2, 2, 0.5, 0.5);
+
+      expect(vg.position.x).toBeCloseTo(0, 6);
+      expect(vg.position.y).toBeCloseTo(0, 6);
+
+      const xs = items.map((m) => m.getCenter()[0]);
+      const ys = items.map((m) => m.getCenter()[1]);
+      const meanX = xs.reduce((s, v) => s + v, 0) / xs.length;
+      const meanY = ys.reduce((s, v) => s + v, 0) / ys.length;
+      expect(meanX).toBeCloseTo(0, 6);
+      expect(meanY).toBeCloseTo(0, 6);
+    });
+
+    // Issue 3: the recenter delta must be converted into the children's
+    // parent-local frame. On a VGroup with a non-identity (scaled) transform a
+    // raw world delta would be divided by the group scale when applied via
+    // child.shift(), pulling the arrangement off-center. The frame conversion
+    // keeps the WORLD-space center fixed.
+    it('arrange stays world-centered on a scaled VGroup (non-identity frame)', () => {
+      const a = makeDot();
+      const b = makeDot();
+      const c = makeDot();
+      const vg = new VGroup(a, b, c);
+      // Apply a non-identity linear transform to the group BEFORE arranging so
+      // world frame != children's parent-local frame.
+      vg.scale(2);
+
+      const before = vg.getCenter();
+      vg.arrange(RIGHT, 0.5);
+      const after = vg.getCenter();
+
+      // World-space center is preserved across arrange despite the group scale.
+      expect(after[0]).toBeCloseTo(before[0], 6);
+      expect(after[1]).toBeCloseTo(before[1], 6);
+      // Symmetric about the world center.
+      expect(a.getCenter()[0] + c.getCenter()[0]).toBeCloseTo(2 * after[0], 6);
+    });
+  });
 });

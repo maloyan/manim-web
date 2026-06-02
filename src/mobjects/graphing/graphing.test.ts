@@ -275,6 +275,33 @@ describe('Axes', () => {
       expect(axes.xAxis).toBeDefined();
       expect(axes.yAxis).toBeDefined();
     });
+
+    // Regression for #417: the y-axis number labels are counter-rotated and must
+    // sit in a single vertical column to the left of the axis — not a stray
+    // horizontal row near the origin (which happened when the +90° rotation was
+    // left deferred and never baked into the labels' positions).
+    it('y-axis number labels form a vertical column, not a horizontal row', () => {
+      const axes = new Axes({
+        xRange: [0, 40, 5],
+        yRange: [-8, 32, 5],
+        xLength: 9,
+        yLength: 6,
+        yAxisConfig: { numbersToInclude: [-5, 0, 5, 10, 15, 20, 25, 30] },
+        tips: false,
+      });
+      const labels = axes.yAxis.getNumberLabels();
+      expect(labels.length).toBeGreaterThan(2);
+
+      const xs = labels.map((l) => l.getCenter()[0]);
+      const ys = labels.map((l) => l.getCenter()[1]);
+
+      // All labels share (near-)identical x — a vertical column.
+      const xSpread = Math.max(...xs) - Math.min(...xs);
+      expect(xSpread).toBeLessThan(0.05);
+      // Labels are spread out vertically.
+      const ySpread = Math.max(...ys) - Math.min(...ys);
+      expect(ySpread).toBeGreaterThan(1);
+    });
   });
 
   describe('coordinate transformations', () => {

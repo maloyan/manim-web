@@ -327,6 +327,9 @@ export class Paragraph extends Text {
     }
   }
 
+  /**
+   * Create a copy of this Paragraph mobject
+   */
   override copy(): Paragraph {
     this.normalizeTransform();
     const copy = new Paragraph({
@@ -344,6 +347,7 @@ export class Paragraph extends Text {
       alignment: this._alignment,
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
+    this._carryVisualSizeTo(copy);
     return copy;
   }
 }

@@ -60,4 +60,70 @@ describe('ImageMobject bounds after scale', () => {
       createElementSpy.mockRestore();
     }
   });
+
+  // Issue 1 regression: a scaled ImageMobject must survive normalizeTransform().
+  // Before the fix, normalize reset scaleVector to 1 without baking the scale
+  // into the persistent display size, so the image shrank back to its unscaled
+  // dimensions (visible inside a VGroup, which normalizes on construction).
+  it('scaled ImageMobject survives normalizeTransform (bounds preserved, scaleVector=1)', async () => {
+    const mockCtx = {
+      imageSmoothingEnabled: false,
+      imageSmoothingQuality: 'low' as const,
+      createImageData: (width: number, height: number) => ({
+        data: new Uint8ClampedArray(width * height * 4),
+        width,
+        height,
+      }),
+      putImageData: () => {},
+      drawImage: () => {},
+      getImageData: (x: number, y: number, width: number, height: number) => ({
+        data: new Uint8ClampedArray(width * height * 4),
+        width,
+        height,
+      }),
+    };
+    const originalCreateElement = document.createElement.bind(document);
+    const spy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string): HTMLElement => {
+        const el = originalCreateElement(tagName);
+        if (tagName.toLowerCase() === 'canvas') {
+          (el as HTMLCanvasElement).getContext = ((contextType: string) =>
+            contextType === '2d' ? mockCtx : null) as HTMLCanvasElement['getContext'];
+        }
+        return el;
+      });
+
+    try {
+      const image = new ImageMobject({
+        pixelData: [
+          [0, 255],
+          [255, 0],
+        ],
+        height: 2,
+      });
+      await image.waitForLoad();
+
+      image.scale(2);
+      const before = image.getBounds();
+      const wBefore = before.max.x - before.min.x;
+      const hBefore = before.max.y - before.min.y;
+
+      image.normalizeTransform();
+
+      // Scale was folded into the persistent size; the transform is now identity.
+      expect(image.scaleVector.x).toBeCloseTo(1, 6);
+      expect(image.scaleVector.y).toBeCloseTo(1, 6);
+
+      const after = image.getBounds();
+      const wAfter = after.max.x - after.min.x;
+      const hAfter = after.max.y - after.min.y;
+
+      // Bounds must NOT change across normalize — no shrink.
+      expect(wAfter).toBeCloseTo(wBefore, 5);
+      expect(hAfter).toBeCloseTo(hBefore, 5);
+    } finally {
+      spy.mockRestore();
+    }
+  });
 });
