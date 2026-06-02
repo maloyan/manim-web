@@ -630,7 +630,6 @@ export class ThreeDAxes extends Group {
    * Create a copy of this ThreeDAxes
    */
   override copy(): ThreeDAxes {
-    this.normalizeTransform();
     const copy = new ThreeDAxes({
       xRange: this._xRange,
       yRange: this._yRange,

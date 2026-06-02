@@ -62,10 +62,10 @@ describe('ImageMobject bounds after scale', () => {
   });
 
   // Issue 1 regression: a scaled ImageMobject must survive normalizeTransform().
-  // Before the fix, normalize reset scaleVector to 1 without baking the scale
-  // into the persistent display size, so the image shrank back to its unscaled
-  // dimensions (visible inside a VGroup, which normalizes on construction).
-  it('scaled ImageMobject survives normalizeTransform (bounds preserved, scaleVector=1)', async () => {
+  // MIGRATION (absolutize): normalize no longer resets scaleVector to 1 / folds
+  // the scale into the display size. The scale is retained on scaleVector and
+  // getBounds()/getBoundingBox() both incorporate it, so bounds are unchanged.
+  it('scaled ImageMobject survives normalizeTransform (bounds preserved, scaleVector retained)', async () => {
     const mockCtx = {
       imageSmoothingEnabled: false,
       imageSmoothingQuality: 'low' as const,
@@ -111,9 +111,9 @@ describe('ImageMobject bounds after scale', () => {
 
       image.normalizeTransform();
 
-      // Scale was folded into the persistent size; the transform is now identity.
-      expect(image.scaleVector.x).toBeCloseTo(1, 6);
-      expect(image.scaleVector.y).toBeCloseTo(1, 6);
+      // MIGRATION: scale is retained on scaleVector (absolutized), not reset to 1.
+      expect(image.scaleVector.x).toBeCloseTo(2, 6);
+      expect(image.scaleVector.y).toBeCloseTo(2, 6);
 
       const after = image.getBounds();
       const wAfter = after.max.x - after.min.x;

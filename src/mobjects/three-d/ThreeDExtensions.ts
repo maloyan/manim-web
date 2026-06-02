@@ -236,7 +236,6 @@ export class Prism extends Mobject3D {
   }
 
   override copy(): Prism {
-    this.normalizeTransform();
     const copy = new Prism({
       sides: this._sides,
       radius: this._radius,
@@ -526,7 +525,6 @@ export class Dot3D extends Mobject3D {
   }
 
   override copy(): Dot3D {
-    this.normalizeTransform();
     const copy = new Dot3D({
       radius: this._radius,
       point: this._pointPosition,
@@ -781,7 +779,6 @@ export class ThreeDVMobject extends VMobject {
   }
 
   override copy(): ThreeDVMobject {
-    this.normalizeTransform();
     const copy = new ThreeDVMobject({
       points: this._points3D.map((p) => [...p]),
       color: this.color,

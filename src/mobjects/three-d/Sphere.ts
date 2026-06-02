@@ -199,7 +199,6 @@ export class Sphere extends Mobject3D {
   }
 
   override copy(): Sphere {
-    this.normalizeTransform();
     const copy = new Sphere({
       radius: this._radius,
       center: this._centerPoint,

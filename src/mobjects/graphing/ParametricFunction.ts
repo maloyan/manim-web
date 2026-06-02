@@ -276,7 +276,6 @@ export class ParametricFunction extends VMobject {
   }
 
   override copy(): ParametricFunction {
-    this.normalizeTransform();
     const copy = new ParametricFunction({
       func: this._func,
       tRange: this._tRange,

@@ -331,7 +331,6 @@ export class Paragraph extends Text {
    * Create a copy of this Paragraph mobject
    */
   override copy(): Paragraph {
-    this.normalizeTransform();
     const copy = new Paragraph({
       text: this._text,
       fontSize: this._fontSize,

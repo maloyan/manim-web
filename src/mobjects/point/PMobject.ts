@@ -317,42 +317,24 @@ export class PMobject extends Mobject {
     return [sumX / count, sumY / count, sumZ / count];
   }
 
-  protected override _bakeOwnGeometry(): void {
-    if (this._points.length === 0) return;
-
-    const sx = this.scaleVector.x;
-    const sy = this.scaleVector.y;
-    const sz = this.scaleVector.z;
-    if (sx !== 1 || sy !== 1 || sz !== 1) {
-      for (const point of this._points) {
-        point.position[0] *= sx;
-        point.position[1] *= sy;
-        point.position[2] *= sz;
-      }
-    }
-
-    const rx = this.rotation.x;
-    const ry = this.rotation.y;
-    const rz = this.rotation.z;
-    if (rx !== 0 || ry !== 0 || rz !== 0) {
-      const mat = new THREE.Matrix4().makeRotationFromEuler(this.rotation);
+  /**
+   * Flatten into absolute coordinates: bake `worldMatrix` into every point, then
+   * reset the local transform to identity and recurse into children.
+   *
+   * @post old.getPoints()[i] === this.getPoints()[i]  // world geometry preserved
+   * @post this._computeOwnMatrix() === Identity
+   */
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+    if (this._points.length > 0) {
       const v = new THREE.Vector3();
       for (const point of this._points) {
-        v.set(point.position[0], point.position[1], point.position[2]).applyMatrix4(mat);
+        v.set(point.position[0], point.position[1], point.position[2]).applyMatrix4(worldMatrix);
         point.position[0] = v.x;
         point.position[1] = v.y;
         point.position[2] = v.z;
       }
     }
-  }
-
-  protected override _recenterLocalGeometry(localCenter: THREE.Vector3): void {
-    for (const point of this._points) {
-      point.position[0] -= localCenter.x;
-      point.position[1] -= localCenter.y;
-      point.position[2] -= localCenter.z;
-    }
-    super._recenterLocalGeometry(localCenter);
+    return this._flattenAsContainer(worldMatrix);
   }
 
   /**

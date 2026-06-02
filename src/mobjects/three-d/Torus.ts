@@ -240,7 +240,6 @@ export class Torus extends Mobject3D {
   }
 
   override copy(): Torus {
-    this.normalizeTransform();
     const copy = new Torus({
       radius: this._radius,
       tubeRadius: this._tubeRadius,

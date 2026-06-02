@@ -531,7 +531,6 @@ export class TexturedSurface extends Mobject3D {
    * Note: The copy will reload textures independently.
    */
   override copy(): TexturedSurface {
-    this.normalizeTransform();
     const copy = new TexturedSurface({
       surface: this._surface,
       textureUrl: this._textureUrl,

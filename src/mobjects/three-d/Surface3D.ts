@@ -393,7 +393,6 @@ export class Surface3D extends Mobject3D {
    * Create a copy of this Surface3D
    */
   override copy(): Surface3D {
-    this.normalizeTransform();
     const copy = new Surface3D({
       func: this._func,
       uRange: this._uRange,

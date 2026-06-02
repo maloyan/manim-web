@@ -145,7 +145,6 @@ export class ConvexHull3D extends Mobject3D {
    * Create a copy of this ConvexHull3D
    */
   override copy(): ConvexHull3D {
-    this.normalizeTransform();
     const copy = new ConvexHull3D({
       points: this._points.map((p) => [...p] as Vector3Tuple),
       color: this.color,

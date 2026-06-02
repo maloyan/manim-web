@@ -125,29 +125,31 @@ describe('MathTexImage copy retains visual size after scale + normalize', () => 
     tex.applyVisualSize(w, h);
     return tex;
   };
-  const planeSize = (tex: MathTexImage): { w: number; h: number } => {
-    const mesh = tex.getDisplayMeshes()[0];
-    const p = (mesh.geometry as THREE.PlaneGeometry).parameters;
-    return { w: p.width, h: p.height };
+  const boundsSize = (tex: MathTexImage): { w: number; h: number } => {
+    const b = tex.getBounds();
+    return { w: b.max.x - b.min.x, h: b.max.y - b.min.y };
   };
 
-  it('single-part copy keeps the baked size (no shrink)', async () => {
+  it('single-part copy keeps the visual size (no shrink)', async () => {
     const tex = makeSized(1, 0.5);
     tex.scale(7);
     tex.normalizeTransform();
-    const before = planeSize(tex);
-    expect(before.w).toBeCloseTo(7, 4); // sanity: scale was baked
+    // MIGRATION (absolutize): the scale is retained on scaleVector, not folded
+    // into the plane geometry, so the durable probe is the world bounds (which
+    // copy() reproduces by copying scaleVector), not the plane geometry size.
+    const before = boundsSize(tex);
+    expect(before.w).toBeCloseTo(7, 4); // sanity: 1 * 7
+    expect(before.h).toBeCloseTo(3.5, 4); // 0.5 * 7
 
     const copy = tex.copy() as MathTexImage;
     // Eager apply: size correct before the async re-render settles.
-    expect(planeSize(copy).w).toBeCloseTo(before.w, 4);
-    expect(planeSize(copy).h).toBeCloseTo(before.h, 4);
+    expect(boundsSize(copy).w).toBeCloseTo(before.w, 4);
+    expect(boundsSize(copy).h).toBeCloseTo(before.h, 4);
 
-    // After the (stubbed) re-render settles, the override re-applies the size and
-    // is cleared — still no shrink.
+    // After the (stubbed) re-render settles, the size still holds — no shrink.
     await copy.waitForRender();
-    expect(planeSize(copy).w).toBeCloseTo(before.w, 4);
-    expect(planeSize(copy).h).toBeCloseTo(before.h, 4);
+    expect(boundsSize(copy).w).toBeCloseTo(before.w, 4);
+    expect(boundsSize(copy).h).toBeCloseTo(before.h, 4);
   });
 
   it('override is consumed once (cleared after render settles)', async () => {

@@ -58,7 +58,6 @@ export class ParametricSurface extends Surface3D {
    * Create a copy of this ParametricSurface
    */
   override copy(): ParametricSurface {
-    this.normalizeTransform();
     const copy = new ParametricSurface({
       func: this._func,
       uRange: this._uRange,

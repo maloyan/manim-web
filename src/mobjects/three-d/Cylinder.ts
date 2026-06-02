@@ -272,7 +272,6 @@ export class Cylinder extends Mobject3D {
   }
 
   override copy(): Cylinder {
-    this.normalizeTransform();
     const copy = new Cylinder({
       radiusTop: this._radiusTop,
       radiusBottom: this._radiusBottom,
@@ -373,7 +372,6 @@ export class Cone extends Cylinder {
   }
 
   override copy(): Cone {
-    this.normalizeTransform();
     const copy = new Cone({
       radius: this._radiusBottom,
       height: this._height,

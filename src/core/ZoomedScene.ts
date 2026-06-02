@@ -59,6 +59,9 @@ class ZoomedCamera {
  * and a visible display frame border.
  */
 class ZoomedDisplay extends Mobject {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+    return this._flattenAsContainer(worldMatrix);
+  }
   /** The visible border of the display window */
   readonly displayFrame: Rectangle;
 

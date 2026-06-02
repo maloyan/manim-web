@@ -247,7 +247,6 @@ export class BulletedList extends VMobject {
   }
 
   override copy(): BulletedList {
-    this.normalizeTransform();
     const copy = new BulletedList({
       items: [...this._items],
       bulletChar: this._bulletChar,
@@ -487,7 +486,6 @@ export class Title extends VMobject {
   }
 
   override copy(): Title {
-    this.normalizeTransform();
     const copy = new Title({
       text: this._titleText,
       fontSize: this._fontSize,
@@ -933,7 +931,6 @@ export class MarkdownText extends VMobject {
   }
 
   override copy(): MarkdownText {
-    this.normalizeTransform();
     const copy = new MarkdownText({
       text: this._markdownText,
       fontSize: this._fontSize,

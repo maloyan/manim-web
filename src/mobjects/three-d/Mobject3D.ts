@@ -1,20 +1,21 @@
+import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
 
 /**
  * Base class for 3D mesh mobjects (Cube, Sphere, Cylinder, Arrow3D, Polyhedron, …).
  *
  * Unlike VMobjects, a 3D mesh stores its geometry in a Three.js buffer rather
- * than in bakeable `_points3D`. The inherited `Mobject.normalizeTransform()`
- * folds geometry by baking points and then resets `rotation`/`scaleVector` to
- * identity — but for a mesh there are no points to bake, so it would reset the
- * transform fields WITHOUT folding them into the geometry, silently discarding
- * the object's rotation/scale (and mutating the source during `copy()`).
+ * than in bakeable points, so it cannot fold a transform into geometry. Instead
+ * of resetting its local transform to identity (which would silently discard
+ * rotation/scale), `normalizeTransform()` *absolutizes*: it sets the local
+ * transform equal to the incoming world matrix, so the mesh renders in the right
+ * place once its ancestors collapse to identity. It is a flattening barrier — its
+ * descendants stay relative to it. See {@link Mobject._flattenAsMesh}.
  *
- * 3D meshes therefore keep their transform intact: `normalizeTransform()` is a
- * no-op. Any 3D mesh primitive should extend this class rather than `Mobject`.
+ * Any 3D mesh primitive should extend this class rather than `Mobject`.
  */
 export abstract class Mobject3D extends Mobject {
-  override normalizeTransform(): this {
-    return this;
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+    return this._flattenAsMesh(worldMatrix);
   }
 }

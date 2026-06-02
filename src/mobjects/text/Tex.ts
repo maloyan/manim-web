@@ -48,7 +48,6 @@ export class Tex extends MathTex {
   }
 
   override copy(): Tex {
-    this.normalizeTransform();
     const copy = new Tex({
       latex: this._originalLatex,
       color: this._color,

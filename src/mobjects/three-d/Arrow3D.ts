@@ -335,7 +335,6 @@ export class Arrow3D extends Mobject3D {
    * Create a copy of this Arrow3D
    */
   override copy(): Arrow3D {
-    this.normalizeTransform();
     const copy = new Arrow3D({
       start: this._start,
       end: this._end,

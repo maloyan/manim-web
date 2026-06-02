@@ -157,7 +157,6 @@ export class Cube extends Mobject3D {
   }
 
   override copy(): Cube {
-    this.normalizeTransform();
     const copy = new Cube({
       sideLength: this._sideLength,
       center: this._centerPoint,
@@ -370,7 +369,6 @@ export class Box3D extends Mobject3D {
   }
 
   override copy(): Box3D {
-    this.normalizeTransform();
     const copy = new Box3D({
       width: this._width,
       height: this._height,

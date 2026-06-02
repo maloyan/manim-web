@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
@@ -191,9 +192,19 @@ export class Circle extends VMobject {
     ];
   }
 
-  override normalizeTransform(): this {
-    this._radius *= this._getUniformScaleFactor();
-    super.normalizeTransform();
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+    // Fold the matrix's uniform scale into the stored radius before super bakes
+    // the points (after which scaleVector is 1 and getRadius() === _radius).
+    const e = worldMatrix.elements;
+    const sx = Math.hypot(e[0], e[1], e[2]);
+    const sy = Math.hypot(e[4], e[5], e[6]);
+    const sz = Math.hypot(e[8], e[9], e[10]);
+    const eps = 1e-9;
+    if (Math.abs(sx - sy) > eps || Math.abs(sx - sz) > eps) {
+      throw new Error('Circle requires uniform scale (x == y == z) to derive radius.');
+    }
+    this._radius *= sx;
+    super.normalizeTransform(worldMatrix);
     return this;
   }
 

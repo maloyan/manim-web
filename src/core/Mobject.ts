@@ -26,13 +26,12 @@ import {
   prepareForNonlinearTransformImpl,
   resolveExtremalPoint,
 } from './MobjectState';
-import { axisVectorFromEulerKey } from '../utils/axis';
 // AnimateProxy registers itself here to break the circular dependency:
 // Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let animateProxyFactory: ((mobject: Mobject) => any) | null = null;
 
-const SCRATCH_EULER = new THREE.Euler();
+const SCRATCH_QUAT = new THREE.Quaternion();
 
 /** @internal Called by AnimateProxy module to register the factory. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -526,7 +525,7 @@ export abstract class Mobject {
    * Copy position, color, standard properties, and optionally children onto `clone`.
    * Every copy() implementation MUST call this to preserve position/color/opacity/style/etc.
    *
-   * @post this is unchanged  // copying reads from the source; it must never mutate it
+   * @post old.getPoints()[i] === this.getPoints()[i]  // reads the source, writes only `clone`
    * @internal Convention: forgetting this call silently loses position/color/style.
    */
   protected _copyBaseAttributesInto(
@@ -573,7 +572,16 @@ export abstract class Mobject {
    * Self-building composites: construct new instance (rebuilds children), call helper, return.
    * Point-morphing classes: construct, call helper, overwrite _points3D, return.
    *
+   * copy() is a LOCAL structural clone: it reproduces this node's own
+   * position/rotation/scale (parent-relative) and deep-copies children. It does
+   * NOT fold in ancestor transforms — a clone of a node nested under a
+   * transformed group carries only the local transform. To get a world-correct
+   * clone, normalizeTransform() the tree first (folding ancestors into absolute
+   * geometry) so that local === world, then copy. This is why animations flatten
+   * with normalizeTransform() before snapshotting via copy().
+   *
    * @post typeof result === typeof this  (strongly typed, no casts)
+   * @post old.getPoints()[i] === this.getPoints()[i]  // source is never mutated
    */
   abstract copy(): Mobject;
 
@@ -817,125 +825,62 @@ export abstract class Mobject {
   // ── Three.js Sync ────────────────────────────────────────────────
 
   /**
-   * Normalize local transform into object-specific canonical representation.
+   * Flatten this mobject's transform into its canonical, absolute representation.
    *
-   * Subclasses may override this to fold transient transforms into their
-   * canonical state (e.g. forwarding container translation to children).
-   * Call this before geometry queries like getCenter()/getBounds().
+   * Bakes `worldMatrix` into the node's own geometry, recurses so every
+   * descendant is expressed in the same frame, then resets the local transform
+   * to identity. Called with no argument it seeds with this node's OWN matrix,
+   * so bake-then-reset preserves world appearance whether or not the node has
+   * ancestors — the ancestors keep their transforms and still apply. The
+   * recursion (and a detached-clone caller) passes an explicit accumulated matrix.
    *
-   * Base implementation is a no-op.
+   * Implemented per family rather than via a hook so the compiler forces every
+   * geometry-owning subclass to declare how it flattens: containers reset to
+   * identity (geometry lives in children), point-based mobjects bake `worldMatrix`
+   * into their points, and Three.js meshes — which cannot bake into points —
+   * absolutize their local transform instead (see {@link _flattenAsMesh}).
+   *
+   * @post old.getPoints()[i] === this.getPoints()[i]  // world geometry preserved, every descendant
+   * @post this._computeOwnMatrix() === Identity        // container/point nodes; meshes: own === worldMatrix
    */
+  abstract normalizeTransform(worldMatrix?: THREE.Matrix4): this;
+
   /**
-   * @post this.rotation === Euler(0,0,0) && this.scaleVector === Vector3(1,1,1)
-   * @post old.getPoints()[i] === this.getPoints()[i]  // for every descendant
-   * @post this.getLocalCenter() === [this.position.x, this.position.y, this.position.z]
+   * Recurse `normalizeTransform` into children, composing each child's own
+   * matrix onto `worldMatrix` so every descendant flattens into the same frame.
    */
-  normalizeTransform(): this {
-    this._propagateTransformDownward();
+  protected _normalizeChildrenInto(worldMatrix: THREE.Matrix4): void {
+    for (const child of this.children) {
+      child.normalizeTransform(worldMatrix.clone().multiply(child._computeOwnMatrix()));
+    }
+  }
+
+  /**
+   * Flatten a node whose geometry is fully described by its children (or which
+   * has no own geometry): recurse into children, then reset own transform to
+   * identity. The transform is not lost — it was folded into the descendants via
+   * the composed `worldMatrix`.
+   */
+  protected _flattenAsContainer(worldMatrix: THREE.Matrix4): this {
+    this._normalizeChildrenInto(worldMatrix);
+    this.position.set(0, 0, 0);
+    this.rotation.set(0, 0, 0);
+    this.scaleVector.set(1, 1, 1);
+    this._markDirty();
     return this;
   }
 
-  protected _propagateTransformDownward(): void {
-    this._bakeOwnGeometry();
-    this._propagateScaleDownward();
-    this._propagateRotationDownward();
-
-    for (const child of this.children) {
-      child.normalizeTransform();
-    }
-
-    if (!this.isEmpty()) {
-      const [cx, cy, cz] = this.getLocalCenter();
-      const localCenterOffset = new THREE.Vector3(
-        cx - this.position.x,
-        cy - this.position.y,
-        cz - this.position.z,
-      );
-
-      this._recenterLocalGeometry(localCenterOffset);
-      this.position.add(localCenterOffset);
-    }
-
-    this.rotation.set(0, 0, 0);
-    this.scaleVector.set(1, 1, 1);
-    this._markDirty();
-  }
-
   /**
-   * Bake this node's own scale and rotation into its local geometry representation.
-   * Called at the start of `_propagateTransformDownward`, before children are touched.
-   * @post this.scaleVector === old.scaleVector && this.rotation === old.rotation  // geometry baked, attributes unchanged
-   * Default is no-op. Override in subclasses with own geometry.
+   * Flatten a Three.js-mesh node that cannot bake geometry into points:
+   * absolutize by setting the local transform equal to `worldMatrix`, so it
+   * renders correctly once its (now identity) ancestors collapse. A mesh is a
+   * flattening barrier — its descendants stay relative to it.
    */
-  protected _bakeOwnGeometry(): void {}
-
-  /**
-   * Shift this node's own geometry items by `-localCenter` to recenter them.
-   * Called after children are recursively normalized, as part of `_propagateTransformDownward`.
-   * @pre  localCenter === this.getLocalCenter() - this.position
-   * @post child.position === old.child.position - localCenter  // for each child
-   * @note override in subclasses that store own geometry (e.g. VMobject shifts _points3D)
-   */
-  protected _recenterLocalGeometry(localCenter: THREE.Vector3): void {
-    for (const child of this.children) {
-      child.shift([-localCenter.x, -localCenter.y, -localCenter.z]);
-    }
-  }
-
-  private _propagateScaleDownward(): void {
-    const sx = this.scaleVector.x;
-    const sy = this.scaleVector.y;
-    const sz = this.scaleVector.z;
-    if (sx === 1 && sy === 1 && sz === 1) return;
-
-    for (const child of this.children) {
-      child.position.set(child.position.x * sx, child.position.y * sy, child.position.z * sz);
-      child.scale([sx, sy, sz]);
-    }
-    this.scaleVector.set(1, 1, 1);
+  protected _flattenAsMesh(worldMatrix: THREE.Matrix4): this {
+    worldMatrix.decompose(this.position, SCRATCH_QUAT, this.scaleVector);
+    this.rotation.setFromQuaternion(SCRATCH_QUAT);
     this._markDirty();
-  }
-
-  /**
-   * @post this.rotation.x === 0 && this.rotation.y === 0 && this.rotation.z === 0
-   * @post child.getPoints()[i] === old.child.getPoints()[i].applyMatrix4(makeRotationFromEuler(old.rotation))  // for each child, each point
-   * @note pivot is the parent-local origin [0,0,0]; child geometry baked in via later child.normalizeTransform()
-   */
-  private _propagateRotationDownward(): void {
-    const rx = this.rotation.x;
-    const ry = this.rotation.y;
-    const rz = this.rotation.z;
-    if (rx === 0 && ry === 0 && rz === 0) return;
-
-    SCRATCH_EULER.set(rx, ry, rz, this.rotation.order);
-
-    for (const child of this.children) {
-      this._propagateEulerStepDownward(child, rx, ry, rz);
-    }
-    this.rotation.set(0, 0, 0);
-    this._markDirty();
-  }
-
-  private _propagateEulerStepDownward(child: Mobject, rx: number, ry: number, rz: number): void {
-    // THREE's Euler->matrix convention applies the axes in REVERSE of the order
-    // string (e.g. order 'ZXY' => matrix Rz·Rx·Ry, i.e. Y applied first to the
-    // vector, then X, then Z). Each sequential rotate() pre-multiplies the running
-    // result, so we must iterate the order string back-to-front to reproduce it.
-    for (const axis of [...this.rotation.order].reverse()) {
-      const eulerAxis = axis as 'X' | 'Y' | 'Z';
-      const angle = eulerAxis === 'X' ? rx : eulerAxis === 'Y' ? ry : rz;
-      if (angle !== 0) {
-        const rotationAxis = axisVectorFromEulerKey(eulerAxis);
-
-        // Bake the group's rotation into each child by rotating the child about
-        // the group's local origin — which is [0,0,0] in the child's PARENT-local
-        // frame. We must NOT route through the world-space `rotate()` here: at this
-        // point `this.rotation` is still set, so a world->parent-local conversion of
-        // [0,0,0] would land on the wrong pivot. For VMobjects, child.normalizeTransform()
-        // later bakes the rotation into _points3D via _bakeOwnGeometry(), so no duplication.
-        child._rotateAboutParentLocalPoint(angle, rotationAxis, [0, 0, 0]);
-      }
-    }
+    return this;
   }
 
   _syncToThree(): void {

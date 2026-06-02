@@ -263,7 +263,6 @@ export class VectorFieldVector extends Arrow {
   }
 
   override copy(): VectorFieldVector {
-    this.normalizeTransform();
     const copy = new VectorFieldVector({
       direction: this._direction,
       startPoint: this._startPoint,

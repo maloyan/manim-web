@@ -88,15 +88,6 @@ export class ImageMobject extends TexturedMobject {
   protected _naturalHeight: number = 1;
   private _mesh: THREE.Mesh | null = null;
 
-  // Persistent scale factors baked by `_bakeFallbackScale` for the pre-load
-  // (and non-uniform-while-rotated) cases, where `_calculateDimensions()` cannot
-  // yet be trusted. Multiplied into the final display dimensions so the factor
-  // survives the async load (which re-runs `_updateGeometry`/`_calculateDimensions`)
-  // and is honored by `getBoundingBox()`. Reset to 1 once an explicit size is
-  // baked via `applyVisualSize` (the size then carries the scale directly).
-  private _bakedScaleX: number = 1;
-  private _bakedScaleY: number = 1;
-
   // Promise that resolves when image is loaded
   private _loadPromise: Promise<void>;
   private _loadResolve: (() => void) | null = null;
@@ -276,20 +267,12 @@ export class ImageMobject extends TexturedMobject {
   /**
    * Calculate the display dimensions based on options and natural size
    */
-  private _calculateDimensions(): { width: number; height: number } {
-    const dims = this._calculateBaseDimensions();
-    // Fold in any durably-baked fallback scale (pre-load / non-uniform-rotated).
-    return {
-      width: dims.width * this._bakedScaleX,
-      height: dims.height * this._bakedScaleY,
-    };
-  }
-
   /**
-   * Display dimensions from width/height options and natural size, BEFORE the
-   * persistent `_bakedScale{X,Y}` fallback factors are applied.
+   * Display dimensions from width/height options and natural size. The transform
+   * `scaleVector` is applied on top of these (e.g. by `getBoundingBox`); it is not
+   * folded in here.
    */
-  private _calculateBaseDimensions(): { width: number; height: number } {
+  private _calculateDimensions(): { width: number; height: number } {
     const aspectRatio = this._naturalWidth / this._naturalHeight;
 
     if (this._width !== undefined && this._height !== undefined) {
@@ -487,44 +470,10 @@ export class ImageMobject extends TexturedMobject {
     this._texture = nextTexture;
   }
 
-  /**
-   * Current persistent visual size for scale-baking. Returns the same display
-   * dimensions used by `getBoundingBox()` (`_calculateDimensions()`), so folding
-   * `scaleVector` into them via `applyVisualSize` keeps bounds unchanged after the
-   * base normalize resets `scaleVector` to 1: bounds go from `dims*scale` (scale
-   * on the group) to `dims*scale` baked into `_width/_height` with scale=1.
-   * Null before the texture loaded (dimensions derive from natural size of 1×1),
-   * so a pre-load scale falls back to `mesh.scale` baking — see `_bakeOwnGeometry`.
-   */
-  protected override _currentVisualSize(): [number, number] | null {
-    if (!this._imageLoaded) return null;
-    const dims = this._calculateDimensions();
-    if (!dims.width || !dims.height) return null;
-    return [dims.width, dims.height];
-  }
-
   applyVisualSize(width: number, height: number): void {
     this._width = width;
     this._height = height;
     this._scaleToFit = false;
-    // The explicit size now carries the full scale; drop any earlier fallback
-    // factor so `_calculateDimensions()` does not double-apply it.
-    this._bakedScaleX = 1;
-    this._bakedScaleY = 1;
-    this._updateGeometry();
-  }
-
-  /**
-   * Durable fallback bake (overrides `TexturedMobject`): persist the scale factor
-   * into `_bakedScale{X,Y}` instead of `mesh.scale`. Multiplied into
-   * `_calculateDimensions()`, so it survives a later async texture load (which
-   * re-runs `_updateGeometry`) and is honored by `getBoundingBox()`. Idempotent:
-   * the caller resets `scaleVector`→1 after this returns; repeated normalizes with
-   * an identity scale multiply by 1.
-   */
-  protected override _bakeFallbackScale(sx: number, sy: number): void {
-    this._bakedScaleX *= sx;
-    this._bakedScaleY *= sy;
     this._updateGeometry();
   }
 
@@ -765,8 +714,6 @@ export class ImageMobject extends TexturedMobject {
     copy._imageLoaded = this._imageLoaded;
     copy._naturalWidth = this._naturalWidth;
     copy._naturalHeight = this._naturalHeight;
-    copy._bakedScaleX = this._bakedScaleX;
-    copy._bakedScaleY = this._bakedScaleY;
     if (this._texture) {
       copy._texture = this._texture.clone();
       copy._markDirty();

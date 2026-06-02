@@ -248,7 +248,6 @@ export class Tetrahedron extends Polyhedron {
   }
 
   override copy(): Tetrahedron {
-    this.normalizeTransform();
     const copy = new Tetrahedron({
       sideLength: this._sideLength,
       center: this._centerPoint,
@@ -326,7 +325,6 @@ export class Octahedron extends Polyhedron {
   }
 
   override copy(): Octahedron {
-    this.normalizeTransform();
     const copy = new Octahedron({
       sideLength: this._sideLength,
       center: this._centerPoint,
@@ -404,7 +402,6 @@ export class Icosahedron extends Polyhedron {
   }
 
   override copy(): Icosahedron {
-    this.normalizeTransform();
     const copy = new Icosahedron({
       sideLength: this._sideLength,
       center: this._centerPoint,
@@ -484,7 +481,6 @@ export class Dodecahedron extends Polyhedron {
   }
 
   override copy(): Dodecahedron {
-    this.normalizeTransform();
     const copy = new Dodecahedron({
       sideLength: this._sideLength,
       center: this._centerPoint,

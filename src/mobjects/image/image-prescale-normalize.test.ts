@@ -4,13 +4,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { ImageMobject } from './index';
 
 /**
- * Regression tests for the DURABLE fallback bake in TexturedMobject._bakeFallbackScale,
- * as overridden by ImageMobject. Covers the case the size-bake path cannot handle:
- * scaling + normalizing an ImageMobject BEFORE its texture has loaded.
+ * Pre-load scale durability for ImageMobject.
  *
- * Before the fix, the scale went into mesh.scale and was clobbered when the async
- * load ran _updateGeometry() (mesh.scale.set(dims...)), and getBoundingBox() ignored
- * mesh.scale entirely. Now the factor persists in _calculateDimensions().
+ * MIGRATION (absolutize): normalize no longer folds a pre-load scale into a
+ * durable `_bakedScale` fallback + resets scaleVector to 1. The scale is simply
+ * retained on `scaleVector`; since `getBoundingBox()` multiplies by `scaleVector`
+ * and `getBounds()` is world-matrix based, a scale applied BEFORE the async
+ * texture load survives the load automatically (the load rebuilds geometry but
+ * never touches the Mobject transform).
  */
 describe('ImageMobject pre-load scale survives load + normalize', () => {
   // Mock 2D canvas context so pixelData decoding works headlessly.
@@ -67,14 +68,14 @@ describe('ImageMobject pre-load scale survives load + normalize', () => {
       withCanvasMock(() => {
         const image = new ImageMobject({ source: 'https://example.com/x.png', width: 2 });
 
-        // Not loaded yet: _currentVisualSize() is null, so this hits the durable fallback.
+        // Not loaded yet: the scale is applied before the texture/natural size exists.
         expect(image.isLoaded()).toBe(false);
         image.scale(3);
         image.normalizeTransform();
 
-        // Transform folded to identity.
-        expect(image.scaleVector.x).toBeCloseTo(1, 6);
-        expect(image.scaleVector.y).toBeCloseTo(1, 6);
+        // MIGRATION: scale is retained on scaleVector (absolutized), not reset to 1.
+        expect(image.scaleVector.x).toBeCloseTo(3, 6);
+        expect(image.scaleVector.y).toBeCloseTo(3, 6);
 
         // Complete the async load.
         fireLoad!();
@@ -95,7 +96,7 @@ describe('ImageMobject pre-load scale survives load + normalize', () => {
     }
   });
 
-  it('a later applyVisualSize composes (overrides) rather than double-applying the fallback', async () => {
+  it('a later applyVisualSize composes with the retained scaleVector (no double-apply on re-normalize)', async () => {
     let fireLoad: (() => void) | null = null;
     const loadSpy = vi
       .spyOn(THREE.TextureLoader.prototype, 'load')
@@ -109,21 +110,25 @@ describe('ImageMobject pre-load scale survives load + normalize', () => {
     try {
       withCanvasMock(() => {
         const image = new ImageMobject({ source: 'https://example.com/x.png', width: 2 });
-        image.scale(3); // -> baked fallback factor 3
-        image.normalizeTransform();
+        image.scale(3);
+        image.normalizeTransform(); // scaleVector retained at 3
         fireLoad!();
 
-        // applyVisualSize sets an explicit size and must DROP the baked factor.
+        // MIGRATION (absolutize): applyVisualSize sets the base display size; it no
+        // longer drops a baked factor. The retained scaleVector (3) still multiplies
+        // it, so the bounding box is 5 * 3 = 15.
         image.applyVisualSize(5, 5);
+        expect(image.scaleVector.x).toBeCloseTo(3, 6);
         const bb = image.getBoundingBox();
-        expect(bb.width).toBeCloseTo(5, 4);
-        expect(bb.height).toBeCloseTo(5, 4);
+        expect(bb.width).toBeCloseTo(15, 4);
+        expect(bb.height).toBeCloseTo(15, 4);
 
-        // A subsequent normalize is a no-op (identity scale) and must not shrink.
+        // A subsequent normalize is idempotent (root mesh re-absolutizes its own
+        // matrix) and must not change the size.
         image.normalizeTransform();
         const bb2 = image.getBoundingBox();
-        expect(bb2.width).toBeCloseTo(5, 4);
-        expect(bb2.height).toBeCloseTo(5, 4);
+        expect(bb2.width).toBeCloseTo(15, 4);
+        expect(bb2.height).toBeCloseTo(15, 4);
       });
     } finally {
       loadSpy.mockRestore();

@@ -2,13 +2,12 @@
 /**
  * Issue 1 regression: a scaled `Text` must survive `normalizeTransform()`.
  *
- * Before the fix, `Text` inherited `TexturedMobject`'s default
- * `_currentVisualSize() => null`, so `_bakeOwnGeometry` skipped scale-baking
- * while the base `normalizeTransform` still reset `scaleVector` to 1 — a scaled
- * Text shrank back to its unscaled size (visible inside a VGroup, which
- * normalizes on construction). The fix folds the scale into the persistent
- * `_worldWidth`/`_worldHeight` (used by the plane geometry) so `getBounds()`
- * stays unchanged across normalize.
+ * MIGRATION (absolutize): `normalizeTransform()` no longer resets `scaleVector`
+ * to 1 and folds the scale into the plane geometry. It now *absolutizes* — the
+ * scale stays on `scaleVector` (re-applied to the display group every sync) and
+ * `getBounds()`/`getBoundingBox()` both incorporate it. So a scaled Text still
+ * renders at the scaled size across normalize; the scale simply lives on the
+ * transform instead of in `_worldWidth`/`_worldHeight`.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Text } from './Text';
@@ -53,7 +52,7 @@ beforeEach(() => {
 });
 
 describe('Text scale survives normalizeTransform (Issue 1)', () => {
-  it('folds scale into the persistent size so bounds are unchanged across normalize', () => {
+  it('absolutizes scale onto the transform so bounds are unchanged across normalize', () => {
     const t = new Text({ text: 'Hello' });
 
     t.scale(2);
@@ -63,9 +62,9 @@ describe('Text scale survives normalizeTransform (Issue 1)', () => {
 
     t.normalizeTransform();
 
-    // Transform is now identity; the scale lives in the geometry size.
-    expect(t.scaleVector.x).toBeCloseTo(1, 6);
-    expect(t.scaleVector.y).toBeCloseTo(1, 6);
+    // MIGRATION: scale is retained on scaleVector (absolutized), not reset to 1.
+    expect(t.scaleVector.x).toBeCloseTo(2, 6);
+    expect(t.scaleVector.y).toBeCloseTo(2, 6);
 
     const after = t.getBounds();
     const wAfter = after.max.x - after.min.x;

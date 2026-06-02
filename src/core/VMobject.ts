@@ -338,67 +338,29 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Bring this VMobject into canonical form without moving any geometry.
+   * Flatten this VMobject into absolute coordinates: bake `worldMatrix` into
+   * `_points3D` (translation, rotation and scale together — one matrix, no
+   * inverse), reset the local transform to identity, and recurse into children.
    *
-   * @post !this.isEmpty() => old.getPoints()[i] === this.getPoints()[i]
-   * @post !this.isEmpty() => this.position === world-space bbox center of _points3D
-   * @post !this.isEmpty() => _points3D bbox center === [0,0,0]
-   * @post this.rotation === Euler(0,0,0) && this.scaleVector === Vector3(1,1,1)
-   * @post child.rotation === Euler(0,0,0) && child.scaleVector === Vector3(1,1,1)  // for every descendant
+   * Seeds with this node's own matrix when called with no argument, so the bake
+   * preserves world appearance whether or not there are ancestors.
+   *
+   * @post !this.isEmpty() => old.getPoints()[i] === this.getPoints()[i]  // world geometry preserved
+   * @post this._computeOwnMatrix() === Identity
    */
-  override normalizeTransform(): this {
-    super.normalizeTransform();
-    this._markDirtyUpward();
-    return this;
-  }
-
-  /**
-   * Bake scale and rotation into `_points3D` before children are propagated.
-   * @post _points3D[i] === old.scaleVector * (old.rotation * old._points3D[i])
-   * @post this.scaleVector === old.scaleVector && this.rotation === old.rotation  // caller resets these
-   * @note no-op when _points3D.length === 0 (e.g. VGroup)
-   */
-  protected override _bakeOwnGeometry(): void {
-    if (this._points3D.length === 0) return;
-
-    const sx = this.scaleVector.x,
-      sy = this.scaleVector.y,
-      sz = this.scaleVector.z;
-    if (sx !== 1 || sy !== 1 || sz !== 1) {
-      for (const p of this._points3D) {
-        p[0] *= sx;
-        p[1] *= sy;
-        p[2] *= sz;
-      }
-    }
-
-    const rx = this.rotation.x,
-      ry = this.rotation.y,
-      rz = this.rotation.z;
-    if (rx !== 0 || ry !== 0 || rz !== 0) {
-      const mat = new THREE.Matrix4().makeRotationFromEuler(this.rotation);
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+    if (this._points3D.length > 0) {
       const v = new THREE.Vector3();
       for (const p of this._points3D) {
-        v.set(p[0], p[1], p[2]).applyMatrix4(mat);
+        v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
         p[0] = v.x;
         p[1] = v.y;
         p[2] = v.z;
       }
     }
-  }
-
-  /**
-   * Shift `_points3D` by `-localCenter`, then delegate to super to shift children.
-   * @pre  localCenter === this.getLocalCenter() - this.position
-   * @post _points3D[i] === old._points3D[i] - localCenter
-   */
-  protected override _recenterLocalGeometry(localCenter: THREE.Vector3): void {
-    for (const p of this._points3D) {
-      p[0] -= localCenter.x;
-      p[1] -= localCenter.y;
-      p[2] -= localCenter.z;
-    }
-    super._recenterLocalGeometry(localCenter);
+    this._flattenAsContainer(worldMatrix);
+    this._markDirtyUpward();
+    return this;
   }
 
   // -----------------------------------------------------------------------

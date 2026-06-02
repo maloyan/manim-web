@@ -190,7 +190,6 @@ export class Line3D extends Mobject3D {
   }
 
   override copy(): Line3D {
-    this.normalizeTransform();
     const copy = new Line3D({
       start: this._start,
       end: this._end,

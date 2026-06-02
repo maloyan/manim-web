@@ -594,7 +594,6 @@ export class AnimatedBoundary extends VMobject {
    * Create a copy of this AnimatedBoundary
    */
   override copy(): AnimatedBoundary {
-    this.normalizeTransform();
     const copy = new AnimatedBoundary(this._boundedMobject, {
       colors: [...this._colors],
       numDashes: this._numDashes,

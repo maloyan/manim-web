@@ -27,6 +27,9 @@ export interface PGroupOptions {
  * ```
  */
 export class PGroup extends Mobject {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+    return this._flattenAsContainer(worldMatrix);
+  }
   constructor(options: PGroupOptions = {}) {
     super();
 

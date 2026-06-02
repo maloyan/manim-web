@@ -301,6 +301,9 @@ export interface CameraFrameState {
  * Animation base class contract (every Animation has a `.mobject`).
  */
 class CameraFrameStub extends Mobject {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+    return this._flattenAsContainer(worldMatrix);
+  }
   constructor() {
     super();
   }

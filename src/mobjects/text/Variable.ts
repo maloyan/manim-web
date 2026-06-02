@@ -65,6 +65,9 @@ export interface VariableOptions {
  * ```
  */
 export class Variable extends Mobject {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+    return this._flattenAsContainer(worldMatrix);
+  }
   protected _label: string;
   protected _value: number;
   protected _numDecimalPlaces: number;
@@ -315,7 +318,6 @@ export class Variable extends Mobject {
   }
 
   override copy(): Variable {
-    this.normalizeTransform();
     const copy = new Variable({
       label: this._label,
       value: this._value,
