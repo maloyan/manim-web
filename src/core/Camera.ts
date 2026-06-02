@@ -68,9 +68,12 @@ export class Camera3D {
 
   /**
    * Get the camera position.
+   *
+   * Reads the live Three.js camera position so external drivers (e.g.
+   * OrbitControls, which mutate the camera directly) are reflected.
    */
   get position(): THREE.Vector3 {
-    return this._position.clone();
+    return this._camera.position.clone();
   }
 
   /**
@@ -152,7 +155,9 @@ export class Camera3D {
    * @returns this for chaining
    */
   orbit(phi: number, theta: number, distance?: number, gamma: number = 0): this {
-    const dist = distance ?? this._position.distanceTo(this._lookAt);
+    // Default to the *live* camera distance so a re-orient after an external
+    // zoom (OrbitControls dolly) doesn't snap back to a stale radius.
+    const dist = distance ?? this._camera.position.distanceTo(this._lookAt);
 
     // Store theta for gimbal lock recovery in getOrbitAngles()
     this._lastTheta = theta;
@@ -184,17 +189,33 @@ export class Camera3D {
    * @returns Object with phi (polar), theta (azimuthal), and distance
    */
   getOrbitAngles(): { phi: number; theta: number; distance: number } {
-    const dx = this._position.x - this._lookAt.x;
-    const dy = this._position.y - this._lookAt.y;
-    const dz = this._position.z - this._lookAt.z;
+    // Read from the live Three.js camera, not the cached this._position.
+    // External drivers (OrbitControls) move the camera directly and never
+    // touch this._position, so the cache goes stale during a drag (issue #425).
+    const dx = this._camera.position.x - this._lookAt.x;
+    const dy = this._camera.position.y - this._lookAt.y;
+    const dz = this._camera.position.z - this._lookAt.z;
     const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+    // Camera coincident with the look-at point: angles are undefined. Avoid
+    // dividing by zero (which would yield NaN) and keep the last azimuth.
+    if (distance < 1e-9) {
+      return { phi: 0, theta: this._lastTheta, distance: 0 };
+    }
 
     const phi = Math.acos(dz / distance);
 
     // At poles (sin(phi) ≈ 0), atan2(0,0) returns 0, losing azimuth.
     // Preserve the last known theta to avoid gimbal lock artifacts.
     const sinPhi = Math.sin(phi);
-    const theta = Math.abs(sinPhi) < 1e-6 ? this._lastTheta : Math.atan2(dy, dx);
+    if (Math.abs(sinPhi) < 1e-6) {
+      return { phi, theta: this._lastTheta, distance };
+    }
+
+    // Remember the live azimuth so a subsequent drag to the pole can fall
+    // back to it rather than to a stale programmatic theta.
+    const theta = Math.atan2(dy, dx);
+    this._lastTheta = theta;
 
     return { phi, theta, distance };
   }
