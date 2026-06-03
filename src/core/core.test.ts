@@ -80,7 +80,9 @@ describe('Mobject', () => {
 
   it('scale applies to scaleVector', () => {
     const m = new Mobject();
-    m.scale(2);
+    // Scale about an explicit point: a bare Mobject has no geometry, so the default
+    // center anchor (getCenter()) is not meaningful here.
+    m.scale(2, { aboutPoint: [0, 0, 0] });
     expect(m.scaleVector.x).toBe(2);
     expect(m.scaleVector.y).toBe(2);
     expect(m.scaleVector.z).toBe(2);

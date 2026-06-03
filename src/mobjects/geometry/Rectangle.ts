@@ -104,10 +104,6 @@ export class Rectangle extends VMobject {
     this.setPoints3D(points);
   }
 
-  override getCenter(): Vector3Tuple {
-    return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
-  }
-
   /**
    * Get the width of the rectangle
    */

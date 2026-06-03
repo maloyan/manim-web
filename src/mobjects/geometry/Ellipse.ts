@@ -111,10 +111,6 @@ export class Ellipse extends VMobject {
     return this;
   }
 
-  getCenter(): Vector3Tuple {
-    return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
-  }
-
   getEllipseCenter(): Vector3Tuple {
     return this.getCenter();
   }

@@ -140,6 +140,10 @@ export class Arc extends TipableVMobject {
     }
 
     this.setPoints3D(points);
+    // The arc center is baked into the points frame (not this.position). Track it
+    // as the construction center so getArcCenter() stays correct after
+    // normalizeTransform() re-bakes the points.
+    this._constructionCenter = [...this._arcCenter];
   }
 
   /**
@@ -197,7 +201,7 @@ export class Arc extends TipableVMobject {
    * Get the center of the arc
    */
   getArcCenter(): Vector3Tuple {
-    return [...this._arcCenter];
+    return this.getConstructionCenter() ?? [...this._arcCenter];
   }
 
   /**

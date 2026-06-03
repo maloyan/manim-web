@@ -44,6 +44,10 @@ export class AnnularSector extends VMobject {
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
     this._generatePoints();
+    // The annular sector's center is the annulus center, a construction point at
+    // the local origin. Tracked separately so getSectorCenter() survives
+    // normalizeTransform().
+    this._constructionCenter = [0, 0, 0];
   }
 
   private _generatePoints(): void {
@@ -118,10 +122,6 @@ export class AnnularSector extends VMobject {
     this.setPoints3D(points);
   }
 
-  override getCenter(): Vector3Tuple {
-    return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
-  }
-
   getInnerRadius(): number {
     return this._innerRadius;
   }
@@ -155,7 +155,7 @@ export class AnnularSector extends VMobject {
     return this;
   }
   getSectorCenter(): Vector3Tuple {
-    return this.getCenter();
+    return this.getConstructionCenter() ?? this.getCenter();
   }
   getArea(): number {
     return (Math.abs(this._angle) / 2) * (this._outerRadius ** 2 - this._innerRadius ** 2);

@@ -145,15 +145,8 @@ export class Circle extends VMobject {
   }
 
   /**
-   * Get the center of the circle
-   */
-  getCircleCenter(): Vector3Tuple {
-    return [this.position.x, this.position.y, this.position.z];
-  }
-
-  /**
    * Set the center of the circle.
-   * @post getCircleCenter() === value
+   * @post getCenter() === value
    */
   setCircleCenter(value: Vector3Tuple): this {
     this.position.set(value[0], value[1], value[2]);
@@ -215,12 +208,13 @@ export class Circle extends VMobject {
     const clone = new Circle({
       radius: this._radius,
       numPoints: this._numPoints,
-      center: this.getCircleCenter(),
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    // _copyBaseAttributesInto copies points, position and _constructionCenter, so
+    // the freshly-built clone is fully overwritten into an exact replica.
+    this._copyBaseAttributesInto(clone, { copyChildren: false });
     return clone;
   }
 }

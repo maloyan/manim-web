@@ -83,10 +83,6 @@ export class Annulus extends VMobject {
     this.setPoints3D(points);
   }
 
-  override getCenter(): Vector3Tuple {
-    return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
-  }
-
   getInnerRadius(): number {
     return this._innerRadius;
   }

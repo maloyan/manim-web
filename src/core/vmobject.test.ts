@@ -128,7 +128,7 @@ describe('VMobject.getPoints (#392)', () => {
     const g = new Group();
     g.add(v);
 
-    g.scale(2);
+    g.scale(2, { aboutPoint: [0, 0, 0] }); // scale about origin, not the group center
     g.shift([0, 5, 0]);
 
     const pts = v.getPoints();
@@ -144,7 +144,7 @@ describe('VMobject.getPoints (#392)', () => {
     // Same isolation as above: focus this test on local-vs-world contract.
     const g = new Group();
     g.add(v);
-    g.scale(2);
+    g.scale(2, { aboutPoint: [0, 0, 0] }); // scale about origin, not the group center
 
     expect(v.getLocalPoints()).toEqual([[1, 0, 0]]); // local snapshot remains local
     expect(v.getPoints()[0][0]).toBeCloseTo(2); // world includes parent scale

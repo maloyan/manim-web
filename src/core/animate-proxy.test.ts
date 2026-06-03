@@ -122,13 +122,13 @@ describe('AnimateProxy', () => {
       proxy.begin();
       proxy.finish();
       expect(c.getCenter()[0]).toBeCloseTo(startCenter[0] + 1, 2);
-      expect(c.getCircleCenter()[0]).toBeCloseTo(startCenter[0] + 1, 2);
+      expect(c.getCenter()[0]).toBeCloseTo(startCenter[0] + 1, 2);
 
       proxy = c.animate.shift([1, 0, 0]);
       proxy.begin();
       proxy.finish();
       expect(c.getCenter()[0]).toBeCloseTo(startCenter[0] + 2, 2);
-      expect(c.getCircleCenter()[0]).toBeCloseTo(startCenter[0] + 2, 2);
+      expect(c.getCenter()[0]).toBeCloseTo(startCenter[0] + 2, 2);
     });
 
     it('accumulates consecutive animate.scale on a Circle', () => {
@@ -153,7 +153,7 @@ describe('AnimateProxy', () => {
       // Visual center, logical _centerPoint, and shifted-then-rescaled
       // points should all agree.
       const visual = c.getCenter();
-      const logical = c.getCircleCenter();
+      const logical = c.getCenter();
       expect(logical[0]).toBeCloseTo(visual[0], 2);
       expect(logical[1]).toBeCloseTo(visual[1], 2);
     });
@@ -182,7 +182,7 @@ describe('AnimateProxy', () => {
       proxy.finish();
 
       expect(c.getCenter()[0]).toBeCloseTo(2, 2);
-      expect(c.getCircleCenter()[0]).toBeCloseTo(2, 2);
+      expect(c.getCenter()[0]).toBeCloseTo(2, 2);
       expect(c.getRadius()).toBeCloseTo(2, 2);
       expect(c.color).toBe('#00ff00');
     });
@@ -203,7 +203,7 @@ describe('AnimateProxy', () => {
       proxy.finish();
 
       // Started at (0,0,0) r=1 → +x by 1 → scale 2 (about own center) → +x by 1
-      expect(c.getCircleCenter()[0]).toBeCloseTo(2, 2);
+      expect(c.getCenter()[0]).toBeCloseTo(2, 2);
       expect(c.getRadius()).toBeCloseTo(2, 2);
     });
   });

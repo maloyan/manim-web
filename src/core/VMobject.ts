@@ -42,6 +42,19 @@ export class VMobject extends VMobjectRendering {
   /** Transform-time override for subpath lengths (compound-path metadata). */
   protected _transformSubpathLengths?: number[];
 
+  /**
+   * Opt-in construction point in the points frame (null => no construction center).
+   *
+   * Radial shapes (Arc, Circle, Sector, ...) define a geometric center that is a
+   * fixed construction point — the arc/circle center or the sector apex — distinct
+   * from both the bbox center ({@link getCenter}) and the vertex centroid
+   * ({@link getCenterOfMass}). Stored in the same frame as {@link _points3D} and
+   * re-baked in {@link normalizeTransform} exactly as the points are, so
+   * {@link getConstructionCenter} stays world-invariant when the deferred transform
+   * is folded into the points.
+   */
+  protected _constructionCenter: Vector3Tuple | null = null;
+
   constructor() {
     super();
     this._isVMobject = true;
@@ -357,6 +370,17 @@ export class VMobject extends VMobjectRendering {
         p[1] = v.y;
         p[2] = v.z;
       }
+      // Points were mutated in place; flag the Three.js geometry for rebuild so
+      // bounds/center (read from the BufferGeometry) don't go stale.
+      this._geometryDirty = true;
+    }
+    if (this._constructionCenter) {
+      const c = new THREE.Vector3(
+        this._constructionCenter[0],
+        this._constructionCenter[1],
+        this._constructionCenter[2],
+      ).applyMatrix4(worldMatrix);
+      this._constructionCenter = [c.x, c.y, c.z];
     }
     this._flattenAsContainer(worldMatrix);
     this._markDirtyUpward();
@@ -636,6 +660,7 @@ export class VMobject extends VMobjectRendering {
     super._copyBaseAttributesInto(clone, options);
     clone._points3D = this._points3D.map((p) => [...p]);
     clone._visiblePointCount = this._visiblePointCount;
+    clone._constructionCenter = this._constructionCenter ? [...this._constructionCenter] : null;
     if (this._transformSubpathLengths !== undefined) {
       clone._transformSubpathLengths = [...this._transformSubpathLengths];
     }
@@ -732,7 +757,12 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * World-space center derived from getAllPoints().
+   * World-space bounding-box center derived from getAllPoints().
+   *
+   * Matches Python manim: the center is always the midpoint of the axis-aligned
+   * bounding box of every point in the family — no per-shape construction-point
+   * overrides. For the vertex centroid (which differs for asymmetric shapes like
+   * sectors), use {@link getCenterOfMass}.
    */
   override getCenter(): Vector3Tuple {
     const worldPoints = this.getAllPoints();
@@ -746,6 +776,24 @@ export class VMobject extends VMobjectRendering {
       (bounds.min.y + bounds.max.y) / 2,
       (bounds.min.z + bounds.max.z) / 2,
     ];
+  }
+
+  /**
+   * World-space construction center for radial shapes (arc/circle center, sector
+   * apex), or null if this shape doesn't define one.
+   *
+   * Unlike {@link getCenter} (bbox) and {@link getCenterOfMass} (vertex centroid),
+   * this tracks a fixed construction point and stays correct after
+   * {@link normalizeTransform} bakes the deferred transform into the points.
+   */
+  getConstructionCenter(): Vector3Tuple | null {
+    if (!this._constructionCenter) return null;
+    const c = new THREE.Vector3(
+      this._constructionCenter[0],
+      this._constructionCenter[1],
+      this._constructionCenter[2],
+    ).applyMatrix4(this._computeWorldMatrix());
+    return [c.x, c.y, c.z];
   }
 
   /**

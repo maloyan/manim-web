@@ -431,20 +431,19 @@ export abstract class Mobject {
     const sy = typeof factor === 'number' ? factor : factor[1];
     const sz = typeof factor === 'number' ? factor : factor[2] === 0 ? 1 : factor[2];
 
-    // Apply scale in deferred-transform space.
+    // Resolve the world-space anchor to hold fixed from the CURRENT (pre-scale)
+    // geometry. With no aboutPoint/aboutEdge, scale about the geometric center
+    // (manim semantics); getCenter() is pure point-math, so this stays correct
+    // even after normalizeTransform() decouples `position` from the actual center.
+    const explicitAnchor = resolveExtremalPoint(this, options);
+    const anchorWorld = explicitAnchor === undefined ? this.getCenter() : explicitAnchor;
+    const anchorLocal = this._worldToParentLocal(anchorWorld);
+
+    // Fold the new scale into the deferred transform, then move `position` so the
+    // anchor's world location is unchanged.
     this.scaleVector.x *= sx;
     this.scaleVector.y *= sy;
     this.scaleVector.z *= sz;
-
-    // aboutPoint/aboutEdge are WORLD-space anchors.
-    // position is parent-local, so convert anchor into parent-local space first.
-    // When no explicit anchor is given, scale about the current position — this
-    // avoids calling getCenter() (which needs a synced Three.js tree) and is
-    // correct: scaling about self means position stays unchanged.
-    const explicitAnchor = resolveExtremalPoint(this, options);
-    const anchorLocal = explicitAnchor
-      ? this._worldToParentLocal(explicitAnchor)
-      : [this.position.x, this.position.y, this.position.z];
 
     this.position.x = anchorLocal[0] + sx * (this.position.x - anchorLocal[0]);
     this.position.y = anchorLocal[1] + sy * (this.position.y - anchorLocal[1]);
@@ -629,7 +628,7 @@ export abstract class Mobject {
    * Unlike {@link getCenter} (which uses bbox midpoint), this is the true
    * centroid — equal to getCenter() only when points are symmetrically distributed.
    */
-  centerOfMass(): Vector3Tuple {
+  getCenterOfMass(): Vector3Tuple {
     const pts = (this as unknown as { getPoints?: () => number[][] }).getPoints?.() ?? [];
     if (pts.length === 0) return this.getCenter();
     let sx = 0,

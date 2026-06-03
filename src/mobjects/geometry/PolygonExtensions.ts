@@ -186,13 +186,6 @@ export class RoundedRectangle extends VMobject {
     this.setPoints3D(points);
   }
 
-  /**
-   * Get the width of the rounded rectangle
-   */
-  override getCenter(): Vector3Tuple {
-    return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
-  }
-
   setWidth(value: number): this {
     this._width = value;
     this._cornerRadius = Math.min(this._cornerRadius, value / 2, this._height / 2);
@@ -313,6 +306,10 @@ export class Star extends VMobject {
     this.strokeWidth = strokeWidth;
 
     this._generatePoints();
+    // The star is built around its center (a construction point at the local
+    // origin). Tracked separately so getStarCenter() reports that center rather
+    // than the off-origin point centroid, and survives normalizeTransform().
+    this._constructionCenter = [0, 0, 0];
   }
 
   /**
@@ -358,13 +355,6 @@ export class Star extends VMobject {
     return this._numPoints;
   }
 
-  /**
-   * Get the outer radius
-   */
-  override getCenter(): Vector3Tuple {
-    return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
-  }
-
   getOuterRadius(): number {
     return this._outerRadius;
   }
@@ -382,7 +372,7 @@ export class Star extends VMobject {
     return this;
   }
   getStarCenter(): Vector3Tuple {
-    return this.getCenter();
+    return this.getConstructionCenter() ?? this.getCenter();
   }
   setStarCenter(value: Vector3Tuple): this {
     this.position.set(value[0], value[1], value[2]);
@@ -524,6 +514,10 @@ export class RegularPolygram extends VMobject {
     this.strokeWidth = strokeWidth;
 
     this._generatePoints();
+    // The polygram is built around its center (a construction point at the local
+    // origin). Tracked separately so getPolygramCenter() reports that center rather
+    // than the off-origin point centroid, and survives normalizeTransform().
+    this._constructionCenter = [0, 0, 0];
   }
 
   /**
@@ -668,15 +662,8 @@ export class RegularPolygram extends VMobject {
     return this;
   }
 
-  /**
-   * Get the center of the polygram
-   */
-  override getCenter(): Vector3Tuple {
-    return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
-  }
-
   getPolygramCenter(): Vector3Tuple {
-    return this.getCenter();
+    return this.getConstructionCenter() ?? this.getCenter();
   }
   setPolygramCenter(value: Vector3Tuple): this {
     this.position.set(value[0], value[1], value[2]);
