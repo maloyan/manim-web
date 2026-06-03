@@ -122,6 +122,16 @@ export class Sector extends VMobject {
   getSectorCenter(): Vector3Tuple {
     return this._parentLocalToWorld(this._constructionCenter);
   }
+  setSectorCenter(value: Vector3Tuple): this {
+    this.normalizeTransform();
+    this.shift([
+      value[0] - this._constructionCenter[0],
+      value[1] - this._constructionCenter[1],
+      value[2] - this._constructionCenter[2],
+    ]);
+    return this;
+  }
+
   getArea(): number {
     return (Math.abs(this._angle) / 2) * this._radius ** 2;
   }

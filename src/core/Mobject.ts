@@ -643,6 +643,15 @@ export abstract class Mobject {
     return [sx / n, sy / n, sz / n];
   }
 
+  moveCenterOfMassTo(target: Vector3Tuple): this {
+    this.shift([
+      target[0] - this.getCenterOfMass()[0],
+      target[1] - this.getCenterOfMass()[1],
+      target[2] - this.getCenterOfMass()[2],
+    ]);
+    return this;
+  }
+
   /**
    * Get center in this mobject's parent coordinate frame.
    *
