@@ -1,6 +1,7 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import * as THREE from 'three';
 
 export interface AnnularSectorOptions {
   innerRadius?: number;
@@ -20,6 +21,7 @@ export class AnnularSector extends VMobject {
   private _startAngle: number;
   private _angle: number;
   private _numComponents: number;
+  private _constructionCenter: Vector3Tuple;
 
   constructor(options: AnnularSectorOptions = {}) {
     super();
@@ -155,10 +157,18 @@ export class AnnularSector extends VMobject {
     return this;
   }
   getSectorCenter(): Vector3Tuple {
-    return this.getConstructionCenter() ?? this.getCenter();
+    return this._parentLocalToWorld([...this._constructionCenter]);
   }
   getArea(): number {
     return (Math.abs(this._angle) / 2) * (this._outerRadius ** 2 - this._innerRadius ** 2);
+  }
+
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    this._constructionCenter = new THREE.Vector3(...this._constructionCenter)
+      .applyMatrix4(worldMatrix)
+      .toArray();
+    super.normalizeTransform(worldMatrix);
+    return this;
   }
 
   override copy(): AnnularSector {

@@ -361,14 +361,6 @@ export class VMobject extends VMobjectRendering {
       // bounds/center (read from the BufferGeometry) don't go stale.
       this._geometryDirty = true;
     }
-    if (this._constructionCenter) {
-      const c = new THREE.Vector3(
-        this._constructionCenter[0],
-        this._constructionCenter[1],
-        this._constructionCenter[2],
-      ).applyMatrix4(worldMatrix);
-      this._constructionCenter = [c.x, c.y, c.z];
-    }
     this._flattenAsContainer(worldMatrix);
     this._markDirtyUpward();
     return this;
@@ -647,7 +639,6 @@ export class VMobject extends VMobjectRendering {
     super._copyBaseAttributesInto(clone, options);
     clone._points3D = this._points3D.map((p) => [...p]);
     clone._visiblePointCount = this._visiblePointCount;
-    clone._constructionCenter = this._constructionCenter ? [...this._constructionCenter] : null;
     if (this._transformSubpathLengths !== undefined) {
       clone._transformSubpathLengths = [...this._transformSubpathLengths];
     }
@@ -763,24 +754,6 @@ export class VMobject extends VMobjectRendering {
       (bounds.min.y + bounds.max.y) / 2,
       (bounds.min.z + bounds.max.z) / 2,
     ];
-  }
-
-  /**
-   * World-space construction center for radial shapes (arc/circle center, sector
-   * apex), or null if this shape doesn't define one.
-   *
-   * Unlike {@link getCenter} (bbox) and {@link getCenterOfMass} (vertex centroid),
-   * this tracks a fixed construction point and stays correct after
-   * {@link normalizeTransform} bakes the deferred transform into the points.
-   */
-  getConstructionCenter(): Vector3Tuple | null {
-    if (!this._constructionCenter) return null;
-    const c = new THREE.Vector3(
-      this._constructionCenter[0],
-      this._constructionCenter[1],
-      this._constructionCenter[2],
-    ).applyMatrix4(this._worldMatrix());
-    return [c.x, c.y, c.z];
   }
 
   /**
