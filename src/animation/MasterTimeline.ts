@@ -477,7 +477,7 @@ import * as THREE from 'three';
 import { Mobject } from '../core/Mobject';
 
 class DummyMobject extends Mobject {
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
     return this._flattenAsContainer(worldMatrix);
   }
   private static _instance: DummyMobject | null = null;

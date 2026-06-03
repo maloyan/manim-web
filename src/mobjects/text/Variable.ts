@@ -65,7 +65,7 @@ export interface VariableOptions {
  * ```
  */
 export class Variable extends Mobject {
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
     return this._flattenAsContainer(worldMatrix);
   }
   protected _label: string;

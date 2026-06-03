@@ -431,7 +431,7 @@ export class NewtonFractal extends Mobject {
 
   // -----------------------------------------------------------------------
   // Flatten: shader-quad geometry can't bake into points, so absolutize.
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
     return this._flattenAsMesh(worldMatrix);
   }
 

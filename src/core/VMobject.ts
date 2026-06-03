@@ -42,19 +42,6 @@ export class VMobject extends VMobjectRendering {
   /** Transform-time override for subpath lengths (compound-path metadata). */
   protected _transformSubpathLengths?: number[];
 
-  /**
-   * Opt-in construction point in the points frame (null => no construction center).
-   *
-   * Radial shapes (Arc, Circle, Sector, ...) define a geometric center that is a
-   * fixed construction point — the arc/circle center or the sector apex — distinct
-   * from both the bbox center ({@link getCenter}) and the vertex centroid
-   * ({@link getCenterOfMass}). Stored in the same frame as {@link _points3D} and
-   * re-baked in {@link normalizeTransform} exactly as the points are, so
-   * {@link getConstructionCenter} stays world-invariant when the deferred transform
-   * is folded into the points.
-   */
-  protected _constructionCenter: Vector3Tuple | null = null;
-
   constructor() {
     super();
     this._isVMobject = true;
@@ -135,7 +122,7 @@ export class VMobject extends VMobjectRendering {
    * @post this.parent === null => result === getLocalPoints()
    */
   getPoints(): number[][] {
-    const worldMatrix = this._computeWorldMatrix();
+    const worldMatrix = this._worldMatrix();
     const scratch = new THREE.Vector3();
     return this._points3D.map((p) => {
       scratch.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
@@ -181,7 +168,7 @@ export class VMobject extends VMobjectRendering {
       p[1] + aboutPoint[1],
       p[2] + aboutPoint[2],
     ]);
-    const inverseWorld = this._computeWorldMatrix().clone().invert();
+    const inverseWorld = this._worldMatrix().clone().invert();
     const scratch = new THREE.Vector3();
     const localPts = worldResult.map((p) => {
       scratch.set(p[0], p[1], p[2]).applyMatrix4(inverseWorld);
@@ -361,7 +348,7 @@ export class VMobject extends VMobjectRendering {
    * @post !this.isEmpty() => old.getPoints()[i] === this.getPoints()[i]  // world geometry preserved
    * @post this._computeOwnMatrix() === Identity
    */
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
     if (this._points3D.length > 0) {
       const v = new THREE.Vector3();
       for (const p of this._points3D) {
@@ -792,7 +779,7 @@ export class VMobject extends VMobjectRendering {
       this._constructionCenter[0],
       this._constructionCenter[1],
       this._constructionCenter[2],
-    ).applyMatrix4(this._computeWorldMatrix());
+    ).applyMatrix4(this._worldMatrix());
     return [c.x, c.y, c.z];
   }
 

@@ -69,7 +69,7 @@ export class ApplyFunction extends Animation {
         // populated during _syncToThree, so a dirty/unsynced mobject reports an
         // identity matrix and drops the position offset baked into
         // getLocalPoints() — getPoints() composes this same matrix.
-        const worldMatrix = (mob as Mobject)._computeWorldMatrix();
+        const worldMatrix = (mob as Mobject)._worldMatrix();
         const inverseWorld = worldMatrix.clone().invert();
 
         const targetPoints = startPoints.map((p) => {
@@ -155,7 +155,7 @@ export class ApplyComplexFunction extends Animation {
 
         // See ApplyFunction.begin(): use the logical world matrix, not
         // _threeObject.matrixWorld, so an unsynced mobject keeps its offset.
-        const worldMatrix = (mob as Mobject)._computeWorldMatrix();
+        const worldMatrix = (mob as Mobject)._worldMatrix();
         const inverseWorld = worldMatrix.clone().invert();
 
         const targetPoints = startPoints.map((p) => {
@@ -298,7 +298,7 @@ export class ApplyMatrix extends Animation {
 
         // See ApplyFunction.begin(): use the logical world matrix, not
         // _threeObject.matrixWorld, so an unsynced mobject keeps its offset.
-        const worldMatrix = (mob as Mobject)._computeWorldMatrix();
+        const worldMatrix = (mob as Mobject)._worldMatrix();
         const inverseWorld = worldMatrix.clone().invert();
 
         const ap = this.aboutPoint;

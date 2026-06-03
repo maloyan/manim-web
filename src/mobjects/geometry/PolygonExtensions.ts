@@ -3,6 +3,7 @@ import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
 import { orientation2D } from '../../utils/vectors';
+import * as THREE from 'three';
 
 /**
  * Options for creating a RoundedRectangle
@@ -276,6 +277,7 @@ export class Star extends VMobject {
   private _outerRadius: number;
   private _innerRadius: number;
   private _startAngle: number;
+  private _constructionCenter: Vector3Tuple;
 
   constructor(options: StarOptions = {}) {
     super();
@@ -304,6 +306,7 @@ export class Star extends VMobject {
     this.color = color;
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
+    this._constructionCenter = center;
 
     this._generatePoints();
     // The star is built around its center (a construction point at the local
@@ -377,6 +380,14 @@ export class Star extends VMobject {
   setStarCenter(value: Vector3Tuple): this {
     this.position.set(value[0], value[1], value[2]);
     this._markDirty();
+    return this;
+  }
+
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    this._constructionCenter = new THREE.Vector3(...this._constructionCenter)
+      .applyMatrix4(worldMatrix)
+      .toArray();
+    super.normalizeTransform(worldMatrix);
     return this;
   }
 

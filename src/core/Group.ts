@@ -11,7 +11,7 @@ import { Mobject, Vector3Tuple } from './Mobject';
  * Operations on the group apply to all children.
  */
 export class Group extends Mobject {
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
     return this._flattenAsContainer(worldMatrix);
   }
   /**

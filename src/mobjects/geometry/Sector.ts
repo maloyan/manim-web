@@ -1,6 +1,7 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import * as THREE from 'three';
 
 export interface SectorOptions {
   radius?: number;
@@ -18,6 +19,7 @@ export class Sector extends VMobject {
   private _startAngle: number;
   private _angle: number;
   private _numComponents: number;
+  private _constructionCenter: Vector3Tuple;
 
   constructor(options: SectorOptions = {}) {
     super();
@@ -118,13 +120,21 @@ export class Sector extends VMobject {
     return this;
   }
   getSectorCenter(): Vector3Tuple {
-    return this.getSectorCenter() ?? this.getCenter();
+    return this._parentLocalToWorld(this._constructionCenter);
   }
   getArea(): number {
     return (Math.abs(this._angle) / 2) * this._radius ** 2;
   }
   getArcLength(): number {
     return Math.abs(this._radius * this._angle);
+  }
+
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    this._constructionCenter = new THREE.Vector3(...this._constructionCenter)
+      .applyMatrix4(worldMatrix)
+      .toArray();
+    super.normalizeTransform(worldMatrix);
+    return this;
   }
 
   override copy(): Sector {

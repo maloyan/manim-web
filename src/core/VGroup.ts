@@ -304,7 +304,7 @@ export class VGroup extends VMobject {
     // leaving the world delta mapped through this group's inverse linear
     // transform. For an identity, parentless group the inverse is identity, so
     // this reduces to the world delta (matching the prior behavior).
-    const invWorld = this._computeWorldMatrix().clone().invert();
+    const invWorld = this._worldMatrix().clone().invert();
     const originalLocal = new THREE.Vector3(...originalCenter).applyMatrix4(invWorld);
     const curLocal = new THREE.Vector3(...cur).applyMatrix4(invWorld);
     const delta: Vector3Tuple = [

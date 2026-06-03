@@ -1,6 +1,8 @@
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
 import { TipableVMobject, TipableVMobjectOptions } from './TipableVMobject';
+import { Matrix4 } from 'three';
+import * as THREE from 'three';
 
 /**
  * Options for creating an Arc
@@ -140,10 +142,6 @@ export class Arc extends TipableVMobject {
     }
 
     this.setPoints3D(points);
-    // The arc center is baked into the points frame (not this.position). Track it
-    // as the construction center so getArcCenter() stays correct after
-    // normalizeTransform() re-bakes the points.
-    this._constructionCenter = [...this._arcCenter];
   }
 
   /**
@@ -247,6 +245,13 @@ export class Arc extends TipableVMobject {
    */
   getArcLength(): number {
     return Math.abs(this._radius * this._angle);
+  }
+
+  override normalizeTransform(worldMatrix?: Matrix4): this {
+    this._arcCenter = new THREE.Vector3(...this._arcCenter)
+      .applyMatrix4(worldMatrix ?? this._worldMatrix())
+      .toArray();
+    return this;
   }
 
   /**

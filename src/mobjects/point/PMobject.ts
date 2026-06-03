@@ -144,7 +144,7 @@ export class PMobject extends Mobject {
    * For world points with color/opacity, use {@link getPointsData}.
    */
   getPoints(): number[][] {
-    const worldMatrix = this._computeWorldMatrix();
+    const worldMatrix = this._worldMatrix();
     const scratch = new THREE.Vector3();
     return this._points.map((p) => {
       scratch.set(p.position[0], p.position[1], p.position[2]).applyMatrix4(worldMatrix);
@@ -158,7 +158,7 @@ export class PMobject extends Mobject {
    * For untransformed local-space coordinates, use {@link getLocalPoints}.
    */
   getPointsData(): PointData[] {
-    const worldMatrix = this._computeWorldMatrix();
+    const worldMatrix = this._worldMatrix();
     const scratch = new THREE.Vector3();
     return this._points.map((p) => {
       scratch.set(p.position[0], p.position[1], p.position[2]).applyMatrix4(worldMatrix);
@@ -174,7 +174,7 @@ export class PMobject extends Mobject {
    * Project a single local-space point into world space, walking the parent chain.
    */
   protected _localToWorld(local: Vector3Tuple): Vector3Tuple {
-    const worldMatrix = this._computeWorldMatrix();
+    const worldMatrix = this._worldMatrix();
     const v = new THREE.Vector3(local[0], local[1], local[2]).applyMatrix4(worldMatrix);
     return [v.x, v.y, v.z];
   }
@@ -199,7 +199,7 @@ export class PMobject extends Mobject {
       p[1] + aboutPoint[1],
       p[2] + aboutPoint[2],
     ]);
-    const inverseWorld = this._computeWorldMatrix().clone().invert();
+    const inverseWorld = this._worldMatrix().clone().invert();
     const scratch = new THREE.Vector3();
     worldResult.forEach((p, i) => {
       scratch.set(p[0], p[1], p[2]).applyMatrix4(inverseWorld);
@@ -324,7 +324,7 @@ export class PMobject extends Mobject {
    * @post old.getPoints()[i] === this.getPoints()[i]  // world geometry preserved
    * @post this._computeOwnMatrix() === Identity
    */
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
     if (this._points.length > 0) {
       const v = new THREE.Vector3();
       for (const point of this._points) {

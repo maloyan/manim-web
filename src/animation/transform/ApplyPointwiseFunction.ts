@@ -71,7 +71,7 @@ export class ApplyPointwiseFunction extends Animation {
         // dirty/unsynced mobject reports an identity matrix and drops the
         // position offset baked into getLocalPoints() — getPoints() composes
         // this same matrix.
-        const worldMatrix = (mob as Mobject)._computeWorldMatrix();
+        const worldMatrix = (mob as Mobject)._worldMatrix();
         const inverseWorld = worldMatrix.clone().invert();
 
         // Transform local → world, apply func, then world → local

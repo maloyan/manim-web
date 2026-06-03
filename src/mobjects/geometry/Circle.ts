@@ -185,7 +185,7 @@ export class Circle extends VMobject {
     ];
   }
 
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
     // Fold the matrix's uniform scale into the stored radius before super bakes
     // the points (after which scaleVector is 1 and getRadius() === _radius).
     const e = worldMatrix.elements;

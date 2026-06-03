@@ -15,7 +15,7 @@ import { Mobject } from '../../core/Mobject';
  * Any 3D mesh primitive should extend this class rather than `Mobject`.
  */
 export abstract class Mobject3D extends Mobject {
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
     return this._flattenAsMesh(worldMatrix);
   }
 }

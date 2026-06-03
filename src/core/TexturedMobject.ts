@@ -47,7 +47,7 @@ export abstract class TexturedMobject extends Mobject {
    *
    * @post old.getBounds() === this.getBounds()  // world geometry preserved
    */
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._computeOwnMatrix()): this {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
     return this._flattenAsMesh(worldMatrix);
   }
 

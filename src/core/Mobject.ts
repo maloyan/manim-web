@@ -378,7 +378,7 @@ export abstract class Mobject {
    */
   protected _worldToParentLocal(p: Vector3Tuple): Vector3Tuple {
     if (!this.parent) return p;
-    const invParent = this.parent._computeWorldMatrix().clone().invert();
+    const invParent = this.parent._worldMatrix().clone().invert();
     const v = new THREE.Vector3(p[0], p[1], p[2]).applyMatrix4(invParent);
     return [v.x, v.y, v.z];
   }
@@ -392,7 +392,7 @@ export abstract class Mobject {
    */
   protected _parentLocalToWorld(p: Vector3Tuple): Vector3Tuple {
     if (!this.parent) return p;
-    const parentWorld = this.parent._computeWorldMatrix();
+    const parentWorld = this.parent._worldMatrix();
     const v = new THREE.Vector3(p[0], p[1], p[2]).applyMatrix4(parentWorld);
     return [v.x, v.y, v.z];
   }
@@ -850,7 +850,7 @@ export abstract class Mobject {
    */
   protected _normalizeChildrenInto(worldMatrix: THREE.Matrix4): void {
     for (const child of this.children) {
-      child.normalizeTransform(worldMatrix.clone().multiply(child._computeOwnMatrix()));
+      child.normalizeTransform(worldMatrix.clone().multiply(child._ownMatrix()));
     }
   }
 
@@ -963,15 +963,15 @@ export abstract class Mobject {
    * @post this.parent === null => this._computeWorldMatrix() === this._computeOwnMatrix()
    * @post this.parent !== null => this._computeWorldMatrix() === this.parent._computeWorldMatrix() * this._computeOwnMatrix()
    */
-  _computeOwnMatrix(): THREE.Matrix4 {
+  _ownMatrix(): THREE.Matrix4 {
     const q = new THREE.Quaternion().setFromEuler(this.rotation);
     return new THREE.Matrix4().compose(this.position, q, this.scaleVector);
   }
 
-  _computeWorldMatrix(): THREE.Matrix4 {
-    const matrix = this._computeOwnMatrix();
+  _worldMatrix(): THREE.Matrix4 {
+    const matrix = this._ownMatrix();
     for (let ancestor: Mobject | null = this.parent; ancestor; ancestor = ancestor.parent) {
-      matrix.premultiply(ancestor._computeOwnMatrix());
+      matrix.premultiply(ancestor._ownMatrix());
     }
     return matrix;
   }
