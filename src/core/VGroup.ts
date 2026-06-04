@@ -20,6 +20,21 @@ export class VGroup extends VMobject {
   }
 
   /**
+   * World-space center from descendant geometry.
+   *
+   * @throws this.isEmpty() — an empty group has no geometry, so no center.
+   * @post !this.isEmpty() => super.getCenter()
+   */
+  override getCenter(): Vector3Tuple {
+    if (this.isEmpty()) {
+      // No geometry => no meaningful center. We don't fall back to `position`
+      // because normalizeTransform() can reset it; callers must not rely on it.
+      throw new Error('VGroup.getCenter: cannot compute center of an empty group (no geometry)');
+    }
+    return super.getCenter();
+  }
+
+  /**
    * Create a new VGroup containing the given mobjects.
    * Accepts both VMobjects and general Mobjects (e.g., Axes, Group).
    * @param mobjects - Mobjects to add to the group

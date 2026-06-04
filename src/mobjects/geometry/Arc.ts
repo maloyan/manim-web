@@ -199,7 +199,7 @@ export class Arc extends TipableVMobject {
    * Get the center of the arc
    */
   getArcCenter(): Vector3Tuple {
-    return this._parentLocalToWorld(this._arcCenter);
+    return this._localToWorld(this._arcCenter);
   }
 
   /**

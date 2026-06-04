@@ -95,12 +95,14 @@ export class Group extends Mobject {
    * the correct strategy automatically: VMobjects use point math, all other
    * types use Box3.setFromObject(). See PointBounds.ts for the full explanation.
    *
-   * @post this.isEmpty() => result === this._parentLocalToWorld([position.x, position.y, position.z])
+   * @throws this.isEmpty() — an empty group has no geometry, so no center.
    * @post !this.isEmpty() => result[i] === (worldBbox.min[i] + worldBbox.max[i]) / 2
    */
   override getCenter(): Vector3Tuple {
     if (this.isEmpty()) {
-      return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
+      // No geometry => no meaningful center. We don't fall back to `position`
+      // because normalizeTransform() can reset it; callers must not rely on it.
+      throw new Error('Group.getCenter: cannot compute center of an empty group (no geometry)');
     }
 
     const bounds = new THREE.Box3();
@@ -116,7 +118,7 @@ export class Group extends Mobject {
     }
 
     if (bounds.isEmpty()) {
-      return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
+      throw new Error('Group.getCenter: cannot compute center of an empty group (no geometry)');
     }
     bounds.getCenter(tempMin);
     return [tempMin.x, tempMin.y, tempMin.z];

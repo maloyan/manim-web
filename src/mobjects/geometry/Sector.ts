@@ -120,7 +120,7 @@ export class Sector extends VMobject {
     return this;
   }
   getSectorCenter(): Vector3Tuple {
-    return this._parentLocalToWorld(this._constructionCenter);
+    return this._localToWorld(this._constructionCenter);
   }
   setSectorCenter(value: Vector3Tuple): this {
     this.normalizeTransform();

@@ -157,7 +157,7 @@ export class AnnularSector extends VMobject {
     return this;
   }
   getSectorCenter(): Vector3Tuple {
-    return this._parentLocalToWorld([...this._constructionCenter]);
+    return this._localToWorld([...this._constructionCenter]);
   }
   getArea(): number {
     return (Math.abs(this._angle) / 2) * (this._outerRadius ** 2 - this._innerRadius ** 2);

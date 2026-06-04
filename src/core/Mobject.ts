@@ -26,6 +26,7 @@ import {
   prepareForNonlinearTransformImpl,
   resolveExtremalPoint,
 } from './MobjectState';
+import { logger } from '../utils/logger';
 // AnimateProxy registers itself here to break the circular dependency:
 // Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -274,16 +275,19 @@ export abstract class Mobject {
       ];
     }
 
-    // 4. Convert both endpoints into the parent-local frame and take their
-    // difference. The translation parts cancel, leaving the world delta mapped
-    // through the parent's inverse linear transform — exactly the parent-local
-    // delta that shift() must apply for the world center to land on targetPos.
-    const targetLocal = this._worldToParentLocal(targetPos);
-    const currentLocal = this._worldToParentLocal(currentCenter);
+    // 4. Convert both endpoints into the parent frame (where `position` lives)
+    // and take their difference. shift() applies the delta to `position`, so it
+    // must be expressed in the parent frame — NOT this node's own local frame,
+    // which would divide out this node's own rotation/scale. The translation
+    // parts cancel, leaving the world delta mapped through the parent's inverse
+    // linear transform.
+    const targetParent = this.parent === null ? targetPos : this.parent._worldToLocal(targetPos);
+    const currentParent =
+      this.parent === null ? currentCenter : this.parent._worldToLocal(currentCenter);
     const delta: Vector3Tuple = [
-      targetLocal[0] - currentLocal[0],
-      targetLocal[1] - currentLocal[1],
-      targetLocal[2] - currentLocal[2],
+      targetParent[0] - currentParent[0],
+      targetParent[1] - currentParent[1],
+      targetParent[2] - currentParent[2],
     ];
 
     // 5. Apply shift (preserves world-space positions)
@@ -327,8 +331,11 @@ export abstract class Mobject {
 
     // Deferred-transform semantics: update node transform only.
     // aboutPoint is WORLD-space; default to the object's world-space center.
+    // _rotateAboutParentLocalPoint works in the parent frame (where `position`
+    // lives), so lift the world pivot through the parent's inverse world matrix.
     const pivotWorld: Vector3Tuple = aboutPoint ?? this.getCenter();
-    this._rotateAboutParentLocalPoint(angle, axis, this._worldToParentLocal(pivotWorld));
+    const pivotParent = this.parent === null ? pivotWorld : this.parent._worldToLocal(pivotWorld);
+    this._rotateAboutParentLocalPoint(angle, axis, pivotParent);
     return this;
   }
 
@@ -370,30 +377,24 @@ export abstract class Mobject {
   }
 
   /**
-   * Convert a WORLD-space point into this node's parent-local frame —
-   * the frame in which `this.position` is expressed.
+   * LOCAL point -> WORLD (the frame this node's points live in; this node's own
+   * transform IS applied).
    *
-   * @post this.parent === null => result === p
-   * @post this.parent !== null => result === parent._computeWorldMatrix().invert() * p
+   * @post result === this._worldMatrix() * p
    */
-  protected _worldToParentLocal(p: Vector3Tuple): Vector3Tuple {
-    if (!this.parent) return p;
-    const invParent = this.parent._worldMatrix().clone().invert();
-    const v = new THREE.Vector3(p[0], p[1], p[2]).applyMatrix4(invParent);
+  protected _localToWorld(p: Vector3Tuple): Vector3Tuple {
+    const v = new THREE.Vector3(p[0], p[1], p[2]).applyMatrix4(this._worldMatrix());
     return [v.x, v.y, v.z];
   }
 
   /**
-   * Convert a point expressed in this node's parent-local frame (the frame of
-   * `this.position`) into WORLD space — the inverse of {@link _worldToParentLocal}.
+   * WORLD point -> this node's LOCAL frame. Inverse of {@link _localToWorld}.
    *
-   * @post this.parent === null => result === p
-   * @post this.parent !== null => result === parent._computeWorldMatrix() * p
+   * @post result === this._worldMatrix().invert() * p
    */
-  protected _parentLocalToWorld(p: Vector3Tuple): Vector3Tuple {
-    if (!this.parent) return p;
-    const parentWorld = this.parent._worldMatrix();
-    const v = new THREE.Vector3(p[0], p[1], p[2]).applyMatrix4(parentWorld);
+  protected _worldToLocal(p: Vector3Tuple): Vector3Tuple {
+    const inv = this._worldMatrix().invert();
+    const v = new THREE.Vector3(p[0], p[1], p[2]).applyMatrix4(inv);
     return [v.x, v.y, v.z];
   }
 
@@ -435,9 +436,11 @@ export abstract class Mobject {
     // geometry. With no aboutPoint/aboutEdge, scale about the geometric center
     // (manim semantics); getCenter() is pure point-math, so this stays correct
     // even after normalizeTransform() decouples `position` from the actual center.
+    // The position math below runs in the parent frame (where `position` lives),
+    // so lift the world anchor through the parent's inverse world matrix.
     const explicitAnchor = resolveExtremalPoint(this, options);
     const anchorWorld = explicitAnchor === undefined ? this.getCenter() : explicitAnchor;
-    const anchorLocal = this._worldToParentLocal(anchorWorld);
+    const anchorLocal = this.parent === null ? anchorWorld : this.parent._worldToLocal(anchorWorld);
 
     // Fold the new scale into the deferred transform, then move `position` so the
     // anchor's world location is unchanged.
@@ -610,46 +613,21 @@ export abstract class Mobject {
   /**
    * Get center in world coordinates.
    *
-   * @post this.isEmpty() => result === this._parentLocalToWorld([position.x, position.y, position.z])
+   * @post this.isEmpty() => result === this._localToWorld([0,0,0])
    * @post !this.isEmpty() => result[i] === (worldBbox.min[i] + worldBbox.max[i]) / 2
    */
   getCenter(): Vector3Tuple {
-    // No geometry to bound: fall back to this node's own world position. position
-    // is parent-local, so lift it to world to stay consistent with the bbox branch.
     if (this.isEmpty()) {
-      return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
+      // No geometry to bound. Fall back to this node's own world position
+      // (origin lifted through the world matrix), matching the bbox branch's
+      // frame. This is a soft default: normalizeTransform() can reset the
+      // underlying position, so callers should not rely on it — hence the warn.
+      logger.warn(
+        'Mobject.getCenter: computing center of an empty mobject (no geometry); falling back to world position. This value is not stable across normalizeTransform().',
+      );
+      return this._localToWorld([0, 0, 0]);
     }
     return getCenterImpl(this);
-  }
-
-  /**
-   * Get center of mass in world coordinates by averaging all world-space points.
-   *
-   * Unlike {@link getCenter} (which uses bbox midpoint), this is the true
-   * centroid — equal to getCenter() only when points are symmetrically distributed.
-   */
-  getCenterOfMass(): Vector3Tuple {
-    const pts = (this as unknown as { getPoints?: () => number[][] }).getPoints?.() ?? [];
-    if (pts.length === 0) return this.getCenter();
-    let sx = 0,
-      sy = 0,
-      sz = 0;
-    for (const p of pts) {
-      sx += p[0];
-      sy += p[1];
-      sz += p[2];
-    }
-    const n = pts.length;
-    return [sx / n, sy / n, sz / n];
-  }
-
-  moveCenterOfMassTo(target: Vector3Tuple): this {
-    this.shift([
-      target[0] - this.getCenterOfMass()[0],
-      target[1] - this.getCenterOfMass()[1],
-      target[2] - this.getCenterOfMass()[2],
-    ]);
-    return this;
   }
 
   /**
@@ -661,17 +639,12 @@ export abstract class Mobject {
    * @post this.parent !== null => result === parent._computeWorldMatrix().invert() * this.getCenter()
    */
   getLocalCenter(): Vector3Tuple {
-    if (this.isEmpty()) {
-      return [this.position.x, this.position.y, this.position.z];
+    if (this.parent === null) {
+      return this.getCenter();
     }
-
-    return this._worldToParentLocal(this.getCenter());
+    return this.parent._worldToLocal(this.getCenter());
   }
 
-  /**
-   * @pre !this.isEmpty()
-   * @post result.min <= result.max component-wise
-   */
   /**
    * Refresh the THREE world matrices so a geometry query reads current
    * transforms, and return the backing object. World coordinates depend on
@@ -680,6 +653,8 @@ export abstract class Mobject {
    * copies locals onto the THREE objects; setFromObject won't walk up to refresh
    * matrixWorld, so we flush ancestors (true) and descendants (true) here.
    * Shared by getBounds() and getBoundingBox() so both stay consistent.
+   * @pre !this.isEmpty()
+   * @post result.min <= result.max component-wise
    */
   _syncWorldMatrices(): THREE.Object3D {
     this._root()._syncToThree();
@@ -695,7 +670,7 @@ export abstract class Mobject {
    * standard geometry types without a renderer. VMobject overrides this with
    * point math because Line2's LineGeometry is incompatible with
    * Box3.setFromObject() — see PointBounds.ts for the full explanation.
-   *
+
    * @pre !this.isEmpty()
    * @post result.min <= result.max component-wise
    */

@@ -61,27 +61,12 @@ describe('Group - extended coverage', () => {
     expect(b.parent).toBeNull();
   });
 
-  it('getCenter with no children returns group position', () => {
-    const g = new Group();
-    g.position.set(5, 6, 7);
-    expect(g.getCenter()).toEqual([5, 6, 7]);
-  });
-
   it('getCenter with children returns geometric center from child bounds', () => {
     const a = new Dot({ point: [0, 0, 0] });
     const b = new Dot({ point: [2, 0, 0] });
     const g = new Group(a, b);
     const center = g.getCenter();
     expect(center[0]).toBeCloseTo(1, 0);
-  });
-
-  it('Group getCenter returns position when every child is empty', () => {
-    // MIGRATION: example-based regression. Intent: a group whose only child has no
-    // geometry has no bounds, so getCenter falls back to position (matching VGroup)
-    // rather than throwing. Replace with a property test later.
-    const g = new Group(new VMobject());
-    g.shift([3, -2, 0]);
-    expect(g.getCenter()).toEqual([3, -2, 0]);
   });
 
   it('Group getBounds uses descendant geometry', () => {
@@ -143,31 +128,6 @@ describe('Group - extended coverage', () => {
     expect(afterSize[1]).toBeGreaterThan(0);
   });
 
-  it('Group getCenter returns position on nested empty containers', () => {
-    // MIGRATION: example-based regression. Intent: nested empty containers still
-    // have no geometry, so getCenter falls back to position. Replace with a
-    // property test later.
-    const g = new Group(new VGroup(new VGroup()));
-    g.shift([1, 4, 0]);
-    expect(g.getCenter()).toEqual([1, 4, 0]);
-  });
-
-  it('empty group getCenter is world-space: follows a transformed parent', () => {
-    // MIGRATION: example-based regression. Intent: getCenter() is world-space even
-    // with no geometry — the parent-local position is lifted through the parent's
-    // transform, so an empty child tracks its parent rather than reporting a raw
-    // local offset. Replace with a property test later.
-    const empty = new Group(new VMobject()); // no geometry => isEmpty()
-    const parent = new Group(empty);
-    empty.shift([1, 0, 0]); // parent-local position
-    const before = empty.getCenter();
-    expect(before[0]).toBeCloseTo(1, 6); // parent untransformed
-
-    parent.shift([10, 0, 0]);
-    const after = empty.getCenter();
-    expect(after[0]).toBeCloseTo(before[0] + 10, 6); // moved into world space with the parent
-  });
-
   it('shift moves group position', () => {
     const a = new VMobject();
     a.position.set(0, 0, 0);
@@ -223,7 +183,7 @@ describe('Group - extended coverage', () => {
   });
 
   it('scale updates group scale vector', () => {
-    const a = new VMobject();
+    const a = new Dot({ point: [0, 0, 0] });
     const g = new Group(a);
     g.scale(2);
     expect(g.scaleVector.x).toBe(2);
@@ -232,7 +192,7 @@ describe('Group - extended coverage', () => {
   });
 
   it('scale with tuple updates group scale vector non-uniformly', () => {
-    const a = new VMobject();
+    const a = new Dot({ point: [0, 0, 0] });
     const g = new Group(a);
     g.scale([2, 3, 4]);
     expect(g.scaleVector.x).toBe(2);

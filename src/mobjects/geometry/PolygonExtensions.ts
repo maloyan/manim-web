@@ -375,10 +375,10 @@ export class Star extends VMobject {
     return this;
   }
   getCenterOfMass(): Vector3Tuple {
-    return this._parentLocalToWorld(this._constructionCenter);
+    return this._localToWorld(this._constructionCenter);
   }
   getStarCenter(): Vector3Tuple {
-    return this._parentLocalToWorld(this._constructionCenter);
+    return this._localToWorld(this._constructionCenter);
   }
   setStarCenter(value: Vector3Tuple): this {
     this.moveCenterOfMassTo(value);
@@ -677,7 +677,7 @@ export class RegularPolygram extends VMobject {
   }
 
   getCenterOfMass(): Vector3Tuple {
-    return this._parentLocalToWorld(this._constructionCenter);
+    return this._localToWorld(this._constructionCenter);
   }
   getPolygramCenter(): Vector3Tuple {
     return this.getCenterOfMass();

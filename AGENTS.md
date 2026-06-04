@@ -52,6 +52,7 @@ npm run docs              # Generate example docs + build Docusaurus site
 - Max 500 lines per file (eslint `max-lines` rule)
 - No `any` types (`@typescript-eslint/no-explicit-any`) — use proper types, never `eslint-disable`
 - camelCase naming convention for methods/properties
+- Logging: use the `logger` utility (`src/utils/logger.ts`), never raw `console.*`. `logger.warn`/`logger.error`/`logger.info`/`logger.debug` prefix `[manim-web]`, respect the configured log level, sanitize args, and notify `onLog` listeners. Raw `console.*` bypasses all of that (and tests fail on unexpected `console.warn`/`console.error`). Note: much of the existing codebase still uses raw `console.*` and is being migrated — new code must use `logger`.
 
 ## Geometry conventions
 

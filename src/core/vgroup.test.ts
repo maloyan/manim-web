@@ -58,12 +58,6 @@ describe('VGroup - extended coverage', () => {
     expect(vg.length).toBe(0);
   });
 
-  it('getCenter with no children returns group position', () => {
-    const vg = new VGroup();
-    // Empty VGroup: after normalizeTransform, position resets
-    expect(vg.getCenter()).toEqual([0, 0, 0]);
-  });
-
   it('getCenter with children includes position offset', () => {
     const a = new Dot({ point: [0, 0, 0] });
     const b = new Dot({ point: [2, 0, 0] });
@@ -75,11 +69,6 @@ describe('VGroup - extended coverage', () => {
 
     const center = vg.getCenter();
     expect(center[0]).toBeCloseTo(bboxCenterX, 6);
-  });
-
-  it('getCenter with only empty VMobject children returns group position', () => {
-    const vg = new VGroup(new VMobject());
-    expect(vg.getCenter()).toEqual([0, 0, 0]);
   });
 
   it('shift moves vgroup position', () => {

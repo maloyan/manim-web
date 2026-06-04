@@ -757,6 +757,38 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
+   * Get center of mass in world coordinates by averaging all world-space points.
+   *
+   * Unlike {@link getCenter} (which uses bbox midpoint), this is the true
+   * centroid — equal to getCenter() only when points are symmetrically distributed.
+   */
+  getCenterOfMass(): Vector3Tuple {
+    const pts = this.getAllPoints();
+    if (pts.length === 0) {
+      throw new Error('getCenterOfMass: VMobject has 0 points');
+    }
+    let sx = 0,
+      sy = 0,
+      sz = 0;
+    for (const p of pts) {
+      sx += p[0];
+      sy += p[1];
+      sz += p[2];
+    }
+    const n = pts.length;
+    return [sx / n, sy / n, sz / n];
+  }
+
+  moveCenterOfMassTo(target: Vector3Tuple): this {
+    this.shift([
+      target[0] - this.getCenterOfMass()[0],
+      target[1] - this.getCenterOfMass()[1],
+      target[2] - this.getCenterOfMass()[2],
+    ]);
+    return this;
+  }
+
+  /**
    * Compute local bounding-box center across this VMobject and all descendants
    * that expose point data.
    */
