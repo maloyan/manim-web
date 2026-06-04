@@ -718,7 +718,15 @@ export class ImageMobject extends TexturedMobject {
       copy._texture = this._texture.clone();
       copy._markDirty();
     }
-    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    // copyPosition must stay true: a mesh keeps its translation on `position`
+    // (not baked into points like a VMobject). The constructor only seeds it
+    // from the construction-time `_centerPoint`, so dropping the live position
+    // makes a copy snap back to its original center and breaks shift/Transform.
+    // copyPosition must stay true: a mesh keeps its translation on `position`
+    // (not baked into points like a VMobject). The constructor only seeds it
+    // from the construction-time `_centerPoint`, so dropping the live position
+    // makes a copy snap back to its original center and breaks shift/Transform.
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
   }
 

@@ -636,6 +636,57 @@ describe('MoveToTarget', () => {
       createElementSpy.mockRestore();
     }
   });
+
+  it('Transform to a shifted ImageMobject interpolates position (translation)', async () => {
+    const mockCanvas2DContext = {
+      imageSmoothingEnabled: false,
+      imageSmoothingQuality: 'low' as const,
+      createImageData: (width: number, height: number) => ({
+        data: new Uint8ClampedArray(width * height * 4),
+        width,
+        height,
+      }),
+      putImageData: () => {},
+      drawImage: () => {},
+    };
+
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = vi
+      .spyOn(document, 'createElement')
+      .mockImplementation((tagName: string): HTMLElement => {
+        const el = originalCreateElement(tagName);
+        if (tagName.toLowerCase() === 'canvas') {
+          (el as HTMLCanvasElement).getContext = ((contextType: string) =>
+            contextType === '2d' ? mockCanvas2DContext : null) as HTMLCanvasElement['getContext'];
+        }
+        return el;
+      });
+
+    try {
+      const pixelData = [
+        [0, 255],
+        [255, 0],
+      ];
+      const image = new ImageMobject({ pixelData, height: 2 });
+      const target = new ImageMobject({ pixelData, height: 2 });
+      await image.waitForLoad();
+      await target.waitForLoad();
+      // Pure translation: identical image shifted right by 3 units. Regression
+      // for ImageMobject.copy() dropping position, which made ShapeMorphStrategy
+      // read a 0→0 start/target and never translate.
+      target.shift([3, 0, 0]);
+
+      const t = new Transform(image, target);
+      t.begin();
+      t.interpolate(0.5);
+      expect(image.position.x).toBeCloseTo(1.5, 5);
+      t.interpolate(1);
+      t.finish();
+      expect(image.position.x).toBeCloseTo(3, 5);
+    } finally {
+      createElementSpy.mockRestore();
+    }
+  });
 });
 
 describe('factory functions', () => {
