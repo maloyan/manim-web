@@ -254,8 +254,13 @@ export class DashedLine extends VMobject {
     return this;
   }
 
+  /**
+   * Copy this DashedLine, rebuilding dashes from endpoint params.
+   * @post result.children.length === this.children.length  // dashes rebuilt by constructor
+   */
   override copy(): DashedLine {
-    const copy = new DashedLine({
+    this.normalizeTransform();
+    const clone = new DashedLine({
       start: this._start,
       end: this._end,
       dashLength: this._dashLength,
@@ -263,7 +268,8 @@ export class DashedLine extends VMobject {
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(copy, { copyChildren: false });
-    return copy;
+    this._copyBaseAttributesInto(clone, { copyPosition: false });
+    clone._dashes = clone.children.slice() as Line[];
+    return clone;
   }
 }

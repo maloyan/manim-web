@@ -16,13 +16,16 @@ export { GrowFromCenter, growFromCenter, type GrowFromCenterOptions } from '../m
 export type GrowArrowOptions = AnimationOptions;
 
 /**
- * GrowArrow animation - grows an arrow from its start point.
- * The arrow extends from start toward end, with the tip growing proportionally.
+ * GrowArrow animation - interpolate arrow from a start-growth state to end state.
  */
 export class GrowArrow extends Animation {
-  private _targetScale: THREE.Vector3 = new THREE.Vector3();
-  private _startPoint: Vector3Tuple = [0, 0, 0];
-  private _endPoint: Vector3Tuple = [0, 0, 0];
+  private _start = new THREE.Vector3();
+  private _endShaftPos = new THREE.Vector3();
+  private _endTipPos = new THREE.Vector3();
+  private _endShaftScale = new THREE.Vector3();
+  private _endTipScale = new THREE.Vector3();
+  private _endShaftCenter = new THREE.Vector3();
+  private _endTipCenter = new THREE.Vector3();
 
   constructor(mobject: Arrow, options: GrowArrowOptions = {}) {
     super(mobject, options);
@@ -32,58 +35,83 @@ export class GrowArrow extends Animation {
     super.begin();
 
     const arrow = this.mobject as Arrow;
+    const shaft = arrow.children[0];
+    const tip = arrow.children[1];
+    if (!shaft || !tip) throw new Error('GrowArrow requires Arrow to have shaft and tip children');
 
-    // Store the target state
-    this._targetScale.copy(arrow.scaleVector);
-    this._startPoint = arrow.getStart();
-    this._endPoint = arrow.getEnd();
+    const [sx, sy, sz] = arrow.getStart();
+    this._start.set(sx, sy, sz);
+    this._endShaftPos.copy(shaft.position);
+    this._endTipPos.copy(tip.position);
+    this._endShaftScale.copy(shaft.scaleVector);
+    this._endTipScale.copy(tip.scaleVector);
 
-    // Start at scale 0 (from the start point)
-    arrow.scaleVector.set(0.001, 0.001, 0.001); // Use small value to avoid division issues
+    {
+      const c = shaft.getCenter();
+      this._endShaftCenter.set(c[0], c[1], c[2]);
+    }
+    {
+      const c = tip.getCenter();
+      this._endTipCenter.set(c[0], c[1], c[2]);
+    }
 
-    // Position at start point
-    const start = this._startPoint;
-    arrow.position.set(start[0], start[1], start[2]);
+    this.interpolate(0);
   }
 
   interpolate(alpha: number): void {
     const arrow = this.mobject as Arrow;
+    const shaft = arrow.children[0];
+    const tip = arrow.children[1];
+    if (!shaft || !tip) throw new Error('GrowArrow requires Arrow to have shaft and tip children');
 
-    // Scale from 0 to target
-    const scale = Math.max(0.001, alpha);
-    arrow.scaleVector.set(
-      this._targetScale.x * scale,
-      this._targetScale.y * scale,
-      this._targetScale.z * scale,
+    const s = alpha;
+
+    shaft.scaleVector.set(
+      this._endShaftScale.x * s,
+      this._endShaftScale.y * s,
+      this._endShaftScale.z * s,
     );
+    tip.scaleVector.set(this._endTipScale.x * s, this._endTipScale.y * s, this._endTipScale.z * s);
 
-    // Interpolate position from start to proper position
-    const start = this._startPoint;
-    const end = this._endPoint;
-    const midX = (start[0] + end[0]) / 2;
-    const midY = (start[1] + end[1]) / 2;
-    const midZ = (start[2] + end[2]) / 2;
-
-    // Position interpolates from start to center
-    arrow.position.set(
-      start[0] + (midX - start[0]) * alpha,
-      start[1] + (midY - start[1]) * alpha,
-      start[2] + (midZ - start[2]) * alpha,
+    const shaftTargetCenter = new THREE.Vector3().lerpVectors(
+      this._start,
+      this._endShaftCenter,
+      alpha,
     );
+    {
+      const c = shaft.getCenter();
+      shaft.shift([
+        shaftTargetCenter.x - c[0],
+        shaftTargetCenter.y - c[1],
+        shaftTargetCenter.z - c[2],
+      ]);
+    }
 
-    arrow._markDirty();
+    const tipTargetCenter = new THREE.Vector3().lerpVectors(this._start, this._endTipCenter, alpha);
+    {
+      const c = tip.getCenter();
+      tip.shift([tipTargetCenter.x - c[0], tipTargetCenter.y - c[1], tipTargetCenter.z - c[2]]);
+    }
+
+    shaft._markDirty();
+    tip._markDirty();
+    this.mobject._markDirty();
   }
 
   override finish(): void {
     const arrow = this.mobject as Arrow;
-    arrow.scaleVector.copy(this._targetScale);
+    const shaft = arrow.children[0];
+    const tip = arrow.children[1];
+    if (!shaft || !tip) throw new Error('GrowArrow requires Arrow to have shaft and tip children');
 
-    // Restore proper position
-    const start = this._startPoint;
-    const end = this._endPoint;
-    arrow.position.set((start[0] + end[0]) / 2, (start[1] + end[1]) / 2, (start[2] + end[2]) / 2);
+    shaft.position.copy(this._endShaftPos);
+    tip.position.copy(this._endTipPos);
+    shaft.scaleVector.copy(this._endShaftScale);
+    tip.scaleVector.copy(this._endTipScale);
 
-    arrow._markDirty();
+    shaft._markDirty();
+    tip._markDirty();
+    this.mobject._markDirty();
     super.finish();
   }
 }
