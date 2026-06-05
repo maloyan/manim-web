@@ -330,7 +330,7 @@ export class Paragraph extends Text {
   /**
    * Create a copy of this Paragraph mobject
    */
-  protected override _createCopy(): Paragraph {
+  override copy(): Paragraph {
     const copy = new Paragraph({
       text: this._text,
       fontSize: this._fontSize,
@@ -345,6 +345,7 @@ export class Paragraph extends Text {
       width: this._maxWidth,
       alignment: this._alignment,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
     this._carryVisualSizeTo(copy);
     return copy;
   }

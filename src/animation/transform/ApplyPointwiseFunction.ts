@@ -64,32 +64,23 @@ export class ApplyPointwiseFunction extends Animation {
         const startPoints = mob.getLocalPoints();
         if (startPoints.length === 0) continue;
 
-        // Get the Three.js object to transform local ↔ world space.
-        // This is needed because rotated objects (e.g. y-axis rotated 90°)
-        // store points in local space, but the user's function expects
-        // world-space coordinates.
-        const threeObj = (mob as Mobject)._threeObject;
-        let worldMatrix: THREE.Matrix4 | null = null;
-        let inverseWorld: THREE.Matrix4 | null = null;
+        // Transform local ↔ world space so the user's function sees world
+        // coordinates (e.g. rotated objects store points in local space).
+        // Use the mobject's logical world matrix, not _threeObject.matrixWorld:
+        // the Three.js node is only populated during _syncToThree, so a
+        // dirty/unsynced mobject reports an identity matrix and drops the
+        // position offset baked into getLocalPoints() — getPoints() composes
+        // this same matrix.
+        const worldMatrix = (mob as Mobject)._worldMatrix();
+        const inverseWorld = worldMatrix.clone().invert();
 
-        if (threeObj) {
-          threeObj.updateWorldMatrix(true, false);
-          worldMatrix = threeObj.matrixWorld;
-          inverseWorld = worldMatrix.clone().invert();
-        }
-
-        let targetPoints: number[][];
-        if (worldMatrix && inverseWorld) {
-          // Transform local → world, apply func, then world → local
-          targetPoints = startPoints.map((p) => {
-            vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
-            const worldResult = this.func([vec.x, vec.y, vec.z]);
-            vec.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld!);
-            return [vec.x, vec.y, vec.z];
-          });
-        } else {
-          targetPoints = startPoints.map((p) => this.func([...p]));
-        }
+        // Transform local → world, apply func, then world → local
+        const targetPoints = startPoints.map((p) => {
+          vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
+          const worldResult = this.func([vec.x, vec.y, vec.z]);
+          vec.set(worldResult[0], worldResult[1], worldResult[2]).applyMatrix4(inverseWorld);
+          return [vec.x, vec.y, vec.z];
+        });
 
         this._snapshots.push({ mob, startPoints, targetPoints });
       }

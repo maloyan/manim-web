@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Options for creating a Cylinder
@@ -54,7 +55,7 @@ export interface CylinderOptions {
  * });
  * ```
  */
-export class Cylinder extends Mobject {
+export class Cylinder extends Mobject3D {
   protected _radiusTop: number;
   protected _radiusBottom: number;
   protected _height: number;
@@ -270,11 +271,8 @@ export class Cylinder extends Mobject {
     );
   }
 
-  /**
-   * Create a copy of this Cylinder
-   */
-  protected override _createCopy(): Cylinder {
-    return new Cylinder({
+  override copy(): Cylinder {
+    const copy = new Cylinder({
       radiusTop: this._radiusTop,
       radiusBottom: this._radiusBottom,
       height: this._height,
@@ -285,6 +283,8 @@ export class Cylinder extends Mobject {
       openEnded: this._openEnded,
       wireframe: this._wireframe,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -371,11 +371,8 @@ export class Cone extends Cylinder {
     return this;
   }
 
-  /**
-   * Create a copy of this Cone
-   */
-  protected override _createCopy(): Cone {
-    return new Cone({
+  override copy(): Cone {
+    const copy = new Cone({
       radius: this._radiusBottom,
       height: this._height,
       center: this._centerPoint,
@@ -385,5 +382,7 @@ export class Cone extends Cylinder {
       openEnded: this._openEnded,
       wireframe: this._wireframe,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

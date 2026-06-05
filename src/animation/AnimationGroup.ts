@@ -22,12 +22,17 @@ export interface AnimationGroupOptions {
  * The actual mobjects are handled by the child animations.
  */
 class GroupMobject extends Mobject {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    return this._flattenAsContainer(worldMatrix);
+  }
   protected _createThreeObject(): THREE.Object3D {
     return new THREE.Group();
   }
 
-  protected _createCopy(): Mobject {
-    return new GroupMobject();
+  override copy(): Mobject {
+    const clone = new GroupMobject();
+    this._copyBaseAttributesInto(clone);
+    return clone;
   }
 }
 

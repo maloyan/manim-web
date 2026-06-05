@@ -430,11 +430,16 @@ export class NewtonFractal extends Mobject {
   }
 
   // -----------------------------------------------------------------------
+  // Flatten: shader-quad geometry can't bake into points, so absolutize.
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    return this._flattenAsMesh(worldMatrix);
+  }
+
   // Copy
   // -----------------------------------------------------------------------
 
-  protected override _createCopy(): NewtonFractal {
-    return new NewtonFractal({
+  override copy(): NewtonFractal {
+    const copy = new NewtonFractal({
       width: this._width,
       height: this._height,
       center: [...this._center],
@@ -446,6 +451,8 @@ export class NewtonFractal extends Mobject {
       lightness: this._lightness,
       opacity: this._opacity,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 
   // -----------------------------------------------------------------------

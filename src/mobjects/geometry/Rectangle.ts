@@ -40,7 +40,6 @@ export interface RectangleOptions {
 export class Rectangle extends VMobject {
   protected _width: number;
   protected _height: number;
-  protected _centerPoint: Vector3Tuple;
 
   constructor(options: RectangleOptions = {}) {
     super();
@@ -56,7 +55,8 @@ export class Rectangle extends VMobject {
 
     this._width = width;
     this._height = height;
-    this._centerPoint = [...center];
+
+    this.position.set(center[0], center[1], center[2]);
 
     this.setColor(color);
     this.fillOpacity = fillOpacity;
@@ -66,36 +66,29 @@ export class Rectangle extends VMobject {
   }
 
   /**
-   * Generate the rectangle points as 4 line segments
+   * Generate the rectangle points centered at local origin.
    */
   private _generatePoints(): void {
     const halfWidth = this._width / 2;
     const halfHeight = this._height / 2;
-    const [cx, cy, cz] = this._centerPoint;
 
-    // Define corners
-    const topLeft: number[] = [cx - halfWidth, cy + halfHeight, cz];
-    const topRight: number[] = [cx + halfWidth, cy + halfHeight, cz];
-    const bottomRight: number[] = [cx + halfWidth, cy - halfHeight, cz];
-    const bottomLeft: number[] = [cx - halfWidth, cy - halfHeight, cz];
+    const topLeft: number[] = [-halfWidth, halfHeight, 0];
+    const topRight: number[] = [halfWidth, halfHeight, 0];
+    const bottomRight: number[] = [halfWidth, -halfHeight, 0];
+    const bottomLeft: number[] = [-halfWidth, -halfHeight, 0];
 
-    // Build path as 4 line segments (each as a degenerate cubic Bezier)
     const points: number[][] = [];
 
-    // Helper to add a line segment as cubic Bezier
     const addLineSegment = (p0: number[], p1: number[]) => {
       const dx = p1[0] - p0[0];
       const dy = p1[1] - p0[1];
       const dz = p1[2] - p0[2];
 
-      // If this is not the first segment, skip the anchor (it's shared)
       if (points.length > 0) {
-        // Control points
         points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
         points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
         points.push([...p1]);
       } else {
-        // First segment includes anchor
         points.push([...p0]);
         points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
         points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
@@ -103,13 +96,9 @@ export class Rectangle extends VMobject {
       }
     };
 
-    // Top edge: topLeft -> topRight
     addLineSegment(topLeft, topRight);
-    // Right edge: topRight -> bottomRight
     addLineSegment(topRight, bottomRight);
-    // Bottom edge: bottomRight -> bottomLeft
     addLineSegment(bottomRight, bottomLeft);
-    // Left edge: bottomLeft -> topLeft (close)
     addLineSegment(bottomLeft, topLeft);
 
     this.setPoints3D(points);
@@ -148,18 +137,18 @@ export class Rectangle extends VMobject {
   }
 
   /**
-   * Get the center of the rectangle
+   * Get the center of the rectangle (world space)
    */
   getRectCenter(): Vector3Tuple {
-    return [...this._centerPoint];
+    return this.getCenter();
   }
 
   /**
    * Set the center of the rectangle
    */
   setRectCenter(value: Vector3Tuple): this {
-    this._centerPoint = [...value];
-    this._generatePoints();
+    this.position.set(value[0], value[1], value[2]);
+    this._markDirty();
     return this;
   }
 
@@ -183,7 +172,7 @@ export class Rectangle extends VMobject {
   getCorner(corner: 'topLeft' | 'topRight' | 'bottomRight' | 'bottomLeft'): Vector3Tuple {
     const halfWidth = this._width / 2;
     const halfHeight = this._height / 2;
-    const [cx, cy, cz] = this._centerPoint;
+    const [cx, cy, cz] = this.getCenter();
 
     switch (corner) {
       case 'topLeft':
@@ -203,42 +192,47 @@ export class Rectangle extends VMobject {
    * Get the top edge center
    */
   getTop(): Vector3Tuple {
-    return [this._centerPoint[0], this._centerPoint[1] + this._height / 2, this._centerPoint[2]];
+    const [cx, cy, cz] = this.getCenter();
+    return [cx, cy + this._height / 2, cz];
   }
 
   /**
    * Get the bottom edge center
    */
   getBottom(): Vector3Tuple {
-    return [this._centerPoint[0], this._centerPoint[1] - this._height / 2, this._centerPoint[2]];
+    const [cx, cy, cz] = this.getCenter();
+    return [cx, cy - this._height / 2, cz];
   }
 
   /**
    * Get the left edge center
    */
   getLeft(): Vector3Tuple {
-    return [this._centerPoint[0] - this._width / 2, this._centerPoint[1], this._centerPoint[2]];
+    const [cx, cy, cz] = this.getCenter();
+    return [cx - this._width / 2, cy, cz];
   }
 
   /**
    * Get the right edge center
    */
   getRight(): Vector3Tuple {
-    return [this._centerPoint[0] + this._width / 2, this._centerPoint[1], this._centerPoint[2]];
+    const [cx, cy, cz] = this.getCenter();
+    return [cx + this._width / 2, cy, cz];
   }
 
   /**
    * Create a copy of this Rectangle
    */
-  protected override _createCopy(): Rectangle {
-    return new Rectangle({
+  override copy(): Rectangle {
+    const clone = new Rectangle({
       width: this._width,
       height: this._height,
-      center: this._centerPoint,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false });
+    return clone;
   }
 }
 
@@ -270,13 +264,14 @@ export class Square extends Rectangle {
   /**
    * Create a copy of this Square
    */
-  protected override _createCopy(): Square {
-    return new Square({
+  override copy(): Square {
+    const clone = new Square({
       sideLength: this.getWidth(),
-      center: this.getRectCenter(),
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false });
+    return clone;
   }
 }

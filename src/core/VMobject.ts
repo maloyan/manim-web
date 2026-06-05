@@ -10,19 +10,12 @@
  */
 
 import * as THREE from 'three';
-import { Vector3Tuple } from './Mobject';
+import { Mobject, Vector3Tuple } from './Mobject';
 import { isVMobject } from './MobjectTypes';
 import { VMobjectRendering } from './VMobjectRendering';
 import { lerp, lerpPoint as lerpPoint3D, signedArea2DFromStride } from '../utils/math';
 import type { Point } from './VMobjectCurves';
 
-import {
-  isNearlyLinear,
-  pointInPolygon,
-  sampleBezierOutline,
-  sampleBezierPath,
-  isClosedPath,
-} from './VMobjectGeometry';
 import { resamplePointList3D } from './VMobjectTransformAlignment';
 import { computePointBounds } from './PointBounds';
 
@@ -112,35 +105,47 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Get all points defining this VMobject as 3D arrays in local (parent) space.
+   * Own points in parent-local space — raw _points3D, no ancestor transforms.
    *
-   * These are the raw `_points3D` values — no ancestor transforms applied.
-   * For world-space coordinates (full parent S/R/T chain), use {@link getPoints}.
-   *
-   * @post result[i] === _points3D[i]  (copy, not reference)
-   * @returns Copy of the points array
+   * @post result[i] === _points3D[i]
    */
   getLocalPoints(): number[][] {
     return this._points3D.map((p) => [...p]);
   }
 
   /**
-   * Get all points defining this VMobject in world coordinates.
-   *
-   * Composes this node's transform with every ancestor's (via {@link _computeWorldMatrix}).
-   * The render-only z-layering offset applied in `_syncToThree` is excluded.
-   * For local (parent-space) coordinates, use {@link getLocalPoints}.
+   * Own points in world coordinates (full ancestor S/R/T chain; render-only
+   * z-layering offset excluded). Children's points are not included — use
+   * {@link getAllPoints} for the full subtree.
    *
    * @post result[i] === worldMatrix * _points3D[i]
    * @post this.parent === null => result === getLocalPoints()
    */
   getPoints(): number[][] {
-    const worldMatrix = this._computeWorldMatrix();
+    const worldMatrix = this._worldMatrix();
     const scratch = new THREE.Vector3();
     return this._points3D.map((p) => {
       scratch.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
       return [scratch.x, scratch.y, scratch.z];
     });
+  }
+
+  /**
+   * World-space points from this node and all VMobject descendants recursively.
+   *
+   * Equivalent to Python manim's get_all_points(). Use this for bounding-box
+   * and center queries that must cover the full subtree.
+   *
+   * @post result === flatMap(this + vmobjectDescendants, m => m.getPoints())
+   */
+  getAllPoints(): number[][] {
+    const result: number[][] = [];
+    const collect = (mob: Mobject) => {
+      if (mob instanceof VMobject) result.push(...mob.getPoints());
+      for (const child of mob.children) collect(child);
+    };
+    collect(this);
+    return result;
   }
 
   /**
@@ -163,7 +168,7 @@ export class VMobject extends VMobjectRendering {
       p[1] + aboutPoint[1],
       p[2] + aboutPoint[2],
     ]);
-    const inverseWorld = this._computeWorldMatrix().clone().invert();
+    const inverseWorld = this._worldMatrix().clone().invert();
     const scratch = new THREE.Vector3();
     const localPts = worldResult.map((p) => {
       scratch.set(p[0], p[1], p[2]).applyMatrix4(inverseWorld);
@@ -333,67 +338,32 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Bring this VMobject into canonical form without moving any geometry.
+   * Flatten this VMobject into absolute coordinates: bake `worldMatrix` into
+   * `_points3D` (translation, rotation and scale together — one matrix, no
+   * inverse), reset the local transform to identity, and recurse into children.
    *
-   * @post !this.isEmpty() => old.getPoints()[i] === this.getPoints()[i]
-   * @post !this.isEmpty() => this.position === world-space bbox center of _points3D
-   * @post !this.isEmpty() => _points3D bbox center === [0,0,0]
-   * @post this.rotation === Euler(0,0,0) && this.scaleVector === Vector3(1,1,1)
-   * @post child.rotation === Euler(0,0,0) && child.scaleVector === Vector3(1,1,1)  // for every descendant
+   * Seeds with this node's own matrix when called with no argument, so the bake
+   * preserves world appearance whether or not there are ancestors.
+   *
+   * @post !this.isEmpty() => old.getPoints()[i] === this.getPoints()[i]  // world geometry preserved
+   * @post this._computeOwnMatrix() === Identity
    */
-  override normalizeTransform(): this {
-    super.normalizeTransform();
-    this._markDirtyUpward();
-    return this;
-  }
-
-  /**
-   * Bake scale and rotation into `_points3D` before children are propagated.
-   * @post _points3D[i] === old.scaleVector * (old.rotation * old._points3D[i])
-   * @post this.scaleVector === old.scaleVector && this.rotation === old.rotation  // caller resets these
-   * @note no-op when _points3D.length === 0 (e.g. VGroup)
-   */
-  protected override _bakeOwnGeometry(): void {
-    if (this._points3D.length === 0) return;
-
-    const sx = this.scaleVector.x,
-      sy = this.scaleVector.y,
-      sz = this.scaleVector.z;
-    if (sx !== 1 || sy !== 1 || sz !== 1) {
-      for (const p of this._points3D) {
-        p[0] *= sx;
-        p[1] *= sy;
-        p[2] *= sz;
-      }
-    }
-
-    const rx = this.rotation.x,
-      ry = this.rotation.y,
-      rz = this.rotation.z;
-    if (rx !== 0 || ry !== 0 || rz !== 0) {
-      const mat = new THREE.Matrix4().makeRotationFromEuler(this.rotation);
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    if (this._points3D.length > 0) {
       const v = new THREE.Vector3();
       for (const p of this._points3D) {
-        v.set(p[0], p[1], p[2]).applyMatrix4(mat);
+        v.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
         p[0] = v.x;
         p[1] = v.y;
         p[2] = v.z;
       }
+      // Points were mutated in place; flag the Three.js geometry for rebuild so
+      // bounds/center (read from the BufferGeometry) don't go stale.
+      this._geometryDirty = true;
     }
-  }
-
-  /**
-   * Shift `_points3D` by `-localCenter`, then delegate to super to shift children.
-   * @pre  localCenter === this.getLocalCenter() - this.position
-   * @post _points3D[i] === old._points3D[i] - localCenter
-   */
-  protected override _recenterLocalGeometry(localCenter: THREE.Vector3): void {
-    for (const p of this._points3D) {
-      p[0] -= localCenter.x;
-      p[1] -= localCenter.y;
-      p[2] -= localCenter.z;
-    }
-    super._recenterLocalGeometry(localCenter);
+    this._flattenAsContainer(worldMatrix);
+    this._markDirtyUpward();
+    return this;
   }
 
   // -----------------------------------------------------------------------
@@ -662,43 +632,40 @@ export class VMobject extends VMobjectRendering {
     return resamplePointList3D(points, targetCount);
   }
 
-  // -----------------------------------------------------------------------
-  // Copy / clone
-  // -----------------------------------------------------------------------
-
-  /**
-   * Create a copy of this VMobject.
-   * Subclasses override _createCopy() to produce an instance of the right
-   * concrete type (Circle, Square, etc.), but those constructors typically
-   * regenerate points from their own parameters (radius, sideLength, ...).
-   * After a Transform animation has morphed the point data, the regenerated
-   * points no longer match the actual visual state.  We therefore always
-   * overwrite the clone's _points3D with the source's current data.
-   */
-  override copy(): VMobject {
-    const clone = super.copy() as VMobject;
-    // Overwrite points so they reflect current (possibly morphed) state,
-    // not whatever _createCopy()'s constructor regenerated.
+  protected _copyBaseAttributesInto(
+    clone: VMobject,
+    options?: { copyChildren?: boolean; copyPosition?: boolean },
+  ): void {
+    super._copyBaseAttributesInto(clone, options);
     clone._points3D = this._points3D.map((p) => [...p]);
     clone._visiblePointCount = this._visiblePointCount;
     if (this._transformSubpathLengths !== undefined) {
       clone._transformSubpathLengths = [...this._transformSubpathLengths];
     }
     clone._geometryDirty = true;
-    return clone;
   }
 
+  // -----------------------------------------------------------------------
+  // Copy / clone
+  // -----------------------------------------------------------------------
+
   /**
-   * Create a copy of this VMobject
+   * Copy this VMobject, preserving point data state after morphs/transforms.
+   *
+   * For subclasses (Circle, Square, etc.): constructors regenerate points from
+   * parameters (radius, sideLength, ...). After a Transform animation has morphed
+   * the data, the regenerated points no longer match the visual state. Subclasses
+   * must override copy(), build a new instance with their constructor params, call
+   * _copyBaseAttributesInto, and then overwrite _points3D with the current state.
+   *
+   * For direct VMobject (rare): just builds and copies.
    */
-  protected override _createCopy(): VMobject {
-    const vmobject = new VMobject();
-    vmobject._points3D = this._points3D.map((p) => [...p]);
-    vmobject._visiblePointCount = this._visiblePointCount;
-    if (this._transformSubpathLengths !== undefined) {
-      vmobject._transformSubpathLengths = [...this._transformSubpathLengths];
-    }
-    return vmobject;
+  override copy(): VMobject {
+    const clone = new VMobject();
+    this._copyBaseAttributesInto(clone);
+    // Overwrite points so they reflect current (possibly morphed) state,
+    // not whatever the constructor regenerated.
+    return clone;
   }
 
   // -----------------------------------------------------------------------
@@ -729,10 +696,54 @@ export class VMobject extends VMobjectRendering {
   }
 
   /**
-   * Get world-space center from world-point bounds.
+   * World-space bounding box computed from bezier control points.
+   *
+   * Overrides Mobject.getBounds() to avoid Box3.setFromObject(), which does
+   * not work for Line2 geometries. See PointBounds.ts for the full explanation.
+   *
+   * @pre !this.isEmpty()
+   * @post result.min <= result.max component-wise
+   */
+  override getBounds(): {
+    min: { x: number; y: number; z: number };
+    max: { x: number; y: number; z: number };
+  } {
+    const box = new THREE.Box3();
+    const tempBox = new THREE.Box3();
+    const tempMin = new THREE.Vector3();
+    const tempMax = new THREE.Vector3();
+    for (const p of this.getAllPoints()) box.expandByPoint(tempMin.set(p[0], p[1], p[2]));
+    // Non-VMobject children use Three.js path.
+    for (const child of this.children) {
+      if (!(child instanceof VMobject)) {
+        const b = child.getBounds();
+        box.union(
+          tempBox.set(
+            tempMin.set(b.min.x, b.min.y, b.min.z),
+            tempMax.set(b.max.x, b.max.y, b.max.z),
+          ),
+        );
+      }
+    }
+    if (box.isEmpty()) {
+      throw new Error(`VMobject.getBounds(): ${this.constructor.name} (${this.id}) has no points.`);
+    }
+    return {
+      min: { x: box.min.x, y: box.min.y, z: box.min.z },
+      max: { x: box.max.x, y: box.max.y, z: box.max.z },
+    };
+  }
+
+  /**
+   * World-space bounding-box center derived from getAllPoints().
+   *
+   * Matches Python manim: the center is always the midpoint of the axis-aligned
+   * bounding box of every point in the family — no per-shape construction-point
+   * overrides. For the vertex centroid (which differs for asymmetric shapes like
+   * sectors), use {@link getCenterOfMass}.
    */
   override getCenter(): Vector3Tuple {
-    const worldPoints = this.getPoints();
+    const worldPoints = this.getAllPoints();
     const bounds = computePointBounds(worldPoints);
     if (!bounds) {
       return [this.position.x, this.position.y, this.position.z];
@@ -743,6 +754,38 @@ export class VMobject extends VMobjectRendering {
       (bounds.min.y + bounds.max.y) / 2,
       (bounds.min.z + bounds.max.z) / 2,
     ];
+  }
+
+  /**
+   * Get center of mass in world coordinates by averaging all world-space points.
+   *
+   * Unlike {@link getCenter} (which uses bbox midpoint), this is the true
+   * centroid — equal to getCenter() only when points are symmetrically distributed.
+   */
+  getCenterOfMass(): Vector3Tuple {
+    const pts = this.getAllPoints();
+    if (pts.length === 0) {
+      throw new Error('getCenterOfMass: VMobject has 0 points');
+    }
+    let sx = 0,
+      sy = 0,
+      sz = 0;
+    for (const p of pts) {
+      sx += p[0];
+      sy += p[1];
+      sz += p[2];
+    }
+    const n = pts.length;
+    return [sx / n, sy / n, sz / n];
+  }
+
+  moveCenterOfMassTo(target: Vector3Tuple): this {
+    this.shift([
+      target[0] - this.getCenterOfMass()[0],
+      target[1] - this.getCenterOfMass()[1],
+      target[2] - this.getCenterOfMass()[2],
+    ]);
+    return this;
   }
 
   /**
@@ -811,40 +854,6 @@ export class VMobject extends VMobjectRendering {
     this._markDirtyUpward();
 
     return this;
-  }
-
-  // -----------------------------------------------------------------------
-  // Geometry utility wrappers (delegate to standalone functions)
-  // -----------------------------------------------------------------------
-
-  /** @internal Check if a Bezier segment is nearly linear. */
-  protected static _isNearlyLinear(
-    p0: number[],
-    p1: number[],
-    p2: number[],
-    p3: number[],
-  ): boolean {
-    return isNearlyLinear(p0, p1, p2, p3);
-  }
-
-  /** @internal Ray-casting point-in-polygon test. */
-  protected static _pointInPolygon(point: number[], ring: number[][]): boolean {
-    return pointInPolygon(point, ring);
-  }
-
-  /** @internal Sample Bezier outline for earcut triangulation. */
-  protected _sampleBezierOutline(points: number[][], samplesPerSegment: number): number[][] {
-    return sampleBezierOutline(points, samplesPerSegment);
-  }
-
-  /** @internal Sample Bezier path for stroke rendering. */
-  protected _sampleBezierPath(points: number[][], samplesPerSegment?: number): number[][] {
-    return sampleBezierPath(points, samplesPerSegment);
-  }
-
-  /** @internal Check if Bezier control points form a closed path. */
-  protected _isClosedPath(points3D: number[][]): boolean {
-    return isClosedPath(points3D);
   }
 
   // -----------------------------------------------------------------------

@@ -249,14 +249,16 @@ export class Polygon extends VMobject {
   /**
    * Create a copy of this Polygon
    */
-  protected override _createCopy(): Polygon {
-    return new Polygon({
+  override copy(): Polygon {
+    const clone = new Polygon({
       vertices: this._vertices,
       closed: this._closed,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    return clone;
   }
 }
 

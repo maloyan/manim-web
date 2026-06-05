@@ -8,7 +8,7 @@ describe('Circle', () => {
   it('constructs with default options', () => {
     const c = new Circle();
     expect(c.getRadius()).toBe(1);
-    expect(c.getCircleCenter()).toEqual([0, 0, 0]);
+    expect(c.getCenter()).toEqual([0, 0, 0]);
     expect(c.color).toBe(BLUE);
     expect(c.fillOpacity).toBe(0);
   });
@@ -16,7 +16,7 @@ describe('Circle', () => {
   it('constructs with custom radius and center', () => {
     const c = new Circle({ radius: 3, center: [1, 2, 0] });
     expect(c.getRadius()).toBe(3);
-    expect(c.getCircleCenter()).toEqual([1, 2, 0]);
+    expect(c.getCenter()).toEqual([1, 2, 0]);
   });
 
   it('getCircumference returns 2*PI*r', () => {
@@ -57,7 +57,7 @@ describe('Circle', () => {
   it('setCircleCenter updates center', () => {
     const c = new Circle();
     c.setCircleCenter([3, 4, 0]);
-    expect(c.getCircleCenter()).toEqual([3, 4, 0]);
+    expect(c.getCenter()).toEqual([3, 4, 0]);
   });
 
   it('setRadius takes the visible radius even when scaled', () => {
@@ -97,7 +97,7 @@ describe('Circle', () => {
   it('shift updates center', () => {
     const c = new Circle({ center: [0, 0, 0] });
     c.shift([1, 2, 0]);
-    expect(c.getCircleCenter()).toEqual([1, 2, 0]);
+    expect(c.getCenter()).toEqual([1, 2, 0]);
   });
 
   it('generates Bezier points (13 points for 4 cubic segments)', () => {
@@ -303,7 +303,7 @@ describe('Arc – uncovered branches', () => {
     expect(start[1]).toBeCloseTo(4, 10);
   });
 
-  it('_createCopy returns independent copy', () => {
+  it('copy() returns independent copy', () => {
     const a = new Arc({
       radius: 3,
       startAngle: Math.PI / 4,

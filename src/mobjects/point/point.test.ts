@@ -107,11 +107,11 @@ describe('PMobject', () => {
     expect(center[2]).toBeCloseTo(0);
   });
 
-  it('centerOfMass returns centroid of points', () => {
+  it('getCenterOfMass returns centroid of points', () => {
     const pm = new PMobject({
       points: [{ position: [0, 0, 0] }, { position: [2, 0, 0] }, { position: [0, 2, 0] }],
     });
-    const com = pm.centerOfMass();
+    const com = pm.getCenterOfMass();
     expect(com[0]).toBeCloseTo(2 / 3);
     expect(com[1]).toBeCloseTo(2 / 3);
     expect(com[2]).toBeCloseTo(0);

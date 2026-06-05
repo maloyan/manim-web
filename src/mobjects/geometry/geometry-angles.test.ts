@@ -176,7 +176,7 @@ describe('Angle', () => {
     );
   });
 
-  it('_createCopy produces an equivalent Angle', () => {
+  it('copy() produces an equivalent Angle', () => {
     const a = new Angle({ points: PTS_90 }, { radius: 0.8 });
     const copy = a.copy();
     expect(copy.getRadius()).toBe(0.8);

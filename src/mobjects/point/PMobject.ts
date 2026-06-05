@@ -144,7 +144,7 @@ export class PMobject extends Mobject {
    * For world points with color/opacity, use {@link getPointsData}.
    */
   getPoints(): number[][] {
-    const worldMatrix = this._computeWorldMatrix();
+    const worldMatrix = this._worldMatrix();
     const scratch = new THREE.Vector3();
     return this._points.map((p) => {
       scratch.set(p.position[0], p.position[1], p.position[2]).applyMatrix4(worldMatrix);
@@ -158,7 +158,7 @@ export class PMobject extends Mobject {
    * For untransformed local-space coordinates, use {@link getLocalPoints}.
    */
   getPointsData(): PointData[] {
-    const worldMatrix = this._computeWorldMatrix();
+    const worldMatrix = this._worldMatrix();
     const scratch = new THREE.Vector3();
     return this._points.map((p) => {
       scratch.set(p.position[0], p.position[1], p.position[2]).applyMatrix4(worldMatrix);
@@ -168,15 +168,6 @@ export class PMobject extends Mobject {
         opacity: p.opacity,
       };
     });
-  }
-
-  /**
-   * Project a single local-space point into world space, walking the parent chain.
-   */
-  protected _localToWorld(local: Vector3Tuple): Vector3Tuple {
-    const worldMatrix = this._computeWorldMatrix();
-    const v = new THREE.Vector3(local[0], local[1], local[2]).applyMatrix4(worldMatrix);
-    return [v.x, v.y, v.z];
   }
 
   /**
@@ -199,7 +190,7 @@ export class PMobject extends Mobject {
       p[1] + aboutPoint[1],
       p[2] + aboutPoint[2],
     ]);
-    const inverseWorld = this._computeWorldMatrix().clone().invert();
+    const inverseWorld = this._worldMatrix().clone().invert();
     const scratch = new THREE.Vector3();
     worldResult.forEach((p, i) => {
       scratch.set(p[0], p[1], p[2]).applyMatrix4(inverseWorld);
@@ -317,42 +308,56 @@ export class PMobject extends Mobject {
     return [sumX / count, sumY / count, sumZ / count];
   }
 
-  protected override _bakeOwnGeometry(): void {
-    if (this._points.length === 0) return;
-
-    const sx = this.scaleVector.x;
-    const sy = this.scaleVector.y;
-    const sz = this.scaleVector.z;
-    if (sx !== 1 || sy !== 1 || sz !== 1) {
-      for (const point of this._points) {
-        point.position[0] *= sx;
-        point.position[1] *= sy;
-        point.position[2] *= sz;
-      }
+  /**
+   * Get center of mass in world coordinates by averaging all world-space points.
+   *
+   * Unlike {@link getCenter} (which uses bbox midpoint), this is the true
+   * centroid — equal to getCenter() only when points are symmetrically distributed.
+   */
+  getCenterOfMass(): Vector3Tuple {
+    const pts = this.getPoints();
+    if (pts.length === 0) {
+      throw new Error('getCenterOfMass: PMobject has 0 points');
     }
+    let sx = 0,
+      sy = 0,
+      sz = 0;
+    for (const p of pts) {
+      sx += p[0];
+      sy += p[1];
+      sz += p[2];
+    }
+    const n = pts.length;
+    return [sx / n, sy / n, sz / n];
+  }
 
-    const rx = this.rotation.x;
-    const ry = this.rotation.y;
-    const rz = this.rotation.z;
-    if (rx !== 0 || ry !== 0 || rz !== 0) {
-      const mat = new THREE.Matrix4().makeRotationFromEuler(this.rotation);
+  moveCenterOfMassTo(target: Vector3Tuple): this {
+    this.shift([
+      target[0] - this.getCenterOfMass()[0],
+      target[1] - this.getCenterOfMass()[1],
+      target[2] - this.getCenterOfMass()[2],
+    ]);
+    return this;
+  }
+
+  /**
+   * Flatten into absolute coordinates: bake `worldMatrix` into every point, then
+   * reset the local transform to identity and recurse into children.
+   *
+   * @post old.getPoints()[i] === this.getPoints()[i]  // world geometry preserved
+   * @post this._computeOwnMatrix() === Identity
+   */
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    if (this._points.length > 0) {
       const v = new THREE.Vector3();
       for (const point of this._points) {
-        v.set(point.position[0], point.position[1], point.position[2]).applyMatrix4(mat);
+        v.set(point.position[0], point.position[1], point.position[2]).applyMatrix4(worldMatrix);
         point.position[0] = v.x;
         point.position[1] = v.y;
         point.position[2] = v.z;
       }
     }
-  }
-
-  protected override _recenterLocalGeometry(localCenter: THREE.Vector3): void {
-    for (const point of this._points) {
-      point.position[0] -= localCenter.x;
-      point.position[1] -= localCenter.y;
-      point.position[2] -= localCenter.z;
-    }
-    super._recenterLocalGeometry(localCenter);
+    return this._flattenAsContainer(worldMatrix);
   }
 
   /**
@@ -423,16 +428,15 @@ export class PMobject extends Mobject {
     }
   }
 
-  /**
-   * Create a copy of this PMobject
-   */
-  protected override _createCopy(): PMobject {
-    return new PMobject({
+  override copy(): PMobject {
+    const copy = new PMobject({
       points: this.getLocalPoints(),
       color: this.color,
       opacity: this._opacity,
       pointSize: this._pointSize,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 
   /**

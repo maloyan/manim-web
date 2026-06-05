@@ -561,16 +561,11 @@ export class Matrix extends VGroup {
     return this._entries[0]?.length ?? 0;
   }
 
-  /**
-   * Create a copy of this Matrix
-   */
-  protected override _createCopy(): VMobject {
-    // Deep copy the data
+  override copy(): Matrix {
     const dataCopy = this._data.map((row) =>
       row.map((val) => (val instanceof Mobject ? val.copy() : val)),
     );
-
-    return new Matrix(dataCopy, {
+    const copy = new Matrix(dataCopy, {
       bracketType: this._bracketType,
       vBuff: this._vBuff,
       hBuff: this._hBuff,
@@ -581,6 +576,8 @@ export class Matrix extends VGroup {
       fontSize: this._fontSize,
       position: [this.position.x, this.position.y, this.position.z],
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    return copy;
   }
 }
 
@@ -608,13 +605,10 @@ export class IntegerMatrix extends Matrix {
     super(intData, options);
   }
 
-  /**
-   * Create a copy of this IntegerMatrix
-   */
-  protected override _createCopy(): VMobject {
+  override copy(): IntegerMatrix {
     const dataCopy = this._data.map((row) => row.map((val) => (typeof val === 'number' ? val : 0)));
 
-    return new IntegerMatrix(dataCopy as number[][], {
+    const copy = new IntegerMatrix(dataCopy as number[][], {
       bracketType: this._bracketType,
       vBuff: this._vBuff,
       hBuff: this._hBuff,
@@ -625,6 +619,8 @@ export class IntegerMatrix extends Matrix {
       fontSize: this._fontSize,
       position: [this.position.x, this.position.y, this.position.z],
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    return copy;
   }
 }
 
@@ -660,16 +656,12 @@ export class DecimalMatrix extends Matrix {
     this._numDecimalPlaces = numDecimalPlaces;
   }
 
-  /**
-   * Create a copy of this DecimalMatrix
-   */
-  protected override _createCopy(): VMobject {
-    // Parse the formatted strings back to numbers
+  override copy(): DecimalMatrix {
     const dataCopy = this._data.map((row) =>
       row.map((val) => (typeof val === 'string' ? parseFloat(val) : (val as number))),
     );
 
-    return new DecimalMatrix(dataCopy as number[][], {
+    const copy = new DecimalMatrix(dataCopy as number[][], {
       bracketType: this._bracketType,
       vBuff: this._vBuff,
       hBuff: this._hBuff,
@@ -681,6 +673,8 @@ export class DecimalMatrix extends Matrix {
       numDecimalPlaces: this._numDecimalPlaces,
       position: [this.position.x, this.position.y, this.position.z],
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    return copy;
   }
 }
 
@@ -716,15 +710,12 @@ export class MobjectMatrix extends Matrix {
     return super._createEntry(value);
   }
 
-  /**
-   * Create a copy of this MobjectMatrix
-   */
-  protected override _createCopy(): VMobject {
+  override copy(): MobjectMatrix {
     const dataCopy = this._data.map((row) =>
       row.map((val) => (val instanceof Mobject ? val.copy() : val)),
     ) as Mobject[][];
 
-    return new MobjectMatrix(dataCopy, {
+    const copy = new MobjectMatrix(dataCopy, {
       bracketType: this._bracketType,
       vBuff: this._vBuff,
       hBuff: this._hBuff,
@@ -735,5 +726,7 @@ export class MobjectMatrix extends Matrix {
       fontSize: this._fontSize,
       position: [this.position.x, this.position.y, this.position.z],
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    return copy;
   }
 }

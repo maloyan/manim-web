@@ -340,7 +340,9 @@ describe('Star', () => {
     expect(s.getNumPoints()).toBe(5);
     expect(s.getOuterRadius()).toBe(1);
     expect(s.getInnerRadius()).toBe(0.4);
-    expect(s.getStarCenter()).toEqual([0, 0, 0]);
+    // getStarCenter() reports the construction center (origin), distinct from the
+    // bbox getCenter() and the off-origin getCenterOfMass() point centroid.
+    expect(s.getCenterOfMass()).toEqual([0, 0, 0]);
   });
 
   it('throws with numPoints < 2', () => {

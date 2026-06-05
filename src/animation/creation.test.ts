@@ -78,12 +78,16 @@ describe('Create', () => {
 
   describe('Group with per-child opacities (opacity fallback)', () => {
     // Concrete Mobject subclass so Group.copy() can iterate children without
-    // tripping the missing-`_createCopy` warn fallback in Animation.begin().
+    // tripping the missing-`_copy` warn fallback in Animation.begin().
     class TestMobject extends Mobject {
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Object3D();
       }
-      protected _createCopy(): Mobject {
+      override getBounds() {
+        const p = this.position;
+        return { min: { x: p.x, y: p.y, z: p.z }, max: { x: p.x, y: p.y, z: p.z } };
+      }
+      override copy(): Mobject {
         return new TestMobject();
       }
     }

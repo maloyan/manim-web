@@ -3,6 +3,7 @@ import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
 import { orientation2D } from '../../utils/vectors';
+import * as THREE from 'three';
 
 /**
  * Options for creating a RoundedRectangle
@@ -43,7 +44,6 @@ export class RoundedRectangle extends VMobject {
   private _width: number;
   private _height: number;
   private _cornerRadius: number;
-  private _centerPoint: Vector3Tuple;
 
   constructor(options: RoundedRectangleOptions = {}) {
     super();
@@ -60,10 +60,9 @@ export class RoundedRectangle extends VMobject {
 
     this._width = width;
     this._height = height;
-    // Clamp corner radius to not exceed half of smaller dimension
     this._cornerRadius = Math.min(cornerRadius, width / 2, height / 2);
-    this._centerPoint = [...center];
 
+    this.position.set(center[0], center[1], center[2]);
     this.color = color;
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
@@ -79,7 +78,7 @@ export class RoundedRectangle extends VMobject {
     const halfWidth = this._width / 2;
     const halfHeight = this._height / 2;
     const r = this._cornerRadius;
-    const [cx, cy, cz] = this._centerPoint;
+    const [cx, cy, cz] = [0, 0, 0];
 
     // Kappa factor for 90-degree arc approximation
     const kappa = (4 / 3) * Math.tan(Math.PI / 8);
@@ -188,16 +187,6 @@ export class RoundedRectangle extends VMobject {
     this.setPoints3D(points);
   }
 
-  /**
-   * Get the width of the rounded rectangle
-   */
-  getWidth(): number {
-    return this._width;
-  }
-
-  /**
-   * Set the width of the rounded rectangle
-   */
   setWidth(value: number): this {
     this._width = value;
     this._cornerRadius = Math.min(this._cornerRadius, value / 2, this._height / 2);
@@ -205,16 +194,6 @@ export class RoundedRectangle extends VMobject {
     return this;
   }
 
-  /**
-   * Get the height of the rounded rectangle
-   */
-  getHeight(): number {
-    return this._height;
-  }
-
-  /**
-   * Set the height of the rounded rectangle
-   */
   setHeight(value: number): this {
     this._height = value;
     this._cornerRadius = Math.min(this._cornerRadius, this._width / 2, value / 2);
@@ -222,51 +201,37 @@ export class RoundedRectangle extends VMobject {
     return this;
   }
 
-  /**
-   * Get the corner radius
-   */
   getCornerRadius(): number {
     return this._cornerRadius;
   }
 
-  /**
-   * Set the corner radius
-   */
   setCornerRadius(value: number): this {
     this._cornerRadius = Math.min(value, this._width / 2, this._height / 2);
     this._generatePoints();
     return this;
   }
 
-  /**
-   * Get the center of the rounded rectangle
-   */
   getRoundedRectCenter(): Vector3Tuple {
-    return [...this._centerPoint];
+    return this.getCenter();
   }
 
-  /**
-   * Set the center of the rounded rectangle
-   */
   setRoundedRectCenter(value: Vector3Tuple): this {
-    this._centerPoint = [...value];
-    this._generatePoints();
+    this.position.set(value[0], value[1], value[2]);
+    this._markDirty();
     return this;
   }
 
-  /**
-   * Create a copy of this RoundedRectangle
-   */
-  protected override _createCopy(): RoundedRectangle {
-    return new RoundedRectangle({
+  override copy(): RoundedRectangle {
+    const clone = new RoundedRectangle({
       width: this._width,
       height: this._height,
       cornerRadius: this._cornerRadius,
-      center: this._centerPoint,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false });
+    return clone;
   }
 }
 
@@ -311,8 +276,8 @@ export class Star extends VMobject {
   private _numPoints: number;
   private _outerRadius: number;
   private _innerRadius: number;
-  private _centerPoint: Vector3Tuple;
   private _startAngle: number;
+  private _constructionCenter: Vector3Tuple;
 
   constructor(options: StarOptions = {}) {
     super();
@@ -335,14 +300,19 @@ export class Star extends VMobject {
     this._numPoints = numPoints;
     this._outerRadius = outerRadius;
     this._innerRadius = innerRadius;
-    this._centerPoint = [...center];
     this._startAngle = startAngle;
 
+    this.position.set(center[0], center[1], center[2]);
     this.color = color;
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
+    this._constructionCenter = center;
 
     this._generatePoints();
+    // The star is built around its center (a construction point at the local
+    // origin). Tracked separately so getStarCenter() reports that center rather
+    // than the off-origin point centroid, and survives normalizeTransform().
+    this._constructionCenter = [0, 0, 0];
   }
 
   /**
@@ -350,13 +320,12 @@ export class Star extends VMobject {
    */
   private _generatePoints(): void {
     const vertices: Vector3Tuple[] = [];
-    const [cx, cy, cz] = this._centerPoint;
-    const angleStep = Math.PI / this._numPoints; // Half of full step for alternating
+    const angleStep = Math.PI / this._numPoints;
 
     for (let i = 0; i < this._numPoints * 2; i++) {
       const angle = this._startAngle + i * angleStep;
       const radius = i % 2 === 0 ? this._outerRadius : this._innerRadius;
-      vertices.push([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle), cz]);
+      vertices.push([radius * Math.cos(angle), radius * Math.sin(angle), 0]);
     }
 
     // Convert vertices to points
@@ -389,68 +358,53 @@ export class Star extends VMobject {
     return this._numPoints;
   }
 
-  /**
-   * Get the outer radius
-   */
   getOuterRadius(): number {
     return this._outerRadius;
   }
-
-  /**
-   * Set the outer radius
-   */
   setOuterRadius(value: number): this {
     this._outerRadius = value;
     this._generatePoints();
     return this;
   }
-
-  /**
-   * Get the inner radius
-   */
   getInnerRadius(): number {
     return this._innerRadius;
   }
-
-  /**
-   * Set the inner radius
-   */
   setInnerRadius(value: number): this {
     this._innerRadius = value;
     this._generatePoints();
     return this;
   }
-
-  /**
-   * Get the center of the star
-   */
-  getStarCenter(): Vector3Tuple {
-    return [...this._centerPoint];
+  getCenterOfMass(): Vector3Tuple {
+    return this._localToWorld(this._constructionCenter);
   }
-
-  /**
-   * Set the center of the star
-   */
+  getStarCenter(): Vector3Tuple {
+    return this._localToWorld(this._constructionCenter);
+  }
   setStarCenter(value: Vector3Tuple): this {
-    this._centerPoint = [...value];
-    this._generatePoints();
+    this.moveCenterOfMassTo(value);
     return this;
   }
 
-  /**
-   * Create a copy of this Star
-   */
-  protected override _createCopy(): Star {
-    return new Star({
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    this._constructionCenter = new THREE.Vector3(...this._constructionCenter)
+      .applyMatrix4(worldMatrix)
+      .toArray();
+    super.normalizeTransform(worldMatrix);
+    return this;
+  }
+
+  override copy(): Star {
+    const clone = new Star({
       numPoints: this._numPoints,
       outerRadius: this._outerRadius,
       innerRadius: this._innerRadius,
-      center: this._centerPoint,
       startAngle: this._startAngle,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false });
+    return clone;
   }
 }
 
@@ -533,9 +487,9 @@ export class RegularPolygram extends VMobject {
   private _numVertices: number;
   private _density: number;
   private _radius: number;
-  private _centerPoint: Vector3Tuple;
   private _startAngle: number;
   private _numComponents: number;
+  private _constructionCenter: Vector3Tuple;
 
   constructor(options: RegularPolygramOptions = {}) {
     super();
@@ -557,8 +511,6 @@ export class RegularPolygram extends VMobject {
     if (density < 1) {
       throw new Error('Density must be at least 1');
     }
-    // For even n, density = n/2 produces degenerate diameters, not a polygon.
-    // For odd n, density can go up to floor(n/2).
     const maxDensity = numVertices % 2 === 0 ? numVertices / 2 - 1 : Math.floor(numVertices / 2);
     if (density > maxDensity) {
       throw new Error(`Density must be between 1 and ${maxDensity} for ${numVertices} vertices`);
@@ -567,15 +519,19 @@ export class RegularPolygram extends VMobject {
     this._numVertices = numVertices;
     this._density = density;
     this._radius = radius;
-    this._centerPoint = [...center];
     this._startAngle = startAngle;
     this._numComponents = gcd(numVertices, density);
 
+    this.position.set(center[0], center[1], center[2]);
     this.color = color;
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
 
     this._generatePoints();
+    // The polygram is built around its center (a construction point at the local
+    // origin). Tracked separately so getPolygramCenter() reports that center rather
+    // than the off-origin point centroid, and survives normalizeTransform().
+    this._constructionCenter = [0, 0, 0];
   }
 
   /**
@@ -594,7 +550,6 @@ export class RegularPolygram extends VMobject {
       this.remove(this.children[0]);
     }
 
-    const [cx, cy, cz] = this._centerPoint;
     const n = this._numVertices;
     const k = this._density;
     const angleStep = (2 * Math.PI) / n;
@@ -603,11 +558,7 @@ export class RegularPolygram extends VMobject {
     const allVertices: Vector3Tuple[] = [];
     for (let i = 0; i < n; i++) {
       const angle = this._startAngle + i * angleStep;
-      allVertices.push([
-        cx + this._radius * Math.cos(angle),
-        cy + this._radius * Math.sin(angle),
-        cz,
-      ]);
+      allVertices.push([this._radius * Math.cos(angle), this._radius * Math.sin(angle), 0]);
     }
 
     const numGons = this._numComponents;
@@ -725,36 +676,29 @@ export class RegularPolygram extends VMobject {
     return this;
   }
 
-  /**
-   * Get the center of the polygram
-   */
-  getPolygramCenter(): Vector3Tuple {
-    return [...this._centerPoint];
+  getCenterOfMass(): Vector3Tuple {
+    return this._localToWorld(this._constructionCenter);
   }
-
-  /**
-   * Set the center of the polygram
-   */
+  getPolygramCenter(): Vector3Tuple {
+    return this.getCenterOfMass();
+  }
   setPolygramCenter(value: Vector3Tuple): this {
-    this._centerPoint = [...value];
-    this._generatePoints();
+    this.moveCenterOfMassTo(value);
     return this;
   }
 
-  /**
-   * Create a copy of this RegularPolygram
-   */
-  protected override _createCopy(): RegularPolygram {
-    return new RegularPolygram({
+  override copy(): RegularPolygram {
+    const clone = new RegularPolygram({
       numVertices: this._numVertices,
       density: this._density,
       radius: this._radius,
-      center: this._centerPoint,
       startAngle: this._startAngle,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false });
+    return clone;
   }
 }
 
@@ -863,14 +807,16 @@ export class Cutout extends VMobject {
   /**
    * Create a copy of this Cutout
    */
-  protected override _createCopy(): Cutout {
-    return new Cutout({
+  override copy(): Cutout {
+    const clone = new Cutout({
       outerShape: this._outerShape.copy() as VMobject,
       innerShape: this._innerShape.copy() as VMobject,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    return clone;
   }
 }
 
@@ -1119,12 +1065,14 @@ export class ConvexHull extends VMobject {
   /**
    * Create a copy of this ConvexHull
    */
-  protected override _createCopy(): ConvexHull {
-    return new ConvexHull({
+  override copy(): ConvexHull {
+    const clone = new ConvexHull({
       points: this._inputPoints,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    return clone;
   }
 }

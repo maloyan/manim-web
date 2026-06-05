@@ -329,6 +329,8 @@ export {
 
 // 3D Mobjects
 export {
+  // Shared 3D mesh base class
+  Mobject3D,
   // Basic 3D primitives
   Sphere,
   type SphereOptions,

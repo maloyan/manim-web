@@ -477,6 +477,9 @@ import * as THREE from 'three';
 import { Mobject } from '../core/Mobject';
 
 class DummyMobject extends Mobject {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    return this._flattenAsContainer(worldMatrix);
+  }
   private static _instance: DummyMobject | null = null;
 
   static get instance(): DummyMobject {
@@ -486,7 +489,7 @@ class DummyMobject extends Mobject {
     return DummyMobject._instance;
   }
 
-  protected _createCopy(): Mobject {
+  override copy(): Mobject {
     return new DummyMobject();
   }
 

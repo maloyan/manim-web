@@ -441,7 +441,7 @@ describe('SVGMobject', () => {
     const copy = orig.copy() as SVGMobject;
     expect(copy).not.toBe(orig);
     expect(copy).toBeInstanceOf(SVGMobject);
-    // _createCopy re-parses SVG, then Mobject.copy() also deep-copies children
+    // _copy re-parses SVG, then Mobject.copy() also deep-copies children
     expect(copy.children.length).toBeGreaterThanOrEqual(orig.children.length);
   });
 
@@ -869,8 +869,10 @@ describe('Brace', () => {
   });
 
   it('handles Mobject without VMobject points (fallback to bounding box)', () => {
-    // Group extends Mobject but is not a VMobject; triggers the fallback path
-    const mob = new Group();
+    // Group extends Mobject but is not a VMobject; bracing it must use the
+    // bounding-box fallback (getCenter/getBoundingBox) rather than point math.
+    // The group has real geometry so it has a well-defined center to brace.
+    const mob = new Group(new Rectangle({ width: 2, height: 1 }));
     const brace = new Brace(mob, { direction: DOWN });
     expect(brace.numPoints).toBeGreaterThan(0);
   });

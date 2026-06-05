@@ -57,8 +57,8 @@ export class ParametricSurface extends Surface3D {
   /**
    * Create a copy of this ParametricSurface
    */
-  protected override _createCopy(): ParametricSurface {
-    return new ParametricSurface({
+  override copy(): ParametricSurface {
+    const copy = new ParametricSurface({
       func: this._func,
       uRange: this._uRange,
       vRange: this._vRange,
@@ -70,6 +70,8 @@ export class ParametricSurface extends Surface3D {
       wireframe: this._wireframe,
       doubleSided: this._doubleSided,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 

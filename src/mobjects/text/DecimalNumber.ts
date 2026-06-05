@@ -432,10 +432,7 @@ export class DecimalNumber extends VMobject {
     return this._worldHeight;
   }
 
-  /**
-   * Create a copy of this DecimalNumber
-   */
-  protected override _createCopy(): DecimalNumber {
+  override copy(): DecimalNumber {
     const copy = new DecimalNumber({
       value: this._value,
       numDecimalPlaces: this._numDecimalPlaces,
@@ -451,6 +448,7 @@ export class DecimalNumber extends VMobject {
       unit: this._unit,
       unitBuff: this._unitBuff,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
   }
 
@@ -488,11 +486,8 @@ export class Integer extends DecimalNumber {
     });
   }
 
-  /**
-   * Create a copy of this Integer
-   */
-  protected override _createCopy(): Integer {
-    return new Integer({
+  override copy(): Integer {
+    const copy = new Integer({
       value: this._value,
       showEllipsis: this._showEllipsis,
       includeSign: this._includeSign,
@@ -506,5 +501,7 @@ export class Integer extends DecimalNumber {
       unit: this._unit,
       unitBuff: this._unitBuff,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Options for creating a Cube
@@ -39,7 +40,7 @@ export interface CubeOptions {
  * });
  * ```
  */
-export class Cube extends Mobject {
+export class Cube extends Mobject3D {
   private _sideLength: number;
   private _wireframe: boolean;
   private _centerPoint: Vector3Tuple;
@@ -155,17 +156,16 @@ export class Cube extends Mobject {
     return Math.pow(this._sideLength, 3);
   }
 
-  /**
-   * Create a copy of this Cube
-   */
-  protected override _createCopy(): Cube {
-    return new Cube({
+  override copy(): Cube {
+    const copy = new Cube({
       sideLength: this._sideLength,
       center: this._centerPoint,
       color: this.color,
       opacity: this._opacity,
       wireframe: this._wireframe,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -209,7 +209,7 @@ export interface Box3DOptions {
  * });
  * ```
  */
-export class Box3D extends Mobject {
+export class Box3D extends Mobject3D {
   private _width: number;
   private _height: number;
   private _depth: number;
@@ -368,11 +368,8 @@ export class Box3D extends Mobject {
     return this._width * this._height * this._depth;
   }
 
-  /**
-   * Create a copy of this Box3D
-   */
-  protected override _createCopy(): Box3D {
-    return new Box3D({
+  override copy(): Box3D {
+    const copy = new Box3D({
       width: this._width,
       height: this._height,
       depth: this._depth,
@@ -381,5 +378,7 @@ export class Box3D extends Mobject {
       opacity: this._opacity,
       wireframe: this._wireframe,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

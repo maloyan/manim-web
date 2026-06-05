@@ -25,11 +25,14 @@ export interface ChangeSpeedOptions {
  * The actual mobject is handled by the wrapped animation.
  */
 class SpeedWrapperMobject extends Mobject {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    return this._flattenAsContainer(worldMatrix);
+  }
   protected _createThreeObject(): THREE.Object3D {
     return new THREE.Group();
   }
 
-  protected _createCopy(): Mobject {
+  override copy(): Mobject {
     return new SpeedWrapperMobject();
   }
 }

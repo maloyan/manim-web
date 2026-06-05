@@ -38,9 +38,8 @@ export interface EllipseOptions {
  * ```
  */
 export class Ellipse extends VMobject {
-  private _width: number;
-  private _height: number;
-  private _centerPoint: Vector3Tuple;
+  private _initWidth: number;
+  private _initHeight: number;
   private _numComponents: number;
 
   constructor(options: EllipseOptions = {}) {
@@ -56,11 +55,11 @@ export class Ellipse extends VMobject {
       numComponents = 8,
     } = options;
 
-    this._width = width;
-    this._height = height;
-    this._centerPoint = [...center];
+    this._initWidth = width;
+    this._initHeight = height;
     this._numComponents = numComponents;
 
+    this.position.set(center[0], center[1], center[2]);
     this.color = color;
     this.fillOpacity = fillOpacity;
     this.strokeWidth = strokeWidth;
@@ -68,120 +67,71 @@ export class Ellipse extends VMobject {
     this._generatePoints();
   }
 
-  /**
-   * Generate the ellipse points using Bezier curve approximation.
-   * Uses 4 cubic Bezier segments for optimal ellipse approximation.
-   */
   private _generatePoints(): void {
-    // Kappa constant for cubic Bezier ellipse approximation
     const kappa = (4 / 3) * (Math.SQRT2 - 1);
-    const a = this._width / 2; // Semi-major axis (horizontal)
-    const b = this._height / 2; // Semi-minor axis (vertical)
-    const [cx, cy, cz] = this._centerPoint;
+    const a = this._initWidth / 2;
+    const b = this._initHeight / 2;
 
     const points: number[][] = [];
 
-    // Right point (0 degrees)
-    const p0: number[] = [cx + a, cy, cz];
-    // Top point (90 degrees)
-    const p1: number[] = [cx, cy + b, cz];
-    // Left point (180 degrees)
-    const p2: number[] = [cx - a, cy, cz];
-    // Bottom point (270 degrees)
-    const p3: number[] = [cx, cy - b, cz];
+    const p0: number[] = [a, 0, 0];
+    const p1: number[] = [0, b, 0];
+    const p2: number[] = [-a, 0, 0];
+    const p3: number[] = [0, -b, 0];
 
-    // Segment 1: Right to Top
     points.push(p0);
-    points.push([cx + a, cy + b * kappa, cz]);
-    points.push([cx + a * kappa, cy + b, cz]);
+    points.push([a, b * kappa, 0]);
+    points.push([a * kappa, b, 0]);
     points.push(p1);
 
-    // Segment 2: Top to Left
-    points.push([cx - a * kappa, cy + b, cz]);
-    points.push([cx - a, cy + b * kappa, cz]);
+    points.push([-a * kappa, b, 0]);
+    points.push([-a, b * kappa, 0]);
     points.push(p2);
 
-    // Segment 3: Left to Bottom
-    points.push([cx - a, cy - b * kappa, cz]);
-    points.push([cx - a * kappa, cy - b, cz]);
+    points.push([-a, -b * kappa, 0]);
+    points.push([-a * kappa, -b, 0]);
     points.push(p3);
 
-    // Segment 4: Bottom to Right (close the ellipse)
-    points.push([cx + a * kappa, cy - b, cz]);
-    points.push([cx + a, cy - b * kappa, cz]);
-    points.push([...p0]); // Close back to start
+    points.push([a * kappa, -b, 0]);
+    points.push([a, -b * kappa, 0]);
+    points.push([...p0]);
 
     this.setPoints3D(points);
   }
 
-  /**
-   * Get the width of the ellipse
-   */
-  getWidth(): number {
-    return this._width;
-  }
-
-  /**
-   * Set the width of the ellipse
-   */
   setWidth(value: number): this {
-    this._width = value;
+    this._initWidth = value;
     this._generatePoints();
     return this;
   }
 
-  /**
-   * Get the height of the ellipse
-   */
-  getHeight(): number {
-    return this._height;
-  }
-
-  /**
-   * Set the height of the ellipse
-   */
   setHeight(value: number): this {
-    this._height = value;
+    this._initHeight = value;
     this._generatePoints();
     return this;
   }
 
-  /**
-   * Get the center of the ellipse
-   */
   getEllipseCenter(): Vector3Tuple {
-    return [...this._centerPoint];
+    return this.getCenter();
   }
 
-  /**
-   * Set the center of the ellipse
-   */
   setEllipseCenter(value: Vector3Tuple): this {
-    this._centerPoint = [...value];
-    this._generatePoints();
+    this.position.set(value[0], value[1], value[2]);
+    this._markDirty();
     return this;
   }
 
-  /**
-   * Get the semi-major axis length (half of width)
-   */
   getSemiMajorAxis(): number {
-    return this._width / 2;
+    return this.getWidth() / 2;
   }
 
-  /**
-   * Get the semi-minor axis length (half of height)
-   */
   getSemiMinorAxis(): number {
-    return this._height / 2;
+    return this.getHeight() / 2;
   }
 
-  /**
-   * Get the eccentricity of the ellipse
-   */
   getEccentricity(): number {
-    const a = this._width / 2;
-    const b = this._height / 2;
+    const a = this.getWidth() / 2;
+    const b = this.getHeight() / 2;
     if (a >= b) {
       return Math.sqrt(1 - (b * b) / (a * a));
     } else {
@@ -189,37 +139,29 @@ export class Ellipse extends VMobject {
     }
   }
 
-  /**
-   * Get the area of the ellipse
-   */
   getArea(): number {
-    return Math.PI * (this._width / 2) * (this._height / 2);
+    return Math.PI * (this.getWidth() / 2) * (this.getHeight() / 2);
   }
 
-  /**
-   * Get a point on the ellipse at a given angle (in radians)
-   * @param angle Angle in radians from the positive x-axis
-   */
   pointAtAngle(angle: number): Vector3Tuple {
+    const [cx, cy, cz] = this.getCenter();
     return [
-      this._centerPoint[0] + (this._width / 2) * Math.cos(angle),
-      this._centerPoint[1] + (this._height / 2) * Math.sin(angle),
-      this._centerPoint[2],
+      cx + (this.getWidth() / 2) * Math.cos(angle),
+      cy + (this.getHeight() / 2) * Math.sin(angle),
+      cz,
     ];
   }
 
-  /**
-   * Create a copy of this Ellipse
-   */
-  protected override _createCopy(): Ellipse {
-    return new Ellipse({
-      width: this._width,
-      height: this._height,
-      center: this._centerPoint,
+  override copy(): Ellipse {
+    const clone = new Ellipse({
+      width: this._initWidth,
+      height: this._initHeight,
       numComponents: this._numComponents,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false });
+    return clone;
   }
 }

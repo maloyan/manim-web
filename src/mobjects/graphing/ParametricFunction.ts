@@ -275,11 +275,8 @@ export class ParametricFunction extends VMobject {
     return this;
   }
 
-  /**
-   * Create a copy of this ParametricFunction
-   */
-  protected override _createCopy(): ParametricFunction {
-    return new ParametricFunction({
+  override copy(): ParametricFunction {
+    const copy = new ParametricFunction({
       func: this._func,
       tRange: this._tRange,
       color: this.color,
@@ -288,5 +285,7 @@ export class ParametricFunction extends VMobject {
       axes: this._axes ?? undefined,
       useAxesCoords: this._useAxesCoords,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

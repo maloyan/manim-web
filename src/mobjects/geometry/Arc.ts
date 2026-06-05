@@ -1,6 +1,8 @@
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
 import { TipableVMobject, TipableVMobjectOptions } from './TipableVMobject';
+import { Matrix4 } from 'three';
+import * as THREE from 'three';
 
 /**
  * Options for creating an Arc
@@ -197,7 +199,7 @@ export class Arc extends TipableVMobject {
    * Get the center of the arc
    */
   getArcCenter(): Vector3Tuple {
-    return [...this._arcCenter];
+    return this._localToWorld(this._arcCenter);
   }
 
   /**
@@ -245,11 +247,18 @@ export class Arc extends TipableVMobject {
     return Math.abs(this._radius * this._angle);
   }
 
+  override normalizeTransform(worldMatrix?: Matrix4): this {
+    this._arcCenter = new THREE.Vector3(...this._arcCenter)
+      .applyMatrix4(worldMatrix ?? this._worldMatrix())
+      .toArray();
+    return this;
+  }
+
   /**
    * Create a copy of this Arc
    */
-  protected override _createCopy(): Arc {
-    return new Arc({
+  override copy(): Arc {
+    const clone = new Arc({
       radius: this._radius,
       startAngle: this._startAngle,
       angle: this._angle,
@@ -258,5 +267,7 @@ export class Arc extends TipableVMobject {
       numComponents: this._numComponents,
       center: this._arcCenter,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    return clone;
   }
 }

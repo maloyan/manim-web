@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Options for creating a Sphere
@@ -41,7 +42,7 @@ export interface SphereOptions {
  * });
  * ```
  */
-export class Sphere extends Mobject {
+export class Sphere extends Mobject3D {
   private _radius: number;
   private _resolution: number;
   private _wireframe: boolean;
@@ -197,11 +198,8 @@ export class Sphere extends Mobject {
     return [x + this.position.x, y + this.position.y, z + this.position.z];
   }
 
-  /**
-   * Create a copy of this Sphere
-   */
-  protected override _createCopy(): Sphere {
-    return new Sphere({
+  override copy(): Sphere {
+    const copy = new Sphere({
       radius: this._radius,
       center: this._centerPoint,
       color: this.color,
@@ -209,5 +207,7 @@ export class Sphere extends Mobject {
       resolution: this._resolution,
       wireframe: this._wireframe,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

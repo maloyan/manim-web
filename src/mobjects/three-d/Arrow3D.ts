@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Options for creating an Arrow3D
@@ -44,7 +45,7 @@ export interface Arrow3DOptions {
  * });
  * ```
  */
-export class Arrow3D extends Mobject {
+export class Arrow3D extends Mobject3D {
   private _start: Vector3Tuple;
   private _end: Vector3Tuple;
   private _tipLength: number;
@@ -333,8 +334,8 @@ export class Arrow3D extends Mobject {
   /**
    * Create a copy of this Arrow3D
    */
-  protected override _createCopy(): Arrow3D {
-    return new Arrow3D({
+  override copy(): Arrow3D {
+    const copy = new Arrow3D({
       start: this._start,
       end: this._end,
       color: this.color,
@@ -344,6 +345,8 @@ export class Arrow3D extends Mobject {
       shaftRadius: this._shaftRadius,
       radialSegments: this._radialSegments,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 

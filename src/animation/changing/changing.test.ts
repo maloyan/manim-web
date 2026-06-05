@@ -362,7 +362,7 @@ describe('TracedPath', () => {
   });
 
   // -----------------------------------------------------------
-  // _createCopy
+  // _copy
   // -----------------------------------------------------------
 
   describe('copy', () => {
@@ -749,7 +749,7 @@ describe('AnimatedBoundary', () => {
   });
 
   // -----------------------------------------------------------
-  // _createCopy
+  // _copy
   // -----------------------------------------------------------
 
   describe('copy', () => {
@@ -766,7 +766,7 @@ describe('AnimatedBoundary', () => {
       const copy = boundary.copy() as AnimatedBoundary;
       expect(copy).toBeInstanceOf(AnimatedBoundary);
       expect(copy.boundedMobject).toBe(mob);
-      // _createCopy creates a new AnimatedBoundary (5 dashes from constructor)
+      // copy creates a new AnimatedBoundary (5 dashes from constructor)
       // then copy() also deep-copies the original's 5 children, totaling 10
       expect(copy.children.length).toBe(10);
     });

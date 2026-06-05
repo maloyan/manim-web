@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ParametricGeometry } from 'three/examples/jsm/geometries/ParametricGeometry.js';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 import { Surface3D } from './Surface3D';
 
 /**
@@ -86,7 +87,7 @@ export interface TexturedSphereOptions {
  * });
  * ```
  */
-export class TexturedSurface extends Mobject {
+export class TexturedSurface extends Mobject3D {
   /** The underlying parametric surface providing geometry */
   private _surface: Surface3D;
 
@@ -529,8 +530,8 @@ export class TexturedSurface extends Mobject {
    * Create a copy of this TexturedSurface.
    * Note: The copy will reload textures independently.
    */
-  protected override _createCopy(): TexturedSurface {
-    return new TexturedSurface({
+  override copy(): TexturedSurface {
+    const copy = new TexturedSurface({
       surface: this._surface,
       textureUrl: this._textureUrl,
       darkTextureUrl: this._darkTextureUrl ?? undefined,
@@ -540,6 +541,8 @@ export class TexturedSurface extends Mobject {
       textureOffset: this._textureOffset,
       doubleSided: this._doubleSided,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 

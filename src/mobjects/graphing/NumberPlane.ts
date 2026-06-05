@@ -309,11 +309,8 @@ export class NumberPlane extends Axes {
     return { ...this._backgroundLineStyle };
   }
 
-  /**
-   * Create a copy of this NumberPlane
-   */
-  protected override _createCopy(): NumberPlane {
-    return new NumberPlane({
+  override copy(): NumberPlane {
+    const copy = new NumberPlane({
       xRange: this._xRange,
       yRange: this._yRange,
       xLength: this._xLength,
@@ -326,5 +323,7 @@ export class NumberPlane extends Axes {
       fadedLineRatio: this._fadedLineRatio,
       fadingFactor: this._fadingFactor,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

@@ -34,7 +34,7 @@ export type TexOptions = MathTexOptions;
  * ```
  */
 export class Tex extends MathTex {
-  /** Original unwrapped latex, used by _createCopy to avoid double-wrapping */
+  /** Original unwrapped latex, used by _copy to avoid double-wrapping */
   private _originalLatex: string | string[];
 
   constructor(options: TexOptions) {
@@ -47,11 +47,8 @@ export class Tex extends MathTex {
     this._originalLatex = options.latex;
   }
 
-  /**
-   * Create a copy of this Tex
-   */
-  protected override _createCopy(): Tex {
-    return new Tex({
+  override copy(): Tex {
+    const copy = new Tex({
       latex: this._originalLatex,
       color: this._color,
       fontSize: this._fontSize,
@@ -62,5 +59,7 @@ export class Tex extends MathTex {
       height: this._targetHeight,
       macros: this._macros,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

@@ -1131,9 +1131,9 @@ describe('MarkupText (additional coverage)', () => {
   });
 
   // -----------------------------------------------------------------
-  // _createCopy preserves all options
+  // _copy preserves all options
   // -----------------------------------------------------------------
-  describe('_createCopy preserves all options', () => {
+  describe('copy() preserves all options', () => {
     it('should preserve letterSpacing and textAlign', () => {
       const orig = new MarkupText({
         text: '<b>Test</b>',

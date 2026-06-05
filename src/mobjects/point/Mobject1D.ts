@@ -241,10 +241,7 @@ export class Mobject1D extends PMobject {
     return this;
   }
 
-  /**
-   * Create a copy of this Mobject1D
-   */
-  protected override _createCopy(): Mobject1D {
+  override copy(): Mobject1D {
     const copy = new Mobject1D({
       start: [...this._start],
       end: [...this._end],
@@ -254,6 +251,7 @@ export class Mobject1D extends PMobject {
       opacity: this._opacity,
       pointSize: this._pointSize,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
   }
 }

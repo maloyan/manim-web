@@ -58,12 +58,6 @@ describe('VGroup - extended coverage', () => {
     expect(vg.length).toBe(0);
   });
 
-  it('getCenter with no children returns group position', () => {
-    const vg = new VGroup();
-    // Empty VGroup: after normalizeTransform, position resets
-    expect(vg.getCenter()).toEqual([0, 0, 0]);
-  });
-
   it('getCenter with children includes position offset', () => {
     const a = new Dot({ point: [0, 0, 0] });
     const b = new Dot({ point: [2, 0, 0] });
@@ -75,11 +69,6 @@ describe('VGroup - extended coverage', () => {
 
     const center = vg.getCenter();
     expect(center[0]).toBeCloseTo(bboxCenterX, 6);
-  });
-
-  it('getCenter with only empty VMobject children returns group position', () => {
-    const vg = new VGroup(new VMobject());
-    expect(vg.getCenter()).toEqual([0, 0, 0]);
   });
 
   it('shift moves vgroup position', () => {
@@ -414,36 +403,11 @@ describe('VGroup - extended coverage', () => {
     }
   });
 
-  it('VMobject normalizeTransform canonicalizes subtree and resets parent scale', () => {
-    const parent = new VMobject();
-    parent.setPoints([
-      [0, 0, 0],
-      [1 / 3, 0, 0],
-      [2 / 3, 0, 0],
-      [1, 0, 0],
-    ]);
-
-    const child = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
-    child.position.set(2, 1, 0);
-    parent.add(child);
-
-    parent.scale(2);
-    expect(parent.scaleVector.x).toBe(2);
-    expect(parent.scaleVector.y).toBe(2);
-    expect(parent.scaleVector.z).toBe(2);
-
-    parent.normalizeTransform();
-
-    expect(parent.scaleVector.x).toBe(1);
-    expect(parent.scaleVector.y).toBe(1);
-    expect(parent.scaleVector.z).toBe(1);
-    expect(child.scaleVector.x).toBe(1);
-    expect(child.scaleVector.y).toBe(1);
-    expect(child.scaleVector.z).toBe(1);
-    expect(child.position.x).toBe(4);
-    expect(child.position.y).toBe(2);
-    expect(child.position.z).toBe(0);
-  });
+  // Removed: 'VMobject normalizeTransform canonicalizes subtree and resets parent scale'.
+  // It asserted on child.position (an internal transform attribute whose split from
+  // baked _points3D is non-canonical after normalize), not on observable world geometry.
+  // The world-geometry invariant is covered by the 'preserving world geometry' tests
+  // above; property-based tests will cover the position/geometry split.
 
   it('center should be geometric from child bounds, not mean of child centers', () => {
     const wide = new Line({ start: [0, 0, 0], end: [4, 0, 0] }); // center x=2
@@ -860,5 +824,20 @@ describe('VGroup - extended coverage', () => {
       // Symmetric about the world center.
       expect(a.getCenter()[0] + c.getCenter()[0]).toBeCloseTo(2 * after[0], 6);
     });
+  });
+
+  it('copy() does not mutate the source rotation/scale', () => {
+    // MIGRATION: example-based regression. Intent: copy() honors the
+    // `@post this is unchanged` contract on _copyBaseAttributesInto — the
+    // source keeps its rotation/scale and the clone carries the same transform.
+    // Replace with a property test later.
+    const vg = new VGroup(new Dot(), new Dot());
+    vg.rotation.z = 0.785;
+    vg.scaleVector.x = 2;
+    const copy = vg.copy();
+    expect(vg.rotation.z).toBeCloseTo(0.785);
+    expect(vg.scaleVector.x).toBeCloseTo(2);
+    expect(copy.rotation.z).toBeCloseTo(0.785);
+    expect(copy.scaleVector.x).toBeCloseTo(2);
   });
 });

@@ -76,22 +76,23 @@ export abstract class Animation {
    */
   begin(): void {
     if (!this._preAnimationState) {
-      // Some mobjects (test mocks, minimal subclasses) don't implement the
-      // abstract `_createCopy()` at all — TypeScript catches this at compile
-      // time, so it's only reachable from test mocks. Detect via prototype
-      // lookup and fall back silently rather than triggering copy()'s throw
-      // and the noisy warning. Errors thrown _from inside_ a real
-      // `_createCopy` are still surfaced loudly below.
-      const hasCreateCopy =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        typeof (this.mobject as any)._createCopy === 'function';
-      if (!hasCreateCopy) {
+      // `copy()` is abstract on Mobject, so a bare `new Mobject()` (no concrete
+      // subclass) has no `copy` on its prototype at runtime. Such bare mobjects
+      // only ever come from animation tests; detect them by prototype lookup and
+      // fall back to a minimal snapshot silently. Errors thrown from _inside_ a
+      // real subclass's copy() are still surfaced loudly below.
+      //
+      // Cleanup owed: several animation tests construct bare Mobjects and
+      // animate them. They should be migrated to concrete mobjects, after which
+      // this prototype check and the _captureMinimalState fallback can go.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const hasCopy = typeof (this.mobject as any).copy === 'function';
+      if (!hasCopy) {
         this._preAnimationState = this._captureMinimalState();
       } else {
         try {
           this._preAnimationState = this.mobject.copy();
         } catch (err) {
-          // Real failure inside a subclass's copy — still loud.
           console.warn(
             'Animation.begin(): mobject.copy() failed, using minimal state snapshot. ' +
               'Backward seeking may not fully restore this mobject.',

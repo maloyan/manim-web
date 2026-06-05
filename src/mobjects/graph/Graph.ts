@@ -32,16 +32,15 @@ export class Graph extends GenericGraph {
     this._directed = false;
   }
 
-  /**
-   * Create a copy of this graph
-   */
-  protected override _createCopy(): Graph {
-    return new Graph({
+  override copy(): Graph {
+    const copy = new Graph({
       vertices: [...this._vertices],
       edges: this._edges.map((e) => [...e] as EdgeTuple),
       layout: { ...this._layoutConfig },
       vertexStyle: { ...this._vertexStyle },
       edgeStyle: { ...this._edgeStyle },
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

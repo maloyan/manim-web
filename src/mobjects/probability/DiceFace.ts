@@ -1,4 +1,3 @@
-import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Vector3Tuple } from '../../core/Mobject';
 import { RoundedRectangle } from '../geometry/PolygonExtensions';
@@ -276,11 +275,8 @@ export class DiceFace extends VGroup {
     return this;
   }
 
-  /**
-   * Create a copy of this DiceFace.
-   */
-  protected override _createCopy(): VMobject {
-    return new DiceFace({
+  override copy(): DiceFace {
+    const copy = new DiceFace({
       value: this._value,
       size: this._size,
       dotColor: this._dotColor,
@@ -291,6 +287,8 @@ export class DiceFace extends VGroup {
       dotRadius: this._dotRadius,
       center: this._faceCenter,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 

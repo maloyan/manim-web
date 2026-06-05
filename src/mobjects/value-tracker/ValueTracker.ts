@@ -69,6 +69,9 @@ export interface ValueTrackerOptions {
  * changing value.
  */
 export class ValueTracker extends Mobject {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    return this._flattenAsContainer(worldMatrix);
+  }
   /** The tracked value */
   private _value: number;
 
@@ -154,8 +157,10 @@ export class ValueTracker extends Mobject {
    * Create a copy of this ValueTracker.
    * @returns A new ValueTracker with the same value
    */
-  protected override _createCopy(): ValueTracker {
-    return new ValueTracker(this._value);
+  override copy(): ValueTracker {
+    const copy = new ValueTracker(this._value);
+    this._copyBaseAttributesInto(copy);
+    return copy;
   }
 
   /**
@@ -237,6 +242,9 @@ export interface ComplexValueTrackerOptions {
  * ```
  */
 export class ComplexValueTracker extends Mobject {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    return this._flattenAsContainer(worldMatrix);
+  }
   /** The tracked complex value */
   private _value: Complex;
 
@@ -368,8 +376,10 @@ export class ComplexValueTracker extends Mobject {
    * Create a copy of this ComplexValueTracker.
    * @returns A new ComplexValueTracker with the same value
    */
-  protected override _createCopy(): ComplexValueTracker {
-    return new ComplexValueTracker(this._value);
+  override copy(): ComplexValueTracker {
+    const copy = new ComplexValueTracker(this._value);
+    this._copyBaseAttributesInto(copy);
+    return copy;
   }
 
   /**

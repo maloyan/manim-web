@@ -321,8 +321,8 @@ export class Mobject2D extends PMobject {
   /**
    * Create a copy of this Mobject2D
    */
-  protected override _createCopy(): Mobject2D {
-    return new Mobject2D({
+  override copy(): Mobject2D {
+    const copy = new Mobject2D({
       center: [...this._center2D],
       width: this._width,
       height: this._height,
@@ -334,5 +334,7 @@ export class Mobject2D extends PMobject {
       opacity: this._opacity,
       pointSize: this._pointSize,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

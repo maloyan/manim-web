@@ -301,6 +301,9 @@ export interface CameraFrameState {
  * Animation base class contract (every Animation has a `.mobject`).
  */
 class CameraFrameStub extends Mobject {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    return this._flattenAsContainer(worldMatrix);
+  }
   constructor() {
     super();
   }
@@ -320,7 +323,7 @@ class CameraFrameStub extends Mobject {
     // intentional no-op
   }
 
-  protected _createCopy(): CameraFrameStub {
+  override copy(): CameraFrameStub {
     return new CameraFrameStub();
   }
 }

@@ -33,7 +33,7 @@ interface WorldFrame {
  * @post result.worldMatrix · result.inverseWorld === identity (up to fp error)
  */
 function captureWorldFrame(mob: Mobject): WorldFrame {
-  const worldMatrix = mob._computeWorldMatrix();
+  const worldMatrix = mob._worldMatrix();
   return { worldMatrix, inverseWorld: worldMatrix.clone().invert() };
 }
 

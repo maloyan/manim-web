@@ -501,12 +501,9 @@ describe('Mobject - extended coverage', () => {
     expect(center[2]).toBe(9);
   });
 
-  // getBounds fallback (no _threeObject)
-  it('getBounds throws when no three object', () => {
+  it('getBounds throws for empty VMobject', () => {
     const vm = new VMobject();
-    vm.position.set(5, 5, 5);
-    // Access bounds without creating three object throws
-    expect(() => vm.getBounds()).toThrow(/empty Three\.js bounds/);
+    expect(() => vm.getBounds()).toThrow(/has no points/);
   });
 
   // nextTo with point target

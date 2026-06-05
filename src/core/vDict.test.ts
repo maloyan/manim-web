@@ -270,7 +270,7 @@ describe('VDict - extended coverage', () => {
     expect(d.submobjects).toContain(vb);
   });
 
-  it('_createCopy returns a new empty VDict', () => {
+  it('copy() returns a new empty VDict', () => {
     const d = new VDict({ a: makeVM() });
     const clone = d.copy() as VDict;
     expect(clone).toBeInstanceOf(VDict);

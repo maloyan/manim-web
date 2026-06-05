@@ -117,6 +117,14 @@
         await image3.waitForLoad();
         await scene.play(new Transform(image, image3));
         await scene.wait(0.5);
+
+        // 5. Pure translation: same image, shifted right by 3 units.
+        //    Verifies Transform interpolates position (not just points/size).
+        const image4 = new ImageMobject({ source: manimLogo, width: 6 });
+        await image4.waitForLoad();
+        image4.shift([3, 0, 0]);
+        await scene.play(new Transform(image, image4));
+        await scene.wait(0.5);
       });
 
       // Reset button handler

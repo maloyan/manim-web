@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 import { VMobject } from '../../core/VMobject';
 
 /**
@@ -45,7 +46,7 @@ export interface PrismOptions {
  * });
  * ```
  */
-export class Prism extends Mobject {
+export class Prism extends Mobject3D {
   private _sides: number;
   private _radius: number;
   private _height: number;
@@ -234,11 +235,8 @@ export class Prism extends Mobject {
     return this.getBaseArea() * this._height;
   }
 
-  /**
-   * Create a copy of this Prism
-   */
-  protected override _createCopy(): Prism {
-    return new Prism({
+  override copy(): Prism {
+    const copy = new Prism({
       sides: this._sides,
       radius: this._radius,
       height: this._height,
@@ -247,6 +245,8 @@ export class Prism extends Mobject {
       opacity: this._opacity,
       wireframe: this._wireframe,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -298,7 +298,7 @@ export interface Dot3DOptions {
  * });
  * ```
  */
-export class Dot3D extends Mobject {
+export class Dot3D extends Mobject3D {
   private _radius: number;
   private _pointPosition: Vector3Tuple;
   private _glow: boolean;
@@ -524,11 +524,8 @@ export class Dot3D extends Mobject {
     return this;
   }
 
-  /**
-   * Create a copy of this Dot3D
-   */
-  protected override _createCopy(): Dot3D {
-    return new Dot3D({
+  override copy(): Dot3D {
+    const copy = new Dot3D({
       radius: this._radius,
       point: this._pointPosition,
       color: this.color,
@@ -538,6 +535,8 @@ export class Dot3D extends Mobject {
       glowRadius: this._glowRadius,
       resolution: this._resolution,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -779,10 +778,7 @@ export class ThreeDVMobject extends VMobject {
     };
   }
 
-  /**
-   * Create a copy of this ThreeDVMobject
-   */
-  protected override _createCopy(): ThreeDVMobject {
+  override copy(): ThreeDVMobject {
     const copy = new ThreeDVMobject({
       points: this._points3D.map((p) => [...p]),
       color: this.color,
@@ -791,6 +787,7 @@ export class ThreeDVMobject extends VMobject {
       strokeWidth: this.strokeWidth,
       closePath: this._closePath,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
   }
 }

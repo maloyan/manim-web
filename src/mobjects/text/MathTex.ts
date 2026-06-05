@@ -158,6 +158,20 @@ export class MathTex extends VGroup {
   }
 
   /**
+   * World-space center. Unlike the base VGroup, an empty (not-yet-rendered)
+   * MathTex falls back to its world-space origin instead of throwing: MathTex is
+   * built lazily, so `scale()`/`moveTo()` (which read getCenter() for their
+   * default anchor) are routinely called before the SVG geometry exists.
+   */
+  override getCenter(): Vector3Tuple {
+    if (this.isEmpty()) {
+      // World location of the node origin (own + ancestor transforms applied).
+      return this._localToWorld([0, 0, 0]);
+    }
+    return super.getCenter();
+  }
+
+  /**
    * Override setColor to propagate to all VMobject children (fill + stroke).
    */
   override setColor(color: string): this {
@@ -467,14 +481,11 @@ export class MathTex extends VGroup {
     }
   };
 
-  /**
-   * Create a copy of this MathTex.
-   */
-  protected override _createCopy(): MathTex {
+  override copy(): MathTex {
     const latexValue = this._isMultiPart
       ? this._parts.map((p) => (p as any)._latex as string)
       : this._latex;
-    return new MathTex({
+    const copy = new MathTex({
       latex: latexValue,
       color: this._color,
       fontSize: this._fontSize,
@@ -485,6 +496,8 @@ export class MathTex extends VGroup {
       height: this._targetHeight,
       macros: this._macros,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: true });
+    return copy;
   }
 }
 

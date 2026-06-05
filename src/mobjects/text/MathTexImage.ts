@@ -106,16 +106,13 @@ interface RenderState {
  * await integral.waitForRender();
  * ```
  *
- * @note Scale a MathTexImage only AFTER `waitForRender()`. Scaling after render
- * takes the DURABLE size-bake path: `normalizeTransform()` folds the scale into
- * `_renderState.width/height` via `applyVisualSize` (mesh.scale reset to 1), so
- * the size survives a later `setRevealProgress()`/`applyVisualSize`. Scaling
- * BEFORE render (no measured size yet) instead relies on the inherited
- * `_bakeFallbackScale` writing into `mesh.scale` — a NON-DURABLE path that a
- * later reveal or `applyVisualSize` may reset. A non-uniform scale of a
- * Z-rotated MathTexImage is likewise unsupported (it also takes the
- * non-durable `mesh.scale` fallback). These edge cases are out of scope; all
- * real usage (including the manim_ce_logo) scales after render.
+ * @note Scaling is durable regardless of render timing. `normalizeTransform()`
+ * *absolutizes* a textured mesh: it leaves the scale on `scaleVector` (re-applied
+ * to the display group every sync) rather than folding it into the rendered plane
+ * size. Because the scale lives on the transform, it survives a later async
+ * render, `setRevealProgress()`, or `applyVisualSize` (all of which only touch the
+ * base plane geometry), and a scale applied BEFORE render is preserved once the
+ * render measures the natural size.
  */
 export class MathTexImage extends TexturedMobject {
   protected _latex: string;
@@ -135,13 +132,13 @@ export class MathTexImage extends TexturedMobject {
   /** Padding in pixels around rendered content */
   protected _padding: number;
   /**
-   * Absolute visual size `[width, height]` (world units) that a `copy()` of an
-   * already-sized MathTexImage must reproduce, overriding the natural size the
+   * Base plane size `[width, height]` (render units) that a `copy()` of an
+   * already-rendered MathTexImage must reproduce, overriding the natural size the
    * copy's fresh async re-render measures. Set by `_createCopy` from the source's
-   * current `_renderState` size (which, after a scale+normalize, carries the baked
-   * scale via `applyVisualSize`); applied once in `_startRender`'s post-render
-   * callback and then cleared. Null for normal (non-copy) instances, so the
-   * standard render/reveal path is untouched.
+   * current `_renderState` size; applied once in `_startRender`'s post-render
+   * callback and then cleared. (Any transform scale is carried separately on
+   * `scaleVector` by `_copyBaseAttributesInto`.) Null for normal (non-copy)
+   * instances, so the standard render/reveal path is untouched.
    */
   protected _visualSizeOverride: [number, number] | null = null;
 
@@ -1096,24 +1093,6 @@ export class MathTexImage extends TexturedMobject {
     this._renderState.texture = nextTexture;
   }
 
-  /**
-   * Own display mesh only in single-part mode; multi-part delegates to child parts.
-   */
-  protected override _ownsDisplayMesh(): boolean {
-    return !this._isMultiPart;
-  }
-
-  /**
-   * Current persistent visual size for scale-baking. Null when multi-part (parts
-   * bake their own size) or before the first render produced dimensions.
-   */
-  protected override _currentVisualSize(): [number, number] | null {
-    if (this._isMultiPart) return null;
-    const { width, height } = this._renderState;
-    if (!width || !height) return null;
-    return [width, height];
-  }
-
   applyVisualSize(width: number, height: number): void {
     if (this._isMultiPart) {
       throw new Error('MathTexImage.applyVisualSize requires single-part MathTexImage');
@@ -1157,10 +1136,7 @@ export class MathTexImage extends TexturedMobject {
     }
   }
 
-  /**
-   * Create a copy of this MathTexImage
-   */
-  protected override _createCopy(): MathTexImage {
+  override copy(): MathTexImage {
     const latexValue = this._isMultiPart ? this._parts.map((p) => p._latex) : this._latex;
     const copy = new MathTexImage({
       latex: latexValue,
@@ -1170,6 +1146,7 @@ export class MathTexImage extends TexturedMobject {
       position: [this.position.x, this.position.y, this.position.z],
       renderer: this._renderer,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
     // Preserve the normalized visual size. After a scale+normalize, a single-part
     // MathTexImage folds its scale into `_renderState.width/height` via
     // `applyVisualSize` (mesh.scale reset to 1). The copy kicks off a fresh async

@@ -235,7 +235,7 @@ export class TracedPath extends VMobject {
   /**
    * Create a copy of this TracedPath
    */
-  protected override _createCopy(): TracedPath {
+  override copy(): TracedPath {
     const copy = new TracedPath(this._trackedMobject, {
       strokeColor: this.color,
       strokeWidth: this.strokeWidth,
@@ -244,6 +244,7 @@ export class TracedPath extends VMobject {
       minDistanceToNewPoint: this._minDistanceToNewPoint,
       maxPoints: this._maxPoints,
     });
+    this._copyBaseAttributesInto(copy);
     // Copy current path data
     copy._pathData = this._pathData.map((d) => ({ point: [...d.point], time: d.time }));
     copy._elapsedTime = this._elapsedTime;
@@ -592,7 +593,7 @@ export class AnimatedBoundary extends VMobject {
   /**
    * Create a copy of this AnimatedBoundary
    */
-  protected override _createCopy(): AnimatedBoundary {
+  override copy(): AnimatedBoundary {
     const copy = new AnimatedBoundary(this._boundedMobject, {
       colors: [...this._colors],
       numDashes: this._numDashes,
@@ -600,6 +601,7 @@ export class AnimatedBoundary extends VMobject {
       cycleRate: this._cycleRate,
       buff: this._buff,
     });
+    this._copyBaseAttributesInto(copy);
     copy._phase = this._phase;
     return copy;
   }

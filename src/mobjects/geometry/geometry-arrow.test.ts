@@ -90,8 +90,7 @@ describe('ApplyMatrix on Arrow with non-uniform matrix', () => {
     anim.begin();
     anim.finish();
 
-    // After finish(), reconstructTip should have been called
-    // The tip should be a proper triangle (not distorted by the shear)
+    // After finish(), the tip should be a proper triangle (not distorted by the shear)
     const tipAfter = arrow.children[1] as VMobject;
     const tipPointsAfter = tipAfter.getLocalPoints();
 

@@ -82,11 +82,8 @@ export class ScreenRectangle extends Rectangle {
     return this;
   }
 
-  /**
-   * Create a copy of this ScreenRectangle
-   */
-  protected override _createCopy(): ScreenRectangle {
-    return new ScreenRectangle({
+  override copy(): ScreenRectangle {
+    const copy = new ScreenRectangle({
       height: this.getHeight(),
       aspectRatio: this._aspectRatio,
       center: this.getRectCenter(),
@@ -94,6 +91,8 @@ export class ScreenRectangle extends Rectangle {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -201,11 +200,8 @@ export class FullScreenRectangle extends Rectangle {
     return this;
   }
 
-  /**
-   * Create a copy of this FullScreenRectangle
-   */
-  protected override _createCopy(): FullScreenRectangle {
-    return new FullScreenRectangle({
+  override copy(): FullScreenRectangle {
+    const copy = new FullScreenRectangle({
       color: this.fillColor ?? this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
@@ -214,6 +210,8 @@ export class FullScreenRectangle extends Rectangle {
       frameHeight: this._frameHeight,
       center: this.getRectCenter(),
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -307,11 +305,8 @@ export class FullScreenFadeRectangle extends FullScreenRectangle {
     return this._fadeProgress === 1;
   }
 
-  /**
-   * Create a copy of this FullScreenFadeRectangle
-   */
-  protected override _createCopy(): FullScreenFadeRectangle {
-    return new FullScreenFadeRectangle({
+  override copy(): FullScreenFadeRectangle {
+    const copy = new FullScreenFadeRectangle({
       color: this.fillColor ?? this.color,
       opacity: this._fadeProgress,
       strokeWidth: this.strokeWidth,
@@ -320,6 +315,8 @@ export class FullScreenFadeRectangle extends FullScreenRectangle {
       frameHeight: this.getFrameHeight(),
       center: this.getRectCenter(),
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 

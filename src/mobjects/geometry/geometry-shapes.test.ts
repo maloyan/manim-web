@@ -139,6 +139,8 @@ describe('AnnularSector', () => {
     expect(as.getOuterRadius()).toBe(1);
     expect(as.getStartAngle()).toBe(0);
     expect(as.getAngle()).toBe(Math.PI / 2);
+    // getSectorCenter() reports the construction center (annulus center), distinct
+    // from the bbox getCenter() and the off-origin getCenterOfMass() centroid.
     expect(as.getSectorCenter()).toEqual([0, 0, 0]);
     expect(as.fillOpacity).toBe(0.5);
   });
@@ -180,6 +182,8 @@ describe('Sector', () => {
     expect(s.getRadius()).toBe(1);
     expect(s.getStartAngle()).toBe(0);
     expect(s.getAngle()).toBe(Math.PI / 2);
+    // getSectorCenter() reports the construction center (apex), distinct from the
+    // bbox getCenter() and the off-origin getCenterOfMass() centroid.
     expect(s.getSectorCenter()).toEqual([0, 0, 0]);
     expect(s.fillOpacity).toBe(0.5);
   });

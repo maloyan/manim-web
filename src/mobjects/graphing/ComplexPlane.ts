@@ -462,11 +462,8 @@ export class ComplexPlane extends NumberPlane {
     return this._coordinateLabels;
   }
 
-  /**
-   * Create a copy of this ComplexPlane
-   */
-  protected override _createCopy(): ComplexPlane {
-    return new ComplexPlane({
+  override copy(): ComplexPlane {
+    const copy = new ComplexPlane({
       xRange: this._xRange,
       yRange: this._yRange,
       xLength: this._xLength,
@@ -477,6 +474,8 @@ export class ComplexPlane extends NumberPlane {
       labelFontSize: this._labelFontSize,
       labelColor: this._labelColor,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -988,11 +987,8 @@ export class PolarPlane extends Group {
     return this;
   }
 
-  /**
-   * Create a copy of this PolarPlane
-   */
-  protected override _createCopy(): PolarPlane {
-    return new PolarPlane({
+  override copy(): PolarPlane {
+    const copy = new PolarPlane({
       radius: this._radius,
       size: this._size,
       radialDivisions: this._radialDivisions,
@@ -1008,5 +1004,7 @@ export class PolarPlane extends Group {
       angleLabels: this._angleLabelOverrides?.map((s) => (typeof s === 'string' ? s : s.copy())),
       radiusLabels: this._radiusLabelOverrides?.map((s) => (typeof s === 'string' ? s : s.copy())),
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

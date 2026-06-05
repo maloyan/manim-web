@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ParametricGeometry } from 'three/examples/jsm/geometries/ParametricGeometry.js';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject3D } from './Mobject3D';
 
 /**
  * Options for creating a Surface3D
@@ -65,7 +66,7 @@ export interface Surface3DOptions {
  * });
  * ```
  */
-export class Surface3D extends Mobject {
+export class Surface3D extends Mobject3D {
   protected _func: (u: number, v: number) => Vector3Tuple;
   protected _uRange: [number, number];
   protected _vRange: [number, number];
@@ -391,8 +392,8 @@ export class Surface3D extends Mobject {
   /**
    * Create a copy of this Surface3D
    */
-  protected override _createCopy(): Surface3D {
-    return new Surface3D({
+  override copy(): Surface3D {
+    const copy = new Surface3D({
       func: this._func,
       uRange: this._uRange,
       vRange: this._vRange,
@@ -405,5 +406,7 @@ export class Surface3D extends Mobject {
       doubleSided: this._doubleSided,
       checkerboardColors: this._checkerboardColors,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

@@ -467,18 +467,16 @@ export class Brace extends VMobject {
     return label;
   }
 
-  /**
-   * Create a copy of this Brace
-   */
-  protected override _createCopy(): Brace {
-    const brace = new Brace(this.mobject!, {
+  override copy(): Brace {
+    const copy = new Brace(this.mobject!, {
       direction: this.braceDirection,
       buff: this.buff,
       color: this.color,
       strokeWidth: this.strokeWidth,
       sharpness: this.sharpness,
     });
-    return brace;
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -789,11 +787,8 @@ export class BraceBetweenPoints extends VMobject {
     return [...this._end];
   }
 
-  /**
-   * Create a copy of this BraceBetweenPoints
-   */
-  protected override _createCopy(): BraceBetweenPoints {
-    return new BraceBetweenPoints({
+  override copy(): BraceBetweenPoints {
+    const copy = new BraceBetweenPoints({
       start: this._start,
       end: this._end,
       direction: this._direction,
@@ -802,6 +797,8 @@ export class BraceBetweenPoints extends VMobject {
       strokeWidth: this.strokeWidth,
       sharpness: this._sharpness,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -987,17 +984,16 @@ export class ArcBrace extends VMobject {
     return this._direction;
   }
 
-  /**
-   * Create a copy of this ArcBrace
-   */
-  protected override _createCopy(): ArcBrace {
-    return new ArcBrace({
+  override copy(): ArcBrace {
+    const copy = new ArcBrace({
       arc: this._arc,
       direction: this._direction,
       buff: this._buff,
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
 
@@ -1108,12 +1104,7 @@ export class BraceLabel extends Group {
     return this._brace.getTip();
   }
 
-  /**
-   * Create a copy of this BraceLabel
-   */
-  protected override _createCopy(): BraceLabel {
-    // This is a simplified copy - full implementation would need to
-    // recreate with the original mobject
+  override copy(): BraceLabel {
     const copy = new BraceLabel(this._brace.mobject!, {
       direction: this._brace.braceDirection,
       buff: this._brace.buff,
@@ -1121,7 +1112,9 @@ export class BraceLabel extends Group {
       strokeWidth: this._brace.strokeWidth,
       sharpness: this._brace.sharpness,
       labelBuff: this._labelBuff,
+      label: this._label ?? '',
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
   }
 }
@@ -1144,12 +1137,9 @@ export class BraceText extends BraceLabel {
     super(mobject, { ...options, label: text });
   }
 
-  /**
-   * Create a copy of this BraceText
-   */
-  protected override _createCopy(): BraceText {
+  override copy(): BraceText {
     const labelText = this._label instanceof Text ? (this._label as Text).getText() : '';
-    return new BraceText(this._brace.mobject!, labelText, {
+    const copy = new BraceText(this._brace.mobject!, labelText, {
       direction: this._brace.braceDirection,
       buff: this._brace.buff,
       color: this._brace.color,
@@ -1157,5 +1147,7 @@ export class BraceText extends BraceLabel {
       sharpness: this._brace.sharpness,
       labelBuff: this._labelBuff,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

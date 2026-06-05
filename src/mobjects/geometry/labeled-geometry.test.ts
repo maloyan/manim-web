@@ -5,14 +5,14 @@
  * Coverage for:
  * - directionToVector (all 8 directions)
  * - LabeledLine: constructor, getLine, getLabel, setLabelText,
- *   setLabelPosition, setLabelOffset, setEndpoints, _createCopy
+ *   setLabelPosition, setLabelOffset, setEndpoints, _copy
  * - LabeledArrow: constructor, getArrow, getLabel, setLabelText,
- *   setLabelPosition, setLabelOffset, setEndpoints, _createCopy
+ *   setLabelPosition, setLabelOffset, setEndpoints, _copy
  * - LabeledDot: constructor, getDot, getLabel, moveTo, setLabelText,
- *   setLabelDirection, setLabelOffset, getPoint, _createCopy
+ *   setLabelDirection, setLabelOffset, getPoint, _copy
  * - AnnotationDot: constructor, getDot, getOutline, getLabel, moveTo,
  *   setLabelText (with/without existing label), setLabelDirection,
- *   setLabelOffset, getPoint, setShowOutline, _createCopy
+ *   setLabelOffset, getPoint, setShowOutline, _copy
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -192,7 +192,7 @@ describe('LabeledLine', () => {
     });
   });
 
-  describe('_createCopy', () => {
+  describe('copy()', () => {
     it('creates a deep copy', () => {
       const ll = new LabeledLine({
         label: 'copy test',
@@ -205,7 +205,7 @@ describe('LabeledLine', () => {
         labelFontSize: 24,
         labelColor: '#123456',
       });
-      const copy = (ll as any)._createCopy() as LabeledLine;
+      const copy = ll.copy() as LabeledLine;
       expect(copy).toBeInstanceOf(LabeledLine);
       expect(copy.getLabel().getText()).toBe('copy test');
     });
@@ -308,7 +308,7 @@ describe('LabeledArrow', () => {
     });
   });
 
-  describe('_createCopy', () => {
+  describe('copy()', () => {
     it('produces a LabeledArrow copy', () => {
       const la = new LabeledArrow({
         label: 'copy',
@@ -318,7 +318,7 @@ describe('LabeledArrow', () => {
         tipLength: 0.3,
         tipWidth: 0.2,
       });
-      const copy = (la as any)._createCopy() as LabeledArrow;
+      const copy = la.copy() as LabeledArrow;
       expect(copy).toBeInstanceOf(LabeledArrow);
       expect(copy.getLabel().getText()).toBe('copy');
     });
@@ -428,14 +428,14 @@ describe('LabeledDot', () => {
     });
   });
 
-  describe('_createCopy', () => {
+  describe('copy()', () => {
     it('produces a LabeledDot copy', () => {
       const ld = new LabeledDot({
         label: 'copy',
         point: [1, 2, 0],
         labelDirection: 'DR',
       });
-      const copy = (ld as any)._createCopy() as LabeledDot;
+      const copy = ld.copy() as LabeledDot;
       expect(copy).toBeInstanceOf(LabeledDot);
       expect(copy.getLabel().getText()).toBe('copy');
     });
@@ -593,7 +593,7 @@ describe('AnnotationDot', () => {
     });
   });
 
-  describe('_createCopy', () => {
+  describe('copy()', () => {
     it('produces an AnnotationDot copy with label', () => {
       const ad = new AnnotationDot({
         point: [1, 2, 0],
@@ -603,14 +603,14 @@ describe('AnnotationDot', () => {
         outlineColor: '#ff0000',
         radius: 0.15,
       });
-      const copy = (ad as any)._createCopy() as AnnotationDot;
+      const copy = ad.copy() as AnnotationDot;
       expect(copy).toBeInstanceOf(AnnotationDot);
       expect(copy.getLabel()!.getText()).toBe('copy');
     });
 
     it('produces copy without label', () => {
       const ad = new AnnotationDot({ showOutline: false });
-      const copy = (ad as any)._createCopy() as AnnotationDot;
+      const copy = ad.copy() as AnnotationDot;
       expect(copy).toBeInstanceOf(AnnotationDot);
       expect(copy.getLabel()).toBeNull();
     });
@@ -822,7 +822,7 @@ describe('LabeledPolygram', () => {
     });
   });
 
-  describe('_createCopy', () => {
+  describe('copy()', () => {
     it('produces a LabeledPolygram copy', () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
@@ -839,7 +839,7 @@ describe('LabeledPolygram', () => {
         labelFontSize: 20,
         precision: 0.1,
       });
-      const copy = (lp as any)._createCopy() as LabeledPolygram;
+      const copy = lp.copy() as LabeledPolygram;
       expect(copy).toBeInstanceOf(LabeledPolygram);
       expect(copy.getLabel().getText()).toBe('copy test');
       expect(copy.pole[0]).toBeCloseTo(lp.pole[0], 0);

@@ -294,15 +294,19 @@ export class DashedVMobject extends Group {
   }
 
   /**
-   * Create a copy of this DashedVMobject
+   * Copy this DashedVMobject, rebuilding dashes from source params.
+   * @post result.children.length === this.children.length  // dashes rebuilt by constructor
    */
-  protected override _createCopy(): DashedVMobject {
-    return new DashedVMobject({
+  override copy(): DashedVMobject {
+    const clone = new DashedVMobject({
       vmobject: this._sourceVMobject.copy() as VMobject,
       numDashes: this._numDashes,
       dashRatio: this._dashRatio,
       color: this._dashColor,
       strokeWidth: this._dashStrokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    clone._dashSegments = clone.children.slice() as VMobject[];
+    return clone;
   }
 }

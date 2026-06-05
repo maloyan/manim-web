@@ -107,8 +107,8 @@ export class TangentialArc extends Arc {
   /**
    * Create a copy of this TangentialArc
    */
-  protected override _createCopy(): TangentialArc {
-    return new TangentialArc({
+  override copy(): TangentialArc {
+    const clone = new TangentialArc({
       start: this.getStartPoint(),
       direction: this._direction,
       radius: this._radius,
@@ -117,5 +117,7 @@ export class TangentialArc extends Arc {
       strokeWidth: this.strokeWidth,
       numComponents: this._numComponents,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    return clone;
   }
 }

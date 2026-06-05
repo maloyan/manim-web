@@ -27,6 +27,9 @@ export interface PGroupOptions {
  * ```
  */
 export class PGroup extends Mobject {
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    return this._flattenAsContainer(worldMatrix);
+  }
   constructor(options: PGroupOptions = {}) {
     super();
 
@@ -198,11 +201,10 @@ export class PGroup extends Mobject {
     return group;
   }
 
-  /**
-   * Create a copy of this PGroup
-   */
-  protected override _createCopy(): PGroup {
-    return new PGroup();
+  override copy(): PGroup {
+    const copy = new PGroup();
+    this._copyBaseAttributesInto(copy);
+    return copy;
   }
 
   /**

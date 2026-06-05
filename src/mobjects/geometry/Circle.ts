@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
@@ -122,6 +123,7 @@ export class Circle extends VMobject {
 
   /**
    * Get the radius of the circle (includes deferred uniform scale).
+   * @post isTransformNormalized() => result === this._radius  // when scale is 1
    */
   getRadius(): number {
     return this._radius * this._getUniformScaleFactor();
@@ -143,15 +145,8 @@ export class Circle extends VMobject {
   }
 
   /**
-   * Get the center of the circle
-   */
-  getCircleCenter(): Vector3Tuple {
-    return [this.position.x, this.position.y, this.position.z];
-  }
-
-  /**
    * Set the center of the circle.
-   * @post getCircleCenter() === value
+   * @post getCenter() === value
    */
   setCircleCenter(value: Vector3Tuple): this {
     this.position.set(value[0], value[1], value[2]);
@@ -190,23 +185,36 @@ export class Circle extends VMobject {
     ];
   }
 
-  override normalizeTransform(): this {
-    this._radius *= this._getUniformScaleFactor();
-    super.normalizeTransform();
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    // Fold the matrix's uniform scale into the stored radius before super bakes
+    // the points (after which scaleVector is 1 and getRadius() === _radius).
+    const e = worldMatrix.elements;
+    const sx = Math.hypot(e[0], e[1], e[2]);
+    const sy = Math.hypot(e[4], e[5], e[6]);
+    const sz = Math.hypot(e[8], e[9], e[10]);
+    const eps = 1e-9;
+    if (Math.abs(sx - sy) > eps || Math.abs(sx - sz) > eps) {
+      throw new Error('Circle requires uniform scale (x == y == z) to derive radius.');
+    }
+    this._radius *= sx;
+    super.normalizeTransform(worldMatrix);
     return this;
   }
 
   /**
-   * Create a copy of this Circle
+   * Copy this Circle.
    */
-  protected override _createCopy(): Circle {
-    return new Circle({
+  override copy(): Circle {
+    const clone = new Circle({
       radius: this._radius,
       numPoints: this._numPoints,
-      center: this.getCircleCenter(),
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    // _copyBaseAttributesInto copies points, position and _constructionCenter, so
+    // the freshly-built clone is fully overwritten into an exact replica.
+    this._copyBaseAttributesInto(clone, { copyChildren: false });
+    return clone;
   }
 }

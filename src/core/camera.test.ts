@@ -107,7 +107,7 @@ describe('Camera2DFrame', () => {
     expect(camera.position.x).not.toBe(99);
   });
 
-  // ---- _createCopy ----
+  // ---- _copy ----
 
   it('copy creates a non-primary frame with same properties', () => {
     const frame = new Camera2DFrame(camera, true);

@@ -629,8 +629,8 @@ export class ThreeDAxes extends Group {
   /**
    * Create a copy of this ThreeDAxes
    */
-  protected override _createCopy(): ThreeDAxes {
-    return new ThreeDAxes({
+  override copy(): ThreeDAxes {
+    const copy = new ThreeDAxes({
       xRange: this._xRange,
       yRange: this._yRange,
       zRange: this._zRange,
@@ -642,5 +642,7 @@ export class ThreeDAxes extends Group {
       labelBuffer: this._labelBuffer,
       billboardLabels: this._billboardLabels,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

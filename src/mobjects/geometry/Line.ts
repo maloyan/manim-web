@@ -80,7 +80,7 @@ export class Line extends VMobject {
    */
   getStart(): Vector3Tuple {
     const localPt = this._points3D.length >= 4 ? this._points3D[0] : this._start;
-    const worldMatrix = this._computeWorldMatrix();
+    const worldMatrix = this._worldMatrix();
     const v = new THREE.Vector3(localPt[0], localPt[1], localPt[2]).applyMatrix4(worldMatrix);
     return [v.x, v.y, v.z];
   }
@@ -101,7 +101,7 @@ export class Line extends VMobject {
   getEnd(): Vector3Tuple {
     const localPt =
       this._points3D.length >= 4 ? this._points3D[this._points3D.length - 1] : this._end;
-    const worldMatrix = this._computeWorldMatrix();
+    const worldMatrix = this._worldMatrix();
     const v = new THREE.Vector3(localPt[0], localPt[1], localPt[2]).applyMatrix4(worldMatrix);
     return [v.x, v.y, v.z];
   }
@@ -171,15 +171,14 @@ export class Line extends VMobject {
     return [s[0] + (e[0] - s[0]) * t, s[1] + (e[1] - s[1]) * t, s[2] + (e[2] - s[2]) * t];
   }
 
-  /**
-   * Create a copy of this Line
-   */
-  protected override _createCopy(): Line {
-    return new Line({
+  override copy(): Line {
+    const copy = new Line({
       start: this._start,
       end: this._end,
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

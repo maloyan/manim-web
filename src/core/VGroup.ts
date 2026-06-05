@@ -20,6 +20,21 @@ export class VGroup extends VMobject {
   }
 
   /**
+   * World-space center from descendant geometry.
+   *
+   * @throws this.isEmpty() — an empty group has no geometry, so no center.
+   * @post !this.isEmpty() => super.getCenter()
+   */
+  override getCenter(): Vector3Tuple {
+    if (this.isEmpty()) {
+      // No geometry => no meaningful center. We don't fall back to `position`
+      // because normalizeTransform() can reset it; callers must not rely on it.
+      throw new Error('VGroup.getCenter: cannot compute center of an empty group (no geometry)');
+    }
+    return super.getCenter();
+  }
+
+  /**
    * Create a new VGroup containing the given mobjects.
    * Accepts both VMobjects and general Mobjects (e.g., Axes, Group).
    * @param mobjects - Mobjects to add to the group
@@ -139,20 +154,6 @@ export class VGroup extends VMobject {
     }
     this._markDirty();
     return this;
-  }
-
-  /**
-   * @post this.isEmpty() => result === this._parentLocalToWorld([position.x, position.y, position.z])
-   * @post !this.isEmpty() => result[i] === (worldBbox.min[i] + worldBbox.max[i]) / 2
-   */
-  override getCenter(): Vector3Tuple {
-    // position is parent-local; lift to world so the empty fallback matches the
-    // world-space bbox branch (and the base Mobject.getCenter convention).
-    if (this.isEmpty()) {
-      return this._parentLocalToWorld([this.position.x, this.position.y, this.position.z]);
-    }
-    const b = this.getBounds();
-    return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
   }
 
   /**
@@ -318,7 +319,7 @@ export class VGroup extends VMobject {
     // leaving the world delta mapped through this group's inverse linear
     // transform. For an identity, parentless group the inverse is identity, so
     // this reduces to the world delta (matching the prior behavior).
-    const invWorld = this._computeWorldMatrix().clone().invert();
+    const invWorld = this._worldMatrix().clone().invert();
     const originalLocal = new THREE.Vector3(...originalCenter).applyMatrix4(invWorld);
     const curLocal = new THREE.Vector3(...cur).applyMatrix4(invWorld);
     const delta: Vector3Tuple = [
@@ -425,12 +426,10 @@ export class VGroup extends VMobject {
     return group;
   }
 
-  /**
-   * Create a copy of this VGroup.
-   */
-  protected override _createCopy(): VMobject {
-    // Create an empty group; children are copied in Mobject.copy()
-    return new VGroup();
+  override copy(): VGroup {
+    const copy = new VGroup();
+    this._copyBaseAttributesInto(copy);
+    return copy;
   }
 
   /**
@@ -500,10 +499,29 @@ export class VGroup extends VMobject {
   }
 
   /**
-   * Get all 3D points from the VGroup.
+   * Local-space points aggregated from all VMobject children.
+   *
+   * @post result === flatMap(vmobjectChildren, c => c.getLocalPoints())
    */
   override getLocalPoints(): number[][] {
     return this.getCombinedPoints();
+  }
+
+  /**
+   * World-space points from this VGroup and all VMobject descendants.
+   *
+   * @post result === flatMap(allVMobjectDescendants, c => c.getPoints())
+   */
+  override getAllPoints(): number[][] {
+    const result: number[][] = [];
+    const collect = (mob: Mobject) => {
+      if (mob instanceof VMobject && !(mob instanceof VGroup)) {
+        result.push(...mob.getPoints());
+      }
+      for (const child of mob.children) collect(child);
+    };
+    for (const child of this.children) collect(child);
+    return result;
   }
 
   /**

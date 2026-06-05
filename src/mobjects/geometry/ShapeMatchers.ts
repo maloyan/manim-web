@@ -73,7 +73,7 @@ export class BackgroundRectangle extends Rectangle {
     //   position = c - initC * scale  (so scaled geometry center = c)
     const initW = this._width;
     const initH = this._height;
-    const initC: Vector3Tuple = [...this._centerPoint];
+    const initC: Vector3Tuple = [0, 0, 0];
 
     let prevW = -1;
     let prevH = -1;
@@ -136,13 +136,15 @@ export class BackgroundRectangle extends Rectangle {
   /**
    * Create a copy of this BackgroundRectangle
    */
-  protected override _createCopy(): BackgroundRectangle {
-    return new BackgroundRectangle(this._targetMobject, {
+  override copy(): BackgroundRectangle {
+    const clone = new BackgroundRectangle(this._targetMobject, {
       buff: this._buff,
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    return clone;
   }
 }
 
@@ -434,14 +436,16 @@ export class SurroundingRectangle extends VMobject {
   /**
    * Create a copy of this SurroundingRectangle
    */
-  protected override _createCopy(): SurroundingRectangle {
-    return new SurroundingRectangle(this._targetMobject, {
+  override copy(): SurroundingRectangle {
+    const clone = new SurroundingRectangle(this._targetMobject, {
       buff: this._buff,
       color: this.color,
       cornerRadius: this._cornerRadius,
       strokeWidth: this.strokeWidth,
       fillOpacity: this.fillOpacity,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    return clone;
   }
 }
 
@@ -571,13 +575,15 @@ export class Underline extends Line {
   /**
    * Create a copy of this Underline
    */
-  protected override _createCopy(): Underline {
-    return new Underline(this._targetMobject, {
+  override copy(): Underline {
+    const clone = new Underline(this._targetMobject, {
       buff: this._buff,
       stretch: this._stretch,
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    return clone;
   }
 }
 
@@ -725,13 +731,18 @@ export class Cross extends VMobject {
   }
 
   /**
-   * Create a copy of this Cross
+   * Copy this Cross, rebuilding lines from target params.
+   * @post result._line1 === result.children[0] && result._line2 === result.children[1]
    */
-  protected override _createCopy(): Cross {
-    return new Cross(this._targetMobject, {
+  override copy(): Cross {
+    const clone = new Cross(this._targetMobject, {
       strokeWidth: this.strokeWidth,
       color: this.color,
       scale: this._scale,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    clone._line1 = clone.children[0] as Line;
+    clone._line2 = clone.children[1] as Line;
+    return clone;
   }
 }

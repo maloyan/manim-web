@@ -20,7 +20,7 @@ class ConcreteMobject extends Mobject {
     return new THREE.Group();
   }
   // eslint-disable-next-line @typescript-eslint/naming-convention
-  protected _createCopy(): Mobject {
+  override copy(): Mobject {
     return new ConcreteMobject();
   }
 }

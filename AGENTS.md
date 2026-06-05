@@ -34,6 +34,17 @@ npm run docs              # Generate example docs + build Docusaurus site
 - Add `// @vitest-environment happy-dom` at top of test files that need DOM/canvas
 - Coverage config in `vitest.config.ts` (v8 provider, lcov reporter)
 - Integration smoke test: `tests/integration/smoke.spec.ts`
+- **Keep example-based tests few.** We are migrating to property-based tests
+  soon (see the code-quality note below), so don't enumerate many cases by
+  hand. Write the smallest set that pins the behavior — one or two
+  representatives is usually enough — and state the **property** the examples
+  stand in for as a `// MIGRATION:` comment, so it can be lifted into a
+  generated property later. Example:
+  ```typescript
+  // MIGRATION: example for the property
+  //   ∀ 3D mesh m, m.normalizeTransform() leaves rotation/scaleVector unchanged.
+  // Replace with a property test once the suite lands.
+  ```
 
 ## Code Style
 
@@ -41,6 +52,7 @@ npm run docs              # Generate example docs + build Docusaurus site
 - Max 500 lines per file (eslint `max-lines` rule)
 - No `any` types (`@typescript-eslint/no-explicit-any`) — use proper types, never `eslint-disable`
 - camelCase naming convention for methods/properties
+- Logging: use the `logger` utility (`src/utils/logger.ts`), never raw `console.*`. `logger.warn`/`logger.error`/`logger.info`/`logger.debug` prefix `[manim-web]`, respect the configured log level, sanitize args, and notify `onLog` listeners. Raw `console.*` bypasses all of that (and tests fail on unexpected `console.warn`/`console.error`). Note: much of the existing codebase still uses raw `console.*` and is being migrated — new code must use `logger`.
 
 ## Geometry conventions
 
@@ -100,6 +112,15 @@ helpers live in `src/utils/math.ts` and are built on top of those.
 // @pre  normalizeTransform() is only meaningful when !this.isEmpty()
 // should be: @pre !this.isEmpty()
 ```
+
+> **Code-quality push (in progress).** We are actively tightening these
+> invariants and will soon back them with **property-based tests** that exercise
+> each `@pre`/`@post` over generated inputs. When adding or changing a method,
+> write its contract as checkable boolean expressions now so it is ready to be
+> turned into a property. Some existing example-based tests are marked
+> `MIGRATION:` — they are weak placeholders to be replaced once the
+> property-based suite lands; prefer asserting on observable invariants (world
+> geometry, bounds) over internal attributes (raw `position`, `_points3D`).
 
 ## Commits, Changelog & Releases
 

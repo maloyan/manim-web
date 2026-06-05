@@ -350,11 +350,8 @@ export class FunctionGraph extends VMobject {
     return this;
   }
 
-  /**
-   * Create a copy of this FunctionGraph
-   */
-  protected override _createCopy(): FunctionGraph {
-    return new FunctionGraph({
+  override copy(): FunctionGraph {
+    const copy = new FunctionGraph({
       func: this._func,
       xRange: this._xRange,
       color: this.color,
@@ -363,5 +360,7 @@ export class FunctionGraph extends VMobject {
       numSamples: this._numSamples,
       axes: this._axes ?? undefined,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

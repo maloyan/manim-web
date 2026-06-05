@@ -1,12 +1,13 @@
 // @vitest-environment happy-dom
 /**
- * Regression tests for the DURABLE fallback bake in TexturedMobject._bakeFallbackScale,
- * as overridden by Text. Covers the cases the size-bake path cannot handle:
- *  - scaling + normalizing BEFORE the canvas produced dimensions (no 2D context yet)
- *  - a later applyVisualSize must compose with / override the fallback, not lose it
+ * Pre-render scale durability for Text.
  *
- * Before the fix, the pre-render scale went into mesh.scale and was lost when a
- * later applyVisualSize() reset mesh.scale to 1 (the MEDIUM finding).
+ * MIGRATION (absolutize): the pre-render scale is no longer routed through a
+ * durable `_bakeFallbackScale` factor that the size-bake path could not handle.
+ * normalize simply retains the scale on `scaleVector` (which lives on the display
+ * group, not the plane mesh), so a scale applied BEFORE the canvas produced
+ * dimensions survives the later canvas render automatically — the render rebuilds
+ * the plane geometry but never touches the Mobject transform.
  */
 import * as THREE from 'three';
 import { describe, it, expect, vi } from 'vitest';
@@ -36,7 +37,7 @@ function createMockCtx(): CanvasRenderingContext2D {
   } as unknown as CanvasRenderingContext2D;
 }
 
-describe('Text pre-render scale survives via durable fallback', () => {
+describe('Text pre-render scale survives via absolutized scaleVector', () => {
   it('scale before canvas dims (size unmeasured) is preserved once the canvas renders', () => {
     const ctxSpy = vi
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
@@ -45,27 +46,23 @@ describe('Text pre-render scale survives via durable fallback', () => {
     try {
       const t = new Text({ text: 'Hello' });
 
-      // Simulate the headless / not-yet-measured state: no world dims yet, so
-      // _currentVisualSize() returns null and the durable fallback path is taken.
+      // Simulate the headless / not-yet-measured state: no world dims yet.
       const tt = t as unknown as {
         _worldWidth: number;
         _worldHeight: number;
-        _currentVisualSize(): unknown;
         _canvasDirty: boolean;
         _renderToCanvas(): void;
         _updateMesh(): void;
       };
       tt._worldWidth = 0;
       tt._worldHeight = 0;
-      // _currentVisualSize() calls getThreeObject() which re-renders; null only if
-      // measurement yields 0. With a real ctx it remeasures, so assert the bake
-      // path directly by stubbing the size getter to null for this scale.
-      const sizeSpy = vi.spyOn(tt, '_currentVisualSize').mockReturnValue(null);
 
       t.scale(2);
       t.normalizeTransform();
-      expect(t.scaleVector.x).toBeCloseTo(1, 6);
-      sizeSpy.mockRestore();
+      // MIGRATION: scale is retained on scaleVector (absolutized), not folded into
+      // a `_bakedScale` fallback. It lives on the display group and survives the
+      // later canvas render below.
+      expect(t.scaleVector.x).toBeCloseTo(2, 6);
 
       // Now the canvas re-renders (recomputing _worldWidth/Height) and rebuilds.
       tt._canvasDirty = true;
@@ -76,43 +73,45 @@ describe('Text pre-render scale survives via durable fallback', () => {
       const baseW = tt._worldWidth;
       const baseH = tt._worldHeight;
 
-      // Geometry must reflect the baked 2x factor over the freshly measured size,
-      // i.e. the pre-render scale was NOT lost by the re-render.
+      // The plane geometry is the freshly measured *base* size (scale is not folded
+      // into geometry)...
       expect(baseW).toBeGreaterThan(0);
-      expect(geom.parameters.width).toBeCloseTo(baseW * 2, 4);
-      expect(geom.parameters.height).toBeCloseTo(baseH * 2, 4);
+      expect(geom.parameters.width).toBeCloseTo(baseW, 4);
+      expect(geom.parameters.height).toBeCloseTo(baseH, 4);
+
+      // ...while the retained 2x scale still applies, so world bounds are 2x base.
+      expect(t.scaleVector.x).toBeCloseTo(2, 6);
+      const b = t.getBounds();
+      expect(b.max.x - b.min.x).toBeCloseTo(baseW * 2, 4);
+      expect(b.max.y - b.min.y).toBeCloseTo(baseH * 2, 4);
     } finally {
       ctxSpy.mockRestore();
     }
   });
 
-  it('a later applyVisualSize overrides the fallback factor (no double-apply, no loss)', () => {
+  it('applyVisualSize sets the explicit base geometry size (mesh.scale stays 1)', () => {
     const ctxSpy = vi
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
       .mockImplementation((contextId: string) => (contextId === '2d' ? createMockCtx() : null));
 
     try {
       const t = new Text({ text: 'World' });
-      // Force the fallback even though dims exist, by calling it directly with a
-      // factor (simulates the non-uniform-rotated unsupported path).
-      (t as unknown as { _bakeFallbackScale(x: number, y: number): void })._bakeFallbackScale(2, 2);
+      t.getThreeObject(); // create the mesh first (as in the live mid-morph flow)
 
-      const geomBefore = t.getDisplayMeshes()[0].geometry as THREE.PlaneGeometry;
-      const baseW = (t as unknown as { _worldWidth: number })._worldWidth;
-      expect(geomBefore.parameters.width).toBeCloseTo(baseW * 2, 4);
-
-      // Explicit size carries the full scale; the fallback factor must be dropped.
+      // MIGRATION (absolutize): applyVisualSize sets the base plane geometry to the
+      // requested size and leaves mesh.scale at 1; any transform scale lives on
+      // scaleVector (the display group), not folded into the mesh.
       t.applyVisualSize(4, 3);
-      const geomAfter = t.getDisplayMeshes()[0].geometry as THREE.PlaneGeometry;
-      expect(geomAfter.parameters.width).toBeCloseTo(4, 4);
-      expect(geomAfter.parameters.height).toBeCloseTo(3, 4);
+      const geom = t.getDisplayMeshes()[0].geometry as THREE.PlaneGeometry;
+      expect(geom.parameters.width).toBeCloseTo(4, 4);
+      expect(geom.parameters.height).toBeCloseTo(3, 4);
       expect(t.getDisplayMeshes()[0].scale.x).toBeCloseTo(1, 6);
     } finally {
       ctxSpy.mockRestore();
     }
   });
 
-  it('the supported post-render uniform-scale path still bakes into size (unchanged)', () => {
+  it('a uniform scale survives normalize with world bounds preserved', () => {
     const ctxSpy = vi
       .spyOn(HTMLCanvasElement.prototype, 'getContext')
       .mockImplementation((contextId: string) => (contextId === '2d' ? createMockCtx() : null));
@@ -126,8 +125,8 @@ describe('Text pre-render scale survives via durable fallback', () => {
       t.normalizeTransform();
       const after = t.getBounds();
       expect(after.max.x - after.min.x).toBeCloseTo(w0 * 2, 5);
-      // Uniform post-render path uses the size bake, leaving the fallback factor at 1.
-      expect((t as unknown as { _bakedScaleX: number })._bakedScaleX).toBeCloseTo(1, 6);
+      // MIGRATION: scale retained on scaleVector (absolutized), not folded into geometry.
+      expect(t.scaleVector.x).toBeCloseTo(2, 6);
     } finally {
       ctxSpy.mockRestore();
     }

@@ -531,11 +531,8 @@ export class ImplicitFunction extends VMobject {
     return this;
   }
 
-  /**
-   * Create a copy of this ImplicitFunction
-   */
-  protected override _createCopy(): ImplicitFunction {
-    return new ImplicitFunction({
+  override copy(): ImplicitFunction {
+    const copy = new ImplicitFunction({
       func: this._func,
       xRange: this._xRange,
       yRange: this._yRange,
@@ -545,5 +542,7 @@ export class ImplicitFunction extends VMobject {
       strokeWidth: this.strokeWidth,
       axes: this._axes ?? undefined,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }

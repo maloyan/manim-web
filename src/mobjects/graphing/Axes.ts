@@ -785,11 +785,8 @@ export class Axes extends Group {
     return ((y - min) / range - 0.5) * this._yLength;
   }
 
-  /**
-   * Create a copy of this Axes
-   */
-  protected override _createCopy(): Axes {
-    return new Axes({
+  override copy(): Axes {
+    const copy = new Axes({
       xRange: this._xRange,
       yRange: this._yRange,
       xLength: this._xLength,
@@ -797,5 +794,7 @@ export class Axes extends Group {
       tips: this._tips,
       tipLength: this._tipLength,
     });
+    this._copyBaseAttributesInto(copy, { copyChildren: false });
+    return copy;
   }
 }
