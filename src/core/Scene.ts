@@ -655,6 +655,79 @@ export class Scene {
   }
 
   /**
+   * Play animations with explicit per-animation start/end times (seconds).
+   *
+   * NOTE: this is a manim-widget wire-format feature — Python manim has no
+   * equivalent per-animation timing API. It is used by the player when
+   * deserializing AnimationGroup descriptors that carry `start`/`end` fields.
+   *
+   * Each entry's `end - start` overrides the animation's own duration so the
+   * Timeline schedules it for the correct window.
+   */
+  async playWithTimestamps(
+    entries: { animation: Animation; start: number; end: number }[],
+  ): Promise<void> {
+    if (entries.length === 0) return;
+
+    const animations = entries.map((e) => e.animation);
+    const allAnimations = this._collectAllAnimations(animations);
+
+    this._cancelPendingRender();
+    this._suppressAutoRender = true;
+    try {
+      const renderPromises: Promise<void>[] = [];
+      const collectRenders = (mobject: Mobject) => {
+        const asyncMob = mobject as Mobject & { waitForRender?: () => Promise<void> };
+        if (typeof asyncMob.waitForRender === 'function') {
+          renderPromises.push(asyncMob.waitForRender().catch(() => {}));
+        }
+        for (const child of mobject.children) collectRenders(child);
+      };
+      for (const anim of allAnimations) collectRenders(anim.mobject);
+      if (renderPromises.length > 0) await Promise.all(renderPromises);
+
+      for (const anim of allAnimations) {
+        if (anim.mobject._dirty) {
+          anim.mobject._syncToThree();
+          anim.mobject._dirty = false;
+        }
+      }
+
+      for (const anim of animations) anim.begin();
+
+      for (const anim of allAnimations) {
+        if (!this._mobjects.has(anim.mobject)) this.add(anim.mobject);
+      }
+
+      this._timeline = new Timeline();
+      for (const { animation, start, end } of entries) {
+        // Override duration so Timeline.add computes the correct endTime.
+        Object.defineProperty(animation, 'duration', {
+          value: end - start,
+          writable: true,
+          configurable: true,
+        });
+        this._timeline.add(animation, start);
+      }
+
+      this._timeline.play();
+      this._isPlaying = true;
+      this._currentTime = 0;
+      this._startRenderLoop();
+    } finally {
+      this._suppressAutoRender = false;
+      this._cancelPendingRender();
+    }
+
+    if (this._disposed) return;
+    await new Promise<void>((resolve) => {
+      this._playPromiseResolve = resolve;
+    });
+
+    for (const anim of allAnimations) anim.cleanUpFromScene(this);
+  }
+
+  /**
    * Play multiple animations in parallel (all at once).
    * Alias for play() - delegates to play() to avoid duplicated logic.
    * @param animations - Animations to play simultaneously
