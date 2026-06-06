@@ -252,6 +252,17 @@ describe('Clickable', () => {
     c.dispose();
   });
 
+  // MIGRATION: example-based regression for issue #430 (Clickable example).
+  // Intent: the defining difference from Draggable is that clicking triggers a
+  // callback WITHOUT repositioning the mobject. Guards the contrast the example
+  // teaches — click = action, drag = move.
+  it('clicking a Clickable fires the callback but never moves the mobject', () => {
+    const canvas = scene.getCanvas();
+    fireMouseEvent(canvas, 'click', { clientX: 400, clientY: 300 });
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(mob.moveTo).not.toHaveBeenCalled();
+  });
+
   it('dispose removes event listeners (no errors on subsequent clicks)', () => {
     clickable.dispose();
     const canvas = scene.getCanvas();
