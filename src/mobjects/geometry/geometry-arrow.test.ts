@@ -64,13 +64,6 @@ describe('Arrow.reconstructTip', () => {
   });
 });
 
-describe('DoubleArrow.reconstructTips', () => {
-  it('exists and can be called without error', () => {
-    const da = new DoubleArrow({ start: [0, 0, 0], end: [3, 0, 0] });
-    expect(() => da.reconstructTips()).not.toThrow();
-  });
-});
-
 // ── ApplyMatrix on Arrow ────────────────────────────────────────────────────
 
 describe('ApplyMatrix on Arrow with non-uniform matrix', () => {

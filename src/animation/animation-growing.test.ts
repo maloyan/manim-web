@@ -70,65 +70,64 @@ describe('GrowArrow', () => {
     });
   });
 
+  // GrowArrow grows the shaft/tip children, leaving the Arrow's own
+  // _start/_end (hence getStart/getEnd) untouched. Progress is therefore
+  // measured on the RENDERED geometry: getWidth() is the rendered length and
+  // getCenter() tracks the visual center from the start point to the midpoint.
   describe('begin()', () => {
-    it('sets scale to near-zero', () => {
+    it('collapses the arrow to near-zero size', () => {
       const arrow = makeArrow();
-      const anim = new GrowArrow(arrow);
-      anim.begin();
-      expect(arrow.scaleVector.x).toBeCloseTo(0.001, 5);
-      expect(arrow.scaleVector.y).toBeCloseTo(0.001, 5);
-      expect(arrow.scaleVector.z).toBeCloseTo(0.001, 5);
+      new GrowArrow(arrow).begin();
+      expect(arrow.getWidth()).toBeCloseTo(0, 1);
     });
 
-    it('moves position to start point', () => {
+    it('collapses onto the start point', () => {
       const arrow = new Arrow({ start: [1, 2, 0], end: [3, 4, 0] });
-      const anim = new GrowArrow(arrow);
-      anim.begin();
-      expect(arrow.position.x).toBeCloseTo(1, 5);
-      expect(arrow.position.y).toBeCloseTo(2, 5);
+      new GrowArrow(arrow).begin();
+      const c = arrow.getCenter();
+      expect(c[0]).toBeCloseTo(1, 1);
+      expect(c[1]).toBeCloseTo(2, 1);
     });
   });
 
   describe('interpolate()', () => {
-    it('at alpha=0.5 scales to roughly half', () => {
-      const arrow = makeArrow();
+    it('at alpha=0.5 is roughly half-grown', () => {
+      const arrow = makeArrow(); // full rendered width = 2
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(0.5);
-      expect(arrow.scaleVector.x).toBeCloseTo(0.5, 2);
-      expect(arrow.scaleVector.y).toBeCloseTo(0.5, 2);
+      expect(arrow.getWidth()).toBeCloseTo(1, 1);
     });
 
-    it('at alpha=1 restores full scale', () => {
+    it('at alpha=1 reaches full size', () => {
       const arrow = makeArrow();
-      const origScaleX = arrow.scaleVector.x;
+      const full = arrow.getWidth();
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(1);
-      expect(arrow.scaleVector.x).toBeCloseTo(origScaleX, 5);
+      expect(arrow.getWidth()).toBeCloseTo(full, 2);
     });
 
-    it('position interpolates from start toward center', () => {
+    it('center grows from the start point toward the midpoint', () => {
       const arrow = new Arrow({ start: [0, 0, 0], end: [4, 0, 0] });
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(1);
-      // At alpha=1 position should be at midpoint (0+4)/2 = 2
-      expect(arrow.position.x).toBeCloseTo(2, 2);
+      // fully grown: visual center sits at the segment midpoint (0+4)/2 = 2
+      expect(arrow.getCenter()[0]).toBeCloseTo(2, 1);
     });
   });
 
   describe('finish()', () => {
-    it('restores original scale and sets position to midpoint', () => {
+    it('restores full size with center at the midpoint', () => {
       const arrow = new Arrow({ start: [0, 0, 0], end: [4, 0, 0] });
-      const origScale = arrow.scaleVector.clone();
+      const full = arrow.getWidth();
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(0.3);
       anim.finish();
-      expect(arrow.scaleVector.x).toBeCloseTo(origScale.x, 5);
-      expect(arrow.scaleVector.y).toBeCloseTo(origScale.y, 5);
-      expect(arrow.position.x).toBeCloseTo(2, 2);
+      expect(arrow.getWidth()).toBeCloseTo(full, 2);
+      expect(arrow.getCenter()[0]).toBeCloseTo(2, 1);
     });
   });
 

@@ -59,53 +59,45 @@ function trianglePoints(): number[][] {
 // ============================================================================
 
 describe('GrowArrow (extra)', () => {
+  // GrowArrow grows the shaft/tip children, so progress shows up in the
+  // rendered geometry: getWidth() is the rendered length and getCenter()
+  // tracks the visual center from the start point to the midpoint.
   describe('interpolate() progression', () => {
-    it('scale increases monotonically from 0 to 1', () => {
+    it('rendered size increases monotonically from 0 to full', () => {
       const arrow = makeArrow();
       const anim = new GrowArrow(arrow);
       anim.begin();
 
-      const scales: number[] = [];
+      const widths: number[] = [];
       for (let a = 0; a <= 1; a += 0.1) {
         anim.interpolate(a);
-        scales.push(arrow.scaleVector.x);
+        widths.push(arrow.getWidth());
       }
 
-      // Each scale should be >= previous
-      for (let i = 1; i < scales.length; i++) {
-        expect(scales[i]).toBeGreaterThanOrEqual(scales[i - 1] - 0.001);
+      for (let i = 1; i < widths.length; i++) {
+        expect(widths[i]).toBeGreaterThanOrEqual(widths[i - 1] - 1e-6);
       }
     });
 
-    it('at alpha=0, scale is clamped to 0.001 (not 0)', () => {
-      const arrow = makeArrow();
-      const anim = new GrowArrow(arrow);
-      anim.begin();
-      anim.interpolate(0);
-      expect(arrow.scaleVector.x).toBeCloseTo(0.001, 5);
-      expect(arrow.scaleVector.y).toBeCloseTo(0.001, 5);
-      expect(arrow.scaleVector.z).toBeCloseTo(0.001, 5);
-    });
-
-    it('position moves continuously from start to midpoint', () => {
+    it('center moves continuously from the start point to the midpoint', () => {
       const arrow = makeArrow([0, 0, 0], [6, 0, 0]);
       const anim = new GrowArrow(arrow);
       anim.begin();
 
       anim.interpolate(0);
-      expect(arrow.position.x).toBeCloseTo(0, 2);
+      expect(arrow.getCenter()[0]).toBeCloseTo(0, 2);
 
       anim.interpolate(0.25);
-      expect(arrow.position.x).toBeCloseTo(0.75, 2);
+      expect(arrow.getCenter()[0]).toBeCloseTo(0.75, 2);
 
       anim.interpolate(0.5);
-      expect(arrow.position.x).toBeCloseTo(1.5, 2);
+      expect(arrow.getCenter()[0]).toBeCloseTo(1.5, 2);
 
       anim.interpolate(0.75);
-      expect(arrow.position.x).toBeCloseTo(2.25, 2);
+      expect(arrow.getCenter()[0]).toBeCloseTo(2.25, 2);
 
       anim.interpolate(1);
-      expect(arrow.position.x).toBeCloseTo(3, 2); // midpoint
+      expect(arrow.getCenter()[0]).toBeCloseTo(3, 2); // midpoint
     });
 
     it('handles arrow with 3D coordinates', () => {
@@ -113,49 +105,33 @@ describe('GrowArrow (extra)', () => {
       const anim = new GrowArrow(arrow);
       anim.begin();
 
-      // Position should start at the start point
-      expect(arrow.position.x).toBeCloseTo(1, 2);
-      expect(arrow.position.y).toBeCloseTo(2, 2);
-      expect(arrow.position.z).toBeCloseTo(3, 2);
+      // collapsed onto the start point
+      const start = arrow.getCenter();
+      expect(start[0]).toBeCloseTo(1, 2);
+      expect(start[1]).toBeCloseTo(2, 2);
+      expect(start[2]).toBeCloseTo(3, 2);
 
       anim.interpolate(1);
-      // At alpha=1, position should be at midpoint
-      expect(arrow.position.x).toBeCloseTo(3, 2); // (1+5)/2
-      expect(arrow.position.y).toBeCloseTo(4, 2); // (2+6)/2
-      expect(arrow.position.z).toBeCloseTo(5, 2); // (3+7)/2
-    });
-  });
-
-  describe('begin() stores target correctly', () => {
-    it('preserves target scale for non-unit scaled arrow', () => {
-      const arrow = makeArrow();
-      arrow.scaleVector.set(2, 3, 4);
-      const anim = new GrowArrow(arrow);
-      anim.begin();
-
-      // Scale should be near-zero after begin
-      expect(arrow.scaleVector.x).toBeCloseTo(0.001, 5);
-
-      anim.interpolate(1);
-      expect(arrow.scaleVector.x).toBeCloseTo(2, 2);
-      expect(arrow.scaleVector.y).toBeCloseTo(3, 2);
-      expect(arrow.scaleVector.z).toBeCloseTo(4, 2);
+      // fully grown: center at the midpoint
+      const mid = arrow.getCenter();
+      expect(mid[0]).toBeCloseTo(3, 2); // (1+5)/2
+      expect(mid[1]).toBeCloseTo(4, 2); // (2+6)/2
+      expect(mid[2]).toBeCloseTo(5, 2); // (3+7)/2
     });
   });
 
   describe('finish() after partial interpolation', () => {
-    it('restores exact state regardless of last interpolation step', () => {
+    it('restores full rendered geometry regardless of last interpolation step', () => {
       const arrow = makeArrow([0, 0, 0], [4, 4, 0]);
-      const origScale = arrow.scaleVector.clone();
+      const full = arrow.getWidth();
       const anim = new GrowArrow(arrow);
       anim.begin();
       anim.interpolate(0.1); // barely started
       anim.finish();
-      expect(arrow.scaleVector.x).toBeCloseTo(origScale.x, 5);
-      expect(arrow.scaleVector.y).toBeCloseTo(origScale.y, 5);
-      expect(arrow.scaleVector.z).toBeCloseTo(origScale.z, 5);
-      expect(arrow.position.x).toBeCloseTo(2, 2); // midpoint x
-      expect(arrow.position.y).toBeCloseTo(2, 2); // midpoint y
+      expect(arrow.getWidth()).toBeCloseTo(full, 2);
+      const c = arrow.getCenter();
+      expect(c[0]).toBeCloseTo(2, 2); // midpoint x
+      expect(c[1]).toBeCloseTo(2, 2); // midpoint y
     });
   });
 

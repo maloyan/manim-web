@@ -2,6 +2,13 @@ import * as THREE from 'three';
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { WHITE } from '../../constants';
+import {
+  segmentLength,
+  segmentMidpoint,
+  segmentDirection,
+  segmentAngle,
+  segmentPointAt,
+} from './segment';
 
 /**
  * Options for creating a Line
@@ -120,12 +127,7 @@ export class Line extends VMobject {
    * @post result === dist(getStart(), getEnd())
    */
   getLength(): number {
-    const s = this.getStart();
-    const e = this.getEnd();
-    const dx = e[0] - s[0];
-    const dy = e[1] - s[1];
-    const dz = e[2] - s[2];
-    return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    return segmentLength(this.getStart(), this.getEnd());
   }
 
   /**
@@ -133,9 +135,7 @@ export class Line extends VMobject {
    * @post result === (getStart() + getEnd()) / 2
    */
   getMidpoint(): Vector3Tuple {
-    const s = this.getStart();
-    const e = this.getEnd();
-    return [(s[0] + e[0]) / 2, (s[1] + e[1]) / 2, (s[2] + e[2]) / 2];
+    return segmentMidpoint(this.getStart(), this.getEnd());
   }
 
   /**
@@ -143,22 +143,14 @@ export class Line extends VMobject {
    * @post result === normalize(getEnd() - getStart())
    */
   getDirection(): Vector3Tuple {
-    const s = this.getStart();
-    const e = this.getEnd();
-    const length = this.getLength();
-    if (length === 0) {
-      return [1, 0, 0];
-    }
-    return [(e[0] - s[0]) / length, (e[1] - s[1]) / length, (e[2] - s[2]) / length];
+    return segmentDirection(this.getStart(), this.getEnd());
   }
 
   /**
    * Get the angle of the line in the XY plane (in radians, world-space).
    */
   getAngle(): number {
-    const s = this.getStart();
-    const e = this.getEnd();
-    return Math.atan2(e[1] - s[1], e[0] - s[0]);
+    return segmentAngle(this.getStart(), this.getEnd());
   }
 
   /**
@@ -166,19 +158,21 @@ export class Line extends VMobject {
    * @post pointAlongPath(0) === getStart() && pointAlongPath(1) === getEnd()
    */
   pointAlongPath(t: number): Vector3Tuple {
-    const s = this.getStart();
-    const e = this.getEnd();
-    return [s[0] + (e[0] - s[0]) * t, s[1] + (e[1] - s[1]) * t, s[2] + (e[2] - s[2]) * t];
+    return segmentPointAt(this.getStart(), this.getEnd(), t);
   }
 
+  /**
+   * Copy this Line.
+   */
   override copy(): Line {
-    const copy = new Line({
-      start: this._start,
-      end: this._end,
+    this.normalizeTransform();
+    const clone = new Line({
+      start: this.getStart(),
+      end: this.getEnd(),
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(copy, { copyChildren: false });
-    return copy;
+    this._copyBaseAttributesInto(clone, { copyPosition: false });
+    return clone;
   }
 }
