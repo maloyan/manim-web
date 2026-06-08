@@ -1254,6 +1254,60 @@ describe('VMobject._interpolatePointList3D (via alignPoints)', () => {
   });
 });
 
+describe('resamplePointList3D – corner-tangent regression', () => {
+  // A square in 3n+1 cubic-bezier format (4 straight-line segments, sideLength=2).
+  // Resampling it to 25 pts (ratio 2:1) places new anchors exactly on the original
+  // curve boundaries (the corners).  The bug: buildSubCubic used the wrong tangent
+  // at those boundaries, producing handles that bulge outside the square.
+  //
+  // For every straight-line segment the handles must lie on the segment itself,
+  // i.e. h1 = anchor_start + 1/3*(anchor_end - anchor_start) and similarly h2.
+  // We verify that every handle in the 25-pt result is collinear with its two
+  // surrounding anchors (within floating-point tolerance).
+
+  it('resampling a square 13→25 keeps all handles collinear with their anchors', () => {
+    const TL = [-1, 1, 0],
+      TR = [1, 1, 0],
+      BR = [1, -1, 0],
+      BL = [-1, -1, 0];
+    function seg(p0: number[], p1: number[]): number[][] {
+      return [
+        [p0[0] + (p1[0] - p0[0]) / 3, p0[1] + (p1[1] - p0[1]) / 3, 0],
+        [p0[0] + (2 * (p1[0] - p0[0])) / 3, p0[1] + (2 * (p1[1] - p0[1])) / 3, 0],
+        [...p1],
+      ];
+    }
+    const sq13 = [TL, ...seg(TL, TR), ...seg(TR, BR), ...seg(BR, BL), ...seg(BL, TL)];
+    expect(sq13.length).toBe(13);
+
+    const v1 = new VMobject();
+    v1.setPoints(sq13);
+    const v2 = new VMobject();
+    // 25-pt target to force resample (same count as a Python Circle with 8 arcs)
+    v2.setPoints(Array.from({ length: 25 }, (_, i) => [i, 0, 0]));
+
+    v1.alignPoints(v2);
+    const pts = v1.getLocalPoints();
+    expect(pts.length).toBe(25);
+
+    // Every triplet [anchor, h1, h2, anchor] must be collinear.
+    // Cross product of (h-anchor_start) × (anchor_end - anchor_start) must be ~0.
+    for (let i = 0; i + 3 < pts.length; i += 3) {
+      const a0 = pts[i],
+        h1 = pts[i + 1],
+        h2 = pts[i + 2],
+        a1 = pts[i + 3];
+      const edgeX = a1[0] - a0[0],
+        edgeY = a1[1] - a0[1];
+      // cross product z-component: edge × (h - a0)
+      const cross1 = edgeX * (h1[1] - a0[1]) - edgeY * (h1[0] - a0[0]);
+      const cross2 = edgeX * (h2[1] - a0[1]) - edgeY * (h2[0] - a0[0]);
+      expect(Math.abs(cross1)).toBeCloseTo(0, 10);
+      expect(Math.abs(cross2)).toBeCloseTo(0, 10);
+    }
+  });
+});
+
 describe('VMobject style optimization (no-op dirty checks)', () => {
   it('setStrokeOpacity does not mark dirty if value unchanged', () => {
     const v = new VMobject();
