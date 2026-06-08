@@ -228,6 +228,20 @@ function locateOnChain(info: ChainArcInfo, arc: number): { curveIdx: number; t: 
   return { curveIdx, t: tForArcLength(info.tables[curveIdx], localArc) };
 }
 
+/**
+ * Like locateOnChain but snaps t≈1 to {curveIdx+1, t:0}.
+ * Used to obtain the *outgoing* tangent at a curve boundary: the tangent on
+ * the arriving side of the next curve rather than the departing side of the
+ * previous one.
+ */
+function locateOnChainSnapped(info: ChainArcInfo, arc: number): { curveIdx: number; t: number } {
+  const loc = locateOnChain(info, arc);
+  if (loc.t > 1 - 1e-9 && loc.curveIdx < info.curves.length - 1) {
+    return { curveIdx: loc.curveIdx + 1, t: 0 };
+  }
+  return loc;
+}
+
 /** Build a degenerate cubic chain consisting of `newCurveCount` zero-length pieces. */
 function makeDegenerateChain(point: number[], newCurveCount: number): number[][] {
   const out: number[][] = [[...point]];
@@ -286,27 +300,37 @@ function arcLengthResampleCubicChain(points: number[][], newCurveCount: number):
   const info = buildChainArcInfo(points);
   if (info.totalLen <= 0) return makeDegenerateChain(points[0], newCurveCount);
 
-  // Anchor positions and unit tangents at each new arc-length-uniform anchor.
+  // For each new anchor compute:
+  //   - its position on the original chain
+  //   - its *outgoing* tangent (used as h1 of the sub-cubic that departs from it)
+  //   - its *incoming* tangent (used as h2 of the sub-cubic that arrives at it)
+  // At smooth points these are equal.  At a sharp corner (e.g. a square vertex)
+  // they differ: the outgoing tangent is the direction of the arriving edge while
+  // the incoming tangent is the direction of the departing edge.  Using the wrong
+  // one produces handles that bulge outside the shape.
   const anchors: number[][] = [];
-  const tangents: number[][] = [];
+  const outgoingTangents: number[][] = []; // h1 of sub-cubic i  (departure direction)
+  const incomingTangents: number[][] = []; // h2 of sub-cubic i-1 (arrival direction)
   for (let i = 0; i <= newCurveCount; i++) {
     const arcAt = (i / newCurveCount) * info.totalLen;
-    const loc = locateOnChain(info, arcAt);
-    const c = info.curves[loc.curveIdx];
-    anchors.push(evalCubicBezier(c[0], c[1], c[2], c[3], loc.t));
-    tangents.push(unitTangentAt(c, loc.t));
+    const locIn = locateOnChain(info, arcAt); // t≈1 stays on current curve → incoming
+    const locOut = locateOnChainSnapped(info, arcAt); // t≈1 snaps to next curve  → outgoing
+    const c = info.curves[locOut.curveIdx];
+    anchors.push(evalCubicBezier(c[0], c[1], c[2], c[3], locOut.t));
+    outgoingTangents.push(unitTangentAt(info.curves[locOut.curveIdx], locOut.t));
+    incomingTangents.push(unitTangentAt(info.curves[locIn.curveIdx], locIn.t));
   }
 
   const out: number[][] = [[...anchors[0]]];
   for (let i = 0; i < newCurveCount; i++) {
-    const sLoc = locateOnChain(info, (i / newCurveCount) * info.totalLen);
-    const eLoc = locateOnChain(info, ((i + 1) / newCurveCount) * info.totalLen);
+    const sLoc = locateOnChainSnapped(info, (i / newCurveCount) * info.totalLen);
+    const eLoc = locateOnChainSnapped(info, ((i + 1) / newCurveCount) * info.totalLen);
     const { h1, h2 } = buildSubCubic(
       info,
       anchors[i],
       anchors[i + 1],
-      tangents[i],
-      tangents[i + 1],
+      outgoingTangents[i], // outgoing direction at start anchor
+      incomingTangents[i + 1], // incoming direction at end anchor
       sLoc,
       eLoc,
     );
