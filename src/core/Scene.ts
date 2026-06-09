@@ -553,18 +553,16 @@ export class Scene {
   }
 
   /**
-   * Play animations in parallel (all at once).
-   * Matches Manim's scene.play() behavior where multiple animations run simultaneously.
-   * Automatically adds mobjects to the scene if not already present.
-   * @param animations - Animations to play
-   * @returns Promise that resolves when all animations complete
+   * Shared animation playback logic for play() and playWithTimestamps().
+   * Handles async render waits, dirty sync, begin(), scene add, timeline setup,
+   * and cleanup. The scheduleOnTimeline callback defines how animations are
+   * scheduled on the timeline (parallel vs. timestamped).
    */
-  async play(...animations: Animation[]): Promise<void> {
-    if (animations.length === 0) return;
-
-    // Collect all nested mobjects (for scene.add), but only begin top-level animations.
-    // AnimationGroup.begin() handles calling begin() on its own children.
-    const allAnimations = this._collectAllAnimations(animations);
+  private async _runAnimations(
+    topLevelAnimations: Animation[],
+    scheduleOnTimeline: (timeline: Timeline) => void,
+  ): Promise<void> {
+    const allAnimations = this._collectAllAnimations(topLevelAnimations);
 
     // Suppress any auto-render that `add()` (called by the user before play,
     // or by us below) might have scheduled. Otherwise the mobject would be
@@ -605,7 +603,7 @@ export class Scene {
       }
 
       // Initialize only top-level animations to avoid double begin() on AnimationGroup children
-      for (const animation of animations) {
+      for (const animation of topLevelAnimations) {
         animation.begin();
       }
 
@@ -617,9 +615,9 @@ export class Scene {
         }
       }
 
-      // Play all animations in parallel (Manim behavior)
+      // Schedule animations on timeline via callback
       this._timeline = new Timeline();
-      this._timeline.addParallel(animations);
+      scheduleOnTimeline(this._timeline);
 
       // Start playback
       this._timeline.play();
@@ -652,6 +650,74 @@ export class Scene {
     for (const animation of allAnimations) {
       animation.cleanUpFromScene(this);
     }
+  }
+
+  /**
+   * Play animations in parallel (all at once).
+   * Matches Manim's scene.play() behavior where multiple animations run simultaneously.
+   * Automatically adds mobjects to the scene if not already present.
+   * @param animations - Animations to play
+   * @returns Promise that resolves when all animations complete
+   */
+  async play(...animations: Animation[]): Promise<void> {
+    if (animations.length === 0) return;
+
+    return this._runAnimations(animations, (timeline) => {
+      timeline.addParallel(animations);
+    });
+  }
+
+  /**
+   * Play animations with explicit per-animation start/end times (seconds).
+   *
+   * NOTE: this is a manim-widget wire-format feature — Python manim has no
+   * equivalent per-animation timing API. It is used by the player when
+   * deserializing AnimationGroup descriptors that carry `start`/`end` fields.
+   *
+   * Each entry's `end - start` overrides the animation's own duration so the
+   * Timeline schedules it for the correct window. WARNING: this permanently
+   * mutates the Animation object's `duration` property. Reusing the same
+   * animation instance in multiple calls will use the last set duration.
+   */
+  async playWithTimestamps(
+    entries: { animation: Animation; start: number; end: number }[],
+  ): Promise<void> {
+    if (entries.length === 0) return;
+
+    // Validate timestamps: finite, end > start, start >= 0
+    for (const { start, end } of entries) {
+      if (!Number.isFinite(start) || !Number.isFinite(end)) {
+        throw new Error(
+          `Invalid animation timing: start and end must be finite (got start=${start}, end=${end})`,
+        );
+      }
+      if (end <= start) {
+        throw new Error(
+          `Invalid animation timing: end (${end}) must be greater than start (${start})`,
+        );
+      }
+      if (start < 0) {
+        throw new Error(`Invalid animation timing: start (${start}) must be >= 0`);
+      }
+    }
+
+    // Override animation durations BEFORE begin() so AnimationGroup can use
+    // the new duration to compute child _startTimes/_endTimes correctly.
+    for (const { animation, start, end } of entries) {
+      Object.defineProperty(animation, 'duration', {
+        value: end - start,
+        writable: true,
+        configurable: true,
+      });
+    }
+
+    const animations = entries.map((e) => e.animation);
+
+    return this._runAnimations(animations, (timeline) => {
+      for (const { animation, start } of entries) {
+        timeline.add(animation, start);
+      }
+    });
   }
 
   /**
