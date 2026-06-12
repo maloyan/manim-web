@@ -84,25 +84,23 @@ export class RoundedRectangle extends VMobject {
     const kappa = (4 / 3) * Math.tan(Math.PI / 8);
 
     // Helper to add a line segment as cubic Bezier
-    const addLineSegment = (p0: number[], p1: number[], isFirst: boolean) => {
+    // (the segment's start anchor is the previous segment's end point)
+    const addLineSegment = (p0: number[], p1: number[]) => {
       const dx = p1[0] - p0[0];
       const dy = p1[1] - p0[1];
       const dz = p1[2] - p0[2];
 
-      if (isFirst) {
-        points.push([...p0]);
-      }
       points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
       points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
       points.push([...p1]);
     };
 
-    // Helper to add a 90-degree arc at a corner
-    // arcCenter: center of the arc circle
-    // startAngle: starting angle in radians
+    // Helper to add a 90-degree arc at a corner.
+    // The path traverses the rectangle clockwise, so each arc sweeps
+    // clockwise from startAngle to startAngle - PI/2.
     const addCornerArc = (arcCenterX: number, arcCenterY: number, startAngle: number) => {
       const theta1 = startAngle;
-      const theta2 = startAngle + Math.PI / 2;
+      const theta2 = startAngle - Math.PI / 2;
 
       // Start point
       const x0 = arcCenterX + r * Math.cos(theta1);
@@ -112,16 +110,13 @@ export class RoundedRectangle extends VMobject {
       const x3 = arcCenterX + r * Math.cos(theta2);
       const y3 = arcCenterY + r * Math.sin(theta2);
 
-      // Control points using kappa
-      const dx1 = -Math.sin(theta1);
-      const dy1 = Math.cos(theta1);
-      const x1 = x0 + kappa * r * dx1;
-      const y1 = y0 + kappa * r * dy1;
+      // Control points using kappa; the unit tangent in the direction of
+      // (clockwise) travel at angle theta is (sin theta, -cos theta)
+      const x1 = x0 + kappa * r * Math.sin(theta1);
+      const y1 = y0 - kappa * r * Math.cos(theta1);
 
-      const dx2 = -Math.sin(theta2);
-      const dy2 = Math.cos(theta2);
-      const x2 = x3 - kappa * r * dx2;
-      const y2 = y3 - kappa * r * dy2;
+      const x2 = x3 - kappa * r * Math.sin(theta2);
+      const y2 = y3 + kappa * r * Math.cos(theta2);
 
       // Arc doesn't need first point (connected from previous segment)
       points.push([x1, y1, cz]);
@@ -129,7 +124,6 @@ export class RoundedRectangle extends VMobject {
       points.push([x3, y3, cz]);
     };
 
-    // Start from top edge (after top-left corner arc ends)
     // Top-left corner arc center
     const tlX = cx - halfWidth + r;
     const tlY = cy + halfHeight - r;
@@ -146,15 +140,15 @@ export class RoundedRectangle extends VMobject {
     const blX = cx - halfWidth + r;
     const blY = cy - halfHeight + r;
 
-    // Start at top-left corner (end of top-left arc = top of left edge)
+    // Start at the top of the left edge (start of the top-left arc)
     const startX = cx - halfWidth;
     const startY = cy + halfHeight - r;
 
     // Build path: top-left arc -> top edge -> top-right arc -> right edge ->
     // bottom-right arc -> bottom edge -> bottom-left arc -> left edge (close)
 
-    // Top-left corner arc (starts at left, goes to top) - 180 to 270 degrees (or PI to 3PI/2)
-    // Actually starts from left side going up: angle PI to PI/2
+    // Top-left corner arc starts from the left side going up:
+    // angle PI sweeping clockwise to PI/2
     const arcStart = Math.PI;
 
     // First point (start of top-left arc)
@@ -164,25 +158,25 @@ export class RoundedRectangle extends VMobject {
     addCornerArc(tlX, tlY, arcStart);
 
     // Top edge (from top-left corner end to top-right corner start)
-    addLineSegment([tlX, cy + halfHeight, cz], [trX, cy + halfHeight, cz], false);
+    addLineSegment([tlX, cy + halfHeight, cz], [trX, cy + halfHeight, cz]);
 
     // Top-right corner arc (from top going to right)
     addCornerArc(trX, trY, Math.PI / 2);
 
     // Right edge
-    addLineSegment([cx + halfWidth, trY, cz], [cx + halfWidth, brY, cz], false);
+    addLineSegment([cx + halfWidth, trY, cz], [cx + halfWidth, brY, cz]);
 
     // Bottom-right corner arc (from right going to bottom)
     addCornerArc(brX, brY, 0);
 
     // Bottom edge
-    addLineSegment([brX, cy - halfHeight, cz], [blX, cy - halfHeight, cz], false);
+    addLineSegment([brX, cy - halfHeight, cz], [blX, cy - halfHeight, cz]);
 
     // Bottom-left corner arc (from bottom going to left)
     addCornerArc(blX, blY, -Math.PI / 2);
 
     // Left edge (closes the shape)
-    addLineSegment([cx - halfWidth, blY, cz], [cx - halfWidth, tlY, cz], false);
+    addLineSegment([cx - halfWidth, blY, cz], [cx - halfWidth, tlY, cz]);
 
     this.setPoints3D(points);
   }

@@ -332,6 +332,85 @@ describe('SurroundingRectangle', () => {
     expect(rounded.getLocalPoints().length).toBeGreaterThan(sharp.getLocalPoints().length);
   });
 
+  // Regression test for the same corner-arc sweep bug as issue #434:
+  // arcs swept counterclockwise while the path runs clockwise.
+  it('rounded corner anchors land on the edge tangent points (issue #434)', () => {
+    const target = new Rectangle({ width: 4, height: 2 });
+    // Outer rect: 4.5 x 2.5 centered at origin, r = 0.3
+    const sr = new SurroundingRectangle(target, { buff: 0.25, cornerRadius: 0.3 });
+    const pts = sr.getLocalPoints();
+    const anchors: number[][] = [];
+    for (let i = 0; i < pts.length; i += 3) anchors.push(pts[i]);
+
+    const expected = [
+      [-2.25, 0.95],
+      [-1.95, 1.25],
+      [1.95, 1.25],
+      [2.25, 0.95],
+      [2.25, -0.95],
+      [1.95, -1.25],
+      [-1.95, -1.25],
+      [-2.25, -0.95],
+      [-2.25, 0.95],
+    ];
+    expect(anchors.length).toBe(expected.length);
+    expected.forEach(([x, y], i) => {
+      expect(anchors[i][0]).toBeCloseTo(x, 10);
+      expect(anchors[i][1]).toBeCloseTo(y, 10);
+    });
+
+    // No point may leave the surrounding rectangle's bounds
+    for (const p of pts) {
+      expect(Math.abs(p[0])).toBeLessThanOrEqual(2.25 + 1e-9);
+      expect(Math.abs(p[1])).toBeLessThanOrEqual(1.25 + 1e-9);
+    }
+  });
+
+  it('rounded corner arcs bulge outward and are tangent to the edges (issue #434)', () => {
+    const r = 0.3;
+    const target = new Rectangle({ width: 4, height: 2 });
+    const sr = new SurroundingRectangle(target, { buff: 0.25, cornerRadius: r });
+    const pts = sr.getLocalPoints();
+
+    const bezier = (p0: number[], p1: number[], p2: number[], p3: number[], t: number) => {
+      const u = 1 - t;
+      return [0, 1].map(
+        (k) =>
+          u * u * u * p0[k] + 3 * u * u * t * p1[k] + 3 * u * t * t * p2[k] + t * t * t * p3[k],
+      );
+    };
+    const unit = (from: number[], to: number[]) => {
+      const dx = to[0] - from[0];
+      const dy = to[1] - from[1];
+      const len = Math.hypot(dx, dy);
+      return [dx / len, dy / len];
+    };
+
+    const d = Math.SQRT1_2;
+    // [segment start index, arc center, outward 45° direction, in-tangent, out-tangent]
+    const arcs: [number, number[], number[], number[], number[]][] = [
+      [0, [-1.95, 0.95], [-d, d], [0, 1], [1, 0]], // top-left
+      [6, [1.95, 0.95], [d, d], [1, 0], [0, -1]], // top-right
+      [12, [1.95, -0.95], [d, -d], [0, -1], [-1, 0]], // bottom-right
+      [18, [-1.95, -0.95], [-d, -d], [-1, 0], [0, 1]], // bottom-left
+    ];
+
+    for (const [s, center, dir, tIn, tOut] of arcs) {
+      // Arc midpoint sits on the corner circle at 45° outward
+      const mid = bezier(pts[s], pts[s + 1], pts[s + 2], pts[s + 3], 0.5);
+      expect(mid[0]).toBeCloseTo(center[0] + r * dir[0], 4);
+      expect(mid[1]).toBeCloseTo(center[1] + r * dir[1], 4);
+
+      // Control points pin the tangent directions to the adjacent edges
+      const startTangent = unit(pts[s], pts[s + 1]);
+      const endTangent = unit(pts[s + 2], pts[s + 3]);
+      expect(startTangent[0]).toBeCloseTo(tIn[0], 10);
+      expect(startTangent[1]).toBeCloseTo(tIn[1], 10);
+      expect(endTangent[0]).toBeCloseTo(tOut[0], 10);
+      expect(endTangent[1]).toBeCloseTo(tOut[1], 10);
+    }
+  });
+
   it('respects custom color and works with Circle target', () => {
     const rect = new Rectangle({ width: 2, height: 2 });
     expect(new SurroundingRectangle(rect, { color: '#ff0000' }).color.toLowerCase()).toBe(

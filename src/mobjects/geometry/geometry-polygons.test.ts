@@ -329,6 +329,152 @@ describe('RoundedRectangle', () => {
     const rr = new RoundedRectangle();
     expect(rr.numPoints).toBeGreaterThan(0);
   });
+
+  // Regression tests for issue #434: corners rendered as "curved spikes"
+  // because the corner arcs swept counterclockwise while the path
+  // traverses the rectangle clockwise.
+  describe('corner geometry (issue #434)', () => {
+    // Evaluate a cubic Bezier segment at parameter t
+    const bezier = (p0: number[], p1: number[], p2: number[], p3: number[], t: number) => {
+      const u = 1 - t;
+      return [0, 1].map(
+        (k) =>
+          u * u * u * p0[k] + 3 * u * u * t * p1[k] + 3 * u * t * t * p2[k] + t * t * t * p3[k],
+      );
+    };
+
+    it('anchor points land on the edge tangent points of all 4 corners', () => {
+      const rr = new RoundedRectangle({ width: 3, height: 1, cornerRadius: 0.15 });
+      const pts = rr.getLocalPoints();
+      const anchors: number[][] = [];
+      for (let i = 0; i < pts.length; i += 3) anchors.push(pts[i]);
+
+      // Clockwise path: TL arc, top edge, TR arc, right edge,
+      // BR arc, bottom edge, BL arc, left edge (close)
+      const expected = [
+        [-1.5, 0.35],
+        [-1.35, 0.5],
+        [1.35, 0.5],
+        [1.5, 0.35],
+        [1.5, -0.35],
+        [1.35, -0.5],
+        [-1.35, -0.5],
+        [-1.5, -0.35],
+        [-1.5, 0.35],
+      ];
+      expect(anchors.length).toBe(expected.length);
+      expected.forEach(([x, y], i) => {
+        expect(anchors[i][0]).toBeCloseTo(x, 10);
+        expect(anchors[i][1]).toBeCloseTo(y, 10);
+      });
+    });
+
+    it('all points (anchors and controls) stay within the rectangle bounds', () => {
+      const rr = new RoundedRectangle({ width: 3, height: 1, cornerRadius: 0.15 });
+      for (const p of rr.getLocalPoints()) {
+        expect(Math.abs(p[0])).toBeLessThanOrEqual(1.5 + 1e-9);
+        expect(Math.abs(p[1])).toBeLessThanOrEqual(0.5 + 1e-9);
+      }
+    });
+
+    it('corner arc midpoints bulge outward at 45 degrees from the arc centers', () => {
+      const r = 0.15;
+      const rr = new RoundedRectangle({ width: 3, height: 1, cornerRadius: r });
+      const pts = rr.getLocalPoints();
+      const d = Math.SQRT1_2; // cos(45°) = sin(45°)
+
+      // [segment start index, arc center, outward 45° direction]
+      const arcs: [number, number[], number[]][] = [
+        [0, [-1.35, 0.35], [-d, d]], // top-left
+        [6, [1.35, 0.35], [d, d]], // top-right
+        [12, [1.35, -0.35], [d, -d]], // bottom-right
+        [18, [-1.35, -0.35], [-d, -d]], // bottom-left
+      ];
+
+      for (const [s, center, dir] of arcs) {
+        const mid = bezier(pts[s], pts[s + 1], pts[s + 2], pts[s + 3], 0.5);
+        expect(mid[0]).toBeCloseTo(center[0] + r * dir[0], 4);
+        expect(mid[1]).toBeCloseTo(center[1] + r * dir[1], 4);
+      }
+    });
+
+    it('corner arcs are tangent to the adjacent edges', () => {
+      // The Bezier midpoint is symmetric in the two control points, so it
+      // cannot detect swapped or inward-bowing controls. Pin the start/end
+      // tangent directions instead: each arc must leave its start anchor
+      // along the incoming edge and reach its end anchor along the outgoing
+      // edge of the clockwise path.
+      const rr = new RoundedRectangle({ width: 3, height: 1, cornerRadius: 0.15 });
+      const pts = rr.getLocalPoints();
+
+      const unit = (from: number[], to: number[]) => {
+        const dx = to[0] - from[0];
+        const dy = to[1] - from[1];
+        const len = Math.hypot(dx, dy);
+        return [dx / len, dy / len];
+      };
+
+      // [segment start index, in-tangent, out-tangent] for the clockwise path
+      const arcs: [number, number[], number[]][] = [
+        [0, [0, 1], [1, 0]], // top-left: up the left edge, out along top edge
+        [6, [1, 0], [0, -1]], // top-right
+        [12, [0, -1], [-1, 0]], // bottom-right
+        [18, [-1, 0], [0, 1]], // bottom-left
+      ];
+
+      for (const [s, tIn, tOut] of arcs) {
+        const startTangent = unit(pts[s], pts[s + 1]);
+        const endTangent = unit(pts[s + 2], pts[s + 3]);
+        expect(startTangent[0]).toBeCloseTo(tIn[0], 10);
+        expect(startTangent[1]).toBeCloseTo(tIn[1], 10);
+        expect(endTangent[0]).toBeCloseTo(tOut[0], 10);
+        expect(endTangent[1]).toBeCloseTo(tOut[1], 10);
+      }
+    });
+
+    it('path is closed', () => {
+      const rr = new RoundedRectangle({ width: 3, height: 1, cornerRadius: 0.15 });
+      const pts = rr.getLocalPoints();
+      const first = pts[0];
+      const last = pts[pts.length - 1];
+      expect(last[0]).toBeCloseTo(first[0], 10);
+      expect(last[1]).toBeCloseTo(first[1], 10);
+    });
+
+    it('cornerRadius 0 degenerates to sharp corners at the rectangle vertices', () => {
+      const rr = new RoundedRectangle({ width: 3, height: 1, cornerRadius: 0 });
+      const corners = [
+        [-1.5, 0.5],
+        [1.5, 0.5],
+        [1.5, -0.5],
+        [-1.5, -0.5],
+      ];
+      for (let i = 0; i < rr.getLocalPoints().length; i += 3) {
+        const a = rr.getLocalPoints()[i];
+        const onCorner = corners.some(
+          ([x, y]) => Math.abs(a[0] - x) < 1e-9 && Math.abs(a[1] - y) < 1e-9,
+        );
+        expect(onCorner).toBe(true);
+      }
+    });
+
+    it('pill shape (radius = half height) reaches the left/right extremes at y=0', () => {
+      const rr = new RoundedRectangle({ width: 4, height: 1, cornerRadius: 0.5 });
+      const anchors: number[][] = [];
+      const pts = rr.getLocalPoints();
+      for (let i = 0; i < pts.length; i += 3) anchors.push(pts[i]);
+
+      const hasLeft = anchors.some((a) => Math.abs(a[0] + 2) < 1e-9 && Math.abs(a[1]) < 1e-9);
+      const hasRight = anchors.some((a) => Math.abs(a[0] - 2) < 1e-9 && Math.abs(a[1]) < 1e-9);
+      expect(hasLeft).toBe(true);
+      expect(hasRight).toBe(true);
+
+      for (const p of pts) {
+        expect(Math.abs(p[0])).toBeLessThanOrEqual(2 + 1e-9);
+        expect(Math.abs(p[1])).toBeLessThanOrEqual(0.5 + 1e-9);
+      }
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

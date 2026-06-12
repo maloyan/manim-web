@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ManimWeb - RoundedRectangle Example</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+
+  <script type="module">
+    import {
+      Scene,
+      RoundedRectangle,
+      SurroundingRectangle,
+      Text,
+      BLUE,
+      GREEN,
+      RED,
+      YELLOW,
+      BLACK,
+    } from '../src/index.ts';
+
+    const container = document.getElementById('container');
+    const scene = new Scene(container, {
+      width: 800,
+      height: 450,
+      backgroundColor: BLACK,
+      backgroundOpacity: 1,
+    });
+
+    // The button from issue #434
+    const button = new RoundedRectangle({
+      width: 3,
+      height: 1,
+      cornerRadius: 0.15,
+      fillOpacity: 1,
+      strokeWidth: 0,
+      center: [-2.5, 1.5, 0],
+    });
+    button.fillColor = BLUE;
+
+    // Larger corner radius
+    const card = new RoundedRectangle({
+      width: 3,
+      height: 2,
+      cornerRadius: 0.5,
+      color: GREEN,
+      fillOpacity: 0.3,
+      center: [2.5, 1, 0],
+    });
+
+    // Pill shape (corner radius = half height)
+    const pill = new RoundedRectangle({
+      width: 4,
+      height: 1,
+      cornerRadius: 0.5,
+      color: RED,
+      fillOpacity: 0.5,
+      center: [-2, -1.5, 0],
+    });
+
+    // SurroundingRectangle with rounded corners
+    const label = new Text({ text: 'manim-web', fontSize: 36 });
+    label.shift([2.5, -1.5, 0]);
+    const frame = new SurroundingRectangle(label, {
+      buff: 0.25,
+      cornerRadius: 0.2,
+      color: YELLOW,
+    });
+
+    scene.add(button, card, pill, label, frame);
+    scene.render();
+  </script>
+</body>
+</html>
