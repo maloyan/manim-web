@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Issue #419 — Draggable renders by default</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #191919;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        color: #fff;
+        font-family: sans-serif;
+      }
+      #status {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        background: rgba(0, 0, 0, 0.65);
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        z-index: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status">loading…</div>
+    <div id="app"></div>
+
+    <script type="module">
+      // Exact reproduction from issue #419: a static scene (no play()/wait()
+      // loop) with a plain `new Draggable(circle, scene)` — no onDrag
+      // render workaround. Dragging the circle must update visually.
+      import { Scene, Circle, Draggable } from '../src/index.ts';
+
+      const scene = new Scene(document.getElementById('app'), {
+        width: 320,
+        height: 320,
+        backgroundColor: '#05060f',
+      });
+
+      const circle = new Circle({ radius: 1, color: '#f94144', fillOpacity: 0.5 });
+      scene.add(circle);
+
+      new Draggable(circle, scene);
+
+      document.getElementById('status').textContent =
+        'Drag the circle — it should follow the cursor (issue #419)';
+    </script>
+  </body>
+</html>

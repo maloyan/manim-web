@@ -40,11 +40,13 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     const dot = new Dot({ color: YELLOW, radius: 0.15 });
     dot.moveTo([0, -1, 0]);
 
-    // A line that connects the circle and dot, updating in real time
+    // A line that connects the circle and dot, updating in real time.
+    // Updaters only run during play()/wait() loops, so rebuild the line
+    // from onDrag instead — Draggable re-renders after each onDrag.
     const line = new Line({ start: circle.getCenter(), end: dot.getCenter() }).setColor(RED);
-    line.addUpdater(() => {
-      line.become(new Line({ start: circle.getCenter(), end: dot.getCenter() }));
-    });
+    const updateLine = () => {
+      line.become(new Line({ start: circle.getCenter(), end: dot.getCenter() }).setColor(RED));
+    };
 
     // Label
     const label = new Text({ text: 'Drag the shapes!', fontSize: 24, color: WHITE });
@@ -54,8 +56,8 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     scene.render();
 
     // Make objects draggable
-    makeDraggable(circle, scene);
-    makeDraggable(dot, scene);
+    makeDraggable(circle, scene, { onDrag: updateLine });
+    makeDraggable(dot, scene, { onDrag: updateLine });
 
     // Square is constrained to X axis only
     makeDraggable(square, scene, {

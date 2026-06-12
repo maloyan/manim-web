@@ -741,6 +741,15 @@ export class ThreeDScene extends Scene {
   }
 
   /**
+   * The orbit-controls rAF loop also renders every frame while it runs,
+   * so count it as an active render loop (e.g. so Draggable doesn't
+   * issue redundant renders while orbiting/dragging).
+   */
+  override get isRenderLoopActive(): boolean {
+    return super.isRenderLoopActive || this._orbitRafId !== null;
+  }
+
+  /**
    * Start a lightweight rAF loop for orbit controls when the scene
    * isn't already rendering (no active animations/waits).
    * Stops automatically when the user releases and damping settles.

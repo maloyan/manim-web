@@ -111,6 +111,7 @@ function createMockScene(
     },
     render: vi.fn(),
     isPlaying: false,
+    isRenderLoopActive: false,
     pause: vi.fn(),
     resume: vi.fn(),
     stop: vi.fn(),
@@ -147,6 +148,19 @@ function fireMouseEvent(
     bubbles: true,
     cancelable: true,
   });
+  target.dispatchEvent(event);
+  return event;
+}
+
+function fireTouchEvent(
+  target: EventTarget,
+  type: string,
+  opts: { clientX?: number; clientY?: number } = {},
+) {
+  // happy-dom has no Touch/TouchEvent constructors, so fake the shape
+  // Draggable reads: `touches` array with clientX/clientY.
+  const event = new Event(type, { bubbles: true, cancelable: true }) as any;
+  event.touches = [{ clientX: opts.clientX ?? 0, clientY: opts.clientY ?? 0 }];
   target.dispatchEvent(event);
   return event;
 }
@@ -559,6 +573,95 @@ describe('Draggable', () => {
     // Just move without mousedown first
     fireMouseEvent(window as any, 'mousemove', { clientX: 450, clientY: 350 });
     expect(mob.moveTo).not.toHaveBeenCalled();
+  });
+
+  // Issue #419: dragging must be visible without the user wiring up
+  // `onDrag: () => scene.render()` themselves.
+  it('renders the scene during drag by default', () => {
+    const canvas = scene.getCanvas();
+    fireMouseEvent(canvas, 'mousedown', { clientX: 400, clientY: 300 });
+    expect(scene.render).toHaveBeenCalledTimes(1);
+
+    fireMouseEvent(window as any, 'mousemove', { clientX: 450, clientY: 350 });
+    expect(scene.render).toHaveBeenCalledTimes(2);
+
+    fireMouseEvent(window as any, 'mousemove', { clientX: 460, clientY: 360 });
+    expect(scene.render).toHaveBeenCalledTimes(3);
+  });
+
+  it('renders the scene when the drag ends', () => {
+    const canvas = scene.getCanvas();
+    fireMouseEvent(canvas, 'mousedown', { clientX: 400, clientY: 300 });
+    fireMouseEvent(window as any, 'mouseup', { clientX: 400, clientY: 300 });
+    // One render on drag start, one on drag end
+    expect(scene.render).toHaveBeenCalledTimes(2);
+  });
+
+  it('does NOT render when autoRender is false', () => {
+    draggable.dispose();
+    draggable = new Draggable(mob as any, scene as any, { autoRender: false });
+
+    const canvas = scene.getCanvas();
+    fireMouseEvent(canvas, 'mousedown', { clientX: 400, clientY: 300 });
+    fireMouseEvent(window as any, 'mousemove', { clientX: 450, clientY: 350 });
+    fireMouseEvent(window as any, 'mouseup', { clientX: 450, clientY: 350 });
+
+    expect(mob.moveTo).toHaveBeenCalled();
+    expect(scene.render).not.toHaveBeenCalled();
+  });
+
+  it('does NOT render while a render loop is already active', () => {
+    scene.isRenderLoopActive = true;
+
+    const canvas = scene.getCanvas();
+    fireMouseEvent(canvas, 'mousedown', { clientX: 400, clientY: 300 });
+    fireMouseEvent(window as any, 'mousemove', { clientX: 450, clientY: 350 });
+    fireMouseEvent(window as any, 'mouseup', { clientX: 450, clientY: 350 });
+
+    expect(mob.moveTo).toHaveBeenCalled();
+    expect(scene.render).not.toHaveBeenCalled();
+  });
+
+  it('renders after onDragStart so start mutations (e.g. highlights) are visible', () => {
+    draggable.dispose();
+    const onDragStart = vi.fn();
+    draggable = new Draggable(mob as any, scene as any, { onDragStart });
+
+    const canvas = scene.getCanvas();
+    fireMouseEvent(canvas, 'mousedown', { clientX: 400, clientY: 300 });
+
+    expect(onDragStart).toHaveBeenCalledTimes(1);
+    expect(scene.render).toHaveBeenCalledTimes(1);
+  });
+
+  // The auto-render must run AFTER user callbacks: callbacks mutate
+  // dependent mobjects (e.g. a follower line in onDrag) and rely on the
+  // subsequent render to display that mutation.
+  it('invokes callbacks BEFORE the auto-render', () => {
+    draggable.dispose();
+    const onDragStart = vi.fn();
+    const onDrag = vi.fn();
+    const onDragEnd = vi.fn();
+    draggable = new Draggable(mob as any, scene as any, { onDragStart, onDrag, onDragEnd });
+
+    const canvas = scene.getCanvas();
+    fireMouseEvent(canvas, 'mousedown', { clientX: 400, clientY: 300 });
+    fireMouseEvent(window as any, 'mousemove', { clientX: 450, clientY: 350 });
+    fireMouseEvent(window as any, 'mouseup', { clientX: 450, clientY: 350 });
+
+    const renderOrders = scene.render.mock.invocationCallOrder;
+    expect(renderOrders).toHaveLength(3);
+    expect(onDragStart.mock.invocationCallOrder[0]).toBeLessThan(renderOrders[0]);
+    expect(onDrag.mock.invocationCallOrder[0]).toBeLessThan(renderOrders[1]);
+    expect(onDragEnd.mock.invocationCallOrder[0]).toBeLessThan(renderOrders[2]);
+  });
+
+  it('renders during drag via touch events by default', () => {
+    const canvas = scene.getCanvas();
+    fireTouchEvent(canvas, 'touchstart', { clientX: 400, clientY: 300 });
+    fireTouchEvent(window as any, 'touchmove', { clientX: 450, clientY: 350 });
+    // One render on touch drag start, one on the move
+    expect(scene.render).toHaveBeenCalledTimes(2);
   });
 
   it('makeDraggable factory returns a Draggable instance', () => {
@@ -1127,6 +1230,7 @@ describe('Draggable in 3D scene', () => {
     mock.getCanvas = vi.fn(() => canvas);
     mock.render = vi.fn();
     mock._canvas = canvas;
+    Object.defineProperty(mock, 'isRenderLoopActive', { value: false });
 
     return mock;
   }

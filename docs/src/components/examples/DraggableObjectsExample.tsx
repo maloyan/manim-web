@@ -16,15 +16,16 @@ async function animate(scene: any) {
   dot.moveTo([0, -1, 0]);
 
   const line = new Line({ start: circle.getCenter(), end: dot.getCenter() }).setColor(RED);
-  line.addUpdater(() => line.become(new Line({ start: circle.getCenter(), end: dot.getCenter() })));
+  const updateLine = () =>
+    line.become(new Line({ start: circle.getCenter(), end: dot.getCenter() }).setColor(RED));
 
   const label = new Text({ text: 'Drag the shapes!', fontSize: 24, color: WHITE });
   label.moveTo([0, 2.5, 0]);
 
   scene.add(circle, square, dot, line, label);
 
-  makeDraggable(circle, scene);
-  makeDraggable(dot, scene);
+  makeDraggable(circle, scene, { onDrag: updateLine });
+  makeDraggable(dot, scene, { onDrag: updateLine });
   makeDraggable(square, scene, { constrainY: [1, 1], snapToGrid: 0.5 });
 
   await scene.wait(15);

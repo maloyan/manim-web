@@ -328,6 +328,17 @@ export class Scene {
   }
 
   /**
+   * Whether a continuous render loop is currently driving frames every
+   * tick: play(), or wait() with per-frame rendering (updaters present).
+   * A static wait() (render-once + timeout) does NOT count — manual
+   * renders are still needed there. Interaction helpers (e.g. Draggable)
+   * use this to skip redundant renders.
+   */
+  get isRenderLoopActive(): boolean {
+    return this._isPlaying || (this._hasActiveLoop && this._needsPerFrameRendering());
+  }
+
+  /**
    * Get the current playback time.
    */
   get currentTime(): number {
