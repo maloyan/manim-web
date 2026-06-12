@@ -113,9 +113,10 @@ export class Surface3D extends Mobject3D {
   }
 
   /**
-   * Create the Three.js parametric surface mesh
+   * Build the surface geometry (indexed, or non-indexed with vertex
+   * colors when checkerboardColors is set).
    */
-  protected _createThreeObject(): THREE.Object3D {
+  private _buildGeometry(): THREE.BufferGeometry {
     const [uMin, uMax] = this._uRange;
     const [vMin, vMax] = this._vRange;
     const uRange = uMax - uMin;
@@ -136,55 +137,113 @@ export class Surface3D extends Mobject3D {
     // Compute normals for proper lighting
     geometry.computeVertexNormals();
 
-    if (this._checkerboardColors) {
-      // Convert to non-indexed so each face can have its own vertex colors.
-      // Smooth normals from the indexed geometry are preserved by toNonIndexed().
-      const nonIndexed = geometry.toNonIndexed();
-      geometry.dispose();
+    if (!this._checkerboardColors) return geometry;
 
-      const posAttr = nonIndexed.getAttribute('position');
-      const colors = new Float32Array(posAttr.count * 3);
-      const c1 = new THREE.Color(this._checkerboardColors[0]);
-      const c2 = new THREE.Color(this._checkerboardColors[1]);
+    // Convert to non-indexed so each face can have its own vertex colors.
+    // Smooth normals from the indexed geometry are preserved by toNonIndexed().
+    const nonIndexed = geometry.toNonIndexed();
+    geometry.dispose();
 
-      // Each quad = 2 triangles = 6 vertices
-      // Quads go u-major: for each v row, iterate u cols
-      let vertexIdx = 0;
-      for (let vi = 0; vi < this._vResolution; vi++) {
-        for (let ui = 0; ui < this._uResolution; ui++) {
-          const c = (ui + vi) % 2 === 0 ? c1 : c2;
-          // 2 triangles per quad = 6 vertices
-          for (let k = 0; k < 6; k++) {
-            colors[vertexIdx * 3] = c.r;
-            colors[vertexIdx * 3 + 1] = c.g;
-            colors[vertexIdx * 3 + 2] = c.b;
-            vertexIdx++;
-          }
+    const posAttr = nonIndexed.getAttribute('position');
+    const colors = new Float32Array(posAttr.count * 3);
+    const c1 = new THREE.Color(this._checkerboardColors[0]);
+    const c2 = new THREE.Color(this._checkerboardColors[1]);
+
+    // Each quad = 2 triangles = 6 vertices
+    // Quads go u-major: for each v row, iterate u cols
+    let vertexIdx = 0;
+    for (let vi = 0; vi < this._vResolution; vi++) {
+      for (let ui = 0; ui < this._uResolution; ui++) {
+        const c = (ui + vi) % 2 === 0 ? c1 : c2;
+        // 2 triangles per quad = 6 vertices
+        for (let k = 0; k < 6; k++) {
+          colors[vertexIdx * 3] = c.r;
+          colors[vertexIdx * 3 + 1] = c.g;
+          colors[vertexIdx * 3 + 2] = c.b;
+          vertexIdx++;
         }
       }
-
-      nonIndexed.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-      const material = new THREE.MeshStandardMaterial({
-        vertexColors: true,
-        opacity: this._opacity,
-        transparent: this._opacity < 1,
-        wireframe: this._wireframe,
-        side: this._doubleSided ? THREE.DoubleSide : THREE.FrontSide,
-      });
-
-      return new THREE.Mesh(nonIndexed, material);
     }
 
+    nonIndexed.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    return nonIndexed;
+  }
+
+  /**
+   * The depth prepass only helps while the surface is shaded as a
+   * translucent solid: opaque surfaces already write depth in the
+   * opaque pass, a wireframe must not be occluded by an invisible solid
+   * prepass, and a fully faded-out surface must not depth-block other
+   * transparent objects (e.g. during FadeOut).
+   */
+  private _prepassEnabled(): boolean {
+    return !this._wireframe && this._opacity > 0 && this._opacity < 1;
+  }
+
+  /** Enable/disable the prepass; disabled means skipped entirely by the renderer. */
+  private _applyPrepassState(prepassMaterial: THREE.Material): void {
+    const enabled = this._prepassEnabled();
+    prepassMaterial.depthWrite = enabled;
+    prepassMaterial.visible = enabled;
+  }
+
+  /** Find the depth-prepass child mesh, if this surface has one. */
+  private _getPrepassMesh(): THREE.Mesh | null {
+    if (!(this._threeObject instanceof THREE.Mesh)) return null;
+    const prepass = this._threeObject.children.find(
+      (c) =>
+        (c as THREE.Mesh).isMesh &&
+        ((c as THREE.Mesh).material as THREE.Material).userData.depthPrepass,
+    );
+    return (prepass as THREE.Mesh) ?? null;
+  }
+
+  /**
+   * Create the Three.js parametric surface mesh.
+   *
+   * A transparent surface is rendered in two passes to fix
+   * self-occlusion (issue #416): a depth-only prepass writes the
+   * front-most layer into the depth buffer, then the color pass
+   * (depthWrite=false per issue #255) depth-tests against it, so e.g. a
+   * bell curve always occludes the flat region behind it. The prepass
+   * mesh is created BEFORE the color mesh: with equal renderOrder and
+   * projected z, three.js' transparent sort tiebreaks on object.id
+   * (reversePainterSortStable — an internal invariant, verified at three
+   * r0.184 and pinned by tests), so the lower id is guaranteed to draw
+   * first. It stays `transparent` so it renders after all opaque
+   * objects, which therefore remain visible through the translucent
+   * surface.
+   *
+   * Trade-off: while the prepass is active, another transparent mobject
+   * that three.js sorts after this surface gets its fragments behind
+   * the surface depth-rejected rather than blended — the surface
+   * behaves as a solid translucent layer, not a stack of blendable
+   * sheets.
+   */
+  protected _createThreeObject(): THREE.Object3D {
+    const geometry = this._buildGeometry();
+    const side = this._doubleSided ? THREE.DoubleSide : THREE.FrontSide;
+
+    const prepassMaterial = new THREE.MeshBasicMaterial({
+      colorWrite: false,
+      transparent: true,
+      side,
+    });
+    this._applyPrepassState(prepassMaterial);
+    prepassMaterial.userData.depthPrepass = true;
+    const prepassMesh = new THREE.Mesh(geometry, prepassMaterial);
+    prepassMesh.raycast = () => {}; // depth-only helper; picking must only see the color mesh
+
     const material = new THREE.MeshStandardMaterial({
-      color: this.color,
+      ...(this._checkerboardColors ? { vertexColors: true } : { color: this.color }),
       opacity: this._opacity,
       transparent: this._opacity < 1,
       wireframe: this._wireframe,
-      side: this._doubleSided ? THREE.DoubleSide : THREE.FrontSide,
+      side,
     });
 
     const mesh = new THREE.Mesh(geometry, material);
+    mesh.add(prepassMesh);
     return mesh;
   }
 
@@ -201,9 +260,19 @@ export class Surface3D extends Mobject3D {
         material.vertexColors = !!this._checkerboardColors;
         material.opacity = this._opacity;
         material.transparent = this._opacity < 1;
+        // Also managed by ThreeDScene's depth settings, but Transform
+        // targets (FadeMorphStrategy) sync outside any scene and must
+        // not depth-block other transparents while translucent.
+        material.depthWrite = this._opacity >= 1;
         material.wireframe = this._wireframe;
         material.side = this._doubleSided ? THREE.DoubleSide : THREE.FrontSide;
         material.needsUpdate = true;
+      }
+      const prepass = this._getPrepassMesh();
+      if (prepass) {
+        const prepassMaterial = prepass.material as THREE.Material;
+        prepassMaterial.side = this._doubleSided ? THREE.DoubleSide : THREE.FrontSide;
+        this._applyPrepassState(prepassMaterial);
       }
     }
   }
@@ -213,55 +282,22 @@ export class Surface3D extends Mobject3D {
    */
   protected _updateGeometry(): void {
     if (this._threeObject instanceof THREE.Mesh) {
-      this._threeObject.geometry.dispose();
+      const oldGeometry = this._threeObject.geometry;
+      const geometry = this._buildGeometry();
 
-      const [uMin, uMax] = this._uRange;
-      const [vMin, vMax] = this._vRange;
-      const uRange = uMax - uMin;
-      const vRange = vMax - vMin;
-
-      const paramFunc = (u: number, v: number, target: THREE.Vector3) => {
-        const uActual = uMin + u * uRange;
-        const vActual = vMin + v * vRange;
-        const [x, y, z] = this._func(uActual, vActual);
-        target.set(x, y, z);
-      };
-
-      const geometry = new ParametricGeometry(paramFunc, this._uResolution, this._vResolution);
-      geometry.computeVertexNormals();
+      // The prepass child shares the geometry, so rebind both before
+      // disposing the old one.
+      this._threeObject.geometry = geometry;
+      const prepass = this._getPrepassMesh();
+      if (prepass) prepass.geometry = geometry;
+      oldGeometry.dispose();
 
       if (this._checkerboardColors) {
-        const nonIndexed = geometry.toNonIndexed();
-        geometry.dispose();
-
-        const posAttr = nonIndexed.getAttribute('position');
-        const colors = new Float32Array(posAttr.count * 3);
-        const c1 = new THREE.Color(this._checkerboardColors[0]);
-        const c2 = new THREE.Color(this._checkerboardColors[1]);
-
-        let vertexIdx = 0;
-        for (let vi = 0; vi < this._vResolution; vi++) {
-          for (let ui = 0; ui < this._uResolution; ui++) {
-            const c = (ui + vi) % 2 === 0 ? c1 : c2;
-            for (let k = 0; k < 6; k++) {
-              colors[vertexIdx * 3] = c.r;
-              colors[vertexIdx * 3 + 1] = c.g;
-              colors[vertexIdx * 3 + 2] = c.b;
-              vertexIdx++;
-            }
-          }
-        }
-
-        nonIndexed.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-        this._threeObject.geometry = nonIndexed;
-
         const material = this._threeObject.material as THREE.MeshStandardMaterial;
         if (material) {
           material.vertexColors = true;
           material.needsUpdate = true;
         }
-      } else {
-        this._threeObject.geometry = geometry;
       }
     }
     this._markDirty();
