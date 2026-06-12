@@ -104,5 +104,9 @@ jobs:
       - name: Build Docusaurus site
         run: npm run build
         working-directory: docs
+        env:
+          # typedoc over the full src tree pushes the build past Node's
+          # default old-space limit on runners (OOM, exit 134)
+          NODE_OPTIONS: --max-old-space-size=6144
       - name: Assert typia transform applied in docs bundle
         run: bash scripts/assert-docs-typia-transform.sh
