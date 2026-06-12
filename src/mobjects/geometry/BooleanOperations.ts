@@ -15,6 +15,7 @@
 
 import { VMobject } from '../../core/VMobject';
 import { DEFAULT_STROKE_WIDTH } from '../../constants';
+import { logger } from '../../utils/logger';
 import polygonClipping from 'polygon-clipping';
 
 // Re-export types from polygon-clipping for internal use
@@ -232,7 +233,7 @@ function performBooleanOp(
     // If polygon-clipping throws (extremely degenerate input), fall back
     // to returning the subject polygon for union/difference, or empty for
     // intersection/xor.
-    console.warn(`BooleanOperations: ${operation} failed, returning fallback.`, err);
+    logger.warn(`BooleanOperations: ${operation} failed, returning fallback.`, err);
     if (operation === 'union' || operation === 'difference') {
       return [polyA];
     }

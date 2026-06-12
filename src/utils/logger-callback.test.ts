@@ -200,3 +200,81 @@ describe('onLog', () => {
     expect(entries).toHaveLength(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Console sink — direct console output fidelity (issue #431)
+// ---------------------------------------------------------------------------
+
+describe('console sink', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    clearLogListeners();
+    vi.restoreAllMocks();
+  });
+
+  it('preserves Error details (not "{}") in console output', () => {
+    const errorSpy = console.error as unknown as ReturnType<typeof vi.fn>;
+
+    logger.error('render failed:', new Error('texture missing'));
+
+    const printed = errorSpy.mock.calls[0].map((a: unknown) => String(a)).join(' ');
+    expect(printed).toContain('texture missing');
+    expect(printed).not.toContain('{}');
+  });
+
+  it('sanitizes secrets inside an Error message before printing', () => {
+    const warnSpy = console.warn as unknown as ReturnType<typeof vi.fn>;
+
+    logger.warn('load failed', new Error('auth was Bearer abc123XYZtoken456'));
+
+    const printed = warnSpy.mock.calls[0].map((a: unknown) => String(a)).join(' ');
+    expect(printed).toContain('[REDACTED]');
+    expect(printed).not.toContain('abc123XYZtoken456');
+  });
+
+  it('prefixes console output with [manim-web]', () => {
+    const warnSpy = console.warn as unknown as ReturnType<typeof vi.fn>;
+
+    logger.warn('plain message');
+
+    expect(warnSpy.mock.calls[0][0]).toBe('[manim-web]');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// LOG_LEVEL environment handling
+// ---------------------------------------------------------------------------
+
+describe('LOG_LEVEL fallback', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+    vi.restoreAllMocks();
+  });
+
+  it('falls back to info when LOG_LEVEL is invalid (warn/error not suppressed)', async () => {
+    vi.stubEnv('LOG_LEVEL', 'bogus-level');
+    vi.resetModules();
+    const fresh = await import('./logger');
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    fresh.logger.warn('should still appear');
+
+    expect(warnSpy).toHaveBeenCalled();
+  });
+
+  it('rejects inherited object keys as LOG_LEVEL (e.g. "toString")', async () => {
+    vi.stubEnv('LOG_LEVEL', 'toString');
+    vi.resetModules();
+    const fresh = await import('./logger');
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    fresh.logger.warn('should still appear');
+
+    expect(warnSpy).toHaveBeenCalled();
+  });
+});

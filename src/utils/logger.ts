@@ -37,8 +37,12 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   error: 3,
 };
 
+const envLevel = typeof process !== 'undefined' ? process.env?.LOG_LEVEL : undefined;
+// An invalid LOG_LEVEL must not silently suppress all output — fall back to 'info'.
 const currentLevel: LogLevel =
-  ((typeof process !== 'undefined' && process.env?.LOG_LEVEL) as LogLevel) || 'info';
+  envLevel && Object.prototype.hasOwnProperty.call(LOG_LEVELS, envLevel)
+    ? (envLevel as LogLevel)
+    : 'info';
 
 function shouldLog(level: LogLevel): boolean {
   return LOG_LEVELS[level] >= LOG_LEVELS[currentLevel];
@@ -123,6 +127,13 @@ function sanitizeString(value: string): string {
 function sanitizeArg(arg: unknown, seen: WeakSet<object> = new WeakSet()): unknown {
   if (typeof arg === 'string') {
     return sanitizeString(arg);
+  }
+
+  // Errors carry their data (message/stack) in non-enumerable fields, so the
+  // generic object walk below would render them as "{}". Convert to a
+  // sanitized string that keeps the stack (or "Name: message" fallback).
+  if (arg instanceof Error) {
+    return sanitizeString(arg.stack ?? `${arg.name}: ${arg.message}`);
   }
 
   if (Array.isArray(arg)) {

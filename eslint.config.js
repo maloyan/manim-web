@@ -71,6 +71,16 @@ export default [
       "no-eval": "error",
       "no-implied-eval": "off",
       "@typescript-eslint/no-implied-eval": "error",
+
+      // All logging must go through src/utils/logger (issue #431); the logger
+      // itself and the test setup are exempted below.
+      "no-console": "error",
+    },
+  },
+  {
+    files: ["src/utils/logger.ts", "src/test-setup/**/*.ts"],
+    rules: {
+      "no-console": "off",
     },
   },
 ];

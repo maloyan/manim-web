@@ -104,6 +104,7 @@ describe('Renderer backgroundOpacity', () => {
 
     renderer.backgroundOpacity = 0.5;
     expect(warnSpy).toHaveBeenCalledWith(
+      '[manim-web]',
       expect.stringContaining('backgroundOpacity < 1 has no effect'),
     );
 

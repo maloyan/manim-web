@@ -24,6 +24,7 @@ import { TexturedMobject } from '../../core/TexturedMobject';
 import { ensureKatexStyles, waitForKatexStyles } from './katexStyles';
 import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
+import { logger } from '../../utils/logger';
 
 const DEFAULT_CANVAS_SCALE = 16;
 
@@ -449,7 +450,7 @@ export class MathTexImage extends TexturedMobject {
         this._markDirty();
       })
       .catch((error) => {
-        console.error('MathTexImage rendering error:', error);
+        logger.error('MathTexImage rendering error:', error);
         this._renderState.isRendering = false;
         this._renderState.renderError = error instanceof Error ? error : new Error(String(error));
       });
@@ -529,7 +530,7 @@ export class MathTexImage extends TexturedMobject {
     const svgEl = tempDiv.querySelector('svg');
     if (!svgEl) {
       document.body.removeChild(tempDiv);
-      console.warn('MathTexImage: MathJax produced no SVG for:', this._latex);
+      logger.warn('MathTexImage: MathJax produced no SVG for:', this._latex);
       return;
     }
 
@@ -554,7 +555,7 @@ export class MathTexImage extends TexturedMobject {
     const width = Math.ceil(svgW) + padding * 2;
     const height = Math.ceil(svgH) + padding * 2;
     if (width <= 0 || height <= 0) {
-      console.warn('MathTexImage (MathJax): Invalid dimensions', {
+      logger.warn('MathTexImage (MathJax): Invalid dimensions', {
         width,
         height,
         latex: this._latex,
@@ -581,7 +582,7 @@ export class MathTexImage extends TexturedMobject {
       };
       img.onerror = () => {
         URL.revokeObjectURL(img.src);
-        console.warn('MathTexImage (MathJax): Failed to rasterize SVG');
+        logger.warn('MathTexImage (MathJax): Failed to rasterize SVG');
         resolve();
       };
       const blob = new Blob([finalSvgString], { type: 'image/svg+xml;charset=utf-8' });
@@ -686,7 +687,7 @@ export class MathTexImage extends TexturedMobject {
               document.fonts.load(`${fs} KaTeX_AMS`),
             ].map((p) =>
               p.catch((err) => {
-                console.warn(
+                logger.warn(
                   'MathTexImage: KaTeX font failed to load. Rendering may be degraded.',
                   err,
                 );
@@ -707,7 +708,7 @@ export class MathTexImage extends TexturedMobject {
       const height = Math.ceil(containerRect.height) + padding * 2;
 
       if (width <= 0 || height <= 0) {
-        console.warn('MathTexImage: Invalid dimensions', { width, height, latex: this._latex });
+        logger.warn('MathTexImage: Invalid dimensions', { width, height, latex: this._latex });
         return;
       }
 

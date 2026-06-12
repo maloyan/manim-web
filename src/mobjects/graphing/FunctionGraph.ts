@@ -1,5 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
+import { logger } from '../../utils/logger';
 
 /**
  * Duck-type interface for Axes, used to avoid circular imports.
@@ -175,14 +176,14 @@ export class FunctionGraph extends VMobject {
       } catch (err) {
         errorCount++;
         if (errorCount === 1) {
-          console.warn(`FunctionGraph: user function threw at x=${x}`, err);
+          logger.warn(`FunctionGraph: user function threw at x=${x}`, err);
         }
         continue;
       }
     }
 
     if (errorCount > 0) {
-      console.warn(`FunctionGraph: function threw ${errorCount}/${sampleCount} times`);
+      logger.warn(`FunctionGraph: function threw ${errorCount}/${sampleCount} times`);
     }
 
     return points;
@@ -262,7 +263,7 @@ export class FunctionGraph extends VMobject {
       }
       return [x, y, 0];
     } catch (err) {
-      console.warn(`FunctionGraph.getPointFromX: function threw at x=${x}`, err);
+      logger.warn(`FunctionGraph.getPointFromX: function threw at x=${x}`, err);
       return null;
     }
   }

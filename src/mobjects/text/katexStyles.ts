@@ -4,6 +4,8 @@
  * Ensures the KaTeX stylesheet is loaded for proper LaTeX rendering.
  */
 
+import { logger } from '../../utils/logger';
+
 let stylesPromise: Promise<void> | null = null;
 let fontOverrideInjected = false;
 
@@ -70,7 +72,7 @@ export function waitForKatexStyles(): Promise<void> {
     link.crossOrigin = 'anonymous';
     link.onload = () => resolve();
     link.onerror = () => {
-      console.warn('MathTex: KaTeX CSS failed to load from CDN. LaTeX rendering may be degraded.');
+      logger.warn('MathTex: KaTeX CSS failed to load from CDN. LaTeX rendering may be degraded.');
       resolve();
     };
     document.head.appendChild(link);

@@ -12,6 +12,7 @@ import { maintainPositionRelativeTo } from './MaintainPositionRelativeTo';
 import { MoveAlongPath, moveAlongPath } from './movement/MoveAlongPath';
 import { AnimationGroup } from './AnimationGroup';
 import { linear } from '../rate-functions';
+import { onLog, clearLogListeners, type LogEntry } from '../utils/logger';
 
 /** Concrete Mobject for tests needing getCenter()/getThreeObject(). */
 class ConcreteMobject extends Mobject {
@@ -113,6 +114,23 @@ describe('Timeline', () => {
       expect(tl.getDuration()).toBeCloseTo(2, 5);
       expect(warn).toHaveBeenCalled();
       warn.mockRestore();
+    });
+
+    // Regression for issue #431: warnings go through the structured logger,
+    // so onLog listeners observe them (a raw console.warn would bypass them).
+    it('invalid position warning is routed through the structured logger', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const entries: LogEntry[] = [];
+      onLog((entry) => entries.push(entry));
+      try {
+        tl.add(anim(1)).add(anim(1), 'bogus');
+        expect(entries).toHaveLength(1);
+        expect(entries[0].level).toBe('warn');
+        expect(entries[0].message).toContain('Invalid position parameter: "bogus"');
+      } finally {
+        clearLogListeners();
+        warn.mockRestore();
+      }
     });
 
     it('"+=N" with decimals', () => {

@@ -27,6 +27,7 @@ import { MasterTimeline } from '../animation/MasterTimeline';
 import { PlayerUI } from './PlayerUI';
 import { PlayerController } from './PlayerController';
 import { RecordingScene } from './RecordingScene';
+import { logger } from '../utils/logger';
 
 export interface PlayerOptions extends SceneOptions {
   /** Auto-hide controls after this many ms. 0 = never. Default 2500. */
@@ -401,7 +402,7 @@ export class Player {
         onProgress: (p) => this._ui.setExportProgress(p),
       });
     } catch (err) {
-      console.error('Export failed:', err);
+      logger.error('Export failed:', err);
       this._ui.showError(`Export failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       this._ui.setExportProgress(null);

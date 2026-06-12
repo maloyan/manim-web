@@ -14,6 +14,7 @@
 
 import { Animation } from './Animation';
 import { Timeline } from './Timeline';
+import { logger } from '../utils/logger';
 
 export interface Segment {
   /** Index in the segments array */
@@ -240,7 +241,7 @@ export class MasterTimeline extends Timeline {
       (last.opts.loop || last.opts.autoNext) &&
       typeof console !== 'undefined'
     ) {
-      console.warn(
+      logger.warn(
         'MasterTimeline.beginSlide: consecutive nextSlide() calls with no play()/wait() between them — previous opts ' +
           JSON.stringify(last.opts) +
           ' will be dropped.',

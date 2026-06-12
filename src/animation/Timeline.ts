@@ -4,6 +4,7 @@
  */
 
 import { Animation } from './Animation';
+import { logger } from '../utils/logger';
 
 /**
  * Position parameter for adding animations to the timeline.
@@ -112,7 +113,7 @@ export class Timeline {
       return Math.max(0, lastEnd - offset);
     }
 
-    console.warn(`Invalid position parameter: "${position}", using ">" instead`);
+    logger.warn(`Invalid position parameter: "${position}", using ">" instead`);
     return lastEnd;
   }
 

@@ -1,6 +1,7 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Axes } from './Axes';
+import { logger } from '../../utils/logger';
 
 /**
  * Options for creating a ParametricFunction
@@ -119,14 +120,14 @@ export class ParametricFunction extends VMobject {
       } catch (err) {
         errorCount++;
         if (errorCount === 1) {
-          console.warn(`ParametricFunction: user function threw at t=${t}`, err);
+          logger.warn(`ParametricFunction: user function threw at t=${t}`, err);
         }
         continue;
       }
     }
 
     if (errorCount > 0) {
-      console.warn(`ParametricFunction: function threw ${errorCount}/${this._numSamples} times`);
+      logger.warn(`ParametricFunction: function threw ${errorCount}/${this._numSamples} times`);
     }
 
     if (points.length < 2) {
@@ -204,7 +205,7 @@ export class ParametricFunction extends VMobject {
 
       return [x, y, z];
     } catch (err) {
-      console.warn(`ParametricFunction.getPointFromT: function threw at t=${t}`, err);
+      logger.warn(`ParametricFunction.getPointFromT: function threw at t=${t}`, err);
       return null;
     }
   }

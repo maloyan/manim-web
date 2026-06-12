@@ -1,4 +1,5 @@
 import type { AudioManager } from '../core/AudioManager';
+import { logger } from '../utils/logger';
 
 /**
  * Duck-type interface for Scene, used to avoid circular imports.
@@ -108,7 +109,7 @@ export class VideoExporter {
       const am = this._scene.audioManager;
       return am.tracks.length > 0 ? am : null;
     } catch (err) {
-      console.warn('AudioManager unavailable; exporting without audio:', err);
+      logger.warn('AudioManager unavailable; exporting without audio:', err);
       return null;
     }
   }
@@ -148,7 +149,7 @@ export class VideoExporter {
       if (MediaRecorder.isTypeSupported('video/quicktime')) {
         mimeType = 'video/quicktime';
       } else {
-        console.warn('MOV format not supported by this browser, falling back to WebM');
+        logger.warn('MOV format not supported by this browser, falling back to WebM');
         mimeType = 'video/webm;codecs=vp9';
       }
     } else {

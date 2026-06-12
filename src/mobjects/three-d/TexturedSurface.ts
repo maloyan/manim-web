@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ParametricGeometry } from 'three/examples/jsm/geometries/ParametricGeometry.js';
 import { Vector3Tuple } from '../../core/Mobject';
+import { logger } from '../../utils/logger';
 import { Mobject3D } from './Mobject3D';
 import { Surface3D } from './Surface3D';
 
@@ -181,7 +182,7 @@ export class TexturedSurface extends Mobject3D {
           },
           undefined,
           (err) => {
-            console.warn(`TexturedSurface: Failed to load texture "${this._textureUrl}"`, err);
+            logger.warn(`TexturedSurface: Failed to load texture "${this._textureUrl}"`, err);
             reject(err);
           },
         );
@@ -205,7 +206,7 @@ export class TexturedSurface extends Mobject3D {
             },
             undefined,
             (err) => {
-              console.warn(
+              logger.warn(
                 `TexturedSurface: Failed to load dark texture "${this._darkTextureUrl}"`,
                 err,
               );
@@ -222,7 +223,7 @@ export class TexturedSurface extends Mobject3D {
         this._applyTextures();
       })
       .catch((error) => {
-        console.error(
+        logger.error(
           'TexturedSurface: Failed to load textures. Surface will use placeholder material.',
           error,
         );

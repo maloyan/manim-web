@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { logger } from '../utils/logger';
 
 /**
  * Options for configuring the Renderer.
@@ -109,11 +110,11 @@ export class Renderer implements IRenderer {
     domElement.addEventListener('webglcontextlost', (event) => {
       event.preventDefault();
       this._contextLost = true;
-      console.warn('Renderer: WebGL context lost. Rendering suspended.');
+      logger.warn('Renderer: WebGL context lost. Rendering suspended.');
     });
     domElement.addEventListener('webglcontextrestored', () => {
       this._contextLost = false;
-      console.warn('Renderer: WebGL context restored.');
+      logger.warn('Renderer: WebGL context restored.');
     });
 
     // Only append if we created a new canvas (no existing canvas provided)
@@ -172,7 +173,7 @@ export class Renderer implements IRenderer {
   set backgroundOpacity(value: number) {
     const clamped = Math.max(0, Math.min(1, value));
     if (!this._alpha && clamped < 1) {
-      console.warn(
+      logger.warn(
         'Renderer: backgroundOpacity < 1 has no effect because the WebGL context ' +
           'was created without alpha. Set backgroundOpacity < 1 in the initial options.',
       );
