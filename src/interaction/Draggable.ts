@@ -21,6 +21,12 @@ export interface DraggableOptions {
   onDragEnd?: (mobject: Mobject, position: Vector3Tuple) => void;
   /** Grid size for snapping, or null for no snapping */
   snapToGrid?: number | null;
+  /**
+   * Render the scene after each drag update so the motion is visible
+   * without a running render loop. Defaults to true. Set to false if you
+   * render manually (e.g. inside onDrag) or run your own render loop.
+   */
+  autoRender?: boolean;
 }
 
 /**
@@ -214,6 +220,7 @@ export class Draggable {
     }
 
     this._options.onDragStart?.(this._mobject, worldPos);
+    this._requestRender();
   }
 
   private _updateDrag(worldPos: Vector3Tuple): void {
@@ -275,6 +282,18 @@ export class Draggable {
     this._mobject.moveTo(newPos);
     this._lastPosition = newPos;
     this._options.onDrag?.(this._mobject, newPos, delta);
+    this._requestRender();
+  }
+
+  /**
+   * Render the scene so the drag is visible (issue #419). Skipped when
+   * autoRender is disabled or when a render loop (play(), wait() with
+   * updaters, orbit controls) is already rendering every frame.
+   */
+  private _requestRender(): void {
+    if (this._options.autoRender === false) return;
+    if (this._scene.isRenderLoopActive) return;
+    this._scene.render();
   }
 
   private _endDrag(): void {
@@ -288,6 +307,7 @@ export class Draggable {
 
     const finalPos = this._mobject.getCenter();
     this._options.onDragEnd?.(this._mobject, finalPos);
+    this._requestRender();
   }
 
   /**
