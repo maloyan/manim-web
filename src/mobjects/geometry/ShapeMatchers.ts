@@ -289,7 +289,6 @@ export class SurroundingRectangle extends VMobject {
     // Magic number for approximating circular arc with cubic Bezier
     const k = 0.5522847498;
 
-    // Start at top-left corner, after the curve
     // Top-left corner arc center
     const tlCx = cx - halfWidth + r;
     const tlCy = cy + halfHeight - r;
@@ -306,24 +305,24 @@ export class SurroundingRectangle extends VMobject {
     const blCx = cx - halfWidth + r;
     const blCy = cy - halfHeight + r;
 
-    // Helper to add arc from angle1 to angle2
-    const addArc = (arcCx: number, arcCy: number, startAngle: number, isFirst: boolean) => {
-      // Each corner is a 90-degree arc
+    // Helper to add a 90-degree corner arc. The path traverses the
+    // rectangle clockwise, so each arc sweeps clockwise from startAngle
+    // to startAngle - PI/2.
+    const addArc = (arcCx: number, arcCy: number, startAngle: number) => {
+      const endAngle = startAngle - Math.PI / 2;
       const cosStart = Math.cos(startAngle);
       const sinStart = Math.sin(startAngle);
-      const cosEnd = Math.cos(startAngle + Math.PI / 2);
-      const sinEnd = Math.sin(startAngle + Math.PI / 2);
+      const cosEnd = Math.cos(endAngle);
+      const sinEnd = Math.sin(endAngle);
 
       const p0: number[] = [arcCx + r * cosStart, arcCy + r * sinStart, cz];
       const p3: number[] = [arcCx + r * cosEnd, arcCy + r * sinEnd, cz];
 
-      // Control points for quarter circle
-      const p1: number[] = [p0[0] - k * r * sinStart, p0[1] + k * r * cosStart, cz];
-      const p2: number[] = [p3[0] + k * r * sinEnd, p3[1] - k * r * cosEnd, cz];
+      // Control points for quarter circle; the unit tangent in the
+      // direction of (clockwise) travel at angle theta is (sin theta, -cos theta)
+      const p1: number[] = [p0[0] + k * r * sinStart, p0[1] - k * r * cosStart, cz];
+      const p2: number[] = [p3[0] - k * r * sinEnd, p3[1] + k * r * cosEnd, cz];
 
-      if (isFirst) {
-        points.push([...p0]);
-      }
       points.push([...p1], [...p2], [...p3]);
     };
 
@@ -338,26 +337,31 @@ export class SurroundingRectangle extends VMobject {
       points.push([...p1]);
     };
 
-    // Top-left arc (starts pointing up, 90 degrees)
-    addArc(tlCx, tlCy, Math.PI / 2, true);
+    // Clockwise path starting at the top of the left edge:
+    // TL arc, top edge, TR arc, right edge, BR arc, bottom edge,
+    // BL arc, left edge (closing)
+    points.push([cx - halfWidth, tlCy, cz]);
+
+    // Top-left arc (from left side going to top: PI -> PI/2)
+    addArc(tlCx, tlCy, Math.PI);
 
     // Top edge
     addLine([tlCx, cy + halfHeight, cz], [trCx, cy + halfHeight, cz]);
 
-    // Top-right arc (starts pointing right, 0 degrees)
-    addArc(trCx, trCy, 0, false);
+    // Top-right arc (from top going to right: PI/2 -> 0)
+    addArc(trCx, trCy, Math.PI / 2);
 
     // Right edge
     addLine([cx + halfWidth, trCy, cz], [cx + halfWidth, brCy, cz]);
 
-    // Bottom-right arc (starts pointing down, -90 degrees)
-    addArc(brCx, brCy, -Math.PI / 2, false);
+    // Bottom-right arc (from right going to bottom: 0 -> -PI/2)
+    addArc(brCx, brCy, 0);
 
     // Bottom edge
     addLine([brCx, cy - halfHeight, cz], [blCx, cy - halfHeight, cz]);
 
-    // Bottom-left arc (starts pointing left, 180 degrees)
-    addArc(blCx, blCy, Math.PI, false);
+    // Bottom-left arc (from bottom going to left: -PI/2 -> -PI)
+    addArc(blCx, blCy, -Math.PI / 2);
 
     // Left edge (closing)
     addLine([cx - halfWidth, blCy, cz], [cx - halfWidth, tlCy, cz]);
