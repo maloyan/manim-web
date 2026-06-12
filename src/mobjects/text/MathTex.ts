@@ -19,6 +19,7 @@ import { WHITE } from '../../constants/colors';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
 import typia from 'typia';
 import { renderLatexToSVG } from './MathJaxRenderer';
+import { logger } from '../../utils/logger';
 
 /** MathJax SVG uses ~1000 font units per em. */
 const MATHJAX_SVG_UNITS_PER_EM = 1000;
@@ -209,7 +210,7 @@ export class MathTex extends VGroup {
         this._markDirty();
       })
       .catch((error) => {
-        console.error('MathTex rendering error:', error);
+        logger.error('MathTex rendering error:', error);
         this._renderError = error instanceof Error ? error : new Error(String(error));
       });
   }

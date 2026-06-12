@@ -8,6 +8,7 @@ import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { WHITE } from '../../constants/colors';
 import { DEFAULT_STROKE_WIDTH } from '../../constants';
+import { logger } from '../../utils/logger';
 
 /** Internal point type for SVG parsing (simple tuple) */
 type SVGPoint = [number, number];
@@ -619,7 +620,7 @@ export class SVGMobject extends VGroup {
     const svg = doc.querySelector('svg');
 
     if (!svg) {
-      console.warn('SVGMobject: No SVG element found');
+      logger.warn('SVGMobject: No SVG element found');
       return;
     }
 

@@ -416,7 +416,10 @@ describe('Timeline', () => {
       const tl = new Timeline();
       tl.add(makeAnim(1)); // 0..1
       tl.add(makeAnim(1), 'invalid'); // should behave like ">" => 1..2
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid position'));
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[manim-web]',
+        expect.stringContaining('Invalid position'),
+      );
       expect(tl.getDuration()).toBeCloseTo(2);
       warnSpy.mockRestore();
     });

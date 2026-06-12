@@ -417,6 +417,7 @@ describe('SVGMobject', () => {
       const svg = new SVGMobject({ svgString: '<div>not svg</div>' });
       expect(svg.children.length).toBe(0);
       expect(warnSpy).toHaveBeenCalledWith(
+        '[manim-web]',
         expect.stringContaining('SVGMobject: No SVG element found'),
       );
     } finally {

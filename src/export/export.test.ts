@@ -202,6 +202,7 @@ describe('VideoExporter', () => {
     await exporter.startRecording();
 
     expect(warnSpy).toHaveBeenCalledWith(
+      '[manim-web]',
       'MOV format not supported by this browser, falling back to WebM',
     );
 

@@ -6,6 +6,7 @@
 import { Mobject } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
 import { RateFunction, smooth } from '../rate-functions';
+import { logger } from '../utils/logger';
 import typia from 'typia';
 
 export type { RateFunction };
@@ -93,7 +94,7 @@ export abstract class Animation {
         try {
           this._preAnimationState = this.mobject.copy();
         } catch (err) {
-          console.warn(
+          logger.warn(
             'Animation.begin(): mobject.copy() failed, using minimal state snapshot. ' +
               'Backward seeking may not fully restore this mobject.',
             err,

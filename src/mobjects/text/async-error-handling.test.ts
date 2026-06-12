@@ -9,6 +9,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MathTexImage } from './MathTexImage';
 import { MathTex } from './MathTex';
+import { logger } from '../../utils/logger';
 
 // Helper: create a minimal MathTexImage prototype mock (single-part mode)
 function createMathTexImageMock() {
@@ -209,9 +210,7 @@ describe('KaTeX styles onerror', () => {
       link.rel = 'stylesheet';
       link.href = 'https://invalid.example.com/nonexistent.css';
       link.onerror = () => {
-        console.warn(
-          'MathTex: KaTeX CSS failed to load from CDN. LaTeX rendering may be degraded.',
-        );
+        logger.warn('MathTex: KaTeX CSS failed to load from CDN. LaTeX rendering may be degraded.');
         resolve();
       };
       document.head.appendChild(link);
@@ -224,6 +223,7 @@ describe('KaTeX styles onerror', () => {
 
     expect(resolved).toBe(true);
     expect(warnSpy).toHaveBeenCalledWith(
+      '[manim-web]',
       'MathTex: KaTeX CSS failed to load from CDN. LaTeX rendering may be degraded.',
     );
 

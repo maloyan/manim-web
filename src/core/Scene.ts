@@ -13,6 +13,7 @@ import { SceneStateManager, SceneSnapshot } from './StateManager';
 import { AudioManager, type AddSoundOptions, type AudioTrack } from './AudioManager';
 import { ensureAnimateProxyRegistered } from './AnimateProxy';
 import type { MultiCamera } from './CameraExtensions';
+import { logger } from '../utils/logger';
 
 // AnimateProxy self-registers with Mobject via a top-level side effect
 // (see AnimateProxy.ts) to avoid the Mobject -> AnimateProxy -> Transform ->
@@ -934,7 +935,9 @@ export class Scene {
             this._scheduleRender();
           })
           .catch((err) => {
-            console.warn('Scene: async mobject render failed for', asyncMob, err);
+            // Log only a small identifier — sanitizing/stringifying a full
+            // mobject graph for the logger would be expensive.
+            logger.warn('Scene: async mobject render failed for', asyncMob.constructor.name, err);
           });
       }
     }
@@ -1158,7 +1161,7 @@ export class Scene {
           this._lastFrameTime = now;
           this._tickFrame(dt);
         } catch (err) {
-          console.error('[Scene] headless render loop error, stopping:', err);
+          logger.error('Scene: headless render loop error, stopping:', err);
           this._stopRenderLoop();
           this._isPlaying = false;
         }
