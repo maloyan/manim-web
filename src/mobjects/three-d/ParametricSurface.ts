@@ -69,6 +69,7 @@ export class ParametricSurface extends Surface3D {
       opacity: this._opacity,
       wireframe: this._wireframe,
       doubleSided: this._doubleSided,
+      checkerboardColors: this._checkerboardColors,
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;

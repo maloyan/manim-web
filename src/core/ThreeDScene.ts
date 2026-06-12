@@ -220,7 +220,10 @@ export class ThreeDScene extends Scene {
       if (!mat) return;
       (Array.isArray(mat) ? mat : [mat]).forEach((m) => {
         m.depthTest = true;
-        m.depthWrite = !m.transparent;
+        // Depth-prepass materials (Surface3D self-occlusion, issue #416)
+        // manage their own depthWrite — they exist precisely to write
+        // depth while transparent.
+        if (!m.userData.depthPrepass) m.depthWrite = !m.transparent;
       });
     });
   }
