@@ -309,7 +309,6 @@ export class InteractiveScene extends Scene {
   // Keyboard shortcut handling
   // ---------------------------------------------------------------------------
 
-  // eslint-disable-next-line complexity
   private _handleKeyDown(e: KeyboardEvent): void {
     const isCtrlOrMeta = e.ctrlKey || e.metaKey;
 

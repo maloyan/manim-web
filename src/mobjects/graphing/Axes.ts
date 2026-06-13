@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { Group } from '../../core/Group';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
@@ -75,7 +74,6 @@ export class Axes extends Group {
   protected _xTip: VMobject | null = null;
   protected _yTip: VMobject | null = null;
 
-  // eslint-disable-next-line complexity
   constructor(options: AxesOptions = {}) {
     super();
 
@@ -608,7 +606,6 @@ export class Axes extends Group {
    * @param options - Area options
    * @returns A filled VMobject representing the area
    */
-  // eslint-disable-next-line complexity
   getArea(
     graph: FunctionGraph,
     xRange: [number, number],
@@ -696,7 +693,6 @@ export class Axes extends Group {
    * @param options - Line graph options
    * @returns A VDict with "line_graph" and "vertex_dots" entries
    */
-  // eslint-disable-next-line complexity
   plotLineGraph(options: {
     xValues: number[];
     yValues: number[];

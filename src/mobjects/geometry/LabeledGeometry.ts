@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 /**
  * Labeled Geometry Mobjects
  *
@@ -734,7 +733,6 @@ export class AnnotationDot extends VGroup {
   private _labelOffset: number;
   private _showOutline: boolean;
 
-  // eslint-disable-next-line complexity
   constructor(options: AnnotationDotOptions = {}) {
     super();
 

@@ -284,7 +284,6 @@ export async function preloadMathJax(): Promise<void> {
  * @param options   - Rendering options.
  * @returns A MathJaxRenderResult containing the SVG element and VMobject group.
  */
-// eslint-disable-next-line complexity
 export async function renderLatexToSVG(
   texString: string,
   options: MathJaxRenderOptions = {},

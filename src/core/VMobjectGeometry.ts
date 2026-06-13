@@ -481,7 +481,6 @@ export function buildEarcutFillGeometry(
  * Winding is set by the lerp of two equally-wound endpoints, so it is
  * stable across the entire animation.
  */
-// eslint-disable-next-line complexity
 function buildEarcutFillGeometryMulti(
   points3D: number[][],
   subpathLengths: number[],

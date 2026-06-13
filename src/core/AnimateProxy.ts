@@ -158,8 +158,8 @@ export class AnimateProxy extends Animation {
       // Use static className property if available (survives minification),
       // fall back to constructor.name for development builds.
       const className =
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (this._source.constructor as any).className ?? this._source.constructor.name;
+        (this._source.constructor as { className?: string }).className ??
+        this._source.constructor.name;
       if (hasAnimationOverride(methodName, className)) {
         const overrideFactory = getAnimationOverride(methodName, className)!;
         this._overrideAnimation = overrideFactory(this._source, {

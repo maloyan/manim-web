@@ -86,8 +86,7 @@ export abstract class Animation {
       // Cleanup owed: several animation tests construct bare Mobjects and
       // animate them. They should be migrated to concrete mobjects, after which
       // this prototype check and the _captureMinimalState fallback can go.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const hasCopy = typeof (this.mobject as any).copy === 'function';
+      const hasCopy = typeof (this.mobject as { copy?: () => Mobject }).copy === 'function';
       if (!hasCopy) {
         this._preAnimationState = this._captureMinimalState();
       } else {
@@ -114,8 +113,7 @@ export abstract class Animation {
   private _captureMinimalState(): Mobject {
     const m = this.mobject;
     // Create a minimal object with the properties reset() needs
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const snapshot = Object.create(null) as any;
+    const snapshot = Object.create(null) as Record<string, unknown>;
     snapshot.position = m.position.clone();
     snapshot.rotation = m.rotation.clone();
     snapshot.scaleVector = m.scaleVector.clone();
@@ -123,7 +121,7 @@ export abstract class Animation {
     snapshot.opacity = m.opacity;
     snapshot.strokeWidth = m.strokeWidth;
     snapshot.fillOpacity = m.fillOpacity;
-    return snapshot as Mobject;
+    return snapshot as unknown as Mobject;
   }
 
   /**

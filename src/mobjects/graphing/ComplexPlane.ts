@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import * as THREE from 'three';
 import { Group } from '../../core/Group';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
@@ -568,7 +567,6 @@ export class PolarPlane extends Group {
   private _angleLabels: Group;
   private _radiusLabels: Group;
 
-  // eslint-disable-next-line complexity
   constructor(options: PolarPlaneOptions = {}) {
     super();
 
@@ -786,7 +784,6 @@ export class PolarPlane extends Group {
   /**
    * Format an angle as a label (0, π/4, π/2, etc.)
    */
-  // eslint-disable-next-line complexity
   private _formatAngleLabel(angle: number): string {
     const epsilon = 0.0001;
 

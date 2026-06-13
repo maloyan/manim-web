@@ -421,8 +421,7 @@ export class Broadcast extends Animation {
         this._parentObject.remove(copyThree);
         // Dispose Three.js resources
         copyThree.traverse((child) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const mesh = child as any;
+          const mesh = child as Partial<THREE.Mesh>;
           if (mesh.geometry) mesh.geometry.dispose();
           if (mesh.material) {
             if (Array.isArray(mesh.material)) {

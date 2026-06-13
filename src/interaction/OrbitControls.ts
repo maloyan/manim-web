@@ -50,7 +50,6 @@ export class OrbitControls {
    * @param canvas - The HTML canvas element for mouse events
    * @param options - Controls configuration options
    */
-  // eslint-disable-next-line complexity
   constructor(camera: THREE.Camera, canvas: HTMLCanvasElement, options?: OrbitControlsOptions) {
     // Set up axis BEFORE constructing controls. Three.js OrbitControls captures camera.up
     // into an internal quaternion at construction and never updates it. 'camera' mode uses

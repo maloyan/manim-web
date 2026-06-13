@@ -158,7 +158,6 @@ describe('ComplexValueTracker', () => {
   });
 
   it('constructs with empty options object', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ct = new ComplexValueTracker({} as unknown as any);
     expect(ct.getValue()).toEqual({ re: 0, im: 0 });
   });

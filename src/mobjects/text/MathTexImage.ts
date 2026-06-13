@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 /**
  * MathTexImage - Rasterized LaTeX rendering for manimweb using KaTeX (default) or MathJax (fallback)
  *
@@ -812,7 +811,6 @@ export class MathTexImage extends TexturedMobject {
     const svgItems: SvgItem[] = [];
     const ruleItems: RuleItem[] = [];
 
-    // eslint-disable-next-line complexity
     const collectNodes = (node: Node): void => {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent;

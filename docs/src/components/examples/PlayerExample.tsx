@@ -33,7 +33,6 @@ function PlayerExampleInner() {
 
     const el = containerRef.current;
     let disposed = false;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let player: any = null;
 
     (async () => {

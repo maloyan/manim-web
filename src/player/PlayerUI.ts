@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 /**
  * PlayerUI - Video-player-style bottom bar overlay for the Player.
  * Pure DOM/CSS, positioned absolutely over the canvas container.

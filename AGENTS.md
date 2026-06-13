@@ -49,8 +49,9 @@ npm run docs              # Generate example docs + build Docusaurus site
 ## Code Style
 
 - ESLint + Prettier enforced via pre-commit hook (husky + lint-staged)
-- Max 500 lines per file (eslint `max-lines` rule)
-- No `any` types (`@typescript-eslint/no-explicit-any`) — use proper types, never `eslint-disable`
+- **Never add an `eslint-disable` directive** (`eslint-disable`, `eslint-disable-next-line`, `eslint-disable-line`) anywhere — fix the root cause instead. This is enforced two ways and CI **will fail** otherwise: the ESLint rule `@eslint-community/eslint-comments/no-use` (in-editor/local) and the authoritative grep guard `npm run lint:no-disable` (`scripts/check-no-eslint-disable.sh`, run in CI and pre-commit, and un-evadable — it scans the whole repo, including files ESLint ignores or never sees: tests, docs, `.mjs`/`.cjs` scripts, and config files). See issue #398.
+- `complexity` (>15) and `max-lines` (>500) are **warnings**, not errors — they report but don't block CI. Prefer keeping functions/files under the limit; if you exceed it, refactor rather than reaching for a disable.
+- No `any` types (`@typescript-eslint/no-explicit-any`) — use proper types, never `eslint-disable`. Use a narrow typed cast (`as { foo: Bar }`) when you must reach an untyped boundary.
 - camelCase naming convention for methods/properties
 - Logging: use the `logger` utility (`src/utils/logger.ts`), never raw `console.*`. `logger.warn`/`logger.error`/`logger.info`/`logger.debug` prefix `[manim-web]`, respect the configured log level, sanitize args, and notify `onLog` listeners. Raw `console.*` bypasses all of that (and tests fail on unexpected `console.warn`/`console.error`). Note: much of the existing codebase still uses raw `console.*` and is being migrated — new code must use `logger`.
 

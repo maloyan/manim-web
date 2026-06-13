@@ -43,6 +43,7 @@
     "test:watch": "vitest",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
+    "lint:no-disable": "bash scripts/check-no-eslint-disable.sh",
     "format": "prettier --write src/",
     "docs": "npm run build && node scripts/generate-example-docs.mjs && cd docs && npm run build",
     "docs:dev": "npm run build && node scripts/generate-example-docs.mjs && cd docs && npm start",
@@ -75,6 +76,7 @@
     "typia": "^12.1.1"
   },
   "devDependencies": {
+    "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.58.2",
     "@types/earcut": "^3.0.0",

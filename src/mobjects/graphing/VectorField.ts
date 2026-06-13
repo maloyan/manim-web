@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { Group } from '../../core/Group';
 import { VMobject } from '../../core/VMobject';
 import { Mobject, Vector3Tuple, UpdaterFunction } from '../../core/Mobject';
@@ -549,7 +548,6 @@ function splitBezierAt(
  * values `lower` and `upper` (both 0-1).  Equivalent to Python manim's
  * `pointwise_become_partial`.
  */
-// eslint-disable-next-line complexity
 function getPartialBezierPoints(allPoints: number[][], lower: number, upper: number): number[][] {
   if (allPoints.length < 4) return [];
   const nCurves = (allPoints.length - 1) / 3;

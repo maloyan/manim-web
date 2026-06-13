@@ -1,6 +1,7 @@
 import eslint from "@eslint/js";
 import tseslint from "typescript-eslint";
 import eslintConfigPrettier from "eslint-config-prettier";
+import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 
 export default [
   {
@@ -21,9 +22,22 @@ export default [
   },
   {
     files: ["src/**/*.ts", "src/**/*.tsx"],
+    plugins: {
+      "@eslint-community/eslint-comments": eslintComments,
+    },
     rules: {
+      // Issue #398: ban `eslint-disable` directives — fix the root cause
+      // instead of suppressing it. This is the in-editor/local guard; the
+      // authoritative, un-evadable backstop is scripts/check-no-eslint-disable.sh
+      // (run in CI and the pre-commit hook), which scans the whole repo —
+      // including files ESLint ignores or never sees (tests, docs, configs).
+      "@eslint-community/eslint-comments/no-use": "error",
+      // Issue #398: `eslint-disable` is banned, so warn-level rules can no
+      // longer be silenced inline. Rules that catch real defects are therefore
+      // `error` (they block CI). Only `complexity` and `max-lines` stay `warn`
+      // (advisory metrics, tracked but non-blocking) — see CI lint step.
       "@typescript-eslint/naming-convention": [
-        "warn",
+        "error",
         { selector: "class", format: ["PascalCase"] },
         { selector: "interface", format: ["PascalCase"] },
         { selector: "typeAlias", format: ["PascalCase"] },
@@ -52,7 +66,7 @@ export default [
       // TS-aware version of no-unused-vars (disable base rule to avoid conflicts)
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
-        "warn",
+        "error",
         {
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
@@ -61,7 +75,7 @@ export default [
       ],
       // Catch expressions that don't affect state (e.g. `x + 1;` with no assignment)
       "no-unused-expressions": "off",
-      "@typescript-eslint/no-unused-expressions": "warn",
+      "@typescript-eslint/no-unused-expressions": "error",
       // Verify recommended rules are active at error level (explicit for visibility)
       "no-unreachable": "error",
       "no-constant-condition": "error",

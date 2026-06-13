@@ -2,10 +2,15 @@ import type { MobjectLike, MobjectStyle, Vector3Tuple } from './MobjectTypes';
 import { isVMobject } from './MobjectTypes';
 import { transformPointByMatrix } from '../utils/math';
 
+/** Internal shape of the protected/private members on MobjectLike touched here. */
+interface MobjectInternals {
+  _opacity: number;
+  _style: MobjectStyle;
+}
+
 /** Helper to access protected/private members on MobjectLike at runtime. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function asInternal(m: MobjectLike): any {
-  return m;
+function asInternal(m: MobjectLike): MobjectInternals {
+  return m as unknown as MobjectInternals;
 }
 
 /**

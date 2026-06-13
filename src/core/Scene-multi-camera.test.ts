@@ -28,7 +28,6 @@ function makeFakeThreeRenderer(): THREE.WebGLRenderer {
     render: vi.fn(() => calls.push('render')),
     getContext: () => ctx,
   };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (stub as any)._calls = calls;
   return stub as unknown as THREE.WebGLRenderer;
 }
@@ -123,13 +122,10 @@ describe('Scene.useMultiCamera (issue #358)', () => {
     scene.useMultiCamera(mc);
     (scene as unknown as SceneInternals)._render();
     // Full-canvas clear before per-viewport rendering.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((fake as any).clear).toHaveBeenCalled();
     expect(mcRenderSpy).toHaveBeenCalledWith(fake, scene.threeScene, 800, 450);
     // Renderer state restored: scissor disabled, viewport reset to full canvas.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((fake as any).setScissorTest).toHaveBeenLastCalledWith(false);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((fake as any).setViewport).toHaveBeenLastCalledWith(0, 0, 800, 450);
   });
 
@@ -144,9 +140,7 @@ describe('Scene.useMultiCamera (issue #358)', () => {
       throw new Error('boom');
     });
     expect(() => (scene as unknown as SceneInternals)._render()).toThrow('boom');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((fake as any).setScissorTest).toHaveBeenLastCalledWith(false);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((fake as any).setViewport).toHaveBeenLastCalledWith(0, 0, 800, 450);
   });
 
@@ -207,7 +201,6 @@ describe('Scene.useMultiCamera (issue #358)', () => {
     });
     mcNoBorders.render(fake, threeScene, 800, 450);
     // One render call for the only camera; no second pass for borders.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((fake as any).render).toHaveBeenCalledTimes(1);
 
     const fake2 = makeFakeThreeRenderer();
@@ -217,7 +210,6 @@ describe('Scene.useMultiCamera (issue #358)', () => {
     mcWithBorder.setViewportBorder(0, { borderColor: '#ff0000', borderWidth: 2 });
     mcWithBorder.render(fake2, threeScene, 800, 450);
     // One pass for the scene + one pass for the border overlay.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((fake2 as any).render).toHaveBeenCalledTimes(2);
   });
 

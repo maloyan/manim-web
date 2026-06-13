@@ -1,9 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import BrowserOnly from '@docusaurus/BrowserOnly';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnimationFn = (scene: any) => Promise<void>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type SceneFactory = (
   container: HTMLElement,
   manim: any,
@@ -84,7 +82,6 @@ function isElementInViewport(el: HTMLElement): boolean {
 
 function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sceneRef = useRef<any>(null);
   const queueFlagRef = useRef<{ released: boolean } | null>(null);
   const [isVisible, setIsVisible] = useState(false);

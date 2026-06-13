@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { Text, TextOptions } from './Text';
 
 /**
@@ -336,7 +335,6 @@ function parseOpenTag(content: string): { tagName: string; attrs: Record<string,
 // Flatten AST to styled segments
 // ---------------------------------------------------------------------------
 
-// eslint-disable-next-line complexity
 function flattenToSegments(
   nodes: MarkupNode[],
   parentContext: StyleContext,
@@ -442,7 +440,6 @@ function flattenToSegments(
 /**
  * Apply Pango <span> attributes to a style context.
  */
-// eslint-disable-next-line complexity
 function applySpanAttributes(
   ctx: StyleContext,
   attrs: Record<string, string>,
@@ -963,7 +960,6 @@ export class MarkupText extends Text {
   // Render override
   // -----------------------------------------------------------------------
 
-  // eslint-disable-next-line complexity
   protected override _renderToCanvas(): void {
     if (!this._canvas || !this._ctx) {
       return;
