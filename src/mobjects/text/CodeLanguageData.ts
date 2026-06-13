@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 /**
  * Language-specific keyword lists, built-in types, comment patterns,
  * and string delimiters used by the Code syntax highlighter.

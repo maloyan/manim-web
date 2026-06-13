@@ -469,7 +469,6 @@ describe('Broadcast', () => {
     it('clears internal copies array', () => {
       const anim = new Broadcast(mob);
       // Access private field via cast to verify cleanup
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const internal = anim as any;
       internal._copies = [createMob(), createMob()];
       anim.finish();
@@ -478,7 +477,6 @@ describe('Broadcast', () => {
 
     it('nullifies parent reference', () => {
       const anim = new Broadcast(mob);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const internal = anim as any;
       internal._parentObject = {};
       internal._copies = [];

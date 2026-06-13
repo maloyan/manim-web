@@ -66,7 +66,6 @@ export class Renderer implements IRenderer {
    * @param container - DOM element to append the canvas to
    * @param options - Renderer configuration options
    */
-  // eslint-disable-next-line complexity
   constructor(container: HTMLElement, options: RendererOptions = {}) {
     const {
       width = container.clientWidth || 800,

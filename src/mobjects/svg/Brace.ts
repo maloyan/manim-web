@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import { VMobject } from '../../core/VMobject';
 import { Mobject, Vector3Tuple, DOWN } from '../../core/Mobject';
 import { isVMobject } from '../../core/MobjectTypes';

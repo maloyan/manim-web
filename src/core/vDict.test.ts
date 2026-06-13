@@ -244,9 +244,7 @@ describe('VDict - extended coverage', () => {
   it('asProxy set with non-VMobject sets on target directly', () => {
     const d = new VDict();
     const proxy = d.asProxy();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (proxy as any)['_someField'] = 42;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((d as any)._someField).toBe(42);
   });
 

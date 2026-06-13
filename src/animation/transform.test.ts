@@ -434,7 +434,6 @@ describe('Transform', () => {
 
     it('uses cross-fade when source is a non-VMobject Mobject', () => {
       class SimpleMobject extends Mobject {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         protected _createThreeObject(): THREE.Object3D {
           return new THREE.Group();
         }
@@ -788,7 +787,6 @@ describe('edge cases', () => {
 describe('cross-fade finish()', () => {
   it('finish() reparents target under source for non-VMobject Mobjects', () => {
     class SimpleMobject extends Mobject {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Group();
       }
@@ -845,7 +843,6 @@ describe('cross-fade finish()', () => {
 
   it('cross-fade adds target to scene graph when source has parent', () => {
     class SimpleMobject extends Mobject {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Group();
       }
@@ -873,7 +870,6 @@ describe('cross-fade finish()', () => {
 
   it('cross-fade position interpolation works for non-VMobject', () => {
     class SimpleMobject extends Mobject {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Group();
       }
@@ -938,7 +934,6 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
         this._mesh = new THREE.Mesh(geometry, material);
       }
 
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       protected _createThreeObject(): THREE.Object3D {
         const group = new THREE.Group();
         group.add(this._mesh);
@@ -994,7 +989,6 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
         this._mesh = new THREE.Mesh(geometry, material);
       }
 
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       protected _createThreeObject(): THREE.Object3D {
         const group = new THREE.Group();
         group.add(this._mesh);
@@ -1005,7 +999,6 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
         return this._mesh;
       }
 
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       override copy(): Mobject {
         const clone = new TextLikeMobject();
         this._copyBaseAttributesInto(clone);

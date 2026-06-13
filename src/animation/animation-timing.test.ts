@@ -16,11 +16,9 @@ import { onLog, clearLogListeners, type LogEntry } from '../utils/logger';
 
 /** Concrete Mobject for tests needing getCenter()/getThreeObject(). */
 class ConcreteMobject extends Mobject {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   protected _createThreeObject(): THREE.Object3D {
     return new THREE.Group();
   }
-  // eslint-disable-next-line @typescript-eslint/naming-convention
   override copy(): Mobject {
     return new ConcreteMobject();
   }

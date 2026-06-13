@@ -16,8 +16,10 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-package-lock
-      - name: ESLint (errors block, warnings tracked)
-        run: npx eslint src/ --max-warnings 0
+      - name: No eslint-disable directives (issue #398)
+        run: npm run lint:no-disable
+      - name: ESLint (errors block; complexity/max-lines report as warnings)
+        run: npm run lint
 
   typecheck:
     name: Typecheck

@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import * as THREE from 'three';
 import {
   type Vector3Tuple,
@@ -27,16 +26,19 @@ import {
   resolveExtremalPoint,
 } from './MobjectState';
 import { logger } from '../utils/logger';
+// Type-only import: erased at compile time, so it introduces no runtime
+// circular dependency (Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject).
+// Used solely to type `Mobject.animate` and the registered factory.
+import type { AnimateProxy } from './AnimateProxy';
+
 // AnimateProxy registers itself here to break the circular dependency:
 // Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let animateProxyFactory: ((mobject: Mobject) => any) | null = null;
+let animateProxyFactory: ((mobject: Mobject) => AnimateProxy) | null = null;
 
 const SCRATCH_QUAT = new THREE.Quaternion();
 
 /** @internal Called by AnimateProxy module to register the factory. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function registerAnimateProxy(factory: (mobject: Mobject) => any): void {
+export function registerAnimateProxy(factory: (mobject: Mobject) => AnimateProxy): void {
   animateProxyFactory = factory;
 }
 
@@ -784,8 +786,7 @@ export abstract class Mobject {
    * scene.play(circle.animate.setColor('#ff0000').scale(2));
    * ```
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  get animate(): any {
+  get animate(): AnimateProxy {
     if (!animateProxyFactory) {
       throw new Error('AnimateProxy not registered. Ensure AnimateProxy module is imported.');
     }

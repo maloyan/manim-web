@@ -190,7 +190,6 @@ export class Paragraph extends Text {
   /**
    * Render text to canvas with justification support
    */
-  // eslint-disable-next-line complexity
   protected override _renderToCanvas(): void {
     if (!this._canvas || !this._ctx) {
       return;

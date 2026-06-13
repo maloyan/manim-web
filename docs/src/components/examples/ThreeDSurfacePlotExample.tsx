@@ -27,8 +27,10 @@ async function animate(scene: any) {
     opacity: 0.85,
   });
 
-  // Scale by 2 about origin (matches Python: gauss_plane.scale(2, about_point=ORIGIN))
-  gaussSurface.scale(2);
+  // Scale by 2 about origin (matches Python: gauss_plane.scale(2, about_point=ORIGIN)).
+  // Without an explicit aboutPoint, scale() pivots about the surface's geometric
+  // center (z≈0.5), which would push the flat base below the z=0 plane.
+  gaussSurface.scale(2, { aboutPoint: [0, 0, 0] });
 
   const axes = new ThreeDAxes({
     xRange: [-6, 6, 1],

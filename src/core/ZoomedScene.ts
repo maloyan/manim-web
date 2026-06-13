@@ -249,7 +249,6 @@ export class ZoomedScene extends Scene {
   private _frameSize = new THREE.Vector3();
   private _viewportSize = new THREE.Vector2();
 
-  // eslint-disable-next-line complexity
   constructor(container: HTMLElement | null, options: ZoomedSceneOptions = {}) {
     super(container, options);
 

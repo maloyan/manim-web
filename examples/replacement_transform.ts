@@ -24,8 +24,7 @@ function log(msg: string) {
 function describe(label: string) {
   const names: string[] = [];
   for (const m of scene.mobjects) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    names.push((m as any).constructor.name);
+    names.push((m as { constructor: { name: string } }).constructor.name);
   }
   log(`${label}: scene has ${names.length} mobjects -> [${names.join(', ')}]`);
 }

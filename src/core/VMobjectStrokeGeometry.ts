@@ -16,7 +16,6 @@ import * as THREE from 'three';
  * @param opacity - Current opacity
  * @returns BufferGeometry and index data, or null if insufficient points
  */
-// eslint-disable-next-line complexity
 export function buildMeshStrokeGeometry(
   group: THREE.Group,
   sampledPoints: number[][],

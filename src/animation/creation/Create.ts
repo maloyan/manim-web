@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 /**
  * Create animation - draws the mobject stroke progressively.
  * For VMobjects, this uses dashed lines to progressively reveal the stroke path,

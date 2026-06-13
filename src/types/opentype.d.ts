@@ -23,14 +23,9 @@ declare module 'opentype.js' {
     [key: string]: unknown;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  function load(url: string): Promise<Font>;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  function parse(buffer: ArrayBuffer, opt?: unknown): Font;
-
   const opentype: {
-    load: typeof load;
-    parse: typeof parse;
+    load(url: string): Promise<Font>;
+    parse(buffer: ArrayBuffer, opt?: unknown): Font;
   };
 
   export default opentype;

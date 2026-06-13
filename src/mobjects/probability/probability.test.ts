@@ -540,7 +540,6 @@ describe('SampleSpace', () => {
     ss.divideVertically([0.5, 0.5]);
     const parts = ss.getVerticalPartitions();
     expect(parts.length).toBe(2);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     parts.push(null as unknown as any);
     expect(ss.getVerticalPartitions().length).toBe(2);
   });
@@ -555,7 +554,6 @@ describe('SampleSpace', () => {
     ss.divideHorizontally([0.5, 0.5]);
     const parts = ss.getHorizontalPartitions();
     expect(parts.length).toBe(2);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     parts.push(null as unknown as any);
     expect(ss.getHorizontalPartitions().length).toBe(2);
   });

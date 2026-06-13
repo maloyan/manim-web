@@ -1,4 +1,3 @@
-/* eslint-disable max-lines */
 import * as THREE from 'three';
 import { Renderer, RendererOptions, IRenderer } from './Renderer';
 import { NullRenderer } from './NullRenderer';
@@ -151,7 +150,6 @@ export class Scene {
    * @param container - DOM element to render into, or null for headless mode
    * @param options - Scene configuration options
    */
-  // eslint-disable-next-line complexity
   constructor(container: HTMLElement | null, options: SceneOptions = {}) {
     const {
       width,
@@ -1533,7 +1531,6 @@ export class Scene {
    * });
    * ```
    */
-  // eslint-disable-next-line complexity
   async export(filename: string, options?: SceneExportOptions): Promise<Blob> {
     if (this.isHeadless) {
       throw new Error(
