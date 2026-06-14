@@ -3,6 +3,7 @@ import { NullRenderer } from './NullRenderer';
 import { Scene } from './Scene';
 import { ThreeDScene } from './ThreeDScene';
 import { ZoomedScene } from './ZoomedScene';
+import { VGroup } from './VGroup';
 import { Circle } from '../mobjects/geometry/Circle';
 import { FadeIn } from '../animation/fading/FadeIn';
 import { FadeOut } from '../animation/fading/FadeOut';
@@ -243,6 +244,42 @@ describe('ThreeDScene headless mode', () => {
     const circle = new Circle();
     scene.add(circle);
     expect(scene.mobjects).toContain(circle);
+    scene.dispose();
+  });
+});
+
+describe('Child z-layering in 3D (issue #465)', () => {
+  it('2D Scene bumps grouped children by idx * 0.01 (draw-order hack)', () => {
+    const scene = Scene.createHeadless();
+    const group = new VGroup(new Circle(), new Circle(), new Circle());
+    scene.add(group);
+    group.getThreeObject(); // force sync
+    const z = group.children.map((c) => c._threeObject!.position.z);
+    expect(z[0]).toBeCloseTo(0, 6);
+    expect(z[1]).toBeCloseTo(0.01, 6);
+    expect(z[2]).toBeCloseTo(0.02, 6);
+    scene.dispose();
+  });
+
+  it('ThreeDScene opts grouped children out of the z bump', () => {
+    const scene = ThreeDScene.createHeadless();
+    const group = new VGroup(new Circle(), new Circle(), new Circle());
+    scene.add(group);
+    group.getThreeObject();
+    for (const c of group.children) {
+      expect(c._threeObject!.position.z).toBeCloseTo(0, 6);
+    }
+    scene.dispose();
+  });
+
+  it('also covers children added to the group after it joins the 3D scene', () => {
+    const scene = ThreeDScene.createHeadless();
+    const group = new VGroup(new Circle());
+    scene.add(group);
+    const late = new Circle();
+    group.add(late);
+    group.getThreeObject();
+    expect(late._threeObject!.position.z).toBeCloseTo(0, 6);
     scene.dispose();
   });
 });

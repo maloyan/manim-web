@@ -197,7 +197,12 @@ export class ThreeDScene extends Scene {
     const newMobs = new Set(mobjects.filter((m) => !this.mobjects.has(m)));
     try {
       super.add(...mobjects);
-      for (const mob of mobjects) ThreeDScene._applyDepthSettings(mob, newMobs.has(mob));
+      for (const mob of mobjects) {
+        // The 2D draw-order z-layering hack corrupts geometry under a 3D
+        // perspective camera (issue #465); opt every added subtree out of it.
+        mob.disableChildZLayering();
+        ThreeDScene._applyDepthSettings(mob, newMobs.has(mob));
+      }
     } finally {
       this._autoRender = wasAuto;
     }
