@@ -9,6 +9,22 @@ import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { WHITE } from '../../constants';
 import { computePointBounds } from '../../core/PointBounds';
 
+let circleTexture: THREE.CanvasTexture | null = null;
+
+function getCircleTexture(): THREE.CanvasTexture {
+  if (circleTexture) return circleTexture;
+  const size = 64;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  circleTexture = new THREE.CanvasTexture(canvas);
+  return circleTexture;
+}
+
 /**
  * A single point with position, color, and opacity.
  */
@@ -33,6 +49,8 @@ export interface PMobjectOptions {
   opacity?: number;
   /** Size of each point in pixels. Default: 10 */
   pointSize?: number;
+  /** Render points as circles instead of squares. Default: true */
+  roundPoints?: boolean;
 }
 
 /**
@@ -62,6 +80,9 @@ export class PMobject extends Mobject {
   /** Point size in pixels */
   protected _pointSize: number = 10;
 
+  /** Whether to render points as circles */
+  protected _roundPoints: boolean = true;
+
   /** THREE.js geometry for points */
   protected _geometry: THREE.BufferGeometry | null = null;
 
@@ -71,11 +92,12 @@ export class PMobject extends Mobject {
   constructor(options: PMobjectOptions = {}) {
     super();
 
-    const { points = [], color = WHITE, opacity = 1, pointSize = 10 } = options;
+    const { points = [], color = WHITE, opacity = 1, pointSize = 10, roundPoints = true } = options;
 
     this.color = color;
     this._opacity = opacity;
     this._pointSize = pointSize;
+    this._roundPoints = roundPoints;
 
     // Add initial points
     for (const point of points) {
@@ -406,7 +428,8 @@ export class PMobject extends Mobject {
         vertexColors: true,
         transparent: true,
         opacity: this._opacity,
-        sizeAttenuation: false, // Points stay same size regardless of distance
+        sizeAttenuation: false,
+        ...(this._roundPoints && { map: getCircleTexture(), alphaTest: 0.5 }),
       });
     } else {
       this._material.size = this._pointSize;
@@ -434,6 +457,7 @@ export class PMobject extends Mobject {
       color: this.color,
       opacity: this._opacity,
       pointSize: this._pointSize,
+      roundPoints: this._roundPoints,
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
