@@ -892,6 +892,24 @@ export abstract class Mobject {
   protected _syncMaterialToThree(): void {}
 
   /**
+   * Disable the 2D draw-order z-layering offset (`idx * 0.01` per non-first
+   * child, applied in {@link _syncToThree}) for this node and its whole subtree.
+   *
+   * The offset is a flat-2D hack that fakes paint order by nudging later
+   * siblings toward the camera. Under a 3D perspective camera with real depth
+   * sorting it instead corrupts geometry: a group's children drift along world-z
+   * proportionally to their index (issue #465). `ThreeDScene` calls this on every
+   * added mobject so 3D scenes opt out. Because the offset is gated on the
+   * *parent's* flag, setting it on a container also covers children added later.
+   */
+  disableChildZLayering(): this {
+    this._disableChildZLayering = true;
+    this._markDirty();
+    for (const child of this.children) child.disableChildZLayering();
+    return this;
+  }
+
+  /**
    * Mark this node's render/transform state stale and propagate the flag to the
    * root. World-space geometry of any node depends on its ancestors' transforms,
    * so a change anywhere must invalidate the whole ancestor chain; the invariant
