@@ -5,12 +5,14 @@
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
+import { PMobject } from '../../mobjects/point/PMobject';
 import { Animation, AnimationOptions, AnimationScene } from '../Animation';
 import { ImageMobject } from '../../mobjects/image';
 import { MathTexImage } from '../../mobjects/text/MathTexImage';
 import { Text } from '../../mobjects/text/Text';
 import { FadeMorphStrategy } from './FadeMorphStrategy';
 import { MorphStrategy } from './MorphStrategy';
+import { PointCloudMorphStrategy } from './PointCloudMorphStrategy';
 import { PointMorphStrategy } from './PointMorphStrategy';
 import { ShapeMorphStrategy } from './ShapeMorphStrategy';
 import { canMorphByPoints } from './TransformPairing';
@@ -24,25 +26,31 @@ export class Transform extends Animation {
     this.target = target;
   }
 
-  private _selectStrategy(): MorphStrategy {
-    const shapeEligible =
+  private _shapeMorphEligible(): boolean {
+    const sameDisplayType =
       (this.mobject instanceof Text && this.target instanceof Text) ||
       (this.mobject instanceof ImageMobject && this.target instanceof ImageMobject) ||
       (this.mobject instanceof MathTexImage && this.target instanceof MathTexImage);
-    if (
-      shapeEligible &&
+    return (
+      sameDisplayType &&
       this.mobject.getDisplayMeshLength() === 1 &&
       this.target.getDisplayMeshLength() === 1
-    ) {
-      return new ShapeMorphStrategy();
-    }
-    if (this.mobject instanceof VMobject && this.target instanceof VMobject) {
-      if (
-        (this.mobject instanceof VGroup && this.target instanceof VGroup) ||
-        canMorphByPoints(this.mobject, this.target)
-      ) {
-        return new PointMorphStrategy();
-      }
+    );
+  }
+
+  private _vmobjectMorphEligible(): boolean {
+    if (!(this.mobject instanceof VMobject && this.target instanceof VMobject)) return false;
+    return (
+      (this.mobject instanceof VGroup && this.target instanceof VGroup) ||
+      canMorphByPoints(this.mobject, this.target)
+    );
+  }
+
+  private _selectStrategy(): MorphStrategy {
+    if (this._shapeMorphEligible()) return new ShapeMorphStrategy();
+    if (this._vmobjectMorphEligible()) return new PointMorphStrategy();
+    if (this.mobject instanceof PMobject && this.target instanceof PMobject) {
+      return new PointCloudMorphStrategy();
     }
     return new FadeMorphStrategy();
   }

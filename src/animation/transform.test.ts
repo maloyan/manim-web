@@ -16,6 +16,8 @@ import { TexturedMobject } from '../core/TexturedMobject';
 import { VMobject } from '../core/VMobject';
 import { VGroup } from '../core/VGroup';
 import { Circle } from '../mobjects/geometry/Circle';
+import { PMobject } from '../mobjects/point/PMobject';
+import { PointCloudMorphStrategy } from './transform/PointCloudMorphStrategy';
 import { ImageMobject } from '../mobjects/image';
 import { Text } from '../mobjects/text/Text';
 import { MathTex } from '../mobjects/text/MathTex';
@@ -1393,5 +1395,64 @@ describe('Text Transform (#305)', () => {
     } finally {
       createElementSpy.mockRestore();
     }
+  });
+
+  describe('PMobject point-cloud transforms', () => {
+    it('selects PointCloudMorphStrategy for PMobject→PMobject (not fade)', () => {
+      const src = new PMobject({ points: [{ position: [-2, 0, 0] }] });
+      const tgt = new PMobject({ points: [{ position: [2, 0, 0] }] });
+      const t = new Transform(src, tgt);
+      t.begin();
+      const strategy = (t as unknown as { _strategy: unknown })._strategy;
+      expect(strategy).toBeInstanceOf(PointCloudMorphStrategy);
+    });
+
+    it('interpolates a single point from x=-2 to x=+2', () => {
+      const src = new PMobject({ points: [{ position: [-2, 0, 0] }] });
+      const tgt = new PMobject({ points: [{ position: [2, 0, 0] }] });
+      const t = new Transform(src, tgt);
+      t.begin();
+
+      t.interpolate(0);
+      expect(src.getLocalPoints()[0].position[0]).toBeCloseTo(-2, 5);
+
+      t.interpolate(0.5);
+      expect(src.getLocalPoints()[0].position[0]).toBeCloseTo(0, 5);
+
+      t.interpolate(1);
+      expect(src.getLocalPoints()[0].position[0]).toBeCloseTo(2, 5);
+
+      t.finish();
+      expect(src.getLocalPoints()[0].position[0]).toBeCloseTo(2, 5);
+    });
+
+    it('interpolates per-point color and opacity', () => {
+      const src = new PMobject({ points: [{ position: [0, 0, 0], color: '#000000', opacity: 0 }] });
+      const tgt = new PMobject({ points: [{ position: [0, 0, 0], color: '#ffffff', opacity: 1 }] });
+      const t = new Transform(src, tgt);
+      t.begin();
+      t.interpolate(0.5);
+      const p = src.getLocalPoints()[0];
+      expect(p.opacity).toBeCloseTo(0.5, 5);
+      // Halfway between black and white lands at mid-grey, not either endpoint.
+      const c = new THREE.Color(p.color);
+      expect(c.r).toBeGreaterThan(0.1);
+      expect(c.r).toBeLessThan(0.9);
+    });
+
+    it('pads point-count mismatch so both clouds stay aligned', () => {
+      const src = new PMobject({ points: [{ position: [0, 0, 0] }] });
+      const tgt = new PMobject({
+        points: [{ position: [1, 0, 0] }, { position: [2, 0, 0] }, { position: [3, 0, 0] }],
+      });
+      const t = new Transform(src, tgt);
+      t.begin();
+      // Source padded up to 3 points to match target.
+      expect(src.getLocalPoints().length).toBe(3);
+      t.finish();
+      // Finishes at the target's real geometry.
+      expect(src.getLocalPoints().length).toBe(3);
+      expect(src.getLocalPoints().map((p) => p.position[0])).toEqual([1, 2, 3]);
+    });
   });
 });
