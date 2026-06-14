@@ -22,8 +22,12 @@ export type AddOptions = AnimationOptions;
 
 /**
  * Instant animation that adds a mobject to the scene.
- * Duration is 0 - just marks the mobject as visible at animation time.
+ * Duration is 0 - just introduces the mobject at animation time.
  * Useful for sequencing when you want to add objects at specific points in a timeline.
+ *
+ * Like Manim's `Scene.add`, this does NOT change the mobject's opacity: a
+ * mobject added with a registered (e.g. partially transparent) stroke/fill
+ * opacity keeps it. Use FadeIn/Create if you want the mobject to animate in.
  */
 export class Add extends Animation {
   constructor(mobject: Mobject, options: AddOptions = {}) {
@@ -31,11 +35,10 @@ export class Add extends Animation {
   }
 
   /**
-   * Set up the animation - ensure mobject is visible
+   * Set up the animation - introduce the mobject without altering its opacity
    */
   override begin(): void {
     super.begin();
-    this.mobject.opacity = 1;
     this.mobject._markDirty();
   }
 
