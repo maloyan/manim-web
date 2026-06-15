@@ -11,12 +11,14 @@ import { computePointBounds } from '../../core/PointBounds';
 
 let circleTexture: THREE.CanvasTexture | null = null;
 
-function getCircleTexture(): THREE.CanvasTexture {
+function getCircleTexture(): THREE.CanvasTexture | null {
   if (circleTexture) return circleTexture;
+  if (typeof document === 'undefined') return null;
   const size = 64;
   const canvas = document.createElement('canvas');
   canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return null;
   ctx.beginPath();
   ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
   ctx.fillStyle = 'white';
@@ -423,13 +425,14 @@ export class PMobject extends Mobject {
    */
   protected _updateMaterial(): void {
     if (!this._material) {
+      const texture = this._roundPoints ? getCircleTexture() : null;
       this._material = new THREE.PointsMaterial({
         size: this._pointSize,
         vertexColors: true,
         transparent: true,
         opacity: this._opacity,
         sizeAttenuation: false,
-        ...(this._roundPoints && { map: getCircleTexture(), alphaTest: 0.5 }),
+        ...(texture && { map: texture, alphaTest: 0.5 }),
       });
     } else {
       this._material.size = this._pointSize;
