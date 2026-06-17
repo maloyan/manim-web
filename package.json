@@ -90,7 +90,7 @@
     "eslint-config-prettier": "^10.1.8",
     "happy-dom": "^20.6.1",
     "husky": "^9.1.7",
-    "jscpd": "^4.0.8",
+    "jscpd": "^5.0.9",
     "knip": "^6.1.0",
     "lint-staged": "^17.0.4",
     "madge": "^8.0.0",
