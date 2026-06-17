@@ -47,11 +47,11 @@ describe('Add', () => {
   });
 
   describe('begin()', () => {
-    it('sets mobject opacity to 1', () => {
+    it('preserves the mobject opacity (does not force it to 1)', () => {
       mob.opacity = 0;
       const anim = new Add(mob);
       anim.begin();
-      expect(mob.opacity).toBe(1);
+      expect(mob.opacity).toBe(0);
     });
 
     it('marks _hasBegun true', () => {
