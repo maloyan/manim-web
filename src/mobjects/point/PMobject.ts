@@ -9,24 +9,6 @@ import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { WHITE } from '../../constants';
 import { computePointBounds } from '../../core/PointBounds';
 
-let circleTexture: THREE.CanvasTexture | null = null;
-
-function getCircleTexture(): THREE.CanvasTexture | null {
-  if (circleTexture) return circleTexture;
-  if (typeof document === 'undefined') return null;
-  const size = 64;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-  ctx.fillStyle = 'white';
-  ctx.fill();
-  circleTexture = new THREE.CanvasTexture(canvas);
-  return circleTexture;
-}
-
 /**
  * A single point with position, color, and opacity.
  */
@@ -89,7 +71,7 @@ export class PMobject extends Mobject {
   protected _geometry: THREE.BufferGeometry | null = null;
 
   /** THREE.js material for points */
-  protected _material: THREE.PointsMaterial | null = null;
+  protected _material: THREE.ShaderMaterial | null = null;
 
   constructor(options: PMobjectOptions = {}) {
     super();
@@ -401,15 +383,16 @@ export class PMobject extends Mobject {
   protected _updateGeometry(): void {
     const positions: number[] = [];
     const colors: number[] = [];
+    const alphas: number[] = [];
 
     const tempColor = new THREE.Color();
 
     for (const point of this._points) {
       positions.push(point.position[0], point.position[1], point.position[2]);
 
-      // Parse color
       tempColor.set(point.color ?? this.color);
       colors.push(tempColor.r, tempColor.g, tempColor.b);
+      alphas.push(point.opacity ?? 1);
     }
 
     if (!this._geometry) {
@@ -418,6 +401,7 @@ export class PMobject extends Mobject {
 
     this._geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     this._geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    this._geometry.setAttribute('pointAlpha', new THREE.Float32BufferAttribute(alphas, 1));
   }
 
   /**
@@ -425,19 +409,45 @@ export class PMobject extends Mobject {
    */
   protected _updateMaterial(): void {
     if (!this._material) {
-      const texture = this._roundPoints ? getCircleTexture() : null;
-      this._material = new THREE.PointsMaterial({
-        size: this._pointSize,
-        vertexColors: true,
+      this._material = new THREE.ShaderMaterial({
+        uniforms: {
+          uSize: { value: this._pointSize },
+          uOpacity: { value: this._opacity },
+          uRound: { value: this._roundPoints },
+        },
+        vertexShader: `
+          attribute vec3 color;
+          attribute float pointAlpha;
+          uniform float uSize;
+          varying vec3 vColor;
+          varying float vAlpha;
+          void main() {
+            vColor = color;
+            vAlpha = pointAlpha;
+            gl_PointSize = uSize;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          uniform float uOpacity;
+          uniform bool uRound;
+          varying vec3 vColor;
+          varying float vAlpha;
+          void main() {
+            if (uRound) {
+              vec2 coord = gl_PointCoord - 0.5;
+              if (dot(coord, coord) > 0.25) discard;
+            }
+            gl_FragColor = vec4(vColor, vAlpha * uOpacity);
+          }
+        `,
         transparent: true,
-        opacity: this._opacity,
-        sizeAttenuation: false,
-        ...(texture && { map: texture, alphaTest: 0.5 }),
       });
     } else {
-      this._material.size = this._pointSize;
-      this._material.opacity = this._opacity;
-      this._material.needsUpdate = true;
+      const mat = this._material as THREE.ShaderMaterial;
+      mat.uniforms['uSize'].value = this._pointSize;
+      mat.uniforms['uOpacity'].value = this._opacity;
+      mat.uniforms['uRound'].value = this._roundPoints;
     }
   }
 
