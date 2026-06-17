@@ -1,10 +1,103 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. This file
-is **auto-generated** by [`standard-version`](https://github.com/conventional-changelog/standard-version)
-from the Conventional Commits history; do not hand-edit the generated release
-sections below. For commit conventions, breaking-change markers, and the
-release process see [`AGENTS.md`](./AGENTS.md#commits-changelog--releases).
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [0.3.23](https://github.com/maloyan/manim-js/compare/v0.3.22...v0.3.23) (2026-06-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* MobjectLike interface and transform behavior changes.
+
+Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+
+* chore: remove arrow-dance debug example
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+* `circle.getCircleCenter` was removed, as well as other
+shape-specific circles. `polygon.getCenter` now matches python manim;
+use `polygon.getCenterOfMass` to get the construction center.
+
+* fix center calculation for sector and star, rename matrix method
+
+* remove getConstructionCenter logic from mobject
+
+* add 2 forgeted methods
+
+* fix: world-frame transforms + empty-getCenter convention
+
+Coordinate-frame fixes (moveTo/rotate/scale lift the anchor into the
+parent frame so scale-then-moveTo and rotate-about-center land correctly),
+plus Star/Polygram centers via the full world matrix.
+
+Empty getCenter() design:
+- base Mobject.getCenter: warn (via logger) and fall back to world
+  position (_localToWorld([0,0,0])) — not stable across normalizeTransform
+- Group/VGroup: throw on empty (no geometry => no meaningful center)
+- MathTex: override to return world position without warning (lazy-empty
+  before render is expected)
+
+Add getCenterOfMass/moveCenterOfMassTo to PMobject and VMobject.
+
+Logging: route new logging through the logger utility, never raw
+console.*; document the convention in AGENTS.md.
+
+Tests: drop misattributed empty-group tests, assert empty VGroup throws,
+brace a non-empty non-VMobject Group for the fallback path, use real
+geometry (Dot) where empty fixtures relied on the old [0,0,0] default.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+
+* fix(image): copy() must preserve position so Transform translates
+
+ImageMobject.copy() passed copyPosition:false, correct for points-baked
+VMobjects but wrong for a textured mesh whose translation lives on
+`position`. The constructor only seeds position from construction-time
+`_centerPoint`, which shift()/moveTo()/normalizeTransform never update, so
+copies snapped back to their original center. ShapeMorphStrategy reads
+start/target position from those copies, so image translation interpolated
+0->0 and never moved (regression from the normalize-transform refactor).
+
+Drop copyPosition:false (default true), matching MathTexImage. Add a copy()
+unit test and an end-to-end Transform-translation test, plus a pure-shift
+step in the image_transform example.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+* MobjectLike interface and transform behavior changes.
+
+Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+
+* chore: remove arrow-dance debug example
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+
+### Features
+
+* **examples:** add Clickable example showcasing click vs drag ([#430](https://github.com/maloyan/manim-js/issues/430)) ([#433](https://github.com/maloyan/manim-js/issues/433)) ([b7c5d80](https://github.com/maloyan/manim-js/commit/b7c5d807463e6e187dda5634bbcd2228b5f4cec9))
+* render PMobject points as circles by default ([#470](https://github.com/maloyan/manim-js/issues/470)) ([ca8eb03](https://github.com/maloyan/manim-js/commit/ca8eb037787e3fdeef3804ef206a5a768f55878e))
+* **transform:** morph point clouds (PMobject) instead of crossfading ([#464](https://github.com/maloyan/manim-js/issues/464)) ([700b179](https://github.com/maloyan/manim-js/commit/700b1795b02f3ffd0924786e3f0b195f73df9191))
+
+
+### Bug Fixes
+
+* **#465:** disable 2D draw-order z-layering in 3D scenes ([#466](https://github.com/maloyan/manim-js/issues/466)) ([2ba6801](https://github.com/maloyan/manim-js/commit/2ba68014f7d8e97f1922967bca35d6a592d093ef)), closes [#465](https://github.com/maloyan/manim-js/issues/465) [#465](https://github.com/maloyan/manim-js/issues/465)
+* **#467:** preserve mobject opacity in Add animation ([#468](https://github.com/maloyan/manim-js/issues/468)) ([5060274](https://github.com/maloyan/manim-js/commit/5060274c51943606622f9e0bb1d389b7fd14e78a)), closes [#467](https://github.com/maloyan/manim-js/issues/467)
+* **3d:** add depth prepass so transparent surfaces self-occlude ([#416](https://github.com/maloyan/manim-js/issues/416)) ([#454](https://github.com/maloyan/manim-js/issues/454)) ([2b3a025](https://github.com/maloyan/manim-js/commit/2b3a0254ea30cb58af162e7ebee97604a3ceaf56)), closes [#255](https://github.com/maloyan/manim-js/issues/255) [#255](https://github.com/maloyan/manim-js/issues/255)
+* **arrow:** geometry-derived endpoints + child-based GrowArrow ([#432](https://github.com/maloyan/manim-js/issues/432)) ([90e4224](https://github.com/maloyan/manim-js/commit/90e42242c599d6f3b9a0a7bd28f81749f15a3f4a)), closes [#339](https://github.com/maloyan/manim-js/issues/339)
+* **camera:** read live camera position in Camera3D orbit angles ([#425](https://github.com/maloyan/manim-js/issues/425)) ([#429](https://github.com/maloyan/manim-js/issues/429)) ([d29e62c](https://github.com/maloyan/manim-js/commit/d29e62cc474002d36a24fd183578193d888f2270))
+* **examples:** scale Gaussian surface about origin so its base sits on z=0 ([#455](https://github.com/maloyan/manim-js/issues/455)) ([ac5695b](https://github.com/maloyan/manim-js/commit/ac5695b4d4437349a5564adcaa0d57c65c4965a6))
+* **geometry:** sweep rounded-corner arcs clockwise to match path direction ([#434](https://github.com/maloyan/manim-js/issues/434)) ([#452](https://github.com/maloyan/manim-js/issues/452)) ([7067ac0](https://github.com/maloyan/manim-js/commit/7067ac0a61866b50fafb64f6516c965b9c6c9f5f))
+* **lint:** ban eslint-disable directives and remove all existing ones ([#398](https://github.com/maloyan/manim-js/issues/398)) ([#456](https://github.com/maloyan/manim-js/issues/456)) ([d1cb6f9](https://github.com/maloyan/manim-js/commit/d1cb6f9aa9506815ec9f8362c2cd46bb739e1642))
+* **logging:** route all console.warn/error through structured logger ([#431](https://github.com/maloyan/manim-js/issues/431)) ([#453](https://github.com/maloyan/manim-js/issues/453)) ([f25f724](https://github.com/maloyan/manim-js/commit/f25f7242f7fffa24171b0de1e39411c1a23686d4))
+* **mathtex:** unify @mathjax/src singleton across chunks ([#396](https://github.com/maloyan/manim-js/issues/396)) ([#412](https://github.com/maloyan/manim-js/issues/412)) ([208b6b5](https://github.com/maloyan/manim-js/commit/208b6b50c04462ebcf55a139a2f3271e705aa578))
+* **pmobject:** include parent-chain transforms in getPoints() ([#392](https://github.com/maloyan/manim-js/issues/392)) ([#414](https://github.com/maloyan/manim-js/issues/414)) ([4204c07](https://github.com/maloyan/manim-js/commit/4204c07b2208bfeed492d067693b573aa556ce37))
+* render scene during Draggable drags by default ([#450](https://github.com/maloyan/manim-js/issues/450)) ([2f7424e](https://github.com/maloyan/manim-js/commit/2f7424e30abd1204cae9226e62fb53c71fa96e6e)), closes [#419](https://github.com/maloyan/manim-js/issues/419) [#419](https://github.com/maloyan/manim-js/issues/419)
+* restore textured-mobject scale/rotation and VGroup arrange centering after [#417](https://github.com/maloyan/manim-js/issues/417) normalize ([#428](https://github.com/maloyan/manim-js/issues/428)) ([bd565bd](https://github.com/maloyan/manim-js/commit/bd565bd4242c963978d276947d642caa8e84cc84))
+* **transform:** correct corner tangents when resampling cubic bezier chains ([#446](https://github.com/maloyan/manim-js/issues/446)) ([4ad3f04](https://github.com/maloyan/manim-js/commit/4ad3f04d89f3ac813aa28cd72b42208c4f303e95))
+
+
+* Normalize transform: follow-up on `copy` implementation (#427) ([cfcb6c0](https://github.com/maloyan/manim-js/commit/cfcb6c0e59bdc95c62d2278857883f2af3fc3304)), closes [#427](https://github.com/maloyan/manim-js/issues/427) [#391](https://github.com/maloyan/manim-js/issues/391) [#390](https://github.com/maloyan/manim-js/issues/390) [#251](https://github.com/maloyan/manim-js/issues/251) [#417](https://github.com/maloyan/manim-js/issues/417) [#1](https://github.com/maloyan/manim-js/issues/1) [#6](https://github.com/maloyan/manim-js/issues/6) [#427](https://github.com/maloyan/manim-js/issues/427) [#417](https://github.com/maloyan/manim-js/issues/417)
+* Normalize transform (#417) ([93e8e70](https://github.com/maloyan/manim-js/commit/93e8e70bd62928f39d5e56e456545f3dba1ca178)), closes [#417](https://github.com/maloyan/manim-js/issues/417) [#391](https://github.com/maloyan/manim-js/issues/391) [#390](https://github.com/maloyan/manim-js/issues/390) [#251](https://github.com/maloyan/manim-js/issues/251) [#417](https://github.com/maloyan/manim-js/issues/417) [#1](https://github.com/maloyan/manim-js/issues/1) [#6](https://github.com/maloyan/manim-js/issues/6)
 
 ### [0.3.22](https://github.com/maloyan/manim-js/compare/v0.3.21...v0.3.22) (2026-05-24)
 
