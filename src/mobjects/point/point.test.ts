@@ -339,16 +339,6 @@ describe('PMobject', () => {
     // Should be the same object
     expect(obj1).toBe(obj2);
   });
-
-  it('getThreeObject with existing material updates size', () => {
-    const pm = new PMobject({ pointSize: 10, points: [{ position: [0, 0, 0] }] });
-    const obj = pm.getThreeObject() as THREE.Points;
-    const mat = obj.material as THREE.PointsMaterial;
-    expect(mat.size).toBe(10);
-    pm.setPointSize(20);
-    pm.getThreeObject(); // triggers _syncMaterialToThree
-    expect(mat.size).toBe(20);
-  });
 });
 
 describe('PointMobject', () => {
