@@ -72,7 +72,7 @@
     "katex": "^0.17.0",
     "opentype.js": "^2.0.0",
     "polygon-clipping": "^0.15.7",
-    "three": "^0.184.0",
+    "three": "^0.185.0",
     "typia": "^12.1.1"
   },
   "devDependencies": {
@@ -82,7 +82,7 @@
     "@types/earcut": "^3.0.0",
     "@types/katex": "^0.16.8",
     "@types/react": "^19.2.13",
-    "@types/three": "^0.184.0",
+    "@types/three": "^0.185.0",
     "@typia/unplugin": "^12.1.1",
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.1.5",
