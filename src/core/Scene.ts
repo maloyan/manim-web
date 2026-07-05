@@ -511,8 +511,11 @@ export class Scene {
 
   /**
    * Check if a THREE object is already part of this scene's graph.
+   * Protected so subclasses with additional render graphs (e.g.
+   * ThreeDScene's HUD scene) can extend this check — otherwise `add()`
+   * reparents objects that are already correctly placed elsewhere.
    */
-  private _isInSceneGraph(obj: THREE.Object3D): boolean {
+  protected _isInSceneGraph(obj: THREE.Object3D): boolean {
     let current = obj.parent;
     while (current) {
       if (current === this._threeScene) return true;

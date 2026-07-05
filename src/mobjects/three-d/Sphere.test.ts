@@ -101,7 +101,12 @@ describe('Sphere opacity / depthWrite (issue #255)', () => {
   it('addFixedInFrameMobjects applies depth settings to HUD spheres (#255)', () => {
     const scene = ThreeDScene.createHeadless();
     const hudSphere = new Sphere({ radius: 0.5, opacity: 0.5 });
+    // addFixedInFrameMobjects() on a not-yet-added mobject only records
+    // intent (#505) — the HUD placement (and its depth settings) resolve
+    // once the mobject is actually added, matching Manim's own
+    // add_fixed_in_frame_mobjects() then add()/play() call order.
     scene.addFixedInFrameMobjects(hudSphere);
+    scene.add(hudSphere);
 
     const mat = getMaterial(hudSphere);
     expect(mat.transparent).toBe(true);

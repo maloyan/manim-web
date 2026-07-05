@@ -85,6 +85,14 @@ export class ThreeDScene extends Scene {
   private _hudCamera: THREE.OrthographicCamera;
   private _fixedMobjects: Set<Mobject> = new Set();
 
+  // Fixed-in-frame mode requested for a mobject not yet added to the scene.
+  // addFixedInFrameMobjects() on such a mob only records intent here instead
+  // of reparenting it into `_hudScene` immediately — the actual placement
+  // happens in add(), once begin() (if any) has already reset the mobject
+  // for its reveal. This mirrors real Manim's fix_in_frame flag, which is
+  // pure metadata with no scene-graph side effect of its own (#505).
+  private _pendingFixedMode: Map<Mobject, 'frame'> = new Map();
+
   // Fixed-orientation mobjects (stay in 3D world but always face the camera)
   private _fixedOrientationMobjects: Set<Mobject> = new Set();
 
@@ -178,6 +186,24 @@ export class ThreeDScene extends Scene {
   }
 
   /**
+   * Extend the base "already placed" check to also recognize objects parked
+   * in the HUD scene. Without this, `Scene.add()` treats a fixed-in-frame
+   * mobject as not-yet-placed and reparents it out of `_hudScene` into the
+   * main 3D scene root — silently undoing `addFixedInFrameMobjects()` the
+   * moment the mobject is (re-)added, e.g. via `Scene.play()`'s own
+   * "add if not yet tracked" step for an animation target (#505).
+   */
+  protected override _isInSceneGraph(obj: THREE.Object3D): boolean {
+    if (super._isInSceneGraph(obj)) return true;
+    let current: THREE.Object3D | null = obj.parent;
+    while (current) {
+      if (current === this._hudScene) return true;
+      current = current.parent;
+    }
+    return false;
+  }
+
+  /**
    * Override add for 3D-correct material/render setup (issue #255):
    *  - depthTest=true on every material (base Scene disables it for 2D layering)
    *  - depthWrite=!transparent (transparent meshes must not occlude later
@@ -190,6 +216,12 @@ export class ThreeDScene extends Scene {
    * after settings are applied, so the first visible frame is correct.
    * Render is deferred via the scheduler (issue #317) so a chained `play()`
    * can suppress it and avoid a pre-animation flash.
+   *
+   * Also resolves any pending fixed-in-frame request recorded by
+   * addFixedInFrameMobjects() while the mobject wasn't yet tracked: the
+   * mobject lands here (via super.add()) only after begin() has already run
+   * for whatever animation introduces it, so moving it into the HUD scene
+   * at this point carries no risk of flashing its pre-animation state (#505).
    */
   add(...mobjects: Mobject[]): this {
     const wasAuto = this._autoRender;
@@ -202,6 +234,15 @@ export class ThreeDScene extends Scene {
         // perspective camera (issue #465); opt every added subtree out of it.
         mob.disableChildZLayering();
         ThreeDScene._applyDepthSettings(mob, newMobs.has(mob));
+
+        if (newMobs.has(mob) && this._pendingFixedMode.get(mob) === 'frame') {
+          this._pendingFixedMode.delete(mob);
+          const threeObj = mob.getThreeObject();
+          this.threeScene.remove(threeObj);
+          this._fixedMobjects.add(mob);
+          this._hudScene.add(threeObj);
+          ThreeDScene._applyDepthSettings(mob, true);
+        }
       }
     } finally {
       this._autoRender = wasAuto;
@@ -465,25 +506,48 @@ export class ThreeDScene extends Scene {
   /**
    * Pin mobjects to the screen (HUD) so they don't move with the 3D camera.
    * Equivalent to Python Manim's add_fixed_in_frame_mobjects.
+   *
+   * If a mobject isn't tracked by the scene yet (i.e. it hasn't been added
+   * via `add()`), this only records the intent — it does NOT reparent into
+   * the HUD scene or render. Real Manim's `add_fixed_in_frame_mobjects` is
+   * inert metadata with zero scene-graph side effects, callable any time
+   * before `self.play(...)` regardless of whether the mobject is on stage
+   * yet; committing the reparent eagerly here instead would risk rendering
+   * the mobject's already-finalized state in the HUD before its own intro
+   * animation's begin() has reset it for the reveal (#505). The deferred
+   * placement happens in add() once the mobject actually lands.
    * @param mobjects - Mobjects to fix in screen space
    * @returns this for chaining
    */
   addFixedInFrameMobjects(...mobjects: Mobject[]): this {
     for (const mob of mobjects) {
-      const threeObj = mob.getThreeObject();
       // Remove from fixed-orientation if present (mutually exclusive)
       if (this._fixedOrientationMobjects.has(mob)) {
         this._fixedOrientationMobjects.delete(mob);
+        const threeObj = mob.getThreeObject();
         threeObj.quaternion.identity();
         threeObj.position.copy(mob.position);
       }
+
+      if (!this.mobjects.has(mob)) {
+        this._pendingFixedMode.set(mob, 'frame');
+        continue;
+      }
+
+      this._pendingFixedMode.delete(mob);
+      const threeObj = mob.getThreeObject();
       this._fixedMobjects.add(mob);
       this._hudScene.add(threeObj);
       // HUD bypasses Scene.add(), so apply 3D depth/renderOrder defaults
       // here so transparent fixed-in-frame mobjects render correctly (#255).
       ThreeDScene._applyDepthSettings(mob, true);
     }
-    if (this._fixedMobjects.size > 0) this.render();
+    // Deferred (not eager) render, matching add()'s scheduling (#352): an
+    // eager render here would show the mobject at full opacity for one frame
+    // before a same-tick scene.play(Create(mob)) call gets to hide it via
+    // begin() — play() cancels any pending scheduled render, but can't
+    // un-render a frame that already happened synchronously.
+    if (this._fixedMobjects.size > 0) this._scheduleRender();
     return this;
   }
 
@@ -494,6 +558,7 @@ export class ThreeDScene extends Scene {
    */
   removeFixedInFrameMobjects(...mobjects: Mobject[]): this {
     for (const mob of mobjects) {
+      this._pendingFixedMode.delete(mob);
       if (this._fixedMobjects.has(mob)) {
         this._fixedMobjects.delete(mob);
         const threeObj = mob.getThreeObject();
@@ -520,7 +585,7 @@ export class ThreeDScene extends Scene {
       }
       this._fixedOrientationMobjects.add(mob);
     }
-    this.render();
+    this._scheduleRender();
     return this;
   }
 
@@ -697,6 +762,7 @@ export class ThreeDScene extends Scene {
       threeObj.position.copy(mob.position);
     }
     this._fixedOrientationMobjects.clear();
+    this._pendingFixedMode.clear();
 
     // Clear any remaining HUD scene children
     while (this._hudScene.children.length > 0) {
@@ -718,6 +784,7 @@ export class ThreeDScene extends Scene {
    */
   remove(...mobjects: Mobject[]): this {
     for (const mob of mobjects) {
+      this._pendingFixedMode.delete(mob);
       if (this._fixedMobjects.has(mob)) {
         this._fixedMobjects.delete(mob);
         const threeObj = mob.getThreeObject();
