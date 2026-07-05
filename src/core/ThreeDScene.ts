@@ -178,6 +178,24 @@ export class ThreeDScene extends Scene {
   }
 
   /**
+   * Extend the base "already placed" check to also recognize objects parked
+   * in the HUD scene. Without this, `Scene.add()` treats a fixed-in-frame
+   * mobject as not-yet-placed and reparents it out of `_hudScene` into the
+   * main 3D scene root — silently undoing `addFixedInFrameMobjects()` the
+   * moment the mobject is (re-)added, e.g. via `Scene.play()`'s own
+   * "add if not yet tracked" step for an animation target (#505).
+   */
+  protected override _isInSceneGraph(obj: THREE.Object3D): boolean {
+    if (super._isInSceneGraph(obj)) return true;
+    let current: THREE.Object3D | null = obj.parent;
+    while (current) {
+      if (current === this._hudScene) return true;
+      current = current.parent;
+    }
+    return false;
+  }
+
+  /**
    * Override add for 3D-correct material/render setup (issue #255):
    *  - depthTest=true on every material (base Scene disables it for 2D layering)
    *  - depthWrite=!transparent (transparent meshes must not occlude later
