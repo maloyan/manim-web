@@ -501,7 +501,12 @@ export class ThreeDScene extends Scene {
       // here so transparent fixed-in-frame mobjects render correctly (#255).
       ThreeDScene._applyDepthSettings(mob, true);
     }
-    if (this._fixedMobjects.size > 0) this.render();
+    // Deferred (not eager) render, matching add()'s scheduling (#352): an
+    // eager render here would show the mobject at full opacity for one frame
+    // before a same-tick scene.play(Create(mob)) call gets to hide it via
+    // begin() — play() cancels any pending scheduled render, but can't
+    // un-render a frame that already happened synchronously.
+    if (this._fixedMobjects.size > 0) this._scheduleRender();
     return this;
   }
 
@@ -538,7 +543,7 @@ export class ThreeDScene extends Scene {
       }
       this._fixedOrientationMobjects.add(mob);
     }
-    this.render();
+    this._scheduleRender();
     return this;
   }
 

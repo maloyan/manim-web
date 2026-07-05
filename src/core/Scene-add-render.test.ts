@@ -158,3 +158,62 @@ describe('Scene.add() defers auto-render (issue #317)', () => {
     scene.dispose();
   });
 });
+
+/**
+ * Regression tests for #505 follow-up: addFixedInFrameMobjects()/
+ * addFixedOrientationMobjects() rendered eagerly (via the immediate,
+ * non-deferred `render()` API) instead of going through the same
+ * `_scheduleRender()` deferral #352 introduced for add(). So even the fully
+ * idiomatic, same-tick call order —
+ *   scene.addFixedInFrameMobjects(mob); scene.play(new Create(mob))
+ * — flashed `mob` at full opacity in the HUD for one frame before
+ * Create.begin() reset it for the reveal, because the eager render fired
+ * before play() got a chance to suppress anything.
+ */
+describe('addFixedInFrameMobjects()/addFixedOrientationMobjects() defer their render', () => {
+  it('addFixedInFrameMobjects() schedules a render via microtask, does not render synchronously', async () => {
+    const scene = ThreeDScene.createHeadless();
+    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, '_render');
+    renderSpy.mockClear();
+
+    scene.addFixedInFrameMobjects(new Circle());
+
+    expect(renderSpy).not.toHaveBeenCalled();
+    await flushMicrotasks();
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+
+    scene.dispose();
+  });
+
+  it('addFixedOrientationMobjects() schedules a render via microtask, does not render synchronously', async () => {
+    const scene = ThreeDScene.createHeadless();
+    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, '_render');
+    renderSpy.mockClear();
+
+    scene.addFixedOrientationMobjects(new Circle());
+
+    expect(renderSpy).not.toHaveBeenCalled();
+    await flushMicrotasks();
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+
+    scene.dispose();
+  });
+
+  it('addFixedInFrameMobjects() then play(Create(...)) does not flash before begin() (#505)', async () => {
+    const scene = ThreeDScene.createHeadless();
+    const circle = new Circle();
+    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, '_render');
+    renderSpy.mockClear();
+
+    scene.addFixedInFrameMobjects(circle);
+    const playPromise = scene.play(new Create(circle, { duration: 0.05 }));
+
+    // The render scheduled by addFixedInFrameMobjects() must be cancelled by
+    // play()'s setup phase — same discipline as a plain add() (#317).
+    expect((scene as unknown as SceneInternals)._pendingRender).toBe(false);
+    expect(renderSpy).not.toHaveBeenCalled();
+
+    await playPromise;
+    scene.dispose();
+  });
+});
