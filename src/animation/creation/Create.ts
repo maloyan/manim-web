@@ -8,6 +8,7 @@ import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
 import { Group } from '../../core/Group';
 import { VMobject } from '../../core/VMobject';
+import { VGroup } from '../../core/VGroup';
 import { Animation, AnimationOptions } from '../Animation';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
@@ -160,7 +161,10 @@ export class Create extends Animation {
    */
   private _collectOpacities(mob: Mobject): void {
     this._savedOpacities.push([mob, mob.opacity]);
-    if (mob instanceof Group) {
+    // VGroup is a VMobject (not a Group), but its setStrokeOpacity also
+    // propagates to children — so children must be saved/restored too,
+    // otherwise begin()'s setStrokeOpacity(0) zeroes them permanently.
+    if (mob instanceof Group || mob instanceof VGroup) {
       for (const child of mob.children) {
         this._collectOpacities(child);
       }
