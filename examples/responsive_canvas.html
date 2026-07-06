@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Responsive Canvas (issue #360)</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { height: 100%; }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - Responsive Canvas (issue #360)</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html,
+    body {
+      height: 100%;
+    }
     body {
       background: #1a1a2e;
       font-family: system-ui, sans-serif;
@@ -19,8 +26,15 @@
       background: #0f0f1e;
       border-bottom: 1px solid #2a2a3e;
     }
-    header h1 { font-size: 16px; font-weight: 600; }
-    header p  { font-size: 12px; opacity: 0.7; margin-top: 4px; }
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    header p {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 4px;
+    }
     /* The container fills the viewport. Rotating a mobile device, dragging
        the browser window, or DevTools resizing all change its size and the
        canvas should follow. */
@@ -40,18 +54,18 @@
       background: rgba(0,0,0,0.6);
       border-radius: 4px;
     }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Responsive canvas demo (issue #360)</h1>
-    <p>Resize the window or rotate your device. The canvas should follow without a reload.</p>
-  </header>
-  <div id="container"></div>
-  <div id="badge" class="badge">–</div>
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Responsive canvas demo (issue #360)</h1>
+      <p>Resize the window or rotate your device. The canvas should follow without a reload.</p>
+    </header>
+    <div id="container"></div>
+    <div id="badge" class="badge">–</div>
 
-  <script type="module">
-    import { Scene, Circle, Square, Create, FadeIn } from '../src/index.ts';
+    <script type="module">
+    import { Circle, Create, FadeIn, Scene, Square } from '../src/index.ts';
 
     const container = document.getElementById('container');
     const badge = document.getElementById('badge');
@@ -76,6 +90,6 @@
     window.addEventListener('resize', report);
     window.addEventListener('orientationchange', report);
     new ResizeObserver(report).observe(container);
-  </script>
-</body>
+    </script>
+  </body>
 </html>

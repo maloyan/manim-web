@@ -8,22 +8,22 @@
 
 // Brace - Curly brace shapes
 export {
+  ArcBrace,
+  type ArcBraceOptions,
   Brace,
   BraceBetweenPoints,
-  ArcBrace,
-  BraceLabel,
-  BraceText,
-  type BraceOptions,
   type BraceBetweenPointsOptions,
-  type ArcBraceOptions,
+  BraceLabel,
   type BraceLabelOptions,
-} from './Brace';
+  type BraceOptions,
+  BraceText,
+} from "./Brace";
 
 // SVGMobject - Parse and display SVG
 export {
   SVGMobject,
   svgMobject,
-  VMobjectFromSVGPath,
   type SVGMobjectOptions,
+  VMobjectFromSVGPath,
   type VMobjectFromSVGPathOptions,
-} from './SVGMobject';
+} from "./SVGMobject";

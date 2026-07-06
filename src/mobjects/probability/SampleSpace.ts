@@ -1,9 +1,18 @@
-import { VGroup } from '../../core/VGroup';
-import { Vector3Tuple } from '../../core/Mobject';
-import { Rectangle } from '../geometry/Rectangle';
-import { Text } from '../text/Text';
-import { Brace } from '../svg/Brace';
-import { BLUE, GREEN, YELLOW, RED, PURPLE, TEAL, GOLD, WHITE } from '../../constants';
+import { VGroup } from "../../core/VGroup";
+import { Vector3Tuple } from "../../core/Mobject";
+import { Rectangle } from "../geometry/Rectangle";
+import { Text } from "../text/Text";
+import { Brace } from "../svg/Brace";
+import {
+  BLUE,
+  GOLD,
+  GREEN,
+  PURPLE,
+  RED,
+  TEAL,
+  WHITE,
+  YELLOW,
+} from "../../constants";
 
 /**
  * Default color cycle used when no colors are specified for divisions.
@@ -385,7 +394,9 @@ export class SampleSpace extends VGroup {
       const subCenterY = currentY - subHeight / 2;
       const color = colors
         ? colors[i % colors.length]
-        : DEFAULT_PARTITION_COLORS[(partitionIndex + i + 2) % DEFAULT_PARTITION_COLORS.length];
+        : DEFAULT_PARTITION_COLORS[
+          (partitionIndex + i + 2) % DEFAULT_PARTITION_COLORS.length
+        ];
 
       const rect = new Rectangle({
         width: parentWidth,
@@ -500,8 +511,12 @@ export class SampleSpace extends VGroup {
    * @param options - Font size and color overrides
    * @returns The created Text mobject
    */
-  addTitle(text: string, options: { fontSize?: number; color?: string; buff?: number } = {}): Text {
-    const { fontSize = this._fontSize * 1.2, color = WHITE, buff = 0.25 } = options;
+  addTitle(
+    text: string,
+    options: { fontSize?: number; color?: string; buff?: number } = {},
+  ): Text {
+    const { fontSize = this._fontSize * 1.2, color = WHITE, buff = 0.25 } =
+      options;
 
     // Remove existing title
     if (this._title) {
@@ -539,7 +554,10 @@ export class SampleSpace extends VGroup {
    * sampleSpace.addBracesAndLabels(["0.3", "0.7"]);
    * ```
    */
-  addBracesAndLabels(labels: string[], options: BraceAnnotationOptions = {}): this {
+  addBracesAndLabels(
+    labels: string[],
+    options: BraceAnnotationOptions = {},
+  ): this {
     const {
       direction = [0, -1, 0] as Vector3Tuple,
       fontSize = this._fontSize,
@@ -554,8 +572,9 @@ export class SampleSpace extends VGroup {
       this._braces = new VGroup();
     }
 
-    const partitions =
-      this._verticalPartitions.length > 0 ? this._verticalPartitions : this._horizontalPartitions;
+    const partitions = this._verticalPartitions.length > 0
+      ? this._verticalPartitions
+      : this._horizontalPartitions;
 
     for (let i = 0; i < partitions.length; i++) {
       const partition = partitions[i];

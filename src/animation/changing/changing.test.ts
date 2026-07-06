@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { VMobject } from '../../core/VMobject';
-import { YELLOW, DEFAULT_STROKE_WIDTH } from '../../constants';
-import { TracedPath, tracedPath, AnimatedBoundary, animatedBoundary } from './index';
+import { describe, expect, it } from "vitest";
+import { VMobject } from "../../core/VMobject";
+import { DEFAULT_STROKE_WIDTH, YELLOW } from "../../constants";
+import {
+  AnimatedBoundary,
+  animatedBoundary,
+  TracedPath,
+  tracedPath,
+} from "./index";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -32,49 +37,49 @@ function makeVMobjectWithBounds(): VMobject {
 // TracedPath
 // ============================================================================
 
-describe('TracedPath', () => {
+describe("TracedPath", () => {
   // -----------------------------------------------------------
   // Constructor / defaults
   // -----------------------------------------------------------
 
-  describe('constructor', () => {
-    it('stores the tracked mobject', () => {
+  describe("constructor", () => {
+    it("stores the tracked mobject", () => {
       const mob = makeMobject();
       const traced = new TracedPath(mob);
       expect(traced.trackedMobject).toBe(mob);
     });
 
-    it('uses YELLOW stroke color by default', () => {
+    it("uses YELLOW stroke color by default", () => {
       const traced = new TracedPath(makeMobject());
       expect(traced.color).toBe(YELLOW);
     });
 
-    it('uses DEFAULT_STROKE_WIDTH by default', () => {
+    it("uses DEFAULT_STROKE_WIDTH by default", () => {
       const traced = new TracedPath(makeMobject());
       expect(traced.strokeWidth).toBe(DEFAULT_STROKE_WIDTH);
     });
 
-    it('sets fillOpacity to 0 (stroke-only)', () => {
+    it("sets fillOpacity to 0 (stroke-only)", () => {
       const traced = new TracedPath(makeMobject());
       expect(traced.fillOpacity).toBe(0);
     });
 
-    it('accepts custom stroke options', () => {
+    it("accepts custom stroke options", () => {
       const traced = new TracedPath(makeMobject(), {
-        strokeColor: '#FF0000',
+        strokeColor: "#FF0000",
         strokeWidth: 8,
         strokeOpacity: 0.5,
       });
-      expect(traced.color).toBe('#FF0000');
+      expect(traced.color).toBe("#FF0000");
       expect(traced.strokeWidth).toBe(8);
     });
 
-    it('registers an updater on construction', () => {
+    it("registers an updater on construction", () => {
       const traced = new TracedPath(makeMobject());
       expect(traced.hasUpdaters()).toBe(true);
     });
 
-    it('records initial position on construction', () => {
+    it("records initial position on construction", () => {
       const mob = makeMobject();
       mob.position.set(3, 4, 0);
       const traced = new TracedPath(mob);
@@ -88,8 +93,8 @@ describe('TracedPath', () => {
   // _updatePath via updater
   // -----------------------------------------------------------
 
-  describe('path tracking', () => {
-    it('records new position when mobject moves beyond minDistance', () => {
+  describe("path tracking", () => {
+    it("records new position when mobject moves beyond minDistance", () => {
       const mob = makeMobject();
       mob.position.set(0, 0, 0);
       const traced = new TracedPath(mob, { minDistanceToNewPoint: 0.05 });
@@ -103,7 +108,7 @@ describe('TracedPath', () => {
       expect(traced.numPoints).toBe(4);
     });
 
-    it('does not record new position when mobject barely moved', () => {
+    it("does not record new position when mobject barely moved", () => {
       const mob = makeMobject();
       mob.position.set(0, 0, 0);
       const traced = new TracedPath(mob, { minDistanceToNewPoint: 0.5 });
@@ -116,7 +121,7 @@ describe('TracedPath', () => {
       expect(traced.numPoints).toBe(0);
     });
 
-    it('builds smooth Bezier curves through multiple points', () => {
+    it("builds smooth Bezier curves through multiple points", () => {
       const mob = makeMobject();
       mob.position.set(0, 0, 0);
       const traced = new TracedPath(mob, { minDistanceToNewPoint: 0.01 });
@@ -136,7 +141,7 @@ describe('TracedPath', () => {
       expect(traced.numPoints).toBe(10);
     });
 
-    it('uses Catmull-Rom style control points for smoothing', () => {
+    it("uses Catmull-Rom style control points for smoothing", () => {
       const mob = makeMobject();
       mob.position.set(0, 0, 0);
       const traced = new TracedPath(mob, { minDistanceToNewPoint: 0.01 });
@@ -168,8 +173,8 @@ describe('TracedPath', () => {
   // Dissipation
   // -----------------------------------------------------------
 
-  describe('dissipation', () => {
-    it('removes old points when dissipatingTime > 0', () => {
+  describe("dissipation", () => {
+    it("removes old points when dissipatingTime > 0", () => {
       const mob = makeMobject();
       mob.position.set(0, 0, 0);
       const traced = new TracedPath(mob, {
@@ -200,7 +205,7 @@ describe('TracedPath', () => {
       expect(pointsAfter).toBeLessThanOrEqual(pointsBefore);
     });
 
-    it('does not remove points when dissipatingTime is 0', () => {
+    it("does not remove points when dissipatingTime is 0", () => {
       const mob = makeMobject();
       mob.position.set(0, 0, 0);
       const traced = new TracedPath(mob, {
@@ -233,8 +238,8 @@ describe('TracedPath', () => {
   // maxPoints limit
   // -----------------------------------------------------------
 
-  describe('maxPoints', () => {
-    it('limits path data to maxPoints entries', () => {
+  describe("maxPoints", () => {
+    it("limits path data to maxPoints entries", () => {
       const mob = makeMobject();
       mob.position.set(0, 0, 0);
       const traced = new TracedPath(mob, {
@@ -260,8 +265,8 @@ describe('TracedPath', () => {
   // clearPath
   // -----------------------------------------------------------
 
-  describe('clearPath()', () => {
-    it('removes all path data', () => {
+  describe("clearPath()", () => {
+    it("removes all path data", () => {
       const mob = makeMobject();
       mob.position.set(0, 0, 0);
       const traced = new TracedPath(mob, { minDistanceToNewPoint: 0.01 });
@@ -275,7 +280,7 @@ describe('TracedPath', () => {
       expect(traced.numPoints).toBe(0);
     });
 
-    it('returns this for chaining', () => {
+    it("returns this for chaining", () => {
       const traced = new TracedPath(makeMobject());
       expect(traced.clearPath()).toBe(traced);
     });
@@ -285,20 +290,20 @@ describe('TracedPath', () => {
   // stopTracking / resumeTracking
   // -----------------------------------------------------------
 
-  describe('stopTracking()', () => {
-    it('removes the updater', () => {
+  describe("stopTracking()", () => {
+    it("removes the updater", () => {
       const traced = new TracedPath(makeMobject());
       expect(traced.hasUpdaters()).toBe(true);
       traced.stopTracking();
       expect(traced.hasUpdaters()).toBe(false);
     });
 
-    it('returns this for chaining', () => {
+    it("returns this for chaining", () => {
       const traced = new TracedPath(makeMobject());
       expect(traced.stopTracking()).toBe(traced);
     });
 
-    it('prevents further path recording', () => {
+    it("prevents further path recording", () => {
       const mob = makeMobject();
       mob.position.set(0, 0, 0);
       const traced = new TracedPath(mob, { minDistanceToNewPoint: 0.01 });
@@ -318,8 +323,8 @@ describe('TracedPath', () => {
     });
   });
 
-  describe('resumeTracking()', () => {
-    it('re-adds the updater', () => {
+  describe("resumeTracking()", () => {
+    it("re-adds the updater", () => {
       const traced = new TracedPath(makeMobject());
       traced.stopTracking();
       expect(traced.hasUpdaters()).toBe(false);
@@ -327,18 +332,18 @@ describe('TracedPath', () => {
       expect(traced.hasUpdaters()).toBe(true);
     });
 
-    it('does not double-add if already tracking', () => {
+    it("does not double-add if already tracking", () => {
       const traced = new TracedPath(makeMobject());
       traced.resumeTracking(); // already tracking, should no-op
       expect(traced.hasUpdaters()).toBe(true);
     });
 
-    it('returns this for chaining', () => {
+    it("returns this for chaining", () => {
       const traced = new TracedPath(makeMobject());
       expect(traced.resumeTracking()).toBe(traced);
     });
 
-    it('resumes path recording after stop', () => {
+    it("resumes path recording after stop", () => {
       const mob = makeMobject();
       mob.position.set(0, 0, 0);
       const traced = new TracedPath(mob, { minDistanceToNewPoint: 0.01 });
@@ -365,11 +370,11 @@ describe('TracedPath', () => {
   // _copy
   // -----------------------------------------------------------
 
-  describe('copy', () => {
-    it('creates a copy with the same tracked mobject', () => {
+  describe("copy", () => {
+    it("creates a copy with the same tracked mobject", () => {
       const mob = makeMobject();
       const traced = new TracedPath(mob, {
-        strokeColor: '#FF0000',
+        strokeColor: "#FF0000",
         strokeWidth: 8,
         dissipatingTime: 2,
         minDistanceToNewPoint: 0.1,
@@ -383,7 +388,7 @@ describe('TracedPath', () => {
       const copy = traced.copy() as TracedPath;
       expect(copy).toBeInstanceOf(TracedPath);
       expect(copy.trackedMobject).toBe(mob);
-      expect(copy.color).toBe('#FF0000');
+      expect(copy.color).toBe("#FF0000");
       expect(copy.strokeWidth).toBe(8);
     });
   });
@@ -392,8 +397,8 @@ describe('TracedPath', () => {
   // Edge case: fewer than 2 points
   // -----------------------------------------------------------
 
-  describe('edge cases', () => {
-    it('with only 1 point, path is cleared (no Bezier)', () => {
+  describe("edge cases", () => {
+    it("with only 1 point, path is cleared (no Bezier)", () => {
       const mob = makeMobject();
       mob.position.set(5, 5, 0);
       const traced = new TracedPath(mob);
@@ -401,7 +406,7 @@ describe('TracedPath', () => {
       expect(traced.numPoints).toBe(0);
     });
 
-    it('3D tracking works (z-axis movement)', () => {
+    it("3D tracking works (z-axis movement)", () => {
       const mob = makeMobject();
       mob.position.set(0, 0, 0);
       const traced = new TracedPath(mob, { minDistanceToNewPoint: 0.01 });
@@ -420,21 +425,21 @@ describe('TracedPath', () => {
   // tracedPath() factory
   // -----------------------------------------------------------
 
-  describe('tracedPath() factory', () => {
-    it('returns a TracedPath instance', () => {
+  describe("tracedPath() factory", () => {
+    it("returns a TracedPath instance", () => {
       const mob = makeMobject();
       const result = tracedPath(mob);
       expect(result).toBeInstanceOf(TracedPath);
       expect(result.trackedMobject).toBe(mob);
     });
 
-    it('passes options through', () => {
+    it("passes options through", () => {
       const result = tracedPath(makeMobject(), {
-        strokeColor: '#00FF00',
+        strokeColor: "#00FF00",
         strokeWidth: 10,
         dissipatingTime: 3,
       });
-      expect(result.color).toBe('#00FF00');
+      expect(result.color).toBe("#00FF00");
       expect(result.strokeWidth).toBe(10);
     });
   });
@@ -444,19 +449,19 @@ describe('TracedPath', () => {
 // AnimatedBoundary
 // ============================================================================
 
-describe('AnimatedBoundary', () => {
+describe("AnimatedBoundary", () => {
   // -----------------------------------------------------------
   // Constructor / defaults
   // -----------------------------------------------------------
 
-  describe('constructor', () => {
-    it('stores the bounded mobject', () => {
+  describe("constructor", () => {
+    it("stores the bounded mobject", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob);
       expect(boundary.boundedMobject).toBe(mob);
     });
 
-    it('defaults colors to [BLUE, YELLOW]', () => {
+    it("defaults colors to [BLUE, YELLOW]", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob);
       // Check that dashes have BLUE and YELLOW colors
@@ -464,19 +469,19 @@ describe('AnimatedBoundary', () => {
       expect(boundary).toBeInstanceOf(VMobject);
     });
 
-    it('sets fillOpacity to 0', () => {
+    it("sets fillOpacity to 0", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob);
       expect(boundary.fillOpacity).toBe(0);
     });
 
-    it('registers an updater for animation', () => {
+    it("registers an updater for animation", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob);
       expect(boundary.hasUpdaters()).toBe(true);
     });
 
-    it('creates dash children', () => {
+    it("creates dash children", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, { numDashes: 10 });
       // Should have 10 children (dashes)
@@ -484,10 +489,10 @@ describe('AnimatedBoundary', () => {
       expect(children.length).toBe(10);
     });
 
-    it('accepts custom options', () => {
+    it("accepts custom options", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, {
-        colors: ['#FF0000', '#00FF00', '#0000FF'],
+        colors: ["#FF0000", "#00FF00", "#0000FF"],
         numDashes: 15,
         dashWidth: 5,
         cycleRate: 2,
@@ -497,20 +502,20 @@ describe('AnimatedBoundary', () => {
       expect(children.length).toBe(15);
     });
 
-    it('cycles colors across dashes', () => {
+    it("cycles colors across dashes", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, {
-        colors: ['#FF0000', '#00FF00'],
+        colors: ["#FF0000", "#00FF00"],
         numDashes: 4,
       });
       const children = boundary.children as VMobject[];
-      expect(children[0].color).toBe('#FF0000');
-      expect(children[1].color).toBe('#00FF00');
-      expect(children[2].color).toBe('#FF0000');
-      expect(children[3].color).toBe('#00FF00');
+      expect(children[0].color).toBe("#FF0000");
+      expect(children[1].color).toBe("#00FF00");
+      expect(children[2].color).toBe("#FF0000");
+      expect(children[3].color).toBe("#00FF00");
     });
 
-    it('default numDashes is 30', () => {
+    it("default numDashes is 30", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob);
       expect(boundary.children.length).toBe(30);
@@ -521,8 +526,8 @@ describe('AnimatedBoundary', () => {
   // Animation update
   // -----------------------------------------------------------
 
-  describe('animation', () => {
-    it('updates phase on each tick', () => {
+  describe("animation", () => {
+    it("updates phase on each tick", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, { cycleRate: 1 });
 
@@ -540,12 +545,13 @@ describe('AnimatedBoundary', () => {
       // At least one coordinate should differ
       const moved = pointsAfter.some(
         (p, i) =>
-          Math.abs(p.x - pointsBefore[i].x) > 0.001 || Math.abs(p.y - pointsBefore[i].y) > 0.001,
+          Math.abs(p.x - pointsBefore[i].x) > 0.001 ||
+          Math.abs(p.y - pointsBefore[i].y) > 0.001,
       );
       expect(moved).toBe(true);
     });
 
-    it('phase wraps around at 1', () => {
+    it("phase wraps around at 1", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, { cycleRate: 1 });
 
@@ -557,7 +563,7 @@ describe('AnimatedBoundary', () => {
       expect(boundary.children.length).toBeGreaterThan(0);
     });
 
-    it('higher cycleRate makes dashes move faster', () => {
+    it("higher cycleRate makes dashes move faster", () => {
       const mob = makeVMobjectWithBounds();
       const slow = new AnimatedBoundary(mob, { cycleRate: 0.5, numDashes: 4 });
       const fast = new AnimatedBoundary(mob, { cycleRate: 2, numDashes: 4 });
@@ -573,8 +579,7 @@ describe('AnimatedBoundary', () => {
       const fastPts = fastChild.points;
 
       if (slowPts.length > 0 && fastPts.length > 0) {
-        const differ =
-          Math.abs(slowPts[0].x - fastPts[0].x) > 0.001 ||
+        const differ = Math.abs(slowPts[0].x - fastPts[0].x) > 0.001 ||
           Math.abs(slowPts[0].y - fastPts[0].y) > 0.001;
         expect(differ).toBe(true);
       }
@@ -585,8 +590,8 @@ describe('AnimatedBoundary', () => {
   // setCycleRate
   // -----------------------------------------------------------
 
-  describe('setCycleRate()', () => {
-    it('changes the cycle rate', () => {
+  describe("setCycleRate()", () => {
+    it("changes the cycle rate", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, { cycleRate: 1 });
       const result = boundary.setCycleRate(3);
@@ -603,22 +608,22 @@ describe('AnimatedBoundary', () => {
   // setColors
   // -----------------------------------------------------------
 
-  describe('setColors()', () => {
-    it('updates dash colors', () => {
+  describe("setColors()", () => {
+    it("updates dash colors", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, {
-        colors: ['#FF0000'],
+        colors: ["#FF0000"],
         numDashes: 4,
       });
 
-      const result = boundary.setColors(['#00FF00', '#0000FF']);
+      const result = boundary.setColors(["#00FF00", "#0000FF"]);
       expect(result).toBe(boundary);
 
       const children = boundary.children as VMobject[];
-      expect(children[0].color).toBe('#00FF00');
-      expect(children[1].color).toBe('#0000FF');
-      expect(children[2].color).toBe('#00FF00');
-      expect(children[3].color).toBe('#0000FF');
+      expect(children[0].color).toBe("#00FF00");
+      expect(children[1].color).toBe("#0000FF");
+      expect(children[2].color).toBe("#00FF00");
+      expect(children[3].color).toBe("#0000FF");
     });
   });
 
@@ -626,8 +631,8 @@ describe('AnimatedBoundary', () => {
   // pause / resume
   // -----------------------------------------------------------
 
-  describe('pause()', () => {
-    it('removes the updater', () => {
+  describe("pause()", () => {
+    it("removes the updater", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob);
       expect(boundary.hasUpdaters()).toBe(true);
@@ -635,13 +640,13 @@ describe('AnimatedBoundary', () => {
       expect(boundary.hasUpdaters()).toBe(false);
     });
 
-    it('returns this for chaining', () => {
+    it("returns this for chaining", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob);
       expect(boundary.pause()).toBe(boundary);
     });
 
-    it('stops animation updates', () => {
+    it("stops animation updates", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, { numDashes: 4 });
 
@@ -664,8 +669,8 @@ describe('AnimatedBoundary', () => {
     });
   });
 
-  describe('resume()', () => {
-    it('re-adds the updater after pause', () => {
+  describe("resume()", () => {
+    it("re-adds the updater after pause", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob);
       boundary.pause();
@@ -674,14 +679,14 @@ describe('AnimatedBoundary', () => {
       expect(boundary.hasUpdaters()).toBe(true);
     });
 
-    it('does not double-add if not paused', () => {
+    it("does not double-add if not paused", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob);
       boundary.resume(); // already has updater
       expect(boundary.hasUpdaters()).toBe(true);
     });
 
-    it('returns this for chaining', () => {
+    it("returns this for chaining", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob);
       expect(boundary.resume()).toBe(boundary);
@@ -692,8 +697,8 @@ describe('AnimatedBoundary', () => {
   // rebuild
   // -----------------------------------------------------------
 
-  describe('rebuild()', () => {
-    it('recreates dashes', () => {
+  describe("rebuild()", () => {
+    it("recreates dashes", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, { numDashes: 10 });
       expect(boundary.children.length).toBe(10);
@@ -708,8 +713,8 @@ describe('AnimatedBoundary', () => {
   // _perimeterToPoint (via positioning)
   // -----------------------------------------------------------
 
-  describe('boundary geometry', () => {
-    it('dashes have points set (positioned on perimeter)', () => {
+  describe("boundary geometry", () => {
+    it("dashes have points set (positioned on perimeter)", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, { numDashes: 4, buff: 0 });
 
@@ -719,7 +724,7 @@ describe('AnimatedBoundary', () => {
       }
     });
 
-    it('dashes respect buff parameter', () => {
+    it("dashes respect buff parameter", () => {
       const mob = makeVMobjectWithBounds();
       const noBuff = new AnimatedBoundary(mob, { numDashes: 4, buff: 0 });
       const withBuff = new AnimatedBoundary(mob, { numDashes: 4, buff: 1 });
@@ -730,13 +735,13 @@ describe('AnimatedBoundary', () => {
       // With buff, points should be further from center
       // At least one coordinate should differ
       if (noBPts.length > 0 && wBPts.length > 0) {
-        const differ =
-          Math.abs(noBPts[0].x - wBPts[0].x) > 0.01 || Math.abs(noBPts[0].y - wBPts[0].y) > 0.01;
+        const differ = Math.abs(noBPts[0].x - wBPts[0].x) > 0.01 ||
+          Math.abs(noBPts[0].y - wBPts[0].y) > 0.01;
         expect(differ).toBe(true);
       }
     });
 
-    it('dash strokeWidth matches dashWidth option', () => {
+    it("dash strokeWidth matches dashWidth option", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, {
         numDashes: 4,
@@ -752,11 +757,11 @@ describe('AnimatedBoundary', () => {
   // _copy
   // -----------------------------------------------------------
 
-  describe('copy', () => {
-    it('creates a copy with same options', () => {
+  describe("copy", () => {
+    it("creates a copy with same options", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, {
-        colors: ['#FF0000'],
+        colors: ["#FF0000"],
         numDashes: 5,
         dashWidth: 6,
         cycleRate: 3,
@@ -776,8 +781,8 @@ describe('AnimatedBoundary', () => {
   // dispose
   // -----------------------------------------------------------
 
-  describe('dispose()', () => {
-    it('cleans up dashes and calls super.dispose', () => {
+  describe("dispose()", () => {
+    it("cleans up dashes and calls super.dispose", () => {
       const mob = makeVMobjectWithBounds();
       const boundary = new AnimatedBoundary(mob, { numDashes: 5 });
 
@@ -790,15 +795,15 @@ describe('AnimatedBoundary', () => {
   // animatedBoundary() factory
   // -----------------------------------------------------------
 
-  describe('animatedBoundary() factory', () => {
-    it('returns an AnimatedBoundary instance', () => {
+  describe("animatedBoundary() factory", () => {
+    it("returns an AnimatedBoundary instance", () => {
       const mob = makeVMobjectWithBounds();
       const result = animatedBoundary(mob);
       expect(result).toBeInstanceOf(AnimatedBoundary);
       expect(result.boundedMobject).toBe(mob);
     });
 
-    it('passes options through', () => {
+    it("passes options through", () => {
       const mob = makeVMobjectWithBounds();
       const result = animatedBoundary(mob, {
         numDashes: 20,

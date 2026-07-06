@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { VMobject } from './VMobject';
+import { describe, expect, it } from "vitest";
+import { VMobject } from "./VMobject";
 
 /**
  * Tests for aboutPoint / aboutEdge support across Mobject transform methods.
@@ -19,8 +19,8 @@ function makeUnitSquare(): VMobject {
 }
 
 // MIGRATION: weak test, remove once property-based tests done
-describe('scale with aboutPoint and aboutEdge (#218)', () => {
-  it('still supports plain scale via transform anchor after normalize', () => {
+describe("scale with aboutPoint and aboutEdge (#218)", () => {
+  it("still supports plain scale via transform anchor after normalize", () => {
     const vm = makeUnitSquare();
     const wpBefore = vm.getPoints();
     vm.scale(3);
@@ -37,8 +37,8 @@ describe('scale with aboutPoint and aboutEdge (#218)', () => {
 });
 
 // MIGRATION: weak test, remove once property-based tests done
-describe('stretch with aboutPoint and aboutEdge (#218)', () => {
-  it('stretches along x axis after normalize', () => {
+describe("stretch with aboutPoint and aboutEdge (#218)", () => {
+  it("stretches along x axis after normalize", () => {
     const vm = makeUnitSquare();
     const wpBefore = vm.getPoints();
     vm.stretch(2, 0);
@@ -61,19 +61,21 @@ describe('stretch with aboutPoint and aboutEdge (#218)', () => {
     expect(heightAfter).toBeCloseTo(heightBefore, 4);
   });
 
-  it('throws when both aboutPoint and aboutEdge are specified', () => {
+  it("throws when both aboutPoint and aboutEdge are specified", () => {
     const vm = makeUnitSquare();
-    expect(() => vm.stretch(2, 0, { aboutPoint: [0, 0, 0], aboutEdge: [1, 0, 0] })).toThrow();
+    expect(() =>
+      vm.stretch(2, 0, { aboutPoint: [0, 0, 0], aboutEdge: [1, 0, 0] })
+    ).toThrow();
   });
 
-  it('throws for invalid dim', () => {
+  it("throws for invalid dim", () => {
     const vm = makeUnitSquare();
     expect(() => vm.stretch(2, 3)).toThrow();
     expect(() => vm.stretch(2, -1)).toThrow();
     expect(() => vm.stretch(2, 1.5)).toThrow();
   });
 
-  it('handles empty options object same as no options', () => {
+  it("handles empty options object same as no options", () => {
     const vm1 = makeUnitSquare();
     const vm2 = makeUnitSquare();
     vm1.stretch(2, 0);
@@ -87,8 +89,8 @@ describe('stretch with aboutPoint and aboutEdge (#218)', () => {
   });
 });
 
-describe('rotate with aboutEdge (#218)', () => {
-  it('rotates about an edge (RIGHT)', () => {
+describe("rotate with aboutEdge (#218)", () => {
+  it("rotates about an edge (RIGHT)", () => {
     const vm = makeUnitSquare();
     // aboutEdge [1,0,0] resolves to right edge center [1,0,0]
     // Rotate 90 degrees CCW about [1,0,0]
@@ -100,8 +102,8 @@ describe('rotate with aboutEdge (#218)', () => {
   });
 });
 
-describe('flip with aboutPoint and aboutEdge (#218)', () => {
-  it('flips about a specific point along x-axis', () => {
+describe("flip with aboutPoint and aboutEdge (#218)", () => {
+  it("flips about a specific point along x-axis", () => {
     const vm = new VMobject();
     vm.setPoints([
       [2, 0, 0],
@@ -119,7 +121,7 @@ describe('flip with aboutPoint and aboutEdge (#218)', () => {
     expect(pts[3][0]).toBeCloseTo(-1);
   });
 
-  it('flips about an edge', () => {
+  it("flips about an edge", () => {
     const vm = makeUnitSquare();
     // aboutEdge [1,0,0] -> right edge center [1,0,0]
     // Flip x about x=1: point [-1,y,0] -> 2*1-(-1) = 3
@@ -130,15 +132,24 @@ describe('flip with aboutPoint and aboutEdge (#218)', () => {
   });
 });
 
-describe('aboutPoint and aboutEdge conflict (#218)', () => {
-  it('throws when both aboutPoint and aboutEdge are specified', () => {
+describe("aboutPoint and aboutEdge conflict (#218)", () => {
+  it("throws when both aboutPoint and aboutEdge are specified", () => {
     const vm = makeUnitSquare();
-    expect(() => vm.scale(2, { aboutPoint: [0, 0, 0], aboutEdge: [1, 0, 0] })).toThrow();
-    expect(() => vm.rotate(Math.PI / 2, { aboutPoint: [0, 0, 0], aboutEdge: [1, 0, 0] })).toThrow();
-    expect(() => vm.flip([1, 0, 0], { aboutPoint: [0, 0, 0], aboutEdge: [1, 0, 0] })).toThrow();
+    expect(() => vm.scale(2, { aboutPoint: [0, 0, 0], aboutEdge: [1, 0, 0] }))
+      .toThrow();
     expect(() =>
-      vm.applyFunction((p) => p, { aboutPoint: [0, 0, 0], aboutEdge: [1, 0, 0] }),
+      vm.rotate(Math.PI / 2, { aboutPoint: [0, 0, 0], aboutEdge: [1, 0, 0] })
     ).toThrow();
+    expect(() =>
+      vm.flip([1, 0, 0], { aboutPoint: [0, 0, 0], aboutEdge: [1, 0, 0] })
+    ).toThrow();
+    expect(() =>
+      vm.applyFunction((p) => p, {
+        aboutPoint: [0, 0, 0],
+        aboutEdge: [1, 0, 0],
+      })
+    )
+      .toThrow();
     expect(() =>
       vm.applyMatrix(
         [
@@ -147,13 +158,13 @@ describe('aboutPoint and aboutEdge conflict (#218)', () => {
           [0, 0, 1],
         ],
         { aboutPoint: [0, 0, 0], aboutEdge: [1, 0, 0] },
-      ),
+      )
     ).toThrow();
   });
 });
 
-describe('applyFunction with aboutPoint and aboutEdge (#218)', () => {
-  it('applies function about a specific point', () => {
+describe("applyFunction with aboutPoint and aboutEdge (#218)", () => {
+  it("applies function about a specific point", () => {
     const vm = new VMobject();
     vm.setPoints([
       [1, 0, 0],
@@ -170,7 +181,7 @@ describe('applyFunction with aboutPoint and aboutEdge (#218)', () => {
     expect(pts[3][0]).toBeCloseTo(7);
   });
 
-  it('applies function about an edge', () => {
+  it("applies function about an edge", () => {
     const vm = makeUnitSquare();
     // aboutEdge [1,0,0] -> right edge center [1,0,0]
     // Scale x by 2 about [1,0,0]

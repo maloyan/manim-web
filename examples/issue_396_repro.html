@@ -3,36 +3,36 @@
   <head>
     <title>Issue #396 — MathTex via spherical coords</title>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      body {
-        background: #191919;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 100vw;
-        height: 100vh;
-        overflow: hidden;
-        color: #fff;
-        font-family: sans-serif;
-      }
-      #container {
-        width: 100vw;
-        height: 100vh;
-      }
-      #status {
-        position: fixed;
-        top: 12px;
-        left: 12px;
-        background: rgba(0, 0, 0, 0.65);
-        padding: 8px 12px;
-        border-radius: 6px;
-        font-size: 13px;
-        z-index: 10;
-      }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #191919;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      color: #fff;
+      font-family: sans-serif;
+    }
+    #container {
+      width: 100vw;
+      height: 100vh;
+    }
+    #status {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      background: rgba(0, 0, 0, 0.65);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      z-index: 10;
+    }
     </style>
   </head>
   <body>
@@ -40,66 +40,66 @@
     <div id="container"></div>
 
     <script type="module">
-      import {
-        Dot3D,
-        YELLOW,
-        makeDraggable,
-        MathTex,
-        ThreeDAxes,
-        ThreeDScene,
-        Line3D,
-        WHITE,
-      } from '../src/index.ts';
+    import {
+      Dot3D,
+      Line3D,
+      makeDraggable,
+      MathTex,
+      ThreeDAxes,
+      ThreeDScene,
+      WHITE,
+      YELLOW,
+    } from '../src/index.ts';
 
-      const statusEl = document.getElementById('status');
+    const statusEl = document.getElementById('status');
 
-      const scene = new ThreeDScene(document.getElementById('container'), {
-        width: window.innerWidth,
-        height: window.innerHeight,
-        backgroundColor: '#191919',
-        phi: 75 * (Math.PI / 180),
-        theta: -45 * (Math.PI / 180),
-        distance: 20,
-        fov: 30,
-        enableOrbitControls: true,
-        orbitControlsUp: 'z',
-      });
+    const scene = new ThreeDScene(document.getElementById('container'), {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      backgroundColor: '#191919',
+      phi: 75 * (Math.PI / 180),
+      theta: -45 * (Math.PI / 180),
+      distance: 20,
+      fov: 30,
+      enableOrbitControls: true,
+      orbitControlsUp: 'z',
+    });
 
-      const axes = new ThreeDAxes({
-        xRange: [-5, 5, 1],
-        yRange: [-5, 5, 1],
-        zRange: [-5, 5, 1],
-        xLength: 10,
-        yLength: 10,
-        zLength: 10,
-        showTicks: false,
-      });
+    const axes = new ThreeDAxes({
+      xRange: [-5, 5, 1],
+      yRange: [-5, 5, 1],
+      zRange: [-5, 5, 1],
+      xLength: 10,
+      yLength: 10,
+      zLength: 10,
+      showTicks: false,
+    });
 
-      const dot = new Dot3D({ radius: 0.1, color: YELLOW })
-        .moveTo(axes.coordsToPoint(1, 1, 1))
-        .addUpdater(() => {});
-      makeDraggable(dot, scene);
+    const dot = new Dot3D({ radius: 0.1, color: YELLOW })
+      .moveTo(axes.coordsToPoint(1, 1, 1))
+      .addUpdater(() => {});
+    makeDraggable(dot, scene);
 
-      const radius = new Line3D({ start: [0, 0, 0], end: dot.getCenter(), lineWidth: 40 }).addUpdater(
-        (mob) => {
-          mob.setEnd(dot.getCenter());
-        },
-      );
+    const radius = new Line3D({ start: [0, 0, 0], end: dot.getCenter(), lineWidth: 40 }).addUpdater(
+      (mob) => {
+        mob.setEnd(dot.getCenter());
+      },
+    );
 
-      const r = new MathTex({ latex: 'r', color: WHITE, fontSize: 22 }).addUpdater((mob) => {
-        mob.moveTo(radius.getMidpoint());
-      });
+    const r = new MathTex({ latex: 'r', color: WHITE, fontSize: 22 }).addUpdater((mob) => {
+      mob.moveTo(radius.getMidpoint());
+    });
 
-      try {
-        await r.waitForRender();
-        statusEl.textContent = 'MathTex rendered ✓ (issue #396 fixed)';
-      } catch (e) {
-        statusEl.textContent = 'MathTex failed ✗ ' + e.message;
-        console.error(e);
-      }
+    try {
+      await r.waitForRender();
+      statusEl.textContent = 'MathTex rendered ✓ (issue #396 fixed)';
+    } catch (e) {
+      statusEl.textContent = 'MathTex failed ✗ ' + e.message;
+      console.error(e);
+    }
 
-      scene.add(axes, dot, radius, r);
-      await scene.wait(Infinity);
+    scene.add(axes, dot, radius, r);
+    await scene.wait(Infinity);
     </script>
   </body>
 </html>

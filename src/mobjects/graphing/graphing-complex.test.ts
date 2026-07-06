@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
-import * as THREE from 'three';
-import { ComplexPlane, PolarPlane } from './ComplexPlane';
-import { Text } from '../text';
-import { Mobject } from '../../core/Mobject';
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import * as THREE from "three";
+import { ComplexPlane, PolarPlane } from "./ComplexPlane";
+import { Text } from "../text";
+import { Mobject } from "../../core/Mobject";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -21,60 +21,63 @@ function tupleCloseTo(a: number[], b: number[], eps = EPSILON): boolean {
 // ---------------------------------------------------------------------------
 // ComplexPlane - static complex arithmetic
 // ---------------------------------------------------------------------------
-describe('ComplexPlane static methods', () => {
-  describe('modulus', () => {
-    it('should compute |3 + 4i| = 5', () => {
+describe("ComplexPlane static methods", () => {
+  describe("modulus", () => {
+    it("should compute |3 + 4i| = 5", () => {
       expect(closeTo(ComplexPlane.modulus({ re: 3, im: 4 }), 5)).toBe(true);
     });
 
-    it('should return 0 for zero', () => {
+    it("should return 0 for zero", () => {
       expect(ComplexPlane.modulus({ re: 0, im: 0 })).toBe(0);
     });
   });
 
-  describe('argument', () => {
-    it('should return 0 for positive real', () => {
+  describe("argument", () => {
+    it("should return 0 for positive real", () => {
       expect(closeTo(ComplexPlane.argument({ re: 1, im: 0 }), 0)).toBe(true);
     });
 
-    it('should return PI/2 for positive imaginary', () => {
-      expect(closeTo(ComplexPlane.argument({ re: 0, im: 1 }), Math.PI / 2)).toBe(true);
+    it("should return PI/2 for positive imaginary", () => {
+      expect(closeTo(ComplexPlane.argument({ re: 0, im: 1 }), Math.PI / 2))
+        .toBe(true);
     });
 
-    it('should return PI for negative real', () => {
-      expect(closeTo(ComplexPlane.argument({ re: -1, im: 0 }), Math.PI)).toBe(true);
+    it("should return PI for negative real", () => {
+      expect(closeTo(ComplexPlane.argument({ re: -1, im: 0 }), Math.PI)).toBe(
+        true,
+      );
     });
   });
 
-  describe('add', () => {
-    it('should add two complex numbers', () => {
+  describe("add", () => {
+    it("should add two complex numbers", () => {
       const result = ComplexPlane.add({ re: 1, im: 2 }, { re: 3, im: 4 });
       expect(result).toEqual({ re: 4, im: 6 });
     });
   });
 
-  describe('subtract', () => {
-    it('should subtract two complex numbers', () => {
+  describe("subtract", () => {
+    it("should subtract two complex numbers", () => {
       const result = ComplexPlane.subtract({ re: 5, im: 3 }, { re: 2, im: 1 });
       expect(result).toEqual({ re: 3, im: 2 });
     });
   });
 
-  describe('multiply', () => {
-    it('should multiply (1+2i)(3+4i) = -5+10i', () => {
+  describe("multiply", () => {
+    it("should multiply (1+2i)(3+4i) = -5+10i", () => {
       const result = ComplexPlane.multiply({ re: 1, im: 2 }, { re: 3, im: 4 });
       expect(closeTo(result.re, -5)).toBe(true);
       expect(closeTo(result.im, 10)).toBe(true);
     });
 
-    it('multiplying by 1 should be identity', () => {
+    it("multiplying by 1 should be identity", () => {
       const z = { re: 3, im: 7 };
       const result = ComplexPlane.multiply(z, { re: 1, im: 0 });
       expect(closeTo(result.re, z.re)).toBe(true);
       expect(closeTo(result.im, z.im)).toBe(true);
     });
 
-    it('multiplying by i should rotate 90 degrees', () => {
+    it("multiplying by i should rotate 90 degrees", () => {
       const z = { re: 1, im: 0 };
       const result = ComplexPlane.multiply(z, { re: 0, im: 1 });
       expect(closeTo(result.re, 0)).toBe(true);
@@ -82,118 +85,118 @@ describe('ComplexPlane static methods', () => {
     });
   });
 
-  describe('divide', () => {
-    it('should divide (4+2i)/(1+i) = 3-i', () => {
+  describe("divide", () => {
+    it("should divide (4+2i)/(1+i) = 3-i", () => {
       const result = ComplexPlane.divide({ re: 4, im: 2 }, { re: 1, im: 1 });
       expect(closeTo(result.re, 3)).toBe(true);
       expect(closeTo(result.im, -1)).toBe(true);
     });
   });
 
-  describe('conjugate', () => {
-    it('should negate the imaginary part', () => {
+  describe("conjugate", () => {
+    it("should negate the imaginary part", () => {
       const result = ComplexPlane.conjugate({ re: 3, im: 4 });
       expect(result).toEqual({ re: 3, im: -4 });
     });
   });
 
-  describe('fromPolar', () => {
-    it('should convert r=1, theta=0 to 1+0i', () => {
+  describe("fromPolar", () => {
+    it("should convert r=1, theta=0 to 1+0i", () => {
       const result = ComplexPlane.fromPolar(1, 0);
       expect(closeTo(result.re, 1)).toBe(true);
       expect(closeTo(result.im, 0)).toBe(true);
     });
 
-    it('should convert r=1, theta=PI/2 to 0+i', () => {
+    it("should convert r=1, theta=PI/2 to 0+i", () => {
       const result = ComplexPlane.fromPolar(1, Math.PI / 2);
       expect(closeTo(result.re, 0)).toBe(true);
       expect(closeTo(result.im, 1)).toBe(true);
     });
 
-    it('should convert r=2, theta=PI to -2+0i', () => {
+    it("should convert r=2, theta=PI to -2+0i", () => {
       const result = ComplexPlane.fromPolar(2, Math.PI);
       expect(closeTo(result.re, -2)).toBe(true);
       expect(closeTo(result.im, 0)).toBe(true);
     });
   });
 
-  describe('pow', () => {
-    it('(1+i)^2 should be 0+2i', () => {
+  describe("pow", () => {
+    it("(1+i)^2 should be 0+2i", () => {
       const result = ComplexPlane.pow({ re: 1, im: 1 }, 2);
       expect(closeTo(result.re, 0)).toBe(true);
       expect(closeTo(result.im, 2)).toBe(true);
     });
 
-    it('z^1 should be z', () => {
+    it("z^1 should be z", () => {
       const z = { re: 3, im: 4 };
       const result = ComplexPlane.pow(z, 1);
       expect(closeTo(result.re, 3)).toBe(true);
       expect(closeTo(result.im, 4)).toBe(true);
     });
 
-    it('z^0 should be 1', () => {
+    it("z^0 should be 1", () => {
       const result = ComplexPlane.pow({ re: 5, im: 12 }, 0);
       expect(closeTo(result.re, 1)).toBe(true);
       expect(closeTo(result.im, 0)).toBe(true);
     });
   });
 
-  describe('exp', () => {
-    it('e^0 should be 1', () => {
+  describe("exp", () => {
+    it("e^0 should be 1", () => {
       const result = ComplexPlane.exp({ re: 0, im: 0 });
       expect(closeTo(result.re, 1)).toBe(true);
       expect(closeTo(result.im, 0)).toBe(true);
     });
 
-    it('e^(i*PI) should be -1 (Euler identity)', () => {
+    it("e^(i*PI) should be -1 (Euler identity)", () => {
       const result = ComplexPlane.exp({ re: 0, im: Math.PI });
       expect(closeTo(result.re, -1)).toBe(true);
       expect(closeTo(result.im, 0)).toBe(true);
     });
   });
 
-  describe('log', () => {
-    it('log(1) should be 0', () => {
+  describe("log", () => {
+    it("log(1) should be 0", () => {
       const result = ComplexPlane.log({ re: 1, im: 0 });
       expect(closeTo(result.re, 0)).toBe(true);
       expect(closeTo(result.im, 0)).toBe(true);
     });
 
-    it('log(e) should be 1+0i', () => {
+    it("log(e) should be 1+0i", () => {
       const result = ComplexPlane.log({ re: Math.E, im: 0 });
       expect(closeTo(result.re, 1)).toBe(true);
       expect(closeTo(result.im, 0)).toBe(true);
     });
   });
 
-  describe('sqrt', () => {
-    it('sqrt(4) should be 2', () => {
+  describe("sqrt", () => {
+    it("sqrt(4) should be 2", () => {
       const result = ComplexPlane.sqrt({ re: 4, im: 0 });
       expect(closeTo(result.re, 2)).toBe(true);
       expect(closeTo(result.im, 0)).toBe(true);
     });
 
-    it('sqrt(-1) should be i', () => {
+    it("sqrt(-1) should be i", () => {
       const result = ComplexPlane.sqrt({ re: -1, im: 0 });
       expect(closeTo(result.re, 0)).toBe(true);
       expect(closeTo(result.im, 1)).toBe(true);
     });
   });
 
-  describe('reciprocal', () => {
-    it('1/(1+0i) should be 1+0i', () => {
+  describe("reciprocal", () => {
+    it("1/(1+0i) should be 1+0i", () => {
       const result = ComplexPlane.reciprocal({ re: 1, im: 0 });
       expect(closeTo(result.re, 1)).toBe(true);
       expect(closeTo(result.im, 0)).toBe(true);
     });
 
-    it('1/(0+i) should be 0-i', () => {
+    it("1/(0+i) should be 0-i", () => {
       const result = ComplexPlane.reciprocal({ re: 0, im: 1 });
       expect(closeTo(result.re, 0)).toBe(true);
       expect(closeTo(result.im, -1)).toBe(true);
     });
 
-    it('z * 1/z should be 1', () => {
+    it("z * 1/z should be 1", () => {
       const z = { re: 3, im: 4 };
       const inv = ComplexPlane.reciprocal(z);
       const product = ComplexPlane.multiply(z, inv);
@@ -206,9 +209,9 @@ describe('ComplexPlane static methods', () => {
 // ---------------------------------------------------------------------------
 // ComplexPlane - instance methods
 // ---------------------------------------------------------------------------
-describe('ComplexPlane instance', () => {
-  describe('n2p / p2n roundtrip', () => {
-    it('should roundtrip a complex number', () => {
+describe("ComplexPlane instance", () => {
+  describe("n2p / p2n roundtrip", () => {
+    it("should roundtrip a complex number", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       const z = { re: 2, im: -1 };
       const point = plane.n2p(z);
@@ -217,7 +220,7 @@ describe('ComplexPlane instance', () => {
       expect(closeTo(back.im, z.im)).toBe(true);
     });
 
-    it('should handle real number input to n2p', () => {
+    it("should handle real number input to n2p", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       const point = plane.n2p(3);
       const back = plane.p2n(point);
@@ -225,7 +228,7 @@ describe('ComplexPlane instance', () => {
       expect(closeTo(back.im, 0)).toBe(true);
     });
 
-    it('should roundtrip origin', () => {
+    it("should roundtrip origin", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       const point = plane.n2p({ re: 0, im: 0 });
       const back = plane.p2n(point);
@@ -234,8 +237,8 @@ describe('ComplexPlane instance', () => {
     });
   });
 
-  describe('n2p mapping', () => {
-    it('n2p(0) should map to the visual origin', () => {
+  describe("n2p mapping", () => {
+    it("n2p(0) should map to the visual origin", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       const pt = plane.n2p(0);
       expect(closeTo(pt[0], 0)).toBe(true);
@@ -247,31 +250,31 @@ describe('ComplexPlane instance', () => {
 // ---------------------------------------------------------------------------
 // PolarPlane
 // ---------------------------------------------------------------------------
-describe('PolarPlane', () => {
+describe("PolarPlane", () => {
   // PolarPlane uses Text for labels which requires document (canvas).
   // We disable labels to avoid "document is not defined" in Node.
   const noLabels = { includeAngleLabels: false, includeRadiusLabels: false };
 
-  describe('constructor defaults', () => {
-    it('should have radius 3', () => {
+  describe("constructor defaults", () => {
+    it("should have radius 3", () => {
       const pp = new PolarPlane(noLabels);
       expect(pp.getRadius()).toBe(3);
     });
 
-    it('should have size 6', () => {
+    it("should have size 6", () => {
       const pp = new PolarPlane(noLabels);
       expect(pp.getSize()).toBe(6);
     });
 
-    it('should have origin at [0,0,0]', () => {
+    it("should have origin at [0,0,0]", () => {
       const pp = new PolarPlane(noLabels);
       const origin = pp.getOrigin();
       expect(tupleCloseTo(origin, [0, 0, 0])).toBe(true);
     });
   });
 
-  describe('pr2pt / pt2pr roundtrip', () => {
-    it('should roundtrip (r=1, theta=0)', () => {
+  describe("pr2pt / pt2pr roundtrip", () => {
+    it("should roundtrip (r=1, theta=0)", () => {
       const pp = new PolarPlane(noLabels);
       const pt = pp.pr2pt(1, 0);
       const [r, theta] = pp.pt2pr(pt);
@@ -279,7 +282,7 @@ describe('PolarPlane', () => {
       expect(closeTo(theta, 0)).toBe(true);
     });
 
-    it('should roundtrip (r=2, theta=PI/4)', () => {
+    it("should roundtrip (r=2, theta=PI/4)", () => {
       const pp = new PolarPlane(noLabels);
       const pt = pp.pr2pt(2, Math.PI / 4);
       const [r, theta] = pp.pt2pr(pt);
@@ -287,7 +290,7 @@ describe('PolarPlane', () => {
       expect(closeTo(theta, Math.PI / 4)).toBe(true);
     });
 
-    it('should roundtrip (r=3, theta=PI)', () => {
+    it("should roundtrip (r=3, theta=PI)", () => {
       const pp = new PolarPlane(noLabels);
       const pt = pp.pr2pt(3, Math.PI);
       const [r, theta] = pp.pt2pr(pt);
@@ -296,15 +299,15 @@ describe('PolarPlane', () => {
     });
   });
 
-  describe('pr2pt coordinate mapping', () => {
-    it('pr2pt(0, 0) should be at the origin', () => {
+  describe("pr2pt coordinate mapping", () => {
+    it("pr2pt(0, 0) should be at the origin", () => {
       const pp = new PolarPlane(noLabels);
       const pt = pp.pr2pt(0, 0);
       expect(closeTo(pt[0], 0)).toBe(true);
       expect(closeTo(pt[1], 0)).toBe(true);
     });
 
-    it('pr2pt(radius, 0) should be at positive x edge', () => {
+    it("pr2pt(radius, 0) should be at positive x edge", () => {
       const pp = new PolarPlane({ radius: 3, size: 6, ...noLabels });
       const scaleFactor = 6 / (2 * 3); // = 1
       const pt = pp.pr2pt(3, 0);
@@ -312,7 +315,7 @@ describe('PolarPlane', () => {
       expect(closeTo(pt[1], 0)).toBe(true);
     });
 
-    it('pr2pt with azimuth offset should rotate', () => {
+    it("pr2pt with azimuth offset should rotate", () => {
       const offset = Math.PI / 4;
       const pp = new PolarPlane({ azimuthOffset: offset, ...noLabels });
       const pt = pp.pr2pt(1, 0);
@@ -323,33 +326,33 @@ describe('PolarPlane', () => {
     });
   });
 
-  describe('groups', () => {
-    it('should have concentric circles', () => {
+  describe("groups", () => {
+    it("should have concentric circles", () => {
       const pp = new PolarPlane({ radialDivisions: 3, ...noLabels });
       expect(pp.getConcentricCircles().children.length).toBe(3);
     });
 
-    it('should have radial lines', () => {
+    it("should have radial lines", () => {
       const pp = new PolarPlane({ angularDivisions: 8, ...noLabels });
       expect(pp.getRadialLines().children.length).toBe(8);
     });
   });
 
-  describe('custom options', () => {
-    it('should respect custom radius and size', () => {
+  describe("custom options", () => {
+    it("should respect custom radius and size", () => {
       const pp = new PolarPlane({ radius: 5, size: 10, ...noLabels });
       expect(pp.getRadius()).toBe(5);
       expect(pp.getSize()).toBe(10);
     });
   });
 
-  describe('setIncludeAngleLabels', () => {
-    it('should return this when value is already the same', () => {
+  describe("setIncludeAngleLabels", () => {
+    it("should return this when value is already the same", () => {
       const pp = new PolarPlane(noLabels);
       expect(pp.setIncludeAngleLabels(false)).toBe(pp);
     });
 
-    it('should add angle labels when toggled on', () => {
+    it("should add angle labels when toggled on", () => {
       const pp = new PolarPlane(noLabels);
       const childrenBefore = pp.children.length;
       pp.setIncludeAngleLabels(true);
@@ -357,7 +360,7 @@ describe('PolarPlane', () => {
       expect(pp.children.length).toBeGreaterThan(childrenBefore);
     });
 
-    it('should not add duplicate angle labels group when called multiple times', () => {
+    it("should not add duplicate angle labels group when called multiple times", () => {
       const pp = new PolarPlane(noLabels);
       pp.setIncludeAngleLabels(true);
       const countAfterFirst = pp.children.length;
@@ -365,7 +368,7 @@ describe('PolarPlane', () => {
       expect(pp.children.length).toBe(countAfterFirst);
     });
 
-    it('should remove angle labels when toggled off', () => {
+    it("should remove angle labels when toggled off", () => {
       const pp = new PolarPlane(noLabels);
       pp.setIncludeAngleLabels(true);
       const countWithLabels = pp.children.length;
@@ -374,20 +377,20 @@ describe('PolarPlane', () => {
     });
   });
 
-  describe('setIncludeRadiusLabels', () => {
-    it('should return this when value is already the same', () => {
+  describe("setIncludeRadiusLabels", () => {
+    it("should return this when value is already the same", () => {
       const pp = new PolarPlane(noLabels);
       expect(pp.setIncludeRadiusLabels(false)).toBe(pp);
     });
 
-    it('should add radius labels when toggled on', () => {
+    it("should add radius labels when toggled on", () => {
       const pp = new PolarPlane(noLabels);
       const childrenBefore = pp.children.length;
       pp.setIncludeRadiusLabels(true);
       expect(pp.children.length).toBeGreaterThan(childrenBefore);
     });
 
-    it('should remove radius labels when toggled off', () => {
+    it("should remove radius labels when toggled off", () => {
       const pp = new PolarPlane(noLabels);
       pp.setIncludeRadiusLabels(true);
       const countWithLabels = pp.children.length;
@@ -396,8 +399,8 @@ describe('PolarPlane', () => {
     });
   });
 
-  describe('getAngleLabels / getRadiusLabels', () => {
-    it('getAngleLabels should return the angle labels group', () => {
+  describe("getAngleLabels / getRadiusLabels", () => {
+    it("getAngleLabels should return the angle labels group", () => {
       const pp = new PolarPlane(noLabels);
       const labels = pp.getAngleLabels();
       expect(labels).toBeDefined();
@@ -406,7 +409,7 @@ describe('PolarPlane', () => {
       expect(labels.children.length).toBe(0);
     });
 
-    it('getRadiusLabels should return the radius labels group', () => {
+    it("getRadiusLabels should return the radius labels group", () => {
       const pp = new PolarPlane(noLabels);
       const labels = pp.getRadiusLabels();
       expect(labels).toBeDefined();
@@ -414,8 +417,8 @@ describe('PolarPlane', () => {
     });
   });
 
-  describe('copy() via copy()', () => {
-    it('copy should produce an independent PolarPlane', () => {
+  describe("copy() via copy()", () => {
+    it("copy should produce an independent PolarPlane", () => {
       const pp = new PolarPlane({
         radius: 4,
         size: 8,
@@ -433,8 +436,8 @@ describe('PolarPlane', () => {
     });
   });
 
-  describe('pt2pr with various angles', () => {
-    it('should return theta near 3PI/2 for point below origin', () => {
+  describe("pt2pr with various angles", () => {
+    it("should return theta near 3PI/2 for point below origin", () => {
       const pp = new PolarPlane(noLabels);
       const pt = pp.pr2pt(1, (3 * Math.PI) / 2);
       const [r, theta] = pp.pt2pr(pt);
@@ -443,14 +446,14 @@ describe('PolarPlane', () => {
     });
   });
 
-  describe('grid structure', () => {
-    it('should create grid with custom options', () => {
+  describe("grid structure", () => {
+    it("should create grid with custom options", () => {
       const pp = new PolarPlane({
         radius: 2,
         size: 4,
         radialDivisions: 2,
         angularDivisions: 4,
-        gridColor: '#ff0000',
+        gridColor: "#ff0000",
         gridStrokeWidth: 2,
         gridOpacity: 0.8,
         ...noLabels,
@@ -464,13 +467,13 @@ describe('PolarPlane', () => {
 // ---------------------------------------------------------------------------
 // ComplexPlane - canvas-dependent tests (imaginary labels, coordinates, etc.)
 // ---------------------------------------------------------------------------
-describe('ComplexPlane with canvas mock', () => {
+describe("ComplexPlane with canvas mock", () => {
   const mockCtx = {
-    font: '',
-    textBaseline: '',
-    textAlign: '',
-    fillStyle: '',
-    strokeStyle: '',
+    font: "",
+    textBaseline: "",
+    textAlign: "",
+    fillStyle: "",
+    strokeStyle: "",
     lineWidth: 0,
     globalAlpha: 1,
     measureText: (t: string) => ({
@@ -500,17 +503,18 @@ describe('ComplexPlane with canvas mock', () => {
 
   beforeAll(() => {
     const origDoc = globalThis.document;
-    vi.stubGlobal('document', {
+    vi.stubGlobal("document", {
       ...origDoc,
       createElement: (tag: string) => {
-        if (tag === 'canvas')
+        if (tag === "canvas") {
           return {
             width: 100,
             height: 50,
             getContext: () => mockCtx,
-            toDataURL: () => '',
+            toDataURL: () => "",
             style: {},
           };
+        }
         return origDoc?.createElement?.(tag) ?? {};
       },
       fonts: { add: vi.fn() },
@@ -521,8 +525,8 @@ describe('ComplexPlane with canvas mock', () => {
     vi.unstubAllGlobals();
   });
 
-  describe('constructor with imaginary labels enabled', () => {
-    it('should create imaginary labels by default', () => {
+  describe("constructor with imaginary labels enabled", () => {
+    it("should create imaginary labels by default", () => {
       const plane = new ComplexPlane();
       const labels = plane.getImaginaryLabels();
       expect(labels).toBeDefined();
@@ -530,48 +534,48 @@ describe('ComplexPlane with canvas mock', () => {
       expect(labels.children.length).toBeGreaterThan(0);
     });
 
-    it('should not create imaginary labels when disabled', () => {
+    it("should not create imaginary labels when disabled", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       const labels = plane.getImaginaryLabels();
       expect(labels.children.length).toBe(0);
     });
 
-    it('should respect custom labelFontSize and labelColor', () => {
+    it("should respect custom labelFontSize and labelColor", () => {
       const plane = new ComplexPlane({
         labelFontSize: 32,
-        labelColor: '#ff0000',
+        labelColor: "#ff0000",
       });
       expect(plane).toBeDefined();
       expect(plane.getImaginaryLabels().children.length).toBeGreaterThan(0);
     });
   });
 
-  describe('setIncludeImaginaryLabels', () => {
-    it('should return this when value is already the same (true)', () => {
+  describe("setIncludeImaginaryLabels", () => {
+    it("should return this when value is already the same (true)", () => {
       const plane = new ComplexPlane();
       expect(plane.setIncludeImaginaryLabels(true)).toBe(plane);
     });
 
-    it('should return this when value is already the same (false)', () => {
+    it("should return this when value is already the same (false)", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       expect(plane.setIncludeImaginaryLabels(false)).toBe(plane);
     });
 
-    it('should remove imaginary labels when toggled off', () => {
+    it("should remove imaginary labels when toggled off", () => {
       const plane = new ComplexPlane();
       const childrenBefore = plane.children.length;
       plane.setIncludeImaginaryLabels(false);
       expect(plane.children.length).toBeLessThan(childrenBefore);
     });
 
-    it('should add imaginary labels when toggled back on', () => {
+    it("should add imaginary labels when toggled back on", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       const childrenBefore = plane.children.length;
       plane.setIncludeImaginaryLabels(true);
       expect(plane.children.length).toBeGreaterThan(childrenBefore);
     });
 
-    it('should not add duplicate group when called multiple times', () => {
+    it("should not add duplicate group when called multiple times", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       plane.setIncludeImaginaryLabels(true);
       const countAfter = plane.children.length;
@@ -580,7 +584,7 @@ describe('ComplexPlane with canvas mock', () => {
     });
   });
 
-  describe('_formatImaginaryLabel branches (via addCoordinates)', () => {
+  describe("_formatImaginaryLabel branches (via addCoordinates)", () => {
     it('should format 1 as "i"', () => {
       // yRange [0, 1, 1] with yVals [1] should produce "i" label
       const plane = new ComplexPlane({
@@ -621,8 +625,8 @@ describe('ComplexPlane with canvas mock', () => {
     });
   });
 
-  describe('addCoordinates', () => {
-    it('should add default coordinate labels from axis ranges', () => {
+  describe("addCoordinates", () => {
+    it("should add default coordinate labels from axis ranges", () => {
       const plane = new ComplexPlane({
         includeImaginaryLabels: false,
         xRange: [-2, 2, 1],
@@ -636,7 +640,7 @@ describe('ComplexPlane with canvas mock', () => {
       expect(labels.children.length).toBe(8);
     });
 
-    it('should add custom x and y coordinate labels', () => {
+    it("should add custom x and y coordinate labels", () => {
       const plane = new ComplexPlane({
         includeImaginaryLabels: false,
         xRange: [-3, 3, 1],
@@ -648,7 +652,7 @@ describe('ComplexPlane with canvas mock', () => {
       expect(labels.children.length).toBe(4);
     });
 
-    it('should clear previous coordinate labels on re-call', () => {
+    it("should clear previous coordinate labels on re-call", () => {
       const plane = new ComplexPlane({
         includeImaginaryLabels: false,
         xRange: [-2, 2, 1],
@@ -660,12 +664,12 @@ describe('ComplexPlane with canvas mock', () => {
       expect(plane.getCoordinateLabels().children.length).toBe(3);
     });
 
-    it('should return this for chaining', () => {
+    it("should return this for chaining", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       expect(plane.addCoordinates()).toBe(plane);
     });
 
-    it('should not add coordinate labels group twice', () => {
+    it("should not add coordinate labels group twice", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       plane.addCoordinates([1], []);
       const countAfterFirst = plane.children.length;
@@ -673,7 +677,7 @@ describe('ComplexPlane with canvas mock', () => {
       expect(plane.children.length).toBe(countAfterFirst);
     });
 
-    it('should format non-integer x labels with one decimal', () => {
+    it("should format non-integer x labels with one decimal", () => {
       const plane = new ComplexPlane({
         includeImaginaryLabels: false,
         xRange: [0, 2, 0.5],
@@ -683,8 +687,8 @@ describe('ComplexPlane with canvas mock', () => {
     });
   });
 
-  describe('getCoordinateLabels', () => {
-    it('should return an empty group before addCoordinates is called', () => {
+  describe("getCoordinateLabels", () => {
+    it("should return an empty group before addCoordinates is called", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       const labels = plane.getCoordinateLabels();
       expect(labels).toBeDefined();
@@ -692,15 +696,15 @@ describe('ComplexPlane with canvas mock', () => {
     });
   });
 
-  describe('copy() via copy()', () => {
-    it('should produce an independent ComplexPlane', () => {
+  describe("copy() via copy()", () => {
+    it("should produce an independent ComplexPlane", () => {
       const plane = new ComplexPlane({
         xRange: [-3, 3, 1],
         yRange: [-2, 2, 1],
         xLength: 8,
         yLength: 4,
         labelFontSize: 18,
-        labelColor: '#00ff00',
+        labelColor: "#00ff00",
       });
       const cp = plane.copy() as ComplexPlane;
       expect(cp).toBeInstanceOf(ComplexPlane);
@@ -709,7 +713,7 @@ describe('ComplexPlane with canvas mock', () => {
       expect(cp.getYRange()).toEqual([-2, 2, 1]);
     });
 
-    it('should copy with includeImaginaryLabels=false', () => {
+    it("should copy with includeImaginaryLabels=false", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       const cp = plane.copy() as ComplexPlane;
       expect(cp).toBeInstanceOf(ComplexPlane);
@@ -717,18 +721,20 @@ describe('ComplexPlane with canvas mock', () => {
     });
   });
 
-  describe('applyComplexFunction', () => {
-    it('should apply z -> z^2 and return this', () => {
+  describe("applyComplexFunction", () => {
+    it("should apply z -> z^2 and return this", () => {
       const plane = new ComplexPlane({
         includeImaginaryLabels: false,
         xRange: [-2, 2, 1],
         yRange: [-2, 2, 1],
       });
-      const result = plane.applyComplexFunction((z) => ComplexPlane.multiply(z, z));
+      const result = plane.applyComplexFunction((z) =>
+        ComplexPlane.multiply(z, z)
+      );
       expect(result).toBe(plane);
     });
 
-    it('should apply identity function without error', () => {
+    it("should apply identity function without error", () => {
       const plane = new ComplexPlane({
         includeImaginaryLabels: false,
         xRange: [-1, 1, 1],
@@ -740,8 +746,8 @@ describe('ComplexPlane with canvas mock', () => {
     });
   });
 
-  describe('n2p / p2n with custom ranges', () => {
-    it('should map complex numbers correctly on custom range', () => {
+  describe("n2p / p2n with custom ranges", () => {
+    it("should map complex numbers correctly on custom range", () => {
       const plane = new ComplexPlane({
         includeImaginaryLabels: false,
         xRange: [-5, 5, 1],
@@ -756,7 +762,7 @@ describe('ComplexPlane with canvas mock', () => {
       expect(closeTo(back.im, -2)).toBe(true);
     });
 
-    it('n2p with negative real number', () => {
+    it("n2p with negative real number", () => {
       const plane = new ComplexPlane({ includeImaginaryLabels: false });
       const pt = plane.n2p(-3);
       const back = plane.p2n(pt);
@@ -765,24 +771,24 @@ describe('ComplexPlane with canvas mock', () => {
     });
   });
 
-  describe('PolarPlane with labels (canvas mock)', () => {
-    it('should create with default labels enabled', () => {
+  describe("PolarPlane with labels (canvas mock)", () => {
+    it("should create with default labels enabled", () => {
       const pp = new PolarPlane();
       expect(pp.getAngleLabels().children.length).toBeGreaterThan(0);
       expect(pp.getRadiusLabels().children.length).toBeGreaterThan(0);
     });
 
-    it('should generate correct number of angle labels for default 12 divisions', () => {
+    it("should generate correct number of angle labels for default 12 divisions", () => {
       const pp = new PolarPlane();
       expect(pp.getAngleLabels().children.length).toBe(12);
     });
 
-    it('should generate correct number of radius labels for default 3 divisions', () => {
+    it("should generate correct number of radius labels for default 3 divisions", () => {
       const pp = new PolarPlane();
       expect(pp.getRadiusLabels().children.length).toBe(3);
     });
 
-    it('should create with custom angular and radial divisions', () => {
+    it("should create with custom angular and radial divisions", () => {
       const pp = new PolarPlane({
         angularDivisions: 8,
         radialDivisions: 4,
@@ -791,7 +797,7 @@ describe('ComplexPlane with canvas mock', () => {
       expect(pp.getRadiusLabels().children.length).toBe(4);
     });
 
-    it('should create with azimuth offset and labels', () => {
+    it("should create with azimuth offset and labels", () => {
       const pp = new PolarPlane({
         azimuthOffset: Math.PI / 4,
         angularDivisions: 4,
@@ -799,17 +805,17 @@ describe('ComplexPlane with canvas mock', () => {
       expect(pp.getAngleLabels().children.length).toBe(4);
     });
 
-    it('copy() with labels should produce independent copy', () => {
+    it("copy() with labels should produce independent copy", () => {
       const pp = new PolarPlane({
         radius: 5,
         size: 10,
         angularDivisions: 8,
         radialDivisions: 2,
-        gridColor: '#00ff00',
+        gridColor: "#00ff00",
         gridStrokeWidth: 3,
         gridOpacity: 0.7,
         labelFontSize: 16,
-        labelColor: '#ff0000',
+        labelColor: "#ff0000",
         azimuthOffset: Math.PI / 6,
       });
       const cp = pp.copy() as PolarPlane;
@@ -818,7 +824,7 @@ describe('ComplexPlane with canvas mock', () => {
       expect(cp.getSize()).toBe(10);
     });
 
-    it('setIncludeAngleLabels should toggle labels with canvas mock', () => {
+    it("setIncludeAngleLabels should toggle labels with canvas mock", () => {
       const pp = new PolarPlane();
       const initialCount = pp.children.length;
       pp.setIncludeAngleLabels(false);
@@ -827,7 +833,7 @@ describe('ComplexPlane with canvas mock', () => {
       expect(pp.children.length).toBe(initialCount);
     });
 
-    it('setIncludeRadiusLabels should toggle labels with canvas mock', () => {
+    it("setIncludeRadiusLabels should toggle labels with canvas mock", () => {
       const pp = new PolarPlane();
       const initialCount = pp.children.length;
       pp.setIncludeRadiusLabels(false);
@@ -836,7 +842,7 @@ describe('ComplexPlane with canvas mock', () => {
       expect(pp.children.length).toBe(initialCount);
     });
 
-    it('_formatAngleLabel should handle common angles in 12-division grid', () => {
+    it("_formatAngleLabel should handle common angles in 12-division grid", () => {
       // A 12-division polar plane generates labels at 0, PI/6, PI/3, PI/2, 2PI/3,
       // 5PI/6, PI, 7PI/6, 4PI/3, 3PI/2, 5PI/3, 11PI/6
       const pp = new PolarPlane({ angularDivisions: 12 });
@@ -844,55 +850,64 @@ describe('ComplexPlane with canvas mock', () => {
       expect(pp.getAngleLabels().children.length).toBe(12);
     });
 
-    it('_formatAngleLabel fallback for unusual angle', () => {
+    it("_formatAngleLabel fallback for unusual angle", () => {
       // Use 7 divisions which produces angles not matching any standard fraction
       const pp = new PolarPlane({ angularDivisions: 7 });
       expect(pp.getAngleLabels().children.length).toBe(7);
     });
 
-    it('_formatAngleLabel covers PI/4 and 3PI/4 with 8 divisions', () => {
+    it("_formatAngleLabel covers PI/4 and 3PI/4 with 8 divisions", () => {
       const pp = new PolarPlane({ angularDivisions: 8 });
       // 8 divisions: 0, PI/4, PI/2, 3PI/4, PI, 5PI/4, 3PI/2, 7PI/4
       expect(pp.getAngleLabels().children.length).toBe(8);
     });
 
-    it('should handle non-integer radius for radius labels', () => {
+    it("should handle non-integer radius for radius labels", () => {
       const pp = new PolarPlane({ radius: 2.5, radialDivisions: 3 });
       expect(pp.getRadiusLabels().children.length).toBe(3);
     });
   });
 
-  describe('PolarPlane custom labels (issue #342)', () => {
-    it('uses custom angle label strings, rendered as Text in division order', () => {
+  describe("PolarPlane custom labels (issue #342)", () => {
+    it("uses custom angle label strings, rendered as Text in division order", () => {
       const pp = new PolarPlane({
         angularDivisions: 4,
         labelFontSize: 20,
-        angleLabels: ['E', 'N', 'W', 'S'],
+        angleLabels: ["E", "N", "W", "S"],
       });
       const labels = pp.getAngleLabels().children;
       expect(labels.length).toBe(4);
       // Verify the actual rendered text — would catch a regression that
       // fell back to default π-formatting.
-      expect(labels.map((m) => (m as Text).getText())).toEqual(['E', 'N', 'W', 'S']);
+      expect(labels.map((m) => (m as Text).getText())).toEqual([
+        "E",
+        "N",
+        "W",
+        "S",
+      ]);
       // Strings render via Text at full labelFontSize.
-      for (const m of labels) expect((m as Text & { _fontSize: number })._fontSize).toBe(20);
+      for (const m of labels) {
+        expect((m as Text & { _fontSize: number })._fontSize).toBe(20);
+      }
     });
 
-    it('uses custom radius label strings at labelFontSize * 0.8', () => {
+    it("uses custom radius label strings at labelFontSize * 0.8", () => {
       const pp = new PolarPlane({
         radialDivisions: 3,
         labelFontSize: 20,
-        radiusLabels: ['A', 'B', 'C'],
+        radiusLabels: ["A", "B", "C"],
       });
       const labels = pp.getRadiusLabels().children;
       expect(labels.length).toBe(3);
-      expect(labels.map((m) => (m as Text).getText())).toEqual(['A', 'B', 'C']);
+      expect(labels.map((m) => (m as Text).getText())).toEqual(["A", "B", "C"]);
       // Radius labels render slightly smaller than angle labels (preserves
       // the default-rendering size convention).
-      for (const m of labels) expect((m as Text & { _fontSize: number })._fontSize).toBe(20 * 0.8);
+      for (const m of labels) {
+        expect((m as Text & { _fontSize: number })._fontSize).toBe(20 * 0.8);
+      }
     });
 
-    it('preserves a non-Text Mobject override identity (no re-wrapping)', () => {
+    it("preserves a non-Text Mobject override identity (no re-wrapping)", () => {
       // Use a non-Text Mobject to confirm the resolver does not rewrap into Text.
       // Mobject is abstract — use a minimal concrete shim.
       class StubMobject extends Mobject {
@@ -905,12 +920,21 @@ describe('ComplexPlane with canvas mock', () => {
         override getCenter(): [number, number, number] {
           const obj = this.getThreeObject();
           obj.updateWorldMatrix(true, false);
-          const v = new THREE.Vector3(this.position.x, this.position.y, this.position.z);
+          const v = new THREE.Vector3(
+            this.position.x,
+            this.position.y,
+            this.position.z,
+          );
           v.applyMatrix4(obj.matrixWorld);
           return [v.x, v.y, v.z];
         }
       }
-      const stubs = [new StubMobject(), new StubMobject(), new StubMobject(), new StubMobject()];
+      const stubs = [
+        new StubMobject(),
+        new StubMobject(),
+        new StubMobject(),
+        new StubMobject(),
+      ];
       const pp = new PolarPlane({ angularDivisions: 4, angleLabels: stubs });
       const labels = pp.getAngleLabels().children;
       for (let i = 0; i < 4; i++) {
@@ -919,57 +943,61 @@ describe('ComplexPlane with canvas mock', () => {
       }
     });
 
-    it('accepts pre-built Mobject entries (used as-is, reparented)', () => {
-      const custom = new Text({ text: 'τ/4', fontSize: 30, color: '#ff00ff' });
+    it("accepts pre-built Mobject entries (used as-is, reparented)", () => {
+      const custom = new Text({ text: "τ/4", fontSize: 30, color: "#ff00ff" });
       const pp = new PolarPlane({
         angularDivisions: 4,
-        angleLabels: [custom, 'N', 'W', 'S'],
+        angleLabels: [custom, "N", "W", "S"],
       });
       expect(pp.getAngleLabels().children.length).toBe(4);
       // Custom mobject reparented into the angle-labels group at index 0.
       expect(pp.getAngleLabels().children[0]).toBe(custom);
     });
 
-    it('throws when angleLabels length mismatches angularDivisions', () => {
-      expect(() => new PolarPlane({ angularDivisions: 4, angleLabels: ['E', 'N', 'W'] })).toThrow(
+    it("throws when angleLabels length mismatches angularDivisions", () => {
+      expect(() =>
+        new PolarPlane({ angularDivisions: 4, angleLabels: ["E", "N", "W"] })
+      ).toThrow(
         /angleLabels length \(3\) must equal angularDivisions \(4\)/,
       );
     });
 
-    it('throws when radiusLabels length mismatches radialDivisions', () => {
-      expect(() => new PolarPlane({ radialDivisions: 3, radiusLabels: ['A', 'B'] })).toThrow(
+    it("throws when radiusLabels length mismatches radialDivisions", () => {
+      expect(() =>
+        new PolarPlane({ radialDivisions: 3, radiusLabels: ["A", "B"] })
+      ).toThrow(
         /radiusLabels length \(2\) must equal radialDivisions \(3\)/,
       );
     });
 
-    it('throws when the same Mobject instance appears in multiple slots', () => {
-      const shared = new Text({ text: 'X' });
+    it("throws when the same Mobject instance appears in multiple slots", () => {
+      const shared = new Text({ text: "X" });
       // Reusing the same instance would silently leave one slot empty after
       // Group.add() reparents — detect at construction instead.
       expect(
         () =>
           new PolarPlane({
             angularDivisions: 4,
-            angleLabels: [shared, 'N', shared, 'S'] as (string | Mobject)[],
+            angleLabels: [shared, "N", shared, "S"] as (string | Mobject)[],
           }),
       ).toThrow(/same Mobject instance more than once \(slot 2\)/);
     });
 
-    it('snapshots input arrays — post-construction mutation does not affect copy', () => {
-      const labels = ['E', 'N', 'W', 'S'];
+    it("snapshots input arrays — post-construction mutation does not affect copy", () => {
+      const labels = ["E", "N", "W", "S"];
       const pp = new PolarPlane({ angularDivisions: 4, angleLabels: labels });
-      labels[0] = 'MUTATED';
+      labels[0] = "MUTATED";
       const cp = pp.copy() as PolarPlane;
       // If snapshotting were broken, the copy's first slot would render 'MUTATED'.
-      expect((cp.getAngleLabels().children[0] as Text).getText()).toBe('E');
+      expect((cp.getAngleLabels().children[0] as Text).getText()).toBe("E");
     });
 
-    it('copy() produces independent custom-label mobjects', () => {
+    it("copy() produces independent custom-label mobjects", () => {
       const pp = new PolarPlane({
         angularDivisions: 4,
         radialDivisions: 2,
-        angleLabels: ['E', 'N', 'W', 'S'],
-        radiusLabels: ['A', 'B'],
+        angleLabels: ["E", "N", "W", "S"],
+        radiusLabels: ["A", "B"],
       });
       const cp = pp.copy() as PolarPlane;
 
@@ -980,18 +1008,22 @@ describe('ComplexPlane with canvas mock', () => {
 
       // Original and copy own distinct label mobject instances.
       for (let i = 0; i < 4; i++) {
-        expect(cp.getAngleLabels().children[i]).not.toBe(pp.getAngleLabels().children[i]);
+        expect(cp.getAngleLabels().children[i]).not.toBe(
+          pp.getAngleLabels().children[i],
+        );
       }
       for (let i = 0; i < 2; i++) {
-        expect(cp.getRadiusLabels().children[i]).not.toBe(pp.getRadiusLabels().children[i]);
+        expect(cp.getRadiusLabels().children[i]).not.toBe(
+          pp.getRadiusLabels().children[i],
+        );
       }
     });
 
-    it('copy() with Mobject overrides deep-copies the override entries', () => {
-      const custom = new Text({ text: 'τ/4', fontSize: 30 });
+    it("copy() with Mobject overrides deep-copies the override entries", () => {
+      const custom = new Text({ text: "τ/4", fontSize: 30 });
       const pp = new PolarPlane({
         angularDivisions: 4,
-        angleLabels: [custom, 'N', 'W', 'S'],
+        angleLabels: [custom, "N", "W", "S"],
       });
       const cp = pp.copy() as PolarPlane;
       // The copy must not share the same Mobject instance as the original.
@@ -999,11 +1031,11 @@ describe('ComplexPlane with canvas mock', () => {
       expect(pp.getAngleLabels().children[0]).toBe(custom);
     });
 
-    it('overrides respect azimuthOffset by placing index 0 at the offset angle', () => {
+    it("overrides respect azimuthOffset by placing index 0 at the offset angle", () => {
       const pp = new PolarPlane({
         angularDivisions: 4,
         azimuthOffset: Math.PI / 2,
-        angleLabels: ['N', 'W', 'S', 'E'],
+        angleLabels: ["N", "W", "S", "E"],
       });
       const first = pp.getAngleLabels().children[0];
       // With azimuthOffset = PI/2, index 0 is placed near +y (x ~ 0, y > 0).
@@ -1011,12 +1043,12 @@ describe('ComplexPlane with canvas mock', () => {
       expect(first.position.y).toBeGreaterThan(0);
     });
 
-    it('radius label positions track ((i+1)/radialDivisions) * radius along +x', () => {
+    it("radius label positions track ((i+1)/radialDivisions) * radius along +x", () => {
       const pp = new PolarPlane({
         radius: 3,
         size: 6, // scaleFactor = 6 / (2*3) = 1
         radialDivisions: 3,
-        radiusLabels: ['A', 'B', 'C'],
+        radiusLabels: ["A", "B", "C"],
       });
       const labels = pp.getRadiusLabels().children;
       // visualR_i = (i/3) * 3 * scaleFactor = i for i in {1,2,3}

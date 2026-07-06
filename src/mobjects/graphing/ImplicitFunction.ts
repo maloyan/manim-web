@@ -1,5 +1,5 @@
-import { VMobject } from '../../core/VMobject';
-import { Axes } from './Axes';
+import { VMobject } from "../../core/VMobject";
+import { Axes } from "./Axes";
 
 /**
  * Options for creating an ImplicitFunction
@@ -74,7 +74,7 @@ export class ImplicitFunction extends VMobject {
       yRange = [-5, 5],
       minDepth = 5,
       maxDepth = 9,
-      color = '#58c4dd',
+      color = "#58c4dd",
       strokeWidth = 2,
       axes,
     } = options;
@@ -108,7 +108,7 @@ export class ImplicitFunction extends VMobject {
 
       // Transform points if axes are provided
       const transformed = polyline.map((p) =>
-        this._axes ? this._axes.coordsToPoint(p[0], p[1]) : [p[0], p[1], 0],
+        this._axes ? this._axes.coordsToPoint(p[0], p[1]) : [p[0], p[1], 0]
       );
 
       const bezierPoints = this._pointsToBezier(transformed);
@@ -166,7 +166,15 @@ export class ImplicitFunction extends VMobject {
       for (let ix = 0; ix < baseRes; ix++) {
         const cellX = xMin + ix * baseDx;
         const cellY = yMin + iy * baseDy;
-        this._processCell(cellX, cellY, baseDx, baseDy, this._minDepth, evalFunc, segments);
+        this._processCell(
+          cellX,
+          cellY,
+          baseDx,
+          baseDy,
+          this._minDepth,
+          evalFunc,
+          segments,
+        );
       }
     }
 
@@ -209,11 +217,35 @@ export class ImplicitFunction extends VMobject {
       const halfDy = dy / 2;
       const nextDepth = depth + 1;
       // Bottom-left sub-cell
-      this._processCell(cellX, cellY, halfDx, halfDy, nextDepth, evalFunc, segments);
+      this._processCell(
+        cellX,
+        cellY,
+        halfDx,
+        halfDy,
+        nextDepth,
+        evalFunc,
+        segments,
+      );
       // Bottom-right sub-cell
-      this._processCell(cellX + halfDx, cellY, halfDx, halfDy, nextDepth, evalFunc, segments);
+      this._processCell(
+        cellX + halfDx,
+        cellY,
+        halfDx,
+        halfDy,
+        nextDepth,
+        evalFunc,
+        segments,
+      );
       // Top-left sub-cell
-      this._processCell(cellX, cellY + halfDy, halfDx, halfDy, nextDepth, evalFunc, segments);
+      this._processCell(
+        cellX,
+        cellY + halfDy,
+        halfDx,
+        halfDy,
+        nextDepth,
+        evalFunc,
+        segments,
+      );
       // Top-right sub-cell
       this._processCell(
         cellX + halfDx,
@@ -229,10 +261,38 @@ export class ImplicitFunction extends VMobject {
 
     // At maxDepth: emit segments for this leaf cell
     // Compute interpolated edge crossing points
-    const left = this._interpolateEdge(cellX, cellY + dy, vTL, cellX, cellY, vBL);
-    const right = this._interpolateEdge(cellX + dx, cellY + dy, vTR, cellX + dx, cellY, vBR);
-    const bottom = this._interpolateEdge(cellX, cellY, vBL, cellX + dx, cellY, vBR);
-    const top = this._interpolateEdge(cellX, cellY + dy, vTL, cellX + dx, cellY + dy, vTR);
+    const left = this._interpolateEdge(
+      cellX,
+      cellY + dy,
+      vTL,
+      cellX,
+      cellY,
+      vBL,
+    );
+    const right = this._interpolateEdge(
+      cellX + dx,
+      cellY + dy,
+      vTR,
+      cellX + dx,
+      cellY,
+      vBR,
+    );
+    const bottom = this._interpolateEdge(
+      cellX,
+      cellY,
+      vBL,
+      cellX + dx,
+      cellY,
+      vBR,
+    );
+    const top = this._interpolateEdge(
+      cellX,
+      cellY + dy,
+      vTL,
+      cellX + dx,
+      cellY + dy,
+      vTR,
+    );
 
     // Map case index to line segments
     switch (caseIndex) {
@@ -300,7 +360,7 @@ export class ImplicitFunction extends VMobject {
       case 14: // All positive except BL
         segments.push([left, bottom]);
         break;
-      // case 0 and 15 already skipped above
+        // case 0 and 15 already skipped above
     }
   }
 
@@ -336,7 +396,10 @@ export class ImplicitFunction extends VMobject {
     const [yMin, yMax] = this._yRange;
     // Use the finest grid level for epsilon so adaptive segments chain properly
     const finestRes = Math.pow(2, this._maxDepth);
-    const cellSize = Math.max((xMax - xMin) / finestRes, (yMax - yMin) / finestRes);
+    const cellSize = Math.max(
+      (xMax - xMin) / finestRes,
+      (yMax - yMin) / finestRes,
+    );
     const epsilon = cellSize * 0.1;
 
     // Build endpoint spatial index
@@ -347,7 +410,10 @@ export class ImplicitFunction extends VMobject {
       return `${qx},${qy}`;
     };
 
-    const endpointMap = new Map<string, Array<{ segIndex: number; endIndex: number }>>();
+    const endpointMap = new Map<
+      string,
+      Array<{ segIndex: number; endIndex: number }>
+    >();
     const used = new Array<boolean>(segments.length).fill(false);
 
     for (let i = 0; i < segments.length; i++) {
@@ -362,7 +428,9 @@ export class ImplicitFunction extends VMobject {
       }
     }
 
-    const findConnected = (point: number[]): { segIndex: number; endIndex: number } | null => {
+    const findConnected = (
+      point: number[],
+    ): { segIndex: number; endIndex: number } | null => {
       const key = quantize(point);
       const list = endpointMap.get(key);
       if (!list) return null;
@@ -456,8 +524,16 @@ export class ImplicitFunction extends VMobject {
 
       // Calculate control points
       const tension = 0.5;
-      const d1 = [(p2[0] - p0[0]) * tension, (p2[1] - p0[1]) * tension, (p2[2] - p0[2]) * tension];
-      const d2 = [(p3[0] - p1[0]) * tension, (p3[1] - p1[1]) * tension, (p3[2] - p1[2]) * tension];
+      const d1 = [
+        (p2[0] - p0[0]) * tension,
+        (p2[1] - p0[1]) * tension,
+        (p2[2] - p0[2]) * tension,
+      ];
+      const d2 = [
+        (p3[0] - p1[0]) * tension,
+        (p3[1] - p1[1]) * tension,
+        (p3[2] - p1[2]) * tension,
+      ];
 
       const cp1 = [p1[0] + d1[0] / 3, p1[1] + d1[1] / 3, p1[2] + d1[2] / 3];
       const cp2 = [p2[0] - d2[0] / 3, p2[1] - d2[1] / 3, p2[2] - d2[2] / 3];

@@ -1,12 +1,12 @@
-import { Scene, SceneOptions } from './Scene';
-import { Mobject, Vector3Tuple } from './Mobject';
-import { Group } from './Group';
-import { Line } from '../mobjects/geometry/Line';
-import { Arrow } from '../mobjects/geometry/Arrow';
+import { Scene, SceneOptions } from "./Scene";
+import { Mobject, Vector3Tuple } from "./Mobject";
+import { Group } from "./Group";
+import { Line } from "../mobjects/geometry/Line";
+import { Arrow } from "../mobjects/geometry/Arrow";
 import {
   coordsToPoint as coordsToPointHelper,
   pointToCoords as pointToCoordsHelper,
-} from '../utils/math';
+} from "../utils/math";
 
 /**
  * Options for configuring a VectorScene.
@@ -60,8 +60,8 @@ export class VectorScene extends Scene {
       yRange = [-3, 3, 1],
       xLength = 10,
       yLength = 6,
-      iColor = '#83C167', // GREEN
-      jColor = '#FC6255', // RED
+      iColor = "#83C167", // GREEN
+      jColor = "#FC6255", // RED
       showBasisVectors = false,
     } = options;
 
@@ -89,8 +89,8 @@ export class VectorScene extends Scene {
    */
   private _setupPlane(): void {
     const grid = new Group();
-    const gridColor = '#555555';
-    const axisColor = '#ffffff';
+    const gridColor = "#555555";
+    const axisColor = "#ffffff";
 
     // Background grid lines
     const [xMin, xMax, xStep] = this._xRange;
@@ -149,7 +149,14 @@ export class VectorScene extends Scene {
    * @returns The visual point [x, y, z]
    */
   coordsToPoint(x: number, y: number): Vector3Tuple {
-    return coordsToPointHelper(x, y, this._xRange, this._yRange, this._xLength, this._yLength);
+    return coordsToPointHelper(
+      x,
+      y,
+      this._xRange,
+      this._yRange,
+      this._xLength,
+      this._yLength,
+    );
   }
 
   /**
@@ -158,7 +165,13 @@ export class VectorScene extends Scene {
    * @returns Graph coordinates [x, y]
    */
   pointToCoords(point: Vector3Tuple): [number, number] {
-    return pointToCoordsHelper(point, this._xRange, this._yRange, this._xLength, this._yLength);
+    return pointToCoordsHelper(
+      point,
+      this._xRange,
+      this._yRange,
+      this._xLength,
+      this._yLength,
+    );
   }
 
   /**
@@ -182,7 +195,7 @@ export class VectorScene extends Scene {
       startPoint?: Vector3Tuple;
     } = {},
   ): Mobject {
-    const { color = '#58C4DD', name, startPoint } = options;
+    const { color = "#58C4DD", name, startPoint } = options;
 
     const vx = vector[0];
     const vy = vector[1];
@@ -192,10 +205,12 @@ export class VectorScene extends Scene {
     const start = startPoint ?? this.coordsToPoint(0, 0);
     const endCoords = startPoint
       ? [
-          startPoint[0] + (this._xLength * vx) / (this._xRange[1] - this._xRange[0]),
-          startPoint[1] + (this._yLength * vy) / (this._yRange[1] - this._yRange[0]),
-          vz,
-        ]
+        startPoint[0] +
+        (this._xLength * vx) / (this._xRange[1] - this._xRange[0]),
+        startPoint[1] +
+        (this._yLength * vy) / (this._yRange[1] - this._yRange[0]),
+        vz,
+      ]
       : this.coordsToPoint(vx, vy);
 
     const arrow = new Arrow({
@@ -230,8 +245,8 @@ export class VectorScene extends Scene {
   showBasisVectors(): this {
     if (this._basisVectorsShown) return this;
 
-    this.addVector([1, 0], { color: this._iColor, name: 'i' });
-    this.addVector([0, 1], { color: this._jColor, name: 'j' });
+    this.addVector([1, 0], { color: this._iColor, name: "i" });
+    this.addVector([0, 1], { color: this._jColor, name: "j" });
 
     this._basisVectorsShown = true;
     this.render();
@@ -243,16 +258,16 @@ export class VectorScene extends Scene {
    * @returns this for chaining
    */
   hideBasisVectors(): this {
-    const iVec = this._vectors.get('i');
-    const jVec = this._vectors.get('j');
+    const iVec = this._vectors.get("i");
+    const jVec = this._vectors.get("j");
 
     if (iVec) {
       this.remove(iVec);
-      this._vectors.delete('i');
+      this._vectors.delete("i");
     }
     if (jVec) {
       this.remove(jVec);
-      this._vectors.delete('j');
+      this._vectors.delete("j");
     }
 
     this._basisVectorsShown = false;

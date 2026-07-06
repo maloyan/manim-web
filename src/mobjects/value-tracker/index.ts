@@ -7,11 +7,11 @@
  */
 
 export {
-  ValueTracker,
-  valueTracker,
+  type Complex,
   ComplexValueTracker,
   complexValueTracker,
-  type ValueTrackerOptions,
   type ComplexValueTrackerOptions,
-  type Complex,
-} from './ValueTracker';
+  ValueTracker,
+  valueTracker,
+  type ValueTrackerOptions,
+} from "./ValueTracker";

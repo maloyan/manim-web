@@ -1,8 +1,8 @@
-import { VGroup } from '../../core/VGroup';
-import { VMobject } from '../../core/VMobject';
-import { Vector3Tuple } from '../../core/Mobject';
-import { WHITE, DEFAULT_STROKE_WIDTH } from '../../constants';
-import { segmentLength, segmentDirection, segmentAngle } from './segment';
+import { VGroup } from "../../core/VGroup";
+import { VMobject } from "../../core/VMobject";
+import { Vector3Tuple } from "../../core/Mobject";
+import { DEFAULT_STROKE_WIDTH, WHITE } from "../../constants";
+import { segmentAngle, segmentDirection, segmentLength } from "./segment";
 
 /**
  * Options for creating an Arrow
@@ -39,7 +39,13 @@ class ArrowShaft extends VMobject {
    * @pre startMargin >= 0 && endMargin >= 0
    * @pre startMargin + endMargin <= |delta|
    */
-  constructor(delta: number[], color: string, strokeWidth: number, startMargin = 0, endMargin = 0) {
+  constructor(
+    delta: number[],
+    color: string,
+    strokeWidth: number,
+    startMargin = 0,
+    endMargin = 0,
+  ) {
     super();
     this.color = color;
     this.strokeWidth = strokeWidth;
@@ -59,10 +65,14 @@ class ArrowShaft extends VMobject {
     }
 
     if (startMargin < 0 || endMargin < 0) {
-      throw new Error(`ArrowShaft margins must be >= 0, got (${startMargin}, ${endMargin})`);
+      throw new Error(
+        `ArrowShaft margins must be >= 0, got (${startMargin}, ${endMargin})`,
+      );
     }
     if (startMargin + endMargin > len + 1e-9) {
-      throw new Error(`ArrowShaft margins ${startMargin}+${endMargin} exceed length ${len}`);
+      throw new Error(
+        `ArrowShaft margins ${startMargin}+${endMargin} exceed length ${len}`,
+      );
     }
 
     const dirX = dx / len;
@@ -79,14 +89,21 @@ class ArrowShaft extends VMobject {
     this.setPoints3D([
       [sx, sy, sz],
       [sx + (ex - sx) / 3, sy + (ey - sy) / 3, sz + (ez - sz) / 3],
-      [sx + (2 * (ex - sx)) / 3, sy + (2 * (ey - sy)) / 3, sz + (2 * (ez - sz)) / 3],
+      [
+        sx + (2 * (ex - sx)) / 3,
+        sy + (2 * (ey - sy)) / 3,
+        sz + (2 * (ez - sz)) / 3,
+      ],
       [ex, ey, ez],
     ]);
   }
 
   override copy(): ArrowShaft {
     const copy = new ArrowShaft([1, 0, 0], this.color, this.strokeWidth);
-    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(copy, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return copy;
   }
 }
@@ -95,7 +112,12 @@ class ArrowShaft extends VMobject {
  * ArrowTip - The triangular tip of an arrow (internal use)
  */
 class ArrowTip extends VMobject {
-  constructor(delta: number[], tipLength: number, tipWidth: number, color: string) {
+  constructor(
+    delta: number[],
+    tipLength: number,
+    tipWidth: number,
+    color: string,
+  ) {
     super();
     this.color = color;
     this.fillOpacity = 1;
@@ -118,7 +140,11 @@ class ArrowTip extends VMobject {
     const dirZ = dz / len;
     const [perpX, perpY, perpZ] = perpendicularFromDirection(dirX, dirY, dirZ);
 
-    const baseCenter: Vector3Tuple = [-dirX * tipLength, -dirY * tipLength, -dirZ * tipLength];
+    const baseCenter: Vector3Tuple = [
+      -dirX * tipLength,
+      -dirY * tipLength,
+      -dirZ * tipLength,
+    ];
     const widthOffset = tipWidth;
     const tipPoint: Vector3Tuple = [0, 0, 0];
     const tipLeft: Vector3Tuple = [
@@ -132,14 +158,23 @@ class ArrowTip extends VMobject {
       baseCenter[2] - perpZ * widthOffset,
     ];
 
-    const addLineSegment = (points: number[][], p0: number[], p1: number[], isFirst: boolean) => {
+    const addLineSegment = (
+      points: number[][],
+      p0: number[],
+      p1: number[],
+      isFirst: boolean,
+    ) => {
       const sdx = p1[0] - p0[0];
       const sdy = p1[1] - p0[1];
       const sdz = p1[2] - p0[2];
 
       if (isFirst) points.push([...p0]);
       points.push([p0[0] + sdx / 3, p0[1] + sdy / 3, p0[2] + sdz / 3]);
-      points.push([p0[0] + (2 * sdx) / 3, p0[1] + (2 * sdy) / 3, p0[2] + (2 * sdz) / 3]);
+      points.push([
+        p0[0] + (2 * sdx) / 3,
+        p0[1] + (2 * sdy) / 3,
+        p0[2] + (2 * sdz) / 3,
+      ]);
       points.push([...p1]);
     };
 
@@ -152,7 +187,10 @@ class ArrowTip extends VMobject {
 
   override copy(): ArrowTip {
     const copy = new ArrowTip([1, 0, 0], 0.3, 0.1, this.color);
-    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(copy, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return copy;
   }
 
@@ -184,7 +222,11 @@ class ArrowTip extends VMobject {
   }
 }
 
-function perpendicularFromDirection(dirX: number, dirY: number, dirZ: number): Vector3Tuple {
+function perpendicularFromDirection(
+  dirX: number,
+  dirY: number,
+  dirZ: number,
+): Vector3Tuple {
   const ref: Vector3Tuple = Math.abs(dirZ) < 0.9 ? [0, 0, 1] : [1, 0, 0];
 
   // ref × dir
@@ -281,7 +323,11 @@ export class Arrow extends VGroup {
 
     const shaftLength = Math.max(0, length - this._tipLength);
     const inv = 1 / length;
-    return [dx * inv * shaftLength, dy * inv * shaftLength, dz * inv * shaftLength];
+    return [
+      dx * inv * shaftLength,
+      dy * inv * shaftLength,
+      dz * inv * shaftLength,
+    ];
   }
 
   /**
@@ -304,7 +350,12 @@ export class Arrow extends VGroup {
       // canonical children (shaft + tip), even for degenerate/zero-length input.
       // Graphing vectors rely on this path and call endpoint helpers on zero vectors.
       this._shaft = new ArrowShaft([0, 0, 0], this._color, this._strokeWidth);
-      this._tip = new ArrowTip([0, 0, 0], this._tipLength, this._tipWidth, this._color);
+      this._tip = new ArrowTip(
+        [0, 0, 0],
+        this._tipLength,
+        this._tipWidth,
+        this._color,
+      );
       this._tip.centerPointsAroundPosition();
       this.add(this._shaft);
       this.add(this._tip);
@@ -317,8 +368,19 @@ export class Arrow extends VGroup {
     // on getStart() — a symmetric shaftDelta-long line would instead sit
     // tipLength/2 forward, gapping at the start and poking into the tip.
     const endMargin = Math.min(this._tipLength, length);
-    this._shaft = new ArrowShaft(delta, this._color, this._strokeWidth, 0, endMargin);
-    this._tip = new ArrowTip(delta, this._tipLength, this._tipWidth, this._color);
+    this._shaft = new ArrowShaft(
+      delta,
+      this._color,
+      this._strokeWidth,
+      0,
+      endMargin,
+    );
+    this._tip = new ArrowTip(
+      delta,
+      this._tipLength,
+      this._tipWidth,
+      this._color,
+    );
     this._tip.centerPointsAroundPosition();
 
     this.add(this._shaft);
@@ -343,7 +405,11 @@ export class Arrow extends VGroup {
    * - Places tip carrier at midpoint + shaftDelta/2 (forward along direction).
    */
   putStartAndEndOn(start: Vector3Tuple, end: Vector3Tuple): this {
-    const delta: Vector3Tuple = [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
+    const delta: Vector3Tuple = [
+      end[0] - start[0],
+      end[1] - start[1],
+      end[2] - start[2],
+    ];
     this._generateParts(delta);
 
     // Endpoints are the source of truth; the shaft/tip layout below just renders them.
@@ -541,13 +607,22 @@ export class Arrow extends VGroup {
       shaftEnd[2] - perpZ * halfW,
     ];
 
-    const addSeg = (pts: number[][], p0: number[], p1: number[], first: boolean) => {
+    const addSeg = (
+      pts: number[][],
+      p0: number[],
+      p1: number[],
+      first: boolean,
+    ) => {
       const sdx = p1[0] - p0[0],
         sdy = p1[1] - p0[1],
         sdz = p1[2] - p0[2];
       if (first) pts.push([...p0]);
       pts.push([p0[0] + sdx / 3, p0[1] + sdy / 3, p0[2] + sdz / 3]);
-      pts.push([p0[0] + (2 * sdx) / 3, p0[1] + (2 * sdy) / 3, p0[2] + (2 * sdz) / 3]);
+      pts.push([
+        p0[0] + (2 * sdx) / 3,
+        p0[1] + (2 * sdy) / 3,
+        p0[2] + (2 * sdz) / 3,
+      ]);
       pts.push([...p1]);
     };
     const newPts: number[][] = [];
@@ -592,7 +667,10 @@ export class Arrow extends VGroup {
     clone._start = [...this._start];
     clone._end = [...this._end];
 
-    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(clone, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return clone;
   }
 }
@@ -645,11 +723,25 @@ export class DoubleArrow extends VGroup {
     const dirZ = dz / length;
 
     const shaftLength = length - 2 * this._tipLength;
-    const shaftDelta: Vector3Tuple = [dirX * shaftLength, dirY * shaftLength, dirZ * shaftLength];
+    const shaftDelta: Vector3Tuple = [
+      dirX * shaftLength,
+      dirY * shaftLength,
+      dirZ * shaftLength,
+    ];
 
     const shaft = new ArrowShaft(shaftDelta, this._color, this._strokeWidth);
-    const endTip = new ArrowTip(delta, this._tipLength, this._tipWidth, this._color);
-    const startTip = new ArrowTip([-dx, -dy, -dz], this._tipLength, this._tipWidth, this._color);
+    const endTip = new ArrowTip(
+      delta,
+      this._tipLength,
+      this._tipWidth,
+      this._color,
+    );
+    const startTip = new ArrowTip(
+      [-dx, -dy, -dz],
+      this._tipLength,
+      this._tipWidth,
+      this._color,
+    );
 
     this.add(shaft);
     this.add(endTip);
@@ -665,14 +757,20 @@ export class DoubleArrow extends VGroup {
   }
 
   putStartAndEndOn(start: Vector3Tuple, end: Vector3Tuple): this {
-    const delta: Vector3Tuple = [end[0] - start[0], end[1] - start[1], end[2] - start[2]];
+    const delta: Vector3Tuple = [
+      end[0] - start[0],
+      end[1] - start[1],
+      end[2] - start[2],
+    ];
     this._generateParts(delta);
 
     // Endpoints are the source of truth; the shaft/tip layout below just renders them.
     this._start = [...start];
     this._end = [...end];
 
-    const length = Math.sqrt(delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2]);
+    const length = Math.sqrt(
+      delta[0] * delta[0] + delta[1] * delta[1] + delta[2] * delta[2],
+    );
     if (length === 0) return this;
 
     const dirX = delta[0] / length;
@@ -782,7 +880,9 @@ export class DoubleArrow extends VGroup {
  * Vector - An Arrow starting from the origin by default
  */
 export class Vector extends Arrow {
-  constructor(options: Omit<ArrowOptions, 'start'> & { direction?: Vector3Tuple } = {}) {
+  constructor(
+    options: Omit<ArrowOptions, "start"> & { direction?: Vector3Tuple } = {},
+  ) {
     const { direction, end, ...rest } = options;
     super({
       ...rest,

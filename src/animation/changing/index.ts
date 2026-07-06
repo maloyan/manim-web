@@ -5,9 +5,9 @@
  * AnimatedBoundary - Creates a "marching ants" animated boundary effect
  */
 
-import { Mobject, UpdaterFunction } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
-import { BLUE, YELLOW, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { Mobject, UpdaterFunction } from "../../core/Mobject";
+import { VMobject } from "../../core/VMobject";
+import { BLUE, DEFAULT_STROKE_WIDTH, YELLOW } from "../../constants";
 
 /**
  * Options for TracedPath
@@ -246,7 +246,10 @@ export class TracedPath extends VMobject {
     });
     this._copyBaseAttributesInto(copy);
     // Copy current path data
-    copy._pathData = this._pathData.map((d) => ({ point: [...d.point], time: d.time }));
+    copy._pathData = this._pathData.map((d) => ({
+      point: [...d.point],
+      time: d.time,
+    }));
     copy._elapsedTime = this._elapsedTime;
     copy._lastPosition = this._lastPosition ? [...this._lastPosition] : null;
     return copy;
@@ -256,7 +259,10 @@ export class TracedPath extends VMobject {
 /**
  * Factory function to create a TracedPath
  */
-export function tracedPath(trackedMobject: Mobject, options?: TracedPathOptions): TracedPath {
+export function tracedPath(
+  trackedMobject: Mobject,
+  options?: TracedPathOptions,
+): TracedPath {
   return new TracedPath(trackedMobject, options);
 }
 
@@ -431,7 +437,9 @@ export class AnimatedBoundary extends VMobject {
       );
 
       // Handle wrap-around: if the dash crosses a corner, simplify to a straight line segment
-      if (Math.abs((endDistance % perimeter) - startDistance) > dashLength * 1.5) {
+      if (
+        Math.abs((endDistance % perimeter) - startDistance) > dashLength * 1.5
+      ) {
         // Dash wraps around perimeter, just draw to the corner
         const cornerDistance = this._nearestCornerDistance(
           startDistance % perimeter,
@@ -530,7 +538,11 @@ export class AnimatedBoundary extends VMobject {
 
     // Control points at 1/3 and 2/3 along the line
     const h1 = [start[0] + dx / 3, start[1] + dy / 3, start[2] + dz / 3];
-    const h2 = [start[0] + (2 * dx) / 3, start[1] + (2 * dy) / 3, start[2] + (2 * dz) / 3];
+    const h2 = [
+      start[0] + (2 * dx) / 3,
+      start[1] + (2 * dy) / 3,
+      start[2] + (2 * dz) / 3,
+    ];
 
     dash.setPoints3D([[...start], h1, h2, [...end]]);
   }

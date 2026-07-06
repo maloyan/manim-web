@@ -2,17 +2,20 @@
  * Factory functions for creating common graph types
  */
 
-import { Vector3Tuple } from '../../core/Mobject';
-import { VertexId, EdgeTuple, GenericGraphOptions } from './graphTypes';
-import { Graph } from './Graph';
-import { DiGraph } from './DiGraph';
+import { Vector3Tuple } from "../../core/Mobject";
+import { EdgeTuple, GenericGraphOptions, VertexId } from "./graphTypes";
+import { Graph } from "./Graph";
+import { DiGraph } from "./DiGraph";
 
 /**
  * Create a complete graph (all vertices connected)
  * @param n - Number of vertices
  * @returns A complete Graph with n vertices
  */
-export function completeGraph(n: number, options: Partial<GenericGraphOptions> = {}): Graph {
+export function completeGraph(
+  n: number,
+  options: Partial<GenericGraphOptions> = {},
+): Graph {
   const vertices: VertexId[] = Array.from({ length: n }, (_, i) => i);
   const edges: EdgeTuple[] = [];
 
@@ -25,7 +28,7 @@ export function completeGraph(n: number, options: Partial<GenericGraphOptions> =
   return new Graph({
     vertices,
     edges,
-    layout: 'circular',
+    layout: "circular",
     ...options,
   });
 }
@@ -35,14 +38,17 @@ export function completeGraph(n: number, options: Partial<GenericGraphOptions> =
  * @param n - Number of vertices
  * @returns A cycle Graph with n vertices
  */
-export function cycleGraph(n: number, options: Partial<GenericGraphOptions> = {}): Graph {
+export function cycleGraph(
+  n: number,
+  options: Partial<GenericGraphOptions> = {},
+): Graph {
   const vertices: VertexId[] = Array.from({ length: n }, (_, i) => i);
   const edges: EdgeTuple[] = vertices.map((v, i) => [v, vertices[(i + 1) % n]]);
 
   return new Graph({
     vertices,
     edges,
-    layout: 'circular',
+    layout: "circular",
     ...options,
   });
 }
@@ -52,7 +58,10 @@ export function cycleGraph(n: number, options: Partial<GenericGraphOptions> = {}
  * @param n - Number of vertices
  * @returns A path Graph with n vertices
  */
-export function pathGraph(n: number, options: Partial<GenericGraphOptions> = {}): Graph {
+export function pathGraph(
+  n: number,
+  options: Partial<GenericGraphOptions> = {},
+): Graph {
   const vertices: VertexId[] = Array.from({ length: n }, (_, i) => i);
   const edges: EdgeTuple[] = [];
 
@@ -64,9 +73,12 @@ export function pathGraph(n: number, options: Partial<GenericGraphOptions> = {})
     vertices,
     edges,
     layout: {
-      type: 'custom',
+      type: "custom",
       positions: new Map(
-        vertices.map((v, i) => [v, [(i - (n - 1) / 2) * 0.8, 0, 0] as Vector3Tuple]),
+        vertices.map((
+          v,
+          i,
+        ) => [v, [(i - (n - 1) / 2) * 0.8, 0, 0] as Vector3Tuple]),
       ),
     },
     ...options,
@@ -78,15 +90,21 @@ export function pathGraph(n: number, options: Partial<GenericGraphOptions> = {})
  * @param n - Number of outer vertices (total vertices = n + 1)
  * @returns A star Graph
  */
-export function starGraph(n: number, options: Partial<GenericGraphOptions> = {}): Graph {
+export function starGraph(
+  n: number,
+  options: Partial<GenericGraphOptions> = {},
+): Graph {
   const center: VertexId = 0;
-  const vertices: VertexId[] = [center, ...Array.from({ length: n }, (_, i) => i + 1)];
+  const vertices: VertexId[] = [
+    center,
+    ...Array.from({ length: n }, (_, i) => i + 1),
+  ];
   const edges: EdgeTuple[] = vertices.slice(1).map((v) => [center, v]);
 
   return new Graph({
     vertices,
     edges,
-    layout: 'shell',
+    layout: "shell",
     ...options,
   });
 }
@@ -96,7 +114,10 @@ export function starGraph(n: number, options: Partial<GenericGraphOptions> = {})
  * @param depth - Depth of the tree
  * @returns A binary tree DiGraph
  */
-export function binaryTree(depth: number, options: Partial<GenericGraphOptions> = {}): DiGraph {
+export function binaryTree(
+  depth: number,
+  options: Partial<GenericGraphOptions> = {},
+): DiGraph {
   const vertices: VertexId[] = [];
   const edges: EdgeTuple[] = [];
 
@@ -121,7 +142,7 @@ export function binaryTree(depth: number, options: Partial<GenericGraphOptions> 
   return new DiGraph({
     vertices,
     edges,
-    layout: { type: 'tree', root: 0 },
+    layout: { type: "tree", root: 0 },
     ...options,
   });
 }
@@ -145,7 +166,11 @@ export function gridGraph(
     for (let c = 0; c < cols; c++) {
       const v = `${r},${c}`;
       vertices.push(v);
-      positions.set(v, [(c - (cols - 1) / 2) * 0.8, ((rows - 1) / 2 - r) * 0.8, 0]);
+      positions.set(v, [
+        (c - (cols - 1) / 2) * 0.8,
+        ((rows - 1) / 2 - r) * 0.8,
+        0,
+      ]);
 
       // Horizontal edge
       if (c < cols - 1) {
@@ -161,7 +186,7 @@ export function gridGraph(
   return new Graph({
     vertices,
     edges,
-    layout: { type: 'custom', positions },
+    layout: { type: "custom", positions },
     ...options,
   });
 }
@@ -196,7 +221,7 @@ export function bipartiteGraph(
   return new Graph({
     vertices,
     edges: graphEdges,
-    layout: { type: 'bipartite', partition: [left, right] },
+    layout: { type: "bipartite", partition: [left, right] },
     ...options,
   });
 }

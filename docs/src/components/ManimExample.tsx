@@ -1,5 +1,5 @@
-import React, { useRef, useState, useEffect } from 'react';
-import BrowserOnly from '@docusaurus/BrowserOnly';
+import React, { useEffect, useRef, useState } from "react";
+import BrowserOnly from "@docusaurus/BrowserOnly";
 
 type AnimationFn = (scene: any) => Promise<void>;
 type SceneFactory = (
@@ -17,10 +17,10 @@ interface ManimExampleProps {
 const ASPECT_RATIO = 800 / 450; // ~16:9
 
 const placeholderStyle: React.CSSProperties = {
-  width: '100%',
+  width: "100%",
   maxWidth: 800,
   aspectRatio: `${ASPECT_RATIO}`,
-  background: '#000000',
+  background: "#000000",
   borderRadius: 12,
 };
 
@@ -65,10 +65,9 @@ function releaseQueue(flag: { released: boolean }): void {
 function forceContextLoss(canvas: HTMLCanvasElement | null): void {
   if (!canvas) return;
   try {
-    const gl =
-      (canvas.getContext('webgl2') as WebGL2RenderingContext | null) ||
-      (canvas.getContext('webgl') as WebGLRenderingContext | null);
-    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    const gl = (canvas.getContext("webgl2") as WebGL2RenderingContext | null) ||
+      (canvas.getContext("webgl") as WebGLRenderingContext | null);
+    gl?.getExtension("WEBGL_lose_context")?.loseContext();
   } catch {
     /* ignore — context may already be lost */
   }
@@ -97,9 +96,12 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
       setIsVisible(true);
     }
 
-    const observer = new IntersectionObserver(([entry]) => setIsVisible(entry.isIntersecting), {
-      threshold: [0, 0.1],
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      {
+        threshold: [0, 0.1],
+      },
+    );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
@@ -126,7 +128,7 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
       }
 
       try {
-        const manim = await import('manim-web');
+        const manim = await import("manim-web");
         if (cancelled) {
           releaseQueue(queueFlag);
           return;
@@ -140,13 +142,15 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
         const scene = createScene
           ? await createScene(container, manim, { width, height })
           : new manim.Scene(container, {
-              width,
-              height,
-              backgroundColor: '#000000',
-            });
+            width,
+            height,
+            backgroundColor: "#000000",
+          });
 
         if (cancelled) {
-          const c = container.querySelector('canvas') as HTMLCanvasElement | null;
+          const c = container.querySelector("canvas") as
+            | HTMLCanvasElement
+            | null;
           forceContextLoss(c);
           try {
             scene.dispose();
@@ -163,18 +167,20 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
         // scenes can start initializing while this one animates.
         releaseQueue(queueFlag);
 
-        const canvas = container.querySelector('canvas') as HTMLCanvasElement | null;
+        const canvas = container.querySelector("canvas") as
+          | HTMLCanvasElement
+          | null;
         const onContextLost = () => {
           if (!cancelled) setIsVisible(false);
         };
-        canvas?.addEventListener('webglcontextlost', onContextLost);
+        canvas?.addEventListener("webglcontextlost", onContextLost);
 
         // Animation loop: run animation, hold, clear, repeat
         while (!cancelled) {
           try {
             await animationFn(scene);
           } catch (e) {
-            console.error('Animation error:', e);
+            console.error("Animation error:", e);
           }
 
           // Re-enable auto-render and force a render so static scenes
@@ -212,7 +218,7 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
           }
         }
 
-        canvas?.removeEventListener('webglcontextlost', onContextLost);
+        canvas?.removeEventListener("webglcontextlost", onContextLost);
 
         forceContextLoss(canvas);
         try {
@@ -222,7 +228,7 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
         }
         sceneRef.current = null;
       } catch (e) {
-        console.error('Scene init error:', e);
+        console.error("Scene init error:", e);
       }
 
       releaseQueue(queueFlag);
@@ -231,7 +237,9 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
     return () => {
       cancelled = true;
       if (sceneRef.current) {
-        const c = containerRef.current?.querySelector('canvas') as HTMLCanvasElement | null;
+        const c = containerRef.current?.querySelector("canvas") as
+          | HTMLCanvasElement
+          | null;
         forceContextLoss(c);
         try {
           sceneRef.current.dispose();
@@ -240,7 +248,7 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
         }
         sceneRef.current = null;
       }
-      container.innerHTML = '';
+      container.innerHTML = "";
       if (queueFlagRef.current) {
         releaseQueue(queueFlagRef.current);
         queueFlagRef.current = null;
@@ -252,13 +260,13 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
     <div
       ref={containerRef}
       style={{
-        width: '100%',
+        width: "100%",
         maxWidth: 800,
         aspectRatio: `${ASPECT_RATIO}`,
-        background: '#000000',
+        background: "#000000",
         borderRadius: 12,
-        overflow: 'hidden',
-        position: 'relative',
+        overflow: "hidden",
+        position: "relative",
       }}
     />
   );

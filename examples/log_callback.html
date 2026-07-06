@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Log Callback (onLog)</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - Log Callback (onLog)</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #1a1a2e;
       display: flex;
@@ -28,8 +32,15 @@
       flex-direction: column;
       gap: 10px;
     }
-    h1 { font-size: 16px; font-weight: 600; }
-    p { font-size: 12px; color: #aaa; line-height: 1.5; }
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+    }
+    p {
+      font-size: 12px;
+      color: #aaa;
+      line-height: 1.5;
+    }
     #log {
       flex: 1;
       min-height: 360px;
@@ -42,11 +53,22 @@
       overflow-y: auto;
       white-space: pre-wrap;
     }
-    .entry { padding: 2px 0; border-bottom: 1px solid #222; }
-    .debug { color: #6c7a89; }
-    .info  { color: #4aa3df; }
-    .warn  { color: #f5c542; }
-    .error { color: #e94560; }
+    .entry {
+      padding: 2px 0;
+      border-bottom: 1px solid #222;
+    }
+    .debug {
+      color: #6c7a89;
+    }
+    .info {
+      color: #4aa3df;
+    }
+    .warn {
+      color: #f5c542;
+    }
+    .error {
+      color: #e94560;
+    }
     button {
       padding: 10px 16px;
       background: #e94560;
@@ -56,25 +78,27 @@
       cursor: pointer;
       font-size: 13px;
     }
-    button:hover { background: #ff6b6b; }
-  </style>
-</head>
-<body>
-  <div id="container"></div>
+    button:hover {
+      background: #ff6b6b;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
 
-  <div id="panel">
-    <h1>onLog() — log message callback</h1>
-    <p>
+    <div id="panel">
+      <h1>onLog() — log message callback</h1>
+      <p>
       Every <code>logger</code> call is forwarded to listeners registered with
       <code>onLog()</code>. Entries are sanitized and JSON-serializable, so they
       can be POSTed to a server — handy for AI agents that need to read errors.
     </p>
-    <button id="runBtn">Run animation &amp; emit logs</button>
-    <div id="log"></div>
-  </div>
+      <button id="runBtn">Run animation &amp; emit logs</button>
+      <div id="log"></div>
+    </div>
 
-  <script type="module">
-    import { Scene, Circle, Create, logger, onLog } from '../src/index.ts';
+    <script type="module">
+    import { Circle, Create, logger, onLog, Scene } from '../src/index.ts';
 
     const container = document.getElementById('container');
     const logEl = document.getElementById('log');
@@ -116,6 +140,6 @@
       logger.warn('animation finished, scene still has', 1, 'mobject');
       logger.error(new Error('example error so agents can see stack capture'));
     });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

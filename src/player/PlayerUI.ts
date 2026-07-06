@@ -3,19 +3,19 @@
  * Pure DOM/CSS, positioned absolutely over the canvas container.
  */
 
-import type { MasterTimeline } from '../animation/MasterTimeline';
+import type { MasterTimeline } from "../animation/MasterTimeline";
 import {
-  Play,
-  Pause,
-  RotateCcw,
   ChevronLeft,
   ChevronRight,
   Download,
-  Presentation,
-  Maximize,
   LucideIcon,
-} from 'lucide';
-import { createElement } from 'lucide';
+  Maximize,
+  Pause,
+  Play,
+  Presentation,
+  RotateCcw,
+} from "lucide";
+import { createElement } from "lucide";
 
 export interface PlayerUICallbacks {
   onPlayPause: () => void;
@@ -66,23 +66,27 @@ export class PlayerUI {
   private _onProgressMove: (e: MouseEvent) => void;
   private _onProgressUp: () => void;
 
-  constructor(container: HTMLElement, callbacks: PlayerUICallbacks, options: PlayerUIOptions = {}) {
+  constructor(
+    container: HTMLElement,
+    callbacks: PlayerUICallbacks,
+    options: PlayerUIOptions = {},
+  ) {
     this._container = container;
     this._callbacks = callbacks;
     this._autoHideMs = options.autoHideMs ?? 2500;
 
     // Ensure container has relative positioning for absolute overlay
     const pos = getComputedStyle(container).position;
-    if (pos === 'static') {
-      container.style.position = 'relative';
+    if (pos === "static") {
+      container.style.position = "relative";
     }
-    container.style.overflow = 'hidden';
+    container.style.overflow = "hidden";
 
     // Build the UI
     this._bar = this._createBar();
     this._playBtn = this._createPlayBtn();
-    this._prevBtn = this._createNavBtn('prev');
-    this._nextBtn = this._createNavBtn('next');
+    this._prevBtn = this._createNavBtn("prev");
+    this._nextBtn = this._createNavBtn("next");
     const progressResult = this._createProgressBar();
     this._progressWrap = progressResult.wrap;
     this._progressFill = progressResult.fill;
@@ -94,19 +98,19 @@ export class PlayerUI {
     this._exportBtn = this._createExportBtn();
 
     // Assemble
-    const leftGroup = el('div', {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '4px',
+    const leftGroup = el("div", {
+      display: "flex",
+      alignItems: "center",
+      gap: "4px",
     });
     leftGroup.appendChild(this._prevBtn);
     leftGroup.appendChild(this._playBtn);
     leftGroup.appendChild(this._nextBtn);
 
-    const rightGroup = el('div', {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
+    const rightGroup = el("div", {
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
     });
     rightGroup.appendChild(this._timeDisplay);
     rightGroup.appendChild(this._speedSelect);
@@ -119,11 +123,11 @@ export class PlayerUI {
     this._bar.appendChild(this._progressWrap);
 
     // Bottom row: controls
-    const controlsRow = el('div', {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '4px 12px 8px',
+    const controlsRow = el("div", {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "4px 12px 8px",
     });
     controlsRow.appendChild(leftGroup);
     controlsRow.appendChild(rightGroup);
@@ -135,13 +139,13 @@ export class PlayerUI {
     this._onMouseMove = () => this._showControls();
     this._onMouseLeave = () => this._scheduleHide();
 
-    container.addEventListener('mousemove', this._onMouseMove);
-    container.addEventListener('mouseleave', this._onMouseLeave);
+    container.addEventListener("mousemove", this._onMouseMove);
+    container.addEventListener("mouseleave", this._onMouseLeave);
 
     // Click on canvas area to toggle play/pause (skip if clicking controls)
-    container.addEventListener('click', (e) => {
+    container.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      if (target.closest('[data-player-bar]')) return;
+      if (target.closest("[data-player-bar]")) return;
       this._callbacks.onPlayPause();
     });
 
@@ -150,9 +154,9 @@ export class PlayerUI {
     this._onProgressMove = (e) => this._moveDrag(e);
     this._onProgressUp = () => this._endDrag();
 
-    this._progressWrap.addEventListener('mousedown', this._onProgressDown);
-    document.addEventListener('mousemove', this._onProgressMove);
-    document.addEventListener('mouseup', this._onProgressUp);
+    this._progressWrap.addEventListener("mousedown", this._onProgressDown);
+    document.addEventListener("mousemove", this._onProgressMove);
+    document.addEventListener("mouseup", this._onProgressUp);
   }
 
   // ---------------------------------------------------------------------------
@@ -172,10 +176,10 @@ export class PlayerUI {
     this._isPlaying = playing;
     if (finished) {
       this._playBtn.innerHTML = this._createIconSVG(RotateCcw, 18);
-      this._playBtn.title = 'Replay (Space)';
+      this._playBtn.title = "Replay (Space)";
     } else {
       this._playBtn.innerHTML = this._createIconSVG(playing ? Pause : Play, 18); // Lucide icon
-      this._playBtn.title = playing ? 'Pause (Space)' : 'Play (Space)';
+      this._playBtn.title = playing ? "Pause (Space)" : "Play (Space)";
     }
     if (playing) {
       this._scheduleHide();
@@ -184,13 +188,15 @@ export class PlayerUI {
 
   setSlidesMode(enabled: boolean): void {
     this._slidesActive = enabled;
-    this._slidesBtn.style.opacity = enabled ? '1' : '0.4';
-    this._slidesBtn.style.background = enabled ? 'rgba(74,158,255,0.25)' : 'none';
-    this._slidesBtn.title = `Slides mode ${enabled ? 'on' : 'off'} (S)`;
+    this._slidesBtn.style.opacity = enabled ? "1" : "0.4";
+    this._slidesBtn.style.background = enabled
+      ? "rgba(74,158,255,0.25)"
+      : "none";
+    this._slidesBtn.title = `Slides mode ${enabled ? "on" : "off"} (S)`;
   }
 
   setSegments(timeline: MasterTimeline): void {
-    this._segmentMarkers.innerHTML = '';
+    this._segmentMarkers.innerHTML = "";
     // Draw markers at slide boundaries — those are the units that prev/next
     // navigation operates on.
     const slides = timeline.getSlides();
@@ -200,16 +206,16 @@ export class PlayerUI {
     for (const seg of slides) {
       if (seg.index === 0) continue; // no marker at 0
       const pct = (seg.startTime / duration) * 100;
-      const marker = el('div', {
-        position: 'absolute',
+      const marker = el("div", {
+        position: "absolute",
         left: `${pct}%`,
-        top: '50%',
-        width: '4px',
-        height: '4px',
-        borderRadius: '50%',
-        background: 'rgba(255,255,255,0.45)',
-        pointerEvents: 'none',
-        transform: 'translate(-2px, -2px)',
+        top: "50%",
+        width: "4px",
+        height: "4px",
+        borderRadius: "50%",
+        background: "rgba(255,255,255,0.45)",
+        pointerEvents: "none",
+        transform: "translate(-2px, -2px)",
       });
       this._segmentMarkers.appendChild(marker);
     }
@@ -224,115 +230,116 @@ export class PlayerUI {
     const svg = createElement(iconComponent, {
       size: size,
       strokeWidth: 2,
-      color: 'currentColor',
-      'aria-hidden': 'true',
+      color: "currentColor",
+      "aria-hidden": "true",
     });
     return svg.outerHTML;
   }
 
   private _createBar(): HTMLElement {
-    const bar = el('div', {
-      position: 'absolute',
-      bottom: '0',
-      left: '0',
-      right: '0',
-      background: 'linear-gradient(transparent, rgba(0,0,0,0.85))',
-      color: '#fff',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      fontSize: '13px',
-      zIndex: '1000',
-      transition: 'opacity 0.3s ease, transform 0.3s ease',
-      userSelect: 'none',
-      cursor: 'default',
+    const bar = el("div", {
+      position: "absolute",
+      bottom: "0",
+      left: "0",
+      right: "0",
+      background: "linear-gradient(transparent, rgba(0,0,0,0.85))",
+      color: "#fff",
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: "13px",
+      zIndex: "1000",
+      transition: "opacity 0.3s ease, transform 0.3s ease",
+      userSelect: "none",
+      cursor: "default",
     });
-    bar.setAttribute('data-player-bar', '');
+    bar.setAttribute("data-player-bar", "");
     return bar;
   }
 
   private _createPlayBtn(): HTMLButtonElement {
-    const btn = document.createElement('button');
+    const btn = document.createElement("button");
     btn.innerHTML = this._createIconSVG(Play, 18);
-    btn.title = 'Play (Space)';
-    applyBtnStyle(btn, '36px', '36px');
-    btn.addEventListener('click', () => this._callbacks.onPlayPause());
+    btn.title = "Play (Space)";
+    applyBtnStyle(btn, "36px", "36px");
+    btn.addEventListener("click", () => this._callbacks.onPlayPause());
     return btn;
   }
 
-  private _createNavBtn(dir: 'prev' | 'next'): HTMLButtonElement {
-    const btn = document.createElement('button');
-    const Icon = dir === 'prev' ? ChevronLeft : ChevronRight; // Lucide icon
+  private _createNavBtn(dir: "prev" | "next"): HTMLButtonElement {
+    const btn = document.createElement("button");
+    const Icon = dir === "prev" ? ChevronLeft : ChevronRight; // Lucide icon
     btn.innerHTML = this._createIconSVG(Icon, 16);
-    btn.title = dir === 'prev' ? 'Previous (Left arrow)' : 'Next (Right arrow)';
-    applyBtnStyle(btn, '28px', '28px');
-    btn.addEventListener('click', () => {
-      if (dir === 'prev') this._callbacks.onPrev();
+    btn.title = dir === "prev" ? "Previous (Left arrow)" : "Next (Right arrow)";
+    applyBtnStyle(btn, "28px", "28px");
+    btn.addEventListener("click", () => {
+      if (dir === "prev") this._callbacks.onPrev();
       else this._callbacks.onNext();
     });
     return btn;
   }
 
   private _createProgressBar() {
-    const wrap = el('div', {
-      position: 'relative',
-      height: '16px',
-      padding: '6px 12px',
-      cursor: 'pointer',
+    const wrap = el("div", {
+      position: "relative",
+      height: "16px",
+      padding: "6px 12px",
+      cursor: "pointer",
     });
 
-    const track = el('div', {
-      position: 'absolute',
-      left: '12px',
-      right: '12px',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      height: '4px',
-      background: 'rgba(255,255,255,0.2)',
-      borderRadius: '2px',
-      overflow: 'visible',
+    const track = el("div", {
+      position: "absolute",
+      left: "12px",
+      right: "12px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      height: "4px",
+      background: "rgba(255,255,255,0.2)",
+      borderRadius: "2px",
+      overflow: "visible",
     });
 
-    const fill = el('div', {
-      width: '0%',
-      height: '100%',
-      background: '#4a9eff',
-      borderRadius: '2px',
-      transition: 'none',
-      position: 'relative',
+    const fill = el("div", {
+      width: "0%",
+      height: "100%",
+      background: "#4a9eff",
+      borderRadius: "2px",
+      transition: "none",
+      position: "relative",
     });
 
     // Playhead dot
-    const dot = el('div', {
-      position: 'absolute',
-      right: '-5px',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      width: '10px',
-      height: '10px',
-      borderRadius: '50%',
-      background: '#4a9eff',
-      boxShadow: '0 0 4px rgba(74,158,255,0.5)',
-      transition: 'transform 0.1s',
+    const dot = el("div", {
+      position: "absolute",
+      right: "-5px",
+      top: "50%",
+      transform: "translateY(-50%)",
+      width: "10px",
+      height: "10px",
+      borderRadius: "50%",
+      background: "#4a9eff",
+      boxShadow: "0 0 4px rgba(74,158,255,0.5)",
+      transition: "transform 0.1s",
     });
     fill.appendChild(dot);
 
-    const hover = el('div', {
-      width: '0%',
-      height: '100%',
-      background: 'rgba(255,255,255,0.1)',
-      borderRadius: '2px',
-      position: 'absolute',
-      top: '0',
-      left: '0',
-      pointerEvents: 'none',
+    const hover = el("div", {
+      width: "0%",
+      height: "100%",
+      background: "rgba(255,255,255,0.1)",
+      borderRadius: "2px",
+      position: "absolute",
+      top: "0",
+      left: "0",
+      pointerEvents: "none",
     });
 
-    const markers = el('div', {
-      position: 'absolute',
-      top: '0',
-      left: '0',
-      width: '100%',
-      height: '100%',
-      pointerEvents: 'none',
+    const markers = el("div", {
+      position: "absolute",
+      top: "0",
+      left: "0",
+      width: "100%",
+      height: "100%",
+      pointerEvents: "none",
     });
 
     track.appendChild(hover);
@@ -341,82 +348,88 @@ export class PlayerUI {
     wrap.appendChild(track);
 
     // Hover preview
-    wrap.addEventListener('mousemove', (e) => {
+    wrap.addEventListener("mousemove", (e) => {
       const rect = track.getBoundingClientRect();
       const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
       hover.style.width = `${x * 100}%`;
     });
-    wrap.addEventListener('mouseleave', () => {
-      hover.style.width = '0%';
+    wrap.addEventListener("mouseleave", () => {
+      hover.style.width = "0%";
     });
 
     // Expand on hover
-    wrap.addEventListener('mouseenter', () => {
-      track.style.height = '6px';
-      dot.style.transform = 'translateY(-50%) scale(1.3)';
+    wrap.addEventListener("mouseenter", () => {
+      track.style.height = "6px";
+      dot.style.transform = "translateY(-50%) scale(1.3)";
     });
-    wrap.addEventListener('mouseleave', () => {
-      track.style.height = '4px';
-      dot.style.transform = 'translateY(-50%) scale(1)';
+    wrap.addEventListener("mouseleave", () => {
+      track.style.height = "4px";
+      dot.style.transform = "translateY(-50%) scale(1)";
     });
 
     return { wrap, fill, hover, markers };
   }
 
   private _createTimeDisplay(): HTMLElement {
-    const d = el('span', {
+    const d = el("span", {
       fontFamily: '"SF Mono", Monaco, Consolas, monospace',
-      fontSize: '12px',
-      opacity: '0.8',
-      whiteSpace: 'nowrap',
-      minWidth: '90px',
-      textAlign: 'center',
+      fontSize: "12px",
+      opacity: "0.8",
+      whiteSpace: "nowrap",
+      minWidth: "90px",
+      textAlign: "center",
     });
-    d.textContent = '0:00 / 0:00';
+    d.textContent = "0:00 / 0:00";
     return d;
   }
 
   private _createSpeedSelect(): HTMLSelectElement {
-    const select = document.createElement('select');
-    select.title = 'Playback speed';
-    Object.assign(select.style, {
-      background: 'rgba(255,255,255,0.1)',
-      color: '#fff',
-      border: '1px solid rgba(255,255,255,0.2)',
-      borderRadius: '4px',
-      padding: '2px 6px',
-      fontSize: '12px',
-      fontFamily: 'inherit',
-      cursor: 'pointer',
-      outline: 'none',
-      appearance: 'none',
-      webkitAppearance: 'none',
-    } satisfies Partial<CSSStyleDeclaration>);
+    const select = document.createElement("select");
+    select.title = "Playback speed";
+    Object.assign(
+      select.style,
+      {
+        background: "rgba(255,255,255,0.1)",
+        color: "#fff",
+        border: "1px solid rgba(255,255,255,0.2)",
+        borderRadius: "4px",
+        padding: "2px 6px",
+        fontSize: "12px",
+        fontFamily: "inherit",
+        cursor: "pointer",
+        outline: "none",
+        appearance: "none",
+        webkitAppearance: "none",
+      } satisfies Partial<CSSStyleDeclaration>,
+    );
 
     for (const rate of [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]) {
-      const opt = document.createElement('option');
+      const opt = document.createElement("option");
       opt.value = String(rate);
       opt.textContent = `${rate}x`;
-      opt.style.background = '#222';
-      opt.style.color = '#fff';
+      opt.style.background = "#222";
+      opt.style.color = "#fff";
       if (rate === 1) opt.selected = true;
       select.appendChild(opt);
     }
 
-    select.addEventListener('change', () => {
+    select.addEventListener("change", () => {
       this._callbacks.onSpeedChange(parseFloat(select.value));
     });
     return select;
   }
 
   private _createExportBtn(): HTMLButtonElement {
-    const wrapper = el('div', { position: 'relative', display: 'inline-block' });
-    const btn = document.createElement('button');
+    const wrapper = el("div", {
+      position: "relative",
+      display: "inline-block",
+    });
+    const btn = document.createElement("button");
     btn.innerHTML = this._createIconSVG(Download, 16);
-    btn.title = 'Export animation';
-    applyBtnStyle(btn, '28px', '28px');
+    btn.title = "Export animation";
+    applyBtnStyle(btn, "28px", "28px");
 
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener("click", (e) => {
       e.stopPropagation();
       if (this._exportMenu) {
         this._closeExportMenu();
@@ -434,62 +447,64 @@ export class PlayerUI {
     const btnRect = this._exportBtn.getBoundingClientRect();
 
     // Invisible backdrop that catches all clicks outside the menu
-    const backdrop = el('div', {
-      position: 'fixed',
-      top: '0',
-      left: '0',
-      width: '100vw',
-      height: '100vh',
-      zIndex: '9999',
+    const backdrop = el("div", {
+      position: "fixed",
+      top: "0",
+      left: "0",
+      width: "100vw",
+      height: "100vh",
+      zIndex: "9999",
     });
-    backdrop.setAttribute('data-player-bar', '');
-    backdrop.addEventListener('mousedown', (e) => {
+    backdrop.setAttribute("data-player-bar", "");
+    backdrop.addEventListener("mousedown", (e) => {
       e.stopPropagation();
       e.preventDefault();
       this._closeExportMenu();
     });
 
-    const menu = el('div', {
-      position: 'fixed',
+    const menu = el("div", {
+      position: "fixed",
       bottom: `${window.innerHeight - btnRect.top + 6}px`,
       left: `${btnRect.left - 60}px`,
-      background: 'rgba(30,30,30,0.95)',
-      border: '1px solid rgba(255,255,255,0.15)',
-      borderRadius: '6px',
-      padding: '4px 0',
-      minWidth: '140px',
-      boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
-      zIndex: '10000',
-      color: '#fff',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      fontSize: '13px',
+      background: "rgba(30,30,30,0.95)",
+      border: "1px solid rgba(255,255,255,0.15)",
+      borderRadius: "6px",
+      padding: "4px 0",
+      minWidth: "140px",
+      boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+      zIndex: "10000",
+      color: "#fff",
+      fontFamily:
+        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+      fontSize: "13px",
     });
-    menu.setAttribute('data-player-bar', '');
+    menu.setAttribute("data-player-bar", "");
 
     const formats = [
-      { ext: 'gif', label: 'GIF', desc: 'Animated image' },
-      { ext: 'webm', label: 'WebM', desc: 'Web video' },
-      { ext: 'mp4', label: 'MP4', desc: 'Video file' },
+      { ext: "gif", label: "GIF", desc: "Animated image" },
+      { ext: "webm", label: "WebM", desc: "Web video" },
+      { ext: "mp4", label: "MP4", desc: "Video file" },
     ];
 
     for (const f of formats) {
-      const item = el('div', {
-        padding: '8px 14px',
-        cursor: 'pointer',
-        fontSize: '13px',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        transition: 'background 0.1s',
+      const item = el("div", {
+        padding: "8px 14px",
+        cursor: "pointer",
+        fontSize: "13px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        transition: "background 0.1s",
       });
-      item.innerHTML = `<span>${f.label}</span><span style="opacity:0.5;font-size:11px">${f.desc}</span>`;
-      item.addEventListener('mouseenter', () => {
-        item.style.background = 'rgba(255,255,255,0.1)';
+      item.innerHTML =
+        `<span>${f.label}</span><span style="opacity:0.5;font-size:11px">${f.desc}</span>`;
+      item.addEventListener("mouseenter", () => {
+        item.style.background = "rgba(255,255,255,0.1)";
       });
-      item.addEventListener('mouseleave', () => {
-        item.style.background = 'none';
+      item.addEventListener("mouseleave", () => {
+        item.style.background = "none";
       });
-      item.addEventListener('click', (e) => {
+      item.addEventListener("click", (e) => {
         e.stopPropagation();
         this._closeExportMenu();
         this._callbacks.onExport(f.ext);
@@ -517,44 +532,47 @@ export class PlayerUI {
     if (progress === null) {
       this._exportBtn.innerHTML = this._createIconSVG(Download, 16); // Lucide icon
       this._exportBtn.disabled = false;
-      this._exportBtn.title = 'Export animation';
+      this._exportBtn.title = "Export animation";
     } else {
       const pct = Math.round(progress * 100);
-      this._exportBtn.innerHTML = `<span style="font-size:10px;font-weight:600">${pct}%</span>`;
+      this._exportBtn.innerHTML =
+        `<span style="font-size:10px;font-weight:600">${pct}%</span>`;
       this._exportBtn.disabled = true;
       this._exportBtn.title = `Exporting... ${pct}%`;
     }
   }
 
   private _createSlidesBtn(): HTMLButtonElement {
-    const btn = document.createElement('button');
+    const btn = document.createElement("button");
     btn.innerHTML = this._createIconSVG(Presentation, 16); // Lucide icon
-    btn.title = 'Slides mode off (S)';
-    applyBtnStyle(btn, '28px', '28px');
-    btn.style.opacity = '0.4';
-    btn.addEventListener('click', () => {
+    btn.title = "Slides mode off (S)";
+    applyBtnStyle(btn, "28px", "28px");
+    btn.style.opacity = "0.4";
+    btn.addEventListener("click", () => {
       this._slidesActive = !this._slidesActive;
       this.setSlidesMode(this._slidesActive);
       this._callbacks.onSlidesToggle(this._slidesActive);
     });
     // Override the default hover to preserve active background
-    btn.addEventListener('mouseenter', () => {
+    btn.addEventListener("mouseenter", () => {
       btn.style.background = this._slidesActive
-        ? 'rgba(74,158,255,0.35)'
-        : 'rgba(255,255,255,0.15)';
+        ? "rgba(74,158,255,0.35)"
+        : "rgba(255,255,255,0.15)";
     });
-    btn.addEventListener('mouseleave', () => {
-      btn.style.background = this._slidesActive ? 'rgba(74,158,255,0.25)' : 'none';
+    btn.addEventListener("mouseleave", () => {
+      btn.style.background = this._slidesActive
+        ? "rgba(74,158,255,0.25)"
+        : "none";
     });
     return btn;
   }
 
   private _createFullscreenBtn(): HTMLButtonElement {
-    const btn = document.createElement('button');
+    const btn = document.createElement("button");
     btn.innerHTML = this._createIconSVG(Maximize, 16); // Lucide icon
-    btn.title = 'Fullscreen (F)';
-    applyBtnStyle(btn, '28px', '28px');
-    btn.addEventListener('click', () => this._callbacks.onFullscreen());
+    btn.title = "Fullscreen (F)";
+    applyBtnStyle(btn, "28px", "28px");
+    btn.addEventListener("click", () => this._callbacks.onFullscreen());
     return btn;
   }
 
@@ -564,8 +582,8 @@ export class PlayerUI {
 
   private _showControls(): void {
     if (!this._isVisible) {
-      this._bar.style.opacity = '1';
-      this._bar.style.transform = 'translateY(0)';
+      this._bar.style.opacity = "1";
+      this._bar.style.transform = "translateY(0)";
       this._isVisible = true;
     }
     this._scheduleHide();
@@ -577,8 +595,8 @@ export class PlayerUI {
 
     this._hideTimeout = setTimeout(() => {
       if (this._isPlaying && !this._isDragging) {
-        this._bar.style.opacity = '0';
-        this._bar.style.transform = 'translateY(8px)';
+        this._bar.style.opacity = "0";
+        this._bar.style.transform = "translateY(8px)";
         this._isVisible = false;
       }
     }, this._autoHideMs);
@@ -619,11 +637,14 @@ export class PlayerUI {
 
   enableScrollScrub(getTime: () => number): void {
     this._progressWrap.addEventListener(
-      'wheel',
+      "wheel",
       (e) => {
         e.preventDefault();
         const delta = e.deltaY > 0 ? 0.1 : -0.1; // 100ms per scroll tick
-        const newTime = Math.max(0, Math.min(this._duration, getTime() + delta));
+        const newTime = Math.max(
+          0,
+          Math.min(this._duration, getTime() + delta),
+        );
         this._callbacks.onSeek(newTime);
       },
       { passive: false },
@@ -632,24 +653,24 @@ export class PlayerUI {
 
   /** Show a temporary error message overlay on the player. */
   showError(message: string): void {
-    const overlay = document.createElement('div');
+    const overlay = document.createElement("div");
     overlay.textContent = message;
     overlay.style.cssText = [
-      'position:absolute',
-      'top:50%',
-      'left:50%',
-      'transform:translate(-50%,-50%)',
-      'background:rgba(200,30,30,0.85)',
-      'color:#fff',
-      'padding:12px 24px',
-      'border-radius:8px',
-      'font:14px/1.4 sans-serif',
-      'z-index:1000',
-      'pointer-events:none',
-      'white-space:pre-wrap',
-      'max-width:80%',
-      'text-align:center',
-    ].join(';');
+      "position:absolute",
+      "top:50%",
+      "left:50%",
+      "transform:translate(-50%,-50%)",
+      "background:rgba(200,30,30,0.85)",
+      "color:#fff",
+      "padding:12px 24px",
+      "border-radius:8px",
+      "font:14px/1.4 sans-serif",
+      "z-index:1000",
+      "pointer-events:none",
+      "white-space:pre-wrap",
+      "max-width:80%",
+      "text-align:center",
+    ].join(";");
     this._container.appendChild(overlay);
     setTimeout(() => overlay.remove(), 4000);
   }
@@ -660,11 +681,11 @@ export class PlayerUI {
 
   dispose(): void {
     if (this._hideTimeout) clearTimeout(this._hideTimeout);
-    this._container.removeEventListener('mousemove', this._onMouseMove);
-    this._container.removeEventListener('mouseleave', this._onMouseLeave);
-    this._progressWrap.removeEventListener('mousedown', this._onProgressDown);
-    document.removeEventListener('mousemove', this._onProgressMove);
-    document.removeEventListener('mouseup', this._onProgressUp);
+    this._container.removeEventListener("mousemove", this._onMouseMove);
+    this._container.removeEventListener("mouseleave", this._onMouseLeave);
+    this._progressWrap.removeEventListener("mousedown", this._onProgressDown);
+    document.removeEventListener("mousemove", this._onProgressMove);
+    document.removeEventListener("mouseup", this._onProgressUp);
     this._bar.remove();
   }
 }
@@ -680,31 +701,34 @@ function el(tag: string, styles: Partial<CSSStyleDeclaration>): HTMLElement {
 }
 
 function applyBtnStyle(btn: HTMLButtonElement, w: string, h: string): void {
-  Object.assign(btn.style, {
-    width: w,
-    height: h,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'none',
-    border: 'none',
-    color: '#fff',
-    cursor: 'pointer',
-    padding: '0',
-    borderRadius: '4px',
-    outline: 'none',
-    transition: 'background 0.15s',
-  } satisfies Partial<CSSStyleDeclaration>);
-  btn.addEventListener('mouseenter', () => {
-    btn.style.background = 'rgba(255,255,255,0.15)';
+  Object.assign(
+    btn.style,
+    {
+      width: w,
+      height: h,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "none",
+      border: "none",
+      color: "#fff",
+      cursor: "pointer",
+      padding: "0",
+      borderRadius: "4px",
+      outline: "none",
+      transition: "background 0.15s",
+    } satisfies Partial<CSSStyleDeclaration>,
+  );
+  btn.addEventListener("mouseenter", () => {
+    btn.style.background = "rgba(255,255,255,0.15)";
   });
-  btn.addEventListener('mouseleave', () => {
-    btn.style.background = 'none';
+  btn.addEventListener("mouseleave", () => {
+    btn.style.background = "none";
   });
 }
 
 function fmt(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60);
-  return `${m}:${String(s).padStart(2, '0')}`;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }

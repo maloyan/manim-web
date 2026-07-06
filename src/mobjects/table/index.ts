@@ -7,14 +7,14 @@
 
 // Table - Base table class and specialized variants
 export {
-  Table,
-  MathTable,
-  MobjectTable,
-  IntegerTable,
   DecimalTable,
-  type TableOptions,
-  type MathTableOptions,
-  type MobjectTableOptions,
-  type IntegerTableOptions,
   type DecimalTableOptions,
-} from './Table';
+  IntegerTable,
+  type IntegerTableOptions,
+  MathTable,
+  type MathTableOptions,
+  MobjectTable,
+  type MobjectTableOptions,
+  Table,
+  type TableOptions,
+} from "./Table";

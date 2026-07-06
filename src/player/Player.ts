@@ -22,12 +22,12 @@
  * ```
  */
 
-import { Scene, SceneOptions } from '../core/Scene';
-import { MasterTimeline } from '../animation/MasterTimeline';
-import { PlayerUI } from './PlayerUI';
-import { PlayerController } from './PlayerController';
-import { RecordingScene } from './RecordingScene';
-import { logger } from '../utils/logger';
+import { Scene, SceneOptions } from "../core/Scene";
+import { MasterTimeline } from "../animation/MasterTimeline";
+import { PlayerUI } from "./PlayerUI";
+import { PlayerController } from "./PlayerController";
+import { RecordingScene } from "./RecordingScene";
+import { logger } from "../utils/logger";
 
 export interface PlayerOptions extends SceneOptions {
   /** Auto-hide controls after this many ms. 0 = never. Default 2500. */
@@ -128,7 +128,7 @@ export class Player {
       }
       this._scene.render();
     };
-    document.addEventListener('fullscreenchange', this._onFullscreenChange);
+    document.addEventListener("fullscreenchange", this._onFullscreenChange);
   }
 
   // ---------------------------------------------------------------------------
@@ -139,7 +139,9 @@ export class Player {
    * Define the animation sequence. The callback receives a recording proxy
    * that captures all play()/wait() calls to build the master timeline.
    */
-  async sequence(builder: (scene: RecordingScene) => Promise<void>): Promise<void> {
+  async sequence(
+    builder: (scene: RecordingScene) => Promise<void>,
+  ): Promise<void> {
     // Reset
     this._masterTimeline = new MasterTimeline();
     this._activeLoopSlideIndex = null;
@@ -228,8 +230,8 @@ export class Player {
     if (this._slidesMode && this._slidesTargetSlideIndex >= 0) {
       const slides = this._masterTimeline.getSlides();
       const targetSlide = slides[this._slidesTargetSlideIndex];
-      const insideTarget =
-        !!targetSlide && time >= targetSlide.startTime && time < targetSlide.endTime;
+      const insideTarget = !!targetSlide && time >= targetSlide.startTime &&
+        time < targetSlide.endTime;
       if (!insideTarget) {
         this._activeLoopSlideIndex = null;
         this._slidesTargetSlideIndex = -1;
@@ -240,7 +242,10 @@ export class Player {
     }
     this._masterTimeline.seek(time);
     this._scene.render();
-    this._ui.updateTime(this._masterTimeline.getCurrentTime(), this._masterTimeline.getDuration());
+    this._ui.updateTime(
+      this._masterTimeline.getCurrentTime(),
+      this._masterTimeline.getDuration(),
+    );
   }
 
   /**
@@ -364,10 +369,15 @@ export class Player {
     if (!current) return;
     const elapsed = this._masterTimeline.getCurrentTime() - current.startTime;
     // Well into the current slide → restart it; otherwise step to previous.
-    const target = elapsed > 0.5 ? current : (slides[current.index - 1] ?? current);
+    const target = elapsed > 0.5
+      ? current
+      : (slides[current.index - 1] ?? current);
     this._masterTimeline.seek(target.startTime);
     this._scene.render();
-    this._ui.updateTime(this._masterTimeline.getCurrentTime(), this._masterTimeline.getDuration());
+    this._ui.updateTime(
+      this._masterTimeline.getCurrentTime(),
+      this._masterTimeline.getDuration(),
+    );
   }
 
   /** Set the playback speed multiplier. */
@@ -402,8 +412,12 @@ export class Player {
         onProgress: (p) => this._ui.setExportProgress(p),
       });
     } catch (err) {
-      logger.error('Export failed:', err);
-      this._ui.showError(`Export failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      logger.error("Export failed:", err);
+      this._ui.showError(
+        `Export failed: ${
+          err instanceof Error ? err.message : "Unknown error"
+        }`,
+      );
     } finally {
       this._ui.setExportProgress(null);
       // Restore playback position (export seeks through the entire timeline)
@@ -435,7 +449,7 @@ export class Player {
   /** Clean up all resources. */
   dispose(): void {
     this._stopLoop();
-    document.removeEventListener('fullscreenchange', this._onFullscreenChange);
+    document.removeEventListener("fullscreenchange", this._onFullscreenChange);
     this._ui.dispose();
     this._controller.dispose();
     this._scene.dispose();
@@ -490,7 +504,9 @@ export class Player {
           // than silently letting playback drift past every slide boundary.
           this._slidesTargetSlideIndex = -1;
           this._activeLoopSlideIndex = null;
-        } else if (this._masterTimeline.getCurrentTime() >= targetSlide.endTime) {
+        } else if (
+          this._masterTimeline.getCurrentTime() >= targetSlide.endTime
+        ) {
           if (targetSlide.loop) {
             // Rewind and keep playing. play() is required because Timeline.update
             // self-pauses when currentTime crosses the timeline duration (i.e.

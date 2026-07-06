@@ -1,6 +1,6 @@
-import { Scene, MathTex, Transform, BLACK, WHITE } from '../src/index.ts';
+import { BLACK, MathTex, Scene, Transform, WHITE } from "../src/index.ts";
 
-const container = document.getElementById('container');
+const container = document.getElementById("container");
 const scene = new Scene(container, {
   width: 1400,
   height: 720,
@@ -30,7 +30,9 @@ async function numberMorphDemo(scene: Scene) {
   }
 
   await Promise.all(
-    pairs.flatMap(({ start, target }) => [start.waitForRender(), target.waitForRender()]),
+    pairs.flatMap((
+      { start, target },
+    ) => [start.waitForRender(), target.waitForRender()]),
   );
 
   const cols = 3;
@@ -40,7 +42,11 @@ async function numberMorphDemo(scene: Scene) {
   pairs.forEach(({ start, target }, i) => {
     const row = Math.floor(i / cols);
     const col = i % cols;
-    const pos: [number, number, number] = [xStart + col * spacing, yStart - row * spacing, 0];
+    const pos: [number, number, number] = [
+      xStart + col * spacing,
+      yStart - row * spacing,
+      0,
+    ];
     start.moveTo(pos);
     target.moveTo(pos);
     scene.add(start);
@@ -53,11 +59,13 @@ async function numberMorphDemo(scene: Scene) {
 
 let isAnimating = false;
 
-document.getElementById('playBtn')?.addEventListener('click', async () => {
+document.getElementById("playBtn")?.addEventListener("click", async () => {
   if (isAnimating) return;
   isAnimating = true;
 
-  const playBtn = document.getElementById('playBtn') as HTMLButtonElement | null;
+  const playBtn = document.getElementById("playBtn") as
+    | HTMLButtonElement
+    | null;
   if (playBtn) playBtn.disabled = true;
 
   scene.clear();
@@ -67,21 +75,23 @@ document.getElementById('playBtn')?.addEventListener('click', async () => {
   if (playBtn) playBtn.disabled = false;
 });
 
-document.getElementById('resetBtn')?.addEventListener('click', () => {
+document.getElementById("resetBtn")?.addEventListener("click", () => {
   scene.clear();
 });
 
 // Embed mode: hide controls, auto-play, loop
-if (new URLSearchParams(window.location.search).has('embed')) {
+if (new URLSearchParams(window.location.search).has("embed")) {
   document
-    .querySelectorAll('.controls, .buttons, h1, #status')
-    .forEach((el) => ((el as HTMLElement).style.display = 'none'));
+    .querySelectorAll(".controls, .buttons, h1, #status")
+    .forEach((el) => ((el as HTMLElement).style.display = "none"));
 
-  const playBtn = document.getElementById('playBtn') as HTMLButtonElement | null;
+  const playBtn = document.getElementById("playBtn") as
+    | HTMLButtonElement
+    | null;
   if (playBtn) {
     setTimeout(() => playBtn.click(), 500);
     new MutationObserver(() => {
       if (!playBtn.disabled) setTimeout(() => playBtn.click(), 1500);
-    }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
+    }).observe(playBtn, { attributes: true, attributeFilter: ["disabled"] });
   }
 }

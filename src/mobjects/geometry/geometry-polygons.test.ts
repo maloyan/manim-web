@@ -1,14 +1,26 @@
-import { describe, it, expect } from 'vitest';
-import { Polygon, Triangle, RegularPolygon, Hexagon, Pentagon } from './Polygon';
-import { RoundedRectangle, Star, RegularPolygram, Cutout, ConvexHull } from './PolygonExtensions';
-import { Circle } from './Circle';
-import { BLUE } from '../../constants';
+import { describe, expect, it } from "vitest";
+import {
+  Hexagon,
+  Pentagon,
+  Polygon,
+  RegularPolygon,
+  Triangle,
+} from "./Polygon";
+import {
+  ConvexHull,
+  Cutout,
+  RegularPolygram,
+  RoundedRectangle,
+  Star,
+} from "./PolygonExtensions";
+import { Circle } from "./Circle";
+import { BLUE } from "../../constants";
 
 // ---------------------------------------------------------------------------
 // Polygon
 // ---------------------------------------------------------------------------
-describe('Polygon', () => {
-  it('constructs a triangle', () => {
+describe("Polygon", () => {
+  it("constructs a triangle", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -20,11 +32,11 @@ describe('Polygon', () => {
     expect(p.isClosed()).toBe(true);
   });
 
-  it('throws with fewer than 2 vertices', () => {
+  it("throws with fewer than 2 vertices", () => {
     expect(() => new Polygon({ vertices: [[0, 0, 0]] })).toThrow();
   });
 
-  it('getVertices returns defensive copies', () => {
+  it("getVertices returns defensive copies", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -37,7 +49,7 @@ describe('Polygon', () => {
     expect(p.getVertices()[0][0]).toBe(0);
   });
 
-  it('getVertex / setVertex work correctly', () => {
+  it("getVertex / setVertex work correctly", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -50,7 +62,7 @@ describe('Polygon', () => {
     expect(p.getVertex(1)).toEqual([2, 0, 0]);
   });
 
-  it('getVertex throws on out-of-bounds index', () => {
+  it("getVertex throws on out-of-bounds index", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -62,7 +74,7 @@ describe('Polygon', () => {
     expect(() => p.getVertex(-1)).toThrow();
   });
 
-  it('getCentroid returns average of vertices', () => {
+  it("getCentroid returns average of vertices", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -75,7 +87,7 @@ describe('Polygon', () => {
     expect(c[1]).toBeCloseTo(1, 10);
   });
 
-  it('getArea for a unit square = 1', () => {
+  it("getArea for a unit square = 1", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -87,7 +99,7 @@ describe('Polygon', () => {
     expect(p.getArea()).toBeCloseTo(1, 10);
   });
 
-  it('getSignedArea is positive for CCW vertices', () => {
+  it("getSignedArea is positive for CCW vertices", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -99,7 +111,7 @@ describe('Polygon', () => {
     expect(p.getSignedArea()).toBeCloseTo(1, 10);
   });
 
-  it('getSignedArea is negative for CW vertices', () => {
+  it("getSignedArea is negative for CW vertices", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -111,7 +123,7 @@ describe('Polygon', () => {
     expect(p.getSignedArea()).toBeCloseTo(-1, 10);
   });
 
-  it('getSignedArea returns 0 for open polygon', () => {
+  it("getSignedArea returns 0 for open polygon", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -123,7 +135,7 @@ describe('Polygon', () => {
     expect(p.getSignedArea()).toBe(0);
   });
 
-  it('getPerimeter for a unit square = 4', () => {
+  it("getPerimeter for a unit square = 4", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -135,7 +147,7 @@ describe('Polygon', () => {
     expect(p.getPerimeter()).toBeCloseTo(4, 10);
   });
 
-  it('getPerimeter for open path is shorter (no closing edge)', () => {
+  it("getPerimeter for open path is shorter (no closing edge)", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -148,7 +160,7 @@ describe('Polygon', () => {
     expect(p.getPerimeter()).toBeCloseTo(3, 10);
   });
 
-  it('setClosed toggles closure', () => {
+  it("setClosed toggles closure", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -161,7 +173,7 @@ describe('Polygon', () => {
     expect(p.isClosed()).toBe(false);
   });
 
-  it('setVertices replaces all vertices', () => {
+  it("setVertices replaces all vertices", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -178,7 +190,7 @@ describe('Polygon', () => {
     expect(p.getVertexCount()).toBe(4);
   });
 
-  it('setVertices throws with fewer than 2', () => {
+  it("setVertices throws with fewer than 2", () => {
     const p = new Polygon({
       vertices: [
         [0, 0, 0],
@@ -192,22 +204,23 @@ describe('Polygon', () => {
 // ---------------------------------------------------------------------------
 // Triangle
 // ---------------------------------------------------------------------------
-describe('Triangle', () => {
-  it('constructs with default equilateral vertices', () => {
+describe("Triangle", () => {
+  it("constructs with default equilateral vertices", () => {
     const t = new Triangle();
     expect(t.getVertexCount()).toBe(3);
     expect(t.isClosed()).toBe(true);
   });
 
-  it('is a Polygon', () => {
+  it("is a Polygon", () => {
     expect(new Triangle()).toBeInstanceOf(Polygon);
   });
 
-  it('default triangle is roughly equilateral', () => {
+  it("default triangle is roughly equilateral", () => {
     const t = new Triangle();
     const verts = t.getVertices();
     // All side lengths should be approximately equal
-    const dist = (a: number[], b: number[]) => Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2);
+    const dist = (a: number[], b: number[]) =>
+      Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2);
     const s1 = dist(verts[0], verts[1]);
     const s2 = dist(verts[1], verts[2]);
     const s3 = dist(verts[2], verts[0]);
@@ -219,32 +232,32 @@ describe('Triangle', () => {
 // ---------------------------------------------------------------------------
 // RegularPolygon
 // ---------------------------------------------------------------------------
-describe('RegularPolygon', () => {
-  it('constructs with default 6 sides', () => {
+describe("RegularPolygon", () => {
+  it("constructs with default 6 sides", () => {
     const rp = new RegularPolygon();
     expect(rp.getNumSides()).toBe(6);
     expect(rp.getPolygonRadius()).toBe(1);
     expect(rp.getVertexCount()).toBe(6);
   });
 
-  it('constructs with custom numSides and radius', () => {
+  it("constructs with custom numSides and radius", () => {
     const rp = new RegularPolygon({ numSides: 8, radius: 2 });
     expect(rp.getNumSides()).toBe(8);
     expect(rp.getPolygonRadius()).toBe(2);
     expect(rp.getVertexCount()).toBe(8);
   });
 
-  it('getSideLength = 2*r*sin(PI/n)', () => {
+  it("getSideLength = 2*r*sin(PI/n)", () => {
     const rp = new RegularPolygon({ numSides: 4, radius: 1 });
     expect(rp.getSideLength()).toBeCloseTo(2 * Math.sin(Math.PI / 4), 10);
   });
 
-  it('getApothem = r*cos(PI/n)', () => {
+  it("getApothem = r*cos(PI/n)", () => {
     const rp = new RegularPolygon({ numSides: 6, radius: 2 });
     expect(rp.getApothem()).toBeCloseTo(2 * Math.cos(Math.PI / 6), 10);
   });
 
-  it('vertices lie on the circle of given radius', () => {
+  it("vertices lie on the circle of given radius", () => {
     const rp = new RegularPolygon({ numSides: 5, radius: 3 });
     for (const v of rp.getVertices()) {
       const dist = Math.sqrt(v[0] ** 2 + v[1] ** 2);
@@ -252,7 +265,7 @@ describe('RegularPolygon', () => {
     }
   });
 
-  it('is a Polygon', () => {
+  it("is a Polygon", () => {
     expect(new RegularPolygon()).toBeInstanceOf(Polygon);
   });
 });
@@ -260,26 +273,26 @@ describe('RegularPolygon', () => {
 // ---------------------------------------------------------------------------
 // Hexagon / Pentagon
 // ---------------------------------------------------------------------------
-describe('Hexagon', () => {
-  it('has 6 sides', () => {
+describe("Hexagon", () => {
+  it("has 6 sides", () => {
     const h = new Hexagon();
     expect(h.getNumSides()).toBe(6);
     expect(h.getVertexCount()).toBe(6);
   });
 
-  it('is a RegularPolygon', () => {
+  it("is a RegularPolygon", () => {
     expect(new Hexagon()).toBeInstanceOf(RegularPolygon);
   });
 });
 
-describe('Pentagon', () => {
-  it('has 5 sides', () => {
+describe("Pentagon", () => {
+  it("has 5 sides", () => {
     const p = new Pentagon();
     expect(p.getNumSides()).toBe(5);
     expect(p.getVertexCount()).toBe(5);
   });
 
-  it('is a RegularPolygon', () => {
+  it("is a RegularPolygon", () => {
     expect(new Pentagon()).toBeInstanceOf(RegularPolygon);
   });
 });
@@ -287,8 +300,8 @@ describe('Pentagon', () => {
 // ---------------------------------------------------------------------------
 // RoundedRectangle (PolygonExtensions)
 // ---------------------------------------------------------------------------
-describe('RoundedRectangle', () => {
-  it('constructs with default options', () => {
+describe("RoundedRectangle", () => {
+  it("constructs with default options", () => {
     const rr = new RoundedRectangle();
     expect(rr.getWidth()).toBe(2);
     expect(rr.getHeight()).toBe(1);
@@ -298,12 +311,12 @@ describe('RoundedRectangle', () => {
     expect(rr.fillOpacity).toBe(0);
   });
 
-  it('clamps corner radius to half of smaller dimension', () => {
+  it("clamps corner radius to half of smaller dimension", () => {
     const rr = new RoundedRectangle({ width: 2, height: 1, cornerRadius: 5 });
     expect(rr.getCornerRadius()).toBe(0.5); // min(5, 1, 0.5) = 0.5
   });
 
-  it('setWidth / setHeight / setCornerRadius update', () => {
+  it("setWidth / setHeight / setCornerRadius update", () => {
     const rr = new RoundedRectangle();
     rr.setWidth(6);
     rr.setHeight(4);
@@ -313,19 +326,19 @@ describe('RoundedRectangle', () => {
     expect(rr.getCornerRadius()).toBe(1);
   });
 
-  it('setCornerRadius clamps to half dimension', () => {
+  it("setCornerRadius clamps to half dimension", () => {
     const rr = new RoundedRectangle({ width: 2, height: 2 });
     rr.setCornerRadius(5);
     expect(rr.getCornerRadius()).toBe(1);
   });
 
-  it('setRoundedRectCenter updates center', () => {
+  it("setRoundedRectCenter updates center", () => {
     const rr = new RoundedRectangle();
     rr.setRoundedRectCenter([3, 4, 0]);
     expect(rr.getRoundedRectCenter()).toEqual([3, 4, 0]);
   });
 
-  it('generates non-empty points', () => {
+  it("generates non-empty points", () => {
     const rr = new RoundedRectangle();
     expect(rr.numPoints).toBeGreaterThan(0);
   });
@@ -333,18 +346,29 @@ describe('RoundedRectangle', () => {
   // Regression tests for issue #434: corners rendered as "curved spikes"
   // because the corner arcs swept counterclockwise while the path
   // traverses the rectangle clockwise.
-  describe('corner geometry (issue #434)', () => {
+  describe("corner geometry (issue #434)", () => {
     // Evaluate a cubic Bezier segment at parameter t
-    const bezier = (p0: number[], p1: number[], p2: number[], p3: number[], t: number) => {
+    const bezier = (
+      p0: number[],
+      p1: number[],
+      p2: number[],
+      p3: number[],
+      t: number,
+    ) => {
       const u = 1 - t;
       return [0, 1].map(
         (k) =>
-          u * u * u * p0[k] + 3 * u * u * t * p1[k] + 3 * u * t * t * p2[k] + t * t * t * p3[k],
+          u * u * u * p0[k] + 3 * u * u * t * p1[k] + 3 * u * t * t * p2[k] +
+          t * t * t * p3[k],
       );
     };
 
-    it('anchor points land on the edge tangent points of all 4 corners', () => {
-      const rr = new RoundedRectangle({ width: 3, height: 1, cornerRadius: 0.15 });
+    it("anchor points land on the edge tangent points of all 4 corners", () => {
+      const rr = new RoundedRectangle({
+        width: 3,
+        height: 1,
+        cornerRadius: 0.15,
+      });
       const pts = rr.getLocalPoints();
       const anchors: number[][] = [];
       for (let i = 0; i < pts.length; i += 3) anchors.push(pts[i]);
@@ -369,15 +393,19 @@ describe('RoundedRectangle', () => {
       });
     });
 
-    it('all points (anchors and controls) stay within the rectangle bounds', () => {
-      const rr = new RoundedRectangle({ width: 3, height: 1, cornerRadius: 0.15 });
+    it("all points (anchors and controls) stay within the rectangle bounds", () => {
+      const rr = new RoundedRectangle({
+        width: 3,
+        height: 1,
+        cornerRadius: 0.15,
+      });
       for (const p of rr.getLocalPoints()) {
         expect(Math.abs(p[0])).toBeLessThanOrEqual(1.5 + 1e-9);
         expect(Math.abs(p[1])).toBeLessThanOrEqual(0.5 + 1e-9);
       }
     });
 
-    it('corner arc midpoints bulge outward at 45 degrees from the arc centers', () => {
+    it("corner arc midpoints bulge outward at 45 degrees from the arc centers", () => {
       const r = 0.15;
       const rr = new RoundedRectangle({ width: 3, height: 1, cornerRadius: r });
       const pts = rr.getLocalPoints();
@@ -398,13 +426,17 @@ describe('RoundedRectangle', () => {
       }
     });
 
-    it('corner arcs are tangent to the adjacent edges', () => {
+    it("corner arcs are tangent to the adjacent edges", () => {
       // The Bezier midpoint is symmetric in the two control points, so it
       // cannot detect swapped or inward-bowing controls. Pin the start/end
       // tangent directions instead: each arc must leave its start anchor
       // along the incoming edge and reach its end anchor along the outgoing
       // edge of the clockwise path.
-      const rr = new RoundedRectangle({ width: 3, height: 1, cornerRadius: 0.15 });
+      const rr = new RoundedRectangle({
+        width: 3,
+        height: 1,
+        cornerRadius: 0.15,
+      });
       const pts = rr.getLocalPoints();
 
       const unit = (from: number[], to: number[]) => {
@@ -432,8 +464,12 @@ describe('RoundedRectangle', () => {
       }
     });
 
-    it('path is closed', () => {
-      const rr = new RoundedRectangle({ width: 3, height: 1, cornerRadius: 0.15 });
+    it("path is closed", () => {
+      const rr = new RoundedRectangle({
+        width: 3,
+        height: 1,
+        cornerRadius: 0.15,
+      });
       const pts = rr.getLocalPoints();
       const first = pts[0];
       const last = pts[pts.length - 1];
@@ -441,7 +477,7 @@ describe('RoundedRectangle', () => {
       expect(last[1]).toBeCloseTo(first[1], 10);
     });
 
-    it('cornerRadius 0 degenerates to sharp corners at the rectangle vertices', () => {
+    it("cornerRadius 0 degenerates to sharp corners at the rectangle vertices", () => {
       const rr = new RoundedRectangle({ width: 3, height: 1, cornerRadius: 0 });
       const corners = [
         [-1.5, 0.5],
@@ -458,14 +494,22 @@ describe('RoundedRectangle', () => {
       }
     });
 
-    it('pill shape (radius = half height) reaches the left/right extremes at y=0', () => {
-      const rr = new RoundedRectangle({ width: 4, height: 1, cornerRadius: 0.5 });
+    it("pill shape (radius = half height) reaches the left/right extremes at y=0", () => {
+      const rr = new RoundedRectangle({
+        width: 4,
+        height: 1,
+        cornerRadius: 0.5,
+      });
       const anchors: number[][] = [];
       const pts = rr.getLocalPoints();
       for (let i = 0; i < pts.length; i += 3) anchors.push(pts[i]);
 
-      const hasLeft = anchors.some((a) => Math.abs(a[0] + 2) < 1e-9 && Math.abs(a[1]) < 1e-9);
-      const hasRight = anchors.some((a) => Math.abs(a[0] - 2) < 1e-9 && Math.abs(a[1]) < 1e-9);
+      const hasLeft = anchors.some((a) =>
+        Math.abs(a[0] + 2) < 1e-9 && Math.abs(a[1]) < 1e-9
+      );
+      const hasRight = anchors.some((a) =>
+        Math.abs(a[0] - 2) < 1e-9 && Math.abs(a[1]) < 1e-9
+      );
       expect(hasLeft).toBe(true);
       expect(hasRight).toBe(true);
 
@@ -480,8 +524,8 @@ describe('RoundedRectangle', () => {
 // ---------------------------------------------------------------------------
 // Star (PolygonExtensions)
 // ---------------------------------------------------------------------------
-describe('Star', () => {
-  it('constructs with default options', () => {
+describe("Star", () => {
+  it("constructs with default options", () => {
     const s = new Star();
     expect(s.getNumPoints()).toBe(5);
     expect(s.getOuterRadius()).toBe(1);
@@ -491,11 +535,11 @@ describe('Star', () => {
     expect(s.getCenterOfMass()).toEqual([0, 0, 0]);
   });
 
-  it('throws with numPoints < 2', () => {
+  it("throws with numPoints < 2", () => {
     expect(() => new Star({ numPoints: 1 })).toThrow();
   });
 
-  it('setOuterRadius / setInnerRadius update radii', () => {
+  it("setOuterRadius / setInnerRadius update radii", () => {
     const s = new Star();
     s.setOuterRadius(2);
     s.setInnerRadius(0.8);
@@ -503,13 +547,13 @@ describe('Star', () => {
     expect(s.getInnerRadius()).toBe(0.8);
   });
 
-  it('setStarCenter updates center', () => {
+  it("setStarCenter updates center", () => {
     const s = new Star();
     s.setStarCenter([1, 2, 0]);
     expect(s.getStarCenter()).toEqual([1, 2, 0]);
   });
 
-  it('generates points (2*numPoints line segments)', () => {
+  it("generates points (2*numPoints line segments)", () => {
     const s = new Star({ numPoints: 5 });
     // 10 vertices, 10 edges => 10 * 3 + 1 = 31 points
     expect(s.numPoints).toBe(31);
@@ -519,43 +563,43 @@ describe('Star', () => {
 // ---------------------------------------------------------------------------
 // RegularPolygram (PolygonExtensions)
 // ---------------------------------------------------------------------------
-describe('RegularPolygram', () => {
-  it('constructs with default options (pentagram {5/2})', () => {
+describe("RegularPolygram", () => {
+  it("constructs with default options (pentagram {5/2})", () => {
     const rp = new RegularPolygram();
     expect(rp.getNumVertices()).toBe(5);
     expect(rp.getDensity()).toBe(2);
     expect(rp.getRadius()).toBe(1);
-    expect(rp.getSchlafliSymbol()).toBe('{5/2}');
+    expect(rp.getSchlafliSymbol()).toBe("{5/2}");
     expect(rp.getNumComponents()).toBe(1); // gcd(5,2) = 1
   });
 
-  it('hexagram {6/2} has 2 components', () => {
+  it("hexagram {6/2} has 2 components", () => {
     const rp = new RegularPolygram({ numVertices: 6, density: 2 });
     expect(rp.getNumComponents()).toBe(2); // gcd(6,2) = 2
-    expect(rp.getSchlafliSymbol()).toBe('{6/2}');
+    expect(rp.getSchlafliSymbol()).toBe("{6/2}");
   });
 
-  it('Schlafli symbol for density=1 omits density', () => {
+  it("Schlafli symbol for density=1 omits density", () => {
     const rp = new RegularPolygram({ numVertices: 5, density: 1 });
-    expect(rp.getSchlafliSymbol()).toBe('{5}');
+    expect(rp.getSchlafliSymbol()).toBe("{5}");
   });
 
-  it('throws with numVertices < 3', () => {
+  it("throws with numVertices < 3", () => {
     expect(() => new RegularPolygram({ numVertices: 2 })).toThrow();
   });
 
-  it('throws with density < 1', () => {
+  it("throws with density < 1", () => {
     expect(() => new RegularPolygram({ numVertices: 5, density: 0 })).toThrow();
   });
 
-  it('throws with density exceeding maximum', () => {
+  it("throws with density exceeding maximum", () => {
     // For n=5 (odd), max density = floor(5/2) = 2
     expect(() => new RegularPolygram({ numVertices: 5, density: 3 })).toThrow();
     // For n=6 (even), max density = 6/2 - 1 = 2
     expect(() => new RegularPolygram({ numVertices: 6, density: 3 })).toThrow();
   });
 
-  it('setRadius / setPolygramCenter update', () => {
+  it("setRadius / setPolygramCenter update", () => {
     const rp = new RegularPolygram();
     rp.setRadius(3);
     expect(rp.getRadius()).toBe(3);
@@ -563,12 +607,12 @@ describe('RegularPolygram', () => {
     expect(rp.getPolygramCenter()).toEqual([1, 1, 0]);
   });
 
-  it('generates non-empty points for single-component polygram', () => {
+  it("generates non-empty points for single-component polygram", () => {
     const rp = new RegularPolygram({ numVertices: 5, density: 2 });
     expect(rp.numPoints).toBeGreaterThan(0);
   });
 
-  it('generates child components for multi-component polygram', () => {
+  it("generates child components for multi-component polygram", () => {
     const rp = new RegularPolygram({ numVertices: 6, density: 2 });
     // 2 components should be added as children
     expect(rp.children.length).toBe(2);
@@ -578,8 +622,8 @@ describe('RegularPolygram', () => {
 // ---------------------------------------------------------------------------
 // Cutout (PolygonExtensions)
 // ---------------------------------------------------------------------------
-describe('Cutout', () => {
-  it('constructs with two shapes', () => {
+describe("Cutout", () => {
+  it("constructs with two shapes", () => {
     const outer = new Circle({ radius: 2 });
     const inner = new Circle({ radius: 1 });
     const cutout = new Cutout({ outerShape: outer, innerShape: inner });
@@ -587,7 +631,7 @@ describe('Cutout', () => {
     expect(cutout.getInnerShape()).toBe(inner);
   });
 
-  it('inherits color from outer shape by default', () => {
+  it("inherits color from outer shape by default", () => {
     const outer = new Circle({ radius: 2 });
     const inner = new Circle({ radius: 1 });
     const cutout = new Cutout({ outerShape: outer, innerShape: inner });
@@ -595,7 +639,7 @@ describe('Cutout', () => {
     expect(cutout.fillOpacity).toBe(outer.fillOpacity);
   });
 
-  it('getSubpathLengths returns lengths of outer and inner', () => {
+  it("getSubpathLengths returns lengths of outer and inner", () => {
     const outer = new Circle({ radius: 2 });
     const inner = new Circle({ radius: 1 });
     const cutout = new Cutout({ outerShape: outer, innerShape: inner });
@@ -605,16 +649,16 @@ describe('Cutout', () => {
     expect(subpaths[1]).toBe(inner.getLocalPoints().length);
   });
 
-  it('accepts custom color overrides', () => {
+  it("accepts custom color overrides", () => {
     const outer = new Circle({ radius: 2 });
     const inner = new Circle({ radius: 1 });
     const cutout = new Cutout({
       outerShape: outer,
       innerShape: inner,
-      color: '#ff0000',
+      color: "#ff0000",
       fillOpacity: 0.8,
     });
-    expect(cutout.color).toBe('#ff0000');
+    expect(cutout.color).toBe("#ff0000");
     expect(cutout.fillOpacity).toBe(0.8);
   });
 });
@@ -622,8 +666,8 @@ describe('Cutout', () => {
 // ---------------------------------------------------------------------------
 // ConvexHull (PolygonExtensions)
 // ---------------------------------------------------------------------------
-describe('ConvexHull', () => {
-  it('constructs from a set of points', () => {
+describe("ConvexHull", () => {
+  it("constructs from a set of points", () => {
     const ch = new ConvexHull({
       points: [
         [0, 0, 0],
@@ -636,7 +680,7 @@ describe('ConvexHull', () => {
     expect(ch.getHullVertexCount()).toBe(3);
   });
 
-  it('throws with fewer than 3 points', () => {
+  it("throws with fewer than 3 points", () => {
     expect(
       () =>
         new ConvexHull({
@@ -648,7 +692,7 @@ describe('ConvexHull', () => {
     ).toThrow();
   });
 
-  it('getInputPoints returns all original points', () => {
+  it("getInputPoints returns all original points", () => {
     const pts: [number, number, number][] = [
       [0, 0, 0],
       [1, 0, 0],
@@ -658,7 +702,7 @@ describe('ConvexHull', () => {
     expect(ch.getInputPoints().length).toBe(3);
   });
 
-  it('getArea for a unit right triangle = 0.5', () => {
+  it("getArea for a unit right triangle = 0.5", () => {
     const ch = new ConvexHull({
       points: [
         [0, 0, 0],
@@ -669,7 +713,7 @@ describe('ConvexHull', () => {
     expect(ch.getArea()).toBeCloseTo(0.5, 10);
   });
 
-  it('getPerimeter for a unit right triangle', () => {
+  it("getPerimeter for a unit right triangle", () => {
     const ch = new ConvexHull({
       points: [
         [0, 0, 0],
@@ -681,7 +725,7 @@ describe('ConvexHull', () => {
     expect(ch.getPerimeter()).toBeCloseTo(2 + Math.SQRT2, 5);
   });
 
-  it('containsPoint returns true for interior point', () => {
+  it("containsPoint returns true for interior point", () => {
     const ch = new ConvexHull({
       points: [
         [0, 0, 0],
@@ -692,7 +736,7 @@ describe('ConvexHull', () => {
     expect(ch.containsPoint([1, 1, 0])).toBe(true);
   });
 
-  it('containsPoint returns false for exterior point', () => {
+  it("containsPoint returns false for exterior point", () => {
     const ch = new ConvexHull({
       points: [
         [0, 0, 0],
@@ -703,7 +747,7 @@ describe('ConvexHull', () => {
     expect(ch.containsPoint([5, 5, 0])).toBe(false);
   });
 
-  it('correctly handles a square with interior points', () => {
+  it("correctly handles a square with interior points", () => {
     const ch = new ConvexHull({
       points: [
         [0, 0, 0],
@@ -719,7 +763,7 @@ describe('ConvexHull', () => {
     expect(ch.getArea()).toBeCloseTo(4, 5);
   });
 
-  it('generates non-empty points', () => {
+  it("generates non-empty points", () => {
     const ch = new ConvexHull({
       points: [
         [0, 0, 0],

@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { buildEarcutFillGeometry } from './VMobjectGeometry';
+import { describe, expect, it } from "vitest";
+import { buildEarcutFillGeometry } from "./VMobjectGeometry";
 
 function cornersToLinearBezier(corners: number[][]): number[][] {
   if (corners.length < 2) return corners.map((p) => [p[0], p[1], p[2] ?? 0]);
@@ -51,8 +51,8 @@ function makeCurvyCircleBezier(cx: number, cy: number, r: number): number[][] {
   return [p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p0];
 }
 
-describe('buildEarcutFillGeometry plane projection regressions', () => {
-  it('triangulates a square in the YZ plane (XY projection is degenerate)', () => {
+describe("buildEarcutFillGeometry plane projection regressions", () => {
+  it("triangulates a square in the YZ plane (XY projection is degenerate)", () => {
     const corners = [
       [0, 0, 0],
       [0, 1, 0],
@@ -66,7 +66,7 @@ describe('buildEarcutFillGeometry plane projection regressions', () => {
     const geometry = buildEarcutFillGeometry(points3D, visiblePoints);
     expect(geometry).not.toBeNull();
 
-    const positions = geometry!.getAttribute('position').array as Float32Array;
+    const positions = geometry!.getAttribute("position").array as Float32Array;
     expect(positions.length).toBeGreaterThan(0);
 
     let maxAbsX = 0;
@@ -80,7 +80,7 @@ describe('buildEarcutFillGeometry plane projection regressions', () => {
     expect(maxZ).toBeGreaterThan(0.5);
   });
 
-  it('triangulates a rotated compound shape with a hole using one shared plane basis', () => {
+  it("triangulates a rotated compound shape with a hole using one shared plane basis", () => {
     const outerCorners = [
       [0, 0, 0],
       [0, 2, 0],
@@ -100,10 +100,14 @@ describe('buildEarcutFillGeometry plane projection regressions', () => {
     const hole = cornersToLinearBezier(holeCorners);
     const points3D = [...outer, ...hole];
 
-    const geometry = buildEarcutFillGeometry(points3D, [], () => [outer.length, hole.length]);
+    const geometry = buildEarcutFillGeometry(
+      points3D,
+      [],
+      () => [outer.length, hole.length],
+    );
     expect(geometry).not.toBeNull();
 
-    const positions = geometry!.getAttribute('position').array as Float32Array;
+    const positions = geometry!.getAttribute("position").array as Float32Array;
     expect(positions.length).toBeGreaterThan(0);
     expect(positions.length % 9).toBe(0);
 
@@ -125,7 +129,7 @@ describe('buildEarcutFillGeometry plane projection regressions', () => {
     expect(maxZ).toBeGreaterThan(1.9);
   });
 
-  it('keeps curved rings densely sampled for fill triangulation (regression)', () => {
+  it("keeps curved rings densely sampled for fill triangulation (regression)", () => {
     // Curvy annulus at small scale.
     // This specifically catches the prior bug: near-linear detection used an
     // absolute threshold (0.01), which wrongly collapsed small-but-curved
@@ -134,10 +138,14 @@ describe('buildEarcutFillGeometry plane projection regressions', () => {
     const inner = makeCurvyCircleBezier(0.2, -0.15, 0.005);
 
     const points3D = [...outer, ...inner];
-    const geometry = buildEarcutFillGeometry(points3D, [], () => [outer.length, inner.length]);
+    const geometry = buildEarcutFillGeometry(
+      points3D,
+      [],
+      () => [outer.length, inner.length],
+    );
     expect(geometry).not.toBeNull();
 
-    const positions = geometry!.getAttribute('position').array as Float32Array;
+    const positions = geometry!.getAttribute("position").array as Float32Array;
     expect(positions.length).toBeGreaterThan(0);
 
     // Gather unique XY vertices used by triangles.

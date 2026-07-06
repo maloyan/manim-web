@@ -1,26 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <script>if(new URLSearchParams(location.search).has('embed'))document.documentElement.classList.add('embed')</script>
-  <meta charset="UTF-8">
-  <title>Write Animation Test</title>
-  <style>
-    * { margin: 0; padding: 0; }
-    body { background: #111; display: flex; flex-direction: column; align-items: center; padding: 20px; color: #fff; font-family: sans-serif; }
-    h1 { margin-bottom: 10px; }
-    #container { border: 2px solid #333; border-radius: 8px; overflow: hidden; }
-    #status { margin-top: 10px; color: #888; }
-    html.embed, html.embed body { margin:0!important;padding:0!important;overflow:hidden;background:#000!important;width:100%;height:100%; }
-    html.embed body { display:flex;justify-content:center;align-items:center; }
-    html.embed .controls, html.embed .buttons, html.embed h1, html.embed #status { display:none!important; }
-    html.embed #container { border:none!important;border-radius:0!important;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center; }
-  </style>
-</head>
-<body>
-  <h1>Write Animation Test</h1>
-  <div id="container"></div>
-  <div id="status">Loading...</div>
+  <head>
+    <script>
+    if (new URLSearchParams(location.search).has('embed')) {
+      document.documentElement.classList.add('embed');
+    }
+    </script>
+    <meta charset="UTF-8">
+    <title>Write Animation Test</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      color: #fff;
+      font-family: sans-serif;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #container {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    #status {
+      margin-top: 10px;
+      color: #888;
+    }
+    html.embed,
+    html.embed body {
+      margin: 0!important;
+      padding: 0!important;
+      overflow: hidden;
+      background: #000!important;
+      width: 100%;
+      height: 100%;
+    }
+    html.embed body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    html.embed .controls,
+    html.embed .buttons,
+    html.embed h1,
+    html.embed #status {
+      display: none!important;
+    }
+    html.embed #container {
+      border: none!important;
+      border-radius: 0!important;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>Write Animation Test</h1>
+    <div id="container"></div>
+    <div id="status">Loading...</div>
 
-  <script type="module" src="./test_write.ts"></script>
-</body>
+    <script type="module" src="./test_write.ts"></script>
+  </body>
 </html>

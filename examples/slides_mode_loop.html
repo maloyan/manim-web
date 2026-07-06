@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Slides Mode (loop / autoNext / multi-play)</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - Slides Mode (loop / autoNext / multi-play)</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #1a1a2e;
       display: flex;
@@ -16,17 +20,43 @@
       font-family: system-ui, sans-serif;
       color: #ccc;
     }
-    h1 { margin-bottom: 16px; font-size: 20px; font-weight: 400; color: #fff; }
-    #container { border-radius: 8px; overflow: hidden; }
-    .info { margin-top: 20px; font-size: 13px; opacity: 0.6; text-align: center; line-height: 1.7; max-width: 720px; }
-    kbd { background: #333; border: 1px solid #555; border-radius: 3px; padding: 1px 6px; font-size: 12px; font-family: monospace; }
-    .highlight { color: #6cf; opacity: 1; font-weight: 500; }
-  </style>
-</head>
-<body>
-  <h1>Slides Mode: <code>nextSlide({ loop, autoNext })</code></h1>
-  <div id="container"></div>
-  <div class="info">
+    h1 {
+      margin-bottom: 16px;
+      font-size: 20px;
+      font-weight: 400;
+      color: #fff;
+    }
+    #container {
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .info {
+      margin-top: 20px;
+      font-size: 13px;
+      opacity: 0.6;
+      text-align: center;
+      line-height: 1.7;
+      max-width: 720px;
+    }
+    kbd {
+      background: #333;
+      border: 1px solid #555;
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    .highlight {
+      color: #6cf;
+      opacity: 1;
+      font-weight: 500;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>Slides Mode: <code>nextSlide({ loop, autoNext })</code></h1>
+    <div id="container"></div>
+    <div class="info">
     <p class="highlight">Mirrors manim-slides' <code>next_slide(loop, auto_next)</code>.</p>
     <br>
     <p>Slide 1: a normal play. Press <kbd>&rarr;</kbd> to advance.</p>
@@ -40,20 +70,20 @@
     <kbd>F</kbd> Fullscreen
   </div>
 
-  <script type="module">
+    <script type="module">
     import {
-      Player,
-      Circle,
-      Square,
-      Create,
-      Rotate,
-      Transform,
-      FadeIn,
-      Indicate,
-      FadeOut,
       BLACK,
       BLUE,
+      Circle,
+      Create,
+      FadeIn,
+      FadeOut,
+      Indicate,
+      Player,
       RED,
+      Rotate,
+      Square,
+      Transform,
       YELLOW,
     } from '../src/index.ts';
     import { linear } from '../src/rate-functions/index.ts';
@@ -93,6 +123,6 @@
     }).catch((err) => {
       console.error('sequence() failed:', err);
     });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

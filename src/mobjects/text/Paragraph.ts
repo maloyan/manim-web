@@ -1,4 +1,4 @@
-import { Text, TextOptions } from './Text';
+import { Text, TextOptions } from "./Text";
 
 /**
  * Options for creating a Paragraph mobject
@@ -7,7 +7,7 @@ export interface ParagraphOptions extends TextOptions {
   /** Maximum width in world units for text wrapping */
   width?: number;
   /** Text alignment within the paragraph. Default: 'left' */
-  alignment?: 'left' | 'center' | 'right' | 'justify';
+  alignment?: "left" | "center" | "right" | "justify";
 }
 
 /** Scale factor: pixels to world units (100 pixels = 1 world unit) */
@@ -37,13 +37,13 @@ const RESOLUTION_SCALE = 2;
  */
 export class Paragraph extends Text {
   protected _maxWidth: number;
-  protected _alignment: 'left' | 'center' | 'right' | 'justify';
+  protected _alignment: "left" | "center" | "right" | "justify";
   protected _wrappedLines: string[] = [];
 
   constructor(options: ParagraphOptions) {
     // Set text alignment to match paragraph alignment
-    const alignment = options.alignment || 'left';
-    const textAlign = alignment === 'justify' ? 'left' : alignment;
+    const alignment = options.alignment || "left";
+    const textAlign = alignment === "justify" ? "left" : alignment;
 
     super({
       ...options,
@@ -80,7 +80,7 @@ export class Paragraph extends Text {
   /**
    * Get the paragraph alignment
    */
-  getAlignment(): 'left' | 'center' | 'right' | 'justify' {
+  getAlignment(): "left" | "center" | "right" | "justify" {
     return this._alignment;
   }
 
@@ -89,9 +89,9 @@ export class Paragraph extends Text {
    * @param alignment - Text alignment
    * @returns this for chaining
    */
-  setAlignment(alignment: 'left' | 'center' | 'right' | 'justify'): this {
+  setAlignment(alignment: "left" | "center" | "right" | "justify"): this {
     this._alignment = alignment;
-    this._textAlign = alignment === 'justify' ? 'left' : alignment;
+    this._textAlign = alignment === "justify" ? "left" : alignment;
     this._renderToCanvas();
     this._updateMesh();
     this._markDirty();
@@ -104,34 +104,35 @@ export class Paragraph extends Text {
    */
   protected _wrapText(): string[] {
     if (!this._ctx) {
-      return this._text.split('\n');
+      return this._text.split("\n");
     }
 
     this._ctx.font = this._buildFontString();
 
     // Convert world units to pixels for comparison
-    const maxWidthPixels =
-      this._maxWidth === Infinity ? Infinity : (this._maxWidth / PIXEL_TO_WORLD) * RESOLUTION_SCALE;
+    const maxWidthPixels = this._maxWidth === Infinity
+      ? Infinity
+      : (this._maxWidth / PIXEL_TO_WORLD) * RESOLUTION_SCALE;
 
-    const paragraphs = this._text.split('\n');
+    const paragraphs = this._text.split("\n");
     const wrappedLines: string[] = [];
 
     for (const paragraph of paragraphs) {
-      if (paragraph.trim() === '') {
-        wrappedLines.push('');
+      if (paragraph.trim() === "") {
+        wrappedLines.push("");
         continue;
       }
 
       const words = paragraph.split(/\s+/);
-      let currentLine = '';
+      let currentLine = "";
 
       for (const word of words) {
         const testLine = currentLine ? `${currentLine} ${word}` : word;
         const metrics = this._ctx.measureText(testLine);
-        const testWidth =
-          metrics.width + (testLine.length - 1) * this._letterSpacing * RESOLUTION_SCALE;
+        const testWidth = metrics.width +
+          (testLine.length - 1) * this._letterSpacing * RESOLUTION_SCALE;
 
-        if (testWidth <= maxWidthPixels || currentLine === '') {
+        if (testWidth <= maxWidthPixels || currentLine === "") {
           currentLine = testLine;
         } else {
           wrappedLines.push(currentLine);
@@ -150,7 +151,11 @@ export class Paragraph extends Text {
   /**
    * Override measure text to use wrapped lines
    */
-  protected override _measureText(): { lines: string[]; width: number; height: number } {
+  protected override _measureText(): {
+    lines: string[];
+    width: number;
+    height: number;
+  } {
     if (!this._ctx) {
       return { lines: [], width: 0, height: 0 };
     }
@@ -166,13 +171,15 @@ export class Paragraph extends Text {
     let maxWidth = 0;
     for (const line of lines) {
       const metrics = this._ctx.measureText(line);
-      const lineWidth = metrics.width + (line.length - 1) * this._letterSpacing * RESOLUTION_SCALE;
+      const lineWidth = metrics.width +
+        (line.length - 1) * this._letterSpacing * RESOLUTION_SCALE;
       maxWidth = Math.max(maxWidth, lineWidth);
     }
 
     // If we have a max width constraint, use it
     if (this._maxWidth !== Infinity) {
-      const maxWidthPixels = (this._maxWidth / PIXEL_TO_WORLD) * RESOLUTION_SCALE;
+      const maxWidthPixels = (this._maxWidth / PIXEL_TO_WORLD) *
+        RESOLUTION_SCALE;
       maxWidth = Math.min(maxWidth, maxWidthPixels);
     }
 
@@ -206,7 +213,7 @@ export class Paragraph extends Text {
 
     // Set font and styles
     this._ctx.font = this._buildFontString();
-    this._ctx.textBaseline = 'top';
+    this._ctx.textBaseline = "top";
 
     const scaledFontSize = this._fontSize * RESOLUTION_SCALE;
     const scaledLineHeight = scaledFontSize * this._lineHeight;
@@ -216,27 +223,30 @@ export class Paragraph extends Text {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const y = padding + i * scaledLineHeight;
-      const isLastLineOfParagraph =
-        i === lines.length - 1 || (i < lines.length - 1 && this._isNewParagraph(lines, i));
+      const isLastLineOfParagraph = i === lines.length - 1 ||
+        (i < lines.length - 1 && this._isNewParagraph(lines, i));
 
-      if (this._alignment === 'justify' && !isLastLineOfParagraph && line.trim().includes(' ')) {
+      if (
+        this._alignment === "justify" && !isLastLineOfParagraph &&
+        line.trim().includes(" ")
+      ) {
         this._drawJustifiedLine(line, padding, width - padding, y);
       } else {
         // Use regular alignment
         let textX: number;
         switch (this._alignment) {
-          case 'right':
-            this._ctx.textAlign = 'right';
+          case "right":
+            this._ctx.textAlign = "right";
             textX = width - padding;
             break;
-          case 'center':
-            this._ctx.textAlign = 'center';
+          case "center":
+            this._ctx.textAlign = "center";
             textX = width / 2;
             break;
-          case 'left':
-          case 'justify':
+          case "left":
+          case "justify":
           default:
-            this._ctx.textAlign = 'left';
+            this._ctx.textAlign = "left";
             textX = padding;
             break;
         }
@@ -270,19 +280,24 @@ export class Paragraph extends Text {
    */
   protected _isNewParagraph(lines: string[], currentIndex: number): boolean {
     if (currentIndex >= lines.length - 1) return true;
-    return lines[currentIndex + 1].trim() === '';
+    return lines[currentIndex + 1].trim() === "";
   }
 
   /**
    * Draw a line with justified spacing
    */
-  protected _drawJustifiedLine(line: string, startX: number, endX: number, y: number): void {
+  protected _drawJustifiedLine(
+    line: string,
+    startX: number,
+    endX: number,
+    y: number,
+  ): void {
     if (!this._ctx) return;
 
     const words = line.trim().split(/\s+/);
     if (words.length <= 1) {
       // Single word, draw normally
-      this._ctx.textAlign = 'left';
+      this._ctx.textAlign = "left";
       if (this.strokeWidth > 0) {
         this._ctx.strokeStyle = this.color;
         this._ctx.lineWidth = this.strokeWidth * RESOLUTION_SCALE;
@@ -306,7 +321,7 @@ export class Paragraph extends Text {
     const spaceWidth = totalSpacing / (words.length - 1);
 
     // Draw each word
-    this._ctx.textAlign = 'left';
+    this._ctx.textAlign = "left";
     let currentX = startX;
 
     for (let i = 0; i < words.length; i++) {

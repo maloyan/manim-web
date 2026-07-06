@@ -28,13 +28,13 @@
  *   keeps bare imports for side effects by default.
  */
 
-import { mathjax } from '@mathjax/src/js/mathjax.js';
-import { TeX } from '@mathjax/src/js/input/tex.js';
-import { SVG } from '@mathjax/src/js/output/svg.js';
-import { liteAdaptor } from '@mathjax/src/js/adaptors/liteAdaptor.js';
-import { RegisterHTMLHandler } from '@mathjax/src/js/handlers/html.js';
-import '@mathjax/src/js/input/tex/ams/AmsConfiguration.js';
-import '@mathjax/src/js/input/tex/newcommand/NewcommandConfiguration.js';
-import '@mathjax/src/js/input/tex/configmacros/ConfigMacrosConfiguration.js';
+import { mathjax } from "@mathjax/src/js/mathjax.js";
+import { TeX } from "@mathjax/src/js/input/tex.js";
+import { SVG } from "@mathjax/src/js/output/svg.js";
+import { liteAdaptor } from "@mathjax/src/js/adaptors/liteAdaptor.js";
+import { RegisterHTMLHandler } from "@mathjax/src/js/handlers/html.js";
+import "@mathjax/src/js/input/tex/ams/AmsConfiguration.js";
+import "@mathjax/src/js/input/tex/newcommand/NewcommandConfiguration.js";
+import "@mathjax/src/js/input/tex/configmacros/ConfigMacrosConfiguration.js";
 
-export { mathjax, TeX, SVG, liteAdaptor, RegisterHTMLHandler };
+export { liteAdaptor, mathjax, RegisterHTMLHandler, SVG, TeX };

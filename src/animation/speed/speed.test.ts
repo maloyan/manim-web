@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { Mobject } from '../../core/Mobject';
-import { Animation, AnimationOptions } from '../Animation';
-import { linear } from '../../rate-functions';
+import { beforeEach, describe, expect, it } from "vitest";
+import { Mobject } from "../../core/Mobject";
+import { Animation, AnimationOptions } from "../Animation";
+import { linear } from "../../rate-functions";
 import {
   ChangeSpeed,
   changeSpeed,
-  linearSpeedRamp,
   emphasizeRegion,
+  linearSpeedRamp,
   rushRegion,
   smoothSpeedCurve,
   SpeedFunction,
-} from './index';
+} from "./index";
 
 /**
  * Concrete test animation that tracks interpolation calls.
@@ -35,52 +35,52 @@ class TestAnimation extends Animation {
 // Predefined speed functions
 // =============================================================
 
-describe('linearSpeedRamp', () => {
-  it('returns startSpeed at t=0', () => {
+describe("linearSpeedRamp", () => {
+  it("returns startSpeed at t=0", () => {
     const fn = linearSpeedRamp(1, 3);
     expect(fn(0)).toBe(1);
   });
 
-  it('returns endSpeed at t=1', () => {
+  it("returns endSpeed at t=1", () => {
     const fn = linearSpeedRamp(1, 3);
     expect(fn(1)).toBe(3);
   });
 
-  it('returns midpoint at t=0.5', () => {
+  it("returns midpoint at t=0.5", () => {
     const fn = linearSpeedRamp(1, 3);
     expect(fn(0.5)).toBeCloseTo(2, 5);
   });
 
-  it('works with decreasing speed', () => {
+  it("works with decreasing speed", () => {
     const fn = linearSpeedRamp(4, 1);
     expect(fn(0)).toBe(4);
     expect(fn(1)).toBe(1);
     expect(fn(0.5)).toBeCloseTo(2.5, 5);
   });
 
-  it('works with equal speeds (constant)', () => {
+  it("works with equal speeds (constant)", () => {
     const fn = linearSpeedRamp(2, 2);
     expect(fn(0)).toBe(2);
     expect(fn(0.5)).toBe(2);
     expect(fn(1)).toBe(2);
   });
 
-  it('interpolates linearly at arbitrary t', () => {
+  it("interpolates linearly at arbitrary t", () => {
     const fn = linearSpeedRamp(0, 10);
     expect(fn(0.3)).toBeCloseTo(3, 5);
     expect(fn(0.7)).toBeCloseTo(7, 5);
   });
 });
 
-describe('emphasizeRegion', () => {
-  it('returns emphasizedSpeed within the region', () => {
+describe("emphasizeRegion", () => {
+  it("returns emphasizedSpeed within the region", () => {
     const fn = emphasizeRegion(0.3, 0.7, 2, 0.5);
     expect(fn(0.3)).toBe(0.5);
     expect(fn(0.5)).toBe(0.5);
     expect(fn(0.7)).toBe(0.5);
   });
 
-  it('returns normalSpeed outside the region', () => {
+  it("returns normalSpeed outside the region", () => {
     const fn = emphasizeRegion(0.3, 0.7, 2, 0.5);
     expect(fn(0)).toBe(2);
     expect(fn(0.1)).toBe(2);
@@ -89,13 +89,13 @@ describe('emphasizeRegion', () => {
     expect(fn(1)).toBe(2);
   });
 
-  it('uses default values (normalSpeed=2, emphasizedSpeed=0.5)', () => {
+  it("uses default values (normalSpeed=2, emphasizedSpeed=0.5)", () => {
     const fn = emphasizeRegion(0.2, 0.8);
     expect(fn(0)).toBe(2);
     expect(fn(0.5)).toBe(0.5);
   });
 
-  it('handles region at start (0 to X)', () => {
+  it("handles region at start (0 to X)", () => {
     const fn = emphasizeRegion(0, 0.5, 3, 1);
     expect(fn(0)).toBe(1);
     expect(fn(0.25)).toBe(1);
@@ -104,7 +104,7 @@ describe('emphasizeRegion', () => {
     expect(fn(1)).toBe(3);
   });
 
-  it('handles region at end (X to 1)', () => {
+  it("handles region at end (X to 1)", () => {
     const fn = emphasizeRegion(0.5, 1, 3, 1);
     expect(fn(0)).toBe(3);
     expect(fn(0.49)).toBe(3);
@@ -113,7 +113,7 @@ describe('emphasizeRegion', () => {
     expect(fn(1)).toBe(1);
   });
 
-  it('handles full range (0 to 1)', () => {
+  it("handles full range (0 to 1)", () => {
     const fn = emphasizeRegion(0, 1, 3, 0.5);
     expect(fn(0)).toBe(0.5);
     expect(fn(0.5)).toBe(0.5);
@@ -121,15 +121,15 @@ describe('emphasizeRegion', () => {
   });
 });
 
-describe('rushRegion', () => {
-  it('returns rushedSpeed within the region', () => {
+describe("rushRegion", () => {
+  it("returns rushedSpeed within the region", () => {
     const fn = rushRegion(0.2, 0.6, 1, 3);
     expect(fn(0.2)).toBe(3);
     expect(fn(0.4)).toBe(3);
     expect(fn(0.6)).toBe(3);
   });
 
-  it('returns normalSpeed outside the region', () => {
+  it("returns normalSpeed outside the region", () => {
     const fn = rushRegion(0.2, 0.6, 1, 3);
     expect(fn(0)).toBe(1);
     expect(fn(0.19)).toBe(1);
@@ -137,13 +137,13 @@ describe('rushRegion', () => {
     expect(fn(1)).toBe(1);
   });
 
-  it('uses default values (normalSpeed=1, rushedSpeed=3)', () => {
+  it("uses default values (normalSpeed=1, rushedSpeed=3)", () => {
     const fn = rushRegion(0.3, 0.7);
     expect(fn(0)).toBe(1);
     expect(fn(0.5)).toBe(3);
   });
 
-  it('handles region covering full range', () => {
+  it("handles region covering full range", () => {
     const fn = rushRegion(0, 1, 1, 5);
     expect(fn(0)).toBe(5);
     expect(fn(0.5)).toBe(5);
@@ -151,39 +151,39 @@ describe('rushRegion', () => {
   });
 });
 
-describe('smoothSpeedCurve', () => {
-  it('returns maxSpeed at t=0', () => {
+describe("smoothSpeedCurve", () => {
+  it("returns maxSpeed at t=0", () => {
     const fn = smoothSpeedCurve(0.5, 2);
     // At t=0: cos(0) = 1, factor = (1+1)/2 = 1, result = 0.5 + 1.5*1 = 2
     expect(fn(0)).toBeCloseTo(2, 5);
   });
 
-  it('returns minSpeed at t=0.5', () => {
+  it("returns minSpeed at t=0.5", () => {
     const fn = smoothSpeedCurve(0.5, 2);
     // At t=0.5: cos(PI) = -1, factor = (1-1)/2 = 0, result = 0.5 + 1.5*0 = 0.5
     expect(fn(0.5)).toBeCloseTo(0.5, 5);
   });
 
-  it('returns maxSpeed at t=1', () => {
+  it("returns maxSpeed at t=1", () => {
     const fn = smoothSpeedCurve(0.5, 2);
     // At t=1: cos(2*PI) = 1, factor = (1+1)/2 = 1, result = 0.5 + 1.5*1 = 2
     expect(fn(1)).toBeCloseTo(2, 5);
   });
 
-  it('is symmetric around t=0.5', () => {
+  it("is symmetric around t=0.5", () => {
     const fn = smoothSpeedCurve(1, 3);
     expect(fn(0.25)).toBeCloseTo(fn(0.75), 5);
     expect(fn(0.1)).toBeCloseTo(fn(0.9), 5);
   });
 
-  it('handles equal min and max (constant speed)', () => {
+  it("handles equal min and max (constant speed)", () => {
     const fn = smoothSpeedCurve(2, 2);
     expect(fn(0)).toBeCloseTo(2, 5);
     expect(fn(0.5)).toBeCloseTo(2, 5);
     expect(fn(1)).toBeCloseTo(2, 5);
   });
 
-  it('handles minSpeed > maxSpeed (inverted curve)', () => {
+  it("handles minSpeed > maxSpeed (inverted curve)", () => {
     const fn = smoothSpeedCurve(3, 1);
     // At t=0: factor=1, result = 3 + (1-3)*1 = 1
     expect(fn(0)).toBeCloseTo(1, 5);
@@ -196,7 +196,7 @@ describe('smoothSpeedCurve', () => {
 // ChangeSpeed
 // =============================================================
 
-describe('ChangeSpeed', () => {
+describe("ChangeSpeed", () => {
   let mob: Mobject;
 
   beforeEach(() => {
@@ -207,47 +207,47 @@ describe('ChangeSpeed', () => {
   // Constructor
   // -----------------------------------------------------------
 
-  describe('constructor', () => {
-    it('wraps the given animation', () => {
+  describe("constructor", () => {
+    it("wraps the given animation", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, (t) => 1);
       expect(anim.animation).toBe(inner);
     });
 
-    it('stores the speed function', () => {
+    it("stores the speed function", () => {
       const speedFn: SpeedFunction = (t) => 2;
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, speedFn);
       expect(anim.speedFunc).toBe(speedFn);
     });
 
-    it('adjusts duration for constant speed > 1 (shorter)', () => {
+    it("adjusts duration for constant speed > 1 (shorter)", () => {
       const inner = new TestAnimation(mob, { duration: 2, rateFunc: linear });
       // Speed 2x everywhere -> duration should be halved
       const anim = new ChangeSpeed(inner, () => 2);
       expect(anim.duration).toBeCloseTo(1, 1);
     });
 
-    it('adjusts duration for constant speed < 1 (longer)', () => {
+    it("adjusts duration for constant speed < 1 (longer)", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       // Speed 0.5x everywhere -> duration should be doubled
       const anim = new ChangeSpeed(inner, () => 0.5);
       expect(anim.duration).toBeCloseTo(2, 1);
     });
 
-    it('keeps same duration for constant speed = 1', () => {
+    it("keeps same duration for constant speed = 1", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, () => 1);
       expect(anim.duration).toBeCloseTo(1, 1);
     });
 
-    it('uses linear rateFunc by default', () => {
+    it("uses linear rateFunc by default", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, () => 1);
       expect(anim.rateFunc).toBe(linear);
     });
 
-    it('accepts custom rateFunc for the wrapper', () => {
+    it("accepts custom rateFunc for the wrapper", () => {
       const customRate = (t: number) => t * t;
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, () => 1, { rateFunc: customRate });
@@ -259,8 +259,8 @@ describe('ChangeSpeed', () => {
   // begin()
   // -----------------------------------------------------------
 
-  describe('begin()', () => {
-    it('calls begin on wrapped animation', () => {
+  describe("begin()", () => {
+    it("calls begin on wrapped animation", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, () => 1);
       anim.begin();
@@ -272,8 +272,8 @@ describe('ChangeSpeed', () => {
   // interpolate()
   // -----------------------------------------------------------
 
-  describe('interpolate()', () => {
-    it('with constant speed=1, maps alpha to approximately same original alpha', () => {
+  describe("interpolate()", () => {
+    it("with constant speed=1, maps alpha to approximately same original alpha", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, () => 1);
       anim.begin();
@@ -288,7 +288,7 @@ describe('ChangeSpeed', () => {
       expect(inner.lastAlpha).toBeCloseTo(1, 1);
     });
 
-    it('at alpha=0 wrapped animation alpha is near 0', () => {
+    it("at alpha=0 wrapped animation alpha is near 0", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, () => 2);
       anim.begin();
@@ -296,7 +296,7 @@ describe('ChangeSpeed', () => {
       expect(inner.lastAlpha).toBeCloseTo(0, 1);
     });
 
-    it('at alpha=1 wrapped animation alpha is near 1', () => {
+    it("at alpha=1 wrapped animation alpha is near 1", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, () => 2);
       anim.begin();
@@ -304,7 +304,7 @@ describe('ChangeSpeed', () => {
       expect(inner.lastAlpha).toBeCloseTo(1, 1);
     });
 
-    it('calls interpolate on inner animation', () => {
+    it("calls interpolate on inner animation", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, () => 1);
       anim.begin();
@@ -317,8 +317,8 @@ describe('ChangeSpeed', () => {
   // finish()
   // -----------------------------------------------------------
 
-  describe('finish()', () => {
-    it('calls finish on wrapped animation', () => {
+  describe("finish()", () => {
+    it("calls finish on wrapped animation", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, () => 1);
       anim.begin();
@@ -326,7 +326,7 @@ describe('ChangeSpeed', () => {
       expect(inner.isFinished()).toBe(true);
     });
 
-    it('marks wrapper as finished', () => {
+    it("marks wrapper as finished", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, () => 1);
       anim.begin();
@@ -340,8 +340,8 @@ describe('ChangeSpeed', () => {
   // reset()
   // -----------------------------------------------------------
 
-  describe('reset()', () => {
-    it('resets both wrapper and wrapped animation', () => {
+  describe("reset()", () => {
+    it("resets both wrapper and wrapped animation", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, () => 1);
       anim.begin();
@@ -353,7 +353,7 @@ describe('ChangeSpeed', () => {
       expect(inner.isFinished()).toBe(false);
     });
 
-    it('resets startTime to null', () => {
+    it("resets startTime to null", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, () => 1);
       anim.update(0, 0);
@@ -367,8 +367,8 @@ describe('ChangeSpeed', () => {
   // Speed function integration tests
   // -----------------------------------------------------------
 
-  describe('speed function integration', () => {
-    it('linearSpeedRamp: animation reaches full progress', () => {
+  describe("speed function integration", () => {
+    it("linearSpeedRamp: animation reaches full progress", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = changeSpeed(inner, linearSpeedRamp(1, 2));
       anim.begin();
@@ -376,7 +376,7 @@ describe('ChangeSpeed', () => {
       expect(inner.lastAlpha).toBeCloseTo(1, 1);
     });
 
-    it('emphasizeRegion: animation reaches full progress', () => {
+    it("emphasizeRegion: animation reaches full progress", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = changeSpeed(inner, emphasizeRegion(0.3, 0.7));
       anim.begin();
@@ -384,7 +384,7 @@ describe('ChangeSpeed', () => {
       expect(inner.lastAlpha).toBeCloseTo(1, 1);
     });
 
-    it('rushRegion: animation reaches full progress', () => {
+    it("rushRegion: animation reaches full progress", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = changeSpeed(inner, rushRegion(0.2, 0.8));
       anim.begin();
@@ -392,7 +392,7 @@ describe('ChangeSpeed', () => {
       expect(inner.lastAlpha).toBeCloseTo(1, 1);
     });
 
-    it('smoothSpeedCurve: animation reaches full progress', () => {
+    it("smoothSpeedCurve: animation reaches full progress", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = changeSpeed(inner, smoothSpeedCurve(0.5, 2));
       anim.begin();
@@ -405,28 +405,28 @@ describe('ChangeSpeed', () => {
   // changeSpeed() factory
   // -----------------------------------------------------------
 
-  describe('changeSpeed() factory', () => {
-    it('returns a ChangeSpeed instance', () => {
+  describe("changeSpeed() factory", () => {
+    it("returns a ChangeSpeed instance", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = changeSpeed(inner, () => 1);
       expect(anim).toBeInstanceOf(ChangeSpeed);
     });
 
-    it('passes speed function through', () => {
+    it("passes speed function through", () => {
       const speedFn: SpeedFunction = (t) => 1 + t;
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = changeSpeed(inner, speedFn);
       expect(anim.speedFunc).toBe(speedFn);
     });
 
-    it('passes options through', () => {
+    it("passes options through", () => {
       const customRate = (t: number) => t;
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = changeSpeed(inner, () => 1, { rateFunc: customRate });
       expect(anim.rateFunc).toBe(customRate);
     });
 
-    it('wraps the given animation', () => {
+    it("wraps the given animation", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = changeSpeed(inner, () => 1);
       expect(anim.animation).toBe(inner);
@@ -437,26 +437,26 @@ describe('ChangeSpeed', () => {
   // Duration adjustment for various speed functions
   // -----------------------------------------------------------
 
-  describe('duration adjustment', () => {
-    it('linearSpeedRamp(1,1) keeps original duration', () => {
+  describe("duration adjustment", () => {
+    it("linearSpeedRamp(1,1) keeps original duration", () => {
       const inner = new TestAnimation(mob, { duration: 2, rateFunc: linear });
       const anim = changeSpeed(inner, linearSpeedRamp(1, 1));
       expect(anim.duration).toBeCloseTo(2, 1);
     });
 
-    it('linearSpeedRamp(2,2) halves duration', () => {
+    it("linearSpeedRamp(2,2) halves duration", () => {
       const inner = new TestAnimation(mob, { duration: 4, rateFunc: linear });
       const anim = changeSpeed(inner, linearSpeedRamp(2, 2));
       expect(anim.duration).toBeCloseTo(2, 1);
     });
 
-    it('constant speed 0.25 quadruples duration', () => {
+    it("constant speed 0.25 quadruples duration", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = changeSpeed(inner, () => 0.25);
       expect(anim.duration).toBeCloseTo(4, 1);
     });
 
-    it('very high speed produces very short duration', () => {
+    it("very high speed produces very short duration", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = changeSpeed(inner, () => 10);
       expect(anim.duration).toBeCloseTo(0.1, 1);
@@ -467,15 +467,15 @@ describe('ChangeSpeed', () => {
   // Edge cases
   // -----------------------------------------------------------
 
-  describe('edge cases', () => {
-    it('handles zero-duration inner animation', () => {
+  describe("edge cases", () => {
+    it("handles zero-duration inner animation", () => {
       const inner = new TestAnimation(mob, { duration: 0, rateFunc: linear });
       // Speed function with zero duration: adjusted duration should be 0
       const anim = changeSpeed(inner, () => 1);
       expect(anim.duration).toBeCloseTo(0, 1);
     });
 
-    it('handles near-zero speed (clamped to 0.001)', () => {
+    it("handles near-zero speed (clamped to 0.001)", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       // Near-zero speed: should not cause division by zero
       const anim = changeSpeed(inner, () => 0);
@@ -484,7 +484,7 @@ describe('ChangeSpeed', () => {
       expect(Number.isFinite(anim.duration)).toBe(true);
     });
 
-    it('interpolate handles alpha=0 correctly', () => {
+    it("interpolate handles alpha=0 correctly", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = changeSpeed(inner, linearSpeedRamp(0.5, 2));
       anim.begin();
@@ -492,7 +492,7 @@ describe('ChangeSpeed', () => {
       expect(inner.lastAlpha).toBeCloseTo(0, 1);
     });
 
-    it('interpolate handles alpha=1 correctly', () => {
+    it("interpolate handles alpha=1 correctly", () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = changeSpeed(inner, linearSpeedRamp(0.5, 2));
       anim.begin();

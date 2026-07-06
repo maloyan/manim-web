@@ -146,7 +146,10 @@ export const reverse = (func: RateFunction): RateFunction => {
 /**
  * Compose two rate functions
  */
-export const compose = (outer: RateFunction, inner: RateFunction): RateFunction => {
+export const compose = (
+  outer: RateFunction,
+  inner: RateFunction,
+): RateFunction => {
   return (t: number): number => outer(inner(t));
 };
 
@@ -169,17 +172,15 @@ const binomial = (n: number, k: number): number => {
  * Returns a function that evaluates the polynomial at t.
  * Matches Python Manim's bezier(*points) which returns a callable.
  */
-const bernstein =
-  (...points: number[]) =>
-  (t: number): number => {
-    const n = points.length - 1;
-    let result = 0;
-    for (let i = 0; i <= n; i++) {
-      const coeff = binomial(n, i) * Math.pow(1 - t, n - i) * Math.pow(t, i);
-      result += coeff * points[i];
-    }
-    return result;
-  };
+const bernstein = (...points: number[]) => (t: number): number => {
+  const n = points.length - 1;
+  let result = 0;
+  for (let i = 0; i <= n; i++) {
+    const coeff = binomial(n, i) * Math.pow(1 - t, n - i) * Math.pow(t, i);
+    result += coeff * points[i];
+  }
+  return result;
+};
 
 // --- New rate functions matching Python Manim ---
 
@@ -214,7 +215,9 @@ export const squishRateFunc = (
  * scaling factor (2/(1-pauseRatio) instead of 1/(1-pauseRatio)) to
  * ensure continuity at the pause boundaries.
  */
-export const thereAndBackWithPause = (pauseRatio: number = 1 / 3): RateFunction => {
+export const thereAndBackWithPause = (
+  pauseRatio: number = 1 / 3,
+): RateFunction => {
   return (t: number): number => {
     const a = 2.0 / (1.0 - pauseRatio);
     if (t < 0.5 - pauseRatio / 2) {
@@ -293,7 +296,8 @@ export const smootherstep: RateFunction = (t) =>
  * Smoothererstep - degree 7 smoothstep
  */
 export const smoothererstep: RateFunction = (t) =>
-  35 * Math.pow(t, 4) - 84 * Math.pow(t, 5) + 70 * Math.pow(t, 6) - 20 * Math.pow(t, 7);
+  35 * Math.pow(t, 4) - 84 * Math.pow(t, 5) + 70 * Math.pow(t, 6) -
+  20 * Math.pow(t, 7);
 
 // --- Standard easing - Sine ---
 
@@ -310,7 +314,8 @@ export const easeOutSine: RateFunction = (t) => Math.sin((t * Math.PI) / 2);
 /**
  * Sine ease in-out
  */
-export const easeInOutSine: RateFunction = (t) => -(Math.cos(Math.PI * t) - 1) / 2;
+export const easeInOutSine: RateFunction = (t) =>
+  -(Math.cos(Math.PI * t) - 1) / 2;
 
 // --- Standard easing - Quad InOut ---
 
@@ -364,7 +369,9 @@ export const easeInOutQuint: RateFunction = (t) =>
 export const easeInOutExpo: RateFunction = (t) => {
   if (t === 0) return 0;
   if (t === 1) return 1;
-  return t < 0.5 ? Math.pow(2, 20 * t - 10) / 2 : (2 - Math.pow(2, -20 * t + 10)) / 2;
+  return t < 0.5
+    ? Math.pow(2, 20 * t - 10) / 2
+    : (2 - Math.pow(2, -20 * t + 10)) / 2;
 };
 
 // --- Standard easing - Circ ---
@@ -377,7 +384,8 @@ export const easeInCirc: RateFunction = (t) => 1 - Math.sqrt(1 - t * t);
 /**
  * Circular ease out
  */
-export const easeOutCirc: RateFunction = (t) => Math.sqrt(1 - (t - 1) * (t - 1));
+export const easeOutCirc: RateFunction = (t) =>
+  Math.sqrt(1 - (t - 1) * (t - 1));
 
 /**
  * Circular ease in-out
@@ -396,7 +404,8 @@ const BACK_C3 = BACK_C1 + 1;
 /**
  * Back ease in - pulls back before moving forward
  */
-export const easeInBack: RateFunction = (t) => BACK_C3 * t * t * t - BACK_C1 * t * t;
+export const easeInBack: RateFunction = (t) =>
+  BACK_C3 * t * t * t - BACK_C1 * t * t;
 
 /**
  * Back ease out - overshoots then returns
@@ -410,7 +419,8 @@ export const easeOutBack: RateFunction = (t) =>
 export const easeInOutBack: RateFunction = (t) =>
   t < 0.5
     ? (Math.pow(2 * t, 2) * ((BACK_C2 + 1) * 2 * t - BACK_C2)) / 2
-    : (Math.pow(2 * t - 2, 2) * ((BACK_C2 + 1) * (2 * t - 2) + BACK_C2) + 2) / 2;
+    : (Math.pow(2 * t - 2, 2) * ((BACK_C2 + 1) * (2 * t - 2) + BACK_C2) + 2) /
+      2;
 
 // --- Standard easing - Elastic ---
 
@@ -443,7 +453,8 @@ export const easeInOutElastic: RateFunction = (t) => {
   if (t === 1) return 1;
   return t < 0.5
     ? -(Math.pow(2, 20 * t - 10) * Math.sin((20 * t - 11.125) * ELASTIC_C5)) / 2
-    : (Math.pow(2, -20 * t + 10) * Math.sin((20 * t - 11.125) * ELASTIC_C5)) / 2 + 1;
+    : (Math.pow(2, -20 * t + 10) * Math.sin((20 * t - 11.125) * ELASTIC_C5)) /
+        2 + 1;
 };
 
 // --- Standard easing - Bounce InOut ---
@@ -452,7 +463,9 @@ export const easeInOutElastic: RateFunction = (t) => {
  * Bounce ease in-out
  */
 export const easeInOutBounce: RateFunction = (t) =>
-  t < 0.5 ? (1 - easeOutBounce(1 - 2 * t)) / 2 : (1 + easeOutBounce(2 * t - 1)) / 2;
+  t < 0.5
+    ? (1 - easeOutBounce(1 - 2 * t)) / 2
+    : (1 + easeOutBounce(2 * t - 1)) / 2;
 
 // --- Python Manim-compatible aliases (snake_case naming) ---
 

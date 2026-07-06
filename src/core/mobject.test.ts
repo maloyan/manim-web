@@ -1,53 +1,53 @@
-import { describe, it, expect } from 'vitest';
-import { Mobject, UP, LEFT, RIGHT, UL, UR, DL } from './Mobject';
-import { VMobject } from './VMobject';
-import { VGroup } from './VGroup';
-import { Group } from './Group';
-import { VDict, VectorizedPoint } from './VDict';
+import { describe, expect, it } from "vitest";
+import { DL, LEFT, Mobject, RIGHT, UL, UP, UR } from "./Mobject";
+import { VMobject } from "./VMobject";
+import { VGroup } from "./VGroup";
+import { Group } from "./Group";
+import { VDict, VectorizedPoint } from "./VDict";
 
-describe('VectorizedPoint', () => {
-  it('creates at origin by default', () => {
+describe("VectorizedPoint", () => {
+  it("creates at origin by default", () => {
     const vp = new VectorizedPoint();
     const loc = vp.getLocation();
     expect(loc).toEqual([0, 0, 0]);
   });
 
-  it('creates at specified location', () => {
+  it("creates at specified location", () => {
     const vp = new VectorizedPoint([3, 4, 5]);
     expect(vp.getLocation()).toEqual([3, 4, 5]);
   });
 
-  it('getCenter returns the point location', () => {
+  it("getCenter returns the point location", () => {
     const vp = new VectorizedPoint([1, 2, 3]);
     expect(vp.getCenter()).toEqual([1, 2, 3]);
   });
 
-  it('setLocation updates the point', () => {
+  it("setLocation updates the point", () => {
     const vp = new VectorizedPoint();
     vp.setLocation([7, 8, 9]);
     expect(vp.getLocation()).toEqual([7, 8, 9]);
   });
 
-  it('moveTo updates location', () => {
+  it("moveTo updates location", () => {
     const vp = new VectorizedPoint([1, 1, 1]);
     vp.moveTo([5, 5, 5]);
     expect(vp.getLocation()).toEqual([5, 5, 5]);
   });
 
-  it('shift adds delta to current location', () => {
+  it("shift adds delta to current location", () => {
     const vp = new VectorizedPoint([1, 2, 3]);
     vp.shift([10, 20, 30]);
     expect(vp.getLocation()).toEqual([11, 22, 33]);
   });
 
-  it('is invisible by default (opacity 0)', () => {
+  it("is invisible by default (opacity 0)", () => {
     const vp = new VectorizedPoint();
     expect(vp.opacity).toBe(0);
     expect(vp.fillOpacity).toBe(0);
     expect(vp.strokeWidth).toBe(0);
   });
 
-  it('copy preserves location', () => {
+  it("copy preserves location", () => {
     const vp = new VectorizedPoint([4, 5, 6]);
     const c = vp.copy() as VectorizedPoint;
     expect(c.getLocation()).toEqual([4, 5, 6]);
@@ -59,9 +59,9 @@ describe('VectorizedPoint', () => {
 // Additional coverage tests for Mobject, Group, VGroup, VDict
 // ============================================================
 
-describe('Mobject - extended coverage', () => {
+describe("Mobject - extended coverage", () => {
   // opacity clamping
-  it('opacity setter clamps to [0, 1]', () => {
+  it("opacity setter clamps to [0, 1]", () => {
     const vm = new VMobject();
     vm.opacity = -0.5;
     expect(vm.opacity).toBe(0);
@@ -70,15 +70,15 @@ describe('Mobject - extended coverage', () => {
   });
 
   // color setter syncs style
-  it('color setter syncs style strokeColor and fillColor', () => {
+  it("color setter syncs style strokeColor and fillColor", () => {
     const vm = new VMobject();
-    vm.color = '#ff0000';
-    expect(vm.style.strokeColor).toBe('#ff0000');
-    expect(vm.style.fillColor).toBe('#ff0000');
+    vm.color = "#ff0000";
+    expect(vm.style.strokeColor).toBe("#ff0000");
+    expect(vm.style.fillColor).toBe("#ff0000");
   });
 
   // style getter returns a copy
-  it('style getter returns a copy, not a reference', () => {
+  it("style getter returns a copy, not a reference", () => {
     const vm = new VMobject();
     const s = vm.style;
     s.strokeWidth = 999;
@@ -86,44 +86,44 @@ describe('Mobject - extended coverage', () => {
   });
 
   // setStyle covers all branches
-  it('setStyle updates strokeColor and syncs color', () => {
+  it("setStyle updates strokeColor and syncs color", () => {
     const vm = new VMobject();
-    vm.setStyle({ strokeColor: '#00ff00' });
-    expect(vm.color).toBe('#00ff00');
+    vm.setStyle({ strokeColor: "#00ff00" });
+    expect(vm.color).toBe("#00ff00");
   });
 
-  it('setStyle updates fillOpacity', () => {
+  it("setStyle updates fillOpacity", () => {
     const vm = new VMobject();
     vm.setStyle({ fillOpacity: 0.7 });
     expect(vm.fillOpacity).toBe(0.7);
   });
 
-  it('setStyle updates strokeOpacity', () => {
+  it("setStyle updates strokeOpacity", () => {
     const vm = new VMobject();
     vm.setStyle({ strokeOpacity: 0.3 });
     expect(vm.opacity).toBe(0.3);
   });
 
-  it('setStyle updates strokeWidth', () => {
+  it("setStyle updates strokeWidth", () => {
     const vm = new VMobject();
     vm.setStyle({ strokeWidth: 10 });
     expect(vm.strokeWidth).toBe(10);
   });
 
-  it('setStyle updates fillColor (branch)', () => {
+  it("setStyle updates fillColor (branch)", () => {
     const vm = new VMobject();
-    vm.setStyle({ fillColor: '#abcdef' });
-    expect(vm.fillColor).toBe('#abcdef');
+    vm.setStyle({ fillColor: "#abcdef" });
+    expect(vm.fillColor).toBe("#abcdef");
   });
 
-  it('setStyle returns this for chaining', () => {
+  it("setStyle returns this for chaining", () => {
     const vm = new VMobject();
     const result = vm.setStyle({ strokeWidth: 5 });
     expect(result).toBe(vm);
   });
 
   // submobjects returns a copy
-  it('submobjects returns a copy of children', () => {
+  it("submobjects returns a copy of children", () => {
     const parent = new VMobject();
     const child = new VMobject();
     parent.add(child);
@@ -133,7 +133,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // add re-parents child from previous parent
-  it('add re-parents child from existing parent', () => {
+  it("add re-parents child from existing parent", () => {
     const p1 = new VMobject();
     const p2 = new VMobject();
     const child = new VMobject();
@@ -146,7 +146,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // add multiple children
-  it('add supports multiple children at once', () => {
+  it("add supports multiple children at once", () => {
     const parent = new VMobject();
     const c1 = new VMobject();
     const c2 = new VMobject();
@@ -155,7 +155,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // remove of non-child is a no-op
-  it('remove of non-child is a no-op', () => {
+  it("remove of non-child is a no-op", () => {
     const parent = new VMobject();
     const outsider = new VMobject();
     parent.remove(outsider);
@@ -163,7 +163,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // remove multiple children
-  it('remove supports multiple children at once', () => {
+  it("remove supports multiple children at once", () => {
     const parent = new VMobject();
     const c1 = new VMobject();
     const c2 = new VMobject();
@@ -175,7 +175,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // non-uniform scale
-  it('scale with tuple applies non-uniform scale', () => {
+  it("scale with tuple applies non-uniform scale", () => {
     const vm = new VMobject();
     vm.scale([2, 3, 4]);
     expect(vm.scaleVector.x).toBe(2);
@@ -184,23 +184,23 @@ describe('Mobject - extended coverage', () => {
   });
 
   // scale with z=0 preserves z
-  it('scale with z=0 preserves z scale (no singular matrix)', () => {
+  it("scale with z=0 preserves z scale (no singular matrix)", () => {
     const vm = new VMobject();
     vm.scale([2, 3, 0]);
     expect(vm.scaleVector.z).toBe(1); // z=0 maps to 1
   });
 
   // setColor no-op when same color
-  it('setColor is no-op when color unchanged', () => {
+  it("setColor is no-op when color unchanged", () => {
     const vm = new VMobject();
-    vm.setColor('#ffffff');
+    vm.setColor("#ffffff");
     vm._dirty = false;
-    vm.setColor('#ffffff');
+    vm.setColor("#ffffff");
     expect(vm._dirty).toBe(false); // should not mark dirty
   });
 
   // setStrokeOpacity clamping and no-op
-  it('setStrokeOpacity clamps and is no-op when unchanged', () => {
+  it("setStrokeOpacity clamps and is no-op when unchanged", () => {
     const vm = new VMobject();
     vm.setStrokeOpacity(0.5);
     expect(vm.opacity).toBe(0.5);
@@ -209,7 +209,7 @@ describe('Mobject - extended coverage', () => {
     expect(vm._dirty).toBe(false);
   });
 
-  it('setStrokeOpacity clamps to [0, 1]', () => {
+  it("setStrokeOpacity clamps to [0, 1]", () => {
     const vm = new VMobject();
     vm.setStrokeOpacity(-1);
     expect(vm.opacity).toBe(0);
@@ -218,7 +218,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // setStrokeWidth clamping and no-op
-  it('setStrokeWidth clamps to 0 and is no-op when unchanged', () => {
+  it("setStrokeWidth clamps to 0 and is no-op when unchanged", () => {
     const vm = new VMobject();
     vm.setStrokeWidth(0);
     expect(vm.strokeWidth).toBe(0);
@@ -227,14 +227,14 @@ describe('Mobject - extended coverage', () => {
     expect(vm._dirty).toBe(false);
   });
 
-  it('setStrokeWidth clamps negative values', () => {
+  it("setStrokeWidth clamps negative values", () => {
     const vm = new VMobject();
     vm.setStrokeWidth(-5);
     expect(vm.strokeWidth).toBe(0);
   });
 
   // setFillOpacity clamping and no-op
-  it('setFillOpacity clamps and is no-op when unchanged', () => {
+  it("setFillOpacity clamps and is no-op when unchanged", () => {
     const vm = new VMobject();
     vm.setFillOpacity(0.3);
     expect(vm.fillOpacity).toBe(0.3);
@@ -243,7 +243,7 @@ describe('Mobject - extended coverage', () => {
     expect(vm._dirty).toBe(false);
   });
 
-  it('setFillOpacity clamps to [0, 1]', () => {
+  it("setFillOpacity clamps to [0, 1]", () => {
     const vm = new VMobject();
     vm.setFillOpacity(-1);
     expect(vm.fillOpacity).toBe(0);
@@ -252,36 +252,36 @@ describe('Mobject - extended coverage', () => {
   });
 
   // setFill
-  it('setFill sets both color and opacity', () => {
+  it("setFill sets both color and opacity", () => {
     const vm = new VMobject();
-    vm.setFill('#ff0000', 0.8);
-    expect(vm.fillColor).toBe('#ff0000');
+    vm.setFill("#ff0000", 0.8);
+    expect(vm.fillColor).toBe("#ff0000");
     expect(vm.fillOpacity).toBe(0.8);
   });
 
-  it('setFill with only color', () => {
+  it("setFill with only color", () => {
     const vm = new VMobject();
-    vm.setFill('#00ff00');
-    expect(vm.fillColor).toBe('#00ff00');
+    vm.setFill("#00ff00");
+    expect(vm.fillColor).toBe("#00ff00");
   });
 
-  it('setFill with only opacity', () => {
+  it("setFill with only opacity", () => {
     const vm = new VMobject();
     vm.setFill(undefined, 0.6);
     expect(vm.fillOpacity).toBe(0.6);
   });
 
   // fillColor setter no-op when same
-  it('fillColor setter is no-op when unchanged', () => {
+  it("fillColor setter is no-op when unchanged", () => {
     const vm = new VMobject();
-    vm.fillColor = '#aabbcc';
+    vm.fillColor = "#aabbcc";
     vm._dirty = false;
-    vm.fillColor = '#aabbcc';
+    vm.fillColor = "#aabbcc";
     expect(vm._dirty).toBe(false);
   });
 
   // flip
-  it('flip along X axis (default) negates scaleVector.x', () => {
+  it("flip along X axis (default) negates scaleVector.x", () => {
     const vm = new VMobject();
     vm.flip();
     expect(vm.scaleVector.x).toBe(-1);
@@ -289,26 +289,26 @@ describe('Mobject - extended coverage', () => {
     expect(vm.scaleVector.z).toBe(1);
   });
 
-  it('flip along Y axis negates scaleVector.y', () => {
+  it("flip along Y axis negates scaleVector.y", () => {
     const vm = new VMobject();
     vm.flip(UP);
     expect(vm.scaleVector.x).toBe(1);
     expect(vm.scaleVector.y).toBe(-1);
   });
 
-  it('flip along Z axis negates scaleVector.z', () => {
+  it("flip along Z axis negates scaleVector.z", () => {
     const vm = new VMobject();
     vm.flip([0, 0, 1]);
     expect(vm.scaleVector.z).toBe(-1);
   });
 
-  it('flip returns this for chaining', () => {
+  it("flip returns this for chaining", () => {
     const vm = new VMobject();
     expect(vm.flip()).toBe(vm);
   });
 
   // rotate (VMobject with points - 2D Z-axis)
-  it('rotate around Z axis transforms VMobject points (2D case)', () => {
+  it("rotate around Z axis transforms VMobject points (2D case)", () => {
     // MIGRATION: weak test, remove once property-based tests done
     // Test that rotation is deferred and baked by normalizeTransform
     const vm = new VMobject();
@@ -333,7 +333,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // rotate with options object and aboutPoint
-  it('rotate with aboutPoint option on VMobject', () => {
+  it("rotate with aboutPoint option on VMobject", () => {
     const vm = new VMobject();
     vm.setPoints([
       [1, 0, 0],
@@ -349,7 +349,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // rotate with non-Z axis (3D rotation via quaternion)
-  it('rotate around X axis on VMobject uses quaternion path', () => {
+  it("rotate around X axis on VMobject uses quaternion path", () => {
     const vm = new VMobject();
     vm.setPoints([
       [0, 1, 0],
@@ -367,7 +367,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // rotate with axis as array (not options object)
-  it('rotate with axis as Vector3Tuple on VMobject', () => {
+  it("rotate with axis as Vector3Tuple on VMobject", () => {
     const vm = new VMobject();
     vm.setPoints([
       [0, 0, 1],
@@ -384,7 +384,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // rotateAboutOrigin
-  it('rotateAboutOrigin rotates VMobject about [0,0,0]', () => {
+  it("rotateAboutOrigin rotates VMobject about [0,0,0]", () => {
     const vm = new VMobject();
     vm.setPoints([
       [1, 0, 0],
@@ -399,7 +399,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // copy
-  it('copy creates a deep independent clone', () => {
+  it("copy creates a deep independent clone", () => {
     const vm = new VMobject();
     vm.setPoints([
       [0, 0, 0],
@@ -408,14 +408,14 @@ describe('Mobject - extended coverage', () => {
       [0, 1, 0],
     ]);
     vm.position.set(5, 5, 5);
-    vm.setColor('#ff0000');
+    vm.setColor("#ff0000");
     vm.setStrokeOpacity(0.5);
     vm.strokeWidth = 8;
     vm.fillOpacity = 0.7;
 
     const clone = vm.copy() as VMobject;
     expect(clone.position.x).toBe(5);
-    expect(clone.color).toBe('#ff0000');
+    expect(clone.color).toBe("#ff0000");
     expect(clone.opacity).toBe(0.5);
     expect(clone.strokeWidth).toBe(8);
     expect(clone.fillOpacity).toBe(0.7);
@@ -425,7 +425,7 @@ describe('Mobject - extended coverage', () => {
     expect(vm.position.x).toBe(5);
   });
 
-  it('copy deep copies children', () => {
+  it("copy deep copies children", () => {
     const parent = new VMobject();
     const child = new VMobject();
     child.position.set(1, 2, 3);
@@ -438,10 +438,10 @@ describe('Mobject - extended coverage', () => {
   });
 
   // become
-  it('become copies visual properties from another mobject', () => {
+  it("become copies visual properties from another mobject", () => {
     const source = new VMobject();
     source.position.set(10, 20, 30);
-    source.setColor('#00ff00');
+    source.setColor("#00ff00");
     source.setStrokeOpacity(0.3);
     source.strokeWidth = 6;
     source.fillOpacity = 0.9;
@@ -457,7 +457,7 @@ describe('Mobject - extended coverage', () => {
 
     expect(target.position.x).toBe(10);
     expect(target.position.y).toBe(20);
-    expect(target.color).toBe('#00ff00');
+    expect(target.color).toBe("#00ff00");
     expect(target.opacity).toBe(0.3);
     expect(target.strokeWidth).toBe(6);
     expect(target.fillOpacity).toBe(0.9);
@@ -466,7 +466,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // replace
-  it('replace scales and repositions to match target bounding box (uniform)', () => {
+  it("replace scales and repositions to match target bounding box (uniform)", () => {
     const target = new VMobject();
     target.position.set(5, 5, 0);
     target.scaleVector.set(2, 2, 2);
@@ -480,7 +480,7 @@ describe('Mobject - extended coverage', () => {
     expect(mob.position.y).toBeCloseTo(targetCenter[1]);
   });
 
-  it('replace with stretch=true scales per-axis', () => {
+  it("replace with stretch=true scales per-axis", () => {
     const target = new VMobject();
     target.position.set(3, 4, 0);
 
@@ -492,7 +492,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // getCenter falls back to position when bounding box is empty
-  it('getCenter returns position when bounding box is empty', () => {
+  it("getCenter returns position when bounding box is empty", () => {
     const vm = new VMobject();
     vm.position.set(7, 8, 9);
     const center = vm.getCenter();
@@ -501,13 +501,13 @@ describe('Mobject - extended coverage', () => {
     expect(center[2]).toBe(9);
   });
 
-  it('getBounds throws for empty VMobject', () => {
+  it("getBounds throws for empty VMobject", () => {
     const vm = new VMobject();
     expect(() => vm.getBounds()).toThrow(/has no points/);
   });
 
   // nextTo with point target
-  it('nextTo with Vector3Tuple target positions correctly', () => {
+  it("nextTo with Vector3Tuple target positions correctly", () => {
     const vm = new VMobject();
     vm.nextTo([0, 0, 0], RIGHT, 0.5);
     // Should be positioned to the right of origin
@@ -516,7 +516,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // nextTo with mobject target
-  it('nextTo with Mobject target', () => {
+  it("nextTo with Mobject target", () => {
     const target = new VMobject();
     target.position.set(0, 0, 0);
     const mob = new VMobject();
@@ -526,7 +526,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // alignTo with point
-  it('alignTo with Vector3Tuple aligns in direction', () => {
+  it("alignTo with Vector3Tuple aligns in direction", () => {
     const vm = new VMobject();
     vm.position.set(1, 1, 0);
     vm.alignTo([5, 5, 0], RIGHT);
@@ -536,7 +536,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // alignTo with mobject
-  it('alignTo with Mobject target', () => {
+  it("alignTo with Mobject target", () => {
     const target = new VMobject();
     target.position.set(5, 5, 0);
     const mob = new VMobject();
@@ -548,7 +548,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // moveToAligned
-  it('moveToAligned without edge aligns centers', () => {
+  it("moveToAligned without edge aligns centers", () => {
     const vm = new VMobject();
     vm.position.set(10, 10, 0);
     vm.moveToAligned([0, 0, 0]);
@@ -556,7 +556,7 @@ describe('Mobject - extended coverage', () => {
     expect(vm.position.y).toBe(0);
   });
 
-  it('moveToAligned with alignedEdge delegates to alignTo', () => {
+  it("moveToAligned with alignedEdge delegates to alignTo", () => {
     const vm = new VMobject();
     vm.position.set(1, 1, 0);
     vm.moveToAligned([5, 5, 0], LEFT);
@@ -564,7 +564,7 @@ describe('Mobject - extended coverage', () => {
     expect(center[0]).toBeCloseTo(5);
   });
 
-  it('moveToAligned with Mobject target', () => {
+  it("moveToAligned with Mobject target", () => {
     const target = new VMobject();
     target.position.set(3, 3, 0);
     const mob = new VMobject();
@@ -575,7 +575,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // moveTo with Mobject target
-  it('moveTo with Mobject target centers on it', () => {
+  it("moveTo with Mobject target centers on it", () => {
     const target = new VMobject();
     target.position.set(5, 5, 0);
     const mob = new VMobject();
@@ -586,7 +586,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // moveTo with Mobject + alignedEdge
-  it('moveTo with Mobject and alignedEdge aligns edges', () => {
+  it("moveTo with Mobject and alignedEdge aligns edges", () => {
     const target = new VMobject();
     target.position.set(5, 5, 0);
     const mob = new VMobject();
@@ -595,7 +595,7 @@ describe('Mobject - extended coverage', () => {
     // Should have shifted to align upper-left edges
   });
 
-  it('moveTo lands the world center on the target even under a scaled+rotated parent', () => {
+  it("moveTo lands the world center on the target even under a scaled+rotated parent", () => {
     // MIGRATION: example-based regression. Intent: moveTo targets a WORLD position.
     // When the mobject sits under a parent that scales/rotates it, the shift must be
     // expressed in the parent-local frame, so the child's world center still lands
@@ -618,7 +618,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // getEdge and convenience getters
-  it('getEdge returns edge in direction', () => {
+  it("getEdge returns edge in direction", () => {
     const vm = new VMobject();
     vm.position.set(0, 0, 0);
     const edge = vm.getEdge(RIGHT);
@@ -626,52 +626,52 @@ describe('Mobject - extended coverage', () => {
     expect(edge.length).toBe(3);
   });
 
-  it('getTop returns top edge', () => {
+  it("getTop returns top edge", () => {
     const vm = new VMobject();
     const top = vm.getTop();
     expect(top).toBeDefined();
     expect(top.length).toBe(3);
   });
 
-  it('getBottom returns bottom edge', () => {
+  it("getBottom returns bottom edge", () => {
     const vm = new VMobject();
     const bottom = vm.getBottom();
     expect(bottom).toBeDefined();
   });
 
-  it('getLeft returns left edge', () => {
+  it("getLeft returns left edge", () => {
     const vm = new VMobject();
     const left = vm.getLeft();
     expect(left).toBeDefined();
   });
 
-  it('getRight returns right edge', () => {
+  it("getRight returns right edge", () => {
     const vm = new VMobject();
     const right = vm.getRight();
     expect(right).toBeDefined();
   });
 
   // setX, setY, setZ
-  it('setX sets x coordinate of center', () => {
+  it("setX sets x coordinate of center", () => {
     const vm = new VMobject();
     vm.setX(5);
     expect(vm.getCenter()[0]).toBeCloseTo(5);
   });
 
-  it('setY sets y coordinate of center', () => {
+  it("setY sets y coordinate of center", () => {
     const vm = new VMobject();
     vm.setY(3);
     expect(vm.getCenter()[1]).toBeCloseTo(3);
   });
 
-  it('setZ sets z coordinate of center', () => {
+  it("setZ sets z coordinate of center", () => {
     const vm = new VMobject();
     vm.setZ(7);
     expect(vm.getCenter()[2]).toBeCloseTo(7);
   });
 
   // center
-  it('center moves to origin', () => {
+  it("center moves to origin", () => {
     const vm = new VMobject();
     vm.position.set(5, 5, 5);
     vm.center();
@@ -681,27 +681,27 @@ describe('Mobject - extended coverage', () => {
   });
 
   // toEdge
-  it('toEdge moves to frame edge', () => {
+  it("toEdge moves to frame edge", () => {
     const vm = new VMobject();
     vm.toEdge(RIGHT);
     expect(vm.position.x).toBeGreaterThan(0);
   });
 
-  it('toEdge with custom buff', () => {
+  it("toEdge with custom buff", () => {
     const vm = new VMobject();
     vm.toEdge(UP, 1.0);
     expect(vm.position.y).toBeGreaterThan(0);
   });
 
   // toCorner
-  it('toCorner moves to corner of frame', () => {
+  it("toCorner moves to corner of frame", () => {
     const vm = new VMobject();
     vm.toCorner(UR);
     expect(vm.position.x).toBeGreaterThan(0);
     expect(vm.position.y).toBeGreaterThan(0);
   });
 
-  it('toCorner with custom buff', () => {
+  it("toCorner with custom buff", () => {
     const vm = new VMobject();
     vm.toCorner(DL, 1.0);
     expect(vm.position.x).toBeLessThan(0);
@@ -709,7 +709,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // applyToFamily
-  it('applyToFamily applies function to self and descendants', () => {
+  it("applyToFamily applies function to self and descendants", () => {
     const parent = new VMobject();
     const child = new VMobject();
     const grandchild = new VMobject();
@@ -725,7 +725,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // getFamily
-  it('getFamily returns self and all descendants', () => {
+  it("getFamily returns self and all descendants", () => {
     const parent = new VMobject();
     const c1 = new VMobject();
     const c2 = new VMobject();
@@ -740,7 +740,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // Updaters
-  it('addUpdater adds and hasUpdaters returns true', () => {
+  it("addUpdater adds and hasUpdaters returns true", () => {
     const vm = new VMobject();
     expect(vm.hasUpdaters()).toBe(false);
     const fn = () => {};
@@ -748,7 +748,7 @@ describe('Mobject - extended coverage', () => {
     expect(vm.hasUpdaters()).toBe(true);
   });
 
-  it('addUpdater with callOnAdd=true calls immediately', () => {
+  it("addUpdater with callOnAdd=true calls immediately", () => {
     const vm = new VMobject();
     let called = false;
     vm.addUpdater(() => {
@@ -757,7 +757,7 @@ describe('Mobject - extended coverage', () => {
     expect(called).toBe(true);
   });
 
-  it('removeUpdater removes the specified updater', () => {
+  it("removeUpdater removes the specified updater", () => {
     const vm = new VMobject();
     const fn = () => {};
     vm.addUpdater(fn);
@@ -765,7 +765,7 @@ describe('Mobject - extended coverage', () => {
     expect(vm.hasUpdaters()).toBe(false);
   });
 
-  it('removeUpdater of non-existent updater is no-op', () => {
+  it("removeUpdater of non-existent updater is no-op", () => {
     const vm = new VMobject();
     const fn1 = () => {};
     const fn2 = () => {};
@@ -774,7 +774,7 @@ describe('Mobject - extended coverage', () => {
     expect(vm.hasUpdaters()).toBe(true);
   });
 
-  it('clearUpdaters removes all updaters', () => {
+  it("clearUpdaters removes all updaters", () => {
     const vm = new VMobject();
     vm.addUpdater(() => {});
     vm.addUpdater(() => {});
@@ -782,7 +782,7 @@ describe('Mobject - extended coverage', () => {
     expect(vm.hasUpdaters()).toBe(false);
   });
 
-  it('getUpdaters returns a copy of updaters', () => {
+  it("getUpdaters returns a copy of updaters", () => {
     const vm = new VMobject();
     const fn = () => {};
     vm.addUpdater(fn);
@@ -792,7 +792,7 @@ describe('Mobject - extended coverage', () => {
     expect(vm.getUpdaters().length).toBe(1); // original unchanged
   });
 
-  it('update runs all updaters and children updaters', () => {
+  it("update runs all updaters and children updaters", () => {
     const parent = new VMobject();
     const child = new VMobject();
     parent.add(child);
@@ -812,7 +812,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // applyFunction
-  it('applyFunction transforms VMobject points', () => {
+  it("applyFunction transforms VMobject points", () => {
     const vm = new VMobject();
     vm.setPoints([
       [1, 0, 0],
@@ -828,7 +828,7 @@ describe('Mobject - extended coverage', () => {
     expect(pts[3][0]).toBe(8);
   });
 
-  it('applyFunction works on nested VMobjects', () => {
+  it("applyFunction works on nested VMobjects", () => {
     const parent = new VMobject();
     const child = new VMobject();
     child.setPoints([
@@ -845,7 +845,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // _markDirtyUpward
-  it('_markDirtyUpward propagates dirty flag to ancestors', () => {
+  it("_markDirtyUpward propagates dirty flag to ancestors", () => {
     const parent = new VMobject();
     const child = new VMobject();
     parent.add(child);
@@ -856,7 +856,7 @@ describe('Mobject - extended coverage', () => {
     expect(parent._dirty).toBe(true);
   });
 
-  it('_markDirtyUpward short-circuits when already dirty', () => {
+  it("_markDirtyUpward short-circuits when already dirty", () => {
     const parent = new VMobject();
     const child = new VMobject();
     parent.add(child);
@@ -867,7 +867,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // isDirty
-  it('isDirty returns current dirty state', () => {
+  it("isDirty returns current dirty state", () => {
     const vm = new VMobject();
     expect(vm.isDirty).toBe(true); // starts dirty
     vm._dirty = false;
@@ -875,24 +875,24 @@ describe('Mobject - extended coverage', () => {
   });
 
   // generateTarget
-  it('generateTarget creates a copy on targetCopy', () => {
+  it("generateTarget creates a copy on targetCopy", () => {
     const vm = new VMobject();
     vm.position.set(1, 2, 3);
-    vm.setColor('#ff0000');
+    vm.setColor("#ff0000");
     const target = vm.generateTarget();
     expect(vm.targetCopy).toBe(target);
     expect(target.position.x).toBe(1);
-    expect(target.color).toBe('#ff0000');
+    expect(target.color).toBe("#ff0000");
     // modifying target should not affect original
     target.position.set(99, 99, 99);
     expect(vm.position.x).toBe(1);
   });
 
   // saveState and restoreState
-  it('saveState stores and restoreState restores', () => {
+  it("saveState stores and restoreState restores", () => {
     const vm = new VMobject();
     vm.position.set(1, 2, 3);
-    vm.setColor('#ff0000');
+    vm.setColor("#ff0000");
     vm.setStrokeOpacity(0.5);
     vm.strokeWidth = 8;
     vm.fillOpacity = 0.7;
@@ -906,7 +906,7 @@ describe('Mobject - extended coverage', () => {
 
     // Modify
     vm.position.set(99, 99, 99);
-    vm.setColor('#0000ff');
+    vm.setColor("#0000ff");
     vm.setStrokeOpacity(1);
     vm.strokeWidth = 2;
     vm.fillOpacity = 0;
@@ -916,19 +916,19 @@ describe('Mobject - extended coverage', () => {
     expect(restored).toBe(true);
     expect(vm.position.x).toBe(1);
     expect(vm.position.y).toBe(2);
-    expect(vm.color).toBe('#ff0000');
+    expect(vm.color).toBe("#ff0000");
     expect(vm.opacity).toBe(0.5);
     expect(vm.strokeWidth).toBe(8);
     expect(vm.fillOpacity).toBe(0.7);
     expect(vm.getLocalPoints().length).toBe(4);
   });
 
-  it('restoreState returns false when no saved state', () => {
+  it("restoreState returns false when no saved state", () => {
     const vm = new VMobject();
     expect(vm.restoreState()).toBe(false);
   });
 
-  it('saveState also stores __savedMobjectState', () => {
+  it("saveState also stores __savedMobjectState", () => {
     const vm = new VMobject();
     vm.position.set(1, 2, 3);
     vm.saveState();
@@ -937,7 +937,7 @@ describe('Mobject - extended coverage', () => {
     expect(state.position).toEqual([1, 2, 3]);
   });
 
-  it('restoreState recursively restores children', () => {
+  it("restoreState recursively restores children", () => {
     const parent = new VMobject();
     const child = new VMobject();
     child.position.set(5, 6, 7);
@@ -951,7 +951,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // dispose
-  it('dispose cleans up without error', () => {
+  it("dispose cleans up without error", () => {
     const vm = new VMobject();
     const child = new VMobject();
     vm.add(child);
@@ -959,7 +959,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // _syncToThree
-  it('_syncToThree creates three object and syncs', () => {
+  it("_syncToThree creates three object and syncs", () => {
     const vm = new VMobject();
     vm.position.set(1, 2, 3);
     vm._syncToThree();
@@ -967,7 +967,7 @@ describe('Mobject - extended coverage', () => {
     expect(vm._dirty).toBe(false);
   });
 
-  it('_syncToThree skips when not dirty', () => {
+  it("_syncToThree skips when not dirty", () => {
     const vm = new VMobject();
     vm._syncToThree();
     vm._dirty = false;
@@ -977,7 +977,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // getThreeObject
-  it('getThreeObject creates and syncs', () => {
+  it("getThreeObject creates and syncs", () => {
     const vm = new VMobject();
     const obj = vm.getThreeObject();
     expect(obj).toBeDefined();
@@ -985,7 +985,7 @@ describe('Mobject - extended coverage', () => {
   });
 
   // prepareForNonlinearTransform
-  it('prepareForNonlinearTransform subdivides cubic segments', () => {
+  it("prepareForNonlinearTransform subdivides cubic segments", () => {
     const vm = new VMobject();
     vm.setPoints([
       [0, 0, 0],
@@ -998,7 +998,7 @@ describe('Mobject - extended coverage', () => {
     expect(vm.numPoints).toBeGreaterThan(originalCount);
   });
 
-  it('prepareForNonlinearTransform skips with fewer than 4 points', () => {
+  it("prepareForNonlinearTransform skips with fewer than 4 points", () => {
     const vm = new VMobject();
     vm.setPoints([
       [0, 0, 0],

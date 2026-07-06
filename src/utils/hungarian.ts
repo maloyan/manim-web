@@ -59,7 +59,12 @@ export interface HungarianResult {
 export function hungarian(costMatrix: number[][]): HungarianResult {
   const origRows = costMatrix.length;
   if (origRows === 0) {
-    return { assignments: [], totalCost: 0, assignedRows: new Set(), assignedCols: new Set() };
+    return {
+      assignments: [],
+      totalCost: 0,
+      assignedRows: new Set(),
+      assignedCols: new Set(),
+    };
   }
   const origCols = costMatrix[0].length;
   if (origCols === 0) {
@@ -85,13 +90,15 @@ export function hungarian(costMatrix: number[][]): HungarianResult {
   const DUMMY_COST = maxCost * 10 + 1;
 
   const n = Math.max(origRows, origCols);
-  const cost: number[][] = Array.from({ length: n }, (_, i) =>
-    Array.from({ length: n }, (_, j) => {
-      if (i < origRows && j < origCols) {
-        return costMatrix[i][j];
-      }
-      return DUMMY_COST;
-    }),
+  const cost: number[][] = Array.from(
+    { length: n },
+    (_, i) =>
+      Array.from({ length: n }, (_, j) => {
+        if (i < origRows && j < origCols) {
+          return costMatrix[i][j];
+        }
+        return DUMMY_COST;
+      }),
   );
 
   // Hungarian algorithm (Kuhn-Munkres) using the potential method.
@@ -211,7 +218,12 @@ export function hungarianFromSimilarity(
 ): HungarianResult {
   const rows = similarityMatrix.length;
   if (rows === 0) {
-    return { assignments: [], totalCost: 0, assignedRows: new Set(), assignedCols: new Set() };
+    return {
+      assignments: [],
+      totalCost: 0,
+      assignedRows: new Set(),
+      assignedCols: new Set(),
+    };
   }
   const cols = similarityMatrix[0].length;
   if (cols === 0) {
@@ -236,13 +248,15 @@ export function hungarianFromSimilarity(
   // Convert similarity to cost: cost = maxSim - similarity
   // Pairs below threshold get a high penalty cost
   const penaltyCost = maxSim * 10 + 1;
-  const costMatrix: number[][] = Array.from({ length: rows }, (_, i) =>
-    Array.from({ length: cols }, (_, j) => {
-      if (similarityMatrix[i][j] >= threshold) {
-        return maxSim - similarityMatrix[i][j];
-      }
-      return penaltyCost;
-    }),
+  const costMatrix: number[][] = Array.from(
+    { length: rows },
+    (_, i) =>
+      Array.from({ length: cols }, (_, j) => {
+        if (similarityMatrix[i][j] >= threshold) {
+          return maxSim - similarityMatrix[i][j];
+        }
+        return penaltyCost;
+      }),
   );
 
   const result = hungarian(costMatrix);

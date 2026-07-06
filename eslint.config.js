@@ -1,18 +1,16 @@
-import eslint from "@eslint/js";
-import tseslint from "typescript-eslint";
-import eslintConfigPrettier from "eslint-config-prettier";
-import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
 
 export default [
   {
-    ignores: ["dist/", "node_modules/", "docs/", "src/**/*.test.ts"],
+    ignores: ['dist/', 'node_modules/', 'docs/', 'src/**/*.test.ts'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
-  eslintConfigPrettier,
   {
-    files: ["src/**/*.ts", "src/**/*.tsx"],
-    ignores: ["src/**/*.test.ts"],
+    files: ['src/**/*.ts', 'src/**/*.tsx'],
+    ignores: ['src/**/*.test.ts'],
     languageOptions: {
       parserOptions: {
         project: true,
@@ -21,9 +19,9 @@ export default [
     },
   },
   {
-    files: ["src/**/*.ts", "src/**/*.tsx"],
+    files: ['src/**/*.ts', 'src/**/*.tsx'],
     plugins: {
-      "@eslint-community/eslint-comments": eslintComments,
+      '@eslint-community/eslint-comments': eslintComments,
     },
     rules: {
       // Issue #398: ban `eslint-disable` directives — fix the root cause
@@ -31,70 +29,70 @@ export default [
       // authoritative, un-evadable backstop is scripts/check-no-eslint-disable.sh
       // (run in CI and the pre-commit hook), which scans the whole repo —
       // including files ESLint ignores or never sees (tests, docs, configs).
-      "@eslint-community/eslint-comments/no-use": "error",
+      '@eslint-community/eslint-comments/no-use': 'error',
       // Issue #398: `eslint-disable` is banned, so warn-level rules can no
       // longer be silenced inline. Rules that catch real defects are therefore
       // `error` (they block CI). Only `complexity` and `max-lines` stay `warn`
       // (advisory metrics, tracked but non-blocking) — see CI lint step.
-      "@typescript-eslint/naming-convention": [
-        "error",
-        { selector: "class", format: ["PascalCase"] },
-        { selector: "interface", format: ["PascalCase"] },
-        { selector: "typeAlias", format: ["PascalCase"] },
-        { selector: "enum", format: ["PascalCase"] },
-        { selector: "enumMember", format: ["UPPER_CASE", "PascalCase"] },
-        { selector: "function", format: ["camelCase", "PascalCase"] },
-        { selector: "method", format: ["camelCase"], leadingUnderscore: "allow" },
-        { selector: "variable", format: ["camelCase", "UPPER_CASE", "PascalCase"] },
+      '@typescript-eslint/naming-convention': [
+        'error',
+        { selector: 'class', format: ['PascalCase'] },
+        { selector: 'interface', format: ['PascalCase'] },
+        { selector: 'typeAlias', format: ['PascalCase'] },
+        { selector: 'enum', format: ['PascalCase'] },
+        { selector: 'enumMember', format: ['UPPER_CASE', 'PascalCase'] },
+        { selector: 'function', format: ['camelCase', 'PascalCase'] },
+        { selector: 'method', format: ['camelCase'], leadingUnderscore: 'allow' },
+        { selector: 'variable', format: ['camelCase', 'UPPER_CASE', 'PascalCase'] },
         {
-          selector: "parameter",
-          format: ["camelCase"],
-          leadingUnderscore: "allow",
+          selector: 'parameter',
+          format: ['camelCase'],
+          leadingUnderscore: 'allow',
         },
       ],
-      "no-warning-comments": [
-        "warn",
-        { terms: ["TODO", "FIXME", "HACK", "XXX"] },
+      'no-warning-comments': [
+        'warn',
+        { terms: ['TODO', 'FIXME', 'HACK', 'XXX'] },
       ],
-      "max-lines": [
-        "warn",
+      'max-lines': [
+        'warn',
         { max: 500, skipBlankLines: true, skipComments: true },
       ],
-      complexity: ["warn", 15],
+      complexity: ['warn', 15],
 
       // Dead/unused code detection
       // TS-aware version of no-unused-vars (disable base rule to avoid conflicts)
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": [
-        "error",
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
         {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
         },
       ],
       // Catch expressions that don't affect state (e.g. `x + 1;` with no assignment)
-      "no-unused-expressions": "off",
-      "@typescript-eslint/no-unused-expressions": "error",
+      'no-unused-expressions': 'off',
+      '@typescript-eslint/no-unused-expressions': 'error',
       // Verify recommended rules are active at error level (explicit for visibility)
-      "no-unreachable": "error",
-      "no-constant-condition": "error",
-      "no-empty": "error",
+      'no-unreachable': 'error',
+      'no-constant-condition': 'error',
+      'no-empty': 'error',
 
       // Security: catch dangerous DOM/eval patterns
-      "no-eval": "error",
-      "no-implied-eval": "off",
-      "@typescript-eslint/no-implied-eval": "error",
+      'no-eval': 'error',
+      'no-implied-eval': 'off',
+      '@typescript-eslint/no-implied-eval': 'error',
 
       // All logging must go through src/utils/logger (issue #431); the logger
       // itself and the test setup are exempted below.
-      "no-console": "error",
+      'no-console': 'error',
     },
   },
   {
-    files: ["src/utils/logger.ts", "src/test-setup/**/*.ts"],
+    files: ['src/utils/logger.ts', 'src/test-setup/**/*.ts'],
     rules: {
-      "no-console": "off",
+      'no-console': 'off',
     },
   },
 ];

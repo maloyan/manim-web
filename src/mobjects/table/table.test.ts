@@ -1,8 +1,14 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, beforeAll } from 'vitest';
-import { Table, MathTable, MobjectTable, IntegerTable, DecimalTable } from './Table';
-import { Rectangle } from '../geometry/Rectangle';
-import { VGroup } from '../../core/VGroup';
+import { beforeAll, describe, expect, it } from "vitest";
+import {
+  DecimalTable,
+  IntegerTable,
+  MathTable,
+  MobjectTable,
+  Table,
+} from "./Table";
+import { Rectangle } from "../geometry/Rectangle";
+import { VGroup } from "../../core/VGroup";
 
 /**
  * happy-dom does not support canvas 2D context. DecimalNumber (used by
@@ -11,8 +17,11 @@ import { VGroup } from '../../core/VGroup';
  */
 beforeAll(() => {
   const origGetContext = HTMLCanvasElement.prototype.getContext;
-  HTMLCanvasElement.prototype.getContext = function (type: string, ...args: unknown[]) {
-    if (type === '2d') {
+  HTMLCanvasElement.prototype.getContext = function (
+    type: string,
+    ...args: unknown[]
+  ) {
+    if (type === "2d") {
       return {
         scale: () => {},
         clearRect: () => {},
@@ -20,11 +29,11 @@ beforeAll(() => {
         fillRect: () => {},
         measureText: () => ({ width: 50, fontBoundingBoxAscent: 30 }),
         drawImage: () => {},
-        font: '',
-        fillStyle: '',
+        font: "",
+        fillStyle: "",
         globalAlpha: 1,
-        textBaseline: 'alphabetic',
-        textAlign: 'left',
+        textBaseline: "alphabetic",
+        textAlign: "left",
       } as unknown as CanvasRenderingContext2D;
     }
     return origGetContext.call(this, type, ...(args as []));
@@ -39,9 +48,9 @@ function entry(w = 0.5, h = 0.5): Rectangle {
   return new Rectangle({ width: w, height: h });
 }
 
-describe('Table', () => {
+describe("Table", () => {
   // ---- Basic construction ----
-  it('constructs a 2x2 table', () => {
+  it("constructs a 2x2 table", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -52,7 +61,7 @@ describe('Table', () => {
     expect(t.getNumCols()).toBe(2);
   });
 
-  it('constructs a 3x1 table', () => {
+  it("constructs a 3x1 table", () => {
     const t = new Table({
       data: [[entry()], [entry()], [entry()]],
     });
@@ -60,7 +69,7 @@ describe('Table', () => {
     expect(t.getNumCols()).toBe(1);
   });
 
-  it('constructs a 1x3 table', () => {
+  it("constructs a 1x3 table", () => {
     const t = new Table({
       data: [[entry(), entry(), entry()]],
     });
@@ -68,14 +77,14 @@ describe('Table', () => {
     expect(t.getNumCols()).toBe(3);
   });
 
-  it('constructs an empty table (0 rows)', () => {
+  it("constructs an empty table (0 rows)", () => {
     const t = new Table({ data: [] });
     expect(t.getNumRows()).toBe(0);
     expect(t.getNumCols()).toBe(0);
   });
 
   // ---- Constructor options ----
-  it('constructs with custom position', () => {
+  it("constructs with custom position", () => {
     const t = new Table({
       data: [[entry()]],
       position: [2, 3, 0],
@@ -83,7 +92,7 @@ describe('Table', () => {
     expect(t.getNumRows()).toBe(1);
   });
 
-  it('constructs with custom vBuff and hBuff', () => {
+  it("constructs with custom vBuff and hBuff", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -96,39 +105,39 @@ describe('Table', () => {
     expect(t.getNumCols()).toBe(2);
   });
 
-  it('constructs with custom lineColor and lineStrokeWidth', () => {
+  it("constructs with custom lineColor and lineStrokeWidth", () => {
     const t = new Table({
       data: [[entry()]],
-      lineColor: '#ff0000',
+      lineColor: "#ff0000",
       lineStrokeWidth: 4,
     });
     expect(t.getNumRows()).toBe(1);
   });
 
-  it('constructs with entriesColor applied to all entries', () => {
+  it("constructs with entriesColor applied to all entries", () => {
     const e1 = entry();
     const e2 = entry();
     const t = new Table({
       data: [[e1, e2]],
-      entriesColor: '#00ff00',
+      entriesColor: "#00ff00",
     });
     expect(t.getNumCols()).toBe(2);
   });
 
-  it('constructs with entriesColor applied to row and col labels', () => {
+  it("constructs with entriesColor applied to row and col labels", () => {
     const rl = entry();
     const cl = entry();
     const t = new Table({
       data: [[entry()]],
       rowLabels: [rl],
       colLabels: [cl],
-      entriesColor: '#ff0000',
+      entriesColor: "#ff0000",
     });
     expect(t.getNumRows()).toBe(1);
   });
 
   // ---- Row and column labels ----
-  it('constructs with row labels', () => {
+  it("constructs with row labels", () => {
     const rl1 = entry();
     const rl2 = entry();
     const t = new Table({
@@ -144,7 +153,7 @@ describe('Table', () => {
     expect(labels.children.length).toBe(2);
   });
 
-  it('constructs with column labels', () => {
+  it("constructs with column labels", () => {
     const cl1 = entry();
     const cl2 = entry();
     const t = new Table({
@@ -160,7 +169,7 @@ describe('Table', () => {
     expect(labels.children.length).toBe(2);
   });
 
-  it('constructs with both row and column labels', () => {
+  it("constructs with both row and column labels", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -173,7 +182,7 @@ describe('Table', () => {
     expect(t.getNumCols()).toBe(2);
   });
 
-  it('constructs with row labels, column labels, and topLeftEntry', () => {
+  it("constructs with row labels, column labels, and topLeftEntry", () => {
     const topLeft = entry();
     const t = new Table({
       data: [
@@ -189,7 +198,7 @@ describe('Table', () => {
   });
 
   // ---- getCell ----
-  it('getCell returns the correct entry', () => {
+  it("getCell returns the correct entry", () => {
     const e1 = entry();
     const e2 = entry();
     const t = new Table({
@@ -199,7 +208,7 @@ describe('Table', () => {
     expect(t.getCell(0, 1)).toBe(e2);
   });
 
-  it('getCell returns correct entry in multi-row table', () => {
+  it("getCell returns correct entry in multi-row table", () => {
     const e1 = entry();
     const e2 = entry();
     const e3 = entry();
@@ -216,7 +225,7 @@ describe('Table', () => {
     expect(t.getCell(1, 1)).toBe(e4);
   });
 
-  it('getCell throws for out-of-bounds indices', () => {
+  it("getCell throws for out-of-bounds indices", () => {
     const t = new Table({
       data: [[entry()]],
     });
@@ -227,7 +236,7 @@ describe('Table', () => {
   });
 
   // ---- getRow ----
-  it('getRow returns a VGroup with correct children', () => {
+  it("getRow returns a VGroup with correct children", () => {
     const e1 = entry();
     const e2 = entry();
     const t = new Table({
@@ -243,14 +252,14 @@ describe('Table', () => {
     expect(row.children).toContain(e2);
   });
 
-  it('getRow throws for out-of-bounds index', () => {
+  it("getRow throws for out-of-bounds index", () => {
     const t = new Table({ data: [[entry()]] });
     expect(() => t.getRow(5)).toThrow();
     expect(() => t.getRow(-1)).toThrow();
   });
 
   // ---- getColumn ----
-  it('getColumn returns a VGroup with correct children', () => {
+  it("getColumn returns a VGroup with correct children", () => {
     const e1 = entry();
     const e3 = entry();
     const t = new Table({
@@ -266,13 +275,13 @@ describe('Table', () => {
     expect(col.children).toContain(e3);
   });
 
-  it('getColumn throws for out-of-bounds index', () => {
+  it("getColumn throws for out-of-bounds index", () => {
     const t = new Table({ data: [[entry()]] });
     expect(() => t.getColumn(5)).toThrow();
     expect(() => t.getColumn(-1)).toThrow();
   });
 
-  it('getColumn handles ragged rows', () => {
+  it("getColumn handles ragged rows", () => {
     // Row 0 has 2 cols, row 1 has 1 col
     const e1 = entry();
     const e2 = entry();
@@ -289,7 +298,7 @@ describe('Table', () => {
   });
 
   // ---- getEntries ----
-  it('getEntries returns VGroup of all data entries', () => {
+  it("getEntries returns VGroup of all data entries", () => {
     const e1 = entry();
     const e2 = entry();
     const e3 = entry();
@@ -308,7 +317,7 @@ describe('Table', () => {
   });
 
   // ---- getRowLabels / getColLabels ----
-  it('getRowLabels returns VGroup', () => {
+  it("getRowLabels returns VGroup", () => {
     const rl = entry();
     const t = new Table({
       data: [[entry()]],
@@ -320,7 +329,7 @@ describe('Table', () => {
     expect(labels.children).toContain(rl);
   });
 
-  it('getColLabels returns VGroup', () => {
+  it("getColLabels returns VGroup", () => {
     const cl = entry();
     const t = new Table({
       data: [[entry()]],
@@ -332,14 +341,14 @@ describe('Table', () => {
     expect(labels.children).toContain(cl);
   });
 
-  it('getRowLabels returns empty VGroup when no labels', () => {
+  it("getRowLabels returns empty VGroup when no labels", () => {
     const t = new Table({ data: [[entry()]] });
     const labels = t.getRowLabels();
     expect(labels).toBeInstanceOf(VGroup);
     expect(labels.children.length).toBe(0);
   });
 
-  it('getColLabels returns empty VGroup when no labels', () => {
+  it("getColLabels returns empty VGroup when no labels", () => {
     const t = new Table({ data: [[entry()]] });
     const labels = t.getColLabels();
     expect(labels).toBeInstanceOf(VGroup);
@@ -347,17 +356,17 @@ describe('Table', () => {
   });
 
   // ---- Lines ----
-  it('getHorizontalLines returns a VGroup', () => {
+  it("getHorizontalLines returns a VGroup", () => {
     const t = new Table({ data: [[entry()]] });
     expect(t.getHorizontalLines()).toBeInstanceOf(VGroup);
   });
 
-  it('getVerticalLines returns a VGroup', () => {
+  it("getVerticalLines returns a VGroup", () => {
     const t = new Table({ data: [[entry()]] });
     expect(t.getVerticalLines()).toBeInstanceOf(VGroup);
   });
 
-  it('generates correct number of lines with outer lines', () => {
+  it("generates correct number of lines with outer lines", () => {
     // 2x2 table with outer lines: 3 horizontal + 3 vertical lines
     const t = new Table({
       data: [
@@ -372,7 +381,7 @@ describe('Table', () => {
     expect(vLines.children.length).toBe(3); // left, middle, right
   });
 
-  it('generates correct number of lines without outer lines', () => {
+  it("generates correct number of lines without outer lines", () => {
     // 2x2 table without outer lines: 1 horizontal + 1 vertical
     const t = new Table({
       data: [
@@ -387,7 +396,7 @@ describe('Table', () => {
     expect(vLines.children.length).toBe(1); // only middle
   });
 
-  it('generates lines with row and column labels', () => {
+  it("generates lines with row and column labels", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -405,7 +414,7 @@ describe('Table', () => {
     expect(vLines.children.length).toBe(4);
   });
 
-  it('constructs with includeOuterLines=false', () => {
+  it("constructs with includeOuterLines=false", () => {
     const t = new Table({
       data: [[entry(), entry()]],
       includeOuterLines: false,
@@ -414,16 +423,16 @@ describe('Table', () => {
   });
 
   // ---- setLineColor ----
-  it('setLineColor updates line colors and returns this', () => {
+  it("setLineColor updates line colors and returns this", () => {
     const t = new Table({
       data: [[entry(), entry()]],
     });
-    const result = t.setLineColor('#ff0000');
+    const result = t.setLineColor("#ff0000");
     expect(result).toBe(t);
   });
 
   // ---- addHighlight ----
-  it('addHighlight creates a highlight rectangle behind a cell', () => {
+  it("addHighlight creates a highlight rectangle behind a cell", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -434,7 +443,7 @@ describe('Table', () => {
     expect(rect).toBeInstanceOf(Rectangle);
   });
 
-  it('addHighlight with default color and opacity', () => {
+  it("addHighlight with default color and opacity", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -445,18 +454,18 @@ describe('Table', () => {
     expect(rect).toBeInstanceOf(Rectangle);
   });
 
-  it('addHighlight with custom color and opacity', () => {
+  it("addHighlight with custom color and opacity", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
         [entry(), entry()],
       ],
     });
-    const rect = t.addHighlight(0, 1, '#ff0000', 0.5);
+    const rect = t.addHighlight(0, 1, "#ff0000", 0.5);
     expect(rect).toBeInstanceOf(Rectangle);
   });
 
-  it('addHighlight replaces existing highlight on same cell', () => {
+  it("addHighlight replaces existing highlight on same cell", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -464,11 +473,11 @@ describe('Table', () => {
       ],
     });
     const rect1 = t.addHighlight(0, 0);
-    const rect2 = t.addHighlight(0, 0, '#ff0000');
+    const rect2 = t.addHighlight(0, 0, "#ff0000");
     expect(rect1).not.toBe(rect2);
   });
 
-  it('addHighlight works with row and column labels', () => {
+  it("addHighlight works with row and column labels", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -481,7 +490,7 @@ describe('Table', () => {
     expect(rect).toBeInstanceOf(Rectangle);
   });
 
-  it('addHighlight on multiple cells', () => {
+  it("addHighlight on multiple cells", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -497,7 +506,7 @@ describe('Table', () => {
   });
 
   // ---- removeHighlight ----
-  it('removeHighlight removes an existing highlight', () => {
+  it("removeHighlight removes an existing highlight", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -509,7 +518,7 @@ describe('Table', () => {
     expect(result).toBe(t); // returns this
   });
 
-  it('removeHighlight on non-existing highlight does not throw', () => {
+  it("removeHighlight on non-existing highlight does not throw", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -522,7 +531,7 @@ describe('Table', () => {
   });
 
   // ---- copy ----
-  it('copy creates a new Table instance', () => {
+  it("copy creates a new Table instance", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -534,7 +543,7 @@ describe('Table', () => {
     expect(c).not.toBe(t);
   });
 
-  it('copy preserves row and column counts', () => {
+  it("copy preserves row and column counts", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -546,7 +555,7 @@ describe('Table', () => {
     expect(c.getNumCols()).toBe(2);
   });
 
-  it('copy with row labels, col labels, and topLeftEntry', () => {
+  it("copy with row labels, col labels, and topLeftEntry", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -561,7 +570,7 @@ describe('Table', () => {
     expect(c.getNumCols()).toBe(2);
   });
 
-  it('copy without outer lines', () => {
+  it("copy without outer lines", () => {
     const t = new Table({
       data: [[entry(), entry()]],
       includeOuterLines: false,
@@ -571,12 +580,12 @@ describe('Table', () => {
   });
 
   // ---- Miscellaneous ----
-  it('is a VGroup', () => {
+  it("is a VGroup", () => {
     const t = new Table({ data: [[entry()]] });
     expect(t).toBeInstanceOf(VGroup);
   });
 
-  it('entries are added as children of the table', () => {
+  it("entries are added as children of the table", () => {
     const t = new Table({
       data: [
         [entry(), entry()],
@@ -587,7 +596,7 @@ describe('Table', () => {
     expect(t.children.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('different entry sizes are handled', () => {
+  it("different entry sizes are handled", () => {
     // Entries with different sizes
     const e1 = entry(1.0, 0.5);
     const e2 = entry(0.5, 1.0);
@@ -604,51 +613,51 @@ describe('Table', () => {
   });
 });
 
-describe('MathTable', () => {
-  it('constructs from string data', () => {
+describe("MathTable", () => {
+  it("constructs from string data", () => {
     const t = new MathTable({
       data: [
-        ['x', 'y'],
-        ['1', '2'],
+        ["x", "y"],
+        ["1", "2"],
       ],
     });
     expect(t.getNumRows()).toBe(2);
     expect(t.getNumCols()).toBe(2);
   });
 
-  it('constructs with row and column labels', () => {
+  it("constructs with row and column labels", () => {
     const t = new MathTable({
       data: [
-        ['1', '2'],
-        ['3', '4'],
+        ["1", "2"],
+        ["3", "4"],
       ],
-      rowLabels: ['R_1', 'R_2'],
-      colLabels: ['C_1', 'C_2'],
+      rowLabels: ["R_1", "R_2"],
+      colLabels: ["C_1", "C_2"],
     });
     expect(t.getNumRows()).toBe(2);
     expect(t.getNumCols()).toBe(2);
   });
 
-  it('constructs with custom fontSize and color', () => {
+  it("constructs with custom fontSize and color", () => {
     const t = new MathTable({
-      data: [['x^2']],
+      data: [["x^2"]],
       fontSize: 48,
-      color: '#ff0000',
+      color: "#ff0000",
     });
     expect(t.getNumRows()).toBe(1);
     expect(t.getNumCols()).toBe(1);
   });
 
-  it('is an instance of Table', () => {
-    const t = new MathTable({ data: [['a']] });
+  it("is an instance of Table", () => {
+    const t = new MathTable({ data: [["a"]] });
     expect(t).toBeInstanceOf(Table);
   });
 
-  it('constructs with includeOuterLines=false', () => {
+  it("constructs with includeOuterLines=false", () => {
     const t = new MathTable({
       data: [
-        ['1', '2'],
-        ['3', '4'],
+        ["1", "2"],
+        ["3", "4"],
       ],
       includeOuterLines: false,
     });
@@ -656,8 +665,8 @@ describe('MathTable', () => {
   });
 });
 
-describe('MobjectTable', () => {
-  it('constructs with mobject data', () => {
+describe("MobjectTable", () => {
+  it("constructs with mobject data", () => {
     const t = new MobjectTable({
       data: [[entry(), entry()]],
     });
@@ -665,14 +674,14 @@ describe('MobjectTable', () => {
     expect(t.getNumCols()).toBe(2);
   });
 
-  it('is an instance of Table', () => {
+  it("is an instance of Table", () => {
     const t = new MobjectTable({ data: [[entry()]] });
     expect(t).toBeInstanceOf(Table);
   });
 });
 
-describe('IntegerTable', () => {
-  it('constructs from number data', () => {
+describe("IntegerTable", () => {
+  it("constructs from number data", () => {
     const t = new IntegerTable({
       data: [
         [1, 2, 3],
@@ -683,7 +692,7 @@ describe('IntegerTable', () => {
     expect(t.getNumCols()).toBe(3);
   });
 
-  it('constructs with row and column labels', () => {
+  it("constructs with row and column labels", () => {
     const t = new IntegerTable({
       data: [
         [1, 2],
@@ -696,24 +705,24 @@ describe('IntegerTable', () => {
     expect(t.getNumCols()).toBe(2);
   });
 
-  it('constructs with custom fontSize and color', () => {
+  it("constructs with custom fontSize and color", () => {
     const t = new IntegerTable({
       data: [[42]],
       fontSize: 48,
-      color: '#00ff00',
+      color: "#00ff00",
     });
     expect(t.getNumRows()).toBe(1);
     expect(t.getNumCols()).toBe(1);
   });
 
-  it('is an instance of Table', () => {
+  it("is an instance of Table", () => {
     const t = new IntegerTable({ data: [[1]] });
     expect(t).toBeInstanceOf(Table);
   });
 });
 
-describe('DecimalTable', () => {
-  it('constructs from decimal data', () => {
+describe("DecimalTable", () => {
+  it("constructs from decimal data", () => {
     const t = new DecimalTable({
       data: [
         [1.5, 2.75],
@@ -724,7 +733,7 @@ describe('DecimalTable', () => {
     expect(t.getNumCols()).toBe(2);
   });
 
-  it('constructs with row and column labels', () => {
+  it("constructs with row and column labels", () => {
     const t = new DecimalTable({
       data: [[1.1, 2.2]],
       rowLabels: [0.5],
@@ -734,7 +743,7 @@ describe('DecimalTable', () => {
     expect(t.getNumCols()).toBe(2);
   });
 
-  it('constructs with custom numDecimalPlaces', () => {
+  it("constructs with custom numDecimalPlaces", () => {
     const t = new DecimalTable({
       data: [[3.14159]],
       numDecimalPlaces: 4,
@@ -743,16 +752,16 @@ describe('DecimalTable', () => {
     expect(t.getNumCols()).toBe(1);
   });
 
-  it('constructs with custom fontSize and color', () => {
+  it("constructs with custom fontSize and color", () => {
     const t = new DecimalTable({
       data: [[1.0]],
       fontSize: 24,
-      color: '#0000ff',
+      color: "#0000ff",
     });
     expect(t.getNumRows()).toBe(1);
   });
 
-  it('is an instance of Table', () => {
+  it("is an instance of Table", () => {
     const t = new DecimalTable({ data: [[1.0]] });
     expect(t).toBeInstanceOf(Table);
   });

@@ -20,12 +20,12 @@
  * ```
  */
 
-import * as THREE from 'three';
+import * as THREE from "three";
 import {
+  type BezierShaderMaterialOptions,
   createBezierShaderMaterial,
   updateBezierMaterialResolution,
-  type BezierShaderMaterialOptions,
-} from './BezierShaderMaterial';
+} from "./BezierShaderMaterial";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -81,7 +81,8 @@ export class BezierRenderer {
   private _pixelRatio: number;
 
   constructor(options: BezierRendererOptions = {}) {
-    const { resolution = [800, 450], pixelRatio = 1, materialOptions = {} } = options;
+    const { resolution = [800, 450], pixelRatio = 1, materialOptions = {} } =
+      options;
 
     this._pixelRatio = pixelRatio;
 
@@ -102,7 +103,12 @@ export class BezierRenderer {
    */
   updateResolution(width: number, height: number, pixelRatio?: number): void {
     if (pixelRatio !== undefined) this._pixelRatio = pixelRatio;
-    updateBezierMaterialResolution(this._material, width, height, this._pixelRatio);
+    updateBezierMaterialResolution(
+      this._material,
+      width,
+      height,
+      this._pixelRatio,
+    );
   }
 
   // -----------------------------------------------------------------------
@@ -127,7 +133,7 @@ export class BezierRenderer {
     points: number[][],
     strokeWidth: number,
     strokeWidthEnd?: number,
-    color: string = '#ffffff',
+    color: string = "#ffffff",
     opacity: number = 1,
   ): BezierSegment[] {
     const segments: BezierSegment[] = [];
@@ -192,7 +198,7 @@ export class BezierRenderer {
     geometry.instanceCount = count;
 
     // Per-vertex quad UVs (shared across all instances)
-    geometry.setAttribute('aQuadUV', new THREE.BufferAttribute(QUAD_UVS, 2));
+    geometry.setAttribute("aQuadUV", new THREE.BufferAttribute(QUAD_UVS, 2));
 
     // Per-instance attributes
     const p0 = new Float32Array(count * 3);
@@ -230,13 +236,22 @@ export class BezierRenderer {
       colors[i4 + 3] = seg.color[3];
     }
 
-    geometry.setAttribute('aP0', new THREE.InstancedBufferAttribute(p0, 3));
-    geometry.setAttribute('aP1', new THREE.InstancedBufferAttribute(p1, 3));
-    geometry.setAttribute('aP2', new THREE.InstancedBufferAttribute(p2, 3));
-    geometry.setAttribute('aP3', new THREE.InstancedBufferAttribute(p3, 3));
-    geometry.setAttribute('aWidthStart', new THREE.InstancedBufferAttribute(wStart, 1));
-    geometry.setAttribute('aWidthEnd', new THREE.InstancedBufferAttribute(wEnd, 1));
-    geometry.setAttribute('aColor', new THREE.InstancedBufferAttribute(colors, 4));
+    geometry.setAttribute("aP0", new THREE.InstancedBufferAttribute(p0, 3));
+    geometry.setAttribute("aP1", new THREE.InstancedBufferAttribute(p1, 3));
+    geometry.setAttribute("aP2", new THREE.InstancedBufferAttribute(p2, 3));
+    geometry.setAttribute("aP3", new THREE.InstancedBufferAttribute(p3, 3));
+    geometry.setAttribute(
+      "aWidthStart",
+      new THREE.InstancedBufferAttribute(wStart, 1),
+    );
+    geometry.setAttribute(
+      "aWidthEnd",
+      new THREE.InstancedBufferAttribute(wEnd, 1),
+    );
+    geometry.setAttribute(
+      "aColor",
+      new THREE.InstancedBufferAttribute(colors, 4),
+    );
 
     const mesh = new THREE.Mesh(geometry, this._material);
     mesh.frustumCulled = false; // Bounds are computed in screen space by shader
@@ -256,7 +271,7 @@ export class BezierRenderer {
   buildMesh(
     points: number[][],
     strokeWidth: number,
-    color: string = '#ffffff',
+    color: string = "#ffffff",
     opacity: number = 1,
     strokeWidthEnd?: number,
   ): THREE.Mesh {
@@ -278,7 +293,10 @@ export class BezierRenderer {
    * @param segments - New segment data
    * @returns The (possibly new) mesh
    */
-  updateMeshFromSegments(mesh: THREE.Mesh, segments: BezierSegment[]): THREE.Mesh {
+  updateMeshFromSegments(
+    mesh: THREE.Mesh,
+    segments: BezierSegment[],
+  ): THREE.Mesh {
     const geo = mesh.geometry as THREE.InstancedBufferGeometry;
     const count = segments.length;
 
@@ -301,13 +319,19 @@ export class BezierRenderer {
     mesh.visible = true;
 
     // Update in-place
-    const p0Attr = geo.getAttribute('aP0') as THREE.InstancedBufferAttribute;
-    const p1Attr = geo.getAttribute('aP1') as THREE.InstancedBufferAttribute;
-    const p2Attr = geo.getAttribute('aP2') as THREE.InstancedBufferAttribute;
-    const p3Attr = geo.getAttribute('aP3') as THREE.InstancedBufferAttribute;
-    const wStartAttr = geo.getAttribute('aWidthStart') as THREE.InstancedBufferAttribute;
-    const wEndAttr = geo.getAttribute('aWidthEnd') as THREE.InstancedBufferAttribute;
-    const colorAttr = geo.getAttribute('aColor') as THREE.InstancedBufferAttribute;
+    const p0Attr = geo.getAttribute("aP0") as THREE.InstancedBufferAttribute;
+    const p1Attr = geo.getAttribute("aP1") as THREE.InstancedBufferAttribute;
+    const p2Attr = geo.getAttribute("aP2") as THREE.InstancedBufferAttribute;
+    const p3Attr = geo.getAttribute("aP3") as THREE.InstancedBufferAttribute;
+    const wStartAttr = geo.getAttribute(
+      "aWidthStart",
+    ) as THREE.InstancedBufferAttribute;
+    const wEndAttr = geo.getAttribute(
+      "aWidthEnd",
+    ) as THREE.InstancedBufferAttribute;
+    const colorAttr = geo.getAttribute(
+      "aColor",
+    ) as THREE.InstancedBufferAttribute;
 
     for (let i = 0; i < count; i++) {
       const seg = segments[i];
@@ -354,7 +378,7 @@ export class BezierRenderer {
     mesh: THREE.Mesh,
     points: number[][],
     strokeWidth: number,
-    color: string = '#ffffff',
+    color: string = "#ffffff",
     opacity: number = 1,
     strokeWidthEnd?: number,
   ): THREE.Mesh {

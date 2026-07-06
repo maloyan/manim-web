@@ -1,6 +1,6 @@
-import { Group } from '../../core/Group';
-import { Axes, AxesOptions } from './Axes';
-import { Line } from '../geometry';
+import { Group } from "../../core/Group";
+import { Axes, AxesOptions } from "./Axes";
+import { Line } from "../geometry";
 
 /**
  * Style configuration for background grid lines
@@ -89,7 +89,7 @@ export class NumberPlane extends Axes {
 
     this._includeBackgroundLines = includeBackgroundLines;
     this._backgroundLineStyle = {
-      color: '#29ABCA',
+      color: "#29ABCA",
       strokeWidth: 1,
       opacity: 1,
       ...backgroundLineStyle,
@@ -98,10 +98,10 @@ export class NumberPlane extends Axes {
     this._fadedLineStyle = fadedLineStyle
       ? { color: this._backgroundLineStyle.color, ...fadedLineStyle }
       : {
-          color: this._backgroundLineStyle.color,
-          strokeWidth: (this._backgroundLineStyle.strokeWidth ?? 2) / 2,
-          opacity: (this._backgroundLineStyle.opacity ?? 1) / 2,
-        };
+        color: this._backgroundLineStyle.color,
+        strokeWidth: (this._backgroundLineStyle.strokeWidth ?? 2) / 2,
+        opacity: (this._backgroundLineStyle.opacity ?? 1) / 2,
+      };
     this._fadedLineRatio = fadedLineRatio;
     this._fadingFactor = fadingFactor;
     this._backgroundLines = new Group();
@@ -156,7 +156,9 @@ export class NumberPlane extends Axes {
           color: color!,
           strokeWidth: strokeWidth!,
         });
-        line.setStrokeOpacity(this._calculateLineOpacity(roundedX, 0, opacity!));
+        line.setStrokeOpacity(
+          this._calculateLineOpacity(roundedX, 0, opacity!),
+        );
         this._backgroundLines.add(line);
       }
     }
@@ -174,7 +176,9 @@ export class NumberPlane extends Axes {
           color: color!,
           strokeWidth: strokeWidth!,
         });
-        line.setStrokeOpacity(this._calculateLineOpacity(0, roundedY, opacity!));
+        line.setStrokeOpacity(
+          this._calculateLineOpacity(0, roundedY, opacity!),
+        );
         this._backgroundLines.add(line);
       }
     }
@@ -236,7 +240,11 @@ export class NumberPlane extends Axes {
   /**
    * Calculate the opacity of a line based on its distance from the origin
    */
-  private _calculateLineOpacity(x: number, y: number, baseOpacity: number): number {
+  private _calculateLineOpacity(
+    x: number,
+    y: number,
+    baseOpacity: number,
+  ): number {
     if (this._fadingFactor === 1) {
       return baseOpacity;
     }
@@ -245,8 +253,12 @@ export class NumberPlane extends Axes {
     const [yMin, yMax] = this._yRange;
 
     // Calculate normalized distance from center
-    const xNorm = xMax !== xMin ? Math.abs(x) / Math.max(Math.abs(xMin), Math.abs(xMax)) : 0;
-    const yNorm = yMax !== yMin ? Math.abs(y) / Math.max(Math.abs(yMin), Math.abs(yMax)) : 0;
+    const xNorm = xMax !== xMin
+      ? Math.abs(x) / Math.max(Math.abs(xMin), Math.abs(xMax))
+      : 0;
+    const yNorm = yMax !== yMin
+      ? Math.abs(y) / Math.max(Math.abs(yMin), Math.abs(yMax))
+      : 0;
     const distance = Math.max(xNorm, yNorm);
 
     // Apply fading

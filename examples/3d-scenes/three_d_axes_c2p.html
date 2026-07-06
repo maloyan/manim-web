@@ -1,28 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>ThreeDAxes c2p alias (issue #257)</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #191919; display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; overflow: hidden; }
-    #container { width: 100vw; height: 100vh; }
-    .controls-hint { position: fixed; bottom: 20px; left: 20px; color: #888; font-family: monospace; font-size: 14px; pointer-events: none; }
-  </style>
-</head>
-<body>
-  <div id="container"></div>
-  <div class="controls-hint">Drag to orbit, scroll to zoom</div>
+  <head>
+    <meta charset="UTF-8">
+    <title>ThreeDAxes c2p alias (issue #257)</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #191919;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #container {
+      width: 100vw;
+      height: 100vh;
+    }
+    .controls-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      color: #888;
+      font-family: monospace;
+      font-size: 14px;
+      pointer-events: none;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div class="controls-hint">Drag to orbit, scroll to zoom</div>
 
-  <script type="module">
+    <script type="module">
     import {
-      ThreeDAxes,
-      Vector3D,
+      BLUE,
       Dot3D,
-      ThreeDScene,
       GREEN,
       RED,
-      BLUE,
+      ThreeDAxes,
+      ThreeDScene,
+      Vector3D,
       YELLOW,
     } from '../../src/index.ts';
 
@@ -62,6 +85,6 @@
     scene.add(axes, vec, dotC2p, dotCoords, dotRoundTrip);
 
     await scene.wait(Infinity);
-  </script>
-</body>
+    </script>
+  </body>
 </html>

@@ -1,5 +1,5 @@
-import * as THREE from 'three';
-import type { MobjectLike, Vector3Tuple } from './MobjectTypes';
+import * as THREE from "three";
+import type { MobjectLike, Vector3Tuple } from "./MobjectTypes";
 
 // Performance optimization: Object pooling for temporary vectors
 // These are shared to avoid allocation in hot paths
@@ -11,7 +11,11 @@ const tempBox3: THREE.Box3 = new THREE.Box3();
  */
 export function getCenterImpl(mob: MobjectLike): Vector3Tuple {
   const b = mob.getBounds();
-  return [(b.min.x + b.max.x) / 2, (b.min.y + b.max.y) / 2, (b.min.z + b.max.z) / 2];
+  return [
+    (b.min.x + b.max.x) / 2,
+    (b.min.y + b.max.y) / 2,
+    (b.min.z + b.max.z) / 2,
+  ];
 }
 
 /**
@@ -34,7 +38,10 @@ export function getBoundingBoxImpl(mob: MobjectLike): {
 /**
  * Get the edge point of the bounding box in a direction.
  */
-export function getEdgeInDirectionImpl(mob: MobjectLike, direction: Vector3Tuple): Vector3Tuple {
+export function getEdgeInDirectionImpl(
+  mob: MobjectLike,
+  direction: Vector3Tuple,
+): Vector3Tuple {
   const center = mob.getCenter();
   const bounds = mob.getBoundingBox();
 
@@ -59,10 +66,12 @@ export function toEdgeImpl(
   const frameHeight = frameDimensions?.[1] ?? 8;
   const bbox = mob.getBoundingBox();
 
-  const targetX =
-    direction[0] !== 0 ? direction[0] * (frameWidth / 2 - buff - bbox.width / 2) : mob.position.x;
-  const targetY =
-    direction[1] !== 0 ? direction[1] * (frameHeight / 2 - buff - bbox.height / 2) : mob.position.y;
+  const targetX = direction[0] !== 0
+    ? direction[0] * (frameWidth / 2 - buff - bbox.width / 2)
+    : mob.position.x;
+  const targetY = direction[1] !== 0
+    ? direction[1] * (frameHeight / 2 - buff - bbox.height / 2)
+    : mob.position.y;
 
   mob.moveTo([targetX, targetY, mob.position.z]);
 }

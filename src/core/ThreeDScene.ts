@@ -1,9 +1,12 @@
-import * as THREE from 'three';
-import { Scene, SceneOptions } from './Scene';
-import { Camera3D } from './Camera';
-import { Lighting } from './Lighting';
-import { OrbitControls, OrbitControlsOptions } from '../interaction/OrbitControls';
-import { Mobject, Vector3Tuple } from './Mobject';
+import * as THREE from "three";
+import { Scene, SceneOptions } from "./Scene";
+import { Camera3D } from "./Camera";
+import { Lighting } from "./Lighting";
+import {
+  OrbitControls,
+  OrbitControlsOptions,
+} from "../interaction/OrbitControls";
+import { Mobject, Vector3Tuple } from "./Mobject";
 
 /**
  * Create a configured 3D camera with initial orientation.
@@ -16,20 +19,19 @@ function createCamera3D(
     phi: number;
     theta: number;
     distance: number;
-    orbitControlsUp?: 'x' | 'y' | 'z';
+    orbitControlsUp?: "x" | "y" | "z";
   },
 ): Camera3D {
   const { fov, phi, theta, distance, orbitControlsUp } = options;
 
   // Compute up vector for OrbitControls compatibility
-  const up: [number, number, number] | undefined =
-    orbitControlsUp === 'x'
-      ? [1, 0, 0]
-      : orbitControlsUp === 'y'
-        ? [0, 1, 0]
-        : orbitControlsUp === 'z'
-          ? [0, 0, 1]
-          : undefined;
+  const up: [number, number, number] | undefined = orbitControlsUp === "x"
+    ? [1, 0, 0]
+    : orbitControlsUp === "y"
+    ? [0, 1, 0]
+    : orbitControlsUp === "z"
+    ? [0, 0, 1]
+    : undefined;
 
   const camera = new Camera3D(aspectRatio, {
     fov,
@@ -59,7 +61,7 @@ export interface ThreeDSceneOptions extends SceneOptions {
   /** Enable orbit controls for user interaction. Defaults to true. */
   enableOrbitControls?: boolean;
   /** Vertical rotation axis for orbit controls: 'x', 'y', or 'z'. If not provided, camera.up is computed from initial phi/theta via orbit() formula. */
-  orbitControlsUp?: 'x' | 'y' | 'z';
+  orbitControlsUp?: "x" | "y" | "z";
   /** Orbit controls configuration options. */
   orbitControlsOptions?: OrbitControlsOptions;
   /** Whether to set up default lighting. Defaults to true. */
@@ -91,7 +93,7 @@ export class ThreeDScene extends Scene {
   // happens in add(), once begin() (if any) has already reset the mobject
   // for its reveal. This mirrors real Manim's fix_in_frame flag, which is
   // pure metadata with no scene-graph side effect of its own (#505).
-  private _pendingFixedMode: Map<Mobject, 'frame'> = new Map();
+  private _pendingFixedMode: Map<Mobject, "frame"> = new Map();
 
   // Fixed-orientation mobjects (stay in 3D world but always face the camera)
   private _fixedOrientationMobjects: Set<Mobject> = new Set();
@@ -159,16 +161,20 @@ export class ThreeDScene extends Scene {
 
       // Preserve initial view direction (position + target) and resync controls state.
       cam.position.copy(preservedPos);
-      this._orbitControls.setTarget([preservedTarget.x, preservedTarget.y, preservedTarget.z]);
+      this._orbitControls.setTarget([
+        preservedTarget.x,
+        preservedTarget.y,
+        preservedTarget.z,
+      ]);
       cam.lookAt(preservedTarget);
       this._orbitControls.update();
 
       // Idle orbit loop: re-render only when user drags while scene isn't animating
-      this._orbitControls.addEventListener('start', () => {
+      this._orbitControls.addEventListener("start", () => {
         this._orbitInteracting = true;
         this._startOrbitLoop();
       });
-      this._orbitControls.addEventListener('end', () => {
+      this._orbitControls.addEventListener("end", () => {
         this._orbitInteracting = false;
       });
     }
@@ -177,7 +183,14 @@ export class ThreeDScene extends Scene {
     this._hudScene = new THREE.Scene();
     const halfW = (options.frameWidth ?? 14) / 2;
     const halfH = (options.frameHeight ?? 8) / 2;
-    this._hudCamera = new THREE.OrthographicCamera(-halfW, halfW, halfH, -halfH, 0.1, 1000);
+    this._hudCamera = new THREE.OrthographicCamera(
+      -halfW,
+      halfW,
+      halfH,
+      -halfH,
+      0.1,
+      1000,
+    );
     this._hudCamera.position.set(0, 0, 10);
     this._hudCamera.lookAt(0, 0, 0);
 
@@ -235,7 +248,7 @@ export class ThreeDScene extends Scene {
         mob.disableChildZLayering();
         ThreeDScene._applyDepthSettings(mob, newMobs.has(mob));
 
-        if (newMobs.has(mob) && this._pendingFixedMode.get(mob) === 'frame') {
+        if (newMobs.has(mob) && this._pendingFixedMode.get(mob) === "frame") {
           this._pendingFixedMode.delete(mob);
           const threeObj = mob.getThreeObject();
           this.threeScene.remove(threeObj);
@@ -258,7 +271,10 @@ export class ThreeDScene extends Scene {
    * depthWrite=!transparent, and (on initial add only) renderOrder=0 so
    * Three.js sorts transparents by camera distance.
    */
-  private static _applyDepthSettings(mob: Mobject, resetRenderOrder = false): void {
+  private static _applyDepthSettings(
+    mob: Mobject,
+    resetRenderOrder = false,
+  ): void {
     mob.getThreeObject().traverse((c) => {
       if (resetRenderOrder) c.renderOrder = 0;
       const mat = (c as THREE.Mesh).material;
@@ -530,7 +546,7 @@ export class ThreeDScene extends Scene {
       }
 
       if (!this.mobjects.has(mob)) {
-        this._pendingFixedMode.set(mob, 'frame');
+        this._pendingFixedMode.set(mob, "frame");
         continue;
       }
 
@@ -642,7 +658,8 @@ export class ThreeDScene extends Scene {
         const clampedDt = Math.min(dt, 0.1);
         if (clampedDt > 0) {
           const current = this._camera3D.getOrbitAngles();
-          const newTheta = current.theta + this._ambientRotationRate * clampedDt;
+          const newTheta = current.theta +
+            this._ambientRotationRate * clampedDt;
           this._camera3D.orbit(current.phi, newTheta, current.distance);
         }
       }
@@ -661,8 +678,10 @@ export class ThreeDScene extends Scene {
           const current = this._camera3D.getOrbitAngles();
           this._illusionThetaTracker += this._illusionRotationRate * clampedDt;
           this._illusionPhiTracker += this._illusionRotationRate * clampedDt;
-          const newTheta = this._illusionOriginTheta + 0.2 * Math.sin(this._illusionThetaTracker);
-          const newPhi = this._illusionOriginPhi + 0.1 * Math.cos(this._illusionPhiTracker);
+          const newTheta = this._illusionOriginTheta +
+            0.2 * Math.sin(this._illusionThetaTracker);
+          const newPhi = this._illusionOriginPhi +
+            0.1 * Math.cos(this._illusionPhiTracker);
           this._camera3D.orbit(newPhi, newTheta, current.distance);
         }
       }
@@ -678,7 +697,9 @@ export class ThreeDScene extends Scene {
       mob._dirty = false;
     };
     for (const mob of this.mobjects) syncDirty(mob);
-    if (this._fixedMobjects) for (const mob of this._fixedMobjects) syncDirty(mob);
+    if (this._fixedMobjects) {
+      for (const mob of this._fixedMobjects) syncDirty(mob);
+    }
 
     // Apply billboard rotation to fixed-orientation mobjects around their
     // current world center. We can't just set `quaternion = camQuat` on the
@@ -686,7 +707,9 @@ export class ThreeDScene extends Scene {
     // the children's offsets (threeObject.position stays at the intended
     // origin), so a raw rotation pivots the children around the wrong point
     // and locks them to screen space (issue #264).
-    if (this._fixedOrientationMobjects && this._fixedOrientationMobjects.size > 0) {
+    if (
+      this._fixedOrientationMobjects && this._fixedOrientationMobjects.size > 0
+    ) {
       const camQuat = this._camera3D.getCamera().quaternion;
       for (const mob of this._fixedOrientationMobjects) {
         const threeObj = mob.getThreeObject();
@@ -834,7 +857,7 @@ export class ThreeDScene extends Scene {
     // Allow orbit loop for static waits where no rAF loop is running.
     if (this._hasActiveLoop && this._needsPerFrameRendering()) return;
 
-    let lastCamJson = '';
+    let lastCamJson = "";
     const tick = () => {
       if (this._disposed) {
         this._orbitRafId = null;
@@ -845,8 +868,7 @@ export class ThreeDScene extends Scene {
 
       // Check if camera has settled (for damping)
       const cam = this._camera3D.getCamera();
-      const camJson =
-        cam.position.x.toFixed(6) +
+      const camJson = cam.position.x.toFixed(6) +
         cam.position.y.toFixed(6) +
         cam.position.z.toFixed(6) +
         cam.quaternion.x.toFixed(6) +

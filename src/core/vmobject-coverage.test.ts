@@ -11,17 +11,17 @@
  * visiblePointCount clamping, and shaderCurves getter/setter.
  */
 
-import { describe, it, expect } from 'vitest';
-import * as THREE from 'three';
-import { VMobject, Point } from './VMobject';
-import { curvesAsSubmobjects, CurvesAsSubmobjects } from './VMobjectCurveUtils';
+import { describe, expect, it } from "vitest";
+import * as THREE from "three";
+import { Point, VMobject } from "./VMobject";
+import { CurvesAsSubmobjects, curvesAsSubmobjects } from "./VMobjectCurveUtils";
 import {
+  isClosedPath,
   isNearlyLinear,
   pointInPolygon,
   sampleBezierOutline,
   sampleBezierPath,
-  isClosedPath,
-} from './VMobjectGeometry';
+} from "./VMobjectGeometry";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -71,8 +71,8 @@ function makeMultiSegmentBezier(): VMobject {
 // setPoints with Point[] (2D objects)
 // ===========================================================================
 
-describe('VMobject.setPoints with Point[] (2D format)', () => {
-  it('converts Point[] to internal 3D representation', () => {
+describe("VMobject.setPoints with Point[] (2D format)", () => {
+  it("converts Point[] to internal 3D representation", () => {
     const v = new VMobject();
     const pts: Point[] = [
       { x: 1, y: 2 },
@@ -88,7 +88,7 @@ describe('VMobject.setPoints with Point[] (2D format)', () => {
     expect(result[3]).toEqual([7, 8, 0]);
   });
 
-  it('handles empty Point array', () => {
+  it("handles empty Point array", () => {
     const v = new VMobject();
     v.setPoints([] as Point[]);
     expect(v.getLocalPoints()).toHaveLength(0);
@@ -100,26 +100,26 @@ describe('VMobject.setPoints with Point[] (2D format)', () => {
 // visiblePointCount edge cases
 // ===========================================================================
 
-describe('VMobject.visiblePointCount clamping', () => {
-  it('clamps to 0 when set to negative', () => {
+describe("VMobject.visiblePointCount clamping", () => {
+  it("clamps to 0 when set to negative", () => {
     const v = makeSimpleBezier();
     v.visiblePointCount = -5;
     expect(v.visiblePointCount).toBe(0);
   });
 
-  it('clamps to numPoints when set beyond total', () => {
+  it("clamps to numPoints when set beyond total", () => {
     const v = makeSimpleBezier();
     v.visiblePointCount = 100;
     expect(v.visiblePointCount).toBe(4);
   });
 
-  it('returns numPoints when _visiblePointCount is null', () => {
+  it("returns numPoints when _visiblePointCount is null", () => {
     const v = makeSimpleBezier();
     // Before any assignment, should return all points
     expect(v.visiblePointCount).toBe(4);
   });
 
-  it('getVisiblePoints returns subset', () => {
+  it("getVisiblePoints returns subset", () => {
     const v = makeSimpleBezier();
     v.visiblePointCount = 2;
     expect(v.getVisiblePoints()).toHaveLength(2);
@@ -131,8 +131,8 @@ describe('VMobject.visiblePointCount clamping', () => {
 // _pointsToShape (via _buildEarcutFillGeometry or indirectly)
 // ===========================================================================
 
-describe('VMobject._pointsToShape (protected, tested via getThreeObject)', () => {
-  it('produces a THREE.Shape from Bezier points', () => {
+describe("VMobject._pointsToShape (protected, tested via getThreeObject)", () => {
+  it("produces a THREE.Shape from Bezier points", () => {
     const v = makeSquare();
     // Access the protected method by casting
     const shape = (v as any)._pointsToShape() as THREE.Shape;
@@ -141,14 +141,14 @@ describe('VMobject._pointsToShape (protected, tested via getThreeObject)', () =>
     expect(shape.curves.length).toBeGreaterThan(0);
   });
 
-  it('returns empty shape for no points', () => {
+  it("returns empty shape for no points", () => {
     const v = new VMobject();
     const shape = (v as any)._pointsToShape() as THREE.Shape;
     expect(shape).toBeInstanceOf(THREE.Shape);
     expect(shape.curves.length).toBe(0);
   });
 
-  it('handles remaining points that do not form full bezier segments', () => {
+  it("handles remaining points that do not form full bezier segments", () => {
     const v = new VMobject();
     // 6 points: 1 full bezier (4 pts) + 2 extra
     v.setPoints([
@@ -169,21 +169,25 @@ describe('VMobject._pointsToShape (protected, tested via getThreeObject)', () =>
 // _pointsToCurvePath
 // ===========================================================================
 
-describe('VMobject._pointsToCurvePath', () => {
-  it('produces a CurvePath from Bezier points', () => {
+describe("VMobject._pointsToCurvePath", () => {
+  it("produces a CurvePath from Bezier points", () => {
     const v = makeMultiSegmentBezier();
-    const curvePath = (v as any)._pointsToCurvePath() as THREE.CurvePath<THREE.Vector3>;
+    const curvePath = (v as any)._pointsToCurvePath() as THREE.CurvePath<
+      THREE.Vector3
+    >;
     expect(curvePath.curves.length).toBe(2); // 2 cubic bezier segments
   });
 
-  it('returns empty CurvePath for fewer than 2 points', () => {
+  it("returns empty CurvePath for fewer than 2 points", () => {
     const v = new VMobject();
     v.setPoints([[0, 0, 0]]);
-    const curvePath = (v as any)._pointsToCurvePath() as THREE.CurvePath<THREE.Vector3>;
+    const curvePath = (v as any)._pointsToCurvePath() as THREE.CurvePath<
+      THREE.Vector3
+    >;
     expect(curvePath.curves.length).toBe(0);
   });
 
-  it('handles remaining points as LineCurve3', () => {
+  it("handles remaining points as LineCurve3", () => {
     const v = new VMobject();
     // 5 points: 1 full bezier (4 pts) + 1 extra creates a LineCurve3
     v.setPoints([
@@ -193,7 +197,9 @@ describe('VMobject._pointsToCurvePath', () => {
       [1, 0, 0],
       [2, 0, 0],
     ]);
-    const curvePath = (v as any)._pointsToCurvePath() as THREE.CurvePath<THREE.Vector3>;
+    const curvePath = (v as any)._pointsToCurvePath() as THREE.CurvePath<
+      THREE.Vector3
+    >;
     // 1 CubicBezierCurve3 + 1 LineCurve3
     expect(curvePath.curves.length).toBe(2);
   });
@@ -203,8 +209,8 @@ describe('VMobject._pointsToCurvePath', () => {
 // _isNearlyLinear (static private)
 // ===========================================================================
 
-describe('VMobject._isNearlyLinear', () => {
-  it('returns true for a perfectly linear segment', () => {
+describe("VMobject._isNearlyLinear", () => {
+  it("returns true for a perfectly linear segment", () => {
     const p0 = [0, 0, 0];
     const p1 = [1 / 3, 0, 0]; // on chord
     const p2 = [2 / 3, 0, 0]; // on chord
@@ -212,7 +218,7 @@ describe('VMobject._isNearlyLinear', () => {
     expect(isNearlyLinear(p0, p1, p2, p3)).toBe(true);
   });
 
-  it('returns false for a curved segment', () => {
+  it("returns false for a curved segment", () => {
     const p0 = [0, 0, 0];
     const p1 = [0.33, 1, 0]; // far from chord
     const p2 = [0.67, 1, 0]; // far from chord
@@ -220,12 +226,12 @@ describe('VMobject._isNearlyLinear', () => {
     expect(isNearlyLinear(p0, p1, p2, p3)).toBe(false);
   });
 
-  it('returns true for degenerate segment (all points at same position)', () => {
+  it("returns true for degenerate segment (all points at same position)", () => {
     const p = [5, 5, 0];
     expect(isNearlyLinear(p, p, p, p)).toBe(true);
   });
 
-  it('returns true when handles are very close to chord', () => {
+  it("returns true when handles are very close to chord", () => {
     const p0 = [0, 0, 0];
     const p1 = [1 / 3, 0.005, 0]; // slightly off chord
     const p2 = [2 / 3, -0.005, 0]; // slightly off chord
@@ -233,7 +239,7 @@ describe('VMobject._isNearlyLinear', () => {
     expect(isNearlyLinear(p0, p1, p2, p3)).toBe(true);
   });
 
-  it('returns false for a curved segment in the XZ plane (regression)', () => {
+  it("returns false for a curved segment in the XZ plane (regression)", () => {
     // Bezier handles bulge in +Z rather than +Y — must not be treated as linear.
     const p0 = [0, 0, 0];
     const p1 = [0.33, 0, 1];
@@ -242,7 +248,7 @@ describe('VMobject._isNearlyLinear', () => {
     expect(isNearlyLinear(p0, p1, p2, p3)).toBe(false);
   });
 
-  it('returns false for a curved segment in the YZ plane', () => {
+  it("returns false for a curved segment in the YZ plane", () => {
     const p0 = [0, 0, 0];
     const p1 = [0, 0.33, 1];
     const p2 = [0, 0.67, 1];
@@ -255,7 +261,7 @@ describe('VMobject._isNearlyLinear', () => {
   // versions of the same shape (e.g. small MathTex "0" → big MathTex "0"
   // during a Transform). A fixed absolute threshold causes small glyphs to
   // render as polygons while large copies render as curves.
-  it('classification is invariant under uniform scaling (issue #310)', () => {
+  it("classification is invariant under uniform scaling (issue #310)", () => {
     // Curved segment: a quarter-circle-ish bulge (handle ~25% off-chord).
     const p0 = [0, 0, 0];
     const p1 = [0.25, 0.25, 0];
@@ -281,7 +287,7 @@ describe('VMobject._isNearlyLinear', () => {
     expect(classify(1)).toBe(classify(10));
   });
 
-  it('a tiny but visibly curved segment is not classified as linear (issue #310)', () => {
+  it("a tiny but visibly curved segment is not classified as linear (issue #310)", () => {
     // ~25% bulge relative to chord, but chord is only 0.02 world units —
     // representative of MathTex glyph segment at small font size.
     const p0 = [0, 0, 0];
@@ -291,7 +297,7 @@ describe('VMobject._isNearlyLinear', () => {
     expect(isNearlyLinear(p0, p1, p2, p3)).toBe(false);
   });
 
-  it('a clearly linear segment at any scale stays linear (issue #310)', () => {
+  it("a clearly linear segment at any scale stays linear (issue #310)", () => {
     // Handle perpendicular deviation = 0.1% of chord length.
     const tiny = (s: number) => [
       [0, 0, 0],
@@ -310,7 +316,7 @@ describe('VMobject._isNearlyLinear', () => {
 // _pointInPolygon (static private)
 // ===========================================================================
 
-describe('VMobject._pointInPolygon', () => {
+describe("VMobject._pointInPolygon", () => {
   // Unit square corners
   const square = [
     [0, 0],
@@ -319,19 +325,19 @@ describe('VMobject._pointInPolygon', () => {
     [0, 1],
   ];
 
-  it('returns true for point inside polygon', () => {
+  it("returns true for point inside polygon", () => {
     expect(pointInPolygon([0.5, 0.5], square)).toBe(true);
   });
 
-  it('returns false for point outside polygon', () => {
+  it("returns false for point outside polygon", () => {
     expect(pointInPolygon([2, 2], square)).toBe(false);
   });
 
-  it('returns false for point far outside', () => {
+  it("returns false for point far outside", () => {
     expect(pointInPolygon([-1, -1], square)).toBe(false);
   });
 
-  it('works with triangle', () => {
+  it("works with triangle", () => {
     const triangle = [
       [0, 0],
       [2, 0],
@@ -346,8 +352,8 @@ describe('VMobject._pointInPolygon', () => {
 // _sampleBezierOutline (private)
 // ===========================================================================
 
-describe('VMobject._sampleBezierOutline', () => {
-  it('samples a curved segment with multiple points', () => {
+describe("VMobject._sampleBezierOutline", () => {
+  it("samples a curved segment with multiple points", () => {
     const v = makeSimpleBezier();
     const pts = v.getLocalPoints();
     const outline = sampleBezierOutline(pts, 8) as number[][];
@@ -358,7 +364,7 @@ describe('VMobject._sampleBezierOutline', () => {
     expect(outline[0][1]).toBeCloseTo(0);
   });
 
-  it('samples a linear segment with fewer points (adaptive)', () => {
+  it("samples a linear segment with fewer points (adaptive)", () => {
     const v = new VMobject();
     // Perfectly linear segment
     v.setPoints([
@@ -376,7 +382,7 @@ describe('VMobject._sampleBezierOutline', () => {
     expect(outline.length).toBe(9);
   });
 
-  it('handles fallback for non-bezier points', () => {
+  it("handles fallback for non-bezier points", () => {
     const v = new VMobject();
     // Only 2 points, not enough for a full bezier segment
     v.setPoints([
@@ -389,7 +395,7 @@ describe('VMobject._sampleBezierOutline', () => {
     expect(outline.length).toBe(2);
   });
 
-  it('removes closing duplicate when first == last', () => {
+  it("removes closing duplicate when first == last", () => {
     const v = new VMobject();
     // Closed bezier: last point == first point
     v.setPointsAsCorners([
@@ -413,8 +419,8 @@ describe('VMobject._sampleBezierOutline', () => {
 // _buildEarcutFillGeometry
 // ===========================================================================
 
-describe('VMobject._buildEarcutFillGeometry', () => {
-  it('returns BufferGeometry for a valid polygon', () => {
+describe("VMobject._buildEarcutFillGeometry", () => {
+  it("returns BufferGeometry for a valid polygon", () => {
     const v = makeSquare();
     const pts3D = v.getLocalPoints();
     const geom = (v as any)._buildEarcutFillGeometry(pts3D);
@@ -422,7 +428,7 @@ describe('VMobject._buildEarcutFillGeometry', () => {
     expect(geom).toBeInstanceOf(THREE.BufferGeometry);
   });
 
-  it('returns null for too few points', () => {
+  it("returns null for too few points", () => {
     const v = new VMobject();
     v.setPoints([
       [0, 0, 0],
@@ -439,8 +445,8 @@ describe('VMobject._buildEarcutFillGeometry', () => {
 // _sampleBezierPath (private)
 // ===========================================================================
 
-describe('VMobject._sampleBezierPath', () => {
-  it('returns sampled points for valid bezier', () => {
+describe("VMobject._sampleBezierPath", () => {
+  it("returns sampled points for valid bezier", () => {
     const v = makeMultiSegmentBezier();
     const pts = v.getLocalPoints();
     const sampled = sampleBezierPath(pts, 4) as number[][];
@@ -450,7 +456,7 @@ describe('VMobject._sampleBezierPath', () => {
     expect(sampled[0][1]).toBeCloseTo(0);
   });
 
-  it('returns input points for non-bezier format', () => {
+  it("returns input points for non-bezier format", () => {
     const v = new VMobject();
     // Only 2 points
     v.setPoints([
@@ -463,7 +469,7 @@ describe('VMobject._sampleBezierPath', () => {
     expect(sampled).toEqual(pts);
   });
 
-  it('emits a fixed sample count per segment regardless of linearity', () => {
+  it("emits a fixed sample count per segment regardless of linearity", () => {
     const v = new VMobject();
     // Linear segment + curved segment — both get full sampling now so the
     // stroke polyline length doesn't flicker mid-Transform when the lerped
@@ -488,20 +494,20 @@ describe('VMobject._sampleBezierPath', () => {
 // _isClosedPath (private)
 // ===========================================================================
 
-describe('VMobject._isClosedPath', () => {
-  it('returns true for closed path', () => {
+describe("VMobject._isClosedPath", () => {
+  it("returns true for closed path", () => {
     const v = makeSquare();
     const pts = v.getLocalPoints();
     expect(isClosedPath(pts)).toBe(true);
   });
 
-  it('returns false for open path', () => {
+  it("returns false for open path", () => {
     const v = makeSimpleBezier();
     const pts = v.getLocalPoints();
     expect(isClosedPath(pts)).toBe(false);
   });
 
-  it('returns false for fewer than 4 points', () => {
+  it("returns false for fewer than 4 points", () => {
     const v = new VMobject();
     v.setPoints([
       [0, 0, 0],
@@ -517,8 +523,8 @@ describe('VMobject._isClosedPath', () => {
 // _copy
 // ===========================================================================
 
-describe('VMobject.copy()', () => {
-  it('produces a deep copy of points', () => {
+describe("VMobject.copy()", () => {
+  it("produces a deep copy of points", () => {
     const v = makeSimpleBezier();
     const copy = v.copy();
     expect(copy).toBeInstanceOf(VMobject);
@@ -528,7 +534,7 @@ describe('VMobject.copy()', () => {
     expect(v.getLocalPoints()[0][0]).toBe(0);
   });
 
-  it('copies visiblePointCount', () => {
+  it("copies visiblePointCount", () => {
     const v = makeSimpleBezier();
     v.visiblePointCount = 2;
     const copy = v.copy();
@@ -540,8 +546,8 @@ describe('VMobject.copy()', () => {
 // _interpolatePointList3D edge cases
 // ===========================================================================
 
-describe('VMobject._interpolatePointList3D edge cases', () => {
-  it('returns array of [0,0,0] for empty input', () => {
+describe("VMobject._interpolatePointList3D edge cases", () => {
+  it("returns array of [0,0,0] for empty input", () => {
     const v = new VMobject();
     const result = (v as any)._interpolatePointList3D([], 5) as number[][];
     expect(result).toHaveLength(5);
@@ -549,7 +555,7 @@ describe('VMobject._interpolatePointList3D edge cases', () => {
     expect(result[4]).toEqual([0, 0, 0]);
   });
 
-  it('returns copy when count matches', () => {
+  it("returns copy when count matches", () => {
     const v = new VMobject();
     const pts = [
       [1, 2, 3],
@@ -564,16 +570,19 @@ describe('VMobject._interpolatePointList3D edge cases', () => {
     expect(pts[0][0]).toBe(1);
   });
 
-  it('repeats single point to fill target count', () => {
+  it("repeats single point to fill target count", () => {
     const v = new VMobject();
-    const result = (v as any)._interpolatePointList3D([[5, 5, 5]], 4) as number[][];
+    const result = (v as any)._interpolatePointList3D(
+      [[5, 5, 5]],
+      4,
+    ) as number[][];
     expect(result).toHaveLength(4);
     for (const p of result) {
       expect(p).toEqual([5, 5, 5]);
     }
   });
 
-  it('handles upsampling from 2 points to 5', () => {
+  it("handles upsampling from 2 points to 5", () => {
     const v = new VMobject();
     const pts = [
       [0, 0, 0],
@@ -597,8 +606,8 @@ describe('VMobject._interpolatePointList3D edge cases', () => {
 // setPoints3D alias
 // ===========================================================================
 
-describe('VMobject.setPoints3D', () => {
-  it('is equivalent to setPoints with number[][]', () => {
+describe("VMobject.setPoints3D", () => {
+  it("is equivalent to setPoints with number[][]", () => {
     const v1 = new VMobject();
     const v2 = new VMobject();
     const pts = [
@@ -617,8 +626,8 @@ describe('VMobject.setPoints3D', () => {
 // points getter (2D Point[] from 3D storage)
 // ===========================================================================
 
-describe('VMobject.points getter', () => {
-  it('returns 2D Point objects', () => {
+describe("VMobject.points getter", () => {
+  it("returns 2D Point objects", () => {
     const v = new VMobject();
     v.setPoints([
       [1, 2, 3],
@@ -630,7 +639,7 @@ describe('VMobject.points getter', () => {
     expect(pts[1]).toEqual({ x: 4, y: 5 });
   });
 
-  it('returns empty array for no points', () => {
+  it("returns empty array for no points", () => {
     const v = new VMobject();
     expect(v.points).toEqual([]);
   });
@@ -640,8 +649,8 @@ describe('VMobject.points getter', () => {
 // addPoints
 // ===========================================================================
 
-describe('VMobject.addPoints', () => {
-  it('appends Point objects to existing points', () => {
+describe("VMobject.addPoints", () => {
+  it("appends Point objects to existing points", () => {
     const v = new VMobject();
     v.setPoints([[0, 0, 0]]);
     v.addPoints({ x: 1, y: 2 }, { x: 3, y: 4 });
@@ -656,8 +665,8 @@ describe('VMobject.addPoints', () => {
 // getVisiblePoints / getVisiblePoints3D
 // ===========================================================================
 
-describe('VMobject visible points', () => {
-  it('getVisiblePoints returns subset as Point[]', () => {
+describe("VMobject visible points", () => {
+  it("getVisiblePoints returns subset as Point[]", () => {
     const v = makeSimpleBezier();
     v.visiblePointCount = 2;
     const visible = v.getVisiblePoints();
@@ -665,7 +674,7 @@ describe('VMobject visible points', () => {
     expect(visible[0]).toEqual({ x: 0, y: 0 });
   });
 
-  it('getVisiblePoints3D returns deep copies', () => {
+  it("getVisiblePoints3D returns deep copies", () => {
     const v = makeSimpleBezier();
     const vis = v.getVisiblePoints3D();
     vis[0][0] = 999;
@@ -678,15 +687,15 @@ describe('VMobject visible points', () => {
 // _toLinewidth
 // ===========================================================================
 
-describe('VMobject._toLinewidth', () => {
-  it('calculates pixel linewidth from strokeWidth', () => {
+describe("VMobject._toLinewidth", () => {
+  it("calculates pixel linewidth from strokeWidth", () => {
     // With default _rendererWidth=800, _frameWidth=14
     const lw = VMobject._toLinewidth(4);
     // 4 * 0.01 * (800/14) = 4 * 0.01 * 57.14... = 2.2857...
     expect(lw).toBeCloseTo(4 * 0.01 * (800 / 14), 2);
   });
 
-  it('returns 0 for zero strokeWidth', () => {
+  it("returns 0 for zero strokeWidth", () => {
     expect(VMobject._toLinewidth(0)).toBe(0);
   });
 });
@@ -695,8 +704,8 @@ describe('VMobject._toLinewidth', () => {
 // curvesAsSubmobjects function
 // ===========================================================================
 
-describe('curvesAsSubmobjects function', () => {
-  it('splits a VMobject into curve children', () => {
+describe("curvesAsSubmobjects function", () => {
+  it("splits a VMobject into curve children", () => {
     const v = makeMultiSegmentBezier();
     const parent = curvesAsSubmobjects(v);
     expect(parent).toBeInstanceOf(VMobject);
@@ -704,7 +713,7 @@ describe('curvesAsSubmobjects function', () => {
     expect(parent.fillOpacity).toBe(0);
   });
 
-  it('copies transform properties', () => {
+  it("copies transform properties", () => {
     const v = makeSimpleBezier();
     v.position.set(1, 2, 3);
     v.scaleVector.set(2, 2, 2);
@@ -714,7 +723,7 @@ describe('curvesAsSubmobjects function', () => {
     expect(parent.scaleVector.x).toBe(2);
   });
 
-  it('returns empty parent for VMobject with no curves', () => {
+  it("returns empty parent for VMobject with no curves", () => {
     const v = new VMobject();
     const parent = curvesAsSubmobjects(v);
     expect(parent.children.length).toBe(0);
@@ -725,8 +734,8 @@ describe('curvesAsSubmobjects function', () => {
 // CurvesAsSubmobjects class extended
 // ===========================================================================
 
-describe('CurvesAsSubmobjects iteration', () => {
-  it('supports Symbol.iterator', () => {
+describe("CurvesAsSubmobjects iteration", () => {
+  it("supports Symbol.iterator", () => {
     const v = makeMultiSegmentBezier();
     const cas = new CurvesAsSubmobjects(v);
     const curves: VMobject[] = [];
@@ -736,7 +745,7 @@ describe('CurvesAsSubmobjects iteration', () => {
     expect(curves.length).toBe(2);
   });
 
-  it('supports forEach', () => {
+  it("supports forEach", () => {
     const v = makeMultiSegmentBezier();
     const cas = new CurvesAsSubmobjects(v);
     const indices: number[] = [];
@@ -744,21 +753,21 @@ describe('CurvesAsSubmobjects iteration', () => {
     expect(indices).toEqual([0, 1]);
   });
 
-  it('supports map', () => {
+  it("supports map", () => {
     const v = makeMultiSegmentBezier();
     const cas = new CurvesAsSubmobjects(v);
     const numPts = cas.map((c) => c.numPoints);
     expect(numPts).toEqual([4, 4]);
   });
 
-  it('getCurve throws for out-of-range index', () => {
+  it("getCurve throws for out-of-range index", () => {
     const v = makeSimpleBezier();
     const cas = new CurvesAsSubmobjects(v);
     expect(() => cas.getCurve(-1)).toThrow();
     expect(() => cas.getCurve(10)).toThrow();
   });
 
-  it('setFromVMobject clears existing children', () => {
+  it("setFromVMobject clears existing children", () => {
     const v1 = makeSimpleBezier();
     const v2 = makeMultiSegmentBezier();
     const cas = new CurvesAsSubmobjects(v1);
@@ -772,13 +781,13 @@ describe('CurvesAsSubmobjects iteration', () => {
 // getUnitVector edge cases
 // ===========================================================================
 
-describe('VMobject.getUnitVector', () => {
-  it('returns [1,0,0] for empty VMobject', () => {
+describe("VMobject.getUnitVector", () => {
+  it("returns [1,0,0] for empty VMobject", () => {
     const v = new VMobject();
     expect(v.getUnitVector()).toEqual([1, 0, 0]);
   });
 
-  it('returns [1,0,0] for degenerate (same start/end)', () => {
+  it("returns [1,0,0] for degenerate (same start/end)", () => {
     const v = new VMobject();
     v.setPoints([
       [5, 5, 0],
@@ -789,7 +798,7 @@ describe('VMobject.getUnitVector', () => {
     expect(v.getUnitVector()).toEqual([1, 0, 0]);
   });
 
-  it('returns correct direction for vertical line', () => {
+  it("returns correct direction for vertical line", () => {
     const v = new VMobject();
     v.setPoints([
       [0, 0, 0],
@@ -808,14 +817,14 @@ describe('VMobject.getUnitVector', () => {
 // getCenter
 // ===========================================================================
 
-describe('VMobject.getCenter', () => {
-  it('returns position for empty VMobject', () => {
+describe("VMobject.getCenter", () => {
+  it("returns position for empty VMobject", () => {
     const v = new VMobject();
     v.position.set(5, 6, 7);
     expect(v.getCenter()).toEqual([5, 6, 7]);
   });
 
-  it('returns bounding box center offset by position', () => {
+  it("returns bounding box center offset by position", () => {
     const v = new VMobject();
     v.setPoints([
       [0, 0, 0],
@@ -835,21 +844,21 @@ describe('VMobject.getCenter', () => {
 // shaderCurves property
 // ===========================================================================
 
-describe('VMobject.shaderCurves', () => {
-  it('defaults to class-level useShaderCurves', () => {
+describe("VMobject.shaderCurves", () => {
+  it("defaults to class-level useShaderCurves", () => {
     const orig = VMobject.useShaderCurves;
     const v = new VMobject();
     expect(v.shaderCurves).toBe(orig);
     VMobject.useShaderCurves = orig; // restore
   });
 
-  it('per-instance override takes precedence', () => {
+  it("per-instance override takes precedence", () => {
     const v = new VMobject();
     v.shaderCurves = true;
     expect(v.shaderCurves).toBe(true);
   });
 
-  it('null reverts to class-level default', () => {
+  it("null reverts to class-level default", () => {
     const v = new VMobject();
     v.shaderCurves = true;
     expect(v.shaderCurves).toBe(true);
@@ -862,13 +871,13 @@ describe('VMobject.shaderCurves', () => {
 // dispose
 // ===========================================================================
 
-describe('VMobject.dispose', () => {
-  it('cleans up without error on fresh VMobject', () => {
+describe("VMobject.dispose", () => {
+  it("cleans up without error on fresh VMobject", () => {
     const v = new VMobject();
     expect(() => v.dispose()).not.toThrow();
   });
 
-  it('cleans up after setting points', () => {
+  it("cleans up after setting points", () => {
     const v = makeSquare();
     expect(() => v.dispose()).not.toThrow();
   });
@@ -878,8 +887,8 @@ describe('VMobject.dispose', () => {
 // interpolate with different point counts (triggers alignPoints)
 // ===========================================================================
 
-describe('VMobject.interpolate with alignment', () => {
-  it('aligns and interpolates when point counts differ', () => {
+describe("VMobject.interpolate with alignment", () => {
+  it("aligns and interpolates when point counts differ", () => {
     const v1 = new VMobject();
     v1.setPoints([
       [0, 0, 0],
@@ -909,8 +918,8 @@ describe('VMobject.interpolate with alignment', () => {
 // setPointsAsCorners edge cases
 // ===========================================================================
 
-describe('VMobject.setPointsAsCorners', () => {
-  it('handles 3D corners correctly', () => {
+describe("VMobject.setPointsAsCorners", () => {
+  it("handles 3D corners correctly", () => {
     const v = new VMobject();
     v.setPointsAsCorners([
       [0, 0, 0],
@@ -929,14 +938,14 @@ describe('VMobject.setPointsAsCorners', () => {
 // _createThreeObject and _syncMaterialToThree (via getThreeObject)
 // ===========================================================================
 
-describe('VMobject THREE.js integration', () => {
-  it('getThreeObject creates a THREE.Group', () => {
+describe("VMobject THREE.js integration", () => {
+  it("getThreeObject creates a THREE.Group", () => {
     const v = makeSimpleBezier();
     const obj = v.getThreeObject();
     expect(obj).toBeInstanceOf(THREE.Group);
   });
 
-  it('getThreeObject for empty VMobject still returns Group', () => {
+  it("getThreeObject for empty VMobject still returns Group", () => {
     const v = new VMobject();
     const obj = v.getThreeObject();
     expect(obj).toBeInstanceOf(THREE.Group);
@@ -947,8 +956,8 @@ describe('VMobject THREE.js integration', () => {
 // constructor
 // ===========================================================================
 
-describe('VMobject constructor', () => {
-  it('initializes with default fill and stroke opacity', () => {
+describe("VMobject constructor", () => {
+  it("initializes with default fill and stroke opacity", () => {
     const v = new VMobject();
     expect(v.fillOpacity).toBe(0.5);
     expect((v as any)._style.fillOpacity).toBe(0.5);
@@ -960,8 +969,8 @@ describe('VMobject constructor', () => {
 // setVisiblePointCount / getVisiblePointCount
 // ===========================================================================
 
-describe('VMobject.setVisiblePointCount / getVisiblePointCount', () => {
-  it('setVisiblePointCount sets the count and marks geometry dirty', () => {
+describe("VMobject.setVisiblePointCount / getVisiblePointCount", () => {
+  it("setVisiblePointCount sets the count and marks geometry dirty", () => {
     const v = makeSimpleBezier();
     (v as any)._geometryDirty = false;
     v.setVisiblePointCount(2);
@@ -969,19 +978,19 @@ describe('VMobject.setVisiblePointCount / getVisiblePointCount', () => {
     expect((v as any)._geometryDirty).toBe(true);
   });
 
-  it('setVisiblePointCount with null shows all points', () => {
+  it("setVisiblePointCount with null shows all points", () => {
     const v = makeSimpleBezier();
     v.setVisiblePointCount(2);
     v.setVisiblePointCount(null);
     expect(v.getVisiblePointCount()).toBeNull();
   });
 
-  it('getVisiblePointCount returns null by default', () => {
+  it("getVisiblePointCount returns null by default", () => {
     const v = new VMobject();
     expect(v.getVisiblePointCount()).toBeNull();
   });
 
-  it('getVisiblePointCount returns the set value', () => {
+  it("getVisiblePointCount returns the set value", () => {
     const v = makeSimpleBezier();
     v.setVisiblePointCount(3);
     expect(v.getVisiblePointCount()).toBe(3);
@@ -992,15 +1001,15 @@ describe('VMobject.setVisiblePointCount / getVisiblePointCount', () => {
 // markGeometryDirty
 // ===========================================================================
 
-describe('VMobject.markGeometryDirty', () => {
-  it('sets _geometryDirty to true', () => {
+describe("VMobject.markGeometryDirty", () => {
+  it("sets _geometryDirty to true", () => {
     const v = new VMobject();
     (v as any)._geometryDirty = false;
     v.markGeometryDirty();
     expect((v as any)._geometryDirty).toBe(true);
   });
 
-  it('can be called multiple times without error', () => {
+  it("can be called multiple times without error", () => {
     const v = makeSimpleBezier();
     v.markGeometryDirty();
     v.markGeometryDirty();

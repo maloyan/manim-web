@@ -11,14 +11,17 @@
  * Uses renderLatexToSVG() -> svgToVMobjects() pipeline.
  */
 
-import { VGroup } from '../../core/VGroup';
-import { VMobject } from '../../core/VMobject';
-import type { Mobject, MobjectStyle, Vector3Tuple } from '../../core/Mobject';
-import { WHITE } from '../../constants/colors';
-import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
-import typia from 'typia';
-import { renderLatexToSVG } from './MathJaxRenderer';
-import { logger } from '../../utils/logger';
+import { VGroup } from "../../core/VGroup";
+import { VMobject } from "../../core/VMobject";
+import type { Mobject, MobjectStyle, Vector3Tuple } from "../../core/Mobject";
+import { WHITE } from "../../constants/colors";
+import {
+  DEFAULT_FONT_SIZE_IN_WORLD_SPACE,
+  DEFAULT_FONT_SIZE_PT,
+} from "../../constants/fontRender";
+import typia from "typia";
+import { renderLatexToSVG } from "./MathJaxRenderer";
+import { logger } from "../../utils/logger";
 
 /** MathJax SVG uses ~1000 font units per em. */
 const MATHJAX_SVG_UNITS_PER_EM = 1000;
@@ -99,7 +102,7 @@ export class MathTex extends VGroup {
       // Multi-part mode: render the FULL expression as one MathJax call
       // for correct layout, then split VMobjects into parts by glyph count.
       this._isMultiPart = true;
-      this._latex = latex.join('');
+      this._latex = latex.join("");
       this._renderPromise = this._renderMultiPart(latex);
     } else {
       this._isMultiPart = false;
@@ -127,10 +130,14 @@ export class MathTex extends VGroup {
    */
   getPart(index: number): VGroup {
     if (!this._isMultiPart) {
-      throw new Error('getPart() is only available on multi-part MathTex (created with string[])');
+      throw new Error(
+        "getPart() is only available on multi-part MathTex (created with string[])",
+      );
     }
     if (index < 0 || index >= this._parts.length) {
-      throw new Error(`Part index ${index} out of range [0, ${this._parts.length - 1}]`);
+      throw new Error(
+        `Part index ${index} out of range [0, ${this._parts.length - 1}]`,
+      );
     }
     return this._parts[index];
   }
@@ -209,8 +216,10 @@ export class MathTex extends VGroup {
         this._markDirty();
       })
       .catch((error) => {
-        logger.error('MathTex rendering error:', error);
-        this._renderError = error instanceof Error ? error : new Error(String(error));
+        logger.error("MathTex rendering error:", error);
+        this._renderError = error instanceof Error
+          ? error
+          : new Error(String(error));
       });
   }
 
@@ -224,7 +233,7 @@ export class MathTex extends VGroup {
       macros: this._macros,
     });
 
-    const viewBox = result.svgElement.getAttribute?.('viewBox');
+    const viewBox = result.svgElement.getAttribute?.("viewBox");
     if (viewBox) {
       const parts = viewBox.split(/\s+/).map(Number);
       this._svgViewBoxWidth = parts[2] || 1000;
@@ -267,7 +276,7 @@ export class MathTex extends VGroup {
         style.fillOpacity = this._svgFillOpacity;
         style.strokeWidth = this._svgStrokeWidth;
       }
-      if ('children' in mob) {
+      if ("children" in mob) {
         for (const child of (mob as { children: Mobject[] }).children) {
           restyle(child);
         }
@@ -293,7 +302,7 @@ export class MathTex extends VGroup {
       if (mob instanceof VMobject && !(mob instanceof VGroup)) {
         vmobjects.push(mob);
       }
-      if ('children' in mob) {
+      if ("children" in mob) {
         for (const child of (mob as { children: Mobject[] }).children) {
           collect(child);
         }
@@ -319,8 +328,8 @@ export class MathTex extends VGroup {
     const rawHeight = maxY - minY;
     if (rawHeight < 0.0001) return;
 
-    const worldPerMathJaxUnit =
-      DEFAULT_FONT_SIZE_IN_WORLD_SPACE / (DEFAULT_FONT_SIZE_PT * MATHJAX_SVG_UNITS_PER_EM);
+    const worldPerMathJaxUnit = DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
+      (DEFAULT_FONT_SIZE_PT * MATHJAX_SVG_UNITS_PER_EM);
     let s = this._fontSize * worldPerMathJaxUnit;
     if (this._targetHeight !== undefined) {
       s = this._targetHeight / rawHeight;
@@ -333,7 +342,9 @@ export class MathTex extends VGroup {
     // Transform all point data: scale and center at origin
     for (const vmob of vmobjects) {
       const pts = vmob.getLocalPoints();
-      const transformed = pts.map((p) => [(p[0] - cx) * s, (p[1] - cy) * s, p[2]]);
+      const transformed = pts.map((
+        p,
+      ) => [(p[0] - cx) * s, (p[1] - cy) * s, p[2]]);
       vmob.setPoints3D(transformed);
     }
   }
@@ -353,14 +364,20 @@ export class MathTex extends VGroup {
     if (sx === 1 && sy === 1 && sz === 1) return;
 
     const visit = (mob: Mobject) => {
-      mob.position.set(mob.position.x * sx, mob.position.y * sy, mob.position.z * sz);
+      mob.position.set(
+        mob.position.x * sx,
+        mob.position.y * sy,
+        mob.position.z * sz,
+      );
       if (mob instanceof VMobject && !(mob instanceof VGroup)) {
         const pts = mob.getLocalPoints();
         const scaled = pts.map((p) => [p[0] * sx, p[1] * sy, p[2] * sz]);
         mob.setPoints3D(scaled);
       }
-      if ('children' in mob) {
-        for (const child of (mob as { children: Mobject[] }).children) visit(child);
+      if ("children" in mob) {
+        for (const child of (mob as { children: Mobject[] }).children) {
+          visit(child);
+        }
       }
       mob._markDirty();
     };
@@ -376,7 +393,7 @@ export class MathTex extends VGroup {
    * 3. Splitting the full expression's VMobjects into part groups by glyph count
    */
   private async _renderMultiPart(latexParts: string[]): Promise<void> {
-    const fullLatex = latexParts.join('');
+    const fullLatex = latexParts.join("");
 
     // Render the full expression as one unit (correct spacing & layout)
     const fullResult = await renderLatexToSVG(fullLatex, {
@@ -384,7 +401,7 @@ export class MathTex extends VGroup {
       color: this._color,
       macros: this._macros,
     });
-    const viewBox = fullResult.svgElement.getAttribute?.('viewBox');
+    const viewBox = fullResult.svgElement.getAttribute?.("viewBox");
     if (viewBox) {
       const parts = viewBox.split(/\s+/).map(Number);
       this._svgViewBoxWidth = parts[2] || 1000;
@@ -460,7 +477,7 @@ export class MathTex extends VGroup {
    * Supports setColor() for per-part coloring.
    */
   private static _PartGroup = class extends VGroup {
-    _latex: string = '';
+    _latex: string = "";
     _color: string = WHITE;
     constructor(_parent: MathTex) {
       super();

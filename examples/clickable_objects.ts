@@ -1,27 +1,27 @@
 import {
-  Scene,
+  BLUE,
   Circle,
-  Square,
-  Text,
+  GREEN,
   makeClickable,
   makeDraggable,
-  type Vector3Tuple,
-  BLUE,
-  GREEN,
-  YELLOW,
-  RED,
-  PURPLE,
   ORANGE,
-  TEAL,
   PINK,
+  PURPLE,
+  RED,
+  Scene,
+  Square,
+  TEAL,
+  Text,
+  type Vector3Tuple,
   WHITE,
-} from '../src/index.ts';
+  YELLOW,
+} from "../src/index.ts";
 
-const container = document.getElementById('container');
+const container = document.getElementById("container");
 const scene = new Scene(container, {
   width: 800,
   height: 450,
-  backgroundColor: '#000000',
+  backgroundColor: "#000000",
 });
 
 // Colors the clickable circle cycles through on each click.
@@ -38,17 +38,17 @@ function disposeHandles(): void {
 
 let isAnimating = false;
 
-document.getElementById('playBtn').addEventListener('click', async () => {
+document.getElementById("playBtn").addEventListener("click", async () => {
   if (isAnimating) return;
   isAnimating = true;
-  document.getElementById('playBtn').disabled = true;
+  document.getElementById("playBtn").disabled = true;
 
   try {
     disposeHandles();
     scene.clear();
 
     const title = new Text({
-      text: 'Click the circle  •  Drag the square',
+      text: "Click the circle  •  Drag the square",
       fontSize: 26,
       color: WHITE,
     });
@@ -61,20 +61,28 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     const circle = new Circle({ radius: 0.7, color: BLUE, fillOpacity: 0.9 });
     circle.moveTo([-2.5, 0.3, 0]);
 
-    const counter = new Text({ text: 'Clicks: 0', fontSize: 22, color: WHITE });
+    const counter = new Text({ text: "Clicks: 0", fontSize: 22, color: WHITE });
     counter.moveTo([-2.5, -1.6, 0]);
 
     // --- Draggable: a continuous gesture that repositions the square. ---
-    const square = new Square({ sideLength: 1.3, color: GREEN, fillOpacity: 0.9 });
+    const square = new Square({
+      sideLength: 1.3,
+      color: GREEN,
+      fillOpacity: 0.9,
+    });
     square.moveTo([2.5, 0.3, 0]);
 
-    const posLabel = new Text({ text: 'Square: (2.5, 0.3)', fontSize: 22, color: WHITE });
+    const posLabel = new Text({
+      text: "Square: (2.5, 0.3)",
+      fontSize: 22,
+      color: WHITE,
+    });
     posLabel.moveTo([2.5, -1.6, 0]);
 
     const hint = new Text({
-      text: 'Double-click the circle to reset',
+      text: "Double-click the circle to reset",
       fontSize: 18,
-      color: '#888888',
+      color: "#888888",
     });
     hint.moveTo([0, -2.8, 0]);
 
@@ -99,7 +107,7 @@ document.getElementById('playBtn').addEventListener('click', async () => {
           clickCount = 0;
           colorIndex = 0;
           circle.setColor(BLUE);
-          counter.setText('Clicks: 0');
+          counter.setText("Clicks: 0");
           scene.render();
         },
       }),
@@ -109,39 +117,41 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     handles.push(
       makeDraggable(square, scene, {
         onDrag: (_mobject, position: Vector3Tuple) => {
-          posLabel.setText(`Square: (${position[0].toFixed(1)}, ${position[1].toFixed(1)})`);
+          posLabel.setText(
+            `Square: (${position[0].toFixed(1)}, ${position[1].toFixed(1)})`,
+          );
           scene.render();
         },
       }),
     );
   } catch (e) {
-    console.error('ERROR:', e.message, e.stack);
+    console.error("ERROR:", e.message, e.stack);
   }
 
   isAnimating = false;
-  document.getElementById('playBtn').disabled = false;
+  document.getElementById("playBtn").disabled = false;
 });
 
-document.getElementById('resetBtn').addEventListener('click', () => {
+document.getElementById("resetBtn").addEventListener("click", () => {
   disposeHandles();
   scene.clear();
 });
 
 // Embed mode: hide controls, auto-play, loop
-if (new URLSearchParams(window.location.search).has('embed')) {
+if (new URLSearchParams(window.location.search).has("embed")) {
   document
-    .querySelectorAll('.controls, .buttons, h1, #status')
-    .forEach((el) => ((el as HTMLElement).style.display = 'none'));
+    .querySelectorAll(".controls, .buttons, h1, #status")
+    .forEach((el) => ((el as HTMLElement).style.display = "none"));
   document.documentElement.style.cssText =
-    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000';
+    "margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000";
   document.body.style.cssText =
-    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center';
-  const cont = document.getElementById('container');
+    "margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center";
+  const cont = document.getElementById("container");
   if (cont) {
     cont.style.cssText =
-      'border:none;border-radius:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center';
+      "border:none;border-radius:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center";
   }
-  const playBtn = document.getElementById('playBtn');
+  const playBtn = document.getElementById("playBtn");
   if (playBtn) {
     setTimeout(() => (playBtn as HTMLButtonElement).click(), 500);
   }

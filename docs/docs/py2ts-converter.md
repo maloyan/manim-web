@@ -62,7 +62,7 @@ class SquareToCircle(Scene):
 **TypeScript output:**
 
 ```typescript
-import { Scene, Square, Circle, Create, Transform, BLUE, PINK } from 'manim-web';
+import { BLUE, Circle, Create, PINK, Scene, Square, Transform } from 'manim-web';
 
 export async function squareToCircle(scene: Scene) {
   const square = new Square({ color: BLUE });
@@ -77,24 +77,24 @@ export async function squareToCircle(scene: Scene) {
 
 ### Mobjects
 
-| Category | Classes |
-|----------|---------|
+| Category     | Classes                                                                                                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Geometry** | Circle, Square, Rectangle, Line, Arrow, DashedLine, Polygon, RegularPolygon, Triangle, Ellipse, Arc, ArcBetweenPoints, Dot, Annulus, Sector, Star, RoundedRectangle |
-| **Text** | Text, MathTex, Tex, Paragraph, MarkupText, DecimalNumber, Integer, Title, BulletedList, Code |
-| **Graphing** | Axes, NumberPlane, FunctionGraph, ParametricFunction, NumberLine, BarChart, CoordinateSystem |
-| **3D** | Sphere, Cube, Cylinder, Cone, Torus, ThreeDAxes, Surface, Line3D, Arrow3D, Dot3D, Prism |
-| **Tables** | Matrix, IntegerMatrix, DecimalMatrix, MobjectMatrix, Table, MathTable |
+| **Text**     | Text, MathTex, Tex, Paragraph, MarkupText, DecimalNumber, Integer, Title, BulletedList, Code                                                                        |
+| **Graphing** | Axes, NumberPlane, FunctionGraph, ParametricFunction, NumberLine, BarChart, CoordinateSystem                                                                        |
+| **3D**       | Sphere, Cube, Cylinder, Cone, Torus, ThreeDAxes, Surface, Line3D, Arrow3D, Dot3D, Prism                                                                             |
+| **Tables**   | Matrix, IntegerMatrix, DecimalMatrix, MobjectMatrix, Table, MathTable                                                                                               |
 
 ### Animations
 
-| Category | Animations |
-|----------|------------|
-| **Creation** | Create, Write, DrawBorderThenFill, ShowCreation, Uncreate, Unwrite |
-| **Fading** | FadeIn, FadeOut, FadeInFromPoint, FadeOutToPoint |
-| **Transforms** | Transform, ReplacementTransform, TransformFromCopy, MoveToTarget, ApplyMethod |
-| **Movement** | Shift, Rotate, GrowFromCenter, GrowFromEdge, GrowFromPoint, GrowArrow, SpinInFromNothing |
-| **Indication** | Indicate, Flash, Circumscribe, ShowPassingFlash, Wiggle, FocusOn, ApplyWave |
-| **Composition** | AnimationGroup, LaggedStart, LaggedStartMap, Succession |
+| Category        | Animations                                                                               |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| **Creation**    | Create, Write, DrawBorderThenFill, ShowCreation, Uncreate, Unwrite                       |
+| **Fading**      | FadeIn, FadeOut, FadeInFromPoint, FadeOutToPoint                                         |
+| **Transforms**  | Transform, ReplacementTransform, TransformFromCopy, MoveToTarget, ApplyMethod            |
+| **Movement**    | Shift, Rotate, GrowFromCenter, GrowFromEdge, GrowFromPoint, GrowArrow, SpinInFromNothing |
+| **Indication**  | Indicate, Flash, Circumscribe, ShowPassingFlash, Wiggle, FocusOn, ApplyWave              |
+| **Composition** | AnimationGroup, LaggedStart, LaggedStartMap, Succession                                  |
 
 ### Python Features
 

@@ -5,9 +5,9 @@
  * sign display, and ellipsis support. Designed to work with ValueTracker for animations.
  */
 
-import * as THREE from 'three';
-import { VMobject } from '../../core/VMobject';
-import { Vector3Tuple } from '../../core/Mobject';
+import * as THREE from "three";
+import { VMobject } from "../../core/VMobject";
+import { Vector3Tuple } from "../../core/Mobject";
 
 /**
  * Options for creating a DecimalNumber mobject
@@ -34,7 +34,7 @@ export interface DecimalNumberOptions {
   /** Fill opacity from 0 to 1. Default: 1 */
   fillOpacity?: number;
   /** Edge to preserve when number width changes. Default: null (center) */
-  edgeToFix?: 'left' | 'right' | null;
+  edgeToFix?: "left" | "right" | null;
   /** Unit string to append (e.g., '%', 'm/s'). Default: '' */
   unit?: string;
   /** Buffer between number and unit. Default: 0.05 */
@@ -79,7 +79,7 @@ export class DecimalNumber extends VMobject {
   protected _fontSize: number;
   protected _fontFamily: string;
   protected _fontWeight: string | number;
-  protected _edgeToFix: 'left' | 'right' | null;
+  protected _edgeToFix: "left" | "right" | null;
   protected _unit: string;
   protected _unitBuff: number;
 
@@ -110,12 +110,12 @@ export class DecimalNumber extends VMobject {
       includeSign = false,
       groupWithCommas = false,
       fontSize = 48,
-      fontFamily = 'monospace',
-      fontWeight = 'normal',
-      color = '#ffffff',
+      fontFamily = "monospace",
+      fontWeight = "normal",
+      color = "#ffffff",
       fillOpacity = 1,
       edgeToFix = null,
-      unit = '',
+      unit = "",
       unitBuff = 0.05,
     } = options;
 
@@ -143,13 +143,13 @@ export class DecimalNumber extends VMobject {
    */
   protected _initCanvas(): void {
     // Headless / non-DOM environment — skip canvas initialization, geometry will be empty
-    if (typeof document === 'undefined') {
+    if (typeof document === "undefined") {
       return;
     }
-    this._canvas = document.createElement('canvas');
-    this._ctx = this._canvas.getContext('2d');
+    this._canvas = document.createElement("canvas");
+    this._ctx = this._canvas.getContext("2d");
     if (!this._ctx) {
-      throw new Error('Failed to get 2D context for DecimalNumber rendering');
+      throw new Error("Failed to get 2D context for DecimalNumber rendering");
     }
   }
 
@@ -188,9 +188,9 @@ export class DecimalNumber extends VMobject {
    * Get the X position of the edge being fixed
    */
   protected _getEdgeX(): number {
-    if (this._edgeToFix === 'left') {
+    if (this._edgeToFix === "left") {
       return this.position.x - this._worldWidth / 2;
-    } else if (this._edgeToFix === 'right') {
+    } else if (this._edgeToFix === "right") {
       return this.position.x + this._worldWidth / 2;
     }
     return this.position.x;
@@ -250,14 +250,14 @@ export class DecimalNumber extends VMobject {
 
     // Add sign for positive numbers if requested
     if (this._includeSign && this._value > 0) {
-      str = '+' + str;
+      str = "+" + str;
     }
 
     // Group with commas if requested
     if (this._groupWithCommas) {
-      const parts = str.split('.');
-      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-      str = parts.join('.');
+      const parts = str.split(".");
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      str = parts.join(".");
     }
 
     // Add unit
@@ -267,7 +267,7 @@ export class DecimalNumber extends VMobject {
 
     // Add ellipsis if requested
     if (this._showEllipsis) {
-      str += '...';
+      str += "...";
     }
 
     return str;
@@ -277,8 +277,9 @@ export class DecimalNumber extends VMobject {
    * Build the CSS font string
    */
   protected _buildFontString(): string {
-    const weight =
-      typeof this._fontWeight === 'number' ? this._fontWeight.toString() : this._fontWeight;
+    const weight = typeof this._fontWeight === "number"
+      ? this._fontWeight.toString()
+      : this._fontWeight;
     const size = Math.round(this._fontSize * RESOLUTION_SCALE);
     return `${weight} ${size}px ${this._fontFamily}`;
   }
@@ -288,7 +289,7 @@ export class DecimalNumber extends VMobject {
    */
   protected _measureText(): { text: string; width: number; height: number } {
     if (!this._ctx) {
-      return { text: '', width: 0, height: 0 };
+      return { text: "", width: 0, height: 0 };
     }
 
     this._ctx.font = this._buildFontString();
@@ -327,8 +328,8 @@ export class DecimalNumber extends VMobject {
 
     // Set font and styles
     this._ctx.font = this._buildFontString();
-    this._ctx.textBaseline = 'middle';
-    this._ctx.textAlign = 'center';
+    this._ctx.textBaseline = "middle";
+    this._ctx.textAlign = "center";
 
     // Draw fill
     this._ctx.fillStyle = this.color;
@@ -355,7 +356,10 @@ export class DecimalNumber extends VMobject {
     this._mesh.geometry.dispose();
 
     // Create new geometry with updated dimensions
-    const geometry = new THREE.PlaneGeometry(this._worldWidth, this._worldHeight);
+    const geometry = new THREE.PlaneGeometry(
+      this._worldWidth,
+      this._worldHeight,
+    );
     this._mesh.geometry = geometry;
   }
 
@@ -387,7 +391,10 @@ export class DecimalNumber extends VMobject {
     });
 
     // Create plane geometry sized to match text
-    const geometry = new THREE.PlaneGeometry(this._worldWidth, this._worldHeight);
+    const geometry = new THREE.PlaneGeometry(
+      this._worldWidth,
+      this._worldHeight,
+    );
 
     // Create mesh
     this._mesh = new THREE.Mesh(geometry, material);
@@ -479,7 +486,7 @@ export class DecimalNumber extends VMobject {
  * ```
  */
 export class Integer extends DecimalNumber {
-  constructor(options: Omit<DecimalNumberOptions, 'numDecimalPlaces'> = {}) {
+  constructor(options: Omit<DecimalNumberOptions, "numDecimalPlaces"> = {}) {
     super({
       ...options,
       numDecimalPlaces: 0,

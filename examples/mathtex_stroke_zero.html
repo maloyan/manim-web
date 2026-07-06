@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - MathTex strokeWidth 0 check</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - MathTex strokeWidth 0 check</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #1a1a2e;
       display: flex;
@@ -34,17 +38,22 @@
       cursor: pointer;
       font-size: 14px;
     }
-    button:hover { background: #ff6b6b; }
-    button:disabled { background: #666; cursor: not-allowed; }
-  </style>
-</head>
-<body>
-  <div id="container"></div>
-  <div class="controls">
-    <button id="playBtn">Render</button>
-    <button id="resetBtn">Reset</button>
-  </div>
+    button:hover {
+      background: #ff6b6b;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div class="controls">
+      <button id="playBtn">Render</button>
+      <button id="resetBtn">Reset</button>
+    </div>
 
-  <script type="module" src="./mathtex_stroke_zero.ts"></script>
-</body>
+    <script type="module" src="./mathtex_stroke_zero.ts"></script>
+  </body>
 </html>

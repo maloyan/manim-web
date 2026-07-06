@@ -1,12 +1,12 @@
-import { VGroup } from '../../core/VGroup';
-import { VMobject } from '../../core/VMobject';
-import { Text } from '../text/Text';
-import { Circle } from '../geometry/Circle';
-import { Square } from '../geometry/Rectangle';
-import { BLUE, GREEN, YELLOW, WHITE, BLACK } from '../../constants/colors';
-import { Create } from '../../animation/creation';
-import { Animation, AnimationOptions } from '../../animation/Animation';
-import { lerp } from '../../utils/math';
+import { VGroup } from "../../core/VGroup";
+import { VMobject } from "../../core/VMobject";
+import { Text } from "../text/Text";
+import { Circle } from "../geometry/Circle";
+import { Square } from "../geometry/Rectangle";
+import { BLACK, BLUE, GREEN, WHITE, YELLOW } from "../../constants/colors";
+import { Create } from "../../animation/creation";
+import { Animation, AnimationOptions } from "../../animation/Animation";
+import { lerp } from "../../utils/math";
 
 export interface ManimBannerOptions {
   /** Use dark theme colors. Default: true */
@@ -37,7 +37,11 @@ export class ManimBanner extends VGroup {
         dz = p1[2] - p0[2];
       if (first) triPoints.push([...p0]);
       triPoints.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-      triPoints.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
+      triPoints.push([
+        p0[0] + (2 * dx) / 3,
+        p0[1] + (2 * dy) / 3,
+        p0[2] + (2 * dz) / 3,
+      ]);
       triPoints.push([...p1]);
     };
     addSeg([-0.5, -0.3, 0], [0, 0.5, 0], true);
@@ -50,7 +54,11 @@ export class ManimBanner extends VGroup {
     circle.strokeWidth = 0;
     circle.moveTo([0, 0, 0]);
 
-    const square = new Square({ sideLength: 0.6, color: YELLOW, fillOpacity: 1 });
+    const square = new Square({
+      sideLength: 0.6,
+      color: YELLOW,
+      fillOpacity: 1,
+    });
     square.strokeWidth = 0;
     square.moveTo([1.2, 0, 0]);
 
@@ -61,7 +69,7 @@ export class ManimBanner extends VGroup {
     // Create text
     const textColor = this._darkTheme ? WHITE : BLACK;
     this._text = new Text({
-      text: 'manim-web',
+      text: "manim-web",
       fontSize: 36,
       color: textColor,
     });
@@ -76,14 +84,20 @@ export class ManimBanner extends VGroup {
    * Create animation - draws the logo shapes
    */
   createAnimation(options: AnimationOptions = {}): Create {
-    return new Create(this._shapes, { duration: options.duration ?? 2, ...options });
+    return new Create(this._shapes, {
+      duration: options.duration ?? 2,
+      ...options,
+    });
   }
 
   /**
    * Expand animation - reveals the text below
    */
   expandAnimation(options: AnimationOptions = {}): Animation {
-    return new BannerExpand(this._text, { duration: options.duration ?? 1.5, ...options });
+    return new BannerExpand(this._text, {
+      duration: options.duration ?? 1.5,
+      ...options,
+    });
   }
 
   getShapes(): VGroup {

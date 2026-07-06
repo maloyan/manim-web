@@ -1,31 +1,31 @@
 import {
-  Scene,
-  Circle,
-  Square,
-  Dot,
-  Line,
-  Text,
-  makeDraggable,
   BLUE,
+  Circle,
+  Dot,
   GREEN,
+  Line,
+  makeDraggable,
   RED,
-  YELLOW,
+  Scene,
+  Square,
+  Text,
   WHITE,
-} from '../src/index.ts';
+  YELLOW,
+} from "../src/index.ts";
 
-const container = document.getElementById('container');
+const container = document.getElementById("container");
 const scene = new Scene(container, {
   width: 800,
   height: 450,
-  backgroundColor: '#000000',
+  backgroundColor: "#000000",
 });
 
 let isAnimating = false;
 
-document.getElementById('playBtn').addEventListener('click', async () => {
+document.getElementById("playBtn").addEventListener("click", async () => {
   if (isAnimating) return;
   isAnimating = true;
-  document.getElementById('playBtn').disabled = true;
+  document.getElementById("playBtn").disabled = true;
 
   try {
     scene.clear();
@@ -34,7 +34,11 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     const circle = new Circle({ radius: 0.5, color: BLUE, fillOpacity: 0.8 });
     circle.moveTo([-2, 1, 0]);
 
-    const square = new Square({ sideLength: 0.8, color: GREEN, fillOpacity: 0.8 });
+    const square = new Square({
+      sideLength: 0.8,
+      color: GREEN,
+      fillOpacity: 0.8,
+    });
     square.moveTo([2, 1, 0]);
 
     const dot = new Dot({ color: YELLOW, radius: 0.15 });
@@ -43,13 +47,22 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     // A line that connects the circle and dot, updating in real time.
     // Updaters only run during play()/wait() loops, so rebuild the line
     // from onDrag instead — Draggable re-renders after each onDrag.
-    const line = new Line({ start: circle.getCenter(), end: dot.getCenter() }).setColor(RED);
+    const line = new Line({ start: circle.getCenter(), end: dot.getCenter() })
+      .setColor(RED);
     const updateLine = () => {
-      line.become(new Line({ start: circle.getCenter(), end: dot.getCenter() }).setColor(RED));
+      line.become(
+        new Line({ start: circle.getCenter(), end: dot.getCenter() }).setColor(
+          RED,
+        ),
+      );
     };
 
     // Label
-    const label = new Text({ text: 'Drag the shapes!', fontSize: 24, color: WHITE });
+    const label = new Text({
+      text: "Drag the shapes!",
+      fontSize: 24,
+      color: WHITE,
+    });
     label.moveTo([0, 2.5, 0]);
 
     scene.add(circle, square, dot, line, label);
@@ -65,32 +78,32 @@ document.getElementById('playBtn').addEventListener('click', async () => {
       snapToGrid: 0.5,
     });
   } catch (e) {
-    console.error('ERROR:', e.message, e.stack);
+    console.error("ERROR:", e.message, e.stack);
   }
 
   isAnimating = false;
-  document.getElementById('playBtn').disabled = false;
+  document.getElementById("playBtn").disabled = false;
 });
 
-document.getElementById('resetBtn').addEventListener('click', () => {
+document.getElementById("resetBtn").addEventListener("click", () => {
   scene.clear();
 });
 
 // Embed mode: hide controls, auto-play, loop
-if (new URLSearchParams(window.location.search).has('embed')) {
+if (new URLSearchParams(window.location.search).has("embed")) {
   document
-    .querySelectorAll('.controls, .buttons, h1, #status')
-    .forEach((el) => ((el as HTMLElement).style.display = 'none'));
+    .querySelectorAll(".controls, .buttons, h1, #status")
+    .forEach((el) => ((el as HTMLElement).style.display = "none"));
   document.documentElement.style.cssText =
-    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000';
+    "margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000";
   document.body.style.cssText =
-    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center';
-  const cont = document.getElementById('container');
+    "margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center";
+  const cont = document.getElementById("container");
   if (cont) {
     cont.style.cssText =
-      'border:none;border-radius:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center';
+      "border:none;border-radius:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center";
   }
-  const playBtn = document.getElementById('playBtn');
+  const playBtn = document.getElementById("playBtn");
   if (playBtn) {
     setTimeout(() => (playBtn as HTMLButtonElement).click(), 500);
   }

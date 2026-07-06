@@ -1,17 +1,17 @@
-import { describe, it, expect } from 'vitest';
-import { Camera2D } from './Camera';
-import { Camera2DFrame } from './Camera2DFrame';
-import { CameraFrame, CameraAnimateProxy } from './CameraFrame';
-import { Mobject } from './Mobject';
-import { VMobject } from './VMobject';
-import { linear } from '../rate-functions';
+import { describe, expect, it } from "vitest";
+import { Camera2D } from "./Camera";
+import { Camera2DFrame } from "./Camera2DFrame";
+import { CameraAnimateProxy, CameraFrame } from "./CameraFrame";
+import { Mobject } from "./Mobject";
+import { VMobject } from "./VMobject";
+import { linear } from "../rate-functions";
 
-describe('Camera2DFrame', () => {
+describe("Camera2DFrame", () => {
   function makeCam(fw = 14, fh = 8) {
     return new Camera2D({ frameWidth: fw, frameHeight: fh });
   }
 
-  it('constructs with invisible visual properties and dummy points', () => {
+  it("constructs with invisible visual properties and dummy points", () => {
     const frame = new Camera2DFrame(makeCam());
     expect(frame.opacity).toBe(0);
     expect(frame.fillOpacity).toBe(0);
@@ -19,19 +19,22 @@ describe('Camera2DFrame', () => {
     expect(frame.numPoints).toBeGreaterThan(0);
   });
 
-  it('primary frame initializes position from camera center', () => {
+  it("primary frame initializes position from camera center", () => {
     const frame = new Camera2DFrame(new Camera2D(), true);
     expect(frame.position.x).toBeCloseTo(0);
     expect(frame.position.y).toBeCloseTo(0);
   });
 
-  it('non-primary frame does not sync position from camera', () => {
-    const frame = new Camera2DFrame(new Camera2D({ position: [3, 5, 10] }), false);
+  it("non-primary frame does not sync position from camera", () => {
+    const frame = new Camera2DFrame(
+      new Camera2D({ position: [3, 5, 10] }),
+      false,
+    );
     expect(frame.position.x).toBe(0);
     expect(frame.position.y).toBe(0);
   });
 
-  it('getCenter returns current position', () => {
+  it("getCenter returns current position", () => {
     const frame = new Camera2DFrame(makeCam());
     frame.position.set(2, 3, 0);
     const c = frame.getCenter();
@@ -40,7 +43,7 @@ describe('Camera2DFrame', () => {
     expect(c[2]).toBeCloseTo(0);
   });
 
-  it('moveTo with array sets position and syncs camera', () => {
+  it("moveTo with array sets position and syncs camera", () => {
     const cam = makeCam();
     const frame = new Camera2DFrame(cam, true);
     const result = frame.moveTo([5, 7, 0]);
@@ -51,7 +54,7 @@ describe('Camera2DFrame', () => {
     expect(cam.position.y).toBeCloseTo(7);
   });
 
-  it('moveTo with Mobject centers on the mobject', () => {
+  it("moveTo with Mobject centers on the mobject", () => {
     const frame = new Camera2DFrame(makeCam(), true);
     const mob = new VMobject();
     mob.moveTo([4, 6, 0]);
@@ -60,7 +63,7 @@ describe('Camera2DFrame', () => {
     expect(frame.position.y).toBeCloseTo(6);
   });
 
-  it('scale on primary frame syncs frameWidth/Height to camera', () => {
+  it("scale on primary frame syncs frameWidth/Height to camera", () => {
     const cam = makeCam(14, 8);
     const frame = new Camera2DFrame(cam, true);
     frame.scale(2);
@@ -68,7 +71,7 @@ describe('Camera2DFrame', () => {
     expect(cam.frameHeight).toBeCloseTo(16);
   });
 
-  it('scale on non-primary frame does not sync to camera', () => {
+  it("scale on non-primary frame does not sync to camera", () => {
     const cam = makeCam(14, 8);
     const frame = new Camera2DFrame(cam, false);
     frame.scale(2);
@@ -76,7 +79,7 @@ describe('Camera2DFrame', () => {
     expect(cam.frameHeight).toBeCloseTo(8);
   });
 
-  it('copy returns a non-primary clone with matching state', () => {
+  it("copy returns a non-primary clone with matching state", () => {
     const cam = makeCam();
     const frame = new Camera2DFrame(cam, true);
     frame.moveTo([3, 4, 0]);
@@ -95,14 +98,14 @@ describe('Camera2DFrame', () => {
     expect(cam.position.y).toBeCloseTo(4);
   });
 
-  it('generateTarget creates a modifiable copy', () => {
+  it("generateTarget creates a modifiable copy", () => {
     const frame = new Camera2DFrame(makeCam(), true);
     const target = frame.generateTarget();
     expect(target).not.toBe(frame);
     expect(frame.targetCopy).toBe(target);
   });
 
-  it('saveState stores a copy that can be used later', () => {
+  it("saveState stores a copy that can be used later", () => {
     const frame = new Camera2DFrame(makeCam(), true);
     frame.moveTo([1, 2, 0]);
     frame.saveState();
@@ -111,7 +114,7 @@ describe('Camera2DFrame', () => {
     expect(frame.savedState!.position.y).toBeCloseTo(2);
   });
 
-  it('_markDirty on primary frame syncs camera position', () => {
+  it("_markDirty on primary frame syncs camera position", () => {
     const cam = makeCam();
     const frame = new Camera2DFrame(cam, true);
     frame.position.set(9, 8, 0);
@@ -120,7 +123,7 @@ describe('Camera2DFrame', () => {
     expect(cam.position.y).toBeCloseTo(8);
   });
 
-  it('shift on primary frame updates camera', () => {
+  it("shift on primary frame updates camera", () => {
     const cam = makeCam();
     const frame = new Camera2DFrame(cam, true);
     frame.shift([2, 3, 0]);
@@ -129,8 +132,8 @@ describe('Camera2DFrame', () => {
   });
 });
 
-describe('CameraFrame', () => {
-  it('constructs with default Euler angles', () => {
+describe("CameraFrame", () => {
+  it("constructs with default Euler angles", () => {
     const frame = new CameraFrame();
     const [theta, phi, gamma] = frame.getEulerAngles();
     expect(theta).toBeCloseTo(-Math.PI / 2);
@@ -138,7 +141,7 @@ describe('CameraFrame', () => {
     expect(gamma).toBe(0);
   });
 
-  it('constructs with custom options', () => {
+  it("constructs with custom options", () => {
     const frame = new CameraFrame(16 / 9, {
       theta: 1.0,
       phi: 0.5,
@@ -153,14 +156,14 @@ describe('CameraFrame', () => {
     expect(frame.getFieldOfView()).toBe(60);
   });
 
-  it('getCamera3D and getThreeCamera return valid cameras', () => {
+  it("getCamera3D and getThreeCamera return valid cameras", () => {
     const frame = new CameraFrame();
     expect(frame.getCamera3D()).toBeDefined();
     expect(frame.getCamera3D().getCamera).toBeDefined();
     expect(frame.getThreeCamera().isPerspectiveCamera).toBe(true);
   });
 
-  it('setTheta/setPhi/setGamma update and return this', () => {
+  it("setTheta/setPhi/setGamma update and return this", () => {
     const frame = new CameraFrame();
     expect(frame.setTheta(1.5)).toBe(frame);
     expect(frame.getTheta()).toBeCloseTo(1.5);
@@ -170,7 +173,7 @@ describe('CameraFrame', () => {
     expect(frame.getGamma()).toBeCloseTo(0.3);
   });
 
-  it('incrementTheta/Phi/Gamma add deltas', () => {
+  it("incrementTheta/Phi/Gamma add deltas", () => {
     const frame = new CameraFrame();
     const t0 = frame.getTheta();
     const p0 = frame.getPhi();
@@ -182,7 +185,7 @@ describe('CameraFrame', () => {
     expect(frame.getGamma()).toBeCloseTo(0.1);
   });
 
-  it('setEulerAngles sets multiple angles, leaves others unchanged', () => {
+  it("setEulerAngles sets multiple angles, leaves others unchanged", () => {
     const frame = new CameraFrame(16 / 9, { theta: 1.0, phi: 0.5 });
     frame.setEulerAngles({ gamma: 0.7 });
     expect(frame.getTheta()).toBeCloseTo(1.0);
@@ -190,7 +193,7 @@ describe('CameraFrame', () => {
     expect(frame.getGamma()).toBeCloseTo(0.7);
   });
 
-  it('setDistance clamps to minimum 0.1', () => {
+  it("setDistance clamps to minimum 0.1", () => {
     const frame = new CameraFrame();
     frame.setDistance(0.01);
     expect(frame.getDistance()).toBeCloseTo(0.1);
@@ -198,19 +201,19 @@ describe('CameraFrame', () => {
     expect(frame.getDistance()).toBeCloseTo(0.1);
   });
 
-  it('setDistance updates and returns this', () => {
+  it("setDistance updates and returns this", () => {
     const frame = new CameraFrame();
     expect(frame.setDistance(15)).toBe(frame);
     expect(frame.getDistance()).toBe(15);
   });
 
-  it('setFieldOfView updates fov', () => {
+  it("setFieldOfView updates fov", () => {
     const frame = new CameraFrame();
     frame.setFieldOfView(90);
     expect(frame.getFieldOfView()).toBe(90);
   });
 
-  it('getCenter and moveTo control look-at center', () => {
+  it("getCenter and moveTo control look-at center", () => {
     const frame = new CameraFrame(16 / 9, { lookAt: [1, 2, 3] });
     expect(frame.getCenter()).toEqual([1, 2, 3]);
     expect(frame.moveTo([5, 6, 7])).toBe(frame);
@@ -220,15 +223,15 @@ describe('CameraFrame', () => {
     expect(c[2]).toBeCloseTo(7);
   });
 
-  it('setAspectRatio returns this', () => {
+  it("setAspectRatio returns this", () => {
     expect(new CameraFrame().setAspectRatio(4 / 3)).toBeInstanceOf(CameraFrame);
   });
 
-  it('mobjectStub is a Mobject instance', () => {
+  it("mobjectStub is a Mobject instance", () => {
     expect(new CameraFrame().mobjectStub).toBeInstanceOf(Mobject);
   });
 
-  it('camera position reflects spherical coordinates', () => {
+  it("camera position reflects spherical coordinates", () => {
     const frame = new CameraFrame(16 / 9, {
       theta: -Math.PI / 2,
       phi: Math.PI / 2,
@@ -240,7 +243,7 @@ describe('CameraFrame', () => {
     expect(cam.position.z).toBeCloseTo(0, 4);
   });
 
-  it('camera position updates when theta changes', () => {
+  it("camera position updates when theta changes", () => {
     const frame = new CameraFrame(16 / 9, {
       theta: 0,
       phi: Math.PI / 2,
@@ -254,7 +257,7 @@ describe('CameraFrame', () => {
     expect(cam.position.y).toBeCloseTo(10, 4);
   });
 
-  it('gamma applies roll to the camera up vector', () => {
+  it("gamma applies roll to the camera up vector", () => {
     const frame = new CameraFrame(16 / 9, {
       theta: -Math.PI / 2,
       phi: Math.PI / 4,
@@ -265,7 +268,7 @@ describe('CameraFrame', () => {
     expect(up.x === 0 && up.y === 1 && up.z === 0).toBe(false);
   });
 
-  it('gamma=0 gives correct up vector for default camera', () => {
+  it("gamma=0 gives correct up vector for default camera", () => {
     // phi=0, theta=-π/2: camera at +Z looking at origin
     // up should be (0, 1, 0) - Y points up on screen
     const frame = new CameraFrame(16 / 9, {
@@ -281,8 +284,8 @@ describe('CameraFrame', () => {
   });
 });
 
-describe('CameraFrame snapshot/restore', () => {
-  it('_snapshot captures current state', () => {
+describe("CameraFrame snapshot/restore", () => {
+  it("_snapshot captures current state", () => {
     const frame = new CameraFrame(16 / 9, {
       theta: 1.0,
       phi: 0.5,
@@ -300,7 +303,7 @@ describe('CameraFrame snapshot/restore', () => {
     expect(s.center).toEqual([1, 2, 3]);
   });
 
-  it('_applyState restores a previously captured state', () => {
+  it("_applyState restores a previously captured state", () => {
     const frame = new CameraFrame();
     const snap = frame._snapshot();
     frame.setTheta(2.0);
@@ -320,8 +323,8 @@ describe('CameraFrame snapshot/restore', () => {
   });
 });
 
-describe('CameraAnimateProxy', () => {
-  it('frame.animate returns a CameraAnimateProxy with defaults', () => {
+describe("CameraAnimateProxy", () => {
+  it("frame.animate returns a CameraAnimateProxy with defaults", () => {
     const frame = new CameraFrame();
     const proxy = frame.animate;
     expect(proxy).toBeInstanceOf(CameraAnimateProxy);
@@ -329,14 +332,14 @@ describe('CameraAnimateProxy', () => {
     expect(proxy.getFrame()).toBe(frame);
   });
 
-  it('animateTo passes custom duration and rateFunc', () => {
+  it("animateTo passes custom duration and rateFunc", () => {
     const frame = new CameraFrame();
     const proxy = frame.animateTo({ duration: 3, rateFunc: linear });
     expect(proxy.duration).toBe(3);
     expect(proxy.rateFunc).toBe(linear);
   });
 
-  it('builder methods are chainable', () => {
+  it("builder methods are chainable", () => {
     const frame = new CameraFrame();
     const proxy = frame.animate;
     const result = proxy
@@ -350,30 +353,38 @@ describe('CameraAnimateProxy', () => {
     expect(result).toBe(proxy);
   });
 
-  it('withDuration and withRateFunc override animation params', () => {
+  it("withDuration and withRateFunc override animation params", () => {
     const frame = new CameraFrame();
     const proxy = frame.animate.withDuration(5).withRateFunc(linear);
     expect(proxy.duration).toBe(5);
     expect(proxy.rateFunc).toBe(linear);
   });
 
-  it('interpolate(0) keeps start state', () => {
-    const frame = new CameraFrame(16 / 9, { theta: 0, phi: Math.PI / 4, distance: 10 });
+  it("interpolate(0) keeps start state", () => {
+    const frame = new CameraFrame(16 / 9, {
+      theta: 0,
+      phi: Math.PI / 4,
+      distance: 10,
+    });
     const proxy = frame.animate.incrementTheta(Math.PI / 2);
     proxy.begin();
     proxy.interpolate(0);
     expect(frame.getTheta()).toBeCloseTo(0);
   });
 
-  it('interpolate(1) reaches target state', () => {
-    const frame = new CameraFrame(16 / 9, { theta: 0, phi: Math.PI / 4, distance: 10 });
+  it("interpolate(1) reaches target state", () => {
+    const frame = new CameraFrame(16 / 9, {
+      theta: 0,
+      phi: Math.PI / 4,
+      distance: 10,
+    });
     const proxy = frame.animate.incrementTheta(Math.PI / 2);
     proxy.begin();
     proxy.interpolate(1);
     expect(frame.getTheta()).toBeCloseTo(Math.PI / 2);
   });
 
-  it('interpolate(0.5) gives midpoint', () => {
+  it("interpolate(0.5) gives midpoint", () => {
     const frame = new CameraFrame(16 / 9, { theta: 0, distance: 10 });
     const proxy = frame.animate.incrementTheta(Math.PI);
     proxy.begin();
@@ -381,9 +392,12 @@ describe('CameraAnimateProxy', () => {
     expect(frame.getTheta()).toBeCloseTo(Math.PI / 2);
   });
 
-  it('absolute setEulerAngles interpolates to target', () => {
+  it("absolute setEulerAngles interpolates to target", () => {
     const frame = new CameraFrame(16 / 9, { theta: 0, phi: 0, gamma: 0 });
-    const proxy = frame.animate.setEulerAngles({ theta: Math.PI, phi: Math.PI / 2 });
+    const proxy = frame.animate.setEulerAngles({
+      theta: Math.PI,
+      phi: Math.PI / 2,
+    });
     proxy.begin();
     proxy.interpolate(1);
     expect(frame.getTheta()).toBeCloseTo(Math.PI);
@@ -391,7 +405,7 @@ describe('CameraAnimateProxy', () => {
     expect(frame.getGamma()).toBeCloseTo(0);
   });
 
-  it('setDistance animates distance', () => {
+  it("setDistance animates distance", () => {
     const frame = new CameraFrame(16 / 9, { distance: 10 });
     const proxy = frame.animate.setDistance(20);
     proxy.begin();
@@ -401,7 +415,7 @@ describe('CameraAnimateProxy', () => {
     expect(frame.getDistance()).toBeCloseTo(20);
   });
 
-  it('setFieldOfView animates fov', () => {
+  it("setFieldOfView animates fov", () => {
     const frame = new CameraFrame(16 / 9, { fov: 45 });
     const proxy = frame.animate.setFieldOfView(90);
     proxy.begin();
@@ -411,7 +425,7 @@ describe('CameraAnimateProxy', () => {
     expect(frame.getFieldOfView()).toBeCloseTo(90);
   });
 
-  it('moveTo animates center', () => {
+  it("moveTo animates center", () => {
     const frame = new CameraFrame(16 / 9, { lookAt: [0, 0, 0] });
     const proxy = frame.animate.moveTo([10, 20, 30]);
     proxy.begin();
@@ -425,7 +439,7 @@ describe('CameraAnimateProxy', () => {
     expect(frame.getCenter()[2]).toBeCloseTo(30);
   });
 
-  it('finish applies final state', () => {
+  it("finish applies final state", () => {
     const frame = new CameraFrame(16 / 9, { theta: 0, phi: 0, distance: 10 });
     const proxy = frame.animate.incrementPhi(1.0);
     proxy.begin();
@@ -433,7 +447,7 @@ describe('CameraAnimateProxy', () => {
     expect(frame.getPhi()).toBeCloseTo(1.0);
   });
 
-  it('combined deltas accumulate', () => {
+  it("combined deltas accumulate", () => {
     const frame = new CameraFrame(16 / 9, { theta: 0, phi: 0 });
     const proxy = frame.animate.incrementTheta(0.5).incrementTheta(0.5);
     proxy.begin();
@@ -442,19 +456,19 @@ describe('CameraAnimateProxy', () => {
   });
 });
 
-describe('Camera2D frame interaction', () => {
-  it('camera.frame is lazily created, cached, and is a Camera2DFrame', () => {
+describe("Camera2D frame interaction", () => {
+  it("camera.frame is lazily created, cached, and is a Camera2DFrame", () => {
     const cam = new Camera2D();
     const f1 = cam.frame;
     expect(f1).toBeInstanceOf(Camera2DFrame);
     expect(cam.frame).toBe(f1);
   });
 
-  it('updateFrame with no frame is a no-op', () => {
+  it("updateFrame with no frame is a no-op", () => {
     new Camera2D().updateFrame(0.016); // should not throw
   });
 
-  it('updateFrame with frame does not throw', () => {
+  it("updateFrame with frame does not throw", () => {
     const cam = new Camera2D();
     const frame = cam.frame; // create the frame
     expect(frame).toBeDefined();
@@ -462,10 +476,10 @@ describe('Camera2D frame interaction', () => {
   });
 });
 
-describe('Camera2D aspectMode', () => {
+describe("Camera2D aspectMode", () => {
   it("defaults to 'fill' for back-compat", () => {
     const cam = new Camera2D({ frameWidth: 14, frameHeight: 8 });
-    expect(cam.aspectMode).toBe('fill');
+    expect(cam.aspectMode).toBe("fill");
     cam.setAspectRatio(2); // viewport aspect 2:1
     // fill mode: keep frameHeight, recompute frameWidth
     expect(cam.frameHeight).toBe(8);
@@ -476,7 +490,7 @@ describe('Camera2D aspectMode', () => {
     const cam = new Camera2D({
       frameWidth: 6,
       frameHeight: 8,
-      aspectMode: 'contain',
+      aspectMode: "contain",
     });
     // Viewport aspect (2) > base aspect (0.75) -> pad width, keep height.
     cam.setAspectRatio(2);
@@ -488,7 +502,7 @@ describe('Camera2D aspectMode', () => {
     const cam = new Camera2D({
       frameWidth: 14,
       frameHeight: 4,
-      aspectMode: 'contain',
+      aspectMode: "contain",
     });
     // Viewport aspect (0.5) < base aspect (3.5) -> pad height, keep width.
     cam.setAspectRatio(0.5);
@@ -500,7 +514,7 @@ describe('Camera2D aspectMode', () => {
     const cam = new Camera2D({
       frameWidth: 6,
       frameHeight: 4,
-      aspectMode: 'contain',
+      aspectMode: "contain",
     });
     // Two different viewport aspects in a row — base dims must not drift.
     cam.setAspectRatio(2);
@@ -510,11 +524,11 @@ describe('Camera2D aspectMode', () => {
     expect(cam.frameHeight).toBeCloseTo(12);
   });
 
-  it('mutating frameWidth/frameHeight updates the base for contain mode', () => {
+  it("mutating frameWidth/frameHeight updates the base for contain mode", () => {
     const cam = new Camera2D({
       frameWidth: 6,
       frameHeight: 4,
-      aspectMode: 'contain',
+      aspectMode: "contain",
     });
     cam.frameWidth = 10; // user re-states intent
     cam.setAspectRatio(2); // 2 > 10/4=2.5? no, 2 < 2.5 -> pad height
@@ -522,15 +536,15 @@ describe('Camera2D aspectMode', () => {
     expect(cam.frameHeight).toBeCloseTo(5);
   });
 
-  it('switching aspectMode re-applies the projection immediately', () => {
+  it("switching aspectMode re-applies the projection immediately", () => {
     const cam = new Camera2D({
       frameWidth: 6,
       frameHeight: 4,
-      aspectMode: 'fill',
+      aspectMode: "fill",
     });
     cam.setAspectRatio(2); // fill mode: keep height (4), width -> 8
     expect(cam.frameWidth).toBeCloseTo(8);
-    cam.aspectMode = 'contain';
+    cam.aspectMode = "contain";
     // After the switch, contain mode reuses current aspect (8/4=2) against
     // the user's base (6/4=1.5). 2 > 1.5 -> pad width.
     expect(cam.frameHeight).toBe(4);

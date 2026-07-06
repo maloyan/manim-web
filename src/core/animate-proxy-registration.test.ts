@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Regression test for #344: importing Scene (e.g. via Scene.createHeadless)
 // without any other reference to AnimateProxy used to leave the animate
 // proxy factory unregistered, so `mobject.animate` threw. Each case below
 // resets the module graph and dynamically imports only Scene + a Mobject
 // subclass via direct module paths, mirroring a minimal user setup.
-describe('AnimateProxy registration via Scene import (issue #344)', () => {
+describe("AnimateProxy registration via Scene import (issue #344)", () => {
   beforeEach(() => {
     vi.resetModules();
   });
@@ -16,10 +16,10 @@ describe('AnimateProxy registration via Scene import (issue #344)', () => {
   const TIMEOUT_MS = 30_000;
 
   it(
-    'Scene.createHeadless registers AnimateProxy so mobject.animate works',
+    "Scene.createHeadless registers AnimateProxy so mobject.animate works",
     async () => {
-      const { Scene } = await import('./Scene');
-      const { Circle } = await import('../mobjects/geometry/Circle');
+      const { Scene } = await import("./Scene");
+      const { Circle } = await import("../mobjects/geometry/Circle");
 
       const scene = Scene.createHeadless();
       const circle = new Circle();
@@ -32,10 +32,10 @@ describe('AnimateProxy registration via Scene import (issue #344)', () => {
   );
 
   it(
-    'new Scene(null, { headless: true }) also registers AnimateProxy',
+    "new Scene(null, { headless: true }) also registers AnimateProxy",
     async () => {
-      const { Scene } = await import('./Scene');
-      const { Circle } = await import('../mobjects/geometry/Circle');
+      const { Scene } = await import("./Scene");
+      const { Circle } = await import("../mobjects/geometry/Circle");
 
       const scene = new Scene(null, { headless: true });
       const circle = new Circle();

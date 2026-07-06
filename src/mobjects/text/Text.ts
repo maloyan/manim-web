@@ -1,9 +1,12 @@
-import * as THREE from 'three';
-import { Vector3Tuple } from '../../core/Mobject';
-import { TexturedMobject } from '../../core/TexturedMobject';
-import { TextGlyphGroup } from './TextGlyphGroup';
-import type { SkeletonizeOptions } from '../../utils/skeletonize';
-import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
+import * as THREE from "three";
+import { Vector3Tuple } from "../../core/Mobject";
+import { TexturedMobject } from "../../core/TexturedMobject";
+import { TextGlyphGroup } from "./TextGlyphGroup";
+import type { SkeletonizeOptions } from "../../utils/skeletonize";
+import {
+  DEFAULT_FONT_SIZE_IN_WORLD_SPACE,
+  DEFAULT_FONT_SIZE_PT,
+} from "../../constants/fontRender";
 
 /** Scale factor from Canvas 2D output to point units.
  * At 72 DPI, 1pt = 4/3 canvas pixels. */
@@ -34,7 +37,7 @@ export interface TextOptions {
   /** Letter spacing in pixels. Default: 0 */
   letterSpacing?: number;
   /** Text alignment. Default: 'center' */
-  textAlign?: 'left' | 'center' | 'right';
+  textAlign?: "left" | "center" | "right";
   /** URL to a font file (OTF/TTF) for glyph vector extraction. When provided, loadGlyphs() can extract glyph outlines for stroke-draw animation. */
   fontUrl?: string;
 }
@@ -72,7 +75,10 @@ const RESOLUTION_SCALE = 2;
  * Ensures the same OTF/TTF is loaded only once via @font-face,
  * and all Text instances sharing a URL get the same CSS family name.
  */
-const fontFaceCache = new Map<string, { familyName: string; loadPromise: Promise<void> }>();
+const fontFaceCache = new Map<
+  string,
+  { familyName: string; loadPromise: Promise<void> }
+>();
 let fontFaceIdCounter = 0;
 
 /**
@@ -92,12 +98,12 @@ async function loadFontFace(url: string): Promise<string> {
   // members used below — a partial mock that has `.fonts` but not `.load`
   // or `.add` would otherwise crash.
   if (
-    typeof document === 'undefined' ||
-    typeof FontFace === 'undefined' ||
-    typeof document.fonts?.add !== 'function' ||
-    typeof document.fonts?.load !== 'function'
+    typeof document === "undefined" ||
+    typeof FontFace === "undefined" ||
+    typeof document.fonts?.add !== "function" ||
+    typeof document.fonts?.load !== "function"
   ) {
-    return '';
+    return "";
   }
 
   const cached = fontFaceCache.get(url);
@@ -129,7 +135,7 @@ export class Text extends TexturedMobject {
   protected _canvasDirty: boolean = true;
   protected _lineHeight: number;
   protected _letterSpacing: number;
-  protected _textAlign: 'left' | 'center' | 'right';
+  protected _textAlign: "left" | "center" | "right";
 
   /** Optional font URL for glyph vector extraction */
   protected _fontUrl?: string;
@@ -156,15 +162,15 @@ export class Text extends TexturedMobject {
     const {
       text,
       fontSize = 48,
-      fontFamily = 'CMU Serif, Georgia, Times New Roman, serif',
-      fontWeight = 'normal',
-      fontStyle = 'normal',
-      color = '#ffffff',
+      fontFamily = "CMU Serif, Georgia, Times New Roman, serif",
+      fontWeight = "normal",
+      fontStyle = "normal",
+      color = "#ffffff",
       fillOpacity = 1,
       strokeWidth = 0,
       lineHeight = 1.2,
       letterSpacing = 0,
-      textAlign = 'center',
+      textAlign = "center",
       fontUrl,
     } = options;
 
@@ -192,13 +198,13 @@ export class Text extends TexturedMobject {
    */
   protected _initCanvas(): void {
     // Headless / non-DOM environment — skip canvas initialization, geometry will be empty
-    if (typeof document === 'undefined') {
+    if (typeof document === "undefined") {
       return;
     }
-    this._canvas = document.createElement('canvas');
-    this._ctx = this._canvas.getContext('2d');
+    this._canvas = document.createElement("canvas");
+    this._ctx = this._canvas.getContext("2d");
     if (!this._ctx) {
-      throw new Error('Failed to get 2D context for text rendering');
+      throw new Error("Failed to get 2D context for text rendering");
     }
   }
 
@@ -283,9 +289,10 @@ export class Text extends TexturedMobject {
    * Build the CSS font string
    */
   protected _buildFontString(): string {
-    const style = this._fontStyle === 'italic' ? 'italic' : 'normal';
-    const weight =
-      typeof this._fontWeight === 'number' ? this._fontWeight.toString() : this._fontWeight;
+    const style = this._fontStyle === "italic" ? "italic" : "normal";
+    const weight = typeof this._fontWeight === "number"
+      ? this._fontWeight.toString()
+      : this._fontWeight;
     const size = Math.round(this._fontSize * RESOLUTION_SCALE);
     return `${style} ${weight} ${size}pt ${this._fontFamily}`;
   }
@@ -300,7 +307,7 @@ export class Text extends TexturedMobject {
     }
 
     this._ctx.font = this._buildFontString();
-    const lines = this._text.split('\n');
+    const lines = this._text.split("\n");
     const scaledFontSize = this._fontSize * RESOLUTION_SCALE;
     const scaledLineHeight = scaledFontSize * this._lineHeight;
 
@@ -308,7 +315,8 @@ export class Text extends TexturedMobject {
     let maxWidth = 0;
     for (const line of lines) {
       const metrics = this._ctx.measureText(line);
-      const lineWidth = metrics.width + (line.length - 1) * this._letterSpacing * RESOLUTION_SCALE;
+      const lineWidth = metrics.width +
+        (line.length - 1) * this._letterSpacing * RESOLUTION_SCALE;
       maxWidth = Math.max(maxWidth, lineWidth);
     }
 
@@ -342,7 +350,7 @@ export class Text extends TexturedMobject {
 
     // Set font and styles
     this._ctx.font = this._buildFontString();
-    this._ctx.textBaseline = 'top';
+    this._ctx.textBaseline = "top";
     this._ctx.textAlign = this._textAlign;
 
     const scaledFontSize = this._fontSize * RESOLUTION_SCALE;
@@ -352,13 +360,13 @@ export class Text extends TexturedMobject {
     // Calculate x position based on alignment
     let textX: number;
     switch (this._textAlign) {
-      case 'left':
+      case "left":
         textX = padding;
         break;
-      case 'right':
+      case "right":
         textX = width - padding;
         break;
-      case 'center':
+      case "center":
       default:
         textX = width / 2;
         break;
@@ -392,8 +400,7 @@ export class Text extends TexturedMobject {
     // At 72 DPI, 1pt = SVG_UNITS_PER_PT canvas pixels
     // 1 EM = DEFAULT_FONT_SIZE_PT at the reference size
     // 1 EM = DEFAULT_FONT_SIZE_IN_WORLD_SPACE world units at reference
-    const pxToWorld =
-      (1 / SVG_UNITS_PER_PT) * // px → pt
+    const pxToWorld = (1 / SVG_UNITS_PER_PT) * // px → pt
       (1 / DEFAULT_FONT_SIZE_PT) * // pt → EM
       DEFAULT_FONT_SIZE_IN_WORLD_SPACE; // EM → world
     this._worldWidth = (width / RESOLUTION_SCALE) * pxToWorld;
@@ -423,15 +430,17 @@ export class Text extends TexturedMobject {
     let currentX = startX;
 
     // Adjust starting position based on alignment
-    if (this._textAlign === 'center') {
-      const totalWidth = this._ctx.measureText(text).width + (text.length - 1) * scaledSpacing;
+    if (this._textAlign === "center") {
+      const totalWidth = this._ctx.measureText(text).width +
+        (text.length - 1) * scaledSpacing;
       currentX = startX - totalWidth / 2;
-    } else if (this._textAlign === 'right') {
-      const totalWidth = this._ctx.measureText(text).width + (text.length - 1) * scaledSpacing;
+    } else if (this._textAlign === "right") {
+      const totalWidth = this._ctx.measureText(text).width +
+        (text.length - 1) * scaledSpacing;
       currentX = startX - totalWidth;
     }
 
-    this._ctx.textAlign = 'left';
+    this._ctx.textAlign = "left";
 
     for (let i = 0; i < text.length; i++) {
       const char = text[i];
@@ -465,7 +474,10 @@ export class Text extends TexturedMobject {
     this._mesh.geometry.dispose();
 
     // Create new geometry with updated dimensions
-    this._mesh.geometry = new THREE.PlaneGeometry(this._worldWidth, this._worldHeight);
+    this._mesh.geometry = new THREE.PlaneGeometry(
+      this._worldWidth,
+      this._worldHeight,
+    );
   }
 
   /**
@@ -496,7 +508,10 @@ export class Text extends TexturedMobject {
     });
 
     // Create plane geometry sized to match text
-    const geometry = new THREE.PlaneGeometry(this._worldWidth, this._worldHeight);
+    const geometry = new THREE.PlaneGeometry(
+      this._worldWidth,
+      this._worldHeight,
+    );
 
     // Create mesh
     this._mesh = new THREE.Mesh(geometry, material);
@@ -513,10 +528,10 @@ export class Text extends TexturedMobject {
   override getDisplayMeshes(): THREE.Mesh[] {
     const object = this.getThreeObject();
     if (!(object instanceof THREE.Group)) {
-      throw new Error('Text.getThreeObject() must return a THREE.Group');
+      throw new Error("Text.getThreeObject() must return a THREE.Group");
     }
     if (!this._mesh) {
-      throw new Error('Text.getDisplayMeshes() requires _mesh');
+      throw new Error("Text.getDisplayMeshes() requires _mesh");
     }
 
     return [this._mesh];
@@ -524,22 +539,24 @@ export class Text extends TexturedMobject {
 
   applyTextureFrom(other: TexturedMobject): void {
     if (!(other instanceof Text)) {
-      throw new Error('Text.applyTextureFrom requires Text');
+      throw new Error("Text.applyTextureFrom requires Text");
     }
     if (!this._mesh) {
-      throw new Error('Text.applyTextureFrom requires _mesh');
+      throw new Error("Text.applyTextureFrom requires _mesh");
     }
     if (!other._mesh) {
-      throw new Error('Text.applyTextureFrom requires source _mesh');
+      throw new Error("Text.applyTextureFrom requires source _mesh");
     }
 
     const material = this._mesh.material;
     const sourceMaterial = other._mesh.material;
     if (!(material instanceof THREE.MeshBasicMaterial)) {
-      throw new Error('Text.applyTextureFrom requires MeshBasicMaterial');
+      throw new Error("Text.applyTextureFrom requires MeshBasicMaterial");
     }
     if (!(sourceMaterial instanceof THREE.MeshBasicMaterial)) {
-      throw new Error('Text.applyTextureFrom requires source MeshBasicMaterial');
+      throw new Error(
+        "Text.applyTextureFrom requires source MeshBasicMaterial",
+      );
     }
 
     const nextTexture = sourceMaterial.map;
@@ -550,7 +567,7 @@ export class Text extends TexturedMobject {
 
   applyContentFrom(other: TexturedMobject): void {
     if (!(other instanceof Text)) {
-      throw new Error('Text.applyContentFrom requires Text');
+      throw new Error("Text.applyContentFrom requires Text");
     }
     this._text = other._text;
     this._canvasDirty = false;

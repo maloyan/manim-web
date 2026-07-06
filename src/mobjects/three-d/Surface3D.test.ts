@@ -13,11 +13,11 @@
  * groupOrder/renderOrder/z) and is guaranteed to draw first. That is an
  * internal Three.js invariant; these tests guard our side of it.
  */
-import * as THREE from 'three';
-import { describe, it, expect, vi } from 'vitest';
-import { ThreeDScene } from '../../core/ThreeDScene';
-import { ParametricSurface } from './ParametricSurface';
-import { Surface3D } from './Surface3D';
+import * as THREE from "three";
+import { describe, expect, it, vi } from "vitest";
+import { ThreeDScene } from "../../core/ThreeDScene";
+import { ParametricSurface } from "./ParametricSurface";
+import { Surface3D } from "./Surface3D";
 
 const bellFunc = (u: number, v: number): [number, number, number] => [
   u,
@@ -25,7 +25,9 @@ const bellFunc = (u: number, v: number): [number, number, number] => [
   Math.exp(-(u * u + v * v) / 0.32),
 ];
 
-function makeSurface(extra: Partial<ConstructorParameters<typeof Surface3D>[0]> = {}): Surface3D {
+function makeSurface(
+  extra: Partial<ConstructorParameters<typeof Surface3D>[0]> = {},
+): Surface3D {
   return new Surface3D({
     func: bellFunc,
     uRange: [-2, 2],
@@ -48,7 +50,7 @@ function getPrepassMesh(surface: Surface3D): THREE.Mesh {
       (c as THREE.Mesh).isMesh &&
       ((c as THREE.Mesh).material as THREE.Material).userData.depthPrepass,
   );
-  expect(prepass, 'expected a depth-prepass child mesh').toBeDefined();
+  expect(prepass, "expected a depth-prepass child mesh").toBeDefined();
   return prepass as THREE.Mesh;
 }
 
@@ -60,8 +62,8 @@ function getColorMaterial(surface: Surface3D): THREE.MeshStandardMaterial {
   return getColorMesh(surface).material as THREE.MeshStandardMaterial;
 }
 
-describe('Surface3D depth prepass (issue #416)', () => {
-  it('transparent surface has a depth-only prepass mesh sharing its geometry', () => {
+describe("Surface3D depth prepass (issue #416)", () => {
+  it("transparent surface has a depth-only prepass mesh sharing its geometry", () => {
     const surface = makeSurface();
     const colorMesh = getColorMesh(surface);
     const prepass = getPrepassMesh(surface);
@@ -75,17 +77,20 @@ describe('Surface3D depth prepass (issue #416)', () => {
     expect(prepass.geometry).toBe(colorMesh.geometry);
   });
 
-  it('prepass mesh has a lower object id than the color mesh (draw-order tiebreak)', () => {
+  it("prepass mesh has a lower object id than the color mesh (draw-order tiebreak)", () => {
     const surface = makeSurface();
     expect(getPrepassMesh(surface).id).toBeLessThan(getColorMesh(surface).id);
   });
 
-  it('prepass mesh is invisible to raycasting', () => {
+  it("prepass mesh is invisible to raycasting", () => {
     const surface = makeSurface();
     const colorMesh = getColorMesh(surface);
     colorMesh.updateMatrixWorld(true);
 
-    const raycaster = new THREE.Raycaster(new THREE.Vector3(0, 0, 5), new THREE.Vector3(0, 0, -1));
+    const raycaster = new THREE.Raycaster(
+      new THREE.Vector3(0, 0, 5),
+      new THREE.Vector3(0, 0, -1),
+    );
     const hits = raycaster.intersectObject(colorMesh, true);
     expect(hits.length).toBeGreaterThan(0);
     for (const hit of hits) {
@@ -93,7 +98,7 @@ describe('Surface3D depth prepass (issue #416)', () => {
     }
   });
 
-  it('prepass mirrors the side setting of the color material', () => {
+  it("prepass mirrors the side setting of the color material", () => {
     const doubleSided = makeSurface({ doubleSided: true });
     expect(getPrepassMaterial(doubleSided).side).toBe(THREE.DoubleSide);
 
@@ -101,8 +106,8 @@ describe('Surface3D depth prepass (issue #416)', () => {
     expect(getPrepassMaterial(singleSided).side).toBe(THREE.FrontSide);
   });
 
-  it('checkerboard (non-indexed) surface gets the same prepass invariants', () => {
-    const surface = makeSurface({ checkerboardColors: ['#E65A4C', '#2D72D2'] });
+  it("checkerboard (non-indexed) surface gets the same prepass invariants", () => {
+    const surface = makeSurface({ checkerboardColors: ["#E65A4C", "#2D72D2"] });
     const colorMesh = getColorMesh(surface);
     const prepass = getPrepassMesh(surface);
     const prepassMat = prepass.material as THREE.Material;
@@ -115,25 +120,25 @@ describe('Surface3D depth prepass (issue #416)', () => {
     expect(colorMesh.geometry.index).toBeNull();
   });
 
-  it('wireframe surface keeps the prepass disabled (depthWrite=false, not drawn)', () => {
+  it("wireframe surface keeps the prepass disabled (depthWrite=false, not drawn)", () => {
     const surface = makeSurface({ wireframe: true });
     expect(getPrepassMaterial(surface).depthWrite).toBe(false);
     expect(getPrepassMaterial(surface).visible).toBe(false);
   });
 
-  it('fully transparent surface disables the prepass depth write', () => {
+  it("fully transparent surface disables the prepass depth write", () => {
     const surface = makeSurface({ opacity: 0 });
     expect(getPrepassMaterial(surface).depthWrite).toBe(false);
     expect(getPrepassMaterial(surface).visible).toBe(false);
   });
 
-  it('opaque surface disables the prepass (color mesh writes its own depth)', () => {
+  it("opaque surface disables the prepass (color mesh writes its own depth)", () => {
     const surface = makeSurface({ opacity: 1 });
     expect(getPrepassMaterial(surface).depthWrite).toBe(false);
     expect(getPrepassMaterial(surface).visible).toBe(false);
   });
 
-  it('runtime opacity changes toggle the prepass across 1 → 0.5 → 0 → 0.5', () => {
+  it("runtime opacity changes toggle the prepass across 1 → 0.5 → 0 → 0.5", () => {
     const scene = ThreeDScene.createHeadless();
     const surface = makeSurface({ opacity: 1 });
     scene.add(surface);
@@ -159,7 +164,7 @@ describe('Surface3D depth prepass (issue #416)', () => {
     scene.dispose();
   });
 
-  it('runtime wireframe toggle disables and re-enables the prepass', () => {
+  it("runtime wireframe toggle disables and re-enables the prepass", () => {
     const scene = ThreeDScene.createHeadless();
     const surface = makeSurface();
     scene.add(surface);
@@ -179,7 +184,7 @@ describe('Surface3D depth prepass (issue #416)', () => {
     scene.dispose();
   });
 
-  it('syncing without a scene keeps color depthWrite correct (Transform-target path)', () => {
+  it("syncing without a scene keeps color depthWrite correct (Transform-target path)", () => {
     // FadeMorphStrategy attaches Transform targets straight to the Three.js
     // parent, bypassing ThreeDScene's depth settings — the surface itself
     // must keep depthWrite consistent with its own transparency.
@@ -193,7 +198,7 @@ describe('Surface3D depth prepass (issue #416)', () => {
     expect(getColorMaterial(surface).depthWrite).toBe(true);
   });
 
-  it('ThreeDScene.add keeps prepass depthWrite=true while color gets depthWrite=false', () => {
+  it("ThreeDScene.add keeps prepass depthWrite=true while color gets depthWrite=false", () => {
     const scene = ThreeDScene.createHeadless();
     const surface = makeSurface();
     scene.add(surface);
@@ -210,31 +215,35 @@ describe('Surface3D depth prepass (issue #416)', () => {
     scene.dispose();
   });
 
-  it('prepass and color mesh always share the same renderOrder (sort-tiebreak precondition)', () => {
+  it("prepass and color mesh always share the same renderOrder (sort-tiebreak precondition)", () => {
     // The id tiebreak in three.js' transparent sort only applies when
     // renderOrder is equal — every renderOrder stamping path must hit
     // both meshes uniformly.
     const scene = ThreeDScene.createHeadless();
     const surface = makeSurface();
     scene.add(surface);
-    expect(getPrepassMesh(surface).renderOrder).toBe(getColorMesh(surface).renderOrder);
+    expect(getPrepassMesh(surface).renderOrder).toBe(
+      getColorMesh(surface).renderOrder,
+    );
     expect(getColorMesh(surface).renderOrder).toBe(0);
 
     const fgSurface = makeSurface();
     scene.addForegroundMobject(fgSurface);
-    expect(getPrepassMesh(fgSurface).renderOrder).toBe(getColorMesh(fgSurface).renderOrder);
+    expect(getPrepassMesh(fgSurface).renderOrder).toBe(
+      getColorMesh(fgSurface).renderOrder,
+    );
 
     scene.dispose();
   });
 
-  it('prepass child keeps an identity local transform (sort-z equality precondition)', () => {
+  it("prepass child keeps an identity local transform (sort-z equality precondition)", () => {
     const surface = makeSurface();
     const prepass = getPrepassMesh(surface);
     prepass.updateMatrix();
     expect(prepass.matrix.equals(new THREE.Matrix4())).toBe(true);
   });
 
-  it('HUD path (addFixedInFrameMobjects) applies the same depth rules to surfaces', () => {
+  it("HUD path (addFixedInFrameMobjects) applies the same depth rules to surfaces", () => {
     const scene = ThreeDScene.createHeadless();
     const surface = makeSurface();
     scene.addFixedInFrameMobjects(surface);
@@ -247,11 +256,11 @@ describe('Surface3D depth prepass (issue #416)', () => {
     scene.dispose();
   });
 
-  it('geometry rebuild (setFunc) updates both meshes and disposes the old geometry', () => {
+  it("geometry rebuild (setFunc) updates both meshes and disposes the old geometry", () => {
     const surface = makeSurface();
     const colorMesh = getColorMesh(surface);
     const oldGeometry = colorMesh.geometry;
-    const disposeSpy = vi.spyOn(oldGeometry, 'dispose');
+    const disposeSpy = vi.spyOn(oldGeometry, "dispose");
 
     surface.setFunc((u, v) => [u, v, u * v]);
 
@@ -261,8 +270,8 @@ describe('Surface3D depth prepass (issue #416)', () => {
     expect(disposeSpy).toHaveBeenCalled();
   });
 
-  it('geometry rebuild on a checkerboard surface keeps shared non-indexed geometry', () => {
-    const surface = makeSurface({ checkerboardColors: ['#E65A4C', '#2D72D2'] });
+  it("geometry rebuild on a checkerboard surface keeps shared non-indexed geometry", () => {
+    const surface = makeSurface({ checkerboardColors: ["#E65A4C", "#2D72D2"] });
     const colorMesh = getColorMesh(surface);
 
     surface.setURange([-1, 1]);
@@ -272,37 +281,44 @@ describe('Surface3D depth prepass (issue #416)', () => {
     expect(colorMesh.geometry.index).toBeNull();
   });
 
-  it('copy() preserves the prepass on the copied surface', () => {
+  it("copy() preserves the prepass on the copied surface", () => {
     const surface = makeSurface();
     const copied = surface.copy();
     expect(getPrepassMaterial(copied).depthWrite).toBe(true);
   });
 });
 
-describe('ParametricSurface.copy (latent bug found in #416 review)', () => {
-  it('round-trips checkerboardColors into identical baked vertex colors', () => {
+describe("ParametricSurface.copy (latent bug found in #416 review)", () => {
+  it("round-trips checkerboardColors into identical baked vertex colors", () => {
     const surface = new ParametricSurface({
       func: bellFunc,
-      checkerboardColors: ['#E65A4C', '#2D72D2'],
+      checkerboardColors: ["#E65A4C", "#2D72D2"],
     });
     const copied = surface.copy();
 
-    const material = (copied.getThreeObject() as THREE.Mesh).material as THREE.MeshStandardMaterial;
+    const material = (copied.getThreeObject() as THREE.Mesh)
+      .material as THREE.MeshStandardMaterial;
     expect(material.vertexColors).toBe(true);
 
-    const originalColors = (surface.getThreeObject() as THREE.Mesh).geometry.getAttribute('color');
-    const copiedColors = (copied.getThreeObject() as THREE.Mesh).geometry.getAttribute('color');
-    expect(Array.from(copiedColors.array)).toEqual(Array.from(originalColors.array));
+    const originalColors = (surface.getThreeObject() as THREE.Mesh).geometry
+      .getAttribute("color");
+    const copiedColors = (copied.getThreeObject() as THREE.Mesh).geometry
+      .getAttribute("color");
+    expect(Array.from(copiedColors.array)).toEqual(
+      Array.from(originalColors.array),
+    );
   });
 });
 
-describe('three.js transparent-sort tiebreak (upstream invariant the fix relies on)', () => {
+describe("three.js transparent-sort tiebreak (upstream invariant the fix relies on)", () => {
   // The prepass draws before the color mesh only because, with equal
   // groupOrder/renderOrder/z, reversePainterSortStable falls back to
   // ascending object id. Verified against three r0.184; this test fails
   // loudly if a three.js upgrade changes that comparator.
-  it('orders equal-z transparent render items by ascending object id', async () => {
-    const { WebGLRenderList } = await import('three/src/renderers/webgl/WebGLRenderLists.js');
+  it("orders equal-z transparent render items by ascending object id", async () => {
+    const { WebGLRenderList } = await import(
+      "three/src/renderers/webgl/WebGLRenderLists.js"
+    );
 
     const makeItem = (objectId: number, materialId: number) => ({
       object: { id: objectId, renderOrder: 0 },
@@ -317,6 +333,9 @@ describe('three.js transparent-sort tiebreak (upstream invariant the fix relies 
     list.push(a.object, null, a.material, 0, 5, null);
     list.sort(null, null);
 
-    expect(list.transparent.map((item: { id: number }) => item.id)).toEqual([1, 2]);
+    expect(list.transparent.map((item: { id: number }) => item.id)).toEqual([
+      1,
+      2,
+    ]);
   });
 });

@@ -1,24 +1,27 @@
-import { describe, it, expect } from 'vitest';
-import { Mobject } from '../core/Mobject';
-import { VMobject } from '../core/VMobject';
-import { linear } from '../rate-functions';
-import { WiggleOutThenIn, wiggleOutThenIn } from './indication/WiggleOutThenIn';
+import { describe, expect, it } from "vitest";
+import { Mobject } from "../core/Mobject";
+import { VMobject } from "../core/VMobject";
+import { linear } from "../rate-functions";
+import { WiggleOutThenIn, wiggleOutThenIn } from "./indication/WiggleOutThenIn";
 import {
   ShowCreationThenDestruction,
   showCreationThenDestruction,
-} from './indication/ShowCreationThenDestruction';
-import { ShowPassingFlash, showPassingFlash } from './indication/ShowPassingFlash';
+} from "./indication/ShowCreationThenDestruction";
+import {
+  ShowPassingFlash,
+  showPassingFlash,
+} from "./indication/ShowPassingFlash";
 import {
   ShowPassingFlashWithThinningStrokeWidth,
   showPassingFlashWithThinningStrokeWidth,
-} from './indication/ShowPassingFlashWithThinningStrokeWidth';
+} from "./indication/ShowPassingFlashWithThinningStrokeWidth";
 import {
   TransformMatchingShapes,
   transformMatchingShapes,
   TransformMatchingTex,
   transformMatchingTex,
-} from './transform/TransformMatching';
-import { ApplyPointwiseFunction } from './transform/ApplyPointwiseFunction';
+} from "./transform/TransformMatching";
+import { ApplyPointwiseFunction } from "./transform/ApplyPointwiseFunction";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -52,9 +55,9 @@ function trianglePoints(): number[][] {
 // WiggleOutThenIn
 // ============================================================================
 
-describe('WiggleOutThenIn', () => {
-  describe('constructor defaults', () => {
-    it('scaleValue=1.1, nWiggles=6, duration=2, rateFunc=linear', () => {
+describe("WiggleOutThenIn", () => {
+  describe("constructor defaults", () => {
+    it("scaleValue=1.1, nWiggles=6, duration=2, rateFunc=linear", () => {
       const anim = new WiggleOutThenIn(makeMobject());
       expect(anim.scaleValue).toBe(1.1);
       expect(anim.nWiggles).toBe(6);
@@ -63,14 +66,14 @@ describe('WiggleOutThenIn', () => {
       expect(anim.rotationAxis).toEqual([0, 0, 1]);
     });
 
-    it('rotationAngle defaults to 0.01 * TAU', () => {
+    it("rotationAngle defaults to 0.01 * TAU", () => {
       const anim = new WiggleOutThenIn(makeMobject());
       expect(anim.rotationAngle).toBeCloseTo(0.01 * 2 * Math.PI, 5);
     });
   });
 
-  describe('custom options', () => {
-    it('accepts custom scaleValue, nWiggles, rotationAngle', () => {
+  describe("custom options", () => {
+    it("accepts custom scaleValue, nWiggles, rotationAngle", () => {
       const anim = new WiggleOutThenIn(makeMobject(), {
         scaleValue: 2.0,
         nWiggles: 3,
@@ -84,8 +87,8 @@ describe('WiggleOutThenIn', () => {
     });
   });
 
-  describe('interpolate()', () => {
-    it('at alpha=0 scale is original (thereAndBackSmooth(0) = 0)', () => {
+  describe("interpolate()", () => {
+    it("at alpha=0 scale is original (thereAndBackSmooth(0) = 0)", () => {
       const m = makeVMobject(trianglePoints());
       const origScale = m.scaleVector.clone();
       const anim = new WiggleOutThenIn(m);
@@ -95,7 +98,7 @@ describe('WiggleOutThenIn', () => {
       expect(m.scaleVector.y).toBeCloseTo(origScale.y, 3);
     });
 
-    it('at alpha=0.5 scale peaks at scaleValue factor', () => {
+    it("at alpha=0.5 scale peaks at scaleValue factor", () => {
       const m = makeVMobject(trianglePoints());
       const anim = new WiggleOutThenIn(m, { scaleValue: 1.5 });
       anim.begin();
@@ -104,7 +107,7 @@ describe('WiggleOutThenIn', () => {
       expect(m.scaleVector.x).toBeCloseTo(1.5, 2);
     });
 
-    it('at alpha=1 scale returns to original', () => {
+    it("at alpha=1 scale returns to original", () => {
       const m = makeVMobject(trianglePoints());
       const origScale = m.scaleVector.clone();
       const anim = new WiggleOutThenIn(m);
@@ -115,8 +118,8 @@ describe('WiggleOutThenIn', () => {
     });
   });
 
-  describe('finish()', () => {
-    it('restores original scale, rotation, and position', () => {
+  describe("finish()", () => {
+    it("restores original scale, rotation, and position", () => {
       const m = makeVMobject(trianglePoints());
       m.position.set(1, 2, 0);
       const origPos = m.position.clone();
@@ -135,8 +138,8 @@ describe('WiggleOutThenIn', () => {
     });
   });
 
-  describe('wiggleOutThenIn() factory', () => {
-    it('returns WiggleOutThenIn instance', () => {
+  describe("wiggleOutThenIn() factory", () => {
+    it("returns WiggleOutThenIn instance", () => {
       const anim = wiggleOutThenIn(makeMobject(), { nWiggles: 4 });
       expect(anim).toBeInstanceOf(WiggleOutThenIn);
       expect(anim.nWiggles).toBe(4);
@@ -148,9 +151,9 @@ describe('WiggleOutThenIn', () => {
 // ShowCreationThenDestruction (constructor + factory only; begin/interpolate need Line2)
 // ============================================================================
 
-describe('ShowCreationThenDestruction', () => {
-  describe('constructor defaults', () => {
-    it('duration=2, rateFunc=linear', () => {
+describe("ShowCreationThenDestruction", () => {
+  describe("constructor defaults", () => {
+    it("duration=2, rateFunc=linear", () => {
       const m = makeMobject();
       const anim = new ShowCreationThenDestruction(m);
       expect(anim.duration).toBe(2);
@@ -158,15 +161,17 @@ describe('ShowCreationThenDestruction', () => {
     });
   });
 
-  describe('custom options', () => {
-    it('accepts custom duration', () => {
-      const anim = new ShowCreationThenDestruction(makeMobject(), { duration: 5 });
+  describe("custom options", () => {
+    it("accepts custom duration", () => {
+      const anim = new ShowCreationThenDestruction(makeMobject(), {
+        duration: 5,
+      });
       expect(anim.duration).toBe(5);
     });
   });
 
-  describe('with non-VMobject (opacity fallback)', () => {
-    it('begin sets opacity to 0, finish sets opacity to 0', () => {
+  describe("with non-VMobject (opacity fallback)", () => {
+    it("begin sets opacity to 0, finish sets opacity to 0", () => {
       const m = makeMobject();
       const anim = new ShowCreationThenDestruction(m);
       anim.begin();
@@ -177,7 +182,7 @@ describe('ShowCreationThenDestruction', () => {
       expect(m.opacity).toBe(0);
     });
 
-    it('interpolate at alpha=0.25 sets opacity to 0.5 (first half ramp)', () => {
+    it("interpolate at alpha=0.25 sets opacity to 0.5 (first half ramp)", () => {
       const m = makeMobject();
       const anim = new ShowCreationThenDestruction(m);
       anim.begin();
@@ -186,7 +191,7 @@ describe('ShowCreationThenDestruction', () => {
       expect(m.opacity).toBeCloseTo(0.5, 2);
     });
 
-    it('interpolate at alpha=0.5 sets opacity to 1 (peak)', () => {
+    it("interpolate at alpha=0.5 sets opacity to 1 (peak)", () => {
       const m = makeMobject();
       const anim = new ShowCreationThenDestruction(m);
       anim.begin();
@@ -194,7 +199,7 @@ describe('ShowCreationThenDestruction', () => {
       expect(m.opacity).toBeCloseTo(1, 2);
     });
 
-    it('interpolate at alpha=0.75 sets opacity to 0.5 (second half decline)', () => {
+    it("interpolate at alpha=0.75 sets opacity to 0.5 (second half decline)", () => {
       const m = makeMobject();
       const anim = new ShowCreationThenDestruction(m);
       anim.begin();
@@ -204,8 +209,8 @@ describe('ShowCreationThenDestruction', () => {
     });
   });
 
-  describe('showCreationThenDestruction() factory', () => {
-    it('returns ShowCreationThenDestruction instance', () => {
+  describe("showCreationThenDestruction() factory", () => {
+    it("returns ShowCreationThenDestruction instance", () => {
       const anim = showCreationThenDestruction(makeMobject());
       expect(anim).toBeInstanceOf(ShowCreationThenDestruction);
     });
@@ -216,9 +221,9 @@ describe('ShowCreationThenDestruction', () => {
 // ShowPassingFlash (constructor + factory; interpolate needs Line2/window)
 // ============================================================================
 
-describe('ShowPassingFlash', () => {
-  describe('constructor defaults', () => {
-    it('duration=1, rateFunc=linear, timeWidth=0.2', () => {
+describe("ShowPassingFlash", () => {
+  describe("constructor defaults", () => {
+    it("duration=1, rateFunc=linear, timeWidth=0.2", () => {
       const m = makeMobject();
       const anim = new ShowPassingFlash(m);
       expect(anim.duration).toBe(1);
@@ -226,30 +231,30 @@ describe('ShowPassingFlash', () => {
       expect(anim.timeWidth).toBe(0.2);
     });
 
-    it('flashStrokeWidth defaults to DEFAULT_STROKE_WIDTH * 1.5', () => {
+    it("flashStrokeWidth defaults to DEFAULT_STROKE_WIDTH * 1.5", () => {
       const anim = new ShowPassingFlash(makeMobject());
       // DEFAULT_STROKE_WIDTH is 4 in constants
       expect(anim.flashStrokeWidth).toBeCloseTo(6, 1);
     });
   });
 
-  describe('custom options', () => {
-    it('accepts custom color, timeWidth, strokeWidth', () => {
+  describe("custom options", () => {
+    it("accepts custom color, timeWidth, strokeWidth", () => {
       const anim = new ShowPassingFlash(makeMobject(), {
-        color: '#ff0000',
+        color: "#ff0000",
         timeWidth: 0.5,
         strokeWidth: 10,
         duration: 3,
       });
-      expect(anim.flashColor).toBe('#ff0000');
+      expect(anim.flashColor).toBe("#ff0000");
       expect(anim.timeWidth).toBe(0.5);
       expect(anim.flashStrokeWidth).toBe(10);
       expect(anim.duration).toBe(3);
     });
   });
 
-  describe('showPassingFlash() factory', () => {
-    it('returns ShowPassingFlash instance', () => {
+  describe("showPassingFlash() factory", () => {
+    it("returns ShowPassingFlash instance", () => {
       const anim = showPassingFlash(makeMobject());
       expect(anim).toBeInstanceOf(ShowPassingFlash);
     });
@@ -260,22 +265,22 @@ describe('ShowPassingFlash', () => {
 // ShowPassingFlashWithThinningStrokeWidth (constructor + factory)
 // ============================================================================
 
-describe('ShowPassingFlashWithThinningStrokeWidth', () => {
-  describe('constructor defaults', () => {
-    it('minStrokeWidthRatio defaults to 0.1', () => {
+describe("ShowPassingFlashWithThinningStrokeWidth", () => {
+  describe("constructor defaults", () => {
+    it("minStrokeWidthRatio defaults to 0.1", () => {
       const anim = new ShowPassingFlashWithThinningStrokeWidth(makeMobject());
       expect(anim.minStrokeWidthRatio).toBe(0.1);
     });
 
-    it('inherits ShowPassingFlash defaults', () => {
+    it("inherits ShowPassingFlash defaults", () => {
       const anim = new ShowPassingFlashWithThinningStrokeWidth(makeMobject());
       expect(anim.timeWidth).toBe(0.2);
       expect(anim.duration).toBe(1);
     });
   });
 
-  describe('custom options', () => {
-    it('accepts custom minStrokeWidthRatio', () => {
+  describe("custom options", () => {
+    it("accepts custom minStrokeWidthRatio", () => {
       const anim = new ShowPassingFlashWithThinningStrokeWidth(makeMobject(), {
         minStrokeWidthRatio: 0.5,
       });
@@ -283,8 +288,8 @@ describe('ShowPassingFlashWithThinningStrokeWidth', () => {
     });
   });
 
-  describe('showPassingFlashWithThinningStrokeWidth() factory', () => {
-    it('returns correct instance', () => {
+  describe("showPassingFlashWithThinningStrokeWidth() factory", () => {
+    it("returns correct instance", () => {
       const anim = showPassingFlashWithThinningStrokeWidth(makeMobject());
       expect(anim).toBeInstanceOf(ShowPassingFlashWithThinningStrokeWidth);
       expect(anim).toBeInstanceOf(ShowPassingFlash);
@@ -296,9 +301,9 @@ describe('ShowPassingFlashWithThinningStrokeWidth', () => {
 // TransformMatchingShapes (constructor + factory + basic properties)
 // ============================================================================
 
-describe('TransformMatchingShapes', () => {
-  describe('constructor defaults', () => {
-    it('matchThreshold=0.5, fadeRatio=0.25, keyFunc=undefined', () => {
+describe("TransformMatchingShapes", () => {
+  describe("constructor defaults", () => {
+    it("matchThreshold=0.5, fadeRatio=0.25, keyFunc=undefined", () => {
       const src = makeVMobject(trianglePoints());
       const tgt = makeVMobject(trianglePoints());
       const anim = new TransformMatchingShapes(src, tgt);
@@ -310,9 +315,9 @@ describe('TransformMatchingShapes', () => {
     });
   });
 
-  describe('custom options', () => {
-    it('accepts matchThreshold and keyFunc', () => {
-      const keyFn = (_vm: VMobject) => 'key';
+  describe("custom options", () => {
+    it("accepts matchThreshold and keyFunc", () => {
+      const keyFn = (_vm: VMobject) => "key";
       const anim = new TransformMatchingShapes(
         makeVMobject(trianglePoints()),
         makeVMobject(trianglePoints()),
@@ -323,7 +328,7 @@ describe('TransformMatchingShapes', () => {
       expect(anim.fadeRatio).toBe(0.4);
     });
 
-    it('clamps fadeRatio to [0, 0.5]', () => {
+    it("clamps fadeRatio to [0, 0.5]", () => {
       const anim = new TransformMatchingShapes(
         makeVMobject(trianglePoints()),
         makeVMobject(trianglePoints()),
@@ -340,8 +345,8 @@ describe('TransformMatchingShapes', () => {
     });
   });
 
-  describe('transformMatchingShapes() factory', () => {
-    it('returns TransformMatchingShapes instance', () => {
+  describe("transformMatchingShapes() factory", () => {
+    it("returns TransformMatchingShapes instance", () => {
       const src = makeVMobject(trianglePoints());
       const tgt = makeVMobject(trianglePoints());
       const anim = transformMatchingShapes(src, tgt);
@@ -355,22 +360,22 @@ describe('TransformMatchingShapes', () => {
 // TransformMatchingTex (constructor + factory + basic properties)
 // ============================================================================
 
-describe('TransformMatchingTex', () => {
-  describe('constructor defaults', () => {
-    it('fadeRatio=0.25, transformMismatches=false', () => {
+describe("TransformMatchingTex", () => {
+  describe("constructor defaults", () => {
+    it("fadeRatio=0.25, transformMismatches=false", () => {
       const src = makeVMobject(trianglePoints());
       const tgt = makeVMobject(trianglePoints());
       const anim = new TransformMatchingTex(src, tgt);
       expect(anim.fadeRatio).toBe(0.25);
       expect(anim.transformMismatches).toBe(false);
       expect(anim.target).toBe(tgt);
-      expect(anim.keyFunc).toBeTypeOf('function');
+      expect(anim.keyFunc).toBeTypeOf("function");
     });
   });
 
-  describe('custom options', () => {
-    it('accepts custom keyFunc and transformMismatches', () => {
-      const keyFn = (_vm: VMobject) => 'custom';
+  describe("custom options", () => {
+    it("accepts custom keyFunc and transformMismatches", () => {
+      const keyFn = (_vm: VMobject) => "custom";
       const anim = new TransformMatchingTex(
         makeVMobject(trianglePoints()),
         makeVMobject(trianglePoints()),
@@ -382,8 +387,8 @@ describe('TransformMatchingTex', () => {
     });
   });
 
-  describe('transformMatchingTex() factory', () => {
-    it('returns TransformMatchingTex instance', () => {
+  describe("transformMatchingTex() factory", () => {
+    it("returns TransformMatchingTex instance", () => {
       const src = makeVMobject(trianglePoints());
       const tgt = makeVMobject(trianglePoints());
       const anim = transformMatchingTex(src, tgt);
@@ -396,9 +401,9 @@ describe('TransformMatchingTex', () => {
 // ApplyPointwiseFunction
 // ============================================================================
 
-describe('ApplyPointwiseFunction', () => {
-  describe('constructor', () => {
-    it('stores the function', () => {
+describe("ApplyPointwiseFunction", () => {
+  describe("constructor", () => {
+    it("stores the function", () => {
       const fn = (p: number[]) => [p[0] * 2, p[1] * 2, p[2]];
       const m = makeVMobject(trianglePoints());
       const anim = new ApplyPointwiseFunction(m, fn);
@@ -406,21 +411,28 @@ describe('ApplyPointwiseFunction', () => {
       expect(anim.mobject).toBe(m);
     });
 
-    it('defaults to duration=1', () => {
+    it("defaults to duration=1", () => {
       const fn = (p: number[]) => p;
-      const anim = new ApplyPointwiseFunction(makeVMobject(trianglePoints()), fn);
+      const anim = new ApplyPointwiseFunction(
+        makeVMobject(trianglePoints()),
+        fn,
+      );
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom duration', () => {
+    it("accepts custom duration", () => {
       const fn = (p: number[]) => p;
-      const anim = new ApplyPointwiseFunction(makeVMobject(trianglePoints()), fn, { duration: 4 });
+      const anim = new ApplyPointwiseFunction(
+        makeVMobject(trianglePoints()),
+        fn,
+        { duration: 4 },
+      );
       expect(anim.duration).toBe(4);
     });
   });
 
-  describe('begin()', () => {
-    it('captures snapshots for VMobject descendants', () => {
+  describe("begin()", () => {
+    it("captures snapshots for VMobject descendants", () => {
       const vm = makeVMobject(trianglePoints());
       const fn = (p: number[]) => [p[0] + 1, p[1], p[2]];
       const anim = new ApplyPointwiseFunction(vm, fn);
@@ -438,8 +450,8 @@ describe('ApplyPointwiseFunction', () => {
     });
   });
 
-  describe('interpolate()', () => {
-    it('at alpha=0.5 points are halfway between start and target', () => {
+  describe("interpolate()", () => {
+    it("at alpha=0.5 points are halfway between start and target", () => {
       // Simple translation: move all x by +2
       const fn = (p: number[]) => [p[0] + 2, p[1], p[2]];
       const vm = makeVMobject([
@@ -460,7 +472,7 @@ describe('ApplyPointwiseFunction', () => {
       }
     });
 
-    it('at alpha=1 points match the function output', () => {
+    it("at alpha=1 points match the function output", () => {
       const fn = (p: number[]) => [p[0] * 3, p[1] * 3, p[2]];
       const vm = makeVMobject([
         [1, 1, 0],
@@ -480,8 +492,8 @@ describe('ApplyPointwiseFunction', () => {
     });
   });
 
-  describe('finish()', () => {
-    it('sets points to final target values', () => {
+  describe("finish()", () => {
+    it("sets points to final target values", () => {
       const fn = (p: number[]) => [p[0] + 5, p[1] - 3, p[2]];
       const vm = makeVMobject([
         [0, 0, 0],

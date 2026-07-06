@@ -7,14 +7,15 @@
  * as it travels along the path.
  */
 
-import * as THREE from 'three';
-import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
-import { Mobject } from '../../core/Mobject';
-import { ShowPassingFlash, ShowPassingFlashOptions } from './ShowPassingFlash';
+import * as THREE from "three";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
+import { Mobject } from "../../core/Mobject";
+import { ShowPassingFlash, ShowPassingFlashOptions } from "./ShowPassingFlash";
 
-export interface ShowPassingFlashWithThinningStrokeWidthOptions extends ShowPassingFlashOptions {
+export interface ShowPassingFlashWithThinningStrokeWidthOptions
+  extends ShowPassingFlashOptions {
   /** Minimum stroke width at the tail (proportion of strokeWidth). Default: 0.1 */
   minStrokeWidthRatio?: number;
 }
@@ -23,7 +24,10 @@ export class ShowPassingFlashWithThinningStrokeWidth extends ShowPassingFlash {
   /** Minimum stroke width ratio (tail) */
   readonly minStrokeWidthRatio: number;
 
-  constructor(mobject: Mobject, options: ShowPassingFlashWithThinningStrokeWidthOptions = {}) {
+  constructor(
+    mobject: Mobject,
+    options: ShowPassingFlashWithThinningStrokeWidthOptions = {},
+  ) {
     super(mobject, options);
     this.minStrokeWidthRatio = options.minStrokeWidthRatio ?? 0.1;
   }
@@ -48,7 +52,10 @@ export class ShowPassingFlashWithThinningStrokeWidth extends ShowPassingFlash {
 
     // Get point indices for the flash segment
     const startIdx = Math.max(0, Math.floor(flashStart * (numPoints - 1)));
-    const endIdx = Math.min(numPoints - 1, Math.ceil(flashEnd * (numPoints - 1)));
+    const endIdx = Math.min(
+      numPoints - 1,
+      Math.ceil(flashEnd * (numPoints - 1)),
+    );
 
     if (startIdx >= endIdx) return;
 
@@ -96,8 +103,8 @@ export class ShowPassingFlashWithThinningStrokeWidth extends ShowPassingFlash {
       const progressAlongFlash = i / Math.max(1, numSegments - 1);
 
       // Stroke width: min at tail (progressAlongFlash=0), max at head (progressAlongFlash=1)
-      const strokeWidthMultiplier =
-        this.minStrokeWidthRatio + (1 - this.minStrokeWidthRatio) * progressAlongFlash;
+      const strokeWidthMultiplier = this.minStrokeWidthRatio +
+        (1 - this.minStrokeWidthRatio) * progressAlongFlash;
       const segmentStrokeWidth = this.flashStrokeWidth * strokeWidthMultiplier;
 
       // Opacity also tapers slightly for smoother visual

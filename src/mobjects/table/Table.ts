@@ -5,15 +5,15 @@
  * supporting various entry types including text, math, and arbitrary mobjects.
  */
 
-import * as THREE from 'three';
-import { Mobject, Vector3Tuple, ORIGIN } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
-import { VGroup } from '../../core/VGroup';
-import { Line } from '../geometry/Line';
-import { Rectangle } from '../geometry/Rectangle';
-import { MathTexImage } from '../text/MathTexImage';
-import { DecimalNumber } from '../text/DecimalNumber';
-import { WHITE, YELLOW } from '../../constants/colors';
+import * as THREE from "three";
+import { Mobject, ORIGIN, Vector3Tuple } from "../../core/Mobject";
+import { VMobject } from "../../core/VMobject";
+import { VGroup } from "../../core/VGroup";
+import { Line } from "../geometry/Line";
+import { Rectangle } from "../geometry/Rectangle";
+import { MathTexImage } from "../text/MathTexImage";
+import { DecimalNumber } from "../text/DecimalNumber";
+import { WHITE, YELLOW } from "../../constants/colors";
 
 /**
  * Options for creating a Table
@@ -136,7 +136,9 @@ export class Table extends VGroup {
 
     // Calculate dimensions
     this._numRows = data.length;
-    this._numCols = data.length > 0 ? Math.max(...data.map((row) => row.length)) : 0;
+    this._numCols = data.length > 0
+      ? Math.max(...data.map((row) => row.length))
+      : 0;
 
     // Initialize groups
     this._entries = new VGroup();
@@ -194,7 +196,10 @@ export class Table extends VGroup {
         const bounds = this._getMobjectBounds(label);
         const actualCol = hasRowLabels ? col + 1 : col;
         this._rowHeights[0] = Math.max(this._rowHeights[0], bounds.height);
-        this._colWidths[actualCol] = Math.max(this._colWidths[actualCol], bounds.width);
+        this._colWidths[actualCol] = Math.max(
+          this._colWidths[actualCol],
+          bounds.width,
+        );
       }
     }
 
@@ -204,7 +209,10 @@ export class Table extends VGroup {
         const label = this._rowLabels[row];
         const bounds = this._getMobjectBounds(label);
         const actualRow = hasColLabels ? row + 1 : row;
-        this._rowHeights[actualRow] = Math.max(this._rowHeights[actualRow], bounds.height);
+        this._rowHeights[actualRow] = Math.max(
+          this._rowHeights[actualRow],
+          bounds.height,
+        );
         this._colWidths[0] = Math.max(this._colWidths[0], bounds.width);
       }
     }
@@ -225,8 +233,14 @@ export class Table extends VGroup {
         const actualRow = hasColLabels ? row + 1 : row;
         const actualCol = hasRowLabels ? col + 1 : col;
 
-        this._rowHeights[actualRow] = Math.max(this._rowHeights[actualRow], bounds.height);
-        this._colWidths[actualCol] = Math.max(this._colWidths[actualCol], bounds.width);
+        this._rowHeights[actualRow] = Math.max(
+          this._rowHeights[actualRow],
+          bounds.height,
+        );
+        this._colWidths[actualCol] = Math.max(
+          this._colWidths[actualCol],
+          bounds.width,
+        );
       }
     }
 
@@ -260,7 +274,9 @@ export class Table extends VGroup {
   /**
    * Get bounds of a mobject
    */
-  protected _getMobjectBounds(mobject: Mobject): { width: number; height: number } {
+  protected _getMobjectBounds(
+    mobject: Mobject,
+  ): { width: number; height: number } {
     // Try to get Three.js bounding box
     const threeObj = mobject.getThreeObject();
     if (threeObj) {
@@ -284,7 +300,11 @@ export class Table extends VGroup {
 
     // Place top-left entry
     if (hasRowLabels && hasColLabels && this._topLeftEntry) {
-      this._topLeftEntry.moveTo([this._colPositions[0], this._rowPositions[0], 0]);
+      this._topLeftEntry.moveTo([
+        this._colPositions[0],
+        this._rowPositions[0],
+        0,
+      ]);
       this._entries.add(this._topLeftEntry as VMobject);
     }
 
@@ -292,7 +312,11 @@ export class Table extends VGroup {
     if (hasColLabels) {
       for (let col = 0; col < this._colLabels.length; col++) {
         const actualCol = hasRowLabels ? col + 1 : col;
-        this._colLabels[col].moveTo([this._colPositions[actualCol], this._rowPositions[0], 0]);
+        this._colLabels[col].moveTo([
+          this._colPositions[actualCol],
+          this._rowPositions[0],
+          0,
+        ]);
         this._entries.add(this._colLabels[col] as VMobject);
       }
     }
@@ -301,7 +325,11 @@ export class Table extends VGroup {
     if (hasRowLabels) {
       for (let row = 0; row < this._rowLabels.length; row++) {
         const actualRow = hasColLabels ? row + 1 : row;
-        this._rowLabels[row].moveTo([this._colPositions[0], this._rowPositions[actualRow], 0]);
+        this._rowLabels[row].moveTo([
+          this._colPositions[0],
+          this._rowPositions[actualRow],
+          0,
+        ]);
         this._entries.add(this._rowLabels[row] as VMobject);
       }
     }
@@ -483,7 +511,12 @@ export class Table extends VGroup {
    * @param opacity - Fill opacity. Default: 0.3
    * @returns The created Rectangle for further customization
    */
-  addHighlight(row: number, col: number, color: string = YELLOW, opacity: number = 0.3): Rectangle {
+  addHighlight(
+    row: number,
+    col: number,
+    color: string = YELLOW,
+    opacity: number = 0.3,
+  ): Rectangle {
     const hasRowLabels = this._rowLabels.length > 0;
     const hasColLabels = this._colLabels.length > 0;
 
@@ -502,7 +535,11 @@ export class Table extends VGroup {
     const rect = new Rectangle({
       width: this._colWidths[actualCol],
       height: this._rowHeights[actualRow],
-      center: [this._colPositions[actualCol], this._rowPositions[actualRow], -0.01],
+      center: [
+        this._colPositions[actualCol],
+        this._rowPositions[actualRow],
+        -0.01,
+      ],
       color: color,
       fillOpacity: opacity,
       strokeWidth: 0,
@@ -585,7 +622,8 @@ export class Table extends VGroup {
 /**
  * Options for creating a MathTable
  */
-export interface MathTableOptions extends Omit<TableOptions, 'data' | 'rowLabels' | 'colLabels'> {
+export interface MathTableOptions
+  extends Omit<TableOptions, "data" | "rowLabels" | "colLabels"> {
   /** 2D array of LaTeX strings */
   data: string[][];
   /** Row labels as LaTeX strings */
@@ -618,18 +656,29 @@ export interface MathTableOptions extends Omit<TableOptions, 'data' | 'rowLabels
  */
 export class MathTable extends Table {
   constructor(options: MathTableOptions) {
-    const { data, rowLabels, colLabels, fontSize = 36, color = WHITE, ...rest } = options;
+    const {
+      data,
+      rowLabels,
+      colLabels,
+      fontSize = 36,
+      color = WHITE,
+      ...rest
+    } = options;
 
     // Convert string[][] to MathTexImage[][]
     const mathData = data.map((row) =>
-      row.map((latex) => new MathTexImage({ latex, fontSize, color })),
+      row.map((latex) => new MathTexImage({ latex, fontSize, color }))
     );
 
     // Convert row labels
-    const mathRowLabels = rowLabels?.map((latex) => new MathTexImage({ latex, fontSize, color }));
+    const mathRowLabels = rowLabels?.map((latex) =>
+      new MathTexImage({ latex, fontSize, color })
+    );
 
     // Convert column labels
-    const mathColLabels = colLabels?.map((latex) => new MathTexImage({ latex, fontSize, color }));
+    const mathColLabels = colLabels?.map((latex) =>
+      new MathTexImage({ latex, fontSize, color })
+    );
 
     super({
       data: mathData,
@@ -671,10 +720,11 @@ export class MobjectTable extends Table {
 /**
  * Options for creating an IntegerTable
  */
-export interface IntegerTableOptions extends Omit<
-  TableOptions,
-  'data' | 'rowLabels' | 'colLabels'
-> {
+export interface IntegerTableOptions extends
+  Omit<
+    TableOptions,
+    "data" | "rowLabels" | "colLabels"
+  > {
   /** 2D array of integers */
   data: number[][];
   /** Row labels as integers */
@@ -705,7 +755,14 @@ export interface IntegerTableOptions extends Omit<
  */
 export class IntegerTable extends Table {
   constructor(options: IntegerTableOptions) {
-    const { data, rowLabels, colLabels, fontSize = 36, color = WHITE, ...rest } = options;
+    const {
+      data,
+      rowLabels,
+      colLabels,
+      fontSize = 36,
+      color = WHITE,
+      ...rest
+    } = options;
 
     // Convert number[][] to DecimalNumber[][]
     const intData = data.map((row) =>
@@ -717,7 +774,7 @@ export class IntegerTable extends Table {
             fontSize,
             color,
           }),
-      ),
+      )
     );
 
     // Convert row labels
@@ -754,10 +811,11 @@ export class IntegerTable extends Table {
 /**
  * Options for creating a DecimalTable
  */
-export interface DecimalTableOptions extends Omit<
-  TableOptions,
-  'data' | 'rowLabels' | 'colLabels'
-> {
+export interface DecimalTableOptions extends
+  Omit<
+    TableOptions,
+    "data" | "rowLabels" | "colLabels"
+  > {
   /** 2D array of decimal numbers */
   data: number[][];
   /** Row labels as decimal numbers */
@@ -810,7 +868,7 @@ export class DecimalTable extends Table {
             fontSize,
             color,
           }),
-      ),
+      )
     );
 
     // Convert row labels

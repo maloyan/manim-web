@@ -1,12 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <script>if(new URLSearchParams(location.search).has('embed'))document.documentElement.classList.add('embed')</script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Split Screen Camera</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <script>
+    if (new URLSearchParams(location.search).has('embed')) {
+      document.documentElement.classList.add('embed');
+    }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - Split Screen Camera</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #1a1a2e;
       display: flex;
@@ -35,21 +43,51 @@
       cursor: pointer;
       font-size: 14px;
     }
-    button:hover { background: #ff6b6b; }
-    button:disabled { background: #666; cursor: not-allowed; }
-    html.embed, html.embed body { margin:0!important;padding:0!important;overflow:hidden;background:#000!important;width:100%;height:100%; }
-    html.embed body { display:flex;justify-content:center;align-items:center; }
-    html.embed .controls, html.embed .buttons, html.embed h1, html.embed #status { display:none!important; }
-    html.embed #container { border:none!important;border-radius:0!important;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center; }
-  </style>
-</head>
-<body>
-  <div id="container"></div>
-  <div class="controls">
-    <button id="playBtn">Play Animation</button>
-    <button id="resetBtn">Reset</button>
-  </div>
+    button:hover {
+      background: #ff6b6b;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    html.embed,
+    html.embed body {
+      margin: 0!important;
+      padding: 0!important;
+      overflow: hidden;
+      background: #000!important;
+      width: 100%;
+      height: 100%;
+    }
+    html.embed body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    html.embed .controls,
+    html.embed .buttons,
+    html.embed h1,
+    html.embed #status {
+      display: none!important;
+    }
+    html.embed #container {
+      border: none!important;
+      border-radius: 0!important;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div class="controls">
+      <button id="playBtn">Play Animation</button>
+      <button id="resetBtn">Reset</button>
+    </div>
 
-  <script type="module" src="./split_screen_camera.ts"></script>
-</body>
+    <script type="module" src="./split_screen_camera.ts"></script>
+  </body>
 </html>

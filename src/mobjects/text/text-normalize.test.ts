@@ -9,17 +9,17 @@
  * renders at the scaled size across normalize; the scale simply lives on the
  * transform instead of in `_worldWidth`/`_worldHeight`.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Text } from './Text';
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Text } from "./Text";
 
 /** Mock 2D context — happy-dom has no canvas 2d support. */
 function createMockCtx(): CanvasRenderingContext2D {
   return {
-    font: '',
-    textBaseline: 'top',
-    textAlign: 'center',
-    fillStyle: '',
-    strokeStyle: '',
+    font: "",
+    textBaseline: "top",
+    textAlign: "center",
+    fillStyle: "",
+    strokeStyle: "",
     globalAlpha: 1,
     lineWidth: 1,
     measureText: vi.fn((_text: string) => ({
@@ -45,15 +45,17 @@ function createMockCtx(): CanvasRenderingContext2D {
 }
 
 beforeEach(() => {
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((contextId: string) => {
-    if (contextId === '2d') return createMockCtx();
-    return null;
-  });
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+    (contextId: string) => {
+      if (contextId === "2d") return createMockCtx();
+      return null;
+    },
+  );
 });
 
-describe('Text scale survives normalizeTransform (Issue 1)', () => {
-  it('absolutizes scale onto the transform so bounds are unchanged across normalize', () => {
-    const t = new Text({ text: 'Hello' });
+describe("Text scale survives normalizeTransform (Issue 1)", () => {
+  it("absolutizes scale onto the transform so bounds are unchanged across normalize", () => {
+    const t = new Text({ text: "Hello" });
 
     t.scale(2);
     const before = t.getBounds();
@@ -75,8 +77,8 @@ describe('Text scale survives normalizeTransform (Issue 1)', () => {
     expect(hAfter).toBeCloseTo(hBefore, 5);
   });
 
-  it('mesh is not shrunk — its local scale stays at 1 after baking', () => {
-    const t = new Text({ text: 'World' });
+  it("mesh is not shrunk — its local scale stays at 1 after baking", () => {
+    const t = new Text({ text: "World" });
     t.scale(3);
     t.normalizeTransform();
 
@@ -85,9 +87,9 @@ describe('Text scale survives normalizeTransform (Issue 1)', () => {
     expect(mesh.scale.y).toBeCloseTo(1, 6);
   });
 
-  it('baked size matches the original scaled bounds (no double-application)', () => {
-    const a = new Text({ text: 'Same' });
-    const b = new Text({ text: 'Same' });
+  it("baked size matches the original scaled bounds (no double-application)", () => {
+    const a = new Text({ text: "Same" });
+    const b = new Text({ text: "Same" });
 
     const baseline = a.getBounds();
     const wBaseline = baseline.max.x - baseline.min.x;

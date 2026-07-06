@@ -1,22 +1,22 @@
 import {
+  defineComponent,
+  h,
+  inject,
+  onMounted,
+  onUnmounted,
+  type PropType,
+  provide,
+  type Ref,
   ref,
   shallowRef,
   watch,
-  onMounted,
-  onUnmounted,
-  provide,
-  inject,
-  h,
-  defineComponent,
-  type Ref,
-  type PropType,
-} from 'vue';
-import { Scene, type SceneOptions } from '../core/Scene';
-import { Mobject, type UpdaterFunction } from '../core/Mobject';
-import { Animation } from '../animation/Animation';
+} from "vue";
+import { Scene, type SceneOptions } from "../core/Scene";
+import { Mobject, type UpdaterFunction } from "../core/Mobject";
+import { Animation } from "../animation/Animation";
 
 // Re-export everything from main library for convenience
-export * from '../index';
+export * from "../index";
 
 /**
  * Composable to create and manage a ManimWeb scene.
@@ -32,7 +32,10 @@ export * from '../index';
  * const { scene, isReady } = useScene(containerRef, { backgroundColor: '#1a1a2e' });
  * ```
  */
-export function useScene(containerRef: Ref<HTMLElement | null>, options?: SceneOptions) {
+export function useScene(
+  containerRef: Ref<HTMLElement | null>,
+  options?: SceneOptions,
+) {
   const scene = shallowRef<Scene | null>(null);
   const isReady = ref(false);
 
@@ -194,7 +197,10 @@ export function useAnimation(scene: Ref<Scene | null>) {
  * });
  * ```
  */
-export function useUpdater(mobject: Ref<Mobject | null>, updater: UpdaterFunction): void {
+export function useUpdater(
+  mobject: Ref<Mobject | null>,
+  updater: UpdaterFunction,
+): void {
   watch(
     mobject,
     (newMobject, oldMobject) => {
@@ -216,7 +222,7 @@ export function useUpdater(mobject: Ref<Mobject | null>, updater: UpdaterFunctio
 }
 
 // Injection key for providing scene to child components
-const MANIMWEB_SCENE_KEY = Symbol('manimweb-scene');
+const MANIMWEB_SCENE_KEY = Symbol("manimweb-scene");
 
 /**
  * ManimScene component.
@@ -245,7 +251,7 @@ const MANIMWEB_SCENE_KEY = Symbol('manimweb-scene');
  * ```
  */
 export const ManimScene = defineComponent({
-  name: 'ManimScene',
+  name: "ManimScene",
 
   props: {
     /**
@@ -270,7 +276,7 @@ export const ManimScene = defineComponent({
      */
     backgroundColor: {
       type: String as PropType<string>,
-      default: '#1a1a2e',
+      default: "#1a1a2e",
     },
     /**
      * Frame width in world units (Manim standard is 14).
@@ -321,7 +327,7 @@ export const ManimScene = defineComponent({
     // Emit ready event when scene becomes available
     watch(isReady, (ready) => {
       if (ready && scene.value) {
-        emit('ready', scene.value);
+        emit("ready", scene.value);
       }
     });
 
@@ -330,13 +336,13 @@ export const ManimScene = defineComponent({
 
     return () =>
       h(
-        'div',
+        "div",
         {
           ref: containerRef,
           style: {
             width: `${props.width}px`,
             height: `${props.height}px`,
-            position: 'relative',
+            position: "relative",
           },
         },
         slots.default?.(),

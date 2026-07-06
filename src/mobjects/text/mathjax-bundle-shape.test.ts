@@ -18,11 +18,11 @@
  * `npm run build`); CI runs `npm run build` first.
  */
 
-import { describe, it, expect } from 'vitest';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { describe, expect, it } from "vitest";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
-const DIST = join(__dirname, '..', '..', '..', 'dist');
+const DIST = join(__dirname, "..", "..", "..", "dist");
 
 const SPLIT_CHUNK_PATTERNS = [
   /mathjax-[A-Za-z0-9_-]+\.js/,
@@ -35,19 +35,21 @@ const SPLIT_CHUNK_PATTERNS = [
   /ConfigMacrosConfiguration-[A-Za-z0-9_-]+\.js/,
 ];
 
-describe('dist/ MathJax chunk shape (issue #396)', () => {
+describe("dist/ MathJax chunk shape (issue #396)", () => {
   if (!existsSync(DIST)) {
-    it.skip('dist/ not built — skipping shape assertion', () => {});
+    it.skip("dist/ not built — skipping shape assertion", () => {});
     return;
   }
 
   const files = readdirSync(DIST);
 
-  it('emits a single MathJaxBundle chunk and no split MathJax chunks', () => {
-    const bundles = files.filter((f) => /^MathJaxBundle-[A-Za-z0-9_-]+\.js$/.test(f));
+  it("emits a single MathJaxBundle chunk and no split MathJax chunks", () => {
+    const bundles = files.filter((f) =>
+      /^MathJaxBundle-[A-Za-z0-9_-]+\.js$/.test(f)
+    );
     expect(
       bundles.length,
-      `expected exactly one MathJaxBundle chunk, got: ${bundles.join(', ')}`,
+      `expected exactly one MathJaxBundle chunk, got: ${bundles.join(", ")}`,
     ).toBe(1);
 
     for (const pattern of SPLIT_CHUNK_PATTERNS) {
@@ -59,20 +61,26 @@ describe('dist/ MathJax chunk shape (issue #396)', () => {
     }
   });
 
-  it('renderer dynamic-imports only the MathJaxBundle chunk', () => {
+  it("renderer dynamic-imports only the MathJaxBundle chunk", () => {
     const srcChunks = files.filter((f) => /^src-[A-Za-z0-9_-]+\.js$/.test(f));
-    expect(srcChunks.length, 'expected a dist/src-*.js entry chunk').toBeGreaterThan(0);
+    expect(srcChunks.length, "expected a dist/src-*.js entry chunk")
+      .toBeGreaterThan(0);
 
     for (const chunk of srcChunks) {
-      const body = readFileSync(join(DIST, chunk), 'utf8');
-      const dynImports = [...body.matchAll(/await import\("\.\/([^"]+)"\)/g)].map((m) => m[1]);
+      const body = readFileSync(join(DIST, chunk), "utf8");
+      const dynImports = [...body.matchAll(/await import\("\.\/([^"]+)"\)/g)]
+        .map((m) => m[1]);
       const mathjaxImports = dynImports.filter((n) =>
-        /MathJax|mathjax|tex-|svg-|html-|liteAdaptor|Configuration/i.test(n),
+        /MathJax|mathjax|tex-|svg-|html-|liteAdaptor|Configuration/i.test(n)
       );
       expect(
         mathjaxImports,
-        `dist/${chunk} must only dynamic-import MathJaxBundle, got: ${mathjaxImports.join(', ')}`,
-      ).toSatisfy((arr: string[]) => arr.every((n) => /^MathJaxBundle-/.test(n)));
+        `dist/${chunk} must only dynamic-import MathJaxBundle, got: ${
+          mathjaxImports.join(", ")
+        }`,
+      ).toSatisfy((arr: string[]) =>
+        arr.every((n) => /^MathJaxBundle-/.test(n))
+      );
     }
   });
 });

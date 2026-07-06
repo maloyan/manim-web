@@ -6,10 +6,10 @@
  * render/load operations fail, instead of silently resolving.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { MathTexImage } from './MathTexImage';
-import { MathTex } from './MathTex';
-import { logger } from '../../utils/logger';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { MathTexImage } from "./MathTexImage";
+import { MathTex } from "./MathTex";
+import { logger } from "../../utils/logger";
 
 // Helper: create a minimal MathTexImage prototype mock (single-part mode)
 function createMathTexImageMock() {
@@ -41,34 +41,40 @@ function createMathTexMock() {
 // MathTexImage error propagation
 // ===========================================================================
 
-describe('MathTexImage async error propagation', () => {
-  describe('paths that intentionally log to console.error', () => {
+describe("MathTexImage async error propagation", () => {
+  describe("paths that intentionally log to console.error", () => {
     // These tests deliberately reject from _renderLatex to exercise the
     // catch path in _startRender, which logs `MathTexImage rendering error:`
     // via console.error. Scope the spy so the multipart tests below still
     // surface unexpected logs.
     let errorSpy: ReturnType<typeof vi.spyOn>;
     beforeEach(() => {
-      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     });
     afterEach(() => {
       errorSpy.mockRestore();
     });
 
-    it('should reject waitForRender when _renderLatex throws an Error', async () => {
+    it("should reject waitForRender when _renderLatex throws an Error", async () => {
       const tex = createMathTexImageMock();
-      tex._renderLatex = vi.fn().mockRejectedValue(new Error('simulated render failure'));
+      tex._renderLatex = vi.fn().mockRejectedValue(
+        new Error("simulated render failure"),
+      );
       tex._startRender();
 
-      await expect(tex.waitForRender()).rejects.toThrow('simulated render failure');
+      await expect(tex.waitForRender()).rejects.toThrow(
+        "simulated render failure",
+      );
       // renderError should be the original Error instance (instanceof branch)
       expect(tex._renderState.renderError).toBeInstanceOf(Error);
-      expect(tex._renderState.renderError.message).toBe('simulated render failure');
+      expect(tex._renderState.renderError.message).toBe(
+        "simulated render failure",
+      );
     });
 
-    it('should set isRendering to false even on error', async () => {
+    it("should set isRendering to false even on error", async () => {
       const tex = createMathTexImageMock();
-      tex._renderLatex = vi.fn().mockRejectedValue(new Error('fail'));
+      tex._renderLatex = vi.fn().mockRejectedValue(new Error("fail"));
       tex._startRender();
 
       try {
@@ -80,26 +86,26 @@ describe('MathTexImage async error propagation', () => {
       expect(tex.isRendering()).toBe(false);
     });
 
-    it('should wrap non-Error rejection values in a new Error', async () => {
+    it("should wrap non-Error rejection values in a new Error", async () => {
       const tex = createMathTexImageMock();
       // Reject with a plain string — exercises the `new Error(String(error))` branch
-      tex._renderLatex = vi.fn().mockRejectedValue('string error');
+      tex._renderLatex = vi.fn().mockRejectedValue("string error");
       tex._startRender();
 
-      await expect(tex.waitForRender()).rejects.toThrow('string error');
+      await expect(tex.waitForRender()).rejects.toThrow("string error");
     });
   });
 
-  it('should propagate errors through multipart waitForRender', async () => {
+  it("should propagate errors through multipart waitForRender", async () => {
     const parent = createMathTexImageMock();
     parent._isMultiPart = true;
-    parent._renderState.renderError = new Error('child render failed');
+    parent._renderState.renderError = new Error("child render failed");
     parent._arrangePromise = Promise.resolve();
 
-    await expect(parent.waitForRender()).rejects.toThrow('child render failed');
+    await expect(parent.waitForRender()).rejects.toThrow("child render failed");
   });
 
-  it('should capture error in _arrangeParts when child parts fail', async () => {
+  it("should capture error in _arrangeParts when child parts fail", async () => {
     // Create a parent mock that simulates multipart mode with failing children
     const parent = createMathTexImageMock();
     parent._isMultiPart = true;
@@ -107,7 +113,7 @@ describe('MathTexImage async error propagation', () => {
     // Create mock child parts whose waitForRender rejects
     const failingChild = createMathTexImageMock();
     failingChild._renderState.renderPromise = Promise.resolve();
-    failingChild._renderState.renderError = new Error('child KaTeX error');
+    failingChild._renderState.renderError = new Error("child KaTeX error");
     parent._parts = [failingChild];
 
     // Directly call _arrangeParts (private, but accessible on prototype mock)
@@ -115,10 +121,10 @@ describe('MathTexImage async error propagation', () => {
 
     // The parent should have captured the child's error
     expect(parent._renderState.renderError).toBeInstanceOf(Error);
-    expect(parent._renderState.renderError!.message).toBe('child KaTeX error');
+    expect(parent._renderState.renderError!.message).toBe("child KaTeX error");
   });
 
-  it('should wrap non-Error failures in _arrangeParts', async () => {
+  it("should wrap non-Error failures in _arrangeParts", async () => {
     const parent = createMathTexImageMock();
     parent._isMultiPart = true;
 
@@ -126,13 +132,13 @@ describe('MathTexImage async error propagation', () => {
     const failingChild = createMathTexImageMock();
     failingChild._renderState.renderPromise = null;
     // Manually override waitForRender to reject with a string
-    failingChild.waitForRender = () => Promise.reject('string rejection');
+    failingChild.waitForRender = () => Promise.reject("string rejection");
     parent._parts = [failingChild];
 
     await (parent as any)._arrangeParts();
 
     expect(parent._renderState.renderError).toBeInstanceOf(Error);
-    expect(parent._renderState.renderError!.message).toBe('string rejection');
+    expect(parent._renderState.renderError!.message).toBe("string rejection");
   });
 });
 
@@ -140,43 +146,49 @@ describe('MathTexImage async error propagation', () => {
 // MathTex (SVG) error propagation
 // ===========================================================================
 
-describe('MathTex async error propagation', () => {
-  describe('paths that intentionally log to console.error', () => {
+describe("MathTex async error propagation", () => {
+  describe("paths that intentionally log to console.error", () => {
     // Silence the expected `MathTex rendering error:` console.error from
     // the catch path so test output stays clean. Scoped to error-triggering
     // tests only — the "no error" case below must still surface unexpected
     // console.error calls.
     let errorSpy: ReturnType<typeof vi.spyOn>;
     beforeEach(() => {
-      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     });
     afterEach(() => {
       errorSpy.mockRestore();
     });
 
-    it('should reject waitForRender when _render throws an Error', async () => {
+    it("should reject waitForRender when _render throws an Error", async () => {
       const tex = createMathTexMock();
-      tex._render = vi.fn().mockRejectedValue(new Error('simulated SVG render failure'));
+      tex._render = vi.fn().mockRejectedValue(
+        new Error("simulated SVG render failure"),
+      );
       tex._startRender();
 
-      await expect(tex.waitForRender()).rejects.toThrow('simulated SVG render failure');
+      await expect(tex.waitForRender()).rejects.toThrow(
+        "simulated SVG render failure",
+      );
       // _renderError should be the original Error instance
       expect(tex._renderError).toBeInstanceOf(Error);
-      expect(tex._renderError.message).toBe('simulated SVG render failure');
+      expect(tex._renderError.message).toBe("simulated SVG render failure");
     });
 
-    it('should wrap non-Error rejection values in a new Error', async () => {
+    it("should wrap non-Error rejection values in a new Error", async () => {
       const tex = createMathTexMock();
-      tex._render = vi.fn().mockRejectedValue('plain string SVG error');
+      tex._render = vi.fn().mockRejectedValue("plain string SVG error");
       tex._startRender();
 
-      await expect(tex.waitForRender()).rejects.toThrow('plain string SVG error');
+      await expect(tex.waitForRender()).rejects.toThrow(
+        "plain string SVG error",
+      );
       // Should be wrapped in a real Error
       expect(tex._renderError).toBeInstanceOf(Error);
     });
   });
 
-  it('should not throw from waitForRender when no error occurred', async () => {
+  it("should not throw from waitForRender when no error occurred", async () => {
     const tex = createMathTexMock();
     tex._renderPromise = Promise.resolve();
     tex._renderError = null;
@@ -190,14 +202,14 @@ describe('MathTex async error propagation', () => {
 // KaTeX styles error handling
 // ===========================================================================
 
-describe('KaTeX styles onerror', () => {
-  it('should resolve and warn when CSS link fires onerror', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+describe("KaTeX styles onerror", () => {
+  it("should resolve and warn when CSS link fires onerror", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     // Reset module state by dynamically re-importing
     // The module caches stylesPromise, so we reset it by removing the link
     // and clearing the module cache
-    const existing = document.getElementById('manimweb-katex-styles');
+    const existing = document.getElementById("manimweb-katex-styles");
     if (existing) existing.remove();
 
     // We need to trigger the real waitForKatexStyles code path.
@@ -205,17 +217,19 @@ describe('KaTeX styles onerror', () => {
     // that the module uses on the link element it creates.
     let resolved = false;
     const promise = new Promise<void>((resolve) => {
-      const link = document.createElement('link');
-      link.id = 'test-katex-onerror';
-      link.rel = 'stylesheet';
-      link.href = 'https://invalid.example.com/nonexistent.css';
+      const link = document.createElement("link");
+      link.id = "test-katex-onerror";
+      link.rel = "stylesheet";
+      link.href = "https://invalid.example.com/nonexistent.css";
       link.onerror = () => {
-        logger.warn('MathTex: KaTeX CSS failed to load from CDN. LaTeX rendering may be degraded.');
+        logger.warn(
+          "MathTex: KaTeX CSS failed to load from CDN. LaTeX rendering may be degraded.",
+        );
         resolve();
       };
       document.head.appendChild(link);
       // Trigger the error event
-      link.dispatchEvent(new Event('error'));
+      link.dispatchEvent(new Event("error"));
     });
 
     await promise;
@@ -223,12 +237,12 @@ describe('KaTeX styles onerror', () => {
 
     expect(resolved).toBe(true);
     expect(warnSpy).toHaveBeenCalledWith(
-      '[manim-web]',
-      'MathTex: KaTeX CSS failed to load from CDN. LaTeX rendering may be degraded.',
+      "[manim-web]",
+      "MathTex: KaTeX CSS failed to load from CDN. LaTeX rendering may be degraded.",
     );
 
     // Clean up
-    const testLink = document.getElementById('test-katex-onerror');
+    const testLink = document.getElementById("test-katex-onerror");
     if (testLink) testLink.remove();
     warnSpy.mockRestore();
   });

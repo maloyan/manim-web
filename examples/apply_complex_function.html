@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - ApplyComplexFunction</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - ApplyComplexFunction</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #1a1a2e;
       display: flex;
@@ -34,32 +38,45 @@
       cursor: pointer;
       font-size: 14px;
     }
-    button:hover { background: #ff6b6b; }
-    button:disabled { background: #666; cursor: not-allowed; }
-    h1 { color: #eee; margin-bottom: 20px; font-size: 24px; }
-    p { color: #aaa; margin-top: 10px; font-size: 14px; }
-  </style>
-</head>
-<body>
-  <h1>ApplyComplexFunction Demo</h1>
-  <div id="container"></div>
-  <div class="controls">
-    <button id="playBtn">Play z => z^2</button>
-    <button id="play2Btn">Play z => 1/z</button>
-    <button id="resetBtn">Reset</button>
-  </div>
-  <p>Applies complex functions to a NumberPlane, treating (x, y) as complex numbers</p>
+    button:hover {
+      background: #ff6b6b;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    h1 {
+      color: #eee;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    p {
+      color: #aaa;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>ApplyComplexFunction Demo</h1>
+    <div id="container"></div>
+    <div class="controls">
+      <button id="playBtn">Play z => z^2</button>
+      <button id="play2Btn">Play z => 1/z</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+    <p>Applies complex functions to a NumberPlane, treating (x, y) as complex numbers</p>
 
-  <script type="module">
+    <script type="module">
     import {
-      Scene,
-      NumberPlane,
-      Circle,
-      Create,
-      FadeIn,
       ApplyComplexFunction,
       BLACK,
       BLUE,
+      Circle,
+      Create,
+      FadeIn,
+      NumberPlane,
+      Scene,
       YELLOW,
     } from '../src/index.ts';
 
@@ -90,13 +107,15 @@
 
       const grid = await setupGrid();
       await scene.wait(0.5);
-      await scene.play(new ApplyComplexFunction(grid, {
-        func: (z) => ({
-          re: z.re * z.re - z.im * z.im,
-          im: 2 * z.re * z.im,
+      await scene.play(
+        new ApplyComplexFunction(grid, {
+          func: (z) => ({
+            re: z.re * z.re - z.im * z.im,
+            im: 2 * z.re * z.im,
+          }),
+          duration: 3,
         }),
-        duration: 3,
-      }));
+      );
       await scene.wait(1);
 
       isAnimating = false;
@@ -113,14 +132,16 @@
 
       const grid = await setupGrid();
       await scene.wait(0.5);
-      await scene.play(new ApplyComplexFunction(grid, {
-        func: (z) => {
-          const denom = z.re * z.re + z.im * z.im;
-          if (denom < 0.001) return { re: z.re, im: z.im };
-          return { re: z.re / denom, im: -z.im / denom };
-        },
-        duration: 3,
-      }));
+      await scene.play(
+        new ApplyComplexFunction(grid, {
+          func: (z) => {
+            const denom = z.re * z.re + z.im * z.im;
+            if (denom < 0.001) return { re: z.re, im: z.im };
+            return { re: z.re / denom, im: -z.im / denom };
+          },
+          duration: 3,
+        }),
+      );
       await scene.wait(1);
 
       isAnimating = false;
@@ -134,6 +155,6 @@
       document.getElementById('playBtn').disabled = false;
       document.getElementById('play2Btn').disabled = false;
     });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

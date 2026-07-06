@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { hungarian, hungarianFromSimilarity } from './hungarian';
+import { describe, expect, it } from "vitest";
+import { hungarian, hungarianFromSimilarity } from "./hungarian";
 
-describe('hungarian', () => {
-  it('returns empty result for empty matrix', () => {
+describe("hungarian", () => {
+  it("returns empty result for empty matrix", () => {
     const result = hungarian([]);
     expect(result.assignments).toEqual([]);
     expect(result.totalCost).toBe(0);
@@ -10,13 +10,13 @@ describe('hungarian', () => {
     expect(result.assignedCols.size).toBe(0);
   });
 
-  it('returns unassigned rows when cols are empty', () => {
+  it("returns unassigned rows when cols are empty", () => {
     const result = hungarian([[], [], []]);
     expect(result.assignments).toEqual([-1, -1, -1]);
     expect(result.totalCost).toBe(0);
   });
 
-  it('solves a 1x1 matrix', () => {
+  it("solves a 1x1 matrix", () => {
     const result = hungarian([[42]]);
     expect(result.assignments).toEqual([0]);
     expect(result.totalCost).toBe(42);
@@ -24,7 +24,7 @@ describe('hungarian', () => {
     expect(result.assignedCols).toEqual(new Set([0]));
   });
 
-  it('solves a 2x2 matrix', () => {
+  it("solves a 2x2 matrix", () => {
     const result = hungarian([
       [1, 2],
       [3, 0],
@@ -34,7 +34,7 @@ describe('hungarian', () => {
     expect(result.totalCost).toBe(1);
   });
 
-  it('solves the 3x3 example from docstring', () => {
+  it("solves the 3x3 example from docstring", () => {
     const cost = [
       [10, 5, 13],
       [3, 7, 15],
@@ -48,7 +48,7 @@ describe('hungarian', () => {
     expect(result.assignments[2]).toBe(2);
   });
 
-  it('solves a 3x3 identity-cost matrix', () => {
+  it("solves a 3x3 identity-cost matrix", () => {
     const cost = [
       [0, 1, 1],
       [1, 0, 1],
@@ -59,7 +59,7 @@ describe('hungarian', () => {
     expect(result.assignments).toEqual([0, 1, 2]);
   });
 
-  it('handles a matrix with all equal costs', () => {
+  it("handles a matrix with all equal costs", () => {
     const cost = [
       [5, 5, 5],
       [5, 5, 5],
@@ -72,7 +72,7 @@ describe('hungarian', () => {
     expect(assignedCols.size).toBe(3);
   });
 
-  it('handles rectangular matrix with more columns than rows', () => {
+  it("handles rectangular matrix with more columns than rows", () => {
     const cost = [
       [4, 1, 3, 8],
       [2, 0, 5, 7],
@@ -92,7 +92,7 @@ describe('hungarian', () => {
     expect(result.assignedCols.size).toBe(2);
   });
 
-  it('handles rectangular matrix with more rows than columns', () => {
+  it("handles rectangular matrix with more rows than columns", () => {
     const cost = [
       [4, 1],
       [2, 0],
@@ -111,7 +111,7 @@ describe('hungarian', () => {
     expect(new Set(assigned).size).toBe(2);
   });
 
-  it('assigns all rows and columns for square matrix', () => {
+  it("assigns all rows and columns for square matrix", () => {
     const cost = [
       [1, 2, 3],
       [4, 5, 6],
@@ -129,7 +129,7 @@ describe('hungarian', () => {
     expect(result.totalCost).toBe(15);
   });
 
-  it('handles zero-cost matrix', () => {
+  it("handles zero-cost matrix", () => {
     const cost = [
       [0, 0],
       [0, 0],
@@ -139,7 +139,7 @@ describe('hungarian', () => {
     expect(result.assignedRows.size).toBe(2);
   });
 
-  it('handles large cost differences', () => {
+  it("handles large cost differences", () => {
     const cost = [
       [1, 1000],
       [1000, 1],
@@ -150,20 +150,20 @@ describe('hungarian', () => {
   });
 });
 
-describe('hungarianFromSimilarity', () => {
-  it('returns empty result for empty matrix', () => {
+describe("hungarianFromSimilarity", () => {
+  it("returns empty result for empty matrix", () => {
     const result = hungarianFromSimilarity([]);
     expect(result.assignments).toEqual([]);
     expect(result.totalCost).toBe(0);
   });
 
-  it('returns unassigned for empty-column matrix', () => {
+  it("returns unassigned for empty-column matrix", () => {
     const result = hungarianFromSimilarity([[], []]);
     expect(result.assignments).toEqual([-1, -1]);
     expect(result.totalCost).toBe(0);
   });
 
-  it('matches highest similarities', () => {
+  it("matches highest similarities", () => {
     const sim = [
       [10, 1],
       [1, 10],
@@ -173,7 +173,7 @@ describe('hungarianFromSimilarity', () => {
     expect(result.assignments).toEqual([0, 1]);
   });
 
-  it('filters assignments below threshold', () => {
+  it("filters assignments below threshold", () => {
     const sim = [
       [0.9, 0.1],
       [0.1, 0.2],
@@ -186,7 +186,7 @@ describe('hungarianFromSimilarity', () => {
     expect(result.assignedRows.has(1)).toBe(false);
   });
 
-  it('unassigns all when everything is below threshold', () => {
+  it("unassigns all when everything is below threshold", () => {
     const sim = [
       [0.1, 0.2],
       [0.3, 0.4],
@@ -197,7 +197,7 @@ describe('hungarianFromSimilarity', () => {
     expect(result.assignedCols.size).toBe(0);
   });
 
-  it('handles 3x3 similarity with default threshold', () => {
+  it("handles 3x3 similarity with default threshold", () => {
     const sim = [
       [9, 2, 1],
       [3, 8, 2],
@@ -208,7 +208,7 @@ describe('hungarianFromSimilarity', () => {
     expect(result.assignments).toEqual([0, 1, 2]);
   });
 
-  it('handles rectangular similarity matrix', () => {
+  it("handles rectangular similarity matrix", () => {
     const sim = [
       [10, 1, 5],
       [1, 10, 1],

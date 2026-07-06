@@ -1,6 +1,6 @@
 export {
-  TexTemplate,
   TexFontTemplates,
+  TexTemplate,
   TexTemplateLibrary,
   type TexTemplateOptions,
-} from './TexTemplate';
+} from "./TexTemplate";

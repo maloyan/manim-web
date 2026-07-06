@@ -1,20 +1,20 @@
-import { describe, it, expect } from 'vitest';
-import { Mobject, UP, LEFT, RIGHT, UL, UR, DL } from './Mobject';
-import { VMobject } from './VMobject';
-import { Group } from './Group';
-import { VGroup } from './VGroup';
-import { Dot } from '../mobjects/geometry/Dot';
-import { Line } from '../mobjects/geometry/Line';
-import { PointMobject } from '../mobjects/point';
+import { describe, expect, it } from "vitest";
+import { DL, LEFT, Mobject, RIGHT, UL, UP, UR } from "./Mobject";
+import { VMobject } from "./VMobject";
+import { Group } from "./Group";
+import { VGroup } from "./VGroup";
+import { Dot } from "../mobjects/geometry/Dot";
+import { Line } from "../mobjects/geometry/Line";
+import { PointMobject } from "../mobjects/point";
 
-describe('Group - extended coverage', () => {
-  it('constructs empty', () => {
+describe("Group - extended coverage", () => {
+  it("constructs empty", () => {
     const g = new Group();
     expect(g.length).toBe(0);
     expect(g.children).toEqual([]);
   });
 
-  it('constructs with initial mobjects', () => {
+  it("constructs with initial mobjects", () => {
     const a = new VMobject();
     const b = new VMobject();
     const g = new Group(a, b);
@@ -23,7 +23,7 @@ describe('Group - extended coverage', () => {
     expect(b.parent).toBe(g);
   });
 
-  it('add re-parents from previous parent', () => {
+  it("add re-parents from previous parent", () => {
     const g1 = new Group();
     const g2 = new Group();
     const vm = new VMobject();
@@ -35,7 +35,7 @@ describe('Group - extended coverage', () => {
     expect(g2.children).toContain(vm);
   });
 
-  it('remove clears parent and removes from children', () => {
+  it("remove clears parent and removes from children", () => {
     const g = new Group();
     const vm = new VMobject();
     g.add(vm);
@@ -44,14 +44,14 @@ describe('Group - extended coverage', () => {
     expect(g.children).not.toContain(vm);
   });
 
-  it('remove of non-member is no-op', () => {
+  it("remove of non-member is no-op", () => {
     const g = new Group();
     const outsider = new VMobject();
     g.remove(outsider);
     expect(g.length).toBe(0);
   });
 
-  it('clear removes all children', () => {
+  it("clear removes all children", () => {
     const a = new VMobject();
     const b = new VMobject();
     const g = new Group(a, b);
@@ -61,7 +61,7 @@ describe('Group - extended coverage', () => {
     expect(b.parent).toBeNull();
   });
 
-  it('getCenter with children returns geometric center from child bounds', () => {
+  it("getCenter with children returns geometric center from child bounds", () => {
     const a = new Dot({ point: [0, 0, 0] });
     const b = new Dot({ point: [2, 0, 0] });
     const g = new Group(a, b);
@@ -69,7 +69,7 @@ describe('Group - extended coverage', () => {
     expect(center[0]).toBeCloseTo(1, 0);
   });
 
-  it('Group getBounds uses descendant geometry', () => {
+  it("Group getBounds uses descendant geometry", () => {
     const a = new Dot({ point: [0, 0, 0] });
     const b = new Dot({ point: [2, 0, 0] });
     const g = new Group(new Group(a, b));
@@ -81,12 +81,12 @@ describe('Group - extended coverage', () => {
     expect(bounds.max.x).toBeGreaterThan(2);
   });
 
-  it('Group getBounds throws on empty container tree', () => {
+  it("Group getBounds throws on empty container tree", () => {
     const g = new Group(new Group());
     expect(() => g.getBounds()).toThrow(/empty Three\.js bounds/);
   });
 
-  it('Group getBounds is stable before and after normalizeTransform with translation/scale/rotation', () => {
+  it("Group getBounds is stable before and after normalizeTransform with translation/scale/rotation", () => {
     // MIGRATION: weak test, remove once property-based tests done
     // Bounding box invariants are complex due to rotation baking and geometry updates.
     const a = new Dot({ point: [0, 0, 0] });
@@ -128,7 +128,7 @@ describe('Group - extended coverage', () => {
     expect(afterSize[1]).toBeGreaterThan(0);
   });
 
-  it('shift moves group position', () => {
+  it("shift moves group position", () => {
     const a = new VMobject();
     a.position.set(0, 0, 0);
     const b = new VMobject();
@@ -143,7 +143,7 @@ describe('Group - extended coverage', () => {
     expect(b.position.x).toBe(2);
   });
 
-  it('moveTo with point moves group center', () => {
+  it("moveTo with point moves group center", () => {
     const a = new PointMobject({ position: [0, 0, 0] });
     const b = new PointMobject({ position: [2, 0, 0] });
     const g = new Group(a, b);
@@ -153,7 +153,7 @@ describe('Group - extended coverage', () => {
     expect(center[1]).toBeCloseTo(5, 0);
   });
 
-  it('scale then moveTo keeps Group center on target', () => {
+  it("scale then moveTo keeps Group center on target", () => {
     const g = new Group(new PointMobject({ position: [1, 0, 0] }));
     g.scale(2);
     g.moveTo([5, 0, 0]);
@@ -163,7 +163,7 @@ describe('Group - extended coverage', () => {
     expect(center[2]).toBeCloseTo(0, 6);
   });
 
-  it('moveTo with Mobject target centers on it', () => {
+  it("moveTo with Mobject target centers on it", () => {
     const target = new PointMobject({ position: [10, 10, 0] });
     const a = new PointMobject({ position: [0, 0, 0] });
     const g = new Group(a);
@@ -174,7 +174,7 @@ describe('Group - extended coverage', () => {
     expect(center[1]).toBeCloseTo(tc[1], 0);
   });
 
-  it('moveTo with Mobject + alignedEdge aligns edges', () => {
+  it("moveTo with Mobject + alignedEdge aligns edges", () => {
     const target = new PointMobject({ position: [5, 5, 0] });
     const a = new PointMobject({ position: [0, 0, 0] });
     const g = new Group(a);
@@ -182,7 +182,7 @@ describe('Group - extended coverage', () => {
     // should shift to align upper-left edges
   });
 
-  it('scale updates group scale vector', () => {
+  it("scale updates group scale vector", () => {
     const a = new Dot({ point: [0, 0, 0] });
     const g = new Group(a);
     g.scale(2);
@@ -191,7 +191,7 @@ describe('Group - extended coverage', () => {
     expect(a.scaleVector.x).toBe(1);
   });
 
-  it('scale with tuple updates group scale vector non-uniformly', () => {
+  it("scale with tuple updates group scale vector non-uniformly", () => {
     const a = new Dot({ point: [0, 0, 0] });
     const g = new Group(a);
     g.scale([2, 3, 4]);
@@ -200,16 +200,16 @@ describe('Group - extended coverage', () => {
     expect(g.scaleVector.z).toBe(4);
   });
 
-  it('setColor propagates to all children', () => {
+  it("setColor propagates to all children", () => {
     const a = new VMobject();
     const b = new VMobject();
     const g = new Group(a, b);
-    g.setColor('#ff0000');
-    expect(a.color).toBe('#ff0000');
-    expect(b.color).toBe('#ff0000');
+    g.setColor("#ff0000");
+    expect(a.color).toBe("#ff0000");
+    expect(b.color).toBe("#ff0000");
   });
 
-  it('setStrokeOpacity propagates to all children', () => {
+  it("setStrokeOpacity propagates to all children", () => {
     const a = new VMobject();
     const b = new VMobject();
     const g = new Group(a, b);
@@ -218,21 +218,21 @@ describe('Group - extended coverage', () => {
     expect(b.opacity).toBe(0.3);
   });
 
-  it('setStrokeWidth propagates to all children', () => {
+  it("setStrokeWidth propagates to all children", () => {
     const a = new VMobject();
     const g = new Group(a);
     g.setStrokeWidth(10);
     expect(a.strokeWidth).toBe(10);
   });
 
-  it('setFillOpacity propagates to all children', () => {
+  it("setFillOpacity propagates to all children", () => {
     const a = new VMobject();
     const g = new Group(a);
     g.setFillOpacity(0.8);
     expect(a.fillOpacity).toBe(0.8);
   });
 
-  it('get returns child by index', () => {
+  it("get returns child by index", () => {
     const a = new VMobject();
     const b = new VMobject();
     const g = new Group(a, b);
@@ -241,7 +241,7 @@ describe('Group - extended coverage', () => {
     expect(g.get(2)).toBeUndefined();
   });
 
-  it('Symbol.iterator allows for-of iteration', () => {
+  it("Symbol.iterator allows for-of iteration", () => {
     const a = new VMobject();
     const b = new VMobject();
     const g = new Group(a, b);
@@ -252,7 +252,7 @@ describe('Group - extended coverage', () => {
     expect(items).toEqual([a, b]);
   });
 
-  it('forEach iterates over children', () => {
+  it("forEach iterates over children", () => {
     const a = new VMobject();
     const b = new VMobject();
     const g = new Group(a, b);
@@ -261,7 +261,7 @@ describe('Group - extended coverage', () => {
     expect(indices).toEqual([0, 1]);
   });
 
-  it('map maps over children', () => {
+  it("map maps over children", () => {
     const a = new VMobject();
     a.position.set(1, 0, 0);
     const b = new VMobject();
@@ -271,7 +271,7 @@ describe('Group - extended coverage', () => {
     expect(xs).toEqual([1, 2]);
   });
 
-  it('filter creates new group with matching children copies', () => {
+  it("filter creates new group with matching children copies", () => {
     const a = new VMobject();
     a.position.set(1, 0, 0);
     const b = new VMobject();
@@ -283,7 +283,7 @@ describe('Group - extended coverage', () => {
     expect(filtered.get(0)).not.toBe(b);
   });
 
-  it('copy creates independent clone with copied children', () => {
+  it("copy creates independent clone with copied children", () => {
     const a = new VMobject();
     a.position.set(1, 2, 3);
     const g = new Group(a);
@@ -297,14 +297,14 @@ describe('Group - extended coverage', () => {
     expect(g.position.x).toBe(10);
   });
 
-  it('_createThreeObject creates THREE.Group', () => {
+  it("_createThreeObject creates THREE.Group", () => {
     const a = new VMobject();
     const g = new Group(a);
     const obj = g.getThreeObject();
     expect(obj).toBeDefined();
   });
 
-  it('copy() does not mutate the source rotation/scale', () => {
+  it("copy() does not mutate the source rotation/scale", () => {
     // MIGRATION: example-based regression. Intent: copy() honors the
     // `@post this is unchanged` contract on _copyBaseAttributesInto — the
     // source keeps its rotation/scale and the clone carries the same transform.

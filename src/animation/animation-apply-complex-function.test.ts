@@ -1,7 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import { VMobject } from '../core/VMobject';
-import { ApplyComplexFunction, applyComplexFunction } from './transform/ApplyTransforms';
-import type { Complex } from './movement/Homotopy';
+import { describe, expect, it } from "vitest";
+import { VMobject } from "../core/VMobject";
+import {
+  ApplyComplexFunction,
+  applyComplexFunction,
+} from "./transform/ApplyTransforms";
+import type { Complex } from "./movement/Homotopy";
 
 // Helpers
 function vm(pts: number[][]): VMobject {
@@ -10,8 +13,8 @@ function vm(pts: number[][]): VMobject {
   return v;
 }
 
-describe('ApplyComplexFunction', () => {
-  it('stores func, mobject, and default duration', () => {
+describe("ApplyComplexFunction", () => {
+  it("stores func, mobject, and default duration", () => {
     const fn = (z: Complex) => ({ re: z.re * 2, im: z.im * 2 });
     const v = vm([[1, 2, 0]]);
     const anim = new ApplyComplexFunction(v, { func: fn });
@@ -20,7 +23,7 @@ describe('ApplyComplexFunction', () => {
     expect(anim.duration).toBe(1);
   });
 
-  it('applies z => z^2 correctly', () => {
+  it("applies z => z^2 correctly", () => {
     // z = 1+i => z^2 = (1+i)^2 = 1 + 2i - 1 = 2i => (0, 2)
     const v = vm([[1, 1, 0]]);
     const anim = new ApplyComplexFunction(v, {
@@ -34,7 +37,7 @@ describe('ApplyComplexFunction', () => {
     expect(pts[0][2]).toBeCloseTo(0, 5); // z preserved
   });
 
-  it('interpolates linearly between start and target', () => {
+  it("interpolates linearly between start and target", () => {
     // z = 2+0i, func: z => z*2 = 4+0i
     const v = vm([[2, 0, 0]]);
     const anim = new ApplyComplexFunction(v, {
@@ -52,7 +55,7 @@ describe('ApplyComplexFunction', () => {
     expect(v.getLocalPoints()[0][0]).toBeCloseTo(4, 5); // end
   });
 
-  it('preserves z coordinate', () => {
+  it("preserves z coordinate", () => {
     const v = vm([[1, 0, 5]]);
     const anim = new ApplyComplexFunction(v, {
       func: (z) => ({ re: z.re + 10, im: z.im }),
@@ -62,7 +65,7 @@ describe('ApplyComplexFunction', () => {
     expect(v.getLocalPoints()[0][2]).toBeCloseTo(5, 5);
   });
 
-  it('handles multiple points', () => {
+  it("handles multiple points", () => {
     const v = vm([
       [1, 0, 0],
       [0, 1, 0],
@@ -83,7 +86,7 @@ describe('ApplyComplexFunction', () => {
     expect(pts[2][1]).toBeCloseTo(-1, 5);
   });
 
-  it('finish sets final points exactly', () => {
+  it("finish sets final points exactly", () => {
     const v = vm([[3, 4, 0]]);
     const anim = new ApplyComplexFunction(v, {
       func: (z) => ({ re: z.re * 2, im: z.im * 2 }),
@@ -95,7 +98,7 @@ describe('ApplyComplexFunction', () => {
     expect(pts[0][1]).toBeCloseTo(8, 5);
   });
 
-  it('identity function preserves points', () => {
+  it("identity function preserves points", () => {
     const v = vm([[1, 2, 3]]);
     const anim = new ApplyComplexFunction(v, {
       func: (z) => z,
@@ -108,13 +111,13 @@ describe('ApplyComplexFunction', () => {
     expect(pts[0][2]).toBeCloseTo(3, 5);
   });
 
-  it('factory creates ApplyComplexFunction', () => {
+  it("factory creates ApplyComplexFunction", () => {
     const fn = (z: Complex) => z;
     const v = vm([[0, 0, 0]]);
     expect(applyComplexFunction(v, fn)).toBeInstanceOf(ApplyComplexFunction);
   });
 
-  it('complex conjugate function works', () => {
+  it("complex conjugate function works", () => {
     // z => conj(z) = (re, -im)
     const v = vm([[3, 4, 0]]);
     const anim = new ApplyComplexFunction(v, {
@@ -126,7 +129,7 @@ describe('ApplyComplexFunction', () => {
     expect(v.getLocalPoints()[0][1]).toBeCloseTo(-4, 5);
   });
 
-  it('works with custom duration', () => {
+  it("works with custom duration", () => {
     const v = vm([[0, 0, 0]]);
     const anim = new ApplyComplexFunction(v, {
       func: (z) => z,

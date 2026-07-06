@@ -1,6 +1,14 @@
-import { Scene, MathTex, FadeIn, WHITE, YELLOW, BLACK, DOWN } from '../src/index.ts';
+import {
+  BLACK,
+  DOWN,
+  FadeIn,
+  MathTex,
+  Scene,
+  WHITE,
+  YELLOW,
+} from "../src/index.ts";
 
-const container = document.getElementById('container');
+const container = document.getElementById("container");
 const scene = new Scene(container, {
   width: 900,
   height: 500,
@@ -9,30 +17,35 @@ const scene = new Scene(container, {
 
 let isAnimating = false;
 
-document.getElementById('playBtn')?.addEventListener('click', async () => {
+document.getElementById("playBtn")?.addEventListener("click", async () => {
   if (isAnimating) return;
   isAnimating = true;
 
-  const playBtn = document.getElementById('playBtn') as HTMLButtonElement | null;
+  const playBtn = document.getElementById("playBtn") as
+    | HTMLButtonElement
+    | null;
   if (playBtn) playBtn.disabled = true;
 
   scene.clear();
 
   const eqStrokeZero = new MathTex({
-    latex: '\\text{strokeWidth}=0:\\quad e^{i\\pi}+1=0',
+    latex: "\\text{strokeWidth}=0:\\quad e^{i\\pi}+1=0",
     color: WHITE,
     strokeWidth: 0,
     fillOpacity: 1,
   });
 
   const eqTinyStroke = new MathTex({
-    latex: '\\text{strokeWidth}=0.01:\\quad e^{i\\pi}+1=0',
+    latex: "\\text{strokeWidth}=0.01:\\quad e^{i\\pi}+1=0",
     color: YELLOW,
     strokeWidth: 0.01,
     fillOpacity: 1,
   });
 
-  await Promise.all([eqStrokeZero.waitForRender(), eqTinyStroke.waitForRender()]);
+  await Promise.all([
+    eqStrokeZero.waitForRender(),
+    eqTinyStroke.waitForRender(),
+  ]);
 
   eqTinyStroke.nextTo(eqStrokeZero, DOWN, 0.8);
 
@@ -42,6 +55,6 @@ document.getElementById('playBtn')?.addEventListener('click', async () => {
   if (playBtn) playBtn.disabled = false;
 });
 
-document.getElementById('resetBtn')?.addEventListener('click', () => {
+document.getElementById("resetBtn")?.addEventListener("click", () => {
   scene.clear();
 });

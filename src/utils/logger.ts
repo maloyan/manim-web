@@ -5,7 +5,7 @@
  */
 
 /** Severity of a log message. */
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = "debug" | "info" | "warn" | "error";
 
 interface Logger {
   debug: (...args: unknown[]) => void;
@@ -37,12 +37,14 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   error: 3,
 };
 
-const envLevel = typeof process !== 'undefined' ? process.env?.LOG_LEVEL : undefined;
+const envLevel = typeof process !== "undefined"
+  ? process.env?.LOG_LEVEL
+  : undefined;
 // An invalid LOG_LEVEL must not silently suppress all output — fall back to 'info'.
 const currentLevel: LogLevel =
   envLevel && Object.prototype.hasOwnProperty.call(LOG_LEVELS, envLevel)
     ? (envLevel as LogLevel)
-    : 'info';
+    : "info";
 
 function shouldLog(level: LogLevel): boolean {
   return LOG_LEVELS[level] >= LOG_LEVELS[currentLevel];
@@ -52,7 +54,7 @@ function shouldLog(level: LogLevel): boolean {
 // Log sanitization / scrubbing
 // ---------------------------------------------------------------------------
 
-const REDACTED = '[REDACTED]';
+const REDACTED = "[REDACTED]";
 
 /**
  * Patterns that indicate sensitive data. Each regex is applied globally to
@@ -124,8 +126,11 @@ function sanitizeString(value: string): string {
  *   Entries are removed on unwind so a value referenced twice (a diamond, not
  *   a cycle) is not mistaken for a circular reference.
  */
-function sanitizeArg(arg: unknown, seen: WeakSet<object> = new WeakSet()): unknown {
-  if (typeof arg === 'string') {
+function sanitizeArg(
+  arg: unknown,
+  seen: WeakSet<object> = new WeakSet(),
+): unknown {
+  if (typeof arg === "string") {
     return sanitizeString(arg);
   }
 
@@ -137,7 +142,7 @@ function sanitizeArg(arg: unknown, seen: WeakSet<object> = new WeakSet()): unkno
   }
 
   if (Array.isArray(arg)) {
-    if (seen.has(arg)) return '[Circular]';
+    if (seen.has(arg)) return "[Circular]";
     seen.add(arg);
     try {
       return arg.map((value) => sanitizeArg(value, seen));
@@ -146,13 +151,17 @@ function sanitizeArg(arg: unknown, seen: WeakSet<object> = new WeakSet()): unkno
     }
   }
 
-  if (arg !== null && typeof arg === 'object') {
-    if (seen.has(arg)) return '[Circular]';
+  if (arg !== null && typeof arg === "object") {
+    if (seen.has(arg)) return "[Circular]";
     seen.add(arg);
     try {
       const sanitized: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(arg as Record<string, unknown>)) {
-        sanitized[key] = SENSITIVE_KEY_PATTERN.test(key) ? REDACTED : sanitizeArg(value, seen);
+      for (
+        const [key, value] of Object.entries(arg as Record<string, unknown>)
+      ) {
+        sanitized[key] = SENSITIVE_KEY_PATTERN.test(key)
+          ? REDACTED
+          : sanitizeArg(value, seen);
       }
       return sanitized;
     } finally {
@@ -189,9 +198,9 @@ function safeStringify(value: unknown): string {
   const seen = new WeakSet<object>();
   try {
     const json = JSON.stringify(value, (_key, val: unknown) => {
-      if (typeof val === 'bigint') return val.toString();
-      if (typeof val === 'object' && val !== null) {
-        if (seen.has(val)) return '[Circular]';
+      if (typeof val === "bigint") return val.toString();
+      if (typeof val === "object" && val !== null) {
+        if (seen.has(val)) return "[Circular]";
         seen.add(val);
       }
       return val;
@@ -204,11 +213,11 @@ function safeStringify(value: unknown): string {
 
 /** Render one raw log argument as a string for {@link LogEntry.message}. */
 function formatArg(arg: unknown): string {
-  if (typeof arg === 'string') return arg;
+  if (typeof arg === "string") return arg;
   // Errors carry their useful data (message/stack) in non-enumerable fields,
   // so a generic object walk would yield "{}". Handle them explicitly.
   if (arg instanceof Error) return arg.stack ?? `${arg.name}: ${arg.message}`;
-  if (arg !== null && typeof arg === 'object') return safeStringify(arg);
+  if (arg !== null && typeof arg === "object") return safeStringify(arg);
   return String(arg);
 }
 
@@ -222,9 +231,9 @@ function formatArg(arg: unknown): string {
  */
 function buildMessage(args: unknown[]): string {
   const parts = args.map((arg) =>
-    arg instanceof Error ? formatArg(arg) : formatArg(sanitizeArg(arg)),
+    arg instanceof Error ? formatArg(arg) : formatArg(sanitizeArg(arg))
   );
-  return sanitizeString(parts.join(' '));
+  return sanitizeString(parts.join(" "));
 }
 
 /**
@@ -275,7 +284,7 @@ function notifyListeners(level: LogLevel, args: unknown[]): void {
         // recurse back into this function. Route the thrown value through the
         // same key-aware sanitize pipeline as a normal log argument: it may
         // carry secrets and this path skips the standard one.
-        console.error('[manim-web] log listener threw:', buildMessage([err]));
+        console.error("[manim-web] log listener threw:", buildMessage([err]));
       }
     }
   } finally {
@@ -291,13 +300,13 @@ function notifyListeners(level: LogLevel, args: unknown[]): void {
 function emit(level: LogLevel, args: unknown[]): void {
   if (!shouldLog(level)) return;
   // Look up the console method dynamically so test spies are honored.
-  console[level]('[manim-web]', ...sanitizeArgs(args));
+  console[level]("[manim-web]", ...sanitizeArgs(args));
   notifyListeners(level, args);
 }
 
 export const logger: Logger = {
-  debug: (...args: unknown[]) => emit('debug', args),
-  info: (...args: unknown[]) => emit('info', args),
-  warn: (...args: unknown[]) => emit('warn', args),
-  error: (...args: unknown[]) => emit('error', args),
+  debug: (...args: unknown[]) => emit("debug", args),
+  info: (...args: unknown[]) => emit("info", args),
+  warn: (...args: unknown[]) => emit("warn", args),
+  error: (...args: unknown[]) => emit("error", args),
 };

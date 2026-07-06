@@ -1,8 +1,8 @@
 <div align="center">
 
 <div align="center">
-  
-  <picture>
+
+<picture>
     <source srcset="assets/branding/logo.svg" media="(prefers-color-scheme: dark)" />
     <img src="assets/branding/logo.svg" width="500" alt="manim-web" />
   </picture>
@@ -33,23 +33,21 @@ The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the bro
 <h1>Manim Web demo</h1>
 <div id="container"></div>
 <script type="module">
-    import {
-        Scene,
-        Circle,
-        Create,
-    } from "https://cdn.jsdelivr.net/npm/manim-web@latest/dist/manim-web.browser.js";
+import {
+  Circle,
+  Create,
+  Scene,
+} from 'https://cdn.jsdelivr.net/npm/manim-web@latest/dist/manim-web.browser.js';
 
-    const options = { width: 500, height: 300 };
-    const scene = new Scene(
-        document.getElementById("container"),
-        options,
-    );
-    const circle = new Circle({ radius: 1.5 });
-    await scene.play(new Create(circle));
+const options = { width: 500, height: 300 };
+const scene = new Scene(
+  document.getElementById('container'),
+  options,
+);
+const circle = new Circle({ radius: 1.5 });
+await scene.play(new Create(circle));
 </script>
 ```
-
-
 
 ### Locally
 
@@ -58,7 +56,7 @@ npm install manim-web
 ```
 
 ```typescript
-import { Scene, Circle, Square, Create, Transform, FadeOut } from 'manim-web';
+import { Circle, Create, FadeOut, Scene, Square, Transform } from 'manim-web';
 
 async function squareToCircle(scene: Scene) {
   const square = new Square({ sideLength: 3 });

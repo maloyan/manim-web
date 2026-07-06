@@ -2,22 +2,22 @@
  * Extra tests for growing animations to supplement animation-growing.test.ts.
  * Covers additional branches, edge cases, and deeper behavioral verification.
  */
-import { describe, it, expect } from 'vitest';
-import { VMobject } from '../../core/VMobject';
-import { PointMobject } from '../../mobjects/point';
-import { Arrow } from '../../mobjects/geometry/Arrow';
+import { describe, expect, it } from "vitest";
+import { VMobject } from "../../core/VMobject";
+import { PointMobject } from "../../mobjects/point";
+import { Arrow } from "../../mobjects/geometry/Arrow";
 import {
   GrowArrow,
   growArrow,
+  GrowFromCenter,
+  growFromCenter,
   GrowFromEdge,
   growFromEdge,
   GrowFromPoint,
   growFromPoint,
   SpinInFromNothing,
   spinInFromNothing,
-  GrowFromCenter,
-  growFromCenter,
-} from './index';
+} from "./index";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -58,12 +58,12 @@ function trianglePoints(): number[][] {
 // GrowArrow - extra tests
 // ============================================================================
 
-describe('GrowArrow (extra)', () => {
+describe("GrowArrow (extra)", () => {
   // GrowArrow grows the shaft/tip children, so progress shows up in the
   // rendered geometry: getWidth() is the rendered length and getCenter()
   // tracks the visual center from the start point to the midpoint.
-  describe('interpolate() progression', () => {
-    it('rendered size increases monotonically from 0 to full', () => {
+  describe("interpolate() progression", () => {
+    it("rendered size increases monotonically from 0 to full", () => {
       const arrow = makeArrow();
       const anim = new GrowArrow(arrow);
       anim.begin();
@@ -79,7 +79,7 @@ describe('GrowArrow (extra)', () => {
       }
     });
 
-    it('center moves continuously from the start point to the midpoint', () => {
+    it("center moves continuously from the start point to the midpoint", () => {
       const arrow = makeArrow([0, 0, 0], [6, 0, 0]);
       const anim = new GrowArrow(arrow);
       anim.begin();
@@ -100,7 +100,7 @@ describe('GrowArrow (extra)', () => {
       expect(arrow.getCenter()[0]).toBeCloseTo(3, 2); // midpoint
     });
 
-    it('handles arrow with 3D coordinates', () => {
+    it("handles arrow with 3D coordinates", () => {
       const arrow = makeArrow([1, 2, 3], [5, 6, 7]);
       const anim = new GrowArrow(arrow);
       anim.begin();
@@ -120,8 +120,8 @@ describe('GrowArrow (extra)', () => {
     });
   });
 
-  describe('finish() after partial interpolation', () => {
-    it('restores full rendered geometry regardless of last interpolation step', () => {
+  describe("finish() after partial interpolation", () => {
+    it("restores full rendered geometry regardless of last interpolation step", () => {
       const arrow = makeArrow([0, 0, 0], [4, 4, 0]);
       const full = arrow.getWidth();
       const anim = new GrowArrow(arrow);
@@ -135,8 +135,8 @@ describe('GrowArrow (extra)', () => {
     });
   });
 
-  describe('growArrow() factory (extra)', () => {
-    it('passes rateFunc option through', () => {
+  describe("growArrow() factory (extra)", () => {
+    it("passes rateFunc option through", () => {
       const rateFunc = (t: number) => t * t;
       const anim = growArrow(makeArrow(), { rateFunc });
       expect(anim.rateFunc).toBe(rateFunc);
@@ -148,9 +148,9 @@ describe('GrowArrow (extra)', () => {
 // GrowFromEdge - extra tests
 // ============================================================================
 
-describe('GrowFromEdge (extra)', () => {
-  describe('edge directions', () => {
-    it('grows from RIGHT edge [1, 0, 0]', () => {
+describe("GrowFromEdge (extra)", () => {
+  describe("edge directions", () => {
+    it("grows from RIGHT edge [1, 0, 0]", () => {
       const m = makeVMobject(trianglePoints());
       m.position.set(0, 0, 0);
       const origPos = m.position.clone();
@@ -169,7 +169,7 @@ describe('GrowFromEdge (extra)', () => {
       expect(m.position.x).toBeCloseTo(origPos.x, 2);
     });
 
-    it('grows from LEFT edge [-1, 0, 0]', () => {
+    it("grows from LEFT edge [-1, 0, 0]", () => {
       const m = makeVMobject(trianglePoints());
       const origPos = m.position.clone();
       const origScale = m.scaleVector.clone();
@@ -180,7 +180,7 @@ describe('GrowFromEdge (extra)', () => {
       expect(m.position.x).toBeCloseTo(origPos.x, 2);
     });
 
-    it('grows from UP edge [0, 1, 0]', () => {
+    it("grows from UP edge [0, 1, 0]", () => {
       const m = makeVMobject(trianglePoints());
       const origScale = m.scaleVector.clone();
       const anim = new GrowFromEdge(m, { edge: [0, 1, 0] });
@@ -189,7 +189,7 @@ describe('GrowFromEdge (extra)', () => {
       expect(m.scaleVector.y).toBeCloseTo(origScale.y, 5);
     });
 
-    it('grows from DOWN edge [0, -1, 0]', () => {
+    it("grows from DOWN edge [0, -1, 0]", () => {
       const m = makeVMobject(trianglePoints());
       const origScale = m.scaleVector.clone();
       const anim = new GrowFromEdge(m, { edge: [0, -1, 0] });
@@ -198,7 +198,7 @@ describe('GrowFromEdge (extra)', () => {
       expect(m.scaleVector.y).toBeCloseTo(origScale.y, 5);
     });
 
-    it('grows from diagonal edge [1, 1, 0]', () => {
+    it("grows from diagonal edge [1, 1, 0]", () => {
       const m = makeVMobject(trianglePoints());
       const origScale = m.scaleVector.clone();
       const origPos = m.position.clone();
@@ -210,8 +210,8 @@ describe('GrowFromEdge (extra)', () => {
     });
   });
 
-  describe('interpolate() progression', () => {
-    it('position moves from edge point toward target', () => {
+  describe("interpolate() progression", () => {
+    it("position moves from edge point toward target", () => {
       const m = makeVMobject(trianglePoints());
       m.position.set(2, 3, 0);
       const anim = new GrowFromEdge(m, { edge: [1, 0, 0] });
@@ -231,7 +231,7 @@ describe('GrowFromEdge (extra)', () => {
       expect(m.position.x).toBeCloseTo((posAtZero.x + 2) / 2, 1);
     });
 
-    it('scale clamps to 0.001 at alpha=0', () => {
+    it("scale clamps to 0.001 at alpha=0", () => {
       const m = makeMobject();
       const anim = new GrowFromEdge(m, { edge: [0, 1, 0] });
       anim.begin();
@@ -242,8 +242,8 @@ describe('GrowFromEdge (extra)', () => {
     });
   });
 
-  describe('with non-unit initial scale', () => {
-    it('preserves non-unit scale through animation cycle', () => {
+  describe("with non-unit initial scale", () => {
+    it("preserves non-unit scale through animation cycle", () => {
       const m = makeVMobject(trianglePoints());
       m.scaleVector.set(3, 2, 1);
       const origScale = m.scaleVector.clone();
@@ -264,14 +264,14 @@ describe('GrowFromEdge (extra)', () => {
     });
   });
 
-  describe('growFromEdge() factory (extra)', () => {
-    it('passes duration option through', () => {
+  describe("growFromEdge() factory (extra)", () => {
+    it("passes duration option through", () => {
       const m = makeMobject();
       const anim = growFromEdge(m, [0, 1, 0], { duration: 3 });
       expect(anim.duration).toBe(3);
     });
 
-    it('passes rateFunc option through', () => {
+    it("passes rateFunc option through", () => {
       const rf = (t: number) => t;
       const anim = growFromEdge(makeMobject(), [1, 0, 0], { rateFunc: rf });
       expect(anim.rateFunc).toBe(rf);
@@ -283,9 +283,9 @@ describe('GrowFromEdge (extra)', () => {
 // GrowFromPoint - extra tests
 // ============================================================================
 
-describe('GrowFromPoint (extra)', () => {
-  describe('begin() with various grow points', () => {
-    it('moves to grow point in 3D', () => {
+describe("GrowFromPoint (extra)", () => {
+  describe("begin() with various grow points", () => {
+    it("moves to grow point in 3D", () => {
       const m = makeMobject();
       m.position.set(0, 0, 0);
       const anim = new GrowFromPoint(m, { point: [5, 10, -3] });
@@ -295,7 +295,7 @@ describe('GrowFromPoint (extra)', () => {
       expect(m.position.z).toBeCloseTo(-3, 5);
     });
 
-    it('negative coordinates for grow point', () => {
+    it("negative coordinates for grow point", () => {
       const m = makeMobject();
       const anim = new GrowFromPoint(m, { point: [-5, -5, -5] });
       anim.begin();
@@ -305,8 +305,8 @@ describe('GrowFromPoint (extra)', () => {
     });
   });
 
-  describe('interpolate() at various alpha values', () => {
-    it('progressive scale increase', () => {
+  describe("interpolate() at various alpha values", () => {
+    it("progressive scale increase", () => {
       const m = makeMobject();
       const anim = new GrowFromPoint(m, { point: [0, 0, 0] });
       anim.begin();
@@ -322,7 +322,7 @@ describe('GrowFromPoint (extra)', () => {
       }
     });
 
-    it('at alpha=0, scale is clamped to 0.001', () => {
+    it("at alpha=0, scale is clamped to 0.001", () => {
       const m = makeMobject();
       const anim = new GrowFromPoint(m, { point: [1, 2, 3] });
       anim.begin();
@@ -330,7 +330,7 @@ describe('GrowFromPoint (extra)', () => {
       expect(m.scaleVector.x).toBeCloseTo(0.001, 5);
     });
 
-    it('position at alpha=0.25 is 1/4 of the way', () => {
+    it("position at alpha=0.25 is 1/4 of the way", () => {
       const m = makeMobject();
       m.position.set(4, 0, 0);
       const anim = new GrowFromPoint(m, { point: [0, 0, 0] });
@@ -339,7 +339,7 @@ describe('GrowFromPoint (extra)', () => {
       expect(m.position.x).toBeCloseTo(1, 2);
     });
 
-    it('position at alpha=0.75 is 3/4 of the way', () => {
+    it("position at alpha=0.75 is 3/4 of the way", () => {
       const m = makeMobject();
       m.position.set(4, 0, 0);
       const anim = new GrowFromPoint(m, { point: [0, 0, 0] });
@@ -349,8 +349,8 @@ describe('GrowFromPoint (extra)', () => {
     });
   });
 
-  describe('grow point at mobject position', () => {
-    it('when grow point equals target, position stays fixed', () => {
+  describe("grow point at mobject position", () => {
+    it("when grow point equals target, position stays fixed", () => {
       const m = makeMobject();
       m.position.set(3, 3, 0);
       const anim = new GrowFromPoint(m, { point: [3, 3, 0] });
@@ -370,8 +370,8 @@ describe('GrowFromPoint (extra)', () => {
     });
   });
 
-  describe('non-unit initial scale', () => {
-    it('preserves non-unit scale after full animation', () => {
+  describe("non-unit initial scale", () => {
+    it("preserves non-unit scale after full animation", () => {
       const m = makeMobject();
       m.scaleVector.set(5, 5, 5);
       const anim = new GrowFromPoint(m, { point: [0, 0, 0] });
@@ -387,13 +387,13 @@ describe('GrowFromPoint (extra)', () => {
     });
   });
 
-  describe('growFromPoint() factory (extra)', () => {
-    it('passes duration through', () => {
+  describe("growFromPoint() factory (extra)", () => {
+    it("passes duration through", () => {
       const anim = growFromPoint(makeMobject(), [1, 2, 3], { duration: 2.5 });
       expect(anim.duration).toBe(2.5);
     });
 
-    it('passes rateFunc through', () => {
+    it("passes rateFunc through", () => {
       const rf = (t: number) => t * t * t;
       const anim = growFromPoint(makeMobject(), [0, 0, 0], { rateFunc: rf });
       expect(anim.rateFunc).toBe(rf);
@@ -405,9 +405,9 @@ describe('GrowFromPoint (extra)', () => {
 // SpinInFromNothing - extra tests
 // ============================================================================
 
-describe('SpinInFromNothing (extra)', () => {
-  describe('default axis is z-axis', () => {
-    it('rotation is primarily around z-axis', () => {
+describe("SpinInFromNothing (extra)", () => {
+  describe("default axis is z-axis", () => {
+    it("rotation is primarily around z-axis", () => {
       const m = makeMobject();
       const anim = new SpinInFromNothing(m);
       anim.begin();
@@ -421,8 +421,8 @@ describe('SpinInFromNothing (extra)', () => {
     });
   });
 
-  describe('custom angle', () => {
-    it('angle=PI results in half rotation', () => {
+  describe("custom angle", () => {
+    it("angle=PI results in half rotation", () => {
       const m = makeMobject();
       const anim = new SpinInFromNothing(m, { angle: Math.PI });
       anim.begin();
@@ -436,7 +436,7 @@ describe('SpinInFromNothing (extra)', () => {
       expect(m.scaleVector.x).toBeCloseTo(1, 5);
     });
 
-    it('angle=0 means no rotation, only scale', () => {
+    it("angle=0 means no rotation, only scale", () => {
       const m = makeMobject();
       const initialRot = m.rotation.clone();
       const anim = new SpinInFromNothing(m, { angle: 0 });
@@ -453,8 +453,8 @@ describe('SpinInFromNothing (extra)', () => {
     });
   });
 
-  describe('custom axis', () => {
-    it('axis=[1, 0, 0] rotates around x-axis', () => {
+  describe("custom axis", () => {
+    it("axis=[1, 0, 0] rotates around x-axis", () => {
       const m = makeMobject();
       const anim = new SpinInFromNothing(m, { axis: [1, 0, 0] });
       anim.begin();
@@ -465,7 +465,7 @@ describe('SpinInFromNothing (extra)', () => {
       expect(m.scaleVector.x).toBeCloseTo(0.5, 2);
     });
 
-    it('axis=[0, 1, 0] rotates around y-axis', () => {
+    it("axis=[0, 1, 0] rotates around y-axis", () => {
       const m = makeMobject();
       const anim = new SpinInFromNothing(m, { axis: [0, 1, 0] });
       anim.begin();
@@ -473,7 +473,7 @@ describe('SpinInFromNothing (extra)', () => {
       expect(m.scaleVector.x).toBeCloseTo(0.5, 2);
     });
 
-    it('axis is normalized internally', () => {
+    it("axis is normalized internally", () => {
       const m1 = makeMobject();
       const m2 = makeMobject();
       const anim1 = new SpinInFromNothing(m1, { axis: [0, 0, 1] });
@@ -491,8 +491,8 @@ describe('SpinInFromNothing (extra)', () => {
     });
   });
 
-  describe('interpolate() scale clamping', () => {
-    it('at alpha=0, scale is clamped to 0.001', () => {
+  describe("interpolate() scale clamping", () => {
+    it("at alpha=0, scale is clamped to 0.001", () => {
       const m = makeMobject();
       const anim = new SpinInFromNothing(m);
       anim.begin();
@@ -502,7 +502,7 @@ describe('SpinInFromNothing (extra)', () => {
       expect(m.scaleVector.z).toBeCloseTo(0.001, 5);
     });
 
-    it('at alpha=0.1, scale is 0.1', () => {
+    it("at alpha=0.1, scale is 0.1", () => {
       const m = makeMobject();
       const anim = new SpinInFromNothing(m);
       anim.begin();
@@ -511,8 +511,8 @@ describe('SpinInFromNothing (extra)', () => {
     });
   });
 
-  describe('finish() with various initial states', () => {
-    it('restores non-zero initial rotation', () => {
+  describe("finish() with various initial states", () => {
+    it("restores non-zero initial rotation", () => {
       const m = makeMobject();
       m.rotation.set(0.5, 0.3, 0.1);
       const origRot = m.rotation.clone();
@@ -529,7 +529,7 @@ describe('SpinInFromNothing (extra)', () => {
       expect(m.rotation.z).toBeCloseTo(origRot.z, 3);
     });
 
-    it('restores non-unit initial scale', () => {
+    it("restores non-unit initial scale", () => {
       const m = makeMobject();
       m.scaleVector.set(2, 3, 4);
       const origScale = m.scaleVector.clone();
@@ -543,8 +543,8 @@ describe('SpinInFromNothing (extra)', () => {
     });
   });
 
-  describe('full animation progression', () => {
-    it('rotation converges to initial rotation as alpha approaches 1', () => {
+  describe("full animation progression", () => {
+    it("rotation converges to initial rotation as alpha approaches 1", () => {
       const m = makeMobject();
       const initialRot = m.rotation.clone();
       const anim = new SpinInFromNothing(m);
@@ -557,7 +557,7 @@ describe('SpinInFromNothing (extra)', () => {
       expect(m.rotation.z).toBeCloseTo(initialRot.z, 1);
     });
 
-    it('marks dirty during interpolation', () => {
+    it("marks dirty during interpolation", () => {
       const m = makeMobject();
       const anim = new SpinInFromNothing(m);
       anim.begin();
@@ -566,15 +566,15 @@ describe('SpinInFromNothing (extra)', () => {
     });
   });
 
-  describe('spinInFromNothing() factory (extra)', () => {
-    it('defaults work when no options provided', () => {
+  describe("spinInFromNothing() factory (extra)", () => {
+    it("defaults work when no options provided", () => {
       const anim = spinInFromNothing(makeMobject());
       expect(anim.angle).toBeCloseTo(Math.PI * 2, 5);
       expect(anim.axis).toEqual([0, 0, 1]);
       expect(anim.duration).toBe(1);
     });
 
-    it('passes all options through', () => {
+    it("passes all options through", () => {
       const rf = (t: number) => t;
       const anim = spinInFromNothing(makeMobject(), {
         angle: Math.PI / 2,
@@ -594,24 +594,24 @@ describe('SpinInFromNothing (extra)', () => {
 // GrowFromCenter - extra tests (re-exported from Scale module)
 // ============================================================================
 
-describe('GrowFromCenter (extra)', () => {
-  describe('re-export verification', () => {
-    it('GrowFromCenter class is available from growing module', () => {
+describe("GrowFromCenter (extra)", () => {
+  describe("re-export verification", () => {
+    it("GrowFromCenter class is available from growing module", () => {
       expect(GrowFromCenter).toBeDefined();
       const m = makeMobject();
       const anim = new GrowFromCenter(m);
       expect(anim).toBeInstanceOf(GrowFromCenter);
     });
 
-    it('growFromCenter factory is available from growing module', () => {
+    it("growFromCenter factory is available from growing module", () => {
       expect(growFromCenter).toBeDefined();
       const anim = growFromCenter(makeMobject());
       expect(anim).toBeInstanceOf(GrowFromCenter);
     });
   });
 
-  describe('with pre-scaled mobject', () => {
-    it('begin() sets scale to (0, 0, 0)', () => {
+  describe("with pre-scaled mobject", () => {
+    it("begin() sets scale to (0, 0, 0)", () => {
       const m = makeMobject();
       m.scaleVector.set(5, 10, 15);
       const anim = new GrowFromCenter(m);
@@ -621,7 +621,7 @@ describe('GrowFromCenter (extra)', () => {
       expect(m.scaleVector.z).toBeCloseTo(0, 5);
     });
 
-    it('interpolate restores proportional scale', () => {
+    it("interpolate restores proportional scale", () => {
       const m = makeMobject();
       m.scaleVector.set(4, 8, 12);
       const anim = new GrowFromCenter(m);
@@ -649,21 +649,21 @@ describe('GrowFromCenter (extra)', () => {
     });
   });
 
-  describe('constructor options', () => {
-    it('accepts custom duration', () => {
+  describe("constructor options", () => {
+    it("accepts custom duration", () => {
       const anim = new GrowFromCenter(makeMobject(), { duration: 3 });
       expect(anim.duration).toBe(3);
     });
 
-    it('accepts custom rateFunc', () => {
+    it("accepts custom rateFunc", () => {
       const rf = (t: number) => t * t;
       const anim = new GrowFromCenter(makeMobject(), { rateFunc: rf });
       expect(anim.rateFunc).toBe(rf);
     });
   });
 
-  describe('finish() guarantees exact target', () => {
-    it('finish after 0 interpolation restores target scale', () => {
+  describe("finish() guarantees exact target", () => {
+    it("finish after 0 interpolation restores target scale", () => {
       const m = makeMobject();
       m.scaleVector.set(7, 7, 7);
       const anim = new GrowFromCenter(m);
@@ -676,8 +676,8 @@ describe('GrowFromCenter (extra)', () => {
     });
   });
 
-  describe('growFromCenter() factory (extra)', () => {
-    it('passes options through', () => {
+  describe("growFromCenter() factory (extra)", () => {
+    it("passes options through", () => {
       const rf = (t: number) => t;
       const anim = growFromCenter(makeMobject(), { duration: 5, rateFunc: rf });
       expect(anim.duration).toBe(5);

@@ -1,14 +1,14 @@
-import * as THREE from 'three';
-import { VMobject } from '../../core/VMobject';
-import { Vector3Tuple } from '../../core/Mobject';
-import { WHITE } from '../../constants';
+import * as THREE from "three";
+import { VMobject } from "../../core/VMobject";
+import { Vector3Tuple } from "../../core/Mobject";
+import { WHITE } from "../../constants";
 import {
+  segmentAngle,
+  segmentDirection,
   segmentLength,
   segmentMidpoint,
-  segmentDirection,
-  segmentAngle,
   segmentPointAt,
-} from './segment';
+} from "./segment";
 
 /**
  * Options for creating a Line
@@ -49,7 +49,12 @@ export class Line extends VMobject {
   constructor(options: LineOptions = {}) {
     super();
 
-    const { start = [0, 0, 0], end = [1, 0, 0], color = WHITE, strokeWidth = 3 } = options;
+    const {
+      start = [0, 0, 0],
+      end = [1, 0, 0],
+      color = WHITE,
+      strokeWidth = 3,
+    } = options;
 
     this._start = [...start];
     this._end = [...end];
@@ -76,7 +81,11 @@ export class Line extends VMobject {
 
     // Control points at 1/3 and 2/3 along the line
     const h1: number[] = [x0 + dx / 3, y0 + dy / 3, z0 + dz / 3];
-    const h2: number[] = [x0 + (2 * dx) / 3, y0 + (2 * dy) / 3, z0 + (2 * dz) / 3];
+    const h2: number[] = [
+      x0 + (2 * dx) / 3,
+      y0 + (2 * dy) / 3,
+      z0 + (2 * dz) / 3,
+    ];
 
     this.setPoints3D([[...this._start], h1, h2, [...this._end]]);
   }
@@ -86,9 +95,12 @@ export class Line extends VMobject {
    * @post result === worldMatrix * _points3D[0]
    */
   getStart(): Vector3Tuple {
-    const localPt = this._points3D.length >= 4 ? this._points3D[0] : this._start;
+    const localPt = this._points3D.length >= 4
+      ? this._points3D[0]
+      : this._start;
     const worldMatrix = this._worldMatrix();
-    const v = new THREE.Vector3(localPt[0], localPt[1], localPt[2]).applyMatrix4(worldMatrix);
+    const v = new THREE.Vector3(localPt[0], localPt[1], localPt[2])
+      .applyMatrix4(worldMatrix);
     return [v.x, v.y, v.z];
   }
 
@@ -106,10 +118,12 @@ export class Line extends VMobject {
    * @post result === worldMatrix * _points3D[last]
    */
   getEnd(): Vector3Tuple {
-    const localPt =
-      this._points3D.length >= 4 ? this._points3D[this._points3D.length - 1] : this._end;
+    const localPt = this._points3D.length >= 4
+      ? this._points3D[this._points3D.length - 1]
+      : this._end;
     const worldMatrix = this._worldMatrix();
-    const v = new THREE.Vector3(localPt[0], localPt[1], localPt[2]).applyMatrix4(worldMatrix);
+    const v = new THREE.Vector3(localPt[0], localPt[1], localPt[2])
+      .applyMatrix4(worldMatrix);
     return [v.x, v.y, v.z];
   }
 

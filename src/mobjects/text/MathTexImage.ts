@@ -16,14 +16,17 @@
  * rendering (recommended), use MathTex from './MathTex' instead.
  */
 
-import * as THREE from 'three';
-import katex from 'katex';
-import { Vector3Tuple } from '../../core/Mobject';
-import { TexturedMobject } from '../../core/TexturedMobject';
-import { ensureKatexStyles, waitForKatexStyles } from './katexStyles';
-import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
-import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
-import { logger } from '../../utils/logger';
+import * as THREE from "three";
+import katex from "katex";
+import { Vector3Tuple } from "../../core/Mobject";
+import { TexturedMobject } from "../../core/TexturedMobject";
+import { ensureKatexStyles, waitForKatexStyles } from "./katexStyles";
+import { katexCanRender, renderLatexToSVG } from "./MathJaxRenderer";
+import {
+  DEFAULT_FONT_SIZE_IN_WORLD_SPACE,
+  DEFAULT_FONT_SIZE_PT,
+} from "../../constants/fontRender";
+import { logger } from "../../utils/logger";
 
 const DEFAULT_CANVAS_SCALE = 16;
 
@@ -39,7 +42,7 @@ const SVG_UNITS_PER_PT = 4 / 3;
  * - 'mathjax': MathJax SVG only (slower, full LaTeX support)
  * - 'auto'   : Try KaTeX first; if it throws, fall back to MathJax
  */
-export type TexRenderer = 'katex' | 'mathjax' | 'auto';
+export type TexRenderer = "katex" | "mathjax" | "auto";
 
 /**
  * Options for creating a MathTexImage object
@@ -122,7 +125,7 @@ export class MathTexImage extends TexturedMobject {
   /** User-requested renderer mode */
   protected _renderer: TexRenderer;
   /** Which renderer was actually used for the last successful render */
-  protected _activeRenderer: 'katex' | 'mathjax' | null = null;
+  protected _activeRenderer: "katex" | "mathjax" | null = null;
   /** Whether this is a multi-part MathTexImage (created from string[]) */
   protected _isMultiPart: boolean = false;
   /** Child MathTexImage parts (only when _isMultiPart is true) */
@@ -147,11 +150,11 @@ export class MathTexImage extends TexturedMobject {
 
     const {
       latex,
-      color = '#ffffff',
+      color = "#ffffff",
       fontSize = 48,
       displayMode = true,
       position = [0, 0, 0],
-      renderer = 'auto',
+      renderer = "auto",
       _padding: padding = 10,
     } = options;
 
@@ -179,7 +182,7 @@ export class MathTexImage extends TexturedMobject {
     if (Array.isArray(latex)) {
       // Multi-part mode: create child MathTexImage for each string
       this._isMultiPart = true;
-      this._latex = latex.join('');
+      this._latex = latex.join("");
 
       for (const part of latex) {
         const child = new MathTexImage({
@@ -203,7 +206,7 @@ export class MathTexImage extends TexturedMobject {
       this._latex = latex;
 
       // Ensure KaTeX CSS is loaded (needed for 'katex' and 'auto' modes)
-      if (this._renderer !== 'mathjax') {
+      if (this._renderer !== "mathjax") {
         ensureKatexStyles();
       }
 
@@ -223,7 +226,7 @@ export class MathTexImage extends TexturedMobject {
    * Get which renderer was actually used for the current render.
    * Returns null if not yet rendered.
    */
-  getActiveRenderer(): 'katex' | 'mathjax' | null {
+  getActiveRenderer(): "katex" | "mathjax" | null {
     return this._activeRenderer;
   }
 
@@ -339,11 +342,13 @@ export class MathTexImage extends TexturedMobject {
   getPart(index: number): MathTexImage {
     if (!this._isMultiPart) {
       throw new Error(
-        'getPart() is only available on multi-part MathTexImage (created with string[])',
+        "getPart() is only available on multi-part MathTexImage (created with string[])",
       );
     }
     if (index < 0 || index >= this._parts.length) {
-      throw new Error(`Part index ${index} out of range [0, ${this._parts.length - 1}]`);
+      throw new Error(
+        `Part index ${index} out of range [0, ${this._parts.length - 1}]`,
+      );
     }
     return this._parts[index];
   }
@@ -363,13 +368,17 @@ export class MathTexImage extends TexturedMobject {
     // Use allSettled to avoid unhandled rejections when child parts fail
     // (e.g. KaTeX errors in test environments). If any part failed,
     // store the first error so the parent's waitForRender() can surface it.
-    const results = await Promise.allSettled(this._parts.map((p) => p.waitForRender()));
-    const firstFailure = results.find((r) => r.status === 'rejected') as
+    const results = await Promise.allSettled(
+      this._parts.map((p) => p.waitForRender()),
+    );
+    const firstFailure = results.find((r) => r.status === "rejected") as
       | PromiseRejectedResult
       | undefined;
     if (firstFailure) {
       const err = firstFailure.reason;
-      this._renderState.renderError = err instanceof Error ? err : new Error(String(err));
+      this._renderState.renderError = err instanceof Error
+        ? err
+        : new Error(String(err));
       return;
     }
 
@@ -379,8 +388,7 @@ export class MathTexImage extends TexturedMobject {
       return w;
     });
     const contentWidths = this._parts.map((p, i) => {
-      const paddingWorld =
-        p._padding *
+      const paddingWorld = p._padding *
         p.getFontSize() *
         (DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
           LATEX_DEFAULT_FONT_SIZE_PT /
@@ -449,9 +457,11 @@ export class MathTexImage extends TexturedMobject {
         this._markDirty();
       })
       .catch((error) => {
-        logger.error('MathTexImage rendering error:', error);
+        logger.error("MathTexImage rendering error:", error);
         this._renderState.isRendering = false;
-        this._renderState.renderError = error instanceof Error ? error : new Error(String(error));
+        this._renderState.renderError = error instanceof Error
+          ? error
+          : new Error(String(error));
       });
   }
 
@@ -467,7 +477,7 @@ export class MathTexImage extends TexturedMobject {
   protected async _renderLatex(): Promise<void> {
     const useRenderer = this._resolveRenderer();
 
-    if (useRenderer === 'mathjax') {
+    if (useRenderer === "mathjax") {
       return this._renderLatexViaMathJax();
     }
 
@@ -478,15 +488,15 @@ export class MathTexImage extends TexturedMobject {
   /**
    * Determine which concrete renderer to use for the current LaTeX string.
    */
-  private _resolveRenderer(): 'katex' | 'mathjax' {
-    if (this._renderer === 'katex') return 'katex';
-    if (this._renderer === 'mathjax') return 'mathjax';
+  private _resolveRenderer(): "katex" | "mathjax" {
+    if (this._renderer === "katex") return "katex";
+    if (this._renderer === "mathjax") return "mathjax";
 
     // 'auto': probe KaTeX
     if (katexCanRender(this._latex, this._displayMode)) {
-      return 'katex';
+      return "katex";
     }
-    return 'mathjax';
+    return "mathjax";
   }
 
   /**
@@ -499,7 +509,7 @@ export class MathTexImage extends TexturedMobject {
     const value = parseFloat(attr);
     if (!value || isNaN(value)) return 0;
     // 1ex ≈ fontSize × 0.5 (x-height approximation)
-    return attr.endsWith('ex') ? value * fontSize * 0.5 : value;
+    return attr.endsWith("ex") ? value * fontSize * 0.5 : value;
   }
 
   /**
@@ -508,34 +518,40 @@ export class MathTexImage extends TexturedMobject {
    * pipeline consistent.
    */
   protected async _renderLatexViaMathJax(): Promise<void> {
-    this._activeRenderer = 'mathjax';
+    this._activeRenderer = "mathjax";
 
     const result = await renderLatexToSVG(this._latex, {
       displayMode: this._displayMode,
-      color: '#ffffff', // always render white; actual color applied via material tint
+      color: "#ffffff", // always render white; actual color applied via material tint
     });
 
     // Render the MathJax SVG into a canvas via <img>
     const svgString = result.svgString;
 
     // Measure intrinsic size
-    const tempDiv = document.createElement('div');
-    tempDiv.style.position = 'absolute';
-    tempDiv.style.left = '-9999px';
-    tempDiv.style.top = '-9999px';
+    const tempDiv = document.createElement("div");
+    tempDiv.style.position = "absolute";
+    tempDiv.style.left = "-9999px";
+    tempDiv.style.top = "-9999px";
     tempDiv.innerHTML = svgString;
     document.body.appendChild(tempDiv);
 
-    const svgEl = tempDiv.querySelector('svg');
+    const svgEl = tempDiv.querySelector("svg");
     if (!svgEl) {
       document.body.removeChild(tempDiv);
-      logger.warn('MathTexImage: MathJax produced no SVG for:', this._latex);
+      logger.warn("MathTexImage: MathJax produced no SVG for:", this._latex);
       return;
     }
 
     // Ensure the SVG has explicit pixel width/height for rasterization.
-    let svgW = this._parseSvgDimension(svgEl.getAttribute('width'), this._fontSize);
-    let svgH = this._parseSvgDimension(svgEl.getAttribute('height'), this._fontSize);
+    let svgW = this._parseSvgDimension(
+      svgEl.getAttribute("width"),
+      this._fontSize,
+    );
+    let svgH = this._parseSvgDimension(
+      svgEl.getAttribute("height"),
+      this._fontSize,
+    );
 
     if ((!svgW || !svgH) && result.width && result.height) {
       // Fallback: derive pixel size from viewBox-based result dimensions.
@@ -545,8 +561,8 @@ export class MathTexImage extends TexturedMobject {
     }
 
     if (svgW && svgH) {
-      svgEl.setAttribute('width', String(svgW));
-      svgEl.setAttribute('height', String(svgH));
+      svgEl.setAttribute("width", String(svgW));
+      svgEl.setAttribute("height", String(svgH));
     }
     const finalSvgString = new XMLSerializer().serializeToString(svgEl);
     document.body.removeChild(tempDiv);
@@ -554,7 +570,7 @@ export class MathTexImage extends TexturedMobject {
     const width = Math.ceil(svgW) + padding * 2;
     const height = Math.ceil(svgH) + padding * 2;
     if (width <= 0 || height <= 0) {
-      logger.warn('MathTexImage (MathJax): Invalid dimensions', {
+      logger.warn("MathTexImage (MathJax): Invalid dimensions", {
         width,
         height,
         latex: this._latex,
@@ -563,12 +579,14 @@ export class MathTexImage extends TexturedMobject {
     }
     // Rasterize to canvas
     const scale = DEFAULT_CANVAS_SCALE;
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = width * scale;
     canvas.height = height * scale;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) {
-      throw new Error('MathTexImage: 2D canvas context unavailable in this environment');
+      throw new Error(
+        "MathTexImage: 2D canvas context unavailable in this environment",
+      );
     }
     ctx.scale(scale, scale);
 
@@ -581,10 +599,12 @@ export class MathTexImage extends TexturedMobject {
       };
       img.onerror = () => {
         URL.revokeObjectURL(img.src);
-        logger.warn('MathTexImage (MathJax): Failed to rasterize SVG');
+        logger.warn("MathTexImage (MathJax): Failed to rasterize SVG");
         resolve();
       };
-      const blob = new Blob([finalSvgString], { type: 'image/svg+xml;charset=utf-8' });
+      const blob = new Blob([finalSvgString], {
+        type: "image/svg+xml;charset=utf-8",
+      });
       img.src = URL.createObjectURL(blob);
     });
 
@@ -601,8 +621,7 @@ export class MathTexImage extends TexturedMobject {
     this._renderState.texture.needsUpdate = true;
 
     // Convert measured pixel dimensions to world units using shared font baseline.
-    const worldScale =
-      this._fontSize *
+    const worldScale = this._fontSize *
       (DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
         LATEX_DEFAULT_FONT_SIZE_PT /
         DEFAULT_FONT_SIZE_PT /
@@ -612,7 +631,8 @@ export class MathTexImage extends TexturedMobject {
 
     if (this._renderState.mesh) {
       this._updateMeshGeometry();
-      const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
+      const material = this._renderState.mesh
+        .material as THREE.MeshBasicMaterial;
       material.map = this._renderState.texture;
       material.needsUpdate = true;
     }
@@ -627,16 +647,16 @@ export class MathTexImage extends TexturedMobject {
    * these pixel dimensions to world space using scaleFactor = 0.01.
    */
   protected async _renderLatexViaKaTeX(): Promise<void> {
-    if (typeof document === 'undefined') {
+    if (typeof document === "undefined") {
       return;
     }
-    this._activeRenderer = 'katex';
+    this._activeRenderer = "katex";
 
     const CANVAS_SCALE = DEFAULT_CANVAS_SCALE;
-    const container = document.createElement('div');
-    container.style.position = 'absolute';
-    container.style.left = '-9999px';
-    container.style.top = '-9999px';
+    const container = document.createElement("div");
+    container.style.position = "absolute";
+    container.style.left = "-9999px";
+    container.style.top = "-9999px";
     container.style.fontSize = `${LATEX_DEFAULT_FONT_SIZE_PT}pt`;
     document.body.appendChild(container);
 
@@ -645,7 +665,7 @@ export class MathTexImage extends TexturedMobject {
       katex.render(this._latex, container, {
         displayMode: this._displayMode,
         throwOnError: false,
-        output: 'html',
+        output: "html",
       });
 
       // Wait for KaTeX CSS to load
@@ -667,11 +687,14 @@ export class MathTexImage extends TexturedMobject {
       // specific members used below so a partial mock cannot crash us. Use
       // a thenable check for `.ready` instead of `instanceof Promise` so
       // cross-realm mocks still pass.
-      const fontsApi = document.fonts as { load?: unknown; ready?: { then?: unknown } } | undefined;
+      const fontsApi = document.fonts as {
+        load?: unknown;
+        ready?: { then?: unknown };
+      } | undefined;
       if (
         fontsApi &&
-        typeof fontsApi.load === 'function' &&
-        typeof fontsApi.ready?.then === 'function'
+        typeof fontsApi.load === "function" &&
+        typeof fontsApi.ready?.then === "function"
       ) {
         const fs = `${this._fontSize}px`;
         const fontTimeout = new Promise<void>((r) => setTimeout(r, 5000));
@@ -687,10 +710,10 @@ export class MathTexImage extends TexturedMobject {
             ].map((p) =>
               p.catch((err) => {
                 logger.warn(
-                  'MathTexImage: KaTeX font failed to load. Rendering may be degraded.',
+                  "MathTexImage: KaTeX font failed to load. Rendering may be degraded.",
                   err,
                 );
-              }),
+              })
             ),
           ),
           fontTimeout,
@@ -707,7 +730,11 @@ export class MathTexImage extends TexturedMobject {
       const height = Math.ceil(containerRect.height) + padding * 2;
 
       if (width <= 0 || height <= 0) {
-        logger.warn('MathTexImage: Invalid dimensions', { width, height, latex: this._latex });
+        logger.warn("MathTexImage: Invalid dimensions", {
+          width,
+          height,
+          latex: this._latex,
+        });
         return;
       }
 
@@ -735,8 +762,7 @@ export class MathTexImage extends TexturedMobject {
       this._renderState.texture.needsUpdate = true;
 
       // Convert measured CSS pixels to world units using the shared 48pt baseline.
-      const worldScale =
-        this._fontSize *
+      const worldScale = this._fontSize *
         (DEFAULT_FONT_SIZE_IN_WORLD_SPACE /
           LATEX_DEFAULT_FONT_SIZE_PT /
           DEFAULT_FONT_SIZE_PT /
@@ -747,7 +773,8 @@ export class MathTexImage extends TexturedMobject {
       // Update mesh if it exists
       if (this._renderState.mesh) {
         this._updateMeshGeometry();
-        const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
+        const material = this._renderState.mesh
+          .material as THREE.MeshBasicMaterial;
         material.map = this._renderState.texture;
         material.needsUpdate = true;
       }
@@ -768,11 +795,11 @@ export class MathTexImage extends TexturedMobject {
     padding: number,
     scale: number = 2,
   ): Promise<HTMLCanvasElement> {
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
     canvas.width = width * scale;
     canvas.height = height * scale;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) {
       // 2D context unavailable (e.g. happy-dom in tests, or a browser
       // configuration where canvas is disabled). Surface as a render error
@@ -781,10 +808,12 @@ export class MathTexImage extends TexturedMobject {
       // unrenderable equation into an invisible one. There is no automatic
       // MathJax retry; callers that want a fallback must re-instantiate
       // with `renderer: 'mathjax'`.
-      throw new Error('MathTexImage: 2D canvas context unavailable in this environment');
+      throw new Error(
+        "MathTexImage: 2D canvas context unavailable in this environment",
+      );
     }
     ctx.scale(scale, scale);
-    ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
+    ctx.fillStyle = "#ffffff"; // always render white; actual color via material tint
 
     // Collect text items, SVG items, and CSS rule items from KaTeX DOM
     interface TextItem {
@@ -822,7 +851,7 @@ export class MathTexImage extends TexturedMobject {
         if (!parent) return;
 
         const style = window.getComputedStyle(parent);
-        if (style.display === 'none' || style.visibility === 'hidden') return;
+        if (style.display === "none" || style.visibility === "hidden") return;
         if (parseFloat(style.opacity) === 0) return;
 
         // Get the position of this text node
@@ -839,7 +868,8 @@ export class MathTexImage extends TexturedMobject {
           text,
           x: r.left - containerRect.left + padding,
           y: r.top - containerRect.top + padding,
-          font: `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
+          font:
+            `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`,
         });
         return;
       }
@@ -848,41 +878,46 @@ export class MathTexImage extends TexturedMobject {
         const el = node as HTMLElement;
 
         // Skip the hidden MathML accessibility tree
-        if (el.classList?.contains('katex-mathml')) return;
+        if (el.classList?.contains("katex-mathml")) return;
 
         // Handle inline SVGs (radical signs, delimiters, etc.)
-        if (el.tagName.toLowerCase() === 'svg') {
+        if (el.tagName.toLowerCase() === "svg") {
           const svgRect = el.getBoundingClientRect();
           if (svgRect.width > 0 && svgRect.height > 0) {
             const clone = el.cloneNode(true) as SVGElement;
-            clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+            clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
             // Always set explicit width/height from the rendered size
-            clone.setAttribute('width', String(svgRect.width));
-            clone.setAttribute('height', String(svgRect.height));
+            clone.setAttribute("width", String(svgRect.width));
+            clone.setAttribute("height", String(svgRect.height));
             // Preserve the viewBox if present; if not, add one from the original SVG
-            if (!clone.getAttribute('viewBox')) {
-              const origVb = el.getAttribute('viewBox');
-              if (origVb) clone.setAttribute('viewBox', origVb);
+            if (!clone.getAttribute("viewBox")) {
+              const origVb = el.getAttribute("viewBox");
+              if (origVb) clone.setAttribute("viewBox", origVb);
             }
             // Set color property for currentColor inheritance in standalone SVG
             // Always render white; actual color applied via material tint
-            clone.setAttribute('color', '#ffffff');
-            clone.setAttribute('style', 'color: #ffffff; overflow: visible;');
+            clone.setAttribute("color", "#ffffff");
+            clone.setAttribute("style", "color: #ffffff; overflow: visible;");
 
             // Replace currentColor in all shape elements (attributes + inline styles)
-            const shapes = clone.querySelectorAll('path, line, rect, circle, polyline, polygon');
+            const shapes = clone.querySelectorAll(
+              "path, line, rect, circle, polyline, polygon",
+            );
             shapes.forEach((p) => {
-              const fill = p.getAttribute('fill');
-              if (!fill || fill === 'currentColor' || fill === 'inherit') {
-                p.setAttribute('fill', '#ffffff');
+              const fill = p.getAttribute("fill");
+              if (!fill || fill === "currentColor" || fill === "inherit") {
+                p.setAttribute("fill", "#ffffff");
               }
-              const stroke = p.getAttribute('stroke');
-              if (stroke === 'currentColor' || stroke === 'inherit') {
-                p.setAttribute('stroke', '#ffffff');
+              const stroke = p.getAttribute("stroke");
+              if (stroke === "currentColor" || stroke === "inherit") {
+                p.setAttribute("stroke", "#ffffff");
               }
-              const inlineStyle = p.getAttribute('style');
-              if (inlineStyle && inlineStyle.includes('currentColor')) {
-                p.setAttribute('style', inlineStyle.replace(/currentColor/g, '#ffffff'));
+              const inlineStyle = p.getAttribute("style");
+              if (inlineStyle && inlineStyle.includes("currentColor")) {
+                p.setAttribute(
+                  "style",
+                  inlineStyle.replace(/currentColor/g, "#ffffff"),
+                );
               }
             });
 
@@ -927,7 +962,9 @@ export class MathTexImage extends TexturedMobject {
 
         // Capture background-color rules (e.g., KaTeX \rule elements)
         const bgColor = elStyle.backgroundColor;
-        if (bgColor && bgColor !== 'transparent' && bgColor !== 'rgba(0, 0, 0, 0)') {
+        if (
+          bgColor && bgColor !== "transparent" && bgColor !== "rgba(0, 0, 0, 0)"
+        ) {
           const elRect = el.getBoundingClientRect();
           if (elRect.width > 0 && elRect.height > 0) {
             ruleItems.push({
@@ -964,7 +1001,9 @@ export class MathTexImage extends TexturedMobject {
               URL.revokeObjectURL(img.src);
               resolve();
             };
-            const blob = new Blob([item.svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const blob = new Blob([item.svgString], {
+              type: "image/svg+xml;charset=utf-8",
+            });
             img.src = URL.createObjectURL(blob);
           });
         }),
@@ -973,16 +1012,16 @@ export class MathTexImage extends TexturedMobject {
 
     // 2. CSS rule items (fraction bars, overlines)
     for (const item of ruleItems) {
-      ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
+      ctx.fillStyle = "#ffffff"; // always render white; actual color via material tint
       ctx.fillRect(item.x, item.y, item.w, item.h);
     }
 
     // 3. Text items LAST (foreground — actual math content on top)
     for (const item of textItems) {
       ctx.font = item.font;
-      ctx.fillStyle = '#ffffff'; // always render white; actual color via material tint
-      ctx.textBaseline = 'alphabetic';
-      ctx.textAlign = 'left';
+      ctx.fillStyle = "#ffffff"; // always render white; actual color via material tint
+      ctx.textBaseline = "alphabetic";
+      ctx.textAlign = "left";
 
       // Compute the alphabetic baseline from the CSS rect position.
       // KaTeX uses tight line-heights, so rect.top ≈ baseline - fontBoundingBoxAscent.
@@ -1058,32 +1097,40 @@ export class MathTexImage extends TexturedMobject {
     // Ensure lazy Three.js construction has run so _renderState.mesh is populated.
     const object = this.getThreeObject();
     if (!(object instanceof THREE.Group)) {
-      throw new Error('MathTexImage.getThreeObject() must return a THREE.Group');
+      throw new Error(
+        "MathTexImage.getThreeObject() must return a THREE.Group",
+      );
     }
     if (!(this._renderState.mesh instanceof THREE.Mesh)) {
-      throw new Error('MathTexImage.getDisplayMeshes requires _renderState.mesh');
+      throw new Error(
+        "MathTexImage.getDisplayMeshes requires _renderState.mesh",
+      );
     }
     return [this._renderState.mesh];
   }
 
   applyTextureFrom(other: TexturedMobject): void {
     if (!(other instanceof MathTexImage)) {
-      throw new Error('MathTexImage.applyTextureFrom requires MathTexImage');
+      throw new Error("MathTexImage.applyTextureFrom requires MathTexImage");
     }
     if (!(this._renderState.mesh instanceof THREE.Mesh)) {
-      throw new Error('MathTexImage.applyTextureFrom requires mesh');
+      throw new Error("MathTexImage.applyTextureFrom requires mesh");
     }
     if (!(other._renderState.mesh instanceof THREE.Mesh)) {
-      throw new Error('MathTexImage.applyTextureFrom requires source mesh');
+      throw new Error("MathTexImage.applyTextureFrom requires source mesh");
     }
 
     const material = this._renderState.mesh.material;
     const sourceMaterial = other._renderState.mesh.material;
     if (!(material instanceof THREE.MeshBasicMaterial)) {
-      throw new Error('MathTexImage.applyTextureFrom requires MeshBasicMaterial');
+      throw new Error(
+        "MathTexImage.applyTextureFrom requires MeshBasicMaterial",
+      );
     }
     if (!(sourceMaterial instanceof THREE.MeshBasicMaterial)) {
-      throw new Error('MathTexImage.applyTextureFrom requires source MeshBasicMaterial');
+      throw new Error(
+        "MathTexImage.applyTextureFrom requires source MeshBasicMaterial",
+      );
     }
 
     const nextTexture = sourceMaterial.map;
@@ -1094,7 +1141,9 @@ export class MathTexImage extends TexturedMobject {
 
   applyVisualSize(width: number, height: number): void {
     if (this._isMultiPart) {
-      throw new Error('MathTexImage.applyVisualSize requires single-part MathTexImage');
+      throw new Error(
+        "MathTexImage.applyVisualSize requires single-part MathTexImage",
+      );
     }
     this._renderState.width = width;
     this._renderState.height = height;
@@ -1106,7 +1155,7 @@ export class MathTexImage extends TexturedMobject {
 
   applyContentFrom(other: TexturedMobject): void {
     if (!(other instanceof MathTexImage)) {
-      throw new Error('MathTexImage.applyContentFrom requires MathTexImage');
+      throw new Error("MathTexImage.applyContentFrom requires MathTexImage");
     }
     this._latex = other._latex;
   }
@@ -1116,12 +1165,15 @@ export class MathTexImage extends TexturedMobject {
    */
   protected override _syncMaterialToThree(): void {
     if (this._renderState.mesh) {
-      const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
+      const material = this._renderState.mesh
+        .material as THREE.MeshBasicMaterial;
       material.opacity = this._opacity;
       material.color.set(this.color); // tint white texture to desired color
 
       // Update texture if available
-      if (this._renderState.texture && material.map !== this._renderState.texture) {
+      if (
+        this._renderState.texture && material.map !== this._renderState.texture
+      ) {
         material.map = this._renderState.texture;
         material.needsUpdate = true;
       }
@@ -1129,14 +1181,19 @@ export class MathTexImage extends TexturedMobject {
       // Update geometry if dimensions changed
       const geometry = this._renderState.mesh.geometry as THREE.PlaneGeometry;
       const params = geometry.parameters;
-      if (params.width !== this._renderState.width || params.height !== this._renderState.height) {
+      if (
+        params.width !== this._renderState.width ||
+        params.height !== this._renderState.height
+      ) {
         this._updateMeshGeometry();
       }
     }
   }
 
   override copy(): MathTexImage {
-    const latexValue = this._isMultiPart ? this._parts.map((p) => p._latex) : this._latex;
+    const latexValue = this._isMultiPart
+      ? this._parts.map((p) => p._latex)
+      : this._latex;
     const copy = new MathTexImage({
       latex: latexValue,
       color: this.color,
@@ -1154,8 +1211,13 @@ export class MathTexImage extends TexturedMobject {
     // copy's re-render settles (multi-part parts carry their own size when copied
     // recursively by `Mobject.copy()`). Also apply it eagerly so a synchronous
     // bounds read before the render settles already reflects the size.
-    if (!this._isMultiPart && this._renderState.width && this._renderState.height) {
-      copy._visualSizeOverride = [this._renderState.width, this._renderState.height];
+    if (
+      !this._isMultiPart && this._renderState.width && this._renderState.height
+    ) {
+      copy._visualSizeOverride = [
+        this._renderState.width,
+        this._renderState.height,
+      ];
       copy.getThreeObject();
       copy.applyVisualSize(this._renderState.width, this._renderState.height);
     }
@@ -1173,7 +1235,10 @@ export class MathTexImage extends TexturedMobject {
       for (let i = 0; i < n; i++) {
         const partStart = i / n;
         const partEnd = (i + 1) / n;
-        const partAlpha = Math.max(0, Math.min(1, (alpha - partStart) / (partEnd - partStart)));
+        const partAlpha = Math.max(
+          0,
+          Math.min(1, (alpha - partStart) / (partEnd - partStart)),
+        );
         this._parts[i].setRevealProgress(partAlpha);
       }
       return;

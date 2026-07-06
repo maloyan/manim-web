@@ -1,66 +1,66 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from "vitest";
 import {
+  coordsToPoint,
+  evalCubicBezier,
   lerp,
   lerpPoint,
-  smoothstep,
-  coordsToPoint,
-  pointToCoords,
-  evalCubicBezier,
   orthonormalizeBasis,
-} from './math';
-import { dotVec, lengthVec } from './vectors';
+  pointToCoords,
+  smoothstep,
+} from "./math";
+import { dotVec, lengthVec } from "./vectors";
 
-describe('lerp', () => {
-  it('returns a at t=0', () => {
+describe("lerp", () => {
+  it("returns a at t=0", () => {
     expect(lerp(10, 20, 0)).toBe(10);
   });
 
-  it('returns b at t=1', () => {
+  it("returns b at t=1", () => {
     expect(lerp(10, 20, 1)).toBe(20);
   });
 
-  it('returns midpoint at t=0.5', () => {
+  it("returns midpoint at t=0.5", () => {
     expect(lerp(0, 100, 0.5)).toBe(50);
   });
 
-  it('handles negative values', () => {
+  it("handles negative values", () => {
     expect(lerp(-10, 10, 0.5)).toBe(0);
   });
 
-  it('extrapolates beyond [0,1]', () => {
+  it("extrapolates beyond [0,1]", () => {
     expect(lerp(0, 10, 2)).toBe(20);
     expect(lerp(0, 10, -1)).toBe(-10);
   });
 });
 
-describe('lerpPoint', () => {
-  it('returns a at t=0', () => {
+describe("lerpPoint", () => {
+  it("returns a at t=0", () => {
     expect(lerpPoint([0, 0, 0], [10, 10, 10], 0)).toEqual([0, 0, 0]);
   });
 
-  it('returns b at t=1', () => {
+  it("returns b at t=1", () => {
     expect(lerpPoint([0, 0, 0], [10, 10, 10], 1)).toEqual([10, 10, 10]);
   });
 
-  it('returns midpoint at t=0.5', () => {
+  it("returns midpoint at t=0.5", () => {
     expect(lerpPoint([0, 0, 0], [10, 20, 30], 0.5)).toEqual([5, 10, 15]);
   });
 });
 
-describe('smoothstep', () => {
-  it('returns 0 at t=0', () => {
+describe("smoothstep", () => {
+  it("returns 0 at t=0", () => {
     expect(smoothstep(0)).toBe(0);
   });
 
-  it('returns 1 at t=1', () => {
+  it("returns 1 at t=1", () => {
     expect(smoothstep(1)).toBe(1);
   });
 
-  it('returns 0.5 at t=0.5', () => {
+  it("returns 0.5 at t=0.5", () => {
     expect(smoothstep(0.5)).toBe(0.5);
   });
 
-  it('is monotonically increasing on [0,1]', () => {
+  it("is monotonically increasing on [0,1]", () => {
     for (let i = 0; i < 20; i++) {
       const t1 = i / 20;
       const t2 = (i + 1) / 20;
@@ -68,34 +68,34 @@ describe('smoothstep', () => {
     }
   });
 
-  it('matches formula 3t^2 - 2t^3', () => {
+  it("matches formula 3t^2 - 2t^3", () => {
     const t = 0.3;
     expect(smoothstep(t)).toBeCloseTo(3 * t * t - 2 * t * t * t, 10);
   });
 });
 
-describe('coordsToPoint / pointToCoords roundtrip', () => {
+describe("coordsToPoint / pointToCoords roundtrip", () => {
   const xRange: [number, number] = [0, 10];
   const yRange: [number, number] = [0, 5];
   const xLength = 12;
   const yLength = 6;
 
-  it('maps graph origin to visual center offset', () => {
+  it("maps graph origin to visual center offset", () => {
     const pt = coordsToPoint(5, 2.5, xRange, yRange, xLength, yLength);
     expect(pt).toEqual([0, 0, 0]);
   });
 
-  it('maps min corner correctly', () => {
+  it("maps min corner correctly", () => {
     const pt = coordsToPoint(0, 0, xRange, yRange, xLength, yLength);
     expect(pt).toEqual([-6, -3, 0]);
   });
 
-  it('maps max corner correctly', () => {
+  it("maps max corner correctly", () => {
     const pt = coordsToPoint(10, 5, xRange, yRange, xLength, yLength);
     expect(pt).toEqual([6, 3, 0]);
   });
 
-  it('roundtrips: pointToCoords(coordsToPoint(x,y)) ≈ [x,y]', () => {
+  it("roundtrips: pointToCoords(coordsToPoint(x,y)) ≈ [x,y]", () => {
     const testPoints = [
       [2, 3],
       [0, 0],
@@ -110,46 +110,46 @@ describe('coordsToPoint / pointToCoords roundtrip', () => {
     }
   });
 
-  it('handles degenerate range (xMin === xMax)', () => {
+  it("handles degenerate range (xMin === xMax)", () => {
     const pt = coordsToPoint(5, 2.5, [5, 5], yRange, xLength, yLength);
     expect(pt[0]).toBe(0); // (0.5 - 0.5) * xLength = 0
   });
 });
 
-describe('evalCubicBezier', () => {
+describe("evalCubicBezier", () => {
   // Straight line from [0,0] to [1,0] (control points on line)
   const p0 = [0, 0, 0];
   const p1 = [1 / 3, 0, 0];
   const p2 = [2 / 3, 0, 0];
   const p3 = [1, 0, 0];
 
-  it('returns p0 at t=0', () => {
+  it("returns p0 at t=0", () => {
     const result = evalCubicBezier(p0, p1, p2, p3, 0);
     expect(result[0]).toBeCloseTo(0, 10);
     expect(result[1]).toBeCloseTo(0, 10);
     expect(result[2]).toBeCloseTo(0, 10);
   });
 
-  it('returns p3 at t=1', () => {
+  it("returns p3 at t=1", () => {
     const result = evalCubicBezier(p0, p1, p2, p3, 1);
     expect(result[0]).toBeCloseTo(1, 10);
     expect(result[1]).toBeCloseTo(0, 10);
     expect(result[2]).toBeCloseTo(0, 10);
   });
 
-  it('returns midpoint at t=0.5 for a straight line', () => {
+  it("returns midpoint at t=0.5 for a straight line", () => {
     const result = evalCubicBezier(p0, p1, p2, p3, 0.5);
     expect(result[0]).toBeCloseTo(0.5, 10);
     expect(result[1]).toBeCloseTo(0, 10);
   });
 
-  it('handles 2D points (no z component)', () => {
+  it("handles 2D points (no z component)", () => {
     const result = evalCubicBezier([0, 0], [0, 1], [1, 1], [1, 0], 0.5);
     expect(result).toHaveLength(3);
     expect(result[2]).toBe(0); // z defaults to 0
   });
 
-  it('evaluates a curved bezier', () => {
+  it("evaluates a curved bezier", () => {
     // Quarter circle approximation
     const k = 0.5522847498;
     const cp0 = [1, 0, 0];
@@ -163,8 +163,8 @@ describe('evalCubicBezier', () => {
   });
 });
 
-describe('orthonormalizeBasis', () => {
-  it('returns orthonormal basis for two non-parallel vectors', () => {
+describe("orthonormalizeBasis", () => {
+  it("returns orthonormal basis for two non-parallel vectors", () => {
     const { v1, v2 } = orthonormalizeBasis([2, 0, 0], [1, 3, 0]);
     expect(lengthVec(v1)).toBeCloseTo(1, 10);
     expect(lengthVec(v2)).toBeCloseTo(1, 10);
@@ -175,7 +175,7 @@ describe('orthonormalizeBasis', () => {
   // must pick a v2 that lies in the SAME plane as the input geometry — not
   // an arbitrary world basis. YZ-plane shapes used to silently project onto
   // X if the fallback picked the world axis with the smallest |dot|.
-  it('collinear fallback for a YZ-plane v1 stays in the YZ plane', () => {
+  it("collinear fallback for a YZ-plane v1 stays in the YZ plane", () => {
     const { v1, v2 } = orthonormalizeBasis([0, 1, 1], [0, 0, 0]);
     expect(lengthVec(v1)).toBeCloseTo(1, 10);
     expect(lengthVec(v2)).toBeCloseTo(1, 10);
@@ -185,7 +185,7 @@ describe('orthonormalizeBasis', () => {
     expect(Math.abs(v2[0])).toBeLessThan(1e-10);
   });
 
-  it('collinear fallback for a Z-aligned v1 picks an X-axis v2', () => {
+  it("collinear fallback for a Z-aligned v1 picks an X-axis v2", () => {
     const { v2 } = orthonormalizeBasis([0, 0, 1], [0, 0, 2]);
     // |u1[2]| ≥ 0.9 → fallback flips to the [1,0,0] world basis.
     expect(Math.abs(v2[0])).toBeCloseTo(1, 10);

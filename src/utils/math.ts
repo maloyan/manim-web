@@ -6,7 +6,7 @@
  * helpers in this file build on top of that module.
  */
 
-import { dotVec, lengthVec, normalizeVec } from './vectors';
+import { dotVec, lengthVec, normalizeVec } from "./vectors";
 
 /**
  * Linear interpolation between two numbers.
@@ -21,7 +21,11 @@ export function lerp(a: number, b: number, t: number): number {
  * Each point is represented as a number array [x, y, z].
  */
 export function lerpPoint(a: number[], b: number[], t: number): number[] {
-  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  return [
+    a[0] + (b[0] - a[0]) * t,
+    a[1] + (b[1] - a[1]) * t,
+    a[2] + (b[2] - a[2]) * t,
+  ];
 }
 
 /**
@@ -167,9 +171,9 @@ export function evalCubicBezier(
     mt3 * p0[0] + 3 * mt2 * t * p1[0] + 3 * mt * t2 * p2[0] + t3 * p3[0],
     mt3 * p0[1] + 3 * mt2 * t * p1[1] + 3 * mt * t2 * p2[1] + t3 * p3[1],
     (p0[2] ?? 0) * mt3 +
-      (p1[2] ?? 0) * 3 * mt2 * t +
-      (p2[2] ?? 0) * 3 * mt * t2 +
-      (p3[2] ?? 0) * t3,
+    (p1[2] ?? 0) * 3 * mt2 * t +
+    (p2[2] ?? 0) * 3 * mt * t2 +
+    (p3[2] ?? 0) * t3,
   ];
 }
 
@@ -284,7 +288,11 @@ export function orthonormalizeBasis(
     // basis vector with the smallest |dot|, e.g. X for a YZ-plane input).
     const perp = Math.abs(u1[2]) < 0.9 ? [0, 0, 1] : [1, 0, 0];
     const perpDot = dotVec(perp, u1);
-    const u2 = [perp[0] - perpDot * u1[0], perp[1] - perpDot * u1[1], perp[2] - perpDot * u1[2]];
+    const u2 = [
+      perp[0] - perpDot * u1[0],
+      perp[1] - perpDot * u1[1],
+      perp[2] - perpDot * u1[2],
+    ];
     return { v1: u1, v2: normalizeVec(u2) };
   }
 

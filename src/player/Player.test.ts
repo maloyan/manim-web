@@ -1,27 +1,39 @@
 // @vitest-environment happy-dom
 // happy-dom is needed for DOM manipulation (Player creates PlayerUI elements,
 // PlayerController attaches keyboard/mouse listeners to container elements).
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { Player, PlayerOptions } from './Player';
-import { PlayerController, PlayerControllerCallbacks } from './PlayerController';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { Player, PlayerOptions } from "./Player";
+import {
+  PlayerController,
+  PlayerControllerCallbacks,
+} from "./PlayerController";
 
 // ---------------------------------------------------------------------------
 // Helper: create a container and Player (headless Scene, no WebGL needed)
 // ---------------------------------------------------------------------------
 
 function createContainer(): HTMLElement {
-  const el = document.createElement('div');
+  const el = document.createElement("div");
   document.body.appendChild(el);
   return el;
 }
 
-function createPlayer(opts: PlayerOptions = {}): { player: Player; container: HTMLElement } {
+function createPlayer(
+  opts: PlayerOptions = {},
+): { player: Player; container: HTMLElement } {
   const container = createContainer();
-  const player = new Player(container, { width: 800, height: 450, headless: true, ...opts });
+  const player = new Player(container, {
+    width: 800,
+    height: 450,
+    headless: true,
+    ...opts,
+  });
   return { player, container };
 }
 
-function createMockAnimation(overrides: { dirty?: boolean; duration?: number } = {}) {
+function createMockAnimation(
+  overrides: { dirty?: boolean; duration?: number } = {},
+) {
   const mockMobject = {
     _dirty: overrides.dirty ?? false,
     _syncToThree: vi.fn(),
@@ -44,7 +56,7 @@ function createMockAnimation(overrides: { dirty?: boolean; duration?: number } =
 // Player tests
 // ---------------------------------------------------------------------------
 
-describe('Player', () => {
+describe("Player", () => {
   let player: Player;
   let container: HTMLElement;
 
@@ -62,13 +74,13 @@ describe('Player', () => {
 
   // ---- Construction ----
 
-  it('creates a Player and exposes scene and timeline', () => {
+  it("creates a Player and exposes scene and timeline", () => {
     expect(player.scene).toBeDefined();
     expect(player.timeline).toBeDefined();
     expect(player.isPlaying).toBe(false);
   });
 
-  it('captures original dimensions when toggleFullscreen is called (issue #360)', () => {
+  it("captures original dimensions when toggleFullscreen is called (issue #360)", () => {
     // Pre-toggle: _orig stays at construction default (0) — captured lazily
     // so any auto-resize before fullscreen is not snapshotted.
     expect((player as any)._origWidth).toBe(0);
@@ -77,7 +89,7 @@ describe('Player', () => {
     // happy-dom does not implement requestFullscreen; stub it to a no-op so
     // toggleFullscreen() runs to completion.
     (container as any).requestFullscreen = vi.fn().mockResolvedValue(undefined);
-    Object.defineProperty(document, 'fullscreenElement', {
+    Object.defineProperty(document, "fullscreenElement", {
       value: null,
       configurable: true,
     });
@@ -90,40 +102,40 @@ describe('Player', () => {
 
   // ---- Disposal ----
 
-  it('dispose cleans up scene and stops loop', () => {
-    const disposeSpy = vi.spyOn(player.scene, 'dispose');
+  it("dispose cleans up scene and stops loop", () => {
+    const disposeSpy = vi.spyOn(player.scene, "dispose");
     player.dispose();
     expect(disposeSpy).toHaveBeenCalled();
   });
 
-  it('dispose can be called multiple times without error', () => {
+  it("dispose can be called multiple times without error", () => {
     player.dispose();
     player.dispose();
   });
 
   // ---- sequence() ----
 
-  it('sequence records animations via RecordingScene and resets timeline', async () => {
+  it("sequence records animations via RecordingScene and resets timeline", async () => {
     let recorderReceived = false;
     await player.sequence(async (scene) => {
       recorderReceived = true;
-      expect(typeof scene.add).toBe('function');
-      expect(typeof scene.remove).toBe('function');
+      expect(typeof scene.add).toBe("function");
+      expect(typeof scene.remove).toBe("function");
       expect(scene.camera).toBeDefined();
-      expect(typeof scene.batch).toBe('function');
+      expect(typeof scene.batch).toBe("function");
     });
     expect(recorderReceived).toBe(true);
   });
 
-  it('sequence calls render and seeks to 0 after recording', async () => {
-    const renderSpy = vi.spyOn(player.scene, 'render');
+  it("sequence calls render and seeks to 0 after recording", async () => {
+    const renderSpy = vi.spyOn(player.scene, "render");
     await player.sequence(async () => {
       // No-op builder
     });
     expect(renderSpy).toHaveBeenCalled();
   });
 
-  it('sequence with autoPlay starts playback', async () => {
+  it("sequence with autoPlay starts playback", async () => {
     player.dispose();
     container.remove();
 
@@ -138,7 +150,7 @@ describe('Player', () => {
     expect(player.isPlaying).toBe(true);
   });
 
-  it('sequence with wait() records a wait segment', async () => {
+  it("sequence with wait() records a wait segment", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(1.5);
     });
@@ -149,7 +161,7 @@ describe('Player', () => {
 
   // ---- play / pause / toggle ----
 
-  it('play sets isPlaying to true', async () => {
+  it("play sets isPlaying to true", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(1);
     });
@@ -157,7 +169,7 @@ describe('Player', () => {
     expect(player.isPlaying).toBe(true);
   });
 
-  it('pause sets isPlaying to false', async () => {
+  it("pause sets isPlaying to false", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(1);
     });
@@ -166,7 +178,7 @@ describe('Player', () => {
     expect(player.isPlaying).toBe(false);
   });
 
-  it('togglePlayPause toggles state', async () => {
+  it("togglePlayPause toggles state", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(1);
     });
@@ -179,7 +191,7 @@ describe('Player', () => {
     expect(player.isPlaying).toBe(false);
   });
 
-  it('play resets to 0 when timeline is finished', async () => {
+  it("play resets to 0 when timeline is finished", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(0.5);
     });
@@ -195,12 +207,12 @@ describe('Player', () => {
 
   // ---- seek ----
 
-  it('seek updates timeline position and renders', async () => {
+  it("seek updates timeline position and renders", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(2);
     });
 
-    const renderSpy = vi.spyOn(player.scene, 'render');
+    const renderSpy = vi.spyOn(player.scene, "render");
     player.seek(1.0);
     expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
     expect(renderSpy).toHaveBeenCalled();
@@ -208,7 +220,7 @@ describe('Player', () => {
 
   // ---- nextSegment / prevSegment ----
 
-  it('nextSegment advances to next segment and pauses', async () => {
+  it("nextSegment advances to next segment and pauses", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(1);
       await scene.wait(1);
@@ -222,7 +234,7 @@ describe('Player', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
   });
 
-  it('prevSegment goes to start of current segment when >0.5s in', async () => {
+  it("prevSegment goes to start of current segment when >0.5s in", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(1);
       await scene.wait(1);
@@ -239,7 +251,7 @@ describe('Player', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
   });
 
-  it('prevSegment goes to previous segment when <=0.5s into current', async () => {
+  it("prevSegment goes to previous segment when <=0.5s into current", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(1);
       await scene.wait(1);
@@ -255,7 +267,7 @@ describe('Player', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(0);
   });
 
-  it('nextSegment does nothing significant at end of timeline', async () => {
+  it("nextSegment does nothing significant at end of timeline", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(1);
     });
@@ -264,7 +276,7 @@ describe('Player', () => {
     expect(player.isPlaying).toBe(false);
   });
 
-  it('prevSegment at beginning seeks to 0', async () => {
+  it("prevSegment at beginning seeks to 0", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(1);
     });
@@ -275,19 +287,23 @@ describe('Player', () => {
 
   // ---- setPlaybackRate ----
 
-  it('setPlaybackRate stores the new rate', () => {
+  it("setPlaybackRate stores the new rate", () => {
     player.setPlaybackRate(2);
-    expect((player as unknown as { _playbackRate: number })._playbackRate).toBe(2);
+    expect((player as unknown as { _playbackRate: number })._playbackRate).toBe(
+      2,
+    );
   });
 
-  it('setPlaybackRate accepts fractional values', () => {
+  it("setPlaybackRate accepts fractional values", () => {
     player.setPlaybackRate(0.5);
-    expect((player as unknown as { _playbackRate: number })._playbackRate).toBe(0.5);
+    expect((player as unknown as { _playbackRate: number })._playbackRate).toBe(
+      0.5,
+    );
   });
 
   // ---- toggleFullscreen ----
 
-  it('toggleFullscreen calls requestFullscreen when not in fullscreen', () => {
+  it("toggleFullscreen calls requestFullscreen when not in fullscreen", () => {
     const requestSpy = vi.fn(() => Promise.resolve());
     container.requestFullscreen = requestSpy;
 
@@ -295,8 +311,8 @@ describe('Player', () => {
     expect(requestSpy).toHaveBeenCalled();
   });
 
-  it('toggleFullscreen calls exitFullscreen when already in fullscreen', () => {
-    Object.defineProperty(document, 'fullscreenElement', {
+  it("toggleFullscreen calls exitFullscreen when already in fullscreen", () => {
+    Object.defineProperty(document, "fullscreenElement", {
       value: container,
       writable: true,
       configurable: true,
@@ -308,21 +324,23 @@ describe('Player', () => {
     player.toggleFullscreen();
     expect(exitSpy).toHaveBeenCalled();
 
-    Object.defineProperty(document, 'fullscreenElement', {
+    Object.defineProperty(document, "fullscreenElement", {
       value: null,
       writable: true,
       configurable: true,
     });
   });
 
-  it('toggleFullscreen handles requestFullscreen rejection gracefully', () => {
-    container.requestFullscreen = vi.fn(() => Promise.reject(new Error('blocked')));
+  it("toggleFullscreen handles requestFullscreen rejection gracefully", () => {
+    container.requestFullscreen = vi.fn(() =>
+      Promise.reject(new Error("blocked"))
+    );
     expect(() => player.toggleFullscreen()).not.toThrow();
   });
 
   // ---- exportAs ----
 
-  it('exportAs pauses playback, exports, then restores position', async () => {
+  it("exportAs pauses playback, exports, then restores position", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(2);
     });
@@ -331,30 +349,32 @@ describe('Player', () => {
     player.play();
     expect(player.isPlaying).toBe(true);
 
-    vi.spyOn(player.scene, 'export').mockResolvedValueOnce(new Blob());
+    vi.spyOn(player.scene, "export").mockResolvedValueOnce(new Blob());
 
-    await player.exportAs('gif');
+    await player.exportAs("gif");
 
     expect(player.isPlaying).toBe(true);
     expect(player.timeline.getCurrentTime()).toBeCloseTo(0.5);
   });
 
-  it('exportAs restores state even on export error', async () => {
+  it("exportAs restores state even on export error", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(2);
     });
 
     player.seek(1.0);
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    vi.spyOn(player.scene, 'export').mockRejectedValueOnce(new Error('export failed'));
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(player.scene, "export").mockRejectedValueOnce(
+      new Error("export failed"),
+    );
 
-    await player.exportAs('webm');
+    await player.exportAs("webm");
 
     expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
     consoleSpy.mockRestore();
   });
 
-  it('exportAs when not playing does not resume playback', async () => {
+  it("exportAs when not playing does not resume playback", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(2);
     });
@@ -362,16 +382,16 @@ describe('Player', () => {
     player.seek(0.5);
     expect(player.isPlaying).toBe(false);
 
-    vi.spyOn(player.scene, 'export').mockResolvedValueOnce(new Blob());
+    vi.spyOn(player.scene, "export").mockResolvedValueOnce(new Blob());
 
-    await player.exportAs('mp4');
+    await player.exportAs("mp4");
 
     expect(player.isPlaying).toBe(false);
   });
 
   // ---- slidesMode option ----
 
-  it('accepts slidesMode option', () => {
+  it("accepts slidesMode option", () => {
     player.dispose();
     container.remove();
     const { player: p, container: c } = createPlayer({ slidesMode: true });
@@ -383,11 +403,13 @@ describe('Player', () => {
     container = result.container;
   });
 
-  it('slidesMode defaults to false', () => {
-    expect((player as unknown as { _slidesMode: boolean })._slidesMode).toBe(false);
+  it("slidesMode defaults to false", () => {
+    expect((player as unknown as { _slidesMode: boolean })._slidesMode).toBe(
+      false,
+    );
   });
 
-  it('nextSegment in slidesMode plays from current position instead of jumping', async () => {
+  it("nextSegment in slidesMode plays from current position instead of jumping", async () => {
     player.dispose();
     container.remove();
     const { player: p, container: c } = createPlayer({ slidesMode: true });
@@ -407,7 +429,7 @@ describe('Player', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(0);
   });
 
-  it('nextSegment in slidesMode does nothing at end of timeline', async () => {
+  it("nextSegment in slidesMode does nothing at end of timeline", async () => {
     player.dispose();
     container.remove();
     const { player: p, container: c } = createPlayer({ slidesMode: true });
@@ -424,7 +446,7 @@ describe('Player', () => {
     expect(player.isPlaying).toBe(false);
   });
 
-  it('prevSegment in slidesMode seeks to previous segment and pauses', async () => {
+  it("prevSegment in slidesMode seeks to previous segment and pauses", async () => {
     player.dispose();
     container.remove();
     const { player: p, container: c } = createPlayer({ slidesMode: true });
@@ -445,7 +467,7 @@ describe('Player', () => {
 
   // ---- per-slide loop ----
 
-  it('public seek clears _activeLoopSlideIndex', async () => {
+  it("public seek clears _activeLoopSlideIndex", async () => {
     player.dispose();
     container.remove();
     const { player: p, container: c } = createPlayer({ slidesMode: true });
@@ -457,13 +479,15 @@ describe('Player', () => {
       await scene.wait(1);
     });
 
-    const internal = player as unknown as { _activeLoopSlideIndex: number | null };
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+    };
     internal._activeLoopSlideIndex = 0;
     player.seek(0.5);
     expect(internal._activeLoopSlideIndex).toBeNull();
   });
 
-  it('setSlidesMode(false) clears active loop state', async () => {
+  it("setSlidesMode(false) clears active loop state", async () => {
     player.dispose();
     container.remove();
     const { player: p, container: c } = createPlayer({ slidesMode: true });
@@ -485,7 +509,7 @@ describe('Player', () => {
     expect(internal._slidesTargetSlideIndex).toBe(-1);
   });
 
-  it('prevSegment from inside an active loop always exits to previous slide', async () => {
+  it("prevSegment from inside an active loop always exits to previous slide", async () => {
     player.dispose();
     container.remove();
     const { player: p, container: c } = createPlayer({ slidesMode: true });
@@ -514,7 +538,7 @@ describe('Player', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(0);
   });
 
-  it('public seek out of an active loop clears both loop and target state', async () => {
+  it("public seek out of an active loop clears both loop and target state", async () => {
     player.dispose();
     container.remove();
     const { player: p, container: c } = createPlayer({ slidesMode: true });
@@ -539,7 +563,7 @@ describe('Player', () => {
     expect(internal._slidesTargetSlideIndex).toBe(-1);
   });
 
-  it('sequence() resets active loop state', async () => {
+  it("sequence() resets active loop state", async () => {
     player.dispose();
     container.remove();
     const { player: p, container: c } = createPlayer({ slidesMode: true });
@@ -563,7 +587,7 @@ describe('Player', () => {
 
   // ---- loop option ----
 
-  it('accepts loop option without error', () => {
+  it("accepts loop option without error", () => {
     player.dispose();
     container.remove();
     const { player: p, container: c } = createPlayer({ loop: true });
@@ -578,14 +602,14 @@ describe('Player', () => {
 
   // ---- fullscreenchange event ----
 
-  it('responds to fullscreenchange by resizing scene', async () => {
+  it("responds to fullscreenchange by resizing scene", async () => {
     await player.sequence(async () => {});
 
-    const resizeSpy = vi.spyOn(player.scene, 'resize');
-    const renderSpy = vi.spyOn(player.scene, 'render');
+    const resizeSpy = vi.spyOn(player.scene, "resize");
+    const renderSpy = vi.spyOn(player.scene, "render");
 
     // toggleFullscreen() snapshots the pre-fullscreen size before the request.
-    Object.defineProperty(document, 'fullscreenElement', {
+    Object.defineProperty(document, "fullscreenElement", {
       value: null,
       writable: true,
       configurable: true,
@@ -594,18 +618,18 @@ describe('Player', () => {
     player.toggleFullscreen();
 
     // Simulate entering fullscreen
-    Object.defineProperty(document, 'fullscreenElement', {
+    Object.defineProperty(document, "fullscreenElement", {
       value: container,
       writable: true,
       configurable: true,
     });
 
-    document.dispatchEvent(new Event('fullscreenchange'));
+    document.dispatchEvent(new Event("fullscreenchange"));
     expect(resizeSpy).toHaveBeenCalled();
     expect(renderSpy).toHaveBeenCalled();
 
     // Simulate exiting fullscreen
-    Object.defineProperty(document, 'fullscreenElement', {
+    Object.defineProperty(document, "fullscreenElement", {
       value: null,
       writable: true,
       configurable: true,
@@ -613,7 +637,7 @@ describe('Player', () => {
 
     resizeSpy.mockClear();
     renderSpy.mockClear();
-    document.dispatchEvent(new Event('fullscreenchange'));
+    document.dispatchEvent(new Event("fullscreenchange"));
 
     expect(resizeSpy).toHaveBeenCalledWith(800, 450);
     expect(renderSpy).toHaveBeenCalled();
@@ -624,7 +648,7 @@ describe('Player', () => {
 // _startLoop render-loop tests
 // ---------------------------------------------------------------------------
 
-describe('Player _startLoop render loop', () => {
+describe("Player _startLoop render loop", () => {
   let player: Player;
   let container: HTMLElement;
   let rafCallbacks: Array<(time: number) => void>;
@@ -644,14 +668,14 @@ describe('Player _startLoop render loop', () => {
     originalPerfNow = performance.now;
 
     vi.stubGlobal(
-      'requestAnimationFrame',
+      "requestAnimationFrame",
       vi.fn((cb: FrameRequestCallback) => {
         rafCallbacks.push(cb as (time: number) => void);
         return rafIdCounter++;
       }),
     );
-    vi.stubGlobal('cancelAnimationFrame', vi.fn());
-    vi.spyOn(performance, 'now').mockReturnValue(0);
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    vi.spyOn(performance, "now").mockReturnValue(0);
 
     const result = createPlayer();
     player = result.player;
@@ -670,12 +694,12 @@ describe('Player _startLoop render loop', () => {
     for (const cb of cbs) cb(time);
   }
 
-  it('_startLoop schedules requestAnimationFrame and loop calls update/render/UI', async () => {
+  it("_startLoop schedules requestAnimationFrame and loop calls update/render/UI", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(2);
     });
 
-    const renderSpy = vi.spyOn(player.scene, 'render');
+    const renderSpy = vi.spyOn(player.scene, "render");
     player.play();
 
     // The first rAF is scheduled; flush it with enough elapsed time (> 14ms)
@@ -686,13 +710,13 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBeGreaterThan(0);
   });
 
-  it('_startLoop skips frame when elapsed < 14ms', async () => {
+  it("_startLoop skips frame when elapsed < 14ms", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(2);
     });
 
     player.play();
-    const renderSpy = vi.spyOn(player.scene, 'render');
+    const renderSpy = vi.spyOn(player.scene, "render");
 
     // Flush with only 5ms elapsed — too fast, should skip
     flushRaf(5);
@@ -703,14 +727,14 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBe(0);
   });
 
-  it('_startLoop stops when not playing', async () => {
+  it("_startLoop stops when not playing", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(2);
     });
 
     player.play();
     player.pause();
-    const renderSpy = vi.spyOn(player.scene, 'render');
+    const renderSpy = vi.spyOn(player.scene, "render");
 
     // Flush — loop should exit early because _isPlaying is false
     flushRaf(20);
@@ -718,7 +742,7 @@ describe('Player _startLoop render loop', () => {
     expect(renderSpy).not.toHaveBeenCalled();
   });
 
-  it('_startLoop handles finished + loop: seeks to 0 and continues', async () => {
+  it("_startLoop handles finished + loop: seeks to 0 and continues", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ loop: true });
@@ -739,7 +763,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBe(0);
   });
 
-  it('_startLoop handles finished + no loop: shows replay and stops', async () => {
+  it("_startLoop handles finished + no loop: shows replay and stops", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(0.5);
     });
@@ -753,7 +777,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.isPlaying).toBe(false);
   });
 
-  it('_startLoop does not double-start when called while already running', async () => {
+  it("_startLoop does not double-start when called while already running", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(2);
     });
@@ -767,7 +791,7 @@ describe('Player _startLoop render loop', () => {
     expect(rafCallbacks.length).toBe(rafCountAfterPlay);
   });
 
-  it('_startLoop updates mobject updaters', async () => {
+  it("_startLoop updates mobject updaters", async () => {
     const mockMob = { update: vi.fn(), dispose: vi.fn() };
     (player.scene.mobjects as Set<unknown>).add(mockMob);
 
@@ -783,7 +807,7 @@ describe('Player _startLoop render loop', () => {
     expect(mockMob.update).toHaveBeenCalled();
   });
 
-  it('_startLoop auto-pauses at segment boundary in slidesMode', async () => {
+  it("_startLoop auto-pauses at segment boundary in slidesMode", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -806,7 +830,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(0.5);
   });
 
-  it('_startLoop rewinds and keeps playing on looped slide boundary in slidesMode', async () => {
+  it("_startLoop rewinds and keeps playing on looped slide boundary in slidesMode", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -828,11 +852,13 @@ describe('Player _startLoop render loop', () => {
     const t = player.timeline.getCurrentTime();
     expect(t).toBeGreaterThanOrEqual(0);
     expect(t).toBeLessThan(0.5);
-    const internal = player as unknown as { _activeLoopSlideIndex: number | null };
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+    };
     expect(internal._activeLoopSlideIndex).toBe(0);
   });
 
-  it('_startLoop rewinds when loop is the final slide (re-plays the underlying timeline)', async () => {
+  it("_startLoop rewinds when loop is the final slide (re-plays the underlying timeline)", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -859,7 +885,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBeGreaterThan(before);
   });
 
-  it('nextSegment from active loop advances to next slide and keeps playing', async () => {
+  it("nextSegment from active loop advances to next slide and keeps playing", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -889,7 +915,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.isPlaying).toBe(true);
   });
 
-  it('nextSegment on a final loop slide seeks to endTime and pauses', async () => {
+  it("nextSegment on a final loop slide seeks to endTime and pauses", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -904,7 +930,9 @@ describe('Player _startLoop render loop', () => {
     player.play();
     flushRaf(400);
 
-    const internal = player as unknown as { _activeLoopSlideIndex: number | null };
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+    };
     expect(internal._activeLoopSlideIndex).toBe(0);
 
     player.nextSegment();
@@ -913,7 +941,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(0.3);
   });
 
-  it('_startLoop ignores loop flag when slidesMode is OFF', async () => {
+  it("_startLoop ignores loop flag when slidesMode is OFF", async () => {
     await player.sequence(async (scene) => {
       await scene.nextSlide({ loop: true });
       await scene.wait(0.3);
@@ -928,11 +956,13 @@ describe('Player _startLoop render loop', () => {
     // slide 0 normally.
     expect(player.isPlaying).toBe(true);
     expect(player.timeline.getCurrentTime()).toBeGreaterThan(0.3);
-    const internal = player as unknown as { _activeLoopSlideIndex: number | null };
+    const internal = player as unknown as {
+      _activeLoopSlideIndex: number | null;
+    };
     expect(internal._activeLoopSlideIndex).toBeNull();
   });
 
-  it('_startLoop auto-advances to next slide when current slide has autoNext', async () => {
+  it("_startLoop auto-advances to next slide when current slide has autoNext", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -959,7 +989,7 @@ describe('Player _startLoop render loop', () => {
     expect(t).toBeLessThanOrEqual(0.6);
   });
 
-  it('_startLoop pauses normally when autoNext is on the final slide', async () => {
+  it("_startLoop pauses normally when autoNext is on the final slide", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -978,7 +1008,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(0.3);
   });
 
-  it('loop wins over autoNext when both are set on a slide', async () => {
+  it("loop wins over autoNext when both are set on a slide", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -1005,7 +1035,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.isPlaying).toBe(true);
   });
 
-  it('chained autoNext slides advance through the whole chain', async () => {
+  it("chained autoNext slides advance through the whole chain", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -1029,7 +1059,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(0.6);
   });
 
-  it('autoNext into a looping slide rewinds rather than pausing', async () => {
+  it("autoNext into a looping slide rewinds rather than pausing", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -1060,7 +1090,7 @@ describe('Player _startLoop render loop', () => {
     expect(t).toBeLessThanOrEqual(0.5);
   });
 
-  it('public seek inside the current target slide preserves loop+target state', async () => {
+  it("public seek inside the current target slide preserves loop+target state", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -1092,7 +1122,7 @@ describe('Player _startLoop render loop', () => {
     expect(internal._slidesTargetSlideIndex).toBe(-1);
   });
 
-  it('autoPlay + slidesMode + autoNext walks through the whole deck', async () => {
+  it("autoPlay + slidesMode + autoNext walks through the whole deck", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true, autoPlay: true });
@@ -1115,7 +1145,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(0.6);
   });
 
-  it('non-slidesMode navigation steps by segment, not by slide', async () => {
+  it("non-slidesMode navigation steps by segment, not by slide", async () => {
     // No slidesMode → nextSegment/prevSegment must move one segment at a time
     // even when the timeline has multi-play slides.
     await player.sequence(async (scene) => {
@@ -1138,7 +1168,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
   });
 
-  it('_startLoop disarms stale _slidesTargetSlideIndex instead of asserting', async () => {
+  it("_startLoop disarms stale _slidesTargetSlideIndex instead of asserting", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -1158,7 +1188,7 @@ describe('Player _startLoop render loop', () => {
     expect(internal._slidesTargetSlideIndex).toBe(-1);
   });
 
-  it('multi-play slide is treated as a single slide for navigation', async () => {
+  it("multi-play slide is treated as a single slide for navigation", async () => {
     player.dispose();
     container.remove();
     const result = createPlayer({ slidesMode: true });
@@ -1187,7 +1217,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.timeline.getCurrentTime()).toBeCloseTo(0.4);
   });
 
-  it('_startLoop does NOT auto-pause at segment boundary without slidesMode', async () => {
+  it("_startLoop does NOT auto-pause at segment boundary without slidesMode", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(0.5);
       await scene.wait(0.5);
@@ -1203,7 +1233,7 @@ describe('Player _startLoop render loop', () => {
     expect(player.isPlaying).toBe(true);
   });
 
-  it('_startLoop applies playback rate to dt', async () => {
+  it("_startLoop applies playback rate to dt", async () => {
     await player.sequence(async (scene) => {
       await scene.wait(10);
     });
@@ -1223,7 +1253,7 @@ describe('Player _startLoop render loop', () => {
 // RecordingScene pass-through methods
 // ---------------------------------------------------------------------------
 
-describe('RecordingScene pass-through methods', () => {
+describe("RecordingScene pass-through methods", () => {
   let player: Player;
   let container: HTMLElement;
 
@@ -1239,32 +1269,32 @@ describe('RecordingScene pass-through methods', () => {
     container.remove();
   });
 
-  it('add delegates to scene.add', async () => {
-    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
+  it("add delegates to scene.add", async () => {
+    const addSpy = vi.spyOn(player.scene, "add").mockReturnThis();
     await player.sequence(async (scene) => {
-      scene.add('fake-mobject' as never);
+      scene.add("fake-mobject" as never);
     });
-    expect(addSpy).toHaveBeenCalledWith('fake-mobject');
+    expect(addSpy).toHaveBeenCalledWith("fake-mobject");
     addSpy.mockRestore();
   });
 
-  it('remove delegates to scene.remove', async () => {
-    const removeSpy = vi.spyOn(player.scene, 'remove').mockReturnThis();
+  it("remove delegates to scene.remove", async () => {
+    const removeSpy = vi.spyOn(player.scene, "remove").mockReturnThis();
     await player.sequence(async (scene) => {
-      scene.remove('fake-mobject' as never);
+      scene.remove("fake-mobject" as never);
     });
-    expect(removeSpy).toHaveBeenCalledWith('fake-mobject');
+    expect(removeSpy).toHaveBeenCalledWith("fake-mobject");
     removeSpy.mockRestore();
   });
 
-  it('camera passes through to scene.camera', async () => {
+  it("camera passes through to scene.camera", async () => {
     await player.sequence(async (scene) => {
       expect(scene.camera).toBe(player.scene.camera);
     });
   });
 
-  it('batch delegates to scene.batch', async () => {
-    const batchSpy = vi.spyOn(player.scene, 'batch');
+  it("batch delegates to scene.batch", async () => {
+    const batchSpy = vi.spyOn(player.scene, "batch");
     const callback = vi.fn();
     await player.sequence(async (scene) => {
       scene.batch(callback);
@@ -1273,7 +1303,7 @@ describe('RecordingScene pass-through methods', () => {
     expect(callback).toHaveBeenCalled();
   });
 
-  it('play with no animations is a no-op', async () => {
+  it("play with no animations is a no-op", async () => {
     await player.sequence(async (scene) => {
       await scene.play();
     });
@@ -1281,9 +1311,9 @@ describe('RecordingScene pass-through methods', () => {
     expect(player.timeline.segmentCount).toBe(0);
   });
 
-  it('play records animation segments into the timeline', async () => {
+  it("play records animation segments into the timeline", async () => {
     const { mockMobject, mockAnimation } = createMockAnimation();
-    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
+    const addSpy = vi.spyOn(player.scene, "add").mockReturnThis();
 
     await player.sequence(async (scene) => {
       await scene.play(mockAnimation as never);
@@ -1296,9 +1326,12 @@ describe('RecordingScene pass-through methods', () => {
     addSpy.mockRestore();
   });
 
-  it('play syncs dirty mobjects before begin', async () => {
-    const { mockMobject, mockAnimation } = createMockAnimation({ dirty: true, duration: 0.5 });
-    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
+  it("play syncs dirty mobjects before begin", async () => {
+    const { mockMobject, mockAnimation } = createMockAnimation({
+      dirty: true,
+      duration: 0.5,
+    });
+    const addSpy = vi.spyOn(player.scene, "add").mockReturnThis();
 
     await player.sequence(async (scene) => {
       await scene.play(mockAnimation as never);
@@ -1309,13 +1342,13 @@ describe('RecordingScene pass-through methods', () => {
     addSpy.mockRestore();
   });
 
-  it('play does not re-add mobjects already in scene', async () => {
+  it("play does not re-add mobjects already in scene", async () => {
     const { mockMobject, mockAnimation } = createMockAnimation();
 
     // Pre-add the mobject to the scene's mobjects set
     (player.scene.mobjects as Set<unknown>).add(mockMobject);
 
-    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
+    const addSpy = vi.spyOn(player.scene, "add").mockReturnThis();
 
     await player.sequence(async (scene) => {
       await scene.play(mockAnimation as never);
@@ -1326,7 +1359,7 @@ describe('RecordingScene pass-through methods', () => {
     addSpy.mockRestore();
   });
 
-  it('wait with default duration records 1s segment', async () => {
+  it("wait with default duration records 1s segment", async () => {
     await player.sequence(async (scene) => {
       await scene.wait();
     });
@@ -1335,9 +1368,9 @@ describe('RecordingScene pass-through methods', () => {
     expect(player.timeline.segmentCount).toBe(1);
   });
 
-  it('nextSlide({loop:true}) before play() produces a looping slide', async () => {
+  it("nextSlide({loop:true}) before play() produces a looping slide", async () => {
     const { mockAnimation } = createMockAnimation();
-    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
+    const addSpy = vi.spyOn(player.scene, "add").mockReturnThis();
 
     await player.sequence(async (scene) => {
       await scene.nextSlide({ loop: true });
@@ -1349,9 +1382,9 @@ describe('RecordingScene pass-through methods', () => {
     addSpy.mockRestore();
   });
 
-  it('default play() produces a slide with loop=false, autoNext=false', async () => {
+  it("default play() produces a slide with loop=false, autoNext=false", async () => {
     const { mockAnimation } = createMockAnimation();
-    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
+    const addSpy = vi.spyOn(player.scene, "add").mockReturnThis();
 
     await player.sequence(async (scene) => {
       await scene.play(mockAnimation as never);
@@ -1363,11 +1396,11 @@ describe('RecordingScene pass-through methods', () => {
     addSpy.mockRestore();
   });
 
-  it('nextSlide() inside sequence groups subsequent plays into one slide', async () => {
+  it("nextSlide() inside sequence groups subsequent plays into one slide", async () => {
     const a1 = createMockAnimation();
     const a2 = createMockAnimation();
     const a3 = createMockAnimation();
-    const addSpy = vi.spyOn(player.scene, 'add').mockReturnThis();
+    const addSpy = vi.spyOn(player.scene, "add").mockReturnThis();
 
     await player.sequence(async (scene) => {
       await scene.nextSlide();
@@ -1390,7 +1423,7 @@ describe('RecordingScene pass-through methods', () => {
 // PlayerController tests
 // ---------------------------------------------------------------------------
 
-describe('PlayerController', () => {
+describe("PlayerController", () => {
   let container: HTMLElement;
   let callbacks: PlayerControllerCallbacks;
   let controller: PlayerController;
@@ -1416,19 +1449,19 @@ describe('PlayerController', () => {
 
   // ---- Setup ----
 
-  it('sets tabindex on container if not present', () => {
-    expect(container.getAttribute('tabindex')).toBe('0');
+  it("sets tabindex on container if not present", () => {
+    expect(container.getAttribute("tabindex")).toBe("0");
     // happy-dom may expand shorthand; just check it contains 'none'
-    expect(container.style.outline).toContain('none');
+    expect(container.style.outline).toContain("none");
   });
 
-  it('does not override existing tabindex', () => {
-    const c2 = document.createElement('div');
-    c2.setAttribute('tabindex', '-1');
+  it("does not override existing tabindex", () => {
+    const c2 = document.createElement("div");
+    c2.setAttribute("tabindex", "-1");
     document.body.appendChild(c2);
 
     const ctrl2 = new PlayerController(c2, callbacks);
-    expect(c2.getAttribute('tabindex')).toBe('-1');
+    expect(c2.getAttribute("tabindex")).toBe("-1");
 
     ctrl2.dispose();
     c2.remove();
@@ -1436,29 +1469,32 @@ describe('PlayerController', () => {
 
   // ---- Key: Space ----
 
-  it('Space key triggers onPlayPause', () => {
-    const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true });
+  it("Space key triggers onPlayPause", () => {
+    const event = new KeyboardEvent("keydown", { key: " ", bubbles: true });
     container.dispatchEvent(event);
     expect(callbacks.onPlayPause).toHaveBeenCalledTimes(1);
   });
 
-  it('k key triggers onPlayPause', () => {
-    const event = new KeyboardEvent('keydown', { key: 'k', bubbles: true });
+  it("k key triggers onPlayPause", () => {
+    const event = new KeyboardEvent("keydown", { key: "k", bubbles: true });
     container.dispatchEvent(event);
     expect(callbacks.onPlayPause).toHaveBeenCalledTimes(1);
   });
 
   // ---- Key: ArrowLeft ----
 
-  it('ArrowLeft triggers onPrev', () => {
-    const event = new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true });
+  it("ArrowLeft triggers onPrev", () => {
+    const event = new KeyboardEvent("keydown", {
+      key: "ArrowLeft",
+      bubbles: true,
+    });
     container.dispatchEvent(event);
     expect(callbacks.onPrev).toHaveBeenCalledTimes(1);
   });
 
-  it('Shift+ArrowLeft triggers onSeek with -1s', () => {
-    const event = new KeyboardEvent('keydown', {
-      key: 'ArrowLeft',
+  it("Shift+ArrowLeft triggers onSeek with -1s", () => {
+    const event = new KeyboardEvent("keydown", {
+      key: "ArrowLeft",
       shiftKey: true,
       bubbles: true,
     });
@@ -1467,10 +1503,10 @@ describe('PlayerController', () => {
     expect(callbacks.onPrev).not.toHaveBeenCalled();
   });
 
-  it('Shift+ArrowLeft clamps to 0', () => {
+  it("Shift+ArrowLeft clamps to 0", () => {
     (callbacks.getCurrentTime as ReturnType<typeof vi.fn>).mockReturnValue(0.3);
-    const event = new KeyboardEvent('keydown', {
-      key: 'ArrowLeft',
+    const event = new KeyboardEvent("keydown", {
+      key: "ArrowLeft",
       shiftKey: true,
       bubbles: true,
     });
@@ -1480,15 +1516,18 @@ describe('PlayerController', () => {
 
   // ---- Key: ArrowRight ----
 
-  it('ArrowRight triggers onNext', () => {
-    const event = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true });
+  it("ArrowRight triggers onNext", () => {
+    const event = new KeyboardEvent("keydown", {
+      key: "ArrowRight",
+      bubbles: true,
+    });
     container.dispatchEvent(event);
     expect(callbacks.onNext).toHaveBeenCalledTimes(1);
   });
 
-  it('Shift+ArrowRight triggers onSeek with +1s', () => {
-    const event = new KeyboardEvent('keydown', {
-      key: 'ArrowRight',
+  it("Shift+ArrowRight triggers onSeek with +1s", () => {
+    const event = new KeyboardEvent("keydown", {
+      key: "ArrowRight",
       shiftKey: true,
       bubbles: true,
     });
@@ -1497,10 +1536,10 @@ describe('PlayerController', () => {
     expect(callbacks.onNext).not.toHaveBeenCalled();
   });
 
-  it('Shift+ArrowRight clamps to duration', () => {
+  it("Shift+ArrowRight clamps to duration", () => {
     (callbacks.getCurrentTime as ReturnType<typeof vi.fn>).mockReturnValue(9.5);
-    const event = new KeyboardEvent('keydown', {
-      key: 'ArrowRight',
+    const event = new KeyboardEvent("keydown", {
+      key: "ArrowRight",
       shiftKey: true,
       bubbles: true,
     });
@@ -1510,62 +1549,62 @@ describe('PlayerController', () => {
 
   // ---- Key: f ----
 
-  it('f key triggers onFullscreen', () => {
-    const event = new KeyboardEvent('keydown', { key: 'f', bubbles: true });
+  it("f key triggers onFullscreen", () => {
+    const event = new KeyboardEvent("keydown", { key: "f", bubbles: true });
     container.dispatchEvent(event);
     expect(callbacks.onFullscreen).toHaveBeenCalledTimes(1);
   });
 
-  it('F key triggers onFullscreen', () => {
-    const event = new KeyboardEvent('keydown', { key: 'F', bubbles: true });
+  it("F key triggers onFullscreen", () => {
+    const event = new KeyboardEvent("keydown", { key: "F", bubbles: true });
     container.dispatchEvent(event);
     expect(callbacks.onFullscreen).toHaveBeenCalledTimes(1);
   });
 
   // ---- Key: Home / End ----
 
-  it('Home key seeks to 0', () => {
-    const event = new KeyboardEvent('keydown', { key: 'Home', bubbles: true });
+  it("Home key seeks to 0", () => {
+    const event = new KeyboardEvent("keydown", { key: "Home", bubbles: true });
     container.dispatchEvent(event);
     expect(callbacks.onSeek).toHaveBeenCalledWith(0);
   });
 
-  it('End key seeks to duration', () => {
-    const event = new KeyboardEvent('keydown', { key: 'End', bubbles: true });
+  it("End key seeks to duration", () => {
+    const event = new KeyboardEvent("keydown", { key: "End", bubbles: true });
     container.dispatchEvent(event);
     expect(callbacks.onSeek).toHaveBeenCalledWith(10);
   });
 
   // ---- Ignores input elements ----
 
-  it('ignores keydown events on INPUT elements', () => {
-    const input = document.createElement('input');
+  it("ignores keydown events on INPUT elements", () => {
+    const input = document.createElement("input");
     container.appendChild(input);
 
-    const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true });
-    Object.defineProperty(event, 'target', { value: input });
+    const event = new KeyboardEvent("keydown", { key: " ", bubbles: true });
+    Object.defineProperty(event, "target", { value: input });
     container.dispatchEvent(event);
 
     expect(callbacks.onPlayPause).not.toHaveBeenCalled();
   });
 
-  it('ignores keydown events on TEXTAREA elements', () => {
-    const textarea = document.createElement('textarea');
+  it("ignores keydown events on TEXTAREA elements", () => {
+    const textarea = document.createElement("textarea");
     container.appendChild(textarea);
 
-    const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true });
-    Object.defineProperty(event, 'target', { value: textarea });
+    const event = new KeyboardEvent("keydown", { key: " ", bubbles: true });
+    Object.defineProperty(event, "target", { value: textarea });
     container.dispatchEvent(event);
 
     expect(callbacks.onPlayPause).not.toHaveBeenCalled();
   });
 
-  it('ignores keydown events on SELECT elements', () => {
-    const select = document.createElement('select');
+  it("ignores keydown events on SELECT elements", () => {
+    const select = document.createElement("select");
     container.appendChild(select);
 
-    const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true });
-    Object.defineProperty(event, 'target', { value: select });
+    const event = new KeyboardEvent("keydown", { key: " ", bubbles: true });
+    Object.defineProperty(event, "target", { value: select });
     container.dispatchEvent(event);
 
     expect(callbacks.onPlayPause).not.toHaveBeenCalled();
@@ -1573,24 +1612,24 @@ describe('PlayerController', () => {
 
   // ---- Click on canvas ----
 
-  it('click on container triggers onPlayPause', () => {
+  it("click on container triggers onPlayPause", () => {
     container.click();
     expect(callbacks.onPlayPause).toHaveBeenCalledTimes(1);
   });
 
-  it('click on player-bar element does NOT trigger onPlayPause', () => {
-    const barElement = document.createElement('div');
-    barElement.setAttribute('data-player-bar', '');
+  it("click on player-bar element does NOT trigger onPlayPause", () => {
+    const barElement = document.createElement("div");
+    barElement.setAttribute("data-player-bar", "");
     container.appendChild(barElement);
 
     barElement.click();
     expect(callbacks.onPlayPause).not.toHaveBeenCalled();
   });
 
-  it('click inside nested player-bar element does NOT trigger onPlayPause', () => {
-    const barElement = document.createElement('div');
-    barElement.setAttribute('data-player-bar', '');
-    const button = document.createElement('button');
+  it("click inside nested player-bar element does NOT trigger onPlayPause", () => {
+    const barElement = document.createElement("div");
+    barElement.setAttribute("data-player-bar", "");
+    const button = document.createElement("button");
     barElement.appendChild(button);
     container.appendChild(barElement);
 
@@ -1600,26 +1639,26 @@ describe('PlayerController', () => {
 
   // ---- Focus on mousedown ----
 
-  it('mousedown focuses the container', () => {
-    const focusSpy = vi.spyOn(container, 'focus');
-    container.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+  it("mousedown focuses the container", () => {
+    const focusSpy = vi.spyOn(container, "focus");
+    container.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
     expect(focusSpy).toHaveBeenCalled();
   });
 
   // ---- Dispose ----
 
-  it('dispose removes keydown listener', () => {
+  it("dispose removes keydown listener", () => {
     controller.dispose();
 
-    const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true });
+    const event = new KeyboardEvent("keydown", { key: " ", bubbles: true });
     container.dispatchEvent(event);
     expect(callbacks.onPlayPause).not.toHaveBeenCalled();
   });
 
   // ---- Unknown keys do nothing ----
 
-  it('unrecognized key does not trigger any callback', () => {
-    const event = new KeyboardEvent('keydown', { key: 'q', bubbles: true });
+  it("unrecognized key does not trigger any callback", () => {
+    const event = new KeyboardEvent("keydown", { key: "q", bubbles: true });
     container.dispatchEvent(event);
 
     expect(callbacks.onPlayPause).not.toHaveBeenCalled();

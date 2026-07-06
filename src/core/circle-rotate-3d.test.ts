@@ -1,14 +1,14 @@
 // @vitest-environment happy-dom
 
-import { describe, it, expect } from 'vitest';
-import * as THREE from 'three';
-import { Circle } from '../../src/index';
+import { describe, expect, it } from "vitest";
+import * as THREE from "three";
+import { Circle } from "../../src/index";
 
-describe('Circle rotate in 3D', () => {
-  it('rotate around X axis should transform both stroke and fill mesh', () => {
+describe("Circle rotate in 3D", () => {
+  it("rotate around X axis should transform both stroke and fill mesh", () => {
     const circle = new Circle({
       radius: 1,
-      color: '#ff0000',
+      color: "#ff0000",
       fillOpacity: 0.7,
       strokeWidth: 2,
     });

@@ -1,19 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from "vitest";
 import {
-  triangulatePolygon,
-  triangulatePolygonPositions,
-  signedArea2D,
   ensureCCW,
   ensureCW,
-} from './triangulate';
+  signedArea2D,
+  triangulatePolygon,
+  triangulatePolygonPositions,
+} from "./triangulate";
 
-describe('triangulatePolygon', () => {
-  it('returns empty for null/undefined input', () => {
+describe("triangulatePolygon", () => {
+  it("returns empty for null/undefined input", () => {
     expect(triangulatePolygon(null as unknown as number[][])).toEqual([]);
     expect(triangulatePolygon(undefined as unknown as number[][])).toEqual([]);
   });
 
-  it('returns empty for fewer than 3 vertices', () => {
+  it("returns empty for fewer than 3 vertices", () => {
     expect(triangulatePolygon([])).toEqual([]);
     expect(triangulatePolygon([[0, 0]])).toEqual([]);
     expect(
@@ -24,7 +24,7 @@ describe('triangulatePolygon', () => {
     ).toEqual([]);
   });
 
-  it('triangulates a triangle (single triangle)', () => {
+  it("triangulates a triangle (single triangle)", () => {
     const tri = [
       [0, 0],
       [1, 0],
@@ -39,7 +39,7 @@ describe('triangulatePolygon', () => {
     }
   });
 
-  it('triangulates a square into 2 triangles', () => {
+  it("triangulates a square into 2 triangles", () => {
     const square = [
       [0, 0],
       [1, 0],
@@ -50,7 +50,7 @@ describe('triangulatePolygon', () => {
     expect(indices.length).toBe(6); // 2 triangles * 3 indices
   });
 
-  it('triangulates a convex pentagon into 3 triangles', () => {
+  it("triangulates a convex pentagon into 3 triangles", () => {
     const pentagon = [
       [0, 0],
       [2, 0],
@@ -62,7 +62,7 @@ describe('triangulatePolygon', () => {
     expect(indices.length).toBe(9); // 3 triangles
   });
 
-  it('handles concave polygon (L-shape)', () => {
+  it("handles concave polygon (L-shape)", () => {
     const lShape = [
       [0, 0],
       [2, 0],
@@ -80,7 +80,7 @@ describe('triangulatePolygon', () => {
     }
   });
 
-  it('uses only the first two components of 3D points', () => {
+  it("uses only the first two components of 3D points", () => {
     const tri3D = [
       [0, 0, 5],
       [1, 0, 10],
@@ -90,7 +90,7 @@ describe('triangulatePolygon', () => {
     expect(indices.length).toBe(3);
   });
 
-  it('handles a polygon with a hole', () => {
+  it("handles a polygon with a hole", () => {
     const outer = [
       [0, 0],
       [10, 0],
@@ -113,7 +113,7 @@ describe('triangulatePolygon', () => {
     }
   });
 
-  it('skips degenerate holes (fewer than 3 vertices)', () => {
+  it("skips degenerate holes (fewer than 3 vertices)", () => {
     const outer = [
       [0, 0],
       [4, 0],
@@ -126,7 +126,7 @@ describe('triangulatePolygon', () => {
     expect(indices.length).toBe(6); // 2 triangles
   });
 
-  it('returns indices whose length is a multiple of 3', () => {
+  it("returns indices whose length is a multiple of 3", () => {
     const hexagon = [
       [1, 0],
       [0.5, 0.87],
@@ -141,14 +141,14 @@ describe('triangulatePolygon', () => {
   });
 });
 
-describe('triangulatePolygonPositions', () => {
-  it('returns empty Float32Array for degenerate input', () => {
+describe("triangulatePolygonPositions", () => {
+  it("returns empty Float32Array for degenerate input", () => {
     const result = triangulatePolygonPositions([]);
     expect(result).toBeInstanceOf(Float32Array);
     expect(result.length).toBe(0);
   });
 
-  it('returns Float32Array with xyz triplets for a triangle', () => {
+  it("returns Float32Array with xyz triplets for a triangle", () => {
     const tri = [
       [0, 0],
       [1, 0],
@@ -163,7 +163,7 @@ describe('triangulatePolygonPositions', () => {
     expect(positions[8]).toBe(0);
   });
 
-  it('applies custom z coordinate', () => {
+  it("applies custom z coordinate", () => {
     const tri = [
       [0, 0],
       [1, 0],
@@ -176,7 +176,7 @@ describe('triangulatePolygonPositions', () => {
     }
   });
 
-  it('includes hole vertices in the output positions', () => {
+  it("includes hole vertices in the output positions", () => {
     const outer = [
       [0, 0],
       [10, 0],
@@ -194,7 +194,7 @@ describe('triangulatePolygonPositions', () => {
     expect(positions.length % 9).toBe(0); // multiple of 9 (3 verts * 3 components)
   });
 
-  it('returns a square triangulated into positions', () => {
+  it("returns a square triangulated into positions", () => {
     const square = [
       [0, 0],
       [1, 0],
@@ -206,8 +206,8 @@ describe('triangulatePolygonPositions', () => {
   });
 });
 
-describe('signedArea2D', () => {
-  it('returns positive area for CCW triangle', () => {
+describe("signedArea2D", () => {
+  it("returns positive area for CCW triangle", () => {
     // CCW triangle: (0,0) -> (1,0) -> (0,1)
     const ccwTriangle = [
       [0, 0],
@@ -218,7 +218,7 @@ describe('signedArea2D', () => {
     expect(area).toBeCloseTo(0.5, 10);
   });
 
-  it('returns negative area for CW triangle', () => {
+  it("returns negative area for CW triangle", () => {
     // CW triangle: (0,0) -> (0,1) -> (1,0)
     const cwTriangle = [
       [0, 0],
@@ -229,7 +229,7 @@ describe('signedArea2D', () => {
     expect(area).toBeCloseTo(-0.5, 10);
   });
 
-  it('returns positive area for CCW unit square', () => {
+  it("returns positive area for CCW unit square", () => {
     const ccwSquare = [
       [0, 0],
       [1, 0],
@@ -240,7 +240,7 @@ describe('signedArea2D', () => {
     expect(area).toBeCloseTo(1.0, 10);
   });
 
-  it('returns negative area for CW unit square', () => {
+  it("returns negative area for CW unit square", () => {
     const cwSquare = [
       [0, 0],
       [0, 1],
@@ -251,7 +251,7 @@ describe('signedArea2D', () => {
     expect(area).toBeCloseTo(-1.0, 10);
   });
 
-  it('returns zero for degenerate (collinear) points', () => {
+  it("returns zero for degenerate (collinear) points", () => {
     const collinear = [
       [0, 0],
       [1, 1],
@@ -260,13 +260,13 @@ describe('signedArea2D', () => {
     expect(signedArea2D(collinear)).toBeCloseTo(0, 10);
   });
 
-  it('returns zero for a single point', () => {
+  it("returns zero for a single point", () => {
     expect(signedArea2D([[5, 5]])).toBeCloseTo(0, 10);
   });
 });
 
-describe('ensureCCW', () => {
-  it('returns the same ring if already CCW', () => {
+describe("ensureCCW", () => {
+  it("returns the same ring if already CCW", () => {
     const ccw = [
       [0, 0],
       [1, 0],
@@ -276,7 +276,7 @@ describe('ensureCCW', () => {
     expect(result).toBe(ccw); // same reference
   });
 
-  it('reverses a CW ring to make it CCW', () => {
+  it("reverses a CW ring to make it CCW", () => {
     const cw = [
       [0, 0],
       [0, 1],
@@ -288,8 +288,8 @@ describe('ensureCCW', () => {
   });
 });
 
-describe('ensureCW', () => {
-  it('returns the same ring if already CW', () => {
+describe("ensureCW", () => {
+  it("returns the same ring if already CW", () => {
     const cw = [
       [0, 0],
       [0, 1],
@@ -299,7 +299,7 @@ describe('ensureCW', () => {
     expect(result).toBe(cw); // same reference
   });
 
-  it('reverses a CCW ring to make it CW', () => {
+  it("reverses a CCW ring to make it CW", () => {
     const ccw = [
       [0, 0],
       [1, 0],

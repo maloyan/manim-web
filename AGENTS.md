@@ -70,7 +70,7 @@ helpers live in `src/utils/math.ts` and are built on top of those.
   `Math.abs(v[2]) < eps`, "is this the Z axis?", or "is the plane the XY
   plane?" to pick a basis. Use `orthonormalFrame(normal)` — it gives you a
   right-handed `{u, v, n}` for any normal.
-  *Exception:* `orthonormalizeBasis` in `src/utils/math.ts` keeps a
+  _Exception:_ `orthonormalizeBasis` in `src/utils/math.ts` keeps a
   Z-biased fallback for its collinear-input branch. Callers (fill
   triangulation in particular) rely on the fallback landing in the same
   plane the geometry occupies — see the regression test in
@@ -143,22 +143,22 @@ therefore user-facing release notes — write them as such.
 
 Allowed `<type>` values and where they land in `CHANGELOG.md`:
 
-| Type       | Section in CHANGELOG | Notes                                |
-| ---------- | -------------------- | ------------------------------------ |
-| `feat`     | Features             | Triggers a **minor** version bump    |
-| `fix`      | Bug Fixes            | Triggers a **patch** bump            |
-| `perf`     | Performance          | Patch bump                           |
-| `refactor` | Refactoring          | Patch bump                           |
-| `docs`     | Documentation        | Patch bump                           |
-| `test`     | Tests                | Patch bump                           |
-| `chore`    | *(hidden)*           | Still counts toward release if cut   |
+| Type       | Section in CHANGELOG | Notes                              |
+| ---------- | -------------------- | ---------------------------------- |
+| `feat`     | Features             | Triggers a **minor** version bump  |
+| `fix`      | Bug Fixes            | Triggers a **patch** bump          |
+| `perf`     | Performance          | Patch bump                         |
+| `refactor` | Refactoring          | Patch bump                         |
+| `docs`     | Documentation        | Patch bump                         |
+| `test`     | Tests                | Patch bump                         |
+| `chore`    | _(hidden)_           | Still counts toward release if cut |
 
 `<scope>` should be the issue number for work tied to a tracked issue:
 `fix(#344): ...`, `feat(#358): ...`. For tooling commits use a topical scope
 (`chore(deps-dev): ...`, `fix(ci): ...`).
 
 The subject must be short, imperative, and stand alone in release notes
-(`add multi-camera example scenes`, not `WIP changes`). It is the *only* part
+(`add multi-camera example scenes`, not `WIP changes`). It is the _only_ part
 of the commit that downstream consumers reliably see.
 
 ### Breaking changes
@@ -208,7 +208,7 @@ Releases are cut locally, then finished by CI:
 
 Caveats agents should know:
 
-- **GitHub Release notes** are built from `git log`, *not* from
+- **GitHub Release notes** are built from `git log`, _not_ from
   `CHANGELOG.md` — bad commit subjects show up in two places, not one.
 - **Never hand-edit generated release entries** in `CHANGELOG.md`. Fix the
   underlying commit message and regenerate, or add a note above the

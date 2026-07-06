@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Basic Example</title>
-  <style>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - Basic Example</title>
+    <style>
     * {
       margin: 0;
       padding: 0;
@@ -43,29 +43,23 @@
     button:hover {
       background: #ff6b6b;
     }
-  </style>
-</head>
-<body>
-  <div id="container"></div>
-  <div class="controls">
-    <button id="playBtn">Play Animation</button>
-    <button id="resetBtn">Reset</button>
-  </div>
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div class="controls">
+      <button id="playBtn">Play Animation</button>
+      <button id="resetBtn">Reset</button>
+    </div>
 
-  <script type="module">
-    import {
-      Scene,
-      Circle,
-      Square,
-      Transform,
-      Create
-    } from '../src/index.ts';
+    <script type="module">
+    import { Circle, Create, Scene, Square, Transform } from '../src/index.ts';
 
     const container = document.getElementById('container');
     const scene = new Scene(container, {
       width: 800,
       height: 450,
-      backgroundColor: '#1a1a2e'
+      backgroundColor: '#1a1a2e',
     });
 
     // Play button handler
@@ -75,13 +69,13 @@
       const c = new Circle({
         radius: 1,
         color: '#e94560',
-        strokeWidth: 4
+        strokeWidth: 4,
       });
 
       const s = new Square({
         sideLength: 2,
         color: '#0f3460',
-        strokeWidth: 4
+        strokeWidth: 4,
       });
 
       scene.add(c);
@@ -96,6 +90,6 @@
     document.getElementById('resetBtn').addEventListener('click', () => {
       scene.clear();
     });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

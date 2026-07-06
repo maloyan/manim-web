@@ -1,52 +1,55 @@
-import { describe, it, expect } from 'vitest';
-import * as THREE from 'three';
-import { VMobject } from '../core/VMobject';
-import { CurvesAsSubmobjects } from '../core/VMobjectCurveUtils';
-import { Mobject } from '../core/Mobject';
-import { Circle } from '../mobjects/geometry/Circle';
-import { Dot } from '../mobjects/geometry/Dot';
+import { describe, expect, it } from "vitest";
+import * as THREE from "three";
+import { VMobject } from "../core/VMobject";
+import { CurvesAsSubmobjects } from "../core/VMobjectCurveUtils";
+import { Mobject } from "../core/Mobject";
+import { Circle } from "../mobjects/geometry/Circle";
+import { Dot } from "../mobjects/geometry/Dot";
 import {
   ApplyFunction,
   applyFunction,
-  ApplyMethod,
-  applyMethod,
   ApplyMatrix,
   applyMatrix,
-  FadeTransform,
-  fadeTransform,
-  FadeTransformPieces,
-  fadeTransformPieces,
+  ApplyMethod,
+  applyMethod,
   ClockwiseTransform,
   clockwiseTransform,
   CounterclockwiseTransform,
   counterclockwiseTransform,
-  TransformFromCopy,
-  transformFromCopy,
-  Swap,
-  swap,
   CyclicReplace,
   cyclicReplace,
+  FadeToColor,
+  fadeToColor,
+  FadeTransform,
+  fadeTransform,
+  FadeTransformPieces,
+  fadeTransformPieces,
+  MobjectWithSavedState,
+  Restore,
+  restore,
   ScaleInPlace,
   scaleInPlace,
   ShrinkToCenter,
   shrinkToCenter,
-  Restore,
-  restore,
-  MobjectWithSavedState,
-  FadeToColor,
-  fadeToColor,
+  Swap,
+  swap,
   TransformAnimations,
   transformAnimations,
-} from './transform/TransformExtensions';
+  TransformFromCopy,
+  transformFromCopy,
+} from "./transform/TransformExtensions";
 import {
   TransformMatchingShapes,
   transformMatchingShapes,
   TransformMatchingTex,
   transformMatchingTex,
-} from './transform/TransformMatching';
-import { ApplyPointwiseFunction, applyPointwiseFunction } from './transform/ApplyPointwiseFunction';
-import { hungarian, hungarianFromSimilarity } from '../utils/hungarian';
-import { Group } from '../core/Group';
+} from "./transform/TransformMatching";
+import {
+  ApplyPointwiseFunction,
+  applyPointwiseFunction,
+} from "./transform/ApplyPointwiseFunction";
+import { hungarian, hungarianFromSimilarity } from "../utils/hungarian";
+import { Group } from "../core/Group";
 
 // Helpers
 function vm(pts: number[][]): VMobject {
@@ -70,19 +73,19 @@ function vgroup(...children: VMobject[]): VMobject {
 
 // ── Hungarian algorithm ────────────────────────────────────────────────────
 
-describe('Hungarian algorithm', () => {
-  it('empty matrix returns empty', () => {
+describe("Hungarian algorithm", () => {
+  it("empty matrix returns empty", () => {
     const r = hungarian([]);
     expect(r.assignments).toEqual([]);
     expect(r.totalCost).toBe(0);
   });
 
-  it('zero-column matrix leaves rows unassigned', () => {
+  it("zero-column matrix leaves rows unassigned", () => {
     const r = hungarian([[], []]);
     expect(r.assignments).toEqual([-1, -1]);
   });
 
-  it('solves 3x3 cost matrix optimally', () => {
+  it("solves 3x3 cost matrix optimally", () => {
     const r = hungarian([
       [10, 5, 13],
       [3, 7, 15],
@@ -92,7 +95,7 @@ describe('Hungarian algorithm', () => {
     expect(r.assignments).toEqual([1, 0, 2]);
   });
 
-  it('handles more rows than cols', () => {
+  it("handles more rows than cols", () => {
     const r = hungarian([
       [1, 4],
       [2, 3],
@@ -102,7 +105,7 @@ describe('Hungarian algorithm', () => {
     expect(r.totalCost).toBeLessThanOrEqual(4);
   });
 
-  it('handles more cols than rows', () => {
+  it("handles more cols than rows", () => {
     const r = hungarian([
       [1, 9, 2],
       [4, 3, 8],
@@ -112,12 +115,12 @@ describe('Hungarian algorithm', () => {
   });
 });
 
-describe('hungarianFromSimilarity', () => {
-  it('empty matrix returns empty', () => {
+describe("hungarianFromSimilarity", () => {
+  it("empty matrix returns empty", () => {
     expect(hungarianFromSimilarity([]).assignments).toEqual([]);
   });
 
-  it('matches highest similarity pairs', () => {
+  it("matches highest similarity pairs", () => {
     const r = hungarianFromSimilarity([
       [0.9, 0.1],
       [0.2, 0.8],
@@ -125,7 +128,7 @@ describe('hungarianFromSimilarity', () => {
     expect(r.assignments).toEqual([0, 1]);
   });
 
-  it('filters below threshold', () => {
+  it("filters below threshold", () => {
     const r = hungarianFromSimilarity(
       [
         [0.3, 0.1],
@@ -136,7 +139,7 @@ describe('hungarianFromSimilarity', () => {
     expect(r.assignments).toEqual([-1, -1]);
   });
 
-  it('keeps matches at threshold, rejects below', () => {
+  it("keeps matches at threshold, rejects below", () => {
     const r = hungarianFromSimilarity(
       [
         [0.5, 0.1],
@@ -147,7 +150,7 @@ describe('hungarianFromSimilarity', () => {
     expect(r.assignments).toEqual([0, 1]);
   });
 
-  it('mixed above/below threshold', () => {
+  it("mixed above/below threshold", () => {
     const r = hungarianFromSimilarity(
       [
         [0.9, 0.1],
@@ -162,20 +165,22 @@ describe('hungarianFromSimilarity', () => {
 
 // ── ApplyFunction ──────────────────────────────────────────────────────────
 
-describe('ApplyFunction', () => {
-  it('stores func, mobject, and default duration', () => {
+describe("ApplyFunction", () => {
+  it("stores func, mobject, and default duration", () => {
     const fn = (p: number[]) => [p[0] * 2, p[1] * 2, p[2]];
     const anim = new ApplyFunction(sq(), { func: fn });
     expect(anim.func).toBe(fn);
     expect(anim.duration).toBe(1);
   });
 
-  it('alpha 0/0.5/1 interpolation', () => {
+  it("alpha 0/0.5/1 interpolation", () => {
     const v = vm([
       [0, 0, 0],
       [2, 0, 0],
     ]);
-    const anim = new ApplyFunction(v, { func: (p) => [p[0] + 4, p[1] + 4, p[2]] });
+    const anim = new ApplyFunction(v, {
+      func: (p) => [p[0] + 4, p[1] + 4, p[2]],
+    });
     anim.begin();
     anim.interpolate(0);
     expect(v.getLocalPoints()[0][0]).toBeCloseTo(0, 5);
@@ -186,16 +191,18 @@ describe('ApplyFunction', () => {
     expect(v.getLocalPoints()[1][0]).toBeCloseTo(6, 5);
   });
 
-  it('finish sets final points', () => {
+  it("finish sets final points", () => {
     const v = vm([[0, 0, 0]]);
-    const anim = new ApplyFunction(v, { func: (p) => [p[0] + 10, p[1] + 20, p[2]] });
+    const anim = new ApplyFunction(v, {
+      func: (p) => [p[0] + 10, p[1] + 20, p[2]],
+    });
     anim.begin();
     anim.finish();
     expect(v.getLocalPoints()[0][0]).toBeCloseTo(10, 5);
     expect(v.getLocalPoints()[0][1]).toBeCloseTo(20, 5);
   });
 
-  it('rotation function', () => {
+  it("rotation function", () => {
     const v = vm([[1, 0, 0]]);
     const anim = new ApplyFunction(v, { func: (p) => [-p[1], p[0], p[2]] });
     anim.begin();
@@ -204,7 +211,7 @@ describe('ApplyFunction', () => {
     expect(v.getLocalPoints()[0][1]).toBeCloseTo(1, 5);
   });
 
-  it('factory creates ApplyFunction', () => {
+  it("factory creates ApplyFunction", () => {
     const fn = (p: number[]) => p;
     expect(applyFunction(sq(), fn)).toBeInstanceOf(ApplyFunction);
   });
@@ -212,8 +219,8 @@ describe('ApplyFunction', () => {
 
 // ── ApplyMatrix ────────────────────────────────────────────────────────────
 
-describe('ApplyMatrix', () => {
-  it('3x3 identity is no-op', () => {
+describe("ApplyMatrix", () => {
+  it("3x3 identity is no-op", () => {
     const v = vm([[3, 4, 0]]);
     const anim = new ApplyMatrix(v, {
       matrix: [
@@ -228,7 +235,7 @@ describe('ApplyMatrix', () => {
     expect(v.getLocalPoints()[0][1]).toBeCloseTo(4, 5);
   });
 
-  it('3x3 scaling', () => {
+  it("3x3 scaling", () => {
     const v = vm([[1, 2, 0]]);
     const anim = new ApplyMatrix(v, {
       matrix: [
@@ -243,7 +250,7 @@ describe('ApplyMatrix', () => {
     expect(v.getLocalPoints()[0][1]).toBeCloseTo(4, 5);
   });
 
-  it('3x3 rotation 90deg', () => {
+  it("3x3 rotation 90deg", () => {
     const v = vm([[1, 0, 0]]);
     const anim = new ApplyMatrix(v, {
       matrix: [
@@ -258,7 +265,7 @@ describe('ApplyMatrix', () => {
     expect(v.getLocalPoints()[0][1]).toBeCloseTo(1, 5);
   });
 
-  it('aboutPoint shifts the pivot', () => {
+  it("aboutPoint shifts the pivot", () => {
     const v = vm([[2, 0, 0]]);
     const anim = new ApplyMatrix(v, {
       matrix: [
@@ -273,7 +280,7 @@ describe('ApplyMatrix', () => {
     expect(v.getLocalPoints()[0][0]).toBeCloseTo(3, 5);
   });
 
-  it('invalid matrix size returns original', () => {
+  it("invalid matrix size returns original", () => {
     const v = vm([[5, 6, 0]]);
     const anim = new ApplyMatrix(v, { matrix: [[1, 2]] });
     anim.begin();
@@ -282,7 +289,7 @@ describe('ApplyMatrix', () => {
     expect(v.getLocalPoints()[0][1]).toBeCloseTo(6, 5);
   });
 
-  it('factory creates ApplyMatrix', () => {
+  it("factory creates ApplyMatrix", () => {
     expect(
       applyMatrix(sq(), [
         [1, 0, 0],
@@ -295,14 +302,14 @@ describe('ApplyMatrix', () => {
 
 // ── FadeTransform ──────────────────────────────────────────────────────────
 
-describe('FadeTransform', () => {
-  it('stores defaults', () => {
+describe("FadeTransform", () => {
+  it("stores defaults", () => {
     const anim = new FadeTransform(sq(), sq());
     expect(anim.stretchFactor).toBe(2);
     expect(anim.duration).toBe(1);
   });
 
-  it('opacity V-curve: fades out then in', () => {
+  it("opacity V-curve: fades out then in", () => {
     const s = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -331,7 +338,7 @@ describe('FadeTransform', () => {
     expect(s.opacity).toBeCloseTo(1, 3);
   });
 
-  it('finish sets target opacity', () => {
+  it("finish sets target opacity", () => {
     const s = vm([[0, 0, 0]]);
     s.opacity = 0.8;
     const t = vm([[1, 0, 0]]);
@@ -342,15 +349,15 @@ describe('FadeTransform', () => {
     expect(s.opacity).toBeCloseTo(0.6, 5);
   });
 
-  it('factory creates FadeTransform', () => {
+  it("factory creates FadeTransform", () => {
     expect(fadeTransform(sq(), sq())).toBeInstanceOf(FadeTransform);
   });
 });
 
 // ── ClockwiseTransform ─────────────────────────────────────────────────────
 
-describe('ClockwiseTransform', () => {
-  it('preserves compound-path topology metadata during interpolation', () => {
+describe("ClockwiseTransform", () => {
+  it("preserves compound-path topology metadata during interpolation", () => {
     const s = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -379,7 +386,7 @@ describe('ClockwiseTransform', () => {
     expect(s.getEffectiveSubpathLengths()).toEqual([5, 5]);
   });
 
-  it('throws on malformed source subpath metadata via shared pairing invariants', () => {
+  it("throws on malformed source subpath metadata via shared pairing invariants", () => {
     const s = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -397,19 +404,21 @@ describe('ClockwiseTransform', () => {
     s.setBaseSubpathLengths([4]);
 
     const anim = new ClockwiseTransform(s, t);
-    expect(() => anim.begin()).toThrow(/subpath lengths sum .* does not match point count/i);
+    expect(() => anim.begin()).toThrow(
+      /subpath lengths sum .* does not match point count/i,
+    );
   });
-  it('default angle is PI', () => {
+  it("default angle is PI", () => {
     const anim = new ClockwiseTransform(sq(), sq());
     expect(anim.angle).toBeCloseTo(Math.PI, 5);
   });
 
-  it('accepts custom angle', () => {
+  it("accepts custom angle", () => {
     const anim = new ClockwiseTransform(sq(), sq(), { angle: Math.PI / 4 });
     expect(anim.angle).toBeCloseTo(Math.PI / 4, 5);
   });
 
-  it('interpolates points with rotation blend', () => {
+  it("interpolates points with rotation blend", () => {
     const s = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -428,7 +437,7 @@ describe('ClockwiseTransform', () => {
     expect(s.getLocalPoints().length).toBe(4);
   });
 
-  it('finish sets target opacity', () => {
+  it("finish sets target opacity", () => {
     const s = new Dot({ point: [0, 0, 0] });
     s.opacity = 0.5;
     const t = new Dot({ point: [4, 0, 0] });
@@ -439,7 +448,7 @@ describe('ClockwiseTransform', () => {
     expect(s.opacity).toBeCloseTo(0.9, 5);
   });
 
-  it('factory creates ClockwiseTransform', () => {
+  it("factory creates ClockwiseTransform", () => {
     const anim = clockwiseTransform(sq(), sq(), { angle: 1.5 });
     expect(anim).toBeInstanceOf(ClockwiseTransform);
     expect(anim.angle).toBeCloseTo(1.5, 5);
@@ -448,8 +457,8 @@ describe('ClockwiseTransform', () => {
 
 // ── CounterclockwiseTransform ──────────────────────────────────────────────
 
-describe('CounterclockwiseTransform', () => {
-  it('preserves compound-path topology metadata during interpolation', () => {
+describe("CounterclockwiseTransform", () => {
+  it("preserves compound-path topology metadata during interpolation", () => {
     const s = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -477,11 +486,14 @@ describe('CounterclockwiseTransform', () => {
 
     expect(s.getEffectiveSubpathLengths()).toEqual([5, 5]);
   });
-  it('default angle is PI', () => {
-    expect(new CounterclockwiseTransform(sq(), sq()).angle).toBeCloseTo(Math.PI, 5);
+  it("default angle is PI", () => {
+    expect(new CounterclockwiseTransform(sq(), sq()).angle).toBeCloseTo(
+      Math.PI,
+      5,
+    );
   });
 
-  it('interpolates without error', () => {
+  it("interpolates without error", () => {
     const s = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -500,7 +512,7 @@ describe('CounterclockwiseTransform', () => {
     expect(s.getLocalPoints().length).toBe(4);
   });
 
-  it('finish sets target opacity', () => {
+  it("finish sets target opacity", () => {
     const s = new Dot({ point: [0, 0, 0] });
     s.opacity = 1;
     const t = new Dot({ point: [5, 5, 0] });
@@ -511,15 +523,17 @@ describe('CounterclockwiseTransform', () => {
     expect(s.opacity).toBeCloseTo(0.3, 5);
   });
 
-  it('factory creates CounterclockwiseTransform', () => {
-    expect(counterclockwiseTransform(sq(), sq())).toBeInstanceOf(CounterclockwiseTransform);
+  it("factory creates CounterclockwiseTransform", () => {
+    expect(counterclockwiseTransform(sq(), sq())).toBeInstanceOf(
+      CounterclockwiseTransform,
+    );
   });
 });
 
 // ── TransformFromCopy ──────────────────────────────────────────────────────
 
-describe('TransformFromCopy', () => {
-  it('animates a copy, not the original', () => {
+describe("TransformFromCopy", () => {
+  it("animates a copy, not the original", () => {
     const src = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -535,7 +549,7 @@ describe('TransformFromCopy', () => {
     expect(anim.mobject).not.toBe(src);
   });
 
-  it('original source unchanged after interpolation', () => {
+  it("original source unchanged after interpolation", () => {
     const src = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -553,7 +567,7 @@ describe('TransformFromCopy', () => {
     expect(src.getLocalPoints()[0][0]).toBeCloseTo(orig[0][0], 5);
   });
 
-  it('factory creates TransformFromCopy', () => {
+  it("factory creates TransformFromCopy", () => {
     const src = sq();
     const anim = transformFromCopy(src, sq());
     expect(anim).toBeInstanceOf(TransformFromCopy);
@@ -563,19 +577,22 @@ describe('TransformFromCopy', () => {
 
 // ── ApplyPointwiseFunction ─────────────────────────────────────────────────
 
-describe('ApplyPointwiseFunction', () => {
-  it('stores func reference', () => {
+describe("ApplyPointwiseFunction", () => {
+  it("stores func reference", () => {
     const fn = (p: number[]) => [p[0] * 2, p[1] * 2, p[2]];
     const anim = new ApplyPointwiseFunction(sq(), fn);
     expect(anim.func).toBe(fn);
   });
 
-  it('translation at alpha 0/0.5/1', () => {
+  it("translation at alpha 0/0.5/1", () => {
     const v = vm([
       [1, 2, 0],
       [3, 4, 0],
     ]);
-    const anim = new ApplyPointwiseFunction(v, (p) => [p[0] + 10, p[1] + 20, p[2]]);
+    const anim = new ApplyPointwiseFunction(
+      v,
+      (p) => [p[0] + 10, p[1] + 20, p[2]],
+    );
     anim.begin();
     anim.interpolate(0);
     expect(v.getLocalPoints()[0][0]).toBeCloseTo(1, 5);
@@ -586,7 +603,7 @@ describe('ApplyPointwiseFunction', () => {
     expect(v.getLocalPoints()[0][1]).toBeCloseTo(22, 5);
   });
 
-  it('finish sets target points', () => {
+  it("finish sets target points", () => {
     const v = vm([[2, 0, 0]]);
     const anim = new ApplyPointwiseFunction(v, (p) => [-p[0], -p[1], p[2]]);
     anim.begin();
@@ -594,7 +611,7 @@ describe('ApplyPointwiseFunction', () => {
     expect(v.getLocalPoints()[0][0]).toBeCloseTo(-2, 5);
   });
 
-  it('skips VMobjects with zero points', () => {
+  it("skips VMobjects with zero points", () => {
     const v = new VMobject();
     const anim = new ApplyPointwiseFunction(v, (p) => [p[0] + 1, p[1], p[2]]);
     anim.begin();
@@ -602,19 +619,25 @@ describe('ApplyPointwiseFunction', () => {
     expect(v.getLocalPoints().length).toBe(0);
   });
 
-  it('applies to children in a group', () => {
+  it("applies to children in a group", () => {
     const c1 = vm([[0, 0, 0]]),
       c2 = vm([[1, 1, 0]]);
-    const anim = new ApplyPointwiseFunction(vgroup(c1, c2), (p) => [p[0] + 5, p[1] + 5, p[2]]);
+    const anim = new ApplyPointwiseFunction(
+      vgroup(c1, c2),
+      (p) => [p[0] + 5, p[1] + 5, p[2]],
+    );
     anim.begin();
     anim.interpolate(1);
     expect(c1.getLocalPoints()[0][0]).toBeCloseTo(5, 5);
     expect(c2.getLocalPoints()[0][0]).toBeCloseTo(6, 5);
   });
 
-  it('scaling function on 3D point', () => {
+  it("scaling function on 3D point", () => {
     const v = vm([[2, 3, 1]]);
-    const anim = new ApplyPointwiseFunction(v, (p) => [p[0] * 3, p[1] * 3, p[2] * 3]);
+    const anim = new ApplyPointwiseFunction(
+      v,
+      (p) => [p[0] * 3, p[1] * 3, p[2] * 3],
+    );
     anim.begin();
     anim.interpolate(1);
     expect(v.getLocalPoints()[0][0]).toBeCloseTo(6, 5);
@@ -622,38 +645,49 @@ describe('ApplyPointwiseFunction', () => {
     expect(v.getLocalPoints()[0][2]).toBeCloseTo(3, 5);
   });
 
-  it('factory creates ApplyPointwiseFunction', () => {
+  it("factory creates ApplyPointwiseFunction", () => {
     const fn = (p: number[]) => p;
-    expect(applyPointwiseFunction(sq(), fn)).toBeInstanceOf(ApplyPointwiseFunction);
+    expect(applyPointwiseFunction(sq(), fn)).toBeInstanceOf(
+      ApplyPointwiseFunction,
+    );
   });
 });
 
 // ── TransformMatchingShapes ────────────────────────────────────────────────
 
-describe('TransformMatchingShapes', () => {
-  it('default options', () => {
+describe("TransformMatchingShapes", () => {
+  it("default options", () => {
     const anim = new TransformMatchingShapes(sq(), sq());
     expect(anim.matchThreshold).toBe(0.5);
     expect(anim.fadeRatio).toBeCloseTo(0.25, 5);
     expect(anim.keyFunc).toBeUndefined();
   });
 
-  it('custom matchThreshold', () => {
-    expect(new TransformMatchingShapes(sq(), sq(), { matchThreshold: 0.8 }).matchThreshold).toBe(
+  it("custom matchThreshold", () => {
+    expect(
+      new TransformMatchingShapes(sq(), sq(), { matchThreshold: 0.8 })
+        .matchThreshold,
+    ).toBe(
       0.8,
     );
   });
 
-  it('clamps fadeRatio to [0, 0.5]', () => {
-    expect(new TransformMatchingShapes(sq(), sq(), { fadeRatio: -0.1 }).fadeRatio).toBe(0);
-    expect(new TransformMatchingShapes(sq(), sq(), { fadeRatio: 0.8 }).fadeRatio).toBe(0.5);
-    expect(new TransformMatchingShapes(sq(), sq(), { fadeRatio: 0.3 }).fadeRatio).toBeCloseTo(
+  it("clamps fadeRatio to [0, 0.5]", () => {
+    expect(
+      new TransformMatchingShapes(sq(), sq(), { fadeRatio: -0.1 }).fadeRatio,
+    ).toBe(0);
+    expect(
+      new TransformMatchingShapes(sq(), sq(), { fadeRatio: 0.8 }).fadeRatio,
+    ).toBe(0.5);
+    expect(
+      new TransformMatchingShapes(sq(), sq(), { fadeRatio: 0.3 }).fadeRatio,
+    ).toBeCloseTo(
       0.3,
       5,
     );
   });
 
-  it('single VMobject transforms without error', () => {
+  it("single VMobject transforms without error", () => {
     const s = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -673,12 +707,12 @@ describe('TransformMatchingShapes', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('keyFunc is called during matching', () => {
+  it("keyFunc is called during matching", () => {
     let called = 0;
     const keyFn = (v: VMobject) => {
       called++;
       const p = v.getLocalPoints();
-      return p.length > 0 ? `y=${p[0][1]}` : '';
+      return p.length > 0 ? `y=${p[0][1]}` : "";
     };
     const src = vgroup(
       vm([
@@ -708,7 +742,7 @@ describe('TransformMatchingShapes', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('runs 0-1 sweep without error', () => {
+  it("runs 0-1 sweep without error", () => {
     const s = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -728,7 +762,7 @@ describe('TransformMatchingShapes', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('factory creates TransformMatchingShapes', () => {
+  it("factory creates TransformMatchingShapes", () => {
     const anim = transformMatchingShapes(sq(), sq(), { matchThreshold: 0.7 });
     expect(anim).toBeInstanceOf(TransformMatchingShapes);
     expect(anim.matchThreshold).toBe(0.7);
@@ -737,30 +771,35 @@ describe('TransformMatchingShapes', () => {
 
 // ── TransformMatchingTex ───────────────────────────────────────────────────
 
-describe('TransformMatchingTex', () => {
-  it('default options', () => {
+describe("TransformMatchingTex", () => {
+  it("default options", () => {
     const anim = new TransformMatchingTex(sq(), sq());
     expect(anim.fadeRatio).toBeCloseTo(0.25, 5);
     expect(anim.transformMismatches).toBe(false);
-    expect(typeof anim.keyFunc).toBe('function');
+    expect(typeof anim.keyFunc).toBe("function");
   });
 
-  it('accepts custom keyFunc and transformMismatches', () => {
-    const k = () => 'x';
-    const anim = new TransformMatchingTex(sq(), sq(), { keyFunc: k, transformMismatches: true });
+  it("accepts custom keyFunc and transformMismatches", () => {
+    const k = () => "x";
+    const anim = new TransformMatchingTex(sq(), sq(), {
+      keyFunc: k,
+      transformMismatches: true,
+    });
     expect(anim.keyFunc).toBe(k);
     expect(anim.transformMismatches).toBe(true);
   });
 
-  it('clamps fadeRatio', () => {
-    expect(new TransformMatchingTex(sq(), sq(), { fadeRatio: -0.5 }).fadeRatio).toBe(0);
-    expect(new TransformMatchingTex(sq(), sq(), { fadeRatio: 0.9 }).fadeRatio).toBe(0.5);
+  it("clamps fadeRatio", () => {
+    expect(new TransformMatchingTex(sq(), sq(), { fadeRatio: -0.5 }).fadeRatio)
+      .toBe(0);
+    expect(new TransformMatchingTex(sq(), sq(), { fadeRatio: 0.9 }).fadeRatio)
+      .toBe(0.5);
   });
 
-  it('children with same key get matched', () => {
+  it("children with same key get matched", () => {
     const keyFn = (v: VMobject) => {
       const p = v.getLocalPoints();
-      return p.length > 0 ? `${p[0][1].toFixed(0)}` : '';
+      return p.length > 0 ? `${p[0][1].toFixed(0)}` : "";
     };
     const src = vgroup(
       vm([
@@ -789,7 +828,7 @@ describe('TransformMatchingTex', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('transformMismatches pairs unmatched via Hungarian', () => {
+  it("transformMismatches pairs unmatched via Hungarian", () => {
     const keyFn = (v: VMobject) => {
       const p = v.getLocalPoints();
       return `u_${p[0]?.[0]}_${p[0]?.[1]}`;
@@ -814,14 +853,17 @@ describe('TransformMatchingTex', () => {
         [11, 10, 0],
       ]),
     );
-    const anim = new TransformMatchingTex(src, tgt, { keyFunc: keyFn, transformMismatches: true });
+    const anim = new TransformMatchingTex(src, tgt, {
+      keyFunc: keyFn,
+      transformMismatches: true,
+    });
     anim.begin();
     anim.interpolate(0.5);
     anim.finish();
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('unmatched source fades out', () => {
+  it("unmatched source fades out", () => {
     const c1 = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -843,8 +885,10 @@ describe('TransformMatchingTex', () => {
     expect(c1.opacity).toBeLessThan(1);
   });
 
-  it('factory creates TransformMatchingTex', () => {
-    const anim = transformMatchingTex(sq(), sq(), { transformMismatches: true });
+  it("factory creates TransformMatchingTex", () => {
+    const anim = transformMatchingTex(sq(), sq(), {
+      transformMismatches: true,
+    });
     expect(anim).toBeInstanceOf(TransformMatchingTex);
     expect(anim.transformMismatches).toBe(true);
   });
@@ -852,53 +896,56 @@ describe('TransformMatchingTex', () => {
 
 // ── ApplyMethod ────────────────────────────────────────────────────────────
 
-describe('ApplyMethod', () => {
-  it('creates a target by copying and calling the method', () => {
+describe("ApplyMethod", () => {
+  it("creates a target by copying and calling the method", () => {
     const c = new Circle({ radius: 1 });
     c.position.set(0, 0, 0);
-    const anim = new ApplyMethod(c, { methodName: 'shift', args: [[3, 0, 0]] });
-    expect(anim.methodName).toBe('shift');
+    const anim = new ApplyMethod(c, { methodName: "shift", args: [[3, 0, 0]] });
+    expect(anim.methodName).toBe("shift");
     expect(anim.args).toEqual([[3, 0, 0]]);
   });
 
-  it('transforms toward target after calling method on copy', () => {
-    const c = new Circle({ radius: 1, color: '#ff0000' });
+  it("transforms toward target after calling method on copy", () => {
+    const c = new Circle({ radius: 1, color: "#ff0000" });
     c.opacity = 1;
     c.position.set(0, 0, 0);
-    const anim = new ApplyMethod(c, { methodName: 'setColor', args: ['#0000ff'] });
+    const anim = new ApplyMethod(c, {
+      methodName: "setColor",
+      args: ["#0000ff"],
+    });
     anim.begin();
     anim.finish();
     // After finish, color should match the target (which had setColor called)
-    expect(c.color.toLowerCase()).toBe('#0000ff');
+    expect(c.color.toLowerCase()).toBe("#0000ff");
   });
 
-  it('handles non-existent method gracefully', () => {
+  it("handles non-existent method gracefully", () => {
     const c = new Circle({ radius: 1 });
     // Non-existent method should just create a copy without calling anything
-    const anim = new ApplyMethod(c, { methodName: 'nonExistentMethod' });
-    expect(anim.methodName).toBe('nonExistentMethod');
+    const anim = new ApplyMethod(c, { methodName: "nonExistentMethod" });
+    expect(anim.methodName).toBe("nonExistentMethod");
     expect(anim.args).toEqual([]);
   });
 
-  it('defaults args to empty array', () => {
+  it("defaults args to empty array", () => {
     const c = new Circle({ radius: 1 });
-    const anim = new ApplyMethod(c, { methodName: 'setColor' });
+    const anim = new ApplyMethod(c, { methodName: "setColor" });
     expect(anim.args).toEqual([]);
   });
 
-  it('factory creates ApplyMethod', () => {
+  it("factory creates ApplyMethod", () => {
     const c = new Circle({ radius: 1 });
-    const anim = applyMethod(c, 'setColor', ['#ff0000'], { duration: 2 });
+    const anim = applyMethod(c, "setColor", ["#ff0000"], { duration: 2 });
     expect(anim).toBeInstanceOf(ApplyMethod);
-    expect(anim.methodName).toBe('setColor');
+    expect(anim.methodName).toBe("setColor");
     expect(anim.duration).toBeCloseTo(2, 5);
   });
 });
 
 // ── FadeTransformPieces ────────────────────────────────────────────────────
 
-describe('FadeTransformPieces', () => {
-  it('stores target and defaults', () => {
+describe("FadeTransformPieces", () => {
+  it("stores target and defaults", () => {
     const s = sq();
     const t = sq();
     const anim = new FadeTransformPieces(s, t);
@@ -906,7 +953,7 @@ describe('FadeTransformPieces', () => {
     expect(anim.duration).toBe(1);
   });
 
-  it('handles single piece (no submobjects) with fade V-curve', () => {
+  it("handles single piece (no submobjects) with fade V-curve", () => {
     const s = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -940,7 +987,7 @@ describe('FadeTransformPieces', () => {
     expect(s.opacity).toBeCloseTo(0.8, 3);
   });
 
-  it('handles submobjects (pieces) independently', () => {
+  it("handles submobjects (pieces) independently", () => {
     const c1 = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -977,7 +1024,7 @@ describe('FadeTransformPieces', () => {
     expect(c2.opacity).toBeCloseTo(0.4, 3);
   });
 
-  it('finish sets final target points and opacity for submobjects', () => {
+  it("finish sets final target points and opacity for submobjects", () => {
     const c1 = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -999,7 +1046,7 @@ describe('FadeTransformPieces', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('finish sets final state for single-piece (no submobjects)', () => {
+  it("finish sets final state for single-piece (no submobjects)", () => {
     const s = vm([[0, 0, 0]]);
     s.opacity = 1;
     const t = vm([[5, 5, 0]]);
@@ -1012,7 +1059,7 @@ describe('FadeTransformPieces', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('handles more source children than target children', () => {
+  it("handles more source children than target children", () => {
     const c1 = vm([[0, 0, 0]]);
     const c2 = vm([[1, 1, 0]]);
     const c3 = vm([[2, 2, 0]]);
@@ -1028,7 +1075,7 @@ describe('FadeTransformPieces', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('handles more target children than source children', () => {
+  it("handles more target children than source children", () => {
     const c1 = vm([[0, 0, 0]]);
     const src = vgroup(c1);
 
@@ -1044,7 +1091,7 @@ describe('FadeTransformPieces', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('factory creates FadeTransformPieces', () => {
+  it("factory creates FadeTransformPieces", () => {
     const anim = fadeTransformPieces(sq(), sq());
     expect(anim).toBeInstanceOf(FadeTransformPieces);
   });
@@ -1052,8 +1099,8 @@ describe('FadeTransformPieces', () => {
 
 // ── Swap ───────────────────────────────────────────────────────────────────
 
-describe('Swap', () => {
-  it('stores defaults', () => {
+describe("Swap", () => {
+  it("stores defaults", () => {
     const m1 = sq();
     const m2 = sq();
     const anim = new Swap(m1, m2);
@@ -1063,18 +1110,18 @@ describe('Swap', () => {
     expect(anim.duration).toBe(1);
   });
 
-  it('accepts custom pathArc', () => {
+  it("accepts custom pathArc", () => {
     const anim = new Swap(sq(), sq(), { pathArc: Math.PI });
     expect(anim.pathArc).toBeCloseTo(Math.PI, 5);
   });
 
-  it('factory creates Swap', () => {
+  it("factory creates Swap", () => {
     const anim = swap(sq(), sq(), { pathArc: 1 });
     expect(anim).toBeInstanceOf(Swap);
     expect(anim.pathArc).toBeCloseTo(1, 5);
   });
 
-  it('swaps positions after finish (autoCenter: false)', () => {
+  it("swaps positions after finish (autoCenter: false)", () => {
     const m1 = sq();
     m1.position.set(0, 0, 0);
     const m2 = sq();
@@ -1090,7 +1137,7 @@ describe('Swap', () => {
     expect(m2.position.y).toBeCloseTo(0, 5);
   });
 
-  it('positions interpolate halfway at alpha 0.5 (autoCenter: false)', () => {
+  it("positions interpolate halfway at alpha 0.5 (autoCenter: false)", () => {
     const m1 = sq();
     m1.position.set(0, 0, 0);
     const m2 = sq();
@@ -1109,7 +1156,7 @@ describe('Swap', () => {
     expect(m2.position.y).toBeCloseTo(-arcOffset * 0.5, 3);
   });
 
-  it('at alpha 0 positions are at start (autoCenter: false)', () => {
+  it("at alpha 0 positions are at start (autoCenter: false)", () => {
     const m1 = sq();
     m1.position.set(0, 0, 0);
     const m2 = sq();
@@ -1123,18 +1170,24 @@ describe('Swap', () => {
     expect(m2.position.x).toBeCloseTo(8, 5);
   });
 
-  it('swaps positions after ApplyPointwiseFunction modifies points', () => {
+  it("swaps positions after ApplyPointwiseFunction modifies points", () => {
     // MRE: ApplyPointwiseFunction modifies points directly, not position
     // Swap should still work by calling centerPointsAroundPosition()
     const m1 = sq();
     const m2 = sq();
 
     // Shift points using ApplyPointwiseFunction (simulates Python manim's shift)
-    const shiftLeft = new ApplyPointwiseFunction(m1, (p) => [p[0] - 2, p[1], p[2]]);
+    const shiftLeft = new ApplyPointwiseFunction(
+      m1,
+      (p) => [p[0] - 2, p[1], p[2]],
+    );
     shiftLeft.begin();
     shiftLeft.finish();
 
-    const shiftRight = new ApplyPointwiseFunction(m2, (p) => [p[0] + 2, p[1], p[2]]);
+    const shiftRight = new ApplyPointwiseFunction(
+      m2,
+      (p) => [p[0] + 2, p[1], p[2]],
+    );
     shiftRight.begin();
     shiftRight.finish();
 
@@ -1154,15 +1207,21 @@ describe('Swap', () => {
     expect(m2.position.x).toBeCloseTo(-1.5, 3);
   });
 
-  it('swaps child-backed VMobject containers after pointwise shifts', () => {
+  it("swaps child-backed VMobject containers after pointwise shifts", () => {
     const m1 = vgroup(sq());
     const m2 = vgroup(sq());
 
-    const shiftLeft = new ApplyPointwiseFunction(m1, (p) => [p[0] - 2, p[1], p[2]]);
+    const shiftLeft = new ApplyPointwiseFunction(
+      m1,
+      (p) => [p[0] - 2, p[1], p[2]],
+    );
     shiftLeft.begin();
     shiftLeft.finish();
 
-    const shiftRight = new ApplyPointwiseFunction(m2, (p) => [p[0] + 2, p[1], p[2]]);
+    const shiftRight = new ApplyPointwiseFunction(
+      m2,
+      (p) => [p[0] + 2, p[1], p[2]],
+    );
     shiftRight.begin();
     shiftRight.finish();
 
@@ -1180,7 +1239,7 @@ describe('Swap', () => {
     expect(m2.position.x).toBeCloseTo(-1.5, 3);
   });
 
-  it('swaps CurvesAsSubmobjects (container with no local points)', () => {
+  it("swaps CurvesAsSubmobjects (container with no local points)", () => {
     // Regression: CurvesAsSubmobjects has empty local _points3D but children have points.
     // centerPointsAroundPosition must scan descendants.
     const base = new Circle({ radius: 1 });
@@ -1190,13 +1249,20 @@ describe('Swap', () => {
     // Verify container has no local points but children do
     expect(curves1.getLocalPoints().length).toBe(0);
     expect(curves1.children.length).toBeGreaterThan(0);
-    expect((curves1.children[0] as VMobject).getLocalPoints().length).toBeGreaterThan(0);
+    expect((curves1.children[0] as VMobject).getLocalPoints().length)
+      .toBeGreaterThan(0);
 
-    const shift1 = new ApplyPointwiseFunction(curves1, (p) => [p[0] - 3, p[1], p[2]]);
+    const shift1 = new ApplyPointwiseFunction(
+      curves1,
+      (p) => [p[0] - 3, p[1], p[2]],
+    );
     shift1.begin();
     shift1.finish();
 
-    const shift2 = new ApplyPointwiseFunction(curves2, (p) => [p[0] + 3, p[1], p[2]]);
+    const shift2 = new ApplyPointwiseFunction(
+      curves2,
+      (p) => [p[0] + 3, p[1], p[2]],
+    );
     shift2.begin();
     shift2.finish();
 
@@ -1209,22 +1275,22 @@ describe('Swap', () => {
     expect(curves2.position.x).toBeLessThan(-2);
   });
 
-  it('throws when autoCenter used with non-VMobject', () => {
+  it("throws when autoCenter used with non-VMobject", () => {
     const m1 = new Mobject();
     const m2 = new Mobject();
     const anim = new Swap(m1, m2);
-    expect(() => anim.begin()).toThrow('Swap autoCenter requires VMobject');
+    expect(() => anim.begin()).toThrow("Swap autoCenter requires VMobject");
   });
 });
 
 // ── CyclicReplace ──────────────────────────────────────────────────────────
 
-describe('CyclicReplace', () => {
-  it('requires at least 2 mobjects', () => {
-    expect(() => new CyclicReplace([sq()])).toThrow('at least 2 mobjects');
+describe("CyclicReplace", () => {
+  it("requires at least 2 mobjects", () => {
+    expect(() => new CyclicReplace([sq()])).toThrow("at least 2 mobjects");
   });
 
-  it('stores defaults', () => {
+  it("stores defaults", () => {
     const m1 = sq();
     const m2 = sq();
     const anim = new CyclicReplace([m1, m2]);
@@ -1233,18 +1299,18 @@ describe('CyclicReplace', () => {
     expect(anim.duration).toBe(1);
   });
 
-  it('accepts custom pathArc', () => {
+  it("accepts custom pathArc", () => {
     const anim = new CyclicReplace([sq(), sq()], { pathArc: 2 });
     expect(anim.pathArc).toBeCloseTo(2, 5);
   });
 
-  it('factory creates CyclicReplace', () => {
+  it("factory creates CyclicReplace", () => {
     const anim = cyclicReplace([sq(), sq(), sq()], { duration: 3 });
     expect(anim).toBeInstanceOf(CyclicReplace);
     expect(anim.duration).toBeCloseTo(3, 5);
   });
 
-  it('cycles positions for 2 mobjects (autoCenter: false)', () => {
+  it("cycles positions for 2 mobjects (autoCenter: false)", () => {
     const m1 = sq();
     m1.position.set(0, 0, 0);
     const m2 = sq();
@@ -1259,7 +1325,7 @@ describe('CyclicReplace', () => {
     expect(m2.position.x).toBeCloseTo(0, 5);
   });
 
-  it('cycles positions for 3 mobjects (autoCenter: false)', () => {
+  it("cycles positions for 3 mobjects (autoCenter: false)", () => {
     const m1 = sq();
     m1.position.set(0, 0, 0);
     const m2 = sq();
@@ -1277,7 +1343,7 @@ describe('CyclicReplace', () => {
     expect(m3.position.x).toBeCloseTo(0, 5);
   });
 
-  it('interpolates with arc offsets at alpha 0.5 (autoCenter: false)', () => {
+  it("interpolates with arc offsets at alpha 0.5 (autoCenter: false)", () => {
     const m1 = sq();
     m1.position.set(0, 0, 0);
     const m2 = sq();
@@ -1292,7 +1358,7 @@ describe('CyclicReplace', () => {
     expect(m2.position.x).toBeCloseTo(5, 3);
   });
 
-  it('cycles positions after ApplyPointwiseFunction modifies points', () => {
+  it("cycles positions after ApplyPointwiseFunction modifies points", () => {
     // MRE: ApplyPointwiseFunction modifies points directly, not position
     // CyclicReplace should still work by calling centerPointsAroundPosition()
     const m1 = sq();
@@ -1300,15 +1366,24 @@ describe('CyclicReplace', () => {
     const m3 = sq();
 
     // Shift points using ApplyPointwiseFunction
-    const shift1 = new ApplyPointwiseFunction(m1, (p) => [p[0] - 2, p[1], p[2]]);
+    const shift1 = new ApplyPointwiseFunction(
+      m1,
+      (p) => [p[0] - 2, p[1], p[2]],
+    );
     shift1.begin();
     shift1.finish();
 
-    const shift2 = new ApplyPointwiseFunction(m2, (p) => [p[0] + 2, p[1], p[2]]);
+    const shift2 = new ApplyPointwiseFunction(
+      m2,
+      (p) => [p[0] + 2, p[1], p[2]],
+    );
     shift2.begin();
     shift2.finish();
 
-    const shift3 = new ApplyPointwiseFunction(m3, (p) => [p[0] + 6, p[1], p[2]]);
+    const shift3 = new ApplyPointwiseFunction(
+      m3,
+      (p) => [p[0] + 6, p[1], p[2]],
+    );
     shift3.begin();
     shift3.finish();
 
@@ -1331,20 +1406,29 @@ describe('CyclicReplace', () => {
     expect(m3.position.x).toBeCloseTo(-1.5, 3);
   });
 
-  it('cycles child-backed VMobject containers after pointwise shifts', () => {
+  it("cycles child-backed VMobject containers after pointwise shifts", () => {
     const m1 = vgroup(sq());
     const m2 = vgroup(sq());
     const m3 = vgroup(sq());
 
-    const shift1 = new ApplyPointwiseFunction(m1, (p) => [p[0] - 2, p[1], p[2]]);
+    const shift1 = new ApplyPointwiseFunction(
+      m1,
+      (p) => [p[0] - 2, p[1], p[2]],
+    );
     shift1.begin();
     shift1.finish();
 
-    const shift2 = new ApplyPointwiseFunction(m2, (p) => [p[0] + 2, p[1], p[2]]);
+    const shift2 = new ApplyPointwiseFunction(
+      m2,
+      (p) => [p[0] + 2, p[1], p[2]],
+    );
     shift2.begin();
     shift2.finish();
 
-    const shift3 = new ApplyPointwiseFunction(m3, (p) => [p[0] + 6, p[1], p[2]]);
+    const shift3 = new ApplyPointwiseFunction(
+      m3,
+      (p) => [p[0] + 6, p[1], p[2]],
+    );
     shift3.begin();
     shift3.finish();
 
@@ -1364,25 +1448,27 @@ describe('CyclicReplace', () => {
     expect(m3.position.x).toBeCloseTo(-1.5, 3);
   });
 
-  it('throws when autoCenter used with non-VMobject', () => {
+  it("throws when autoCenter used with non-VMobject", () => {
     const m1 = new Mobject();
     const m2 = new Mobject();
     const anim = new CyclicReplace([m1, m2]);
-    expect(() => anim.begin()).toThrow('CyclicReplace autoCenter requires VMobject');
+    expect(() => anim.begin()).toThrow(
+      "CyclicReplace autoCenter requires VMobject",
+    );
   });
 });
 
 // ── ScaleInPlace ───────────────────────────────────────────────────────────
 
-describe('ScaleInPlace', () => {
-  it('stores scale factor', () => {
+describe("ScaleInPlace", () => {
+  it("stores scale factor", () => {
     const m = sq();
     const anim = new ScaleInPlace(m, { scaleFactor: 2 });
     expect(anim.scaleFactor).toBe(2);
     expect(anim.duration).toBe(1);
   });
 
-  it('scales from initial to target scale', () => {
+  it("scales from initial to target scale", () => {
     const m = sq();
     m.scaleVector.set(1, 1, 1);
 
@@ -1398,7 +1484,7 @@ describe('ScaleInPlace', () => {
     expect(m.scaleVector.x).toBeCloseTo(3, 3);
   });
 
-  it('finish sets final scale', () => {
+  it("finish sets final scale", () => {
     const m = sq();
     m.scaleVector.set(1, 1, 1);
 
@@ -1412,7 +1498,7 @@ describe('ScaleInPlace', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('works with scale factor less than 1', () => {
+  it("works with scale factor less than 1", () => {
     const m = sq();
     m.scaleVector.set(4, 4, 4);
 
@@ -1424,7 +1510,7 @@ describe('ScaleInPlace', () => {
     expect(m.scaleVector.y).toBeCloseTo(2, 5);
   });
 
-  it('factory creates ScaleInPlace', () => {
+  it("factory creates ScaleInPlace", () => {
     const anim = scaleInPlace(sq(), 2.5, { duration: 0.5 });
     expect(anim).toBeInstanceOf(ScaleInPlace);
     expect(anim.scaleFactor).toBe(2.5);
@@ -1434,13 +1520,13 @@ describe('ScaleInPlace', () => {
 
 // ── ShrinkToCenter ─────────────────────────────────────────────────────────
 
-describe('ShrinkToCenter', () => {
-  it('defaults to 1s duration', () => {
+describe("ShrinkToCenter", () => {
+  it("defaults to 1s duration", () => {
     const anim = new ShrinkToCenter(sq());
     expect(anim.duration).toBe(1);
   });
 
-  it('scale shrinks to zero over animation', () => {
+  it("scale shrinks to zero over animation", () => {
     const m = sq();
     m.scaleVector.set(2, 2, 2);
 
@@ -1457,7 +1543,7 @@ describe('ShrinkToCenter', () => {
     expect(m.scaleVector.x).toBeCloseTo(0, 3);
   });
 
-  it('finish sets scale to zero', () => {
+  it("finish sets scale to zero", () => {
     const m = sq();
     m.scaleVector.set(3, 3, 3);
 
@@ -1471,7 +1557,7 @@ describe('ShrinkToCenter', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('factory creates ShrinkToCenter', () => {
+  it("factory creates ShrinkToCenter", () => {
     const anim = shrinkToCenter(sq(), { duration: 0.3 });
     expect(anim).toBeInstanceOf(ShrinkToCenter);
     expect(anim.duration).toBeCloseTo(0.3, 5);
@@ -1480,22 +1566,22 @@ describe('ShrinkToCenter', () => {
 
 // ── Restore ────────────────────────────────────────────────────────────────
 
-describe('Restore', () => {
-  it('throws if savedState is null', () => {
+describe("Restore", () => {
+  it("throws if savedState is null", () => {
     const c = new Circle({ radius: 1 });
     expect(() => {
       new Restore(c as unknown as MobjectWithSavedState);
-    }).toThrow('Restore requires mobject.savedState to be set');
+    }).toThrow("Restore requires mobject.savedState to be set");
   });
 
-  it('works when savedState is set via saveState()', () => {
-    const c = new Circle({ radius: 1, color: '#ff0000' });
+  it("works when savedState is set via saveState()", () => {
+    const c = new Circle({ radius: 1, color: "#ff0000" });
     c.opacity = 1;
     c.saveState();
 
     // Modify the circle
     c.opacity = 0.2;
-    c.color = '#0000ff';
+    c.color = "#0000ff";
     c.position.set(5, 5, 0);
 
     const anim = new Restore(c as unknown as MobjectWithSavedState);
@@ -1511,36 +1597,36 @@ describe('Restore', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('factory creates Restore', () => {
+  it("factory creates Restore", () => {
     const c = new Circle({ radius: 1 });
     c.saveState();
     const anim = restore(c as unknown as MobjectWithSavedState);
     expect(anim).toBeInstanceOf(Restore);
   });
 
-  it('factory throws without savedState', () => {
+  it("factory throws without savedState", () => {
     const c = new Circle({ radius: 1 });
     expect(() => {
       restore(c as unknown as MobjectWithSavedState);
-    }).toThrow('Restore requires mobject.savedState to be set');
+    }).toThrow("Restore requires mobject.savedState to be set");
   });
 });
 
 // ── FadeToColor ────────────────────────────────────────────────────────────
 
-describe('FadeToColor', () => {
-  it('stores target color', () => {
+describe("FadeToColor", () => {
+  it("stores target color", () => {
     const m = sq();
-    const anim = new FadeToColor(m, { color: '#00ff00' });
-    expect(anim.targetColor).toBe('#00ff00');
+    const anim = new FadeToColor(m, { color: "#00ff00" });
+    expect(anim.targetColor).toBe("#00ff00");
     expect(anim.duration).toBe(1);
   });
 
-  it('interpolates color from source to target', () => {
+  it("interpolates color from source to target", () => {
     const m = sq();
-    m.color = '#ff0000';
+    m.color = "#ff0000";
 
-    const anim = new FadeToColor(m, { color: '#0000ff' });
+    const anim = new FadeToColor(m, { color: "#0000ff" });
     anim.begin();
 
     anim.interpolate(0);
@@ -1555,30 +1641,30 @@ describe('FadeToColor', () => {
     expect(mid.b).toBeCloseTo(0.5, 1);
   });
 
-  it('finish sets exact target color', () => {
+  it("finish sets exact target color", () => {
     const m = sq();
-    m.color = '#ff0000';
+    m.color = "#ff0000";
 
-    const anim = new FadeToColor(m, { color: '#00ff00' });
+    const anim = new FadeToColor(m, { color: "#00ff00" });
     anim.begin();
     anim.finish();
 
-    expect(m.color).toBe('#00ff00');
+    expect(m.color).toBe("#00ff00");
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('factory creates FadeToColor', () => {
-    const anim = fadeToColor(sq(), '#ff00ff', { duration: 2 });
+  it("factory creates FadeToColor", () => {
+    const anim = fadeToColor(sq(), "#ff00ff", { duration: 2 });
     expect(anim).toBeInstanceOf(FadeToColor);
-    expect(anim.targetColor).toBe('#ff00ff');
+    expect(anim.targetColor).toBe("#ff00ff");
     expect(anim.duration).toBeCloseTo(2, 5);
   });
 });
 
 // ── TransformAnimations ────────────────────────────────────────────────────
 
-describe('TransformAnimations', () => {
-  it('stores both animations', () => {
+describe("TransformAnimations", () => {
+  it("stores both animations", () => {
     const v1 = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -1587,25 +1673,35 @@ describe('TransformAnimations', () => {
       [2, 0, 0],
       [3, 0, 0],
     ]);
-    const anim1 = new ApplyFunction(v1, { func: (p) => [p[0] + 1, p[1], p[2]] });
-    const anim2 = new ApplyFunction(v2, { func: (p) => [p[0] + 2, p[1], p[2]] });
+    const anim1 = new ApplyFunction(v1, {
+      func: (p) => [p[0] + 1, p[1], p[2]],
+    });
+    const anim2 = new ApplyFunction(v2, {
+      func: (p) => [p[0] + 2, p[1], p[2]],
+    });
     const meta = new TransformAnimations(anim1, anim2);
     expect(meta.animation1).toBe(anim1);
     expect(meta.animation2).toBe(anim2);
     expect(meta.duration).toBe(1);
   });
 
-  it('accepts custom transformRateFunc', () => {
+  it("accepts custom transformRateFunc", () => {
     const v1 = vm([[0, 0, 0]]);
     const v2 = vm([[1, 0, 0]]);
-    const anim1 = new ApplyFunction(v1, { func: (p) => [p[0] + 1, p[1], p[2]] });
-    const anim2 = new ApplyFunction(v2, { func: (p) => [p[0] + 2, p[1], p[2]] });
+    const anim1 = new ApplyFunction(v1, {
+      func: (p) => [p[0] + 1, p[1], p[2]],
+    });
+    const anim2 = new ApplyFunction(v2, {
+      func: (p) => [p[0] + 2, p[1], p[2]],
+    });
     const customRate = (t: number) => t * t;
-    const meta = new TransformAnimations(anim1, anim2, { transformRateFunc: customRate });
+    const meta = new TransformAnimations(anim1, anim2, {
+      transformRateFunc: customRate,
+    });
     expect(meta.transformRateFunc).toBe(customRate);
   });
 
-  it('begin/interpolate/finish runs without error', () => {
+  it("begin/interpolate/finish runs without error", () => {
     const v1 = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -1618,8 +1714,12 @@ describe('TransformAnimations', () => {
       [1, 1, 0],
       [0, 1, 0],
     ]);
-    const anim1 = new ApplyFunction(v1, { func: (p) => [p[0] + 2, p[1], p[2]] });
-    const anim2 = new ApplyFunction(v2, { func: (p) => [p[0], p[1] + 2, p[2]] });
+    const anim1 = new ApplyFunction(v1, {
+      func: (p) => [p[0] + 2, p[1], p[2]],
+    });
+    const anim2 = new ApplyFunction(v2, {
+      func: (p) => [p[0], p[1] + 2, p[2]],
+    });
     const meta = new TransformAnimations(anim1, anim2);
     meta.begin();
     meta.interpolate(0);
@@ -1629,11 +1729,15 @@ describe('TransformAnimations', () => {
     expect(meta.isFinished()).toBe(true);
   });
 
-  it('factory creates TransformAnimations', () => {
+  it("factory creates TransformAnimations", () => {
     const v1 = vm([[0, 0, 0]]);
     const v2 = vm([[1, 0, 0]]);
-    const anim1 = new ApplyFunction(v1, { func: (p) => [p[0] + 1, p[1], p[2]] });
-    const anim2 = new ApplyFunction(v2, { func: (p) => [p[0] + 2, p[1], p[2]] });
+    const anim1 = new ApplyFunction(v1, {
+      func: (p) => [p[0] + 1, p[1], p[2]],
+    });
+    const anim2 = new ApplyFunction(v2, {
+      func: (p) => [p[0] + 2, p[1], p[2]],
+    });
     const meta = transformAnimations(anim1, anim2, { duration: 2 });
     expect(meta).toBeInstanceOf(TransformAnimations);
     expect(meta.duration).toBeCloseTo(2, 5);
@@ -1642,8 +1746,8 @@ describe('TransformAnimations', () => {
 
 // ── TransformMatchingShapes extra coverage ──────────────────────────────────
 
-describe('TransformMatchingShapes - fade-in with parent', () => {
-  it('adds fade-in copies to parent when source has a parent', () => {
+describe("TransformMatchingShapes - fade-in with parent", () => {
+  it("adds fade-in copies to parent when source has a parent", () => {
     // Source has 1 child, target has 2 children -> 1 unmatched target fades in
     const parentGroup = new VMobject();
     const srcChild = vm([
@@ -1673,7 +1777,7 @@ describe('TransformMatchingShapes - fade-in with parent', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('handles unmatched source fading out', () => {
+  it("handles unmatched source fading out", () => {
     // Source has 2 children, target has 1 -> 1 source fades out
     const srcChild1 = vm([
       [0, 0, 0],
@@ -1704,8 +1808,8 @@ describe('TransformMatchingShapes - fade-in with parent', () => {
 
 // ── TransformMatchingTex extra coverage ─────────────────────────────────────
 
-describe('TransformMatchingTex - mismatch cross-fade', () => {
-  it('cross-fades mismatched pairs at alpha < 0.5 and >= 0.5', () => {
+describe("TransformMatchingTex - mismatch cross-fade", () => {
+  it("cross-fades mismatched pairs at alpha < 0.5 and >= 0.5", () => {
     const keyFn = (v: VMobject) =>
       `unique_${v.getLocalPoints()[0]?.[0]}_${v.getLocalPoints()[0]?.[1]}`;
     const srcChild = vm([
@@ -1740,7 +1844,7 @@ describe('TransformMatchingTex - mismatch cross-fade', () => {
     anim.finish();
   });
 
-  it('handles nested VGroups in _getTexParts', () => {
+  it("handles nested VGroups in _getTexParts", () => {
     // Create nested structure: parent -> group -> children
     const leaf1 = vm([
       [0, 0, 0],
@@ -1771,7 +1875,7 @@ describe('TransformMatchingTex - mismatch cross-fade', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('finish finalizes mismatched pairs', () => {
+  it("finish finalizes mismatched pairs", () => {
     const keyFn = (v: VMobject) => `u_${v.getLocalPoints()[0]?.[0]}`;
     const srcChild = vm([
       [0, 0, 0],
@@ -1783,7 +1887,7 @@ describe('TransformMatchingTex - mismatch cross-fade', () => {
       [11, 0, 0],
     ]);
     tgtChild.opacity = 0.6;
-    tgtChild.color = '#ff0000';
+    tgtChild.color = "#ff0000";
 
     const anim = new TransformMatchingTex(vgroup(srcChild), vgroup(tgtChild), {
       keyFunc: keyFn,
@@ -1792,14 +1896,14 @@ describe('TransformMatchingTex - mismatch cross-fade', () => {
     anim.begin();
     anim.finish();
     expect(srcChild.opacity).toBeCloseTo(0.6, 5);
-    expect(srcChild.color).toBe('#ff0000');
+    expect(srcChild.color).toBe("#ff0000");
   });
 });
 
 // ── TransformMatchingTex asymmetric unmatched coverage ──────────────────────
 
-describe('TransformMatchingTex - asymmetric transformMismatches', () => {
-  it('fades out extra unmatched sources when sources > targets (lines 572-573)', () => {
+describe("TransformMatchingTex - asymmetric transformMismatches", () => {
+  it("fades out extra unmatched sources when sources > targets (lines 572-573)", () => {
     // 3 unique source children, 1 unique target child
     // All different keys -> 0 matched by key
     // transformMismatches: Hungarian pairs 1 source with 1 target, leaving 2 sources unpaired
@@ -1846,7 +1950,7 @@ describe('TransformMatchingTex - asymmetric transformMismatches', () => {
     anim.finish();
   });
 
-  it('fades in extra unmatched targets when targets > sources (lines 585, 655)', () => {
+  it("fades in extra unmatched targets when targets > sources (lines 585, 655)", () => {
     // 1 unique source child, 3 unique target children
     // All different keys -> 0 matched by key
     // transformMismatches: Hungarian pairs 1 source with closest target, 2 targets fade in
@@ -1897,8 +2001,8 @@ describe('TransformMatchingTex - asymmetric transformMismatches', () => {
   });
 });
 
-describe('TransformMatchingTex - finish with fade parts (lines 729, 733)', () => {
-  it('finish() sets fadeOutParts to 0 and fadeInParts to target opacity', () => {
+describe("TransformMatchingTex - finish with fade parts (lines 729, 733)", () => {
+  it("finish() sets fadeOutParts to 0 and fadeInParts to target opacity", () => {
     // Source has 2 children, target has 2 children, all unique keys -> no key matches
     // transformMismatches: false -> all sources fadeOut, all targets fadeIn
     const s1 = vm([
@@ -1946,29 +2050,29 @@ describe('TransformMatchingTex - finish with fade parts (lines 729, 733)', () =>
   });
 });
 
-describe('TransformMatchingTex - defaultTexKey with getLatex (line 393)', () => {
-  it('uses getLatex() when available on vmobject', () => {
+describe("TransformMatchingTex - defaultTexKey with getLatex (line 393)", () => {
+  it("uses getLatex() when available on vmobject", () => {
     const s1 = vm([
       [0, 0, 0],
       [1, 0, 0],
     ]);
-    (s1 as unknown as { getLatex: () => string }).getLatex = () => 'x^2';
+    (s1 as unknown as { getLatex: () => string }).getLatex = () => "x^2";
     const s2 = vm([
       [2, 0, 0],
       [3, 0, 0],
     ]);
-    (s2 as unknown as { getLatex: () => string }).getLatex = () => 'y^2';
+    (s2 as unknown as { getLatex: () => string }).getLatex = () => "y^2";
 
     const t1 = vm([
       [10, 0, 0],
       [11, 0, 0],
     ]);
-    (t1 as unknown as { getLatex: () => string }).getLatex = () => 'x^2';
+    (t1 as unknown as { getLatex: () => string }).getLatex = () => "x^2";
     const t2 = vm([
       [20, 0, 0],
       [21, 0, 0],
     ]);
-    (t2 as unknown as { getLatex: () => string }).getLatex = () => 'z^2';
+    (t2 as unknown as { getLatex: () => string }).getLatex = () => "z^2";
 
     const src = vgroup(s1, s2);
     const tgt = vgroup(t1, t2);
@@ -1982,8 +2086,8 @@ describe('TransformMatchingTex - defaultTexKey with getLatex (line 393)', () => 
   });
 });
 
-describe('TransformMatchingTex - empty VMobject getBoundingBox (lines 22-23)', () => {
-  it('handles VMobject with no points via getBoundingBox fallback', () => {
+describe("TransformMatchingTex - empty VMobject getBoundingBox (lines 22-23)", () => {
+  it("handles VMobject with no points via getBoundingBox fallback", () => {
     // Create children with no points - defaultTexKey calls getBoundingBox which hits the empty branch
     const s1 = new VMobject(); // no points set
     const t1 = new VMobject(); // no points set
@@ -2002,8 +2106,8 @@ describe('TransformMatchingTex - empty VMobject getBoundingBox (lines 22-23)', (
 
 // ── ApplyFunction on Group ──────────────────────────────────────────────────
 
-describe('ApplyFunction on Group', () => {
-  it('transforms VMobject children within a Group', () => {
+describe("ApplyFunction on Group", () => {
+  it("transforms VMobject children within a Group", () => {
     const child1 = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -2037,7 +2141,7 @@ describe('ApplyFunction on Group', () => {
     expect(pts2[3][1]).toBeCloseTo(2);
   });
 
-  it('factory function accepts Mobject', () => {
+  it("factory function accepts Mobject", () => {
     const child = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -2052,8 +2156,8 @@ describe('ApplyFunction on Group', () => {
 
 // ── ApplyMatrix on Group ────────────────────────────────────────────────────
 
-describe('ApplyMatrix on Group', () => {
-  it('applies 3x3 matrix to all VMobject children', () => {
+describe("ApplyMatrix on Group", () => {
+  it("applies 3x3 matrix to all VMobject children", () => {
     const child = vm([
       [1, 0, 0],
       [2, 0, 0],
@@ -2080,7 +2184,7 @@ describe('ApplyMatrix on Group', () => {
     expect(pts[3][0]).toBeCloseTo(8);
   });
 
-  it('factory function accepts Mobject', () => {
+  it("factory function accepts Mobject", () => {
     const group = new Group(
       vm([
         [0, 0, 0],

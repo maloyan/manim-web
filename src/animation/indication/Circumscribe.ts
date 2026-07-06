@@ -5,15 +5,15 @@
  * or circle around a mobject to highlight it, then fades it away.
  */
 
-import * as THREE from 'three';
-import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { Animation, AnimationOptions } from '../Animation';
-import { YELLOW, DEFAULT_STROKE_WIDTH } from '../../constants';
+import * as THREE from "three";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
+import { Mobject, Vector3Tuple } from "../../core/Mobject";
+import { Animation, AnimationOptions } from "../Animation";
+import { DEFAULT_STROKE_WIDTH, YELLOW } from "../../constants";
 
-export type CircumscribeShape = 'rectangle' | 'circle';
+export type CircumscribeShape = "rectangle" | "circle";
 
 export interface CircumscribeOptions extends AnimationOptions {
   /** Shape to draw around the mobject. Default: 'rectangle' */
@@ -56,14 +56,16 @@ export class Circumscribe extends Animation {
   private _parentObject: THREE.Object3D | null = null;
 
   /** Bounds of the mobject */
-  private _bounds: { center: Vector3Tuple; width: number; height: number } | null = null;
+  private _bounds:
+    | { center: Vector3Tuple; width: number; height: number }
+    | null = null;
 
   /** Total path length for progressive drawing */
   private _totalLength: number = 0;
 
   constructor(mobject: Mobject, options: CircumscribeOptions = {}) {
     super(mobject, { duration: options.duration ?? 1, ...options });
-    this.shapeType = options.shape ?? 'rectangle';
+    this.shapeType = options.shape ?? "rectangle";
     this.shapeColor = options.color ?? YELLOW;
     this.buff = options.buff ?? 0.2;
     this.strokeWidth = options.strokeWidth ?? DEFAULT_STROKE_WIDTH;
@@ -113,7 +115,7 @@ export class Circumscribe extends Animation {
 
     let positions: number[];
 
-    if (this.shapeType === 'circle') {
+    if (this.shapeType === "circle") {
       positions = this._createCirclePositions();
     } else {
       positions = this._createRectanglePositions();
@@ -242,6 +244,9 @@ export class Circumscribe extends Animation {
  * @param mobject The mobject to circumscribe
  * @param options Circumscribe options (shape, color, buff, strokeWidth, timeWidth, fadeOut)
  */
-export function circumscribe(mobject: Mobject, options?: CircumscribeOptions): Circumscribe {
+export function circumscribe(
+  mobject: Mobject,
+  options?: CircumscribeOptions,
+): Circumscribe {
   return new Circumscribe(mobject, options);
 }

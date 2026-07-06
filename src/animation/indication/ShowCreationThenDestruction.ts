@@ -10,13 +10,13 @@
  * For other mobjects, falls back to opacity fade in/out.
  */
 
-import { Mobject } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
-import { Animation, AnimationOptions } from '../Animation';
-import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { linear } from '../../rate-functions';
-import { hasLine2Children, getLine2TotalLength } from '../creation/Create';
+import { Mobject } from "../../core/Mobject";
+import { VMobject } from "../../core/VMobject";
+import { Animation, AnimationOptions } from "../Animation";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+import { linear } from "../../rate-functions";
+import { getLine2TotalLength, hasLine2Children } from "../creation/Create";
 
 export type ShowCreationThenDestructionOptions = AnimationOptions;
 
@@ -26,7 +26,10 @@ export class ShowCreationThenDestruction extends Animation {
   /** Whether to use dash-based reveal (needs Line2 children) */
   private _useDashReveal: boolean = false;
 
-  constructor(mobject: Mobject, options: ShowCreationThenDestructionOptions = {}) {
+  constructor(
+    mobject: Mobject,
+    options: ShowCreationThenDestructionOptions = {},
+  ) {
     super(mobject, {
       duration: options.duration ?? 2,
       rateFunc: options.rateFunc ?? linear,
@@ -36,7 +39,8 @@ export class ShowCreationThenDestruction extends Animation {
   override begin(): void {
     super.begin();
 
-    this._useDashReveal = this.mobject instanceof VMobject && hasLine2Children(this.mobject);
+    this._useDashReveal = this.mobject instanceof VMobject &&
+      hasLine2Children(this.mobject);
 
     if (this._useDashReveal) {
       // Set up dashed line for progressive reveal

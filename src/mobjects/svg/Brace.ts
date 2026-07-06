@@ -1,11 +1,11 @@
-import { VMobject } from '../../core/VMobject';
-import { Mobject, Vector3Tuple, DOWN } from '../../core/Mobject';
-import { isVMobject } from '../../core/MobjectTypes';
-import { Group } from '../../core/Group';
-import { Text } from '../text/Text';
-import { MathTexImage } from '../text/MathTexImage';
-import { Arc } from '../geometry/Arc';
-import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
+import { VMobject } from "../../core/VMobject";
+import { DOWN, Mobject, Vector3Tuple } from "../../core/Mobject";
+import { isVMobject } from "../../core/MobjectTypes";
+import { Group } from "../../core/Group";
+import { Text } from "../text/Text";
+import { MathTexImage } from "../text/MathTexImage";
+import { Arc } from "../geometry/Arc";
+import { DEFAULT_STROKE_WIDTH, WHITE } from "../../constants";
 
 /**
  * Options for creating a Brace
@@ -135,7 +135,8 @@ export class Brace extends VMobject {
   constructor(mobject: Mobject, options: BraceOptions = {}) {
     super();
 
-    const { direction = DOWN, buff = 0.2, color = WHITE, sharpness = 2 } = options;
+    const { direction = DOWN, buff = 0.2, color = WHITE, sharpness = 2 } =
+      options;
 
     this.mobject = mobject;
     this.braceDirection = [...direction];
@@ -163,7 +164,8 @@ export class Brace extends VMobject {
 
     // Normalize direction
     const dirMag = Math.sqrt(
-      this.braceDirection[0] ** 2 + this.braceDirection[1] ** 2 + this.braceDirection[2] ** 2,
+      this.braceDirection[0] ** 2 + this.braceDirection[1] ** 2 +
+        this.braceDirection[2] ** 2,
     );
     const normDir: Vector3Tuple = [
       this.braceDirection[0] / dirMag,
@@ -241,7 +243,10 @@ export class Brace extends VMobject {
 
     // Compute widths based on Manim CE formula
     const SVG_MIN_WIDTH = 0.90552;
-    const linearSection = Math.max(0, (length * this.sharpness - SVG_MIN_WIDTH) / 2);
+    const linearSection = Math.max(
+      0,
+      (length * this.sharpness - SVG_MIN_WIDTH) / 2,
+    );
     const svgTotalWidth = SVG_MIN_WIDTH + 2 * linearSection;
     const wScale = length / svgTotalWidth;
 
@@ -367,8 +372,16 @@ export class Brace extends VMobject {
     const lower: number[][] = [];
     for (let i = 0; i < 19; i++) {
       const h = ht[i];
-      upper.push([cl[i][0] + normals[i][0] * h, cl[i][1] + normals[i][1] * h, cl[i][2]]);
-      lower.push([cl[i][0] - normals[i][0] * h, cl[i][1] - normals[i][1] * h, cl[i][2]]);
+      upper.push([
+        cl[i][0] + normals[i][0] * h,
+        cl[i][1] + normals[i][1] * h,
+        cl[i][2],
+      ]);
+      lower.push([
+        cl[i][0] - normals[i][0] * h,
+        cl[i][1] - normals[i][1] * h,
+        cl[i][2],
+      ]);
     }
 
     // Closed filled path: upper contour forward + lower contour reversed
@@ -428,7 +441,8 @@ export class Brace extends VMobject {
    */
   getDirection(): Vector3Tuple {
     const mag = Math.sqrt(
-      this.braceDirection[0] ** 2 + this.braceDirection[1] ** 2 + this.braceDirection[2] ** 2,
+      this.braceDirection[0] ** 2 + this.braceDirection[1] ** 2 +
+        this.braceDirection[2] ** 2,
     );
     return [
       this.braceDirection[0] / mag,
@@ -441,7 +455,10 @@ export class Brace extends VMobject {
    * Create a Text label positioned at the tip of the brace.
    * Mirrors Manim's Brace.get_text() API.
    */
-  getText(text: string, options: { fontSize?: number; color?: string; buff?: number } = {}): Text {
+  getText(
+    text: string,
+    options: { fontSize?: number; color?: string; buff?: number } = {},
+  ): Text {
     const { fontSize = 36, color = WHITE, buff = 0.4 } = options;
     const tip = this.getTip();
     const dir = this.getDirection();
@@ -505,7 +522,8 @@ export class BraceBetweenPoints extends VMobject {
   constructor(options: BraceBetweenPointsOptions) {
     super();
 
-    const { start, end, direction, buff = 0.2, color = WHITE, sharpness = 2 } = options;
+    const { start, end, direction, buff = 0.2, color = WHITE, sharpness = 2 } =
+      options;
 
     this._start = [...start];
     this._end = [...end];
@@ -541,7 +559,8 @@ export class BraceBetweenPoints extends VMobject {
   protected _generateBracePoints(): void {
     // Normalize direction
     const dirMag = Math.sqrt(
-      this._direction[0] ** 2 + this._direction[1] ** 2 + this._direction[2] ** 2,
+      this._direction[0] ** 2 + this._direction[1] ** 2 +
+        this._direction[2] ** 2,
     );
     const normDir: Vector3Tuple = [
       this._direction[0] / dirMag,
@@ -588,7 +607,10 @@ export class BraceBetweenPoints extends VMobject {
     const CURL_HEIGHT = 0.14;
     const TIP_HEIGHT = 0.25;
     const SVG_MIN_WIDTH = 0.90552;
-    const linearSection = Math.max(0, (length * this._sharpness - SVG_MIN_WIDTH) / 2);
+    const linearSection = Math.max(
+      0,
+      (length * this._sharpness - SVG_MIN_WIDTH) / 2,
+    );
     const svgTotalWidth = SVG_MIN_WIDTH + 2 * linearSection;
     const wScale = length / svgTotalWidth;
 
@@ -708,8 +730,16 @@ export class BraceBetweenPoints extends VMobject {
     const lower: number[][] = [];
     for (let i = 0; i < 19; i++) {
       const h = ht[i];
-      upper.push([cl[i][0] + normals[i][0] * h, cl[i][1] + normals[i][1] * h, cl[i][2]]);
-      lower.push([cl[i][0] - normals[i][0] * h, cl[i][1] - normals[i][1] * h, cl[i][2]]);
+      upper.push([
+        cl[i][0] + normals[i][0] * h,
+        cl[i][1] + normals[i][1] * h,
+        cl[i][2],
+      ]);
+      lower.push([
+        cl[i][0] - normals[i][0] * h,
+        cl[i][1] - normals[i][1] * h,
+        cl[i][2],
+      ]);
     }
 
     this.setPoints3D([
@@ -767,9 +797,14 @@ export class BraceBetweenPoints extends VMobject {
    */
   getDirection(): Vector3Tuple {
     const mag = Math.sqrt(
-      this._direction[0] ** 2 + this._direction[1] ** 2 + this._direction[2] ** 2,
+      this._direction[0] ** 2 + this._direction[1] ** 2 +
+        this._direction[2] ** 2,
     );
-    return [this._direction[0] / mag, this._direction[1] / mag, this._direction[2] / mag];
+    return [
+      this._direction[0] / mag,
+      this._direction[1] / mag,
+      this._direction[2] / mag,
+    ];
   }
 
   /**
@@ -826,7 +861,8 @@ export class ArcBrace extends VMobject {
   constructor(options: ArcBraceOptions) {
     super();
 
-    const { arc, direction = 1, buff = 0.2, color = WHITE, strokeWidth = 1 } = options;
+    const { arc, direction = 1, buff = 0.2, color = WHITE, strokeWidth = 1 } =
+      options;
 
     this._arc = arc;
     this._direction = direction;
@@ -899,7 +935,11 @@ export class ArcBrace extends VMobject {
 
     // Generate 4 Bezier curves
     // Curve 1: Start to quarter
-    const tangentStart: Vector3Tuple = [-Math.sin(startAngle), Math.cos(startAngle), 0];
+    const tangentStart: Vector3Tuple = [
+      -Math.sin(startAngle),
+      Math.cos(startAngle),
+      0,
+    ];
     const tangentQ1: Vector3Tuple = [-Math.sin(q1Angle), Math.cos(q1Angle), 0];
 
     points.push([...braceStart]);
@@ -916,7 +956,11 @@ export class ArcBrace extends VMobject {
     points.push([...q1Point]);
 
     // Curve 2: Quarter to tip
-    const tangentMid: Vector3Tuple = [-Math.sin(midAngle), Math.cos(midAngle), 0];
+    const tangentMid: Vector3Tuple = [
+      -Math.sin(midAngle),
+      Math.cos(midAngle),
+      0,
+    ];
     const q1ToMidKappa = kappa * 0.5;
 
     points.push([
@@ -1024,7 +1068,7 @@ export class BraceLabel extends Group {
     super();
 
     const {
-      label = '',
+      label = "",
       fontSize = 36,
       labelBuff = 0.2,
       labelColor = WHITE,
@@ -1048,7 +1092,7 @@ export class BraceLabel extends Group {
     this.add(this._brace);
 
     // Create or use the label
-    if (typeof label === 'string' && label.length > 0) {
+    if (typeof label === "string" && label.length > 0) {
       this._label = new Text({
         text: label,
         fontSize,
@@ -1111,7 +1155,7 @@ export class BraceLabel extends Group {
       strokeWidth: this._brace.strokeWidth,
       sharpness: this._brace.sharpness,
       labelBuff: this._labelBuff,
-      label: this._label ?? '',
+      label: this._label ?? "",
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
@@ -1132,12 +1176,18 @@ export class BraceLabel extends Group {
  * ```
  */
 export class BraceText extends BraceLabel {
-  constructor(mobject: Mobject, text: string, options: Omit<BraceLabelOptions, 'label'> = {}) {
+  constructor(
+    mobject: Mobject,
+    text: string,
+    options: Omit<BraceLabelOptions, "label"> = {},
+  ) {
     super(mobject, { ...options, label: text });
   }
 
   override copy(): BraceText {
-    const labelText = this._label instanceof Text ? (this._label as Text).getText() : '';
+    const labelText = this._label instanceof Text
+      ? (this._label as Text).getText()
+      : "";
     const copy = new BraceText(this._brace.mobject!, labelText, {
       direction: this._brace.braceDirection,
       buff: this._brace.buff,

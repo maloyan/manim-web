@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { VMobject } from './VMobject';
-import { VGroup } from './VGroup';
+import { describe, expect, it } from "vitest";
+import { VMobject } from "./VMobject";
+import { VGroup } from "./VGroup";
 
-describe('applyMatrix', () => {
-  it('applies a 3x3 identity matrix (no change)', () => {
+describe("applyMatrix", () => {
+  it("applies a 3x3 identity matrix (no change)", () => {
     const vm = new VMobject();
     vm.setPoints([
       [1, 2, 0],
@@ -24,7 +24,7 @@ describe('applyMatrix', () => {
     expect(pts[3][1]).toBeCloseTo(8);
   });
 
-  it('applies a 3x3 scaling matrix', () => {
+  it("applies a 3x3 scaling matrix", () => {
     const vm = new VMobject();
     vm.setPoints([
       [1, 0, 0],
@@ -45,7 +45,7 @@ describe('applyMatrix', () => {
     expect(pts[3][0]).toBeCloseTo(8);
   });
 
-  it('applies a 3x3 rotation matrix (90 degrees CCW)', () => {
+  it("applies a 3x3 rotation matrix (90 degrees CCW)", () => {
     const vm = new VMobject();
     vm.setPoints([
       [1, 0, 0],
@@ -68,7 +68,7 @@ describe('applyMatrix', () => {
     expect(pts[3][1]).toBeCloseTo(4);
   });
 
-  it('applies a matrix with aboutPoint', () => {
+  it("applies a matrix with aboutPoint", () => {
     const vm = new VMobject();
     vm.setPoints([
       [1, 0, 0],
@@ -90,7 +90,7 @@ describe('applyMatrix', () => {
     expect(pts[3][0]).toBeCloseTo(7); // (4-1)*2+1 = 7
   });
 
-  it('applies a matrix with aboutEdge', () => {
+  it("applies a matrix with aboutEdge", () => {
     const vm = new VMobject();
     // A unit square centered at origin
     vm.setPoints([
@@ -116,7 +116,7 @@ describe('applyMatrix', () => {
     expect(pts[3][1]).toBeCloseTo(-2);
   });
 
-  it('works on nested VMobjects in a VGroup', () => {
+  it("works on nested VMobjects in a VGroup", () => {
     const child = new VMobject();
     child.setPoints([
       [1, 0, 0],
@@ -138,7 +138,7 @@ describe('applyMatrix', () => {
     expect(pts[1][0]).toBeCloseTo(4);
   });
 
-  it('supports 2x2 matrix', () => {
+  it("supports 2x2 matrix", () => {
     const vm = new VMobject();
     vm.setPoints([
       [1, 0, 0],
@@ -159,7 +159,7 @@ describe('applyMatrix', () => {
     expect(pts[1][1]).toBeCloseTo(0);
   });
 
-  it('returns this for chaining', () => {
+  it("returns this for chaining", () => {
     const vm = new VMobject();
     vm.setPoints([
       [1, 0, 0],

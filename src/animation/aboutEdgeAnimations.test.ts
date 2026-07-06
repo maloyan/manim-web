@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
-import { VMobject } from '../core/VMobject';
-import { Rotate } from './movement/Rotate';
-import { Scale } from './movement/Scale';
-import { Rotating } from './utility/index';
+import { describe, expect, it } from "vitest";
+import { VMobject } from "../core/VMobject";
+import { Rotate } from "./movement/Rotate";
+import { Scale } from "./movement/Scale";
+import { Rotating } from "./utility/index";
 
 function makeUnitSquare(): VMobject {
   const vm = new VMobject();
@@ -15,8 +15,8 @@ function makeUnitSquare(): VMobject {
   return vm;
 }
 
-describe('Rotate animation with aboutEdge (#218)', () => {
-  it('accepts aboutEdge option', () => {
+describe("Rotate animation with aboutEdge (#218)", () => {
+  it("accepts aboutEdge option", () => {
     const vm = makeUnitSquare();
     const anim = new Rotate(vm, { angle: Math.PI / 2, aboutEdge: [1, 0, 0] });
     // aboutEdge [1,0,0] should resolve to the right edge center [1,0,0]
@@ -26,7 +26,7 @@ describe('Rotate animation with aboutEdge (#218)', () => {
     expect(anim.aboutPoint![2]).toBeCloseTo(0);
   });
 
-  it('throws when both aboutPoint and aboutEdge are provided', () => {
+  it("throws when both aboutPoint and aboutEdge are provided", () => {
     const vm = makeUnitSquare();
     expect(
       () =>
@@ -39,8 +39,8 @@ describe('Rotate animation with aboutEdge (#218)', () => {
   });
 });
 
-describe('Scale animation with aboutEdge (#218)', () => {
-  it('accepts aboutEdge option', () => {
+describe("Scale animation with aboutEdge (#218)", () => {
+  it("accepts aboutEdge option", () => {
     const vm = makeUnitSquare();
     const anim = new Scale(vm, { scaleFactor: 2, aboutEdge: [0, 1, 0] });
     // aboutEdge [0,1,0] should resolve to top edge center [0,1,0]
@@ -50,7 +50,7 @@ describe('Scale animation with aboutEdge (#218)', () => {
     expect(anim.aboutPoint![2]).toBeCloseTo(0);
   });
 
-  it('throws when both aboutPoint and aboutEdge are provided', () => {
+  it("throws when both aboutPoint and aboutEdge are provided", () => {
     const vm = makeUnitSquare();
     expect(
       () =>
@@ -63,8 +63,8 @@ describe('Scale animation with aboutEdge (#218)', () => {
   });
 });
 
-describe('Rotating animation with aboutEdge (#218)', () => {
-  it('accepts aboutEdge option', () => {
+describe("Rotating animation with aboutEdge (#218)", () => {
+  it("accepts aboutEdge option", () => {
     const vm = makeUnitSquare();
     const anim = new Rotating(vm, { aboutEdge: [1, 0, 0] });
     // aboutEdge [1,0,0] should resolve to the right edge center [1,0,0]
@@ -74,7 +74,7 @@ describe('Rotating animation with aboutEdge (#218)', () => {
     expect(anim.aboutPoint![2]).toBeCloseTo(0);
   });
 
-  it('throws when both aboutPoint and aboutEdge are provided', () => {
+  it("throws when both aboutPoint and aboutEdge are provided", () => {
     const vm = makeUnitSquare();
     expect(
       () =>

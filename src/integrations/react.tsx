@@ -1,20 +1,25 @@
 import {
-  useRef,
-  useEffect,
-  useState,
-  useCallback,
   createContext,
-  useContext,
+  type CSSProperties,
+  type DependencyList,
+  type ReactElement,
   type ReactNode,
   type RefObject,
-  type DependencyList,
-  type CSSProperties,
-  type ReactElement,
-} from 'react';
-import { Scene, type SceneOptions, type Mobject, type Animation } from '../index';
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
+import {
+  type Animation,
+  type Mobject,
+  Scene,
+  type SceneOptions,
+} from "../index";
 
 // Re-export for convenience
-export * from '../index';
+export * from "../index";
 
 /**
  * Hook to create and manage a ManimWeb scene
@@ -174,7 +179,7 @@ export interface ManimSceneProps {
 export function ManimScene({
   width = 800,
   height = 450,
-  backgroundColor = '#1a1a2e',
+  backgroundColor = "#1a1a2e",
   backgroundOpacity,
   onSceneReady,
   children,
@@ -182,7 +187,12 @@ export function ManimScene({
   style,
 }: ManimSceneProps): ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
-  const scene = useScene(containerRef, { width, height, backgroundColor, backgroundOpacity });
+  const scene = useScene(containerRef, {
+    width,
+    height,
+    backgroundColor,
+    backgroundOpacity,
+  });
   const onSceneReadyRef = useRef(onSceneReady);
 
   // Update callback ref when it changes
@@ -203,7 +213,7 @@ export function ManimScene({
       style={{
         width,
         height,
-        position: 'relative',
+        position: "relative",
         ...style,
       }}
     >
@@ -264,20 +274,25 @@ export function ManimProvider({
   children,
   width = 800,
   height = 450,
-  backgroundColor = '#1a1a2e',
+  backgroundColor = "#1a1a2e",
   backgroundOpacity,
   className,
   style,
 }: ManimProviderProps): ReactElement {
   const containerRef = useRef<HTMLDivElement>(null);
-  const scene = useScene(containerRef, { width, height, backgroundColor, backgroundOpacity });
+  const scene = useScene(containerRef, {
+    width,
+    height,
+    backgroundColor,
+    backgroundOpacity,
+  });
 
   return (
     <SceneContext.Provider value={scene}>
       <div
         ref={containerRef}
         className={className}
-        style={{ width, height, position: 'relative', ...style }}
+        style={{ width, height, position: "relative", ...style }}
       />
       {children}
     </SceneContext.Provider>
@@ -334,7 +349,9 @@ export function useUpdater(
  * @param scene - The scene to use for waiting
  * @returns A wait function that returns a promise
  */
-export function useWait(scene: Scene | null): (duration: number) => Promise<void> {
+export function useWait(
+  scene: Scene | null,
+): (duration: number) => Promise<void> {
   return useCallback(
     (duration: number) => {
       if (!scene) return Promise.resolve();

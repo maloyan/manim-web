@@ -1,2 +1,10 @@
-export { GifExporter, createGifExporter, type GifExportOptions } from './GifExporter';
-export { VideoExporter, createVideoExporter, type VideoExportOptions } from './VideoExporter';
+export {
+  createGifExporter,
+  GifExporter,
+  type GifExportOptions,
+} from "./GifExporter";
+export {
+  createVideoExporter,
+  VideoExporter,
+  type VideoExportOptions,
+} from "./VideoExporter";

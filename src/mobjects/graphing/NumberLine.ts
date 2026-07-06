@@ -1,6 +1,6 @@
-import { VMobject } from '../../core/VMobject';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { MathTexImage } from '../../mobjects/text/MathTexImage';
+import { VMobject } from "../../core/VMobject";
+import { Mobject, Vector3Tuple } from "../../core/Mobject";
+import { MathTexImage } from "../../mobjects/text/MathTexImage";
 
 /**
  * Options for creating a NumberLine
@@ -71,7 +71,7 @@ export class NumberLine extends VMobject {
     const {
       xRange = [-5, 5, 1],
       length = 10,
-      color = '#ffffff',
+      color = "#ffffff",
       strokeWidth = 2,
       includeTicks = true,
       tickSize = 0.2,
@@ -160,8 +160,8 @@ export class NumberLine extends VMobject {
     this._numberLabels = [];
 
     // Add number labels
-    const numbersToShow =
-      this._numbersToInclude ?? (this._includeNumbers ? this._getDefaultNumbers() : null);
+    const numbersToShow = this._numbersToInclude ??
+      (this._includeNumbers ? this._getDefaultNumbers() : null);
     if (numbersToShow) {
       const excludeSet = new Set(this._numbersToExclude);
       const elongatedSetForLabels = new Set(
@@ -172,13 +172,15 @@ export class NumberLine extends VMobject {
         if (excludeSet.has(n)) continue;
         if (n < min - step * 0.01 || n > max + step * 0.01) continue;
         const x = this._numberToX(n);
-        const rawText = Number.isInteger(n) ? String(n) : n.toFixed(this._decimalPlaces);
+        const rawText = Number.isInteger(n)
+          ? String(n)
+          : n.toFixed(this._decimalPlaces);
         // Use LaTeX minus sign for negative numbers
-        const labelText = rawText.replace(/^-/, '-');
+        const labelText = rawText.replace(/^-/, "-");
         const label = new MathTexImage({
           latex: labelText,
           fontSize: this._numberFontSize,
-          color: '#ffffff',
+          color: "#ffffff",
         });
         // Position below the tick with enough clearance (account for elongated ticks)
         const ts = elongatedSetForLabels.has(Math.round(n * 1e9) / 1e9)
@@ -401,7 +403,7 @@ export class UnitInterval extends NumberLine {
   constructor(options: UnitIntervalOptions = {}) {
     const {
       length = 5,
-      color = '#ffffff',
+      color = "#ffffff",
       strokeWidth = 2,
       includeTicks = true,
       tickSize = 0.2,
@@ -413,7 +415,11 @@ export class UnitInterval extends NumberLine {
     // Calculate step based on number of decimal places
     // numDecimalPlaces = 1 -> step = 0.1 (10 subdivisions)
     // numDecimalPlaces = 2 -> step = 0.01 (100 subdivisions), but we want 0.25 for nice ticks
-    const step = numDecimalPlaces === 1 ? 0.1 : numDecimalPlaces === 2 ? 0.25 : 0.5;
+    const step = numDecimalPlaces === 1
+      ? 0.1
+      : numDecimalPlaces === 2
+      ? 0.25
+      : 0.5;
 
     super({
       xRange: [0, 1, step],

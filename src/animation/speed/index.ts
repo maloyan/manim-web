@@ -2,10 +2,10 @@
  * Speed-related animations for controlling animation playback speed.
  */
 
-import * as THREE from 'three';
-import { Animation } from '../Animation';
-import { Mobject } from '../../core/Mobject';
-import { linear } from '../../rate-functions';
+import * as THREE from "three";
+import { Animation } from "../Animation";
+import { Mobject } from "../../core/Mobject";
+import { linear } from "../../rate-functions";
 
 /**
  * Speed function type: maps progress (0-1) to a speed multiplier.
@@ -25,7 +25,9 @@ export interface ChangeSpeedOptions {
  * The actual mobject is handled by the wrapped animation.
  */
 class SpeedWrapperMobject extends Mobject {
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+  override normalizeTransform(
+    worldMatrix: THREE.Matrix4 = this._ownMatrix(),
+  ): this {
     return this._flattenAsContainer(worldMatrix);
   }
   protected _createThreeObject(): THREE.Object3D {
@@ -113,8 +115,9 @@ function mapProgressToOriginal(
   // Linear interpolation within the segment
   const segmentStart = integrals[low];
   const segmentEnd = integrals[Math.min(high, numSamples)];
-  const segmentProgress =
-    segmentEnd > segmentStart ? (targetIntegral - segmentStart) / (segmentEnd - segmentStart) : 0;
+  const segmentProgress = segmentEnd > segmentStart
+    ? (targetIntegral - segmentStart) / (segmentEnd - segmentStart)
+    : 0;
 
   return Math.min(1, Math.max(0, (low + segmentProgress) / numSamples));
 }
@@ -154,12 +157,19 @@ export class ChangeSpeed extends Animation {
   /** Number of samples for numerical integration */
   private readonly _numSamples: number = 200;
 
-  constructor(animation: Animation, speedFunc: SpeedFunction, options: ChangeSpeedOptions = {}) {
+  constructor(
+    animation: Animation,
+    speedFunc: SpeedFunction,
+    options: ChangeSpeedOptions = {},
+  ) {
     // Create a dummy mobject for the wrapper
     const dummyMobject = new SpeedWrapperMobject();
 
     // Compute adjusted duration
-    const adjustedDuration = computeAdjustedDuration(animation.duration, speedFunc);
+    const adjustedDuration = computeAdjustedDuration(
+      animation.duration,
+      speedFunc,
+    );
 
     super(dummyMobject, {
       duration: adjustedDuration,
@@ -183,7 +193,11 @@ export class ChangeSpeed extends Animation {
    */
   interpolate(alpha: number): void {
     // Map the adjusted alpha to the original animation's progress
-    const originalAlpha = mapProgressToOriginal(alpha, this.speedFunc, this._numSamples);
+    const originalAlpha = mapProgressToOriginal(
+      alpha,
+      this.speedFunc,
+      this._numSamples,
+    );
 
     // Apply the wrapped animation's rate function
     const transformedAlpha = this.animation.rateFunc(originalAlpha);
@@ -242,7 +256,10 @@ export function changeSpeed(
 /**
  * Linear speed ramp from startSpeed to endSpeed.
  */
-export function linearSpeedRamp(startSpeed: number, endSpeed: number): SpeedFunction {
+export function linearSpeedRamp(
+  startSpeed: number,
+  endSpeed: number,
+): SpeedFunction {
   return (t: number) => startSpeed + (endSpeed - startSpeed) * t;
 }
 
@@ -297,7 +314,10 @@ export function rushRegion(
  * @param minSpeed Minimum speed (at t=0.5)
  * @param maxSpeed Maximum speed (at t=0 and t=1)
  */
-export function smoothSpeedCurve(minSpeed: number, maxSpeed: number): SpeedFunction {
+export function smoothSpeedCurve(
+  minSpeed: number,
+  maxSpeed: number,
+): SpeedFunction {
   return (t: number) => {
     // Cosine curve: starts at max, dips to min at middle, back to max
     const factor = (1 + Math.cos(2 * Math.PI * t)) / 2;

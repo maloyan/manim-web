@@ -7,22 +7,22 @@
 
 // Matrix and variants
 export {
-  Matrix,
-  IntegerMatrix,
-  DecimalMatrix,
-  MobjectMatrix,
-  type MatrixOptions,
-  type IntegerMatrixOptions,
-  type DecimalMatrixOptions,
-  type MobjectMatrixOptions,
   type BracketType,
+  DecimalMatrix,
+  type DecimalMatrixOptions,
   type ElementAlignment,
-} from './Matrix';
+  IntegerMatrix,
+  type IntegerMatrixOptions,
+  Matrix,
+  type MatrixOptions,
+  MobjectMatrix,
+  type MobjectMatrixOptions,
+} from "./Matrix";
 
 // Helper functions
 export {
   getDetText,
+  type GetDetTextOptions,
   matrixToMobject,
   matrixToTexString,
-  type GetDetTextOptions,
-} from './MatrixHelpers';
+} from "./MatrixHelpers";

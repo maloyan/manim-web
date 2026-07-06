@@ -1,18 +1,22 @@
-import * as THREE from 'three';
-import { Renderer, RendererOptions, IRenderer } from './Renderer';
-import { NullRenderer } from './NullRenderer';
-import { Camera2D, CameraOptions } from './Camera';
-import { Mobject } from './Mobject';
-import { Animation } from '../animation/Animation';
-import { AnimationGroup } from '../animation/AnimationGroup';
-import { Timeline } from '../animation/Timeline';
-import { MANIM_BACKGROUND } from '../constants/colors';
-import { VMobject } from './VMobject';
-import { SceneStateManager, SceneSnapshot } from './StateManager';
-import { AudioManager, type AddSoundOptions, type AudioTrack } from './AudioManager';
-import { ensureAnimateProxyRegistered } from './AnimateProxy';
-import type { MultiCamera } from './CameraExtensions';
-import { logger } from '../utils/logger';
+import * as THREE from "three";
+import { IRenderer, Renderer, RendererOptions } from "./Renderer";
+import { NullRenderer } from "./NullRenderer";
+import { Camera2D, CameraOptions } from "./Camera";
+import { Mobject } from "./Mobject";
+import { Animation } from "../animation/Animation";
+import { AnimationGroup } from "../animation/AnimationGroup";
+import { Timeline } from "../animation/Timeline";
+import { MANIM_BACKGROUND } from "../constants/colors";
+import { VMobject } from "./VMobject";
+import { SceneSnapshot, SceneStateManager } from "./StateManager";
+import {
+  type AddSoundOptions,
+  AudioManager,
+  type AudioTrack,
+} from "./AudioManager";
+import { ensureAnimateProxyRegistered } from "./AnimateProxy";
+import type { MultiCamera } from "./CameraExtensions";
+import { logger } from "../utils/logger";
 
 // AnimateProxy self-registers with Mobject via a top-level side effect
 // (see AnimateProxy.ts) to avoid the Mobject -> AnimateProxy -> Transform ->
@@ -185,7 +189,7 @@ export class Scene {
     } else {
       if (!container) {
         throw new Error(
-          'container is required for non-headless Scene. Use { headless: true } to create a scene without a DOM container.',
+          "container is required for non-headless Scene. Use { headless: true } to create a scene without a DOM container.",
         );
       }
       const rendererOptions: RendererOptions = {
@@ -220,14 +224,19 @@ export class Scene {
     this._mobjects = new Set();
 
     // Initialize state manager (undo/redo)
-    this._stateManager = new SceneStateManager(() => Array.from(this._mobjects));
+    this._stateManager = new SceneStateManager(() =>
+      Array.from(this._mobjects)
+    );
 
     // Initial render
     this._render();
 
     // Install auto-resize observer. Only when neither width nor height was
     // pinned by the caller — explicit dimensions are treated as a fixed canvas.
-    if (autoResize && !headless && this._container && width == null && height == null) {
+    if (
+      autoResize && !headless && this._container && width == null &&
+      height == null
+    ) {
       this._installAutoResize();
     }
   }
@@ -334,7 +343,8 @@ export class Scene {
    * use this to skip redundant renders.
    */
   get isRenderLoopActive(): boolean {
-    return this._isPlaying || (this._hasActiveLoop && this._needsPerFrameRendering());
+    return this._isPlaying ||
+      (this._hasActiveLoop && this._needsPerFrameRendering());
   }
 
   /**
@@ -402,7 +412,7 @@ export class Scene {
   async addSoundAtAnimation(
     animation: Animation,
     url: string,
-    options?: Omit<AddSoundOptions, 'time'> & { timeOffset?: number },
+    options?: Omit<AddSoundOptions, "time"> & { timeOffset?: number },
   ): Promise<AudioTrack> {
     return this.audioManager.addSoundAtAnimation(animation, url, options);
   }
@@ -503,7 +513,11 @@ export class Scene {
    * renderer dimensions instead of the class-level statics.
    */
   private _setSceneContextRecursive(mobject: Mobject): void {
-    mobject._setSceneContext(this._renderer.width, this._renderer.height, this._camera.frameWidth);
+    mobject._setSceneContext(
+      this._renderer.width,
+      this._renderer.height,
+      this._camera.frameWidth,
+    );
     for (const child of mobject.children) {
       this._setSceneContextRecursive(child);
     }
@@ -589,8 +603,10 @@ export class Scene {
       // animate an empty mobject because SVG paths haven't loaded yet.
       const renderPromises: Promise<void>[] = [];
       const collectRenders = (mobject: Mobject) => {
-        const asyncMob = mobject as Mobject & { waitForRender?: () => Promise<void> };
-        if (typeof asyncMob.waitForRender === 'function') {
+        const asyncMob = mobject as Mobject & {
+          waitForRender?: () => Promise<void>;
+        };
+        if (typeof asyncMob.waitForRender === "function") {
           renderPromises.push(asyncMob.waitForRender().catch(() => {}));
         }
         for (const child of mobject.children) {
@@ -710,14 +726,16 @@ export class Scene {
         );
       }
       if (start < 0) {
-        throw new Error(`Invalid animation timing: start (${start}) must be >= 0`);
+        throw new Error(
+          `Invalid animation timing: start (${start}) must be >= 0`,
+        );
       }
     }
 
     // Override animation durations BEFORE begin() so AnimationGroup can use
     // the new duration to compute child _startTimes/_endTimes correctly.
     for (const { animation, start, end } of entries) {
-      Object.defineProperty(animation, 'duration', {
+      Object.defineProperty(animation, "duration", {
         value: end - start,
         writable: true,
         configurable: true,
@@ -921,11 +939,12 @@ export class Scene {
       waitForRender?: () => Promise<void>;
       isRendering?: () => boolean;
     };
-    if (typeof asyncMob.waitForRender === 'function') {
+    if (typeof asyncMob.waitForRender === "function") {
       // If the mobject exposes an isRendering() check and is no longer
       // rendering, the promise is already settled -- skip the callback
       // to avoid a redundant (and potentially flickering) re-render.
-      const stillRendering = typeof asyncMob.isRendering !== 'function' || asyncMob.isRendering();
+      const stillRendering = typeof asyncMob.isRendering !== "function" ||
+        asyncMob.isRendering();
 
       if (stillRendering) {
         asyncMob
@@ -938,7 +957,11 @@ export class Scene {
           .catch((err) => {
             // Log only a small identifier — sanitizing/stringifying a full
             // mobject graph for the logger would be expensive.
-            logger.warn('Scene: async mobject render failed for', asyncMob.constructor.name, err);
+            logger.warn(
+              "Scene: async mobject render failed for",
+              asyncMob.constructor.name,
+              err,
+            );
           });
       }
     }
@@ -1055,7 +1078,10 @@ export class Scene {
    */
   private _updateFrustum(): void {
     const camera = this._camera.getCamera();
-    this._projScreenMatrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    this._projScreenMatrix.multiplyMatrices(
+      camera.projectionMatrix,
+      camera.matrixWorldInverse,
+    );
     this._frustum.setFromProjectionMatrix(this._projScreenMatrix);
   }
 
@@ -1162,7 +1188,7 @@ export class Scene {
           this._lastFrameTime = now;
           this._tickFrame(dt);
         } catch (err) {
-          logger.error('Scene: headless render loop error, stopping:', err);
+          logger.error("Scene: headless render loop error, stopping:", err);
           this._stopRenderLoop();
           this._isPlaying = false;
         }
@@ -1218,7 +1244,7 @@ export class Scene {
    */
   private _stopRenderLoop(): void {
     if (this._animationFrameId !== null) {
-      if (typeof cancelAnimationFrame !== 'undefined') {
+      if (typeof cancelAnimationFrame !== "undefined") {
         cancelAnimationFrame(this._animationFrameId);
       }
       this._animationFrameId = null;
@@ -1306,7 +1332,7 @@ export class Scene {
    * so a rotation that fires multiple events resizes once per frame.
    */
   private _installAutoResize(): void {
-    if (typeof window === 'undefined' || !this._container) return;
+    if (typeof window === "undefined" || !this._container) return;
 
     const measure = () => {
       this._resizeRafId = null;
@@ -1325,7 +1351,7 @@ export class Scene {
       this._resizeRafId = requestAnimationFrame(measure);
     };
 
-    if (typeof ResizeObserver !== 'undefined') {
+    if (typeof ResizeObserver !== "undefined") {
       this._resizeObserver = new ResizeObserver(schedule);
       this._resizeObserver.observe(this._container);
     }
@@ -1334,8 +1360,8 @@ export class Scene {
     // is a belt-and-suspenders trigger for older mobile browsers where the
     // observer can lag behind device rotation.
     this._onWindowResize = schedule;
-    window.addEventListener('resize', this._onWindowResize);
-    window.addEventListener('orientationchange', this._onWindowResize);
+    window.addEventListener("resize", this._onWindowResize);
+    window.addEventListener("orientationchange", this._onWindowResize);
   }
 
   private _disposeAutoResize(): void {
@@ -1347,9 +1373,9 @@ export class Scene {
       this._resizeObserver.disconnect();
       this._resizeObserver = null;
     }
-    if (this._onWindowResize && typeof window !== 'undefined') {
-      window.removeEventListener('resize', this._onWindowResize);
-      window.removeEventListener('orientationchange', this._onWindowResize);
+    if (this._onWindowResize && typeof window !== "undefined") {
+      window.removeEventListener("resize", this._onWindowResize);
+      window.removeEventListener("orientationchange", this._onWindowResize);
     }
     this._onWindowResize = null;
   }
@@ -1370,12 +1396,12 @@ export class Scene {
   getContainer(): HTMLElement {
     if (this.isHeadless) {
       throw new Error(
-        'getContainer() is not available in headless mode. Create a Scene with a container for rendering.',
+        "getContainer() is not available in headless mode. Create a Scene with a container for rendering.",
       );
     }
     const canvas = this._renderer.getCanvas();
     if (!canvas.parentElement) {
-      throw new Error('Scene canvas is not attached to a container');
+      throw new Error("Scene canvas is not attached to a container");
     }
     return canvas.parentElement;
   }
@@ -1537,15 +1563,15 @@ export class Scene {
   async export(filename: string, options?: SceneExportOptions): Promise<Blob> {
     if (this.isHeadless) {
       throw new Error(
-        'export() is not available in headless mode. Create a Scene with a container for rendering and exporting.',
+        "export() is not available in headless mode. Create a Scene with a container for rendering and exporting.",
       );
     }
-    const ext = filename.slice(filename.lastIndexOf('.')).toLowerCase();
+    const ext = filename.slice(filename.lastIndexOf(".")).toLowerCase();
 
     let blob: Blob;
 
-    if (ext === '.gif') {
-      const { GifExporter } = await import('../export/GifExporter');
+    if (ext === ".gif") {
+      const { GifExporter } = await import("../export/GifExporter");
       const exporter = new GifExporter(this, {
         fps: options?.fps,
         quality: options?.quality as number | undefined,
@@ -1558,9 +1584,9 @@ export class Scene {
       });
       blob = await exporter.exportTimeline(options?.duration);
       GifExporter.download(blob, filename);
-    } else if (ext === '.webm' || ext === '.mp4' || ext === '.mov') {
-      const { VideoExporter } = await import('../export/VideoExporter');
-      const format = ext === '.mp4' ? 'mp4' : ext === '.mov' ? 'mov' : 'webm';
+    } else if (ext === ".webm" || ext === ".mp4" || ext === ".mov") {
+      const { VideoExporter } = await import("../export/VideoExporter");
+      const format = ext === ".mp4" ? "mp4" : ext === ".mov" ? "mov" : "webm";
       const exporter = new VideoExporter(this, {
         fps: options?.fps,
         quality: options?.quality,
@@ -1574,7 +1600,9 @@ export class Scene {
       blob = await exporter.exportTimeline(options?.duration);
       VideoExporter.download(blob, filename);
     } else {
-      throw new Error(`Unsupported export format "${ext}". Supported: .gif, .webm, .mp4, .mov`);
+      throw new Error(
+        `Unsupported export format "${ext}". Supported: .gif, .webm, .mp4, .mov`,
+      );
     }
 
     return blob;

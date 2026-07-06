@@ -1,22 +1,22 @@
-import { describe, it, expect } from 'vitest';
-import { Mobject } from '../core/Mobject';
-import { VMobject } from '../core/VMobject';
-import { linear } from '../rate-functions';
+import { describe, expect, it } from "vitest";
+import { Mobject } from "../core/Mobject";
+import { VMobject } from "../core/VMobject";
+import { linear } from "../rate-functions";
 import {
-  Homotopy,
-  homotopy,
+  type Complex,
   ComplexHomotopy,
   complexHomotopy,
-  SmoothedVectorizedHomotopy,
-  smoothedVectorizedHomotopy,
+  type ComplexHomotopyFunction,
+  Homotopy,
+  homotopy,
+  type HomotopyFunction,
   PhaseFlow,
   phaseFlow,
-  type HomotopyFunction,
-  type ComplexHomotopyFunction,
+  SmoothedVectorizedHomotopy,
+  smoothedVectorizedHomotopy,
   type VectorFieldFunction,
-  type Complex,
-} from './movement/Homotopy';
-import { MoveAlongPath, moveAlongPath } from './movement/MoveAlongPath';
+} from "./movement/Homotopy";
+import { MoveAlongPath, moveAlongPath } from "./movement/MoveAlongPath";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -103,9 +103,9 @@ function curvedPath(): VMobject {
 // Homotopy
 // ============================================================================
 
-describe('Homotopy', () => {
-  describe('constructor', () => {
-    it('stores the homotopy function', () => {
+describe("Homotopy", () => {
+  describe("constructor", () => {
+    it("stores the homotopy function", () => {
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const m = makeMobject();
       const anim = new Homotopy(m, { homotopyFunc: fn });
@@ -113,13 +113,13 @@ describe('Homotopy', () => {
       expect(anim.mobject).toBe(m);
     });
 
-    it('defaults to duration=1', () => {
+    it("defaults to duration=1", () => {
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = new Homotopy(makeMobject(), { homotopyFunc: fn });
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom duration and rateFunc', () => {
+    it("accepts custom duration and rateFunc", () => {
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = new Homotopy(makeMobject(), {
         homotopyFunc: fn,
@@ -131,11 +131,16 @@ describe('Homotopy', () => {
     });
   });
 
-  describe('with non-VMobject (Mobject)', () => {
-    it('interpolate transforms the position', () => {
+  describe("with non-VMobject (Mobject)", () => {
+    it("interpolate transforms the position", () => {
       const m = makeMobject();
       m.position.set(1, 2, 3);
-      const fn: HomotopyFunction = (x, y, z, t) => [x + t, y + t * 2, z + t * 3];
+      const fn: HomotopyFunction = (
+        x,
+        y,
+        z,
+        t,
+      ) => [x + t, y + t * 2, z + t * 3];
       const anim = new Homotopy(m, { homotopyFunc: fn });
       anim.begin();
       anim.interpolate(0.5);
@@ -144,7 +149,7 @@ describe('Homotopy', () => {
       expect(m.position.z).toBeCloseTo(4.5, 5);
     });
 
-    it('interpolate at alpha=0 keeps original position', () => {
+    it("interpolate at alpha=0 keeps original position", () => {
       const m = makeMobject();
       m.position.set(2, 3, 4);
       const fn: HomotopyFunction = (x, y, z, t) => [x + t, y + t, z + t];
@@ -157,10 +162,15 @@ describe('Homotopy', () => {
       expect(m.position.z).toBeCloseTo(4, 5);
     });
 
-    it('interpolate at alpha=1 transforms fully', () => {
+    it("interpolate at alpha=1 transforms fully", () => {
       const m = makeMobject();
       m.position.set(1, 1, 1);
-      const fn: HomotopyFunction = (x, y, z, t) => [x * (1 + t), y * (1 + t), z * (1 + t)];
+      const fn: HomotopyFunction = (
+        x,
+        y,
+        z,
+        t,
+      ) => [x * (1 + t), y * (1 + t), z * (1 + t)];
       const anim = new Homotopy(m, { homotopyFunc: fn });
       anim.begin();
       anim.interpolate(1);
@@ -169,7 +179,7 @@ describe('Homotopy', () => {
       expect(m.position.z).toBeCloseTo(2, 5);
     });
 
-    it('finish sets exact final position', () => {
+    it("finish sets exact final position", () => {
       const m = makeMobject();
       m.position.set(0, 0, 0);
       const fn: HomotopyFunction = (_x, _y, _z, t) => [t * 10, t * 20, t * 30];
@@ -183,8 +193,8 @@ describe('Homotopy', () => {
     });
   });
 
-  describe('with VMobject', () => {
-    it('begin stores original points', () => {
+  describe("with VMobject", () => {
+    it("begin stores original points", () => {
       const vm = makeVMobject(quadPoints());
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = new Homotopy(vm, { homotopyFunc: fn });
@@ -194,7 +204,7 @@ describe('Homotopy', () => {
       expect(pts.length).toBe(4);
     });
 
-    it('interpolate transforms all VMobject points', () => {
+    it("interpolate transforms all VMobject points", () => {
       const vm = makeVMobject(quadPoints());
       const origPts = vm.getLocalPoints();
       // Shift all points by t in x
@@ -210,7 +220,7 @@ describe('Homotopy', () => {
       }
     });
 
-    it('interpolate at alpha=0.5 transforms halfway', () => {
+    it("interpolate at alpha=0.5 transforms halfway", () => {
       const vm = makeVMobject(quadPoints());
       const origPts = vm.getLocalPoints();
       // Scale all x by (1 + t)
@@ -224,7 +234,7 @@ describe('Homotopy', () => {
       }
     });
 
-    it('uses original points for each interpolation call (not cumulative)', () => {
+    it("uses original points for each interpolation call (not cumulative)", () => {
       const vm = makeVMobject(quadPoints());
       const origPts = vm.getLocalPoints();
       const fn: HomotopyFunction = (x, y, z, t) => [x + t * 10, y, z];
@@ -241,7 +251,7 @@ describe('Homotopy', () => {
       }
     });
 
-    it('finish ensures exact final transform', () => {
+    it("finish ensures exact final transform", () => {
       const vm = makeVMobject(quadPoints());
       const origPts = vm.getLocalPoints();
       const fn: HomotopyFunction = (x, y, z, _t) => [x + 100, y + 200, z + 300];
@@ -257,7 +267,7 @@ describe('Homotopy', () => {
       }
     });
 
-    it('handles empty VMobject gracefully', () => {
+    it("handles empty VMobject gracefully", () => {
       const vm = makeVMobject([]);
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = new Homotopy(vm, { homotopyFunc: fn });
@@ -267,7 +277,7 @@ describe('Homotopy', () => {
       expect(vm.getLocalPoints().length).toBe(0);
     });
 
-    it('applies the homotopy in world space when the mobject carries a transform', () => {
+    it("applies the homotopy in world space when the mobject carries a transform", () => {
       // MIGRATION: example-based regression. Intent: the homotopy function sees the
       // coordinates the mobject actually occupies (world space), not its raw local
       // points. A point at local (0,0,0) shifted to world (5,0,0), fed through a
@@ -286,14 +296,14 @@ describe('Homotopy', () => {
     });
   });
 
-  describe('homotopy() factory', () => {
-    it('returns Homotopy instance', () => {
+  describe("homotopy() factory", () => {
+    it("returns Homotopy instance", () => {
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = homotopy(makeMobject(), fn);
       expect(anim).toBeInstanceOf(Homotopy);
     });
 
-    it('passes through options', () => {
+    it("passes through options", () => {
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = homotopy(makeMobject(), fn, { duration: 5 });
       expect(anim.duration).toBe(5);
@@ -305,9 +315,9 @@ describe('Homotopy', () => {
 // ComplexHomotopy
 // ============================================================================
 
-describe('ComplexHomotopy', () => {
-  describe('constructor', () => {
-    it('stores the complex function', () => {
+describe("ComplexHomotopy", () => {
+  describe("constructor", () => {
+    it("stores the complex function", () => {
       const fn: ComplexHomotopyFunction = (z, _t) => z;
       const m = makeMobject();
       const anim = new ComplexHomotopy(m, { complexFunc: fn });
@@ -315,27 +325,32 @@ describe('ComplexHomotopy', () => {
       expect(anim.mobject).toBe(m);
     });
 
-    it('defaults to duration=1', () => {
+    it("defaults to duration=1", () => {
       const fn: ComplexHomotopyFunction = (z, _t) => z;
       const anim = new ComplexHomotopy(makeMobject(), { complexFunc: fn });
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom duration', () => {
+    it("accepts custom duration", () => {
       const fn: ComplexHomotopyFunction = (z, _t) => z;
-      const anim = new ComplexHomotopy(makeMobject(), { complexFunc: fn, duration: 4 });
+      const anim = new ComplexHomotopy(makeMobject(), {
+        complexFunc: fn,
+        duration: 4,
+      });
       expect(anim.duration).toBe(4);
     });
   });
 
-  describe('with non-VMobject (Mobject)', () => {
-    it('treats position as complex number (x=re, y=im)', () => {
+  describe("with non-VMobject (Mobject)", () => {
+    it("treats position as complex number (x=re, y=im)", () => {
       const m = makeMobject();
       m.position.set(1, 0, 5); // z=1+0i, z-coord=5
       // Rotation by 90 degrees: multiply by i
       const fn: ComplexHomotopyFunction = (z, t) => ({
-        re: z.re * Math.cos((t * Math.PI) / 2) - z.im * Math.sin((t * Math.PI) / 2),
-        im: z.re * Math.sin((t * Math.PI) / 2) + z.im * Math.cos((t * Math.PI) / 2),
+        re: z.re * Math.cos((t * Math.PI) / 2) -
+          z.im * Math.sin((t * Math.PI) / 2),
+        im: z.re * Math.sin((t * Math.PI) / 2) +
+          z.im * Math.cos((t * Math.PI) / 2),
       });
       const anim = new ComplexHomotopy(m, { complexFunc: fn });
       anim.begin();
@@ -347,7 +362,7 @@ describe('ComplexHomotopy', () => {
       expect(m.position.z).toBeCloseTo(5, 5);
     });
 
-    it('interpolate at alpha=0 keeps original position', () => {
+    it("interpolate at alpha=0 keeps original position", () => {
       const m = makeMobject();
       m.position.set(3, 4, 0);
       // Identity at t=0
@@ -362,7 +377,7 @@ describe('ComplexHomotopy', () => {
       expect(m.position.y).toBeCloseTo(4, 5);
     });
 
-    it('complex squaring: z^2', () => {
+    it("complex squaring: z^2", () => {
       const m = makeMobject();
       m.position.set(1, 1, 0); // z = 1+i
       // z^2 = (1+i)^2 = 1 + 2i - 1 = 2i
@@ -383,10 +398,13 @@ describe('ComplexHomotopy', () => {
       expect(m.position.y).toBeCloseTo(2, 5);
     });
 
-    it('finish sets exact final position', () => {
+    it("finish sets exact final position", () => {
       const m = makeMobject();
       m.position.set(2, 3, 0);
-      const fn: ComplexHomotopyFunction = (_z, t) => ({ re: t * 10, im: t * 20 });
+      const fn: ComplexHomotopyFunction = (_z, t) => ({
+        re: t * 10,
+        im: t * 20,
+      });
       const anim = new ComplexHomotopy(m, { complexFunc: fn });
       anim.begin();
       anim.interpolate(0.2);
@@ -396,8 +414,8 @@ describe('ComplexHomotopy', () => {
     });
   });
 
-  describe('with VMobject', () => {
-    it('begin stores original points', () => {
+  describe("with VMobject", () => {
+    it("begin stores original points", () => {
       const vm = makeVMobject(quadPoints());
       const fn: ComplexHomotopyFunction = (z, _t) => z;
       const anim = new ComplexHomotopy(vm, { complexFunc: fn });
@@ -405,7 +423,7 @@ describe('ComplexHomotopy', () => {
       expect(vm.getLocalPoints().length).toBe(4);
     });
 
-    it('transforms all points as complex numbers', () => {
+    it("transforms all points as complex numbers", () => {
       const vm = makeVMobject([
         [1, 0, 0],
         [0, 1, 0],
@@ -431,7 +449,7 @@ describe('ComplexHomotopy', () => {
       expect(pts[3][1]).toBeCloseTo(-1, 5);
     });
 
-    it('preserves z-coordinate of points', () => {
+    it("preserves z-coordinate of points", () => {
       const vm = makeVMobject([
         [1, 0, 5],
         [0, 1, 10],
@@ -452,7 +470,7 @@ describe('ComplexHomotopy', () => {
       expect(pts[3][2]).toBeCloseTo(20, 5);
     });
 
-    it('uses original points for each call (not cumulative)', () => {
+    it("uses original points for each call (not cumulative)", () => {
       const vm = makeVMobject([
         [1, 0, 0],
         [2, 0, 0],
@@ -473,7 +491,7 @@ describe('ComplexHomotopy', () => {
       expect(pts[1][0]).toBeCloseTo(52, 5);
     });
 
-    it('handles empty VMobject', () => {
+    it("handles empty VMobject", () => {
       const vm = makeVMobject([]);
       const fn: ComplexHomotopyFunction = (z, _t) => z;
       const anim = new ComplexHomotopy(vm, { complexFunc: fn });
@@ -482,7 +500,7 @@ describe('ComplexHomotopy', () => {
       expect(vm.getLocalPoints().length).toBe(0);
     });
 
-    it('finish applies exact final transform', () => {
+    it("finish applies exact final transform", () => {
       const vm = makeVMobject(quadPoints());
       const fn: ComplexHomotopyFunction = (z, _t) => ({
         re: z.re + 10,
@@ -498,14 +516,14 @@ describe('ComplexHomotopy', () => {
     });
   });
 
-  describe('complexHomotopy() factory', () => {
-    it('returns ComplexHomotopy instance', () => {
+  describe("complexHomotopy() factory", () => {
+    it("returns ComplexHomotopy instance", () => {
       const fn: ComplexHomotopyFunction = (z, _t) => z;
       const anim = complexHomotopy(makeMobject(), fn);
       expect(anim).toBeInstanceOf(ComplexHomotopy);
     });
 
-    it('passes through options', () => {
+    it("passes through options", () => {
       const fn: ComplexHomotopyFunction = (z, _t) => z;
       const anim = complexHomotopy(makeMobject(), fn, { duration: 7 });
       expect(anim.duration).toBe(7);
@@ -517,9 +535,9 @@ describe('ComplexHomotopy', () => {
 // SmoothedVectorizedHomotopy
 // ============================================================================
 
-describe('SmoothedVectorizedHomotopy', () => {
-  describe('constructor', () => {
-    it('stores the homotopy function', () => {
+describe("SmoothedVectorizedHomotopy", () => {
+  describe("constructor", () => {
+    it("stores the homotopy function", () => {
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const vm = makeVMobject(quadPoints());
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
@@ -527,7 +545,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       expect(anim.mobject).toBe(vm);
     });
 
-    it('defaults to duration=1', () => {
+    it("defaults to duration=1", () => {
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = new SmoothedVectorizedHomotopy(makeVMobject(quadPoints()), {
         homotopyFunc: fn,
@@ -535,7 +553,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom duration', () => {
+    it("accepts custom duration", () => {
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = new SmoothedVectorizedHomotopy(makeVMobject(quadPoints()), {
         homotopyFunc: fn,
@@ -545,8 +563,8 @@ describe('SmoothedVectorizedHomotopy', () => {
     });
   });
 
-  describe('begin()', () => {
-    it('stores original points and computes anchor indices', () => {
+  describe("begin()", () => {
+    it("stores original points and computes anchor indices", () => {
       const vm = makeVMobject(twoSegmentPoints());
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
@@ -556,8 +574,8 @@ describe('SmoothedVectorizedHomotopy', () => {
     });
   });
 
-  describe('interpolate()', () => {
-    it('handles empty VMobject gracefully', () => {
+  describe("interpolate()", () => {
+    it("handles empty VMobject gracefully", () => {
       const vm = makeVMobject([]);
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
@@ -567,7 +585,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       expect(vm.getLocalPoints().length).toBe(0);
     });
 
-    it('identity homotopy preserves points', () => {
+    it("identity homotopy preserves points", () => {
       const vm = makeVMobject(twoSegmentPoints());
       const origPts = vm.getLocalPoints();
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
@@ -583,7 +601,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       }
     });
 
-    it('transforms anchor points directly', () => {
+    it("transforms anchor points directly", () => {
       const vm = makeVMobject(twoSegmentPoints());
       // Simple translation
       const fn: HomotopyFunction = (x, y, z, t) => [x + t * 10, y, z];
@@ -599,7 +617,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       expect(pts[6][0]).toBeCloseTo(12, 3);
     });
 
-    it('transforms handles with smoothing', () => {
+    it("transforms handles with smoothing", () => {
       const vm = makeVMobject(twoSegmentPoints());
       const origPts = vm.getLocalPoints();
       // Simple translation - handles should move similarly
@@ -616,9 +634,14 @@ describe('SmoothedVectorizedHomotopy', () => {
       }
     });
 
-    it('works with a single segment (4 points)', () => {
+    it("works with a single segment (4 points)", () => {
       const vm = makeVMobject(quadPoints());
-      const fn: HomotopyFunction = (x, y, z, t) => [x * (1 + t), y * (1 + t), z];
+      const fn: HomotopyFunction = (
+        x,
+        y,
+        z,
+        t,
+      ) => [x * (1 + t), y * (1 + t), z];
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
       anim.begin();
       anim.interpolate(1);
@@ -629,7 +652,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       expect(pts[3][1]).toBeCloseTo(2, 3);
     });
 
-    it('works with three segments (10 points)', () => {
+    it("works with three segments (10 points)", () => {
       const vm = makeVMobject(threeSegmentPoints());
       const fn: HomotopyFunction = (x, y, z, t) => [x + t, y + t, z];
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
@@ -643,7 +666,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       expect(pts[9][0]).toBeCloseTo(4, 3);
     });
 
-    it('interpolate uses originals (not cumulative)', () => {
+    it("interpolate uses originals (not cumulative)", () => {
       const vm = makeVMobject(twoSegmentPoints());
       const origPts = vm.getLocalPoints();
       const fn: HomotopyFunction = (x, y, z, t) => [x + t * 100, y, z];
@@ -656,7 +679,7 @@ describe('SmoothedVectorizedHomotopy', () => {
       expect(pts[0][0]).toBeCloseTo(50, 3);
     });
 
-    it('handles non-standard point count (last point includes as anchor)', () => {
+    it("handles non-standard point count (last point includes as anchor)", () => {
       // 5 points: anchors at 0, 3; last index 4 is not a multiple of 3
       const vm = makeVMobject([
         [0, 0, 0],
@@ -675,8 +698,8 @@ describe('SmoothedVectorizedHomotopy', () => {
     });
   });
 
-  describe('finish()', () => {
-    it('applies exact final transform', () => {
+  describe("finish()", () => {
+    it("applies exact final transform", () => {
       const vm = makeVMobject(twoSegmentPoints());
       const fn: HomotopyFunction = (x, y, z, _t) => [x + 100, y + 200, z];
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
@@ -689,14 +712,14 @@ describe('SmoothedVectorizedHomotopy', () => {
     });
   });
 
-  describe('smoothedVectorizedHomotopy() factory', () => {
-    it('returns SmoothedVectorizedHomotopy instance', () => {
+  describe("smoothedVectorizedHomotopy() factory", () => {
+    it("returns SmoothedVectorizedHomotopy instance", () => {
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = smoothedVectorizedHomotopy(makeVMobject(quadPoints()), fn);
       expect(anim).toBeInstanceOf(SmoothedVectorizedHomotopy);
     });
 
-    it('passes through options', () => {
+    it("passes through options", () => {
       const fn: HomotopyFunction = (x, y, z, _t) => [x, y, z];
       const anim = smoothedVectorizedHomotopy(makeVMobject(quadPoints()), fn, {
         duration: 8,
@@ -710,9 +733,9 @@ describe('SmoothedVectorizedHomotopy', () => {
 // PhaseFlow
 // ============================================================================
 
-describe('PhaseFlow', () => {
-  describe('constructor', () => {
-    it('stores the vector field function', () => {
+describe("PhaseFlow", () => {
+  describe("constructor", () => {
+    it("stores the vector field function", () => {
       const vf: VectorFieldFunction = ([x, y, z]) => [-y, x, z];
       const m = makeMobject();
       const anim = new PhaseFlow(m, { vectorField: vf });
@@ -720,19 +743,22 @@ describe('PhaseFlow', () => {
       expect(anim.mobject).toBe(m);
     });
 
-    it('virtualTime defaults to 1', () => {
+    it("virtualTime defaults to 1", () => {
       const vf: VectorFieldFunction = ([x, y, _z]) => [-y, x, 0];
       const anim = new PhaseFlow(makeMobject(), { vectorField: vf });
       expect(anim.virtualTime).toBe(1);
     });
 
-    it('accepts custom virtualTime', () => {
+    it("accepts custom virtualTime", () => {
       const vf: VectorFieldFunction = ([x, y, _z]) => [-y, x, 0];
-      const anim = new PhaseFlow(makeMobject(), { vectorField: vf, virtualTime: 5 });
+      const anim = new PhaseFlow(makeMobject(), {
+        vectorField: vf,
+        virtualTime: 5,
+      });
       expect(anim.virtualTime).toBe(5);
     });
 
-    it('accepts custom integrationSteps', () => {
+    it("accepts custom integrationSteps", () => {
       const vf: VectorFieldFunction = ([x, y, _z]) => [-y, x, 0];
       const anim = new PhaseFlow(makeMobject(), {
         vectorField: vf,
@@ -742,21 +768,24 @@ describe('PhaseFlow', () => {
       expect(anim.duration).toBe(1);
     });
 
-    it('defaults to duration=1', () => {
+    it("defaults to duration=1", () => {
       const vf: VectorFieldFunction = ([x, y, _z]) => [-y, x, 0];
       const anim = new PhaseFlow(makeMobject(), { vectorField: vf });
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom duration', () => {
+    it("accepts custom duration", () => {
       const vf: VectorFieldFunction = ([x, y, _z]) => [-y, x, 0];
-      const anim = new PhaseFlow(makeMobject(), { vectorField: vf, duration: 3 });
+      const anim = new PhaseFlow(makeMobject(), {
+        vectorField: vf,
+        duration: 3,
+      });
       expect(anim.duration).toBe(3);
     });
   });
 
-  describe('with non-VMobject (Mobject)', () => {
-    it('flows position along circular vector field', () => {
+  describe("with non-VMobject (Mobject)", () => {
+    it("flows position along circular vector field", () => {
       const m = makeMobject();
       m.position.set(1, 0, 0);
       // Circular flow: dp/dt = [-y, x, 0]
@@ -773,11 +802,14 @@ describe('PhaseFlow', () => {
       expect(m.position.z).toBeCloseTo(0, 5);
     });
 
-    it('interpolate at alpha=0 keeps original position', () => {
+    it("interpolate at alpha=0 keeps original position", () => {
       const m = makeMobject();
       m.position.set(1, 0, 0);
       const vf: VectorFieldFunction = ([x, y, _z]) => [-y, x, 0];
-      const anim = new PhaseFlow(m, { vectorField: vf, virtualTime: Math.PI / 2 });
+      const anim = new PhaseFlow(m, {
+        vectorField: vf,
+        virtualTime: Math.PI / 2,
+      });
       anim.begin();
       anim.interpolate(0);
       // flowTime = 0 * virtualTime = 0, so no movement
@@ -785,7 +817,7 @@ describe('PhaseFlow', () => {
       expect(m.position.y).toBeCloseTo(0, 5);
     });
 
-    it('interpolate at alpha=0.5 flows half the virtual time', () => {
+    it("interpolate at alpha=0.5 flows half the virtual time", () => {
       const m = makeMobject();
       m.position.set(1, 0, 0);
       // Circular flow, virtualTime = PI => half is PI/2 (quarter turn)
@@ -798,7 +830,7 @@ describe('PhaseFlow', () => {
       expect(m.position.y).toBeCloseTo(1, 2);
     });
 
-    it('flows along constant vector field (translation)', () => {
+    it("flows along constant vector field (translation)", () => {
       const m = makeMobject();
       m.position.set(0, 0, 0);
       // Constant field: velocity = (1, 2, 3) everywhere
@@ -812,7 +844,7 @@ describe('PhaseFlow', () => {
       expect(m.position.z).toBeCloseTo(15, 2);
     });
 
-    it('flows from stored original position (not cumulative)', () => {
+    it("flows from stored original position (not cumulative)", () => {
       const m = makeMobject();
       m.position.set(1, 0, 0);
       const vf: VectorFieldFunction = (_p) => [1, 0, 0];
@@ -823,7 +855,7 @@ describe('PhaseFlow', () => {
       expect(m.position.x).toBeCloseTo(6, 2);
     });
 
-    it('finish sets exact final position', () => {
+    it("finish sets exact final position", () => {
       const m = makeMobject();
       m.position.set(0, 0, 0);
       const vf: VectorFieldFunction = (_p) => [10, 20, 30];
@@ -837,8 +869,8 @@ describe('PhaseFlow', () => {
     });
   });
 
-  describe('with VMobject', () => {
-    it('flows all points along vector field', () => {
+  describe("with VMobject", () => {
+    it("flows all points along vector field", () => {
       const vm = makeVMobject([
         [1, 0, 0],
         [0, 1, 0],
@@ -857,7 +889,7 @@ describe('PhaseFlow', () => {
       expect(pts[3][0]).toBeCloseTo(2, 2); // 0 + 2
     });
 
-    it('flows VMobject points along circular field', () => {
+    it("flows VMobject points along circular field", () => {
       const vm = makeVMobject([
         [1, 0, 0],
         [2, 0, 0],
@@ -880,7 +912,7 @@ describe('PhaseFlow', () => {
       expect(pts[3][1]).toBeCloseTo(4, 1);
     });
 
-    it('uses original points for each call', () => {
+    it("uses original points for each call", () => {
       const vm = makeVMobject([
         [0, 0, 0],
         [1, 0, 0],
@@ -898,7 +930,7 @@ describe('PhaseFlow', () => {
       expect(pts[1][0]).toBeCloseTo(51, 1);
     });
 
-    it('handles empty VMobject', () => {
+    it("handles empty VMobject", () => {
       const vm = makeVMobject([]);
       const vf: VectorFieldFunction = (_p) => [1, 0, 0];
       const anim = new PhaseFlow(vm, { vectorField: vf });
@@ -907,7 +939,7 @@ describe('PhaseFlow', () => {
       expect(vm.getLocalPoints().length).toBe(0);
     });
 
-    it('finish applies exact final flow', () => {
+    it("finish applies exact final flow", () => {
       const vm = makeVMobject(quadPoints());
       const vf: VectorFieldFunction = (_p) => [10, 0, 0];
       const anim = new PhaseFlow(vm, { vectorField: vf, virtualTime: 1 });
@@ -921,14 +953,14 @@ describe('PhaseFlow', () => {
     });
   });
 
-  describe('phaseFlow() factory', () => {
-    it('returns PhaseFlow instance', () => {
+  describe("phaseFlow() factory", () => {
+    it("returns PhaseFlow instance", () => {
       const vf: VectorFieldFunction = ([x, y, _z]) => [-y, x, 0];
       const anim = phaseFlow(makeMobject(), vf);
       expect(anim).toBeInstanceOf(PhaseFlow);
     });
 
-    it('passes through options', () => {
+    it("passes through options", () => {
       const vf: VectorFieldFunction = ([x, y, _z]) => [-y, x, 0];
       const anim = phaseFlow(makeMobject(), vf, {
         virtualTime: 3,
@@ -944,12 +976,12 @@ describe('PhaseFlow', () => {
 // MoveAlongPath
 // ============================================================================
 
-describe('MoveAlongPath', () => {
+describe("MoveAlongPath", () => {
   // MoveAlongPath.begin() calls getCenter() which requires a concrete Mobject
   // (getThreeObject -> _createThreeObject). Use VMobject for all tests.
 
-  describe('constructor', () => {
-    it('stores the path', () => {
+  describe("constructor", () => {
+    it("stores the path", () => {
       const path = straightLinePath();
       const m = makeVMobject();
       const anim = new MoveAlongPath(m, { path });
@@ -957,33 +989,36 @@ describe('MoveAlongPath', () => {
       expect(anim.mobject).toBe(m);
     });
 
-    it('rotateAlongPath defaults to false', () => {
+    it("rotateAlongPath defaults to false", () => {
       const path = straightLinePath();
       const anim = new MoveAlongPath(makeVMobject(), { path });
       expect(anim.rotateAlongPath).toBe(false);
     });
 
-    it('accepts rotateAlongPath=true', () => {
+    it("accepts rotateAlongPath=true", () => {
       const path = straightLinePath();
-      const anim = new MoveAlongPath(makeVMobject(), { path, rotateAlongPath: true });
+      const anim = new MoveAlongPath(makeVMobject(), {
+        path,
+        rotateAlongPath: true,
+      });
       expect(anim.rotateAlongPath).toBe(true);
     });
 
-    it('defaults to duration=1', () => {
+    it("defaults to duration=1", () => {
       const path = straightLinePath();
       const anim = new MoveAlongPath(makeVMobject(), { path });
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom duration', () => {
+    it("accepts custom duration", () => {
       const path = straightLinePath();
       const anim = new MoveAlongPath(makeVMobject(), { path, duration: 3 });
       expect(anim.duration).toBe(3);
     });
   });
 
-  describe('interpolate along straight line path', () => {
-    it('at alpha=0 mobject is at start of path', () => {
+  describe("interpolate along straight line path", () => {
+    it("at alpha=0 mobject is at start of path", () => {
       const path = straightLinePath();
       const m = makeVMobject();
       const anim = new MoveAlongPath(m, { path });
@@ -995,7 +1030,7 @@ describe('MoveAlongPath', () => {
       expect(m.position.z).toBeCloseTo(0, 3);
     });
 
-    it('at alpha=1 mobject is at end of path', () => {
+    it("at alpha=1 mobject is at end of path", () => {
       const path = straightLinePath();
       const m = makeVMobject();
       const anim = new MoveAlongPath(m, { path });
@@ -1007,7 +1042,7 @@ describe('MoveAlongPath', () => {
       expect(m.position.z).toBeCloseTo(0, 3);
     });
 
-    it('at alpha=0.5 mobject is at midpoint', () => {
+    it("at alpha=0.5 mobject is at midpoint", () => {
       const path = straightLinePath();
       const m = makeVMobject();
       const anim = new MoveAlongPath(m, { path });
@@ -1018,7 +1053,7 @@ describe('MoveAlongPath', () => {
       expect(m.position.y).toBeCloseTo(0, 3);
     });
 
-    it('follows the path at its real (world) location when the path is shifted', () => {
+    it("follows the path at its real (world) location when the path is shifted", () => {
       // MIGRATION: example-based regression. Intent: MoveAlongPath samples the path
       // in WORLD space. A path carrying its own transform (here shifted up by 10)
       // must be followed where it actually sits, not orbiting its untransformed
@@ -1038,8 +1073,8 @@ describe('MoveAlongPath', () => {
     });
   });
 
-  describe('interpolate along curved path', () => {
-    it('at alpha=0 mobject is at start', () => {
+  describe("interpolate along curved path", () => {
+    it("at alpha=0 mobject is at start", () => {
       const path = curvedPath();
       const m = makeVMobject();
       const anim = new MoveAlongPath(m, { path });
@@ -1049,7 +1084,7 @@ describe('MoveAlongPath', () => {
       expect(m.position.y).toBeCloseTo(0, 3);
     });
 
-    it('at alpha=1 mobject is at end', () => {
+    it("at alpha=1 mobject is at end", () => {
       const path = curvedPath();
       const m = makeVMobject();
       const anim = new MoveAlongPath(m, { path });
@@ -1059,7 +1094,7 @@ describe('MoveAlongPath', () => {
       expect(m.position.y).toBeCloseTo(0, 3);
     });
 
-    it('at alpha=0.5 mobject is at peak of curve', () => {
+    it("at alpha=0.5 mobject is at peak of curve", () => {
       const path = curvedPath();
       const m = makeVMobject();
       const anim = new MoveAlongPath(m, { path });
@@ -1073,8 +1108,8 @@ describe('MoveAlongPath', () => {
     });
   });
 
-  describe('with empty/short path', () => {
-    it('handles path with no points (stays at current position)', () => {
+  describe("with empty/short path", () => {
+    it("handles path with no points (stays at current position)", () => {
       const path = makeVMobject([]);
       const m = makeVMobject();
       m.position.set(5, 5, 5);
@@ -1086,7 +1121,7 @@ describe('MoveAlongPath', () => {
       expect(m.position.y).toBeCloseTo(5, 3);
     });
 
-    it('handles path with fewer than 4 points', () => {
+    it("handles path with fewer than 4 points", () => {
       const path = makeVMobject([
         [1, 0, 0],
         [2, 0, 0],
@@ -1101,8 +1136,8 @@ describe('MoveAlongPath', () => {
     });
   });
 
-  describe('rotateAlongPath', () => {
-    it('rotates mobject to align with tangent direction', () => {
+  describe("rotateAlongPath", () => {
+    it("rotates mobject to align with tangent direction", () => {
       // Path going right (positive x): tangent is (1, 0, 0) => angle = 0
       const path = straightLinePath();
       const m = makeVMobject();
@@ -1113,7 +1148,7 @@ describe('MoveAlongPath', () => {
       expect(m.rotation.z).toBeCloseTo(0, 3);
     });
 
-    it('rotates mobject for upward-curving path', () => {
+    it("rotates mobject for upward-curving path", () => {
       // Path that curves upward
       const path = makeVMobject([
         [0, 0, 0],
@@ -1129,7 +1164,7 @@ describe('MoveAlongPath', () => {
       expect(m.rotation.z).toBeCloseTo(Math.PI / 2, 2);
     });
 
-    it('does not rotate when rotateAlongPath is false', () => {
+    it("does not rotate when rotateAlongPath is false", () => {
       const path = makeVMobject([
         [0, 0, 0],
         [0, 1, 0],
@@ -1145,8 +1180,8 @@ describe('MoveAlongPath', () => {
     });
   });
 
-  describe('finish()', () => {
-    it('sets exact final position', () => {
+  describe("finish()", () => {
+    it("sets exact final position", () => {
       const path = straightLinePath();
       const m = makeVMobject();
       const anim = new MoveAlongPath(m, { path });
@@ -1160,14 +1195,14 @@ describe('MoveAlongPath', () => {
     });
   });
 
-  describe('moveAlongPath() factory', () => {
-    it('returns MoveAlongPath instance', () => {
+  describe("moveAlongPath() factory", () => {
+    it("returns MoveAlongPath instance", () => {
       const path = straightLinePath();
       const anim = moveAlongPath(makeVMobject(), path);
       expect(anim).toBeInstanceOf(MoveAlongPath);
     });
 
-    it('passes through options', () => {
+    it("passes through options", () => {
       const path = straightLinePath();
       const anim = moveAlongPath(makeVMobject(), path, {
         rotateAlongPath: true,
@@ -1178,8 +1213,8 @@ describe('MoveAlongPath', () => {
     });
   });
 
-  describe('alpha clamping', () => {
-    it('clamps alpha below 0', () => {
+  describe("alpha clamping", () => {
+    it("clamps alpha below 0", () => {
       const path = straightLinePath();
       const m = makeVMobject();
       const anim = new MoveAlongPath(m, { path });
@@ -1189,7 +1224,7 @@ describe('MoveAlongPath', () => {
       expect(m.position.x).toBeCloseTo(0, 3);
     });
 
-    it('clamps alpha above 1', () => {
+    it("clamps alpha above 1", () => {
       const path = straightLinePath();
       const m = makeVMobject();
       const anim = new MoveAlongPath(m, { path });
@@ -1200,8 +1235,8 @@ describe('MoveAlongPath', () => {
     });
   });
 
-  describe('multi-segment path', () => {
-    it('moves through all segments', () => {
+  describe("multi-segment path", () => {
+    it("moves through all segments", () => {
       // 3 segments means 10 points
       const path = makeVMobject(threeSegmentPoints());
       const m = makeVMobject();
@@ -1219,7 +1254,7 @@ describe('MoveAlongPath', () => {
       expect(m.position.y).toBeCloseTo(0, 3);
     });
 
-    it('at alpha=1/3 is at end of first segment', () => {
+    it("at alpha=1/3 is at end of first segment", () => {
       const path = makeVMobject(threeSegmentPoints());
       const m = makeVMobject();
       const anim = new MoveAlongPath(m, { path });

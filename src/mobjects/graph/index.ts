@@ -8,33 +8,33 @@
 
 // Types and interfaces
 export type {
-  VertexId,
-  EdgeTuple,
-  LayoutType,
-  VertexStyleOptions,
-  EdgeStyleOptions,
-  VertexConfig,
-  EdgeConfig,
-  LayoutConfig,
-  GenericGraphOptions,
   DiGraphOptions,
-} from './graphTypes';
+  EdgeConfig,
+  EdgeStyleOptions,
+  EdgeTuple,
+  GenericGraphOptions,
+  LayoutConfig,
+  LayoutType,
+  VertexConfig,
+  VertexId,
+  VertexStyleOptions,
+} from "./graphTypes";
 
 // Layout algorithms (exported for direct use and testing)
-export { computeLayout, computeCircularLayout } from './layoutAlgorithms';
+export { computeCircularLayout, computeLayout } from "./layoutAlgorithms";
 
 // Core graph classes
-export { GenericGraph } from './GenericGraph';
-export { Graph } from './Graph';
-export { DiGraph } from './DiGraph';
+export { GenericGraph } from "./GenericGraph";
+export { Graph } from "./Graph";
+export { DiGraph } from "./DiGraph";
 
 // Factory functions for common graph types
 export {
+  binaryTree,
+  bipartiteGraph,
   completeGraph,
   cycleGraph,
+  gridGraph,
   pathGraph,
   starGraph,
-  binaryTree,
-  gridGraph,
-  bipartiteGraph,
-} from './graphFactories';
+} from "./graphFactories";

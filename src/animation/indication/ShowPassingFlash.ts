@@ -5,16 +5,16 @@
  * portion of a VMobject's stroke traveling along its path.
  */
 
-import * as THREE from 'three';
-import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
-import { Mobject } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
-import { Animation, AnimationOptions } from '../Animation';
-import { linear } from '../../rate-functions';
-import { YELLOW, DEFAULT_STROKE_WIDTH } from '../../constants';
-import { evalCubicBezier } from '../../utils/math';
+import * as THREE from "three";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
+import { Mobject } from "../../core/Mobject";
+import { VMobject } from "../../core/VMobject";
+import { Animation, AnimationOptions } from "../Animation";
+import { linear } from "../../rate-functions";
+import { DEFAULT_STROKE_WIDTH, YELLOW } from "../../constants";
+import { evalCubicBezier } from "../../utils/math";
 
 export interface ShowPassingFlashOptions extends AnimationOptions {
   /** Color of the flash. Default: YELLOW */
@@ -110,7 +110,10 @@ export class ShowPassingFlash extends Animation {
       for (let t = 0; t <= samplesPerSegment; t++) {
         const u = t / samplesPerSegment;
         const pt = evalCubicBezier(p0, p1, p2, p3, u);
-        if (result.length === 0 || this._distance(pt, result[result.length - 1]) > 0.01) {
+        if (
+          result.length === 0 ||
+          this._distance(pt, result[result.length - 1]) > 0.01
+        ) {
           result.push(pt);
         }
       }
@@ -146,7 +149,10 @@ export class ShowPassingFlash extends Animation {
 
     // Get point indices for the flash segment
     const startIdx = Math.max(0, Math.floor(flashStart * (numPoints - 1)));
-    const endIdx = Math.min(numPoints - 1, Math.ceil(flashEnd * (numPoints - 1)));
+    const endIdx = Math.min(
+      numPoints - 1,
+      Math.ceil(flashEnd * (numPoints - 1)),
+    );
 
     if (startIdx >= endIdx) return;
 

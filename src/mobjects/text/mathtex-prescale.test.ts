@@ -11,20 +11,20 @@
  * Mirrors the shape of the `shift()` fallback fix (issue #318).
  */
 
-import { describe, it, expect } from 'vitest';
-import { MathTex } from './MathTex';
+import { describe, expect, it } from "vitest";
+import { MathTex } from "./MathTex";
 
-describe('MathTex pre-render scale (issue #324)', () => {
-  it('records scale on parent scaleVector when called before render', () => {
-    const tex = new MathTex({ latex: 'x^2' });
+describe("MathTex pre-render scale (issue #324)", () => {
+  it("records scale on parent scaleVector when called before render", () => {
+    const tex = new MathTex({ latex: "x^2" });
     tex.scale(2);
     expect(tex.scaleVector.x).toBe(2);
     expect(tex.scaleVector.y).toBe(2);
     expect(tex.scaleVector.z).toBe(2);
   });
 
-  it('bakes the pre-render scale into geometry once render completes', async () => {
-    const tex = new MathTex({ latex: 'x' });
+  it("bakes the pre-render scale into geometry once render completes", async () => {
+    const tex = new MathTex({ latex: "x" });
     tex.scale(2);
     await tex.waitForRender();
     // After bake, parent scale is back to identity so subsequent transforms
@@ -34,9 +34,9 @@ describe('MathTex pre-render scale (issue #324)', () => {
     expect(tex.scaleVector.z).toBe(1);
   });
 
-  it('single-glyph: bounding box reflects pre-render scale after waitForRender', async () => {
-    const baseline = new MathTex({ latex: 'x' });
-    const scaled = new MathTex({ latex: 'x' });
+  it("single-glyph: bounding box reflects pre-render scale after waitForRender", async () => {
+    const baseline = new MathTex({ latex: "x" });
+    const scaled = new MathTex({ latex: "x" });
     scaled.scale(2);
 
     await Promise.all([baseline.waitForRender(), scaled.waitForRender()]);
@@ -47,9 +47,9 @@ describe('MathTex pre-render scale (issue #324)', () => {
     expect(bs.height).toBeCloseTo(ba.height * 2, 2);
   });
 
-  it('multi-glyph: bounding box reflects pre-render scale after waitForRender', async () => {
-    const baseline = new MathTex({ latex: 'x^2' });
-    const scaled = new MathTex({ latex: 'x^2' });
+  it("multi-glyph: bounding box reflects pre-render scale after waitForRender", async () => {
+    const baseline = new MathTex({ latex: "x^2" });
+    const scaled = new MathTex({ latex: "x^2" });
     scaled.scale(2);
 
     await Promise.all([baseline.waitForRender(), scaled.waitForRender()]);
@@ -60,9 +60,9 @@ describe('MathTex pre-render scale (issue #324)', () => {
     expect(bs.height).toBeCloseTo(ba.height * 2, 2);
   });
 
-  it('multi-part: bounding box reflects pre-render scale after waitForRender', async () => {
-    const baseline = new MathTex({ latex: ['a', '+', 'b'] });
-    const scaled = new MathTex({ latex: ['a', '+', 'b'] });
+  it("multi-part: bounding box reflects pre-render scale after waitForRender", async () => {
+    const baseline = new MathTex({ latex: ["a", "+", "b"] });
+    const scaled = new MathTex({ latex: ["a", "+", "b"] });
     scaled.scale(2);
 
     await Promise.all([baseline.waitForRender(), scaled.waitForRender()]);
@@ -73,11 +73,11 @@ describe('MathTex pre-render scale (issue #324)', () => {
     expect(bs.height).toBeCloseTo(ba.height * 2, 2);
   });
 
-  it('matches reporter repro shape: scale then moveTo before render', async () => {
-    const baseline = new MathTex({ latex: 'x' });
+  it("matches reporter repro shape: scale then moveTo before render", async () => {
+    const baseline = new MathTex({ latex: "x" });
     baseline.moveTo([-2, 0, 0]);
 
-    const scaled = new MathTex({ latex: 'x' });
+    const scaled = new MathTex({ latex: "x" });
     scaled.scale(2);
     scaled.moveTo([2, 0, 0]);
 
@@ -90,9 +90,9 @@ describe('MathTex pre-render scale (issue #324)', () => {
     expect(baseline.getCenter()[0]).toBeCloseTo(-2, 2);
   });
 
-  it('pre-render scale then post-render shift preserves world-space translation', async () => {
-    const baseline = new MathTex({ latex: 'x' });
-    const tex = new MathTex({ latex: 'x' });
+  it("pre-render scale then post-render shift preserves world-space translation", async () => {
+    const baseline = new MathTex({ latex: "x" });
+    const tex = new MathTex({ latex: "x" });
     tex.scale(2);
     await Promise.all([baseline.waitForRender(), tex.waitForRender()]);
 
@@ -101,11 +101,14 @@ describe('MathTex pre-render scale (issue #324)', () => {
     // Logical center matches rendered position: both should land at x = 1.
     expect(tex.getCenter()[0]).toBeCloseTo(1, 2);
     // Width still doubled.
-    expect(tex.getBoundingBox().width).toBeCloseTo(baseline.getBoundingBox().width * 2, 2);
+    expect(tex.getBoundingBox().width).toBeCloseTo(
+      baseline.getBoundingBox().width * 2,
+      2,
+    );
   });
 
-  it('pre-render scale then post-render moveTo lands at target', async () => {
-    const tex = new MathTex({ latex: 'x' });
+  it("pre-render scale then post-render moveTo lands at target", async () => {
+    const tex = new MathTex({ latex: "x" });
     tex.scale(2);
     await tex.waitForRender();
 
@@ -115,9 +118,9 @@ describe('MathTex pre-render scale (issue #324)', () => {
     expect(tex.getCenter()[1]).toBeCloseTo(-1, 2);
   });
 
-  it('non-uniform pre-render scale is preserved', async () => {
-    const baseline = new MathTex({ latex: 'x' });
-    const scaled = new MathTex({ latex: 'x' });
+  it("non-uniform pre-render scale is preserved", async () => {
+    const baseline = new MathTex({ latex: "x" });
+    const scaled = new MathTex({ latex: "x" });
     scaled.scale([2, 3, 1]);
 
     expect(scaled.scaleVector.x).toBe(2);

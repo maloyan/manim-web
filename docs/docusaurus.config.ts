@@ -1,38 +1,38 @@
-import { themes as prismThemes } from 'prism-react-renderer';
-import type { Config } from '@docusaurus/types';
-import type * as Preset from '@docusaurus/preset-classic';
+import { themes as prismThemes } from "prism-react-renderer";
+import type { Config } from "@docusaurus/types";
+import type * as Preset from "@docusaurus/preset-classic";
 
 const config: Config = {
-  title: 'manim-web',
-  tagline: 'Mathematical animations for the web',
-  favicon: 'img/favicon.ico',
+  title: "manim-web",
+  tagline: "Mathematical animations for the web",
+  favicon: "img/favicon.ico",
 
   future: {
     v4: true,
   },
 
-  url: 'https://maloyan.github.io',
-  baseUrl: '/manim-web/',
+  url: "https://maloyan.github.io",
+  baseUrl: "/manim-web/",
 
-  onBrokenLinks: 'warn',
+  onBrokenLinks: "warn",
 
   markdown: {
-    format: 'detect',
+    format: "detect",
   },
 
   i18n: {
-    defaultLocale: 'en',
-    locales: ['en'],
+    defaultLocale: "en",
+    locales: ["en"],
   },
 
   plugins: [
     [
-      'docusaurus-plugin-typedoc',
+      "docusaurus-plugin-typedoc",
       {
-        entryPoints: ['../src/index.ts'],
-        tsconfig: '../tsconfig.typedoc.json',
-        out: 'docs/api',
-        readme: 'none',
+        entryPoints: ["../src/index.ts"],
+        tsconfig: "../tsconfig.typedoc.json",
+        out: "docs/api",
+        readme: "none",
         skipErrorChecking: true,
         excludePrivate: true,
         excludeInternal: true,
@@ -42,25 +42,25 @@ const config: Config = {
 
   themes: [
     [
-      '@easyops-cn/docusaurus-search-local',
+      "@easyops-cn/docusaurus-search-local",
       {
         hashed: true,
-        docsRouteBasePath: '/',
+        docsRouteBasePath: "/",
       },
     ],
   ],
 
   presets: [
     [
-      'classic',
+      "classic",
       {
         docs: {
-          sidebarPath: './sidebars.ts',
-          routeBasePath: '/',
+          sidebarPath: "./sidebars.ts",
+          routeBasePath: "/",
         },
         blog: false,
         theme: {
-          customCss: './src/css/custom.css',
+          customCss: "./src/css/custom.css",
         },
       } satisfies Preset.Options,
     ],
@@ -68,52 +68,54 @@ const config: Config = {
 
   themeConfig: {
     colorMode: {
-      defaultMode: 'dark',
+      defaultMode: "dark",
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: 'manim-web',
+      title: "manim-web",
       items: [
         {
-          type: 'docSidebar',
-          sidebarId: 'docs',
-          position: 'left',
-          label: 'Docs',
+          type: "docSidebar",
+          sidebarId: "docs",
+          position: "left",
+          label: "Docs",
         },
         {
-          href: 'https://github.com/maloyan/manim-web',
-          label: 'GitHub',
-          position: 'right',
+          href: "https://github.com/maloyan/manim-web",
+          label: "GitHub",
+          position: "right",
         },
       ],
     },
     footer: {
-      style: 'dark',
+      style: "dark",
       links: [
         {
-          title: 'Documentation',
+          title: "Documentation",
           items: [
             {
-              label: 'Getting Started',
-              to: '/getting-started',
+              label: "Getting Started",
+              to: "/getting-started",
             },
             {
-              label: 'Examples',
-              to: '/examples',
+              label: "Examples",
+              to: "/examples",
             },
           ],
         },
         {
-          title: 'More',
+          title: "More",
           items: [
             {
-              label: 'GitHub',
-              href: 'https://github.com/maloyan/manim-web',
+              label: "GitHub",
+              href: "https://github.com/maloyan/manim-web",
             },
           ],
         },
       ],
-      copyright: `Copyright ${new Date().getFullYear()} manim-web contributors. Built with Docusaurus.`,
+      copyright: `Copyright ${
+        new Date().getFullYear()
+      } manim-web contributors. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,

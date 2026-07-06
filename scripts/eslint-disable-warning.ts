@@ -8,7 +8,13 @@
 const PATTERN = /(\/\/|\/\*|\*|<!--|\{\/\*|#)\s*eslint-(disable|enable)/;
 
 // Use Set for O(1) lookups
-const EXCLUDE_DIRS = new Set(['node_modules', 'dist', 'build', '.git', '.deno']);
+const EXCLUDE_DIRS = new Set([
+  "node_modules",
+  "dist",
+  "build",
+  ".git",
+  ".deno",
+]);
 
 interface Match {
   file: string;
@@ -18,10 +24,10 @@ interface Match {
 
 async function isGitRepo(): Promise<boolean> {
   try {
-    const cmd = new Deno.Command('git', {
-      args: ['rev-parse', '--is-inside-work-tree'],
-      stdout: 'null',
-      stderr: 'null',
+    const cmd = new Deno.Command("git", {
+      args: ["rev-parse", "--is-inside-work-tree"],
+      stdout: "null",
+      stderr: "null",
     });
     const { success } = await cmd.output();
     return success;
@@ -31,20 +37,23 @@ async function isGitRepo(): Promise<boolean> {
 }
 
 async function getGitTrackedFiles(): Promise<string[]> {
-  const cmd = new Deno.Command('git', {
-    args: ['ls-files'],
-    stdout: 'piped',
+  const cmd = new Deno.Command("git", {
+    args: ["ls-files"],
+    stdout: "piped",
   });
   const { stdout } = await cmd.output();
   return new TextDecoder()
     .decode(stdout)
-    .split('\n')
+    .split("\n")
     .filter((f) => f.length > 0);
 }
 
 // Parallel file search
-async function searchFilesParallel(files: string[], repoRoot: string): Promise<Match[]> {
-  const scriptPath = import.meta.filename || '';
+async function searchFilesParallel(
+  files: string[],
+  repoRoot: string,
+): Promise<Match[]> {
+  const scriptPath = import.meta.filename || "";
   const results: Match[] = [];
 
   // Process in chunks for better memory management
@@ -66,7 +75,7 @@ async function searchFilesParallel(files: string[], repoRoot: string): Promise<M
 
         // Read file and search in one pass
         const content = await Deno.readTextFile(fullPath);
-        const lines = content.split('\n');
+        const lines = content.split("\n");
         const matches: Match[] = [];
 
         for (let i = 0; i < lines.length; i++) {
@@ -102,7 +111,7 @@ function getAllFilesSync(dir: string): string[] {
       const fullPath = `${dir}/${entry.name}`;
 
       if (entry.isDirectory) {
-        if (!EXCLUDE_DIRS.has(entry.name) && !entry.name.startsWith('.')) {
+        if (!EXCLUDE_DIRS.has(entry.name) && !entry.name.startsWith(".")) {
           files.push(...getAllFilesSync(fullPath));
         }
       } else if (entry.isFile) {
@@ -135,7 +144,7 @@ async function main() {
     console.error(
       "✖ Found 'eslint-disable'/'eslint-enable' directive(s) (banned — see issue #398):",
     );
-    console.error('');
+    console.error("");
 
     // Group by file for cleaner output
     const grouped = new Map<string, typeof allMatches>();
@@ -152,14 +161,16 @@ async function main() {
       }
     }
 
-    console.error('');
-    console.error('Fix the underlying lint problem instead of suppressing it.');
+    console.error("");
+    console.error("Fix the underlying lint problem instead of suppressing it.");
     Deno.exit(1);
   }
 
   const endTime = performance.now();
   console.log(
-    `✓ No 'eslint-disable' directives anywhere in the repo. (${(endTime - startTime).toFixed(2)}ms)`,
+    `✓ No 'eslint-disable' directives anywhere in the repo. (${
+      (endTime - startTime).toFixed(2)
+    }ms)`,
   );
 }
 

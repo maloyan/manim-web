@@ -178,23 +178,58 @@ const CLASS_MAP = {
 
 // Animation classes (need `new` keyword when called)
 const ANIMATION_CLASSES = new Set([
-  'Create','Uncreate','DrawBorderThenFill','Write','Unwrite',
-  'AddTextLetterByLetter','RemoveTextLetterByLetter','ShowCreation',
-  'FadeIn','FadeOut',
-  'Transform','ReplacementTransform','TransformFromCopy','ClockwiseTransform',
-  'CounterclockwiseTransform','MoveToTarget','ApplyMethod','ApplyFunction',
-  'FadeTransform','Swap','CyclicReplace','Restore','ScaleInPlace','ShrinkToCenter',
-  'Shift','Rotate','GrowFromCenter','GrowArrow','GrowFromEdge','GrowFromPoint',
-  'SpinInFromNothing','MoveAlongPath',
-  'Indicate','Flash','Circumscribe','Wiggle','ShowPassingFlash','ApplyWave',
-  'FocusOn','Pulse',
-  'AnimationGroup','LaggedStart','LaggedStartMap','Succession',
-  'UpdateFromFunc','UpdateFromAlphaFunc',
-  'Rotating','Broadcast',
+  'Create',
+  'Uncreate',
+  'DrawBorderThenFill',
+  'Write',
+  'Unwrite',
+  'AddTextLetterByLetter',
+  'RemoveTextLetterByLetter',
+  'ShowCreation',
+  'FadeIn',
+  'FadeOut',
+  'Transform',
+  'ReplacementTransform',
+  'TransformFromCopy',
+  'ClockwiseTransform',
+  'CounterclockwiseTransform',
+  'MoveToTarget',
+  'ApplyMethod',
+  'ApplyFunction',
+  'FadeTransform',
+  'Swap',
+  'CyclicReplace',
+  'Restore',
+  'ScaleInPlace',
+  'ShrinkToCenter',
+  'Shift',
+  'Rotate',
+  'GrowFromCenter',
+  'GrowArrow',
+  'GrowFromEdge',
+  'GrowFromPoint',
+  'SpinInFromNothing',
+  'MoveAlongPath',
+  'Indicate',
+  'Flash',
+  'Circumscribe',
+  'Wiggle',
+  'ShowPassingFlash',
+  'ApplyWave',
+  'FocusOn',
+  'Pulse',
+  'AnimationGroup',
+  'LaggedStart',
+  'LaggedStartMap',
+  'Succession',
+  'UpdateFromFunc',
+  'UpdateFromAlphaFunc',
+  'Rotating',
+  'Broadcast',
 ]);
 
 // Mobject classes (also need `new`)
-const MOBJECT_CLASSES = new Set(Object.keys(CLASS_MAP).filter(k => !ANIMATION_CLASSES.has(k)));
+const MOBJECT_CLASSES = new Set(Object.keys(CLASS_MAP).filter((k) => !ANIMATION_CLASSES.has(k)));
 
 // All classes that need `new`
 const ALL_CLASSES = new Set([...ANIMATION_CLASSES, ...MOBJECT_CLASSES]);
@@ -319,35 +354,88 @@ const METHOD_MAP = {
 
 // ─── Color constant map ──────────────────────────────────────────────
 const COLOR_MAP = {
-  'WHITE': 'WHITE', 'BLACK': 'BLACK',
-  'BLUE': 'BLUE', 'BLUE_A': 'BLUE_A', 'BLUE_B': 'BLUE_B', 'BLUE_C': 'BLUE_C',
-  'BLUE_D': 'BLUE_D', 'BLUE_E': 'BLUE_E', 'PURE_BLUE': 'PURE_BLUE',
-  'RED': 'RED', 'RED_A': 'RED_A', 'RED_B': 'RED_B', 'RED_C': 'RED_C',
-  'RED_D': 'RED_D', 'RED_E': 'RED_E', 'PURE_RED': 'PURE_RED',
-  'GREEN': 'GREEN', 'GREEN_A': 'GREEN_A', 'GREEN_B': 'GREEN_B', 'GREEN_C': 'GREEN_C',
-  'GREEN_D': 'GREEN_D', 'GREEN_E': 'GREEN_E', 'PURE_GREEN': 'PURE_GREEN',
-  'YELLOW': 'YELLOW', 'YELLOW_A': 'YELLOW_A', 'YELLOW_B': 'YELLOW_B', 'YELLOW_C': 'YELLOW_C',
-  'YELLOW_D': 'YELLOW_D', 'YELLOW_E': 'YELLOW_E',
-  'ORANGE': 'ORANGE', 'PINK': 'PINK',
-  'PURPLE': 'PURPLE', 'PURPLE_A': 'PURPLE_A', 'PURPLE_B': 'PURPLE_B', 'PURPLE_C': 'PURPLE_C',
-  'PURPLE_D': 'PURPLE_D', 'PURPLE_E': 'PURPLE_E',
-  'TEAL': 'TEAL', 'TEAL_A': 'TEAL_A', 'TEAL_B': 'TEAL_B', 'TEAL_C': 'TEAL_C',
-  'TEAL_D': 'TEAL_D', 'TEAL_E': 'TEAL_E',
-  'GOLD': 'GOLD', 'GOLD_A': 'GOLD_A', 'GOLD_B': 'GOLD_B', 'GOLD_C': 'GOLD_C',
-  'GOLD_D': 'GOLD_D', 'GOLD_E': 'GOLD_E',
-  'MAROON': 'MAROON', 'MAROON_A': 'MAROON_A', 'MAROON_B': 'MAROON_B', 'MAROON_C': 'MAROON_C',
-  'MAROON_D': 'MAROON_D', 'MAROON_E': 'MAROON_E',
-  'GRAY': 'GRAY', 'GRAY_A': 'GRAY_A', 'GRAY_B': 'GRAY_B', 'GRAY_C': 'GRAY_C',
-  'GRAY_D': 'GRAY_D', 'GRAY_E': 'GRAY_E',
-  'GREY': 'GRAY', 'GREY_A': 'GRAY_A', 'GREY_B': 'GRAY_B',
-  'LIGHT_GRAY': 'LIGHT_GRAY', 'DARK_GRAY': 'DARK_GRAY',
-  'LIGHTER_GREY': 'LIGHTER_GRAY', 'DARKER_GREY': 'DARKER_GRAY',
+  'WHITE': 'WHITE',
+  'BLACK': 'BLACK',
+  'BLUE': 'BLUE',
+  'BLUE_A': 'BLUE_A',
+  'BLUE_B': 'BLUE_B',
+  'BLUE_C': 'BLUE_C',
+  'BLUE_D': 'BLUE_D',
+  'BLUE_E': 'BLUE_E',
+  'PURE_BLUE': 'PURE_BLUE',
+  'RED': 'RED',
+  'RED_A': 'RED_A',
+  'RED_B': 'RED_B',
+  'RED_C': 'RED_C',
+  'RED_D': 'RED_D',
+  'RED_E': 'RED_E',
+  'PURE_RED': 'PURE_RED',
+  'GREEN': 'GREEN',
+  'GREEN_A': 'GREEN_A',
+  'GREEN_B': 'GREEN_B',
+  'GREEN_C': 'GREEN_C',
+  'GREEN_D': 'GREEN_D',
+  'GREEN_E': 'GREEN_E',
+  'PURE_GREEN': 'PURE_GREEN',
+  'YELLOW': 'YELLOW',
+  'YELLOW_A': 'YELLOW_A',
+  'YELLOW_B': 'YELLOW_B',
+  'YELLOW_C': 'YELLOW_C',
+  'YELLOW_D': 'YELLOW_D',
+  'YELLOW_E': 'YELLOW_E',
+  'ORANGE': 'ORANGE',
+  'PINK': 'PINK',
+  'PURPLE': 'PURPLE',
+  'PURPLE_A': 'PURPLE_A',
+  'PURPLE_B': 'PURPLE_B',
+  'PURPLE_C': 'PURPLE_C',
+  'PURPLE_D': 'PURPLE_D',
+  'PURPLE_E': 'PURPLE_E',
+  'TEAL': 'TEAL',
+  'TEAL_A': 'TEAL_A',
+  'TEAL_B': 'TEAL_B',
+  'TEAL_C': 'TEAL_C',
+  'TEAL_D': 'TEAL_D',
+  'TEAL_E': 'TEAL_E',
+  'GOLD': 'GOLD',
+  'GOLD_A': 'GOLD_A',
+  'GOLD_B': 'GOLD_B',
+  'GOLD_C': 'GOLD_C',
+  'GOLD_D': 'GOLD_D',
+  'GOLD_E': 'GOLD_E',
+  'MAROON': 'MAROON',
+  'MAROON_A': 'MAROON_A',
+  'MAROON_B': 'MAROON_B',
+  'MAROON_C': 'MAROON_C',
+  'MAROON_D': 'MAROON_D',
+  'MAROON_E': 'MAROON_E',
+  'GRAY': 'GRAY',
+  'GRAY_A': 'GRAY_A',
+  'GRAY_B': 'GRAY_B',
+  'GRAY_C': 'GRAY_C',
+  'GRAY_D': 'GRAY_D',
+  'GRAY_E': 'GRAY_E',
+  'GREY': 'GRAY',
+  'GREY_A': 'GRAY_A',
+  'GREY_B': 'GRAY_B',
+  'LIGHT_GRAY': 'LIGHT_GRAY',
+  'DARK_GRAY': 'DARK_GRAY',
+  'LIGHTER_GREY': 'LIGHTER_GRAY',
+  'DARKER_GREY': 'DARKER_GRAY',
 };
 
 const DIRECTION_MAP = {
-  'UP': 'UP', 'DOWN': 'DOWN', 'LEFT': 'LEFT', 'RIGHT': 'RIGHT',
-  'ORIGIN': 'ORIGIN', 'OUT': 'OUT', 'IN': 'IN',
-  'UL': 'UL', 'UR': 'UR', 'DL': 'DL', 'DR': 'DR',
+  'UP': 'UP',
+  'DOWN': 'DOWN',
+  'LEFT': 'LEFT',
+  'RIGHT': 'RIGHT',
+  'ORIGIN': 'ORIGIN',
+  'OUT': 'OUT',
+  'IN': 'IN',
+  'UL': 'UL',
+  'UR': 'UR',
+  'DL': 'DL',
+  'DR': 'DR',
 };
 
 const RATE_FUNC_MAP = {
@@ -424,7 +512,11 @@ function findMatchingParen(s, openIndex) {
       if (ch === strChar && s[i - 1] !== '\\') inStr = false;
       continue;
     }
-    if (ch === '"' || ch === "'" || ch === '`') { inStr = true; strChar = ch; continue; }
+    if (ch === '"' || ch === "'" || ch === '`') {
+      inStr = true;
+      strChar = ch;
+      continue;
+    }
     if (ch === openCh) depth++;
     if (ch === closeCh) {
       depth--;
@@ -472,7 +564,9 @@ function convertNestedDefs(lines) {
     if (defMatch) {
       const [, indent, funcName, params] = defMatch;
       // Keep snake_case name — convertLine will add `const` and rename via varRenames
-      const tsParams = params.split(',').map(p => p.trim()).filter(p => p && p !== 'self').join(', ');
+      const tsParams = params.split(',').map((p) => p.trim()).filter((p) => p && p !== 'self').join(
+        ', ',
+      );
       result.push(`${indent}${funcName} = (${tsParams}) => {`);
 
       // Collect body lines (more indented than the def line)
@@ -518,7 +612,10 @@ function convertPythonToTypeScript(pythonCode) {
     if (/^\s*import\s+/.test(line) && !line.includes('=')) continue;
 
     // Skip if __name__ block
-    if (/^\s*if\s+__name__/.test(line)) { inConstruct = false; continue; }
+    if (/^\s*if\s+__name__/.test(line)) {
+      inConstruct = false;
+      continue;
+    }
 
     // Scene class definition
     const classMatch = line.match(/^class\s+(\w+)\s*\(\s*(\w+)\s*\)\s*:/);
@@ -570,7 +667,7 @@ function convertPythonToTypeScript(pythonCode) {
 
   // Fallback: if no scenes found, treat whole file as one
   if (scenes.length === 0) {
-    scenes.push({ name: 'MyScene', base: 'Scene', lines: lines.map(l => '  ' + l) });
+    scenes.push({ name: 'MyScene', base: 'Scene', lines: lines.map((l) => '  ' + l) });
   }
 
   // ── Phase 2: Convert each scene ──
@@ -582,7 +679,7 @@ function convertPythonToTypeScript(pythonCode) {
     usedUtilities: new Set(),
   };
 
-  const convertedScenes = scenes.map(scene => {
+  const convertedScenes = scenes.map((scene) => {
     // Pre-process: convert nested function definitions to arrow functions
     scene.lines = convertNestedDefs(scene.lines);
 
@@ -601,11 +698,11 @@ function convertPythonToTypeScript(pythonCode) {
 
   // ── Phase 3: Build output ──
   const imports = new Set();
-  tracking.usedClasses.forEach(c => imports.add(c));
-  tracking.usedColors.forEach(c => imports.add(COLOR_MAP[c] || c));
-  tracking.usedDirections.forEach(d => imports.add(d));
-  tracking.usedRateFuncs.forEach(r => imports.add(r));
-  tracking.usedUtilities.forEach(u => imports.add(u));
+  tracking.usedClasses.forEach((c) => imports.add(c));
+  tracking.usedColors.forEach((c) => imports.add(COLOR_MAP[c] || c));
+  tracking.usedDirections.forEach((d) => imports.add(d));
+  tracking.usedRateFuncs.forEach((r) => imports.add(r));
+  tracking.usedUtilities.forEach((u) => imports.add(u));
   const uniqueImports = [...imports].sort();
 
   const output = [];
@@ -671,9 +768,9 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
         'scene.camera.frame.generateTarget()',
         `  scene.camera.frame.targetCopy!.scale(${sf})`,
         `  scene.camera.frame.targetCopy!.moveTo(${tgt}.getCenter())`,
-        `  await scene.play(new MoveToTarget(scene.camera.frame))`
+        `  await scene.play(new MoveToTarget(scene.camera.frame))`,
       ].join(';\n');
-    }
+    },
   );
 
   // .animate.shift(direction) → new Shift(obj, { direction: direction })
@@ -727,7 +824,8 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   line = line.replace(/\bnp\.pi\b/g, 'Math.PI');
 
   // np.arange(start, stop, step) → expanded array literal
-  line = line.replace(/\bnp\.arange\s*\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/g,
+  line = line.replace(
+    /\bnp\.arange\s*\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)/g,
     (_, start, stop, step) => {
       const arr = [];
       const s = parseFloat(start), e = parseFloat(stop), st = parseFloat(step);
@@ -735,7 +833,7 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
         arr.push(Math.round(i * 1e10) / 1e10);
       }
       return `[${arr.join(', ')}]`;
-    }
+    },
   );
 
   // np.linspace(start, stop, N) → linspace(start, stop, N)
@@ -750,33 +848,47 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   line = line.replace(/(\w+(?:\.\w+)*)\s*\[(\d+)\s*:\s*\]/g, '$1.slice($2)');
 
   // func(array).argmin() → array.reduce((mi, _, i, a) => func(a[i]) < func(a[mi]) ? i : mi, 0)
-  line = line.replace(/(\w+)\((\w+)\)\.argmin\(\)/g,
-    '$2.reduce((mi, _, i, a) => $1(a[i]) < $1(a[mi]) ? i : mi, 0)');
+  line = line.replace(
+    /(\w+)\((\w+)\)\.argmin\(\)/g,
+    '$2.reduce((mi, _, i, a) => $1(a[i]) < $1(a[mi]) ? i : mi, 0)',
+  );
 
   // ** power → Math.pow (AFTER **kwargs conversion, so x**2 is still intact)
   line = line.replace(/(\w+)\s*\*\*\s*(\w+)/g, 'Math.pow($1, $2)');
 
   // range()
   line = line.replace(/range\((\d+)\)/g, 'Array.from({length: $1}, (_, i) => i)');
-  line = line.replace(/range\((\d+),\s*(\d+)\)/g,
-    'Array.from({length: $2 - $1}, (_, i) => i + $1)');
+  line = line.replace(
+    /range\((\d+),\s*(\d+)\)/g,
+    'Array.from({length: $2 - $1}, (_, i) => i + $1)',
+  );
 
   // List comprehension: [expr for x in iterable]
   line = line.replace(
     /\[\s*(.+?)\s+for\s+(\w+)\s+in\s+(.+?)\s*\]/g,
-    '$3.map(($2) => $1)'
+    '$3.map(($2) => $1)',
   );
 
   // f-strings
-  line = line.replace(/f"([^"]*?)"/g, (_, inner) =>
-    '`' + inner.replace(/\{([^}]+)\}/g, '${$1}') + '`');
-  line = line.replace(/f'([^']*?)'/g, (_, inner) =>
-    '`' + inner.replace(/\{([^}]+)\}/g, '${$1}') + '`');
+  line = line.replace(
+    /f"([^"]*?)"/g,
+    (_, inner) => '`' + inner.replace(/\{([^}]+)\}/g, '${$1}') + '`',
+  );
+  line = line.replace(
+    /f'([^']*?)'/g,
+    (_, inner) => '`' + inner.replace(/\{([^}]+)\}/g, '${$1}') + '`',
+  );
 
   // Raw strings: double backslashes so they survive as literals in JS strings
   // Negative lookbehind ensures we don't match r" inside a word like "color"
-  line = line.replace(/(?<![a-zA-Z0-9_"])r"([^"]*?)"/g, (_, s) => '"' + s.replace(/\\/g, '\\\\') + '"');
-  line = line.replace(/(?<![a-zA-Z0-9_'])r'([^']*?)'/g, (_, s) => "'" + s.replace(/\\/g, '\\\\') + "'");
+  line = line.replace(
+    /(?<![a-zA-Z0-9_"])r"([^"]*?)"/g,
+    (_, s) => '"' + s.replace(/\\/g, '\\\\') + '"',
+  );
+  line = line.replace(
+    /(?<![a-zA-Z0-9_'])r'([^']*?)'/g,
+    (_, s) => "'" + s.replace(/\\/g, '\\\\') + "'",
+  );
 
   // Direction vector addition → compound constants (before tracking)
   line = line.replace(/\bUP\s*\+\s*LEFT\b/g, 'UL');
@@ -843,8 +955,10 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   });
 
   // Python dict string keys → JS property names: "snake_key": → camelKey:
-  line = line.replace(/"([a-z_][a-z_0-9]*)"\s*:/g, (_, key) =>
-    `${KWARG_MAP[key] || snakeToCamel(key)}:`);
+  line = line.replace(
+    /"([a-z_][a-z_0-9]*)"\s*:/g,
+    (_, key) => `${KWARG_MAP[key] || snakeToCamel(key)}:`,
+  );
 
   // Known method renames
   for (const [pyMethod, tsMethod] of Object.entries(METHOD_MAP)) {
@@ -852,13 +966,14 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   }
 
   // Remaining snake_case method names
-  line = line.replace(/\.([a-z_][a-z_0-9]*)\s*\(/g, (_, method) =>
-    `.${snakeToCamel(method)}(`);
+  line = line.replace(/\.([a-z_][a-z_0-9]*)\s*\(/g, (_, method) => `.${snakeToCamel(method)}(`);
 
   // Snake_case property access (not method calls) → camelCase
   // Matches .prop_name followed by [ . , ) ; space or end-of-line, but NOT (
-  line = line.replace(/\.([a-z_][a-z_0-9]*)(?=\s*[.[,);\s]|$)(?!\s*\()/g, (_, prop) =>
-    `.${snakeToCamel(prop)}`);
+  line = line.replace(
+    /\.([a-z_][a-z_0-9]*)(?=\s*[.[,);\s]|$)(?!\s*\()/g,
+    (_, prop) => `.${snakeToCamel(prop)}`,
+  );
 
   // Class instantiation → new ClassName()
   for (const cls of Object.keys(CLASS_MAP)) {
@@ -911,7 +1026,7 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   // for loops
   line = line.replace(
     /for\s+(\w+)\s+in\s+Array\.from\(\{length:\s*(\w+)\},\s*\(_, i\) => i\)/g,
-    'for (let $1 = 0; $1 < $2; $1++)'
+    'for (let $1 = 0; $1 < $2; $1++)',
   );
   line = line.replace(/for\s+(\w+)\s+in\s+(.+?)\s*\{/g, 'for (const $1 of $2) {');
 
@@ -926,9 +1041,11 @@ function convertLine(rawLine, tracking, varRenames, mathTexVars = new Set()) {
   let assignIndent = '';
   if (varMatch) {
     const [, indent, varName, value] = varMatch;
-    if (!/\b(const|let|var)\s/.test(line) &&
-        !/^\s*(for|if|while|return|export)\b/.test(line.trim()) &&
-        !varRenames.has(varName)) {
+    if (
+      !/\b(const|let|var)\s/.test(line) &&
+      !/^\s*(for|if|while|return|export)\b/.test(line.trim()) &&
+      !varRenames.has(varName)
+    ) {
       const camelName = snakeToCamel(varName);
       varRenames.set(varName, camelName);
       line = `${indent}const ${camelName} = ${value}`;
@@ -989,24 +1106,34 @@ function convertConstructorArgs(line) {
     if (args.trim().startsWith('{')) continue;
 
     // Classes that always need their positional args wrapped into an options object
-    const needsWrapping = ['Text', 'Title', 'Paragraph', 'MarkupText', 'MathTex', 'Tex'].includes(className);
+    const needsWrapping = ['Text', 'Title', 'Paragraph', 'MarkupText', 'MathTex', 'Tex'].includes(
+      className,
+    );
     const needsDotWrapping = ['Dot', 'SmallDot', 'LargeDot'].includes(className);
-    const needsPositionalWrapping = ['Line', 'Arrow', 'DoubleArrow', 'Line3D', 'Arrow3D', 'Vector'].includes(className);
-    if (!args.includes(':') && !needsWrapping && !needsPositionalWrapping && !needsDotWrapping) continue;
+    const needsPositionalWrapping = ['Line', 'Arrow', 'DoubleArrow', 'Line3D', 'Arrow3D', 'Vector']
+      .includes(className);
+    if (!args.includes(':') && !needsWrapping && !needsPositionalWrapping && !needsDotWrapping) {
+      continue;
+    }
 
     const parts = smartSplit(args);
     const positional = [];
     const kwargs = [];
 
     for (const part of parts) {
-      if (/^\s*\w+\s*:/.test(part) && !part.trim().startsWith('"') && !part.trim().startsWith("'") && !part.trim().startsWith('`')) {
+      if (
+        /^\s*\w+\s*:/.test(part) && !part.trim().startsWith('"') && !part.trim().startsWith("'") &&
+        !part.trim().startsWith('`')
+      ) {
         kwargs.push(part.trim());
       } else {
         positional.push(part.trim());
       }
     }
 
-    if (kwargs.length === 0 && !needsWrapping && !needsPositionalWrapping && !needsDotWrapping) continue;
+    if (kwargs.length === 0 && !needsWrapping && !needsPositionalWrapping && !needsDotWrapping) {
+      continue;
+    }
 
     let newArgs;
 
@@ -1025,13 +1152,18 @@ function convertConstructorArgs(line) {
       if (positional.length >= 2) {
         const opts = [{ key: 'path', val: positional[1] }];
         for (const k of kwargs) opts.push({ key: null, val: k });
-        newArgs = `${positional[0]}, { ${opts.map(o => o.key ? `${o.key}: ${o.val}` : o.val).join(', ')} }`;
+        newArgs = `${positional[0]}, { ${
+          opts.map((o) => o.key ? `${o.key}: ${o.val}` : o.val).join(', ')
+        } }`;
       } else if (positional.length === 1 && kwargs.length > 0) {
         newArgs = `${positional[0]}, { ${kwargs.join(', ')} }`;
       } else {
         continue;
       }
-    } else if (className === 'Text' || className === 'Title' || className === 'Paragraph' || className === 'MarkupText') {
+    } else if (
+      className === 'Text' || className === 'Title' || className === 'Paragraph' ||
+      className === 'MarkupText'
+    ) {
       if (positional.length > 0) {
         const kw = kwargs.length > 0 ? ', ' + kwargs.join(', ') : '';
         newArgs = `{ text: ${positional[0]}${kw} }`;
@@ -1050,8 +1182,10 @@ function convertConstructorArgs(line) {
       } else {
         newArgs = `{ ${kwargs.join(', ')} }`;
       }
-    } else if (className === 'Line' || className === 'Arrow' || className === 'DoubleArrow' ||
-               className === 'Line3D' || className === 'Arrow3D') {
+    } else if (
+      className === 'Line' || className === 'Arrow' || className === 'DoubleArrow' ||
+      className === 'Line3D' || className === 'Arrow3D'
+    ) {
       if (positional.length >= 2) {
         newArgs = `{ start: ${positional[0]}, end: ${positional[1]}`;
         if (kwargs.length > 0) newArgs += ', ' + kwargs.join(', ');
@@ -1063,8 +1197,15 @@ function convertConstructorArgs(line) {
       } else {
         newArgs = `{ ${kwargs.join(', ')} }`;
       }
-    } else if (['Transform', 'ReplacementTransform', 'TransformFromCopy',
-                'ClockwiseTransform', 'CounterclockwiseTransform'].includes(className)) {
+    } else if (
+      [
+        'Transform',
+        'ReplacementTransform',
+        'TransformFromCopy',
+        'ClockwiseTransform',
+        'CounterclockwiseTransform',
+      ].includes(className)
+    ) {
       if (positional.length >= 2) {
         const opts = kwargs.length > 0 ? `, { ${kwargs.join(', ')} }` : '';
         newArgs = `${positional[0]}, ${positional[1]}${opts}`;
@@ -1122,7 +1263,10 @@ function convertMethodCallArgs(line) {
     const kwargs = [];
 
     for (const part of parts) {
-      if (/^\s*\w+\s*:/.test(part) && !part.trim().startsWith('"') && !part.trim().startsWith("'") && !part.trim().startsWith('`')) {
+      if (
+        /^\s*\w+\s*:/.test(part) && !part.trim().startsWith('"') && !part.trim().startsWith("'") &&
+        !part.trim().startsWith('`')
+      ) {
         kwargs.push(part.trim());
       } else {
         positional.push(part.trim());
@@ -1163,8 +1307,16 @@ function smartSplit(s) {
       continue;
     }
 
-    if (ch === '(' || ch === '[' || ch === '{') { depth++; current += ch; continue; }
-    if (ch === ')' || ch === ']' || ch === '}') { depth--; current += ch; continue; }
+    if (ch === '(' || ch === '[' || ch === '{') {
+      depth++;
+      current += ch;
+      continue;
+    }
+    if (ch === ')' || ch === ']' || ch === '}') {
+      depth--;
+      current += ch;
+      continue;
+    }
 
     if (ch === ',' && depth === 0) {
       parts.push(current);
@@ -1199,9 +1351,9 @@ function convertParams(params) {
   if (!params) return '';
   return params
     .split(',')
-    .map(p => p.trim())
-    .filter(p => p && p !== 'self')
-    .map(p => {
+    .map((p) => p.trim())
+    .filter((p) => p && p !== 'self')
+    .map((p) => {
       const [name, ...rest] = p.split('=');
       if (rest.length > 0) {
         return `${snakeToCamel(name.trim())} = ${rest.join('=')}`;

@@ -2,26 +2,30 @@
  * Transform animation - morphs one mobject into another.
  */
 
-import { Mobject } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
-import { VGroup } from '../../core/VGroup';
-import { PMobject } from '../../mobjects/point/PMobject';
-import { Animation, AnimationOptions, AnimationScene } from '../Animation';
-import { ImageMobject } from '../../mobjects/image';
-import { MathTexImage } from '../../mobjects/text/MathTexImage';
-import { Text } from '../../mobjects/text/Text';
-import { FadeMorphStrategy } from './FadeMorphStrategy';
-import { MorphStrategy } from './MorphStrategy';
-import { PointCloudMorphStrategy } from './PointCloudMorphStrategy';
-import { PointMorphStrategy } from './PointMorphStrategy';
-import { ShapeMorphStrategy } from './ShapeMorphStrategy';
-import { canMorphByPoints } from './TransformPairing';
+import { Mobject } from "../../core/Mobject";
+import { VMobject } from "../../core/VMobject";
+import { VGroup } from "../../core/VGroup";
+import { PMobject } from "../../mobjects/point/PMobject";
+import { Animation, AnimationOptions, AnimationScene } from "../Animation";
+import { ImageMobject } from "../../mobjects/image";
+import { MathTexImage } from "../../mobjects/text/MathTexImage";
+import { Text } from "../../mobjects/text/Text";
+import { FadeMorphStrategy } from "./FadeMorphStrategy";
+import { MorphStrategy } from "./MorphStrategy";
+import { PointCloudMorphStrategy } from "./PointCloudMorphStrategy";
+import { PointMorphStrategy } from "./PointMorphStrategy";
+import { ShapeMorphStrategy } from "./ShapeMorphStrategy";
+import { canMorphByPoints } from "./TransformPairing";
 
 export class Transform extends Animation {
   readonly target: Mobject;
   private _strategy: MorphStrategy | null = null;
 
-  constructor(mobject: Mobject, target: Mobject, options: AnimationOptions = {}) {
+  constructor(
+    mobject: Mobject,
+    target: Mobject,
+    options: AnimationOptions = {},
+  ) {
     super(mobject, options);
     this.target = target;
   }
@@ -29,8 +33,10 @@ export class Transform extends Animation {
   private _shapeMorphEligible(): boolean {
     const sameDisplayType =
       (this.mobject instanceof Text && this.target instanceof Text) ||
-      (this.mobject instanceof ImageMobject && this.target instanceof ImageMobject) ||
-      (this.mobject instanceof MathTexImage && this.target instanceof MathTexImage);
+      (this.mobject instanceof ImageMobject &&
+        this.target instanceof ImageMobject) ||
+      (this.mobject instanceof MathTexImage &&
+        this.target instanceof MathTexImage);
     return (
       sameDisplayType &&
       this.mobject.getDisplayMeshLength() === 1 &&
@@ -39,7 +45,9 @@ export class Transform extends Animation {
   }
 
   private _vmobjectMorphEligible(): boolean {
-    if (!(this.mobject instanceof VMobject && this.target instanceof VMobject)) return false;
+    if (
+      !(this.mobject instanceof VMobject && this.target instanceof VMobject)
+    ) return false;
     return (
       (this.mobject instanceof VGroup && this.target instanceof VGroup) ||
       canMorphByPoints(this.mobject, this.target)
@@ -62,12 +70,14 @@ export class Transform extends Animation {
   }
 
   override interpolate(alpha: number): void {
-    if (!this._strategy) throw new Error('Transform.interpolate requires strategy');
+    if (!this._strategy) {
+      throw new Error("Transform.interpolate requires strategy");
+    }
     this._strategy.interpolate(this, this.mobject, this.target, alpha);
   }
 
   override finish(): void {
-    if (!this._strategy) throw new Error('Transform.finish requires strategy');
+    if (!this._strategy) throw new Error("Transform.finish requires strategy");
     this._strategy.finish(this, this.mobject, this.target);
     super.finish();
   }
@@ -105,13 +115,17 @@ export interface MobjectWithTarget extends Mobject {
 }
 export class MoveToTarget extends Transform {
   constructor(mobject: MobjectWithTarget, options: AnimationOptions = {}) {
-    if (!mobject.targetCopy)
+    if (!mobject.targetCopy) {
       throw new Error(
-        'MoveToTarget requires mobject.targetCopy to be set. Use mobject.generateTarget() first.',
+        "MoveToTarget requires mobject.targetCopy to be set. Use mobject.generateTarget() first.",
       );
+    }
     super(mobject, mobject.targetCopy, options);
   }
 }
-export function moveToTarget(mobject: MobjectWithTarget, options?: AnimationOptions): MoveToTarget {
+export function moveToTarget(
+  mobject: MobjectWithTarget,
+  options?: AnimationOptions,
+): MoveToTarget {
   return new MoveToTarget(mobject, options);
 }

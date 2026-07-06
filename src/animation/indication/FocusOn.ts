@@ -5,14 +5,14 @@
  * ring or dot that focuses attention on a specific point.
  */
 
-import * as THREE from 'three';
-import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { Animation, AnimationOptions } from '../Animation';
-import { smooth } from '../../rate-functions';
-import { GRAY, DEFAULT_STROKE_WIDTH } from '../../constants';
+import * as THREE from "three";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
+import { Mobject, Vector3Tuple } from "../../core/Mobject";
+import { Animation, AnimationOptions } from "../Animation";
+import { smooth } from "../../rate-functions";
+import { DEFAULT_STROKE_WIDTH, GRAY } from "../../constants";
 
 export interface FocusOnOptions extends AnimationOptions {
   /** Color of the focus effect. Default: GRAY */
@@ -82,7 +82,11 @@ export class FocusOn extends Animation {
 
     // Create rings group
     this._ringsGroup = new THREE.Group();
-    this._ringsGroup.position.set(this._center[0], this._center[1], this._center[2] - 0.01);
+    this._ringsGroup.position.set(
+      this._center[0],
+      this._center[1],
+      this._center[2] - 0.01,
+    );
 
     // Create concentric rings
     for (let i = 0; i < this.numRings; i++) {
@@ -148,10 +152,14 @@ export class FocusOn extends Animation {
       if (child instanceof Line2) {
         // Stagger the rings - each one slightly delayed
         const ringDelay = i / (this.numRings * 2);
-        const adjustedAlpha = Math.max(0, Math.min(1, (alpha - ringDelay) / (1 - ringDelay)));
+        const adjustedAlpha = Math.max(
+          0,
+          Math.min(1, (alpha - ringDelay) / (1 - ringDelay)),
+        );
 
         // Calculate radius: starts large, shrinks to end
-        const radius = this.startRadius + (this.endRadius - this.startRadius) * adjustedAlpha;
+        const radius = this.startRadius +
+          (this.endRadius - this.startRadius) * adjustedAlpha;
 
         // Calculate opacity: visible in middle, fades at end
         let opacity: number;

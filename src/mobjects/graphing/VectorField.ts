@@ -1,8 +1,8 @@
-import { Group } from '../../core/Group';
-import { VMobject } from '../../core/VMobject';
-import { Mobject, Vector3Tuple, UpdaterFunction } from '../../core/Mobject';
-import { Arrow } from '../geometry';
-import { DEFAULT_STROKE_WIDTH } from '../../constants';
+import { Group } from "../../core/Group";
+import { VMobject } from "../../core/VMobject";
+import { Mobject, UpdaterFunction, Vector3Tuple } from "../../core/Mobject";
+import { Arrow } from "../geometry";
+import { DEFAULT_STROKE_WIDTH } from "../../constants";
 
 /**
  * Type for vector field function that maps (x, y) to [vx, vy]
@@ -171,9 +171,9 @@ export class VectorField extends Group {
     this._opacity = opacity;
 
     // Set up color function
-    if (typeof color === 'function') {
+    if (typeof color === "function") {
       this._colorFunc = color;
-    } else if (typeof color === 'string') {
+    } else if (typeof color === "string") {
       this._colorFunc = () => color;
     } else {
       this._colorFunc = defaultColorFunction;
@@ -407,7 +407,10 @@ export class ArrowVectorField extends VectorField {
       if (this._normalizeArrows) {
         arrowLength = this._maxArrowLength * this._lengthScale;
       } else {
-        arrowLength = Math.min(magnitude * this._lengthScale, this._maxArrowLength);
+        arrowLength = Math.min(
+          magnitude * this._lengthScale,
+          this._maxArrowLength,
+        );
       }
 
       // Calculate end point
@@ -548,7 +551,11 @@ function splitBezierAt(
  * values `lower` and `upper` (both 0-1).  Equivalent to Python manim's
  * `pointwise_become_partial`.
  */
-function getPartialBezierPoints(allPoints: number[][], lower: number, upper: number): number[][] {
+function getPartialBezierPoints(
+  allPoints: number[][],
+  lower: number,
+  upper: number,
+): number[][] {
   if (allPoints.length < 4) return [];
   const nCurves = (allPoints.length - 1) / 3;
   if (nCurves < 1 || lower >= upper) return [];
@@ -654,7 +661,12 @@ export class StreamLines extends VectorField {
   private _lineDurations: number[] = [];
 
   /** Raw integrated points for each streamline (populated during generation) */
-  private _streamlineData: { x: number; y: number; vx: number; vy: number }[][] = [];
+  private _streamlineData: {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+  }[][] = [];
   /** The VMobject children corresponding to each streamline (no arrows) */
   private _streamlineVMobjects: VMobject[] = [];
   /** Updater reference for continuous motion animation */
@@ -745,7 +757,10 @@ export class StreamLines extends VectorField {
   private _integrateStreamline(
     startX: number,
     startY: number,
-  ): { points: { x: number; y: number; vx: number; vy: number }[]; lastStep: number } {
+  ): {
+    points: { x: number; y: number; vx: number; vy: number }[];
+    lastStep: number;
+  } {
     const [xMin, xMax] = this._xRange;
     const [yMin, yMax] = this._yRange;
     const maxSteps = Math.ceil(this._virtualTime / this._stepSize) + 1;
@@ -869,8 +884,8 @@ export class StreamLines extends VectorField {
       streamline.setPoints3D(bezierPoints);
 
       // Color based on average magnitude along the line
-      const avgMagnitude =
-        linePoints.reduce((sum, p) => sum + Math.sqrt(p.vx ** 2 + p.vy ** 2), 0) /
+      const avgMagnitude = linePoints.reduce((sum, p) =>
+        sum + Math.sqrt(p.vx ** 2 + p.vy ** 2), 0) /
         linePoints.length;
 
       const color = this._colorFunc(
@@ -916,7 +931,9 @@ export class StreamLines extends VectorField {
       const prev = linePoints[i - 1];
       const curr = linePoints[i];
 
-      const segmentLen = Math.sqrt((curr.x - prev.x) ** 2 + (curr.y - prev.y) ** 2);
+      const segmentLen = Math.sqrt(
+        (curr.x - prev.x) ** 2 + (curr.y - prev.y) ** 2,
+      );
       distanceAccum += segmentLen;
 
       // Place arrow at spacing intervals
@@ -928,8 +945,16 @@ export class StreamLines extends VectorField {
           const dirY = curr.vy / mag;
 
           const arrow = new Arrow({
-            start: [curr.x - (dirX * arrowLen) / 2, curr.y - (dirY * arrowLen) / 2, 0],
-            end: [curr.x + (dirX * arrowLen) / 2, curr.y + (dirY * arrowLen) / 2, 0],
+            start: [
+              curr.x - (dirX * arrowLen) / 2,
+              curr.y - (dirY * arrowLen) / 2,
+              0,
+            ],
+            end: [
+              curr.x + (dirX * arrowLen) / 2,
+              curr.y + (dirY * arrowLen) / 2,
+              0,
+            ],
             color,
             strokeWidth: this._strokeWidth,
             tipLength: arrowLen * 0.5,
@@ -1051,7 +1076,9 @@ export class StreamLines extends VectorField {
     }
 
     // Use stored line durations and virtualTime
-    const runTimes: number[] = this._lineDurations.map((d) => d / Math.max(flowSpeed, 1e-6));
+    const runTimes: number[] = this._lineDurations.map((d) =>
+      d / Math.max(flowSpeed, 1e-6)
+    );
     const virtualTime = this._virtualTime;
 
     // Initialize per-line time (seconds). Matches Python manim:
@@ -1133,7 +1160,9 @@ export class StreamLines extends VectorField {
       const vmob = this._streamlineVMobjects[i];
       if (!vmob) continue;
 
-      if (this._savedOriginalPoints[i] && this._savedOriginalPoints[i].length > 0) {
+      if (
+        this._savedOriginalPoints[i] && this._savedOriginalPoints[i].length > 0
+      ) {
         vmob.setPoints3D(this._savedOriginalPoints[i]);
       } else {
         // Fallback: recompute from integrated data

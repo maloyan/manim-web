@@ -6,9 +6,12 @@
  * as Line2 geometry (for dash-based stroke animation).
  */
 
-import { VMobject } from '../../core/VMobject';
-import type { Font, Glyph } from 'opentype.js';
-import { skeletonizeGlyph, type SkeletonizeOptions } from '../../utils/skeletonize';
+import { VMobject } from "../../core/VMobject";
+import type { Font, Glyph } from "opentype.js";
+import {
+  skeletonizeGlyph,
+  type SkeletonizeOptions,
+} from "../../utils/skeletonize";
 
 /** Scale factor: pixels to world units (100 pixels = 1 world unit) */
 const PIXEL_TO_WORLD = 1 / 100;
@@ -71,7 +74,7 @@ export class GlyphVMobject extends VMobject {
 
     const xOff = options.xOffset ?? 0;
     const yOff = options.yOffset ?? 0;
-    const color = options.color ?? '#ffffff';
+    const color = options.color ?? "#ffffff";
     const sw = options.strokeWidth ?? 2;
 
     this.setColor(color);
@@ -79,7 +82,13 @@ export class GlyphVMobject extends VMobject {
     this.fillOpacity = 0; // outline only during animation
     this._style.fillOpacity = 0;
 
-    const points3D = this._buildPoints(options.glyph, options.font, options.fontSize, xOff, yOff);
+    const points3D = this._buildPoints(
+      options.glyph,
+      options.font,
+      options.fontSize,
+      xOff,
+      yOff,
+    );
     this._outlinePoints = points3D;
 
     if (points3D.length > 0) {
@@ -117,7 +126,7 @@ export class GlyphVMobject extends VMobject {
 
     for (const cmd of cmds) {
       switch (cmd.type) {
-        case 'M': {
+        case "M": {
           // If we had a previous contour, connect with a degenerate segment
           if (contourStarted && allPoints.length > 0) {
             // Add degenerate zero-length cubic to connect contours
@@ -128,7 +137,11 @@ export class GlyphVMobject extends VMobject {
             allPoints.push([...newPt]); // anchor2 = new start
           } else {
             // First contour: set the start anchor
-            allPoints.push([cmd.x * PIXEL_TO_WORLD, -cmd.y * PIXEL_TO_WORLD, 0]);
+            allPoints.push([
+              cmd.x * PIXEL_TO_WORLD,
+              -cmd.y * PIXEL_TO_WORLD,
+              0,
+            ]);
           }
           currentX = cmd.x;
           currentY = cmd.y;
@@ -138,7 +151,7 @@ export class GlyphVMobject extends VMobject {
           break;
         }
 
-        case 'L': {
+        case "L": {
           // Line to — convert to cubic Bezier with control points at 1/3 and 2/3
           const x = cmd.x;
           const y = cmd.y;
@@ -156,7 +169,7 @@ export class GlyphVMobject extends VMobject {
           break;
         }
 
-        case 'Q': {
+        case "Q": {
           // Quadratic Bezier — convert to cubic
           // CP1 = P0 + 2/3*(Q - P0), CP2 = P + 2/3*(Q - P)
           const qx = cmd.x1;
@@ -178,10 +191,18 @@ export class GlyphVMobject extends VMobject {
           break;
         }
 
-        case 'C': {
+        case "C": {
           // Cubic Bezier — use directly
-          allPoints.push([cmd.x1 * PIXEL_TO_WORLD, -cmd.y1 * PIXEL_TO_WORLD, 0]);
-          allPoints.push([cmd.x2 * PIXEL_TO_WORLD, -cmd.y2 * PIXEL_TO_WORLD, 0]);
+          allPoints.push([
+            cmd.x1 * PIXEL_TO_WORLD,
+            -cmd.y1 * PIXEL_TO_WORLD,
+            0,
+          ]);
+          allPoints.push([
+            cmd.x2 * PIXEL_TO_WORLD,
+            -cmd.y2 * PIXEL_TO_WORLD,
+            0,
+          ]);
           allPoints.push([cmd.x * PIXEL_TO_WORLD, -cmd.y * PIXEL_TO_WORLD, 0]);
 
           currentX = cmd.x;
@@ -189,7 +210,7 @@ export class GlyphVMobject extends VMobject {
           break;
         }
 
-        case 'Z': {
+        case "Z": {
           // Close path — line back to contour start
           if (currentX !== contourStartX || currentY !== contourStartY) {
             const cp1x = currentX + (contourStartX - currentX) / 3;
@@ -199,7 +220,11 @@ export class GlyphVMobject extends VMobject {
 
             allPoints.push([cp1x * PIXEL_TO_WORLD, -cp1y * PIXEL_TO_WORLD, 0]);
             allPoints.push([cp2x * PIXEL_TO_WORLD, -cp2y * PIXEL_TO_WORLD, 0]);
-            allPoints.push([contourStartX * PIXEL_TO_WORLD, -contourStartY * PIXEL_TO_WORLD, 0]);
+            allPoints.push([
+              contourStartX * PIXEL_TO_WORLD,
+              -contourStartY * PIXEL_TO_WORLD,
+              0,
+            ]);
           }
           currentX = contourStartX;
           currentY = contourStartY;
@@ -222,15 +247,19 @@ export class GlyphVMobject extends VMobject {
    *   or `null` if the glyph has no computable skeleton.
    */
   getSkeletonPath(options?: SkeletonizeOptions): number[][] | null {
-    if (this._skeletonPath !== null)
+    if (this._skeletonPath !== null) {
       return this._skeletonPath.length > 0 ? this._skeletonPath : null;
+    }
 
     if (this._outlinePoints.length < 4) {
       this._skeletonPath = [];
       return null;
     }
 
-    this._skeletonPath = skeletonizeGlyph(this._outlinePoints, options ?? this._skeletonOptions);
+    this._skeletonPath = skeletonizeGlyph(
+      this._outlinePoints,
+      options ?? this._skeletonOptions,
+    );
     return this._skeletonPath.length > 0 ? this._skeletonPath : null;
   }
 
@@ -247,8 +276,13 @@ export class GlyphVMobject extends VMobject {
    */
   set useSkeletonStroke(value: boolean) {
     this._useSkeletonStroke = value;
-    if (value && this._skeletonPath === null && this._outlinePoints.length > 0) {
-      this._skeletonPath = skeletonizeGlyph(this._outlinePoints, this._skeletonOptions);
+    if (
+      value && this._skeletonPath === null && this._outlinePoints.length > 0
+    ) {
+      this._skeletonPath = skeletonizeGlyph(
+        this._outlinePoints,
+        this._skeletonOptions,
+      );
     }
   }
 

@@ -10,8 +10,8 @@
  *   node scripts/generate-example-docs.mjs
  */
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'fs';
-import { join, basename, dirname } from 'path';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import { basename, dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,10 +25,50 @@ const DOCS_DIR = join(ROOT, 'docs', 'docs');
 // ---------------------------------------------------------------------------
 
 const CATEGORIES = {
-  'Basic Concepts': ['manim_ce_logo', 'brace_annotation', 'vector_arrow', 'boolean_operations', 'mathtex_svg'],
-  'Animations': ['point_moving_on_shapes', 'moving_around', 'moving_angle', 'moving_dots', 'moving_group_to_destination', 'moving_frame_box', 'rotation_updater', 'point_with_trace', 'sine_curve_unit_circle', 'apply_matrix_arrows', 'apply_matrix_method', 'rate_functions_comparison', 'easing_functions_showcase'],
-  'Plotting': ['sin_cos_plot', 'arg_min', 'graph_area_plot', 'polygon_on_axes', 'heat_diagram_plot'],
-  'Special Camera Settings': ['following_graph_camera', 'moving_zoomed_scene_around', 'fixed_in_frame_mobject_test', 'fixed_orientation_mobjects', 'three_d_light_source_position', 'three_d_surface_plot', 'three_d_camera_rotation', 'three_d_camera_illusion_rotation', 'three_d_angle', 'three_d_reflex_angle', 'split_screen_camera', 'picture_in_picture_camera', 'quad_view_camera'],
+  'Basic Concepts': [
+    'manim_ce_logo',
+    'brace_annotation',
+    'vector_arrow',
+    'boolean_operations',
+    'mathtex_svg',
+  ],
+  'Animations': [
+    'point_moving_on_shapes',
+    'moving_around',
+    'moving_angle',
+    'moving_dots',
+    'moving_group_to_destination',
+    'moving_frame_box',
+    'rotation_updater',
+    'point_with_trace',
+    'sine_curve_unit_circle',
+    'apply_matrix_arrows',
+    'apply_matrix_method',
+    'rate_functions_comparison',
+    'easing_functions_showcase',
+  ],
+  'Plotting': [
+    'sin_cos_plot',
+    'arg_min',
+    'graph_area_plot',
+    'polygon_on_axes',
+    'heat_diagram_plot',
+  ],
+  'Special Camera Settings': [
+    'following_graph_camera',
+    'moving_zoomed_scene_around',
+    'fixed_in_frame_mobject_test',
+    'fixed_orientation_mobjects',
+    'three_d_light_source_position',
+    'three_d_surface_plot',
+    'three_d_camera_rotation',
+    'three_d_camera_illusion_rotation',
+    'three_d_angle',
+    'three_d_reflex_angle',
+    'split_screen_camera',
+    'picture_in_picture_camera',
+    'quad_view_camera',
+  ],
   'Advanced Projects': ['opening_manim', 'export_animation'],
 };
 
@@ -63,7 +103,15 @@ const EXAMPLE_META = {
   boolean_operations: {
     description:
       'Demonstrates the four boolean set operations (union, intersection, difference, exclusion) applied to overlapping ellipses. Each result is scaled down and labeled with animated transitions.',
-    learnMore: ['Union', 'Intersection', 'Difference', 'Exclusion', 'Ellipse', 'FadeIn', 'MoveToTarget'],
+    learnMore: [
+      'Union',
+      'Intersection',
+      'Difference',
+      'Exclusion',
+      'Ellipse',
+      'FadeIn',
+      'MoveToTarget',
+    ],
   },
   point_moving_on_shapes: {
     description:
@@ -143,7 +191,15 @@ const EXAMPLE_META = {
   moving_zoomed_scene_around: {
     description:
       'Demonstrates ZoomedScene with a camera frame that magnifies part of a grayscale image. Shows the zoomed display popping out, non-uniform scaling, shifting, and the reverse pop-out animation.',
-    learnMore: ['ZoomedScene', 'ImageMobject', 'BackgroundRectangle', 'Create', 'FadeIn', 'Scale', 'Shift'],
+    learnMore: [
+      'ZoomedScene',
+      'ImageMobject',
+      'BackgroundRectangle',
+      'Create',
+      'FadeIn',
+      'Scale',
+      'Shift',
+    ],
   },
   mathtex_svg: {
     description:
@@ -153,7 +209,15 @@ const EXAMPLE_META = {
   opening_manim: {
     description:
       'A multi-part showcase: writes text and a LaTeX equation, transforms the title, creates a NumberPlane grid, and applies a non-linear sine warp using ApplyPointwiseFunction.',
-    learnMore: ['Text', 'MathTex', 'NumberPlane', 'Write', 'Transform', 'ApplyPointwiseFunction', 'Create'],
+    learnMore: [
+      'Text',
+      'MathTex',
+      'NumberPlane',
+      'Write',
+      'Transform',
+      'ApplyPointwiseFunction',
+      'Create',
+    ],
   },
   export_animation: {
     description:
@@ -265,8 +329,14 @@ function findMatchingBrace(text, openIndex) {
       const quote = ch;
       i++;
       while (i < text.length) {
-        if (text[i] === '\\') { i += 2; continue; }
-        if (text[i] === quote) { i++; break; }
+        if (text[i] === '\\') {
+          i += 2;
+          continue;
+        }
+        if (text[i] === quote) {
+          i++;
+          break;
+        }
         i++;
       }
       continue;
@@ -281,7 +351,9 @@ function findMatchingBrace(text, openIndex) {
     // Skip multi-line comments
     if (ch === '/' && i + 1 < text.length && text[i + 1] === '*') {
       i += 2;
-      while (i < text.length && !(text[i] === '*' && i + 1 < text.length && text[i + 1] === '/')) i++;
+      while (i < text.length && !(text[i] === '*' && i + 1 < text.length && text[i + 1] === '/')) {
+        i++;
+      }
       i += 2;
       continue;
     }
@@ -310,8 +382,14 @@ function findMatchingParen(text, openIndex) {
       const quote = ch;
       i++;
       while (i < text.length) {
-        if (text[i] === '\\') { i += 2; continue; }
-        if (text[i] === quote) { i++; break; }
+        if (text[i] === '\\') {
+          i += 2;
+          continue;
+        }
+        if (text[i] === quote) {
+          i++;
+          break;
+        }
         i++;
       }
       continue;
@@ -324,7 +402,9 @@ function findMatchingParen(text, openIndex) {
 
     if (ch === '/' && i + 1 < text.length && text[i + 1] === '*') {
       i += 2;
-      while (i < text.length && !(text[i] === '*' && i + 1 < text.length && text[i + 1] === '/')) i++;
+      while (i < text.length && !(text[i] === '*' && i + 1 < text.length && text[i + 1] === '/')) {
+        i++;
+      }
       i += 2;
       continue;
     }
@@ -425,7 +505,7 @@ function cleanBody(bodyStr) {
   // Strip trailing blank lines so removeTrailingBraces can see the `}`
   while (lines.length > 0 && lines[lines.length - 1].trim() === '') lines.pop();
   lines = removeTrailingBraces(lines);
-  lines = deindent(lines);           // second pass after boilerplate/brace removal
+  lines = deindent(lines); // second pass after boilerplate/brace removal
   lines = collapseBlankLines(lines);
   return lines.join('\n');
 }
@@ -457,7 +537,7 @@ function extractCleanCode(tsContent) {
   // 1b. Replace local font paths with CDN URLs (local paths don't exist in Docusaurus build)
   code = code.replace(
     /['"]\.\/fonts\/KaTeX_Main-Regular\.ttf['"]/g,
-    "'https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/fonts/KaTeX_Main-Regular.ttf'"
+    "'https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/fonts/KaTeX_Main-Regular.ttf'",
   );
 
   // 2. Remove "// Converted from Python..." comment lines at top
@@ -474,7 +554,10 @@ function extractCleanCode(tsContent) {
   }
 
   // 4. Remove boilerplate variable declarations
-  code = code.replace(/^const container = document\.getElementById\(['"]container['"]\);?\s*\n/gm, '');
+  code = code.replace(
+    /^const container = document\.getElementById\(['"]container['"]\);?\s*\n/gm,
+    '',
+  );
   code = code.replace(/^const status = document\.getElementById\(['"]status['"]\);?\s*\n/gm, '');
   code = code.replace(/^let isAnimating = false;?\s*\n/gm, '');
   code = code.replace(/^const buttons = document\.querySelectorAll\(['"]button['"]\);?\s*\n/gm, '');
@@ -533,7 +616,7 @@ function extractCleanCode(tsContent) {
   // 10. Inline container in Scene constructor (handles Scene and subclasses like ZoomedScene)
   code = code.replace(
     /new (\w*Scene)\(\s*container\s*,/g,
-    "new $1(document.getElementById('container'),"
+    "new $1(document.getElementById('container'),",
   );
 
   // 11. Collect named async functions that take `scene` param
@@ -577,11 +660,16 @@ function extractCleanCode(tsContent) {
   //     - Otherwise, extract and clean the handler body
   //     Preserve "// Demo N: ..." comments before handlers
 
-  let handlerRe = /document\.getElementById\(['"](\w+)['"]\)\.addEventListener\(\s*['"]click['"]\s*,\s*async\s*\(\s*\)\s*=>\s*\{/g;
+  let handlerRe =
+    /document\.getElementById\(['"](\w+)['"]\)\.addEventListener\(\s*['"]click['"]\s*,\s*async\s*\(\s*\)\s*=>\s*\{/g;
   // Collect all handler matches
   const handlerMatches = [];
   while ((match = handlerRe.exec(code)) !== null) {
-    handlerMatches.push({ id: match[1], index: match.index, matchEnd: match.index + match[0].length });
+    handlerMatches.push({
+      id: match[1],
+      index: match.index,
+      matchEnd: match.index + match[0].length,
+    });
   }
 
   // Process from end to start
@@ -625,7 +713,9 @@ function extractCleanCode(tsContent) {
       .replace(/document\.getElementById\(['"]playBtn['"]\)\.disabled\s*=[^;]*;?\s*/gm, '')
       .trim();
 
-    const funcCallMatch = bodyStripped.match(/^(?:await\s+)?(\w+)\s*\(\s*scene\s*(?::\s*\w+)?\s*\)\s*;?\s*$/);
+    const funcCallMatch = bodyStripped.match(
+      /^(?:await\s+)?(\w+)\s*\(\s*scene\s*(?::\s*\w+)?\s*\)\s*;?\s*$/,
+    );
 
     if (funcCallMatch && namedFunctions[funcCallMatch[1]]) {
       // Body just calls a named function whose body we already have -> remove handler entirely
@@ -646,7 +736,10 @@ function extractCleanCode(tsContent) {
   // 14. Remove any remaining bare function calls like `await funcName(scene);` or `funcName(scene);`
   //     that reference named functions we already extracted
   for (const name of Object.keys(namedFunctions)) {
-    const callRe = new RegExp(`^\\s*(?:await\\s+)?${name}\\s*\\(\\s*scene\\s*(?::\\s*\\w+)?\\s*\\)\\s*;?\\s*$`, 'gm');
+    const callRe = new RegExp(
+      `^\\s*(?:await\\s+)?${name}\\s*\\(\\s*scene\\s*(?::\\s*\\w+)?\\s*\\)\\s*;?\\s*$`,
+      'gm',
+    );
     code = code.replace(callRe, '');
   }
 
@@ -792,10 +885,13 @@ function parseCleanCode(cleanCode) {
       // Lines before scene creation that are not imports are constants
       // e.g., `const TAU = Math.PI * 2;`, `const FONT_URL = '...'`
       // But once we hit `await`, `scene.`, or an animation call, we're in body
-      if (trimmed.startsWith('await ') || trimmed.startsWith('scene.') ||
-          /^(const|let)\s+\w+\s*=\s*new\s+(Axes|Circle|Square|Dot|Line|Text|MathTex|Tex|VGroup|Group|NumberPlane|Ellipse|MarkupText)\b/.test(trimmed) ||
-          /^(const|let)\s+\w+\s*=\s*\w+\.(plot|copy|getAxis)/.test(trimmed) ||
-          /^\/\/\s*(Demo|Part)\s+\d+/.test(trimmed)) {
+      if (
+        trimmed.startsWith('await ') || trimmed.startsWith('scene.') ||
+        /^(const|let)\s+\w+\s*=\s*new\s+(Axes|Circle|Square|Dot|Line|Text|MathTex|Tex|VGroup|Group|NumberPlane|Ellipse|MarkupText)\b/
+          .test(trimmed) ||
+        /^(const|let)\s+\w+\s*=\s*\w+\.(plot|copy|getAxis)/.test(trimmed) ||
+        /^\/\/\s*(Demo|Part)\s+\d+/.test(trimmed)
+      ) {
         phase = 'body';
         bodyLines.push(line);
       } else {
@@ -941,7 +1037,7 @@ function generateComponentFile(stem, cleanCode) {
   const specifiers = extractImportSpecifiers(parsed.imports);
   // For the createScene factory, the scene class import is handled there, not in animate
   const animateSpecifiers = isCustomScene
-    ? specifiers.filter(s => s !== sceneClassName)
+    ? specifiers.filter((s) => s !== sceneClassName)
     : specifiers;
   if (animateSpecifiers.length > 0) {
     lines.push(`  const { ${animateSpecifiers.join(', ')} } = await import('manim-web');`);
@@ -1002,7 +1098,7 @@ function generateComponentFile(stem, cleanCode) {
     lines.push(`function createScene(container: HTMLElement, manim: any) {`);
     // Replace direct references to imported specifiers with manim.X
     let opts = sceneOptions;
-    const optionSpecifiers = specifiers.filter(s => opts.includes(s));
+    const optionSpecifiers = specifiers.filter((s) => opts.includes(s));
     for (const spec of optionSpecifiers) {
       opts = opts.replace(new RegExp(`\\b${spec}\\b`, 'g'), `manim.${spec}`);
     }
@@ -1179,7 +1275,16 @@ player.sequence(async (scene) => {
 
   await scene.wait(1);
 });`,
-      learnMore: ['Player', 'Circle', 'Square', 'Triangle', 'Create', 'Transform', 'Indicate', 'Rotate'],
+      learnMore: [
+        'Player',
+        'Circle',
+        'Square',
+        'Triangle',
+        'Create',
+        'Transform',
+        'Indicate',
+        'Rotate',
+      ],
     },
   ];
 
@@ -1193,18 +1298,24 @@ player.sequence(async (scene) => {
 
   // Add featured component imports
   for (const feat of FEATURED_EXAMPLES) {
-    lines.push(`import ${feat.componentName} from '@site/src/components/examples/${feat.componentName}';`);
+    lines.push(
+      `import ${feat.componentName} from '@site/src/components/examples/${feat.componentName}';`,
+    );
   }
 
   // Add all auto-generated component imports
   for (const ex of examples) {
-    lines.push(`import ${ex.componentName} from '@site/src/components/examples/${ex.componentName}';`);
+    lines.push(
+      `import ${ex.componentName} from '@site/src/components/examples/${ex.componentName}';`,
+    );
   }
 
   lines.push('');
   lines.push('# Examples');
   lines.push('');
-  lines.push('Interactive examples showing what you can build with manim-web. Each example includes a live animation and source code.');
+  lines.push(
+    'Interactive examples showing what you can build with manim-web. Each example includes a live animation and source code.',
+  );
   lines.push('');
 
   // Emit featured examples first
@@ -1225,7 +1336,8 @@ player.sequence(async (scene) => {
     lines.push('</details>');
     lines.push('');
     if (feat.learnMore && feat.learnMore.length > 0) {
-      const learnMoreInline = feat.learnMore.map((name) => `[**${name}**](/api/classes/${name})`).join(' \u00B7 ');
+      const learnMoreInline = feat.learnMore.map((name) => `[**${name}**](/api/classes/${name})`)
+        .join(' \u00B7 ');
       lines.push(`**Learn More:** ${learnMoreInline}`);
       lines.push('');
     }
@@ -1236,7 +1348,7 @@ player.sequence(async (scene) => {
   for (const ex of examples) exampleByStem[ex.stem] = ex;
   const grouped = {};
   for (const [cat, stems] of Object.entries(CATEGORIES)) {
-    grouped[cat] = stems.filter(s => exampleByStem[s]).map(s => exampleByStem[s]);
+    grouped[cat] = stems.filter((s) => exampleByStem[s]).map((s) => exampleByStem[s]);
   }
 
   let isFirst = FEATURED_EXAMPLES.length === 0;
@@ -1267,7 +1379,8 @@ player.sequence(async (scene) => {
       lines.push('');
 
       if (ex.learnMore.length > 0) {
-        const learnMoreInline = ex.learnMore.map((name) => `[**${name}**](/api/classes/${name})`).join(' \u00B7 ');
+        const learnMoreInline = ex.learnMore.map((name) => `[**${name}**](/api/classes/${name})`)
+          .join(' \u00B7 ');
         lines.push(`**Learn More:** ${learnMoreInline}`);
         lines.push('');
       }

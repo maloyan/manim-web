@@ -1,6 +1,6 @@
-import * as THREE from 'three';
-import { Mobject, Vector3Tuple, RIGHT } from '../../core/Mobject';
-import { PMobject } from './PMobject';
+import * as THREE from "three";
+import { Mobject, RIGHT, Vector3Tuple } from "../../core/Mobject";
+import { PMobject } from "./PMobject";
 
 /**
  * Options for creating a PGroup
@@ -27,7 +27,9 @@ export interface PGroupOptions {
  * ```
  */
 export class PGroup extends Mobject {
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+  override normalizeTransform(
+    worldMatrix: THREE.Matrix4 = this._ownMatrix(),
+  ): this {
     return this._flattenAsContainer(worldMatrix);
   }
   constructor(options: PGroupOptions = {}) {

@@ -1,17 +1,17 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { logger, onLog, clearLogListeners, type LogEntry } from './logger';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { clearLogListeners, type LogEntry, logger, onLog } from "./logger";
 
 // ---------------------------------------------------------------------------
 // onLog — log-message callback subscription (issue #380)
 // ---------------------------------------------------------------------------
 
-describe('onLog', () => {
+describe("onLog", () => {
   beforeEach(() => {
     // Silence console so test output stays pristine.
-    vi.spyOn(console, 'debug').mockImplementation(() => {});
-    vi.spyOn(console, 'info').mockImplementation(() => {});
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, "debug").mockImplementation(() => {});
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -19,183 +19,185 @@ describe('onLog', () => {
     vi.restoreAllMocks();
   });
 
-  it('delivers a structured entry to a registered listener', () => {
+  it("delivers a structured entry to a registered listener", () => {
     const entries: LogEntry[] = [];
     onLog((entry) => entries.push(entry));
 
-    logger.info('hello world');
+    logger.info("hello world");
 
     expect(entries).toHaveLength(1);
-    expect(entries[0].level).toBe('info');
-    expect(entries[0].message).toBe('hello world');
-    expect(typeof entries[0].timestamp).toBe('number');
+    expect(entries[0].level).toBe("info");
+    expect(entries[0].message).toBe("hello world");
+    expect(typeof entries[0].timestamp).toBe("number");
     expect(entries[0].timestamp).toBeGreaterThan(0);
   });
 
-  it('joins multiple arguments into the message', () => {
+  it("joins multiple arguments into the message", () => {
     const entries: LogEntry[] = [];
     onLog((entry) => entries.push(entry));
 
-    logger.warn('count is', 42, { ok: true });
+    logger.warn("count is", 42, { ok: true });
 
-    expect(entries[0].level).toBe('warn');
+    expect(entries[0].level).toBe("warn");
     expect(entries[0].message).toBe('count is 42 {"ok":true}');
   });
 
-  it('stops delivering after unsubscribe', () => {
+  it("stops delivering after unsubscribe", () => {
     const entries: LogEntry[] = [];
     const unsubscribe = onLog((entry) => entries.push(entry));
 
-    logger.info('first');
+    logger.info("first");
     unsubscribe();
-    logger.info('second');
+    logger.info("second");
 
     expect(entries).toHaveLength(1);
-    expect(entries[0].message).toBe('first');
+    expect(entries[0].message).toBe("first");
   });
 
-  it('notifies every registered listener', () => {
+  it("notifies every registered listener", () => {
     const a: LogEntry[] = [];
     const b: LogEntry[] = [];
     onLog((entry) => a.push(entry));
     onLog((entry) => b.push(entry));
 
-    logger.error('boom');
+    logger.error("boom");
 
     expect(a).toHaveLength(1);
     expect(b).toHaveLength(1);
   });
 
-  it('isolates a throwing listener so others still fire and logging survives', () => {
+  it("isolates a throwing listener so others still fire and logging survives", () => {
     const received: LogEntry[] = [];
     onLog(() => {
-      throw new Error('listener exploded');
+      throw new Error("listener exploded");
     });
     onLog((entry) => received.push(entry));
 
-    expect(() => logger.info('still works')).not.toThrow();
+    expect(() => logger.info("still works")).not.toThrow();
     expect(received).toHaveLength(1);
-    expect(received[0].message).toBe('still works');
+    expect(received[0].message).toBe("still works");
   });
 
-  it('sanitizes sensitive data in the forwarded message', () => {
+  it("sanitizes sensitive data in the forwarded message", () => {
     const entries: LogEntry[] = [];
     onLog((entry) => entries.push(entry));
 
-    logger.info('Auth: ' + 'Bearer ' + 'abc123XYZtoken456');
+    logger.info("Auth: " + "Bearer " + "abc123XYZtoken456");
 
-    expect(entries[0].message).toContain('[REDACTED]');
-    expect(entries[0].message).not.toContain('abc123XYZtoken456');
+    expect(entries[0].message).toContain("[REDACTED]");
+    expect(entries[0].message).not.toContain("abc123XYZtoken456");
   });
 
-  it('respects the log-level filter (debug suppressed at default level)', () => {
+  it("respects the log-level filter (debug suppressed at default level)", () => {
     const entries: LogEntry[] = [];
     onLog((entry) => entries.push(entry));
 
-    logger.debug('verbose detail');
+    logger.debug("verbose detail");
 
     expect(entries).toHaveLength(0);
   });
 
-  it('serializes Error arguments with a useful message', () => {
+  it("serializes Error arguments with a useful message", () => {
     const entries: LogEntry[] = [];
     onLog((entry) => entries.push(entry));
 
-    logger.error(new Error('something failed'));
+    logger.error(new Error("something failed"));
 
-    expect(entries[0].message).toContain('something failed');
+    expect(entries[0].message).toContain("something failed");
   });
 
-  it('emits to listeners only after writing to the console', () => {
+  it("emits to listeners only after writing to the console", () => {
     let consoleCalledWhenListenerFired = false;
     onLog(() => {
       consoleCalledWhenListenerFired =
         (console.info as ReturnType<typeof vi.fn>).mock.calls.length > 0;
     });
 
-    logger.info('ordering check');
+    logger.info("ordering check");
 
     expect(consoleCalledWhenListenerFired).toBe(true);
   });
 
-  it('does not recurse when a listener calls the logger', () => {
+  it("does not recurse when a listener calls the logger", () => {
     let calls = 0;
     onLog(() => {
       calls += 1;
-      if (calls < 5) logger.info('re-entrant call');
+      if (calls < 5) logger.info("re-entrant call");
     });
 
-    expect(() => logger.info('start')).not.toThrow();
+    expect(() => logger.info("start")).not.toThrow();
     expect(calls).toBe(1);
   });
 
-  it('handles circular objects without throwing', () => {
+  it("handles circular objects without throwing", () => {
     const entries: LogEntry[] = [];
     onLog((entry) => entries.push(entry));
 
-    const circular: Record<string, unknown> = { name: 'loop' };
+    const circular: Record<string, unknown> = { name: "loop" };
     circular.self = circular;
 
-    expect(() => logger.info('cycle:', circular)).not.toThrow();
+    expect(() => logger.info("cycle:", circular)).not.toThrow();
     expect(entries).toHaveLength(1);
-    expect(entries[0].message).toContain('cycle:');
+    expect(entries[0].message).toContain("cycle:");
   });
 
-  it('redacts object values stored under sensitive keys', () => {
+  it("redacts object values stored under sensitive keys", () => {
     const entries: LogEntry[] = [];
     onLog((entry) => entries.push(entry));
 
-    logger.info({ api_key: 'secretvalue123', label: 'safe-to-show' });
+    logger.info({ api_key: "secretvalue123", label: "safe-to-show" });
 
-    expect(entries[0].message).not.toContain('secretvalue123');
-    expect(entries[0].message).toContain('[REDACTED]');
-    expect(entries[0].message).toContain('safe-to-show');
+    expect(entries[0].message).not.toContain("secretvalue123");
+    expect(entries[0].message).toContain("[REDACTED]");
+    expect(entries[0].message).toContain("safe-to-show");
   });
 
-  it('renders shared (non-circular) references without a false [Circular]', () => {
+  it("renders shared (non-circular) references without a false [Circular]", () => {
     const entries: LogEntry[] = [];
     onLog((entry) => entries.push(entry));
 
     const shared = { value: 7 };
     logger.info({ a: shared, b: shared });
 
-    expect(entries[0].message).not.toContain('[Circular]');
+    expect(entries[0].message).not.toContain("[Circular]");
     // Both occurrences of the shared object should be rendered.
     expect(entries[0].message.match(/7/g)).toHaveLength(2);
   });
 
-  it('sanitizes secrets when reporting a thrown listener error', () => {
+  it("sanitizes secrets when reporting a thrown listener error", () => {
     const errorSpy = console.error as unknown as ReturnType<typeof vi.fn>;
     onLog(() => {
-      throw new Error('listener leak: ' + 'Bearer ' + 'abc123XYZtoken456');
+      throw new Error("listener leak: " + "Bearer " + "abc123XYZtoken456");
     });
 
-    logger.info('trigger');
+    logger.info("trigger");
 
-    const reported = errorSpy.mock.calls.map((c: unknown[]) => c.join(' ')).join(' ');
-    expect(reported).toContain('[REDACTED]');
-    expect(reported).not.toContain('abc123XYZtoken456');
+    const reported = errorSpy.mock.calls.map((c: unknown[]) => c.join(" "))
+      .join(" ");
+    expect(reported).toContain("[REDACTED]");
+    expect(reported).not.toContain("abc123XYZtoken456");
   });
 
-  it('redacts structured secrets in a non-Error thrown listener value', () => {
+  it("redacts structured secrets in a non-Error thrown listener value", () => {
     const errorSpy = console.error as unknown as ReturnType<typeof vi.fn>;
     onLog(() => {
-      throw { apiKey: 'hunter2plaintext' };
+      throw { apiKey: "hunter2plaintext" };
     });
 
-    logger.info('trigger');
+    logger.info("trigger");
 
-    const reported = errorSpy.mock.calls.map((c: unknown[]) => c.join(' ')).join(' ');
-    expect(reported).not.toContain('hunter2plaintext');
-    expect(reported).toContain('[REDACTED]');
+    const reported = errorSpy.mock.calls.map((c: unknown[]) => c.join(" "))
+      .join(" ");
+    expect(reported).not.toContain("hunter2plaintext");
+    expect(reported).toContain("[REDACTED]");
   });
 
-  it('clearLogListeners removes all listeners', () => {
+  it("clearLogListeners removes all listeners", () => {
     const entries: LogEntry[] = [];
     onLog((entry) => entries.push(entry));
 
     clearLogListeners();
-    logger.info('after clear');
+    logger.info("after clear");
 
     expect(entries).toHaveLength(0);
   });
@@ -205,10 +207,10 @@ describe('onLog', () => {
 // Console sink — direct console output fidelity (issue #431)
 // ---------------------------------------------------------------------------
 
-describe('console sink', () => {
+describe("console sink", () => {
   beforeEach(() => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -219,29 +221,33 @@ describe('console sink', () => {
   it('preserves Error details (not "{}") in console output', () => {
     const errorSpy = console.error as unknown as ReturnType<typeof vi.fn>;
 
-    logger.error('render failed:', new Error('texture missing'));
+    logger.error("render failed:", new Error("texture missing"));
 
-    const printed = errorSpy.mock.calls[0].map((a: unknown) => String(a)).join(' ');
-    expect(printed).toContain('texture missing');
-    expect(printed).not.toContain('{}');
+    const printed = errorSpy.mock.calls[0].map((a: unknown) => String(a)).join(
+      " ",
+    );
+    expect(printed).toContain("texture missing");
+    expect(printed).not.toContain("{}");
   });
 
-  it('sanitizes secrets inside an Error message before printing', () => {
+  it("sanitizes secrets inside an Error message before printing", () => {
     const warnSpy = console.warn as unknown as ReturnType<typeof vi.fn>;
 
-    logger.warn('load failed', new Error('auth was Bearer abc123XYZtoken456'));
+    logger.warn("load failed", new Error("auth was Bearer abc123XYZtoken456"));
 
-    const printed = warnSpy.mock.calls[0].map((a: unknown) => String(a)).join(' ');
-    expect(printed).toContain('[REDACTED]');
-    expect(printed).not.toContain('abc123XYZtoken456');
+    const printed = warnSpy.mock.calls[0].map((a: unknown) => String(a)).join(
+      " ",
+    );
+    expect(printed).toContain("[REDACTED]");
+    expect(printed).not.toContain("abc123XYZtoken456");
   });
 
-  it('prefixes console output with [manim-web]', () => {
+  it("prefixes console output with [manim-web]", () => {
     const warnSpy = console.warn as unknown as ReturnType<typeof vi.fn>;
 
-    logger.warn('plain message');
+    logger.warn("plain message");
 
-    expect(warnSpy.mock.calls[0][0]).toBe('[manim-web]');
+    expect(warnSpy.mock.calls[0][0]).toBe("[manim-web]");
   });
 });
 
@@ -249,31 +255,31 @@ describe('console sink', () => {
 // LOG_LEVEL environment handling
 // ---------------------------------------------------------------------------
 
-describe('LOG_LEVEL fallback', () => {
+describe("LOG_LEVEL fallback", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     vi.resetModules();
     vi.restoreAllMocks();
   });
 
-  it('falls back to info when LOG_LEVEL is invalid (warn/error not suppressed)', async () => {
-    vi.stubEnv('LOG_LEVEL', 'bogus-level');
+  it("falls back to info when LOG_LEVEL is invalid (warn/error not suppressed)", async () => {
+    vi.stubEnv("LOG_LEVEL", "bogus-level");
     vi.resetModules();
-    const fresh = await import('./logger');
+    const fresh = await import("./logger");
 
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    fresh.logger.warn('should still appear');
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    fresh.logger.warn("should still appear");
 
     expect(warnSpy).toHaveBeenCalled();
   });
 
   it('rejects inherited object keys as LOG_LEVEL (e.g. "toString")', async () => {
-    vi.stubEnv('LOG_LEVEL', 'toString');
+    vi.stubEnv("LOG_LEVEL", "toString");
     vi.resetModules();
-    const fresh = await import('./logger');
+    const fresh = await import("./logger");
 
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    fresh.logger.warn('should still appear');
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    fresh.logger.warn("should still appear");
 
     expect(warnSpy).toHaveBeenCalled();
   });

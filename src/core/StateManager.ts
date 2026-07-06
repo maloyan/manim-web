@@ -10,9 +10,9 @@
  * which expects `mobject.savedState` to be a VMobject copy.
  */
 
-import * as THREE from 'three';
-import { Mobject, MobjectStyle } from './Mobject';
-import { VMobject, Point } from './VMobject';
+import * as THREE from "three";
+import { Mobject, MobjectStyle } from "./Mobject";
+import { Point, VMobject } from "./VMobject";
 
 // ---------------------------------------------------------------------------
 // Serializable state interfaces
@@ -97,7 +97,12 @@ export function serializeMobject(mob: Mobject): MobjectState {
   const state: MobjectState = {
     id: mob.id,
     position: [mob.position.x, mob.position.y, mob.position.z],
-    rotation: [mob.rotation.x, mob.rotation.y, mob.rotation.z, mob.rotation.order],
+    rotation: [
+      mob.rotation.x,
+      mob.rotation.y,
+      mob.rotation.z,
+      mob.rotation.order,
+    ],
     scale: [mob.scaleVector.x, mob.scaleVector.y, mob.scaleVector.z],
     color: mob.color,
     opacity: mob.opacity,
@@ -287,7 +292,7 @@ export class SceneStateManager {
     if (this._undoStack.length === 0) return false;
 
     // Save current state for redo before overwriting
-    const currentSnapshot = this._captureSnapshot('(pre-undo)');
+    const currentSnapshot = this._captureSnapshot("(pre-undo)");
     this._redoStack.push(currentSnapshot);
 
     // Pop and apply
@@ -307,7 +312,7 @@ export class SceneStateManager {
     if (this._redoStack.length === 0) return false;
 
     // Save current state for undo before overwriting
-    const currentSnapshot = this._captureSnapshot('(pre-redo)');
+    const currentSnapshot = this._captureSnapshot("(pre-redo)");
     this._undoStack.push(currentSnapshot);
     if (this._undoStack.length > this.maxDepth) {
       this._undoStack.shift();

@@ -2,10 +2,10 @@
  * MoveAlongPath animation - moves a mobject along a path defined by a VMobject.
  */
 
-import * as THREE from 'three';
-import { Mobject } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
-import { Animation, AnimationOptions } from '../Animation';
+import * as THREE from "three";
+import { Mobject } from "../../core/Mobject";
+import { VMobject } from "../../core/VMobject";
+import { Animation, AnimationOptions } from "../Animation";
 
 export interface MoveAlongPathOptions extends AnimationOptions {
   /** The path to follow (VMobject) */
@@ -31,9 +31,12 @@ function evaluateCubicBezier(
   const t3 = t2 * t;
 
   return [
-    oneMinusT3 * p0[0] + 3 * oneMinusT2 * t * p1[0] + 3 * oneMinusT * t2 * p2[0] + t3 * p3[0],
-    oneMinusT3 * p0[1] + 3 * oneMinusT2 * t * p1[1] + 3 * oneMinusT * t2 * p2[1] + t3 * p3[1],
-    oneMinusT3 * p0[2] + 3 * oneMinusT2 * t * p1[2] + 3 * oneMinusT * t2 * p2[2] + t3 * p3[2],
+    oneMinusT3 * p0[0] + 3 * oneMinusT2 * t * p1[0] +
+    3 * oneMinusT * t2 * p2[0] + t3 * p3[0],
+    oneMinusT3 * p0[1] + 3 * oneMinusT2 * t * p1[1] +
+    3 * oneMinusT * t2 * p2[1] + t3 * p3[1],
+    oneMinusT3 * p0[2] + 3 * oneMinusT2 * t * p1[2] +
+    3 * oneMinusT * t2 * p2[2] + t3 * p3[2],
   ];
 }
 
@@ -53,14 +56,14 @@ function evaluateCubicBezierDerivative(
 
   return [
     3 * oneMinusT2 * (p1[0] - p0[0]) +
-      6 * oneMinusT * t * (p2[0] - p1[0]) +
-      3 * t2 * (p3[0] - p2[0]),
+    6 * oneMinusT * t * (p2[0] - p1[0]) +
+    3 * t2 * (p3[0] - p2[0]),
     3 * oneMinusT2 * (p1[1] - p0[1]) +
-      6 * oneMinusT * t * (p2[1] - p1[1]) +
-      3 * t2 * (p3[1] - p2[1]),
+    6 * oneMinusT * t * (p2[1] - p1[1]) +
+    3 * t2 * (p3[1] - p2[1]),
     3 * oneMinusT2 * (p1[2] - p0[2]) +
-      6 * oneMinusT * t * (p2[2] - p1[2]) +
-      3 * t2 * (p3[2] - p2[2]),
+    6 * oneMinusT * t * (p2[2] - p1[2]) +
+    3 * t2 * (p3[2] - p2[2]),
   ];
 }
 
@@ -129,7 +132,9 @@ export class MoveAlongPath extends Animation {
   /**
    * Get position and tangent at alpha (0 to 1) along the path
    */
-  private _getPositionAndTangent(alpha: number): { position: number[]; tangent: number[] } {
+  private _getPositionAndTangent(
+    alpha: number,
+  ): { position: number[]; tangent: number[] } {
     if (this._numSegments === 0 || this._pathPoints.length < 4) {
       // No valid path, stay at current position
       const pos = this.mobject.position;
@@ -144,7 +149,10 @@ export class MoveAlongPath extends Animation {
 
     // Map alpha to segment and local t
     const totalProgress = alpha * this._numSegments;
-    const segmentIndex = Math.min(Math.floor(totalProgress), this._numSegments - 1);
+    const segmentIndex = Math.min(
+      Math.floor(totalProgress),
+      this._numSegments - 1,
+    );
     const localT = totalProgress - segmentIndex;
 
     // Get the 4 control points for this segment
@@ -211,7 +219,7 @@ export class MoveAlongPath extends Animation {
 export function moveAlongPath(
   mobject: Mobject,
   path: VMobject,
-  options?: Omit<MoveAlongPathOptions, 'path'>,
+  options?: Omit<MoveAlongPathOptions, "path">,
 ): MoveAlongPath {
   return new MoveAlongPath(mobject, { ...options, path });
 }

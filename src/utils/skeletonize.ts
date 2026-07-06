@@ -93,7 +93,9 @@ function chainsToBeziers(
   let firstChain = true;
 
   for (const chain of chains) {
-    const worldChain = chain.map(([px, py]) => pixelToWorld(px, py, bbox, cols, rows));
+    const worldChain = chain.map(([px, py]) =>
+      pixelToWorld(px, py, bbox, cols, rows)
+    );
     const smooth = catmullRomSmooth(worldChain, smoothSubs);
     if (smooth.length < 2) continue;
 
@@ -154,7 +156,12 @@ function computeBBox(points: number[][]): BBox {
  * Rasterize the cubic Bezier outline into a binary grid.
  * Uses the even-odd fill rule with scanline intersection counting.
  */
-function rasterizeOutline(points: number[][], bbox: BBox, cols: number, rows: number): Uint8Array {
+function rasterizeOutline(
+  points: number[][],
+  bbox: BBox,
+  cols: number,
+  rows: number,
+): Uint8Array {
   const grid = new Uint8Array(cols * rows);
 
   // Small margin to avoid edge aliasing
@@ -239,10 +246,12 @@ function flattenCubicsToSegments(
       const t = s / steps;
       const mt = 1 - t;
       // De Casteljau
-      const x =
-        mt * mt * mt * p0[0] + 3 * mt * mt * t * p1[0] + 3 * mt * t * t * p2[0] + t * t * t * p3[0];
-      const y =
-        mt * mt * mt * p0[1] + 3 * mt * mt * t * p1[1] + 3 * mt * t * t * p2[1] + t * t * t * p3[1];
+      const x = mt * mt * mt * p0[0] + 3 * mt * mt * t * p1[0] +
+        3 * mt * t * t * p2[0] +
+        t * t * t * p3[0];
+      const y = mt * mt * mt * p0[1] + 3 * mt * mt * t * p1[1] +
+        3 * mt * t * t * p2[1] +
+        t * t * t * p3[1];
 
       const px = toPixelX(x);
       const py = toPixelY(y);
@@ -307,7 +316,12 @@ function zhangSuenCommonCheck(
  * Step-specific condition for Zhang-Suen sub-iteration 1:
  * At least one of {P2,P4,P6} and at least one of {P4,P6,P8} must be background.
  */
-function zhangSuenStep1Check(p2: number, p4: number, p6: number, p8: number): boolean {
+function zhangSuenStep1Check(
+  p2: number,
+  p4: number,
+  p6: number,
+  p8: number,
+): boolean {
   if (p2 && p4 && p6) return false;
   if (p4 && p6 && p8) return false;
   return true;
@@ -317,7 +331,12 @@ function zhangSuenStep1Check(p2: number, p4: number, p6: number, p8: number): bo
  * Step-specific condition for Zhang-Suen sub-iteration 2:
  * At least one of {P2,P4,P8} and at least one of {P2,P6,P8} must be background.
  */
-function zhangSuenStep2Check(p2: number, p4: number, p6: number, p8: number): boolean {
+function zhangSuenStep2Check(
+  p2: number,
+  p4: number,
+  p6: number,
+  p8: number,
+): boolean {
   if (p2 && p4 && p8) return false;
   if (p2 && p6 && p8) return false;
   return true;
@@ -328,7 +347,12 @@ function zhangSuenStep2Check(p2: number, p4: number, p6: number, p8: number): bo
  * @param step 1 for the first sub-iteration, 2 for the second.
  * @returns true if any pixels were removed.
  */
-function zhangSuenPass(grid: Uint8Array, cols: number, rows: number, step: 1 | 2): boolean {
+function zhangSuenPass(
+  grid: Uint8Array,
+  cols: number,
+  rows: number,
+  step: 1 | 2,
+): boolean {
   let changed = false;
 
   for (let r = 1; r < rows - 1; r++) {
@@ -347,7 +371,9 @@ function zhangSuenPass(grid: Uint8Array, cols: number, rows: number, step: 1 | 2
 
       if (
         zhangSuenCommonCheck(p2, p3, p4, p5, p6, p7, p8, p9) &&
-        (step === 1 ? zhangSuenStep1Check(p2, p4, p6, p8) : zhangSuenStep2Check(p2, p4, p6, p8))
+        (step === 1
+          ? zhangSuenStep1Check(p2, p4, p6, p8)
+          : zhangSuenStep2Check(p2, p4, p6, p8))
       ) {
         grid[idx + c] = 2;
         changed = true;
@@ -444,7 +470,9 @@ function traceChains(
     for (let n = 0; n < 8; n++) {
       const nr = r + N8_DR[n];
       const nc = c + N8_DC[n];
-      if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr * cols + nc]) {
+      if (
+        nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr * cols + nc]
+      ) {
         d++;
       }
     }
@@ -533,7 +561,13 @@ function traceChains(
 // ---------------------------------------------------------------------------
 
 /** Convert pixel coordinates back to world coordinates (3D with z=0). */
-function pixelToWorld(px: number, py: number, bbox: BBox, cols: number, rows: number): number[] {
+function pixelToWorld(
+  px: number,
+  py: number,
+  bbox: BBox,
+  cols: number,
+  rows: number,
+): number[] {
   const wx = bbox.minX + (px / cols) * bbox.width;
   const wy = bbox.minY + (py / rows) * bbox.height;
   return [wx, wy, 0];
@@ -551,7 +585,10 @@ function pixelToWorld(px: number, py: number, bbox: BBox, cols: number, rows: nu
  * @param subdivisions Number of interpolated points per input segment
  * @returns Smoothed array of [x, y, z] points
  */
-function catmullRomSmooth(points: number[][], subdivisions: number): number[][] {
+function catmullRomSmooth(
+  points: number[][],
+  subdivisions: number,
+): number[][] {
   if (points.length < 2) return points;
   if (points.length === 2) return points;
 

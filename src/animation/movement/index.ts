@@ -1,48 +1,52 @@
 // Movement animations
 
 // Rotate
-export { Rotate, rotate, type RotateOptions } from './Rotate';
+export { Rotate, rotate, type RotateOptions } from "./Rotate";
 
 // Scale
 export {
-  Scale,
-  scale,
   GrowFromCenter,
   growFromCenter,
-  type ScaleOptions,
   type GrowFromCenterOptions,
-} from './Scale';
+  Scale,
+  scale,
+  type ScaleOptions,
+} from "./Scale";
 
 // Shift
 export {
-  Shift,
-  shift,
+  type MobjectWithTargetPosition,
   MoveToTargetPosition,
   moveToTargetPosition,
-  type ShiftOptions,
   type MoveToTargetPositionOptions,
-  type MobjectWithTargetPosition,
-} from './Shift';
+  Shift,
+  shift,
+  type ShiftOptions,
+} from "./Shift";
 
 // MoveAlongPath
-export { MoveAlongPath, moveAlongPath, type MoveAlongPathOptions } from './MoveAlongPath';
+export {
+  MoveAlongPath,
+  moveAlongPath,
+  type MoveAlongPathOptions,
+} from "./MoveAlongPath";
 
 // Homotopy animations
 export {
-  Homotopy,
-  homotopy,
+  type Complex,
   ComplexHomotopy,
   complexHomotopy,
-  SmoothedVectorizedHomotopy,
-  smoothedVectorizedHomotopy,
+  type ComplexHomotopyFunction,
+  type ComplexHomotopyOptions,
+  Homotopy,
+  homotopy,
+  type HomotopyFunction,
+  type HomotopyOptions,
   PhaseFlow,
   phaseFlow,
-  type HomotopyFunction,
-  type ComplexHomotopyFunction,
-  type VectorFieldFunction,
-  type Complex,
-  type HomotopyOptions,
-  type ComplexHomotopyOptions,
-  type SmoothedVectorizedHomotopyOptions,
   type PhaseFlowOptions,
-} from './Homotopy';
+  SmoothedVectorizedHomotopy,
+  smoothedVectorizedHomotopy,
+  type SmoothedVectorizedHomotopyOptions,
+  type VectorFieldFunction,
+} from "./Homotopy";

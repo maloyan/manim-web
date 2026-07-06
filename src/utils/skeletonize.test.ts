@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { skeletonizeGlyph } from './skeletonize';
+import { describe, expect, it } from "vitest";
+import { skeletonizeGlyph } from "./skeletonize";
 
-describe('skeletonizeGlyph', () => {
-  it('returns empty array for empty input', () => {
+describe("skeletonizeGlyph", () => {
+  it("returns empty array for empty input", () => {
     expect(skeletonizeGlyph([])).toEqual([]);
   });
 
-  it('returns empty array for fewer than 4 points', () => {
+  it("returns empty array for fewer than 4 points", () => {
     expect(skeletonizeGlyph([[0, 0, 0]])).toEqual([]);
     expect(
       skeletonizeGlyph([
@@ -17,7 +17,7 @@ describe('skeletonizeGlyph', () => {
     ).toEqual([]);
   });
 
-  it('returns empty array for zero-width bounding box', () => {
+  it("returns empty array for zero-width bounding box", () => {
     // All points on a vertical line
     const points = [
       [0, 0, 0],
@@ -28,7 +28,7 @@ describe('skeletonizeGlyph', () => {
     expect(skeletonizeGlyph(points)).toEqual([]);
   });
 
-  it('returns empty array for zero-height bounding box', () => {
+  it("returns empty array for zero-height bounding box", () => {
     // All points on a horizontal line
     const points = [
       [0, 0, 0],
@@ -39,12 +39,15 @@ describe('skeletonizeGlyph', () => {
     expect(skeletonizeGlyph(points)).toEqual([]);
   });
 
-  it('produces output points with z=0', () => {
+  it("produces output points with z=0", () => {
     // Create a simple square outline as cubic Bezier path
     // anchor0, handle, handle, anchor1, handle, handle, anchor2, ...
     // A simple closed square: 4 cubic segments = 13 control points
     const sq = makeSquareOutline(0, 0, 2, 2);
-    const result = skeletonizeGlyph(sq, { gridResolution: 50, minChainLength: 2 });
+    const result = skeletonizeGlyph(sq, {
+      gridResolution: 50,
+      minChainLength: 2,
+    });
     // May or may not produce skeleton depending on thinning, but check format
     for (const pt of result) {
       expect(pt.length).toBe(3);
@@ -52,10 +55,13 @@ describe('skeletonizeGlyph', () => {
     }
   });
 
-  it('produces bezier points in groups of 3n+1 per chain', () => {
+  it("produces bezier points in groups of 3n+1 per chain", () => {
     // A thick rectangle should produce a skeleton
     const rect = makeSquareOutline(0, 0, 4, 2);
-    const result = skeletonizeGlyph(rect, { gridResolution: 60, minChainLength: 2 });
+    const result = skeletonizeGlyph(rect, {
+      gridResolution: 60,
+      minChainLength: 2,
+    });
     // If we get output, it should follow VMobject convention:
     // first anchor + (handle, handle, anchor) * N
     // So length = 1 + 3*N for a single chain, or more complex for multi-chain
@@ -66,10 +72,16 @@ describe('skeletonizeGlyph', () => {
     }
   });
 
-  it('respects gridResolution option', () => {
+  it("respects gridResolution option", () => {
     const rect = makeSquareOutline(0, 0, 4, 2);
-    const lowRes = skeletonizeGlyph(rect, { gridResolution: 20, minChainLength: 2 });
-    const highRes = skeletonizeGlyph(rect, { gridResolution: 80, minChainLength: 2 });
+    const lowRes = skeletonizeGlyph(rect, {
+      gridResolution: 20,
+      minChainLength: 2,
+    });
+    const highRes = skeletonizeGlyph(rect, {
+      gridResolution: 80,
+      minChainLength: 2,
+    });
     // Higher resolution generally produces more or equally many points
     // (not strictly guaranteed but likely for reasonable shapes)
     // Just verify both produce valid output
@@ -81,9 +93,12 @@ describe('skeletonizeGlyph', () => {
     }
   });
 
-  it('respects minChainLength option', () => {
+  it("respects minChainLength option", () => {
     const rect = makeSquareOutline(0, 0, 4, 2);
-    const strict = skeletonizeGlyph(rect, { gridResolution: 50, minChainLength: 100 });
+    const strict = skeletonizeGlyph(rect, {
+      gridResolution: 50,
+      minChainLength: 100,
+    });
     // With a very high minChainLength, short chains are filtered out
     // This may produce empty output or fewer chains
     // Either way, if there are points, they should be properly formatted
@@ -92,9 +107,12 @@ describe('skeletonizeGlyph', () => {
     }
   });
 
-  it('output points are within bounding box of input', () => {
+  it("output points are within bounding box of input", () => {
     const rect = makeSquareOutline(-1, -1, 3, 3);
-    const result = skeletonizeGlyph(rect, { gridResolution: 60, minChainLength: 2 });
+    const result = skeletonizeGlyph(rect, {
+      gridResolution: 60,
+      minChainLength: 2,
+    });
     for (const pt of result) {
       // Skeleton should stay within or very near the bounding box
       // Allow a small margin for interpolation/smoothing
@@ -105,10 +123,13 @@ describe('skeletonizeGlyph', () => {
     }
   });
 
-  it('handles circle-like outline', () => {
+  it("handles circle-like outline", () => {
     // A circle outline defined as 4 cubic Bezier segments
     const circle = makeCircleOutline(0, 0, 2);
-    const result = skeletonizeGlyph(circle, { gridResolution: 60, minChainLength: 2 });
+    const result = skeletonizeGlyph(circle, {
+      gridResolution: 60,
+      minChainLength: 2,
+    });
     // A circle's skeleton is ideally a single point at center,
     // but with pixelation it may produce short chains or nothing
     for (const pt of result) {
@@ -117,9 +138,12 @@ describe('skeletonizeGlyph', () => {
     }
   });
 
-  it('handles tall narrow rectangle', () => {
+  it("handles tall narrow rectangle", () => {
     const tall = makeSquareOutline(0, 0, 0.5, 4);
-    const result = skeletonizeGlyph(tall, { gridResolution: 60, minChainLength: 2 });
+    const result = skeletonizeGlyph(tall, {
+      gridResolution: 60,
+      minChainLength: 2,
+    });
     // Tall narrow shape should produce a roughly vertical skeleton
     for (const pt of result) {
       expect(pt.length).toBe(3);
@@ -137,7 +161,12 @@ describe('skeletonizeGlyph', () => {
  * Each side is a straight line represented as a cubic where handles
  * lie on the segment (degenerate cubic = straight line).
  */
-function makeSquareOutline(x0: number, y0: number, x1: number, y1: number): number[][] {
+function makeSquareOutline(
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): number[][] {
   // Corners: bottom-left, bottom-right, top-right, top-left
   const bl: number[] = [x0, y0, 0];
   const br: number[] = [x1, y0, 0];

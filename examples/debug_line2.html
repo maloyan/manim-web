@@ -1,24 +1,41 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Debug Line2 Rendering</title>
-  <style>
-    body { margin: 0; background: #111; color: #fff; font-family: monospace; padding: 20px; }
-    canvas { border: 2px solid #333; display: block; margin: 10px 0; }
-    #log { white-space: pre-wrap; font-size: 12px; max-height: 400px; overflow: auto; background: #222; padding: 10px; }
-  </style>
-</head>
-<body>
-  <h3>Test 1: Raw Three.js Line2 (no manimweb)</h3>
-  <div id="container1"></div>
-  <h3>Test 2: Manimweb Circle (no animation)</h3>
-  <div id="container2"></div>
-  <h3>Test 3: Manimweb Circle + Create animation</h3>
-  <div id="container3"></div>
-  <h3>Debug Log</h3>
-  <div id="log"></div>
+  <head>
+    <title>Debug Line2 Rendering</title>
+    <style>
+    body {
+      margin: 0;
+      background: #111;
+      color: #fff;
+      font-family: monospace;
+      padding: 20px;
+    }
+    canvas {
+      border: 2px solid #333;
+      display: block;
+      margin: 10px 0;
+    }
+    #log {
+      white-space: pre-wrap;
+      font-size: 12px;
+      max-height: 400px;
+      overflow: auto;
+      background: #222;
+      padding: 10px;
+    }
+    </style>
+  </head>
+  <body>
+    <h3>Test 1: Raw Three.js Line2 (no manimweb)</h3>
+    <div id="container1"></div>
+    <h3>Test 2: Manimweb Circle (no animation)</h3>
+    <div id="container2"></div>
+    <h3>Test 3: Manimweb Circle + Create animation</h3>
+    <div id="container3"></div>
+    <h3>Debug Log</h3>
+    <div id="log"></div>
 
-  <script type="module">
+    <script type="module">
     import * as THREE from 'three';
     import { Line2 } from 'three/examples/jsm/lines/Line2.js';
     import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
@@ -51,18 +68,23 @@
       const samples = [];
       // Sample 4 bezier segments
       const bezierSegments = [
-        [[r, 0, 0], [r, r*kappa, 0], [r*kappa, r, 0], [0, r, 0]],
-        [[0, r, 0], [-r*kappa, r, 0], [-r, r*kappa, 0], [-r, 0, 0]],
-        [[-r, 0, 0], [-r, -r*kappa, 0], [-r*kappa, -r, 0], [0, -r, 0]],
-        [[0, -r, 0], [r*kappa, -r, 0], [r, -r*kappa, 0], [r, 0, 0]],
+        [[r, 0, 0], [r, r * kappa, 0], [r * kappa, r, 0], [0, r, 0]],
+        [[0, r, 0], [-r * kappa, r, 0], [-r, r * kappa, 0], [-r, 0, 0]],
+        [[-r, 0, 0], [-r, -r * kappa, 0], [-r * kappa, -r, 0], [0, -r, 0]],
+        [[0, -r, 0], [r * kappa, -r, 0], [r, -r * kappa, 0], [r, 0, 0]],
       ];
       for (const seg of bezierSegments) {
         for (let t = 0; t <= 1; t += 0.25) {
           const mt = 1 - t;
-          const x = mt*mt*mt*seg[0][0] + 3*mt*mt*t*seg[1][0] + 3*mt*t*t*seg[2][0] + t*t*t*seg[3][0];
-          const y = mt*mt*mt*seg[0][1] + 3*mt*mt*t*seg[1][1] + 3*mt*t*t*seg[2][1] + t*t*t*seg[3][1];
+          const x = mt * mt * mt * seg[0][0] + 3 * mt * mt * t * seg[1][0] +
+            3 * mt * t * t * seg[2][0] + t * t * t * seg[3][0];
+          const y = mt * mt * mt * seg[0][1] + 3 * mt * mt * t * seg[1][1] +
+            3 * mt * t * t * seg[2][1] + t * t * t * seg[3][1];
           const z = 0;
-          if (samples.length === 0 || Math.abs(x - samples[samples.length-3]) > 0.001 || Math.abs(y - samples[samples.length-2]) > 0.001) {
+          if (
+            samples.length === 0 || Math.abs(x - samples[samples.length - 3]) > 0.001 ||
+            Math.abs(y - samples[samples.length - 2]) > 0.001
+          ) {
             samples.push(x, y, z);
           }
         }
@@ -95,8 +117,7 @@
       });
       log(`Test 1: Window size = ${window.innerWidth}x${window.innerHeight}, Canvas = ${W}x${H}`);
       log(`Test 1: DPR = ${window.devicePixelRatio}`);
-
-    } catch(e) {
+    } catch (e) {
       log('Test 1 ERROR: ' + e.message);
       console.error(e);
     }
@@ -109,7 +130,7 @@
       const scene2 = new Scene(container2, {
         width: 800,
         height: 450,
-        backgroundColor: '#1a1a2e'
+        backgroundColor: '#1a1a2e',
       });
 
       const c2 = new Circle({ radius: 1.5, color: '#e94560', strokeWidth: 4 });
@@ -129,18 +150,25 @@
           const g = child.geometry;
           log(`    geometry attributes: ${Object.keys(g.attributes).join(', ')}`);
           if (g.attributes.instanceStart) {
-            log(`    instanceStart count=${g.attributes.instanceStart.count || g.attributes.instanceStart.data?.count}`);
+            log(
+              `    instanceStart count=${
+                g.attributes.instanceStart.count || g.attributes.instanceStart.data?.count
+              }`,
+            );
           }
           // Check bounding sphere
           g.computeBoundingSphere();
           if (g.boundingSphere) {
-            log(`    boundingSphere: center=(${g.boundingSphere.center.x.toFixed(2)},${g.boundingSphere.center.y.toFixed(2)},${g.boundingSphere.center.z.toFixed(2)}) radius=${g.boundingSphere.radius.toFixed(2)}`);
+            log(
+              `    boundingSphere: center=(${g.boundingSphere.center.x.toFixed(2)},${
+                g.boundingSphere.center.y.toFixed(2)
+              },${g.boundingSphere.center.z.toFixed(2)}) radius=${g.boundingSphere.radius.toFixed(2)}`,
+            );
           }
         }
       });
       log('Test 2: Circle added (no animation)');
-
-    } catch(e) {
+    } catch (e) {
       log('Test 2 ERROR: ' + e.message);
       console.error(e);
     }
@@ -153,7 +181,7 @@
       const scene3 = new Scene(container3, {
         width: 800,
         height: 450,
-        backgroundColor: '#1a1a2e'
+        backgroundColor: '#1a1a2e',
       });
 
       const c3 = new Circle({ radius: 1.5, color: '#00ff88', strokeWidth: 4 });
@@ -162,11 +190,10 @@
 
       await scene3.play(new Create(c3));
       log('Test 3: Create animation complete');
-
-    } catch(e) {
+    } catch (e) {
       log('Test 3 ERROR: ' + e.message);
       console.error(e);
     }
-  </script>
-</body>
+    </script>
+  </body>
 </html>

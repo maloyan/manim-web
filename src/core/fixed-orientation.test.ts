@@ -1,19 +1,19 @@
-import { describe, it, expect } from 'vitest';
-import * as THREE from 'three';
-import { ThreeDScene } from './ThreeDScene';
-import { VGroup } from './VGroup';
-import { Circle } from '../mobjects/geometry/Circle';
-import { Square } from '../mobjects/geometry/Rectangle';
+import { describe, expect, it } from "vitest";
+import * as THREE from "three";
+import { ThreeDScene } from "./ThreeDScene";
+import { VGroup } from "./VGroup";
+import { Circle } from "../mobjects/geometry/Circle";
+import { Square } from "../mobjects/geometry/Rectangle";
 
-describe('addFixedOrientationMobjects', () => {
-  it('method exists on ThreeDScene', () => {
+describe("addFixedOrientationMobjects", () => {
+  it("method exists on ThreeDScene", () => {
     const scene = ThreeDScene.createHeadless();
-    expect(typeof scene.addFixedOrientationMobjects).toBe('function');
-    expect(typeof scene.removeFixedOrientationMobjects).toBe('function');
+    expect(typeof scene.addFixedOrientationMobjects).toBe("function");
+    expect(typeof scene.removeFixedOrientationMobjects).toBe("function");
     scene.dispose();
   });
 
-  it('fixed-orientation mobjects face the camera after orbit', () => {
+  it("fixed-orientation mobjects face the camera after orbit", () => {
     const scene = ThreeDScene.createHeadless();
     const circle = new Circle();
     scene.add(circle);
@@ -43,7 +43,7 @@ describe('addFixedOrientationMobjects', () => {
     scene.dispose();
   });
 
-  it('non-fixed mobjects are NOT affected by camera orbit', () => {
+  it("non-fixed mobjects are NOT affected by camera orbit", () => {
     const scene = ThreeDScene.createHeadless();
     const circle = new Circle();
     scene.add(circle);
@@ -61,7 +61,7 @@ describe('addFixedOrientationMobjects', () => {
     scene.dispose();
   });
 
-  it('fixed-orientation mobjects remain in the main 3D scene (not HUD)', () => {
+  it("fixed-orientation mobjects remain in the main 3D scene (not HUD)", () => {
     const scene = ThreeDScene.createHeadless();
     const circle = new Circle();
     scene.add(circle);
@@ -72,7 +72,7 @@ describe('addFixedOrientationMobjects', () => {
     scene.dispose();
   });
 
-  it('removeFixedOrientationMobjects stops billboard behavior', () => {
+  it("removeFixedOrientationMobjects stops billboard behavior", () => {
     const scene = ThreeDScene.createHeadless();
     const circle = new Circle();
     scene.add(circle);
@@ -95,8 +95,7 @@ describe('addFixedOrientationMobjects', () => {
 
     // These should NOT match (unless camera happens to be at identity)
     // Since we're at phi=PI/2, theta=0, camera is NOT at identity
-    const diff =
-      Math.abs(threeObj.quaternion.x - camQuat.x) +
+    const diff = Math.abs(threeObj.quaternion.x - camQuat.x) +
       Math.abs(threeObj.quaternion.y - camQuat.y) +
       Math.abs(threeObj.quaternion.z - camQuat.z) +
       Math.abs(threeObj.quaternion.w - camQuat.w);
@@ -105,7 +104,7 @@ describe('addFixedOrientationMobjects', () => {
     scene.dispose();
   });
 
-  it('works with multiple mobjects', () => {
+  it("works with multiple mobjects", () => {
     const scene = ThreeDScene.createHeadless();
     const c1 = new Circle();
     const c2 = new Square();
@@ -128,7 +127,7 @@ describe('addFixedOrientationMobjects', () => {
     scene.dispose();
   });
 
-  it('clear() removes fixed-orientation tracking', () => {
+  it("clear() removes fixed-orientation tracking", () => {
     const scene = ThreeDScene.createHeadless();
     const circle = new Circle();
     scene.add(circle);
@@ -138,12 +137,13 @@ describe('addFixedOrientationMobjects', () => {
     // After clear, adding a new mobject and orbiting should not crash
     const c2 = new Circle();
     scene.add(c2);
-    expect(() => scene.setCameraOrientation(Math.PI / 3, Math.PI / 4, 15)).not.toThrow();
+    expect(() => scene.setCameraOrientation(Math.PI / 3, Math.PI / 4, 15)).not
+      .toThrow();
 
     scene.dispose();
   });
 
-  it('remove() cleans up fixed-orientation tracking and resets quaternion', () => {
+  it("remove() cleans up fixed-orientation tracking and resets quaternion", () => {
     const scene = ThreeDScene.createHeadless();
     const circle = new Circle();
     scene.add(circle);
@@ -163,7 +163,7 @@ describe('addFixedOrientationMobjects', () => {
     scene.dispose();
   });
 
-  it('addFixedOrientationMobjects removes from fixed-in-frame (mutually exclusive)', () => {
+  it("addFixedOrientationMobjects removes from fixed-in-frame (mutually exclusive)", () => {
     const scene = ThreeDScene.createHeadless();
     const circle = new Circle();
     scene.add(circle);
@@ -186,7 +186,7 @@ describe('addFixedOrientationMobjects', () => {
     scene.dispose();
   });
 
-  it('addFixedInFrameMobjects removes from fixed-orientation (mutually exclusive)', () => {
+  it("addFixedInFrameMobjects removes from fixed-orientation (mutually exclusive)", () => {
     const scene = ThreeDScene.createHeadless();
     const circle = new Circle();
     scene.add(circle);
@@ -233,7 +233,7 @@ describe('addFixedOrientationMobjects', () => {
     return [v.x, v.y, v.z];
   };
 
-  it('VGroup moved off-origin keeps its world center under camera orbit', () => {
+  it("VGroup moved off-origin keeps its world center under camera orbit", () => {
     const scene = ThreeDScene.createHeadless();
     const group = new VGroup();
     group.add(new Circle());
@@ -269,7 +269,7 @@ describe('addFixedOrientationMobjects', () => {
     scene.dispose();
   });
 
-  it('VGroup billboard follows a moving center (updater scenario)', () => {
+  it("VGroup billboard follows a moving center (updater scenario)", () => {
     const scene = ThreeDScene.createHeadless();
     const group = new VGroup();
     group.add(new Circle());
@@ -290,7 +290,7 @@ describe('addFixedOrientationMobjects', () => {
     scene.dispose();
   });
 
-  it('empty VGroup has no center to query (getCenter throws)', () => {
+  it("empty VGroup has no center to query (getCenter throws)", () => {
     // An empty group has no geometry, so there is no meaningful center. We
     // throw rather than silently fall back to `position`, which
     // normalizeTransform() can reset — callers must not depend on it.
@@ -298,7 +298,7 @@ describe('addFixedOrientationMobjects', () => {
     expect(() => group.getCenter()).toThrow(/empty group/);
   });
 
-  it('removeFixedOrientationMobjects restores the displaced position', () => {
+  it("removeFixedOrientationMobjects restores the displaced position", () => {
     const scene = ThreeDScene.createHeadless();
     const group = new VGroup();
     group.add(new Circle());

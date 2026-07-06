@@ -1,4 +1,8 @@
-import { evalCubicBezier, lerpPoint as lerpPoint3D, signedArea2DFromStride } from '../utils/math';
+import {
+  evalCubicBezier,
+  lerpPoint as lerpPoint3D,
+  signedArea2DFromStride,
+} from "../utils/math";
 
 export interface CompoundAlignmentResult {
   srcAlignedPoints: number[][];
@@ -7,7 +11,10 @@ export interface CompoundAlignmentResult {
 }
 
 /** Split a flat point array into subpath chunks based on lengths metadata. */
-function splitBySubpathLengths(points3D: number[][], lengths: number[]): number[][][] {
+function splitBySubpathLengths(
+  points3D: number[][],
+  lengths: number[],
+): number[][][] {
   const chunks: number[][][] = [];
   let offset = 0;
   for (const len of lengths) {
@@ -34,11 +41,14 @@ function makeNullSubpathFromReference(
  * `remapBezierCurveCount` to preserve curve fidelity; otherwise falls back
  * to piecewise-linear interpolation.
  */
-export function resamplePointList3D(points: number[][], targetCount: number): number[][] {
+export function resamplePointList3D(
+  points: number[][],
+  targetCount: number,
+): number[][] {
   if (targetCount <= 0) return [];
 
   if (points.length === 0) {
-    throw new Error('resamplePointList3D: empty point list is a metadata bug');
+    throw new Error("resamplePointList3D: empty point list is a metadata bug");
   }
 
   if (targetCount === 1) {
@@ -49,7 +59,10 @@ export function resamplePointList3D(points: number[][], targetCount: number): nu
     return Array.from({ length: targetCount }, () => [...points[0]]);
   }
 
-  if (isCubicBezierChain(points) && targetCount >= 4 && (targetCount - 1) % 3 === 0) {
+  if (
+    isCubicBezierChain(points) && targetCount >= 4 &&
+    (targetCount - 1) % 3 === 0
+  ) {
     // Always re-parameterise cubic chains to arc-length-uniform anchors,
     // including when targetCount === points.length. Without this the
     // pairing in `Transform` keeps whatever non-uniform anchor distribution
@@ -202,9 +215,20 @@ function buildChainArcInfo(points: number[][]): ChainArcInfo {
   const cumulative: number[] = [0];
   let totalLen = 0;
   for (let i = 0; i + 3 < points.length; i += 3) {
-    const curve: number[][] = [points[i], points[i + 1], points[i + 2], points[i + 3]];
+    const curve: number[][] = [
+      points[i],
+      points[i + 1],
+      points[i + 2],
+      points[i + 3],
+    ];
     curves.push(curve);
-    const table = buildArcLengthTable(curve[0], curve[1], curve[2], curve[3], 32);
+    const table = buildArcLengthTable(
+      curve[0],
+      curve[1],
+      curve[2],
+      curve[3],
+      32,
+    );
     tables.push(table);
     totalLen += table.total;
     cumulative.push(totalLen);
@@ -213,7 +237,10 @@ function buildChainArcInfo(points: number[][]): ChainArcInfo {
 }
 
 /** Locate `(curveIdx, localT)` for an absolute arc-length on a chain. */
-function locateOnChain(info: ChainArcInfo, arc: number): { curveIdx: number; t: number } {
+function locateOnChain(
+  info: ChainArcInfo,
+  arc: number,
+): { curveIdx: number; t: number } {
   if (arc <= 0) return { curveIdx: 0, t: 0 };
   if (arc >= info.totalLen) return { curveIdx: info.curves.length - 1, t: 1 };
   let lo = 0;
@@ -234,7 +261,10 @@ function locateOnChain(info: ChainArcInfo, arc: number): { curveIdx: number; t: 
  * the arriving side of the next curve rather than the departing side of the
  * previous one.
  */
-function locateOnChainSnapped(info: ChainArcInfo, arc: number): { curveIdx: number; t: number } {
+function locateOnChainSnapped(
+  info: ChainArcInfo,
+  arc: number,
+): { curveIdx: number; t: number } {
   const loc = locateOnChain(info, arc);
   if (loc.t > 1 - 1e-9 && loc.curveIdx < info.curves.length - 1) {
     return { curveIdx: loc.curveIdx + 1, t: 0 };
@@ -243,9 +273,14 @@ function locateOnChainSnapped(info: ChainArcInfo, arc: number): { curveIdx: numb
 }
 
 /** Build a degenerate cubic chain consisting of `newCurveCount` zero-length pieces. */
-function makeDegenerateChain(point: number[], newCurveCount: number): number[][] {
+function makeDegenerateChain(
+  point: number[],
+  newCurveCount: number,
+): number[][] {
   const out: number[][] = [[...point]];
-  for (let i = 0; i < newCurveCount; i++) out.push([...point], [...point], [...point]);
+  for (let i = 0; i < newCurveCount; i++) {
+    out.push([...point], [...point], [...point]);
+  }
   return out;
 }
 
@@ -291,9 +326,15 @@ function buildSubCubic(
   };
 }
 
-function arcLengthResampleCubicChain(points: number[][], newCurveCount: number): number[][] {
+function arcLengthResampleCubicChain(
+  points: number[][],
+  newCurveCount: number,
+): number[][] {
   const currentCurveCount = (points.length - 1) / 3;
-  if (!Number.isInteger(currentCurveCount) || currentCurveCount <= 0 || newCurveCount <= 0) {
+  if (
+    !Number.isInteger(currentCurveCount) || currentCurveCount <= 0 ||
+    newCurveCount <= 0
+  ) {
     return points.map((p) => [...p]);
   }
 
@@ -317,14 +358,22 @@ function arcLengthResampleCubicChain(points: number[][], newCurveCount: number):
     const locOut = locateOnChainSnapped(info, arcAt); // t≈1 snaps to next curve  → outgoing
     const c = info.curves[locOut.curveIdx];
     anchors.push(evalCubicBezier(c[0], c[1], c[2], c[3], locOut.t));
-    outgoingTangents.push(unitTangentAt(info.curves[locOut.curveIdx], locOut.t));
+    outgoingTangents.push(
+      unitTangentAt(info.curves[locOut.curveIdx], locOut.t),
+    );
     incomingTangents.push(unitTangentAt(info.curves[locIn.curveIdx], locIn.t));
   }
 
   const out: number[][] = [[...anchors[0]]];
   for (let i = 0; i < newCurveCount; i++) {
-    const sLoc = locateOnChainSnapped(info, (i / newCurveCount) * info.totalLen);
-    const eLoc = locateOnChainSnapped(info, ((i + 1) / newCurveCount) * info.totalLen);
+    const sLoc = locateOnChainSnapped(
+      info,
+      (i / newCurveCount) * info.totalLen,
+    );
+    const eLoc = locateOnChainSnapped(
+      info,
+      ((i + 1) / newCurveCount) * info.totalLen,
+    );
     const { h1, h2 } = buildSubCubic(
       info,
       anchors[i],
@@ -357,9 +406,13 @@ function clonePoints(points: number[][]): number[][] {
   return points.map((p) => [...p]);
 }
 
-function isStrideClosedCubicSubpath(points: number[][], stride: number): boolean {
+function isStrideClosedCubicSubpath(
+  points: number[][],
+  stride: number,
+): boolean {
   const openLen = points.length - 1;
-  return isClosedSubpathForRotation(points) && openLen > 0 && openLen % stride === 0;
+  return isClosedSubpathForRotation(points) && openLen > 0 &&
+    openLen % stride === 0;
 }
 
 /**
@@ -367,7 +420,11 @@ function isStrideClosedCubicSubpath(points: number[][], stride: number): boolean
  * The "open" portion (length n - 1) is rotated by `shift` (multiple of
  * `stride`); the closing duplicate of the first point is re-appended.
  */
-function rotateClosedSubpath(subpath: number[][], shift: number, openLen: number): number[][] {
+function rotateClosedSubpath(
+  subpath: number[][],
+  shift: number,
+  openLen: number,
+): number[][] {
   if (shift === 0) return clonePoints(subpath);
   const rotatedOpen: number[][] = [];
   for (let i = 0; i < openLen; i++) {
@@ -423,8 +480,12 @@ function rotateClosedTargetForBestAlignment(
   tgtSubpath: number[][],
 ): number[][] {
   const stride = 3;
-  if (!isStrideClosedCubicSubpath(srcSubpath, stride)) return clonePoints(tgtSubpath);
-  if (!isStrideClosedCubicSubpath(tgtSubpath, stride)) return clonePoints(tgtSubpath);
+  if (!isStrideClosedCubicSubpath(srcSubpath, stride)) {
+    return clonePoints(tgtSubpath);
+  }
+  if (!isStrideClosedCubicSubpath(tgtSubpath, stride)) {
+    return clonePoints(tgtSubpath);
+  }
   if (srcSubpath.length !== tgtSubpath.length) return clonePoints(tgtSubpath);
 
   const openLen = tgtSubpath.length - 1;
@@ -452,16 +513,17 @@ function alignSubpathPairPoints(
   tgtSubpath: number[][],
 ): { srcAligned: number[][]; tgtAligned: number[][] } {
   const maxCount = Math.max(srcSubpath.length, tgtSubpath.length);
-  const srcAligned =
-    srcSubpath.length < maxCount
-      ? resamplePointList3D(srcSubpath, maxCount)
-      : srcSubpath.map((p) => [...p]);
-  const tgtAlignedRaw =
-    tgtSubpath.length < maxCount
-      ? resamplePointList3D(tgtSubpath, maxCount)
-      : tgtSubpath.map((p) => [...p]);
+  const srcAligned = srcSubpath.length < maxCount
+    ? resamplePointList3D(srcSubpath, maxCount)
+    : srcSubpath.map((p) => [...p]);
+  const tgtAlignedRaw = tgtSubpath.length < maxCount
+    ? resamplePointList3D(tgtSubpath, maxCount)
+    : tgtSubpath.map((p) => [...p]);
 
-  const tgtAligned = rotateClosedTargetForBestAlignment(srcAligned, tgtAlignedRaw);
+  const tgtAligned = rotateClosedTargetForBestAlignment(
+    srcAligned,
+    tgtAlignedRaw,
+  );
 
   return { srcAligned, tgtAligned };
 }
@@ -475,11 +537,19 @@ function computeCenter(points3D: number[][]): number[] {
     sum[1] += p[1] ?? 0;
     sum[2] += p[2] ?? 0;
   }
-  return [sum[0] / points3D.length, sum[1] / points3D.length, sum[2] / points3D.length];
+  return [
+    sum[0] / points3D.length,
+    sum[1] / points3D.length,
+    sum[2] / points3D.length,
+  ];
 }
 
 /** Validate subpath lengths match point counts; throw on mismatch. */
-function validateSubpathLengths(points3D: number[][], lengths: number[], label: string): void {
+function validateSubpathLengths(
+  points3D: number[][],
+  lengths: number[],
+  label: string,
+): void {
   const total = lengths.reduce((sum, len) => sum + len, 0);
   if (total !== points3D.length) {
     throw new Error(
@@ -595,8 +665,8 @@ export function alignCompoundPathsForTransform(
   tgtSigns?: Array<1 | -1>,
 ): CompoundAlignmentResult | null {
   // Validate first, then early-return on trivial cases
-  if (srcLengths) validateSubpathLengths(srcPoints3D, srcLengths, 'source');
-  if (tgtLengths) validateSubpathLengths(tgtPoints3D, tgtLengths, 'target');
+  if (srcLengths) validateSubpathLengths(srcPoints3D, srcLengths, "source");
+  if (tgtLengths) validateSubpathLengths(tgtPoints3D, tgtLengths, "target");
   if (srcSigns && srcLengths && srcSigns.length !== srcLengths.length) {
     throw new Error(
       `alignCompoundPathsForTransform: srcSigns length (${srcSigns.length}) must match srcLengths length (${srcLengths.length})`,
@@ -608,7 +678,10 @@ export function alignCompoundPathsForTransform(
     );
   }
 
-  if (!srcLengths || !tgtLengths || (srcLengths.length <= 1 && tgtLengths.length <= 1)) {
+  if (
+    !srcLengths || !tgtLengths ||
+    (srcLengths.length <= 1 && tgtLengths.length <= 1)
+  ) {
     return null;
   }
 

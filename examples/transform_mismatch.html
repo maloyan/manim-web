@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Zero</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - Zero</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #111;
       display: flex;
@@ -18,13 +22,13 @@
       border-radius: 8px;
       overflow: hidden;
     }
-  </style>
-</head>
-<body>
-  <div id="container"></div>
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
 
-  <script type="module">
-    import { ThreeDScene, MathTex, FadeIn, BLACK, WHITE } from '../src/index.ts';
+    <script type="module">
+    import { BLACK, FadeIn, MathTex, ThreeDScene, WHITE } from '../src/index.ts';
 
     const container = document.getElementById('container');
     const scene = new ThreeDScene(container, {
@@ -41,6 +45,6 @@
     await zero.waitForRender();
     zero.scale(4);
     await scene.play(new FadeIn(zero, { duration: 0.5 }));
-  </script>
-</body>
+    </script>
+  </body>
 </html>
