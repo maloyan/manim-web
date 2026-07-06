@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 140" width="500" height="140">
+  <defs>
+    <!-- Gradient Background -->
+    <linearGradient id="darkBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0e1a"/>
+      <stop offset="100%" style="stop-color:#1a1f36"/>
+    </linearGradient>
+    
+    <!-- Glow Effect for Play Button -->
+    <radialGradient id="glowBlue" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#58a6ff;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#58a6ff;stop-opacity:0"/>
+    </radialGradient>
+    
+    <!-- Gradient Stroke -->
+    <linearGradient id="blueStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#58a6ff"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+    
+    <!-- Text Gradient -->
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#e2e8f0"/>
+    </linearGradient>
+    
+    <!-- Web Gradient -->
+    <linearGradient id="webGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#58a6ff"/>
+      <stop offset="100%" style="stop-color:#7c3aed"/>
+    </linearGradient>
+
+    <!-- Math Symbols Glow -->
+    <filter id="mathGlow">
+      <feGaussianBlur stdDeviation="1" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Play Button Glow -->
+    <filter id="playGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Drop Shadow -->
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Background with subtle border -->
+  <rect x="0" y="0" width="500" height="140" rx="24" fill="url(#darkBg)" stroke="#2d3748" stroke-width="1.5" filter="url(#shadow)"/>
+  
+  <!-- Glow behind play button -->
+  <circle cx="75" cy="70" r="50" fill="url(#glowBlue)"/>
+
+  <!-- Play button - Modern with gradient -->
+  <circle cx="75" cy="70" r="38" stroke="url(#blueStroke)" stroke-width="2.5" fill="rgba(88,166,255,0.08)" filter="url(#playGlow)"/>
+  <circle cx="75" cy="70" r="38" stroke="url(#blueStroke)" stroke-width="2.5" fill="none"/>
+  
+  <!-- Play triangle with better proportions -->
+  <polygon points="62,52 62,88 96,70" fill="#58a6ff" filter="url(#playGlow)"/>
+  
+  <!-- Subtle play button inner shine -->
+  <polygon points="65,55 65,85 88,70" fill="rgba(255,255,255,0.15)" opacity="0.3"/>
+
+  <!-- Math symbols - Modern with better positioning -->
+  <g filter="url(#mathGlow)">
+    <text x="140" y="52" font-family="'Georgia','Times New Roman',serif" font-size="30" fill="#fbbf24" font-style="italic" font-weight="bold">∫</text>
+    <text x="175" y="88" font-family="'Georgia','Times New Roman',serif" font-size="26" fill="#a78bfa" font-weight="bold">∑</text>
+    <text x="208" y="52" font-family="'Georgia','Times New Roman',serif" font-size="24" fill="#60a5fa" font-weight="bold">π</text>
+    
+    <!-- Decorative dots -->
+    <circle cx="135" cy="88" r="2" fill="#58a6ff" opacity="0.4"/>
+    <circle cx="225" cy="88" r="2" fill="#58a6ff" opacity="0.4"/>
+  </g>
+
+  <!-- Text - Manim with gradient -->
+  <text x="255" y="75" font-family="'Inter','Segoe UI',sans-serif" font-size="36" font-weight="800" fill="url(#textGradient)" letter-spacing="-1">
+    Manim
+  </text>
+  
+  <!-- -web with gradient -->
+  <text x="365" y="75" font-family="'Inter','Segoe UI',sans-serif" font-size="36" font-weight="300" fill="url(#webGradient)" letter-spacing="-0.5">
+     Web
+  </text>
+
+  <!-- Subtitle with better styling -->
+  <text x="255" y="100" font-family="'Inter','Segoe UI',sans-serif" font-size="13" fill="#8b949e" font-weight="400" letter-spacing="0.3">
+    Mathematical Animations on the Web
+  </text>
+  
+  <!-- Decorative line -->
+  <line x1="255" y1="108" x2="460" y2="108" stroke="rgba(88,166,255,0.1)" stroke-width="1"/>
+  
+</svg>
