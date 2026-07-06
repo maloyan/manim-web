@@ -4,6 +4,18 @@
  */
 
 import type { MasterTimeline } from '../animation/MasterTimeline';
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Presentation,
+  Maximize,
+  LucideIcon,
+} from 'lucide';
+import { createElement } from 'lucide';
 
 export interface PlayerUICallbacks {
   onPlayPause: () => void;
@@ -159,10 +171,10 @@ export class PlayerUI {
   setPlaying(playing: boolean, finished: boolean = false): void {
     this._isPlaying = playing;
     if (finished) {
-      this._playBtn.innerHTML = REPLAY_ICON;
+      this._playBtn.innerHTML = this._createIconSVG(RotateCcw, 18);
       this._playBtn.title = 'Replay (Space)';
     } else {
-      this._playBtn.innerHTML = playing ? PAUSE_ICON : PLAY_ICON;
+      this._playBtn.innerHTML = this._createIconSVG(playing ? Pause : Play, 18); // Lucide icon
       this._playBtn.title = playing ? 'Pause (Space)' : 'Play (Space)';
     }
     if (playing) {
@@ -207,6 +219,17 @@ export class PlayerUI {
   // Internal: build UI elements
   // ---------------------------------------------------------------------------
 
+  // SVG Icons from lucide
+  private _createIconSVG(iconComponent: LucideIcon, size: number = 18): string {
+    const svg = createElement(iconComponent, {
+      size: size,
+      strokeWidth: 2,
+      color: 'currentColor',
+      'aria-hidden': 'true',
+    });
+    return svg.outerHTML;
+  }
+
   private _createBar(): HTMLElement {
     const bar = el('div', {
       position: 'absolute',
@@ -228,7 +251,7 @@ export class PlayerUI {
 
   private _createPlayBtn(): HTMLButtonElement {
     const btn = document.createElement('button');
-    btn.innerHTML = PLAY_ICON;
+    btn.innerHTML = this._createIconSVG(Play, 18);
     btn.title = 'Play (Space)';
     applyBtnStyle(btn, '36px', '36px');
     btn.addEventListener('click', () => this._callbacks.onPlayPause());
@@ -237,7 +260,8 @@ export class PlayerUI {
 
   private _createNavBtn(dir: 'prev' | 'next'): HTMLButtonElement {
     const btn = document.createElement('button');
-    btn.innerHTML = dir === 'prev' ? PREV_ICON : NEXT_ICON;
+    const Icon = dir === 'prev' ? ChevronLeft : ChevronRight; // Lucide icon
+    btn.innerHTML = this._createIconSVG(Icon, 16);
     btn.title = dir === 'prev' ? 'Previous (Left arrow)' : 'Next (Right arrow)';
     applyBtnStyle(btn, '28px', '28px');
     btn.addEventListener('click', () => {
@@ -388,7 +412,7 @@ export class PlayerUI {
   private _createExportBtn(): HTMLButtonElement {
     const wrapper = el('div', { position: 'relative', display: 'inline-block' });
     const btn = document.createElement('button');
-    btn.innerHTML = EXPORT_ICON;
+    btn.innerHTML = this._createIconSVG(Download, 16);
     btn.title = 'Export animation';
     applyBtnStyle(btn, '28px', '28px');
 
@@ -491,7 +515,7 @@ export class PlayerUI {
   /** Update the export button to show progress. */
   setExportProgress(progress: number | null): void {
     if (progress === null) {
-      this._exportBtn.innerHTML = EXPORT_ICON;
+      this._exportBtn.innerHTML = this._createIconSVG(Download, 16); // Lucide icon
       this._exportBtn.disabled = false;
       this._exportBtn.title = 'Export animation';
     } else {
@@ -504,7 +528,7 @@ export class PlayerUI {
 
   private _createSlidesBtn(): HTMLButtonElement {
     const btn = document.createElement('button');
-    btn.innerHTML = SLIDES_ICON;
+    btn.innerHTML = this._createIconSVG(Presentation, 16); // Lucide icon
     btn.title = 'Slides mode off (S)';
     applyBtnStyle(btn, '28px', '28px');
     btn.style.opacity = '0.4';
@@ -527,7 +551,7 @@ export class PlayerUI {
 
   private _createFullscreenBtn(): HTMLButtonElement {
     const btn = document.createElement('button');
-    btn.innerHTML = FULLSCREEN_ICON;
+    btn.innerHTML = this._createIconSVG(Maximize, 16); // Lucide icon
     btn.title = 'Fullscreen (F)';
     applyBtnStyle(btn, '28px', '28px');
     btn.addEventListener('click', () => this._callbacks.onFullscreen());
@@ -684,23 +708,3 @@ function fmt(seconds: number): string {
   const s = Math.floor(seconds % 60);
   return `${m}:${String(s).padStart(2, '0')}`;
 }
-
-// ---------------------------------------------------------------------------
-// SVG Icons (inline, small)
-// ---------------------------------------------------------------------------
-
-const PLAY_ICON = `<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><path d="M5 3l10 6-10 6V3z"/></svg>`;
-
-const PAUSE_ICON = `<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><rect x="4" y="3" width="3.5" height="12" rx="0.5"/><rect x="10.5" y="3" width="3.5" height="12" rx="0.5"/></svg>`;
-
-const REPLAY_ICON = `<svg width="18" height="18" viewBox="0 0 18 18" fill="currentColor"><path d="M9 3a6 6 0 1 0 6 6h-2a4 4 0 1 1-4-4v3l4-3.5L9 1v2z"/></svg>`;
-
-const PREV_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="3" width="2" height="10"/><path d="M14 3L6 8l8 5V3z"/></svg>`;
-
-const NEXT_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="12" y="3" width="2" height="10"/><path d="M2 3l8 5-8 5V3z"/></svg>`;
-
-const EXPORT_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L8 10M8 10L5 7M8 10L11 7" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12v1h10v-1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`;
-
-const SLIDES_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 14h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6 6l5 3-5 3V6z"/></svg>`;
-
-const FULLSCREEN_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h4v2H4v2H2V2zm8 0h4v4h-2V4h-2V2zM2 10h2v2h2v2H2v-4zm10 2h-2v2h4v-4h-2v2z"/></svg>`;
