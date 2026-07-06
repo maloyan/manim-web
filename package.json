@@ -1,6 +1,6 @@
 {
   "name": "manim-web",
-  "version": "0.3.24",
+  "version": "0.3.26",
   "description": "Manim-like mathematical animation library for the web",
   "type": "module",
   "main": "dist/index.js",
@@ -43,7 +43,7 @@
     "test:watch": "vitest",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "lint:no-disable": "bash scripts/check-no-eslint-disable.sh",
+    "lint:no-disable": "deno run --allow-read --allow-run scripts/eslint-disable-warning.ts",
     "format": "prettier --write src/",
     "docs": "npm run build && node scripts/generate-example-docs.mjs && cd docs && npm run build",
     "docs:dev": "npm run build && node scripts/generate-example-docs.mjs && cd docs && npm start",
