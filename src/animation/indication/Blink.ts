@@ -5,10 +5,10 @@
  * the mobject, making it fade out and back in a configurable number of times.
  */
 
-import * as THREE from 'three';
-import { Mobject } from '../../core/Mobject';
-import { Animation, AnimationOptions } from '../Animation';
-import { linear } from '../../rate-functions';
+import * as THREE from "three";
+import { Mobject } from "../../core/Mobject";
+import { Animation, AnimationOptions } from "../Animation";
+import { linear } from "../../rate-functions";
 
 export interface BlinkOptions extends AnimationOptions {
   /** Number of blinks. Default: 2 */
@@ -88,15 +88,16 @@ export class Blink extends Animation {
     if (blinkPhase < fadeOutEnd) {
       // Fading out
       const fadeProgress = blinkPhase / fadeOutEnd;
-      currentOpacity =
-        this._originalOpacity + (this.minOpacity - this._originalOpacity) * fadeProgress;
+      currentOpacity = this._originalOpacity +
+        (this.minOpacity - this._originalOpacity) * fadeProgress;
     } else if (blinkPhase < fadeInStart) {
       // At minimum opacity
       currentOpacity = this.minOpacity;
     } else {
       // Fading in
       const fadeProgress = (blinkPhase - fadeInStart) / (1 - fadeInStart);
-      currentOpacity = this.minOpacity + (this._originalOpacity - this.minOpacity) * fadeProgress;
+      currentOpacity = this.minOpacity +
+        (this._originalOpacity - this.minOpacity) * fadeProgress;
     }
 
     // Apply opacity to mobject and all materials

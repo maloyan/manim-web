@@ -1,34 +1,34 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, vi } from 'vitest';
-import * as THREE from 'three';
+import { describe, expect, it, vi } from "vitest";
+import * as THREE from "three";
 import {
-  Transform,
-  ReplacementTransform,
-  MoveToTarget,
-  transform,
-  replacementTransform,
-  moveToTarget,
   MobjectWithTarget,
-} from './transform/Transform';
-import { ShapeMorphStrategy } from './transform/ShapeMorphStrategy';
-import { Mobject } from '../core/Mobject';
-import { TexturedMobject } from '../core/TexturedMobject';
-import { VMobject } from '../core/VMobject';
-import { VGroup } from '../core/VGroup';
-import { Circle } from '../mobjects/geometry/Circle';
-import { PMobject } from '../mobjects/point/PMobject';
-import { PointCloudMorphStrategy } from './transform/PointCloudMorphStrategy';
-import { ImageMobject } from '../mobjects/image';
-import { Text } from '../mobjects/text/Text';
-import { MathTex } from '../mobjects/text/MathTex';
-import { alignVmobjectPair } from './transform/TransformPairing';
+  MoveToTarget,
+  moveToTarget,
+  ReplacementTransform,
+  replacementTransform,
+  Transform,
+  transform,
+} from "./transform/Transform";
+import { ShapeMorphStrategy } from "./transform/ShapeMorphStrategy";
+import { Mobject } from "../core/Mobject";
+import { TexturedMobject } from "../core/TexturedMobject";
+import { VMobject } from "../core/VMobject";
+import { VGroup } from "../core/VGroup";
+import { Circle } from "../mobjects/geometry/Circle";
+import { PMobject } from "../mobjects/point/PMobject";
+import { PointCloudMorphStrategy } from "./transform/PointCloudMorphStrategy";
+import { ImageMobject } from "../mobjects/image";
+import { Text } from "../mobjects/text/Text";
+import { MathTex } from "../mobjects/text/MathTex";
+import { alignVmobjectPair } from "./transform/TransformPairing";
 
 /** Two circles with distinct styles for point-morphing tests. */
 function makePair() {
-  const c1 = new Circle({ radius: 1, color: '#ff0000', strokeWidth: 2 });
+  const c1 = new Circle({ radius: 1, color: "#ff0000", strokeWidth: 2 });
   c1.opacity = 0.8;
   c1.fillOpacity = 0.2;
-  const c2 = new Circle({ radius: 2, color: '#0000ff', strokeWidth: 6 });
+  const c2 = new Circle({ radius: 2, color: "#0000ff", strokeWidth: 6 });
   c2.opacity = 0.4;
   c2.fillOpacity = 0.9;
   return { c1, c2 };
@@ -42,7 +42,9 @@ function vmWithPoints(pts: number[][]) {
 
 function collectVmobjectLeavesWithPoints(mobject: Mobject): VMobject[] {
   const out: VMobject[] = [];
-  const vmChildren = mobject.children.filter((c): c is VMobject => c instanceof VMobject);
+  const vmChildren = mobject.children.filter((c): c is VMobject =>
+    c instanceof VMobject
+  );
   if (
     mobject instanceof VMobject &&
     mobject.getLocalPoints().length > 0 &&
@@ -104,7 +106,10 @@ class SyncingTexturedMobject extends TexturedMobject {
 
   protected override _syncMaterialToThree(): void {
     const geometry = this._mesh.geometry as THREE.PlaneGeometry;
-    if (geometry.parameters.width !== this._width || geometry.parameters.height !== this._height) {
+    if (
+      geometry.parameters.width !== this._width ||
+      geometry.parameters.height !== this._height
+    ) {
       this._mesh.geometry.dispose();
       this._mesh.geometry = new THREE.PlaneGeometry(this._width, this._height);
     }
@@ -117,9 +122,9 @@ class SyncingTexturedMobject extends TexturedMobject {
   }
 }
 
-describe('Transform', () => {
-  describe('compound path final topology', () => {
-    it('restores exact target points at finish for single-to-compound morph', () => {
+describe("Transform", () => {
+  describe("compound path final topology", () => {
+    it("restores exact target points at finish for single-to-compound morph", () => {
       const source = vmWithPoints([
         [0, 0, 0],
         [1, 0, 0],
@@ -152,7 +157,7 @@ describe('Transform', () => {
       expect(source.getEffectiveSubpathLengths()).toEqual([5, 5]);
     });
 
-    it('restores target subpath lengths at finish for compound shapes', () => {
+    it("restores target subpath lengths at finish for compound shapes", () => {
       const source = vmWithPoints([
         [0, 0, 0],
         [1, 0, 0],
@@ -186,9 +191,9 @@ describe('Transform', () => {
       expect(source.getEffectiveSubpathLengths()).toEqual([5, 5]);
     });
 
-    it('produces equal-length aligned point lists for MathTex 1 -> 0', async () => {
-      const one = new MathTex({ latex: '1' });
-      const zero = new MathTex({ latex: '0' });
+    it("produces equal-length aligned point lists for MathTex 1 -> 0", async () => {
+      const one = new MathTex({ latex: "1" });
+      const zero = new MathTex({ latex: "0" });
       await Promise.all([one.waitForRender(), zero.waitForRender()]);
 
       const oneLeaves = collectVmobjectLeavesWithPoints(one);
@@ -210,7 +215,7 @@ describe('Transform', () => {
       }
     });
   });
-  it('stores mobject, target, and defaults to 1s duration', () => {
+  it("stores mobject, target, and defaults to 1s duration", () => {
     const { c1, c2 } = makePair();
     const t = new Transform(c1, c2);
     expect(t.mobject).toBe(c1);
@@ -218,13 +223,16 @@ describe('Transform', () => {
     expect(t.duration).toBe(1);
   });
 
-  it('accepts custom duration', () => {
+  it("accepts custom duration", () => {
     const { c1, c2 } = makePair();
-    expect(new Transform(c1, c2, { duration: 2.5 }).duration).toBeCloseTo(2.5, 5);
+    expect(new Transform(c1, c2, { duration: 2.5 }).duration).toBeCloseTo(
+      2.5,
+      5,
+    );
   });
 
-  describe('begin() with two VMobjects (point morphing)', () => {
-    it('captures start and target points', () => {
+  describe("begin() with two VMobjects (point morphing)", () => {
+    it("captures start and target points", () => {
       const { c1, c2 } = makePair();
       const startLen = c1.getLocalPoints().length;
       const t = new Transform(c1, c2);
@@ -233,7 +241,7 @@ describe('Transform', () => {
       expect(startLen).toBeGreaterThan(0);
     });
 
-    it('captures style start values (verified at alpha 0)', () => {
+    it("captures style start values (verified at alpha 0)", () => {
       const { c1, c2 } = makePair();
       const t = new Transform(c1, c2);
       t.begin();
@@ -244,8 +252,8 @@ describe('Transform', () => {
     });
   });
 
-  describe('interpolate() – point morphing', () => {
-    it('at alpha 0 points stay at start', () => {
+  describe("interpolate() – point morphing", () => {
+    it("at alpha 0 points stay at start", () => {
       const { c1, c2 } = makePair();
       const startPts = c1.getLocalPoints().map((p) => [...p]);
       const t = new Transform(c1, c2);
@@ -260,17 +268,17 @@ describe('Transform', () => {
       }
     });
 
-    it('at alpha 1 points reach target', () => {
+    it("at alpha 1 points reach target", () => {
       const { c1, c2 } = makePair();
       const t = new Transform(c1, c2);
       t.begin();
       t.interpolate(1);
       const pts = c1.getLocalPoints();
       expect(pts.length).toBeGreaterThan(0);
-      expect(typeof pts[pts.length - 1][0]).toBe('number');
+      expect(typeof pts[pts.length - 1][0]).toBe("number");
     });
 
-    it('at alpha 0.5 points are interpolated halfway', () => {
+    it("at alpha 0.5 points are interpolated halfway", () => {
       const vm1 = vmWithPoints([
         [0, 0, 0],
         [4, 0, 0],
@@ -293,8 +301,8 @@ describe('Transform', () => {
     });
   });
 
-  describe('style interpolation', () => {
-    it('opacity lerps between source and target', () => {
+  describe("style interpolation", () => {
+    it("opacity lerps between source and target", () => {
       const { c1, c2 } = makePair();
       const t = new Transform(c1, c2);
       t.begin();
@@ -306,7 +314,7 @@ describe('Transform', () => {
       expect(c1.opacity).toBeCloseTo(0.4, 5);
     });
 
-    it('fillOpacity lerps between source and target', () => {
+    it("fillOpacity lerps between source and target", () => {
       const { c1, c2 } = makePair();
       const t = new Transform(c1, c2);
       t.begin();
@@ -318,7 +326,7 @@ describe('Transform', () => {
       expect(c1.fillOpacity).toBeCloseTo(0.9, 5);
     });
 
-    it('strokeWidth lerps between source and target', () => {
+    it("strokeWidth lerps between source and target", () => {
       const { c1, c2 } = makePair();
       const t = new Transform(c1, c2);
       t.begin();
@@ -331,8 +339,8 @@ describe('Transform', () => {
     });
   });
 
-  describe('color interpolation', () => {
-    it('stroke color lerps between source and target colors', () => {
+  describe("color interpolation", () => {
+    it("stroke color lerps between source and target colors", () => {
       const { c1, c2 } = makePair();
       const t = new Transform(c1, c2);
       t.begin();
@@ -346,12 +354,12 @@ describe('Transform', () => {
       expect(mid.b).toBeCloseTo(0.5, 1);
     });
 
-    it('fill color lerps when source and target differ', () => {
-      const c1 = new Circle({ radius: 1, color: '#ff0000' });
-      c1.fillColor = '#00ff00';
+    it("fill color lerps when source and target differ", () => {
+      const c1 = new Circle({ radius: 1, color: "#ff0000" });
+      c1.fillColor = "#00ff00";
       c1.fillOpacity = 0.5;
-      const c2 = new Circle({ radius: 2, color: '#0000ff' });
-      c2.fillColor = '#ff00ff';
+      const c2 = new Circle({ radius: 2, color: "#0000ff" });
+      c2.fillColor = "#ff00ff";
       c2.fillOpacity = 0.5;
       const t = new Transform(c1, c2);
       t.begin();
@@ -364,8 +372,8 @@ describe('Transform', () => {
     });
   });
 
-  describe('position interpolation', () => {
-    it('source position lerps toward target position', () => {
+  describe("position interpolation", () => {
+    it("source position lerps toward target position", () => {
       const c1 = new Circle({ radius: 1 });
       c1.position.set(0, 0, 0);
       const c2 = new Circle({ radius: 1 });
@@ -384,8 +392,8 @@ describe('Transform', () => {
     });
   });
 
-  describe('finish()', () => {
-    it('sets final points, styles, and color from target', () => {
+  describe("finish()", () => {
+    it("sets final points, styles, and color from target", () => {
       const { c1, c2 } = makePair();
       const t = new Transform(c1, c2);
       t.begin();
@@ -396,7 +404,7 @@ describe('Transform', () => {
       expect(c1.color.toLowerCase()).toBe(c2.color.toLowerCase());
     });
 
-    it('sets final position from target', () => {
+    it("sets final position from target", () => {
       const c1 = new Circle({ radius: 1 });
       c1.position.set(0, 0, 0);
       const c2 = new Circle({ radius: 1 });
@@ -408,7 +416,7 @@ describe('Transform', () => {
       expect(c1.position.y).toBeCloseTo(5, 5);
     });
 
-    it('marks the animation as finished', () => {
+    it("marks the animation as finished", () => {
       const { c1, c2 } = makePair();
       const t = new Transform(c1, c2);
       t.begin();
@@ -418,8 +426,8 @@ describe('Transform', () => {
     });
   });
 
-  describe('cross-fade mode', () => {
-    it('uses cross-fade when both VMobjects have zero points', () => {
+  describe("cross-fade mode", () => {
+    it("uses cross-fade when both VMobjects have zero points", () => {
       const vm1 = new VMobject();
       const vm2 = new VMobject();
       vm1.opacity = 1;
@@ -434,7 +442,7 @@ describe('Transform', () => {
       expect(vm1.opacity).toBeCloseTo(0, 5);
     });
 
-    it('uses cross-fade when source is a non-VMobject Mobject', () => {
+    it("uses cross-fade when source is a non-VMobject Mobject", () => {
       class SimpleMobject extends Mobject {
         protected _createThreeObject(): THREE.Object3D {
           return new THREE.Group();
@@ -456,8 +464,8 @@ describe('Transform', () => {
     });
   });
 
-  describe('rotation and scale interpolation', () => {
-    it('euler angles lerp between source and target', () => {
+  describe("rotation and scale interpolation", () => {
+    it("euler angles lerp between source and target", () => {
       const c1 = new Circle({ radius: 1 });
       c1.rotation.set(0, 0, 0);
       const c2 = new Circle({ radius: 1 });
@@ -468,7 +476,7 @@ describe('Transform', () => {
       expect(c1.rotation.x).toBeCloseTo(Math.PI / 2, 5);
     });
 
-    it('scaleVector lerps between source and target', () => {
+    it("scaleVector lerps between source and target", () => {
       const c1 = new Circle({ radius: 1 });
       c1.scaleVector.set(1, 1, 1);
       const c2 = new Circle({ radius: 1 });
@@ -483,8 +491,8 @@ describe('Transform', () => {
   });
 });
 
-describe('ReplacementTransform', () => {
-  it('extends Transform and stores mobject/target', () => {
+describe("ReplacementTransform", () => {
+  it("extends Transform and stores mobject/target", () => {
     const { c1, c2 } = makePair();
     const rt = new ReplacementTransform(c1, c2);
     expect(rt).toBeInstanceOf(Transform);
@@ -492,7 +500,7 @@ describe('ReplacementTransform', () => {
     expect(rt.target).toBe(c2);
   });
 
-  it('inherits point morphing interpolation', () => {
+  it("inherits point morphing interpolation", () => {
     const { c1, c2 } = makePair();
     const rt = new ReplacementTransform(c1, c2);
     rt.begin();
@@ -504,7 +512,7 @@ describe('ReplacementTransform', () => {
     expect(c1.opacity).toBeCloseTo(0.4, 5);
   });
 
-  it('finish marks animation as finished', () => {
+  it("finish marks animation as finished", () => {
     const { c1, c2 } = makePair();
     const rt = new ReplacementTransform(c1, c2);
     rt.begin();
@@ -512,7 +520,7 @@ describe('ReplacementTransform', () => {
     expect(rt.isFinished()).toBe(true);
   });
 
-  describe('cleanUpFromScene (issue #308)', () => {
+  describe("cleanUpFromScene (issue #308)", () => {
     function makeFakeScene() {
       const set = new Set<Mobject>();
       return {
@@ -524,7 +532,7 @@ describe('ReplacementTransform', () => {
       };
     }
 
-    it('removes source and adds target after the animation', () => {
+    it("removes source and adds target after the animation", () => {
       const { c1, c2 } = makePair();
       const { set, scene } = makeFakeScene();
       scene.add(c1);
@@ -536,7 +544,7 @@ describe('ReplacementTransform', () => {
       expect(set.has(c2)).toBe(true);
     });
 
-    it('plain Transform leaves scene membership unchanged', () => {
+    it("plain Transform leaves scene membership unchanged", () => {
       const { c1, c2 } = makePair();
       const { set, scene } = makeFakeScene();
       scene.add(c1);
@@ -548,7 +556,7 @@ describe('ReplacementTransform', () => {
       expect(set.has(c2)).toBe(false);
     });
 
-    it('adding target is idempotent if it was already in the scene', () => {
+    it("adding target is idempotent if it was already in the scene", () => {
       const { c1, c2 } = makePair();
       const { set, scene } = makeFakeScene();
       scene.add(c1);
@@ -561,16 +569,16 @@ describe('ReplacementTransform', () => {
   });
 });
 
-describe('MoveToTarget', () => {
-  it('throws if mobject.targetCopy is null', () => {
+describe("MoveToTarget", () => {
+  it("throws if mobject.targetCopy is null", () => {
     const c = new Circle({ radius: 1 });
     expect(() => {
       new MoveToTarget(c as unknown as MobjectWithTarget);
-    }).toThrow('MoveToTarget requires mobject.targetCopy to be set');
+    }).toThrow("MoveToTarget requires mobject.targetCopy to be set");
   });
 
-  it('works when targetCopy is set via generateTarget', () => {
-    const c = new Circle({ radius: 1, color: '#ff0000' });
+  it("works when targetCopy is set via generateTarget", () => {
+    const c = new Circle({ radius: 1, color: "#ff0000" });
     c.opacity = 1;
     c.generateTarget();
     (c.targetCopy as VMobject).opacity = 0.3;
@@ -584,10 +592,10 @@ describe('MoveToTarget', () => {
     expect(c.position.x).toBeCloseTo(2.5, 5);
   });
 
-  it('issue #306: ImageMobject MoveToTarget applies scaling and persists final size', async () => {
+  it("issue #306: ImageMobject MoveToTarget applies scaling and persists final size", async () => {
     const mockCanvas2DContext = {
       imageSmoothingEnabled: false,
-      imageSmoothingQuality: 'low' as const,
+      imageSmoothingQuality: "low" as const,
       createImageData: (width: number, height: number) => ({
         data: new Uint8ClampedArray(width * height * 4),
         width,
@@ -599,12 +607,14 @@ describe('MoveToTarget', () => {
 
     const originalCreateElement = document.createElement.bind(document);
     const createElementSpy = vi
-      .spyOn(document, 'createElement')
+      .spyOn(document, "createElement")
       .mockImplementation((tagName: string): HTMLElement => {
         const el = originalCreateElement(tagName);
-        if (tagName.toLowerCase() === 'canvas') {
+        if (tagName.toLowerCase() === "canvas") {
           (el as HTMLCanvasElement).getContext = ((contextType: string) =>
-            contextType === '2d' ? mockCanvas2DContext : null) as HTMLCanvasElement['getContext'];
+            contextType === "2d"
+              ? mockCanvas2DContext
+              : null) as HTMLCanvasElement["getContext"];
         }
         return el;
       });
@@ -638,10 +648,10 @@ describe('MoveToTarget', () => {
     }
   });
 
-  it('Transform to a shifted ImageMobject interpolates position (translation)', async () => {
+  it("Transform to a shifted ImageMobject interpolates position (translation)", async () => {
     const mockCanvas2DContext = {
       imageSmoothingEnabled: false,
-      imageSmoothingQuality: 'low' as const,
+      imageSmoothingQuality: "low" as const,
       createImageData: (width: number, height: number) => ({
         data: new Uint8ClampedArray(width * height * 4),
         width,
@@ -653,12 +663,14 @@ describe('MoveToTarget', () => {
 
     const originalCreateElement = document.createElement.bind(document);
     const createElementSpy = vi
-      .spyOn(document, 'createElement')
+      .spyOn(document, "createElement")
       .mockImplementation((tagName: string): HTMLElement => {
         const el = originalCreateElement(tagName);
-        if (tagName.toLowerCase() === 'canvas') {
+        if (tagName.toLowerCase() === "canvas") {
           (el as HTMLCanvasElement).getContext = ((contextType: string) =>
-            contextType === '2d' ? mockCanvas2DContext : null) as HTMLCanvasElement['getContext'];
+            contextType === "2d"
+              ? mockCanvas2DContext
+              : null) as HTMLCanvasElement["getContext"];
         }
         return el;
       });
@@ -690,8 +702,8 @@ describe('MoveToTarget', () => {
   });
 });
 
-describe('factory functions', () => {
-  it('transform() creates Transform with options', () => {
+describe("factory functions", () => {
+  it("transform() creates Transform with options", () => {
     const { c1, c2 } = makePair();
     const t = transform(c1, c2, { duration: 3 });
     expect(t).toBeInstanceOf(Transform);
@@ -700,7 +712,7 @@ describe('factory functions', () => {
     expect(t.duration).toBeCloseTo(3, 5);
   });
 
-  it('replacementTransform() creates ReplacementTransform with options', () => {
+  it("replacementTransform() creates ReplacementTransform with options", () => {
     const { c1, c2 } = makePair();
     const rt = replacementTransform(c1, c2, { duration: 0.5 });
     expect(rt).toBeInstanceOf(ReplacementTransform);
@@ -710,7 +722,7 @@ describe('factory functions', () => {
     expect(rt.duration).toBeCloseTo(0.5, 5);
   });
 
-  it('moveToTarget() creates MoveToTarget', () => {
+  it("moveToTarget() creates MoveToTarget", () => {
     const c = new Circle({ radius: 1 });
     c.generateTarget();
     const mt = moveToTarget(c as unknown as MobjectWithTarget);
@@ -718,20 +730,20 @@ describe('factory functions', () => {
     expect(mt).toBeInstanceOf(Transform);
   });
 
-  it('moveToTarget() throws without targetCopy', () => {
+  it("moveToTarget() throws without targetCopy", () => {
     const c = new Circle({ radius: 1 });
     expect(() => {
       moveToTarget(c as unknown as MobjectWithTarget);
-    }).toThrow('MoveToTarget requires mobject.targetCopy to be set');
+    }).toThrow("MoveToTarget requires mobject.targetCopy to be set");
   });
 });
 
-describe('edge cases', () => {
-  it('identical source and target is a no-op', () => {
-    const c1 = new Circle({ radius: 1, color: '#ff0000' });
+describe("edge cases", () => {
+  it("identical source and target is a no-op", () => {
+    const c1 = new Circle({ radius: 1, color: "#ff0000" });
     c1.opacity = 1;
     c1.fillOpacity = 0.5;
-    const c2 = new Circle({ radius: 1, color: '#ff0000' });
+    const c2 = new Circle({ radius: 1, color: "#ff0000" });
     c2.opacity = 1;
     c2.fillOpacity = 0.5;
     const t = new Transform(c1, c2);
@@ -741,7 +753,7 @@ describe('edge cases', () => {
     expect(c1.fillOpacity).toBeCloseTo(0.5, 5);
   });
 
-  it('manually set VMobject points interpolate correctly', () => {
+  it("manually set VMobject points interpolate correctly", () => {
     const vm1 = vmWithPoints([
       [0, 0, 0],
       [1, 0, 0],
@@ -766,7 +778,7 @@ describe('edge cases', () => {
     expect(vm1.getLocalPoints()[2][1]).toBeCloseTo(3, 5);
   });
 
-  it('multiple interpolate calls update progressively', () => {
+  it("multiple interpolate calls update progressively", () => {
     const { c1, c2 } = makePair();
     const t = new Transform(c1, c2);
     t.begin();
@@ -776,7 +788,7 @@ describe('edge cases', () => {
     expect(c1.opacity).toBeCloseTo(0.5, 5); // 0.8 + (0.4-0.8)*0.75
   });
 
-  it('zero-duration transform is valid', () => {
+  it("zero-duration transform is valid", () => {
     const { c1, c2 } = makePair();
     const t = new Transform(c1, c2, { duration: 0 });
     expect(t.duration).toBe(0);
@@ -786,8 +798,8 @@ describe('edge cases', () => {
   });
 });
 
-describe('cross-fade finish()', () => {
-  it('finish() reparents target under source for non-VMobject Mobjects', () => {
+describe("cross-fade finish()", () => {
+  it("finish() reparents target under source for non-VMobject Mobjects", () => {
     class SimpleMobject extends Mobject {
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Group();
@@ -822,7 +834,7 @@ describe('cross-fade finish()', () => {
     expect(t.isFinished()).toBe(true);
   });
 
-  it('finish() handles cross-fade for VMobjects with zero points', () => {
+  it("finish() handles cross-fade for VMobjects with zero points", () => {
     const vm1 = new VMobject();
     const vm2 = new VMobject();
     vm1.opacity = 1;
@@ -843,7 +855,7 @@ describe('cross-fade finish()', () => {
     expect(t.isFinished()).toBe(true);
   });
 
-  it('cross-fade adds target to scene graph when source has parent', () => {
+  it("cross-fade adds target to scene graph when source has parent", () => {
     class SimpleMobject extends Mobject {
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Group();
@@ -870,7 +882,7 @@ describe('cross-fade finish()', () => {
     expect(m2.getThreeObject().parent).toBeTruthy();
   });
 
-  it('cross-fade position interpolation works for non-VMobject', () => {
+  it("cross-fade position interpolation works for non-VMobject", () => {
     class SimpleMobject extends Mobject {
       protected _createThreeObject(): THREE.Object3D {
         return new THREE.Group();
@@ -896,7 +908,7 @@ describe('cross-fade finish()', () => {
     expect(m1.position.x).toBeCloseTo(5, 3);
   });
 
-  it('cross-fade for zero-point VMobjects interpolates position', () => {
+  it("cross-fade for zero-point VMobjects interpolates position", () => {
     const vm1 = new VMobject();
     const vm2 = new VMobject();
     vm1.position.set(0, 0, 0);
@@ -918,8 +930,8 @@ describe('cross-fade finish()', () => {
   });
 });
 
-describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
-  it('swaps texture and geometry when both source and target have getTextureMesh', () => {
+describe("cross-fade finish() with getTextureMesh (Text-like)", () => {
+  it("swaps texture and geometry when both source and target have getTextureMesh", () => {
     // Create mobjects that look like Text objects with getTextureMesh
     class TextLikeMobject extends Mobject {
       private _mesh: THREE.Mesh;
@@ -928,7 +940,11 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
         super();
         const geometry = new THREE.PlaneGeometry(1, 1);
         // Use a DataTexture instead of CanvasTexture to avoid DOM dependency
-        const dataTexture = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+        const dataTexture = new THREE.DataTexture(
+          new Uint8Array([255, 255, 255, 255]),
+          1,
+          1,
+        );
         const material = new THREE.MeshBasicMaterial({
           transparent: true,
           map: dataTexture,
@@ -976,14 +992,18 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
     expect(t.isFinished()).toBe(true);
   });
 
-  it('leaves target in scene graph after fade finish so it remains visible', () => {
+  it("leaves target in scene graph after fade finish so it remains visible", () => {
     class TextLikeMobject extends Mobject {
       private _mesh: THREE.Mesh;
 
       constructor() {
         super();
         const geometry = new THREE.PlaneGeometry(1, 1);
-        const dataTexture = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1);
+        const dataTexture = new THREE.DataTexture(
+          new Uint8Array([255, 255, 255, 255]),
+          1,
+          1,
+        );
         const material = new THREE.MeshBasicMaterial({
           transparent: true,
           map: dataTexture,
@@ -1029,13 +1049,13 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
   });
 });
 
-describe('finish() with fill color interpolation', () => {
-  it('sets final fill color when source and target differ', () => {
-    const c1 = new Circle({ radius: 1, color: '#ff0000' });
-    c1.fillColor = '#00ff00';
+describe("finish() with fill color interpolation", () => {
+  it("sets final fill color when source and target differ", () => {
+    const c1 = new Circle({ radius: 1, color: "#ff0000" });
+    c1.fillColor = "#00ff00";
     c1.fillOpacity = 0.5;
-    const c2 = new Circle({ radius: 2, color: '#0000ff' });
-    c2.fillColor = '#ff00ff';
+    const c2 = new Circle({ radius: 2, color: "#0000ff" });
+    c2.fillColor = "#ff00ff";
     c2.fillOpacity = 0.5;
 
     const t = new Transform(c1, c2);
@@ -1044,13 +1064,13 @@ describe('finish() with fill color interpolation', () => {
 
     // fillColor should match target
     const finalFill = new THREE.Color(c1.fillColor ?? c1.color);
-    const expectedFill = new THREE.Color('#ff00ff');
+    const expectedFill = new THREE.Color("#ff00ff");
     expect(finalFill.r).toBeCloseTo(expectedFill.r, 1);
     expect(finalFill.g).toBeCloseTo(expectedFill.g, 1);
     expect(finalFill.b).toBeCloseTo(expectedFill.b, 1);
   });
 
-  it('finish() sets rotation and scale from target', () => {
+  it("finish() sets rotation and scale from target", () => {
     const c1 = new Circle({ radius: 1 });
     c1.rotation.set(0, 0, 0);
     c1.scaleVector.set(1, 1, 1);
@@ -1069,8 +1089,8 @@ describe('finish() with fill color interpolation', () => {
   });
 });
 
-describe('Transform on VGroup (#206)', () => {
-  it('begin/interpolate/finish does not crash with material-is-null', () => {
+describe("Transform on VGroup (#206)", () => {
+  it("begin/interpolate/finish does not crash with material-is-null", () => {
     const circle = new Circle({ radius: 1 });
     const group = new VGroup(circle);
 
@@ -1089,7 +1109,7 @@ describe('Transform on VGroup (#206)', () => {
     }).not.toThrow();
   });
 
-  it('keeps VGroup anchors identity and still reaches scaled child geometry', () => {
+  it("keeps VGroup anchors identity and still reaches scaled child geometry", () => {
     const circle = new Circle({ radius: 1 });
     const group = new VGroup(circle);
 
@@ -1118,12 +1138,16 @@ describe('Transform on VGroup (#206)', () => {
     expect(sourceBounds.max.y).toBeCloseTo(targetBounds.max.y, 6);
   });
 
-  it('finish sets children to target state (points and style)', () => {
-    const circle = new Circle({ radius: 1, color: '#ff0000', strokeWidth: 2 });
+  it("finish sets children to target state (points and style)", () => {
+    const circle = new Circle({ radius: 1, color: "#ff0000", strokeWidth: 2 });
     circle.fillOpacity = 0.3;
     const group = new VGroup(circle);
 
-    const targetCircle = new Circle({ radius: 2, color: '#0000ff', strokeWidth: 4 });
+    const targetCircle = new Circle({
+      radius: 2,
+      color: "#0000ff",
+      strokeWidth: 4,
+    });
     targetCircle.fillOpacity = 0.8;
     const target = new VGroup(targetCircle);
 
@@ -1142,7 +1166,7 @@ describe('Transform on VGroup (#206)', () => {
     expect(circle.fillOpacity).toBeCloseTo(0.8, 5);
   });
 
-  it('handles VGroup with multiple children', () => {
+  it("handles VGroup with multiple children", () => {
     const c1 = new Circle({ radius: 1 });
     const c2 = new Circle({ radius: 0.5 });
     c2.shift([2, 0, 0]);
@@ -1159,7 +1183,7 @@ describe('Transform on VGroup (#206)', () => {
     }).not.toThrow();
   });
 
-  it('fades in extra target children when target has more', () => {
+  it("fades in extra target children when target has more", () => {
     const c1 = new Circle({ radius: 1 });
     const group = new VGroup(c1);
 
@@ -1184,7 +1208,7 @@ describe('Transform on VGroup (#206)', () => {
     expect(placeholder.opacity).toBeCloseTo(tc2.opacity, 5);
   });
 
-  it('fades out extra source children when source has more', () => {
+  it("fades out extra source children when source has more", () => {
     const c1 = new Circle({ radius: 1 });
     const c2 = new Circle({ radius: 0.5 });
     const group = new VGroup(c1, c2);
@@ -1201,7 +1225,7 @@ describe('Transform on VGroup (#206)', () => {
     expect(c2.fillOpacity).toBeCloseTo(0, 5);
   });
 
-  it('interpolate at alpha=0 preserves start state', () => {
+  it("interpolate at alpha=0 preserves start state", () => {
     const circle = new Circle({ radius: 1 });
     const group = new VGroup(circle);
 
@@ -1221,14 +1245,14 @@ describe('Transform on VGroup (#206)', () => {
     }
   });
 
-  describe('transform sequencing', () => {
-    it('supports chained transforms a->b then b->c on the same source', () => {
-      const a = new Circle({ radius: 1, color: '#ff0000' });
+  describe("transform sequencing", () => {
+    it("supports chained transforms a->b then b->c on the same source", () => {
+      const a = new Circle({ radius: 1, color: "#ff0000" });
       a.shift([-2, 0, 0]);
-      const b = new Circle({ radius: 1.5, color: '#00ff00' });
+      const b = new Circle({ radius: 1.5, color: "#00ff00" });
       b.shift([1, 2, 0]);
       b.opacity = 0.6;
-      const c = new Circle({ radius: 0.75, color: '#0000ff' });
+      const c = new Circle({ radius: 0.75, color: "#0000ff" });
       c.shift([4, -1, 0]);
       c.opacity = 0.25;
 
@@ -1248,19 +1272,19 @@ describe('Transform on VGroup (#206)', () => {
       expect(a.color).toBe(c.color);
     });
 
-    it('supports fan-out from identical a seeds: a->b and a->c', () => {
-      const seed = new Circle({ radius: 1, color: '#ffaa00' });
+    it("supports fan-out from identical a seeds: a->b and a->c", () => {
+      const seed = new Circle({ radius: 1, color: "#ffaa00" });
       seed.shift([-1, -1, 0]);
       seed.opacity = 0.9;
 
       const sourceForB = seed.copy() as Circle;
       const sourceForC = seed.copy() as Circle;
 
-      const b = new Circle({ radius: 2, color: '#00aaff' });
+      const b = new Circle({ radius: 2, color: "#00aaff" });
       b.shift([3, 0, 0]);
       b.opacity = 0.5;
 
-      const c = new Circle({ radius: 0.5, color: '#aa00ff' });
+      const c = new Circle({ radius: 0.5, color: "#aa00ff" });
       c.shift([0, 3, 0]);
       c.opacity = 0.2;
 
@@ -1295,11 +1319,11 @@ describe('Transform on VGroup (#206)', () => {
 
 function makeTextCanvasMock() {
   return {
-    font: '',
-    textBaseline: '',
-    textAlign: 'center' as const,
-    fillStyle: '',
-    strokeStyle: '',
+    font: "",
+    textBaseline: "",
+    textAlign: "center" as const,
+    fillStyle: "",
+    strokeStyle: "",
     globalAlpha: 1,
     lineWidth: 0,
     measureText: (_text: string) => ({ width: 100 }),
@@ -1309,8 +1333,8 @@ function makeTextCanvasMock() {
   };
 }
 
-describe('Shape morph non-regression', () => {
-  it('keeps unit-geometry morph setup stable against _syncToThree geometry restores', () => {
+describe("Shape morph non-regression", () => {
+  it("keeps unit-geometry morph setup stable against _syncToThree geometry restores", () => {
     const source = new SyncingTexturedMobject(1, 0.5);
     const target = new SyncingTexturedMobject(2, 1);
     const strategy = new ShapeMorphStrategy();
@@ -1335,70 +1359,74 @@ describe('Shape morph non-regression', () => {
   });
 });
 
-describe('Text Transform (#305)', () => {
-  it('getText() returns target text after Transform finish', () => {
+describe("Text Transform (#305)", () => {
+  it("getText() returns target text after Transform finish", () => {
     const mockCtx = makeTextCanvasMock();
     const originalCreateElement = document.createElement.bind(document);
     const createElementSpy = vi
-      .spyOn(document, 'createElement')
+      .spyOn(document, "createElement")
       .mockImplementation((tagName: string): HTMLElement => {
         const el = originalCreateElement(tagName);
-        if (tagName.toLowerCase() === 'canvas') {
+        if (tagName.toLowerCase() === "canvas") {
           (el as HTMLCanvasElement).getContext = ((contextType: string) =>
-            contextType === '2d' ? mockCtx : null) as HTMLCanvasElement['getContext'];
+            contextType === "2d" ? mockCtx : null) as HTMLCanvasElement[
+              "getContext"
+            ];
         }
         return el;
       });
 
     try {
-      const t1 = new Text({ text: 'A' });
-      const t2 = new Text({ text: 'B' });
+      const t1 = new Text({ text: "A" });
+      const t2 = new Text({ text: "B" });
       const tr = new Transform(t1, t2);
       tr.begin();
       tr.interpolate(0.5);
       tr.finish();
 
-      expect(t1.getText()).toBe('B');
+      expect(t1.getText()).toBe("B");
     } finally {
       createElementSpy.mockRestore();
     }
   });
 
-  it('getText() stays as target text after subsequent _markDirty + _syncToThree (#305)', () => {
+  it("getText() stays as target text after subsequent _markDirty + _syncToThree (#305)", () => {
     const mockCtx = makeTextCanvasMock();
     const originalCreateElement = document.createElement.bind(document);
     const createElementSpy = vi
-      .spyOn(document, 'createElement')
+      .spyOn(document, "createElement")
       .mockImplementation((tagName: string): HTMLElement => {
         const el = originalCreateElement(tagName);
-        if (tagName.toLowerCase() === 'canvas') {
+        if (tagName.toLowerCase() === "canvas") {
           (el as HTMLCanvasElement).getContext = ((contextType: string) =>
-            contextType === '2d' ? mockCtx : null) as HTMLCanvasElement['getContext'];
+            contextType === "2d" ? mockCtx : null) as HTMLCanvasElement[
+              "getContext"
+            ];
         }
         return el;
       });
 
     try {
-      const t1 = new Text({ text: 'A' });
-      const t2 = new Text({ text: 'B' });
+      const t1 = new Text({ text: "A" });
+      const t2 = new Text({ text: "B" });
       const tr = new Transform(t1, t2);
       tr.begin();
       tr.interpolate(0.5);
       tr.finish();
 
-      expect(t1.getText()).toBe('B');
+      expect(t1.getText()).toBe("B");
 
       // A subsequent sync cycle must not revert getText() to source text
       t1._markDirty();
       t1._syncToThree();
-      expect(t1.getText()).toBe('B');
+      expect(t1.getText()).toBe("B");
     } finally {
       createElementSpy.mockRestore();
     }
   });
 
-  describe('PMobject point-cloud transforms', () => {
-    it('selects PointCloudMorphStrategy for PMobject→PMobject (not fade)', () => {
+  describe("PMobject point-cloud transforms", () => {
+    it("selects PointCloudMorphStrategy for PMobject→PMobject (not fade)", () => {
       const src = new PMobject({ points: [{ position: [-2, 0, 0] }] });
       const tgt = new PMobject({ points: [{ position: [2, 0, 0] }] });
       const t = new Transform(src, tgt);
@@ -1407,7 +1435,7 @@ describe('Text Transform (#305)', () => {
       expect(strategy).toBeInstanceOf(PointCloudMorphStrategy);
     });
 
-    it('interpolates a single point from x=-2 to x=+2', () => {
+    it("interpolates a single point from x=-2 to x=+2", () => {
       const src = new PMobject({ points: [{ position: [-2, 0, 0] }] });
       const tgt = new PMobject({ points: [{ position: [2, 0, 0] }] });
       const t = new Transform(src, tgt);
@@ -1426,9 +1454,13 @@ describe('Text Transform (#305)', () => {
       expect(src.getLocalPoints()[0].position[0]).toBeCloseTo(2, 5);
     });
 
-    it('interpolates per-point color and opacity', () => {
-      const src = new PMobject({ points: [{ position: [0, 0, 0], color: '#000000', opacity: 0 }] });
-      const tgt = new PMobject({ points: [{ position: [0, 0, 0], color: '#ffffff', opacity: 1 }] });
+    it("interpolates per-point color and opacity", () => {
+      const src = new PMobject({
+        points: [{ position: [0, 0, 0], color: "#000000", opacity: 0 }],
+      });
+      const tgt = new PMobject({
+        points: [{ position: [0, 0, 0], color: "#ffffff", opacity: 1 }],
+      });
       const t = new Transform(src, tgt);
       t.begin();
       t.interpolate(0.5);
@@ -1440,10 +1472,12 @@ describe('Text Transform (#305)', () => {
       expect(c.r).toBeLessThan(0.9);
     });
 
-    it('pads point-count mismatch so both clouds stay aligned', () => {
+    it("pads point-count mismatch so both clouds stay aligned", () => {
       const src = new PMobject({ points: [{ position: [0, 0, 0] }] });
       const tgt = new PMobject({
-        points: [{ position: [1, 0, 0] }, { position: [2, 0, 0] }, { position: [3, 0, 0] }],
+        points: [{ position: [1, 0, 0] }, { position: [2, 0, 0] }, {
+          position: [3, 0, 0],
+        }],
       });
       const t = new Transform(src, tgt);
       t.begin();

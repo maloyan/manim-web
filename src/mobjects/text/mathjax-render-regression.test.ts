@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 
-import { describe, it, expect } from 'vitest';
-import { VMobject } from '../../core/VMobject';
-import { renderLatexToSVG } from './MathJaxRenderer';
+import { describe, expect, it } from "vitest";
+import { VMobject } from "../../core/VMobject";
+import { renderLatexToSVG } from "./MathJaxRenderer";
 
 function getRawHeightFromVmobjectGroup(group: { children: unknown[] }): number {
   let minY = Number.POSITIVE_INFINITY;
@@ -17,15 +17,15 @@ function getRawHeightFromVmobjectGroup(group: { children: unknown[] }): number {
   }
 
   if (!Number.isFinite(minY) || !Number.isFinite(maxY)) {
-    throw new Error('No VMobject points found in MathJax render result');
+    throw new Error("No VMobject points found in MathJax render result");
   }
 
   return maxY - minY;
 }
 
-describe('MathJaxRenderer regression (real MathJax)', () => {
-  it('renders x at about 453 raw MathJax units', async () => {
-    const result = await renderLatexToSVG('x');
+describe("MathJaxRenderer regression (real MathJax)", () => {
+  it("renders x at about 453 raw MathJax units", async () => {
+    const result = await renderLatexToSVG("x");
     const rawHeight = getRawHeightFromVmobjectGroup(result.vmobjectGroup);
 
     // MathJax path coordinates are in internal font units (about 1000 per em),

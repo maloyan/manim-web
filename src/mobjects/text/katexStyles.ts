@@ -4,7 +4,7 @@
  * Ensures the KaTeX stylesheet is loaded for proper LaTeX rendering.
  */
 
-import { logger } from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 let stylesPromise: Promise<void> | null = null;
 let fontOverrideInjected = false;
@@ -12,7 +12,7 @@ let fontOverrideInjected = false;
 /**
  * Inject a document-level CSS rule to ensure KaTeX respects font-size.
  * This is the only way to disable the 1.21 scaling that katex set by default.
- 
+
  * KaTeX's internal spans and font-size classes can override inherited styles,
  * so we use !important at the .katex root level.
  *
@@ -20,17 +20,17 @@ let fontOverrideInjected = false;
  */
 function ensureKatexFontOverride(): void {
   if (fontOverrideInjected) return;
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
 
-  const existing = document.getElementById('manimweb-katex-font-override');
+  const existing = document.getElementById("manimweb-katex-font-override");
   if (existing) {
     fontOverrideInjected = true;
     return;
   }
 
-  const style = document.createElement('style');
-  style.id = 'manimweb-katex-font-override';
-  style.textContent = '.katex { font-size: 1em !important; }';
+  const style = document.createElement("style");
+  style.id = "manimweb-katex-font-override";
+  style.textContent = ".katex { font-size: 1em !important; }";
   document.head.appendChild(style);
   fontOverrideInjected = true;
 }
@@ -53,26 +53,30 @@ export function ensureKatexStyles(): void {
  */
 export function waitForKatexStyles(): Promise<void> {
   if (stylesPromise) return stylesPromise;
-  if (typeof document === 'undefined') {
+  if (typeof document === "undefined") {
     stylesPromise = Promise.resolve();
     return stylesPromise;
   }
 
-  const existing = document.getElementById('manimweb-katex-styles') as HTMLLinkElement | null;
+  const existing = document.getElementById("manimweb-katex-styles") as
+    | HTMLLinkElement
+    | null;
   if (existing) {
     stylesPromise = Promise.resolve();
     return stylesPromise;
   }
 
   stylesPromise = new Promise<void>((resolve) => {
-    const link = document.createElement('link');
-    link.id = 'manimweb-katex-styles';
-    link.rel = 'stylesheet';
-    link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css';
-    link.crossOrigin = 'anonymous';
+    const link = document.createElement("link");
+    link.id = "manimweb-katex-styles";
+    link.rel = "stylesheet";
+    link.href = "https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css";
+    link.crossOrigin = "anonymous";
     link.onload = () => resolve();
     link.onerror = () => {
-      logger.warn('MathTex: KaTeX CSS failed to load from CDN. LaTeX rendering may be degraded.');
+      logger.warn(
+        "MathTex: KaTeX CSS failed to load from CDN. LaTeX rendering may be degraded.",
+      );
       resolve();
     };
     document.head.appendChild(link);
@@ -85,5 +89,6 @@ export function waitForKatexStyles(): Promise<void> {
  * Check if KaTeX styles have been injected
  */
 export function areKatexStylesLoaded(): boolean {
-  return stylesPromise !== null || document.getElementById('manimweb-katex-styles') !== null;
+  return stylesPromise !== null ||
+    document.getElementById("manimweb-katex-styles") !== null;
 }

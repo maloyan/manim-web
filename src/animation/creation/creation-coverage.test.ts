@@ -17,26 +17,26 @@
  * - Factory functions
  */
 
-import { describe, it, expect } from 'vitest';
-import { Mobject } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
-import { PointMobject } from '../../mobjects/point';
+import { describe, expect, it } from "vitest";
+import { Mobject } from "../../core/Mobject";
+import { VMobject } from "../../core/VMobject";
+import { PointMobject } from "../../mobjects/point";
 import {
+  AddTextLetterByLetter,
+  addTextLetterByLetter,
   Create,
   create,
   DrawBorderThenFill,
   drawBorderThenFill,
-  Uncreate,
-  uncreate,
-  Write,
-  write,
-  Unwrite,
-  unwrite,
-  AddTextLetterByLetter,
-  addTextLetterByLetter,
   RemoveTextLetterByLetter,
   removeTextLetterByLetter,
-} from './Create';
+  Uncreate,
+  uncreate,
+  Unwrite,
+  unwrite,
+  Write,
+  write,
+} from "./Create";
 import {
   AddTextWordByWord,
   addTextWordByWord,
@@ -48,7 +48,7 @@ import {
   showSubmobjectsOneByOne,
   SpiralIn,
   spiralIn,
-} from './CreationExtensions';
+} from "./CreationExtensions";
 
 // =============================================================================
 // Helpers
@@ -57,9 +57,9 @@ import {
 /** Mock text mobject with getText/setText */
 class MockTextMobject extends Mobject {
   private _text: string;
-  color: string = '#ffffff';
+  color: string = "#ffffff";
 
-  constructor(text: string = 'Hello World') {
+  constructor(text: string = "Hello World") {
     super();
     this._text = text;
   }
@@ -73,7 +73,7 @@ class MockTextMobject extends Mobject {
   }
 
   protected _createThreeObject() {
-    return new (require('three').Object3D)();
+    return new (require("three").Object3D)();
   }
 
   protected _syncToThree(): void {}
@@ -96,7 +96,7 @@ class MockMathTexMobject extends Mobject {
   }
 
   protected _createThreeObject() {
-    return new (require('three').Object3D)();
+    return new (require("three").Object3D)();
   }
 
   protected _syncToThree(): void {}
@@ -133,8 +133,8 @@ function makeParentWithChildren(n: number): Mobject {
 // Create - VMobject without Line2 (opacity fallback)
 // =============================================================================
 
-describe('Create - VMobject opacity fallback', () => {
-  it('begin sets opacity to 0 for VMobject without Line2', () => {
+describe("Create - VMobject opacity fallback", () => {
+  it("begin sets opacity to 0 for VMobject without Line2", () => {
     // Empty VMobject = no Line2 children = opacity fallback
     const v = new VMobject();
     v.opacity = 1;
@@ -143,7 +143,7 @@ describe('Create - VMobject opacity fallback', () => {
     expect(v.opacity).toBe(0);
   });
 
-  it('interpolate sets opacity proportionally', () => {
+  it("interpolate sets opacity proportionally", () => {
     const v = new VMobject();
     const anim = new Create(v);
     anim.begin();
@@ -153,7 +153,7 @@ describe('Create - VMobject opacity fallback', () => {
     expect(v.opacity).toBeCloseTo(0.7, 5);
   });
 
-  it('finish sets opacity to 1', () => {
+  it("finish sets opacity to 1", () => {
     const v = new VMobject();
     const anim = new Create(v);
     anim.begin();
@@ -167,14 +167,14 @@ describe('Create - VMobject opacity fallback', () => {
 // DrawBorderThenFill - VMobject without Line2
 // =============================================================================
 
-describe('DrawBorderThenFill - VMobject without Line2', () => {
-  it('begin does not crash for VMobject without Line2', () => {
+describe("DrawBorderThenFill - VMobject without Line2", () => {
+  it("begin does not crash for VMobject without Line2", () => {
     const v = makeVMobject();
     const anim = new DrawBorderThenFill(v);
     expect(() => anim.begin()).not.toThrow();
   });
 
-  it('interpolate does nothing (no dash reveal)', () => {
+  it("interpolate does nothing (no dash reveal)", () => {
     const v = makeVMobject();
     v.setStrokeOpacity(0.8);
     const anim = new DrawBorderThenFill(v);
@@ -184,7 +184,7 @@ describe('DrawBorderThenFill - VMobject without Line2', () => {
     expect(v.opacity).toBe(0.8);
   });
 
-  it('finish does not crash', () => {
+  it("finish does not crash", () => {
     const v = makeVMobject();
     const anim = new DrawBorderThenFill(v);
     anim.begin();
@@ -192,7 +192,7 @@ describe('DrawBorderThenFill - VMobject without Line2', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('factory function returns DrawBorderThenFill', () => {
+  it("factory function returns DrawBorderThenFill", () => {
     const v = makeVMobject();
     const anim = drawBorderThenFill(v, { duration: 3 });
     expect(anim).toBeInstanceOf(DrawBorderThenFill);
@@ -204,14 +204,14 @@ describe('DrawBorderThenFill - VMobject without Line2', () => {
 // Uncreate - VMobject without Line2
 // =============================================================================
 
-describe('Uncreate - VMobject without Line2', () => {
-  it('begin does not crash', () => {
+describe("Uncreate - VMobject without Line2", () => {
+  it("begin does not crash", () => {
     const v = new VMobject(); // empty = no Line2
     const anim = new Uncreate(v);
     expect(() => anim.begin()).not.toThrow();
   });
 
-  it('interpolate reduces opacity for non-Line2 VMobject', () => {
+  it("interpolate reduces opacity for non-Line2 VMobject", () => {
     const v = new VMobject();
     const anim = new Uncreate(v);
     anim.begin();
@@ -223,7 +223,7 @@ describe('Uncreate - VMobject without Line2', () => {
     expect(v.opacity).toBeCloseTo(0, 5);
   });
 
-  it('finish sets opacity to 0', () => {
+  it("finish sets opacity to 0", () => {
     const v = new VMobject();
     const anim = new Uncreate(v);
     anim.begin();
@@ -231,7 +231,7 @@ describe('Uncreate - VMobject without Line2', () => {
     expect(v.opacity).toBe(0);
   });
 
-  it('factory function returns Uncreate', () => {
+  it("factory function returns Uncreate", () => {
     const v = new VMobject();
     const anim = uncreate(v, { duration: 1.5 });
     expect(anim).toBeInstanceOf(Uncreate);
@@ -243,8 +243,8 @@ describe('Uncreate - VMobject without Line2', () => {
 // Uncreate with non-VMobject
 // =============================================================================
 
-describe('Uncreate - non-VMobject', () => {
-  it('interpolate reduces opacity', () => {
+describe("Uncreate - non-VMobject", () => {
+  it("interpolate reduces opacity", () => {
     const m = new Mobject();
     const anim = new Uncreate(m);
     anim.begin();
@@ -252,7 +252,7 @@ describe('Uncreate - non-VMobject', () => {
     expect(m.opacity).toBeCloseTo(0.5, 5);
   });
 
-  it('finish sets opacity to 0', () => {
+  it("finish sets opacity to 0", () => {
     const m = new Mobject();
     const anim = new Uncreate(m);
     anim.begin();
@@ -265,14 +265,14 @@ describe('Uncreate - non-VMobject', () => {
 // ShowIncreasingSubsets
 // =============================================================================
 
-describe('ShowIncreasingSubsets', () => {
-  it('constructor defaults', () => {
+describe("ShowIncreasingSubsets", () => {
+  it("constructor defaults", () => {
     const parent = makeParentWithChildren(3);
     const anim = new ShowIncreasingSubsets(parent);
     expect(anim.duration).toBe(1); // default
   });
 
-  it('begin hides all children', () => {
+  it("begin hides all children", () => {
     const parent = makeParentWithChildren(3);
     const anim = new ShowIncreasingSubsets(parent);
     anim.begin();
@@ -281,7 +281,7 @@ describe('ShowIncreasingSubsets', () => {
     }
   });
 
-  it('interpolate shows children cumulatively', () => {
+  it("interpolate shows children cumulatively", () => {
     const parent = makeParentWithChildren(4);
     const anim = new ShowIncreasingSubsets(parent);
     anim.begin();
@@ -296,7 +296,7 @@ describe('ShowIncreasingSubsets', () => {
     expect(parent.children[3].opacity).toBe(0);
   });
 
-  it('interpolate at alpha=1 shows all', () => {
+  it("interpolate at alpha=1 shows all", () => {
     const parent = makeParentWithChildren(3);
     const anim = new ShowIncreasingSubsets(parent);
     anim.begin();
@@ -306,7 +306,7 @@ describe('ShowIncreasingSubsets', () => {
     }
   });
 
-  it('finish restores original opacities', () => {
+  it("finish restores original opacities", () => {
     const parent = new Mobject();
     const c1 = new Mobject();
     c1.setStrokeOpacity(0.5);
@@ -321,7 +321,7 @@ describe('ShowIncreasingSubsets', () => {
     expect(c2.opacity).toBe(0.8);
   });
 
-  it('factory function works', () => {
+  it("factory function works", () => {
     const parent = makeParentWithChildren(2);
     const anim = showIncreasingSubsets(parent, { duration: 2 });
     expect(anim).toBeInstanceOf(ShowIncreasingSubsets);
@@ -333,8 +333,8 @@ describe('ShowIncreasingSubsets', () => {
 // ShowSubmobjectsOneByOne
 // =============================================================================
 
-describe('ShowSubmobjectsOneByOne', () => {
-  it('begin hides all children', () => {
+describe("ShowSubmobjectsOneByOne", () => {
+  it("begin hides all children", () => {
     const parent = makeParentWithChildren(3);
     const anim = new ShowSubmobjectsOneByOne(parent);
     anim.begin();
@@ -343,7 +343,7 @@ describe('ShowSubmobjectsOneByOne', () => {
     }
   });
 
-  it('interpolate shows only one child at a time', () => {
+  it("interpolate shows only one child at a time", () => {
     const parent = makeParentWithChildren(4);
     const anim = new ShowSubmobjectsOneByOne(parent);
     anim.begin();
@@ -360,7 +360,7 @@ describe('ShowSubmobjectsOneByOne', () => {
     expect(parent.children[2].opacity).toBe(0);
   });
 
-  it('interpolate at alpha=0 shows first child', () => {
+  it("interpolate at alpha=0 shows first child", () => {
     const parent = makeParentWithChildren(3);
     const anim = new ShowSubmobjectsOneByOne(parent);
     anim.begin();
@@ -369,7 +369,7 @@ describe('ShowSubmobjectsOneByOne', () => {
     expect(parent.children[1].opacity).toBe(0);
   });
 
-  it('finish shows only last child', () => {
+  it("finish shows only last child", () => {
     const parent = makeParentWithChildren(3);
     const anim = new ShowSubmobjectsOneByOne(parent);
     anim.begin();
@@ -379,7 +379,7 @@ describe('ShowSubmobjectsOneByOne', () => {
     expect(parent.children[2].opacity).toBe(1);
   });
 
-  it('factory function works', () => {
+  it("factory function works", () => {
     const parent = makeParentWithChildren(2);
     const anim = showSubmobjectsOneByOne(parent);
     expect(anim).toBeInstanceOf(ShowSubmobjectsOneByOne);
@@ -390,15 +390,15 @@ describe('ShowSubmobjectsOneByOne', () => {
 // Write - with VMobject (opacity fallback)
 // =============================================================================
 
-describe('Write - VMobject opacity fallback', () => {
-  it('begin sets opacity to 0', () => {
+describe("Write - VMobject opacity fallback", () => {
+  it("begin sets opacity to 0", () => {
     const v = new VMobject(); // empty = no Line2
     const anim = new Write(v);
     anim.begin();
     expect(v.opacity).toBe(0);
   });
 
-  it('interpolate increases opacity', () => {
+  it("interpolate increases opacity", () => {
     const v = new VMobject();
     const anim = new Write(v);
     anim.begin();
@@ -406,7 +406,7 @@ describe('Write - VMobject opacity fallback', () => {
     expect(v.opacity).toBeCloseTo(0.5, 5);
   });
 
-  it('finish sets opacity to original', () => {
+  it("finish sets opacity to original", () => {
     const v = new VMobject();
     v.setStrokeOpacity(0.8);
     const anim = new Write(v);
@@ -416,7 +416,7 @@ describe('Write - VMobject opacity fallback', () => {
     expect(v.opacity).toBe(0.8);
   });
 
-  it('factory function works', () => {
+  it("factory function works", () => {
     const v = new VMobject();
     const anim = write(v, { duration: 2 });
     expect(anim).toBeInstanceOf(Write);
@@ -428,15 +428,15 @@ describe('Write - VMobject opacity fallback', () => {
 // Write - with MathTex-like (setRevealProgress)
 // =============================================================================
 
-describe('Write - setRevealProgress path', () => {
-  it('begin sets reveal to 0', () => {
+describe("Write - setRevealProgress path", () => {
+  it("begin sets reveal to 0", () => {
     const m = new MockMathTexMobject();
     const anim = new Write(m);
     anim.begin();
     expect(m.getRevealProgress()).toBe(0);
   });
 
-  it('interpolate sets reveal progress', () => {
+  it("interpolate sets reveal progress", () => {
     const m = new MockMathTexMobject();
     const anim = new Write(m);
     anim.begin();
@@ -446,7 +446,7 @@ describe('Write - setRevealProgress path', () => {
     expect(m.getRevealProgress()).toBeCloseTo(0.7, 5);
   });
 
-  it('finish sets reveal to 1', () => {
+  it("finish sets reveal to 1", () => {
     const m = new MockMathTexMobject();
     const anim = new Write(m);
     anim.begin();
@@ -454,7 +454,7 @@ describe('Write - setRevealProgress path', () => {
     expect(m.getRevealProgress()).toBe(1);
   });
 
-  it('remover mode sets reveal to 0 on finish', () => {
+  it("remover mode sets reveal to 0 on finish", () => {
     const m = new MockMathTexMobject();
     const anim = new Write(m, { remover: true });
     anim.begin();
@@ -467,8 +467,8 @@ describe('Write - setRevealProgress path', () => {
 // Write - reverse mode
 // =============================================================================
 
-describe('Write - reverse mode', () => {
-  it('starts from original opacity', () => {
+describe("Write - reverse mode", () => {
+  it("starts from original opacity", () => {
     const v = new VMobject(); // empty = opacity fallback
     v.setStrokeOpacity(1);
     const anim = new Write(v, { reverse: true });
@@ -477,7 +477,7 @@ describe('Write - reverse mode', () => {
     expect(v.opacity).toBe(1);
   });
 
-  it('interpolate decreases opacity in reverse', () => {
+  it("interpolate decreases opacity in reverse", () => {
     const v = new VMobject();
     v.setStrokeOpacity(1);
     const anim = new Write(v, { reverse: true });
@@ -492,8 +492,8 @@ describe('Write - reverse mode', () => {
 // Write - remover + opacity fallback
 // =============================================================================
 
-describe('Write - remover mode (opacity)', () => {
-  it('finish with remover sets opacity to 0', () => {
+describe("Write - remover mode (opacity)", () => {
+  it("finish with remover sets opacity to 0", () => {
     const v = new VMobject(); // empty = opacity fallback
     const anim = new Write(v, { remover: true });
     anim.begin();
@@ -501,7 +501,7 @@ describe('Write - remover mode (opacity)', () => {
     expect(v.opacity).toBe(0);
   });
 
-  it('finish without remover sets opacity to original', () => {
+  it("finish without remover sets opacity to original", () => {
     const v = new VMobject();
     v.setStrokeOpacity(0.9);
     const anim = new Write(v, { remover: false });
@@ -515,20 +515,20 @@ describe('Write - remover mode (opacity)', () => {
 // Unwrite
 // =============================================================================
 
-describe('Unwrite', () => {
-  it('is a Write with reverse and remover', () => {
+describe("Unwrite", () => {
+  it("is a Write with reverse and remover", () => {
     const v = new VMobject();
     const anim = new Unwrite(v);
     expect(anim).toBeInstanceOf(Write);
   });
 
-  it('factory function works', () => {
+  it("factory function works", () => {
     const v = new VMobject();
     const anim = unwrite(v);
     expect(anim).toBeInstanceOf(Unwrite);
   });
 
-  it('begin preserves current opacity', () => {
+  it("begin preserves current opacity", () => {
     const v = new VMobject(); // empty = opacity fallback
     v.setStrokeOpacity(1);
     const anim = new Unwrite(v);
@@ -541,39 +541,39 @@ describe('Unwrite', () => {
 // AddTextLetterByLetter
 // =============================================================================
 
-describe('AddTextLetterByLetter', () => {
-  it('begin clears text', () => {
-    const m = new MockTextMobject('ABCDE');
+describe("AddTextLetterByLetter", () => {
+  it("begin clears text", () => {
+    const m = new MockTextMobject("ABCDE");
     const anim = new AddTextLetterByLetter(m);
     anim.begin();
-    expect(m.getText()).toBe('');
+    expect(m.getText()).toBe("");
   });
 
-  it('interpolate reveals characters progressively', () => {
-    const m = new MockTextMobject('ABCDE');
+  it("interpolate reveals characters progressively", () => {
+    const m = new MockTextMobject("ABCDE");
     const anim = new AddTextLetterByLetter(m);
     anim.begin();
     anim.interpolate(0.4);
-    expect(m.getText()).toBe('AB');
+    expect(m.getText()).toBe("AB");
     anim.interpolate(0.8);
-    expect(m.getText()).toBe('ABCD');
+    expect(m.getText()).toBe("ABCD");
   });
 
-  it('finish shows full text', () => {
-    const m = new MockTextMobject('ABCDE');
+  it("finish shows full text", () => {
+    const m = new MockTextMobject("ABCDE");
     const anim = new AddTextLetterByLetter(m);
     anim.begin();
     anim.finish();
-    expect(m.getText()).toBe('ABCDE');
+    expect(m.getText()).toBe("ABCDE");
   });
 
-  it('factory function works', () => {
-    const m = new MockTextMobject('test');
+  it("factory function works", () => {
+    const m = new MockTextMobject("test");
     const anim = addTextLetterByLetter(m, { timePerChar: 0.05 });
     expect(anim).toBeInstanceOf(AddTextLetterByLetter);
   });
 
-  it('does nothing for mobject without getText', () => {
+  it("does nothing for mobject without getText", () => {
     const m = new Mobject();
     const anim = new AddTextLetterByLetter(m);
     anim.begin();
@@ -588,39 +588,39 @@ describe('AddTextLetterByLetter', () => {
 // RemoveTextLetterByLetter
 // =============================================================================
 
-describe('RemoveTextLetterByLetter', () => {
-  it('begin preserves text', () => {
-    const m = new MockTextMobject('ABCDE');
+describe("RemoveTextLetterByLetter", () => {
+  it("begin preserves text", () => {
+    const m = new MockTextMobject("ABCDE");
     const anim = new RemoveTextLetterByLetter(m);
     anim.begin();
-    expect(m.getText()).toBe('ABCDE');
+    expect(m.getText()).toBe("ABCDE");
   });
 
-  it('interpolate removes characters progressively', () => {
-    const m = new MockTextMobject('ABCDE');
+  it("interpolate removes characters progressively", () => {
+    const m = new MockTextMobject("ABCDE");
     const anim = new RemoveTextLetterByLetter(m);
     anim.begin();
     anim.interpolate(0.4);
-    expect(m.getText()).toBe('ABC');
+    expect(m.getText()).toBe("ABC");
     anim.interpolate(0.8);
-    expect(m.getText()).toBe('A');
+    expect(m.getText()).toBe("A");
   });
 
-  it('finish clears text', () => {
-    const m = new MockTextMobject('ABCDE');
+  it("finish clears text", () => {
+    const m = new MockTextMobject("ABCDE");
     const anim = new RemoveTextLetterByLetter(m);
     anim.begin();
     anim.finish();
-    expect(m.getText()).toBe('');
+    expect(m.getText()).toBe("");
   });
 
-  it('factory function works', () => {
-    const m = new MockTextMobject('test');
+  it("factory function works", () => {
+    const m = new MockTextMobject("test");
     const anim = removeTextLetterByLetter(m);
     expect(anim).toBeInstanceOf(RemoveTextLetterByLetter);
   });
 
-  it('does nothing for mobject without setText', () => {
+  it("does nothing for mobject without setText", () => {
     const m = new Mobject();
     const anim = new RemoveTextLetterByLetter(m);
     anim.begin();
@@ -634,41 +634,41 @@ describe('RemoveTextLetterByLetter', () => {
 // AddTextWordByWord
 // =============================================================================
 
-describe('AddTextWordByWord', () => {
-  it('begin clears text', () => {
-    const m = new MockTextMobject('Hello World Foo');
+describe("AddTextWordByWord", () => {
+  it("begin clears text", () => {
+    const m = new MockTextMobject("Hello World Foo");
     const anim = new AddTextWordByWord(m);
     anim.begin();
-    expect(m.getText()).toBe('');
+    expect(m.getText()).toBe("");
   });
 
-  it('interpolate reveals words progressively', () => {
-    const m = new MockTextMobject('Hello World Foo');
+  it("interpolate reveals words progressively", () => {
+    const m = new MockTextMobject("Hello World Foo");
     const anim = new AddTextWordByWord(m);
     anim.begin();
     // 3 words: at alpha=0.34, should show 1 word
     anim.interpolate(0.34);
-    expect(m.getText()).toBe('Hello');
+    expect(m.getText()).toBe("Hello");
     // At alpha=0.67, should show 2 words
     anim.interpolate(0.67);
-    expect(m.getText()).toBe('Hello World');
+    expect(m.getText()).toBe("Hello World");
   });
 
-  it('finish restores full text', () => {
-    const m = new MockTextMobject('Hello World Foo');
+  it("finish restores full text", () => {
+    const m = new MockTextMobject("Hello World Foo");
     const anim = new AddTextWordByWord(m);
     anim.begin();
     anim.finish();
-    expect(m.getText()).toBe('Hello World Foo');
+    expect(m.getText()).toBe("Hello World Foo");
   });
 
-  it('factory function works', () => {
-    const m = new MockTextMobject('test');
+  it("factory function works", () => {
+    const m = new MockTextMobject("test");
     const anim = addTextWordByWord(m, { timePerWord: 0.3 });
     expect(anim).toBeInstanceOf(AddTextWordByWord);
   });
 
-  it('does nothing for mobject without getText', () => {
+  it("does nothing for mobject without getText", () => {
     const m = new Mobject();
     const anim = new AddTextWordByWord(m);
     anim.begin();
@@ -682,22 +682,22 @@ describe('AddTextWordByWord', () => {
 // ShowPartial
 // =============================================================================
 
-describe('ShowPartial', () => {
-  it('constructor defaults', () => {
+describe("ShowPartial", () => {
+  it("constructor defaults", () => {
     const v = makeVMobject();
     const anim = new ShowPartial(v);
     expect(anim.startPortion).toBe(0);
     expect(anim.endPortion).toBe(1);
   });
 
-  it('accepts custom start and end portions', () => {
+  it("accepts custom start and end portions", () => {
     const v = makeVMobject();
     const anim = new ShowPartial(v, { startPortion: 0.2, endPortion: 0.8 });
     expect(anim.startPortion).toBe(0.2);
     expect(anim.endPortion).toBe(0.8);
   });
 
-  it('interpolate uses opacity for non-VMobject', () => {
+  it("interpolate uses opacity for non-VMobject", () => {
     const m = new Mobject();
     const anim = new ShowPartial(m);
     anim.begin();
@@ -705,7 +705,7 @@ describe('ShowPartial', () => {
     expect(m.opacity).toBeCloseTo(0.5, 5);
   });
 
-  it('finish does not crash', () => {
+  it("finish does not crash", () => {
     const v = makeVMobject();
     const anim = new ShowPartial(v);
     anim.begin();
@@ -713,7 +713,7 @@ describe('ShowPartial', () => {
     expect(anim.isFinished()).toBe(true);
   });
 
-  it('factory function works', () => {
+  it("factory function works", () => {
     const v = makeVMobject();
     const anim = showPartial(v, { startPortion: 0.1 });
     expect(anim).toBeInstanceOf(ShowPartial);
@@ -725,22 +725,22 @@ describe('ShowPartial', () => {
 // SpiralIn
 // =============================================================================
 
-describe('SpiralIn', () => {
-  it('constructor defaults', () => {
+describe("SpiralIn", () => {
+  it("constructor defaults", () => {
     const m = new PointMobject({ position: [0, 0, 0] });
     const anim = new SpiralIn(m);
     expect(anim.scaleFactor).toBe(3);
     expect(anim.numTurns).toBe(2);
   });
 
-  it('accepts custom options', () => {
+  it("accepts custom options", () => {
     const m = new PointMobject({ position: [0, 0, 0] });
     const anim = new SpiralIn(m, { scaleFactor: 5, numTurns: 3 });
     expect(anim.scaleFactor).toBe(5);
     expect(anim.numTurns).toBe(3);
   });
 
-  it('begin scales up and moves to center', () => {
+  it("begin scales up and moves to center", () => {
     const m = new PointMobject({ position: [2, 3, 0] });
     const origScale = m.scaleVector.x;
     const anim = new SpiralIn(m);
@@ -749,17 +749,17 @@ describe('SpiralIn', () => {
     expect(m.scaleVector.x).toBeGreaterThan(origScale);
   });
 
-  it('interpolate moves mobject towards target', () => {
+  it("interpolate moves mobject towards target", () => {
     const m = new PointMobject({ position: [2, 0, 0] });
     const anim = new SpiralIn(m);
     anim.begin();
     anim.interpolate(0.5);
     // Should be partway between center and target
     // Since spiral adds rotation, just check it didn't crash
-    expect(typeof m.position.x).toBe('number');
+    expect(typeof m.position.x).toBe("number");
   });
 
-  it('finish restores target position and scale', () => {
+  it("finish restores target position and scale", () => {
     const m = new PointMobject({ position: [2, 3, 0] });
     m.scaleVector.set(1, 1, 1);
     const anim = new SpiralIn(m);
@@ -771,7 +771,7 @@ describe('SpiralIn', () => {
     expect(m.scaleVector.x).toBeCloseTo(1);
   });
 
-  it('works with children', () => {
+  it("works with children", () => {
     const parent = new VMobject();
     const c1 = new PointMobject({ position: [0, 0, 0] });
     c1.moveTo([1, 0, 0]);
@@ -787,7 +787,7 @@ describe('SpiralIn', () => {
     expect(c2.position.x).toBeCloseTo(-1);
   });
 
-  it('factory function works', () => {
+  it("factory function works", () => {
     const m = new PointMobject({ position: [0, 0, 0] });
     const anim = spiralIn(m, { scaleFactor: 2, numTurns: 1 });
     expect(anim).toBeInstanceOf(SpiralIn);
@@ -799,8 +799,8 @@ describe('SpiralIn', () => {
 // Create _childAlpha via lagRatio
 // =============================================================================
 
-describe('Create - lagRatio stagger', () => {
-  it('lagRatio=0 means all children animate together', () => {
+describe("Create - lagRatio stagger", () => {
+  it("lagRatio=0 means all children animate together", () => {
     const m = new Mobject();
     const anim = new Create(m, { lagRatio: 0 });
     anim.begin();
@@ -808,7 +808,7 @@ describe('Create - lagRatio stagger', () => {
     expect(m.opacity).toBeCloseTo(0.5, 5);
   });
 
-  it('lagRatio>0 with single mobject behaves normally', () => {
+  it("lagRatio>0 with single mobject behaves normally", () => {
     const m = new Mobject();
     const anim = new Create(m, { lagRatio: 0.5 });
     anim.begin();
@@ -822,8 +822,8 @@ describe('Create - lagRatio stagger', () => {
 // Create with non-Mobject
 // =============================================================================
 
-describe('Create factory', () => {
-  it('default duration is 2', () => {
+describe("Create factory", () => {
+  it("default duration is 2", () => {
     const m = new Mobject();
     const anim = create(m);
     expect(anim.duration).toBe(2);
@@ -834,15 +834,15 @@ describe('Create factory', () => {
 // Write with non-VMobject, non-text mobject
 // =============================================================================
 
-describe('Write - plain Mobject fallback', () => {
-  it('begin sets opacity to 0', () => {
+describe("Write - plain Mobject fallback", () => {
+  it("begin sets opacity to 0", () => {
     const m = new Mobject();
     const anim = new Write(m);
     anim.begin();
     expect(m.opacity).toBe(0);
   });
 
-  it('interpolate increases opacity', () => {
+  it("interpolate increases opacity", () => {
     const m = new Mobject();
     const anim = new Write(m);
     anim.begin();
@@ -850,7 +850,7 @@ describe('Write - plain Mobject fallback', () => {
     expect(m.opacity).toBeCloseTo(0.5, 5);
   });
 
-  it('finish restores opacity', () => {
+  it("finish restores opacity", () => {
     const m = new Mobject();
     m.setStrokeOpacity(0.7);
     const anim = new Write(m);
@@ -864,15 +864,15 @@ describe('Write - plain Mobject fallback', () => {
 // Write reverse with setRevealProgress (MathTex-like)
 // =============================================================================
 
-describe('Write - reverse with setRevealProgress', () => {
-  it('begin sets reveal to 1 (reverse starts from full)', () => {
+describe("Write - reverse with setRevealProgress", () => {
+  it("begin sets reveal to 1 (reverse starts from full)", () => {
     const m = new MockMathTexMobject();
     const anim = new Write(m, { reverse: true });
     anim.begin();
     expect(m.getRevealProgress()).toBe(1);
   });
 
-  it('interpolate decreases reveal in reverse', () => {
+  it("interpolate decreases reveal in reverse", () => {
     const m = new MockMathTexMobject();
     const anim = new Write(m, { reverse: true });
     anim.begin();

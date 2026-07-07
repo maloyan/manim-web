@@ -1,8 +1,8 @@
-import { VMobject } from '../../core/VMobject';
-import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, WHITE, DEFAULT_STROKE_WIDTH } from '../../constants';
-import { Line } from './Line';
-import { crossVec, dotVec, lengthVec, normalizeVec } from '../../utils/vectors';
+import { VMobject } from "../../core/VMobject";
+import { Vector3Tuple } from "../../core/Mobject";
+import { BLUE, DEFAULT_STROKE_WIDTH, WHITE } from "../../constants";
+import { Line } from "./Line";
+import { crossVec, dotVec, lengthVec, normalizeVec } from "../../utils/vectors";
 
 /**
  * Options for creating an Angle
@@ -23,7 +23,7 @@ export interface AngleOptions {
   /** Number of decimal places for angle value display. Default: 2 */
   decimalPlaces?: number;
   /** Display unit for angle. Default: 'radians' */
-  unit?: 'radians' | 'degrees';
+  unit?: "radians" | "degrees";
   /**
    * Rotation axis / plane normal. Fixes the reference plane so the angle
    * is measured continuously in `[0, 2π)` (or `(-2π, 0]` with `otherAngle`)
@@ -69,7 +69,7 @@ export class Angle extends VMobject {
   private _label: string | null = null;
   private _showValue: boolean;
   private _decimalPlaces: number;
-  private _unit: 'radians' | 'degrees';
+  private _unit: "radians" | "degrees";
   private _u: Vector3Tuple = [1, 0, 0];
   private _v: Vector3Tuple = [0, 1, 0];
 
@@ -84,7 +84,7 @@ export class Angle extends VMobject {
       color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       decimalPlaces = 2,
-      unit = 'radians',
+      unit = "radians",
       axis,
     } = options;
 
@@ -101,7 +101,7 @@ export class Angle extends VMobject {
     let vertex: Vector3Tuple;
     let point2: Vector3Tuple;
 
-    if ('line1' in input && 'line2' in input) {
+    if ("line1" in input && "line2" in input) {
       // Two lines - find intersection point (vertex)
       const line1Start = input.line1.getStart();
       const line1End = input.line1.getEnd();
@@ -154,14 +154,16 @@ export class Angle extends VMobject {
     let normal: Vector3Tuple;
     if (axis) {
       if (lengthVec(axis) < 1e-10) {
-        throw new Error('Angle: axis option must be a non-zero vector');
+        throw new Error("Angle: axis option must be a non-zero vector");
       }
       normal = normalizeVec(axis);
     } else {
       normal = crossVec(dir1, dir2);
 
       if (lengthVec(normal) < 1e-10) {
-        const arb: Vector3Tuple = Math.abs(dir1[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+        const arb: Vector3Tuple = Math.abs(dir1[0]) < 0.9
+          ? [1, 0, 0]
+          : [0, 1, 0];
         normal = crossVec(dir1, arb);
         if (normal[2] < 0) {
           normal = [-normal[0], -normal[1], -normal[2]];
@@ -169,7 +171,9 @@ export class Angle extends VMobject {
       }
       normal = normalizeVec(normal);
 
-      if (Math.abs(dir1[2]) < 1e-10 && Math.abs(dir2[2]) < 1e-10 && normal[2] < 0) {
+      if (
+        Math.abs(dir1[2]) < 1e-10 && Math.abs(dir2[2]) < 1e-10 && normal[2] < 0
+      ) {
         normal = [-normal[0], -normal[1], -normal[2]] as Vector3Tuple;
       }
     }
@@ -185,7 +189,9 @@ export class Angle extends VMobject {
     ];
     if (lengthVec(u) < 1e-10) {
       // dir1 parallel to normal; fall back to any perpendicular vector.
-      const arb: Vector3Tuple = Math.abs(normal[0]) < 0.9 ? [1, 0, 0] : [0, 1, 0];
+      const arb: Vector3Tuple = Math.abs(normal[0]) < 0.9
+        ? [1, 0, 0]
+        : [0, 1, 0];
       u = crossVec(normal, arb);
     }
     this._u = normalizeVec(u);
@@ -246,7 +252,10 @@ export class Angle extends VMobject {
       case 3:
         // Third quadrant
         if (deltaAngle > 0) {
-          return { start: startAngle + deltaAngle, delta: 2 * Math.PI - deltaAngle };
+          return {
+            start: startAngle + deltaAngle,
+            delta: 2 * Math.PI - deltaAngle,
+          };
         }
         return { start: startAngle, delta: deltaAngle };
       case 4:
@@ -286,7 +295,10 @@ export class Angle extends VMobject {
     const r = this._radius;
 
     const totalAngle = this._angleValue;
-    const numSegments = Math.max(1, Math.ceil((Math.abs(totalAngle) / (Math.PI / 2)) * 2));
+    const numSegments = Math.max(
+      1,
+      Math.ceil((Math.abs(totalAngle) / (Math.PI / 2)) * 2),
+    );
     const segmentAngle = totalAngle / numSegments;
     const kappa = (4 / 3) * Math.tan(segmentAngle / 4);
 
@@ -363,8 +375,11 @@ export class Angle extends VMobject {
    */
   getLabel(): string | null {
     if (this._showValue) {
-      const value = this._unit === 'degrees' ? this.getAngleValueDegrees() : this.getAngleValue();
-      return value.toFixed(this._decimalPlaces) + (this._unit === 'degrees' ? '\u00B0' : '');
+      const value = this._unit === "degrees"
+        ? this.getAngleValueDegrees()
+        : this.getAngleValue();
+      return value.toFixed(this._decimalPlaces) +
+        (this._unit === "degrees" ? "\u00B0" : "");
     }
     return this._label;
   }
@@ -426,7 +441,10 @@ export class Angle extends VMobject {
         unit: this._unit,
       },
     );
-    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(clone, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     clone._label = this._label;
     return clone;
   }
@@ -473,7 +491,8 @@ export class RightAngle extends VMobject {
   constructor(input: AngleInput, options: RightAngleOptions = {}) {
     super();
 
-    const { size = 0.3, color = BLUE, strokeWidth = DEFAULT_STROKE_WIDTH } = options;
+    const { size = 0.3, color = BLUE, strokeWidth = DEFAULT_STROKE_WIDTH } =
+      options;
 
     this._size = size;
     this.color = color;
@@ -485,7 +504,7 @@ export class RightAngle extends VMobject {
     let vertex: Vector3Tuple;
     let point2: Vector3Tuple;
 
-    if ('line1' in input && 'line2' in input) {
+    if ("line1" in input && "line2" in input) {
       const line1Start = input.line1.getStart();
       const line1End = input.line1.getEnd();
       const line2Start = input.line2.getStart();
@@ -568,7 +587,11 @@ export class RightAngle extends VMobject {
     this.setPoints3D(points);
   }
 
-  private _addLinePoints(points: number[][], start: Vector3Tuple, end: Vector3Tuple): void {
+  private _addLinePoints(
+    points: number[][],
+    start: Vector3Tuple,
+    end: Vector3Tuple,
+  ): void {
     const dx = end[0] - start[0];
     const dy = end[1] - start[1];
     const dz = end[2] - start[2];
@@ -579,7 +602,11 @@ export class RightAngle extends VMobject {
 
     // Control points at 1/3 and 2/3 for straight line
     points.push([start[0] + dx / 3, start[1] + dy / 3, start[2] + dz / 3]);
-    points.push([start[0] + (2 * dx) / 3, start[1] + (2 * dy) / 3, start[2] + (2 * dz) / 3]);
+    points.push([
+      start[0] + (2 * dx) / 3,
+      start[1] + (2 * dy) / 3,
+      start[2] + (2 * dz) / 3,
+    ]);
     points.push([...end]);
   }
 
@@ -626,7 +653,10 @@ export class RightAngle extends VMobject {
         strokeWidth: this.strokeWidth,
       },
     );
-    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(clone, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return clone;
   }
 }
@@ -705,13 +735,21 @@ export class Elbow extends VMobject {
 
     // Calculate the three points of the L-shape
     // Start point is at (-width, 0) rotated
-    const start: Vector3Tuple = [cx + -this._width * cos, cy + -this._width * sin, cz];
+    const start: Vector3Tuple = [
+      cx + -this._width * cos,
+      cy + -this._width * sin,
+      cz,
+    ];
 
     // Corner is at (0, 0) which is the position
     const corner: Vector3Tuple = [cx, cy, cz];
 
     // End point is at (0, height) rotated
-    const end: Vector3Tuple = [cx + -this._height * sin, cy + this._height * cos, cz];
+    const end: Vector3Tuple = [
+      cx + -this._height * sin,
+      cy + this._height * cos,
+      cz,
+    ];
 
     const points: number[][] = [];
 
@@ -724,7 +762,11 @@ export class Elbow extends VMobject {
     this.setPoints3D(points);
   }
 
-  private _addLinePoints(points: number[][], start: Vector3Tuple, end: Vector3Tuple): void {
+  private _addLinePoints(
+    points: number[][],
+    start: Vector3Tuple,
+    end: Vector3Tuple,
+  ): void {
     const dx = end[0] - start[0];
     const dy = end[1] - start[1];
     const dz = end[2] - start[2];
@@ -734,7 +776,11 @@ export class Elbow extends VMobject {
     }
 
     points.push([start[0] + dx / 3, start[1] + dy / 3, start[2] + dz / 3]);
-    points.push([start[0] + (2 * dx) / 3, start[1] + (2 * dy) / 3, start[2] + (2 * dz) / 3]);
+    points.push([
+      start[0] + (2 * dx) / 3,
+      start[1] + (2 * dy) / 3,
+      start[2] + (2 * dz) / 3,
+    ]);
     points.push([...end]);
   }
 
@@ -811,7 +857,10 @@ export class Elbow extends VMobject {
       strokeWidth: this.strokeWidth,
       position: this._cornerPosition,
     });
-    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(clone, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return clone;
   }
 }
@@ -933,7 +982,11 @@ export class TangentLine extends VMobject {
       const frac = t * (numPoints - 1) - index;
 
       if (index >= numPoints - 1) {
-        return [points[numPoints - 1][0], points[numPoints - 1][1], points[numPoints - 1][2]];
+        return [
+          points[numPoints - 1][0],
+          points[numPoints - 1][1],
+          points[numPoints - 1][2],
+        ];
       }
 
       const p1 = points[index];
@@ -1010,7 +1063,11 @@ export class TangentLine extends VMobject {
     this.setPoints3D([
       [...start],
       [start[0] + dx / 3, start[1] + dy / 3, start[2] + dz / 3],
-      [start[0] + (2 * dx) / 3, start[1] + (2 * dy) / 3, start[2] + (2 * dz) / 3],
+      [
+        start[0] + (2 * dx) / 3,
+        start[1] + (2 * dy) / 3,
+        start[2] + (2 * dz) / 3,
+      ],
       [...end],
     ]);
   }
@@ -1102,7 +1159,10 @@ export class TangentLine extends VMobject {
       strokeWidth: this.strokeWidth,
       dT: this._dT,
     });
-    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(clone, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return clone;
   }
 }

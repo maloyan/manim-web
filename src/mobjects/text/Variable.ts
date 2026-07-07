@@ -5,11 +5,11 @@
  * something like "x = 5" that can be animated.
  */
 
-import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { DecimalNumber } from './DecimalNumber';
-import { ValueTracker } from '../value-tracker';
-import { MathTexImage } from './MathTexImage';
+import * as THREE from "three";
+import { Mobject, Vector3Tuple } from "../../core/Mobject";
+import { DecimalNumber } from "./DecimalNumber";
+import { ValueTracker } from "../value-tracker";
+import { MathTexImage } from "./MathTexImage";
 
 /**
  * Options for creating a Variable mobject
@@ -65,7 +65,9 @@ export interface VariableOptions {
  * ```
  */
 export class Variable extends Mobject {
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+  override normalizeTransform(
+    worldMatrix: THREE.Matrix4 = this._ownMatrix(),
+  ): this {
     return this._flattenAsContainer(worldMatrix);
   }
   protected _label: string;
@@ -100,8 +102,8 @@ export class Variable extends Mobject {
       numDecimalPlaces = 2,
       showEllipsis = false,
       includeSign = false,
-      labelColor = '#ffffff',
-      valueColor = '#ffffff',
+      labelColor = "#ffffff",
+      valueColor = "#ffffff",
       fontSize = 48,
       labelBuff = 0.1,
       valueBuff = 0.1,
@@ -130,7 +132,7 @@ export class Variable extends Mobject {
 
     // Create equals sign
     this._equalsMobject = new MathTexImage({
-      latex: '=',
+      latex: "=",
       color: labelColor,
       fontSize: fontSize,
     });
@@ -143,7 +145,7 @@ export class Variable extends Mobject {
       includeSign: includeSign,
       color: valueColor,
       fontSize: fontSize,
-      edgeToFix: 'left', // Keep value aligned when digits change
+      edgeToFix: "left", // Keep value aligned when digits change
     });
 
     // Add submobjects
@@ -168,8 +170,9 @@ export class Variable extends Mobject {
     const numberWidth = this._numberMobject.getWidth();
 
     // Calculate total width
-    const totalWidth =
-      labelDims[0] + this._labelBuff + equalsDims[0] + this._valueBuff + numberWidth;
+    const totalWidth = labelDims[0] + this._labelBuff + equalsDims[0] +
+      this._valueBuff +
+      numberWidth;
 
     // Position from left to right, centered at origin
     let currentX = -totalWidth / 2;

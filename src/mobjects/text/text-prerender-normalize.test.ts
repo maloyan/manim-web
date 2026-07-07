@@ -9,17 +9,17 @@
  * dimensions survives the later canvas render automatically — the render rebuilds
  * the plane geometry but never touches the Mobject transform.
  */
-import * as THREE from 'three';
-import { describe, it, expect, vi } from 'vitest';
-import { Text } from './Text';
+import * as THREE from "three";
+import { describe, expect, it, vi } from "vitest";
+import { Text } from "./Text";
 
 function createMockCtx(): CanvasRenderingContext2D {
   return {
-    font: '',
-    textBaseline: 'top',
-    textAlign: 'center',
-    fillStyle: '',
-    strokeStyle: '',
+    font: "",
+    textBaseline: "top",
+    textAlign: "center",
+    fillStyle: "",
+    strokeStyle: "",
     globalAlpha: 1,
     lineWidth: 1,
     measureText: vi.fn((_text: string) => ({
@@ -37,14 +37,16 @@ function createMockCtx(): CanvasRenderingContext2D {
   } as unknown as CanvasRenderingContext2D;
 }
 
-describe('Text pre-render scale survives via absolutized scaleVector', () => {
-  it('scale before canvas dims (size unmeasured) is preserved once the canvas renders', () => {
+describe("Text pre-render scale survives via absolutized scaleVector", () => {
+  it("scale before canvas dims (size unmeasured) is preserved once the canvas renders", () => {
     const ctxSpy = vi
-      .spyOn(HTMLCanvasElement.prototype, 'getContext')
-      .mockImplementation((contextId: string) => (contextId === '2d' ? createMockCtx() : null));
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockImplementation((
+        contextId: string,
+      ) => (contextId === "2d" ? createMockCtx() : null));
 
     try {
-      const t = new Text({ text: 'Hello' });
+      const t = new Text({ text: "Hello" });
 
       // Simulate the headless / not-yet-measured state: no world dims yet.
       const tt = t as unknown as {
@@ -89,13 +91,15 @@ describe('Text pre-render scale survives via absolutized scaleVector', () => {
     }
   });
 
-  it('applyVisualSize sets the explicit base geometry size (mesh.scale stays 1)', () => {
+  it("applyVisualSize sets the explicit base geometry size (mesh.scale stays 1)", () => {
     const ctxSpy = vi
-      .spyOn(HTMLCanvasElement.prototype, 'getContext')
-      .mockImplementation((contextId: string) => (contextId === '2d' ? createMockCtx() : null));
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockImplementation((
+        contextId: string,
+      ) => (contextId === "2d" ? createMockCtx() : null));
 
     try {
-      const t = new Text({ text: 'World' });
+      const t = new Text({ text: "World" });
       t.getThreeObject(); // create the mesh first (as in the live mid-morph flow)
 
       // MIGRATION (absolutize): applyVisualSize sets the base plane geometry to the
@@ -111,13 +115,15 @@ describe('Text pre-render scale survives via absolutized scaleVector', () => {
     }
   });
 
-  it('a uniform scale survives normalize with world bounds preserved', () => {
+  it("a uniform scale survives normalize with world bounds preserved", () => {
     const ctxSpy = vi
-      .spyOn(HTMLCanvasElement.prototype, 'getContext')
-      .mockImplementation((contextId: string) => (contextId === '2d' ? createMockCtx() : null));
+      .spyOn(HTMLCanvasElement.prototype, "getContext")
+      .mockImplementation((
+        contextId: string,
+      ) => (contextId === "2d" ? createMockCtx() : null));
 
     try {
-      const t = new Text({ text: 'Same' });
+      const t = new Text({ text: "Same" });
       const baseline = t.getBounds();
       const w0 = baseline.max.x - baseline.min.x;
 

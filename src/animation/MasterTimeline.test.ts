@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import * as THREE from 'three';
-import { Mobject } from '../core/Mobject';
-import { VMobject } from '../core/VMobject';
-import { Animation, AnimationOptions } from './Animation';
-import { MasterTimeline } from './MasterTimeline';
-import { linear } from '../rate-functions';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as THREE from "three";
+import { Mobject } from "../core/Mobject";
+import { VMobject } from "../core/VMobject";
+import { Animation, AnimationOptions } from "./Animation";
+import { MasterTimeline } from "./MasterTimeline";
+import { linear } from "../rate-functions";
 
 // =============================================================================
 // Test helpers
@@ -46,7 +46,7 @@ class TestAnimation extends Animation {
 // Tests
 // =============================================================================
 
-describe('MasterTimeline', () => {
+describe("MasterTimeline", () => {
   let tl: MasterTimeline;
 
   beforeEach(() => {
@@ -56,8 +56,8 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // addSegment
   // ---------------------------------------------------------------------------
-  describe('addSegment', () => {
-    it('creates a segment with correct timing from a single animation', () => {
+  describe("addSegment", () => {
+    it("creates a segment with correct timing from a single animation", () => {
       const mob = new TestMobject();
       const anim = new TestAnimation(mob, { duration: 2 });
       const seg = tl.addSegment([anim]);
@@ -69,7 +69,7 @@ describe('MasterTimeline', () => {
       expect(seg.isWait).toBe(false);
     });
 
-    it('uses the max duration of parallel animations', () => {
+    it("uses the max duration of parallel animations", () => {
       const mob1 = new TestMobject();
       const mob2 = new TestMobject();
       const anim1 = new TestAnimation(mob1, { duration: 1 });
@@ -79,7 +79,7 @@ describe('MasterTimeline', () => {
       expect(seg.endTime).toBe(3);
     });
 
-    it('appends segments sequentially', () => {
+    it("appends segments sequentially", () => {
       const mob1 = new TestMobject();
       const mob2 = new TestMobject();
       const anim1 = new TestAnimation(mob1, { duration: 2 });
@@ -94,7 +94,7 @@ describe('MasterTimeline', () => {
       expect(seg2.endTime).toBe(3);
     });
 
-    it('tracks mobject first-segment for each unique mobject', () => {
+    it("tracks mobject first-segment for each unique mobject", () => {
       const mob = new TestMobject();
       const anim1 = new TestAnimation(mob, { duration: 1 });
       const anim2 = new TestAnimation(mob, { duration: 1 });
@@ -108,7 +108,7 @@ describe('MasterTimeline', () => {
       expect(mob.opacity).toBe(1);
     });
 
-    it('registers animations on the underlying timeline', () => {
+    it("registers animations on the underlying timeline", () => {
       const mob = new TestMobject();
       const anim = new TestAnimation(mob, { duration: 1 });
       tl.addSegment([anim]);
@@ -121,8 +121,8 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // slides (beginSlide / finalizeSlides / getSlides)
   // ---------------------------------------------------------------------------
-  describe('slides', () => {
-    it('auto-boundary: one slide per segment when no beginSlide() was called', () => {
+  describe("slides", () => {
+    it("auto-boundary: one slide per segment when no beginSlide() was called", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
@@ -139,7 +139,7 @@ describe('MasterTimeline', () => {
       });
     });
 
-    it('beginSlide before any segment makes slide 0 use those opts', () => {
+    it("beginSlide before any segment makes slide 0 use those opts", () => {
       const mob = new TestMobject();
       tl.beginSlide({ loop: true });
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
@@ -151,7 +151,7 @@ describe('MasterTimeline', () => {
       expect(slides[0].autoNext).toBe(false);
     });
 
-    it('beginSlide mid-recording groups subsequent segments into one slide', () => {
+    it("beginSlide mid-recording groups subsequent segments into one slide", () => {
       const mob = new TestMobject();
       // slide 0: 1 segment
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
@@ -192,10 +192,10 @@ describe('MasterTimeline', () => {
       });
     });
 
-    it('back-to-back beginSlide calls without segments are skipped', () => {
+    it("back-to-back beginSlide calls without segments are skipped", () => {
       // Silence the expected `MasterTimeline.beginSlide: consecutive
       // nextSlide() calls ...` warn — this test exercises the path.
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
       try {
         const mob = new TestMobject();
         tl.beginSlide({ loop: true });
@@ -214,14 +214,14 @@ describe('MasterTimeline', () => {
       }
     });
 
-    it('finalizeSlides with no segments leaves slides empty', () => {
+    it("finalizeSlides with no segments leaves slides empty", () => {
       tl.beginSlide({ loop: true });
       tl.finalizeSlides();
       expect(tl.getSlides()).toHaveLength(0);
       expect(tl.slideCount).toBe(0);
     });
 
-    it('throws if a multi-play slide is marked loop with zero total duration', () => {
+    it("throws if a multi-play slide is marked loop with zero total duration", () => {
       // Synthetic: a beginSlide(loop:true) that wraps a single zero-duration
       // wait would be a tight-loop trap.
       tl.beginSlide({ loop: true });
@@ -229,7 +229,7 @@ describe('MasterTimeline', () => {
       expect(() => tl.finalizeSlides()).toThrow(/zero-duration/);
     });
 
-    it('finalizeSlides is idempotent: calling twice produces the same slide list', () => {
+    it("finalizeSlides is idempotent: calling twice produces the same slide list", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.beginSlide({ loop: true });
@@ -241,13 +241,13 @@ describe('MasterTimeline', () => {
       expect(second).toEqual(first);
     });
 
-    it('finalizeSlides on a completely empty timeline produces no slides', () => {
+    it("finalizeSlides on a completely empty timeline produces no slides", () => {
       tl.finalizeSlides();
       expect(tl.slideCount).toBe(0);
       expect(tl.getCurrentSlide()).toBeNull();
     });
 
-    it('getSlideAtTime returns null before the first slide', () => {
+    it("getSlideAtTime returns null before the first slide", () => {
       const mob = new TestMobject();
       tl.beginSlide();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
@@ -257,9 +257,9 @@ describe('MasterTimeline', () => {
       expect(tl.getSlideAtTime(-1)).toBeNull();
     });
 
-    it('warns on consecutive beginSlide calls that drop non-default opts', () => {
+    it("warns on consecutive beginSlide calls that drop non-default opts", () => {
       const mob = new TestMobject();
-      const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
       tl.beginSlide({ loop: true });
       tl.beginSlide(); // drops { loop: true } silently — should warn
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
@@ -268,7 +268,7 @@ describe('MasterTimeline', () => {
       spy.mockRestore();
     });
 
-    it('normalises autoNext to false when loop is true', () => {
+    it("normalises autoNext to false when loop is true", () => {
       const mob = new TestMobject();
       tl.beginSlide({ loop: true, autoNext: true });
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
@@ -278,7 +278,7 @@ describe('MasterTimeline', () => {
       expect(slide.autoNext).toBe(false);
     });
 
-    it('getCurrentSlide returns slide containing the current time', () => {
+    it("getCurrentSlide returns slide containing the current time", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.beginSlide({ loop: true });
@@ -298,8 +298,8 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // addWaitSegment
   // ---------------------------------------------------------------------------
-  describe('addWaitSegment', () => {
-    it('creates a wait segment with empty animations', () => {
+  describe("addWaitSegment", () => {
+    it("creates a wait segment with empty animations", () => {
       const seg = tl.addWaitSegment(1.5);
 
       expect(seg.index).toBe(0);
@@ -309,12 +309,12 @@ describe('MasterTimeline', () => {
       expect(seg.isWait).toBe(true);
     });
 
-    it('advances timeline duration', () => {
+    it("advances timeline duration", () => {
       tl.addWaitSegment(2);
       expect(tl.getDuration()).toBe(2);
     });
 
-    it('chains correctly after an animation segment', () => {
+    it("chains correctly after an animation segment", () => {
       const mob = new TestMobject();
       const anim = new TestAnimation(mob, { duration: 1 });
       tl.addSegment([anim]);
@@ -329,13 +329,13 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // getSegments / segmentCount
   // ---------------------------------------------------------------------------
-  describe('getSegments / segmentCount', () => {
-    it('returns empty array when no segments', () => {
+  describe("getSegments / segmentCount", () => {
+    it("returns empty array when no segments", () => {
       expect(tl.getSegments()).toEqual([]);
       expect(tl.segmentCount).toBe(0);
     });
 
-    it('returns all segments in order', () => {
+    it("returns all segments in order", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.addWaitSegment(0.5);
@@ -353,12 +353,12 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // getSegmentAtTime
   // ---------------------------------------------------------------------------
-  describe('getSegmentAtTime', () => {
-    it('returns null when no segments exist', () => {
+  describe("getSegmentAtTime", () => {
+    it("returns null when no segments exist", () => {
       expect(tl.getSegmentAtTime(0)).toBeNull();
     });
 
-    it('returns the first segment for time 0', () => {
+    it("returns the first segment for time 0", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.addWaitSegment(1);
@@ -368,7 +368,7 @@ describe('MasterTimeline', () => {
       expect(seg!.index).toBe(0);
     });
 
-    it('returns the correct segment for mid-timeline time', () => {
+    it("returns the correct segment for mid-timeline time", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]); // 0-1
       tl.addWaitSegment(1); // 1-2
@@ -381,7 +381,7 @@ describe('MasterTimeline', () => {
       expect(tl.getSegmentAtTime(2.5)!.index).toBe(2);
     });
 
-    it('returns the last segment for time past duration', () => {
+    it("returns the last segment for time past duration", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
 
@@ -389,7 +389,7 @@ describe('MasterTimeline', () => {
       expect(seg!.index).toBe(0);
     });
 
-    it('returns the first segment when time is before all segments', () => {
+    it("returns the first segment when time is before all segments", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
 
@@ -402,8 +402,8 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // getCurrentSegment
   // ---------------------------------------------------------------------------
-  describe('getCurrentSegment', () => {
-    it('returns the segment matching the current playback time', () => {
+  describe("getCurrentSegment", () => {
+    it("returns the segment matching the current playback time", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
@@ -419,8 +419,8 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // play / pause / update
   // ---------------------------------------------------------------------------
-  describe('play / pause / update', () => {
-    it('does not advance time when paused', () => {
+  describe("play / pause / update", () => {
+    it("does not advance time when paused", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 2 })]);
 
@@ -428,7 +428,7 @@ describe('MasterTimeline', () => {
       expect(tl.getCurrentTime()).toBe(0);
     });
 
-    it('advances time when playing', () => {
+    it("advances time when playing", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 2 })]);
 
@@ -437,7 +437,7 @@ describe('MasterTimeline', () => {
       expect(tl.getCurrentTime()).toBeCloseTo(0.5);
     });
 
-    it('clamps time at duration and stops playing', () => {
+    it("clamps time at duration and stops playing", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
 
@@ -448,7 +448,7 @@ describe('MasterTimeline', () => {
       expect(tl.isFinished()).toBe(true);
     });
 
-    it('can be paused and resumed', () => {
+    it("can be paused and resumed", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 2 })]);
 
@@ -467,8 +467,8 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // seek (MasterTimeline override)
   // ---------------------------------------------------------------------------
-  describe('seek', () => {
-    it('updates currentTime', () => {
+  describe("seek", () => {
+    it("updates currentTime", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 2 })]);
 
@@ -476,7 +476,7 @@ describe('MasterTimeline', () => {
       expect(tl.getCurrentTime()).toBe(1);
     });
 
-    it('resets all segment animations before re-applying', () => {
+    it("resets all segment animations before re-applying", () => {
       const mob1 = new TestMobject();
       const mob2 = new TestMobject();
       const anim1 = new TestAnimation(mob1, { duration: 1 });
@@ -500,7 +500,7 @@ describe('MasterTimeline', () => {
       expect(anim2.resetCallCount).toBeGreaterThanOrEqual(1);
     });
 
-    it('clears _startedAnimations so updates re-begin animations', () => {
+    it("clears _startedAnimations so updates re-begin animations", () => {
       const mob = new TestMobject();
       const anim = new TestAnimation(mob, { duration: 1 });
       tl.addSegment([anim]);
@@ -517,7 +517,7 @@ describe('MasterTimeline', () => {
       expect(anim.isFinished()).toBe(false);
     });
 
-    it('hides mobjects whose introducing segment has not started yet', () => {
+    it("hides mobjects whose introducing segment has not started yet", () => {
       const mob1 = new TestMobject();
       const mob2 = new TestMobject();
       const anim1 = new TestAnimation(mob1, { duration: 1 });
@@ -534,7 +534,7 @@ describe('MasterTimeline', () => {
       expect(mob1.opacity).toBeGreaterThan(0);
     });
 
-    it('does not hide mobjects whose segment has started', () => {
+    it("does not hide mobjects whose segment has started", () => {
       const mob1 = new TestMobject();
       const mob2 = new TestMobject();
       const anim1 = new TestAnimation(mob1, { duration: 1 });
@@ -549,7 +549,7 @@ describe('MasterTimeline', () => {
       expect(mob2.opacity).toBeGreaterThan(0);
     });
 
-    it('seek returns this for chaining', () => {
+    it("seek returns this for chaining", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       const result = tl.seek(0.5);
@@ -560,8 +560,8 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // reset (MasterTimeline override)
   // ---------------------------------------------------------------------------
-  describe('reset', () => {
-    it('seeks to time 0 and pauses', () => {
+  describe("reset", () => {
+    it("seeks to time 0 and pauses", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
 
@@ -574,12 +574,12 @@ describe('MasterTimeline', () => {
       expect(tl.isPlaying()).toBe(false);
     });
 
-    it('returns this for chaining', () => {
+    it("returns this for chaining", () => {
       const result = tl.reset();
       expect(result).toBe(tl);
     });
 
-    it('hides mobjects in future segments after reset', () => {
+    it("hides mobjects in future segments after reset", () => {
       const mob1 = new TestMobject();
       const mob2 = new TestMobject();
       const anim1 = new TestAnimation(mob1, { duration: 1 });
@@ -601,12 +601,12 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // nextSegment
   // ---------------------------------------------------------------------------
-  describe('nextSegment', () => {
-    it('returns null when no segments exist', () => {
+  describe("nextSegment", () => {
+    it("returns null when no segments exist", () => {
       expect(tl.nextSegment()).toBeNull();
     });
 
-    it('seeks to the next segment and returns it', () => {
+    it("seeks to the next segment and returns it", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
@@ -619,7 +619,7 @@ describe('MasterTimeline', () => {
       expect(tl.getCurrentTime()).toBe(1);
     });
 
-    it('returns null when already at the last segment', () => {
+    it("returns null when already at the last segment", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
@@ -629,7 +629,7 @@ describe('MasterTimeline', () => {
       expect(next).toBeNull();
     });
 
-    it('advances through all segments sequentially', () => {
+    it("advances through all segments sequentially", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
@@ -645,12 +645,12 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // prevSegment
   // ---------------------------------------------------------------------------
-  describe('prevSegment', () => {
-    it('returns null when no segments exist', () => {
+  describe("prevSegment", () => {
+    it("returns null when no segments exist", () => {
       expect(tl.prevSegment()).toBeNull();
     });
 
-    it('seeks to current segment start when more than 0.5s in', () => {
+    it("seeks to current segment start when more than 0.5s in", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 2 })]);
       tl.addSegment([new TestAnimation(mob, { duration: 2 })]);
@@ -662,7 +662,7 @@ describe('MasterTimeline', () => {
       expect(tl.getCurrentTime()).toBe(2); // seeked to segment 1 start
     });
 
-    it('seeks to previous segment when less than 0.5s into current', () => {
+    it("seeks to previous segment when less than 0.5s into current", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 2 })]);
       tl.addSegment([new TestAnimation(mob, { duration: 2 })]);
@@ -674,7 +674,7 @@ describe('MasterTimeline', () => {
       expect(tl.getCurrentTime()).toBe(0); // seeked to segment 0 start
     });
 
-    it('seeks to time 0 when at the first segment with less than 0.5s elapsed', () => {
+    it("seeks to time 0 when at the first segment with less than 0.5s elapsed", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 2 })]);
 
@@ -685,7 +685,7 @@ describe('MasterTimeline', () => {
       expect(tl.getCurrentTime()).toBe(0); // seeked to beginning
     });
 
-    it('seeks to current segment start at exactly 0.5s boundary', () => {
+    it("seeks to current segment start at exactly 0.5s boundary", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 2 })]);
       tl.addSegment([new TestAnimation(mob, { duration: 2 })]);
@@ -697,7 +697,7 @@ describe('MasterTimeline', () => {
       expect(prev!.index).toBe(0);
     });
 
-    it('navigates back through multiple segments', () => {
+    it("navigates back through multiple segments", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
@@ -716,13 +716,13 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // getCurrentTime / getDuration / isFinished
   // ---------------------------------------------------------------------------
-  describe('getCurrentTime / getDuration / isFinished', () => {
-    it('returns 0 duration for empty timeline', () => {
+  describe("getCurrentTime / getDuration / isFinished", () => {
+    it("returns 0 duration for empty timeline", () => {
       expect(tl.getDuration()).toBe(0);
       expect(tl.getCurrentTime()).toBe(0);
     });
 
-    it('returns correct duration after adding segments', () => {
+    it("returns correct duration after adding segments", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.addWaitSegment(0.5);
@@ -731,13 +731,13 @@ describe('MasterTimeline', () => {
       expect(tl.getDuration()).toBe(3.5); // 1 + 0.5 + 2
     });
 
-    it('isFinished returns false initially', () => {
+    it("isFinished returns false initially", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       expect(tl.isFinished()).toBe(false);
     });
 
-    it('isFinished returns true after playing to the end', () => {
+    it("isFinished returns true after playing to the end", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
 
@@ -746,7 +746,7 @@ describe('MasterTimeline', () => {
       expect(tl.isFinished()).toBe(true);
     });
 
-    it('isFinished returns true for empty timeline', () => {
+    it("isFinished returns true for empty timeline", () => {
       // duration is 0, currentTime is 0, so 0 >= 0 => true
       expect(tl.isFinished()).toBe(true);
     });
@@ -755,8 +755,8 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // Segment boundary tracking across operations
   // ---------------------------------------------------------------------------
-  describe('segment boundary tracking', () => {
-    it('maintains consistent indices across mixed segment types', () => {
+  describe("segment boundary tracking", () => {
+    it("maintains consistent indices across mixed segment types", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]); // 0
       tl.addWaitSegment(0.5); // 1
@@ -770,7 +770,7 @@ describe('MasterTimeline', () => {
       expect(segs[3].index).toBe(3);
     });
 
-    it('segment times form a contiguous chain', () => {
+    it("segment times form a contiguous chain", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.addWaitSegment(0.5);
@@ -786,8 +786,8 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // _mobjectFirstSegment visibility logic
   // ---------------------------------------------------------------------------
-  describe('mobject first-segment visibility logic', () => {
-    it('hides a mobject introduced in segment 2 when seeking to segment 0', () => {
+  describe("mobject first-segment visibility logic", () => {
+    it("hides a mobject introduced in segment 2 when seeking to segment 0", () => {
       const mob1 = new TestMobject();
       const mob2 = new TestMobject();
       const mob3 = new TestMobject();
@@ -801,7 +801,7 @@ describe('MasterTimeline', () => {
       expect(mob3.opacity).toBe(0);
     });
 
-    it('shows all mobjects when seeking past all segments', () => {
+    it("shows all mobjects when seeking past all segments", () => {
       const mob1 = new TestMobject();
       const mob2 = new TestMobject();
 
@@ -813,7 +813,7 @@ describe('MasterTimeline', () => {
       expect(mob2.opacity).toBeGreaterThan(0);
     });
 
-    it('does not re-register a mobject that appears in multiple segments', () => {
+    it("does not re-register a mobject that appears in multiple segments", () => {
       const mob = new TestMobject();
 
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]); // seg 0
@@ -826,7 +826,7 @@ describe('MasterTimeline', () => {
       expect(mob.opacity).toBeGreaterThan(0);
     });
 
-    it('handles multiple mobjects in the same segment', () => {
+    it("handles multiple mobjects in the same segment", () => {
       const mob1 = new TestMobject();
       const mob2 = new TestMobject();
 
@@ -847,8 +847,8 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // WaitAnimation (implicitly tested through addWaitSegment)
   // ---------------------------------------------------------------------------
-  describe('WaitAnimation behavior', () => {
-    it('advances timeline time without affecting any mobject', () => {
+  describe("WaitAnimation behavior", () => {
+    it("advances timeline time without affecting any mobject", () => {
       const mob = new TestMobject();
       mob.opacity = 1;
 
@@ -860,7 +860,7 @@ describe('MasterTimeline', () => {
       expect(tl.getCurrentTime()).toBe(1);
     });
 
-    it('WaitAnimation finishes after its duration', () => {
+    it("WaitAnimation finishes after its duration", () => {
       tl.addWaitSegment(1);
       tl.play();
       tl.update(1.5);
@@ -872,8 +872,8 @@ describe('MasterTimeline', () => {
   // ---------------------------------------------------------------------------
   // Integration: full playback and seek workflow
   // ---------------------------------------------------------------------------
-  describe('integration: full workflow', () => {
-    it('plays through segments, seeks back, and plays again', () => {
+  describe("integration: full workflow", () => {
+    it("plays through segments, seeks back, and plays again", () => {
       const mob1 = new TestMobject();
       const mob2 = new TestMobject();
       const anim1 = new TestAnimation(mob1, { duration: 1 });
@@ -903,7 +903,7 @@ describe('MasterTimeline', () => {
       expect(tl.getCurrentTime()).toBeCloseTo(2);
     });
 
-    it('restores opacity of mobjects when their segment starts during playback (GH-106)', () => {
+    it("restores opacity of mobjects when their segment starts during playback (GH-106)", () => {
       // Reproduces the bug from PR #106:
       // After seek(0), mobjects in later segments get opacity=0.
       // During update() playback, their opacity is never restored
@@ -942,7 +942,7 @@ describe('MasterTimeline', () => {
       expect(mob3.opacity).toBeGreaterThan(0);
     });
 
-    it('nextSegment and prevSegment navigate correctly', () => {
+    it("nextSegment and prevSegment navigate correctly", () => {
       const mob = new TestMobject();
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
       tl.addSegment([new TestAnimation(mob, { duration: 1 })]);
@@ -972,7 +972,7 @@ describe('MasterTimeline', () => {
 // Animation: _captureMinimalState and reset() with VMobject
 // =============================================================================
 
-describe('Animation _captureMinimalState and reset', () => {
+describe("Animation _captureMinimalState and reset", () => {
   /** Mobject whose copy() throws, forcing the catch+warn fallback. */
   class NoCopyMobject extends Mobject {
     protected _createThreeObject(): THREE.Object3D {
@@ -980,7 +980,7 @@ describe('Animation _captureMinimalState and reset', () => {
     }
     protected _syncToThree(): void {}
     override copy(): Mobject {
-      throw new Error('copy not supported');
+      throw new Error("copy not supported");
     }
   }
 
@@ -989,7 +989,7 @@ describe('Animation _captureMinimalState and reset', () => {
     interpolate(alpha: number): void {
       // Mutate mobject visually to simulate an animation effect
       this.mobject.opacity = alpha;
-      this.mobject.color = '#ff0000';
+      this.mobject.color = "#ff0000";
     }
   }
 
@@ -999,14 +999,14 @@ describe('Animation _captureMinimalState and reset', () => {
   function silenceCopyWarn(): void {
     let warnSpy: ReturnType<typeof vi.spyOn>;
     beforeEach(() => {
-      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     });
     afterEach(() => {
       warnSpy.mockRestore();
     });
   }
 
-  it('reset() restores VMobject points when saved state is a VMobject copy', () => {
+  it("reset() restores VMobject points when saved state is a VMobject copy", () => {
     const mob = new VMobject();
     // Set some points
     mob.setPoints([
@@ -1041,15 +1041,18 @@ describe('Animation _captureMinimalState and reset', () => {
     ]);
   });
 
-  describe('with NoCopyMobject (deliberately throws from copy)', () => {
+  describe("with NoCopyMobject (deliberately throws from copy)", () => {
     silenceCopyWarn();
 
-    it('falls back to _captureMinimalState when copy() throws', () => {
+    it("falls back to _captureMinimalState when copy() throws", () => {
       const mob = new NoCopyMobject();
       mob.opacity = 0.8;
-      mob.color = '#00ff00';
+      mob.color = "#00ff00";
 
-      const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+      const anim = new StateTestAnimation(mob, {
+        duration: 1,
+        rateFunc: linear,
+      });
       // begin() should not throw even though copy() does
       expect(() => anim.begin()).not.toThrow();
 
@@ -1057,35 +1060,41 @@ describe('Animation _captureMinimalState and reset', () => {
       const snapshot = (anim as any)._preAnimationState;
       expect(snapshot).not.toBeNull();
       expect(snapshot.opacity).toBe(0.8);
-      expect(snapshot.color).toBe('#00ff00');
+      expect(snapshot.color).toBe("#00ff00");
     });
 
-    it('reset() restores mobject from minimal snapshot', () => {
+    it("reset() restores mobject from minimal snapshot", () => {
       const mob = new NoCopyMobject();
       mob.opacity = 1;
-      mob.color = '#ffffff';
+      mob.color = "#ffffff";
       mob.strokeWidth = 2;
       mob.fillOpacity = 0.5;
 
-      const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+      const anim = new StateTestAnimation(mob, {
+        duration: 1,
+        rateFunc: linear,
+      });
       anim.begin();
 
       // Simulate the animation mutating the mobject
       anim.interpolate(0.5);
       expect(mob.opacity).toBe(0.5);
-      expect(mob.color).toBe('#ff0000');
+      expect(mob.color).toBe("#ff0000");
 
       // Reset should restore original values
       anim.reset();
       expect(mob.opacity).toBe(1);
-      expect(mob.color).toBe('#ffffff');
+      expect(mob.color).toBe("#ffffff");
       expect(mob.strokeWidth).toBe(2);
       expect(mob.fillOpacity).toBe(0.5);
     });
 
-    it('reset() clears _startTime, _isFinished, and _hasBegun', () => {
+    it("reset() clears _startTime, _isFinished, and _hasBegun", () => {
       const mob = new NoCopyMobject();
-      const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+      const anim = new StateTestAnimation(mob, {
+        duration: 1,
+        rateFunc: linear,
+      });
 
       anim.begin();
       anim.update(0, 0);
@@ -1098,11 +1107,14 @@ describe('Animation _captureMinimalState and reset', () => {
       expect((anim as any)._hasBegun).toBe(false);
     });
 
-    it('begin() only captures snapshot on the first call', () => {
+    it("begin() only captures snapshot on the first call", () => {
       const mob = new NoCopyMobject();
       mob.opacity = 0.9;
 
-      const anim = new StateTestAnimation(mob, { duration: 1, rateFunc: linear });
+      const anim = new StateTestAnimation(mob, {
+        duration: 1,
+        rateFunc: linear,
+      });
       anim.begin();
 
       const firstSnapshot = (anim as any)._preAnimationState;

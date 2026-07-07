@@ -1,18 +1,18 @@
 import {
-  Scene,
+  AnimationGroup,
   Arrow,
   GrowArrow,
+  Rotate,
+  Scene,
   Transform,
   VMobject,
-  AnimationGroup,
-  Rotate,
-} from '../src/index.ts';
+} from "../src/index.ts";
 
-const container = document.getElementById('container')!;
+const container = document.getElementById("container")!;
 const scene = new Scene(container, {
   width: 800,
   height: 450,
-  backgroundColor: '#101319',
+  backgroundColor: "#101319",
 });
 
 let isAnimating = false;
@@ -21,14 +21,14 @@ function makeArrowTo(radius: number, angle: number): Arrow {
   return new Arrow({
     start: [0, 0, 0],
     end: [radius * Math.cos(angle), radius * Math.sin(angle), 0],
-    color: '#7dd3fc',
+    color: "#7dd3fc",
     strokeWidth: 3,
     tipLength: 0.28,
     tipWidth: 0.12,
   });
 }
 
-document.getElementById('playBtn')!.addEventListener('click', async () => {
+document.getElementById("playBtn")!.addEventListener("click", async () => {
   if (isAnimating) return;
   isAnimating = true;
 
@@ -66,12 +66,14 @@ document.getElementById('playBtn')!.addEventListener('click', async () => {
   );
 
   // Scale all arrows down to half (together).
-  await scene.play(...arrows.map((arrow) => arrow.animate.scale(0.5).withDuration(0.9)));
+  await scene.play(
+    ...arrows.map((arrow) => arrow.animate.scale(0.5).withDuration(0.9)),
+  );
 
   // Change tip color to yellow one after another (staggered).
   const colorAnimations = arrows.map((arrow) => {
     const tip = arrow.children[1] as VMobject;
-    return tip.animate.setColor('#ffeb3b').withDuration(0.15);
+    return tip.animate.setColor("#ffeb3b").withDuration(0.15);
   });
   await scene.play(new AnimationGroup(colorAnimations, { lagRatio: 0.33 }));
 
@@ -101,7 +103,7 @@ document.getElementById('playBtn')!.addEventListener('click', async () => {
       const target = new Arrow({
         start: [cx - half * tx, cy - half * ty, 0],
         end: [cx + half * tx, cy + half * ty, 0],
-        color: '#7dd3fc', // reset the yellow tips back to the base arrow color
+        color: "#7dd3fc", // reset the yellow tips back to the base arrow color
         strokeWidth: 3,
         tipLength: 0.28,
         tipWidth: 0.12,
@@ -113,14 +115,14 @@ document.getElementById('playBtn')!.addEventListener('click', async () => {
   isAnimating = false;
 });
 
-document.getElementById('resetBtn')!.addEventListener('click', () => {
+document.getElementById("resetBtn")!.addEventListener("click", () => {
   scene.clear();
 });
 
 // Embed mode: hide controls and autoplay.
-if (new URLSearchParams(window.location.search).has('embed')) {
+if (new URLSearchParams(window.location.search).has("embed")) {
   document
-    .querySelectorAll('.controls')
-    .forEach((el) => ((el as HTMLElement).style.display = 'none'));
-  setTimeout(() => document.getElementById('playBtn')?.click(), 300);
+    .querySelectorAll(".controls")
+    .forEach((el) => ((el as HTMLElement).style.display = "none"));
+  setTimeout(() => document.getElementById("playBtn")?.click(), 300);
 }

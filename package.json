@@ -1,6 +1,6 @@
 {
   "name": "manim-web",
-  "version": "0.3.23",
+  "version": "0.3.28",
   "description": "Manim-like mathematical animation library for the web",
   "type": "module",
   "main": "dist/index.js",
@@ -43,8 +43,8 @@
     "test:watch": "vitest",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "lint:no-disable": "bash scripts/check-no-eslint-disable.sh",
-    "format": "prettier --write src/",
+    "lint:no-disable": "deno run --allow-read --allow-run scripts/eslint-disable-warning.ts",
+    "format": "deno fmt src",
     "docs": "npm run build && node scripts/generate-example-docs.mjs && cd docs && npm run build",
     "docs:dev": "npm run build && node scripts/generate-example-docs.mjs && cd docs && npm start",
     "docs:examples": "node scripts/generate-example-docs.mjs",
@@ -52,7 +52,7 @@
     "circular": "madge --circular --extensions ts src/",
     "cpd": "jscpd src/",
     "test:integration": "npx playwright test",
-    "format:check": "prettier --check src/",
+    "format:check": "deno fmt src --check",
     "knip": "knip",
     "release": "standard-version",
     "release:minor": "standard-version --release-as minor",
@@ -62,7 +62,7 @@
   "lint-staged": {
     "*.{ts,tsx}": [
       "eslint --fix",
-      "prettier --write"
+      "deno fmt"
     ]
   },
   "dependencies": {
@@ -70,6 +70,7 @@
     "earcut": "^3.0.2",
     "gif.js": "^0.2.0",
     "katex": "^0.17.0",
+    "lucide": "^1.23.0",
     "opentype.js": "^2.0.0",
     "polygon-clipping": "^0.15.7",
     "three": "^0.184.0",
@@ -81,20 +82,19 @@
     "@playwright/test": "^1.58.2",
     "@types/earcut": "^3.0.0",
     "@types/katex": "^0.16.8",
+    "@types/node": "^26.1.0",
     "@types/react": "^19.2.13",
     "@types/three": "^0.184.0",
     "@typia/unplugin": "^12.1.1",
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.1.5",
     "eslint": "^10.0.2",
-    "eslint-config-prettier": "^10.1.8",
     "happy-dom": "^20.6.1",
     "husky": "^9.1.7",
     "jscpd": "^5.0.9",
     "knip": "^6.1.0",
     "lint-staged": "^17.0.4",
     "madge": "^8.0.0",
-    "prettier": "^3.8.1",
     "standard-version": "^9.5.0",
     "typedoc": "^0.28.16",
     "typescript": "^5.3.0",

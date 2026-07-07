@@ -1,6 +1,6 @@
-import * as THREE from 'three';
-import { Camera2D, Camera3D, CameraOptions, Camera3DOptions } from './Camera';
-import { Mobject, Vector3Tuple } from './Mobject';
+import * as THREE from "three";
+import { Camera2D, Camera3D, Camera3DOptions, CameraOptions } from "./Camera";
+import { Mobject, Vector3Tuple } from "./Mobject";
 
 /**
  * Coordinate mapping function type.
@@ -173,7 +173,8 @@ export class MovingCamera extends Camera2D {
    */
   isAnimating(): boolean {
     return (
-      this._animationProgress < 1 && (this._targetPosition !== null || this._targetZoom !== null)
+      this._animationProgress < 1 &&
+      (this._targetPosition !== null || this._targetZoom !== null)
     );
   }
 
@@ -206,9 +207,12 @@ export class MovingCamera extends Camera2D {
 
       // Interpolate position
       if (this._targetPosition !== null) {
-        const newX = this._startPosition.x + (this._targetPosition.x - this._startPosition.x) * t;
-        const newY = this._startPosition.y + (this._targetPosition.y - this._startPosition.y) * t;
-        const newZ = this._startPosition.z + (this._targetPosition.z - this._startPosition.z) * t;
+        const newX = this._startPosition.x +
+          (this._targetPosition.x - this._startPosition.x) * t;
+        const newY = this._startPosition.y +
+          (this._targetPosition.y - this._startPosition.y) * t;
+        const newZ = this._startPosition.z +
+          (this._targetPosition.z - this._startPosition.z) * t;
         this.moveTo([newX, newY, newZ]);
       }
 
@@ -349,12 +353,18 @@ export class ThreeDCamera extends Camera3D {
    * Update camera position based on spherical coordinates.
    */
   private _updatePositionFromSpherical(): void {
-    const x = this._lookAtTarget.x + this._distance * Math.sin(this._phi) * Math.cos(this._theta);
+    const x = this._lookAtTarget.x +
+      this._distance * Math.sin(this._phi) * Math.cos(this._theta);
     const y = this._lookAtTarget.y + this._distance * Math.cos(this._phi);
-    const z = this._lookAtTarget.z + this._distance * Math.sin(this._phi) * Math.sin(this._theta);
+    const z = this._lookAtTarget.z +
+      this._distance * Math.sin(this._phi) * Math.sin(this._theta);
 
     this.moveTo([x, y, z]);
-    this.setLookAt([this._lookAtTarget.x, this._lookAtTarget.y, this._lookAtTarget.z]);
+    this.setLookAt([
+      this._lookAtTarget.x,
+      this._lookAtTarget.y,
+      this._lookAtTarget.z,
+    ]);
   }
 
   /**
@@ -438,7 +448,9 @@ export class ThreeDCamera extends Camera3D {
     if (options.phi !== undefined) this._targetPhi = options.phi;
     if (options.theta !== undefined) this._targetTheta = options.theta;
     if (options.distance !== undefined) this._targetDistance = options.distance;
-    if (options.duration !== undefined) this._animationDuration = options.duration;
+    if (options.duration !== undefined) {
+      this._animationDuration = options.duration;
+    }
 
     this._animationProgress = 0;
     return this;
@@ -450,7 +462,8 @@ export class ThreeDCamera extends Camera3D {
   isAnimating(): boolean {
     return (
       this._animationProgress < 1 &&
-      (this._targetPhi !== null || this._targetTheta !== null || this._targetDistance !== null)
+      (this._targetPhi !== null || this._targetTheta !== null ||
+        this._targetDistance !== null)
     );
   }
 
@@ -462,25 +475,28 @@ export class ThreeDCamera extends Camera3D {
   update(dt: number): void {
     if (
       this._animationProgress < 1 &&
-      (this._targetPhi !== null || this._targetTheta !== null || this._targetDistance !== null)
+      (this._targetPhi !== null || this._targetTheta !== null ||
+        this._targetDistance !== null)
     ) {
       this._animationProgress += dt / this._animationDuration;
       this._animationProgress = Math.min(1, this._animationProgress);
 
       // Smooth ease-in-out
-      const t =
-        this._animationProgress < 0.5
-          ? 4 * this._animationProgress * this._animationProgress * this._animationProgress
-          : 1 - Math.pow(-2 * this._animationProgress + 2, 3) / 2;
+      const t = this._animationProgress < 0.5
+        ? 4 * this._animationProgress * this._animationProgress *
+          this._animationProgress
+        : 1 - Math.pow(-2 * this._animationProgress + 2, 3) / 2;
 
       if (this._targetPhi !== null) {
         this._phi = this._startPhi + (this._targetPhi - this._startPhi) * t;
       }
       if (this._targetTheta !== null) {
-        this._theta = this._startTheta + (this._targetTheta - this._startTheta) * t;
+        this._theta = this._startTheta +
+          (this._targetTheta - this._startTheta) * t;
       }
       if (this._targetDistance !== null) {
-        this._distance = this._startDistance + (this._targetDistance - this._startDistance) * t;
+        this._distance = this._startDistance +
+          (this._targetDistance - this._startDistance) * t;
       }
 
       this._updatePositionFromSpherical();
@@ -636,14 +652,21 @@ export class MultiCamera {
    */
   setViewportBorder(
     index: number,
-    style: { borderColor?: number | string | null; borderWidth?: number | null },
+    style: {
+      borderColor?: number | string | null;
+      borderWidth?: number | null;
+    },
   ): this {
     const entry = this._cameras[index];
     if (!entry) return this;
     if (style.borderColor === null) delete entry.viewport.borderColor;
-    else if (style.borderColor !== undefined) entry.viewport.borderColor = style.borderColor;
+    else if (style.borderColor !== undefined) {
+      entry.viewport.borderColor = style.borderColor;
+    }
     if (style.borderWidth === null) delete entry.viewport.borderWidth;
-    else if (style.borderWidth !== undefined) entry.viewport.borderWidth = style.borderWidth;
+    else if (style.borderWidth !== undefined) {
+      entry.viewport.borderWidth = style.borderWidth;
+    }
     return this;
   }
 
@@ -739,8 +762,12 @@ export class MultiCamera {
     rightCamera: Camera2D | Camera3D | MovingCamera | ThreeDCamera,
   ): this {
     this._cameras = [];
-    this.addCamera(leftCamera, { x: 0, y: 0, width: 0.5, height: 1 }, 'left');
-    this.addCamera(rightCamera, { x: 0.5, y: 0, width: 0.5, height: 1 }, 'right');
+    this.addCamera(leftCamera, { x: 0, y: 0, width: 0.5, height: 1 }, "left");
+    this.addCamera(
+      rightCamera,
+      { x: 0.5, y: 0, width: 0.5, height: 1 },
+      "right",
+    );
     return this;
   }
 
@@ -755,8 +782,12 @@ export class MultiCamera {
     bottomCamera: Camera2D | Camera3D | MovingCamera | ThreeDCamera,
   ): this {
     this._cameras = [];
-    this.addCamera(topCamera, { x: 0, y: 0.5, width: 1, height: 0.5 }, 'top');
-    this.addCamera(bottomCamera, { x: 0, y: 0, width: 1, height: 0.5 }, 'bottom');
+    this.addCamera(topCamera, { x: 0, y: 0.5, width: 1, height: 0.5 }, "top");
+    this.addCamera(
+      bottomCamera,
+      { x: 0, y: 0, width: 1, height: 0.5 },
+      "bottom",
+    );
     return this;
   }
 
@@ -771,13 +802,14 @@ export class MultiCamera {
   setupPictureInPicture(
     mainCamera: Camera2D | Camera3D | MovingCamera | ThreeDCamera,
     pipCamera: Camera2D | Camera3D | MovingCamera | ThreeDCamera,
-    pipPosition: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' = 'bottom-right',
+    pipPosition: "top-left" | "top-right" | "bottom-left" | "bottom-right" =
+      "bottom-right",
     pipSize: number = 0.25,
   ): this {
     this._cameras = [];
 
     // Main camera (full screen)
-    this.addCamera(mainCamera, { x: 0, y: 0, width: 1, height: 1 }, 'main');
+    this.addCamera(mainCamera, { x: 0, y: 0, width: 1, height: 1 }, "main");
 
     // Calculate PiP position
     const margin = 0.02;
@@ -785,19 +817,19 @@ export class MultiCamera {
     let pipY = 0;
 
     switch (pipPosition) {
-      case 'top-left':
+      case "top-left":
         pipX = margin;
         pipY = 1 - pipSize - margin;
         break;
-      case 'top-right':
+      case "top-right":
         pipX = 1 - pipSize - margin;
         pipY = 1 - pipSize - margin;
         break;
-      case 'bottom-left':
+      case "bottom-left":
         pipX = margin;
         pipY = margin;
         break;
-      case 'bottom-right':
+      case "bottom-right":
         pipX = 1 - pipSize - margin;
         pipY = margin;
         break;
@@ -805,7 +837,12 @@ export class MultiCamera {
         throw new Error(`Unexpected pipPosition: ${pipPosition}`);
     }
 
-    this.addCamera(pipCamera, { x: pipX, y: pipY, width: pipSize, height: pipSize }, 'pip');
+    this.addCamera(pipCamera, {
+      x: pipX,
+      y: pipY,
+      width: pipSize,
+      height: pipSize,
+    }, "pip");
     return this;
   }
 
@@ -823,10 +860,26 @@ export class MultiCamera {
     ],
   ): this {
     this._cameras = [];
-    this.addCamera(cameras[0], { x: 0, y: 0.5, width: 0.5, height: 0.5 }, 'top-left');
-    this.addCamera(cameras[1], { x: 0.5, y: 0.5, width: 0.5, height: 0.5 }, 'top-right');
-    this.addCamera(cameras[2], { x: 0, y: 0, width: 0.5, height: 0.5 }, 'bottom-left');
-    this.addCamera(cameras[3], { x: 0.5, y: 0, width: 0.5, height: 0.5 }, 'bottom-right');
+    this.addCamera(
+      cameras[0],
+      { x: 0, y: 0.5, width: 0.5, height: 0.5 },
+      "top-left",
+    );
+    this.addCamera(
+      cameras[1],
+      { x: 0.5, y: 0.5, width: 0.5, height: 0.5 },
+      "top-right",
+    );
+    this.addCamera(
+      cameras[2],
+      { x: 0, y: 0, width: 0.5, height: 0.5 },
+      "bottom-left",
+    );
+    this.addCamera(
+      cameras[3],
+      { x: 0.5, y: 0, width: 0.5, height: 0.5 },
+      "bottom-right",
+    );
     return this;
   }
 
@@ -896,7 +949,9 @@ export class MultiCamera {
     canvasHeight: number,
   ): void {
     const bordered = this._cameras.filter(
-      (e) => e.enabled && (e.viewport.borderWidth ?? 0) > 0 && e.viewport.borderColor != null,
+      (e) =>
+        e.enabled && (e.viewport.borderWidth ?? 0) > 0 &&
+        e.viewport.borderColor != null,
     );
     if (bordered.length === 0) return;
 
@@ -905,7 +960,14 @@ export class MultiCamera {
       // Pixel-space ortho: (0,0) bottom-left, (W,H) top-right. WebGL's
       // viewport / scissor coordinates use the same origin, so x/y/width/
       // height from the viewport map straight through.
-      this._borderCamera = new THREE.OrthographicCamera(0, canvasWidth, canvasHeight, 0, -1, 1);
+      this._borderCamera = new THREE.OrthographicCamera(
+        0,
+        canvasWidth,
+        canvasHeight,
+        0,
+        -1,
+        1,
+      );
     } else {
       this._borderCamera.left = 0;
       this._borderCamera.right = canvasWidth;
@@ -939,8 +1001,14 @@ export class MultiCamera {
       // strips) inside the viewport. This works on every WebGL driver
       // regardless of `gl.lineWidth` clamping (which silently ignores
       // values > 1 on most platforms).
-      const color = new THREE.Color(vp.borderColor as THREE.ColorRepresentation);
-      const mat = new THREE.MeshBasicMaterial({ color, depthTest: false, depthWrite: false });
+      const color = new THREE.Color(
+        vp.borderColor as THREE.ColorRepresentation,
+      );
+      const mat = new THREE.MeshBasicMaterial({
+        color,
+        depthTest: false,
+        depthWrite: false,
+      });
       const strips: Array<[number, number, number, number]> = [
         [px, py + ph - bw, pw, bw], // top
         [px, py, pw, bw], // bottom
@@ -1067,7 +1135,7 @@ export interface SplitScreenCameraOptions {
   /** Camera for the right (or bottom) side. Defaults to a new Camera2D. */
   rightCamera?: Camera2D;
   /** Split direction. Defaults to 'horizontal'. */
-  split?: 'horizontal' | 'vertical';
+  split?: "horizontal" | "vertical";
   /** Split ratio (0-1). Defaults to 0.5. */
   splitRatio?: number;
 }
@@ -1084,7 +1152,7 @@ export class SplitScreenCamera {
   private _leftCamera: Camera2D;
   private _rightCamera: Camera2D;
   private _multiCamera: MultiCamera;
-  private _splitDirection: 'horizontal' | 'vertical';
+  private _splitDirection: "horizontal" | "vertical";
   private _splitRatio: number;
 
   /**
@@ -1094,7 +1162,7 @@ export class SplitScreenCamera {
   constructor(options: SplitScreenCameraOptions = {}) {
     this._leftCamera = options.leftCamera ?? new Camera2D();
     this._rightCamera = options.rightCamera ?? new Camera2D();
-    this._splitDirection = options.split ?? 'horizontal';
+    this._splitDirection = options.split ?? "horizontal";
     this._splitRatio = SplitScreenCamera._clampRatio(options.splitRatio ?? 0.5);
     this._multiCamera = new MultiCamera();
     this._rebuildViewports();
@@ -1114,17 +1182,32 @@ export class SplitScreenCamera {
     this._multiCamera.clear();
     const r = this._splitRatio;
 
-    if (this._splitDirection === 'horizontal') {
-      this._multiCamera.addCamera(this._leftCamera, { x: 0, y: 0, width: r, height: 1 }, 'left');
+    if (this._splitDirection === "horizontal") {
+      this._multiCamera.addCamera(this._leftCamera, {
+        x: 0,
+        y: 0,
+        width: r,
+        height: 1,
+      }, "left");
       this._multiCamera.addCamera(
         this._rightCamera,
         { x: r, y: 0, width: 1 - r, height: 1 },
-        'right',
+        "right",
       );
     } else {
       // Vertical: left camera on top, right camera on bottom
-      this._multiCamera.addCamera(this._leftCamera, { x: 0, y: r, width: 1, height: 1 - r }, 'top');
-      this._multiCamera.addCamera(this._rightCamera, { x: 0, y: 0, width: 1, height: r }, 'bottom');
+      this._multiCamera.addCamera(this._leftCamera, {
+        x: 0,
+        y: r,
+        width: 1,
+        height: 1 - r,
+      }, "top");
+      this._multiCamera.addCamera(this._rightCamera, {
+        x: 0,
+        y: 0,
+        width: 1,
+        height: r,
+      }, "bottom");
     }
   }
 
@@ -1156,7 +1239,7 @@ export class SplitScreenCamera {
    * Get the current split direction.
    * @returns 'horizontal' or 'vertical'
    */
-  getSplitDirection(): 'horizontal' | 'vertical' {
+  getSplitDirection(): "horizontal" | "vertical" {
     return this._splitDirection;
   }
 
@@ -1173,7 +1256,7 @@ export class SplitScreenCamera {
    * @param direction - 'horizontal' for side-by-side, 'vertical' for stacked
    * @returns this for chaining
    */
-  setSplit(direction: 'horizontal' | 'vertical'): this {
+  setSplit(direction: "horizontal" | "vertical"): this {
     this._splitDirection = direction;
     this._rebuildViewports();
     return this;

@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Arrow Dance</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arrow Dance</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #0b0f14;
       display: flex;
@@ -36,16 +40,18 @@
       cursor: pointer;
       font-size: 14px;
     }
-    button:hover { background: #3b82f6; }
-  </style>
-</head>
-<body>
-  <div id="container"></div>
-  <div class="controls">
-    <button id="playBtn">Play Arrow Dance</button>
-    <button id="resetBtn">Reset</button>
-  </div>
+    button:hover {
+      background: #3b82f6;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div class="controls">
+      <button id="playBtn">Play Arrow Dance</button>
+      <button id="resetBtn">Reset</button>
+    </div>
 
-  <script type="module" src="./arrow-dance.ts"></script>
-</body>
+    <script type="module" src="./arrow-dance.ts"></script>
+  </body>
 </html>

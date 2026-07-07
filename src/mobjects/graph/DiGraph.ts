@@ -26,8 +26,8 @@
  * ```
  */
 
-import { VertexId, EdgeTuple, DiGraphOptions } from './graphTypes';
-import { GenericGraph } from './GenericGraph';
+import { DiGraphOptions, EdgeTuple, VertexId } from "./graphTypes";
+import { GenericGraph } from "./GenericGraph";
 
 export class DiGraph extends GenericGraph {
   constructor(options: DiGraphOptions = {}) {

@@ -1,8 +1,8 @@
-import { VMobject } from '../../core/VMobject';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { Rectangle } from './Rectangle';
-import { Line } from './Line';
-import { YELLOW, BLACK, RED, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { VMobject } from "../../core/VMobject";
+import { Mobject, Vector3Tuple } from "../../core/Mobject";
+import { Rectangle } from "./Rectangle";
+import { Line } from "./Line";
+import { BLACK, DEFAULT_STROKE_WIDTH, RED, YELLOW } from "../../constants";
 
 /**
  * Options for creating a BackgroundRectangle
@@ -36,7 +36,8 @@ export class BackgroundRectangle extends Rectangle {
   private _buff: number;
 
   constructor(mobject: Mobject, options: BackgroundRectangleOptions = {}) {
-    const { buff = 0.2, color = BLACK, fillOpacity = 0.75, strokeWidth = 0 } = options;
+    const { buff = 0.2, color = BLACK, fillOpacity = 0.75, strokeWidth = 0 } =
+      options;
 
     // Calculate initial dimensions from mobject bounding box
     const bounds = mobject.getBoundingBox();
@@ -105,7 +106,11 @@ export class BackgroundRectangle extends Rectangle {
       const sy = initH > 0.0001 ? h / initH : 1;
       this.scaleVector.set(sx, sy, 1);
       // Compensate position so scaled geometry center aligns with target center
-      this.position.set(center[0] - initC[0] * sx, center[1] - initC[1] * sy, center[2] - initC[2]);
+      this.position.set(
+        center[0] - initC[0] * sx,
+        center[1] - initC[1] * sy,
+        center[2] - initC[2],
+      );
       this._markDirty();
     });
   }
@@ -143,7 +148,10 @@ export class BackgroundRectangle extends Rectangle {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(clone, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return clone;
   }
 }
@@ -256,12 +264,20 @@ export class SurroundingRectangle extends VMobject {
 
       if (!isFirst) {
         points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-        points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
+        points.push([
+          p0[0] + (2 * dx) / 3,
+          p0[1] + (2 * dy) / 3,
+          p0[2] + (2 * dz) / 3,
+        ]);
         points.push([...p1]);
       } else {
         points.push([...p0]);
         points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-        points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
+        points.push([
+          p0[0] + (2 * dx) / 3,
+          p0[1] + (2 * dy) / 3,
+          p0[2] + (2 * dz) / 3,
+        ]);
         points.push([...p1]);
       }
     };
@@ -320,7 +336,11 @@ export class SurroundingRectangle extends VMobject {
 
       // Control points for quarter circle; the unit tangent in the
       // direction of (clockwise) travel at angle theta is (sin theta, -cos theta)
-      const p1: number[] = [p0[0] + k * r * sinStart, p0[1] - k * r * cosStart, cz];
+      const p1: number[] = [
+        p0[0] + k * r * sinStart,
+        p0[1] - k * r * cosStart,
+        cz,
+      ];
       const p2: number[] = [p3[0] - k * r * sinEnd, p3[1] + k * r * cosEnd, cz];
 
       points.push([...p1], [...p2], [...p3]);
@@ -333,7 +353,11 @@ export class SurroundingRectangle extends VMobject {
       const dz = p1[2] - p0[2];
 
       points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-      points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
+      points.push([
+        p0[0] + (2 * dx) / 3,
+        p0[1] + (2 * dy) / 3,
+        p0[2] + (2 * dz) / 3,
+      ]);
       points.push([...p1]);
     };
 
@@ -448,7 +472,10 @@ export class SurroundingRectangle extends VMobject {
       strokeWidth: this.strokeWidth,
       fillOpacity: this.fillOpacity,
     });
-    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(clone, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return clone;
   }
 }
@@ -486,7 +513,12 @@ export class Underline extends Line {
   private _stretch: number;
 
   constructor(mobject: Mobject, options: UnderlineOptions = {}) {
-    const { buff = 0.1, stretch = 0, color = YELLOW, strokeWidth = DEFAULT_STROKE_WIDTH } = options;
+    const {
+      buff = 0.1,
+      stretch = 0,
+      color = YELLOW,
+      strokeWidth = DEFAULT_STROKE_WIDTH,
+    } = options;
 
     // Calculate initial line position
     const bounds = mobject.getBoundingBox();
@@ -526,7 +558,10 @@ export class Underline extends Line {
       const sy = bottom - this._buff;
       const ex = center[0] + halfWidth;
       const z = center[2];
-      if (sx === prevSx && sy === prevSy && ex === prevEx && sy === prevEy && z === prevZ) return;
+      if (
+        sx === prevSx && sy === prevSy && ex === prevEx && sy === prevEy &&
+        z === prevZ
+      ) return;
       prevSx = sx;
       prevSy = sy;
       prevEx = ex;
@@ -586,7 +621,10 @@ export class Underline extends Line {
       color: this.color,
       strokeWidth: this.strokeWidth,
     });
-    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(clone, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return clone;
   }
 }
@@ -677,17 +715,34 @@ export class Cross extends VMobject {
         center[0] === prevCx &&
         center[1] === prevCy &&
         center[2] === prevCz
-      )
+      ) {
         return;
+      }
       prevHw = halfWidth;
       prevHh = halfHeight;
       prevCx = center[0];
       prevCy = center[1];
       prevCz = center[2];
-      this._line1.setStart([center[0] - halfWidth, center[1] + halfHeight, center[2]]);
-      this._line1.setEnd([center[0] + halfWidth, center[1] - halfHeight, center[2]]);
-      this._line2.setStart([center[0] + halfWidth, center[1] + halfHeight, center[2]]);
-      this._line2.setEnd([center[0] - halfWidth, center[1] - halfHeight, center[2]]);
+      this._line1.setStart([
+        center[0] - halfWidth,
+        center[1] + halfHeight,
+        center[2],
+      ]);
+      this._line1.setEnd([
+        center[0] + halfWidth,
+        center[1] - halfHeight,
+        center[2],
+      ]);
+      this._line2.setStart([
+        center[0] + halfWidth,
+        center[1] + halfHeight,
+        center[2],
+      ]);
+      this._line2.setEnd([
+        center[0] - halfWidth,
+        center[1] - halfHeight,
+        center[2],
+      ]);
     });
   }
 
@@ -744,7 +799,10 @@ export class Cross extends VMobject {
       color: this.color,
       scale: this._scale,
     });
-    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(clone, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     clone._line1 = clone.children[0] as Line;
     clone._line2 = clone.children[1] as Line;
     return clone;

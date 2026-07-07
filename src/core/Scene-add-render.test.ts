@@ -1,10 +1,10 @@
-import { describe, it, expect, vi } from 'vitest';
-import { Scene } from './Scene';
-import { ThreeDScene } from './ThreeDScene';
-import { Circle } from '../mobjects/geometry/Circle';
-import { Square } from '../mobjects/geometry/Rectangle';
-import { Create } from '../animation/creation/Create';
-import { FadeIn } from '../animation/fading/FadeIn';
+import { describe, expect, it, vi } from "vitest";
+import { Scene } from "./Scene";
+import { ThreeDScene } from "./ThreeDScene";
+import { Circle } from "../mobjects/geometry/Circle";
+import { Square } from "../mobjects/geometry/Rectangle";
+import { Create } from "../animation/creation/Create";
+import { FadeIn } from "../animation/fading/FadeIn";
 
 /**
  * Regression tests for issue #317:
@@ -22,10 +22,10 @@ type SceneInternals = {
   _suppressAutoRender: boolean;
 };
 
-describe('Scene.add() defers auto-render (issue #317)', () => {
-  it('add() schedules a render via microtask, does not render synchronously', async () => {
+describe("Scene.add() defers auto-render (issue #317)", () => {
+  it("add() schedules a render via microtask, does not render synchronously", async () => {
     const scene = Scene.createHeadless();
-    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, '_render');
+    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, "_render");
     // Constructor calls _render() once; reset before the test action.
     renderSpy.mockClear();
 
@@ -40,9 +40,9 @@ describe('Scene.add() defers auto-render (issue #317)', () => {
     scene.dispose();
   });
 
-  it('multiple add() calls within a tick coalesce into a single render', async () => {
+  it("multiple add() calls within a tick coalesce into a single render", async () => {
     const scene = Scene.createHeadless();
-    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, '_render');
+    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, "_render");
     renderSpy.mockClear();
 
     scene.add(new Circle());
@@ -56,10 +56,10 @@ describe('Scene.add() defers auto-render (issue #317)', () => {
     scene.dispose();
   });
 
-  it('play() after add() suppresses the pending render (no pre-animation flash)', async () => {
+  it("play() after add() suppresses the pending render (no pre-animation flash)", async () => {
     const scene = Scene.createHeadless();
     const circle = new Circle();
-    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, '_render');
+    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, "_render");
     renderSpy.mockClear();
 
     scene.add(circle);
@@ -77,7 +77,7 @@ describe('Scene.add() defers auto-render (issue #317)', () => {
     scene.dispose();
   });
 
-  it('wait() cancels the add() pending render', async () => {
+  it("wait() cancels the add() pending render", async () => {
     const scene = Scene.createHeadless();
     scene.add(new Circle());
     expect((scene as unknown as SceneInternals)._pendingRender).toBe(true);
@@ -89,9 +89,9 @@ describe('Scene.add() defers auto-render (issue #317)', () => {
     scene.dispose();
   });
 
-  it('add() with no follow-up play still renders (backward compatible)', async () => {
+  it("add() with no follow-up play still renders (backward compatible)", async () => {
     const scene = Scene.createHeadless();
-    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, '_render');
+    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, "_render");
     renderSpy.mockClear();
 
     scene.add(new Circle());
@@ -101,9 +101,9 @@ describe('Scene.add() defers auto-render (issue #317)', () => {
     scene.dispose();
   });
 
-  it('add() with autoRender=false does not schedule a render', async () => {
+  it("add() with autoRender=false does not schedule a render", async () => {
     const scene = Scene.createHeadless({ autoRender: false } as never);
-    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, '_render');
+    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, "_render");
     renderSpy.mockClear();
 
     scene.add(new Circle());
@@ -113,9 +113,9 @@ describe('Scene.add() defers auto-render (issue #317)', () => {
     scene.dispose();
   });
 
-  it('ThreeDScene.add() also defers its render (#317)', async () => {
+  it("ThreeDScene.add() also defers its render (#317)", async () => {
     const scene = ThreeDScene.createHeadless();
-    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, '_render');
+    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, "_render");
     renderSpy.mockClear();
 
     scene.add(new Circle());
@@ -126,10 +126,10 @@ describe('Scene.add() defers auto-render (issue #317)', () => {
     scene.dispose();
   });
 
-  it('addForegroundMobject() defers its render and is suppressed by play() (#317)', async () => {
+  it("addForegroundMobject() defers its render and is suppressed by play() (#317)", async () => {
     const scene = Scene.createHeadless();
     const circle = new Circle();
-    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, '_render');
+    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, "_render");
     renderSpy.mockClear();
 
     scene.addForegroundMobject(circle);
@@ -142,10 +142,10 @@ describe('Scene.add() defers auto-render (issue #317)', () => {
     scene.dispose();
   });
 
-  it('FadeIn after add() does not flash the mobject visible (#317)', async () => {
+  it("FadeIn after add() does not flash the mobject visible (#317)", async () => {
     const scene = Scene.createHeadless();
     const circle = new Circle();
-    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, '_render');
+    const renderSpy = vi.spyOn(scene as unknown as SceneInternals, "_render");
     renderSpy.mockClear();
 
     scene.add(circle);

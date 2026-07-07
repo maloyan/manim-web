@@ -1,13 +1,13 @@
-import React, { useRef, useState, useEffect } from 'react';
-import BrowserOnly from '@docusaurus/BrowserOnly';
+import React, { useEffect, useRef, useState } from "react";
+import BrowserOnly from "@docusaurus/BrowserOnly";
 
 const ASPECT_RATIO = 800 / 450;
 
 const placeholderStyle: React.CSSProperties = {
-  width: '100%',
+  width: "100%",
   maxWidth: 800,
   aspectRatio: `${ASPECT_RATIO}`,
-  background: '#000000',
+  background: "#000000",
   borderRadius: 12,
 };
 
@@ -20,9 +20,12 @@ function PlayerExampleInner() {
     const el = containerRef.current;
     if (!el) return;
 
-    const observer = new IntersectionObserver(([entry]) => setIsVisible(entry.isIntersecting), {
-      rootMargin: '200px',
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      {
+        rootMargin: "200px",
+      },
+    );
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
@@ -52,7 +55,7 @@ function PlayerExampleInner() {
         RED,
         GREEN,
         YELLOW,
-      } = await import('manim-web');
+      } = await import("manim-web");
 
       if (disposed) return;
 
@@ -71,11 +74,11 @@ function PlayerExampleInner() {
       }
 
       // Handle WebGL context loss
-      const canvas = el.querySelector('canvas');
+      const canvas = el.querySelector("canvas");
       const onContextLost = () => {
         if (!disposed) setIsVisible(false);
       };
-      canvas?.addEventListener('webglcontextlost', onContextLost);
+      canvas?.addEventListener("webglcontextlost", onContextLost);
 
       player.sequence(async (scene) => {
         const circle = new Circle({ radius: 1.5, color: BLUE });
@@ -112,7 +115,7 @@ function PlayerExampleInner() {
           /* ignore */
         }
       }
-      el.innerHTML = '';
+      el.innerHTML = "";
     };
   }, [isVisible]);
 
@@ -120,12 +123,12 @@ function PlayerExampleInner() {
     <div
       ref={containerRef}
       style={{
-        width: '100%',
+        width: "100%",
         maxWidth: 800,
         aspectRatio: `${ASPECT_RATIO}`,
-        background: '#000000',
+        background: "#000000",
         borderRadius: 12,
-        overflow: 'hidden',
+        overflow: "hidden",
       }}
     />
   );

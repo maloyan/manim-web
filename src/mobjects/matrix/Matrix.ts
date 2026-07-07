@@ -5,23 +5,23 @@
  * of values with configurable brackets and styling.
  */
 
-import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
-import { VGroup } from '../../core/VGroup';
-import { MathTexImage } from '../text/MathTexImage';
-import { WHITE } from '../../constants/colors';
-import { DEFAULT_STROKE_WIDTH } from '../../constants';
+import * as THREE from "three";
+import { Mobject, Vector3Tuple } from "../../core/Mobject";
+import { VMobject } from "../../core/VMobject";
+import { VGroup } from "../../core/VGroup";
+import { MathTexImage } from "../text/MathTexImage";
+import { WHITE } from "../../constants/colors";
+import { DEFAULT_STROKE_WIDTH } from "../../constants";
 
 /**
  * Bracket type options for matrices
  */
-export type BracketType = '[]' | '()' | '||' | '{}' | '<>' | '';
+export type BracketType = "[]" | "()" | "||" | "{}" | "<>" | "";
 
 /**
  * Alignment options for elements within cells
  */
-export type ElementAlignment = 'left' | 'center' | 'right';
+export type ElementAlignment = "left" | "center" | "right";
 
 /**
  * Options for creating a Matrix mobject
@@ -106,14 +106,17 @@ export class Matrix extends VGroup {
   /** The matrix content without brackets */
   protected _content: VGroup | null = null;
 
-  constructor(data: (string | number | Mobject)[][], options: MatrixOptions = {}) {
+  constructor(
+    data: (string | number | Mobject)[][],
+    options: MatrixOptions = {},
+  ) {
     super();
 
     const {
-      bracketType = '[]',
+      bracketType = "[]",
       vBuff = 0.8,
       hBuff = 1.3,
-      elementAlignment = 'center',
+      elementAlignment = "center",
       bracketColor = WHITE,
       bracketStrokeWidth = DEFAULT_STROKE_WIDTH,
       elementColor = WHITE,
@@ -156,7 +159,7 @@ export class Matrix extends VGroup {
       const rowGroup = new VGroup();
 
       for (let j = 0; j < numCols; j++) {
-        const value = this._data[i]?.[j] ?? '';
+        const value = this._data[i]?.[j] ?? "";
         const entry = this._createEntry(value);
 
         rowEntries.push(entry);
@@ -198,7 +201,7 @@ export class Matrix extends VGroup {
     }
 
     // Convert to LaTeX string
-    const latex = typeof value === 'number' ? String(value) : value;
+    const latex = typeof value === "number" ? String(value) : value;
 
     return new MathTexImage({
       latex,
@@ -267,7 +270,7 @@ export class Matrix extends VGroup {
    * Create the bracket mobjects
    */
   protected _createBrackets(): void {
-    if (this._bracketType === '') {
+    if (this._bracketType === "") {
       this._brackets = null;
       return;
     }
@@ -281,14 +284,22 @@ export class Matrix extends VGroup {
     this._brackets = new VGroup();
 
     // Create left bracket
-    this._leftBracket = this._createBracketShape(this._bracketType, 'left', height);
+    this._leftBracket = this._createBracketShape(
+      this._bracketType,
+      "left",
+      height,
+    );
     if (this._leftBracket) {
       this._leftBracket.moveTo([-(width / 2 + this._hBuff * 0.3), 0, 0]);
       this._brackets.add(this._leftBracket);
     }
 
     // Create right bracket
-    this._rightBracket = this._createBracketShape(this._bracketType, 'right', height);
+    this._rightBracket = this._createBracketShape(
+      this._bracketType,
+      "right",
+      height,
+    );
     if (this._rightBracket) {
       this._rightBracket.moveTo([width / 2 + this._hBuff * 0.3, 0, 0]);
       this._brackets.add(this._rightBracket);
@@ -300,7 +311,7 @@ export class Matrix extends VGroup {
    */
   protected _createBracketShape(
     type: BracketType,
-    side: 'left' | 'right',
+    side: "left" | "right",
     height: number,
   ): VMobject {
     const bracket = new VMobject();
@@ -310,7 +321,7 @@ export class Matrix extends VGroup {
 
     const halfHeight = height / 2;
     const hookSize = height * 0.08;
-    const sign = side === 'left' ? 1 : -1;
+    const sign = side === "left" ? 1 : -1;
     const points = this._getBracketPoints(type, halfHeight, hookSize, sign);
 
     bracket.setPoints3D(this._pointsToLineBezier(points));
@@ -331,7 +342,7 @@ export class Matrix extends VGroup {
     const points: number[][] = [];
 
     switch (type) {
-      case '[]':
+      case "[]":
         points.push(
           [sign * hookSize, halfHeight, 0],
           [0, halfHeight, 0],
@@ -340,20 +351,24 @@ export class Matrix extends VGroup {
         );
         break;
 
-      case '()':
+      case "()":
         this._addParenthesisPoints(points, halfHeight, hookSize, sign);
         break;
 
-      case '||':
+      case "||":
         points.push([0, halfHeight, 0], [0, -halfHeight, 0]);
         break;
 
-      case '{}':
+      case "{}":
         this._addCurlyBracePoints(points, halfHeight, hookSize, sign);
         break;
 
-      case '<>':
-        points.push([sign * hookSize, halfHeight, 0], [0, 0, 0], [sign * hookSize, -halfHeight, 0]);
+      case "<>":
+        points.push([sign * hookSize, halfHeight, 0], [0, 0, 0], [
+          sign * hookSize,
+          -halfHeight,
+          0,
+        ]);
         break;
 
       default:
@@ -401,14 +416,18 @@ export class Matrix extends VGroup {
     for (let i = 0; i <= numSegs; i++) {
       const t = i / numSegs;
       const y = halfHeight - t * halfHeight;
-      const x = sign * (curlyWidth + (midPointWidth - curlyWidth) * Math.sin((t * Math.PI) / 2));
+      const x = sign *
+        (curlyWidth +
+          (midPointWidth - curlyWidth) * Math.sin((t * Math.PI) / 2));
       points.push([x, y, 0]);
     }
     // Bottom half: from middle point to bottom
     for (let i = 1; i <= numSegs; i++) {
       const t = i / numSegs;
       const y = -t * halfHeight;
-      const x = sign * (midPointWidth - (midPointWidth - curlyWidth) * Math.sin((t * Math.PI) / 2));
+      const x = sign *
+        (midPointWidth -
+          (midPointWidth - curlyWidth) * Math.sin((t * Math.PI) / 2));
       points.push([x, y, 0]);
     }
   }
@@ -434,7 +453,11 @@ export class Matrix extends VGroup {
 
       // Add control points for line segment (1/3 and 2/3 along line)
       bezierPoints.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-      bezierPoints.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
+      bezierPoints.push([
+        p0[0] + (2 * dx) / 3,
+        p0[1] + (2 * dy) / 3,
+        p0[2] + (2 * dz) / 3,
+      ]);
       bezierPoints.push([...p1]);
     }
 
@@ -563,7 +586,7 @@ export class Matrix extends VGroup {
 
   override copy(): Matrix {
     const dataCopy = this._data.map((row) =>
-      row.map((val) => (val instanceof Mobject ? val.copy() : val)),
+      row.map((val) => (val instanceof Mobject ? val.copy() : val))
     );
     const copy = new Matrix(dataCopy, {
       bracketType: this._bracketType,
@@ -576,7 +599,10 @@ export class Matrix extends VGroup {
       fontSize: this._fontSize,
       position: [this.position.x, this.position.y, this.position.z],
     });
-    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(copy, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return copy;
   }
 }
@@ -606,7 +632,9 @@ export class IntegerMatrix extends Matrix {
   }
 
   override copy(): IntegerMatrix {
-    const dataCopy = this._data.map((row) => row.map((val) => (typeof val === 'number' ? val : 0)));
+    const dataCopy = this._data.map((row) =>
+      row.map((val) => (typeof val === "number" ? val : 0))
+    );
 
     const copy = new IntegerMatrix(dataCopy as number[][], {
       bracketType: this._bracketType,
@@ -619,7 +647,10 @@ export class IntegerMatrix extends Matrix {
       fontSize: this._fontSize,
       position: [this.position.x, this.position.y, this.position.z],
     });
-    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(copy, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return copy;
   }
 }
@@ -650,7 +681,9 @@ export class DecimalMatrix extends Matrix {
     const { numDecimalPlaces = 2, ...matrixOptions } = options;
 
     // Format all values with specified decimal places
-    const formattedData = data.map((row) => row.map((val) => val.toFixed(numDecimalPlaces)));
+    const formattedData = data.map((row) =>
+      row.map((val) => val.toFixed(numDecimalPlaces))
+    );
 
     super(formattedData, matrixOptions);
     this._numDecimalPlaces = numDecimalPlaces;
@@ -658,7 +691,9 @@ export class DecimalMatrix extends Matrix {
 
   override copy(): DecimalMatrix {
     const dataCopy = this._data.map((row) =>
-      row.map((val) => (typeof val === 'string' ? parseFloat(val) : (val as number))),
+      row.map((
+        val,
+      ) => (typeof val === "string" ? parseFloat(val) : (val as number)))
     );
 
     const copy = new DecimalMatrix(dataCopy as number[][], {
@@ -673,7 +708,10 @@ export class DecimalMatrix extends Matrix {
       numDecimalPlaces: this._numDecimalPlaces,
       position: [this.position.x, this.position.y, this.position.z],
     });
-    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(copy, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return copy;
   }
 }
@@ -712,7 +750,7 @@ export class MobjectMatrix extends Matrix {
 
   override copy(): MobjectMatrix {
     const dataCopy = this._data.map((row) =>
-      row.map((val) => (val instanceof Mobject ? val.copy() : val)),
+      row.map((val) => (val instanceof Mobject ? val.copy() : val))
     ) as Mobject[][];
 
     const copy = new MobjectMatrix(dataCopy, {
@@ -726,7 +764,10 @@ export class MobjectMatrix extends Matrix {
       fontSize: this._fontSize,
       position: [this.position.x, this.position.y, this.position.z],
     });
-    this._copyBaseAttributesInto(copy, { copyChildren: false, copyPosition: false });
+    this._copyBaseAttributesInto(copy, {
+      copyChildren: false,
+      copyPosition: false,
+    });
     return copy;
   }
 }

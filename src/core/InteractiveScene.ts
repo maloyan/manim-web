@@ -11,27 +11,34 @@
  * interactive authoring tools. Regular Scene is unaffected.
  */
 
-import * as THREE from 'three';
-import { Scene, SceneOptions } from './Scene';
-import { Mobject, Vector3Tuple } from './Mobject';
-import { VMobject } from './VMobject';
-import { VGroup } from './VGroup';
-import { serializeMobject, deserializeMobject, MobjectState } from './StateManager';
-import { SelectionManager, SelectionManagerOptions } from '../interaction/SelectionManager';
+import * as THREE from "three";
+import { Scene, SceneOptions } from "./Scene";
+import { Mobject, Vector3Tuple } from "./Mobject";
+import { VMobject } from "./VMobject";
+import { VGroup } from "./VGroup";
 import {
-  RED,
+  deserializeMobject,
+  MobjectState,
+  serializeMobject,
+} from "./StateManager";
+import {
+  SelectionManager,
+  SelectionManagerOptions,
+} from "../interaction/SelectionManager";
+import {
   BLUE,
-  GREEN,
-  YELLOW,
-  ORANGE,
-  PURPLE,
-  TEAL,
-  PINK,
-  WHITE,
-  GRAY,
-  MAROON,
   GOLD,
-} from '../constants/colors';
+  GRAY,
+  GREEN,
+  MAROON,
+  ORANGE,
+  PINK,
+  PURPLE,
+  RED,
+  TEAL,
+  WHITE,
+  YELLOW,
+} from "../constants/colors";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -96,7 +103,10 @@ export class InteractiveScene extends Scene {
   private _interactiveOptions: Required<
     Pick<
       InteractiveSceneOptions,
-      'showColorPalette' | 'colorPaletteToggleKey' | 'enableDragMove' | 'enableKeyboardShortcuts'
+      | "showColorPalette"
+      | "colorPaletteToggleKey"
+      | "enableDragMove"
+      | "enableKeyboardShortcuts"
     >
   >;
 
@@ -127,7 +137,7 @@ export class InteractiveScene extends Scene {
 
     this._interactiveOptions = {
       showColorPalette: options.showColorPalette ?? false,
-      colorPaletteToggleKey: options.colorPaletteToggleKey ?? 'c',
+      colorPaletteToggleKey: options.colorPaletteToggleKey ?? "c",
       enableDragMove: options.enableDragMove ?? true,
       enableKeyboardShortcuts: options.enableKeyboardShortcuts ?? true,
     };
@@ -143,14 +153,14 @@ export class InteractiveScene extends Scene {
 
     // Set up keyboard and drag listeners
     if (this._interactiveOptions.enableKeyboardShortcuts) {
-      window.addEventListener('keydown', this._onKeyDown);
+      window.addEventListener("keydown", this._onKeyDown);
     }
 
     if (this._interactiveOptions.enableDragMove) {
       const canvas = this.getCanvas();
-      canvas.addEventListener('mousedown', this._onMouseDownDrag);
-      window.addEventListener('mousemove', this._onMouseMoveDrag);
-      window.addEventListener('mouseup', this._onMouseUpDrag);
+      canvas.addEventListener("mousedown", this._onMouseDownDrag);
+      window.addEventListener("mousemove", this._onMouseMoveDrag);
+      window.addEventListener("mouseup", this._onMouseUpDrag);
     }
 
     // Show palette if requested
@@ -246,7 +256,9 @@ export class InteractiveScene extends Scene {
     if (selected.length < 2) return;
 
     // Only group VMobjects (non-VMobjects are skipped)
-    const vmobjects = selected.filter((m): m is VMobject => m instanceof VMobject);
+    const vmobjects = selected.filter((m): m is VMobject =>
+      m instanceof VMobject
+    );
     if (vmobjects.length < 2) return;
 
     this.saveState();
@@ -321,14 +333,16 @@ export class InteractiveScene extends Scene {
     ) {
       // Only toggle if no input element is focused
       const active = document.activeElement;
-      if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA')) {
+      if (
+        !active || (active.tagName !== "INPUT" && active.tagName !== "TEXTAREA")
+      ) {
         this.toggleColorPalette();
         return;
       }
     }
 
     // --- Undo: Ctrl+Z ---
-    if (isCtrlOrMeta && e.key === 'z' && !e.shiftKey) {
+    if (isCtrlOrMeta && e.key === "z" && !e.shiftKey) {
       e.preventDefault();
       this.undo();
       this.selection.refreshHighlights();
@@ -336,7 +350,7 @@ export class InteractiveScene extends Scene {
     }
 
     // --- Redo: Ctrl+Shift+Z or Ctrl+Y ---
-    if (isCtrlOrMeta && ((e.key === 'z' && e.shiftKey) || e.key === 'y')) {
+    if (isCtrlOrMeta && ((e.key === "z" && e.shiftKey) || e.key === "y")) {
       e.preventDefault();
       this.redo();
       this.selection.refreshHighlights();
@@ -344,10 +358,12 @@ export class InteractiveScene extends Scene {
     }
 
     // --- Delete/Backspace: remove selected ---
-    if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (e.key === "Delete" || e.key === "Backspace") {
       // Only if not focused on an input
       const active = document.activeElement;
-      if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA')) {
+      if (
+        !active || (active.tagName !== "INPUT" && active.tagName !== "TEXTAREA")
+      ) {
         e.preventDefault();
         this.deleteSelected();
         return;
@@ -355,7 +371,7 @@ export class InteractiveScene extends Scene {
     }
 
     // --- Copy: Ctrl+C ---
-    if (isCtrlOrMeta && e.key === 'c' && !e.shiftKey) {
+    if (isCtrlOrMeta && e.key === "c" && !e.shiftKey) {
       if (this.selection.count > 0) {
         this.copySelected();
         // Don't preventDefault so system clipboard still works for text
@@ -364,7 +380,7 @@ export class InteractiveScene extends Scene {
     }
 
     // --- Paste: Ctrl+V ---
-    if (isCtrlOrMeta && e.key === 'v') {
+    if (isCtrlOrMeta && e.key === "v") {
       if (this._clipboard.length > 0) {
         e.preventDefault();
         this.pasteFromClipboard();
@@ -373,14 +389,14 @@ export class InteractiveScene extends Scene {
     }
 
     // --- Group: Ctrl+G ---
-    if (isCtrlOrMeta && e.key === 'g' && !e.shiftKey) {
+    if (isCtrlOrMeta && e.key === "g" && !e.shiftKey) {
       e.preventDefault();
       this.groupSelected();
       return;
     }
 
     // --- Ungroup: Ctrl+Shift+G ---
-    if (isCtrlOrMeta && e.key === 'G' && e.shiftKey) {
+    if (isCtrlOrMeta && e.key === "G" && e.shiftKey) {
       e.preventDefault();
       this.ungroupSelected();
       return;
@@ -448,66 +464,68 @@ export class InteractiveScene extends Scene {
   // ---------------------------------------------------------------------------
 
   /** Standard Manim colors for the palette. */
-  private static readonly PALETTE_COLORS: Array<{ name: string; value: string }> = [
-    { name: 'Red', value: RED },
-    { name: 'Blue', value: BLUE },
-    { name: 'Green', value: GREEN },
-    { name: 'Yellow', value: YELLOW },
-    { name: 'Orange', value: ORANGE },
-    { name: 'Purple', value: PURPLE },
-    { name: 'Teal', value: TEAL },
-    { name: 'Pink', value: PINK },
-    { name: 'White', value: WHITE },
-    { name: 'Gray', value: GRAY },
-    { name: 'Maroon', value: MAROON },
-    { name: 'Gold', value: GOLD },
+  private static readonly PALETTE_COLORS: Array<
+    { name: string; value: string }
+  > = [
+    { name: "Red", value: RED },
+    { name: "Blue", value: BLUE },
+    { name: "Green", value: GREEN },
+    { name: "Yellow", value: YELLOW },
+    { name: "Orange", value: ORANGE },
+    { name: "Purple", value: PURPLE },
+    { name: "Teal", value: TEAL },
+    { name: "Pink", value: PINK },
+    { name: "White", value: WHITE },
+    { name: "Gray", value: GRAY },
+    { name: "Maroon", value: MAROON },
+    { name: "Gold", value: GOLD },
   ];
 
   private _showColorPalette(): void {
     if (this._paletteContainer) return;
 
     const container = this.getContainer();
-    const palette = document.createElement('div');
-    palette.style.position = 'absolute';
-    palette.style.bottom = '10px';
-    palette.style.left = '50%';
-    palette.style.transform = 'translateX(-50%)';
-    palette.style.display = 'flex';
-    palette.style.gap = '6px';
-    palette.style.padding = '8px 12px';
-    palette.style.background = 'rgba(28, 28, 28, 0.85)';
-    palette.style.borderRadius = '8px';
-    palette.style.boxShadow = '0 2px 12px rgba(0,0,0,0.5)';
-    palette.style.zIndex = '9999';
-    palette.style.userSelect = 'none';
+    const palette = document.createElement("div");
+    palette.style.position = "absolute";
+    palette.style.bottom = "10px";
+    palette.style.left = "50%";
+    palette.style.transform = "translateX(-50%)";
+    palette.style.display = "flex";
+    palette.style.gap = "6px";
+    palette.style.padding = "8px 12px";
+    palette.style.background = "rgba(28, 28, 28, 0.85)";
+    palette.style.borderRadius = "8px";
+    palette.style.boxShadow = "0 2px 12px rgba(0,0,0,0.5)";
+    palette.style.zIndex = "9999";
+    palette.style.userSelect = "none";
 
     for (const { name, value } of InteractiveScene.PALETTE_COLORS) {
-      const swatch = document.createElement('div');
+      const swatch = document.createElement("div");
       swatch.title = name;
-      swatch.style.width = '24px';
-      swatch.style.height = '24px';
-      swatch.style.borderRadius = '4px';
+      swatch.style.width = "24px";
+      swatch.style.height = "24px";
+      swatch.style.borderRadius = "4px";
       swatch.style.backgroundColor = value;
-      swatch.style.border = '2px solid rgba(255,255,255,0.3)';
-      swatch.style.cursor = 'pointer';
-      swatch.style.transition = 'transform 0.1s, border-color 0.1s';
+      swatch.style.border = "2px solid rgba(255,255,255,0.3)";
+      swatch.style.cursor = "pointer";
+      swatch.style.transition = "transform 0.1s, border-color 0.1s";
 
-      swatch.addEventListener('mouseenter', () => {
-        swatch.style.transform = 'scale(1.2)';
-        swatch.style.borderColor = 'rgba(255,255,255,0.8)';
+      swatch.addEventListener("mouseenter", () => {
+        swatch.style.transform = "scale(1.2)";
+        swatch.style.borderColor = "rgba(255,255,255,0.8)";
       });
-      swatch.addEventListener('mouseleave', () => {
-        swatch.style.transform = 'scale(1)';
-        swatch.style.borderColor = 'rgba(255,255,255,0.3)';
+      swatch.addEventListener("mouseleave", () => {
+        swatch.style.transform = "scale(1)";
+        swatch.style.borderColor = "rgba(255,255,255,0.3)";
       });
-      swatch.addEventListener('click', () => {
+      swatch.addEventListener("click", () => {
         this.applyColorToSelected(value);
       });
 
       palette.appendChild(swatch);
     }
 
-    container.style.position = container.style.position || 'relative';
+    container.style.position = container.style.position || "relative";
     container.appendChild(palette);
     this._paletteContainer = palette;
     this._paletteVisible = true;
@@ -548,13 +566,13 @@ export class InteractiveScene extends Scene {
    */
   override dispose(): void {
     // Remove keyboard listener
-    window.removeEventListener('keydown', this._onKeyDown);
+    window.removeEventListener("keydown", this._onKeyDown);
 
     // Remove drag listeners
     const canvas = this.getCanvas();
-    canvas.removeEventListener('mousedown', this._onMouseDownDrag);
-    window.removeEventListener('mousemove', this._onMouseMoveDrag);
-    window.removeEventListener('mouseup', this._onMouseUpDrag);
+    canvas.removeEventListener("mousedown", this._onMouseDownDrag);
+    window.removeEventListener("mousemove", this._onMouseMoveDrag);
+    window.removeEventListener("mouseup", this._onMouseUpDrag);
 
     // Dispose selection manager
     this.selection.dispose();

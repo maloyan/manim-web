@@ -1,17 +1,17 @@
 // @vitest-environment happy-dom
-import { describe, it, expect } from 'vitest';
-import * as THREE from 'three';
-import { Mobject } from '../core/Mobject';
-import { VMobject } from '../core/VMobject';
-import { PointMobject } from '../mobjects/point/PointMobject';
-import { ApplyWave } from './indication/ApplyWave';
-import { applyWave } from './indication/ApplyWave';
-import { Circumscribe } from './indication/Circumscribe';
-import { circumscribe } from './indication/Circumscribe';
-import { Flash } from './indication/Flash';
-import { flash } from './indication/Flash';
-import { linear, smooth } from '../rate-functions';
-import { YELLOW, DEFAULT_STROKE_WIDTH } from '../constants';
+import { describe, expect, it } from "vitest";
+import * as THREE from "three";
+import { Mobject } from "../core/Mobject";
+import { VMobject } from "../core/VMobject";
+import { PointMobject } from "../mobjects/point/PointMobject";
+import { ApplyWave } from "./indication/ApplyWave";
+import { applyWave } from "./indication/ApplyWave";
+import { Circumscribe } from "./indication/Circumscribe";
+import { circumscribe } from "./indication/Circumscribe";
+import { Flash } from "./indication/Flash";
+import { flash } from "./indication/Flash";
+import { linear, smooth } from "../rate-functions";
+import { DEFAULT_STROKE_WIDTH, YELLOW } from "../constants";
 
 /** Concrete Mobject for tests that call getCenter()/getThreeObject(). */
 class ConcreteMobject extends Mobject {
@@ -26,19 +26,19 @@ class ConcreteMobject extends Mobject {
 // ---------------------------------------------------------------------------
 // ApplyWave
 // ---------------------------------------------------------------------------
-describe('ApplyWave', () => {
-  describe('constructor defaults', () => {
-    it('has direction=horizontal, amplitude=0.2, wavelength=1.5, speed=1, ripples=false', () => {
+describe("ApplyWave", () => {
+  describe("constructor defaults", () => {
+    it("has direction=horizontal, amplitude=0.2, wavelength=1.5, speed=1, ripples=false", () => {
       const m = new Mobject();
       const anim = new ApplyWave(m);
-      expect(anim.direction).toBe('horizontal');
+      expect(anim.direction).toBe("horizontal");
       expect(anim.amplitude).toBe(0.2);
       expect(anim.wavelength).toBe(1.5);
       expect(anim.speed).toBe(1);
       expect(anim.ripples).toBe(false);
     });
 
-    it('has duration=1 and rateFunc=linear', () => {
+    it("has duration=1 and rateFunc=linear", () => {
       const m = new Mobject();
       const anim = new ApplyWave(m);
       expect(anim.duration).toBe(1);
@@ -46,52 +46,52 @@ describe('ApplyWave', () => {
     });
   });
 
-  describe('custom options', () => {
-    it('uses custom direction', () => {
+  describe("custom options", () => {
+    it("uses custom direction", () => {
       const m = new Mobject();
-      const anim = new ApplyWave(m, { direction: 'vertical' });
-      expect(anim.direction).toBe('vertical');
+      const anim = new ApplyWave(m, { direction: "vertical" });
+      expect(anim.direction).toBe("vertical");
     });
 
-    it('uses custom amplitude', () => {
+    it("uses custom amplitude", () => {
       const m = new Mobject();
       const anim = new ApplyWave(m, { amplitude: 0.5 });
       expect(anim.amplitude).toBe(0.5);
     });
 
-    it('uses custom wavelength', () => {
+    it("uses custom wavelength", () => {
       const m = new Mobject();
       const anim = new ApplyWave(m, { wavelength: 3 });
       expect(anim.wavelength).toBe(3);
     });
 
-    it('uses custom speed', () => {
+    it("uses custom speed", () => {
       const m = new Mobject();
       const anim = new ApplyWave(m, { speed: 2 });
       expect(anim.speed).toBe(2);
     });
 
-    it('uses custom ripples', () => {
+    it("uses custom ripples", () => {
       const m = new Mobject();
       const anim = new ApplyWave(m, { ripples: true });
       expect(anim.ripples).toBe(true);
     });
 
-    it('uses custom duration', () => {
+    it("uses custom duration", () => {
       const m = new Mobject();
       const anim = new ApplyWave(m, { duration: 3 });
       expect(anim.duration).toBe(3);
     });
 
-    it('uses custom rateFunc', () => {
+    it("uses custom rateFunc", () => {
       const m = new Mobject();
       const anim = new ApplyWave(m, { rateFunc: smooth });
       expect(anim.rateFunc).toBe(smooth);
     });
   });
 
-  describe('non-VMobject position wave (horizontal)', () => {
-    it('begin stores original position', () => {
+  describe("non-VMobject position wave (horizontal)", () => {
+    it("begin stores original position", () => {
       const m = new PointMobject({ position: [0, 0, 0] });
       m.position.set(1, 2, 3);
       const anim = new ApplyWave(m);
@@ -101,7 +101,7 @@ describe('ApplyWave', () => {
       expect(m.position.y).toBeCloseTo(2, 5);
     });
 
-    it('at alpha=0 position is unchanged (envelope=0)', () => {
+    it("at alpha=0 position is unchanged (envelope=0)", () => {
       const m = new PointMobject({ position: [0, 0, 0] });
       m.position.set(0, 5, 0);
       const anim = new ApplyWave(m);
@@ -110,7 +110,7 @@ describe('ApplyWave', () => {
       expect(m.position.y).toBeCloseTo(5, 5);
     });
 
-    it('at alpha=0.5 envelope is max (sin(PI/2)=1)', () => {
+    it("at alpha=0.5 envelope is max (sin(PI/2)=1)", () => {
       const m = new PointMobject({ position: [0, 0, 0] });
       m.position.set(0, 0, 0);
       const anim = new ApplyWave(m);
@@ -122,7 +122,7 @@ describe('ApplyWave', () => {
       expect(m.position.y).toBeCloseTo(expected, 5);
     });
 
-    it('at alpha=1 envelope is ~0 (sin(PI)~0)', () => {
+    it("at alpha=1 envelope is ~0 (sin(PI)~0)", () => {
       const m = new PointMobject({ position: [0, 0, 0] });
       m.position.set(0, 0, 0);
       const anim = new ApplyWave(m);
@@ -133,11 +133,11 @@ describe('ApplyWave', () => {
     });
   });
 
-  describe('non-VMobject position wave (vertical)', () => {
-    it('displaces x instead of y for vertical direction', () => {
+  describe("non-VMobject position wave (vertical)", () => {
+    it("displaces x instead of y for vertical direction", () => {
       const m = new PointMobject({ position: [0, 0, 0] });
       m.position.set(0, 0, 0);
-      const anim = new ApplyWave(m, { direction: 'vertical' });
+      const anim = new ApplyWave(m, { direction: "vertical" });
       anim.begin();
       anim.interpolate(0.5);
       const envelope = Math.sin(0.5 * Math.PI);
@@ -148,7 +148,7 @@ describe('ApplyWave', () => {
     });
   });
 
-  describe('VMobject wave', () => {
+  describe("VMobject wave", () => {
     function makeVMobject(): VMobject {
       const vm = new VMobject();
       // Set up a simple square shape
@@ -173,7 +173,7 @@ describe('ApplyWave', () => {
       return vm;
     }
 
-    it('begin stores original points', () => {
+    it("begin stores original points", () => {
       const vm = makeVMobject();
       const originalPoints = vm.getLocalPoints().map((p) => [...p]);
       const anim = new ApplyWave(vm);
@@ -188,11 +188,14 @@ describe('ApplyWave', () => {
       }
     });
 
-    it('horizontal wave displaces y coordinates', () => {
+    it("horizontal wave displaces y coordinates", () => {
       const vm = makeVMobject();
       const originalPoints = vm.getLocalPoints().map((p) => [...p]);
       // Use wavelength=1.0 to avoid sin hitting exact zeros at boundary points
-      const anim = new ApplyWave(vm, { direction: 'horizontal', wavelength: 1.0 });
+      const anim = new ApplyWave(vm, {
+        direction: "horizontal",
+        wavelength: 1.0,
+      });
       anim.begin();
       anim.interpolate(0.3);
       const currentPoints = vm.getLocalPoints();
@@ -211,11 +214,14 @@ describe('ApplyWave', () => {
       }
     });
 
-    it('vertical wave displaces x coordinates', () => {
+    it("vertical wave displaces x coordinates", () => {
       const vm = makeVMobject();
       const originalPoints = vm.getLocalPoints().map((p) => [...p]);
       // Use wavelength=1.0 to avoid sin hitting exact zeros at boundary points
-      const anim = new ApplyWave(vm, { direction: 'vertical', wavelength: 1.0 });
+      const anim = new ApplyWave(vm, {
+        direction: "vertical",
+        wavelength: 1.0,
+      });
       anim.begin();
       anim.interpolate(0.3);
       const currentPoints = vm.getLocalPoints();
@@ -233,7 +239,7 @@ describe('ApplyWave', () => {
       }
     });
 
-    it('ripple mode displaces both x and y based on radial distance', () => {
+    it("ripple mode displaces both x and y based on radial distance", () => {
       const vm = makeVMobject();
       const originalPoints = vm.getLocalPoints().map((p) => [...p]);
       const anim = new ApplyWave(vm, { ripples: true });
@@ -246,7 +252,7 @@ describe('ApplyWave', () => {
       }
     });
 
-    it('finish restores original points', () => {
+    it("finish restores original points", () => {
       const vm = makeVMobject();
       const originalPoints = vm.getLocalPoints().map((p) => [...p]);
       const anim = new ApplyWave(vm);
@@ -262,8 +268,8 @@ describe('ApplyWave', () => {
     });
   });
 
-  describe('finish restores non-VMobject position', () => {
-    it('restores original position after animation', () => {
+  describe("finish restores non-VMobject position", () => {
+    it("restores original position after animation", () => {
       const m = new PointMobject({ position: [0, 0, 0] });
       m.position.set(3, 7, 2);
       const anim = new ApplyWave(m);
@@ -276,8 +282,8 @@ describe('ApplyWave', () => {
     });
   });
 
-  describe('custom amplitude affects displacement magnitude', () => {
-    it('larger amplitude produces larger displacement', () => {
+  describe("custom amplitude affects displacement magnitude", () => {
+    it("larger amplitude produces larger displacement", () => {
       const m1 = new PointMobject({ position: [0, 0, 0] });
       m1.position.set(0, 0, 0);
       const anim1 = new ApplyWave(m1, { amplitude: 0.2 });
@@ -299,18 +305,18 @@ describe('ApplyWave', () => {
     });
   });
 
-  describe('applyWave() factory function', () => {
-    it('returns an ApplyWave instance', () => {
+  describe("applyWave() factory function", () => {
+    it("returns an ApplyWave instance", () => {
       const m = new Mobject();
       const anim = applyWave(m);
       expect(anim).toBeInstanceOf(ApplyWave);
     });
 
-    it('passes options through', () => {
+    it("passes options through", () => {
       const m = new Mobject();
-      const anim = applyWave(m, { amplitude: 0.8, direction: 'vertical' });
+      const anim = applyWave(m, { amplitude: 0.8, direction: "vertical" });
       expect(anim.amplitude).toBe(0.8);
-      expect(anim.direction).toBe('vertical');
+      expect(anim.direction).toBe("vertical");
     });
   });
 });
@@ -318,17 +324,17 @@ describe('ApplyWave', () => {
 // ---------------------------------------------------------------------------
 // Circumscribe
 // ---------------------------------------------------------------------------
-describe('Circumscribe', () => {
-  describe('constructor defaults', () => {
-    it('has shape=rectangle, color=YELLOW, buff=0.2', () => {
+describe("Circumscribe", () => {
+  describe("constructor defaults", () => {
+    it("has shape=rectangle, color=YELLOW, buff=0.2", () => {
       const m = new Mobject();
       const anim = new Circumscribe(m);
-      expect(anim.shapeType).toBe('rectangle');
+      expect(anim.shapeType).toBe("rectangle");
       expect(anim.shapeColor).toBe(YELLOW);
       expect(anim.buff).toBe(0.2);
     });
 
-    it('has strokeWidth=DEFAULT_STROKE_WIDTH, timeWidth=0.3, fadeOut=true', () => {
+    it("has strokeWidth=DEFAULT_STROKE_WIDTH, timeWidth=0.3, fadeOut=true", () => {
       const m = new Mobject();
       const anim = new Circumscribe(m);
       expect(anim.strokeWidth).toBe(DEFAULT_STROKE_WIDTH);
@@ -336,68 +342,68 @@ describe('Circumscribe', () => {
       expect(anim.fadeOut).toBe(true);
     });
 
-    it('has duration=1', () => {
+    it("has duration=1", () => {
       const m = new Mobject();
       const anim = new Circumscribe(m);
       expect(anim.duration).toBe(1);
     });
   });
 
-  describe('custom options', () => {
-    it('uses custom shape', () => {
+  describe("custom options", () => {
+    it("uses custom shape", () => {
       const m = new Mobject();
-      const anim = new Circumscribe(m, { shape: 'circle' });
-      expect(anim.shapeType).toBe('circle');
+      const anim = new Circumscribe(m, { shape: "circle" });
+      expect(anim.shapeType).toBe("circle");
     });
 
-    it('uses custom color', () => {
+    it("uses custom color", () => {
       const m = new Mobject();
-      const anim = new Circumscribe(m, { color: '#ff0000' });
-      expect(anim.shapeColor).toBe('#ff0000');
+      const anim = new Circumscribe(m, { color: "#ff0000" });
+      expect(anim.shapeColor).toBe("#ff0000");
     });
 
-    it('uses custom buff', () => {
+    it("uses custom buff", () => {
       const m = new Mobject();
       const anim = new Circumscribe(m, { buff: 0.5 });
       expect(anim.buff).toBe(0.5);
     });
 
-    it('uses custom strokeWidth', () => {
+    it("uses custom strokeWidth", () => {
       const m = new Mobject();
       const anim = new Circumscribe(m, { strokeWidth: 8 });
       expect(anim.strokeWidth).toBe(8);
     });
 
-    it('uses custom timeWidth', () => {
+    it("uses custom timeWidth", () => {
       const m = new Mobject();
       const anim = new Circumscribe(m, { timeWidth: 0.5 });
       expect(anim.timeWidth).toBe(0.5);
     });
 
-    it('uses custom fadeOut', () => {
+    it("uses custom fadeOut", () => {
       const m = new Mobject();
       const anim = new Circumscribe(m, { fadeOut: false });
       expect(anim.fadeOut).toBe(false);
     });
 
-    it('uses custom duration', () => {
+    it("uses custom duration", () => {
       const m = new Mobject();
       const anim = new Circumscribe(m, { duration: 2 });
       expect(anim.duration).toBe(2);
     });
   });
 
-  describe('circumscribe() factory function', () => {
-    it('returns a Circumscribe instance', () => {
+  describe("circumscribe() factory function", () => {
+    it("returns a Circumscribe instance", () => {
       const m = new Mobject();
       const anim = circumscribe(m);
       expect(anim).toBeInstanceOf(Circumscribe);
     });
 
-    it('passes options through', () => {
+    it("passes options through", () => {
       const m = new Mobject();
-      const anim = circumscribe(m, { shape: 'circle', buff: 0.8 });
-      expect(anim.shapeType).toBe('circle');
+      const anim = circumscribe(m, { shape: "circle", buff: 0.8 });
+      expect(anim.shapeType).toBe("circle");
       expect(anim.buff).toBe(0.8);
     });
   });
@@ -406,9 +412,9 @@ describe('Circumscribe', () => {
 // ---------------------------------------------------------------------------
 // Flash
 // ---------------------------------------------------------------------------
-describe('Flash', () => {
-  describe('constructor defaults', () => {
-    it('has color=YELLOW, numLines=8, flashRadius=1', () => {
+describe("Flash", () => {
+  describe("constructor defaults", () => {
+    it("has color=YELLOW, numLines=8, flashRadius=1", () => {
       const m = new Mobject();
       const anim = new Flash(m);
       expect(anim.flashColor).toBe(YELLOW);
@@ -416,66 +422,66 @@ describe('Flash', () => {
       expect(anim.flashRadius).toBe(1);
     });
 
-    it('has lineWidth=DEFAULT_STROKE_WIDTH, innerRadius=0', () => {
+    it("has lineWidth=DEFAULT_STROKE_WIDTH, innerRadius=0", () => {
       const m = new Mobject();
       const anim = new Flash(m);
       expect(anim.lineWidth).toBe(DEFAULT_STROKE_WIDTH);
       expect(anim.innerRadius).toBe(0);
     });
 
-    it('has duration=0.5', () => {
+    it("has duration=0.5", () => {
       const m = new Mobject();
       const anim = new Flash(m);
       expect(anim.duration).toBe(0.5);
     });
   });
 
-  describe('custom options', () => {
-    it('uses custom color', () => {
+  describe("custom options", () => {
+    it("uses custom color", () => {
       const m = new Mobject();
-      const anim = new Flash(m, { color: '#00ff00' });
-      expect(anim.flashColor).toBe('#00ff00');
+      const anim = new Flash(m, { color: "#00ff00" });
+      expect(anim.flashColor).toBe("#00ff00");
     });
 
-    it('uses custom numLines', () => {
+    it("uses custom numLines", () => {
       const m = new Mobject();
       const anim = new Flash(m, { numLines: 12 });
       expect(anim.numLines).toBe(12);
     });
 
-    it('uses custom flashRadius', () => {
+    it("uses custom flashRadius", () => {
       const m = new Mobject();
       const anim = new Flash(m, { flashRadius: 2.5 });
       expect(anim.flashRadius).toBe(2.5);
     });
 
-    it('uses custom lineWidth', () => {
+    it("uses custom lineWidth", () => {
       const m = new Mobject();
       const anim = new Flash(m, { lineWidth: 6 });
       expect(anim.lineWidth).toBe(6);
     });
 
-    it('uses custom innerRadius', () => {
+    it("uses custom innerRadius", () => {
       const m = new Mobject();
       const anim = new Flash(m, { innerRadius: 0.3 });
       expect(anim.innerRadius).toBe(0.3);
     });
 
-    it('uses custom duration', () => {
+    it("uses custom duration", () => {
       const m = new Mobject();
       const anim = new Flash(m, { duration: 2 });
       expect(anim.duration).toBe(2);
     });
   });
 
-  describe('flash() factory function', () => {
-    it('returns a Flash instance', () => {
+  describe("flash() factory function", () => {
+    it("returns a Flash instance", () => {
       const m = new Mobject();
       const anim = flash(m);
       expect(anim).toBeInstanceOf(Flash);
     });
 
-    it('passes options through', () => {
+    it("passes options through", () => {
       const m = new Mobject();
       const anim = flash(m, { numLines: 16, flashRadius: 3 });
       expect(anim.numLines).toBe(16);

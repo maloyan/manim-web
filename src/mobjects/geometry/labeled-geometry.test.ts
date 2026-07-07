@@ -15,20 +15,20 @@
  *   setLabelOffset, getPoint, setShowOutline, _copy
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  LabeledLine,
+  AnnotationDot,
   LabeledArrow,
   LabeledDot,
-  AnnotationDot,
+  LabeledLine,
   LabeledPolygram,
-} from './LabeledGeometry';
-import { Line } from './Line';
-import { Arrow } from './Arrow';
-import { Dot } from './Dot';
-import { Circle } from './Circle';
-import { Polygram } from './Polygram';
-import { WHITE } from '../../constants';
+} from "./LabeledGeometry";
+import { Line } from "./Line";
+import { Arrow } from "./Arrow";
+import { Dot } from "./Dot";
+import { Circle } from "./Circle";
+import { Polygram } from "./Polygram";
+import { WHITE } from "../../constants";
 
 /**
  * Create a mock CanvasRenderingContext2D.
@@ -36,11 +36,11 @@ import { WHITE } from '../../constants';
  */
 function createMockCtx(): CanvasRenderingContext2D {
   return {
-    font: '',
-    textBaseline: 'top',
-    textAlign: 'center',
-    fillStyle: '',
-    strokeStyle: '',
+    font: "",
+    textBaseline: "top",
+    textAlign: "center",
+    fillStyle: "",
+    strokeStyle: "",
     globalAlpha: 1,
     lineWidth: 1,
     measureText: vi.fn((_text: string) => ({
@@ -66,28 +66,30 @@ function createMockCtx(): CanvasRenderingContext2D {
 }
 
 beforeEach(() => {
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((contextId: string) => {
-    if (contextId === '2d') return createMockCtx();
-    return null;
-  });
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockImplementation(
+    (contextId: string) => {
+      if (contextId === "2d") return createMockCtx();
+      return null;
+    },
+  );
 });
 
 // ===========================================================================
 // LabeledLine
 // ===========================================================================
 
-describe('LabeledLine', () => {
-  describe('constructor', () => {
-    it('creates with defaults', () => {
-      const ll = new LabeledLine({ label: 'test' });
+describe("LabeledLine", () => {
+  describe("constructor", () => {
+    it("creates with defaults", () => {
+      const ll = new LabeledLine({ label: "test" });
       expect(ll.getLine()).toBeInstanceOf(Line);
       expect(ll.getLabel()).toBeDefined();
-      expect(ll.getLabel().getText()).toBe('test');
+      expect(ll.getLabel().getText()).toBe("test");
     });
 
-    it('accepts custom start and end', () => {
+    it("accepts custom start and end", () => {
       const ll = new LabeledLine({
-        label: 'AB',
+        label: "AB",
         start: [-2, 0, 0],
         end: [2, 0, 0],
       });
@@ -96,68 +98,72 @@ describe('LabeledLine', () => {
       expect(line.getEnd()).toEqual([2, 0, 0]);
     });
 
-    it('accepts custom labelPosition, labelOrientation, labelOffset', () => {
+    it("accepts custom labelPosition, labelOrientation, labelOffset", () => {
       const ll = new LabeledLine({
-        label: 'X',
+        label: "X",
         labelPosition: 0.3,
-        labelOrientation: 'perpendicular',
+        labelOrientation: "perpendicular",
         labelOffset: 0.5,
       });
       // Just verify construction succeeds
-      expect(ll.getLabel().getText()).toBe('X');
+      expect(ll.getLabel().getText()).toBe("X");
     });
 
-    it('accepts horizontal label orientation', () => {
+    it("accepts horizontal label orientation", () => {
       const ll = new LabeledLine({
-        label: 'H',
-        labelOrientation: 'horizontal',
+        label: "H",
+        labelOrientation: "horizontal",
       });
       expect(ll.getLabel().rotation.z).toBe(0);
     });
 
-    it('accepts custom color and strokeWidth', () => {
+    it("accepts custom color and strokeWidth", () => {
       const ll = new LabeledLine({
-        label: 'c',
-        color: '#ff0000',
+        label: "c",
+        color: "#ff0000",
         strokeWidth: 6,
       });
-      expect(ll.getLine().color.toLowerCase()).toBe('#ff0000');
+      expect(ll.getLine().color.toLowerCase()).toBe("#ff0000");
     });
 
-    it('labelColor defaults to line color', () => {
+    it("labelColor defaults to line color", () => {
       const ll = new LabeledLine({
-        label: 'c',
-        color: '#00ff00',
+        label: "c",
+        color: "#00ff00",
       });
-      expect(ll.getLabel().color.toLowerCase()).toBe('#00ff00');
+      expect(ll.getLabel().color.toLowerCase()).toBe("#00ff00");
     });
 
-    it('accepts custom labelColor', () => {
+    it("accepts custom labelColor", () => {
       const ll = new LabeledLine({
-        label: 'c',
-        color: '#00ff00',
-        labelColor: '#ff0000',
+        label: "c",
+        color: "#00ff00",
+        labelColor: "#ff0000",
       });
-      expect(ll.getLabel().color.toLowerCase()).toBe('#ff0000');
+      expect(ll.getLabel().color.toLowerCase()).toBe("#ff0000");
     });
   });
 
-  describe('setLabelText', () => {
-    it('updates label text', () => {
-      const ll = new LabeledLine({ label: 'old' });
-      ll.setLabelText('new');
-      expect(ll.getLabel().getText()).toBe('new');
+  describe("setLabelText", () => {
+    it("updates label text", () => {
+      const ll = new LabeledLine({ label: "old" });
+      ll.setLabelText("new");
+      expect(ll.getLabel().getText()).toBe("new");
     });
 
-    it('returns this for chaining', () => {
-      const ll = new LabeledLine({ label: 'x' });
-      expect(ll.setLabelText('y')).toBe(ll);
+    it("returns this for chaining", () => {
+      const ll = new LabeledLine({ label: "x" });
+      expect(ll.setLabelText("y")).toBe(ll);
     });
   });
 
-  describe('setLabelPosition', () => {
-    it('updates label position along line', () => {
-      const ll = new LabeledLine({ label: 'mid', start: [0, 0, 0], end: [4, 0, 0] });
+  describe("setLabelPosition", () => {
+    it("updates label position along line", () => {
+      const ll = new LabeledLine({
+        label: "mid",
+        start: [0, 0, 0],
+        end: [4, 0, 0],
+      });
       ll.setLabelPosition(0.0);
       // Label should be near the start of the line
       const label = ll.getLabel();
@@ -165,78 +171,82 @@ describe('LabeledLine', () => {
       expect(label).toBeDefined();
     });
 
-    it('returns this for chaining', () => {
-      const ll = new LabeledLine({ label: 'x' });
+    it("returns this for chaining", () => {
+      const ll = new LabeledLine({ label: "x" });
       expect(ll.setLabelPosition(0.8)).toBe(ll);
     });
   });
 
-  describe('setLabelOffset', () => {
-    it('returns this for chaining', () => {
-      const ll = new LabeledLine({ label: 'x' });
+  describe("setLabelOffset", () => {
+    it("returns this for chaining", () => {
+      const ll = new LabeledLine({ label: "x" });
       expect(ll.setLabelOffset(0.5)).toBe(ll);
     });
   });
 
-  describe('setEndpoints', () => {
-    it('updates line and repositions label', () => {
-      const ll = new LabeledLine({ label: 'test', start: [0, 0, 0], end: [1, 0, 0] });
+  describe("setEndpoints", () => {
+    it("updates line and repositions label", () => {
+      const ll = new LabeledLine({
+        label: "test",
+        start: [0, 0, 0],
+        end: [1, 0, 0],
+      });
       ll.setEndpoints([0, 0, 0], [5, 5, 0]);
       const line = ll.getLine();
       expect(line.getEnd()).toEqual([5, 5, 0]);
     });
 
-    it('returns this for chaining', () => {
-      const ll = new LabeledLine({ label: 'x' });
+    it("returns this for chaining", () => {
+      const ll = new LabeledLine({ label: "x" });
       expect(ll.setEndpoints([0, 0, 0], [1, 1, 0])).toBe(ll);
     });
   });
 
-  describe('copy()', () => {
-    it('creates a deep copy', () => {
+  describe("copy()", () => {
+    it("creates a deep copy", () => {
       const ll = new LabeledLine({
-        label: 'copy test',
+        label: "copy test",
         start: [-1, 0, 0],
         end: [3, 2, 0],
-        color: '#abcdef',
+        color: "#abcdef",
         labelPosition: 0.3,
-        labelOrientation: 'perpendicular',
+        labelOrientation: "perpendicular",
         labelOffset: 0.4,
         labelFontSize: 24,
-        labelColor: '#123456',
+        labelColor: "#123456",
       });
       const copy = ll.copy() as LabeledLine;
       expect(copy).toBeInstanceOf(LabeledLine);
-      expect(copy.getLabel().getText()).toBe('copy test');
+      expect(copy.getLabel().getText()).toBe("copy test");
     });
   });
 
-  describe('perpendicular label rotation', () => {
-    it('handles upside-down perpendicular label', () => {
+  describe("perpendicular label rotation", () => {
+    it("handles upside-down perpendicular label", () => {
       // Create a line going left (angle > PI/2 for perpendicular)
       const ll = new LabeledLine({
-        label: 'perp',
+        label: "perp",
         start: [2, 0, 0],
         end: [-2, 0, 0],
-        labelOrientation: 'perpendicular',
+        labelOrientation: "perpendicular",
       });
       // The label rotation should be adjusted to keep text readable
       const label = ll.getLabel();
-      expect(typeof label.rotation.z).toBe('number');
+      expect(typeof label.rotation.z).toBe("number");
     });
   });
 
-  describe('parallel label with upside-down line', () => {
-    it('flips label to keep readable', () => {
+  describe("parallel label with upside-down line", () => {
+    it("flips label to keep readable", () => {
       // Line going from right to left: angle = PI
       const ll = new LabeledLine({
-        label: 'parallel',
+        label: "parallel",
         start: [2, 0, 0],
         end: [-2, 0, 0],
-        labelOrientation: 'parallel',
+        labelOrientation: "parallel",
       });
       const label = ll.getLabel();
-      expect(typeof label.rotation.z).toBe('number');
+      expect(typeof label.rotation.z).toBe("number");
     });
   });
 });
@@ -245,112 +255,112 @@ describe('LabeledLine', () => {
 // LabeledArrow
 // ===========================================================================
 
-describe('LabeledArrow', () => {
-  describe('constructor', () => {
-    it('creates with defaults', () => {
-      const la = new LabeledArrow({ label: 'Force' });
+describe("LabeledArrow", () => {
+  describe("constructor", () => {
+    it("creates with defaults", () => {
+      const la = new LabeledArrow({ label: "Force" });
       expect(la.getArrow()).toBeInstanceOf(Arrow);
-      expect(la.getLabel().getText()).toBe('Force');
+      expect(la.getLabel().getText()).toBe("Force");
     });
 
-    it('accepts custom start, end, and options', () => {
+    it("accepts custom start, end, and options", () => {
       const la = new LabeledArrow({
-        label: 'v',
+        label: "v",
         start: [0, 0, 0],
         end: [3, 4, 0],
-        color: '#ff0000',
+        color: "#ff0000",
         labelPosition: 0.7,
-        labelOrientation: 'horizontal',
+        labelOrientation: "horizontal",
         labelOffset: 0.3,
         labelFontSize: 28,
-        labelColor: '#00ff00',
+        labelColor: "#00ff00",
       });
-      expect(la.getLabel().getText()).toBe('v');
-      expect(la.getLabel().color.toLowerCase()).toBe('#00ff00');
+      expect(la.getLabel().getText()).toBe("v");
+      expect(la.getLabel().color.toLowerCase()).toBe("#00ff00");
     });
 
-    it('labelColor defaults to arrow color', () => {
+    it("labelColor defaults to arrow color", () => {
       const la = new LabeledArrow({
-        label: 'x',
-        color: '#aabbcc',
+        label: "x",
+        color: "#aabbcc",
       });
-      expect(la.getLabel().color.toLowerCase()).toBe('#aabbcc');
+      expect(la.getLabel().color.toLowerCase()).toBe("#aabbcc");
     });
   });
 
-  describe('setLabelText', () => {
-    it('updates text', () => {
-      const la = new LabeledArrow({ label: 'old' });
-      la.setLabelText('new');
-      expect(la.getLabel().getText()).toBe('new');
+  describe("setLabelText", () => {
+    it("updates text", () => {
+      const la = new LabeledArrow({ label: "old" });
+      la.setLabelText("new");
+      expect(la.getLabel().getText()).toBe("new");
     });
   });
 
-  describe('setLabelPosition', () => {
-    it('returns this', () => {
-      const la = new LabeledArrow({ label: 'x' });
+  describe("setLabelPosition", () => {
+    it("returns this", () => {
+      const la = new LabeledArrow({ label: "x" });
       expect(la.setLabelPosition(0.9)).toBe(la);
     });
   });
 
-  describe('setLabelOffset', () => {
-    it('returns this', () => {
-      const la = new LabeledArrow({ label: 'x' });
+  describe("setLabelOffset", () => {
+    it("returns this", () => {
+      const la = new LabeledArrow({ label: "x" });
       expect(la.setLabelOffset(0.6)).toBe(la);
     });
   });
 
-  describe('setEndpoints', () => {
-    it('updates arrow endpoints', () => {
-      const la = new LabeledArrow({ label: 'test' });
+  describe("setEndpoints", () => {
+    it("updates arrow endpoints", () => {
+      const la = new LabeledArrow({ label: "test" });
       la.setEndpoints([0, 0, 0], [5, 0, 0]);
       expect(la.getArrow().getEnd()).toEqual([5, 0, 0]);
     });
   });
 
-  describe('copy()', () => {
-    it('produces a LabeledArrow copy', () => {
+  describe("copy()", () => {
+    it("produces a LabeledArrow copy", () => {
       const la = new LabeledArrow({
-        label: 'copy',
+        label: "copy",
         start: [0, 0, 0],
         end: [2, 3, 0],
-        labelColor: '#123456',
+        labelColor: "#123456",
         tipLength: 0.3,
         tipWidth: 0.2,
       });
       const copy = la.copy() as LabeledArrow;
       expect(copy).toBeInstanceOf(LabeledArrow);
-      expect(copy.getLabel().getText()).toBe('copy');
+      expect(copy.getLabel().getText()).toBe("copy");
     });
   });
 
-  describe('parallel and perpendicular label orientations', () => {
-    it('parallel label on upside-down arrow is flipped', () => {
+  describe("parallel and perpendicular label orientations", () => {
+    it("parallel label on upside-down arrow is flipped", () => {
       const la = new LabeledArrow({
-        label: 'par',
+        label: "par",
         start: [2, 0, 0],
         end: [-2, 0, 0],
-        labelOrientation: 'parallel',
+        labelOrientation: "parallel",
       });
-      expect(typeof la.getLabel().rotation.z).toBe('number');
+      expect(typeof la.getLabel().rotation.z).toBe("number");
     });
 
-    it('perpendicular label', () => {
+    it("perpendicular label", () => {
       const la = new LabeledArrow({
-        label: 'perp',
+        label: "perp",
         start: [0, 0, 0],
         end: [0, 3, 0],
-        labelOrientation: 'perpendicular',
+        labelOrientation: "perpendicular",
       });
-      expect(typeof la.getLabel().rotation.z).toBe('number');
+      expect(typeof la.getLabel().rotation.z).toBe("number");
     });
 
-    it('horizontal label stays at z=0', () => {
+    it("horizontal label stays at z=0", () => {
       const la = new LabeledArrow({
-        label: 'horiz',
+        label: "horiz",
         start: [0, 0, 0],
         end: [3, 4, 0],
-        labelOrientation: 'horizontal',
+        labelOrientation: "horizontal",
       });
       expect(la.getLabel().rotation.z).toBe(0);
     });
@@ -361,88 +371,97 @@ describe('LabeledArrow', () => {
 // LabeledDot
 // ===========================================================================
 
-describe('LabeledDot', () => {
-  describe('constructor', () => {
-    it('creates with defaults', () => {
-      const ld = new LabeledDot({ label: 'A' });
+describe("LabeledDot", () => {
+  describe("constructor", () => {
+    it("creates with defaults", () => {
+      const ld = new LabeledDot({ label: "A" });
       expect(ld.getDot()).toBeInstanceOf(Dot);
-      expect(ld.getLabel().getText()).toBe('A');
+      expect(ld.getLabel().getText()).toBe("A");
     });
 
-    it('accepts custom point and options', () => {
+    it("accepts custom point and options", () => {
       const ld = new LabeledDot({
-        label: 'P',
+        label: "P",
         point: [1, 2, 0],
-        labelDirection: 'DOWN',
+        labelDirection: "DOWN",
         labelOffset: 0.5,
         labelFontSize: 20,
-        labelColor: '#ff0000',
+        labelColor: "#ff0000",
         radius: 0.1,
-        color: '#00ff00',
+        color: "#00ff00",
         fillOpacity: 0.8,
       });
-      expect(ld.getLabel().getText()).toBe('P');
+      expect(ld.getLabel().getText()).toBe("P");
       expect(ld.getPoint()).toEqual([1, 2, 0]);
     });
   });
 
-  describe('moveTo', () => {
-    it('moves dot and updates label position', () => {
-      const ld = new LabeledDot({ label: 'A', point: [0, 0, 0] });
+  describe("moveTo", () => {
+    it("moves dot and updates label position", () => {
+      const ld = new LabeledDot({ label: "A", point: [0, 0, 0] });
       ld.moveTo([3, 4, 0]);
       expect(ld.getPoint()).toEqual([3, 4, 0]);
     });
 
-    it('returns this', () => {
-      const ld = new LabeledDot({ label: 'A' });
+    it("returns this", () => {
+      const ld = new LabeledDot({ label: "A" });
       expect(ld.moveTo([1, 1, 0])).toBe(ld);
     });
   });
 
-  describe('setLabelText', () => {
-    it('updates text', () => {
-      const ld = new LabeledDot({ label: 'old' });
-      ld.setLabelText('new');
-      expect(ld.getLabel().getText()).toBe('new');
+  describe("setLabelText", () => {
+    it("updates text", () => {
+      const ld = new LabeledDot({ label: "old" });
+      ld.setLabelText("new");
+      expect(ld.getLabel().getText()).toBe("new");
     });
   });
 
-  describe('setLabelDirection', () => {
-    it('updates direction', () => {
-      const ld = new LabeledDot({ label: 'A', labelDirection: 'UP' });
-      ld.setLabelDirection('RIGHT');
+  describe("setLabelDirection", () => {
+    it("updates direction", () => {
+      const ld = new LabeledDot({ label: "A", labelDirection: "UP" });
+      ld.setLabelDirection("RIGHT");
       // No crash, direction is updated
       expect(ld).toBeDefined();
     });
 
-    it('returns this', () => {
-      const ld = new LabeledDot({ label: 'A' });
-      expect(ld.setLabelDirection('DL')).toBe(ld);
+    it("returns this", () => {
+      const ld = new LabeledDot({ label: "A" });
+      expect(ld.setLabelDirection("DL")).toBe(ld);
     });
   });
 
-  describe('setLabelOffset', () => {
-    it('returns this', () => {
-      const ld = new LabeledDot({ label: 'A' });
+  describe("setLabelOffset", () => {
+    it("returns this", () => {
+      const ld = new LabeledDot({ label: "A" });
       expect(ld.setLabelOffset(0.6)).toBe(ld);
     });
   });
 
-  describe('copy()', () => {
-    it('produces a LabeledDot copy', () => {
+  describe("copy()", () => {
+    it("produces a LabeledDot copy", () => {
       const ld = new LabeledDot({
-        label: 'copy',
+        label: "copy",
         point: [1, 2, 0],
-        labelDirection: 'DR',
+        labelDirection: "DR",
       });
       const copy = ld.copy() as LabeledDot;
       expect(copy).toBeInstanceOf(LabeledDot);
-      expect(copy.getLabel().getText()).toBe('copy');
+      expect(copy.getLabel().getText()).toBe("copy");
     });
   });
 
-  describe('all label directions', () => {
-    const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT', 'UL', 'UR', 'DL', 'DR'] as const;
+  describe("all label directions", () => {
+    const directions = [
+      "UP",
+      "DOWN",
+      "LEFT",
+      "RIGHT",
+      "UL",
+      "UR",
+      "DL",
+      "DR",
+    ] as const;
     for (const dir of directions) {
       it(`supports direction ${dir}`, () => {
         const ld = new LabeledDot({
@@ -459,156 +478,156 @@ describe('LabeledDot', () => {
 // AnnotationDot
 // ===========================================================================
 
-describe('AnnotationDot', () => {
-  describe('constructor', () => {
-    it('creates with defaults', () => {
+describe("AnnotationDot", () => {
+  describe("constructor", () => {
+    it("creates with defaults", () => {
       const ad = new AnnotationDot();
       expect(ad.getDot()).toBeInstanceOf(Dot);
       expect(ad.getOutline()).toBeInstanceOf(Circle);
       expect(ad.getLabel()).toBeNull();
     });
 
-    it('creates with label', () => {
-      const ad = new AnnotationDot({ label: 'Critical' });
+    it("creates with label", () => {
+      const ad = new AnnotationDot({ label: "Critical" });
       expect(ad.getLabel()).not.toBeNull();
-      expect(ad.getLabel()!.getText()).toBe('Critical');
+      expect(ad.getLabel()!.getText()).toBe("Critical");
     });
 
-    it('creates without outline', () => {
+    it("creates without outline", () => {
       const ad = new AnnotationDot({ showOutline: false });
       expect(ad.getOutline()).toBeNull();
     });
 
-    it('accepts custom options', () => {
+    it("accepts custom options", () => {
       const ad = new AnnotationDot({
         point: [3, 4, 0],
-        label: 'X',
-        labelDirection: 'DL',
+        label: "X",
+        labelDirection: "DL",
         labelOffset: 0.6,
         labelFontSize: 24,
-        labelColor: '#ff0000',
-        outlineColor: '#00ff00',
+        labelColor: "#ff0000",
+        outlineColor: "#00ff00",
         outlineScale: 2,
         outlineOpacity: 0.5,
         radius: 0.2,
-        color: '#0000ff',
+        color: "#0000ff",
         fillOpacity: 0.9,
         strokeWidth: 2,
       });
       expect(ad.getPoint()).toEqual([3, 4, 0]);
-      expect(ad.getLabel()!.getText()).toBe('X');
+      expect(ad.getLabel()!.getText()).toBe("X");
     });
 
-    it('labelColor defaults to dot color', () => {
-      const ad = new AnnotationDot({ label: 'X', color: '#aabbcc' });
-      expect(ad.getLabel()!.color.toLowerCase()).toBe('#aabbcc');
+    it("labelColor defaults to dot color", () => {
+      const ad = new AnnotationDot({ label: "X", color: "#aabbcc" });
+      expect(ad.getLabel()!.color.toLowerCase()).toBe("#aabbcc");
     });
   });
 
-  describe('moveTo', () => {
-    it('moves dot and outline', () => {
-      const ad = new AnnotationDot({ point: [0, 0, 0], label: 'P' });
+  describe("moveTo", () => {
+    it("moves dot and outline", () => {
+      const ad = new AnnotationDot({ point: [0, 0, 0], label: "P" });
       ad.moveTo([5, 6, 0]);
       expect(ad.getPoint()).toEqual([5, 6, 0]);
     });
 
-    it('works without outline', () => {
+    it("works without outline", () => {
       const ad = new AnnotationDot({ showOutline: false });
       ad.moveTo([1, 1, 0]);
       expect(ad.getPoint()).toEqual([1, 1, 0]);
     });
 
-    it('works without label', () => {
+    it("works without label", () => {
       const ad = new AnnotationDot({});
       ad.moveTo([2, 2, 0]);
       expect(ad.getPoint()).toEqual([2, 2, 0]);
     });
 
-    it('returns this', () => {
+    it("returns this", () => {
       const ad = new AnnotationDot();
       expect(ad.moveTo([1, 1, 0])).toBe(ad);
     });
   });
 
-  describe('setLabelText', () => {
-    it('updates existing label', () => {
-      const ad = new AnnotationDot({ label: 'old' });
-      ad.setLabelText('new');
-      expect(ad.getLabel()!.getText()).toBe('new');
+  describe("setLabelText", () => {
+    it("updates existing label", () => {
+      const ad = new AnnotationDot({ label: "old" });
+      ad.setLabelText("new");
+      expect(ad.getLabel()!.getText()).toBe("new");
     });
 
-    it('creates label if it does not exist', () => {
+    it("creates label if it does not exist", () => {
       const ad = new AnnotationDot();
       expect(ad.getLabel()).toBeNull();
-      ad.setLabelText('created');
+      ad.setLabelText("created");
       expect(ad.getLabel()).not.toBeNull();
-      expect(ad.getLabel()!.getText()).toBe('created');
+      expect(ad.getLabel()!.getText()).toBe("created");
     });
 
-    it('returns this', () => {
+    it("returns this", () => {
       const ad = new AnnotationDot();
-      expect(ad.setLabelText('x')).toBe(ad);
+      expect(ad.setLabelText("x")).toBe(ad);
     });
   });
 
-  describe('setLabelDirection', () => {
-    it('updates label direction', () => {
-      const ad = new AnnotationDot({ label: 'A', labelDirection: 'UP' });
-      ad.setLabelDirection('DOWN');
+  describe("setLabelDirection", () => {
+    it("updates label direction", () => {
+      const ad = new AnnotationDot({ label: "A", labelDirection: "UP" });
+      ad.setLabelDirection("DOWN");
       // No crash
-      expect(ad.getLabel()!.getText()).toBe('A');
+      expect(ad.getLabel()!.getText()).toBe("A");
     });
 
-    it('returns this', () => {
-      const ad = new AnnotationDot({ label: 'A' });
-      expect(ad.setLabelDirection('LEFT')).toBe(ad);
+    it("returns this", () => {
+      const ad = new AnnotationDot({ label: "A" });
+      expect(ad.setLabelDirection("LEFT")).toBe(ad);
     });
   });
 
-  describe('setLabelOffset', () => {
-    it('returns this', () => {
-      const ad = new AnnotationDot({ label: 'A' });
+  describe("setLabelOffset", () => {
+    it("returns this", () => {
+      const ad = new AnnotationDot({ label: "A" });
       expect(ad.setLabelOffset(0.8)).toBe(ad);
     });
   });
 
-  describe('setShowOutline', () => {
-    it('enables outline when previously disabled', () => {
+  describe("setShowOutline", () => {
+    it("enables outline when previously disabled", () => {
       const ad = new AnnotationDot({ showOutline: false });
       expect(ad.getOutline()).toBeNull();
       ad.setShowOutline(true);
       expect(ad.getOutline()).not.toBeNull();
     });
 
-    it('disables outline when previously enabled', () => {
+    it("disables outline when previously enabled", () => {
       const ad = new AnnotationDot({ showOutline: true });
       expect(ad.getOutline()).not.toBeNull();
       ad.setShowOutline(false);
       expect(ad.getOutline()).toBeNull();
     });
 
-    it('returns this', () => {
+    it("returns this", () => {
       const ad = new AnnotationDot();
       expect(ad.setShowOutline(false)).toBe(ad);
     });
   });
 
-  describe('copy()', () => {
-    it('produces an AnnotationDot copy with label', () => {
+  describe("copy()", () => {
+    it("produces an AnnotationDot copy with label", () => {
       const ad = new AnnotationDot({
         point: [1, 2, 0],
-        label: 'copy',
-        labelDirection: 'DR',
+        label: "copy",
+        labelDirection: "DR",
         showOutline: true,
-        outlineColor: '#ff0000',
+        outlineColor: "#ff0000",
         radius: 0.15,
       });
       const copy = ad.copy() as AnnotationDot;
       expect(copy).toBeInstanceOf(AnnotationDot);
-      expect(copy.getLabel()!.getText()).toBe('copy');
+      expect(copy.getLabel()!.getText()).toBe("copy");
     });
 
-    it('produces copy without label', () => {
+    it("produces copy without label", () => {
       const ad = new AnnotationDot({ showOutline: false });
       const copy = ad.copy() as AnnotationDot;
       expect(copy).toBeInstanceOf(AnnotationDot);
@@ -616,8 +635,8 @@ describe('AnnotationDot', () => {
     });
   });
 
-  describe('getPoint', () => {
-    it('returns dot position', () => {
+  describe("getPoint", () => {
+    it("returns dot position", () => {
       const ad = new AnnotationDot({ point: [7, 8, 0] });
       expect(ad.getPoint()).toEqual([7, 8, 0]);
     });
@@ -628,9 +647,9 @@ describe('AnnotationDot', () => {
 // LabeledPolygram
 // ===========================================================================
 
-describe('LabeledPolygram', () => {
-  describe('constructor', () => {
-    it('creates with vertex groups and label', () => {
+describe("LabeledPolygram", () => {
+  describe("constructor", () => {
+    it("creates with vertex groups and label", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           [
@@ -640,13 +659,13 @@ describe('LabeledPolygram', () => {
             [0, 3, 0],
           ],
         ],
-        label: 'Rectangle',
+        label: "Rectangle",
       });
       expect(lp.getPolygram()).toBeInstanceOf(Polygram);
-      expect(lp.getLabel().getText()).toBe('Rectangle');
+      expect(lp.getLabel().getText()).toBe("Rectangle");
     });
 
-    it('accepts custom color and fillOpacity', () => {
+    it("accepts custom color and fillOpacity", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           [
@@ -656,16 +675,16 @@ describe('LabeledPolygram', () => {
             [0, 2, 0],
           ],
         ],
-        label: 'Square',
-        color: '#ff0000',
+        label: "Square",
+        color: "#ff0000",
         fillOpacity: 0.5,
       });
-      expect(lp.getPolygram().color.toLowerCase()).toBe('#ff0000');
+      expect(lp.getPolygram().color.toLowerCase()).toBe("#ff0000");
     });
   });
 
-  describe('label positioning', () => {
-    it('places label at pole of inaccessibility', () => {
+  describe("label positioning", () => {
+    it("places label at pole of inaccessibility", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           [
@@ -675,7 +694,7 @@ describe('LabeledPolygram', () => {
             [0, 4, 0],
           ],
         ],
-        label: 'Center',
+        label: "Center",
       });
       // For a square, the pole should be near the center
       const pole = lp.pole;
@@ -684,8 +703,8 @@ describe('LabeledPolygram', () => {
     });
   });
 
-  describe('pole and radius properties', () => {
-    it('exposes pole as [x, y]', () => {
+  describe("pole and radius properties", () => {
+    it("exposes pole as [x, y]", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           [
@@ -695,15 +714,15 @@ describe('LabeledPolygram', () => {
             [0, 4, 0],
           ],
         ],
-        label: 'Test',
+        label: "Test",
       });
       const pole = lp.pole;
       expect(pole).toHaveLength(2);
-      expect(typeof pole[0]).toBe('number');
-      expect(typeof pole[1]).toBe('number');
+      expect(typeof pole[0]).toBe("number");
+      expect(typeof pole[1]).toBe("number");
     });
 
-    it('exposes radius (distance to nearest edge)', () => {
+    it("exposes radius (distance to nearest edge)", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           [
@@ -713,7 +732,7 @@ describe('LabeledPolygram', () => {
             [0, 4, 0],
           ],
         ],
-        label: 'Test',
+        label: "Test",
       });
       expect(lp.radius).toBeGreaterThan(0);
       // For a 4x4 square, the pole radius should be ~2
@@ -721,8 +740,8 @@ describe('LabeledPolygram', () => {
     });
   });
 
-  describe('custom precision', () => {
-    it('accepts precision parameter', () => {
+  describe("custom precision", () => {
+    it("accepts precision parameter", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           [
@@ -732,7 +751,7 @@ describe('LabeledPolygram', () => {
             [0, 2, 0],
           ],
         ],
-        label: 'Prec',
+        label: "Prec",
         precision: 0.001,
       });
       expect(lp.pole[0]).toBeCloseTo(1, 2);
@@ -740,8 +759,8 @@ describe('LabeledPolygram', () => {
     });
   });
 
-  describe('custom label options', () => {
-    it('accepts labelFontSize', () => {
+  describe("custom label options", () => {
+    it("accepts labelFontSize", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           [
@@ -751,13 +770,13 @@ describe('LabeledPolygram', () => {
             [0, 2, 0],
           ],
         ],
-        label: 'Small',
+        label: "Small",
         labelFontSize: 24,
       });
       expect(lp.getLabel().getFontSize()).toBe(24);
     });
 
-    it('accepts labelColor', () => {
+    it("accepts labelColor", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           [
@@ -767,13 +786,13 @@ describe('LabeledPolygram', () => {
             [0, 2, 0],
           ],
         ],
-        label: 'Red',
-        labelColor: '#ff0000',
+        label: "Red",
+        labelColor: "#ff0000",
       });
-      expect(lp.getLabel().color.toLowerCase()).toBe('#ff0000');
+      expect(lp.getLabel().color.toLowerCase()).toBe("#ff0000");
     });
 
-    it('defaults labelColor to white', () => {
+    it("defaults labelColor to white", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           [
@@ -783,14 +802,14 @@ describe('LabeledPolygram', () => {
             [0, 2, 0],
           ],
         ],
-        label: 'Default',
+        label: "Default",
       });
       expect(lp.getLabel().color.toUpperCase()).toBe(WHITE);
     });
   });
 
-  describe('setLabelText', () => {
-    it('updates label text', () => {
+  describe("setLabelText", () => {
+    it("updates label text", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           [
@@ -800,13 +819,13 @@ describe('LabeledPolygram', () => {
             [0, 2, 0],
           ],
         ],
-        label: 'old',
+        label: "old",
       });
-      lp.setLabelText('new');
-      expect(lp.getLabel().getText()).toBe('new');
+      lp.setLabelText("new");
+      expect(lp.getLabel().getText()).toBe("new");
     });
 
-    it('returns this for chaining', () => {
+    it("returns this for chaining", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           [
@@ -816,14 +835,14 @@ describe('LabeledPolygram', () => {
             [0, 2, 0],
           ],
         ],
-        label: 'x',
+        label: "x",
       });
-      expect(lp.setLabelText('y')).toBe(lp);
+      expect(lp.setLabelText("y")).toBe(lp);
     });
   });
 
-  describe('copy()', () => {
-    it('produces a LabeledPolygram copy', () => {
+  describe("copy()", () => {
+    it("produces a LabeledPolygram copy", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           [
@@ -833,22 +852,22 @@ describe('LabeledPolygram', () => {
             [0, 3, 0],
           ],
         ],
-        label: 'copy test',
-        color: '#abcdef',
-        labelColor: '#123456',
+        label: "copy test",
+        color: "#abcdef",
+        labelColor: "#123456",
         labelFontSize: 20,
         precision: 0.1,
       });
       const copy = lp.copy() as LabeledPolygram;
       expect(copy).toBeInstanceOf(LabeledPolygram);
-      expect(copy.getLabel().getText()).toBe('copy test');
+      expect(copy.getLabel().getText()).toBe("copy test");
       expect(copy.pole[0]).toBeCloseTo(lp.pole[0], 0);
       expect(copy.pole[1]).toBeCloseTo(lp.pole[1], 0);
     });
   });
 
-  describe('polygon with holes (multiple vertex groups)', () => {
-    it('creates polygram with outer and hole groups', () => {
+  describe("polygon with holes (multiple vertex groups)", () => {
+    it("creates polygram with outer and hole groups", () => {
       const lp = new LabeledPolygram({
         vertexGroups: [
           // Outer boundary
@@ -866,13 +885,14 @@ describe('LabeledPolygram', () => {
             [4, 6, 0],
           ],
         ],
-        label: 'With Hole',
+        label: "With Hole",
       });
       expect(lp.getPolygram()).toBeInstanceOf(Polygram);
-      expect(lp.getLabel().getText()).toBe('With Hole');
+      expect(lp.getLabel().getText()).toBe("With Hole");
       // Pole should not be inside the hole
       const pole = lp.pole;
-      const insideHole = pole[0] > 4 && pole[0] < 6 && pole[1] > 4 && pole[1] < 6;
+      const insideHole = pole[0] > 4 && pole[0] < 6 && pole[1] > 4 &&
+        pole[1] < 6;
       expect(insideHole).toBe(false);
       expect(lp.radius).toBeGreaterThan(0);
     });

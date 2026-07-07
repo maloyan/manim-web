@@ -1,12 +1,18 @@
 <div align="center">
 
-# manim-web
+<div align="center">
+
+<picture>
+    <source srcset="assets/branding/logo.svg" media="(prefers-color-scheme: dark)" />
+    <img src="assets/branding/logo.svg" width="500" alt="manim-web" />
+  </picture>
+  </div>
 
 **Mathematical animations for the web.**
 
 The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the browser, no Python required.
 
-<img src="assets/demo_square_to_circle.gif" width="600" alt="Square to Circle demo">
+<img src="assets/demo/square_to_circle.gif" width="600" alt="Square to Circle demo">
 
 [![npm version](https://img.shields.io/npm/v/manim-web.svg)](https://www.npmjs.com/package/manim-web)
 [![CI](https://github.com/maloyan/manim-web/actions/workflows/ci.yml/badge.svg)](https://github.com/maloyan/manim-web/actions/workflows/ci.yml)
@@ -24,26 +30,24 @@ The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the bro
 ### Browser
 
 ```html
-<h1>Manim-web demo</h1>
+<h1>Manim Web demo</h1>
 <div id="container"></div>
 <script type="module">
-    import {
-        Scene,
-        Circle,
-        Create,
-    } from "https://cdn.jsdelivr.net/npm/manim-web@latest/dist/manim-web.browser.js";
+import {
+  Circle,
+  Create,
+  Scene,
+} from 'https://cdn.jsdelivr.net/npm/manim-web@latest/dist/manim-web.browser.js';
 
-    const options = { width: 500, height: 300 };
-    const scene = new Scene(
-        document.getElementById("container"),
-        options,
-    );
-    const circle = new Circle({ radius: 1.5 });
-    await scene.play(new Create(circle));
+const options = { width: 500, height: 300 };
+const scene = new Scene(
+  document.getElementById('container'),
+  options,
+);
+const circle = new Circle({ radius: 1.5 });
+await scene.play(new Create(circle));
 </script>
 ```
-
-
 
 ### Locally
 
@@ -52,7 +56,7 @@ npm install manim-web
 ```
 
 ```typescript
-import { Scene, Circle, Square, Create, Transform, FadeOut } from 'manim-web';
+import { Circle, Create, FadeOut, Scene, Square, Transform } from 'manim-web';
 
 async function squareToCircle(scene: Scene) {
   const square = new Square({ sideLength: 3 });
@@ -70,12 +74,12 @@ See the [examples](https://maloyan.github.io/manim-web/) for more.
 
 <table>
 <tr>
-<td align="center"><img src="assets/demo_function_graph.gif" width="350" alt="Function Graphs"><br><b>Function Graphs</b></td>
-<td align="center"><img src="assets/demo_math_equations.gif" width="350" alt="LaTeX Equations"><br><b>LaTeX Equations</b></td>
+<td align="center"><img src="assets/demo/function_graph.gif" width="350" alt="Function Graphs"><br><b>Function Graphs</b></td>
+<td align="center"><img src="assets/demo/math_equations.gif" width="350" alt="LaTeX Equations"><br><b>LaTeX Equations</b></td>
 </tr>
 <tr>
-<td align="center"><img src="assets/demo_text.gif" width="350" alt="Text Animations"><br><b>Text Animations</b></td>
-<td align="center"><img src="assets/demo_square_to_circle.gif" width="350" alt="Geometry Transforms"><br><b>Geometry Transforms</b></td>
+<td align="center"><img src="assets/demo/text.gif" width="350" alt="Text Animations"><br><b>Text Animations</b></td>
+<td align="center"><img src="assets/demo/square_to_circle.gif" width="350" alt="Geometry Transforms"><br><b>Geometry Transforms</b></td>
 </tr>
 </table>
 

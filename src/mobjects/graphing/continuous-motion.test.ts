@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { StreamLines } from './VectorField';
+import { describe, expect, it } from "vitest";
+import { StreamLines } from "./VectorField";
 
 const uniformFunc = () => [1, 0] as [number, number];
 const rotationFunc = (x: number, y: number) => [-y, x] as [number, number];
@@ -13,15 +13,15 @@ function makeStreamLines(func = uniformFunc, numLines = 5) {
   });
 }
 
-describe('StreamLines continuous motion', () => {
-  describe('startAnimation', () => {
-    it('returns this for chaining', () => {
+describe("StreamLines continuous motion", () => {
+  describe("startAnimation", () => {
+    it("returns this for chaining", () => {
       const sl = makeStreamLines();
       expect(sl.startAnimation()).toBe(sl);
       sl.endAnimation();
     });
 
-    it('adds an updater to the StreamLines', () => {
+    it("adds an updater to the StreamLines", () => {
       const sl = makeStreamLines();
       expect(sl.hasUpdaters()).toBe(false);
       sl.startAnimation();
@@ -29,7 +29,7 @@ describe('StreamLines continuous motion', () => {
       sl.endAnimation();
     });
 
-    it('accepts custom options', () => {
+    it("accepts custom options", () => {
       const sl = makeStreamLines();
       sl.startAnimation({
         warmUp: false,
@@ -41,7 +41,7 @@ describe('StreamLines continuous motion', () => {
       sl.endAnimation();
     });
 
-    it('replaces existing animation when called twice', () => {
+    it("replaces existing animation when called twice", () => {
       const sl = makeStreamLines();
       sl.startAnimation({ warmUp: false });
       sl.startAnimation({ warmUp: true, flowSpeed: 3 });
@@ -51,7 +51,7 @@ describe('StreamLines continuous motion', () => {
       expect(sl.hasUpdaters()).toBe(false);
     });
 
-    it('is a no-op when there are no streamlines', () => {
+    it("is a no-op when there are no streamlines", () => {
       // A vector field that always returns zero should produce no streamlines
       const sl = new StreamLines({
         func: () => [0, 0] as [number, number],
@@ -66,14 +66,14 @@ describe('StreamLines continuous motion', () => {
     });
   });
 
-  describe('endAnimation', () => {
-    it('returns this for chaining', () => {
+  describe("endAnimation", () => {
+    it("returns this for chaining", () => {
       const sl = makeStreamLines();
       sl.startAnimation();
       expect(sl.endAnimation()).toBe(sl);
     });
 
-    it('removes the updater', () => {
+    it("removes the updater", () => {
       const sl = makeStreamLines();
       sl.startAnimation();
       expect(sl.hasUpdaters()).toBe(true);
@@ -81,12 +81,12 @@ describe('StreamLines continuous motion', () => {
       expect(sl.hasUpdaters()).toBe(false);
     });
 
-    it('is safe to call without startAnimation', () => {
+    it("is safe to call without startAnimation", () => {
       const sl = makeStreamLines();
       expect(() => sl.endAnimation()).not.toThrow();
     });
 
-    it('is safe to call twice', () => {
+    it("is safe to call twice", () => {
       const sl = makeStreamLines();
       sl.startAnimation();
       sl.endAnimation();
@@ -94,7 +94,7 @@ describe('StreamLines continuous motion', () => {
       expect(sl.hasUpdaters()).toBe(false);
     });
 
-    it('restores streamline visibility after animation', () => {
+    it("restores streamline visibility after animation", () => {
       const sl = makeStreamLines();
       const childCountBefore = sl.children.length;
       sl.startAnimation({ warmUp: false });
@@ -104,8 +104,8 @@ describe('StreamLines continuous motion', () => {
     });
   });
 
-  describe('updater behavior', () => {
-    it('phases advance when updater is called', () => {
+  describe("updater behavior", () => {
+    it("phases advance when updater is called", () => {
       const sl = makeStreamLines(rotationFunc, 5);
       sl.startAnimation({ warmUp: false, flowSpeed: 1, timeWidth: 0.3 });
 
@@ -117,7 +117,7 @@ describe('StreamLines continuous motion', () => {
       sl.endAnimation();
     });
 
-    it('warm-up randomizes phases', () => {
+    it("warm-up randomizes phases", () => {
       const sl1 = makeStreamLines(rotationFunc, 5);
       const sl2 = makeStreamLines(rotationFunc, 5);
 
@@ -132,7 +132,7 @@ describe('StreamLines continuous motion', () => {
       sl2.endAnimation();
     });
 
-    it('updater does not throw during multiple frames', () => {
+    it("updater does not throw during multiple frames", () => {
       const sl = makeStreamLines(rotationFunc, 8);
       sl.startAnimation({ warmUp: false, flowSpeed: 2, timeWidth: 0.4 });
 
@@ -146,21 +146,21 @@ describe('StreamLines continuous motion', () => {
       sl.endAnimation();
     });
 
-    it('handles small timeWidth', () => {
+    it("handles small timeWidth", () => {
       const sl = makeStreamLines(uniformFunc, 5);
       sl.startAnimation({ warmUp: false, flowSpeed: 1, timeWidth: 0.05 });
       expect(() => sl.update(0.1)).not.toThrow();
       sl.endAnimation();
     });
 
-    it('handles large timeWidth', () => {
+    it("handles large timeWidth", () => {
       const sl = makeStreamLines(uniformFunc, 5);
       sl.startAnimation({ warmUp: false, flowSpeed: 1, timeWidth: 0.9 });
       expect(() => sl.update(0.1)).not.toThrow();
       sl.endAnimation();
     });
 
-    it('wraps around phase correctly', () => {
+    it("wraps around phase correctly", () => {
       const sl = makeStreamLines(uniformFunc, 3);
       sl.startAnimation({ warmUp: false, flowSpeed: 10, timeWidth: 0.3 });
 
@@ -175,8 +175,8 @@ describe('StreamLines continuous motion', () => {
     });
   });
 
-  describe('integration with other StreamLines features', () => {
-    it('works after setFunction', () => {
+  describe("integration with other StreamLines features", () => {
+    it("works after setFunction", () => {
       const sl = makeStreamLines();
       sl.setFunction(rotationFunc);
       sl.startAnimation();
@@ -185,7 +185,7 @@ describe('StreamLines continuous motion', () => {
       sl.endAnimation();
     });
 
-    it('works with showArrows', () => {
+    it("works with showArrows", () => {
       const sl = new StreamLines({
         func: uniformFunc,
         xRange: [-2, 2, 1],
@@ -199,7 +199,7 @@ describe('StreamLines continuous motion', () => {
       sl.endAnimation();
     });
 
-    it('works with variableWidth', () => {
+    it("works with variableWidth", () => {
       const sl = new StreamLines({
         func: rotationFunc,
         xRange: [-2, 2, 1],
@@ -212,7 +212,7 @@ describe('StreamLines continuous motion', () => {
       sl.endAnimation();
     });
 
-    it('works with custom startPoints', () => {
+    it("works with custom startPoints", () => {
       const sl = new StreamLines({
         func: uniformFunc,
         startPoints: [
@@ -226,7 +226,7 @@ describe('StreamLines continuous motion', () => {
       sl.endAnimation();
     });
 
-    it('copy does not carry over animation state', () => {
+    it("copy does not carry over animation state", () => {
       const sl = makeStreamLines();
       sl.startAnimation();
       const cp = sl.copy();

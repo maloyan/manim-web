@@ -5,51 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ManimWeb - PolarPlane Custom Labels (issue #342)</title>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      body {
-        background: #1a1a2e;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        min-height: 100vh;
-        font-family: system-ui, sans-serif;
-        gap: 16px;
-        padding: 24px;
-      }
-      .row {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      .panel {
-        border: 2px solid #333;
-        border-radius: 8px;
-        overflow: hidden;
-        padding: 8px;
-        background: #0f0f1a;
-      }
-      .panel h2 {
-        color: #eee;
-        font-size: 14px;
-        margin-bottom: 6px;
-        text-align: center;
-      }
-      h1 {
-        color: #eee;
-        font-size: 22px;
-      }
-      p {
-        color: #aaa;
-        font-size: 13px;
-        text-align: center;
-        max-width: 800px;
-      }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      gap: 16px;
+      padding: 24px;
+    }
+    .row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .panel {
+      border: 2px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+      padding: 8px;
+      background: #0f0f1a;
+    }
+    .panel h2 {
+      color: #eee;
+      font-size: 14px;
+      margin-bottom: 6px;
+      text-align: center;
+    }
+    h1 {
+      color: #eee;
+      font-size: 22px;
+    }
+    p {
+      color: #aaa;
+      font-size: 13px;
+      text-align: center;
+      max-width: 800px;
+    }
     </style>
   </head>
   <body>
@@ -77,75 +77,75 @@
     </div>
 
     <script type="module">
-      import { Scene, PolarPlane, MathTex, BLACK } from '../src/index.ts';
+    import { BLACK, MathTex, PolarPlane, Scene } from '../src/index.ts';
 
-      const W = 380,
-        H = 380;
+    const W = 380,
+      H = 380;
 
-      // 1) Default polar plane — pi/6, pi/4 etc.
-      const sDefault = new Scene(document.getElementById('c-default'), {
-        width: W,
-        height: H,
-        backgroundColor: BLACK,
-      });
-      sDefault.add(new PolarPlane({ radius: 3, size: 5, angularDivisions: 12 }));
+    // 1) Default polar plane — pi/6, pi/4 etc.
+    const sDefault = new Scene(document.getElementById('c-default'), {
+      width: W,
+      height: H,
+      backgroundColor: BLACK,
+    });
+    sDefault.add(new PolarPlane({ radius: 3, size: 5, angularDivisions: 12 }));
 
-      // 2) Compass overrides — strings rendered via Text.
-      const sCompass = new Scene(document.getElementById('c-compass'), {
-        width: W,
-        height: H,
-        backgroundColor: BLACK,
-      });
-      sCompass.add(
-        new PolarPlane({
-          radius: 3,
-          size: 5,
-          angularDivisions: 4,
-          radialDivisions: 3,
-          angleLabels: ['E', 'N', 'W', 'S'],
-          radiusLabels: ['1u', '2u', '3u'],
-        }),
-      );
+    // 2) Compass overrides — strings rendered via Text.
+    const sCompass = new Scene(document.getElementById('c-compass'), {
+      width: W,
+      height: H,
+      backgroundColor: BLACK,
+    });
+    sCompass.add(
+      new PolarPlane({
+        radius: 3,
+        size: 5,
+        angularDivisions: 4,
+        radialDivisions: 3,
+        angleLabels: ['E', 'N', 'W', 'S'],
+        radiusLabels: ['1u', '2u', '3u'],
+      }),
+    );
 
-      // 3) tauist (τ) overrides via MathTex — pre-built MathTex mobjects
-      //    are used as-is (caller owns LaTeX styling), positioned by the
-      //    plane, and reparented into the angle/radius label groups.
-      const sTau = new Scene(document.getElementById('c-tau'), {
-        width: W,
-        height: H,
-        backgroundColor: BLACK,
-      });
-      const tauAngleLatex = [
-        '0',
-        '\\tau/12',
-        '\\tau/6',
-        '\\tau/4',
-        '\\tau/3',
-        '5\\tau/12',
-        '\\tau/2',
-        '7\\tau/12',
-        '2\\tau/3',
-        '3\\tau/4',
-        '5\\tau/6',
-        '11\\tau/12',
-      ];
-      const tauAngleLabels = tauAngleLatex.map((latex) => new MathTex({ latex, fontSize: 28 }));
-      const tauRadiusLabels = ['r_1', 'r_2', 'r_3'].map(
-        (latex) => new MathTex({ latex, fontSize: 24 }),
-      );
-      // Wait for LaTeX to render before letting PolarPlane position the
-      // labels — `moveTo` needs real bounds to compute placement.
-      await Promise.all([...tauAngleLabels, ...tauRadiusLabels].map((l) => l.waitForRender()));
-      sTau.add(
-        new PolarPlane({
-          radius: 3,
-          size: 5,
-          angularDivisions: 12,
-          radialDivisions: 3,
-          angleLabels: tauAngleLabels,
-          radiusLabels: tauRadiusLabels,
-        }),
-      );
+    // 3) tauist (τ) overrides via MathTex — pre-built MathTex mobjects
+    //    are used as-is (caller owns LaTeX styling), positioned by the
+    //    plane, and reparented into the angle/radius label groups.
+    const sTau = new Scene(document.getElementById('c-tau'), {
+      width: W,
+      height: H,
+      backgroundColor: BLACK,
+    });
+    const tauAngleLatex = [
+      '0',
+      '\\tau/12',
+      '\\tau/6',
+      '\\tau/4',
+      '\\tau/3',
+      '5\\tau/12',
+      '\\tau/2',
+      '7\\tau/12',
+      '2\\tau/3',
+      '3\\tau/4',
+      '5\\tau/6',
+      '11\\tau/12',
+    ];
+    const tauAngleLabels = tauAngleLatex.map((latex) => new MathTex({ latex, fontSize: 28 }));
+    const tauRadiusLabels = ['r_1', 'r_2', 'r_3'].map(
+      (latex) => new MathTex({ latex, fontSize: 24 }),
+    );
+    // Wait for LaTeX to render before letting PolarPlane position the
+    // labels — `moveTo` needs real bounds to compute placement.
+    await Promise.all([...tauAngleLabels, ...tauRadiusLabels].map((l) => l.waitForRender()));
+    sTau.add(
+      new PolarPlane({
+        radius: 3,
+        size: 5,
+        angularDivisions: 12,
+        radialDivisions: 3,
+        angleLabels: tauAngleLabels,
+        radiusLabels: tauRadiusLabels,
+      }),
+    );
     </script>
   </body>
 </html>

@@ -5,13 +5,13 @@
  * that flash outward from the mobject's center.
  */
 
-import * as THREE from 'three';
-import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { Animation, AnimationOptions } from '../Animation';
-import { YELLOW, DEFAULT_STROKE_WIDTH } from '../../constants';
+import * as THREE from "three";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
+import { Mobject, Vector3Tuple } from "../../core/Mobject";
+import { Animation, AnimationOptions } from "../Animation";
+import { DEFAULT_STROKE_WIDTH, YELLOW } from "../../constants";
 
 export interface FlashOptions extends AnimationOptions {
   /** Color of the flash lines. Default: YELLOW */
@@ -72,7 +72,11 @@ export class Flash extends Animation {
 
     // Create flash lines group
     this._flashGroup = new THREE.Group();
-    this._flashGroup.position.set(this._center[0], this._center[1], this._center[2] + 0.01);
+    this._flashGroup.position.set(
+      this._center[0],
+      this._center[1],
+      this._center[2] + 0.01,
+    );
 
     // Create radial flash lines
     for (let i = 0; i < this.numLines; i++) {
@@ -109,7 +113,8 @@ export class Flash extends Animation {
     if (!this._flashGroup) return;
 
     // Flash grows outward and fades
-    const currentOuterRadius = this.innerRadius + (this.flashRadius - this.innerRadius) * alpha;
+    const currentOuterRadius = this.innerRadius +
+      (this.flashRadius - this.innerRadius) * alpha;
     const opacity = 1 - alpha; // Fade out as it expands
 
     this._flashGroup.children.forEach((child, i) => {

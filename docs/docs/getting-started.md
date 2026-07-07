@@ -17,7 +17,7 @@ npm install manim-web
 Create a minimal scene with a shape animation:
 
 ```typescript
-import { Scene, Circle, Create, FadeOut, BLACK } from 'manim-web';
+import { BLACK, Circle, Create, FadeOut, Scene } from 'manim-web';
 
 // Set up the scene
 const container = document.getElementById('container');

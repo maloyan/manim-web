@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - StreamLines Continuous Motion</title>
-  <style>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - StreamLines Continuous Motion</title>
+    <style>
     * {
       margin: 0;
       padding: 0;
@@ -55,33 +55,27 @@
       font-size: 14px;
       text-align: center;
     }
-  </style>
-</head>
-<body>
-  <div class="info">StreamLines Continuous Motion (Issue #135)</div>
-  <div id="container"></div>
-  <div class="controls">
-    <button id="startBtn">Start Animation</button>
-    <button id="stopBtn">Stop Animation</button>
-    <button id="field1Btn" class="active">Sine Field</button>
-    <button id="field2Btn">Rotation Field</button>
-    <button id="field3Btn">Dipole Field</button>
-  </div>
+    </style>
+  </head>
+  <body>
+    <div class="info">StreamLines Continuous Motion (Issue #135)</div>
+    <div id="container"></div>
+    <div class="controls">
+      <button id="startBtn">Start Animation</button>
+      <button id="stopBtn">Stop Animation</button>
+      <button id="field1Btn" class="active">Sine Field</button>
+      <button id="field2Btn">Rotation Field</button>
+      <button id="field3Btn">Dipole Field</button>
+    </div>
 
-  <script type="module">
-    import {
-      Scene,
-      StreamLines,
-      NumberPlane,
-      Create,
-      FadeIn,
-    } from '../src/index.ts';
+    <script type="module">
+    import { Create, FadeIn, NumberPlane, Scene, StreamLines } from '../src/index.ts';
 
     const container = document.getElementById('container');
     const scene = new Scene(container, {
       width: 900,
       height: 550,
-      backgroundColor: '#1a1a2e'
+      backgroundColor: '#1a1a2e',
     });
 
     // Add a subtle grid
@@ -168,12 +162,12 @@
 
     fieldBtns.forEach((btn, idx) => {
       btn.addEventListener('click', () => {
-        fieldBtns.forEach(b => b.classList.remove('active'));
+        fieldBtns.forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
         isAnimating = false;
         createField(fields[idx]);
       });
     });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

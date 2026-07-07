@@ -1,8 +1,8 @@
-import { VGroup } from '../../core/VGroup';
-import { Vector3Tuple } from '../../core/Mobject';
-import { RoundedRectangle } from '../geometry/PolygonExtensions';
-import { Dot } from '../geometry/Dot';
-import { WHITE, BLACK } from '../../constants';
+import { VGroup } from "../../core/VGroup";
+import { Vector3Tuple } from "../../core/Mobject";
+import { RoundedRectangle } from "../geometry/PolygonExtensions";
+import { Dot } from "../geometry/Dot";
+import { BLACK, WHITE } from "../../constants";
 
 /**
  * Options for creating a DiceFace
@@ -129,7 +129,9 @@ export class DiceFace extends VGroup {
     } = options;
 
     if (value < 1 || value > 6 || !Number.isInteger(value)) {
-      throw new Error(`DiceFace value must be an integer from 1 to 6. Got: ${value}`);
+      throw new Error(
+        `DiceFace value must be an integer from 1 to 6. Got: ${value}`,
+      );
     }
 
     this._value = value;
@@ -200,7 +202,9 @@ export class DiceFace extends VGroup {
    */
   setValue(value: number): this {
     if (value < 1 || value > 6 || !Number.isInteger(value)) {
-      throw new Error(`DiceFace value must be an integer from 1 to 6. Got: ${value}`);
+      throw new Error(
+        `DiceFace value must be an integer from 1 to 6. Got: ${value}`,
+      );
     }
 
     // Remove existing dots
@@ -306,7 +310,7 @@ export class DiceFace extends VGroup {
  * ```
  */
 export function createDiceRow(
-  options: Omit<DiceFaceOptions, 'value' | 'center'> = {},
+  options: Omit<DiceFaceOptions, "value" | "center"> = {},
   buff: number = 0.3,
 ): VGroup {
   const size = options.size ?? 1.5;

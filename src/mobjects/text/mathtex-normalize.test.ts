@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import * as THREE from 'three';
-import { MathTexImage } from './MathTexImage';
-import { VGroup } from '../../core/VGroup';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as THREE from "three";
+import { MathTexImage } from "./MathTexImage";
+import { VGroup } from "../../core/VGroup";
 
 // happy-dom has no 2D canvas context, so the background LaTeX render rejects.
 // These tests only exercise the transform-baking math, not rendering, so we
@@ -10,7 +10,7 @@ import { VGroup } from '../../core/VGroup';
 beforeEach(() => {
   vi.spyOn(
     MathTexImage.prototype as unknown as { _renderLatex(): Promise<void> },
-    '_renderLatex',
+    "_renderLatex",
   ).mockResolvedValue(undefined);
 });
 
@@ -30,7 +30,7 @@ afterEach(() => {
  * `getBounds()` incorporates it, so the world size is preserved. The plane
  * geometry therefore keeps its base size; the world size is base * scaleVector.
  */
-describe('MathTexImage survives normalizeTransform (#417)', () => {
+describe("MathTexImage survives normalizeTransform (#417)", () => {
   const boundsSize = (tex: MathTexImage): { w: number; h: number } => {
     const b = tex.getBounds();
     return { w: b.max.x - b.min.x, h: b.max.y - b.min.y };
@@ -38,8 +38,10 @@ describe('MathTexImage survives normalizeTransform (#417)', () => {
   // Build a single-part MathTexImage with a known render size, with its mesh
   // created, without depending on async LaTeX rendering.
   const makeSized = (w: number, h: number): MathTexImage => {
-    const tex = new MathTexImage({ latex: 'M' });
-    const rs = (tex as unknown as { _renderState: { width: number; height: number } })._renderState;
+    const tex = new MathTexImage({ latex: "M" });
+    const rs =
+      (tex as unknown as { _renderState: { width: number; height: number } })
+        ._renderState;
     rs.width = w;
     rs.height = h;
     tex.getThreeObject(); // create the mesh
@@ -53,7 +55,7 @@ describe('MathTexImage survives normalizeTransform (#417)', () => {
     return { w: params.width, h: params.height };
   };
 
-  it('retains scale on scaleVector so the world size persists across normalize', () => {
+  it("retains scale on scaleVector so the world size persists across normalize", () => {
     const tex = makeSized(1, 0.5);
     tex.scale(7);
     expect(tex.scaleVector.x).toBeCloseTo(7, 6);
@@ -73,7 +75,7 @@ describe('MathTexImage survives normalizeTransform (#417)', () => {
     expect(world.h).toBeCloseTo(3.5, 4);
   });
 
-  it('scale baking is idempotent (second normalize does not double-apply)', () => {
+  it("scale baking is idempotent (second normalize does not double-apply)", () => {
     const tex = makeSized(1, 0.5);
     tex.scale(7);
     tex.normalizeTransform();
@@ -84,7 +86,7 @@ describe('MathTexImage survives normalizeTransform (#417)', () => {
     expect(second.h).toBeCloseTo(first.h, 6);
   });
 
-  it('a scaled MathTexImage inside a VGroup keeps its size after group normalize', () => {
+  it("a scaled MathTexImage inside a VGroup keeps its size after group normalize", () => {
     const tex = makeSized(1, 0.5);
     tex.scale(3);
     const vg = new VGroup(tex); // constructor normalizes
@@ -96,7 +98,7 @@ describe('MathTexImage survives normalizeTransform (#417)', () => {
     expect(boundsSize(tex).w).toBeCloseTo(3, 4);
   });
 
-  it('a Z-rotated MathTexImage in a group bakes net rotation into the mesh', () => {
+  it("a Z-rotated MathTexImage in a group bakes net rotation into the mesh", () => {
     // Group rotated +90°, child counter-rotated -90° => net 0 visual orientation,
     // mirroring the heat-diagram y-axis labels.
     const label = makeSized(0.4, 0.4);
@@ -113,7 +115,9 @@ describe('MathTexImage survives normalizeTransform (#417)', () => {
     const mesh = label.getDisplayMeshes()[0];
     group._syncToThree();
     mesh.updateWorldMatrix(true, true);
-    const e = new THREE.Euler().setFromQuaternion(mesh.getWorldQuaternion(new THREE.Quaternion()));
+    const e = new THREE.Euler().setFromQuaternion(
+      mesh.getWorldQuaternion(new THREE.Quaternion()),
+    );
     expect(Math.abs(e.z) % Math.PI).toBeCloseTo(0, 4);
   });
 });

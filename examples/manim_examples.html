@@ -1,12 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <script>if(new URLSearchParams(location.search).has('embed'))document.documentElement.classList.add('embed')</script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Manim Examples</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <script>
+    if (new URLSearchParams(location.search).has('embed')) {
+      document.documentElement.classList.add('embed');
+    }
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - Manim Examples</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #0f0f23;
       min-height: 100vh;
@@ -17,7 +25,10 @@
       font-family: system-ui, sans-serif;
       color: #fff;
     }
-    h1 { margin-bottom: 20px; color: #e94560; }
+    h1 {
+      margin-bottom: 20px;
+      color: #e94560;
+    }
     #container {
       border: 2px solid #333;
       border-radius: 12px;
@@ -41,25 +52,55 @@
       font-size: 14px;
       transition: background 0.2s;
     }
-    button:hover { background: #ff6b6b; }
-    button:disabled { background: #666; cursor: not-allowed; }
-    html.embed, html.embed body { margin:0!important;padding:0!important;overflow:hidden;background:#000!important;width:100%;height:100%; }
-    html.embed body { display:flex;justify-content:center;align-items:center; }
-    html.embed .controls, html.embed .buttons, html.embed h1, html.embed #status { display:none!important; }
-    html.embed #container { border:none!important;border-radius:0!important;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center; }
-  </style>
-</head>
-<body>
-  <h1>Manim Examples</h1>
-  <div id="container"></div>
-  <div class="buttons">
-    <button id="demo1">Square to Circle</button>
-    <button id="demo2">Modified Objects</button>
-    <button id="demo3">Displaying Text</button>
-    <button id="demo4">Math Equations</button>
-    <button id="demo5">Function Graph</button>
-  </div>
+    button:hover {
+      background: #ff6b6b;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    html.embed,
+    html.embed body {
+      margin: 0!important;
+      padding: 0!important;
+      overflow: hidden;
+      background: #000!important;
+      width: 100%;
+      height: 100%;
+    }
+    html.embed body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    html.embed .controls,
+    html.embed .buttons,
+    html.embed h1,
+    html.embed #status {
+      display: none!important;
+    }
+    html.embed #container {
+      border: none!important;
+      border-radius: 0!important;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>Manim Examples</h1>
+    <div id="container"></div>
+    <div class="buttons">
+      <button id="demo1">Square to Circle</button>
+      <button id="demo2">Modified Objects</button>
+      <button id="demo3">Displaying Text</button>
+      <button id="demo4">Math Equations</button>
+      <button id="demo5">Function Graph</button>
+    </div>
 
-  <script type="module" src="./manim_examples.ts"></script>
-</body>
+    <script type="module" src="./manim_examples.ts"></script>
+  </body>
 </html>

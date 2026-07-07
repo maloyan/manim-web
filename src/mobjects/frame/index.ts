@@ -5,10 +5,10 @@
  * useful for backgrounds, fade effects, and screen-relative positioning.
  */
 
-import { Rectangle, type RectangleOptions } from '../geometry/Rectangle';
-import { Vector3Tuple } from '../../core/Mobject';
-import { BLACK, WHITE } from '../../constants/colors';
-import { DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT } from '../../constants';
+import { Rectangle, type RectangleOptions } from "../geometry/Rectangle";
+import { Vector3Tuple } from "../../core/Mobject";
+import { BLACK, WHITE } from "../../constants/colors";
+import { DEFAULT_FRAME_HEIGHT, DEFAULT_FRAME_WIDTH } from "../../constants";
 
 /**
  * Default 16:9 aspect ratio
@@ -18,7 +18,8 @@ export const DEFAULT_ASPECT_RATIO = 16 / 9;
 /**
  * Options for creating a ScreenRectangle
  */
-export interface ScreenRectangleOptions extends Omit<RectangleOptions, 'width'> {
+export interface ScreenRectangleOptions
+  extends Omit<RectangleOptions, "width"> {
   /** Height of the rectangle. Default: 4 */
   height?: number;
   /** Aspect ratio (width/height). Default: 16/9 */
@@ -218,10 +219,11 @@ export class FullScreenRectangle extends Rectangle {
 /**
  * Options for creating a FullScreenFadeRectangle
  */
-export interface FullScreenFadeRectangleOptions extends Omit<
-  FullScreenRectangleOptions,
-  'fillOpacity'
-> {
+export interface FullScreenFadeRectangleOptions extends
+  Omit<
+    FullScreenRectangleOptions,
+    "fillOpacity"
+  > {
   /** Initial opacity for the fade. Default: 0 (invisible) */
   opacity?: number;
 }
@@ -324,7 +326,7 @@ export class FullScreenFadeRectangle extends FullScreenRectangle {
  * Create a black fade rectangle for fade-to-black effects
  */
 export function createFadeToBlack(
-  options: Omit<FullScreenFadeRectangleOptions, 'color'> = {},
+  options: Omit<FullScreenFadeRectangleOptions, "color"> = {},
 ): FullScreenFadeRectangle {
   return new FullScreenFadeRectangle({ ...options, color: BLACK });
 }
@@ -333,7 +335,7 @@ export function createFadeToBlack(
  * Create a white fade rectangle for fade-to-white effects
  */
 export function createFadeToWhite(
-  options: Omit<FullScreenFadeRectangleOptions, 'color'> = {},
+  options: Omit<FullScreenFadeRectangleOptions, "color"> = {},
 ): FullScreenFadeRectangle {
   return new FullScreenFadeRectangle({ ...options, color: WHITE });
 }

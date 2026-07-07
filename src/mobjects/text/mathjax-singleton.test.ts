@@ -21,20 +21,23 @@
  * by handler registration performed inside another test in this file.
  */
 
-import { describe, it, expect } from 'vitest';
-import { renderLatexToSVG, MathJaxSingletonMismatchError } from './MathJaxRenderer';
+import { describe, expect, it } from "vitest";
+import {
+  MathJaxSingletonMismatchError,
+  renderLatexToSVG,
+} from "./MathJaxRenderer";
 
-describe('MathJax singleton (issue #396)', () => {
+describe("MathJax singleton (issue #396)", () => {
   it('renders LaTeX without throwing "Can\'t find handler for document"', async () => {
     // First test in the file: if `loadMathJax` ever stops calling
     // RegisterHTMLHandler internally, the singleton stays empty and this
     // call throws the issue #396 error before any other test can prime it.
-    const result = await renderLatexToSVG('x');
+    const result = await renderLatexToSVG("x");
     expect(result.vmobjectGroup.children.length).toBeGreaterThan(0);
   });
 
-  it('points renderer and RegisterHTMLHandler at the same singleton', async () => {
-    const bundle = await import('./MathJaxBundle');
+  it("points renderer and RegisterHTMLHandler at the same singleton", async () => {
+    const bundle = await import("./MathJaxBundle");
     const adaptor = bundle.liteAdaptor();
     const registered = bundle.RegisterHTMLHandler(adaptor) as unknown;
 
@@ -46,13 +49,15 @@ describe('MathJax singleton (issue #396)', () => {
     // mathjax.handlers; this proves both sides share state, which is what
     // breaks under esm.sh's chunk duplication. PrioritizedList wraps each
     // entry as { item, priority }, so unwrap before checking.
-    const items = Array.from(mathjax.handlers).map((entry) => (entry as { item: unknown }).item);
+    const items = Array.from(mathjax.handlers).map((entry) =>
+      (entry as { item: unknown }).item
+    );
     expect(items).toContain(registered);
   });
 
-  it('exports a typed mismatch error so the CDN fallback can catch it', () => {
+  it("exports a typed mismatch error so the CDN fallback can catch it", () => {
     const err = new MathJaxSingletonMismatchError();
     expect(err).toBeInstanceOf(Error);
-    expect(err.name).toBe('MathJaxSingletonMismatchError');
+    expect(err.name).toBe("MathJaxSingletonMismatchError");
   });
 });

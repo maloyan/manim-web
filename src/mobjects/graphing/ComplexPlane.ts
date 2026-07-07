@@ -1,13 +1,13 @@
-import * as THREE from 'three';
-import { Group } from '../../core/Group';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
-import { NumberPlane, NumberPlaneOptions } from './NumberPlane';
-import { Line } from '../geometry';
-import { Circle } from '../geometry';
-import { Text } from '../text';
-import { WHITE } from '../../constants';
-import { resolveExtremalPoint } from '../../core/MobjectState';
+import * as THREE from "three";
+import { Group } from "../../core/Group";
+import { Mobject, Vector3Tuple } from "../../core/Mobject";
+import { VMobject } from "../../core/VMobject";
+import { NumberPlane, NumberPlaneOptions } from "./NumberPlane";
+import { Line } from "../geometry";
+import { Circle } from "../geometry";
+import { Text } from "../text";
+import { WHITE } from "../../constants";
+import { resolveExtremalPoint } from "../../core/MobjectState";
 
 /**
  * Complex number representation
@@ -110,7 +110,11 @@ export class ComplexPlane extends NumberPlane {
       });
 
       // Position label to the left of the y-axis
-      label.moveTo([visualX - this.position.x - 0.3, visualY - this.position.y, 0]);
+      label.moveTo([
+        visualX - this.position.x - 0.3,
+        visualY - this.position.y,
+        0,
+      ]);
 
       this._imaginaryLabels.add(label);
     }
@@ -121,9 +125,9 @@ export class ComplexPlane extends NumberPlane {
    */
   private _formatImaginaryLabel(value: number): string {
     if (Math.abs(value - 1) < 0.0001) {
-      return 'i';
+      return "i";
     } else if (Math.abs(value + 1) < 0.0001) {
-      return '-i';
+      return "-i";
     } else if (Number.isInteger(value)) {
       return `${value}i`;
     } else {
@@ -137,7 +141,7 @@ export class ComplexPlane extends NumberPlane {
    * @returns Visual point [x, y, z]
    */
   n2p(z: Complex | number): Vector3Tuple {
-    if (typeof z === 'number') {
+    if (typeof z === "number") {
       return this.coordsToPoint(z, 0);
     }
     return this.coordsToPoint(z.re, z.im);
@@ -334,7 +338,11 @@ export class ComplexPlane extends NumberPlane {
     const transformPoint = (point: number[]): number[] => {
       let p = point;
       if (aboutPt) {
-        p = [point[0] - aboutPt[0], point[1] - aboutPt[1], point[2] - aboutPt[2]];
+        p = [
+          point[0] - aboutPt[0],
+          point[1] - aboutPt[1],
+          point[2] - aboutPt[2],
+        ];
       }
       const z = this.p2n(p as [number, number, number]);
       const w = func(z);
@@ -355,7 +363,10 @@ export class ComplexPlane extends NumberPlane {
   /**
    * Recursively walk `group` and transform the points of every VMobject child.
    */
-  private _transformChildren(group: Mobject, transformFn: (p: number[]) => number[]): void {
+  private _transformChildren(
+    group: Mobject,
+    transformFn: (p: number[]) => number[],
+  ): void {
     for (const child of group.children || []) {
       if (child instanceof VMobject) {
         const points = child.getLocalPoints();
@@ -428,7 +439,11 @@ export class ComplexPlane extends NumberPlane {
         fontSize: this._labelFontSize,
         color: this._labelColor,
       });
-      label.moveTo([visualX - this.position.x, visualY - this.position.y - 0.3, 0]);
+      label.moveTo([
+        visualX - this.position.x,
+        visualY - this.position.y - 0.3,
+        0,
+      ]);
       this._coordinateLabels.add(label);
     }
 
@@ -441,7 +456,11 @@ export class ComplexPlane extends NumberPlane {
         fontSize: this._labelFontSize,
         color: this._labelColor,
       });
-      label.moveTo([visualX - this.position.x - 0.3, visualY - this.position.y, 0]);
+      label.moveTo([
+        visualX - this.position.x - 0.3,
+        visualY - this.position.y,
+        0,
+      ]);
       this._coordinateLabels.add(label);
     }
 
@@ -575,7 +594,7 @@ export class PolarPlane extends Group {
       size = 6,
       radialDivisions = 3,
       angularDivisions = 12,
-      gridColor = '#555555',
+      gridColor = "#555555",
       gridStrokeWidth = 1,
       gridOpacity = 0.5,
       includeAngleLabels = true,
@@ -600,8 +619,8 @@ export class PolarPlane extends Group {
     // Reject duplicate Mobject instances — `Group.add()` reparents, so the
     // same Mobject appearing in multiple slots would silently leave only the
     // final slot populated.
-    PolarPlane._assertUniqueMobjects(angleLabels, 'angleLabels');
-    PolarPlane._assertUniqueMobjects(radiusLabels, 'radiusLabels');
+    PolarPlane._assertUniqueMobjects(angleLabels, "angleLabels");
+    PolarPlane._assertUniqueMobjects(radiusLabels, "radiusLabels");
 
     this._radius = radius;
     this._size = size;
@@ -652,7 +671,8 @@ export class PolarPlane extends Group {
 
     // Generate concentric circles
     for (let i = 1; i <= this._radialDivisions; i++) {
-      const circleRadius = (i / this._radialDivisions) * this._radius * scaleFactor;
+      const circleRadius = (i / this._radialDivisions) * this._radius *
+        scaleFactor;
       const circle = new Circle({
         radius: circleRadius,
         color: this._gridColor,
@@ -665,7 +685,8 @@ export class PolarPlane extends Group {
     // Generate radial lines
     const outerRadius = this._size / 2;
     for (let i = 0; i < this._angularDivisions; i++) {
-      const angle = this._azimuthOffset + (i / this._angularDivisions) * 2 * Math.PI;
+      const angle = this._azimuthOffset +
+        (i / this._angularDivisions) * 2 * Math.PI;
       const endX = outerRadius * Math.cos(angle);
       const endY = outerRadius * Math.sin(angle);
 
@@ -691,22 +712,23 @@ export class PolarPlane extends Group {
     // Angle labels
     if (this._includeAngleLabels) {
       for (let i = 0; i < this._angularDivisions; i++) {
-        const angle = this._azimuthOffset + (i / this._angularDivisions) * 2 * Math.PI;
+        const angle = this._azimuthOffset +
+          (i / this._angularDivisions) * 2 * Math.PI;
         const labelX = (outerRadius + labelOffset) * Math.cos(angle);
         const labelY = (outerRadius + labelOffset) * Math.sin(angle);
 
         const override = this._angleLabelOverrides?.[i];
-        const label =
-          override !== undefined
-            ? this._resolveLabelSpec(override, this._labelFontSize)
-            : (() => {
-                const normalized = ((angle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-                return new Text({
-                  text: this._formatAngleLabel(normalized),
-                  fontSize: this._labelFontSize,
-                  color: this._labelColor,
-                });
-              })();
+        const label = override !== undefined
+          ? this._resolveLabelSpec(override, this._labelFontSize)
+          : (() => {
+            const normalized = ((angle % (2 * Math.PI)) + 2 * Math.PI) %
+              (2 * Math.PI);
+            return new Text({
+              text: this._formatAngleLabel(normalized),
+              fontSize: this._labelFontSize,
+              color: this._labelColor,
+            });
+          })();
         label.moveTo([labelX, labelY, 0]);
 
         this._angleLabels.add(label);
@@ -720,14 +742,13 @@ export class PolarPlane extends Group {
         const visualR = r * scaleFactor;
 
         const override = this._radiusLabelOverrides?.[i - 1];
-        const label =
-          override !== undefined
-            ? this._resolveLabelSpec(override, this._labelFontSize * 0.8)
-            : new Text({
-                text: Number.isInteger(r) ? `${r}` : r.toFixed(1),
-                fontSize: this._labelFontSize * 0.8,
-                color: this._labelColor,
-              });
+        const label = override !== undefined
+          ? this._resolveLabelSpec(override, this._labelFontSize * 0.8)
+          : new Text({
+            text: Number.isInteger(r) ? `${r}` : r.toFixed(1),
+            fontSize: this._labelFontSize * 0.8,
+            color: this._labelColor,
+          });
         // Position radius labels along the positive x-axis, slightly below
         label.moveTo([visualR, -0.2, 0]);
 
@@ -760,7 +781,7 @@ export class PolarPlane extends Group {
     const seen = new Set<Mobject>();
     for (let i = 0; i < labels.length; i++) {
       const spec = labels[i];
-      if (typeof spec === 'string') continue;
+      if (typeof spec === "string") continue;
       if (seen.has(spec)) {
         throw new Error(
           `PolarPlane: ${optionName} contains the same Mobject instance more than once (slot ${i}). Each Mobject slot needs its own instance.`,
@@ -771,7 +792,7 @@ export class PolarPlane extends Group {
   }
 
   private _resolveLabelSpec(spec: string | Mobject, fontSize: number): Mobject {
-    if (typeof spec === 'string') {
+    if (typeof spec === "string") {
       return new Text({
         text: spec,
         fontSize,
@@ -788,23 +809,23 @@ export class PolarPlane extends Group {
     const epsilon = 0.0001;
 
     // Check for common angles
-    if (Math.abs(angle) < epsilon) return '0';
-    if (Math.abs(angle - Math.PI / 6) < epsilon) return 'π/6';
-    if (Math.abs(angle - Math.PI / 4) < epsilon) return 'π/4';
-    if (Math.abs(angle - Math.PI / 3) < epsilon) return 'π/3';
-    if (Math.abs(angle - Math.PI / 2) < epsilon) return 'π/2';
-    if (Math.abs(angle - (2 * Math.PI) / 3) < epsilon) return '2π/3';
-    if (Math.abs(angle - (3 * Math.PI) / 4) < epsilon) return '3π/4';
-    if (Math.abs(angle - (5 * Math.PI) / 6) < epsilon) return '5π/6';
-    if (Math.abs(angle - Math.PI) < epsilon) return 'π';
-    if (Math.abs(angle - (7 * Math.PI) / 6) < epsilon) return '7π/6';
-    if (Math.abs(angle - (5 * Math.PI) / 4) < epsilon) return '5π/4';
-    if (Math.abs(angle - (4 * Math.PI) / 3) < epsilon) return '4π/3';
-    if (Math.abs(angle - (3 * Math.PI) / 2) < epsilon) return '3π/2';
-    if (Math.abs(angle - (5 * Math.PI) / 3) < epsilon) return '5π/3';
-    if (Math.abs(angle - (7 * Math.PI) / 4) < epsilon) return '7π/4';
-    if (Math.abs(angle - (11 * Math.PI) / 6) < epsilon) return '11π/6';
-    if (Math.abs(angle - 2 * Math.PI) < epsilon) return '2π';
+    if (Math.abs(angle) < epsilon) return "0";
+    if (Math.abs(angle - Math.PI / 6) < epsilon) return "π/6";
+    if (Math.abs(angle - Math.PI / 4) < epsilon) return "π/4";
+    if (Math.abs(angle - Math.PI / 3) < epsilon) return "π/3";
+    if (Math.abs(angle - Math.PI / 2) < epsilon) return "π/2";
+    if (Math.abs(angle - (2 * Math.PI) / 3) < epsilon) return "2π/3";
+    if (Math.abs(angle - (3 * Math.PI) / 4) < epsilon) return "3π/4";
+    if (Math.abs(angle - (5 * Math.PI) / 6) < epsilon) return "5π/6";
+    if (Math.abs(angle - Math.PI) < epsilon) return "π";
+    if (Math.abs(angle - (7 * Math.PI) / 6) < epsilon) return "7π/6";
+    if (Math.abs(angle - (5 * Math.PI) / 4) < epsilon) return "5π/4";
+    if (Math.abs(angle - (4 * Math.PI) / 3) < epsilon) return "4π/3";
+    if (Math.abs(angle - (3 * Math.PI) / 2) < epsilon) return "3π/2";
+    if (Math.abs(angle - (5 * Math.PI) / 3) < epsilon) return "5π/3";
+    if (Math.abs(angle - (7 * Math.PI) / 4) < epsilon) return "7π/4";
+    if (Math.abs(angle - (11 * Math.PI) / 6) < epsilon) return "11π/6";
+    if (Math.abs(angle - 2 * Math.PI) < epsilon) return "2π";
 
     // Fallback to decimal radians
     return `${(angle / Math.PI).toFixed(2)}π`;
@@ -915,7 +936,12 @@ export class PolarPlane extends Group {
    * Idempotent: re-calling replaces any prior hook on the same meshes.
    */
   billboardLabels(): this {
-    for (const label of [...this._angleLabels.children, ...this._radiusLabels.children]) {
+    for (
+      const label of [
+        ...this._angleLabels.children,
+        ...this._radiusLabels.children,
+      ]
+    ) {
       label.getThreeObject().traverse((child) => {
         if (!(child instanceof THREE.Mesh)) return;
         child.onBeforeRender = (_renderer, _scene, camera) => {
@@ -924,7 +950,9 @@ export class PolarPlane extends Group {
             parent.updateMatrixWorld(true);
             const parentWorldQuat = new THREE.Quaternion();
             parent.getWorldQuaternion(parentWorldQuat);
-            child.quaternion.copy(parentWorldQuat.invert()).multiply(camera.quaternion);
+            child.quaternion.copy(parentWorldQuat.invert()).multiply(
+              camera.quaternion,
+            );
           } else {
             child.quaternion.copy(camera.quaternion);
           }
@@ -998,8 +1026,12 @@ export class PolarPlane extends Group {
       labelFontSize: this._labelFontSize,
       labelColor: this._labelColor,
       azimuthOffset: this._azimuthOffset,
-      angleLabels: this._angleLabelOverrides?.map((s) => (typeof s === 'string' ? s : s.copy())),
-      radiusLabels: this._radiusLabelOverrides?.map((s) => (typeof s === 'string' ? s : s.copy())),
+      angleLabels: this._angleLabelOverrides?.map((
+        s,
+      ) => (typeof s === "string" ? s : s.copy())),
+      radiusLabels: this._radiusLabelOverrides?.map((
+        s,
+      ) => (typeof s === "string" ? s : s.copy())),
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;

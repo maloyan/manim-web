@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { polylabel } from './polylabel';
+import { describe, expect, it } from "vitest";
+import { polylabel } from "./polylabel";
 
-describe('polylabel', () => {
-  describe('simple square', () => {
-    it('finds center of a unit square', () => {
+describe("polylabel", () => {
+  describe("simple square", () => {
+    it("finds center of a unit square", () => {
       const square = [
         [
           [0, 0],
@@ -19,7 +19,7 @@ describe('polylabel', () => {
       expect(result.distance).toBeCloseTo(0.5, 1);
     });
 
-    it('finds center of a larger square', () => {
+    it("finds center of a larger square", () => {
       const square = [
         [
           [0, 0],
@@ -36,8 +36,8 @@ describe('polylabel', () => {
     });
   });
 
-  describe('triangle', () => {
-    it('finds pole of equilateral triangle', () => {
+  describe("triangle", () => {
+    it("finds pole of equilateral triangle", () => {
       const triangle = [
         [
           [0, 0],
@@ -53,7 +53,7 @@ describe('polylabel', () => {
       expect(result.distance).toBeGreaterThan(0);
     });
 
-    it('finds pole of right triangle', () => {
+    it("finds pole of right triangle", () => {
       const triangle = [
         [
           [0, 0],
@@ -71,8 +71,8 @@ describe('polylabel', () => {
     });
   });
 
-  describe('polygon with hole', () => {
-    it('finds pole away from hole', () => {
+  describe("polygon with hole", () => {
+    it("finds pole away from hole", () => {
       // Outer ring: large square
       // Inner ring (hole): small square in the center
       const rings = [
@@ -103,8 +103,8 @@ describe('polylabel', () => {
     });
   });
 
-  describe('precision parameter', () => {
-    it('returns result with lower precision', () => {
+  describe("precision parameter", () => {
+    it("returns result with lower precision", () => {
       const square = [
         [
           [0, 0],
@@ -124,8 +124,8 @@ describe('polylabel', () => {
     });
   });
 
-  describe('degenerate cases', () => {
-    it('handles zero-area polygon', () => {
+  describe("degenerate cases", () => {
+    it("handles zero-area polygon", () => {
       const line = [
         [
           [0, 0],

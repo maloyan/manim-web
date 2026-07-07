@@ -1,10 +1,10 @@
-import * as THREE from 'three';
-import { VMobject } from '../../core/VMobject';
+import * as THREE from "three";
+import { VMobject } from "../../core/VMobject";
 import {
   collectLeafVMobjectSnapshots,
   type LeafVMobjectSnapshot,
-} from '../../core/MobjectTraversal';
-import { alignCompoundPathsForTransform } from '../../core/VMobjectTransformAlignment';
+} from "../../core/MobjectTraversal";
+import { alignCompoundPathsForTransform } from "../../core/VMobjectTransformAlignment";
 
 function sum(values: number[]): number {
   let out = 0;
@@ -34,23 +34,34 @@ export interface AlignedTransformPair {
   finalTargetSubpathLengths?: number[];
 }
 
-export function alignVmobjectPair(source: VMobject, target: VMobject): AlignedTransformPair {
+export function alignVmobjectPair(
+  source: VMobject,
+  target: VMobject,
+): AlignedTransformPair {
   const startCopy = source.copy() as VMobject;
   const targetCopy = target.copy() as VMobject;
 
   const finalTargetPoints = targetCopy.getLocalPoints();
-  const finalTargetSubpathLengths =
-    targetCopy.getEffectiveSubpathLengths?.() ?? target.getEffectiveSubpathLengths?.();
+  const finalTargetSubpathLengths = targetCopy.getEffectiveSubpathLengths?.() ??
+    target.getEffectiveSubpathLengths?.();
 
-  const srcLengths =
-    startCopy.getEffectiveSubpathLengths?.() ?? source.getEffectiveSubpathLengths?.();
+  const srcLengths = startCopy.getEffectiveSubpathLengths?.() ??
+    source.getEffectiveSubpathLengths?.();
   const tgtLengths = finalTargetSubpathLengths;
 
   const startPointsRaw = startCopy.getLocalPoints();
   const targetPointsRaw = targetCopy.getLocalPoints();
 
-  assertSubpathLengthsMatchPoints(startPointsRaw, srcLengths, 'alignVmobjectPair(source)');
-  assertSubpathLengthsMatchPoints(targetPointsRaw, tgtLengths, 'alignVmobjectPair(target)');
+  assertSubpathLengthsMatchPoints(
+    startPointsRaw,
+    srcLengths,
+    "alignVmobjectPair(source)",
+  );
+  assertSubpathLengthsMatchPoints(
+    targetPointsRaw,
+    tgtLengths,
+    "alignVmobjectPair(target)",
+  );
 
   const srcSigns = startCopy.getSubpathOrientationSigns?.(srcLengths);
   const tgtSigns = targetCopy.getSubpathOrientationSigns?.(tgtLengths);
@@ -94,14 +105,19 @@ export function alignVmobjectPair(source: VMobject, target: VMobject): AlignedTr
 }
 
 export function canMorphByPoints(source: VMobject, target: VMobject): boolean {
-  return source.getLocalPoints().length > 0 && target.getLocalPoints().length > 0;
+  return source.getLocalPoints().length > 0 &&
+    target.getLocalPoints().length > 0;
 }
 
-function makePlaceholderSnapshot(reference?: LeafVMobjectSnapshot): LeafVMobjectSnapshot {
+function makePlaceholderSnapshot(
+  reference?: LeafVMobjectSnapshot,
+): LeafVMobjectSnapshot {
   return {
     leaf: new VMobject(),
-    worldMatrix: reference?.worldMatrix.clone() ?? new THREE.Matrix4().identity(),
-    parentWorldMatrix: reference?.parentWorldMatrix.clone() ?? new THREE.Matrix4().identity(),
+    worldMatrix: reference?.worldMatrix.clone() ??
+      new THREE.Matrix4().identity(),
+    parentWorldMatrix: reference?.parentWorldMatrix.clone() ??
+      new THREE.Matrix4().identity(),
     worldPosition: reference?.worldPosition.clone() ?? new THREE.Vector3(),
     worldRotation: reference?.worldRotation.clone() ?? new THREE.Euler(),
     worldScale: reference?.worldScale.clone() ?? new THREE.Vector3(1, 1, 1),
@@ -128,11 +144,18 @@ export function pairLeafSnapshotsByIndex(
     const source = sourceLeaves[i];
     const target = targetLeaves[i];
     if (!source && !target) {
-      throw new Error(`pairLeafSnapshotsByIndex: invalid empty pair at index ${i}`);
+      throw new Error(
+        `pairLeafSnapshotsByIndex: invalid empty pair at index ${i}`,
+      );
     }
 
     if (source && target) {
-      pairs.push({ source, target, sourceIsPlaceholder: false, targetIsPlaceholder: false });
+      pairs.push({
+        source,
+        target,
+        sourceIsPlaceholder: false,
+        targetIsPlaceholder: false,
+      });
       continue;
     }
 

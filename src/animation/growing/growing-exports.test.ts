@@ -2,7 +2,7 @@
  * Tests that all growing animation classes and factory functions
  * are properly exported from the main index.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from "vitest";
 import {
   Animation,
   GrowArrow,
@@ -13,54 +13,54 @@ import {
   growFromPoint,
   SpinInFromNothing,
   spinInFromNothing,
-} from '../../index';
+} from "../../index";
 
-describe('Growing animation exports from main index', () => {
-  it('GrowArrow class is defined', () => {
+describe("Growing animation exports from main index", () => {
+  it("GrowArrow class is defined", () => {
     expect(GrowArrow).toBeDefined();
   });
 
-  it('growArrow factory function is defined', () => {
+  it("growArrow factory function is defined", () => {
     expect(growArrow).toBeDefined();
   });
 
-  it('GrowArrow extends Animation', () => {
+  it("GrowArrow extends Animation", () => {
     expect(GrowArrow.prototype instanceof Animation).toBe(true);
   });
 
-  it('GrowFromEdge class is defined', () => {
+  it("GrowFromEdge class is defined", () => {
     expect(GrowFromEdge).toBeDefined();
   });
 
-  it('growFromEdge factory function is defined', () => {
+  it("growFromEdge factory function is defined", () => {
     expect(growFromEdge).toBeDefined();
   });
 
-  it('GrowFromEdge extends Animation', () => {
+  it("GrowFromEdge extends Animation", () => {
     expect(GrowFromEdge.prototype instanceof Animation).toBe(true);
   });
 
-  it('GrowFromPoint class is defined', () => {
+  it("GrowFromPoint class is defined", () => {
     expect(GrowFromPoint).toBeDefined();
   });
 
-  it('growFromPoint factory function is defined', () => {
+  it("growFromPoint factory function is defined", () => {
     expect(growFromPoint).toBeDefined();
   });
 
-  it('GrowFromPoint extends Animation', () => {
+  it("GrowFromPoint extends Animation", () => {
     expect(GrowFromPoint.prototype instanceof Animation).toBe(true);
   });
 
-  it('SpinInFromNothing class is defined', () => {
+  it("SpinInFromNothing class is defined", () => {
     expect(SpinInFromNothing).toBeDefined();
   });
 
-  it('spinInFromNothing factory function is defined', () => {
+  it("spinInFromNothing factory function is defined", () => {
     expect(spinInFromNothing).toBeDefined();
   });
 
-  it('SpinInFromNothing extends Animation', () => {
+  it("SpinInFromNothing extends Animation", () => {
     expect(SpinInFromNothing.prototype instanceof Animation).toBe(true);
   });
 });

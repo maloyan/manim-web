@@ -1,78 +1,78 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  isFeatureEnabled,
-  setFeatureFlags,
-  resetFeatureFlags,
   getFeatureFlags,
-} from './featureFlags';
-import { logger } from './logger';
+  isFeatureEnabled,
+  resetFeatureFlags,
+  setFeatureFlags,
+} from "./featureFlags";
+import { logger } from "./logger";
 import {
-  FrameTimeTracker,
-  PerformanceMonitor,
   createFrameTimeTracker,
   createPerformanceMonitor,
-} from './Performance';
+  FrameTimeTracker,
+  PerformanceMonitor,
+} from "./Performance";
 
 // =========================================================================
 // featureFlags
 // =========================================================================
 
-describe('featureFlags', () => {
+describe("featureFlags", () => {
   beforeEach(() => {
     resetFeatureFlags();
   });
 
-  it('isFeatureEnabled returns false for unknown flags', () => {
-    expect(isFeatureEnabled('DOES_NOT_EXIST')).toBe(false);
-    expect(isFeatureEnabled('')).toBe(false);
-    expect(isFeatureEnabled('random_flag_xyz')).toBe(false);
+  it("isFeatureEnabled returns false for unknown flags", () => {
+    expect(isFeatureEnabled("DOES_NOT_EXIST")).toBe(false);
+    expect(isFeatureEnabled("")).toBe(false);
+    expect(isFeatureEnabled("random_flag_xyz")).toBe(false);
   });
 
-  it('known flags default to false', () => {
-    expect(isFeatureEnabled('EXPERIMENTAL_3D_LIGHTING')).toBe(false);
-    expect(isFeatureEnabled('WEBGPU_RENDERER')).toBe(false);
-    expect(isFeatureEnabled('ADVANCED_TEXT_LAYOUT')).toBe(false);
+  it("known flags default to false", () => {
+    expect(isFeatureEnabled("EXPERIMENTAL_3D_LIGHTING")).toBe(false);
+    expect(isFeatureEnabled("WEBGPU_RENDERER")).toBe(false);
+    expect(isFeatureEnabled("ADVANCED_TEXT_LAYOUT")).toBe(false);
   });
 
-  it('setFeatureFlags overrides specific flags', () => {
+  it("setFeatureFlags overrides specific flags", () => {
     setFeatureFlags({ EXPERIMENTAL_3D_LIGHTING: true });
-    expect(isFeatureEnabled('EXPERIMENTAL_3D_LIGHTING')).toBe(true);
+    expect(isFeatureEnabled("EXPERIMENTAL_3D_LIGHTING")).toBe(true);
   });
 
-  it('setFeatureFlags preserves other flags when overriding one', () => {
+  it("setFeatureFlags preserves other flags when overriding one", () => {
     setFeatureFlags({ WEBGPU_RENDERER: true });
-    expect(isFeatureEnabled('WEBGPU_RENDERER')).toBe(true);
-    expect(isFeatureEnabled('EXPERIMENTAL_3D_LIGHTING')).toBe(false);
-    expect(isFeatureEnabled('ADVANCED_TEXT_LAYOUT')).toBe(false);
+    expect(isFeatureEnabled("WEBGPU_RENDERER")).toBe(true);
+    expect(isFeatureEnabled("EXPERIMENTAL_3D_LIGHTING")).toBe(false);
+    expect(isFeatureEnabled("ADVANCED_TEXT_LAYOUT")).toBe(false);
   });
 
-  it('resetFeatureFlags restores defaults', () => {
+  it("resetFeatureFlags restores defaults", () => {
     setFeatureFlags({
       EXPERIMENTAL_3D_LIGHTING: true,
       WEBGPU_RENDERER: true,
       ADVANCED_TEXT_LAYOUT: true,
     });
     resetFeatureFlags();
-    expect(isFeatureEnabled('EXPERIMENTAL_3D_LIGHTING')).toBe(false);
-    expect(isFeatureEnabled('WEBGPU_RENDERER')).toBe(false);
-    expect(isFeatureEnabled('ADVANCED_TEXT_LAYOUT')).toBe(false);
+    expect(isFeatureEnabled("EXPERIMENTAL_3D_LIGHTING")).toBe(false);
+    expect(isFeatureEnabled("WEBGPU_RENDERER")).toBe(false);
+    expect(isFeatureEnabled("ADVANCED_TEXT_LAYOUT")).toBe(false);
   });
 
-  it('getFeatureFlags returns a copy that does not affect internal state', () => {
+  it("getFeatureFlags returns a copy that does not affect internal state", () => {
     const copy = getFeatureFlags();
     // Mutate the copy
-    (copy as Record<string, boolean>)['EXPERIMENTAL_3D_LIGHTING'] = true;
-    (copy as Record<string, boolean>)['NEW_FLAG'] = true;
+    (copy as Record<string, boolean>)["EXPERIMENTAL_3D_LIGHTING"] = true;
+    (copy as Record<string, boolean>)["NEW_FLAG"] = true;
     // Internal state must be unchanged
-    expect(isFeatureEnabled('EXPERIMENTAL_3D_LIGHTING')).toBe(false);
-    expect(isFeatureEnabled('NEW_FLAG')).toBe(false);
+    expect(isFeatureEnabled("EXPERIMENTAL_3D_LIGHTING")).toBe(false);
+    expect(isFeatureEnabled("NEW_FLAG")).toBe(false);
   });
 
-  it('getFeatureFlags reflects current overrides', () => {
+  it("getFeatureFlags reflects current overrides", () => {
     setFeatureFlags({ ADVANCED_TEXT_LAYOUT: true });
     const flags = getFeatureFlags();
-    expect(flags['ADVANCED_TEXT_LAYOUT']).toBe(true);
-    expect(flags['WEBGPU_RENDERER']).toBe(false);
+    expect(flags["ADVANCED_TEXT_LAYOUT"]).toBe(true);
+    expect(flags["WEBGPU_RENDERER"]).toBe(false);
   });
 });
 
@@ -80,115 +80,118 @@ describe('featureFlags', () => {
 // logger
 // =========================================================================
 
-describe('logger', () => {
-  it('has debug, info, warn, error methods', () => {
-    expect(typeof logger.debug).toBe('function');
-    expect(typeof logger.info).toBe('function');
-    expect(typeof logger.warn).toBe('function');
-    expect(typeof logger.error).toBe('function');
+describe("logger", () => {
+  it("has debug, info, warn, error methods", () => {
+    expect(typeof logger.debug).toBe("function");
+    expect(typeof logger.info).toBe("function");
+    expect(typeof logger.warn).toBe("function");
+    expect(typeof logger.error).toBe("function");
   });
 
-  describe('console delegation', () => {
+  describe("console delegation", () => {
     let infoSpy: ReturnType<typeof vi.spyOn>;
     let errorSpy: ReturnType<typeof vi.spyOn>;
     let warnSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-      infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
-      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
+      errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     });
 
     afterEach(() => {
       vi.restoreAllMocks();
     });
 
-    it('logger.info calls console.info', () => {
-      logger.info('hello');
+    it("logger.info calls console.info", () => {
+      logger.info("hello");
       expect(infoSpy).toHaveBeenCalled();
-      expect(infoSpy.mock.calls[0][0]).toBe('[manim-web]');
-      expect(infoSpy.mock.calls[0][1]).toBe('hello');
+      expect(infoSpy.mock.calls[0][0]).toBe("[manim-web]");
+      expect(infoSpy.mock.calls[0][1]).toBe("hello");
     });
 
-    it('logger.error calls console.error', () => {
-      logger.error('boom');
+    it("logger.error calls console.error", () => {
+      logger.error("boom");
       expect(errorSpy).toHaveBeenCalled();
-      expect(errorSpy.mock.calls[0][0]).toBe('[manim-web]');
-      expect(errorSpy.mock.calls[0][1]).toBe('boom');
+      expect(errorSpy.mock.calls[0][0]).toBe("[manim-web]");
+      expect(errorSpy.mock.calls[0][1]).toBe("boom");
     });
 
-    it('logger.warn calls console.warn', () => {
-      logger.warn('careful');
+    it("logger.warn calls console.warn", () => {
+      logger.warn("careful");
       expect(warnSpy).toHaveBeenCalled();
-      expect(warnSpy.mock.calls[0][0]).toBe('[manim-web]');
-      expect(warnSpy.mock.calls[0][1]).toBe('careful');
+      expect(warnSpy.mock.calls[0][0]).toBe("[manim-web]");
+      expect(warnSpy.mock.calls[0][1]).toBe("careful");
     });
   });
 
-  describe('sanitizeString (via logger output)', () => {
+  describe("sanitizeString (via logger output)", () => {
     let infoSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-      infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+      infoSpy = vi.spyOn(console, "info").mockImplementation(() => {});
     });
 
     afterEach(() => {
       vi.restoreAllMocks();
     });
 
-    it('redacts Bearer tokens', () => {
-      logger.info('Auth: ' + 'Bearer eyJ' + 'token1234567890');
+    it("redacts Bearer tokens", () => {
+      logger.info("Auth: " + "Bearer eyJ" + "token1234567890");
       const logged = infoSpy.mock.calls[0][1];
-      expect(logged).toContain('[REDACTED]');
-      expect(logged).not.toContain('eyJtoken');
+      expect(logged).toContain("[REDACTED]");
+      expect(logged).not.toContain("eyJtoken");
     });
 
-    it('redacts JWT tokens', () => {
-      logger.info('Token: ' + 'eyJhbGciOiJIUzI1NiJ9' + '.eyJpYXQiOjE2OTk5OTk5OTl9.somesig');
+    it("redacts JWT tokens", () => {
+      logger.info(
+        "Token: " + "eyJhbGciOiJIUzI1NiJ9" +
+          ".eyJpYXQiOjE2OTk5OTk5OTl9.somesig",
+      );
       const logged = infoSpy.mock.calls[0][1];
-      expect(logged).toContain('[REDACTED]');
-      expect(logged).not.toContain('eyJhbGci');
+      expect(logged).toContain("[REDACTED]");
+      expect(logged).not.toContain("eyJhbGci");
     });
 
-    it('redacts AWS access key IDs', () => {
-      logger.info('Key: ' + 'AKIA' + '1234567890123456');
+    it("redacts AWS access key IDs", () => {
+      logger.info("Key: " + "AKIA" + "1234567890123456");
       const logged = infoSpy.mock.calls[0][1];
-      expect(logged).toContain('[REDACTED]');
-      expect(logged).not.toContain('AKIA1234');
+      expect(logged).toContain("[REDACTED]");
+      expect(logged).not.toContain("AKIA1234");
     });
 
-    it('redacts GitHub tokens', () => {
-      logger.info('Token: ' + 'ghp_' + 'abc123456789012345678901234567890123');
+    it("redacts GitHub tokens", () => {
+      logger.info("Token: " + "ghp_" + "abc123456789012345678901234567890123");
       const logged = infoSpy.mock.calls[0][1];
-      expect(logged).toContain('[REDACTED]');
-      expect(logged).not.toContain('ghp_abc');
+      expect(logged).toContain("[REDACTED]");
+      expect(logged).not.toContain("ghp_abc");
     });
 
-    it('redacts Stripe keys', () => {
-      logger.info('Key: ' + 'sk_live' + '_abcdefghij1234567890abcd');
+    it("redacts Stripe keys", () => {
+      logger.info("Key: " + "sk_live" + "_abcdefghij1234567890abcd");
       const logged = infoSpy.mock.calls[0][1];
-      expect(logged).toContain('[REDACTED]');
-      expect(logged).not.toContain('sk_live_abc');
+      expect(logged).toContain("[REDACTED]");
+      expect(logged).not.toContain("sk_live_abc");
     });
 
-    it('redacts email addresses', () => {
-      logger.info('Contact: user@example.com for info');
+    it("redacts email addresses", () => {
+      logger.info("Contact: user@example.com for info");
       const logged = infoSpy.mock.calls[0][1];
-      expect(logged).toContain('[REDACTED]');
-      expect(logged).not.toContain('user@example.com');
+      expect(logged).toContain("[REDACTED]");
+      expect(logged).not.toContain("user@example.com");
     });
 
-    it('redacts generic api_key=value patterns', () => {
-      logger.info('Config: api_key=secretvalue123');
+    it("redacts generic api_key=value patterns", () => {
+      logger.info("Config: api_key=secretvalue123");
       const logged = infoSpy.mock.calls[0][1];
-      expect(logged).toContain('[REDACTED]');
-      expect(logged).not.toContain('secretvalue123');
+      expect(logged).toContain("[REDACTED]");
+      expect(logged).not.toContain("secretvalue123");
     });
 
-    it('leaves non-sensitive strings untouched', () => {
-      logger.info('Just a normal log message');
+    it("leaves non-sensitive strings untouched", () => {
+      logger.info("Just a normal log message");
       const logged = infoSpy.mock.calls[0][1];
-      expect(logged).toBe('Just a normal log message');
+      expect(logged).toBe("Just a normal log message");
     });
   });
 });
@@ -197,18 +200,18 @@ describe('logger', () => {
 // FrameTimeTracker
 // =========================================================================
 
-describe('FrameTimeTracker', () => {
+describe("FrameTimeTracker", () => {
   let perfNowMock: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
-    perfNowMock = vi.spyOn(performance, 'now');
+    perfNowMock = vi.spyOn(performance, "now");
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('constructor uses default maxSamples of 60', () => {
+  it("constructor uses default maxSamples of 60", () => {
     const tracker = new FrameTimeTracker();
     // Fill beyond 60 samples - older ones should be evicted
     let time = 0;
@@ -227,7 +230,7 @@ describe('FrameTimeTracker', () => {
     expect(tracker.getMaxFrameTime()).toBeCloseTo(10, 5);
   });
 
-  it('constructor with custom maxSamples', () => {
+  it("constructor with custom maxSamples", () => {
     const tracker = new FrameTimeTracker(3);
     let time = 0;
     const durations = [5, 10, 15, 20, 25];
@@ -244,27 +247,27 @@ describe('FrameTimeTracker', () => {
     expect(tracker.getAverageFrameTime()).toBeCloseTo(20, 5);
   });
 
-  it('getAverageFrameTime returns 0 when no samples', () => {
+  it("getAverageFrameTime returns 0 when no samples", () => {
     const tracker = new FrameTimeTracker();
     expect(tracker.getAverageFrameTime()).toBe(0);
   });
 
-  it('getMaxFrameTime returns 0 when no samples', () => {
+  it("getMaxFrameTime returns 0 when no samples", () => {
     const tracker = new FrameTimeTracker();
     expect(tracker.getMaxFrameTime()).toBe(0);
   });
 
-  it('getMinFrameTime returns 0 when no samples', () => {
+  it("getMinFrameTime returns 0 when no samples", () => {
     const tracker = new FrameTimeTracker();
     expect(tracker.getMinFrameTime()).toBe(0);
   });
 
-  it('get95thPercentile returns 0 when no samples', () => {
+  it("get95thPercentile returns 0 when no samples", () => {
     const tracker = new FrameTimeTracker();
     expect(tracker.get95thPercentile()).toBe(0);
   });
 
-  it('startFrame/endFrame records frame times', () => {
+  it("startFrame/endFrame records frame times", () => {
     const tracker = new FrameTimeTracker();
     perfNowMock.mockReturnValueOnce(100);
     tracker.startFrame();
@@ -276,7 +279,7 @@ describe('FrameTimeTracker', () => {
     expect(tracker.getMinFrameTime()).toBeCloseTo(16.5, 5);
   });
 
-  it('respects maxSamples limit and shifts old samples', () => {
+  it("respects maxSamples limit and shifts old samples", () => {
     const tracker = new FrameTimeTracker(2);
     // Frame 1: 10ms
     perfNowMock.mockReturnValueOnce(0);
@@ -299,7 +302,7 @@ describe('FrameTimeTracker', () => {
     expect(tracker.getAverageFrameTime()).toBeCloseTo(25, 5);
   });
 
-  it('getAverageFrameTime computes correctly with multiple samples', () => {
+  it("getAverageFrameTime computes correctly with multiple samples", () => {
     const tracker = new FrameTimeTracker();
     const durations = [10, 20, 30];
     let time = 0;
@@ -313,7 +316,7 @@ describe('FrameTimeTracker', () => {
     expect(tracker.getAverageFrameTime()).toBeCloseTo(20, 5);
   });
 
-  it('getMaxFrameTime returns correct max', () => {
+  it("getMaxFrameTime returns correct max", () => {
     const tracker = new FrameTimeTracker();
     const durations = [5, 50, 15];
     let time = 0;
@@ -327,7 +330,7 @@ describe('FrameTimeTracker', () => {
     expect(tracker.getMaxFrameTime()).toBeCloseTo(50, 5);
   });
 
-  it('getMinFrameTime returns correct min', () => {
+  it("getMinFrameTime returns correct min", () => {
     const tracker = new FrameTimeTracker();
     const durations = [25, 5, 15];
     let time = 0;
@@ -341,7 +344,7 @@ describe('FrameTimeTracker', () => {
     expect(tracker.getMinFrameTime()).toBeCloseTo(5, 5);
   });
 
-  it('get95thPercentile computes correctly', () => {
+  it("get95thPercentile computes correctly", () => {
     const tracker = new FrameTimeTracker(100);
     // Create 20 samples: 1, 2, 3, ..., 20
     let time = 0;
@@ -356,7 +359,7 @@ describe('FrameTimeTracker', () => {
     expect(tracker.get95thPercentile()).toBeCloseTo(20, 5);
   });
 
-  it('getSummary returns all stats', () => {
+  it("getSummary returns all stats", () => {
     const tracker = new FrameTimeTracker();
     const durations = [10, 20, 30, 40];
     let time = 0;
@@ -375,7 +378,7 @@ describe('FrameTimeTracker', () => {
     expect(summary.p95).toBeCloseTo(40, 5);
   });
 
-  it('reset clears all frame times', () => {
+  it("reset clears all frame times", () => {
     const tracker = new FrameTimeTracker();
     perfNowMock.mockReturnValueOnce(0);
     tracker.startFrame();
@@ -392,12 +395,12 @@ describe('FrameTimeTracker', () => {
     expect(tracker.get95thPercentile()).toBe(0);
   });
 
-  it('createFrameTimeTracker factory returns a FrameTimeTracker', () => {
+  it("createFrameTimeTracker factory returns a FrameTimeTracker", () => {
     const tracker = createFrameTimeTracker();
     expect(tracker).toBeInstanceOf(FrameTimeTracker);
   });
 
-  it('createFrameTimeTracker factory respects maxSamples argument', () => {
+  it("createFrameTimeTracker factory respects maxSamples argument", () => {
     const tracker = createFrameTimeTracker(5);
     let time = 0;
     for (let i = 0; i < 10; i++) {
@@ -416,7 +419,7 @@ describe('FrameTimeTracker', () => {
 // PerformanceMonitor
 // =========================================================================
 
-describe('PerformanceMonitor', () => {
+describe("PerformanceMonitor", () => {
   let rafCallbacks: Map<number, FrameRequestCallback>;
   let rafId: number;
   let perfNowMock: ReturnType<typeof vi.spyOn>;
@@ -425,17 +428,17 @@ describe('PerformanceMonitor', () => {
     rafCallbacks = new Map();
     rafId = 0;
 
-    vi.stubGlobal('requestAnimationFrame', (cb: FrameRequestCallback) => {
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
       const id = ++rafId;
       rafCallbacks.set(id, cb);
       return id;
     });
 
-    vi.stubGlobal('cancelAnimationFrame', (id: number) => {
+    vi.stubGlobal("cancelAnimationFrame", (id: number) => {
       rafCallbacks.delete(id);
     });
 
-    perfNowMock = vi.spyOn(performance, 'now');
+    perfNowMock = vi.spyOn(performance, "now");
   });
 
   afterEach(() => {
@@ -452,17 +455,17 @@ describe('PerformanceMonitor', () => {
     cb(timestamp);
   }
 
-  it('getFps returns 0 initially', () => {
+  it("getFps returns 0 initially", () => {
     const monitor = new PerformanceMonitor();
     expect(monitor.getFps()).toBe(0);
   });
 
-  it('isRunning returns false initially', () => {
+  it("isRunning returns false initially", () => {
     const monitor = new PerformanceMonitor();
     expect(monitor.isRunning()).toBe(false);
   });
 
-  it('start sets isRunning to true', () => {
+  it("start sets isRunning to true", () => {
     const monitor = new PerformanceMonitor();
     perfNowMock.mockReturnValue(0);
     monitor.start();
@@ -470,7 +473,7 @@ describe('PerformanceMonitor', () => {
     monitor.stop();
   });
 
-  it('stop sets isRunning to false', () => {
+  it("stop sets isRunning to false", () => {
     const monitor = new PerformanceMonitor();
     perfNowMock.mockReturnValue(0);
     monitor.start();
@@ -478,7 +481,7 @@ describe('PerformanceMonitor', () => {
     expect(monitor.isRunning()).toBe(false);
   });
 
-  it('start prevents double-start (no-op if already running)', () => {
+  it("start prevents double-start (no-op if already running)", () => {
     const monitor = new PerformanceMonitor();
     perfNowMock.mockReturnValue(0);
 
@@ -494,7 +497,7 @@ describe('PerformanceMonitor', () => {
     monitor.stop();
   });
 
-  it('reset clears statistics', () => {
+  it("reset clears statistics", () => {
     const monitor = new PerformanceMonitor();
     perfNowMock.mockReturnValue(0);
     monitor.start();
@@ -510,7 +513,7 @@ describe('PerformanceMonitor', () => {
     expect(monitor.getInstantFps()).toBe(0);
   });
 
-  it('createPerformanceMonitor factory returns a PerformanceMonitor', () => {
+  it("createPerformanceMonitor factory returns a PerformanceMonitor", () => {
     const monitor = createPerformanceMonitor();
     expect(monitor).toBeInstanceOf(PerformanceMonitor);
     expect(monitor.isRunning()).toBe(false);

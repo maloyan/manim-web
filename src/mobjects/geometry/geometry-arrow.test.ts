@@ -1,22 +1,22 @@
-import { describe, it, expect } from 'vitest';
-import { Arrow, DoubleArrow } from './Arrow';
-import { VMobject } from '../../core/VMobject';
-import { ApplyMatrix } from '../../animation/transform/TransformExtensions';
+import { describe, expect, it } from "vitest";
+import { Arrow, DoubleArrow } from "./Arrow";
+import { VMobject } from "../../core/VMobject";
+import { ApplyMatrix } from "../../animation/transform/TransformExtensions";
 
 // ── Arrow defaults ──────────────────────────────────────────────────────────
 
-describe('Arrow defaults', () => {
-  it('has pointier default tipLength=0.3', () => {
+describe("Arrow defaults", () => {
+  it("has pointier default tipLength=0.3", () => {
     const arrow = new Arrow();
     expect(arrow.getTipLength()).toBe(0.3);
   });
 
-  it('has pointier default tipWidth=0.1', () => {
+  it("has pointier default tipWidth=0.1", () => {
     const arrow = new Arrow();
     expect(arrow.getTipWidth()).toBe(0.1);
   });
 
-  it('DoubleArrow has same pointier defaults', () => {
+  it("DoubleArrow has same pointier defaults", () => {
     const da = new DoubleArrow({ start: [0, 0, 0], end: [2, 0, 0] });
     expect(da.getLength()).toBeGreaterThan(0);
   });
@@ -24,8 +24,8 @@ describe('Arrow defaults', () => {
 
 // ── reconstructTip ──────────────────────────────────────────────────────────
 
-describe('Arrow.reconstructTip', () => {
-  it('rebuilds clean triangle shape while preserving apex position', () => {
+describe("Arrow.reconstructTip", () => {
+  it("rebuilds clean triangle shape while preserving apex position", () => {
     const arrow = new Arrow({ start: [0, 0, 0], end: [2, 0, 0] });
 
     // The tip child is children[1]
@@ -48,7 +48,7 @@ describe('Arrow.reconstructTip', () => {
     expect(end[1]).toBeCloseTo(apexAfter[1], 5);
   });
 
-  it('preserves tip dimensions after reconstruction', () => {
+  it("preserves tip dimensions after reconstruction", () => {
     const arrow = new Arrow({
       start: [0, 0, 0],
       end: [3, 0, 0],
@@ -66,8 +66,8 @@ describe('Arrow.reconstructTip', () => {
 
 // ── ApplyMatrix on Arrow ────────────────────────────────────────────────────
 
-describe('ApplyMatrix on Arrow with non-uniform matrix', () => {
-  it('reconstructs tip after shear', () => {
+describe("ApplyMatrix on Arrow with non-uniform matrix", () => {
+  it("reconstructs tip after shear", () => {
     const arrow = new Arrow({ start: [0, 0, 0], end: [2, 0, 0] });
     const tipBefore = arrow.children[1] as VMobject;
     const tipPointsBefore = tipBefore.getLocalPoints();

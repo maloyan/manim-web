@@ -12,18 +12,18 @@
  * geometry, but don't write depth so further transparent fragments
  * behind aren't rejected.
  */
-import * as THREE from 'three';
-import { describe, it, expect } from 'vitest';
-import { ThreeDScene } from '../../core/ThreeDScene';
-import { Sphere } from './Sphere';
+import * as THREE from "three";
+import { describe, expect, it } from "vitest";
+import { ThreeDScene } from "../../core/ThreeDScene";
+import { Sphere } from "./Sphere";
 
 function getMaterial(sphere: Sphere): THREE.MeshStandardMaterial {
   const mesh = sphere.getThreeObject() as THREE.Mesh;
   return mesh.material as THREE.MeshStandardMaterial;
 }
 
-describe('Sphere opacity / depthWrite (issue #255)', () => {
-  it('opaque sphere keeps depthWrite enabled after add', () => {
+describe("Sphere opacity / depthWrite (issue #255)", () => {
+  it("opaque sphere keeps depthWrite enabled after add", () => {
     const scene = ThreeDScene.createHeadless();
     const sphere = new Sphere({ radius: 1, opacity: 1 });
     scene.add(sphere);
@@ -36,7 +36,7 @@ describe('Sphere opacity / depthWrite (issue #255)', () => {
     scene.dispose();
   });
 
-  it('transparent sphere has depthWrite disabled after add', () => {
+  it("transparent sphere has depthWrite disabled after add", () => {
     const scene = ThreeDScene.createHeadless();
     const sphere = new Sphere({ radius: 1, opacity: 0.02 });
     scene.add(sphere);
@@ -49,7 +49,7 @@ describe('Sphere opacity / depthWrite (issue #255)', () => {
     scene.dispose();
   });
 
-  it('depthWrite is independent of add order for transparent meshes', () => {
+  it("depthWrite is independent of add order for transparent meshes", () => {
     const scene = ThreeDScene.createHeadless();
     const a = new Sphere({ radius: 1, opacity: 0.3 });
     const b = new Sphere({ radius: 2, opacity: 0.3 });
@@ -69,7 +69,7 @@ describe('Sphere opacity / depthWrite (issue #255)', () => {
     scene2.dispose();
   });
 
-  it('runtime opacity change flips depthWrite on next render sync', () => {
+  it("runtime opacity change flips depthWrite on next render sync", () => {
     const scene = ThreeDScene.createHeadless();
     const sphere = new Sphere({ radius: 1, opacity: 1 });
     scene.add(sphere);
@@ -86,7 +86,7 @@ describe('Sphere opacity / depthWrite (issue #255)', () => {
     scene.dispose();
   });
 
-  it('3D add resets renderOrder to 0 so Three.js sorts transparents by distance', () => {
+  it("3D add resets renderOrder to 0 so Three.js sorts transparents by distance", () => {
     const scene = ThreeDScene.createHeadless();
     const a = new Sphere({ radius: 1, opacity: 0.3 });
     const b = new Sphere({ radius: 2, opacity: 0.3 });
@@ -98,7 +98,7 @@ describe('Sphere opacity / depthWrite (issue #255)', () => {
     scene.dispose();
   });
 
-  it('addFixedInFrameMobjects applies depth settings to HUD spheres (#255)', () => {
+  it("addFixedInFrameMobjects applies depth settings to HUD spheres (#255)", () => {
     const scene = ThreeDScene.createHeadless();
     const hudSphere = new Sphere({ radius: 0.5, opacity: 0.5 });
     // addFixedInFrameMobjects() on a not-yet-added mobject only records
@@ -117,7 +117,7 @@ describe('Sphere opacity / depthWrite (issue #255)', () => {
     scene.dispose();
   });
 
-  it('addForegroundMobject still gets a high renderOrder after 3D reset', () => {
+  it("addForegroundMobject still gets a high renderOrder after 3D reset", () => {
     const scene = ThreeDScene.createHeadless();
     const fg = new Sphere({ radius: 1, opacity: 1 });
     scene.addForegroundMobject(fg);
@@ -127,7 +127,7 @@ describe('Sphere opacity / depthWrite (issue #255)', () => {
     scene.dispose();
   });
 
-  it('re-adding an existing foreground mobject does not clobber its renderOrder', () => {
+  it("re-adding an existing foreground mobject does not clobber its renderOrder", () => {
     const scene = ThreeDScene.createHeadless();
     const fg = new Sphere({ radius: 1, opacity: 1 });
     scene.addForegroundMobject(fg);
@@ -140,7 +140,7 @@ describe('Sphere opacity / depthWrite (issue #255)', () => {
     scene.dispose();
   });
 
-  it('runtime opacity restore re-enables depthWrite on next render sync', () => {
+  it("runtime opacity restore re-enables depthWrite on next render sync", () => {
     const scene = ThreeDScene.createHeadless();
     const sphere = new Sphere({ radius: 1, opacity: 0.5 });
     scene.add(sphere);

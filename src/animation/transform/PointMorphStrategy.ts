@@ -1,17 +1,17 @@
-import * as THREE from 'three';
-import { VMobject } from '../../core/VMobject';
-import { VGroup } from '../../core/VGroup';
-import { Mobject } from '../../core/Mobject';
-import { Animation } from '../Animation';
-import { lerpPoint } from '../../utils/math';
-import { worldToParentLocalPosition } from '../../core/MobjectTraversal';
+import * as THREE from "three";
+import { VMobject } from "../../core/VMobject";
+import { VGroup } from "../../core/VGroup";
+import { Mobject } from "../../core/Mobject";
+import { Animation } from "../Animation";
+import { lerpPoint } from "../../utils/math";
+import { worldToParentLocalPosition } from "../../core/MobjectTraversal";
 import {
   alignVmobjectPair,
   canMorphByPoints,
-  pairLeafSnapshotsByIndex,
   type LeafPairByIndex,
-} from './TransformPairing';
-import { MorphStrategy } from './MorphStrategy';
+  pairLeafSnapshotsByIndex,
+} from "./TransformPairing";
+import { MorphStrategy } from "./MorphStrategy";
 
 interface ChildStyle {
   opacity: number;
@@ -35,8 +35,16 @@ interface VGroupLeafState {
   finalTargetSubpathLengths?: number[];
   startStyle: ChildStyle;
   targetStyle: ChildStyle;
-  strokeColorPair: { start: THREE.Color; target: THREE.Color; interpolate: boolean };
-  fillColorPair: { start: THREE.Color; target: THREE.Color; interpolate: boolean };
+  strokeColorPair: {
+    start: THREE.Color;
+    target: THREE.Color;
+    interpolate: boolean;
+  };
+  fillColorPair: {
+    start: THREE.Color;
+    target: THREE.Color;
+    interpolate: boolean;
+  };
 }
 const scratchColor = new THREE.Color();
 
@@ -87,8 +95,9 @@ export class PointMorphStrategy implements MorphStrategy {
   private _vgroupLeafStates: VGroupLeafState[] = [];
 
   begin(_animation: Animation, source: Mobject, target: Mobject): void {
-    if (!(source instanceof VMobject) || !(target instanceof VMobject))
-      throw new Error('PointMorphStrategy requires VMobject inputs');
+    if (!(source instanceof VMobject) || !(target instanceof VMobject)) {
+      throw new Error("PointMorphStrategy requires VMobject inputs");
+    }
     if (source instanceof VGroup && target instanceof VGroup) {
       this._beginVGroup(source, target);
       return;
@@ -136,8 +145,9 @@ export class PointMorphStrategy implements MorphStrategy {
     source.normalizeTransform();
     const normalizedTarget = target.copy() as VGroup;
     normalizedTarget.normalizeTransform();
-    for (const pair of pairLeafSnapshotsByIndex(source, normalizedTarget))
+    for (const pair of pairLeafSnapshotsByIndex(source, normalizedTarget)) {
       this._vgroupLeafStates.push(this._build(source, pair));
+    }
     // _startPosition / _targetPosition are the group's own position vectors (parent-local).
     this._startPosition.copy(source.position);
     this._targetPosition.copy(normalizedTarget.position);
@@ -147,7 +157,12 @@ export class PointMorphStrategy implements MorphStrategy {
     this._targetScale.copy(normalizedTarget.scaleVector);
   }
   private _build(group: VGroup, pair: LeafPairByIndex): VGroupLeafState {
-    const { source: src, target: tgt, sourceIsPlaceholder, targetIsPlaceholder } = pair;
+    const {
+      source: src,
+      target: tgt,
+      sourceIsPlaceholder,
+      targetIsPlaceholder,
+    } = pair;
     const sc = src.leaf;
     const tc = tgt.leaf;
     let child: VMobject = sc;
@@ -157,24 +172,36 @@ export class PointMorphStrategy implements MorphStrategy {
       child.fillOpacity = 0;
       group.add(child);
     }
-    const canMorph = canMorphByPoints(sc, tc) && !sourceIsPlaceholder && !targetIsPlaceholder;
+    const canMorph = canMorphByPoints(sc, tc) && !sourceIsPlaceholder &&
+      !targetIsPlaceholder;
     const aligned = canMorph ? alignVmobjectPair(sc, tc) : undefined;
     const startPoints = aligned?.startPoints ?? child.getLocalPoints();
     const targetPoints = aligned?.targetPoints ?? child.getLocalPoints();
-    const finalTargetPoints = aligned?.finalTargetPoints ?? child.getLocalPoints();
+    const finalTargetPoints = aligned?.finalTargetPoints ??
+      child.getLocalPoints();
     const finalTargetSubpathLengths = aligned?.finalTargetSubpathLengths;
     if (aligned) {
       child.setPoints(aligned.startPoints);
       child.setTransformSubpathLengths(aligned.alignedSubpathLengths);
     } else child.setTransformSubpathLengths(undefined);
-    const startStyle = sourceIsPlaceholder ? captureStyleFaded(tc) : captureStyle(child);
-    const targetStyle = targetIsPlaceholder ? captureStyleFaded(sc) : captureStyle(tc);
+    const startStyle = sourceIsPlaceholder
+      ? captureStyleFaded(tc)
+      : captureStyle(child);
+    const targetStyle = targetIsPlaceholder
+      ? captureStyleFaded(sc)
+      : captureStyle(tc);
     return {
       child,
       startPoints,
       targetPoints,
-      startPosition: worldToParentLocalPosition(src.worldPosition, src.parentWorldMatrix),
-      targetPosition: worldToParentLocalPosition(tgt.worldPosition, src.parentWorldMatrix),
+      startPosition: worldToParentLocalPosition(
+        src.worldPosition,
+        src.parentWorldMatrix,
+      ),
+      targetPosition: worldToParentLocalPosition(
+        tgt.worldPosition,
+        src.parentWorldMatrix,
+      ),
       finalTargetPoints,
       finalTargetSubpathLengths,
       startStyle,
@@ -191,66 +218,104 @@ export class PointMorphStrategy implements MorphStrategy {
       },
     };
   }
-  interpolate(_animation: Animation, source: Mobject, _target: Mobject, alpha: number): void {
+  interpolate(
+    _animation: Animation,
+    source: Mobject,
+    _target: Mobject,
+    alpha: number,
+  ): void {
     if (this._isVGroupTransform) {
       // group.position is NOT lerped: leaf positions already encode the group translation delta
       // (targetPosition = P_target - P_source + target_child.localPos), so lerping them
       // implicitly moves the group without needing to touch group.position mid-animation.
       for (const leaf of this._vgroupLeafStates) {
         const interpolated: number[][] = [];
-        for (let i = 0; i < leaf.startPoints.length; i++)
-          interpolated.push(lerpPoint(leaf.startPoints[i], leaf.targetPoints[i], alpha));
+        for (let i = 0; i < leaf.startPoints.length; i++) {
+          interpolated.push(
+            lerpPoint(leaf.startPoints[i], leaf.targetPoints[i], alpha),
+          );
+        }
         leaf.child.setPoints(interpolated);
-        leaf.child.position.lerpVectors(leaf.startPosition, leaf.targetPosition, alpha);
+        leaf.child.position.lerpVectors(
+          leaf.startPosition,
+          leaf.targetPosition,
+          alpha,
+        );
         const ss = leaf.startStyle,
           ts = leaf.targetStyle;
         leaf.child.opacity = ss.opacity + (ts.opacity - ss.opacity) * alpha;
-        leaf.child.fillOpacity = ss.fillOpacity + (ts.fillOpacity - ss.fillOpacity) * alpha;
-        leaf.child.strokeWidth = ss.strokeWidth + (ts.strokeWidth - ss.strokeWidth) * alpha;
-        if (leaf.strokeColorPair.interpolate)
-          leaf.child.color =
-            '#' +
+        leaf.child.fillOpacity = ss.fillOpacity +
+          (ts.fillOpacity - ss.fillOpacity) * alpha;
+        leaf.child.strokeWidth = ss.strokeWidth +
+          (ts.strokeWidth - ss.strokeWidth) * alpha;
+        if (leaf.strokeColorPair.interpolate) {
+          leaf.child.color = "#" +
             scratchColor
-              .lerpColors(leaf.strokeColorPair.start, leaf.strokeColorPair.target, alpha)
+              .lerpColors(
+                leaf.strokeColorPair.start,
+                leaf.strokeColorPair.target,
+                alpha,
+              )
               .getHexString();
-        if (leaf.fillColorPair.interpolate)
-          leaf.child.fillColor =
-            '#' +
+        }
+        if (leaf.fillColorPair.interpolate) {
+          leaf.child.fillColor = "#" +
             scratchColor
-              .lerpColors(leaf.fillColorPair.start, leaf.fillColorPair.target, alpha)
+              .lerpColors(
+                leaf.fillColorPair.start,
+                leaf.fillColorPair.target,
+                alpha,
+              )
               .getHexString();
+        }
         leaf.child._markDirty();
       }
       return;
     }
     const vmobject = source as VMobject;
     const interpolatedPoints: number[][] = [];
-    for (let i = 0; i < this._startPoints.length; i++)
-      interpolatedPoints.push(lerpPoint(this._startPoints[i], this._targetPoints[i], alpha));
+    for (let i = 0; i < this._startPoints.length; i++) {
+      interpolatedPoints.push(
+        lerpPoint(this._startPoints[i], this._targetPoints[i], alpha),
+      );
+    }
     vmobject.setPoints(interpolatedPoints);
     vmobject.setTransformSubpathLengths(this._alignedSubpathLengths);
-    vmobject.opacity = this._startOpacity + (this._targetOpacity - this._startOpacity) * alpha;
-    vmobject.fillOpacity =
-      this._startFillOpacity + (this._targetFillOpacity - this._startFillOpacity) * alpha;
-    vmobject.strokeWidth =
-      this._startStrokeWidth + (this._targetStrokeWidth - this._startStrokeWidth) * alpha;
-    if (this._interpolateColor)
-      vmobject.color =
-        '#' +
-        new THREE.Color().lerpColors(this._startColor, this._targetColor, alpha).getHexString();
-    if (this._interpolateFillColor)
-      vmobject.fillColor =
-        '#' +
+    vmobject.opacity = this._startOpacity +
+      (this._targetOpacity - this._startOpacity) * alpha;
+    vmobject.fillOpacity = this._startFillOpacity +
+      (this._targetFillOpacity - this._startFillOpacity) * alpha;
+    vmobject.strokeWidth = this._startStrokeWidth +
+      (this._targetStrokeWidth - this._startStrokeWidth) * alpha;
+    if (this._interpolateColor) {
+      vmobject.color = "#" +
+        new THREE.Color().lerpColors(this._startColor, this._targetColor, alpha)
+          .getHexString();
+    }
+    if (this._interpolateFillColor) {
+      vmobject.fillColor = "#" +
         new THREE.Color()
           .lerpColors(this._startFillColor, this._targetFillColor, alpha)
           .getHexString();
-    vmobject.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
-    vmobject.rotation.set(
-      this._startRotation.x + (this._targetRotation.x - this._startRotation.x) * alpha,
-      this._startRotation.y + (this._targetRotation.y - this._startRotation.y) * alpha,
-      this._startRotation.z + (this._targetRotation.z - this._startRotation.z) * alpha,
+    }
+    vmobject.position.lerpVectors(
+      this._startPosition,
+      this._targetPosition,
+      alpha,
     );
-    vmobject.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
+    vmobject.rotation.set(
+      this._startRotation.x +
+        (this._targetRotation.x - this._startRotation.x) * alpha,
+      this._startRotation.y +
+        (this._targetRotation.y - this._startRotation.y) * alpha,
+      this._startRotation.z +
+        (this._targetRotation.z - this._startRotation.z) * alpha,
+    );
+    vmobject.scaleVector.lerpVectors(
+      this._startScale,
+      this._targetScale,
+      alpha,
+    );
     vmobject._markDirty();
   }
   /**
@@ -275,7 +340,10 @@ export class PointMorphStrategy implements MorphStrategy {
       const group = source as VGroup;
       // leaf.targetPosition is in source-local space: P_target - P_source + target_child.localPos.
       // Re-express in target-local space by subtracting (P_target - P_source).
-      const posOffset = new THREE.Vector3().subVectors(this._targetPosition, this._startPosition);
+      const posOffset = new THREE.Vector3().subVectors(
+        this._targetPosition,
+        this._startPosition,
+      );
       for (const leaf of this._vgroupLeafStates) {
         leaf.child.setPoints(leaf.finalTargetPoints);
         leaf.child.position.copy(leaf.targetPosition).sub(posOffset);
@@ -295,14 +363,18 @@ export class PointMorphStrategy implements MorphStrategy {
     const vmobject = source as VMobject;
     const vtarget = target as VMobject;
     vmobject.setPoints(
-      this._finalTargetPoints.length > 0 ? this._finalTargetPoints : this._targetPoints,
+      this._finalTargetPoints.length > 0
+        ? this._finalTargetPoints
+        : this._targetPoints,
     );
     vmobject.setTransformSubpathLengths(this._finalTargetSubpathLengths);
     vmobject.opacity = this._targetOpacity;
     vmobject.fillOpacity = this._targetFillOpacity;
     vmobject.strokeWidth = this._targetStrokeWidth;
     vmobject.color = vtarget.color;
-    if (this._interpolateFillColor) vmobject.fillColor = vtarget.fillColor || vtarget.color;
+    if (this._interpolateFillColor) {
+      vmobject.fillColor = vtarget.fillColor || vtarget.color;
+    }
     vmobject.position.copy(this._targetPosition);
     vmobject.rotation.copy(this._targetRotation);
     vmobject.scaleVector.copy(this._targetScale);

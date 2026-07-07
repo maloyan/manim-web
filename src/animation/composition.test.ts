@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { Mobject } from '../core/Mobject';
-import { AnimationGroup } from './AnimationGroup';
-import { Succession, succession } from './Succession';
-import { FadeIn } from './fading/FadeIn';
-import { linear } from '../rate-functions';
+import { describe, expect, it } from "vitest";
+import { Mobject } from "../core/Mobject";
+import { AnimationGroup } from "./AnimationGroup";
+import { Succession, succession } from "./Succession";
+import { FadeIn } from "./fading/FadeIn";
+import { linear } from "../rate-functions";
 
 /**
  * Helper to create a FadeIn animation with linear rateFunc for predictable testing.
@@ -13,27 +13,27 @@ function createFadeIn(duration: number = 1): FadeIn {
   return new FadeIn(m, { duration, rateFunc: linear });
 }
 
-describe('AnimationGroup', () => {
-  describe('empty group', () => {
-    it('has duration 0', () => {
+describe("AnimationGroup", () => {
+  describe("empty group", () => {
+    it("has duration 0", () => {
       const group = new AnimationGroup([]);
       expect(group.duration).toBe(0);
     });
 
-    it('can call begin without error', () => {
+    it("can call begin without error", () => {
       const group = new AnimationGroup([]);
       expect(() => group.begin()).not.toThrow();
     });
 
-    it('can call finish without error', () => {
+    it("can call finish without error", () => {
       const group = new AnimationGroup([]);
       group.begin();
       expect(() => group.finish()).not.toThrow();
     });
   });
 
-  describe('parallel (lagRatio=0)', () => {
-    it('duration is max of all animation durations', () => {
+  describe("parallel (lagRatio=0)", () => {
+    it("duration is max of all animation durations", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(2);
       const a3 = createFadeIn(1.5);
@@ -41,21 +41,21 @@ describe('AnimationGroup', () => {
       expect(group.duration).toBeCloseTo(2, 5);
     });
 
-    it('duration equals single animation duration with one child', () => {
+    it("duration equals single animation duration with one child", () => {
       const a1 = createFadeIn(3);
       const group = new AnimationGroup([a1], { lagRatio: 0 });
       expect(group.duration).toBeCloseTo(3, 5);
     });
 
-    it('lagRatio defaults to 0', () => {
+    it("lagRatio defaults to 0", () => {
       const a1 = createFadeIn(1);
       const group = new AnimationGroup([a1]);
       expect(group.lagRatio).toBe(0);
     });
   });
 
-  describe('sequential (lagRatio=1)', () => {
-    it('duration is sum of all animation durations', () => {
+  describe("sequential (lagRatio=1)", () => {
+    it("duration is sum of all animation durations", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(2);
       const a3 = createFadeIn(1.5);
@@ -63,15 +63,15 @@ describe('AnimationGroup', () => {
       expect(group.duration).toBeCloseTo(4.5, 5);
     });
 
-    it('duration is single duration with one child', () => {
+    it("duration is single duration with one child", () => {
       const a1 = createFadeIn(2);
       const group = new AnimationGroup([a1], { lagRatio: 1 });
       expect(group.duration).toBeCloseTo(2, 5);
     });
   });
 
-  describe('staggered (lagRatio=0.5)', () => {
-    it('computes correct duration with equal-length animations', () => {
+  describe("staggered (lagRatio=0.5)", () => {
+    it("computes correct duration with equal-length animations", () => {
       // Two animations of duration 1 each, lagRatio=0.5
       // anim0 starts at 0, ends at 1
       // anim1 starts at 0.5 (0 + 1*0.5), ends at 1.5
@@ -82,7 +82,7 @@ describe('AnimationGroup', () => {
       expect(group.duration).toBeCloseTo(1.5, 5);
     });
 
-    it('computes correct duration with three animations', () => {
+    it("computes correct duration with three animations", () => {
       // Three animations of duration 1, lagRatio=0.5
       // anim0: starts 0, ends 1
       // anim1: starts 0.5, ends 1.5
@@ -95,7 +95,7 @@ describe('AnimationGroup', () => {
       expect(group.duration).toBeCloseTo(2.0, 5);
     });
 
-    it('computes correct duration with different-length animations', () => {
+    it("computes correct duration with different-length animations", () => {
       // anim0: dur=2, starts 0, ends 2
       // anim1: dur=1, starts 2*0.5=1, ends 2
       // Group duration = max(2, 2) = 2
@@ -106,8 +106,8 @@ describe('AnimationGroup', () => {
     });
   });
 
-  describe('begin()', () => {
-    it('calls begin on all child animations', () => {
+  describe("begin()", () => {
+    it("calls begin on all child animations", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2]);
@@ -119,7 +119,7 @@ describe('AnimationGroup', () => {
       expect(a2.mobject.opacity).toBe(0);
     });
 
-    it('can be called on sequential group', () => {
+    it("can be called on sequential group", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2], { lagRatio: 1 });
@@ -130,8 +130,8 @@ describe('AnimationGroup', () => {
     });
   });
 
-  describe('interpolate() with lagRatio=0 (parallel)', () => {
-    it('all animations get same alpha when same duration', () => {
+  describe("interpolate() with lagRatio=0 (parallel)", () => {
+    it("all animations get same alpha when same duration", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2], { lagRatio: 0 });
@@ -145,7 +145,7 @@ describe('AnimationGroup', () => {
       expect(a2.mobject.opacity).toBeCloseTo(0.5, 5);
     });
 
-    it('at alpha=0 all animations are at start', () => {
+    it("at alpha=0 all animations are at start", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2], { lagRatio: 0 });
@@ -156,7 +156,7 @@ describe('AnimationGroup', () => {
       expect(a2.mobject.opacity).toBeCloseTo(0, 5);
     });
 
-    it('at alpha=1 all animations are at end', () => {
+    it("at alpha=1 all animations are at end", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2], { lagRatio: 0 });
@@ -167,7 +167,7 @@ describe('AnimationGroup', () => {
       expect(a2.mobject.opacity).toBeCloseTo(1, 5);
     });
 
-    it('shorter animation finishes before longer one', () => {
+    it("shorter animation finishes before longer one", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(2);
       const group = new AnimationGroup([a1, a2], { lagRatio: 0 });
@@ -183,8 +183,8 @@ describe('AnimationGroup', () => {
     });
   });
 
-  describe('interpolate() with lagRatio=1 (sequential)', () => {
-    it('first anim plays then second with 2 anims of duration 1', () => {
+  describe("interpolate() with lagRatio=1 (sequential)", () => {
+    it("first anim plays then second with 2 anims of duration 1", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2], { lagRatio: 1 });
@@ -200,7 +200,7 @@ describe('AnimationGroup', () => {
       expect(a2.mobject.opacity).toBeCloseTo(0, 5);
     });
 
-    it('second anim plays after first finishes', () => {
+    it("second anim plays after first finishes", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2], { lagRatio: 1 });
@@ -214,7 +214,7 @@ describe('AnimationGroup', () => {
       expect(a2.mobject.opacity).toBeCloseTo(0.5, 5);
     });
 
-    it('at group alpha=0 both are at start', () => {
+    it("at group alpha=0 both are at start", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2], { lagRatio: 1 });
@@ -225,7 +225,7 @@ describe('AnimationGroup', () => {
       expect(a2.mobject.opacity).toBeCloseTo(0, 5);
     });
 
-    it('at group alpha=1 both are finished', () => {
+    it("at group alpha=1 both are finished", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2], { lagRatio: 1 });
@@ -236,7 +236,7 @@ describe('AnimationGroup', () => {
       expect(a2.mobject.opacity).toBeCloseTo(1, 5);
     });
 
-    it('midpoint: first finished, second starting', () => {
+    it("midpoint: first finished, second starting", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2], { lagRatio: 1 });
@@ -250,7 +250,7 @@ describe('AnimationGroup', () => {
       expect(a2.mobject.opacity).toBeCloseTo(0, 5);
     });
 
-    it('works with three sequential animations', () => {
+    it("works with three sequential animations", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const a3 = createFadeIn(1);
@@ -275,8 +275,8 @@ describe('AnimationGroup', () => {
     });
   });
 
-  describe('interpolate() with lagRatio=0.5 (staggered)', () => {
-    it('animations overlap correctly', () => {
+  describe("interpolate() with lagRatio=0.5 (staggered)", () => {
+    it("animations overlap correctly", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2], { lagRatio: 0.5 });
@@ -302,8 +302,8 @@ describe('AnimationGroup', () => {
     });
   });
 
-  describe('finish()', () => {
-    it('calls finish on all children', () => {
+  describe("finish()", () => {
+    it("calls finish on all children", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2]);
@@ -318,7 +318,7 @@ describe('AnimationGroup', () => {
       expect(group.isFinished()).toBe(true);
     });
 
-    it('finish on sequential group finishes all children', () => {
+    it("finish on sequential group finishes all children", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2], { lagRatio: 1 });
@@ -330,14 +330,14 @@ describe('AnimationGroup', () => {
     });
   });
 
-  describe('isFinished()', () => {
-    it('returns false initially', () => {
+  describe("isFinished()", () => {
+    it("returns false initially", () => {
       const a1 = createFadeIn(1);
       const group = new AnimationGroup([a1]);
       expect(group.isFinished()).toBe(false);
     });
 
-    it('returns true only when all children finished', () => {
+    it("returns true only when all children finished", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2]);
@@ -347,8 +347,8 @@ describe('AnimationGroup', () => {
     });
   });
 
-  describe('reset()', () => {
-    it('resets all children', () => {
+  describe("reset()", () => {
+    it("resets all children", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = new AnimationGroup([a1, a2]);
@@ -363,16 +363,16 @@ describe('AnimationGroup', () => {
     });
   });
 
-  describe('animationGroup() factory function', () => {
-    it('returns an AnimationGroup instance', async () => {
-      const { animationGroup } = await import('./AnimationGroup');
+  describe("animationGroup() factory function", () => {
+    it("returns an AnimationGroup instance", async () => {
+      const { animationGroup } = await import("./AnimationGroup");
       const a1 = createFadeIn(1);
       const group = animationGroup([a1]);
       expect(group).toBeInstanceOf(AnimationGroup);
     });
 
-    it('passes lagRatio option', async () => {
-      const { animationGroup } = await import('./AnimationGroup');
+    it("passes lagRatio option", async () => {
+      const { animationGroup } = await import("./AnimationGroup");
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const group = animationGroup([a1, a2], { lagRatio: 1 });
@@ -382,9 +382,9 @@ describe('AnimationGroup', () => {
   });
 });
 
-describe('Succession', () => {
-  describe('class', () => {
-    it('creates an AnimationGroup with lagRatio=1', () => {
+describe("Succession", () => {
+  describe("class", () => {
+    it("creates an AnimationGroup with lagRatio=1", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const s = new Succession([a1, a2]);
@@ -392,14 +392,14 @@ describe('Succession', () => {
       expect(s.lagRatio).toBe(1);
     });
 
-    it('duration is sum of all animation durations', () => {
+    it("duration is sum of all animation durations", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(2);
       const s = new Succession([a1, a2]);
       expect(s.duration).toBeCloseTo(3, 5);
     });
 
-    it('animations play sequentially', () => {
+    it("animations play sequentially", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const s = new Succession([a1, a2]);
@@ -416,7 +416,7 @@ describe('Succession', () => {
       expect(a2.mobject.opacity).toBeCloseTo(0.5, 5);
     });
 
-    it('works with three animations', () => {
+    it("works with three animations", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const a3 = createFadeIn(1);
@@ -424,14 +424,14 @@ describe('Succession', () => {
       expect(s.duration).toBeCloseTo(3, 5);
     });
 
-    it('empty succession has duration 0', () => {
+    it("empty succession has duration 0", () => {
       const s = new Succession([]);
       expect(s.duration).toBe(0);
     });
   });
 
-  describe('succession() factory function', () => {
-    it('returns an AnimationGroup with lagRatio=1', () => {
+  describe("succession() factory function", () => {
+    it("returns an AnimationGroup with lagRatio=1", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const s = succession([a1, a2]);
@@ -439,14 +439,14 @@ describe('Succession', () => {
       expect(s.lagRatio).toBe(1);
     });
 
-    it('computes correct sequential duration', () => {
+    it("computes correct sequential duration", () => {
       const a1 = createFadeIn(2);
       const a2 = createFadeIn(3);
       const s = succession([a1, a2]);
       expect(s.duration).toBeCloseTo(5, 5);
     });
 
-    it('animations play in sequence', () => {
+    it("animations play in sequence", () => {
       const a1 = createFadeIn(1);
       const a2 = createFadeIn(1);
       const s = succession([a1, a2]);
@@ -458,7 +458,7 @@ describe('Succession', () => {
       expect(a2.mobject.opacity).toBeCloseTo(0, 5);
     });
 
-    it('accepts rateFunc option', () => {
+    it("accepts rateFunc option", () => {
       const customRate = (t: number) => t * t;
       const a1 = createFadeIn(1);
       const s = succession([a1], { rateFunc: customRate });

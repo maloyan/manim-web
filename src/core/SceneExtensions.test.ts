@@ -6,21 +6,21 @@
  * - Coordinate conversion helpers used by VectorScene and LinearTransformationScene
  * - Matrix2D type and matrix operations
  */
-import { describe, it, expect } from 'vitest';
-import { Rectangle } from '../mobjects/geometry/Rectangle';
-import { Scene } from './Scene';
-import { ZoomDisplayPopOut } from './SceneExtensions';
-import { coordsToPoint, pointToCoords } from '../utils/math';
+import { describe, expect, it } from "vitest";
+import { Rectangle } from "../mobjects/geometry/Rectangle";
+import { Scene } from "./Scene";
+import { ZoomDisplayPopOut } from "./SceneExtensions";
+import { coordsToPoint, pointToCoords } from "../utils/math";
 
-describe('ZoomedDisplay defaults', () => {
-  it('displayFrame Rectangle uses strokeWidth=3 matching Python Manim default', () => {
+describe("ZoomedDisplay defaults", () => {
+  it("displayFrame Rectangle uses strokeWidth=3 matching Python Manim default", () => {
     // Python Manim's image_frame_stroke_width defaults to 3.
     // The displayFrame is a Rectangle with this stroke width.
     const rect = new Rectangle({ width: 6, height: 1, strokeWidth: 3 });
     expect(rect.strokeWidth).toBe(3);
   });
 
-  it('Rectangle with strokeWidth=3 produces correct mesh half-width', () => {
+  it("Rectangle with strokeWidth=3 produces correct mesh half-width", () => {
     // halfW = strokeWidth * 0.005 in _updateMeshStroke
     const strokeWidth = 3;
     const halfW = strokeWidth * 0.005;
@@ -30,32 +30,37 @@ describe('ZoomedDisplay defaults', () => {
     expect(halfW * 2).toBeCloseTo(0.03, 6);
   });
 
-  it('ZoomedCamera frame is a Rectangle with fillOpacity 0', () => {
+  it("ZoomedCamera frame is a Rectangle with fillOpacity 0", () => {
     // ZoomedCamera creates a Rectangle with fillOpacity = 0 (transparent interior)
-    const frame = new Rectangle({ width: 0.9, height: 0.9, color: '#FFFF00', strokeWidth: 3 });
+    const frame = new Rectangle({
+      width: 0.9,
+      height: 0.9,
+      color: "#FFFF00",
+      strokeWidth: 3,
+    });
     frame.fillOpacity = 0;
     expect(frame.fillOpacity).toBe(0);
     expect(frame.strokeWidth).toBe(3);
-    expect(frame.color).toBe('#FFFF00');
+    expect(frame.color).toBe("#FFFF00");
   });
 
-  it('ZoomedDisplay display frame matches expected defaults', () => {
+  it("ZoomedDisplay display frame matches expected defaults", () => {
     // The display frame uses displayFrameColor (default '#FFFF00') and
     // displayFrameStrokeWidth (default 3)
     const displayFrame = new Rectangle({
       width: 3,
       height: 3,
-      color: '#FFFF00',
+      color: "#FFFF00",
       strokeWidth: 3,
     });
     displayFrame.fillOpacity = 0;
     expect(displayFrame.fillOpacity).toBe(0);
-    expect(displayFrame.color).toBe('#FFFF00');
+    expect(displayFrame.color).toBe("#FFFF00");
   });
 });
 
-describe('Scene._autoRender accessibility', () => {
-  it('_autoRender is accessible from subclasses (protected)', () => {
+describe("Scene._autoRender accessibility", () => {
+  it("_autoRender is accessible from subclasses (protected)", () => {
     // Verify the protected field exists and can be accessed by subclasses.
     // ZoomedScene extends Scene and needs to suppress auto-render
     // during activateZooming() to prevent flicker.
@@ -76,8 +81,8 @@ describe('Scene._autoRender accessibility', () => {
   });
 });
 
-describe('ZoomDisplayPopOut', () => {
-  it('should construct with display and frame mobjects', () => {
+describe("ZoomDisplayPopOut", () => {
+  it("should construct with display and frame mobjects", () => {
     const display = new Rectangle({ width: 3, height: 3 });
     const frame = new Rectangle({ width: 0.9, height: 0.9 });
     const anim = new ZoomDisplayPopOut(display, frame);
@@ -86,7 +91,7 @@ describe('ZoomDisplayPopOut', () => {
     expect(anim.duration).toBe(1); // default duration
   });
 
-  it('should accept custom animation options', () => {
+  it("should accept custom animation options", () => {
     const display = new Rectangle({ width: 3, height: 3 });
     const frame = new Rectangle({ width: 0.9, height: 0.9 });
     const rateFunc = (t: number) => t * t;
@@ -98,7 +103,7 @@ describe('ZoomDisplayPopOut', () => {
     expect(anim.rateFunc).toBe(rateFunc);
   });
 
-  it('begin() should save display position and scale, then snap to frame', () => {
+  it("begin() should save display position and scale, then snap to frame", () => {
     const display = new Rectangle({ width: 3, height: 3 });
     const frame = new Rectangle({ width: 0.9, height: 0.9 });
 
@@ -117,7 +122,7 @@ describe('ZoomDisplayPopOut', () => {
     expect(Math.abs(displayCenter[1] - frameCenter[1])).toBeLessThan(0.5);
   });
 
-  it('interpolate(0) should keep display at frame-matched position', () => {
+  it("interpolate(0) should keep display at frame-matched position", () => {
     const display = new Rectangle({ width: 3, height: 3 });
     const frame = new Rectangle({ width: 0.9, height: 0.9 });
     display.moveTo([5, 3, 0]);
@@ -135,7 +140,7 @@ describe('ZoomDisplayPopOut', () => {
     expect(display.position.y).toBeCloseTo(frameMatchedY, 5);
   });
 
-  it('interpolate(1) should move display to its original saved position', () => {
+  it("interpolate(1) should move display to its original saved position", () => {
     const display = new Rectangle({ width: 3, height: 3 });
     const frame = new Rectangle({ width: 0.9, height: 0.9 });
     display.moveTo([5, 3, 0]);
@@ -152,7 +157,7 @@ describe('ZoomDisplayPopOut', () => {
     expect(display.position.y).toBeCloseTo(savedY, 5);
   });
 
-  it('interpolate(0.5) should produce an intermediate position', () => {
+  it("interpolate(0.5) should produce an intermediate position", () => {
     const display = new Rectangle({ width: 3, height: 3 });
     const frame = new Rectangle({ width: 0.9, height: 0.9 });
     display.moveTo([4, 0, 0]);
@@ -170,7 +175,7 @@ describe('ZoomDisplayPopOut', () => {
     expect(display.position.x).toBeCloseTo(expectedX, 5);
   });
 
-  it('interpolate without begin should be a no-op', () => {
+  it("interpolate without begin should be a no-op", () => {
     const display = new Rectangle({ width: 3, height: 3 });
     const frame = new Rectangle({ width: 0.9, height: 0.9 });
     display.moveTo([5, 3, 0]);
@@ -183,7 +188,7 @@ describe('ZoomDisplayPopOut', () => {
     expect(display.position.y).toBeCloseTo(3, 5);
   });
 
-  it('finish() should apply final rateFunc value', () => {
+  it("finish() should apply final rateFunc value", () => {
     const display = new Rectangle({ width: 3, height: 3 });
     const frame = new Rectangle({ width: 0.9, height: 0.9 });
     display.moveTo([5, 3, 0]);
@@ -201,14 +206,16 @@ describe('ZoomDisplayPopOut', () => {
     expect(display.position.y).toBeCloseTo(savedY, 3);
   });
 
-  it('finish() with reverse rate function should keep display at frame position', () => {
+  it("finish() with reverse rate function should keep display at frame position", () => {
     const display = new Rectangle({ width: 3, height: 3 });
     const frame = new Rectangle({ width: 0.9, height: 0.9 });
     display.moveTo([5, 3, 0]);
 
     // Reverse rate function: rateFunc(1) = 0
     const reverseFunc = (t: number) => 1 - t;
-    const anim = new ZoomDisplayPopOut(display, frame, { rateFunc: reverseFunc });
+    const anim = new ZoomDisplayPopOut(display, frame, {
+      rateFunc: reverseFunc,
+    });
     anim.begin();
 
     const frameMatchedX = display.position.x;
@@ -222,7 +229,7 @@ describe('ZoomDisplayPopOut', () => {
     expect(display.position.y).toBeCloseTo(frameMatchedY, 3);
   });
 
-  it('should also interpolate scale between frame-matched and saved', () => {
+  it("should also interpolate scale between frame-matched and saved", () => {
     const display = new Rectangle({ width: 6, height: 6 });
     const frame = new Rectangle({ width: 1, height: 1 });
     display.moveTo([4, 2, 0]);
@@ -252,20 +259,20 @@ describe('ZoomDisplayPopOut', () => {
   });
 });
 
-describe('coordsToPoint and pointToCoords helpers (used by VectorScene/LinearTransformationScene)', () => {
+describe("coordsToPoint and pointToCoords helpers (used by VectorScene/LinearTransformationScene)", () => {
   const xRange: [number, number, number] = [-5, 5, 1];
   const yRange: [number, number, number] = [-3, 3, 1];
   const xLength = 10;
   const yLength = 6;
 
-  it('coordsToPoint should map origin (0,0) to visual (0,0,0)', () => {
+  it("coordsToPoint should map origin (0,0) to visual (0,0,0)", () => {
     const pt = coordsToPoint(0, 0, xRange, yRange, xLength, yLength);
     expect(pt[0]).toBeCloseTo(0, 5);
     expect(pt[1]).toBeCloseTo(0, 5);
     expect(pt[2]).toBe(0);
   });
 
-  it('coordsToPoint should map (5,3) to visual (5,3,0)', () => {
+  it("coordsToPoint should map (5,3) to visual (5,3,0)", () => {
     // x=5 is at xMax, so xNorm=1 -> (1-0.5)*10 = 5
     // y=3 is at yMax, so yNorm=1 -> (1-0.5)*6 = 3
     const pt = coordsToPoint(5, 3, xRange, yRange, xLength, yLength);
@@ -273,13 +280,13 @@ describe('coordsToPoint and pointToCoords helpers (used by VectorScene/LinearTra
     expect(pt[1]).toBeCloseTo(3, 5);
   });
 
-  it('coordsToPoint should map (-5,-3) to visual (-5,-3,0)', () => {
+  it("coordsToPoint should map (-5,-3) to visual (-5,-3,0)", () => {
     const pt = coordsToPoint(-5, -3, xRange, yRange, xLength, yLength);
     expect(pt[0]).toBeCloseTo(-5, 5);
     expect(pt[1]).toBeCloseTo(-3, 5);
   });
 
-  it('coordsToPoint should handle asymmetric ranges', () => {
+  it("coordsToPoint should handle asymmetric ranges", () => {
     const asymXRange: [number, number, number] = [0, 10, 1];
     const asymYRange: [number, number, number] = [0, 4, 1];
     const pt = coordsToPoint(5, 2, asymXRange, asymYRange, 10, 8);
@@ -289,10 +296,17 @@ describe('coordsToPoint and pointToCoords helpers (used by VectorScene/LinearTra
     expect(pt[1]).toBeCloseTo(0, 5);
   });
 
-  it('pointToCoords should be the inverse of coordsToPoint', () => {
+  it("pointToCoords should be the inverse of coordsToPoint", () => {
     const graphX = 2;
     const graphY = -1;
-    const visualPt = coordsToPoint(graphX, graphY, xRange, yRange, xLength, yLength);
+    const visualPt = coordsToPoint(
+      graphX,
+      graphY,
+      xRange,
+      yRange,
+      xLength,
+      yLength,
+    );
     const [rx, ry] = pointToCoords(
       visualPt as [number, number, number],
       xRange,
@@ -304,13 +318,13 @@ describe('coordsToPoint and pointToCoords helpers (used by VectorScene/LinearTra
     expect(ry).toBeCloseTo(graphY, 5);
   });
 
-  it('pointToCoords should map visual origin to graph origin', () => {
+  it("pointToCoords should map visual origin to graph origin", () => {
     const [rx, ry] = pointToCoords([0, 0, 0], xRange, yRange, xLength, yLength);
     expect(rx).toBeCloseTo(0, 5);
     expect(ry).toBeCloseTo(0, 5);
   });
 
-  it('roundtrip coordsToPoint -> pointToCoords for multiple values', () => {
+  it("roundtrip coordsToPoint -> pointToCoords for multiple values", () => {
     const testPoints: [number, number][] = [
       [1, 2],
       [-3, 1],
@@ -334,8 +348,8 @@ describe('coordsToPoint and pointToCoords helpers (used by VectorScene/LinearTra
   });
 });
 
-describe('Matrix2D operations (used by LinearTransformationScene)', () => {
-  it('identity matrix multiplication should be identity', () => {
+describe("Matrix2D operations (used by LinearTransformationScene)", () => {
+  it("identity matrix multiplication should be identity", () => {
     const identity: [[number, number], [number, number]] = [
       [1, 0],
       [0, 1],
@@ -352,7 +366,7 @@ describe('Matrix2D operations (used by LinearTransformationScene)', () => {
     ]);
   });
 
-  it('rotation matrix should preserve determinant of 1', () => {
+  it("rotation matrix should preserve determinant of 1", () => {
     const angle = Math.PI / 4;
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
@@ -360,11 +374,12 @@ describe('Matrix2D operations (used by LinearTransformationScene)', () => {
       [cos, -sin],
       [sin, cos],
     ];
-    const det = rotation[0][0] * rotation[1][1] - rotation[0][1] * rotation[1][0];
+    const det = rotation[0][0] * rotation[1][1] -
+      rotation[0][1] * rotation[1][0];
     expect(det).toBeCloseTo(1, 10);
   });
 
-  it('scaling matrix should scale determinant accordingly', () => {
+  it("scaling matrix should scale determinant accordingly", () => {
     const scale: [[number, number], [number, number]] = [
       [2, 0],
       [0, 3],
@@ -373,7 +388,7 @@ describe('Matrix2D operations (used by LinearTransformationScene)', () => {
     expect(det).toBe(6);
   });
 
-  it('matrix inverse times original should yield identity', () => {
+  it("matrix inverse times original should yield identity", () => {
     const m: [[number, number], [number, number]] = [
       [2, 1],
       [1, 3],
@@ -398,7 +413,7 @@ describe('Matrix2D operations (used by LinearTransformationScene)', () => {
     expect(result[1][1]).toBeCloseTo(1, 10);
   });
 
-  it('shear matrix should have determinant 1', () => {
+  it("shear matrix should have determinant 1", () => {
     const shear: [[number, number], [number, number]] = [
       [1, 2],
       [0, 1],
@@ -408,15 +423,15 @@ describe('Matrix2D operations (used by LinearTransformationScene)', () => {
   });
 });
 
-describe('ZoomedSceneOptions defaults verification', () => {
-  it('default cameraFrameWidth should be displayWidth * zoomFactor', () => {
+describe("ZoomedSceneOptions defaults verification", () => {
+  it("default cameraFrameWidth should be displayWidth * zoomFactor", () => {
     const displayWidth = 3;
     const zoomFactor = 0.3;
     const cameraFrameWidth = displayWidth * zoomFactor;
     expect(cameraFrameWidth).toBeCloseTo(0.9, 5);
   });
 
-  it('default display corner position calculation', () => {
+  it("default display corner position calculation", () => {
     // Default: corner = [1, 1, 0] (upper-right), cornerBuff = 0.5
     // frameW = 14, frameH = 8 (Manim defaults)
     const corner = [1, 1, 0];
@@ -426,8 +441,12 @@ describe('ZoomedSceneOptions defaults verification', () => {
     const frameW = 14;
     const frameH = 8;
 
-    const dx = corner[0] !== 0 ? corner[0] * (frameW / 2 - cornerBuff - displayWidth / 2) : 0;
-    const dy = corner[1] !== 0 ? corner[1] * (frameH / 2 - cornerBuff - displayHeight / 2) : 0;
+    const dx = corner[0] !== 0
+      ? corner[0] * (frameW / 2 - cornerBuff - displayWidth / 2)
+      : 0;
+    const dy = corner[1] !== 0
+      ? corner[1] * (frameH / 2 - cornerBuff - displayHeight / 2)
+      : 0;
 
     // dx = 1 * (7 - 0.5 - 1.5) = 5.0
     // dy = 1 * (4 - 0.5 - 1.5) = 2.0
@@ -435,7 +454,7 @@ describe('ZoomedSceneOptions defaults verification', () => {
     expect(dy).toBeCloseTo(2.0, 5);
   });
 
-  it('display corner calculation for lower-left corner', () => {
+  it("display corner calculation for lower-left corner", () => {
     const corner = [-1, -1, 0];
     const cornerBuff = 0.5;
     const displayWidth = 3;
@@ -443,37 +462,45 @@ describe('ZoomedSceneOptions defaults verification', () => {
     const frameW = 14;
     const frameH = 8;
 
-    const dx = corner[0] !== 0 ? corner[0] * (frameW / 2 - cornerBuff - displayWidth / 2) : 0;
-    const dy = corner[1] !== 0 ? corner[1] * (frameH / 2 - cornerBuff - displayHeight / 2) : 0;
+    const dx = corner[0] !== 0
+      ? corner[0] * (frameW / 2 - cornerBuff - displayWidth / 2)
+      : 0;
+    const dy = corner[1] !== 0
+      ? corner[1] * (frameH / 2 - cornerBuff - displayHeight / 2)
+      : 0;
 
     expect(dx).toBeCloseTo(-5.0, 5);
     expect(dy).toBeCloseTo(-2.0, 5);
   });
 
-  it('display corner calculation for center-right (corner=[1,0,0])', () => {
+  it("display corner calculation for center-right (corner=[1,0,0])", () => {
     const corner = [1, 0, 0];
     const cornerBuff = 0.5;
     const displayWidth = 3;
     const frameW = 14;
     const frameH = 8;
 
-    const dx = corner[0] !== 0 ? corner[0] * (frameW / 2 - cornerBuff - displayWidth / 2) : 0;
-    const dy = corner[1] !== 0 ? corner[1] * (frameH / 2 - cornerBuff - displayWidth / 2) : 0;
+    const dx = corner[0] !== 0
+      ? corner[0] * (frameW / 2 - cornerBuff - displayWidth / 2)
+      : 0;
+    const dy = corner[1] !== 0
+      ? corner[1] * (frameH / 2 - cornerBuff - displayWidth / 2)
+      : 0;
 
     expect(dx).toBeCloseTo(5.0, 5);
     expect(dy).toBe(0); // y component is 0 since corner[1] is 0
   });
 });
 
-describe('VectorSceneOptions defaults verification', () => {
-  it('default ranges and lengths', () => {
+describe("VectorSceneOptions defaults verification", () => {
+  it("default ranges and lengths", () => {
     const defaults = {
       xRange: [-5, 5, 1] as [number, number, number],
       yRange: [-3, 3, 1] as [number, number, number],
       xLength: 10,
       yLength: 6,
-      iColor: '#83C167',
-      jColor: '#FC6255',
+      iColor: "#83C167",
+      jColor: "#FC6255",
     };
 
     // Verify origin maps to visual (0,0)
@@ -515,8 +542,8 @@ describe('VectorSceneOptions defaults verification', () => {
   });
 });
 
-describe('LinearTransformationScene defaults verification', () => {
-  it('default grid uses symmetric ranges [-5,5] for both axes', () => {
+describe("LinearTransformationScene defaults verification", () => {
+  it("default grid uses symmetric ranges [-5,5] for both axes", () => {
     const xRange: [number, number, number] = [-5, 5, 1];
     const yRange: [number, number, number] = [-5, 5, 1];
     const xLength = 10;
@@ -528,7 +555,7 @@ describe('LinearTransformationScene defaults verification', () => {
     expect(origin[1]).toBeCloseTo(0, 5);
   });
 
-  it('_coordToVisualX formula matches coordsToPoint x component', () => {
+  it("_coordToVisualX formula matches coordsToPoint x component", () => {
     const xRange: [number, number, number] = [-5, 5, 1];
     const xLength = 10;
 
@@ -543,7 +570,7 @@ describe('LinearTransformationScene defaults verification', () => {
     expect(visualX).toBeCloseTo(pt[0], 5);
   });
 
-  it('_coordToVisualY formula matches coordsToPoint y component', () => {
+  it("_coordToVisualY formula matches coordsToPoint y component", () => {
     const yRange: [number, number, number] = [-5, 5, 1];
     const yLength = 10;
 
@@ -556,7 +583,7 @@ describe('LinearTransformationScene defaults verification', () => {
     expect(visualY).toBeCloseTo(pt[1], 5);
   });
 
-  it('should handle equal min/max range (degenerate case)', () => {
+  it("should handle equal min/max range (degenerate case)", () => {
     // When xMin === xMax, _coordToVisualX returns (0.5 - 0.5) * xLength = 0
     const xRange: [number, number, number] = [3, 3, 1];
     const xLength = 10;
@@ -569,13 +596,13 @@ describe('LinearTransformationScene defaults verification', () => {
   });
 });
 
-describe('MovingCameraScene defaults verification', () => {
-  it('default camera duration should be 1 second', () => {
+describe("MovingCameraScene defaults verification", () => {
+  it("default camera duration should be 1 second", () => {
     const defaultCameraDuration = 1;
     expect(defaultCameraDuration).toBe(1);
   });
 
-  it('smoothstep function produces correct interpolation', () => {
+  it("smoothstep function produces correct interpolation", () => {
     // MovingCameraScene uses smoothstep for camera animations
     // smoothstep(t) = t * t * (3 - 2 * t)
     const smoothstepLocal = (t: number) => t * t * (3 - 2 * t);
@@ -593,7 +620,7 @@ describe('MovingCameraScene defaults verification', () => {
     expect(derivAt1).toBeCloseTo(0, 2);
   });
 
-  it('zoom calculation: zoom=2 means half frameWidth', () => {
+  it("zoom calculation: zoom=2 means half frameWidth", () => {
     // MovingCameraScene.zoomTo: _zoomTarget = 1 / zoom
     // Current frameWidth * currentZoom = final frameWidth
     const defaultWidth = 14;
@@ -603,7 +630,7 @@ describe('MovingCameraScene defaults verification', () => {
     expect(finalWidth).toBe(7);
   });
 
-  it('zoom calculation: zoom=0.5 means double frameWidth', () => {
+  it("zoom calculation: zoom=0.5 means double frameWidth", () => {
     const defaultWidth = 14;
     const zoom = 0.5;
     const zoomTarget = 1 / zoom; // 2
@@ -612,8 +639,8 @@ describe('MovingCameraScene defaults verification', () => {
   });
 });
 
-describe('ThreeDSceneOptions defaults verification', () => {
-  it('default camera parameters', () => {
+describe("ThreeDSceneOptions defaults verification", () => {
+  it("default camera parameters", () => {
     const defaults = {
       fov: 45,
       phi: Math.PI / 4,
@@ -631,7 +658,7 @@ describe('ThreeDSceneOptions defaults verification', () => {
     expect(defaults.setupLighting).toBe(true);
   });
 
-  it('HUD camera dimensions match frame dimensions', () => {
+  it("HUD camera dimensions match frame dimensions", () => {
     const frameWidth = 14;
     const frameHeight = 8;
     const halfW = frameWidth / 2; // 7
@@ -640,7 +667,7 @@ describe('ThreeDSceneOptions defaults verification', () => {
     expect(halfH).toBe(4);
   });
 
-  it('ambient rotation rate default is 0.1 rad/s', () => {
+  it("ambient rotation rate default is 0.1 rad/s", () => {
     const defaultRate = 0.1;
     // After 1 second, theta should advance by 0.1 radians
     const dt = 1;
@@ -648,7 +675,7 @@ describe('ThreeDSceneOptions defaults verification', () => {
     expect(deltaTheta).toBeCloseTo(0.1, 10);
   });
 
-  it('3D illusion rotation oscillation formulas', () => {
+  it("3D illusion rotation oscillation formulas", () => {
     // Python Manim: theta oscillates via 0.2*sin(tracker), phi via 0.1*cos(tracker)
     const originTheta = -Math.PI / 4;
     const originPhi = Math.PI / 4;
@@ -662,7 +689,7 @@ describe('ThreeDSceneOptions defaults verification', () => {
     expect(newPhi).toBeCloseTo(originPhi, 10);
   });
 
-  it('ambient rotation clamps dt to 0.1 to avoid huge jumps', () => {
+  it("ambient rotation clamps dt to 0.1 to avoid huge jumps", () => {
     const maxDt = 0.1;
     const largeDt = 5.0; // e.g., after tab regains focus
     const clampedDt = Math.min(largeDt, maxDt);

@@ -1,9 +1,19 @@
-import React from 'react';
-import ManimExample from '../ManimExample';
+import React from "react";
+import ManimExample from "../ManimExample";
 
 async function animate(scene: any) {
-  const { Polygon, LabeledPolygram, Circle, FadeIn, Create, BLACK, BLUE, WHITE } =
-    await import('manim-web');
+  const {
+    Polygon,
+    LabeledPolygram,
+    Circle,
+    FadeIn,
+    Create,
+    BLACK,
+    BLUE,
+    WHITE,
+  } = await import(
+    "manim-web"
+  );
 
   // Define an irregular polygon with two holes
   const ring1 = [
@@ -72,7 +82,7 @@ async function animate(scene: any) {
   // Create labeled polygram - computes pole of inaccessibility
   const labeled = new LabeledPolygram({
     vertexGroups: [ring1, ring2, ring3],
-    label: 'Pole',
+    label: "Pole",
     precision: 0.01,
     labelFontSize: 28,
     labelColor: WHITE,

@@ -3,8 +3,8 @@
  */
 
 export {
+  type AnimationClass,
   LaggedStartMap,
   laggedStartMap,
   type LaggedStartMapOptions,
-  type AnimationClass,
-} from './LaggedStartMap';
+} from "./LaggedStartMap";

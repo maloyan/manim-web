@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import * as THREE from 'three';
-import { Renderer } from './Renderer';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as THREE from "three";
+import { Renderer } from "./Renderer";
 
 const mockCanvas = {
   addEventListener: vi.fn(),
@@ -9,8 +9,8 @@ const mockCanvas = {
   style: {},
 };
 
-vi.mock('three', async () => {
-  const actual = await vi.importActual<typeof THREE>('three');
+vi.mock("three", async () => {
+  const actual = await vi.importActual<typeof THREE>("three");
   // Must use function() (not arrow) so it can be called with `new`
   const MockWebGLRenderer = vi.fn().mockImplementation(function () {
     return {
@@ -33,22 +33,24 @@ function createContainer(): HTMLElement {
   } as unknown as HTMLElement;
 }
 
-describe('Renderer backgroundOpacity', () => {
+describe("Renderer backgroundOpacity", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('defaults backgroundOpacity to 1', () => {
+  it("defaults backgroundOpacity to 1", () => {
     const renderer = new Renderer(createContainer());
     expect(renderer.backgroundOpacity).toBe(1);
   });
 
-  it('accepts backgroundOpacity in options', () => {
-    const renderer = new Renderer(createContainer(), { backgroundOpacity: 0.5 });
+  it("accepts backgroundOpacity in options", () => {
+    const renderer = new Renderer(createContainer(), {
+      backgroundOpacity: 0.5,
+    });
     expect(renderer.backgroundOpacity).toBe(0.5);
   });
 
-  it('clamps backgroundOpacity to [0, 1] on construction', () => {
+  it("clamps backgroundOpacity to [0, 1] on construction", () => {
     const over = new Renderer(createContainer(), { backgroundOpacity: 2 });
     expect(over.backgroundOpacity).toBe(1);
 
@@ -56,7 +58,7 @@ describe('Renderer backgroundOpacity', () => {
     expect(under.backgroundOpacity).toBe(0);
   });
 
-  it('clamps backgroundOpacity to [0, 1] via setter', () => {
+  it("clamps backgroundOpacity to [0, 1] via setter", () => {
     const renderer = new Renderer(createContainer(), { backgroundOpacity: 0 });
     renderer.backgroundOpacity = 5;
     expect(renderer.backgroundOpacity).toBe(1);
@@ -65,54 +67,68 @@ describe('Renderer backgroundOpacity', () => {
     expect(renderer.backgroundOpacity).toBe(0);
   });
 
-  it('auto-enables alpha when backgroundOpacity < 1', () => {
+  it("auto-enables alpha when backgroundOpacity < 1", () => {
     new Renderer(createContainer(), { backgroundOpacity: 0.5 });
-    const ctorCall = (THREE.WebGLRenderer as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    const ctorCall =
+      (THREE.WebGLRenderer as unknown as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
     expect(ctorCall.alpha).toBe(true);
   });
 
-  it('does not enable alpha when backgroundOpacity is 1', () => {
+  it("does not enable alpha when backgroundOpacity is 1", () => {
     new Renderer(createContainer(), { backgroundOpacity: 1 });
-    const ctorCall = (THREE.WebGLRenderer as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    const ctorCall =
+      (THREE.WebGLRenderer as unknown as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
     expect(ctorCall.alpha).toBe(false);
   });
 
-  it('respects explicit alpha=true even when backgroundOpacity is 1', () => {
+  it("respects explicit alpha=true even when backgroundOpacity is 1", () => {
     new Renderer(createContainer(), { alpha: true, backgroundOpacity: 1 });
-    const ctorCall = (THREE.WebGLRenderer as unknown as ReturnType<typeof vi.fn>).mock.calls[0][0];
+    const ctorCall =
+      (THREE.WebGLRenderer as unknown as ReturnType<typeof vi.fn>).mock
+        .calls[0][0];
     expect(ctorCall.alpha).toBe(true);
   });
 
-  it('passes backgroundOpacity to setClearColor on construction', () => {
-    const renderer = new Renderer(createContainer(), { backgroundOpacity: 0.3 });
+  it("passes backgroundOpacity to setClearColor on construction", () => {
+    const renderer = new Renderer(createContainer(), {
+      backgroundOpacity: 0.3,
+    });
     const mockRenderer = (renderer as any)._renderer;
-    expect(mockRenderer.setClearColor).toHaveBeenCalledWith(expect.any(THREE.Color), 0.3);
+    expect(mockRenderer.setClearColor).toHaveBeenCalledWith(
+      expect.any(THREE.Color),
+      0.3,
+    );
   });
 
-  it('passes backgroundOpacity to setClearColor when setter is used', () => {
+  it("passes backgroundOpacity to setClearColor when setter is used", () => {
     const renderer = new Renderer(createContainer(), { backgroundOpacity: 0 });
     const mockRenderer = (renderer as any)._renderer;
     mockRenderer.setClearColor.mockClear();
 
     renderer.backgroundOpacity = 0.7;
-    expect(mockRenderer.setClearColor).toHaveBeenCalledWith(expect.any(THREE.Color), 0.7);
+    expect(mockRenderer.setClearColor).toHaveBeenCalledWith(
+      expect.any(THREE.Color),
+      0.7,
+    );
   });
 
-  it('warns when setting opacity < 1 on non-alpha context', () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it("warns when setting opacity < 1 on non-alpha context", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const renderer = new Renderer(createContainer(), { backgroundOpacity: 1 });
 
     renderer.backgroundOpacity = 0.5;
     expect(warnSpy).toHaveBeenCalledWith(
-      '[manim-web]',
-      expect.stringContaining('backgroundOpacity < 1 has no effect'),
+      "[manim-web]",
+      expect.stringContaining("backgroundOpacity < 1 has no effect"),
     );
 
     warnSpy.mockRestore();
   });
 
-  it('does not warn when setting opacity < 1 on alpha context', () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it("does not warn when setting opacity < 1 on alpha context", () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const renderer = new Renderer(createContainer(), { backgroundOpacity: 0 });
 
     renderer.backgroundOpacity = 0.5;
@@ -121,17 +137,22 @@ describe('Renderer backgroundOpacity', () => {
     warnSpy.mockRestore();
   });
 
-  it('updates setClearColor when backgroundColor is changed', () => {
-    const renderer = new Renderer(createContainer(), { backgroundOpacity: 0.4 });
+  it("updates setClearColor when backgroundColor is changed", () => {
+    const renderer = new Renderer(createContainer(), {
+      backgroundOpacity: 0.4,
+    });
     const mockRenderer = (renderer as any)._renderer;
     mockRenderer.setClearColor.mockClear();
 
-    renderer.backgroundColor = '#ff0000';
-    expect(mockRenderer.setClearColor).toHaveBeenCalledWith(expect.any(THREE.Color), 0.4);
+    renderer.backgroundColor = "#ff0000";
+    expect(mockRenderer.setClearColor).toHaveBeenCalledWith(
+      expect.any(THREE.Color),
+      0.4,
+    );
   });
 });
 
-describe('Renderer.resize() pixel-ratio handling (issue #360)', () => {
+describe("Renderer.resize() pixel-ratio handling (issue #360)", () => {
   // Node env has no `window`; stub one so the resize DPR refresh runs.
   const originalWindow = (globalThis as { window?: unknown }).window;
 
@@ -150,7 +171,7 @@ describe('Renderer.resize() pixel-ratio handling (issue #360)', () => {
     }
   });
 
-  it('refreshes devicePixelRatio on resize when no explicit pixelRatio was set', () => {
+  it("refreshes devicePixelRatio on resize when no explicit pixelRatio was set", () => {
     const renderer = new Renderer(createContainer());
     const mock = (renderer as any)._renderer;
     mock.setPixelRatio.mockClear();
@@ -161,7 +182,7 @@ describe('Renderer.resize() pixel-ratio handling (issue #360)', () => {
     expect(mock.setSize).toHaveBeenCalledWith(1000, 600);
   });
 
-  it('does NOT overwrite an explicit pixelRatio on resize', () => {
+  it("does NOT overwrite an explicit pixelRatio on resize", () => {
     const renderer = new Renderer(createContainer(), { pixelRatio: 1 });
     const mock = (renderer as any)._renderer;
     mock.setPixelRatio.mockClear();

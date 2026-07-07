@@ -1,21 +1,21 @@
-import * as THREE from 'three';
-import { VMobject } from '../../core/VMobject';
-import { Vector3Tuple } from '../../core/Mobject';
+import * as THREE from "three";
+import { VMobject } from "../../core/VMobject";
+import { Vector3Tuple } from "../../core/Mobject";
 import {
-  type Token,
   type CodeColorScheme,
   DEFAULT_COLOR_SCHEME,
+  type Token,
   tokenizeLine,
-} from './CodeHighlighting';
+} from "./CodeHighlighting";
 
 // Re-export all highlighting types and constants so existing imports from './Code' still work
 export {
-  type Token,
-  type TokenType,
   type CodeColorScheme,
   DEFAULT_COLOR_SCHEME,
   MONOKAI_COLOR_SCHEME,
-} from './CodeHighlighting';
+  type Token,
+  type TokenType,
+} from "./CodeHighlighting";
 
 /**
  * Options for creating a Code mobject
@@ -125,11 +125,11 @@ export class Code extends VMobject {
 
     const {
       code,
-      language = 'text',
+      language = "text",
       lineNumbers = true,
       tabWidth = 4,
       fontSize = 24,
-      fontFamily = 'monospace',
+      fontFamily = "monospace",
       colorScheme = DEFAULT_COLOR_SCHEME,
       showBackground = true,
       backgroundPadding = 16,
@@ -166,13 +166,13 @@ export class Code extends VMobject {
    */
   protected _initCanvas(): void {
     // Headless / non-DOM environment — skip canvas initialization, geometry will be empty
-    if (typeof document === 'undefined') {
+    if (typeof document === "undefined") {
       return;
     }
-    this._canvas = document.createElement('canvas');
-    this._ctx = this._canvas.getContext('2d');
+    this._canvas = document.createElement("canvas");
+    this._ctx = this._canvas.getContext("2d");
     if (!this._ctx) {
-      throw new Error('Failed to get 2D context for code rendering');
+      throw new Error("Failed to get 2D context for code rendering");
     }
   }
 
@@ -181,11 +181,13 @@ export class Code extends VMobject {
    */
   protected _parseCode(): void {
     // Expand tabs to spaces
-    const expandedCode = this._code.replace(/\t/g, ' '.repeat(this._tabWidth));
-    this._lines = expandedCode.split('\n');
+    const expandedCode = this._code.replace(/\t/g, " ".repeat(this._tabWidth));
+    this._lines = expandedCode.split("\n");
 
     // Tokenize each line using the standalone tokenizer
-    this._tokenizedLines = this._lines.map((line) => tokenizeLine(line, this._language));
+    this._tokenizedLines = this._lines.map((line) =>
+      tokenizeLine(line, this._language)
+    );
   }
 
   /**
@@ -271,7 +273,8 @@ export class Code extends VMobject {
 
     // Calculate line position relative to code block
     const lineY = scaledPadding + (index + 0.5) * scaledLineHeight;
-    const worldY = this._worldHeight / 2 - (lineY / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
+    const worldY = this._worldHeight / 2 -
+      (lineY / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
 
     return {
       text: this._lines[index],
@@ -290,7 +293,7 @@ export class Code extends VMobject {
   highlightLines(
     startLine: number,
     endLine: number,
-    color: string = 'rgba(255, 255, 0, 0.3)',
+    color: string = "rgba(255, 255, 0, 0.3)",
   ): this {
     // Clear existing highlights
     this.clearHighlights();
@@ -305,12 +308,16 @@ export class Code extends VMobject {
 
     // Calculate highlight dimensions
     const highlightHeight =
-      (((end - start + 1) * scaledLineHeight) / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
-    const highlightWidth = this._worldWidth - 2 * (this._backgroundPadding * PIXEL_TO_WORLD);
+      (((end - start + 1) * scaledLineHeight) / RESOLUTION_SCALE) *
+      PIXEL_TO_WORLD;
+    const highlightWidth = this._worldWidth -
+      2 * (this._backgroundPadding * PIXEL_TO_WORLD);
 
     // Calculate position
-    const topY = this._worldHeight / 2 - (scaledPadding / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
-    const startY = topY - (((start - 0.5) * scaledLineHeight) / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
+    const topY = this._worldHeight / 2 -
+      (scaledPadding / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
+    const startY = topY -
+      (((start - 0.5) * scaledLineHeight) / RESOLUTION_SCALE) * PIXEL_TO_WORLD;
     const centerY = startY - highlightHeight / 2;
 
     // Create highlight geometry
@@ -320,7 +327,9 @@ export class Code extends VMobject {
     // (THREE.Color logs `Alpha component of rgba(...) will be ignored` otherwise).
     let alpha = 0.3;
     let rgbColor = color;
-    const rgbaMatch = color.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/);
+    const rgbaMatch = color.match(
+      /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/,
+    );
     if (rgbaMatch) {
       if (rgbaMatch[4] !== undefined) {
         alpha = parseFloat(rgbaMatch[4]);
@@ -337,7 +346,11 @@ export class Code extends VMobject {
     });
 
     const highlightMesh = new THREE.Mesh(geometry, material);
-    highlightMesh.position.set(0, centerY - this._worldHeight / 2 + highlightHeight, 0.001);
+    highlightMesh.position.set(
+      0,
+      centerY - this._worldHeight / 2 + highlightHeight,
+      0.001,
+    );
     this._highlightMeshes.push(highlightMesh);
 
     if (this._threeObject) {
@@ -408,7 +421,9 @@ export class Code extends VMobject {
 
     // Total dimensions
     const width = Math.ceil(lineNumberWidth + maxWidth + scaledPadding * 2);
-    const height = Math.ceil(this._lines.length * scaledLineHeight + scaledPadding * 2);
+    const height = Math.ceil(
+      this._lines.length * scaledLineHeight + scaledPadding * 2,
+    );
 
     return { width, height };
   }
@@ -444,7 +459,7 @@ export class Code extends VMobject {
 
     // Set font
     this._ctx.font = this._buildFontString();
-    this._ctx.textBaseline = 'middle';
+    this._ctx.textBaseline = "middle";
 
     // Draw each line
     for (let i = 0; i < this._lines.length; i++) {
@@ -453,13 +468,13 @@ export class Code extends VMobject {
       // Draw line number
       if (this._lineNumbers) {
         this._ctx.fillStyle = this._colorScheme.lineNumber;
-        this._ctx.textAlign = 'right';
+        this._ctx.textAlign = "right";
         const lineNum = (i + 1).toString();
         this._ctx.fillText(lineNum, lineNumberWidth - 10 * RESOLUTION_SCALE, y);
       }
 
       // Draw tokenized code
-      this._ctx.textAlign = 'left';
+      this._ctx.textAlign = "left";
       let x = lineNumberWidth + scaledPadding / 2;
 
       for (const token of this._tokenizedLines[i]) {
@@ -482,7 +497,13 @@ export class Code extends VMobject {
   /**
    * Draw a rounded rectangle
    */
-  protected _roundRect(x: number, y: number, width: number, height: number, radius: number): void {
+  protected _roundRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radius: number,
+  ): void {
     if (!this._ctx) return;
 
     this._ctx.beginPath();
@@ -490,7 +511,12 @@ export class Code extends VMobject {
     this._ctx.lineTo(x + width - radius, y);
     this._ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
     this._ctx.lineTo(x + width, y + height - radius);
-    this._ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    this._ctx.quadraticCurveTo(
+      x + width,
+      y + height,
+      x + width - radius,
+      y + height,
+    );
     this._ctx.lineTo(x + radius, y + height);
     this._ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
     this._ctx.lineTo(x, y + radius);
@@ -509,7 +535,10 @@ export class Code extends VMobject {
     this._mesh.geometry.dispose();
 
     // Create new geometry with updated dimensions
-    const geometry = new THREE.PlaneGeometry(this._worldWidth, this._worldHeight);
+    const geometry = new THREE.PlaneGeometry(
+      this._worldWidth,
+      this._worldHeight,
+    );
     this._mesh.geometry = geometry;
   }
 
@@ -541,7 +570,10 @@ export class Code extends VMobject {
     });
 
     // Create plane geometry sized to match code
-    const geometry = new THREE.PlaneGeometry(this._worldWidth, this._worldHeight);
+    const geometry = new THREE.PlaneGeometry(
+      this._worldWidth,
+      this._worldHeight,
+    );
 
     // Create mesh
     this._mesh = new THREE.Mesh(geometry, material);

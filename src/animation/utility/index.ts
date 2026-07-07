@@ -8,11 +8,11 @@
  * - Broadcast: Ripple/broadcast effect for emphasis
  */
 
-import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { Animation, AnimationOptions } from '../Animation';
-import { linear } from '../../rate-functions';
-import { resolveExtremalPoint } from '../../core/MobjectState';
+import * as THREE from "three";
+import { Mobject, Vector3Tuple } from "../../core/Mobject";
+import { Animation, AnimationOptions } from "../Animation";
+import { linear } from "../../rate-functions";
+import { resolveExtremalPoint } from "../../core/MobjectState";
 
 // ============================================================================
 // Add Animation
@@ -137,7 +137,7 @@ export class Wait extends Animation {
 export function wait(
   mobject: Mobject,
   duration?: number,
-  options?: Omit<WaitOptions, 'duration'>,
+  options?: Omit<WaitOptions, "duration">,
 ): Wait {
   return new Wait(mobject, { ...options, duration });
 }
@@ -220,7 +220,11 @@ export class Rotating extends Animation {
     } else {
       // Default to mobject center
       const center = this.mobject.getCenter();
-      this._aboutPointVector = new THREE.Vector3(center[0], center[1], center[2]);
+      this._aboutPointVector = new THREE.Vector3(
+        center[0],
+        center[1],
+        center[2],
+      );
     }
   }
 
@@ -233,7 +237,10 @@ export class Rotating extends Animation {
     const totalAngle = this.angle * alpha;
 
     // Create rotation quaternion for current angle
-    const rotationQuat = new THREE.Quaternion().setFromAxisAngle(this._axisVector, totalAngle);
+    const rotationQuat = new THREE.Quaternion().setFromAxisAngle(
+      this._axisVector,
+      totalAngle,
+    );
 
     // Apply rotation to initial quaternion
     const newQuat = new THREE.Quaternion().copy(this._initialQuaternion);
@@ -245,9 +252,13 @@ export class Rotating extends Animation {
     // Handle rotation about a point
     if (this._aboutPointVector) {
       // Translate position: rotate initial position around aboutPoint
-      const offset = new THREE.Vector3().copy(this._initialPosition).sub(this._aboutPointVector);
+      const offset = new THREE.Vector3().copy(this._initialPosition).sub(
+        this._aboutPointVector,
+      );
       offset.applyQuaternion(rotationQuat);
-      const newPosition = new THREE.Vector3().copy(this._aboutPointVector).add(offset);
+      const newPosition = new THREE.Vector3().copy(this._aboutPointVector).add(
+        offset,
+      );
 
       this.mobject.position.copy(newPosition);
     }
@@ -262,7 +273,10 @@ export class Rotating extends Animation {
  * @param mobject The mobject to rotate
  * @param options Rotating options (angle, axis, aboutPoint, duration)
  */
-export function rotating(mobject: Mobject, options?: RotatingOptions): Rotating {
+export function rotating(
+  mobject: Mobject,
+  options?: RotatingOptions,
+): Rotating {
   return new Rotating(mobject, options);
 }
 
@@ -355,11 +369,19 @@ export class Broadcast extends Animation {
       const copy = this.mobject.copy();
 
       // Position at focal point
-      copy.position.set(this.focalPoint[0], this.focalPoint[1], this.focalPoint[2]);
+      copy.position.set(
+        this.focalPoint[0],
+        this.focalPoint[1],
+        this.focalPoint[2],
+      );
 
       // Set initial scale based on initialWidth
-      const scaleFactor = this._originalWidth > 0.001 ? this.initialWidth / this._originalWidth : 0;
-      copy.scaleVector.copy(this._originalScale).multiplyScalar(Math.max(scaleFactor, 0));
+      const scaleFactor = this._originalWidth > 0.001
+        ? this.initialWidth / this._originalWidth
+        : 0;
+      copy.scaleVector.copy(this._originalScale).multiplyScalar(
+        Math.max(scaleFactor, 0),
+      );
 
       // Set initial opacity
       copy.setStrokeOpacity(this.initialOpacity);
@@ -392,10 +414,14 @@ export class Broadcast extends Animation {
       }
 
       // Interpolate scale: from initialWidth to originalWidth
-      const targetScaleFactor =
-        this._originalWidth > 0.001 ? this.initialWidth / this._originalWidth : 0;
-      const currentScaleFactor = targetScaleFactor + (1 - targetScaleFactor) * localAlpha;
-      copy.scaleVector.copy(this._originalScale).multiplyScalar(Math.max(currentScaleFactor, 0));
+      const targetScaleFactor = this._originalWidth > 0.001
+        ? this.initialWidth / this._originalWidth
+        : 0;
+      const currentScaleFactor = targetScaleFactor +
+        (1 - targetScaleFactor) * localAlpha;
+      copy.scaleVector.copy(this._originalScale).multiplyScalar(
+        Math.max(currentScaleFactor, 0),
+      );
 
       // Interpolate position: from focalPoint to original position
       const origPos = this.mobject.position;
@@ -406,8 +432,8 @@ export class Broadcast extends Animation {
       );
 
       // Interpolate opacity: from initialOpacity to finalOpacity
-      const currentOpacity =
-        this.initialOpacity + (this.finalOpacity - this.initialOpacity) * localAlpha;
+      const currentOpacity = this.initialOpacity +
+        (this.finalOpacity - this.initialOpacity) * localAlpha;
       copy.setStrokeOpacity(currentOpacity);
 
       copy._markDirty();
@@ -428,7 +454,9 @@ export class Broadcast extends Animation {
           if (mesh.geometry) mesh.geometry.dispose();
           if (mesh.material) {
             if (Array.isArray(mesh.material)) {
-              mesh.material.forEach((m: { dispose: () => void }) => m.dispose());
+              mesh.material.forEach((m: { dispose: () => void }) =>
+                m.dispose()
+              );
             } else {
               mesh.material.dispose();
             }
@@ -449,6 +477,9 @@ export class Broadcast extends Animation {
  * @param mobject The mobject to broadcast
  * @param options Broadcast options (focalPoint, nMobs, initialOpacity, finalOpacity, initialWidth, lagRatio)
  */
-export function broadcast(mobject: Mobject, options?: BroadcastOptions): Broadcast {
+export function broadcast(
+  mobject: Mobject,
+  options?: BroadcastOptions,
+): Broadcast {
   return new Broadcast(mobject, options);
 }

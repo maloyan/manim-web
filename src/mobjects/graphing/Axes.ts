@@ -1,14 +1,14 @@
-import { Group } from '../../core/Group';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
-import { VGroup } from '../../core/VGroup';
-import { VDict } from '../../core/VDict';
-import { NumberLine, NumberLineOptions } from './NumberLine';
-import { FunctionGraph, FunctionGraphOptions } from './FunctionGraph';
-import { MathTexImage } from '../../mobjects/text/MathTexImage';
-import { Line } from '../../mobjects/geometry/Line';
-import { DashedLine } from '../../mobjects/geometry/DashedLine';
-import { Dot } from '../../mobjects/geometry/Dot';
+import { Group } from "../../core/Group";
+import { Mobject, Vector3Tuple } from "../../core/Mobject";
+import { VMobject } from "../../core/VMobject";
+import { VGroup } from "../../core/VGroup";
+import { VDict } from "../../core/VDict";
+import { NumberLine, NumberLineOptions } from "./NumberLine";
+import { FunctionGraph, FunctionGraphOptions } from "./FunctionGraph";
+import { MathTexImage } from "../../mobjects/text/MathTexImage";
+import { Line } from "../../mobjects/geometry/Line";
+import { DashedLine } from "../../mobjects/geometry/DashedLine";
+import { Dot } from "../../mobjects/geometry/Dot";
 
 /**
  * Options for creating Axes
@@ -82,7 +82,7 @@ export class Axes extends Group {
       yRange: yRangeRaw = [-3, 3, 1],
       xLength = 10,
       yLength = 6,
-      color = '#ffffff',
+      color = "#ffffff",
       axisConfig = {},
       xAxisConfig = {},
       yAxisConfig = {},
@@ -90,23 +90,22 @@ export class Axes extends Group {
     } = options;
 
     // Normalize 2-element ranges to 3-element [min, max, step] (default step = 1)
-    const xRange: [number, number, number] =
-      xRangeRaw.length === 2
-        ? [xRangeRaw[0], xRangeRaw[1], 1]
-        : (xRangeRaw as [number, number, number]);
-    const yRange: [number, number, number] =
-      yRangeRaw.length === 2
-        ? [yRangeRaw[0], yRangeRaw[1], 1]
-        : (yRangeRaw as [number, number, number]);
+    const xRange: [number, number, number] = xRangeRaw.length === 2
+      ? [xRangeRaw[0], xRangeRaw[1], 1]
+      : (xRangeRaw as [number, number, number]);
+    const yRange: [number, number, number] = yRangeRaw.length === 2
+      ? [yRangeRaw[0], yRangeRaw[1], 1]
+      : (yRangeRaw as [number, number, number]);
 
     this._xRange = [...xRange];
     this._yRange = [...yRange];
     this._xLength = xLength;
     this._yLength = yLength;
     // Support includeTip from axisConfig (Python Manim pattern: axis_config={"include_tip": False})
-    this._tips =
-      options.tips ??
-      ((axisConfig as Record<string, unknown>)?.includeTip as boolean | undefined) ??
+    this._tips = options.tips ??
+      ((axisConfig as Record<string, unknown>)?.includeTip as
+        | boolean
+        | undefined) ??
       true;
     this._tipLength = tipLength;
 
@@ -189,19 +188,32 @@ export class Axes extends Group {
     const yAxisX = this._numberToVisualX(0); // x-offset of the y-axis line
 
     // Helper to create a triangular tip as a filled VMobject
-    const createTip = (tipPoint: number[], baseLeft: number[], baseRight: number[]): VMobject => {
+    const createTip = (
+      tipPoint: number[],
+      baseLeft: number[],
+      baseRight: number[],
+    ): VMobject => {
       const tip = new VMobject();
       tip.color = color;
       tip.fillOpacity = 1;
       tip.strokeWidth = 0;
 
-      const addLineSegment = (points: number[][], p0: number[], p1: number[], isFirst: boolean) => {
+      const addLineSegment = (
+        points: number[][],
+        p0: number[],
+        p1: number[],
+        isFirst: boolean,
+      ) => {
         const dx = p1[0] - p0[0];
         const dy = p1[1] - p0[1];
         const dz = p1[2] - p0[2];
         if (isFirst) points.push([...p0]);
         points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-        points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
+        points.push([
+          p0[0] + (2 * dx) / 3,
+          p0[1] + (2 * dy) / 3,
+          p0[2] + (2 * dz) / 3,
+        ]);
         points.push([...p1]);
       };
 
@@ -265,7 +277,11 @@ export class Axes extends Group {
     const visualX = (xNorm - 0.5) * this._xLength;
     const visualY = (yNorm - 0.5) * this._yLength;
 
-    return [visualX + this.position.x, visualY + this.position.y, this.position.z];
+    return [
+      visualX + this.position.x,
+      visualY + this.position.y,
+      this.position.z,
+    ];
   }
 
   /**
@@ -373,7 +389,7 @@ export class Axes extends Group {
    */
   plot(
     func: (x: number) => number,
-    options: Partial<Omit<FunctionGraphOptions, 'func' | 'axes'>> = {},
+    options: Partial<Omit<FunctionGraphOptions, "func" | "axes">> = {},
   ): FunctionGraph {
     return new FunctionGraph({
       func,
@@ -390,33 +406,46 @@ export class Axes extends Group {
    * @returns A Group containing the two labels
    */
   getAxisLabels(
-    xLabelOrOpts?: string | Mobject | { xLabel?: string | Mobject; yLabel?: string | Mobject },
+    xLabelOrOpts?: string | Mobject | {
+      xLabel?: string | Mobject;
+      yLabel?: string | Mobject;
+    },
     yLabelArg?: string | Mobject,
   ): Group {
     let xLabelInput: string | Mobject;
     let yLabelInput: string | Mobject;
     if (
-      typeof xLabelOrOpts === 'object' &&
+      typeof xLabelOrOpts === "object" &&
       xLabelOrOpts !== null &&
       !(xLabelOrOpts instanceof Mobject)
     ) {
-      xLabelInput =
-        (xLabelOrOpts as { xLabel?: string | Mobject; yLabel?: string | Mobject }).xLabel ?? 'x';
-      yLabelInput =
-        (xLabelOrOpts as { xLabel?: string | Mobject; yLabel?: string | Mobject }).yLabel ?? 'y';
+      xLabelInput = (xLabelOrOpts as {
+        xLabel?: string | Mobject;
+        yLabel?: string | Mobject;
+      }).xLabel ?? "x";
+      yLabelInput = (xLabelOrOpts as {
+        xLabel?: string | Mobject;
+        yLabel?: string | Mobject;
+      }).yLabel ?? "y";
     } else {
-      xLabelInput = xLabelOrOpts ?? 'x';
-      yLabelInput = yLabelArg ?? 'y';
+      xLabelInput = xLabelOrOpts ?? "x";
+      yLabelInput = yLabelArg ?? "y";
     }
 
-    const xLabelMob =
-      xLabelInput instanceof Mobject
-        ? xLabelInput
-        : new MathTexImage({ latex: xLabelInput, fontSize: 32, color: '#ffffff' });
-    const yLabelMob =
-      yLabelInput instanceof Mobject
-        ? yLabelInput
-        : new MathTexImage({ latex: yLabelInput, fontSize: 32, color: '#ffffff' });
+    const xLabelMob = xLabelInput instanceof Mobject
+      ? xLabelInput
+      : new MathTexImage({
+        latex: xLabelInput,
+        fontSize: 32,
+        color: "#ffffff",
+      });
+    const yLabelMob = yLabelInput instanceof Mobject
+      ? yLabelInput
+      : new MathTexImage({
+        latex: yLabelInput,
+        fontSize: 32,
+        color: "#ffffff",
+      });
 
     // Position x label at the end of x-axis (UR direction from right end, matching Manim)
     const xEnd = this._xLength / 2;
@@ -447,11 +476,11 @@ export class Axes extends Group {
     labelOrOptions?:
       | string
       | {
-          xVal?: number;
-          direction?: Vector3Tuple;
-          color?: string;
-          label?: string;
-        },
+        xVal?: number;
+        direction?: Vector3Tuple;
+        color?: string;
+        label?: string;
+      },
     options: {
       xVal?: number;
       direction?: Vector3Tuple;
@@ -462,13 +491,13 @@ export class Axes extends Group {
     // Handle overload: second arg can be a string label or an options object
     let opts = options;
     let label: string | undefined;
-    if (typeof labelOrOptions === 'object' && labelOrOptions !== null) {
+    if (typeof labelOrOptions === "object" && labelOrOptions !== null) {
       opts = { ...labelOrOptions, ...options };
       label = undefined;
     } else {
       label = labelOrOptions;
     }
-    const labelStr = label ?? opts.label ?? '';
+    const labelStr = label ?? opts.label ?? "";
     const xVal = opts.xVal ?? this._xRange[1];
     const direction = opts.direction ?? [1, 1, 0];
     const color = opts.color ?? graph.color;
@@ -500,7 +529,8 @@ export class Axes extends Group {
       lineFunc?: typeof Line | typeof DashedLine;
     } = {},
   ): VMobject {
-    const { color = '#ffffff', strokeWidth = 2, lineFunc = DashedLine } = options;
+    const { color = "#ffffff", strokeWidth = 2, lineFunc = DashedLine } =
+      options;
     const xAxisY = this.coordsToPoint(0, 0)[1];
     return new lineFunc({
       start: [point[0], xAxisY, point[2]] as Vector3Tuple,
@@ -550,7 +580,7 @@ export class Axes extends Group {
     const {
       xRange,
       dx = 0.1,
-      color = '#58c4dd',
+      color = "#58c4dd",
       fillOpacity = 0.5,
       strokeWidth = 1,
       strokeColor = color,
@@ -584,7 +614,11 @@ export class Axes extends Group {
         const ddz = p1[2] - p0[2];
         if (first) points.push([...p0]);
         points.push([p0[0] + ddx / 3, p0[1] + ddy / 3, p0[2] + ddz / 3]);
-        points.push([p0[0] + (2 * ddx) / 3, p0[1] + (2 * ddy) / 3, p0[2] + (2 * ddz) / 3]);
+        points.push([
+          p0[0] + (2 * ddx) / 3,
+          p0[1] + (2 * ddy) / 3,
+          p0[2] + (2 * ddz) / 3,
+        ]);
         points.push([...p1]);
       };
       addSeg(bl, tl, true);
@@ -616,7 +650,8 @@ export class Axes extends Group {
       strokeWidth?: number;
     } = {},
   ): VMobject {
-    const { boundedGraph, color = '#888888', opacity = 0.5, strokeWidth = 0 } = options;
+    const { boundedGraph, color = "#888888", opacity = 0.5, strokeWidth = 0 } =
+      options;
 
     const [xStart, xEnd] = xRange;
     const numSamples = 100;
@@ -675,7 +710,11 @@ export class Axes extends Group {
       const ddz = p1[2] - p0[2];
       if (i === 0) bezierPoints.push([...p0]);
       bezierPoints.push([p0[0] + ddx / 3, p0[1] + ddy / 3, p0[2] + ddz / 3]);
-      bezierPoints.push([p0[0] + (2 * ddx) / 3, p0[1] + (2 * ddy) / 3, p0[2] + (2 * ddz) / 3]);
+      bezierPoints.push([
+        p0[0] + (2 * ddx) / 3,
+        p0[1] + (2 * ddy) / 3,
+        p0[2] + (2 * ddz) / 3,
+      ]);
       bezierPoints.push([...p1]);
     }
 
@@ -710,7 +749,7 @@ export class Axes extends Group {
     const {
       xValues,
       yValues,
-      lineColor = '#fcff00', // YELLOW_C
+      lineColor = "#fcff00", // YELLOW_C
       addVertexDots = true,
       vertexDotRadius = 0.08,
       vertexDotStyle = {},
@@ -735,17 +774,21 @@ export class Axes extends Group {
         const dz = p1[2] - p0[2];
         if (i === 0) points.push([...p0]);
         points.push([p0[0] + dx / 3, p0[1] + dy / 3, p0[2] + dz / 3]);
-        points.push([p0[0] + (2 * dx) / 3, p0[1] + (2 * dy) / 3, p0[2] + (2 * dz) / 3]);
+        points.push([
+          p0[0] + (2 * dx) / 3,
+          p0[1] + (2 * dy) / 3,
+          p0[2] + (2 * dz) / 3,
+        ]);
         points.push([...p1]);
       }
       lineMob.setPoints3D(points);
-      result.set('line_graph', lineMob);
+      result.set("line_graph", lineMob);
     }
 
     // Build vertex dots (default color is white, matching Manim's Dot default)
     if (addVertexDots) {
       const dotsGroup = new VGroup();
-      const dotColor = vertexDotStyle.color ?? '#ffffff';
+      const dotColor = vertexDotStyle.color ?? "#ffffff";
       for (let i = 0; i < xValues.length; i++) {
         const pt = this.coordsToPoint(xValues[i], yValues[i]);
         const dot = new Dot({
@@ -761,7 +804,7 @@ export class Axes extends Group {
         }
         dotsGroup.add(dot);
       }
-      result.set('vertex_dots', dotsGroup);
+      result.set("vertex_dots", dotsGroup);
     }
 
     return result;

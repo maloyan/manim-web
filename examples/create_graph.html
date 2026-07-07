@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Create Graph</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - Create Graph</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #1a1a2e;
       display: flex;
@@ -34,37 +38,42 @@
       cursor: pointer;
       font-size: 14px;
     }
-    button:hover { background: #ff6b6b; }
-    button:disabled { background: #666; cursor: not-allowed; }
-  </style>
-</head>
-<body>
-  <div id="container"></div>
-  <div class="controls">
-    <button id="playBtn">Play Animation</button>
-    <button id="resetBtn">Reset</button>
-  </div>
+    button:hover {
+      background: #ff6b6b;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div class="controls">
+      <button id="playBtn">Play Animation</button>
+      <button id="resetBtn">Reset</button>
+    </div>
 
-  <script type="module">
+    <script type="module">
     import {
-      Scene,
       Axes,
-      FunctionGraph,
-      MathTexImage,
-      Create,
-      Write,
-      Transform,
-      FadeIn,
       BLACK,
       BLUE,
-      WHITE
+      Create,
+      FadeIn,
+      FunctionGraph,
+      MathTexImage,
+      Scene,
+      Transform,
+      WHITE,
+      Write,
     } from '../src/index.ts';
 
     const container = document.getElementById('container');
     const scene = new Scene(container, {
       width: 800,
       height: 450,
-      backgroundColor: BLACK
+      backgroundColor: BLACK,
     });
 
     let isAnimating = false;
@@ -82,14 +91,14 @@
         xLength: 8,
         yLength: 6,
         color: BLUE,
-        tips: true
+        tips: true,
       });
 
       const graph = new FunctionGraph({
         func: (x) => x * x,
         xRange: [-2.2, 2.2],
         color: WHITE,
-        axes: axes
+        axes: axes,
       });
 
       const graphLabel = new MathTexImage({ latex: 'x^2', fontSize: 32, color: WHITE });
@@ -99,7 +108,7 @@
         func: (x) => x * x * x,
         xRange: [-1.7, 1.7],
         color: WHITE,
-        axes: axes
+        axes: axes,
       });
 
       const graphLabel2 = new MathTexImage({ latex: 'x^3', fontSize: 32, color: WHITE });
@@ -120,6 +129,6 @@
     document.getElementById('resetBtn').addEventListener('click', () => {
       scene.clear();
     });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

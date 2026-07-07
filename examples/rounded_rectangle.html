@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - RoundedRectangle Example</title>
-  <style>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - RoundedRectangle Example</title>
+    <style>
     * {
       margin: 0;
       padding: 0;
@@ -23,22 +23,22 @@
       border-radius: 8px;
       overflow: hidden;
     }
-  </style>
-</head>
-<body>
-  <div id="container"></div>
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
 
-  <script type="module">
+    <script type="module">
     import {
-      Scene,
-      RoundedRectangle,
-      SurroundingRectangle,
-      Text,
+      BLACK,
       BLUE,
       GREEN,
       RED,
+      RoundedRectangle,
+      Scene,
+      SurroundingRectangle,
+      Text,
       YELLOW,
-      BLACK,
     } from '../src/index.ts';
 
     const container = document.getElementById('container');
@@ -91,6 +91,6 @@
 
     scene.add(button, card, pill, label, frame);
     scene.render();
-  </script>
-</body>
+    </script>
+  </body>
 </html>

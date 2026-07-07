@@ -1,10 +1,23 @@
-import { Group } from '../../core/Group';
-import { VGroup } from '../../core/VGroup';
-import { VMobject } from '../../core/VMobject';
-import { Rectangle } from '../geometry/Rectangle';
-import { Text } from '../text/Text';
-import { NumberLine, NumberLineOptions } from './NumberLine';
+import { Group } from "../../core/Group";
+import { VGroup } from "../../core/VGroup";
+import { VMobject } from "../../core/VMobject";
+import { Rectangle } from "../geometry/Rectangle";
+import { Text } from "../text/Text";
+import { NumberLine, NumberLineOptions } from "./NumberLine";
 import {
+  BLUE,
+  GOLD,
+  GREEN,
+  ORANGE,
+  PURPLE,
+  RED,
+  TEAL,
+  WHITE,
+  YELLOW,
+} from "../../constants/colors";
+
+/** Default color cycle for bars */
+const DEFAULT_BAR_COLORS = [
   BLUE,
   GREEN,
   RED,
@@ -13,11 +26,7 @@ import {
   PURPLE,
   TEAL,
   GOLD,
-  WHITE,
-} from '../../constants/colors';
-
-/** Default color cycle for bars */
-const DEFAULT_BAR_COLORS = [BLUE, GREEN, RED, YELLOW, ORANGE, PURPLE, TEAL, GOLD];
+];
 
 /**
  * Options for creating a BarChart
@@ -198,7 +207,7 @@ export class BarChart extends Group {
   private _normalizeValues(values: number[] | number[][]): number[][] {
     if (values.length === 0) return [[]];
 
-    if (typeof values[0] === 'number') {
+    if (typeof values[0] === "number") {
       // Simple array - single series
       return [values as number[]];
     }
@@ -308,8 +317,10 @@ export class BarChart extends Group {
    * Get the x-coordinate for a group center
    */
   private _groupCenterX(groupIndex: number): number {
-    const groupWidth = this._numSeries * this._barWidth + (this._numSeries - 1) * this._barGap;
-    const totalWidth = this._numGroups * groupWidth + (this._numGroups - 1) * this._groupGap;
+    const groupWidth = this._numSeries * this._barWidth +
+      (this._numSeries - 1) * this._barGap;
+    const totalWidth = this._numGroups * groupWidth +
+      (this._numGroups - 1) * this._groupGap;
     const startX = (this._width - totalWidth) / 2 + groupWidth / 2;
     return startX + groupIndex * (groupWidth + this._groupGap);
   }
@@ -319,9 +330,11 @@ export class BarChart extends Group {
    */
   private _barCenterX(groupIndex: number, seriesIndex: number): number {
     const groupCenter = this._groupCenterX(groupIndex);
-    const groupWidth = this._numSeries * this._barWidth + (this._numSeries - 1) * this._barGap;
-    const barOffset =
-      seriesIndex * (this._barWidth + this._barGap) - groupWidth / 2 + this._barWidth / 2;
+    const groupWidth = this._numSeries * this._barWidth +
+      (this._numSeries - 1) * this._barGap;
+    const barOffset = seriesIndex * (this._barWidth + this._barGap) -
+      groupWidth / 2 +
+      this._barWidth / 2;
     return groupCenter + barOffset;
   }
 
@@ -401,13 +414,13 @@ export class BarChart extends Group {
       // Format the number (remove trailing zeros after decimal)
       const labelText = Number.isInteger(roundedValue)
         ? roundedValue.toString()
-        : roundedValue.toFixed(1).replace(/\.?0+$/, '');
+        : roundedValue.toFixed(1).replace(/\.?0+$/, "");
 
       const label = new Text({
         text: labelText,
         fontSize: this._yLabelFontSize,
         color: this._axisColor,
-        textAlign: 'right',
+        textAlign: "right",
       });
 
       label.moveTo([-0.3, y, 0]);
@@ -443,7 +456,7 @@ export class BarChart extends Group {
         text: this._seriesNames[i],
         fontSize: 18,
         color: this._axisColor,
-        textAlign: 'left',
+        textAlign: "left",
       });
       label.moveTo([legendX + 0.3, y, 0]);
 

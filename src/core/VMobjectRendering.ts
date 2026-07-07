@@ -7,21 +7,21 @@
  * manipulation, interpolation, and alignment on top.
  */
 
-import * as THREE from 'three';
-import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
-import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
-import { Mobject } from './Mobject';
-import { BezierRenderer } from '../rendering/BezierRenderer';
-import type { Point } from './VMobjectCurves';
+import * as THREE from "three";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
+import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
+import { Mobject } from "./Mobject";
+import { BezierRenderer } from "../rendering/BezierRenderer";
+import type { Point } from "./VMobjectCurves";
 import {
-  sampleBezierPath,
   buildEarcutFillGeometry,
   isClosedPath,
-  pointsToShape,
   pointsToCurvePath,
-} from './VMobjectGeometry';
-import { buildMeshStrokeGeometry } from './VMobjectStrokeGeometry';
+  pointsToShape,
+  sampleBezierPath,
+} from "./VMobjectGeometry";
+import { buildMeshStrokeGeometry } from "./VMobjectStrokeGeometry";
 
 /**
  * Base class for VMobject that handles all Three.js rendering:
@@ -99,14 +99,19 @@ export abstract class VMobjectRendering extends Mobject {
 
   /** Instance-level linewidth computation using per-instance scene context */
   private _computeLinewidth(strokeWidth: number): number {
-    return strokeWidth * 0.01 * (this._getRendererWidth() / this._getFrameWidth());
+    return strokeWidth * 0.01 *
+      (this._getRendererWidth() / this._getFrameWidth());
   }
 
   /**
    * Set per-instance scene context for multi-scene support.
    * Called by Scene when a VMobject is added or the scene is resized.
    */
-  _setSceneContext(rendererWidth: number, rendererHeight: number, frameWidth: number): void {
+  _setSceneContext(
+    rendererWidth: number,
+    rendererHeight: number,
+    frameWidth: number,
+  ): void {
     this._sceneRendererWidth = rendererWidth;
     this._sceneRendererHeight = rendererHeight;
     this._sceneFrameWidth = frameWidth;
@@ -120,7 +125,10 @@ export abstract class VMobjectRendering extends Mobject {
    * NOTE: This static method uses class-level statics. For multi-scene
    * correctness, internal code should use the instance method _computeLinewidth().
    */
-  static _toLinewidth(this: typeof VMobjectRendering, strokeWidth: number): number {
+  static _toLinewidth(
+    this: typeof VMobjectRendering,
+    strokeWidth: number,
+  ): number {
     return strokeWidth * 0.01 * (this._rendererWidth / this._frameWidth);
   }
 
@@ -154,11 +162,15 @@ export abstract class VMobjectRendering extends Mobject {
   /**
    * Get the shared BezierRenderer, creating it if needed.
    */
-  private static _getBezierRenderer(cls: typeof VMobjectRendering): BezierRenderer {
+  private static _getBezierRenderer(
+    cls: typeof VMobjectRendering,
+  ): BezierRenderer {
     if (!VMobjectRendering._sharedBezierRenderer) {
       VMobjectRendering._sharedBezierRenderer = new BezierRenderer({
         resolution: [cls._rendererWidth, cls._rendererHeight],
-        pixelRatio: typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1,
+        pixelRatio: typeof window !== "undefined"
+          ? Math.min(window.devicePixelRatio, 2)
+          : 1,
       });
     }
     return VMobjectRendering._sharedBezierRenderer;
@@ -210,12 +222,22 @@ export abstract class VMobjectRendering extends Mobject {
     return pointsToCurvePath(this.getVisiblePoints3D());
   }
 
-  protected _buildEarcutFillGeometry(points3D: number[][]): THREE.BufferGeometry | null {
+  protected _buildEarcutFillGeometry(
+    points3D: number[][],
+  ): THREE.BufferGeometry | null {
     const effectiveLengths = (
-      this as unknown as { getEffectiveSubpathLengths?: () => number[] | undefined }
+      this as unknown as {
+        getEffectiveSubpathLengths?: () => number[] | undefined;
+      }
     ).getEffectiveSubpathLengths?.();
-    const getSubpathLengths = effectiveLengths ? () => effectiveLengths : undefined;
-    return buildEarcutFillGeometry(points3D, this.getVisiblePoints(), getSubpathLengths);
+    const getSubpathLengths = effectiveLengths
+      ? () => effectiveLengths
+      : undefined;
+    return buildEarcutFillGeometry(
+      points3D,
+      this.getVisiblePoints(),
+      getSubpathLengths,
+    );
   }
 
   // -----------------------------------------------------------------------
@@ -234,7 +256,10 @@ export abstract class VMobjectRendering extends Mobject {
       opacity: this._opacity,
       transparent: this._opacity < 1,
       depthWrite: this._opacity >= 1,
-      resolution: new THREE.Vector2(this._getRendererWidth(), this._getRendererHeight()),
+      resolution: new THREE.Vector2(
+        this._getRendererWidth(),
+        this._getRendererHeight(),
+      ),
       dashed: false,
     });
 
@@ -267,7 +292,8 @@ export abstract class VMobjectRendering extends Mobject {
     }
 
     const useShader = this.shaderCurves;
-    const useMeshStroke = !useShader && this.useStrokeMesh && isClosedPath(points3D);
+    const useMeshStroke = !useShader && this.useStrokeMesh &&
+      isClosedPath(points3D);
 
     if (useShader) {
       this._updateBezierStroke(group, points3D);
@@ -330,7 +356,9 @@ export abstract class VMobjectRendering extends Mobject {
 
   private _updateLine2Stroke(group: THREE.Group, points3D: number[][]): void {
     const subpathLengths = (
-      this as unknown as { getEffectiveSubpathLengths?: () => number[] | undefined }
+      this as unknown as {
+        getEffectiveSubpathLengths?: () => number[] | undefined;
+      }
     ).getEffectiveSubpathLengths?.();
 
     if (subpathLengths && subpathLengths.length > 1) {
@@ -449,8 +477,16 @@ export abstract class VMobjectRendering extends Mobject {
   // Mesh stroke
   // -----------------------------------------------------------------------
 
-  private _updateMeshStroke(group: THREE.Group, sampledPoints: number[][]): void {
-    const result = buildMeshStrokeGeometry(group, sampledPoints, this.strokeWidth, this._opacity);
+  private _updateMeshStroke(
+    group: THREE.Group,
+    sampledPoints: number[][],
+  ): void {
+    const result = buildMeshStrokeGeometry(
+      group,
+      sampledPoints,
+      this.strokeWidth,
+      this._opacity,
+    );
 
     if (!result) {
       this._removeMeshStroke(group);
@@ -467,8 +503,7 @@ export abstract class VMobjectRendering extends Mobject {
         this._strokeMeshMaterial.depthWrite = this._opacity >= 1;
       }
     } else {
-      this._strokeMeshMaterial =
-        this._strokeMeshMaterial ||
+      this._strokeMeshMaterial = this._strokeMeshMaterial ||
         new THREE.MeshBasicMaterial({
           color: new THREE.Color(this.color),
           side: THREE.DoubleSide,
@@ -481,7 +516,10 @@ export abstract class VMobjectRendering extends Mobject {
       this._strokeMeshMaterial.opacity = this._opacity;
       this._strokeMeshMaterial.transparent = this._opacity < 1;
       this._strokeMeshMaterial.depthWrite = this._opacity >= 1;
-      this._cachedStrokeMesh = new THREE.Mesh(result.geometry, this._strokeMeshMaterial);
+      this._cachedStrokeMesh = new THREE.Mesh(
+        result.geometry,
+        this._strokeMeshMaterial,
+      );
       this._cachedStrokeMesh.frustumCulled = false;
       group.add(this._cachedStrokeMesh);
     }
@@ -536,7 +574,10 @@ export abstract class VMobjectRendering extends Mobject {
     }
 
     if (this._cachedBezierMesh) {
-      const updated = renderer.updateMeshFromSegments(this._cachedBezierMesh, segments);
+      const updated = renderer.updateMeshFromSegments(
+        this._cachedBezierMesh,
+        segments,
+      );
       if (updated !== this._cachedBezierMesh) {
         group.remove(this._cachedBezierMesh);
         group.add(updated);
@@ -556,7 +597,10 @@ export abstract class VMobjectRendering extends Mobject {
     while (group.children.length > 0) {
       const child = group.children[0];
       group.remove(child);
-      if (child instanceof THREE.Mesh || child instanceof THREE.Line || child instanceof Line2) {
+      if (
+        child instanceof THREE.Mesh || child instanceof THREE.Line ||
+        child instanceof Line2
+      ) {
         (child as THREE.Mesh | THREE.Line | Line2).geometry?.dispose();
       }
     }
@@ -573,7 +617,10 @@ export abstract class VMobjectRendering extends Mobject {
       this._strokeMaterial.transparent = this._opacity < 1;
       this._strokeMaterial.depthWrite = this._opacity >= 1;
       this._strokeMaterial.linewidth = this._computeLinewidth(this.strokeWidth);
-      this._strokeMaterial.resolution.set(this._getRendererWidth(), this._getRendererHeight());
+      this._strokeMaterial.resolution.set(
+        this._getRendererWidth(),
+        this._getRendererHeight(),
+      );
 
       if (this._opacity < 1) {
         this._strokeMaterial.stencilWrite = true;
@@ -604,7 +651,9 @@ export abstract class VMobjectRendering extends Mobject {
       VMobjectRendering._sharedBezierRenderer.updateResolution(
         this._getRendererWidth(),
         this._getRendererHeight(),
-        typeof window !== 'undefined' ? Math.min(window.devicePixelRatio, 2) : 1,
+        typeof window !== "undefined"
+          ? Math.min(window.devicePixelRatio, 2)
+          : 1,
       );
     }
 

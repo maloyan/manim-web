@@ -8,19 +8,19 @@
  * The orange `x^2` is built with `scale(2)` before being added to the scene
  * and should render at twice the size of the blue baseline.
  */
-import { Scene, MathTex, BLACK, Create } from '../src/index.ts';
+import { BLACK, Create, MathTex, Scene } from "../src/index.ts";
 
-const container = document.getElementById('container');
+const container = document.getElementById("container");
 const scene = new Scene(container, {
   width: 800,
   height: 450,
   backgroundColor: BLACK,
 });
 
-const baseline = new MathTex({ latex: 'x^2', color: '#6aa9ff' });
+const baseline = new MathTex({ latex: "x^2", color: "#6aa9ff" });
 baseline.moveTo([-2, 0, 0]);
 
-const scaled = new MathTex({ latex: 'x^2', color: '#ffaa66' });
+const scaled = new MathTex({ latex: "x^2", color: "#ffaa66" });
 scaled.scale(2);
 scaled.moveTo([2, 0, 0]);
 

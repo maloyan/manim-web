@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { FadeIn, fadeIn } from './fading/FadeIn';
-import { FadeOut, fadeOut } from './fading/FadeOut';
-import { Mobject } from '../core/Mobject';
-import { linear } from '../rate-functions';
+import { beforeEach, describe, expect, it } from "vitest";
+import { FadeIn, fadeIn } from "./fading/FadeIn";
+import { FadeOut, fadeOut } from "./fading/FadeOut";
+import { Mobject } from "../core/Mobject";
+import { linear } from "../rate-functions";
 
-describe('FadeIn', () => {
+describe("FadeIn", () => {
   let mob: Mobject;
 
   beforeEach(() => {
@@ -15,14 +15,14 @@ describe('FadeIn', () => {
   // Constructor
   // -----------------------------------------------------------
 
-  describe('constructor', () => {
-    it('accepts mobject and default options', () => {
+  describe("constructor", () => {
+    it("accepts mobject and default options", () => {
       const anim = new FadeIn(mob);
       expect(anim.mobject).toBe(mob);
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts mobject with custom options', () => {
+    it("accepts mobject with custom options", () => {
       const anim = new FadeIn(mob, { duration: 2, rateFunc: linear });
       expect(anim.duration).toBe(2);
       expect(anim.rateFunc).toBe(linear);
@@ -33,15 +33,15 @@ describe('FadeIn', () => {
   // begin()
   // -----------------------------------------------------------
 
-  describe('begin()', () => {
-    it('sets opacity to 0', () => {
+  describe("begin()", () => {
+    it("sets opacity to 0", () => {
       mob.opacity = 1;
       const anim = new FadeIn(mob);
       anim.begin();
       expect(mob.opacity).toBe(0);
     });
 
-    it('stores target position', () => {
+    it("stores target position", () => {
       mob.position.set(3, 4, 5);
       const anim = new FadeIn(mob);
       anim.begin();
@@ -52,7 +52,7 @@ describe('FadeIn', () => {
       expect(mob.position.z).toBe(5);
     });
 
-    it('with shift: stores shifted start position and moves mobject', () => {
+    it("with shift: stores shifted start position and moves mobject", () => {
       mob.position.set(1, 2, 0);
       const anim = new FadeIn(mob, { shift: [0, -1, 0] });
       anim.begin();
@@ -67,29 +67,29 @@ describe('FadeIn', () => {
   // interpolate()
   // -----------------------------------------------------------
 
-  describe('interpolate()', () => {
-    it('at alpha=0: opacity is 0', () => {
+  describe("interpolate()", () => {
+    it("at alpha=0: opacity is 0", () => {
       const anim = new FadeIn(mob);
       anim.begin();
       anim.interpolate(0);
       expect(mob.opacity).toBeCloseTo(0, 5);
     });
 
-    it('at alpha=0.5: opacity is 0.5', () => {
+    it("at alpha=0.5: opacity is 0.5", () => {
       const anim = new FadeIn(mob);
       anim.begin();
       anim.interpolate(0.5);
       expect(mob.opacity).toBeCloseTo(0.5, 5);
     });
 
-    it('at alpha=1: opacity is 1', () => {
+    it("at alpha=1: opacity is 1", () => {
       const anim = new FadeIn(mob);
       anim.begin();
       anim.interpolate(1);
       expect(mob.opacity).toBeCloseTo(1, 5);
     });
 
-    it('with shift: position interpolates from start to target', () => {
+    it("with shift: position interpolates from start to target", () => {
       mob.position.set(2, 0, 0);
       const anim = new FadeIn(mob, { shift: [-2, 0, 0] });
       anim.begin();
@@ -105,7 +105,7 @@ describe('FadeIn', () => {
       expect(mob.position.x).toBeCloseTo(2, 5);
     });
 
-    it('no shift: position unchanged during interpolation', () => {
+    it("no shift: position unchanged during interpolation", () => {
       mob.position.set(5, 3, 1);
       const anim = new FadeIn(mob);
       anim.begin();
@@ -128,8 +128,8 @@ describe('FadeIn', () => {
   // finish()
   // -----------------------------------------------------------
 
-  describe('finish()', () => {
-    it('sets opacity to 1', () => {
+  describe("finish()", () => {
+    it("sets opacity to 1", () => {
       const anim = new FadeIn(mob);
       anim.begin();
       anim.interpolate(0.5); // partially through
@@ -137,7 +137,7 @@ describe('FadeIn', () => {
       expect(mob.opacity).toBe(1);
     });
 
-    it('sets position to target when shift is used', () => {
+    it("sets position to target when shift is used", () => {
       mob.position.set(3, 0, 0);
       const anim = new FadeIn(mob, { shift: [-3, 0, 0] });
       anim.begin();
@@ -148,7 +148,7 @@ describe('FadeIn', () => {
       expect(mob.position.z).toBeCloseTo(0, 5);
     });
 
-    it('marks animation as finished', () => {
+    it("marks animation as finished", () => {
       const anim = new FadeIn(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -161,14 +161,14 @@ describe('FadeIn', () => {
   // fadeIn() factory function
   // -----------------------------------------------------------
 
-  describe('fadeIn() factory', () => {
-    it('returns a FadeIn instance', () => {
+  describe("fadeIn() factory", () => {
+    it("returns a FadeIn instance", () => {
       const anim = fadeIn(mob);
       expect(anim).toBeInstanceOf(FadeIn);
       expect(anim.mobject).toBe(mob);
     });
 
-    it('passes options through', () => {
+    it("passes options through", () => {
       const anim = fadeIn(mob, { duration: 3, rateFunc: linear });
       expect(anim.duration).toBe(3);
       expect(anim.rateFunc).toBe(linear);
@@ -180,7 +180,7 @@ describe('FadeIn', () => {
 // FadeOut
 // =============================================================
 
-describe('FadeOut', () => {
+describe("FadeOut", () => {
   let mob: Mobject;
 
   beforeEach(() => {
@@ -191,13 +191,13 @@ describe('FadeOut', () => {
   // Constructor
   // -----------------------------------------------------------
 
-  describe('constructor', () => {
-    it('sets remover to true', () => {
+  describe("constructor", () => {
+    it("sets remover to true", () => {
       const anim = new FadeOut(mob);
       expect(anim.remover).toBe(true);
     });
 
-    it('accepts mobject and options', () => {
+    it("accepts mobject and options", () => {
       const anim = new FadeOut(mob, { duration: 0.5 });
       expect(anim.mobject).toBe(mob);
       expect(anim.duration).toBe(0.5);
@@ -208,8 +208,8 @@ describe('FadeOut', () => {
   // begin()
   // -----------------------------------------------------------
 
-  describe('begin()', () => {
-    it('stores initial opacity (default 1)', () => {
+  describe("begin()", () => {
+    it("stores initial opacity (default 1)", () => {
       mob.opacity = 1;
       const anim = new FadeOut(mob);
       anim.begin();
@@ -217,7 +217,7 @@ describe('FadeOut', () => {
       expect(mob.opacity).toBe(1);
     });
 
-    it('stores initial opacity when non-1', () => {
+    it("stores initial opacity when non-1", () => {
       mob.opacity = 0.8;
       const anim = new FadeOut(mob);
       anim.begin();
@@ -229,8 +229,8 @@ describe('FadeOut', () => {
   // interpolate()
   // -----------------------------------------------------------
 
-  describe('interpolate()', () => {
-    it('at alpha=0: opacity equals initial opacity', () => {
+  describe("interpolate()", () => {
+    it("at alpha=0: opacity equals initial opacity", () => {
       mob.opacity = 1;
       const anim = new FadeOut(mob);
       anim.begin();
@@ -238,7 +238,7 @@ describe('FadeOut', () => {
       expect(mob.opacity).toBeCloseTo(1, 5);
     });
 
-    it('at alpha=0.5: opacity is half of initial', () => {
+    it("at alpha=0.5: opacity is half of initial", () => {
       mob.opacity = 1;
       const anim = new FadeOut(mob);
       anim.begin();
@@ -246,7 +246,7 @@ describe('FadeOut', () => {
       expect(mob.opacity).toBeCloseTo(0.5, 5);
     });
 
-    it('at alpha=1: opacity is 0', () => {
+    it("at alpha=1: opacity is 0", () => {
       mob.opacity = 1;
       const anim = new FadeOut(mob);
       anim.begin();
@@ -254,7 +254,7 @@ describe('FadeOut', () => {
       expect(mob.opacity).toBeCloseTo(0, 5);
     });
 
-    it('preserves initial non-1 opacity', () => {
+    it("preserves initial non-1 opacity", () => {
       mob.opacity = 0.8;
       const anim = new FadeOut(mob);
       anim.begin();
@@ -269,7 +269,7 @@ describe('FadeOut', () => {
       expect(mob.opacity).toBeCloseTo(0, 5);
     });
 
-    it('with shift: position interpolates from start to start+shift', () => {
+    it("with shift: position interpolates from start to start+shift", () => {
       mob.position.set(1, 0, 0);
       const anim = new FadeOut(mob, { shift: [2, 0, 0] });
       anim.begin();
@@ -285,7 +285,7 @@ describe('FadeOut', () => {
       expect(mob.position.x).toBeCloseTo(3, 5);
     });
 
-    it('without shift: position unchanged', () => {
+    it("without shift: position unchanged", () => {
       mob.position.set(4, 2, 1);
       const anim = new FadeOut(mob);
       anim.begin();
@@ -300,8 +300,8 @@ describe('FadeOut', () => {
   // finish()
   // -----------------------------------------------------------
 
-  describe('finish()', () => {
-    it('sets opacity to 0', () => {
+  describe("finish()", () => {
+    it("sets opacity to 0", () => {
       mob.opacity = 1;
       const anim = new FadeOut(mob);
       anim.begin();
@@ -310,7 +310,7 @@ describe('FadeOut', () => {
       expect(mob.opacity).toBe(0);
     });
 
-    it('sets position to end when shift is used', () => {
+    it("sets position to end when shift is used", () => {
       mob.position.set(0, 0, 0);
       const anim = new FadeOut(mob, { shift: [0, 3, 0] });
       anim.begin();
@@ -320,7 +320,7 @@ describe('FadeOut', () => {
       expect(mob.position.z).toBeCloseTo(0, 5);
     });
 
-    it('marks animation as finished', () => {
+    it("marks animation as finished", () => {
       const anim = new FadeOut(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -333,19 +333,19 @@ describe('FadeOut', () => {
   // fadeOut() factory function
   // -----------------------------------------------------------
 
-  describe('fadeOut() factory', () => {
-    it('returns a FadeOut instance', () => {
+  describe("fadeOut() factory", () => {
+    it("returns a FadeOut instance", () => {
       const anim = fadeOut(mob);
       expect(anim).toBeInstanceOf(FadeOut);
       expect(anim.mobject).toBe(mob);
     });
 
-    it('sets remover to true', () => {
+    it("sets remover to true", () => {
       const anim = fadeOut(mob);
       expect(anim.remover).toBe(true);
     });
 
-    it('passes options through', () => {
+    it("passes options through", () => {
       const anim = fadeOut(mob, { duration: 0.3, rateFunc: linear });
       expect(anim.duration).toBe(0.3);
       expect(anim.rateFunc).toBe(linear);

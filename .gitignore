@@ -22,3 +22,7 @@ test-results/
 thoughts/
 .claude
 .desloppify/
+deno.lock
+docs/pnpm-lock.yaml
+docs/pnpm-workspace.yaml
+pnpm-lock.yaml

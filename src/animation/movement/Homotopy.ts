@@ -3,11 +3,11 @@
  * point-wise transformations over time.
  */
 
-import * as THREE from 'three';
-import { Mobject } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
-import { Animation, AnimationOptions } from '../Animation';
-import { flowPoint } from '../../utils/ode';
+import * as THREE from "three";
+import { Mobject } from "../../core/Mobject";
+import { VMobject } from "../../core/VMobject";
+import { Animation, AnimationOptions } from "../Animation";
+import { flowPoint } from "../../utils/ode";
 
 /**
  * A captured world transform: the mobject's world matrix and its inverse.
@@ -79,7 +79,9 @@ export type ComplexHomotopyFunction = (z: Complex, t: number) => Complex;
  * @param point - Point in 3D space [x, y, z]
  * @returns Vector at that point [vx, vy, vz]
  */
-export type VectorFieldFunction = (point: [number, number, number]) => [number, number, number];
+export type VectorFieldFunction = (
+  point: [number, number, number],
+) => [number, number, number];
 
 export interface HomotopyOptions extends AnimationOptions {
   /** The homotopy function to apply */
@@ -304,7 +306,9 @@ export class SmoothedVectorizedHomotopy extends Animation {
     // (anchor transforms blended with point offsets) is only coherent when
     // every quantity lives in the same frame.
     const { worldMatrix } = this._frame;
-    this._originalPoints = vmobject.getLocalPoints().map((p) => applyMatrix(worldMatrix, p));
+    this._originalPoints = vmobject.getLocalPoints().map((p) =>
+      applyMatrix(worldMatrix, p)
+    );
 
     // Compute anchor indices (every 3rd point starting from 0)
     // Points format: [anchor1, handle1, handle2, anchor2, handle3, handle4, anchor3, ...]
@@ -325,7 +329,9 @@ export class SmoothedVectorizedHomotopy extends Animation {
    * to maintain relative positions to their anchors.
    */
   interpolate(alpha: number): void {
-    if (!this._originalPoints || this._originalPoints.length === 0 || !this._frame) {
+    if (
+      !this._originalPoints || this._originalPoints.length === 0 || !this._frame
+    ) {
       return;
     }
 
@@ -334,12 +340,20 @@ export class SmoothedVectorizedHomotopy extends Animation {
     const newPoints: number[][] = new Array(numPoints);
 
     // First pass: transform all anchor points
-    const anchorTransforms: Map<number, { original: number[]; transformed: number[] }> = new Map();
+    const anchorTransforms: Map<
+      number,
+      { original: number[]; transformed: number[] }
+    > = new Map();
 
     for (const anchorIdx of this._anchorIndices) {
       if (anchorIdx < numPoints) {
         const original = this._originalPoints[anchorIdx];
-        const transformed = this.homotopyFunc(original[0], original[1], original[2], alpha);
+        const transformed = this.homotopyFunc(
+          original[0],
+          original[1],
+          original[2],
+          alpha,
+        );
         anchorTransforms.set(anchorIdx, { original, transformed });
         newPoints[anchorIdx] = transformed;
       }
@@ -367,7 +381,10 @@ export class SmoothedVectorizedHomotopy extends Animation {
   private _transformHandle(
     i: number,
     alpha: number,
-    anchorTransforms: Map<number, { original: number[]; transformed: number[] }>,
+    anchorTransforms: Map<
+      number,
+      { original: number[]; transformed: number[] }
+    >,
   ): number[] {
     const originalHandle = this._originalPoints![i];
 
@@ -415,20 +432,30 @@ export class SmoothedVectorizedHomotopy extends Animation {
       // Mix the direct transformation with the smoothed one to keep curve quality.
       const smoothFactor = 0.5;
       return [0, 1, 2].map(
-        (k) => localTransform[k] * (1 - smoothFactor) + blended[k] * smoothFactor,
+        (k) =>
+          localTransform[k] * (1 - smoothFactor) + blended[k] * smoothFactor,
       );
     }
 
     // Only one anchor: carry the handle's original offset onto the moved anchor.
-    const anchorData = anchorTransforms.get(prevAnchorIdx >= 0 ? prevAnchorIdx : nextAnchorIdx);
+    const anchorData = anchorTransforms.get(
+      prevAnchorIdx >= 0 ? prevAnchorIdx : nextAnchorIdx,
+    );
     if (anchorData) {
       return [0, 1, 2].map(
-        (k) => anchorData.transformed[k] + (originalHandle[k] - anchorData.original[k]),
+        (k) =>
+          anchorData.transformed[k] +
+          (originalHandle[k] - anchorData.original[k]),
       );
     }
 
     // No anchors found, just transform directly.
-    return this.homotopyFunc(originalHandle[0], originalHandle[1], originalHandle[2], alpha);
+    return this.homotopyFunc(
+      originalHandle[0],
+      originalHandle[1],
+      originalHandle[2],
+      alpha,
+    );
   }
 
   /**
@@ -517,9 +544,12 @@ export class PhaseFlow extends Animation {
 
     if (!this._isVMobject || !this._originalPoints || !this._frame) {
       // For non-VMobjects, flow the position from the stored original (world-space)
-      const start =
-        this._originalPosition ??
-        ([this.mobject.position.x, this.mobject.position.y, this.mobject.position.z] as [
+      const start = this._originalPosition ??
+        ([
+          this.mobject.position.x,
+          this.mobject.position.y,
+          this.mobject.position.z,
+        ] as [
           number,
           number,
           number,
@@ -573,7 +603,7 @@ export class PhaseFlow extends Animation {
 export function homotopy(
   mobject: Mobject,
   homotopyFunc: HomotopyFunction,
-  options?: Omit<HomotopyOptions, 'homotopyFunc'>,
+  options?: Omit<HomotopyOptions, "homotopyFunc">,
 ): Homotopy {
   return new Homotopy(mobject, { ...options, homotopyFunc });
 }
@@ -587,7 +617,7 @@ export function homotopy(
 export function complexHomotopy(
   mobject: Mobject,
   complexFunc: ComplexHomotopyFunction,
-  options?: Omit<ComplexHomotopyOptions, 'complexFunc'>,
+  options?: Omit<ComplexHomotopyOptions, "complexFunc">,
 ): ComplexHomotopy {
   return new ComplexHomotopy(mobject, { ...options, complexFunc });
 }
@@ -601,7 +631,7 @@ export function complexHomotopy(
 export function smoothedVectorizedHomotopy(
   mobject: VMobject,
   homotopyFunc: HomotopyFunction,
-  options?: Omit<SmoothedVectorizedHomotopyOptions, 'homotopyFunc'>,
+  options?: Omit<SmoothedVectorizedHomotopyOptions, "homotopyFunc">,
 ): SmoothedVectorizedHomotopy {
   return new SmoothedVectorizedHomotopy(mobject, { ...options, homotopyFunc });
 }
@@ -615,7 +645,7 @@ export function smoothedVectorizedHomotopy(
 export function phaseFlow(
   mobject: Mobject,
   vectorField: VectorFieldFunction,
-  options?: Omit<PhaseFlowOptions, 'vectorField'>,
+  options?: Omit<PhaseFlowOptions, "vectorField">,
 ): PhaseFlow {
   return new PhaseFlow(mobject, { ...options, vectorField });
 }

@@ -9,18 +9,18 @@
  * - Point-in-polygon and linearity tests
  */
 
-import * as THREE from 'three';
-import { triangulatePolygon } from '../utils/triangulate';
+import * as THREE from "three";
+import { triangulatePolygon } from "../utils/triangulate";
 import {
   evalCubicBezier,
-  selectScatteredPoints,
   extractVectorsFrom3Points,
   orthonormalizeBasis,
   projectToPlane,
+  selectScatteredPoints,
   signedArea2DFromStride,
-} from '../utils/math';
-import { crossVec, lengthVec } from '../utils/vectors';
-import type { Point } from './VMobjectCurves';
+} from "../utils/math";
+import { crossVec, lengthVec } from "../utils/vectors";
+import type { Point } from "./VMobjectCurves";
 
 /**
  * Sampling density used for fill triangulation outlines.
@@ -54,8 +54,17 @@ const LINEARITY_REL_TOL = 0.01;
  * length. Must handle z so that arcs in non-XY planes (e.g. Angle in XZ
  * plane) still sample as curves.
  */
-export function isNearlyLinear(p0: number[], p1: number[], p2: number[], p3: number[]): boolean {
-  const c: [number, number, number] = [p3[0] - p0[0], p3[1] - p0[1], (p3[2] ?? 0) - (p0[2] ?? 0)];
+export function isNearlyLinear(
+  p0: number[],
+  p1: number[],
+  p2: number[],
+  p3: number[],
+): boolean {
+  const c: [number, number, number] = [
+    p3[0] - p0[0],
+    p3[1] - p0[1],
+    (p3[2] ?? 0) - (p0[2] ?? 0),
+  ];
 
   // Handle distances from p0 — used both as the degenerate-chord fallback
   // and to distinguish a "loop" Bezier (chord ≈ 0 but handles bulge out).
@@ -71,7 +80,9 @@ export function isNearlyLinear(p0: number[], p1: number[], p2: number[], p3: num
 
   // |a × c| / |c| is the perpendicular distance from q to the chord.
   const perpDist = (q: number[]): number =>
-    lengthVec(crossVec([q[0] - p0[0], q[1] - p0[1], (q[2] ?? 0) - (p0[2] ?? 0)], c)) / chord;
+    lengthVec(
+      crossVec([q[0] - p0[0], q[1] - p0[1], (q[2] ?? 0) - (p0[2] ?? 0)], c),
+    ) / chord;
 
   return Math.max(perpDist(p1), perpDist(p2)) < LINEARITY_REL_TOL * chord;
 }
@@ -98,7 +109,10 @@ export function isNearlyLinear(p0: number[], p1: number[], p2: number[], p3: num
  * @param points - Bezier control points
  * @param samplesPerSegment - Number of samples per cubic Bezier segment
  */
-export function sampleBezierPath(points: number[][], samplesPerSegment: number = 4): number[][] {
+export function sampleBezierPath(
+  points: number[][],
+  samplesPerSegment: number = 4,
+): number[][] {
   const result: number[][] = [];
 
   // Points are stored as: [anchor, handle, handle, anchor, handle, handle, anchor, ...]
@@ -133,7 +147,10 @@ export function sampleBezierPath(points: number[][], samplesPerSegment: number =
  * samples per segment so the polyline length doesn't flicker frame-to-frame
  * during a `Transform`.
  */
-export function sampleBezierOutline(points: number[][], samplesPerSegment: number): number[][] {
+export function sampleBezierOutline(
+  points: number[][],
+  samplesPerSegment: number,
+): number[][] {
   const result: number[][] = [];
 
   for (let i = 0; i + 3 < points.length; i += 3) {
@@ -161,7 +178,9 @@ export function sampleBezierOutline(points: number[][], samplesPerSegment: numbe
   if (result.length > 1) {
     const first = result[0];
     const last = result[result.length - 1];
-    if (Math.abs(first[0] - last[0]) < 1e-8 && Math.abs(first[1] - last[1]) < 1e-8) {
+    if (
+      Math.abs(first[0] - last[0]) < 1e-8 && Math.abs(first[1] - last[1]) < 1e-8
+    ) {
       result.pop();
     }
   }
@@ -173,7 +192,10 @@ export function sampleBezierOutline(points: number[][], samplesPerSegment: numbe
  * Sample Bezier path into 3D points (preserves z).
  * Same logic as sampleBezierOutline but returns [x, y, z] instead of [x, y].
  */
-function sampleBezierOutline3D(points: number[][], samplesPerSegment: number): number[][] {
+function sampleBezierOutline3D(
+  points: number[][],
+  samplesPerSegment: number,
+): number[][] {
   const result: number[][] = [];
   for (let i = 0; i + 3 < points.length; i += 3) {
     const p0 = points[i];
@@ -329,7 +351,14 @@ export function pointsToShape(visiblePoints: Point[]): THREE.Shape {
     const handle2 = visiblePoints[i + 2];
     const anchor2 = visiblePoints[i + 3];
 
-    shape.bezierCurveTo(handle1.x, handle1.y, handle2.x, handle2.y, anchor2.x, anchor2.y);
+    shape.bezierCurveTo(
+      handle1.x,
+      handle1.y,
+      handle2.x,
+      handle2.y,
+      anchor2.x,
+      anchor2.y,
+    );
 
     // Move to next segment (skip by 3 to share anchor)
     i += 3;
@@ -348,7 +377,9 @@ export function pointsToShape(visiblePoints: Point[]): THREE.Shape {
  * Convert points to a THREE.CurvePath for stroke rendering
  * @param visiblePoints3D - The visible points as 3D arrays
  */
-export function pointsToCurvePath(visiblePoints3D: number[][]): THREE.CurvePath<THREE.Vector3> {
+export function pointsToCurvePath(
+  visiblePoints3D: number[][],
+): THREE.CurvePath<THREE.Vector3> {
   const path = new THREE.CurvePath<THREE.Vector3>();
 
   if (visiblePoints3D.length < 2) {
@@ -430,7 +461,11 @@ export function buildEarcutFillGeometry(
   // For disjoint subpaths (e.g. boolean XOR), split control points FIRST
   // then sample each subpath independently.
   if (subpathLengths && subpathLengths.length > 1) {
-    return buildEarcutFillGeometryMulti(points3D, subpathLengths, visiblePoints);
+    return buildEarcutFillGeometryMulti(
+      points3D,
+      subpathLengths,
+      visiblePoints,
+    );
   }
 
   // Sample Bezier curves into 3D polyline, then project to plane for triangulation
@@ -459,7 +494,7 @@ export function buildEarcutFillGeometry(
   }
 
   const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
   return geometry;
 }
 
@@ -516,7 +551,7 @@ function buildEarcutFillGeometryMulti(
 
   // Project each 3D ring to 2D using the shared plane basis
   const rings2D: number[][][] = rings3D.map((ring) =>
-    ring.map((p) => projectToPlane(p, origin, v1, v2)),
+    ring.map((p) => projectToPlane(p, origin, v1, v2))
   );
 
   // Classify rings by winding orientation in the shared 2D plane: the
@@ -583,7 +618,10 @@ function buildEarcutFillGeometryMulti(
       }
     }
 
-    const indices = triangulatePolygon(outerRing, holeRings.length > 0 ? holeRings : undefined);
+    const indices = triangulatePolygon(
+      outerRing,
+      holeRings.length > 0 ? holeRings : undefined,
+    );
     if (indices.length === 0) continue;
 
     const allVerts: number[][] = [...outerRing];
@@ -602,7 +640,10 @@ function buildEarcutFillGeometryMulti(
   if (allPositions.length === 0) return null;
 
   const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(allPositions), 3));
+  geometry.setAttribute(
+    "position",
+    new THREE.BufferAttribute(new Float32Array(allPositions), 3),
+  );
   return geometry;
 }
 

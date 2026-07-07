@@ -11,44 +11,58 @@ export {
   type NumberLineOptions,
   UnitInterval,
   type UnitIntervalOptions,
-} from './NumberLine';
+} from "./NumberLine";
 
 // Axes
-export { Axes, type AxesOptions } from './Axes';
+export { Axes, type AxesOptions } from "./Axes";
 
 // NumberPlane
-export { NumberPlane, type NumberPlaneOptions, type BackgroundLineStyle } from './NumberPlane';
+export {
+  type BackgroundLineStyle,
+  NumberPlane,
+  type NumberPlaneOptions,
+} from "./NumberPlane";
 
 // FunctionGraph
-export { FunctionGraph, type FunctionGraphOptions } from './FunctionGraph';
+export { FunctionGraph, type FunctionGraphOptions } from "./FunctionGraph";
 
 // ImplicitFunction
-export { ImplicitFunction, type ImplicitFunctionOptions } from './ImplicitFunction';
+export {
+  ImplicitFunction,
+  type ImplicitFunctionOptions,
+} from "./ImplicitFunction";
 
 // ParametricFunction
-export { ParametricFunction, type ParametricFunctionOptions } from './ParametricFunction';
+export {
+  ParametricFunction,
+  type ParametricFunctionOptions,
+} from "./ParametricFunction";
 
 // Vector
-export { VectorFieldVector, type VectorFieldVectorOptions } from './Vector';
+export { VectorFieldVector, type VectorFieldVectorOptions } from "./Vector";
 
 // ComplexPlane
-export { ComplexPlane, type ComplexPlaneOptions, type Complex } from './ComplexPlane';
+export {
+  type Complex,
+  ComplexPlane,
+  type ComplexPlaneOptions,
+} from "./ComplexPlane";
 
 // PolarPlane
-export { PolarPlane, type PolarPlaneOptions } from './ComplexPlane';
+export { PolarPlane, type PolarPlaneOptions } from "./ComplexPlane";
 
 // BarChart
-export { BarChart, type BarChartOptions } from './BarChart';
+export { BarChart, type BarChartOptions } from "./BarChart";
 
 // VectorField
 export {
-  VectorField,
   ArrowVectorField,
-  StreamLines,
-  type VectorFunction,
-  type ColorFunction,
-  type VectorFieldBaseOptions,
   type ArrowVectorFieldOptions,
-  type StreamLinesOptions,
+  type ColorFunction,
   type ContinuousMotionOptions,
-} from './VectorField';
+  StreamLines,
+  type StreamLinesOptions,
+  VectorField,
+  type VectorFieldBaseOptions,
+  type VectorFunction,
+} from "./VectorField";

@@ -28,7 +28,7 @@ Everything renders in real time using WebGL -- no server, no video encoding, no 
 ## Quick example
 
 ```typescript
-import { Scene, Circle, Create, FadeOut, BLACK } from 'manim-web';
+import { BLACK, Circle, Create, FadeOut, Scene } from 'manim-web';
 
 const container = document.getElementById('container');
 const scene = new Scene(container, {

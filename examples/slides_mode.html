@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Slides Mode Demo</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - Slides Mode Demo</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #1a1a2e;
       display: flex;
@@ -46,12 +50,12 @@
       opacity: 1;
       font-weight: 500;
     }
-  </style>
-</head>
-<body>
-  <h1>Slides Mode Demo</h1>
-  <div id="container"></div>
-  <div class="info">
+    </style>
+  </head>
+  <body>
+    <h1>Slides Mode Demo</h1>
+    <div id="container"></div>
+    <div class="info">
     <p class="highlight">slidesMode: true - each arrow press plays one segment, then pauses</p>
     <br>
     <kbd>&rarr;</kbd> Play next segment &nbsp;
@@ -60,22 +64,22 @@
     <kbd>F</kbd> Fullscreen
   </div>
 
-  <script type="module">
+    <script type="module">
     import {
-      Player,
-      Circle,
-      Square,
-      Triangle,
-      Create,
-      Transform,
-      FadeIn,
-      FadeOut,
-      Indicate,
-      Rotate,
       BLACK,
       BLUE,
-      RED,
+      Circle,
+      Create,
+      FadeIn,
+      FadeOut,
       GREEN,
+      Indicate,
+      Player,
+      RED,
+      Rotate,
+      Square,
+      Transform,
+      Triangle,
     } from '../src/index.ts';
 
     const container = document.getElementById('container');
@@ -115,6 +119,6 @@
       // Slide 8: Final pause
       await scene.wait(1);
     });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

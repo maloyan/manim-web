@@ -1,34 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>ThreeDAxes coordsToPoint alignment</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #191919; display: flex; justify-content: center; align-items: center; width: 100vw; height: 100vh; overflow: hidden; }
-    #container { width: 100vw; height: 100vh; }
-    .controls-hint { position: fixed; bottom: 20px; left: 20px; color: #888; font-family: monospace; font-size: 14px; pointer-events: none; }
-  </style>
-</head>
-<body>
-  <div id="container"></div>
-  <div class="controls-hint">Drag to orbit, scroll to zoom</div>
-  <!-- Use mouse to control camera: left-drag to orbit, right-drag to pan, scroll to zoom -->
+  <head>
+    <meta charset="UTF-8">
+    <title>ThreeDAxes coordsToPoint alignment</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #191919;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #container {
+      width: 100vw;
+      height: 100vh;
+    }
+    .controls-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      color: #888;
+      font-family: monospace;
+      font-size: 14px;
+      pointer-events: none;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div class="controls-hint">Drag to orbit, scroll to zoom</div>
+    <!-- Use mouse to control camera: left-drag to orbit, right-drag to pan, scroll to zoom -->
 
-  <script type="module">
+    <script type="module">
     import {
-      ThreeDAxes,
       Arrow3D,
-      Dot3D,
-      ThreeDScene,
-      Create,
-      Shift,
-      RED,
-      RED_E,
-      GREEN,
-      GREEN_E,
       BLUE,
       BLUE_E,
+      Create,
+      Dot3D,
+      GREEN,
+      GREEN_E,
+      RED,
+      RED_E,
+      Shift,
+      ThreeDAxes,
+      ThreeDScene,
     } from '../../src/index.ts';
 
     const scene = new ThreeDScene(document.getElementById('container'), {
@@ -40,7 +63,7 @@
       distance: 20,
       fov: 30,
       enableOrbitControls: true,
-      orbitControlsUp: "z",
+      orbitControlsUp: 'z',
     });
 
     const axes = new ThreeDAxes({
@@ -65,11 +88,11 @@
 
     scene.add(axes, axesX, axesY, axesZ, ballX, ballY, ballZ);
 
-    await scene.play( new Shift(ballX, { direction: [4, 0, 0] }));
-    await scene.play( new Shift(ballY, { direction: [0, 4, 0] }));
-    await scene.play( new Shift(ballZ, { direction: [0, 0, 4] }));
+    await scene.play(new Shift(ballX, { direction: [4, 0, 0] }));
+    await scene.play(new Shift(ballY, { direction: [0, 4, 0] }));
+    await scene.play(new Shift(ballZ, { direction: [0, 0, 4] }));
 
     await scene.wait(Infinity);
-  </script>
-</body>
+    </script>
+  </body>
 </html>

@@ -1,35 +1,35 @@
-import * as THREE from 'three';
+import * as THREE from "three";
 import {
-  type Vector3Tuple,
-  type MobjectStyle,
   type AxisOrOptions,
-  UP,
   DOWN,
   LEFT,
+  type MobjectStyle,
   RIGHT,
-} from './MobjectTypes';
+  UP,
+  type Vector3Tuple,
+} from "./MobjectTypes";
 import {
-  getCenterImpl,
   getBoundingBoxImpl,
+  getCenterImpl,
   getEdgeInDirectionImpl,
   toEdgeImpl,
-} from './MobjectPositioning';
-import typia from 'typia';
+} from "./MobjectPositioning";
+import typia from "typia";
 import {
-  saveMobjectStateImpl,
-  restoreMobjectStateImpl,
-  becomeMobjectImpl,
-  replaceMobjectImpl,
   applyFunctionImpl,
   applyMatrixImpl,
+  becomeMobjectImpl,
   prepareForNonlinearTransformImpl,
+  replaceMobjectImpl,
   resolveExtremalPoint,
-} from './MobjectState';
-import { logger } from '../utils/logger';
+  restoreMobjectStateImpl,
+  saveMobjectStateImpl,
+} from "./MobjectState";
+import { logger } from "../utils/logger";
 // Type-only import: erased at compile time, so it introduces no runtime
 // circular dependency (Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject).
 // Used solely to type `Mobject.animate` and the registered factory.
-import type { AnimateProxy } from './AnimateProxy';
+import type { AnimateProxy } from "./AnimateProxy";
 
 // AnimateProxy registers itself here to break the circular dependency:
 // Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject
@@ -38,30 +38,32 @@ let animateProxyFactory: ((mobject: Mobject) => AnimateProxy) | null = null;
 const SCRATCH_QUAT = new THREE.Quaternion();
 
 /** @internal Called by AnimateProxy module to register the factory. */
-export function registerAnimateProxy(factory: (mobject: Mobject) => AnimateProxy): void {
+export function registerAnimateProxy(
+  factory: (mobject: Mobject) => AnimateProxy,
+): void {
   animateProxyFactory = factory;
 }
 
 // Re-export everything from MobjectTypes so existing imports from './Mobject' continue to work
 export {
-  type Vector3Tuple,
-  type MobjectStyle,
-  type MobjectLike,
-  type VMobjectLike,
   type AxisOrOptions,
-  isVMobjectLike,
-  UP,
-  DOWN,
-  LEFT,
-  RIGHT,
-  OUT,
-  IN,
-  ORIGIN,
-  UL,
-  UR,
   DL,
+  DOWN,
   DR,
-} from './MobjectTypes';
+  IN,
+  isVMobjectLike,
+  LEFT,
+  type MobjectLike,
+  type MobjectStyle,
+  ORIGIN,
+  OUT,
+  RIGHT,
+  UL,
+  UP,
+  UR,
+  type Vector3Tuple,
+  type VMobjectLike,
+} from "./MobjectTypes";
 
 /**
  * Updater function type that runs every frame.
@@ -81,7 +83,7 @@ export abstract class Mobject {
   rotation: THREE.Euler;
   scaleVector: THREE.Vector3;
   createdAtBeginning: boolean = false;
-  protected _color: string = '#ffffff';
+  protected _color: string = "#ffffff";
   get color(): string {
     return this._color;
   }
@@ -124,12 +126,12 @@ export abstract class Mobject {
   constructor() {
     this.id = `mobject_${Mobject._idCounter++}`;
     this.position = new THREE.Vector3(0, 0, 0);
-    this.rotation = new THREE.Euler(0, 0, 0, 'XYZ');
+    this.rotation = new THREE.Euler(0, 0, 0, "XYZ");
     this.scaleVector = new THREE.Vector3(1, 1, 1);
     this._style = {
-      fillColor: '#ffffff',
+      fillColor: "#ffffff",
       fillOpacity: 0,
-      strokeColor: '#ffffff',
+      strokeColor: "#ffffff",
       strokeOpacity: 1,
       strokeWidth: 4,
     };
@@ -268,7 +270,9 @@ export abstract class Mobject {
     // 3. Handle edge alignment (same delta math, world space)
     if (alignedEdge) {
       // A raw point has no extent, so its edge is the point itself.
-      const targetEdge = Array.isArray(target) ? target : target._getEdgeInDirection(alignedEdge);
+      const targetEdge = Array.isArray(target)
+        ? target
+        : target._getEdgeInDirection(alignedEdge);
       const thisEdge = this._getEdgeInDirection(alignedEdge);
       targetPos = [
         targetEdge[0] - thisEdge[0] + currentCenter[0],
@@ -283,9 +287,12 @@ export abstract class Mobject {
     // which would divide out this node's own rotation/scale. The translation
     // parts cancel, leaving the world delta mapped through the parent's inverse
     // linear transform.
-    const targetParent = this.parent === null ? targetPos : this.parent._worldToLocal(targetPos);
-    const currentParent =
-      this.parent === null ? currentCenter : this.parent._worldToLocal(currentCenter);
+    const targetParent = this.parent === null
+      ? targetPos
+      : this.parent._worldToLocal(targetPos);
+    const currentParent = this.parent === null
+      ? currentCenter
+      : this.parent._worldToLocal(currentCenter);
     const delta: Vector3Tuple = [
       targetParent[0] - currentParent[0],
       targetParent[1] - currentParent[1],
@@ -304,8 +311,8 @@ export abstract class Mobject {
    * Accepts aboutPoint or aboutEdge to specify the rotation center.
    */
   rotate(angle: number, axisOrOptions?: Vector3Tuple | AxisOrOptions): this {
-    if (typeof angle !== 'number') {
-      throw new TypeError('Mobject.rotate: angle must be a number');
+    if (typeof angle !== "number") {
+      throw new TypeError("Mobject.rotate: angle must be a number");
     }
 
     if (axisOrOptions !== undefined) {
@@ -336,7 +343,9 @@ export abstract class Mobject {
     // _rotateAboutParentLocalPoint works in the parent frame (where `position`
     // lives), so lift the world pivot through the parent's inverse world matrix.
     const pivotWorld: Vector3Tuple = aboutPoint ?? this.getCenter();
-    const pivotParent = this.parent === null ? pivotWorld : this.parent._worldToLocal(pivotWorld);
+    const pivotParent = this.parent === null
+      ? pivotWorld
+      : this.parent._worldToLocal(pivotWorld);
     this._rotateAboutParentLocalPoint(angle, axis, pivotParent);
     return this;
   }
@@ -369,7 +378,11 @@ export abstract class Mobject {
       this.position.z - pivotLocal[2],
     ).applyQuaternion(q);
 
-    this.position.set(pivotLocal[0] + rel.x, pivotLocal[1] + rel.y, pivotLocal[2] + rel.z);
+    this.position.set(
+      pivotLocal[0] + rel.x,
+      pivotLocal[1] + rel.y,
+      pivotLocal[2] + rel.z,
+    );
 
     const current = new THREE.Quaternion().setFromEuler(this.rotation);
     current.multiply(q);
@@ -385,7 +398,9 @@ export abstract class Mobject {
    * @post result === this._worldMatrix() * p
    */
   protected _localToWorld(p: Vector3Tuple): Vector3Tuple {
-    const v = new THREE.Vector3(p[0], p[1], p[2]).applyMatrix4(this._worldMatrix());
+    const v = new THREE.Vector3(p[0], p[1], p[2]).applyMatrix4(
+      this._worldMatrix(),
+    );
     return [v.x, v.y, v.z];
   }
 
@@ -430,9 +445,13 @@ export abstract class Mobject {
     factor: number | Vector3Tuple,
     options?: { aboutPoint?: Vector3Tuple; aboutEdge?: Vector3Tuple },
   ): this {
-    const sx = typeof factor === 'number' ? factor : factor[0];
-    const sy = typeof factor === 'number' ? factor : factor[1];
-    const sz = typeof factor === 'number' ? factor : factor[2] === 0 ? 1 : factor[2];
+    const sx = typeof factor === "number" ? factor : factor[0];
+    const sy = typeof factor === "number" ? factor : factor[1];
+    const sz = typeof factor === "number"
+      ? factor
+      : factor[2] === 0
+      ? 1
+      : factor[2];
 
     // Resolve the world-space anchor to hold fixed from the CURRENT (pre-scale)
     // geometry. With no aboutPoint/aboutEdge, scale about the geometric center
@@ -441,8 +460,12 @@ export abstract class Mobject {
     // The position math below runs in the parent frame (where `position` lives),
     // so lift the world anchor through the parent's inverse world matrix.
     const explicitAnchor = resolveExtremalPoint(this, options);
-    const anchorWorld = explicitAnchor === undefined ? this.getCenter() : explicitAnchor;
-    const anchorLocal = this.parent === null ? anchorWorld : this.parent._worldToLocal(anchorWorld);
+    const anchorWorld = explicitAnchor === undefined
+      ? this.getCenter()
+      : explicitAnchor;
+    const anchorLocal = this.parent === null
+      ? anchorWorld
+      : this.parent._worldToLocal(anchorWorld);
 
     // Fold the new scale into the deferred transform, then move `position` so the
     // anchor's world location is unchanged.
@@ -468,7 +491,7 @@ export abstract class Mobject {
     }
     if (options?.aboutPoint || options?.aboutEdge) {
       throw new Error(
-        'Mobject.stretch(): aboutPoint/aboutEdge is not supported in deferred-transform mode. Use applyFunction/applyMatrix or normalize first.',
+        "Mobject.stretch(): aboutPoint/aboutEdge is not supported in deferred-transform mode. Use applyFunction/applyMatrix or normalize first.",
       );
     }
     const scaleFactors: Vector3Tuple = [1, 1, 1];
@@ -625,7 +648,7 @@ export abstract class Mobject {
       // frame. This is a soft default: normalizeTransform() can reset the
       // underlying position, so callers should not rely on it — hence the warn.
       logger.warn(
-        'Mobject.getCenter: computing center of an empty mobject (no geometry); falling back to world position. This value is not stable across normalizeTransform().',
+        "Mobject.getCenter: computing center of an empty mobject (no geometry); falling back to world position. This value is not stable across normalizeTransform().",
       );
       return this._localToWorld([0, 0, 0]);
     }
@@ -699,10 +722,21 @@ export abstract class Mobject {
     buff: number = 0.25,
   ): this {
     const tPt = Array.isArray(target) ? target : target.getCenter();
-    const sEdge = this._getEdgeInDirection([-direction[0], -direction[1], -direction[2]]);
-    const tEdge = Array.isArray(target) ? tPt : target._getEdgeInDirection(direction);
-    const len = Math.sqrt(direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2) || 1;
-    const n: Vector3Tuple = [direction[0] / len, direction[1] / len, direction[2] / len];
+    const sEdge = this._getEdgeInDirection([
+      -direction[0],
+      -direction[1],
+      -direction[2],
+    ]);
+    const tEdge = Array.isArray(target)
+      ? tPt
+      : target._getEdgeInDirection(direction);
+    const len =
+      Math.sqrt(direction[0] ** 2 + direction[1] ** 2 + direction[2] ** 2) || 1;
+    const n: Vector3Tuple = [
+      direction[0] / len,
+      direction[1] / len,
+      direction[2] / len,
+    ];
     return this.shift([
       tEdge[0] + n[0] * buff - sEdge[0],
       tEdge[1] + n[1] * buff - sEdge[1],
@@ -711,7 +745,9 @@ export abstract class Mobject {
   }
 
   alignTo(target: Mobject | Vector3Tuple, direction: Vector3Tuple): this {
-    const tp = Array.isArray(target) ? target : target._getEdgeInDirection(direction);
+    const tp = Array.isArray(target)
+      ? target
+      : target._getEdgeInDirection(direction);
     const sp = this._getEdgeInDirection(direction);
     return this.shift([
       direction[0] !== 0 ? tp[0] - sp[0] : 0,
@@ -720,7 +756,10 @@ export abstract class Mobject {
     ]);
   }
 
-  moveToAligned(target: Mobject | Vector3Tuple, alignedEdge?: Vector3Tuple): this {
+  moveToAligned(
+    target: Mobject | Vector3Tuple,
+    alignedEdge?: Vector3Tuple,
+  ): this {
     if (alignedEdge) return this.alignTo(target, alignedEdge);
     return this.moveTo(Array.isArray(target) ? target : target.getCenter());
   }
@@ -788,12 +827,18 @@ export abstract class Mobject {
    */
   get animate(): AnimateProxy {
     if (!animateProxyFactory) {
-      throw new Error('AnimateProxy not registered. Ensure AnimateProxy module is imported.');
+      throw new Error(
+        "AnimateProxy not registered. Ensure AnimateProxy module is imported.",
+      );
     }
     return animateProxyFactory(this);
   }
 
-  toEdge(direction: Vector3Tuple, buff: number = 0.5, frameDimensions?: [number, number]): this {
+  toEdge(
+    direction: Vector3Tuple,
+    buff: number = 0.5,
+    frameDimensions?: [number, number],
+  ): this {
     toEdgeImpl(this, direction, buff, frameDimensions);
     return this;
   }
@@ -835,7 +880,9 @@ export abstract class Mobject {
    */
   protected _normalizeChildrenInto(worldMatrix: THREE.Matrix4): void {
     for (const child of this.children) {
-      child.normalizeTransform(worldMatrix.clone().multiply(child._ownMatrix()));
+      child.normalizeTransform(
+        worldMatrix.clone().multiply(child._ownMatrix()),
+      );
     }
   }
 
@@ -882,7 +929,10 @@ export abstract class Mobject {
     this._syncMaterialToThree();
     for (const child of this.children) {
       child._syncToThree();
-      if (child._threeObject && !this._threeObject.children.includes(child._threeObject)) {
+      if (
+        child._threeObject &&
+        !this._threeObject.children.includes(child._threeObject)
+      ) {
         this._threeObject.add(child._threeObject);
       }
     }
@@ -973,7 +1023,11 @@ export abstract class Mobject {
 
   _worldMatrix(): THREE.Matrix4 {
     const matrix = this._ownMatrix();
-    for (let ancestor: Mobject | null = this.parent; ancestor; ancestor = ancestor.parent) {
+    for (
+      let ancestor: Mobject | null = this.parent;
+      ancestor;
+      ancestor = ancestor.parent
+    ) {
       matrix.premultiply(ancestor._ownMatrix());
     }
     return matrix;
@@ -1110,7 +1164,11 @@ export abstract class Mobject {
    * Default is a no-op; subclasses override as needed.
    * @internal
    */
-  _setSceneContext(_rendererWidth: number, _rendererHeight: number, _frameWidth: number): void {}
+  _setSceneContext(
+    _rendererWidth: number,
+    _rendererHeight: number,
+    _frameWidth: number,
+  ): void {}
 
   // ── Cleanup ──────────────────────────────────────────────────────
 

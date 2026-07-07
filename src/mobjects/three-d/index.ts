@@ -6,58 +6,63 @@
  */
 
 // Shared 3D mesh base class
-export { Mobject3D } from './Mobject3D';
+export { Mobject3D } from "./Mobject3D";
 
 // Basic 3D primitives
-export { Sphere, type SphereOptions } from './Sphere';
-export { Cube, Box3D, type CubeOptions, type Box3DOptions } from './Cube';
-export { Cylinder, Cone, type CylinderOptions, type ConeOptions } from './Cylinder';
-export { Torus, type TorusOptions } from './Torus';
+export { Sphere, type SphereOptions } from "./Sphere";
+export { Box3D, type Box3DOptions, Cube, type CubeOptions } from "./Cube";
+export {
+  Cone,
+  type ConeOptions,
+  Cylinder,
+  type CylinderOptions,
+} from "./Cylinder";
+export { Torus, type TorusOptions } from "./Torus";
 
 // Platonic solids
 export {
-  Polyhedron,
-  Tetrahedron,
-  Octahedron,
-  Icosahedron,
   Dodecahedron,
-  type PolyhedronOptions,
-  type TetrahedronOptions,
-  type OctahedronOptions,
-  type IcosahedronOptions,
   type DodecahedronOptions,
-} from './Polyhedra';
+  Icosahedron,
+  type IcosahedronOptions,
+  Octahedron,
+  type OctahedronOptions,
+  Polyhedron,
+  type PolyhedronOptions,
+  Tetrahedron,
+  type TetrahedronOptions,
+} from "./Polyhedra";
 
 // Lines and arrows
-export { Line3D, type Line3DOptions } from './Line3D';
-export { Arrow3D, Vector3D, type Arrow3DOptions } from './Arrow3D';
+export { Line3D, type Line3DOptions } from "./Line3D";
+export { Arrow3D, type Arrow3DOptions, Vector3D } from "./Arrow3D";
 
 // Surfaces
-export { Surface3D, type Surface3DOptions } from './Surface3D';
+export { Surface3D, type Surface3DOptions } from "./Surface3D";
 export {
   ParametricSurface,
-  SurfacePresets,
   type ParametricSurfaceOptions,
-} from './ParametricSurface';
+  SurfacePresets,
+} from "./ParametricSurface";
 export {
-  TexturedSurface,
   texturedSphere,
-  type TexturedSurfaceOptions,
   type TexturedSphereOptions,
-} from './TexturedSurface';
+  TexturedSurface,
+  type TexturedSurfaceOptions,
+} from "./TexturedSurface";
 
 // Coordinate systems
-export { ThreeDAxes, type ThreeDAxesOptions } from './ThreeDAxes';
+export { ThreeDAxes, type ThreeDAxesOptions } from "./ThreeDAxes";
 
 // Additional 3D primitives and extensions
 export {
-  Prism,
   Dot3D,
-  ThreeDVMobject,
-  type PrismOptions,
   type Dot3DOptions,
+  Prism,
+  type PrismOptions,
+  ThreeDVMobject,
   type ThreeDVMobjectOptions,
-} from './ThreeDExtensions';
+} from "./ThreeDExtensions";
 
 // Convex Hull
-export { ConvexHull3D, type ConvexHull3DOptions } from './ConvexHull3D';
+export { ConvexHull3D, type ConvexHull3DOptions } from "./ConvexHull3D";

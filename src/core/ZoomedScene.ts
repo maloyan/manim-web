@@ -1,10 +1,10 @@
-import * as THREE from 'three';
-import { Scene, SceneOptions } from './Scene';
-import { Mobject } from './Mobject';
-import { Rectangle } from '../mobjects/geometry/Rectangle';
-import { Animation, AnimationOptions } from '../animation/Animation';
-import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
+import * as THREE from "three";
+import { Scene, SceneOptions } from "./Scene";
+import { Mobject } from "./Mobject";
+import { Rectangle } from "../mobjects/geometry/Rectangle";
+import { Animation, AnimationOptions } from "../animation/Animation";
+import { Line2 } from "three/examples/jsm/lines/Line2.js";
+import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 
 /**
  * Options for configuring a ZoomedScene.
@@ -43,7 +43,12 @@ class ZoomedCamera {
   /** The visible frame rectangle showing the zoom region */
   readonly frame: Rectangle;
 
-  constructor(width: number, height: number, color: string, strokeWidth: number) {
+  constructor(
+    width: number,
+    height: number,
+    color: string,
+    strokeWidth: number,
+  ) {
     this.frame = new Rectangle({
       width,
       height,
@@ -59,7 +64,9 @@ class ZoomedCamera {
  * and a visible display frame border.
  */
 class ZoomedDisplay extends Mobject {
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+  override normalizeTransform(
+    worldMatrix: THREE.Matrix4 = this._ownMatrix(),
+  ): this {
     return this._flattenAsContainer(worldMatrix);
   }
   /** The visible border of the display window */
@@ -194,18 +201,28 @@ export class ZoomDisplayPopOut extends Animation {
   }
 
   interpolate(alpha: number): void {
-    if (!this._startPosition || !this._startScale || !this._savedPosition || !this._savedScale) {
+    if (
+      !this._startPosition || !this._startScale || !this._savedPosition ||
+      !this._savedScale
+    ) {
       return;
     }
     const display = this.mobject;
 
     // Lerp position from frame-matched to saved target
-    display.position.lerpVectors(this._startPosition, this._savedPosition, alpha);
+    display.position.lerpVectors(
+      this._startPosition,
+      this._savedPosition,
+      alpha,
+    );
 
     // Lerp scale from frame-matched to saved target
-    display.scaleVector.x = this._startScale.x + (this._savedScale.x - this._startScale.x) * alpha;
-    display.scaleVector.y = this._startScale.y + (this._savedScale.y - this._startScale.y) * alpha;
-    display.scaleVector.z = this._startScale.z + (this._savedScale.z - this._startScale.z) * alpha;
+    display.scaleVector.x = this._startScale.x +
+      (this._savedScale.x - this._startScale.x) * alpha;
+    display.scaleVector.y = this._startScale.y +
+      (this._savedScale.y - this._startScale.y) * alpha;
+    display.scaleVector.z = this._startScale.z +
+      (this._savedScale.z - this._startScale.z) * alpha;
 
     display._markDirty();
   }
@@ -255,10 +272,12 @@ export class ZoomedScene extends Scene {
     const displayWidth = options.displayWidth ?? 3;
     const displayHeight = options.displayHeight ?? 3;
     const zoomFactor = options.zoomFactor ?? 0.3;
-    const cameraFrameWidth = options.cameraFrameWidth ?? displayWidth * zoomFactor;
-    const cameraFrameHeight = options.cameraFrameHeight ?? displayHeight * zoomFactor;
-    const cameraFrameColor = options.cameraFrameColor ?? '#FFFF00';
-    const displayFrameColor = options.displayFrameColor ?? '#FFFF00';
+    const cameraFrameWidth = options.cameraFrameWidth ??
+      displayWidth * zoomFactor;
+    const cameraFrameHeight = options.cameraFrameHeight ??
+      displayHeight * zoomFactor;
+    const cameraFrameColor = options.cameraFrameColor ?? "#FFFF00";
+    const displayFrameColor = options.displayFrameColor ?? "#FFFF00";
     const cameraFrameStrokeWidth = options.cameraFrameStrokeWidth ?? 3;
     const displayFrameStrokeWidth = options.displayFrameStrokeWidth ?? 3;
     const renderTargetSize = options.renderTargetSize ?? 512;
@@ -267,11 +286,11 @@ export class ZoomedScene extends Scene {
     this._zoomRenderTarget = this.isHeadless
       ? null
       : new THREE.WebGLRenderTarget(renderTargetSize, renderTargetSize, {
-          minFilter: THREE.LinearFilter,
-          magFilter: THREE.LinearFilter,
-          format: THREE.RGBAFormat,
-          generateMipmaps: false,
-        });
+        minFilter: THREE.LinearFilter,
+        magFilter: THREE.LinearFilter,
+        format: THREE.RGBAFormat,
+        generateMipmaps: false,
+      });
 
     // Create dedicated camera for zoom render pass (separate from scene camera)
     this._zoomCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
@@ -298,8 +317,12 @@ export class ZoomedScene extends Scene {
     const cornerBuff = options.displayCornerBuff ?? 0.5;
     const frameW = this.camera.frameWidth;
     const frameH = this.camera.frameHeight;
-    const dx = corner[0] !== 0 ? corner[0] * (frameW / 2 - cornerBuff - displayWidth / 2) : 0;
-    const dy = corner[1] !== 0 ? corner[1] * (frameH / 2 - cornerBuff - displayHeight / 2) : 0;
+    const dx = corner[0] !== 0
+      ? corner[0] * (frameW / 2 - cornerBuff - displayWidth / 2)
+      : 0;
+    const dy = corner[1] !== 0
+      ? corner[1] * (frameH / 2 - cornerBuff - displayHeight / 2)
+      : 0;
     this._displayDefaultPos = [dx, dy, 0];
     this.zoomedDisplay.moveTo(this._displayDefaultPos);
   }
@@ -351,7 +374,11 @@ export class ZoomedScene extends Scene {
    * Use { rateFunc: (t) => smooth(1 - t) } for a reverse pop-out.
    */
   getZoomedDisplayPopOutAnimation(options?: AnimationOptions): Animation {
-    return new ZoomDisplayPopOut(this.zoomedDisplay, this.zoomedCamera.frame, options);
+    return new ZoomDisplayPopOut(
+      this.zoomedDisplay,
+      this.zoomedCamera.frame,
+      options,
+    );
   }
 
   /** Guard against reentrant _render() calls */
@@ -409,7 +436,12 @@ export class ZoomedScene extends Scene {
 
         // Restore viewport to full canvas size
         webglRenderer.getSize(this._viewportSize);
-        webglRenderer.setViewport(0, 0, this._viewportSize.x, this._viewportSize.y);
+        webglRenderer.setViewport(
+          0,
+          0,
+          this._viewportSize.x,
+          this._viewportSize.y,
+        );
 
         // Restore display and frame visibility
         displayObj.visible = prevDisplayVisible;
@@ -445,7 +477,9 @@ export class ZoomedScene extends Scene {
 
     // Reset Line2 material dashed state left behind by Uncreate
     // (Uncreate.finish() leaves dashed=true + dashSize=0, making strokes invisible)
-    for (const mob of [this.zoomedCamera.frame, this.zoomedDisplay.displayFrame]) {
+    for (
+      const mob of [this.zoomedCamera.frame, this.zoomedDisplay.displayFrame]
+    ) {
       mob.getThreeObject().traverse((child) => {
         if (child instanceof Line2) {
           const material = child.material as LineMaterial;

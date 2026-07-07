@@ -1,25 +1,25 @@
 import {
-  Scene,
+  ApplyPointwiseFunction,
+  BLACK,
   Create,
+  DOWN,
   FadeIn,
   FadeOut,
-  Transform,
-  ApplyPointwiseFunction,
-  Text,
   MathTexImage,
   NumberPlane,
-  VGroup,
-  UP,
-  DOWN,
+  Scene,
+  Text,
+  Transform,
   UL,
-  BLACK,
+  UP,
+  VGroup,
   WHITE,
-} from '../src/index.ts';
+} from "../src/index.ts";
 
-const FONT_URL = './fonts/KaTeX_Main-Regular.ttf';
+const FONT_URL = "./fonts/KaTeX_Main-Regular.ttf";
 
-const container = document.getElementById('container');
-const status = document.getElementById('status');
+const container = document.getElementById("container");
+const status = document.getElementById("status");
 const scene = new Scene(container, {
   width: 800,
   height: 450,
@@ -30,26 +30,26 @@ let isAnimating = false;
 
 function log(msg) {
   status.textContent = msg;
-  console.log('[OpeningManim]', msg);
+  console.log("[OpeningManim]", msg);
 }
 
-document.getElementById('playBtn').addEventListener('click', async () => {
+document.getElementById("playBtn").addEventListener("click", async () => {
   if (isAnimating) return;
   isAnimating = true;
-  document.getElementById('playBtn').disabled = true;
+  document.getElementById("playBtn").disabled = true;
   scene.clear();
 
   try {
     // Part 1: Title and equation (Write title, FadeIn equation from below)
-    log('Part 1: Title and equation...');
+    log("Part 1: Title and equation...");
     const title = new Text({
-      text: 'This is some LaTeX',
+      text: "This is some LaTeX",
       fontSize: 48,
       color: WHITE,
       fontUrl: FONT_URL,
     });
     const basel = new MathTexImage({
-      latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}',
+      latex: "\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}",
     });
     await basel.waitForRender?.();
 
@@ -59,23 +59,26 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     await scene.wait(1);
 
     // Part 2: Transform title to UL corner, fade out equation downward
-    log('Part 2: Transform title...');
+    log("Part 2: Transform title...");
     const transformTitle = new Text({
-      text: 'That was a transform',
+      text: "That was a transform",
       fontSize: 48,
       color: WHITE,
       fontUrl: FONT_URL,
     });
     await transformTitle.loadGlyphs();
     transformTitle.toCorner(UL);
-    await scene.play(new Transform(title, transformTitle), new FadeOut(basel, { shift: DOWN }));
+    await scene.play(
+      new Transform(title, transformTitle),
+      new FadeOut(basel, { shift: DOWN }),
+    );
     await scene.wait(1);
 
     // Part 3: Number plane grid with title
-    log('Part 3: Number plane grid...');
+    log("Part 3: Number plane grid...");
     const grid = new NumberPlane();
     const gridTitle = new Text({
-      text: 'This is a grid',
+      text: "This is a grid",
       fontSize: 72,
       color: WHITE,
       fontUrl: FONT_URL,
@@ -91,9 +94,9 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     await scene.wait(1);
 
     // Part 4: Non-linear grid transform (sin warp)
-    log('Part 4: Non-linear grid transform...');
+    log("Part 4: Non-linear grid transform...");
     const gridTransformTitle = new Text({
-      text: 'That was a non-linear function\napplied to the grid',
+      text: "That was a non-linear function\napplied to the grid",
       fontSize: 48,
       color: WHITE,
       fontUrl: FONT_URL,
@@ -113,60 +116,60 @@ document.getElementById('playBtn').addEventListener('click', async () => {
     await scene.wait(1);
 
     // Part 5: Transform grid title to explain what happened
-    log('Part 5: Grid transform title...');
+    log("Part 5: Grid transform title...");
     await scene.play(new Transform(gridTitle, gridTransformTitle));
     await scene.wait(1);
 
-    log('Done!');
+    log("Done!");
   } catch (err) {
-    log('Error: ' + err.message);
+    log("Error: " + err.message);
     console.error(err);
   }
 
   isAnimating = false;
-  document.getElementById('playBtn').disabled = false;
+  document.getElementById("playBtn").disabled = false;
 });
 
 // Auto-play on load
-document.getElementById('playBtn').click();
+document.getElementById("playBtn").click();
 
 // Embed mode: hide controls, auto-play, loop
-if (new URLSearchParams(window.location.search).has('embed')) {
+if (new URLSearchParams(window.location.search).has("embed")) {
   document
-    .querySelectorAll('.controls, .buttons, h1, #status')
-    .forEach((el) => (el.style.display = 'none'));
+    .querySelectorAll(".controls, .buttons, h1, #status")
+    .forEach((el) => (el.style.display = "none"));
   document.documentElement.style.cssText =
-    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000';
+    "margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000";
   document.body.style.cssText =
-    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center';
-  const cont = document.getElementById('container');
+    "margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center";
+  const cont = document.getElementById("container");
   if (cont) {
     cont.style.cssText =
-      'border:none;border-radius:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center';
+      "border:none;border-radius:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center";
   }
-  const svg = cont && cont.querySelector('svg');
+  const svg = cont && cont.querySelector("svg");
   if (svg) {
-    svg.style.width = '100%';
-    svg.style.height = '100%';
-    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    svg.style.width = "100%";
+    svg.style.height = "100%";
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
   }
   // Also watch for SVG to appear (it may be created after scene init)
   if (cont) {
     new MutationObserver((_, obs) => {
-      const s = cont.querySelector('svg');
+      const s = cont.querySelector("svg");
       if (s) {
-        s.style.width = '100%';
-        s.style.height = '100%';
-        s.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        s.style.width = "100%";
+        s.style.height = "100%";
+        s.setAttribute("preserveAspectRatio", "xMidYMid meet");
         obs.disconnect();
       }
     }).observe(cont, { childList: true, subtree: true });
   }
-  const playBtn = document.getElementById('playBtn');
+  const playBtn = document.getElementById("playBtn");
   if (playBtn) {
     setTimeout(() => playBtn.click(), 500);
     new MutationObserver(() => {
       if (!playBtn.disabled) setTimeout(() => playBtn.click(), 2000);
-    }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
+    }).observe(playBtn, { attributes: true, attributeFilter: ["disabled"] });
   }
 }

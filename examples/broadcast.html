@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Broadcast Animation</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - Broadcast Animation</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #1a1a2e;
       display: flex;
@@ -34,28 +38,33 @@
       cursor: pointer;
       font-size: 14px;
     }
-    button:hover { background: #ff6b6b; }
-    button:disabled { background: #666; cursor: not-allowed; }
-  </style>
-</head>
-<body>
-  <div id="container"></div>
-  <div class="controls">
-    <button id="playBtn">Play Broadcast</button>
-    <button id="resetBtn">Reset</button>
-  </div>
+    button:hover {
+      background: #ff6b6b;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div class="controls">
+      <button id="playBtn">Play Broadcast</button>
+      <button id="resetBtn">Reset</button>
+    </div>
 
-  <script type="module">
+    <script type="module">
     import {
-      Scene,
-      Circle,
-      Square,
+      BLACK,
+      BLUE,
       Broadcast,
+      Circle,
       Create,
       FadeIn,
-      BLACK,
+      Scene,
+      Square,
       TEAL_A,
-      BLUE,
       YELLOW,
     } from '../src/index.ts';
 
@@ -87,13 +96,15 @@
       const square = new Square({ sideLength: 2, color: YELLOW });
       scene.add(square);
       await scene.play(new FadeIn(square));
-      await scene.play(new Broadcast(square, {
-        nMobs: 3,
-        initialOpacity: 0.8,
-        finalOpacity: 0,
-        lagRatio: 0.3,
-        duration: 2,
-      }));
+      await scene.play(
+        new Broadcast(square, {
+          nMobs: 3,
+          initialOpacity: 0.8,
+          finalOpacity: 0,
+          lagRatio: 0.3,
+          duration: 2,
+        }),
+      );
       await scene.wait(0.5);
 
       // Example 3: Broadcast from an offset focal point
@@ -101,11 +112,13 @@
       const circle2 = new Circle({ radius: 1, color: BLUE });
       scene.add(circle2);
       await scene.play(new FadeIn(circle2));
-      await scene.play(new Broadcast(circle2, {
-        focalPoint: [-2, 0, 0],
-        nMobs: 4,
-        duration: 3,
-      }));
+      await scene.play(
+        new Broadcast(circle2, {
+          focalPoint: [-2, 0, 0],
+          nMobs: 4,
+          duration: 3,
+        }),
+      );
       await scene.wait(0.5);
 
       isAnimating = false;
@@ -115,6 +128,6 @@
     document.getElementById('resetBtn').addEventListener('click', () => {
       scene.clear();
     });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

@@ -1,5 +1,5 @@
-import type { AudioManager } from '../core/AudioManager';
-import { logger } from '../utils/logger';
+import type { AudioManager } from "../core/AudioManager";
+import { logger } from "../utils/logger";
 
 /**
  * Duck-type interface for Scene, used to avoid circular imports.
@@ -23,7 +23,7 @@ export interface VideoExportOptions {
   /** Quality from 0-1. Defaults to 0.9. */
   quality?: number;
   /** Video format. Defaults to 'webm' (mp4/mov require additional browser codec support). */
-  format?: 'webm' | 'mp4' | 'mov';
+  format?: "webm" | "mp4" | "mov";
   /** Output width in pixels. Defaults to scene width. */
   width?: number;
   /** Output height in pixels. Defaults to scene height. */
@@ -47,7 +47,7 @@ export interface VideoExportOptions {
 interface ResolvedVideoExportOptions {
   fps: number;
   quality: number;
-  format: 'webm' | 'mp4' | 'mov';
+  format: "webm" | "mp4" | "mov";
   width: number;
   height: number;
   duration: number;
@@ -85,7 +85,7 @@ export class VideoExporter {
     this._options = {
       fps: options?.fps ?? 60,
       quality: options?.quality ?? 0.9,
-      format: options?.format ?? 'webm',
+      format: options?.format ?? "webm",
       width: options?.width ?? scene.getWidth(),
       height: options?.height ?? scene.getHeight(),
       duration: options?.duration ?? 0,
@@ -108,7 +108,7 @@ export class VideoExporter {
       const am = this._scene.audioManager;
       return am.tracks.length > 0 ? am : null;
     } catch (err) {
-      logger.warn('AudioManager unavailable; exporting without audio:', err);
+      logger.warn("AudioManager unavailable; exporting without audio:", err);
       return null;
     }
   }
@@ -121,38 +121,45 @@ export class VideoExporter {
    */
   async startRecording(): Promise<void> {
     if (this._isRecording) {
-      throw new Error('Already recording');
+      throw new Error("Already recording");
     }
 
     const canvas = this._scene.getCanvas();
     const videoStream = canvas.captureStream(this._options.fps);
 
     // Merge audio tracks into the stream if available
-    const audioManager = this._options.includeAudio ? this._getAudioManager() : null;
+    const audioManager = this._options.includeAudio
+      ? this._getAudioManager()
+      : null;
     let combinedStream: MediaStream;
 
     if (audioManager && audioManager.tracks.length > 0) {
       // Create a stream destination from the audio manager and merge tracks
       const audioDest = audioManager.createStreamDestination();
       const audioTracks = audioDest.stream.getAudioTracks();
-      combinedStream = new MediaStream([...videoStream.getVideoTracks(), ...audioTracks]);
+      combinedStream = new MediaStream([
+        ...videoStream.getVideoTracks(),
+        ...audioTracks,
+      ]);
     } else {
       combinedStream = videoStream;
     }
 
     // Determine codec based on format
     let mimeType: string;
-    if (this._options.format === 'webm') {
-      mimeType = 'video/webm;codecs=vp9';
-    } else if (this._options.format === 'mov') {
-      if (MediaRecorder.isTypeSupported('video/quicktime')) {
-        mimeType = 'video/quicktime';
+    if (this._options.format === "webm") {
+      mimeType = "video/webm;codecs=vp9";
+    } else if (this._options.format === "mov") {
+      if (MediaRecorder.isTypeSupported("video/quicktime")) {
+        mimeType = "video/quicktime";
       } else {
-        logger.warn('MOV format not supported by this browser, falling back to WebM');
-        mimeType = 'video/webm;codecs=vp9';
+        logger.warn(
+          "MOV format not supported by this browser, falling back to WebM",
+        );
+        mimeType = "video/webm;codecs=vp9";
       }
     } else {
-      mimeType = 'video/mp4'; // Note: MP4 support varies by browser
+      mimeType = "video/mp4"; // Note: MP4 support varies by browser
     }
 
     if (!MediaRecorder.isTypeSupported(mimeType)) {
@@ -183,18 +190,18 @@ export class VideoExporter {
   async stopRecording(): Promise<Blob> {
     return new Promise((resolve, reject) => {
       if (!this._mediaRecorder || !this._isRecording) {
-        reject(new Error('Not recording'));
+        reject(new Error("Not recording"));
         return;
       }
 
       this._mediaRecorder.onstop = () => {
         let mimeType: string;
-        if (this._options.format === 'webm') {
-          mimeType = 'video/webm';
-        } else if (this._options.format === 'mov') {
-          mimeType = 'video/quicktime';
+        if (this._options.format === "webm") {
+          mimeType = "video/webm";
+        } else if (this._options.format === "mov") {
+          mimeType = "video/quicktime";
         } else {
-          mimeType = 'video/mp4';
+          mimeType = "video/mp4";
         }
         const blob = new Blob(this._recordedChunks, { type: mimeType });
         this._isRecording = false;
@@ -216,13 +223,16 @@ export class VideoExporter {
    * @returns Promise resolving to the video Blob
    */
   async exportTimeline(duration?: number): Promise<Blob> {
-    const totalDuration =
-      duration ?? this._options.duration ?? this._scene.getTimelineDuration() ?? 5;
+    const totalDuration = duration ?? this._options.duration ??
+      this._scene.getTimelineDuration() ??
+      5;
     const totalFrames = Math.ceil(totalDuration * this._options.fps);
     const frameDuration = 1 / this._options.fps;
 
     // Start audio playback for real-time recording mux
-    const audioManager = this._options.includeAudio ? this._getAudioManager() : null;
+    const audioManager = this._options.includeAudio
+      ? this._getAudioManager()
+      : null;
     if (audioManager && audioManager.tracks.length > 0) {
       audioManager.seek(0);
     }
@@ -268,8 +278,9 @@ export class VideoExporter {
     const audioManager = this._getAudioManager();
     if (!audioManager || audioManager.tracks.length === 0) return null;
 
-    const totalDuration =
-      duration ?? this._options.duration ?? this._scene.getTimelineDuration() ?? 5;
+    const totalDuration = duration ?? this._options.duration ??
+      this._scene.getTimelineDuration() ??
+      5;
     return audioManager.exportWAV(totalDuration);
   }
 
@@ -278,9 +289,9 @@ export class VideoExporter {
    * @param blob - The video blob to download
    * @param filename - The filename (defaults to 'animation.webm')
    */
-  static download(blob: Blob, filename: string = 'animation.webm'): void {
+  static download(blob: Blob, filename: string = "animation.webm"): void {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
@@ -296,8 +307,12 @@ export class VideoExporter {
    */
   async exportAndDownload(filename?: string, duration?: number): Promise<void> {
     const blob = await this.exportTimeline(duration);
-    const extMap: Record<string, string> = { webm: '.webm', mp4: '.mp4', mov: '.mov' };
-    const ext = extMap[this._options.format] ?? '.webm';
+    const extMap: Record<string, string> = {
+      webm: ".webm",
+      mp4: ".mp4",
+      mov: ".mov",
+    };
+    const ext = extMap[this._options.format] ?? ".webm";
     VideoExporter.download(blob, filename ?? `animation${ext}`);
   }
 

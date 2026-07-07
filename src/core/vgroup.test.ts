@@ -1,22 +1,22 @@
-import { describe, it, expect } from 'vitest';
-import { UL, RIGHT } from './Mobject';
-import { ORIGIN } from './MobjectTypes';
-import { VMobject } from './VMobject';
-import { Group } from './Group';
-import { VGroup } from './VGroup';
-import { Line } from '../mobjects/geometry/Line';
-import { Dot } from '../mobjects/geometry/Dot';
-import { PointMobject } from '../mobjects/point';
-import { axisVectorFromEulerKey } from '../utils/axis';
+import { describe, expect, it } from "vitest";
+import { RIGHT, UL } from "./Mobject";
+import { ORIGIN } from "./MobjectTypes";
+import { VMobject } from "./VMobject";
+import { Group } from "./Group";
+import { VGroup } from "./VGroup";
+import { Line } from "../mobjects/geometry/Line";
+import { Dot } from "../mobjects/geometry/Dot";
+import { PointMobject } from "../mobjects/point";
+import { axisVectorFromEulerKey } from "../utils/axis";
 
-describe('VGroup - extended coverage', () => {
-  it('constructs empty', () => {
+describe("VGroup - extended coverage", () => {
+  it("constructs empty", () => {
     const vg = new VGroup();
     expect(vg.length).toBe(0);
     expect(vg.fillOpacity).toBe(0);
   });
 
-  it('constructs with VMobjects', () => {
+  it("constructs with VMobjects", () => {
     const a = new VMobject();
     const b = new VMobject();
     const vg = new VGroup(a, b);
@@ -24,14 +24,14 @@ describe('VGroup - extended coverage', () => {
     expect(a.parent).toBe(vg);
   });
 
-  it('add handles non-VMobjects via super.add', () => {
+  it("add handles non-VMobjects via super.add", () => {
     const vg = new VGroup();
     const g = new Group();
     vg.add(g);
     expect(vg.children).toContain(g);
   });
 
-  it('addVMobjects re-parents from previous parent', () => {
+  it("addVMobjects re-parents from previous parent", () => {
     const g1 = new VGroup();
     const g2 = new VGroup();
     const vm = new VMobject();
@@ -42,7 +42,7 @@ describe('VGroup - extended coverage', () => {
     expect(g1.children).not.toContain(vm);
   });
 
-  it('remove removes mobjects and marks dirty', () => {
+  it("remove removes mobjects and marks dirty", () => {
     const a = new VMobject();
     const b = new VMobject();
     const vg = new VGroup(a, b);
@@ -51,14 +51,14 @@ describe('VGroup - extended coverage', () => {
     expect(a.parent).toBeNull();
   });
 
-  it('remove of non-member is no-op', () => {
+  it("remove of non-member is no-op", () => {
     const vg = new VGroup();
     const outsider = new VMobject();
     vg.remove(outsider);
     expect(vg.length).toBe(0);
   });
 
-  it('getCenter with children includes position offset', () => {
+  it("getCenter with children includes position offset", () => {
     const a = new Dot({ point: [0, 0, 0] });
     const b = new Dot({ point: [2, 0, 0] });
     const vg = new VGroup(a, b);
@@ -71,7 +71,7 @@ describe('VGroup - extended coverage', () => {
     expect(center[0]).toBeCloseTo(bboxCenterX, 6);
   });
 
-  it('shift moves vgroup position', () => {
+  it("shift moves vgroup position", () => {
     const a = new VMobject();
     a.position.set(0, 0, 0);
     const vg = new VGroup(a);
@@ -81,7 +81,7 @@ describe('VGroup - extended coverage', () => {
     expect(a.position.x).toBe(0);
   });
 
-  it('shift on empty VGroup is equivalent to shifting after children are added (issue #318)', () => {
+  it("shift on empty VGroup is equivalent to shifting after children are added (issue #318)", () => {
     const makeChild = (): VMobject => {
       const a = new VMobject();
       a.setPoints3D([
@@ -109,7 +109,7 @@ describe('VGroup - extended coverage', () => {
     expect(preShift.getCenter()[0]).toBeCloseTo(postShift.getCenter()[0], 5);
   });
 
-  it('pre-shifted VGroup center is stable across matrixWorld updates', () => {
+  it("pre-shifted VGroup center is stable across matrixWorld updates", () => {
     const vg = new VGroup();
     vg.shift([-8, 0, 0]);
     const a = new VMobject();
@@ -133,7 +133,7 @@ describe('VGroup - extended coverage', () => {
   // Regression: world-space getCenter() must reflect transforms made elsewhere
   // in the tree without first reading another node (the MathTex animate.shift bug).
   // A change anywhere marks the chain dirty, and a geometry query syncs from the root.
-  it('descendant getCenter() reflects an ancestor shift without reading the ancestor first', () => {
+  it("descendant getCenter() reflects an ancestor shift without reading the ancestor first", () => {
     const leaf = new VMobject();
     leaf.setPoints3D([
       [0, 0, 0],
@@ -150,7 +150,7 @@ describe('VGroup - extended coverage', () => {
     expect(inner.getCenter()[0]).toBeCloseTo(before + 5, 5);
   });
 
-  it('ancestor getCenter() reflects a descendant shift without reading the descendant first', () => {
+  it("ancestor getCenter() reflects a descendant shift without reading the descendant first", () => {
     const leaf = new VMobject();
     leaf.setPoints3D([
       [0, 0, 0],
@@ -167,7 +167,7 @@ describe('VGroup - extended coverage', () => {
     expect(top.getCenter()[0]).toBeCloseTo(before + 5, 5);
   });
 
-  it('moveTo with point moves VGroup center', () => {
+  it("moveTo with point moves VGroup center", () => {
     const a = new Dot({ point: [0, 0, 0] });
     const b = new Dot({ point: [2, 0, 0] });
     const vg = new VGroup(a, b);
@@ -177,7 +177,7 @@ describe('VGroup - extended coverage', () => {
     expect(center[1]).toBeCloseTo(10, 0);
   });
 
-  it('scale then moveTo keeps VGroup center on target', () => {
+  it("scale then moveTo keeps VGroup center on target", () => {
     const vg = new VGroup(new PointMobject({ position: [1, 0, 0] }));
     vg.scale(2);
     vg.moveTo([5, 0, 0]);
@@ -187,7 +187,7 @@ describe('VGroup - extended coverage', () => {
     expect(center[2]).toBeCloseTo(0, 6);
   });
 
-  it('moveTo with Mobject target', () => {
+  it("moveTo with Mobject target", () => {
     const target = new PointMobject({ position: [5, 5, 0] });
     const a = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a);
@@ -197,7 +197,7 @@ describe('VGroup - extended coverage', () => {
     expect(center[0]).toBeCloseTo(tc[0], 0);
   });
 
-  it('moveTo with Mobject + alignedEdge', () => {
+  it("moveTo with Mobject + alignedEdge", () => {
     const target = new PointMobject({ position: [5, 5, 0] });
     const a = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a);
@@ -205,7 +205,7 @@ describe('VGroup - extended coverage', () => {
     // should have shifted to align
   });
 
-  it('rotate stores on VGroup, then normalizeTransform forwards to children', () => {
+  it("rotate stores on VGroup, then normalizeTransform forwards to children", () => {
     const line = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
     const dot = new Dot({ point: [2, 0, 0], radius: 0 });
     const vg = new VGroup(line, dot);
@@ -227,7 +227,7 @@ describe('VGroup - extended coverage', () => {
     expect(dotCenter[1]).toBeCloseTo(1, 6);
   });
 
-  it('normalizeTransform bakes VGroup rotation while preserving child world geometry', () => {
+  it("normalizeTransform bakes VGroup rotation while preserving child world geometry", () => {
     // MIGRATION: weak test, remove once property-based tests done
     // Intent: baking a group rotation into an off-center child must not move
     // the child in world space, and must leave the group transform canonical.
@@ -250,7 +250,7 @@ describe('VGroup - extended coverage', () => {
     }
   });
 
-  it('VGroup isEmpty treats point-less VMobject containers with renderable descendants as non-empty', () => {
+  it("VGroup isEmpty treats point-less VMobject containers with renderable descendants as non-empty", () => {
     const container = new VMobject();
     const line = new Line({ start: [0, 0, 0], end: [2, 0, 0] });
     container.add(line);
@@ -268,28 +268,30 @@ describe('VGroup - extended coverage', () => {
     expect(after[1]).toBeCloseTo(3, 6);
   });
 
-  it('normalizeTransform respects non-XYZ Euler order for VGroup rotation', () => {
+  it("normalizeTransform respects non-XYZ Euler order for VGroup rotation", () => {
     const sourceLine = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
     const sourceGroup = new VGroup(sourceLine);
-    sourceGroup.rotation.order = 'YXZ';
-    sourceGroup.rotation.set(0.4, 0.7, 0.2, 'YXZ');
+    sourceGroup.rotation.order = "YXZ";
+    sourceGroup.rotation.set(0.4, 0.7, 0.2, "YXZ");
 
     const xyzLine = new Line({ start: [0, 0, 0], end: [1, 0, 0] });
     const xyzGroup = new VGroup(xyzLine);
-    xyzGroup.rotation.order = 'XYZ';
-    xyzGroup.rotation.set(0.4, 0.7, 0.2, 'XYZ');
+    xyzGroup.rotation.order = "XYZ";
+    xyzGroup.rotation.set(0.4, 0.7, 0.2, "XYZ");
 
     sourceGroup.normalizeTransform();
     xyzGroup.normalizeTransform();
 
     const sourceEnd = sourceLine.getEnd();
     const xyzEnd = xyzLine.getEnd();
-    expect(Math.abs(sourceEnd[0] - xyzEnd[0]) + Math.abs(sourceEnd[1] - xyzEnd[1])).toBeGreaterThan(
+    expect(
+      Math.abs(sourceEnd[0] - xyzEnd[0]) + Math.abs(sourceEnd[1] - xyzEnd[1]),
+    ).toBeGreaterThan(
       1e-4,
     );
   });
 
-  it('normalizeTransform bakes ordered Euler rotation to PointMobject child', () => {
+  it("normalizeTransform bakes ordered Euler rotation to PointMobject child", () => {
     // MIGRATION: weak test, remove once property-based tests done
     // Intent: an ordered Euler rotation set on the group is baked into the
     // child while preserving the child's WORLD geometry. The point is placed
@@ -299,7 +301,7 @@ describe('VGroup - extended coverage', () => {
     const point = new PointMobject({ position: [1, 2, 3] });
     const anchor = new PointMobject({ position: [-4, 0, 0] });
     const group = new VGroup(point, anchor);
-    group.rotation.set(0.3, -0.5, 0.2, 'ZXY');
+    group.rotation.set(0.3, -0.5, 0.2, "ZXY");
 
     // World position of the point with the group rotation applied (pre-bake).
     const before = point.getPosition();
@@ -318,11 +320,11 @@ describe('VGroup - extended coverage', () => {
     expect(group.rotation.z).toBeCloseTo(0, 6);
   });
 
-  it('normalizeTransform is idempotent for deferred rotation on VGroup', () => {
+  it("normalizeTransform is idempotent for deferred rotation on VGroup", () => {
     const point = new PointMobject({ position: [1, 2, 3] });
     const group = new VGroup(point);
-    group.rotation.order = 'YXZ';
-    group.rotation.set(0.4, 0.2, -0.1, 'YXZ');
+    group.rotation.order = "YXZ";
+    group.rotation.set(0.4, 0.2, -0.1, "YXZ");
 
     group.normalizeTransform();
     const afterFirst = point.getPosition();
@@ -335,7 +337,7 @@ describe('VGroup - extended coverage', () => {
     expect(afterSecond[2]).toBeCloseTo(afterFirst[2], 6);
   });
 
-  it('scale updates vgroup scale vector', () => {
+  it("scale updates vgroup scale vector", () => {
     const a = new PointMobject({ position: [0, 0, 0] });
     const b = new PointMobject({ position: [4, 0, 0] });
     const vg = new VGroup(a, b);
@@ -346,7 +348,7 @@ describe('VGroup - extended coverage', () => {
     expect(b.scaleVector.x).toBe(1);
   });
 
-  it('scale with tuple updates vgroup scale vector non-uniformly', () => {
+  it("scale with tuple updates vgroup scale vector non-uniformly", () => {
     const a = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a);
     vg.scale([2, 3, 1]);
@@ -354,7 +356,7 @@ describe('VGroup - extended coverage', () => {
     expect(vg.scaleVector.y).toBe(3);
   });
 
-  it('getBounds reflects transformed+scaled VGroup without normalizeTransform', () => {
+  it("getBounds reflects transformed+scaled VGroup without normalizeTransform", () => {
     const line = new Line({ start: [0, 0, 0], end: [2, 0, 0] });
     const vg = new VGroup(line);
 
@@ -375,7 +377,7 @@ describe('VGroup - extended coverage', () => {
     expect(scaledWidth).toBeCloseTo(shiftedWidth * 2, 6);
   });
 
-  it('normalizeTransform bakes VGroup scale into children while preserving world geometry', () => {
+  it("normalizeTransform bakes VGroup scale into children while preserving world geometry", () => {
     // MIGRATION: weak test, remove once property-based tests done
     // Intent: a deferred group scale is folded entirely into child geometry —
     // every scaleVector returns to 1 and world geometry is unchanged.
@@ -409,7 +411,7 @@ describe('VGroup - extended coverage', () => {
   // The world-geometry invariant is covered by the 'preserving world geometry' tests
   // above; property-based tests will cover the position/geometry split.
 
-  it('center should be geometric from child bounds, not mean of child centers', () => {
+  it("center should be geometric from child bounds, not mean of child centers", () => {
     const wide = new Line({ start: [0, 0, 0], end: [4, 0, 0] }); // center x=2
     const narrow = new Line({ start: [10, 0, 0], end: [11, 0, 0] }); // center x=10.5
     const vg = new VGroup(wide, narrow);
@@ -418,7 +420,7 @@ describe('VGroup - extended coverage', () => {
     expect(vg.getCenter()[0]).toBeCloseTo(5.5, 6);
   });
 
-  it('scale result is invariant to translating group vs children', () => {
+  it("scale result is invariant to translating group vs children", () => {
     // MIGRATION: weak test, remove once property-based tests done
     // Intent: identical world geometry scaled about the same world anchor must
     // yield identical world geometry, regardless of whether the offset lives on
@@ -444,30 +446,30 @@ describe('VGroup - extended coverage', () => {
     expect(cB[2]).toBeCloseTo(cA[2], 6);
   });
 
-  it('setColor propagates to children', () => {
+  it("setColor propagates to children", () => {
     const a = new VMobject();
     const b = new VMobject();
     const vg = new VGroup(a, b);
-    vg.setColor('#00ff00');
-    expect(a.color).toBe('#00ff00');
-    expect(b.color).toBe('#00ff00');
+    vg.setColor("#00ff00");
+    expect(a.color).toBe("#00ff00");
+    expect(b.color).toBe("#00ff00");
   });
 
-  it('setStrokeOpacity propagates to children', () => {
+  it("setStrokeOpacity propagates to children", () => {
     const a = new VMobject();
     const vg = new VGroup(a);
     vg.setStrokeOpacity(0.5);
     expect(a.opacity).toBe(0.5);
   });
 
-  it('setStrokeWidth propagates to children', () => {
+  it("setStrokeWidth propagates to children", () => {
     const a = new VMobject();
     const vg = new VGroup(a);
     vg.setStrokeWidth(12);
     expect(a.strokeWidth).toBe(12);
   });
 
-  it('setFillOpacity propagates only to VMobject children', () => {
+  it("setFillOpacity propagates only to VMobject children", () => {
     const a = new VMobject();
     const g = new Group(); // not a VMobject
     const vg = new VGroup(a, g);
@@ -475,61 +477,61 @@ describe('VGroup - extended coverage', () => {
     expect(a.fillOpacity).toBe(0.9);
   });
 
-  it('setFill applies color and opacity to VMobject children', () => {
+  it("setFill applies color and opacity to VMobject children", () => {
     const a = new VMobject();
     const b = new VMobject();
     const vg = new VGroup(a, b);
-    vg.setFill('#ff0000', 0.8);
+    vg.setFill("#ff0000", 0.8);
     expect(a.fillOpacity).toBe(0.8);
     expect(b.fillOpacity).toBe(0.8);
   });
 
-  it('setFill with only color', () => {
+  it("setFill with only color", () => {
     const a = new VMobject();
     const vg = new VGroup(a);
-    vg.setFill('#abcdef');
-    expect(a.color).toBe('#abcdef');
+    vg.setFill("#abcdef");
+    expect(a.color).toBe("#abcdef");
   });
 
-  it('setFill with only opacity', () => {
+  it("setFill with only opacity", () => {
     const a = new VMobject();
     const vg = new VGroup(a);
     vg.setFill(undefined, 0.5);
     expect(a.fillOpacity).toBe(0.5);
   });
 
-  it('setStroke applies color, width, opacity to VMobject children', () => {
+  it("setStroke applies color, width, opacity to VMobject children", () => {
     const a = new VMobject();
     const vg = new VGroup(a);
-    vg.setStroke('#00ff00', 8, 0.6);
-    expect(a.color).toBe('#00ff00');
+    vg.setStroke("#00ff00", 8, 0.6);
+    expect(a.color).toBe("#00ff00");
     expect(a.strokeWidth).toBe(8);
     expect(a.opacity).toBe(0.6);
   });
 
-  it('setStroke with only color', () => {
+  it("setStroke with only color", () => {
     const a = new VMobject();
     const vg = new VGroup(a);
-    vg.setStroke('#aabbcc');
-    expect(a.color).toBe('#aabbcc');
+    vg.setStroke("#aabbcc");
+    expect(a.color).toBe("#aabbcc");
   });
 
-  it('setStroke with only width', () => {
+  it("setStroke with only width", () => {
     const a = new VMobject();
     const vg = new VGroup(a);
     vg.setStroke(undefined, 10);
     expect(a.strokeWidth).toBe(10);
   });
 
-  it('setStroke skips non-VMobject children', () => {
+  it("setStroke skips non-VMobject children", () => {
     const a = new VMobject();
     const g = new Group();
     const vg = new VGroup(a, g);
-    vg.setStroke('#ff0000', 5, 0.5);
-    expect(a.color).toBe('#ff0000');
+    vg.setStroke("#ff0000", 5, 0.5);
+    expect(a.color).toBe("#ff0000");
   });
 
-  it('arrange positions children in a row', () => {
+  it("arrange positions children in a row", () => {
     const a = new PointMobject({ position: [0, 0, 0] });
     const b = new PointMobject({ position: [0, 0, 0] });
     const c = new PointMobject({ position: [0, 0, 0] });
@@ -541,12 +543,12 @@ describe('VGroup - extended coverage', () => {
     expect(bCenter[0]).toBeGreaterThanOrEqual(aCenter[0]);
   });
 
-  it('arrange with empty group is no-op', () => {
+  it("arrange with empty group is no-op", () => {
     const vg = new VGroup();
     expect(() => vg.arrange()).not.toThrow();
   });
 
-  it('arrange with center=false does not recenter', () => {
+  it("arrange with center=false does not recenter", () => {
     const a = new PointMobject({ position: [0, 0, 0] });
     const b = new PointMobject({ position: [0, 0, 0] });
     const vg = new VGroup(a, b);
@@ -554,37 +556,49 @@ describe('VGroup - extended coverage', () => {
     // should not throw
   });
 
-  it('arrangeInGrid positions children in grid', () => {
-    const items = Array.from({ length: 6 }, () => new PointMobject({ position: [0, 0, 0] }));
+  it("arrangeInGrid positions children in grid", () => {
+    const items = Array.from(
+      { length: 6 },
+      () => new PointMobject({ position: [0, 0, 0] }),
+    );
     const vg = new VGroup(...items);
     vg.arrangeInGrid(2, 3);
     // Should not throw and children should be repositioned
   });
 
-  it('arrangeInGrid with empty group is no-op', () => {
+  it("arrangeInGrid with empty group is no-op", () => {
     const vg = new VGroup();
     expect(() => vg.arrangeInGrid()).not.toThrow();
   });
 
-  it('arrangeInGrid auto-calculates rows/cols', () => {
-    const items = Array.from({ length: 9 }, () => new PointMobject({ position: [0, 0, 0] }));
+  it("arrangeInGrid auto-calculates rows/cols", () => {
+    const items = Array.from(
+      { length: 9 },
+      () => new PointMobject({ position: [0, 0, 0] }),
+    );
     const vg = new VGroup(...items);
     vg.arrangeInGrid(); // auto: sqrt(9)=3, so 3x3
   });
 
-  it('arrangeInGrid with only rows specified', () => {
-    const items = Array.from({ length: 6 }, () => new PointMobject({ position: [0, 0, 0] }));
+  it("arrangeInGrid with only rows specified", () => {
+    const items = Array.from(
+      { length: 6 },
+      () => new PointMobject({ position: [0, 0, 0] }),
+    );
     const vg = new VGroup(...items);
     vg.arrangeInGrid(2); // 2 rows, auto cols
   });
 
-  it('arrangeInGrid with only cols specified', () => {
-    const items = Array.from({ length: 6 }, () => new PointMobject({ position: [0, 0, 0] }));
+  it("arrangeInGrid with only cols specified", () => {
+    const items = Array.from(
+      { length: 6 },
+      () => new PointMobject({ position: [0, 0, 0] }),
+    );
     const vg = new VGroup(...items);
     vg.arrangeInGrid(undefined, 3); // auto rows, 3 cols
   });
 
-  it('getCombinedPoints returns points from all VMobject children', () => {
+  it("getCombinedPoints returns points from all VMobject children", () => {
     const a = new VMobject();
     a.setPoints([
       [0, 0, 0],
@@ -600,7 +614,7 @@ describe('VGroup - extended coverage', () => {
     expect(combined.length).toBe(4);
   });
 
-  it('getPoints returns combined points from children', () => {
+  it("getPoints returns combined points from children", () => {
     const a = new VMobject();
     a.setPoints([
       [0, 0, 0],
@@ -610,7 +624,7 @@ describe('VGroup - extended coverage', () => {
     expect(vg.getLocalPoints().length).toBe(2);
   });
 
-  it('combines children geometry, preserving world coordinates', () => {
+  it("combines children geometry, preserving world coordinates", () => {
     // MIGRATION: weak test, remove once property-based tests done
     // Intent: a VGroup surfaces every child's geometry, and grouping leaves the
     // child's world coordinates unchanged.
@@ -632,7 +646,7 @@ describe('VGroup - extended coverage', () => {
     expect(world[1][1]).toBeCloseTo(4, 6);
   });
 
-  it('setPoints distributes across children, round-tripping with getLocalPoints', () => {
+  it("setPoints distributes across children, round-tripping with getLocalPoints", () => {
     // MIGRATION: example-based regression. Intent: a VGroup holds no points of its
     // own — getLocalPoints aggregates its children, so the matching setter must
     // partition the array back across those children (read-modify-write must round
@@ -670,7 +684,7 @@ describe('VGroup - extended coverage', () => {
     expect(b.getLocalPoints()[0][0]).toBeCloseTo(bBefore[0][0] + 10, 6);
   });
 
-  it('setPoints rejects an array that does not match the children point count', () => {
+  it("setPoints rejects an array that does not match the children point count", () => {
     // MIGRATION: example-based regression. Intent: because a VGroup partitions the
     // array across its children, a mismatched length is unrecoverable and must throw
     // rather than corrupt the partition. Replace with a property test later.
@@ -683,7 +697,7 @@ describe('VGroup - extended coverage', () => {
     expect(() => vg.setPoints([[0, 0, 0]])).toThrow();
   });
 
-  it('get returns child by index', () => {
+  it("get returns child by index", () => {
     const a = new VMobject();
     const b = new VMobject();
     const vg = new VGroup(a, b);
@@ -692,7 +706,7 @@ describe('VGroup - extended coverage', () => {
     expect(vg.get(2)).toBeUndefined();
   });
 
-  it('Symbol.iterator allows for-of iteration', () => {
+  it("Symbol.iterator allows for-of iteration", () => {
     const a = new VMobject();
     const b = new VMobject();
     const vg = new VGroup(a, b);
@@ -703,7 +717,7 @@ describe('VGroup - extended coverage', () => {
     expect(items).toEqual([a, b]);
   });
 
-  it('forEach iterates with index', () => {
+  it("forEach iterates with index", () => {
     const a = new VMobject();
     const vg = new VGroup(a);
     const indices: number[] = [];
@@ -711,7 +725,7 @@ describe('VGroup - extended coverage', () => {
     expect(indices).toEqual([0]);
   });
 
-  it('map maps over VMobjects', () => {
+  it("map maps over VMobjects", () => {
     const a = new VMobject();
     a.position.set(1, 0, 0);
     const b = new VMobject();
@@ -721,7 +735,7 @@ describe('VGroup - extended coverage', () => {
     expect(xs).toEqual([1, 2]);
   });
 
-  it('filter creates new VGroup with copies', () => {
+  it("filter creates new VGroup with copies", () => {
     const a = new VMobject();
     a.position.set(1, 0, 0);
     const b = new VMobject();
@@ -732,7 +746,7 @@ describe('VGroup - extended coverage', () => {
     expect(filtered.get(0)).not.toBe(b);
   });
 
-  it('copy creates independent clone', () => {
+  it("copy creates independent clone", () => {
     const a = new VMobject();
     a.position.set(1, 2, 3);
     const vg = new VGroup(a);
@@ -744,7 +758,7 @@ describe('VGroup - extended coverage', () => {
     expect(a.position.x).toBe(1);
   });
 
-  it('_createThreeObject creates THREE.Group', () => {
+  it("_createThreeObject creates THREE.Group", () => {
     const a = new VMobject();
     const vg = new VGroup(a);
     const obj = vg.getThreeObject();
@@ -753,10 +767,10 @@ describe('VGroup - extended coverage', () => {
 
   // Regression for #417: arrange/arrangeInGrid must recenter by shifting the
   // CHILDREN (not the container) so adding the children directly stays centered.
-  describe('arrange recenters children, not the container (#417 regression)', () => {
+  describe("arrange recenters children, not the container (#417 regression)", () => {
     const makeDot = () => new Dot({ position: [0, 0, 0] });
 
-    it('arrange shifts children so their combined center returns to origin', () => {
+    it("arrange shifts children so their combined center returns to origin", () => {
       const a = makeDot();
       const b = makeDot();
       const c = makeDot();
@@ -774,7 +788,7 @@ describe('VGroup - extended coverage', () => {
       expect(a.getCenter()[0]).toBeCloseTo(-c.getCenter()[0], 6);
     });
 
-    it('arrange(DOWN) keeps the pair vertically centered on the children', () => {
+    it("arrange(DOWN) keeps the pair vertically centered on the children", () => {
       const a = makeDot();
       const b = makeDot();
       const vg = new VGroup(a, b);
@@ -784,7 +798,7 @@ describe('VGroup - extended coverage', () => {
       expect(midY).toBeCloseTo(0, 6);
     });
 
-    it('arrangeInGrid recenters children around the group origin', () => {
+    it("arrangeInGrid recenters children around the group origin", () => {
       const items = Array.from({ length: 4 }, makeDot);
       const vg = new VGroup(...items);
       vg.arrangeInGrid(2, 2, 0.5, 0.5);
@@ -805,7 +819,7 @@ describe('VGroup - extended coverage', () => {
     // raw world delta would be divided by the group scale when applied via
     // child.shift(), pulling the arrangement off-center. The frame conversion
     // keeps the WORLD-space center fixed.
-    it('arrange stays world-centered on a scaled VGroup (non-identity frame)', () => {
+    it("arrange stays world-centered on a scaled VGroup (non-identity frame)", () => {
       const a = makeDot();
       const b = makeDot();
       const c = makeDot();
@@ -826,7 +840,7 @@ describe('VGroup - extended coverage', () => {
     });
   });
 
-  it('copy() does not mutate the source rotation/scale', () => {
+  it("copy() does not mutate the source rotation/scale", () => {
     // MIGRATION: example-based regression. Intent: copy() honors the
     // `@post this is unchanged` contract on _copyBaseAttributesInto — the
     // source keeps its rotation/scale and the clone carries the same transform.

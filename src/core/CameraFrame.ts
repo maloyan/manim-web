@@ -13,11 +13,11 @@
  *   gamma = roll angle (rotation around the viewing axis)
  */
 
-import * as THREE from 'three';
-import { Camera3D, Camera3DOptions } from './Camera';
-import { Animation, AnimationOptions } from '../animation/Animation';
-import { Mobject, Vector3Tuple } from './Mobject';
-import { RateFunction, smooth } from '../rate-functions';
+import * as THREE from "three";
+import { Camera3D, Camera3DOptions } from "./Camera";
+import { Animation, AnimationOptions } from "../animation/Animation";
+import { Mobject, Vector3Tuple } from "./Mobject";
+import { RateFunction, smooth } from "../rate-functions";
 
 // ---------------------------------------------------------------------------
 // CameraFrame
@@ -301,7 +301,9 @@ export interface CameraFrameState {
  * Animation base class contract (every Animation has a `.mobject`).
  */
 class CameraFrameStub extends Mobject {
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+  override normalizeTransform(
+    worldMatrix: THREE.Matrix4 = this._ownMatrix(),
+  ): this {
     return this._flattenAsContainer(worldMatrix);
   }
   constructor() {
@@ -405,13 +407,16 @@ export class CameraAnimateProxy extends Animation {
 
   /** Override duration for this animation (builder-style). */
   withDuration(seconds: number): this {
-    Object.defineProperty(this, 'duration', { value: seconds, writable: false });
+    Object.defineProperty(this, "duration", {
+      value: seconds,
+      writable: false,
+    });
     return this;
   }
 
   /** Override rate function (builder-style). */
   withRateFunc(fn: RateFunction): this {
-    Object.defineProperty(this, 'rateFunc', { value: fn, writable: false });
+    Object.defineProperty(this, "rateFunc", { value: fn, writable: false });
     return this;
   }
 
@@ -430,12 +435,16 @@ export class CameraAnimateProxy extends Animation {
     const start = this._startState;
 
     // Compute target state from start + deltas + absolutes
-    const targetTheta = this._absolute.theta ?? start.theta + (this._targetDelta.theta ?? 0);
-    const targetPhi = this._absolute.phi ?? start.phi + (this._targetDelta.phi ?? 0);
-    const targetGamma = this._absolute.gamma ?? start.gamma + (this._targetDelta.gamma ?? 0);
-    const targetDistance =
-      this._absolute.distance ?? start.distance + (this._targetDelta.distance ?? 0);
-    const targetFov = this._absolute.fov ?? start.fov + (this._targetDelta.fov ?? 0);
+    const targetTheta = this._absolute.theta ??
+      start.theta + (this._targetDelta.theta ?? 0);
+    const targetPhi = this._absolute.phi ??
+      start.phi + (this._targetDelta.phi ?? 0);
+    const targetGamma = this._absolute.gamma ??
+      start.gamma + (this._targetDelta.gamma ?? 0);
+    const targetDistance = this._absolute.distance ??
+      start.distance + (this._targetDelta.distance ?? 0);
+    const targetFov = this._absolute.fov ??
+      start.fov + (this._targetDelta.fov ?? 0);
     const targetCenter = this._absolute.center ?? start.center;
 
     // Linearly interpolate every property

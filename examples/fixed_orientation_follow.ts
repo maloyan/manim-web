@@ -1,4 +1,11 @@
-import { Dot3D, MathTex, ThreeDAxes, ThreeDScene, UP, makeDraggable } from '../src/index.ts';
+import {
+  Dot3D,
+  makeDraggable,
+  MathTex,
+  ThreeDAxes,
+  ThreeDScene,
+  UP,
+} from "../src/index.ts";
 
 function addVectors(a: number[], b: number[]): [number, number, number] {
   return [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
@@ -8,17 +15,17 @@ function scalarMult(a: number[], b: number): [number, number, number] {
   return [a[0] * b, a[1] * b, a[2] * b];
 }
 
-const container = document.getElementById('container')!;
+const container = document.getElementById("container")!;
 const scene = new ThreeDScene(container, {
   width: 800,
   height: 450,
-  backgroundColor: '#191919',
+  backgroundColor: "#191919",
   phi: 75 * (Math.PI / 180),
   theta: -45 * (Math.PI / 180),
   distance: 20,
   fov: 30,
   enableOrbitControls: true,
-  orbitControlsUp: 'z',
+  orbitControlsUp: "z",
 });
 
 const axes = new ThreeDAxes({
@@ -34,7 +41,7 @@ const axes = new ThreeDAxes({
 const dot = new Dot3D({ radius: 0.1 }).moveTo(axes.coordsToPoint(1, 1, 1));
 makeDraggable(dot, scene);
 
-const lbl = new MathTex({ latex: 'r', fontSize: 0.2 }).addUpdater((mob) => {
+const lbl = new MathTex({ latex: "r", fontSize: 0.2 }).addUpdater((mob) => {
   mob.moveTo(addVectors(dot.getCenter(), scalarMult(UP, 0.15)));
 });
 

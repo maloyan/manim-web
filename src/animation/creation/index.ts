@@ -1,35 +1,35 @@
 export {
-  Create,
-  create,
-  DrawBorderThenFill,
-  drawBorderThenFill,
-  Uncreate,
-  uncreate,
-  // Write animations for text
-  Write,
-  write,
-  Unwrite,
-  unwrite,
   // Letter-by-letter animations
   AddTextLetterByLetter,
   addTextLetterByLetter,
-  RemoveTextLetterByLetter,
-  removeTextLetterByLetter,
+  type AddTextLetterByLetterOptions,
+  Create,
+  create,
   // Types
   type CreateOptions,
+  DrawBorderThenFill,
+  drawBorderThenFill,
+  RemoveTextLetterByLetter,
+  removeTextLetterByLetter,
+  Uncreate,
+  uncreate,
+  Unwrite,
+  unwrite,
+  // Write animations for text
+  Write,
+  write,
   type WriteOptions,
-  type AddTextLetterByLetterOptions,
-} from './Create';
+} from "./Create";
 
 // Typing with cursor animations
 export {
   TypeWithCursor,
   typeWithCursor,
+  type TypeWithCursorOptions,
   UntypeWithCursor,
   untypeWithCursor,
-  type TypeWithCursorOptions,
   type UntypeWithCursorOptions,
-} from './TypeWithCursor';
+} from "./TypeWithCursor";
 
 // Extended creation animations
 export {
@@ -53,4 +53,4 @@ export {
   SpiralIn,
   spiralIn,
   type SpiralInOptions,
-} from './CreationExtensions';
+} from "./CreationExtensions";

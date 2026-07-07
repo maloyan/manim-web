@@ -3,9 +3,9 @@
  * VGroup extends VMobject to provide specialized grouping for vectorized mobjects.
  */
 
-import * as THREE from 'three';
-import { Mobject, Vector3Tuple, RIGHT } from './Mobject';
-import { VMobject, Point } from './VMobject';
+import * as THREE from "three";
+import { Mobject, RIGHT, Vector3Tuple } from "./Mobject";
+import { Point, VMobject } from "./VMobject";
 
 /**
  * VGroup is a specialized group for VMobjects.
@@ -16,7 +16,8 @@ export class VGroup extends VMobject {
    * True when this VGroup (recursively) has no renderable geometry.
    */
   override isEmpty(): boolean {
-    return this.children.length === 0 || this.children.every((child) => child.isEmpty());
+    return this.children.length === 0 ||
+      this.children.every((child) => child.isEmpty());
   }
 
   /**
@@ -29,7 +30,9 @@ export class VGroup extends VMobject {
     if (this.isEmpty()) {
       // No geometry => no meaningful center. We don't fall back to `position`
       // because normalizeTransform() can reset it; callers must not rely on it.
-      throw new Error('VGroup.getCenter: cannot compute center of an empty group (no geometry)');
+      throw new Error(
+        "VGroup.getCenter: cannot compute center of an empty group (no geometry)",
+      );
     }
     return super.getCenter();
   }
@@ -260,7 +263,11 @@ export class VGroup extends VMobject {
    * @param center - Whether to center the arrangement at the group's position, default true
    * @returns this for chaining
    */
-  arrange(direction: Vector3Tuple = RIGHT, buff: number = 0.25, center: boolean = true): this {
+  arrange(
+    direction: Vector3Tuple = RIGHT,
+    buff: number = 0.25,
+    center: boolean = true,
+  ): this {
     if (this.children.length === 0) return this;
 
     // Store original center if we want to recenter later
@@ -311,7 +318,9 @@ export class VGroup extends VMobject {
       originalCenter[1] - cur[1],
       originalCenter[2] - cur[2],
     ];
-    if (worldDelta[0] === 0 && worldDelta[1] === 0 && worldDelta[2] === 0) return;
+    if (worldDelta[0] === 0 && worldDelta[1] === 0 && worldDelta[2] === 0) {
+      return;
+    }
 
     // The children's parent-local frame IS this group's local frame, so this
     // group's world matrix maps child-local → world. Invert it and apply to both
@@ -320,7 +329,9 @@ export class VGroup extends VMobject {
     // transform. For an identity, parentless group the inverse is identity, so
     // this reduces to the world delta (matching the prior behavior).
     const invWorld = this._worldMatrix().clone().invert();
-    const originalLocal = new THREE.Vector3(...originalCenter).applyMatrix4(invWorld);
+    const originalLocal = new THREE.Vector3(...originalCenter).applyMatrix4(
+      invWorld,
+    );
     const curLocal = new THREE.Vector3(...cur).applyMatrix4(invWorld);
     const delta: Vector3Tuple = [
       originalLocal.x - curLocal.x,
@@ -338,7 +349,12 @@ export class VGroup extends VMobject {
    * @param buffY - Vertical buffer between elements, default 0.25
    * @returns this for chaining
    */
-  arrangeInGrid(rows?: number, cols?: number, buffX: number = 0.25, buffY: number = 0.25): this {
+  arrangeInGrid(
+    rows?: number,
+    cols?: number,
+    buffX: number = 0.25,
+    buffY: number = 0.25,
+  ): this {
     const n = this.children.length;
     if (n === 0) return this;
 
@@ -538,14 +554,15 @@ export class VGroup extends VMobject {
    * @post for each child i: child.getLocalPoints() === the i-th slice of points
    */
   override setPoints(points: Point[] | number[][]): this {
-    const pts3D: number[][] =
-      points.length === 0
-        ? []
-        : Array.isArray(points[0])
-          ? (points as number[][]).map((p) => [p[0], p[1], p[2] ?? 0])
-          : (points as Point[]).map((p) => [p.x, p.y, 0]);
+    const pts3D: number[][] = points.length === 0
+      ? []
+      : Array.isArray(points[0])
+      ? (points as number[][]).map((p) => [p[0], p[1], p[2] ?? 0])
+      : (points as Point[]).map((p) => [p.x, p.y, 0]);
 
-    const vChildren = this.children.filter((c) => c instanceof VMobject) as VMobject[];
+    const vChildren = this.children.filter((c) =>
+      c instanceof VMobject
+    ) as VMobject[];
     const counts = vChildren.map((c) => c.getLocalPoints().length);
     const total = counts.reduce((n, c) => n + c, 0);
     if (pts3D.length !== total) {

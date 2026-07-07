@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Square to Circle with Modifications</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - Square to Circle with Modifications</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #1a1a2e;
       display: flex;
@@ -34,28 +38,33 @@
       cursor: pointer;
       font-size: 14px;
     }
-    button:hover { background: #ff6b6b; }
-    button:disabled { background: #666; cursor: not-allowed; }
-  </style>
-</head>
-<body>
-  <div id="container"></div>
-  <div class="controls">
-    <button id="playBtn">Play Animation</button>
-    <button id="resetBtn">Reset</button>
-  </div>
+    button:hover {
+      background: #ff6b6b;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <div class="controls">
+      <button id="playBtn">Play Animation</button>
+      <button id="resetBtn">Reset</button>
+    </div>
 
-  <script type="module">
+    <script type="module">
     import {
-      Scene,
-      Circle,
-      Square,
-      Create,
-      Transform,
-      FadeOut,
       BLACK,
+      Circle,
+      Create,
+      FadeOut,
       PINK,
-      RIGHT
+      RIGHT,
+      Scene,
+      Square,
+      Transform,
     } from '../src/index.ts';
 
     const TAU = Math.PI * 2;
@@ -64,7 +73,7 @@
     const scene = new Scene(container, {
       width: 800,
       height: 450,
-      backgroundColor: BLACK
+      backgroundColor: BLACK,
     });
 
     let isAnimating = false;
@@ -93,6 +102,6 @@
     document.getElementById('resetBtn').addEventListener('click', () => {
       scene.clear();
     });
-  </script>
-</body>
+    </script>
+  </body>
 </html>

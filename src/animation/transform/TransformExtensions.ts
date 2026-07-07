@@ -12,13 +12,13 @@ export {
   ApplyFunction,
   applyFunction,
   type ApplyFunctionOptions,
-  ApplyMethod,
-  applyMethod,
-  type ApplyMethodOptions,
   ApplyMatrix,
   applyMatrix,
   type ApplyMatrixOptions,
-} from './ApplyTransforms';
+  ApplyMethod,
+  applyMethod,
+  type ApplyMethodOptions,
+} from "./ApplyTransforms";
 
 // FadeTransforms
 export {
@@ -31,7 +31,7 @@ export {
   TransformFromCopy,
   transformFromCopy,
   type TransformFromCopyOptions,
-} from './FadeTransforms';
+} from "./FadeTransforms";
 
 // MovementTransforms
 export {
@@ -41,30 +41,30 @@ export {
   CounterclockwiseTransform,
   counterclockwiseTransform,
   type CounterclockwiseTransformOptions,
-  Swap,
-  swap,
-  type SwapOptions,
   CyclicReplace,
   cyclicReplace,
   type CyclicReplaceOptions,
-} from './MovementTransforms';
+  Swap,
+  swap,
+  type SwapOptions,
+} from "./MovementTransforms";
 
 // SpecialTransforms
 export {
+  FadeToColor,
+  fadeToColor,
+  type FadeToColorOptions,
+  type MobjectWithSavedState,
+  Restore,
+  restore,
+  type RestoreOptions,
   ScaleInPlace,
   scaleInPlace,
   type ScaleInPlaceOptions,
   ShrinkToCenter,
   shrinkToCenter,
   type ShrinkToCenterOptions,
-  Restore,
-  restore,
-  type MobjectWithSavedState,
-  type RestoreOptions,
-  FadeToColor,
-  fadeToColor,
-  type FadeToColorOptions,
   TransformAnimations,
   transformAnimations,
   type TransformAnimationsOptions,
-} from './SpecialTransforms';
+} from "./SpecialTransforms";

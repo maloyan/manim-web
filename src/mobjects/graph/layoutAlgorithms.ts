@@ -2,8 +2,8 @@
  * Layout algorithms for graph vertex positioning
  */
 
-import { Vector3Tuple } from '../../core/Mobject';
-import { VertexId, EdgeTuple, LayoutConfig, VertexConfig } from './graphTypes';
+import { Vector3Tuple } from "../../core/Mobject";
+import { EdgeTuple, LayoutConfig, VertexConfig, VertexId } from "./graphTypes";
 
 /**
  * Compute vertex positions using the specified layout algorithm
@@ -19,31 +19,51 @@ export function computeLayout(
   const center = config.center ?? [0, 0, 0];
 
   switch (config.type) {
-    case 'circular':
+    case "circular":
       computeCircularLayout(vertices, positions, scale, center);
       break;
-    case 'spring':
-      computeSpringLayout(vertices, edges, positions, scale, center, config.iterations ?? 50);
+    case "spring":
+      computeSpringLayout(
+        vertices,
+        edges,
+        positions,
+        scale,
+        center,
+        config.iterations ?? 50,
+      );
       break;
-    case 'tree':
+    case "tree":
       computeTreeLayout(vertices, edges, positions, scale, center, config.root);
       break;
-    case 'grid':
+    case "grid":
       computeGridLayout(vertices, positions, scale, center);
       break;
-    case 'random':
+    case "random":
       computeRandomLayout(vertices, positions, scale, center);
       break;
-    case 'shell':
+    case "shell":
       computeShellLayout(vertices, positions, scale, center);
       break;
-    case 'kamada_kawai':
-      computeKamadaKawaiLayout(vertices, edges, positions, scale, center, config.iterations ?? 50);
+    case "kamada_kawai":
+      computeKamadaKawaiLayout(
+        vertices,
+        edges,
+        positions,
+        scale,
+        center,
+        config.iterations ?? 50,
+      );
       break;
-    case 'bipartite':
-      computeBipartiteLayout(vertices, positions, scale, center, config.partition);
+    case "bipartite":
+      computeBipartiteLayout(
+        vertices,
+        positions,
+        scale,
+        center,
+        config.partition,
+      );
       break;
-    case 'custom':
+    case "custom":
       if (config.positions) {
         for (const [v, pos] of config.positions) {
           positions.set(v, pos);
@@ -283,13 +303,21 @@ function computeTreeLayout(
   }
 
   const totalWidth = scale * 2;
-  assignPositions(rootVertex, center[0] - totalWidth / 2, center[0] + totalWidth / 2);
+  assignPositions(
+    rootVertex,
+    center[0] - totalWidth / 2,
+    center[0] + totalWidth / 2,
+  );
 
   // Position any unvisited vertices
   let offset = 0;
   for (const v of vertices) {
     if (!positions.has(v)) {
-      positions.set(v, [center[0] + offset * 0.5, center[1] - scale, center[2]]);
+      positions.set(v, [
+        center[0] + offset * 0.5,
+        center[1] - scale,
+        center[2],
+      ]);
       offset++;
     }
   }
@@ -350,12 +378,18 @@ function computeShellLayout(
 
   // Determine number of shells (roughly sqrt(n))
   const numShells = Math.max(1, Math.ceil(Math.sqrt(n / 4)));
-  const verticesPerShell: VertexId[][] = Array.from({ length: numShells }, () => []);
+  const verticesPerShell: VertexId[][] = Array.from(
+    { length: numShells },
+    () => [],
+  );
 
   // Distribute vertices across shells
   let idx = 0;
   for (let shell = 0; shell < numShells && idx < n; shell++) {
-    const shellSize = Math.min(Math.max(1, Math.ceil((n - idx) / (numShells - shell))), n - idx);
+    const shellSize = Math.min(
+      Math.max(1, Math.ceil((n - idx) / (numShells - shell))),
+      n - idx,
+    );
     for (let i = 0; i < shellSize && idx < n; i++) {
       verticesPerShell[shell].push(vertices[idx++]);
     }
@@ -396,7 +430,10 @@ function computeKamadaKawaiLayout(
   computeCircularLayout(vertices, positions, scale * 0.5, center);
 
   // Compute shortest path distances using Floyd-Warshall
-  const dist: number[][] = Array.from({ length: n }, () => Array(n).fill(Infinity));
+  const dist: number[][] = Array.from(
+    { length: n },
+    () => Array(n).fill(Infinity),
+  );
   const vertexIndex = new Map<VertexId, number>();
   vertices.forEach((v, i) => {
     vertexIndex.set(v, i);

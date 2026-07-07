@@ -3,17 +3,21 @@
  * Provides sliders, buttons, checkboxes, and color pickers for real-time parameter control.
  */
 
-import { Scene } from '../core/Scene';
+import { Scene } from "../core/Scene";
 
 /**
  * Position options for the controls panel.
  */
-export type ControlsPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+export type ControlsPosition =
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right";
 
 /**
  * Theme options for the controls panel.
  */
-export type ControlsTheme = 'dark' | 'light';
+export type ControlsTheme = "dark" | "light";
 
 /**
  * Options for configuring the Controls panel.
@@ -96,8 +100,8 @@ export class Controls {
   constructor(scene: Scene, options: ControlsOptions = {}) {
     this._scene = scene;
     this._options = {
-      position: options.position ?? 'top-right',
-      theme: options.theme ?? 'dark',
+      position: options.position ?? "top-right",
+      theme: options.theme ?? "dark",
       width: options.width ?? 250,
     };
     this._panel = this._createPanel();
@@ -121,8 +125,8 @@ export class Controls {
    * Create the controls panel and attach it to the scene container.
    */
   private _createPanel(): HTMLElement {
-    const panel = document.createElement('div');
-    panel.className = 'manimweb-controls';
+    const panel = document.createElement("div");
+    panel.className = "manimweb-controls";
     panel.style.cssText = `
       position: absolute;
       ${this._getPositionStyles()}
@@ -130,8 +134,12 @@ export class Controls {
       max-height: calc(100% - 24px);
       overflow-y: auto;
       padding: 12px;
-      background: ${this._options.theme === 'dark' ? 'rgba(0, 0, 0, 0.85)' : 'rgba(255, 255, 255, 0.95)'};
-      color: ${this._options.theme === 'dark' ? '#ffffff' : '#000000'};
+      background: ${
+      this._options.theme === "dark"
+        ? "rgba(0, 0, 0, 0.85)"
+        : "rgba(255, 255, 255, 0.95)"
+    };
+      color: ${this._options.theme === "dark" ? "#ffffff" : "#000000"};
       border-radius: 8px;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       font-size: 14px;
@@ -145,7 +153,7 @@ export class Controls {
 
     // Get the scene's container and ensure it has relative positioning
     const container = this._scene.getContainer();
-    container.style.position = 'relative';
+    container.style.position = "relative";
     container.appendChild(panel);
 
     return panel;
@@ -155,15 +163,15 @@ export class Controls {
    * Get CSS position styles based on the configured position.
    */
   private _getPositionStyles(): string {
-    const margin = '12px';
+    const margin = "12px";
     switch (this._options.position) {
-      case 'top-left':
+      case "top-left":
         return `top: ${margin}; left: ${margin};`;
-      case 'top-right':
+      case "top-right":
         return `top: ${margin}; right: ${margin};`;
-      case 'bottom-left':
+      case "bottom-left":
         return `bottom: ${margin}; left: ${margin};`;
-      case 'bottom-right':
+      case "bottom-right":
         return `bottom: ${margin}; right: ${margin};`;
       default:
         return `top: ${margin}; right: ${margin};`;
@@ -174,21 +182,23 @@ export class Controls {
    * Get the accent color based on theme.
    */
   protected _getAccentColor(): string {
-    return this._options.theme === 'dark' ? '#4a90d9' : '#3b7fc4';
+    return this._options.theme === "dark" ? "#4a90d9" : "#3b7fc4";
   }
 
   /**
    * Get the hover color based on theme.
    */
   protected _getHoverColor(): string {
-    return this._options.theme === 'dark' ? '#5a9fe9' : '#4b8fd4';
+    return this._options.theme === "dark" ? "#5a9fe9" : "#4b8fd4";
   }
 
   /**
    * Get the border color based on theme.
    */
   protected _getBorderColor(): string {
-    return this._options.theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)';
+    return this._options.theme === "dark"
+      ? "rgba(255, 255, 255, 0.2)"
+      : "rgba(0, 0, 0, 0.2)";
   }
 
   /**
@@ -197,11 +207,11 @@ export class Controls {
    * @returns The created wrapper element
    */
   addSlider(config: SliderConfig): HTMLElement {
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'margin-bottom: 12px;';
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "margin-bottom: 12px;";
 
     // Create label row with value display
-    const labelRow = document.createElement('label');
+    const labelRow = document.createElement("label");
     labelRow.style.cssText = `
       display: flex;
       justify-content: space-between;
@@ -210,12 +220,12 @@ export class Controls {
       cursor: default;
     `;
 
-    const labelText = document.createElement('span');
+    const labelText = document.createElement("span");
     labelText.textContent = config.label;
-    labelText.style.cssText = 'font-weight: 500;';
+    labelText.style.cssText = "font-weight: 500;";
 
     const initialValue = config.value ?? config.min;
-    const valueText = document.createElement('span');
+    const valueText = document.createElement("span");
     valueText.textContent = this._formatNumber(initialValue);
     valueText.style.cssText = `
       font-family: 'SF Mono', Monaco, Consolas, monospace;
@@ -227,8 +237,8 @@ export class Controls {
     labelRow.appendChild(valueText);
 
     // Create slider input
-    const slider = document.createElement('input');
-    slider.type = 'range';
+    const slider = document.createElement("input");
+    slider.type = "range";
     slider.min = String(config.min);
     slider.max = String(config.max);
     slider.step = String(config.step ?? (config.max - config.min) / 100);
@@ -247,7 +257,7 @@ export class Controls {
     // Add touch-friendly styling
     this._styleSliderThumb(slider);
 
-    slider.addEventListener('input', () => {
+    slider.addEventListener("input", () => {
       const val = parseFloat(slider.value);
       valueText.textContent = this._formatNumber(val);
       config.onChange(val);
@@ -266,9 +276,9 @@ export class Controls {
     const accentColor = this._getAccentColor();
 
     // Create a style element for pseudo-elements
-    const styleId = 'manimweb-slider-styles';
+    const styleId = "manimweb-slider-styles";
     if (!document.getElementById(styleId)) {
-      const style = document.createElement('style');
+      const style = document.createElement("style");
       style.id = styleId;
       style.textContent = `
         .manimweb-controls input[type="range"]::-webkit-slider-thumb {
@@ -316,7 +326,7 @@ export class Controls {
    * @returns The created button element
    */
   addButton(config: ButtonConfig): HTMLElement {
-    const button = document.createElement('button');
+    const button = document.createElement("button");
     button.textContent = config.label;
 
     const accentColor = this._getAccentColor();
@@ -340,19 +350,19 @@ export class Controls {
     `;
 
     // Add hover and active states
-    button.addEventListener('mouseenter', () => {
+    button.addEventListener("mouseenter", () => {
       button.style.background = hoverColor;
     });
-    button.addEventListener('mouseleave', () => {
+    button.addEventListener("mouseleave", () => {
       button.style.background = accentColor;
     });
-    button.addEventListener('mousedown', () => {
-      button.style.transform = 'scale(0.98)';
+    button.addEventListener("mousedown", () => {
+      button.style.transform = "scale(0.98)";
     });
-    button.addEventListener('mouseup', () => {
-      button.style.transform = 'scale(1)';
+    button.addEventListener("mouseup", () => {
+      button.style.transform = "scale(1)";
     });
-    button.addEventListener('click', config.onClick);
+    button.addEventListener("click", config.onClick);
 
     this._panel.appendChild(button);
     return button;
@@ -364,7 +374,7 @@ export class Controls {
    * @returns The created wrapper element
    */
   addCheckbox(config: CheckboxConfig): HTMLElement {
-    const wrapper = document.createElement('label');
+    const wrapper = document.createElement("label");
     wrapper.style.cssText = `
       display: flex;
       align-items: center;
@@ -375,7 +385,7 @@ export class Controls {
     `;
 
     // Create custom checkbox container
-    const checkboxWrapper = document.createElement('div');
+    const checkboxWrapper = document.createElement("div");
     checkboxWrapper.style.cssText = `
       position: relative;
       width: 20px;
@@ -384,8 +394,8 @@ export class Controls {
     `;
 
     // Hidden actual checkbox
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
     checkbox.checked = config.checked ?? false;
     checkbox.style.cssText = `
       position: absolute;
@@ -397,7 +407,7 @@ export class Controls {
     `;
 
     // Custom checkbox visual
-    const customCheckbox = document.createElement('div');
+    const customCheckbox = document.createElement("div");
     const accentColor = this._getAccentColor();
     const updateCheckboxStyle = () => {
       customCheckbox.style.cssText = `
@@ -407,8 +417,10 @@ export class Controls {
         width: 100%;
         height: 100%;
         border-radius: 4px;
-        border: 2px solid ${checkbox.checked ? accentColor : this._getBorderColor()};
-        background: ${checkbox.checked ? accentColor : 'transparent'};
+        border: 2px solid ${
+        checkbox.checked ? accentColor : this._getBorderColor()
+      };
+        background: ${checkbox.checked ? accentColor : "transparent"};
         transition: all 0.15s ease;
         pointer-events: none;
         display: flex;
@@ -417,11 +429,11 @@ export class Controls {
       `;
       customCheckbox.innerHTML = checkbox.checked
         ? '<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6L5 9L10 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-        : '';
+        : "";
     };
     updateCheckboxStyle();
 
-    checkbox.addEventListener('change', () => {
+    checkbox.addEventListener("change", () => {
       updateCheckboxStyle();
       config.onChange(checkbox.checked);
     });
@@ -429,9 +441,9 @@ export class Controls {
     checkboxWrapper.appendChild(checkbox);
     checkboxWrapper.appendChild(customCheckbox);
 
-    const labelText = document.createElement('span');
+    const labelText = document.createElement("span");
     labelText.textContent = config.label;
-    labelText.style.cssText = 'font-weight: 500;';
+    labelText.style.cssText = "font-weight: 500;";
 
     wrapper.appendChild(checkboxWrapper);
     wrapper.appendChild(labelText);
@@ -445,11 +457,11 @@ export class Controls {
    * @returns The created wrapper element
    */
   addColorPicker(config: ColorPickerConfig): HTMLElement {
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'margin-bottom: 12px;';
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "margin-bottom: 12px;";
 
     // Create label row
-    const labelRow = document.createElement('div');
+    const labelRow = document.createElement("div");
     labelRow.style.cssText = `
       display: flex;
       justify-content: space-between;
@@ -457,12 +469,12 @@ export class Controls {
       margin-bottom: 6px;
     `;
 
-    const labelText = document.createElement('span');
+    const labelText = document.createElement("span");
     labelText.textContent = config.label;
-    labelText.style.cssText = 'font-weight: 500;';
+    labelText.style.cssText = "font-weight: 500;";
 
-    const initialColor = config.value ?? '#ffffff';
-    const colorValue = document.createElement('span');
+    const initialColor = config.value ?? "#ffffff";
+    const colorValue = document.createElement("span");
     colorValue.textContent = initialColor.toUpperCase();
     colorValue.style.cssText = `
       font-family: 'SF Mono', Monaco, Consolas, monospace;
@@ -474,7 +486,7 @@ export class Controls {
     labelRow.appendChild(colorValue);
 
     // Create color picker row
-    const pickerRow = document.createElement('div');
+    const pickerRow = document.createElement("div");
     pickerRow.style.cssText = `
       display: flex;
       align-items: center;
@@ -482,8 +494,8 @@ export class Controls {
     `;
 
     // Color input
-    const colorInput = document.createElement('input');
-    colorInput.type = 'color';
+    const colorInput = document.createElement("input");
+    colorInput.type = "color";
     colorInput.value = initialColor;
     colorInput.style.cssText = `
       width: 40px;
@@ -496,8 +508,8 @@ export class Controls {
     `;
 
     // Text input for hex value
-    const textInput = document.createElement('input');
-    textInput.type = 'text';
+    const textInput = document.createElement("input");
+    textInput.type = "text";
     textInput.value = initialColor;
     textInput.style.cssText = `
       flex: 1;
@@ -511,22 +523,22 @@ export class Controls {
       outline: none;
     `;
 
-    textInput.addEventListener('focus', () => {
+    textInput.addEventListener("focus", () => {
       textInput.style.borderColor = this._getAccentColor();
     });
-    textInput.addEventListener('blur', () => {
+    textInput.addEventListener("blur", () => {
       textInput.style.borderColor = this._getBorderColor();
     });
 
     // Sync color and text inputs
-    colorInput.addEventListener('input', () => {
+    colorInput.addEventListener("input", () => {
       const color = colorInput.value;
       textInput.value = color;
       colorValue.textContent = color.toUpperCase();
       config.onChange(color);
     });
 
-    textInput.addEventListener('input', () => {
+    textInput.addEventListener("input", () => {
       const color = textInput.value;
       // Validate hex color
       if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
@@ -549,7 +561,7 @@ export class Controls {
    * Add a horizontal separator line.
    */
   addSeparator(): void {
-    const hr = document.createElement('hr');
+    const hr = document.createElement("hr");
     hr.style.cssText = `
       border: none;
       border-top: 1px solid ${this._getBorderColor()};
@@ -564,7 +576,7 @@ export class Controls {
    * @returns The created label element
    */
   addLabel(text: string): HTMLElement {
-    const label = document.createElement('div');
+    const label = document.createElement("div");
     label.textContent = text;
     label.style.cssText = `
       font-weight: 600;
@@ -583,21 +595,21 @@ export class Controls {
    * Show the controls panel.
    */
   show(): void {
-    this._panel.style.display = 'block';
+    this._panel.style.display = "block";
   }
 
   /**
    * Hide the controls panel.
    */
   hide(): void {
-    this._panel.style.display = 'none';
+    this._panel.style.display = "none";
   }
 
   /**
    * Toggle the controls panel visibility.
    */
   toggle(): void {
-    if (this._panel.style.display === 'none') {
+    if (this._panel.style.display === "none") {
       this.show();
     } else {
       this.hide();
@@ -608,7 +620,7 @@ export class Controls {
    * Check if the controls panel is visible.
    */
   isVisible(): boolean {
-    return this._panel.style.display !== 'none';
+    return this._panel.style.display !== "none";
   }
 
   /**

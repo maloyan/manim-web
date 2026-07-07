@@ -1,16 +1,16 @@
-import { describe, it, expect } from 'vitest';
-import { selectScatteredPoints, extractVectorsFrom3Points } from './math';
+import { describe, expect, it } from "vitest";
+import { extractVectorsFrom3Points, selectScatteredPoints } from "./math";
 
-describe('selectScatteredPoints', () => {
-  it('returns [] for empty', () => {
+describe("selectScatteredPoints", () => {
+  it("returns [] for empty", () => {
     expect(selectScatteredPoints([])).toEqual([]);
   });
 
-  it('returns [0] for single point', () => {
+  it("returns [0] for single point", () => {
     expect(selectScatteredPoints([[1, 2]])).toEqual([0]);
   });
 
-  it('returns [0, 1] for two points', () => {
+  it("returns [0, 1] for two points", () => {
     expect(
       selectScatteredPoints([
         [0, 0],
@@ -19,7 +19,7 @@ describe('selectScatteredPoints', () => {
     ).toEqual([0, 1]);
   });
 
-  it('selects opposite corners of square', () => {
+  it("selects opposite corners of square", () => {
     const square = [
       [0, 0],
       [1, 0],
@@ -32,13 +32,13 @@ describe('selectScatteredPoints', () => {
   });
 });
 
-describe('extractVectorsFrom3Points', () => {
-  it('returns null for < 3 points', () => {
+describe("extractVectorsFrom3Points", () => {
+  it("returns null for < 3 points", () => {
     expect(extractVectorsFrom3Points([])).toBeNull();
     expect(extractVectorsFrom3Points([[0, 0]])).toBeNull();
   });
 
-  it('extracts vectors from 3 points', () => {
+  it("extracts vectors from 3 points", () => {
     const result = extractVectorsFrom3Points([
       [0, 0, 0],
       [1, 0, 0],
@@ -48,7 +48,7 @@ describe('extractVectorsFrom3Points', () => {
     expect(result!.v2).toEqual([0, 1, 0]);
   });
 
-  it('handles 2D points', () => {
+  it("handles 2D points", () => {
     const result = extractVectorsFrom3Points([
       [0, 0],
       [2, 0],

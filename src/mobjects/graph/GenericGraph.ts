@@ -5,27 +5,29 @@
  * Manages vertices and edges as Mobject children for animation support.
  */
 
-import * as THREE from 'three';
-import { Mobject, Vector3Tuple } from '../../core/Mobject';
-import { Dot } from '../geometry/Dot';
-import { Line } from '../geometry/Line';
-import { Arrow } from '../geometry/Arrow';
-import { BLUE, WHITE, RED, DEFAULT_STROKE_WIDTH } from '../../constants';
+import * as THREE from "three";
+import { Mobject, Vector3Tuple } from "../../core/Mobject";
+import { Dot } from "../geometry/Dot";
+import { Line } from "../geometry/Line";
+import { Arrow } from "../geometry/Arrow";
+import { BLUE, DEFAULT_STROKE_WIDTH, RED, WHITE } from "../../constants";
 import {
-  VertexId,
-  EdgeTuple,
-  LayoutType,
-  VertexStyleOptions,
-  EdgeStyleOptions,
-  VertexConfig,
   EdgeConfig,
-  LayoutConfig,
+  EdgeStyleOptions,
+  EdgeTuple,
   GenericGraphOptions,
-} from './graphTypes';
-import { computeLayout } from './layoutAlgorithms';
+  LayoutConfig,
+  LayoutType,
+  VertexConfig,
+  VertexId,
+  VertexStyleOptions,
+} from "./graphTypes";
+import { computeLayout } from "./layoutAlgorithms";
 
 export class GenericGraph extends Mobject {
-  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+  override normalizeTransform(
+    worldMatrix: THREE.Matrix4 = this._ownMatrix(),
+  ): this {
     return this._flattenAsContainer(worldMatrix);
   }
   /** List of vertex identifiers */
@@ -70,7 +72,7 @@ export class GenericGraph extends Mobject {
     const {
       vertices = [],
       edges = [],
-      layout = 'spring',
+      layout = "spring",
       vertexStyle = {},
       edgeStyle = {},
       vertexConfig,
@@ -95,7 +97,7 @@ export class GenericGraph extends Mobject {
     };
 
     // Parse layout config
-    if (typeof layout === 'string') {
+    if (typeof layout === "string") {
       this._layoutConfig = { type: layout, scale: 2, center: [0, 0, 0] };
     } else {
       this._layoutConfig = { scale: 2, center: [0, 0, 0], ...layout };
@@ -224,7 +226,11 @@ export class GenericGraph extends Mobject {
 
     // Shorten edge to not overlap with vertex circles
     const vertexRadius = this._vertexStyle.radius ?? 0.15;
-    const [startPos, endPos] = this._shortenEdge(sourcePos, targetPos, vertexRadius);
+    const [startPos, endPos] = this._shortenEdge(
+      sourcePos,
+      targetPos,
+      vertexRadius,
+    );
 
     let edge: Mobject;
     if (this._directed) {
@@ -278,7 +284,11 @@ export class GenericGraph extends Mobject {
       start[1] + dy * factor,
       start[2] + dz * factor,
     ];
-    const newEnd: Vector3Tuple = [end[0] - dx * factor, end[1] - dy * factor, end[2] - dz * factor];
+    const newEnd: Vector3Tuple = [
+      end[0] - dx * factor,
+      end[1] - dy * factor,
+      end[2] - dz * factor,
+    ];
 
     return [newStart, newEnd];
   }
@@ -562,7 +572,7 @@ export class GenericGraph extends Mobject {
    * @returns this for chaining
    */
   setLayout(layout: LayoutType | LayoutConfig): this {
-    if (typeof layout === 'string') {
+    if (typeof layout === "string") {
       this._layoutConfig = { ...this._layoutConfig, type: layout };
     } else {
       this._layoutConfig = { ...this._layoutConfig, ...layout };
@@ -630,7 +640,11 @@ export class GenericGraph extends Mobject {
   /**
    * Highlight a path (sequence of vertices)
    */
-  highlightPath(path: VertexId[], vertexColor: string = RED, edgeColor: string = RED): this {
+  highlightPath(
+    path: VertexId[],
+    vertexColor: string = RED,
+    edgeColor: string = RED,
+  ): this {
     for (let i = 0; i < path.length; i++) {
       this.setVertexColor(path[i], vertexColor);
       if (i < path.length - 1) {

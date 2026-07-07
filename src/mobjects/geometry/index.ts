@@ -6,135 +6,150 @@
  */
 
 // Circle
-export { Circle, type CircleOptions } from './Circle';
+export { Circle, type CircleOptions } from "./Circle";
 
 // Line
-export { Line, type LineOptions } from './Line';
+export { Line, type LineOptions } from "./Line";
 
 // Rectangle and Square
-export { Rectangle, Square, type RectangleOptions } from './Rectangle';
+export { Rectangle, type RectangleOptions, Square } from "./Rectangle";
 
 // Polygon and variants
 export {
-  Polygon,
-  Triangle,
-  RegularPolygon,
   Hexagon,
   Pentagon,
+  Polygon,
   type PolygonOptions,
-} from './Polygon';
+  RegularPolygon,
+  Triangle,
+} from "./Polygon";
 
 // Polygram (generalized polygon with multiple vertex groups)
-export { Polygram, type PolygramOptions } from './Polygram';
+export { Polygram, type PolygramOptions } from "./Polygram";
 
 // TipableVMobject base class
-export { TipableVMobject, type TipableVMobjectOptions, type TipOptions } from './TipableVMobject';
+export {
+  TipableVMobject,
+  type TipableVMobjectOptions,
+  type TipOptions,
+} from "./TipableVMobject";
 
 // Arrow and variants
-export { Arrow, DoubleArrow, Vector, type ArrowOptions } from './Arrow';
+export { Arrow, type ArrowOptions, DoubleArrow, Vector } from "./Arrow";
 
 // Arc and variants
-export { Arc, type ArcOptions } from './Arc';
-export { ArcBetweenPoints, type ArcBetweenPointsOptions } from './ArcBetweenPoints';
+export { Arc, type ArcOptions } from "./Arc";
+export {
+  ArcBetweenPoints,
+  type ArcBetweenPointsOptions,
+} from "./ArcBetweenPoints";
 
 // Arc-based shapes
-export { Ellipse, type EllipseOptions } from './Ellipse';
-export { Annulus, type AnnulusOptions } from './Annulus';
-export { AnnularSector, type AnnularSectorOptions } from './AnnularSector';
-export { Sector, type SectorOptions } from './Sector';
-export { ArcPolygon, type ArcPolygonOptions, type ArcConfig } from './ArcPolygon';
-export { CurvedArrow, type CurvedArrowOptions } from './CurvedArrow';
-export { CurvedDoubleArrow } from './CurvedDoubleArrow';
-export { TangentialArc, type TangentialArcOptions } from './TangentialArc';
+export { Ellipse, type EllipseOptions } from "./Ellipse";
+export { Annulus, type AnnulusOptions } from "./Annulus";
+export { AnnularSector, type AnnularSectorOptions } from "./AnnularSector";
+export { Sector, type SectorOptions } from "./Sector";
+export {
+  type ArcConfig,
+  ArcPolygon,
+  type ArcPolygonOptions,
+} from "./ArcPolygon";
+export { CurvedArrow, type CurvedArrowOptions } from "./CurvedArrow";
+export { CurvedDoubleArrow } from "./CurvedDoubleArrow";
+export { TangentialArc, type TangentialArcOptions } from "./TangentialArc";
 
 // Dashed shapes
-export { DashedLine, type DashedLineOptions } from './DashedLine';
-export { DashedVMobject, type DashedVMobjectOptions } from './DashedVMobject';
+export { DashedLine, type DashedLineOptions } from "./DashedLine";
+export { DashedVMobject, type DashedVMobjectOptions } from "./DashedVMobject";
 
 // Cubic Bezier
-export { CubicBezier, type CubicBezierOptions, type CubicBezierPoints } from './CubicBezier';
+export {
+  CubicBezier,
+  type CubicBezierOptions,
+  type CubicBezierPoints,
+} from "./CubicBezier";
 
 // Dot and variants
-export { Dot, SmallDot, LargeDot, type DotOptions } from './Dot';
+export { Dot, type DotOptions, LargeDot, SmallDot } from "./Dot";
 
 // Shape matchers
 export {
   BackgroundRectangle,
-  SurroundingRectangle,
-  Underline,
-  Cross,
   type BackgroundRectangleOptions,
-  type SurroundingRectangleOptions,
-  type UnderlineOptions,
+  Cross,
   type CrossOptions,
-} from './ShapeMatchers';
+  SurroundingRectangle,
+  type SurroundingRectangleOptions,
+  Underline,
+  type UnderlineOptions,
+} from "./ShapeMatchers";
 
 // Extended polygon shapes
 export {
+  ConvexHull,
+  type ConvexHullOptions,
+  Cutout,
+  type CutoutOptions,
+  RegularPolygram,
+  type RegularPolygramOptions,
   RoundedRectangle,
   type RoundedRectangleOptions,
   Star,
   type StarOptions,
-  RegularPolygram,
-  type RegularPolygramOptions,
-  Cutout,
-  type CutoutOptions,
-  ConvexHull,
-  type ConvexHullOptions,
-} from './PolygonExtensions';
+} from "./PolygonExtensions";
 
 // Angle shapes
 export {
   Angle,
-  RightAngle,
-  Elbow,
-  TangentLine,
-  type AngleOptions,
   type AngleInput,
-  type RightAngleOptions,
+  type AngleOptions,
+  Elbow,
   type ElbowOptions,
+  RightAngle,
+  type RightAngleOptions,
+  TangentLine,
   type TangentLineOptions,
-} from './AngleShapes';
+} from "./AngleShapes";
 
 // Arrow tips
 export {
-  ArrowTip,
-  ArrowTriangleTip,
-  ArrowTriangleFilledTip,
-  ArrowCircleTip,
   ArrowCircleFilledTip,
-  ArrowSquareTip,
+  ArrowCircleTip,
   ArrowSquareFilledTip,
-  StealthTip,
+  ArrowSquareTip,
+  ArrowTip,
   type ArrowTipOptions,
-} from './ArrowTips';
+  ArrowTriangleFilledTip,
+  ArrowTriangleTip,
+  StealthTip,
+} from "./ArrowTips";
 
 // Boolean operations
 export {
-  Union,
-  Intersection,
-  Difference,
-  Exclusion,
-  BooleanResult,
-  union,
-  intersection,
-  difference,
-  exclusion,
   type BooleanOperationOptions,
-} from './BooleanOperations';
+  BooleanResult,
+  Difference,
+  difference,
+  Exclusion,
+  exclusion,
+  Intersection,
+  intersection,
+  Union,
+  union,
+} from "./BooleanOperations";
 
 // Labeled geometry
 export {
-  LabeledLine,
-  LabeledArrow,
-  LabeledDot,
   AnnotationDot,
-  LabeledPolygram,
-  type LabeledLineOptions,
-  type LabeledArrowOptions,
-  type LabeledDotOptions,
   type AnnotationDotOptions,
-  type LabeledPolygramOptions,
   type LabelDirection,
+  LabeledArrow,
+  type LabeledArrowOptions,
+  LabeledDot,
+  type LabeledDotOptions,
+  LabeledLine,
+  type LabeledLineOptions,
+  LabeledPolygram,
+  type LabeledPolygramOptions,
   type LabelOrientation,
-} from './LabeledGeometry';
+} from "./LabeledGeometry";

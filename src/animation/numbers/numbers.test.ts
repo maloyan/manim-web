@@ -1,13 +1,13 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
-import { DecimalNumber } from '../../mobjects/text/DecimalNumber';
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { DecimalNumber } from "../../mobjects/text/DecimalNumber";
 import {
-  ChangingDecimal,
   ChangeDecimalToValue,
-  changingDecimal,
   changeDecimalToValue,
-} from './index';
-import { linear } from '../../rate-functions';
+  ChangingDecimal,
+  changingDecimal,
+} from "./index";
+import { linear } from "../../rate-functions";
 
 /**
  * happy-dom does not support canvas 2D context. DecimalNumber calls
@@ -16,20 +16,26 @@ import { linear } from '../../rate-functions';
  */
 beforeAll(() => {
   const origGetContext = HTMLCanvasElement.prototype.getContext;
-  HTMLCanvasElement.prototype.getContext = function (type: string, ...args: unknown[]) {
-    if (type === '2d') {
+  HTMLCanvasElement.prototype.getContext = function (
+    type: string,
+    ...args: unknown[]
+  ) {
+    if (type === "2d") {
       return {
         scale: () => {},
         clearRect: () => {},
         fillText: () => {},
         fillRect: () => {},
-        measureText: (t: string) => ({ width: t.length * 10, fontBoundingBoxAscent: 30 }),
+        measureText: (t: string) => ({
+          width: t.length * 10,
+          fontBoundingBoxAscent: 30,
+        }),
         drawImage: () => {},
-        font: '',
-        fillStyle: '',
+        font: "",
+        fillStyle: "",
         globalAlpha: 1,
-        textBaseline: 'alphabetic',
-        textAlign: 'left',
+        textBaseline: "alphabetic",
+        textAlign: "left",
       } as unknown as CanvasRenderingContext2D;
     }
     return origGetContext.call(this, type, ...(args as []));
@@ -40,7 +46,7 @@ beforeAll(() => {
 // ChangingDecimal
 // =============================================================
 
-describe('ChangingDecimal', () => {
+describe("ChangingDecimal", () => {
   let num: DecimalNumber;
 
   beforeEach(() => {
@@ -51,49 +57,52 @@ describe('ChangingDecimal', () => {
   // Constructor
   // -----------------------------------------------------------
 
-  describe('constructor', () => {
-    it('stores the decimal number reference', () => {
+  describe("constructor", () => {
+    it("stores the decimal number reference", () => {
       const anim = new ChangingDecimal(num, { endValue: 100 });
       expect(anim.decimalNumber).toBe(num);
     });
 
-    it('stores mobject reference on base class', () => {
+    it("stores mobject reference on base class", () => {
       const anim = new ChangingDecimal(num, { endValue: 100 });
       expect(anim.mobject).toBe(num);
     });
 
-    it('uses current value as default startValue', () => {
+    it("uses current value as default startValue", () => {
       num.setValue(42);
       const anim = new ChangingDecimal(num, { endValue: 100 });
       expect(anim.getStartValue()).toBe(42);
     });
 
-    it('accepts explicit startValue', () => {
+    it("accepts explicit startValue", () => {
       const anim = new ChangingDecimal(num, { startValue: 10, endValue: 100 });
       expect(anim.getStartValue()).toBe(10);
     });
 
-    it('stores endValue', () => {
+    it("stores endValue", () => {
       const anim = new ChangingDecimal(num, { endValue: 200 });
       expect(anim.getEndValue()).toBe(200);
     });
 
-    it('defaults duration to 1', () => {
+    it("defaults duration to 1", () => {
       const anim = new ChangingDecimal(num, { endValue: 100 });
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom duration', () => {
+    it("accepts custom duration", () => {
       const anim = new ChangingDecimal(num, { endValue: 100, duration: 3 });
       expect(anim.duration).toBe(3);
     });
 
-    it('accepts custom rateFunc', () => {
-      const anim = new ChangingDecimal(num, { endValue: 100, rateFunc: linear });
+    it("accepts custom rateFunc", () => {
+      const anim = new ChangingDecimal(num, {
+        endValue: 100,
+        rateFunc: linear,
+      });
       expect(anim.rateFunc).toBe(linear);
     });
 
-    it('defaults suspendMobjectUpdating to false', () => {
+    it("defaults suspendMobjectUpdating to false", () => {
       const anim = new ChangingDecimal(num, { endValue: 100 });
       anim.begin();
       anim.interpolate(0.5);
@@ -106,8 +115,8 @@ describe('ChangingDecimal', () => {
   // begin()
   // -----------------------------------------------------------
 
-  describe('begin()', () => {
-    it('calls super.begin()', () => {
+  describe("begin()", () => {
+    it("calls super.begin()", () => {
       const anim = new ChangingDecimal(num, { endValue: 100 });
       expect(anim.isFinished()).toBe(false);
       anim.finish();
@@ -121,8 +130,8 @@ describe('ChangingDecimal', () => {
   // interpolate()
   // -----------------------------------------------------------
 
-  describe('interpolate()', () => {
-    it('at alpha=0: value equals startValue', () => {
+  describe("interpolate()", () => {
+    it("at alpha=0: value equals startValue", () => {
       num.setValue(10);
       const anim = new ChangingDecimal(num, { endValue: 50 });
       anim.begin();
@@ -130,7 +139,7 @@ describe('ChangingDecimal', () => {
       expect(num.getValue()).toBeCloseTo(10, 5);
     });
 
-    it('at alpha=0.5: value is midpoint', () => {
+    it("at alpha=0.5: value is midpoint", () => {
       num.setValue(0);
       const anim = new ChangingDecimal(num, { endValue: 100 });
       anim.begin();
@@ -138,7 +147,7 @@ describe('ChangingDecimal', () => {
       expect(num.getValue()).toBeCloseTo(50, 5);
     });
 
-    it('at alpha=1: value equals endValue', () => {
+    it("at alpha=1: value equals endValue", () => {
       num.setValue(0);
       const anim = new ChangingDecimal(num, { endValue: 100 });
       anim.begin();
@@ -146,14 +155,14 @@ describe('ChangingDecimal', () => {
       expect(num.getValue()).toBeCloseTo(100, 5);
     });
 
-    it('interpolates with explicit startValue', () => {
+    it("interpolates with explicit startValue", () => {
       const anim = new ChangingDecimal(num, { startValue: 20, endValue: 80 });
       anim.begin();
       anim.interpolate(0.25);
       expect(num.getValue()).toBeCloseTo(35, 5); // 20 + (80-20)*0.25 = 35
     });
 
-    it('interpolates negative range correctly', () => {
+    it("interpolates negative range correctly", () => {
       num.setValue(-50);
       const anim = new ChangingDecimal(num, { endValue: 50 });
       anim.begin();
@@ -161,7 +170,7 @@ describe('ChangingDecimal', () => {
       expect(num.getValue()).toBeCloseTo(0, 5); // -50 + (50-(-50))*0.5 = 0
     });
 
-    it('interpolates from positive to negative', () => {
+    it("interpolates from positive to negative", () => {
       num.setValue(100);
       const anim = new ChangingDecimal(num, { endValue: -100 });
       anim.begin();
@@ -171,7 +180,7 @@ describe('ChangingDecimal', () => {
       expect(num.getValue()).toBeCloseTo(-100, 5);
     });
 
-    it('does nothing when suspendMobjectUpdating is true', () => {
+    it("does nothing when suspendMobjectUpdating is true", () => {
       num.setValue(42);
       const anim = new ChangingDecimal(num, {
         endValue: 100,
@@ -183,7 +192,7 @@ describe('ChangingDecimal', () => {
       expect(num.getValue()).toBe(42);
     });
 
-    it('handles same start and end value', () => {
+    it("handles same start and end value", () => {
       num.setValue(50);
       const anim = new ChangingDecimal(num, { endValue: 50 });
       anim.begin();
@@ -191,7 +200,7 @@ describe('ChangingDecimal', () => {
       expect(num.getValue()).toBeCloseTo(50, 5);
     });
 
-    it('handles fractional alpha values', () => {
+    it("handles fractional alpha values", () => {
       num.setValue(0);
       const anim = new ChangingDecimal(num, { endValue: 1000 });
       anim.begin();
@@ -208,8 +217,8 @@ describe('ChangingDecimal', () => {
   // finish()
   // -----------------------------------------------------------
 
-  describe('finish()', () => {
-    it('sets value to exactly the endValue', () => {
+  describe("finish()", () => {
+    it("sets value to exactly the endValue", () => {
       num.setValue(0);
       const anim = new ChangingDecimal(num, { endValue: 99.99 });
       anim.begin();
@@ -218,7 +227,7 @@ describe('ChangingDecimal', () => {
       expect(num.getValue()).toBe(99.99);
     });
 
-    it('marks animation as finished', () => {
+    it("marks animation as finished", () => {
       const anim = new ChangingDecimal(num, { endValue: 100 });
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -226,7 +235,7 @@ describe('ChangingDecimal', () => {
       expect(anim.isFinished()).toBe(true);
     });
 
-    it('sets endValue even when suspendMobjectUpdating was true', () => {
+    it("sets endValue even when suspendMobjectUpdating was true", () => {
       num.setValue(0);
       const anim = new ChangingDecimal(num, {
         endValue: 77,
@@ -246,20 +255,20 @@ describe('ChangingDecimal', () => {
   // getStartValue / getEndValue
   // -----------------------------------------------------------
 
-  describe('getStartValue / getEndValue', () => {
-    it('getStartValue returns start value', () => {
+  describe("getStartValue / getEndValue", () => {
+    it("getStartValue returns start value", () => {
       num.setValue(5);
       const anim = new ChangingDecimal(num, { startValue: 10, endValue: 20 });
       expect(anim.getStartValue()).toBe(10);
     });
 
-    it('getStartValue returns current value when no explicit start', () => {
+    it("getStartValue returns current value when no explicit start", () => {
       num.setValue(7);
       const anim = new ChangingDecimal(num, { endValue: 20 });
       expect(anim.getStartValue()).toBe(7);
     });
 
-    it('getEndValue returns end value', () => {
+    it("getEndValue returns end value", () => {
       const anim = new ChangingDecimal(num, { endValue: 999 });
       expect(anim.getEndValue()).toBe(999);
     });
@@ -269,13 +278,13 @@ describe('ChangingDecimal', () => {
   // changingDecimal() factory
   // -----------------------------------------------------------
 
-  describe('changingDecimal() factory', () => {
-    it('returns a ChangingDecimal instance', () => {
+  describe("changingDecimal() factory", () => {
+    it("returns a ChangingDecimal instance", () => {
       const anim = changingDecimal(num, { endValue: 100 });
       expect(anim).toBeInstanceOf(ChangingDecimal);
     });
 
-    it('passes options through', () => {
+    it("passes options through", () => {
       const anim = changingDecimal(num, {
         startValue: 5,
         endValue: 50,
@@ -288,7 +297,7 @@ describe('ChangingDecimal', () => {
       expect(anim.rateFunc).toBe(linear);
     });
 
-    it('stores the decimal number reference', () => {
+    it("stores the decimal number reference", () => {
       const anim = changingDecimal(num, { endValue: 100 });
       expect(anim.decimalNumber).toBe(num);
     });
@@ -299,7 +308,7 @@ describe('ChangingDecimal', () => {
 // ChangeDecimalToValue
 // =============================================================
 
-describe('ChangeDecimalToValue', () => {
+describe("ChangeDecimalToValue", () => {
   let num: DecimalNumber;
 
   beforeEach(() => {
@@ -310,44 +319,50 @@ describe('ChangeDecimalToValue', () => {
   // Constructor
   // -----------------------------------------------------------
 
-  describe('constructor', () => {
-    it('stores the decimal number reference', () => {
+  describe("constructor", () => {
+    it("stores the decimal number reference", () => {
       const anim = new ChangeDecimalToValue(num, { targetValue: 100 });
       expect(anim.decimalNumber).toBe(num);
     });
 
-    it('stores mobject reference on base class', () => {
+    it("stores mobject reference on base class", () => {
       const anim = new ChangeDecimalToValue(num, { targetValue: 100 });
       expect(anim.mobject).toBe(num);
     });
 
-    it('captures current value as startValue', () => {
+    it("captures current value as startValue", () => {
       num.setValue(25);
       const anim = new ChangeDecimalToValue(num, { targetValue: 100 });
       expect(anim.getStartValue()).toBe(25);
     });
 
-    it('stores targetValue', () => {
+    it("stores targetValue", () => {
       const anim = new ChangeDecimalToValue(num, { targetValue: 200 });
       expect(anim.getTargetValue()).toBe(200);
     });
 
-    it('defaults duration to 1', () => {
+    it("defaults duration to 1", () => {
       const anim = new ChangeDecimalToValue(num, { targetValue: 100 });
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom duration', () => {
-      const anim = new ChangeDecimalToValue(num, { targetValue: 100, duration: 5 });
+    it("accepts custom duration", () => {
+      const anim = new ChangeDecimalToValue(num, {
+        targetValue: 100,
+        duration: 5,
+      });
       expect(anim.duration).toBe(5);
     });
 
-    it('accepts custom rateFunc', () => {
-      const anim = new ChangeDecimalToValue(num, { targetValue: 100, rateFunc: linear });
+    it("accepts custom rateFunc", () => {
+      const anim = new ChangeDecimalToValue(num, {
+        targetValue: 100,
+        rateFunc: linear,
+      });
       expect(anim.rateFunc).toBe(linear);
     });
 
-    it('defaults suspendMobjectUpdating to false', () => {
+    it("defaults suspendMobjectUpdating to false", () => {
       const anim = new ChangeDecimalToValue(num, { targetValue: 100 });
       anim.begin();
       anim.interpolate(0.5);
@@ -359,8 +374,8 @@ describe('ChangeDecimalToValue', () => {
   // begin()
   // -----------------------------------------------------------
 
-  describe('begin()', () => {
-    it('captures current value as start value', () => {
+  describe("begin()", () => {
+    it("captures current value as start value", () => {
       num.setValue(30);
       const anim = new ChangeDecimalToValue(num, { targetValue: 100 });
       // Change the value after construction but before begin
@@ -370,7 +385,7 @@ describe('ChangeDecimalToValue', () => {
       expect(anim.getStartValue()).toBe(40);
     });
 
-    it('calls super.begin()', () => {
+    it("calls super.begin()", () => {
       const anim = new ChangeDecimalToValue(num, { targetValue: 100 });
       anim.finish();
       expect(anim.isFinished()).toBe(true);
@@ -383,8 +398,8 @@ describe('ChangeDecimalToValue', () => {
   // interpolate()
   // -----------------------------------------------------------
 
-  describe('interpolate()', () => {
-    it('at alpha=0: value equals startValue', () => {
+  describe("interpolate()", () => {
+    it("at alpha=0: value equals startValue", () => {
       num.setValue(10);
       const anim = new ChangeDecimalToValue(num, { targetValue: 50 });
       anim.begin();
@@ -392,7 +407,7 @@ describe('ChangeDecimalToValue', () => {
       expect(num.getValue()).toBeCloseTo(10, 5);
     });
 
-    it('at alpha=0.5: value is midpoint', () => {
+    it("at alpha=0.5: value is midpoint", () => {
       num.setValue(0);
       const anim = new ChangeDecimalToValue(num, { targetValue: 100 });
       anim.begin();
@@ -400,7 +415,7 @@ describe('ChangeDecimalToValue', () => {
       expect(num.getValue()).toBeCloseTo(50, 5);
     });
 
-    it('at alpha=1: value equals targetValue', () => {
+    it("at alpha=1: value equals targetValue", () => {
       num.setValue(0);
       const anim = new ChangeDecimalToValue(num, { targetValue: 100 });
       anim.begin();
@@ -408,7 +423,7 @@ describe('ChangeDecimalToValue', () => {
       expect(num.getValue()).toBeCloseTo(100, 5);
     });
 
-    it('interpolates negative values correctly', () => {
+    it("interpolates negative values correctly", () => {
       num.setValue(-100);
       const anim = new ChangeDecimalToValue(num, { targetValue: 0 });
       anim.begin();
@@ -416,7 +431,7 @@ describe('ChangeDecimalToValue', () => {
       expect(num.getValue()).toBeCloseTo(-50, 5);
     });
 
-    it('interpolates from positive to negative', () => {
+    it("interpolates from positive to negative", () => {
       num.setValue(50);
       const anim = new ChangeDecimalToValue(num, { targetValue: -50 });
       anim.begin();
@@ -426,7 +441,7 @@ describe('ChangeDecimalToValue', () => {
       expect(num.getValue()).toBeCloseTo(-50, 5);
     });
 
-    it('does nothing when suspendMobjectUpdating is true', () => {
+    it("does nothing when suspendMobjectUpdating is true", () => {
       num.setValue(42);
       const anim = new ChangeDecimalToValue(num, {
         targetValue: 100,
@@ -437,7 +452,7 @@ describe('ChangeDecimalToValue', () => {
       expect(num.getValue()).toBe(42);
     });
 
-    it('handles same start and target value', () => {
+    it("handles same start and target value", () => {
       num.setValue(50);
       const anim = new ChangeDecimalToValue(num, { targetValue: 50 });
       anim.begin();
@@ -445,7 +460,7 @@ describe('ChangeDecimalToValue', () => {
       expect(num.getValue()).toBeCloseTo(50, 5);
     });
 
-    it('handles fractional interpolation', () => {
+    it("handles fractional interpolation", () => {
       num.setValue(0);
       const anim = new ChangeDecimalToValue(num, { targetValue: 1000 });
       anim.begin();
@@ -460,8 +475,8 @@ describe('ChangeDecimalToValue', () => {
   // finish()
   // -----------------------------------------------------------
 
-  describe('finish()', () => {
-    it('sets value to exactly the targetValue', () => {
+  describe("finish()", () => {
+    it("sets value to exactly the targetValue", () => {
       num.setValue(0);
       const anim = new ChangeDecimalToValue(num, { targetValue: 99.99 });
       anim.begin();
@@ -470,7 +485,7 @@ describe('ChangeDecimalToValue', () => {
       expect(num.getValue()).toBe(99.99);
     });
 
-    it('marks animation as finished', () => {
+    it("marks animation as finished", () => {
       const anim = new ChangeDecimalToValue(num, { targetValue: 100 });
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -478,7 +493,7 @@ describe('ChangeDecimalToValue', () => {
       expect(anim.isFinished()).toBe(true);
     });
 
-    it('sets targetValue even when suspendMobjectUpdating was true', () => {
+    it("sets targetValue even when suspendMobjectUpdating was true", () => {
       num.setValue(0);
       const anim = new ChangeDecimalToValue(num, {
         targetValue: 77,
@@ -496,19 +511,19 @@ describe('ChangeDecimalToValue', () => {
   // getStartValue / getTargetValue
   // -----------------------------------------------------------
 
-  describe('getStartValue / getTargetValue', () => {
-    it('getStartValue returns the captured start value', () => {
+  describe("getStartValue / getTargetValue", () => {
+    it("getStartValue returns the captured start value", () => {
       num.setValue(15);
       const anim = new ChangeDecimalToValue(num, { targetValue: 100 });
       expect(anim.getStartValue()).toBe(15);
     });
 
-    it('getTargetValue returns target value', () => {
+    it("getTargetValue returns target value", () => {
       const anim = new ChangeDecimalToValue(num, { targetValue: 999 });
       expect(anim.getTargetValue()).toBe(999);
     });
 
-    it('getStartValue updates after begin()', () => {
+    it("getStartValue updates after begin()", () => {
       num.setValue(10);
       const anim = new ChangeDecimalToValue(num, { targetValue: 100 });
       expect(anim.getStartValue()).toBe(10);
@@ -522,13 +537,13 @@ describe('ChangeDecimalToValue', () => {
   // changeDecimalToValue() factory
   // -----------------------------------------------------------
 
-  describe('changeDecimalToValue() factory', () => {
-    it('returns a ChangeDecimalToValue instance', () => {
+  describe("changeDecimalToValue() factory", () => {
+    it("returns a ChangeDecimalToValue instance", () => {
       const anim = changeDecimalToValue(num, { targetValue: 100 });
       expect(anim).toBeInstanceOf(ChangeDecimalToValue);
     });
 
-    it('passes options through', () => {
+    it("passes options through", () => {
       const anim = changeDecimalToValue(num, {
         targetValue: 50,
         duration: 2,
@@ -539,7 +554,7 @@ describe('ChangeDecimalToValue', () => {
       expect(anim.rateFunc).toBe(linear);
     });
 
-    it('stores the decimal number reference', () => {
+    it("stores the decimal number reference", () => {
       const anim = changeDecimalToValue(num, { targetValue: 100 });
       expect(anim.decimalNumber).toBe(num);
     });

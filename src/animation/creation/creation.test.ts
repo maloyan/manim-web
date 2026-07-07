@@ -1,24 +1,24 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Mobject } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
-import { linear } from '../../rate-functions';
-import { PointMobject } from '../../mobjects/point';
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Mobject } from "../../core/Mobject";
+import { VMobject } from "../../core/VMobject";
+import { linear } from "../../rate-functions";
+import { PointMobject } from "../../mobjects/point";
 import {
+  AddTextLetterByLetter,
+  addTextLetterByLetter,
   Create,
   create,
   DrawBorderThenFill,
   drawBorderThenFill,
-  Uncreate,
-  uncreate,
-  Write,
-  write,
-  Unwrite,
-  unwrite,
-  AddTextLetterByLetter,
-  addTextLetterByLetter,
   RemoveTextLetterByLetter,
   removeTextLetterByLetter,
-} from './Create';
+  Uncreate,
+  uncreate,
+  Unwrite,
+  unwrite,
+  Write,
+  write,
+} from "./Create";
 import {
   AddTextWordByWord,
   addTextWordByWord,
@@ -30,13 +30,13 @@ import {
   showSubmobjectsOneByOne,
   SpiralIn,
   spiralIn,
-} from './CreationExtensions';
+} from "./CreationExtensions";
 import {
   TypeWithCursor,
   typeWithCursor,
   UntypeWithCursor,
   untypeWithCursor,
-} from './TypeWithCursor';
+} from "./TypeWithCursor";
 
 // =============================================================================
 // Helper: create a mock text-like mobject with getText/setText
@@ -44,9 +44,9 @@ import {
 
 class MockTextMobject extends Mobject {
   private _text: string;
-  color: string = '#ffffff';
+  color: string = "#ffffff";
 
-  constructor(text: string = 'Hello World') {
+  constructor(text: string = "Hello World") {
     super();
     this._text = text;
   }
@@ -60,7 +60,7 @@ class MockTextMobject extends Mobject {
   }
 
   protected _createThreeObject() {
-    return new (require('three').Object3D)();
+    return new (require("three").Object3D)();
   }
 
   protected _syncToThree(): void {}
@@ -94,7 +94,7 @@ class MockMathTexMobject extends Mobject {
   }
 
   protected _createThreeObject() {
-    return new (require('three').Object3D)();
+    return new (require("three").Object3D)();
   }
 
   protected _syncToThree(): void {}
@@ -115,7 +115,7 @@ class MockPlainMobject extends Mobject {
   }
 
   protected _createThreeObject() {
-    return new (require('three').Object3D)();
+    return new (require("three").Object3D)();
   }
 
   protected _syncToThree(): void {}
@@ -125,43 +125,43 @@ class MockPlainMobject extends Mobject {
 // Create
 // =============================================================================
 
-describe('Create', () => {
+describe("Create", () => {
   let mob: Mobject;
 
   beforeEach(() => {
     mob = new MockPlainMobject();
   });
 
-  describe('constructor', () => {
-    it('sets default duration to 2', () => {
+  describe("constructor", () => {
+    it("sets default duration to 2", () => {
       const anim = new Create(mob);
       expect(anim.duration).toBe(2);
     });
 
-    it('accepts custom duration', () => {
+    it("accepts custom duration", () => {
       const anim = new Create(mob, { duration: 3 });
       expect(anim.duration).toBe(3);
     });
 
-    it('stores the mobject reference', () => {
+    it("stores the mobject reference", () => {
       const anim = new Create(mob);
       expect(anim.mobject).toBe(mob);
     });
 
-    it('accepts lagRatio option', () => {
+    it("accepts lagRatio option", () => {
       const anim = new Create(mob, { lagRatio: 0.5 });
       // lagRatio is private, but we can test its effect via interpolation
       expect(anim.mobject).toBe(mob);
     });
 
-    it('accepts rateFunc option', () => {
+    it("accepts rateFunc option", () => {
       const anim = new Create(mob, { rateFunc: linear });
       expect(anim.rateFunc).toBe(linear);
     });
   });
 
-  describe('begin() - non-VMobject fallback (opacity)', () => {
-    it('sets opacity to 0 for non-VMobject', () => {
+  describe("begin() - non-VMobject fallback (opacity)", () => {
+    it("sets opacity to 0 for non-VMobject", () => {
       mob.opacity = 1;
       const anim = new Create(mob);
       anim.begin();
@@ -169,22 +169,22 @@ describe('Create', () => {
     });
   });
 
-  describe('interpolate() - non-VMobject fallback (opacity)', () => {
-    it('at alpha=0: opacity is 0', () => {
+  describe("interpolate() - non-VMobject fallback (opacity)", () => {
+    it("at alpha=0: opacity is 0", () => {
       const anim = new Create(mob);
       anim.begin();
       anim.interpolate(0);
       expect(mob.opacity).toBeCloseTo(0, 5);
     });
 
-    it('at alpha=0.5: opacity is 0.5', () => {
+    it("at alpha=0.5: opacity is 0.5", () => {
       const anim = new Create(mob);
       anim.begin();
       anim.interpolate(0.5);
       expect(mob.opacity).toBeCloseTo(0.5, 5);
     });
 
-    it('at alpha=1: opacity is 1', () => {
+    it("at alpha=1: opacity is 1", () => {
       const anim = new Create(mob);
       anim.begin();
       anim.interpolate(1);
@@ -192,8 +192,8 @@ describe('Create', () => {
     });
   });
 
-  describe('finish() - non-VMobject fallback', () => {
-    it('sets opacity to 1', () => {
+  describe("finish() - non-VMobject fallback", () => {
+    it("sets opacity to 1", () => {
       const anim = new Create(mob);
       anim.begin();
       anim.interpolate(0.5);
@@ -201,7 +201,7 @@ describe('Create', () => {
       expect(mob.opacity).toBe(1);
     });
 
-    it('marks animation as finished', () => {
+    it("marks animation as finished", () => {
       const anim = new Create(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -210,8 +210,8 @@ describe('Create', () => {
     });
   });
 
-  describe('begin() - VMobject without Line2 (opacity fallback)', () => {
-    it('sets opacity to 0 for VMobject without Line2 children', () => {
+  describe("begin() - VMobject without Line2 (opacity fallback)", () => {
+    it("sets opacity to 0 for VMobject without Line2 children", () => {
       const vmob = new VMobject();
       vmob.opacity = 1;
       const anim = new Create(vmob);
@@ -220,8 +220,8 @@ describe('Create', () => {
     });
   });
 
-  describe('interpolate() - VMobject without Line2 (opacity fallback)', () => {
-    it('interpolates opacity for VMobject without Line2', () => {
+  describe("interpolate() - VMobject without Line2 (opacity fallback)", () => {
+    it("interpolates opacity for VMobject without Line2", () => {
       const vmob = new VMobject();
       const anim = new Create(vmob);
       anim.begin();
@@ -237,8 +237,8 @@ describe('Create', () => {
     });
   });
 
-  describe('finish() - VMobject without Line2', () => {
-    it('sets opacity to 1', () => {
+  describe("finish() - VMobject without Line2", () => {
+    it("sets opacity to 1", () => {
       const vmob = new VMobject();
       const anim = new Create(vmob);
       anim.begin();
@@ -247,8 +247,8 @@ describe('Create', () => {
     });
   });
 
-  describe('_childAlpha() via interpolation behavior', () => {
-    it('with lagRatio=0 all children get same alpha (tested via Mobject fallback)', () => {
+  describe("_childAlpha() via interpolation behavior", () => {
+    it("with lagRatio=0 all children get same alpha (tested via Mobject fallback)", () => {
       // lagRatio=0 means _childAlpha returns alpha unchanged
       const anim = new Create(mob, { lagRatio: 0 });
       anim.begin();
@@ -258,22 +258,22 @@ describe('Create', () => {
   });
 });
 
-describe('create() factory', () => {
-  it('returns a Create instance', () => {
+describe("create() factory", () => {
+  it("returns a Create instance", () => {
     const mob = new MockPlainMobject();
     const anim = create(mob);
     expect(anim).toBeInstanceOf(Create);
     expect(anim.mobject).toBe(mob);
   });
 
-  it('passes options through', () => {
+  it("passes options through", () => {
     const mob = new MockPlainMobject();
     const anim = create(mob, { duration: 5, rateFunc: linear });
     expect(anim.duration).toBe(5);
     expect(anim.rateFunc).toBe(linear);
   });
 
-  it('default duration is 2', () => {
+  it("default duration is 2", () => {
     const mob = new MockPlainMobject();
     const anim = create(mob);
     expect(anim.duration).toBe(2);
@@ -284,39 +284,39 @@ describe('create() factory', () => {
 // DrawBorderThenFill
 // =============================================================================
 
-describe('DrawBorderThenFill', () => {
+describe("DrawBorderThenFill", () => {
   let mob: Mobject;
 
   beforeEach(() => {
     mob = new MockPlainMobject();
   });
 
-  describe('constructor', () => {
-    it('sets default duration to 2', () => {
+  describe("constructor", () => {
+    it("sets default duration to 2", () => {
       const anim = new DrawBorderThenFill(mob);
       expect(anim.duration).toBe(2);
     });
 
-    it('accepts custom duration', () => {
+    it("accepts custom duration", () => {
       const anim = new DrawBorderThenFill(mob, { duration: 3.5 });
       expect(anim.duration).toBe(3.5);
     });
 
-    it('stores the mobject reference', () => {
+    it("stores the mobject reference", () => {
       const anim = new DrawBorderThenFill(mob);
       expect(anim.mobject).toBe(mob);
     });
   });
 
-  describe('begin() - non-VMobject', () => {
-    it('does not crash for non-VMobject', () => {
+  describe("begin() - non-VMobject", () => {
+    it("does not crash for non-VMobject", () => {
       const anim = new DrawBorderThenFill(mob);
       expect(() => anim.begin()).not.toThrow();
     });
   });
 
-  describe('interpolate() - non-VMobject (no dash reveal)', () => {
-    it('does nothing for non-VMobject (no _useDashReveal)', () => {
+  describe("interpolate() - non-VMobject (no dash reveal)", () => {
+    it("does nothing for non-VMobject (no _useDashReveal)", () => {
       const anim = new DrawBorderThenFill(mob);
       anim.begin();
       mob.opacity = 0.5;
@@ -326,16 +326,16 @@ describe('DrawBorderThenFill', () => {
     });
   });
 
-  describe('begin() - VMobject without Line2', () => {
-    it('does not crash for VMobject without Line2 children', () => {
+  describe("begin() - VMobject without Line2", () => {
+    it("does not crash for VMobject without Line2 children", () => {
       const vmob = new VMobject();
       const anim = new DrawBorderThenFill(vmob);
       expect(() => anim.begin()).not.toThrow();
     });
   });
 
-  describe('finish()', () => {
-    it('marks animation as finished', () => {
+  describe("finish()", () => {
+    it("marks animation as finished", () => {
       const anim = new DrawBorderThenFill(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -345,15 +345,15 @@ describe('DrawBorderThenFill', () => {
   });
 });
 
-describe('drawBorderThenFill() factory', () => {
-  it('returns a DrawBorderThenFill instance', () => {
+describe("drawBorderThenFill() factory", () => {
+  it("returns a DrawBorderThenFill instance", () => {
     const mob = new MockPlainMobject();
     const anim = drawBorderThenFill(mob);
     expect(anim).toBeInstanceOf(DrawBorderThenFill);
     expect(anim.mobject).toBe(mob);
   });
 
-  it('passes options through', () => {
+  it("passes options through", () => {
     const mob = new MockPlainMobject();
     const anim = drawBorderThenFill(mob, { duration: 4, rateFunc: linear });
     expect(anim.duration).toBe(4);
@@ -365,32 +365,32 @@ describe('drawBorderThenFill() factory', () => {
 // Uncreate
 // =============================================================================
 
-describe('Uncreate', () => {
+describe("Uncreate", () => {
   let mob: Mobject;
 
   beforeEach(() => {
     mob = new MockPlainMobject();
   });
 
-  describe('constructor', () => {
-    it('sets default duration to 2', () => {
+  describe("constructor", () => {
+    it("sets default duration to 2", () => {
       const anim = new Uncreate(mob);
       expect(anim.duration).toBe(2);
     });
 
-    it('accepts custom duration', () => {
+    it("accepts custom duration", () => {
       const anim = new Uncreate(mob, { duration: 1.5 });
       expect(anim.duration).toBe(1.5);
     });
 
-    it('stores the mobject reference', () => {
+    it("stores the mobject reference", () => {
       const anim = new Uncreate(mob);
       expect(anim.mobject).toBe(mob);
     });
   });
 
-  describe('begin() - non-VMobject', () => {
-    it('does not modify opacity for non-VMobject', () => {
+  describe("begin() - non-VMobject", () => {
+    it("does not modify opacity for non-VMobject", () => {
       mob.opacity = 1;
       const anim = new Uncreate(mob);
       anim.begin();
@@ -399,8 +399,8 @@ describe('Uncreate', () => {
     });
   });
 
-  describe('interpolate() - non-VMobject fallback (opacity)', () => {
-    it('at alpha=0: opacity is 1', () => {
+  describe("interpolate() - non-VMobject fallback (opacity)", () => {
+    it("at alpha=0: opacity is 1", () => {
       mob.opacity = 1;
       const anim = new Uncreate(mob);
       anim.begin();
@@ -408,7 +408,7 @@ describe('Uncreate', () => {
       expect(mob.opacity).toBeCloseTo(1, 5);
     });
 
-    it('at alpha=0.5: opacity is 0.5', () => {
+    it("at alpha=0.5: opacity is 0.5", () => {
       mob.opacity = 1;
       const anim = new Uncreate(mob);
       anim.begin();
@@ -416,7 +416,7 @@ describe('Uncreate', () => {
       expect(mob.opacity).toBeCloseTo(0.5, 5);
     });
 
-    it('at alpha=1: opacity is 0', () => {
+    it("at alpha=1: opacity is 0", () => {
       mob.opacity = 1;
       const anim = new Uncreate(mob);
       anim.begin();
@@ -425,8 +425,8 @@ describe('Uncreate', () => {
     });
   });
 
-  describe('finish() - non-VMobject', () => {
-    it('sets opacity to 0', () => {
+  describe("finish() - non-VMobject", () => {
+    it("sets opacity to 0", () => {
       mob.opacity = 1;
       const anim = new Uncreate(mob);
       anim.begin();
@@ -434,7 +434,7 @@ describe('Uncreate', () => {
       expect(mob.opacity).toBe(0);
     });
 
-    it('marks animation as finished', () => {
+    it("marks animation as finished", () => {
       const anim = new Uncreate(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -443,16 +443,16 @@ describe('Uncreate', () => {
     });
   });
 
-  describe('begin() - VMobject without Line2', () => {
-    it('does not crash', () => {
+  describe("begin() - VMobject without Line2", () => {
+    it("does not crash", () => {
       const vmob = new VMobject();
       const anim = new Uncreate(vmob);
       expect(() => anim.begin()).not.toThrow();
     });
   });
 
-  describe('interpolate() - VMobject without Line2', () => {
-    it('uses opacity fallback', () => {
+  describe("interpolate() - VMobject without Line2", () => {
+    it("uses opacity fallback", () => {
       const vmob = new VMobject();
       vmob.opacity = 1;
       const anim = new Uncreate(vmob);
@@ -462,8 +462,8 @@ describe('Uncreate', () => {
     });
   });
 
-  describe('finish() - VMobject without Line2', () => {
-    it('sets opacity to 0', () => {
+  describe("finish() - VMobject without Line2", () => {
+    it("sets opacity to 0", () => {
       const vmob = new VMobject();
       vmob.opacity = 1;
       const anim = new Uncreate(vmob);
@@ -474,15 +474,15 @@ describe('Uncreate', () => {
   });
 });
 
-describe('uncreate() factory', () => {
-  it('returns an Uncreate instance', () => {
+describe("uncreate() factory", () => {
+  it("returns an Uncreate instance", () => {
     const mob = new MockPlainMobject();
     const anim = uncreate(mob);
     expect(anim).toBeInstanceOf(Uncreate);
     expect(anim.mobject).toBe(mob);
   });
 
-  it('passes options through', () => {
+  it("passes options through", () => {
     const mob = new MockPlainMobject();
     const anim = uncreate(mob, { duration: 3 });
     expect(anim.duration).toBe(3);
@@ -493,87 +493,87 @@ describe('uncreate() factory', () => {
 // Write
 // =============================================================================
 
-describe('Write', () => {
+describe("Write", () => {
   let mob: Mobject;
 
   beforeEach(() => {
     mob = new MockPlainMobject();
   });
 
-  describe('constructor', () => {
-    it('sets default duration to 1', () => {
+  describe("constructor", () => {
+    it("sets default duration to 1", () => {
       const anim = new Write(mob);
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom duration', () => {
+    it("accepts custom duration", () => {
       const anim = new Write(mob, { duration: 2.5 });
       expect(anim.duration).toBe(2.5);
     });
 
-    it('stores the mobject reference', () => {
+    it("stores the mobject reference", () => {
       const anim = new Write(mob);
       expect(anim.mobject).toBe(mob);
     });
 
-    it('sets default lagRatio to 0.05', () => {
+    it("sets default lagRatio to 0.05", () => {
       const anim = new Write(mob);
       // lagRatio is protected, cast to access
       expect((anim as any).lagRatio).toBe(0.05);
     });
 
-    it('accepts custom lagRatio', () => {
+    it("accepts custom lagRatio", () => {
       const anim = new Write(mob, { lagRatio: 0.1 });
       expect((anim as any).lagRatio).toBe(0.1);
     });
 
-    it('sets default reverse to false', () => {
+    it("sets default reverse to false", () => {
       const anim = new Write(mob);
       expect((anim as any)._reverse).toBe(false);
     });
 
-    it('accepts reverse option', () => {
+    it("accepts reverse option", () => {
       const anim = new Write(mob, { reverse: true });
       expect((anim as any)._reverse).toBe(true);
     });
 
-    it('sets default remover to false', () => {
+    it("sets default remover to false", () => {
       const anim = new Write(mob);
       expect((anim as any)._remover).toBe(false);
     });
 
-    it('accepts remover option', () => {
+    it("accepts remover option", () => {
       const anim = new Write(mob, { remover: true });
       expect((anim as any)._remover).toBe(true);
     });
 
-    it('sets default strokeRatio to 0.7', () => {
+    it("sets default strokeRatio to 0.7", () => {
       const anim = new Write(mob);
       expect((anim as any)._strokeRatio).toBe(0.7);
     });
 
-    it('accepts custom strokeRatio', () => {
+    it("accepts custom strokeRatio", () => {
       const anim = new Write(mob, { strokeRatio: 0.5 });
       expect((anim as any)._strokeRatio).toBe(0.5);
     });
   });
 
-  describe('begin() - non-VMobject, no glyph, no reveal (opacity fallback)', () => {
-    it('sets opacity to 0 for forward play', () => {
+  describe("begin() - non-VMobject, no glyph, no reveal (opacity fallback)", () => {
+    it("sets opacity to 0 for forward play", () => {
       mob.opacity = 1;
       const anim = new Write(mob);
       anim.begin();
       expect(mob.opacity).toBe(0);
     });
 
-    it('keeps opacity at original for reverse play', () => {
+    it("keeps opacity at original for reverse play", () => {
       mob.opacity = 0.8;
       const anim = new Write(mob, { reverse: true });
       anim.begin();
       expect(mob.opacity).toBeCloseTo(0.8, 5);
     });
 
-    it('stores original opacity', () => {
+    it("stores original opacity", () => {
       mob.opacity = 0.7;
       const anim = new Write(mob);
       anim.begin();
@@ -581,8 +581,8 @@ describe('Write', () => {
     });
   });
 
-  describe('begin() - with setRevealProgress (MathTex path)', () => {
-    it('uses setRevealProgress path when available', () => {
+  describe("begin() - with setRevealProgress (MathTex path)", () => {
+    it("uses setRevealProgress path when available", () => {
       const mathMob = new MockMathTexMobject();
       const anim = new Write(mathMob);
       anim.begin();
@@ -590,7 +590,7 @@ describe('Write', () => {
       expect(mathMob.getRevealProgress()).toBe(0);
     });
 
-    it('sets reveal progress to 1 for reverse', () => {
+    it("sets reveal progress to 1 for reverse", () => {
       const mathMob = new MockMathTexMobject();
       const anim = new Write(mathMob, { reverse: true });
       anim.begin();
@@ -599,8 +599,8 @@ describe('Write', () => {
     });
   });
 
-  describe('interpolate() - opacity fallback (no VMobject, no glyph)', () => {
-    it('at alpha=0: opacity is 0 (forward)', () => {
+  describe("interpolate() - opacity fallback (no VMobject, no glyph)", () => {
+    it("at alpha=0: opacity is 0 (forward)", () => {
       mob.opacity = 1;
       const anim = new Write(mob);
       anim.begin();
@@ -608,7 +608,7 @@ describe('Write', () => {
       expect(mob.opacity).toBeCloseTo(0, 5);
     });
 
-    it('at alpha=0.5: opacity is 0.5 (forward)', () => {
+    it("at alpha=0.5: opacity is 0.5 (forward)", () => {
       mob.opacity = 1;
       const anim = new Write(mob);
       anim.begin();
@@ -616,7 +616,7 @@ describe('Write', () => {
       expect(mob.opacity).toBeCloseTo(0.5, 5);
     });
 
-    it('at alpha=1: opacity is original (forward)', () => {
+    it("at alpha=1: opacity is original (forward)", () => {
       mob.opacity = 1;
       const anim = new Write(mob);
       anim.begin();
@@ -624,7 +624,7 @@ describe('Write', () => {
       expect(mob.opacity).toBeCloseTo(1, 5);
     });
 
-    it('reverse: alpha=0 gives full opacity, alpha=1 gives 0', () => {
+    it("reverse: alpha=0 gives full opacity, alpha=1 gives 0", () => {
       mob.opacity = 1;
       const anim = new Write(mob, { reverse: true });
       anim.begin();
@@ -640,8 +640,8 @@ describe('Write', () => {
     });
   });
 
-  describe('interpolate() - revealProgress path', () => {
-    it('calls setRevealProgress with effectiveAlpha', () => {
+  describe("interpolate() - revealProgress path", () => {
+    it("calls setRevealProgress with effectiveAlpha", () => {
       const mathMob = new MockMathTexMobject();
       const anim = new Write(mathMob);
       anim.begin();
@@ -650,7 +650,7 @@ describe('Write', () => {
       expect(mathMob.getRevealProgress()).toBeCloseTo(0.5, 5);
     });
 
-    it('reverse mode inverts alpha for revealProgress', () => {
+    it("reverse mode inverts alpha for revealProgress", () => {
       const mathMob = new MockMathTexMobject();
       const anim = new Write(mathMob, { reverse: true });
       anim.begin();
@@ -661,8 +661,8 @@ describe('Write', () => {
     });
   });
 
-  describe('finish() - opacity fallback (forward, not remover)', () => {
-    it('restores original opacity', () => {
+  describe("finish() - opacity fallback (forward, not remover)", () => {
+    it("restores original opacity", () => {
       mob.opacity = 0.8;
       const anim = new Write(mob);
       anim.begin();
@@ -671,7 +671,7 @@ describe('Write', () => {
       expect(mob.opacity).toBeCloseTo(0.8, 5);
     });
 
-    it('marks animation as finished', () => {
+    it("marks animation as finished", () => {
       const anim = new Write(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -680,8 +680,8 @@ describe('Write', () => {
     });
   });
 
-  describe('finish() - opacity fallback (remover=true)', () => {
-    it('sets opacity to 0 when remover is true', () => {
+  describe("finish() - opacity fallback (remover=true)", () => {
+    it("sets opacity to 0 when remover is true", () => {
       mob.opacity = 1;
       const anim = new Write(mob, { remover: true });
       anim.begin();
@@ -691,8 +691,8 @@ describe('Write', () => {
     });
   });
 
-  describe('finish() - revealProgress path', () => {
-    it('sets reveal progress to 1 when not remover', () => {
+  describe("finish() - revealProgress path", () => {
+    it("sets reveal progress to 1 when not remover", () => {
       const mathMob = new MockMathTexMobject();
       const anim = new Write(mathMob);
       anim.begin();
@@ -700,7 +700,7 @@ describe('Write', () => {
       expect(mathMob.getRevealProgress()).toBe(1);
     });
 
-    it('sets reveal progress to 0 when remover', () => {
+    it("sets reveal progress to 0 when remover", () => {
       const mathMob = new MockMathTexMobject();
       const anim = new Write(mathMob, { remover: true });
       anim.begin();
@@ -709,8 +709,8 @@ describe('Write', () => {
     });
   });
 
-  describe('begin() - VMobject without Line2 (opacity fallback)', () => {
-    it('sets opacity to 0 for VMobject without Line2', () => {
+  describe("begin() - VMobject without Line2 (opacity fallback)", () => {
+    it("sets opacity to 0 for VMobject without Line2", () => {
       const vmob = new VMobject();
       vmob.opacity = 1;
       const anim = new Write(vmob);
@@ -720,15 +720,15 @@ describe('Write', () => {
   });
 });
 
-describe('write() factory', () => {
-  it('returns a Write instance', () => {
+describe("write() factory", () => {
+  it("returns a Write instance", () => {
     const mob = new MockPlainMobject();
     const anim = write(mob);
     expect(anim).toBeInstanceOf(Write);
     expect(anim.mobject).toBe(mob);
   });
 
-  it('passes options through', () => {
+  it("passes options through", () => {
     const mob = new MockPlainMobject();
     const anim = write(mob, { duration: 2, lagRatio: 0.1 });
     expect(anim.duration).toBe(2);
@@ -740,38 +740,38 @@ describe('write() factory', () => {
 // Unwrite
 // =============================================================================
 
-describe('Unwrite', () => {
-  it('extends Write', () => {
+describe("Unwrite", () => {
+  it("extends Write", () => {
     const mob = new MockPlainMobject();
     const anim = new Unwrite(mob);
     expect(anim).toBeInstanceOf(Write);
   });
 
-  it('sets reverse to true', () => {
+  it("sets reverse to true", () => {
     const mob = new MockPlainMobject();
     const anim = new Unwrite(mob);
     expect((anim as any)._reverse).toBe(true);
   });
 
-  it('sets remover to true', () => {
+  it("sets remover to true", () => {
     const mob = new MockPlainMobject();
     const anim = new Unwrite(mob);
     expect((anim as any)._remover).toBe(true);
   });
 
-  it('default duration is 1', () => {
+  it("default duration is 1", () => {
     const mob = new MockPlainMobject();
     const anim = new Unwrite(mob);
     expect(anim.duration).toBe(1);
   });
 
-  it('accepts custom duration', () => {
+  it("accepts custom duration", () => {
     const mob = new MockPlainMobject();
     const anim = new Unwrite(mob, { duration: 3 });
     expect(anim.duration).toBe(3);
   });
 
-  it('full lifecycle: opacity goes from original to 0', () => {
+  it("full lifecycle: opacity goes from original to 0", () => {
     const mob = new MockPlainMobject();
     mob.opacity = 1;
     const anim = new Unwrite(mob);
@@ -791,15 +791,15 @@ describe('Unwrite', () => {
   });
 });
 
-describe('unwrite() factory', () => {
-  it('returns an Unwrite instance', () => {
+describe("unwrite() factory", () => {
+  it("returns an Unwrite instance", () => {
     const mob = new MockPlainMobject();
     const anim = unwrite(mob);
     expect(anim).toBeInstanceOf(Unwrite);
     expect(anim.mobject).toBe(mob);
   });
 
-  it('passes options through', () => {
+  it("passes options through", () => {
     const mob = new MockPlainMobject();
     const anim = unwrite(mob, { duration: 2 });
     expect(anim.duration).toBe(2);
@@ -810,99 +810,99 @@ describe('unwrite() factory', () => {
 // AddTextLetterByLetter
 // =============================================================================
 
-describe('AddTextLetterByLetter', () => {
-  describe('constructor', () => {
-    it('sets default duration to 1', () => {
-      const mob = new MockTextMobject('Hello');
+describe("AddTextLetterByLetter", () => {
+  describe("constructor", () => {
+    it("sets default duration to 1", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new AddTextLetterByLetter(mob);
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom duration', () => {
-      const mob = new MockTextMobject('Hello');
+    it("accepts custom duration", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new AddTextLetterByLetter(mob, { duration: 3 });
       expect(anim.duration).toBe(3);
     });
 
-    it('sets default timePerChar to 0.1', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets default timePerChar to 0.1", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new AddTextLetterByLetter(mob);
       expect((anim as any).timePerChar).toBe(0.1);
     });
 
-    it('accepts custom timePerChar', () => {
-      const mob = new MockTextMobject('Hello');
+    it("accepts custom timePerChar", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new AddTextLetterByLetter(mob, { timePerChar: 0.2 });
       expect((anim as any).timePerChar).toBe(0.2);
     });
   });
 
-  describe('begin()', () => {
-    it('stores full text and sets text to empty', () => {
-      const mob = new MockTextMobject('Hello');
+  describe("begin()", () => {
+    it("stores full text and sets text to empty", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new AddTextLetterByLetter(mob);
       anim.begin();
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
     });
   });
 
-  describe('interpolate()', () => {
-    it('at alpha=0: text is empty', () => {
-      const mob = new MockTextMobject('Hello');
+  describe("interpolate()", () => {
+    it("at alpha=0: text is empty", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new AddTextLetterByLetter(mob);
       anim.begin();
       anim.interpolate(0);
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
     });
 
-    it('at alpha=0.5: shows half the characters', () => {
-      const mob = new MockTextMobject('Hello');
+    it("at alpha=0.5: shows half the characters", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new AddTextLetterByLetter(mob);
       anim.begin();
       anim.interpolate(0.5);
       // Math.floor(0.5 * 5) = 2
-      expect(mob.getText()).toBe('He');
+      expect(mob.getText()).toBe("He");
     });
 
-    it('at alpha=1: shows all characters', () => {
-      const mob = new MockTextMobject('Hello');
+    it("at alpha=1: shows all characters", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new AddTextLetterByLetter(mob);
       anim.begin();
       anim.interpolate(1);
-      expect(mob.getText()).toBe('Hello');
+      expect(mob.getText()).toBe("Hello");
     });
 
-    it('at alpha=0.2: shows 1 character for 5-char text', () => {
-      const mob = new MockTextMobject('Hello');
+    it("at alpha=0.2: shows 1 character for 5-char text", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new AddTextLetterByLetter(mob);
       anim.begin();
       anim.interpolate(0.2);
       // Math.floor(0.2 * 5) = 1
-      expect(mob.getText()).toBe('H');
+      expect(mob.getText()).toBe("H");
     });
 
-    it('handles empty text gracefully', () => {
-      const mob = new MockTextMobject('');
+    it("handles empty text gracefully", () => {
+      const mob = new MockTextMobject("");
       const anim = new AddTextLetterByLetter(mob);
       anim.begin();
       anim.interpolate(0.5);
       // Empty text with empty fullText: no-op because fullText is falsy
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
     });
   });
 
-  describe('finish()', () => {
-    it('sets text to full text', () => {
-      const mob = new MockTextMobject('Hello World');
+  describe("finish()", () => {
+    it("sets text to full text", () => {
+      const mob = new MockTextMobject("Hello World");
       const anim = new AddTextLetterByLetter(mob);
       anim.begin();
       anim.interpolate(0.3);
       anim.finish();
-      expect(mob.getText()).toBe('Hello World');
+      expect(mob.getText()).toBe("Hello World");
     });
 
-    it('marks animation as finished', () => {
-      const mob = new MockTextMobject('Test');
+    it("marks animation as finished", () => {
+      const mob = new MockTextMobject("Test");
       const anim = new AddTextLetterByLetter(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -911,21 +911,21 @@ describe('AddTextLetterByLetter', () => {
     });
   });
 
-  describe('with non-text mobject (no getText/setText)', () => {
-    it('does not crash when begin is called on non-text mobject', () => {
+  describe("with non-text mobject (no getText/setText)", () => {
+    it("does not crash when begin is called on non-text mobject", () => {
       const mob = new MockPlainMobject();
       const anim = new AddTextLetterByLetter(mob);
       expect(() => anim.begin()).not.toThrow();
     });
 
-    it('does not crash when interpolate is called on non-text mobject', () => {
+    it("does not crash when interpolate is called on non-text mobject", () => {
       const mob = new MockPlainMobject();
       const anim = new AddTextLetterByLetter(mob);
       anim.begin();
       expect(() => anim.interpolate(0.5)).not.toThrow();
     });
 
-    it('does not crash when finish is called on non-text mobject', () => {
+    it("does not crash when finish is called on non-text mobject", () => {
       const mob = new MockPlainMobject();
       const anim = new AddTextLetterByLetter(mob);
       anim.begin();
@@ -934,16 +934,16 @@ describe('AddTextLetterByLetter', () => {
   });
 });
 
-describe('addTextLetterByLetter() factory', () => {
-  it('returns an AddTextLetterByLetter instance', () => {
-    const mob = new MockTextMobject('Hi');
+describe("addTextLetterByLetter() factory", () => {
+  it("returns an AddTextLetterByLetter instance", () => {
+    const mob = new MockTextMobject("Hi");
     const anim = addTextLetterByLetter(mob);
     expect(anim).toBeInstanceOf(AddTextLetterByLetter);
     expect(anim.mobject).toBe(mob);
   });
 
-  it('passes options through', () => {
-    const mob = new MockTextMobject('Hi');
+  it("passes options through", () => {
+    const mob = new MockTextMobject("Hi");
     const anim = addTextLetterByLetter(mob, { duration: 2, timePerChar: 0.05 });
     expect(anim.duration).toBe(2);
     expect((anim as any).timePerChar).toBe(0.05);
@@ -954,95 +954,95 @@ describe('addTextLetterByLetter() factory', () => {
 // RemoveTextLetterByLetter
 // =============================================================================
 
-describe('RemoveTextLetterByLetter', () => {
-  describe('constructor', () => {
-    it('sets default duration to 1', () => {
-      const mob = new MockTextMobject('Hello');
+describe("RemoveTextLetterByLetter", () => {
+  describe("constructor", () => {
+    it("sets default duration to 1", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new RemoveTextLetterByLetter(mob);
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom duration', () => {
-      const mob = new MockTextMobject('Hello');
+    it("accepts custom duration", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new RemoveTextLetterByLetter(mob, { duration: 2 });
       expect(anim.duration).toBe(2);
     });
 
-    it('sets default timePerChar to 0.1', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets default timePerChar to 0.1", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new RemoveTextLetterByLetter(mob);
       expect((anim as any).timePerChar).toBe(0.1);
     });
   });
 
-  describe('begin()', () => {
-    it('stores full text', () => {
-      const mob = new MockTextMobject('Hello');
+  describe("begin()", () => {
+    it("stores full text", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new RemoveTextLetterByLetter(mob);
       anim.begin();
-      expect((anim as any)._fullText).toBe('Hello');
+      expect((anim as any)._fullText).toBe("Hello");
     });
   });
 
-  describe('interpolate()', () => {
-    it('at alpha=0: full text visible', () => {
-      const mob = new MockTextMobject('Hello');
+  describe("interpolate()", () => {
+    it("at alpha=0: full text visible", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new RemoveTextLetterByLetter(mob);
       anim.begin();
       anim.interpolate(0);
       // charsToRemove = floor(0 * 5) = 0, remaining = 5
-      expect(mob.getText()).toBe('Hello');
+      expect(mob.getText()).toBe("Hello");
     });
 
-    it('at alpha=0.5: half text removed', () => {
-      const mob = new MockTextMobject('Hello');
+    it("at alpha=0.5: half text removed", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new RemoveTextLetterByLetter(mob);
       anim.begin();
       anim.interpolate(0.5);
       // charsToRemove = floor(0.5 * 5) = 2, remaining = 3
-      expect(mob.getText()).toBe('Hel');
+      expect(mob.getText()).toBe("Hel");
     });
 
-    it('at alpha=1: text is empty', () => {
-      const mob = new MockTextMobject('Hello');
+    it("at alpha=1: text is empty", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new RemoveTextLetterByLetter(mob);
       anim.begin();
       anim.interpolate(1);
       // charsToRemove = floor(1 * 5) = 5, remaining = 0
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
     });
 
-    it('at alpha=0.4: 2 chars removed from 5-char text', () => {
-      const mob = new MockTextMobject('Hello');
+    it("at alpha=0.4: 2 chars removed from 5-char text", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new RemoveTextLetterByLetter(mob);
       anim.begin();
       anim.interpolate(0.4);
       // charsToRemove = floor(0.4 * 5) = 2, remaining = 3
-      expect(mob.getText()).toBe('Hel');
+      expect(mob.getText()).toBe("Hel");
     });
 
-    it('handles empty text gracefully', () => {
-      const mob = new MockTextMobject('');
+    it("handles empty text gracefully", () => {
+      const mob = new MockTextMobject("");
       const anim = new RemoveTextLetterByLetter(mob);
       anim.begin();
       anim.interpolate(0.5);
       // empty fullText is falsy so condition in interpolate skips
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
     });
   });
 
-  describe('finish()', () => {
-    it('sets text to empty', () => {
-      const mob = new MockTextMobject('Hello');
+  describe("finish()", () => {
+    it("sets text to empty", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new RemoveTextLetterByLetter(mob);
       anim.begin();
       anim.interpolate(0.3);
       anim.finish();
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
     });
 
-    it('marks animation as finished', () => {
-      const mob = new MockTextMobject('Test');
+    it("marks animation as finished", () => {
+      const mob = new MockTextMobject("Test");
       const anim = new RemoveTextLetterByLetter(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -1051,8 +1051,8 @@ describe('RemoveTextLetterByLetter', () => {
     });
   });
 
-  describe('with non-text mobject', () => {
-    it('does not crash on begin/interpolate/finish', () => {
+  describe("with non-text mobject", () => {
+    it("does not crash on begin/interpolate/finish", () => {
       const mob = new MockPlainMobject();
       const anim = new RemoveTextLetterByLetter(mob);
       expect(() => {
@@ -1064,16 +1064,16 @@ describe('RemoveTextLetterByLetter', () => {
   });
 });
 
-describe('removeTextLetterByLetter() factory', () => {
-  it('returns a RemoveTextLetterByLetter instance', () => {
-    const mob = new MockTextMobject('Hi');
+describe("removeTextLetterByLetter() factory", () => {
+  it("returns a RemoveTextLetterByLetter instance", () => {
+    const mob = new MockTextMobject("Hi");
     const anim = removeTextLetterByLetter(mob);
     expect(anim).toBeInstanceOf(RemoveTextLetterByLetter);
     expect(anim.mobject).toBe(mob);
   });
 
-  it('passes options through', () => {
-    const mob = new MockTextMobject('Hi');
+  it("passes options through", () => {
+    const mob = new MockTextMobject("Hi");
     const anim = removeTextLetterByLetter(mob, { duration: 2 });
     expect(anim.duration).toBe(2);
   });
@@ -1083,107 +1083,107 @@ describe('removeTextLetterByLetter() factory', () => {
 // AddTextWordByWord (CreationExtensions)
 // =============================================================================
 
-describe('AddTextWordByWord', () => {
-  describe('constructor', () => {
-    it('stores the mobject reference', () => {
-      const mob = new MockTextMobject('Hello World');
+describe("AddTextWordByWord", () => {
+  describe("constructor", () => {
+    it("stores the mobject reference", () => {
+      const mob = new MockTextMobject("Hello World");
       const anim = new AddTextWordByWord(mob);
       expect(anim.mobject).toBe(mob);
     });
 
-    it('sets default timePerWord to 0.2', () => {
-      const mob = new MockTextMobject('Hello World');
+    it("sets default timePerWord to 0.2", () => {
+      const mob = new MockTextMobject("Hello World");
       const anim = new AddTextWordByWord(mob);
       expect(anim.timePerWord).toBe(0.2);
     });
 
-    it('accepts custom timePerWord', () => {
-      const mob = new MockTextMobject('Hello World');
+    it("accepts custom timePerWord", () => {
+      const mob = new MockTextMobject("Hello World");
       const anim = new AddTextWordByWord(mob, { timePerWord: 0.5 });
       expect(anim.timePerWord).toBe(0.5);
     });
   });
 
-  describe('begin()', () => {
-    it('stores full text and splits into words', () => {
-      const mob = new MockTextMobject('Hello World');
+  describe("begin()", () => {
+    it("stores full text and splits into words", () => {
+      const mob = new MockTextMobject("Hello World");
       const anim = new AddTextWordByWord(mob);
       anim.begin();
-      expect(mob.getText()).toBe('');
-      expect((anim as any)._words).toEqual(['Hello', 'World']);
+      expect(mob.getText()).toBe("");
+      expect((anim as any)._words).toEqual(["Hello", "World"]);
     });
 
-    it('handles multiple spaces', () => {
-      const mob = new MockTextMobject('Hello   World   Foo');
+    it("handles multiple spaces", () => {
+      const mob = new MockTextMobject("Hello   World   Foo");
       const anim = new AddTextWordByWord(mob);
       anim.begin();
-      expect((anim as any)._words).toEqual(['Hello', 'World', 'Foo']);
+      expect((anim as any)._words).toEqual(["Hello", "World", "Foo"]);
     });
 
-    it('handles single word', () => {
-      const mob = new MockTextMobject('Hello');
+    it("handles single word", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new AddTextWordByWord(mob);
       anim.begin();
-      expect((anim as any)._words).toEqual(['Hello']);
+      expect((anim as any)._words).toEqual(["Hello"]);
     });
 
-    it('handles empty text', () => {
-      const mob = new MockTextMobject('');
+    it("handles empty text", () => {
+      const mob = new MockTextMobject("");
       const anim = new AddTextWordByWord(mob);
       anim.begin();
       expect((anim as any)._words).toEqual([]);
     });
   });
 
-  describe('interpolate()', () => {
-    it('at alpha=0: no words shown', () => {
-      const mob = new MockTextMobject('Hello World Foo');
+  describe("interpolate()", () => {
+    it("at alpha=0: no words shown", () => {
+      const mob = new MockTextMobject("Hello World Foo");
       const anim = new AddTextWordByWord(mob);
       anim.begin();
       anim.interpolate(0);
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
     });
 
-    it('at alpha=0.5: half the words shown', () => {
-      const mob = new MockTextMobject('Hello World Foo Bar');
+    it("at alpha=0.5: half the words shown", () => {
+      const mob = new MockTextMobject("Hello World Foo Bar");
       const anim = new AddTextWordByWord(mob);
       anim.begin();
       anim.interpolate(0.5);
       // Math.floor(0.5 * 4) = 2
-      expect(mob.getText()).toBe('Hello World');
+      expect(mob.getText()).toBe("Hello World");
     });
 
-    it('at alpha=1: all words shown', () => {
-      const mob = new MockTextMobject('Hello World');
+    it("at alpha=1: all words shown", () => {
+      const mob = new MockTextMobject("Hello World");
       const anim = new AddTextWordByWord(mob);
       anim.begin();
       anim.interpolate(1);
       // Math.floor(1 * 2) = 2
-      expect(mob.getText()).toBe('Hello World');
+      expect(mob.getText()).toBe("Hello World");
     });
 
-    it('handles empty words array gracefully', () => {
-      const mob = new MockTextMobject('');
+    it("handles empty words array gracefully", () => {
+      const mob = new MockTextMobject("");
       const anim = new AddTextWordByWord(mob);
       anim.begin();
       anim.interpolate(0.5);
       // _words.length is 0, condition fails
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
     });
   });
 
-  describe('finish()', () => {
-    it('sets text to full text', () => {
-      const mob = new MockTextMobject('Hello World');
+  describe("finish()", () => {
+    it("sets text to full text", () => {
+      const mob = new MockTextMobject("Hello World");
       const anim = new AddTextWordByWord(mob);
       anim.begin();
       anim.interpolate(0.3);
       anim.finish();
-      expect(mob.getText()).toBe('Hello World');
+      expect(mob.getText()).toBe("Hello World");
     });
 
-    it('marks animation as finished', () => {
-      const mob = new MockTextMobject('Test');
+    it("marks animation as finished", () => {
+      const mob = new MockTextMobject("Test");
       const anim = new AddTextWordByWord(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -1192,8 +1192,8 @@ describe('AddTextWordByWord', () => {
     });
   });
 
-  describe('with non-text mobject', () => {
-    it('does not crash on begin/interpolate/finish', () => {
+  describe("with non-text mobject", () => {
+    it("does not crash on begin/interpolate/finish", () => {
       const mob = new MockPlainMobject();
       const anim = new AddTextWordByWord(mob);
       expect(() => {
@@ -1205,16 +1205,16 @@ describe('AddTextWordByWord', () => {
   });
 });
 
-describe('addTextWordByWord() factory', () => {
-  it('returns an AddTextWordByWord instance', () => {
-    const mob = new MockTextMobject('Hi there');
+describe("addTextWordByWord() factory", () => {
+  it("returns an AddTextWordByWord instance", () => {
+    const mob = new MockTextMobject("Hi there");
     const anim = addTextWordByWord(mob);
     expect(anim).toBeInstanceOf(AddTextWordByWord);
     expect(anim.mobject).toBe(mob);
   });
 
-  it('passes options through', () => {
-    const mob = new MockTextMobject('Hi');
+  it("passes options through", () => {
+    const mob = new MockTextMobject("Hi");
     const anim = addTextWordByWord(mob, { timePerWord: 0.3 });
     expect(anim.timePerWord).toBe(0.3);
   });
@@ -1224,17 +1224,17 @@ describe('addTextWordByWord() factory', () => {
 // ShowIncreasingSubsets (CreationExtensions)
 // =============================================================================
 
-describe('ShowIncreasingSubsets', () => {
-  describe('constructor', () => {
-    it('stores the mobject reference', () => {
+describe("ShowIncreasingSubsets", () => {
+  describe("constructor", () => {
+    it("stores the mobject reference", () => {
       const mob = new MockPlainMobject();
       const anim = new ShowIncreasingSubsets(mob);
       expect(anim.mobject).toBe(mob);
     });
   });
 
-  describe('begin()', () => {
-    it('hides all submobjects initially', () => {
+  describe("begin()", () => {
+    it("hides all submobjects initially", () => {
       const parent = new MockPlainMobject();
       const child1 = new MockPlainMobject();
       const child2 = new MockPlainMobject();
@@ -1254,7 +1254,7 @@ describe('ShowIncreasingSubsets', () => {
       expect(child3.opacity).toBe(0);
     });
 
-    it('stores original opacities', () => {
+    it("stores original opacities", () => {
       const parent = new MockPlainMobject();
       const child1 = new MockPlainMobject();
       const child2 = new MockPlainMobject();
@@ -1270,8 +1270,8 @@ describe('ShowIncreasingSubsets', () => {
     });
   });
 
-  describe('interpolate()', () => {
-    it('shows submobjects progressively', () => {
+  describe("interpolate()", () => {
+    it("shows submobjects progressively", () => {
       const parent = new MockPlainMobject();
       const child1 = new MockPlainMobject();
       const child2 = new MockPlainMobject();
@@ -1299,7 +1299,7 @@ describe('ShowIncreasingSubsets', () => {
       expect(child4.opacity).toBe(0); // hidden
     });
 
-    it('at alpha=0 all are hidden or partially showing first', () => {
+    it("at alpha=0 all are hidden or partially showing first", () => {
       const parent = new MockPlainMobject();
       const child1 = new MockPlainMobject();
       child1.opacity = 1;
@@ -1313,7 +1313,7 @@ describe('ShowIncreasingSubsets', () => {
       expect(child1.opacity).toBeCloseTo(0, 5);
     });
 
-    it('at alpha=1 all are fully shown', () => {
+    it("at alpha=1 all are fully shown", () => {
       const parent = new MockPlainMobject();
       const child1 = new MockPlainMobject();
       const child2 = new MockPlainMobject();
@@ -1332,8 +1332,8 @@ describe('ShowIncreasingSubsets', () => {
     });
   });
 
-  describe('finish()', () => {
-    it('shows all submobjects with their original opacities', () => {
+  describe("finish()", () => {
+    it("shows all submobjects with their original opacities", () => {
       const parent = new MockPlainMobject();
       const child1 = new MockPlainMobject();
       const child2 = new MockPlainMobject();
@@ -1350,7 +1350,7 @@ describe('ShowIncreasingSubsets', () => {
       expect(child2.opacity).toBeCloseTo(0.8, 5);
     });
 
-    it('marks animation as finished', () => {
+    it("marks animation as finished", () => {
       const parent = new MockPlainMobject();
       const anim = new ShowIncreasingSubsets(parent);
       anim.begin();
@@ -1360,8 +1360,8 @@ describe('ShowIncreasingSubsets', () => {
     });
   });
 
-  describe('with no children', () => {
-    it('handles mobject with no children', () => {
+  describe("with no children", () => {
+    it("handles mobject with no children", () => {
       const parent = new MockPlainMobject();
       const anim = new ShowIncreasingSubsets(parent);
       expect(() => {
@@ -1373,8 +1373,8 @@ describe('ShowIncreasingSubsets', () => {
   });
 });
 
-describe('showIncreasingSubsets() factory', () => {
-  it('returns a ShowIncreasingSubsets instance', () => {
+describe("showIncreasingSubsets() factory", () => {
+  it("returns a ShowIncreasingSubsets instance", () => {
     const mob = new MockPlainMobject();
     const anim = showIncreasingSubsets(mob);
     expect(anim).toBeInstanceOf(ShowIncreasingSubsets);
@@ -1385,37 +1385,37 @@ describe('showIncreasingSubsets() factory', () => {
 // ShowPartial (CreationExtensions)
 // =============================================================================
 
-describe('ShowPartial', () => {
-  describe('constructor', () => {
-    it('sets default start and end portions', () => {
+describe("ShowPartial", () => {
+  describe("constructor", () => {
+    it("sets default start and end portions", () => {
       const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob);
       expect(anim.startPortion).toBe(0);
       expect(anim.endPortion).toBe(1);
     });
 
-    it('accepts custom portions', () => {
+    it("accepts custom portions", () => {
       const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob, { startPortion: 0.2, endPortion: 0.8 });
       expect(anim.startPortion).toBe(0.2);
       expect(anim.endPortion).toBe(0.8);
     });
 
-    it('detects VMobject', () => {
+    it("detects VMobject", () => {
       const vmob = new VMobject();
       const anim = new ShowPartial(vmob);
       expect((anim as any)._isVMobject).toBe(true);
     });
 
-    it('detects non-VMobject', () => {
+    it("detects non-VMobject", () => {
       const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob);
       expect((anim as any)._isVMobject).toBe(false);
     });
   });
 
-  describe('interpolate() - non-VMobject (opacity fallback)', () => {
-    it('at alpha=0: opacity is 0', () => {
+  describe("interpolate() - non-VMobject (opacity fallback)", () => {
+    it("at alpha=0: opacity is 0", () => {
       const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob);
       anim.begin();
@@ -1423,7 +1423,7 @@ describe('ShowPartial', () => {
       expect(mob.opacity).toBeCloseTo(0, 5);
     });
 
-    it('at alpha=0.5: opacity is 0.5', () => {
+    it("at alpha=0.5: opacity is 0.5", () => {
       const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob);
       anim.begin();
@@ -1431,7 +1431,7 @@ describe('ShowPartial', () => {
       expect(mob.opacity).toBeCloseTo(0.5, 5);
     });
 
-    it('at alpha=1: opacity is 1', () => {
+    it("at alpha=1: opacity is 1", () => {
       const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob);
       anim.begin();
@@ -1440,8 +1440,8 @@ describe('ShowPartial', () => {
     });
   });
 
-  describe('finish()', () => {
-    it('marks animation as finished', () => {
+  describe("finish()", () => {
+    it("marks animation as finished", () => {
       const mob = new MockPlainMobject();
       const anim = new ShowPartial(mob);
       anim.begin();
@@ -1451,8 +1451,8 @@ describe('ShowPartial', () => {
     });
   });
 
-  describe('VMobject without Line2 (no crash)', () => {
-    it('begin() does not crash on VMobject without Line2', () => {
+  describe("VMobject without Line2 (no crash)", () => {
+    it("begin() does not crash on VMobject without Line2", () => {
       const vmob = new VMobject();
       const anim = new ShowPartial(vmob);
       expect(() => anim.begin()).not.toThrow();
@@ -1460,15 +1460,15 @@ describe('ShowPartial', () => {
   });
 });
 
-describe('showPartial() factory', () => {
-  it('returns a ShowPartial instance', () => {
+describe("showPartial() factory", () => {
+  it("returns a ShowPartial instance", () => {
     const mob = new MockPlainMobject();
     const anim = showPartial(mob);
     expect(anim).toBeInstanceOf(ShowPartial);
     expect(anim.mobject).toBe(mob);
   });
 
-  it('passes options through', () => {
+  it("passes options through", () => {
     const mob = new MockPlainMobject();
     const anim = showPartial(mob, { startPortion: 0.1, endPortion: 0.9 });
     expect(anim.startPortion).toBe(0.1);
@@ -1480,17 +1480,17 @@ describe('showPartial() factory', () => {
 // ShowSubmobjectsOneByOne (CreationExtensions)
 // =============================================================================
 
-describe('ShowSubmobjectsOneByOne', () => {
-  describe('constructor', () => {
-    it('stores the mobject reference', () => {
+describe("ShowSubmobjectsOneByOne", () => {
+  describe("constructor", () => {
+    it("stores the mobject reference", () => {
       const mob = new MockPlainMobject();
       const anim = new ShowSubmobjectsOneByOne(mob);
       expect(anim.mobject).toBe(mob);
     });
   });
 
-  describe('begin()', () => {
-    it('hides all submobjects initially', () => {
+  describe("begin()", () => {
+    it("hides all submobjects initially", () => {
       const parent = new MockPlainMobject();
       const child1 = new MockPlainMobject();
       const child2 = new MockPlainMobject();
@@ -1507,8 +1507,8 @@ describe('ShowSubmobjectsOneByOne', () => {
     });
   });
 
-  describe('interpolate()', () => {
-    it('shows only one submobject at a time', () => {
+  describe("interpolate()", () => {
+    it("shows only one submobject at a time", () => {
       const parent = new MockPlainMobject();
       const child1 = new MockPlainMobject();
       const child2 = new MockPlainMobject();
@@ -1542,7 +1542,7 @@ describe('ShowSubmobjectsOneByOne', () => {
       expect(child3.opacity).toBe(1);
     });
 
-    it('preserves original opacity when showing', () => {
+    it("preserves original opacity when showing", () => {
       const parent = new MockPlainMobject();
       const child1 = new MockPlainMobject();
       child1.opacity = 0.6;
@@ -1555,7 +1555,7 @@ describe('ShowSubmobjectsOneByOne', () => {
       expect(child1.opacity).toBeCloseTo(0.6, 5);
     });
 
-    it('hides previous submobject when showing next', () => {
+    it("hides previous submobject when showing next", () => {
       const parent = new MockPlainMobject();
       const child1 = new MockPlainMobject();
       const child2 = new MockPlainMobject();
@@ -1579,8 +1579,8 @@ describe('ShowSubmobjectsOneByOne', () => {
     });
   });
 
-  describe('finish()', () => {
-    it('shows only the last submobject', () => {
+  describe("finish()", () => {
+    it("shows only the last submobject", () => {
       const parent = new MockPlainMobject();
       const child1 = new MockPlainMobject();
       const child2 = new MockPlainMobject();
@@ -1601,7 +1601,7 @@ describe('ShowSubmobjectsOneByOne', () => {
       expect(child3.opacity).toBeCloseTo(0.7, 5);
     });
 
-    it('marks animation as finished', () => {
+    it("marks animation as finished", () => {
       const parent = new MockPlainMobject();
       const anim = new ShowSubmobjectsOneByOne(parent);
       anim.begin();
@@ -1611,8 +1611,8 @@ describe('ShowSubmobjectsOneByOne', () => {
     });
   });
 
-  describe('with no children', () => {
-    it('handles mobject with no children', () => {
+  describe("with no children", () => {
+    it("handles mobject with no children", () => {
       const parent = new MockPlainMobject();
       const anim = new ShowSubmobjectsOneByOne(parent);
       expect(() => {
@@ -1624,8 +1624,8 @@ describe('ShowSubmobjectsOneByOne', () => {
   });
 });
 
-describe('showSubmobjectsOneByOne() factory', () => {
-  it('returns a ShowSubmobjectsOneByOne instance', () => {
+describe("showSubmobjectsOneByOne() factory", () => {
+  it("returns a ShowSubmobjectsOneByOne instance", () => {
     const mob = new MockPlainMobject();
     const anim = showSubmobjectsOneByOne(mob);
     expect(anim).toBeInstanceOf(ShowSubmobjectsOneByOne);
@@ -1636,35 +1636,35 @@ describe('showSubmobjectsOneByOne() factory', () => {
 // SpiralIn (CreationExtensions)
 // =============================================================================
 
-describe('SpiralIn', () => {
-  describe('constructor', () => {
-    it('sets default scaleFactor to 3', () => {
+describe("SpiralIn", () => {
+  describe("constructor", () => {
+    it("sets default scaleFactor to 3", () => {
       const mob = new MockPlainMobject();
       const anim = new SpiralIn(mob);
       expect(anim.scaleFactor).toBe(3);
     });
 
-    it('sets default numTurns to 2', () => {
+    it("sets default numTurns to 2", () => {
       const mob = new MockPlainMobject();
       const anim = new SpiralIn(mob);
       expect(anim.numTurns).toBe(2);
     });
 
-    it('accepts custom scaleFactor', () => {
+    it("accepts custom scaleFactor", () => {
       const mob = new MockPlainMobject();
       const anim = new SpiralIn(mob, { scaleFactor: 5 });
       expect(anim.scaleFactor).toBe(5);
     });
 
-    it('accepts custom numTurns', () => {
+    it("accepts custom numTurns", () => {
       const mob = new MockPlainMobject();
       const anim = new SpiralIn(mob, { numTurns: 4 });
       expect(anim.numTurns).toBe(4);
     });
   });
 
-  describe('begin()', () => {
-    it('scales up the mobject by scaleFactor when no children', () => {
+  describe("begin()", () => {
+    it("scales up the mobject by scaleFactor when no children", () => {
       const mob = new PointMobject({ position: [0, 0, 0] });
       mob.scaleVector.set(1, 1, 1);
       const anim = new SpiralIn(mob, { scaleFactor: 3 });
@@ -1676,7 +1676,7 @@ describe('SpiralIn', () => {
       expect(mob.scaleVector.z).toBeCloseTo(3, 5);
     });
 
-    it('moves mobject to center point when no children', () => {
+    it("moves mobject to center point when no children", () => {
       const mob = new PointMobject({ position: [2, 3, 0] });
       const anim = new SpiralIn(mob, { scaleFactor: 2 });
       anim.begin();
@@ -1690,8 +1690,8 @@ describe('SpiralIn', () => {
     });
   });
 
-  describe('interpolate()', () => {
-    it('at alpha=0: mobject is at center, scaled up', () => {
+  describe("interpolate()", () => {
+    it("at alpha=0: mobject is at center, scaled up", () => {
       const mob = new PointMobject({ position: [0, 0, 0] });
       mob.scaleVector.set(1, 1, 1);
       const anim = new SpiralIn(mob, { scaleFactor: 3, numTurns: 1 });
@@ -1703,7 +1703,7 @@ describe('SpiralIn', () => {
       expect(mob.scaleVector.x).toBeCloseTo(3, 5);
     });
 
-    it('at alpha=1: mobject is at target position and scale', () => {
+    it("at alpha=1: mobject is at target position and scale", () => {
       const mob = new PointMobject({ position: [2, 0, 0] });
       mob.scaleVector.set(1, 1, 1);
       const anim = new SpiralIn(mob, { scaleFactor: 3, numTurns: 1 });
@@ -1720,7 +1720,7 @@ describe('SpiralIn', () => {
       expect(mob.position.x).toBeCloseTo(targetX, 5);
     });
 
-    it('at alpha=0.5: intermediate state', () => {
+    it("at alpha=0.5: intermediate state", () => {
       const mob = new PointMobject({ position: [0, 0, 0] });
       mob.scaleVector.set(1, 1, 1);
       const anim = new SpiralIn(mob, { scaleFactor: 2, numTurns: 1 });
@@ -1732,8 +1732,8 @@ describe('SpiralIn', () => {
     });
   });
 
-  describe('finish()', () => {
-    it('restores target position and scale', () => {
+  describe("finish()", () => {
+    it("restores target position and scale", () => {
       const mob = new PointMobject({ position: [0, 0, 0] });
       mob.moveTo([3, 4, 0]);
       mob.scaleVector.set(1, 1, 1);
@@ -1749,7 +1749,7 @@ describe('SpiralIn', () => {
       expect(mob.scaleVector.y).toBeCloseTo(1, 5);
     });
 
-    it('marks animation as finished', () => {
+    it("marks animation as finished", () => {
       const mob = new PointMobject({ position: [0, 0, 0] });
       mob.moveTo([1, 2, 0]);
       const anim = new SpiralIn(mob);
@@ -1760,8 +1760,8 @@ describe('SpiralIn', () => {
     });
   });
 
-  describe('with children', () => {
-    it('animates children when present', () => {
+  describe("with children", () => {
+    it("animates children when present", () => {
       const parent = new VMobject();
       const child1 = new PointMobject({ position: [0, 0, 0] });
       child1.moveTo([1, 0, 0]);
@@ -1789,15 +1789,15 @@ describe('SpiralIn', () => {
   });
 });
 
-describe('spiralIn() factory', () => {
-  it('returns a SpiralIn instance', () => {
+describe("spiralIn() factory", () => {
+  it("returns a SpiralIn instance", () => {
     const mob = new MockPlainMobject();
     const anim = spiralIn(mob);
     expect(anim).toBeInstanceOf(SpiralIn);
     expect(anim.mobject).toBe(mob);
   });
 
-  it('passes options through', () => {
+  it("passes options through", () => {
     const mob = new MockPlainMobject();
     const anim = spiralIn(mob, { scaleFactor: 5, numTurns: 3 });
     expect(anim.scaleFactor).toBe(5);
@@ -1809,111 +1809,111 @@ describe('spiralIn() factory', () => {
 // TypeWithCursor (TypeWithCursor.ts)
 // =============================================================================
 
-describe('TypeWithCursor', () => {
-  describe('constructor', () => {
-    it('sets default cursorChar to |', () => {
-      const mob = new MockTextMobject('Hello');
+describe("TypeWithCursor", () => {
+  describe("constructor", () => {
+    it("sets default cursorChar to |", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob);
-      expect((anim as any).cursorChar).toBe('|');
+      expect((anim as any).cursorChar).toBe("|");
     });
 
-    it('sets default cursorBlinkRate to 2', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets default cursorBlinkRate to 2", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob);
       expect((anim as any).cursorBlinkRate).toBe(2);
     });
 
-    it('sets default typingSpeed to 10', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets default typingSpeed to 10", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob);
       expect((anim as any).typingSpeed).toBe(10);
     });
 
-    it('sets default cursorBlinks to true', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets default cursorBlinks to true", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob);
       expect((anim as any).cursorBlinks).toBe(true);
     });
 
-    it('sets default hideCursorOnComplete to false', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets default hideCursorOnComplete to false", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob);
       expect((anim as any).hideCursorOnComplete).toBe(false);
     });
 
-    it('sets default duration to 1', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets default duration to 1", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob);
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom cursorChar', () => {
-      const mob = new MockTextMobject('Hello');
-      const anim = new TypeWithCursor(mob, { cursorChar: '_' });
-      expect((anim as any).cursorChar).toBe('_');
+    it("accepts custom cursorChar", () => {
+      const mob = new MockTextMobject("Hello");
+      const anim = new TypeWithCursor(mob, { cursorChar: "_" });
+      expect((anim as any).cursorChar).toBe("_");
     });
 
-    it('accepts custom cursorBlinkRate', () => {
-      const mob = new MockTextMobject('Hello');
+    it("accepts custom cursorBlinkRate", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob, { cursorBlinkRate: 5 });
       expect((anim as any).cursorBlinkRate).toBe(5);
     });
 
-    it('accepts custom typingSpeed', () => {
-      const mob = new MockTextMobject('Hello');
+    it("accepts custom typingSpeed", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob, { typingSpeed: 20 });
       expect((anim as any).typingSpeed).toBe(20);
     });
 
-    it('accepts cursorBlinks option', () => {
-      const mob = new MockTextMobject('Hello');
+    it("accepts cursorBlinks option", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob, { cursorBlinks: false });
       expect((anim as any).cursorBlinks).toBe(false);
     });
 
-    it('accepts hideCursorOnComplete option', () => {
-      const mob = new MockTextMobject('Hello');
+    it("accepts hideCursorOnComplete option", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob, { hideCursorOnComplete: true });
       expect((anim as any).hideCursorOnComplete).toBe(true);
     });
 
-    it('accepts highlightColor option', () => {
-      const mob = new MockTextMobject('Hello');
-      const anim = new TypeWithCursor(mob, { highlightColor: '#ff0000' });
-      expect((anim as any).highlightColor).toBe('#ff0000');
+    it("accepts highlightColor option", () => {
+      const mob = new MockTextMobject("Hello");
+      const anim = new TypeWithCursor(mob, { highlightColor: "#ff0000" });
+      expect((anim as any).highlightColor).toBe("#ff0000");
     });
 
-    it('accepts custom duration', () => {
-      const mob = new MockTextMobject('Hello');
+    it("accepts custom duration", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob, { duration: 5 });
       expect(anim.duration).toBe(5);
     });
   });
 
-  describe('begin()', () => {
-    it('stores full text', () => {
-      const mob = new MockTextMobject('Hello');
+  describe("begin()", () => {
+    it("stores full text", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob);
       anim.begin();
-      expect((anim as any)._fullText).toBe('Hello');
+      expect((anim as any)._fullText).toBe("Hello");
     });
 
-    it('sets initial text to just cursor', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets initial text to just cursor", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob);
       anim.begin();
-      expect(mob.getText()).toBe('|');
+      expect(mob.getText()).toBe("|");
     });
 
-    it('sets initial text to custom cursor', () => {
-      const mob = new MockTextMobject('Hello');
-      const anim = new TypeWithCursor(mob, { cursorChar: '_' });
+    it("sets initial text to custom cursor", () => {
+      const mob = new MockTextMobject("Hello");
+      const anim = new TypeWithCursor(mob, { cursorChar: "_" });
       anim.begin();
-      expect(mob.getText()).toBe('_');
+      expect(mob.getText()).toBe("_");
     });
 
-    it('initializes cursor state', () => {
-      const mob = new MockTextMobject('Hello');
+    it("initializes cursor state", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob);
       anim.begin();
       expect((anim as any)._currentCharCount).toBe(0);
@@ -1921,66 +1921,66 @@ describe('TypeWithCursor', () => {
       expect((anim as any)._lastCursorToggleTime).toBe(0);
     });
 
-    it('stores original color', () => {
-      const mob = new MockTextMobject('Hello');
-      mob.color = '#00ff00';
+    it("stores original color", () => {
+      const mob = new MockTextMobject("Hello");
+      mob.color = "#00ff00";
       const anim = new TypeWithCursor(mob);
       anim.begin();
-      expect((anim as any)._originalColor).toBe('#00ff00');
+      expect((anim as any)._originalColor).toBe("#00ff00");
     });
   });
 
-  describe('interpolate()', () => {
-    it('shows partial text with cursor at alpha=0.5', () => {
-      const mob = new MockTextMobject('Hello');
+  describe("interpolate()", () => {
+    it("shows partial text with cursor at alpha=0.5", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob, { cursorBlinks: false });
       anim.begin();
       anim.interpolate(0.5);
       // targetCharCount = floor(0.5 * 5) = 2
       // cursorBlinks false => cursor always visible
-      expect(mob.getText()).toBe('He|');
+      expect(mob.getText()).toBe("He|");
     });
 
-    it('shows no text at alpha=0', () => {
-      const mob = new MockTextMobject('Hello');
+    it("shows no text at alpha=0", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob, { cursorBlinks: false });
       anim.begin();
       anim.interpolate(0);
       // targetCharCount = floor(0 * 5) = 0
-      expect(mob.getText()).toBe('|');
+      expect(mob.getText()).toBe("|");
     });
 
-    it('shows all text at alpha=1', () => {
-      const mob = new MockTextMobject('Hello');
+    it("shows all text at alpha=1", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob, { cursorBlinks: false });
       anim.begin();
       anim.interpolate(1);
       // targetCharCount = floor(1 * 5) = 5
-      expect(mob.getText()).toBe('Hello|');
+      expect(mob.getText()).toBe("Hello|");
     });
 
-    it('when cursorBlinks=false, cursor is always visible', () => {
-      const mob = new MockTextMobject('Hi');
+    it("when cursorBlinks=false, cursor is always visible", () => {
+      const mob = new MockTextMobject("Hi");
       const anim = new TypeWithCursor(mob, { cursorBlinks: false });
       anim.begin();
       anim.interpolate(0.5);
       // targetCharCount = floor(0.5 * 2) = 1
-      expect(mob.getText()).toBe('H|');
+      expect(mob.getText()).toBe("H|");
     });
 
-    it('applies highlight color when specified', () => {
-      const mob = new MockHighlightTextMobject('Hello');
+    it("applies highlight color when specified", () => {
+      const mob = new MockHighlightTextMobject("Hello");
       const anim = new TypeWithCursor(mob, {
         cursorBlinks: false,
-        highlightColor: '#ff0000',
+        highlightColor: "#ff0000",
       });
       anim.begin();
       anim.interpolate(0.5);
-      expect(mob.color).toBe('#ff0000');
+      expect(mob.color).toBe("#ff0000");
       expect(mob._renderToCanvas).toHaveBeenCalled();
     });
 
-    it('does not crash for non-text mobject', () => {
+    it("does not crash for non-text mobject", () => {
       const mob = new MockPlainMobject();
       const anim = new TypeWithCursor(mob);
       anim.begin();
@@ -1988,48 +1988,48 @@ describe('TypeWithCursor', () => {
     });
   });
 
-  describe('_calculateDuration()', () => {
-    it('returns text length / typingSpeed', () => {
-      const mob = new MockTextMobject('Hello World'); // 11 chars
+  describe("_calculateDuration()", () => {
+    it("returns text length / typingSpeed", () => {
+      const mob = new MockTextMobject("Hello World"); // 11 chars
       const anim = new TypeWithCursor(mob, { typingSpeed: 10 });
       anim.begin(); // sets _fullText
       expect((anim as any)._calculateDuration()).toBeCloseTo(1.1, 5);
     });
   });
 
-  describe('finish()', () => {
-    it('shows full text with cursor when hideCursorOnComplete is false', () => {
-      const mob = new MockTextMobject('Hello');
+  describe("finish()", () => {
+    it("shows full text with cursor when hideCursorOnComplete is false", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob, { hideCursorOnComplete: false });
       anim.begin();
       anim.interpolate(0.5);
       anim.finish();
-      expect(mob.getText()).toBe('Hello|');
+      expect(mob.getText()).toBe("Hello|");
     });
 
-    it('shows full text without cursor when hideCursorOnComplete is true', () => {
-      const mob = new MockTextMobject('Hello');
+    it("shows full text without cursor when hideCursorOnComplete is true", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob, { hideCursorOnComplete: true });
       anim.begin();
       anim.interpolate(0.5);
       anim.finish();
-      expect(mob.getText()).toBe('Hello');
+      expect(mob.getText()).toBe("Hello");
     });
 
-    it('restores original color when highlight was used', () => {
-      const mob = new MockHighlightTextMobject('Hello');
-      mob.color = '#00ff00';
+    it("restores original color when highlight was used", () => {
+      const mob = new MockHighlightTextMobject("Hello");
+      mob.color = "#00ff00";
       const anim = new TypeWithCursor(mob, {
-        highlightColor: '#ff0000',
+        highlightColor: "#ff0000",
       });
       anim.begin();
       anim.interpolate(0.5);
       anim.finish();
-      expect(mob.color).toBe('#00ff00');
+      expect(mob.color).toBe("#00ff00");
     });
 
-    it('marks animation as finished', () => {
-      const mob = new MockTextMobject('Test');
+    it("marks animation as finished", () => {
+      const mob = new MockTextMobject("Test");
       const anim = new TypeWithCursor(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -2037,7 +2037,7 @@ describe('TypeWithCursor', () => {
       expect(anim.isFinished()).toBe(true);
     });
 
-    it('does not crash for non-text mobject', () => {
+    it("does not crash for non-text mobject", () => {
       const mob = new MockPlainMobject();
       const anim = new TypeWithCursor(mob);
       anim.begin();
@@ -2045,9 +2045,9 @@ describe('TypeWithCursor', () => {
     });
   });
 
-  describe('cursor blinking', () => {
-    it('toggles cursor based on blink rate', () => {
-      const mob = new MockTextMobject('Hello');
+  describe("cursor blinking", () => {
+    it("toggles cursor based on blink rate", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new TypeWithCursor(mob, {
         cursorBlinks: true,
         cursorBlinkRate: 2,
@@ -2059,7 +2059,7 @@ describe('TypeWithCursor', () => {
       // At alpha=0 (time=0): cursor starts visible
       anim.interpolate(0);
       const text1 = mob.getText();
-      expect(text1).toContain('|'); // cursor starts visible
+      expect(text1).toContain("|"); // cursor starts visible
 
       // The blinking toggle depends on time threshold logic,
       // testing that cursor can be toggled
@@ -2068,27 +2068,27 @@ describe('TypeWithCursor', () => {
       // The cursor should have toggled at least once
       // We can verify by checking that the text either has cursor or space
       const text2 = mob.getText();
-      expect(text2.endsWith('|') || text2.endsWith(' ')).toBe(true);
+      expect(text2.endsWith("|") || text2.endsWith(" ")).toBe(true);
     });
   });
 });
 
-describe('typeWithCursor() factory', () => {
-  it('returns a TypeWithCursor instance', () => {
-    const mob = new MockTextMobject('Hello');
+describe("typeWithCursor() factory", () => {
+  it("returns a TypeWithCursor instance", () => {
+    const mob = new MockTextMobject("Hello");
     const anim = typeWithCursor(mob);
     expect(anim).toBeInstanceOf(TypeWithCursor);
     expect(anim.mobject).toBe(mob);
   });
 
-  it('passes options through', () => {
-    const mob = new MockTextMobject('Hello');
+  it("passes options through", () => {
+    const mob = new MockTextMobject("Hello");
     const anim = typeWithCursor(mob, {
-      cursorChar: '_',
+      cursorChar: "_",
       typingSpeed: 20,
       duration: 3,
     });
-    expect((anim as any).cursorChar).toBe('_');
+    expect((anim as any).cursorChar).toBe("_");
     expect((anim as any).typingSpeed).toBe(20);
     expect(anim.duration).toBe(3);
   });
@@ -2098,114 +2098,114 @@ describe('typeWithCursor() factory', () => {
 // UntypeWithCursor (TypeWithCursor.ts)
 // =============================================================================
 
-describe('UntypeWithCursor', () => {
-  describe('constructor', () => {
-    it('sets default cursorChar to |', () => {
-      const mob = new MockTextMobject('Hello');
+describe("UntypeWithCursor", () => {
+  describe("constructor", () => {
+    it("sets default cursorChar to |", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob);
-      expect((anim as any).cursorChar).toBe('|');
+      expect((anim as any).cursorChar).toBe("|");
     });
 
-    it('sets default cursorBlinkRate to 2', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets default cursorBlinkRate to 2", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob);
       expect((anim as any).cursorBlinkRate).toBe(2);
     });
 
-    it('sets default deletingSpeed to 15', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets default deletingSpeed to 15", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob);
       expect((anim as any).deletingSpeed).toBe(15);
     });
 
-    it('sets default cursorBlinks to true', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets default cursorBlinks to true", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob);
       expect((anim as any).cursorBlinks).toBe(true);
     });
 
-    it('sets default hideCursorOnComplete to true', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets default hideCursorOnComplete to true", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob);
       expect((anim as any).hideCursorOnComplete).toBe(true);
     });
 
-    it('sets default duration to 1', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets default duration to 1", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob);
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom cursorChar', () => {
-      const mob = new MockTextMobject('Hello');
-      const anim = new UntypeWithCursor(mob, { cursorChar: '_' });
-      expect((anim as any).cursorChar).toBe('_');
+    it("accepts custom cursorChar", () => {
+      const mob = new MockTextMobject("Hello");
+      const anim = new UntypeWithCursor(mob, { cursorChar: "_" });
+      expect((anim as any).cursorChar).toBe("_");
     });
 
-    it('accepts custom deletingSpeed', () => {
-      const mob = new MockTextMobject('Hello');
+    it("accepts custom deletingSpeed", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob, { deletingSpeed: 25 });
       expect((anim as any).deletingSpeed).toBe(25);
     });
 
-    it('accepts custom duration', () => {
-      const mob = new MockTextMobject('Hello');
+    it("accepts custom duration", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob, { duration: 3 });
       expect(anim.duration).toBe(3);
     });
 
-    it('accepts highlightColor', () => {
-      const mob = new MockTextMobject('Hello');
-      const anim = new UntypeWithCursor(mob, { highlightColor: '#00ff00' });
-      expect((anim as any).highlightColor).toBe('#00ff00');
+    it("accepts highlightColor", () => {
+      const mob = new MockTextMobject("Hello");
+      const anim = new UntypeWithCursor(mob, { highlightColor: "#00ff00" });
+      expect((anim as any).highlightColor).toBe("#00ff00");
     });
 
-    it('accepts hideCursorOnComplete=false', () => {
-      const mob = new MockTextMobject('Hello');
+    it("accepts hideCursorOnComplete=false", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob, { hideCursorOnComplete: false });
       expect((anim as any).hideCursorOnComplete).toBe(false);
     });
   });
 
-  describe('begin()', () => {
-    it('stores full text', () => {
-      const mob = new MockTextMobject('Hello');
+  describe("begin()", () => {
+    it("stores full text", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob);
       anim.begin();
-      expect((anim as any)._fullText).toBe('Hello');
+      expect((anim as any)._fullText).toBe("Hello");
     });
 
-    it('sets text to full text + cursor', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets text to full text + cursor", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob);
       anim.begin();
-      expect(mob.getText()).toBe('Hello|');
+      expect(mob.getText()).toBe("Hello|");
     });
 
-    it('removes trailing cursor from stored text if present', () => {
-      const mob = new MockTextMobject('Hello|');
+    it("removes trailing cursor from stored text if present", () => {
+      const mob = new MockTextMobject("Hello|");
       const anim = new UntypeWithCursor(mob);
       anim.begin();
-      expect((anim as any)._fullText).toBe('Hello');
+      expect((anim as any)._fullText).toBe("Hello");
     });
 
-    it('removes custom trailing cursor from stored text', () => {
-      const mob = new MockTextMobject('Hello_');
-      const anim = new UntypeWithCursor(mob, { cursorChar: '_' });
+    it("removes custom trailing cursor from stored text", () => {
+      const mob = new MockTextMobject("Hello_");
+      const anim = new UntypeWithCursor(mob, { cursorChar: "_" });
       anim.begin();
-      expect((anim as any)._fullText).toBe('Hello');
+      expect((anim as any)._fullText).toBe("Hello");
     });
 
-    it('stores original color', () => {
-      const mob = new MockTextMobject('Hello');
-      mob.color = '#00ff00';
+    it("stores original color", () => {
+      const mob = new MockTextMobject("Hello");
+      mob.color = "#00ff00";
       const anim = new UntypeWithCursor(mob);
       anim.begin();
-      expect((anim as any)._originalColor).toBe('#00ff00');
+      expect((anim as any)._originalColor).toBe("#00ff00");
     });
 
-    it('initializes cursor state', () => {
-      const mob = new MockTextMobject('Hello');
+    it("initializes cursor state", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob);
       anim.begin();
       expect((anim as any)._cursorVisible).toBe(true);
@@ -2213,55 +2213,55 @@ describe('UntypeWithCursor', () => {
     });
   });
 
-  describe('interpolate()', () => {
-    it('removes text progressively (alpha=0: full text)', () => {
-      const mob = new MockTextMobject('Hello');
+  describe("interpolate()", () => {
+    it("removes text progressively (alpha=0: full text)", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob, { cursorBlinks: false });
       anim.begin();
       anim.interpolate(0);
       // charsToRemove = floor(0 * 5) = 0, remaining = 5
-      expect(mob.getText()).toBe('Hello|');
+      expect(mob.getText()).toBe("Hello|");
     });
 
-    it('removes half text at alpha=0.5', () => {
-      const mob = new MockTextMobject('Hello');
+    it("removes half text at alpha=0.5", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob, { cursorBlinks: false });
       anim.begin();
       anim.interpolate(0.5);
       // charsToRemove = floor(0.5 * 5) = 2, remaining = 3
-      expect(mob.getText()).toBe('Hel|');
+      expect(mob.getText()).toBe("Hel|");
     });
 
-    it('removes all text at alpha=1', () => {
-      const mob = new MockTextMobject('Hello');
+    it("removes all text at alpha=1", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob, { cursorBlinks: false });
       anim.begin();
       anim.interpolate(1);
       // charsToRemove = floor(1 * 5) = 5, remaining = 0
-      expect(mob.getText()).toBe('|');
+      expect(mob.getText()).toBe("|");
     });
 
-    it('applies highlight color when specified', () => {
-      const mob = new MockHighlightTextMobject('Hello');
+    it("applies highlight color when specified", () => {
+      const mob = new MockHighlightTextMobject("Hello");
       const anim = new UntypeWithCursor(mob, {
         cursorBlinks: false,
-        highlightColor: '#ff0000',
+        highlightColor: "#ff0000",
       });
       anim.begin();
       anim.interpolate(0.5);
-      expect(mob.color).toBe('#ff0000');
+      expect(mob.color).toBe("#ff0000");
       expect(mob._renderToCanvas).toHaveBeenCalled();
     });
 
-    it('does not crash for non-text mobject', () => {
+    it("does not crash for non-text mobject", () => {
       const mob = new MockPlainMobject();
       const anim = new UntypeWithCursor(mob);
       anim.begin();
       expect(() => anim.interpolate(0.5)).not.toThrow();
     });
 
-    it('cursor blinking toggles visibility', () => {
-      const mob = new MockTextMobject('Hello');
+    it("cursor blinking toggles visibility", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob, {
         cursorBlinks: true,
         cursorBlinkRate: 2,
@@ -2272,43 +2272,43 @@ describe('UntypeWithCursor', () => {
       anim.interpolate(0);
       const text1 = mob.getText();
       // Starts visible
-      expect(text1.endsWith('|') || text1.endsWith(' ')).toBe(true);
+      expect(text1.endsWith("|") || text1.endsWith(" ")).toBe(true);
     });
   });
 
-  describe('finish()', () => {
-    it('sets text to empty when hideCursorOnComplete is true', () => {
-      const mob = new MockTextMobject('Hello');
+  describe("finish()", () => {
+    it("sets text to empty when hideCursorOnComplete is true", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob, { hideCursorOnComplete: true });
       anim.begin();
       anim.interpolate(0.5);
       anim.finish();
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
     });
 
-    it('sets text to cursor only when hideCursorOnComplete is false', () => {
-      const mob = new MockTextMobject('Hello');
+    it("sets text to cursor only when hideCursorOnComplete is false", () => {
+      const mob = new MockTextMobject("Hello");
       const anim = new UntypeWithCursor(mob, { hideCursorOnComplete: false });
       anim.begin();
       anim.interpolate(0.5);
       anim.finish();
-      expect(mob.getText()).toBe('|');
+      expect(mob.getText()).toBe("|");
     });
 
-    it('restores original color when highlight was used', () => {
-      const mob = new MockHighlightTextMobject('Hello');
-      mob.color = '#00ff00';
+    it("restores original color when highlight was used", () => {
+      const mob = new MockHighlightTextMobject("Hello");
+      mob.color = "#00ff00";
       const anim = new UntypeWithCursor(mob, {
-        highlightColor: '#ff0000',
+        highlightColor: "#ff0000",
       });
       anim.begin();
       anim.interpolate(0.5);
       anim.finish();
-      expect(mob.color).toBe('#00ff00');
+      expect(mob.color).toBe("#00ff00");
     });
 
-    it('marks animation as finished', () => {
-      const mob = new MockTextMobject('Test');
+    it("marks animation as finished", () => {
+      const mob = new MockTextMobject("Test");
       const anim = new UntypeWithCursor(mob);
       anim.begin();
       expect(anim.isFinished()).toBe(false);
@@ -2316,7 +2316,7 @@ describe('UntypeWithCursor', () => {
       expect(anim.isFinished()).toBe(true);
     });
 
-    it('does not crash for non-text mobject', () => {
+    it("does not crash for non-text mobject", () => {
       const mob = new MockPlainMobject();
       const anim = new UntypeWithCursor(mob);
       anim.begin();
@@ -2325,22 +2325,22 @@ describe('UntypeWithCursor', () => {
   });
 });
 
-describe('untypeWithCursor() factory', () => {
-  it('returns an UntypeWithCursor instance', () => {
-    const mob = new MockTextMobject('Hello');
+describe("untypeWithCursor() factory", () => {
+  it("returns an UntypeWithCursor instance", () => {
+    const mob = new MockTextMobject("Hello");
     const anim = untypeWithCursor(mob);
     expect(anim).toBeInstanceOf(UntypeWithCursor);
     expect(anim.mobject).toBe(mob);
   });
 
-  it('passes options through', () => {
-    const mob = new MockTextMobject('Hello');
+  it("passes options through", () => {
+    const mob = new MockTextMobject("Hello");
     const anim = untypeWithCursor(mob, {
-      cursorChar: '_',
+      cursorChar: "_",
       deletingSpeed: 25,
       duration: 3,
     });
-    expect((anim as any).cursorChar).toBe('_');
+    expect((anim as any).cursorChar).toBe("_");
     expect((anim as any).deletingSpeed).toBe(25);
     expect(anim.duration).toBe(3);
   });
@@ -2350,9 +2350,9 @@ describe('untypeWithCursor() factory', () => {
 // Full lifecycle integration tests
 // =============================================================================
 
-describe('Full lifecycle integration', () => {
-  describe('Create full cycle', () => {
-    it('opacity goes 0 -> intermediate -> 1 for non-VMobject', () => {
+describe("Full lifecycle integration", () => {
+  describe("Create full cycle", () => {
+    it("opacity goes 0 -> intermediate -> 1 for non-VMobject", () => {
       const mob = new MockPlainMobject();
       mob.opacity = 1;
       const anim = new Create(mob);
@@ -2372,8 +2372,8 @@ describe('Full lifecycle integration', () => {
     });
   });
 
-  describe('Uncreate full cycle', () => {
-    it('opacity goes 1 -> intermediate -> 0 for non-VMobject', () => {
+  describe("Uncreate full cycle", () => {
+    it("opacity goes 1 -> intermediate -> 0 for non-VMobject", () => {
       const mob = new MockPlainMobject();
       mob.opacity = 1;
       const anim = new Uncreate(mob);
@@ -2393,113 +2393,113 @@ describe('Full lifecycle integration', () => {
     });
   });
 
-  describe('AddTextLetterByLetter full cycle', () => {
-    it('text goes empty -> partial -> full', () => {
-      const mob = new MockTextMobject('ABCDE');
+  describe("AddTextLetterByLetter full cycle", () => {
+    it("text goes empty -> partial -> full", () => {
+      const mob = new MockTextMobject("ABCDE");
       const anim = new AddTextLetterByLetter(mob);
 
       anim.begin();
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
 
       anim.interpolate(0.2);
-      expect(mob.getText()).toBe('A');
+      expect(mob.getText()).toBe("A");
 
       anim.interpolate(0.6);
-      expect(mob.getText()).toBe('ABC');
+      expect(mob.getText()).toBe("ABC");
 
       anim.finish();
-      expect(mob.getText()).toBe('ABCDE');
+      expect(mob.getText()).toBe("ABCDE");
     });
   });
 
-  describe('RemoveTextLetterByLetter full cycle', () => {
-    it('text goes full -> partial -> empty', () => {
-      const mob = new MockTextMobject('ABCDE');
+  describe("RemoveTextLetterByLetter full cycle", () => {
+    it("text goes full -> partial -> empty", () => {
+      const mob = new MockTextMobject("ABCDE");
       const anim = new RemoveTextLetterByLetter(mob);
 
       anim.begin();
 
       anim.interpolate(0);
-      expect(mob.getText()).toBe('ABCDE');
+      expect(mob.getText()).toBe("ABCDE");
 
       anim.interpolate(0.4);
-      expect(mob.getText()).toBe('ABC');
+      expect(mob.getText()).toBe("ABC");
 
       anim.interpolate(0.8);
-      expect(mob.getText()).toBe('A');
+      expect(mob.getText()).toBe("A");
 
       anim.finish();
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
     });
   });
 
-  describe('TypeWithCursor full cycle', () => {
-    it('text typed then cursor shown at end', () => {
-      const mob = new MockTextMobject('Hi');
+  describe("TypeWithCursor full cycle", () => {
+    it("text typed then cursor shown at end", () => {
+      const mob = new MockTextMobject("Hi");
       const anim = new TypeWithCursor(mob, { cursorBlinks: false });
 
       anim.begin();
-      expect(mob.getText()).toBe('|');
+      expect(mob.getText()).toBe("|");
 
       anim.interpolate(0.5);
       // floor(0.5 * 2) = 1
-      expect(mob.getText()).toBe('H|');
+      expect(mob.getText()).toBe("H|");
 
       anim.interpolate(1);
-      expect(mob.getText()).toBe('Hi|');
+      expect(mob.getText()).toBe("Hi|");
 
       anim.finish();
-      expect(mob.getText()).toBe('Hi|');
+      expect(mob.getText()).toBe("Hi|");
     });
   });
 
-  describe('UntypeWithCursor full cycle', () => {
-    it('text removed then empty or cursor at end', () => {
-      const mob = new MockTextMobject('Hi');
+  describe("UntypeWithCursor full cycle", () => {
+    it("text removed then empty or cursor at end", () => {
+      const mob = new MockTextMobject("Hi");
       const anim = new UntypeWithCursor(mob, {
         cursorBlinks: false,
         hideCursorOnComplete: true,
       });
 
       anim.begin();
-      expect(mob.getText()).toBe('Hi|');
+      expect(mob.getText()).toBe("Hi|");
 
       anim.interpolate(0.5);
       // charsToRemove = floor(0.5 * 2) = 1, remaining = 1
-      expect(mob.getText()).toBe('H|');
+      expect(mob.getText()).toBe("H|");
 
       anim.interpolate(1);
       // charsToRemove = floor(1 * 2) = 2, remaining = 0
-      expect(mob.getText()).toBe('|');
+      expect(mob.getText()).toBe("|");
 
       anim.finish();
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
     });
   });
 
-  describe('AddTextWordByWord full cycle', () => {
-    it('words appear one by one', () => {
-      const mob = new MockTextMobject('Hello World Foo');
+  describe("AddTextWordByWord full cycle", () => {
+    it("words appear one by one", () => {
+      const mob = new MockTextMobject("Hello World Foo");
       const anim = new AddTextWordByWord(mob);
 
       anim.begin();
-      expect(mob.getText()).toBe('');
+      expect(mob.getText()).toBe("");
 
       // 3 words, alpha = 1/3 -> numWords = 1
       anim.interpolate(1 / 3);
-      expect(mob.getText()).toBe('Hello');
+      expect(mob.getText()).toBe("Hello");
 
       // alpha = 2/3 -> numWords = 2
       anim.interpolate(2 / 3);
-      expect(mob.getText()).toBe('Hello World');
+      expect(mob.getText()).toBe("Hello World");
 
       anim.finish();
-      expect(mob.getText()).toBe('Hello World Foo');
+      expect(mob.getText()).toBe("Hello World Foo");
     });
   });
 
-  describe('ShowIncreasingSubsets full cycle', () => {
-    it('submobjects appear progressively', () => {
+  describe("ShowIncreasingSubsets full cycle", () => {
+    it("submobjects appear progressively", () => {
       const parent = new MockPlainMobject();
       const child1 = new MockPlainMobject();
       const child2 = new MockPlainMobject();
@@ -2528,10 +2528,10 @@ describe('Full lifecycle integration', () => {
 // =============================================================================
 // Create + MasterTimeline integration (issue #117)
 // =============================================================================
-import { MasterTimeline } from '../MasterTimeline';
+import { MasterTimeline } from "../MasterTimeline";
 
-describe('Create with MasterTimeline (opacity fallback path)', () => {
-  it('Create(Dot) opacity fades from 0 to 1 in MasterTimeline', () => {
+describe("Create with MasterTimeline (opacity fallback path)", () => {
+  it("Create(Dot) opacity fades from 0 to 1 in MasterTimeline", () => {
     const dot = new MockPlainMobject();
     dot.opacity = 1;
 
@@ -2553,7 +2553,7 @@ describe('Create with MasterTimeline (opacity fallback path)', () => {
     expect(dot.opacity).toBeCloseTo(1, 1);
   });
 
-  it('sequential Create animations: dot2 hidden until its segment', () => {
+  it("sequential Create animations: dot2 hidden until its segment", () => {
     const dot1 = new MockPlainMobject();
     dot1.opacity = 1;
     const dot2 = new MockPlainMobject();
@@ -2588,7 +2588,7 @@ describe('Create with MasterTimeline (opacity fallback path)', () => {
     expect(dot2.opacity).toBeCloseTo(1, 1);
   });
 
-  it('seek(0) does not corrupt saved opacity for opacity-based Create', () => {
+  it("seek(0) does not corrupt saved opacity for opacity-based Create", () => {
     const dot = new MockPlainMobject();
     dot.opacity = 0.8;
 

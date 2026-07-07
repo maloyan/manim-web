@@ -1,18 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { Mobject } from '../core/Mobject';
-import { linear } from '../rate-functions';
+import { beforeEach, describe, expect, it } from "vitest";
+import { Mobject } from "../core/Mobject";
+import { linear } from "../rate-functions";
 import {
   Add,
   add,
-  Remove,
-  remove,
-  Wait,
-  wait,
-  Rotating,
-  rotating,
   Broadcast,
   broadcast,
-} from './utility/index';
+  Remove,
+  remove,
+  Rotating,
+  rotating,
+  Wait,
+  wait,
+} from "./utility/index";
 
 function createMob(): Mobject {
   return new Mobject();
@@ -22,47 +22,47 @@ function createMob(): Mobject {
 // Add
 // ==================================================================
 
-describe('Add', () => {
+describe("Add", () => {
   let mob: Mobject;
 
   beforeEach(() => {
     mob = createMob();
   });
 
-  describe('constructor', () => {
-    it('forces duration to 0', () => {
+  describe("constructor", () => {
+    it("forces duration to 0", () => {
       const anim = new Add(mob);
       expect(anim.duration).toBe(0);
     });
 
-    it('forces duration to 0 even if custom duration provided', () => {
+    it("forces duration to 0 even if custom duration provided", () => {
       const anim = new Add(mob, { duration: 5 });
       expect(anim.duration).toBe(0);
     });
 
-    it('stores mobject reference', () => {
+    it("stores mobject reference", () => {
       const anim = new Add(mob);
       expect(anim.mobject).toBe(mob);
     });
   });
 
-  describe('begin()', () => {
-    it('preserves the mobject opacity (does not force it to 1)', () => {
+  describe("begin()", () => {
+    it("preserves the mobject opacity (does not force it to 1)", () => {
       mob.opacity = 0;
       const anim = new Add(mob);
       anim.begin();
       expect(mob.opacity).toBe(0);
     });
 
-    it('marks _hasBegun true', () => {
+    it("marks _hasBegun true", () => {
       const anim = new Add(mob);
       anim.begin();
       expect((anim as unknown as { _hasBegun: boolean })._hasBegun).toBe(true);
     });
   });
 
-  describe('interpolate()', () => {
-    it('does nothing (instant animation)', () => {
+  describe("interpolate()", () => {
+    it("does nothing (instant animation)", () => {
       mob.opacity = 1;
       const anim = new Add(mob);
       anim.begin();
@@ -75,13 +75,13 @@ describe('Add', () => {
     });
   });
 
-  describe('add() factory', () => {
-    it('returns an Add instance', () => {
+  describe("add() factory", () => {
+    it("returns an Add instance", () => {
       const anim = add(mob);
       expect(anim).toBeInstanceOf(Add);
     });
 
-    it('stores mobject reference', () => {
+    it("stores mobject reference", () => {
       const anim = add(mob);
       expect(anim.mobject).toBe(mob);
     });
@@ -92,47 +92,47 @@ describe('Add', () => {
 // Remove
 // ==================================================================
 
-describe('Remove', () => {
+describe("Remove", () => {
   let mob: Mobject;
 
   beforeEach(() => {
     mob = createMob();
   });
 
-  describe('constructor', () => {
-    it('forces duration to 0', () => {
+  describe("constructor", () => {
+    it("forces duration to 0", () => {
       const anim = new Remove(mob);
       expect(anim.duration).toBe(0);
     });
 
-    it('forces duration to 0 even if custom duration provided', () => {
+    it("forces duration to 0 even if custom duration provided", () => {
       const anim = new Remove(mob, { duration: 3 });
       expect(anim.duration).toBe(0);
     });
 
-    it('stores mobject reference', () => {
+    it("stores mobject reference", () => {
       const anim = new Remove(mob);
       expect(anim.mobject).toBe(mob);
     });
   });
 
-  describe('begin()', () => {
-    it('sets mobject opacity to 0', () => {
+  describe("begin()", () => {
+    it("sets mobject opacity to 0", () => {
       mob.opacity = 1;
       const anim = new Remove(mob);
       anim.begin();
       expect(mob.opacity).toBe(0);
     });
 
-    it('marks _hasBegun true', () => {
+    it("marks _hasBegun true", () => {
       const anim = new Remove(mob);
       anim.begin();
       expect((anim as unknown as { _hasBegun: boolean })._hasBegun).toBe(true);
     });
   });
 
-  describe('interpolate()', () => {
-    it('does nothing (instant animation)', () => {
+  describe("interpolate()", () => {
+    it("does nothing (instant animation)", () => {
       mob.opacity = 1;
       const anim = new Remove(mob);
       anim.begin();
@@ -144,13 +144,13 @@ describe('Remove', () => {
     });
   });
 
-  describe('remove() factory', () => {
-    it('returns a Remove instance', () => {
+  describe("remove() factory", () => {
+    it("returns a Remove instance", () => {
       const anim = remove(mob);
       expect(anim).toBeInstanceOf(Remove);
     });
 
-    it('stores mobject reference', () => {
+    it("stores mobject reference", () => {
       const anim = remove(mob);
       expect(anim.mobject).toBe(mob);
     });
@@ -161,38 +161,38 @@ describe('Remove', () => {
 // Wait
 // ==================================================================
 
-describe('Wait', () => {
+describe("Wait", () => {
   let mob: Mobject;
 
   beforeEach(() => {
     mob = createMob();
   });
 
-  describe('constructor', () => {
-    it('defaults duration to 1', () => {
+  describe("constructor", () => {
+    it("defaults duration to 1", () => {
       const anim = new Wait(mob);
       expect(anim.duration).toBe(1);
     });
 
-    it('accepts custom duration', () => {
+    it("accepts custom duration", () => {
       const anim = new Wait(mob, { duration: 3 });
       expect(anim.duration).toBe(3);
     });
 
-    it('defaults rateFunc to linear', () => {
+    it("defaults rateFunc to linear", () => {
       const anim = new Wait(mob);
       expect(anim.rateFunc).toBe(linear);
     });
 
-    it('accepts custom rateFunc', () => {
+    it("accepts custom rateFunc", () => {
       const custom = (t: number) => t * t;
       const anim = new Wait(mob, { rateFunc: custom });
       expect(anim.rateFunc).toBe(custom);
     });
   });
 
-  describe('interpolate()', () => {
-    it('does nothing visually', () => {
+  describe("interpolate()", () => {
+    it("does nothing visually", () => {
       mob.opacity = 0.7;
       mob.position.set(1, 2, 3);
       const anim = new Wait(mob);
@@ -209,18 +209,18 @@ describe('Wait', () => {
     });
   });
 
-  describe('wait() factory', () => {
-    it('returns a Wait instance', () => {
+  describe("wait() factory", () => {
+    it("returns a Wait instance", () => {
       const anim = wait(mob);
       expect(anim).toBeInstanceOf(Wait);
     });
 
-    it('accepts duration as second argument', () => {
+    it("accepts duration as second argument", () => {
       const anim = wait(mob, 5);
       expect(anim.duration).toBe(5);
     });
 
-    it('passes additional options', () => {
+    it("passes additional options", () => {
       const custom = (t: number) => t;
       const anim = wait(mob, 2, { rateFunc: custom });
       expect(anim.duration).toBe(2);
@@ -233,62 +233,62 @@ describe('Wait', () => {
 // Rotating
 // ==================================================================
 
-describe('Rotating', () => {
+describe("Rotating", () => {
   let mob: Mobject;
 
   beforeEach(() => {
     mob = createMob();
   });
 
-  describe('constructor', () => {
-    it('defaults duration to 5', () => {
+  describe("constructor", () => {
+    it("defaults duration to 5", () => {
       const anim = new Rotating(mob);
       expect(anim.duration).toBe(5);
     });
 
-    it('defaults angle to 2*PI (TAU)', () => {
+    it("defaults angle to 2*PI (TAU)", () => {
       const anim = new Rotating(mob);
       expect(anim.angle).toBeCloseTo(2 * Math.PI, 5);
     });
 
-    it('defaults axis to Z [0,0,1]', () => {
+    it("defaults axis to Z [0,0,1]", () => {
       const anim = new Rotating(mob);
       expect(anim.axis).toEqual([0, 0, 1]);
     });
 
-    it('defaults aboutPoint to null (mobject center)', () => {
+    it("defaults aboutPoint to null (mobject center)", () => {
       const anim = new Rotating(mob);
       expect(anim.aboutPoint).toBeNull();
     });
 
-    it('defaults rateFunc to linear', () => {
+    it("defaults rateFunc to linear", () => {
       const anim = new Rotating(mob);
       expect(anim.rateFunc).toBe(linear);
     });
 
-    it('accepts custom angle', () => {
+    it("accepts custom angle", () => {
       const anim = new Rotating(mob, { angle: Math.PI });
       expect(anim.angle).toBeCloseTo(Math.PI, 5);
     });
 
-    it('accepts custom axis', () => {
+    it("accepts custom axis", () => {
       const anim = new Rotating(mob, { axis: [1, 0, 0] });
       expect(anim.axis).toEqual([1, 0, 0]);
     });
 
-    it('accepts custom aboutPoint', () => {
+    it("accepts custom aboutPoint", () => {
       const anim = new Rotating(mob, { aboutPoint: [1, 2, 3] });
       expect(anim.aboutPoint).toEqual([1, 2, 3]);
     });
 
-    it('accepts custom duration', () => {
+    it("accepts custom duration", () => {
       const anim = new Rotating(mob, { duration: 10 });
       expect(anim.duration).toBe(10);
     });
   });
 
-  describe('interpolate()', () => {
-    it('at alpha=0 rotation is unchanged from initial', () => {
+  describe("interpolate()", () => {
+    it("at alpha=0 rotation is unchanged from initial", () => {
       mob.position.set(0, 0, 0);
       // Provide aboutPoint to avoid getCenter() calling getThreeObject() on abstract Mobject
       const anim = new Rotating(mob, { aboutPoint: [0, 0, 0] });
@@ -299,7 +299,7 @@ describe('Rotating', () => {
       expect(mob.rotation.z).toBeCloseTo(initialZ, 5);
     });
 
-    it('at alpha=1 with default angle rotates by TAU (full circle)', () => {
+    it("at alpha=1 with default angle rotates by TAU (full circle)", () => {
       mob.position.set(0, 0, 0);
       const anim = new Rotating(mob, { aboutPoint: [0, 0, 0] });
       anim.begin();
@@ -312,7 +312,7 @@ describe('Rotating', () => {
       expect(Math.sin(z)).toBeCloseTo(0, 3);
     });
 
-    it('at alpha=0.5 with PI angle rotates by PI/2', () => {
+    it("at alpha=0.5 with PI angle rotates by PI/2", () => {
       mob.position.set(0, 0, 0);
       const anim = new Rotating(mob, {
         angle: Math.PI,
@@ -327,7 +327,7 @@ describe('Rotating', () => {
       expect(Math.sin(z)).toBeCloseTo(1, 2);
     });
 
-    it('rotation about a point changes position', () => {
+    it("rotation about a point changes position", () => {
       mob.position.set(1, 0, 0);
       const anim = new Rotating(mob, {
         angle: Math.PI / 2,
@@ -341,7 +341,7 @@ describe('Rotating', () => {
       expect(mob.position.y).toBeCloseTo(1, 2);
     });
 
-    it('rotation about X axis', () => {
+    it("rotation about X axis", () => {
       mob.position.set(0, 1, 0);
       const anim = new Rotating(mob, {
         angle: Math.PI / 2,
@@ -357,7 +357,7 @@ describe('Rotating', () => {
       expect(mob.position.z).toBeCloseTo(1, 2);
     });
 
-    it('marks mobject dirty', () => {
+    it("marks mobject dirty", () => {
       const anim = new Rotating(mob, { aboutPoint: [0, 0, 0] });
       anim.begin();
       mob._dirty = false;
@@ -366,13 +366,13 @@ describe('Rotating', () => {
     });
   });
 
-  describe('rotating() factory', () => {
-    it('returns a Rotating instance', () => {
+  describe("rotating() factory", () => {
+    it("returns a Rotating instance", () => {
       const anim = rotating(mob);
       expect(anim).toBeInstanceOf(Rotating);
     });
 
-    it('passes options through', () => {
+    it("passes options through", () => {
       const anim = rotating(mob, {
         angle: Math.PI,
         duration: 3,
@@ -392,40 +392,40 @@ describe('Rotating', () => {
 // Full interpolation testing requires Three.js context.
 // We test constructor/config and factory only.
 
-describe('Broadcast', () => {
+describe("Broadcast", () => {
   let mob: Mobject;
 
   beforeEach(() => {
     mob = createMob();
   });
 
-  describe('constructor', () => {
-    it('defaults duration to 3', () => {
+  describe("constructor", () => {
+    it("defaults duration to 3", () => {
       const anim = new Broadcast(mob);
       expect(anim.duration).toBe(3);
     });
 
-    it('defaults nMobs to 5', () => {
+    it("defaults nMobs to 5", () => {
       const anim = new Broadcast(mob);
       expect(anim.nMobs).toBe(5);
     });
 
-    it('defaults focalPoint to ORIGIN', () => {
+    it("defaults focalPoint to ORIGIN", () => {
       const anim = new Broadcast(mob);
       expect(anim.focalPoint).toEqual([0, 0, 0]);
     });
 
-    it('defaults lagRatio to 0.2', () => {
+    it("defaults lagRatio to 0.2", () => {
       const anim = new Broadcast(mob);
       expect(anim.lagRatio).toBeCloseTo(0.2, 5);
     });
 
-    it('defaults rateFunc to linear', () => {
+    it("defaults rateFunc to linear", () => {
       const anim = new Broadcast(mob);
       expect(anim.rateFunc).toBe(linear);
     });
 
-    it('accepts custom options', () => {
+    it("accepts custom options", () => {
       const anim = new Broadcast(mob, {
         focalPoint: [1, 2, 0],
         nMobs: 8,
@@ -444,29 +444,29 @@ describe('Broadcast', () => {
       expect(anim.duration).toBe(2);
     });
 
-    it('defaults initialOpacity to 1', () => {
+    it("defaults initialOpacity to 1", () => {
       const anim = new Broadcast(mob);
       expect(anim.initialOpacity).toBe(1);
     });
 
-    it('defaults finalOpacity to 0', () => {
+    it("defaults finalOpacity to 0", () => {
       const anim = new Broadcast(mob);
       expect(anim.finalOpacity).toBe(0);
     });
 
-    it('defaults initialWidth to 0', () => {
+    it("defaults initialWidth to 0", () => {
       const anim = new Broadcast(mob);
       expect(anim.initialWidth).toBe(0);
     });
 
-    it('does not set remover (original mobject stays in scene)', () => {
+    it("does not set remover (original mobject stays in scene)", () => {
       const anim = new Broadcast(mob);
       expect(anim.remover).toBe(false);
     });
   });
 
-  describe('finish()', () => {
-    it('clears internal copies array', () => {
+  describe("finish()", () => {
+    it("clears internal copies array", () => {
       const anim = new Broadcast(mob);
       // Access private field via cast to verify cleanup
       const internal = anim as any;
@@ -475,7 +475,7 @@ describe('Broadcast', () => {
       expect(internal._copies).toEqual([]);
     });
 
-    it('nullifies parent reference', () => {
+    it("nullifies parent reference", () => {
       const anim = new Broadcast(mob);
       const internal = anim as any;
       internal._parentObject = {};
@@ -485,13 +485,13 @@ describe('Broadcast', () => {
     });
   });
 
-  describe('broadcast() factory', () => {
-    it('returns a Broadcast instance', () => {
+  describe("broadcast() factory", () => {
+    it("returns a Broadcast instance", () => {
       const anim = broadcast(mob);
       expect(anim).toBeInstanceOf(Broadcast);
     });
 
-    it('passes options through', () => {
+    it("passes options through", () => {
       const anim = broadcast(mob, {
         nMobs: 7,
         initialWidth: 1.0,

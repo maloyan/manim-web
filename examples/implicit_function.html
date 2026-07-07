@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ManimWeb - Implicit Functions</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManimWeb - Implicit Functions</title>
+    <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
     body {
       background: #1a1a2e;
       display: flex;
@@ -45,36 +49,34 @@
       cursor: pointer;
       font-size: 14px;
     }
-    button:hover { background: #ff6b6b; }
-    button:disabled { background: #666; cursor: not-allowed; }
-  </style>
-</head>
-<body>
-  <h1>Implicit Functions (Marching Squares)</h1>
-  <p>Plots curves defined by f(x, y) = 0</p>
-  <div id="container"></div>
-  <div class="controls">
-    <button id="circleBtn">Circle</button>
-    <button id="ellipseBtn">Ellipse</button>
-    <button id="figure8Btn">Figure-8</button>
-    <button id="allBtn">Show All</button>
-  </div>
+    button:hover {
+      background: #ff6b6b;
+    }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>Implicit Functions (Marching Squares)</h1>
+    <p>Plots curves defined by f(x, y) = 0</p>
+    <div id="container"></div>
+    <div class="controls">
+      <button id="circleBtn">Circle</button>
+      <button id="ellipseBtn">Ellipse</button>
+      <button id="figure8Btn">Figure-8</button>
+      <button id="allBtn">Show All</button>
+    </div>
 
-  <script type="module">
-    import {
-      Scene,
-      Axes,
-      ImplicitFunction,
-      Create,
-      FadeOut,
-      BLACK
-    } from '../src/index.ts';
+    <script type="module">
+    import { Axes, BLACK, Create, FadeOut, ImplicitFunction, Scene } from '../src/index.ts';
 
     const container = document.getElementById('container');
     const scene = new Scene(container, {
       width: 800,
       height: 450,
-      backgroundColor: BLACK
+      backgroundColor: BLACK,
     });
 
     const axes = new Axes({
@@ -162,7 +164,7 @@
     }
 
     function setButtonsDisabled(disabled) {
-      document.querySelectorAll('button').forEach(b => b.disabled = disabled);
+      document.querySelectorAll('button').forEach((b) => b.disabled = disabled);
     }
 
     // Circle: x^2 + y^2 - 1 = 0
@@ -184,6 +186,6 @@
     });
 
     document.getElementById('allBtn').addEventListener('click', showAll);
-  </script>
-</body>
+    </script>
+  </body>
 </html>

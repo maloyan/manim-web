@@ -1,19 +1,22 @@
-import { describe, it, expect } from 'vitest';
-import { readFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { describe, expect, it } from "vitest";
+import { existsSync, readFileSync } from "fs";
+import { resolve } from "path";
 
-const BROWSER_BUNDLE_PATH = resolve(__dirname, '../../dist/manim-web.browser.js');
+const BROWSER_BUNDLE_PATH = resolve(
+  __dirname,
+  "../../dist/manim-web.browser.js",
+);
 const bundleExists = existsSync(BROWSER_BUNDLE_PATH);
 
-describe.skipIf(!bundleExists)('Browser bundle', () => {
+describe.skipIf(!bundleExists)("Browser bundle", () => {
   it('should NOT contain bare import specifiers for "three"', () => {
-    const content = readFileSync(BROWSER_BUNDLE_PATH, 'utf-8');
+    const content = readFileSync(BROWSER_BUNDLE_PATH, "utf-8");
     // Match bare specifiers like: from "three" or from 'three'
     const bareThreeImports = content.match(/from\s+["']three["']/g);
     expect(bareThreeImports).toBeNull();
   });
 
-  it('should export key symbols', async () => {
+  it("should export key symbols", async () => {
     const mod = await import(BROWSER_BUNDLE_PATH);
     expect(mod.Scene).toBeDefined();
     expect(mod.Circle).toBeDefined();

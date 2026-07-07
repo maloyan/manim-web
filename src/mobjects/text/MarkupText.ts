@@ -1,4 +1,4 @@
-import { Text, TextOptions } from './Text';
+import { Text, TextOptions } from "./Text";
 
 /**
  * Options for creating a MarkupText mobject
@@ -75,7 +75,7 @@ export interface StyledTextSegment {
 // ---------------------------------------------------------------------------
 
 interface MarkupNode {
-  type: 'text' | 'element';
+  type: "text" | "element";
   /** For text nodes */
   content?: string;
   /** For element nodes */
@@ -133,9 +133,9 @@ const SMALL_SCALE = 0.83;
 
 function decodeEntities(s: string): string {
   return s
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, "'");
 }
@@ -157,13 +157,13 @@ function parsePangoMarkup(markup: string): MarkupNode[] {
 
   while (pos < markup.length) {
     // Look for the next '<'
-    const tagStart = markup.indexOf('<', pos);
+    const tagStart = markup.indexOf("<", pos);
 
     if (tagStart === -1) {
       // Rest is plain text
       const text = markup.substring(pos);
       if (text) {
-        nodes.push({ type: 'text', content: decodeEntities(text) });
+        nodes.push({ type: "text", content: decodeEntities(text) });
       }
       break;
     }
@@ -172,36 +172,39 @@ function parsePangoMarkup(markup: string): MarkupNode[] {
     if (tagStart > pos) {
       const text = markup.substring(pos, tagStart);
       if (text) {
-        nodes.push({ type: 'text', content: decodeEntities(text) });
+        nodes.push({ type: "text", content: decodeEntities(text) });
       }
     }
 
     // Find end of tag
-    const tagEnd = markup.indexOf('>', tagStart);
+    const tagEnd = markup.indexOf(">", tagStart);
     if (tagEnd === -1) {
       // Malformed: treat rest as text
-      nodes.push({ type: 'text', content: decodeEntities(markup.substring(tagStart)) });
+      nodes.push({
+        type: "text",
+        content: decodeEntities(markup.substring(tagStart)),
+      });
       break;
     }
 
     const tagContent = markup.substring(tagStart + 1, tagEnd).trim();
 
     // Self-closing tag? (e.g. <br/>)
-    if (tagContent.endsWith('/')) {
+    if (tagContent.endsWith("/")) {
       // Ignore self-closing tags (no Pango equivalent we need)
       pos = tagEnd + 1;
       continue;
     }
 
     // Closing tag?
-    if (tagContent.startsWith('/')) {
+    if (tagContent.startsWith("/")) {
       // We return what we have - the caller handles matching
       // Put pos past this closing tag
       pos = tagEnd + 1;
       // Return nodes; the closing tag name is embedded in context
       // We use a sentinel to signal the close
       const closeTag = tagContent.substring(1).trim().toLowerCase();
-      nodes.push({ type: 'element', tag: '__close__', content: closeTag });
+      nodes.push({ type: "element", tag: "__close__", content: closeTag });
       continue;
     }
 
@@ -211,7 +214,7 @@ function parsePangoMarkup(markup: string): MarkupNode[] {
     // Now recursively parse children until we hit the matching close tag
     const innerResult = parsePangoMarkupInner(markup, tagEnd + 1, tagName);
     const elementNode: MarkupNode = {
-      type: 'element',
+      type: "element",
       tag: tagName,
       attrs,
       children: innerResult.children,
@@ -221,7 +224,7 @@ function parsePangoMarkup(markup: string): MarkupNode[] {
   }
 
   // Filter out any stray __close__ sentinels (shouldn't happen in well-formed input)
-  return nodes.filter((n) => !(n.type === 'element' && n.tag === '__close__'));
+  return nodes.filter((n) => !(n.type === "element" && n.tag === "__close__"));
 }
 
 /**
@@ -236,13 +239,13 @@ function parsePangoMarkupInner(
   let pos = startPos;
 
   while (pos < markup.length) {
-    const tagStart = markup.indexOf('<', pos);
+    const tagStart = markup.indexOf("<", pos);
 
     if (tagStart === -1) {
       // Rest is text inside this element
       const text = markup.substring(pos);
       if (text) {
-        children.push({ type: 'text', content: decodeEntities(text) });
+        children.push({ type: "text", content: decodeEntities(text) });
       }
       pos = markup.length;
       break;
@@ -252,13 +255,16 @@ function parsePangoMarkupInner(
     if (tagStart > pos) {
       const text = markup.substring(pos, tagStart);
       if (text) {
-        children.push({ type: 'text', content: decodeEntities(text) });
+        children.push({ type: "text", content: decodeEntities(text) });
       }
     }
 
-    const tagEnd = markup.indexOf('>', tagStart);
+    const tagEnd = markup.indexOf(">", tagStart);
     if (tagEnd === -1) {
-      children.push({ type: 'text', content: decodeEntities(markup.substring(tagStart)) });
+      children.push({
+        type: "text",
+        content: decodeEntities(markup.substring(tagStart)),
+      });
       pos = markup.length;
       break;
     }
@@ -266,13 +272,13 @@ function parsePangoMarkupInner(
     const tagContent = markup.substring(tagStart + 1, tagEnd).trim();
 
     // Self-closing
-    if (tagContent.endsWith('/')) {
+    if (tagContent.endsWith("/")) {
       pos = tagEnd + 1;
       continue;
     }
 
     // Closing tag?
-    if (tagContent.startsWith('/')) {
+    if (tagContent.startsWith("/")) {
       const closeTag = tagContent.substring(1).trim().toLowerCase();
       pos = tagEnd + 1;
       if (closeTag === parentTag.toLowerCase()) {
@@ -288,7 +294,7 @@ function parsePangoMarkupInner(
     const { tagName, attrs } = parseOpenTag(tagContent);
     const innerResult = parsePangoMarkupInner(markup, tagEnd + 1, tagName);
     children.push({
-      type: 'element',
+      type: "element",
       tag: tagName,
       attrs,
       children: innerResult.children,
@@ -303,7 +309,9 @@ function parsePangoMarkupInner(
  * Parse an opening tag string into tag name and attributes.
  * E.g. 'span font_family="Arial" color="red"' => { tagName: 'span', attrs: { font_family: 'Arial', color: 'red' } }
  */
-function parseOpenTag(content: string): { tagName: string; attrs: Record<string, string> } {
+function parseOpenTag(
+  content: string,
+): { tagName: string; attrs: Record<string, string> } {
   // Tag name is the first token
   const firstSpace = content.search(/\s/);
   let tagName: string;
@@ -311,7 +319,7 @@ function parseOpenTag(content: string): { tagName: string; attrs: Record<string,
 
   if (firstSpace === -1) {
     tagName = content.toLowerCase();
-    attrStr = '';
+    attrStr = "";
   } else {
     tagName = content.substring(0, firstSpace).toLowerCase();
     attrStr = content.substring(firstSpace + 1);
@@ -345,7 +353,7 @@ function flattenToSegments(
   const segments: StyledTextSegment[] = [];
 
   for (const node of nodes) {
-    if (node.type === 'text') {
+    if (node.type === "text") {
       if (node.content) {
         segments.push({
           text: node.content,
@@ -366,55 +374,63 @@ function flattenToSegments(
     }
 
     // Element node
-    const tag = node.tag || '';
+    const tag = node.tag || "";
     const attrs = node.attrs || {};
     const ctx: StyleContext = { ...parentContext };
 
     switch (tag) {
-      case 'b':
-      case 'bold':
-        ctx.fontWeight = 'bold';
+      case "b":
+      case "bold":
+        ctx.fontWeight = "bold";
         break;
 
-      case 'i':
-      case 'italic':
-        ctx.fontStyle = 'italic';
+      case "i":
+      case "italic":
+        ctx.fontStyle = "italic";
         break;
 
-      case 'u':
-      case 'underline':
+      case "u":
+      case "underline":
         ctx.underline = true;
         break;
 
-      case 's':
-      case 'strikethrough':
+      case "s":
+      case "strikethrough":
         ctx.strikethrough = true;
         break;
 
-      case 'sup':
-        ctx.baselineShift = (parentContext.baselineShift || 0) + SUPERSCRIPT_SHIFT;
+      case "sup":
+        ctx.baselineShift = (parentContext.baselineShift || 0) +
+          SUPERSCRIPT_SHIFT;
         ctx.relativeScale = parentContext.relativeScale * SCRIPT_SCALE;
         break;
 
-      case 'sub':
-        ctx.baselineShift = (parentContext.baselineShift || 0) + SUBSCRIPT_SHIFT;
+      case "sub":
+        ctx.baselineShift = (parentContext.baselineShift || 0) +
+          SUBSCRIPT_SHIFT;
         ctx.relativeScale = parentContext.relativeScale * SCRIPT_SCALE;
         break;
 
-      case 'big':
+      case "big":
         ctx.relativeScale = parentContext.relativeScale * BIG_SCALE;
         break;
 
-      case 'small':
+      case "small":
         ctx.relativeScale = parentContext.relativeScale * SMALL_SCALE;
         break;
 
-      case 'tt':
+      case "tt":
         ctx.fontFamily = codeFontFamily;
         break;
 
-      case 'span':
-        applySpanAttributes(ctx, attrs, defaultFontSize, defaultFontFamily, codeFontFamily);
+      case "span":
+        applySpanAttributes(
+          ctx,
+          attrs,
+          defaultFontSize,
+          defaultFontFamily,
+          codeFontFamily,
+        );
         break;
 
       default:
@@ -448,38 +464,42 @@ function applySpanAttributes(
   _codeFontFamily: string,
 ): void {
   // font_family / font
-  const family = attrs['font_family'] || attrs['font'] || attrs['face'];
+  const family = attrs["font_family"] || attrs["font"] || attrs["face"];
   if (family) {
     ctx.fontFamily = family;
   }
 
   // font_size / size
-  const sizeStr = attrs['font_size'] || attrs['size'];
+  const sizeStr = attrs["font_size"] || attrs["size"];
   if (sizeStr) {
-    ctx.fontSize = parseFontSize(sizeStr, ctx.fontSize ?? defaultFontSize, ctx.relativeScale);
+    ctx.fontSize = parseFontSize(
+      sizeStr,
+      ctx.fontSize ?? defaultFontSize,
+      ctx.relativeScale,
+    );
     // Reset relativeScale since we've baked it into fontSize
     ctx.relativeScale = 1;
   }
 
   // color / foreground / fgcolor
-  const fg = attrs['color'] || attrs['foreground'] || attrs['fgcolor'];
+  const fg = attrs["color"] || attrs["foreground"] || attrs["fgcolor"];
   if (fg) {
     ctx.color = fg;
   }
 
   // background / bgcolor
-  const bg = attrs['background'] || attrs['bgcolor'];
+  const bg = attrs["background"] || attrs["bgcolor"];
   if (bg) {
     ctx.backgroundColor = bg;
   }
 
   // weight
-  const weight = attrs['weight'];
+  const weight = attrs["weight"];
   if (weight) {
-    if (weight === 'bold') {
-      ctx.fontWeight = 'bold';
-    } else if (weight === 'normal') {
-      ctx.fontWeight = 'normal';
+    if (weight === "bold") {
+      ctx.fontWeight = "bold";
+    } else if (weight === "normal") {
+      ctx.fontWeight = "normal";
     } else {
       const numWeight = parseInt(weight, 10);
       if (!isNaN(numWeight)) {
@@ -489,27 +509,27 @@ function applySpanAttributes(
   }
 
   // style
-  const style = attrs['style'];
+  const style = attrs["style"];
   if (style) {
-    if (style === 'italic' || style === 'oblique' || style === 'normal') {
+    if (style === "italic" || style === "oblique" || style === "normal") {
       ctx.fontStyle = style;
     }
   }
 
   // underline
-  const underline = attrs['underline'];
+  const underline = attrs["underline"];
   if (underline) {
-    ctx.underline = underline === 'single' || underline === 'true';
+    ctx.underline = underline === "single" || underline === "true";
   }
 
   // strikethrough
-  const st = attrs['strikethrough'];
+  const st = attrs["strikethrough"];
   if (st) {
-    ctx.strikethrough = st === 'true';
+    ctx.strikethrough = st === "true";
   }
 
   // variant
-  const variant = attrs['variant'];
+  const variant = attrs["variant"];
   if (variant) {
     ctx.fontVariant = variant;
   }
@@ -523,29 +543,33 @@ function applySpanAttributes(
  * Supports: absolute pixels ("24"), named sizes ("larger","smaller","xx-large", etc.),
  * percentages ("120%"), and Pango scale units (multiply by ~1024).
  */
-function parseFontSize(value: string, currentSize: number, _currentScale: number): number {
+function parseFontSize(
+  value: string,
+  currentSize: number,
+  _currentScale: number,
+): number {
   const trimmed = value.trim().toLowerCase();
 
   // Named relative sizes
-  if (trimmed === 'larger') return currentSize * 1.2;
-  if (trimmed === 'smaller') return currentSize * 0.83;
+  if (trimmed === "larger") return currentSize * 1.2;
+  if (trimmed === "smaller") return currentSize * 0.83;
 
   // Named absolute sizes (approximate Pango mapping)
   const namedSizes: Record<string, number> = {
-    'xx-small': 0.5789,
-    'x-small': 0.6944,
+    "xx-small": 0.5789,
+    "x-small": 0.6944,
     small: 0.8333,
     medium: 1.0,
     large: 1.2,
-    'x-large': 1.44,
-    'xx-large': 1.728,
+    "x-large": 1.44,
+    "xx-large": 1.728,
   };
   if (namedSizes[trimmed] !== undefined) {
     return currentSize * namedSizes[trimmed];
   }
 
   // Percentage (e.g. "120%")
-  if (trimmed.endsWith('%')) {
+  if (trimmed.endsWith("%")) {
     const pct = parseFloat(trimmed);
     if (!isNaN(pct)) {
       return currentSize * (pct / 100);
@@ -571,9 +595,10 @@ function parseFontSize(value: string, currentSize: number, _currentScale: number
 
 function containsMarkupTags(text: string): boolean {
   // Check for common Pango tags
-  return /<\s*\/?\s*(b|bold|i|italic|u|underline|s|strikethrough|span|sup|sub|big|small|tt)\b/i.test(
-    text,
-  );
+  return /<\s*\/?\s*(b|bold|i|italic|u|underline|s|strikethrough|span|sup|sub|big|small|tt)\b/i
+    .test(
+      text,
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -632,7 +657,7 @@ export class MarkupText extends Text {
   protected _styledSegments: StyledTextSegment[] = [];
 
   /** Code / monospace font family */
-  protected _codeFontFamily: string = 'monospace';
+  protected _codeFontFamily: string = "monospace";
 
   constructor(options: MarkupTextOptions) {
     super(options);
@@ -768,7 +793,8 @@ export class MarkupText extends Text {
         const overlaps = matches.some(
           (m) =>
             (match!.index >= m.start && match!.index < m.end) ||
-            (match!.index + match![0].length > m.start && match!.index + match![0].length <= m.end),
+            (match!.index + match![0].length > m.start &&
+              match!.index + match![0].length <= m.end),
         );
         if (!overlaps) {
           matches.push({
@@ -792,15 +818,17 @@ export class MarkupText extends Text {
         if (plain) this._styledSegments.push(this._makeDefaultSegment(plain));
       }
       const seg = this._makeDefaultSegment(m.text);
-      if (m.bold) seg.fontWeight = 'bold';
-      if (m.italic) seg.fontStyle = 'italic';
+      if (m.bold) seg.fontWeight = "bold";
+      if (m.italic) seg.fontStyle = "italic";
       if (m.code) seg.fontFamily = this._codeFontFamily;
       this._styledSegments.push(seg);
       currentIndex = m.end;
     }
 
     if (currentIndex < text.length) {
-      this._styledSegments.push(this._makeDefaultSegment(text.substring(currentIndex)));
+      this._styledSegments.push(
+        this._makeDefaultSegment(text.substring(currentIndex)),
+      );
     }
   }
 
@@ -840,10 +868,14 @@ export class MarkupText extends Text {
    * Build a CSS font string for a styled segment.
    */
   protected _buildStyledFontString(seg: StyledTextSegment): string {
-    const style = seg.fontStyle || this._fontStyle || 'normal';
+    const style = seg.fontStyle || this._fontStyle || "normal";
     const weightRaw = seg.fontWeight ?? this._fontWeight;
-    const weight = typeof weightRaw === 'number' ? weightRaw.toString() : weightRaw || 'normal';
-    const size = Math.round(this._resolveSegmentFontSize(seg) * RESOLUTION_SCALE);
+    const weight = typeof weightRaw === "number"
+      ? weightRaw.toString()
+      : weightRaw || "normal";
+    const size = Math.round(
+      this._resolveSegmentFontSize(seg) * RESOLUTION_SCALE,
+    );
     const family = seg.fontFamily || this._fontFamily;
 
     // font-variant is not part of the shorthand font string for Canvas 2D,
@@ -859,7 +891,7 @@ export class MarkupText extends Text {
    * Get plain text without markup for compatibility
    */
   protected _getPlainText(): string {
-    return this._styledSegments.map((s) => s.text).join('');
+    return this._styledSegments.map((s) => s.text).join("");
   }
 
   /**
@@ -876,7 +908,7 @@ export class MarkupText extends Text {
     if (!this._styledSegments) return lines;
 
     for (const seg of this._styledSegments) {
-      const parts = seg.text.split('\n');
+      const parts = seg.text.split("\n");
       for (let i = 0; i < parts.length; i++) {
         if (i > 0) {
           lineIdx++;
@@ -901,7 +933,8 @@ export class MarkupText extends Text {
     for (const seg of segments) {
       this._ctx.font = this._buildStyledFontString(seg);
       totalWidth += this._ctx.measureText(seg.text).width;
-      totalWidth += (seg.text.length - 1) * this._letterSpacing * RESOLUTION_SCALE;
+      totalWidth += (seg.text.length - 1) * this._letterSpacing *
+        RESOLUTION_SCALE;
     }
     return totalWidth;
   }
@@ -922,7 +955,11 @@ export class MarkupText extends Text {
   // Measure override
   // -----------------------------------------------------------------------
 
-  protected override _measureText(): { lines: string[]; width: number; height: number } {
+  protected override _measureText(): {
+    lines: string[];
+    width: number;
+    height: number;
+  } {
     if (!this._ctx) {
       return { lines: [], width: 0, height: 0 };
     }
@@ -951,7 +988,7 @@ export class MarkupText extends Text {
     const width = Math.ceil(maxWidth + padding * 2);
     const height = Math.ceil(totalHeight + padding * 2);
 
-    const lines = lineSegments.map((segs) => segs.map((s) => s.text).join(''));
+    const lines = lineSegments.map((segs) => segs.map((s) => s.text).join(""));
 
     return { lines, width, height };
   }
@@ -990,13 +1027,13 @@ export class MarkupText extends Text {
       const lineWidth = this._measureStyledLineWidth(segments);
       let startX: number;
       switch (this._textAlign) {
-        case 'center':
+        case "center":
           startX = (width - lineWidth) / 2;
           break;
-        case 'right':
+        case "right":
           startX = width - padding - lineWidth;
           break;
-        case 'left':
+        case "left":
         default:
           startX = padding;
           break;
@@ -1005,18 +1042,18 @@ export class MarkupText extends Text {
       // Draw each segment
       let currentX = startX;
       for (const seg of segments) {
-        const segFontSize = this._resolveSegmentFontSize(seg) * RESOLUTION_SCALE;
+        const segFontSize = this._resolveSegmentFontSize(seg) *
+          RESOLUTION_SCALE;
         const fontStr = this._buildStyledFontString(seg);
         this._ctx.font = fontStr;
-        this._ctx.textBaseline = 'alphabetic';
-        this._ctx.textAlign = 'left';
+        this._ctx.textBaseline = "alphabetic";
+        this._ctx.textAlign = "left";
 
         // Compute y position for this segment (baseline + shift)
         const shiftPx = seg.baselineShift * lineMaxFs;
         const segY = baseline + shiftPx;
 
-        const segWidth =
-          this._ctx.measureText(seg.text).width +
+        const segWidth = this._ctx.measureText(seg.text).width +
           (seg.text.length - 1) * this._letterSpacing * RESOLUTION_SCALE;
 
         // Draw background if present

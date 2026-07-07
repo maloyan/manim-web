@@ -13,10 +13,10 @@
  *   [anchor, handle1, handle2, anchor, ...]
  */
 
-import { VMobject } from '../../core/VMobject';
-import { VGroup } from '../../core/VGroup';
-import { WHITE } from '../../constants/colors';
-import { DEFAULT_STROKE_WIDTH } from '../../constants';
+import { VMobject } from "../../core/VMobject";
+import { VGroup } from "../../core/VGroup";
+import { WHITE } from "../../constants/colors";
+import { DEFAULT_STROKE_WIDTH } from "../../constants";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -60,14 +60,13 @@ function tokenizePath(d: string): Array<{ cmd: string; args: number[] }> {
   for (const seg of segments) {
     const cmd = seg[0];
     const raw = seg.slice(1).trim();
-    const args =
-      raw.length > 0
-        ? raw
-            .replace(/([0-9])-([0-9])/g, '$1 -$2')
-            .split(/[\s,]+/)
-            .filter(Boolean)
-            .map(Number)
-        : [];
+    const args = raw.length > 0
+      ? raw
+        .replace(/([0-9])-([0-9])/g, "$1 -$2")
+        .split(/[\s,]+/)
+        .filter(Boolean)
+        .map(Number)
+      : [];
     tokens.push({ cmd, args });
   }
   return tokens;
@@ -93,7 +92,7 @@ export function parseSVGPathData(d: string): Vec2[][] {
   let startY = 0;
   let lastCtrlX = 0;
   let lastCtrlY = 0;
-  let prevCmd = '';
+  let prevCmd = "";
 
   const tokens = tokenizePath(d);
 
@@ -102,7 +101,7 @@ export function parseSVGPathData(d: string): Vec2[][] {
     const uc = cmd.toUpperCase();
 
     switch (uc) {
-      case 'M': {
+      case "M": {
         // MoveTo -- starts a new sub-path
         if (currentPath.length > 0) {
           subPaths.push(currentPath);
@@ -122,11 +121,11 @@ export function parseSVGPathData(d: string): Vec2[][] {
           cx = x;
           cy = y;
         }
-        prevCmd = 'M';
+        prevCmd = "M";
         break;
       }
 
-      case 'L': {
+      case "L": {
         for (let i = 0; i < args.length; i += 2) {
           const x = rel ? cx + args[i] : args[i];
           const y = rel ? cy + args[i + 1] : args[i + 1];
@@ -134,31 +133,31 @@ export function parseSVGPathData(d: string): Vec2[][] {
           cx = x;
           cy = y;
         }
-        prevCmd = 'L';
+        prevCmd = "L";
         break;
       }
 
-      case 'H': {
+      case "H": {
         for (const a of args) {
           const x = rel ? cx + a : a;
           pushLineTo(currentPath, cx, cy, x, cy);
           cx = x;
         }
-        prevCmd = 'H';
+        prevCmd = "H";
         break;
       }
 
-      case 'V': {
+      case "V": {
         for (const a of args) {
           const y = rel ? cy + a : a;
           pushLineTo(currentPath, cx, cy, cx, y);
           cy = y;
         }
-        prevCmd = 'V';
+        prevCmd = "V";
         break;
       }
 
-      case 'C': {
+      case "C": {
         for (let i = 0; i < args.length; i += 6) {
           let c1x = args[i],
             c1y = args[i + 1];
@@ -180,16 +179,16 @@ export function parseSVGPathData(d: string): Vec2[][] {
           cx = ex;
           cy = ey;
         }
-        prevCmd = 'C';
+        prevCmd = "C";
         break;
       }
 
-      case 'S': {
+      case "S": {
         for (let i = 0; i < args.length; i += 4) {
           // Reflected control point
           let c1x = cx,
             c1y = cy;
-          if (prevCmd === 'C' || prevCmd === 'S') {
+          if (prevCmd === "C" || prevCmd === "S") {
             c1x = 2 * cx - lastCtrlX;
             c1y = 2 * cy - lastCtrlY;
           }
@@ -208,12 +207,12 @@ export function parseSVGPathData(d: string): Vec2[][] {
           lastCtrlY = c2y;
           cx = ex;
           cy = ey;
-          prevCmd = 'S';
+          prevCmd = "S";
         }
         break;
       }
 
-      case 'Q': {
+      case "Q": {
         for (let i = 0; i < args.length; i += 4) {
           let qx = args[i],
             qy = args[i + 1];
@@ -236,15 +235,15 @@ export function parseSVGPathData(d: string): Vec2[][] {
           cx = ex;
           cy = ey;
         }
-        prevCmd = 'Q';
+        prevCmd = "Q";
         break;
       }
 
-      case 'T': {
+      case "T": {
         for (let i = 0; i < args.length; i += 2) {
           let qx = cx,
             qy = cy;
-          if (prevCmd === 'Q' || prevCmd === 'T') {
+          if (prevCmd === "Q" || prevCmd === "T") {
             qx = 2 * cx - lastCtrlX;
             qy = 2 * cy - lastCtrlY;
           }
@@ -263,12 +262,12 @@ export function parseSVGPathData(d: string): Vec2[][] {
           lastCtrlY = qy;
           cx = ex;
           cy = ey;
-          prevCmd = 'T';
+          prevCmd = "T";
         }
         break;
       }
 
-      case 'A': {
+      case "A": {
         for (let i = 0; i < args.length; i += 7) {
           const rx = args[i];
           const ry = args[i + 1];
@@ -288,18 +287,18 @@ export function parseSVGPathData(d: string): Vec2[][] {
           cx = ex;
           cy = ey;
         }
-        prevCmd = 'A';
+        prevCmd = "A";
         break;
       }
 
-      case 'Z': {
+      case "Z": {
         // Close path
         if (cx !== startX || cy !== startY) {
           pushLineTo(currentPath, cx, cy, startX, startY);
         }
         cx = startX;
         cy = startY;
-        prevCmd = 'Z';
+        prevCmd = "Z";
         break;
       }
     }
@@ -317,7 +316,13 @@ export function parseSVGPathData(d: string): Vec2[][] {
 // ---------------------------------------------------------------------------
 
 /** Push a cubic Bezier that represents a straight line segment. */
-function pushLineTo(path: Vec2[], x0: number, y0: number, x1: number, y1: number): void {
+function pushLineTo(
+  path: Vec2[],
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): void {
   const c1x = x0 + (x1 - x0) / 3;
   const c1y = y0 + (y1 - y0) / 3;
   const c2x = x0 + ((x1 - x0) * 2) / 3;
@@ -375,7 +380,12 @@ function arcToCubicBezier(
   const cyOrig = sinPhi * cxp + cosPhi * cyp + (y1 + y2) / 2;
 
   const theta1 = vecAngle(1, 0, (x1p - cxp) / rx, (y1p - cyp) / ry);
-  let dtheta = vecAngle((x1p - cxp) / rx, (y1p - cyp) / ry, (-x1p - cxp) / rx, (-y1p - cyp) / ry);
+  let dtheta = vecAngle(
+    (x1p - cxp) / rx,
+    (y1p - cyp) / ry,
+    (-x1p - cxp) / rx,
+    (-y1p - cyp) / ry,
+  );
   if (fs === 0 && dtheta > 0) dtheta -= 2 * Math.PI;
   if (fs === 1 && dtheta < 0) dtheta += 2 * Math.PI;
 
@@ -385,7 +395,8 @@ function arcToCubicBezier(
   for (let i = 0; i < numSeg; i++) {
     const sa = theta1 + i * segAngle;
     const ea = sa + segAngle;
-    const alpha = (Math.sin(segAngle) * (Math.sqrt(4 + 3 * Math.tan(segAngle / 2) ** 2) - 1)) / 3;
+    const alpha = (Math.sin(segAngle) *
+      (Math.sqrt(4 + 3 * Math.tan(segAngle / 2) ** 2) - 1)) / 3;
 
     const cos1 = Math.cos(sa),
       sin1 = Math.sin(sa);
@@ -453,10 +464,10 @@ export function svgToVMobjects(
   // 1. Collect <defs> glyph paths for <use> references
   // ------------------------------------------------------------------
   const defs = new Map<string, string>(); // id -> d-attribute
-  const defElements = svgElement.querySelectorAll('defs path');
+  const defElements = svgElement.querySelectorAll("defs path");
   defElements.forEach((el) => {
-    const id = el.getAttribute('id');
-    const d = el.getAttribute('d');
+    const id = el.getAttribute("id");
+    const d = el.getAttribute("d");
     if (id && d) defs.set(id, d);
   });
 
@@ -467,14 +478,19 @@ export function svgToVMobjects(
   // Keep renderer units unchanged here. Caller controls world conversion.
   const worldScale = scaleFactor;
 
-  function walkElement(el: Element, accTx: number, accTy: number, accScale: number): void {
+  function walkElement(
+    el: Element,
+    accTx: number,
+    accTy: number,
+    accScale: number,
+  ): void {
     const tag = el.tagName.toLowerCase();
 
     // Skip <defs> — we collected them above
-    if (tag === 'defs') return;
+    if (tag === "defs") return;
 
     // Skip MathJax error elements (merror produces a background rect)
-    if (el.getAttribute('data-mml-node') === 'merror') return;
+    if (el.getAttribute("data-mml-node") === "merror") return;
 
     // Handle <g> transform: translate and scale
     // SVG transforms apply left-to-right in the attribute string.
@@ -484,7 +500,7 @@ export function svgToVMobjects(
     let localTx = accTx;
     let localTy = accTy;
     let localScale = accScale;
-    const transform = el.getAttribute('transform');
+    const transform = el.getAttribute("transform");
     if (transform) {
       const regex = /(translate|scale)\s*\(([^)]*)\)/g;
       let m;
@@ -494,17 +510,17 @@ export function svgToVMobjects(
           .split(/[\s,]+/)
           .filter(Boolean)
           .map(Number);
-        if (type === 'translate') {
+        if (type === "translate") {
           localTx += localScale * (args[0] || 0);
           localTy += localScale * (args[1] || 0);
-        } else if (type === 'scale') {
+        } else if (type === "scale") {
           localScale *= args[0] || 1;
         }
       }
     }
 
-    if (tag === 'path') {
-      const d = el.getAttribute('d');
+    if (tag === "path") {
+      const d = el.getAttribute("d");
       if (d) {
         const vmob = pathDataToVMobject(
           d,
@@ -519,15 +535,16 @@ export function svgToVMobjects(
         );
         if (vmob) group.add(vmob);
       }
-    } else if (tag === 'use') {
+    } else if (tag === "use") {
       // Resolve <use xlink:href="#id"> or <use href="#id">
-      const href = el.getAttribute('xlink:href') || el.getAttribute('href') || '';
-      const id = href.replace(/^#/, '');
+      const href = el.getAttribute("xlink:href") || el.getAttribute("href") ||
+        "";
+      const id = href.replace(/^#/, "");
       const d = defs.get(id);
 
       // <use> elements can have their own x/y offsets (in local coordinate space)
-      const useX = parseFloat(el.getAttribute('x') || '0');
-      const useY = parseFloat(el.getAttribute('y') || '0');
+      const useX = parseFloat(el.getAttribute("x") || "0");
+      const useY = parseFloat(el.getAttribute("y") || "0");
 
       if (d) {
         const vmob = pathDataToVMobject(
@@ -543,13 +560,15 @@ export function svgToVMobjects(
         );
         if (vmob) group.add(vmob);
       }
-    } else if (tag === 'rect') {
-      const rx = parseFloat(el.getAttribute('x') || '0');
-      const ry = parseFloat(el.getAttribute('y') || '0');
-      const rw = parseFloat(el.getAttribute('width') || '0');
-      const rh = parseFloat(el.getAttribute('height') || '0');
+    } else if (tag === "rect") {
+      const rx = parseFloat(el.getAttribute("x") || "0");
+      const ry = parseFloat(el.getAttribute("y") || "0");
+      const rw = parseFloat(el.getAttribute("width") || "0");
+      const rh = parseFloat(el.getAttribute("height") || "0");
       if (rw > 0 && rh > 0) {
-        const d = `M${rx},${ry} L${rx + rw},${ry} L${rx + rw},${ry + rh} L${rx},${ry + rh} Z`;
+        const d = `M${rx},${ry} L${rx + rw},${ry} L${rx + rw},${
+          ry + rh
+        } L${rx},${ry + rh} Z`;
         const vmob = pathDataToVMobject(
           d,
           localTx,

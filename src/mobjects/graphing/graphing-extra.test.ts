@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
-import { ImplicitFunction } from './ImplicitFunction';
-import { VectorField, ArrowVectorField, StreamLines } from './VectorField';
-import { NumberPlane } from './NumberPlane';
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { ImplicitFunction } from "./ImplicitFunction";
+import { ArrowVectorField, StreamLines, VectorField } from "./VectorField";
+import { NumberPlane } from "./NumberPlane";
 
 const EPSILON = 1e-6;
 function closeTo(a: number, b: number, eps = EPSILON): boolean {
@@ -9,14 +9,14 @@ function closeTo(a: number, b: number, eps = EPSILON): boolean {
 }
 
 // BarChart creates Text (canvas-dependent). Mock document for Node.
-describe('BarChart', () => {
-  let BarChart: typeof import('./BarChart').BarChart;
+describe("BarChart", () => {
+  let BarChart: typeof import("./BarChart").BarChart;
   const mockCtx = {
-    font: '',
-    textBaseline: '',
-    textAlign: '',
-    fillStyle: '',
-    strokeStyle: '',
+    font: "",
+    textBaseline: "",
+    textAlign: "",
+    fillStyle: "",
+    strokeStyle: "",
     lineWidth: 0,
     globalAlpha: 1,
     measureText: (t: string) => ({
@@ -46,29 +46,30 @@ describe('BarChart', () => {
 
   beforeAll(async () => {
     const origDoc = globalThis.document;
-    vi.stubGlobal('document', {
+    vi.stubGlobal("document", {
       ...origDoc,
       createElement: (tag: string) => {
-        if (tag === 'canvas')
+        if (tag === "canvas") {
           return {
             width: 100,
             height: 50,
             getContext: () => mockCtx,
-            toDataURL: () => '',
+            toDataURL: () => "",
             style: {},
           };
+        }
         return origDoc?.createElement?.(tag) ?? {};
       },
       fonts: { add: vi.fn() },
     });
-    BarChart = (await import('./BarChart')).BarChart;
+    BarChart = (await import("./BarChart")).BarChart;
   });
 
   afterAll(() => {
     vi.unstubAllGlobals();
   });
 
-  it('should construct with simple data and store values', () => {
+  it("should construct with simple data and store values", () => {
     const c = new BarChart({ values: [1, 2, 3] });
     expect(c).toBeDefined();
     expect(c.getValuesFlat()).toEqual([1, 2, 3]);
@@ -76,7 +77,7 @@ describe('BarChart', () => {
     expect(c.getNumGroups()).toBe(3);
   });
 
-  it('should have bars VGroup with correct count', () => {
+  it("should have bars VGroup with correct count", () => {
     const c = new BarChart({ values: [4, 5, 6, 7] });
     expect(c.bars).toBeDefined();
     let count = 0;
@@ -84,7 +85,7 @@ describe('BarChart', () => {
     expect(count).toBe(4);
   });
 
-  it('should handle grouped bar data', () => {
+  it("should handle grouped bar data", () => {
     const c = new BarChart({
       values: [
         [1, 2],
@@ -93,18 +94,22 @@ describe('BarChart', () => {
     });
     expect(c.getNumGroups()).toBe(2);
     expect(c.getNumSeries()).toBe(2);
-    for (let g = 0; g < 2; g++) for (let s = 0; s < 2; s++) expect(c.getBar(g, s)).toBeDefined();
+    for (let g = 0; g < 2; g++) {
+      for (let s = 0; s < 2; s++) expect(c.getBar(g, s)).toBeDefined();
+    }
   });
 
-  it('bars with larger values should have larger heights', () => {
+  it("bars with larger values should have larger heights", () => {
     const c = new BarChart({ values: [1, 5, 3] });
-    const [h0, h1, h2] = [c.getBar(0)!, c.getBar(1)!, c.getBar(2)!].map((b) => b.getHeight());
+    const [h0, h1, h2] = [c.getBar(0)!, c.getBar(1)!, c.getBar(2)!].map((b) =>
+      b.getHeight()
+    );
     expect(h1).toBeGreaterThan(h0);
     expect(h1).toBeGreaterThan(h2);
     expect(h2).toBeGreaterThan(h0);
   });
 
-  it('equal values should produce equal height bars', () => {
+  it("equal values should produce equal height bars", () => {
     const c = new BarChart({ values: [3, 3, 3] });
     const h0 = c.getBar(0)!.getHeight();
     const h1 = c.getBar(1)!.getHeight();
@@ -113,17 +118,19 @@ describe('BarChart', () => {
     expect(closeTo(h1, h2)).toBe(true);
   });
 
-  it('should accept custom colors (single and array)', () => {
-    expect(new BarChart({ values: [1, 2], barColors: '#ff0000' })).toBeDefined();
-    expect(new BarChart({ values: [1, 2], barColors: ['#ff0000', '#00ff00'] })).toBeDefined();
+  it("should accept custom colors (single and array)", () => {
+    expect(new BarChart({ values: [1, 2], barColors: "#ff0000" }))
+      .toBeDefined();
+    expect(new BarChart({ values: [1, 2], barColors: ["#ff0000", "#00ff00"] }))
+      .toBeDefined();
   });
 
-  it('setBarColors should return this for chaining', () => {
+  it("setBarColors should return this for chaining", () => {
     const c = new BarChart({ values: [1, 2] });
-    expect(c.setBarColors('#123456')).toBe(c);
+    expect(c.setBarColors("#123456")).toBe(c);
   });
 
-  it('should accept custom barWidth and barGap', () => {
+  it("should accept custom barWidth and barGap", () => {
     expect(new BarChart({ values: [1, 2, 3], barWidth: 1.0 })).toBeDefined();
     const c = new BarChart({
       values: [
@@ -136,13 +143,13 @@ describe('BarChart', () => {
     expect(c.getNumGroups()).toBe(2);
   });
 
-  it('should create xLabels for each group', () => {
-    const c = new BarChart({ values: [1, 2], xLabels: ['X', 'Y'] });
+  it("should create xLabels for each group", () => {
+    const c = new BarChart({ values: [1, 2], xLabels: ["X", "Y"] });
     expect(c.xLabels).toBeDefined();
     expect(c.xLabels.children.length).toBe(2);
   });
 
-  it('should use default and custom chart dimensions', () => {
+  it("should use default and custom chart dimensions", () => {
     const d = new BarChart({ values: [1] });
     expect(d.getHeight()).toBe(5);
     expect(d.getWidth()).toBe(8);
@@ -151,7 +158,7 @@ describe('BarChart', () => {
     expect(c.getWidth()).toBe(12);
   });
 
-  it('should auto-calculate and accept custom yRange', () => {
+  it("should auto-calculate and accept custom yRange", () => {
     const auto = new BarChart({ values: [1, 2, 3] });
     const [yMin, yMax, step] = auto.getYRange();
     expect(yMin).toBe(0);
@@ -161,20 +168,20 @@ describe('BarChart', () => {
     expect(custom.getYRange()).toEqual([0, 10, 2]);
   });
 
-  it('changeBarValues should update values and return bars', () => {
+  it("changeBarValues should update values and return bars", () => {
     const c = new BarChart({ values: [1, 2, 3] });
     const result = c.changeBarValues([5, 3, 8]);
     expect(c.getValuesFlat()).toEqual([5, 3, 8]);
     expect(result).toBe(c.bars);
   });
 
-  it('changeBarValues should handle values exceeding yRange', () => {
+  it("changeBarValues should handle values exceeding yRange", () => {
     const c = new BarChart({ values: [1, 2, 3], yRange: [0, 5, 1] });
     c.changeBarValues([10, 20, 30]);
     expect(c.getYRange()[1]).toBeGreaterThanOrEqual(30);
   });
 
-  it('getBar should return bar or undefined', () => {
+  it("getBar should return bar or undefined", () => {
     const c = new BarChart({
       values: [
         [1, 2],
@@ -189,7 +196,7 @@ describe('BarChart', () => {
     expect(c2.getBar(0)).toBeDefined();
   });
 
-  it('getSeriesBars should return VGroup with bars', () => {
+  it("getSeriesBars should return VGroup with bars", () => {
     // Note: getSeriesBars reparents bars via add(), shifting indices
     const c = new BarChart({
       values: [
@@ -202,7 +209,7 @@ describe('BarChart', () => {
     expect(s.children.length).toBeGreaterThan(0);
   });
 
-  it('getValues should return a deep copy', () => {
+  it("getValues should return a deep copy", () => {
     const c = new BarChart({ values: [1, 2, 3] });
     const vals = c.getValues();
     expect(vals).toEqual([[1, 2, 3]]);
@@ -210,45 +217,45 @@ describe('BarChart', () => {
     expect(c.getValuesFlat()[0]).toBe(1);
   });
 
-  it('setBarFillOpacity should return this', () => {
+  it("setBarFillOpacity should return this", () => {
     const c = new BarChart({ values: [1, 2] });
     expect(c.setBarFillOpacity(0.5)).toBe(c);
   });
 
-  it('legend should be null unless configured', () => {
+  it("legend should be null unless configured", () => {
     expect(new BarChart({ values: [1, 2] }).legend).toBeNull();
     const c = new BarChart({
       values: [
         [1, 2],
         [3, 4],
       ],
-      seriesNames: ['A', 'B'],
+      seriesNames: ["A", "B"],
       showLegend: true,
     });
     expect(c.legend).not.toBeNull();
   });
 
-  it('should handle empty values', () => {
+  it("should handle empty values", () => {
     expect(new BarChart({ values: [] }).getNumGroups()).toBe(0);
   });
 });
 
 // VectorField (base class)
-describe('VectorField', () => {
-  it('should construct and store function', () => {
+describe("VectorField", () => {
+  it("should construct and store function", () => {
     const func = (x: number, y: number): [number, number] => [x, y];
     const vf = new VectorField({ func });
     expect(vf).toBeDefined();
     expect(vf.getFunction()).toBe(func);
   });
 
-  it('should have default ranges', () => {
+  it("should have default ranges", () => {
     const vf = new VectorField({ func: (x, y) => [x, y] });
     expect(vf.getXRange()).toEqual([-5, 5, 0.5]);
     expect(vf.getYRange()).toEqual([-3, 3, 0.5]);
   });
 
-  it('should accept custom ranges', () => {
+  it("should accept custom ranges", () => {
     const vf = new VectorField({
       func: (x, y) => [x, y],
       xRange: [-2, 2, 1],
@@ -258,7 +265,7 @@ describe('VectorField', () => {
     expect(vf.getYRange()).toEqual([-1, 1, 0.5]);
   });
 
-  it('lengthScale default, custom, and setter', () => {
+  it("lengthScale default, custom, and setter", () => {
     const vf = new VectorField({ func: (x, y) => [x, y] });
     expect(vf.getLengthScale()).toBe(1);
     const vf2 = new VectorField({ func: (x, y) => [x, y], lengthScale: 2.5 });
@@ -267,14 +274,14 @@ describe('VectorField', () => {
     expect(vf.getLengthScale()).toBe(3);
   });
 
-  it('setFunction should update and chain', () => {
+  it("setFunction should update and chain", () => {
     const vf = new VectorField({ func: (x, y) => [x, y] });
     const fn2 = (x: number, y: number): [number, number] => [-y, x];
     expect(vf.setFunction(fn2)).toBe(vf);
     expect(vf.getFunction()).toBe(fn2);
   });
 
-  it('interpolateFunction at alpha 0, 0.5, 1', () => {
+  it("interpolateFunction at alpha 0, 0.5, 1", () => {
     const vf0 = new VectorField({ func: (x, y) => [x, y] });
     vf0.interpolateFunction((x, y) => [-y, x], 0);
     const [a0x, a0y] = vf0.getFunction()(1, 0);
@@ -291,8 +298,11 @@ describe('VectorField', () => {
     expect(closeTo(mx, 1) && closeTo(my, 1)).toBe(true);
   });
 
-  it('copy should produce independent VectorField', () => {
-    const vf = new VectorField({ func: (x, y) => [x, y], xRange: [-2, 2, 0.5] });
+  it("copy should produce independent VectorField", () => {
+    const vf = new VectorField({
+      func: (x, y) => [x, y],
+      xRange: [-2, 2, 0.5],
+    });
     const cp = vf.copy();
     expect(cp).toBeInstanceOf(VectorField);
     expect(cp).not.toBe(vf);
@@ -301,8 +311,8 @@ describe('VectorField', () => {
 });
 
 // ArrowVectorField
-describe('ArrowVectorField', () => {
-  it('should construct and have arrow children', () => {
+describe("ArrowVectorField", () => {
+  it("should construct and have arrow children", () => {
     const avf = new ArrowVectorField({
       func: (_x, _y) => [1, 0],
       xRange: [-1, 1, 1],
@@ -312,7 +322,7 @@ describe('ArrowVectorField', () => {
     expect(avf.children.length).toBeGreaterThan(0);
   });
 
-  it('finer resolution produces more arrows', () => {
+  it("finer resolution produces more arrows", () => {
     const coarse = new ArrowVectorField({
       func: () => [1, 0] as [number, number],
       xRange: [-2, 2, 2],
@@ -326,7 +336,7 @@ describe('ArrowVectorField', () => {
     expect(fine.children.length).toBeGreaterThan(coarse.children.length);
   });
 
-  it('should respect custom ranges', () => {
+  it("should respect custom ranges", () => {
     const avf = new ArrowVectorField({
       func: (x, y) => [x, y],
       xRange: [0, 2, 1],
@@ -336,7 +346,7 @@ describe('ArrowVectorField', () => {
     expect(avf.getYRange()).toEqual([0, 2, 1]);
   });
 
-  it('should evaluate function at grid points', () => {
+  it("should evaluate function at grid points", () => {
     const pts: [number, number][] = [];
     new ArrowVectorField({
       func: (x, y) => {
@@ -351,7 +361,7 @@ describe('ArrowVectorField', () => {
     expect(pts.some(([x, y]) => closeTo(x, 1) && closeTo(y, 1))).toBe(true);
   });
 
-  it('zero vectors produce no arrows', () => {
+  it("zero vectors produce no arrows", () => {
     const avf = new ArrowVectorField({
       func: () => [0, 0] as [number, number],
       xRange: [-1, 1, 1],
@@ -360,7 +370,7 @@ describe('ArrowVectorField', () => {
     expect(avf.children.length).toBe(0);
   });
 
-  it('normalizeArrows default, option, and setter', () => {
+  it("normalizeArrows default, option, and setter", () => {
     const a = new ArrowVectorField({
       func: (x, y) => [x, y],
       xRange: [-1, 1, 1],
@@ -378,7 +388,7 @@ describe('ArrowVectorField', () => {
     expect(a.getNormalizeArrows()).toBe(true);
   });
 
-  it('maxArrowLength default and setter', () => {
+  it("maxArrowLength default and setter", () => {
     const a = new ArrowVectorField({
       func: (x, y) => [x, y],
       xRange: [-1, 1, 0.5],
@@ -389,24 +399,24 @@ describe('ArrowVectorField', () => {
     expect(a.getMaxArrowLength()).toBe(2.0);
   });
 
-  it('should accept static color string and color function', () => {
+  it("should accept static color string and color function", () => {
     const a = new ArrowVectorField({
       func: () => [1, 0] as [number, number],
       xRange: [0, 0, 1],
       yRange: [0, 0, 1],
-      color: '#00ff00',
+      color: "#00ff00",
     });
     expect(a.children.length).toBeGreaterThan(0);
     const b = new ArrowVectorField({
       func: (x, y) => [x, y],
       xRange: [-1, 1, 1],
       yRange: [-1, 1, 1],
-      color: (m: number) => (m > 1 ? '#f00' : '#00f'),
+      color: (m: number) => (m > 1 ? "#f00" : "#00f"),
     });
     expect(b.children.length).toBeGreaterThan(0);
   });
 
-  it('minMagnitude filters small vectors', () => {
+  it("minMagnitude filters small vectors", () => {
     const a = new ArrowVectorField({
       func: (x, y) => [x * 0.01, y * 0.01],
       xRange: [-1, 1, 1],
@@ -416,7 +426,7 @@ describe('ArrowVectorField', () => {
     expect(a.children.length).toBe(0);
   });
 
-  it('copy produces ArrowVectorField', () => {
+  it("copy produces ArrowVectorField", () => {
     const a = new ArrowVectorField({
       func: (x, y) => [x, y],
       xRange: [-1, 1, 1],
@@ -429,8 +439,8 @@ describe('ArrowVectorField', () => {
 });
 
 // StreamLines
-describe('StreamLines', () => {
-  it('should construct and generate children', () => {
+describe("StreamLines", () => {
+  it("should construct and generate children", () => {
     const sl = new StreamLines({
       func: () => [1, 0] as [number, number],
       xRange: [-2, 2, 1],
@@ -441,23 +451,32 @@ describe('StreamLines', () => {
     expect(sl.children.length).toBeGreaterThan(0);
   });
 
-  it('numLines default, custom, and setter', () => {
-    expect(new StreamLines({ func: () => [1, 0] as [number, number] }).getNumLines()).toBe(15);
+  it("numLines default, custom, and setter", () => {
     expect(
-      new StreamLines({ func: () => [1, 0] as [number, number], numLines: 8 }).getNumLines(),
+      new StreamLines({ func: () => [1, 0] as [number, number] }).getNumLines(),
+    ).toBe(15);
+    expect(
+      new StreamLines({ func: () => [1, 0] as [number, number], numLines: 8 })
+        .getNumLines(),
     ).toBe(8);
-    const sl = new StreamLines({ func: () => [1, 0] as [number, number], numLines: 5 });
+    const sl = new StreamLines({
+      func: () => [1, 0] as [number, number],
+      numLines: 5,
+    });
     sl.setNumLines(10);
     expect(sl.getNumLines()).toBe(10);
   });
 
-  it('should accept and update startPoints', () => {
+  it("should accept and update startPoints", () => {
     const pts: [number, number][] = [
       [0, 0],
       [1, 1],
       [-1, -1],
     ];
-    const sl = new StreamLines({ func: () => [1, 0] as [number, number], startPoints: pts });
+    const sl = new StreamLines({
+      func: () => [1, 0] as [number, number],
+      startPoints: pts,
+    });
     expect(sl.getStartPoints()).toEqual(pts);
     const newPts: [number, number][] = [
       [0, 0],
@@ -467,22 +486,25 @@ describe('StreamLines', () => {
     expect(sl.getStartPoints()).toEqual(newPts);
   });
 
-  it('maxLineLength default and setter', () => {
+  it("maxLineLength default and setter", () => {
     const sl = new StreamLines({ func: () => [1, 0] as [number, number] });
     expect(sl.getMaxLineLength()).toBe(10);
     sl.setMaxLineLength(20);
     expect(sl.getMaxLineLength()).toBe(20);
   });
 
-  it('showArrows default and setter', () => {
+  it("showArrows default and setter", () => {
     const sl = new StreamLines({ func: () => [1, 0] as [number, number] });
     expect(sl.getShowArrows()).toBe(false);
     sl.setShowArrows(true);
     expect(sl.getShowArrows()).toBe(true);
   });
 
-  it('copy produces StreamLines', () => {
-    const sl = new StreamLines({ func: () => [1, 0] as [number, number], numLines: 5 });
+  it("copy produces StreamLines", () => {
+    const sl = new StreamLines({
+      func: () => [1, 0] as [number, number],
+      numLines: 5,
+    });
     const cp = sl.copy();
     expect(cp).toBeInstanceOf(StreamLines);
     expect(cp).not.toBe(sl);
@@ -490,17 +512,21 @@ describe('StreamLines', () => {
 });
 
 // ImplicitFunction
-describe('ImplicitFunction', () => {
+describe("ImplicitFunction", () => {
   const circleFunc = (x: number, y: number) => x * x + y * y - 1;
 
-  it('should create circle and have non-empty points', () => {
+  it("should create circle and have non-empty points", () => {
     const c = new ImplicitFunction({ func: circleFunc });
     expect(c).toBeDefined();
     expect(c.getLocalPoints().length).toBeGreaterThan(0);
   });
 
-  it('should have points near the unit circle', () => {
-    const c = new ImplicitFunction({ func: circleFunc, minDepth: 5, maxDepth: 7 });
+  it("should have points near the unit circle", () => {
+    const c = new ImplicitFunction({
+      func: circleFunc,
+      minDepth: 5,
+      maxDepth: 7,
+    });
     const pts = c.getLocalPoints();
     let found = false;
     for (let i = 0; i < pts.length; i += 3) {
@@ -513,8 +539,12 @@ describe('ImplicitFunction', () => {
     expect(found).toBe(true);
   });
 
-  it('should accept and update custom ranges', () => {
-    const imp = new ImplicitFunction({ func: circleFunc, xRange: [-2, 2], yRange: [-2, 2] });
+  it("should accept and update custom ranges", () => {
+    const imp = new ImplicitFunction({
+      func: circleFunc,
+      xRange: [-2, 2],
+      yRange: [-2, 2],
+    });
     expect(imp.getXRange()).toEqual([-2, 2]);
     expect(imp.getYRange()).toEqual([-2, 2]);
     imp.setXRange([-3, 3]);
@@ -523,7 +553,7 @@ describe('ImplicitFunction', () => {
     expect(imp.getYRange()).toEqual([-4, 4]);
   });
 
-  it('should accept custom depth and finer depth produces more points', () => {
+  it("should accept custom depth and finer depth produces more points", () => {
     const low = new ImplicitFunction({
       func: circleFunc,
       xRange: [-2, 2],
@@ -539,10 +569,12 @@ describe('ImplicitFunction', () => {
       maxDepth: 7,
     });
     expect(low.getLocalPoints().length).toBeGreaterThan(0);
-    expect(high.getLocalPoints().length).toBeGreaterThan(low.getLocalPoints().length);
+    expect(high.getLocalPoints().length).toBeGreaterThan(
+      low.getLocalPoints().length,
+    );
   });
 
-  it('different equations produce different point sets', () => {
+  it("different equations produce different point sets", () => {
     const circle = new ImplicitFunction({
       func: circleFunc,
       xRange: [-3, 3],
@@ -559,10 +591,12 @@ describe('ImplicitFunction', () => {
     });
     expect(circle.getLocalPoints().length).toBeGreaterThan(0);
     expect(line.getLocalPoints().length).toBeGreaterThan(0);
-    expect(circle.getLocalPoints().length).not.toBe(line.getLocalPoints().length);
+    expect(circle.getLocalPoints().length).not.toBe(
+      line.getLocalPoints().length,
+    );
   });
 
-  it('hyperbola and sine curve produce points', () => {
+  it("hyperbola and sine curve produce points", () => {
     const hyp = new ImplicitFunction({
       func: (x, y) => x * x - y * y - 1,
       xRange: [-3, 3],
@@ -581,7 +615,7 @@ describe('ImplicitFunction', () => {
     expect(sine.getLocalPoints().length).toBeGreaterThan(0);
   });
 
-  it('no-solution equation has no points', () => {
+  it("no-solution equation has no points", () => {
     const ns = new ImplicitFunction({
       func: (x, y) => x * x + y * y + 1,
       xRange: [-2, 2],
@@ -592,16 +626,20 @@ describe('ImplicitFunction', () => {
     expect(ns.getLocalPoints().length).toBe(0);
   });
 
-  it('styling defaults and custom', () => {
+  it("styling defaults and custom", () => {
     const d = new ImplicitFunction({ func: circleFunc });
-    expect(d.color).toBe('#58c4dd');
+    expect(d.color).toBe("#58c4dd");
     expect(d.fillOpacity).toBe(0);
-    const c = new ImplicitFunction({ func: circleFunc, color: '#ff0000', strokeWidth: 5 });
-    expect(c.color).toBe('#ff0000');
+    const c = new ImplicitFunction({
+      func: circleFunc,
+      color: "#ff0000",
+      strokeWidth: 5,
+    });
+    expect(c.color).toBe("#ff0000");
     expect(c.strokeWidth).toBe(5);
   });
 
-  it('setFunction should regenerate and chain', () => {
+  it("setFunction should regenerate and chain", () => {
     const imp = new ImplicitFunction({
       func: circleFunc,
       xRange: [-3, 3],
@@ -616,31 +654,31 @@ describe('ImplicitFunction', () => {
     expect(after).not.toBe(before);
   });
 
-  it('getFunction returns stored function', () => {
+  it("getFunction returns stored function", () => {
     const imp = new ImplicitFunction({ func: circleFunc });
     expect(imp.getFunction()).toBe(circleFunc);
   });
 
-  it('setAxes(null) chains', () => {
+  it("setAxes(null) chains", () => {
     const imp = new ImplicitFunction({ func: circleFunc });
     expect(imp.setAxes(null)).toBe(imp);
   });
 
-  it('copy produces independent ImplicitFunction', () => {
+  it("copy produces independent ImplicitFunction", () => {
     const imp = new ImplicitFunction({
       func: circleFunc,
-      color: '#00ff00',
+      color: "#00ff00",
       xRange: [-2, 2],
       yRange: [-2, 2],
     });
     const cp = imp.copy();
     expect(cp).toBeInstanceOf(ImplicitFunction);
     expect(cp).not.toBe(imp);
-    expect(cp.color).toBe('#00ff00');
+    expect(cp.color).toBe("#00ff00");
     expect(cp.getXRange()).toEqual([-2, 2]);
   });
 
-  it('handles saddle point case 5 center > 0 branch', () => {
+  it("handles saddle point case 5 center > 0 branch", () => {
     // (x-0.1)*(y-0.1) with saddle shifted off grid lines
     // In cell containing saddle, BL+TR > 0, center > 0
     const imp = new ImplicitFunction({
@@ -653,7 +691,7 @@ describe('ImplicitFunction', () => {
     expect(imp.getLocalPoints().length).toBeGreaterThan(0);
   });
 
-  it('handles saddle point case 5 center <= 0 branch', () => {
+  it("handles saddle point case 5 center <= 0 branch", () => {
     // depth 2, range [-2,2], cell [0,1]x[0,1] for f=(x-0.5)*(y-0.5)-0.01
     // BL(0,0)=0.25-0.01=0.24>0, BR(1,0)=-0.25-0.01<0,
     // TL(0,1)=-0.25-0.01<0, TR(1,1)=0.25-0.01=0.24>0 => case 5
@@ -668,7 +706,7 @@ describe('ImplicitFunction', () => {
     expect(imp.getLocalPoints().length).toBeGreaterThan(0);
   });
 
-  it('handles saddle point case 10 center > 0 branch', () => {
+  it("handles saddle point case 10 center > 0 branch", () => {
     // depth 2, range [-2,2], cell [0,1]x[0,1] for f=-(x-0.5)*(y-0.5)+0.01
     // BL(0,0)=-0.24<0, BR(1,0)=0.26>0,
     // TL(0,1)=0.26>0, TR(1,1)=-0.24<0 => case 10
@@ -683,7 +721,7 @@ describe('ImplicitFunction', () => {
     expect(imp.getLocalPoints().length).toBeGreaterThan(0);
   });
 
-  it('handles saddle point case 10 center <= 0 branch', () => {
+  it("handles saddle point case 10 center <= 0 branch", () => {
     // depth 2, range [-2,2], cell [0,1]x[0,1] for f=-(x-0.5)*(y-0.5)-0.01
     // BL(0,0)=-0.26<0, BR(1,0)=0.24>0,
     // TL(0,1)=0.24>0, TR(1,1)=-0.26<0 => case 10
@@ -698,7 +736,7 @@ describe('ImplicitFunction', () => {
     expect(imp.getLocalPoints().length).toBeGreaterThan(0);
   });
 
-  it('handles _interpolateEdge near-zero division', () => {
+  it("handles _interpolateEdge near-zero division", () => {
     // When v0 and v1 are nearly equal, interpolation falls back to midpoint
     const flatFunc = (x: number, y: number) => {
       // Returns very small values near zero that cross sign
@@ -716,7 +754,7 @@ describe('ImplicitFunction', () => {
     expect(imp).toBeDefined();
   });
 
-  it('setYRange updates range and regenerates', () => {
+  it("setYRange updates range and regenerates", () => {
     const imp = new ImplicitFunction({ func: circleFunc, yRange: [-1, 1] });
     expect(imp.getYRange()).toEqual([-1, 1]);
     imp.setYRange([-3, 3]);
@@ -727,41 +765,41 @@ describe('ImplicitFunction', () => {
 // ---------------------------------------------------------------------------
 // NumberPlane
 // ---------------------------------------------------------------------------
-describe('NumberPlane', () => {
-  describe('constructor defaults', () => {
-    it('should create with default options', () => {
+describe("NumberPlane", () => {
+  describe("constructor defaults", () => {
+    it("should create with default options", () => {
       const plane = new NumberPlane();
       expect(plane).toBeDefined();
     });
 
-    it('should have default xRange [-7, 7, 1]', () => {
+    it("should have default xRange [-7, 7, 1]", () => {
       const plane = new NumberPlane();
       expect(plane.getXRange()).toEqual([-7, 7, 1]);
     });
 
-    it('should have default yRange [-4, 4, 1]', () => {
+    it("should have default yRange [-4, 4, 1]", () => {
       const plane = new NumberPlane();
       expect(plane.getYRange()).toEqual([-4, 4, 1]);
     });
 
-    it('should have default xLength 14', () => {
+    it("should have default xLength 14", () => {
       const plane = new NumberPlane();
       expect(plane.getXLength()).toBe(14);
     });
 
-    it('should have default yLength 8', () => {
+    it("should have default yLength 8", () => {
       const plane = new NumberPlane();
       expect(plane.getYLength()).toBe(8);
     });
 
-    it('should include background lines by default', () => {
+    it("should include background lines by default", () => {
       const plane = new NumberPlane();
       const bgLines = plane.getBackgroundLines();
       expect(bgLines).toBeDefined();
       expect(bgLines.children.length).toBeGreaterThan(0);
     });
 
-    it('should default to no tips', () => {
+    it("should default to no tips", () => {
       // NumberPlane defaults tips to false
       const plane = new NumberPlane();
       // The plane should not have tip children beyond axes + background
@@ -769,8 +807,8 @@ describe('NumberPlane', () => {
     });
   });
 
-  describe('constructor with custom options', () => {
-    it('should accept custom xRange and yRange', () => {
+  describe("constructor with custom options", () => {
+    it("should accept custom xRange and yRange", () => {
       const plane = new NumberPlane({
         xRange: [-3, 3, 0.5],
         yRange: [-2, 2, 0.5],
@@ -779,7 +817,7 @@ describe('NumberPlane', () => {
       expect(plane.getYRange()).toEqual([-2, 2, 0.5]);
     });
 
-    it('should accept custom xLength and yLength', () => {
+    it("should accept custom xLength and yLength", () => {
       const plane = new NumberPlane({
         xLength: 8,
         yLength: 4,
@@ -788,35 +826,35 @@ describe('NumberPlane', () => {
       expect(plane.getYLength()).toBe(4);
     });
 
-    it('should accept includeBackgroundLines=false', () => {
+    it("should accept includeBackgroundLines=false", () => {
       const plane = new NumberPlane({ includeBackgroundLines: false });
       const bgLines = plane.getBackgroundLines();
       expect(bgLines.children.length).toBe(0);
     });
 
-    it('should accept custom backgroundLineStyle', () => {
+    it("should accept custom backgroundLineStyle", () => {
       const plane = new NumberPlane({
         backgroundLineStyle: {
-          color: '#ff0000',
+          color: "#ff0000",
           strokeWidth: 3,
           opacity: 0.5,
         },
       });
       const style = plane.getBackgroundLineStyle();
-      expect(style.color).toBe('#ff0000');
+      expect(style.color).toBe("#ff0000");
       expect(style.strokeWidth).toBe(3);
       expect(style.opacity).toBe(0.5);
     });
 
-    it('should have default backgroundLineStyle when not specified', () => {
+    it("should have default backgroundLineStyle when not specified", () => {
       const plane = new NumberPlane();
       const style = plane.getBackgroundLineStyle();
-      expect(style.color).toBe('#29ABCA');
+      expect(style.color).toBe("#29ABCA");
       expect(style.strokeWidth).toBe(1);
       expect(style.opacity).toBe(1);
     });
 
-    it('should accept custom fadedLineRatio with faded lines', () => {
+    it("should accept custom fadedLineRatio with faded lines", () => {
       const plane = new NumberPlane({
         xRange: [-2, 2, 1],
         yRange: [-2, 2, 1],
@@ -827,13 +865,13 @@ describe('NumberPlane', () => {
       expect(bgLines.children.length).toBeGreaterThan(0);
     });
 
-    it('should accept custom fadedLineStyle', () => {
+    it("should accept custom fadedLineStyle", () => {
       const plane = new NumberPlane({
         xRange: [-2, 2, 1],
         yRange: [-2, 2, 1],
         fadedLineRatio: 1,
         fadedLineStyle: {
-          color: '#00ff00',
+          color: "#00ff00",
           strokeWidth: 0.5,
           opacity: 0.2,
         },
@@ -841,13 +879,13 @@ describe('NumberPlane', () => {
       expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
     });
 
-    it('should auto-compute fadedLineStyle from backgroundLineStyle', () => {
+    it("should auto-compute fadedLineStyle from backgroundLineStyle", () => {
       const plane = new NumberPlane({
         xRange: [-2, 2, 1],
         yRange: [-2, 2, 1],
         fadedLineRatio: 1,
         backgroundLineStyle: {
-          color: '#aabbcc',
+          color: "#aabbcc",
           strokeWidth: 4,
           opacity: 0.8,
         },
@@ -856,7 +894,7 @@ describe('NumberPlane', () => {
       expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
     });
 
-    it('should accept fadingFactor != 1', () => {
+    it("should accept fadingFactor != 1", () => {
       const plane = new NumberPlane({
         xRange: [-3, 3, 1],
         yRange: [-3, 3, 1],
@@ -866,15 +904,15 @@ describe('NumberPlane', () => {
     });
   });
 
-  describe('coordsToPoint / pointToCoords', () => {
-    it('should map origin to visual center', () => {
+  describe("coordsToPoint / pointToCoords", () => {
+    it("should map origin to visual center", () => {
       const plane = new NumberPlane();
       const pt = plane.coordsToPoint(0, 0);
       expect(closeTo(pt[0], 0)).toBe(true);
       expect(closeTo(pt[1], 0)).toBe(true);
     });
 
-    it('should roundtrip coordinates', () => {
+    it("should roundtrip coordinates", () => {
       const plane = new NumberPlane({
         xRange: [-5, 5, 1],
         yRange: [-3, 3, 1],
@@ -885,7 +923,7 @@ describe('NumberPlane', () => {
       expect(closeTo(y, -2)).toBe(true);
     });
 
-    it('should map edge coordinates to visual edges', () => {
+    it("should map edge coordinates to visual edges", () => {
       const plane = new NumberPlane({
         xRange: [-5, 5, 1],
         yRange: [-3, 3, 1],
@@ -902,41 +940,41 @@ describe('NumberPlane', () => {
     });
   });
 
-  describe('getAxes (xAxis / yAxis)', () => {
-    it('should have xAxis and yAxis', () => {
+  describe("getAxes (xAxis / yAxis)", () => {
+    it("should have xAxis and yAxis", () => {
       const plane = new NumberPlane();
       expect(plane.getXAxis()).toBeDefined();
       expect(plane.getYAxis()).toBeDefined();
     });
 
-    it('xAxis and yAxis should be accessible via public fields', () => {
+    it("xAxis and yAxis should be accessible via public fields", () => {
       const plane = new NumberPlane();
       expect(plane.xAxis).toBe(plane.getXAxis());
       expect(plane.yAxis).toBe(plane.getYAxis());
     });
   });
 
-  describe('getBackgroundLines', () => {
-    it('should return the background lines group', () => {
+  describe("getBackgroundLines", () => {
+    it("should return the background lines group", () => {
       const plane = new NumberPlane();
       const bg = plane.getBackgroundLines();
       expect(bg).toBeDefined();
       expect(bg.children.length).toBeGreaterThan(0);
     });
 
-    it('should return empty group when background lines disabled', () => {
+    it("should return empty group when background lines disabled", () => {
       const plane = new NumberPlane({ includeBackgroundLines: false });
       expect(plane.getBackgroundLines().children.length).toBe(0);
     });
   });
 
-  describe('setIncludeBackgroundLines', () => {
-    it('should return this when value is already the same', () => {
+  describe("setIncludeBackgroundLines", () => {
+    it("should return this when value is already the same", () => {
       const plane = new NumberPlane();
       expect(plane.setIncludeBackgroundLines(true)).toBe(plane);
     });
 
-    it('should remove background lines when toggled off', () => {
+    it("should remove background lines when toggled off", () => {
       const plane = new NumberPlane();
       const childrenBefore = plane.children.length;
       plane.setIncludeBackgroundLines(false);
@@ -946,7 +984,7 @@ describe('NumberPlane', () => {
       expect(plane.children.includes(plane.getBackgroundLines())).toBe(false);
     });
 
-    it('should add background lines when toggled on', () => {
+    it("should add background lines when toggled on", () => {
       const plane = new NumberPlane({ includeBackgroundLines: false });
       const childrenBefore = plane.children.length;
       plane.setIncludeBackgroundLines(true);
@@ -954,7 +992,7 @@ describe('NumberPlane', () => {
       expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
     });
 
-    it('should not add duplicate background lines group when called multiple times', () => {
+    it("should not add duplicate background lines group when called multiple times", () => {
       const plane = new NumberPlane({ includeBackgroundLines: false });
       plane.setIncludeBackgroundLines(true);
       const countAfter = plane.children.length;
@@ -962,21 +1000,21 @@ describe('NumberPlane', () => {
       expect(plane.children.length).toBe(countAfter);
     });
 
-    it('should return this for chaining', () => {
+    it("should return this for chaining", () => {
       const plane = new NumberPlane();
       expect(plane.setIncludeBackgroundLines(false)).toBe(plane);
     });
   });
 
-  describe('setBackgroundLineStyle', () => {
-    it('should update background line style and return this', () => {
+  describe("setBackgroundLineStyle", () => {
+    it("should update background line style and return this", () => {
       const plane = new NumberPlane();
-      const result = plane.setBackgroundLineStyle({ color: '#ff0000' });
+      const result = plane.setBackgroundLineStyle({ color: "#ff0000" });
       expect(result).toBe(plane);
-      expect(plane.getBackgroundLineStyle().color).toBe('#ff0000');
+      expect(plane.getBackgroundLineStyle().color).toBe("#ff0000");
     });
 
-    it('should regenerate lines when background is active', () => {
+    it("should regenerate lines when background is active", () => {
       const plane = new NumberPlane();
       const linesBefore = plane.getBackgroundLines().children.length;
       plane.setBackgroundLineStyle({ strokeWidth: 5 });
@@ -985,27 +1023,27 @@ describe('NumberPlane', () => {
       expect(plane.getBackgroundLineStyle().strokeWidth).toBe(5);
     });
 
-    it('should not regenerate lines when background is disabled', () => {
+    it("should not regenerate lines when background is disabled", () => {
       const plane = new NumberPlane({ includeBackgroundLines: false });
-      plane.setBackgroundLineStyle({ color: '#00ff00' });
+      plane.setBackgroundLineStyle({ color: "#00ff00" });
       expect(plane.getBackgroundLines().children.length).toBe(0);
-      expect(plane.getBackgroundLineStyle().color).toBe('#00ff00');
+      expect(plane.getBackgroundLineStyle().color).toBe("#00ff00");
     });
 
-    it('should merge with existing style, not replace', () => {
+    it("should merge with existing style, not replace", () => {
       const plane = new NumberPlane({
-        backgroundLineStyle: { color: '#111111', strokeWidth: 3, opacity: 0.7 },
+        backgroundLineStyle: { color: "#111111", strokeWidth: 3, opacity: 0.7 },
       });
       plane.setBackgroundLineStyle({ opacity: 0.3 });
       const style = plane.getBackgroundLineStyle();
-      expect(style.color).toBe('#111111');
+      expect(style.color).toBe("#111111");
       expect(style.strokeWidth).toBe(3);
       expect(style.opacity).toBe(0.3);
     });
   });
 
-  describe('getBackgroundLineStyle', () => {
-    it('should return a copy (not the internal reference)', () => {
+  describe("getBackgroundLineStyle", () => {
+    it("should return a copy (not the internal reference)", () => {
       const plane = new NumberPlane();
       const s1 = plane.getBackgroundLineStyle();
       const s2 = plane.getBackgroundLineStyle();
@@ -1014,8 +1052,8 @@ describe('NumberPlane', () => {
     });
   });
 
-  describe('_calculateLineOpacity (via fadingFactor)', () => {
-    it('fadingFactor=1 should produce uniform opacity', () => {
+  describe("_calculateLineOpacity (via fadingFactor)", () => {
+    it("fadingFactor=1 should produce uniform opacity", () => {
       const plane = new NumberPlane({
         xRange: [-3, 3, 1],
         yRange: [-3, 3, 1],
@@ -1025,7 +1063,7 @@ describe('NumberPlane', () => {
       expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
     });
 
-    it('fadingFactor < 1 should produce distance-based fading', () => {
+    it("fadingFactor < 1 should produce distance-based fading", () => {
       const plane = new NumberPlane({
         xRange: [-3, 3, 1],
         yRange: [-3, 3, 1],
@@ -1034,7 +1072,7 @@ describe('NumberPlane', () => {
       expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);
     });
 
-    it('fadingFactor=0 should still generate lines', () => {
+    it("fadingFactor=0 should still generate lines", () => {
       const plane = new NumberPlane({
         xRange: [-3, 3, 1],
         yRange: [-3, 3, 1],
@@ -1044,8 +1082,8 @@ describe('NumberPlane', () => {
     });
   });
 
-  describe('background lines generation details', () => {
-    it('should generate vertical and horizontal lines', () => {
+  describe("background lines generation details", () => {
+    it("should generate vertical and horizontal lines", () => {
       const plane = new NumberPlane({
         xRange: [-2, 2, 1],
         yRange: [-2, 2, 1],
@@ -1055,7 +1093,7 @@ describe('NumberPlane', () => {
       expect(count).toBeGreaterThan(0);
     });
 
-    it('fadedLineRatio > 0 should produce more lines than ratio=0', () => {
+    it("fadedLineRatio > 0 should produce more lines than ratio=0", () => {
       const noFaded = new NumberPlane({
         xRange: [-2, 2, 1],
         yRange: [-2, 2, 1],
@@ -1071,7 +1109,7 @@ describe('NumberPlane', () => {
       );
     });
 
-    it('fadedLineRatio=3 should produce even more sub-grid lines', () => {
+    it("fadedLineRatio=3 should produce even more sub-grid lines", () => {
       const r2 = new NumberPlane({
         xRange: [-2, 2, 1],
         yRange: [-2, 2, 1],
@@ -1088,14 +1126,14 @@ describe('NumberPlane', () => {
     });
   });
 
-  describe('copy() via copy()', () => {
-    it('should produce an independent NumberPlane', () => {
+  describe("copy() via copy()", () => {
+    it("should produce an independent NumberPlane", () => {
       const plane = new NumberPlane({
         xRange: [-3, 3, 1],
         yRange: [-2, 2, 1],
         xLength: 8,
         yLength: 4,
-        backgroundLineStyle: { color: '#112233' },
+        backgroundLineStyle: { color: "#112233" },
         fadedLineRatio: 2,
         fadingFactor: 0.7,
       });
@@ -1108,15 +1146,15 @@ describe('NumberPlane', () => {
       expect(cp.getYLength()).toBe(4);
     });
 
-    it('copy with no background lines should also have none', () => {
+    it("copy with no background lines should also have none", () => {
       const plane = new NumberPlane({ includeBackgroundLines: false });
       const cp = plane.copy() as NumberPlane;
       expect(cp.getBackgroundLines().children.length).toBe(0);
     });
   });
 
-  describe('c2p alias', () => {
-    it('c2p should be equivalent to coordsToPoint', () => {
+  describe("c2p alias", () => {
+    it("c2p should be equivalent to coordsToPoint", () => {
       const plane = new NumberPlane();
       const pt1 = plane.c2p(2, -1);
       const pt2 = plane.coordsToPoint(2, -1);
@@ -1126,8 +1164,8 @@ describe('NumberPlane', () => {
     });
   });
 
-  describe('NumberPlane with tips enabled', () => {
-    it('should support tips option', () => {
+  describe("NumberPlane with tips enabled", () => {
+    it("should support tips option", () => {
       const plane = new NumberPlane({ tips: true });
       expect(plane).toBeDefined();
       // Should have more children than without tips

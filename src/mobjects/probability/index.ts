@@ -7,12 +7,12 @@
 
 // Sample Space
 export {
+  type BraceAnnotationOptions,
+  type DivideOptions,
+  type Partition,
   SampleSpace,
   type SampleSpaceOptions,
-  type Partition,
-  type DivideOptions,
-  type BraceAnnotationOptions,
-} from './SampleSpace';
+} from "./SampleSpace";
 
 // Dice Face
-export { DiceFace, createDiceRow, type DiceFaceOptions } from './DiceFace';
+export { createDiceRow, DiceFace, type DiceFaceOptions } from "./DiceFace";
