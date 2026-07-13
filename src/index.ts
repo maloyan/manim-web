@@ -1,3 +1,7 @@
+// Re-export the bundled three.js instance so consumers (e.g. the /browser
+// build) can share it instead of loading a second, incompatible copy.
+export * as THREE from 'three';
+
 // Colors
 export * from './constants/colors';
 export {
