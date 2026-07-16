@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.24](https://github.com/maloyan/manim-web/compare/v0.3.23...v0.3.24) (2026-07-13)
+
+
+### Features
+
+* **PMobject:** per-point opacity via ShaderMaterial ([#475](https://github.com/maloyan/manim-web/issues/475)) ([e8bee85](https://github.com/maloyan/manim-web/commit/e8bee85))
+* re-export THREE from the public API ([#510](https://github.com/maloyan/manim-web/issues/510)) ([66d133e](https://github.com/maloyan/manim-web/commit/66d133e))
+
+
+### Bug Fixes
+
+* **#501:** restore VGroup child opacities in Create opacity fallback ([#502](https://github.com/maloyan/manim-web/issues/502)) ([b6cdea3](https://github.com/maloyan/manim-web/commit/b6cdea3))
+* **#503:** use npm ci in CI jobs for reproducible dependency versions ([#504](https://github.com/maloyan/manim-web/issues/504)) ([64b284c](https://github.com/maloyan/manim-web/commit/64b284c))
+* **#505:** don't unpin fixed-in-frame mobjects when re-added to the scene ([#506](https://github.com/maloyan/manim-web/issues/506)) ([aed4a9b](https://github.com/maloyan/manim-web/commit/aed4a9b))
+
 ### [0.3.23](https://github.com/maloyan/manim-js/compare/v0.3.22...v0.3.23) (2026-06-17)
 
 
