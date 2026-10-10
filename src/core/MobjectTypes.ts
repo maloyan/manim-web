@@ -30,6 +30,22 @@ export const DL: Vector3Tuple = [-1, -1, 0]; // DOWN + LEFT
 export const DR: Vector3Tuple = [1, -1, 0]; // DOWN + RIGHT
 
 /**
+ * Options accepted by the base Mobject constructor.
+ *
+ * `userId` is a user-defined string identifier, separate from the internal
+ * `Mobject.id` uuid. Use it to look a mobject up later with
+ * `Scene.getMobject(id)` without holding the original JS reference.
+ */
+export interface MobjectOptions {
+  /**
+   * Optional user-defined string identifier for lookup via
+   * `Scene.getMobject()`. Distinct from the internal `id` uuid. Not required
+   * to be unique; the lookup returns the first match.
+   */
+  userId?: string;
+}
+
+/**
  * Style properties for mobjects
  */
 export interface MobjectStyle {

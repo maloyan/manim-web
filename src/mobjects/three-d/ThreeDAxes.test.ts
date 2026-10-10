@@ -339,6 +339,110 @@ describe('ThreeDAxes coordsToPoint aligns with scene coordinates (issue #256)', 
   });
 });
 
+describe('ThreeDAxes per-axis length options (issue #538)', () => {
+  it('defaults each length to the range span when the option is omitted', () => {
+    const axes = new ThreeDAxes({
+      xRange: [-6, 6, 1],
+      yRange: [-5, 5, 1],
+      zRange: [-4, 4, 1],
+    });
+    expect(axes.getXLength()).toBeCloseTo(12);
+    expect(axes.getYLength()).toBeCloseTo(10);
+    expect(axes.getZLength()).toBeCloseTo(8);
+  });
+
+  it('keeps a 1:1 coordsToPoint mapping when lengths are omitted', () => {
+    const axes = new ThreeDAxes();
+    expect(axes.coordsToPoint(3, -2, 4)).toEqual([3, -2, 4]);
+    // Arrow endpoints match the raw range (default [-6,6],[-5,5],[-4,4]).
+    expect(axes.getXAxis().getEnd()).toEqual([6, 0, 0]);
+    expect(axes.getYAxis().getEnd()).toEqual([0, 5, 0]);
+    expect(axes.getZAxis().getEnd()).toEqual([0, 0, 4]);
+  });
+
+  it('reports the configured length and scales coordsToPoint by length/span', () => {
+    const axes = new ThreeDAxes({
+      xRange: [-6, 6, 1], // span 12
+      yRange: [-5, 5, 1], // span 10
+      zRange: [-4, 4, 1], // span 8
+      xLength: 24, // scale 2
+      yLength: 5, // scale 0.5
+      zLength: 16, // scale 2
+    });
+
+    expect(axes.getXLength()).toBeCloseTo(24);
+    expect(axes.getYLength()).toBeCloseTo(5);
+    expect(axes.getZLength()).toBeCloseTo(16);
+
+    const pt = axes.coordsToPoint(3, 4, 2);
+    expect(pt[0]).toBeCloseTo(6); // 3 * 2
+    expect(pt[1]).toBeCloseTo(2); // 4 * 0.5
+    expect(pt[2]).toBeCloseTo(4); // 2 * 2
+  });
+
+  it('leaves the range unchanged when only the length changes', () => {
+    const axes = new ThreeDAxes({
+      xRange: [-6, 6, 1],
+      yRange: [-5, 5, 1],
+      zRange: [-4, 4, 1],
+      xLength: 24,
+      yLength: 5,
+      zLength: 16,
+    });
+    expect(axes.getXRange()).toEqual([-6, 6, 1]);
+    expect(axes.getYRange()).toEqual([-5, 5, 1]);
+    expect(axes.getZRange()).toEqual([-4, 4, 1]);
+  });
+
+  it('stretches the axis arrows to span the configured length', () => {
+    const axes = new ThreeDAxes({
+      xRange: [-6, 6, 1],
+      zRange: [-4, 4, 1],
+      xLength: 24, // scale 2 → end at 12
+      zLength: 16, // scale 2 → end at 8
+    });
+    expect(axes.getXAxis().getEnd()).toEqual([12, 0, 0]);
+    expect(axes.getZAxis().getEnd()).toEqual([0, 0, 8]);
+  });
+
+  it('positions labels past the scaled arrow tips', () => {
+    const axes = new ThreeDAxes({
+      xRange: [-6, 6, 1],
+      zRange: [-4, 4, 1],
+      xLength: 24, // scale 2 → x tip at 12
+      zLength: 16, // scale 2 → z tip at 8
+      showLabels: true,
+      labelBuffer: 0.4,
+    });
+    expect(axes.getXLabel()!.position.x).toBeCloseTo(12 + 0.4);
+    expect(axes.getZLabel()!.position.z).toBeCloseTo(8 + 0.4 * 0.3);
+  });
+
+  it('keeps pointToCoords the inverse of coordsToPoint with custom lengths', () => {
+    const axes = new ThreeDAxes({
+      xRange: [-6, 6, 1],
+      yRange: [-5, 5, 1],
+      zRange: [-4, 4, 1],
+      xLength: 24,
+      yLength: 5,
+      zLength: 16,
+    });
+    const original: [number, number, number] = [3, -2, 1.5];
+    const back = axes.pointToCoords(axes.coordsToPoint(...original));
+    expect(back[0]).toBeCloseTo(original[0]);
+    expect(back[1]).toBeCloseTo(original[1]);
+    expect(back[2]).toBeCloseTo(original[2]);
+  });
+
+  it('preserves custom lengths across copy()', () => {
+    const axes = new ThreeDAxes({ xLength: 24, yLength: 5, zLength: 16 });
+    const copy = axes.copy() as ThreeDAxes;
+    expect(copy.getXLength()).toBeCloseTo(24);
+    expect(copy.getYLength()).toBeCloseTo(5);
+    expect(copy.getZLength()).toBeCloseTo(16);
+  });
+});
+
 describe('ThreeDAxes c2p / p2c aliases (issue #257)', () => {
   it('c2p exists as a function', () => {
     const axes = new ThreeDAxes();

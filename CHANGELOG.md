@@ -2,6 +2,30 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.4.0](https://github.com/maloyan/manim-web/compare/v0.3.24...v0.4.0) (2026-10-10)
+
+
+### Features
+
+* **core:** optional user ids + Scene.getMobject lookup ([#547](https://github.com/maloyan/manim-web/issues/547)) ([1226394](https://github.com/maloyan/manim-web/commit/1226394dd8d7cebbbc54cc693830308e8c7b0e3e))
+* **graphing:** add length options to ThreeDAxes ([#538](https://github.com/maloyan/manim-web/issues/538)) ([e44749a](https://github.com/maloyan/manim-web/commit/e44749a1c1745ac851a8ca30234a2fffccb43cef))
+* **graphing:** add tangent/secant/derivative toolkit to Axes ([ef8f0b1](https://github.com/maloyan/manim-web/commit/ef8f0b1372353ef718190ee4563a9f47d28e766e))
+* make runtime asset fallbacks configurable ([#542](https://github.com/maloyan/manim-web/issues/542)) ([09fa01a](https://github.com/maloyan/manim-web/commit/09fa01aed2719f137222d2d4823f415d29d08810))
+
+
+### Bug Fixes
+
+* **ci:** raise docs build heap limit to 8192MB to fix OOM ([#513](https://github.com/maloyan/manim-web/issues/513)) ([5281739](https://github.com/maloyan/manim-web/commit/5281739d30164d780c619cd3131d778d76f13c21)), closes [#510](https://github.com/maloyan/manim-web/issues/510)
+* **core:** avoid full geometry rebuild when opacity crosses 1 ([#548](https://github.com/maloyan/manim-web/issues/548)) ([22c1c8c](https://github.com/maloyan/manim-web/commit/22c1c8cd1cbc1758c63f90cc4a2ae3b17ee6916a))
+* correct DashedLine Create and Transform behavior ([#546](https://github.com/maloyan/manim-web/issues/546)) ([9fc77ba](https://github.com/maloyan/manim-web/commit/9fc77ba30d376c02dc4b5a8427a4b2247bc43148)), closes [#544](https://github.com/maloyan/manim-web/issues/544) [#544](https://github.com/maloyan/manim-web/issues/544) [#544](https://github.com/maloyan/manim-web/issues/544) [#544](https://github.com/maloyan/manim-web/issues/544) [#545](https://github.com/maloyan/manim-web/issues/545) [#534](https://github.com/maloyan/manim-web/issues/534) [#534](https://github.com/maloyan/manim-web/issues/534)
+* **graphing:** inherit NumberLine color in number labels ([#541](https://github.com/maloyan/manim-web/issues/541)) ([f749f21](https://github.com/maloyan/manim-web/commit/f749f21abe6bb533991710ea0e8d8d2d858da7c1))
+* publish transitive declaration dependencies ([#540](https://github.com/maloyan/manim-web/issues/540)) ([96024eb](https://github.com/maloyan/manim-web/commit/96024eb67a176d99cf28a844ed1977cd349a5092))
+
+
+### Documentation
+
+* fix package links, link the build write-up and author site ([#550](https://github.com/maloyan/manim-web/issues/550)) ([2422e30](https://github.com/maloyan/manim-web/commit/2422e307f9a9d1af0540b2ae1a2e2834c5b23152))
+
 ### [0.3.24](https://github.com/maloyan/manim-web/compare/v0.3.23...v0.3.24) (2026-07-13)
 
 

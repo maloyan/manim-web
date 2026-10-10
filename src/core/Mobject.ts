@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {
   type Vector3Tuple,
   type MobjectStyle,
+  type MobjectOptions,
   type AxisOrOptions,
   UP,
   DOWN,
@@ -46,6 +47,7 @@ export function registerAnimateProxy(factory: (mobject: Mobject) => AnimateProxy
 export {
   type Vector3Tuple,
   type MobjectStyle,
+  type MobjectOptions,
   type MobjectLike,
   type VMobjectLike,
   type AxisOrOptions,
@@ -75,6 +77,13 @@ export type UpdaterFunction = (mobject: Mobject, dt: number) => void;
 /** Base mathematical object class. All visible objects in manimweb inherit from this class. */
 export abstract class Mobject {
   readonly id: string;
+  /**
+   * User-defined string identifier, separate from the internal `id` uuid.
+   * Set it via the constructor option `userId` or {@link setUserId}, then look
+   * the mobject up with {@link Scene.getMobject}. Undefined unless the user
+   * assigns one; not required to be unique.
+   */
+  private _userId?: string;
   parent: Mobject | null = null;
   children: Mobject[] = [];
   position: THREE.Vector3;
@@ -121,8 +130,9 @@ export abstract class Mobject {
   __savedMobjectState: unknown = null;
   private static _idCounter: number = 0;
 
-  constructor() {
+  constructor(options: MobjectOptions = {}) {
     this.id = `mobject_${Mobject._idCounter++}`;
+    this._userId = options.userId;
     this.position = new THREE.Vector3(0, 0, 0);
     this.rotation = new THREE.Euler(0, 0, 0, 'XYZ');
     this.scaleVector = new THREE.Vector3(1, 1, 1);
@@ -133,6 +143,28 @@ export abstract class Mobject {
       strokeOpacity: 1,
       strokeWidth: 4,
     };
+  }
+
+  // ── Identity ─────────────────────────────────────────────────────
+
+  /**
+   * The user-defined string identifier, or undefined if none was set.
+   * Distinct from the internal {@link id} uuid. Look a mobject up by this
+   * value with {@link Scene.getMobject}.
+   */
+  get userId(): string | undefined {
+    return this._userId;
+  }
+
+  /**
+   * Set the user-defined string identifier used by {@link Scene.getMobject}.
+   * Chainable, so it fits factory and loop code: `factory().setUserId('row-3')`.
+   * The value need not be unique; the lookup returns the first match.
+   * @param userId - The identifier to assign
+   */
+  setUserId(userId: string): this {
+    this._userId = userId;
+    return this;
   }
 
   // ── Opacity & Style ──────────────────────────────────────────────

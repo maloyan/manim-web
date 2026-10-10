@@ -33,6 +33,7 @@ export {
 export {
   Mobject,
   type MobjectStyle,
+  type MobjectOptions,
   type Vector3Tuple,
   type UpdaterFunction,
 } from './core/Mobject';
