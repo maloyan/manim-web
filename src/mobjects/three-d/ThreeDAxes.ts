@@ -15,6 +15,22 @@ export interface ThreeDAxesOptions {
   yRange?: [number, number, number];
   /** Z-axis range as [min, max, step]. Default: [-4, 4, 1] */
   zRange?: [number, number, number];
+  /**
+   * Visual length of the x-axis in scene units, independent of xRange.
+   * When omitted, defaults to the x-range span (xMax - xMin), so the axis
+   * keeps a 1:1 range-to-visual mapping (unchanged default behavior).
+   */
+  xLength?: number;
+  /**
+   * Visual length of the y-axis in scene units, independent of yRange.
+   * When omitted, defaults to the y-range span (yMax - yMin).
+   */
+  yLength?: number;
+  /**
+   * Visual length of the z-axis in scene units, independent of zRange.
+   * When omitted, defaults to the z-range span (zMax - zMin).
+   */
+  zLength?: number;
   /** Default color for all axes. Default: '#ffffff' */
   axisColor?: string;
   /** Color for x-axis (overrides axisColor). Default: same as axisColor */
@@ -89,6 +105,14 @@ export class ThreeDAxes extends Group {
   private _xRange!: [number, number, number];
   private _yRange!: [number, number, number];
   private _zRange!: [number, number, number];
+  private _xLength!: number;
+  private _yLength!: number;
+  private _zLength!: number;
+  // Per-axis factor that maps a graph coordinate to a scene coordinate:
+  // scale = length / (max - min). With length omitted it is 1 (1:1 mapping).
+  private _xScale!: number;
+  private _yScale!: number;
+  private _zScale!: number;
   private _showTicks!: boolean;
   private _tickLength!: number;
   private _ticks: Line3D[] = [];
@@ -107,27 +131,30 @@ export class ThreeDAxes extends Group {
     this._disableChildZLayering = true;
 
     const ranges = this._initRanges(options);
+    this._initLengths(options);
     this._initTickConfig(options);
     this._initLabelConfig(options);
 
     const colors = this._resolveAxisColors(options);
     const arrowCfg = this._resolveArrowConfig(options);
 
+    // Arrow endpoints use scaled (visual) positions so the drawn axis spans
+    // the configured length, not the raw range span.
     this._xAxis = this._buildAxisArrow(
-      [ranges.x[0], 0, 0],
-      [ranges.x[1], 0, 0],
+      [ranges.x[0] * this._xScale, 0, 0],
+      [ranges.x[1] * this._xScale, 0, 0],
       colors.x,
       arrowCfg,
     );
     this._yAxis = this._buildAxisArrow(
-      [0, ranges.y[0], 0],
-      [0, ranges.y[1], 0],
+      [0, ranges.y[0] * this._yScale, 0],
+      [0, ranges.y[1] * this._yScale, 0],
       colors.y,
       arrowCfg,
     );
     this._zAxis = this._buildAxisArrow(
-      [0, 0, ranges.z[0]],
-      [0, 0, ranges.z[1]],
+      [0, 0, ranges.z[0] * this._zScale],
+      [0, 0, ranges.z[1] * this._zScale],
       colors.z,
       arrowCfg,
     );
@@ -156,6 +183,26 @@ export class ThreeDAxes extends Group {
     this._yRange = y;
     this._zRange = z;
     return { x, y, z };
+  }
+
+  /**
+   * Resolve each axis visual length and its range-to-visual scale factor.
+   * When a length option is omitted, it defaults to the range span, which
+   * gives scale 1 and keeps the historical 1:1 mapping unchanged.
+   */
+  private _initLengths(options: ThreeDAxesOptions): void {
+    const xSpan = this._xRange[1] - this._xRange[0];
+    const ySpan = this._yRange[1] - this._yRange[0];
+    const zSpan = this._zRange[1] - this._zRange[0];
+
+    this._xLength = options.xLength ?? xSpan;
+    this._yLength = options.yLength ?? ySpan;
+    this._zLength = options.zLength ?? zSpan;
+
+    // Guard against a zero-span range so the scale stays finite.
+    this._xScale = xSpan !== 0 ? this._xLength / xSpan : 1;
+    this._yScale = ySpan !== 0 ? this._yLength / ySpan : 1;
+    this._zScale = zSpan !== 0 ? this._zLength / zSpan : 1;
   }
 
   private _initTickConfig(options: ThreeDAxesOptions): void {
@@ -216,14 +263,16 @@ export class ThreeDAxes extends Group {
     const [zMin, zMax, zStep] = this._zRange;
     const t = this._tickLength / 2;
 
-    // X-axis ticks: single perpendicular mark in Manim Z direction (vertical)
+    // X-axis ticks: single perpendicular mark in Manim Z direction (vertical).
+    // The along-axis position scales; the mark size (t) stays fixed.
     for (let x = xMin; x <= xMax; x += xStep) {
       if (Math.abs(x) < 0.001) continue;
       if (Math.abs(x - xMin) < 0.001 || Math.abs(x - xMax) < 0.001) continue;
 
+      const xv = x * this._xScale;
       const tick = new Line3D({
-        start: [x, 0, -t],
-        end: [x, 0, t],
+        start: [xv, 0, -t],
+        end: [xv, 0, t],
         color: xColor,
       });
       this._ticks.push(tick);
@@ -235,9 +284,10 @@ export class ThreeDAxes extends Group {
       if (Math.abs(y) < 0.001) continue;
       if (Math.abs(y - yMin) < 0.001 || Math.abs(y - yMax) < 0.001) continue;
 
+      const yv = y * this._yScale;
       const tick = new Line3D({
-        start: [0, y, -t],
-        end: [0, y, t],
+        start: [0, yv, -t],
+        end: [0, yv, t],
         color: yColor,
       });
       this._ticks.push(tick);
@@ -249,9 +299,10 @@ export class ThreeDAxes extends Group {
       if (Math.abs(z) < 0.001) continue;
       if (Math.abs(z - zMin) < 0.001 || Math.abs(z - zMax) < 0.001) continue;
 
+      const zv = z * this._zScale;
       const tick = new Line3D({
-        start: [-t, 0, z],
-        end: [t, 0, z],
+        start: [-t, 0, zv],
+        end: [t, 0, zv],
         color: zColor,
       });
       this._ticks.push(tick);
@@ -287,16 +338,17 @@ export class ThreeDAxes extends Group {
     this._zLabel = this._buildLabel(zInput, zColor);
 
     const buf = this._labelBuffer;
-    const xMax = this._xRange[1];
-    const yMax = this._yRange[1];
-    const zMax = this._zRange[1];
+    // Labels sit just past each arrow tip, which is at the scaled range max.
+    const xTip = this._xRange[1] * this._xScale;
+    const yTip = this._yRange[1] * this._yScale;
+    const zTip = this._zRange[1] * this._zScale;
 
-    this._xLabel.position.set(xMax + buf, 0, 0);
-    this._yLabel.position.set(0, yMax + buf, 0);
+    this._xLabel.position.set(xTip + buf, 0, 0);
+    this._yLabel.position.set(0, yTip + buf, 0);
     // Z label: mirror Manim CE's `direction=RIGHT` convention — offset to
     // the side of the arrow tip (not directly above) so it doesn't sit
     // on top of the arrow shaft/cone.
-    this._zLabel.position.set(buf, 0, zMax + buf * 0.3);
+    this._zLabel.position.set(buf, 0, zTip + buf * 0.3);
 
     // Labels live in a dedicated Group so `getAxisLabels()` can return the
     // same Group every time without re-parenting (which would remove the
@@ -368,10 +420,16 @@ export class ThreeDAxes extends Group {
 
   /**
    * Convert graph coordinates to visual point coordinates (scene space).
-   * With unit_size=1, graph coordinates map directly to visual positions.
+   * Each graph coordinate is multiplied by its axis scale (length / span)
+   * before the axes' position offset is applied. With default lengths the
+   * scale is 1, so graph coordinates map directly to visual positions.
    */
   coordsToPoint(x: number, y: number, z: number): Vector3Tuple {
-    return [x + this.position.x, y + this.position.y, z + this.position.z];
+    return [
+      x * this._xScale + this.position.x,
+      y * this._yScale + this.position.y,
+      z * this._zScale + this.position.z,
+    ];
   }
 
   /**
@@ -385,9 +443,9 @@ export class ThreeDAxes extends Group {
    * Convert visual point coordinates (scene space) to graph coordinates.
    */
   pointToCoords(point: Vector3Tuple): Vector3Tuple {
-    const tx = point[0] - this.position.x;
-    const ty = point[1] - this.position.y;
-    const tz = point[2] - this.position.z;
+    const tx = (point[0] - this.position.x) / this._xScale;
+    const ty = (point[1] - this.position.y) / this._yScale;
+    const tz = (point[2] - this.position.z) / this._zScale;
     return [tx, ty, tz];
   }
 
@@ -441,24 +499,27 @@ export class ThreeDAxes extends Group {
   }
 
   /**
-   * Get the visual X length (range span)
+   * Get the visual X length in scene units. Equals the configured xLength,
+   * or the x-range span when xLength was omitted.
    */
   getXLength(): number {
-    return this._xRange[1] - this._xRange[0];
+    return this._xLength;
   }
 
   /**
-   * Get the visual Y length (range span)
+   * Get the visual Y length in scene units. Equals the configured yLength,
+   * or the y-range span when yLength was omitted.
    */
   getYLength(): number {
-    return this._yRange[1] - this._yRange[0];
+    return this._yLength;
   }
 
   /**
-   * Get the visual Z length (range span)
+   * Get the visual Z length in scene units. Equals the configured zLength,
+   * or the z-range span when zLength was omitted.
    */
   getZLength(): number {
-    return this._zRange[1] - this._zRange[0];
+    return this._zLength;
   }
 
   /**
@@ -634,6 +695,9 @@ export class ThreeDAxes extends Group {
       xRange: this._xRange,
       yRange: this._yRange,
       zRange: this._zRange,
+      xLength: this._xLength,
+      yLength: this._yLength,
+      zLength: this._zLength,
       showTicks: this._showTicks,
       tickLength: this._tickLength,
       showLabels: this._showLabels,
