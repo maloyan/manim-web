@@ -53,9 +53,7 @@ interface SkeletonPathMobject {
 export function getLine2TotalLength(child: Line2): number {
   const geom = child.geometry;
   const distEnd = geom.getAttribute('instanceDistanceEnd') as
-    | THREE.InterleavedBufferAttribute
-    | THREE.BufferAttribute
-    | null;
+    THREE.InterleavedBufferAttribute | THREE.BufferAttribute | null;
   if (distEnd && distEnd.count > 0) {
     const arr = 'data' in distEnd && distEnd.data ? distEnd.data.array : distEnd.array;
     return (arr[arr.length - 1] as number) || 1;

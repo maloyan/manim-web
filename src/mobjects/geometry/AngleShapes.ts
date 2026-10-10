@@ -38,8 +38,7 @@ export interface AngleOptions {
  * Input for Angle constructor - either two Lines or three points
  */
 export type AngleInput =
-  | { line1: Line; line2: Line }
-  | { points: [Vector3Tuple, Vector3Tuple, Vector3Tuple] };
+  { line1: Line; line2: Line } | { points: [Vector3Tuple, Vector3Tuple, Vector3Tuple] };
 
 /**
  * Angle - Angle indicator between two lines
