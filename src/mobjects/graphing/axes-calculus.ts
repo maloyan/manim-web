@@ -16,7 +16,7 @@ import { MathTexImage } from '../../mobjects/text/MathTexImage';
 import { WHITE, YELLOW, GREEN } from '../../constants';
 
 /** Default finite-difference step used for tangent estimates (matches CE's small dx). */
-export const DEFAULT_TANGENT_DX = 0.001;
+const DEFAULT_TANGENT_DX = 0.001;
 
 /**
  * The subset of Axes that the calculus toolkit needs. Declared here to avoid a
