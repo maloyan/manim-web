@@ -9,6 +9,14 @@ import { MathTexImage } from '../../mobjects/text/MathTexImage';
 import { Line } from '../../mobjects/geometry/Line';
 import { DashedLine } from '../../mobjects/geometry/DashedLine';
 import { Dot } from '../../mobjects/geometry/Dot';
+import {
+  slopeOfTangent,
+  angleOfTangent,
+  getVerticalLinesToGraph,
+  getSecantSlopeGroup,
+  type VerticalLinesToGraphOptions,
+  type SecantSlopeGroupOptions,
+} from './axes-calculus';
 
 /**
  * Options for creating Axes
@@ -512,6 +520,39 @@ export class Axes extends Group {
       color,
       strokeWidth,
     });
+  }
+
+  /**
+   * Slope of the tangent to a graph at x, in coordinate space.
+   * @see slopeOfTangent in axes-calculus
+   */
+  slopeOfTangent(x: number, graph: FunctionGraph, dx?: number): number {
+    return slopeOfTangent(x, graph, dx);
+  }
+
+  /**
+   * Angle of the tangent to a graph at x, in points space (respects non-uniform
+   * x/y unit scaling).
+   * @see angleOfTangent in axes-calculus
+   */
+  angleOfTangent(x: number, graph: FunctionGraph, dx?: number): number {
+    return angleOfTangent(this, x, graph, dx);
+  }
+
+  /**
+   * Vertical lines from the x-axis to a graph, sampled across an interval.
+   * @see getVerticalLinesToGraph in axes-calculus
+   */
+  getVerticalLinesToGraph(graph: FunctionGraph, options?: VerticalLinesToGraphOptions): VGroup {
+    return getVerticalLinesToGraph(this, graph, options);
+  }
+
+  /**
+   * Group of lines illustrating the secant slope at x over a step dx.
+   * @see getSecantSlopeGroup in axes-calculus
+   */
+  getSecantSlopeGroup(x: number, graph: FunctionGraph, options?: SecantSlopeGroupOptions): VGroup {
+    return getSecantSlopeGroup(this, x, graph, options);
   }
 
   /**
