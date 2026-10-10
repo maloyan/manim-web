@@ -351,6 +351,28 @@ export class Scene {
     return this._mobjects;
   }
 
+  /**
+   * Find a mobject by its user-defined identifier (see `Mobject.setUserId`).
+   *
+   * Searches every added mobject and its descendants (the family tree), so a
+   * mobject nested inside a VGroup or Group is found as long as its container
+   * was added to the scene. This mirrors how `add()` tracks a mobject together
+   * with its children.
+   *
+   * @param id - The user id to match against each mobject's `userId`
+   * @returns The first mobject whose `userId` equals `id`, or `undefined` if
+   *   none matches. When several mobjects share the same id, the first one
+   *   found in scene-insertion then depth-first family order is returned.
+   */
+  getMobject(id: string): Mobject | undefined {
+    for (const mobject of this._mobjects) {
+      for (const member of mobject.getFamily()) {
+        if (member.userId === id) return member;
+      }
+    }
+    return undefined;
+  }
+
   // ---------------------------------------------------------------------------
   // Audio
   // ---------------------------------------------------------------------------
