@@ -151,6 +151,10 @@ npm install
 npm run dev
 ```
 
+## How it was built
+
+The port was written with coding agents. The story, with numbers from the git history: [Porting Manim to TypeScript with Coding Agents](https://maloyan.xyz/blog/porting-manim-to-typescript-with-agents).
+
 ## License
 
-MIT
+MIT. Created by [Narek Maloyan](https://maloyan.xyz).
