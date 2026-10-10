@@ -365,8 +365,7 @@ export class MathTexImage extends TexturedMobject {
     // store the first error so the parent's waitForRender() can surface it.
     const results = await Promise.allSettled(this._parts.map((p) => p.waitForRender()));
     const firstFailure = results.find((r) => r.status === 'rejected') as
-      | PromiseRejectedResult
-      | undefined;
+      PromiseRejectedResult | undefined;
     if (firstFailure) {
       const err = firstFailure.reason;
       this._renderState.renderError = err instanceof Error ? err : new Error(String(err));
