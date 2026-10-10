@@ -1007,3 +1007,73 @@ describe('VMobject.markGeometryDirty', () => {
     expect((v as any)._geometryDirty).toBe(true);
   });
 });
+
+// ===========================================================================
+// Opacity 1.0 boundary crossing (issue #548)
+//
+// Ending a fade at full opacity must be a material-only update, not a full
+// geometry rebuild. A rebuild of the opacity-independent fill mesh on every
+// FadeIn completion froze pages with ~100 VMobjects.
+// ===========================================================================
+
+describe('VMobject opacity boundary does not rebuild fill geometry (#548)', () => {
+  it('does not re-triangulate the fill when opacity crosses the 1.0 boundary', () => {
+    const v = makeSquare();
+    v.fillOpacity = 0.5;
+    v.getThreeObject(); // initial sync builds the fill once
+
+    // Count fill (earcut) rebuilds from here on; opacity must not drive them.
+    let fillBuilds = 0;
+    const original = (v as any)._buildEarcutFillGeometry.bind(v);
+    (v as any)._buildEarcutFillGeometry = (points: number[][]) => {
+      fillBuilds++;
+      return original(points);
+    };
+
+    v.opacity = 0.5; // cross below 1 (opaque -> transparent)
+    v.getThreeObject();
+
+    v.opacity = 1; // cross to full opacity (transparent -> opaque)
+    v.getThreeObject();
+
+    // Fill geometry is opacity-independent: zero rebuilds across both crossings.
+    expect(fillBuilds).toBe(0);
+  });
+
+  it('keeps the same fill geometry instance across an opacity boundary crossing', () => {
+    const v = makeSquare();
+    v.fillOpacity = 0.5;
+    v.getThreeObject();
+
+    v.opacity = 0.5;
+    v.getThreeObject();
+    const fillGeomBefore = (v as any)._cachedFillMesh?.geometry;
+    expect(fillGeomBefore).toBeDefined();
+
+    v.opacity = 1; // boundary crossing
+    v.getThreeObject();
+    const fillGeomAfter = (v as any)._cachedFillMesh?.geometry;
+
+    // Fill is opacity-independent: it must not be re-triangulated.
+    expect(fillGeomAfter).toBe(fillGeomBefore);
+  });
+
+  it('updates stroke material transparent/depthWrite flags at the boundary', () => {
+    const v = makeSquare();
+    v.getThreeObject();
+
+    v.opacity = 0.5;
+    v.getThreeObject();
+    expect((v as any)._strokeMaterial.transparent).toBe(true);
+    expect((v as any)._strokeMaterial.depthWrite).toBe(false);
+
+    // three.js recompiles a material only when needsUpdate bumps its version.
+    const versionBefore = (v as any)._strokeMaterial.version;
+
+    v.opacity = 1;
+    v.getThreeObject();
+    expect((v as any)._strokeMaterial.transparent).toBe(false);
+    expect((v as any)._strokeMaterial.depthWrite).toBe(true);
+    expect((v as any)._strokeMaterial.version).toBeGreaterThan(versionBefore);
+  });
+});
