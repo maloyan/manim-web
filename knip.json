@@ -9,6 +9,7 @@
   },
   "rules": {
     "optionalPeerDependencies": "off",
-    "duplicates": "off"
+    "duplicates": "off",
+    "types": "off"
   }
 }
