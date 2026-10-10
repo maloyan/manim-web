@@ -119,11 +119,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/maloyan/manim-js.git"
+    "url": "https://github.com/maloyan/manim-web.git"
   },
-  "homepage": "https://maloyan.github.io/manim-js/",
+  "homepage": "https://maloyan.github.io/manim-web/",
   "bugs": {
-    "url": "https://github.com/maloyan/manim-js/issues"
+    "url": "https://github.com/maloyan/manim-web/issues"
   },
   "keywords": [
     "animation",

@@ -110,6 +110,14 @@ const config: Config = {
               label: 'GitHub',
               href: 'https://github.com/maloyan/manim-web',
             },
+            {
+              label: 'How it was built',
+              href: 'https://maloyan.xyz/blog/porting-manim-to-typescript-with-agents',
+            },
+            {
+              label: 'Author',
+              href: 'https://maloyan.xyz',
+            },
           ],
         },
       ],
