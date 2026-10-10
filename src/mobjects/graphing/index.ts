@@ -16,17 +16,8 @@ export {
 // Axes
 export { Axes, type AxesOptions } from './Axes';
 
-// Axes calculus toolkit (tangent / secant / derivative helpers)
-export {
-  slopeOfTangent,
-  angleOfTangent,
-  getVerticalLinesToGraph,
-  getSecantSlopeGroup,
-  DEFAULT_TANGENT_DX,
-  type CalculusAxes,
-  type VerticalLinesToGraphOptions,
-  type SecantSlopeGroupOptions,
-} from './axes-calculus';
+// Axes calculus toolkit option types (the toolkit is exposed via Axes methods)
+export { type VerticalLinesToGraphOptions, type SecantSlopeGroupOptions } from './axes-calculus';
 
 // NumberPlane
 export { NumberPlane, type NumberPlaneOptions, type BackgroundLineStyle } from './NumberPlane';
