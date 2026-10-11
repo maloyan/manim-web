@@ -1156,6 +1156,8 @@ export {
   createWebCodecsExporter,
   type WebCodecsExportOptions,
   type WebCodecsVideoCodec,
+  chooseVideoExporterStrategy,
+  type VideoExporterStrategy,
 } from './export';
 
 // Vector math utilities
@@ -1177,6 +1179,18 @@ export {
 export { Player, type PlayerOptions } from './player';
 export { PlayerUI, type PlayerUIOptions, type PlayerUICallbacks } from './player';
 export { PlayerController, type PlayerControllerCallbacks } from './player';
+export {
+  ExportSettingsPanel,
+  resolveResolution,
+  qualityToBitrate,
+  RESOLUTION_PRESETS,
+  FPS_PRESETS,
+  QUALITY_PRESETS,
+  type ExportSettings,
+  type ResolutionPreset,
+  type QualityPreset,
+  type ExportDefaults,
+} from './player';
 
 // Feature flags
 export {

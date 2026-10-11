@@ -22,12 +22,16 @@
  * ```
  */
 
-import { Scene, SceneOptions } from '../core/Scene';
+import { Scene, SceneOptions, SceneExportOptions } from '../core/Scene';
 import { MasterTimeline } from '../animation/MasterTimeline';
 import { PlayerUI } from './PlayerUI';
 import { PlayerController } from './PlayerController';
 import { RecordingScene } from './RecordingScene';
 import { logger } from '../utils/logger';
+import { WebCodecsExporter } from '../export/WebCodecsExporter';
+import { chooseVideoExporterStrategy } from '../export/chooseExporter';
+import { downloadBlob } from '../export/FrameExporter';
+import { qualityToBitrate, type ExportSettings } from './ExportSettingsUI';
 
 export interface PlayerOptions extends SceneOptions {
   /** Auto-hide controls after this many ms. 0 = never. Default 2500. */
@@ -38,6 +42,11 @@ export interface PlayerOptions extends SceneOptions {
   loop?: boolean;
   /** Slides mode: arrows play/pause at slide boundaries like a presentation. Default false. */
   slidesMode?: boolean;
+  /**
+   * Show an fps/resolution/quality panel in the export menu, so viewers can
+   * pick export settings without subclassing the Player. Default false.
+   */
+  exportControls?: boolean;
 }
 
 export class Player {
@@ -53,6 +62,8 @@ export class Player {
   private _loop: boolean;
   private _autoPlay: boolean;
   private _slidesMode: boolean;
+  private _exportControls: boolean;
+  private _exportFps: number;
   /**
    * Index of the slide that slidesMode playback should stop (or loop / advance)
    * at when its endTime is reached. -1 means no target armed.
@@ -73,6 +84,8 @@ export class Player {
     this._loop = options.loop ?? false;
     this._autoPlay = options.autoPlay ?? false;
     this._slidesMode = options.slidesMode ?? false;
+    this._exportControls = options.exportControls ?? false;
+    this._exportFps = options.targetFps ?? 60;
 
     // Create the underlying scene
     this._scene = new Scene(container, options);
@@ -90,11 +103,17 @@ export class Player {
         onNext: () => this.nextSegment(),
         onSpeedChange: (r) => this.setPlaybackRate(r),
         onFullscreen: () => this.toggleFullscreen(),
-        onExport: (format) => this.exportAs(format),
+        onExport: (format, settings) => this.exportAs(format, settings),
         onSlidesToggle: (enabled) => this.setSlidesMode(enabled),
+        getExportDefaults: () => ({
+          width: this._scene.getWidth(),
+          height: this._scene.getHeight(),
+          fps: this._exportFps,
+        }),
       },
       {
         autoHideMs: options.autoHideMs,
+        exportControls: this._exportControls,
       },
     );
 
@@ -395,22 +414,43 @@ export class Player {
     }
   }
 
-  /** Export the animation in the given format (gif, webm, mp4). */
-  async exportAs(format: string): Promise<void> {
+  /**
+   * Export the animation in the given format (gif, webm, mp4).
+   *
+   * For video (webm/mp4) the frame-accurate {@link WebCodecsExporter} is used
+   * when the browser supports it; otherwise it falls back to the MediaRecorder
+   * VideoExporter via `Scene.export`. GIF always uses `Scene.export`.
+   *
+   * @param format - Output format: `gif`, `webm` or `mp4`.
+   * @param settings - Optional fps/resolution/quality from the export panel.
+   *   When omitted, the exporter keeps its format defaults.
+   */
+  async exportAs(format: string, settings?: ExportSettings): Promise<void> {
     const wasPlaying = this._isPlaying;
     const savedTime = this._masterTimeline.getCurrentTime();
     if (wasPlaying) this.pause();
 
     const filename = `animation.${format}`;
+    const duration = this._masterTimeline.getDuration();
+    const onProgress = (p: number): void => this._ui.setExportProgress(p);
     this._ui.setExportProgress(0);
 
     try {
-      await this._scene.export(filename, {
-        duration: this._masterTimeline.getDuration(),
-        width: this._scene.getWidth(),
-        height: this._scene.getHeight(),
-        onProgress: (p) => this._ui.setExportProgress(p),
-      });
+      const isVideo = format === 'webm' || format === 'mp4';
+      if (isVideo && chooseVideoExporterStrategy() === 'webcodecs') {
+        await this._exportWithWebCodecs(
+          format === 'mp4' ? 'mp4' : 'webm',
+          settings,
+          duration,
+          onProgress,
+          filename,
+        );
+      } else {
+        await this._scene.export(
+          filename,
+          this._buildSceneExportOptions(format, settings, duration, onProgress),
+        );
+      }
     } catch (err) {
       logger.error('Export failed:', err);
       this._ui.showError(`Export failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -420,6 +460,53 @@ export class Player {
       this.seek(savedTime);
       if (wasPlaying) this.play();
     }
+  }
+
+  /** Run a frame-accurate WebCodecs video export and download the result. */
+  private async _exportWithWebCodecs(
+    format: 'webm' | 'mp4',
+    settings: ExportSettings | undefined,
+    duration: number,
+    onProgress: (p: number) => void,
+    filename: string,
+  ): Promise<void> {
+    const exporter = new WebCodecsExporter(this._scene, {
+      format,
+      fps: settings?.fps ?? this._exportFps,
+      width: settings?.width ?? this._scene.getWidth(),
+      height: settings?.height ?? this._scene.getHeight(),
+      bitrate: qualityToBitrate(settings?.quality ?? 0.9),
+      duration,
+      onProgress,
+    });
+    const blob = await exporter.export();
+    downloadBlob(blob, filename);
+  }
+
+  /**
+   * Build `Scene.export` options. With no `settings`, only the base options are
+   * set so each format keeps its own defaults (e.g. GIF fps 30, quality 10).
+   */
+  private _buildSceneExportOptions(
+    format: string,
+    settings: ExportSettings | undefined,
+    duration: number,
+    onProgress: (p: number) => void,
+  ): SceneExportOptions {
+    const options: SceneExportOptions = {
+      duration,
+      width: this._scene.getWidth(),
+      height: this._scene.getHeight(),
+      onProgress,
+    };
+    if (!settings) return options;
+    options.width = settings.width;
+    options.height = settings.height;
+    options.fps = settings.fps;
+    // `quality` is a 0-1 video bitrate dial; GIF quality (1-30) differs, so it
+    // is not forwarded to GIF export.
+    if (format !== 'gif') options.quality = settings.quality;
+    return options;
   }
 
   /** Toggle browser fullscreen on the player container. */
