@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.6.0](https://github.com/maloyan/manim-web/compare/v0.5.0...v0.6.0) (2026-10-11)
+
+
+### Features
+
+* **animation:** fAlways + always updater helpers (parity) ([fc1ab30](https://github.com/maloyan/manim-web/commit/fc1ab309c3ae7e7f2ca5d6e88088ffad5b562458))
+* **core:** VMobject.roundCorners for arbitrary polygons (parity) ([38e1198](https://github.com/maloyan/manim-web/commit/38e11982df8fade8f199f8c71bb43f9612bccbea))
+* **text:** Text linear color gradient fill (parity) ([aa546bb](https://github.com/maloyan/manim-web/commit/aa546bbeebaad37aaaa5b15130cc970d0e7998b8))
+
 ## [0.5.0](https://github.com/maloyan/manim-web/compare/v0.4.0...v0.5.0) (2026-10-11)
 
 
