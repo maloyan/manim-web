@@ -1134,6 +1134,19 @@ export {
   type SliderOptions,
 } from './interaction';
 
+// --- dynamic matrix (best-manim) ---
+export {
+  MatrixTracker,
+  makeMatrixTracker,
+  applyMatrixLive,
+  type Matrix2x2,
+  type MatrixSource,
+  type BasisVectorSource,
+  type DependentPoint,
+  type DynamicMatrixOptions,
+  type LiveMatrixBinding,
+} from './interaction';
+
 // Export
 export {
   GifExporter,
