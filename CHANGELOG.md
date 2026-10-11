@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.17.0](https://github.com/maloyan/manim-web/compare/v0.15.0...v0.17.0) (2026-10-11)
+
+
+### Features
+
+* **a11y:** WebVTT captions, reduced-motion, ARIA narration ([3280c8e](https://github.com/maloyan/manim-web/commit/3280c8e095dbfe3de275996670fdb21f8c16d25a))
+* **color:** Oklab/Oklch perceptual color interpolation ([c41d93d](https://github.com/maloyan/manim-web/commit/c41d93d15b7803265c44da4b97e5ff2f5d06e984))
+* **graphing:** 3D isosurfaces, heatmap and contour plots ([4b7c3d0](https://github.com/maloyan/manim-web/commit/4b7c3d08a9e48002b3c92c0118cc8db9ea72062e)), closes [#4428](https://github.com/maloyan/manim-web/issues/4428) [#416](https://github.com/maloyan/manim-web/issues/416)
+* **graph:** weighted-edge labels and self-loop edges ([d502747](https://github.com/maloyan/manim-web/commit/d5027472766e685e2a20f04d75045f427f2b8ae0)), closes [#3153](https://github.com/maloyan/manim-web/issues/3153)
+* **mobjects:** opt-in RK4 integrator and seeded flow for StreamLines ([cb482b7](https://github.com/maloyan/manim-web/commit/cb482b7a77afb50919b71a34eb229bb785bfc6f5)), closes [#3789](https://github.com/maloyan/manim-web/issues/3789)
+
+
+### Bug Fixes
+
+* **docs:** add MovablePoint and Slider to the scene in the live example ([0207d1e](https://github.com/maloyan/manim-web/commit/0207d1e1187271358d1738fcdd7fc78cb9fe2fbd))
+* **text:** recreate canvas texture on setText size change ([#607](https://github.com/maloyan/manim-web/issues/607)) ([2df7994](https://github.com/maloyan/manim-web/commit/2df799422ad3c757e11fa96863f64df9ae3fd9a2))
+
+
+### Tests
+
+* **spaceOps:** ignore sign of zero in midpoint/mean property ([996e196](https://github.com/maloyan/manim-web/commit/996e196b97009c460f53b92fb7ae7b2113aed2a4))
+
 ## [0.16.0](https://github.com/maloyan/manim-web/compare/v0.15.0...v0.16.0) (2026-10-11)
 
 
