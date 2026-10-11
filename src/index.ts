@@ -121,6 +121,39 @@ export {
 export { parseBookmarks, type Bookmark, type ParsedTranscript } from './audio/bookmarks';
 // --- end voiceover ---
 
+// --- accessibility (a11y) layer (browser-unique) ---
+// Three opt-in capabilities: WebVTT captions from voiceover timings,
+// prefers-reduced-motion respect, and ARIA live-region narration. All are
+// inert by default and guard every DOM access (Node / SSR safe).
+export {
+  attachCaptionTrack,
+  formatVttTimestamp,
+  voiceoverToVTT,
+  type CaptionTrackHandle,
+  type CaptionTrackOptions,
+  type VoiceoverCaptionCue,
+} from './a11y/captions';
+export {
+  applyReducedMotion,
+  getReducedMotionRunTime,
+  isReducedMotionEnabled,
+  prefersReducedMotion,
+  reducedRunTime,
+  resetReducedMotion,
+  setReducedMotion,
+  shouldReduceMotion,
+  type ReducedMotionOptions,
+} from './a11y/reducedMotion';
+export {
+  announceMobject,
+  AriaNarrator,
+  createLiveRegion,
+  describeMobject,
+  type AriaDescribable,
+  type LiveRegionOptions,
+} from './a11y/ariaNarration';
+// --- end accessibility (a11y) layer ---
+
 export { Renderer, type RendererOptions, type IRenderer } from './core/Renderer';
 export { NullRenderer } from './core/NullRenderer';
 export {
