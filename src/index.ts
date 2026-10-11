@@ -360,6 +360,8 @@ export {
   VectorField,
   ArrowVectorField,
   StreamLines,
+  stepVectorField,
+  type Integrator,
   type VectorFunction,
   type ColorFunction,
   type VectorFieldBaseOptions,
