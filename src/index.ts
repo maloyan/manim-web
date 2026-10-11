@@ -614,6 +614,16 @@ export { ImageMobject, type ImageMobjectOptions, type ImageFilterOptions } from 
 // --- video (best-manim) ---
 export { VideoMobject, type VideoMobjectOptions } from './mobjects/video';
 
+// --- animated gif (best-manim) ---
+export {
+  AnimatedImageMobject,
+  setGifDecoder,
+  type AnimatedImageMobjectOptions,
+  type DecodedGif,
+  type DecodedGifFrame,
+  type GifDecoder,
+} from './mobjects/image/AnimatedImageMobject';
+
 // Frame/Screen mobjects
 export {
   ScreenRectangle,
