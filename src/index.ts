@@ -1134,6 +1134,19 @@ export {
   type SliderOptions,
 } from './interaction';
 
+// --- dynamic matrix (best-manim) ---
+export {
+  MatrixTracker,
+  makeMatrixTracker,
+  applyMatrixLive,
+  type Matrix2x2,
+  type MatrixSource,
+  type BasisVectorSource,
+  type DependentPoint,
+  type DynamicMatrixOptions,
+  type LiveMatrixBinding,
+} from './interaction';
+
 // Export
 export {
   GifExporter,
@@ -1156,6 +1169,8 @@ export {
   createWebCodecsExporter,
   type WebCodecsExportOptions,
   type WebCodecsVideoCodec,
+  chooseVideoExporterStrategy,
+  type VideoExporterStrategy,
 } from './export';
 
 // Vector math utilities
@@ -1177,6 +1192,18 @@ export {
 export { Player, type PlayerOptions } from './player';
 export { PlayerUI, type PlayerUIOptions, type PlayerUICallbacks } from './player';
 export { PlayerController, type PlayerControllerCallbacks } from './player';
+export {
+  ExportSettingsPanel,
+  resolveResolution,
+  qualityToBitrate,
+  RESOLUTION_PRESETS,
+  FPS_PRESETS,
+  QUALITY_PRESETS,
+  type ExportSettings,
+  type ResolutionPreset,
+  type QualityPreset,
+  type ExportDefaults,
+} from './player';
 
 // Feature flags
 export {
@@ -1364,3 +1391,28 @@ export {
   type ReskinnableMobject,
   type ReskinnableScene,
 } from './utils/ThemeManager';
+
+// --- scene serialization (best-manim) ---
+// Type-aware scene/mobject serialization with an extensible registry.
+// NOTE: the single-mobject helpers are named `serializeSceneMobject` /
+// `deserializeSceneMobject` here because the top level already exports the
+// lower-level state helpers `serializeMobject` / `deserializeMobject` from
+// StateManager. The folder barrel keeps the short names.
+export {
+  serializeScene,
+  deserializeScene,
+  serializeMobject as serializeSceneMobject,
+  deserializeMobject as deserializeSceneMobject,
+  registerSerializableMobject,
+  unregisterSerializableMobject,
+  getSerializableTypes,
+  getSerializer,
+  type SerializedScene,
+  type SerializedMobject,
+  type SerializedTransform,
+  type SerializedStyle,
+  type MobjectSerializer,
+  type SceneLike,
+  type ContainerLike,
+  type Vec3,
+} from './serialization';

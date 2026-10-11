@@ -16,3 +16,4 @@ export {
   type WebCodecsExportOptions,
   type WebCodecsVideoCodec,
 } from './WebCodecsExporter';
+export { chooseVideoExporterStrategy, type VideoExporterStrategy } from './chooseExporter';

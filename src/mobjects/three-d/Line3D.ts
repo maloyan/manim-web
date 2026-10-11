@@ -69,6 +69,16 @@ export class Line3D extends Mobject3D {
       linewidth: this.strokeWidth,
       worldUnits: false,
       resolution: new THREE.Vector2(this._resolutionWidth, this._resolutionHeight),
+      // Bias the line slightly toward the camera. A Line3D is often coplanar
+      // with a surface it annotates (a radius on the z=0 grid plane, an edge on
+      // a face). Mobile GPUs frequently expose a 16-bit depth buffer, half the
+      // precision desktop browsers get, so such a line z-fights: it draws on
+      // one device and drops on another. The negative offset makes the line win
+      // the depth test consistently at any depth-buffer precision, while
+      // depthTest stays on so genuine occlusion by nearer geometry still works.
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1,
     });
 
     const line = new Line2(geometry, material);
