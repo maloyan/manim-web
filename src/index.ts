@@ -1008,3 +1008,26 @@ export {
 
 // Logging
 export { logger, onLog, type LogEntry, type LogLevel, type LogListener } from './utils/logger';
+
+// --- utils/iterables/unit/family/debug (parity) ---
+export {
+  adjacentNTuples,
+  adjacentPairs,
+  removeListRedundancies,
+  listDifferenceUpdate,
+  listUpdate,
+  tuplify,
+  makeEven,
+  stretchArrayToLength,
+  uniqChain,
+  powerset,
+  hashObj,
+} from './utils/iterables';
+export { Pixels, Degrees, Munits, Percent } from './utils/unit';
+export {
+  extractMobjectFamilyMembers,
+  restructureListToExcludeCertainFamilyMembers,
+  indexLabels,
+  printFamily,
+  type IndexLabelsOptions,
+} from './utils/debug';
