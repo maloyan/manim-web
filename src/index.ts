@@ -461,6 +461,19 @@ export {
   type ConvexHull3DOptions,
 } from './mobjects/three-d';
 
+// --- 3D model import (best-manim) ---
+export {
+  ModelMobject,
+  setModelLoaderFactory,
+  detectModelFormat,
+  type ModelMobjectOptions,
+  type ModelFormat,
+  type ModelUpAxis,
+  type ModelLoader,
+  type ModelLoaderFactory,
+} from './mobjects/three-d/ModelMobject';
+// --- end 3D model import ---
+
 // Value Trackers
 export {
   ValueTracker,
