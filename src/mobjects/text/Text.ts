@@ -14,6 +14,7 @@ import {
   measureStyledText,
   renderStyledTextToCanvas,
 } from './textStyleRuns';
+import { createTextCanvasTexture, reallocateTextureIfResized } from './textTexture';
 
 /** Scale factor from Canvas 2D output to point units.
  * At 72 DPI, 1pt = 4/3 canvas pixels. */
@@ -590,6 +591,11 @@ export class Text extends TexturedMobject {
 
     // Create new geometry with updated dimensions
     this._mesh.geometry = new THREE.PlaneGeometry(this._worldWidth, this._worldHeight);
+
+    // Recreate the texture if the backing canvas changed size (issue #607); see
+    // `textTexture.ts` for why a resize needs a fresh texture.
+    const next = reallocateTextureIfResized(this._mesh, this._canvas, this._texture);
+    if (next) this._texture = next;
   }
 
   /**
@@ -605,11 +611,9 @@ export class Text extends TexturedMobject {
       return group;
     }
 
-    // Create texture from canvas
-    this._texture = new THREE.CanvasTexture(this._canvas);
-    this._texture.colorSpace = THREE.SRGBColorSpace;
-    this._texture.minFilter = THREE.LinearFilter;
-    this._texture.magFilter = THREE.LinearFilter;
+    // Create texture from canvas (its allocated size is tracked so a later
+    // resize can recreate it, issue #607).
+    this._texture = createTextCanvasTexture(this._canvas);
 
     // Create material with transparency
     const material = new THREE.MeshBasicMaterial({
