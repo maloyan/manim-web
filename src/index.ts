@@ -392,6 +392,7 @@ export {
   Code,
   type CodeOptions,
   type CodeColorScheme,
+  type CodeToken,
   type Token,
   type TokenType,
   DEFAULT_COLOR_SCHEME,
@@ -794,6 +795,15 @@ export {
   TransformMatchingTex,
   transformMatchingTex,
   type TransformMatchingTexOptions,
+} from './animation/transform';
+// --- code diff animation (best-manim) ---
+export {
+  TransformMatchingCode,
+  transformMatchingCode,
+  type TransformMatchingCodeOptions,
+  type CodeMatchBy,
+  type CodeMatchedPart,
+  type CodeFadingPart,
 } from './animation/transform';
 export {
   TransformAnimations,
