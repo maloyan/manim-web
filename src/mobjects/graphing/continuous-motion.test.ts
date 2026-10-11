@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { StreamLines } from './VectorField';
+import { StreamLines, type VectorFunction } from './VectorField';
 
 const uniformFunc = () => [1, 0] as [number, number];
 const rotationFunc = (x: number, y: number) => [-y, x] as [number, number];
 
-function makeStreamLines(func = uniformFunc, numLines = 5) {
+function makeStreamLines(func: VectorFunction = uniformFunc, numLines = 5) {
   return new StreamLines({
     func,
     xRange: [-2, 2, 1],

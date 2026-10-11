@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Mobject } from '../core/Mobject';
+import { TestMobject } from '../test-setup/TestMobject';
 import { AnimationGroup } from './AnimationGroup';
 import { Succession, succession } from './Succession';
 import { FadeIn } from './fading/FadeIn';
@@ -9,7 +9,7 @@ import { linear } from '../rate-functions';
  * Helper to create a FadeIn animation with linear rateFunc for predictable testing.
  */
 function createFadeIn(duration: number = 1): FadeIn {
-  const m = new Mobject();
+  const m = new TestMobject();
   return new FadeIn(m, { duration, rateFunc: linear });
 }
 

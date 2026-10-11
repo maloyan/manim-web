@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Mobject } from '../../core/Mobject';
+import { TestMobject } from '../../test-setup/TestMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { linear } from '../../rate-functions';
 import {
@@ -200,7 +201,7 @@ describe('ChangeSpeed', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new TestMobject();
   });
 
   // -----------------------------------------------------------
@@ -210,12 +211,12 @@ describe('ChangeSpeed', () => {
   describe('constructor', () => {
     it('wraps the given animation', () => {
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
-      const anim = new ChangeSpeed(inner, (t) => 1);
+      const anim = new ChangeSpeed(inner, () => 1);
       expect(anim.animation).toBe(inner);
     });
 
     it('stores the speed function', () => {
-      const speedFn: SpeedFunction = (t) => 2;
+      const speedFn: SpeedFunction = () => 2;
       const inner = new TestAnimation(mob, { duration: 1, rateFunc: linear });
       const anim = new ChangeSpeed(inner, speedFn);
       expect(anim.speedFunc).toBe(speedFn);

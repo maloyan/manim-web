@@ -43,6 +43,7 @@
     "build:browser": "vite build --config vite.browser.config.ts",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "typecheck:tests": "tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",

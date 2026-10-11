@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Mobject } from '../core/Mobject';
+import { TestMobject } from '../test-setup/TestMobject';
 import { VMobject } from '../core/VMobject';
 import { linear } from '../rate-functions';
 import { WiggleOutThenIn, wiggleOutThenIn } from './indication/WiggleOutThenIn';
@@ -25,7 +26,7 @@ import { ApplyPointwiseFunction } from './transform/ApplyPointwiseFunction';
 // ---------------------------------------------------------------------------
 
 function makeMobject(): Mobject {
-  return new Mobject();
+  return new TestMobject();
 }
 
 function makeVMobject(pts?: number[][]): VMobject {

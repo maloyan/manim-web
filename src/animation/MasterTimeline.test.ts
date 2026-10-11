@@ -15,9 +15,12 @@ class TestMobject extends Mobject {
   protected _createThreeObject(): THREE.Object3D {
     return new THREE.Object3D();
   }
-  protected _syncToThree(): void {}
+  override _syncToThree(): void {}
   override copy(): Mobject {
     return new TestMobject();
+  }
+  override normalizeTransform(): this {
+    return this;
   }
 }
 
@@ -978,7 +981,10 @@ describe('Animation _captureMinimalState and reset', () => {
     protected _createThreeObject(): THREE.Object3D {
       return new THREE.Object3D();
     }
-    protected _syncToThree(): void {}
+    override _syncToThree(): void {}
+    override normalizeTransform(): this {
+      return this;
+    }
     override copy(): Mobject {
       throw new Error('copy not supported');
     }

@@ -15,6 +15,7 @@ function createCallbacks(): PlayerUICallbacks {
     onSpeedChange: vi.fn(),
     onFullscreen: vi.fn(),
     onExport: vi.fn(),
+    onSlidesToggle: vi.fn(),
   };
 }
 
@@ -975,7 +976,6 @@ describe('PlayerUI', () => {
       (menu.children[0] as HTMLElement).click();
 
       // Menu should be removed from body
-      const menusAfter = document.querySelectorAll('[data-player-bar]');
       // Only our bar should remain (in the container)
       const bodyMenus = document.body.querySelectorAll(':scope > [data-player-bar]');
       expect(bodyMenus.length).toBe(0);

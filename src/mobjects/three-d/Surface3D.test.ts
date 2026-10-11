@@ -312,10 +312,30 @@ describe('three.js transparent-sort tiebreak (upstream invariant the fix relies 
     const b = makeItem(2, 100);
 
     // Insert in reverse id order so a stable no-op sort cannot pass.
-    const list = new WebGLRenderList();
-    list.push(b.object, null, b.material, 0, 5, null);
-    list.push(a.object, null, a.material, 0, 5, null);
-    list.sort(null, null);
+    const list = new (
+      WebGLRenderList as unknown as new () => InstanceType<typeof WebGLRenderList>
+    )();
+    list.push(
+      b.object as unknown as THREE.Object3D,
+      null,
+      b.material as unknown as THREE.Material,
+      0,
+      5,
+      null,
+    );
+    list.push(
+      a.object as unknown as THREE.Object3D,
+      null,
+      a.material as unknown as THREE.Material,
+      0,
+      5,
+      null,
+    );
+    list.sort(
+      null as unknown as (a: unknown, b: unknown) => number,
+      null as unknown as (a: unknown, b: unknown) => number,
+      false,
+    );
 
     expect(list.transparent.map((item: { id: number }) => item.id)).toEqual([1, 2]);
   });

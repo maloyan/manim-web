@@ -96,7 +96,7 @@ describe('axes-calculus: getSecantSlopeGroup', () => {
     const x = 1;
     const dx = 0.5;
     const group = getSecantSlopeGroup(axes, x, graph, { dx });
-    const dxLine = group.children[0] as { getStart(): number[]; getEnd(): number[] };
+    const dxLine = group.children[0] as unknown as { getStart(): number[]; getEnd(): number[] };
     const p1 = axes.coordsToPoint(x, f(x));
     const p2 = axes.coordsToPoint(x + dx, f(x + dx));
     const start = dxLine.getStart();
@@ -113,7 +113,7 @@ describe('axes-calculus: getSecantSlopeGroup', () => {
     const x = 1;
     const dx = 0.5;
     const group = getSecantSlopeGroup(axes, x, graph, { dx });
-    const secant = group.children[3] as { getStart(): number[]; getEnd(): number[] };
+    const secant = group.children[3] as unknown as { getStart(): number[]; getEnd(): number[] };
     const [cx1, cy1] = axes.pointToCoords(secant.getStart() as [number, number, number]);
     const [cx2, cy2] = axes.pointToCoords(secant.getEnd() as [number, number, number]);
     const secantSlope = (cy2 - cy1) / (cx2 - cx1);
@@ -150,7 +150,7 @@ describe('axes-calculus: getVerticalLinesToGraph', () => {
       const x = xRange[0] + i * step;
       const expected = graph.getPointFromX(x);
       expect(expected).not.toBeNull();
-      const line = group.children[i] as { getEnd(): number[] };
+      const line = group.children[i] as unknown as { getEnd(): number[] };
       const end = line.getEnd();
       expect(end[0]).toBeCloseTo(expected![0], 6);
       expect(end[1]).toBeCloseTo(expected![1], 6);

@@ -114,7 +114,7 @@ describe('ThreeDAxes showLabels', () => {
       cam,
       mesh.geometry,
       mesh.material as THREE.Material,
-      null,
+      null as unknown as THREE.Group,
     );
     const meshWorldQuat = new THREE.Quaternion();
     mesh.getWorldQuaternion(meshWorldQuat);

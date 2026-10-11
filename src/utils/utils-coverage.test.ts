@@ -36,7 +36,7 @@ describe('Performance coverage gaps', () => {
       // Simulate 60 frames per second
       for (let f = 0; f < 60; f++) {
         now += 16.67;
-        if (rafCallback) rafCallback(now);
+        if (rafCallback) (rafCallback as FrameRequestCallback)(now);
       }
       now += 1; // Ensure we pass 1000ms mark
     }

@@ -69,8 +69,6 @@ describe('Arrow.reconstructTip', () => {
 describe('ApplyMatrix on Arrow with non-uniform matrix', () => {
   it('reconstructs tip after shear', () => {
     const arrow = new Arrow({ start: [0, 0, 0], end: [2, 0, 0] });
-    const tipBefore = arrow.children[1] as VMobject;
-    const tipPointsBefore = tipBefore.getLocalPoints();
 
     // Shear matrix: x' = x + 0.5*y, y' = y
     const shear = [

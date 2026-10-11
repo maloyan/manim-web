@@ -61,7 +61,11 @@ function createMockCtx(): CanvasRenderingContext2D {
 
 beforeAll(() => {
   const orig = HTMLCanvasElement.prototype.getContext;
-  HTMLCanvasElement.prototype.getContext = function (type: string, ...args: unknown[]) {
+  HTMLCanvasElement.prototype.getContext = function (
+    this: HTMLCanvasElement,
+    type: string,
+    ...args: unknown[]
+  ) {
     if (type === '2d') return createMockCtx();
     return orig.call(this, type, ...(args as []));
   } as typeof orig;
@@ -625,7 +629,6 @@ describe('Code (additional coverage)', () => {
       const c = new Code({ code: 'def x():', language: 'text' });
       const obj = c.getThreeObject();
       const mesh = obj.children.find((ch) => ch.type === 'Mesh') as THREE.Mesh;
-      const geom1 = mesh.geometry;
 
       c.setLanguage('python');
       const geom2 = mesh.geometry;

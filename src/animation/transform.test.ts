@@ -448,6 +448,9 @@ describe('Transform', () => {
           this._copyBaseAttributesInto(clone);
           return clone;
         }
+        override normalizeTransform(): this {
+          return this;
+        }
       }
       const m1 = new SimpleMobject();
       const m2 = new SimpleMobject();
@@ -801,6 +804,9 @@ describe('cross-fade finish()', () => {
         this._copyBaseAttributesInto(clone);
         return clone;
       }
+      override normalizeTransform(): this {
+        return this;
+      }
     }
     const m1 = new SimpleMobject();
     const m2 = new SimpleMobject();
@@ -857,6 +863,9 @@ describe('cross-fade finish()', () => {
         this._copyBaseAttributesInto(clone);
         return clone;
       }
+      override normalizeTransform(): this {
+        return this;
+      }
     }
     const m1 = new SimpleMobject();
     const m2 = new SimpleMobject();
@@ -883,6 +892,9 @@ describe('cross-fade finish()', () => {
         const clone = new SimpleMobject();
         this._copyBaseAttributesInto(clone);
         return clone;
+      }
+      override normalizeTransform(): this {
+        return this;
       }
     }
     const m1 = new SimpleMobject();
@@ -955,6 +967,9 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
         this._copyBaseAttributesInto(clone);
         return clone;
       }
+      override normalizeTransform(): this {
+        return this;
+      }
     }
 
     const m1 = new TextLikeMobject();
@@ -1009,6 +1024,9 @@ describe('cross-fade finish() with getTextureMesh (Text-like)', () => {
         const clone = new TextLikeMobject();
         this._copyBaseAttributesInto(clone);
         return clone;
+      }
+      override normalizeTransform(): this {
+        return this;
       }
     }
 

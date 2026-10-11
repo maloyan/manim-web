@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Animation, AnimationOptions } from './Animation';
 import { Mobject } from '../core/Mobject';
@@ -13,16 +12,6 @@ import { MoveAlongPath, moveAlongPath } from './movement/MoveAlongPath';
 import { AnimationGroup } from './AnimationGroup';
 import { linear } from '../rate-functions';
 import { onLog, clearLogListeners, type LogEntry } from '../utils/logger';
-
-/** Concrete Mobject for tests needing getCenter()/getThreeObject(). */
-class ConcreteMobject extends Mobject {
-  protected _createThreeObject(): THREE.Object3D {
-    return new THREE.Group();
-  }
-  override copy(): Mobject {
-    return new ConcreteMobject();
-  }
-}
 
 class TestAnimation extends Animation {
   lastAlpha: number | null = null;

@@ -202,7 +202,7 @@ describe('Text mobjects in headless scene', () => {
 
   it('DecimalNumber can be added to headless scene', () => {
     const scene = Scene.createHeadless();
-    const num = new DecimalNumber(3.14);
+    const num = new DecimalNumber({ value: 3.14 });
     expect(() => scene.add(num)).not.toThrow();
     scene.dispose();
   });

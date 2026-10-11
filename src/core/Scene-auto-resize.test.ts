@@ -32,10 +32,8 @@ type ROCallback = (entries: ResizeObserverEntry[], observer: ResizeObserver) => 
 let lastObserver: { cb: ROCallback; targets: Element[]; disconnect: () => void } | null = null;
 
 class MockResizeObserver {
-  private _cb: ROCallback;
   private _targets: Element[] = [];
   constructor(cb: ROCallback) {
-    this._cb = cb;
     lastObserver = {
       cb,
       targets: this._targets,

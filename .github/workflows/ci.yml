@@ -32,6 +32,8 @@ jobs:
       - run: npm ci
       - name: TypeScript type checking
         run: npm run typecheck
+      - name: TypeScript type checking (tests) (issue #415)
+        run: npm run typecheck:tests
 
   test:
     name: Test

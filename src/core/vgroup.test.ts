@@ -7,7 +7,6 @@ import { VGroup } from './VGroup';
 import { Line } from '../mobjects/geometry/Line';
 import { Dot } from '../mobjects/geometry/Dot';
 import { PointMobject } from '../mobjects/point';
-import { axisVectorFromEulerKey } from '../utils/axis';
 
 describe('VGroup - extended coverage', () => {
   it('constructs empty', () => {
@@ -754,7 +753,7 @@ describe('VGroup - extended coverage', () => {
   // Regression for #417: arrange/arrangeInGrid must recenter by shifting the
   // CHILDREN (not the container) so adding the children directly stays centered.
   describe('arrange recenters children, not the container (#417 regression)', () => {
-    const makeDot = () => new Dot({ position: [0, 0, 0] });
+    const makeDot = () => new Dot({ point: [0, 0, 0] });
 
     it('arrange shifts children so their combined center returns to origin', () => {
       const a = makeDot();

@@ -46,7 +46,7 @@ describe('solveIVP', () => {
   });
 
   it('records trajectory when requested', () => {
-    const f = (_t: number, y: number[]) => [1];
+    const f = (_t: number, _y: number[]) => [1];
     const result = solveIVP(f, 0, [0], 1, { numSteps: 10, recordTrajectory: true });
     expect(result.trajectory).toHaveLength(11); // 10 steps + initial
     expect(result.trajectory[0].t).toBe(0);

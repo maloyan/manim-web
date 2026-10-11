@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { VMobject } from '../core/VMobject';
 import { CurvesAsSubmobjects } from '../core/VMobjectCurveUtils';
-import { Mobject } from '../core/Mobject';
+import { TestMobject } from '../test-setup/TestMobject';
 import { Circle } from '../mobjects/geometry/Circle';
 import { Dot } from '../mobjects/geometry/Dot';
 import {
@@ -1210,8 +1210,8 @@ describe('Swap', () => {
   });
 
   it('throws when autoCenter used with non-VMobject', () => {
-    const m1 = new Mobject();
-    const m2 = new Mobject();
+    const m1 = new TestMobject();
+    const m2 = new TestMobject();
     const anim = new Swap(m1, m2);
     expect(() => anim.begin()).toThrow('Swap autoCenter requires VMobject');
   });
@@ -1365,8 +1365,8 @@ describe('CyclicReplace', () => {
   });
 
   it('throws when autoCenter used with non-VMobject', () => {
-    const m1 = new Mobject();
-    const m2 = new Mobject();
+    const m1 = new TestMobject();
+    const m2 = new TestMobject();
     const anim = new CyclicReplace([m1, m2]);
     expect(() => anim.begin()).toThrow('CyclicReplace autoCenter requires VMobject');
   });

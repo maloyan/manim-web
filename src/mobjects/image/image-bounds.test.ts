@@ -14,7 +14,7 @@ describe('ImageMobject bounds after scale', () => {
       }),
       putImageData: () => {},
       drawImage: () => {},
-      getImageData: (x: number, y: number, width: number, height: number) => ({
+      getImageData: (_x: number, _y: number, width: number, height: number) => ({
         data: new Uint8ClampedArray(width * height * 4),
         width,
         height,
@@ -76,7 +76,7 @@ describe('ImageMobject bounds after scale', () => {
       }),
       putImageData: () => {},
       drawImage: () => {},
-      getImageData: (x: number, y: number, width: number, height: number) => ({
+      getImageData: (_x: number, _y: number, width: number, height: number) => ({
         data: new Uint8ClampedArray(width * height * 4),
         width,
         height,
