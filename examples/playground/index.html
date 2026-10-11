@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>manim-web Playground</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --bg: #010409;
+        --panel: #0d1117;
+        --border: #30363d;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --accent: #e94560;
+      }
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+      header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--panel);
+        flex-wrap: wrap;
+      }
+      header h1 {
+        font-size: 15px;
+        font-weight: 600;
+      }
+      header .spacer {
+        flex: 1;
+      }
+      header .hint {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      select,
+      button {
+        font-size: 13px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: #161b22;
+        color: var(--text);
+        cursor: pointer;
+      }
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+        font-weight: 600;
+      }
+      button:hover {
+        filter: brightness(1.1);
+      }
+      main {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+      }
+      #left {
+        width: 46%;
+        min-width: 320px;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border);
+      }
+      #editor {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+      }
+      #error {
+        display: none;
+        white-space: pre-wrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        color: #ffb4b4;
+        background: #2d0b0b;
+        border-top: 1px solid #5a1f1f;
+        padding: 10px 14px;
+        max-height: 40%;
+        overflow: auto;
+      }
+      #error[hidden] {
+        display: none;
+      }
+      #right {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        min-width: 0;
+        overflow: auto;
+      }
+      #container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      @media (max-width: 760px) {
+        main {
+          flex-direction: column;
+        }
+        #left {
+          width: 100%;
+          height: 50%;
+          border-right: none;
+          border-bottom: 1px solid var(--border);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>manim-web Playground</h1>
+      <select id="examples" title="Load an example"></select>
+      <button id="run" class="primary" title="Run (Cmd/Ctrl + Enter)">Run ▶</button>
+      <button id="share" title="Copy a shareable link">Copy share link</button>
+      <span class="spacer"></span>
+      <span class="hint"
+        >Edit the scene, then press <strong>Run</strong> or <strong>⌘/Ctrl + Enter</strong></span
+      >
+    </header>
+    <main>
+      <section id="left">
+        <div id="editor"></div>
+        <pre id="error" hidden></pre>
+      </section>
+      <section id="right">
+        <div id="container"></div>
+      </section>
+    </main>
+    <script type="module" src="./playground.ts"></script>
+  </body>
+</html>

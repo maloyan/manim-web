@@ -11,7 +11,7 @@ export default defineConfig({
   },
   test: {
     pool: 'threads',
-    include: ['src/**/*.test.ts'],
+    include: ['src/**/*.test.ts', 'examples/playground/**/*.test.ts'],
     setupFiles: ['./src/test-setup/vitest-setup.ts'],
     environmentOptions: {
       happyDOM: {
