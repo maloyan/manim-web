@@ -28,6 +28,7 @@ import {
   chainFromAnchorsAndHandles,
 } from './VMobjectCurveMath';
 import { colorGradient } from './VMobjectColorGradient';
+import { roundCornersPoints } from './VMobjectRoundCorners';
 
 // Re-export Point type so existing `import { Point } from './VMobject'` keeps working.
 export type { Point } from './VMobjectCurves';
@@ -1014,6 +1015,28 @@ export class VMobject extends VMobjectRendering {
       const anchors = anchorsFromPoints(member.getLocalPoints());
       if (anchors.length < 2) continue;
       member.setPointsAsCorners(anchors);
+    }
+    return this;
+  }
+
+  /**
+   * Replace each sharp corner with a circular arc of the given radius
+   * (Manim CE's `round_corners`). Reads the path as a polygon through its
+   * anchors and inserts, at every corner, an arc tangent to both adjacent
+   * edges. The offset from each corner is clamped to half the shorter adjacent
+   * edge, so arcs on short edges never overlap. Convex and reflex corners both
+   * round correctly. A collinear corner and a non-positive radius leave the
+   * corner sharp. A closed path rounds every vertex; an open path keeps its two
+   * end vertices sharp. Applies to every family member that owns points.
+   * Chainable.
+   *
+   * @param radius - Corner radius; <= 0 is a no-op
+   * @returns this for chaining
+   */
+  roundCorners(radius: number): this {
+    if (radius <= 0) return this;
+    for (const member of this.familyMembersWithPoints()) {
+      member.setPoints(roundCornersPoints(member.getLocalPoints(), radius));
     }
     return this;
   }
