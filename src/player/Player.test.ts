@@ -1629,3 +1629,212 @@ describe('PlayerController', () => {
     expect(callbacks.onFullscreen).not.toHaveBeenCalled();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Interactive slides (issue #449): interaction works while paused on a slide
+// ---------------------------------------------------------------------------
+
+describe('Player interactive slides', () => {
+  let player: Player;
+  let container: HTMLElement;
+
+  function create(opts: PlayerOptions = {}): void {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    player = new Player(container, {
+      width: 800,
+      height: 450,
+      headless: true,
+      ...opts,
+    });
+  }
+
+  /** Drain the microtask queue so scheduled idle renders run. */
+  async function flushMicrotasks(): Promise<void> {
+    await Promise.resolve();
+  }
+
+  afterEach(() => {
+    player.dispose();
+    container.remove();
+  });
+
+  // ---- option plumbing ----
+
+  it('accepts interactiveSlides option and attaches the idle-render path', () => {
+    create({ slidesMode: true, interactiveSlides: true });
+    expect(player.interactiveSlides).toBe(true);
+    const internal = player as unknown as {
+      _slideInteraction: { isAttached: boolean } | null;
+    };
+    expect(internal._slideInteraction).not.toBeNull();
+    expect(internal._slideInteraction?.isAttached).toBe(true);
+  });
+
+  it('interactiveSlides defaults to false and attaches no idle-render path', () => {
+    create({ slidesMode: true });
+    expect(player.interactiveSlides).toBe(false);
+    const internal = player as unknown as { _slideInteraction: unknown };
+    expect(internal._slideInteraction).toBeNull();
+  });
+
+  // ---- paused interaction renders without advancing the timeline ----
+
+  it('renders on a pointer event while paused on a slide, without advancing the timeline', async () => {
+    create({ slidesMode: true, interactiveSlides: true });
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+      await scene.nextSlide();
+      await scene.wait(1);
+    });
+
+    // Paused on the first slide (sequence() seeks to 0 and does not play).
+    expect(player.isPlaying).toBe(false);
+    const timeBefore = player.timeline.getCurrentTime();
+    const renderSpy = vi.spyOn(player.scene, 'render');
+
+    container.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    await flushMicrotasks();
+
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+    // Timeline must NOT advance — interaction is not playback.
+    expect(player.timeline.getCurrentTime()).toBe(timeBefore);
+  });
+
+  it('a simulated drag moves the object and the idle render draws the new position', async () => {
+    create({ slidesMode: true, interactiveSlides: true });
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+    });
+
+    const renderSpy = vi.spyOn(player.scene, 'render');
+
+    // Simulate a Draggable handler: registered AFTER the Player's idle
+    // listener, it mutates the object on the same pointer event. The idle
+    // render runs in a microtask after the whole dispatch, so it sees the
+    // moved object regardless of listener order.
+    const obj = { x: 0 };
+    container.addEventListener('mousemove', () => {
+      obj.x = 5;
+    });
+
+    container.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    await flushMicrotasks();
+
+    expect(obj.x).toBe(5);
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('coalesces multiple pointer events in one tick into a single render', async () => {
+    create({ slidesMode: true, interactiveSlides: true });
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+    });
+
+    const renderSpy = vi.spyOn(player.scene, 'render');
+    container.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    container.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    container.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    await flushMicrotasks();
+
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT idle-render while playing (the render loop already draws)', async () => {
+    create({ slidesMode: true, interactiveSlides: true });
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+    });
+
+    const internal = player as unknown as {
+      _slideInteraction: { renderCount: number };
+    };
+    player.play();
+    expect(player.isPlaying).toBe(true);
+
+    container.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    await flushMicrotasks();
+
+    expect(internal._slideInteraction.renderCount).toBe(0);
+  });
+
+  // ---- navigation still works ----
+
+  it('nextSlide still advances while interactiveSlides is on', async () => {
+    create({ slidesMode: true, interactiveSlides: true });
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+      await scene.nextSlide();
+      await scene.wait(1);
+    });
+
+    expect(player.isPlaying).toBe(false);
+    player.nextSlide();
+    // Arming the current slide starts playback toward its end boundary.
+    expect(player.isPlaying).toBe(true);
+    const internal = player as unknown as { _slidesTargetSlideIndex: number };
+    expect(internal._slidesTargetSlideIndex).toBeGreaterThanOrEqual(0);
+  });
+
+  // ---- default (non-interactive) behavior ----
+
+  it('default slides do NOT render on pointer events while paused', async () => {
+    create({ slidesMode: true });
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+    });
+
+    const renderSpy = vi.spyOn(player.scene, 'render');
+    container.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    await flushMicrotasks();
+
+    expect(renderSpy).not.toHaveBeenCalled();
+  });
+
+  // ---- runtime toggle ----
+
+  it('setInteractiveSlides enables and disables the idle-render path', async () => {
+    create({ slidesMode: true });
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+    });
+    const internal = player as unknown as { _slideInteraction: unknown };
+
+    player.setInteractiveSlides(true);
+    expect(player.interactiveSlides).toBe(true);
+    expect(internal._slideInteraction).not.toBeNull();
+
+    const renderSpy = vi.spyOn(player.scene, 'render');
+    container.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    await flushMicrotasks();
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+
+    player.setInteractiveSlides(false);
+    expect(player.interactiveSlides).toBe(false);
+    expect(internal._slideInteraction).toBeNull();
+
+    renderSpy.mockClear();
+    container.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    await flushMicrotasks();
+    expect(renderSpy).not.toHaveBeenCalled();
+  });
+
+  // ---- disposal ----
+
+  it('dispose removes the idle-render listeners', async () => {
+    create({ slidesMode: true, interactiveSlides: true });
+    await player.sequence(async (scene) => {
+      await scene.wait(1);
+    });
+
+    const renderSpy = vi.spyOn(player.scene, 'render');
+    player.dispose();
+
+    container.dispatchEvent(new MouseEvent('mousemove', { bubbles: true }));
+    await flushMicrotasks();
+    expect(renderSpy).not.toHaveBeenCalled();
+
+    // Re-create so afterEach has a live player/container to tear down.
+    create({ interactiveSlides: true });
+  });
+});

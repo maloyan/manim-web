@@ -27,6 +27,7 @@ import { MasterTimeline } from '../animation/MasterTimeline';
 import { PlayerUI } from './PlayerUI';
 import { PlayerController } from './PlayerController';
 import { RecordingScene } from './RecordingScene';
+import { SlideInteractionRenderer } from './SlideInteractionRenderer';
 import { logger } from '../utils/logger';
 
 export interface PlayerOptions extends SceneOptions {
@@ -38,6 +39,13 @@ export interface PlayerOptions extends SceneOptions {
   loop?: boolean;
   /** Slides mode: arrows play/pause at slide boundaries like a presentation. Default false. */
   slidesMode?: boolean;
+  /**
+   * Keep the scene interactive while paused. When true, a Draggable,
+   * Clickable or Hoverable object responds on a paused slide: a pointer event
+   * triggers one scene render without advancing the timeline. Default false,
+   * so normal slides keep their cheap paused behavior (no extra renders).
+   */
+  interactiveSlides?: boolean;
 }
 
 export class Player {
@@ -53,6 +61,9 @@ export class Player {
   private _loop: boolean;
   private _autoPlay: boolean;
   private _slidesMode: boolean;
+  private _interactiveSlides: boolean;
+  /** Idle-render path that keeps a paused slide interactive. Null when off. */
+  private _slideInteraction: SlideInteractionRenderer | null = null;
   /**
    * Index of the slide that slidesMode playback should stop (or loop / advance)
    * at when its endTime is reached. -1 means no target armed.
@@ -73,6 +84,7 @@ export class Player {
     this._loop = options.loop ?? false;
     this._autoPlay = options.autoPlay ?? false;
     this._slidesMode = options.slidesMode ?? false;
+    this._interactiveSlides = options.interactiveSlides ?? false;
 
     // Create the underlying scene
     this._scene = new Scene(container, options);
@@ -129,6 +141,24 @@ export class Player {
       this._scene.render();
     };
     document.addEventListener('fullscreenchange', this._onFullscreenChange);
+
+    if (this._interactiveSlides) {
+      this._enableSlideInteraction();
+    }
+  }
+
+  /**
+   * Attach the idle-render path. Renders happen only while the Player is
+   * paused (not playing), so this never fights the active render loop.
+   */
+  private _enableSlideInteraction(): void {
+    if (this._slideInteraction) return;
+    this._slideInteraction = new SlideInteractionRenderer(
+      this._container,
+      this._scene,
+      () => !this._isPlaying,
+    );
+    this._slideInteraction.attach();
   }
 
   // ---------------------------------------------------------------------------
@@ -395,6 +425,26 @@ export class Player {
     }
   }
 
+  /** Whether the scene stays interactive while paused on a slide. */
+  get interactiveSlides(): boolean {
+    return this._interactiveSlides;
+  }
+
+  /**
+   * Enable or disable interactive slides at runtime. When enabled, a paused
+   * slide renders on pointer interaction (drag/click/hover) without advancing
+   * the timeline. When disabled, the idle-render path is removed.
+   */
+  setInteractiveSlides(enabled: boolean): void {
+    this._interactiveSlides = enabled;
+    if (enabled) {
+      this._enableSlideInteraction();
+    } else if (this._slideInteraction) {
+      this._slideInteraction.dispose();
+      this._slideInteraction = null;
+    }
+  }
+
   /** Export the animation in the given format (gif, webm, mp4). */
   async exportAs(format: string): Promise<void> {
     const wasPlaying = this._isPlaying;
@@ -445,6 +495,8 @@ export class Player {
   /** Clean up all resources. */
   dispose(): void {
     this._stopLoop();
+    this._slideInteraction?.dispose();
+    this._slideInteraction = null;
     document.removeEventListener('fullscreenchange', this._onFullscreenChange);
     this._ui.dispose();
     this._controller.dispose();
