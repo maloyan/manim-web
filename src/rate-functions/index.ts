@@ -459,3 +459,17 @@ export const easeInOutBounce: RateFunction = (t) =>
 export { easeIn as easeInCubic };
 export { easeOut as easeOutCubic };
 export { easeInOut as easeInOutCubic };
+
+// --- spring + custom easing (best-manim) ---
+
+export { spring } from './spring';
+export type { SpringOptions } from './spring';
+export {
+  cubicBezier,
+  ease,
+  easeInBezier,
+  easeOutBezier,
+  easeInOutBezier,
+  steps,
+} from './customEase';
+export type { StepPosition } from './customEase';

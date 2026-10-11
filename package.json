@@ -79,6 +79,7 @@
     "@types/three": "^0.185.1",
     "earcut": "^3.0.2",
     "gif.js": "^0.2.0",
+    "gifuct-js": "^2.1.2",
     "katex": "^0.18.1",
     "mp4-muxer": "^5.2.2",
     "opentype.js": "^2.0.0",

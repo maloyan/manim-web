@@ -392,6 +392,7 @@ export {
   Code,
   type CodeOptions,
   type CodeColorScheme,
+  type CodeToken,
   type Token,
   type TokenType,
   DEFAULT_COLOR_SCHEME,
@@ -613,6 +614,16 @@ export { ImageMobject, type ImageMobjectOptions, type ImageFilterOptions } from 
 // --- video (best-manim) ---
 export { VideoMobject, type VideoMobjectOptions } from './mobjects/video';
 
+// --- animated gif (best-manim) ---
+export {
+  AnimatedImageMobject,
+  setGifDecoder,
+  type AnimatedImageMobjectOptions,
+  type DecodedGif,
+  type DecodedGifFrame,
+  type GifDecoder,
+} from './mobjects/image/AnimatedImageMobject';
+
 // Frame/Screen mobjects
 export {
   ScreenRectangle,
@@ -794,6 +805,15 @@ export {
   TransformMatchingTex,
   transformMatchingTex,
   type TransformMatchingTexOptions,
+} from './animation/transform';
+// --- code diff animation (best-manim) ---
+export {
+  TransformMatchingCode,
+  transformMatchingCode,
+  type TransformMatchingCodeOptions,
+  type CodeMatchBy,
+  type CodeMatchedPart,
+  type CodeFadingPart,
 } from './animation/transform';
 export {
   TransformAnimations,
@@ -1058,6 +1078,16 @@ export {
   easeInCubic,
   easeOutCubic,
   easeInOutCubic,
+  // --- spring + custom easing (best-manim) ---
+  spring,
+  type SpringOptions,
+  cubicBezier,
+  ease,
+  easeInBezier,
+  easeOutBezier,
+  easeInOutBezier,
+  steps,
+  type StepPosition,
 } from './rate-functions';
 
 // Interaction - UI Controls
