@@ -8,6 +8,11 @@ import { VGroup } from '../../core/VGroup';
 import { WHITE } from '../../constants/colors';
 import { DEFAULT_STROKE_WIDTH } from '../../constants';
 import { logger } from '../../utils/logger';
+import { createStyledVMobject, makeFilledVMobject } from './svgFill';
+import { parseGradientDefs } from './svgGradients';
+import { buildSvgTextMobjects } from './svgText';
+import { buildSvgImageMobjects } from './svgImage';
+import { fetchSvgText, defaultSvgFetcher, type SvgFetcher } from './svgLoader';
 
 /** Internal point type for SVG parsing (simple tuple) */
 type SVGPoint = [number, number];
@@ -33,6 +38,15 @@ export interface SVGMobjectOptions {
   /** Center position */
   center?: [number, number, number];
 }
+
+/**
+ * Options for {@link SVGMobject.fromUrl}. Same as {@link SVGMobjectOptions}
+ * (minus `svgString`, which is fetched) plus an injectable fetcher.
+ */
+export type SVGMobjectFromUrlOptions = Omit<SVGMobjectOptions, 'svgString'> & {
+  /** Fetch implementation. Defaults to `globalThis.fetch`. */
+  fetcher?: SvgFetcher;
+};
 
 /**
  * VMobjectFromSVGPath options
@@ -501,27 +515,6 @@ function vectorAngle(ux: number, uy: number, vx: number, vy: number): number {
 }
 
 /**
- * Helper function to create a styled VMobject from points.
- */
-function createStyledVMobject(
-  points3D: [number, number, number][],
-  color: string,
-  strokeWidth: number,
-  fillColor?: string,
-  fillOpacity?: number,
-): VMobject {
-  const vmob = new VMobject();
-  vmob.setColor(color);
-  vmob.strokeWidth = strokeWidth;
-  if (fillColor) {
-    vmob.fillColor = fillColor;
-  }
-  vmob.fillOpacity = fillOpacity ?? 0;
-  vmob.setPoints3D(points3D);
-  return vmob;
-}
-
-/**
  * VMobjectFromSVGPath - create a VMobject from a single SVG path d attribute.
  */
 export class VMobjectFromSVGPath extends VMobject {
@@ -566,6 +559,7 @@ export class VMobjectFromSVGPath extends VMobject {
  */
 export class SVGMobject extends VGroup {
   private _svgString: string;
+  private _loadError: Error | null = null;
 
   constructor(options: SVGMobjectOptions = {}) {
     super();
@@ -604,6 +598,40 @@ export class SVGMobject extends VGroup {
     }
   }
 
+  /**
+   * Fetch an SVG from a URL and parse it through the standard string path.
+   *
+   * The fetcher is injected (default `globalThis.fetch`) so tests can mock it.
+   * A fetch or parse failure does not throw: it returns an empty SVGMobject
+   * whose {@link getLoadError} reports the error.
+   *
+   * @param url - The SVG resource URL.
+   * @param options - Standard SVGMobject options plus an optional `fetcher`.
+   * @returns A promise resolving to the parsed (or empty, on error) SVGMobject.
+   */
+  static async fromUrl(url: string, options: SVGMobjectFromUrlOptions = {}): Promise<SVGMobject> {
+    const { fetcher = defaultSvgFetcher, ...rest } = options;
+    try {
+      const svgString = await fetchSvgText(url, fetcher);
+      const mob = new SVGMobject({ ...rest, svgString });
+      return mob;
+    } catch (error) {
+      const mob = new SVGMobject({ ...rest });
+      mob._loadError = error instanceof Error ? error : new Error(String(error));
+      return mob;
+    }
+  }
+
+  /**
+   * The error captured while loading or parsing, or null when none occurred.
+   *
+   * Set by {@link fromUrl} on a fetch failure and by the parser when the input
+   * has no `<svg>` root.
+   */
+  getLoadError(): Error | null {
+    return this._loadError;
+  }
+
   private _parseSVG(
     svgString: string,
     defaultColor: string,
@@ -618,8 +646,12 @@ export class SVGMobject extends VGroup {
 
     if (!svg) {
       logger.warn('SVGMobject: No SVG element found');
+      this._loadError = new Error('SVGMobject: No SVG element found');
       return;
     }
+
+    // Gradient definitions, resolved for any fill="url(#id)" references below.
+    const gradientDefs = parseGradientDefs(svg);
 
     // Process all path elements
     const paths = svg.querySelectorAll('path');
@@ -629,7 +661,6 @@ export class SVGMobject extends VGroup {
 
       // Get styling from element
       const stroke = pathEl.getAttribute('stroke') || defaultColor;
-      const fill = pathEl.getAttribute('fill') || defaultFillColor;
       const strokeWidthAttr = pathEl.getAttribute('stroke-width');
       const sw = strokeWidthAttr ? parseFloat(strokeWidthAttr) : defaultStrokeWidth;
 
@@ -638,13 +669,15 @@ export class SVGMobject extends VGroup {
         if (points.length === 0) continue;
 
         const points3D: [number, number, number][] = points.map((p) => [p[0], p[1], 0]);
-        const vmob = createStyledVMobject(
+        const vmob = makeFilledVMobject({
           points3D,
-          stroke,
-          sw,
-          fill !== 'none' ? fill : undefined,
-          fill && fill !== 'none' ? (defaultFillOpacity ?? 0.5) : 0,
-        );
+          strokeColor: stroke,
+          strokeWidth: sw,
+          rawFill: pathEl.getAttribute('fill'),
+          fallbackFill: defaultFillColor,
+          defaultFillOpacity,
+          defs: gradientDefs,
+        });
         this.add(vmob);
       }
     }
@@ -665,17 +698,16 @@ export class SVGMobject extends VGroup {
 
       for (const pts of points) {
         const points3D: [number, number, number][] = pts.map((p) => [p[0], p[1], 0]);
-        const vmob = createStyledVMobject(
+        const vmob = makeFilledVMobject({
           points3D,
-          rectEl.getAttribute('stroke') || defaultColor,
-          parseFloat(rectEl.getAttribute('stroke-width') || String(defaultStrokeWidth)),
-          rectEl.getAttribute('fill') !== 'none'
-            ? rectEl.getAttribute('fill') || undefined
-            : undefined,
-          rectEl.getAttribute('fill') && rectEl.getAttribute('fill') !== 'none'
-            ? (defaultFillOpacity ?? 0.5)
-            : 0,
-        );
+          strokeColor: rectEl.getAttribute('stroke') || defaultColor,
+          strokeWidth: parseFloat(
+            rectEl.getAttribute('stroke-width') || String(defaultStrokeWidth),
+          ),
+          rawFill: rectEl.getAttribute('fill'),
+          defaultFillOpacity,
+          defs: gradientDefs,
+        });
         this.add(vmob);
       }
     }
@@ -701,17 +733,16 @@ export class SVGMobject extends VGroup {
       const points = parseSVGPath(d);
       for (const pts of points) {
         const points3D: [number, number, number][] = pts.map((p) => [p[0], p[1], 0]);
-        const vmob = createStyledVMobject(
+        const vmob = makeFilledVMobject({
           points3D,
-          circleEl.getAttribute('stroke') || defaultColor,
-          parseFloat(circleEl.getAttribute('stroke-width') || String(defaultStrokeWidth)),
-          circleEl.getAttribute('fill') !== 'none'
-            ? circleEl.getAttribute('fill') || undefined
-            : undefined,
-          circleEl.getAttribute('fill') && circleEl.getAttribute('fill') !== 'none'
-            ? (defaultFillOpacity ?? 0.5)
-            : 0,
-        );
+          strokeColor: circleEl.getAttribute('stroke') || defaultColor,
+          strokeWidth: parseFloat(
+            circleEl.getAttribute('stroke-width') || String(defaultStrokeWidth),
+          ),
+          rawFill: circleEl.getAttribute('fill'),
+          defaultFillOpacity,
+          defs: gradientDefs,
+        });
         this.add(vmob);
       }
     }
@@ -790,17 +821,16 @@ export class SVGMobject extends VGroup {
       const points = parseSVGPath(d);
       for (const pts of points) {
         const points3D: [number, number, number][] = pts.map((p) => [p[0], p[1], 0]);
-        const vmob = createStyledVMobject(
+        const vmob = makeFilledVMobject({
           points3D,
-          polygonEl.getAttribute('stroke') || defaultColor,
-          parseFloat(polygonEl.getAttribute('stroke-width') || String(defaultStrokeWidth)),
-          polygonEl.getAttribute('fill') !== 'none'
-            ? polygonEl.getAttribute('fill') || undefined
-            : undefined,
-          polygonEl.getAttribute('fill') && polygonEl.getAttribute('fill') !== 'none'
-            ? (defaultFillOpacity ?? 0.5)
-            : 0,
-        );
+          strokeColor: polygonEl.getAttribute('stroke') || defaultColor,
+          strokeWidth: parseFloat(
+            polygonEl.getAttribute('stroke-width') || String(defaultStrokeWidth),
+          ),
+          rawFill: polygonEl.getAttribute('fill'),
+          defaultFillOpacity,
+          defs: gradientDefs,
+        });
         this.add(vmob);
       }
     }
@@ -832,6 +862,16 @@ export class SVGMobject extends VGroup {
         );
         this.add(vmob);
       }
+    }
+
+    // Process <text> elements via the Text mobject (best-manim enhancement).
+    for (const textMob of buildSvgTextMobjects(svg, { color: defaultColor })) {
+      this.add(textMob);
+    }
+
+    // Process <image> elements via ImageMobject (best-effort).
+    for (const imageMob of buildSvgImageMobjects(svg)) {
+      this.add(imageMob);
     }
   }
 

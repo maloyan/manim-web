@@ -537,6 +537,16 @@ export {
   VMobjectFromSVGPath,
   type SVGMobjectOptions,
   type VMobjectFromSVGPathOptions,
+  // --- svg enhancements (best-manim) ---
+  type SVGMobjectFromUrlOptions,
+  GradientVMobject,
+  type GradientVMobjectOptions,
+  type SvgGradient,
+  type SvgGradientStop,
+  type SvgGradientType,
+  type SvgFetcher,
+  type SvgFetchResponse,
+  // --- end svg enhancements ---
 } from './mobjects/svg';
 
 // Graph mobjects for network visualization
