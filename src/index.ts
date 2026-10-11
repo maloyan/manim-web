@@ -1084,6 +1084,16 @@ export { SelectionManager, type SelectionManagerOptions } from './interaction';
 // Interaction - Camera Controls
 export { OrbitControls, type OrbitControlsOptions } from './interaction';
 
+// --- explorable interactivity (best-manim) ---
+export {
+  MovablePoint,
+  makeMovablePoint,
+  type MovablePointOptions,
+  Slider,
+  makeSlider,
+  type SliderOptions,
+} from './interaction';
+
 // Export
 export {
   GifExporter,

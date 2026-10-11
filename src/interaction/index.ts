@@ -25,6 +25,10 @@ export { Draggable, makeDraggable, type DraggableOptions } from './Draggable';
 export { Hoverable, makeHoverable, type HoverableOptions } from './Hoverable';
 export { Clickable, makeClickable, type ClickableOptions } from './Clickable';
 
+// Explorable interactivity
+export { MovablePoint, makeMovablePoint, type MovablePointOptions } from './MovablePoint';
+export { Slider, makeSlider, type SliderOptions } from './Slider';
+
 // Selection
 export { SelectionManager, type SelectionManagerOptions } from './SelectionManager';
 
