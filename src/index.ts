@@ -1008,3 +1008,20 @@ export {
 
 // Logging
 export { logger, onLog, type LogEntry, type LogLevel, type LogListener } from './utils/logger';
+
+// --- utils/bezier (parity) ---
+export {
+  bezier,
+  partialBezierPoints,
+  splitBezier,
+  subdivideBezier,
+  bezierRemap,
+  interpolate,
+  integerInterpolate,
+  mid,
+  inverseInterpolate,
+  matchInterpolate,
+  getSmoothCubicBezierHandlePoints,
+  isClosed,
+  proportionsAlongBezierCurveForPoint,
+} from './utils/bezier';
