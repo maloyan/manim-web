@@ -1,0 +1,340 @@
+---
+title: New in 0.11 and 0.12
+sidebar_label: New in 0.11 & 0.12
+---
+
+import MovablePointSliderExample from '@site/src/components/examples/MovablePointSliderExample';
+import SvgGradientTextExample from '@site/src/components/examples/SvgGradientTextExample';
+import BlendModeThemeExample from '@site/src/components/examples/BlendModeThemeExample';
+
+Features added in the 0.11 and 0.12 releases. Each section has a copy-paste snippet and a runnable example under `examples/`.
+
+## Zero-build embed with `<manim-scene>`
+
+The `<manim-scene>` custom element embeds a live animation with one HTML tag. No bundler and no build step are needed.
+
+Register the element once, then give it a factory. The factory receives the element's container and returns a `Scene` or a `Player`. Plain HTML pages set the factory through the `src` attribute, which points at a module that default-exports the factory. Bundler users set the factory on the element property instead.
+
+Runnable example: `examples/web_component.html`.
+
+<details>
+<summary>Source Code</summary>
+
+```html
+<manim-scene width="800" height="450" background="#000000" controls></manim-scene>
+
+<script type="module" src="./scene.js"></script>
+```
+
+```typescript
+// scene.js — the module named by the src attribute.
+import { Player, Circle, Create, BLUE } from 'manim-web';
+
+// A default export factory: (container) => Scene | Player.
+export default function (container) {
+  const player = new Player(container, { width: 800, height: 450 });
+  player.sequence(async (scene) => {
+    await scene.play(new Create(new Circle({ radius: 1.5, color: BLUE })));
+  });
+  return player;
+}
+```
+
+```html
+<!-- Register the tag once, anywhere on the page. -->
+<script type="module">
+  import { registerManimElement } from 'manim-web/element';
+  registerManimElement();
+</script>
+```
+
+</details>
+
+**Attributes:** `width`, `height`, `background`, `src`, `controls`, `autoplay`, `loop`.
+
+**Learn More:** [**registerManimElement**](/api/functions/registerManimElement) · [**ManimSceneElement**](/api/classes/ManimSceneElement) · [**Player**](/api/classes/Player)
+
+---
+
+## VideoMobject
+
+`VideoMobject` draws an HTML video onto a plane. It shifts, scales, and rotates like any other mobject, and it joins the scene with `scene.add`.
+
+The video follows the DOM clock during normal play. When a `Player` scrubs or seeks, call `syncToTime(sceneTime)` so the shown frame matches the scene time. A cross-origin source must send CORS headers, or the canvas becomes tainted and export fails.
+
+Runnable example: `examples/video_mobject.html`.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, VideoMobject, BLACK } from 'manim-web';
+
+const scene = new Scene(container, { width: 800, height: 450, backgroundColor: BLACK });
+
+const video = new VideoMobject({
+  src: './clip.mp4',
+  width: 5,
+  loop: true,
+  muted: true,
+});
+
+scene.add(video);
+
+await video.waitForLoad();
+video.play();
+
+// Follow the scene clock when the Player scrubs or seeks:
+// video.syncToTime(scene.currentTime);
+```
+
+</details>
+
+**Methods:** `play`, `pause`, `seek`, `setPlaybackRate`, `syncToTime`, `waitForLoad`, `isLoaded`.
+
+**Learn More:** [**VideoMobject**](/api/classes/VideoMobject)
+
+---
+
+## 3D models with `ModelMobject.fromUrl`
+
+`ModelMobject.fromUrl` imports a glTF, GLB, or OBJ model as a 3D mobject. The method picks the loader from the file extension. The default loaders are the Three.js example loaders, imported on demand.
+
+Use `upAxis` to match the model's up direction to the scene, which is Y up. Set `center: true` to recenter the model on the origin. Add the result to a `ThreeDScene`.
+
+Runnable example: `examples/model_mobject.html`.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ThreeDScene, ModelMobject, Rotate } from 'manim-web';
+
+const scene = new ThreeDScene(container, { width: 800, height: 450 });
+
+const model = await ModelMobject.fromUrl('./duck.glb', {
+  scale: 1.5,
+  upAxis: 'y',
+  center: true,
+});
+
+scene.add(model);
+await scene.play(new Rotate(model, { angle: Math.PI * 2, duration: 4 }));
+```
+
+</details>
+
+**Options:** `scale`, `upAxis`, `center`, `color`, `materialOverride`, `onProgress`, `loader`, `throwOnError`.
+
+**Learn More:** [**ModelMobject**](/api/classes/ModelMobject)
+
+---
+
+## PNG and WebCodecs export
+
+Two export paths render in the browser with no server and no ffmpeg.
+
+`exportFramePNG` captures one frame. `exportAndDownloadPNG` captures and saves it. `exportPNGSequence` seeks across a time range and returns one PNG Blob per frame. `WebCodecsExporter` encodes an MP4 or WebM when the browser supports the WebCodecs API, so guard it with `WebCodecsExporter.isSupported()`.
+
+Runnable example: `examples/frame_export.html`.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  exportAndDownloadPNG,
+  exportPNGSequence,
+  WebCodecsExporter,
+  downloadBlob,
+} from 'manim-web';
+
+// One PNG of the frame at t = 2s.
+await exportAndDownloadPNG(scene, 'frame.png', { time: 2 });
+
+// Every frame of a time range, as Blobs.
+const frames = await exportPNGSequence(scene, { fps: 30, from: 0, to: 3 });
+
+// An MP4 through WebCodecs, when available.
+if (WebCodecsExporter.isSupported()) {
+  const exporter = new WebCodecsExporter(scene, { fps: 30, format: 'mp4', duration: 3 });
+  const blob = await exporter.export();
+  downloadBlob(blob, 'animation.mp4');
+}
+```
+
+</details>
+
+**Learn More:** [**exportFramePNG**](/api/functions/exportFramePNG) · [**exportPNGSequence**](/api/functions/exportPNGSequence) · [**WebCodecsExporter**](/api/classes/WebCodecsExporter)
+
+---
+
+## MovablePoint and Slider
+
+`MovablePoint` and `Slider` are primitives for explorable explanations. The reader drags them, and a callback reports the new value. Drag the point below, and move the slider to resize the circle.
+
+A `MovablePoint` is a draggable dot. Constrain it to a function, a parametric curve, a line, or a segment. A `Slider` is an in-scene control bound to a value. Both accept a `ValueTracker` through the `tracker` option, so dependent mobjects can update through the tracker.
+
+<MovablePointSliderExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, Circle, Text, MovablePoint, Slider, BLUE, YELLOW, WHITE } from 'manim-web';
+
+const scene = new Scene(container, { width: 800, height: 450 });
+
+let circle = new Circle({ radius: 1, color: BLUE });
+circle.moveTo([-2.5, 0.5, 0]);
+
+const readout = new Text({ text: 'point: (2.5, 0.5)', fontSize: 22, color: WHITE });
+readout.moveTo([2.5, 2.2, 0]);
+scene.add(circle, readout);
+
+// A draggable point that reports its position.
+new MovablePoint(scene, {
+  point: [2.5, 0.5, 0],
+  color: YELLOW,
+  onChange: (pos) => {
+    readout.setText(`point: (${pos[0].toFixed(1)}, ${pos[1].toFixed(1)})`);
+    scene.render();
+  },
+});
+
+// A slider that rebuilds the circle at the chosen radius.
+new Slider(scene, {
+  min: 0.25,
+  max: 2,
+  step: 0.05,
+  value: 1,
+  length: 4,
+  center: [-2.5, -2.6, 0],
+  showLabel: true,
+  onChange: (value) => {
+    circle.become(new Circle({ radius: value, color: BLUE }).moveTo([-2.5, 0.5, 0]));
+    scene.render();
+  },
+});
+```
+
+</details>
+
+**Learn More:** [**MovablePoint**](/api/classes/MovablePoint) · [**makeMovablePoint**](/api/functions/makeMovablePoint) · [**Slider**](/api/classes/Slider) · [**makeSlider**](/api/functions/makeSlider)
+
+---
+
+## Voiceover
+
+`VoiceoverScene` syncs animation to narration. The `voiceover` method speaks the text through the Web Speech API and runs a callback while the voice plays.
+
+Mark beats in the text with `<bookmark mark="name"/>`. Inside the callback, `tracker.waitForMark('name')` resolves when the voice reaches that mark, so each animation starts on cue. A mark that never arrives resolves on finish, so a beat never hangs. Speech synthesis needs a user gesture to start.
+
+Runnable example: `examples/voiceover.html`.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { VoiceoverScene, Circle, Square, Create, Transform, BLUE, RED } from 'manim-web';
+
+const scene = new VoiceoverScene(container, { width: 800, height: 450 });
+
+const circle = new Circle({ radius: 1.5, color: BLUE });
+const square = new Square({ sideLength: 3, color: RED });
+
+await scene.voiceover(
+  "First we draw a <bookmark mark='circle'/> circle. " +
+    "Then we morph it into a <bookmark mark='square'/> square.",
+  async (tracker) => {
+    await tracker.waitForMark('circle');
+    await scene.play(new Create(circle));
+
+    await tracker.waitForMark('square');
+    await scene.play(new Transform(circle, square));
+  },
+);
+```
+
+</details>
+
+**Learn More:** [**VoiceoverScene**](/api/classes/VoiceoverScene) · [**Voiceover**](/api/classes/Voiceover)
+
+---
+
+## SVG import
+
+`SVGMobject` reads SVG content into vector paths. It parses gradients, `<text>`, and `<image>` from the source. A gradient fill becomes a `GradientVMobject`, a `<text>` node becomes a `Text` submobject, and an `<image>` node becomes an `ImageMobject`.
+
+Pass the markup through the `svgString` option, or fetch it from a server with `SVGMobject.fromUrl(url, options)`. The example below uses an inline string with a linear gradient and a text label.
+
+<SvgGradientTextExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, SVGMobject, Create } from 'manim-web';
+
+const scene = new Scene(container, { width: 800, height: 450 });
+
+const svgString = `
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+    <defs>
+      <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#58C4DD"/>
+        <stop offset="100%" stop-color="#D147BD"/>
+      </linearGradient>
+    </defs>
+    <rect x="10" y="10" width="100" height="40" rx="8" fill="url(#grad)"/>
+    <text x="60" y="72" font-size="14" fill="#ffffff" text-anchor="middle">manim-web</text>
+  </svg>`;
+
+const logo = new SVGMobject({ svgString, height: 3 });
+await scene.play(new Create(logo, { duration: 2 }));
+
+// Fetch from a URL instead:
+// const logo = await SVGMobject.fromUrl('./logo.svg', { height: 3 });
+```
+
+</details>
+
+**Learn More:** [**SVGMobject**](/api/classes/SVGMobject) · [**GradientVMobject**](/api/classes/GradientVMobject)
+
+---
+
+## Blend modes and themes
+
+Each mobject carries a blend mode. Call `setBlendMode(mode)` to change how its color mixes with what is behind it. The modes are `normal`, `additive`, `multiply`, `subtractive`, and `screen`. The three circles below use `additive`, so the overlaps glow.
+
+The theme system swaps the default colors for a whole scene. The built-in themes are `default`, `dark`, `light`, and `3b1b`. `setTheme(name, { scene })` recolors every mobject and the background at once. `registerTheme(name, palette)` adds a theme of your own. You can also set the background directly with `scene.backgroundColor`.
+
+<BlendModeThemeExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, Circle, setTheme, RED, GREEN, BLUE } from 'manim-web';
+
+const scene = new Scene(container, { width: 800, height: 450, backgroundColor: '#000000' });
+
+const red = new Circle({ radius: 1.4, color: RED, fillOpacity: 0.9 }).moveTo([-0.8, 0.5, 0]);
+const green = new Circle({ radius: 1.4, color: GREEN, fillOpacity: 0.9 }).moveTo([0.8, 0.5, 0]);
+const blue = new Circle({ radius: 1.4, color: BLUE, fillOpacity: 0.9 }).moveTo([0, -0.8, 0]);
+
+for (const circle of [red, green, blue]) {
+  circle.setBlendMode('additive');
+}
+scene.add(red, green, blue);
+
+// Re-skin the whole scene with a built-in theme.
+setTheme('3b1b', { scene });
+
+// Or set the background on its own.
+scene.backgroundColor = '#1a1a2e';
+```
+
+</details>
+
+**Learn More:** [**setTheme**](/api/functions/setTheme) · [**registerTheme**](/api/functions/registerTheme) · [**BLEND_MODES**](/api/variables/BLEND_MODES)

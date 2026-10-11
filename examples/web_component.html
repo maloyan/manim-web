@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      if (new URLSearchParams(location.search).has('embed'))
+        document.documentElement.classList.add('embed');
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ManimWeb - Web Component</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #1a1a2e;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        font-family: system-ui, sans-serif;
+      }
+      manim-scene {
+        border: 2px solid #333;
+        border-radius: 8px;
+        overflow: hidden;
+        display: block;
+      }
+      html.embed,
+      html.embed body {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden;
+        background: #000 !important;
+        width: 100%;
+        height: 100%;
+      }
+      html.embed body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      html.embed manim-scene {
+        border: none !important;
+        border-radius: 0 !important;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Zero-build embed: one HTML tag plus one module script. -->
+    <manim-scene width="800" height="450" background="#000000" controls></manim-scene>
+
+    <script type="module" src="./web_component.ts"></script>
+  </body>
+</html>
