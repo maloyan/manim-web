@@ -16,6 +16,12 @@ export {
 // Axes
 export { Axes, type AxesOptions } from './Axes';
 
+// CoordinateSystem (shared surface of Axes/NumberPlane)
+export { type CoordinateSystem } from './CoordinateSystem';
+
+// Scaling strategies (LinearBase/LogBase)
+export { ScaleBase, LinearBase, LogBase, type GetCustomLabelsOptions } from './scale';
+
 // Axes calculus toolkit option types (the toolkit is exposed via Axes methods)
 export { type VerticalLinesToGraphOptions, type SecantSlopeGroupOptions } from './axes-calculus';
 

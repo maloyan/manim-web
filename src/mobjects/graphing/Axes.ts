@@ -4,6 +4,7 @@ import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { VDict } from '../../core/VDict';
 import { NumberLine, NumberLineOptions } from './NumberLine';
+import { CoordinateSystem } from './CoordinateSystem';
 import { FunctionGraph, FunctionGraphOptions } from './FunctionGraph';
 import { MathTexImage } from '../../mobjects/text/MathTexImage';
 import { Line } from '../../mobjects/geometry/Line';
@@ -77,7 +78,7 @@ interface AxisLineOptions {
  * const point = axes.coordsToPoint(3, 2);
  * ```
  */
-export class Axes extends Group {
+export class Axes extends Group implements CoordinateSystem {
   /** The x-axis NumberLine */
   xAxis: NumberLine;
   /** The y-axis NumberLine */

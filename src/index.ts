@@ -307,6 +307,15 @@ export {
   type ContinuousMotionOptions,
 } from './mobjects/graphing';
 
+// --- graphing parity ---
+export {
+  type CoordinateSystem,
+  ScaleBase,
+  LinearBase,
+  LogBase,
+  type GetCustomLabelsOptions,
+} from './mobjects/graphing';
+
 // Text and LaTeX
 export {
   Text,
