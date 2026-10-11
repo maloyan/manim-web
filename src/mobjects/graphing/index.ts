@@ -34,6 +34,18 @@ export { FunctionGraph, type FunctionGraphOptions } from './FunctionGraph';
 // ImplicitFunction
 export { ImplicitFunction, type ImplicitFunctionOptions } from './ImplicitFunction';
 
+// Scalar-field color maps
+export { sampleColormap, valueToColor, VIRIDIS, INFERNO, COOLWARM } from './colormap';
+
+// Marching squares (iso-contour extraction)
+export { marchingSquares, type ContourSegment } from './marchingSquares';
+
+// HeatMap (2D scalar field)
+export { HeatMap, type HeatMapOptions, type ScalarField2D } from './HeatMap';
+
+// ContourPlot (iso-contour lines)
+export { ContourPlot, type ContourPlotOptions, type ContourField } from './ContourPlot';
+
 // ParametricFunction
 export { ParametricFunction, type ParametricFunctionOptions } from './ParametricFunction';
 
