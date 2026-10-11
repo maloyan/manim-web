@@ -77,6 +77,7 @@ export {
   DEFAULT_COLOR_SCHEME,
   MONOKAI_COLOR_SCHEME,
 } from './Code';
+export { type CodeToken, type CodeTokenLayoutParams } from './CodeTokenLayout';
 
 // MathTexParts - Single-string MathTex and partitioned MathTex
 export {

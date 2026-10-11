@@ -114,6 +114,16 @@ export {
   type TransformMatchingTexOptions,
 } from './TransformMatching';
 
+// --- code diff animation (best-manim) ---
+export {
+  TransformMatchingCode,
+  transformMatchingCode,
+  type TransformMatchingCodeOptions,
+  type CodeMatchBy,
+  type CodeMatchedPart,
+  type CodeFadingPart,
+} from './TransformMatchingCode';
+
 export {
   ApplyPointwiseFunction,
   applyPointwiseFunction,

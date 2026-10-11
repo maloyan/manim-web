@@ -3,10 +3,12 @@ import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import {
   type Token,
+  type TokenType,
   type CodeColorScheme,
   DEFAULT_COLOR_SCHEME,
   tokenizeLine,
 } from './CodeHighlighting';
+import { type CodeToken, computeCodeTokens } from './CodeTokenLayout';
 
 // Re-export all highlighting types and constants so existing imports from './Code' still work
 export {
@@ -278,6 +280,65 @@ export class Code extends VMobject {
       position: [this.position.x, this.position.y + worldY, this.position.z],
       tokens: this._tokenizedLines[index],
     };
+  }
+
+  /**
+   * Get a flat list of tokens with their world-space positions.
+   *
+   * The positions come from the same layout as the rendered block, computed
+   * without a 2D canvas so this also works in a headless environment.
+   * `TransformMatchingCode` uses this to match unchanged tokens between two
+   * Code blocks and animate only the difference.
+   *
+   * @returns One {@link CodeToken} per token, in reading order.
+   */
+  getCodeTokens(): CodeToken[] {
+    return computeCodeTokens({
+      lines: this._lines,
+      tokenizedLines: this._tokenizedLines,
+      fontSize: this._fontSize,
+      lineHeight: this._lineHeight,
+      backgroundPadding: this._backgroundPadding,
+      lineNumbers: this._lineNumbers,
+      position: [this.position.x, this.position.y, this.position.z],
+    });
+  }
+
+  /**
+   * Build a standalone Code mobject that renders a single token, styled like
+   * this block. The token keeps its syntax color, has no line numbers and no
+   * background. `TransformMatchingCode` uses this to animate single tokens.
+   *
+   * @param text - The token text.
+   * @param type - The syntax type that selects the color.
+   * @returns A new single-token Code mobject.
+   */
+  makeTokenMobject(text: string, type: TokenType): Code {
+    const tokenColor = this._colorScheme[type];
+    const scheme: CodeColorScheme = {
+      keyword: tokenColor,
+      string: tokenColor,
+      comment: tokenColor,
+      number: tokenColor,
+      function: tokenColor,
+      operator: tokenColor,
+      punctuation: tokenColor,
+      type: tokenColor,
+      default: tokenColor,
+      background: 'rgba(0, 0, 0, 0)',
+      lineNumber: tokenColor,
+    };
+    return new Code({
+      code: text,
+      language: 'text',
+      lineNumbers: false,
+      showBackground: false,
+      fontSize: this._fontSize,
+      fontFamily: this._fontFamily,
+      colorScheme: scheme,
+      tabWidth: this._tabWidth,
+      lineHeight: this._lineHeight,
+    });
   }
 
   /**
