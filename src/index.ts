@@ -379,6 +379,23 @@ export {
   type GetCustomLabelsOptions,
 } from './mobjects/graphing';
 
+// --- scalar-field visualization (heatmap / contour) ---
+export {
+  HeatMap,
+  type HeatMapOptions,
+  type ScalarField2D,
+  ContourPlot,
+  type ContourPlotOptions,
+  type ContourField,
+  sampleColormap,
+  valueToColor,
+  VIRIDIS,
+  INFERNO,
+  COOLWARM,
+  marchingSquares,
+  type ContourSegment,
+} from './mobjects/graphing';
+
 // Text and LaTeX
 export {
   Text,
@@ -523,6 +540,13 @@ export {
   // Convex hull
   ConvexHull3D,
   type ConvexHull3DOptions,
+  // Isosurface (marching cubes)
+  ImplicitSurface,
+  type ImplicitSurfaceOptions,
+  marchingCubes,
+  type MarchingCubesOptions,
+  type MarchingCubesResult,
+  type ScalarField3D,
 } from './mobjects/three-d';
 
 // --- 3D model import (best-manim) ---

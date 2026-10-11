@@ -34,11 +34,17 @@ export class DiGraph extends GenericGraph {
     super(options);
     this._directed = true;
 
-    // Recreate edge mobjects as arrows
+    // Recreate edge mobjects as arrows. The base constructor ran with
+    // `_directed` still false, so it built lines (and any edge labels); drop
+    // both and rebuild so edges become arrows and self-loops get a tip.
     for (const m of this._edgeMobjects.values()) {
       this.remove(m);
     }
+    for (const m of this._edgeLabelMobjects.values()) {
+      this.remove(m);
+    }
     this._edgeMobjects.clear();
+    this._edgeLabelMobjects.clear();
 
     for (const [source, target] of this._edges) {
       this._createEdgeMobject(source, target);
