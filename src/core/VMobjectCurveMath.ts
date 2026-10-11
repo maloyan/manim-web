@@ -186,7 +186,7 @@ function bezierEval(controls: number[][], t: number): number[] {
  * @param a - Start parameter in [0, 1]
  * @param b - End parameter in [0, 1], b >= a
  */
-function partialBezierPoints(controls: number[][], a: number, b: number): number[][] {
+export function partialBezierPoints(controls: number[][], a: number, b: number): number[][] {
   const n = controls.length;
   if (a === 1) {
     const lastPt = controls[n - 1];
@@ -210,7 +210,7 @@ function partialBezierPoints(controls: number[][], a: number, b: number): number
  *
  * @returns [integer index, fractional residue in [0, 1]]
  */
-function integerInterpolate(start: number, end: number, alpha: number): [number, number] {
+export function integerInterpolate(start: number, end: number, alpha: number): [number, number] {
   if (alpha >= 1) return [end - 1, 1];
   if (alpha <= 0) return [start, 0];
   const value = Math.floor(start + (end - start) * alpha);

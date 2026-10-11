@@ -1125,3 +1125,20 @@ export {
   counterclockwisePath,
 } from './utils/paths';
 export { clip, sigmoid, choose, binarySearch } from './utils/simpleFunctions';
+
+// --- utils/bezier (parity) ---
+export {
+  bezier,
+  partialBezierPoints,
+  splitBezier,
+  subdivideBezier,
+  bezierRemap,
+  interpolate,
+  integerInterpolate,
+  mid,
+  inverseInterpolate,
+  matchInterpolate,
+  getSmoothCubicBezierHandlePoints,
+  isClosed,
+  proportionsAlongBezierCurveForPoint,
+} from './utils/bezier';
