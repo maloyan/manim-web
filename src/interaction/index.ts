@@ -29,6 +29,19 @@ export { Clickable, makeClickable, type ClickableOptions } from './Clickable';
 export { MovablePoint, makeMovablePoint, type MovablePointOptions } from './MovablePoint';
 export { Slider, makeSlider, type SliderOptions } from './Slider';
 
+// Dynamic (continuous) matrix transformations
+export {
+  MatrixTracker,
+  makeMatrixTracker,
+  applyMatrixLive,
+  type Matrix2x2,
+  type MatrixSource,
+  type BasisVectorSource,
+  type DependentPoint,
+  type DynamicMatrixOptions,
+  type LiveMatrixBinding,
+} from './DynamicMatrix';
+
 // Selection
 export { SelectionManager, type SelectionManagerOptions } from './SelectionManager';
 
