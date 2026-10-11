@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.14.0](https://github.com/maloyan/manim-web/compare/v0.13.0...v0.14.0) (2026-10-11)
+
+
+### Features
+
+* continuous dynamic matrix transformations (MatrixTracker + applyMatrixLive) ([aeadd89](https://github.com/maloyan/manim-web/commit/aeadd8928c5e8eb4396f47e6ecf6d9bed74f9e65)), closes [#359](https://github.com/maloyan/manim-web/issues/359)
+* interactive slides — keep paused Player slides interactive (fixes [#449](https://github.com/maloyan/manim-web/issues/449)) ([108625b](https://github.com/maloyan/manim-web/commit/108625bbd09c83104ea03bafb8febf4a22b2dabc))
+* JSON scene serialization format (closes [#244](https://github.com/maloyan/manim-web/issues/244)) ([4d47647](https://github.com/maloyan/manim-web/commit/4d476471a14abe15d61952e6550b09519afb2148))
+* **player:** add export settings (fps/resolution/quality) and frame-accurate path ([afec6b5](https://github.com/maloyan/manim-web/commit/afec6b5de6748f8b4e30f6dce9b2fd5f18b7a2be)), closes [#539](https://github.com/maloyan/manim-web/issues/539)
+
+
+### Bug Fixes
+
+* **#536:** bias Line3D depth to stop mobile z-fighting ([f1d4875](https://github.com/maloyan/manim-web/commit/f1d48750b5b4012aff57525cff6a4baecd4f4015)), closes [#536](https://github.com/maloyan/manim-web/issues/536)
+* CyclicReplace single-arc path ([#448](https://github.com/maloyan/manim-web/issues/448)); regression-guard GrowFromPoint on DashedLine ([#535](https://github.com/maloyan/manim-web/issues/535)) ([09e76cf](https://github.com/maloyan/manim-web/commit/09e76cf548e02792facc6f7237a040080d85e14d))
+
+
+### Documentation
+
+* fix React/Vue examples, PR template, Getting Started, ARCHITECTURE.md, AGENTS.md ([fd7a246](https://github.com/maloyan/manim-web/commit/fd7a246364be3052e03795ea75bae6e1a37a4294)), closes [#549](https://github.com/maloyan/manim-web/issues/549) [#393](https://github.com/maloyan/manim-web/issues/393) [#397](https://github.com/maloyan/manim-web/issues/397) [#284](https://github.com/maloyan/manim-web/issues/284) [#401](https://github.com/maloyan/manim-web/issues/401) [#400](https://github.com/maloyan/manim-web/issues/400)
+
 ## [0.13.0](https://github.com/maloyan/manim-web/compare/v0.12.0...v0.13.0) (2026-10-11)
 
 
