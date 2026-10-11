@@ -1364,3 +1364,28 @@ export {
   type ReskinnableMobject,
   type ReskinnableScene,
 } from './utils/ThemeManager';
+
+// --- scene serialization (best-manim) ---
+// Type-aware scene/mobject serialization with an extensible registry.
+// NOTE: the single-mobject helpers are named `serializeSceneMobject` /
+// `deserializeSceneMobject` here because the top level already exports the
+// lower-level state helpers `serializeMobject` / `deserializeMobject` from
+// StateManager. The folder barrel keeps the short names.
+export {
+  serializeScene,
+  deserializeScene,
+  serializeMobject as serializeSceneMobject,
+  deserializeMobject as deserializeSceneMobject,
+  registerSerializableMobject,
+  unregisterSerializableMobject,
+  getSerializableTypes,
+  getSerializer,
+  type SerializedScene,
+  type SerializedMobject,
+  type SerializedTransform,
+  type SerializedStyle,
+  type MobjectSerializer,
+  type SceneLike,
+  type ContainerLike,
+  type Vec3,
+} from './serialization';
