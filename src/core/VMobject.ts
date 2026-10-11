@@ -26,6 +26,8 @@ import {
   anchorsFromPoints,
   smoothHandlePoints,
   chainFromAnchorsAndHandles,
+  appendPointsToPointList,
+  insertNCurvesToPointList,
 } from './VMobjectCurveMath';
 import { colorGradient } from './VMobjectColorGradient';
 import { roundCornersPoints } from './VMobjectRoundCorners';
@@ -374,6 +376,46 @@ export class VMobject extends VMobjectRendering {
       this._markDirtyUpward();
     }
     return this;
+  }
+
+  /**
+   * Append a shared-anchor cubic chain to this VMobject's points (Manim CE's
+   * `append_points`). When this path is non-empty the first appended anchor
+   * continues from the last existing anchor and is dropped, so the chain stays
+   * one continuous path with the 3k+1-point invariant. Chainable.
+   *
+   * @param points - Points to append (a shared-anchor chain on its own)
+   * @returns this for chaining
+   */
+  appendPoints(points: number[][]): this {
+    this._points3D = appendPointsToPointList(this._points3D, points);
+    this._geometryDirty = true;
+    this._markDirtyUpward();
+    return this;
+  }
+
+  /**
+   * Subdivide this path so it contains `n` more cubic curves without changing
+   * its shape (Manim CE's `insert_n_curves`). Chainable.
+   *
+   * @param n - Number of cubics to add
+   * @returns this for chaining
+   */
+  insertNCurves(n: number): this {
+    return this.setPoints(this.insertNCurvesToPointList(n, this._points3D));
+  }
+
+  /**
+   * Pure counterpart of {@link insertNCurves}: return a copy of `points` with
+   * `n` more cubics (Manim CE's `insert_n_curves_to_point_list`). Does not
+   * mutate this VMobject.
+   *
+   * @param n - Number of cubics to add
+   * @param points - Source shared-anchor cubic chain
+   * @returns New chain with `n` more cubics
+   */
+  insertNCurvesToPointList(n: number, points: number[][]): number[][] {
+    return insertNCurvesToPointList(n, points);
   }
 
   /**

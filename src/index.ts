@@ -1170,3 +1170,6 @@ export {
   proportionsAlongBezierCurveForPoint,
   pointLiesOnBezier,
 } from './utils/bezier';
+
+// --- geometry parity ---
+export { ArcPolygonFromArcs } from './mobjects/geometry';
