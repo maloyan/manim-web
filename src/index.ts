@@ -385,6 +385,19 @@ export {
   type TextStyleMaps,
   type TextStyleRun,
   buildStyledTextLines,
+  // --- typst parity ---
+  Typst,
+  MathTypst,
+  type TypstOptions,
+  type MathTypstOptions,
+  renderTypstToSVG,
+  preloadTypst,
+  isTypstLoaded,
+  setTypstCompiler,
+  type TypstRenderOptions,
+  type TypstRenderResult,
+  type TypstSvgCompiler,
+  // --- end typst parity ---
 } from './mobjects/text';
 
 // 3D Mobjects
