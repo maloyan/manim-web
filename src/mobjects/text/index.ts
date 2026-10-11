@@ -47,6 +47,20 @@ export { parseSVGPathData, svgToVMobjects, type SVGToVMobjectOptions } from './s
 // Tex - Manim compatibility alias
 export { Tex, type TexOptions } from './Tex';
 
+// --- typst parity ---
+// Typst - SVG vector-based Typst rendering via lazy-loaded WASM compiler
+export { Typst, MathTypst, type TypstOptions, type MathTypstOptions } from './Typst';
+export {
+  renderTypstToSVG,
+  preloadTypst,
+  isTypstLoaded,
+  setTypstCompiler,
+  type TypstRenderOptions,
+  type TypstRenderResult,
+  type TypstSvgCompiler,
+} from './TypstRenderer';
+// --- end typst parity ---
+
 // DecimalNumber - Animatable number display
 export { DecimalNumber, Integer, type DecimalNumberOptions } from './DecimalNumber';
 

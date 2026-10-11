@@ -5,17 +5,18 @@ This document records the public API coverage of manim-web against ManimCE
 
 ## Headline numbers
 
-| Metric                                              | Count                 |
-| --------------------------------------------------- | --------------------- |
-| Total ManimCE public symbols                        | 685                   |
-| EXISTS (ported)                                     | 427                   |
-| MISSING (feasible, not yet ported)                  | 2                     |
-| INFEASIBLE (out of scope for the browser port)      | 256                   |
-| **Feasible coverage** = EXISTS / (EXISTS + MISSING) | **427 / 429 = 99.5%** |
+| Metric                                              | Count                  |
+| --------------------------------------------------- | ---------------------- |
+| Total ManimCE public symbols                        | 685                    |
+| EXISTS (ported)                                     | 429                    |
+| MISSING (feasible, not yet ported)                  | 0                      |
+| INFEASIBLE (out of scope for the browser port)      | 256                    |
+| **Feasible coverage** = EXISTS / (EXISTS + MISSING) | **429 / 429 = 100.0%** |
 
-Every feasible ManimCE symbol is ported except the two Typst symbols below. If
-the Typst typesetter counts as INFEASIBLE (it needs a bundled WASM engine, like
-the native renderers), feasible coverage is 100%.
+Every feasible ManimCE public symbol is ported. The 256 INFEASIBLE symbols are
+the CLI, the config system, the Cairo and OpenGL renderers, file and sound
+writers, caching, hashing, and other host-side helpers that a browser port
+cannot run.
 
 ## Methodology
 
@@ -35,11 +36,7 @@ excluded from the coverage ratio.
 
 ## Remaining feasible-missing symbols
 
-- `Typst`, `MathTypst` (`mobject/text/typst_mobject.py`) - a Typst mobject needs
-  a Typst typesetting engine. In the browser that means bundling a multi-megabyte
-  WASM build of the Typst compiler. This is out of scope for the lightweight
-  port, the same way the Cairo and OpenGL renderers are. A future opt-in package
-  could add it. LaTeX math already works through `MathTex` / `MathTexImage`.
+None. Every feasible ManimCE 0.22.0 public symbol has a manim-web export.
 
 ## Notes on adapted ports
 
@@ -64,3 +61,8 @@ copy, because the browser port differs from the Python/OpenGL original:
   Loading API (`FontFace` + `document.fonts`), and no-ops safely in Node / SSR.
 - `get3dVmob*` (`mobject/three_d/three_d_utils.py`) - ported as pure functions
   over the shared-anchor cubic point chain.
+- `Typst`, `MathTypst` (`mobject/text/typst_mobject.py`) - ported through a
+  lazy-loaded WASM build of the Typst compiler (`@myriaddreamin/typst.ts`). The
+  compiler loads on first render through a dynamic `import()`, so the base
+  bundle and the Docs build stay light. Compile is async (CE's SVG import is
+  sync), so the mobject exposes a ready promise.
