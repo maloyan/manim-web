@@ -115,6 +115,62 @@ export function runFontString(run: TextStyleRun, base: RunFontBase): string {
 }
 
 // ---------------------------------------------------------------------------
+// Linear color gradient fill (Manim CE `Text(..., gradient=(A, B, ...))`)
+// ---------------------------------------------------------------------------
+
+/** One color stop of a linear gradient: an offset in [0, 1] and its CSS color. */
+export interface GradientStop {
+  offset: number;
+  color: string;
+}
+
+/**
+ * Build evenly-spaced gradient color stops from a color list.
+ *
+ * Two colors map to offsets [0, 1], three to [0, 0.5, 1], and n colors to
+ * offset i/(n-1). The color order is preserved. A single color is degenerate:
+ * it yields one stop at offset 0, which fills a solid color. An empty list
+ * yields no stops.
+ *
+ * This is pure, so the stop math is unit-testable without a real canvas.
+ */
+export function buildGradientStops(colors: string[]): GradientStop[] {
+  if (colors.length === 0) return [];
+  if (colors.length === 1) return [{ offset: 0, color: colors[0] }];
+  const last = colors.length - 1;
+  return colors.map((color, i) => ({ offset: i / last, color }));
+}
+
+/**
+ * True when `gradient` can drive a linear gradient fill: it exists and has at
+ * least two colors, as Manim CE requires.
+ */
+export function gradientIsActive(gradient: string[] | null | undefined): gradient is string[] {
+  return !!gradient && gradient.length >= 2;
+}
+
+/**
+ * Build a horizontal (left to right) `CanvasGradient` from `x0` to `x1` with
+ * evenly-spaced stops from `colors`. Returns null when `colors` is empty or the
+ * context cannot create a gradient (e.g. a mock without `createLinearGradient`).
+ */
+function buildLinearGradientFill(
+  ctx: CanvasRenderingContext2D,
+  colors: string[],
+  x0: number,
+  x1: number,
+): CanvasGradient | null {
+  const stops = buildGradientStops(colors);
+  if (stops.length === 0) return null;
+  if (typeof ctx.createLinearGradient !== 'function') return null;
+  const grad = ctx.createLinearGradient(x0, 0, x1, 0);
+  for (const stop of stops) {
+    grad.addColorStop(stop.offset, stop.color);
+  }
+  return grad;
+}
+
+// ---------------------------------------------------------------------------
 // Canvas measure + render for styled text
 // ---------------------------------------------------------------------------
 
@@ -135,6 +191,13 @@ export interface StyledTextParams {
   color: string;
   fillOpacity: number;
   strokeWidth: number;
+  /**
+   * Optional linear color gradient (2+ colors). When set, runs with no explicit
+   * color (no `t2c` match) fill with a horizontal left-to-right gradient that
+   * spans the text's rendered box. Runs with an explicit `t2c` color keep that
+   * color, so the gradient composes with `t2c` rather than overriding it.
+   */
+  gradient?: string[];
 }
 
 /** Shared derived layout values for a styled render. */
@@ -222,6 +285,13 @@ export function renderStyledTextToCanvas(
   ctx.textBaseline = 'top';
   ctx.textAlign = 'left';
 
+  // Build one gradient spanning the text box (padding..width-padding) in canvas
+  // space. Each glyph is drawn at its own x, so a shared gradient fill yields a
+  // smooth left-to-right gradient across the whole block. Null when inactive.
+  const gradientFill = gradientIsActive(params.gradient)
+    ? buildLinearGradientFill(ctx, params.gradient, padding, width - padding)
+    : null;
+
   for (let i = 0; i < styledLines.length; i++) {
     const runs = styledLines[i];
     const y = padding + i * scaledLineHeight;
@@ -243,16 +313,20 @@ export function renderStyledTextToCanvas(
 
     for (const run of runs) {
       ctx.font = runFontString(run, base);
-      const runColor = run.color || params.color;
+      // A run with an explicit t2c color keeps it. A run with no color uses the
+      // gradient when active, else the flat base color.
+      const runPaint: string | CanvasGradient = run.color
+        ? run.color
+        : (gradientFill ?? params.color);
       const runWidth = ctx.measureText(run.text).width;
 
       if (params.strokeWidth > 0) {
-        ctx.strokeStyle = runColor;
+        ctx.strokeStyle = runPaint;
         ctx.lineWidth = params.strokeWidth * RESOLUTION_SCALE;
         ctx.strokeText(run.text, currentX, y);
       }
 
-      ctx.fillStyle = runColor;
+      ctx.fillStyle = runPaint;
       ctx.globalAlpha = params.fillOpacity;
       ctx.fillText(run.text, currentX, y);
 

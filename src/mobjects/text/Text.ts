@@ -9,6 +9,7 @@ import {
   type TextStyleRun,
   type StyledTextParams,
   buildStyledTextLines,
+  gradientIsActive,
   hasStyleMaps,
   measureStyledText,
   renderStyledTextToCanvas,
@@ -52,6 +53,15 @@ export interface TextOptions {
   t2w?: Record<string, string | number>;
   /** Per-substring font-style map (text-to-slant), e.g. { x: 'italic' }. */
   t2s?: Record<string, string>;
+  /**
+   * Linear color gradient fill, as in Manim CE `Text(..., gradient=(A, B, ...))`.
+   * Provide 2+ CSS colors. The text fills with a horizontal left-to-right
+   * gradient that spans its rendered box, with the colors evenly spaced across
+   * [0, 1]. The gradient takes precedence over the flat `color`. It composes
+   * with `t2c`: a substring colored by `t2c` keeps that color, and only the
+   * remaining (un-colored) characters take the gradient.
+   */
+  gradient?: string[];
 }
 
 /** Resolution multiplier for crisp text on retina displays */
@@ -151,6 +161,8 @@ export class Text extends TexturedMobject {
 
   /** Per-substring style maps (t2c/t2w/t2s). Empty when no styling requested. */
   protected _styleMaps: TextStyleMaps = {};
+  /** Linear color gradient (2+ colors), or null when the fill is flat. */
+  protected _gradient: string[] | null = null;
   /** Cached glyph group (created lazily by loadGlyphs) */
   protected _glyphGroup: TextGlyphGroup | null = null;
 
@@ -187,10 +199,12 @@ export class Text extends TexturedMobject {
       t2c,
       t2w,
       t2s,
+      gradient,
     } = options;
 
     this._text = text;
     this._styleMaps = { t2c, t2w, t2s };
+    this._gradient = gradient ?? null;
     this._fontSize = fontSize;
     this._fontFamily = fontFamily;
     this._fontWeight = fontWeight;
@@ -253,6 +267,23 @@ export class Text extends TexturedMobject {
    */
   getStyledTextLines(): TextStyleRun[][] {
     return buildStyledTextLines(this._text, this._styleMaps);
+  }
+
+  /**
+   * Get the configured linear gradient colors, or null when the fill is flat.
+   * Returns a copy so callers cannot mutate the internal state.
+   */
+  getGradient(): string[] | null {
+    return this._gradient ? [...this._gradient] : null;
+  }
+
+  /**
+   * True when this Text renders through the styled-run canvas path: either a
+   * per-substring style map (t2c/t2w/t2s) or an active color gradient is set.
+   * Plain Text with none of these keeps the original flat render path.
+   */
+  protected _usesStyledPath(): boolean {
+    return hasStyleMaps(this._styleMaps) || gradientIsActive(this._gradient);
   }
 
   /**
@@ -331,7 +362,7 @@ export class Text extends TexturedMobject {
       return { lines: [], width: 0, height: 0 };
     }
 
-    if (hasStyleMaps(this._styleMaps)) {
+    if (this._usesStyledPath()) {
       return this._measureStyledText();
     }
 
@@ -367,7 +398,7 @@ export class Text extends TexturedMobject {
       return;
     }
 
-    if (hasStyleMaps(this._styleMaps)) {
+    if (this._usesStyledPath()) {
       this._renderStyledToCanvas();
       return;
     }
@@ -508,6 +539,7 @@ export class Text extends TexturedMobject {
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
+      gradient: this._gradient ?? undefined,
     };
   }
 
@@ -764,6 +796,7 @@ export class Text extends TexturedMobject {
       t2c: this._styleMaps.t2c,
       t2w: this._styleMaps.t2w,
       t2s: this._styleMaps.t2s,
+      gradient: this._gradient ?? undefined,
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     this._carryVisualSizeTo(copy);
