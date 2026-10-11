@@ -110,3 +110,26 @@ describe('Line3D scene context → LineMaterial.resolution', () => {
     scene.dispose();
   });
 });
+
+describe('Line3D depth bias against z-fighting (issue #536)', () => {
+  // On mobile GPUs the depth buffer is often 16-bit, half the precision of the
+  // 24-bit buffer desktop browsers get. A Line3D that is coplanar with a
+  // surface (e.g. a radius projected onto the z=0 grid plane) then z-fights:
+  // the same scene drops the line on one device and draws it on another. A
+  // negative polygon offset pulls the line slightly toward the camera so it
+  // wins the depth test consistently, regardless of depth-buffer precision.
+  it('enables a negative polygon offset on the LineMaterial', () => {
+    const line = new Line3D({ end: [1, 0, 0], lineWidth: 2 });
+    const mat = getMaterial(line);
+    expect(mat.polygonOffset).toBe(true);
+    // Negative factor and units bias the fragment depth toward the camera.
+    expect(mat.polygonOffsetFactor).toBeLessThan(0);
+    expect(mat.polygonOffsetUnits).toBeLessThan(0);
+  });
+
+  it('keeps the depth test enabled so real occlusion still works', () => {
+    const line = new Line3D({ end: [1, 1, 1], lineWidth: 2 });
+    const mat = getMaterial(line);
+    expect(mat.depthTest).toBe(true);
+  });
+});
