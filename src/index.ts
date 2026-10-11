@@ -559,6 +559,9 @@ export {
 // Image mobjects
 export { ImageMobject, type ImageMobjectOptions, type ImageFilterOptions } from './mobjects/image';
 
+// --- video (best-manim) ---
+export { VideoMobject, type VideoMobjectOptions } from './mobjects/video';
+
 // Frame/Screen mobjects
 export {
   ScreenRectangle,
