@@ -148,13 +148,18 @@ describe('quaternion properties', () => {
 
 describe('centroid and mapping properties', () => {
   it('midpoint equals the center of mass of the two points and their mean', () => {
+    // Collapse -0 to +0. `midpoint`/`centerOfMass` sum from a +0 accumulator, so
+    // they never return -0, but the direct mean `(a + b) / 2` yields -0 when both
+    // coordinates are -0. The two are mathematically equal (-0 === +0), so the
+    // exact-equality check must ignore the sign of zero.
+    const noNegZero = (x: number): number => (x === 0 ? 0 : x);
     fc.assert(
       fc.property(vec3, vec3, (a, b) => {
         const m = midpoint(a, b);
         const c = centerOfMass([a, b]);
         for (let d = 0; d < 3; d++) {
           expect(m[d]).toBe(c[d]);
-          expect(m[d]).toBe((a[d] + b[d]) / 2);
+          expect(noNegZero(m[d])).toBe(noNegZero((a[d] + b[d]) / 2));
         }
       }),
       { numRuns: 300 },
