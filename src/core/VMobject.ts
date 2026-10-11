@@ -18,6 +18,16 @@ import type { Point } from './VMobjectCurves';
 
 import { resamplePointList3D } from './VMobjectTransformAlignment';
 import { computePointBounds } from './PointBounds';
+import { isClosedPath } from './VMobjectGeometry';
+import {
+  pointFromProportionOnPath,
+  proportionFromPointOnPath,
+  partialPathPoints,
+  anchorsFromPoints,
+  smoothHandlePoints,
+  chainFromAnchorsAndHandles,
+} from './VMobjectCurveMath';
+import { colorGradient } from './VMobjectColorGradient';
 
 // Re-export Point type so existing `import { Point } from './VMobject'` keeps working.
 export type { Point } from './VMobjectCurves';
@@ -892,6 +902,142 @@ export class VMobject extends VMobjectRendering {
 
     this._markDirtyUpward();
 
+    return this;
+  }
+
+  // -----------------------------------------------------------------------
+  // Arc-length parametrization and partial curves
+  // -----------------------------------------------------------------------
+
+  /**
+   * Point at arc-length proportion `alpha` along this VMobject's curve.
+   *
+   * `alpha` is measured by cumulative arc length over all cubic segments, so
+   * `getPointFromProportion(0.5)` is the geometric midpoint of the whole path
+   * (not the midpoint of the middle segment). Matches Manim CE's
+   * `point_from_proportion`. Points are in this object's local space.
+   *
+   * @param alpha - Proportion in [0, 1]
+   * @returns Point as [x, y, z]
+   * @throws Error when the VMobject has no points
+   */
+  getPointFromProportion(alpha: number): Vector3Tuple {
+    return pointFromProportionOnPath(this._points3D, alpha);
+  }
+
+  /**
+   * Arc-length proportion of the point on this curve nearest to `point`.
+   *
+   * Monotone inverse of {@link getPointFromProportion}: for a point that lies
+   * on the curve it round-trips back to the same point at sampling resolution.
+   *
+   * @param point - Query point [x, y, z] in local space
+   * @returns Proportion in [0, 1]
+   */
+  proportionFromPoint(point: Vector3Tuple): number {
+    return proportionFromPointOnPath(this._points3D, point);
+  }
+
+  /**
+   * Replace this VMobject's points with the partial path of `vmobject`
+   * between arc-index proportions a and b. Port of Manim CE's
+   * `pointwise_become_partial`. Backs ShowPassingFlash on arbitrary VMobjects.
+   *
+   * @param vmobject - Source VMobject to take the partial path from
+   * @param a - Start proportion in [0, 1]
+   * @param b - End proportion in [0, 1]
+   * @returns this for chaining
+   */
+  pointwiseBecomePartial(vmobject: VMobject, a: number, b: number): this {
+    this.setPoints(partialPathPoints(vmobject.getLocalPoints(), a, b));
+    return this;
+  }
+
+  /**
+   * A new VMobject holding the portion of this curve between proportions a and b.
+   *
+   * For a closed path with a > b the subcurve wraps around the seam (the end
+   * portion [a, 1] followed by the start portion [0, b]), matching Manim CE's
+   * `get_subcurve`. Style is copied from this object.
+   *
+   * @param a - Start proportion in [0, 1]
+   * @param b - End proportion in [0, 1]
+   * @returns A new VMobject for the subcurve
+   */
+  getSubcurve(a: number, b: number): VMobject {
+    if (a > b && isClosedPath(this._points3D)) {
+      const head = this.copy();
+      head.pointwiseBecomePartial(this, a, 1);
+      const tail = this.copy();
+      tail.pointwiseBecomePartial(this, 0, b);
+      const headPoints = head.getLocalPoints();
+      const tailPoints = tail.getLocalPoints();
+      // Drop the tail's first anchor; it duplicates the head's last anchor.
+      head.setPoints(headPoints.concat(tailPoints.length > 0 ? tailPoints.slice(1) : []));
+      return head;
+    }
+    const sub = this.copy();
+    sub.pointwiseBecomePartial(this, a, b);
+    return sub;
+  }
+
+  // -----------------------------------------------------------------------
+  // Anchor modes: smooth / jagged
+  // -----------------------------------------------------------------------
+
+  /**
+   * Recompute handles so the path is a smooth C1-continuous spline through its
+   * anchors (Manim CE's `make_smooth`). Applies to every family member that
+   * owns points. Chainable.
+   *
+   * @returns this for chaining
+   */
+  makeSmooth(): this {
+    for (const member of this.familyMembersWithPoints()) {
+      const anchors = anchorsFromPoints(member.getLocalPoints());
+      if (anchors.length < 2) continue;
+      const { h1, h2 } = smoothHandlePoints(anchors);
+      member.setPoints(chainFromAnchorsAndHandles(anchors, h1, h2));
+    }
+    return this;
+  }
+
+  /**
+   * Recompute handles so every segment is a straight line between its anchors
+   * (Manim CE's `make_jagged`). Applies to every family member that owns
+   * points. Chainable.
+   *
+   * @returns this for chaining
+   */
+  makeJagged(): this {
+    for (const member of this.familyMembersWithPoints()) {
+      const anchors = anchorsFromPoints(member.getLocalPoints());
+      if (anchors.length < 2) continue;
+      member.setPointsAsCorners(anchors);
+    }
+    return this;
+  }
+
+  // -----------------------------------------------------------------------
+  // Color gradients
+  // -----------------------------------------------------------------------
+
+  /**
+   * Distribute colors across this object's submobjects along a gradient
+   * (Manim CE's `set_color_by_gradient` submobject variant). Each family member
+   * that owns points gets one interpolated color. With a single color this is
+   * equivalent to {@link setColor}.
+   *
+   * @param colors - Two or more gradient colors
+   * @returns this for chaining
+   */
+  setColorByGradient(...colors: string[]): this {
+    if (colors.length === 0) return this;
+    if (colors.length === 1) return this.setColor(colors[0]);
+    const members = this.familyMembersWithPoints();
+    if (members.length === 0) return this;
+    const gradient = colorGradient(colors, members.length);
+    members.forEach((member, i) => member.setColor(gradient[i]));
     return this;
   }
 
