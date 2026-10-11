@@ -57,6 +57,14 @@ export interface EdgeStyleOptions {
   tipLength?: number;
   /** For directed graphs, tip width. Default: 0.12 */
   tipWidth?: number;
+  /** Radius of a self-loop arc (edge from a vertex to itself). Default: 0.3 */
+  selfLoopRadius?: number;
+  /** Font size for a weight or label rendered on the edge. Default: 24 */
+  labelFontSize?: number;
+  /** Color for a weight or label rendered on the edge. Default: edge color */
+  labelColor?: string;
+  /** Gap between a straight edge and its label. Default: 0.2 */
+  labelBuff?: number;
 }
 
 /**

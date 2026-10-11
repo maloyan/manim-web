@@ -23,6 +23,15 @@ import {
   GenericGraphOptions,
 } from './graphTypes';
 import { computeLayout } from './layoutAlgorithms';
+import { Text } from '../text/Text';
+import {
+  createEdgeLabel,
+  createSelfLoopEdge,
+  edgeLabelString,
+  selfLoopLabelPoint,
+  straightEdgeLabelPoint,
+  DEFAULT_EDGE_LABEL_BUFF,
+} from './graphEdgeDecorations';
 
 export class GenericGraph extends Mobject {
   override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
@@ -42,6 +51,9 @@ export class GenericGraph extends Mobject {
 
   /** Map of edge key to Line/Arrow mobject */
   protected _edgeMobjects: Map<string, Mobject> = new Map();
+
+  /** Map of edge key to its weight/label Text mobject */
+  protected _edgeLabelMobjects: Map<string, Text> = new Map();
 
   /** Layout configuration */
   protected _layoutConfig: LayoutConfig;
@@ -172,8 +184,12 @@ export class GenericGraph extends Mobject {
     for (const m of this._edgeMobjects.values()) {
       this.remove(m);
     }
+    for (const m of this._edgeLabelMobjects.values()) {
+      this.remove(m);
+    }
     this._vertexMobjects.clear();
     this._edgeMobjects.clear();
+    this._edgeLabelMobjects.clear();
 
     // Create edges first (so they render behind vertices)
     for (const [source, target] of this._edges) {
@@ -222,31 +238,57 @@ export class GenericGraph extends Mobject {
     const cfg = this._edgeConfig.get(key);
     const style = { ...this._edgeStyle, ...cfg?.style };
 
-    // Shorten edge to not overlap with vertex circles
     const vertexRadius = this._vertexStyle.radius ?? 0.15;
-    const [startPos, endPos] = this._shortenEdge(sourcePos, targetPos, vertexRadius);
 
     let edge: Mobject;
-    if (this._directed) {
-      edge = new Arrow({
-        start: startPos,
-        end: endPos,
-        color: style.color,
-        strokeWidth: style.strokeWidth,
-        tipLength: style.tipLength,
-        tipWidth: style.tipWidth,
-      });
+    let labelPoint: Vector3Tuple;
+
+    if (source === target) {
+      // Self-loop: render a loop arc (with a tip when directed), not a line.
+      edge = createSelfLoopEdge(sourcePos, vertexRadius, style, this._directed);
+      labelPoint = selfLoopLabelPoint(sourcePos, vertexRadius, style);
     } else {
-      edge = new Line({
-        start: startPos,
-        end: endPos,
-        color: style.color,
-        strokeWidth: style.strokeWidth,
-      });
+      // Shorten edge to not overlap with vertex circles
+      const [startPos, endPos] = this._shortenEdge(sourcePos, targetPos, vertexRadius);
+
+      if (this._directed) {
+        edge = new Arrow({
+          start: startPos,
+          end: endPos,
+          color: style.color,
+          strokeWidth: style.strokeWidth,
+          tipLength: style.tipLength,
+          tipWidth: style.tipWidth,
+        });
+      } else {
+        edge = new Line({
+          start: startPos,
+          end: endPos,
+          color: style.color,
+          strokeWidth: style.strokeWidth,
+        });
+      }
+
+      labelPoint = straightEdgeLabelPoint(
+        startPos,
+        endPos,
+        style.labelBuff ?? DEFAULT_EDGE_LABEL_BUFF,
+      );
     }
 
     this._edgeMobjects.set(key, edge);
     this.add(edge);
+
+    // Render a weight/label on the edge when the config provides one.
+    const labelText = edgeLabelString(cfg);
+    if (labelText !== null) {
+      const label = createEdgeLabel(labelText, style);
+      // Position via shift (parent-local) so an empty (headless) Text is not
+      // asked for its center, which would warn.
+      label.shift(labelPoint);
+      this._edgeLabelMobjects.set(key, label);
+      this.add(label);
+    }
   }
 
   /**
@@ -406,6 +448,7 @@ export class GenericGraph extends Mobject {
         if (edge) {
           this.remove(edge);
           this._edgeMobjects.delete(key);
+          this._removeEdgeLabel(key);
           this._createEdgeMobject(source, target);
         }
       }
@@ -517,6 +560,7 @@ export class GenericGraph extends Mobject {
       this.remove(edge);
       this._edgeMobjects.delete(key);
     }
+    this._removeEdgeLabel(key);
 
     this._edgeConfig.delete(key);
     this._markDirty();
@@ -554,6 +598,21 @@ export class GenericGraph extends Mobject {
     return this._edgeMobjects.get(key);
   }
 
+  /**
+   * Get the weight/label Text mobject for an edge, if the edge has one.
+   */
+  getEdgeLabelMobject(source: VertexId, target: VertexId): Text | undefined {
+    const key = this._getEdgeKey(source, target);
+    return this._edgeLabelMobjects.get(key);
+  }
+
+  /**
+   * Check whether an edge is a self-loop (connects a vertex to itself).
+   */
+  isSelfLoop(source: VertexId, target: VertexId): boolean {
+    return source === target && this.hasEdge(source, target);
+  }
+
   // ========== Layout Operations ==========
 
   /**
@@ -587,11 +646,23 @@ export class GenericGraph extends Mobject {
         this.remove(edge);
         this._edgeMobjects.delete(key);
       }
+      this._removeEdgeLabel(key);
       this._createEdgeMobject(source, target);
     }
 
     this._markDirty();
     return this;
+  }
+
+  /**
+   * Remove and forget the label mobject for an edge, if any.
+   */
+  protected _removeEdgeLabel(key: string): void {
+    const label = this._edgeLabelMobjects.get(key);
+    if (label) {
+      this.remove(label);
+      this._edgeLabelMobjects.delete(key);
+    }
   }
 
   /**
