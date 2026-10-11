@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.15.0](https://github.com/maloyan/manim-web/compare/v0.14.0...v0.15.0) (2026-10-11)
+
+
+### Features
+
+* **geo:** add geographical maps module (2D choropleth + 3D globe) ([8a6d697](https://github.com/maloyan/manim-web/commit/8a6d69720544521ce15d69006764dea838815bb6)), closes [#296](https://github.com/maloyan/manim-web/issues/296)
+
+
+### Bug Fixes
+
+* **rate-functions:** floor spring damping ratio so damping:0 stays finite; format serialization README ([a145fa3](https://github.com/maloyan/manim-web/commit/a145fa3b104d0b37838e87ce1169930762dc3415))
+
+
+### Tests
+
+* add property-based tests for pure core modules ([#413](https://github.com/maloyan/manim-web/issues/413)) ([c36b8e2](https://github.com/maloyan/manim-web/commit/c36b8e2da80c26e5f54336f62336e05a83301a3f))
+* typecheck test files and remove bare Mobject ([#415](https://github.com/maloyan/manim-web/issues/415), [#426](https://github.com/maloyan/manim-web/issues/426)) ([0a54034](https://github.com/maloyan/manim-web/commit/0a540343635a169b3b44619cb59bc4b69431099a))
+
 ## [0.14.0](https://github.com/maloyan/manim-web/compare/v0.13.0...v0.14.0) (2026-10-11)
 
 
