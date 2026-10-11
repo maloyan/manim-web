@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.11.0](https://github.com/maloyan/manim-web/compare/v0.10.0...v0.11.0) (2026-10-11)
+
+
+### Features
+
+* **element:** <manim-scene> web component for zero-build embeds ([a83d9a4](https://github.com/maloyan/manim-web/commit/a83d9a4663aff7657c17fc8305b96ca9e412215c))
+* **export:** PNG frame export and deterministic WebCodecs encoder ([c987e00](https://github.com/maloyan/manim-web/commit/c987e002543c10f8d7ae845ec6bab83f28e0c8d7))
+* **three-d:** ModelMobject for glTF/OBJ 3D model import ([afc0189](https://github.com/maloyan/manim-web/commit/afc018931c8d1e944421409fcc156b6889884afe))
+* **video:** VideoMobject — HTML video as a movable mobject ([fc183bc](https://github.com/maloyan/manim-web/commit/fc183bc4eb306a66b319a53df853718071e57b86))
+
 ## [0.10.0](https://github.com/maloyan/manim-web/compare/v0.9.0...v0.10.0) (2026-10-11)
 
 
