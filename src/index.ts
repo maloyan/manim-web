@@ -1170,3 +1170,16 @@ export {
   proportionsAlongBezierCurveForPoint,
   pointLiesOnBezier,
 } from './utils/bezier';
+
+// --- three-d parity ---
+export {
+  get3dVmobGradientStartAndEndPoints,
+  get3dVmobStartCornerIndex,
+  get3dVmobEndCornerIndex,
+  get3dVmobStartCorner,
+  get3dVmobEndCorner,
+  get3dVmobUnitNormal,
+  get3dVmobStartCornerUnitNormal,
+  get3dVmobEndCornerUnitNormal,
+} from './mobjects/three-d/threeDVmobUtils';
+export { SpecialThreeDScene, type SpecialThreeDSceneOptions } from './core/SpecialThreeDScene';
