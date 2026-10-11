@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.5.0](https://github.com/maloyan/manim-web/compare/v0.4.0...v0.5.0) (2026-10-11)
+
+
+### Features
+
+* **core:** always_redraw + size-to-fit/match helpers on Mobject (parity) ([d9706e4](https://github.com/maloyan/manim-web/commit/d9706e458f0b78e18bd280553102fc7783ebd9fc))
+* **core:** arc-length proportion, subcurve, smooth/jagged + color gradient on VMobject (parity) ([1313ca3](https://github.com/maloyan/manim-web/commit/1313ca3347d071dac47df0ceadd408ad6a49bf0f))
+* **graphing:** Axes addCoordinates + horizontal/lines-to-point (parity) ([7b431bd](https://github.com/maloyan/manim-web/commit/7b431bd10bb00c86b478c323937ddfa2868efd2e))
+* **text:** MathTex setColorByTex + Text per-substring color (parity) ([4abdb72](https://github.com/maloyan/manim-web/commit/4abdb7247ecbaa5b8629a912f96059d38575c034))
+
+
+### Bug Fixes
+
+* **graphing:** drop redundant calculus value exports flagged by knip ([#552](https://github.com/maloyan/manim-web/issues/552)) ([0ac75ec](https://github.com/maloyan/manim-web/commit/0ac75eca9f616681b8d0e77e7cf66df07e3c6944))
+
 ## [0.4.0](https://github.com/maloyan/manim-web/compare/v0.3.24...v0.4.0) (2026-10-10)
 
 
