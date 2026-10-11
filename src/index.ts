@@ -1236,6 +1236,20 @@ export {
   rgbToHsv,
 } from './utils/color';
 
+// --- perceptual color interpolation (Oklab / Oklch, opt-in) ---
+export {
+  colorToOklab,
+  oklabToColor,
+  colorToOklch,
+  oklchToColor,
+  oklabToOklch,
+  oklchToOklab,
+  interpolateColorOklab,
+  interpolateColorOklch,
+  type Oklab,
+  type Oklch,
+} from './utils/oklab';
+
 // --- color classes (parity) ---
 export {
   ManimColor,
