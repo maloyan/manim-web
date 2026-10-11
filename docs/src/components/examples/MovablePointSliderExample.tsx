@@ -38,8 +38,10 @@ async function animate(scene: any) {
     },
   });
 
-  void point;
-  void slider;
+  // MovablePoint and Slider do not add themselves to the scene, so add them
+  // here. Without this the example shows neither control (see issue #602).
+  scene.add(point, slider);
+  scene.render();
 }
 
 export default function MovablePointSliderExample() {
