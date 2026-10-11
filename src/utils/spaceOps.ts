@@ -21,6 +21,8 @@ import type { Vector3Tuple } from '../core/MobjectTypes';
 import { DOWN, OUT, RIGHT, UP } from '../core/MobjectTypes';
 import type { Complex } from '../mobjects/value-tracker';
 import { crossVec, lengthVec, normalizeVec } from './vectors';
+import { adjacentPairs } from './iterables';
+import { triangulatePolygon } from './triangulate';
 
 const TAU = 2 * Math.PI;
 
@@ -398,6 +400,38 @@ function perpendicularBisector(
   ];
 }
 
+// --- matrices and winding ----------------------------------------------------
+
+/**
+ * A `dim` x `dim` matrix of 0/1 flags that marks the band near the main
+ * diagonal (ManimCE `thick_diagonal`). An entry is 1 when the absolute index
+ * difference is less than `thickness`, else 0.
+ */
+function thickDiagonal(dim: number, thickness = 2): number[][] {
+  const out: number[][] = [];
+  for (let r = 0; r < dim; r++) {
+    const row: number[] = [];
+    for (let c = 0; c < dim; c++) row.push(Math.abs(r - c) < thickness ? 1 : 0);
+    out.push(row);
+  }
+  return out;
+}
+
+/**
+ * The number of times the polygon `points` winds around the origin
+ * (ManimCE `get_winding_number`). The orientation is positive counterclockwise.
+ */
+function getWindingNumber(points: number[][]): number {
+  let totalAngle = 0;
+  for (const [p1, p2] of adjacentPairs(points)) {
+    const rawAngle = angleOfVector(p2) - angleOfVector(p1) + Math.PI;
+    // Python-style modulo: the result is always non-negative for a positive TAU.
+    const dAngle = (((rawAngle % TAU) + TAU) % TAU) - Math.PI;
+    totalAngle += dAngle;
+  }
+  return totalAngle / TAU;
+}
+
 // --- public API (camelCase; ManimCE space_ops parity) ------------------------
 
 export {
@@ -417,7 +451,11 @@ export {
   angleOfVector,
   angleBetweenVectors,
   getUnitNormal,
+  compassDirections,
   regularVertices,
+  thickDiagonal,
+  getWindingNumber,
+  triangulatePolygon as earclipTriangulation,
   complexToR3,
   r3ToComplex,
   complexFuncToR3Func,

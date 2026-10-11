@@ -11,6 +11,11 @@ import {
   uniqChain,
   powerset,
   hashObj,
+  allElementsAreInstances,
+  concatenateLists,
+  listify,
+  removeNones,
+  makeEvenByCycling,
 } from './iterables';
 
 describe('iterables (ManimCE parity)', () => {
@@ -86,5 +91,65 @@ describe('iterables (ManimCE parity)', () => {
     expect(hashObj(new Set([1, 2, 3]))).toBe(hashObj(new Set([3, 2, 1])));
     expect(hashObj([1, 2])).not.toBe(hashObj([2, 1]));
     expect(typeof hashObj('x')).toBe('number');
+  });
+});
+
+describe('allElementsAreInstances', () => {
+  it('is true when every element is an instance of the class', () => {
+    expect(allElementsAreInstances([new Map(), new Map()], Map)).toBe(true);
+  });
+
+  it('is false when any element is not an instance', () => {
+    expect(allElementsAreInstances([new Map(), new Set()], Map)).toBe(false);
+  });
+
+  it('is true for an empty iterable', () => {
+    expect(allElementsAreInstances([], Map)).toBe(true);
+  });
+});
+
+describe('concatenateLists', () => {
+  it('combines iterables into one flat list', () => {
+    expect(concatenateLists([1, 2], [3, 4], [5])).toEqual([1, 2, 3, 4, 5]);
+  });
+
+  it('returns an empty list when given nothing', () => {
+    expect(concatenateLists<number>()).toEqual([]);
+  });
+});
+
+describe('listify', () => {
+  it('wraps a string in a single-element array', () => {
+    expect(listify('str')).toEqual(['str']);
+  });
+
+  it('spreads an iterable', () => {
+    expect(listify([1, 2])).toEqual([1, 2]);
+  });
+
+  it('wraps a non-iterable value', () => {
+    expect(listify(5)).toEqual([5]);
+  });
+});
+
+describe('removeNones', () => {
+  it('drops falsy values and keeps truthy ones', () => {
+    expect(removeNones(['m', '', 'l', 0, 42, false, true])).toEqual(['m', 'l', 42, true]);
+  });
+});
+
+describe('makeEvenByCycling', () => {
+  it('cycles the shorter iterable to match the longer one', () => {
+    expect(makeEvenByCycling([1, 2], [3, 4, 5, 6])).toEqual([
+      [1, 2, 1, 2],
+      [3, 4, 5, 6],
+    ]);
+  });
+
+  it('cycles with an odd target length', () => {
+    expect(makeEvenByCycling([1, 2], [3, 4, 5, 6, 7])).toEqual([
+      [1, 2, 1, 2, 1],
+      [3, 4, 5, 6, 7],
+    ]);
   });
 });

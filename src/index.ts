@@ -41,6 +41,19 @@ export {
   SEMIBOLD,
   HEAVY,
   ULTRAHEAVY,
+  ULTRALIGHT,
+  SEMILIGHT,
+  BOOK,
+  ULTRABOLD,
+  ITALIC,
+  OBLIQUE,
+  DEFAULT_WAIT_TIME,
+  DEFAULT_POINTWISE_FUNCTION_RUN_TIME,
+  DEFAULT_POINT_DENSITY_2D,
+  DEFAULT_POINT_DENSITY_1D,
+  SCALE_FACTOR_PER_FONT_POINT,
+  START_X,
+  START_Y,
   LineJointType,
   CapStyleType,
 } from './constants/parity';
@@ -65,6 +78,7 @@ export { AnimateProxy } from './core/AnimateProxy';
 export { UP, DOWN, LEFT, RIGHT, IN, OUT, ORIGIN, UL, UR, DL, DR } from './core/Mobject';
 export { VMobject, type Point } from './core/VMobject';
 export { VGroup } from './core/VGroup';
+export { CurvesAsSubmobjects } from './core/VMobjectCurveUtils';
 export { VDict, VectorizedPoint } from './core/VDict';
 export { Group } from './core/Group';
 export { Scene, type SceneOptions, type SceneExportOptions } from './core/Scene';
@@ -195,6 +209,9 @@ export {
   type SurroundingRectangleOptions,
   type UnderlineOptions,
   type CrossOptions,
+  // Labeled mobjects
+  Label,
+  type LabelOptions,
   // Extended polygon shapes
   RoundedRectangle,
   type RoundedRectangleOptions,
@@ -386,6 +403,7 @@ export {
   type Arrow3DOptions,
   // Surfaces
   Surface3D,
+  Surface3D as Surface,
   type Surface3DOptions,
   ParametricSurface,
   SurfacePresets,
@@ -1070,10 +1088,15 @@ export {
   listUpdate,
   tuplify,
   makeEven,
+  makeEvenByCycling,
   stretchArrayToLength,
   uniqChain,
   powerset,
   hashObj,
+  allElementsAreInstances,
+  concatenateLists,
+  listify,
+  removeNones,
 } from './utils/iterables';
 export { Pixels, Degrees, Munits, Percent } from './utils/unit';
 export {
@@ -1102,7 +1125,11 @@ export {
   angleOfVector,
   angleBetweenVectors,
   getUnitNormal,
+  compassDirections,
   regularVertices,
+  thickDiagonal,
+  getWindingNumber,
+  earclipTriangulation,
   complexToR3,
   r3ToComplex,
   complexFuncToR3Func,
@@ -1141,4 +1168,5 @@ export {
   getSmoothCubicBezierHandlePoints,
   isClosed,
   proportionsAlongBezierCurveForPoint,
+  pointLiesOnBezier,
 } from './utils/bezier';

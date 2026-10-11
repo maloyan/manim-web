@@ -70,6 +70,49 @@ export const HEAVY = 'HEAVY';
 /** Ultraheavy font weight. */
 export const ULTRAHEAVY = 'ULTRAHEAVY';
 
+/** Ultralight font weight. */
+export const ULTRALIGHT = 'ULTRALIGHT';
+
+/** Semilight font weight. */
+export const SEMILIGHT = 'SEMILIGHT';
+
+/** Book font weight. */
+export const BOOK = 'BOOK';
+
+/** Ultrabold font weight. */
+export const ULTRABOLD = 'ULTRABOLD';
+
+// --- Font slants (Pango names) ---
+
+/** Italic font slant. */
+export const ITALIC = 'ITALIC';
+
+/** Oblique font slant. */
+export const OBLIQUE = 'OBLIQUE';
+
+// --- Simple defaults (verbatim from ManimCE `constants.py`) ---
+
+/** Default run time of a wait animation, in seconds. */
+export const DEFAULT_WAIT_TIME = 1.0;
+
+/** Default run time of a pointwise function animation, in seconds. */
+export const DEFAULT_POINTWISE_FUNCTION_RUN_TIME = 3.0;
+
+/** Default sample density for a 2D region. */
+export const DEFAULT_POINT_DENSITY_2D = 25;
+
+/** Default sample density for a 1D path. */
+export const DEFAULT_POINT_DENSITY_1D = 10;
+
+/** World-space scale factor applied per font point. */
+export const SCALE_FACTOR_PER_FONT_POINT = 1 / 960;
+
+/** Default horizontal start offset, in pixels. */
+export const START_X = 30;
+
+/** Default vertical start offset, in pixels. */
+export const START_Y = 20;
+
 // --- Enums ---
 
 /** Collection of available line joint types. */

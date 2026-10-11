@@ -29,6 +29,10 @@ import {
   shoelaceDirection,
   sphericalToCartesian,
   zToVector,
+  compassDirections,
+  thickDiagonal,
+  getWindingNumber,
+  earclipTriangulation,
 } from './spaceOps';
 
 const close = (a: number, b: number, eps = 1e-9): boolean => Math.abs(a - b) < eps;
@@ -289,5 +293,76 @@ describe('perpendicularBisector', () => {
     expect(close(a[0], 0)).toBe(true);
     expect(close(b[0], 0)).toBe(true);
     expect(close((a[1] + b[1]) / 2, 0)).toBe(true);
+  });
+});
+
+describe('compassDirections', () => {
+  it('returns n unit directions starting at RIGHT by default', () => {
+    const dirs = compassDirections(4);
+    expect(dirs.length).toBe(4);
+    expectVec(dirs[0], [1, 0, 0]);
+    expectVec(dirs[1], [0, 1, 0]);
+    expectVec(dirs[2], [-1, 0, 0]);
+    expectVec(dirs[3], [0, -1, 0]);
+  });
+
+  it('honours a custom start vector', () => {
+    const dirs = compassDirections(2, [0, 1, 0]);
+    expectVec(dirs[0], [0, 1, 0]);
+    expectVec(dirs[1], [0, -1, 0]);
+  });
+});
+
+describe('thickDiagonal', () => {
+  it('marks the band of width `thickness` around the diagonal', () => {
+    expect(thickDiagonal(3)).toEqual([
+      [1, 1, 0],
+      [1, 1, 1],
+      [0, 1, 1],
+    ]);
+  });
+
+  it('with thickness 1 is the identity pattern', () => {
+    expect(thickDiagonal(3, 1)).toEqual([
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+    ]);
+  });
+});
+
+describe('getWindingNumber', () => {
+  it('is 1 for a CCW unit square around the origin', () => {
+    const square = [
+      [1, 1, 0],
+      [-1, 1, 0],
+      [-1, -1, 0],
+      [1, -1, 0],
+    ];
+    expect(close(getWindingNumber(square), 1, 1e-9)).toBe(true);
+  });
+
+  it('is 0 for a polygon that does not enclose the origin', () => {
+    const square = [
+      [1, 1, 0],
+      [3, 1, 0],
+      [3, 3, 0],
+      [1, 3, 0],
+    ];
+    expect(close(getWindingNumber(square), 0, 1e-9)).toBe(true);
+  });
+});
+
+describe('earclipTriangulation', () => {
+  it('triangulates a square into two triangles (6 indices)', () => {
+    const square = [
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ];
+    const indices = earclipTriangulation(square);
+    expect(indices.length).toBe(6);
+    expect(indices.every((i) => i >= 0 && i < 4)).toBe(true);
   });
 });
