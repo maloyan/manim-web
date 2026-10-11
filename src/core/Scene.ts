@@ -6,7 +6,7 @@ import { Mobject } from './Mobject';
 import { Animation } from '../animation/Animation';
 import { AnimationGroup } from '../animation/AnimationGroup';
 import { Timeline } from '../animation/Timeline';
-import { MANIM_BACKGROUND } from '../constants/colors';
+import { getActiveTheme } from '../utils/ThemeManager';
 import { VMobject } from './VMobject';
 import { SceneStateManager, SceneSnapshot } from './StateManager';
 import { AudioManager, type AddSoundOptions, type AudioTrack } from './AudioManager';
@@ -154,7 +154,7 @@ export class Scene {
     const {
       width,
       height,
-      backgroundColor = MANIM_BACKGROUND,
+      backgroundColor = getActiveTheme().background,
       frameWidth = 14,
       frameHeight = 8,
       targetFps = 60,
@@ -1425,6 +1425,22 @@ export class Scene {
    */
   getHeight(): number {
     return this._renderer.height;
+  }
+
+  /**
+   * Get the scene background color, as a THREE.Color.
+   */
+  get backgroundColor(): THREE.Color {
+    const color = this._renderer.backgroundColor;
+    return color instanceof THREE.Color ? color : new THREE.Color(color);
+  }
+
+  /**
+   * Set the scene background color. Accepts a THREE.Color or a CSS color string.
+   * Used by {@link setTheme} to re-skin an existing scene.
+   */
+  set backgroundColor(color: THREE.Color | string) {
+    this._renderer.backgroundColor = color;
   }
 
   /**

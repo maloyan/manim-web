@@ -93,6 +93,34 @@ export {
   type Matrix2D,
 } from './core/LinearTransformationScene';
 export { AudioManager, type AudioTrack, type AddSoundOptions } from './core/AudioManager';
+
+// --- voiceover (best-manim) ---
+export {
+  Voiceover,
+  type VoiceoverOptions,
+  type VoiceoverCallback,
+  type VoiceoverTracker,
+  type VoiceoverAudioOptions,
+  type VoiceoverAudioScheduler,
+} from './audio/Voiceover';
+export {
+  VoiceoverScene,
+  type VoiceoverSceneOptions,
+  type VoiceoverSceneAudioOptions,
+} from './audio/VoiceoverScene';
+export {
+  setSpeechSynthesizer,
+  getSpeechSynthesizer,
+  isSpeechSupported,
+  WebSpeechSynthesizer,
+  type SpeechSynthesizer,
+  type SpeechUtteranceHandle,
+  type SpeechOptions,
+  type SpeechBoundaryInfo,
+} from './audio/speechSynthesizer';
+export { parseBookmarks, type Bookmark, type ParsedTranscript } from './audio/bookmarks';
+// --- end voiceover ---
+
 export { Renderer, type RendererOptions, type IRenderer } from './core/Renderer';
 export { NullRenderer } from './core/NullRenderer';
 export {
@@ -537,6 +565,16 @@ export {
   VMobjectFromSVGPath,
   type SVGMobjectOptions,
   type VMobjectFromSVGPathOptions,
+  // --- svg enhancements (best-manim) ---
+  type SVGMobjectFromUrlOptions,
+  GradientVMobject,
+  type GradientVMobjectOptions,
+  type SvgGradient,
+  type SvgGradientStop,
+  type SvgGradientType,
+  type SvgFetcher,
+  type SvgFetchResponse,
+  // --- end svg enhancements ---
 } from './mobjects/svg';
 
 // Graph mobjects for network visualization
@@ -1056,6 +1094,16 @@ export { SelectionManager, type SelectionManagerOptions } from './interaction';
 // Interaction - Camera Controls
 export { OrbitControls, type OrbitControlsOptions } from './interaction';
 
+// --- explorable interactivity (best-manim) ---
+export {
+  MovablePoint,
+  makeMovablePoint,
+  type MovablePointOptions,
+  Slider,
+  makeSlider,
+  type SliderOptions,
+} from './interaction';
+
 // Export
 export {
   GifExporter,
@@ -1263,3 +1311,26 @@ export {
   type ManimSceneFactory,
   type ManimSceneInstance,
 } from './integrations/webcomponent';
+
+// --- blend modes + themes (best-manim) ---
+// `setBlendMode` / `getBlendMode` are methods on Mobject. The BlendMode type,
+// blend helpers, and the ThemeManager API are exported here.
+export {
+  type BlendMode,
+  BLEND_MODES,
+  blendModeToThree,
+  applyBlendMode,
+} from './rendering/blendModes';
+export {
+  registerTheme,
+  setTheme,
+  getTheme,
+  getActiveTheme,
+  getThemeNames,
+  resetThemes,
+  type Theme,
+  type ActiveTheme,
+  type SetThemeOptions,
+  type ReskinnableMobject,
+  type ReskinnableScene,
+} from './utils/ThemeManager';
