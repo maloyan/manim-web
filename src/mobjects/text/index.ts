@@ -11,6 +11,9 @@ export { Text, type TextOptions } from './Text';
 // Per-substring style runs (t2c/t2w/t2s layout model for Text)
 export { type TextStyleMaps, type TextStyleRun, buildStyledTextLines } from './textStyleRuns';
 
+// Linear color gradient fill for Text (pure stop-builder; unit-testable)
+export { type GradientStop, buildGradientStops } from './textStyleRuns';
+
 // Glyph vector extraction (for stroke-draw animation)
 export { GlyphVMobject, type GlyphVMobjectOptions } from './GlyphVMobject';
 export { TextGlyphGroup, type TextGlyphGroupOptions } from './TextGlyphGroup';
