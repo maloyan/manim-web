@@ -1060,3 +1060,26 @@ export {
   hsvToRgb,
   rgbToHsv,
 } from './utils/color';
+
+// --- utils/iterables/unit/family/debug (parity) ---
+export {
+  adjacentNTuples,
+  adjacentPairs,
+  removeListRedundancies,
+  listDifferenceUpdate,
+  listUpdate,
+  tuplify,
+  makeEven,
+  stretchArrayToLength,
+  uniqChain,
+  powerset,
+  hashObj,
+} from './utils/iterables';
+export { Pixels, Degrees, Munits, Percent } from './utils/unit';
+export {
+  extractMobjectFamilyMembers,
+  restructureListToExcludeCertainFamilyMembers,
+  indexLabels,
+  printFamily,
+  type IndexLabelsOptions,
+} from './utils/debug';
