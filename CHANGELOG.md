@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.13.0](https://github.com/maloyan/manim-web/compare/v0.12.0...v0.13.0) (2026-10-11)
+
+
+### Features
+
+* animated GIF support via AnimatedImageMobject ([25707f6](https://github.com/maloyan/manim-web/commit/25707f630e6eb614fb11e3f54692f0863afd6314)), closes [#2950](https://github.com/maloyan/manim-web/issues/2950)
+* **examples:** add in-browser manim-web playground ([b4b4113](https://github.com/maloyan/manim-web/commit/b4b4113a1b59ca6c3dd74e5dd413724e4634c0ec))
+* **rate-functions:** add spring physics and custom easing ([c0d2c51](https://github.com/maloyan/manim-web/commit/c0d2c51b99f2672f11d3df16043ef6513c14cd90))
+* TransformMatchingCode for animating Code diffs (ManimCE [#4103](https://github.com/maloyan/manim-web/issues/4103)) ([a30164e](https://github.com/maloyan/manim-web/commit/a30164e54b2b0f280a5f4df01893d932753b2bf7))
+
+
+### Documentation
+
+* BEYOND-PARITY.md — researched ManimCE gaps and the manim-web response ([fefa0fe](https://github.com/maloyan/manim-web/commit/fefa0fe5e3d0c29b4f3acd151dbb6b026a85df82))
+* document and add examples for 0.11-0.12 features ([8fa921c](https://github.com/maloyan/manim-web/commit/8fa921c6b9e7c4b957f05bc8afb1006f1afdaa36))
+
 ## [0.12.0](https://github.com/maloyan/manim-web/compare/v0.11.0...v0.12.0) (2026-10-11)
 
 
