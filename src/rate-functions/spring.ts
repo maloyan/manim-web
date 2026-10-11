@@ -60,7 +60,10 @@ const resolveSpring = (options: SpringOptions): { omega0: number; zeta: number }
   const damping = options.damping ?? DEFAULT_DAMPING;
   const mass = options.mass ?? DEFAULT_MASS;
   const omega0 = Math.sqrt(stiffness / mass);
-  const zeta = damping / (2 * Math.sqrt(stiffness * mass));
+  // Floor the damping ratio to a small positive value. A frictionless spring
+  // (damping 0, zeta 0) never settles, so its settle time is infinite and the
+  // normalized position is NaN. The floor keeps a heavily underdamped curve.
+  const zeta = Math.max(damping / (2 * Math.sqrt(stiffness * mass)), 1e-3);
   return { omega0, zeta };
 };
 

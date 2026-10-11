@@ -95,6 +95,15 @@ describe('spring', () => {
     const lots = Math.max(...sample(spring({ bounce: 0.8 }), 200));
     expect(lots).toBeGreaterThan(little);
   });
+
+  it('stays finite for zero damping (a frictionless spring)', () => {
+    const f = spring({ damping: 0 });
+    expect(f(0)).toBe(0);
+    expect(f(1)).toBeCloseTo(1, 5);
+    for (const v of sample(f, 50)) {
+      expect(Number.isFinite(v)).toBe(true);
+    }
+  });
 });
 
 describe('cubicBezier', () => {
