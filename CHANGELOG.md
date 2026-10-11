@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.10.0](https://github.com/maloyan/manim-web/compare/v0.9.0...v0.10.0) (2026-10-11)
+
+
+### Features
+
+* **text:** Typst + MathTypst mobjects via lazy-loaded Typst WASM (parity) ([fa2b82e](https://github.com/maloyan/manim-web/commit/fa2b82eb9bd4638d074dd2e293e86ede5763678d))
+
+
+### Documentation
+
+* PARITY.md to 100% feasible coverage (Typst shipped) ([b681036](https://github.com/maloyan/manim-web/commit/b681036016d8fb314b62fc566b8b065a25901b1e))
+
 ## [0.9.0](https://github.com/maloyan/manim-web/compare/v0.8.0...v0.9.0) (2026-10-11)
 
 
