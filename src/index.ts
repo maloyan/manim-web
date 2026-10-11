@@ -331,6 +331,10 @@ export {
   type TitleOptions,
   type MarkdownTextOptions,
   type StyledTextSegment,
+  // Per-substring style runs (t2c/t2w/t2s)
+  type TextStyleMaps,
+  type TextStyleRun,
+  buildStyledTextLines,
 } from './mobjects/text';
 
 // 3D Mobjects
@@ -764,6 +768,7 @@ export {
 export { UpdateFromFunc, updateFromFunc } from './animation/UpdateFromFunc';
 export { UpdateFromAlphaFunc, updateFromAlphaFunc } from './animation/UpdateFromAlphaFunc';
 export { maintainPositionRelativeTo } from './animation/MaintainPositionRelativeTo';
+export { alwaysRedraw } from './animation/AlwaysRedraw';
 
 // Number animations
 export {

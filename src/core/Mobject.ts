@@ -770,6 +770,9 @@ export abstract class Mobject {
   getHeight(): number {
     return this.getBoundingBox().height;
   }
+  getDepth(): number {
+    return this.getBoundingBox().depth;
+  }
   /** @deprecated Use getBoundingBox() instead. */
   _getBoundingBox(): { width: number; height: number; depth: number } {
     return this.getBoundingBox();
@@ -803,6 +806,67 @@ export abstract class Mobject {
   }
   center(): this {
     return this.moveTo([0, 0, 0]);
+  }
+
+  // ── Size-to-fit / match helpers ──────────────────────────────────
+  // Manim CE parity: scale uniformly so one dimension hits a target size,
+  // or match another mobject's size or center coordinate. A current size of
+  // 0 along the measured axis gives no finite scale factor, so those calls
+  // are no-ops (matching CE, which cannot grow a zero-extent dimension).
+
+  /** Scale uniformly so the width becomes `width`. */
+  scaleToFitWidth(width: number): this {
+    const current = this.getWidth();
+    if (current === 0) return this;
+    return this.scale(width / current);
+  }
+  /** Scale uniformly so the height becomes `height`. */
+  scaleToFitHeight(height: number): this {
+    const current = this.getHeight();
+    if (current === 0) return this;
+    return this.scale(height / current);
+  }
+  /** Scale uniformly so the depth becomes `depth`. */
+  scaleToFitDepth(depth: number): this {
+    const current = this.getDepth();
+    if (current === 0) return this;
+    return this.scale(depth / current);
+  }
+  /** CE `set_width` (stretch=false default): alias of {@link scaleToFitWidth}. */
+  setWidth(width: number): this {
+    return this.scaleToFitWidth(width);
+  }
+  /** CE `set_height` (stretch=false default): alias of {@link scaleToFitHeight}. */
+  setHeight(height: number): this {
+    return this.scaleToFitHeight(height);
+  }
+  /** CE `set_depth` (stretch=false default): alias of {@link scaleToFitDepth}. */
+  setDepth(depth: number): this {
+    return this.scaleToFitDepth(depth);
+  }
+  /** Scale uniformly so the width matches `mob`'s width. */
+  matchWidth(mob: Mobject): this {
+    return this.scaleToFitWidth(mob.getWidth());
+  }
+  /** Scale uniformly so the height matches `mob`'s height. */
+  matchHeight(mob: Mobject): this {
+    return this.scaleToFitHeight(mob.getHeight());
+  }
+  /** Scale uniformly so the depth matches `mob`'s depth. */
+  matchDepth(mob: Mobject): this {
+    return this.scaleToFitDepth(mob.getDepth());
+  }
+  /** Shift so the center x-coordinate matches `mob`'s. */
+  matchX(mob: Mobject): this {
+    return this.setX(mob.getCenter()[0]);
+  }
+  /** Shift so the center y-coordinate matches `mob`'s. */
+  matchY(mob: Mobject): this {
+    return this.setY(mob.getCenter()[1]);
+  }
+  /** Shift so the center z-coordinate matches `mob`'s. */
+  matchZ(mob: Mobject): this {
+    return this.setZ(mob.getCenter()[2]);
   }
 
   // ── Animate Proxy ────────────────────────────────────────────────

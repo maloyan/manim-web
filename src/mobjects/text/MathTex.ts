@@ -201,6 +201,60 @@ export class MathTex extends VGroup {
   }
 
   /**
+   * Color every sub-part whose LaTeX matches `tex`.
+   *
+   * Matches Manim CE `set_color_by_tex`. By default a part matches when its
+   * LaTeX string CONTAINS `tex` (substring match). Set `substring: false` for
+   * an exact-string match. Matching is case-sensitive unless `caseSensitive`
+   * is false. For a single-string MathTex the whole expression is one part, so
+   * a match colors the whole mobject. Chainable.
+   *
+   * Call after `waitForRender()`: parts exist only once rendering completes.
+   */
+  setColorByTex(
+    tex: string,
+    color: string,
+    opts: { substring?: boolean; caseSensitive?: boolean } = {},
+  ): this {
+    const substring = opts.substring ?? true;
+    const caseSensitive = opts.caseSensitive ?? true;
+    const needle = caseSensitive ? tex : tex.toLowerCase();
+    const matches = (partLatex: string): boolean => {
+      const hay = caseSensitive ? partLatex : partLatex.toLowerCase();
+      return substring ? hay.includes(needle) : hay === needle;
+    };
+
+    if (!this._isMultiPart) {
+      if (matches(this._latex)) {
+        this.setColor(color);
+      }
+      return this;
+    }
+
+    for (const part of this._parts) {
+      const partLatex = (part as unknown as { getLatex?: () => string }).getLatex?.() ?? '';
+      if (matches(partLatex)) {
+        part.setColor(color);
+      }
+    }
+    return this;
+  }
+
+  /**
+   * Color several sub-expressions at once, from a { tex: color } map.
+   *
+   * Matches Manim CE `set_color_by_tex_to_color_map`. Each entry is applied
+   * with the default substring semantics of `setColorByTex`. Later entries can
+   * override earlier ones where their matches overlap. Chainable.
+   */
+  setColorByTexToColorMap(map: Record<string, string>): this {
+    for (const [tex, color] of Object.entries(map)) {
+      this.setColorByTex(tex, color);
+    }
+    return this;
+  }
+
+  /**
    * Start the async rendering process.
    */
   protected _startRender(): void {
