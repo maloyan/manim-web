@@ -360,6 +360,48 @@ export interface CyclicReplaceOptions extends AnimationOptions {
 }
 
 /**
+ * Move `start` toward `end` along a circular arc, the same path function Manim
+ * CE uses for `path_arc` (see `manim.utils.paths.path_along_arc`). Every point
+ * rotates the same angle in the same direction around a shared arc center, so a
+ * set of mobjects animated together keeps one consistent rotational motion
+ * instead of each choosing its own direction.
+ *
+ * @param arcAngle Total arc sweep in radians. 0 (or near 0) is a straight line.
+ * @post alpha === 0 => result === start; alpha === 1 => result === end
+ */
+function pointAlongArc(
+  start: THREE.Vector3,
+  end: THREE.Vector3,
+  alpha: number,
+  arcAngle: number,
+): THREE.Vector3 {
+  const STRAIGHT_THRESHOLD = 1e-6;
+  if (Math.abs(arcAngle) < STRAIGHT_THRESHOLD) {
+    return new THREE.Vector3().lerpVectors(start, end, alpha);
+  }
+
+  // Arc center sits on the perpendicular bisector of the start→end chord.
+  const vect = new THREE.Vector3().subVectors(end, start);
+  const center = new THREE.Vector3().addVectors(start, vect.clone().multiplyScalar(0.5));
+  if (Math.abs(arcAngle - Math.PI) > STRAIGHT_THRESHOLD) {
+    // perpendicular (in the xy plane) = cross(OUT, vect); matches Manim's axis = OUT.
+    const perp = new THREE.Vector3(-vect.y, vect.x, 0);
+    center.add(perp.multiplyScalar(1 / (2 * Math.tan(arcAngle / 2))));
+  }
+
+  // Rotate (start - center) by alpha * arcAngle around the z axis.
+  const rel = new THREE.Vector3().subVectors(start, center);
+  const theta = alpha * arcAngle;
+  const cos = Math.cos(theta);
+  const sin = Math.sin(theta);
+  return new THREE.Vector3(
+    center.x + rel.x * cos - rel.y * sin,
+    center.y + rel.x * sin + rel.y * cos,
+    center.z + rel.z,
+  );
+}
+
+/**
  * CyclicReplace animation - cyclically replaces positions of multiple mobjects.
  * Each mobject moves to the position of the next mobject in the list.
  */
@@ -412,18 +454,18 @@ export class CyclicReplace extends Animation {
   }
 
   interpolate(alpha: number): void {
-    const arcOffset = Math.sin(alpha * Math.PI) * this.pathArc;
-
     for (let i = 0; i < this.mobjects.length; i++) {
       const mobject = this.mobjects[i];
-      const pos = new THREE.Vector3().lerpVectors(
+      // One consistent arc for every mobject (Manim CE path_arc), so the cycle
+      // reads as a single rotational shift. The previous code flipped the arc
+      // direction per index parity, which made neighbours drift opposite ways
+      // (issue #448).
+      const pos = pointAlongArc(
         this._startPositions[i],
         this._targetPositions[i],
         alpha,
+        this.pathArc,
       );
-
-      // Alternate arc direction for visual variety
-      pos.y += arcOffset * (i % 2 === 0 ? 0.5 : -0.5);
 
       mobject.position.copy(pos);
       mobject._markDirty();
