@@ -1088,6 +1088,10 @@ export {
   rgbToHsv,
 } from './utils/color';
 
+// --- color classes (parity) ---
+export { ManimColor, HSV, RGBA, RandomColorGenerator, getShadedRgb } from './utils/ManimColor';
+export type { ParsableManimColor, ManimColorDType } from './utils/ManimColor';
+
 // --- utils/iterables/unit/family/debug (parity) ---
 export {
   adjacentNTuples,
