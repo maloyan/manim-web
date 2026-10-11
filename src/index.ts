@@ -1254,3 +1254,12 @@ export { registerFont, type FontSource } from './mobjects/text/registerFont';
 
 // --- geometry parity ---
 export { ArcPolygonFromArcs } from './mobjects/geometry';
+
+// --- web component (best-manim) ---
+export {
+  ManimSceneElement,
+  registerManimElement,
+  manimElementInternals,
+  type ManimSceneFactory,
+  type ManimSceneInstance,
+} from './integrations/webcomponent';

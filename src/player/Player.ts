@@ -183,6 +183,16 @@ export class Player {
     return this._isPlaying;
   }
 
+  /** Whether playback restarts from the beginning when it reaches the end. */
+  get loop(): boolean {
+    return this._loop;
+  }
+
+  /** Enable or disable looping. The render loop reads this flag live. */
+  set loop(value: boolean) {
+    this._loop = value;
+  }
+
   /** Start playback from current position. */
   play(): void {
     if (this._masterTimeline.isFinished()) {
