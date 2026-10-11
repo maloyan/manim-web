@@ -21,6 +21,51 @@ export type ColorFunction = (
 ) => string;
 
 /**
+ * Numerical scheme used to trace a streamline through the field.
+ *
+ * - `'euler'`: first-order explicit Euler. The historical default. Fast, but it
+ *   drifts on curved flows (a rotational field spirals outward).
+ * - `'rk4'`: classical fourth-order Runge-Kutta. Four evaluations per step and
+ *   far smaller truncation error, so a closed orbit stays closed.
+ */
+export type Integrator = 'euler' | 'rk4';
+
+/**
+ * Advance one integration step of dX/dt = func(X) from (x, y) over dt.
+ *
+ * This is the single source of truth for both schemes, so {@link StreamLines}
+ * and direct callers trace identical paths. The `'euler'` branch reproduces the
+ * legacy `x + dt * v` update exactly, so the default output never changes.
+ *
+ * @param func - The field, mapping (x, y) to [vx, vy]
+ * @param x - Current X coordinate
+ * @param y - Current Y coordinate
+ * @param dt - Step size (virtual time)
+ * @param integrator - Scheme to use. Default: 'euler'
+ * @returns The next [x, y] position
+ */
+export function stepVectorField(
+  func: VectorFunction,
+  x: number,
+  y: number,
+  dt: number,
+  integrator: Integrator = 'euler',
+): [number, number] {
+  if (integrator === 'rk4') {
+    const [k1x, k1y] = func(x, y);
+    const [k2x, k2y] = func(x + (dt / 2) * k1x, y + (dt / 2) * k1y);
+    const [k3x, k3y] = func(x + (dt / 2) * k2x, y + (dt / 2) * k2y);
+    const [k4x, k4y] = func(x + dt * k3x, y + dt * k3y);
+    return [
+      x + (dt / 6) * (k1x + 2 * k2x + 2 * k3x + k4x),
+      y + (dt / 6) * (k1y + 2 * k2y + 2 * k3y + k4y),
+    ];
+  }
+  const [vx, vy] = func(x, y);
+  return [x + dt * vx, y + dt * vy];
+}
+
+/**
  * Base options for all vector field types
  */
 export interface VectorFieldBaseOptions {
@@ -86,6 +131,11 @@ export interface StreamLinesOptions extends VectorFieldBaseOptions {
   padding?: number;
   /** Number of lines per grid point. Default: 1 */
   nRepeats?: number;
+  /**
+   * Numerical scheme for tracing streamlines. Default: 'euler' (unchanged
+   * behavior). Set to 'rk4' for a far more accurate trace on curved flows.
+   */
+  integrator?: Integrator;
 }
 
 /**
@@ -504,6 +554,12 @@ export interface ContinuousMotionOptions {
   timeWidth?: number;
   /** Rate function for opacity within the window. Default: linear */
   rateFunc?: (t: number) => number;
+  /**
+   * Seed for the per-line start-phase randomization. When set, the flow is
+   * fully reproducible (a seeded mulberry32 PRNG replaces Math.random). When
+   * omitted, phases stay nondeterministic, as before.
+   */
+  seed?: number;
 }
 
 /** Simple seeded PRNG (mulberry32) for reproducible noise */
@@ -651,6 +707,7 @@ export class StreamLines extends VectorField {
   private _noiseFactor: number;
   private _padding: number;
   private _nRepeats: number;
+  private _integrator: Integrator;
   private _lineDurations: number[] = [];
 
   /** Raw integrated points for each streamline (populated during generation) */
@@ -689,6 +746,7 @@ export class StreamLines extends VectorField {
       maxAnchorsPerLine = 100,
       padding = 3,
       nRepeats = 1,
+      integrator = 'euler',
     } = options;
 
     this._numLines = numLines;
@@ -704,6 +762,7 @@ export class StreamLines extends VectorField {
     this._noiseFactor = options.noiseFactor ?? this._yRange[2] / 2;
     this._padding = padding;
     this._nRepeats = nRepeats;
+    this._integrator = integrator;
 
     this._generateStreamlines();
   }
@@ -736,8 +795,11 @@ export class StreamLines extends VectorField {
   }
 
   /**
-   * Integrate a streamline from a starting point using simple Euler integration.
-   * Matches Python manim behavior: magnitude directly scales step size.
+   * Integrate a streamline from a starting point.
+   *
+   * Uses the configured integrator (see {@link Integrator}). The default
+   * `'euler'` reproduces Python manim behavior: magnitude directly scales step
+   * size. `'rk4'` traces the same field with fourth-order accuracy.
    * @param startX - Starting X coordinate
    * @param startY - Starting Y coordinate
    * @returns Array of points along the streamline
@@ -761,11 +823,10 @@ export class StreamLines extends VectorField {
 
     for (let step = 0; step < maxSteps; step++) {
       lastStep = step;
-      const [vx, vy] = this._func(x, y);
 
-      // Simple Euler integration - magnitude directly scales step (matches Python)
-      const newX = x + dt * vx;
-      const newY = y + dt * vy;
+      // Advance one step. Euler reproduces the legacy `x + dt * v` update;
+      // rk4 takes four field samples for a far more accurate trace.
+      const [newX, newY] = stepVectorField(this._func, x, y, dt, this._integrator);
 
       // Check bounds with padding
       if (
@@ -1029,7 +1090,7 @@ export class StreamLines extends VectorField {
    * @param options - Animation configuration
    */
   startAnimation(options: ContinuousMotionOptions = {}): this {
-    const { warmUp = true, flowSpeed = 1, timeWidth = 0.3 } = options;
+    const { warmUp = true, flowSpeed = 1, timeWidth = 0.3, seed } = options;
 
     // Stop any existing animation first
     if (this._animationUpdater) {
@@ -1059,9 +1120,12 @@ export class StreamLines extends VectorField {
     //   if warm_up: line.time *= -1
     // When warmUp=True, time starts negative so lines are initially invisible
     // and gradually appear. When warmUp=False, time starts positive (random phase).
+    // A provided seed makes the phase sequence reproducible; without one the
+    // flow stays nondeterministic, as before.
+    const rng: () => number = seed === undefined ? Math.random : seededRandom(seed);
     this._phases = new Array(numLines);
     for (let i = 0; i < numLines; i++) {
-      const randTime = Math.random() * virtualTime;
+      const randTime = rng() * virtualTime;
       this._phases[i] = warmUp ? -randTime : randTime;
     }
 
@@ -1153,6 +1217,24 @@ export class StreamLines extends VectorField {
     return this;
   }
 
+  /**
+   * Current per-line flow phases (seconds), as a copy.
+   *
+   * Empty before {@link startAnimation} and after {@link endAnimation}. With a
+   * `seed`, the phases right after {@link startAnimation} are reproducible,
+   * which makes the flow testable.
+   */
+  getFlowPhases(): number[] {
+    return [...this._phases];
+  }
+
+  /**
+   * The numerical scheme used to trace the streamlines.
+   */
+  getIntegrator(): Integrator {
+    return this._integrator;
+  }
+
   override copy(): StreamLines {
     const copy = new StreamLines({
       func: this._func,
@@ -1177,6 +1259,7 @@ export class StreamLines extends VectorField {
       noiseFactor: this._noiseFactor,
       padding: this._padding,
       nRepeats: this._nRepeats,
+      integrator: this._integrator,
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
