@@ -4,6 +4,7 @@
  */
 
 import type { MasterTimeline } from '../animation/MasterTimeline';
+import { ExportSettingsPanel, type ExportSettings, type ExportDefaults } from './ExportSettingsUI';
 
 export interface PlayerUICallbacks {
   onPlayPause: () => void;
@@ -12,13 +13,24 @@ export interface PlayerUICallbacks {
   onNext: () => void;
   onSpeedChange: (rate: number) => void;
   onFullscreen: () => void;
-  onExport: (format: string) => void;
+  /**
+   * Export in the given format. When the export settings panel is enabled
+   * (`exportControls`), the chosen fps/resolution/quality are passed too.
+   */
+  onExport: (format: string, settings?: ExportSettings) => void;
   onSlidesToggle: (enabled: boolean) => void;
+  /** Current output size and frame rate, used to seed the settings panel. */
+  getExportDefaults?: () => ExportDefaults;
 }
 
 export interface PlayerUIOptions {
   /** Auto-hide controls after this many ms of inactivity. 0 = never hide. Default 2500. */
   autoHideMs?: number;
+  /**
+   * Show an fps/resolution/quality panel in the export menu. Default false, so
+   * the export menu is unchanged unless opted in.
+   */
+  exportControls?: boolean;
 }
 
 export class PlayerUI {
@@ -41,6 +53,8 @@ export class PlayerUI {
   private _exportBtnWrapper: HTMLElement | null = null;
   private _callbacks: PlayerUICallbacks;
   private _autoHideMs: number;
+  private _exportControls: boolean;
+  private _exportPanel: ExportSettingsPanel | null = null;
   private _hideTimeout: ReturnType<typeof setTimeout> | null = null;
   private _isVisible: boolean = true;
   private _isDragging: boolean = false;
@@ -58,6 +72,7 @@ export class PlayerUI {
     this._container = container;
     this._callbacks = callbacks;
     this._autoHideMs = options.autoHideMs ?? 2500;
+    this._exportControls = options.exportControls ?? false;
 
     // Ensure container has relative positioning for absolute overlay
     const pos = getComputedStyle(container).position;
@@ -442,6 +457,17 @@ export class PlayerUI {
     });
     menu.setAttribute('data-player-bar', '');
 
+    // Opt-in settings panel (fps / resolution / quality) above the format list.
+    if (this._exportControls) {
+      const defaults = this._callbacks.getExportDefaults?.() ?? {
+        width: 1920,
+        height: 1080,
+        fps: 60,
+      };
+      this._exportPanel = new ExportSettingsPanel(defaults);
+      menu.appendChild(this._exportPanel.element);
+    }
+
     const formats = [
       { ext: 'gif', label: 'GIF', desc: 'Animated image' },
       { ext: 'webm', label: 'WebM', desc: 'Web video' },
@@ -467,8 +493,13 @@ export class PlayerUI {
       });
       item.addEventListener('click', (e) => {
         e.stopPropagation();
+        const settings = this._exportPanel?.getSettings();
         this._closeExportMenu();
-        this._callbacks.onExport(f.ext);
+        if (settings) {
+          this._callbacks.onExport(f.ext, settings);
+        } else {
+          this._callbacks.onExport(f.ext);
+        }
       });
       menu.appendChild(item);
     }
@@ -485,6 +516,7 @@ export class PlayerUI {
       this._exportMenuBackdrop = null;
       this._exportMenu.remove();
       this._exportMenu = null;
+      this._exportPanel = null;
     }
   }
 
