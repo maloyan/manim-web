@@ -1196,3 +1196,8 @@ export {
   get3dVmobEndCornerUnitNormal,
 } from './mobjects/three-d/threeDVmobUtils';
 export { SpecialThreeDScene, type SpecialThreeDSceneOptions } from './core/SpecialThreeDScene';
+
+// --- misc parity ---
+export { assertIsMobjectMethod } from './animation/Always';
+export { overrideAnimate } from './animation/AnimationUtilities';
+export { registerFont, type FontSource } from './mobjects/text/registerFont';

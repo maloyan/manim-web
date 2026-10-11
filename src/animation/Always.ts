@@ -97,3 +97,36 @@ export function always<M extends Mobject>(
   });
   return mob;
 }
+
+/**
+ * Assert that `(mob, methodName)` names a method of a Mobject (CE
+ * `assert_is_mobject_method`).
+ *
+ * CE takes one bound method and recovers the receiver from `method.__self__`.
+ * A JavaScript method reference loses its `this`, so this repo validates the
+ * `(mobject, methodName)` pair that `always` / `fAlways` already accept. The
+ * check throws a clear `Error` when `mob` is not a `Mobject`, or when
+ * `mob[methodName]` is not a function.
+ *
+ * @param mob - The value that must be a `Mobject`.
+ * @param methodName - The name that must resolve to a method on `mob`.
+ * @throws Error when `mob` is not a `Mobject` or `methodName` is not a method.
+ *
+ * @example
+ * ```typescript
+ * assertIsMobjectMethod(dot, 'setX'); // ok
+ * assertIsMobjectMethod(dot, 'nope'); // throws
+ * ```
+ */
+export function assertIsMobjectMethod(mob: unknown, methodName: string): void {
+  if (!(mob instanceof Mobject)) {
+    const got = mob === null ? 'null' : typeof mob;
+    throw new Error(`assertIsMobjectMethod: expected a Mobject, got ${got}`);
+  }
+  const candidate = (mob as unknown as Record<string, unknown>)[methodName];
+  if (typeof candidate !== 'function') {
+    throw new Error(
+      `assertIsMobjectMethod: "${methodName}" is not a method of ${mob.constructor.name}`,
+    );
+  }
+}
