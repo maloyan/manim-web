@@ -1083,3 +1083,45 @@ export {
   printFamily,
   type IndexLabelsOptions,
 } from './utils/debug';
+
+// --- utils/space-ops/paths/simple (parity) ---
+export {
+  normSquared,
+  cross,
+  cross2d,
+  normalize,
+  quaternionMult,
+  quaternionFromAngleAxis,
+  angleAxisFromQuaternion,
+  quaternionConjugate,
+  rotationMatrix,
+  rotationAboutZ,
+  rotationMatrixTranspose,
+  rotateVector,
+  zToVector,
+  angleOfVector,
+  angleBetweenVectors,
+  getUnitNormal,
+  regularVertices,
+  complexToR3,
+  r3ToComplex,
+  complexFuncToR3Func,
+  centerOfMass,
+  midpoint,
+  lineIntersection,
+  findIntersection,
+  shoelace,
+  shoelaceDirection,
+  cartesianToSpherical,
+  sphericalToCartesian,
+  perpendicularBisector,
+} from './utils/spaceOps';
+export {
+  type PathFunc,
+  straightPath,
+  pathAlongArc,
+  pathAlongCircles,
+  clockwisePath,
+  counterclockwisePath,
+} from './utils/paths';
+export { clip, sigmoid, choose, binarySearch } from './utils/simpleFunctions';
