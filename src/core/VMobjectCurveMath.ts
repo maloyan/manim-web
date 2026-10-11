@@ -352,6 +352,77 @@ export function smoothHandlePoints(anchors: number[][]): { h1: number[][]; h2: n
   return { h1, h2 };
 }
 
+// ---------------------------------------------------------------------------
+// Point-list building: append points and insert curves
+// ---------------------------------------------------------------------------
+
+/** Copy a point, defaulting the z coordinate to 0. */
+function copyPoint(p: number[]): number[] {
+  return [p[0], p[1], p[2] ?? 0];
+}
+
+/**
+ * Append `newPoints` to a shared-anchor cubic chain, returning the joined chain.
+ *
+ * Port of Manim CE's `append_points`, adapted to the shared-anchor layout. CE
+ * stores each cubic as four independent points and concatenates raw, so the
+ * join anchor appears twice. Here consecutive cubics share their boundary
+ * anchor, so when the existing chain is non-empty the first appended anchor
+ * continues from the last existing anchor and is dropped. With `existing` of
+ * 3k+1 points and `newPoints` of 3m+1 points the result has 3(k+m)+1 points.
+ *
+ * @param existing - Current shared-anchor chain (may be empty)
+ * @param newPoints - Points to append (a shared-anchor chain on its own)
+ * @returns New joined chain; `existing` and `newPoints` are not mutated
+ */
+export function appendPointsToPointList(existing: number[][], newPoints: number[][]): number[][] {
+  if (newPoints.length === 0) return existing.map(copyPoint);
+  if (existing.length === 0) return newPoints.map(copyPoint);
+  return existing.map(copyPoint).concat(newPoints.slice(1).map(copyPoint));
+}
+
+/** Split factors that `bezier_remap` assigns to each source curve. */
+function remapSplitFactors(currentCurves: number, newCurves: number): number[] {
+  const factors = new Array<number>(currentCurves).fill(0);
+  for (let k = 0; k < newCurves; k++) {
+    factors[Math.floor((k * currentCurves) / newCurves)] += 1;
+  }
+  return factors;
+}
+
+/**
+ * Subdivide a shared-anchor chain so it contains exactly `n` more cubics.
+ *
+ * Port of Manim CE's `insert_n_curves_to_point_list`. Each existing cubic is
+ * split into as many equal-parameter sub-cubics as `bezier_remap` requires, so
+ * the sampled curve is unchanged and the curve count rises by exactly `n`.
+ *
+ * @param n - Number of cubics to add (<= 0 returns a copy)
+ * @param points - Source shared-anchor cubic chain
+ * @returns New chain with `numCurves + n` cubics
+ */
+export function insertNCurvesToPointList(n: number, points: number[][]): number[][] {
+  if (n <= 0) return points.map(copyPoint);
+  if (points.length === 1) {
+    return Array.from({ length: 3 * n + 1 }, () => copyPoint(points[0]));
+  }
+  const numCurves = getNumCurvesFromPoints(points);
+  if (numCurves === 0) return points.map(copyPoint);
+
+  const splitFactors = remapSplitFactors(numCurves, numCurves + n);
+  const result: number[][] = [];
+  for (let c = 0; c < numCurves; c++) {
+    const quad = points.slice(c * 3, c * 3 + 4);
+    const sf = splitFactors[c];
+    for (let i = 0; i < sf; i++) {
+      const piece = partialBezierPoints(quad, i / sf, (i + 1) / sf);
+      const startAt = result.length === 0 ? 0 : 1;
+      for (let j = startAt; j < piece.length; j++) result.push(copyPoint(piece[j]));
+    }
+  }
+  return result;
+}
+
 /**
  * Assemble a shared-anchor point chain from anchors and per-segment handles.
  */

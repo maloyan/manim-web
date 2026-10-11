@@ -1201,3 +1201,6 @@ export { SpecialThreeDScene, type SpecialThreeDSceneOptions } from './core/Speci
 export { assertIsMobjectMethod } from './animation/Always';
 export { overrideAnimate } from './animation/AnimationUtilities';
 export { registerFont, type FontSource } from './mobjects/text/registerFont';
+
+// --- geometry parity ---
+export { ArcPolygonFromArcs } from './mobjects/geometry';

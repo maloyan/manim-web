@@ -1,6 +1,8 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
+import { getNumCurvesFromPoints } from '../../core/VMobjectCurves';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { Arc } from './Arc';
 
 /**
  * Arc configuration for connecting vertices in ArcPolygon
@@ -230,6 +232,89 @@ export class ArcPolygon extends VMobject {
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
     });
+    this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    return clone;
+  }
+}
+
+/** Euclidean distance between two 3D points (z defaults to 0). */
+function pointDistance(a: Vector3Tuple, b: Vector3Tuple): number {
+  const dx = a[0] - b[0];
+  const dy = a[1] - b[1];
+  const dz = (a[2] ?? 0) - (b[2] ?? 0);
+  return Math.sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+/** A single straight cubic (shared-anchor, four points) between two points. */
+function straightCubic(start: Vector3Tuple, end: Vector3Tuple): number[][] {
+  const dx = end[0] - start[0];
+  const dy = end[1] - start[1];
+  const dz = (end[2] ?? 0) - (start[2] ?? 0);
+  const sz = start[2] ?? 0;
+  return [
+    [start[0], start[1], sz],
+    [start[0] + dx / 3, start[1] + dy / 3, sz + dz / 3],
+    [start[0] + (2 * dx) / 3, start[1] + (2 * dy) / 3, sz + (2 * dz) / 3],
+    [end[0], end[1], end[2] ?? 0],
+  ];
+}
+
+/**
+ * ArcPolygonFromArcs - a closed path stitched from pre-made {@link Arc} pieces.
+ *
+ * Port of Manim CE's `ArcPolygonFromArcs`. Each arc's points are appended in
+ * order; between one arc's last point and the next arc's first point a
+ * connecting straight segment is inserted, subdivided to roughly match the arc
+ * resolution. The arcs are taken in cyclic order, so the final segment closes
+ * the path back to the first arc's first point. Endpoints are read from the
+ * arcs' actual geometry (first and last points), matching CE's `get_start`
+ * and `get_end`. The arcs' endpoints are assumed to connect; when they do, the
+ * connecting segments are degenerate and the result is one continuous path.
+ *
+ * Unlike CE this does not also add the arcs as child submobjects: the result is
+ * only the stitched path, so the arcs are not drawn a second time.
+ *
+ * @example
+ * ```typescript
+ * const poly = new ArcPolygonFromArcs(arc1, arc2, arc3);
+ * ```
+ */
+export class ArcPolygonFromArcs extends VMobject {
+  /** The component arcs, in cyclic order. */
+  readonly arcs: Arc[];
+
+  constructor(...arcs: Arc[]) {
+    super();
+    if (arcs.length === 0) {
+      throw new Error('ArcPolygonFromArcs requires at least one Arc');
+    }
+    this.arcs = [...arcs];
+    this.fillOpacity = 0;
+
+    const n = arcs.length;
+    for (let i = 0; i < n; i++) {
+      const arc1 = arcs[i];
+      const arc2 = arcs[(i + 1) % n];
+      const arc1Points = arc1.getLocalPoints();
+      const arc2Points = arc2.getLocalPoints();
+      this.appendPoints(arc1Points);
+
+      // CE's get_end / get_start: the arc's actual last / first geometry point.
+      const start = arc1Points[arc1Points.length - 1] as Vector3Tuple;
+      const end = arc2Points[0] as Vector3Tuple;
+      const lenRatio = pointDistance(start, end) / arc1.getArcLength();
+      if (!Number.isFinite(lenRatio)) continue;
+
+      const extraCurves = Math.trunc(getNumCurvesFromPoints(arc1Points) * lenRatio);
+      this.appendPoints(this.insertNCurvesToPointList(extraCurves, straightCubic(start, end)));
+    }
+  }
+
+  /**
+   * Create a copy of this ArcPolygonFromArcs.
+   */
+  override copy(): ArcPolygonFromArcs {
+    const clone = new ArcPolygonFromArcs(...this.arcs.map((arc) => arc.copy()));
     this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
   }
