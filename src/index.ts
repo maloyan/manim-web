@@ -1263,3 +1263,26 @@ export {
   type ManimSceneFactory,
   type ManimSceneInstance,
 } from './integrations/webcomponent';
+
+// --- blend modes + themes (best-manim) ---
+// `setBlendMode` / `getBlendMode` are methods on Mobject. The BlendMode type,
+// blend helpers, and the ThemeManager API are exported here.
+export {
+  type BlendMode,
+  BLEND_MODES,
+  blendModeToThree,
+  applyBlendMode,
+} from './rendering/blendModes';
+export {
+  registerTheme,
+  setTheme,
+  getTheme,
+  getActiveTheme,
+  getThemeNames,
+  resetThemes,
+  type Theme,
+  type ActiveTheme,
+  type SetThemeOptions,
+  type ReskinnableMobject,
+  type ReskinnableScene,
+} from './utils/ThemeManager';

@@ -27,6 +27,8 @@ import {
   resolveExtremalPoint,
 } from './MobjectState';
 import { logger } from '../utils/logger';
+import { getActiveTheme } from '../utils/ThemeManager';
+import { applyBlendMode, type BlendMode } from '../rendering/blendModes';
 // Type-only import: erased at compile time, so it introduces no runtime
 // circular dependency (Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject).
 // Used solely to type `Mobject.animate` and the registered factory.
@@ -104,6 +106,14 @@ export abstract class Mobject {
   protected _opacity: number = 1;
   strokeWidth: number = 4;
   fillOpacity: number = 0;
+  /** Current blend mode for this mobject's own materials (default `normal`). */
+  protected _blendMode: BlendMode = 'normal';
+  /**
+   * Whether a blend mode was ever set on this mobject. While false, the blend
+   * step in {@link _syncToThree} is skipped entirely, so unthemed/unblended
+   * mobjects never touch material blending state (keeps the default path exact).
+   */
+  protected _blendModeActive: boolean = false;
   /** When true, children skip the 2D z-layering offset in _syncToThree. */
   protected _disableChildZLayering: boolean = false;
   protected _style: MobjectStyle;
@@ -136,10 +146,14 @@ export abstract class Mobject {
     this.position = new THREE.Vector3(0, 0, 0);
     this.rotation = new THREE.Euler(0, 0, 0, 'XYZ');
     this.scaleVector = new THREE.Vector3(1, 1, 1);
+    // Seed default colors from the active theme. The `default` theme reproduces
+    // the historical white stroke/fill, so unthemed mobjects are unchanged.
+    const theme = getActiveTheme();
+    this._color = theme.strokeColor;
     this._style = {
-      fillColor: '#ffffff',
+      fillColor: theme.fillColor,
       fillOpacity: 0,
-      strokeColor: '#ffffff',
+      strokeColor: theme.strokeColor,
       strokeOpacity: 1,
       strokeWidth: 4,
     };
@@ -201,6 +215,66 @@ export abstract class Mobject {
       this._markDirty();
     }
     return this;
+  }
+
+  // ── Blend mode ───────────────────────────────────────────────────
+
+  /**
+   * Set the blend mode for this mobject and its whole family.
+   *
+   * The mode flows through to every three.js material of this mobject and its
+   * submobjects on the next sync. The default is `'normal'` (standard alpha
+   * blending), which matches three.js's own default, so output is unchanged
+   * until a non-default mode is set.
+   *
+   * @param mode - One of `normal`, `additive`, `multiply`, `subtractive`, `screen`.
+   * @returns this for chaining.
+   */
+  setBlendMode(mode: BlendMode): this {
+    for (const member of this.getFamily()) {
+      member._blendMode = mode;
+      member._blendModeActive = true;
+      member._markDirty();
+    }
+    return this;
+  }
+
+  /** The current blend mode of this mobject. */
+  getBlendMode(): BlendMode {
+    return this._blendMode;
+  }
+
+  /**
+   * Apply the current blend mode to this node's own three.js materials.
+   *
+   * Traverses this mobject's backing object but stops at any submobject's
+   * backing object, so each family member owns its own materials (a child with
+   * a different blend mode is not clobbered by its parent's traversal).
+   */
+  protected _applyBlendModeToThree(): void {
+    const root = this._threeObject;
+    if (!root) return;
+
+    const childRoots = new Set<THREE.Object3D>();
+    for (const child of this.children) {
+      if (child._threeObject) childRoots.add(child._threeObject);
+    }
+
+    const mode = this._blendMode;
+    const visit = (object: THREE.Object3D): void => {
+      const material = (object as Partial<THREE.Mesh>).material;
+      if (material) {
+        if (Array.isArray(material)) {
+          for (const m of material) applyBlendMode(m, mode);
+        } else {
+          applyBlendMode(material, mode);
+        }
+      }
+      for (const nested of object.children) {
+        if (!childRoots.has(nested)) visit(nested);
+      }
+    };
+    visit(root);
   }
 
   setStrokeOpacity(opacity: number): this {
@@ -589,6 +663,8 @@ export abstract class Mobject {
     clone.strokeWidth = this.strokeWidth;
     clone.fillOpacity = this.fillOpacity;
     clone._style = { ...this._style };
+    clone._blendMode = this._blendMode;
+    clone._blendModeActive = this._blendModeActive;
 
     if (copyChildren) {
       // Snapshot the source list: copying onto `clone` may mutate a shared
@@ -976,6 +1052,7 @@ export abstract class Mobject {
       if (idx > 0) this._threeObject.position.z += idx * 0.01;
     }
     this._syncMaterialToThree();
+    if (this._blendModeActive) this._applyBlendModeToThree();
     for (const child of this.children) {
       child._syncToThree();
       if (child._threeObject && !this._threeObject.children.includes(child._threeObject)) {
