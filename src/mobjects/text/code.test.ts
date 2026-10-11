@@ -5,7 +5,11 @@ import { Code, DEFAULT_COLOR_SCHEME, MONOKAI_COLOR_SCHEME, TokenType } from './C
 /** Stub canvas 2D context (happy-dom lacks canvas support) */
 beforeAll(() => {
   const orig = HTMLCanvasElement.prototype.getContext;
-  HTMLCanvasElement.prototype.getContext = function (type: string, ...args: unknown[]) {
+  HTMLCanvasElement.prototype.getContext = function (
+    this: HTMLCanvasElement,
+    type: string,
+    ...args: unknown[]
+  ) {
     if (type === '2d') {
       return {
         scale: () => {},

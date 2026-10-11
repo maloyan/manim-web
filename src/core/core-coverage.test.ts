@@ -22,6 +22,7 @@ import {
   MobjectState,
 } from './StateManager';
 import { VDict, VectorizedPoint } from './VDict';
+import type { MobjectStyle } from './MobjectTypes';
 
 /** Create a simple VMobject with 4 points (one cubic Bezier segment). */
 function makeVM(): VMobject {
@@ -514,18 +515,20 @@ describe('VMobject - interpolate style branches', () => {
     ]);
 
     // Set style properties on both
-    v1._style.fillOpacity = 0.2;
-    v2._style.fillOpacity = 0.8;
-    v1._style.strokeOpacity = 0.3;
-    v2._style.strokeOpacity = 0.9;
-    v1._style.strokeWidth = 2;
-    v2._style.strokeWidth = 8;
+    const s1 = (v1 as unknown as { _style: MobjectStyle })._style;
+    const s2 = (v2 as unknown as { _style: MobjectStyle })._style;
+    s1.fillOpacity = 0.2;
+    s2.fillOpacity = 0.8;
+    s1.strokeOpacity = 0.3;
+    s2.strokeOpacity = 0.9;
+    s1.strokeWidth = 2;
+    s2.strokeWidth = 8;
 
     v1.interpolate(v2, 0.5);
 
-    expect(v1._style.fillOpacity).toBeCloseTo(0.5);
-    expect(v1._style.strokeOpacity).toBeCloseTo(0.6);
-    expect(v1._style.strokeWidth).toBeCloseTo(5);
+    expect(s1.fillOpacity).toBeCloseTo(0.5);
+    expect(s1.strokeOpacity).toBeCloseTo(0.6);
+    expect(s1.strokeWidth).toBeCloseTo(5);
   });
 
   it('interpolate with different point counts aligns first', () => {

@@ -19,6 +19,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { Mobject } from '../../core/Mobject';
+import { TestMobject } from '../../test-setup/TestMobject';
 import { VMobject } from '../../core/VMobject';
 import { PointMobject } from '../../mobjects/point';
 import { DashedLine } from '../../mobjects/geometry/DashedLine';
@@ -58,7 +59,6 @@ import {
 /** Mock text mobject with getText/setText */
 class MockTextMobject extends Mobject {
   private _text: string;
-  color: string = '#ffffff';
 
   constructor(text: string = 'Hello World') {
     super();
@@ -77,7 +77,11 @@ class MockTextMobject extends Mobject {
     return new (require('three').Object3D)();
   }
 
-  protected _syncToThree(): void {}
+  override _syncToThree(): void {}
+
+  override normalizeTransform(): this {
+    return this;
+  }
 
   override copy(): Mobject {
     return new MockTextMobject(this._text);
@@ -100,7 +104,11 @@ class MockMathTexMobject extends Mobject {
     return new (require('three').Object3D)();
   }
 
-  protected _syncToThree(): void {}
+  override _syncToThree(): void {}
+
+  override normalizeTransform(): this {
+    return this;
+  }
 
   override copy(): Mobject {
     return new MockMathTexMobject();
@@ -121,9 +129,9 @@ function makeVMobject(): VMobject {
 
 /** Create a parent mobject with children */
 function makeParentWithChildren(n: number): Mobject {
-  const parent = new Mobject();
+  const parent = new TestMobject();
   for (let i = 0; i < n; i++) {
-    const child = new Mobject();
+    const child = new TestMobject();
     child.setStrokeOpacity(1);
     parent.add(child);
   }
@@ -246,7 +254,7 @@ describe('Uncreate - VMobject without Line2', () => {
 
 describe('Uncreate - non-VMobject', () => {
   it('interpolate reduces opacity', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = new Uncreate(m);
     anim.begin();
     anim.interpolate(0.5);
@@ -254,7 +262,7 @@ describe('Uncreate - non-VMobject', () => {
   });
 
   it('finish sets opacity to 0', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = new Uncreate(m);
     anim.begin();
     anim.finish();
@@ -308,10 +316,10 @@ describe('ShowIncreasingSubsets', () => {
   });
 
   it('finish restores original opacities', () => {
-    const parent = new Mobject();
-    const c1 = new Mobject();
+    const parent = new TestMobject();
+    const c1 = new TestMobject();
     c1.setStrokeOpacity(0.5);
-    const c2 = new Mobject();
+    const c2 = new TestMobject();
     c2.setStrokeOpacity(0.8);
     parent.add(c1, c2);
 
@@ -575,7 +583,7 @@ describe('AddTextLetterByLetter', () => {
   });
 
   it('does nothing for mobject without getText', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = new AddTextLetterByLetter(m);
     anim.begin();
     anim.interpolate(0.5);
@@ -622,7 +630,7 @@ describe('RemoveTextLetterByLetter', () => {
   });
 
   it('does nothing for mobject without setText', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = new RemoveTextLetterByLetter(m);
     anim.begin();
     anim.interpolate(0.5);
@@ -670,7 +678,7 @@ describe('AddTextWordByWord', () => {
   });
 
   it('does nothing for mobject without getText', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = new AddTextWordByWord(m);
     anim.begin();
     anim.interpolate(0.5);
@@ -699,7 +707,7 @@ describe('ShowPartial', () => {
   });
 
   it('interpolate uses opacity for non-VMobject', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = new ShowPartial(m);
     anim.begin();
     anim.interpolate(0.5);
@@ -802,7 +810,7 @@ describe('SpiralIn', () => {
 
 describe('Create - lagRatio stagger', () => {
   it('lagRatio=0 means all children animate together', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = new Create(m, { lagRatio: 0 });
     anim.begin();
     anim.interpolate(0.5);
@@ -810,7 +818,7 @@ describe('Create - lagRatio stagger', () => {
   });
 
   it('lagRatio>0 with single mobject behaves normally', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = new Create(m, { lagRatio: 0.5 });
     anim.begin();
     anim.interpolate(0.5);
@@ -885,14 +893,14 @@ describe('Animation.getSubAlpha (Manim CE get_sub_alpha formula)', () => {
   }
 
   it('returns alpha unchanged when lagRatio<=0 or a single member', () => {
-    const anim = new Create(new Mobject());
+    const anim = new Create(new TestMobject());
     expect(subAlpha(anim, 0.42, 0, 1, 0.9)).toBeCloseTo(0.42, 10);
     expect(subAlpha(anim, 0.42, 0, 5, 0)).toBeCloseTo(0.42, 10);
   });
 
   it('matches the documented 3-member, lagRatio=0.5 staircase', () => {
     // member i's window is [0.25*i, 0.5 + 0.25*i] — see the lag-ratio audit.
-    const anim = new Create(new Mobject());
+    const anim = new Create(new TestMobject());
     for (let i = 0; i < 3; i++) {
       const start = 0.25 * i;
       const end = 0.5 + 0.25 * i;
@@ -903,7 +911,7 @@ describe('Animation.getSubAlpha (Manim CE get_sub_alpha formula)', () => {
   });
 
   it('clips outside its own window instead of going negative or past 1', () => {
-    const anim = new Create(new Mobject());
+    const anim = new Create(new TestMobject());
     // member 2 of 3 (lagRatio=0.5) only starts moving at alpha=0.5
     expect(subAlpha(anim, 0.1, 2, 3, 0.5)).toBe(0);
     expect(subAlpha(anim, 1, 0, 3, 0.5)).toBe(1);
@@ -923,7 +931,7 @@ describe('VMobjectRendering.getOwnStrokeLines', () => {
 
 describe('Create factory', () => {
   it('default duration is 2', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = create(m);
     expect(anim.duration).toBe(2);
   });
@@ -935,14 +943,14 @@ describe('Create factory', () => {
 
 describe('Write - plain Mobject fallback', () => {
   it('begin sets opacity to 0', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = new Write(m);
     anim.begin();
     expect(m.opacity).toBe(0);
   });
 
   it('interpolate increases opacity', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = new Write(m);
     anim.begin();
     anim.interpolate(0.5);
@@ -950,7 +958,7 @@ describe('Write - plain Mobject fallback', () => {
   });
 
   it('finish restores opacity', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     m.setStrokeOpacity(0.7);
     const anim = new Write(m);
     anim.begin();

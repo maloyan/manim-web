@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Mobject } from '../core/Mobject';
+import { TestMobject } from '../test-setup/TestMobject';
 import { Animation, AnimationOptions } from './Animation';
 import { linear } from '../rate-functions';
 import {
@@ -28,7 +29,7 @@ class RecordingAnimation extends Animation {
 }
 
 function createMob(): Mobject {
-  return new Mobject();
+  return new TestMobject();
 }
 
 // ------------------------------------------------------------------

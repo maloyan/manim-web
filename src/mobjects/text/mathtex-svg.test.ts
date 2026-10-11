@@ -11,7 +11,6 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { MathTex, MathTexSVG } from './MathTex';
 import { MathTexImage } from './MathTexImage';
 import { Tex } from './Tex';
-import { renderLatexToSVG } from './MathJaxRenderer';
 import { VGroup } from '../../core/VGroup';
 import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
@@ -122,12 +121,9 @@ describe('Tex size consistency', () => {
     await tex.waitForRender();
     tex.center();
 
-    const top = tex.getTop();
-    const bottom = tex.getBottom();
     const right = tex.getRight();
     const left = tex.getLeft();
 
-    const vertical = Math.abs(top[1] - bottom[1]);
     const horizontal = Math.abs(right[0] - left[0]);
 
     // "what" is approximately 2 ems wide in text mode

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { describe, it, expect } from 'vitest';
 import { Mobject } from '../core/Mobject';
+import { TestMobject } from '../test-setup/TestMobject';
 import { VMobject } from '../core/VMobject';
 import { Group } from '../core/Group';
 import {
@@ -26,19 +27,19 @@ import {
 describe('Create', () => {
   describe('constructor defaults', () => {
     it('has duration=2', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new Create(m);
       expect(anim.duration).toBe(2);
     });
 
     it('accepts custom duration', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new Create(m, { duration: 3 });
       expect(anim.duration).toBe(3);
     });
 
     it('accepts custom lagRatio', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new Create(m, { lagRatio: 0.5 });
       // lagRatio is private but we can verify via the class existing
       expect(anim).toBeInstanceOf(Create);
@@ -47,7 +48,7 @@ describe('Create', () => {
 
   describe('non-VMobject (opacity fallback)', () => {
     it('begin sets opacity to 0', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       m.setStrokeOpacity(1);
       const anim = new Create(m);
       anim.begin();
@@ -55,7 +56,7 @@ describe('Create', () => {
     });
 
     it('interpolate sets opacity proportional to alpha', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new Create(m);
       anim.begin();
       anim.interpolate(0);
@@ -67,7 +68,7 @@ describe('Create', () => {
     });
 
     it('finish restores opacity to 1', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new Create(m);
       anim.begin();
       anim.interpolate(0.5);
@@ -89,6 +90,9 @@ describe('Create', () => {
       }
       override copy(): Mobject {
         return new TestMobject();
+      }
+      override normalizeTransform(): this {
+        return this;
       }
     }
 
@@ -153,13 +157,13 @@ describe('Create', () => {
 
   describe('create() factory function', () => {
     it('returns a Create instance', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = create(m);
       expect(anim).toBeInstanceOf(Create);
     });
 
     it('passes options through', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = create(m, { duration: 5 });
       expect(anim.duration).toBe(5);
     });
@@ -172,13 +176,13 @@ describe('Create', () => {
 describe('DrawBorderThenFill', () => {
   describe('constructor defaults', () => {
     it('has duration=2', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new DrawBorderThenFill(m);
       expect(anim.duration).toBe(2);
     });
 
     it('accepts custom duration', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new DrawBorderThenFill(m, { duration: 4 });
       expect(anim.duration).toBe(4);
     });
@@ -186,20 +190,20 @@ describe('DrawBorderThenFill', () => {
 
   describe('non-VMobject (no dash reveal, no-op interpolation)', () => {
     it('begin does not crash for non-VMobject', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new DrawBorderThenFill(m);
       expect(() => anim.begin()).not.toThrow();
     });
 
     it('interpolate does not crash for non-VMobject', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new DrawBorderThenFill(m);
       anim.begin();
       expect(() => anim.interpolate(0.5)).not.toThrow();
     });
 
     it('finish does not crash for non-VMobject', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new DrawBorderThenFill(m);
       anim.begin();
       anim.interpolate(1);
@@ -220,13 +224,13 @@ describe('DrawBorderThenFill', () => {
 
   describe('drawBorderThenFill() factory function', () => {
     it('returns a DrawBorderThenFill instance', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = drawBorderThenFill(m);
       expect(anim).toBeInstanceOf(DrawBorderThenFill);
     });
 
     it('passes options through', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = drawBorderThenFill(m, { duration: 3 });
       expect(anim.duration).toBe(3);
     });
@@ -239,13 +243,13 @@ describe('DrawBorderThenFill', () => {
 describe('Uncreate', () => {
   describe('constructor defaults', () => {
     it('has duration=2', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new Uncreate(m);
       expect(anim.duration).toBe(2);
     });
 
     it('accepts custom duration', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new Uncreate(m, { duration: 1 });
       expect(anim.duration).toBe(1);
     });
@@ -253,7 +257,7 @@ describe('Uncreate', () => {
 
   describe('non-VMobject (opacity fallback)', () => {
     it('interpolate fades opacity from 1 to 0', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       m.setStrokeOpacity(1);
       const anim = new Uncreate(m);
       anim.begin();
@@ -266,7 +270,7 @@ describe('Uncreate', () => {
     });
 
     it('finish sets opacity to 0', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       m.setStrokeOpacity(1);
       const anim = new Uncreate(m);
       anim.begin();
@@ -278,13 +282,13 @@ describe('Uncreate', () => {
 
   describe('uncreate() factory function', () => {
     it('returns an Uncreate instance', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = uncreate(m);
       expect(anim).toBeInstanceOf(Uncreate);
     });
 
     it('passes options through', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = uncreate(m, { duration: 5 });
       expect(anim.duration).toBe(5);
     });
@@ -297,13 +301,13 @@ describe('Uncreate', () => {
 describe('Write', () => {
   describe('constructor defaults', () => {
     it('has duration=1', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new Write(m);
       expect(anim.duration).toBe(1);
     });
 
     it('accepts custom duration', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new Write(m, { duration: 2 });
       expect(anim.duration).toBe(2);
     });
@@ -311,7 +315,7 @@ describe('Write', () => {
 
   describe('non-VMobject (opacity fallback)', () => {
     it('begin sets opacity to 0', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       m.setStrokeOpacity(1);
       const anim = new Write(m);
       anim.begin();
@@ -319,7 +323,7 @@ describe('Write', () => {
     });
 
     it('interpolate sets opacity proportional to alpha', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       m.setStrokeOpacity(1);
       const anim = new Write(m);
       anim.begin();
@@ -328,7 +332,7 @@ describe('Write', () => {
     });
 
     it('finish restores opacity', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       m.setStrokeOpacity(0.8);
       const anim = new Write(m);
       anim.begin();
@@ -340,7 +344,7 @@ describe('Write', () => {
 
   describe('reverse mode (opacity fallback)', () => {
     it('reverse starts with full opacity and fades to 0', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       m.setStrokeOpacity(1);
       const anim = new Write(m, { reverse: true });
       anim.begin();
@@ -356,13 +360,13 @@ describe('Write', () => {
 
   describe('write() factory function', () => {
     it('returns a Write instance', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = write(m);
       expect(anim).toBeInstanceOf(Write);
     });
 
     it('passes options through', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = write(m, { duration: 3 });
       expect(anim.duration).toBe(3);
     });
@@ -375,19 +379,19 @@ describe('Write', () => {
 describe('Unwrite', () => {
   describe('constructor', () => {
     it('is an instance of Write', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new Unwrite(m);
       expect(anim).toBeInstanceOf(Write);
     });
 
     it('has duration=1 by default', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new Unwrite(m);
       expect(anim.duration).toBe(1);
     });
 
     it('accepts custom duration', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new Unwrite(m, { duration: 2 });
       expect(anim.duration).toBe(2);
     });
@@ -395,7 +399,7 @@ describe('Unwrite', () => {
 
   describe('unwrite() factory function', () => {
     it('returns an Unwrite instance', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = unwrite(m);
       expect(anim).toBeInstanceOf(Unwrite);
     });
@@ -408,20 +412,20 @@ describe('Unwrite', () => {
 describe('AddTextLetterByLetter', () => {
   describe('constructor defaults', () => {
     it('has duration=1, timePerChar=0.1', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new AddTextLetterByLetter(m);
       expect(anim.duration).toBe(1);
-      expect(anim.timePerChar).toBe(0.1);
+      expect((anim as unknown as { timePerChar: number }).timePerChar).toBe(0.1);
     });
 
     it('accepts custom duration and timePerChar', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new AddTextLetterByLetter(m, {
         duration: 5,
         timePerChar: 0.2,
       });
       expect(anim.duration).toBe(5);
-      expect(anim.timePerChar).toBe(0.2);
+      expect((anim as unknown as { timePerChar: number }).timePerChar).toBe(0.2);
     });
   });
 
@@ -431,9 +435,9 @@ describe('AddTextLetterByLetter', () => {
       setText(t: string): void;
     }
     function makeTextMobject(text: string): Mobject & TextLike {
-      const m = new Mobject();
+      const m = new TestMobject();
       let currentText = text;
-      const tm = m as Mobject & TextLike;
+      const tm = m as unknown as Mobject & TextLike;
       tm.getText = () => currentText;
       tm.setText = (t: string) => {
         currentText = t;
@@ -474,7 +478,7 @@ describe('AddTextLetterByLetter', () => {
 
   describe('without text methods (noop)', () => {
     it('does not crash when mobject has no getText/setText', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new AddTextLetterByLetter(m);
       expect(() => {
         anim.begin();
@@ -486,15 +490,15 @@ describe('AddTextLetterByLetter', () => {
 
   describe('addTextLetterByLetter() factory function', () => {
     it('returns an AddTextLetterByLetter instance', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = addTextLetterByLetter(m);
       expect(anim).toBeInstanceOf(AddTextLetterByLetter);
     });
 
     it('passes options through', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = addTextLetterByLetter(m, { timePerChar: 0.5 });
-      expect(anim.timePerChar).toBe(0.5);
+      expect((anim as unknown as { timePerChar: number }).timePerChar).toBe(0.5);
     });
   });
 });
@@ -505,10 +509,10 @@ describe('AddTextLetterByLetter', () => {
 describe('RemoveTextLetterByLetter', () => {
   describe('constructor defaults', () => {
     it('has duration=1, timePerChar=0.1', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = new RemoveTextLetterByLetter(m);
       expect(anim.duration).toBe(1);
-      expect(anim.timePerChar).toBe(0.1);
+      expect((anim as unknown as { timePerChar: number }).timePerChar).toBe(0.1);
     });
   });
 
@@ -518,9 +522,9 @@ describe('RemoveTextLetterByLetter', () => {
       setText(t: string): void;
     }
     function makeTextMobject(text: string): Mobject & TextLike {
-      const m = new Mobject();
+      const m = new TestMobject();
       let currentText = text;
-      const tm = m as Mobject & TextLike;
+      const tm = m as unknown as Mobject & TextLike;
       tm.getText = () => currentText;
       tm.setText = (t: string) => {
         currentText = t;
@@ -561,19 +565,19 @@ describe('RemoveTextLetterByLetter', () => {
 
   describe('removeTextLetterByLetter() factory function', () => {
     it('returns a RemoveTextLetterByLetter instance', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = removeTextLetterByLetter(m);
       expect(anim).toBeInstanceOf(RemoveTextLetterByLetter);
     });
 
     it('passes options through', () => {
-      const m = new Mobject();
+      const m = new TestMobject();
       const anim = removeTextLetterByLetter(m, {
         duration: 2,
         timePerChar: 0.3,
       });
       expect(anim.duration).toBe(2);
-      expect(anim.timePerChar).toBe(0.3);
+      expect((anim as unknown as { timePerChar: number }).timePerChar).toBe(0.3);
     });
   });
 });
@@ -583,7 +587,7 @@ describe('RemoveTextLetterByLetter', () => {
 // ---------------------------------------------------------------------------
 describe('Create stagger with lagRatio', () => {
   it('lagRatio=0 means all children animate together (opacity path)', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = new Create(m, { lagRatio: 0 });
     anim.begin();
     // opacity fallback: all animated together regardless
@@ -592,7 +596,7 @@ describe('Create stagger with lagRatio', () => {
   });
 
   it('lagRatio>0 still animates correctly for opacity path', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     const anim = new Create(m, { lagRatio: 0.3 });
     anim.begin();
     anim.interpolate(1);

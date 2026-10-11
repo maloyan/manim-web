@@ -205,7 +205,7 @@ describe('ParametricFunction', () => {
         func: (t) => [Math.cos(t), Math.sin(t)],
         tRange: [0, 2 * Math.PI],
       });
-      const pt = pf.getPointFromT(0);
+      const pt = pf.getPointFromT(0)!;
       expect(closeTo(pt[0], 1)).toBe(true);
       expect(closeTo(pt[1], 0)).toBe(true);
       expect(pt[2]).toBe(0);
@@ -216,7 +216,7 @@ describe('ParametricFunction', () => {
         func: (t) => [t, t * 2, t * 3],
         tRange: [0, 1],
       });
-      const pt = pf.getPointFromT(0.5);
+      const pt = pf.getPointFromT(0.5)!;
       expect(closeTo(pt[0], 0.5)).toBe(true);
       expect(closeTo(pt[1], 1.0)).toBe(true);
       expect(closeTo(pt[2], 1.5)).toBe(true);
@@ -246,7 +246,7 @@ describe('ParametricFunction', () => {
         func: (t) => [Math.cos(t), Math.sin(t)],
         tRange: [0, 2 * Math.PI],
       });
-      const pt = pf.getPointFromT(Math.PI / 2);
+      const pt = pf.getPointFromT(Math.PI / 2)!;
       expect(closeTo(pt[0], 0, 1e-5)).toBe(true);
       expect(closeTo(pt[1], 1, 1e-5)).toBe(true);
     });
@@ -391,7 +391,7 @@ describe('ParametricFunction', () => {
         axes,
       });
       // getPointFromT should use axes transformation
-      const pt = pf.getPointFromT(0);
+      const pt = pf.getPointFromT(0)!;
       const expected = axes.coordsToPoint(0, 0);
       expect(tupleCloseTo(pt, expected)).toBe(true);
     });
@@ -409,7 +409,7 @@ describe('ParametricFunction', () => {
         axes,
         useAxesCoords: true,
       });
-      const pt = pf.getPointFromT(1);
+      const pt = pf.getPointFromT(1)!;
       const expected = axes.coordsToPoint(2, 3);
       expect(tupleCloseTo(pt, expected)).toBe(true);
     });
@@ -423,7 +423,7 @@ describe('ParametricFunction', () => {
         useAxesCoords: false,
       });
       // Without axes transformation, raw coordinates are returned
-      const pt = pf.getPointFromT(0.5);
+      const pt = pf.getPointFromT(0.5)!;
       expect(closeTo(pt[0], 0.5)).toBe(true);
       expect(closeTo(pt[1], 0.5)).toBe(true);
       expect(pt[2]).toBe(0);
@@ -456,7 +456,7 @@ describe('ParametricFunction', () => {
       });
       pf.setAxes(null);
       // After clearing axes, getPointFromT should return raw coordinates
-      const pt = pf.getPointFromT(0.5);
+      const pt = pf.getPointFromT(0.5)!;
       expect(closeTo(pt[0], 0.5)).toBe(true);
       expect(closeTo(pt[1], 0.5)).toBe(true);
     });
@@ -477,13 +477,13 @@ describe('ParametricFunction', () => {
         useAxesCoords: false,
       });
       // Initially no transformation
-      const ptRaw = pf.getPointFromT(0.5);
+      const ptRaw = pf.getPointFromT(0.5)!;
       expect(closeTo(ptRaw[0], 0.5)).toBe(true);
 
       // Enable transformation
       const result = pf.setUseAxesCoords(true);
       expect(result).toBe(pf); // chainable
-      const ptTransformed = pf.getPointFromT(0.5);
+      const ptTransformed = pf.getPointFromT(0.5)!;
       const expected = axes.coordsToPoint(0.5, 0.5);
       expect(tupleCloseTo(ptTransformed, expected)).toBe(true);
     });
@@ -497,7 +497,7 @@ describe('ParametricFunction', () => {
         useAxesCoords: true,
       });
       pf.setUseAxesCoords(false);
-      const pt = pf.getPointFromT(0.5);
+      const pt = pf.getPointFromT(0.5)!;
       // Should return raw coords, not axes-transformed
       expect(closeTo(pt[0], 0.5)).toBe(true);
       expect(closeTo(pt[1], 0.5)).toBe(true);
@@ -534,8 +534,8 @@ describe('ParametricFunction', () => {
       const copied = pf.copy() as ParametricFunction;
       expect(copied).not.toBe(pf);
       // The copy should produce similar points
-      const origPt = pf.getPointFromT(0.5);
-      const copyPt = copied.getPointFromT(0.5);
+      const origPt = pf.getPointFromT(0.5)!;
+      const copyPt = copied.getPointFromT(0.5)!;
       expect(tupleCloseTo(origPt, copyPt)).toBe(true);
     });
 

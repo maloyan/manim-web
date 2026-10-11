@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Animation, AnimationOptions } from './Animation';
 import { Mobject } from '../core/Mobject';
+import { TestMobject } from '../test-setup/TestMobject';
 import { smooth, linear } from '../rate-functions';
 
 /**
@@ -25,7 +26,7 @@ describe('Animation base class', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new TestMobject();
   });
 
   // -----------------------------------------------------------

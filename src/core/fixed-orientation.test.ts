@@ -199,7 +199,6 @@ describe('addFixedOrientationMobjects', () => {
 
     // Orbit — quaternion should NOT track camera anymore (it's in HUD now)
     scene.setCameraOrientation(Math.PI / 3, Math.PI / 4, 15);
-    const cam = scene.camera3D.getCamera();
     const q = circle.getThreeObject().quaternion;
 
     // Should be identity (reset when removed from orientation tracking)

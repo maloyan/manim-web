@@ -10,7 +10,3 @@ export function axisVector(axis: AxisName): [number, number, number] {
       return [0, 0, 1];
   }
 }
-
-export function axisVectorFromEulerKey(key: 'X' | 'Y' | 'Z'): [number, number, number] {
-  return axisVector(key.toLowerCase() as AxisName);
-}

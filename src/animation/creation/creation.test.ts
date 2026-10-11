@@ -44,7 +44,6 @@ import {
 
 class MockTextMobject extends Mobject {
   private _text: string;
-  color: string = '#ffffff';
 
   constructor(text: string = 'Hello World') {
     super();
@@ -63,7 +62,11 @@ class MockTextMobject extends Mobject {
     return new (require('three').Object3D)();
   }
 
-  protected _syncToThree(): void {}
+  override _syncToThree(): void {}
+
+  override normalizeTransform(): this {
+    return this;
+  }
 
   override copy(): Mobject {
     return new MockTextMobject(this._text);
@@ -97,7 +100,11 @@ class MockMathTexMobject extends Mobject {
     return new (require('three').Object3D)();
   }
 
-  protected _syncToThree(): void {}
+  override _syncToThree(): void {}
+
+  override normalizeTransform(): this {
+    return this;
+  }
 
   override copy(): Mobject {
     return new MockMathTexMobject();
@@ -118,7 +125,11 @@ class MockPlainMobject extends Mobject {
     return new (require('three').Object3D)();
   }
 
-  protected _syncToThree(): void {}
+  override _syncToThree(): void {}
+
+  override normalizeTransform(): this {
+    return this;
+  }
 }
 
 // =============================================================================

@@ -12,7 +12,6 @@
  * Transform / saveState-restore infra.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import * as THREE from 'three';
 import { Text } from './Text';
 import { MarkupText } from './MarkupText';
 import { Paragraph } from './Paragraph';
@@ -49,11 +48,17 @@ function createMockCtx(): CanvasRenderingContext2D {
   } as unknown as CanvasRenderingContext2D;
 }
 
-const widthOf = (m: { getBounds(): { min: THREE.Vector3; max: THREE.Vector3 } }): number => {
+type BoundsLike = {
+  getBounds(): {
+    min: { x: number; y: number; z: number };
+    max: { x: number; y: number; z: number };
+  };
+};
+const widthOf = (m: BoundsLike): number => {
   const b = m.getBounds();
   return b.max.x - b.min.x;
 };
-const heightOf = (m: { getBounds(): { min: THREE.Vector3; max: THREE.Vector3 } }): number => {
+const heightOf = (m: BoundsLike): number => {
   const b = m.getBounds();
   return b.max.y - b.min.y;
 };

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Mobject } from './Mobject';
+import { TestMobject } from '../test-setup/TestMobject';
 import { VMobject } from './VMobject';
 import { VGroup } from './VGroup';
 import { PMobject } from '../mobjects/point/PMobject';
@@ -7,7 +7,7 @@ import { RED, DEFAULT_STROKE_WIDTH } from '../constants';
 
 describe('Mobject', () => {
   it('constructs with default position at origin', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     // position is a THREE.Vector3
     expect(m.position.x).toBe(0);
     expect(m.position.y).toBe(0);
@@ -15,36 +15,36 @@ describe('Mobject', () => {
   });
 
   it('color defaults to lowercase white', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     // THREE.js stores colors in lowercase
     expect(m.color.toLowerCase()).toBe('#ffffff');
   });
 
   it('setColor updates color', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     m.setColor('#FF0000');
     expect(m.color.toLowerCase()).toBe('#ff0000');
   });
 
   it('opacity defaults to 1', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     expect(m.opacity).toBe(1);
   });
 
   it('opacity can be set', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     m.opacity = 0.5;
     expect(m.opacity).toBe(0.5);
   });
 
   it('submobjects is initially empty', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     expect(m.submobjects).toEqual([]);
   });
 
   it('add/remove children', () => {
-    const parent = new Mobject();
-    const child = new Mobject();
+    const parent = new TestMobject();
+    const child = new TestMobject();
     parent.add(child);
     expect(parent.submobjects).toContain(child);
 
@@ -53,7 +53,7 @@ describe('Mobject', () => {
   });
 
   it('shift moves position', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     m.shift([1, 2, 0]);
     expect(m.position.x).toBe(1);
     expect(m.position.y).toBe(2);
@@ -61,7 +61,7 @@ describe('Mobject', () => {
   });
 
   it('shift is cumulative', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     m.shift([1, 0, 0]);
     m.shift([0, 1, 0]);
     expect(m.position.x).toBe(1);
@@ -79,7 +79,7 @@ describe('Mobject', () => {
   });
 
   it('scale applies to scaleVector', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     // Scale about an explicit point: a bare Mobject has no geometry, so the default
     // center anchor (getCenter()) is not meaningful here.
     m.scale(2, { aboutPoint: [0, 0, 0] });
@@ -89,12 +89,12 @@ describe('Mobject', () => {
   });
 
   it('strokeWidth defaults to 4', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     expect(m.strokeWidth).toBe(4);
   });
 
   it('fillOpacity defaults to 0', () => {
-    const m = new Mobject();
+    const m = new TestMobject();
     expect(m.fillOpacity).toBe(0);
   });
 });

@@ -700,7 +700,7 @@ describe('ImplicitFunction', () => {
 
   it('handles _interpolateEdge near-zero division', () => {
     // When v0 and v1 are nearly equal, interpolation falls back to midpoint
-    const flatFunc = (x: number, y: number) => {
+    const flatFunc = (x: number, _y: number) => {
       // Returns very small values near zero that cross sign
       if (x < 0) return -1e-15;
       return 1e-15;
@@ -978,7 +978,6 @@ describe('NumberPlane', () => {
 
     it('should regenerate lines when background is active', () => {
       const plane = new NumberPlane();
-      const linesBefore = plane.getBackgroundLines().children.length;
       plane.setBackgroundLineStyle({ strokeWidth: 5 });
       // Lines are regenerated but count stays similar
       expect(plane.getBackgroundLines().children.length).toBeGreaterThan(0);

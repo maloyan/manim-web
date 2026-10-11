@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Mobject } from '../core/Mobject';
+import { TestMobject } from '../test-setup/TestMobject';
 import { VMobject } from '../core/VMobject';
 import { linear } from '../rate-functions';
 import {
@@ -14,7 +15,6 @@ import {
   type HomotopyFunction,
   type ComplexHomotopyFunction,
   type VectorFieldFunction,
-  type Complex,
 } from './movement/Homotopy';
 import { MoveAlongPath, moveAlongPath } from './movement/MoveAlongPath';
 
@@ -23,7 +23,7 @@ import { MoveAlongPath, moveAlongPath } from './movement/MoveAlongPath';
 // ---------------------------------------------------------------------------
 
 function makeMobject(): Mobject {
-  return new Mobject();
+  return new TestMobject();
 }
 
 function makeVMobject(pts?: number[][]): VMobject {
@@ -645,7 +645,6 @@ describe('SmoothedVectorizedHomotopy', () => {
 
     it('interpolate uses originals (not cumulative)', () => {
       const vm = makeVMobject(twoSegmentPoints());
-      const origPts = vm.getLocalPoints();
       const fn: HomotopyFunction = (x, y, z, t) => [x + t * 100, y, z];
       const anim = new SmoothedVectorizedHomotopy(vm, { homotopyFunc: fn });
       anim.begin();

@@ -1,10 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { Mobject, UP, LEFT, RIGHT, UL, UR, DL } from './Mobject';
+import { Mobject, UL } from './Mobject';
 import { VMobject } from './VMobject';
 import { Group } from './Group';
-import { VGroup } from './VGroup';
 import { Dot } from '../mobjects/geometry/Dot';
-import { Line } from '../mobjects/geometry/Line';
 import { PointMobject } from '../mobjects/point';
 
 describe('Group - extended coverage', () => {

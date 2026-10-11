@@ -980,10 +980,15 @@ describe('DashedLine - propagation and copy', () => {
 
   describe('copy() does not duplicate children (regression)', () => {
     it('children count matches exactly, before and after, for several dashLength/dashRatio combinations', () => {
-      const cases = [
-        { start: [-3, 0, 0] as const, end: [3, 0, 0] as const, dashLength: 0.3, dashRatio: 0.5 },
-        { start: [-2, 1, 0] as const, end: [2, -1, 0] as const, dashLength: 0.12, dashRatio: 0.3 },
-        { start: [0, 0, 0] as const, end: [1, 0, 0] as const, dashLength: 0.25, dashRatio: 0.9 },
+      const cases: Array<{
+        start: [number, number, number];
+        end: [number, number, number];
+        dashLength: number;
+        dashRatio: number;
+      }> = [
+        { start: [-3, 0, 0], end: [3, 0, 0], dashLength: 0.3, dashRatio: 0.5 },
+        { start: [-2, 1, 0], end: [2, -1, 0], dashLength: 0.12, dashRatio: 0.3 },
+        { start: [0, 0, 0], end: [1, 0, 0], dashLength: 0.25, dashRatio: 0.9 },
       ];
       for (const c of cases) {
         const dl = new DashedLine(c);

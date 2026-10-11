@@ -54,15 +54,16 @@ describe('ImageMobject pre-load scale survives load + normalize', () => {
   it('scale before texture load is preserved after async load completes', async () => {
     // Drive the TextureLoader manually so we can scale+normalize BEFORE onLoad.
     let fireLoad: (() => void) | null = null;
-    const loadSpy = vi
-      .spyOn(THREE.TextureLoader.prototype, 'load')
-      .mockImplementation((_url: string, onLoad?: any) => {
-        const texture = new THREE.Texture();
-        // 4x2 natural pixels -> aspect ratio 2.
-        (texture as any).image = { width: 4, height: 2 };
-        fireLoad = () => onLoad?.(texture);
-        return texture;
-      });
+    const loadSpy = vi.spyOn(THREE.TextureLoader.prototype, 'load').mockImplementation(((
+      _url: string,
+      onLoad?: (t: THREE.Texture) => void,
+    ) => {
+      const texture = new THREE.Texture();
+      // 4x2 natural pixels -> aspect ratio 2.
+      (texture as any).image = { width: 4, height: 2 };
+      fireLoad = () => onLoad?.(texture);
+      return texture;
+    }) as unknown as typeof THREE.TextureLoader.prototype.load);
 
     try {
       withCanvasMock(() => {
@@ -98,14 +99,15 @@ describe('ImageMobject pre-load scale survives load + normalize', () => {
 
   it('a later applyVisualSize composes with the retained scaleVector (no double-apply on re-normalize)', async () => {
     let fireLoad: (() => void) | null = null;
-    const loadSpy = vi
-      .spyOn(THREE.TextureLoader.prototype, 'load')
-      .mockImplementation((_url: string, onLoad?: any) => {
-        const texture = new THREE.Texture();
-        (texture as any).image = { width: 4, height: 2 };
-        fireLoad = () => onLoad?.(texture);
-        return texture;
-      });
+    const loadSpy = vi.spyOn(THREE.TextureLoader.prototype, 'load').mockImplementation(((
+      _url: string,
+      onLoad?: (t: THREE.Texture) => void,
+    ) => {
+      const texture = new THREE.Texture();
+      (texture as any).image = { width: 4, height: 2 };
+      fireLoad = () => onLoad?.(texture);
+      return texture;
+    }) as unknown as typeof THREE.TextureLoader.prototype.load);
 
     try {
       withCanvasMock(() => {

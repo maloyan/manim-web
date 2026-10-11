@@ -1,6 +1,8 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { Mock } from 'vitest';
 import * as THREE from 'three';
+import type { Mobject } from '../core/Mobject';
 
 // ---------------------------------------------------------------------------
 // Minimal mocks for Mobject and Scene so we can test interaction logic
@@ -188,13 +190,13 @@ function fireKeyboardEvent(
 describe('Clickable', () => {
   let scene: ReturnType<typeof createMockScene>;
   let mob: ReturnType<typeof createMockMobject>;
-  let onClick: ReturnType<typeof vi.fn>;
+  let onClick: Mock<(mobject: Mobject, event: MouseEvent) => void>;
   let clickable: Clickable;
 
   beforeEach(() => {
     scene = createMockScene();
     mob = createMockMobject({ center: [0, 0, 0], bounds: { width: 2, height: 2 } });
-    onClick = vi.fn();
+    onClick = vi.fn<(mobject: Mobject, event: MouseEvent) => void>();
     clickable = new Clickable(mob as any, scene as any, { onClick });
   });
 
@@ -243,7 +245,7 @@ describe('Clickable', () => {
   });
 
   it('fires onDoubleClick when provided and double-click lands inside', () => {
-    const onDoubleClick = vi.fn();
+    const onDoubleClick = vi.fn<(mobject: Mobject, event: MouseEvent) => void>();
     clickable.dispose();
     clickable = new Clickable(mob as any, scene as any, { onClick, onDoubleClick });
 
