@@ -61,3 +61,14 @@ export {
 
 // Convex Hull
 export { ConvexHull3D, type ConvexHull3DOptions } from './ConvexHull3D';
+
+// Marching cubes (isosurface extraction)
+export {
+  marchingCubes,
+  type MarchingCubesOptions,
+  type MarchingCubesResult,
+  type ScalarField3D,
+} from './marchingCubes';
+
+// ImplicitSurface (3D isosurface)
+export { ImplicitSurface, type ImplicitSurfaceOptions } from './ImplicitSurface';
