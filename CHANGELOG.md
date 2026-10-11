@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.12.0](https://github.com/maloyan/manim-web/compare/v0.11.0...v0.12.0) (2026-10-11)
+
+
+### Features
+
+* **audio:** add Voiceover narration-sync helper ([8c923da](https://github.com/maloyan/manim-web/commit/8c923da45c62e6af2ac965420b77e46ef387ba47))
+* **interaction:** add MovablePoint and Slider explorable primitives ([72ed08a](https://github.com/maloyan/manim-web/commit/72ed08aa8671a8faee772424cfaeb49382a5cd53))
+* per-mobject blend modes and a theme system ([bf4a2ff](https://github.com/maloyan/manim-web/commit/bf4a2ffc32afd54e0d0c07041640dc4609ee226b))
+* **svg:** add URL loading, gradients, and text/image import ([085425b](https://github.com/maloyan/manim-web/commit/085425baeb08776a711a0c3bd619753bc8014faf)), closes [#3709](https://github.com/maloyan/manim-web/issues/3709)
+
 ## [0.11.0](https://github.com/maloyan/manim-web/compare/v0.10.0...v0.11.0) (2026-10-11)
 
 
