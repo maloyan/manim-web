@@ -1050,6 +1050,20 @@ export {
   type VideoExportOptions,
 } from './export';
 
+// --- export ergonomics (best-manim) ---
+export {
+  exportFramePNG,
+  exportPNGSequence,
+  downloadBlob,
+  exportAndDownloadPNG,
+  type FrameExportOptions,
+  type PNGSequenceOptions,
+  WebCodecsExporter,
+  createWebCodecsExporter,
+  type WebCodecsExportOptions,
+  type WebCodecsVideoCodec,
+} from './export';
+
 // Vector math utilities
 export {
   scaleVec,
