@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Mobject } from '../core/Mobject';
+import { TestMobject } from '../test-setup/TestMobject';
 import { Animation } from './Animation';
 import {
   overrideAnimate,
@@ -14,7 +15,7 @@ import { AnimateProxy } from '../core/AnimateProxy';
  * The override is registered against a mobject class + method name, and
  * `AnimateProxy` plays it in place of the default Transform.
  */
-class OverrideTestMob extends Mobject {}
+class OverrideTestMob extends TestMobject {}
 
 class FlagAnimation extends Animation {
   interpolate(): void {

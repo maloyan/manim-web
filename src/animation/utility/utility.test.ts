@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
+import { TestMobject } from '../../test-setup/TestMobject';
 import { PointMobject } from '../../mobjects/point/PointMobject';
 import { linear } from '../../rate-functions';
 import {
@@ -24,7 +25,7 @@ describe('Add', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new TestMobject();
   });
 
   // -----------------------------------------------------------
@@ -133,7 +134,7 @@ describe('Remove', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new TestMobject();
   });
 
   // -----------------------------------------------------------
@@ -232,7 +233,7 @@ describe('Wait', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new TestMobject();
   });
 
   // -----------------------------------------------------------
@@ -342,7 +343,7 @@ describe('Rotating', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new TestMobject();
   });
 
   // -----------------------------------------------------------
@@ -584,7 +585,7 @@ describe('Broadcast', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new TestMobject();
   });
 
   // -----------------------------------------------------------

@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { VMobject } from './VMobject';
-import { VGroup } from './VGroup';
-import { VDict, VectorizedPoint } from './VDict';
+import { VDict } from './VDict';
 
 /** Create a simple VMobject with 4 corner points (a quad). */
 function makeVM(tag?: string): VMobject {

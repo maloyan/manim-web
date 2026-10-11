@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { PMobject, PointMobject, PointCloudDot, Mobject1D, Mobject2D, PGroup } from './index';
 import { Group } from '../../core/Group';
-import { VMobject } from '../../core/VMobject';
 import { ORIGIN } from '../../core/MobjectTypes';
 
 describe('PMobject', () => {
@@ -233,7 +232,6 @@ describe('PMobject', () => {
     it('combined nested rotation + scale + translation order is correct', () => {
       // MIGRATION: weak test, remove once property-based tests done
       const pm = new PMobject().addPoint({ position: [1, 0, 0] });
-      const initialWorld = pm.getPoints()[0];
 
       const inner = new Group(pm);
       inner.rotate(Math.PI / 2, [0, 0, 1]);
@@ -848,7 +846,6 @@ describe('Mobject2D', () => {
 
   it('regenerate recreates random points', () => {
     const m = new Mobject2D({ numPointsX: 20, distribution: 'random' });
-    const ptsBefore = m.getLocalPoints().map((p) => p.position);
     m.regenerate();
     const ptsAfter = m.getLocalPoints().map((p) => p.position);
     expect(ptsAfter.length).toBe(20);

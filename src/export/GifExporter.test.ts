@@ -29,7 +29,7 @@ function createMockGifInstance() {
 
 vi.mock('gif.js', () => {
   return {
-    default: vi.fn(function MockGIF() {
+    default: vi.fn(function MockGIF(this: typeof mockGifInstance) {
       Object.assign(this, mockGifInstance);
       return this;
     }),

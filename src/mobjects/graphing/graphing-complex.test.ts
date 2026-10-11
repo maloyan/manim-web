@@ -899,6 +899,9 @@ describe('ComplexPlane with canvas mock', () => {
         override copy(): Mobject {
           return new StubMobject();
         }
+        override normalizeTransform(): this {
+          return this;
+        }
         protected override _createThreeObject(): THREE.Object3D {
           return new THREE.Group();
         }

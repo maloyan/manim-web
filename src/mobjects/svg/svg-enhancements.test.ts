@@ -11,7 +11,11 @@ import { colorGradient } from '../../core/VMobjectColorGradient';
 /** Stub canvas 2D context (happy-dom lacks full canvas support, Text needs it). */
 beforeAll(() => {
   const orig = HTMLCanvasElement.prototype.getContext;
-  HTMLCanvasElement.prototype.getContext = function (type: string, ...args: unknown[]) {
+  HTMLCanvasElement.prototype.getContext = function (
+    this: HTMLCanvasElement,
+    type: string,
+    ...args: unknown[]
+  ) {
     if (type === '2d') {
       return {
         scale: () => {},

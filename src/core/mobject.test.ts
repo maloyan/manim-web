@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Mobject, UP, LEFT, RIGHT, UL, UR, DL } from './Mobject';
 import { VMobject } from './VMobject';
 import { VGroup } from './VGroup';
-import { Group } from './Group';
-import { VDict, VectorizedPoint } from './VDict';
+import { VectorizedPoint } from './VDict';
 
 describe('VectorizedPoint', () => {
   it('creates at origin by default', () => {

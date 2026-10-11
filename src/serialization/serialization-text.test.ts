@@ -42,7 +42,7 @@ beforeAll(() => {
       };
     }
     return null;
-  };
+  } as unknown as typeof HTMLCanvasElement.prototype.getContext;
 });
 
 afterAll(() => {

@@ -18,7 +18,7 @@ For each mobject it captures:
   stroke width),
 - the **submobject tree** (children, recursively).
 
-Props hold the *base* (pre-scale) size and the transform holds the scale, so
+Props hold the _base_ (pre-scale) size and the transform holds the scale, so
 `serialize -> deserialize -> serialize` is stable for the supported types.
 
 ## Public API

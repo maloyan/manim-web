@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Mobject } from '../core/Mobject';
+import { TestMobject } from '../test-setup/TestMobject';
 import { linear } from '../rate-functions';
 import {
   Add,
@@ -15,7 +16,7 @@ import {
 } from './utility/index';
 
 function createMob(): Mobject {
-  return new Mobject();
+  return new TestMobject();
 }
 
 // ==================================================================

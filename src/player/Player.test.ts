@@ -628,9 +628,6 @@ describe('Player _startLoop render loop', () => {
   let player: Player;
   let container: HTMLElement;
   let rafCallbacks: Array<(time: number) => void>;
-  let originalRaf: typeof requestAnimationFrame;
-  let originalCaf: typeof cancelAnimationFrame;
-  let originalPerfNow: typeof performance.now;
   let rafIdCounter: number;
 
   beforeEach(() => {
@@ -639,9 +636,6 @@ describe('Player _startLoop render loop', () => {
     // Mock requestAnimationFrame to capture callbacks
     rafCallbacks = [];
     rafIdCounter = 1;
-    originalRaf = globalThis.requestAnimationFrame;
-    originalCaf = globalThis.cancelAnimationFrame;
-    originalPerfNow = performance.now;
 
     vi.stubGlobal(
       'requestAnimationFrame',
@@ -1403,6 +1397,7 @@ describe('PlayerController', () => {
       onNext: vi.fn(),
       onSeek: vi.fn(),
       onFullscreen: vi.fn(),
+      onSlidesToggle: vi.fn(),
       getCurrentTime: vi.fn(() => 5),
       getDuration: vi.fn(() => 10),
     };

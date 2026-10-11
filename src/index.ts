@@ -1416,3 +1416,37 @@ export {
   type ContainerLike,
   type Vec3,
 } from './serialization';
+
+// --- geo maps (best-manim) ---
+// 2D choropleth maps + 3D globe from GeoJSON. ChoroplethMap projects lon/lat
+// (equirectangular by default, mercator available) and fills regions by value;
+// Globe plots lat/long points, great-circle arcs and a graticule on a sphere.
+export {
+  ChoroplethMap,
+  GeoMap,
+  Globe,
+  ColorScale,
+  equirectangular,
+  mercator,
+  exteriorRings,
+  type ChoroplethMapOptions,
+  type ChoroplethValueAccessor,
+  type GlobeOptions,
+  type GlobePointOptions,
+  type GlobeArcOptions,
+  type GlobeGraticuleOptions,
+  type LatLon,
+  type ColorScaleOptions,
+  type GeoProjection,
+  type EquirectangularOptions,
+  type MercatorOptions,
+  type GeoPosition,
+  type GeoLinearRing,
+  type GeoPolygon,
+  type GeoMultiPolygon,
+  type GeoGeometry,
+  type GeoProperties,
+  type GeoFeature,
+  type GeoFeatureCollection,
+} from './mobjects/geo';
+// --- end geo maps ---

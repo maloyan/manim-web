@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Mobject } from '../core/Mobject';
+import { TestMobject } from '../test-setup/TestMobject';
 import { VMobject } from '../core/VMobject';
 import { Arrow } from '../mobjects/geometry/Arrow';
 import { linear } from '../rate-functions';
@@ -24,7 +25,7 @@ function makeArrow(): Arrow {
 }
 
 function makeMobject(): Mobject {
-  return new Mobject();
+  return new TestMobject();
 }
 
 function makeVMobject(pts?: number[][]): VMobject {

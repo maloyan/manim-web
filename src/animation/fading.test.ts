@@ -2,13 +2,14 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { FadeIn, fadeIn } from './fading/FadeIn';
 import { FadeOut, fadeOut } from './fading/FadeOut';
 import { Mobject } from '../core/Mobject';
+import { TestMobject } from '../test-setup/TestMobject';
 import { linear } from '../rate-functions';
 
 describe('FadeIn', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new TestMobject();
   });
 
   // -----------------------------------------------------------
@@ -184,7 +185,7 @@ describe('FadeOut', () => {
   let mob: Mobject;
 
   beforeEach(() => {
-    mob = new Mobject();
+    mob = new TestMobject();
   });
 
   // -----------------------------------------------------------
