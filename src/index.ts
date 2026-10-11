@@ -93,6 +93,34 @@ export {
   type Matrix2D,
 } from './core/LinearTransformationScene';
 export { AudioManager, type AudioTrack, type AddSoundOptions } from './core/AudioManager';
+
+// --- voiceover (best-manim) ---
+export {
+  Voiceover,
+  type VoiceoverOptions,
+  type VoiceoverCallback,
+  type VoiceoverTracker,
+  type VoiceoverAudioOptions,
+  type VoiceoverAudioScheduler,
+} from './audio/Voiceover';
+export {
+  VoiceoverScene,
+  type VoiceoverSceneOptions,
+  type VoiceoverSceneAudioOptions,
+} from './audio/VoiceoverScene';
+export {
+  setSpeechSynthesizer,
+  getSpeechSynthesizer,
+  isSpeechSupported,
+  WebSpeechSynthesizer,
+  type SpeechSynthesizer,
+  type SpeechUtteranceHandle,
+  type SpeechOptions,
+  type SpeechBoundaryInfo,
+} from './audio/speechSynthesizer';
+export { parseBookmarks, type Bookmark, type ParsedTranscript } from './audio/bookmarks';
+// --- end voiceover ---
+
 export { Renderer, type RendererOptions, type IRenderer } from './core/Renderer';
 export { NullRenderer } from './core/NullRenderer';
 export {
