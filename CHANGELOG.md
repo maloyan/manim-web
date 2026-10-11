@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.15.1](https://github.com/maloyan/manim-web/compare/v0.15.0...v0.15.1) (2026-10-11)
+
+
+### Bug Fixes
+
+* **docs:** add MovablePoint and Slider to the scene in the live example ([0207d1e](https://github.com/maloyan/manim-web/commit/0207d1e1187271358d1738fcdd7fc78cb9fe2fbd))
+* **text:** recreate canvas texture on setText size change ([#607](https://github.com/maloyan/manim-web/issues/607)) ([2df7994](https://github.com/maloyan/manim-web/commit/2df799422ad3c757e11fa96863f64df9ae3fd9a2))
+
 ## [0.15.0](https://github.com/maloyan/manim-web/compare/v0.14.0...v0.15.0) (2026-10-11)
 
 
