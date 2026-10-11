@@ -21,6 +21,30 @@ export {
   DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
 } from './constants';
 
+// --- constants (parity) ---
+export {
+  PI,
+  TAU,
+  DEGREES,
+  X_AXIS,
+  Y_AXIS,
+  Z_AXIS,
+  DEFAULT_DOT_RADIUS,
+  DEFAULT_SMALL_DOT_RADIUS,
+  DEFAULT_DASH_LENGTH,
+  DEFAULT_ARROW_TIP_LENGTH,
+  NORMAL,
+  BOLD,
+  THIN,
+  LIGHT,
+  MEDIUM,
+  SEMIBOLD,
+  HEAVY,
+  ULTRAHEAVY,
+  LineJointType,
+  CapStyleType,
+} from './constants/parity';
+
 // TeX Templates
 export {
   TexTemplate,
@@ -771,6 +795,14 @@ export { maintainPositionRelativeTo } from './animation/MaintainPositionRelative
 export { alwaysRedraw } from './animation/AlwaysRedraw';
 export { fAlways, always, type MethodKeys } from './animation/Always';
 
+// --- animation updaters (parity) ---
+export {
+  alwaysShift,
+  alwaysRotate,
+  turnAnimationIntoUpdater,
+  cycleAnimation,
+} from './animation/updaters';
+
 // Number animations
 export {
   ChangingDecimal,
@@ -1008,3 +1040,105 @@ export {
 
 // Logging
 export { logger, onLog, type LogEntry, type LogLevel, type LogListener } from './utils/logger';
+
+// --- utils/color (parity) ---
+export {
+  colorToRgb,
+  colorToRgba,
+  colorToIntRgb,
+  colorToIntRgba,
+  rgbToColor,
+  rgbaToColor,
+  rgbToHex,
+  hexToRgb,
+  invertColor,
+  interpolateColor,
+  averageColor,
+  colorGradient,
+  randomColor,
+  randomBrightColor,
+  hsvToRgb,
+  rgbToHsv,
+} from './utils/color';
+
+// --- utils/iterables/unit/family/debug (parity) ---
+export {
+  adjacentNTuples,
+  adjacentPairs,
+  removeListRedundancies,
+  listDifferenceUpdate,
+  listUpdate,
+  tuplify,
+  makeEven,
+  stretchArrayToLength,
+  uniqChain,
+  powerset,
+  hashObj,
+} from './utils/iterables';
+export { Pixels, Degrees, Munits, Percent } from './utils/unit';
+export {
+  extractMobjectFamilyMembers,
+  restructureListToExcludeCertainFamilyMembers,
+  indexLabels,
+  printFamily,
+  type IndexLabelsOptions,
+} from './utils/debug';
+
+// --- utils/space-ops/paths/simple (parity) ---
+export {
+  normSquared,
+  cross,
+  cross2d,
+  normalize,
+  quaternionMult,
+  quaternionFromAngleAxis,
+  angleAxisFromQuaternion,
+  quaternionConjugate,
+  rotationMatrix,
+  rotationAboutZ,
+  rotationMatrixTranspose,
+  rotateVector,
+  zToVector,
+  angleOfVector,
+  angleBetweenVectors,
+  getUnitNormal,
+  regularVertices,
+  complexToR3,
+  r3ToComplex,
+  complexFuncToR3Func,
+  centerOfMass,
+  midpoint,
+  lineIntersection,
+  findIntersection,
+  shoelace,
+  shoelaceDirection,
+  cartesianToSpherical,
+  sphericalToCartesian,
+  perpendicularBisector,
+} from './utils/spaceOps';
+export {
+  type PathFunc,
+  straightPath,
+  pathAlongArc,
+  pathAlongCircles,
+  clockwisePath,
+  counterclockwisePath,
+} from './utils/paths';
+export { clip, sigmoid, choose, binarySearch } from './utils/simpleFunctions';
+
+// --- utils/bezier (parity) ---
+export {
+  bezier,
+  partialBezierPoints,
+  splitBezier,
+  subdivideBezier,
+  bezierRemap,
+  interpolate,
+  integerInterpolate,
+  mid,
+  inverseInterpolate,
+  matchInterpolate,
+  getSmoothCubicBezierHandlePoints,
+  isClosed,
+  proportionsAlongBezierCurveForPoint,
+} from './utils/bezier';
