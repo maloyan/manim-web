@@ -26,4 +26,18 @@ export {
   VMobjectFromSVGPath,
   type SVGMobjectOptions,
   type VMobjectFromSVGPathOptions,
+  type SVGMobjectFromUrlOptions,
 } from './SVGMobject';
+
+// --- svg enhancements (best-manim) ---
+// Gradient fills: parse <linearGradient>/<radialGradient> and apply as fills.
+export {
+  GradientVMobject,
+  type GradientVMobjectOptions,
+  type SvgGradient,
+  type SvgGradientStop,
+  type SvgGradientType,
+} from './svgGradients';
+// URL loading: SVGMobject.fromUrl's injectable fetcher contract.
+export { type SvgFetcher, type SvgFetchResponse } from './svgLoader';
+// --- end svg enhancements ---
