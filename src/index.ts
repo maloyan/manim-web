@@ -764,6 +764,7 @@ export {
 export { UpdateFromFunc, updateFromFunc } from './animation/UpdateFromFunc';
 export { UpdateFromAlphaFunc, updateFromAlphaFunc } from './animation/UpdateFromAlphaFunc';
 export { maintainPositionRelativeTo } from './animation/MaintainPositionRelativeTo';
+export { alwaysRedraw } from './animation/AlwaysRedraw';
 
 // Number animations
 export {
