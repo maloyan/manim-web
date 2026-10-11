@@ -1008,3 +1008,23 @@ export {
 
 // Logging
 export { logger, onLog, type LogEntry, type LogLevel, type LogListener } from './utils/logger';
+
+// --- utils/color (parity) ---
+export {
+  colorToRgb,
+  colorToRgba,
+  colorToIntRgb,
+  colorToIntRgba,
+  rgbToColor,
+  rgbaToColor,
+  rgbToHex,
+  hexToRgb,
+  invertColor,
+  interpolateColor,
+  averageColor,
+  colorGradient,
+  randomColor,
+  randomBrightColor,
+  hsvToRgb,
+  rgbToHsv,
+} from './utils/color';
