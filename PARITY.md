@@ -5,12 +5,12 @@ This document records the public API coverage of manim-web against ManimCE
 
 ## Headline numbers
 
-| Metric | Count |
-| --- | --- |
-| Total ManimCE public symbols | 685 |
-| EXISTS (ported) | 403 |
-| MISSING (feasible, not yet ported) | 25 |
-| INFEASIBLE (out of scope for the browser port) | 257 |
+| Metric                                              | Count                 |
+| --------------------------------------------------- | --------------------- |
+| Total ManimCE public symbols                        | 685                   |
+| EXISTS (ported)                                     | 403                   |
+| MISSING (feasible, not yet ported)                  | 25                    |
+| INFEASIBLE (out of scope for the browser port)      | 257                   |
 | **Feasible coverage** = EXISTS / (EXISTS + MISSING) | **403 / 428 = 94.2%** |
 
 ## Methodology
