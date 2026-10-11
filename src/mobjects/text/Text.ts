@@ -4,6 +4,15 @@ import { TexturedMobject } from '../../core/TexturedMobject';
 import { TextGlyphGroup } from './TextGlyphGroup';
 import type { SkeletonizeOptions } from '../../utils/skeletonize';
 import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
+import {
+  type TextStyleMaps,
+  type TextStyleRun,
+  type StyledTextParams,
+  buildStyledTextLines,
+  hasStyleMaps,
+  measureStyledText,
+  renderStyledTextToCanvas,
+} from './textStyleRuns';
 
 /** Scale factor from Canvas 2D output to point units.
  * At 72 DPI, 1pt = 4/3 canvas pixels. */
@@ -37,6 +46,12 @@ export interface TextOptions {
   textAlign?: 'left' | 'center' | 'right';
   /** URL to a font file (OTF/TTF) for glyph vector extraction. When provided, loadGlyphs() can extract glyph outlines for stroke-draw animation. */
   fontUrl?: string;
+  /** Per-substring color map (text-to-color), as in Manim CE. Colors every occurrence of each substring. */
+  t2c?: Record<string, string>;
+  /** Per-substring font-weight map (text-to-weight), e.g. { bold: 'bold' }. */
+  t2w?: Record<string, string | number>;
+  /** Per-substring font-style map (text-to-slant), e.g. { x: 'italic' }. */
+  t2s?: Record<string, string>;
 }
 
 /** Resolution multiplier for crisp text on retina displays */
@@ -133,6 +148,9 @@ export class Text extends TexturedMobject {
 
   /** Optional font URL for glyph vector extraction */
   protected _fontUrl?: string;
+
+  /** Per-substring style maps (t2c/t2w/t2s). Empty when no styling requested. */
+  protected _styleMaps: TextStyleMaps = {};
   /** Cached glyph group (created lazily by loadGlyphs) */
   protected _glyphGroup: TextGlyphGroup | null = null;
 
@@ -166,9 +184,13 @@ export class Text extends TexturedMobject {
       letterSpacing = 0,
       textAlign = 'center',
       fontUrl,
+      t2c,
+      t2w,
+      t2s,
     } = options;
 
     this._text = text;
+    this._styleMaps = { t2c, t2w, t2s };
     this._fontSize = fontSize;
     this._fontFamily = fontFamily;
     this._fontWeight = fontWeight;
@@ -221,6 +243,16 @@ export class Text extends TexturedMobject {
     this._updateMesh();
     this._markDirty();
     return this;
+  }
+
+  /**
+   * Get the per-substring style layout model: lines of styled runs.
+   *
+   * This is the testable model behind `t2c`/`t2w`/`t2s`. A run's null fields
+   * fall back to the Text base color/weight/style at render time.
+   */
+  getStyledTextLines(): TextStyleRun[][] {
+    return buildStyledTextLines(this._text, this._styleMaps);
   }
 
   /**
@@ -299,6 +331,10 @@ export class Text extends TexturedMobject {
       return { lines: [], width: 0, height: 0 };
     }
 
+    if (hasStyleMaps(this._styleMaps)) {
+      return this._measureStyledText();
+    }
+
     this._ctx.font = this._buildFontString();
     const lines = this._text.split('\n');
     const scaledFontSize = this._fontSize * RESOLUTION_SCALE;
@@ -328,6 +364,11 @@ export class Text extends TexturedMobject {
    */
   protected _renderToCanvas(): void {
     if (!this._canvas || !this._ctx) {
+      return;
+    }
+
+    if (hasStyleMaps(this._styleMaps)) {
+      this._renderStyledToCanvas();
       return;
     }
 
@@ -453,6 +494,57 @@ export class Text extends TexturedMobject {
 
     // Restore alignment
     this._ctx.textAlign = this._textAlign;
+  }
+
+  /** Collect the style and layout fields the styled canvas path needs. */
+  protected _styledTextParams(): StyledTextParams {
+    return {
+      fontSize: this._fontSize,
+      fontFamily: this._fontFamily,
+      fontStyle: this._fontStyle,
+      fontWeight: this._fontWeight,
+      lineHeight: this._lineHeight,
+      textAlign: this._textAlign,
+      color: this.color,
+      fillOpacity: this.fillOpacity,
+      strokeWidth: this.strokeWidth,
+    };
+  }
+
+  /**
+   * Measure styled (t2c/t2w/t2s) text via the shared styled-run layout helper.
+   */
+  protected _measureStyledText(): { lines: string[]; width: number; height: number } {
+    if (!this._ctx) {
+      return { lines: [], width: 0, height: 0 };
+    }
+    return measureStyledText(this._ctx, this.getStyledTextLines(), this._styledTextParams());
+  }
+
+  /**
+   * Render styled (t2c/t2w/t2s) text through the shared styled-run renderer,
+   * then store the resulting world-space size.
+   */
+  protected _renderStyledToCanvas(): void {
+    if (!this._canvas || !this._ctx) {
+      return;
+    }
+    const size = renderStyledTextToCanvas(
+      this._canvas,
+      this._ctx,
+      this.getStyledTextLines(),
+      this._styledTextParams(),
+      {
+        defaultFontSizePt: DEFAULT_FONT_SIZE_PT,
+        defaultFontSizeInWorld: DEFAULT_FONT_SIZE_IN_WORLD_SPACE,
+      },
+    );
+    this._worldWidth = size.width;
+    this._worldHeight = size.height;
+    this._canvasDirty = false;
+    if (this._texture) {
+      this._texture.needsUpdate = true;
+    }
   }
 
   /**
@@ -669,6 +761,9 @@ export class Text extends TexturedMobject {
       letterSpacing: this._letterSpacing,
       textAlign: this._textAlign,
       fontUrl: this._fontUrl,
+      t2c: this._styleMaps.t2c,
+      t2w: this._styleMaps.t2w,
+      t2s: this._styleMaps.t2s,
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     this._carryVisualSizeTo(copy);

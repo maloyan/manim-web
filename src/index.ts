@@ -331,6 +331,10 @@ export {
   type TitleOptions,
   type MarkdownTextOptions,
   type StyledTextSegment,
+  // Per-substring style runs (t2c/t2w/t2s)
+  type TextStyleMaps,
+  type TextStyleRun,
+  buildStyledTextLines,
 } from './mobjects/text';
 
 // 3D Mobjects
