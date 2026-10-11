@@ -1170,3 +1170,8 @@ export {
   proportionsAlongBezierCurveForPoint,
   pointLiesOnBezier,
 } from './utils/bezier';
+
+// --- misc parity ---
+export { assertIsMobjectMethod } from './animation/Always';
+export { overrideAnimate } from './animation/AnimationUtilities';
+export { registerFont, type FontSource } from './mobjects/text/registerFont';

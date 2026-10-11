@@ -41,6 +41,39 @@ export function overrideAnimation(
 }
 
 /**
+ * overrideAnimate - Register a custom `.animate` behavior for a method, by class.
+ *
+ * TS-idiomatic form of CE's `@override_animate(method)` decorator. CE decorates
+ * a method so that `mob.animate.method()` plays a custom animation instead of
+ * interpolating the method's effect. A decorator needs a target, and this repo
+ * does not use TypeScript decorators, so the override is registered against the
+ * mobject class and method name. `AnimateProxy.begin` consults this registry
+ * (via `getAnimationOverride`) and uses the factory when exactly that method is
+ * recorded, so wiring the hook is not needed.
+ *
+ * The class key matches the lookup in `AnimateProxy`: the static `className`
+ * (survives minification) when present, otherwise `mobjectClass.name`.
+ *
+ * @param mobjectClass - The mobject class the override applies to.
+ * @param methodName - The method whose `.animate` behavior is overridden.
+ * @param animationFactory - Builds the animation played for `mob.animate[methodName]()`.
+ *
+ * @example
+ * ```typescript
+ * overrideAnimate(MyMobject, 'clearContent', (mob, args) => new Uncreate(mob, args));
+ * myMobject.animate.clearContent(); // plays Uncreate instead of a Transform
+ * ```
+ */
+export function overrideAnimate<M extends Mobject>(
+  mobjectClass: abstract new (...args: never[]) => M,
+  methodName: string,
+  animationFactory: AnimationOverrideFunc,
+): void {
+  const className = (mobjectClass as { className?: string }).className ?? mobjectClass.name;
+  overrideAnimation(methodName, className, animationFactory);
+}
+
+/**
  * getAnimationOverride - Get registered animation override for a method
  *
  * @param methodName The method name to check
