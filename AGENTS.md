@@ -6,24 +6,59 @@
 
 ```bash
 npm run dev               # Start Vite dev server
-npm run build             # TypeScript compile + Vite build
+npm run build             # TypeScript compile + Vite build (library + browser bundle)
 npm run typecheck         # Type-check without emitting
 npm test                  # Run unit tests (vitest)
 npm run test:coverage     # Run tests with coverage report
 npm run test:integration  # Run Playwright smoke tests
-npm run lint              # ESLint
-npm run format:check      # Prettier check
+npm run lint              # ESLint (src/)
+npm run format:check      # Prettier check (src/)
+npm run lint:no-disable   # Grep guard: fail on any eslint-disable (whole repo)
+npm run knip              # Report unused files, exports, and dependencies
 npm run docs              # Generate example docs + build Docusaurus site
 ```
 
+## The gauntlet — run before every PR
+
+CI runs these. Run them locally first. All must pass:
+
+```bash
+npm run typecheck
+npm test
+npm run lint
+npm run format:check
+npm run lint:no-disable
+npm run knip
+npm run build
+```
+
+`npm run format` (not `format:check`) auto-fixes formatting.
+
+## Pull requests
+
+- `main` is **protected**. Never push to it. Open a PR from a branch.
+- Fill in `.github/pull_request_template.md`, including the gauntlet checklist.
+- The PR title becomes the squash-commit subject and lands in `CHANGELOG.md`.
+  Use Conventional Commits — see _Commits, Changelog & Releases_ below.
+
 ## Architecture
 
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full flow (Scene/play loop,
+Mobject taxonomy, the dirty flag, the rendering pipeline, animations, and the
+presentation timeline). Directory map:
+
 - `src/core/` — Mobject, VMobject, Group, VGroup, Scene, Camera, Renderer
-- `src/animation/` — Animation base, Transform, FadeIn/Out, Create, etc.
-- `src/mobjects/` — Geometry, graphing, text, SVG, table, matrix, probability
-- `src/integrations/` — React and Vue components
+- `src/animation/` — Animation base, Transform, FadeIn/Out, Create, Timeline
+- `src/rendering/` — BezierRenderer and the SDF stroke shader
+- `src/rate-functions/` — rate functions (smooth, linear, easing, ...)
+- `src/mobjects/` — Geometry, graphing, text, SVG, table, matrix, probability, 3D
+- `src/interaction/` — Draggable, Hoverable, Clickable, OrbitControls, Slider
+- `src/export/` — GIF and video (WebCodecs) exporters
+- `src/player/` — presentation Player with scrubbing and controls
+- `src/integrations/` — React, Vue, and `<manim-scene>` web component
 - `src/utils/` — Math helpers, vectors, triangulation, skeletonization
-- `examples/` — HTML+TS example pairs (auto-generated docs from these)
+- `examples/` — HTML+TS example pairs (auto-generated docs from these); the
+  in-browser editor lives in `examples/playground/`
 - `docs/` — Docusaurus documentation site
 - `tools/py2ts.cjs` — Python Manim to TypeScript converter
 
@@ -70,7 +105,7 @@ helpers live in `src/utils/math.ts` and are built on top of those.
   `Math.abs(v[2]) < eps`, "is this the Z axis?", or "is the plane the XY
   plane?" to pick a basis. Use `orthonormalFrame(normal)` — it gives you a
   right-handed `{u, v, n}` for any normal.
-  *Exception:* `orthonormalizeBasis` in `src/utils/math.ts` keeps a
+  _Exception:_ `orthonormalizeBasis` in `src/utils/math.ts` keeps a
   Z-biased fallback for its collinear-input branch. Callers (fill
   triangulation in particular) rely on the fallback landing in the same
   plane the geometry occupies — see the regression test in
@@ -143,22 +178,22 @@ therefore user-facing release notes — write them as such.
 
 Allowed `<type>` values and where they land in `CHANGELOG.md`:
 
-| Type       | Section in CHANGELOG | Notes                                |
-| ---------- | -------------------- | ------------------------------------ |
-| `feat`     | Features             | Triggers a **minor** version bump    |
-| `fix`      | Bug Fixes            | Triggers a **patch** bump            |
-| `perf`     | Performance          | Patch bump                           |
-| `refactor` | Refactoring          | Patch bump                           |
-| `docs`     | Documentation        | Patch bump                           |
-| `test`     | Tests                | Patch bump                           |
-| `chore`    | *(hidden)*           | Still counts toward release if cut   |
+| Type       | Section in CHANGELOG | Notes                              |
+| ---------- | -------------------- | ---------------------------------- |
+| `feat`     | Features             | Triggers a **minor** version bump  |
+| `fix`      | Bug Fixes            | Triggers a **patch** bump          |
+| `perf`     | Performance          | Patch bump                         |
+| `refactor` | Refactoring          | Patch bump                         |
+| `docs`     | Documentation        | Patch bump                         |
+| `test`     | Tests                | Patch bump                         |
+| `chore`    | _(hidden)_           | Still counts toward release if cut |
 
 `<scope>` should be the issue number for work tied to a tracked issue:
 `fix(#344): ...`, `feat(#358): ...`. For tooling commits use a topical scope
 (`chore(deps-dev): ...`, `fix(ci): ...`).
 
 The subject must be short, imperative, and stand alone in release notes
-(`add multi-camera example scenes`, not `WIP changes`). It is the *only* part
+(`add multi-camera example scenes`, not `WIP changes`). It is the _only_ part
 of the commit that downstream consumers reliably see.
 
 ### Breaking changes
@@ -208,7 +243,7 @@ Releases are cut locally, then finished by CI:
 
 Caveats agents should know:
 
-- **GitHub Release notes** are built from `git log`, *not* from
+- **GitHub Release notes** are built from `git log`, _not_ from
   `CHANGELOG.md` — bad commit subjects show up in two places, not one.
 - **Never hand-edit generated release entries** in `CHANGELOG.md`. Fix the
   underlying commit message and regenerate, or add a note above the

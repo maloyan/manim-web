@@ -27,23 +27,18 @@ The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the bro
 <h1>Manim-web demo</h1>
 <div id="container"></div>
 <script type="module">
-    import {
-        Scene,
-        Circle,
-        Create,
-    } from "https://cdn.jsdelivr.net/npm/manim-web@latest/dist/manim-web.browser.js";
+  import {
+    Scene,
+    Circle,
+    Create,
+  } from 'https://cdn.jsdelivr.net/npm/manim-web@latest/dist/manim-web.browser.js';
 
-    const options = { width: 500, height: 300 };
-    const scene = new Scene(
-        document.getElementById("container"),
-        options,
-    );
-    const circle = new Circle({ radius: 1.5 });
-    await scene.play(new Create(circle));
+  const options = { width: 500, height: 300 };
+  const scene = new Scene(document.getElementById('container'), options);
+  const circle = new Circle({ radius: 1.5 });
+  await scene.play(new Create(circle));
 </script>
 ```
-
-
 
 ### Locally
 
@@ -94,23 +89,44 @@ See the [examples](https://maloyan.github.io/manim-web/) for more.
 
 ### React
 
+The `ManimScene` component builds the scene in the `onSceneReady` callback. It
+runs once, after the scene mounts.
+
 ```tsx
 import { ManimScene } from 'manim-web/react';
+import { Circle, Create } from 'manim-web';
 
 function App() {
-  return <ManimScene construct={squareToCircle} width={800} height={450} />;
+  return (
+    <ManimScene
+      width={800}
+      height={450}
+      onSceneReady={async (scene) => {
+        const circle = new Circle({ radius: 1.5 });
+        await scene.play(new Create(circle));
+      }}
+    />
+  );
 }
 ```
 
 ### Vue
 
+The `ManimScene` component emits a `ready` event with the scene instance. Build
+the scene in the handler.
+
 ```vue
-<script setup>
-import { ManimScene } from 'manim-web/vue';
+<script setup lang="ts">
+import { ManimScene, Circle, Create, type Scene } from 'manim-web/vue';
+
+const onReady = async (scene: Scene) => {
+  const circle = new Circle({ radius: 1.5 });
+  await scene.play(new Create(circle));
+};
 </script>
 
 <template>
-  <ManimScene :construct="squareToCircle" :width="800" :height="450" />
+  <ManimScene :width="800" :height="450" @ready="onReady" />
 </template>
 ```
 
