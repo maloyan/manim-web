@@ -795,6 +795,14 @@ export { maintainPositionRelativeTo } from './animation/MaintainPositionRelative
 export { alwaysRedraw } from './animation/AlwaysRedraw';
 export { fAlways, always, type MethodKeys } from './animation/Always';
 
+// --- animation updaters (parity) ---
+export {
+  alwaysShift,
+  alwaysRotate,
+  turnAnimationIntoUpdater,
+  cycleAnimation,
+} from './animation/updaters';
+
 // Number animations
 export {
   ChangingDecimal,
