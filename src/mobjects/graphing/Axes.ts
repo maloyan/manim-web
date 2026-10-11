@@ -44,6 +44,16 @@ export interface AxesOptions {
   tipLength?: number;
 }
 
+/** Styling options for the reference lines drawn to a point (vertical/horizontal). */
+interface AxisLineOptions {
+  /** Stroke color. Default: '#ffffff' */
+  color?: string;
+  /** Stroke width in pixels. Default: 2 */
+  strokeWidth?: number;
+  /** Line constructor to use. Default: DashedLine */
+  lineFunc?: typeof Line | typeof DashedLine;
+}
+
 /**
  * Axes - A coordinate system with x and y axes
  *
@@ -81,6 +91,8 @@ export class Axes extends Group {
   protected _tipLength: number;
   protected _xTip: VMobject | null = null;
   protected _yTip: VMobject | null = null;
+  /** Tick-number labels added by addCoordinates (empty until it is called). */
+  protected _coordinateNumberLabels: Mobject[] = [];
 
   constructor(options: AxesOptions = {}) {
     super();
@@ -504,14 +516,7 @@ export class Axes extends Group {
    * @param options - Line options
    * @returns A Line from the x-axis to the point
    */
-  getVerticalLine(
-    point: Vector3Tuple,
-    options: {
-      color?: string;
-      strokeWidth?: number;
-      lineFunc?: typeof Line | typeof DashedLine;
-    } = {},
-  ): VMobject {
+  getVerticalLine(point: Vector3Tuple, options: AxisLineOptions = {}): VMobject {
     const { color = '#ffffff', strokeWidth = 2, lineFunc = DashedLine } = options;
     const xAxisY = this.coordsToPoint(0, 0)[1];
     return new lineFunc({
@@ -520,6 +525,81 @@ export class Axes extends Group {
       color,
       strokeWidth,
     });
+  }
+
+  /**
+   * Create a horizontal line from the y-axis across to a point.
+   * Mirrors getVerticalLine. Matches Python Manim's get_horizontal_line().
+   * @param point - The target point [x, y, z] in visual coordinates
+   * @param options - Line options
+   * @returns A Line from the y-axis to the point
+   */
+  getHorizontalLine(point: Vector3Tuple, options: AxisLineOptions = {}): VMobject {
+    const { color = '#ffffff', strokeWidth = 2, lineFunc = DashedLine } = options;
+    const yAxisX = this.coordsToPoint(0, 0)[0];
+    return new lineFunc({
+      start: [yAxisX, point[1], point[2]] as Vector3Tuple,
+      end: [point[0], point[1], point[2]] as Vector3Tuple,
+      color,
+      strokeWidth,
+    });
+  }
+
+  /**
+   * Get both reference lines (vertical and horizontal) from the axes to a point.
+   * Matches Python Manim's get_lines_to_point().
+   * @param point - The target point [x, y, z] in visual coordinates
+   * @param options - Line options applied to both lines
+   * @returns A VGroup with the vertical line (child 0) and horizontal line (child 1)
+   */
+  getLinesToPoint(point: Vector3Tuple, options: AxisLineOptions = {}): VGroup {
+    const group = new VGroup();
+    group.add(this.getVerticalLine(point, options));
+    group.add(this.getHorizontalLine(point, options));
+    return group;
+  }
+
+  /**
+   * Add tick-number labels to both axes (Python Manim's add_coordinates()).
+   *
+   * The labels are added as submobjects of the Axes in its local frame, so they
+   * follow any transform applied to the Axes. The origin (0) is always excluded,
+   * matching the axes' default numbersToExclude. Chainable.
+   *
+   * @param xValues - X values to label. Default: every x-axis step value.
+   * @param yValues - Y values to label. Default: every y-axis step value.
+   * @returns this, for chaining
+   */
+  addCoordinates(xValues?: number[], yValues?: number[]): this {
+    const xs = xValues ?? this._axisDefaultNumbers(this._xRange);
+    const ys = yValues ?? this._axisDefaultNumbers(this._yRange);
+
+    const xAxisLocalY = this._numberToVisualY(0);
+    const yAxisLocalX = this._numberToVisualX(0);
+    const xBelow = this.xAxis.getTickSize() + 0.35;
+
+    for (const x of xs) {
+      if (x === 0) continue;
+      const label = this._makeNumberLabel(x, this.xAxis.color);
+      label.position.set(this._numberToVisualX(x), xAxisLocalY - xBelow, 0);
+      this.add(label);
+      this._coordinateNumberLabels.push(label);
+    }
+    for (const y of ys) {
+      if (y === 0) continue;
+      const label = this._makeNumberLabel(y, this.yAxis.color);
+      label.position.set(yAxisLocalX - 0.45, this._numberToVisualY(y), 0);
+      this.add(label);
+      this._coordinateNumberLabels.push(label);
+    }
+    return this;
+  }
+
+  /**
+   * Get the tick-number labels added by addCoordinates (empty until it runs).
+   */
+  getCoordinateNumberLabels(): Mobject[] {
+    return [...this._coordinateNumberLabels];
   }
 
   /**
@@ -810,6 +890,24 @@ export class Axes extends Group {
     }
 
     return result;
+  }
+
+  /** Default numbers for an axis: every step value from min to max (inclusive). */
+  private _axisDefaultNumbers(range: [number, number, number]): number[] {
+    const [min, max, step] = range;
+    if (step <= 0) return [];
+    const out: number[] = [];
+    const eps = step * 1e-4;
+    for (let n = min; n <= max + eps; n += step) {
+      out.push(Math.round(n / step) * step);
+    }
+    return out;
+  }
+
+  /** Build a tick-number label, formatted like NumberLine's number labels. */
+  private _makeNumberLabel(n: number, color: string): MathTexImage {
+    const text = Number.isInteger(n) ? String(n) : n.toFixed(2);
+    return new MathTexImage({ latex: text, fontSize: 28, color });
   }
 
   private _numberToVisualX(x: number): number {
