@@ -14,8 +14,8 @@
  * - Hex output truncates channels and uppercases (matching `ManimColor.to_hex`).
  * - HSV conversion mirrors Python's `colorsys` (h, s, v all in 0.0..1.0).
  *
- * The `ManimColor`, `HSV` and `RGBA` classes are intentionally not ported; see
- * the note at the end of this file.
+ * The `ManimColor`, `HSV` and `RGBA` classes (the object layer on top of these
+ * functions) live in `./ManimColor`.
  */
 
 import * as Colors from '../constants/colors';
@@ -267,13 +267,9 @@ export function rgbToHsv(rgb: Rgb): Hsv {
 }
 
 /*
- * Deferred: the `ManimColor` class and its `HSV` / `RGBA` color-space subclasses.
- *
- * manim-web models a color as a hex string end to end (VMobject and every other
- * caller store and pass `#rrggbb`). The free functions above cover ManimCE's
- * public color conversion API against that model. Porting the `ManimColor`
- * object (with its arithmetic operators, colorspace classes and parse overloads)
- * would introduce a parallel color type that no existing code consumes, which
- * would churn the codebase for no behavioral gain. `get_shaded_rgb` is also out
- * of scope for this parity pass (surface shading lives elsewhere in the port).
+ * The `ManimColor` object layer (with `HSV` / `RGBA` color spaces,
+ * `RandomColorGenerator` and `get_shaded_rgb`) is ported in `./ManimColor`,
+ * reusing the conversion functions above. manim-web still models a color as a
+ * `#rrggbb` hex string end to end; `ManimColor.toHex()` keeps the object
+ * interoperable with that model.
  */
