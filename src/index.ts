@@ -461,6 +461,19 @@ export {
   type ConvexHull3DOptions,
 } from './mobjects/three-d';
 
+// --- 3D model import (best-manim) ---
+export {
+  ModelMobject,
+  setModelLoaderFactory,
+  detectModelFormat,
+  type ModelMobjectOptions,
+  type ModelFormat,
+  type ModelUpAxis,
+  type ModelLoader,
+  type ModelLoaderFactory,
+} from './mobjects/three-d/ModelMobject';
+// --- end 3D model import ---
+
 // Value Trackers
 export {
   ValueTracker,
@@ -558,6 +571,9 @@ export {
 
 // Image mobjects
 export { ImageMobject, type ImageMobjectOptions, type ImageFilterOptions } from './mobjects/image';
+
+// --- video (best-manim) ---
+export { VideoMobject, type VideoMobjectOptions } from './mobjects/video';
 
 // Frame/Screen mobjects
 export {
@@ -1050,6 +1066,20 @@ export {
   type VideoExportOptions,
 } from './export';
 
+// --- export ergonomics (best-manim) ---
+export {
+  exportFramePNG,
+  exportPNGSequence,
+  downloadBlob,
+  exportAndDownloadPNG,
+  type FrameExportOptions,
+  type PNGSequenceOptions,
+  WebCodecsExporter,
+  createWebCodecsExporter,
+  type WebCodecsExportOptions,
+  type WebCodecsVideoCodec,
+} from './export';
+
 // Vector math utilities
 export {
   scaleVec,
@@ -1224,3 +1254,12 @@ export { registerFont, type FontSource } from './mobjects/text/registerFont';
 
 // --- geometry parity ---
 export { ArcPolygonFromArcs } from './mobjects/geometry';
+
+// --- web component (best-manim) ---
+export {
+  ManimSceneElement,
+  registerManimElement,
+  manimElementInternals,
+  type ManimSceneFactory,
+  type ManimSceneInstance,
+} from './integrations/webcomponent';
