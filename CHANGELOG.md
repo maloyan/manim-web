@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.9.0](https://github.com/maloyan/manim-web/compare/v0.8.0...v0.9.0) (2026-10-11)
+
+
+### Features
+
+* **color:** ManimColor/HSV/RGBA/RandomColorGenerator/getShadedRgb (parity) ([bed1de4](https://github.com/maloyan/manim-web/commit/bed1de4691a9daa8287db2daa4886b35e59d7686))
+* **geometry:** VMobject appendPoints/insertNCurves + ArcPolygonFromArcs (parity) ([74e7e6a](https://github.com/maloyan/manim-web/commit/74e7e6a218bde07aa43d33fca9c3c9d12615e14e))
+* **graphing:** CoordinateSystem export + LinearBase/LogBase scaling (parity) ([aa4f658](https://github.com/maloyan/manim-web/commit/aa4f658bfb85de2dc8b28ac264418e5f2452cc87))
+* override_animate + assertIsMobjectMethod + registerFont (parity) ([9194665](https://github.com/maloyan/manim-web/commit/9194665e5cb57314c9105b4a56014f87e8846c92))
+* **three-d:** get_3d_vmob_* helpers + SpecialThreeDScene (parity) ([2065986](https://github.com/maloyan/manim-web/commit/2065986c1906a0412893f53ebcab9b8cf87e9fce))
+
+
+### Documentation
+
+* update PARITY.md to 99.5% + tidy color type exports ([711037e](https://github.com/maloyan/manim-web/commit/711037e298c3f9419086fe8d7d2b957872382ad5))
+
 ## [0.8.0](https://github.com/maloyan/manim-web/compare/v0.7.0...v0.8.0) (2026-10-11)
 
 

@@ -307,6 +307,15 @@ export {
   type ContinuousMotionOptions,
 } from './mobjects/graphing';
 
+// --- graphing parity ---
+export {
+  type CoordinateSystem,
+  ScaleBase,
+  LinearBase,
+  LogBase,
+  type GetCustomLabelsOptions,
+} from './mobjects/graphing';
+
 // Text and LaTeX
 export {
   Text,
@@ -1079,6 +1088,17 @@ export {
   rgbToHsv,
 } from './utils/color';
 
+// --- color classes (parity) ---
+export {
+  ManimColor,
+  HSV,
+  RGBA,
+  RandomColorGenerator,
+  getShadedRgb,
+  type ParsableManimColor,
+  type ManimColorDType,
+} from './utils/ManimColor';
+
 // --- utils/iterables/unit/family/debug (parity) ---
 export {
   adjacentNTuples,
@@ -1170,3 +1190,24 @@ export {
   proportionsAlongBezierCurveForPoint,
   pointLiesOnBezier,
 } from './utils/bezier';
+
+// --- three-d parity ---
+export {
+  get3dVmobGradientStartAndEndPoints,
+  get3dVmobStartCornerIndex,
+  get3dVmobEndCornerIndex,
+  get3dVmobStartCorner,
+  get3dVmobEndCorner,
+  get3dVmobUnitNormal,
+  get3dVmobStartCornerUnitNormal,
+  get3dVmobEndCornerUnitNormal,
+} from './mobjects/three-d/threeDVmobUtils';
+export { SpecialThreeDScene, type SpecialThreeDSceneOptions } from './core/SpecialThreeDScene';
+
+// --- misc parity ---
+export { assertIsMobjectMethod } from './animation/Always';
+export { overrideAnimate } from './animation/AnimationUtilities';
+export { registerFont, type FontSource } from './mobjects/text/registerFont';
+
+// --- geometry parity ---
+export { ArcPolygonFromArcs } from './mobjects/geometry';
