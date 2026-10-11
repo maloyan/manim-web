@@ -21,6 +21,30 @@ export {
   DEFAULT_MOBJECT_TO_MOBJECT_BUFFER,
 } from './constants';
 
+// --- constants (parity) ---
+export {
+  PI,
+  TAU,
+  DEGREES,
+  X_AXIS,
+  Y_AXIS,
+  Z_AXIS,
+  DEFAULT_DOT_RADIUS,
+  DEFAULT_SMALL_DOT_RADIUS,
+  DEFAULT_DASH_LENGTH,
+  DEFAULT_ARROW_TIP_LENGTH,
+  NORMAL,
+  BOLD,
+  THIN,
+  LIGHT,
+  MEDIUM,
+  SEMIBOLD,
+  HEAVY,
+  ULTRAHEAVY,
+  LineJointType,
+  CapStyleType,
+} from './constants/parity';
+
 // TeX Templates
 export {
   TexTemplate,
