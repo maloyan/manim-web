@@ -1058,6 +1058,16 @@ export {
   easeInCubic,
   easeOutCubic,
   easeInOutCubic,
+  // --- spring + custom easing (best-manim) ---
+  spring,
+  type SpringOptions,
+  cubicBezier,
+  ease,
+  easeInBezier,
+  easeOutBezier,
+  easeInOutBezier,
+  steps,
+  type StepPosition,
 } from './rate-functions';
 
 // Interaction - UI Controls
