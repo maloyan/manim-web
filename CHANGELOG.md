@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.7.0](https://github.com/maloyan/manim-web/compare/v0.6.0...v0.7.0) (2026-10-11)
+
+
+### Features
+
+* **animation:** always_shift/always_rotate/turn_animation_into_updater/cycle_animation (parity) ([2eb80ea](https://github.com/maloyan/manim-web/commit/2eb80ea2158cfb1099ee454e5a27e2fd1abf80bb))
+* **constants:** export ManimCE math/axis/default/font constants (parity) ([3946298](https://github.com/maloyan/manim-web/commit/39462984787f2120f8999e634615834f49cb2d67))
+* **utils:** export ManimCE bezier utilities (parity) ([4510690](https://github.com/maloyan/manim-web/commit/4510690cd9d73bba464025593be7bf9543348ae6))
+* **utils:** export ManimCE color utilities (parity) ([eeced4f](https://github.com/maloyan/manim-web/commit/eeced4fa622e4d18da466ec49a74ac6e3229b2f1))
+* **utils:** export ManimCE iterables/unit/family/debug helpers (parity) ([73d9097](https://github.com/maloyan/manim-web/commit/73d9097e828d9fc7a3ce5f20e8184ceb3f4656c2))
+* **utils:** export ManimCE space_ops/paths/simple_functions (parity) ([d2303ca](https://github.com/maloyan/manim-web/commit/d2303ca7e99aed37390650156e13af20b6ff7d9e))
+
 ## [0.6.0](https://github.com/maloyan/manim-web/compare/v0.5.0...v0.6.0) (2026-10-11)
 
 
