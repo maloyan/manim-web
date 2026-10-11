@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.8.0](https://github.com/maloyan/manim-web/compare/v0.7.0...v0.8.0) (2026-10-11)
+
+
+### Features
+
+* close cheap ManimCE parity residual + add PARITY.md ([1de3efb](https://github.com/maloyan/manim-web/commit/1de3efba50c6a21803409eff28efa7713b36983e))
+
+
+### Documentation
+
+* prettier-format PARITY.md ([f5dfb3b](https://github.com/maloyan/manim-web/commit/f5dfb3b42fded656331a2235813ad4735442c66d))
+
 ## [0.7.0](https://github.com/maloyan/manim-web/compare/v0.6.0...v0.7.0) (2026-10-11)
 
 

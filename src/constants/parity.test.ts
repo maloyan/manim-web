@@ -18,6 +18,19 @@ import {
   SEMIBOLD,
   HEAVY,
   ULTRAHEAVY,
+  ULTRALIGHT,
+  SEMILIGHT,
+  BOOK,
+  ULTRABOLD,
+  ITALIC,
+  OBLIQUE,
+  DEFAULT_WAIT_TIME,
+  DEFAULT_POINTWISE_FUNCTION_RUN_TIME,
+  DEFAULT_POINT_DENSITY_2D,
+  DEFAULT_POINT_DENSITY_1D,
+  SCALE_FACTOR_PER_FONT_POINT,
+  START_X,
+  START_Y,
   LineJointType,
   CapStyleType,
 } from './parity';
@@ -101,6 +114,29 @@ describe('ManimCE parity constants', () => {
       expect(CapStyleType.ROUND).toBe(1);
       expect(CapStyleType.BUTT).toBe(2);
       expect(CapStyleType.SQUARE).toBe(3);
+    });
+  });
+
+  describe('extra font weights and slants', () => {
+    it('exposes the Pango weight and slant names', () => {
+      expect(ULTRALIGHT).toBe('ULTRALIGHT');
+      expect(SEMILIGHT).toBe('SEMILIGHT');
+      expect(BOOK).toBe('BOOK');
+      expect(ULTRABOLD).toBe('ULTRABOLD');
+      expect(ITALIC).toBe('ITALIC');
+      expect(OBLIQUE).toBe('OBLIQUE');
+    });
+  });
+
+  describe('simple defaults (verbatim from ManimCE)', () => {
+    it('matches ManimCE values', () => {
+      expect(DEFAULT_WAIT_TIME).toBe(1.0);
+      expect(DEFAULT_POINTWISE_FUNCTION_RUN_TIME).toBe(3.0);
+      expect(DEFAULT_POINT_DENSITY_2D).toBe(25);
+      expect(DEFAULT_POINT_DENSITY_1D).toBe(10);
+      expect(SCALE_FACTOR_PER_FONT_POINT).toBeCloseTo(1 / 960, 12);
+      expect(START_X).toBe(30);
+      expect(START_Y).toBe(20);
     });
   });
 });

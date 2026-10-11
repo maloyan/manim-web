@@ -69,6 +69,9 @@ export {
   type CrossOptions,
 } from './ShapeMatchers';
 
+// Labeled mobjects
+export { Label, type LabelOptions } from './Label';
+
 // Extended polygon shapes
 export {
   RoundedRectangle,

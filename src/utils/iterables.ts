@@ -1,13 +1,13 @@
 /**
  * Operations on iterables, ported from ManimCE `manim/utils/iterables.py`.
  *
- * Only the helpers that add value over plain JavaScript are ported here.
- * The following ManimCE helpers are intentionally skipped because each one is
- * a trivial wrapper over a native `Array` operation:
- *  - `concatenate_lists`      -> `arrays.flat()` / `[].concat(...arrays)`
- *  - `listify`                -> `Array.isArray(x) ? x : [x]` (see `tuplify`)
- *  - `remove_nones`           -> `arr.filter(Boolean)`
- *  - `all_elements_are_instances` -> `arr.every((e) => e instanceof C)`
+ * Some helpers are thin wrappers over native `Array` operations. They are
+ * ported anyway to keep name-parity with ManimCE's public API:
+ *  - `concatenateLists`       (CE `concatenate_lists`)
+ *  - `listify`                (CE `listify`)
+ *  - `removeNones`            (CE `remove_nones`)
+ *  - `allElementsAreInstances` (CE `all_elements_are_instances`)
+ *  - `makeEvenByCycling`      (CE `make_even_by_cycling`)
  *
  * `powerset` is not part of ManimCE 0.22.0 `iterables.py`; it is added here as
  * a genuinely useful combinatorial helper (present in older manim variants).
@@ -208,6 +208,90 @@ export function powerset<T>(items: readonly T[]): T[][] {
     }
   }
   return result;
+}
+
+/**
+ * Return `true` when every element of `iterable` is an instance of `Class`.
+ * Mirrors ManimCE `all_elements_are_instances`.
+ */
+export function allElementsAreInstances<T>(
+  iterable: Iterable<unknown>,
+  ctor: abstract new (...args: never[]) => T,
+): boolean {
+  for (const e of iterable) {
+    if (!(e instanceof ctor)) return false;
+  }
+  return true;
+}
+
+/**
+ * Combine the given iterables into one flat list (one level deep).
+ * Mirrors ManimCE `concatenate_lists`.
+ *
+ * @example
+ * concatenateLists([1, 2], [3, 4], [5]); // [1, 2, 3, 4, 5]
+ */
+export function concatenateLists<T>(...listOfLists: Iterable<T>[]): T[] {
+  const result: T[] = [];
+  for (const lst of listOfLists) {
+    for (const item of lst) result.push(item);
+  }
+  return result;
+}
+
+/**
+ * Convert a value to a list intelligently. A string becomes a single-element
+ * array; any other iterable is spread; anything else is wrapped.
+ *
+ * Mirrors ManimCE `listify` (equivalent to `tuplify`, kept for name-parity).
+ *
+ * @example
+ * listify("str");  // ["str"]
+ * listify([1, 2]); // [1, 2]
+ * listify(5);      // [5]
+ */
+export function listify<T>(obj: T | readonly T[] | string): (T | string)[] {
+  if (typeof obj === 'string') return [obj];
+  if (obj !== null && typeof obj === 'object' && Symbol.iterator in obj) {
+    return [...(obj as Iterable<T>)];
+  }
+  return [obj as T];
+}
+
+/**
+ * Return the elements of `sequence` that are truthy (drops values where
+ * `Boolean(x)` is `false`). Mirrors ManimCE `remove_nones`.
+ *
+ * @example
+ * removeNones(["m", "", "l", 0, 42, false, true]); // ["m", "l", 42, true]
+ */
+export function removeNones<T>(sequence: Iterable<T>): NonNullable<T>[] {
+  const result: NonNullable<T>[] = [];
+  for (const x of sequence) {
+    if (x) result.push(x as NonNullable<T>);
+  }
+  return result;
+}
+
+/**
+ * Extend the shorter of two iterables by cycling its values until both have
+ * the same length. Mirrors ManimCE `make_even_by_cycling`.
+ *
+ * @example
+ * makeEvenByCycling([1, 2], [3, 4, 5, 6]); // [[1,2,1,2], [3,4,5,6]]
+ */
+export function makeEvenByCycling<T, U>(
+  iterable1: readonly T[],
+  iterable2: readonly U[],
+): [T[], U[]] {
+  const length = Math.max(iterable1.length, iterable2.length);
+  const out1: T[] = [];
+  const out2: U[] = [];
+  for (let n = 0; n < length; n++) {
+    out1.push(iterable1[n % iterable1.length]);
+    out2.push(iterable2[n % iterable2.length]);
+  }
+  return [out1, out2];
 }
 
 /**

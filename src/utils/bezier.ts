@@ -436,6 +436,17 @@ function proportionsAlongBezierCurveForPoint(
   return common.filter((r) => r >= 0 && r <= 1);
 }
 
+/**
+ * Whether `point` lies on the Bézier curve defined by `controlPoints`
+ * (Manim CE `point_lies_on_bezier`). The point lies on the curve when the
+ * Bézier polynomial has at least one real root in `[0, 1]`.
+ *
+ * @throws Error when `point` and the control points have different shapes.
+ */
+function pointLiesOnBezier(point: number[], controlPoints: number[][], roundTo = 1e-6): boolean {
+  return proportionsAlongBezierCurveForPoint(point, controlPoints, roundTo).length > 0;
+}
+
 // ---------------------------------------------------------------------------
 // Public exports for the functions declared above (camelCase, Manim CE parity)
 // ---------------------------------------------------------------------------
@@ -448,4 +459,5 @@ export {
   bezierRemap,
   isClosed,
   proportionsAlongBezierCurveForPoint,
+  pointLiesOnBezier,
 };

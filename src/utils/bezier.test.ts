@@ -13,6 +13,7 @@ import {
   isClosed,
   getSmoothCubicBezierHandlePoints,
   proportionsAlongBezierCurveForPoint,
+  pointLiesOnBezier,
 } from './bezier';
 
 describe('interpolate', () => {
@@ -318,5 +319,24 @@ describe('proportionsAlongBezierCurveForPoint', () => {
         ],
       ),
     ).toThrow();
+  });
+});
+
+describe('pointLiesOnBezier', () => {
+  const line: number[][] = [
+    [0, 0, 0],
+    [2, 0, 0],
+  ];
+
+  it('is true for a point on the curve', () => {
+    expect(pointLiesOnBezier([1, 0, 0], line)).toBe(true);
+  });
+
+  it('is false for a point off the curve', () => {
+    expect(pointLiesOnBezier([1, 5, 0], line)).toBe(false);
+  });
+
+  it('throws when shapes differ', () => {
+    expect(() => pointLiesOnBezier([1, 0], line)).toThrow();
   });
 });
