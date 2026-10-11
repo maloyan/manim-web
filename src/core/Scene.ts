@@ -13,6 +13,7 @@ import { AudioManager, type AddSoundOptions, type AudioTrack } from './AudioMana
 import { ensureAnimateProxyRegistered } from './AnimateProxy';
 import type { MultiCamera } from './CameraExtensions';
 import { logger } from '../utils/logger';
+import { applyReducedMotion } from '../a11y/reducedMotion';
 
 // AnimateProxy self-registers with Mobject via a top-level side effect
 // (see AnimateProxy.ts) to avoid the Mobject -> AnimateProxy -> Transform ->
@@ -705,6 +706,11 @@ export class Scene {
    */
   async play(...animations: Animation[]): Promise<void> {
     if (animations.length === 0) return;
+
+    // Opt-in accessibility: when `prefers-reduced-motion` handling is enabled
+    // and the OS asks for it, collapse run times so the scene jumps to its
+    // final state. Inert by default, so default playback is unchanged.
+    applyReducedMotion(animations);
 
     return this._runAnimations(animations, (timeline) => {
       timeline.addParallel(animations);
