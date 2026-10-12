@@ -250,17 +250,44 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
 
   return (
     <div
-      ref={containerRef}
       style={{
         width: '100%',
         maxWidth: 800,
         aspectRatio: `${ASPECT_RATIO}`,
-        background: '#000000',
+        // Intentional panel instead of pure black, so examples that are not
+        // currently rendering a live scene (most of them on this long page,
+        // where only a few WebGL contexts can be active at once) read as a
+        // deliberate placeholder rather than a broken black box.
+        background: 'linear-gradient(135deg, #15161f 0%, #20222e 100%)',
         borderRadius: 12,
         overflow: 'hidden',
         position: 'relative',
       }}
-    />
+    >
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#49506b',
+          fontSize: 14,
+          fontWeight: 700,
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          pointerEvents: 'none',
+          userSelect: 'none',
+        }}
+      >
+        manim-web
+      </div>
+      {/* The live scene's canvas is mounted here and covers the poster above
+          while it renders.  Kept separate from the poster so the scene
+          cleanup's innerHTML reset never removes the placeholder. */}
+      <div ref={containerRef} style={{ position: 'absolute', inset: 0, zIndex: 1 }} />
+    </div>
   );
 }
 
