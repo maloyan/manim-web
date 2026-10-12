@@ -17,3 +17,11 @@ export {
   type WebCodecsVideoCodec,
 } from './WebCodecsExporter';
 export { chooseVideoExporterStrategy, type VideoExporterStrategy } from './chooseExporter';
+export {
+  sceneToSVG,
+  exportSVG,
+  exportAndDownloadSVG,
+  type SvgExportOptions,
+  type SvgExportableScene,
+  type SvgExportableCamera,
+} from './SvgExporter';
