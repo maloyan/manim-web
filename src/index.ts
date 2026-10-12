@@ -1245,6 +1245,13 @@ export { SelectionManager, type SelectionManagerOptions } from './interaction';
 
 // Interaction - Camera Controls
 export { OrbitControls, type OrbitControlsOptions } from './interaction';
+export {
+  PanZoomControls,
+  makePanZoomControls,
+  type PanZoomControlsOptions,
+  type PanZoomCamera,
+  type PanZoomBounds,
+} from './interaction';
 
 // --- explorable interactivity (best-manim) ---
 export {

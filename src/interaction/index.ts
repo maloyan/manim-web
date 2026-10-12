@@ -47,3 +47,10 @@ export { SelectionManager, type SelectionManagerOptions } from './SelectionManag
 
 // Camera controls
 export { OrbitControls, type OrbitControlsOptions } from './OrbitControls';
+export {
+  PanZoomControls,
+  makePanZoomControls,
+  type PanZoomControlsOptions,
+  type PanZoomCamera,
+  type PanZoomBounds,
+} from './PanZoomControls';
