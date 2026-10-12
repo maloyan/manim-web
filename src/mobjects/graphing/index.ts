@@ -119,6 +119,14 @@ export { RadarChart, type RadarChartOptions } from './RadarChart';
 // WaterfallChart (bridge chart)
 export { WaterfallChart, type WaterfallChartOptions } from './WaterfallChart';
 
+// GanttChart (project timeline bars)
+export {
+  GanttChart,
+  type GanttChartOptions,
+  type GanttTask,
+  type GanttTimeValue,
+} from './GanttChart';
+
 // PieChart and DonutChart
 export {
   PieChart,
