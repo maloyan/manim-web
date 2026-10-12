@@ -752,6 +752,14 @@ export {
   type Distribution2D,
 } from './mobjects/point';
 
+// Particle systems (emitters with lifetime, velocity, forces)
+export {
+  ParticleSystem,
+  type ParticleSystemOptions,
+  type ParticleForces,
+  type ParticleSnapshot,
+} from './mobjects/particles';
+
 // Fractal mobjects
 export {
   MandelbrotSet,
