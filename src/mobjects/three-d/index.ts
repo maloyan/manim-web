@@ -79,3 +79,19 @@ export {
   type InstancedMobjectOptions,
   type InstanceTransform,
 } from './InstancedMobject';
+
+// Extruded / beveled 3D text
+export {
+  Text3D,
+  setFontLoaderFactory,
+  setTextGeometryFactory,
+  DEFAULT_FONT_URL,
+  type Text3DOptions,
+  type Text3DFromUrlOptions,
+  type Text3DBevel,
+  type Text3DGeometryParams,
+  type ParsedFont,
+  type FontLoaderLike,
+  type FontLoaderFactory,
+  type TextGeometryFactory,
+} from './Text3D';
