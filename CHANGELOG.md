@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.20.0](https://github.com/maloyan/manim-web/compare/v0.15.0...v0.20.0) (2026-10-12)
+
+
+### Features
+
+* **3d:** OBJ/MTL material and texture support for ModelMobject ([b97097b](https://github.com/maloyan/manim-web/commit/b97097b215592e45a7cb92409d9fb1d0b5d9e368))
+* **a11y:** WebVTT captions, reduced-motion, ARIA narration ([3280c8e](https://github.com/maloyan/manim-web/commit/3280c8e095dbfe3de275996670fdb21f8c16d25a))
+* **audio:** audio-reactive animation via Web Audio FFT ([3ee052d](https://github.com/maloyan/manim-web/commit/3ee052d84b3bc8d9659970e48c421f89a95d4947))
+* **color:** Oklab/Oklch perceptual color interpolation ([c41d93d](https://github.com/maloyan/manim-web/commit/c41d93d15b7803265c44da4b97e5ff2f5d06e984))
+* **export:** scene-to-SVG vector export ([b7409a3](https://github.com/maloyan/manim-web/commit/b7409a3f79db4f7439babafaad2353dc551701b0))
+* **graphing:** 3D isosurfaces, heatmap and contour plots ([4b7c3d0](https://github.com/maloyan/manim-web/commit/4b7c3d08a9e48002b3c92c0118cc8db9ea72062e)), closes [#4428](https://github.com/maloyan/manim-web/issues/4428) [#416](https://github.com/maloyan/manim-web/issues/416)
+* **graphing:** PieChart and DonutChart ([2b4390c](https://github.com/maloyan/manim-web/commit/2b4390ca0af8c2c2907b212c62cd97b5209263ef))
+* **graph:** weighted-edge labels and self-loop edges ([d502747](https://github.com/maloyan/manim-web/commit/d5027472766e685e2a20f04d75045f427f2b8ae0)), closes [#3153](https://github.com/maloyan/manim-web/issues/3153)
+* **mobjects:** GPU-instanced mobject for large scenes ([9b1ad67](https://github.com/maloyan/manim-web/commit/9b1ad67a09c2429d37f2bfc344ae4df1254b57bd))
+* **mobjects:** opt-in RK4 integrator and seeded flow for StreamLines ([cb482b7](https://github.com/maloyan/manim-web/commit/cb482b7a77afb50919b71a34eb229bb785bfc6f5)), closes [#3789](https://github.com/maloyan/manim-web/issues/3789)
+* **svg:** pattern fill support ([9ea8c93](https://github.com/maloyan/manim-web/commit/9ea8c93935b7bad75ab239eadfcb870f8d8907ab))
+* **table:** entry/row/column accessors, cell highlighting, numeric table variants ([5408781](https://github.com/maloyan/manim-web/commit/54087817d5fc311f2fa1f3c2b44c7b2530901c68))
+
+
+### Bug Fixes
+
+* **docs:** add MovablePoint and Slider to the scene in the live example ([0207d1e](https://github.com/maloyan/manim-web/commit/0207d1e1187271358d1738fcdd7fc78cb9fe2fbd))
+* **text:** recreate canvas texture on setText size change ([#607](https://github.com/maloyan/manim-web/issues/607)) ([2df7994](https://github.com/maloyan/manim-web/commit/2df799422ad3c757e11fa96863f64df9ae3fd9a2))
+
+
+### Documentation
+
+* pages and live examples for 0.16/0.17 features ([51af95c](https://github.com/maloyan/manim-web/commit/51af95c999ba1d67553ea6acf7f24ea9424631b3))
+
+
+### Tests
+
+* **spaceOps:** ignore sign of zero in midpoint/mean property ([996e196](https://github.com/maloyan/manim-web/commit/996e196b97009c460f53b92fb7ae7b2113aed2a4))
+* **text:** deflake MathJax script-fallback test under parallel load ([6907c62](https://github.com/maloyan/manim-web/commit/6907c62ba1b9afb7ced38d65ccdcf61082976945))
+
 ## [0.19.0](https://github.com/maloyan/manim-web/compare/v0.15.0...v0.19.0) (2026-10-12)
 
 
