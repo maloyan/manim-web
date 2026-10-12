@@ -1,0 +1,458 @@
+---
+title: New in 0.23, 0.24, and 0.25
+sidebar_label: New in 0.23, 0.24 & 0.25
+---
+
+import FourierEpicyclesExample from '@site/src/components/examples/FourierEpicyclesExample';
+import CandlestickChartExample from '@site/src/components/examples/CandlestickChartExample';
+import HistogramExample from '@site/src/components/examples/HistogramExample';
+import BoxPlotExample from '@site/src/components/examples/BoxPlotExample';
+import DomainColoringExample from '@site/src/components/examples/DomainColoringExample';
+import SankeyDiagramExample from '@site/src/components/examples/SankeyDiagramExample';
+import ForceDirectedLayoutExample from '@site/src/components/examples/ForceDirectedLayoutExample';
+
+Features added in the 0.23, 0.24, and 0.25 releases. Each section lists the
+real exported API, a copy-paste snippet, and a runnable example where the
+feature is visual.
+
+## 0.23.0
+
+### LottieMobject
+
+`LottieMobject` renders a Lottie (Bodymovin) animation onto a textured plane in
+the scene. Build one from parsed JSON, or load one over the network with the
+`LottieMobject.fromUrl` static method, which resolves once the composition is
+ready. The mobject is time-driven: call `syncToTime(sceneTime)` on every
+scrub or seek so the drawn frame matches the scene clock, which keeps exports
+deterministic.
+
+The default player lazy-imports the `lottie-web` package on first use. In Node,
+jsdom, and SSR there is no DOM, so the class degrades without throwing; inject a
+player with the `player` option (or `setLottiePlayerFactory`) to drive it
+headless.
+
+A real Lottie file needs a network fetch, so this section is a code sample.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { LottieMobject } from 'manim-web';
+
+// 1. Load from a URL. The promise resolves once the composition is parsed.
+const anim = await LottieMobject.fromUrl('/animations/spinner.json', {
+  width: 4, // scene units; height follows the aspect ratio
+  loop: true,
+  speed: 1, // playback speed multiplier
+});
+scene.add(anim);
+
+// 2. Drive the frame from the scene clock on each seek or scrub.
+anim.syncToTime(1.5); // show the frame at 1.5 seconds
+anim.seekToProgress(0.5); // or seek by normalized progress in [0, 1]
+
+// 3. Live playback controls.
+anim.play();
+anim.pause();
+anim.setSpeed(2);
+anim.setLoop(false);
+anim.duration; // composition length in seconds
+
+// 4. Build from already-parsed JSON instead of a URL.
+const fromData = new LottieMobject({ animationData, loop: true });
+```
+
+</details>
+
+`fromUrl` rejects on a failed fetch; `getLoadError()` and `isLoaded()` report
+load state, and `waitForLoad()` resolves when the composition is ready.
+`getTotalFrames()` and `getFrameRate()` read the composition metadata.
+
+## 0.24.0
+
+### FourierEpicycles and FourierSeries
+
+`FourierEpicycles` is the rotating-vector ("epicycle") approximation of a path:
+given a path and a term count `N`, it builds the chain of `N` rotating vectors
+and their circles whose tip-to-tail sum tracks the path, plus the curve traced
+by the final tip. With `animate` on (the default) an updater rotates each vector
+at its own frequency and extends the trace each frame, reproducing the iconic
+3Blue1Brown animation. The geometry is deterministic: `setTime(t)` fully
+determines every vector for a normalized time `t`.
+
+The path is a `number[][]` of samples (each `[x, y]` read as `x + i·y`), a
+`VMobject` sampled along its arc length, or a parametric complex function.
+
+The example below fits 40 rotating vectors to the outline of a square.
+
+<FourierEpicyclesExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { FourierEpicycles } from 'manim-web';
+
+// Sample the path as [x, y] points, read as the complex point x + i*y.
+const path: number[][] = [];
+for (let i = 0; i < 256; i++) {
+  const t = (2 * Math.PI * i) / 256;
+  path.push([Math.cos(t), Math.sin(t) + Math.sin(3 * t) / 3]);
+}
+
+const epicycles = new FourierEpicycles({
+  path,
+  numTerms: 40, // number of rotating vectors to show
+  order: 'frequency', // the iconic 0, +1, -1, +2, -2, ... ordering
+  speed: 0.15, // cycles per second advanced by the updater
+  traceColor: '#ffff00',
+  color: '#58c4dd',
+  animate: true, // install the time updater (default)
+});
+scene.add(epicycles); // scene.wait() ticks the updater each frame
+```
+
+</details>
+
+`setTime(t)`, `getTime()`, `getTracePoints()`, and `getCoefficients()` drive and
+inspect the chain. A `ValueTracker` passed as `tracker` replaces the internal
+clock. The related `FourierSeries` plots the partial Fourier sum of a real
+periodic function `y = f(x)` as a curve on axes:
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { FourierSeries, Axes } from 'manim-web';
+
+const axes = new Axes({ xRange: [-Math.PI, Math.PI], yRange: [-1.5, 1.5] });
+const series = new FourierSeries({
+  func: (x) => (x > 0 ? 1 : -1), // a square wave
+  numTerms: 7, // harmonics kept, chosen by amplitude
+  period: 2 * Math.PI,
+  xRange: [-Math.PI, Math.PI],
+  axes,
+});
+scene.add(axes, series);
+```
+
+</details>
+
+The lower-level helpers `fourierCoefficients`, `reconstructSample`,
+`partialSum`, and `fourierSeriesApproximation` are exported for custom work.
+
+### CandlestickChart
+
+`CandlestickChart` is a financial OHLC chart. Each period renders as a body
+rectangle spanning open to close plus a high/low wick line. Bullish periods
+(`close >= open`) and bearish periods (`close < open`) use separate colors. The
+price axis auto-scales to the data unless `yRange` is given, and optional volume
+bars render below the price area. The chart is a `VGroup`, so `Create` and
+`FadeIn` animate it directly.
+
+<CandlestickChartExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { CandlestickChart, Create } from 'manim-web';
+
+const chart = new CandlestickChart({
+  data: [
+    { open: 10, high: 15, low: 8, close: 14, date: 'Mon', volume: 120 },
+    { open: 14, high: 16, low: 11, close: 12, date: 'Tue', volume: 90 },
+    { open: 12, high: 13, low: 9, close: 13, date: 'Wed', volume: 140 },
+  ],
+  bullishColor: '#83c167', // close >= open
+  bearishColor: '#fc6255', // close < open
+  showVolume: true,
+  width: 8,
+  height: 4.2,
+});
+scene.play(new Create(chart));
+```
+
+</details>
+
+The chart exposes its parts as fields: `candles`, `volumeBars`, `yAxis`,
+`xAxisLine`, `xLabels`, and `yLabels`.
+
+### Statistical plots
+
+Four statistical chart mobjects landed together. Each builds its own `Axes` from
+the data unless you pass one, and each extends a group so `Create` and `FadeIn`
+animate it.
+
+`Histogram` bins raw values into equal-width bins (or explicit `binEdges`). Bar
+height is the count, the relative frequency (`normalize`), or the probability
+density (`density`).
+
+<HistogramExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Histogram, Create } from 'manim-web';
+
+const hist = new Histogram({
+  data: [1, 2, 2, 3, 3, 3, 4, 4, 5],
+  bins: 12, // or pass binEdges for explicit edges
+  density: true, // bar height as probability density
+  color: '#58c4dd',
+  xLength: 8,
+  yLength: 4.6,
+});
+scene.play(new Create(hist));
+```
+
+</details>
+
+`BoxPlot` draws a box from Q1 to Q3 with a median line, whiskers reaching the
+extremes inside `whiskerFactor` × IQR, and dots for the outliers beyond them.
+Pass one group (`number[]`) or several (`number[][]`), laid side by side.
+
+<BoxPlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { BoxPlot, Create } from 'manim-web';
+
+const box = new BoxPlot({
+  data: [
+    [4, 5, 6, 6, 7, 7, 8, 9, 10, 22], // 22 is an outlier
+    [2, 3, 3, 4, 5, 5, 6, 7, 8],
+  ],
+  orientation: 'vertical',
+  colors: ['#58c4dd', '#83c167'],
+  whiskerFactor: 1.5,
+});
+scene.play(new Create(box));
+box.getSummary(0); // { q1, median, q3, whiskerLow, whiskerHigh, outliers }
+```
+
+</details>
+
+`ScatterPlot` plots paired `x`/`y` points; a per-point `sizes` array turns it
+into a bubble chart. `ViolinPlot` draws a kernel-density silhouette per group,
+mirrored around the category axis.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ScatterPlot, ViolinPlot } from 'manim-web';
+
+const scatter = new ScatterPlot({
+  x: [1, 2, 3, 4, 5],
+  y: [2, 1, 4, 3, 5],
+  sizes: [0.06, 0.12, 0.2, 0.1, 0.08], // per-point radii: a bubble chart
+  colors: '#58c4dd',
+});
+
+const violin = new ViolinPlot({
+  data: [
+    [1, 2, 2, 3, 3, 3, 4, 4, 5],
+    [2, 3, 4, 4, 5, 6, 6, 7],
+  ],
+  orientation: 'vertical', // bandwidth defaults to Silverman's rule
+});
+```
+
+</details>
+
+### URL permalinks
+
+The serialization layer can mirror UI state into the URL hash, so a shareable
+link reproduces the exact scene controls. `bindStateToUrl` ties a list of
+controls to the hash: it restores them on bind and on every `hashchange`, and
+`save()` writes the current values back. The lower-level
+`encodeStateToHash` / `decodeStateFromHash` and `writeStateToUrl` /
+`readStateFromUrl` work with a raw state object.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  bindStateToUrl,
+  encodeStateToHash,
+  decodeStateFromHash,
+  writeStateToUrl,
+  readStateFromUrl,
+} from 'manim-web';
+
+// 1. Bind controls to the hash. Each binding is a stable id plus get/set.
+const controller = bindStateToUrl(
+  [
+    { id: 'amp', get: () => ampTracker.getValue(), set: (v) => ampTracker.setValue(v as number) },
+    {
+      id: 'freq',
+      get: () => freqTracker.getValue(),
+      set: (v) => freqTracker.setValue(v as number),
+    },
+  ],
+  { replace: true, restoreOnBind: true, listen: true },
+);
+controller.save(); // write current control values to the URL hash
+controller.dispose(); // stop listening for hashchange
+
+// 2. Or encode/decode a plain state object yourself.
+const hash = encodeStateToHash({ amp: 2, freq: 3 }); // base64url string
+const state = decodeStateFromHash(hash);
+writeStateToUrl({ amp: 2, freq: 3 }); // write to location.hash
+const current = readStateFromUrl(); // read it back
+```
+
+</details>
+
+## 0.25.0
+
+### DomainColoring
+
+`DomainColoring` renders a phase portrait of a complex function `w = f(z)` on a
+flat mesh in the `z = 0` plane. The hue encodes `arg(f(z))` and the modulus
+`|f(z)|` drives brightness, so zeros read dark and poles read bright. The
+`banded` scheme oscillates brightness over each octave of the modulus to draw
+the dark/light contour rings of a Wegert portrait; `smooth` rises monotonically.
+
+Because the mesh lies flat, view it from straight above with a `ThreeDScene`.
+
+<DomainColoringExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { DomainColoring } from 'manim-web';
+
+const plot = new DomainColoring({
+  func: (z) => {
+    // f(z) = z^2, computed with real arithmetic on { re, im }.
+    return { re: z.re * z.re - z.im * z.im, im: 2 * z.re * z.im };
+  },
+  reRange: [-3, 3],
+  imRange: [-3, 3],
+  resolution: 320, // pixel grid per axis
+  scheme: 'banded', // or 'smooth'
+  contourLines: false,
+});
+scene.add(plot);
+```
+
+</details>
+
+### SankeyDiagram
+
+`SankeyDiagram` draws a flow diagram: nodes keyed by id, and directed links
+whose ribbon thickness is proportional to the flow value. Columns are assigned
+automatically from the link graph (or pinned with a node `layer`), and each link
+colors itself from its source node by default. The diagram is a `VGroup`, so
+`Create` animates the ribbons and node rectangles.
+
+<SankeyDiagramExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { SankeyDiagram, Create } from 'manim-web';
+
+const sankey = new SankeyDiagram({
+  nodes: [
+    { id: 'Budget', color: '#58c4dd' },
+    { id: 'Eng', color: '#83c167' },
+    { id: 'Salaries' },
+    { id: 'Cloud' },
+  ],
+  links: [
+    { source: 'Budget', target: 'Eng', value: 40 },
+    { source: 'Eng', target: 'Salaries', value: 28 },
+    { source: 'Eng', target: 'Cloud', value: 12 },
+  ],
+  orientation: 'horizontal',
+  linkColorMode: 'source', // or 'target' / 'blend'
+  height: 4.2,
+});
+scene.play(new Create(sankey));
+```
+
+</details>
+
+The standalone `computeSankeyLayout` returns node and link geometry without
+building mobjects, for custom rendering.
+
+### Animated force-directed layout
+
+A graph can relax itself with a live spring simulation. `graph.animateSpringLayout()`
+returns a `ForceDirectedLayout` animation that runs the Fruchterman-Reingold
+simulation step by step over the run time, so the vertices visibly settle. The
+whole trajectory is computed once at `begin()`, so the animation is
+deterministic and safe to seek in either direction.
+
+<ForceDirectedLayoutExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Graph } from 'manim-web';
+
+const graph = new Graph({
+  vertices: ['A', 'B', 'C', 'D', 'E'],
+  edges: [
+    ['A', 'B'],
+    ['B', 'C'],
+    ['C', 'D'],
+    ['D', 'E'],
+    ['E', 'A'],
+  ],
+  showLabels: true,
+});
+scene.add(graph);
+
+// Play the live simulation. seed gives repeatable random start positions.
+await scene.play(graph.animateSpringLayout({ iterations: 80, seed: 5, duration: 3 }));
+```
+
+</details>
+
+`iterations`, `cooling`, `scale`, and `center` tune the simulation. Omit `seed`
+to relax from the vertices' current positions instead of a random start.
+
+### Slide PDF export
+
+`exportSlidesToPDF` turns a slide deck into a PDF, one page per slide. For each
+slide the scene seeks to the chosen still (the first or last frame) and places
+that frame, centered and aspect-preserving, on its own page. A `Player` is a
+valid source directly. It returns the PDF as a `Blob` (or `null` for an empty
+deck); `exportAndDownloadSlidesToPDF` triggers a browser download instead.
+
+The default PDF factory lazy-imports `jspdf`, so a real export runs in the
+browser. This section is a code sample.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { exportSlidesToPDF, exportAndDownloadSlidesToPDF } from 'manim-web';
+
+// player drives a slide deck; it is a valid source directly.
+const blob = await exportSlidesToPDF(player, {
+  still: 'last', // capture the last frame of each slide (or 'first')
+  orientation: 'landscape',
+  pageSize: 'a4',
+  background: [0, 0, 0], // page fill as [r, g, b]; omit for a white page
+  onProgress: (p) => console.log(`${Math.round(p * 100)}%`),
+});
+
+// Or trigger a browser download in one call.
+await exportAndDownloadSlidesToPDF(player, 'slides.pdf', { still: 'last' });
+```
+
+</details>
+
+A sibling `exportSlidesToPPTX` produces a PowerPoint deck from the same source.
