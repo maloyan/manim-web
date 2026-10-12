@@ -30,7 +30,15 @@ const placeholderStyle: React.CSSProperties = {
  * of simultaneous context requests that can cause GPU OOM).  The queue is
  * released as soon as the scene is created, allowing multiple scenes to
  * animate concurrently.
+ *
+ * Each waiter is guarded by a watchdog so a scene that fails to release the
+ * queue (an error on an unexpected path, a race during unmount) can never
+ * permanently block every later example from initializing — which would
+ * leave the rest of the page as black boxes.  Off-screen scenes are disposed
+ * by the IntersectionObserver, so the watchdog can only ever let a small,
+ * bounded number of contexts coexist briefly.
  */
+const INIT_WATCHDOG_MS = 5000;
 let initQueue: Array<() => void> = [];
 let initRunning = false;
 
@@ -40,17 +48,26 @@ function enqueueInit(): Promise<void> {
     return Promise.resolve();
   }
   return new Promise((resolve) => {
-    initQueue.push(resolve);
+    let fired = false;
+    const go = () => {
+      if (fired) return;
+      fired = true;
+      resolve();
+    };
+    initQueue.push(go);
+    // Never let a waiter block forever if the holder never releases.
+    setTimeout(go, INIT_WATCHDOG_MS);
   });
 }
 
 function dequeueInit(): void {
-  if (initQueue.length > 0) {
+  // Skip waiters that already self-released via their watchdog.
+  while (initQueue.length > 0) {
     const next = initQueue.shift()!;
     next();
-  } else {
-    initRunning = false;
+    return;
   }
+  initRunning = false;
 }
 
 /** Release the queue exactly once via a shared flag. */
