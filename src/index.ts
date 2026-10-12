@@ -457,6 +457,23 @@ export {
   type GlyphVMobjectOptions,
   TextGlyphGroup,
   type TextGlyphGroupOptions,
+  // Text-on-a-path
+  TextOnPath,
+  type TextOnPathOptions,
+  type TextOnPathGlyph,
+  type TextOnPathSource,
+  computeGlyphPlacements,
+  sampledPathFromPoints,
+  sampledPathFromFunction,
+  visibleGlyphChars,
+  alignmentToOffset,
+  type SampledPath,
+  type GlyphLayoutEntry,
+  type GlyphLayoutOptions,
+  type GlyphPlacement,
+  type TextOnPathAlignment,
+  type TextOnPathOverflow,
+  type PathPoint,
   // Code blocks
   Code,
   type CodeOptions,
@@ -751,6 +768,14 @@ export {
   type Mobject2DOptions,
   type Distribution2D,
 } from './mobjects/point';
+
+// Particle systems (emitters with lifetime, velocity, forces)
+export {
+  ParticleSystem,
+  type ParticleSystemOptions,
+  type ParticleForces,
+  type ParticleSnapshot,
+} from './mobjects/particles';
 
 // Fractal mobjects
 export {
