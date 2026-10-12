@@ -777,6 +777,22 @@ export {
   binaryTree,
   gridGraph,
   bipartiteGraph,
+  // Sankey (flow) diagram
+  SankeyDiagram,
+  SankeyNode,
+  SankeyLink,
+  type SankeyDiagramOptions,
+  type SankeyLinkColorMode,
+  type SankeySpan,
+  computeSankeyLayout,
+  orientPoint,
+  type SankeyNodeInput,
+  type SankeyLinkInput,
+  type SankeyOrientation,
+  type SankeyLayoutOptions,
+  type NodeLayout,
+  type LinkLayout,
+  type SankeyLayout,
 } from './mobjects/graph';
 
 // Image mobjects

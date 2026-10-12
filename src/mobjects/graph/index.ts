@@ -38,3 +38,24 @@ export {
   gridGraph,
   bipartiteGraph,
 } from './graphFactories';
+
+// Sankey (flow) diagram
+export {
+  SankeyDiagram,
+  SankeyNode,
+  SankeyLink,
+  type SankeyDiagramOptions,
+  type SankeyLinkColorMode,
+  type SankeySpan,
+} from './SankeyDiagram';
+export {
+  computeSankeyLayout,
+  orientPoint,
+  type SankeyNodeInput,
+  type SankeyLinkInput,
+  type SankeyOrientation,
+  type SankeyLayoutOptions,
+  type NodeLayout,
+  type LinkLayout,
+  type SankeyLayout,
+} from './sankeyLayout';
