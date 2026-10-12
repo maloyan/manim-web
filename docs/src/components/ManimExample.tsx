@@ -103,22 +103,40 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
   const queueFlagRef = useRef<{ released: boolean } | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Visibility detection — IntersectionObserver with manual fallback.
+  // Visibility detection.  The IntersectionObserver alone proved unreliable
+  // inside the Docusaurus router — on the long examples page only the first
+  // example (caught by the initial manual check) ever activated, leaving the
+  // other ~38 as permanent black boxes.  A throttled scroll/resize fallback
+  // re-checks the viewport directly so every example activates on scroll.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    // Manual check — IntersectionObserver may not fire its initial callback
-    // immediately when used inside Docusaurus BrowserOnly.
-    if (isElementInViewport(el)) {
-      setIsVisible(true);
-    }
+    const update = () => setIsVisible(isElementInViewport(el));
+    update();
 
     const observer = new IntersectionObserver(([entry]) => setIsVisible(entry.isIntersecting), {
       threshold: [0, 0.1],
     });
     observer.observe(el);
-    return () => observer.disconnect();
+
+    let scheduled = false;
+    const onScroll = () => {
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(() => {
+        scheduled = false;
+        update();
+      });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
   }, []);
 
   // Scene lifecycle — loops while visible.
