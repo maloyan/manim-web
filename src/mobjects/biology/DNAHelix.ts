@@ -1,0 +1,240 @@
+/**
+ * DNAHelix - a double helix of DNA.
+ *
+ * The helix is two phosphate backbone strands (parametric helices, half a turn
+ * out of phase) plus base-pair "rungs" that connect them at even intervals.
+ * The rungs can be colored by base with the A/T/G/C palette.
+ *
+ * The helix axis is vertical (the Y axis). A full turn rises by `pitch`, so a
+ * helix of `turns` turns has height `turns * pitch`. In 2D schematic mode the
+ * strands are two sine waves in the XY plane; in 3D mode they wind around the
+ * axis in the Z direction too.
+ *
+ * The helix is a VGroup, so Create and FadeIn animate it directly.
+ *
+ * @example
+ * ```typescript
+ * const dna = new DNAHelix({ turns: 3, basePairs: 12 });
+ * scene.play(new Create(dna));
+ *
+ * // A short 3D helix with an explicit sequence.
+ * const gene = new DNAHelix({
+ *   turns: 2,
+ *   basePairs: 8,
+ *   threeD: true,
+ *   sequence: ['A', 'T', 'G', 'C'],
+ * });
+ * ```
+ */
+
+import { VGroup } from '../../core/VGroup';
+import { Vector3Tuple } from '../../core/Mobject';
+import { Line } from '../geometry/Line';
+import { ParametricFunction } from '../graphing/ParametricFunction';
+import { DEFAULT_STROKE_WIDTH } from '../../constants';
+import { baseColor, complementOf, normalizeBase } from './biologyColors';
+import { BaseSymbol, DNAHelixOptions, BasePairRender, StrandPair } from './biologyTypes';
+
+/** Default order the bases repeat in when no sequence is given. */
+const DEFAULT_SEQUENCE: readonly BaseSymbol[] = ['A', 'T', 'G', 'C'];
+
+/** Default colors of the two backbone strands. */
+const DEFAULT_BACKBONE_COLORS: [string, string] = ['#58C4DD', '#FF862F'];
+
+/** Default rung color used when colorByBase is false. */
+const DEFAULT_RUNG_COLOR = '#CCCCCC';
+
+export class DNAHelix extends VGroup {
+  protected _turns: number;
+  protected _radius: number;
+  protected _pitch: number;
+  protected _basePairs: number;
+  protected _threeD: boolean;
+  protected _colorByBase: boolean;
+  protected _sequence: BaseSymbol[];
+  protected _backboneColors: [string, string];
+  protected _baseColors: Partial<Record<BaseSymbol, string>>;
+  protected _rungColor: string;
+  protected _strokeWidth: number;
+  protected _numSamplesPerTurn: number;
+
+  /** The two strand functions, built once and shared by strands and rungs. */
+  protected _strandFuncs: [(t: number) => Vector3Tuple, (t: number) => Vector3Tuple];
+  /** The two resolved strands. */
+  protected _strands: StrandPair;
+  /** The resolved base pairs, from bottom to top. */
+  protected _pairs: BasePairRender[] = [];
+
+  /** The base-pair rung mobjects, drawn behind the strands. */
+  readonly rungsGroup: VGroup;
+  /** The backbone strand mobjects, drawn in front of the rungs. */
+  readonly strandsGroup: VGroup;
+
+  constructor(options: DNAHelixOptions = {}) {
+    super();
+
+    const {
+      turns = 3,
+      radius = 0.5,
+      pitch = 1,
+      basePairs = 12,
+      threeD = false,
+      colorByBase = true,
+      sequence = [],
+      backboneColors = DEFAULT_BACKBONE_COLORS,
+      baseColors = {},
+      rungColor = DEFAULT_RUNG_COLOR,
+      strokeWidth = DEFAULT_STROKE_WIDTH,
+      numSamplesPerTurn = 32,
+    } = options;
+
+    this._turns = Math.max(0, turns);
+    this._radius = radius;
+    this._pitch = pitch;
+    this._basePairs = Math.max(0, Math.floor(basePairs));
+    this._threeD = threeD;
+    this._colorByBase = colorByBase;
+    this._sequence = sequence.map((b) => normalizeBase(b));
+    this._backboneColors = [backboneColors[0], backboneColors[1]];
+    this._baseColors = { ...baseColors };
+    this._rungColor = rungColor;
+    this._strokeWidth = strokeWidth;
+    this._numSamplesPerTurn = Math.max(2, numSamplesPerTurn);
+
+    this._strandFuncs = [this._makeStrandFunc(0), this._makeStrandFunc(Math.PI)];
+
+    this.rungsGroup = new VGroup();
+    this.strandsGroup = new VGroup();
+
+    this._strands = this._buildStrands();
+    this._buildBasePairs();
+
+    // Rungs render behind the backbone strands.
+    this.add(this.rungsGroup);
+    this.add(this.strandsGroup);
+  }
+
+  /** Build the parametric position function for one strand at the given phase. */
+  protected _makeStrandFunc(phase: number): (t: number) => Vector3Tuple {
+    const r = this._radius;
+    const p = this._pitch;
+    const halfH = (this._turns * p) / 2;
+    const threeD = this._threeD;
+    return (t: number): Vector3Tuple => {
+      const angle = 2 * Math.PI * t + phase;
+      const x = r * Math.cos(angle);
+      const y = p * t - halfH;
+      const z = threeD ? r * Math.sin(angle) : 0;
+      return [x, y, z];
+    };
+  }
+
+  /** Build the two backbone strands as parametric curves and add them. */
+  protected _buildStrands(): StrandPair {
+    const numSamples = Math.max(2, Math.ceil(this._turns * this._numSamplesPerTurn));
+    const tRange: [number, number] = [0, this._turns];
+    const strands = this._strandFuncs.map((func, i) => {
+      const strand = new ParametricFunction({
+        func,
+        tRange,
+        numSamples,
+        color: this._backboneColors[i],
+        strokeWidth: this._strokeWidth,
+      });
+      this.strandsGroup.add(strand);
+      return strand;
+    });
+    return [strands[0], strands[1]];
+  }
+
+  /** The base on the first strand at a base-pair index (sequence or default). */
+  protected _baseAt(index: number): BaseSymbol {
+    if (this._sequence.length > 0) {
+      return this._sequence[index % this._sequence.length];
+    }
+    return DEFAULT_SEQUENCE[index % DEFAULT_SEQUENCE.length];
+  }
+
+  /** The helix parameter (in turns) at a base-pair index, centered in its slot. */
+  protected _paramAt(index: number): number {
+    if (this._basePairs === 0) {
+      return 0;
+    }
+    return (this._turns * (index + 0.5)) / this._basePairs;
+  }
+
+  /** Build every base-pair rung and add its line to rungsGroup. */
+  protected _buildBasePairs(): void {
+    for (let i = 0; i < this._basePairs; i++) {
+      const t = this._paramAt(i);
+      const base = this._baseAt(i);
+      const complement = complementOf(base);
+      const start = this._strandFuncs[0](t);
+      const end = this._strandFuncs[1](t);
+      const color = this._colorByBase ? baseColor(base, this._baseColors) : this._rungColor;
+      const line = new Line({ start, end, color, strokeWidth: this._strokeWidth });
+      this.rungsGroup.add(line);
+      this._pairs.push({ index: i, t, base, complement, start, end, line, color });
+    }
+  }
+
+  // ========== Accessors ==========
+
+  /** Get the two backbone strands, first and second. */
+  getStrands(): StrandPair {
+    return [this._strands[0], this._strands[1]];
+  }
+
+  /** Get one backbone strand by index (0 or 1), or undefined. */
+  getStrand(index: number): ParametricFunction | undefined {
+    return this._strands[index];
+  }
+
+  /** Get all resolved base pairs, from bottom to top. */
+  getBasePairs(): BasePairRender[] {
+    return [...this._pairs];
+  }
+
+  /** Get the resolved base pair at an index, or undefined. */
+  getBasePair(index: number): BasePairRender | undefined {
+    return this._pairs[index];
+  }
+
+  /** The point on a strand (0 or 1) at helix parameter t, in turns. */
+  pointOnStrand(strandIndex: number, t: number): Vector3Tuple {
+    const func = this._strandFuncs[strandIndex];
+    if (!func) {
+      return [0, 0, 0];
+    }
+    return func(t);
+  }
+
+  /** The total height of the helix along its axis: turns * pitch. */
+  getHelixHeight(): number {
+    return this._turns * this._pitch;
+  }
+
+  /** The number of base pairs. */
+  get numBasePairs(): number {
+    return this._pairs.length;
+  }
+
+  override copy(): DNAHelix {
+    const clone = new DNAHelix({
+      turns: this._turns,
+      radius: this._radius,
+      pitch: this._pitch,
+      basePairs: this._basePairs,
+      threeD: this._threeD,
+      colorByBase: this._colorByBase,
+      sequence: [...this._sequence],
+      backboneColors: [this._backboneColors[0], this._backboneColors[1]],
+      baseColors: { ...this._baseColors },
+      rungColor: this._rungColor,
+      strokeWidth: this._strokeWidth,
+      numSamplesPerTurn: this._numSamplesPerTurn,
+    });
+    this._copyBaseAttributesInto(clone, { copyChildren: false });
+    return clone;
+  }
+}
