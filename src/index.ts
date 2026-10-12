@@ -1845,6 +1845,23 @@ export {
   type BindUrlStateOptions,
   type UrlStateBinding,
   type UrlStateController,
+  defineParametrizedScene,
+  resolveProps,
+  renderParametrized,
+  propsFromUrl,
+  type PropsRecord,
+  type PropTypeTag,
+  type PropsSchema,
+  type DataFetcher,
+  type SceneMetadata,
+  type MetadataContext,
+  type CalculateMetadataResult,
+  type CalculateMetadata,
+  type SceneBuilder,
+  type ParametrizedSceneDefinition,
+  type ResolvedMetadata,
+  type ParametrizedRenderResult,
+  type RenderParametrizedOptions,
 } from './serialization';
 
 // --- geo maps (best-manim) ---
