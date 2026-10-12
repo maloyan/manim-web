@@ -131,6 +131,22 @@ export {
 } from './audio/AudioAnalyzer';
 // --- end audio-reactive ---
 
+// --- MIDI input (best-manim, browser-unique) ---
+export {
+  MidiInput,
+  isMidiSupported,
+  type MidiInputOptions,
+  type MidiConnectOptions,
+  type MidiBindOptions,
+  type MidiAccessLike,
+  type MidiInputLike,
+  type MidiMessageLike,
+  type MidiNoteListener,
+  type MidiNoteOffListener,
+  type MidiControlListener,
+} from './audio/MidiInput';
+// --- end MIDI input ---
+
 // --- accessibility (a11y) layer (browser-unique) ---
 // Three opt-in capabilities: WebVTT captions from voiceover timings,
 // prefers-reduced-motion respect, and ARIA live-region narration. All are
@@ -396,6 +412,14 @@ export {
   CandlestickChart,
   type CandlestickChartOptions,
   type OHLC,
+  RadarChart,
+  type RadarChartOptions,
+  WaterfallChart,
+  type WaterfallChartOptions,
+  GanttChart,
+  type GanttChartOptions,
+  type GanttTask,
+  type GanttTimeValue,
   PieChart,
   type PieChartOptions,
   DonutChart,
@@ -447,6 +471,30 @@ export {
   type ContourSegment,
 } from './mobjects/graphing';
 
+// --- treemap and chord diagram (data-viz mobjects) ---
+export {
+  Treemap,
+  type TreemapOptions,
+  type TreemapColorBy,
+  computeTreemapLayout,
+  squarify,
+  treemapNodeValue,
+  type TreemapNode,
+  type TreemapRect,
+  type TreemapTile,
+  ChordDiagram,
+  ChordArc,
+  ChordRibbon,
+  type ChordDiagramOptions,
+  computeChordLayout,
+  chordMatrixFromFlows,
+  type ChordFlow,
+  type ChordGroupArc,
+  type ChordRibbonSpan,
+  type ChordLayout,
+  type ChordLayoutOptions,
+} from './mobjects/graphing';
+
 // --- statistical plots ---
 export {
   Histogram,
@@ -473,6 +521,26 @@ export {
   type HistogramBinsOptions,
   type KdeOptions,
   type BoxSummary,
+} from './mobjects/graphing';
+
+// --- multi-series charts (stacked/grouped bars, area, step) and calendar heatmap ---
+export {
+  DEFAULT_SERIES_COLORS,
+  cycleColor,
+  toColorList,
+  StackedBarChart,
+  type StackedBarChartOptions,
+  type BarChartMode,
+  AreaChart,
+  type AreaChartOptions,
+  StepChart,
+  type StepChartOptions,
+  type StepMode,
+  CalendarHeatmap,
+  GITHUB_GREENS,
+  type CalendarHeatmapOptions,
+  type CalendarDatum,
+  type CellPosition,
 } from './mobjects/graphing';
 
 // Text and LaTeX
@@ -814,6 +882,9 @@ export {
 // Image mobjects
 export { ImageMobject, type ImageMobjectOptions, type ImageFilterOptions } from './mobjects/image';
 
+// --- sketch / hand-drawn stroke style (best-manim) ---
+export { sketch, type SketchOptions } from './mobjects/sketch';
+
 // --- video (best-manim) ---
 export { VideoMobject, type VideoMobjectOptions } from './mobjects/video';
 
@@ -879,6 +950,31 @@ export {
   type ParticleSnapshot,
 } from './mobjects/particles';
 
+// Physics (2D rigid-body simulation: gravity, collisions, springs, pendulum)
+export {
+  PhysicsWorld,
+  type PhysicsWorldOptions,
+  Body,
+  type BodyOptions,
+  type BodyShape,
+  type CircleShape,
+  type PolygonShape,
+  type Constraint,
+  type Anchor,
+  DistanceConstraint,
+  type DistanceConstraintOptions,
+  SpringConstraint,
+  type SpringConstraintOptions,
+  type Bounds,
+  resolveBounds,
+  resolveCircleCircle,
+  pendulum,
+  type PendulumOptions,
+  springChain,
+  type SpringChainOptions,
+  type Vec2,
+} from './mobjects/physics';
+
 // Fractal mobjects
 export {
   MandelbrotSet,
@@ -886,6 +982,13 @@ export {
   NewtonFractal,
   type NewtonFractalOptions,
 } from './mobjects/fractals';
+
+// Custom GLSL shader mobject (Shadertoy-style fragment shader on a plane)
+export {
+  ShaderMobject,
+  type ShaderMobjectOptions,
+  type ShaderUniformValue,
+} from './mobjects/shader';
 
 // Probability mobjects
 export {
@@ -1108,6 +1211,28 @@ export {
   type AnimationGroupOptions,
 } from './animation/AnimationGroup';
 export { LaggedStart, laggedStart, type LaggedStartOptions } from './animation/LaggedStart';
+
+// Kinetic-typography preset animations (per-glyph text effects)
+export {
+  resolveGlyphs,
+  typeOn,
+  fadeInByLetter,
+  fadeInByWord,
+  riseByLetter,
+  scalePopByLetter,
+  waveLetters,
+  WaveLetters,
+  tracking,
+  spreadOut,
+  LetterSpacing,
+  glitchIn,
+  GlitchIn,
+  type KineticTypographyOptions,
+  type RiseByLetterOptions,
+  type WaveLettersOptions,
+  type LetterSpacingOptions,
+  type GlitchInOptions,
+} from './animation/text';
 export { Succession, succession, type SuccessionOptions } from './animation/Succession';
 export {
   LaggedStartMap,
@@ -1731,3 +1856,45 @@ export {
   type GeoFeatureCollection,
 } from './mobjects/geo';
 // --- end geo maps ---
+
+// --- neural-network / ML diagram toolkit (manim-ml analogue) ---
+// Layers (FeedForward, Convolutional, Pooling, Image) compose into a
+// NeuralNetwork VGroup with dense connection lines; forwardPass / backwardPass
+// animate a signal flowing through the connections.
+export {
+  // Layer base + layer mobjects
+  NeuralNetworkLayer,
+  FeedForwardLayer,
+  type FeedForwardLayerOptions,
+  ConvolutionalLayer,
+  type ConvolutionalLayerOptions,
+  PoolingLayer,
+  type PoolingLayerOptions,
+  ImageLayer,
+  type ImageLayerOptions,
+  // Shared feature-map stack builder
+  buildFeatureMapStack,
+  type FeatureMapStackConfig,
+  type FeatureMapStackResult,
+  // Network
+  NeuralNetwork,
+  type NeuralNetworkOptions,
+  // Animations
+  EdgePulse,
+  edgePulse,
+  type EdgePulseOptions,
+  forwardPass,
+  backwardPass,
+  type ForwardPassOptions,
+  // Styles
+  type NodeStyleOptions,
+  type ConnectionStyleOptions,
+  type ResolvedNodeStyle,
+  type ResolvedEdgeStyle,
+  DEFAULT_NODE_STYLE,
+  DEFAULT_EDGE_STYLE,
+  DEFAULT_ACTIVATION_COLOR,
+  resolveNodeStyle,
+  resolveEdgeStyle,
+} from './mobjects/ml';
+// --- end neural-network toolkit ---

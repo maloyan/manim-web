@@ -89,8 +89,43 @@ export { PolarPlane, type PolarPlaneOptions } from './ComplexPlane';
 // BarChart
 export { BarChart, type BarChartOptions } from './BarChart';
 
+// Multi-series chart color helpers
+export { DEFAULT_SERIES_COLORS, cycleColor, toColorList } from './chartColors';
+
+// StackedBarChart (stacked / grouped multi-series bars)
+export { StackedBarChart, type StackedBarChartOptions, type BarChartMode } from './StackedBarChart';
+
+// AreaChart (filled areas under lines, optionally stacked)
+export { AreaChart, type AreaChartOptions } from './AreaChart';
+
+// StepChart (step line graph)
+export { StepChart, type StepChartOptions, type StepMode } from './StepChart';
+
+// CalendarHeatmap (GitHub-style day-cell grid)
+export {
+  CalendarHeatmap,
+  GITHUB_GREENS,
+  type CalendarHeatmapOptions,
+  type CalendarDatum,
+  type CellPosition,
+} from './CalendarHeatmap';
+
 // CandlestickChart (financial OHLC chart)
 export { CandlestickChart, type CandlestickChartOptions, type OHLC } from './CandlestickChart';
+
+// RadarChart (spider chart)
+export { RadarChart, type RadarChartOptions } from './RadarChart';
+
+// WaterfallChart (bridge chart)
+export { WaterfallChart, type WaterfallChartOptions } from './WaterfallChart';
+
+// GanttChart (project timeline bars)
+export {
+  GanttChart,
+  type GanttChartOptions,
+  type GanttTask,
+  type GanttTimeValue,
+} from './GanttChart';
 
 // PieChart and DonutChart
 export {
@@ -102,6 +137,29 @@ export {
   type SliceGeometry,
   type LabelPosition,
 } from './PieChart';
+
+// Treemap (squarified hierarchical rectangles)
+export { Treemap, type TreemapOptions, type TreemapColorBy } from './Treemap';
+export {
+  computeTreemapLayout,
+  squarify,
+  treemapNodeValue,
+  type TreemapNode,
+  type TreemapRect,
+  type TreemapTile,
+} from './treemapLayout';
+
+// ChordDiagram (arcs around a circle with proportional ribbons)
+export { ChordDiagram, ChordArc, ChordRibbon, type ChordDiagramOptions } from './ChordDiagram';
+export {
+  computeChordLayout,
+  chordMatrixFromFlows,
+  type ChordFlow,
+  type ChordGroupArc,
+  type ChordRibbonSpan,
+  type ChordLayout,
+  type ChordLayoutOptions,
+} from './chordLayout';
 
 // Statistical plots (histogram, scatter, box, violin) and their stats helpers
 export {
