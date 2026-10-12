@@ -26,6 +26,7 @@
 import * as THREE from 'three';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Mobject3D } from './Mobject3D';
+import { applyObjMaterials, type MtlLoader } from './objMaterials';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -69,12 +70,25 @@ export interface ModelMobjectOptions {
   center?: boolean;
   /** Convenience fill color applied to every mesh material. */
   color?: string;
-  /** Replace every mesh material with this one. Wins over `color`. */
+  /** Replace every mesh material with this one. Wins over `color` and MTL. */
   materialOverride?: THREE.Material;
+  /**
+   * For .obj only: explicit companion .mtl URL. Its materials and texture maps
+   * apply to the meshes. `materialOverride` and `color` still win over them.
+   * Ignored for glTF, which embeds its materials natively.
+   */
+  mtlUrl?: string;
+  /**
+   * For .obj only: auto-derive the .mtl URL from the .obj URL and load it.
+   * `mtlUrl` takes priority when both are set. Default: false.
+   */
+  loadMaterials?: boolean;
   /** Progress callback forwarded to the loader. */
   onProgress?: (event: ProgressEvent) => void;
   /** Inject a loader directly (bypasses the factory and the network). */
   loader?: ModelLoader;
+  /** Inject an MTLLoader directly (bypasses the factory and the network). */
+  mtlLoader?: MtlLoader;
   /**
    * When false, a load failure resolves to an empty ModelMobject whose
    * {@link ModelMobject.getLoadError} holds the error instead of rejecting.
@@ -202,11 +216,16 @@ export class ModelMobject extends Mobject3D {
    * The loader is chosen from the extension: `.glb` / `.gltf` -> GLTFLoader,
    * `.obj` -> OBJLoader. Inject a loader with the `loader` option (or
    * `setModelLoaderFactory`) to avoid the network, e.g. in tests.
+   *
+   * For `.obj`, set `mtlUrl` (or `loadMaterials: true` to derive the .mtl URL)
+   * to load the companion .mtl and apply its materials and texture maps before
+   * the OBJ parse. `materialOverride` and `color` still win over them.
    */
   static async fromUrl(url: string, options: ModelMobjectOptions = {}): Promise<ModelMobject> {
     const format = detectModelFormat(url);
     try {
       const loader = await resolveLoader(format, options.loader);
+      if (format === 'obj') await applyObjMaterials(loader, url, options);
       const result = await loader.loadAsync(url, options.onProgress);
       const object = normalizeLoadResult(result);
       return new ModelMobject(object, options, format);

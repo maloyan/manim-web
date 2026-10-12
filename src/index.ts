@@ -560,6 +560,17 @@ export {
   type ModelLoader,
   type ModelLoaderFactory,
 } from './mobjects/three-d/ModelMobject';
+export {
+  applyObjMaterials,
+  setMtlLoaderFactory,
+  deriveMtlUrl,
+  deriveBasePath,
+  type MtlLoader,
+  type MtlLoaderFactory,
+  type MtlMaterials,
+  type ObjMaterialSink,
+  type ObjMaterialOptions,
+} from './mobjects/three-d/objMaterials';
 // --- end 3D model import ---
 
 // Value Trackers
