@@ -2,6 +2,98 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.34.3](https://github.com/maloyan/manim-web/compare/v0.15.0...v0.34.3) (2026-10-12)
+
+
+### Features
+
+* **3d:** extruded/beveled 3D text ([05328fd](https://github.com/maloyan/manim-web/commit/05328fd11b827c2ded059e7cdc12aa798cb64fd5))
+* **3d:** OBJ/MTL material and texture support for ModelMobject ([b97097b](https://github.com/maloyan/manim-web/commit/b97097b215592e45a7cb92409d9fb1d0b5d9e368))
+* **a11y:** WebVTT captions, reduced-motion, ARIA narration ([3280c8e](https://github.com/maloyan/manim-web/commit/3280c8e095dbfe3de275996670fdb21f8c16d25a))
+* **animation:** kinetic-typography preset animations ([edf31f5](https://github.com/maloyan/manim-web/commit/edf31f5ae260037c690d224a14de90380c3c421f))
+* **audio:** audio-reactive animation via Web Audio FFT ([3ee052d](https://github.com/maloyan/manim-web/commit/3ee052d84b3bc8d9659970e48c421f89a95d4947))
+* **audio:** spatial/positional audio via PannerNode ([7576070](https://github.com/maloyan/manim-web/commit/75760704a7773135ff47927022bf9d9fddccae00))
+* **audio:** Web MIDI input for animation control ([dbcb900](https://github.com/maloyan/manim-web/commit/dbcb90099030fd3055412fff3632e92b35f85c06))
+* **biology:** DNA helix and cell mobjects ([f854324](https://github.com/maloyan/manim-web/commit/f8543244a5bd5bbb6e05ff6beabc551cfed4f0cd)), closes [#4809](https://github.com/maloyan/manim-web/issues/4809)
+* **chemistry:** molecule mobjects for science animations ([828d98f](https://github.com/maloyan/manim-web/commit/828d98f412fe2e3584b5e8328fbc1fb2bff685cb))
+* **color:** Oklab/Oklch perceptual color interpolation ([c41d93d](https://github.com/maloyan/manim-web/commit/c41d93d15b7803265c44da4b97e5ff2f5d06e984))
+* **core:** opt-in post-processing pipeline (bloom, vignette, DOF) ([7c0846e](https://github.com/maloyan/manim-web/commit/7c0846e539b97726af79f078d6fb8f0d1060b872))
+* **core:** opt-in WebXR scene output ([ea47ab5](https://github.com/maloyan/manim-web/commit/ea47ab50b5cac47b63e679e9449bb695b11d4bbd))
+* **core:** reactive signal graph (lazy memoized computed values) ([3481b19](https://github.com/maloyan/manim-web/commit/3481b1939dd83b6b7bdfcf6eb5a94aff35bc687c))
+* **effects:** per-mobject drop shadow ([cec33d8](https://github.com/maloyan/manim-web/commit/cec33d8a54678aa377b8852dab88e495e8e1f9a3)), closes [ManimCommunity/manim#3616](https://github.com/ManimCommunity/manim/issues/3616)
+* **export:** animated SVG (SMIL) export ([2e0868d](https://github.com/maloyan/manim-web/commit/2e0868dd4036eadf577d942cf8d8233e71e2b118))
+* **export:** scene-to-SVG vector export ([b7409a3](https://github.com/maloyan/manim-web/commit/b7409a3f79db4f7439babafaad2353dc551701b0))
+* **export:** slide-deck export to PDF ([da8337a](https://github.com/maloyan/manim-web/commit/da8337a52f90bb2d3fd8df1d0acde99cc1ea310b))
+* **export:** transparent/alpha background export ([ca08499](https://github.com/maloyan/manim-web/commit/ca08499729f9fa2bf033a35553e7338c729ad70d))
+* **graph:** animated force-directed layout ([eb903ac](https://github.com/maloyan/manim-web/commit/eb903ac2f9062866a29a09021ff1fc58ca6e518e))
+* **graphing:** 3D isosurfaces, heatmap and contour plots ([4b7c3d0](https://github.com/maloyan/manim-web/commit/4b7c3d08a9e48002b3c92c0118cc8db9ea72062e)), closes [#4428](https://github.com/maloyan/manim-web/issues/4428) [#416](https://github.com/maloyan/manim-web/issues/416)
+* **graphing:** candlestick/OHLC financial chart ([06b9a08](https://github.com/maloyan/manim-web/commit/06b9a083dff7a701ed82593cd9c5859f376e9203))
+* **graphing:** complex-function domain coloring ([bdc389f](https://github.com/maloyan/manim-web/commit/bdc389fe88560a99aa7ee43512a8f5004303b414))
+* **graphing:** Fourier series and epicycle visualization ([26fc7b7](https://github.com/maloyan/manim-web/commit/26fc7b71d4e79c910f56d88069169ff98b5d299c))
+* **graphing:** Gantt chart ([9212c0a](https://github.com/maloyan/manim-web/commit/9212c0a6a17172b77cc6ad8443399f8992e6434e))
+* **graphing:** histogram, scatter, box and violin plots ([caeaeef](https://github.com/maloyan/manim-web/commit/caeaeefd48b58c1542f9d836f4f3c2a95419db0d))
+* **graphing:** PieChart and DonutChart ([2b4390c](https://github.com/maloyan/manim-web/commit/2b4390ca0af8c2c2907b212c62cd97b5209263ef))
+* **graphing:** radar and waterfall charts ([933e65c](https://github.com/maloyan/manim-web/commit/933e65c2d62cb3c77e23ddf211af5d79f9ab5c80))
+* **graphing:** stacked/area/step charts and calendar heatmap ([c055035](https://github.com/maloyan/manim-web/commit/c055035f65f76be0bfed1afb870e42f1554e45d5))
+* **graphing:** treemap and chord diagram ([4f4dc5d](https://github.com/maloyan/manim-web/commit/4f4dc5d72e87d931147187a46e2ff35128aafb27))
+* **graph:** Sankey flow diagram ([8e53fe7](https://github.com/maloyan/manim-web/commit/8e53fe70a422ebc2590d944a814332ca3b8cfc2c))
+* **graph:** weighted-edge labels and self-loop edges ([d502747](https://github.com/maloyan/manim-web/commit/d5027472766e685e2a20f04d75045f427f2b8ae0)), closes [#3153](https://github.com/maloyan/manim-web/issues/3153)
+* **integrations:** notebook/Observable embed helper ([d425d4e](https://github.com/maloyan/manim-web/commit/d425d4e4c671270ec607419bba5304246191435e))
+* **interaction:** 2D pan/zoom viewport controls ([ee86f75](https://github.com/maloyan/manim-web/commit/ee86f753beb2e1353ccdd980a7e1e9455fce6a65))
+* **interaction:** gamepad input for interactive apps and games ([40836be](https://github.com/maloyan/manim-web/commit/40836be275c46fbe08814cbeb2d8245ecfc3ad46))
+* **interaction:** keyboard input for interactive apps and games ([97cc639](https://github.com/maloyan/manim-web/commit/97cc639a7d8f0efebcfa285797d024d82db7e252))
+* **interaction:** state-machine for input-driven animation ([c7113e4](https://github.com/maloyan/manim-web/commit/c7113e4cccfc2db03f1a4dcc59cebdbf3e533d80))
+* **ml:** neural-network diagram toolkit ([0bd6a3f](https://github.com/maloyan/manim-web/commit/0bd6a3f76cd6c8d6f373819fa39bdd917248f443))
+* **mobjects:** custom GLSL ShaderMobject ([4732dad](https://github.com/maloyan/manim-web/commit/4732dad92d00335db660a616c76c3f99e125ad0b))
+* **mobjects:** GPU-instanced mobject for large scenes ([9b1ad67](https://github.com/maloyan/manim-web/commit/9b1ad67a09c2429d37f2bfc344ae4df1254b57bd))
+* **mobjects:** hand-drawn sketch stroke style ([e8b2263](https://github.com/maloyan/manim-web/commit/e8b2263826286dfd3d7f76669e0f129ed86467ca))
+* **mobjects:** Lottie animation import ([ada1f08](https://github.com/maloyan/manim-web/commit/ada1f082a9e9ccb757c2ebb31420c5190c3a597b))
+* **mobjects:** opt-in RK4 integrator and seeded flow for StreamLines ([cb482b7](https://github.com/maloyan/manim-web/commit/cb482b7a77afb50919b71a34eb229bb785bfc6f5)), closes [#3789](https://github.com/maloyan/manim-web/issues/3789)
+* **mobjects:** particle system with emitter and forces ([148475f](https://github.com/maloyan/manim-web/commit/148475fc8b1677a1a2b5f061d853ccd7935a1132))
+* **physics:** 2D rigid-body physics simulation ([b036e0f](https://github.com/maloyan/manim-web/commit/b036e0f0134da52f953f2aa7b3bee154507ae5f5))
+* **scene:** props/schema parametrized scenes with data-at-render ([326cae1](https://github.com/maloyan/manim-web/commit/326cae1b7d82541b3c0d80c26d86ebb345da4bf1))
+* **serialization:** URL-state permalinks for explorables ([c714fc4](https://github.com/maloyan/manim-web/commit/c714fc4f24ef16e3732876d0a073403c57ce0e0e))
+* **svg:** pattern fill support ([9ea8c93](https://github.com/maloyan/manim-web/commit/9ea8c93935b7bad75ab239eadfcb870f8d8907ab))
+* **table:** entry/row/column accessors, cell highlighting, numeric table variants ([5408781](https://github.com/maloyan/manim-web/commit/54087817d5fc311f2fa1f3c2b44c7b2530901c68))
+* **text:** text-on-a-path layout ([b198346](https://github.com/maloyan/manim-web/commit/b19834625b0e09f9b81f6d9b58d1656e4f047a72))
+
+
+### Bug Fixes
+
+* **core:** keep play() alive when a render throws mid-animation ([986461a](https://github.com/maloyan/manim-web/commit/986461a53218b74622ebcd000edba94c66574845))
+* **docs:** activate every example on scroll (not just the first) ([a962946](https://github.com/maloyan/manim-web/commit/a962946fffc815df97a27da069ac9d8aeb1d464c))
+* **docs:** add MovablePoint and Slider to the scene in the live example ([0207d1e](https://github.com/maloyan/manim-web/commit/0207d1e1187271358d1738fcdd7fc78cb9fe2fbd))
+* **docs:** click-to-run examples (bound live WebGL contexts) ([90fcf1e](https://github.com/maloyan/manim-web/commit/90fcf1ee2a6d865ca0651352d5c1eeea78beb2ca))
+* **docs:** intentional poster panel instead of pure-black example boxes ([bd7e881](https://github.com/maloyan/manim-web/commit/bd7e8814ec7cb9bf06a8c9cab87d3cd84363830a))
+* **docs:** run example on click without gating on flaky isVisible ([bd491d3](https://github.com/maloyan/manim-web/commit/bd491d3a264e8ac02dd3e0e258879e816b809be0))
+* **docs:** stop frozen step-by-step formula example ([9c78123](https://github.com/maloyan/manim-web/commit/9c78123d1160f6da7f92a6250997b87c014e17d4))
+* **docs:** stop the examples init-queue from stalling into black boxes ([187f359](https://github.com/maloyan/manim-web/commit/187f3591fc710d5ad0611675278c4922207671ff))
+* **graphing:** remove spurious bridging lines in ContourPlot ([#700](https://github.com/maloyan/manim-web/issues/700)) ([76f59a1](https://github.com/maloyan/manim-web/commit/76f59a107d4ce9484b78afa9992e4f66cf4efa99))
+* **interaction:** add touch and pinch support to PanZoomControls ([#693](https://github.com/maloyan/manim-web/issues/693)) ([3c7bb88](https://github.com/maloyan/manim-web/commit/3c7bb88eaace47400556b4af2a0d4bb08ff39f51))
+* **svg:** center imported SVG and size <text> so it renders on screen ([31a584c](https://github.com/maloyan/manim-web/commit/31a584cb877d3b148df626469abd7f9798f7371d))
+* **text:** recreate canvas texture on setText size change ([#607](https://github.com/maloyan/manim-web/issues/607)) ([2df7994](https://github.com/maloyan/manim-web/commit/2df799422ad3c757e11fa96863f64df9ae3fd9a2))
+* **text:** stroke each glyph contour as its own subpath ([#716](https://github.com/maloyan/manim-web/issues/716)) ([5e54f9e](https://github.com/maloyan/manim-web/commit/5e54f9e3b6b0d1c1104a66d9086840b53b834093)), closes [#700](https://github.com/maloyan/manim-web/issues/700)
+* **transform:** ignore stale subpath lengths instead of crashing ([43aa65d](https://github.com/maloyan/manim-web/commit/43aa65d146249f8e90510dd26dc0eab6321f6d26)), closes [#700](https://github.com/maloyan/manim-web/issues/700) [#716](https://github.com/maloyan/manim-web/issues/716)
+
+
+### Tests
+
+* **spaceOps:** ignore sign of zero in midpoint/mean property ([996e196](https://github.com/maloyan/manim-web/commit/996e196b97009c460f53b92fb7ae7b2113aed2a4))
+* **text:** deflake MathJax script-fallback test under parallel load ([6907c62](https://github.com/maloyan/manim-web/commit/6907c62ba1b9afb7ced38d65ccdcf61082976945))
+
+
+### Documentation
+
+* **#381:** add manim-web skill with live-dev watch.js ([8b7c3fb](https://github.com/maloyan/manim-web/commit/8b7c3fbb61e88959c36ba2fe629543ffa82cc23a)), closes [#381](https://github.com/maloyan/manim-web/issues/381)
+* document GamepadInput (0.32) ([0a73224](https://github.com/maloyan/manim-web/commit/0a732241db4c602e073a6e72bfb421f304b63993))
+* **examples:** add step-by-step formula transform example ([#705](https://github.com/maloyan/manim-web/issues/705)) ([cb39e60](https://github.com/maloyan/manim-web/commit/cb39e6081c8de32a4b24841e2235f8a39045c7c7))
+* pages and live examples for 0.16/0.17 features ([51af95c](https://github.com/maloyan/manim-web/commit/51af95c999ba1d67553ea6acf7f24ea9424631b3))
+* pages and live examples for 0.18/0.19 features ([3904d4b](https://github.com/maloyan/manim-web/commit/3904d4b0d22ed4f9098f4c997ad9915a4835fdb8))
+* pages and live examples for 0.20-0.22 features ([ba046af](https://github.com/maloyan/manim-web/commit/ba046afa7b1a657c1656648fa0c0f5eb003802c1))
+* pages and live examples for 0.23-0.25 features ([3649423](https://github.com/maloyan/manim-web/commit/364942358162b7a4c4b5cf4ccfa8ce9a5c2f5e4b))
+* pages and live examples for 0.26-0.28 features ([d50f4af](https://github.com/maloyan/manim-web/commit/d50f4af2c50f95e938f9733e4199889802295495))
+* pages and live examples for 0.29-0.31 features ([2711fac](https://github.com/maloyan/manim-web/commit/2711faca7c8287a312c986fa51fa2e2a2ca22f74))
+
 ### [0.34.2](https://github.com/maloyan/manim-web/compare/v0.15.0...v0.34.2) (2026-10-12)
 
 
