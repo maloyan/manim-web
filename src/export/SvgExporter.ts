@@ -72,7 +72,7 @@ export interface SvgExportOptions {
 }
 
 /** A VMobject whose points are its own drawable geometry. */
-interface DrawableVMobject {
+export interface DrawableVMobject {
   getPoints(): number[][];
   getEffectiveSubpathLengths(): number[] | undefined;
   color: string;
@@ -88,7 +88,7 @@ const DEFAULT_PRECISION = 3;
  * Format a number for SVG output: round to `precision` decimals and drop any
  * trailing zeros and the sign on negative zero.
  */
-function formatNumber(value: number, precision: number): string {
+export function formatNumber(value: number, precision: number): string {
   if (!Number.isFinite(value)) return '0';
   const rounded = Number(value.toFixed(precision));
   const normalized = Object.is(rounded, -0) ? 0 : rounded;
@@ -96,7 +96,7 @@ function formatNumber(value: number, precision: number): string {
 }
 
 /** Escape a string for safe use inside an XML attribute value. */
-function escapeAttr(value: string): string {
+export function escapeAttr(value: string): string {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -111,7 +111,7 @@ function escapeAttr(value: string): string {
  * left-to-right; world y is flipped because SVG y grows downward. The result
  * matches the raster exporters' pixel aspect.
  */
-function makeWorldToPixel(
+export function makeWorldToPixel(
   camera: SvgExportableCamera,
   pixelWidth: number,
   pixelHeight: number,
@@ -178,8 +178,44 @@ function subpathToPathData(
 }
 
 /** Resolve the fill color used at render time: `style.fillColor` or `color`. */
-function resolveFillColor(mob: DrawableVMobject): string {
+export function resolveFillColor(mob: DrawableVMobject): string {
   return mob.style.fillColor ?? mob.color;
+}
+
+/**
+ * One manim stroke unit renders as this many SVG pixels (see VMobjectRendering).
+ *
+ * The scale keeps stroke widths matching the raster exporters' pixel aspect.
+ */
+export function computeStrokeScale(camera: SvgExportableCamera, pixelWidth: number): number {
+  return (0.01 * pixelWidth) / (camera.frameWidth || 1);
+}
+
+/**
+ * Build the SVG path-data (`d`) string for one VMobject, or null when it has no
+ * drawable geometry.
+ *
+ * This is the geometry half of `vmobjectToPath`: it walks the VMobject's
+ * subpaths and maps each world point to the pixel viewBox, but it does not read
+ * any fill or stroke style. The animated (SMIL) exporter reuses it to sample a
+ * mobject's path at each keyframe.
+ */
+export function buildVmobjectPathData(
+  mob: DrawableVMobject,
+  toPixel: (point: number[]) => [number, number],
+  precision: number,
+): string | null {
+  const points = mob.getPoints();
+  if (points.length < 4) return null;
+
+  const subpaths = splitSubpaths(points, mob.getEffectiveSubpathLengths());
+  const dataFragments: string[] = [];
+  for (const subpath of subpaths) {
+    const fragment = subpathToPathData(subpath, toPixel, precision);
+    if (fragment) dataFragments.push(fragment);
+  }
+  if (dataFragments.length === 0) return null;
+  return dataFragments.join(' ');
 }
 
 /**
@@ -195,22 +231,14 @@ function vmobjectToPath(
   strokeScale: number,
   precision: number,
 ): string | null {
-  const points = mob.getPoints();
-  if (points.length < 4) return null;
-
-  const subpaths = splitSubpaths(points, mob.getEffectiveSubpathLengths());
-  const dataFragments: string[] = [];
-  for (const subpath of subpaths) {
-    const fragment = subpathToPathData(subpath, toPixel, precision);
-    if (fragment) dataFragments.push(fragment);
-  }
-  if (dataFragments.length === 0) return null;
+  const d = buildVmobjectPathData(mob, toPixel, precision);
+  if (d === null) return null;
 
   const hasFill = mob.fillOpacity > 0;
   const hasStroke = mob.strokeWidth > 0;
   if (!hasFill && !hasStroke) return null;
 
-  const attrs: string[] = [`d="${dataFragments.join(' ')}"`];
+  const attrs: string[] = [`d="${d}"`];
 
   if (hasFill) {
     attrs.push(`fill="${escapeAttr(resolveFillColor(mob))}"`);
@@ -233,7 +261,7 @@ function vmobjectToPath(
 }
 
 /** Type guard: a VMobject that owns drawable points. */
-function isDrawableVMobject(member: unknown): member is DrawableVMobject {
+export function isDrawableVMobject(member: unknown): member is DrawableVMobject {
   return member instanceof VMobject && member.getPoints().length >= 4;
 }
 
@@ -255,8 +283,7 @@ export function sceneToSVG(scene: SvgExportableScene, options?: SvgExportOptions
   const pixelHeight = scene.getHeight();
   const camera = scene.camera;
   const toPixel = makeWorldToPixel(camera, pixelWidth, pixelHeight);
-  // One manim stroke unit renders as this many pixels (see VMobjectRendering).
-  const strokeScale = (0.01 * pixelWidth) / (camera.frameWidth || 1);
+  const strokeScale = computeStrokeScale(camera, pixelWidth);
 
   const groups: string[] = [];
   for (const topLevel of scene.mobjects) {
