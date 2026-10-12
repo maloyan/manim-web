@@ -885,6 +885,9 @@ export { ImageMobject, type ImageMobjectOptions, type ImageFilterOptions } from 
 // --- sketch / hand-drawn stroke style (best-manim) ---
 export { sketch, type SketchOptions } from './mobjects/sketch';
 
+// --- effects: per-mobject drop shadow ---
+export { withDropShadow, type DropShadowOptions } from './mobjects/effects';
+
 // --- video (best-manim) ---
 export { VideoMobject, type VideoMobjectOptions } from './mobjects/video';
 
