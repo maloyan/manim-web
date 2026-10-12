@@ -17,6 +17,7 @@ export default defineConfig({
         'integrations/react': resolve(__dirname, 'src/integrations/react.tsx'),
         'integrations/vue': resolve(__dirname, 'src/integrations/vue.ts'),
         'integrations/webcomponent': resolve(__dirname, 'src/integrations/webcomponent.ts'),
+        'integrations/notebook': resolve(__dirname, 'src/integrations/notebook.ts'),
       },
       formats: ['es'],
     },
