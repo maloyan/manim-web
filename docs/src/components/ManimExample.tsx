@@ -85,6 +85,11 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
   const sceneRef = useRef<any>(null);
   const queueFlagRef = useRef<{ released: boolean } | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  // Scenes run only after the user clicks "Run".  The /examples page has ~100
+  // examples; auto-running them all exhausts the browser's limited WebGL
+  // contexts, so most never rendered and showed as black boxes.  Click-to-run
+  // bounds the number of live contexts to the few the reader actually opens.
+  const [activated, setActivated] = useState(false);
 
   // Visibility detection — IntersectionObserver with manual fallback.
   useEffect(() => {
@@ -104,9 +109,9 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
     return () => observer.disconnect();
   }, []);
 
-  // Scene lifecycle — loops while visible.
-  // ALL scenes go through the init queue so only one WebGL context is active.
-  const shouldRun = isVisible;
+  // Scene lifecycle — runs only when the example is both opened (clicked) and
+  // on screen.  Scrolling away frees its WebGL context; scrolling back re-runs.
+  const shouldRun = isVisible && activated;
 
   useEffect(() => {
     if (!shouldRun || !containerRef.current) return;
@@ -250,39 +255,68 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
 
   return (
     <div
+      onClick={() => setActivated(true)}
+      role={activated ? undefined : 'button'}
+      tabIndex={activated ? undefined : 0}
+      onKeyDown={(e) => {
+        if (!activated && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          setActivated(true);
+        }
+      }}
       style={{
         width: '100%',
         maxWidth: 800,
         aspectRatio: `${ASPECT_RATIO}`,
-        // Intentional panel instead of pure black, so examples that are not
-        // currently rendering a live scene (most of them on this long page,
-        // where only a few WebGL contexts can be active at once) read as a
-        // deliberate placeholder rather than a broken black box.
+        // Intentional panel instead of pure black.  The /examples page has ~100
+        // examples; auto-running them all exhausts the browser's limited WebGL
+        // contexts, so most never rendered and showed as black boxes.  Instead
+        // each is a click-to-run poster, bounding live contexts to the few the
+        // reader opens.
         background: 'linear-gradient(135deg, #15161f 0%, #20222e 100%)',
         borderRadius: 12,
         overflow: 'hidden',
         position: 'relative',
+        cursor: activated ? 'default' : 'pointer',
       }}
     >
-      <div
-        aria-hidden
-        style={{
-          position: 'absolute',
-          inset: 0,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#49506b',
-          fontSize: 14,
-          fontWeight: 700,
-          letterSpacing: '0.18em',
-          textTransform: 'uppercase',
-          pointerEvents: 'none',
-          userSelect: 'none',
-        }}
-      >
-        manim-web
-      </div>
+      {/* Run affordance — shown until the user opens the example. */}
+      {!activated && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            color: '#8b93b8',
+            userSelect: 'none',
+          }}
+        >
+          <div
+            aria-hidden
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              background: 'rgba(130,140,190,0.14)',
+              border: '1px solid rgba(130,140,190,0.35)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 22,
+              paddingLeft: 4,
+            }}
+          >
+            ▶
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.04em' }}>
+            Run animation
+          </div>
+        </div>
+      )}
       {/* The live scene's canvas is mounted here and covers the poster above
           while it renders.  Kept separate from the poster so the scene
           cleanup's innerHTML reset never removes the placeholder. */}
