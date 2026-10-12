@@ -1268,6 +1268,12 @@ export {
   type WebCodecsVideoCodec,
   chooseVideoExporterStrategy,
   type VideoExporterStrategy,
+  sceneToSVG,
+  exportSVG,
+  exportAndDownloadSVG,
+  type SvgExportOptions,
+  type SvgExportableScene,
+  type SvgExportableCamera,
 } from './export';
 
 // Vector math utilities
