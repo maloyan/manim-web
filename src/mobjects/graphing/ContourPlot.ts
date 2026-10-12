@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Axes } from './Axes';
-import { marchingSquares, type ContourSegment } from './marchingSquares';
+import { marchingSquares, linkContourSegments } from './marchingSquares';
 
 /** A 2D scalar field g(x, y). */
 export type ContourField = (x: number, y: number) => number;
@@ -32,9 +32,10 @@ export interface ContourPlotOptions {
  *
  * The field is sampled on a regular grid, then marching squares (see
  * {@link marchingSquares}) extracts the line segments of each requested level.
- * The segments are drawn as one stroked VMobject with a path break between
- * them, so disjoint contours and nested loops all render. When `axes` is given,
- * segment endpoints map through `axes.coordsToPoint`, matching
+ * The segments of each level are linked into ordered polylines, and every
+ * polyline becomes a separate subpath of one stroked VMobject, so disjoint
+ * contours and nested loops render without any line bridging them. When `axes`
+ * is given, polyline points map through `axes.coordsToPoint`, matching
  * {@link ImplicitFunction}.
  *
  * @example
@@ -105,53 +106,58 @@ export class ContourPlot extends VMobject {
     return { values, xs, ys };
   }
 
-  /** Collect contour segments across every requested level. */
-  private _contourSegments(): ContourSegment[] {
-    const { values, xs, ys } = this._sampleGrid();
-    const segments: ContourSegment[] = [];
-    for (const level of this._levels) {
-      segments.push(...marchingSquares(values, xs, ys, level));
-    }
-    return segments;
-  }
-
   /** Map a field-space point to scene space through the axes, if any. */
   private _toScene(point: [number, number]): number[] {
     return this._axes ? this._axes.coordsToPoint(point[0], point[1]) : [point[0], point[1], 0];
   }
 
-  /** Convert a straight segment into four cubic-Bezier control points. */
-  private _segmentToBezier(a: number[], b: number[]): number[][] {
-    const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
-    return [
-      [...a],
-      [a[0] + d[0] / 3, a[1] + d[1] / 3, a[2] + d[2] / 3],
-      [a[0] + (2 * d[0]) / 3, a[1] + (2 * d[1]) / 3, a[2] + (2 * d[2]) / 3],
-      [...b],
-    ];
+  /** Convert an ordered polyline into a shared-anchor cubic-Bezier chain. */
+  private _polylineToBezier(pts: number[][]): number[][] {
+    const chain: number[][] = [];
+    if (pts.length === 0) return chain;
+    chain.push([...pts[0]]);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const a = pts[i];
+      const b = pts[i + 1];
+      const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+      chain.push([a[0] + d[0] / 3, a[1] + d[1] / 3, a[2] + d[2] / 3]);
+      chain.push([a[0] + (2 * d[0]) / 3, a[1] + (2 * d[1]) / 3, a[2] + (2 * d[2]) / 3]);
+      chain.push([...b]);
+    }
+    return chain;
   }
 
-  /** Build the stroked path from the contour segments. */
+  /**
+   * Build the stroked path from the contour pieces.
+   *
+   * Each level's marching-squares segments are linked into ordered polylines
+   * (see {@link linkContourSegments}), and every polyline becomes its own
+   * subpath. The subpath-length metadata makes the renderer stroke each piece
+   * on its own, so no line ever bridges two disjoint contour pieces.
+   */
   private _generatePoints(): void {
-    const segments = this._contourSegments();
+    const { values, xs, ys } = this._sampleGrid();
+    const [xMin, xMax] = this._xRange;
+    const [yMin, yMax] = this._yRange;
+    const n = this._resolution;
+    const eps = Math.max(Math.min((xMax - xMin) / n, (yMax - yMin) / n) * 1e-6, 1e-12);
+
     const allPoints: number[][] = [];
-    let first = true;
+    const subpathLengths: number[] = [];
 
-    for (const [sa, sb] of segments) {
-      const a = this._toScene(sa);
-      const b = this._toScene(sb);
-      const bezier = this._segmentToBezier(a, b);
-
-      if (!first && allPoints.length > 0) {
-        // A degenerate triple breaks the path between disjoint segments.
-        const last = allPoints[allPoints.length - 1];
-        allPoints.push([...last], [...last], [...bezier[0]]);
+    for (const level of this._levels) {
+      const segments = marchingSquares(values, xs, ys, level);
+      for (const polyline of linkContourSegments(segments, eps)) {
+        if (polyline.length < 2) continue;
+        const scenePoints = polyline.map((p) => this._toScene(p));
+        const chain = this._polylineToBezier(scenePoints);
+        allPoints.push(...chain);
+        subpathLengths.push(chain.length);
       }
-      allPoints.push(...bezier);
-      first = false;
     }
 
     this.setPoints3D(allPoints);
+    this.setBaseSubpathLengths(subpathLengths.length > 0 ? subpathLengths : undefined);
   }
 
   /** Get the scalar field. */
