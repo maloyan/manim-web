@@ -885,6 +885,9 @@ export { ImageMobject, type ImageMobjectOptions, type ImageFilterOptions } from 
 // --- sketch / hand-drawn stroke style (best-manim) ---
 export { sketch, type SketchOptions } from './mobjects/sketch';
 
+// --- effects: per-mobject drop shadow ---
+export { withDropShadow, type DropShadowOptions } from './mobjects/effects';
+
 // --- video (best-manim) ---
 export { VideoMobject, type VideoMobjectOptions } from './mobjects/video';
 
@@ -1001,6 +1004,27 @@ export {
   createDiceRow,
   type DiceFaceOptions,
 } from './mobjects/probability';
+
+// Chemistry mobjects (2D skeletal molecule structures)
+export {
+  MoleculeMobject,
+  water,
+  methane,
+  benzene,
+  ethanol,
+  cpkColor,
+  normalizeElement,
+  CPK_COLORS,
+  DEFAULT_ELEMENT_COLOR,
+  type MoleculeBuilderOptions,
+  type AtomSpec,
+  type BondSpec,
+  type BondOrder,
+  type BondStyle,
+  type MoleculeOptions,
+  type AtomRender,
+  type BondRender,
+} from './mobjects/chemistry';
 
 // Animations
 export { Animation, type AnimationOptions, type RateFunction } from './animation/Animation';
