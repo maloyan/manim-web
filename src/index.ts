@@ -183,6 +183,14 @@ export {
 export { Renderer, type RendererOptions, type IRenderer } from './core/Renderer';
 export { NullRenderer } from './core/NullRenderer';
 export {
+  enableXR,
+  isXRSupported,
+  WebXRSession,
+  type WebXROptions,
+  type XRSceneLike,
+  type XRButtonOptions,
+} from './core/WebXR';
+export {
   PostProcessingPipeline,
   setPostProcessingModules,
   setPostProcessingModulesLoader,
