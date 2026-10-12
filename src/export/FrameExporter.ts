@@ -11,9 +11,13 @@
  *    same frame loop VideoExporter uses.
  */
 
+import { requireAlphaRenderer, withTransparentClear, type AlphaRenderer } from './alphaBackground';
+
 /**
  * Duck-type interface for Scene, used to avoid a circular import.
  * FrameExporter only needs canvas access, seek, and the timeline duration.
+ *
+ * `renderer` and `render` are optional and used only for transparent export.
  */
 interface ExportableScene {
   getCanvas(): HTMLCanvasElement;
@@ -21,6 +25,10 @@ interface ExportableScene {
   getHeight(): number;
   seek(time: number): void;
   getTimelineDuration(): number | null;
+  /** The WebGL renderer, used only for transparent export. */
+  renderer?: { getThreeRenderer(): AlphaRenderer } | null;
+  /** Re-render the current frame, used only for transparent single-frame export. */
+  render?(): void;
 }
 
 /** Options for a single-frame PNG capture. */
@@ -31,6 +39,14 @@ export interface FrameExportOptions {
   type?: string;
   /** Quality from 0-1 for lossy types such as 'image/jpeg'. Ignored for PNG. */
   quality?: number;
+  /**
+   * Render with a transparent background, so the PNG carries a real alpha
+   * channel (RGBA, transparent where nothing is drawn). Defaults to false.
+   * Needs a Scene created with `{ alpha: true }` (or `backgroundOpacity < 1`);
+   * otherwise the export throws a clear error instead of producing an opaque
+   * image. Use a lossless type such as 'image/png' to keep the alpha channel.
+   */
+  transparent?: boolean;
 }
 
 /** Options for a PNG frame-sequence capture. */
@@ -47,6 +63,14 @@ export interface PNGSequenceOptions {
   quality?: number;
   /** Progress callback (0-1). */
   onProgress?: (progress: number) => void;
+  /**
+   * Render with a transparent background, so each PNG carries a real alpha
+   * channel (RGBA, transparent where nothing is drawn). Defaults to false.
+   * Needs a Scene created with `{ alpha: true }` (or `backgroundOpacity < 1`);
+   * otherwise the export throws a clear error instead of producing opaque
+   * frames. Use a lossless type such as 'image/png' to keep the alpha channel.
+   */
+  transparent?: boolean;
 }
 
 /**
@@ -108,11 +132,48 @@ export async function exportFramePNG(
   scene: ExportableScene,
   options?: FrameExportOptions,
 ): Promise<Blob> {
+  const type = options?.type ?? 'image/png';
+
+  if (options?.transparent) {
+    const renderer = requireAlphaRenderer(scene);
+    return withTransparentClear(renderer, () => {
+      renderFrameForCapture(scene, options?.time);
+      return canvasToBlob(scene.getCanvas(), type, options?.quality);
+    });
+  }
+
   if (options?.time !== undefined) {
     scene.seek(options.time);
   }
   const canvas = scene.getCanvas();
-  return canvasToBlob(canvas, options?.type ?? 'image/png', options?.quality);
+  return canvasToBlob(canvas, type, options?.quality);
+}
+
+/**
+ * Re-render a single frame so the current clear color applies.
+ *
+ * When a `time` is given the scene seeks to it, which re-renders. Otherwise the
+ * current frame is re-rendered through `scene.render`. A transparent capture
+ * must re-render, because the previous frame was drawn with the opaque clear.
+ *
+ * @param scene - The scene to render
+ * @param time - Optional timeline time to seek to before rendering
+ * @throws Error when no time is given and the scene has no render method
+ */
+function renderFrameForCapture(scene: ExportableScene, time?: number): void {
+  if (time !== undefined) {
+    scene.seek(time);
+    return;
+  }
+  if (typeof scene.render === 'function') {
+    scene.render();
+    return;
+  }
+  throw new Error(
+    'Transparent single-frame export needs either a `time` to seek to, or a ' +
+      'scene with a render() method, so the frame is re-rendered with a ' +
+      'transparent background.',
+  );
 }
 
 /**
@@ -139,15 +200,23 @@ export async function exportPNGSequence(
   const totalFrames = Math.ceil(duration * fps);
   const frameDuration = 1 / fps;
 
-  const blobs: Blob[] = [];
-  for (let frame = 0; frame < totalFrames; frame++) {
-    const time = from + frame * frameDuration;
-    scene.seek(time);
-    const canvas = scene.getCanvas();
-    blobs.push(await canvasToBlob(canvas, type, options.quality));
-    onProgress((frame + 1) / totalFrames);
+  const captureAll = async (): Promise<Blob[]> => {
+    const blobs: Blob[] = [];
+    for (let frame = 0; frame < totalFrames; frame++) {
+      const time = from + frame * frameDuration;
+      scene.seek(time);
+      const canvas = scene.getCanvas();
+      blobs.push(await canvasToBlob(canvas, type, options.quality));
+      onProgress((frame + 1) / totalFrames);
+    }
+    return blobs;
+  };
+
+  if (options.transparent) {
+    const renderer = requireAlphaRenderer(scene);
+    return withTransparentClear(renderer, captureAll);
   }
-  return blobs;
+  return captureAll();
 }
 
 /**
