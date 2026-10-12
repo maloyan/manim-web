@@ -1002,6 +1002,27 @@ export {
   type DiceFaceOptions,
 } from './mobjects/probability';
 
+// Chemistry mobjects (2D skeletal molecule structures)
+export {
+  MoleculeMobject,
+  water,
+  methane,
+  benzene,
+  ethanol,
+  cpkColor,
+  normalizeElement,
+  CPK_COLORS,
+  DEFAULT_ELEMENT_COLOR,
+  type MoleculeBuilderOptions,
+  type AtomSpec,
+  type BondSpec,
+  type BondOrder,
+  type BondStyle,
+  type MoleculeOptions,
+  type AtomRender,
+  type BondRender,
+} from './mobjects/chemistry';
+
 // Animations
 export { Animation, type AnimationOptions, type RateFunction } from './animation/Animation';
 export { Timeline, type PositionParam } from './animation/Timeline';

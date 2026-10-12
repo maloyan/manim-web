@@ -1,0 +1,20 @@
+/**
+ * Chemistry mobjects for manim-web.
+ *
+ * 2D skeletal molecule structures: atoms as element labels, bonds as
+ * single/double/triple lines with optional wedge/dash stereochemistry, plus
+ * prebuilt example molecules and the CPK color palette.
+ */
+
+export { MoleculeMobject } from './MoleculeMobject';
+export { water, methane, benzene, ethanol, type MoleculeBuilderOptions } from './molecules';
+export { cpkColor, normalizeElement, CPK_COLORS, DEFAULT_ELEMENT_COLOR } from './cpkColors';
+export {
+  type AtomSpec,
+  type BondSpec,
+  type BondOrder,
+  type BondStyle,
+  type MoleculeOptions,
+  type AtomRender,
+  type BondRender,
+} from './chemistryTypes';
