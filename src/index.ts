@@ -451,6 +451,30 @@ export {
   type ContourSegment,
 } from './mobjects/graphing';
 
+// --- treemap and chord diagram (data-viz mobjects) ---
+export {
+  Treemap,
+  type TreemapOptions,
+  type TreemapColorBy,
+  computeTreemapLayout,
+  squarify,
+  treemapNodeValue,
+  type TreemapNode,
+  type TreemapRect,
+  type TreemapTile,
+  ChordDiagram,
+  ChordArc,
+  ChordRibbon,
+  type ChordDiagramOptions,
+  computeChordLayout,
+  chordMatrixFromFlows,
+  type ChordFlow,
+  type ChordGroupArc,
+  type ChordRibbonSpan,
+  type ChordLayout,
+  type ChordLayoutOptions,
+} from './mobjects/graphing';
+
 // --- statistical plots ---
 export {
   Histogram,

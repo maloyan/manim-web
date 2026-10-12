@@ -130,6 +130,29 @@ export {
   type LabelPosition,
 } from './PieChart';
 
+// Treemap (squarified hierarchical rectangles)
+export { Treemap, type TreemapOptions, type TreemapColorBy } from './Treemap';
+export {
+  computeTreemapLayout,
+  squarify,
+  treemapNodeValue,
+  type TreemapNode,
+  type TreemapRect,
+  type TreemapTile,
+} from './treemapLayout';
+
+// ChordDiagram (arcs around a circle with proportional ribbons)
+export { ChordDiagram, ChordArc, ChordRibbon, type ChordDiagramOptions } from './ChordDiagram';
+export {
+  computeChordLayout,
+  chordMatrixFromFlows,
+  type ChordFlow,
+  type ChordGroupArc,
+  type ChordRibbonSpan,
+  type ChordLayout,
+  type ChordLayoutOptions,
+} from './chordLayout';
+
 // Statistical plots (histogram, scatter, box, violin) and their stats helpers
 export {
   mean,
