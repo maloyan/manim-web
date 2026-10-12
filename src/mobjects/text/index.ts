@@ -15,6 +15,28 @@ export { type TextStyleMaps, type TextStyleRun, buildStyledTextLines } from './t
 export { GlyphVMobject, type GlyphVMobjectOptions } from './GlyphVMobject';
 export { TextGlyphGroup, type TextGlyphGroupOptions } from './TextGlyphGroup';
 
+// Text-on-a-path: lay out glyphs along an arbitrary curve.
+export {
+  TextOnPath,
+  type TextOnPathOptions,
+  type TextOnPathGlyph,
+  type TextOnPathSource,
+} from './TextOnPath';
+export {
+  computeGlyphPlacements,
+  sampledPathFromPoints,
+  sampledPathFromFunction,
+  visibleGlyphChars,
+  alignmentToOffset,
+  type SampledPath,
+  type GlyphLayoutEntry,
+  type GlyphLayoutOptions,
+  type GlyphPlacement,
+  type TextOnPathAlignment,
+  type TextOnPathOverflow,
+  type PathPoint,
+} from './textOnPathLayout';
+
 // Paragraph - Text with word wrapping
 export { Paragraph, type ParagraphOptions } from './Paragraph';
 
