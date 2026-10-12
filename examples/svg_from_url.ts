@@ -22,7 +22,9 @@ const svgString = `
     <text x="60" y="72" font-size="14" fill="#ffffff" text-anchor="middle">manim-web</text>
   </svg>`;
 
-const logo = new SVGMobject({ svgString, height: 3 });
+// fillOpacity makes the parsed gradient fill opaque. SVGMobject keeps shapes
+// as outlines by default, so without it the gradient would not show.
+const logo = new SVGMobject({ svgString, height: 3, fillOpacity: 1 });
 
 async function run(): Promise<void> {
   await scene.play(new Create(logo, { duration: 2 }));
