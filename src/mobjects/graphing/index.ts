@@ -46,6 +46,15 @@ export { HeatMap, type HeatMapOptions, type ScalarField2D } from './HeatMap';
 // ContourPlot (iso-contour lines)
 export { ContourPlot, type ContourPlotOptions, type ContourField } from './ContourPlot';
 
+// DomainColoring (phase portrait of a complex function f: C -> C)
+export {
+  DomainColoring,
+  phasePortraitColor,
+  type DomainColoringOptions,
+  type ComplexFunction,
+  type BrightnessScheme,
+} from './DomainColoring';
+
 // ParametricFunction
 export { ParametricFunction, type ParametricFunctionOptions } from './ParametricFunction';
 

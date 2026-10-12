@@ -23,6 +23,7 @@ import {
   GenericGraphOptions,
 } from './graphTypes';
 import { computeLayout } from './layoutAlgorithms';
+import { ForceDirectedLayout, ForceDirectedLayoutOptions } from './ForceDirectedLayout';
 import { Text } from '../text/Text';
 import {
   createEdgeLabel,
@@ -670,6 +671,22 @@ export class GenericGraph extends Mobject {
    */
   getPositions(): Map<VertexId, Vector3Tuple> {
     return new Map(this._positions);
+  }
+
+  /**
+   * Build an animation that relaxes the graph with a live spring
+   * (force-directed) simulation. The vertices move step by step over the
+   * animation's run time, so the graph visibly settles.
+   *
+   * The scale, center, and iterations default to this graph's layout config.
+   * @param options - Animation and simulation options.
+   * @returns A ForceDirectedLayout animation.
+   */
+  animateSpringLayout(options: ForceDirectedLayoutOptions = {}): ForceDirectedLayout {
+    const scale = options.scale ?? this._layoutConfig.scale ?? 2;
+    const center = options.center ?? this._layoutConfig.center ?? [0, 0, 0];
+    const iterations = options.iterations ?? this._layoutConfig.iterations ?? 50;
+    return new ForceDirectedLayout(this, { ...options, scale, center, iterations });
   }
 
   // ========== Styling Operations ==========

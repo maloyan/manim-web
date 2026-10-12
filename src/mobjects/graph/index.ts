@@ -21,7 +21,24 @@ export type {
 } from './graphTypes';
 
 // Layout algorithms (exported for direct use and testing)
-export { computeLayout, computeCircularLayout } from './layoutAlgorithms';
+export {
+  computeLayout,
+  computeCircularLayout,
+  springLayoutStep,
+  randomSpringPositions,
+  springForceConstant,
+  DEFAULT_SPRING_COOLING,
+  type SpringPoint,
+  type SpringStepParams,
+  type SpringStepResult,
+} from './layoutAlgorithms';
+
+// Animated (live) force-directed layout
+export {
+  ForceDirectedLayout,
+  forceDirectedLayout,
+  type ForceDirectedLayoutOptions,
+} from './ForceDirectedLayout';
 
 // Core graph classes
 export { GenericGraph } from './GenericGraph';
@@ -38,3 +55,24 @@ export {
   gridGraph,
   bipartiteGraph,
 } from './graphFactories';
+
+// Sankey (flow) diagram
+export {
+  SankeyDiagram,
+  SankeyNode,
+  SankeyLink,
+  type SankeyDiagramOptions,
+  type SankeyLinkColorMode,
+  type SankeySpan,
+} from './SankeyDiagram';
+export {
+  computeSankeyLayout,
+  orientPoint,
+  type SankeyNodeInput,
+  type SankeyLinkInput,
+  type SankeyOrientation,
+  type SankeyLayoutOptions,
+  type NodeLayout,
+  type LinkLayout,
+  type SankeyLayout,
+} from './sankeyLayout';
