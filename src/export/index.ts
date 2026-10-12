@@ -26,6 +26,14 @@ export {
   type SvgExportableCamera,
 } from './SvgExporter';
 export {
+  sceneToAnimatedSVG,
+  exportAnimatedSVG,
+  exportAndDownloadAnimatedSVG,
+  type SmilExportOptions,
+  type SmilExportableScene,
+  type SmilAnimatableAttribute,
+} from './SmilExporter';
+export {
   exportSlidesToPDF,
   exportAndDownloadSlidesToPDF,
   exportSlidesToPPTX,

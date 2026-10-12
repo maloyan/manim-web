@@ -147,6 +147,22 @@ export {
 } from './audio/MidiInput';
 // --- end MIDI input ---
 
+// --- spatial / positional audio (browser-unique) ---
+export {
+  SpatialAudio,
+  isSpatialAudioSupported,
+  type SpatialAudioOptions,
+  type SpatialAudioContextLike,
+  type SpatialPanner,
+  type SpatialListenerLike,
+  type SpatialAudioParam,
+  type PositionTarget,
+  type ListenerCameraView,
+  type PositionalSource,
+} from './audio/SpatialAudio';
+export { MediaElementSource, BufferSource } from './audio/spatialAudioSources';
+// --- end spatial / positional audio ---
+
 // --- accessibility (a11y) layer (browser-unique) ---
 // Three opt-in capabilities: WebVTT captions from voiceover timings,
 // prefers-reduced-motion respect, and ARIA live-region narration. All are
@@ -182,6 +198,14 @@ export {
 
 export { Renderer, type RendererOptions, type IRenderer } from './core/Renderer';
 export { NullRenderer } from './core/NullRenderer';
+export {
+  enableXR,
+  isXRSupported,
+  WebXRSession,
+  type WebXROptions,
+  type XRSceneLike,
+  type XRButtonOptions,
+} from './core/WebXR';
 export {
   PostProcessingPipeline,
   setPostProcessingModules,
@@ -715,6 +739,19 @@ export {
   InstancedMobject,
   type InstancedMobjectOptions,
   type InstanceTransform,
+  // Extruded / beveled 3D text
+  Text3D,
+  setFontLoaderFactory,
+  setTextGeometryFactory,
+  DEFAULT_FONT_URL,
+  type Text3DOptions,
+  type Text3DFromUrlOptions,
+  type Text3DBevel,
+  type Text3DGeometryParams,
+  type ParsedFont,
+  type FontLoaderLike,
+  type FontLoaderFactory,
+  type TextGeometryFactory,
 } from './mobjects/three-d';
 
 // --- 3D model import (best-manim) ---
@@ -1041,6 +1078,33 @@ export {
   type AtomRender,
   type BondRender,
 } from './mobjects/chemistry';
+
+// Biology mobjects
+export {
+  DNAHelix,
+  Cell,
+  AminoAcidChain,
+  baseColor,
+  complementOf,
+  normalizeBase,
+  organelleColor,
+  residueColor,
+  DNA_BASE_COLORS,
+  BASE_COMPLEMENT,
+  ORGANELLE_COLORS,
+  RESIDUE_COLORS,
+  DEFAULT_BIOLOGY_COLOR,
+  type BaseSymbol,
+  type CellShape,
+  type DNAHelixOptions,
+  type BasePairRender,
+  type OrganelleSpec,
+  type CellOptions,
+  type OrganelleRender,
+  type AminoAcidChainOptions,
+  type ResidueRender,
+  type StrandPair,
+} from './mobjects/biology';
 
 // Animations
 export { Animation, type AnimationOptions, type RateFunction } from './animation/Animation';
@@ -1619,6 +1683,12 @@ export {
   type SvgExportOptions,
   type SvgExportableScene,
   type SvgExportableCamera,
+  sceneToAnimatedSVG,
+  exportAnimatedSVG,
+  exportAndDownloadAnimatedSVG,
+  type SmilExportOptions,
+  type SmilExportableScene,
+  type SmilAnimatableAttribute,
   exportSlidesToPDF,
   exportAndDownloadSlidesToPDF,
   exportSlidesToPPTX,
