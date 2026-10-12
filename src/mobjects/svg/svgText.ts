@@ -58,6 +58,20 @@ export function buildSvgTextMobjects(svg: Element, defaults: SvgTextDefaults): T
       ...(fontSize && !Number.isNaN(fontSize) ? { fontSize } : {}),
     });
 
+    // An SVG `font-size` is measured in user units, the same coordinate space
+    // as the parsed shapes. A Text mobject instead sizes itself in world units
+    // from points, a much smaller scale, so an unscaled label is tens of times
+    // too small next to the shapes and renders as an invisible speck. Rescale
+    // the Text so its rendered height matches the SVG font-size in user units.
+    // getHeight() is 0 without real canvas metrics (test environments), so the
+    // rescale is skipped there and the parse keeps its prior behavior.
+    if (fontSize && Number.isFinite(fontSize)) {
+      const worldHeight = text.getHeight();
+      if (worldHeight > 0) {
+        text.scale(fontSize / worldHeight);
+      }
+    }
+
     // SVG y grows downward; scene y grows upward (paths are flipped the same way).
     text.moveTo([x, -y, 0]);
     result.push(text);

@@ -1,0 +1,96 @@
+<!doctype html>
+<html>
+  <head>
+    <title>SVGMobject gradient + text — render regression</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #191919;
+        color: #fff;
+        font-family: sans-serif;
+      }
+      #container {
+        width: 800px;
+        height: 450px;
+      }
+      #status {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        font-size: 13px;
+        z-index: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status">loading…</div>
+    <div id="container"></div>
+
+    <script type="module">
+      // Regression for the "SVG import" docs example rendering an all-black
+      // frame. SVGMobject content was parsed at its viewBox coordinates (far
+      // from the scene origin) and rendered off the camera frame; its gradient
+      // fill was also transparent. This mirrors the fixed docs example and
+      // reports the rendered pixel counts so the Playwright test can assert the
+      // gradient rect and the text actually draw.
+      import { Scene, SVGMobject, Create } from '../src/index.ts';
+
+      const statusEl = document.getElementById('status');
+      const container = document.getElementById('container');
+      const scene = new Scene(container, { width: 800, height: 450, backgroundColor: '#000000' });
+
+      const svgString = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+          <defs>
+            <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#58C4DD"/>
+              <stop offset="100%" stop-color="#D147BD"/>
+            </linearGradient>
+          </defs>
+          <rect x="10" y="10" width="100" height="40" rx="8" fill="url(#grad)"/>
+          <text x="60" y="72" font-size="14" fill="#ffffff" text-anchor="middle">manim-web</text>
+        </svg>`;
+
+      const logo = new SVGMobject({ svgString, height: 3, fillOpacity: 1 });
+
+      function sampleCanvas() {
+        const canvas = container.querySelector('canvas');
+        if (!canvas) return { nonBlack: 0, colored: 0 };
+        const c2 = document.createElement('canvas');
+        c2.width = canvas.width;
+        c2.height = canvas.height;
+        const ctx = c2.getContext('2d');
+        ctx.drawImage(canvas, 0, 0);
+        const { data } = ctx.getImageData(0, 0, c2.width, c2.height);
+        let nonBlack = 0;
+        let colored = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i],
+            g = data[i + 1],
+            b = data[i + 2];
+          if (r > 10 || g > 10 || b > 10) nonBlack++;
+          if (Math.max(r, g, b) - Math.min(r, g, b) > 25) colored++;
+        }
+        return { nonBlack, colored };
+      }
+
+      (async () => {
+        try {
+          await scene.play(new Create(logo, { duration: 0.6 }));
+          await new Promise((r) => setTimeout(r, 600));
+          scene._render?.();
+          const px = sampleCanvas();
+          window.__render = px;
+          statusEl.textContent = `RENDERED nonBlack=${px.nonBlack} colored=${px.colored}`;
+        } catch (e) {
+          statusEl.textContent = 'ERROR ' + e.message;
+          console.error(e);
+        }
+      })();
+    </script>
+  </body>
+</html>

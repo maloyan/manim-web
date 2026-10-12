@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+  <head>
+    <title>ParticleSystem fountain — render regression</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        background: #191919;
+        color: #fff;
+        font-family: sans-serif;
+      }
+      #container {
+        width: 800px;
+        height: 450px;
+      }
+      #status {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        font-size: 13px;
+        z-index: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status">loading…</div>
+    <div id="container"></div>
+
+    <script type="module">
+      // Regression for the "ParticleSystem" docs example rendering an all-black
+      // frame. The example drives the simulation with scene.wait(999999); the
+      // wait must keep ticking the emitter's updater each frame so particles
+      // spawn and render. This mirrors that example and reports the living
+      // particle count and rendered pixels so the Playwright test can assert
+      // particles actually draw.
+      import { Scene, ParticleSystem } from '../src/index.ts';
+
+      const statusEl = document.getElementById('status');
+      const container = document.getElementById('container');
+      const scene = new Scene(container, { width: 800, height: 450, backgroundColor: '#000000' });
+
+      const fountain = new ParticleSystem({
+        spawnRate: 120,
+        maxParticles: 600,
+        lifetime: 2.2,
+        lifetimeSpread: 0.4,
+        position: [0, -2.6, 0],
+        velocity: [0, 6, 0],
+        velocitySpread: [2.2, 1.2, 0],
+        forces: { gravity: [0, -9.8, 0] },
+        startSize: 10,
+        endSize: 0,
+        startColor: '#ffd166',
+        endColor: '#ef476f',
+        useOklab: true,
+        seed: 7,
+      });
+
+      scene.add(fountain);
+      // A "forever" wait drives the simulation; it never resolves, so it is not
+      // awaited here. The emitter's updater ticks each frame while it runs.
+      scene.wait(999999);
+
+      function countNonBlack() {
+        const canvas = container.querySelector('canvas');
+        if (!canvas) return 0;
+        const c2 = document.createElement('canvas');
+        c2.width = canvas.width;
+        c2.height = canvas.height;
+        const ctx = c2.getContext('2d');
+        ctx.drawImage(canvas, 0, 0);
+        const { data } = ctx.getImageData(0, 0, c2.width, c2.height);
+        let nonBlack = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          if (data[i] > 10 || data[i + 1] > 10 || data[i + 2] > 10) nonBlack++;
+        }
+        return nonBlack;
+      }
+
+      setTimeout(() => {
+        const nonBlack = countNonBlack();
+        window.__render = { living: fountain.getLivingCount(), nonBlack };
+        statusEl.textContent = `RENDERED living=${fountain.getLivingCount()} nonBlack=${nonBlack}`;
+      }, 1500);
+    </script>
+  </body>
+</html>

@@ -593,9 +593,14 @@ export class SVGMobject extends VGroup {
       this.scale(scaleFactor);
     }
 
-    // Center if specified
-    if (options.center) {
-      this.moveTo(options.center);
+    // Center the parsed artwork. SVG coordinates place shapes at the viewBox
+    // origin, which is usually far from the scene origin, so an uncentered
+    // group renders off the camera frame as an all-black frame. ManimCE centers
+    // an imported SVG at the origin; this matches that. An explicit `center`
+    // option still wins. An empty group (no parsed shapes) has no bounds, so
+    // skip it to avoid a NaN translation.
+    if (this.children.length > 0) {
+      this.moveTo(options.center ?? [0, 0, 0]);
     }
   }
 
