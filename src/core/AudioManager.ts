@@ -452,6 +452,18 @@ export class AudioManager {
     return dest;
   }
 
+  /**
+   * Connect the master output to an external node (for example an
+   * `AnalyserNode` used for audio-reactive visualization). The node keeps
+   * receiving the mixed output until the context is closed.
+   *
+   * @param node - The destination node to feed from the master gain
+   */
+  connectOutput(node: AudioNode): void {
+    this._ensureContext();
+    this._masterGain!.connect(node);
+  }
+
   // --------------------------------------------------------------------------
   // WAV encoder (static utility)
   // --------------------------------------------------------------------------

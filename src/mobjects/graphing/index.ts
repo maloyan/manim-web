@@ -61,6 +61,17 @@ export { PolarPlane, type PolarPlaneOptions } from './ComplexPlane';
 // BarChart
 export { BarChart, type BarChartOptions } from './BarChart';
 
+// PieChart and DonutChart
+export {
+  PieChart,
+  type PieChartOptions,
+  DonutChart,
+  type DonutChartOptions,
+  computeSliceGeometry,
+  type SliceGeometry,
+  type LabelPosition,
+} from './PieChart';
+
 // VectorField
 export {
   VectorField,

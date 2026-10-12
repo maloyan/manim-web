@@ -121,6 +121,16 @@ export {
 export { parseBookmarks, type Bookmark, type ParsedTranscript } from './audio/bookmarks';
 // --- end voiceover ---
 
+// --- audio-reactive analysis (best-manim, browser-unique) ---
+export {
+  AudioAnalyzer,
+  isAudioAnalysisSupported,
+  type AudioAnalyzerOptions,
+  type AudioReactiveBindOptions,
+  type SpectrumAnalyser,
+} from './audio/AudioAnalyzer';
+// --- end audio-reactive ---
+
 // --- accessibility (a11y) layer (browser-unique) ---
 // Three opt-in capabilities: WebVTT captions from voiceover timings,
 // prefers-reduced-motion respect, and ARIA live-region narration. All are
@@ -357,6 +367,13 @@ export {
   type PolarPlaneOptions,
   BarChart,
   type BarChartOptions,
+  PieChart,
+  type PieChartOptions,
+  DonutChart,
+  type DonutChartOptions,
+  computeSliceGeometry,
+  type SliceGeometry,
+  type LabelPosition,
   VectorField,
   ArrowVectorField,
   StreamLines,
@@ -1251,6 +1268,12 @@ export {
   type WebCodecsVideoCodec,
   chooseVideoExporterStrategy,
   type VideoExporterStrategy,
+  sceneToSVG,
+  exportSVG,
+  exportAndDownloadSVG,
+  type SvgExportOptions,
+  type SvgExportableScene,
+  type SvgExportableCamera,
 } from './export';
 
 // Vector math utilities
