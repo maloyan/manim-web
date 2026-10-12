@@ -421,10 +421,11 @@ await scene.play(new Indicate(xSquared, { color: YELLOW }));
 
 ## Step-by-Step Formula Transformation
 
-Show the algebra steps, ManimCE-style. Multi-part `MathTex` makes each symbol an
-addressable part, and `transformMatchingTex` morphs the parts that two lines share
-while fading the rest. Chaining these across several lines turns a result into a
-readable derivation: here `(a + b)²` expands to `a² + 2ab + b²`.
+Show the algebra steps, ManimCE-style. Build every line as its own `MathTex`,
+then step through them: `Write` the first line, then fade each line out as the
+next fades in. A multi-part `MathTex` for the result makes each term an
+addressable part, so the middle term can be highlighted. Here `(a + b)²` expands
+to `a² + 2ab + b²`.
 
 <FormulaTransformExample />
 
@@ -432,21 +433,35 @@ readable derivation: here `(a + b)²` expands to `a² + 2ab + b²`.
 <summary>Source Code</summary>
 
 ```typescript
-import { MathTex, VGroup, Write, transformMatchingTex, WHITE } from 'manim-web';
+import { MathTex, Write, FadeIn, FadeOut, Indicate, WHITE, YELLOW } from 'manim-web';
 
-// Each line is a multi-part MathTex: parts with the same LaTeX string morph,
-// the rest fade. Shared symbols across lines read as the steps of the algebra.
-const line1 = new MathTex({ latex: ['(', 'a', '+', 'b', ')^{2}'], color: WHITE });
-await line1.waitForRender();
-scene.add(new VGroup(line1));
+// Build and render every line up front. MathTex renders asynchronously, so
+// resolving the batch first keeps each `scene.play` self-contained.
+const line1 = new MathTex({ latex: '(a+b)^{2}', color: WHITE });
+const line2 = new MathTex({ latex: '(a+b)(a+b)', color: WHITE });
+const line3 = new MathTex({ latex: 'a^{2}+ab+ab+b^{2}', color: WHITE });
+// The result is multi-part so each term is addressable with getPart().
+const line4 = new MathTex({ latex: ['a^{2}', '+', '2ab', '+', 'b^{2}'], color: WHITE });
+
+const lines = [line1, line2, line3, line4];
+await Promise.all(lines.map((eq) => eq.waitForRender()));
+for (const eq of lines) eq.moveTo([0, 0, 0]);
+
+// Write the first line, then fade each step out as the next fades in.
+scene.add(line1);
 await scene.play(new Write(line1));
 
-const line2 = new MathTex({ latex: ['a^{2}', '+', '2ab', '+', 'b^{2}'], color: WHITE });
-await line2.waitForRender();
-line2.moveTo([0, 0, 0]);
+let previous = line1;
+for (const next of [line2, line3, line4]) {
+  scene.add(next);
+  await scene.play(new FadeOut(previous, { duration: 0.5 }), new FadeIn(next, { duration: 0.5 }));
+  scene.remove(previous);
+  previous = next;
+}
 
-// Matching parts transform in place; the new terms fade in.
-await scene.play(transformMatchingTex(line1, line2, { duration: 1.6, fadeRatio: 0.3 }));
+// Highlight the middle term of the result.
+line4.getPart(2).setColor(YELLOW);
+await scene.play(new Indicate(line4.getPart(2), { color: YELLOW }));
 ```
 
 </details>
