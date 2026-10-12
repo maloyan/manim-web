@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeAll } from 'vitest';
-import { Table, MathTable, MobjectTable, IntegerTable, DecimalTable } from './Table';
+import { Table } from './Table';
+import { MathTable, MobjectTable, IntegerTable, DecimalTable } from './TableVariants';
 import { Rectangle } from '../geometry/Rectangle';
 import { VGroup } from '../../core/VGroup';
 
@@ -605,6 +606,216 @@ describe('Table', () => {
     });
     expect(t.getNumRows()).toBe(2);
     expect(t.getNumCols()).toBe(2);
+  });
+
+  // ---- getRows ----
+  it('getRows returns a VGroup of row VGroups', () => {
+    const e1 = entry();
+    const e2 = entry();
+    const e3 = entry();
+    const e4 = entry();
+    const t = new Table({
+      data: [
+        [e1, e2],
+        [e3, e4],
+      ],
+    });
+    const rows = t.getRows();
+    expect(rows).toBeInstanceOf(VGroup);
+    expect(rows.children.length).toBe(2);
+    expect(rows.children[0]).toBeInstanceOf(VGroup);
+    const firstRow = rows.children[0] as VGroup;
+    expect(firstRow.children).toContain(e1);
+    expect(firstRow.children).toContain(e2);
+  });
+
+  // ---- getColumns ----
+  it('getColumns returns a VGroup of column VGroups', () => {
+    const e1 = entry();
+    const e2 = entry();
+    const e3 = entry();
+    const e4 = entry();
+    const t = new Table({
+      data: [
+        [e1, e2],
+        [e3, e4],
+      ],
+    });
+    const cols = t.getColumns();
+    expect(cols).toBeInstanceOf(VGroup);
+    expect(cols.children.length).toBe(2);
+    expect(cols.children[0]).toBeInstanceOf(VGroup);
+    const firstCol = cols.children[0] as VGroup;
+    expect(firstCol.children).toContain(e1);
+    expect(firstCol.children).toContain(e3);
+  });
+
+  // ---- getEntriesWithoutLabels ----
+  it('getEntriesWithoutLabels returns only data entries (not labels)', () => {
+    const e1 = entry();
+    const e2 = entry();
+    const rl = entry();
+    const cl = entry();
+    const t = new Table({
+      data: [[e1, e2]],
+      rowLabels: [rl],
+      colLabels: [cl, entry()],
+    });
+    const entries = t.getEntriesWithoutLabels();
+    expect(entries).toBeInstanceOf(VGroup);
+    expect(entries.children.length).toBe(2);
+    expect(entries.children).toContain(e1);
+    expect(entries.children).toContain(e2);
+    expect(entries.children).not.toContain(rl);
+    expect(entries.children).not.toContain(cl);
+  });
+
+  // ---- getLabels ----
+  it('getLabels returns column labels followed by row labels', () => {
+    const rl1 = entry();
+    const rl2 = entry();
+    const cl1 = entry();
+    const cl2 = entry();
+    const t = new Table({
+      data: [
+        [entry(), entry()],
+        [entry(), entry()],
+      ],
+      rowLabels: [rl1, rl2],
+      colLabels: [cl1, cl2],
+    });
+    const labels = t.getLabels();
+    expect(labels).toBeInstanceOf(VGroup);
+    expect(labels.children.length).toBe(4);
+    expect(labels.children).toContain(rl1);
+    expect(labels.children).toContain(cl1);
+  });
+
+  it('getLabels returns empty VGroup when no labels', () => {
+    const t = new Table({ data: [[entry()]] });
+    expect(t.getLabels().children.length).toBe(0);
+  });
+
+  // ---- getHighlightedCell ----
+  it('getHighlightedCell returns a Rectangle without adding it to the table', () => {
+    const t = new Table({
+      data: [
+        [entry(), entry()],
+        [entry(), entry()],
+      ],
+    });
+    const before = t.children.length;
+    const rect = t.getHighlightedCell(0, 0);
+    expect(rect).toBeInstanceOf(Rectangle);
+    // Pure accessor: table children count is unchanged
+    expect(t.children.length).toBe(before);
+  });
+
+  it('getHighlightedCell throws for out-of-bounds indices', () => {
+    const t = new Table({ data: [[entry()]] });
+    expect(() => t.getHighlightedCell(5, 0)).toThrow();
+    expect(() => t.getHighlightedCell(0, -1)).toThrow();
+  });
+
+  // ---- addHighlightedCell ----
+  it('addHighlightedCell adds a highlight and returns a Rectangle', () => {
+    const t = new Table({
+      data: [
+        [entry(), entry()],
+        [entry(), entry()],
+      ],
+    });
+    const before = t.children.length;
+    const rect = t.addHighlightedCell(0, 0);
+    expect(rect).toBeInstanceOf(Rectangle);
+    // Rectangle is inserted as a child of the table
+    expect(t.children.length).toBe(before + 1);
+    expect(t.children).toContain(rect);
+  });
+
+  // ---- addBackgroundToEntries ----
+  it('addBackgroundToEntries adds one background rectangle per entry', () => {
+    const t = new Table({
+      data: [
+        [entry(), entry()],
+        [entry(), entry()],
+      ],
+    });
+    const before = t.children.length;
+    const result = t.addBackgroundToEntries();
+    expect(result).toBe(t);
+    // 4 entries => 4 background rectangles added
+    expect(t.children.length).toBe(before + 4);
+    const added = t.children.slice(0, 4);
+    for (const rect of added) {
+      expect(rect).toBeInstanceOf(Rectangle);
+    }
+  });
+
+  it('addBackgroundToEntries is idempotent across repeated calls', () => {
+    const t = new Table({
+      data: [
+        [entry(), entry()],
+        [entry(), entry()],
+      ],
+    });
+    t.addBackgroundToEntries();
+    const afterFirst = t.children.length;
+    t.addBackgroundToEntries();
+    // Second call replaces the first set, no net growth
+    expect(t.children.length).toBe(afterFirst);
+  });
+
+  // ---- setRowColors ----
+  it('setRowColors colors each row and returns this', () => {
+    const e1 = entry();
+    const e2 = entry();
+    const e3 = entry();
+    const e4 = entry();
+    const t = new Table({
+      data: [
+        [e1, e2],
+        [e3, e4],
+      ],
+    });
+    const result = t.setRowColors('#ff0000', '#00ff00');
+    expect(result).toBe(t);
+    expect(e1.color).toBe('#ff0000');
+    expect(e2.color).toBe('#ff0000');
+    expect(e3.color).toBe('#00ff00');
+    expect(e4.color).toBe('#00ff00');
+  });
+
+  it('setRowColors leaves extra rows unchanged when fewer colors given', () => {
+    const e1 = entry();
+    const e3 = entry();
+    const t = new Table({
+      data: [[e1], [e3]],
+    });
+    const original = e3.color;
+    t.setRowColors('#ff0000');
+    expect(e1.color).toBe('#ff0000');
+    expect(e3.color).toBe(original);
+  });
+
+  // ---- setColumnColors ----
+  it('setColumnColors colors each column and returns this', () => {
+    const e1 = entry();
+    const e2 = entry();
+    const e3 = entry();
+    const e4 = entry();
+    const t = new Table({
+      data: [
+        [e1, e2],
+        [e3, e4],
+      ],
+    });
+    const result = t.setColumnColors('#ff0000', '#0000ff');
+    expect(result).toBe(t);
+    expect(e1.color).toBe('#ff0000');
+    expect(e3.color).toBe('#ff0000');
+    expect(e2.color).toBe('#0000ff');
+    expect(e4.color).toBe('#0000ff');
   });
 });
 
