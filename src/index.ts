@@ -1821,3 +1821,45 @@ export {
   type GeoFeatureCollection,
 } from './mobjects/geo';
 // --- end geo maps ---
+
+// --- neural-network / ML diagram toolkit (manim-ml analogue) ---
+// Layers (FeedForward, Convolutional, Pooling, Image) compose into a
+// NeuralNetwork VGroup with dense connection lines; forwardPass / backwardPass
+// animate a signal flowing through the connections.
+export {
+  // Layer base + layer mobjects
+  NeuralNetworkLayer,
+  FeedForwardLayer,
+  type FeedForwardLayerOptions,
+  ConvolutionalLayer,
+  type ConvolutionalLayerOptions,
+  PoolingLayer,
+  type PoolingLayerOptions,
+  ImageLayer,
+  type ImageLayerOptions,
+  // Shared feature-map stack builder
+  buildFeatureMapStack,
+  type FeatureMapStackConfig,
+  type FeatureMapStackResult,
+  // Network
+  NeuralNetwork,
+  type NeuralNetworkOptions,
+  // Animations
+  EdgePulse,
+  edgePulse,
+  type EdgePulseOptions,
+  forwardPass,
+  backwardPass,
+  type ForwardPassOptions,
+  // Styles
+  type NodeStyleOptions,
+  type ConnectionStyleOptions,
+  type ResolvedNodeStyle,
+  type ResolvedEdgeStyle,
+  DEFAULT_NODE_STYLE,
+  DEFAULT_EDGE_STYLE,
+  DEFAULT_ACTIVATION_COLOR,
+  resolveNodeStyle,
+  resolveEdgeStyle,
+} from './mobjects/ml';
+// --- end neural-network toolkit ---
