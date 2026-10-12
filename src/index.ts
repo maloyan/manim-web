@@ -1530,6 +1530,19 @@ export {
   type SliderOptions,
 } from './interaction';
 
+// --- keyboard input (general-purpose, for interactive apps and games) ---
+export {
+  KeyboardInput,
+  makeKeyboardInput,
+  normalizeKey,
+  type KeyboardInputOptions,
+  type KeyCallback,
+  type Unsubscribe,
+  type StateMachineInputSink,
+  type ValueSink,
+  type BindValueOptions,
+} from './interaction';
+
 // --- state machine (input-driven, Rive-style) ---
 export {
   StateMachine,

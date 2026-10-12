@@ -63,6 +63,19 @@ export {
   type StateMachineOptions,
 } from './StateMachine';
 
+// Keyboard input (general-purpose, for interactive apps and games)
+export {
+  KeyboardInput,
+  makeKeyboardInput,
+  normalizeKey,
+  type KeyboardInputOptions,
+  type KeyCallback,
+  type Unsubscribe,
+  type StateMachineInputSink,
+  type ValueSink,
+  type BindValueOptions,
+} from './KeyboardInput';
+
 // Camera controls
 export { OrbitControls, type OrbitControlsOptions } from './OrbitControls';
 export {
