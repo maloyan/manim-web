@@ -109,9 +109,12 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
     return () => observer.disconnect();
   }, []);
 
-  // Scene lifecycle — runs only when the example is both opened (clicked) and
-  // on screen.  Scrolling away frees its WebGL context; scrolling back re-runs.
-  const shouldRun = isVisible && activated;
+  // Scene lifecycle — runs once the reader opens the example by clicking.  We
+  // deliberately do NOT gate on `isVisible`: the IntersectionObserver proved
+  // unreliable on this page, and an explicit click is unambiguous intent.
+  // Live contexts stay bounded because only the handful of examples the reader
+  // actually opens ever run.
+  const shouldRun = activated;
 
   useEffect(() => {
     if (!shouldRun || !containerRef.current) return;
