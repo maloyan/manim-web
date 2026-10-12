@@ -61,6 +61,9 @@ export { PolarPlane, type PolarPlaneOptions } from './ComplexPlane';
 // BarChart
 export { BarChart, type BarChartOptions } from './BarChart';
 
+// CandlestickChart (financial OHLC chart)
+export { CandlestickChart, type CandlestickChartOptions, type OHLC } from './CandlestickChart';
+
 // PieChart and DonutChart
 export {
   PieChart,
