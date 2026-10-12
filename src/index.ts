@@ -121,6 +121,16 @@ export {
 export { parseBookmarks, type Bookmark, type ParsedTranscript } from './audio/bookmarks';
 // --- end voiceover ---
 
+// --- audio-reactive analysis (best-manim, browser-unique) ---
+export {
+  AudioAnalyzer,
+  isAudioAnalysisSupported,
+  type AudioAnalyzerOptions,
+  type AudioReactiveBindOptions,
+  type SpectrumAnalyser,
+} from './audio/AudioAnalyzer';
+// --- end audio-reactive ---
+
 // --- accessibility (a11y) layer (browser-unique) ---
 // Three opt-in capabilities: WebVTT captions from voiceover timings,
 // prefers-reduced-motion respect, and ARIA live-region narration. All are
