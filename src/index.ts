@@ -396,6 +396,10 @@ export {
   CandlestickChart,
   type CandlestickChartOptions,
   type OHLC,
+  RadarChart,
+  type RadarChartOptions,
+  WaterfallChart,
+  type WaterfallChartOptions,
   PieChart,
   type PieChartOptions,
   DonutChart,
@@ -447,6 +451,30 @@ export {
   type ContourSegment,
 } from './mobjects/graphing';
 
+// --- treemap and chord diagram (data-viz mobjects) ---
+export {
+  Treemap,
+  type TreemapOptions,
+  type TreemapColorBy,
+  computeTreemapLayout,
+  squarify,
+  treemapNodeValue,
+  type TreemapNode,
+  type TreemapRect,
+  type TreemapTile,
+  ChordDiagram,
+  ChordArc,
+  ChordRibbon,
+  type ChordDiagramOptions,
+  computeChordLayout,
+  chordMatrixFromFlows,
+  type ChordFlow,
+  type ChordGroupArc,
+  type ChordRibbonSpan,
+  type ChordLayout,
+  type ChordLayoutOptions,
+} from './mobjects/graphing';
+
 // --- statistical plots ---
 export {
   Histogram,
@@ -473,6 +501,26 @@ export {
   type HistogramBinsOptions,
   type KdeOptions,
   type BoxSummary,
+} from './mobjects/graphing';
+
+// --- multi-series charts (stacked/grouped bars, area, step) and calendar heatmap ---
+export {
+  DEFAULT_SERIES_COLORS,
+  cycleColor,
+  toColorList,
+  StackedBarChart,
+  type StackedBarChartOptions,
+  type BarChartMode,
+  AreaChart,
+  type AreaChartOptions,
+  StepChart,
+  type StepChartOptions,
+  type StepMode,
+  CalendarHeatmap,
+  GITHUB_GREENS,
+  type CalendarHeatmapOptions,
+  type CalendarDatum,
+  type CellPosition,
 } from './mobjects/graphing';
 
 // Text and LaTeX
