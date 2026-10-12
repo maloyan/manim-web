@@ -151,3 +151,104 @@ export function marchingSquares(
 
   return segments;
 }
+
+/** An ordered chain of points tracing one contour piece, in field coordinates. */
+export type ContourPolyline = [number, number][];
+
+/**
+ * Stitch the unordered segments of {@link marchingSquares} into ordered
+ * polylines. Marching squares emits independent 2-point segments in grid-scan
+ * order; this chains segments that share an endpoint into one polyline, so each
+ * connected contour piece becomes a single stroke and each disjoint piece
+ * becomes its own polyline. A closed loop repeats its first point as its last.
+ *
+ * Endpoints on a shared grid edge are computed by identical arithmetic in both
+ * adjacent cells, so they match exactly. `eps` only guards against sign-of-zero
+ * fuzz; keep it far below the grid spacing so distinct crossings never merge.
+ *
+ * @param segments Segments from {@link marchingSquares} (one level).
+ * @param eps Coordinate quantization used to match shared endpoints.
+ * @returns One polyline per connected contour piece.
+ */
+export function linkContourSegments(segments: ContourSegment[], eps: number): ContourPolyline[] {
+  const step = eps > 0 ? eps : 1e-12;
+  const points: [number, number][] = [];
+  const keyToId = new Map<string, number>();
+
+  const idOf = (p: [number, number]): number => {
+    const key = `${Math.round(p[0] / step)},${Math.round(p[1] / step)}`;
+    let id = keyToId.get(key);
+    if (id === undefined) {
+      id = points.length;
+      points.push(p);
+      keyToId.set(key, id);
+    }
+    return id;
+  };
+
+  // Each segment becomes a pair of point ids; the adjacency map lists, for every
+  // point id, the indices of the segments that touch it.
+  const segIds: [number, number][] = [];
+  const adjacency = new Map<number, number[]>();
+  const attach = (pointId: number, segIndex: number): void => {
+    const list = adjacency.get(pointId);
+    if (list) list.push(segIndex);
+    else adjacency.set(pointId, [segIndex]);
+  };
+
+  for (const [a, b] of segments) {
+    const ia = idOf(a);
+    const ib = idOf(b);
+    if (ia === ib) continue; // drop a degenerate zero-length segment
+    const index = segIds.length;
+    segIds.push([ia, ib]);
+    attach(ia, index);
+    attach(ib, index);
+  }
+
+  const used = new Array<boolean>(segIds.length).fill(false);
+
+  /** Find an unused segment touching `pointId` and return its other endpoint. */
+  const nextFrom = (pointId: number): { seg: number; other: number } | null => {
+    const list = adjacency.get(pointId);
+    if (!list) return null;
+    for (const seg of list) {
+      if (used[seg]) continue;
+      const [ia, ib] = segIds[seg];
+      return { seg, other: ia === pointId ? ib : ia };
+    }
+    return null;
+  };
+
+  const polylines: ContourPolyline[] = [];
+  for (let i = 0; i < segIds.length; i++) {
+    if (used[i]) continue;
+    used[i] = true;
+    const [startId, endId] = segIds[i];
+    const chain: number[] = [startId, endId];
+
+    // Grow forward from the current end until the piece ends or closes.
+    let cur = endId;
+    for (let next = nextFrom(cur); next; next = nextFrom(cur)) {
+      used[next.seg] = true;
+      cur = next.other;
+      chain.push(cur);
+      if (cur === startId) break; // closed loop
+    }
+
+    // Grow backward from the start, unless the piece already closed.
+    if (chain[chain.length - 1] !== chain[0]) {
+      cur = startId;
+      for (let prev = nextFrom(cur); prev; prev = nextFrom(cur)) {
+        used[prev.seg] = true;
+        cur = prev.other;
+        chain.unshift(cur);
+        if (cur === chain[chain.length - 1]) break; // closed loop
+      }
+    }
+
+    polylines.push(chain.map((id) => [points[id][0], points[id][1]]));
+  }
+
+  return polylines;
+}
