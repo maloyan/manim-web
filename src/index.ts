@@ -147,6 +147,22 @@ export {
 } from './audio/MidiInput';
 // --- end MIDI input ---
 
+// --- spatial / positional audio (browser-unique) ---
+export {
+  SpatialAudio,
+  isSpatialAudioSupported,
+  type SpatialAudioOptions,
+  type SpatialAudioContextLike,
+  type SpatialPanner,
+  type SpatialListenerLike,
+  type SpatialAudioParam,
+  type PositionTarget,
+  type ListenerCameraView,
+  type PositionalSource,
+} from './audio/SpatialAudio';
+export { MediaElementSource, BufferSource } from './audio/spatialAudioSources';
+// --- end spatial / positional audio ---
+
 // --- accessibility (a11y) layer (browser-unique) ---
 // Three opt-in capabilities: WebVTT captions from voiceover timings,
 // prefers-reduced-motion respect, and ARIA live-region narration. All are
