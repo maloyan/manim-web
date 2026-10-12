@@ -45,8 +45,10 @@ export interface GlyphVMobjectOptions {
  * control point format that VMobject expects:
  *   [anchor1, handle1, handle2, anchor2, handle3, handle4, anchor3, ...]
  *
- * Multi-contour glyphs (e.g., "o", "B", "i") produce multiple sub-paths
- * joined by degenerate zero-length segments.
+ * Multi-contour glyphs (e.g., "o", "B", "i") produce multiple subpaths, one
+ * per contour. The subpath lengths are published via `setBaseSubpathLengths`
+ * so the renderer strokes each contour on its own, with no line bridging the
+ * disjoint pieces (issue #716).
  */
 export class GlyphVMobject extends VMobject {
   private _glyph: Glyph;
@@ -79,11 +81,23 @@ export class GlyphVMobject extends VMobject {
     this.fillOpacity = 0; // outline only during animation
     this._style.fillOpacity = 0;
 
-    const points3D = this._buildPoints(options.glyph, options.font, options.fontSize, xOff, yOff);
+    const { points: points3D, subpathLengths } = this._buildPoints(
+      options.glyph,
+      options.font,
+      options.fontSize,
+      xOff,
+      yOff,
+    );
     this._outlinePoints = points3D;
 
     if (points3D.length > 0) {
       this.setPoints3D(points3D);
+      // Each glyph contour is its own subpath. The metadata makes the renderer
+      // stroke each contour on its own, so no line bridges the disjoint pieces
+      // (e.g. the dot and stem of 'i', the bowl of 'b'). See issue #716.
+      if (subpathLengths.length > 0) {
+        this.setBaseSubpathLengths(subpathLengths);
+      }
     }
 
     // Eagerly compute skeleton if requested
@@ -94,6 +108,11 @@ export class GlyphVMobject extends VMobject {
 
   /**
    * Convert glyph path commands to cubic Bezier control points in world space.
+   *
+   * Each glyph contour (started by an `M` command) becomes a separate subpath.
+   * The returned `subpathLengths` records the control-point count of each
+   * contour so the renderer strokes them independently. No segment bridges two
+   * disjoint contours (e.g. the dot and stem of 'i'). See issue #716.
    */
   private _buildPoints(
     glyph: Glyph,
@@ -101,35 +120,38 @@ export class GlyphVMobject extends VMobject {
     fontSize: number,
     xOffset: number,
     yOffset: number,
-  ): number[][] {
+  ): { points: number[][]; subpathLengths: number[] } {
     // Get path commands from opentype.js
     const path = glyph.getPath(xOffset, yOffset, fontSize);
     const cmds = path.commands;
 
-    if (cmds.length === 0) return [];
+    if (cmds.length === 0) return { points: [], subpathLengths: [] };
 
     const allPoints: number[][] = [];
+    const subpathLengths: number[] = [];
+    let subpathStart = 0;
     let currentX = 0;
     let currentY = 0;
     let contourStartX = 0;
     let contourStartY = 0;
     let contourStarted = false;
 
+    /** Record the length of the contour that just ended, if non-empty. */
+    const closeSubpath = (): void => {
+      const count = allPoints.length - subpathStart;
+      if (count > 0) subpathLengths.push(count);
+      subpathStart = allPoints.length;
+    };
+
     for (const cmd of cmds) {
       switch (cmd.type) {
         case 'M': {
-          // If we had a previous contour, connect with a degenerate segment
-          if (contourStarted && allPoints.length > 0) {
-            // Add degenerate zero-length cubic to connect contours
-            const lastPt = allPoints[allPoints.length - 1];
-            const newPt = [cmd.x * PIXEL_TO_WORLD, -cmd.y * PIXEL_TO_WORLD, 0];
-            allPoints.push([...lastPt]); // handle1 = previous anchor
-            allPoints.push([...newPt]); // handle2 = new anchor
-            allPoints.push([...newPt]); // anchor2 = new start
-          } else {
-            // First contour: set the start anchor
-            allPoints.push([cmd.x * PIXEL_TO_WORLD, -cmd.y * PIXEL_TO_WORLD, 0]);
+          // Start a new contour as its own subpath — never bridge the gap to
+          // the previous contour with a connecting segment.
+          if (contourStarted) {
+            closeSubpath();
           }
+          allPoints.push([cmd.x * PIXEL_TO_WORLD, -cmd.y * PIXEL_TO_WORLD, 0]);
           currentX = cmd.x;
           currentY = cmd.y;
           contourStartX = cmd.x;
@@ -208,7 +230,10 @@ export class GlyphVMobject extends VMobject {
       }
     }
 
-    return allPoints;
+    // Record the final contour.
+    closeSubpath();
+
+    return { points: allPoints, subpathLengths };
   }
 
   /**
