@@ -1,0 +1,334 @@
+---
+title: New in 0.27 and 0.28
+sidebar_label: New in 0.27 & 0.28
+---
+
+import GanttChartExample from '@site/src/components/examples/GanttChartExample';
+import KineticTypographyExample from '@site/src/components/examples/KineticTypographyExample';
+import NeuralNetworkExample from '@site/src/components/examples/NeuralNetworkExample';
+import ShaderMobjectExample from '@site/src/components/examples/ShaderMobjectExample';
+import SketchExample from '@site/src/components/examples/SketchExample';
+import PendulumExample from '@site/src/components/examples/PendulumExample';
+
+Features added in the 0.27 and 0.28 releases. Each section lists the real
+exported API, a copy-paste snippet, and a runnable example where the feature is
+visual. The MIDI and notebook sections are code samples, since both depend on
+the host environment.
+
+## 0.27.0
+
+### GanttChart
+
+`GanttChart` is a project-timeline chart. Each task is a horizontal bar that
+spans its start to its end on a shared time x-axis, and each task sits on one
+row. Optional dependency arrows point from a predecessor's end to a dependent
+task's start, and an optional "today" marker draws a vertical line. Time values
+are numbers or `Date` objects.
+
+<GanttChartExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { GanttChart, FadeIn } from 'manim-web';
+
+const chart = new GanttChart({
+  tasks: [
+    { name: 'Research', start: 0, end: 3 },
+    { name: 'Design', start: 3, end: 6, dependencies: ['Research'] },
+    { name: 'Build', start: 6, end: 11, dependencies: ['Design'] },
+    { name: 'Test', start: 9, end: 13, dependencies: ['Build'] },
+    { name: 'Launch', start: 13, end: 15, dependencies: ['Test'] },
+  ],
+  showDependencies: true,
+  today: 7, // vertical marker at t = 7
+  width: 9,
+});
+scene.play(new FadeIn(chart));
+```
+
+</details>
+
+Tasks that share a `row` key share a row and may overlap. Options also include
+`rowHeight`, `rowGap`, `barColors`, `barFillOpacity`, `axisColor`,
+`showTimeAxis`, `timeTicks`, `timeTickCount`, `formatTime`, `showLabels`,
+`dependencyColor`, and `todayColor`.
+
+### Kinetic typography
+
+The kinetic-typography pack is a set of ready-made per-glyph text animations.
+Each preset is a factory that returns an `Animation`, so
+`scene.play(fadeInByLetter(text))` works directly. A preset staggers an effect
+across a `Text`'s glyph submobjects. A `Text` has no glyph children until
+`loadGlyphs()` builds them from a font file, so load the glyph group and animate
+it; a plain `Text` with no glyphs animates as a single unit without throwing.
+
+<KineticTypographyExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Text, fadeInByLetter, waveLetters } from 'manim-web';
+
+const text = new Text({ text: 'manim web', fontUrl: '/fonts/Inter-Regular.ttf', fontSize: 96 });
+const glyphs = await text.loadGlyphs(); // a TextGlyphGroup whose children are glyphs
+
+// Entrance: reveal the glyphs with an overlapping stagger.
+await scene.play(fadeInByLetter(glyphs, { lagRatio: 0.15 }));
+
+// Emphasis: each glyph oscillates with a per-glyph phase, then settles.
+await scene.play(waveLetters(glyphs, { amplitude: 0.3, waves: 2, duration: 2 }));
+```
+
+</details>
+
+Entrance presets are `typeOn`, `fadeInByLetter`, `fadeInByWord`, `riseByLetter`,
+`scalePopByLetter`, and `glitchIn`. Emphasis presets are `waveLetters`,
+`tracking`, and `spreadOut`. The underlying animation classes `WaveLetters`,
+`LetterSpacing`, and `GlitchIn` are exported too, with `resolveGlyphs(target)`
+for building custom presets.
+
+### MidiInput
+
+`MidiInput` wraps `navigator.requestMIDIAccess()` so a MIDI keyboard or
+controller can drive mobject properties and `ValueTracker`s each frame. It
+mirrors `AudioAnalyzer`: the same feature-detection, the same `bindToTracker` and
+`createUpdater` bindings, and the same degrade-to-no-op contract. In Node, jsdom,
+or SSR it degrades to a no-op, so reads return zeros or null and nothing throws.
+Live MIDI input needs a browser and a device, so this section is a code sample.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { MidiInput, isMidiSupported, ValueTracker, Dot } from 'manim-web';
+
+if (isMidiSupported()) {
+  const midi = new MidiInput();
+  await midi.connect(); // prompts the browser for MIDI access
+
+  // Reads, each from the latest MIDI state.
+  midi.getNote(60); // velocity of middle C, or null if it is up
+  midi.isNoteOn(60); // whether middle C is held
+  midi.getControl(1); // mod wheel (CC 1), normalized to [0, 1]
+  midi.getPitchBend(); // pitch bend in [-1, 1]
+
+  // Drive a ValueTracker from a read each frame.
+  const level = new ValueTracker(0);
+  midi.bindToTracker(level, () => midi.getControl(1));
+
+  const dot = new Dot();
+  dot.addUpdater(() => dot.setScale(1 + level.getValue()));
+
+  // Or map MIDI onto any property with a custom updater.
+  dot.addUpdater(midi.createUpdater((d, m) => d.setScale(1 + m.getControl(1))));
+
+  // Event listeners each return an unsubscribe function.
+  const off = midi.onNoteOn((note, velocity) => console.log(note, velocity));
+}
+```
+
+</details>
+
+`getInputNames()` lists the connected ports, `onNoteOff` and `onControlChange`
+add the other listeners, and `dispose()` detaches every handler.
+
+### Notebook embed
+
+The `manim-web/notebook` subpath embeds a scene in a Jupyter or Observable cell.
+`embedScene` creates and manages a scene in a host element (or a fresh one), and
+`observableScene` returns a detached node for an Observable cell. The subpath
+re-exports the whole library, so a cell imports mobjects and animations from the
+same entry point.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { embedScene, observableScene, Circle, FadeIn } from 'manim-web/notebook';
+
+// Jupyter / plain DOM: pass an element (or undefined to create one).
+const { element, scene, ready, dispose } = embedScene(
+  undefined,
+  async (scene) => {
+    const circle = new Circle({ radius: 1 });
+    scene.add(circle);
+    await scene.play(new FadeIn(circle));
+  },
+  { width: 640, height: 360 },
+);
+document.body.appendChild(element);
+await ready; // resolves when the setup callback finishes
+
+// Observable: return the node directly; invalidation disposes it on re-run.
+const node = observableScene(
+  async (scene) => {
+    const dot = new Circle({ radius: 0.5 });
+    scene.add(dot);
+    await scene.play(new FadeIn(dot));
+  },
+  { width: 800, invalidation },
+);
+```
+
+</details>
+
+`embedScene` returns `{ scene, element, ready, dispose }`; `observableScene`
+returns the host node with `scene` and `dispose` attached. Both take the normal
+`Scene` options plus `aspect` and `className`.
+
+## 0.28.0
+
+### NeuralNetwork
+
+`NeuralNetwork` is a diagram of stacked layers with connection lines between
+adjacent layers (a manim-ml analogue). It places the layers left to right and,
+for every adjacent pair, draws a dense set of connection lines between their
+node anchors. `forwardPass` then lights the connections gap by gap, from the
+input layer to the output layer; `backwardPass` does the same in reverse.
+
+<NeuralNetworkExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { NeuralNetwork, FeedForwardLayer, forwardPass } from 'manim-web';
+
+const net = new NeuralNetwork(
+  [
+    new FeedForwardLayer({ numNodes: 3 }),
+    new FeedForwardLayer({ numNodes: 5 }),
+    new FeedForwardLayer({ numNodes: 4 }),
+    new FeedForwardLayer({ numNodes: 2 }),
+  ],
+  { layerSpacing: 1.1 },
+);
+scene.add(net);
+
+// Light each gap from input to output.
+await scene.play(forwardPass(net, { gapDuration: 0.8 }));
+```
+
+</details>
+
+Other layer types are `ConvolutionalLayer`, `PoolingLayer`, and `ImageLayer`.
+`forwardPass` and `backwardPass` accept `lagRatio`, `gapDuration`,
+`activationColor`, and `peakOpacity`; the per-line `EdgePulse` animation is
+exported for custom flows.
+
+### ShaderMobject
+
+`ShaderMobject` is a plane rendered with a user-supplied GLSL fragment shader. It
+follows the Shadertoy convention with built-in uniforms updated each frame:
+`iTime` (seconds), `iResolution` (the plane size), and an optional `iMouse`.
+Construction never touches a WebGL context, so it is headless-safe; the material
+builds lazily on first render. A frame updater advances `iTime`, so animated
+shaders run on the timeline.
+
+<ShaderMobjectExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ShaderMobject } from 'manim-web';
+
+const shader = new ShaderMobject({
+  fragmentShader: `
+    precision highp float;
+    uniform float iTime;
+    varying vec2 vUv; // plane UV in [0, 1]
+    void main() {
+      gl_FragColor = vec4(vUv, 0.5 + 0.5 * sin(iTime), 1.0);
+    }
+  `,
+  width: 9,
+  height: 5,
+  uniforms: { uScale: 6.0 }, // user uniforms pass through by GLSL name
+});
+scene.add(shader); // the frame updater advances iTime
+
+shader.setUniform('uScale', 8.0); // update a uniform at any time
+```
+
+</details>
+
+Pass `mouse: true` to expose `iMouse`. Methods include `setUniform`,
+`getUniform`, `getTime`, `setResolution`, `setWidth`, `setHeight`, and
+`getMaterial`.
+
+### sketch
+
+`sketch(mobject, options)` returns a new VMobject whose path is a perturbed,
+hand-drawn version of the source (a rough.js / xkcd look). The source is never
+changed. The algorithm reads the path as an anchor polyline, jitters each vertex
+with a seeded PRNG, then subdivides and bows each edge. A fixed `seed`
+reproduces the same output, and `roughness: 0` reproduces the source shape.
+
+<SketchExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Square, Circle, VGroup, sketch, Create } from 'manim-web';
+
+const shapes = new VGroup(
+  new Square({ sideLength: 2.4, color: '#58c4dd' }).shift([-2, 0, 0]),
+  new Circle({ radius: 1.2, color: '#ffd166' }).shift([2, 0, 0]),
+);
+
+// A hand-drawn copy; the source stays crisp.
+const rough = sketch(shapes, { roughness: 1.5, bowing: 1.5, strokes: 2, seed: 7 });
+scene.play(new Create(rough));
+```
+
+</details>
+
+Options are `roughness`, `bowing`, `strokeWidthJitter`, `seed`, `strokes` (1 or
+2 for a double-stroke look), and `segments` (straight sub-segments per edge).
+Container mobjects (groups, glyph text, SVG) sketch every member that owns
+points.
+
+### Physics simulation
+
+The physics module adds a compact 2D rigid-body world. A `PhysicsWorld` holds
+bodies and constraints and advances them with semi-implicit Euler integration.
+Each body can carry a mobject, which the world moves to the body position on
+every step, so adding the world to a scene renders the simulation. A fixed
+`seed` makes the simulation deterministic. Two builders cover common setups:
+`pendulum` (a bob pinned to a fixed pivot by a rigid distance constraint) and
+`springChain` (a row of bodies linked by springs).
+
+<PendulumExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { pendulum, Dot, Line } from 'manim-web';
+
+const pivot: [number, number] = [0, 2];
+
+// A bob pinned to a fixed pivot; pass a bob mobject so it renders.
+const bob = new Dot({ radius: 0.18, color: '#fc6255' });
+const world = pendulum({ pivot, length: 3, angle: Math.PI / 2.2, bob });
+
+// A rod kept in sync with the bob body each frame.
+const body = world.getBody(0);
+const rod = new Line({ start: [pivot[0], pivot[1], 0], end: [0, 0, 0] });
+rod.addUpdater(() => rod.setEnd([body.position[0], body.position[1], 0]));
+
+scene.add(rod);
+scene.add(world); // the scene render loop ticks the simulation each frame
+```
+
+</details>
+
+`springChain({ count, spacing, stiffness, damping, anchored })` builds a hanging
+chain. The lower-level API is `new PhysicsWorld({ gravity, bounds, seed })` with
+`addBody`, `addConstraint`, `step(dt)`, `reset()`, and `getBodies()`; the
+constraints are `DistanceConstraint` and `SpringConstraint`.
