@@ -950,6 +950,31 @@ export {
   type ParticleSnapshot,
 } from './mobjects/particles';
 
+// Physics (2D rigid-body simulation: gravity, collisions, springs, pendulum)
+export {
+  PhysicsWorld,
+  type PhysicsWorldOptions,
+  Body,
+  type BodyOptions,
+  type BodyShape,
+  type CircleShape,
+  type PolygonShape,
+  type Constraint,
+  type Anchor,
+  DistanceConstraint,
+  type DistanceConstraintOptions,
+  SpringConstraint,
+  type SpringConstraintOptions,
+  type Bounds,
+  resolveBounds,
+  resolveCircleCircle,
+  pendulum,
+  type PendulumOptions,
+  springChain,
+  type SpringChainOptions,
+  type Vec2,
+} from './mobjects/physics';
+
 // Fractal mobjects
 export {
   MandelbrotSet,
