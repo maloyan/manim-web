@@ -1,0 +1,194 @@
+---
+title: New in 0.18 and 0.19
+sidebar_label: New in 0.18 & 0.19
+---
+
+import InstancedCubesExample from '@site/src/components/examples/InstancedCubesExample';
+import TableAccessorsExample from '@site/src/components/examples/TableAccessorsExample';
+
+Features added in the 0.18 and 0.19 releases. Each section lists the real
+exported API, a copy-paste snippet, and a runnable example where the feature
+is visual.
+
+## OBJ models with materials and textures
+
+`ModelMobject.fromUrl` loads a 3D model from a URL. For an `.obj` file, a
+companion `.mtl` file holds the materials and texture maps. Two new options
+load that file, so an OBJ model keeps its colors and textures instead of a flat
+default fill.
+
+- `mtlUrl` sets the `.mtl` URL directly.
+- `loadMaterials: true` derives the `.mtl` URL from the `.obj` URL.
+
+`mtlUrl` wins when both are set. Both options apply to `.obj` only. A glTF file
+(`.glb` / `.gltf`) embeds its materials natively, so it needs neither option.
+`materialOverride` and `color` still win over the loaded materials.
+
+A real model needs asset files, so this section is a code sample.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ModelMobject } from 'manim-web';
+
+// OBJ with an explicit companion .mtl URL (materials + texture maps).
+const chair = await ModelMobject.fromUrl('/models/chair.obj', {
+  mtlUrl: '/models/chair.mtl',
+  center: true,
+  scale: 2,
+});
+scene.add(chair); // use a ThreeDScene
+
+// OBJ that derives the .mtl URL from the .obj URL.
+const lamp = await ModelMobject.fromUrl('/models/lamp.obj', {
+  loadMaterials: true,
+});
+
+// glTF embeds its materials, so no material option is needed.
+const robot = await ModelMobject.fromUrl('/models/robot.glb', { scale: 1.5 });
+```
+
+</details>
+
+The helpers `applyObjMaterials`, `deriveMtlUrl`, `deriveBasePath`, and
+`setMtlLoaderFactory` are also exported. A failed load rejects by default; pass
+`throwOnError: false` to resolve to an empty model whose `getLoadError()` holds
+the error.
+
+---
+
+## GPU instancing with InstancedMobject
+
+`InstancedMobject` draws many copies of one template with a single
+`THREE.InstancedMesh`, so thousands of copies cost one draw call instead of one
+mesh each. It is opt-in and does not change the default render path.
+
+Each instance has its own `position`, optional `rotation` (Euler radians, XYZ
+order), optional `scale` (uniform or per-axis), and optional per-instance
+`color`. Omit `geometry` and `material` to get a unit box with a standard
+material; pass a `template` mobject to derive both from it.
+
+The example below draws a grid of 324 instanced cubes, one color per cube, in a
+single draw call. Drag to orbit.
+
+<InstancedCubesExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { InstancedMobject } from 'manim-web';
+
+// One transform per instance. No geometry/material means a unit box.
+const instances = [];
+for (let i = 0; i < 1000; i++) {
+  instances.push({
+    position: [Math.random() * 10 - 5, Math.random() * 10 - 5, 0],
+    scale: 0.1,
+    color: `hsl(${Math.random() * 360}, 80%, 60%)`,
+  });
+}
+
+const cloud = new InstancedMobject({ instances });
+scene.add(cloud); // 1000 copies, one draw call; use a ThreeDScene
+```
+
+</details>
+
+Update one instance in place with `setInstanceTransform(index, transform)` or
+`setInstanceColor(index, color)`, or replace the whole set with
+`setInstances(instances)`. Read back with `getInstanceCount()`,
+`getInstanceMatrix(index)`, `getGeometry()`, and `getMaterial()`. Pass an
+explicit `geometry` and `material` (for example a `THREE.SphereGeometry`) for a
+non-box template; `manim-web` re-exports `THREE`.
+
+---
+
+## Table accessors and cell styling
+
+`Table` gained accessors and styling methods that match ManimCE's names.
+
+- `getRows()` / `getColumns()` return a `VGroup` of row or column `VGroup`s.
+- `getEntriesWithoutLabels()` returns every data entry, skipping labels.
+- `getLabels()` returns the column labels followed by the row labels.
+- `getHighlightedCell(row, col)` builds a highlight rectangle for one cell
+  without adding it; `addHighlightedCell(row, col)` builds and inserts it behind
+  the cell.
+- `addBackgroundToEntries(color, opacity)` adds a filled rectangle behind every
+  data entry. Repeated calls replace the previous backgrounds.
+- `setRowColors(...colors)` / `setColumnColors(...colors)` color each data row
+  or column in order.
+
+The example below colors the two data rows and highlights one cell.
+
+<TableAccessorsExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Table, Text } from 'manim-web';
+
+const cell = (value: string) => new Text({ text: value, fontSize: 40 });
+
+const table = new Table({
+  data: [
+    [cell('12'), cell('7'), cell('31')],
+    [cell('4'), cell('19'), cell('8')],
+  ],
+  rowLabels: [cell('A'), cell('B')],
+  colLabels: [cell('Q1'), cell('Q2'), cell('Q3')],
+});
+
+table.setRowColors('#58c4dd', '#f5a623'); // row 0 cyan, row 1 orange
+table.addHighlightedCell(1, 2, '#ff3366', 0.5); // highlight one data cell
+scene.add(table); // the highlight is a child of the table
+```
+
+</details>
+
+Row and column indices are 0-based and exclude labels. The default highlight
+color is `YELLOW` at `0.3` opacity.
+
+---
+
+## SVG pattern fills
+
+`SVGMobject` now reads `<pattern>` definitions. A shape with
+`fill="url(#id)"` gets a repeating tile texture built from the pattern content,
+instead of falling back to a solid color. The tile may hold `rect`, `circle`,
+`ellipse`, `polygon`, `path`, and `<image>` elements. An unsupported or empty
+tile falls back to a solid approximation, so parsing never throws.
+
+Build an `SVGMobject` from a string with the constructor (or the `svgMobject`
+helper), or from a URL with `SVGMobject.fromUrl`.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { SVGMobject } from 'manim-web';
+
+// A rectangle filled with a repeating dot pattern.
+const svg = `
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <defs>
+      <pattern id="dots" patternUnits="userSpaceOnUse" width="10" height="10">
+        <circle cx="5" cy="5" r="2.5" fill="#58c4dd" />
+      </pattern>
+    </defs>
+    <rect x="0" y="0" width="100" height="100" fill="url(#dots)" />
+  </svg>
+`;
+
+const shape = new SVGMobject({ svgString: svg });
+scene.add(shape);
+```
+
+</details>
+
+The pattern layer exports `parsePatternDefs(svg)`, `resolvePatternFill(fill,
+defs)`, and `PatternVMobject` (whose fill exposes a repeating
+`THREE.CanvasTexture`), along with the `SvgPattern`, `SvgPatternUnits`, and
+`PatternVMobjectOptions` types.
