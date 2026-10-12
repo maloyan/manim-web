@@ -1,6 +1,6 @@
 ---
-title: New in 0.29, 0.30 and 0.31
-sidebar_label: New in 0.29 - 0.31
+title: New in 0.29, 0.30, 0.31 and 0.32
+sidebar_label: New in 0.29 - 0.32
 ---
 
 import BenzeneMoleculeExample from '@site/src/components/examples/BenzeneMoleculeExample';
@@ -8,11 +8,11 @@ import DropShadowExample from '@site/src/components/examples/DropShadowExample';
 import StateMachineExample from '@site/src/components/examples/StateMachineExample';
 import SignalsExample from '@site/src/components/examples/SignalsExample';
 
-Features added in the 0.29, 0.30 and 0.31 releases. Each section lists the real
-exported API, a copy-paste snippet, and a runnable example where the feature is
-visual. The reactive signals, parametrized scenes, and keyboard input sections
-show real API usage; the parametrized and keyboard sections stay code samples,
-since one renders off-screen and the other needs live key events.
+Features added in the 0.29, 0.30, 0.31 and 0.32 releases. Each section lists the
+real exported API, a copy-paste snippet, and a runnable example where the
+feature is visual. The parametrized scene, keyboard input, and gamepad input
+sections stay code samples: one renders off-screen, and the other two need live
+hardware events (key presses or a connected gamepad).
 
 ## 0.29.0
 
@@ -265,3 +265,65 @@ names accept any common spelling (`'ArrowUp'`, `'w'`, `' '`), normalized by
 unsubscribe function, and `'any'` matches every key), and manage the lifecycle
 with `enable`, `disable`, and `dispose`. `makeKeyboardInput(options)` is a
 factory for the same controller.
+
+## 0.32.0
+
+### GamepadInput
+
+`GamepadInput` is the gamepad sibling of `KeyboardInput`, built on the Web
+Gamepad API. It is the other half of game input: the same lifecycle (`enable` /
+`disable` / `dispose`), the same per-frame edge queries (`wasButtonPressed` and
+`wasButtonReleased`), a movement vector from the d-pad or left stick, and the
+same `StateMachine` and `ValueTracker` bindings.
+
+The Gamepad API is poll-based, not event-based: button state arrives in a
+snapshot, not as events. So `poll()` (aliased by `update(dt)` for render-loop
+parity with `KeyboardInput`) reads the live snapshot each frame and computes the
+press and release edges. Call it once per frame before reading state. All
+navigator and DOM access is feature-detected, so the controller is safe to
+construct in Node or a headless render: the reads return `false` or zero and
+never throw. Live gamepad events need a browser and a connected pad, so this
+section is a code sample.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { GamepadInput, Dot } from 'manim-web';
+
+// deadzone ignores a resting stick so it does not drift.
+const pad = new GamepadInput({ deadzone: 0.15 });
+const player = new Dot({ radius: 0.14, color: '#58c4dd' });
+scene.add(player);
+
+// In the render loop, each frame:
+function frame(dt: number): void {
+  pad.poll(); // read the snapshot and compute edges (update(dt) is an alias)
+  const [dx, dy] = pad.getLeftStick(); // left stick as [x, y], up is +y
+  player.shift([dx * speed * dt, dy * speed * dt, 0]);
+  if (pad.wasButtonPressed('A')) player.scale(1.2); // edge, once per press
+}
+
+// Or get a normalized direction from the d-pad, falling back to the left stick.
+const [mx, my] = pad.getDirectionVector(); // unit vector, [0, 0] when neutral
+
+// Bind buttons to a StateMachine or a ValueTracker, like KeyboardInput.
+pad.bindBool(sm, 'running', 'RB'); // true while held, false on release
+pad.bindTrigger(sm, 'jump', 'A'); // fire the trigger on each button-down
+pad.bindValue(thrust, 'RT', { heldValue: 1, releasedValue: 0 });
+```
+
+</details>
+
+Button reads are `isButtonDown`, `anyButtonDown`, `wasButtonPressed`,
+`wasButtonReleased`, and `getButtonValue` (the analog `[0, 1]` value, which
+varies on the triggers). Name a button in any common spelling (`'A'`, `'cross'`,
+`'dpadUp'`, `'LT'`), resolved to a standard-mapping index by `resolveButton`;
+the `STANDARD_BUTTONS` and `STANDARD_AXES` maps hold the canonical names. Axis
+reads are `getAxis(index, deadzone?)`, `getLeftStick`, and `getRightStick` (each
+flips the API's downward vertical axis so up is `+y`), and `getDirectionVector`
+(the d-pad wins when held, else the left stick). Register callbacks with
+`onButtonDown` / `onButtonUp` (each returns an unsubscribe function, and `'any'`
+matches every button), inspect connected pads with `getConnectedGamepads`, and
+check support with `isGamepadSupported`. `makeGamepadInput(options)` is a factory
+for the same controller.
