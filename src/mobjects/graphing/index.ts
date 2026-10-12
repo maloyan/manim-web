@@ -89,6 +89,27 @@ export { PolarPlane, type PolarPlaneOptions } from './ComplexPlane';
 // BarChart
 export { BarChart, type BarChartOptions } from './BarChart';
 
+// Multi-series chart color helpers
+export { DEFAULT_SERIES_COLORS, cycleColor, toColorList } from './chartColors';
+
+// StackedBarChart (stacked / grouped multi-series bars)
+export { StackedBarChart, type StackedBarChartOptions, type BarChartMode } from './StackedBarChart';
+
+// AreaChart (filled areas under lines, optionally stacked)
+export { AreaChart, type AreaChartOptions } from './AreaChart';
+
+// StepChart (step line graph)
+export { StepChart, type StepChartOptions, type StepMode } from './StepChart';
+
+// CalendarHeatmap (GitHub-style day-cell grid)
+export {
+  CalendarHeatmap,
+  GITHUB_GREENS,
+  type CalendarHeatmapOptions,
+  type CalendarDatum,
+  type CellPosition,
+} from './CalendarHeatmap';
+
 // CandlestickChart (financial OHLC chart)
 export { CandlestickChart, type CandlestickChartOptions, type OHLC } from './CandlestickChart';
 

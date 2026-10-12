@@ -479,6 +479,26 @@ export {
   type BoxSummary,
 } from './mobjects/graphing';
 
+// --- multi-series charts (stacked/grouped bars, area, step) and calendar heatmap ---
+export {
+  DEFAULT_SERIES_COLORS,
+  cycleColor,
+  toColorList,
+  StackedBarChart,
+  type StackedBarChartOptions,
+  type BarChartMode,
+  AreaChart,
+  type AreaChartOptions,
+  StepChart,
+  type StepChartOptions,
+  type StepMode,
+  CalendarHeatmap,
+  GITHUB_GREENS,
+  type CalendarHeatmapOptions,
+  type CalendarDatum,
+  type CellPosition,
+} from './mobjects/graphing';
+
 // Text and LaTeX
 export {
   Text,
