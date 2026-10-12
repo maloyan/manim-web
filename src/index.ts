@@ -442,6 +442,34 @@ export {
   type ContourSegment,
 } from './mobjects/graphing';
 
+// --- statistical plots ---
+export {
+  Histogram,
+  type HistogramOptions,
+  ScatterPlot,
+  type ScatterPlotOptions,
+  BoxPlot,
+  type BoxPlotOptions,
+  type PlotOrientation,
+  ViolinPlot,
+  type ViolinPlotOptions,
+  type ViolinDensity,
+  mean,
+  stdDev,
+  quantile,
+  iqr,
+  histogramBins,
+  kde,
+  silvermanBandwidth,
+  boxSummary,
+  extent,
+  niceAxisRange,
+  type HistogramBin,
+  type HistogramBinsOptions,
+  type KdeOptions,
+  type BoxSummary,
+} from './mobjects/graphing';
+
 // Text and LaTeX
 export {
   Text,
