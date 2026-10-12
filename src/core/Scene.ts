@@ -12,6 +12,7 @@ import { SceneStateManager, SceneSnapshot } from './StateManager';
 import { AudioManager, type AddSoundOptions, type AudioTrack } from './AudioManager';
 import { ensureAnimateProxyRegistered } from './AnimateProxy';
 import type { MultiCamera } from './CameraExtensions';
+import type { PostProcessingPipeline } from './PostProcessing';
 import { logger } from '../utils/logger';
 import { applyReducedMotion } from '../a11y/reducedMotion';
 
@@ -136,6 +137,12 @@ export class Scene {
   // instead of the single-camera path. Default-camera object stays alive
   // for API compatibility and as a fallback when this is cleared.
   private _multiCamera: MultiCamera | null = null;
+
+  // Optional opt-in post-processing pipeline. When attached and enabled,
+  // `_render()` routes the frame through its EffectComposer. When null or
+  // disabled (the default), the render path is byte-identical to a direct
+  // `renderer.render(scene, camera)` call.
+  private _postProcessing: PostProcessingPipeline | null = null;
 
   // Auto-resize: ResizeObserver on container + window listeners (orientationchange
   // fallback for mobile browsers where ResizeObserver lags behind rotation).
@@ -275,6 +282,36 @@ export class Scene {
     if (mc === null) {
       const aspectRatio = this._renderer.width / this._renderer.height;
       this._camera.setAspectRatio(aspectRatio);
+    }
+    this._render();
+    return this;
+  }
+
+  /**
+   * Get the attached post-processing pipeline, or null when the default
+   * direct render path is in use.
+   */
+  get postProcessing(): PostProcessingPipeline | null {
+    return this._postProcessing;
+  }
+
+  /**
+   * Attach (or detach) an opt-in GPU post-processing pipeline (bloom, vignette,
+   * depth of field). Pass `null` to revert to the direct render path. Has no
+   * effect in headless mode (the NullRenderer has no WebGL context). The
+   * pipeline preloads its modules so later frames can route through the
+   * composer; until they load, the direct path is used.
+   * @param pipeline - PostProcessingPipeline instance, or null to detach
+   * @returns this for chaining
+   */
+  usePostProcessing(pipeline: PostProcessingPipeline | null): this {
+    this._postProcessing = pipeline;
+    if (pipeline !== null && !this.isHeadless) {
+      pipeline.setSize(this._renderer.width, this._renderer.height);
+      // Kick off the lazy module load; errors there must not break attach.
+      void pipeline.prepare().catch((err) => {
+        logger.warn(`Scene: post-processing modules failed to load: ${err}`);
+      });
     }
     this._render();
     return this;
@@ -1035,11 +1072,42 @@ export class Scene {
       this._updateFrustum();
     }
 
+    // Opt-in post-processing takes precedence when it can draw this frame.
+    // When it reports it did not draw (modules still loading, no passes, or no
+    // WebGL), fall through to the default path so behavior is never worse.
+    if (
+      this._postProcessing !== null &&
+      this._postProcessing.enabled &&
+      !this.isHeadless &&
+      this._renderPostProcessing()
+    ) {
+      return;
+    }
+
     if (this._multiCamera !== null && !this.isHeadless) {
       this._renderMultiCamera();
     } else {
       this._renderer.render(this._threeScene, this._camera.getCamera());
     }
+  }
+
+  /**
+   * Render through the attached post-processing pipeline. Guards for a lost
+   * WebGL context the same way {@link _renderMultiCamera} does.
+   * @returns true if the composer drew the frame, false to fall back
+   */
+  protected _renderPostProcessing(): boolean {
+    const pipeline = this._postProcessing;
+    if (pipeline === null) return false;
+    const threeRenderer = this._renderer.getThreeRenderer();
+    if (threeRenderer.getContext().isContextLost()) return false;
+    return pipeline.render(
+      threeRenderer,
+      this._threeScene,
+      this._camera.getCamera(),
+      this._renderer.width,
+      this._renderer.height,
+    );
   }
 
   /**
@@ -1325,6 +1393,9 @@ export class Scene {
    */
   resize(width: number, height: number): this {
     this._renderer.resize(width, height);
+    if (this._postProcessing !== null) {
+      this._postProcessing.setSize(width, height);
+    }
     const aspectRatio = width / height;
     this._camera.setAspectRatio(aspectRatio);
     VMobject._rendererWidth = width;
@@ -1664,6 +1735,12 @@ export class Scene {
       mobject.dispose();
     }
     this._mobjects.clear();
+
+    // Dispose post-processing GPU resources before the renderer.
+    if (this._postProcessing !== null) {
+      this._postProcessing.dispose();
+      this._postProcessing = null;
+    }
 
     // Dispose renderer
     this._renderer.dispose();

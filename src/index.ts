@@ -167,6 +167,18 @@ export {
 export { Renderer, type RendererOptions, type IRenderer } from './core/Renderer';
 export { NullRenderer } from './core/NullRenderer';
 export {
+  PostProcessingPipeline,
+  setPostProcessingModules,
+  setPostProcessingModulesLoader,
+  type BloomOptions,
+  type VignetteOptions,
+  type DepthOfFieldOptions,
+  type PassConfig,
+  type ComposerLike,
+  type PostProcessingModules,
+  type PostProcessingModulesLoader,
+} from './core/PostProcessing';
+export {
   SceneStateManager,
   serializeMobject,
   deserializeMobject,
