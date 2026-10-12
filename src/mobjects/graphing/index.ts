@@ -92,6 +92,12 @@ export { BarChart, type BarChartOptions } from './BarChart';
 // CandlestickChart (financial OHLC chart)
 export { CandlestickChart, type CandlestickChartOptions, type OHLC } from './CandlestickChart';
 
+// RadarChart (spider chart)
+export { RadarChart, type RadarChartOptions } from './RadarChart';
+
+// WaterfallChart (bridge chart)
+export { WaterfallChart, type WaterfallChartOptions } from './WaterfallChart';
+
 // PieChart and DonutChart
 export {
   PieChart,
