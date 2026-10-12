@@ -76,6 +76,21 @@ export {
   type BindValueOptions,
 } from './KeyboardInput';
 
+// Gamepad input (Web Gamepad API, for interactive apps and games)
+export {
+  GamepadInput,
+  makeGamepadInput,
+  resolveButton,
+  isGamepadSupported,
+  STANDARD_BUTTONS,
+  STANDARD_AXES,
+  type GamepadInputOptions,
+  type GamepadButtonLike,
+  type GamepadLike,
+  type GamepadSource,
+  type GamepadButtonCallback,
+} from './GamepadInput';
+
 // Camera controls
 export { OrbitControls, type OrbitControlsOptions } from './OrbitControls';
 export {
