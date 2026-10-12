@@ -11,9 +11,7 @@ import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Line } from '../geometry/Line';
 import { Rectangle } from '../geometry/Rectangle';
-import { MathTexImage } from '../text/MathTexImage';
-import { DecimalNumber } from '../text/DecimalNumber';
-import { WHITE, YELLOW } from '../../constants/colors';
+import { WHITE, YELLOW, BLACK } from '../../constants/colors';
 
 /**
  * Options for creating a Table
@@ -98,6 +96,8 @@ export class Table extends VGroup {
   protected _verticalLines: VGroup;
   /** Background rectangles for highlighting */
   protected _backgroundRectangles: Map<string, Rectangle> = new Map();
+  /** Background rectangles added behind every entry via addBackgroundToEntries */
+  protected _entryBackgrounds: Rectangle[] = [];
 
   /** Cell dimensions for each row and column */
   protected _rowHeights: number[] = [];
@@ -434,6 +434,32 @@ export class Table extends VGroup {
   }
 
   /**
+   * Get all rows as a VGroup of VGroups (0-indexed, data only).
+   * Each child VGroup holds the entries of one row.
+   * @returns VGroup of row VGroups
+   */
+  getRows(): VGroup {
+    const rows: VMobject[] = [];
+    for (let row = 0; row < this._numRows; row++) {
+      rows.push(this.getRow(row));
+    }
+    return new VGroup(...rows);
+  }
+
+  /**
+   * Get all columns as a VGroup of VGroups (0-indexed, data only).
+   * Each child VGroup holds the entries of one column.
+   * @returns VGroup of column VGroups
+   */
+  getColumns(): VGroup {
+    const cols: VMobject[] = [];
+    for (let col = 0; col < this._numCols; col++) {
+      cols.push(this.getColumn(col));
+    }
+    return new VGroup(...cols);
+  }
+
+  /**
    * Get all data entries as a VGroup
    * @returns VGroup containing all data entries
    */
@@ -445,6 +471,16 @@ export class Table extends VGroup {
       }
     }
     return new VGroup(...entries);
+  }
+
+  /**
+   * Get all data entries, excluding row and column labels, as a VGroup.
+   * Equivalent to {@link getEntries}; provided to match ManimCE's
+   * get_entries_without_labels naming.
+   * @returns VGroup containing all data entries
+   */
+  getEntriesWithoutLabels(): VGroup {
+    return this.getEntries();
   }
 
   /**
@@ -462,6 +498,18 @@ export class Table extends VGroup {
   }
 
   /**
+   * Get all labels (column labels followed by row labels) as a VGroup.
+   * @returns VGroup containing every label mobject
+   */
+  getLabels(): VGroup {
+    const labels: VMobject[] = [
+      ...this._colLabels.map((m) => m as VMobject),
+      ...this._rowLabels.map((m) => m as VMobject),
+    ];
+    return new VGroup(...labels);
+  }
+
+  /**
    * Get all horizontal lines
    */
   getHorizontalLines(): VGroup {
@@ -476,6 +524,40 @@ export class Table extends VGroup {
   }
 
   /**
+   * Build a highlight rectangle sized and positioned to cover a cell, WITHOUT
+   * adding it to the table. Use {@link addHighlight} to also insert it.
+   * @param row - Row index (0-based)
+   * @param col - Column index (0-based)
+   * @param color - Highlight color. Default: YELLOW
+   * @param opacity - Fill opacity. Default: 0.3
+   * @returns The created Rectangle
+   */
+  getHighlightedCell(
+    row: number,
+    col: number,
+    color: string = YELLOW,
+    opacity: number = 0.3,
+  ): Rectangle {
+    if (row < 0 || row >= this._numRows || col < 0 || col >= this._numCols) {
+      throw new Error(`Cell (${row}, ${col}) out of bounds`);
+    }
+    const hasRowLabels = this._rowLabels.length > 0;
+    const hasColLabels = this._colLabels.length > 0;
+
+    const actualRow = hasColLabels ? row + 1 : row;
+    const actualCol = hasRowLabels ? col + 1 : col;
+
+    return new Rectangle({
+      width: this._colWidths[actualCol],
+      height: this._rowHeights[actualRow],
+      center: [this._colPositions[actualCol], this._rowPositions[actualRow], -0.01],
+      color: color,
+      fillOpacity: opacity,
+      strokeWidth: 0,
+    });
+  }
+
+  /**
    * Add a highlight rectangle behind a cell
    * @param row - Row index (0-based)
    * @param col - Column index (0-based)
@@ -484,12 +566,6 @@ export class Table extends VGroup {
    * @returns The created Rectangle for further customization
    */
   addHighlight(row: number, col: number, color: string = YELLOW, opacity: number = 0.3): Rectangle {
-    const hasRowLabels = this._rowLabels.length > 0;
-    const hasColLabels = this._colLabels.length > 0;
-
-    const actualRow = hasColLabels ? row + 1 : row;
-    const actualCol = hasRowLabels ? col + 1 : col;
-
     const key = `${row},${col}`;
 
     // Remove existing highlight if any
@@ -499,14 +575,7 @@ export class Table extends VGroup {
       this._backgroundRectangles.delete(key);
     }
 
-    const rect = new Rectangle({
-      width: this._colWidths[actualCol],
-      height: this._rowHeights[actualRow],
-      center: [this._colPositions[actualCol], this._rowPositions[actualRow], -0.01],
-      color: color,
-      fillOpacity: opacity,
-      strokeWidth: 0,
-    });
+    const rect = this.getHighlightedCell(row, col, color, opacity);
 
     this._backgroundRectangles.set(key, rect);
 
@@ -516,6 +585,51 @@ export class Table extends VGroup {
 
     this._markDirty();
     return rect;
+  }
+
+  /**
+   * Alias for {@link addHighlight}, matching ManimCE's add_highlighted_cell.
+   * @param row - Row index (0-based)
+   * @param col - Column index (0-based)
+   * @param color - Highlight color. Default: YELLOW
+   * @param opacity - Fill opacity. Default: 0.3
+   * @returns The created Rectangle for further customization
+   */
+  addHighlightedCell(
+    row: number,
+    col: number,
+    color: string = YELLOW,
+    opacity: number = 0.3,
+  ): Rectangle {
+    return this.addHighlight(row, col, color, opacity);
+  }
+
+  /**
+   * Add a filled background rectangle behind every data entry.
+   * Repeated calls replace the previous backgrounds.
+   * @param color - Background color. Default: BLACK
+   * @param opacity - Fill opacity. Default: 1
+   * @returns this
+   */
+  addBackgroundToEntries(color: string = BLACK, opacity: number = 1): this {
+    // Remove any backgrounds from a previous call (idempotent)
+    for (const existing of this._entryBackgrounds) {
+      this.remove(existing);
+    }
+    this._entryBackgrounds = [];
+
+    for (let row = 0; row < this._numRows; row++) {
+      for (let col = 0; col < this._data[row].length; col++) {
+        const rect = this.getHighlightedCell(row, col, color, opacity);
+        this._entryBackgrounds.push(rect);
+        // Add at the beginning so it stays behind entries
+        this.children.unshift(rect);
+        rect.parent = this;
+      }
+    }
+
+    this._markDirty();
+    return this;
   }
 
   /**
@@ -561,6 +675,40 @@ export class Table extends VGroup {
     return this;
   }
 
+  /**
+   * Set the color of each data row. Colors are matched to rows in order.
+   * Rows beyond the number of colors are left unchanged.
+   * @param colors - One color per row
+   * @returns this
+   */
+  setRowColors(...colors: string[]): this {
+    const count = Math.min(colors.length, this._numRows);
+    for (let row = 0; row < count; row++) {
+      for (const entry of this._data[row]) {
+        entry.setColor(colors[row]);
+      }
+    }
+    return this;
+  }
+
+  /**
+   * Set the color of each data column. Colors are matched to columns in order.
+   * Columns beyond the number of colors are left unchanged.
+   * @param colors - One color per column
+   * @returns this
+   */
+  setColumnColors(...colors: string[]): this {
+    const count = Math.min(colors.length, this._numCols);
+    for (let col = 0; col < count; col++) {
+      for (let row = 0; row < this._numRows; row++) {
+        if (col < this._data[row].length) {
+          this._data[row][col].setColor(colors[col]);
+        }
+      }
+    }
+    return this;
+  }
+
   override copy(): Table {
     const dataCopy = this._data.map((row) => row.map((entry) => entry.copy()));
     const rowLabelsCopy = this._rowLabels.map((label) => label.copy());
@@ -579,267 +727,5 @@ export class Table extends VGroup {
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
-  }
-}
-
-/**
- * Options for creating a MathTable
- */
-export interface MathTableOptions extends Omit<TableOptions, 'data' | 'rowLabels' | 'colLabels'> {
-  /** 2D array of LaTeX strings */
-  data: string[][];
-  /** Row labels as LaTeX strings */
-  rowLabels?: string[];
-  /** Column labels as LaTeX strings */
-  colLabels?: string[];
-  /** Font size for MathTex entries. Default: 36 */
-  fontSize?: number;
-  /** Color for all entries. Default: WHITE */
-  color?: string;
-}
-
-/**
- * MathTable - A table where all entries are LaTeX-rendered MathTex
- *
- * Convenience class for creating tables of mathematical expressions.
- *
- * @example
- * ```typescript
- * const table = new MathTable({
- *   data: [
- *     ['x', 'x^2', 'x^3'],
- *     ['1', '1', '1'],
- *     ['2', '4', '8'],
- *     ['3', '9', '27'],
- *   ],
- *   colLabels: ['x', 'x^2', 'x^3'],
- * });
- * ```
- */
-export class MathTable extends Table {
-  constructor(options: MathTableOptions) {
-    const { data, rowLabels, colLabels, fontSize = 36, color = WHITE, ...rest } = options;
-
-    // Convert string[][] to MathTexImage[][]
-    const mathData = data.map((row) =>
-      row.map((latex) => new MathTexImage({ latex, fontSize, color })),
-    );
-
-    // Convert row labels
-    const mathRowLabels = rowLabels?.map((latex) => new MathTexImage({ latex, fontSize, color }));
-
-    // Convert column labels
-    const mathColLabels = colLabels?.map((latex) => new MathTexImage({ latex, fontSize, color }));
-
-    super({
-      data: mathData,
-      rowLabels: mathRowLabels,
-      colLabels: mathColLabels,
-      ...rest,
-    });
-  }
-}
-
-/**
- * Options for creating a MobjectTable
- */
-export type MobjectTableOptions = TableOptions;
-
-/**
- * MobjectTable - A table that can contain any type of mobject
- *
- * This is essentially an alias for Table, but with a more descriptive name
- * when you explicitly want to mix different mobject types.
- *
- * @example
- * ```typescript
- * const circle = new Circle();
- * const square = new Square();
- * const text = new Text({ text: 'Hello' });
- *
- * const table = new MobjectTable({
- *   data: [[circle, square, text]]
- * });
- * ```
- */
-export class MobjectTable extends Table {
-  constructor(options: MobjectTableOptions) {
-    super(options);
-  }
-}
-
-/**
- * Options for creating an IntegerTable
- */
-export interface IntegerTableOptions extends Omit<
-  TableOptions,
-  'data' | 'rowLabels' | 'colLabels'
-> {
-  /** 2D array of integers */
-  data: number[][];
-  /** Row labels as integers */
-  rowLabels?: number[];
-  /** Column labels as integers */
-  colLabels?: number[];
-  /** Font size. Default: 36 */
-  fontSize?: number;
-  /** Color for all entries. Default: WHITE */
-  color?: string;
-}
-
-/**
- * IntegerTable - A table of integers
- *
- * Creates a table displaying integer values using DecimalNumber with 0 decimal places.
- *
- * @example
- * ```typescript
- * const table = new IntegerTable({
- *   data: [
- *     [1, 2, 3],
- *     [4, 5, 6],
- *     [7, 8, 9],
- *   ]
- * });
- * ```
- */
-export class IntegerTable extends Table {
-  constructor(options: IntegerTableOptions) {
-    const { data, rowLabels, colLabels, fontSize = 36, color = WHITE, ...rest } = options;
-
-    // Convert number[][] to DecimalNumber[][]
-    const intData = data.map((row) =>
-      row.map(
-        (value) =>
-          new DecimalNumber({
-            value,
-            numDecimalPlaces: 0,
-            fontSize,
-            color,
-          }),
-      ),
-    );
-
-    // Convert row labels
-    const intRowLabels = rowLabels?.map(
-      (value) =>
-        new DecimalNumber({
-          value,
-          numDecimalPlaces: 0,
-          fontSize,
-          color,
-        }),
-    );
-
-    // Convert column labels
-    const intColLabels = colLabels?.map(
-      (value) =>
-        new DecimalNumber({
-          value,
-          numDecimalPlaces: 0,
-          fontSize,
-          color,
-        }),
-    );
-
-    super({
-      data: intData,
-      rowLabels: intRowLabels,
-      colLabels: intColLabels,
-      ...rest,
-    });
-  }
-}
-
-/**
- * Options for creating a DecimalTable
- */
-export interface DecimalTableOptions extends Omit<
-  TableOptions,
-  'data' | 'rowLabels' | 'colLabels'
-> {
-  /** 2D array of decimal numbers */
-  data: number[][];
-  /** Row labels as decimal numbers */
-  rowLabels?: number[];
-  /** Column labels as decimal numbers */
-  colLabels?: number[];
-  /** Number of decimal places. Default: 2 */
-  numDecimalPlaces?: number;
-  /** Font size. Default: 36 */
-  fontSize?: number;
-  /** Color for all entries. Default: WHITE */
-  color?: string;
-}
-
-/**
- * DecimalTable - A table of decimal numbers
- *
- * Creates a table displaying decimal values with configurable precision.
- *
- * @example
- * ```typescript
- * const table = new DecimalTable({
- *   data: [
- *     [1.234, 2.567, 3.891],
- *     [4.123, 5.456, 6.789],
- *   ],
- *   numDecimalPlaces: 2
- * });
- * ```
- */
-export class DecimalTable extends Table {
-  constructor(options: DecimalTableOptions) {
-    const {
-      data,
-      rowLabels,
-      colLabels,
-      numDecimalPlaces = 2,
-      fontSize = 36,
-      color = WHITE,
-      ...rest
-    } = options;
-
-    // Convert number[][] to DecimalNumber[][]
-    const decData = data.map((row) =>
-      row.map(
-        (value) =>
-          new DecimalNumber({
-            value,
-            numDecimalPlaces,
-            fontSize,
-            color,
-          }),
-      ),
-    );
-
-    // Convert row labels
-    const decRowLabels = rowLabels?.map(
-      (value) =>
-        new DecimalNumber({
-          value,
-          numDecimalPlaces,
-          fontSize,
-          color,
-        }),
-    );
-
-    // Convert column labels
-    const decColLabels = colLabels?.map(
-      (value) =>
-        new DecimalNumber({
-          value,
-          numDecimalPlaces,
-          fontSize,
-          color,
-        }),
-    );
-
-    super({
-      data: decData,
-      rowLabels: decRowLabels,
-      colLabels: decColLabels,
-      ...rest,
-    });
   }
 }

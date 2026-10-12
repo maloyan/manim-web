@@ -38,6 +38,15 @@ export {
   type SvgGradientStop,
   type SvgGradientType,
 } from './svgGradients';
+// Pattern fills: parse <pattern> and apply the tile as a repeating texture.
+export {
+  PatternVMobject,
+  parsePatternDefs,
+  resolvePatternFill,
+  type PatternVMobjectOptions,
+  type SvgPattern,
+  type SvgPatternUnits,
+} from './svgPatterns';
 // URL loading: SVGMobject.fromUrl's injectable fetcher contract.
 export { type SvgFetcher, type SvgFetchResponse } from './svgLoader';
 // --- end svg enhancements ---

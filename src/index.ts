@@ -547,6 +547,10 @@ export {
   type MarchingCubesOptions,
   type MarchingCubesResult,
   type ScalarField3D,
+  // GPU instancing (opt-in, for large scenes)
+  InstancedMobject,
+  type InstancedMobjectOptions,
+  type InstanceTransform,
 } from './mobjects/three-d';
 
 // --- 3D model import (best-manim) ---
@@ -643,6 +647,12 @@ export {
   type SvgGradient,
   type SvgGradientStop,
   type SvgGradientType,
+  PatternVMobject,
+  parsePatternDefs,
+  resolvePatternFill,
+  type PatternVMobjectOptions,
+  type SvgPattern,
+  type SvgPatternUnits,
   type SvgFetcher,
   type SvgFetchResponse,
   // --- end svg enhancements ---

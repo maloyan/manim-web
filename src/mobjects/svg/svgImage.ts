@@ -11,6 +11,7 @@
  */
 
 import { ImageMobject } from '../image';
+import { isRenderableSvgElement } from './svgFill';
 
 /**
  * Read an `<image>` href, preferring SVG2 `href` and falling back to the
@@ -33,6 +34,7 @@ function readHref(el: Element): string | null {
 export function buildSvgImageMobjects(svg: Element): ImageMobject[] {
   const result: ImageMobject[] = [];
   for (const el of svg.querySelectorAll('image')) {
+    if (!isRenderableSvgElement(el)) continue;
     const href = readHref(el);
     if (!href) continue;
 

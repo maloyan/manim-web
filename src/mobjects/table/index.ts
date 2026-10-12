@@ -5,16 +5,17 @@
  * supporting various entry types including text, math, and arbitrary mobjects.
  */
 
-// Table - Base table class and specialized variants
+// Table - Base table class
+export { Table, type TableOptions } from './Table';
+
+// Table variants - specialized subclasses built from simple inputs
 export {
-  Table,
   MathTable,
   MobjectTable,
   IntegerTable,
   DecimalTable,
-  type TableOptions,
   type MathTableOptions,
   type MobjectTableOptions,
   type IntegerTableOptions,
   type DecimalTableOptions,
-} from './Table';
+} from './TableVariants';
