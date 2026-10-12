@@ -167,6 +167,18 @@ export {
 export { Renderer, type RendererOptions, type IRenderer } from './core/Renderer';
 export { NullRenderer } from './core/NullRenderer';
 export {
+  PostProcessingPipeline,
+  setPostProcessingModules,
+  setPostProcessingModulesLoader,
+  type BloomOptions,
+  type VignetteOptions,
+  type DepthOfFieldOptions,
+  type PassConfig,
+  type ComposerLike,
+  type PostProcessingModules,
+  type PostProcessingModulesLoader,
+} from './core/PostProcessing';
+export {
   SceneStateManager,
   serializeMobject,
   deserializeMobject,
@@ -1245,6 +1257,13 @@ export { SelectionManager, type SelectionManagerOptions } from './interaction';
 
 // Interaction - Camera Controls
 export { OrbitControls, type OrbitControlsOptions } from './interaction';
+export {
+  PanZoomControls,
+  makePanZoomControls,
+  type PanZoomControlsOptions,
+  type PanZoomCamera,
+  type PanZoomBounds,
+} from './interaction';
 
 // --- explorable interactivity (best-manim) ---
 export {
