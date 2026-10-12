@@ -1042,6 +1042,33 @@ export {
   type BondRender,
 } from './mobjects/chemistry';
 
+// Biology mobjects
+export {
+  DNAHelix,
+  Cell,
+  AminoAcidChain,
+  baseColor,
+  complementOf,
+  normalizeBase,
+  organelleColor,
+  residueColor,
+  DNA_BASE_COLORS,
+  BASE_COMPLEMENT,
+  ORGANELLE_COLORS,
+  RESIDUE_COLORS,
+  DEFAULT_BIOLOGY_COLOR,
+  type BaseSymbol,
+  type CellShape,
+  type DNAHelixOptions,
+  type BasePairRender,
+  type OrganelleSpec,
+  type CellOptions,
+  type OrganelleRender,
+  type AminoAcidChainOptions,
+  type ResidueRender,
+  type StrandPair,
+} from './mobjects/biology';
+
 // Animations
 export { Animation, type AnimationOptions, type RateFunction } from './animation/Animation';
 export { Timeline, type PositionParam } from './animation/Timeline';
