@@ -1514,6 +1514,24 @@ export {
   type SliderOptions,
 } from './interaction';
 
+// --- state machine (input-driven, Rive-style) ---
+export {
+  StateMachine,
+  GuardBuilder,
+  when,
+  allOf,
+  anyOf,
+  type InputValue,
+  type InputKind,
+  type InputsSnapshot,
+  type Guard,
+  type StateContext,
+  type StateAction,
+  type StateConfig,
+  type TransitionConfig,
+  type StateMachineOptions,
+} from './interaction';
+
 // --- dynamic matrix (best-manim) ---
 export {
   MatrixTracker,
