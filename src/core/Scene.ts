@@ -98,6 +98,9 @@ export class Scene {
   private _backgroundTimerId: ReturnType<typeof setInterval> | null = null;
   private _lastFrameTime: number = 0;
   private _playPromiseResolve: (() => void) | null = null;
+  // Guards the render-error log so a failing `_render()` logs at most once per
+  // play instead of once per frame. Reset when a render loop starts.
+  private _renderErrorLogged: boolean = false;
   protected _disposed: boolean = false;
   protected _waitCleanups: Array<() => void> = [];
 
@@ -1238,7 +1241,17 @@ export class Scene {
       this._multiCamera.update(dt);
     }
 
-    this._render();
+    try {
+      this._render();
+    } catch (err) {
+      // A render error must not freeze the scene. Log once per play so the
+      // failure is visible, and keep the timeline/promise lifecycle alive so
+      // play() still settles instead of hanging forever on a frozen frame.
+      if (!this._renderErrorLogged) {
+        logger.error('Scene: render error during animation frame:', err);
+        this._renderErrorLogged = true;
+      }
+    }
     this._checkFinished();
   }
 
@@ -1249,6 +1262,9 @@ export class Scene {
    * when the tab is in the background (rAF is suspended).
    */
   private _startRenderLoop(): void {
+    // Fresh play/wait/resume: let a render error log again (once per play).
+    this._renderErrorLogged = false;
+
     if (this._animationFrameId !== null) return;
     if (this.isHeadless && this._backgroundTimerId !== null) return;
 
@@ -1270,6 +1286,12 @@ export class Scene {
           logger.error('Scene: headless render loop error, stopping:', err);
           this._stopRenderLoop();
           this._isPlaying = false;
+          // Settle any pending play() promise so `await scene.play()` does not
+          // hang forever after the loop stops on a non-render error.
+          if (this._playPromiseResolve) {
+            this._playPromiseResolve();
+            this._playPromiseResolve = null;
+          }
         }
       }, 16);
       return;
