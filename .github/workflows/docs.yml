@@ -56,7 +56,7 @@ jobs:
           # typedoc over the full src tree (incl. the THREE namespace) pushes
           # the build past Node's default old-space limit on runners (OOM,
           # exit 134); 6144 became insufficient once THREE was re-exported
-          NODE_OPTIONS: --max-old-space-size=8192
+          NODE_OPTIONS: --max-old-space-size=12288
 
       - name: Assert typia transform applied in docs bundle
         run: bash scripts/assert-docs-typia-transform.sh
