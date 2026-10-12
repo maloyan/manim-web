@@ -752,6 +752,22 @@ export {
   type Complex,
 } from './mobjects/value-tracker';
 
+// Reactive signal graph (lazy, memoized, auto-tracked computed values)
+export {
+  createSignal,
+  createComputed,
+  createEffect,
+  batch,
+  untrack,
+  bindSignalToTracker,
+  trackerToSignal,
+  type Accessor,
+  type Signal,
+  type Computed,
+  type EffectHandle,
+  type NumericValueHolder,
+} from './core/signals';
+
 // Matrix
 export {
   Matrix,
@@ -1514,6 +1530,24 @@ export {
   type SliderOptions,
 } from './interaction';
 
+// --- state machine (input-driven, Rive-style) ---
+export {
+  StateMachine,
+  GuardBuilder,
+  when,
+  allOf,
+  anyOf,
+  type InputValue,
+  type InputKind,
+  type InputsSnapshot,
+  type Guard,
+  type StateContext,
+  type StateAction,
+  type StateConfig,
+  type TransitionConfig,
+  type StateMachineOptions,
+} from './interaction';
+
 // --- dynamic matrix (best-manim) ---
 export {
   MatrixTracker,
@@ -1845,6 +1879,23 @@ export {
   type BindUrlStateOptions,
   type UrlStateBinding,
   type UrlStateController,
+  defineParametrizedScene,
+  resolveProps,
+  renderParametrized,
+  propsFromUrl,
+  type PropsRecord,
+  type PropTypeTag,
+  type PropsSchema,
+  type DataFetcher,
+  type SceneMetadata,
+  type MetadataContext,
+  type CalculateMetadataResult,
+  type CalculateMetadata,
+  type SceneBuilder,
+  type ParametrizedSceneDefinition,
+  type ResolvedMetadata,
+  type ParametrizedRenderResult,
+  type RenderParametrizedOptions,
 } from './serialization';
 
 // --- geo maps (best-manim) ---

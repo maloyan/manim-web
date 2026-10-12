@@ -54,3 +54,23 @@ export type {
   UrlStateBinding,
   UrlStateController,
 } from './urlState';
+
+export {
+  defineParametrizedScene,
+  resolveProps,
+  renderParametrized,
+  propsFromUrl,
+  type PropsRecord,
+  type PropTypeTag,
+  type PropsSchema,
+  type DataFetcher,
+  type SceneMetadata,
+  type MetadataContext,
+  type CalculateMetadataResult,
+  type CalculateMetadata,
+  type SceneBuilder,
+  type ParametrizedSceneDefinition,
+  type ResolvedMetadata,
+  type ParametrizedRenderResult,
+  type RenderParametrizedOptions,
+} from './parametrized';
