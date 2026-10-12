@@ -769,6 +769,17 @@ export {
   // Layout algorithms
   computeLayout,
   computeCircularLayout,
+  springLayoutStep,
+  randomSpringPositions,
+  springForceConstant,
+  DEFAULT_SPRING_COOLING,
+  type SpringPoint,
+  type SpringStepParams,
+  type SpringStepResult,
+  // Animated (live) force-directed layout
+  ForceDirectedLayout,
+  forceDirectedLayout,
+  type ForceDirectedLayoutOptions,
   // Helper functions for common graph types
   completeGraph,
   cycleGraph,
