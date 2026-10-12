@@ -1156,6 +1156,28 @@ export {
   type AnimationGroupOptions,
 } from './animation/AnimationGroup';
 export { LaggedStart, laggedStart, type LaggedStartOptions } from './animation/LaggedStart';
+
+// Kinetic-typography preset animations (per-glyph text effects)
+export {
+  resolveGlyphs,
+  typeOn,
+  fadeInByLetter,
+  fadeInByWord,
+  riseByLetter,
+  scalePopByLetter,
+  waveLetters,
+  WaveLetters,
+  tracking,
+  spreadOut,
+  LetterSpacing,
+  glitchIn,
+  GlitchIn,
+  type KineticTypographyOptions,
+  type RiseByLetterOptions,
+  type WaveLettersOptions,
+  type LetterSpacingOptions,
+  type GlitchInOptions,
+} from './animation/text';
 export { Succession, succession, type SuccessionOptions } from './animation/Succession';
 export {
   LaggedStartMap,
