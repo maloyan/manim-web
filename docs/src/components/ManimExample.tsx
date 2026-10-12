@@ -30,15 +30,7 @@ const placeholderStyle: React.CSSProperties = {
  * of simultaneous context requests that can cause GPU OOM).  The queue is
  * released as soon as the scene is created, allowing multiple scenes to
  * animate concurrently.
- *
- * Each waiter is guarded by a watchdog so a scene that fails to release the
- * queue (an error on an unexpected path, a race during unmount) can never
- * permanently block every later example from initializing — which would
- * leave the rest of the page as black boxes.  Off-screen scenes are disposed
- * by the IntersectionObserver, so the watchdog can only ever let a small,
- * bounded number of contexts coexist briefly.
  */
-const INIT_WATCHDOG_MS = 5000;
 let initQueue: Array<() => void> = [];
 let initRunning = false;
 
@@ -48,26 +40,17 @@ function enqueueInit(): Promise<void> {
     return Promise.resolve();
   }
   return new Promise((resolve) => {
-    let fired = false;
-    const go = () => {
-      if (fired) return;
-      fired = true;
-      resolve();
-    };
-    initQueue.push(go);
-    // Never let a waiter block forever if the holder never releases.
-    setTimeout(go, INIT_WATCHDOG_MS);
+    initQueue.push(resolve);
   });
 }
 
 function dequeueInit(): void {
-  // Skip waiters that already self-released via their watchdog.
-  while (initQueue.length > 0) {
+  if (initQueue.length > 0) {
     const next = initQueue.shift()!;
     next();
-    return;
+  } else {
+    initRunning = false;
   }
-  initRunning = false;
 }
 
 /** Release the queue exactly once via a shared flag. */
@@ -103,40 +86,22 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
   const queueFlagRef = useRef<{ released: boolean } | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Visibility detection.  The IntersectionObserver alone proved unreliable
-  // inside the Docusaurus router — on the long examples page only the first
-  // example (caught by the initial manual check) ever activated, leaving the
-  // other ~38 as permanent black boxes.  A throttled scroll/resize fallback
-  // re-checks the viewport directly so every example activates on scroll.
+  // Visibility detection — IntersectionObserver with manual fallback.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
 
-    const update = () => setIsVisible(isElementInViewport(el));
-    update();
+    // Manual check — IntersectionObserver may not fire its initial callback
+    // immediately when used inside Docusaurus BrowserOnly.
+    if (isElementInViewport(el)) {
+      setIsVisible(true);
+    }
 
     const observer = new IntersectionObserver(([entry]) => setIsVisible(entry.isIntersecting), {
       threshold: [0, 0.1],
     });
     observer.observe(el);
-
-    let scheduled = false;
-    const onScroll = () => {
-      if (scheduled) return;
-      scheduled = true;
-      requestAnimationFrame(() => {
-        scheduled = false;
-        update();
-      });
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-    };
+    return () => observer.disconnect();
   }, []);
 
   // Scene lifecycle — loops while visible.
