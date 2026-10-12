@@ -1,0 +1,319 @@
+---
+title: New in 0.26
+sidebar_label: New in 0.26
+---
+
+import RadarChartExample from '@site/src/components/examples/RadarChartExample';
+import TreemapExample from '@site/src/components/examples/TreemapExample';
+import ChordDiagramExample from '@site/src/components/examples/ChordDiagramExample';
+import WaterfallChartExample from '@site/src/components/examples/WaterfallChartExample';
+import StackedBarChartExample from '@site/src/components/examples/StackedBarChartExample';
+import AreaChartExample from '@site/src/components/examples/AreaChartExample';
+import StepChartExample from '@site/src/components/examples/StepChartExample';
+import CalendarHeatmapExample from '@site/src/components/examples/CalendarHeatmapExample';
+
+The 0.26 release adds a data-visualization chart suite under
+`src/mobjects/graphing`. Each chart is a `VGroup` or `Group`, so `Create` and
+`FadeIn` animate it. Each section below lists the real exported API, a
+copy-paste snippet, and a runnable example.
+
+## RadarChart
+
+`RadarChart` draws N axes that radiate from a shared center, one per category,
+spaced at `2*pi/N`. Each value plots at a radius proportional to the value along
+its axis, and the points of a series connect into a closed polygon. Several
+series overlay on the same axes, each with its own color and a semi-transparent
+fill. Negative values clamp to the center; a value equal to `maxValue` sits on
+the outer ring.
+
+<RadarChartExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { RadarChart, Create } from 'manim-web';
+
+const chart = new RadarChart({
+  data: [
+    [4, 2, 5, 1, 3],
+    [1, 5, 2, 4, 2],
+  ], // one series is number[], several series are number[][]
+  categories: ['Speed', 'Power', 'Range', 'Cost', 'Weight'],
+  radius: 2.6,
+  maxValue: 5, // the value that reaches the outer ring (default: the data max)
+  numRings: 5, // concentric grid rings
+  seriesColors: ['#58c4dd', '#fc6255'], // single color or an array that cycles
+  fillOpacity: 0.3,
+});
+scene.play(new Create(chart));
+
+chart.getSeriesPolygon(0); // the first series polygon
+chart.getPointForValue(0, 2); // the plotted point for series 0, axis 2
+```
+
+</details>
+
+Options also include `startAngle`, `strokeWidth`, `showGrid`, `showLabels`,
+`labelFontSize`, and `gridColor`. Accessors are `getData()`, `getNumAxes()`,
+`getNumSeries()`, `getMaxValue()`, `getOuterRadius()`, `getAxisAngle(i)`,
+`getAxes()`, `getGrid()`, `getSeries()`, and `getLabels()`.
+
+## Treemap
+
+`Treemap` is a squarified treemap of nested rectangles. Each node of a value
+hierarchy becomes a `Rectangle` sized in proportion to its value, and children
+tile their parent's rectangle, so a child always sits inside its parent. Tiles
+are colored by top-level category or by depth. Empty, single-node, and
+zero-value inputs produce no error.
+
+<TreemapExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Treemap } from 'manim-web';
+
+const tree = new Treemap({
+  data: {
+    name: 'root',
+    children: [
+      { name: 'TypeScript', value: 42 },
+      { name: 'Rust', value: 23 },
+      {
+        name: 'Python',
+        children: [
+          { name: 'ml', value: 10 },
+          { name: 'web', value: 7 },
+        ],
+      },
+    ],
+  },
+  width: 9,
+  height: 5,
+  colorBy: 'category', // or 'depth'
+  padding: 0.06, // inset between a parent tile and its children
+});
+scene.add(tree);
+
+tree.getTile([2, 0]); // the 'ml' rectangle, by index path
+```
+
+</details>
+
+The standalone `computeTreemapLayout(node, rect)` returns the plain tile layout
+without building mobjects. Options also include `colors`, `fillOpacity`,
+`strokeColor`, `strokeWidth`, `showRoot`, `showInternalNodes`, `showLabels`,
+`labelFontSize`, and `minLabelSize`.
+
+## ChordDiagram
+
+`ChordDiagram` draws arcs around a circle linked by proportional ribbons. Each
+group becomes an arc whose angle is proportional to the group's total flow, and
+each non-zero flow pair becomes a ribbon whose span angles are proportional to
+the flow values. Pass a square `matrix`, or a `flows` link-list with a
+`groupCount`.
+
+<ChordDiagramExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ChordDiagram } from 'manim-web';
+
+const chord = new ChordDiagram({
+  matrix: [
+    [0, 5, 2, 1],
+    [5, 0, 3, 2],
+    [2, 3, 0, 4],
+    [1, 2, 4, 0],
+  ], // matrix[i][j] is the flow from group i to group j
+  labels: ['A', 'B', 'C', 'D'],
+  radius: 2.3,
+  ringWidth: 0.25,
+  gap: 0.05, // angular gap between groups, in radians
+});
+scene.add(chord);
+
+chord.getArc(0); // the first group arc
+```
+
+</details>
+
+The `chordMatrixFromFlows(flows, groupCount)` helper turns a link list into a
+matrix. Options also include `startAngle`, `colors`, `arcOpacity`,
+`ribbonOpacity`, `showLabels`, `labelFontSize`, and `labelBuff`.
+
+## WaterfallChart
+
+`WaterfallChart` shows sequential contributions (deltas) left to right. Each bar
+starts at the running total of the bars before it, so the chart reads as a
+stepwise build-up. Positive and negative contributions get different colors, and
+an optional total bar spans 0 to the sum.
+
+<WaterfallChartExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { WaterfallChart, FadeIn } from 'manim-web';
+
+const chart = new WaterfallChart({
+  values: [1200, 340, -180, 90, -120], // sequential deltas, left to right
+  labels: ['Start', 'Sales', 'Refunds', 'Add-ons', 'Fees'],
+  showTotal: true, // append a bar spanning 0 to the sum
+  totalLabel: 'Net',
+  increaseColor: '#83c167',
+  decreaseColor: '#fc6255',
+  height: 5,
+  width: 9,
+});
+scene.play(new FadeIn(chart));
+```
+
+</details>
+
+Options also include `showConnectors`, `totalColor`, `barWidth`, `barGap`,
+`yRange`, `axisColor`, `includeYTicks`, `includeYLabels`, `showLabels`,
+`labelFontSize`, and `yLabelFontSize`.
+
+## StackedBarChart
+
+`StackedBarChart` is a multi-series bar chart. In `stacked` mode each category
+shows its series piled on top of one another, so bar `i` sits on the cumulative
+sum of the series below it. In `grouped` mode the series sit side by side within
+each category.
+
+<StackedBarChartExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { StackedBarChart, FadeIn } from 'manim-web';
+
+const chart = new StackedBarChart({
+  values: [
+    [3, 7, 2],
+    [5, 4, 6],
+  ], // values[series][category]
+  mode: 'stacked', // or 'grouped'
+  xLabels: ['Q1', 'Q2', 'Q3'],
+  seriesNames: ['2023', '2024'],
+  showLegend: true,
+  height: 5,
+  width: 8,
+});
+scene.play(new FadeIn(chart));
+```
+
+</details>
+
+Options also include `slotWidth`, `categoryGap`, `seriesGap`, `seriesColors`,
+`fillOpacity`, `strokeWidth`, `xLabelFontSize`, `yRange`, and `axisColor`. The
+shared color helpers `DEFAULT_SERIES_COLORS`, `cycleColor`, and `toColorList`
+back every multi-series chart.
+
+## AreaChart
+
+`AreaChart` draws one or more series as filled areas under a line. Each series
+becomes a semi-transparent fill from its line down to the baseline, plus the line
+itself. With `stacked`, each area rests on the cumulative sum of the series
+below it.
+
+<AreaChartExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { AreaChart, FadeIn } from 'manim-web';
+
+const chart = new AreaChart({
+  values: [
+    [1, 3, 2, 5, 4, 6],
+    [2, 1, 4, 3, 5, 3],
+  ], // values[series][point]
+  stacked: true,
+  seriesNames: ['Reads', 'Writes'],
+  xLength: 9,
+  yLength: 5,
+});
+scene.play(new FadeIn(chart));
+```
+
+</details>
+
+Options also include `xValues`, `baseline`, `seriesColors`, `fillOpacity`,
+`lineWidth`, an existing `axes` to plot onto, `xRange`, `yRange`, and
+`axisColor`.
+
+## StepChart
+
+`StepChart` draws a line graph as horizontal and vertical steps. Each series
+holds its value across an interval, then jumps to the next value. The jump falls
+`before`, `after`, or at the `center` of each interval, which suits discrete or
+state-over-time data.
+
+<StepChartExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { StepChart, Create } from 'manim-web';
+
+const chart = new StepChart({
+  values: [
+    [0, 2, 2, 5, 3, 4],
+    [1, 1, 3, 3, 2, 5],
+  ],
+  stepMode: 'after', // 'before' | 'after' | 'center'
+  showDots: true,
+  xLength: 9,
+  yLength: 5,
+});
+scene.play(new Create(chart));
+```
+
+</details>
+
+Options also include `xValues`, `seriesColors`, `lineWidth`, `dotRadius`, an
+existing `axes`, `xRange`, `yRange`, and `axisColor`.
+
+## CalendarHeatmap
+
+`CalendarHeatmap` is a GitHub-style contribution grid. Each day is a cell
+colored by its value across a palette mapped over the value domain. Days with no
+datum use `emptyColor`. The default palette is the GitHub green ramp,
+`GITHUB_GREENS`.
+
+<CalendarHeatmapExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { CalendarHeatmap, FadeIn } from 'manim-web';
+
+const heatmap = new CalendarHeatmap({
+  data: [
+    { date: '2024-01-01', value: 3 },
+    { date: '2024-01-02', value: 0 },
+    { date: '2024-01-03', value: 5 },
+    // ...one { date, value } per day
+  ],
+  cellSize: 0.32,
+  weekStartsOn: 0, // 0 = Sunday (GitHub), 1 = Monday
+  useOklab: true, // blend the palette in perceptually-uniform Oklab space
+});
+scene.play(new FadeIn(heatmap));
+```
+
+</details>
+
+Options also include `startDate`, `endDate`, `cellGap`, `palette`, `domain`,
+`emptyColor`, `showMonthLabels`, `monthLabelFontSize`, and `labelColor`.

@@ -18,6 +18,8 @@ const sidebars: SidebarsConfig = {
         'examples/release-0-18-0-19',
         'examples/release-0-20-0-22',
         'examples/release-0-23-0-25',
+        'examples/release-0-26',
+        'examples/release-0-27-0-28',
       ],
     },
     {
