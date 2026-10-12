@@ -1,0 +1,353 @@
+---
+title: New in 0.16 and 0.17
+sidebar_label: New in 0.16 & 0.17
+---
+
+import ContourPlotExample from '@site/src/components/examples/ContourPlotExample';
+import HeatMapExample from '@site/src/components/examples/HeatMapExample';
+import IsosurfaceExample from '@site/src/components/examples/IsosurfaceExample';
+import WeightedGraphExample from '@site/src/components/examples/WeightedGraphExample';
+import OklabGradientExample from '@site/src/components/examples/OklabGradientExample';
+import StreamLinesRk4Example from '@site/src/components/examples/StreamLinesRk4Example';
+
+Features added in the 0.16 and 0.17 releases. Each section lists the real
+exported API, a copy-paste snippet, and a runnable example where the feature
+is visual.
+
+## Accessibility (a11y) layer
+
+manim-web has an accessibility layer with three capabilities. All three are
+**opt-in** and inert by default, so they never change default playback or
+output. Every DOM access is guarded, so the module is safe to import in Node,
+SSR, and test environments.
+
+### WebVTT captions from voiceover timings
+
+A [`Voiceover`](/api/classes/Voiceover) carries a start and end time for each
+phrase. `voiceoverToVTT` turns those timings into a standards-valid WebVTT
+caption string. `attachCaptionTrack` wraps the string in a blob URL and adds it
+to an HTML `<video>` as a `<track kind="captions">`, so caption and
+screen-reader users can follow the narration.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { voiceoverToVTT, attachCaptionTrack } from 'manim-web';
+
+// Each cue is { text, start, end } in seconds from the start of the narration.
+const vtt = voiceoverToVTT([
+  { text: 'First, we draw a circle.', start: 0, end: 2.5 },
+  { text: 'Then we transform it into a square.', start: 2.5, end: 5 },
+]);
+
+// vtt is now a valid .vtt string. Attach it to a rendered video.
+const video = document.querySelector('video');
+const handle = attachCaptionTrack(video, vtt, { label: 'English', language: 'en' });
+
+// attachCaptionTrack returns null off the browser (no DOM). Clean up later:
+handle?.remove();
+```
+
+</details>
+
+`formatVttTimestamp(seconds)` is also exported if you build caption files by hand.
+
+### Respect `prefers-reduced-motion`
+
+Some viewers set their operating system to reduce motion. When the app opts in
+with `setReducedMotion` **and** the OS reports
+`(prefers-reduced-motion: reduce)`, animations collapse to a short run time, so
+the scene jumps to its final state instead of playing.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { setReducedMotion, applyReducedMotion, Create, Circle } from 'manim-web';
+
+// Opt in once, and set the collapsed run time (seconds).
+setReducedMotion({ enabled: true, runTime: 0 });
+
+// Collapse a batch of animations before playing them. Does nothing unless the
+// OS prefers reduced motion, so it is safe to call unconditionally.
+const animations = [new Create(new Circle())];
+applyReducedMotion(animations);
+await scene.play(...animations);
+```
+
+</details>
+
+`prefersReducedMotion()`, `shouldReduceMotion()`, `reducedRunTime(seconds)`,
+`isReducedMotionEnabled()`, and `resetReducedMotion()` are also exported for
+finer control.
+
+### ARIA live-region narration
+
+A screen-reader user cannot see a scene change. `AriaNarrator` creates a
+visually hidden `aria-live` region and speaks short messages through it.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { AriaNarrator, createLiveRegion } from 'manim-web';
+
+const narrator = new AriaNarrator({ assertive: false });
+
+// narrator.available is false off the browser; every method is a safe no-op.
+if (narrator.available) {
+  narrator.announce('Scene one. A blue square grows from the center.');
+}
+
+// Clean up when the scene ends.
+narrator.destroy();
+
+// Low-level helper if you manage the region yourself:
+const region = createLiveRegion({ id: 'my-live-region' });
+```
+
+</details>
+
+---
+
+## Perceptual color interpolation (Oklab / Oklch)
+
+The default color blend runs in sRGB space, which is not perceptually uniform,
+so a straight blend of two saturated colors passes through a muddy, desaturated
+midpoint. `interpolateColorOklab` and `interpolateColorOklch` blend in a
+perceptually-uniform space, so the midpoint stays bright and vivid.
+
+The example below blends blue to yellow. The top row is the default sRGB blend;
+the bottom row is the Oklab blend. Notice the gray dip in the middle of the top
+row that the bottom row avoids.
+
+<OklabGradientExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { interpolateColor, interpolateColorOklab, interpolateColorOklch } from 'manim-web';
+
+// alpha of 0 returns the first color, 1 returns the second.
+interpolateColor('#0000ff', '#ffff00', 0.5); // sRGB midpoint (default, unchanged)
+interpolateColorOklab('#0000ff', '#ffff00', 0.5); // perceptual midpoint
+interpolateColorOklch('#ff0000', '#00ff00', 0.5); // hue sweep: stays through orange
+```
+
+</details>
+
+The default sRGB interpolation does **not** change. These helpers are opt-in.
+Conversions `colorToOklab` / `oklabToColor`, `colorToOklch` / `oklchToColor`,
+and `oklabToOklch` / `oklchToOklab` are also exported, along with the `Oklab`
+and `Oklch` types. Oklch blends hue along the shortest arc of the color circle,
+so a red-to-green blend stays saturated through orange.
+
+---
+
+## Streamlines: RK4 integrator and seeded flow
+
+`StreamLines` traces a vector field. Two new options were added. (The
+`VectorField`, `ArrowVectorField`, and `StreamLines` classes already existed.)
+
+- `integrator: 'euler' | 'rk4'` chooses the numerical scheme. The default
+  `'euler'` is the historical first-order scheme and is unchanged. `'rk4'` is
+  classical fourth-order Runge-Kutta: four field samples per step, for a far
+  more accurate trace on curved flows.
+- `startAnimation({ seed })` makes the per-line start phases reproducible. With
+  a `seed`, a seeded PRNG replaces `Math.random`, so the flow animation is
+  identical run to run. Without a seed, the phases stay nondeterministic, as
+  before.
+
+The example below traces a rotational field `(x, y) -> (-y, x)` with `'rk4'`
+and a fixed seed.
+
+<StreamLinesRk4Example />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { StreamLines } from 'manim-web';
+
+const streamLines = new StreamLines({
+  func: (x, y) => [-y, x], // rotational field
+  xRange: [-4, 4, 0.5],
+  yRange: [-4, 4, 0.5],
+  integrator: 'rk4', // fourth-order accuracy (default is 'euler')
+  strokeWidth: 3,
+});
+scene.add(streamLines);
+
+// A seed makes the flow reproducible.
+streamLines.startAnimation({ warmUp: false, flowSpeed: 1.5, seed: 42 });
+await scene.wait(streamLines.virtualTime / 1.5);
+```
+
+</details>
+
+---
+
+## 3D isosurfaces and scalar fields
+
+### ImplicitSurface
+
+`ImplicitSurface` renders the level set `f(x, y, z) = isoLevel` of a 3D scalar
+field with marching cubes. An arbitrary smooth field can be shown without a
+parametrization. It reuses the Surface3D depth conventions, so a translucent
+isosurface occludes itself correctly. The example is a torus; drag to orbit.
+
+<IsosurfaceExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ImplicitSurface } from 'manim-web';
+
+// A unit sphere: x^2 + y^2 + z^2 = 1.
+const sphere = new ImplicitSurface({
+  func: (x, y, z) => x * x + y * y + z * z,
+  isoLevel: 1,
+  resolution: 32,
+});
+
+// A torus implicit surface.
+const torus = new ImplicitSurface({
+  func: (x, y, z) => {
+    const q = Math.sqrt(x * x + y * y) - 1.3;
+    return q * q + z * z;
+  },
+  isoLevel: 0.2,
+  color: '#d147bd',
+  opacity: 0.85,
+});
+scene.add(torus); // use a ThreeDScene
+```
+
+</details>
+
+### HeatMap
+
+`HeatMap` encodes a 2D scalar field `g(x, y)` as a colored plane in the
+`z = 0` plane. The field is sampled on a grid and each vertex is colored through
+a colormap; the GPU interpolates across each cell for a smooth gradient. Set
+`useOklab: true` to blend the palette in perceptual space. The example shows two
+Gaussian bumps viewed from above.
+
+<HeatMapExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { HeatMap, INFERNO } from 'manim-web';
+
+const heat = new HeatMap({
+  func: (x, y) => Math.exp(-(x * x + y * y) / 4),
+  xRange: [-3, 3],
+  yRange: [-3, 3],
+  resolution: 96,
+  domain: [0, 1], // value range mapped across the palette; auto if omitted
+  palette: INFERNO, // default is a viridis-like palette
+  useOklab: true, // blend the palette perceptually
+});
+scene.add(heat); // use a ThreeDScene
+```
+
+</details>
+
+### ContourPlot
+
+`ContourPlot` draws the iso-contour lines of a 2D scalar field `g(x, y)` with
+marching squares. Each requested level becomes a stroked path, so nested loops
+and disjoint contours all render. Pass `axes` to map the contours onto an
+`Axes`. The example contours a saddle field `x^2 - y^2`.
+
+<ContourPlotExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ContourPlot } from 'manim-web';
+
+// Concentric circles: g = x^2 + y^2 contoured at 1, 4, 9.
+const contours = new ContourPlot({
+  func: (x, y) => x * x + y * y,
+  levels: [1, 4, 9],
+  xRange: [-4, 4],
+  yRange: [-4, 4],
+  color: '#58c4dd',
+  strokeWidth: 2,
+});
+scene.add(contours);
+```
+
+</details>
+
+### Colormaps
+
+Three colormaps are exported: `VIRIDIS`, `INFERNO`, and `COOLWARM`. Each is an
+ordered array of hex stops. `sampleColormap(palette, t)` returns the color at
+`t` in `0..1`; `valueToColor(value, min, max, palette)` maps a value in a range.
+Both take an optional `useOklab` flag.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { sampleColormap, valueToColor, VIRIDIS, COOLWARM } from 'manim-web';
+
+sampleColormap(VIRIDIS, 0.5); // the middle of the viridis palette
+sampleColormap(VIRIDIS, 0.5, true); // blended in Oklab space
+valueToColor(7, 0, 10, COOLWARM); // map the value 7 in the range 0..10
+```
+
+</details>
+
+---
+
+## Graph weighted-edge labels and self-loops
+
+`Graph` and `DiGraph` now render edge weights and labels, and support self-loop
+edges (an edge from a vertex to itself). The example is an undirected weighted
+graph with one self-loop on vertex A and one text label.
+
+<WeightedGraphExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Graph, Create } from 'manim-web';
+
+const graph = new Graph({
+  vertices: ['A', 'B', 'C'],
+  // ['A', 'A'] is a self-loop: an edge from a vertex to itself.
+  edges: [
+    ['A', 'B'],
+    ['B', 'C'],
+    ['A', 'A'],
+  ],
+  layout: 'circular',
+  showLabels: true,
+  // Edge keys are "source--target" (sorted) for an undirected Graph,
+  // and "source->target" for a DiGraph.
+  edgeConfig: {
+    'A--B': { weight: 7 }, // a number renders as its string
+    'B--C': { label: 'cut' }, // an explicit label wins over weight
+    'A--A': { weight: 1, style: { selfLoopRadius: 0.4 } },
+  },
+});
+await scene.play(new Create(graph));
+```
+
+</details>
+
+Per-edge style options for a label are `labelFontSize`, `labelColor`, and
+`labelBuff` (the gap between a straight edge and its label); a self-loop uses
+`selfLoopRadius`. A `DiGraph` draws a directed self-loop with a tip. Use
+`graph.getEdgeLabelMobject(source, target)` to reach a label, and
+`graph.isSelfLoop(source, target)` to test an edge.
