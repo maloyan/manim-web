@@ -14,6 +14,7 @@ const sidebars: SidebarsConfig = {
         'examples/3d-scenes',
         'examples/new',
         'examples/release-0-11-0-12',
+        'examples/release-0-16-0-17',
       ],
     },
     {
