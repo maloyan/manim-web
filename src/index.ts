@@ -131,6 +131,22 @@ export {
 } from './audio/AudioAnalyzer';
 // --- end audio-reactive ---
 
+// --- MIDI input (best-manim, browser-unique) ---
+export {
+  MidiInput,
+  isMidiSupported,
+  type MidiInputOptions,
+  type MidiConnectOptions,
+  type MidiBindOptions,
+  type MidiAccessLike,
+  type MidiInputLike,
+  type MidiMessageLike,
+  type MidiNoteListener,
+  type MidiNoteOffListener,
+  type MidiControlListener,
+} from './audio/MidiInput';
+// --- end MIDI input ---
+
 // --- accessibility (a11y) layer (browser-unique) ---
 // Three opt-in capabilities: WebVTT captions from voiceover timings,
 // prefers-reduced-motion respect, and ARIA live-region narration. All are
