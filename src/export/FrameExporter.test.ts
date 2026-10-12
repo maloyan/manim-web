@@ -34,6 +34,33 @@ function createMockScene(overrides?: Record<string, unknown>) {
   } as any;
 }
 
+/** Build a stub WebGL renderer that records clear-alpha calls. */
+function createAlphaRenderer(options?: { alpha?: boolean; clearAlpha?: number }) {
+  let clearAlpha = options?.clearAlpha ?? 1;
+  const setClearAlpha = vi.fn((value: number) => {
+    clearAlpha = value;
+  });
+  const renderer = {
+    getClearAlpha: () => clearAlpha,
+    setClearAlpha,
+    getContext: () => ({
+      getContextAttributes: () => ({ alpha: options?.alpha ?? true }),
+    }),
+  };
+  return { renderer, setClearAlpha };
+}
+
+/** Build a mock scene that exposes an alpha-capable WebGL renderer. */
+function createAlphaScene(options?: { alpha?: boolean; overrides?: Record<string, unknown> }) {
+  const { renderer, setClearAlpha } = createAlphaRenderer({ alpha: options?.alpha });
+  const scene = createMockScene({
+    renderer: { getThreeRenderer: () => renderer },
+    render: vi.fn(),
+    ...options?.overrides,
+  });
+  return { scene, renderer, setClearAlpha };
+}
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -86,6 +113,51 @@ describe('exportFramePNG', () => {
 });
 
 // ---------------------------------------------------------------------------
+// exportFramePNG — transparent (alpha)
+// ---------------------------------------------------------------------------
+
+describe('exportFramePNG (transparent)', () => {
+  it('sets clear alpha to 0 during capture then restores it', async () => {
+    const { scene, setClearAlpha } = createAlphaScene();
+
+    const blob = await exportFramePNG(scene, { time: 1, transparent: true });
+
+    expect(blob).toBeInstanceOf(Blob);
+    expect(setClearAlpha).toHaveBeenNthCalledWith(1, 0);
+    expect(setClearAlpha).toHaveBeenNthCalledWith(2, 1);
+    expect(scene.seek).toHaveBeenCalledWith(1);
+  });
+
+  it('re-renders the current frame via render() when no time is given', async () => {
+    const { scene } = createAlphaScene();
+
+    await exportFramePNG(scene, { transparent: true });
+
+    expect(scene.render).toHaveBeenCalledTimes(1);
+    expect(scene.seek).not.toHaveBeenCalled();
+  });
+
+  it('throws when the WebGL context has no alpha channel', async () => {
+    const { scene } = createAlphaScene({ alpha: false });
+
+    await expect(exportFramePNG(scene, { transparent: true })).rejects.toThrow(/alpha channel/i);
+  });
+
+  it('throws when the scene exposes no renderer', async () => {
+    const scene = createMockScene();
+
+    await expect(exportFramePNG(scene, { transparent: true })).rejects.toThrow(/did not expose/i);
+  });
+
+  it('throws when no time and no render method are available', async () => {
+    const { renderer } = createAlphaRenderer();
+    const scene = createMockScene({ renderer: { getThreeRenderer: () => renderer } });
+
+    await expect(exportFramePNG(scene, { transparent: true })).rejects.toThrow(/render\(\)/);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // exportPNGSequence
 // ---------------------------------------------------------------------------
 
@@ -124,6 +196,38 @@ describe('exportPNGSequence', () => {
 
     // 3 seconds at 10fps = 30 frames
     expect(blobs).toHaveLength(30);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// exportPNGSequence — transparent (alpha)
+// ---------------------------------------------------------------------------
+
+describe('exportPNGSequence (transparent)', () => {
+  it('captures every frame under a transparent clear then restores it', async () => {
+    const { scene, setClearAlpha } = createAlphaScene();
+
+    const blobs = await exportPNGSequence(scene, {
+      fps: 10,
+      from: 0,
+      to: 1,
+      transparent: true,
+    });
+
+    expect(blobs).toHaveLength(10);
+    expect(scene.seek).toHaveBeenCalledTimes(10);
+    // clear alpha set to 0 once up front, restored once at the end.
+    expect(setClearAlpha).toHaveBeenCalledTimes(2);
+    expect(setClearAlpha).toHaveBeenNthCalledWith(1, 0);
+    expect(setClearAlpha).toHaveBeenNthCalledWith(2, 1);
+  });
+
+  it('throws when the WebGL context has no alpha channel', async () => {
+    const { scene } = createAlphaScene({ alpha: false });
+
+    await expect(exportPNGSequence(scene, { fps: 10, to: 1, transparent: true })).rejects.toThrow(
+      /alpha channel/i,
+    );
   });
 });
 

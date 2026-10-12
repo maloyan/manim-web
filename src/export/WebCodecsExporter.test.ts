@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { WebCodecsExporter, createWebCodecsExporter } from './WebCodecsExporter';
+import { Muxer } from 'webm-muxer';
 
 // ---------------------------------------------------------------------------
 // Muxer mock (dynamic import of mp4-muxer / webm-muxer)
@@ -41,8 +42,9 @@ vi.mock('webm-muxer', () => ({
 // WebCodecs global mocks
 // ---------------------------------------------------------------------------
 
-function installWebCodecsMocks() {
+function installWebCodecsMocks(options?: { isConfigSupported?: 'absent' | boolean }) {
   const encoderInstances: any[] = [];
+  const frameInstances: any[] = [];
 
   class MockVideoEncoder {
     output: (chunk: any, meta: any) => void;
@@ -59,6 +61,12 @@ function installWebCodecsMocks() {
       this.error = init.error;
       encoderInstances.push(this);
     }
+    static isConfigSupported?: (config: any) => Promise<{ supported?: boolean }>;
+  }
+
+  if (options?.isConfigSupported !== 'absent') {
+    const supported = options?.isConfigSupported ?? true;
+    MockVideoEncoder.isConfigSupported = vi.fn(() => Promise.resolve({ supported }));
   }
 
   class MockVideoFrame {
@@ -66,12 +74,28 @@ function installWebCodecsMocks() {
     constructor(
       public source: unknown,
       public init: unknown,
-    ) {}
+    ) {
+      frameInstances.push(this);
+    }
   }
 
   vi.stubGlobal('VideoEncoder', MockVideoEncoder);
   vi.stubGlobal('VideoFrame', MockVideoFrame);
-  return { encoderInstances };
+  return { encoderInstances, frameInstances, MockVideoEncoder };
+}
+
+/** Build a stub WebGL renderer that records clear-alpha calls. */
+function createAlphaRenderer(alpha = true) {
+  let clearAlpha = 1;
+  const setClearAlpha = vi.fn((value: number) => {
+    clearAlpha = value;
+  });
+  const renderer = {
+    getClearAlpha: () => clearAlpha,
+    setClearAlpha,
+    getContext: () => ({ getContextAttributes: () => ({ alpha }) }),
+  };
+  return { renderer, setClearAlpha };
 }
 
 function createMockScene(overrides?: Record<string, unknown>) {
@@ -84,6 +108,16 @@ function createMockScene(overrides?: Record<string, unknown>) {
     seek: vi.fn(),
     ...overrides,
   } as any;
+}
+
+/** Build a mock scene that exposes an alpha-capable WebGL renderer. */
+function createAlphaScene(alpha = true, overrides?: Record<string, unknown>) {
+  const { renderer, setClearAlpha } = createAlphaRenderer(alpha);
+  const scene = createMockScene({
+    renderer: { getThreeRenderer: () => renderer },
+    ...overrides,
+  });
+  return { scene, renderer, setClearAlpha };
 }
 
 beforeEach(() => {
@@ -210,5 +244,77 @@ describe('createWebCodecsExporter', () => {
     expect(exporter).toBeInstanceOf(WebCodecsExporter);
     expect(exporter.getOptions().fps).toBe(24);
     expect(exporter.getOptions().format).toBe('mp4');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// export() — alpha (transparent) path
+// ---------------------------------------------------------------------------
+
+describe('WebCodecsExporter alpha options', () => {
+  it('defaults format to webm and codec to vp9 when alpha is set', () => {
+    const exporter = new WebCodecsExporter(createMockScene(), { alpha: true });
+    expect(exporter.getOptions().format).toBe('webm');
+    expect(exporter.getOptions().codec).toBe('vp9');
+    expect(exporter.getOptions().alpha).toBe(true);
+  });
+});
+
+describe('WebCodecsExporter.export (alpha)', () => {
+  it('configures the encoder and muxer for alpha, and toggles the clear alpha', async () => {
+    const { encoderInstances, frameInstances } = installWebCodecsMocks();
+    const { scene, setClearAlpha } = createAlphaScene();
+    const exporter = new WebCodecsExporter(scene, { alpha: true, fps: 10, duration: 0.3 });
+
+    const blob = await exporter.export();
+
+    // Encoder keeps the alpha channel.
+    const config = encoderInstances[0].configure.mock.calls[0][0];
+    expect(config.alpha).toBe('keep');
+    // webm muxer gets alpha enabled on its video track.
+    const muxerOpts = (Muxer as any).mock.calls.at(-1)[0];
+    expect(muxerOpts.video.alpha).toBe(true);
+    // Every VideoFrame keeps alpha.
+    expect(frameInstances.length).toBeGreaterThan(0);
+    for (const frame of frameInstances) {
+      expect((frame.init as any).alpha).toBe('keep');
+    }
+    // Clear alpha set to 0 for the capture, then restored to 1.
+    expect(setClearAlpha).toHaveBeenNthCalledWith(1, 0);
+    expect(setClearAlpha).toHaveBeenNthCalledWith(2, 1);
+    expect(blob.type).toBe('video/webm');
+  });
+
+  it('checks alpha encode support and throws when unsupported', async () => {
+    installWebCodecsMocks({ isConfigSupported: false });
+    const { scene } = createAlphaScene();
+    const exporter = new WebCodecsExporter(scene, { alpha: true, fps: 10, duration: 0.3 });
+
+    await expect(exporter.export()).rejects.toThrow(/cannot encode/i);
+  });
+
+  it('proceeds when isConfigSupported is unavailable (cannot detect)', async () => {
+    installWebCodecsMocks({ isConfigSupported: 'absent' });
+    const { scene } = createAlphaScene();
+    const exporter = new WebCodecsExporter(scene, { alpha: true, fps: 10, duration: 0.2 });
+
+    const blob = await exporter.export();
+    expect(blob.type).toBe('video/webm');
+  });
+
+  it('throws when alpha is requested with an incompatible format/codec', async () => {
+    installWebCodecsMocks();
+    const { scene } = createAlphaScene();
+    const exporter = new WebCodecsExporter(scene, { alpha: true, format: 'mp4', fps: 10 });
+
+    await expect(exporter.export()).rejects.toThrow(/webm.*vp9|vp9.*webm/i);
+  });
+
+  it('throws when the scene has no alpha channel in its WebGL context', async () => {
+    installWebCodecsMocks();
+    const { scene } = createAlphaScene(false);
+    const exporter = new WebCodecsExporter(scene, { alpha: true, fps: 10, duration: 0.2 });
+
+    await expect(exporter.export()).rejects.toThrow(/alpha channel/i);
   });
 });
