@@ -643,6 +643,12 @@ export {
   type SvgGradient,
   type SvgGradientStop,
   type SvgGradientType,
+  PatternVMobject,
+  parsePatternDefs,
+  resolvePatternFill,
+  type PatternVMobjectOptions,
+  type SvgPattern,
+  type SvgPatternUnits,
   type SvgFetcher,
   type SvgFetchResponse,
   // --- end svg enhancements ---

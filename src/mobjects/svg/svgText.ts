@@ -13,6 +13,7 @@
  */
 
 import { Text } from '../text/Text';
+import { isRenderableSvgElement } from './svgFill';
 
 /** Default styling for `<text>` elements that omit their own. */
 export interface SvgTextDefaults {
@@ -37,6 +38,7 @@ function anchorToAlign(anchor: string | null): 'left' | 'center' | 'right' {
 export function buildSvgTextMobjects(svg: Element, defaults: SvgTextDefaults): Text[] {
   const result: Text[] = [];
   for (const el of svg.querySelectorAll('text')) {
+    if (!isRenderableSvgElement(el)) continue;
     const content = (el.textContent ?? '').trim();
     if (!content) continue;
 
