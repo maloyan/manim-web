@@ -740,6 +740,19 @@ export { ImageMobject, type ImageMobjectOptions, type ImageFilterOptions } from 
 // --- video (best-manim) ---
 export { VideoMobject, type VideoMobjectOptions } from './mobjects/video';
 
+// --- lottie (best-manim) ---
+export {
+  LottieMobject,
+  setLottiePlayerFactory,
+  type LottieMobjectOptions,
+  type LottieFromUrlOptions,
+  type LottieAnimationData,
+  type LottieAnimation,
+  type LottiePlayer,
+  type LottiePlayerFactory,
+  type LottieLoadParams,
+} from './mobjects/lottie';
+
 // --- animated gif (best-manim) ---
 export {
   AnimatedImageMobject,
