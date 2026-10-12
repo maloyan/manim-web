@@ -1,0 +1,21 @@
+// Kinetic-typography preset animations (per-glyph text effects).
+export {
+  resolveGlyphs,
+  typeOn,
+  fadeInByLetter,
+  fadeInByWord,
+  riseByLetter,
+  scalePopByLetter,
+  waveLetters,
+  WaveLetters,
+  tracking,
+  spreadOut,
+  LetterSpacing,
+  glitchIn,
+  GlitchIn,
+  type KineticTypographyOptions,
+  type RiseByLetterOptions,
+  type WaveLettersOptions,
+  type LetterSpacingOptions,
+  type GlitchInOptions,
+} from './kineticTypography';
