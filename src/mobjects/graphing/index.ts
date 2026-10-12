@@ -52,6 +52,25 @@ export { ParametricFunction, type ParametricFunctionOptions } from './Parametric
 // Vector
 export { VectorFieldVector, type VectorFieldVectorOptions } from './Vector';
 
+// Fourier series / epicycle visualization
+export {
+  fourierCoefficients,
+  reconstructSample,
+  partialSum,
+  orderCoefficients,
+  fourierSeriesApproximation,
+  type FourierCoefficient,
+  type FourierOrder,
+  type FourierSeriesApproximationOptions,
+} from './fourier';
+export {
+  FourierEpicycles,
+  type FourierEpicyclesOptions,
+  type FourierPathInput,
+  type ComplexPathFunction,
+} from './FourierEpicycles';
+export { FourierSeries, type FourierSeriesOptions } from './FourierSeries';
+
 // ComplexPlane
 export { ComplexPlane, type ComplexPlaneOptions, type Complex } from './ComplexPlane';
 
@@ -60,6 +79,9 @@ export { PolarPlane, type PolarPlaneOptions } from './ComplexPlane';
 
 // BarChart
 export { BarChart, type BarChartOptions } from './BarChart';
+
+// CandlestickChart (financial OHLC chart)
+export { CandlestickChart, type CandlestickChartOptions, type OHLC } from './CandlestickChart';
 
 // PieChart and DonutChart
 export {
@@ -71,6 +93,28 @@ export {
   type SliceGeometry,
   type LabelPosition,
 } from './PieChart';
+
+// Statistical plots (histogram, scatter, box, violin) and their stats helpers
+export {
+  mean,
+  stdDev,
+  quantile,
+  iqr,
+  histogramBins,
+  kde,
+  silvermanBandwidth,
+  boxSummary,
+  extent,
+  niceAxisRange,
+  type HistogramBin,
+  type HistogramBinsOptions,
+  type KdeOptions,
+  type BoxSummary,
+} from './stats';
+export { Histogram, type HistogramOptions } from './Histogram';
+export { ScatterPlot, type ScatterPlotOptions } from './ScatterPlot';
+export { BoxPlot, type BoxPlotOptions, type PlotOrientation } from './BoxPlot';
+export { ViolinPlot, type ViolinPlotOptions, type ViolinDensity } from './ViolinPlot';
 
 // VectorField
 export {

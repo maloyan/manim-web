@@ -38,3 +38,19 @@ export type {
   ContainerLike,
   Vec3,
 } from './types';
+
+export {
+  encodeStateToHash,
+  decodeStateFromHash,
+  writeStateToUrl,
+  readStateFromUrl,
+  onUrlStateChange,
+  bindStateToUrl,
+} from './urlState';
+
+export type {
+  WriteStateOptions,
+  BindUrlStateOptions,
+  UrlStateBinding,
+  UrlStateController,
+} from './urlState';
