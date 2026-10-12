@@ -52,6 +52,25 @@ export { ParametricFunction, type ParametricFunctionOptions } from './Parametric
 // Vector
 export { VectorFieldVector, type VectorFieldVectorOptions } from './Vector';
 
+// Fourier series / epicycle visualization
+export {
+  fourierCoefficients,
+  reconstructSample,
+  partialSum,
+  orderCoefficients,
+  fourierSeriesApproximation,
+  type FourierCoefficient,
+  type FourierOrder,
+  type FourierSeriesApproximationOptions,
+} from './fourier';
+export {
+  FourierEpicycles,
+  type FourierEpicyclesOptions,
+  type FourierPathInput,
+  type ComplexPathFunction,
+} from './FourierEpicycles';
+export { FourierSeries, type FourierSeriesOptions } from './FourierSeries';
+
 // ComplexPlane
 export { ComplexPlane, type ComplexPlaneOptions, type Complex } from './ComplexPlane';
 
