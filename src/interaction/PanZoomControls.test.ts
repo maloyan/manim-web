@@ -80,6 +80,25 @@ function fireMouse(
   );
 }
 
+/**
+ * happy-dom has no Touch/TouchEvent constructors, so fake the shape the
+ * controller reads: a `touches` array (and `changedTouches`) of objects with
+ * clientX/clientY. Matches the approach already used in interaction.test.ts.
+ */
+function fireTouch(
+  target: EventTarget,
+  type: string,
+  touches: Array<{ clientX: number; clientY: number }>,
+): void {
+  const event = new Event(type, { bubbles: true, cancelable: true }) as Event & {
+    touches: Array<{ clientX: number; clientY: number }>;
+    changedTouches: Array<{ clientX: number; clientY: number }>;
+  };
+  event.touches = touches;
+  event.changedTouches = touches;
+  target.dispatchEvent(event);
+}
+
 describe('PanZoomControls', () => {
   let camera: PanZoomCamera;
   let element: HTMLElement;
@@ -311,6 +330,192 @@ describe('PanZoomControls', () => {
     controls = new PanZoomControls(camera, el);
     expect(() => fireWheel(el, { deltaY: -100, clientX: 0, clientY: 0 })).not.toThrow();
     // no NaN leaked into the camera
+    expect(Number.isNaN(camera.frameWidth)).toBe(false);
+    expect(camera.frameWidth).toBe(14);
+  });
+
+  // ── Touch: single-finger pan ─────────────────────────────────────
+
+  it('single-finger drag pans the camera like a mouse pan', () => {
+    controls = new PanZoomControls(camera, element);
+    fireTouch(element, 'touchstart', [{ clientX: 400, clientY: 300 }]);
+    // move right 100px: worldPerPx = 14/800 = 0.0175 => 1.75 world units
+    fireTouch(window, 'touchmove', [{ clientX: 500, clientY: 300 }]);
+    expect(camera.position.x).toBeCloseTo(-1.75, 6);
+    expect(camera.position.y).toBeCloseTo(0, 6);
+    // move down 100px: worldPerPx = 8/600 => 1.3333 world units
+    fireTouch(window, 'touchmove', [{ clientX: 500, clientY: 400 }]);
+    expect(camera.position.y).toBeCloseTo(8 / 6, 6);
+    // lift the finger; further moves do nothing
+    fireTouch(window, 'touchend', []);
+    const x = camera.position.x;
+    fireTouch(window, 'touchmove', [{ clientX: 700, clientY: 400 }]);
+    expect(camera.position.x).toBeCloseTo(x, 6);
+  });
+
+  it('single-finger drag does not zoom (frame unchanged)', () => {
+    controls = new PanZoomControls(camera, element);
+    fireTouch(element, 'touchstart', [{ clientX: 400, clientY: 300 }]);
+    fireTouch(window, 'touchmove', [{ clientX: 500, clientY: 350 }]);
+    expect(camera.frameWidth).toBe(14);
+    expect(camera.frameHeight).toBe(8);
+  });
+
+  // ── Touch: two-finger pinch zoom ─────────────────────────────────
+
+  it('pinch out (fingers apart) zooms in about the midpoint', () => {
+    controls = new PanZoomControls(camera, element);
+    // start: two fingers 100px apart, centered on the element center
+    fireTouch(element, 'touchstart', [
+      { clientX: 350, clientY: 300 },
+      { clientX: 450, clientY: 300 },
+    ]);
+    // spread to 200px apart, same midpoint (400,300) => factor 100/200 = 0.5
+    fireTouch(window, 'touchmove', [
+      { clientX: 300, clientY: 300 },
+      { clientX: 500, clientY: 300 },
+    ]);
+    expect(camera.frameWidth).toBeCloseTo(7, 6);
+    expect(camera.frameHeight).toBeCloseTo(4, 6);
+    // midpoint was the element center, so the center does not move
+    expect(camera.position.x).toBeCloseTo(0, 6);
+    expect(camera.position.y).toBeCloseTo(0, 6);
+  });
+
+  it('pinch in (fingers together) zooms out', () => {
+    controls = new PanZoomControls(camera, element);
+    fireTouch(element, 'touchstart', [
+      { clientX: 300, clientY: 300 },
+      { clientX: 500, clientY: 300 },
+    ]);
+    // close to 100px apart => factor 200/100 = 2
+    fireTouch(window, 'touchmove', [
+      { clientX: 350, clientY: 300 },
+      { clientX: 450, clientY: 300 },
+    ]);
+    expect(camera.frameWidth).toBeCloseTo(28, 6);
+    expect(camera.frameHeight).toBeCloseTo(16, 6);
+  });
+
+  it('pinch zooms about the midpoint: the world point under it stays fixed', () => {
+    controls = new PanZoomControls(camera, element);
+    const midX = 600;
+    const midY = 300;
+    const worldBefore = worldAt(camera, midX, midY);
+    // 100px apart about (600,300)
+    fireTouch(element, 'touchstart', [
+      { clientX: 550, clientY: 300 },
+      { clientX: 650, clientY: 300 },
+    ]);
+    // 200px apart, same midpoint
+    fireTouch(window, 'touchmove', [
+      { clientX: 500, clientY: 300 },
+      { clientX: 700, clientY: 300 },
+    ]);
+    const worldAfter = worldAt(camera, midX, midY);
+    expect(camera.frameWidth).toBeCloseTo(7, 6);
+    expect(worldAfter.x).toBeCloseTo(worldBefore.x, 6);
+    expect(worldAfter.y).toBeCloseTo(worldBefore.y, 6);
+    // the center actually moved (midpoint was off-center)
+    expect(camera.position.x).not.toBeCloseTo(0, 3);
+  });
+
+  it('two-finger drag (constant spread) pans by the midpoint delta', () => {
+    controls = new PanZoomControls(camera, element);
+    fireTouch(element, 'touchstart', [
+      { clientX: 350, clientY: 300 },
+      { clientX: 450, clientY: 300 },
+    ]);
+    // both fingers move right 50px: midpoint 400 -> 450, spread unchanged
+    fireTouch(window, 'touchmove', [
+      { clientX: 400, clientY: 300 },
+      { clientX: 500, clientY: 300 },
+    ]);
+    // worldDx = 50 * 14 / 800 = 0.875
+    expect(camera.position.x).toBeCloseTo(-0.875, 6);
+    expect(camera.frameWidth).toBeCloseTo(14, 6);
+  });
+
+  it('does not pinch-zoom when enableZoom is false (two-finger still pans)', () => {
+    controls = new PanZoomControls(camera, element, { enableZoom: false });
+    fireTouch(element, 'touchstart', [
+      { clientX: 350, clientY: 300 },
+      { clientX: 450, clientY: 300 },
+    ]);
+    fireTouch(window, 'touchmove', [
+      { clientX: 300, clientY: 300 },
+      { clientX: 500, clientY: 300 },
+    ]);
+    expect(camera.frameWidth).toBe(14);
+  });
+
+  it('continues panning when one finger lifts after a pinch', () => {
+    controls = new PanZoomControls(camera, element);
+    fireTouch(element, 'touchstart', [
+      { clientX: 350, clientY: 300 },
+      { clientX: 450, clientY: 300 },
+    ]);
+    // lift to one finger at (500,300)
+    fireTouch(window, 'touchend', [{ clientX: 500, clientY: 300 }]);
+    const before = camera.position.x;
+    // single finger drags right 100px
+    fireTouch(window, 'touchmove', [{ clientX: 600, clientY: 300 }]);
+    expect(camera.position.x).toBeCloseTo(before - 1.75, 6);
+  });
+
+  // ── Touch: lifecycle ─────────────────────────────────────────────
+
+  it('disable() detaches touch listeners (no effect after)', () => {
+    controls = new PanZoomControls(camera, element);
+    controls.disable();
+    fireTouch(element, 'touchstart', [
+      { clientX: 350, clientY: 300 },
+      { clientX: 450, clientY: 300 },
+    ]);
+    fireTouch(window, 'touchmove', [
+      { clientX: 300, clientY: 300 },
+      { clientX: 500, clientY: 300 },
+    ]);
+    expect(camera.frameWidth).toBe(14);
+    expect(camera.position.x).toBe(0);
+  });
+
+  it('dispose() removes the touch listeners it added', () => {
+    const addSpy = vi.spyOn(element, 'addEventListener');
+    const removeSpy = vi.spyOn(element, 'removeEventListener');
+    controls = new PanZoomControls(camera, element);
+    expect(addSpy.mock.calls.some((c) => c[0] === 'touchstart')).toBe(true);
+    controls.dispose();
+    expect(removeSpy.mock.calls.some((c) => c[0] === 'touchstart')).toBe(true);
+    addSpy.mockRestore();
+    removeSpy.mockRestore();
+  });
+
+  it('touch gestures are safe with a zero-size bounding rect', () => {
+    const el = document.createElement('div');
+    el.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      right: 0,
+      bottom: 0,
+      width: 0,
+      height: 0,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    document.body.appendChild(el);
+    controls = new PanZoomControls(camera, el);
+    expect(() => {
+      fireTouch(el, 'touchstart', [
+        { clientX: 0, clientY: 0 },
+        { clientX: 10, clientY: 0 },
+      ]);
+      fireTouch(window, 'touchmove', [
+        { clientX: 0, clientY: 0 },
+        { clientX: 20, clientY: 0 },
+      ]);
+    }).not.toThrow();
     expect(Number.isNaN(camera.frameWidth)).toBe(false);
     expect(camera.frameWidth).toBe(14);
   });
