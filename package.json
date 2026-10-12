@@ -28,6 +28,11 @@
       "import": "./dist/integrations/webcomponent.js",
       "default": "./dist/integrations/webcomponent.js"
     },
+    "./notebook": {
+      "types": "./dist/integrations/notebook.d.ts",
+      "import": "./dist/integrations/notebook.js",
+      "default": "./dist/integrations/notebook.js"
+    },
     "./browser": {
       "types": "./dist/index.d.ts",
       "import": "./dist/manim-web.browser.js",

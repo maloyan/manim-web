@@ -131,6 +131,22 @@ export {
 } from './audio/AudioAnalyzer';
 // --- end audio-reactive ---
 
+// --- MIDI input (best-manim, browser-unique) ---
+export {
+  MidiInput,
+  isMidiSupported,
+  type MidiInputOptions,
+  type MidiConnectOptions,
+  type MidiBindOptions,
+  type MidiAccessLike,
+  type MidiInputLike,
+  type MidiMessageLike,
+  type MidiNoteListener,
+  type MidiNoteOffListener,
+  type MidiControlListener,
+} from './audio/MidiInput';
+// --- end MIDI input ---
+
 // --- accessibility (a11y) layer (browser-unique) ---
 // Three opt-in capabilities: WebVTT captions from voiceover timings,
 // prefers-reduced-motion respect, and ARIA live-region narration. All are
@@ -400,6 +416,10 @@ export {
   type RadarChartOptions,
   WaterfallChart,
   type WaterfallChartOptions,
+  GanttChart,
+  type GanttChartOptions,
+  type GanttTask,
+  type GanttTimeValue,
   PieChart,
   type PieChartOptions,
   DonutChart,
@@ -1156,6 +1176,28 @@ export {
   type AnimationGroupOptions,
 } from './animation/AnimationGroup';
 export { LaggedStart, laggedStart, type LaggedStartOptions } from './animation/LaggedStart';
+
+// Kinetic-typography preset animations (per-glyph text effects)
+export {
+  resolveGlyphs,
+  typeOn,
+  fadeInByLetter,
+  fadeInByWord,
+  riseByLetter,
+  scalePopByLetter,
+  waveLetters,
+  WaveLetters,
+  tracking,
+  spreadOut,
+  LetterSpacing,
+  glitchIn,
+  GlitchIn,
+  type KineticTypographyOptions,
+  type RiseByLetterOptions,
+  type WaveLettersOptions,
+  type LetterSpacingOptions,
+  type GlitchInOptions,
+} from './animation/text';
 export { Succession, succession, type SuccessionOptions } from './animation/Succession';
 export {
   LaggedStartMap,
