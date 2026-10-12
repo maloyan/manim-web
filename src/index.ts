@@ -882,6 +882,9 @@ export {
 // Image mobjects
 export { ImageMobject, type ImageMobjectOptions, type ImageFilterOptions } from './mobjects/image';
 
+// --- sketch / hand-drawn stroke style (best-manim) ---
+export { sketch, type SketchOptions } from './mobjects/sketch';
+
 // --- video (best-manim) ---
 export { VideoMobject, type VideoMobjectOptions } from './mobjects/video';
 
