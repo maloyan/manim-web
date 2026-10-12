@@ -87,7 +87,158 @@ export function computeCircularLayout(
 }
 
 /**
- * Spring (force-directed) layout using Fruchterman-Reingold algorithm
+ * A 2D point used by the spring (force-directed) simulation.
+ */
+export interface SpringPoint {
+  x: number;
+  y: number;
+}
+
+/**
+ * Parameters for a single Fruchterman-Reingold step.
+ */
+export interface SpringStepParams {
+  /** Optimal edge length (the `k` constant in Fruchterman-Reingold). */
+  k: number;
+  /** Current temperature. It limits the maximum displacement per step. */
+  temperature: number;
+  /** Cooling factor applied to the temperature after the step. Default: 0.95. */
+  cooling?: number;
+}
+
+/**
+ * Result of a single spring step: the next positions and the cooled temperature.
+ */
+export interface SpringStepResult {
+  /** The positions after the step. */
+  positions: Map<VertexId, SpringPoint>;
+  /** The temperature after cooling. */
+  temperature: number;
+}
+
+/** Default cooling factor for the spring (force-directed) simulation. */
+export const DEFAULT_SPRING_COOLING = 0.95;
+
+/**
+ * Compute the Fruchterman-Reingold force constant `k` for `n` vertices.
+ * It is the optimal distance between two vertices for the given `scale`.
+ */
+export function springForceConstant(n: number, scale: number): number {
+  const area = scale * scale * 4;
+  return Math.sqrt(area / n);
+}
+
+/**
+ * Create the initial spring positions for the vertices.
+ *
+ * Each vertex gets a position inside a box of side `scale * 2` around `center`.
+ * Pass a deterministic `random` function (0..1) for a repeatable layout.
+ */
+export function randomSpringPositions(
+  vertices: VertexId[],
+  scale: number,
+  center: Vector3Tuple,
+  random: () => number = Math.random,
+): Map<VertexId, SpringPoint> {
+  const positions = new Map<VertexId, SpringPoint>();
+  for (const v of vertices) {
+    positions.set(v, {
+      x: center[0] + (random() - 0.5) * scale * 2,
+      y: center[1] + (random() - 0.5) * scale * 2,
+    });
+  }
+  return positions;
+}
+
+/**
+ * Advance the spring (force-directed) simulation by one step.
+ *
+ * This is one Fruchterman-Reingold iteration. It computes repulsive forces
+ * between every pair of vertices and attractive forces along the edges. Then it
+ * moves each vertex by its net force, limited by the temperature. It returns a
+ * new positions map and the cooled temperature, so the caller holds the state.
+ *
+ * The function is pure. It reads `positions` and returns new positions. It does
+ * not change the input. Run it `iterations` times to reproduce
+ * `computeSpringLayout`.
+ */
+export function springLayoutStep(
+  vertices: VertexId[],
+  edges: EdgeTuple[],
+  positions: Map<VertexId, SpringPoint>,
+  params: SpringStepParams,
+): SpringStepResult {
+  const { k, temperature } = params;
+  const cooling = params.cooling ?? DEFAULT_SPRING_COOLING;
+  const n = vertices.length;
+
+  const disp = new Map<VertexId, SpringPoint>();
+  for (const v of vertices) {
+    disp.set(v, { x: 0, y: 0 });
+  }
+
+  // Repulsive forces between all pairs
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const u = vertices[i];
+      const v = vertices[j];
+      const pu = positions.get(u)!;
+      const pv = positions.get(v)!;
+      const dx = pu.x - pv.x;
+      const dy = pu.y - pv.y;
+      const dist = Math.max(0.01, Math.sqrt(dx * dx + dy * dy));
+      const force = (k * k) / dist;
+      const fx = (dx / dist) * force;
+      const fy = (dy / dist) * force;
+      disp.get(u)!.x += fx;
+      disp.get(u)!.y += fy;
+      disp.get(v)!.x -= fx;
+      disp.get(v)!.y -= fy;
+    }
+  }
+
+  // Attractive forces along edges
+  for (const [u, v] of edges) {
+    const pu = positions.get(u);
+    const pv = positions.get(v);
+    if (!pu || !pv) continue;
+    const dx = pu.x - pv.x;
+    const dy = pu.y - pv.y;
+    const dist = Math.max(0.01, Math.sqrt(dx * dx + dy * dy));
+    const force = (dist * dist) / k;
+    const fx = (dx / dist) * force;
+    const fy = (dy / dist) * force;
+    disp.get(u)!.x -= fx;
+    disp.get(u)!.y -= fy;
+    disp.get(v)!.x += fx;
+    disp.get(v)!.y += fy;
+  }
+
+  // Apply displacements with the temperature limit
+  const next = new Map<VertexId, SpringPoint>();
+  for (const v of vertices) {
+    const d = disp.get(v)!;
+    const p = positions.get(v)!;
+    const dist = Math.sqrt(d.x * d.x + d.y * d.y);
+    let x = p.x;
+    let y = p.y;
+    if (dist > 0) {
+      const factor = Math.min(dist, temperature) / dist;
+      x = p.x + d.x * factor;
+      y = p.y + d.y * factor;
+    }
+    next.set(v, { x, y });
+  }
+
+  return { positions: next, temperature: temperature * cooling };
+}
+
+/**
+ * Spring (force-directed) layout using the Fruchterman-Reingold algorithm.
+ *
+ * It seeds random positions, then runs `springLayoutStep` for `iterations`
+ * steps and writes the final positions into `positions`. For a live, animated
+ * version see the `ForceDirectedLayout` animation.
  */
 function computeSpringLayout(
   vertices: VertexId[],
@@ -100,87 +251,14 @@ function computeSpringLayout(
   const n = vertices.length;
   if (n === 0) return;
 
-  // Initialize with random positions
-  const pos: Map<VertexId, { x: number; y: number }> = new Map();
-  for (const v of vertices) {
-    pos.set(v, {
-      x: center[0] + (Math.random() - 0.5) * scale * 2,
-      y: center[1] + (Math.random() - 0.5) * scale * 2,
-    });
-  }
-
-  // Build adjacency
-  const adjacency = new Map<VertexId, Set<VertexId>>();
-  for (const v of vertices) {
-    adjacency.set(v, new Set());
-  }
-  for (const [u, v] of edges) {
-    adjacency.get(u)?.add(v);
-    adjacency.get(v)?.add(u);
-  }
-
-  // Fruchterman-Reingold parameters
-  const area = scale * scale * 4;
-  const k = Math.sqrt(area / n);
+  let pos = randomSpringPositions(vertices, scale, center);
+  const k = springForceConstant(n, scale);
   let temperature = scale;
 
   for (let iter = 0; iter < iterations; iter++) {
-    const disp: Map<VertexId, { x: number; y: number }> = new Map();
-    for (const v of vertices) {
-      disp.set(v, { x: 0, y: 0 });
-    }
-
-    // Repulsive forces between all pairs
-    for (let i = 0; i < n; i++) {
-      for (let j = i + 1; j < n; j++) {
-        const u = vertices[i];
-        const v = vertices[j];
-        const pu = pos.get(u)!;
-        const pv = pos.get(v)!;
-        const dx = pu.x - pv.x;
-        const dy = pu.y - pv.y;
-        const dist = Math.max(0.01, Math.sqrt(dx * dx + dy * dy));
-        const force = (k * k) / dist;
-        const fx = (dx / dist) * force;
-        const fy = (dy / dist) * force;
-        disp.get(u)!.x += fx;
-        disp.get(u)!.y += fy;
-        disp.get(v)!.x -= fx;
-        disp.get(v)!.y -= fy;
-      }
-    }
-
-    // Attractive forces along edges
-    for (const [u, v] of edges) {
-      const pu = pos.get(u);
-      const pv = pos.get(v);
-      if (!pu || !pv) continue;
-      const dx = pu.x - pv.x;
-      const dy = pu.y - pv.y;
-      const dist = Math.max(0.01, Math.sqrt(dx * dx + dy * dy));
-      const force = (dist * dist) / k;
-      const fx = (dx / dist) * force;
-      const fy = (dy / dist) * force;
-      disp.get(u)!.x -= fx;
-      disp.get(u)!.y -= fy;
-      disp.get(v)!.x += fx;
-      disp.get(v)!.y += fy;
-    }
-
-    // Apply displacements with temperature limit
-    for (const v of vertices) {
-      const d = disp.get(v)!;
-      const p = pos.get(v)!;
-      const dist = Math.sqrt(d.x * d.x + d.y * d.y);
-      if (dist > 0) {
-        const factor = Math.min(dist, temperature) / dist;
-        p.x += d.x * factor;
-        p.y += d.y * factor;
-      }
-    }
-
-    // Cool down
-    temperature *= 0.95;
+    const result = springLayoutStep(vertices, edges, pos, { k, temperature });
+    pos = result.positions;
+    temperature = result.temperature;
   }
 
   // Copy to output
