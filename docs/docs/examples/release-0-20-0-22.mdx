@@ -1,0 +1,344 @@
+---
+title: New in 0.20, 0.21, and 0.22
+sidebar_label: New in 0.20, 0.21 & 0.22
+---
+
+import PieChartExample from '@site/src/components/examples/PieChartExample';
+import DonutChartExample from '@site/src/components/examples/DonutChartExample';
+import ParticleSystemExample from '@site/src/components/examples/ParticleSystemExample';
+import TextOnPathExample from '@site/src/components/examples/TextOnPathExample';
+import PanZoomControlsExample from '@site/src/components/examples/PanZoomControlsExample';
+
+Features added in the 0.20, 0.21, and 0.22 releases. Each section lists the
+real exported API, a copy-paste snippet, and a runnable example where the
+feature is visual.
+
+## 0.20.0
+
+### PieChart and DonutChart
+
+`PieChart` builds a `VGroup` of sectors whose sweep angles are proportional to
+each value divided by the total. `DonutChart` extends it with a hole in the
+middle. Non-positive values are skipped, a single value fills the whole circle,
+and empty data yields an empty group.
+
+The example below is a pie chart with per-slice labels and percentages.
+
+<PieChartExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { PieChart } from 'manim-web';
+
+const pie = new PieChart({
+  values: [35, 25, 20, 15, 5],
+  labels: ['Rust', 'TS', 'Python', 'Go', 'Other'],
+  showPercentages: true, // append the rounded percentage to each label
+  radius: 2.1,
+});
+scene.add(pie);
+
+pie.getSlice(0); // the first sector
+pie.getSliceGeometry(); // start angle, sweep angle, and fraction per slice
+```
+
+</details>
+
+`DonutChart` adds an `innerRadius`, a fraction of the outer radius in `[0, 1)`.
+A value of `0` makes a full pie.
+
+<DonutChartExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { DonutChart } from 'manim-web';
+
+const donut = new DonutChart({
+  values: [30, 20, 25, 15, 10],
+  labels: ['A', 'B', 'C', 'D', 'E'],
+  innerRadius: 0.55, // hole radius as a fraction of the outer radius
+  showPercentages: true,
+  radius: 2.1,
+});
+scene.add(donut);
+
+donut.getInnerRadius(); // the hole radius in scene units
+```
+
+</details>
+
+Both charts accept `colors` (a single color or an array that cycles),
+`startAngle`, `fillOpacity`, `strokeColor`, `strokeWidth`, `labelPosition`
+(`'inside'` or `'outside'`), `showLegend`, and `legendFontSize`. The slice
+accessors are `getSectors()`, `getSlice(index)`, `getSliceGeometry()`,
+`getValues()`, and `getRadius()`.
+
+### Scene to SVG export
+
+`sceneToSVG` walks the scene's 2D VMobjects and writes each one as an SVG
+`<path>` with the correct fill and stroke. The result is resolution-independent
+and editable in a vector tool, unlike the raster GIF, PNG, and video exporters.
+The `viewBox` matches the raster pixel aspect, so the vector result lines up
+with a PNG of the same frame. True 3D meshes are not VMobjects and are skipped.
+
+A real export needs a running scene, so this section is a code sample.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { sceneToSVG, exportSVG, exportAndDownloadSVG } from 'manim-web';
+
+// 1. The SVG markup as a string.
+const markup = sceneToSVG(scene, {
+  precision: 3, // decimal places for coordinates (default 3)
+  background: '#000000', // omit for a transparent background
+});
+
+// 2. The SVG as an image/svg+xml Blob.
+const blob = exportSVG(scene);
+
+// 3. Trigger a browser download (throws off the browser, where there is no DOM).
+exportAndDownloadSVG(scene, 'scene.svg');
+```
+
+</details>
+
+### Audio-reactive animation
+
+`AudioAnalyzer` wraps a Web Audio `AnalyserNode` over an audio source and
+exposes frequency-spectrum reads that drive mobject properties each frame. This
+is impossible in file-based ManimCE. Every Web Audio and DOM access is
+feature-detected, so in Node, jsdom, and SSR the class degrades to a no-op:
+reads return zeros and nothing throws.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { AudioAnalyzer, ValueTracker, Dot } from 'manim-web';
+
+// Tap an <audio> element. Also: fromAudioManager(manager), connectSource(node).
+const analyzer = AudioAnalyzer.fromMediaElement(audioElement);
+
+// Band reads, each normalized to [0, 1].
+analyzer.getBass(); // 20-250 Hz
+analyzer.getMid(); // 250-4000 Hz
+analyzer.getTreble(); // 4000-20000 Hz
+analyzer.getBand(60, 120); // a custom band
+analyzer.getLevel(); // overall loudness (RMS of the waveform)
+
+// Drive a ValueTracker from a read each frame: value = offset + read() * scale.
+const bass = new ValueTracker(0);
+analyzer.bindToTracker(bass, () => analyzer.getBass(), { scale: 2 });
+
+const dot = new Dot();
+dot.addUpdater(() => dot.setScale(1 + bass.getValue()));
+
+// Or map the spectrum onto any property with a custom updater.
+dot.addUpdater(
+  analyzer.createUpdater((d, a) => {
+    d.setScale(1 + a.getTreble());
+  }),
+);
+```
+
+</details>
+
+`isAudioAnalysisSupported()` reports whether the Web Audio API is available.
+Call `analyzer.dispose()` to release an owned `AudioContext`.
+
+## 0.21.0
+
+### ParticleSystem
+
+`ParticleSystem` is an emitter for motion graphics such as fountains, sparks,
+and flow fields. It spawns particles over time, integrates their motion under
+forces, ages them, and removes them when they die. The simulation is
+deterministic: a fixed `seed` reproduces the exact same evolution, so renders
+are reproducible and the behavior is testable without a GPU.
+
+The example below is a seeded fountain. Particles emit upward, gravity pulls
+them back down, and each one fades from gold to pink over its lifetime.
+
+<ParticleSystemExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ParticleSystem } from 'manim-web';
+
+const fountain = new ParticleSystem({
+  spawnRate: 120, // particles per second
+  maxParticles: 600,
+  lifetime: 2.2,
+  lifetimeSpread: 0.4,
+  position: [0, -2.6, 0], // emitter origin
+  velocity: [0, 6, 0],
+  velocitySpread: [2.2, 1.2, 0],
+  forces: { gravity: [0, -9.8, 0], drag: 0 },
+  startSize: 10,
+  endSize: 0,
+  startColor: '#ffd166',
+  endColor: '#ef476f',
+  useOklab: true, // blend the color perceptually over the life
+  seed: 7,
+});
+scene.add(fountain); // the scene render loop ticks the simulation each frame
+```
+
+</details>
+
+Add it to a scene and the render loop advances the simulation each frame. Call
+`step(dt)` to advance it manually (for tests or offline renders), `reset()` to
+clear every particle and restart the PRNG from the seed, and `getParticles()`
+for read-only snapshots. `getLivingCount()` and `setSpawnRate(rate)` round out
+the API.
+
+### Transparent and alpha export
+
+The PNG and WebCodecs exporters can now render a transparent background, so the
+output carries a real alpha channel to composite over other footage. Every
+transparent path needs a Scene created with `{ alpha: true }` (or
+`backgroundOpacity < 1`); otherwise the export throws a clear error instead of
+producing an opaque result that claims transparency.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, exportFramePNG, exportPNGSequence, WebCodecsExporter } from 'manim-web';
+
+// The context must carry an alpha channel for any transparent export.
+const scene = new Scene(container, { alpha: true });
+
+// A single PNG with a transparent background.
+const frame = await exportFramePNG(scene, { time: 1, transparent: true });
+
+// A PNG sequence, every frame transparent.
+const frames = await exportPNGSequence(scene, { fps: 30, to: 2, transparent: true });
+
+// Transparent video needs the webm format with the vp9 codec (the only path
+// that carries an alpha side channel). Both default on when alpha is set.
+const exporter = new WebCodecsExporter(scene, { alpha: true });
+const video = await exporter.export();
+```
+
+</details>
+
+### TextOnPath
+
+`TextOnPath` lays out each glyph of a run along an arbitrary curve. Each glyph
+center sits at a successive arc-length offset and, by default, rotates to match
+the path tangent. This is the per-glyph typography that ManimCE's
+`MoveAlongPath` does not provide: that animates one whole mobject along a path.
+
+The path can be a VMobject (an Arc, a Line, or any curve), a raw point chain, or
+a function `t -> [x, y, z]`. The example below is font mode: a string plus a
+font URL, resolved with `await waitForReady()`.
+
+<TextOnPathExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { TextOnPath } from 'manim-web';
+
+const text = new TextOnPath({
+  text: 'manim web',
+  fontUrl: '/fonts/Inter-Regular.ttf',
+  path: (t) => [(t - 0.5) * 9, Math.sin(t * Math.PI) * 2.2 - 0.6, 0],
+  fontSize: 72,
+  color: '#58c4dd',
+  startOffset: 0, // arc-length distance where the run starts
+  tracking: 0, // extra spacing after every glyph
+  rotateWithTangent: true, // false lays the glyphs flat
+  alignment: 'center', // vertical placement relative to the curve
+  overflow: 'clamp', // or 'wrap' to loop around the path
+});
+await text.waitForReady(); // font mode only
+scene.add(text);
+```
+
+</details>
+
+For synchronous layout, pass pre-built `glyphs` (each a mobject plus its advance
+width) instead of `text` and `fontUrl`; the group is then ready without a
+`waitForReady()` call.
+
+## 0.22.0
+
+### PanZoomControls
+
+`PanZoomControls` adds Desmos-style mouse pan and zoom to a 2D scene. The wheel
+zooms the frame about the world point under the cursor, and a pointer drag pans
+the frame. The controller only reads and writes the camera, so it never touches
+the core render path and is a pure opt-in input controller.
+
+Scroll to zoom and drag to pan the plane below.
+
+<PanZoomControlsExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { PanZoomControls } from 'manim-web';
+
+const controls = new PanZoomControls(scene.camera, scene.getCanvas(), {
+  zoomSpeed: 0.0015,
+  minZoom: 0.1, // widest zoom-out, relative to the starting frame
+  maxZoom: 10, // closest zoom-in
+  bounds: { minX: -8, maxX: 8, minY: -5, maxY: 5 }, // clamp the camera center
+  onChange: () => scene.render(), // redraw after each pan or zoom
+});
+
+// Later, to stop responding to the mouse:
+controls.dispose();
+```
+
+</details>
+
+Options also include `panButton`, `invertZoom`, `enablePanX`, `enablePanY`, and
+`enableZoom`. `enable()`, `disable()`, and `isEnabled()` toggle the listeners;
+the `makePanZoomControls(camera, domElement, options)` factory is an alternative
+to `new`.
+
+### GPU post-processing
+
+`PostProcessingPipeline` adds opt-in screen-space effects (bloom, vignette, and
+bokeh depth of field) that native Cairo ManimCE cannot do. Attach it with
+`scene.usePostProcessing(pipeline)`. The default render path stays byte-identical
+to a direct render until a pipeline is attached. The three.js post-processing
+modules load lazily on first use, so the first frames fall back to the direct
+path until they resolve.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { PostProcessingPipeline } from 'manim-web';
+
+const pipeline = new PostProcessingPipeline()
+  .addBloom({ strength: 1, radius: 0.4, threshold: 0.85 }) // bright areas glow
+  .addVignette({ offset: 1, darkness: 1 }) // darken the frame edges
+  .addDepthOfField({ focus: 10, aperture: 0.025, maxblur: 0.01 }); // bokeh blur
+
+scene.usePostProcessing(pipeline); // pass null to revert to the direct path
+
+// Toggle the whole stack without detaching it.
+pipeline.setEnabled(false);
+```
+
+</details>
+
+Each `add*` call appends a pass in order and returns the pipeline for chaining.
+`clear()` removes every pass, and `dispose()` frees the composer's GPU
+resources. Post-processing has no effect in headless mode, where there is no
+WebGL context.
