@@ -72,3 +72,10 @@ export {
 
 // ImplicitSurface (3D isosurface)
 export { ImplicitSurface, type ImplicitSurfaceOptions } from './ImplicitSurface';
+
+// GPU instancing (opt-in, for large scenes)
+export {
+  InstancedMobject,
+  type InstancedMobjectOptions,
+  type InstanceTransform,
+} from './InstancedMobject';
