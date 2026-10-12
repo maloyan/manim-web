@@ -16,6 +16,14 @@ import {
   type ModelLoader,
   type ModelFormat,
 } from './ModelMobject';
+import {
+  setMtlLoaderFactory,
+  deriveMtlUrl,
+  deriveBasePath,
+  type MtlLoader,
+  type MtlMaterials,
+  type ObjMaterialSink,
+} from './objMaterials';
 
 /** Build a small fake loaded model: a Group holding one unit-box mesh. */
 function makeModel(): THREE.Group {
@@ -46,7 +54,71 @@ class MockLoader implements ModelLoader {
 
 afterEach(() => {
   setModelLoaderFactory(null);
+  setMtlLoaderFactory(null);
 });
+
+// ── MTL stubs for OBJ material/texture tests ──────────────────────────
+
+/** A preloaded MTL material set holding one representative material. */
+class StubMtlMaterials implements MtlMaterials {
+  preloaded = false;
+  readonly material = new THREE.MeshStandardMaterial({ color: '#123456' });
+
+  preload(): void {
+    this.preloaded = true;
+  }
+}
+
+/** A stub MTLLoader that records path handling and never hits a network. */
+class StubMtlLoader implements MtlLoader {
+  path = '';
+  resourcePath = '';
+  loadedUrl: string | null = null;
+  readonly materials = new StubMtlMaterials();
+
+  setPath(path: string): MtlLoader {
+    this.path = path;
+    return this;
+  }
+
+  setResourcePath(path: string): MtlLoader {
+    this.resourcePath = path;
+    return this;
+  }
+
+  async loadAsync(url: string): Promise<MtlMaterials> {
+    this.loadedUrl = url;
+    return this.materials;
+  }
+}
+
+/** A stub OBJLoader that accepts MTL materials and applies them to its mesh. */
+class StubObjLoader implements ModelLoader, ObjMaterialSink {
+  calls: string[] = [];
+  setMaterialsArg: MtlMaterials | null = null;
+  materialsPreloadedAtSet = false;
+  setMaterialsBeforeLoad = false;
+  private loaded = false;
+
+  setMaterials(materials: MtlMaterials): void {
+    this.setMaterialsArg = materials;
+    this.materialsPreloadedAtSet = (materials as StubMtlMaterials).preloaded;
+    this.setMaterialsBeforeLoad = !this.loaded;
+  }
+
+  async loadAsync(url: string): Promise<THREE.Object3D> {
+    this.loaded = true;
+    this.calls.push(url);
+    const group = makeModel();
+    const applied = this.setMaterialsArg;
+    if (applied instanceof StubMtlMaterials) {
+      group.traverse((object) => {
+        if (object instanceof THREE.Mesh) object.material = applied.material;
+      });
+    }
+    return group;
+  }
+}
 
 describe('ModelMobject.detectModelFormat', () => {
   it('maps extensions to loader formats', () => {
@@ -262,6 +334,135 @@ describe('ModelMobject.copy', () => {
     expect(copy).not.toBe(mobject);
     expect(copy.getObject()).not.toBe(mobject.getObject());
     expect(copy.position.x).toBeCloseTo(1);
+  });
+});
+
+describe('objMaterials URL helpers', () => {
+  it('derives the companion .mtl URL from an .obj URL', () => {
+    expect(deriveMtlUrl('https://x/models/scene.obj')).toBe('https://x/models/scene.mtl');
+    expect(deriveMtlUrl('./c.OBJ?v=2#f')).toBe('./c.mtl');
+    expect(deriveMtlUrl('bare.obj')).toBe('bare.mtl');
+  });
+
+  it('derives the base directory path from a URL', () => {
+    expect(deriveBasePath('https://x/models/scene.mtl')).toBe('https://x/models/');
+    expect(deriveBasePath('scene.mtl')).toBe('');
+    expect(deriveBasePath('./a/b/c.mtl?q=1')).toBe('./a/b/');
+  });
+});
+
+describe('ModelMobject OBJ + MTL materials', () => {
+  it('loads the derived .mtl and applies it before the OBJ parse', async () => {
+    const mtlLoader = new StubMtlLoader();
+    const objLoader = new StubObjLoader();
+    const mobject = await ModelMobject.fromUrl('https://x/models/scene.obj', {
+      loader: objLoader,
+      mtlLoader,
+      loadMaterials: true,
+    });
+
+    expect(mtlLoader.loadedUrl).toBe('scene.mtl');
+    expect(mtlLoader.path).toBe('https://x/models/');
+    expect(mtlLoader.resourcePath).toBe('https://x/models/');
+    expect(objLoader.setMaterialsArg).toBe(mtlLoader.materials);
+    expect(objLoader.materialsPreloadedAtSet).toBe(true);
+    expect(objLoader.setMaterialsBeforeLoad).toBe(true);
+
+    let checked = false;
+    mobject.getObject().traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        expect(object.material).toBe(mtlLoader.materials.material);
+        checked = true;
+      }
+    });
+    expect(checked).toBe(true);
+  });
+
+  it('uses an explicit mtlUrl and derives its own base path', async () => {
+    const mtlLoader = new StubMtlLoader();
+    const objLoader = new StubObjLoader();
+    await ModelMobject.fromUrl('https://x/a/model.obj', {
+      loader: objLoader,
+      mtlLoader,
+      mtlUrl: 'https://x/b/custom.mtl',
+    });
+
+    expect(mtlLoader.loadedUrl).toBe('custom.mtl');
+    expect(mtlLoader.path).toBe('https://x/b/');
+    expect(mtlLoader.resourcePath).toBe('https://x/b/');
+  });
+
+  it('resolves the MTLLoader through setMtlLoaderFactory', async () => {
+    const mtlLoader = new StubMtlLoader();
+    let factoryCalls = 0;
+    setMtlLoaderFactory(() => {
+      factoryCalls += 1;
+      return mtlLoader;
+    });
+    const objLoader = new StubObjLoader();
+    await ModelMobject.fromUrl('scene.obj', {
+      loader: objLoader,
+      loadMaterials: true,
+    });
+
+    expect(factoryCalls).toBe(1);
+    expect(mtlLoader.loadedUrl).toBe('scene.mtl');
+    expect(objLoader.setMaterialsArg).toBe(mtlLoader.materials);
+  });
+
+  it('does not load any MTL without mtlUrl or loadMaterials (backward compat)', async () => {
+    let factoryCalls = 0;
+    setMtlLoaderFactory(() => {
+      factoryCalls += 1;
+      return new StubMtlLoader();
+    });
+    const objLoader = new StubObjLoader();
+    await ModelMobject.fromUrl('scene.obj', { loader: objLoader });
+
+    expect(factoryCalls).toBe(0);
+    expect(objLoader.setMaterialsArg).toBeNull();
+  });
+
+  it('never loads an MTL for a glTF model', async () => {
+    const mtlLoader = new StubMtlLoader();
+    await ModelMobject.fromUrl('https://x/model.glb', {
+      loader: new MockLoader(makeModel),
+      mtlLoader,
+      loadMaterials: true,
+    });
+    expect(mtlLoader.loadedUrl).toBeNull();
+  });
+
+  it('lets materialOverride win over the MTL materials', async () => {
+    const override = new THREE.MeshBasicMaterial({ color: '#00ff00' });
+    const mtlLoader = new StubMtlLoader();
+    const objLoader = new StubObjLoader();
+    const mobject = await ModelMobject.fromUrl('scene.obj', {
+      loader: objLoader,
+      mtlLoader,
+      loadMaterials: true,
+      materialOverride: override,
+    });
+
+    let checked = false;
+    mobject.getObject().traverse((object) => {
+      if (object instanceof THREE.Mesh) {
+        expect(object.material).toBe(override);
+        checked = true;
+      }
+    });
+    expect(checked).toBe(true);
+  });
+
+  it('skips MTL loading when the OBJ loader cannot accept materials', async () => {
+    const mtlLoader = new StubMtlLoader();
+    const mobject = await ModelMobject.fromUrl('scene.obj', {
+      loader: new MockLoader(makeModel),
+      mtlLoader,
+      loadMaterials: true,
+    });
+    expect(mtlLoader.loadedUrl).toBeNull();
+    expect(mobject).toBeInstanceOf(ModelMobject);
   });
 });
 
