@@ -752,6 +752,22 @@ export {
   type Complex,
 } from './mobjects/value-tracker';
 
+// Reactive signal graph (lazy, memoized, auto-tracked computed values)
+export {
+  createSignal,
+  createComputed,
+  createEffect,
+  batch,
+  untrack,
+  bindSignalToTracker,
+  trackerToSignal,
+  type Accessor,
+  type Signal,
+  type Computed,
+  type EffectHandle,
+  type NumericValueHolder,
+} from './core/signals';
+
 // Matrix
 export {
   Matrix,
