@@ -8,8 +8,9 @@ import { VGroup } from '../../core/VGroup';
 import { WHITE } from '../../constants/colors';
 import { DEFAULT_STROKE_WIDTH } from '../../constants';
 import { logger } from '../../utils/logger';
-import { createStyledVMobject, makeFilledVMobject } from './svgFill';
+import { createStyledVMobject, makeFilledVMobject, isRenderableSvgElement } from './svgFill';
 import { parseGradientDefs } from './svgGradients';
+import { parsePatternDefs } from './svgPatterns';
 import { buildSvgTextMobjects } from './svgText';
 import { buildSvgImageMobjects } from './svgImage';
 import { fetchSvgText, defaultSvgFetcher, type SvgFetcher } from './svgLoader';
@@ -650,12 +651,15 @@ export class SVGMobject extends VGroup {
       return;
     }
 
-    // Gradient definitions, resolved for any fill="url(#id)" references below.
+    // Gradient and pattern definitions, resolved for any fill="url(#id)"
+    // references below.
     const gradientDefs = parseGradientDefs(svg);
+    const patternDefs = parsePatternDefs(svg);
 
     // Process all path elements
     const paths = svg.querySelectorAll('path');
     for (const pathEl of paths) {
+      if (!isRenderableSvgElement(pathEl)) continue;
       const d = pathEl.getAttribute('d');
       if (!d) continue;
 
@@ -677,6 +681,7 @@ export class SVGMobject extends VGroup {
           fallbackFill: defaultFillColor,
           defaultFillOpacity,
           defs: gradientDefs,
+          patternDefs,
         });
         this.add(vmob);
       }
@@ -685,6 +690,7 @@ export class SVGMobject extends VGroup {
     // Process rect elements
     const rects = svg.querySelectorAll('rect');
     for (const rectEl of rects) {
+      if (!isRenderableSvgElement(rectEl)) continue;
       const x = parseFloat(rectEl.getAttribute('x') || '0');
       const y = parseFloat(rectEl.getAttribute('y') || '0');
       const width = parseFloat(rectEl.getAttribute('width') || '0');
@@ -707,6 +713,7 @@ export class SVGMobject extends VGroup {
           rawFill: rectEl.getAttribute('fill'),
           defaultFillOpacity,
           defs: gradientDefs,
+          patternDefs,
         });
         this.add(vmob);
       }
@@ -715,6 +722,7 @@ export class SVGMobject extends VGroup {
     // Process circle elements
     const circles = svg.querySelectorAll('circle');
     for (const circleEl of circles) {
+      if (!isRenderableSvgElement(circleEl)) continue;
       const cx = parseFloat(circleEl.getAttribute('cx') || '0');
       const cy = parseFloat(circleEl.getAttribute('cy') || '0');
       const r = parseFloat(circleEl.getAttribute('r') || '0');
@@ -742,6 +750,7 @@ export class SVGMobject extends VGroup {
           rawFill: circleEl.getAttribute('fill'),
           defaultFillOpacity,
           defs: gradientDefs,
+          patternDefs,
         });
         this.add(vmob);
       }
@@ -750,6 +759,7 @@ export class SVGMobject extends VGroup {
     // Process ellipse elements
     const ellipses = svg.querySelectorAll('ellipse');
     for (const ellipseEl of ellipses) {
+      if (!isRenderableSvgElement(ellipseEl)) continue;
       const cx = parseFloat(ellipseEl.getAttribute('cx') || '0');
       const cy = parseFloat(ellipseEl.getAttribute('cy') || '0');
       const rx = parseFloat(ellipseEl.getAttribute('rx') || '0');
@@ -781,6 +791,7 @@ export class SVGMobject extends VGroup {
     // Process line elements
     const lines = svg.querySelectorAll('line');
     for (const lineEl of lines) {
+      if (!isRenderableSvgElement(lineEl)) continue;
       const x1 = parseFloat(lineEl.getAttribute('x1') || '0');
       const y1 = parseFloat(lineEl.getAttribute('y1') || '0');
       const x2 = parseFloat(lineEl.getAttribute('x2') || '0');
@@ -803,6 +814,7 @@ export class SVGMobject extends VGroup {
     // Process polygon elements
     const polygons = svg.querySelectorAll('polygon');
     for (const polygonEl of polygons) {
+      if (!isRenderableSvgElement(polygonEl)) continue;
       const pointsAttr = polygonEl.getAttribute('points');
       if (!pointsAttr) continue;
 
@@ -830,6 +842,7 @@ export class SVGMobject extends VGroup {
           rawFill: polygonEl.getAttribute('fill'),
           defaultFillOpacity,
           defs: gradientDefs,
+          patternDefs,
         });
         this.add(vmob);
       }
@@ -838,6 +851,7 @@ export class SVGMobject extends VGroup {
     // Process polyline elements
     const polylines = svg.querySelectorAll('polyline');
     for (const polylineEl of polylines) {
+      if (!isRenderableSvgElement(polylineEl)) continue;
       const pointsAttr = polylineEl.getAttribute('points');
       if (!pointsAttr) continue;
 
