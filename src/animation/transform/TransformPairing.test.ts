@@ -38,7 +38,13 @@ function makeLinearClosedSquare(x0: number, y0: number, x1: number, y1: number):
 }
 
 describe('TransformPairing core', () => {
-  it('throws when provided subpath lengths do not match point count', () => {
+  it('treats subpath lengths that do not match the point count as stale and does not throw', () => {
+    // Stale/mismatched subpath metadata (sum 4 != 5 points) is a normal
+    // lifecycle occurrence: a transform override, or base topology, outlives a
+    // point replacement (`become`, a second Transform, ...). It must be treated
+    // as absent (single-subpath fallback), never crash the animation. See
+    // VMobject.getEffectiveSubpathLengths and the regression suite
+    // transform-stale-subpath-lengths.test.ts.
     const source = vmWithPoints([
       [0, 0, 0],
       [1, 0, 0],
@@ -56,9 +62,11 @@ describe('TransformPairing core', () => {
 
     source.setBaseSubpathLengths([4]);
 
-    expect(() => alignVmobjectPair(source, target)).toThrow(
-      /subpath lengths sum .* does not match point count/i,
-    );
+    let pair!: ReturnType<typeof alignVmobjectPair>;
+    expect(() => {
+      pair = alignVmobjectPair(source, target);
+    }).not.toThrow();
+    expect(pair.startPoints.length).toBe(pair.targetPoints.length);
   });
   it('alignVmobjectPair keeps exact final target topology while returning aligned interpolation points', () => {
     const source = vmWithPoints([

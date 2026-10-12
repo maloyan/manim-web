@@ -496,12 +496,31 @@ export class VMobject extends VMobjectRendering {
   /**
    * Get effective subpath lengths for rendering.
    * Returns transform override if present, else base/subclass metadata.
+   *
+   * Subpath lengths partition the current points, so their sum must equal the
+   * current point count. A transform override is transient: it is set together
+   * with a matching point array during a Transform, but a later operation can
+   * replace the points without clearing it (e.g. `become`, a second Transform
+   * to a target with a different topology, `setPoints`). The stored lengths are
+   * then stale and no longer describe the live points. Hand such stale metadata
+   * to the transform aligner and it throws
+   * "subpath lengths sum (X) does not match point count (Y)", which aborts the
+   * animation and renders the mobject black (observed on several docs examples).
+   *
+   * Treat a sum mismatch as stale metadata and return undefined, so callers and
+   * the renderer fall back to a single full-length subpath. Metadata that still
+   * matches the points (ContourPlot #700, glyph contours #716, an in-flight
+   * Transform) sums correctly and is returned unchanged.
    */
   getEffectiveSubpathLengths(): number[] | undefined {
-    if (this._transformSubpathLengths !== undefined) {
-      return [...this._transformSubpathLengths];
-    }
-    return this.getSubpathLengths?.();
+    const lengths =
+      this._transformSubpathLengths !== undefined
+        ? [...this._transformSubpathLengths]
+        : this.getSubpathLengths?.();
+    if (lengths === undefined) return undefined;
+    const total = lengths.reduce((sum, len) => sum + len, 0);
+    if (total !== this._points3D.length) return undefined;
+    return lengths;
   }
 
   /**
