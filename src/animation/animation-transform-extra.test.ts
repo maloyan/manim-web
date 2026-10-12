@@ -379,7 +379,11 @@ describe('ClockwiseTransform', () => {
     expect(s.getEffectiveSubpathLengths()).toEqual([5, 5]);
   });
 
-  it('throws on malformed source subpath metadata via shared pairing invariants', () => {
+  it('treats stale/mismatched source subpath metadata as absent instead of throwing', () => {
+    // Subpath lengths that no longer sum to the live point count (sum 4 != 5)
+    // are stale metadata, not a fatal error. The transform must fall back to a
+    // single subpath and run, never crash the animation (black render). See
+    // VMobject.getEffectiveSubpathLengths and transform-stale-subpath-lengths.test.ts.
     const s = vm([
       [0, 0, 0],
       [1, 0, 0],
@@ -397,7 +401,7 @@ describe('ClockwiseTransform', () => {
     s.setBaseSubpathLengths([4]);
 
     const anim = new ClockwiseTransform(s, t);
-    expect(() => anim.begin()).toThrow(/subpath lengths sum .* does not match point count/i);
+    expect(() => anim.begin()).not.toThrow();
   });
   it('default angle is PI', () => {
     const anim = new ClockwiseTransform(sq(), sq());
