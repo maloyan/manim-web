@@ -955,6 +955,13 @@ export {
   type NewtonFractalOptions,
 } from './mobjects/fractals';
 
+// Custom GLSL shader mobject (Shadertoy-style fragment shader on a plane)
+export {
+  ShaderMobject,
+  type ShaderMobjectOptions,
+  type ShaderUniformValue,
+} from './mobjects/shader';
+
 // Probability mobjects
 export {
   SampleSpace,
