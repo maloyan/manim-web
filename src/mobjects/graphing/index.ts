@@ -72,6 +72,28 @@ export {
   type LabelPosition,
 } from './PieChart';
 
+// Statistical plots (histogram, scatter, box, violin) and their stats helpers
+export {
+  mean,
+  stdDev,
+  quantile,
+  iqr,
+  histogramBins,
+  kde,
+  silvermanBandwidth,
+  boxSummary,
+  extent,
+  niceAxisRange,
+  type HistogramBin,
+  type HistogramBinsOptions,
+  type KdeOptions,
+  type BoxSummary,
+} from './stats';
+export { Histogram, type HistogramOptions } from './Histogram';
+export { ScatterPlot, type ScatterPlotOptions } from './ScatterPlot';
+export { BoxPlot, type BoxPlotOptions, type PlotOrientation } from './BoxPlot';
+export { ViolinPlot, type ViolinPlotOptions, type ViolinDensity } from './ViolinPlot';
+
 // VectorField
 export {
   VectorField,
