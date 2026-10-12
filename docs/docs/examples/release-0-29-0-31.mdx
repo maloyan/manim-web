@@ -1,0 +1,267 @@
+---
+title: New in 0.29, 0.30 and 0.31
+sidebar_label: New in 0.29 - 0.31
+---
+
+import BenzeneMoleculeExample from '@site/src/components/examples/BenzeneMoleculeExample';
+import DropShadowExample from '@site/src/components/examples/DropShadowExample';
+import StateMachineExample from '@site/src/components/examples/StateMachineExample';
+import SignalsExample from '@site/src/components/examples/SignalsExample';
+
+Features added in the 0.29, 0.30 and 0.31 releases. Each section lists the real
+exported API, a copy-paste snippet, and a runnable example where the feature is
+visual. The reactive signals, parametrized scenes, and keyboard input sections
+show real API usage; the parametrized and keyboard sections stay code samples,
+since one renders off-screen and the other needs live key events.
+
+## 0.29.0
+
+### MoleculeMobject
+
+`MoleculeMobject` draws a 2D skeletal molecule from explicit atom and bond
+coordinates. Atoms are nodes with an element symbol and `x`/`y` in bond-length
+units; bonds are edges between atom indices, with an optional `order` (1, 2, or 3) and `type` (`normal`, `wedge`, or `dash`). Carbons stay implicit by the
+skeletal convention unless `showCarbonLabels` is set. The class extends
+`VGroup`, so `Create` and `FadeIn` animate it.
+
+Four prebuilt builders cover common teaching molecules: `water()`, `methane()`,
+`benzene()`, and `ethanol()`. Each returns a `MoleculeMobject` and takes the
+same style overrides (bond length, colors, label options).
+
+<BenzeneMoleculeExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { benzene, MoleculeMobject, FadeIn } from 'manim-web';
+
+// A prebuilt molecule. bondLength scales every atom coordinate.
+const ring = benzene({ bondLength: 1.8, bondColor: '#ffffff' });
+scene.play(new FadeIn(ring));
+
+// Or build one from explicit atoms and bonds (water, bent 104.5 degrees).
+const custom = new MoleculeMobject({
+  atoms: [
+    { element: 'O', x: 0, y: 0 },
+    { element: 'H', x: -0.79, y: -0.61 },
+    { element: 'H', x: 0.79, y: -0.61 },
+  ],
+  bonds: [
+    { from: 0, to: 1 },
+    { from: 0, to: 2, order: 1 },
+  ],
+  bondLength: 1.5,
+});
+```
+
+</details>
+
+Options also include `colors` (per-element overrides merged over the CPK
+palette), `labelFontSize`, and `bondSpacing`. Accessors are `getAtoms()`,
+`getBonds()`, `getAtom(i)`, `getBond(i)`, `numAtoms`, and `numBonds`. The color
+helpers `cpkColor`, `normalizeElement`, `CPK_COLORS`, and `DEFAULT_ELEMENT_COLOR`
+back the element palette.
+
+### withDropShadow
+
+`withDropShadow(mobject, options)` returns a `VGroup` that holds one or more
+shadow copies behind the original. Each shadow is a deep copy of the source,
+recolored to the shadow color at a reduced opacity and shifted by the offset.
+The source is never recolored or moved: the group holds the real original in
+front, so the result is a drop-in for it. There is no real blur pass; `layers`
+fakes a soft edge with several fainter copies that spread farther out by `blur`.
+
+<DropShadowExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Square, withDropShadow, Create } from 'manim-web';
+
+const card = new Square({ sideLength: 2.6, color: '#58c4dd', strokeWidth: 4 });
+
+const shadowed = withDropShadow(card, {
+  offset: [0.18, -0.18], // shadow offset [dx, dy] in scene units
+  color: '#000000',
+  opacity: 0.45, // opacity of the strongest layer
+  layers: 6, // more copies fake a softer edge
+  blur: 1.2, // extra outward spread of the outer layers
+});
+scene.play(new Create(shadowed)); // group = [shadow layers..., original]
+```
+
+</details>
+
+Options are `offset`, `color`, `opacity`, `layers`, `blur`, and `scale` (a
+uniform scale of each shadow copy). With `layers` at 1 (the default) the shadow
+is a single hard copy.
+
+## 0.30.0
+
+### StateMachine
+
+`StateMachine` is a Rive-style, input-driven animation controller. A machine
+holds named states, typed inputs (`boolInput`, `numberInput`, `triggerInput`),
+and transitions between states guarded by input conditions. Call `update(dt)`
+each frame to evaluate the current state's transitions; the first matching one
+fires. On entering a state the machine runs that state's `onEnter` action, which
+is where an animation or a property change starts. The core logic is headless
+and deterministic: the same input sequence produces the same state sequence.
+
+<StateMachineExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { StateMachine, when, Square, Transform } from 'manim-web';
+
+const sm = new StateMachine();
+sm.addState('idle', { onEnter: () => (target = small) });
+sm.addState('active', { onEnter: () => (target = large) });
+sm.triggerInput('toggle'); // a trigger is pending for one update after fire()
+sm.addTransition('idle', 'active', when('toggle').onTrigger());
+sm.addTransition('active', 'idle', when('toggle').onTrigger());
+
+// Each frame (or on a UI event):
+sm.fire('toggle'); // make the trigger pending
+sm.update(); // fire the transition, run the target onEnter
+sm.getCurrentState(); // 'active'
+```
+
+</details>
+
+Guards come from `when(name)` with `isTrue`, `isFalse`, `is`, `equals`,
+`greaterThan`, `lessThan`, `atLeast`, `atMost`, and `onTrigger`; combine them
+with `allOf` and `anyOf`. To drive the machine from UI events, wire
+`inputHandler(name)` and `triggerHandler(name)` to a `Clickable` `onClick`, a
+`Hoverable` callback, or a `Slider` `onChange`.
+
+### Reactive signals
+
+The signal graph is a small, synchronous reactivity core in the style of Motion
+Canvas. `createSignal(initial)` is a writable source; `createComputed(fn)` is a
+derived value that runs lazily, memoizes, and auto-tracks the signals it reads,
+so it recomputes only after one of those changes; `createEffect(fn)` runs once
+and re-runs when a tracked dependency changes. The graph is push-dirty,
+pull-value: a write marks dependents dirty, and a computed recomputes only when
+its value is read.
+
+<SignalsExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { createSignal, createComputed, createEffect, Dot } from 'manim-web';
+
+const x = createSignal(-3);
+const y = createComputed(() => (x() * x()) / 3 - 1.5); // derived from x
+
+// An effect pushes the derived value into the scene.
+const cursor = new Dot({ radius: 0.14, color: '#58c4dd' });
+createEffect(() => cursor.moveTo([x(), y(), 0]));
+scene.add(cursor);
+
+x.set(2); // recomputes y and moves the cursor on this write
+```
+
+</details>
+
+A signal reads with `s()`, writes with `s.set(v)`, reads without tracking with
+`s.peek()`, and derives a write with `s.update(fn)`. `batch(fn)` coalesces many
+writes into one effect flush, and `untrack(fn)` reads without registering a
+dependency. `bindSignalToTracker(signal, tracker)` drives a `ValueTracker` from
+a signal, and `trackerToSignal(tracker)` wraps a tracker as a writable signal,
+so the signal graph interoperates with the animation layer.
+
+### Parametrized scenes
+
+A parametrized scene is a reusable scene recipe (Remotion-style): typed
+`defaultProps`, an optional async `calculateMetadata` hook that may fetch data
+and override the render size, fps, or duration before the scene is built, and a
+`build` function that assembles the scene from the resolved props and the
+fetched data. One definition renders many prop sets, so a single scene drives
+data-driven batch generation. `renderParametrized` runs off-screen, so this
+section is a code sample.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { defineParametrizedScene, resolveProps, renderParametrized, Text } from 'manim-web';
+
+const titleCard = defineParametrizedScene({
+  defaultProps: { label: 'A', value: 1, color: '#58c4dd' },
+  // Optional pre-render hook: fetch data and override scene config.
+  calculateMetadata: async ({ props, fetch }) => {
+    const data = await fetch(`/api/series/${props.label}`);
+    return { data, duration: 3, width: 1920, height: 1080, fps: 60 };
+  },
+  build: (scene, props, data) => {
+    scene.add(new Text({ text: `${props.label}: ${props.value}`, color: props.color }));
+  },
+});
+
+// Resolve props without rendering (defaults + input, input wins, coerced to type).
+const props = resolveProps(titleCard, { value: '42' }); // value coerced to number 42
+
+// Render one prop set. Headless-safe; inject fetch so tests never hit the network.
+const { scene, url, metadata } = await renderParametrized(titleCard, { label: 'B' });
+```
+
+</details>
+
+Each input prop is coerced to the type of its matching default (or an explicit
+`schema` tag), and an uncoercible or unknown key falls back to the default. The
+result carries the built `scene`, the resolved `props`, the fetched `data`, the
+resolved `metadata`, and a shareable `url` hash. `propsFromUrl(def)` reads props
+from the current URL hash, reusing the URL-state codec so a parametrized scene
+stays shareable.
+
+## 0.31.0
+
+### KeyboardInput
+
+`KeyboardInput` is a general-purpose keyboard controller for interactive apps
+and games. It tracks held keys, exposes per-frame edge queries (`wasPressed` and
+`wasReleased`), derives a movement vector from the arrow keys and WASD, and binds
+a key to a `StateMachine` input or a `ValueTracker`. All DOM access is
+feature-detected, so it is safe to construct in Node or a headless render: the
+reads return `false` or zero and never throw. Live key events need a browser, so
+this section is a code sample.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { KeyboardInput } from 'manim-web';
+
+// preventDefault stops game keys (arrows, Space) from scrolling the page.
+const keys = new KeyboardInput({ preventDefault: ['arrowup', 'arrowdown', 'space'] });
+
+// In the render loop, each frame:
+function frame(dt: number): void {
+  const [dx, dy] = keys.getDirectionVector(); // unit vector from arrows + WASD
+  player.shift([dx * speed * dt, dy * speed * dt, 0]);
+  if (keys.wasPressed('Space')) player.jump(); // edge, once per press
+  keys.endFrame(); // clear the per-frame pressed/released edges
+}
+
+// Bind keys to a StateMachine or a ValueTracker.
+keys.bindBool(sm, 'running', 'shift'); // true while held, false on release
+keys.bindTrigger(sm, 'jump', 'space'); // fire the trigger on each key-down
+keys.bindValue(thrust, 'w', { heldValue: 1, releasedValue: 0 });
+```
+
+</details>
+
+Reads include `isKeyDown`, `anyKeyDown`, `wasPressed`, `wasReleased`, `getAxis`
+(raw axes in `{-1, 0, 1}`), and `getDirectionVector` (the normalized axes). Key
+names accept any common spelling (`'ArrowUp'`, `'w'`, `' '`), normalized by
+`normalizeKey`. Register callbacks with `onKeyDown` / `onKeyUp` (each returns an
+unsubscribe function, and `'any'` matches every key), and manage the lifecycle
+with `enable`, `disable`, and `dispose`. `makeKeyboardInput(options)` is a
+factory for the same controller.
