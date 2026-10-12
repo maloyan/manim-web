@@ -83,12 +83,15 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 /**
- * Desmos-style mouse pan and zoom for a 2D (orthographic) manim camera.
+ * Desmos-style pan and zoom for a 2D (orthographic) manim camera, with mouse
+ * and touch input.
  *
  * Wheel zooms the frame about the world point under the cursor (zoom to
- * cursor, not to center); a pointer drag pans the frame. The controller only
- * reads/writes the camera through {@link PanZoomCamera}; it never touches the
- * core render path, so it is a pure opt-in input controller.
+ * cursor, not to center); a mouse drag pans the frame. On touch devices, a
+ * one-finger drag pans, and a two-finger gesture pinch-zooms about the
+ * midpoint of the two touches while panning by the midpoint delta. The
+ * controller only reads/writes the camera through {@link PanZoomCamera}; it
+ * never touches the core render path, so it is a pure opt-in input controller.
  *
  * Lifecycle mirrors {@link OrbitControls}: listeners are attached while the
  * controller is enabled and removed on `disable()` / `dispose()`.
@@ -111,8 +114,11 @@ export class PanZoomControls {
   private _enabled = false;
   private _disposed = false;
   private _panning = false;
+  private _pinching = false;
   private _lastClientX = 0;
   private _lastClientY = 0;
+  /** Distance in pixels between the two touches at the last pinch sample. */
+  private _lastPinchDist = 0;
 
   private readonly _window: Window | null;
 
@@ -120,10 +126,13 @@ export class PanZoomControls {
   private readonly _onMouseDown: (e: MouseEvent) => void;
   private readonly _onMouseMove: (e: MouseEvent) => void;
   private readonly _onMouseUp: () => void;
+  private readonly _onTouchStart: (e: TouchEvent) => void;
+  private readonly _onTouchMove: (e: TouchEvent) => void;
+  private readonly _onTouchEnd: (e: TouchEvent) => void;
 
   /**
    * @param camera     The 2D camera to drive (e.g. `scene.camera`).
-   * @param domElement The element that receives wheel/pointer events (e.g. the canvas).
+   * @param domElement The element that receives wheel/mouse/touch events (e.g. the canvas).
    * @param options    Pan/zoom configuration.
    */
   constructor(camera: PanZoomCamera, domElement: HTMLElement, options?: PanZoomControlsOptions) {
@@ -154,6 +163,9 @@ export class PanZoomControls {
     this._onMouseDown = this._handleMouseDown.bind(this);
     this._onMouseMove = this._handleMouseMove.bind(this);
     this._onMouseUp = this._handleMouseUp.bind(this);
+    this._onTouchStart = this._handleTouchStart.bind(this);
+    this._onTouchMove = this._handleTouchMove.bind(this);
+    this._onTouchEnd = this._handleTouchEnd.bind(this);
 
     if ((options?.enabled ?? true) === true) {
       this.enable();
@@ -173,9 +185,14 @@ export class PanZoomControls {
     this._enabled = true;
     el.addEventListener('wheel', this._onWheel, { passive: false });
     el.addEventListener('mousedown', this._onMouseDown);
+    // touchstart is non-passive so a starting gesture can call preventDefault()
+    // and stop the page from scrolling/zooming under the control.
+    el.addEventListener('touchstart', this._onTouchStart, { passive: false });
     if (this._window) {
       this._window.addEventListener('mousemove', this._onMouseMove);
       this._window.addEventListener('mouseup', this._onMouseUp);
+      this._window.addEventListener('touchmove', this._onTouchMove, { passive: false });
+      this._window.addEventListener('touchend', this._onTouchEnd);
     }
   }
 
@@ -184,14 +201,18 @@ export class PanZoomControls {
     if (!this._enabled) return;
     this._enabled = false;
     this._panning = false;
+    this._pinching = false;
     const el = this._domElement;
     if (el && typeof el.removeEventListener === 'function') {
       el.removeEventListener('wheel', this._onWheel);
       el.removeEventListener('mousedown', this._onMouseDown);
+      el.removeEventListener('touchstart', this._onTouchStart);
     }
     if (this._window) {
       this._window.removeEventListener('mousemove', this._onMouseMove);
       this._window.removeEventListener('mouseup', this._onMouseUp);
+      this._window.removeEventListener('touchmove', this._onTouchMove);
+      this._window.removeEventListener('touchend', this._onTouchEnd);
     }
   }
 
@@ -208,28 +229,10 @@ export class PanZoomControls {
     const ndc = this._eventToNdc(e.clientX, e.clientY);
     if (!ndc) return;
 
-    const worldBefore = this._worldAt(ndc.x, ndc.y);
-
     const dir = this._options.invertZoom ? -e.deltaY : e.deltaY;
     const requestedFactor = Math.exp(dir * this._options.zoomSpeed);
 
-    // Clamp the resulting frame width to the configured zoom range.
-    // zoom = baseFrameWidth / frameWidth, so a wider frame is a smaller zoom.
-    const minWidth = this._baseFrameWidth / this._options.maxZoom;
-    const maxWidth = this._baseFrameWidth / this._options.minZoom;
-    const targetWidth = this._camera.frameWidth * requestedFactor;
-    const clampedWidth = clamp(targetWidth, minWidth, maxWidth);
-    const factor = clampedWidth / this._camera.frameWidth;
-    if (factor === 1) return; // already at a limit — nothing to do
-
-    this._camera.frameWidth = this._camera.frameWidth * factor;
-    this._camera.frameHeight = this._camera.frameHeight * factor;
-
-    // Re-anchor the center so the same world point stays under the cursor.
-    const centerX = worldBefore.x - (ndc.x * this._camera.frameWidth) / 2;
-    const centerY = worldBefore.y - (ndc.y * this._camera.frameHeight) / 2;
-    this._applyCenter(centerX, centerY);
-
+    if (!this._applyZoom(ndc.x, ndc.y, requestedFactor)) return; // at a limit
     e.preventDefault();
     this._emitChange();
   }
@@ -246,34 +249,96 @@ export class PanZoomControls {
 
   private _handleMouseMove(e: MouseEvent): void {
     if (!this._panning) return;
-    const rect = this._domElement.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) {
-      this._lastClientX = e.clientX;
-      this._lastClientY = e.clientY;
-      return;
-    }
-
-    const dxPx = e.clientX - this._lastClientX;
-    const dyPx = e.clientY - this._lastClientY;
-    this._lastClientX = e.clientX;
-    this._lastClientY = e.clientY;
-
-    // Grab-and-move: the world point under the cursor follows the cursor, so
-    // the center moves opposite in x and along screen-y (world-y is flipped).
-    const worldDx = (dxPx * this._camera.frameWidth) / rect.width;
-    const worldDy = (dyPx * this._camera.frameHeight) / rect.height;
-
-    let centerX = this._camera.position.x;
-    let centerY = this._camera.position.y;
-    if (this._options.enablePanX) centerX -= worldDx;
-    if (this._options.enablePanY) centerY += worldDy;
-
-    this._applyCenter(centerX, centerY);
-    this._emitChange();
+    if (this._panDelta(e.clientX, e.clientY)) this._emitChange();
   }
 
   private _handleMouseUp(): void {
     if (this._panning) this._panning = false;
+  }
+
+  // ── Touch / pinch handlers ──────────────────────────────────────
+
+  private _handleTouchStart(e: TouchEvent): void {
+    if (!this._enabled) return;
+    const touches = e.touches;
+    if (touches.length >= 2) {
+      this._beginPinch(touches[0], touches[1]);
+      e.preventDefault();
+      return;
+    }
+    if (touches.length === 1) {
+      if (!this._options.enablePanX && !this._options.enablePanY) return;
+      this._pinching = false;
+      this._panning = true;
+      this._lastClientX = touches[0].clientX;
+      this._lastClientY = touches[0].clientY;
+      e.preventDefault();
+    }
+  }
+
+  private _handleTouchMove(e: TouchEvent): void {
+    if (!this._enabled) return;
+    const touches = e.touches;
+    if (this._pinching && touches.length >= 2) {
+      this._handlePinchMove(touches[0], touches[1]);
+      e.preventDefault();
+      return;
+    }
+    if (this._panning && touches.length >= 1) {
+      if (this._panDelta(touches[0].clientX, touches[0].clientY)) this._emitChange();
+      e.preventDefault();
+    }
+  }
+
+  private _handleTouchEnd(e: TouchEvent): void {
+    const remaining = e.touches;
+    if (remaining.length === 0) {
+      this._panning = false;
+      this._pinching = false;
+      this._lastPinchDist = 0;
+      return;
+    }
+    if (remaining.length === 1) {
+      // Lifting one finger of a pinch leaves a single contact: keep panning
+      // from the remaining finger so the gesture does not jump.
+      this._pinching = false;
+      this._panning = this._options.enablePanX || this._options.enablePanY;
+      this._lastClientX = remaining[0].clientX;
+      this._lastClientY = remaining[0].clientY;
+    }
+  }
+
+  private _beginPinch(t0: Touch, t1: Touch): void {
+    this._pinching = true;
+    this._panning = false;
+    this._lastClientX = (t0.clientX + t1.clientX) / 2;
+    this._lastClientY = (t0.clientY + t1.clientY) / 2;
+    this._lastPinchDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+  }
+
+  private _handlePinchMove(t0: Touch, t1: Touch): void {
+    const midX = (t0.clientX + t1.clientX) / 2;
+    const midY = (t0.clientY + t1.clientY) / 2;
+    const dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+
+    let changed = false;
+
+    // Zoom about the midpoint. Spreading the fingers (dist grows) shrinks the
+    // frame (zoom in); the ratio of old/new distance is the requested factor,
+    // which maps onto the same clamped zoom path the wheel uses.
+    if (this._options.enableZoom && this._lastPinchDist > 0 && dist > 0) {
+      const ndc = this._eventToNdc(midX, midY);
+      if (ndc) {
+        const requestedFactor = this._lastPinchDist / dist;
+        if (this._applyZoom(ndc.x, ndc.y, requestedFactor)) changed = true;
+      }
+    }
+    this._lastPinchDist = dist;
+
+    // Two-finger drag: pan by how far the midpoint moved.
+    if (this._panDelta(midX, midY)) changed = true;
+
+    if (changed) this._emitChange();
   }
 
   // ── Helpers ─────────────────────────────────────────────────────
@@ -294,6 +359,66 @@ export class PanZoomControls {
       x: this._camera.position.x + (ndcX * this._camera.frameWidth) / 2,
       y: this._camera.position.y + (ndcY * this._camera.frameHeight) / 2,
     };
+  }
+
+  /**
+   * Scale the frame by `requestedFactor` (clamped to min/max zoom) about the
+   * world point under the given NDC coordinates, re-anchoring the center so
+   * that point stays fixed on screen. Shared by wheel zoom and pinch zoom.
+   * Returns true if the frame actually changed, false if already at a limit.
+   */
+  private _applyZoom(ndcX: number, ndcY: number, requestedFactor: number): boolean {
+    const worldBefore = this._worldAt(ndcX, ndcY);
+
+    // Clamp the resulting frame width to the configured zoom range.
+    // zoom = baseFrameWidth / frameWidth, so a wider frame is a smaller zoom.
+    const minWidth = this._baseFrameWidth / this._options.maxZoom;
+    const maxWidth = this._baseFrameWidth / this._options.minZoom;
+    const targetWidth = this._camera.frameWidth * requestedFactor;
+    const clampedWidth = clamp(targetWidth, minWidth, maxWidth);
+    const factor = clampedWidth / this._camera.frameWidth;
+    if (factor === 1) return false; // already at a limit — nothing to do
+
+    this._camera.frameWidth = this._camera.frameWidth * factor;
+    this._camera.frameHeight = this._camera.frameHeight * factor;
+
+    const centerX = worldBefore.x - (ndcX * this._camera.frameWidth) / 2;
+    const centerY = worldBefore.y - (ndcY * this._camera.frameHeight) / 2;
+    this._applyCenter(centerX, centerY);
+    return true;
+  }
+
+  /**
+   * Pan the center so the world point under the previous cursor/midpoint
+   * follows it to the new screen position. Updates the last cursor each call.
+   * Returns true if the center was updated, false when the element has no size
+   * (headless/zero-rect) so callers can skip the onChange emit.
+   */
+  private _panDelta(clientX: number, clientY: number): boolean {
+    const rect = this._domElement.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      this._lastClientX = clientX;
+      this._lastClientY = clientY;
+      return false;
+    }
+
+    const dxPx = clientX - this._lastClientX;
+    const dyPx = clientY - this._lastClientY;
+    this._lastClientX = clientX;
+    this._lastClientY = clientY;
+
+    // Grab-and-move: the world point under the cursor follows the cursor, so
+    // the center moves opposite in x and along screen-y (world-y is flipped).
+    const worldDx = (dxPx * this._camera.frameWidth) / rect.width;
+    const worldDy = (dyPx * this._camera.frameHeight) / rect.height;
+
+    let centerX = this._camera.position.x;
+    let centerY = this._camera.position.y;
+    if (this._options.enablePanX) centerX -= worldDx;
+    if (this._options.enablePanY) centerY += worldDy;
+
+    this._applyCenter(centerX, centerY);
+    return true;
   }
 
   /** Clamp to bounds (if any) and push the new center to the camera. */
