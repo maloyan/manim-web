@@ -1589,6 +1589,16 @@ export {
   type SceneLike,
   type ContainerLike,
   type Vec3,
+  encodeStateToHash,
+  decodeStateFromHash,
+  writeStateToUrl,
+  readStateFromUrl,
+  onUrlStateChange,
+  bindStateToUrl,
+  type WriteStateOptions,
+  type BindUrlStateOptions,
+  type UrlStateBinding,
+  type UrlStateController,
 } from './serialization';
 
 // --- geo maps (best-manim) ---
