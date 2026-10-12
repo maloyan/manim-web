@@ -13,6 +13,7 @@ import TransformMatchingBaseExample from '@site/src/components/examples/Transfor
 import ManimBannerExample from '@site/src/components/examples/ManimBannerExample';
 import TexTemplateExample from '@site/src/components/examples/TexTemplateExample';
 import MathTexPartExample from '@site/src/components/examples/MathTexPartExample';
+import FormulaTransformExample from '@site/src/components/examples/FormulaTransformExample';
 import AnimationUtilitiesExample from '@site/src/components/examples/AnimationUtilitiesExample';
 
 Examples showcasing newly implemented features in manim-web.
@@ -412,6 +413,40 @@ await scene.play(new Create(rSquared));
 
 // Highlight specific parts
 await scene.play(new Indicate(xSquared, { color: YELLOW }));
+```
+
+</details>
+
+---
+
+## Step-by-Step Formula Transformation
+
+Show the algebra steps, ManimCE-style. Multi-part `MathTex` makes each symbol an
+addressable part, and `transformMatchingTex` morphs the parts that two lines share
+while fading the rest. Chaining these across several lines turns a result into a
+readable derivation: here `(a + b)²` expands to `a² + 2ab + b²`.
+
+<FormulaTransformExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { MathTex, VGroup, Write, transformMatchingTex, WHITE } from 'manim-web';
+
+// Each line is a multi-part MathTex: parts with the same LaTeX string morph,
+// the rest fade. Shared symbols across lines read as the steps of the algebra.
+const line1 = new MathTex({ latex: ['(', 'a', '+', 'b', ')^{2}'], color: WHITE });
+await line1.waitForRender();
+scene.add(new VGroup(line1));
+await scene.play(new Write(line1));
+
+const line2 = new MathTex({ latex: ['a^{2}', '+', '2ab', '+', 'b^{2}'], color: WHITE });
+await line2.waitForRender();
+line2.moveTo([0, 0, 0]);
+
+// Matching parts transform in place; the new terms fade in.
+await scene.play(transformMatchingTex(line1, line2, { duration: 1.6, fadeRatio: 0.3 }));
 ```
 
 </details>
