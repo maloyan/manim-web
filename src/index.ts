@@ -701,6 +701,13 @@ export {
   Arrow3D,
   Vector3D,
   type Arrow3DOptions,
+  // Shared mesh orientation helper
+  orientMeshAlong,
+  // Molecular primitives (bonds, tubes)
+  Bond3D,
+  type Bond3DOptions,
+  TubeFromPoints,
+  type TubeFromPointsOptions,
   // Surfaces
   Surface3D,
   Surface3D as Surface,
@@ -1087,6 +1094,51 @@ export {
   type AtomRender,
   type BondRender,
 } from './mobjects/chemistry';
+
+// Molecular mobjects, radius tables and PDB parser (3D molecule / drug-binding)
+export {
+  COVALENT_RADII,
+  VDW_RADII,
+  DEFAULT_COVALENT_RADIUS,
+  DEFAULT_VDW_RADIUS,
+  covalentRadius,
+  vdwRadius,
+  Molecule3D,
+  parsePdb,
+  threeToOneLetter,
+  THREE_TO_ONE_LETTER,
+  UNKNOWN_RESIDUE_CODE,
+  Protein,
+  BindingPocket,
+  hydrogenBond,
+  contact,
+  distanceLabel,
+  residueLabel,
+  dockLigand,
+} from './mobjects/molecular';
+export type {
+  Atom3DSpec,
+  Bond3DSpec,
+  MoleculeStyle,
+  Molecule3DOptions,
+  Atom3DRender,
+  Bond3DRender,
+  ParsedStructure,
+  ResidueCA,
+  SecondaryStructure,
+  ParsePdbOptions,
+  ProteinOptions,
+  ProteinRepresentation,
+  ProteinColorMode,
+  BindingPocketOptions,
+  BindingPocketStyle,
+  DashedAnnotationOptions,
+  HydrogenBondOptions,
+  ContactOptions,
+  DistanceLabelOptions,
+  ResidueLabelOptions,
+  DockLigandOptions,
+} from './mobjects/molecular';
 
 // Biology mobjects
 export {

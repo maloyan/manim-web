@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Vector3Tuple } from '../../core/Mobject';
 import { meshMaterial } from '../../core/threeMaterial';
 import { Mobject3D } from './Mobject3D';
+import { orientMeshAlong } from './meshOrient';
 
 /**
  * Options for creating an Arrow3D
@@ -81,11 +82,23 @@ export class Arrow3D extends Mobject3D {
   }
 
   /**
-   * Create the Three.js arrow object (shaft + tip)
+   * Create the Three.js arrow object (shaft + tip).
+   *
+   * Builds into a fresh Group. The geometry build lives in
+   * {@link _populateGroup} so {@link _rebuildGeometry} can refill the SAME
+   * Group in place instead of replacing the top-level object (which would
+   * orphan it from a scene graph that already holds the old reference).
    */
   protected _createThreeObject(): THREE.Object3D {
     const group = new THREE.Group();
+    this._populateGroup(group);
+    return group;
+  }
 
+  /**
+   * Build the shaft and tip meshes into `group`.
+   */
+  private _populateGroup(group: THREE.Group): void {
     // Calculate direction and length
     const dx = this._end[0] - this._start[0];
     const dy = this._end[1] - this._start[1];
@@ -93,7 +106,7 @@ export class Arrow3D extends Mobject3D {
     const totalLength = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
     if (totalLength === 0) {
-      return group;
+      return;
     }
 
     // Direction vector
@@ -157,8 +170,6 @@ export class Arrow3D extends Mobject3D {
     tip.position.copy(tipCenter);
     this._orientMesh(tip, dir);
     group.add(tip);
-
-    return group;
   }
 
   /**
@@ -166,14 +177,7 @@ export class Arrow3D extends Mobject3D {
    * Cylinders and cones in Three.js are oriented along the Y axis by default
    */
   private _orientMesh(mesh: THREE.Mesh, direction: THREE.Vector3): void {
-    // Default up direction for cylinders/triangles in Three.js
-    const up = new THREE.Vector3(0, 1, 0);
-
-    // Calculate rotation quaternion
-    const quaternion = new THREE.Quaternion();
-    quaternion.setFromUnitVectors(up, direction);
-
-    mesh.quaternion.copy(quaternion);
+    orientMeshAlong(mesh, direction);
   }
 
   /**
@@ -194,23 +198,49 @@ export class Arrow3D extends Mobject3D {
   }
 
   /**
-   * Rebuild the arrow geometry
+   * Rebuild the arrow geometry IN PLACE.
+   *
+   * A Scene adds this arrow's top-level object to its THREE scene graph once,
+   * at add time, and holds that exact reference. So the rebuild must keep the
+   * same top-level Group: it disposes and removes the old children, then
+   * refills the same Group with the fresh meshes. Replacing `_threeObject`
+   * with a new object would orphan the arrow — the scene would keep rendering
+   * the stale geometry while `getThreeObject()` returned an unparented object.
    */
   private _rebuildGeometry(): void {
-    if (this._threeObject) {
-      // Dispose old geometry
-      this._threeObject.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.geometry.dispose();
-          if (child.material instanceof THREE.Material) {
-            child.material.dispose();
+    // Before the first build there is nothing parented yet; defer to the lazy
+    // build in getThreeObject()/_syncToThree().
+    if (!(this._threeObject instanceof THREE.Group)) {
+      this._markDirty();
+      return;
+    }
+
+    const group = this._threeObject;
+
+    // Dispose and detach the old children.
+    for (const child of [...group.children]) {
+      child.traverse((node) => {
+        if (node instanceof THREE.Mesh) {
+          node.geometry.dispose();
+          if (node.material instanceof THREE.Material) {
+            node.material.dispose();
           }
         }
       });
+      group.remove(child);
     }
 
-    // Create new Three object
-    this._threeObject = this._createThreeObject();
+    // Refill the same Group with the new geometry.
+    this._populateGroup(group);
+
+    // The Scene sets renderOrder on the group and cascades it to the meshes so
+    // THREE sorts draw order correctly. Freshly built children default to 0, so
+    // re-cascade the group's renderOrder to keep that sort stable after a
+    // rebuild.
+    for (const child of group.children) {
+      child.renderOrder = group.renderOrder;
+    }
+
     this._markDirty();
   }
 

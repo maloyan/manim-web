@@ -32,6 +32,13 @@ export {
 export { Line3D, type Line3DOptions } from './Line3D';
 export { Arrow3D, Vector3D, type Arrow3DOptions } from './Arrow3D';
 
+// Shared mesh orientation helper (local +Y -> direction)
+export { orientMeshAlong } from './meshOrient';
+
+// Molecular primitives (bonds, tubes)
+export { Bond3D, type Bond3DOptions } from './Bond3D';
+export { TubeFromPoints, type TubeFromPointsOptions } from './TubeFromPoints';
+
 // Surfaces
 export { Surface3D, type Surface3DOptions } from './Surface3D';
 export {
