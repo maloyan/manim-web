@@ -186,7 +186,13 @@ function parseAtomLine(line: string, isHet: boolean): ParsedAtom | null {
   const resSeq = Number.parseInt(line.slice(22, 26), 10);
 
   return {
-    spec: { element, position: [x, y, z] },
+    spec: {
+      element,
+      position: [x, y, z],
+      chain: chain === '' ? undefined : chain,
+      resSeq: Number.isNaN(resSeq) ? undefined : resSeq,
+      resName: resName === '' ? undefined : resName,
+    },
     serial: Number.isNaN(serial) ? -1 : serial,
     isHet,
     resName,

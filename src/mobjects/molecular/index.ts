@@ -28,6 +28,9 @@ export type {
 export { parsePdb } from './pdb';
 export type { ParsedStructure, ResidueCA, SecondaryStructure, ParsePdbOptions } from './pdb';
 
+export { selectAtoms, bindingSiteSelection, DEFAULT_BINDING_SITE_RADIUS } from './selection';
+export type { AtomSelectionOptions } from './selection';
+
 export { threeToOneLetter, THREE_TO_ONE_LETTER, UNKNOWN_RESIDUE_CODE } from './residues';
 
 export { Protein } from './Protein';

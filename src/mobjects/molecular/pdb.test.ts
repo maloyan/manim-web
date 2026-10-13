@@ -173,6 +173,12 @@ describe('parsePdb records', () => {
     expect(s.atoms[0].element).toBe('N');
     expect(s.atoms[0].position).toEqual([11.0, 13.0, 10.0]);
   });
+
+  it('carries per-atom chain, resSeq and resName for selection', () => {
+    const s = parsePdb(SAMPLE);
+    expect(s.atoms[0]).toMatchObject({ chain: 'A', resSeq: 1, resName: 'ALA' });
+    expect(s.hetatms[0]).toMatchObject({ chain: 'A', resSeq: 101, resName: 'LIG' });
+  });
 });
 
 describe('parsePdb CONECT bonds', () => {
