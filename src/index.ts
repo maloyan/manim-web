@@ -1095,7 +1095,7 @@ export {
   type BondRender,
 } from './mobjects/chemistry';
 
-// Molecular radius tables (3D molecule / drug-binding prerequisites)
+// Molecular mobjects, radius tables and PDB parser (3D molecule / drug-binding)
 export {
   COVALENT_RADII,
   VDW_RADII,
@@ -1103,6 +1103,23 @@ export {
   DEFAULT_VDW_RADIUS,
   covalentRadius,
   vdwRadius,
+  Molecule3D,
+  parsePdb,
+  threeToOneLetter,
+  THREE_TO_ONE_LETTER,
+  UNKNOWN_RESIDUE_CODE,
+} from './mobjects/molecular';
+export type {
+  Atom3DSpec,
+  Bond3DSpec,
+  MoleculeStyle,
+  Molecule3DOptions,
+  Atom3DRender,
+  Bond3DRender,
+  ParsedStructure,
+  ResidueCA,
+  SecondaryStructure,
+  ParsePdbOptions,
 } from './mobjects/molecular';
 
 // Biology mobjects
