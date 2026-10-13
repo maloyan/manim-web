@@ -7,6 +7,8 @@ import MolecularSurfaceExample from '@site/src/components/examples/MolecularSurf
 import FlowArcExample from '@site/src/components/examples/FlowArcExample';
 import AnimatedChoroplethExample from '@site/src/components/examples/AnimatedChoroplethExample';
 import ReactionMechanismExample from '@site/src/components/examples/ReactionMechanismExample';
+import ReactionArrowExample from '@site/src/components/examples/ReactionArrowExample';
+import OrbitalSurfaceExample from '@site/src/components/examples/OrbitalSurfaceExample';
 
 Features added in the 0.38 release: a molecular surface that wraps a molecule in
 3D, curved electron-pushing arrows for reaction mechanisms, and two additions to
@@ -226,3 +228,105 @@ await scene.play(new Create(breaking, { duration: 1 }));
 
 Options are `from` and `to` (required), `electrons` (`'pair'` or `'single'`),
 `bulge`, `direction` (`'ccw'` or `'cw'`), `color`, and `strokeWidth`.
+
+---
+
+## Reaction schemes with ReactionArrow (0.38)
+
+`ReactionArrow` draws the arrow between reactants and products in a reaction
+scheme. It extends `VGroup`, so `Create` reveals the shaft progressively. The
+arrow goes from `start` to `end`, both `[x, y, z]`. `kind` picks the symbol:
+`'forward'` (the default) is one shaft with one head; `'reversible'` is two
+parallel shafts with full heads pointing opposite ways; `'equilibrium'` is two
+shafts with single-barb harpoon half-heads; `'resonance'` is one shaft with a
+head at both ends. `conditionsAbove` and `conditionsBelow` set labels centered
+over and under the arrow midpoint, for catalysts, solvents, or rate constants.
+`color`, `strokeWidth`, and `fontSize` style the arrow and the labels.
+
+The example stacks all four kinds in one 2D frame. `ReactionArrow` is 2D, so it
+uses a regular `Scene`. The arrows are white, so they read on the dark
+background. The forward arrow carries a `cat., Δ` label above and `H2O` below;
+the reversible arrow carries a `k1` label above.
+
+<ReactionArrowExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ReactionArrow, Create } from 'manim-web';
+
+// Forward: one shaft, one head, with conditions above and below.
+const forward = new ReactionArrow({
+  start: [-2, 2.4, 0],
+  end: [2, 2.4, 0],
+  kind: 'forward', // 'reversible' | 'equilibrium' | 'resonance'
+  conditionsAbove: 'cat., Δ',
+  conditionsBelow: 'H2O',
+  color: '#ffffff',
+  strokeWidth: 6,
+});
+await scene.play(new Create(forward, { duration: 0.9 })); // use a regular Scene
+
+// Reversible: two full heads pointing opposite ways, with a rate label.
+const reversible = new ReactionArrow({
+  start: [-2, 0.8, 0],
+  end: [2, 0.8, 0],
+  kind: 'reversible',
+  conditionsAbove: 'k1',
+  color: '#ffffff',
+  strokeWidth: 6,
+});
+await scene.play(new Create(reversible, { duration: 0.9 }));
+
+// equilibrium (harpoon half-heads) and resonance (a head at both ends) follow
+// the same pattern, each drawn with its own Create.
+```
+
+</details>
+
+Options are `start` and `end` (required), `kind` (`'forward'`, `'reversible'`,
+`'equilibrium'`, or `'resonance'`), `conditionsAbove`, `conditionsBelow`,
+`color`, `strokeWidth`, and `fontSize` (default 24).
+
+---
+
+## Atomic orbitals with OrbitalSurface (0.38)
+
+`OrbitalSurface` draws an atomic orbital as a two-color isosurface, the positive
+phase in one color and the negative phase in another. It extends `Group`, so it
+lives in a `ThreeDScene` and composes with `Molecule3D` in the same world
+coordinates. `type` picks the shape: `'s'` is one sphere, `'px'`, `'py'`, and
+`'pz'` are two-lobe dumbbells along each axis, `'dz2'` is two lobes with a torus
+around the waist, and `'dxy'` is four lobes. `center` places the orbital, `scale`
+sets the lobe size, and `isoValue` sets the threshold the lobe is drawn at (a
+smaller value grows the lobe). `positiveColor`, `negativeColor`, and `opacity`
+style the two phases.
+
+The example fades in a single `pz` orbital, the red-and-blue dumbbell, then spins
+it with a gentle ambient camera rotation. The scene uses `orbitControlsUp: 'z'`,
+so the dumbbell stays upright along z while it turns.
+
+<OrbitalSurfaceExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { OrbitalSurface, FadeIn } from 'manim-web';
+
+// A pz orbital: two lobes along z, red (positive) over blue (negative).
+const orbital = new OrbitalSurface({ type: 'pz', scale: 2 });
+scene.add(orbital); // use a ThreeDScene with orbitControlsUp: 'z'
+await scene.play(new FadeIn(orbital, { duration: 1.5 }));
+
+// Spin slowly so both lobes and the waist between them read as 3D.
+scene.beginAmbientCameraRotation(0.3);
+```
+
+</details>
+
+Options are `type` (`'s'`, `'px'`, `'py'`, `'pz'`, `'dz2'`, or `'dxy'`, default
+`'pz'`), `center`, `scale` (default 2), `isoValue`, `resolution`,
+`positiveColor`, `negativeColor`, and `opacity`. The read-only `surfaces` field
+holds the underlying `ImplicitSurface` per phase.
