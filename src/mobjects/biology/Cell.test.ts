@@ -3,6 +3,9 @@ import { Cell } from './Cell';
 import { VGroup } from '../../core/VGroup';
 import { Circle } from '../geometry/Circle';
 import { Ellipse } from '../geometry/Ellipse';
+import { Dot } from '../geometry/Dot';
+import { Arc } from '../geometry/Arc';
+import { ParametricFunction } from '../graphing/ParametricFunction';
 import { organelleColor } from './biologyColors';
 import type { OrganelleSpec } from './biologyTypes';
 
@@ -127,5 +130,87 @@ describe('Cell', () => {
     expect(clone).toBeInstanceOf(Cell);
     expect(clone.numOrganelles).toBe(cell.numOrganelles);
     expect(clone.getMembrane()).toBeInstanceOf(Ellipse);
+  });
+
+  // ===== Bilayer membrane =====
+
+  it('has an inner bilayer outline matching the membrane shape', () => {
+    expect(new Cell().innerMembrane).toBeInstanceOf(Circle);
+    expect(new Cell({ shape: 'ellipse', width: 4, height: 2 }).innerMembrane).toBeInstanceOf(
+      Ellipse,
+    );
+  });
+
+  it('fills the membrane with a soft cytoplasm tint', () => {
+    const cell = new Cell({ radius: 2 });
+    expect(cell.getMembrane().fillOpacity).toBeGreaterThan(0);
+    expect(cell.getMembrane().fillOpacity).toBeLessThan(0.3);
+  });
+
+  // ===== Nucleus detail =====
+
+  it('builds a nucleus envelope, tint and nucleolus', () => {
+    const cell = new Cell();
+    expect(cell.nucleusGroup).toBeInstanceOf(VGroup);
+    // disc, inner tint, envelope ring, nucleolus.
+    expect(cell.nucleusGroup?.children).toHaveLength(4);
+  });
+
+  it('has no nucleus group when showNucleus is false', () => {
+    const cell = new Cell({ showNucleus: false });
+    expect(cell.nucleusGroup).toBeNull();
+    expect(cell.getNucleus()).toBeNull();
+  });
+
+  // ===== Realistic organelle composites =====
+
+  it('builds a mitochondrion as a body with cristae', () => {
+    const cell = new Cell({ organelles: [{ name: 'mitochondrion' }] });
+    const shape = cell.getOrganelle(0)?.shape;
+    expect(shape).toBeInstanceOf(VGroup);
+    const children = (shape as VGroup).children;
+    expect(children.length).toBeGreaterThan(1);
+    expect(children.some((c) => c instanceof Ellipse)).toBe(true);
+    expect(children.some((c) => c instanceof ParametricFunction)).toBe(true);
+  });
+
+  it('builds a golgi as stacked arcs', () => {
+    const cell = new Cell({ organelles: [{ name: 'golgi' }] });
+    const shape = cell.getOrganelle(0)?.shape as VGroup;
+    expect(shape).toBeInstanceOf(VGroup);
+    expect(shape.children.length).toBeGreaterThanOrEqual(3);
+    expect(shape.children.every((c) => c instanceof Arc)).toBe(true);
+  });
+
+  it('builds a ribosome as a cluster of dots, not one circle', () => {
+    const cell = new Cell({ organelles: [{ name: 'ribosome' }] });
+    const shape = cell.getOrganelle(0)?.shape as VGroup;
+    expect(shape).toBeInstanceOf(VGroup);
+    expect(shape.children.length).toBeGreaterThanOrEqual(4);
+    expect(shape.children.every((c) => c instanceof Dot)).toBe(true);
+  });
+
+  it('builds an endoplasmic reticulum as wavy membranes', () => {
+    const cell = new Cell({ organelles: [{ name: 'endoplasmic reticulum' }] });
+    const shape = cell.getOrganelle(0)?.shape as VGroup;
+    expect(shape).toBeInstanceOf(VGroup);
+    expect(shape.children.every((c) => c instanceof ParametricFunction)).toBe(true);
+  });
+
+  it('builds a lysosome as a sac with enzyme dots', () => {
+    const cell = new Cell({ organelles: [{ name: 'lysosome' }] });
+    const shape = cell.getOrganelle(0)?.shape as VGroup;
+    expect(shape).toBeInstanceOf(VGroup);
+    expect(shape.children.filter((c) => c instanceof Dot).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('keeps an explicit shape as a plain primitive', () => {
+    const cell = new Cell({ organelles: [{ name: 'mitochondrion', shape: 'ellipse' }] });
+    expect(cell.getOrganelle(0)?.shape).toBeInstanceOf(Ellipse);
+  });
+
+  it('draws plain circles when organelleDetail is false', () => {
+    const cell = new Cell({ organelleDetail: false, organelles: [{ name: 'mitochondrion' }] });
+    expect(cell.getOrganelle(0)?.shape).toBeInstanceOf(Circle);
   });
 });

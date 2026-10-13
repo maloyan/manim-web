@@ -3,12 +3,17 @@
  *
  * The helix is two phosphate backbone strands (parametric helices, half a turn
  * out of phase) plus base-pair "rungs" that connect them at even intervals.
- * The rungs can be colored by base with the A/T/G/C palette.
+ * The rungs can be colored by base with the A/T/G/C palette, and a nucleotide
+ * bead sits where each rung meets a backbone.
  *
  * The helix axis is vertical (the Y axis). A full turn rises by `pitch`, so a
  * helix of `turns` turns has height `turns * pitch`. In 2D schematic mode the
  * strands are two sine waves in the XY plane; in 3D mode they wind around the
  * axis in the Z direction too.
+ *
+ * Depth cue: even in 2D the helix fakes depth. Each rung and bead gets a
+ * "frontness" from the helix angle, so the ones at the back of a turn are
+ * thinner and dimmer than the ones at the front. The eye reads the twist as 3D.
  *
  * The helix is a VGroup, so Create and FadeIn animate it directly.
  *
@@ -30,6 +35,7 @@
 import { VGroup } from '../../core/VGroup';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Line } from '../geometry/Line';
+import { Circle } from '../geometry/Circle';
 import { ParametricFunction } from '../graphing/ParametricFunction';
 import { DEFAULT_STROKE_WIDTH } from '../../constants';
 import { baseColor, complementOf, normalizeBase } from './biologyColors';
@@ -38,11 +44,27 @@ import { BaseSymbol, DNAHelixOptions, BasePairRender, StrandPair } from './biolo
 /** Default order the bases repeat in when no sequence is given. */
 const DEFAULT_SEQUENCE: readonly BaseSymbol[] = ['A', 'T', 'G', 'C'];
 
-/** Default colors of the two backbone strands. */
-const DEFAULT_BACKBONE_COLORS: [string, string] = ['#58C4DD', '#FF862F'];
+/** Default colors of the two backbone strands (a cyan and an orange). */
+const DEFAULT_BACKBONE_COLORS: [string, string] = ['#29B6F6', '#FF7043'];
 
 /** Default rung color used when colorByBase is false. */
 const DEFAULT_RUNG_COLOR = '#CCCCCC';
+
+/** Opacity of a rung or bead at the back of a turn (frontness 0). */
+const BACK_OPACITY = 0.4;
+/** Stroke-width multiplier of a rung at the back of a turn (frontness 0). */
+const BACK_RUNG_WIDTH_SCALE = 0.55;
+/** Stroke-width multiplier of a rung at the front of a turn (frontness 1). */
+const FRONT_RUNG_WIDTH_SCALE = 1.15;
+/** Radius multiplier of a bead at the back of a turn (frontness 0). */
+const BACK_BEAD_RADIUS_SCALE = 0.6;
+/** Radius multiplier of a bead at the front of a turn (frontness 1). */
+const FRONT_BEAD_RADIUS_SCALE = 1.1;
+
+/** Linear interpolation from a (at 0) to b (at 1). */
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
 
 export class DNAHelix extends VGroup {
   protected _turns: number;
@@ -57,6 +79,11 @@ export class DNAHelix extends VGroup {
   protected _rungColor: string;
   protected _strokeWidth: number;
   protected _numSamplesPerTurn: number;
+  protected _depthCue: boolean;
+  protected _showNucleotides: boolean;
+  protected _nucleotideRadius: number;
+  protected _backboneStrokeWidth: number;
+  protected _rungStrokeWidth: number;
 
   /** The two strand functions, built once and shared by strands and rungs. */
   protected _strandFuncs: [(t: number) => Vector3Tuple, (t: number) => Vector3Tuple];
@@ -69,6 +96,8 @@ export class DNAHelix extends VGroup {
   readonly rungsGroup: VGroup;
   /** The backbone strand mobjects, drawn in front of the rungs. */
   readonly strandsGroup: VGroup;
+  /** The nucleotide bead mobjects, drawn on top of the strands. */
+  readonly nucleotidesGroup: VGroup;
 
   constructor(options: DNAHelixOptions = {}) {
     super();
@@ -85,7 +114,11 @@ export class DNAHelix extends VGroup {
       baseColors = {},
       rungColor = DEFAULT_RUNG_COLOR,
       strokeWidth = DEFAULT_STROKE_WIDTH,
-      numSamplesPerTurn = 32,
+      numSamplesPerTurn = 48,
+      depthCue = true,
+      showNucleotides = true,
+      nucleotideRadius,
+      backboneStrokeWidth,
     } = options;
 
     this._turns = Math.max(0, turns);
@@ -100,18 +133,26 @@ export class DNAHelix extends VGroup {
     this._rungColor = rungColor;
     this._strokeWidth = strokeWidth;
     this._numSamplesPerTurn = Math.max(2, numSamplesPerTurn);
+    this._depthCue = depthCue;
+    this._showNucleotides = showNucleotides;
+    this._nucleotideRadius = nucleotideRadius ?? Math.max(0.04, 0.14 * Math.abs(radius));
+    this._backboneStrokeWidth = backboneStrokeWidth ?? strokeWidth;
+    // Rungs read as a cleaner ladder when a little thinner than the backbone.
+    this._rungStrokeWidth = 0.8 * strokeWidth;
 
     this._strandFuncs = [this._makeStrandFunc(0), this._makeStrandFunc(Math.PI)];
 
     this.rungsGroup = new VGroup();
     this.strandsGroup = new VGroup();
+    this.nucleotidesGroup = new VGroup();
 
     this._strands = this._buildStrands();
     this._buildBasePairs();
 
-    // Rungs render behind the backbone strands.
+    // Rungs render behind the backbone strands; beads sit on top of the joins.
     this.add(this.rungsGroup);
     this.add(this.strandsGroup);
+    this.add(this.nucleotidesGroup);
   }
 
   /** Build the parametric position function for one strand at the given phase. */
@@ -139,7 +180,7 @@ export class DNAHelix extends VGroup {
         tRange,
         numSamples,
         color: this._backboneColors[i],
-        strokeWidth: this._strokeWidth,
+        strokeWidth: this._backboneStrokeWidth,
       });
       this.strandsGroup.add(strand);
       return strand;
@@ -163,7 +204,19 @@ export class DNAHelix extends VGroup {
     return (this._turns * (index + 0.5)) / this._basePairs;
   }
 
-  /** Build every base-pair rung and add its line to rungsGroup. */
+  /**
+   * How far toward the viewer the first strand sits at helix parameter t, from
+   * 0 (back of a turn) to 1 (front). 0.5 when the depth cue is off, so nothing
+   * is dimmed or thinned.
+   */
+  protected _frontnessAt(t: number): number {
+    if (!this._depthCue) {
+      return 0.5;
+    }
+    return (Math.sin(2 * Math.PI * t) + 1) / 2;
+  }
+
+  /** Build every base-pair rung and bead, and add them to their groups. */
   protected _buildBasePairs(): void {
     for (let i = 0; i < this._basePairs; i++) {
       const t = this._paramAt(i);
@@ -172,10 +225,71 @@ export class DNAHelix extends VGroup {
       const start = this._strandFuncs[0](t);
       const end = this._strandFuncs[1](t);
       const color = this._colorByBase ? baseColor(base, this._baseColors) : this._rungColor;
-      const line = new Line({ start, end, color, strokeWidth: this._strokeWidth });
+      const frontness = this._frontnessAt(t);
+
+      const line = this._buildRung(start, end, color, frontness);
       this.rungsGroup.add(line);
-      this._pairs.push({ index: i, t, base, complement, start, end, line, color });
+
+      // The first strand's end has the rung's frontness; the second strand's
+      // end is half a turn away, so it has the opposite frontness.
+      const startColor = this._colorByBase ? baseColor(base, this._baseColors) : color;
+      const endColor = this._colorByBase ? baseColor(complement, this._baseColors) : color;
+      const startBead = this._buildBead(start, startColor, frontness);
+      const endBead = this._buildBead(end, endColor, 1 - frontness);
+
+      this._pairs.push({
+        index: i,
+        t,
+        base,
+        complement,
+        start,
+        end,
+        line,
+        color,
+        frontness,
+        startBead,
+        endBead,
+      });
     }
+  }
+
+  /** Build one rung line, dimmed and thinned by its frontness. */
+  protected _buildRung(
+    start: Vector3Tuple,
+    end: Vector3Tuple,
+    color: string,
+    frontness: number,
+  ): Line {
+    const widthScale = lerp(BACK_RUNG_WIDTH_SCALE, FRONT_RUNG_WIDTH_SCALE, frontness);
+    const line = new Line({
+      start,
+      end,
+      color,
+      strokeWidth: this._rungStrokeWidth * widthScale,
+    });
+    if (this._depthCue) {
+      line.setStrokeOpacity(lerp(BACK_OPACITY, 1, frontness));
+    }
+    return line;
+  }
+
+  /** Build one nucleotide bead at a strand join, sized and dimmed by frontness. */
+  protected _buildBead(center: Vector3Tuple, color: string, frontness: number): Circle | null {
+    if (!this._showNucleotides) {
+      return null;
+    }
+    const radiusScale = lerp(BACK_BEAD_RADIUS_SCALE, FRONT_BEAD_RADIUS_SCALE, frontness);
+    const opacity = this._depthCue ? lerp(BACK_OPACITY, 1, frontness) : 1;
+    const bead = new Circle({
+      radius: this._nucleotideRadius * radiusScale,
+      color,
+      fillOpacity: opacity,
+      strokeWidth: 0,
+    });
+    bead.setStrokeOpacity(opacity);
+    bead.moveTo(center);
+    this.nucleotidesGroup.add(bead);
+    return bead;
   }
 
   // ========== Accessors ==========
@@ -233,6 +347,10 @@ export class DNAHelix extends VGroup {
       rungColor: this._rungColor,
       strokeWidth: this._strokeWidth,
       numSamplesPerTurn: this._numSamplesPerTurn,
+      depthCue: this._depthCue,
+      showNucleotides: this._showNucleotides,
+      nucleotideRadius: this._nucleotideRadius,
+      backboneStrokeWidth: this._backboneStrokeWidth,
     });
     this._copyBaseAttributesInto(clone, { copyChildren: false });
     return clone;
