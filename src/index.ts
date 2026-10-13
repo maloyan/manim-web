@@ -2064,6 +2064,9 @@ export {
 export {
   ChoroplethMap,
   GeoMap,
+  AnimateChoropleth,
+  animateChoropleth,
+  FlowArc,
   Globe,
   ColorScale,
   equirectangular,
@@ -2073,6 +2076,8 @@ export {
   type PolygonRings,
   type ChoroplethMapOptions,
   type ChoroplethValueAccessor,
+  type AnimateChoroplethOptions,
+  type FlowArcOptions,
   type GlobeOptions,
   type GlobePointOptions,
   type GlobeArcOptions,

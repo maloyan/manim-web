@@ -41,6 +41,16 @@ export {
   type ChoroplethValueAccessor,
 } from './ChoroplethMap';
 
+// Animated choropleth (recolor regions over time)
+export {
+  AnimateChoropleth,
+  animateChoropleth,
+  type AnimateChoroplethOptions,
+} from './AnimateChoropleth';
+
+// 2D flow arc (curved flow line between two geo points)
+export { FlowArc, type FlowArcOptions } from './FlowArc';
+
 // 3D globe
 export {
   Globe,
