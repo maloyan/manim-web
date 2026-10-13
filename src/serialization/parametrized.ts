@@ -188,7 +188,7 @@ function coerceValue(value: unknown, tag: PropTypeTag, fallback: unknown): unkno
       return fallback;
     }
     case 'vec3':
-      return readVec3(value, (isVec3Like(fallback) ? fallback : [0, 0, 0]) as Vec3);
+      return readVec3(value, isVec3Like(fallback) ? fallback : [0, 0, 0]);
     case 'array':
       return Array.isArray(value) ? value : fallback;
     case 'object':

@@ -159,7 +159,7 @@ function defaultCaptureSlide(scene: SlideCaptureScene, time: number): CapturedSl
 /** Lazy-import `jspdf` and build a document. The default {@link PdfFactory}. */
 async function defaultPdfFactory(options: PdfInitOptions): Promise<PdfDocument> {
   const { jsPDF } = await import('jspdf');
-  return new jsPDF(options) as unknown as PdfDocument;
+  return new jsPDF(options);
 }
 
 /**
@@ -317,7 +317,7 @@ async function defaultPptxFactory(): Promise<PptxDocument> {
         'options.pptxFactory. PDF export (exportSlidesToPDF) needs no extra install.',
     );
   }
-  const PptxCtor = (mod.default ?? mod) as new () => PptxDocument;
+  const PptxCtor = mod.default ?? mod;
   return new PptxCtor();
 }
 

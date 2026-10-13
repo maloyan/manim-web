@@ -129,7 +129,7 @@ export function tuplify<T>(obj: T | readonly T[] | string): (T | string)[] {
   if (obj !== null && typeof obj === 'object' && Symbol.iterator in obj) {
     return [...(obj as Iterable<T>)];
   }
-  return [obj as T];
+  return [obj];
 }
 
 /**
@@ -255,7 +255,7 @@ export function listify<T>(obj: T | readonly T[] | string): (T | string)[] {
   if (obj !== null && typeof obj === 'object' && Symbol.iterator in obj) {
     return [...(obj as Iterable<T>)];
   }
-  return [obj as T];
+  return [obj];
 }
 
 /**
@@ -268,7 +268,7 @@ export function listify<T>(obj: T | readonly T[] | string): (T | string)[] {
 export function removeNones<T>(sequence: Iterable<T>): NonNullable<T>[] {
   const result: NonNullable<T>[] = [];
   for (const x of sequence) {
-    if (x) result.push(x as NonNullable<T>);
+    if (x) result.push(x);
   }
   return result;
 }

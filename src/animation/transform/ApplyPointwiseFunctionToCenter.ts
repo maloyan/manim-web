@@ -91,7 +91,7 @@ export class ApplyPointwiseFunctionToCenter extends Animation {
         if (worldMatrix && inverseWorld) {
           targetPoints = startPoints.map((p) => {
             // Transform to world space
-            vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix!);
+            vec.set(p[0], p[1], p[2]).applyMatrix4(worldMatrix);
             // Shift to center-relative coordinates
             const relPoint = [vec.x - center[0], vec.y - center[1], vec.z - center[2]];
             // Apply function in center-relative space
@@ -99,7 +99,7 @@ export class ApplyPointwiseFunctionToCenter extends Animation {
             // Shift back from center-relative
             vec.set(result[0] + center[0], result[1] + center[1], result[2] + center[2]);
             // Transform back to local space
-            vec.applyMatrix4(inverseWorld!);
+            vec.applyMatrix4(inverseWorld);
             return [vec.x, vec.y, vec.z];
           });
         } else {

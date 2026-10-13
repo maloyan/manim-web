@@ -84,7 +84,7 @@ export function getLine2TotalLength(child: Line2): number {
     THREE.InterleavedBufferAttribute | THREE.BufferAttribute | null;
   if (distEnd && distEnd.count > 0) {
     const arr = 'data' in distEnd && distEnd.data ? distEnd.data.array : distEnd.array;
-    return (arr[arr.length - 1] as number) || 1;
+    return arr[arr.length - 1] || 1;
   }
   return 1;
 }

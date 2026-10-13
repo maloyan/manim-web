@@ -572,7 +572,7 @@ function alignChunkListsByLength(
       // synthesise a degenerate tgt at src's own centroid so the
       // feature shrinks in place at its source location.
       srcSub = src!;
-      tgtSub = makeNullSubpathFromReference(src!, computeCenter(src!));
+      tgtSub = makeNullSubpathFromReference(src, computeCenter(src));
     }
 
     const { srcAligned, tgtAligned } = alignSubpathPairPoints(srcSub, tgtSub);

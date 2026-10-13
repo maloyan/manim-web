@@ -8,7 +8,7 @@
  */
 
 import { MoleculeMobject } from './MoleculeMobject';
-import { MoleculeOptions } from './chemistryTypes';
+import { MoleculeOptions, BondSpec } from './chemistryTypes';
 
 /** Style overrides a builder forwards to the MoleculeMobject (no atoms/bonds). */
 export type MoleculeBuilderOptions = Partial<Omit<MoleculeOptions, 'atoms' | 'bonds'>>;
@@ -59,11 +59,10 @@ export function benzene(options: MoleculeBuilderOptions = {}): MoleculeMobject {
     const angle = (Math.PI / 3) * i + Math.PI / 2;
     return { element: 'C', x: Math.cos(angle), y: Math.sin(angle) };
   });
-  const bonds = Array.from({ length: 6 }, (_unused, i) => ({
+  const bonds: BondSpec[] = Array.from({ length: 6 }, (_unused, i) => ({
     from: i,
     to: (i + 1) % 6,
-    // cast: pin the literal type so Array.from infers the bond-order union, not number.
-    order: (i % 2 === 0 ? 2 : 1) as 1 | 2,
+    order: i % 2 === 0 ? 2 : 1,
   }));
   return new MoleculeMobject({ atoms, bonds, ...options });
 }
