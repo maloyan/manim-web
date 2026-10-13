@@ -75,6 +75,7 @@ export {
   type UpdaterFunction,
 } from './core/Mobject';
 export { AnimateProxy } from './core/AnimateProxy';
+export { type MaskOptions, MASK_STENCIL_BIT, MASK_RENDER_ORDER } from './core/Mask';
 export { UP, DOWN, LEFT, RIGHT, IN, OUT, ORIGIN, UL, UR, DL, DR } from './core/Mobject';
 export { VMobject, type Point } from './core/VMobject';
 export { VGroup } from './core/VGroup';

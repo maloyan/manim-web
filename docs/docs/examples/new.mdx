@@ -16,8 +16,46 @@ import MathTexPartExample from '@site/src/components/examples/MathTexPartExample
 import FormulaTransformExample from '@site/src/components/examples/FormulaTransformExample';
 import AnimationUtilitiesExample from '@site/src/components/examples/AnimationUtilitiesExample';
 import ResponsiveAspectExample from '@site/src/components/examples/ResponsiveAspectExample';
+import MaskExample from '@site/src/components/examples/MaskExample';
 
 Examples showcasing newly implemented features in manim-web.
+
+## Clip Masks
+
+Clip any mobject to a mask shape, like an After-Effects track matte. The mask shape's filled region defines what stays visible; everything outside it is clipped. The clip uses the WebGL stencil buffer and updates every frame, so animating the mask shape re-clips the content live. Watch the circle sweep across to reveal the rainbow bars below.
+
+<MaskExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { VGroup, Rectangle, Circle, RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE } from 'manim-web';
+
+// Colorful content: six tall rainbow bars.
+const colors = [RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE];
+const bars = new VGroup();
+colors.forEach((color, i) => {
+  const bar = new Rectangle({ width: 1.7, height: 6, color, fillOpacity: 1, strokeWidth: 0 });
+  bar.moveTo([(i - 2.5) * 1.7, 0, 0]);
+  bars.add(bar);
+});
+
+// The mask shape defines the visible region. It is never drawn itself.
+const mask = new Circle({ radius: 1.5 });
+mask.moveTo([-6, 0, 0]);
+
+bars.setMask(mask); // opt-in clip; bars.clearMask() removes it
+scene.add(bars);
+
+// Moving the mask re-clips the content every frame.
+await scene.play(mask.animate.shift([12, 0, 0]).withDuration(2.5));
+await scene.play(mask.animate.shift([-12, 0, 0]).withDuration(2.5));
+```
+
+Pass `{ invert: true }` to `setMask` to show the content _outside_ the mask shape instead of inside it.
+
+</details>
 
 ## Draggable Objects
 

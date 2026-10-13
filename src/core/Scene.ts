@@ -536,6 +536,10 @@ export class Scene {
         if (!this._isInSceneGraph(threeObj)) {
           this._threeScene.add(threeObj);
         }
+        // Attach a clip mask (if any) now that this mobject's backing object has
+        // a parent, so its mask shape can be added as a sibling. No-op when the
+        // mobject is not masked, so the default path is untouched.
+        mobject._applyMaskToThree();
         // If mobject or any descendant has pending async rendering (e.g. MathTex),
         // re-render when done. Recursively check children since MathTex objects
         // may be nested inside VGroup/Group containers.
@@ -562,6 +566,15 @@ export class Scene {
         // (sub-objects stay with their parent group)
         if (threeObj.parent === this._threeScene) {
           this._threeScene.remove(threeObj);
+        }
+        // A clip mask shape is attached as a sibling in the scene root; remove
+        // it alongside its masked mobject. No-op when the mobject is unmasked.
+        const mask = mobject.getMask();
+        if (mask) {
+          const maskObj = mask._threeObject;
+          if (maskObj && maskObj.parent === this._threeScene) {
+            this._threeScene.remove(maskObj);
+          }
         }
       }
     }

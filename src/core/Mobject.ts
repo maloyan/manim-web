@@ -30,6 +30,13 @@ import { logger } from '../utils/logger';
 import { meshMaterial } from './threeMaterial';
 import { getActiveTheme } from '../utils/ThemeManager';
 import { applyBlendMode, type BlendMode } from '../rendering/blendModes';
+import {
+  type MaskOptions,
+  MASK_RENDER_ORDER,
+  applyMaskWriteStencil,
+  applyMaskedStencil,
+  resetMaskStencil,
+} from './Mask';
 // Type-only import: erased at compile time, so it introduces no runtime
 // circular dependency (Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject).
 // Used solely to type `Mobject.animate` and the registered factory.
@@ -119,6 +126,19 @@ export abstract class Mobject {
   protected _disableChildZLayering: boolean = false;
   protected _style: MobjectStyle;
   _threeObject: THREE.Object3D | null = null;
+  /**
+   * Clip mask shape, or null when this mobject is not masked. When set, this
+   * mobject's content is drawn only inside the mask shape's filled region (or
+   * outside it when {@link _maskInvert} is true) via a stencil clip. Null keeps
+   * the default render path untouched.
+   */
+  private _maskMobject: Mobject | null = null;
+  /** Whether the active mask is inverted (show outside the shape). */
+  private _maskInvert: boolean = false;
+  /** The mask shape's fillOpacity before masking, restored on {@link clearMask}. */
+  private _maskSavedFillOpacity: number | null = null;
+  /** Per-frame updater that keeps the mask clip current; removed on clear. */
+  private _maskUpdater: UpdaterFunction | null = null;
   /**
    * THREE backing object needs re-sync from this node's transform/state.
    * @inv this._dirty || child._dirty === false  // a clean node has a clean subtree
@@ -313,6 +333,122 @@ export abstract class Mobject {
     if (color !== undefined) this.fillColor = color;
     if (opacity !== undefined) this.setFillOpacity(opacity);
     return this;
+  }
+
+  // ── Clip masking ─────────────────────────────────────────────────
+
+  /**
+   * Clip this mobject to a mask shape, like an After-Effects track matte.
+   *
+   * The mask shape (any VMobject, e.g. a Circle or Rectangle) defines a region
+   * by its filled area. After this call, this mobject's content is drawn only
+   * where it overlaps the mask shape (or only outside it when `invert` is set).
+   * The clip uses the WebGL stencil buffer and updates every frame, so moving or
+   * animating the mask shape re-clips the content live. The mask shape itself is
+   * never drawn (it is consumed as a matte); its fill is forced opaque so its
+   * region is well defined.
+   *
+   * Opt-in: a mobject with no mask renders exactly as before.
+   *
+   * @param mask - The shape whose filled region defines the visible area.
+   * @param options - {@link MaskOptions}; `invert` shows the content outside the
+   *   mask instead of inside.
+   * @returns this, for chaining.
+   */
+  setMask(mask: Mobject, options: MaskOptions = {}): this {
+    if (mask === this) {
+      logger.warn('Mobject.setMask: a mobject cannot mask itself; ignoring.');
+      return this;
+    }
+    // Replacing an existing mask: restore the previous one first.
+    if (this._maskMobject && this._maskMobject !== mask) this.clearMask();
+
+    this._maskMobject = mask;
+    this._maskInvert = options.invert ?? false;
+
+    // The mask's filled region defines the visible area, so it must have a
+    // fill. Force it opaque (invisible anyway via colorWrite) and remember the
+    // original so clearMask can restore it.
+    this._maskSavedFillOpacity = mask.fillOpacity;
+    if (mask.fillOpacity <= 0) mask.setFillOpacity(1);
+
+    // Drive the clip every frame so animating the mask re-clips live, even
+    // when this mobject's own state is unchanged.
+    const updater: UpdaterFunction = () => this._applyMaskToThree();
+    this._maskUpdater = updater;
+    this.addUpdater(updater);
+
+    this._markDirty();
+    // Apply immediately so a static (non-animated) scene clips on first render.
+    this._applyMaskToThree();
+    return this;
+  }
+
+  /**
+   * Remove the clip mask set by {@link setMask}, restoring the default render
+   * path. No-op when this mobject is not masked.
+   *
+   * @returns this, for chaining.
+   */
+  clearMask(): this {
+    const mask = this._maskMobject;
+    if (!mask) return this;
+
+    if (this._maskUpdater) {
+      this.removeUpdater(this._maskUpdater);
+      this._maskUpdater = null;
+    }
+    // Detach the mask shape from the scene graph and reset both subtrees.
+    const maskObject = mask._threeObject;
+    if (maskObject) {
+      resetMaskStencil(maskObject);
+      maskObject.parent?.remove(maskObject);
+    }
+    if (this._threeObject) resetMaskStencil(this._threeObject);
+    if (this._maskSavedFillOpacity !== null) {
+      mask.setFillOpacity(this._maskSavedFillOpacity);
+    }
+
+    this._maskMobject = null;
+    this._maskInvert = false;
+    this._maskSavedFillOpacity = null;
+    this._markDirty();
+    return this;
+  }
+
+  /** The current clip mask shape, or null when this mobject is not masked. */
+  getMask(): Mobject | null {
+    return this._maskMobject;
+  }
+
+  /**
+   * Re-apply the stencil clip for the current mask: sync the mask shape, attach
+   * it as a sibling of this mobject's backing object so it draws first, write
+   * the mask stencil, and set this mobject's content to test against it.
+   *
+   * Called from {@link _syncToThree}, from the per-frame mask updater, and by
+   * the Scene right after this mobject is added. A no-op when unmasked, which
+   * keeps the default render path byte-identical.
+   * @internal
+   */
+  _applyMaskToThree(): void {
+    const mask = this._maskMobject;
+    if (!mask) return;
+
+    // The mask-write flags depend only on the mask shape, so apply them even
+    // before this mobject's own backing object exists.
+    const maskObject = mask.getThreeObject();
+    applyMaskWriteStencil(maskObject, MASK_RENDER_ORDER);
+
+    if (!this._threeObject) return;
+
+    // Draw the mask as a sibling (not a child) so it lives in scene space,
+    // unaffected by this mobject's transform, and is not swept up by the
+    // Scene's per-subtree renderOrder assignment on the content.
+    const parent = this._threeObject.parent;
+    if (parent && maskObject.parent !== parent) parent.add(maskObject);
+
+    applyMaskedStencil(this._threeObject, this._maskInvert);
   }
 
   get fillColor(): string | undefined {
@@ -1061,6 +1197,9 @@ export abstract class Mobject {
         this._threeObject.add(child._threeObject);
       }
     }
+    // Re-apply the clip mask (no-op when unmasked) after materials and the
+    // content subtree are current, so the stencil flags are not overwritten.
+    this._applyMaskToThree();
     this._dirty = false;
   }
 
@@ -1318,6 +1457,8 @@ export abstract class Mobject {
   // ── Cleanup ──────────────────────────────────────────────────────
 
   dispose(): void {
+    // Detach any clip mask so its shape leaves the scene graph with this node.
+    if (this._maskMobject) this.clearMask();
     for (const child of this.children) child.dispose();
     if (this._threeObject) {
       this._threeObject.traverse((object) => {
