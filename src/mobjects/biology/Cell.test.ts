@@ -65,6 +65,26 @@ describe('Cell', () => {
     expect(cell.getOrganelle(0)?.label).toBeNull();
   });
 
+  it('keeps auto-placed organelle labels inside the membrane', () => {
+    const radius = 2.6;
+    const cell = new Cell({
+      radius,
+      organelles: [
+        { name: 'mitochondrion' },
+        { name: 'ribosome' },
+        { name: 'lysosome' },
+        { name: 'vacuole' },
+        { name: 'golgi' },
+        { name: 'endoplasmic reticulum' },
+      ],
+    });
+    for (const organelle of cell.getOrganelles()) {
+      const center = organelle.label!.getCenter();
+      // The label sits well inside the membrane, not on its edge.
+      expect(Math.hypot(center[0], center[1])).toBeLessThan(0.6 * radius);
+    }
+  });
+
   it('applies the organelle palette color', () => {
     const cell = new Cell({ organelles: ORGANELLES });
     expect(cell.getOrganelle(0)?.color).toBe(organelleColor('mitochondrion'));

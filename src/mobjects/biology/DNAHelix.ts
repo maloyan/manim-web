@@ -6,10 +6,11 @@
  * The rungs can be colored by base with the A/T/G/C palette, and a nucleotide
  * bead sits where each rung meets a backbone.
  *
- * The helix axis is vertical (the Y axis). A full turn rises by `pitch`, so a
- * helix of `turns` turns has height `turns * pitch`. In 2D schematic mode the
- * strands are two sine waves in the XY plane; in 3D mode they wind around the
- * axis in the Z direction too.
+ * The helix axis is vertical. A full turn rises by `pitch`, so a helix of
+ * `turns` turns has height `turns * pitch`. In 2D schematic mode the axis is Y
+ * and the strands are two sine waves in the XY plane. In 3D mode the axis is Z
+ * (a ThreeDScene is Z-up), the strands wind around it in the XY plane, and the
+ * nucleotide beads are real spheres.
  *
  * Depth cue: even in 2D the helix fakes depth. Each rung and bead gets a
  * "frontness" from the helix angle, so the ones at the back of a turn are
@@ -36,6 +37,7 @@ import { VGroup } from '../../core/VGroup';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Line } from '../geometry/Line';
 import { Circle } from '../geometry/Circle';
+import { Sphere } from '../three-d/Sphere';
 import { ParametricFunction } from '../graphing/ParametricFunction';
 import { DEFAULT_STROKE_WIDTH } from '../../constants';
 import { baseColor, complementOf, normalizeBase } from './biologyColors';
@@ -163,10 +165,16 @@ export class DNAHelix extends VGroup {
     const threeD = this._threeD;
     return (t: number): Vector3Tuple => {
       const angle = 2 * Math.PI * t + phase;
-      const x = r * Math.cos(angle);
-      const y = p * t - halfH;
-      const z = threeD ? r * Math.sin(angle) : 0;
-      return [x, y, z];
+      const axis = p * t - halfH;
+      if (threeD) {
+        // In a ThreeDScene the camera is Z-up, so the helix axis runs along Z
+        // and the two strands wind around it in the XY plane. This stands the
+        // helix upright on screen instead of laying it on its side.
+        return [r * Math.cos(angle), r * Math.sin(angle), axis];
+      }
+      // 2D schematic: the axis is the vertical Y, the strand is a sine wave in
+      // X, and Z stays flat so it reads as a ladder in the XY plane.
+      return [r * Math.cos(angle), axis, 0];
     };
   }
 
@@ -274,9 +282,25 @@ export class DNAHelix extends VGroup {
   }
 
   /** Build one nucleotide bead at a strand join, sized and dimmed by frontness. */
-  protected _buildBead(center: Vector3Tuple, color: string, frontness: number): Circle | null {
+  protected _buildBead(
+    center: Vector3Tuple,
+    color: string,
+    frontness: number,
+  ): Circle | Sphere | null {
     if (!this._showNucleotides) {
       return null;
+    }
+    // In 3D the beads are real spheres, so the depth test (not a fake dimming)
+    // sorts them. They keep a full size and opacity and read as nucleotides.
+    if (this._threeD) {
+      const bead = new Sphere({
+        radius: this._nucleotideRadius,
+        color,
+        center,
+        resolution: 16,
+      });
+      this.nucleotidesGroup.add(bead);
+      return bead;
     }
     const radiusScale = lerp(BACK_BEAD_RADIUS_SCALE, FRONT_BEAD_RADIUS_SCALE, frontness);
     const opacity = this._depthCue ? lerp(BACK_OPACITY, 1, frontness) : 1;
