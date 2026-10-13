@@ -1,0 +1,155 @@
+---
+title: New in 0.38 — surfaces & maps
+sidebar_label: New in 0.38
+---
+
+import MolecularSurfaceExample from '@site/src/components/examples/MolecularSurfaceExample';
+import FlowArcExample from '@site/src/components/examples/FlowArcExample';
+import AnimatedChoroplethExample from '@site/src/components/examples/AnimatedChoroplethExample';
+
+Features added in the 0.38 release: a molecular surface that wraps a molecule in
+3D, and two additions to the geo module, animated flow arcs and animated
+choropleth recoloring. Each section lists the real exported API, a copy-paste
+snippet, and a runnable example. All data is hand-authored inline: no files, no
+network calls.
+
+## MolecularSurface (0.38)
+
+`MolecularSurface` wraps a set of atoms in a translucent skin and extends
+`Group`, so it composes with `Molecule3D` in the same `ThreeDScene` and the same
+world coordinates. An atom is `{ element, position: [x, y, z] }`, the same
+`Atom3DSpec` that `Molecule3D` takes. `kind` is `'vdw'` (the union of van der
+Waals spheres, the default) or `'sas'` (the solvent-accessible surface, which
+adds a `probeRadius`). Keep `opacity` low (about 0.4) so the sticks underneath
+read through the skin.
+
+The example wraps the benzene ball-and-stick model from the molecular page in a
+translucent blue van der Waals surface, then spins it.
+
+<MolecularSurfaceExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Molecule3D, MolecularSurface, Create, FadeIn } from 'manim-web';
+
+// The ball-and-stick structure (benzene atoms + bonds).
+const benzene = new Molecule3D({ atoms, bonds, style: 'ball-and-stick' });
+scene.add(benzene); // use a ThreeDScene
+await scene.play(new Create(benzene, { duration: 2 }));
+
+// A translucent van der Waals skin over the SAME atoms, same world coords.
+const surface = new MolecularSurface({
+  atoms,
+  kind: 'vdw', // or 'sas' for the solvent-accessible surface
+  color: '#6fa8dc',
+  opacity: 0.4, // low, so the sticks read through
+});
+scene.add(surface);
+await scene.play(new FadeIn(surface));
+```
+
+</details>
+
+Options are `atoms` (required), `kind`, `probeRadius`, `radiusScale`, `color`,
+`opacity`, `resolution` (marching-cubes grid cells per axis, default 48),
+`isoValue`, `padding`, and `scale`. The read-only `surface` field is the
+underlying `ImplicitSurface`, or `null` when there are no atoms.
+
+---
+
+## FlowArc (0.38)
+
+`FlowArc` draws a curved flow line between two geographic points on a projection,
+the 2D counterpart of `Globe.arc`. It extends `Polygon`, so `Create` reveals it
+progressively. Endpoints are `[latitude, longitude]` in degrees. Pass the SAME
+`projection` instance the map uses, or the arcs will not land on the regions.
+`bulge` sets how far the arc bows from the straight chord (default 0.2; negative
+bows the other way).
+
+`FlowArc` is 2D, so it uses a regular `Scene`. The example lays three flow arcs
+over a row of `ChoroplethMap` regions on a shared equirectangular projection; a
+wide `bulge` makes each arc bow up over the row so the flow reads clearly.
+
+<FlowArcExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ChoroplethMap, FlowArc, equirectangular, Create } from 'manim-web';
+
+// One projection instance, shared by the map and every arc.
+const projection = equirectangular({ radius: 24 });
+
+const map = new ChoroplethMap({
+  geojson, // a FeatureCollection of rectangular Polygons, coords [lon, lat]
+  value: (feature) => feature.properties.value,
+  colorScale: ['#0d1b2a', '#4cc9f0'],
+  projection,
+});
+await scene.play(new Create(map, { duration: 1.5 }));
+
+// Endpoints are [lat, lon]; the arc swaps the pair before projecting. A wide
+// bulge bows the arc up over the regions, into the background.
+const flow = new FlowArc({
+  from: [0, -11], // [lat, lon]
+  to: [0, 10],
+  projection, // the SAME instance as the map
+  bulge: 0.4,
+  color: '#ff6b35',
+  lineWidth: 3,
+});
+await scene.play(new Create(flow, { duration: 1 }));
+```
+
+</details>
+
+Options are `from` and `to` (required), `projection`, `bulge`, `color`,
+`lineWidth` (default 2), and `samples` (polyline resolution, default 48).
+
+---
+
+## animateChoropleth (0.38)
+
+`animateChoropleth(map, toValue, options)` returns an `Animation` that crossfades
+every region fill of a `ChoroplethMap` toward the colors a new value accessor
+produces. `toValue` is a value accessor `(feature) => number`, the same shape as
+the map's `value` option, not a plain object. `ChoroplethMap.setValues(toValue)`
+applies a new accessor at once with no animation. The `AnimateChoropleth` class
+is also exported.
+
+The example builds a three-region map colored by value set A, then plays
+`animateChoropleth` to recolor the regions to value set B over two seconds. A
+fixed `domain` keeps both sets on the same color ramp.
+
+<AnimatedChoroplethExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ChoroplethMap, animateChoropleth, equirectangular, Create } from 'manim-web';
+
+// Each region carries two values; two accessors read set A and set B.
+const valueA = (feature) => feature.properties.a;
+const valueB = (feature) => feature.properties.b;
+
+const map = new ChoroplethMap({
+  geojson,
+  value: valueA, // the start coloring
+  colorScale: ['#0d1b2a', '#4cc9f0'],
+  domain: [0, 10], // fixed, so both sets share one ramp
+  projection: equirectangular({ radius: 24 }),
+});
+await scene.play(new Create(map, { duration: 1.5 }));
+
+// Recolor every region from set A to set B.
+await scene.play(animateChoropleth(map, valueB, { runTime: 2 }));
+```
+
+</details>
+
+Options extend the standard animation options: `runTime` (seconds, the default
+1), its alias `duration`, and `rateFunc`.

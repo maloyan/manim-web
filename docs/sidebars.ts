@@ -24,6 +24,7 @@ const sidebars: SidebarsConfig = {
         'examples/release-0-29-0-31',
         'examples/release-0-32-0-36',
         'examples/molecular',
+        'examples/molecular-and-maps-0-38',
       ],
     },
     {
