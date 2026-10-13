@@ -1,17 +1,18 @@
 ---
-title: New in 0.38 — surfaces & maps
+title: New in 0.38
 sidebar_label: New in 0.38
 ---
 
 import MolecularSurfaceExample from '@site/src/components/examples/MolecularSurfaceExample';
 import FlowArcExample from '@site/src/components/examples/FlowArcExample';
 import AnimatedChoroplethExample from '@site/src/components/examples/AnimatedChoroplethExample';
+import ReactionMechanismExample from '@site/src/components/examples/ReactionMechanismExample';
 
 Features added in the 0.38 release: a molecular surface that wraps a molecule in
-3D, and two additions to the geo module, animated flow arcs and animated
-choropleth recoloring. Each section lists the real exported API, a copy-paste
-snippet, and a runnable example. All data is hand-authored inline: no files, no
-network calls.
+3D, curved electron-pushing arrows for reaction mechanisms, and two additions to
+the geo module, animated flow arcs and animated choropleth recoloring. Each
+section lists the real exported API, a copy-paste snippet, and a runnable
+example. All data is hand-authored inline: no files, no network calls.
 
 ## MolecularSurface (0.38)
 
@@ -153,3 +154,75 @@ await scene.play(animateChoropleth(map, valueB, { runTime: 2 }));
 
 Options extend the standard animation options: `runTime` (seconds, the default
 1), its alias `duration`, and `rateFunc`.
+
+---
+
+## Reaction mechanisms with ElectronPushingArrow (0.38)
+
+`ElectronPushingArrow` draws the curved arrow that organic chemists use to show
+where electrons move in a reaction step. It extends `VMobject`, so `Create`
+reveals the curl progressively. The arrow goes `from` a source point `to` a
+destination point, both `[x, y, z]`. `electrons` picks the head: `'pair'` (the
+default) draws a double-barbed arrow for a two-electron pair; `'single'` draws a
+single-barbed fishhook for a one-electron (radical) shift. `bulge` sets how far
+the shaft bows off the straight chord, as a fraction of the chord length
+(default 0.3). `direction` picks the side it bows to, `'ccw'` or `'cw'`, so you
+can bend an arrow clear of the atom labels. `color` and `strokeWidth` style it.
+
+`arrowBetweenAtoms(molecule, i, j, opts)` is a convenience that reads the world
+positions of atoms `i` and `j` from a `MoleculeMobject` and returns an arrow from
+atom `i` to atom `j`, so you do not hand-type the endpoints. It takes the same
+options as `ElectronPushingArrow` minus `from` and `to`.
+
+The example builds a 2D skeletal fragment for an SN2 step, a nucleophile O, a
+carbon C, and a leaving group Br joined by a C–Br bond, then overlays two
+electron-pair arrows: a pink arrow for the nucleophilic attack of O on C
+(`arrowBetweenAtoms`), and a magenta arrow for the C–Br bond breaking onto Br.
+`ElectronPushingArrow` is 2D, so it uses a regular `Scene`.
+
+<ReactionMechanismExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { MoleculeMobject, ElectronPushingArrow, arrowBetweenAtoms, Create } from 'manim-web';
+
+// Atom 0 = nucleophile O, atom 1 = carbon C, atom 2 = leaving group Br.
+const molecule = new MoleculeMobject({
+  atoms: [
+    { element: 'O', x: -1.2, y: 1.2 },
+    { element: 'C', x: 0.6, y: 0 },
+    { element: 'Br', x: 2.4, y: -0.6 },
+  ],
+  bonds: [{ from: 1, to: 2 }], // the C–Br bond
+  showCarbonLabels: true,
+});
+molecule.center();
+await scene.play(new Create(molecule, { duration: 1.5 }));
+
+// Nucleophilic attack: an electron pair moves from O (atom 0) to C (atom 1).
+const attack = arrowBetweenAtoms(molecule, 0, 1, {
+  electrons: 'pair', // 'single' for a one-electron fishhook
+  bulge: 0.35,
+  direction: 'ccw',
+  color: '#e84393',
+});
+await scene.play(new Create(attack, { duration: 1 }));
+
+// Bond breaking: the C–Br pair leaves onto Br. 'cw' bows it clear of the label.
+const breaking = new ElectronPushingArrow({
+  from: [1.5, -0.3, 0],
+  to: [2.4, -0.9, 0],
+  electrons: 'pair',
+  bulge: 0.3,
+  direction: 'cw',
+  color: '#f368e0',
+});
+await scene.play(new Create(breaking, { duration: 1 }));
+```
+
+</details>
+
+Options are `from` and `to` (required), `electrons` (`'pair'` or `'single'`),
+`bulge`, `direction` (`'ccw'` or `'cw'`), `color`, and `strokeWidth`.
