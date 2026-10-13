@@ -88,11 +88,8 @@ export class Matrix extends VGroup {
   /** Grid of entry mobjects */
   protected _entries: Mobject[][] = [];
 
-  /** Rows as VGroups */
+  /** Rows as VGroups. These are the groups that OWN the entries (see _buildMatrix). */
   protected _rows: VGroup[] = [];
-
-  /** Columns as VGroups */
-  protected _columns: VGroup[] = [];
 
   /** Left bracket mobject */
   protected _leftBracket: VMobject | null = null;
@@ -149,7 +146,6 @@ export class Matrix extends VGroup {
     // Create entry mobjects
     this._entries = [];
     this._rows = [];
-    this._columns = Array.from({ length: numCols }, () => new VGroup());
 
     for (let i = 0; i < numRows; i++) {
       const rowEntries: Mobject[] = [];
@@ -160,8 +156,14 @@ export class Matrix extends VGroup {
         const entry = this._createEntry(value);
 
         rowEntries.push(entry);
+        // Each entry is owned by exactly ONE group: its row. The row groups are
+        // attached to the matrix through _content below, so every entry stays in
+        // the matrix render tree. A VGroup child has a single parent: add()
+        // removes it from any previous parent, and _syncToThree() likewise moves
+        // its THREE object to the new parent. A second add() onto a column group
+        // would therefore pull the entry out of the matrix and make it invisible.
+        // Columns are built on demand as non-owning views instead (see getColumn).
         rowGroup.add(entry);
-        this._columns[j].add(entry);
       }
 
       this._entries.push(rowEntries);
@@ -469,18 +471,38 @@ export class Matrix extends VGroup {
   }
 
   /**
-   * Get all entries as a flat VGroup
+   * Build a VGroup that REFERENCES the given mobjects as a read-only view,
+   * without reparenting them.
+   *
+   * The matrix owns each entry exactly once, through the row groups attached to
+   * its content (see _buildMatrix), and getRows() returns those owning groups.
+   * getColumns() and getEntries() are VIEWS: they must return the same entry
+   * mobjects, but must NOT take ownership. VGroup.add() removes a child from its
+   * current parent, which would pull the entry out of the matrix render tree and
+   * make it invisible (the historical Matrix render bug). So this helper attaches
+   * the references directly and never syncs the view into the scene graph.
+   */
+  private _referenceGroup(members: Mobject[]): VGroup {
+    const view = new VGroup();
+    for (const member of members) {
+      view.children.push(member);
+    }
+    return view;
+  }
+
+  /**
+   * Get all entries as a flat VGroup (a non-owning view).
    */
   getEntries(): VGroup {
-    const entries = new VGroup();
+    const entries: Mobject[] = [];
     for (const row of this._entries) {
       for (const entry of row) {
         if (entry instanceof VMobject) {
-          entries.add(entry);
+          entries.push(entry);
         }
       }
     }
-    return entries;
+    return this._referenceGroup(entries);
   }
 
   /**
@@ -510,19 +532,30 @@ export class Matrix extends VGroup {
   }
 
   /**
-   * Get all columns as VGroups
+   * Get all columns as VGroups (non-owning views; see _referenceGroup).
    */
   getColumns(): VGroup[] {
-    return [...this._columns];
+    const cols: VGroup[] = [];
+    for (let j = 0; j < this.numCols; j++) {
+      const col = this.getColumn(j);
+      if (col) cols.push(col);
+    }
+    return cols;
   }
 
   /**
-   * Get a specific column as a VGroup
+   * Get a specific column as a VGroup (a non-owning view; see _referenceGroup).
    * @param j Column index (0-based)
    * @returns The column VGroup, or undefined if out of bounds
    */
   getColumn(j: number): VGroup | undefined {
-    return this._columns[j];
+    if (j < 0 || j >= this.numCols) return undefined;
+    const col: Mobject[] = [];
+    for (const row of this._entries) {
+      const entry = row[j];
+      if (entry) col.push(entry);
+    }
+    return this._referenceGroup(col);
   }
 
   /**
