@@ -67,7 +67,7 @@ Demonstrates how to keep labels readable in a 3D scene using addFixedOrientation
 <summary>Source Code</summary>
 
 ```typescript
-import { Text, ThreeDAxes, ThreeDScene, UP } from 'manim-web';
+import { GOLD, Text, ThreeDAxes, ThreeDScene } from 'manim-web';
 
 const scene = new ThreeDScene(document.getElementById('container'), {
   width: 800,
@@ -90,11 +90,11 @@ const axes = new ThreeDAxes({
 });
 
 // Create a label that sits in 3D space but always faces the camera
-const label = new Text({ text: 'Origin', fontSize: 24 });
-label.moveTo([0, 0.5, 0]);
+const label = new Text({ text: 'Origin', fontSize: 32, color: GOLD });
+label.moveTo([0.4, 0.4, 0.3]);
 
-const xLabel = new Text({ text: 'X', fontSize: 24 });
-xLabel.moveTo([6.5, 0, 0]);
+const xLabel = new Text({ text: 'X', fontSize: 32, color: GOLD });
+xLabel.moveTo([6.8, 0, 0.4]);
 
 scene.add(axes, label, xLabel);
 
@@ -200,9 +200,7 @@ const scene = new ThreeDScene(document.getElementById('container'), {
 const sigma = 0.4;
 const mu = [0.0, 0.0];
 
-// Gaussian surface: parametric function mapping (u,v) to 3D point
-// Surface3D func returns [x, y, z] used directly as THREE.js coordinates.
-// Manim Z-up -> THREE.js Y-up: return [manimX, manimZ, -manimY]
+// Gaussian surface: Z-up Manim convention — height is along z.
 const gaussSurface = new Surface3D({
   func: (u: number, v: number) => {
     const x = u;
@@ -211,8 +209,7 @@ const gaussSurface = new Surface3D({
     const dy = y - mu[1];
     const d = Math.sqrt(dx * dx + dy * dy);
     const z = Math.exp(-(d * d) / (2.0 * sigma * sigma));
-    // Manim coords (x, y, z) -> THREE.js coords (x, z, -y)
-    return [x, z, -y];
+    return [x, y, z];
   },
   uRange: [-2, 2],
   vRange: [-2, 2],
@@ -222,8 +219,10 @@ const gaussSurface = new Surface3D({
   opacity: 0.85,
 });
 
-// Scale by 2 about origin (matches Python: gauss_plane.scale(2, about_point=ORIGIN))
-gaussSurface.scale(2);
+// Scale by 2 about origin (matches Python: gauss_plane.scale(2, about_point=ORIGIN)).
+// Without an explicit aboutPoint, scale() pivots about the surface's geometric
+// center (z≈0.5), which would push the flat base below the z=0 plane.
+gaussSurface.scale(2, { aboutPoint: [0, 0, 0] });
 
 const axes = new ThreeDAxes({
   xRange: [-6, 6, 1],
@@ -279,11 +278,6 @@ const axes = new ThreeDAxes({
 });
 
 const circle = new Circle({ radius: 1, color: '#FC6255' });
-// Circle points are in Manim x-y plane but VMobject renders them
-// directly in THREE.js coords. Rotate -90° around X to lay flat
-// on the ground plane (THREE.js x-z = Manim x-y).
-circle.rotation.x = -Math.PI / 2;
-
 scene.add(circle, axes);
 
 // Begin ambient camera rotation (theta rotates at 0.1 rad/s)
@@ -342,11 +336,6 @@ const axes = new ThreeDAxes({
 });
 
 const circle = new Circle({ radius: 1, color: '#FC6255' });
-// Circle points are in Manim x-y plane but VMobject renders them
-// directly in THREE.js coords. Rotate -90° around X to lay flat
-// on the ground plane (THREE.js x-z = Manim x-y).
-circle.rotation.x = -Math.PI / 2;
-
 scene.add(circle, axes);
 
 // Begin 3D illusion camera rotation (theta rotates at 2 rad/s,
@@ -405,10 +394,7 @@ const p2: [number, number, number] = [0, 1.5, 2];
 const line1 = new Line3D({ start: origin, end: p1, color: YELLOW });
 const line2 = new Line3D({ start: origin, end: p2, color: GREEN });
 
-const angle = new Angle(
-  { points: [p1, origin, p2] },
-  { radius: 0.8, color: WHITE },
-);
+const angle = new Angle({ points: [p1, origin, p2] }, { radius: 0.8, color: WHITE });
 
 scene.add(axes, line1, line2, angle);
 await scene.wait(Infinity);
@@ -417,4 +403,3 @@ await scene.wait(Infinity);
 </details>
 
 **Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**ThreeDAxes**](/api/classes/ThreeDAxes) · [**Line3D**](/api/classes/Line3D) · [**Angle**](/api/classes/Angle)
-

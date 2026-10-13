@@ -193,7 +193,7 @@ readout.moveTo([2.5, 2.2, 0]);
 scene.add(circle, readout);
 
 // A draggable point that reports its position.
-new MovablePoint(scene, {
+const point = new MovablePoint(scene, {
   point: [2.5, 0.5, 0],
   color: YELLOW,
   onChange: (pos) => {
@@ -203,7 +203,7 @@ new MovablePoint(scene, {
 });
 
 // A slider that rebuilds the circle at the chosen radius.
-new Slider(scene, {
+const slider = new Slider(scene, {
   min: 0.25,
   max: 2,
   step: 0.05,
@@ -216,6 +216,10 @@ new Slider(scene, {
     scene.render();
   },
 });
+
+// MovablePoint and Slider do not add themselves to the scene.
+scene.add(point, slider);
+scene.render();
 ```
 
 </details>

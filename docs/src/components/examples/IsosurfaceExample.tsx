@@ -12,7 +12,7 @@ async function animate(scene: any) {
     axisColor: '#888888',
   });
 
-  // A torus as the level set of an implicit scalar field f(x, y, z) = 0.09.
+  // A torus as the level set of an implicit scalar field f(x, y, z) = 0.2.
   const torus = new ImplicitSurface({
     func: (x: number, y: number, z: number) => {
       const q = Math.sqrt(x * x + y * y) - 1.3;
