@@ -701,6 +701,13 @@ export {
   Arrow3D,
   Vector3D,
   type Arrow3DOptions,
+  // Shared mesh orientation helper
+  orientMeshAlong,
+  // Molecular primitives (bonds, tubes)
+  Bond3D,
+  type Bond3DOptions,
+  TubeFromPoints,
+  type TubeFromPointsOptions,
   // Surfaces
   Surface3D,
   Surface3D as Surface,
@@ -1087,6 +1094,16 @@ export {
   type AtomRender,
   type BondRender,
 } from './mobjects/chemistry';
+
+// Molecular radius tables (3D molecule / drug-binding prerequisites)
+export {
+  COVALENT_RADII,
+  VDW_RADII,
+  DEFAULT_COVALENT_RADIUS,
+  DEFAULT_VDW_RADIUS,
+  covalentRadius,
+  vdwRadius,
+} from './mobjects/molecular';
 
 // Biology mobjects
 export {

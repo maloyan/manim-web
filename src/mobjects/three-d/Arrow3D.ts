@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Vector3Tuple } from '../../core/Mobject';
 import { meshMaterial } from '../../core/threeMaterial';
 import { Mobject3D } from './Mobject3D';
+import { orientMeshAlong } from './meshOrient';
 
 /**
  * Options for creating an Arrow3D
@@ -166,14 +167,7 @@ export class Arrow3D extends Mobject3D {
    * Cylinders and cones in Three.js are oriented along the Y axis by default
    */
   private _orientMesh(mesh: THREE.Mesh, direction: THREE.Vector3): void {
-    // Default up direction for cylinders/triangles in Three.js
-    const up = new THREE.Vector3(0, 1, 0);
-
-    // Calculate rotation quaternion
-    const quaternion = new THREE.Quaternion();
-    quaternion.setFromUnitVectors(up, direction);
-
-    mesh.quaternion.copy(quaternion);
+    orientMeshAlong(mesh, direction);
   }
 
   /**
