@@ -29,3 +29,21 @@ export { parsePdb } from './pdb';
 export type { ParsedStructure, ResidueCA, SecondaryStructure, ParsePdbOptions } from './pdb';
 
 export { threeToOneLetter, THREE_TO_ONE_LETTER, UNKNOWN_RESIDUE_CODE } from './residues';
+
+export { Protein } from './Protein';
+export type { ProteinOptions, ProteinRepresentation, ProteinColorMode } from './Protein';
+
+export { BindingPocket } from './BindingPocket';
+export type { BindingPocketOptions, BindingPocketStyle } from './BindingPocket';
+
+export { hydrogenBond, contact, distanceLabel, residueLabel } from './annotations';
+export type {
+  DashedAnnotationOptions,
+  HydrogenBondOptions,
+  ContactOptions,
+  DistanceLabelOptions,
+  ResidueLabelOptions,
+} from './annotations';
+
+export { dockLigand } from './dock';
+export type { DockLigandOptions } from './dock';

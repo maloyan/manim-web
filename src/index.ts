@@ -1108,6 +1108,13 @@ export {
   threeToOneLetter,
   THREE_TO_ONE_LETTER,
   UNKNOWN_RESIDUE_CODE,
+  Protein,
+  BindingPocket,
+  hydrogenBond,
+  contact,
+  distanceLabel,
+  residueLabel,
+  dockLigand,
 } from './mobjects/molecular';
 export type {
   Atom3DSpec,
@@ -1120,6 +1127,17 @@ export type {
   ResidueCA,
   SecondaryStructure,
   ParsePdbOptions,
+  ProteinOptions,
+  ProteinRepresentation,
+  ProteinColorMode,
+  BindingPocketOptions,
+  BindingPocketStyle,
+  DashedAnnotationOptions,
+  HydrogenBondOptions,
+  ContactOptions,
+  DistanceLabelOptions,
+  ResidueLabelOptions,
+  DockLigandOptions,
 } from './mobjects/molecular';
 
 // Biology mobjects
