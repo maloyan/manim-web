@@ -13,6 +13,7 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'fs';
 import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -1395,6 +1396,20 @@ player.sequence(async (scene) => {
   const outPath = join(DOCS_DIR, 'examples.mdx');
   writeFileSync(outPath, lines.join('\n'), 'utf-8');
   console.log(`  Generated: docs/docs/examples.mdx`);
+
+  // Format the generated files with Prettier so the committed output matches
+  // the repo style (the pre-commit hook formats everything else). Without this
+  // the raw generator output (e.g. single-line imports) drifts from the
+  // committed, Prettier-wrapped versions and every regen shows spurious diffs.
+  try {
+    execSync(`npx prettier --write "${COMPONENTS_DIR}/*.tsx" "${outPath}"`, {
+      cwd: ROOT,
+      stdio: 'ignore',
+    });
+    console.log('  Formatted generated files with Prettier');
+  } catch {
+    console.warn('  Prettier formatting skipped (run `npx prettier --write` on docs/ manually)');
+  }
 
   console.log(`\nDone! Generated ${examples.length} example components and examples page.`);
 }
