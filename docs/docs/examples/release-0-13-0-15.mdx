@@ -1,0 +1,352 @@
+---
+title: New in 0.13, 0.14 and 0.15
+sidebar_label: New in 0.13–0.15
+---
+
+import SpringEasingExample from '@site/src/components/examples/SpringEasingExample';
+import TransformMatchingCodeExample from '@site/src/components/examples/TransformMatchingCodeExample';
+import MatrixLiveExample from '@site/src/components/examples/MatrixLiveExample';
+import ChoroplethMapExample from '@site/src/components/examples/ChoroplethMapExample';
+import GlobeExample from '@site/src/components/examples/GlobeExample';
+
+Features added in the 0.13, 0.14 and 0.15 releases. Each section lists the real
+exported API, a copy-paste snippet, and a runnable example where the feature
+is visual.
+
+## Spring physics and custom easing (0.13)
+
+The rate-functions module gained a `spring` factory and CSS-style custom easing.
+`spring(options)` returns a rate function that starts at 0, overshoots, and
+settles at 1. Tune it with `stiffness`, `damping` and `mass`, or set a single
+`bounce` in `[0, 1)` that replaces the stiffness and damping pair.
+
+`cubicBezier(x1, y1, x2, y2)` builds a rate function from two control points,
+and `steps(n, position)` builds a discrete staircase of `n` jumps. Pass any of
+them to an animation through the `rateFunc` option. The top square below uses a
+bouncy spring; the bottom square uses `steps(5)`.
+
+<SpringEasingExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Square, Transform, spring, cubicBezier, steps } from 'manim-web';
+
+const a = new Square();
+const b = new Square().moveTo([5, 0, 0]);
+scene.add(a);
+
+// A bouncy spring that overshoots, then settles.
+await scene.play(new Transform(a, b, { duration: 2.5, rateFunc: spring({ bounce: 0.5 }) }));
+
+// Custom cubic-bezier easing (CSS "ease-in-out"), and discrete step easing.
+const easeInOut = cubicBezier(0.65, 0, 0.35, 1);
+const staircase = steps(5); // five discrete jumps, snapping at the end of each
+```
+
+</details>
+
+The constant easings `ease`, `easeInBezier`, `easeOutBezier`, and
+`easeInOutBezier` are also exported, along with the `SpringOptions` and
+`StepPosition` types.
+
+---
+
+## Animate code diffs with TransformMatchingCode (0.13)
+
+`TransformMatchingCode` morphs one `Code` mobject into another and keeps the
+tokens that match. Matched tokens move to their new position, removed tokens
+fade out, and new tokens fade in. The `transformMatchingCode(source, target,
+options)` factory returns the same animation.
+
+A `Code` mobject takes a `code` string and an optional `language`. The example
+below changes two tokens between the two snippets.
+
+<TransformMatchingCodeExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Code, transformMatchingCode } from 'manim-web';
+
+const before = new Code({ code: 'const z = x + y;', language: 'javascript' });
+const after = new Code({ code: 'const z = x * y;', language: 'javascript' });
+scene.add(before);
+
+// matchBy 'token' (default) matches token-by-token; 'line' matches whole lines.
+await scene.play(transformMatchingCode(before, after, { duration: 2, matchBy: 'token' }));
+```
+
+</details>
+
+Options are `keyFunc`, `fadeRatio` (default `0.25`), `matchBy` (`'token'` or
+`'line'`), `transformMismatches`, and `fadeTransformMismatches`, plus the
+standard animation options such as `duration` and `rateFunc`.
+
+---
+
+## Animated GIFs with AnimatedImageMobject (0.13)
+
+`AnimatedImageMobject` plays an animated GIF as a mobject. It shifts, scales,
+and rotates like any other mobject. The `source` option takes a GIF URL or a
+`data:image/gif;base64,...` data URI. There is no per-frame array option, so an
+inline example needs a real GIF; this section is source-only.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { AnimatedImageMobject } from 'manim-web';
+
+const gif = new AnimatedImageMobject({
+  source: './loader.gif', // a GIF URL, or a data:image/gif;base64,... data URI
+  width: 4,
+  loop: true,
+  autoplay: true,
+});
+scene.add(gif);
+
+await gif.waitForLoad();
+gif.play();
+
+// Follow the scene clock when a Player scrubs or seeks:
+// gif.syncToTime(scene.currentTime);
+```
+
+</details>
+
+Options are `source` (required), `loop`, `autoplay`, `fps`, `width`, `height`,
+`scaleToFit`, `center`, `opacity`, and `doubleSided`. Methods are `play`,
+`pause`, `seek`, `setLoop`, `syncToTime`, `waitForLoad`, and `isLoaded`. For
+frames that are generated in code rather than decoded from a file, register a
+custom decoder with `setGifDecoder`.
+
+---
+
+## Live matrix transforms: MatrixTracker and applyMatrixLive (0.14)
+
+`applyMatrixLive(target, matrix, options)` binds a mobject to a 2x2 matrix and
+re-maps it from its pristine geometry every frame. `makeMatrixTracker(matrix)`
+creates a `MatrixTracker` that holds the current matrix; set a new value with
+`setMatrix`, then call `binding.update()` to re-map.
+
+A `Matrix2x2` is `[[a, b], [c, d]]` in row-major order. The columns are the
+images of the basis vectors. The grid below rotates as the matrix sweeps from
+the identity to a 90-degree rotation.
+
+<MatrixLiveExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { NumberPlane, makeMatrixTracker, applyMatrixLive } from 'manim-web';
+
+const plane = new NumberPlane();
+scene.add(plane);
+
+const tracker = makeMatrixTracker();
+const binding = applyMatrixLive(plane, tracker, { onChange: () => scene.render() });
+
+// A 90-degree rotation. The columns are the images of the basis vectors.
+const angle = Math.PI / 2;
+tracker.setMatrix([
+  [Math.cos(angle), -Math.sin(angle)],
+  [Math.sin(angle), Math.cos(angle)],
+]);
+binding.update();
+```
+
+</details>
+
+A matrix source can be a literal `Matrix2x2`, a getter `() => Matrix2x2`, or a
+`MatrixTracker`. `MatrixTracker.fromBasisVectors(i, j)` drives the matrix from
+two draggable basis vectors, so a reader can transform the grid by hand. The
+binding exposes `getMatrix`, `setMatrix`, `addDependentPoint`, `update`, and
+`remove`.
+
+---
+
+## JSON scene serialization (0.14)
+
+`serializeScene(scene)` captures a scene as a plain, JSON-safe object (not a
+string). `deserializeScene(doc, container)` rebuilds the mobjects into any
+container that has an `add` method, and returns the created top-level mobjects.
+The feature is a data round-trip, so this section is source-only.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { serializeScene, deserializeScene } from 'manim-web';
+
+// Capture the scene as a plain object, then store it as text.
+const doc = serializeScene(scene);
+const json = JSON.stringify(doc);
+
+// Later, rebuild the mobjects into a scene or any container with `add`.
+const restored = deserializeScene(JSON.parse(json), scene);
+```
+
+</details>
+
+The single-mobject helpers `serializeMobject` and `deserializeMobject` are also
+exported, along with the registry functions `registerSerializableMobject`,
+`unregisterSerializableMobject`, `getSerializableTypes`, and `getSerializer` for
+custom mobject types.
+
+---
+
+## Interactive Player slides (0.14)
+
+A `Player` in slides mode pauses between slides. With `interactiveSlides: true`,
+a paused slide still responds to `Draggable`, `Clickable`, and `Hoverable`
+mobjects and re-renders on pointer events, without advancing the timeline. The
+feature is interaction-only, so this section is source-only.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Player } from 'manim-web';
+
+const player = new Player(container, {
+  slidesMode: true, // presentation navigation: next / previous slide
+  interactiveSlides: true, // a paused slide still responds to drags and clicks
+});
+
+// Toggle at runtime:
+player.setInteractiveSlides(false);
+```
+
+</details>
+
+`interactiveSlides` defaults to `false`. The getter `player.interactiveSlides`
+reports the current value, and `setSlidesMode` toggles the presentation mode on
+its own.
+
+---
+
+## Player export settings (0.14)
+
+The `Player` can export the animation in the browser. `exportControls: true`
+shows an on-screen panel for frames-per-second, resolution, and quality.
+`exportAs(format, settings)` exports directly, where `format` is `'gif'`,
+`'webm'`, or `'mp4'`. The feature produces a file, so this section is
+source-only.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Player } from 'manim-web';
+
+const player = new Player(container, {
+  exportControls: true, // show the fps / resolution / quality panel
+  targetFps: 60, // the default export frame rate
+});
+
+// Or export directly with explicit settings.
+await player.exportAs('mp4', { fps: 60, width: 1920, height: 1080, quality: 0.9 });
+```
+
+</details>
+
+The export `settings` object is `{ fps, width, height, quality }`, where
+`quality` is in `0..1`. When `settings` is omitted, each format keeps its own
+defaults. Video uses the WebCodecs path when the browser supports it.
+
+---
+
+## Choropleth maps (0.15)
+
+The geo module adds data maps from GeoJSON. `ChoroplethMap` fills each region by
+a value through a color ramp. Pass the GeoJSON through `geojson`, a value
+accessor through `value`, and the ramp through `colorScale`. A `projection`
+turns longitude and latitude into scene coordinates; `equirectangular` is the
+default, and `mercator` is also available.
+
+`ChoroplethMap` is 2D, so it uses a regular `Scene`. The example below colors a
+grid of regions from low to high.
+
+<ChoroplethMapExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ChoroplethMap, equirectangular } from 'manim-web';
+
+const geojson = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      properties: { value: 3 },
+      geometry: { type: 'Polygon', coordinates: [[[-6, -3], [-3, -3], [-3, 3], [-6, 3], [-6, -3]]] },
+    },
+    {
+      type: 'Feature',
+      properties: { value: 9 },
+      geometry: { type: 'Polygon', coordinates: [[[-3, -3], [0, -3], [0, 3], [-3, 3], [-3, -3]]] },
+    },
+  ],
+};
+
+const map = new ChoroplethMap({
+  geojson,
+  value: (feature) => feature.properties.value, // one number per region
+  colorScale: ['#0d1b2a', '#4cc9f0'], // low -> high color ramp
+  borderColor: '#1b263b',
+  projection: equirectangular({ radius: 57.3 }), // about one scene unit per degree
+});
+scene.add(map);
+```
+
+</details>
+
+Options include `domain` (the value range mapped across the ramp, auto if
+omitted), `fillOpacity`, `noDataColor`, and `borderWidth`. The `ColorScale`
+class, the `mercator` projection, the `exteriorRings` helper, and the GeoJSON
+types are also exported. `GeoMap` is an alias for `ChoroplethMap`.
+
+---
+
+## 3D globe (0.15)
+
+`Globe` plots geography on a sphere. `plotPoint(lat, lon, options)` adds a
+marker, `arc(from, to, options)` draws a great-circle arc, and `graticule(options)`
+builds a latitude and longitude grid. All three attach to the globe, so they
+rotate with it.
+
+`Globe` is 3D, so it uses a `ThreeDScene`. Drag to orbit. The example plots two
+cities and a great-circle arc between them, then spins.
+
+<GlobeExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Globe, Rotate } from 'manim-web';
+
+const globe = new Globe({ radius: 2.2, color: '#2a6f97' });
+
+// plotPoint, arc and graticule attach to the globe, so they spin with it.
+globe.graticule({ latStep: 30, lonStep: 30 });
+globe.plotPoint(48.85, 2.35, { color: '#ffd166' }); // Paris (lat, lon)
+globe.plotPoint(40.71, -74.0, { color: '#ffd166' }); // New York
+globe.arc([48.85, 2.35], [40.71, -74.0], { altitude: 0.3 });
+
+scene.add(globe); // Globe is 3D: use a ThreeDScene
+await scene.play(new Rotate(globe, { angle: Math.PI * 2, duration: 8 }));
+```
+
+</details>
+
+A `LatLon` is `[latitude, longitude]` in degrees. `Globe` options include
+`textureUrl` and `darkTextureUrl` for a textured sphere, `opacity`, and
+`resolution`. The helper `latLonToPoint(lat, lon)` returns the 3D point for a
+coordinate.
