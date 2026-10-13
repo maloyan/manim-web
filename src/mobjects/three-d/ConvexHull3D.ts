@@ -54,7 +54,7 @@ export class ConvexHull3D extends Mobject3D {
       center = [0, 0, 0],
     } = options;
 
-    this._points = points.map((p) => [...p] as Vector3Tuple);
+    this._points = points.map((p) => [...p]);
     this._wireframe = wireframe;
     this._centerPoint = [...center];
 
@@ -109,14 +109,14 @@ export class ConvexHull3D extends Mobject3D {
    * Get a copy of the hull points
    */
   getPoints3D(): Vector3Tuple[] {
-    return this._points.map((p) => [...p] as Vector3Tuple);
+    return this._points.map((p) => [...p]);
   }
 
   /**
    * Replace the hull points and rebuild the geometry
    */
   setPoints3DData(points: Vector3Tuple[]): this {
-    this._points = points.map((p) => [...p] as Vector3Tuple);
+    this._points = points.map((p) => [...p]);
     if (this._threeObject instanceof THREE.Mesh) {
       this._threeObject.geometry.dispose();
       this._threeObject.geometry = this._createGeometry();
@@ -146,7 +146,7 @@ export class ConvexHull3D extends Mobject3D {
    */
   override copy(): ConvexHull3D {
     const copy = new ConvexHull3D({
-      points: this._points.map((p) => [...p] as Vector3Tuple),
+      points: this._points.map((p) => [...p]),
       color: this.color,
       opacity: this._opacity,
       wireframe: this._wireframe,

@@ -13,7 +13,7 @@
  * ```typescript
  * class TransformMatchingCustom extends TransformMatchingAbstractBase {
  *   protected _getSubmobjects(vmobject: VMobject): VMobject[] {
- *     return vmobject.children.filter(c => c instanceof VMobject) as VMobject[];
+ *     return vmobject.children.filter((c): c is VMobject => c instanceof VMobject);
  *   }
  *   protected _getKey(vmobject: VMobject): string {
  *     return myCustomKeyFunction(vmobject);
@@ -51,7 +51,7 @@ interface FadingPart {
   targetOpacity: number;
 }
 
-export abstract class TransformMatchingAbstractBase extends Animation {
+export abstract class TransformMatchingAbstractBase extends Animation<VMobject> {
   /** The target mobject to transform into */
   readonly target: VMobject;
 
@@ -96,7 +96,7 @@ export abstract class TransformMatchingAbstractBase extends Animation {
    * to add additional matching strategies (e.g., similarity-based).
    */
   protected _matchParts(): void {
-    const sourceParts = this._getSubmobjects(this.mobject as VMobject);
+    const sourceParts = this._getSubmobjects(this.mobject);
     const targetParts = this._getSubmobjects(this.target);
 
     const usedSourceIndices = new Set<number>();
@@ -150,7 +150,7 @@ export abstract class TransformMatchingAbstractBase extends Animation {
     for (let i = 0; i < targetParts.length; i++) {
       if (!usedTargetIndices.has(i)) {
         const vmob = targetParts[i];
-        const copy = vmob.copy() as VMobject;
+        const copy = vmob.copy();
         copy.opacity = 0;
         const parent = this.mobject.parent;
         if (parent) {
@@ -171,8 +171,8 @@ export abstract class TransformMatchingAbstractBase extends Animation {
    * Aligns their points so they can be smoothly interpolated.
    */
   protected _addMatchedPart(source: VMobject, target: VMobject): void {
-    const srcCopy = source.copy() as VMobject;
-    const tgtCopy = target.copy() as VMobject;
+    const srcCopy = source.copy();
+    const tgtCopy = target.copy();
 
     const srcLengths = source.getEffectiveSubpathLengths?.();
     const tgtLengths = target.getEffectiveSubpathLengths?.();

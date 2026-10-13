@@ -248,7 +248,7 @@ function applyBindings(bindings: readonly UrlStateBinding[], state: unknown): bo
  * @example
  * ```ts
  * const controller = bindStateToUrl([
- *   { id: 'p', get: () => point.getPoint(), set: (v) => point.setPoint(v as Vector3Tuple) },
+ *   { id: 'p', get: () => point.getPoint(), set: (v) => point.setPoint(v) },
  *   { id: 's', get: () => slider.getValue(), set: (v) => slider.setValue(v as number) },
  * ]);
  * // after a drag:

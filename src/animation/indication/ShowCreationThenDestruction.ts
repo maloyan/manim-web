@@ -14,7 +14,6 @@ import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { linear } from '../../rate-functions';
 import { hasLine2Children, getLine2TotalLength } from '../creation/Create';
 
@@ -43,7 +42,7 @@ export class ShowCreationThenDestruction extends Animation {
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
-          const material = child.material as LineMaterial;
+          const material = child.material;
           material.dashed = true;
           material.dashScale = 1;
 
@@ -76,7 +75,7 @@ export class ShowCreationThenDestruction extends Animation {
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
-          const material = child.material as LineMaterial;
+          const material = child.material;
           const visibleLength = effectiveAlpha * this._totalLength;
           material.dashSize = visibleLength;
           material.gapSize = this._totalLength - visibleLength + 0.0001;
@@ -94,7 +93,7 @@ export class ShowCreationThenDestruction extends Animation {
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
-          const material = child.material as LineMaterial;
+          const material = child.material;
           material.dashSize = 0;
           material.gapSize = this._totalLength;
           material.needsUpdate = true;

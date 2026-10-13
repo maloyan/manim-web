@@ -71,7 +71,7 @@ export class ArcPolygon extends VMobject {
       throw new Error('ArcPolygon requires at least 2 vertices');
     }
 
-    this._vertices = vertices.map((v) => [...v] as Vector3Tuple);
+    this._vertices = vertices.map((v) => [...v]);
     // Extend arcConfigs to match number of edges
     this._arcConfigs = [];
     for (let i = 0; i < vertices.length; i++) {
@@ -211,7 +211,7 @@ export class ArcPolygon extends VMobject {
    * Get the vertices
    */
   getVertices(): Vector3Tuple[] {
-    return this._vertices.map((v) => [...v] as Vector3Tuple);
+    return this._vertices.map((v) => [...v]);
   }
 
   /**

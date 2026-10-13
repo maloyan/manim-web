@@ -44,6 +44,11 @@ export interface MathTexOptions {
   macros?: Record<string, string>;
 }
 
+/** True when `m` exposes a `getLatex()` method. */
+function hasGetLatex(m: object): m is { getLatex(): string } {
+  return 'getLatex' in m && typeof m.getLatex === 'function';
+}
+
 export class MathTex extends VGroup {
   protected _latex: string;
   protected _fontSize: number;
@@ -232,7 +237,7 @@ export class MathTex extends VGroup {
     }
 
     for (const part of this._parts) {
-      const partLatex = (part as unknown as { getLatex?: () => string }).getLatex?.() ?? '';
+      const partLatex = hasGetLatex(part) ? part.getLatex() : '';
       if (matches(partLatex)) {
         part.setColor(color);
       }

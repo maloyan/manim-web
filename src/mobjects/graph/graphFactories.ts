@@ -65,9 +65,7 @@ export function pathGraph(n: number, options: Partial<GenericGraphOptions> = {})
     edges,
     layout: {
       type: 'custom',
-      positions: new Map(
-        vertices.map((v, i) => [v, [(i - (n - 1) / 2) * 0.8, 0, 0] as Vector3Tuple]),
-      ),
+      positions: new Map(vertices.map((v, i) => [v, [(i - (n - 1) / 2) * 0.8, 0, 0]])),
     },
     ...options,
   });

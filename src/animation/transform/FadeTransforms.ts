@@ -22,7 +22,7 @@ export interface FadeTransformOptions extends AnimationOptions {
  * FadeTransform animation - transforms with a fade effect.
  * The source fades out while morphing to the target, which fades in.
  */
-export class FadeTransform extends Animation {
+export class FadeTransform extends Animation<VMobject> {
   /** The target mobject to transform into */
   readonly target: VMobject;
 
@@ -53,7 +53,7 @@ export class FadeTransform extends Animation {
   override begin(): void {
     super.begin();
 
-    const vmobject = this.mobject as VMobject;
+    const vmobject = this.mobject;
 
     const aligned = alignVmobjectPair(vmobject, this.target);
     this._startPoints = aligned.startPoints;
@@ -67,7 +67,7 @@ export class FadeTransform extends Animation {
   }
 
   interpolate(alpha: number): void {
-    const vmobject = this.mobject as VMobject;
+    const vmobject = this.mobject;
 
     // Interpolate points
     const interpolatedPoints: number[][] = [];
@@ -87,7 +87,7 @@ export class FadeTransform extends Animation {
   }
 
   override finish(): void {
-    const vmobject = this.mobject as VMobject;
+    const vmobject = this.mobject;
     vmobject.setPoints(this._targetPoints);
     vmobject.setTransformSubpathLengths(undefined);
     vmobject.opacity = this._targetOpacity;
@@ -120,7 +120,7 @@ export type FadeTransformPiecesOptions = AnimationOptions;
  * FadeTransformPieces animation - transforms pieces (submobjects) with fade effect.
  * Each submobject fades and transforms independently.
  */
-export class FadeTransformPieces extends Animation {
+export class FadeTransformPieces extends Animation<VMobject> {
   /** The target mobject to transform into */
   readonly target: VMobject;
 
@@ -141,7 +141,7 @@ export class FadeTransformPieces extends Animation {
   override begin(): void {
     super.begin();
 
-    const source = this.mobject as VMobject;
+    const source = this.mobject;
     const sourceChildren = source.children as VMobject[];
     const targetChildren = this.target.children as VMobject[];
 
@@ -150,8 +150,8 @@ export class FadeTransformPieces extends Animation {
       const maxLen = Math.max(sourceChildren.length, targetChildren.length);
 
       for (let i = 0; i < maxLen; i++) {
-        const srcChild = sourceChildren[Math.min(i, sourceChildren.length - 1)] as VMobject;
-        const tgtChild = targetChildren[Math.min(i, targetChildren.length - 1)] as VMobject;
+        const srcChild = sourceChildren[Math.min(i, sourceChildren.length - 1)];
+        const tgtChild = targetChildren[Math.min(i, targetChildren.length - 1)];
 
         const aligned = alignVmobjectPair(srcChild, tgtChild);
         this._pieceStates.push({
@@ -176,12 +176,12 @@ export class FadeTransformPieces extends Animation {
   }
 
   interpolate(alpha: number): void {
-    const source = this.mobject as VMobject;
+    const source = this.mobject;
     const sourceChildren = source.children as VMobject[];
 
     if (sourceChildren.length > 0 && this._pieceStates.length > 0) {
       for (let i = 0; i < sourceChildren.length; i++) {
-        const child = sourceChildren[i] as VMobject;
+        const child = sourceChildren[i];
         const state = this._pieceStates[Math.min(i, this._pieceStates.length - 1)];
 
         const points: number[][] = [];
@@ -217,12 +217,12 @@ export class FadeTransformPieces extends Animation {
   }
 
   override finish(): void {
-    const source = this.mobject as VMobject;
+    const source = this.mobject;
     const sourceChildren = source.children as VMobject[];
 
     if (sourceChildren.length > 0 && this._pieceStates.length > 0) {
       for (let i = 0; i < sourceChildren.length; i++) {
-        const child = sourceChildren[i] as VMobject;
+        const child = sourceChildren[i];
         const state = this._pieceStates[Math.min(i, this._pieceStates.length - 1)];
         child.setPoints(state.targetPoints);
         child.setTransformSubpathLengths(undefined);
@@ -269,7 +269,7 @@ export class TransformFromCopy extends Transform {
 
   constructor(source: VMobject, target: VMobject, options: TransformFromCopyOptions = {}) {
     // Create a copy of the source to animate
-    const sourceCopy = source.copy() as VMobject;
+    const sourceCopy = source.copy();
     super(sourceCopy, target, options);
     this.originalSource = source;
   }

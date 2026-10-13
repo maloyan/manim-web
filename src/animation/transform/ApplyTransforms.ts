@@ -229,7 +229,7 @@ export class ApplyMethod extends Transform {
 
   constructor(mobject: VMobject, options: ApplyMethodOptions) {
     // Create target by copying and calling method
-    const target = mobject.copy() as VMobject;
+    const target = mobject.copy();
     const method = (target as unknown as Record<string, (...args: unknown[]) => unknown>)[
       options.methodName
     ];

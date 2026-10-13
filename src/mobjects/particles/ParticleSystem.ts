@@ -235,8 +235,8 @@ export class ParticleSystem extends PMobject {
    */
   getParticles(): ParticleSnapshot[] {
     return this._particles.map((p) => ({
-      position: [...p.position] as Vector3Tuple,
-      velocity: [...p.velocity] as Vector3Tuple,
+      position: [...p.position],
+      velocity: [...p.velocity],
       age: p.age,
       lifetime: p.lifetime,
       size: p.size,
@@ -344,7 +344,7 @@ export class ParticleSystem extends PMobject {
   /** Mirror the living particles into the PMobject point buffer for rendering. */
   private _syncParticlesToPoints(): void {
     this._points = this._particles.map((p) => ({
-      position: [...p.position] as Vector3Tuple,
+      position: [...p.position],
       color: p.color,
       opacity: this._opacity,
     }));

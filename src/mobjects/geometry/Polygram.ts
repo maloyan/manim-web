@@ -44,7 +44,7 @@ export class Polygram extends VMobject {
       const first = closed[0];
       const last = closed[closed.length - 1];
       if (first[0] !== last[0] || first[1] !== last[1] || first[2] !== last[2]) {
-        closed.push([...first] as Vector3Tuple);
+        closed.push([...first]);
       }
       return closed;
     });
@@ -100,14 +100,14 @@ export class Polygram extends VMobject {
   }
 
   getVertexGroups(): Vector3Tuple[][] {
-    return this._vertexGroups.map((group) => group.map((v) => [...v] as Vector3Tuple));
+    return this._vertexGroups.map((group) => group.map((v) => [...v]));
   }
 
   getVertexGroup(index: number): Vector3Tuple[] {
     if (index < 0 || index >= this._vertexGroups.length) {
       throw new Error(`Vertex group index ${index} out of bounds`);
     }
-    return this._vertexGroups[index].map((v) => [...v] as Vector3Tuple);
+    return this._vertexGroups[index].map((v) => [...v]);
   }
 
   getCentroid(): Vector3Tuple {

@@ -191,7 +191,7 @@ export class Circumscribe extends Animation {
 
     this._shapeGroup.traverse((child) => {
       if (child instanceof Line2) {
-        const material = child.material as LineMaterial;
+        const material = child.material;
 
         // Calculate draw progress
         // For the first (1 - timeWidth) of the animation, draw the shape
@@ -225,7 +225,7 @@ export class Circumscribe extends Animation {
       this._shapeGroup.traverse((child) => {
         if (child instanceof Line2) {
           child.geometry.dispose();
-          (child.material as LineMaterial).dispose();
+          child.material.dispose();
         }
       });
 

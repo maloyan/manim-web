@@ -521,8 +521,8 @@ export class Axes extends Group implements CoordinateSystem {
     const { color = '#ffffff', strokeWidth = 2, lineFunc = DashedLine } = options;
     const xAxisY = this.coordsToPoint(0, 0)[1];
     return new lineFunc({
-      start: [point[0], xAxisY, point[2]] as Vector3Tuple,
-      end: [point[0], point[1], point[2]] as Vector3Tuple,
+      start: [point[0], xAxisY, point[2]],
+      end: [point[0], point[1], point[2]],
       color,
       strokeWidth,
     });
@@ -539,8 +539,8 @@ export class Axes extends Group implements CoordinateSystem {
     const { color = '#ffffff', strokeWidth = 2, lineFunc = DashedLine } = options;
     const yAxisX = this.coordsToPoint(0, 0)[0];
     return new lineFunc({
-      start: [yAxisX, point[1], point[2]] as Vector3Tuple,
-      end: [point[0], point[1], point[2]] as Vector3Tuple,
+      start: [yAxisX, point[1], point[2]],
+      end: [point[0], point[1], point[2]],
       color,
       strokeWidth,
     });

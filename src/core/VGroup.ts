@@ -481,7 +481,7 @@ export class VGroup extends VMobject {
    */
   filter(fn: (vmobject: VMobject, index: number) => boolean): VGroup {
     const filtered = (this.children as VMobject[]).filter(fn);
-    return new VGroup(...filtered.map((m) => m.copy() as VMobject));
+    return new VGroup(...filtered.map((m) => m.copy()));
   }
 
   /**
@@ -545,7 +545,7 @@ export class VGroup extends VMobject {
           ? (points as number[][]).map((p) => [p[0], p[1], p[2] ?? 0])
           : (points as Point[]).map((p) => [p.x, p.y, 0]);
 
-    const vChildren = this.children.filter((c) => c instanceof VMobject) as VMobject[];
+    const vChildren = this.children.filter((c): c is VMobject => c instanceof VMobject);
     const counts = vChildren.map((c) => c.getLocalPoints().length);
     const total = counts.reduce((n, c) => n + c, 0);
     if (pts3D.length !== total) {

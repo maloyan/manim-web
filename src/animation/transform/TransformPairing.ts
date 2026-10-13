@@ -35,8 +35,8 @@ export interface AlignedTransformPair {
 }
 
 export function alignVmobjectPair(source: VMobject, target: VMobject): AlignedTransformPair {
-  const startCopy = source.copy() as VMobject;
-  const targetCopy = target.copy() as VMobject;
+  const startCopy = source.copy();
+  const targetCopy = target.copy();
 
   const finalTargetPoints = targetCopy.getLocalPoints();
   const finalTargetSubpathLengths =
@@ -123,7 +123,7 @@ function makePlaceholderSnapshot(reference?: LeafVMobjectSnapshot): LeafVMobject
 /** A real copy of an existing leaf, starting at that leaf's own world transform. */
 function duplicateLeafSnapshot(reference: LeafVMobjectSnapshot): LeafVMobjectSnapshot {
   return {
-    leaf: reference.leaf.copy() as VMobject,
+    leaf: reference.leaf.copy(),
     worldMatrix: reference.worldMatrix.clone(),
     parentWorldMatrix: reference.parentWorldMatrix.clone(),
     worldPosition: reference.worldPosition.clone(),

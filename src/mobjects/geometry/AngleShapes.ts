@@ -169,7 +169,7 @@ export class Angle extends VMobject {
       normal = normalizeVec(normal);
 
       if (Math.abs(dir1[2]) < 1e-10 && Math.abs(dir2[2]) < 1e-10 && normal[2] < 0) {
-        normal = [-normal[0], -normal[1], -normal[2]] as Vector3Tuple;
+        normal = [-normal[0], -normal[1], -normal[2]];
       }
     }
 

@@ -37,7 +37,7 @@ export class ShowPassingFlashWithThinningStrokeWidth extends ShowPassingFlash {
       this._flashGroup.remove(child);
       if (child instanceof Line2) {
         child.geometry.dispose();
-        (child.material as LineMaterial).dispose();
+        child.material.dispose();
       }
     }
 
