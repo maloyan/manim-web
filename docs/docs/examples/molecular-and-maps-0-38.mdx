@@ -9,6 +9,8 @@ import AnimatedChoroplethExample from '@site/src/components/examples/AnimatedCho
 import ReactionMechanismExample from '@site/src/components/examples/ReactionMechanismExample';
 import ReactionArrowExample from '@site/src/components/examples/ReactionArrowExample';
 import OrbitalSurfaceExample from '@site/src/components/examples/OrbitalSurfaceExample';
+import MolfileExample from '@site/src/components/examples/MolfileExample';
+import BindingSiteExample from '@site/src/components/examples/BindingSiteExample';
 
 Features added in the 0.38 release: a molecular surface that wraps a molecule in
 3D, curved electron-pushing arrows for reaction mechanisms, and two additions to
@@ -330,3 +332,118 @@ Options are `type` (`'s'`, `'px'`, `'py'`, `'pz'`, `'dz2'`, or `'dxy'`, default
 `'pz'`), `center`, `scale` (default 2), `isoValue`, `resolution`,
 `positiveColor`, `negativeColor`, and `opacity`. The read-only `surfaces` field
 holds the underlying `ImplicitSurface` per phase.
+
+---
+
+## Molecules from MOL/SDF files (0.38)
+
+`moleculeFromMolfile(text, options)` parses a V2000 MOL block (an `.mol` file or
+one record of an `.sdf` file) into a 2D skeletal `MoleculeMobject`. It reads the
+atom block for the elements and 2D coordinates, and the bond block for the bond
+orders and the wedge/dash stereo flags. A bond of order 2 draws a double line;
+the wedge flag (stereo `1`) draws a solid wedge toward the viewer; the dash flag
+(stereo `6`) draws a hashed bond going behind. `parseMolfile` returns the raw
+parsed data instead of a mobject, and `parseSdf` splits a multi-record SDF. The
+returned mobject is a normal `MoleculeMobject`, so `.center()`, `.scale()` and
+`Create` all work on it. The parser takes a string, so there is no file or
+network access.
+
+The example parses a four-atom inline MOL block: a C=C double bond, a C–O single
+bond, a C–Cl wedge, and an O–Cl dash. `moleculeFromMolfile` is 2D, so it uses a
+regular `Scene`.
+
+<MolfileExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { moleculeFromMolfile, Create } from 'manim-web';
+
+// A hand-authored V2000 MOL block: 4 atoms, 4 bonds.
+const molfile = `test-molecule
+  manim-web
+a comment line
+  4  4  0  0  0  0  0  0  0  0999 V2000
+    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    1.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000    1.0000    0.0000 Cl  0  0  0  0  0  0  0  0  0  0  0  0
+  1  2  2  0  0  0  0
+  2  3  1  0  0  0  0
+  1  4  1  1  0  0  0
+  3  4  1  6  0  0  0
+M  END`;
+
+// Parse into a 2D skeletal MoleculeMobject, then draw it.
+const molecule = moleculeFromMolfile(molfile, {
+  bondLength: 1.8,
+  showCarbonLabels: true,
+});
+molecule.center();
+molecule.scale(1.6);
+await scene.play(new Create(molecule, { duration: 2 })); // use a regular Scene
+```
+
+</details>
+
+Options are the `MoleculeMobject` options minus `atoms` and `bonds` (those come
+from the file), for example `bondLength`, `showCarbonLabels`, and `bondColor`.
+
+---
+
+## Binding-site selection (0.38)
+
+`parsePdb(text)` reads fixed-column PDB records from a string into a
+`ParsedStructure`: `atoms` (from ATOM records), `hetatms` (from HETATM records,
+the ligand), `bonds` (from CONECT records), and `residues`. `bindingSiteSelection(structure, radius)`
+returns a new `ParsedStructure` with only the protein atoms within `radius`
+angstrom of any hetatm, the pocket that lines the bound ligand. The ligand is the
+reference, so it is not kept in the result; render it from `structure.hetatms`.
+`bonds` are kept only when both endpoints survive, re-numbered into the new atom
+order, and the input is never mutated. `selectAtoms(structure, options)` is the
+general filter (by element, chain, residue, or proximity) that this convenience
+builds on. The default radius is `DEFAULT_BINDING_SITE_RADIUS` (5). Parsing and
+selection are pure data operations, so this works without a scene.
+
+The example parses a tiny inline PDB of three residues (ALA 1, SER 2, LEU 3) and
+a three-atom ligand between residues 1 and 2. `bindingSiteSelection` with a
+6-angstrom radius keeps the ALA 1 and SER 2 atoms (the pocket) and drops LEU 3,
+which sits about 12 angstrom away. The pocket renders as ball-and-stick with the
+ligand beside it. `Molecule3D` is 3D, so it uses a `ThreeDScene`.
+
+<BindingSiteExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { parsePdb, bindingSiteSelection, Molecule3D, Create, FadeIn } from 'manim-web';
+
+// A hand-authored PDB string (fixed columns). LEU 3 sits far from the ligand.
+const pdb = `ATOM      1  N   ALA A   1       1.200   1.000   0.000  1.00  0.00           N
+ATOM      2  CA  ALA A   1       2.000   0.600   0.600  1.00  0.00           C
+... (ALA 1, SER 2, far LEU 3, and a 3-atom HETATM ligand LIG) ...
+HETATM   15  C1  LIG A   4       0.000   0.000   0.000  1.00  0.00           C
+CONECT    2    1    3    5
+END`;
+
+const structure = parsePdb(pdb);
+
+// Keep protein atoms within 6 angstrom of the ligand: the pocket. The ligand
+// (hetatms) is the reference, so render it separately.
+const site = bindingSiteSelection(structure, 6);
+
+const pocket = new Molecule3D({ atoms: site.atoms, bonds: site.bonds, style: 'ball-and-stick' });
+const ligand = new Molecule3D({ atoms: structure.hetatms, style: 'ball-and-stick' });
+scene.add(pocket); // use a ThreeDScene
+scene.add(ligand);
+await scene.play(new Create(pocket, { duration: 2 }));
+await scene.play(new FadeIn(ligand, { duration: 1 }));
+```
+
+</details>
+
+`parsePdb` takes `includeWater` (default false). `bindingSiteSelection` takes the
+`radius` in angstrom. `selectAtoms` takes `elements`, `chains`, `resSeqs`,
+`residueCodes`, `nearPoint`, `nearLigand`, `includeHetatms`, and `invert`.
