@@ -123,7 +123,7 @@ import {
   Transform,
   ApplyPointwiseFunction,
   Text,
-  MathTex,
+  MathTexImage,
   NumberPlane,
   VGroup,
   UP,
@@ -147,7 +147,9 @@ const title = new Text({
   color: WHITE,
   fontUrl: FONT_URL,
 });
-const basel = new MathTex({ latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}' });
+const basel = new MathTexImage({
+  latex: '\\sum_{n=1}^\\infty \\frac{1}{n^2} = \\frac{\\pi^2}{6}',
+});
 await basel.waitForRender?.();
 
 new VGroup(title, basel).arrange(DOWN);
@@ -213,7 +215,7 @@ await scene.wait(1);
 
 </details>
 
-**Learn More:** [**Text**](/api/classes/Text) · [**MathTex**](/api/classes/MathTex) · [**NumberPlane**](/api/classes/NumberPlane) · [**Write**](/api/classes/Write) · [**Transform**](/api/classes/Transform) · [**ApplyPointwiseFunction**](/api/classes/ApplyPointwiseFunction) · [**Create**](/api/classes/Create)
+**Learn More:** [**Text**](/api/classes/Text) · [**MathTexImage**](/api/classes/MathTexImage) · [**NumberPlane**](/api/classes/NumberPlane) · [**Transform**](/api/classes/Transform) · [**ApplyPointwiseFunction**](/api/classes/ApplyPointwiseFunction) · [**Create**](/api/classes/Create)
 
 ---
 
@@ -230,7 +232,7 @@ Creates the Manim Community Edition logo using a large blackboard-bold M, a circ
 import {
   Circle,
   LEFT,
-  MathTex,
+  MathTexImage,
   ORIGIN,
   RIGHT,
   Scene,
@@ -252,7 +254,7 @@ const logoGreen = '#87c2a5';
 const logoBlue = '#525893';
 const logoRed = '#e07a5f';
 const logoBlack = '#343434';
-const dsM = new MathTex({ latex: '\\mathbb{M}', fillColor: logoBlack });
+const dsM = new MathTexImage({ latex: '\\mathbb{M}', fillColor: logoBlack });
 await dsM.waitForRender();
 dsM.scale(7);
 dsM.shift(addVec(scaleVec(2.25, LEFT), scaleVec(1.5, UP)));
@@ -266,7 +268,7 @@ scene.add(logo);
 
 </details>
 
-**Learn More:** [**MathTex**](/api/classes/MathTex) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square) · [**Triangle**](/api/classes/Triangle) · [**VGroup**](/api/classes/VGroup)
+**Learn More:** [**MathTexImage**](/api/classes/MathTexImage) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square) · [**Triangle**](/api/classes/Triangle) · [**VGroup**](/api/classes/VGroup)
 
 ---
 
@@ -319,7 +321,7 @@ Displays a vector arrow on a coordinate plane with labeled origin and tip points
 <summary>Source Code</summary>
 
 ```typescript
-import { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text } from 'manim-web';
+import { Arrow, DOWN, Dot, NumberPlane, ORIGIN, RIGHT, Scene, Text, YELLOW } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -327,7 +329,7 @@ const scene = new Scene(document.getElementById('container'), {
   backgroundColor: '#000000',
 });
 
-const dot = new Dot({ point: ORIGIN });
+const dot = new Dot({ point: ORIGIN, radius: 0.12, color: YELLOW });
 const arrow = new Arrow({ start: ORIGIN, end: [2, 2, 0] });
 const numberplane = new NumberPlane();
 const originText = new Text({ text: '(0, 0)' }).nextTo(dot, DOWN);
@@ -399,7 +401,7 @@ const bool_ops_text = new Text({
 }).nextTo(ellipse1, UP);
 const ellipse_group = new Group(bool_ops_text, ellipse1, ellipse2).moveTo(scaleVec(3, LEFT));
 // Create underline AFTER group is positioned so it uses the text's final position
-const underline = new Underline(bool_ops_text, { color: WHITE, strokeWidth: 2, buff: -0.25 });
+const underline = new Underline(bool_ops_text, { color: WHITE, strokeWidth: 2, buff: 0.05 });
 ellipse_group.add(underline);
 await scene.play(new FadeIn(ellipse_group));
 
@@ -485,7 +487,7 @@ import {
   RED,
   BLUE,
   GREEN,
-  YELLOW,
+  GOLD,
 } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
@@ -498,27 +500,22 @@ const scene = new Scene(document.getElementById('container'), {
 const equation1 = new MathTex({
   latex: '\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}',
   color: WHITE,
-  fontSize: 2,
 });
 const equation2 = new MathTex({
   latex: 'e^{i\\pi} + 1 = 0',
-  color: YELLOW,
-  fontSize: 2.5,
+  color: GOLD,
 });
 const multiPart = new MathTex({
   latex: ['E', '=', 'mc^2'],
   color: WHITE,
-  fontSize: 3,
 });
 const equation3 = new MathTex({
   latex: '\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}',
   color: GREEN,
-  fontSize: 2,
 });
 const matrix = new MathTex({
   latex: 'A = \\begin{pmatrix} a_{11} & a_{12} \\\\ a_{21} & a_{22} \\end{pmatrix}',
   color: WHITE,
-  fontSize: 2,
 });
 
 // Render all SVGs in parallel
@@ -680,7 +677,7 @@ import {
   FadeToColor,
   LEFT,
   Line,
-  MathTex,
+  MathTexImage,
   RED,
   RIGHT,
   SMALL_BUFF,
@@ -704,7 +701,7 @@ const line_moving = new Line({ start: LEFT, end: RIGHT });
 const line_ref = line_moving.copy();
 line_moving.rotate(theta_tracker.getValue() * (Math.PI / 180), { aboutPoint: rotation_center });
 const a = new Angle({ line1: line1, line2: line_moving }, { radius: 0.5, otherAngle: false });
-const tex = new MathTex({ latex: '\\theta', color: WHITE });
+const tex = new MathTexImage({ latex: '\\theta', color: WHITE });
 await tex.waitForRender();
 tex.moveTo(
   new Angle(
@@ -743,7 +740,7 @@ await scene.wait(1);
 
 </details>
 
-**Learn More:** [**Angle**](/api/classes/Angle) · [**Line**](/api/classes/Line) · [**MathTex**](/api/classes/MathTex) · [**ValueTracker**](/api/classes/ValueTracker) · [**FadeToColor**](/api/classes/FadeToColor)
+**Learn More:** [**Angle**](/api/classes/Angle) · [**Line**](/api/classes/Line) · [**MathTexImage**](/api/classes/MathTexImage) · [**ValueTracker**](/api/classes/ValueTracker) · [**FadeToColor**](/api/classes/FadeToColor)
 
 ---
 
@@ -854,7 +851,7 @@ Renders a multi-part LaTeX equation (the product rule), then highlights individu
 ```typescript
 import {
   Create,
-  MathTex,
+  MathTexImage,
   ReplacementTransform,
   Scene,
   SurroundingRectangle,
@@ -866,7 +863,7 @@ const scene = new Scene(document.getElementById('container'), {
   backgroundColor: '#000000',
 });
 
-const text = new MathTex({
+const text = new MathTexImage({
   latex: ['\\frac{d}{dx}f(x)g(x)=', 'f(x)\\frac{d}{dx}g(x)', '+', 'g(x)\\frac{d}{dx}f(x)'],
 });
 await text.waitForRender();
@@ -881,7 +878,7 @@ await scene.wait();
 
 </details>
 
-**Learn More:** [**MathTex**](/api/classes/MathTex) · [**SurroundingRectangle**](/api/classes/SurroundingRectangle) · [**Create**](/api/classes/Create) · [**ReplacementTransform**](/api/classes/ReplacementTransform)
+**Learn More:** [**MathTexImage**](/api/classes/MathTexImage) · [**SurroundingRectangle**](/api/classes/SurroundingRectangle) · [**Create**](/api/classes/Create) · [**ReplacementTransform**](/api/classes/ReplacementTransform)
 
 ---
 
@@ -988,7 +985,7 @@ import {
   Dot,
   Line,
   VGroup,
-  MathTex,
+  MathTexImage,
   BLACK,
   BLUE,
   RED,
@@ -1013,10 +1010,10 @@ scene.add(xAxis, yAxis);
 
 // --- X labels ---
 const xLabels = [
-  new MathTex({ latex: '\\pi' }),
-  new MathTex({ latex: '2\\pi' }),
-  new MathTex({ latex: '3\\pi' }),
-  new MathTex({ latex: '4\\pi' }),
+  new MathTexImage({ latex: '\\pi' }),
+  new MathTexImage({ latex: '2\\pi' }),
+  new MathTexImage({ latex: '3\\pi' }),
+  new MathTexImage({ latex: '4\\pi' }),
 ];
 for (let i = 0; i < xLabels.length; i++) {
   xLabels[i].nextTo([-1 + 2 * i, 0, 0], DOWN, 0.4);
@@ -1098,7 +1095,7 @@ dot.removeUpdater(goAroundCircle);
 
 </details>
 
-**Learn More:** [**Circle**](/api/classes/Circle) · [**Dot**](/api/classes/Dot) · [**Line**](/api/classes/Line) · [**VGroup**](/api/classes/VGroup) · [**MathTex**](/api/classes/MathTex)
+**Learn More:** [**Circle**](/api/classes/Circle) · [**Dot**](/api/classes/Dot) · [**Line**](/api/classes/Line) · [**VGroup**](/api/classes/VGroup) · [**MathTexImage**](/api/classes/MathTexImage)
 
 ---
 
@@ -1112,16 +1109,7 @@ Shows how ApplyMatrix works on Arrows and a NumberPlane. A shear transformation 
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Arrow,
-  NumberPlane,
-  Scene,
-  Text,
-  YELLOW,
-  GREEN_C,
-  RED_C,
-  applyMatrix,
-} from 'manim-web';
+import { Arrow, NumberPlane, Scene, Text, YELLOW, GREEN_C, RED_C, applyMatrix } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -1138,7 +1126,7 @@ const arrow3 = new Arrow({ start: [-1, 1, 0], end: [1, -1, 0], color: RED_C });
 
 scene.add(arrow1, arrow2, arrow3);
 
-const label = new Text({ text: 'Before shear', fontSize: 24, color: '#ffffff' });
+const label = new Text({ text: 'Before shear', fontSize: 48, color: '#ffffff' });
 label.moveTo([0, 3.2, 0]);
 scene.add(label);
 
@@ -1163,7 +1151,7 @@ await scene.play(
 scene.remove(label);
 const label2 = new Text({
   text: 'After shear — tips reconstructed',
-  fontSize: 24,
+  fontSize: 48,
   color: '#ffffff',
 });
 label2.moveTo([0, 3.2, 0]);
@@ -1188,13 +1176,7 @@ Applies a complex function to a NumberPlane, treating each point's (x, y) coordi
 <summary>Source Code</summary>
 
 ```typescript
-import {
-  Scene,
-  NumberPlane,
-  Create,
-  ApplyComplexFunction,
-  BLACK,
-} from 'manim-web';
+import { Scene, NumberPlane, Create, ApplyComplexFunction, BLACK } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 800,
@@ -1310,6 +1292,7 @@ import {
   Shift,
   AnimationGroup,
   RIGHT,
+  LEFT,
   BLACK,
   BLUE,
   RED,
@@ -1348,10 +1331,10 @@ const rateFunctions: Array<{
 ];
 
 const ROW_COUNT = rateFunctions.length;
-const TOP_Y = 2.0;
-const ROW_SPACING = 0.7;
-const START_X = -2.5;
-const SHIFT_DISTANCE = 5.0;
+const TOP_Y = 2.4;
+const ROW_SPACING = 0.85;
+const START_X = -1.5;
+const SHIFT_DISTANCE = 5.5;
 
 const dots: Dot[] = [];
 const shiftDirection = scaleVec(SHIFT_DISTANCE, RIGHT) as [number, number, number];
@@ -1360,14 +1343,6 @@ for (let i = 0; i < ROW_COUNT; i++) {
   const y = TOP_Y - i * ROW_SPACING;
   const { name, color } = rateFunctions[i];
 
-  // Label on the left
-  const label = new Text({
-    text: name,
-    fontSize: 20,
-    color: WHITE,
-  });
-  label.moveTo([START_X - 2.0, y, 0]);
-
   // Track line (faint guide)
   const trackLine = new Line({
     start: [START_X, y, 0],
@@ -1375,6 +1350,14 @@ for (let i = 0; i < ROW_COUNT; i++) {
     color: '#333333',
     strokeWidth: 1,
   });
+
+  // Label on the left, right-edge aligned just before track start
+  const label = new Text({
+    text: name,
+    fontSize: 28,
+    color: WHITE,
+  });
+  label.nextTo(trackLine, LEFT, 0.2);
 
   // Dot at the start position
   const dot = new Dot({
@@ -1422,6 +1405,7 @@ import {
   Shift,
   AnimationGroup,
   RIGHT,
+  LEFT,
   BLACK,
   BLUE,
   RED,
@@ -1464,10 +1448,10 @@ const rateFunctions: Array<{
 ];
 
 const ROW_COUNT = rateFunctions.length;
-const TOP_Y = 2.5;
-const ROW_SPACING = 0.65;
-const START_X = -2.2;
-const SHIFT_DISTANCE = 5.0;
+const TOP_Y = 3.0;
+const ROW_SPACING = 0.75;
+const START_X = -1.2;
+const SHIFT_DISTANCE = 5.5;
 
 const dots: Dot[] = [];
 const shiftDirection = scaleVec(SHIFT_DISTANCE, RIGHT) as [number, number, number];
@@ -1476,14 +1460,6 @@ for (let i = 0; i < ROW_COUNT; i++) {
   const y = TOP_Y - i * ROW_SPACING;
   const { name, color } = rateFunctions[i];
 
-  // Label on the left
-  const label = new Text({
-    text: name,
-    fontSize: 18,
-    color: WHITE,
-  });
-  label.moveTo([START_X - 2.3, y, 0]);
-
   // Track line (faint guide)
   const trackLine = new Line({
     start: [START_X, y, 0],
@@ -1491,6 +1467,14 @@ for (let i = 0; i < ROW_COUNT; i++) {
     color: '#333333',
     strokeWidth: 1,
   });
+
+  // Label on the left, right-edge aligned just before track start
+  const label = new Text({
+    text: name,
+    fontSize: 26,
+    color: WHITE,
+  });
+  label.nextTo(trackLine, LEFT, 0.2);
 
   // Dot at the start position
   const dot = new Dot({
@@ -1608,47 +1592,96 @@ const scene = new Scene(document.getElementById('container'), {
 
 // Define polygon with holes
 const ring1 = [
-  [-3.8, -2.4, 0], [-2.4, -2.5, 0], [-1.3, -1.6, 0], [-0.2, -1.7, 0],
-  [1.7, -2.5, 0], [2.9, -2.6, 0], [3.5, -1.5, 0], [4.9, -1.4, 0],
-  [4.5, 0.2, 0], [4.7, 1.6, 0], [3.5, 2.4, 0], [1.1, 2.5, 0],
-  [-0.1, 0.9, 0], [-1.2, 0.5, 0], [-1.6, 0.7, 0], [-1.4, 1.9, 0],
-  [-2.6, 2.6, 0], [-4.4, 1.2, 0], [-4.9, -0.8, 0],
+  [-3.8, -2.4, 0],
+  [-2.4, -2.5, 0],
+  [-1.3, -1.6, 0],
+  [-0.2, -1.7, 0],
+  [1.7, -2.5, 0],
+  [2.9, -2.6, 0],
+  [3.5, -1.5, 0],
+  [4.9, -1.4, 0],
+  [4.5, 0.2, 0],
+  [4.7, 1.6, 0],
+  [3.5, 2.4, 0],
+  [1.1, 2.5, 0],
+  [-0.1, 0.9, 0],
+  [-1.2, 0.5, 0],
+  [-1.6, 0.7, 0],
+  [-1.4, 1.9, 0],
+  [-2.6, 2.6, 0],
+  [-4.4, 1.2, 0],
+  [-4.9, -0.8, 0],
 ];
 const ring2 = [
-  [0.2, -1.2, 0], [0.9, -1.2, 0], [1.4, -2.0, 0], [2.1, -1.6, 0],
-  [2.2, -0.5, 0], [1.4, 0.0, 0], [0.4, -0.2, 0],
+  [0.2, -1.2, 0],
+  [0.9, -1.2, 0],
+  [1.4, -2.0, 0],
+  [2.1, -1.6, 0],
+  [2.2, -0.5, 0],
+  [1.4, 0.0, 0],
+  [0.4, -0.2, 0],
 ];
-const ring3 = [[-2.7, 1.4, 0], [-2.3, 1.7, 0], [-2.8, 1.9, 0]];
+const ring3 = [
+  [-2.7, 1.4, 0],
+  [-2.3, 1.7, 0],
+  [-2.8, 1.9, 0],
+];
 
 // Add polygon with holes to scene
 const outerPoly = new Polygon({
-  vertices: ring1, color: BLUE, fillOpacity: 0.75, strokeWidth: 2,
+  vertices: ring1,
+  color: BLUE,
+  fillOpacity: 0.75,
+  strokeWidth: 2,
 });
 const hole1 = new Polygon({
-  vertices: ring2, color: BLACK, fillOpacity: 1, strokeWidth: 0,
+  vertices: ring2,
+  color: BLACK,
+  fillOpacity: 1,
+  strokeWidth: 0,
 });
 const hole2 = new Polygon({
-  vertices: ring3, color: BLACK, fillOpacity: 1, strokeWidth: 0,
+  vertices: ring3,
+  color: BLACK,
+  fillOpacity: 1,
+  strokeWidth: 0,
 });
-scene.add(outerPoly, hole1, hole2);
+// Fade in polygon + holes together
+await scene.play(
+  new FadeIn(outerPoly, { duration: 0.8 }),
+  new FadeIn(hole1, { duration: 0.8 }),
+  new FadeIn(hole2, { duration: 0.8 }),
+);
 
-// Label fades in at the pole of inaccessibility
+// LabeledPolygram computes the pole of inaccessibility; keep it invisible
+// so only its label is drawn on top of the polygon above.
 const labeled = new LabeledPolygram({
   vertexGroups: [ring1, ring2, ring3],
   label: 'Pole',
   precision: 0.01,
   labelFontSize: 28,
   labelColor: WHITE,
+  color: BLUE,
+  fillOpacity: 0,
+  strokeWidth: 0,
 });
-await scene.play(new FadeIn(labeled, { duration: 1 }));
+
+// Hide the label, add to scene, then fade it in at the pole
+const label = labeled.getLabel();
+label.opacity = 0;
+scene.add(labeled);
+await scene.play(new FadeIn(label, { duration: 1 }));
 
 // Draw reference circle at the pole
 const circle = new Circle({
   radius: labeled.radius,
   color: WHITE,
   center: [labeled.pole[0], labeled.pole[1], 0],
+  fillOpacity: 0,
+  strokeWidth: 2,
 });
 await scene.play(new Create(circle, { duration: 0.8 }));
+await scene.wait(2);
 ```
 
 </details>
@@ -1925,4 +1958,3 @@ scene.useMultiCamera(null);
 </details>
 
 **Learn More:** [**Scene**](/api/classes/Scene) · [**Camera2D**](/api/classes/Camera2D) · [**MultiCamera**](/api/classes/MultiCamera) · [**ValueTracker**](/api/classes/ValueTracker)
-

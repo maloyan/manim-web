@@ -16,7 +16,7 @@ async function animate(scene: any) {
   if (!glyphs) return;
   glyphs.center();
 
-  // typewriter-style reveal, then a per-glyph wave emphasis.
+  // fade each glyph in with an overlapping stagger, then a per-glyph wave emphasis.
   await scene.play(fadeInByLetter(glyphs, { lagRatio: 0.15 }));
   await scene.play(waveLetters(glyphs, { amplitude: 0.3, waves: 2, duration: 2 }));
   await scene.wait(999999);

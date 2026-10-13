@@ -411,7 +411,6 @@ import {
   MED_SMALL_BUFF,
   PURPLE,
   RED,
-  RIGHT,
   Scale,
   ScaleInPlace,
   Shift,
@@ -481,7 +480,7 @@ scene.activateZooming();
 // Pop-out animation: display pops from frame position to its shifted position
 await scene.play(scene.getZoomedDisplayPopOutAnimation(), unfoldCamera);
 
-zoomedCameraText.nextTo(zoomedDisplayFrame, DOWN);
+zoomedCameraText.nextTo(zoomedDisplay, DOWN);
 await scene.play(new FadeIn(zoomedCameraText, { shift: UP }));
 
 // Scale frame and display non-uniformly
@@ -496,7 +495,7 @@ await scene.wait();
 await scene.play(new ScaleInPlace(zoomedDisplay, { scaleFactor: 2 }));
 await scene.wait();
 
-await scene.play(new Shift(frame, { direction: scaleVec(2.5, RIGHT) }));
+await scene.play(new Shift(frame, { direction: scaleVec(2.5, DOWN) }));
 await scene.wait();
 
 // Reverse pop-out: move display back to frame
@@ -524,7 +523,7 @@ Visualizes a vector field with flowing streamlines. Uses StreamLines with startA
 <summary>Source Code</summary>
 
 ```typescript
-import { Scene, NumberPlane, StreamLines, BLACK } from 'manim-web';
+import { Scene, StreamLines, BLACK } from 'manim-web';
 
 const scene = new Scene(document.getElementById('container'), {
   width: 854,
@@ -532,48 +531,28 @@ const scene = new Scene(document.getElementById('container'), {
   backgroundColor: BLACK,
 });
 
-const plane = new NumberPlane({
-  xRange: [-7, 7, 1],
-  yRange: [-4, 4, 1],
-  backgroundLineStyle: {
-    color: '#333355',
-    strokeWidth: 0.5,
-    opacity: 0.3,
-  },
-});
-scene.add(plane);
-
+// Matches the Python manim ContinuousMotion field:
+// func = lambda pos: sin(pos[0] / 2) * UR + cos(pos[1] / 2) * LEFT
+// UR = [1, 1, 0], LEFT = [-1, 0, 0]
 const streamLines = new StreamLines({
-  func: (x, y) => [
-    Math.sin(x / 2) + Math.cos(y / 2) * 0.5,
-    Math.cos(x / 2) * 0.5 - Math.sin(y / 2),
-  ],
-  xRange: [-6, 6, 0.5],
-  yRange: [-3.5, 3.5, 0.5],
-  numLines: 25,
+  func: (x, y) => [Math.sin(x / 2) - Math.cos(y / 2), Math.sin(x / 2)],
   strokeWidth: 3,
-  maxLineLength: 12,
-  stepSize: 0.08,
-  opacity: 0.9,
+  maxAnchorsPerLine: 30,
 });
 scene.add(streamLines);
 
 // Start continuous flowing animation
 streamLines.startAnimation({
-  warmUp: true, // randomize initial phases
+  warmUp: false, // keep deterministic initial phases
   flowSpeed: 1.5, // speed multiplier
-  timeWidth: 0.3, // visible window fraction
 });
 
-await scene.wait(10);
-
-// Stop and restore static streamlines
-streamLines.endAnimation();
+await scene.wait(streamLines.virtualTime / 1.5);
 ```
 
 </details>
 
-**Learn More:** [**StreamLines**](/api/classes/StreamLines) · [**NumberPlane**](/api/classes/NumberPlane)
+**Learn More:** [**StreamLines**](/api/classes/StreamLines)
 
 ---
 
