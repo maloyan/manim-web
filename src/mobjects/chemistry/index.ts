@@ -7,6 +7,13 @@
  */
 
 export { MoleculeMobject } from './MoleculeMobject';
+export {
+  ElectronPushingArrow,
+  arrowBetweenAtoms,
+  DEFAULT_ELECTRON_ARROW_COLOR,
+  type ElectronPushingArrowOptions,
+  type ArrowElectrons,
+} from './ElectronPushingArrow';
 export { water, methane, benzene, ethanol, type MoleculeBuilderOptions } from './molecules';
 export { cpkColor, normalizeElement, CPK_COLORS, DEFAULT_ELEMENT_COLOR } from './cpkColors';
 export {
