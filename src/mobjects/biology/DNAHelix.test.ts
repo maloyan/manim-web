@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { DNAHelix } from './DNAHelix';
+import { logger } from '../../utils/logger';
 import { VGroup } from '../../core/VGroup';
 import { Line } from '../geometry/Line';
 import { Circle } from '../geometry/Circle';
@@ -158,6 +159,19 @@ describe('DNAHelix', () => {
     const dna = new DNAHelix({ basePairs: 2 });
     expect(dna.getBasePair(99)).toBeUndefined();
     expect(dna.getStrand(5)).toBeUndefined();
+  });
+
+  it('warns and returns the origin for an out-of-range strand index', () => {
+    const warn = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    const dna = new DNAHelix({ basePairs: 2 });
+    expect(dna.pointOnStrand(5, 0.5)).toEqual([0, 0, 0]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toMatch(/strand index 5 is out of range/i);
+    // A valid strand index neither warns nor returns the origin.
+    const point = dna.pointOnStrand(0, 0.5);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(point).not.toEqual([0, 0, 0]);
+    warn.mockRestore();
   });
 
   it('copy() preserves strand and base-pair counts', () => {

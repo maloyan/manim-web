@@ -40,6 +40,7 @@ import { Circle } from '../geometry/Circle';
 import { Sphere } from '../three-d/Sphere';
 import { ParametricFunction } from '../graphing/ParametricFunction';
 import { DEFAULT_STROKE_WIDTH } from '../../constants';
+import { logger } from '../../utils/logger';
 import { baseColor, complementOf, normalizeBase } from './biologyColors';
 import { BaseSymbol, DNAHelixOptions, BasePairRender, StrandPair } from './biologyTypes';
 
@@ -338,10 +339,19 @@ export class DNAHelix extends VGroup {
     return this._pairs[index];
   }
 
-  /** The point on a strand (0 or 1) at helix parameter t, in turns. */
+  /**
+   * The point on a strand (0 or 1) at helix parameter t, in turns.
+   *
+   * A strand index other than 0 or 1 is a caller error: it warns and returns
+   * the origin, so a bad index is visible instead of silently feeding a
+   * `[0,0,0]` point into downstream geometry.
+   */
   pointOnStrand(strandIndex: number, t: number): Vector3Tuple {
     const func = this._strandFuncs[strandIndex];
     if (!func) {
+      logger.warn(
+        `DNAHelix.pointOnStrand: strand index ${strandIndex} is out of range (expected 0 or 1); returning the origin.`,
+      );
       return [0, 0, 0];
     }
     return func(t);
