@@ -3,7 +3,8 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Scene, Dot, VGroup, Line, ValueTracker, BLUE, GREEN, RED, RIGHT } = await import('manim-web');
+  const { Scene, Dot, VGroup, Line, ValueTracker, BLUE, GREEN, RED, RIGHT } =
+    await import('manim-web');
 
   const d1 = new Dot({ color: BLUE });
   const d2 = new Dot({ color: GREEN });
