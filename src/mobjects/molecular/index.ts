@@ -36,6 +36,9 @@ export type { ProteinOptions, ProteinRepresentation, ProteinColorMode } from './
 export { BindingPocket } from './BindingPocket';
 export type { BindingPocketOptions, BindingPocketStyle } from './BindingPocket';
 
+export { MolecularSurface } from './MolecularSurface';
+export type { MolecularSurfaceOptions, MolecularSurfaceKind } from './MolecularSurface';
+
 export { hydrogenBond, contact, distanceLabel, residueLabel } from './annotations';
 export type {
   DashedAnnotationOptions,
