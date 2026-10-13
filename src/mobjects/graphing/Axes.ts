@@ -112,13 +112,9 @@ export class Axes extends Group implements CoordinateSystem {
 
     // Normalize 2-element ranges to 3-element [min, max, step] (default step = 1)
     const xRange: [number, number, number] =
-      xRangeRaw.length === 2
-        ? [xRangeRaw[0], xRangeRaw[1], 1]
-        : (xRangeRaw as [number, number, number]);
+      xRangeRaw.length === 2 ? [xRangeRaw[0], xRangeRaw[1], 1] : xRangeRaw;
     const yRange: [number, number, number] =
-      yRangeRaw.length === 2
-        ? [yRangeRaw[0], yRangeRaw[1], 1]
-        : (yRangeRaw as [number, number, number]);
+      yRangeRaw.length === 2 ? [yRangeRaw[0], yRangeRaw[1], 1] : yRangeRaw;
 
     this._xRange = [...xRange];
     this._yRange = [...yRange];
@@ -425,10 +421,8 @@ export class Axes extends Group implements CoordinateSystem {
       xLabelOrOpts !== null &&
       !(xLabelOrOpts instanceof Mobject)
     ) {
-      xLabelInput =
-        (xLabelOrOpts as { xLabel?: string | Mobject; yLabel?: string | Mobject }).xLabel ?? 'x';
-      yLabelInput =
-        (xLabelOrOpts as { xLabel?: string | Mobject; yLabel?: string | Mobject }).yLabel ?? 'y';
+      xLabelInput = xLabelOrOpts.xLabel ?? 'x';
+      yLabelInput = xLabelOrOpts.yLabel ?? 'y';
     } else {
       xLabelInput = xLabelOrOpts ?? 'x';
       yLabelInput = yLabelArg ?? 'y';

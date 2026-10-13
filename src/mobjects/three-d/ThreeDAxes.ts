@@ -670,11 +670,7 @@ export class ThreeDAxes extends Group {
     };
     this._showLabels = true;
     this._detachExistingLabels();
-    this._createLabels(
-      this._xAxis.color as string,
-      this._yAxis.color as string,
-      this._zAxis.color as string,
-    );
+    this._createLabels(this._xAxis.color, this._yAxis.color, this._zAxis.color);
   }
 
   private _detachExistingLabels(): void {

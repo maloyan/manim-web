@@ -71,7 +71,7 @@ export function normalizeBase(base: string): BaseSymbol {
 export function baseColor(base: string, overrides?: Partial<Record<BaseSymbol, string>>): string {
   const symbol = normalizeBase(base);
   if (overrides && overrides[symbol] !== undefined) {
-    return overrides[symbol] as string;
+    return overrides[symbol];
   }
   return DNA_BASE_COLORS[symbol] ?? DEFAULT_BIOLOGY_COLOR;
 }

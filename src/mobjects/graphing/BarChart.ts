@@ -4,6 +4,7 @@ import { VMobject } from '../../core/VMobject';
 import { Rectangle } from '../geometry/Rectangle';
 import { Text } from '../text/Text';
 import { NumberLine, NumberLineOptions } from './NumberLine';
+import { isFlatSeries } from './seriesData';
 import {
   BLUE,
   GREEN,
@@ -198,12 +199,12 @@ export class BarChart extends Group {
   private _normalizeValues(values: number[] | number[][]): number[][] {
     if (values.length === 0) return [[]];
 
-    if (typeof values[0] === 'number') {
+    if (isFlatSeries(values)) {
       // Simple array - single series
-      return [values as number[]];
+      return [values];
     }
     // Already 2D array
-    return values as number[][];
+    return values;
   }
 
   /**

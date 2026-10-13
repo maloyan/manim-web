@@ -4,6 +4,7 @@ import { Polygon } from '../geometry/Polygon';
 import { Line } from '../geometry/Line';
 import { Text } from '../text/Text';
 import { BLUE, GREEN, RED, YELLOW, ORANGE, PURPLE, TEAL, GOLD, GRAY } from '../../constants/colors';
+import { isFlatSeries } from './seriesData';
 
 /** Default color cycle for radar series. */
 const DEFAULT_SERIES_COLORS = [BLUE, GREEN, RED, YELLOW, ORANGE, PURPLE, TEAL, GOLD];
@@ -146,10 +147,10 @@ export class RadarChart extends VGroup {
   /** Normalize data to a 2D array (series x categories). */
   private _normalizeData(data: number[] | number[][]): number[][] {
     if (data.length === 0) return [];
-    if (typeof data[0] === 'number') {
-      return [data as number[]];
+    if (isFlatSeries(data)) {
+      return [data];
     }
-    return (data as number[][]).map((series) => [...series]);
+    return data.map((series) => [...series]);
   }
 
   /** Largest value across all series, or 1 when nothing is positive. */

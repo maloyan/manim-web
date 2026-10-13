@@ -285,7 +285,7 @@ export class Table extends VGroup {
     // Place top-left entry
     if (hasRowLabels && hasColLabels && this._topLeftEntry) {
       this._topLeftEntry.moveTo([this._colPositions[0], this._rowPositions[0], 0]);
-      this._entries.add(this._topLeftEntry as VMobject);
+      this._entries.add(this._topLeftEntry);
     }
 
     // Place column labels
@@ -293,7 +293,7 @@ export class Table extends VGroup {
       for (let col = 0; col < this._colLabels.length; col++) {
         const actualCol = hasRowLabels ? col + 1 : col;
         this._colLabels[col].moveTo([this._colPositions[actualCol], this._rowPositions[0], 0]);
-        this._entries.add(this._colLabels[col] as VMobject);
+        this._entries.add(this._colLabels[col]);
       }
     }
 
@@ -302,7 +302,7 @@ export class Table extends VGroup {
       for (let row = 0; row < this._rowLabels.length; row++) {
         const actualRow = hasColLabels ? row + 1 : row;
         this._rowLabels[row].moveTo([this._colPositions[0], this._rowPositions[actualRow], 0]);
-        this._entries.add(this._rowLabels[row] as VMobject);
+        this._entries.add(this._rowLabels[row]);
       }
     }
 
@@ -317,7 +317,7 @@ export class Table extends VGroup {
           this._rowPositions[actualRow],
           0,
         ]);
-        this._entries.add(this._data[row][col] as VMobject);
+        this._entries.add(this._data[row][col]);
       }
     }
   }

@@ -96,7 +96,7 @@ async function loadTypst(): Promise<TypstSnippetLike> {
   typstLoadPromise = (async () => {
     try {
       const { $typst } = await import('@myriaddreamin/typst.ts');
-      typstSnippet = $typst as unknown as TypstSnippetLike;
+      typstSnippet = $typst;
       return typstSnippet;
     } catch (error) {
       typstLoadPromise = null;
