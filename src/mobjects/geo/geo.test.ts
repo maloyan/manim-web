@@ -15,6 +15,7 @@ import { equirectangular, mercator } from './projections';
 import { ColorScale } from './colorScale';
 import { ChoroplethMap, GeoMap } from './ChoroplethMap';
 import { Globe } from './Globe';
+import { exteriorRings, polygonRings } from './geojson';
 import type { GeoFeatureCollection } from './geojson';
 
 const sampleGeo: GeoFeatureCollection = {
@@ -49,6 +50,65 @@ const sampleGeo: GeoFeatureCollection = {
               [30, 30],
               [20, 30],
               [20, 20],
+            ],
+          ],
+        ],
+      },
+    },
+  ],
+};
+
+/**
+ * Features whose geometry carries interior rings (holes): a Polygon with one
+ * hole and a MultiPolygon whose single sub-polygon has one hole. The exterior
+ * is a large square; the hole is a small square inside it.
+ */
+const holeGeo: GeoFeatureCollection = {
+  type: 'FeatureCollection',
+  features: [
+    {
+      type: 'Feature',
+      properties: { name: 'withHole', value: 10 },
+      geometry: {
+        type: 'Polygon',
+        coordinates: [
+          [
+            [0, 0],
+            [40, 0],
+            [40, 40],
+            [0, 40],
+            [0, 0],
+          ],
+          [
+            [10, 10],
+            [10, 20],
+            [20, 20],
+            [20, 10],
+            [10, 10],
+          ],
+        ],
+      },
+    },
+    {
+      type: 'Feature',
+      properties: { name: 'multiWithHole', value: 20 },
+      geometry: {
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [
+              [0, 0],
+              [40, 0],
+              [40, 40],
+              [0, 40],
+              [0, 0],
+            ],
+            [
+              [10, 10],
+              [10, 20],
+              [20, 20],
+              [20, 10],
+              [10, 10],
             ],
           ],
         ],
@@ -185,6 +245,73 @@ describe('ChoroplethMap', () => {
 
   it('is also exported under the GeoMap alias', () => {
     expect(GeoMap).toBe(ChoroplethMap);
+  });
+
+  it('punches an interior ring (hole) out of a Polygon region', () => {
+    const map = new ChoroplethMap({
+      geojson: holeGeo,
+      value: (feature) => feature.properties?.value as number,
+    });
+    const poly = map.getRegionPolygons(0)[0];
+    expect(poly).toBeInstanceOf(Polygon);
+    // The hole is carried on the polygon as one interior ring.
+    expect(poly.getHoles()).toHaveLength(1);
+    // The fill is a compound path: one exterior subpath plus one hole subpath.
+    // The earcut multi-fill reads these lengths and carves the hole out.
+    const lengths = poly.getEffectiveSubpathLengths();
+    expect(lengths).toBeDefined();
+    expect(lengths).toHaveLength(2);
+    // Subpath lengths partition the polygon's points exactly.
+    expect(lengths!.reduce((a, b) => a + b, 0)).toBe(poly.getLocalPoints().length);
+    // The exterior ring is unchanged; the hole does not leak into getVertices.
+    expect(poly.getVertexCount()).toBe(4);
+    // The hole is projected like the exterior (lon/lat -> radians).
+    expect(poly.getHoles()[0][0][0]).toBeCloseTo(10 * DEG, 10);
+    expect(poly.getHoles()[0][0][1]).toBeCloseTo(10 * DEG, 10);
+  });
+
+  it('keeps each sub-polygon of a MultiPolygon with its own holes', () => {
+    const map = new ChoroplethMap({
+      geojson: holeGeo,
+      value: (feature) => feature.properties?.value as number,
+    });
+    const polys = map.getRegionPolygons(1);
+    expect(polys).toHaveLength(1);
+    expect(polys[0].getHoles()).toHaveLength(1);
+    expect(polys[0].getEffectiveSubpathLengths()).toHaveLength(2);
+  });
+
+  it('leaves a hole-free region as a single-subpath polygon', () => {
+    const map = new ChoroplethMap({
+      geojson: sampleGeo,
+      value: (feature) => feature.properties?.value as number,
+    });
+    const poly = map.getRegionPolygons(0)[0];
+    expect(poly.getHoles()).toHaveLength(0);
+    expect(poly.getEffectiveSubpathLengths()).toBeUndefined();
+  });
+});
+
+describe('GeoJSON polygonRings', () => {
+  it('returns the exterior and interior rings of a Polygon', () => {
+    const rings = polygonRings(holeGeo.features[0].geometry);
+    expect(rings).toHaveLength(1);
+    expect(rings[0].exterior[0]).toEqual([0, 0]);
+    expect(rings[0].holes).toHaveLength(1);
+    expect(rings[0].holes[0][0]).toEqual([10, 10]);
+  });
+
+  it('returns one entry per sub-polygon of a MultiPolygon, each with its holes', () => {
+    const rings = polygonRings(holeGeo.features[1].geometry);
+    expect(rings).toHaveLength(1);
+    expect(rings[0].holes).toHaveLength(1);
+    expect(rings[0].holes[0][0]).toEqual([10, 10]);
+  });
+
+  it('exteriorRings still returns only the exterior ring (backward compatible)', () => {
+    const rings = exteriorRings(holeGeo.features[0].geometry);
+    expect(rings).toHaveLength(1);
+    expect(rings[0][0]).toEqual([0, 0]);
   });
 });
 

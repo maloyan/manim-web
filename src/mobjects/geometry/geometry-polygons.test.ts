@@ -3,6 +3,7 @@ import { Polygon, Triangle, RegularPolygon, Hexagon, Pentagon } from './Polygon'
 import { RoundedRectangle, Star, RegularPolygram, Cutout, ConvexHull } from './PolygonExtensions';
 import { Circle } from './Circle';
 import { BLUE } from '../../constants';
+import type { Vector3Tuple } from '../../core/Mobject';
 
 // ---------------------------------------------------------------------------
 // Polygon
@@ -18,6 +19,86 @@ describe('Polygon', () => {
     });
     expect(p.getVertexCount()).toBe(3);
     expect(p.isClosed()).toBe(true);
+  });
+
+  it('builds a compound fill path when given interior rings (holes)', () => {
+    const exterior: Vector3Tuple[] = [
+      [0, 0, 0],
+      [4, 0, 0],
+      [4, 4, 0],
+      [0, 4, 0],
+    ];
+    const hole: Vector3Tuple[] = [
+      [1, 1, 0],
+      [1, 2, 0],
+      [2, 2, 0],
+      [2, 1, 0],
+    ];
+    const p = new Polygon({ vertices: exterior, holes: [hole] });
+    expect(p.getHoles()).toHaveLength(1);
+    // Exterior ring is unchanged; the hole does not enter getVertices.
+    expect(p.getVertexCount()).toBe(4);
+    // One exterior subpath + one hole subpath, partitioning all points.
+    const lengths = p.getEffectiveSubpathLengths();
+    expect(lengths).toHaveLength(2);
+    expect(lengths!.reduce((a, b) => a + b, 0)).toBe(p.getLocalPoints().length);
+  });
+
+  it('orients a hole opposite to the exterior whatever its input winding', () => {
+    const exterior: Vector3Tuple[] = [
+      [0, 0, 0],
+      [4, 0, 0],
+      [4, 4, 0],
+      [0, 4, 0],
+    ];
+    // Hole wound the SAME way as the exterior (CCW); the primitive must flip it
+    // so earcut classifies it as a hole, not a second filled region.
+    const holeSameWinding: Vector3Tuple[] = [
+      [1, 1, 0],
+      [2, 1, 0],
+      [2, 2, 0],
+      [1, 2, 0],
+    ];
+    const p = new Polygon({ vertices: exterior, holes: [holeSameWinding] });
+    const signs = p.getSubpathOrientationSigns();
+    expect(signs).toBeDefined();
+    expect(signs).toHaveLength(2);
+    // Exterior and hole subpaths wind in opposite directions.
+    expect(signs![0]).not.toBe(signs![1]);
+  });
+
+  it('leaves a hole-free polygon with no subpath metadata', () => {
+    const p = new Polygon({
+      vertices: [
+        [0, 0, 0],
+        [1, 0, 0],
+        [0.5, 1, 0],
+      ],
+    });
+    expect(p.getHoles()).toHaveLength(0);
+    expect(p.getEffectiveSubpathLengths()).toBeUndefined();
+  });
+
+  it('copy() preserves interior rings (holes)', () => {
+    const p = new Polygon({
+      vertices: [
+        [0, 0, 0],
+        [4, 0, 0],
+        [4, 4, 0],
+        [0, 4, 0],
+      ],
+      holes: [
+        [
+          [1, 1, 0],
+          [1, 2, 0],
+          [2, 2, 0],
+          [2, 1, 0],
+        ],
+      ],
+    });
+    const clone = p.copy();
+    expect(clone.getHoles()).toHaveLength(1);
+    expect(clone.getEffectiveSubpathLengths()).toHaveLength(2);
   });
 
   it('throws with fewer than 2 vertices', () => {

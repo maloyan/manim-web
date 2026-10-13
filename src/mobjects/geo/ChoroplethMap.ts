@@ -4,7 +4,8 @@
  *
  * The map is a {@link Group} of regions. Each feature becomes one region (a
  * single {@link Polygon} when it has one exterior ring, or a nested
- * {@link Group} of polygons for a MultiPolygon). Lon/lat are projected to 2D
+ * {@link Group} of polygons for a MultiPolygon). Interior rings (holes) are
+ * punched out of the fill. Lon/lat are projected to 2D
  * with a {@link GeoProjection} (equirectangular by default). The fill color
  * comes from a {@link ColorScale}; an optional border is drawn as the polygon
  * stroke.
@@ -18,10 +19,11 @@ import { Mobject } from '../../core/Mobject';
 import { Polygon } from '../geometry/Polygon';
 import { GRAY } from '../../constants/colors';
 import {
-  exteriorRings,
+  polygonRings,
   type GeoFeature,
   type GeoFeatureCollection,
   type GeoLinearRing,
+  type PolygonRings,
 } from './geojson';
 import { equirectangular, type GeoProjection } from './projections';
 import { ColorScale } from './colorScale';
@@ -129,10 +131,10 @@ export class ChoroplethMap extends Group {
     const hasValue = typeof value === 'number' && Number.isFinite(value);
     const color = hasValue ? this._colorScale.colorFor(value) : style.noDataColor;
 
-    const rings = exteriorRings(feature.geometry);
+    const rings = polygonRings(feature.geometry);
     const polygons: Polygon[] = [];
-    for (const ring of rings) {
-      const polygon = this._buildPolygon(ring, color, style);
+    for (const polygonRing of rings) {
+      const polygon = this._buildPolygon(polygonRing, color, style);
       if (polygon) polygons.push(polygon);
     }
 
@@ -146,19 +148,24 @@ export class ChoroplethMap extends Group {
   }
 
   private _buildPolygon(
-    ring: GeoLinearRing,
+    rings: PolygonRings,
     color: string,
     style: { fillOpacity: number; borderColor: string; borderWidth: number },
   ): Polygon | null {
     // Drop a trailing point that duplicates the first (GeoJSON rings are
-    // closed); Polygon closes the ring itself.
-    const open = dropClosingPoint(ring);
-    if (open.length < 3) return null;
+    // closed); Polygon closes each ring itself. Then project lon/lat to 2D.
+    const projectRing = (ring: GeoLinearRing): [number, number, number][] =>
+      dropClosingPoint(ring).map((position) => {
+        const [x, y] = this._projection(position);
+        return [x, y, 0];
+      });
 
-    const vertices = open.map((position) => {
-      const [x, y] = this._projection(position);
-      return [x, y, 0] as [number, number, number];
-    });
+    const vertices = projectRing(rings.exterior);
+    if (vertices.length < 3) return null;
+
+    // Interior rings (holes) are punched out of the fill. Drop any that are too
+    // small to bound an area.
+    const holes = rings.holes.map(projectRing).filter((hole) => hole.length >= 3);
 
     const polygon = new Polygon({
       vertices,
@@ -166,6 +173,7 @@ export class ChoroplethMap extends Group {
       strokeWidth: style.borderWidth,
       fillOpacity: style.fillOpacity,
       closed: true,
+      holes: holes.length > 0 ? holes : undefined,
     });
     polygon.setFill(color, style.fillOpacity);
     return polygon;
@@ -186,7 +194,10 @@ export class ChoroplethMap extends Group {
     return this._regionColors[index];
   }
 
-  /** Get the polygons that make up a feature's region (one per exterior ring). */
+  /**
+   * Get the polygons that make up a feature's region (one per exterior ring;
+   * each carries its own interior rings as holes).
+   */
   getRegionPolygons(index: number): Polygon[] {
     return [...(this._regionPolygons[index] ?? [])];
   }
