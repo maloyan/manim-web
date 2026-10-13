@@ -232,23 +232,29 @@ Helper functions for working with matrices: `getDetText` adds determinant notati
 import {
   Matrix, IntegerMatrix, DecimalMatrix, MobjectMatrix,
   Circle, Square, MathTex,
-  Create, FadeIn, getDetText, YELLOW,
+  FadeIn, getDetText, YELLOW,
 } from 'manim-web';
 
 // Multiple matrix types (like Python Manim's MatrixExamples)
-const m0 = new Matrix([['\\pi', '0'], ['-1', '1']]);
-const m1 = new IntegerMatrix([[1.5, 0], [12, -1.3]], { bracketType: '()' });
-const m2 = new DecimalMatrix([[3.456, 2.122], [33.2244, 12.33]], { numDecimalPlaces: 2 });
+// hBuff widens the column spacing so multi-digit entries do not overlap.
+const m0 = new Matrix([['\\pi', '0'], ['-1', '1']], { hBuff: 3 });
+const m1 = new IntegerMatrix([[1.5, 0], [12, -1.3]], { bracketType: '()', hBuff: 3 });
+const m2 = new DecimalMatrix([[3.456, 2.122], [33.2244, 12.33]], { numDecimalPlaces: 2, hBuff: 4 });
 const m3 = new MobjectMatrix([
   [new Circle({ radius: 0.15 }), new Square({ sideLength: 0.25 })],
   [new MathTex({ latex: '\\pi' }), new Circle({ radius: 0.1 })],
 ]);
 
+// The cell contents live in the matrix column groups, so re-attach the
+// columns to the matrix before display so the entries render.
+for (const m of [m0, m1, m2, m3]) m.add(...m.getColumns());
+scene.add(m0, m1, m2, m3);
+
 // Determinant text (like Python Manim's DeterminantOfAMatrix)
 const matrix = new Matrix([[2, 0], [-1, 1]]);
+matrix.add(...matrix.getColumns());
 const det = getDetText(matrix, { determinant: 3, color: YELLOW });
-scene.add(matrix);
-scene.add(det);
+scene.add(matrix, det);
 ```
 
 </details>
@@ -351,14 +357,14 @@ import {
 const source = new VGroup();
 source.add(new Circle({ radius: 0.5, color: BLUE, fillOpacity: 0.5 }));
 source.add(new Square({ sideLength: 1, color: RED, fillOpacity: 0.5 }));
-source.add(new Triangle({ sideLength: 1, color: GREEN, fillOpacity: 0.5 }));
+source.add(new Triangle({ color: GREEN, fillOpacity: 0.5 }));
 await scene.play(new Create(source));
 
 // Target shapes (rearranged)
 const target = new VGroup();
 target.add(new Circle({ radius: 0.7, color: YELLOW, fillOpacity: 0.5 }));
 target.add(new Square({ sideLength: 1.2, color: GREEN, fillOpacity: 0.5 }));
-target.add(new Triangle({ sideLength: 0.8, color: BLUE, fillOpacity: 0.5 }));
+target.add(new Triangle({ color: BLUE, fillOpacity: 0.5 }).scale(0.8));
 
 // Shapes are matched and transformed smoothly
 await scene.play(new TransformMatchingShapes(source, target, { duration: 2 }));

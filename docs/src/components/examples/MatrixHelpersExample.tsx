@@ -2,93 +2,97 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { MathTex, VGroup, Circle, Square, Star, FadeIn, FadeOut, WHITE, RED, TEAL_A } =
-    await import('manim-web');
+  const {
+    Matrix,
+    IntegerMatrix,
+    DecimalMatrix,
+    MobjectMatrix,
+    Circle,
+    Square,
+    MathTex,
+    getDetText,
+    FadeIn,
+    FadeOut,
+    WHITE,
+    YELLOW,
+    TEAL_A,
+    RED,
+  } = await import('manim-web');
 
-  // --- Part 1: MatrixExamples - 4 matrix types in a 2x2 grid ---
+  // The matrix entries live in the matrix's column groups, so re-attach the
+  // columns to the matrix before display so the cell contents render.
+  const showEntries = (m: any) => m.add(...m.getColumns());
 
-  const m0 = new MathTex({
-    latex: '\\begin{bmatrix} \\pi & 0 \\\\ -1 & 1 \\end{bmatrix}',
-    color: WHITE,
-    fontSize: 40,
-  });
+  const waitEntries = async (m: any) => {
+    const ps: Promise<void>[] = [];
+    for (let i = 0; i < m.numRows; i++) {
+      for (let j = 0; j < m.numCols; j++) {
+        const e = m.getEntry(i, j);
+        if (e?.waitForRender) ps.push(e.waitForRender());
+      }
+    }
+    await Promise.all(ps);
+  };
 
-  const m1 = new MathTex({
-    latex: '\\begin{pmatrix} 2 & 0 \\\\ 12 & -1 \\end{pmatrix}',
-    color: WHITE,
-    fontSize: 40,
-  });
-
-  const m2 = new MathTex({
-    latex: '\\left\\{ \\begin{matrix} 3.46 & 2.12 \\\\ 33.22 & 12.33 \\end{matrix} \\right\\}',
-    color: WHITE,
-    fontSize: 40,
-  });
-
-  const piTex = new MathTex({ latex: '\\pi', color: TEAL_A, fontSize: 80 });
-  const leftAngle = new MathTex({ latex: '\\Bigg\\langle', color: WHITE, fontSize: 40 });
-  const rightAngle = new MathTex({ latex: '\\Bigg\\rangle', color: WHITE, fontSize: 40 });
-
-  // Wait for all MathTex renders before positioning
-  await Promise.all([
-    m0.waitForRender(),
-    m1.waitForRender(),
-    m2.waitForRender(),
-    piTex.waitForRender(),
-    leftAngle.waitForRender(),
-    rightAngle.waitForRender(),
+  // --- Part 1: four matrix types in a 2x2 grid (like Manim's MatrixExamples) ---
+  // The layout runs at construction before the cell images render, so widen the
+  // column spacing (hBuff) to keep multi-digit entries from overlapping.
+  const m0 = new Matrix(
+    [
+      ['\\pi', '0'],
+      ['-1', '1'],
+    ],
+    { hBuff: 3 },
+  );
+  const m1 = new IntegerMatrix(
+    [
+      [1.5, 0],
+      [12, -1.3],
+    ],
+    { bracketType: '()', hBuff: 3 },
+  );
+  const m2 = new DecimalMatrix(
+    [
+      [3.456, 2.122],
+      [33.2244, 12.33],
+    ],
+    { numDecimalPlaces: 2, hBuff: 4 },
+  );
+  const m3 = new MobjectMatrix([
+    [new Circle({ radius: 0.15, color: RED }), new Square({ sideLength: 0.25, color: WHITE })],
+    [new MathTex({ latex: '\\pi', color: TEAL_A }), new Circle({ radius: 0.1, color: YELLOW })],
   ]);
 
+  for (const m of [m0, m1, m2, m3]) showEntries(m);
   m0.moveTo([-3, 1.3, 0]);
   m1.moveTo([3, 1.3, 0]);
   m2.moveTo([-3, -1.3, 0]);
-
-  // Bottom-right: shapes with angle brackets
-  const spacing = 1.1;
-  const cellGroup = new VGroup();
-
-  const circle = new Circle({ radius: 0.3, color: RED, fillOpacity: 0 });
-  circle.moveTo([-spacing / 2, spacing / 2, 0]);
-  cellGroup.add(circle);
-
-  const square = new Square({ sideLength: 0.55, color: WHITE, fillOpacity: 0 });
-  square.moveTo([spacing / 2, spacing / 2, 0]);
-  cellGroup.add(square);
-
-  piTex.moveTo([-spacing / 2, -spacing / 2, 0]);
-  cellGroup.add(piTex);
-
-  const star = new Star({ outerRadius: 0.35, innerRadius: 0.14, color: TEAL_A, fillOpacity: 0 });
-  star.moveTo([spacing / 2, -spacing / 2, 0]);
-  cellGroup.add(star);
-
-  leftAngle.moveTo([-(spacing / 2 + 0.8), 0, 0]);
-  cellGroup.add(leftAngle);
-
-  rightAngle.moveTo([spacing / 2 + 0.8, 0, 0]);
-  cellGroup.add(rightAngle);
-
-  cellGroup.moveTo([3, -1.3, 0]);
+  m3.moveTo([3, -1.3, 0]);
+  await Promise.all([waitEntries(m0), waitEntries(m1), waitEntries(m2), waitEntries(m3)]);
 
   await scene.play(new FadeIn(m0, { duration: 0.5 }));
   await scene.play(new FadeIn(m1, { duration: 0.5 }));
   await scene.play(new FadeIn(m2, { duration: 0.5 }));
-  await scene.play(new FadeIn(cellGroup, { duration: 0.5 }));
+  await scene.play(new FadeIn(m3, { duration: 0.5 }));
   await scene.wait(3);
 
-  // --- Part 2: DeterminantOfAMatrix ---
   await scene.play(new FadeOut(m0, { duration: 0.3 }));
   await scene.play(new FadeOut(m1, { duration: 0.3 }));
   await scene.play(new FadeOut(m2, { duration: 0.3 }));
-  await scene.play(new FadeOut(cellGroup, { duration: 0.3 }));
+  await scene.play(new FadeOut(m3, { duration: 0.3 }));
 
-  const detTex = new MathTex({
-    latex: '\\text{det} \\left( \\begin{bmatrix} 2 & 0 \\\\ -1 & 1 \\end{bmatrix} \\right) = 3',
-    color: WHITE,
-    fontSize: 48,
-  });
-  await detTex.waitForRender();
-  await scene.play(new FadeIn(detTex, { duration: 1.5 }));
+  // --- Part 2: getDetText adds determinant notation around a Matrix ---
+  const matrix = new Matrix([
+    [2, 0],
+    [-1, 1],
+  ]);
+  showEntries(matrix);
+  matrix.moveTo([-0.8, 0, 0]);
+  scene.add(matrix);
+  await waitEntries(matrix);
+
+  const det = getDetText(matrix, { determinant: 3, color: YELLOW });
+  await scene.play(new FadeIn(det, { duration: 1.2 }));
   await scene.wait(3);
 }
 

@@ -2,37 +2,46 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Circle, Square, RegularPolygon, Create, Transform, FadeIn, BLUE, RED, GREEN, YELLOW } =
-    await import('manim-web');
+  const {
+    VGroup,
+    Circle,
+    Square,
+    Triangle,
+    TransformMatchingShapes,
+    Create,
+    BLUE,
+    RED,
+    GREEN,
+    YELLOW,
+  } = await import('manim-web');
 
-  // Create shapes
-  const circle = new Circle({ radius: 1, color: BLUE, fillOpacity: 0.5 });
-  circle.moveTo([-2, 0, 0]);
+  // Source shapes
+  const source = new VGroup();
+  const sCircle = new Circle({ radius: 0.5, color: BLUE, fillOpacity: 0.5 });
+  sCircle.moveTo([-2, 0, 0]);
+  const sSquare = new Square({ sideLength: 1, color: RED, fillOpacity: 0.5 });
+  const sTriangle = new Triangle({ color: GREEN, fillOpacity: 0.5 });
+  sTriangle.moveTo([2, 0, 0]);
+  source.add(sCircle);
+  source.add(sSquare);
+  source.add(sTriangle);
+  await scene.play(new Create(source, { duration: 1 }));
+  await scene.wait(0.5);
 
-  const square = new Square({ sideLength: 1.5, color: RED, fillOpacity: 0.5 });
-  square.moveTo([0, 0, 0]);
+  // Target shapes (recolored and resized)
+  const target = new VGroup();
+  const tCircle = new Circle({ radius: 0.7, color: YELLOW, fillOpacity: 0.5 });
+  tCircle.moveTo([2, 0.5, 0]);
+  const tSquare = new Square({ sideLength: 1.2, color: GREEN, fillOpacity: 0.5 });
+  const tTriangle = new Triangle({ color: BLUE, fillOpacity: 0.5 });
+  tTriangle.scale(0.7);
+  tTriangle.moveTo([-2, -0.5, 0]);
+  target.add(tCircle);
+  target.add(tSquare);
+  target.add(tTriangle);
 
-  const triangle = new RegularPolygon({ numSides: 3, radius: 0.8, color: GREEN, fillOpacity: 0.5 });
-  triangle.moveTo([2, 0, 0]);
-
-  await scene.play(new Create(circle, { duration: 0.8 }));
-  await scene.play(new Create(square, { duration: 0.8 }));
-  await scene.play(new Create(triangle, { duration: 0.8 }));
-  await scene.wait(0.3);
-
-  // Transform each shape
-  const circle2 = new Circle({ radius: 0.7, color: YELLOW, fillOpacity: 0.5 });
-  circle2.moveTo([2, 1, 0]);
-
-  const square2 = new Square({ sideLength: 1.2, color: GREEN, fillOpacity: 0.5 });
-  square2.moveTo([0, -0.5, 0]);
-
-  const triangle2 = new RegularPolygon({ numSides: 3, radius: 0.5, color: BLUE, fillOpacity: 0.5 });
-  triangle2.moveTo([-2, 0.5, 0]);
-
-  await scene.play(new Transform(circle, circle2, { duration: 1.5 }));
-  await scene.play(new Transform(square, square2, { duration: 1.5 }));
-  await scene.play(new Transform(triangle, triangle2, { duration: 1.5 }));
+  // TransformMatchingShapes matches sub-shapes and morphs them smoothly.
+  await scene.play(new TransformMatchingShapes(source, target, { duration: 2 }));
   await scene.wait(1);
 }
 
