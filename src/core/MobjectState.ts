@@ -26,7 +26,7 @@ function copyMobjectProperties(dst: MobjectLike, src: MobjectLike): void {
   asInternal(dst)._opacity = asInternal(src)._opacity;
   dst.strokeWidth = src.strokeWidth;
   dst.fillOpacity = src.fillOpacity;
-  asInternal(dst)._style = { ...asInternal(src)._style } as MobjectStyle;
+  asInternal(dst)._style = { ...asInternal(src)._style };
 }
 
 /**

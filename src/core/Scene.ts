@@ -868,7 +868,7 @@ export class Scene {
         // normalize to the field's declared `ReturnType<typeof setInterval>`.
         timerId = setTimeout(() => {
           cleanup();
-        }, duration * 1000) as unknown as ReturnType<typeof setInterval>;
+        }, duration * 1000);
         return;
       }
 
@@ -1723,7 +1723,7 @@ export class Scene {
       const { GifExporter } = await import('../export/GifExporter');
       const exporter = new GifExporter(this, {
         fps: options?.fps,
-        quality: options?.quality as number | undefined,
+        quality: options?.quality,
         width: options?.width,
         height: options?.height,
         duration: options?.duration,

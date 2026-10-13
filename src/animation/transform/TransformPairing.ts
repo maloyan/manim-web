@@ -229,7 +229,7 @@ export function pairLeafSnapshotsByIndex(
     } else {
       pairs.push({
         source: makePlaceholderSnapshot(target),
-        target: target as LeafVMobjectSnapshot,
+        target: target,
         sourceIsPlaceholder: true,
         targetIsPlaceholder: false,
         sourceIsNew: true,

@@ -89,6 +89,14 @@ export default [
       // All logging must go through src/utils/logger (issue #431); the logger
       // itself and the test setup are exempted below.
       "no-console": "error",
+
+      // Issue #399: ban redundant type assertions. A cast the compiler can
+      // prove is unnecessary is noise that hides real type problems, so the
+      // type-checked rule fails CI on any new one. Casts that survive are the
+      // genuinely necessary ones (three.js union narrowing, DOM/third-party
+      // returns, dynamic-index Record proxies, cross-module protected access),
+      // each marked with a `// cast:` comment.
+      "@typescript-eslint/no-unnecessary-type-assertion": "error",
     },
   },
   {

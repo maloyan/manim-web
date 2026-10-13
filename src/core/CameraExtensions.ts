@@ -939,7 +939,7 @@ export class MultiCamera {
       // strips) inside the viewport. This works on every WebGL driver
       // regardless of `gl.lineWidth` clamping (which silently ignores
       // values > 1 on most platforms).
-      const color = new THREE.Color(vp.borderColor as THREE.ColorRepresentation);
+      const color = new THREE.Color(vp.borderColor);
       const mat = new THREE.MeshBasicMaterial({ color, depthTest: false, depthWrite: false });
       const strips: Array<[number, number, number, number]> = [
         [px, py + ph - bw, pw, bw], // top
