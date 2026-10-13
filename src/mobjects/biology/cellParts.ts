@@ -50,8 +50,8 @@ function wavyLine(
 
 /** A mitochondrion: a bean body with inner cristae. */
 function buildMitochondrion(color: string, scale: number): VMobject {
-  const halfW = 0.31 * scale;
-  const halfH = 0.17 * scale;
+  const halfW = 0.25 * scale;
+  const halfH = 0.135 * scale;
   const body = new Ellipse({
     width: 2 * halfW,
     height: 2 * halfH,
@@ -127,12 +127,12 @@ function buildRibosomeCluster(color: string, scale: number): VMobject {
   return group;
 }
 
-/** A vacuole: a large, pale, low-opacity bubble. */
+/** A vacuole: a pale, low-opacity bubble. */
 function buildVacuole(color: string, scale: number): VMobject {
   const vacuole = new Circle({
-    radius: 0.3 * scale,
+    radius: 0.2 * scale,
     color,
-    fillOpacity: 0.18,
+    fillOpacity: 0.2,
     strokeWidth: 2,
   });
   vacuole.strokeColor = paleColor(color);
@@ -142,7 +142,7 @@ function buildVacuole(color: string, scale: number): VMobject {
 /** A lysosome: a small sac with a few enzyme dots inside. */
 function buildLysosome(color: string, scale: number): VMobject {
   const body = new Circle({
-    radius: 0.17 * scale,
+    radius: 0.145 * scale,
     color,
     fillOpacity: 0.55,
     strokeWidth: 2.5,

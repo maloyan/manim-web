@@ -37,17 +37,17 @@ export const BASE_COMPLEMENT: Readonly<Record<BaseSymbol, BaseSymbol>> = {
 export const ORGANELLE_COLORS: Readonly<Record<string, string>> = {
   nucleus: '#7E57C2',
   nucleolus: '#5E35B1',
-  mitochondrion: '#EF5350',
-  mitochondria: '#EF5350',
-  ribosome: '#8D6E63',
-  'golgi apparatus': '#26A69A',
-  golgi: '#26A69A',
-  'endoplasmic reticulum': '#FFA726',
-  lysosome: '#EC407A',
-  vacuole: '#29B6F6',
-  chloroplast: '#66BB6A',
-  centrosome: '#FFCA28',
-  peroxisome: '#AB47BC',
+  mitochondrion: '#E8654A',
+  mitochondria: '#E8654A',
+  ribosome: '#9A7B6A',
+  'golgi apparatus': '#2B9E8F',
+  golgi: '#2B9E8F',
+  'endoplasmic reticulum': '#E3A03B',
+  lysosome: '#D6568F',
+  vacuole: '#5BA8D6',
+  chloroplast: '#5FB07A',
+  centrosome: '#E0B03A',
+  peroxisome: '#9A68C4',
 };
 
 /**

@@ -51,11 +51,11 @@ const DEFAULT_BACKBONE_COLORS: [string, string] = ['#29B6F6', '#FF7043'];
 const DEFAULT_RUNG_COLOR = '#CCCCCC';
 
 /** Opacity of a rung or bead at the back of a turn (frontness 0). */
-const BACK_OPACITY = 0.4;
+const BACK_OPACITY = 0.28;
 /** Stroke-width multiplier of a rung at the back of a turn (frontness 0). */
-const BACK_RUNG_WIDTH_SCALE = 0.55;
+const BACK_RUNG_WIDTH_SCALE = 0.5;
 /** Stroke-width multiplier of a rung at the front of a turn (frontness 1). */
-const FRONT_RUNG_WIDTH_SCALE = 1.15;
+const FRONT_RUNG_WIDTH_SCALE = 1.35;
 /** Radius multiplier of a bead at the back of a turn (frontness 0). */
 const BACK_BEAD_RADIUS_SCALE = 0.6;
 /** Radius multiplier of a bead at the front of a turn (frontness 1). */
@@ -116,10 +116,13 @@ export class DNAHelix extends VGroup {
       strokeWidth = DEFAULT_STROKE_WIDTH,
       numSamplesPerTurn = 48,
       depthCue = true,
-      showNucleotides = true,
       nucleotideRadius,
       backboneStrokeWidth,
+      rungStrokeWidth,
     } = options;
+    // Flat-disc beads turn edge-on in a rotating 3D view and read as stray
+    // ticks, so a 3D helix hides them by default. A 2D helix keeps them.
+    const showNucleotides = options.showNucleotides ?? !threeD;
 
     this._turns = Math.max(0, turns);
     this._radius = radius;
@@ -136,9 +139,9 @@ export class DNAHelix extends VGroup {
     this._depthCue = depthCue;
     this._showNucleotides = showNucleotides;
     this._nucleotideRadius = nucleotideRadius ?? Math.max(0.04, 0.14 * Math.abs(radius));
-    this._backboneStrokeWidth = backboneStrokeWidth ?? strokeWidth;
-    // Rungs read as a cleaner ladder when a little thinner than the backbone.
-    this._rungStrokeWidth = 0.8 * strokeWidth;
+    // Bold backbone tubes read as the two strands; rungs sit a little thinner.
+    this._backboneStrokeWidth = backboneStrokeWidth ?? 1.4 * strokeWidth;
+    this._rungStrokeWidth = rungStrokeWidth ?? 0.95 * strokeWidth;
 
     this._strandFuncs = [this._makeStrandFunc(0), this._makeStrandFunc(Math.PI)];
 
@@ -216,6 +219,23 @@ export class DNAHelix extends VGroup {
     return (Math.sin(2 * Math.PI * t) + 1) / 2;
   }
 
+  /**
+   * The weight (0 at the back of a turn, 1 at the front) that sets a rung's
+   * opacity and stroke width.
+   *
+   * In 3D the renderer already foreshortens a rung that points at the camera
+   * and the view can rotate, so a baked front/back cue would fight the real
+   * geometry. 3D rungs therefore keep a uniform weight of 1 and let perspective
+   * do the work. In 2D, where there is no real depth, the weight follows the
+   * frontness so the front rungs read bolder than the back ones.
+   */
+  protected _rungWeightAt(t: number): number {
+    if (this._threeD || !this._depthCue) {
+      return 1;
+    }
+    return this._frontnessAt(t);
+  }
+
   /** Build every base-pair rung and bead, and add them to their groups. */
   protected _buildBasePairs(): void {
     for (let i = 0; i < this._basePairs; i++) {
@@ -226,8 +246,9 @@ export class DNAHelix extends VGroup {
       const end = this._strandFuncs[1](t);
       const color = this._colorByBase ? baseColor(base, this._baseColors) : this._rungColor;
       const frontness = this._frontnessAt(t);
+      const rungWeight = this._rungWeightAt(t);
 
-      const line = this._buildRung(start, end, color, frontness);
+      const line = this._buildRung(start, end, color, rungWeight);
       this.rungsGroup.add(line);
 
       // The first strand's end has the rung's frontness; the second strand's
@@ -253,22 +274,26 @@ export class DNAHelix extends VGroup {
     }
   }
 
-  /** Build one rung line, dimmed and thinned by its frontness. */
+  /**
+   * Build one rung line at the given weight (0 back, 1 front). A 3D rung always
+   * has weight 1 and lets perspective foreshorten it; a 2D rung is thinned and
+   * dimmed toward the back so the flat ladder still reads as a twist.
+   */
   protected _buildRung(
     start: Vector3Tuple,
     end: Vector3Tuple,
     color: string,
-    frontness: number,
+    weight: number,
   ): Line {
-    const widthScale = lerp(BACK_RUNG_WIDTH_SCALE, FRONT_RUNG_WIDTH_SCALE, frontness);
+    const widthScale = lerp(BACK_RUNG_WIDTH_SCALE, FRONT_RUNG_WIDTH_SCALE, weight);
     const line = new Line({
       start,
       end,
       color,
       strokeWidth: this._rungStrokeWidth * widthScale,
     });
-    if (this._depthCue) {
-      line.setStrokeOpacity(lerp(BACK_OPACITY, 1, frontness));
+    if (this._depthCue && !this._threeD) {
+      line.setStrokeOpacity(lerp(BACK_OPACITY, 1, weight));
     }
     return line;
   }
@@ -351,6 +376,7 @@ export class DNAHelix extends VGroup {
       showNucleotides: this._showNucleotides,
       nucleotideRadius: this._nucleotideRadius,
       backboneStrokeWidth: this._backboneStrokeWidth,
+      rungStrokeWidth: this._rungStrokeWidth,
     });
     this._copyBaseAttributesInto(clone, { copyChildren: false });
     return clone;

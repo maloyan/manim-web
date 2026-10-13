@@ -104,7 +104,7 @@ export class Cell extends VGroup {
     this._width = width ?? 2 * radius;
     this._height = height ?? 1.4 * radius;
     this._organelleSpecs = organelles.map((o) => ({ ...o }));
-    this._nucleusRadius = nucleusRadius ?? 0.35 * radius;
+    this._nucleusRadius = nucleusRadius ?? 0.3 * radius;
     this._showNucleus = showNucleus;
     this._labels = labels;
     this._labelFontSize = labelFontSize;
@@ -177,11 +177,11 @@ export class Cell extends VGroup {
       fillOpacity: 0.32,
       strokeWidth: 0,
     });
-    // A denser inner disc fakes a radial tint toward the center.
+    // A soft denser inner disc fakes a gentle radial tint toward the center.
     const innerTint = new Circle({
-      radius: 0.6 * r,
+      radius: 0.72 * r,
       color: this._nucleusColor,
-      fillOpacity: 0.28,
+      fillOpacity: 0.22,
       strokeWidth: 0,
     });
     const envelope = new Circle({
@@ -205,8 +205,11 @@ export class Cell extends VGroup {
     if (count <= 0) {
       return [0, 0, 0];
     }
-    const ringRadius = (this._nucleusRadius + this._radius) / 2;
-    const angle = (2 * Math.PI * index) / count + Math.PI / 2;
+    // Sit the ring in the clear band between the nucleus and the membrane, a
+    // little inboard so each organelle keeps breathing room and its label stays
+    // inside the cell. Start at the top and go clockwise.
+    const ringRadius = 0.64 * this._radius;
+    const angle = Math.PI / 2 - (2 * Math.PI * index) / count;
     return [ringRadius * Math.cos(angle), ringRadius * Math.sin(angle), 0];
   }
 
@@ -281,8 +284,15 @@ export class Cell extends VGroup {
     }
     const label = new Text({ text, fontSize: this._labelFontSize });
     // Sit the label just below the organelle so it does not cover the shape.
-    const gap = 0.28 * this._radius;
-    label.moveTo([position[0], position[1] - gap, position[2]]);
+    const gap = 0.2 * this._radius;
+    let y = position[1] - gap;
+    // Keep the whole label inside the membrane: never let it drop past a band
+    // just inside the edge, so a low organelle does not push its label out.
+    const minY = -0.84 * this._radius;
+    if (y < minY) {
+      y = minY;
+    }
+    label.moveTo([position[0], y, position[2]]);
     return label;
   }
 

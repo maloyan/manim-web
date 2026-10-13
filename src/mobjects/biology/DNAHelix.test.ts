@@ -154,13 +154,23 @@ describe('DNAHelix', () => {
   });
 
   it('places each bead on its backbone strand', () => {
-    const dna = new DNAHelix({ turns: 2, basePairs: 6, threeD: true });
+    const dna = new DNAHelix({ turns: 2, basePairs: 6, threeD: true, showNucleotides: true });
     for (const pair of dna.getBasePairs()) {
       expect(pair.startBead?.getCenter()[0]).toBeCloseTo(pair.start[0], 6);
       expect(pair.startBead?.getCenter()[1]).toBeCloseTo(pair.start[1], 6);
       expect(pair.endBead?.getCenter()[0]).toBeCloseTo(pair.end[0], 6);
       expect(pair.endBead?.getCenter()[1]).toBeCloseTo(pair.end[1], 6);
     }
+  });
+
+  it('hides beads by default in 3D but keeps them in 2D', () => {
+    // Flat-disc beads turn edge-on in a rotating 3D view, so a 3D helix drops
+    // them by default; a 2D helix still shows them.
+    const flat = new DNAHelix({ basePairs: 6 });
+    expect(flat.nucleotidesGroup.children.length).toBeGreaterThan(0);
+    const helix3d = new DNAHelix({ basePairs: 6, threeD: true });
+    expect(helix3d.nucleotidesGroup.children).toHaveLength(0);
+    expect(helix3d.getBasePair(0)?.startBead).toBeNull();
   });
 
   it('colors the two beads of a pair by their own base', () => {
@@ -213,5 +223,23 @@ describe('DNAHelix', () => {
       expect(pair.line.opacity).toBe(1);
     }
     expect(Math.max(...widths) - Math.min(...widths)).toBeLessThan(1e-9);
+  });
+
+  it('gives 3D rungs a uniform weight so real perspective does the depth', () => {
+    // In 3D the renderer foreshortens a rung that points at the camera, so the
+    // baked front/back cue is dropped and every rung keeps the same weight.
+    const dna = new DNAHelix({ turns: 3, basePairs: 12, threeD: true });
+    const widths = dna.getBasePairs().map((p) => p.line.strokeWidth);
+    const opacities = dna.getBasePairs().map((p) => p.line.opacity);
+    expect(Math.max(...widths) - Math.min(...widths)).toBeLessThan(1e-9);
+    expect(Math.max(...opacities) - Math.min(...opacities)).toBeLessThan(1e-9);
+  });
+
+  it('honors a rungStrokeWidth override', () => {
+    const dna = new DNAHelix({ basePairs: 6, threeD: true, rungStrokeWidth: 2 });
+    const thick = new DNAHelix({ basePairs: 6, threeD: true, rungStrokeWidth: 8 });
+    expect(thick.getBasePair(0)!.line.strokeWidth).toBeGreaterThan(
+      dna.getBasePair(0)!.line.strokeWidth,
+    );
   });
 });

@@ -59,12 +59,18 @@ export interface DNAHelixOptions {
    * the back of each turn. Default: true.
    */
   depthCue?: boolean;
-  /** Draw a nucleotide bead where each rung meets a backbone. Default: true. */
+  /**
+   * Draw a nucleotide bead where each rung meets a backbone. Default: true in
+   * 2D, false in 3D. The beads are flat discs, so in a rotating 3D view they
+   * turn edge-on and read as stray ticks; 3D helices look cleaner without them.
+   */
   showNucleotides?: boolean;
   /** Radius of each nucleotide bead. Default: 0.14 * radius. */
   nucleotideRadius?: number;
-  /** Stroke width of the two backbone strands. Default: the strokeWidth. */
+  /** Stroke width of the two backbone strands. Default: 1.4 * strokeWidth. */
   backboneStrokeWidth?: number;
+  /** Stroke width of the base-pair rungs. Default: 0.95 * strokeWidth. */
+  rungStrokeWidth?: number;
 }
 
 /** A resolved base pair of a {@link DNAHelix}. */
