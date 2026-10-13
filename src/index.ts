@@ -1077,6 +1077,9 @@ export {
 // Chemistry mobjects (2D skeletal molecule structures)
 export {
   MoleculeMobject,
+  ElectronPushingArrow,
+  arrowBetweenAtoms,
+  DEFAULT_ELECTRON_ARROW_COLOR,
   water,
   methane,
   benzene,
@@ -1085,6 +1088,8 @@ export {
   normalizeElement,
   CPK_COLORS,
   DEFAULT_ELEMENT_COLOR,
+  type ElectronPushingArrowOptions,
+  type ArrowElectrons,
   type MoleculeBuilderOptions,
   type AtomSpec,
   type BondSpec,
