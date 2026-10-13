@@ -7,6 +7,7 @@
  * caller overrides, which win over the palette.
  */
 
+import { logger } from '../../utils/logger';
 import type { BaseSymbol } from './biologyTypes';
 
 /** Fallback color for an organelle or residue not in a palette. */
@@ -52,11 +53,23 @@ export const ORGANELLE_COLORS: Readonly<Record<string, string>> = {
 
 /**
  * Normalize a base symbol to its uppercase letter.
+ *
+ * Only A, T, G and C are recognized DNA bases. An unrecognized input (for
+ * example RNA 'U' or junk) is still returned uppercased, but it is logged as a
+ * warning so the data error is visible instead of silent. This function does
+ * not add RNA support.
  * @param base - The raw base symbol (any case).
  * @returns The uppercase base symbol.
  */
 export function normalizeBase(base: string): BaseSymbol {
-  return base.trim().toUpperCase() as BaseSymbol;
+  const symbol = base.trim().toUpperCase();
+  if (!Object.prototype.hasOwnProperty.call(DNA_BASE_COLORS, symbol)) {
+    logger.warn(
+      `normalizeBase: unrecognized DNA base "${base}". ` +
+        `Expected one of A, T, G, C. The value is returned uppercased and unchanged.`,
+    );
+  }
+  return symbol as BaseSymbol;
 }
 
 /**
