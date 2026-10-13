@@ -82,6 +82,14 @@ export { CurvesAsSubmobjects } from './core/VMobjectCurveUtils';
 export { VDict, VectorizedPoint } from './core/VDict';
 export { Group } from './core/Group';
 export { Scene, type SceneOptions, type SceneExportOptions } from './core/Scene';
+export {
+  SafeArea,
+  intersectFrames,
+  type AspectFrameSize,
+  type SafeAreaAnchor,
+  type SafeAreaOptions,
+} from './core/SafeArea';
+export { renderAspects, type AspectTarget, type RenderedAspect } from './core/renderAspects';
 export { InteractiveScene, type InteractiveSceneOptions } from './core/InteractiveScene';
 export { ThreeDScene, type ThreeDSceneOptions } from './core/ThreeDScene';
 export { ZoomedScene, ZoomDisplayPopOut, type ZoomedSceneOptions } from './core/ZoomedScene';
