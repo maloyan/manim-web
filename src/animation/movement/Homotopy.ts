@@ -119,9 +119,6 @@ export class Homotopy extends Animation {
   /** World transform captured at begin(), so the function runs in world space */
   private _frame: WorldFrame | null = null;
 
-  /** Whether the mobject is a VMobject */
-  private _isVMobject: boolean = false;
-
   constructor(mobject: Mobject, options: HomotopyOptions) {
     super(mobject, options);
     this.homotopyFunc = options.homotopyFunc;
@@ -134,11 +131,9 @@ export class Homotopy extends Animation {
     super.begin();
 
     if (this.mobject instanceof VMobject) {
-      this._isVMobject = true;
-      this._originalPoints = (this.mobject as VMobject).getLocalPoints();
+      this._originalPoints = this.mobject.getLocalPoints();
       this._frame = captureWorldFrame(this.mobject);
     } else {
-      this._isVMobject = false;
       this._originalPoints = null;
       this._frame = null;
     }
@@ -153,7 +148,7 @@ export class Homotopy extends Animation {
    * this reduces to the plain transform.
    */
   interpolate(alpha: number): void {
-    if (!this._isVMobject || !this._originalPoints || !this._frame) {
+    if (!(this.mobject instanceof VMobject) || !this._originalPoints || !this._frame) {
       // For non-VMobjects, we can only transform the position (already world-space)
       const pos = this.mobject.position;
       const [newX, newY, newZ] = this.homotopyFunc(pos.x, pos.y, pos.z, alpha);
@@ -163,7 +158,6 @@ export class Homotopy extends Animation {
     }
 
     // Transform all points on the VMobject in world space
-    const vmobject = this.mobject as VMobject;
     const { worldMatrix, inverseWorld } = this._frame;
     const newPoints: number[][] = [];
 
@@ -173,7 +167,7 @@ export class Homotopy extends Animation {
       newPoints.push(applyMatrix(inverseWorld, moved));
     }
 
-    vmobject.setPoints3D(newPoints);
+    this.mobject.setPoints3D(newPoints);
   }
 
   /**
@@ -199,9 +193,6 @@ export class ComplexHomotopy extends Animation {
   /** World transform captured at begin(), so the function runs in world space */
   private _frame: WorldFrame | null = null;
 
-  /** Whether the mobject is a VMobject */
-  private _isVMobject: boolean = false;
-
   constructor(mobject: Mobject, options: ComplexHomotopyOptions) {
     super(mobject, options);
     this.complexFunc = options.complexFunc;
@@ -214,11 +205,9 @@ export class ComplexHomotopy extends Animation {
     super.begin();
 
     if (this.mobject instanceof VMobject) {
-      this._isVMobject = true;
-      this._originalPoints = (this.mobject as VMobject).getLocalPoints();
+      this._originalPoints = this.mobject.getLocalPoints();
       this._frame = captureWorldFrame(this.mobject);
     } else {
-      this._isVMobject = false;
       this._originalPoints = null;
       this._frame = null;
     }
@@ -232,7 +221,7 @@ export class ComplexHomotopy extends Animation {
    * pushed back through the inverse. World === local when untransformed.
    */
   interpolate(alpha: number): void {
-    if (!this._isVMobject || !this._originalPoints || !this._frame) {
+    if (!(this.mobject instanceof VMobject) || !this._originalPoints || !this._frame) {
       // For non-VMobjects, transform the position in the complex plane (world-space)
       const pos = this.mobject.position;
       const z: Complex = { re: pos.x, im: pos.y };
@@ -243,7 +232,6 @@ export class ComplexHomotopy extends Animation {
     }
 
     // Transform all points treating (x, y) as complex numbers, in world space
-    const vmobject = this.mobject as VMobject;
     const { worldMatrix, inverseWorld } = this._frame;
     const newPoints: number[][] = [];
 
@@ -253,7 +241,7 @@ export class ComplexHomotopy extends Animation {
       newPoints.push(applyMatrix(inverseWorld, [result.re, result.im, wz]));
     }
 
-    vmobject.setPoints3D(newPoints);
+    this.mobject.setPoints3D(newPoints);
   }
 
   /**
@@ -472,9 +460,6 @@ export class PhaseFlow extends Animation {
   /** Original position for non-VMobject mobjects */
   private _originalPosition: [number, number, number] | null = null;
 
-  /** Whether the mobject is a VMobject */
-  private _isVMobject: boolean = false;
-
   /** Number of integration steps per unit of virtual time */
   private readonly _integrationSteps: number;
 
@@ -492,11 +477,9 @@ export class PhaseFlow extends Animation {
     super.begin();
 
     if (this.mobject instanceof VMobject) {
-      this._isVMobject = true;
-      this._originalPoints = (this.mobject as VMobject).getLocalPoints();
+      this._originalPoints = this.mobject.getLocalPoints();
       this._frame = captureWorldFrame(this.mobject);
     } else {
-      this._isVMobject = false;
       this._originalPoints = null;
       this._frame = null;
       const pos = this.mobject.position;
@@ -515,15 +498,13 @@ export class PhaseFlow extends Animation {
   interpolate(alpha: number): void {
     const flowTime = alpha * this.virtualTime;
 
-    if (!this._isVMobject || !this._originalPoints || !this._frame) {
+    if (!(this.mobject instanceof VMobject) || !this._originalPoints || !this._frame) {
       // For non-VMobjects, flow the position from the stored original (world-space)
-      const start =
-        this._originalPosition ??
-        ([this.mobject.position.x, this.mobject.position.y, this.mobject.position.z] as [
-          number,
-          number,
-          number,
-        ]);
+      const start: [number, number, number] = this._originalPosition ?? [
+        this.mobject.position.x,
+        this.mobject.position.y,
+        this.mobject.position.z,
+      ];
       const [newX, newY, newZ] = flowPoint(
         this.vectorField,
         start,
@@ -536,7 +517,6 @@ export class PhaseFlow extends Animation {
     }
 
     // Flow all points on the VMobject from their original positions, in world space
-    const vmobject = this.mobject as VMobject;
     const { worldMatrix, inverseWorld } = this._frame;
     const newPoints: number[][] = [];
 
@@ -550,7 +530,7 @@ export class PhaseFlow extends Animation {
       newPoints.push(applyMatrix(inverseWorld, flowed));
     }
 
-    vmobject.setPoints3D(newPoints);
+    this.mobject.setPoints3D(newPoints);
   }
 
   /**

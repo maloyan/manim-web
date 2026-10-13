@@ -309,7 +309,7 @@ function canonicalize(obj: unknown): string {
   if (obj === null) return 'null';
   if (obj === undefined) return 'undefined';
   const type = typeof obj;
-  if (type === 'string') return `s:${obj as string}`;
+  if (typeof obj === 'string') return `s:${obj}`;
   if (type === 'number' || type === 'boolean' || type === 'bigint') {
     return `${type[0]}:${String(obj)}`;
   }

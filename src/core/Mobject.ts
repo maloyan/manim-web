@@ -262,7 +262,8 @@ export abstract class Mobject {
 
     const mode = this._blendMode;
     const visit = (object: THREE.Object3D): void => {
-      const material = (object as Partial<THREE.Mesh>).material;
+      const meshLike: THREE.Object3D & { material?: THREE.Material | THREE.Material[] } = object;
+      const material = meshLike.material;
       if (material) {
         if (Array.isArray(material)) {
           for (const m of material) applyBlendMode(m, mode);

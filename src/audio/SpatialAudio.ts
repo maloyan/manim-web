@@ -405,6 +405,8 @@ export class SpatialAudio {
   /** Connect an input node into the panner (used by the factories). */
   private _wireInput(node: AudioNode): void {
     if (this._panner) {
+      // cast: SpatialPanner is a structural wrapper, not a Web Audio AudioNode
+      // subtype, but at runtime it is the real PannerNode that `connect` needs.
       node.connect(this._panner as unknown as AudioNode);
     }
   }

@@ -65,9 +65,8 @@ export class ShowPassingFlash extends Animation {
     this._parentObject = threeObj.parent ?? threeObj;
 
     // Get path points from VMobject or use bounding box
-    if (this._isVMobject) {
-      const vmob = this.mobject as VMobject;
-      this._pathPoints = vmob.getLocalPoints();
+    if (this.mobject instanceof VMobject) {
+      this._pathPoints = this.mobject.getLocalPoints();
 
       // Sample Bezier path for smoother flash
       this._pathPoints = this._samplePath(this._pathPoints);

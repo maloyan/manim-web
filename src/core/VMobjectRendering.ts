@@ -228,6 +228,8 @@ export abstract class VMobjectRendering extends Mobject {
   }
 
   protected _buildEarcutFillGeometry(points3D: number[][]): THREE.BufferGeometry | null {
+    // cast: `getEffectiveSubpathLengths` lives on some subclasses only; the
+    // weak-type rule forbids a plain annotation for an all-optional shape.
     const effectiveLengths = (
       this as unknown as { getEffectiveSubpathLengths?: () => number[] | undefined }
     ).getEffectiveSubpathLengths?.();
@@ -354,6 +356,7 @@ export abstract class VMobjectRendering extends Mobject {
   // -----------------------------------------------------------------------
 
   private _updateLine2Stroke(group: THREE.Group, points3D: number[][]): void {
+    // cast: see `_buildEarcutFillGeometry` — optional subclass method probe.
     const subpathLengths = (
       this as unknown as { getEffectiveSubpathLengths?: () => number[] | undefined }
     ).getEffectiveSubpathLengths?.();
@@ -582,7 +585,7 @@ export abstract class VMobjectRendering extends Mobject {
       const child = group.children[0];
       group.remove(child);
       if (child instanceof THREE.Mesh || child instanceof THREE.Line || child instanceof Line2) {
-        (child as THREE.Mesh | THREE.Line | Line2).geometry?.dispose();
+        child.geometry?.dispose();
       }
     }
   }

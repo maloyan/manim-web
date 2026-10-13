@@ -56,7 +56,7 @@ export class Blink extends Animation {
     const threeObj = this.mobject.getThreeObject();
     threeObj.traverse((child) => {
       if (child instanceof THREE.Mesh || child instanceof THREE.Line) {
-        const material = (child as THREE.Mesh).material;
+        const material = child.material;
         if (Array.isArray(material)) {
           this._materials.push(...material);
         } else if (material) {

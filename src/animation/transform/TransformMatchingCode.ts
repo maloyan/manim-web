@@ -77,7 +77,7 @@ export interface CodeFadingPart {
 const DEFAULT_FADE_RATIO = 0.25;
 const FULL_OPACITY = 1;
 
-export class TransformMatchingCode extends Animation {
+export class TransformMatchingCode extends Animation<Code> {
   /** The target Code block to transform into. */
   readonly target: Code;
 
@@ -242,7 +242,7 @@ export class TransformMatchingCode extends Animation {
   }
 
   private _addMatchedPart(source: CodeToken, target: CodeToken, into: CodeMatchedPart[]): void {
-    const mobject = (this.mobject as Code).makeTokenMobject(source.text, source.type);
+    const mobject = this.mobject.makeTokenMobject(source.text, source.type);
     this._place(mobject, source.position);
     mobject.opacity = FULL_OPACITY;
     this._parentAdd(mobject);
@@ -256,7 +256,7 @@ export class TransformMatchingCode extends Animation {
   }
 
   private _addFadeOutPart(source: CodeToken): void {
-    const mobject = (this.mobject as Code).makeTokenMobject(source.text, source.type);
+    const mobject = this.mobject.makeTokenMobject(source.text, source.type);
     this._place(mobject, source.position);
     mobject.opacity = FULL_OPACITY;
     this._parentAdd(mobject);
@@ -283,9 +283,9 @@ export class TransformMatchingCode extends Animation {
 
   override begin(): void {
     super.begin();
-    this._matchUnits(this._units(this.mobject as Code), this._units(this.target));
+    this._matchUnits(this._units(this.mobject), this._units(this.target));
     // Hide the original blocks; the token mobjects carry the animation.
-    (this.mobject as Code).opacity = 0;
+    this.mobject.opacity = 0;
     this.target.opacity = 0;
   }
 

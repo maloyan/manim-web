@@ -18,7 +18,7 @@ export type GrowArrowOptions = AnimationOptions;
 /**
  * GrowArrow animation - interpolate arrow from a start-growth state to end state.
  */
-export class GrowArrow extends Animation {
+export class GrowArrow extends Animation<Arrow> {
   private _start = new THREE.Vector3();
   private _endShaftPos = new THREE.Vector3();
   private _endTipPos = new THREE.Vector3();
@@ -34,7 +34,7 @@ export class GrowArrow extends Animation {
   override begin(): void {
     super.begin();
 
-    const arrow = this.mobject as Arrow;
+    const arrow = this.mobject;
     const shaft = arrow.children[0];
     const tip = arrow.children[1];
     if (!shaft || !tip) throw new Error('GrowArrow requires Arrow to have shaft and tip children');
@@ -59,7 +59,7 @@ export class GrowArrow extends Animation {
   }
 
   interpolate(alpha: number): void {
-    const arrow = this.mobject as Arrow;
+    const arrow = this.mobject;
     const shaft = arrow.children[0];
     const tip = arrow.children[1];
     if (!shaft || !tip) throw new Error('GrowArrow requires Arrow to have shaft and tip children');
@@ -99,7 +99,7 @@ export class GrowArrow extends Animation {
   }
 
   override finish(): void {
-    const arrow = this.mobject as Arrow;
+    const arrow = this.mobject;
     const shaft = arrow.children[0];
     const tip = arrow.children[1];
     if (!shaft || !tip) throw new Error('GrowArrow requires Arrow to have shaft and tip children');

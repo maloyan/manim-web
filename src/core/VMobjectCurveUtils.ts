@@ -178,14 +178,25 @@ export class CurvesAsSubmobjects extends VMobject {
     if (n < 0 || n >= this.children.length) {
       throw new Error(`Curve index ${n} out of range. Has ${this.children.length} curves.`);
     }
-    return this.children[n] as VMobject;
+    return this._curveChildren[n];
+  }
+
+  /**
+   * The children typed as curve VMobjects.
+   *
+   * Every child created by this class is a single-curve VMobject, but the base
+   * `Mobject.children` is `Mobject[]`. This accessor narrows once.
+   */
+  // cast: CurvesAsSubmobjects stores only VMobject curves; base type is Mobject[].
+  private get _curveChildren(): VMobject[] {
+    return this.children as VMobject[];
   }
 
   /**
    * Iterate over all curves.
    */
   [Symbol.iterator](): Iterator<VMobject> {
-    return (this.children as VMobject[])[Symbol.iterator]();
+    return this._curveChildren[Symbol.iterator]();
   }
 
   /**
@@ -194,7 +205,7 @@ export class CurvesAsSubmobjects extends VMobject {
    * @returns this for chaining
    */
   forEach(fn: (curve: VMobject, index: number) => void): this {
-    (this.children as VMobject[]).forEach(fn);
+    this._curveChildren.forEach(fn);
     return this;
   }
 
@@ -204,7 +215,7 @@ export class CurvesAsSubmobjects extends VMobject {
    * @returns Array of mapped values
    */
   map<T>(fn: (curve: VMobject, index: number) => T): T[] {
-    return (this.children as VMobject[]).map(fn);
+    return this._curveChildren.map(fn);
   }
 
   /**

@@ -520,7 +520,9 @@ export class Scene {
         // Also disable depth test so renderOrder controls draw order (2D scene).
         threeObj.traverse((child) => {
           child.renderOrder = ro;
-          const mesh = child as THREE.Mesh;
+          // Any child with a material (Mesh, Line, Points) gets depthTest off;
+          // the optional property lets plain Object3D nodes fall through.
+          const mesh: THREE.Object3D & { material?: THREE.Material | THREE.Material[] } = child;
           if (mesh.material) {
             if (Array.isArray(mesh.material)) {
               for (const m of mesh.material) m.depthTest = false;
@@ -661,7 +663,7 @@ export class Scene {
       // animate an empty mobject because SVG paths haven't loaded yet.
       const renderPromises: Promise<void>[] = [];
       const collectRenders = (mobject: Mobject) => {
-        const asyncMob = mobject as Mobject & { waitForRender?: () => Promise<void> };
+        const asyncMob: Mobject & { waitForRender?: () => Promise<void> } = mobject;
         if (typeof asyncMob.waitForRender === 'function') {
           renderPromises.push(asyncMob.waitForRender().catch(() => {}));
         }
@@ -862,6 +864,8 @@ export class Scene {
           // "Forever" wait (e.g. wait(999999)) — resolve only on dispose
           return;
         }
+        // cast: the timer-handle type differs between the DOM and Node lib;
+        // normalize to the field's declared `ReturnType<typeof setInterval>`.
         timerId = setTimeout(() => {
           cleanup();
         }, duration * 1000) as unknown as ReturnType<typeof setInterval>;
@@ -994,10 +998,10 @@ export class Scene {
    * that can cause visible flicker.
    */
   private _awaitAsyncRenders(mobject: Mobject): void {
-    const asyncMob = mobject as Mobject & {
+    const asyncMob: Mobject & {
       waitForRender?: () => Promise<void>;
       isRendering?: () => boolean;
-    };
+    } = mobject;
     if (typeof asyncMob.waitForRender === 'function') {
       // If the mobject exposes an isRendering() check and is no longer
       // rendering, the promise is already settled -- skip the callback

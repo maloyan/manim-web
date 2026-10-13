@@ -63,7 +63,7 @@ export function triangulatePolygon(vertices: number[][], holes?: number[][][]): 
     2, // dimensions (2D)
   );
 
-  return indices as number[];
+  return indices;
 }
 
 /**
