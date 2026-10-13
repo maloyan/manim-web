@@ -132,7 +132,9 @@ export interface Text3DFromUrlOptions extends Text3DOptions {
  * fetched at runtime, never bundled, so the base package stays small.
  */
 export const DEFAULT_FONT_URL =
-  'https://cdn.jsdelivr.net/npm/three@0.185.1/examples/fonts/helvetiker_regular.typeface.json';
+  // three stopped publishing examples/fonts to npm after ~0.168, so the version
+  // pinned for the renderer 404s for this asset; 0.160.0 still ships it on the CDN.
+  'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/fonts/helvetiker_regular.typeface.json';
 
 /** Injected font-loader factory. When set, the lazy default import is skipped. */
 let fontLoaderFactoryOverride: FontLoaderFactory | null = null;
