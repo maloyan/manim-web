@@ -5,18 +5,20 @@ import ManimExample from '../ManimExample';
 async function animate(scene: any) {
   const { Cell, Create } = await import('manim-web');
 
-  // A 2D cell diagram: a membrane, a nucleus, and labeled organelles.
-  // Organelles with no position are auto-arranged on a ring.
+  // A 2D cell diagram: a bilayer membrane, a detailed nucleus, and realistic
+  // organelles. Organelles with no position are auto-arranged on a ring, and
+  // each name picks its own shape (bean cristae, stacked golgi, dot clusters).
   const cell = new Cell({
     radius: 2.6,
     organelles: [
-      { name: 'mitochondrion', shape: 'ellipse' },
+      { name: 'mitochondrion' },
       { name: 'ribosome' },
       { name: 'lysosome' },
-      { name: 'vacuole', shape: 'ellipse' },
+      { name: 'vacuole' },
       { name: 'golgi' },
+      { name: 'endoplasmic reticulum', label: 'ER' },
     ],
-    labelFontSize: 22,
+    labelFontSize: 18,
   });
 
   await scene.play(new Create(cell, { duration: 2.5 }));

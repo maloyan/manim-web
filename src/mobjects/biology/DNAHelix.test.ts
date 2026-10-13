@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { DNAHelix } from './DNAHelix';
 import { VGroup } from '../../core/VGroup';
 import { Line } from '../geometry/Line';
+import { Circle } from '../geometry/Circle';
 import { ParametricFunction } from '../graphing/ParametricFunction';
 import { baseColor, complementOf } from './biologyColors';
 import type { Vector3Tuple } from '../../core/Mobject';
@@ -140,5 +141,77 @@ describe('DNAHelix', () => {
     expect(clone.numBasePairs).toBe(dna.numBasePairs);
     expect(clone.getStrands()).toHaveLength(2);
     expect(clone.getHelixHeight()).toBe(dna.getHelixHeight());
+  });
+
+  // ===== Nucleotide beads =====
+
+  it('builds two nucleotide beads per base pair by default', () => {
+    const dna = new DNAHelix({ turns: 3, basePairs: 10 });
+    expect(dna.nucleotidesGroup.children).toHaveLength(20);
+    const pair = dna.getBasePair(0);
+    expect(pair?.startBead).toBeInstanceOf(Circle);
+    expect(pair?.endBead).toBeInstanceOf(Circle);
+  });
+
+  it('places each bead on its backbone strand', () => {
+    const dna = new DNAHelix({ turns: 2, basePairs: 6, threeD: true });
+    for (const pair of dna.getBasePairs()) {
+      expect(pair.startBead?.getCenter()[0]).toBeCloseTo(pair.start[0], 6);
+      expect(pair.startBead?.getCenter()[1]).toBeCloseTo(pair.start[1], 6);
+      expect(pair.endBead?.getCenter()[0]).toBeCloseTo(pair.end[0], 6);
+      expect(pair.endBead?.getCenter()[1]).toBeCloseTo(pair.end[1], 6);
+    }
+  });
+
+  it('colors the two beads of a pair by their own base', () => {
+    const dna = new DNAHelix({ basePairs: 4, sequence: ['A', 'T', 'G', 'C'] });
+    const pair = dna.getBasePair(0)!;
+    expect(pair.startBead?.fillColor).toBe(baseColor('A'));
+    expect(pair.endBead?.fillColor).toBe(baseColor('T'));
+  });
+
+  it('omits beads when showNucleotides is false', () => {
+    const dna = new DNAHelix({ basePairs: 6, showNucleotides: false });
+    expect(dna.nucleotidesGroup.children).toHaveLength(0);
+    expect(dna.getBasePair(0)?.startBead).toBeNull();
+    expect(dna.getBasePair(0)?.endBead).toBeNull();
+  });
+
+  // ===== Depth cue =====
+
+  it('gives every rung a frontness in [0, 1]', () => {
+    const dna = new DNAHelix({ turns: 3, basePairs: 12 });
+    for (const pair of dna.getBasePairs()) {
+      expect(pair.frontness).toBeGreaterThanOrEqual(0);
+      expect(pair.frontness).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('draws front rungs thicker and brighter than back rungs', () => {
+    const dna = new DNAHelix({ turns: 3, basePairs: 12 });
+    const pairs = dna.getBasePairs();
+    const front = pairs.reduce((a, b) => (b.frontness > a.frontness ? b : a));
+    const back = pairs.reduce((a, b) => (b.frontness < a.frontness ? b : a));
+    expect(front.frontness).toBeGreaterThan(back.frontness);
+    expect(front.line.strokeWidth).toBeGreaterThan(back.line.strokeWidth);
+    expect(front.line.opacity).toBeGreaterThan(back.line.opacity);
+  });
+
+  it('draws a bead at the front larger than its paired bead at the back', () => {
+    const dna = new DNAHelix({ turns: 3, basePairs: 12 });
+    const pair = dna.getBasePairs().reduce((a, b) => (b.frontness > a.frontness ? b : a));
+    // The two beads of a pair are half a turn apart, so one leads the other.
+    expect(pair.startBead!.getRadius()).toBeGreaterThan(pair.endBead!.getRadius());
+    expect(pair.startBead!.opacity).toBeGreaterThan(pair.endBead!.opacity);
+  });
+
+  it('applies no depth variation when depthCue is false', () => {
+    const dna = new DNAHelix({ turns: 3, basePairs: 12, depthCue: false });
+    const widths = dna.getBasePairs().map((p) => p.line.strokeWidth);
+    for (const pair of dna.getBasePairs()) {
+      expect(pair.frontness).toBe(0.5);
+      expect(pair.line.opacity).toBe(1);
+    }
+    expect(Math.max(...widths) - Math.min(...widths)).toBeLessThan(1e-9);
   });
 });

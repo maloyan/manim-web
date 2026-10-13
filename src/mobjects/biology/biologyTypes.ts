@@ -52,8 +52,19 @@ export interface DNAHelixOptions {
   rungColor?: string;
   /** Stroke width of the strands and rungs. Default: 4. */
   strokeWidth?: number;
-  /** Samples taken per turn for each strand curve. Default: 32. */
+  /** Samples taken per turn for each strand curve. Default: 48. */
   numSamplesPerTurn?: number;
+  /**
+   * Fake 3D depth by dimming and thinning the rungs and nucleotides that sit at
+   * the back of each turn. Default: true.
+   */
+  depthCue?: boolean;
+  /** Draw a nucleotide bead where each rung meets a backbone. Default: true. */
+  showNucleotides?: boolean;
+  /** Radius of each nucleotide bead. Default: 0.14 * radius. */
+  nucleotideRadius?: number;
+  /** Stroke width of the two backbone strands. Default: the strokeWidth. */
+  backboneStrokeWidth?: number;
 }
 
 /** A resolved base pair of a {@link DNAHelix}. */
@@ -74,6 +85,16 @@ export interface BasePairRender {
   line: Line;
   /** The resolved rung color. */
   color: string;
+  /**
+   * How far the rung sits toward the viewer, from 0 (back of a turn) to 1
+   * (front). Drives the depth-cue dimming and thinning. 0.5 when depth cue is
+   * off.
+   */
+  frontness: number;
+  /** The nucleotide bead on the first strand, or null when beads are off. */
+  startBead: Circle | null;
+  /** The nucleotide bead on the second strand, or null when beads are off. */
+  endBead: Circle | null;
 }
 
 /** One organelle in the input of a {@link Cell}. */
@@ -122,6 +143,14 @@ export interface CellOptions {
   membraneColor?: string;
   /** Nucleus fill color. Default: a purple. */
   nucleusColor?: string;
+  /** Opacity of the soft cytoplasm fill inside the membrane. Default: 0.1. */
+  cytoplasmOpacity?: number;
+  /**
+   * Draw organelles with no explicit `shape` as detailed, realistic composites
+   * (a mitochondrion with cristae, a stacked golgi, and so on). When false,
+   * every organelle is a plain filled circle. Default: true.
+   */
+  organelleDetail?: boolean;
 }
 
 /** A resolved organelle of a {@link Cell}. */
