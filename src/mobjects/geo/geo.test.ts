@@ -9,6 +9,7 @@ import { describe, it, expect } from 'vitest';
 import { Group } from '../../core/Group';
 import { Polygon } from '../geometry/Polygon';
 import { Sphere } from '../three-d/Sphere';
+import { Line3D } from '../three-d/Line3D';
 import { Dot3D } from '../three-d/ThreeDExtensions';
 import { equirectangular, mercator } from './projections';
 import { ColorScale } from './colorScale';
@@ -233,8 +234,25 @@ describe('Globe', () => {
   it('arc interpolates a great circle whose midpoint lies on the sphere', () => {
     const globe = new Globe({ radius: RADIUS });
     const arc = globe.arc([0, 0], [0, 90], { segments: 16 });
-    expect(arc).toBeInstanceOf(Polygon);
-    const vertices = arc.getVertices();
+    // The arc now renders as a polyline of Line3D segments, not a 2D Polygon.
+    // Line3D gives consistent pixel width and a depth bias that stops the line
+    // from z-fighting the sphere surface it sits on.
+    expect(arc).toBeInstanceOf(Group);
+    expect(arc).not.toBeInstanceOf(Polygon);
+    const segments = arc.submobjects;
+    // 16 arc segments -> 16 single-segment Line3D children.
+    expect(segments.length).toBe(16);
+    expect(segments.every((seg) => seg instanceof Line3D)).toBe(true);
+    // Consecutive segments share an endpoint, so they form one continuous path.
+    for (let i = 0; i < segments.length - 1; i++) {
+      expect((segments[i] as Line3D).getEnd()).toEqual((segments[i + 1] as Line3D).getStart());
+    }
+    // Reconstruct the polyline vertices from the segment endpoints.
+    const vertices = [
+      (segments[0] as Line3D).getStart(),
+      ...segments.map((seg) => (seg as Line3D).getEnd()),
+    ];
+    expect(vertices).toHaveLength(17);
     // Endpoints sit on the sphere surface.
     expect(vertices[0][0]).toBeCloseTo(RADIUS, 8);
     const last = vertices[vertices.length - 1];
@@ -249,17 +267,30 @@ describe('Globe', () => {
     expect(mid[1]).toBeCloseTo(globe.latLonToPoint(0, 45)[1], 6);
   });
 
+  it('honors the arc altitude by lifting the polyline off the surface', () => {
+    const globe = new Globe({ radius: RADIUS });
+    const arc = globe.arc([0, 0], [0, 90], { segments: 8, altitude: 0.1 });
+    const start = (arc.submobjects[0] as Line3D).getStart();
+    const r = Math.sqrt(start[0] * start[0] + start[1] * start[1] + start[2] * start[2]);
+    expect(r).toBeCloseTo(RADIUS * 1.1, 8);
+  });
+
   it('builds a graticule grid of meridians and parallels', () => {
     const globe = new Globe({ radius: RADIUS });
     const grid = globe.graticule({ latStep: 30, lonStep: 30 });
     expect(grid).toBeInstanceOf(Group);
     // 30-degree steps: meridians at lon -180..150 (12), parallels at -60..60 (5).
-    expect(grid.submobjects.length).toBeGreaterThan(0);
     const lines = grid.submobjects;
-    expect(lines.every((line) => line instanceof Polygon)).toBe(true);
+    expect(lines.length).toBe(17);
+    // Each grid line is now a Line3D polyline (a Group of Line3D segments),
+    // not a single 2D Polygon.
+    expect(lines.every((line) => line instanceof Group)).toBe(true);
+    const firstLine = lines[0] as Group;
+    const segments = firstLine.submobjects;
+    expect(segments.length).toBeGreaterThan(0);
+    expect(segments.every((seg) => seg instanceof Line3D)).toBe(true);
     // Every graticule vertex lies on the sphere surface.
-    const first = lines[0] as Polygon;
-    const v = first.getVertices()[0];
+    const v = (segments[0] as Line3D).getStart();
     const r = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     expect(r).toBeCloseTo(RADIUS, 6);
   });
