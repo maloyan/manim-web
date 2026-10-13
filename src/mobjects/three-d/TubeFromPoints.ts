@@ -67,12 +67,25 @@ export class TubeFromPoints extends Mobject3D {
       throw new Error(`TubeFromPoints requires at least two points, received ${points.length}.`);
     }
 
-    this._points = points.map((p) => [...p] as Vector3Tuple);
+    // Coincident consecutive points make CatmullRomCurve3 emit NaN geometry, so
+    // drop any point that repeats the one before it (within a tiny epsilon on
+    // squared distance). Real backbones (e.g. PDB CA chains) can carry such
+    // duplicates.
+    const deduped = dropConsecutiveDuplicates(points);
+    if (deduped.length < 2) {
+      throw new Error(
+        `TubeFromPoints requires at least two distinct points, received ${deduped.length} after removing consecutive duplicates.`,
+      );
+    }
+
+    this._points = deduped.map((p) => [...p] as Vector3Tuple);
     this._radius = radius;
     this._closed = closed;
     this._radialSegments = radialSegments;
     this._smoothing = smoothing;
-    this._tubularSegments = tubularSegments ?? Math.max(1, smoothing * (points.length - 1));
+    // Floor any value (including an explicit tubularSegments: 0) at 1 so
+    // TubeGeometry never builds an empty mesh.
+    this._tubularSegments = Math.max(1, tubularSegments ?? smoothing * (this._points.length - 1));
 
     this._curve = new THREE.CatmullRomCurve3(
       this._points.map((p) => new THREE.Vector3(p[0], p[1], p[2])),
@@ -156,4 +169,27 @@ export class TubeFromPoints extends Mobject3D {
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
   }
+}
+
+/** Squared-distance epsilon below which two points count as coincident. */
+const DUPLICATE_EPSILON_SQ = 1e-9;
+
+/**
+ * Return a copy of `points` with each point that coincides with the one before
+ * it removed. Two points coincide when their squared distance is below
+ * {@link DUPLICATE_EPSILON_SQ}. The first point is always kept.
+ */
+export function dropConsecutiveDuplicates(points: Vector3Tuple[]): Vector3Tuple[] {
+  const result: Vector3Tuple[] = [];
+  for (const p of points) {
+    const prev = result[result.length - 1];
+    if (prev) {
+      const dx = p[0] - prev[0];
+      const dy = p[1] - prev[1];
+      const dz = p[2] - prev[2];
+      if (dx * dx + dy * dy + dz * dz < DUPLICATE_EPSILON_SQ) continue;
+    }
+    result.push([...p] as Vector3Tuple);
+  }
+  return result;
 }
