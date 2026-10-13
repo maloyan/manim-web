@@ -50,8 +50,8 @@ function wavyLine(
 
 /** A mitochondrion: a bean body with inner cristae. */
 function buildMitochondrion(color: string, scale: number): VMobject {
-  const halfW = 0.31 * scale;
-  const halfH = 0.17 * scale;
+  const halfW = 0.22 * scale;
+  const halfH = 0.13 * scale;
   const body = new Ellipse({
     width: 2 * halfW,
     height: 2 * halfH,
@@ -78,16 +78,16 @@ function buildGolgi(color: string, scale: number): VMobject {
   const group = new VGroup();
   const count = 4;
   for (let i = 0; i < count; i++) {
-    const r = (0.12 + 0.045 * i) * scale;
+    const r = (0.09 + 0.032 * i) * scale;
     const arc = new Arc({
       radius: r,
-      startAngle: Math.PI * 0.18,
-      angle: Math.PI * 0.64,
+      startAngle: Math.PI * 0.16,
+      angle: Math.PI * 0.68,
       color,
-      strokeWidth: 3,
-      center: [0, -0.03 * scale * i, 0],
+      strokeWidth: 3.5,
+      center: [0, -0.018 * scale * i, 0],
     });
-    arc.setStrokeOpacity(0.6 + 0.12 * i);
+    arc.setStrokeOpacity(0.65 + 0.1 * i);
     group.add(arc);
   }
   return group;
@@ -98,8 +98,8 @@ function buildEndoplasmicReticulum(color: string, scale: number): VMobject {
   const group = new VGroup();
   const count = 3;
   for (let i = 0; i < count; i++) {
-    const y = ((i - (count - 1) / 2) / count) * 0.34 * scale;
-    const line = wavyLine(-0.3 * scale, 0.3 * scale, y, 0.05 * scale, 2, color, 2.5);
+    const y = ((i - (count - 1) / 2) / count) * 0.26 * scale;
+    const line = wavyLine(-0.22 * scale, 0.22 * scale, y, 0.04 * scale, 2, color, 2.5);
     line.setStrokeOpacity(0.9);
     group.add(line);
   }
@@ -130,7 +130,7 @@ function buildRibosomeCluster(color: string, scale: number): VMobject {
 /** A vacuole: a large, pale, low-opacity bubble. */
 function buildVacuole(color: string, scale: number): VMobject {
   const vacuole = new Circle({
-    radius: 0.3 * scale,
+    radius: 0.2 * scale,
     color,
     fillOpacity: 0.18,
     strokeWidth: 2,
@@ -142,7 +142,7 @@ function buildVacuole(color: string, scale: number): VMobject {
 /** A lysosome: a small sac with a few enzyme dots inside. */
 function buildLysosome(color: string, scale: number): VMobject {
   const body = new Circle({
-    radius: 0.17 * scale,
+    radius: 0.15 * scale,
     color,
     fillOpacity: 0.55,
     strokeWidth: 2.5,
@@ -152,10 +152,10 @@ function buildLysosome(color: string, scale: number): VMobject {
   const group = new VGroup(body);
   const enzymeColor = outlineColor(color);
   const offsets: Vector3Tuple[] = [
-    [0.05 * scale, 0.04 * scale, 0],
-    [-0.06 * scale, 0.02 * scale, 0],
-    [0.02 * scale, -0.06 * scale, 0],
-    [-0.03 * scale, -0.04 * scale, 0],
+    [0.045 * scale, 0.035 * scale, 0],
+    [-0.05 * scale, 0.018 * scale, 0],
+    [0.018 * scale, -0.05 * scale, 0],
+    [-0.025 * scale, -0.035 * scale, 0],
   ];
   for (const offset of offsets) {
     const dot = new Dot({ radius: 0.028 * scale, color: enzymeColor, fillOpacity: 0.85 });

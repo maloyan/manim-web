@@ -104,7 +104,7 @@ export class Cell extends VGroup {
     this._width = width ?? 2 * radius;
     this._height = height ?? 1.4 * radius;
     this._organelleSpecs = organelles.map((o) => ({ ...o }));
-    this._nucleusRadius = nucleusRadius ?? 0.35 * radius;
+    this._nucleusRadius = nucleusRadius ?? 0.3 * radius;
     this._showNucleus = showNucleus;
     this._labels = labels;
     this._labelFontSize = labelFontSize;
@@ -280,10 +280,27 @@ export class Cell extends VGroup {
       return null;
     }
     const label = new Text({ text, fontSize: this._labelFontSize });
-    // Sit the label just below the organelle so it does not cover the shape.
-    const gap = 0.28 * this._radius;
-    label.moveTo([position[0], position[1] - gap, position[2]]);
+    label.moveTo(this._labelPosition(position));
     return label;
+  }
+
+  /**
+   * Where an organelle label sits. The label is pulled radially inward, onto
+   * the band between the nucleus and the organelle ring, so it never crosses
+   * the membrane and never covers the organelle. An organelle at the center
+   * (distance ~0) drops its label straight below instead.
+   */
+  protected _labelPosition(position: Vector3Tuple): Vector3Tuple {
+    const [x, y, z] = position;
+    const distance = Math.hypot(x, y);
+    if (distance < 1e-6) {
+      return [x, y - 0.3 * this._radius, z];
+    }
+    // Sit the label in the band between the nucleus and the organelle ring,
+    // close to the nucleus so it clears even the compact round organelles that
+    // reach furthest in toward the center.
+    const labelRadius = this._nucleusRadius + 0.1 * this._radius;
+    return [(x / distance) * labelRadius, (y / distance) * labelRadius, z];
   }
 
   // ========== Accessors ==========

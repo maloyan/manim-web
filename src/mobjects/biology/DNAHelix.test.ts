@@ -3,6 +3,7 @@ import { DNAHelix } from './DNAHelix';
 import { VGroup } from '../../core/VGroup';
 import { Line } from '../geometry/Line';
 import { Circle } from '../geometry/Circle';
+import { Sphere } from '../three-d/Sphere';
 import { ParametricFunction } from '../graphing/ParametricFunction';
 import { baseColor, complementOf } from './biologyColors';
 import type { Vector3Tuple } from '../../core/Mobject';
@@ -49,6 +50,31 @@ describe('DNAHelix', () => {
     for (const pair of dna.getBasePairs()) {
       // Phase pi flips the x component of the 2D schematic strand.
       expect(pair.end[0]).toBeCloseTo(-pair.start[0], 9);
+    }
+  });
+
+  it('in 2D the helix axis is Y and Z stays flat', () => {
+    const dna = new DNAHelix({ turns: 2, radius: 0.7, pitch: 1, basePairs: 8 });
+    const samples = [0, 0.5, 1, 1.5, 2].map((t) => dna.pointOnStrand(0, t));
+    for (const point of samples) {
+      expect(point[2]).toBe(0);
+    }
+    for (let i = 1; i < samples.length; i++) {
+      expect(samples[i][1]).toBeGreaterThan(samples[i - 1][1]);
+    }
+  });
+
+  it('in 3D the helix axis is Z and the strands wind in X and Y', () => {
+    const radius = 0.7;
+    const dna = new DNAHelix({ turns: 2, radius, pitch: 1, basePairs: 8, threeD: true });
+    const samples = [0, 0.5, 1, 1.5, 2].map((t) => dna.pointOnStrand(0, t));
+    // The axis rises monotonically in Z (a ThreeDScene is Z-up).
+    for (let i = 1; i < samples.length; i++) {
+      expect(samples[i][2]).toBeGreaterThan(samples[i - 1][2]);
+    }
+    // The winding stays on the radius circle in the XY plane.
+    for (const point of samples) {
+      expect(Math.hypot(point[0], point[1])).toBeCloseTo(radius, 9);
     }
   });
 
@@ -151,6 +177,13 @@ describe('DNAHelix', () => {
     const pair = dna.getBasePair(0);
     expect(pair?.startBead).toBeInstanceOf(Circle);
     expect(pair?.endBead).toBeInstanceOf(Circle);
+  });
+
+  it('in 3D the nucleotide beads are spheres', () => {
+    const dna = new DNAHelix({ basePairs: 5, threeD: true });
+    const pair = dna.getBasePair(0);
+    expect(pair?.startBead).toBeInstanceOf(Sphere);
+    expect(pair?.endBead).toBeInstanceOf(Sphere);
   });
 
   it('places each bead on its backbone strand', () => {

@@ -16,6 +16,7 @@ import type { VMobject } from '../../core/VMobject';
 import type { Text } from '../text/Text';
 import type { Line } from '../geometry/Line';
 import type { Circle } from '../geometry/Circle';
+import type { Sphere } from '../three-d/Sphere';
 import type { ParametricFunction } from '../graphing/ParametricFunction';
 
 /** A DNA base symbol. */
@@ -92,9 +93,9 @@ export interface BasePairRender {
    */
   frontness: number;
   /** The nucleotide bead on the first strand, or null when beads are off. */
-  startBead: Circle | null;
+  startBead: Circle | Sphere | null;
   /** The nucleotide bead on the second strand, or null when beads are off. */
-  endBead: Circle | null;
+  endBead: Circle | Sphere | null;
 }
 
 /** One organelle in the input of a {@link Cell}. */

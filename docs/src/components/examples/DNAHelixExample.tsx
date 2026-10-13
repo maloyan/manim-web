@@ -6,16 +6,17 @@ import ManimExample from '../ManimExample';
 async function animate(scene: any) {
   const { DNAHelix, Create } = await import('manim-web');
 
-  // threeD winds the two backbones around the vertical axis in Z, so the
-  // strands are clearly two separate helices (not a flat ladder). The rungs
-  // are colored by base with the A/T/G/C palette; the second strand is the
-  // complement of the first.
+  // threeD winds the two backbones around the vertical axis (Z in a
+  // ThreeDScene), so the strands read as two separate helices standing
+  // upright, with the base-pair rungs crossing the interior and a colored
+  // nucleotide sphere where each rung meets a strand. The rungs are colored by
+  // base with the A/T/G/C palette; the second strand is the complement.
   const dna = new DNAHelix({
     threeD: true,
     turns: 4,
-    basePairs: 22,
+    basePairs: 14,
     pitch: 1.5,
-    radius: 1.0,
+    radius: 1.1,
     sequence: ['A', 'T', 'G', 'C', 'A', 'A', 'T', 'G', 'C', 'T'],
     backboneStrokeWidth: 7,
   });
@@ -34,9 +35,11 @@ function createScene(container: HTMLElement, manim: any, dims: { width: number; 
     width: dims.width,
     height: dims.height,
     backgroundColor: '#000000',
-    phi: 82 * (Math.PI / 180), // look nearly side-on at the vertical helix
-    theta: 0,
-    distance: 11,
+    // The helix axis is Z (the ThreeDScene is Z-up), so a slightly top-down,
+    // three-quarter view stands it upright and shows the 3D winding.
+    phi: 72 * (Math.PI / 180),
+    theta: -45 * (Math.PI / 180),
+    distance: 13,
     fov: 45,
   });
 }
