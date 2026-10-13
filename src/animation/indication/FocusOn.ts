@@ -136,7 +136,7 @@ export class FocusOn extends Animation {
     ring.geometry = geometry;
     ring.computeLineDistances();
 
-    const material = ring.material as LineMaterial;
+    const material = ring.material;
     material.opacity = opacity;
     material.needsUpdate = true;
   }
@@ -178,7 +178,7 @@ export class FocusOn extends Animation {
       this._ringsGroup.traverse((child) => {
         if (child instanceof Line2) {
           child.geometry.dispose();
-          (child.material as LineMaterial).dispose();
+          child.material.dispose();
         }
       });
 

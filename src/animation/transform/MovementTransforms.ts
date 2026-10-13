@@ -23,7 +23,7 @@ export interface ClockwiseTransformOptions extends AnimationOptions {
  * ClockwiseTransform animation - transforms while rotating clockwise.
  * Points follow an arc path in the clockwise direction.
  */
-export class ClockwiseTransform extends Animation {
+export class ClockwiseTransform extends Animation<VMobject> {
   /** The target mobject to transform into */
   readonly target: VMobject;
 
@@ -52,7 +52,7 @@ export class ClockwiseTransform extends Animation {
   override begin(): void {
     super.begin();
 
-    const vmobject = this.mobject as VMobject;
+    const vmobject = this.mobject;
 
     const aligned = alignVmobjectPair(vmobject, this.target);
     this._startPoints = aligned.startPoints;
@@ -75,7 +75,7 @@ export class ClockwiseTransform extends Animation {
   }
 
   interpolate(alpha: number): void {
-    const vmobject = this.mobject as VMobject;
+    const vmobject = this.mobject;
 
     // Rotation angle at this alpha (clockwise = negative)
     const currentAngle = -this.angle * alpha;
@@ -109,7 +109,7 @@ export class ClockwiseTransform extends Animation {
   }
 
   override finish(): void {
-    const vmobject = this.mobject as VMobject;
+    const vmobject = this.mobject;
     vmobject.setPoints(this._targetPoints);
     vmobject.setTransformSubpathLengths(undefined);
     vmobject.opacity = this._targetOpacity;
@@ -145,7 +145,7 @@ export interface CounterclockwiseTransformOptions extends AnimationOptions {
  * CounterclockwiseTransform animation - transforms while rotating counterclockwise.
  * Points follow an arc path in the counterclockwise direction.
  */
-export class CounterclockwiseTransform extends Animation {
+export class CounterclockwiseTransform extends Animation<VMobject> {
   /** The target mobject to transform into */
   readonly target: VMobject;
 
@@ -174,7 +174,7 @@ export class CounterclockwiseTransform extends Animation {
   override begin(): void {
     super.begin();
 
-    const vmobject = this.mobject as VMobject;
+    const vmobject = this.mobject;
 
     const aligned = alignVmobjectPair(vmobject, this.target);
     this._startPoints = aligned.startPoints;
@@ -196,7 +196,7 @@ export class CounterclockwiseTransform extends Animation {
   }
 
   interpolate(alpha: number): void {
-    const vmobject = this.mobject as VMobject;
+    const vmobject = this.mobject;
 
     // Rotation angle at this alpha (counterclockwise = positive)
     const currentAngle = this.angle * alpha;
@@ -227,7 +227,7 @@ export class CounterclockwiseTransform extends Animation {
   }
 
   override finish(): void {
-    const vmobject = this.mobject as VMobject;
+    const vmobject = this.mobject;
     vmobject.setPoints(this._targetPoints);
     vmobject.setTransformSubpathLengths(undefined);
     vmobject.opacity = this._targetOpacity;

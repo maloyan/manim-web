@@ -29,9 +29,9 @@ export interface AnimationScene {
   remove(...mobjects: Mobject[]): void;
 }
 
-export abstract class Animation {
+export abstract class Animation<M extends Mobject = Mobject> {
   /** The mobject being animated */
-  readonly mobject: Mobject;
+  readonly mobject: M;
 
   /** Duration of the animation in seconds */
   readonly duration: number;
@@ -61,7 +61,7 @@ export abstract class Animation {
    */
   private _preAnimationState: Mobject | null = null;
 
-  constructor(mobject: Mobject, options: AnimationOptions = {}) {
+  constructor(mobject: M, options: AnimationOptions = {}) {
     // Validate options via typia to generate runtime assertions.
     typia.assert<AnimationOptions>(options);
     this.mobject = mobject;

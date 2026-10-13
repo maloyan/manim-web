@@ -112,8 +112,8 @@ export class LinearTransformationScene extends Scene {
     for (let x = xMin; x <= xMax; x += xStep) {
       const vx = this._coordToVisualX(x);
       const line = new Line({
-        start: [vx, -this._yLength / 2, 0] as Vector3Tuple,
-        end: [vx, this._yLength / 2, 0] as Vector3Tuple,
+        start: [vx, -this._yLength / 2, 0],
+        end: [vx, this._yLength / 2, 0],
         color: this._gridColor,
         strokeWidth: 1,
       });
@@ -125,8 +125,8 @@ export class LinearTransformationScene extends Scene {
     for (let y = yMin; y <= yMax; y += yStep) {
       const vy = this._coordToVisualY(y);
       const line = new Line({
-        start: [-this._xLength / 2, vy, 0] as Vector3Tuple,
-        end: [this._xLength / 2, vy, 0] as Vector3Tuple,
+        start: [-this._xLength / 2, vy, 0],
+        end: [this._xLength / 2, vy, 0],
         color: this._gridColor,
         strokeWidth: 1,
       });

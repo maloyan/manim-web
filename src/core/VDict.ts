@@ -210,7 +210,7 @@ export class VDict extends VGroup {
 
     // Deep copy children with their names
     for (const [name, vmobject] of this._dict.entries()) {
-      const vmobjectCopy = vmobject.copy() as VMobject;
+      const vmobjectCopy = vmobject.copy();
       clone.set(name, vmobjectCopy);
     }
 

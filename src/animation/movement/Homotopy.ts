@@ -270,7 +270,7 @@ export class ComplexHomotopy extends Animation {
  * This is better suited for VMobject transformations as it properly
  * handles control points to preserve curve continuity.
  */
-export class SmoothedVectorizedHomotopy extends Animation {
+export class SmoothedVectorizedHomotopy extends Animation<VMobject> {
   /** The homotopy function */
   readonly homotopyFunc: HomotopyFunction;
 
@@ -298,7 +298,7 @@ export class SmoothedVectorizedHomotopy extends Animation {
   override begin(): void {
     super.begin();
 
-    const vmobject = this.mobject as VMobject;
+    const vmobject = this.mobject;
     this._frame = captureWorldFrame(vmobject);
     // Store originals already lifted to world space; the smoothing math below
     // (anchor transforms blended with point offsets) is only coherent when
@@ -329,7 +329,7 @@ export class SmoothedVectorizedHomotopy extends Animation {
       return;
     }
 
-    const vmobject = this.mobject as VMobject;
+    const vmobject = this.mobject;
     const numPoints = this._originalPoints.length;
     const newPoints: number[][] = new Array(numPoints);
 

@@ -11,9 +11,7 @@ import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Animation, AnimationOptions } from '../Animation';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import type { TextGlyphGroup } from '../../mobjects/text/TextGlyphGroup';
-import type { GlyphVMobject } from '../../mobjects/text/GlyphVMobject';
 
 /**
  * Interface for mobjects that support glyph-stroke animation (e.g. Text).
@@ -43,6 +41,36 @@ interface TextAccessMobject {
  */
 interface SkeletonPathMobject {
   getSkeletonPath(): number[][] | null;
+}
+
+/** True when `m` exposes a `getGlyphGroup()` method (glyph-stroke capable). */
+function hasGlyphGroup(m: Mobject): m is Mobject & GlyphStrokeMobject {
+  return 'getGlyphGroup' in m && typeof m.getGlyphGroup === 'function';
+}
+
+/** True when `m` exposes a `getTextureMesh()` method. */
+function hasTextureMesh(m: Mobject): m is Mobject & GlyphStrokeMobject {
+  return 'getTextureMesh' in m && typeof m.getTextureMesh === 'function';
+}
+
+/** True when `m` exposes a `setRevealProgress()` method (left-to-right reveal). */
+function hasRevealProgress(m: Mobject): m is Mobject & RevealProgressMobject {
+  return 'setRevealProgress' in m && typeof m.setRevealProgress === 'function';
+}
+
+/** True when `m` exposes a `getSkeletonPath()` method. */
+function hasSkeletonPath(m: Mobject): m is Mobject & SkeletonPathMobject {
+  return 'getSkeletonPath' in m && typeof m.getSkeletonPath === 'function';
+}
+
+/** True when `m` exposes a `getText()` accessor. */
+function hasGetText(m: Mobject): m is Mobject & TextAccessMobject {
+  return 'getText' in m && typeof m.getText === 'function';
+}
+
+/** True when `m` exposes a `setText()` mutator. */
+function hasSetText(m: Mobject): m is Mobject & TextAccessMobject {
+  return 'setText' in m && typeof m.setText === 'function';
 }
 
 /**
@@ -85,7 +113,7 @@ export function setLine2RevealLength(line: Line2, visibleLength: number, totalLe
     return;
   }
   line.visible = true;
-  const material = line.material as LineMaterial;
+  const material = line.material;
   material.dashSize = visibleLength;
   material.gapSize = Math.max(0.0001, totalLen - visibleLength + 0.0001);
   material.needsUpdate = true;
@@ -174,7 +202,7 @@ export class Create extends Animation {
         const lines = member.getOwnStrokeLines();
         const lengths: number[] = [];
         for (const line of lines) {
-          const material = line.material as LineMaterial;
+          const material = line.material;
           material.dashed = true;
           material.dashScale = 1;
 
@@ -269,7 +297,7 @@ export class Create extends Animation {
             for (let j = 0; j < this._memberLines[i].length; j++) {
               const totalLen = this._memberLineLengths[i][j];
               const line = this._memberLines[i][j];
-              const material = line.material as LineMaterial;
+              const material = line.material;
               if (material.dashed) {
                 setLine2RevealLength(line, totalLen, totalLen);
               }
@@ -302,7 +330,7 @@ export class Create extends Animation {
       for (const lines of this._memberLines) {
         for (const line of lines) {
           line.visible = true;
-          const material = line.material as LineMaterial;
+          const material = line.material;
           material.dashed = false;
           material.needsUpdate = true;
         }
@@ -354,7 +382,7 @@ export class DrawBorderThenFill extends Animation {
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
-          const material = child.material as LineMaterial;
+          const material = child.material;
           material.dashed = true;
           material.dashScale = 1;
           child.computeLineDistances();
@@ -389,7 +417,7 @@ export class DrawBorderThenFill extends Animation {
         threeObj.traverse((child) => {
           if (child instanceof Line2) {
             child.visible = true;
-            const material = child.material as LineMaterial;
+            const material = child.material;
             if (material.dashed) {
               material.dashed = false;
               material.needsUpdate = true;
@@ -410,7 +438,7 @@ export class DrawBorderThenFill extends Animation {
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
           child.visible = true;
-          const material = child.material as LineMaterial;
+          const material = child.material;
           material.dashed = false;
           material.needsUpdate = true;
         }
@@ -453,7 +481,7 @@ export class Uncreate extends Animation {
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
-          const material = child.material as LineMaterial;
+          const material = child.material;
           material.dashed = true;
           material.dashScale = 1;
 
@@ -546,6 +574,9 @@ export class Write extends Animation {
   private _useDashReveal: boolean = false;
   private _useRevealProgress: boolean = false;
 
+  // Narrowed reference to the mobject, cached when reveal-progress mode is active.
+  private _revealMobject: RevealProgressMobject | null = null;
+
   // Dash reveal state
   private _totalLength: number = 0;
 
@@ -574,11 +605,8 @@ export class Write extends Animation {
     this._originalOpacity = this.mobject.opacity;
 
     // Priority 1: Check for glyph stroke mode
-    if (
-      'getGlyphGroup' in this.mobject &&
-      typeof (this.mobject as unknown as GlyphStrokeMobject).getGlyphGroup === 'function'
-    ) {
-      const glyphGroup = (this.mobject as unknown as GlyphStrokeMobject).getGlyphGroup();
+    if (hasGlyphGroup(this.mobject)) {
+      const glyphGroup = this.mobject.getGlyphGroup();
       if (glyphGroup && glyphGroup.length > 0) {
         this._useGlyphStroke = true;
         this._glyphGroup = glyphGroup;
@@ -588,12 +616,10 @@ export class Write extends Animation {
     }
 
     // Priority 2: Left-to-right reveal for mobjects with setRevealProgress (MathTex)
-    if (
-      'setRevealProgress' in this.mobject &&
-      typeof (this.mobject as unknown as RevealProgressMobject).setRevealProgress === 'function'
-    ) {
+    if (hasRevealProgress(this.mobject)) {
       this._useRevealProgress = true;
-      (this.mobject as unknown as RevealProgressMobject).setRevealProgress(this._reverse ? 1 : 0);
+      this._revealMobject = this.mobject;
+      this.mobject.setRevealProgress(this._reverse ? 1 : 0);
       return;
     }
 
@@ -604,7 +630,7 @@ export class Write extends Animation {
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
-          const material = child.material as LineMaterial;
+          const material = child.material;
           material.dashed = true;
           material.dashScale = 1;
 
@@ -631,11 +657,8 @@ export class Write extends Animation {
     const glyphGroup = this._glyphGroup!;
 
     // Hide the Text's texture mesh
-    if (
-      'getTextureMesh' in this.mobject &&
-      typeof (this.mobject as unknown as GlyphStrokeMobject).getTextureMesh === 'function'
-    ) {
-      this._textMesh = (this.mobject as unknown as GlyphStrokeMobject).getTextureMesh();
+    if (hasTextureMesh(this.mobject)) {
+      this._textMesh = this.mobject.getTextureMesh();
     }
     if (this._textMesh) {
       this._textMesh.visible = false;
@@ -668,13 +691,9 @@ export class Write extends Animation {
       const childThreeObj = child.getThreeObject();
 
       // Check if this glyph has a skeleton path
-      const glyphChild = child as unknown as GlyphVMobject;
       let skeletonPath: number[][] | null = null;
-      if (
-        'getSkeletonPath' in glyphChild &&
-        typeof (glyphChild as unknown as SkeletonPathMobject).getSkeletonPath === 'function'
-      ) {
-        skeletonPath = (glyphChild as unknown as SkeletonPathMobject).getSkeletonPath();
+      if (hasSkeletonPath(child)) {
+        skeletonPath = child.getSkeletonPath();
       }
 
       if (skeletonPath && skeletonPath.length >= 4) {
@@ -697,7 +716,7 @@ export class Write extends Animation {
         let skelTotalLen = 1;
         skelThreeObj.traverse((obj) => {
           if (obj instanceof Line2) {
-            const material = obj.material as LineMaterial;
+            const material = obj.material;
             material.dashed = true;
             material.dashScale = 1;
 
@@ -719,7 +738,7 @@ export class Write extends Animation {
         let totalLen = 1;
         childThreeObj.traverse((obj) => {
           if (obj instanceof Line2) {
-            const material = obj.material as LineMaterial;
+            const material = obj.material;
             material.dashed = true;
             material.dashScale = 1;
 
@@ -742,7 +761,7 @@ export class Write extends Animation {
     if (this._useGlyphStroke) {
       this._interpolateGlyphStroke(effectiveAlpha);
     } else if (this._useRevealProgress) {
-      (this.mobject as unknown as RevealProgressMobject).setRevealProgress(effectiveAlpha);
+      this._revealMobject?.setRevealProgress(effectiveAlpha);
     } else if (this._useDashReveal) {
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
@@ -832,7 +851,7 @@ export class Write extends Animation {
           skelThreeObj.traverse((obj) => {
             if (obj instanceof Line2) {
               setLine2RevealLength(obj, totalLen, totalLen);
-              const material = obj.material as LineMaterial;
+              const material = obj.material;
               material.opacity = 1 - fadeAlpha;
               material.needsUpdate = true;
             }
@@ -846,7 +865,7 @@ export class Write extends Animation {
           childThreeObj.traverse((obj) => {
             if (obj instanceof Line2) {
               setLine2RevealLength(obj, totalLen, totalLen);
-              const material = obj.material as LineMaterial;
+              const material = obj.material;
               material.opacity = 1 - fadeAlpha;
               material.needsUpdate = true;
             }
@@ -874,9 +893,9 @@ export class Write extends Animation {
 
     if (this._useRevealProgress) {
       if (this._remover) {
-        (this.mobject as unknown as RevealProgressMobject).setRevealProgress(0);
+        this._revealMobject?.setRevealProgress(0);
       } else {
-        (this.mobject as unknown as RevealProgressMobject).setRevealProgress(1);
+        this._revealMobject?.setRevealProgress(1);
       }
       super.finish();
       return;
@@ -898,7 +917,7 @@ export class Write extends Animation {
         threeObj.traverse((child) => {
           if (child instanceof Line2) {
             child.visible = true;
-            const material = child.material as LineMaterial;
+            const material = child.material;
             material.dashed = false;
             material.needsUpdate = true;
           }
@@ -963,7 +982,7 @@ export class Write extends Animation {
       child.getThreeObject().traverse((obj) => {
         if (obj instanceof Line2) {
           obj.visible = true;
-          const material = obj.material as LineMaterial;
+          const material = obj.material;
           material.dashed = false;
           material.needsUpdate = true;
         }
@@ -1042,51 +1061,33 @@ export class AddTextLetterByLetter extends Animation {
 
   override begin(): void {
     super.begin();
-    if (
-      'getText' in this.mobject &&
-      typeof (this.mobject as unknown as TextAccessMobject).getText === 'function'
-    ) {
-      this._fullText = (this.mobject as unknown as TextAccessMobject).getText();
-      if (
-        !this.reverse &&
-        'setText' in this.mobject &&
-        typeof (this.mobject as unknown as TextAccessMobject).setText === 'function'
-      ) {
-        (this.mobject as unknown as TextAccessMobject).setText('');
+    if (hasGetText(this.mobject)) {
+      this._fullText = this.mobject.getText();
+      if (!this.reverse && hasSetText(this.mobject)) {
+        this.mobject.setText('');
       }
     }
   }
 
   interpolate(alpha: number): void {
-    if (
-      'setText' in this.mobject &&
-      typeof (this.mobject as unknown as TextAccessMobject).setText === 'function' &&
-      this._fullText
-    ) {
+    if (hasSetText(this.mobject) && this._fullText) {
       if (this.reverse) {
         const numCharsToRemove = Math.floor(alpha * this._fullText.length);
         const remainingChars = this._fullText.length - numCharsToRemove;
-        (this.mobject as unknown as TextAccessMobject).setText(
-          this._fullText.substring(0, remainingChars),
-        );
+        this.mobject.setText(this._fullText.substring(0, remainingChars));
       } else {
         const numChars = Math.floor(alpha * this._fullText.length);
-        (this.mobject as unknown as TextAccessMobject).setText(
-          this._fullText.substring(0, numChars),
-        );
+        this.mobject.setText(this._fullText.substring(0, numChars));
       }
     }
   }
 
   override finish(): void {
-    if (
-      'setText' in this.mobject &&
-      typeof (this.mobject as unknown as TextAccessMobject).setText === 'function'
-    ) {
+    if (hasSetText(this.mobject)) {
       if (this.reverse) {
-        (this.mobject as unknown as TextAccessMobject).setText('');
+        this.mobject.setText('');
       } else if (this._fullText) {
-        (this.mobject as unknown as TextAccessMobject).setText(this._fullText);
+        this.mobject.setText(this._fullText);
       }
     }
     super.finish();

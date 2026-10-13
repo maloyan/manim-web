@@ -802,8 +802,8 @@ export class Cutout extends VMobject {
    */
   override copy(): Cutout {
     const clone = new Cutout({
-      outerShape: this._outerShape.copy() as VMobject,
-      innerShape: this._innerShape.copy() as VMobject,
+      outerShape: this._outerShape.copy(),
+      innerShape: this._innerShape.copy(),
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
@@ -857,7 +857,7 @@ export class ConvexHull extends VMobject {
       throw new Error('ConvexHull requires at least 3 points');
     }
 
-    this._inputPoints = points.map((p) => [...p] as Vector3Tuple);
+    this._inputPoints = points.map((p) => [...p]);
     this._hullVertices = [];
 
     this.color = color;
@@ -972,14 +972,14 @@ export class ConvexHull extends VMobject {
    * Get the hull vertices
    */
   getHullVertices(): Vector3Tuple[] {
-    return this._hullVertices.map((v) => [...v] as Vector3Tuple);
+    return this._hullVertices.map((v) => [...v]);
   }
 
   /**
    * Get the original input points
    */
   getInputPoints(): Vector3Tuple[] {
-    return this._inputPoints.map((p) => [...p] as Vector3Tuple);
+    return this._inputPoints.map((p) => [...p]);
   }
 
   /**

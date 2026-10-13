@@ -234,7 +234,7 @@ export class CameraFrame {
       gamma: this._gamma,
       distance: this._distance,
       fov: this._fov,
-      center: [this._center.x, this._center.y, this._center.z] as Vector3Tuple,
+      center: [this._center.x, this._center.y, this._center.z],
     };
   }
 

@@ -254,7 +254,7 @@ export class RadarChart extends VGroup {
       }
       // Polygon needs at least 2 vertices; duplicate a lone point.
       if (vertices.length === 1) {
-        vertices.push([...vertices[0]] as Vector3Tuple);
+        vertices.push([...vertices[0]]);
       }
       const polygon = new Polygon({
         vertices,

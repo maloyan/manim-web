@@ -4,7 +4,6 @@ import { Mobject } from './Mobject';
 import { Rectangle } from '../mobjects/geometry/Rectangle';
 import { Animation, AnimationOptions } from '../animation/Animation';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 
 /**
  * Options for configuring a ZoomedScene.
@@ -448,7 +447,7 @@ export class ZoomedScene extends Scene {
     for (const mob of [this.zoomedCamera.frame, this.zoomedDisplay.displayFrame]) {
       mob.getThreeObject().traverse((child) => {
         if (child instanceof Line2) {
-          const material = child.material as LineMaterial;
+          const material = child.material;
           material.dashed = false;
           material.needsUpdate = true;
         }

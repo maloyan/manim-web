@@ -144,7 +144,7 @@ export class PointMorphStrategy implements MorphStrategy {
   private _beginVGroup(source: VMobject, target: VMobject): void {
     this._isVGroupTransform = true;
     source.normalizeTransform();
-    const normalizedTarget = target.copy() as VMobject;
+    const normalizedTarget = target.copy();
     normalizedTarget.normalizeTransform();
     for (const pair of pairLeafSnapshotsByIndex(source, normalizedTarget))
       this._vgroupLeafStates.push(this._build(source, pair));
@@ -170,7 +170,7 @@ export class PointMorphStrategy implements MorphStrategy {
     if (sourceIsPlaceholder) {
       // Blank filler (only when the source family had zero leaves at all):
       // start as an invisible copy of the target, fading in in place.
-      child = tc.copy() as VMobject;
+      child = tc.copy();
       child.opacity = 0;
       child.fillOpacity = 0;
       group.add(child);

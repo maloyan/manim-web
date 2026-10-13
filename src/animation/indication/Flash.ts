@@ -115,7 +115,7 @@ export class Flash extends Animation {
     this._flashGroup.children.forEach((child, i) => {
       if (child instanceof Line2) {
         const angle = (i / this.numLines) * Math.PI * 2;
-        const material = child.material as LineMaterial;
+        const material = child.material;
 
         // Update opacity
         material.opacity = opacity;
@@ -148,7 +148,7 @@ export class Flash extends Animation {
       this._flashGroup.traverse((child) => {
         if (child instanceof Line2) {
           child.geometry.dispose();
-          (child.material as LineMaterial).dispose();
+          child.material.dispose();
         }
       });
 

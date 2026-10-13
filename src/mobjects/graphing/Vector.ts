@@ -65,7 +65,7 @@ export class VectorFieldVector extends Arrow {
     const dirLength = lengthVec(direction);
 
     // Apply max length constraint
-    let scaledDirection = [...direction] as Vector3Tuple;
+    let scaledDirection = [...direction];
     if (dirLength > maxLength && maxLength > 0) {
       const scaleFactor = maxLength / dirLength;
       scaledDirection = [
@@ -114,7 +114,7 @@ export class VectorFieldVector extends Arrow {
     const dirLength = lengthVec(direction);
 
     // Apply max length constraint
-    let scaledDirection = [...direction] as Vector3Tuple;
+    let scaledDirection = [...direction];
     if (dirLength > this._maxLength && this._maxLength > 0) {
       const scaleFactor = this._maxLength / dirLength;
       scaledDirection = [

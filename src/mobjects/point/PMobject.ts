@@ -169,7 +169,7 @@ export class PMobject extends Mobject {
     return this._points.map((p) => {
       scratch.set(p.position[0], p.position[1], p.position[2]).applyMatrix4(worldMatrix);
       return {
-        position: [scratch.x, scratch.y, scratch.z] as Vector3Tuple,
+        position: [scratch.x, scratch.y, scratch.z],
         color: p.color,
         opacity: p.opacity,
       };
@@ -211,7 +211,7 @@ export class PMobject extends Mobject {
    */
   getLocalPoints(): PointData[] {
     return this._points.map((p) => ({
-      position: [...p.position] as Vector3Tuple,
+      position: [...p.position],
       color: p.color,
       opacity: p.opacity,
     }));

@@ -54,12 +54,7 @@ export class CubicBezier extends VMobject {
     const { points, color = BLUE, strokeWidth = DEFAULT_STROKE_WIDTH } = options;
 
     // Deep copy the control points
-    this._controlPoints = [
-      [...points[0]] as Vector3Tuple,
-      [...points[1]] as Vector3Tuple,
-      [...points[2]] as Vector3Tuple,
-      [...points[3]] as Vector3Tuple,
-    ];
+    this._controlPoints = [[...points[0]], [...points[1]], [...points[2]], [...points[3]]];
 
     this.color = color;
     this.fillOpacity = 0;
@@ -85,10 +80,10 @@ export class CubicBezier extends VMobject {
    */
   getControlPoints(): CubicBezierPoints {
     return [
-      [...this._controlPoints[0]] as Vector3Tuple,
-      [...this._controlPoints[1]] as Vector3Tuple,
-      [...this._controlPoints[2]] as Vector3Tuple,
-      [...this._controlPoints[3]] as Vector3Tuple,
+      [...this._controlPoints[0]],
+      [...this._controlPoints[1]],
+      [...this._controlPoints[2]],
+      [...this._controlPoints[3]],
     ];
   }
 
@@ -96,12 +91,7 @@ export class CubicBezier extends VMobject {
    * Set the control points
    */
   setControlPoints(points: CubicBezierPoints): this {
-    this._controlPoints = [
-      [...points[0]] as Vector3Tuple,
-      [...points[1]] as Vector3Tuple,
-      [...points[2]] as Vector3Tuple,
-      [...points[3]] as Vector3Tuple,
-    ];
+    this._controlPoints = [[...points[0]], [...points[1]], [...points[2]], [...points[3]]];
     this._generatePoints();
     return this;
   }
@@ -110,14 +100,14 @@ export class CubicBezier extends VMobject {
    * Get a specific control point by index (0-3)
    */
   getControlPoint(index: 0 | 1 | 2 | 3): Vector3Tuple {
-    return [...this._controlPoints[index]] as Vector3Tuple;
+    return [...this._controlPoints[index]];
   }
 
   /**
    * Set a specific control point by index (0-3)
    */
   setControlPoint(index: 0 | 1 | 2 | 3, point: Vector3Tuple): this {
-    this._controlPoints[index] = [...point] as Vector3Tuple;
+    this._controlPoints[index] = [...point];
     this._generatePoints();
     return this;
   }
@@ -237,14 +227,14 @@ export class CubicBezier extends VMobject {
    * Get the start point (p0)
    */
   getStart(): Vector3Tuple {
-    return [...this._controlPoints[0]] as Vector3Tuple;
+    return [...this._controlPoints[0]];
   }
 
   /**
    * Get the end point (p3)
    */
   getEnd(): Vector3Tuple {
-    return [...this._controlPoints[3]] as Vector3Tuple;
+    return [...this._controlPoints[3]];
   }
 
   /**

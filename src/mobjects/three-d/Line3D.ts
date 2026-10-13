@@ -89,7 +89,7 @@ export class Line3D extends Mobject3D {
 
   protected override _syncMaterialToThree(): void {
     if (this._threeObject instanceof Line2) {
-      const material = this._threeObject.material as LineMaterial;
+      const material = this._threeObject.material;
       if (material) {
         material.color.set(this.color);
         material.opacity = this._opacity;
@@ -130,7 +130,7 @@ export class Line3D extends Mobject3D {
     this._resolutionWidth = rendererWidth;
     this._resolutionHeight = rendererHeight;
     if (this._threeObject instanceof Line2) {
-      const material = this._threeObject.material as LineMaterial;
+      const material = this._threeObject.material;
       material?.resolution.set(rendererWidth, rendererHeight);
     }
   }

@@ -898,7 +898,7 @@ export class SVGMobject extends VGroup {
    * Get all subpaths as individual VMobjects.
    */
   getSubpaths(): VMobject[] {
-    return this.children.filter((c) => c instanceof VMobject) as VMobject[];
+    return this.children.filter((c): c is VMobject => c instanceof VMobject);
   }
 
   override copy(): SVGMobject {

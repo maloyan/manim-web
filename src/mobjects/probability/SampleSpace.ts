@@ -541,7 +541,7 @@ export class SampleSpace extends VGroup {
    */
   addBracesAndLabels(labels: string[], options: BraceAnnotationOptions = {}): this {
     const {
-      direction = [0, -1, 0] as Vector3Tuple,
+      direction = [0, -1, 0],
       fontSize = this._fontSize,
       braceColor = WHITE,
       labelColor = WHITE,

@@ -60,7 +60,7 @@ export class Polygon extends VMobject {
       throw new Error('Polygon requires at least 2 vertices');
     }
 
-    this._vertices = vertices.map((v) => [...v] as Vector3Tuple);
+    this._vertices = vertices.map((v) => [...v]);
     this._closed = closed;
 
     this.color = color;
@@ -109,7 +109,7 @@ export class Polygon extends VMobject {
    * Get the vertices of the polygon
    */
   getVertices(): Vector3Tuple[] {
-    return this._vertices.map((v) => [...v] as Vector3Tuple);
+    return this._vertices.map((v) => [...v]);
   }
 
   /**
@@ -119,7 +119,7 @@ export class Polygon extends VMobject {
     if (vertices.length < 2) {
       throw new Error('Polygon requires at least 2 vertices');
     }
-    this._vertices = vertices.map((v) => [...v] as Vector3Tuple);
+    this._vertices = vertices.map((v) => [...v]);
     this._generatePoints();
     return this;
   }

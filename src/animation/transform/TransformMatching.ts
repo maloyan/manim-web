@@ -44,7 +44,7 @@ export interface TransformMatchingShapesOptions extends AnimationOptions {
  *
  * Matched shapes transform smoothly, while unmatched shapes fade in/out.
  */
-export class TransformMatchingShapes extends Animation {
+export class TransformMatchingShapes extends Animation<VMobject> {
   /** The target mobject to transform into */
   readonly target: VMobject;
 
@@ -78,7 +78,7 @@ export class TransformMatchingShapes extends Animation {
    * Get submobjects from a VMobject (or treat as single if no children)
    */
   private _getSubmobjects(vmobject: VMobject): VMobject[] {
-    const children = vmobject.children.filter((c) => c instanceof VMobject) as VMobject[];
+    const children = vmobject.children.filter((c): c is VMobject => c instanceof VMobject);
     if (children.length > 0) {
       return children;
     }
@@ -90,7 +90,7 @@ export class TransformMatchingShapes extends Animation {
    * Match submobjects between source and target using optimal assignment.
    */
   private _matchSubmobjects(): void {
-    const sourceSubmobs = this._getSubmobjects(this.mobject as VMobject);
+    const sourceSubmobs = this._getSubmobjects(this.mobject);
     const targetSubmobs = this._getSubmobjects(this.target);
 
     const usedSourceIndices = new Set<number>();
@@ -165,7 +165,7 @@ export class TransformMatchingShapes extends Animation {
       if (!usedTargetIndices.has(i)) {
         const vmob = targetSubmobs[i];
         // Add to scene as copy, starting invisible
-        const copy = vmob.copy() as VMobject;
+        const copy = vmob.copy();
         copy.opacity = 0;
 
         // Add to parent of source mobject
@@ -188,8 +188,8 @@ export class TransformMatchingShapes extends Animation {
    * Add a matched pair
    */
   private _addMatchedPart(source: VMobject, target: VMobject): void {
-    const srcCopy = source.copy() as VMobject;
-    const tgtCopy = target.copy() as VMobject;
+    const srcCopy = source.copy();
+    const tgtCopy = target.copy();
     srcCopy.alignPoints(tgtCopy);
 
     this._matchedParts.push({
@@ -290,11 +290,15 @@ export interface TransformMatchingTexOptions extends AnimationOptions {
  * Extract a key for TeX matching.
  * Tries to use the LaTeX string if available, otherwise uses a hash of the shape.
  */
+/** True when `m` exposes a `getLatex()` method (e.g. MathTex or Tex). */
+function hasGetLatex(m: object): m is { getLatex(): string } {
+  return 'getLatex' in m && typeof m.getLatex === 'function';
+}
+
 function defaultTexKey(vmobject: VMobject): string {
   // Check if it's a MathTex or Tex with getLatex method
-  const maybeTexObj = vmobject as unknown as { getLatex?: () => string };
-  if (typeof maybeTexObj.getLatex === 'function') {
-    return maybeTexObj.getLatex();
+  if (hasGetLatex(vmobject)) {
+    return vmobject.getLatex();
   }
 
   // For VGroup children, try to identify by position and size
@@ -321,7 +325,7 @@ function defaultTexKey(vmobject: VMobject): string {
  * const anim = transformMatchingTex(formula1, formula2);
  * ```
  */
-export class TransformMatchingTex extends Animation {
+export class TransformMatchingTex extends Animation<VMobject> {
   /** The target mobject to transform into */
   readonly target: VMobject;
 
@@ -359,7 +363,7 @@ export class TransformMatchingTex extends Animation {
    */
   private _getTexParts(vmobject: VMobject): VMobject[] {
     // If the mobject has children (like a VGroup of TeX parts), use those
-    const children = vmobject.children.filter((c) => c instanceof VMobject) as VMobject[];
+    const children = vmobject.children.filter((c): c is VMobject => c instanceof VMobject);
     if (children.length > 0) {
       // Recursively flatten nested groups
       const result: VMobject[] = [];
@@ -385,7 +389,7 @@ export class TransformMatchingTex extends Animation {
    *   cost to optimally pair remaining unmatched source and target parts.
    */
   private _matchTexParts(): void {
-    const sourceParts = this._getTexParts(this.mobject as VMobject);
+    const sourceParts = this._getTexParts(this.mobject);
     const targetParts = this._getTexParts(this.target);
 
     const usedSourceIndices = new Set<number>();
@@ -509,8 +513,8 @@ export class TransformMatchingTex extends Animation {
    * Add a matched pair
    */
   private _addMatchedPart(source: VMobject, target: VMobject): void {
-    const srcCopy = source.copy() as VMobject;
-    const tgtCopy = target.copy() as VMobject;
+    const srcCopy = source.copy();
+    const tgtCopy = target.copy();
     const srcLengths = source.getEffectiveSubpathLengths?.();
     const tgtLengths = target.getEffectiveSubpathLengths?.();
     const alignedCompound = alignCompoundPathsForTransform(
@@ -557,8 +561,8 @@ export class TransformMatchingTex extends Animation {
    * Add a mismatched pair for transformation
    */
   private _addMismatchedPair(source: VMobject, target: VMobject): void {
-    const srcCopy = source.copy() as VMobject;
-    const tgtCopy = target.copy() as VMobject;
+    const srcCopy = source.copy();
+    const tgtCopy = target.copy();
     const srcLengths = source.getEffectiveSubpathLengths?.();
     const tgtLengths = target.getEffectiveSubpathLengths?.();
     const alignedCompound = alignCompoundPathsForTransform(
@@ -605,7 +609,7 @@ export class TransformMatchingTex extends Animation {
    * Add a fade-in part
    */
   private _addFadeInPart(vmob: VMobject): void {
-    const copy = vmob.copy() as VMobject;
+    const copy = vmob.copy();
     copy.opacity = 0;
 
     const parent = this.mobject.parent;

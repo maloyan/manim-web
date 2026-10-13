@@ -7,7 +7,6 @@ import { Mobject } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
-import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 
 /** Interface for mobjects that support getText/setText */
 interface TextLikeMobject {
@@ -182,7 +181,7 @@ export class ShowPartial extends Animation {
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
-          const material = child.material as LineMaterial;
+          const material = child.material;
           material.dashed = true;
           material.dashScale = 1;
 
@@ -213,7 +212,7 @@ export class ShowPartial extends Animation {
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
-          const material = child.material as LineMaterial;
+          const material = child.material;
           const visibleLength = currentPortion * this._totalLength;
           material.dashSize = visibleLength;
           material.gapSize = this._totalLength - visibleLength + 0.0001;
@@ -231,7 +230,7 @@ export class ShowPartial extends Animation {
       const threeObj = this.mobject.getThreeObject();
       threeObj.traverse((child) => {
         if (child instanceof Line2) {
-          const material = child.material as LineMaterial;
+          const material = child.material;
           material.dashed = false;
           material.needsUpdate = true;
         }

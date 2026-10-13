@@ -299,7 +299,7 @@ export class DashedVMobject extends Group {
    */
   override copy(): DashedVMobject {
     const clone = new DashedVMobject({
-      vmobject: this._sourceVMobject.copy() as VMobject,
+      vmobject: this._sourceVMobject.copy(),
       numDashes: this._numDashes,
       dashRatio: this._dashRatio,
       color: this._dashColor,
