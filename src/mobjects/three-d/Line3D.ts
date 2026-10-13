@@ -103,7 +103,7 @@ export class Line3D extends Mobject3D {
 
   protected _updateGeometry(): void {
     if (this._threeObject instanceof Line2) {
-      const geometry = this._threeObject.geometry as LineGeometry;
+      const geometry = this._threeObject.geometry;
       geometry.setPositions(this._buildPositions());
       this._threeObject.computeLineDistances();
     }

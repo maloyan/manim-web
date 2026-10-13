@@ -67,7 +67,7 @@ export function setMtlLoaderFactory(factory: MtlLoaderFactory | null): void {
 /** Dynamically load the Three.js MTLLoader. The specifier is a literal. */
 async function defaultMtlLoaderFactory(): Promise<MtlLoader> {
   const { MTLLoader } = await import('three/examples/jsm/loaders/MTLLoader.js');
-  return new MTLLoader() as unknown as MtlLoader;
+  return new MTLLoader();
 }
 
 /** Resolve the MTLLoader, honoring the injected loader / factory. */

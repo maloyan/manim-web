@@ -444,7 +444,7 @@ export class PMobject extends Mobject {
         transparent: true,
       });
     } else {
-      const mat = this._material as THREE.ShaderMaterial;
+      const mat = this._material;
       mat.uniforms['uSize'].value = this._pointSize;
       mat.uniforms['uOpacity'].value = this._opacity;
       mat.uniforms['uRound'].value = this._roundPoints;

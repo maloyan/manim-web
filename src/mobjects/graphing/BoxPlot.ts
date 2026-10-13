@@ -6,6 +6,7 @@ import { Line } from '../geometry/Line';
 import { Dot } from '../geometry/Dot';
 import { Axes } from './Axes';
 import { boxSummary, extent, niceAxisRange, type BoxSummary } from './stats';
+import { isFlatSeries } from './seriesData';
 import {
   BLUE,
   GREEN,
@@ -307,6 +308,6 @@ export class BoxPlot extends Group {
 /** Normalize a one-group or many-group data argument to number[][]. */
 export function normalizeGroups(data: number[] | number[][]): number[][] {
   if (data.length === 0) return [[]];
-  if (typeof data[0] === 'number') return [data as number[]];
-  return data as number[][];
+  if (isFlatSeries(data)) return [data];
+  return data;
 }

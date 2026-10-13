@@ -62,6 +62,7 @@ export function benzene(options: MoleculeBuilderOptions = {}): MoleculeMobject {
   const bonds = Array.from({ length: 6 }, (_unused, i) => ({
     from: i,
     to: (i + 1) % 6,
+    // cast: pin the literal type so Array.from infers the bond-order union, not number.
     order: (i % 2 === 0 ? 2 : 1) as 1 | 2,
   }));
   return new MoleculeMobject({ atoms, bonds, ...options });

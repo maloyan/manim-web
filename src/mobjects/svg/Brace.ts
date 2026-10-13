@@ -1137,7 +1137,7 @@ export class BraceText extends BraceLabel {
   }
 
   override copy(): BraceText {
-    const labelText = this._label instanceof Text ? (this._label as Text).getText() : '';
+    const labelText = this._label instanceof Text ? this._label.getText() : '';
     const copy = new BraceText(this._brace.mobject!, labelText, {
       direction: this._brace.braceDirection,
       buff: this._brace.buff,

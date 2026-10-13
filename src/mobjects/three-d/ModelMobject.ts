@@ -131,10 +131,10 @@ export function detectModelFormat(url: string): ModelFormat {
 async function defaultLoaderFactory(format: ModelFormat): Promise<ModelLoader> {
   if (format === 'gltf') {
     const { GLTFLoader } = await import('three/examples/jsm/loaders/GLTFLoader.js');
-    return new GLTFLoader() as unknown as ModelLoader;
+    return new GLTFLoader();
   }
   const { OBJLoader } = await import('three/examples/jsm/loaders/OBJLoader.js');
-  return new OBJLoader() as unknown as ModelLoader;
+  return new OBJLoader();
 }
 
 /** Resolve the loader for a format, honoring the injected loader / factory. */

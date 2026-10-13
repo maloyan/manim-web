@@ -102,6 +102,8 @@ export function setLottiePlayerFactory(factory: LottiePlayerFactory | null): voi
 async function defaultPlayerFactory(): Promise<LottiePlayer> {
   const mod = await import('lottie-web');
   const candidate = (mod as { default?: unknown }).default ?? mod;
+  // cast: lottie-web ships no usable types for the default export; the runtime
+  // object satisfies the LottiePlayer shape this module relies on.
   return candidate as unknown as LottiePlayer;
 }
 

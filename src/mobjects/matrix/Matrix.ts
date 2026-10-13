@@ -608,7 +608,7 @@ export class IntegerMatrix extends Matrix {
   override copy(): IntegerMatrix {
     const dataCopy = this._data.map((row) => row.map((val) => (typeof val === 'number' ? val : 0)));
 
-    const copy = new IntegerMatrix(dataCopy as number[][], {
+    const copy = new IntegerMatrix(dataCopy, {
       bracketType: this._bracketType,
       vBuff: this._vBuff,
       hBuff: this._hBuff,
@@ -661,7 +661,7 @@ export class DecimalMatrix extends Matrix {
       row.map((val) => (typeof val === 'string' ? parseFloat(val) : (val as number))),
     );
 
-    const copy = new DecimalMatrix(dataCopy as number[][], {
+    const copy = new DecimalMatrix(dataCopy, {
       bracketType: this._bracketType,
       vBuff: this._vBuff,
       hBuff: this._hBuff,

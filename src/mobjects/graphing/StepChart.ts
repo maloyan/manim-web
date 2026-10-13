@@ -6,6 +6,7 @@ import { Vector3Tuple } from '../../core/Mobject';
 import { Axes } from './Axes';
 import { niceAxisRange, extent } from './stats';
 import { cycleColor, toColorList } from './chartColors';
+import { isFlatSeries } from './seriesData';
 
 /**
  * Where the step between two points falls.
@@ -126,7 +127,7 @@ export class StepChart extends Group {
 
   private _normalize(values: number[][] | number[]): number[][] {
     if (values.length === 0) return [];
-    return typeof values[0] === 'number' ? [values as number[]] : (values as number[][]);
+    return isFlatSeries(values) ? [values] : values;
   }
 
   /** Build the step vertices (data space) for one series. */

@@ -164,7 +164,7 @@ async function resolveFontLoader(injected?: FontLoaderLike): Promise<FontLoaderL
   if (injected) return injected;
   if (fontLoaderFactoryOverride) return fontLoaderFactoryOverride();
   const { FontLoader } = await import('three/examples/jsm/loaders/FontLoader.js');
-  return new FontLoader() as unknown as FontLoaderLike;
+  return new FontLoader();
 }
 
 /**
@@ -178,6 +178,8 @@ async function resolveGeometryFactory(
   if (injected) return injected;
   if (geometryFactoryOverride) return geometryFactoryOverride;
   const { TextGeometry } = await import('three/examples/jsm/geometries/TextGeometry.js');
+  // cast: bridge our TextGeometryParameters to the three.js TextGeometry
+  // constructor options, whose Font type comes from a different module copy.
   return (text, params) =>
     new TextGeometry(text, params as unknown as ConstructorParameters<typeof TextGeometry>[1]);
 }

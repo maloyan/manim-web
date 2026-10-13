@@ -104,7 +104,7 @@ export class Code extends VMobject {
   protected _texture: THREE.CanvasTexture | null = null;
 
   /** Plane mesh for displaying the texture */
-  protected _mesh: THREE.Mesh | null = null;
+  protected _mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> | null = null;
 
   /** Background mesh */
   protected _backgroundMesh: THREE.Mesh | null = null;
@@ -624,7 +624,7 @@ export class Code extends VMobject {
     this._renderToCanvas();
 
     if (this._mesh) {
-      const material = this._mesh.material as THREE.MeshBasicMaterial;
+      const material = this._mesh.material;
       if (material) {
         material.opacity = this._opacity;
       }
@@ -663,7 +663,7 @@ export class Code extends VMobject {
     this._texture?.dispose();
     if (this._mesh) {
       this._mesh.geometry.dispose();
-      (this._mesh.material as THREE.Material).dispose();
+      this._mesh.material.dispose();
     }
     this.clearHighlights();
     this._canvas = null;

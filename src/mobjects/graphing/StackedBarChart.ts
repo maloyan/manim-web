@@ -5,6 +5,7 @@ import { Rectangle } from '../geometry/Rectangle';
 import { Text } from '../text/Text';
 import { WHITE } from '../../constants/colors';
 import { toColorList, cycleColor } from './chartColors';
+import { isFlatSeries } from './seriesData';
 
 /** How a StackedBarChart arranges the bars of each category. */
 export type BarChartMode = 'stacked' | 'grouped';
@@ -161,7 +162,7 @@ export class StackedBarChart extends Group {
   /** Coerce the input into a [series][category] grid with equal category counts. */
   private _normalize(values: number[][] | number[]): number[][] {
     if (values.length === 0) return [];
-    const grid = typeof values[0] === 'number' ? [values as number[]] : (values as number[][]);
+    const grid = isFlatSeries(values) ? [values] : values;
     const maxLen = grid.reduce((m, s) => Math.max(m, s.length), 0);
     return grid.map((series) => {
       const padded = series.slice(0, maxLen);

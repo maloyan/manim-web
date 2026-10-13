@@ -13,7 +13,8 @@
 
 import { VGroup } from '../../core/VGroup';
 import { VMobject } from '../../core/VMobject';
-import type { Mobject, MobjectStyle, Vector3Tuple } from '../../core/Mobject';
+import type { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { hasStyleRecord } from './glyphStyle';
 import { WHITE } from '../../constants/colors';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
 import typia from 'typia';
@@ -63,7 +64,7 @@ export class MathTex extends VGroup {
   /** Whether this is a multi-part MathTex (created from string[]) */
   protected _isMultiPart: boolean = false;
   /** Child part groups (only when _isMultiPart is true) */
-  protected _parts: VGroup[] = [];
+  protected _parts: Array<VGroup & { _latex: string }> = [];
   /** Promise that resolves when rendering is complete */
   protected _renderPromise: Promise<void> | null = null;
   /** Error from rendering, if any */
@@ -108,7 +109,7 @@ export class MathTex extends VGroup {
       this._renderPromise = this._renderMultiPart(latex);
     } else {
       this._isMultiPart = false;
-      this._latex = latex as string;
+      this._latex = latex;
       this._startRender();
     }
   }
@@ -322,9 +323,11 @@ export class MathTex extends VGroup {
         mob.strokeWidth = this._svgStrokeWidth;
         mob.setColor(this._color);
         // Access _style directly: protected member, reached from a sibling instance.
-        const style = (mob as unknown as { _style: MobjectStyle })._style;
-        style.fillOpacity = this._svgFillOpacity;
-        style.strokeWidth = this._svgStrokeWidth;
+        if (hasStyleRecord(mob)) {
+          const style = mob._style;
+          style.fillOpacity = this._svgFillOpacity;
+          style.strokeWidth = this._svgStrokeWidth;
+        }
       }
       if ('children' in mob) {
         for (const child of (mob as { children: Mobject[] }).children) {
@@ -491,7 +494,7 @@ export class MathTex extends VGroup {
         partGroup.add(glyph);
       }
 
-      this._parts.push(partGroup as unknown as MathTex);
+      this._parts.push(partGroup);
       this.add(partGroup);
     }
 
@@ -542,9 +545,7 @@ export class MathTex extends VGroup {
   };
 
   override copy(): MathTex {
-    const latexValue = this._isMultiPart
-      ? this._parts.map((p) => (p as unknown as { _latex: string })._latex)
-      : this._latex;
+    const latexValue = this._isMultiPart ? this._parts.map((p) => p._latex) : this._latex;
     const copy = new MathTex({
       latex: latexValue,
       color: this._color,

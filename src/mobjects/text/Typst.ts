@@ -17,7 +17,8 @@
 
 import { VGroup } from '../../core/VGroup';
 import { VMobject } from '../../core/VMobject';
-import type { Mobject, MobjectStyle, Vector3Tuple } from '../../core/Mobject';
+import type { Mobject, Vector3Tuple } from '../../core/Mobject';
+import { hasStyleRecord } from './glyphStyle';
 import { WHITE } from '../../constants/colors';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
 import typia from 'typia';
@@ -223,9 +224,12 @@ export class Typst extends VGroup {
         mob.fillOpacity = this._svgFillOpacity;
         mob.strokeWidth = this._svgStrokeWidth;
         mob.setColor(this._color);
-        const style = (mob as unknown as { _style: MobjectStyle })._style;
-        style.fillOpacity = this._svgFillOpacity;
-        style.strokeWidth = this._svgStrokeWidth;
+        // Access _style directly: protected member, reached from a sibling instance.
+        if (hasStyleRecord(mob)) {
+          const style = mob._style;
+          style.fillOpacity = this._svgFillOpacity;
+          style.strokeWidth = this._svgStrokeWidth;
+        }
       }
       if ('children' in mob) {
         for (const child of (mob as { children: Mobject[] }).children) {

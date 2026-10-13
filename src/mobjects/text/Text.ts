@@ -175,7 +175,7 @@ export class Text extends TexturedMobject {
   protected _texture: THREE.Texture | null = null;
 
   /** Plane mesh for displaying the texture */
-  protected _mesh: THREE.Mesh | null = null;
+  protected _mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> | null = null;
 
   /** Cached dimensions in world units */
   protected _worldWidth: number = 0;
@@ -709,7 +709,7 @@ export class Text extends TexturedMobject {
     }
 
     if (this._mesh) {
-      const material = this._mesh.material as THREE.MeshBasicMaterial;
+      const material = this._mesh.material;
       if (material) {
         material.opacity = this._opacity;
       }
@@ -841,7 +841,7 @@ export class Text extends TexturedMobject {
     this._texture?.dispose();
     if (this._mesh) {
       this._mesh.geometry.dispose();
-      (this._mesh.material as THREE.Material).dispose();
+      this._mesh.material.dispose();
     }
     this._canvas = null;
     this._ctx = null;
