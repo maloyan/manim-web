@@ -39,6 +39,9 @@ export type { BindingPocketOptions, BindingPocketStyle } from './BindingPocket';
 export { MolecularSurface } from './MolecularSurface';
 export type { MolecularSurfaceOptions, MolecularSurfaceKind } from './MolecularSurface';
 
+export { OrbitalSurface } from './OrbitalSurface';
+export type { OrbitalSurfaceOptions, OrbitalType } from './OrbitalSurface';
+
 export { hydrogenBond, contact, distanceLabel, residueLabel } from './annotations';
 export type {
   DashedAnnotationOptions,
