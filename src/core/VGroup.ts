@@ -440,15 +440,30 @@ export class VGroup extends VMobject {
   }
 
   /**
+   * The children typed as a known Mobject subtype.
+   *
+   * The base `Mobject.children` is `Mobject[]` because `add` also accepts
+   * non-VMobject containers (for example Axes or Group). A builder that puts
+   * a known subtype in the group reads it back through here, which asserts the
+   * element type in ONE place instead of at each call site. The default type
+   * `VMobject` covers the common case; a caller that stores a narrower type
+   * (for example a VGroup of VGroups) passes it explicitly.
+   *
+   * @returns The children, typed as T.
+   */
+  getChildrenAs<T extends Mobject = VMobject>(): T[] {
+    return this.children as T[];
+  }
+
+  /**
    * The children typed as the VMobjects a VGroup is built from.
    *
    * `add()` only ever pushes VMobjects, but the base `Mobject.children` is
    * `Mobject[]`. This accessor narrows once so the iteration helpers below are
    * typed without repeating the cast.
    */
-  // cast: VGroup holds only VMobjects (enforced by `add`); base type is Mobject[].
   private get _vchildren(): VMobject[] {
-    return this.children as VMobject[];
+    return this.getChildrenAs<VMobject>();
   }
 
   /**

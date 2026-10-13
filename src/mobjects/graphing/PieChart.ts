@@ -319,7 +319,7 @@ export class PieChart extends VGroup {
 
   /** Get all slice sectors. */
   getSectors(): VMobject[] {
-    return this.slices.children as VMobject[];
+    return this.slices.getChildrenAs<VMobject>();
   }
 
   /**

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Vector3Tuple } from '../../core/Mobject';
+import { meshMaterial } from '../../core/threeMaterial';
 import { Mobject3D } from './Mobject3D';
 import { VMobject } from '../../core/VMobject';
 
@@ -110,15 +111,13 @@ export class Prism extends Mobject3D {
    * Sync material properties to Three.js object
    */
   protected override _syncMaterialToThree(): void {
-    if (this._threeObject instanceof THREE.Mesh) {
-      const material = this._threeObject.material as THREE.MeshStandardMaterial;
-      if (material) {
-        material.color.set(this.color);
-        material.opacity = this._opacity;
-        material.transparent = this._opacity < 1;
-        material.wireframe = this._wireframe;
-        material.needsUpdate = true;
-      }
+    const material = this.getMeshMaterial<THREE.MeshStandardMaterial>();
+    if (material) {
+      material.color.set(this.color);
+      material.opacity = this._opacity;
+      material.transparent = this._opacity < 1;
+      material.wireframe = this._wireframe;
+      material.needsUpdate = true;
     }
   }
 
@@ -390,29 +389,25 @@ export class Dot3D extends Mobject3D {
    */
   protected override _syncMaterialToThree(): void {
     if (this._threeObject instanceof THREE.Group) {
-      const mainMesh = this._threeObject.children[0] as THREE.Mesh;
-      if (mainMesh) {
-        const material = mainMesh.material as THREE.MeshStandardMaterial;
-        if (material) {
-          material.color.set(this.color);
-          material.opacity = this._opacity;
-          material.transparent = this._opacity < 1;
-          if (this._glow) {
-            material.emissive = new THREE.Color(this.color);
-            material.emissiveIntensity = this._glowIntensity * 0.5;
-          }
-          material.needsUpdate = true;
+      const mainMesh = this._threeObject.children[0];
+      if (mainMesh instanceof THREE.Mesh) {
+        const material = meshMaterial<THREE.MeshStandardMaterial>(mainMesh);
+        material.color.set(this.color);
+        material.opacity = this._opacity;
+        material.transparent = this._opacity < 1;
+        if (this._glow) {
+          material.emissive = new THREE.Color(this.color);
+          material.emissiveIntensity = this._glowIntensity * 0.5;
         }
+        material.needsUpdate = true;
       }
 
       // Update glow mesh if it exists
       if (this._glowMesh) {
-        const glowMaterial = this._glowMesh.material as THREE.MeshBasicMaterial;
-        if (glowMaterial) {
-          glowMaterial.color.set(this.color);
-          glowMaterial.opacity = (this._opacity * 0.3) / this._glowIntensity;
-          glowMaterial.needsUpdate = true;
-        }
+        const glowMaterial = meshMaterial<THREE.MeshBasicMaterial>(this._glowMesh);
+        glowMaterial.color.set(this.color);
+        glowMaterial.opacity = (this._opacity * 0.3) / this._glowIntensity;
+        glowMaterial.needsUpdate = true;
       }
     }
   }

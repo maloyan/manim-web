@@ -7,7 +7,6 @@
 
 import * as THREE from 'three';
 import { Mobject, Vector3Tuple, ORIGIN } from '../../core/Mobject';
-import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Line } from '../geometry/Line';
 import { Rectangle } from '../geometry/Rectangle';
@@ -412,7 +411,7 @@ export class Table extends VGroup {
     if (row < 0 || row >= this._numRows) {
       throw new Error(`Row ${row} out of bounds`);
     }
-    return new VGroup(...this._data[row].map((m) => m as VMobject));
+    return new VGroup(...this._data[row]);
   }
 
   /**
@@ -424,10 +423,10 @@ export class Table extends VGroup {
     if (col < 0 || col >= this._numCols) {
       throw new Error(`Column ${col} out of bounds`);
     }
-    const entries: VMobject[] = [];
+    const entries: Mobject[] = [];
     for (let row = 0; row < this._numRows; row++) {
       if (col < this._data[row].length) {
-        entries.push(this._data[row][col] as VMobject);
+        entries.push(this._data[row][col]);
       }
     }
     return new VGroup(...entries);
@@ -439,7 +438,7 @@ export class Table extends VGroup {
    * @returns VGroup of row VGroups
    */
   getRows(): VGroup {
-    const rows: VMobject[] = [];
+    const rows: VGroup[] = [];
     for (let row = 0; row < this._numRows; row++) {
       rows.push(this.getRow(row));
     }
@@ -452,7 +451,7 @@ export class Table extends VGroup {
    * @returns VGroup of column VGroups
    */
   getColumns(): VGroup {
-    const cols: VMobject[] = [];
+    const cols: VGroup[] = [];
     for (let col = 0; col < this._numCols; col++) {
       cols.push(this.getColumn(col));
     }
@@ -464,10 +463,10 @@ export class Table extends VGroup {
    * @returns VGroup containing all data entries
    */
   getEntries(): VGroup {
-    const entries: VMobject[] = [];
+    const entries: Mobject[] = [];
     for (const row of this._data) {
       for (const entry of row) {
-        entries.push(entry as VMobject);
+        entries.push(entry);
       }
     }
     return new VGroup(...entries);
@@ -487,14 +486,14 @@ export class Table extends VGroup {
    * Get row labels as a VGroup
    */
   getRowLabels(): VGroup {
-    return new VGroup(...this._rowLabels.map((m) => m as VMobject));
+    return new VGroup(...this._rowLabels);
   }
 
   /**
    * Get column labels as a VGroup
    */
   getColLabels(): VGroup {
-    return new VGroup(...this._colLabels.map((m) => m as VMobject));
+    return new VGroup(...this._colLabels);
   }
 
   /**
@@ -502,10 +501,7 @@ export class Table extends VGroup {
    * @returns VGroup containing every label mobject
    */
   getLabels(): VGroup {
-    const labels: VMobject[] = [
-      ...this._colLabels.map((m) => m as VMobject),
-      ...this._rowLabels.map((m) => m as VMobject),
-    ];
+    const labels: Mobject[] = [...this._colLabels, ...this._rowLabels];
     return new VGroup(...labels);
   }
 

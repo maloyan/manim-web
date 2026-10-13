@@ -118,15 +118,13 @@ export class Torus extends Mobject3D {
    * Sync material properties to Three.js object
    */
   protected override _syncMaterialToThree(): void {
-    if (this._threeObject instanceof THREE.Mesh) {
-      const material = this._threeObject.material as THREE.MeshStandardMaterial;
-      if (material) {
-        material.color.set(this.color);
-        material.opacity = this._opacity;
-        material.transparent = this._opacity < 1;
-        material.wireframe = this._wireframe;
-        material.needsUpdate = true;
-      }
+    const material = this.getMeshMaterial<THREE.MeshStandardMaterial>();
+    if (material) {
+      material.color.set(this.color);
+      material.opacity = this._opacity;
+      material.transparent = this._opacity < 1;
+      material.wireframe = this._wireframe;
+      material.needsUpdate = true;
     }
   }
 

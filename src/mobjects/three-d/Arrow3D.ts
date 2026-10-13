@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Vector3Tuple } from '../../core/Mobject';
+import { meshMaterial } from '../../core/threeMaterial';
 import { Mobject3D } from './Mobject3D';
 
 /**
@@ -182,13 +183,11 @@ export class Arrow3D extends Mobject3D {
     if (this._threeObject instanceof THREE.Group) {
       this._threeObject.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          const material = child.material as THREE.MeshBasicMaterial;
-          if (material) {
-            material.color.set(this.color);
-            material.opacity = this._opacity;
-            material.transparent = this._opacity < 1;
-            material.needsUpdate = true;
-          }
+          const material = meshMaterial<THREE.MeshBasicMaterial>(child);
+          material.color.set(this.color);
+          material.opacity = this._opacity;
+          material.transparent = this._opacity < 1;
+          material.needsUpdate = true;
         }
       });
     }

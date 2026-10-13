@@ -27,6 +27,7 @@ import {
   resolveExtremalPoint,
 } from './MobjectState';
 import { logger } from '../utils/logger';
+import { meshMaterial } from './threeMaterial';
 import { getActiveTheme } from '../utils/ThemeManager';
 import { applyBlendMode, type BlendMode } from '../rendering/blendModes';
 // Type-only import: erased at compile time, so it introduces no runtime
@@ -1119,6 +1120,34 @@ export abstract class Mobject {
     if (!this._threeObject) this._threeObject = this._createThreeObject();
     this._syncToThree();
     return this._threeObject;
+  }
+
+  /**
+   * The backing THREE object as a Mesh, or null when it is not a Mesh.
+   *
+   * The base `_threeObject` is a polymorphic `THREE.Object3D`: a Group for a
+   * container, a Line for a stroked VMobject, a Mesh for a solid. This method
+   * does the single `instanceof THREE.Mesh` check in one place, so a subclass
+   * that built a Mesh reads it back with a typed result and no assertion.
+   *
+   * @returns The backing Mesh, or null.
+   */
+  protected getMesh(): THREE.Mesh | null {
+    return this._threeObject instanceof THREE.Mesh ? this._threeObject : null;
+  }
+
+  /**
+   * The single material of the backing Mesh, typed as T, or null.
+   *
+   * The result is null when the backing object is not a Mesh. This matches the
+   * prior `if (this._threeObject instanceof THREE.Mesh)` guard: a non-Mesh
+   * object produces no material and the caller skips the sync.
+   *
+   * @returns The mesh material as T, or null.
+   */
+  protected getMeshMaterial<T extends THREE.Material = THREE.Material>(): T | null {
+    const mesh = this.getMesh();
+    return mesh ? meshMaterial<T>(mesh) : null;
   }
 
   /**

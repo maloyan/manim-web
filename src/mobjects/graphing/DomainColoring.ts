@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Vector3Tuple } from '../../core/Mobject';
+import { meshMaterial } from '../../core/threeMaterial';
 import { Mobject3D } from '../three-d/Mobject3D';
 import { hsvToRgb, rgbToHex } from '../../utils/color';
 import { Complex } from './ComplexPlane';
@@ -293,13 +294,11 @@ export class DomainColoring extends Mobject3D {
   }
 
   protected override _syncMaterialToThree(): void {
-    if (this._threeObject instanceof THREE.Mesh) {
-      const material = this._threeObject.material as THREE.MeshBasicMaterial;
-      if (material) {
-        material.opacity = this._opacity;
-        material.transparent = this._opacity < 1;
-        material.needsUpdate = true;
-      }
+    const material = this.getMeshMaterial<THREE.MeshBasicMaterial>();
+    if (material) {
+      material.opacity = this._opacity;
+      material.transparent = this._opacity < 1;
+      material.needsUpdate = true;
     }
   }
 
@@ -310,7 +309,7 @@ export class DomainColoring extends Mobject3D {
       const oldGeometry = mesh.geometry;
       mesh.geometry = this._buildGeometry();
       oldGeometry.dispose();
-      const material = mesh.material as THREE.MeshBasicMaterial;
+      const material = meshMaterial<THREE.MeshBasicMaterial>(mesh);
       const oldMap = material.map;
       material.map = this._buildTexture();
       material.needsUpdate = true;

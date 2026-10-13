@@ -6,6 +6,7 @@
 
 import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
+import { meshMaterial } from '../../core/threeMaterial';
 import { Group } from '../../core/Group';
 import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
@@ -876,10 +877,8 @@ export class Write extends Animation {
       // Fade in the texture mesh
       if (this._textMesh) {
         this._textMesh.visible = true;
-        const material = this._textMesh.material as THREE.MeshBasicMaterial;
-        if (material) {
-          material.opacity = this._originalOpacity * fadeAlpha;
-        }
+        const material = meshMaterial<THREE.MeshBasicMaterial>(this._textMesh);
+        material.opacity = this._originalOpacity * fadeAlpha;
       }
     }
   }
@@ -946,10 +945,8 @@ export class Write extends Animation {
       // Write complete: show texture, hide glyphs
       if (this._textMesh) {
         this._textMesh.visible = true;
-        const material = this._textMesh.material as THREE.MeshBasicMaterial;
-        if (material) {
-          material.opacity = this._originalOpacity;
-        }
+        const material = meshMaterial<THREE.MeshBasicMaterial>(this._textMesh);
+        material.opacity = this._originalOpacity;
       }
       this.mobject.setStrokeOpacity(this._originalOpacity);
     }
