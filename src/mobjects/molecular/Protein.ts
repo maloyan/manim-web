@@ -19,7 +19,7 @@
 import * as THREE from 'three';
 import { Group } from '../../core/Group';
 import { Vector3Tuple } from '../../core/Mobject';
-import { TubeFromPoints } from '../three-d/TubeFromPoints';
+import { TubeFromPoints, dropConsecutiveDuplicates } from '../three-d/TubeFromPoints';
 import { Line3D } from '../three-d/Line3D';
 import { ResidueCA, SecondaryStructure } from './pdb';
 import { residueColor } from '../biology/biologyColors';
@@ -192,8 +192,13 @@ export class Protein extends Group {
    * Catmull-Rom curve fit through every CA point so the spans join smoothly.
    */
   private _buildTube(): void {
+    // Real PDBs can carry duplicate consecutive CA coordinates. Drop them before
+    // fitting the curve: CatmullRomCurve3 emits NaN geometry on coincident
+    // control points.
+    const curvePoints = dropConsecutiveDuplicates(this._caPoints);
+    if (curvePoints.length < 2) return;
     const curve = new THREE.CatmullRomCurve3(
-      this._caPoints.map((p) => new THREE.Vector3(p[0], p[1], p[2])),
+      curvePoints.map((p) => new THREE.Vector3(p[0], p[1], p[2])),
     );
     const n = this._caPoints.length;
     for (let i = 0; i < n - 1; i++) {
@@ -205,6 +210,9 @@ export class Protein extends Group {
         const p = curve.getPoint(t);
         points.push([p.x, p.y, p.z]);
       }
+      // A span whose samples collapse to one distinct point would make
+      // TubeFromPoints throw; skip it instead.
+      if (dropConsecutiveDuplicates(points).length < 2) continue;
       this.add(
         new TubeFromPoints({
           points,
@@ -235,6 +243,11 @@ export class Protein extends Group {
    * @returns The hex color string.
    */
   colorForResidue(index: number): string {
+    if (index < 0 || index >= this._residues.length) {
+      throw new Error(
+        `Protein.colorForResidue: index ${index} is out of range (0 to ${this._residues.length - 1}).`,
+      );
+    }
     const residue = this._residues[index];
     switch (this._colorMode) {
       case 'residue':

@@ -54,7 +54,7 @@ export class AnimateChoropleth extends Animation<ChoroplethMap> {
     // Snapshot the colors each region shows right now.
     this._startColors = [];
     for (let index = 0; index < count; index++) {
-      this._startColors.push(map.getRegionColor(index));
+      this._startColors.push(map.getRegionColor(index) ?? '#000000');
     }
 
     // Apply the new values once to read the target colors (this also updates the
@@ -62,7 +62,7 @@ export class AnimateChoropleth extends Animation<ChoroplethMap> {
     map.setValues(this._toValue);
     this._targetColors = [];
     for (let index = 0; index < count; index++) {
-      this._targetColors.push(map.getRegionColor(index));
+      this._targetColors.push(map.getRegionColor(index) ?? '#000000');
     }
     this._applyColors(0);
   }

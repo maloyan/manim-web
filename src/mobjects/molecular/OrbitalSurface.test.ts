@@ -109,6 +109,18 @@ describe('OrbitalSurface', () => {
     expect(orbital.surfaces[0].color).toBe(positiveColor);
   });
 
+  it('builds a finite surface for an unknown (cast) orbital type', () => {
+    // An invalid type must not make angularShape return undefined → NaN field.
+    const build = () => new OrbitalSurface({ type: 'unknown' as OrbitalType, resolution: 12 });
+    expect(build).not.toThrow();
+    const bounds = build().getBounds();
+    for (const corner of [bounds.min, bounds.max]) {
+      expect(Number.isFinite(corner.x)).toBe(true);
+      expect(Number.isFinite(corner.y)).toBe(true);
+      expect(Number.isFinite(corner.z)).toBe(true);
+    }
+  });
+
   it('does not throw for zero or degenerate params', () => {
     expect(() => new OrbitalSurface({ scale: 0, resolution: 0 })).not.toThrow();
     expect(() => new OrbitalSurface({ scale: -1, resolution: 1 })).not.toThrow();

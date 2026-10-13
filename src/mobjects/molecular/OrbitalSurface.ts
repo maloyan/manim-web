@@ -256,5 +256,8 @@ function angularShape(
       return ((2 * rz * rz - rx * rx - ry * ry) / (scale * scale)) * env;
     case 'dxy':
       return ((rx * ry) / (scale * scale)) * env;
+    default:
+      // An invalid (cast) type yields a finite field instead of undefined→NaN.
+      return 0;
   }
 }

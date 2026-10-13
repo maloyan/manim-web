@@ -187,8 +187,8 @@ describe('animateChoropleth', () => {
 
   it('is driven by begin/interpolate/finish: alpha 0 ~ old, alpha 1 ~ new', () => {
     const map = build();
-    const startA = colorToRgb(map.getRegionColor(0)); // black
-    const startB = colorToRgb(map.getRegionColor(1)); // white
+    const startA = colorToRgb(map.getRegionColor(0)!); // black
+    const startB = colorToRgb(map.getRegionColor(1)!); // white
     const anim = animateChoropleth(map, accessor(newValues), { runTime: 2 });
     expect(anim).toBeInstanceOf(AnimateChoropleth);
     expect(anim.duration).toBe(2);

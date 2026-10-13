@@ -207,6 +207,9 @@ describe('ChoroplethMap', () => {
     expect(map.getRegionColor(1)).toBe('#ffffff');
     // The region polygon carries the value color as its fill.
     expect(map.getRegionPolygons(0)[0].fillColor).toBe('#000000');
+    // An out-of-range index returns undefined (a querying accessor, not a throw).
+    expect(map.getRegionColor(map.getRegionCount())).toBeUndefined();
+    expect(map.getRegionColor(-1)).toBeUndefined();
   });
 
   it('uses the no-data color when the accessor returns null', () => {

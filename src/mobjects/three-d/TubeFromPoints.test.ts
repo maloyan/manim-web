@@ -130,6 +130,55 @@ describe('TubeFromPoints', () => {
     expect(tubeGeometry(tube).parameters.tubularSegments).toBe(40);
   });
 
+  it('floors an explicit tubularSegments of 0 to a non-empty tube', () => {
+    const tube = new TubeFromPoints({
+      points: [
+        [0, 0, 0],
+        [1, 0, 0],
+        [2, 0, 0],
+      ],
+      tubularSegments: 0,
+    });
+    const geometry = tubeGeometry(tube);
+    // Floored to 1 segment, so the mesh carries vertices (not an empty mesh).
+    expect(geometry.parameters.tubularSegments).toBe(1);
+    expect(geometry.getAttribute('position').count).toBeGreaterThan(0);
+  });
+
+  it('drops a duplicated consecutive point and builds finite geometry', () => {
+    const tube = new TubeFromPoints({
+      points: [
+        [0, 0, 0],
+        [1, 0, 0],
+        [1, 0, 0], // duplicate of the previous point
+        [2, 0, 0],
+      ],
+    });
+    // The duplicate is removed, so three distinct control points remain.
+    expect(tube.getPoints()).toEqual([
+      [0, 0, 0],
+      [1, 0, 0],
+      [2, 0, 0],
+    ]);
+    const mid = tube.pointAt(0.5);
+    expect(mid.every((c) => Number.isFinite(c))).toBe(true);
+    const position = tubeGeometry(tube).getAttribute('position').array;
+    expect(Array.from(position).every((c) => Number.isFinite(c))).toBe(true);
+  });
+
+  it('throws when all points are identical', () => {
+    expect(
+      () =>
+        new TubeFromPoints({
+          points: [
+            [1, 1, 1],
+            [1, 1, 1],
+            [1, 1, 1],
+          ],
+        }),
+    ).toThrow(/at least two distinct points/i);
+  });
+
   it('returns a copy of the input points', () => {
     const tube = new TubeFromPoints({
       points: [

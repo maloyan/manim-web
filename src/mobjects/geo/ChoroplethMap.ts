@@ -225,8 +225,14 @@ export class ChoroplethMap extends Group {
     return this._regions.length;
   }
 
-  /** Get the fill color assigned to a feature's region. */
-  getRegionColor(index: number): string {
+  /**
+   * Get the fill color assigned to a feature's region.
+   *
+   * @param index - The region index, from 0 to {@link getRegionCount} minus 1.
+   * @returns The hex color string, or `undefined` if the index is out of range.
+   */
+  getRegionColor(index: number): string | undefined {
+    if (index < 0 || index >= this._regionColors.length) return undefined;
     return this._regionColors[index];
   }
 

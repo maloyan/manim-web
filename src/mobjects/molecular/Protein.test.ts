@@ -100,6 +100,15 @@ describe('Protein color modes', () => {
     expect(protein.colorForResidue(0)).toBe('#abcdef');
     expect(protein.colorForResidue(2)).toBe('#abcdef');
   });
+
+  it('throws a clear range error for an out-of-range residue index', () => {
+    const protein = new Protein({ residues: RESIDUES, colorMode: 'uniform' });
+    const last = protein.getResidueCount() - 1;
+    expect(() => protein.colorForResidue(protein.getResidueCount())).toThrow(
+      new RegExp(`out of range \\(0 to ${last}\\)`),
+    );
+    expect(() => protein.colorForResidue(-1)).toThrow(/out of range/i);
+  });
 });
 
 describe('Protein copy', () => {

@@ -88,7 +88,10 @@ export interface MolecularSurfaceOptions {
   opacity?: number;
   /** Marching-cubes grid cells per axis. Default: 48. */
   resolution?: number;
-  /** The metaball iso threshold. Default: 1. */
+  /**
+   * The iso threshold. Default: 0 (the union-of-spheres surface; a positive
+   * value dilates it outward, a negative value shrinks it).
+   */
   isoValue?: number;
   /** Extra space around the atom bounding box. Default: the max atom radius. */
   padding?: number;
@@ -195,7 +198,7 @@ export class MolecularSurface extends Group {
     return r * this._worldScale;
   }
 
-  /** Build the metaball scalar field `f(p) = Σ r_i² / |p - p_i|²`. */
+  /** Build the signed union-of-spheres distance field `f(p) = min_i(|p - p_i| − r_i)`. */
   private _makeField(
     centers: ReadonlyArray<[number, number, number]>,
     radii: ReadonlyArray<number>,
