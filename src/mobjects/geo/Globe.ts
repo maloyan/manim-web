@@ -18,7 +18,7 @@ import { Vector3Tuple } from '../../core/Mobject';
 import { Sphere } from '../three-d/Sphere';
 import { TexturedSurface, texturedSphere } from '../three-d/TexturedSurface';
 import { Dot3D } from '../three-d/ThreeDExtensions';
-import { Polygon } from '../geometry/Polygon';
+import { Line3D } from '../three-d/Line3D';
 
 const DEG_TO_RAD = Math.PI / 180;
 
@@ -178,9 +178,10 @@ export class Globe extends Group {
    * @param from - Start `[lat, lon]` in degrees.
    * @param to - End `[lat, lon]` in degrees.
    * @param options - Segment count, color, width and optional altitude.
-   * @returns The created {@link Polygon} polyline.
+   * @returns The created {@link Group} of {@link Line3D} segments that form the
+   *   polyline.
    */
-  arc(from: LatLon, to: LatLon, options: GlobeArcOptions = {}): Polygon {
+  arc(from: LatLon, to: LatLon, options: GlobeArcOptions = {}): Group {
     const { segments = 64, color = '#ef476f', lineWidth = 2, altitude = 0 } = options;
     const radius = this._radius * (1 + altitude);
     const start = unitVector(from[0], from[1]);
@@ -201,9 +202,9 @@ export class Globe extends Group {
       ]);
     }
 
-    const polygon = new Polygon({ vertices, color, strokeWidth: lineWidth, closed: false });
-    this.add(polygon);
-    return polygon;
+    const line = this._polyline(vertices, color, lineWidth);
+    this.add(line);
+    return line;
   }
 
   /**
@@ -230,9 +231,25 @@ export class Globe extends Group {
     return grid;
   }
 
-  private _gridLine(samples: LatLon[], color: string, lineWidth: number): Polygon {
+  private _gridLine(samples: LatLon[], color: string, lineWidth: number): Group {
     const vertices = samples.map(([lat, lon]) => this.latLonToPoint(lat, lon));
-    return new Polygon({ vertices, color, strokeWidth: lineWidth, closed: false });
+    return this._polyline(vertices, color, lineWidth);
+  }
+
+  /**
+   * Build a polyline on the globe from a point list as a {@link Group} of
+   * {@link Line3D} segments. Line3D renders with `Line2`/`LineMaterial`, so the
+   * line keeps a constant pixel width on every GPU, and its polygon-offset
+   * depth bias stops the line from z-fighting the sphere surface it sits on.
+   * One Line3D joins each pair of consecutive points, so the segments form a
+   * single continuous path.
+   */
+  private _polyline(points: Vector3Tuple[], color: string, lineWidth: number): Group {
+    const line = new Group();
+    for (let i = 0; i < points.length - 1; i++) {
+      line.add(new Line3D({ start: points[i], end: points[i + 1], color, lineWidth }));
+    }
+    return line;
   }
 
   private _surfacePoint(lat: number, lon: number, radius: number): Vector3Tuple {
