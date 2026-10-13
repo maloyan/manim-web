@@ -93,11 +93,21 @@ The example below fits 40 rotating vectors to the outline of a square.
 ```typescript
 import { FourierEpicycles } from 'manim-web';
 
-// Sample the path as [x, y] points, read as the complex point x + i*y.
+// Sample the outline of a square as [x, y] points, read as x + i*y.
 const path: number[][] = [];
-for (let i = 0; i < 256; i++) {
-  const t = (2 * Math.PI * i) / 256;
-  path.push([Math.cos(t), Math.sin(t) + Math.sin(3 * t) / 3]);
+const corners = [
+  [-1.6, -1.6],
+  [1.6, -1.6],
+  [1.6, 1.6],
+  [-1.6, 1.6],
+];
+for (let c = 0; c < 4; c++) {
+  const [ax, ay] = corners[c];
+  const [bx, by] = corners[(c + 1) % 4];
+  for (let i = 0; i < 64; i++) {
+    const t = i / 64;
+    path.push([ax + (bx - ax) * t, ay + (by - ay) * t]);
+  }
 }
 
 const epicycles = new FourierEpicycles({
@@ -331,8 +341,15 @@ import { DomainColoring } from 'manim-web';
 
 const plot = new DomainColoring({
   func: (z) => {
-    // f(z) = z^2, computed with real arithmetic on { re, im }.
-    return { re: z.re * z.re - z.im * z.im, im: 2 * z.re * z.im };
+    // f(z) = (z^2 - 1) / (z^2 + 1), computed with real arithmetic on { re, im }.
+    const z2re = z.re * z.re - z.im * z.im;
+    const z2im = 2 * z.re * z.im;
+    const nre = z2re - 1;
+    const nim = z2im;
+    const dre = z2re + 1;
+    const dim = z2im;
+    const denom = dre * dre + dim * dim;
+    return { re: (nre * dre + nim * dim) / denom, im: (nim * dre - nre * dim) / denom };
   },
   reRange: [-3, 3],
   imRange: [-3, 3],

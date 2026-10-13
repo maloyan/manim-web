@@ -11,6 +11,7 @@ import ReactionArrowExample from '@site/src/components/examples/ReactionArrowExa
 import OrbitalSurfaceExample from '@site/src/components/examples/OrbitalSurfaceExample';
 import MolfileExample from '@site/src/components/examples/MolfileExample';
 import BindingSiteExample from '@site/src/components/examples/BindingSiteExample';
+import SmilesExample from '@site/src/components/examples/SmilesExample';
 
 Features added in the 0.38 release: a molecular surface that wraps a molecule in
 3D, curved electron-pushing arrows for reaction mechanisms, and two additions to
@@ -447,3 +448,31 @@ await scene.play(new FadeIn(ligand, { duration: 1 }));
 `parsePdb` takes `includeWater` (default false). `bindingSiteSelection` takes the
 `radius` in angstrom. `selectAtoms` takes `elements`, `chains`, `resSeqs`,
 `residueCodes`, `nearPoint`, `nearLigand`, `includeHetatms`, and `invert`.
+
+## Molecules from SMILES (0.38)
+
+`moleculeFromSmiles(smiles, options?)` parses a SMILES string (the organic
+subset) into a 2D skeletal `MoleculeMobject`. It handles atoms, bond orders
+(`=`, `#`), branches `()`, ring closures (e.g. `c1ccccc1`), and disconnected
+components `.`. Stereochemistry (`@`/`@@`, `/`, `\\`) is parsed but not drawn,
+and aromaticity is read from lowercase spelling (no ring perception).
+
+<SmilesExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { moleculeFromSmiles, Create } from 'manim-web';
+
+// Organic-subset SMILES: 'CCO' (ethanol), 'c1ccccc1' (benzene),
+// 'C1CCCCC1' (cyclohexane), 'CC(=O)O' (acetic acid).
+const molecule = moleculeFromSmiles('CC(=O)O', { bondLength: 1.6, showCarbonLabels: true });
+molecule.center();
+await scene.play(new Create(molecule, { duration: 2 }));
+```
+
+</details>
+
+`parseSmiles(smiles)` returns the parsed `{ atoms, bonds }` graph (with per-atom
+aromatic/charge/hcount) if you want the data without a mobject.

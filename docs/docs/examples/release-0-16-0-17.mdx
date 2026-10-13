@@ -242,16 +242,18 @@ Gaussian bumps viewed from above.
 <summary>Source Code</summary>
 
 ```typescript
-import { HeatMap, INFERNO } from 'manim-web';
+import { HeatMap } from 'manim-web';
 
 const heat = new HeatMap({
-  func: (x, y) => Math.exp(-(x * x + y * y) / 4),
-  xRange: [-3, 3],
-  yRange: [-3, 3],
+  // Two Gaussian bumps.
+  func: (x, y) =>
+    Math.exp(-((x - 1.3) ** 2 + (y - 1.3) ** 2) / 2) +
+    Math.exp(-((x + 1.3) ** 2 + (y + 1.3) ** 2) / 1.5),
+  xRange: [-4, 4],
+  yRange: [-4, 4],
   resolution: 96,
   domain: [0, 1], // value range mapped across the palette; auto if omitted
-  palette: INFERNO, // default is a viridis-like palette
-  useOklab: true, // blend the palette perceptually
+  useOklab: true, // blend the default viridis-like palette perceptually
 });
 scene.add(heat); // use a ThreeDScene
 ```
@@ -273,10 +275,10 @@ and disjoint contours all render. Pass `axes` to map the contours onto an
 ```typescript
 import { ContourPlot } from 'manim-web';
 
-// Concentric circles: g = x^2 + y^2 contoured at 1, 4, 9.
+// A saddle field g = x^2 - y^2 contoured at symmetric levels.
 const contours = new ContourPlot({
-  func: (x, y) => x * x + y * y,
-  levels: [1, 4, 9],
+  func: (x, y) => x * x - y * y,
+  levels: [-4, -2, -1, 0, 1, 2, 4],
   xRange: [-4, 4],
   yRange: [-4, 4],
   color: '#58c4dd',

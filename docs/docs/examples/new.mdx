@@ -232,7 +232,7 @@ Helper functions for working with matrices: `getDetText` adds determinant notati
 import {
   Matrix, IntegerMatrix, DecimalMatrix, MobjectMatrix,
   Circle, Square, MathTex,
-  Create, FadeIn, getDetText, YELLOW,
+  FadeIn, getDetText, YELLOW,
 } from 'manim-web';
 
 // Multiple matrix types (like Python Manim's MatrixExamples)
@@ -244,11 +244,12 @@ const m3 = new MobjectMatrix([
   [new MathTex({ latex: '\\pi' }), new Circle({ radius: 0.1 })],
 ]);
 
+scene.add(m0, m1, m2, m3);
+
 // Determinant text (like Python Manim's DeterminantOfAMatrix)
 const matrix = new Matrix([[2, 0], [-1, 1]]);
 const det = getDetText(matrix, { determinant: 3, color: YELLOW });
-scene.add(matrix);
-scene.add(det);
+scene.add(matrix, det);
 ```
 
 </details>
@@ -265,7 +266,7 @@ A 3D convex hull computed from arbitrary points in space. Pass an array of 3D co
 <summary>Source Code</summary>
 
 ```typescript
-import { ConvexHull3D, Create, Rotate, GREEN_C } from 'manim-web';
+import { ConvexHull3D, GREEN_C } from 'manim-web';
 
 const hull = new ConvexHull3D({
   points: [
@@ -275,14 +276,13 @@ const hull = new ConvexHull3D({
     [0.5, 0.5, 0.5], [-0.5, -0.5, 0.5],
   ],
   color: GREEN_C,
-  opacity: 0.6,
+  opacity: 0.7,
+  wireframe: true,
 });
 
-await scene.play(new Create(hull, { duration: 2 }));
-await scene.play(new Rotate(hull, { angle: Math.PI, duration: 3 }));
+scene.add(hull);
 
-// Switch to wireframe
-hull.setWireframe(true);
+// Switch to a solid hull at any time with hull.setWireframe(false).
 ```
 
 </details>
@@ -306,6 +306,7 @@ const arc = new Arc({
   startAngle: 0,
   angle: Math.PI * 1.2,
   color: BLUE,
+  addTip: true, // TipableVMobject adds an arrow tip to the arc's end
 });
 await scene.play(new Create(arc));
 
@@ -351,14 +352,14 @@ import {
 const source = new VGroup();
 source.add(new Circle({ radius: 0.5, color: BLUE, fillOpacity: 0.5 }));
 source.add(new Square({ sideLength: 1, color: RED, fillOpacity: 0.5 }));
-source.add(new Triangle({ sideLength: 1, color: GREEN, fillOpacity: 0.5 }));
+source.add(new Triangle({ color: GREEN, fillOpacity: 0.5 }));
 await scene.play(new Create(source));
 
 // Target shapes (rearranged)
 const target = new VGroup();
 target.add(new Circle({ radius: 0.7, color: YELLOW, fillOpacity: 0.5 }));
 target.add(new Square({ sideLength: 1.2, color: GREEN, fillOpacity: 0.5 }));
-target.add(new Triangle({ sideLength: 0.8, color: BLUE, fillOpacity: 0.5 }));
+target.add(new Triangle({ color: BLUE, fillOpacity: 0.5 }).scale(0.8));
 
 // Shapes are matched and transformed smoothly
 await scene.play(new TransformMatchingShapes(source, target, { duration: 2 }));
@@ -436,22 +437,23 @@ console.log(palatino.description); // "Palatino"
 <summary>Source Code</summary>
 
 ```typescript
-import { MathTex, Create, FadeIn, Indicate, RED, BLUE, GREEN, WHITE } from 'manim-web';
+import { MathTex, Create, Indicate, RED, BLUE, GREEN, YELLOW, WHITE } from 'manim-web';
 
-// Create individually colored equation parts
-const xSquared = new MathTex({ latex: 'x^2', color: RED });
-const plus = new MathTex({ latex: '+', color: WHITE });
-const ySquared = new MathTex({ latex: 'y^2', color: BLUE });
-const equals = new MathTex({ latex: '=', color: WHITE });
-const rSquared = new MathTex({ latex: 'r^2', color: GREEN });
+// One multi-part MathTex: each array entry is an addressable part.
+const equation = new MathTex({ latex: ['x^2', '+', 'y^2', '=', 'r^2'], color: WHITE });
+await equation.waitForRender();
 
-// Animate each part independently
-await scene.play(new Create(xSquared));
-await scene.play(new Create(ySquared));
-await scene.play(new Create(rSquared));
+// Color individual parts with getPart(index).
+equation.getPart(0).setColor(RED); // x^2
+equation.getPart(2).setColor(BLUE); // y^2
+equation.getPart(4).setColor(GREEN); // r^2
 
-// Highlight specific parts
-await scene.play(new Indicate(xSquared, { color: YELLOW }));
+await scene.play(new Create(equation));
+
+// Highlight specific parts.
+await scene.play(new Indicate(equation.getPart(0), { color: YELLOW }));
+await scene.play(new Indicate(equation.getPart(2), { color: YELLOW }));
+await scene.play(new Indicate(equation.getPart(4), { color: YELLOW }));
 ```
 
 </details>
@@ -519,7 +521,7 @@ await scene.play(new Indicate(line4.getPart(2), { color: YELLOW }));
 ```typescript
 import {
   Circle, Square, Create, Transform,
-  prepareAnimation,
+  prepareAnimation, BLUE, RED,
 } from 'manim-web';
 
 // Accept direct Animation instances
