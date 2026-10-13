@@ -16,6 +16,7 @@ export {
 } from './ElectronPushingArrow';
 export { ReactionArrow, type ReactionArrowOptions, type ReactionArrowKind } from './ReactionArrow';
 export { water, methane, benzene, ethanol, type MoleculeBuilderOptions } from './molecules';
+export { parseMolfile, parseSdf, moleculeFromMolfile, type ParsedMolfile } from './molfile';
 export { cpkColor, normalizeElement, CPK_COLORS, DEFAULT_ELEMENT_COLOR } from './cpkColors';
 export {
   type AtomSpec,
