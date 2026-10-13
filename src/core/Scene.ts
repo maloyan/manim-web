@@ -1431,6 +1431,31 @@ export class Scene {
   }
 
   /**
+   * Reconfigure the frame aspect at runtime for multi-output rendering.
+   *
+   * Authors write one scene, then render it landscape (16:9 YouTube),
+   * portrait (9:16 Reels/Shorts) or square (1:1) from the same source.
+   * This method resizes the renderer, the camera frame and the logical
+   * coordinate frame together by reusing the {@link resize} path.
+   *
+   * The frame height stays invariant (Manim's convention, matching the
+   * camera's `fill` mode); only the frame width tracks the new aspect. World
+   * coordinates therefore stay sensible and every mobject keeps its position
+   * relative to the frame center. Pair it with a {@link SafeArea} so content
+   * anchored to the common visible rectangle reflows instead of clipping.
+   *
+   * @param width - Target render width in pixels. Must be positive.
+   * @param height - Target render height in pixels. Must be positive.
+   * @returns this for chaining
+   */
+  setFrameAspect(width: number, height: number): this {
+    if (!(width > 0) || !(height > 0)) {
+      throw new Error(`setFrameAspect requires positive dimensions, received ${width}x${height}.`);
+    }
+    return this.resize(width, height);
+  }
+
+  /**
    * Install ResizeObserver on the container and a window resize/orientation
    * fallback. All triggers funnel through a single rAF-debounced measurement
    * so a rotation that fires multiple events resizes once per frame.

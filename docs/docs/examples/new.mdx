@@ -15,6 +15,7 @@ import TexTemplateExample from '@site/src/components/examples/TexTemplateExample
 import MathTexPartExample from '@site/src/components/examples/MathTexPartExample';
 import FormulaTransformExample from '@site/src/components/examples/FormulaTransformExample';
 import AnimationUtilitiesExample from '@site/src/components/examples/AnimationUtilitiesExample';
+import ResponsiveAspectExample from '@site/src/components/examples/ResponsiveAspectExample';
 
 Examples showcasing newly implemented features in manim-web.
 
@@ -492,6 +493,53 @@ await scene.play(anim1);
 const square = new Square({ sideLength: 2, color: RED });
 const anim2 = prepareAnimation(() => new Transform(circle, square));
 await scene.play(anim2);
+```
+
+</details>
+
+---
+
+## Responsive Multi-Aspect Layout
+
+Author one scene, render it landscape (16:9 YouTube) and portrait (9:16 Reels/Shorts) from the same source. `Scene.setFrameAspect(width, height)` reconfigures the camera frame, the renderer and the logical coordinate frame at runtime. A `SafeArea` computes the rectangle visible in every target aspect, so content anchored to it reflows instead of clipping. Watch the frame switch below — the safe-area content stays on screen in both shapes.
+
+<ResponsiveAspectExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Scene, SafeArea, Rectangle, Text, Circle, renderAspects, WHITE, BLUE } from 'manim-web';
+
+// The rectangle visible in BOTH 16:9 and 9:16.
+const safe = SafeArea.fromAspectRatios([16 / 9, 9 / 16]);
+
+const title = new Text({ text: 'Safe area', color: WHITE });
+safe.place(title, 'top', 0.3); // anchored to the safe-area top edge
+
+const badge = new Circle({ radius: 1, color: BLUE, fillOpacity: 0.8 });
+safe.place(badge, 'center');
+
+scene.add(title, badge);
+
+// Switch aspect at runtime — content anchored to the safe area reflows.
+scene.setFrameAspect(1080, 1920); // 9:16 portrait
+scene.setFrameAspect(1920, 1080); // 16:9 landscape
+
+// Or produce every output at once, then drive the existing exporters per scene.
+const outputs = await renderAspects(
+  () => new Scene(container),
+  (s) => {
+    const dot = new Circle({ radius: 1, color: BLUE });
+    SafeArea.fromAspectRatios([16 / 9, 9 / 16, 1 / 1]).place(dot, 'center');
+    s.add(dot);
+  },
+  [
+    { width: 1920, height: 1080, name: 'youtube' },
+    { width: 1080, height: 1920, name: 'reels', theme: 'dark' },
+    { width: 1080, height: 1080, name: 'square' },
+  ],
+);
 ```
 
 </details>
