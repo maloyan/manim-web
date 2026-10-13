@@ -80,6 +80,10 @@ export class ChoroplethMap extends Group {
   private _regions: Mobject[] = [];
   private _regionColors: string[] = [];
   private _regionPolygons: Polygon[][] = [];
+  private _features: GeoFeature[] = [];
+  private _fillOpacity: number;
+  private _noDataColor: string;
+  private _fixedDomain: boolean;
 
   constructor(options: ChoroplethMapOptions) {
     super();
@@ -97,8 +101,12 @@ export class ChoroplethMap extends Group {
     } = options;
 
     this._projection = projection;
+    this._fillOpacity = fillOpacity;
+    this._noDataColor = noDataColor;
+    this._fixedDomain = domain !== undefined;
 
     const features = geojson.features ?? [];
+    this._features = features;
     const values = features.map((feature, index) => value(feature, index));
 
     this._colorScale = new ColorScale({ colors: colorScale, domain });
@@ -111,11 +119,41 @@ export class ChoroplethMap extends Group {
     features.forEach((feature, index) => {
       this._buildRegion(feature, values[index], {
         fillOpacity,
-        noDataColor,
         borderColor,
         borderWidth,
       });
     });
+  }
+
+  /**
+   * Re-apply values: recompute each region's fill color from a new accessor and
+   * update the region fills in place. The color/domain logic matches the
+   * constructor: when the map was built without a fixed `domain`, the domain is
+   * re-derived from the new values; a fixed domain is kept. The scene graph is
+   * unchanged (same regions, same polygons), so this is safe to call every frame.
+   *
+   * @param value - Reads the new numeric value per feature.
+   */
+  setValues(value: ChoroplethValueAccessor): void {
+    const values = this._features.map((feature, index) => value(feature, index));
+    if (!this._fixedDomain) {
+      this._colorScale.setDomainFromValues(
+        values.filter((v): v is number => typeof v === 'number' && Number.isFinite(v)),
+      );
+    }
+    values.forEach((v, index) => {
+      const color = this._colorForValue(v);
+      this._regionColors[index] = color;
+      for (const polygon of this._regionPolygons[index]) {
+        polygon.setFill(color, this._fillOpacity);
+      }
+    });
+  }
+
+  /** Map a feature value to its fill color (no-data color when non-finite). */
+  private _colorForValue(value: number | null | undefined): string {
+    const hasValue = typeof value === 'number' && Number.isFinite(value);
+    return hasValue ? this._colorScale.colorFor(value) : this._noDataColor;
   }
 
   private _buildRegion(
@@ -123,13 +161,11 @@ export class ChoroplethMap extends Group {
     value: number | null | undefined,
     style: {
       fillOpacity: number;
-      noDataColor: string;
       borderColor: string;
       borderWidth: number;
     },
   ): void {
-    const hasValue = typeof value === 'number' && Number.isFinite(value);
-    const color = hasValue ? this._colorScale.colorFor(value) : style.noDataColor;
+    const color = this._colorForValue(value);
 
     const rings = polygonRings(feature.geometry);
     const polygons: Polygon[] = [];
