@@ -42,6 +42,21 @@ export interface Atom3DSpec {
   element: string;
   /** Position `[x, y, z]`, in the molecule's own coordinates. */
   position: Vector3Tuple;
+  /**
+   * The chain identifier this atom belongs to, if known (from a PDB parse).
+   * Optional and ignored by rendering; it exists for selection and grouping.
+   */
+  chain?: string;
+  /**
+   * The residue sequence number this atom belongs to, if known.
+   * Optional and ignored by rendering; it exists for selection and grouping.
+   */
+  resSeq?: number;
+  /**
+   * The residue name this atom belongs to, if known (3-letter, e.g. 'ALA').
+   * Optional and ignored by rendering; it exists for selection and grouping.
+   */
+  resName?: string;
 }
 
 /** A single bond between two atoms, by their index in the atoms array. */

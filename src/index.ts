@@ -1134,6 +1134,9 @@ export {
   distanceLabel,
   residueLabel,
   dockLigand,
+  selectAtoms,
+  bindingSiteSelection,
+  DEFAULT_BINDING_SITE_RADIUS,
 } from './mobjects/molecular';
 export type {
   Atom3DSpec,
@@ -1161,6 +1164,7 @@ export type {
   DistanceLabelOptions,
   ResidueLabelOptions,
   DockLigandOptions,
+  AtomSelectionOptions,
 } from './mobjects/molecular';
 
 // Biology mobjects
