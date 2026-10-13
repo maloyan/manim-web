@@ -539,7 +539,9 @@ export class SelectionManager {
 
     this._scene.threeScene.remove(outline);
     outline.geometry.dispose();
-    (outline.material as THREE.Material).dispose();
+    const mat = outline.material;
+    if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
+    else mat.dispose();
     this._highlights.delete(mob);
 
     this._scene.render();

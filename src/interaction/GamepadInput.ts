@@ -657,13 +657,15 @@ export class GamepadInput {
 
   /** Log a connected pad. The snapshot is still read fresh each {@link poll}. */
   private _handleConnect(event: Event): void {
-    const pad = (event as Partial<GamepadEvent>).gamepad;
+    const gamepadEvent: Partial<GamepadEvent> = event;
+    const pad = gamepadEvent.gamepad;
     logger.info(`[manim-web] GamepadInput: gamepad connected (index ${pad?.index ?? '?'}).`);
   }
 
   /** Log a disconnected pad. {@link poll} releases its held buttons. */
   private _handleDisconnect(event: Event): void {
-    const pad = (event as Partial<GamepadEvent>).gamepad;
+    const gamepadEvent: Partial<GamepadEvent> = event;
+    const pad = gamepadEvent.gamepad;
     logger.info(`[manim-web] GamepadInput: gamepad disconnected (index ${pad?.index ?? '?'}).`);
   }
 }

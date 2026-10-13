@@ -142,6 +142,7 @@ export class FadeTransformPieces extends Animation<VMobject> {
     super.begin();
 
     const source = this.mobject;
+    // cast: fade pieces are always VMobjects; base `children` is Mobject[].
     const sourceChildren = source.children as VMobject[];
     const targetChildren = this.target.children as VMobject[];
 

@@ -108,8 +108,8 @@ export class VectorScene extends Scene {
       const [vx] = c2p(x, 0);
       const isAxis = Math.abs(x) < 0.001;
       const line = new Line({
-        start: [vx, -this._yLength / 2, 0] as Vector3Tuple,
-        end: [vx, this._yLength / 2, 0] as Vector3Tuple,
+        start: [vx, -this._yLength / 2, 0],
+        end: [vx, this._yLength / 2, 0],
         color: isAxis ? axisColor : gridColor,
         strokeWidth: isAxis ? 2 : 1,
       });
@@ -122,8 +122,8 @@ export class VectorScene extends Scene {
       const [, vy] = c2p(0, y);
       const isAxis = Math.abs(y) < 0.001;
       const line = new Line({
-        start: [-this._xLength / 2, vy, 0] as Vector3Tuple,
-        end: [this._xLength / 2, vy, 0] as Vector3Tuple,
+        start: [-this._xLength / 2, vy, 0],
+        end: [this._xLength / 2, vy, 0],
         color: isAxis ? axisColor : gridColor,
         strokeWidth: isAxis ? 2 : 1,
       });

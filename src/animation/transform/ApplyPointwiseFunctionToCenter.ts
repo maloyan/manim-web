@@ -26,9 +26,13 @@ interface VMobjectLike {
   setPoints(pts: number[][]): void;
 }
 
-function isVMobjectLike(m: unknown): m is VMobjectLike {
-  const obj = m as Record<string, unknown>;
-  return typeof obj.getLocalPoints === 'function' && typeof obj.setPoints === 'function';
+function isVMobjectLike(m: Mobject): m is Mobject & VMobjectLike {
+  return (
+    'getLocalPoints' in m &&
+    typeof m.getLocalPoints === 'function' &&
+    'setPoints' in m &&
+    typeof m.setPoints === 'function'
+  );
 }
 
 /**
@@ -68,7 +72,7 @@ export class ApplyPointwiseFunctionToCenter extends Animation {
         const startPoints = mob.getLocalPoints();
         if (startPoints.length === 0) continue;
 
-        const mobObj = mob as Mobject;
+        const mobObj = mob;
 
         // Get the Three.js object to transform local <-> world space.
         const threeObj = mobObj._threeObject;

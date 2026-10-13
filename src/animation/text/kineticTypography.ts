@@ -87,9 +87,7 @@ interface TextLike {
 
 /** Type guard for mobjects that expose getText(). */
 function hasGetText(target: Mobject): target is Mobject & TextLike {
-  return (
-    'getText' in target && typeof (target as Mobject & Partial<TextLike>).getText === 'function'
-  );
+  return 'getText' in target && typeof target.getText === 'function';
 }
 
 /**

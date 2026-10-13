@@ -918,11 +918,11 @@ export class MultiCamera {
     // Drop any leftovers from the previous frame.
     while (borderScene.children.length > 0) {
       const child = borderScene.children.pop();
-      if (child && (child as THREE.Mesh).geometry) {
-        (child as THREE.Mesh).geometry.dispose();
-      }
-      if (child && (child as THREE.Mesh).material) {
-        const mat = (child as THREE.Mesh).material;
+      // The border scene holds only `THREE.Mesh` strips (added below), so
+      // `instanceof` narrows `child` and types `geometry`/`material` directly.
+      if (child instanceof THREE.Mesh) {
+        child.geometry.dispose();
+        const mat = child.material;
         if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
         else mat.dispose();
       }

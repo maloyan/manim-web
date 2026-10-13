@@ -440,19 +440,31 @@ export class VGroup extends VMobject {
   }
 
   /**
+   * The children typed as the VMobjects a VGroup is built from.
+   *
+   * `add()` only ever pushes VMobjects, but the base `Mobject.children` is
+   * `Mobject[]`. This accessor narrows once so the iteration helpers below are
+   * typed without repeating the cast.
+   */
+  // cast: VGroup holds only VMobjects (enforced by `add`); base type is Mobject[].
+  private get _vchildren(): VMobject[] {
+    return this.children as VMobject[];
+  }
+
+  /**
    * Get a vmobject by index.
    * @param index - Index of the vmobject
    * @returns The vmobject at the given index, or undefined
    */
   get(index: number): VMobject | undefined {
-    return this.children[index] as VMobject | undefined;
+    return this._vchildren[index];
   }
 
   /**
    * Iterate over all vmobjects in the group.
    */
   [Symbol.iterator](): Iterator<VMobject> {
-    return (this.children as VMobject[])[Symbol.iterator]();
+    return this._vchildren[Symbol.iterator]();
   }
 
   /**
@@ -461,7 +473,7 @@ export class VGroup extends VMobject {
    * @returns this for chaining
    */
   forEach(fn: (vmobject: VMobject, index: number) => void): this {
-    (this.children as VMobject[]).forEach(fn);
+    this._vchildren.forEach(fn);
     return this;
   }
 
@@ -471,7 +483,7 @@ export class VGroup extends VMobject {
    * @returns Array of mapped values
    */
   map<T>(fn: (vmobject: VMobject, index: number) => T): T[] {
-    return (this.children as VMobject[]).map(fn);
+    return this._vchildren.map(fn);
   }
 
   /**
@@ -480,7 +492,7 @@ export class VGroup extends VMobject {
    * @returns New VGroup with filtered vmobjects
    */
   filter(fn: (vmobject: VMobject, index: number) => boolean): VGroup {
-    const filtered = (this.children as VMobject[]).filter(fn);
+    const filtered = this._vchildren.filter(fn);
     return new VGroup(...filtered.map((m) => m.copy()));
   }
 

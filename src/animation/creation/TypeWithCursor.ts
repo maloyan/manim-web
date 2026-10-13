@@ -31,19 +31,16 @@ function hasTextMethods(obj: unknown): obj is TextLikeMobject {
     typeof obj === 'object' &&
     obj !== null &&
     'getText' in obj &&
-    typeof (obj as TextLikeMobject).getText === 'function' &&
+    typeof obj.getText === 'function' &&
     'setText' in obj &&
-    typeof (obj as TextLikeMobject).setText === 'function'
+    typeof obj.setText === 'function'
   );
 }
 
 /** Type guard for mobjects with setText only */
 function hasSetText(obj: unknown): obj is TextLikeMobject {
   return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'setText' in obj &&
-    typeof (obj as TextLikeMobject).setText === 'function'
+    typeof obj === 'object' && obj !== null && 'setText' in obj && typeof obj.setText === 'function'
   );
 }
 
@@ -58,7 +55,7 @@ function hasRenderToCanvas(obj: unknown): obj is RenderableMobject {
     typeof obj === 'object' &&
     obj !== null &&
     '_renderToCanvas' in obj &&
-    typeof (obj as RenderableMobject)._renderToCanvas === 'function'
+    typeof obj._renderToCanvas === 'function'
   );
 }
 

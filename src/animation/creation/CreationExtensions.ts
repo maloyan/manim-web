@@ -20,9 +20,9 @@ function hasTextMethods(obj: unknown): obj is TextLikeMobject {
     typeof obj === 'object' &&
     obj !== null &&
     'getText' in obj &&
-    typeof (obj as TextLikeMobject).getText === 'function' &&
+    typeof obj.getText === 'function' &&
     'setText' in obj &&
-    typeof (obj as TextLikeMobject).setText === 'function'
+    typeof obj.setText === 'function'
   );
 }
 

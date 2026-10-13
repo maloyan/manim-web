@@ -308,6 +308,9 @@ export class TransformAnimations extends Animation {
   override begin(): void {
     super.begin();
 
+    // cast: TransformAnimations blends two point-based animations, so all three
+    // mobjects must be VMobjects; the generic `Animation` API still accepts any
+    // Mobject, hence the assertion here rather than a narrowed constructor.
     const vmobject = this.mobject as VMobject;
     const anim1Mobject = this.animation1.mobject as VMobject;
     const anim2Mobject = this.animation2.mobject as VMobject;

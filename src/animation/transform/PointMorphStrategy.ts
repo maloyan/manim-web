@@ -247,6 +247,8 @@ export class PointMorphStrategy implements MorphStrategy {
       }
       return;
     }
+    // cast: this strategy runs only for VMobject point morphing; the shared
+    // strategy interface types `source`/`target` as the base Mobject.
     const vmobject = source as VMobject;
     const interpolatedPoints: number[][] = [];
     for (let i = 0; i < this._startPoints.length; i++)

@@ -22,9 +22,13 @@ interface VMobjectLike {
   setPoints(pts: number[][]): void;
 }
 
-function isVMobjectLike(m: unknown): m is VMobjectLike {
-  const obj = m as Record<string, unknown>;
-  return typeof obj.getLocalPoints === 'function' && typeof obj.setPoints === 'function';
+function isVMobjectLike(m: Mobject): m is Mobject & VMobjectLike {
+  return (
+    'getLocalPoints' in m &&
+    typeof m.getLocalPoints === 'function' &&
+    'setPoints' in m &&
+    typeof m.setPoints === 'function'
+  );
 }
 
 /**
@@ -71,7 +75,7 @@ export class ApplyPointwiseFunction extends Animation {
         // dirty/unsynced mobject reports an identity matrix and drops the
         // position offset baked into getLocalPoints() — getPoints() composes
         // this same matrix.
-        const worldMatrix = (mob as Mobject)._worldMatrix();
+        const worldMatrix = mob._worldMatrix();
         const inverseWorld = worldMatrix.clone().invert();
 
         // Transform local → world, apply func, then world → local

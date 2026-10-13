@@ -414,10 +414,10 @@ export class PlaybackControls extends Controls {
         this._updatePlayPauseButton();
       }
 
-      this._updateInterval = requestAnimationFrame(update) as unknown as number;
+      this._updateInterval = requestAnimationFrame(update);
     };
 
-    this._updateInterval = requestAnimationFrame(update) as unknown as number;
+    this._updateInterval = requestAnimationFrame(update);
   }
 
   /**

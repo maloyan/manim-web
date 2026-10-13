@@ -43,7 +43,6 @@ export class ApplyWave extends Animation {
   readonly ripples: boolean;
 
   /** Whether mobject is a VMobject */
-  private _isVMobject: boolean = false;
 
   /** Original points (for VMobjects) */
   private _originalPoints: number[][] = [];
@@ -72,7 +71,6 @@ export class ApplyWave extends Animation {
     this.wavelength = options.wavelength ?? 1.5;
     this.speed = options.speed ?? 1;
     this.ripples = options.ripples ?? false;
-    this._isVMobject = mobject instanceof VMobject;
   }
 
   override begin(): void {
@@ -81,9 +79,8 @@ export class ApplyWave extends Animation {
     this._originalPosition.copy(this.mobject.position);
     this._center = this.mobject.getCenter();
 
-    if (this._isVMobject) {
-      const vmob = this.mobject as VMobject;
-      this._originalPoints = vmob.getLocalPoints().map((p) => [...p]);
+    if (this.mobject instanceof VMobject) {
+      this._originalPoints = this.mobject.getLocalPoints().map((p) => [...p]);
 
       // Calculate bounds
       if (this._originalPoints.length > 0) {
@@ -108,16 +105,14 @@ export class ApplyWave extends Animation {
   }
 
   interpolate(alpha: number): void {
-    if (this._isVMobject) {
-      this._applyWaveToVMobject(alpha);
+    if (this.mobject instanceof VMobject) {
+      this._applyWaveToVMobject(this.mobject, alpha);
     } else {
       this._applyWaveToPosition(alpha);
     }
   }
 
-  private _applyWaveToVMobject(alpha: number): void {
-    const vmob = this.mobject as VMobject;
-
+  private _applyWaveToVMobject(vmob: VMobject, alpha: number): void {
     // Calculate wave parameters
     // Wave travels from one side to the other
     const wavePhase = alpha * (1 + this.wavelength * 2) * this.speed;
@@ -190,9 +185,8 @@ export class ApplyWave extends Animation {
 
   override finish(): void {
     // Restore original state
-    if (this._isVMobject) {
-      const vmob = this.mobject as VMobject;
-      vmob.setPoints(this._originalPoints);
+    if (this.mobject instanceof VMobject) {
+      this.mobject.setPoints(this._originalPoints);
     }
 
     this.mobject.position.copy(this._originalPosition);

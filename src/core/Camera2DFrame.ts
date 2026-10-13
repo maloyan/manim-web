@@ -118,7 +118,7 @@ export class Camera2DFrame extends VMobject {
       return this;
     }
     // Mobject target — center on its getCenter()
-    const pt = (target as Mobject).getCenter();
+    const pt = target.getCenter();
     this.position.set(pt[0], pt[1], 0);
     this._markDirty();
     return this;

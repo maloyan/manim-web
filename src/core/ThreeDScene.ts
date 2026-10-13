@@ -261,7 +261,8 @@ export class ThreeDScene extends Scene {
   private static _applyDepthSettings(mob: Mobject, resetRenderOrder = false): void {
     mob.getThreeObject().traverse((c) => {
       if (resetRenderOrder) c.renderOrder = 0;
-      const mat = (c as THREE.Mesh).material;
+      const matHolder: THREE.Object3D & { material?: THREE.Material | THREE.Material[] } = c;
+      const mat = matHolder.material;
       if (!mat) return;
       (Array.isArray(mat) ? mat : [mat]).forEach((m) => {
         m.depthTest = true;
