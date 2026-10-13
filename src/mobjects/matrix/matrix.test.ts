@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Matrix, IntegerMatrix, DecimalMatrix, MobjectMatrix } from './Matrix';
+import { Mobject } from '../../core/Mobject';
 import { VGroup } from '../../core/VGroup';
 import { VMobject } from '../../core/VMobject';
 
@@ -315,5 +316,80 @@ describe('MobjectMatrix', () => {
     expect(c.numRows).toBe(1);
     expect(c).not.toBe(m);
     expect(c.getEntry(0, 0)).not.toBe(entries[0][0]);
+  });
+});
+
+// Regression: a bare `new Matrix(...)` must keep its entries in the matrix
+// render tree. The former _buildMatrix added each entry to a row group AND to a
+// column group; the second add() reparented the entry onto a detached column
+// VGroup, so the matrix rendered only its brackets. These tests fail against
+// that double-parenting bug and pass once entries are owned by rows alone.
+describe('Matrix render tree (regression: entries must stay attached)', () => {
+  it('includes every entry in the matrix family after construction', () => {
+    const m = new Matrix([
+      [1, 2],
+      [3, 4],
+    ]);
+    const family = m.getFamily();
+    for (let i = 0; i < 2; i++) {
+      for (let j = 0; j < 2; j++) {
+        expect(family).toContain(m.getEntry(i, j));
+      }
+    }
+  });
+
+  it("resolves each entry's parent chain up to the matrix", () => {
+    const m = new Matrix([
+      [1, 2],
+      [3, 4],
+    ]);
+    for (let i = 0; i < 2; i++) {
+      for (let j = 0; j < 2; j++) {
+        const chain: Mobject[] = [];
+        let node: Mobject | null = m.getEntry(i, j) ?? null;
+        while (node) {
+          chain.push(node);
+          node = node.parent;
+        }
+        expect(chain).toContain(m);
+      }
+    }
+  });
+
+  it("attaches each entry's THREE object under the matrix THREE object", () => {
+    const a = new VMobject();
+    const b = new VMobject();
+    const c = new VMobject();
+    const d = new VMobject();
+    const m = new MobjectMatrix([
+      [a, b],
+      [c, d],
+    ]);
+    const root = m.getThreeObject(); // triggers _syncToThree over the family
+    for (const entry of [a, b, c, d]) {
+      let parent: typeof root.parent = entry.getThreeObject().parent;
+      let reachesMatrix = false;
+      while (parent) {
+        if (parent === root) {
+          reachesMatrix = true;
+          break;
+        }
+        parent = parent.parent;
+      }
+      expect(reachesMatrix).toBe(true);
+    }
+  });
+
+  it('getEntries returns a view that does NOT detach entries from the matrix', () => {
+    const m = new Matrix([
+      [1, 2],
+      [3, 4],
+    ]);
+    // Calling the view accessors must not steal the entries out of the matrix.
+    m.getEntries();
+    m.getColumns();
+    const family = m.getFamily();
+    expect(family).toContain(m.getEntry(0, 0));
+    expect(family).toContain(m.getEntry(1, 1));
   });
 });
