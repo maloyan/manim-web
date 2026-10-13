@@ -1137,6 +1137,8 @@ export {
   selectAtoms,
   bindingSiteSelection,
   DEFAULT_BINDING_SITE_RADIUS,
+  morphMolecule,
+  MorphMolecule,
 } from './mobjects/molecular';
 export type {
   Atom3DSpec,
@@ -1165,6 +1167,8 @@ export type {
   ResidueLabelOptions,
   DockLigandOptions,
   AtomSelectionOptions,
+  Conformation,
+  MorphMoleculeOptions,
 } from './mobjects/molecular';
 
 // Biology mobjects

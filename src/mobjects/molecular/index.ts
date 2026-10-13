@@ -56,3 +56,6 @@ export type {
 
 export { dockLigand } from './dock';
 export type { DockLigandOptions } from './dock';
+
+export { morphMolecule, MorphMolecule } from './MorphMolecule';
+export type { Conformation, MorphMoleculeOptions } from './MorphMolecule';

@@ -370,6 +370,49 @@ export class Molecule3D extends Group {
     return this._bonds.length;
   }
 
+  // ========== Mutation ==========
+
+  /**
+   * Move every atom to a new position and rebuild the bonds to follow.
+   *
+   * The positions are in the molecule's rendered coordinate space, the same
+   * space as {@link getAtoms}`()[i].position` (the atom spec coordinates times
+   * the world scale; for the default scale of 1 they are the spec coordinates).
+   * Each sphere moves to its new position. The bonds are rebuilt from the new
+   * positions, so the sticks follow the atoms and keep their split colors and
+   * double/triple offsets. Space-filling molecules have no bonds to rebuild.
+   *
+   * This drives {@link MorphMolecule} but is also useful on its own to set a
+   * conformation directly.
+   *
+   * @param positions One `[x, y, z]` per atom, in atom order.
+   * @throws If `positions.length` is not equal to {@link numAtoms}.
+   */
+  setAtomPositions(positions: Vector3Tuple[]): this {
+    if (positions.length !== this._atoms.length) {
+      throw new Error(
+        `Molecule3D.setAtomPositions: expected ${this._atoms.length} positions ` +
+          `(one per atom), got ${positions.length}.`,
+      );
+    }
+    for (let i = 0; i < positions.length; i++) {
+      const p = positions[i];
+      const atom = this._atoms[i];
+      atom.sphere.position.set(p[0], p[1], p[2]);
+      atom.sphere._markDirty();
+      atom.position = [p[0], p[1], p[2]];
+    }
+    this._rebuildBonds();
+    return this;
+  }
+
+  /** Clear the bond sticks and rebuild them from the current atom positions. */
+  private _rebuildBonds(): void {
+    this.bondsGroup.clear();
+    this._bonds.length = 0;
+    this._buildBonds();
+  }
+
   override copy(): Molecule3D {
     const copy = new Molecule3D({
       atoms: this._atomSpecs.map((a) => ({ element: a.element, position: [...a.position] })),
