@@ -9,6 +9,8 @@
 // GeoJSON types and helpers
 export {
   exteriorRings,
+  polygonRings,
+  type PolygonRings,
   type GeoPosition,
   type GeoLinearRing,
   type GeoPolygon,

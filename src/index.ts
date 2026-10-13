@@ -2017,6 +2017,8 @@ export {
   equirectangular,
   mercator,
   exteriorRings,
+  polygonRings,
+  type PolygonRings,
   type ChoroplethMapOptions,
   type ChoroplethValueAccessor,
   type GlobeOptions,

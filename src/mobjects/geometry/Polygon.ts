@@ -3,6 +3,24 @@ import { Vector3Tuple } from '../../core/Mobject';
 import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
 
 /**
+ * Signed area of a 2D ring (XY plane) via the shoelace formula. Positive for a
+ * counter-clockwise ring, negative for a clockwise ring. Used to re-wind holes
+ * opposite to their exterior ring.
+ *
+ * @param ring - The ring vertices (the closing vertex may be omitted).
+ * @returns The signed area.
+ */
+function signedArea2D(ring: Vector3Tuple[]): number {
+  let area = 0;
+  const n = ring.length;
+  for (let i = 0; i < n; i++) {
+    const j = (i + 1) % n;
+    area += ring[i][0] * ring[j][1] - ring[j][0] * ring[i][1];
+  }
+  return area / 2;
+}
+
+/**
  * Options for creating a Polygon
  */
 export interface PolygonOptions {
@@ -16,6 +34,13 @@ export interface PolygonOptions {
   strokeWidth?: number;
   /** Whether to close the polygon. Default: true */
   closed?: boolean;
+  /**
+   * Interior rings (holes) punched out of the fill. Each hole is an array of
+   * vertices; the hole is closed automatically. A hole is honored only when the
+   * polygon is closed. Each hole is re-wound opposite to the exterior ring, so
+   * the input winding does not matter. Default: none.
+   */
+  holes?: Vector3Tuple[][];
 }
 
 /**
@@ -44,6 +69,7 @@ export interface PolygonOptions {
 export class Polygon extends VMobject {
   private _vertices: Vector3Tuple[];
   private _closed: boolean;
+  private _holes: Vector3Tuple[][];
 
   constructor(options: PolygonOptions) {
     super();
@@ -54,6 +80,7 @@ export class Polygon extends VMobject {
       fillOpacity = 0,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       closed = true,
+      holes = [],
     } = options;
 
     if (!vertices || vertices.length < 2) {
@@ -62,6 +89,7 @@ export class Polygon extends VMobject {
 
     this._vertices = vertices.map((v) => [...v]);
     this._closed = closed;
+    this._holes = holes.map((hole) => hole.map((v) => [...v]));
 
     this.color = color;
     this.fillOpacity = fillOpacity;
@@ -71,9 +99,13 @@ export class Polygon extends VMobject {
   }
 
   /**
-   * Generate the polygon points from vertices as line segments
+   * Build the Bezier control points for one ring of vertices as line segments.
+   *
+   * @param vertices - The ring vertices (open; not repeating the first point).
+   * @param closed - Whether to add the closing segment back to the first point.
+   * @returns The ring's Bezier control points.
    */
-  private _generatePoints(): void {
+  private static _buildRingPoints(vertices: Vector3Tuple[], closed: boolean): number[][] {
     const points: number[][] = [];
 
     // Helper to add a line segment as cubic Bezier
@@ -93,16 +125,61 @@ export class Polygon extends VMobject {
     };
 
     // Connect vertices with line segments
-    for (let i = 0; i < this._vertices.length - 1; i++) {
-      addLineSegment(this._vertices[i], this._vertices[i + 1], i === 0);
+    for (let i = 0; i < vertices.length - 1; i++) {
+      addLineSegment(vertices[i], vertices[i + 1], i === 0);
     }
 
-    // Close the polygon if needed
-    if (this._closed && this._vertices.length > 2) {
-      addLineSegment(this._vertices[this._vertices.length - 1], this._vertices[0], false);
+    // Close the ring if needed
+    if (closed && vertices.length > 2) {
+      addLineSegment(vertices[vertices.length - 1], vertices[0], false);
     }
 
+    return points;
+  }
+
+  /**
+   * Generate the polygon points from vertices as line segments.
+   *
+   * With no holes (or an open polygon) this is a single subpath, exactly as
+   * before. With holes, the exterior ring and each hole become separate
+   * subpaths of one compound path, recorded via `setBaseSubpathLengths`. The
+   * fill renderer reads those lengths and carves each hole out with earcut. A
+   * hole wound the same way as the exterior is reversed, so the earcut winding
+   * check always classifies it as a hole.
+   */
+  private _generatePoints(): void {
+    const exterior = Polygon._buildRingPoints(this._vertices, this._closed);
+
+    // No holes, or an open polygon: one subpath, legacy behavior unchanged.
+    if (this._holes.length === 0 || !this._closed) {
+      this.setBaseSubpathLengths(undefined);
+      this.setPoints3D(exterior);
+      return;
+    }
+
+    const exteriorSign = Math.sign(signedArea2D(this._vertices));
+    const points: number[][] = [...exterior];
+    const subpathLengths: number[] = [exterior.length];
+
+    for (const hole of this._holes) {
+      if (hole.length < 3) continue; // a hole needs at least a triangle
+      const oriented = Math.sign(signedArea2D(hole)) === exteriorSign ? [...hole].reverse() : hole;
+      const holePoints = Polygon._buildRingPoints(oriented, true);
+      points.push(...holePoints);
+      subpathLengths.push(holePoints.length);
+    }
+
+    this.setBaseSubpathLengths(subpathLengths.length > 1 ? subpathLengths : undefined);
     this.setPoints3D(points);
+  }
+
+  /**
+   * Get the interior rings (holes) of the polygon.
+   *
+   * @returns A defensive copy of each hole's vertices.
+   */
+  getHoles(): Vector3Tuple[][] {
+    return this._holes.map((hole) => hole.map((v) => [...v]));
   }
 
   /**
@@ -256,6 +333,7 @@ export class Polygon extends VMobject {
       color: this.color,
       fillOpacity: this.fillOpacity,
       strokeWidth: this.strokeWidth,
+      holes: this._holes,
     });
     this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
     return clone;
