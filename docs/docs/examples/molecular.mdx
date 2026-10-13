@@ -1,0 +1,256 @@
+---
+title: 3D molecules & drug binding
+sidebar_label: Molecular 3D
+---
+
+import Molecule3DExample from '@site/src/components/examples/Molecule3DExample';
+import ProteinRibbonExample from '@site/src/components/examples/ProteinRibbonExample';
+import LigandDockingExample from '@site/src/components/examples/LigandDockingExample';
+
+The molecular module draws molecules, proteins and a full ligand-docking story
+in 3D. Every section lists the real exported API, a copy-paste snippet, and a
+runnable example where the feature is visual. All data is hand-authored inline:
+the module reads no files and makes no network calls.
+
+## Molecule3D
+
+`Molecule3D` is a node-link structure: atoms are spheres at explicit 3D
+coordinates, bonds are sticks between atom indices. An `Atom3DSpec` is
+`{ element, position: [x, y, z] }`; a `Bond3DSpec` is `{ from, to, order? }`,
+where `order` 1, 2 or 3 draws one, two or three parallel sticks. Three styles
+are supported through `style`: `'ball-and-stick'` (small spheres plus bonds,
+the default), `'space-filling'` (large van der Waals spheres, no bonds) and
+`'wireframe'`. Atoms are colored by the standard CPK palette; `colors` overrides
+a color per element.
+
+The example below is benzene: six carbons on a planar hexagon with alternating
+double bonds, plus six hydrogens. Drag to orbit, or watch it spin.
+
+<Molecule3DExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Molecule3D, Create } from 'manim-web';
+
+// Benzene: carbons on a hexagon (radius 1.4 A), hydrogens on the same rays.
+const benzene = new Molecule3D({
+  atoms: [
+    { element: 'C', position: [1.4, 0, 0] },
+    { element: 'C', position: [0.7, 1.212, 0] },
+    { element: 'C', position: [-0.7, 1.212, 0] },
+    { element: 'C', position: [-1.4, 0, 0] },
+    { element: 'C', position: [-0.7, -1.212, 0] },
+    { element: 'C', position: [0.7, -1.212, 0] },
+    { element: 'H', position: [2.49, 0, 0] },
+    { element: 'H', position: [1.245, 2.156, 0] },
+    { element: 'H', position: [-1.245, 2.156, 0] },
+    { element: 'H', position: [-2.49, 0, 0] },
+    { element: 'H', position: [-1.245, -2.156, 0] },
+    { element: 'H', position: [1.245, -2.156, 0] },
+  ],
+  // The ring alternates double (order 2) and single bonds; then one C-H each.
+  bonds: [
+    { from: 0, to: 1, order: 2 },
+    { from: 1, to: 2 },
+    { from: 2, to: 3, order: 2 },
+    { from: 3, to: 4 },
+    { from: 4, to: 5, order: 2 },
+    { from: 5, to: 0 },
+    { from: 0, to: 6 },
+    { from: 1, to: 7 },
+    { from: 2, to: 8 },
+    { from: 3, to: 9 },
+    { from: 4, to: 10 },
+    { from: 5, to: 11 },
+  ],
+  style: 'ball-and-stick', // default; 'space-filling' or 'wireframe' also work
+});
+scene.add(benzene); // use a ThreeDScene
+await scene.play(new Create(benzene));
+
+// A space-filling view of the same atoms: large van der Waals spheres, no bonds.
+const spaceFilling = new Molecule3D({ atoms: benzene.getAtoms(), style: 'space-filling' });
+```
+
+</details>
+
+`radiusScheme` (`'covalent'`, `'vdw'` or `'uniform'`), `radiusScale`,
+`bondRadius`, `bondColor`, `sphereResolution` and `scale` tune the render.
+Accessors `getAtoms()`, `getBonds()`, `getAtom(i)`, `numAtoms` and `numBonds`
+read the resolved structure.
+
+## parsePdb
+
+`parsePdb(text, { includeWater? })` reads fixed-column PDB records from a local
+string (no network, no file IO) and returns
+`{ atoms, hetatms, bonds, residues }`. `atoms` and `hetatms` are `Atom3DSpec`
+arrays ready for `Molecule3D`; `bonds` are `Bond3DSpec` from CONECT records;
+`residues` is one `ResidueCA` per alpha-carbon (`{ code, ca, chain?, resSeq?, ss? }`)
+ready for `Protein`. Waters are dropped unless `includeWater` is true.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { parsePdb, Molecule3D } from 'manim-web';
+
+// A two-atom fragment in real PDB column layout (ATOM + CONECT records).
+const pdbText = `
+ATOM      1  N   ALA A   1       0.000   0.000   0.000  1.00  0.00           N
+ATOM      2  CA  ALA A   1       1.458   0.000   0.000  1.00  0.00           C
+CONECT    1    2
+`;
+
+const { atoms, bonds, residues } = parsePdb(pdbText);
+const mol = new Molecule3D({ atoms, bonds }); // render the parsed atoms
+// residues feeds Protein directly (see below).
+```
+
+</details>
+
+## Protein
+
+`Protein` draws a protein backbone from its alpha-carbon (CA) positions, one per
+residue. `representation` is `'tube'` (a smooth Catmull-Rom ribbon, the default)
+or `'backbone-line'` (a polyline). `colorMode` is `'secondary-structure'`
+(helix red, sheet yellow, coil grey — the default), `'residue'`, `'rainbow'`
+(N-to-C spectrum) or `'uniform'`. `tubeRadius`, `smoothing`, `uniformColor`,
+`ssColors` and `scale` tune the render.
+
+The example builds an ideal alpha helix of 18 residues programmatically (100°
+of turn and 1.5 Å of rise per residue, on a 2.3 Å cylinder) and marks every
+residue `ss: 'helix'`, so secondary-structure coloring paints the tube red.
+
+<ProteinRibbonExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Protein } from 'manim-web';
+
+// Generate an ideal alpha helix: 18 residues up the Z axis, centered on origin.
+const codes = ['A', 'L', 'V', 'G', 'K', 'E', 'S'];
+const residues = Array.from({ length: 18 }, (_, i) => {
+  const t = i * ((100 * Math.PI) / 180);
+  return {
+    code: codes[i % codes.length],
+    ca: [2.3 * Math.cos(t), 2.3 * Math.sin(t), i * 1.5 - 12.75],
+    ss: 'helix' as const,
+  };
+});
+
+const protein = new Protein({
+  residues,
+  representation: 'tube',
+  colorMode: 'secondary-structure', // helix -> red
+  tubeRadius: 0.35,
+  smoothing: 8,
+});
+scene.add(protein); // use a ThreeDScene
+```
+
+</details>
+
+## BindingPocket and annotations
+
+`BindingPocket` marks a binding site with one sphere at `center` with `radius`,
+drawn as a `'translucent-surface'` (default) or a `'wireframe-sphere'` so the
+ligand stays visible inside it. `getCenter()` returns the center, which is the
+docking target below.
+
+Four annotation builders make the interaction legible. Each returns a plain
+mobject, never an animation, so the caller places and plays it. Labels use the
+2D `Text` mobject, which faces +Z, so the caller billboards them with
+`scene.addFixedOrientationMobjects(...)`.
+
+- `hydrogenBond(from, to, options?)` and `contact(from, to, options?)` return a
+  `Group` of dashed `Line3D` segments between two atoms.
+- `distanceLabel(from, to, options?)` returns a `Group` of `[line, label]`. The
+  label text is the measured distance unless `label` overrides it. Billboard the
+  **last** child (the label), not the whole group, or the line endpoints detach.
+- `residueLabel(position, text, options?)` returns a `Text` mobject to billboard.
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { BindingPocket, hydrogenBond, distanceLabel, residueLabel } from 'manim-web';
+
+const pocket = new BindingPocket({ center: [3.8, 0, 0], radius: 2.8, opacity: 0.25 });
+scene.add(pocket);
+
+const donor = [2.1, -0.8, -0.6]; // a backbone atom
+const target = pocket.getCenter();
+
+// A dashed hydrogen bond.
+const hb = hydrogenBond(donor, target, { color: '#9fe2bf' });
+scene.add(hb);
+
+// A measured line with a binding-energy label; billboard only the label child.
+const energy = distanceLabel(donor, target, { label: 'ΔG = -9.2 kcal/mol', color: '#ffe066' });
+scene.add(energy);
+scene.addFixedOrientationMobjects(energy.children[energy.children.length - 1]);
+
+// A floating residue tag.
+const tag = residueLabel([target[0], target[1], target[2] + 3.4], 'LYS-128');
+scene.add(tag);
+scene.addFixedOrientationMobjects(tag);
+```
+
+</details>
+
+## Ligand docking
+
+This is the headline move. `dockLigand({ ligand, target, startOffset?, runTime?, spin?, spinAngle? })`
+returns one `Animation` that flies the ligand in from `target + startOffset`,
+optionally tumbling, and settles it exactly on `target`. It places the ligand at
+the fly-in start itself, so the caller only `scene.add(ligand)` first, then
+`scene.play(dockLigand(...))`. Camera orbit is the scene's job: call
+`scene.beginAmbientCameraRotation(rate)` separately to orbit while docking.
+
+The example composes the whole module: a `Protein` helix fades in, a
+`BindingPocket` grows beside it, a small ligand docks into `pocket.getCenter()`
+while the camera orbits, then a `hydrogenBond` and a ΔG `distanceLabel` are
+drawn. The ligand should settle **inside** the blue pocket sphere.
+
+<LigandDockingExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Molecule3D, Protein, BindingPocket, dockLigand, hydrogenBond, FadeIn, GrowFromCenter } from 'manim-web';
+
+// 1. The protein fades in (helix trace as in the Protein section).
+const protein = new Protein({ residues, representation: 'tube', colorMode: 'secondary-structure', tubeRadius: 0.35 });
+scene.add(protein);
+await scene.play(new FadeIn(protein));
+
+// 2. The binding pocket grows beside the helix.
+const pocket = new BindingPocket({ center: [3.8, 0, 0], radius: 2.8, opacity: 0.25 });
+scene.add(pocket);
+await scene.play(new GrowFromCenter(pocket));
+
+// 3. A small ligand docks into the pocket center while the camera orbits.
+const ligand = new Molecule3D({
+  atoms: [
+    { element: 'C', position: [0, 0, 0] },
+    { element: 'O', position: [1.3, 0.2, 0] },
+    { element: 'N', position: [-0.8, 1.1, 0] },
+    { element: 'O', position: [-0.4, -1.2, 0.3] },
+  ],
+  bonds: [{ from: 0, to: 1, order: 2 }, { from: 0, to: 2 }, { from: 0, to: 3 }],
+});
+scene.add(ligand); // dockLigand positions it at target + startOffset
+scene.beginAmbientCameraRotation(0.25);
+await scene.play(dockLigand({ ligand, target: pocket.getCenter(), startOffset: [0, 0, 10], runTime: 2.5 }));
+
+// 4. Draw the binding story: a hydrogen bond from a backbone CA to the ligand.
+const hb = hydrogenBond(protein.getCAPoints()[9], pocket.getCenter());
+scene.add(hb);
+```
+
+</details>
