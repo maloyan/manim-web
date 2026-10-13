@@ -74,7 +74,7 @@ export interface MathTexImageOptions {
 interface RenderState {
   canvas: HTMLCanvasElement | null;
   texture: THREE.Texture | null;
-  mesh: THREE.Mesh | null;
+  mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> | null;
   width: number;
   height: number;
   isRendering: boolean;
@@ -610,7 +610,7 @@ export class MathTexImage extends TexturedMobject {
 
     if (this._renderState.mesh) {
       this._updateMeshGeometry();
-      const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
+      const material = this._renderState.mesh.material;
       material.map = this._renderState.texture;
       material.needsUpdate = true;
     }
@@ -745,7 +745,7 @@ export class MathTexImage extends TexturedMobject {
       // Update mesh if it exists
       if (this._renderState.mesh) {
         this._updateMeshGeometry();
-        const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
+        const material = this._renderState.mesh.material;
         material.map = this._renderState.texture;
         material.needsUpdate = true;
       }
@@ -1114,7 +1114,7 @@ export class MathTexImage extends TexturedMobject {
    */
   protected override _syncMaterialToThree(): void {
     if (this._renderState.mesh) {
-      const material = this._renderState.mesh.material as THREE.MeshBasicMaterial;
+      const material = this._renderState.mesh.material;
       material.opacity = this._opacity;
       material.color.set(this.color); // tint white texture to desired color
 
@@ -1213,7 +1213,7 @@ export class MathTexImage extends TexturedMobject {
     }
     if (this._renderState.mesh) {
       this._renderState.mesh.geometry.dispose();
-      (this._renderState.mesh.material as THREE.Material).dispose();
+      this._renderState.mesh.material.dispose();
     }
     super.dispose();
   }

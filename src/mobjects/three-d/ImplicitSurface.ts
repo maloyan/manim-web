@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { Vector3Tuple } from '../../core/Mobject';
+import { meshMaterial } from '../../core/threeMaterial';
 import { Mobject3D } from './Mobject3D';
 import { marchingCubes, type ScalarField3D } from './marchingCubes';
 
@@ -150,13 +151,12 @@ export class ImplicitSurface extends Mobject3D {
 
   /** Find the depth-prepass child mesh, if this surface has one. */
   private _getPrepassMesh(): THREE.Mesh | null {
-    if (!(this._threeObject instanceof THREE.Mesh)) return null;
-    const prepass = this._threeObject.children.find(
-      (c) =>
-        (c as THREE.Mesh).isMesh &&
-        ((c as THREE.Mesh).material as THREE.Material).userData.depthPrepass,
+    const mesh = this.getMesh();
+    if (!mesh) return null;
+    const prepass = mesh.children.find(
+      (c): c is THREE.Mesh => c instanceof THREE.Mesh && !!meshMaterial(c).userData.depthPrepass,
     );
-    return (prepass as THREE.Mesh) ?? null;
+    return prepass ?? null;
   }
 
   /**
@@ -196,8 +196,7 @@ export class ImplicitSurface extends Mobject3D {
 
   /** Sync material properties to the Three.js object. */
   protected override _syncMaterialToThree(): void {
-    if (!(this._threeObject instanceof THREE.Mesh)) return;
-    const material = this._threeObject.material as THREE.MeshStandardMaterial;
+    const material = this.getMeshMaterial<THREE.MeshStandardMaterial>();
     if (material) {
       material.color.set(this.color);
       material.opacity = this._opacity;
@@ -209,7 +208,7 @@ export class ImplicitSurface extends Mobject3D {
     }
     const prepass = this._getPrepassMesh();
     if (prepass) {
-      const prepassMaterial = prepass.material as THREE.Material;
+      const prepassMaterial = meshMaterial(prepass);
       prepassMaterial.side = this._doubleSided ? THREE.DoubleSide : THREE.FrontSide;
       this._applyPrepassState(prepassMaterial);
     }

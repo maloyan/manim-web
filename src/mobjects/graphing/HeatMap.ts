@@ -183,14 +183,12 @@ export class HeatMap extends Mobject3D {
   }
 
   protected override _syncMaterialToThree(): void {
-    if (this._threeObject instanceof THREE.Mesh) {
-      const material = this._threeObject.material as THREE.MeshBasicMaterial;
-      if (material) {
-        material.vertexColors = true;
-        material.opacity = this._opacity;
-        material.transparent = this._opacity < 1;
-        material.needsUpdate = true;
-      }
+    const material = this.getMeshMaterial<THREE.MeshBasicMaterial>();
+    if (material) {
+      material.vertexColors = true;
+      material.opacity = this._opacity;
+      material.transparent = this._opacity < 1;
+      material.needsUpdate = true;
     }
   }
 

@@ -86,7 +86,7 @@ export class ImageMobject extends TexturedMobject {
   protected _imageLoaded: boolean = false;
   protected _naturalWidth: number = 1;
   protected _naturalHeight: number = 1;
-  private _mesh: THREE.Mesh | null = null;
+  private _mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> | null = null;
 
   // Promise that resolves when image is loaded
   private _loadPromise: Promise<void>;
@@ -496,7 +496,7 @@ export class ImageMobject extends TexturedMobject {
 
     mesh.scale.set(dims.width, dims.height, 1);
 
-    const material = mesh.material as THREE.MeshBasicMaterial;
+    const material = mesh.material;
     if (material && this._texture) {
       material.map = this._texture;
       material.needsUpdate = true;
@@ -511,7 +511,7 @@ export class ImageMobject extends TexturedMobject {
   protected override _syncMaterialToThree(): void {
     const mesh = this._mesh;
     if (mesh) {
-      const material = mesh.material as THREE.MeshBasicMaterial;
+      const material = mesh.material;
       if (material) {
         material.opacity = this._opacity;
         material.transparent = this._opacity < 1;

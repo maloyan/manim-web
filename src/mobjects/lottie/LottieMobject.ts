@@ -171,7 +171,7 @@ export class LottieMobject extends TexturedMobject {
   protected _loadError: Error | null = null;
   protected _playing: boolean = false;
   protected _playhead: number = 0;
-  private _mesh: THREE.Mesh | null = null;
+  private _mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> | null = null;
 
   private _loadPromise: Promise<void>;
   private _loadResolve: (() => void) | null = null;
@@ -537,7 +537,7 @@ export class LottieMobject extends TexturedMobject {
     if (!mesh) return;
     const dims = this._calculateDimensions();
     mesh.scale.set(dims.width, dims.height, 1);
-    const material = mesh.material as THREE.MeshBasicMaterial;
+    const material = mesh.material;
     if (material && this._texture) {
       material.map = this._texture;
       material.needsUpdate = true;
@@ -548,8 +548,7 @@ export class LottieMobject extends TexturedMobject {
   protected override _syncMaterialToThree(): void {
     const mesh = this._mesh;
     if (!mesh) return;
-    const material = mesh.material as THREE.MeshBasicMaterial;
-    if (!material) return;
+    const material = mesh.material;
     material.opacity = this._opacity;
     material.transparent = this._opacity < 1;
     material.side = this._doubleSided ? THREE.DoubleSide : THREE.FrontSide;

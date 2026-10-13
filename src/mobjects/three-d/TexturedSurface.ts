@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ParametricGeometry } from 'three/examples/jsm/geometries/ParametricGeometry.js';
 import { Vector3Tuple } from '../../core/Mobject';
+import { meshMaterial } from '../../core/threeMaterial';
 import { logger } from '../../utils/logger';
 import { Mobject3D } from './Mobject3D';
 import { Surface3D } from './Surface3D';
@@ -236,13 +237,11 @@ export class TexturedSurface extends Mobject3D {
    * textured material or a day/night shader material.
    */
   private _applyTextures(): void {
-    if (!this._threeObject || !(this._threeObject instanceof THREE.Mesh)) return;
-    if (!this._texture) return;
-
-    const mesh = this._threeObject as THREE.Mesh;
+    const mesh = this.getMesh();
+    if (!mesh || !this._texture) return;
 
     // Dispose old material
-    const oldMaterial = mesh.material as THREE.Material;
+    const oldMaterial = meshMaterial(mesh);
     oldMaterial.dispose();
 
     if (this._darkTexture) {
@@ -521,7 +520,7 @@ export class TexturedSurface extends Mobject3D {
       this._dayNightMaterial = null;
     }
     if (this._threeObject instanceof THREE.Mesh) {
-      const mat = this._threeObject.material as THREE.Material;
+      const mat = meshMaterial(this._threeObject);
       mat.dispose();
       this._threeObject.geometry.dispose();
     }

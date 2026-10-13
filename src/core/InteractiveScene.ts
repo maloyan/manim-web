@@ -276,8 +276,7 @@ export class InteractiveScene extends Scene {
 
     for (const group of groups) {
       // Extract children before removing the group.
-      // cast: these groups only ever hold VMobjects; base children is Mobject[].
-      const children = [...group.children] as VMobject[];
+      const children = [...group.getChildrenAs<VMobject>()];
       this.remove(group);
 
       for (const child of children) {

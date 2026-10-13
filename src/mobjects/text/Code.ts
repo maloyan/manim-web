@@ -120,7 +120,7 @@ export class Code extends VMobject {
   protected _tokenizedLines: Token[][] = [];
 
   /** Highlight rectangles */
-  protected _highlightMeshes: THREE.Mesh[] = [];
+  protected _highlightMeshes: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>[] = [];
 
   constructor(options: CodeOptions) {
     super();
@@ -419,7 +419,7 @@ export class Code extends VMobject {
         this._threeObject.remove(mesh);
       }
       mesh.geometry.dispose();
-      (mesh.material as THREE.Material).dispose();
+      mesh.material.dispose();
     }
     this._highlightMeshes = [];
     return this;

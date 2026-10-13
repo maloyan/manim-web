@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ParametricGeometry } from 'three/examples/jsm/geometries/ParametricGeometry.js';
 import { Vector3Tuple } from '../../core/Mobject';
+import { meshMaterial } from '../../core/threeMaterial';
 import { Mobject3D } from './Mobject3D';
 
 /**
@@ -189,13 +190,12 @@ export class Surface3D extends Mobject3D {
 
   /** Find the depth-prepass child mesh, if this surface has one. */
   private _getPrepassMesh(): THREE.Mesh | null {
-    if (!(this._threeObject instanceof THREE.Mesh)) return null;
-    const prepass = this._threeObject.children.find(
-      (c) =>
-        (c as THREE.Mesh).isMesh &&
-        ((c as THREE.Mesh).material as THREE.Material).userData.depthPrepass,
+    const mesh = this.getMesh();
+    if (!mesh) return null;
+    const prepass = mesh.children.find(
+      (c): c is THREE.Mesh => c instanceof THREE.Mesh && !!meshMaterial(c).userData.depthPrepass,
     );
-    return (prepass as THREE.Mesh) ?? null;
+    return prepass ?? null;
   }
 
   /**
@@ -251,29 +251,27 @@ export class Surface3D extends Mobject3D {
    * Sync material properties to Three.js object
    */
   protected override _syncMaterialToThree(): void {
-    if (this._threeObject instanceof THREE.Mesh) {
-      const material = this._threeObject.material as THREE.MeshStandardMaterial;
-      if (material) {
-        if (!this._checkerboardColors) {
-          material.color.set(this.color);
-        }
-        material.vertexColors = !!this._checkerboardColors;
-        material.opacity = this._opacity;
-        material.transparent = this._opacity < 1;
-        // Also managed by ThreeDScene's depth settings, but Transform
-        // targets (FadeMorphStrategy) sync outside any scene and must
-        // not depth-block other transparents while translucent.
-        material.depthWrite = this._opacity >= 1;
-        material.wireframe = this._wireframe;
-        material.side = this._doubleSided ? THREE.DoubleSide : THREE.FrontSide;
-        material.needsUpdate = true;
+    const material = this.getMeshMaterial<THREE.MeshStandardMaterial>();
+    if (material) {
+      if (!this._checkerboardColors) {
+        material.color.set(this.color);
       }
-      const prepass = this._getPrepassMesh();
-      if (prepass) {
-        const prepassMaterial = prepass.material as THREE.Material;
-        prepassMaterial.side = this._doubleSided ? THREE.DoubleSide : THREE.FrontSide;
-        this._applyPrepassState(prepassMaterial);
-      }
+      material.vertexColors = !!this._checkerboardColors;
+      material.opacity = this._opacity;
+      material.transparent = this._opacity < 1;
+      // Also managed by ThreeDScene's depth settings, but Transform
+      // targets (FadeMorphStrategy) sync outside any scene and must
+      // not depth-block other transparents while translucent.
+      material.depthWrite = this._opacity >= 1;
+      material.wireframe = this._wireframe;
+      material.side = this._doubleSided ? THREE.DoubleSide : THREE.FrontSide;
+      material.needsUpdate = true;
+    }
+    const prepass = this._getPrepassMesh();
+    if (prepass) {
+      const prepassMaterial = meshMaterial(prepass);
+      prepassMaterial.side = this._doubleSided ? THREE.DoubleSide : THREE.FrontSide;
+      this._applyPrepassState(prepassMaterial);
     }
   }
 
@@ -293,11 +291,9 @@ export class Surface3D extends Mobject3D {
       oldGeometry.dispose();
 
       if (this._checkerboardColors) {
-        const material = this._threeObject.material as THREE.MeshStandardMaterial;
-        if (material) {
-          material.vertexColors = true;
-          material.needsUpdate = true;
-        }
+        const material = meshMaterial<THREE.MeshStandardMaterial>(this._threeObject);
+        material.vertexColors = true;
+        material.needsUpdate = true;
       }
     }
     this._markDirty();

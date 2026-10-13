@@ -417,7 +417,7 @@ export class CandlestickChart extends VGroup {
 
   /** Get all candle VGroups. */
   getCandles(): VGroup[] {
-    return this.candles.children as VGroup[];
+    return this.candles.getChildrenAs<VGroup>();
   }
 
   /**
@@ -426,7 +426,7 @@ export class CandlestickChart extends VGroup {
    */
   getCandle(index: number): VGroup | undefined {
     if (index < 0 || index >= this.candles.children.length) return undefined;
-    return this.candles.children[index] as VGroup;
+    return this.candles.getChildrenAs<VGroup>()[index];
   }
 
   /**
