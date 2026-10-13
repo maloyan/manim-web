@@ -1,0 +1,373 @@
+---
+title: New in 0.32, 0.33, 0.35 and 0.36
+sidebar_label: New in 0.32 - 0.36
+---
+
+import GameInputExample from '@site/src/components/examples/GameInputExample';
+import DNAHelixExample from '@site/src/components/examples/DNAHelixExample';
+import CellExample from '@site/src/components/examples/CellExample';
+import AminoAcidChainExample from '@site/src/components/examples/AminoAcidChainExample';
+import Text3DExample from '@site/src/components/examples/Text3DExample';
+import SpatialAudioExample from '@site/src/components/examples/SpatialAudioExample';
+import WebXRExample from '@site/src/components/examples/WebXRExample';
+import SmilExportExample from '@site/src/components/examples/SmilExportExample';
+import ResponsiveAspectExample from '@site/src/components/examples/ResponsiveAspectExample';
+import MaskExample from '@site/src/components/examples/MaskExample';
+
+Features added in the 0.32, 0.33, 0.35 and 0.36 releases. Each section lists the
+real exported API and a copy-paste snippet. Visual features run live: click to
+render them. The input, audio, WebXR and SVG-export features cannot be shown by a
+passive WebGL render, so each has an honest interactive control instead: move a
+dot with the keyboard or a gamepad, pan a tone around the listener, probe this
+device for VR, and download a real animated SVG.
+
+## 0.32.0
+
+### Game input: KeyboardInput and GamepadInput
+
+`KeyboardInput` (added in 0.31) and `GamepadInput` (0.32) are the two halves of
+interactive game input. Both share one shape: the same lifecycle (`enable` /
+`disable` / `dispose`), per-frame edge queries (`wasPressed` / `wasButtonPressed`),
+a movement vector from the arrow keys and WASD or the d-pad and left stick, and
+the same `StateMachine` and `ValueTracker` bindings. A keyboard is event-based;
+the Gamepad API is poll-based, so call `pad.poll()` once per frame before reading
+it. All DOM and navigator access is feature-detected, so both are safe to
+construct in Node.
+
+The widget below is live. Click it, then move the dot with **WASD / arrow keys**,
+or connect a gamepad and use the left stick or d-pad.
+
+<GameInputExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { KeyboardInput, GamepadInput } from 'manim-web';
+
+// preventDefault stops game keys from scrolling the page.
+const keys = new KeyboardInput({ preventDefault: ['w', 'a', 's', 'd', 'space'] });
+const pad = new GamepadInput({ deadzone: 0.15 });
+
+// In the render loop, each frame:
+function frame(dt: number): void {
+  pad.poll(); // read the gamepad snapshot and compute button edges
+
+  // Combine the two direction vectors (each is a unit vector, [0, 0] when idle).
+  const [kx, ky] = keys.getDirectionVector();
+  const [gx, gy] = pad.getDirectionVector();
+  player.shift([(kx + gx) * speed * dt, (ky + gy) * speed * dt, 0]);
+
+  if (keys.wasPressed('Space') || pad.wasButtonPressed('A')) player.jump();
+  keys.endFrame(); // clear this frame's pressed / released edges
+}
+```
+
+</details>
+
+Check pad support with `isGamepadSupported()`, list live pads with
+`getConnectedGamepads()`, and build either controller from a factory with
+`makeKeyboardInput(options)` or `makeGamepadInput(options)`.
+
+## 0.33.0
+
+### DNAHelix
+
+`DNAHelix` draws a double helix: two phosphate backbone strands (parametric
+helices half a turn out of phase) joined by base-pair rungs. The rungs can be
+colored by base with the A/T/G/C palette (`DNA_BASE_COLORS`), and the second
+strand is the complement of the first. It is a `VGroup`, so `Create` and `FadeIn`
+animate it. Set `threeD: true` for a helix that winds around the axis in Z.
+
+<DNAHelixExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { DNAHelix, Create } from 'manim-web';
+
+const dna = new DNAHelix({
+  turns: 3,
+  basePairs: 14,
+  pitch: 1.6,
+  radius: 0.9,
+  sequence: ['A', 'T', 'G', 'C', 'A', 'A', 'T', 'G'], // repeats to fill basePairs
+  strokeWidth: 5,
+});
+scene.play(new Create(dna, { duration: 2.5 }));
+```
+
+</details>
+
+Options include `colorByBase`, `backboneColors`, `baseColors`, `rungColor`, and
+`numSamplesPerTurn`. `DNA_BASE_COLORS` is the exported base palette.
+
+### Cell
+
+`Cell` is a 2D cell diagram: a membrane (a circle or an ellipse), an optional
+nucleus, and a set of labeled organelles. Each organelle is a small shape placed
+at an explicit `position`, or auto-arranged on a ring between the nucleus and the
+membrane when no position is given. It is a `VGroup`.
+
+<CellExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Cell, Create } from 'manim-web';
+
+const cell = new Cell({
+  radius: 2.6,
+  organelles: [
+    { name: 'mitochondrion', shape: 'ellipse' }, // CellShape: 'circle' | 'ellipse'
+    { name: 'ribosome' },
+    { name: 'lysosome' },
+    { name: 'vacuole', shape: 'ellipse' },
+    { name: 'golgi' },
+  ],
+  labelFontSize: 22,
+});
+scene.play(new Create(cell, { duration: 2.5 }));
+```
+
+</details>
+
+Options include `shape`, `showNucleus`, `nucleusRadius`, `labels`, `colors`
+(per-name overrides), `membraneColor`, and `nucleusColor`.
+
+### AminoAcidChain
+
+`AminoAcidChain` is a bead chain of amino acid residues joined by peptide bond
+lines, laid out left to right in a straight row or a zigzag. Beads are colored by
+residue and labeled with their code. It is a `VGroup`.
+
+<AminoAcidChainExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { AminoAcidChain, Create } from 'manim-web';
+
+const chain = new AminoAcidChain({
+  residues: ['M', 'A', 'G', 'K', 'D', 'E', 'F', 'R', 'S', 'T'],
+  beadRadius: 0.38,
+  spacing: 1.05,
+  zigzag: true,
+  labelFontSize: 22,
+});
+scene.play(new Create(chain, { duration: 2.5 }));
+```
+
+</details>
+
+Options include `colors` (per-code overrides), `labels`, `bondColor`, and
+`strokeWidth`.
+
+### Text3D
+
+`Text3D` is true 3D text: a typeface extruded into a solid mesh with an optional
+bevel, through Three.js `TextGeometry`. The mesh drops into the normal 3D
+hierarchy, so it shifts, scales, rotates and takes the 3D camera and lighting
+like a `Cube`. No font is bundled: `Text3D.fromUrl(text, options)` loads a
+`typeface.json` (a small default font from a CDN, or your own `fontUrl`), then
+builds the mesh. The camera orbits below so the extrusion depth and bevel show.
+
+<Text3DExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { Text3D } from 'manim-web';
+
+// fromUrl is async: it loads the font, then returns a ready Text3D.
+const text = await Text3D.fromUrl('manim', {
+  size: 1.6,
+  depth: 0.5,
+  bevel: { enabled: true, thickness: 0.06, size: 0.04 },
+  color: '#58c4dd',
+});
+text.center(); // TextGeometry builds from the left baseline; recenter at origin.
+
+scene.add(text); // a ThreeDScene — the default lights light the depth and bevel
+```
+
+</details>
+
+Pass a `fontUrl` for a custom typeface, or build from an already-parsed font with
+`Text3D.fromFont(text, font, options)`. `setText` and `setSize` rebuild the
+geometry in place.
+
+### Spatial audio: SpatialAudio
+
+`SpatialAudio` is a sound positioned in 3D, wired through a Web Audio
+`PannerNode`. Move it with `setPosition`, or `attachTo(mobject)` so it follows a
+mobject each `update(dt)`, and place the listener with `setListenerPosition` or
+`setListenerFromCamera`. Build one from a decoded buffer with
+`SpatialAudio.fromBuffer` or from an `<audio>` / `<video>` element with
+`SpatialAudio.fromMediaElement`. Guard with `isSpatialAudioSupported()`.
+
+The button below is live: it plays a looping tone and sweeps it from the left ear
+to the right ear. Use headphones to hear the pan.
+
+<SpatialAudioExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { SpatialAudio, isSpatialAudioSupported } from 'manim-web';
+
+if (isSpatialAudioSupported()) {
+  const audio = SpatialAudio.fromBuffer(toneBuffer, { loop: true, position: [-8, 0, 0] });
+  audio.setListenerPosition([0, 0, 0]);
+  audio.play();
+
+  // Move the source each frame; the PannerNode pans it in 3D.
+  audio.setPosition([x, 0, 0]);
+
+  // Or follow a mobject: audio.attachTo(dot) then audio.update(dt) per frame.
+}
+```
+
+</details>
+
+The `SpatialPanner` type and the panner setters (`panningModel`, `distanceModel`,
+`refDistance`, `maxDistance`, `rolloffFactor`) expose the underlying node.
+
+### WebXR
+
+`enableXR(scene, options)` returns a `WebXRSession` that can render a `Scene` or a
+`ThreeDScene` in an immersive VR/AR headset through `renderer.xr`. The desktop
+render path is never touched; XR activates only on `enterXR()`. Every entry point
+degrades cleanly without hardware: `isXRSupported()` resolves `false` and
+`enterXR()` resolves `false` without throwing.
+
+The button below calls the real `isXRSupported('immersive-vr')` guard and reports
+what this device can do. Most readers have no headset, so it reports "not
+available" — which is exactly how the guard behaves in code.
+
+<WebXRExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { enableXR, isXRSupported } from 'manim-web';
+
+if (await isXRSupported('immersive-vr')) {
+  const session = enableXR(scene, {
+    onFrame: (time) => {
+      // advance animation state here while the headset drives the render loop
+    },
+  });
+
+  // A ready-made Enter VR / Exit VR button; its label reflects support.
+  const button = session.createButton();
+  if (button) document.body.appendChild(button);
+
+  // Or drive the session yourself:
+  await session.enterXR();
+  // ...later
+  await session.exitXR();
+}
+```
+
+</details>
+
+`WebXROptions` also takes `mode` (`'immersive-vr'` by default), `referenceSpaceType`,
+a custom `camera`, `sessionInit` features, and an `onExit` callback.
+
+### Animated SVG export (SMIL)
+
+`exportAnimatedSVG(scene, options)` samples a scene across its timeline and emits
+one standalone `<svg>` whose elements carry SMIL `<animate>` tags. The result
+plays on its own in any browser, with no JavaScript, and loops.
+`exportAndDownloadAnimatedSVG(scene, filename, options)` downloads it.
+
+The button below is live: it builds a small scene and downloads a real animated
+SVG. Open the file in a browser to watch it loop.
+
+<SmilExportExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { exportAndDownloadAnimatedSVG, exportAnimatedSVG } from 'manim-web';
+
+// Record an animation on a Scene, then export the timeline as one SVG.
+await scene.play(dot.animate.shift([8, 0, 0]));
+exportAndDownloadAnimatedSVG(scene, 'scene.svg', { duration: 2, loop: true });
+
+// Or get the Blob without downloading it (for example, to upload it).
+const blob = exportAnimatedSVG(scene, { fps: 30, background: '#111111' });
+```
+
+</details>
+
+Options include `keyframes` (or `fps`), `attributes` (which may animate),
+`precision`, and `preferTransform` (emit pure translation as an
+`<animateTransform>`, which always interpolates cleanly).
+
+## 0.35.0
+
+### Responsive multi-aspect
+
+`SafeArea` is the region visible across several frame aspect ratios at a shared
+reference height. `SafeArea.fromAspectRatios([...])` builds it, and `place`
+anchors a mobject to an edge, a corner, or the center of it. Content anchored to
+the safe area stays on screen when the frame aspect switches, so one scene renders
+cleanly as 16:9 and 9:16. The example switches `setFrameAspect` back and forth; the
+outlined box and its dots reflow instead of clipping.
+
+<ResponsiveAspectExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { SafeArea, Rectangle, Text } from 'manim-web';
+
+// The region visible in BOTH 16:9 and 9:16 at a shared reference height.
+const safe = SafeArea.fromAspectRatios([16 / 9, 9 / 16]);
+safe.place(title, 'top', 0.3);
+safe.place(badge, 'center');
+
+// Switch the frame aspect; anchored content stays on screen in both.
+scene.setFrameAspect(450, 800); // 9:16 portrait (Reels / Shorts)
+scene.setFrameAspect(800, 450); // 16:9 landscape (YouTube)
+```
+
+</details>
+
+## 0.36.0
+
+### Clip masks
+
+`mobject.setMask(shape)` clips a mobject to a mask shape, like an After-Effects
+track matte. The mask's filled region defines what stays visible; everything
+outside it is clipped. The clip uses the WebGL stencil buffer and updates every
+frame, so animating the mask shape re-clips the content live. The example sweeps a
+circle across six rainbow bars to reveal a moving slice of them.
+
+<MaskExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { VGroup, Circle } from 'manim-web';
+
+// bars is a VGroup of colored Rectangles; mask is a Circle.
+bars.setMask(mask); // only the part of bars inside the circle is drawn
+scene.add(bars);
+
+// The clip updates every frame, so moving the circle re-reveals a new slice.
+await scene.play(mask.animate.shift([12, 0, 0]));
+```
+
+</details>
