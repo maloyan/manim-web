@@ -1,10 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { MoleculeMobject } from './MoleculeMobject';
 import { VGroup } from '../../core/VGroup';
 import { Line } from '../geometry/Line';
 import { Polygon } from '../geometry/Polygon';
 import { DashedLine } from '../geometry/DashedLine';
 import { cpkColor } from './cpkColors';
+import { logger } from '../../utils/logger';
 import { AtomSpec, BondSpec } from './chemistryTypes';
 
 const WATER_ATOMS: AtomSpec[] = [
@@ -169,20 +170,50 @@ describe('MoleculeMobject', () => {
   });
 
   it('does not throw on a bond referencing a missing atom', () => {
-    expect(
-      () =>
-        new MoleculeMobject({
-          atoms: [{ element: 'O', x: 0, y: 0 }],
-          bonds: [{ from: 0, to: 5 }],
-        }),
-    ).not.toThrow();
-    const mol = new MoleculeMobject({
-      atoms: [{ element: 'O', x: 0, y: 0 }],
-      bonds: [{ from: 0, to: 5 }],
-    });
-    // The bond is still counted, but it draws no lines.
-    expect(mol.getBonds()).toHaveLength(1);
-    expect(mol.getBond(0)?.lines).toHaveLength(0);
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    try {
+      expect(
+        () =>
+          new MoleculeMobject({
+            atoms: [{ element: 'O', x: 0, y: 0 }],
+            bonds: [{ from: 0, to: 5 }],
+          }),
+      ).not.toThrow();
+      const mol = new MoleculeMobject({
+        atoms: [{ element: 'O', x: 0, y: 0 }],
+        bonds: [{ from: 0, to: 5 }],
+      });
+      // The bond is still counted, but it draws no lines.
+      expect(mol.getBonds()).toHaveLength(1);
+      expect(mol.getBond(0)?.lines).toHaveLength(0);
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('warns on an out-of-range bond and still builds the valid bonds', () => {
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    try {
+      const mol = new MoleculeMobject({
+        atoms: [
+          { element: 'O', x: 0, y: 0 },
+          { element: 'H', x: 1, y: 0 },
+        ],
+        bonds: [
+          { from: 0, to: 1 }, // valid
+          { from: 0, to: 5 }, // out of range
+        ],
+      });
+      // Exactly one warning, for the single out-of-range bond.
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(String(warnSpy.mock.calls[0][0])).toMatch(/missing atom index/i);
+      // Both bonds are counted; the valid one draws a line, the bad one none.
+      expect(mol.getBonds()).toHaveLength(2);
+      expect(mol.getBond(0)?.lines).toHaveLength(1);
+      expect(mol.getBond(1)?.lines).toHaveLength(0);
+    } finally {
+      warnSpy.mockRestore();
+    }
   });
 
   it('returns undefined for an out-of-range atom or bond', () => {

@@ -34,6 +34,7 @@ import { DashedLine } from '../geometry/DashedLine';
 import { Text } from '../text/Text';
 import { WHITE } from '../../constants/colors';
 import { DEFAULT_STROKE_WIDTH } from '../../constants';
+import { logger } from '../../utils/logger';
 import { cpkColor, normalizeElement } from './cpkColors';
 import {
   AtomSpec,
@@ -162,14 +163,20 @@ export class MoleculeMobject extends VGroup {
   /**
    * Build the line mobjects for one bond.
    *
-   * A bond that references a missing atom produces no lines (handled
-   * gracefully, no throw). A wedge or dash bond produces one mobject. A normal
-   * bond produces `order` parallel lines.
+   * A bond that references a missing atom index produces no lines. The bond is
+   * skipped gracefully (no throw), but the data error is logged as a warning so
+   * it is visible rather than silent. A wedge or dash bond produces one
+   * mobject. A normal bond produces `order` parallel lines.
    */
   protected _buildBondLines(spec: BondSpec, order: BondOrder, type: BondStyle): Mobject[] {
     const fromAtom = this._atoms[spec.from];
     const toAtom = this._atoms[spec.to];
     if (!fromAtom || !toAtom) {
+      logger.warn(
+        `MoleculeMobject: bond references a missing atom index ` +
+          `(from=${spec.from}, to=${spec.to}, atom count=${this._atoms.length}). ` +
+          `The bond is skipped.`,
+      );
       return [];
     }
 
