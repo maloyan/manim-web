@@ -62,6 +62,9 @@ export {
   type MollweideOptions,
 } from './projections';
 
+// Ring clipping for disc projections (orthographic globe limb)
+export { clipRingToCircle } from './clipCircle';
+
 // Color scale
 export { ColorScale, type ColorScaleOptions } from './colorScale';
 
