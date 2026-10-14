@@ -1,0 +1,214 @@
+---
+title: New in 0.39
+sidebar_label: New in 0.39
+---
+
+import OrthographicGlobeExample from '@site/src/components/examples/OrthographicGlobeExample';
+import MollweideWorldExample from '@site/src/components/examples/MollweideWorldExample';
+import MoleculeTrajectoryExample from '@site/src/components/examples/MoleculeTrajectoryExample';
+import ProteinBFactorExample from '@site/src/components/examples/ProteinBFactorExample';
+
+Features added in the 0.39 release: five new map projections (including an
+`orthographic` projection you animate for a spinning globe), MD-trajectory
+playback for molecules, and property-based protein coloring. Each section lists
+the real exported API, a copy-paste snippet, and a runnable example. All data is
+hand-authored inline: no files, no network calls.
+
+## Rotating globe with the orthographic projection (0.39)
+
+`orthographic(options)` builds the "view of a globe from far away" projection.
+Its `rotate: [centerLon, centerLat]` option sets the geographic point at the
+center of the disc; animate `centerLon` and the globe spins about its axis. The
+far hemisphere is unmappable, so the projection returns `[NaN, NaN]` for those
+points and `ChoroplethMap` drops them, which gives the circular silhouette and
+the far side hiding on its own.
+
+`ChoroplethMap` fixes its projection at construction and has no reprojection
+call, so a holder `Group` with an updater rebuilds the map every frame from a
+`ValueTracker` that sweeps the longitude. A fixed `domain` holds the color ramp
+steady while the regions move. `orthographic` is 2D, so this uses a regular
+`Scene`.
+
+<OrthographicGlobeExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ChoroplethMap, orthographic, ValueTracker, Group } from 'manim-web';
+
+// geojson is an inline FeatureCollection of 20-degree lon/lat cells, each with a
+// `land` value (see the full component). value reads that field.
+const value = (feature) => feature.properties.land;
+
+// One orthographic view of the sphere, centered on `lon`.
+const buildMap = (lon) =>
+  new ChoroplethMap({
+    geojson,
+    value,
+    colorScale: ['#0d3b66', '#3a9f5a'], // ocean -> land
+    domain: [0, 1], // fixed, so the ramp is steady while regions move
+    projection: orthographic({ radius: 2.6, rotate: [lon, 0] }),
+    borderWidth: 0,
+  });
+
+// Animate the center longitude; a holder's updater swaps in a freshly projected
+// map each frame (ChoroplethMap cannot reproject in place).
+const centerLon = new ValueTracker(0);
+const holder = new Group();
+let lastLon = null;
+holder.addUpdater(() => {
+  const lon = centerLon.getValue();
+  if (lon === lastLon) return;
+  lastLon = lon;
+  holder.clear();
+  holder.add(buildMap(lon));
+});
+holder.add(buildMap(0));
+scene.add(holder); // use a regular Scene
+
+await scene.play(centerLon.animateTo(360, { duration: 10 })); // one full turn
+```
+
+</details>
+
+`orthographic` options are `radius` (disc radius, default 1) and `rotate`
+(`[centerLon, centerLat]` in degrees, default `[0, 0]`).
+
+---
+
+## Whole-world maps with mollweide and robinson (0.39)
+
+`mollweide(options)` is the elliptical equal-area whole-world projection;
+`robinson(options)` is the compromise flat-top world map. Both take the same
+options and plug straight into a `ChoroplethMap` as its `projection`. `albers`
+(conic equal-area) and the composite `albersUsa` (continental US with Alaska and
+Hawaii insets) round out the five new projections, for US thematic maps. These
+projections are 2D, so this uses a regular `Scene`.
+
+The example projects the same inline landmass grid used by the globe above into
+the Mollweide ellipse and reveals it with `Create`.
+
+<MollweideWorldExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { ChoroplethMap, mollweide, Create } from 'manim-web';
+
+const map = new ChoroplethMap({
+  geojson, // the same inline landmass grid as the globe example
+  value: (feature) => feature.properties.land,
+  colorScale: ['#0d3b66', '#3a9f5a'], // ocean -> land
+  domain: [0, 1],
+  // mollweide: elliptical equal-area. Swap for robinson() for the flat-top
+  // world map with the same call shape.
+  projection: mollweide({ radius: 1.3 }),
+  borderColor: '#0b1b2a',
+  borderWidth: 0.5,
+});
+
+scene.add(map); // use a regular Scene
+await scene.play(new Create(map, { duration: 2.5 }));
+```
+
+</details>
+
+`mollweide` and `robinson` options are `radius` (scale, default 1) and
+`centerLon` (central meridian in degrees, default 0). `albers` adds `parallels`,
+`centerLon` and `centerLat`; `albersUsa` takes only `radius`.
+
+---
+
+## MD-trajectory playback with playTrajectory (0.39)
+
+`parsePdbTrajectory(text)` reads a multi-MODEL PDB into
+`{ structure, frames, numModels }`: one conformation per MODEL block, every frame
+with the same atoms in the same order. `playTrajectory({ molecule, frames })`
+returns an `Animation` that drives a `Molecule3D` from frame 0 through each frame
+in order, interpolating atom positions and rebuilding the bonds every frame so
+the sticks follow. `MoleculeTrajectory` is the underlying class; `morphMolecule`
+is the single-target sibling that morphs from the molecule's current shape to one
+`to` conformation. `Molecule3D` is 3D, so this uses a `ThreeDScene`.
+
+The example parses an inline 3-MODEL PDB of one 6-carbon chain (extended,
+half-folded, hairpin) and plays it forward then back.
+
+<MoleculeTrajectoryExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { parsePdbTrajectory, Molecule3D, playTrajectory, Create } from 'manim-web';
+
+// pdb is an inline multi-MODEL PDB string (3 models, 6 carbons, CONECT chain).
+const traj = parsePdbTrajectory(pdb); // { structure, frames, numModels }
+
+// Build the molecule from model 1; its atom count matches every frame. The
+// carbons are tinted so the chain reads on the dark background.
+const molecule = new Molecule3D({
+  atoms: traj.structure.atoms,
+  bonds: traj.structure.bonds,
+  style: 'ball-and-stick',
+  colors: { C: '#58c4dd' },
+  bondColor: '#9fe3f0',
+});
+scene.add(molecule); // use a ThreeDScene
+await scene.play(new Create(molecule, { duration: 1.2 }));
+
+// Play frame 0 -> 1 -> 2, then back, so it loops.
+await scene.play(playTrajectory({ molecule, frames: traj.frames, runTime: 2.5 }));
+await scene.play(playTrajectory({ molecule, frames: [...traj.frames].reverse(), runTime: 2.5 }));
+```
+
+</details>
+
+`playTrajectory` options are `molecule`, `frames` (one conformation per frame),
+and `runTime` (seconds, default 2). `morphMolecule` takes `molecule`, a single
+`to` (or a `frames` trajectory), and `runTime`.
+
+---
+
+## Property-based protein coloring (0.39)
+
+`Protein` gains three property color modes beyond the structural ones:
+`colorMode: 'bfactor'` maps the per-residue B-factor (temperature factor) onto a
+blue -> white -> red ramp; `'hydrophobicity'` uses the Kyte-Doolittle scale; and
+`'charge'` paints basic, acidic and neutral residues. The `'bfactor'` mode reads
+`residue.tempFactor`, which `parsePdb` fills from the PDB B-factor column, so
+parse the structure first. The other two read only the residue code.
+
+The example parses an inline CA-only PDB whose B-factors rise from the rigid ends
+to a flexible middle, then draws a tube colored by `'bfactor'`. `Protein` is 3D,
+so this uses a `ThreeDScene`.
+
+<ProteinBFactorExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import { parsePdb, Protein, Create } from 'manim-web';
+
+// parsePdb reads the B-factor column into each residue's tempFactor.
+const { residues } = parsePdb(pdb);
+
+const protein = new Protein({
+  residues,
+  representation: 'tube',
+  colorMode: 'bfactor', // blue (rigid) -> white -> red (flexible); 'hydrophobicity' / 'charge' too
+  tubeRadius: 0.35,
+  smoothing: 8,
+});
+scene.add(protein); // use a ThreeDScene
+await scene.play(new Create(protein, { duration: 2.5 }));
+```
+
+</details>
+
+`colorMode 'bfactor'` needs per-residue B-factor data (parse with `parsePdb`, or
+it throws). `'hydrophobicity'` and `'charge'` work from the residue code alone.
+The B-factor ramp is `DEFAULT_BFACTOR_COLORS`, with the domain taken from the
+data.
