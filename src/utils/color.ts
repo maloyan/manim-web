@@ -189,19 +189,34 @@ export function averageColor(...colors: string[]): string {
 // the colors module, de-duplicated (aliases such as RED = RED_C collapse).
 const PALETTE: string[] = Array.from(new Set<string>(Object.values(Colors)));
 
-/** Return a random color from the Manim palette. Ports `random_color`. */
-export function randomColor(): string {
-  const index = Math.floor(Math.random() * PALETTE.length);
+/** A deterministic PRNG (mulberry32) returning a float in [0, 1) from a seed. */
+function mulberry32(seed: number): number {
+  let t = (Math.trunc(seed) + 0x6d2b79f5) | 0;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
+/**
+ * Return a random color from the Manim palette. Ports `random_color`.
+ *
+ * With a `seed` the choice is deterministic (the same seed always returns the
+ * same color), which keeps a scene reproducible; without one it is random.
+ */
+export function randomColor(seed?: number): string {
+  const r = seed === undefined ? Math.random() : mulberry32(seed);
+  const index = Math.floor(r * PALETTE.length);
   return PALETTE[index];
 }
 
 /**
  * Return a random bright color: a random palette color averaged with white.
  *
- * Ports `random_bright_color` (`0.5 * (rgb + 1)`).
+ * Ports `random_bright_color` (`0.5 * (rgb + 1)`). A `seed` makes it
+ * deterministic, like {@link randomColor}.
  */
-export function randomBrightColor(): string {
-  const [r, g, b] = colorToRgb(randomColor());
+export function randomBrightColor(seed?: number): string {
+  const [r, g, b] = colorToRgb(randomColor(seed));
   return rgbToHex([0.5 * (r + 1), 0.5 * (g + 1), 0.5 * (b + 1)]);
 }
 
