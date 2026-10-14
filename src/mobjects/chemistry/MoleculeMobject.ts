@@ -82,7 +82,7 @@ export class MoleculeMobject extends VGroup {
       showCarbonLabels = false,
       labelFontSize = 28,
       bondColor = WHITE,
-      bondSpacing = 0.08,
+      bondSpacing = 0.15,
     } = options;
 
     this._atomSpecs = atoms.map((a) => ({ ...a }));
@@ -216,6 +216,17 @@ export class MoleculeMobject extends VGroup {
     return [start, end];
   }
 
+  /**
+   * World-unit separation between the parallel lines of a multiple bond.
+   *
+   * `bondSpacing` is a fraction of the bond length, so a double bond keeps the
+   * same relative gap at any `bondLength`. A fixed world-unit gap looks merged
+   * on a large molecule and too wide on a small one.
+   */
+  protected _lineSeparation(): number {
+    return this._bondSpacing * this._bondLength;
+  }
+
   /** Unit perpendicular to the segment, in the XY plane. */
   protected _perpendicular(start: Vector3Tuple, end: Vector3Tuple): Vector3Tuple {
     const dx = end[0] - start[0];
@@ -234,7 +245,7 @@ export class MoleculeMobject extends VGroup {
     order: BondOrder,
   ): Mobject[] {
     const perp = this._perpendicular(start, end);
-    const spacing = this._bondSpacing;
+    const spacing = this._lineSeparation();
     // Offsets centered on 0: single -> [0]; double -> [-s/2, s/2]; triple -> [-s, 0, s].
     let offsets: number[];
     if (order === 2) {
@@ -259,7 +270,7 @@ export class MoleculeMobject extends VGroup {
   /** Build a filled triangle wedge from `start` (point) to `end` (wide base). */
   protected _buildWedge(start: Vector3Tuple, end: Vector3Tuple): Mobject {
     const perp = this._perpendicular(start, end);
-    const half = this._bondSpacing * 1.6;
+    const half = this._lineSeparation() * 1.6;
     const baseA: Vector3Tuple = [end[0] + perp[0] * half, end[1] + perp[1] * half, 0];
     const baseB: Vector3Tuple = [end[0] - perp[0] * half, end[1] - perp[1] * half, 0];
     return new Polygon({
