@@ -856,6 +856,17 @@ export {
   type DecimalTableOptions,
 } from './mobjects/table';
 
+// Writing pen (follows the Write / Create stroke tip)
+export {
+  WritingPen,
+  PenFollowStroke,
+  writeWithPen,
+  WriteWithPen,
+  type WritingPenOptions,
+  type PenFollowStrokeOptions,
+  type WriteWithPenOptions,
+} from './mobjects/writing-pen';
+
 // SVG-based mobjects (Braces)
 export {
   Brace,
