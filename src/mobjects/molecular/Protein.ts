@@ -24,12 +24,34 @@ import { Line3D } from '../three-d/Line3D';
 import { ResidueCA, SecondaryStructure } from './pdb';
 import { residueColor } from '../biology/biologyColors';
 import { ColorScale } from '../geo/colorScale';
+import {
+  residueHydropathy,
+  residueCharge,
+  HYDROPATHY_MIN,
+  HYDROPATHY_MAX,
+  DEFAULT_HYDROPATHY_COLORS,
+  DEFAULT_BFACTOR_COLORS,
+  DEFAULT_CHARGE_COLORS,
+} from './residueProperties';
 
 /** How the protein backbone is drawn. */
 export type ProteinRepresentation = 'backbone-line' | 'tube';
 
-/** How the protein backbone is colored. */
-export type ProteinColorMode = 'residue' | 'secondary-structure' | 'rainbow' | 'uniform';
+/**
+ * How the protein backbone is colored.
+ *
+ * Besides the structural modes, three property modes map a per-residue scalar to
+ * a color ramp: `'bfactor'` (the CA temperature factor), `'hydrophobicity'`
+ * (Kyte-Doolittle) and `'charge'` (basic / acidic / neutral).
+ */
+export type ProteinColorMode =
+  | 'residue'
+  | 'secondary-structure'
+  | 'rainbow'
+  | 'uniform'
+  | 'bfactor'
+  | 'hydrophobicity'
+  | 'charge';
 
 /** Options for a {@link Protein}. */
 export interface ProteinOptions {
@@ -132,6 +154,8 @@ export class Protein extends Group {
   private readonly _caPoints: Vector3Tuple[];
   /** The rainbow scale over residue index. */
   private readonly _rainbowScale: ColorScale;
+  /** The color scale for a property mode (`'bfactor'` / `'hydrophobicity'`), else null. */
+  private readonly _propertyScale: ColorScale | null;
 
   constructor(options: ProteinOptions) {
     super();
@@ -160,8 +184,38 @@ export class Protein extends Group {
       colors: RAINBOW_COLORS,
       domain: [0, Math.max(1, this._residues.length - 1)],
     });
+    this._propertyScale = this._buildPropertyScale();
 
     this._build();
+  }
+
+  /**
+   * Build the color scale for a property color mode, or null for a mode that
+   * does not use one (structural and charge modes).
+   *
+   * @throws If `'bfactor'` is requested but no residue carries a B-factor.
+   */
+  private _buildPropertyScale(): ColorScale | null {
+    if (this._colorMode === 'hydrophobicity') {
+      return new ColorScale({
+        colors: DEFAULT_HYDROPATHY_COLORS,
+        domain: [HYDROPATHY_MIN, HYDROPATHY_MAX],
+      });
+    }
+    if (this._colorMode === 'bfactor') {
+      const temps = this._residues
+        .map((r) => r.tempFactor)
+        .filter((t): t is number => Number.isFinite(t));
+      if (temps.length === 0) {
+        throw new Error(
+          'Protein: colorMode "bfactor" needs per-residue B-factor data, but none of the ' +
+            'residues carry a tempFactor. Parse the PDB with parsePdb (it reads the B-factor ' +
+            'column) or choose another colorMode.',
+        );
+      }
+      return new ColorScale({ colors: DEFAULT_BFACTOR_COLORS }).setDomainFromValues(temps);
+    }
+    return null;
   }
 
   /** Build the backbone primitives, one per residue span. */
@@ -256,12 +310,43 @@ export class Protein extends Group {
         return this._rainbowScale.colorFor(index);
       case 'uniform':
         return this._uniformColor;
-      case 'secondary-structure':
-      default: {
+      case 'secondary-structure': {
         const ss = residue.ss ?? 'coil';
         return this._colors[ss] ?? this._ssColors[ss];
       }
+      case 'charge':
+        return this._chargeColor(residue);
+      case 'hydrophobicity':
+      case 'bfactor':
+        return this._propertyColor(residue);
+      default:
+        throw new Error(`Protein: unknown colorMode "${String(this._colorMode)}".`);
     }
+  }
+
+  /** The charge color for a residue (basic / acidic / neutral), with overrides. */
+  private _chargeColor(residue: ResidueCA): string {
+    const charge = residueCharge(residue.code);
+    const key = charge > 0 ? 'positive' : charge < 0 ? 'negative' : 'neutral';
+    return this._colors[key] ?? DEFAULT_CHARGE_COLORS[key];
+  }
+
+  /** The ramp color for a scalar property mode (`'hydrophobicity'` / `'bfactor'`). */
+  private _propertyColor(residue: ResidueCA): string {
+    const scale = this._propertyScale;
+    if (!scale) {
+      throw new Error(
+        `Protein: internal error, no color scale for colorMode "${String(this._colorMode)}".`,
+      );
+    }
+    if (this._colorMode === 'hydrophobicity') {
+      return scale.colorFor(residueHydropathy(residue.code));
+    }
+    // B-factor: a residue missing its tempFactor falls back to the ramp's low end.
+    const value = Number.isFinite(residue.tempFactor)
+      ? (residue.tempFactor as number)
+      : scale.getDomain()[0];
+    return scale.colorFor(value);
   }
 
   override copy(): Protein {

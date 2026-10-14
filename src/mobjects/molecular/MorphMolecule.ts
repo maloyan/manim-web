@@ -193,3 +193,68 @@ export function morphMolecule(options: MorphMoleculeOptions): Animation {
 
   return new MorphMolecule(molecule, targetFrames, runTime ?? DEFAULT_RUN_TIME);
 }
+
+/** Options for {@link playTrajectory}. */
+export interface PlayTrajectoryOptions {
+  /** The molecule to drive. Its atom count must match every frame's length. */
+  molecule: Molecule3D;
+  /**
+   * The trajectory frames, one conformation per frame, in frame order. Frame 0
+   * is the starting conformation (for example model 1 of a multi-MODEL PDB).
+   */
+  frames: Conformation[];
+  /** The total run time in seconds. Default: 2. */
+  runTime?: number;
+}
+
+/**
+ * An MD-trajectory playback animation.
+ *
+ * Unlike {@link MorphMolecule}, the trajectory starts at its own frame 0, not at
+ * the molecule's current conformation: {@link begin} snaps the molecule to frame
+ * 0 first. It then reuses the MorphMolecule segment interpolation and per-frame
+ * bond rebuild to step through the remaining frames. The alpha range 0 to 1 is
+ * split evenly across the segments between consecutive frames.
+ */
+export class MoleculeTrajectory extends MorphMolecule {
+  /** The first frame, used as the explicit start conformation. */
+  private readonly _firstFrame: Conformation;
+
+  constructor(molecule: Molecule3D, frames: Conformation[], runTime: number) {
+    // The morph's targets are the frames after the first. A single-frame
+    // trajectory holds that one frame (the molecule stays at frame 0).
+    super(molecule, frames.length > 1 ? frames.slice(1) : [frames[0]], runTime);
+    this._firstFrame = frames[0];
+  }
+
+  override begin(): void {
+    // Start at the recorded frame 0, not at whatever conformation the molecule
+    // currently holds, so alpha 0 lands exactly on the first frame.
+    this.mobject.setAtomPositions(this._firstFrame);
+    super.begin();
+  }
+}
+
+/**
+ * Create a {@link MoleculeTrajectory} animation that plays a molecule across an
+ * ordered list of frames (an MD trajectory).
+ *
+ * Over alpha 0 to 1, the molecule moves from frame 0 through each frame in
+ * order, interpolating linearly between consecutive frames and rebuilding the
+ * bonds each frame so the sticks follow the atoms. Pair it with
+ * {@link parsePdbTrajectory} to play a multi-MODEL PDB.
+ *
+ * @param options - The molecule, the trajectory `frames` and the run time.
+ * @returns An {@link Animation} to pass to `scene.play`.
+ * @throws If `frames` is empty, or if any frame has the wrong length or a
+ *   non-finite coordinate.
+ */
+export function playTrajectory(options: PlayTrajectoryOptions): Animation {
+  const { molecule, frames, runTime } = options;
+  if (!frames || frames.length < 1) {
+    throw new Error('playTrajectory: frames must have at least one conformation.');
+  }
+  const numAtoms = molecule.numAtoms;
+  frames.forEach((frame, i) => validateFrame(frame, numAtoms, `frames[${i}]`));
+  return new MoleculeTrajectory(molecule, frames, runTime ?? DEFAULT_RUN_TIME);
+}
