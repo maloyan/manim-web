@@ -29,8 +29,41 @@ export interface GeoMultiPolygon {
   coordinates: GeoLinearRing[][];
 }
 
-/** The geometry types this module renders. */
-export type GeoGeometry = GeoPolygon | GeoMultiPolygon;
+/** A Point geometry: a single position. */
+export interface GeoPoint {
+  type: 'Point';
+  coordinates: GeoPosition;
+}
+
+/** A MultiPoint geometry: an array of positions. */
+export interface GeoMultiPoint {
+  type: 'MultiPoint';
+  coordinates: GeoPosition[];
+}
+
+/** A LineString geometry: an ordered array of positions. */
+export interface GeoLineString {
+  type: 'LineString';
+  coordinates: GeoPosition[];
+}
+
+/** A MultiLineString geometry: an array of line strings. */
+export interface GeoMultiLineString {
+  type: 'MultiLineString';
+  coordinates: GeoPosition[][];
+}
+
+/**
+ * The geometry types this module models.
+ *
+ * {@link ChoroplethMap} renders only the areal types (Polygon, MultiPolygon);
+ * the point and line types are modeled so decoders such as `topojsonToGeojson`
+ * can return them in a {@link GeoFeatureCollection}. The ring helpers
+ * ({@link exteriorRings}, {@link polygonRings}) return an empty array for the
+ * non-areal types.
+ */
+export type GeoGeometry =
+  GeoPolygon | GeoMultiPolygon | GeoPoint | GeoMultiPoint | GeoLineString | GeoMultiLineString;
 
 /** Arbitrary per-feature properties. */
 export type GeoProperties = Record<string, unknown> | null;
@@ -64,12 +97,16 @@ export function exteriorRings(geometry: GeoGeometry): GeoLinearRing[] {
     const ring = geometry.coordinates[0];
     return ring ? [ring] : [];
   }
-  const rings: GeoLinearRing[] = [];
-  for (const polygon of geometry.coordinates) {
-    const ring = polygon[0];
-    if (ring) rings.push(ring);
+  if (geometry.type === 'MultiPolygon') {
+    const rings: GeoLinearRing[] = [];
+    for (const polygon of geometry.coordinates) {
+      const ring = polygon[0];
+      if (ring) rings.push(ring);
+    }
+    return rings;
   }
-  return rings;
+  // Point, MultiPoint, LineString, MultiLineString have no areal rings.
+  return [];
 }
 
 /**
@@ -98,10 +135,14 @@ export function polygonRings(geometry: GeoGeometry): PolygonRings[] {
     const [exterior, ...holes] = geometry.coordinates;
     return exterior ? [{ exterior, holes }] : [];
   }
-  const result: PolygonRings[] = [];
-  for (const polygon of geometry.coordinates) {
-    const [exterior, ...holes] = polygon;
-    if (exterior) result.push({ exterior, holes });
+  if (geometry.type === 'MultiPolygon') {
+    const result: PolygonRings[] = [];
+    for (const polygon of geometry.coordinates) {
+      const [exterior, ...holes] = polygon;
+      if (exterior) result.push({ exterior, holes });
+    }
+    return result;
   }
-  return result;
+  // Point, MultiPoint, LineString, MultiLineString have no areal rings.
+  return [];
 }

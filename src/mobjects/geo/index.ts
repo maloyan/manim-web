@@ -16,10 +16,31 @@ export {
   type GeoPolygon,
   type GeoMultiPolygon,
   type GeoGeometry,
+  type GeoPoint,
+  type GeoMultiPoint,
+  type GeoLineString,
+  type GeoMultiLineString,
   type GeoProperties,
   type GeoFeature,
   type GeoFeatureCollection,
 } from './geojson';
+
+// TopoJSON -> GeoJSON conversion
+export {
+  topojsonToGeojson,
+  type Topology,
+  type TopoTransform,
+  type TopoGeometryBase,
+  type TopoGeometryObject,
+  type TopoPoint,
+  type TopoMultiPoint,
+  type TopoLineString,
+  type TopoMultiLineString,
+  type TopoPolygon,
+  type TopoMultiPolygon,
+  type TopoGeometryCollection,
+  type TopoNullGeometry,
+} from './topojson';
 
 // Projections
 export {
@@ -39,6 +60,7 @@ export {
   GeoMap,
   type ChoroplethMapOptions,
   type ChoroplethValueAccessor,
+  type GeoBounds,
 } from './ChoroplethMap';
 
 // Animated choropleth (recolor regions over time)
