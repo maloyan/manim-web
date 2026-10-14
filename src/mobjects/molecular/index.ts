@@ -74,6 +74,13 @@ export { DensitySurface } from './DensitySurface';
 export type { DensitySurfaceOptions, DensityGrid } from './DensitySurface';
 
 export { hydrogenBond, contact, distanceLabel, residueLabel } from './annotations';
+export { detectInteractions, drawInteractions } from './interactions';
+export type {
+  Interaction,
+  InteractionType,
+  DetectInteractionsOptions,
+  DrawInteractionsOptions,
+} from './interactions';
 export type {
   DashedAnnotationOptions,
   HydrogenBondOptions,
