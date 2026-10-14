@@ -45,6 +45,18 @@ export { threeToOneLetter, THREE_TO_ONE_LETTER, UNKNOWN_RESIDUE_CODE } from './r
 export { Protein } from './Protein';
 export type { ProteinOptions, ProteinRepresentation, ProteinColorMode } from './Protein';
 
+export {
+  dihedralDegrees,
+  computeRamachandran,
+  pointInPolygon,
+  regionFor,
+  RAMACHANDRAN_REGIONS,
+} from './ramachandran';
+export type { RamachandranPoint, RamachandranRegion } from './ramachandran';
+
+export { RamachandranPlot } from './RamachandranPlot';
+export type { RamachandranPlotOptions, RamachandranColorBy } from './RamachandranPlot';
+
 export { BindingPocket } from './BindingPocket';
 export type { BindingPocketOptions, BindingPocketStyle } from './BindingPocket';
 
