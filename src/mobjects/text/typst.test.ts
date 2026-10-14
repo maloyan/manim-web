@@ -161,6 +161,25 @@ describe('Typst copy()', () => {
   });
 });
 
+describe('Typst empty-source guard', () => {
+  it('throws a clear error for empty Typst source', () => {
+    expect(() => new Typst({ typst: '' })).toThrow(/empty/i);
+  });
+
+  it('throws for whitespace-only Typst source', () => {
+    expect(() => new Typst({ typst: '   \n\t' })).toThrow(/empty/i);
+  });
+
+  it('throws for empty MathTypst content before math-wrapping', () => {
+    expect(() => new MathTypst({ typst: '' })).toThrow(/empty/i);
+  });
+
+  it('never invokes the compiler for empty source', () => {
+    expect(() => new Typst({ typst: '' })).toThrow();
+    expect(compiledSources).toEqual([]);
+  });
+});
+
 describe('Typst graceful failure', () => {
   it('rejects waitForRender when the compiler throws, without crashing', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
