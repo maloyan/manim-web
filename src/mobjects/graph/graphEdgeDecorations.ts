@@ -38,34 +38,64 @@ export function edgeLabelString(cfg?: EdgeConfig): string | null {
   return null;
 }
 
+/** Fraction of a full circle the loop arc spans. The remaining gap faces the
+ * vertex so the two open ends sit next to it, as in a hand-drawn self-loop. */
+const SELF_LOOP_SWEEP = Math.PI * 1.5;
+
 /**
- * Center of the self-loop arc. The loop sits just outside the vertex, above it,
- * so the bottom of the loop touches the top of the vertex circle.
+ * Return a unit outward direction for a self-loop. Falls back to straight up
+ * (`[0, 1, 0]`) when the given direction is zero-length (a lone vertex), so a
+ * single-vertex graph keeps its loop above the vertex.
+ */
+function unitDirection(direction?: Vector3Tuple): Vector3Tuple {
+  if (!direction) {
+    return [0, 1, 0];
+  }
+  const len = Math.hypot(direction[0], direction[1]);
+  if (len < 1e-6) {
+    return [0, 1, 0];
+  }
+  return [direction[0] / len, direction[1] / len, 0];
+}
+
+/**
+ * Center of the self-loop arc. The loop sits just outside the vertex along the
+ * outward `direction`, so the near side of the loop touches the vertex circle.
  */
 function selfLoopArcCenter(
   vertexCenter: Vector3Tuple,
   vertexRadius: number,
   loopRadius: number,
+  dir: Vector3Tuple,
 ): Vector3Tuple {
-  return [vertexCenter[0], vertexCenter[1] + vertexRadius + loopRadius, vertexCenter[2]];
+  const offset = vertexRadius + loopRadius;
+  return [vertexCenter[0] + dir[0] * offset, vertexCenter[1] + dir[1] * offset, vertexCenter[2]];
 }
 
 /**
- * Build the loop arc for a self-loop edge. The arc is a near-full circle above
- * the vertex. For a directed graph it carries an arrow tip at its end.
+ * Build the loop arc for a self-loop edge. The arc is a near-full circle that
+ * bulges outward along `direction` (away from the graph center) so it never
+ * crosses the incident edges. For a directed graph it carries an arrow tip.
  */
 export function createSelfLoopEdge(
   vertexCenter: Vector3Tuple,
   vertexRadius: number,
   style: EdgeStyleOptions,
   directed: boolean,
+  direction?: Vector3Tuple,
 ): Arc {
   const loopRadius = style.selfLoopRadius ?? DEFAULT_SELF_LOOP_RADIUS;
+  const dir = unitDirection(direction);
+  const theta = Math.atan2(dir[1], dir[0]);
+  // The gap in the arc faces the vertex (inward, theta + PI). Start one half-gap
+  // past that inward point and sweep the long way around.
+  const gapHalf = (Math.PI * 2 - SELF_LOOP_SWEEP) / 2;
+  const startAngle = theta + Math.PI + gapHalf;
   const arc = new Arc({
     radius: loopRadius,
-    center: selfLoopArcCenter(vertexCenter, vertexRadius, loopRadius),
-    startAngle: -Math.PI * 0.75,
-    angle: Math.PI * 1.5,
+    center: selfLoopArcCenter(vertexCenter, vertexRadius, loopRadius, dir),
+    startAngle,
+    angle: SELF_LOOP_SWEEP,
     color: style.color ?? WHITE,
     strokeWidth: style.strokeWidth,
   });
@@ -75,16 +105,19 @@ export function createSelfLoopEdge(
   return arc;
 }
 
-/** Point at which to place the label of a self-loop edge (above the loop). */
+/** Point at which to place the self-loop label: just beyond the loop, outward. */
 export function selfLoopLabelPoint(
   vertexCenter: Vector3Tuple,
   vertexRadius: number,
   style: EdgeStyleOptions,
+  direction?: Vector3Tuple,
 ): Vector3Tuple {
   const loopRadius = style.selfLoopRadius ?? DEFAULT_SELF_LOOP_RADIUS;
   const buff = style.labelBuff ?? DEFAULT_EDGE_LABEL_BUFF;
-  const center = selfLoopArcCenter(vertexCenter, vertexRadius, loopRadius);
-  return [center[0], center[1] + loopRadius + buff, center[2]];
+  const dir = unitDirection(direction);
+  const center = selfLoopArcCenter(vertexCenter, vertexRadius, loopRadius, dir);
+  const out = loopRadius + buff;
+  return [center[0] + dir[0] * out, center[1] + dir[1] * out, center[2]];
 }
 
 /**
