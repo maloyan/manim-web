@@ -7,10 +7,10 @@
  * ({@link colorGradient}).
  *
  * ManimCE drops gradients on SVG import (tracking issue #3709); the browser
- * renders them natively. The single-fill render pipeline in manim-web draws one
- * flat color, so a gradient is approximated: the flat fill is the first
- * (offset-0) stop, and the full resampled palette is exposed on
- * {@link GradientVMobject.gradientColors} for gradient-aware consumers.
+ * renders them natively. manim-web draws the gradient with per-vertex fill
+ * colors (see {@link VMobject.setFillGradient}). The full resampled palette is
+ * also exposed on {@link GradientVMobject.gradientColors}. SVG stop opacity and
+ * gradient vectors are not applied. The gradient spans the shape bounding box.
  */
 
 import { VMobject } from '../../core/VMobject';
@@ -164,10 +164,11 @@ export interface GradientVMobjectOptions {
 /**
  * A VMobject whose fill comes from an SVG gradient.
  *
- * The flat `fillColor` is the first (offset-0) stop, so it renders correctly in
- * the single-fill pipeline. {@link gradientColors} holds the full resampled
- * palette (via {@link colorGradient}) for consumers that render or animate the
- * gradient, and {@link gradient} keeps the original parsed stops.
+ * The constructor calls {@link VMobject.setFillGradient} with the parsed stops,
+ * so the fill renders as a real linear or radial gradient. The flat `fillColor`
+ * stays the first (offset-0) stop. {@link gradientColors} holds the full
+ * resampled palette (via {@link colorGradient}), and {@link gradient} keeps the
+ * original parsed stops.
  */
 export class GradientVMobject extends VMobject {
   /** The parsed gradient definition applied as fill. */
@@ -185,6 +186,10 @@ export class GradientVMobject extends VMobject {
     if (firstStop) {
       this.fillColor = firstStop.color;
     }
+    this.setFillGradient({
+      type: options.gradient.type,
+      stops: options.gradient.stops.map((stop) => ({ offset: stop.offset, color: stop.color })),
+    });
     this.fillOpacity = options.fillOpacity ?? 0.5;
     this.setPoints3D(options.points3D);
   }

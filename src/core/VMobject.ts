@@ -753,6 +753,7 @@ export class VMobject extends VMobjectRendering {
     if (this._transformSubpathLengths !== undefined) {
       clone._transformSubpathLengths = [...this._transformSubpathLengths];
     }
+    this._copyFillGradientInto(clone);
     clone._geometryDirty = true;
   }
 

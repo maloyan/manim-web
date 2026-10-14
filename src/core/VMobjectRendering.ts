@@ -22,6 +22,11 @@ import {
   pointsToCurvePath,
 } from './VMobjectGeometry';
 import { buildMeshStrokeGeometry } from './VMobjectStrokeGeometry';
+import {
+  buildGradientFillGeometry,
+  normalizeFillGradient,
+  type FillGradientSpec,
+} from './VMobjectFillGradient';
 
 /**
  * Base class for VMobject that handles all Three.js rendering:
@@ -37,6 +42,9 @@ export abstract class VMobjectRendering extends Mobject {
 
   /** Three.js fill material */
   protected _fillMaterial: THREE.MeshBasicMaterial | null = null;
+
+  /** Gradient fill spec, or null for a flat fill. */
+  protected _fillGradient: FillGradientSpec | null = null;
 
   /** Whether geometry needs rebuild (separate from material dirty) */
   protected _geometryDirty: boolean = true;
@@ -328,10 +336,51 @@ export abstract class VMobjectRendering extends Mobject {
     }
   }
 
+  /**
+   * Set a gradient fill, or clear it with null.
+   * The gradient uses per-vertex colors. The flat fill color is not used while it is set.
+   *
+   * @param spec - The gradient, or null for a flat fill.
+   * @returns This mobject.
+   */
+  setFillGradient(spec: FillGradientSpec | null): this {
+    this._fillGradient = spec ? normalizeFillGradient(spec) : null;
+    this._geometryDirty = true;
+    this._syncFillGradientMaterial();
+    this._markDirty();
+    return this;
+  }
+
+  /** The current gradient fill spec (a copy), or null for a flat fill. */
+  getFillGradient(): FillGradientSpec | null {
+    return this._fillGradient ? normalizeFillGradient(this._fillGradient) : null;
+  }
+
+  /** Copy the gradient spec into another mobject. */
+  protected _copyFillGradientInto(clone: VMobjectRendering): void {
+    clone.setFillGradient(this._fillGradient);
+  }
+
+  /** Switch the fill material between flat color and vertex colors. */
+  private _syncFillGradientMaterial(): void {
+    const mat = this._fillMaterial;
+    if (!mat) return;
+    const useVertexColors = this._fillGradient !== null;
+    if (mat.vertexColors !== useVertexColors) {
+      mat.vertexColors = useVertexColors;
+      mat.needsUpdate = true;
+    }
+    if (useVertexColors) mat.color.set('#ffffff');
+    else mat.color.set(this._style.fillColor || this.color);
+  }
+
   /** Rebuild or dispose the earcut fill mesh for the current points. */
   private _updateFillGeometry(group: THREE.Group, points3D: number[][]): void {
     if (this.fillOpacity > 0 && points3D.length >= 4) {
-      const fillGeom = this._buildEarcutFillGeometry(points3D);
+      let fillGeom = this._buildEarcutFillGeometry(points3D);
+      if (fillGeom && this._fillGradient) {
+        fillGeom = buildGradientFillGeometry(fillGeom, this._fillGradient);
+      }
       if (fillGeom) {
         if (this._cachedFillMesh) {
           this._cachedFillMesh.geometry.dispose();
@@ -646,7 +695,7 @@ export abstract class VMobjectRendering extends Mobject {
     }
 
     if (this._fillMaterial) {
-      this._fillMaterial.color.set(this._style.fillColor || this.color);
+      this._syncFillGradientMaterial();
       this._fillMaterial.opacity = this._opacity * this.fillOpacity;
     }
 

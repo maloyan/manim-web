@@ -78,6 +78,12 @@ export { AnimateProxy } from './core/AnimateProxy';
 export { type MaskOptions, MASK_STENCIL_BIT, MASK_RENDER_ORDER } from './core/Mask';
 export { UP, DOWN, LEFT, RIGHT, IN, OUT, ORIGIN, UL, UR, DL, DR } from './core/Mobject';
 export { VMobject, type Point } from './core/VMobject';
+export type {
+  FillGradientSpec,
+  FillGradientStop,
+  LinearFillGradient,
+  RadialFillGradient,
+} from './core/VMobjectFillGradient';
 export { VGroup } from './core/VGroup';
 export { CurvesAsSubmobjects } from './core/VMobjectCurveUtils';
 export { VDict, VectorizedPoint } from './core/VDict';
