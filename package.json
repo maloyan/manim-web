@@ -92,7 +92,7 @@
     "mp4-muxer": "^5.2.2",
     "opentype.js": "^2.0.0",
     "polygon-clipping": "^0.15.7",
-    "three": "^0.185.1",
+    "three": "^0.186.1",
     "typia": "^12.1.1",
     "webm-muxer": "^5.1.4"
   },
