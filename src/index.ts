@@ -1286,6 +1286,15 @@ export {
   type PhyloNodeRender,
   type PhyloLeafRender,
   type PhyloBranchRender,
+  Membrane,
+  ComplexBlob,
+  type MembraneRow,
+  type MembraneGap,
+  type MembraneOptions,
+  type LipidRender,
+  type ComplexBlobShape,
+  type ComplexBlobLabelPosition,
+  type ComplexBlobOptions,
 } from './mobjects/biology';
 
 // Animations
