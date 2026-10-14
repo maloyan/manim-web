@@ -27,6 +27,8 @@ import {
   type PolygonRings,
 } from './geojson';
 import { equirectangular, isProjectedPointVisible, type GeoProjection } from './projections';
+import { clipRingToCircle } from './clipCircle';
+import { pointInPolygon } from '../../core/VMobjectGeometry';
 import { ColorScale } from './colorScale';
 
 /**
@@ -186,8 +188,7 @@ export class ChoroplethMap extends Group {
     const rings = polygonRings(feature.geometry);
     const polygons: Polygon[] = [];
     for (const polygonRing of rings) {
-      const polygon = this._buildPolygon(polygonRing, color, style);
-      if (polygon) polygons.push(polygon);
+      polygons.push(...this._buildPolygons(polygonRing, color, style));
     }
 
     // One child per feature: the polygon itself when single, else a sub-group.
@@ -199,43 +200,68 @@ export class ChoroplethMap extends Group {
     this._regionPolygons.push(polygons);
   }
 
-  private _buildPolygon(
+  private _buildPolygons(
     rings: PolygonRings,
     color: string,
     style: { fillOpacity: number; borderColor: string; borderWidth: number },
-  ): Polygon | null {
-    // Drop a trailing point that duplicates the first (GeoJSON rings are
-    // closed); Polygon closes each ring itself. Then project lon/lat to 2D.
-    // Back-facing points (e.g. the far hemisphere of an orthographic
-    // projection) come back as [NaN, NaN]; drop them so NaN never enters the
-    // polygon geometry. A ring left with fewer than 3 points is skipped below.
-    const projectRing = (ring: GeoLinearRing): [number, number, number][] => {
-      const vertices: [number, number, number][] = [];
-      for (const position of dropClosingPoint(ring)) {
-        const projected = this._projection(position);
-        if (!isProjectedPointVisible(projected)) continue;
-        vertices.push([projected[0], projected[1], 0]);
-      }
-      return vertices;
-    };
+  ): Polygon[] {
+    // Project each ring to 2D. When the projection maps only a disc
+    // (orthographic, `clipRadius` set), clip the ring to that limb so a ring
+    // crossing the edge ends on the globe silhouette instead of chording across
+    // it; one ring can then yield several pieces. Otherwise every point maps, so
+    // the ring projects to a single piece (stray [NaN, NaN] dropped defensively).
+    // A piece left with fewer than 3 points is skipped.
+    const exteriorPieces = this._projectRingPieces(rings.exterior).filter((r) => r.length >= 3);
+    if (exteriorPieces.length === 0) return [];
 
-    const vertices = projectRing(rings.exterior);
-    if (vertices.length < 3) return null;
+    // Interior rings (holes) are punched out of the fill. Drop any too small to
+    // bound an area.
+    const holes = rings.holes
+      .flatMap((hole) => this._projectRingPieces(hole))
+      .filter((hole) => hole.length >= 3);
 
-    // Interior rings (holes) are punched out of the fill. Drop any that are too
-    // small to bound an area.
-    const holes = rings.holes.map(projectRing).filter((hole) => hole.length >= 3);
+    const polygons: Polygon[] = [];
+    for (const vertices of exteriorPieces) {
+      // Attach the holes that fall inside this piece. With a single piece every
+      // hole belongs to it (the common, unclipped case); with several pieces a
+      // containment test routes each hole to its piece.
+      const myHoles =
+        exteriorPieces.length === 1
+          ? holes
+          : holes.filter((hole) => pointInPolygon(hole[0], vertices));
 
-    const polygon = new Polygon({
-      vertices,
-      color: style.borderColor,
-      strokeWidth: style.borderWidth,
-      fillOpacity: style.fillOpacity,
-      closed: true,
-      holes: holes.length > 0 ? holes : undefined,
-    });
-    polygon.setFill(color, style.fillOpacity);
-    return polygon;
+      const polygon = new Polygon({
+        vertices,
+        color: style.borderColor,
+        strokeWidth: style.borderWidth,
+        fillOpacity: style.fillOpacity,
+        closed: true,
+        holes: myHoles.length > 0 ? myHoles : undefined,
+      });
+      polygon.setFill(color, style.fillOpacity);
+      polygons.push(polygon);
+    }
+    return polygons;
+  }
+
+  /**
+   * Project one GeoJSON ring to one or more 2D pieces. A disc projection
+   * (`clipRadius` set) clips the ring to the limb and may return several pieces;
+   * any other projection returns a single piece.
+   */
+  private _projectRingPieces(ring: GeoLinearRing): [number, number, number][][] {
+    const open = dropClosingPoint(ring);
+    const clipRadius = this._projection.clipRadius;
+    if (clipRadius !== undefined) {
+      return clipRingToCircle(open, this._projection, clipRadius);
+    }
+    const vertices: [number, number, number][] = [];
+    for (const position of open) {
+      const projected = this._projection(position);
+      if (!isProjectedPointVisible(projected)) continue;
+      vertices.push([projected[0], projected[1], 0]);
+    }
+    return [vertices];
   }
 
   /** Get the per-feature region mobjects (one entry per feature). */

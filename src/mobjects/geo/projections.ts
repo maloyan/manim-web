@@ -32,8 +32,20 @@ const DEG_TO_RAD = Math.PI / 180;
  * A projection maps a lon/lat position (degrees) to a 2D scene point. An
  * unmappable point (for example the far hemisphere of an {@link orthographic}
  * projection) comes back as `[NaN, NaN]`; see {@link isProjectedPointVisible}.
+ *
+ * `clipRadius`, when set, marks the projection as mapping only a disc of that
+ * radius centered on the origin (the projected globe silhouette of
+ * {@link orthographic}). Area renderers then clip each polygon ring to that
+ * circle, following the limb across the hidden hemisphere, instead of only
+ * dropping the unmappable vertices (which chords straight across the disc).
+ * Cylindrical and whole-world projections leave it undefined: they map every
+ * point, so there is nothing to clip.
  */
-export type GeoProjection = (position: GeoPosition) => [number, number];
+export interface GeoProjection {
+  (position: GeoPosition): [number, number];
+  /** Projected radius of the mappable disc, for ring clipping. Undefined = map everything. */
+  clipRadius?: number;
+}
 
 /**
  * Test whether a projected point is mappable (both coordinates finite).
@@ -151,7 +163,7 @@ export function orthographic(options: OrthographicOptions = {}): GeoProjection {
   const phi0 = rotate[1] * DEG_TO_RAD;
   const sinPhi0 = Math.sin(phi0);
   const cosPhi0 = Math.cos(phi0);
-  return ([lon, lat]) => {
+  const project: GeoProjection = ([lon, lat]) => {
     const lambda = lon * DEG_TO_RAD - lambda0;
     const phi = lat * DEG_TO_RAD;
     const cosPhi = Math.cos(phi);
@@ -165,6 +177,10 @@ export function orthographic(options: OrthographicOptions = {}): GeoProjection {
       radius * (cosPhi0 * sinPhi - sinPhi0 * cosPhi * Math.cos(lambda)),
     ];
   };
+  // The mappable region is the disc of this radius: the projected globe
+  // silhouette. Area renderers clip polygon rings to it along the limb.
+  project.clipRadius = radius;
+  return project;
 }
 
 /** Options for the Albers (conic equal-area) projection. */

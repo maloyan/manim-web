@@ -11,8 +11,10 @@ import ProteinBFactorExample from '@site/src/components/examples/ProteinBFactorE
 Features added in the 0.39 release: five new map projections (including an
 `orthographic` projection you animate for a spinning globe), MD-trajectory
 playback for molecules, and property-based protein coloring. Each section lists
-the real exported API, a copy-paste snippet, and a runnable example. All data is
-hand-authored inline: no files, no network calls.
+the real exported API, a copy-paste snippet, and a runnable example. The two map
+examples share one inline world outline (the Natural Earth 1:110m land, a compact
+TopoJSON decoded with `topojsonToGeojson`); the molecule examples are
+hand-authored inline. No files, no network calls.
 
 ## Rotating globe with the orthographic projection (0.39)
 
@@ -20,8 +22,9 @@ hand-authored inline: no files, no network calls.
 Its `rotate: [centerLon, centerLat]` option sets the geographic point at the
 center of the disc; animate `centerLon` and the globe spins about its axis. The
 far hemisphere is unmappable, so the projection returns `[NaN, NaN]` for those
-points and `ChoroplethMap` drops them, which gives the circular silhouette and
-the far side hiding on its own.
+points. `ChoroplethMap` reads the projection's `clipRadius` and clips each land
+ring to the globe limb, following the edge across the hidden side, so continents
+end cleanly on the silhouette instead of chording across the disc.
 
 `ChoroplethMap` fixes its projection at construction and has no reprojection
 call, so a holder `Group` with an updater rebuilds the map every frame from a
@@ -35,37 +38,45 @@ steady while the regions move. `orthographic` is 2D, so this uses a regular
 <summary>Source Code</summary>
 
 ```typescript
-import { ChoroplethMap, orthographic, ValueTracker, Group } from 'manim-web';
+import { ChoroplethMap, orthographic, ValueTracker, Group, Circle, topojsonToGeojson } from 'manim-web';
 
-// geojson is an inline FeatureCollection of 20-degree lon/lat cells, each with a
-// `land` value (see the full component). value reads that field.
-const value = (feature) => feature.properties.land;
+// Decode the inline Natural Earth 1:110m land outline (one MultiPolygon of the
+// continents). Color every feature as land.
+const geojson = topojsonToGeojson(worldLandTopology, 'land');
 
-// One orthographic view of the sphere, centered on `lon`.
-const buildMap = (lon) =>
+// A static blue disc behind the land: the ocean and the globe silhouette.
+const ocean = new Circle({ radius: 2.6, strokeWidth: 0 });
+ocean.setFill('#0d3b66', 1);
+
+// One orthographic view of the land, centered on `lon`. ChoroplethMap clips each
+// ring to the limb, so the continents end on the globe edge.
+const buildLand = (lon) =>
   new ChoroplethMap({
     geojson,
-    value,
-    colorScale: ['#0d3b66', '#3a9f5a'], // ocean -> land
-    domain: [0, 1], // fixed, so the ramp is steady while regions move
+    value: () => 1,
+    colorScale: ['#3a9f5a', '#3a9f5a'], // green land
+    domain: [0, 1],
     projection: orthographic({ radius: 2.6, rotate: [lon, 0] }),
-    borderWidth: 0,
+    borderColor: '#0b2a17',
+    borderWidth: 0.4,
   });
 
 // Animate the center longitude; a holder's updater swaps in a freshly projected
-// map each frame (ChoroplethMap cannot reproject in place).
+// land layer (ChoroplethMap cannot reproject in place). Rebuilding every 2
+// degrees keeps the turn smooth without rebuilding the outline every frame.
 const centerLon = new ValueTracker(0);
 const holder = new Group();
-let lastLon = null;
+let lastStep = null;
 holder.addUpdater(() => {
-  const lon = centerLon.getValue();
-  if (lon === lastLon) return;
-  lastLon = lon;
+  const step = Math.round(centerLon.getValue() / 2) * 2;
+  if (step === lastStep) return;
+  lastStep = step;
   holder.clear();
-  holder.add(buildMap(lon));
+  holder.add(buildLand(step));
 });
-holder.add(buildMap(0));
-scene.add(holder); // use a regular Scene
+holder.add(buildLand(0));
+scene.add(ocean); // use a regular Scene
+scene.add(holder);
 
 await scene.play(centerLon.animateTo(360, { duration: 10 })); // one full turn
 ```
@@ -86,8 +97,9 @@ options and plug straight into a `ChoroplethMap` as its `projection`. `albers`
 Hawaii insets) round out the five new projections, for US thematic maps. These
 projections are 2D, so this uses a regular `Scene`.
 
-The example projects the same inline landmass grid used by the globe above into
-the Mollweide ellipse and reveals it with `Create`.
+The example projects the same inline world outline used by the globe above into
+the Mollweide ellipse, fills the continents green over a blue ocean ellipse, and
+reveals it with `Create`.
 
 <MollweideWorldExample />
 
@@ -95,21 +107,34 @@ the Mollweide ellipse and reveals it with `Create`.
 <summary>Source Code</summary>
 
 ```typescript
-import { ChoroplethMap, mollweide, Create } from 'manim-web';
+import { ChoroplethMap, mollweide, Create, Ellipse, topojsonToGeojson } from 'manim-web';
+
+// The same inline Natural Earth 1:110m land outline as the globe example.
+const geojson = topojsonToGeojson(worldLandTopology, 'land');
+
+// A blue ocean ellipse the size of the Mollweide frame (x half-width
+// 2*sqrt(2)*R, y half-height sqrt(2)*R), behind the green continents.
+const ocean = new Ellipse({
+  width: 2 * 2 * Math.SQRT2 * 1.3,
+  height: 2 * Math.SQRT2 * 1.3,
+  strokeWidth: 0,
+});
+ocean.setFill('#0d3b66', 1);
 
 const map = new ChoroplethMap({
-  geojson, // the same inline landmass grid as the globe example
-  value: (feature) => feature.properties.land,
-  colorScale: ['#0d3b66', '#3a9f5a'], // ocean -> land
+  geojson,
+  value: () => 1,
+  colorScale: ['#3a9f5a', '#3a9f5a'], // green land
   domain: [0, 1],
   // mollweide: elliptical equal-area. Swap for robinson() for the flat-top
   // world map with the same call shape.
   projection: mollweide({ radius: 1.3 }),
-  borderColor: '#0b1b2a',
+  borderColor: '#0b2a17',
   borderWidth: 0.5,
 });
 
-scene.add(map); // use a regular Scene
+scene.add(ocean); // use a regular Scene
+scene.add(map);
 await scene.play(new Create(map, { duration: 2.5 }));
 ```
 
