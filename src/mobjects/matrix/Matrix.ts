@@ -243,7 +243,16 @@ export class Matrix extends VGroup {
         const x = (j - (numCols - 1) / 2) * cellWidth;
         const y = ((numRows - 1) / 2 - i) * cellHeight;
 
-        entry.moveTo([x, y, 0]);
+        // Shift within the cell for left/right alignment. 'center' is the
+        // default centered position (offset 0).
+        let alignOffset = 0;
+        if (this._elementAlignment !== 'center') {
+          const entryWidth = this._getEntryBounds(entry).width;
+          const slack = (cellWidth - entryWidth) / 2;
+          alignOffset = this._elementAlignment === 'left' ? -slack : slack;
+        }
+
+        entry.moveTo([x + alignOffset, y, 0]);
       }
     }
   }
@@ -681,6 +690,14 @@ export class DecimalMatrix extends Matrix {
 
   constructor(data: number[][], options: DecimalMatrixOptions = {}) {
     const { numDecimalPlaces = 2, ...matrixOptions } = options;
+
+    // toFixed throws a RangeError outside [0, 100]; validate first for a clear
+    // message instead of the raw engine error.
+    if (!Number.isInteger(numDecimalPlaces) || numDecimalPlaces < 0 || numDecimalPlaces > 100) {
+      throw new Error(
+        `DecimalMatrix: numDecimalPlaces must be an integer in [0, 100], got ${numDecimalPlaces}.`,
+      );
+    }
 
     // Format all values with specified decimal places
     const formattedData = data.map((row) => row.map((val) => val.toFixed(numDecimalPlaces)));

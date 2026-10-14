@@ -216,6 +216,14 @@ export class Globe extends Group {
    */
   graticule(options: GlobeGraticuleOptions = {}): Group {
     const { latStep = 30, lonStep = 30, segments = 48, color = '#8d99ae', lineWidth = 1 } = options;
+    // A non-positive step never advances the meridian/parallel loops below, so
+    // the grid would never finish building. Reject it instead of hanging.
+    if (lonStep <= 0) {
+      throw new Error(`Globe.graticule: lonStep must be positive, got ${lonStep}.`);
+    }
+    if (latStep <= 0) {
+      throw new Error(`Globe.graticule: latStep must be positive, got ${latStep}.`);
+    }
     const grid = new Group();
 
     // Meridians: fixed longitude, latitude from -90 to 90.

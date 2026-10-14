@@ -266,3 +266,32 @@ describe('ChoroplethMap region bounds', () => {
     expect(focus.width).toBeCloseTo(union.maxX - union.minX, 10);
   });
 });
+
+describe('topojsonToGeojson: null geometry members', () => {
+  it('skips a {type:null} member instead of discarding the whole collection', () => {
+    const topology: Topology = {
+      type: 'Topology',
+      arcs: [],
+      objects: {
+        things: {
+          type: 'GeometryCollection',
+          geometries: [
+            { type: 'Point', coordinates: [1, 2] },
+            // A documented TopoJSON null geometry; it must not abort the decode.
+            { type: null },
+            { type: 'Point', coordinates: [3, 4] },
+          ],
+        },
+      },
+    };
+
+    const geo = topojsonToGeojson(topology);
+    // The null member is dropped; the two real points still decode.
+    expect(geo.features).toHaveLength(2);
+    const coords = geo.features.map((f) => (f.geometry as GeoPoint).coordinates);
+    expect(coords).toEqual([
+      [1, 2],
+      [3, 4],
+    ]);
+  });
+});

@@ -166,6 +166,12 @@ function parseMolRecord(lines: string[]): ParsedMolfile {
   if (countsLine.length < COUNTS_MIN_LENGTH) {
     throw new Error(`Molfile: the counts line is too short (read "${countsLine}").`);
   }
+  // The V3000 extended format keeps atoms and bonds in `M V30` blocks, not the
+  // fixed-column counts line, so this parser would read zero of each and return
+  // a silently empty molecule. Reject it instead.
+  if (countsLine.includes('V3000')) {
+    throw new Error('V3000 molfile format not supported');
+  }
   const atomCount = parseIntField(countsLine, 0, 3, 'atom count');
   const bondCount = parseIntField(countsLine, 3, 6, 'bond count');
   if (atomCount < 0 || bondCount < 0) {

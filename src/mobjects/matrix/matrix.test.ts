@@ -3,6 +3,7 @@ import { Matrix, IntegerMatrix, DecimalMatrix, MobjectMatrix } from './Matrix';
 import { Mobject } from '../../core/Mobject';
 import { VGroup } from '../../core/VGroup';
 import { VMobject } from '../../core/VMobject';
+import { Dot } from '../geometry/Dot';
 
 describe('Matrix', () => {
   it('constructs a 2x2 matrix from numbers', () => {
@@ -391,5 +392,93 @@ describe('Matrix render tree (regression: entries must stay attached)', () => {
     const family = m.getFamily();
     expect(family).toContain(m.getEntry(0, 0));
     expect(family).toContain(m.getEntry(1, 1));
+  });
+});
+
+/** A width hint attached to a test entry so layout widths are deterministic. */
+interface WidthTag {
+  __entryWidth?: number;
+}
+
+/** A MobjectMatrix whose entry widths come from a tag, not from rendering. */
+class WidthStubMatrix extends MobjectMatrix {
+  protected override _getEntryBounds(entry: Mobject): { width: number; height: number } {
+    const w = (entry as unknown as WidthTag).__entryWidth ?? 0.5;
+    return { width: w, height: 0.4 };
+  }
+}
+
+/** Build a tagged entry of a known layout width. */
+function entryOfWidth(width: number): Mobject {
+  const dot = new Dot();
+  (dot as unknown as WidthTag).__entryWidth = width;
+  return dot;
+}
+
+describe('Matrix elementAlignment', () => {
+  // A 1x2 matrix: a narrow entry (0.3) next to a wide entry (1.0). The cell
+  // width is the widest entry plus the horizontal buffer, so the narrow entry
+  // has slack to move within its cell.
+  const NARROW = 0.3;
+  const WIDE = 1.0;
+  const build = (alignment: 'left' | 'center' | 'right'): WidthStubMatrix =>
+    new WidthStubMatrix([[entryOfWidth(NARROW), entryOfWidth(WIDE)]], {
+      bracketType: '',
+      elementAlignment: alignment,
+    });
+
+  it("'left' places a narrow entry left of its centered position", () => {
+    const centered = build('center');
+    const left = build('left');
+    const c0 = centered.getEntry(0, 0)!.position.x;
+    const c1 = centered.getEntry(0, 1)!.position.x;
+    const l0 = left.getEntry(0, 0)!.position.x;
+
+    // The column spacing is the cell width (centered entries sit at cell centers).
+    const cellWidth = c1 - c0;
+    const expectedOffset = -(cellWidth - NARROW) / 2;
+    expect(l0).toBeCloseTo(c0 + expectedOffset, 6);
+    expect(l0).toBeLessThan(c0);
+    // The narrow entry's left edge aligns with the cell's left edge.
+    expect(l0 - NARROW / 2).toBeCloseTo(c0 - cellWidth / 2, 6);
+  });
+
+  it("'right' mirrors 'left' about the centered position", () => {
+    const centered = build('center');
+    const right = build('right');
+    const c0 = centered.getEntry(0, 0)!.position.x;
+    const c1 = centered.getEntry(0, 1)!.position.x;
+    const r0 = right.getEntry(0, 0)!.position.x;
+
+    const cellWidth = c1 - c0;
+    expect(r0).toBeCloseTo(c0 + (cellWidth - NARROW) / 2, 6);
+    expect(r0).toBeGreaterThan(c0);
+  });
+});
+
+describe('DecimalMatrix numDecimalPlaces validation', () => {
+  it('rejects a negative count instead of throwing a raw RangeError', () => {
+    let error: unknown;
+    try {
+      new DecimalMatrix([[1.5]], { numDecimalPlaces: -1 });
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(Error);
+    expect((error as Error).message).toMatch(/numDecimalPlaces/);
+    // A raw toFixed RangeError would carry no explaining message.
+    expect((error as Error).message).not.toMatch(/toFixed/);
+  });
+
+  it('rejects a count above 100', () => {
+    expect(() => new DecimalMatrix([[1.5]], { numDecimalPlaces: 101 })).toThrow(/numDecimalPlaces/);
+  });
+
+  it('rejects a non-integer count', () => {
+    expect(() => new DecimalMatrix([[1.5]], { numDecimalPlaces: 2.5 })).toThrow(/numDecimalPlaces/);
+  });
+
+  it('still accepts a valid count', () => {
+    expect(() => new DecimalMatrix([[1.23456]], { numDecimalPlaces: 3 })).not.toThrow();
   });
 });

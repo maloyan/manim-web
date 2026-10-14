@@ -6,7 +6,7 @@
  * the surface builds without throwing.
  */
 import { describe, it, expect } from 'vitest';
-import { MolecularSurface } from './MolecularSurface';
+import { MolecularSurface, maxValue } from './MolecularSurface';
 import { ImplicitSurface } from '../three-d/ImplicitSurface';
 import { vdwRadius } from './elementRadii';
 import type { Atom3DSpec } from './Molecule3D';
@@ -121,5 +121,23 @@ describe('MolecularSurface', () => {
     expect(clone.getBounds()).toEqual(surface.getBounds());
     expect(clone.surface?.fillOpacity).toBeCloseTo(0.5, 6);
     expect(clone.surface?.getResolution()).toBe(20);
+  });
+});
+
+describe('maxValue (bounds helper)', () => {
+  it('handles a very large array without a call-stack overflow', () => {
+    const big = new Array<number>(1000000);
+    for (let i = 0; i < big.length; i++) {
+      big[i] = i % 97;
+    }
+    big[123456] = 1000;
+    // Math.max(...big) throws "Maximum call stack size exceeded" at this size.
+    expect(() => Math.max(...big)).toThrow();
+    expect(maxValue(big)).toBe(1000);
+  });
+
+  it('matches Math.max on small arrays', () => {
+    expect(maxValue([3, 1, 4, 1, 5, 9, 2, 6])).toBe(9);
+    expect(maxValue([-5, -2, -9])).toBe(-2);
   });
 });

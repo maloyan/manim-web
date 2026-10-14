@@ -79,6 +79,16 @@ const AROMATIC_ELEMENTS: Readonly<Record<string, string>> = {
 };
 
 /**
+ * Two-letter lowercase aromatic symbols, read before the single-letter table so
+ * `[se]` is selenium, not sulfur with a dropped `e`.
+ */
+const TWO_LETTER_AROMATIC_ELEMENTS: Readonly<Record<string, string>> = {
+  se: 'Se',
+  te: 'Te',
+  as: 'As',
+};
+
+/**
  * Known element symbols, used to validate a bracket atom. A symbol outside this
  * set is an error, so a typo such as `[Xx]` fails loudly instead of rendering.
  */
@@ -170,14 +180,33 @@ function readBracketElement(cur: Cursor, body: string): { element: string; aroma
     return { element: ch, aromatic: false };
   }
   if (ch !== undefined && ch >= 'a' && ch <= 'z') {
-    const upper = AROMATIC_ELEMENTS[ch];
-    if (upper === undefined) {
-      throw new Error(`SMILES: unknown aromatic element "${ch}" in bracket atom "[${body}]".`);
-    }
-    cur.i += 1;
-    return { element: upper, aromatic: true };
+    return readLowercaseAromatic(cur, body);
   }
   throw new Error(`SMILES: bracket atom "[${body}]" has no element symbol.`);
+}
+
+/**
+ * Read a lowercase aromatic element at the cursor (already known to start with
+ * a lowercase letter). A two-letter aromatic (`se`, `te`, `as`) is tried before
+ * the single-letter table, so the second letter is not left behind.
+ */
+function readLowercaseAromatic(cur: Cursor, body: string): { element: string; aromatic: boolean } {
+  const two = cur.text.slice(cur.i, cur.i + 2);
+  const twoUpper =
+    two.length === 2 && two[1] >= 'a' && two[1] <= 'z'
+      ? TWO_LETTER_AROMATIC_ELEMENTS[two]
+      : undefined;
+  if (twoUpper !== undefined) {
+    cur.i += 2;
+    return { element: twoUpper, aromatic: true };
+  }
+  const ch = cur.text[cur.i];
+  const upper = AROMATIC_ELEMENTS[ch];
+  if (upper === undefined) {
+    throw new Error(`SMILES: unknown aromatic element "${ch}" in bracket atom "[${body}]".`);
+  }
+  cur.i += 1;
+  return { element: upper, aromatic: true };
 }
 
 /** Read an explicit hydrogen count (`H` with an optional digit) at the cursor. */

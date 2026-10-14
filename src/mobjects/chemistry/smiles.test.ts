@@ -287,3 +287,79 @@ describe('moleculeFromSmiles', () => {
     expect(bond.lines.length).toBe(2);
   });
 });
+
+describe('parseSmiles: long chains (iterative layout)', () => {
+  it('lays out a very long chain without a call-stack overflow', () => {
+    // The recursive child placement overflowed the stack on a long chain.
+    const long = 'C'.repeat(20000);
+    let atoms: ReadonlyArray<{ x: number; y: number }> = [];
+    expect(() => {
+      atoms = parseSmiles(long).atoms;
+    }).not.toThrow();
+    expect(atoms).toHaveLength(20000);
+    // Every atom gets finite coordinates.
+    expect(atoms.every((a) => Number.isFinite(a.x) && Number.isFinite(a.y))).toBe(true);
+  });
+
+  it('keeps the layout of short structures unchanged (regression)', () => {
+    // Golden coordinates captured from the recursive layout before the rewrite.
+    const cases: Array<[string, number[][]]> = [
+      [
+        'CCCC',
+        [
+          [0, 0],
+          [-0.866025, -0.5],
+          [-0.866025, 0.5],
+          [-1.732051, 0],
+        ],
+      ],
+      [
+        'CC(C)CC',
+        [
+          [0, 0],
+          [-0.866025, -0.5],
+          [-0.866025, 0.5],
+          [0, -1],
+          [0, 0],
+        ],
+      ],
+      [
+        'C1CCC(CC)CC1',
+        [
+          [1, 1],
+          [1.866025, 0.5],
+          [1.866025, -0.5],
+          [1, -1],
+          [0.133975, -0.5],
+          [0.133975, -1.5],
+          [0.133975, -0.5],
+          [0.133975, 0.5],
+        ],
+      ],
+    ];
+    for (const [smiles, expected] of cases) {
+      const { atoms } = parseSmiles(smiles);
+      expect(atoms).toHaveLength(expected.length);
+      atoms.forEach((atom, i) => {
+        expect(atom.x).toBeCloseTo(expected[i][0], 5);
+        expect(atom.y).toBeCloseTo(expected[i][1], 5);
+      });
+    }
+  });
+});
+
+describe('parseSmiles: two-letter lowercase aromatic bracket atoms', () => {
+  it('parses [se] as selenium, not sulfur plus a dropped letter', () => {
+    const { atoms } = parseSmiles('c1cc[se]c1');
+    const se = atoms.find((a) => a.element === 'Se');
+    expect(se).toBeDefined();
+    expect(se?.aromatic).toBe(true);
+    // The bug read only 's' (sulfur) and dropped 'e'.
+    expect(atoms.some((a) => a.element === 'S')).toBe(false);
+  });
+
+  it('parses [te] tellurium and [as] arsenic', () => {
+    expect(parseSmiles('[te]').atoms[0].element).toBe('Te');
+    expect(parseSmiles('[as]').atoms[0].element).toBe('As');
+  });
+});
