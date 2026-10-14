@@ -1,0 +1,85 @@
+{
+  "library": "manim-web",
+  "version": "0.0.0-fixture",
+  "generatedAt": "2026-01-01T00:00:00.000Z",
+  "typedocVersion": "fixture",
+  "symbolCount": 5,
+  "symbols": [
+    {
+      "name": "Widget",
+      "kind": "class",
+      "category": "demo",
+      "source": "src/mobjects/demo/Widget.ts:10",
+      "summary": "A demo widget.",
+      "examples": ["```typescript\nconst w = new Widget({ size: 2 });\n```"],
+      "extends": ["Group"],
+      "construct": {
+        "signature": "new Widget(options: WidgetOptions)",
+        "params": [{ "name": "options", "type": "WidgetOptions", "optional": false }]
+      }
+    },
+    {
+      "name": "BaseOptions",
+      "kind": "interface",
+      "category": "demo",
+      "source": "src/mobjects/demo/Widget.ts:1",
+      "summary": "Base options.",
+      "examples": [],
+      "extends": [],
+      "fields": [
+        {
+          "name": "color",
+          "type": "string",
+          "optional": true,
+          "default": "'red'",
+          "doc": "Fill color. Default: 'red'."
+        }
+      ]
+    },
+    {
+      "name": "WidgetOptions",
+      "kind": "interface",
+      "category": "demo",
+      "source": "src/mobjects/demo/Widget.ts:4",
+      "summary": "Options for a Widget.",
+      "examples": [],
+      "extends": ["BaseOptions"],
+      "fields": [
+        { "name": "size", "type": "number", "optional": false, "doc": "Edge length." },
+        {
+          "name": "color",
+          "type": "string",
+          "optional": true,
+          "default": "'blue'",
+          "doc": "Fill color. Default: 'blue'."
+        }
+      ]
+    },
+    {
+      "name": "makeWidget",
+      "kind": "function",
+      "category": "demo",
+      "source": "src/mobjects/demo/factory.ts:2",
+      "summary": "Create a widget.",
+      "examples": [],
+      "signatures": [
+        {
+          "signature": "makeWidget(size: number): Widget",
+          "params": [{ "name": "size", "type": "number", "optional": false, "doc": "The size." }],
+          "returns": "Widget",
+          "summary": "Create a widget."
+        }
+      ]
+    },
+    {
+      "name": "DEMO_SCALE",
+      "kind": "variable",
+      "category": "demo",
+      "source": "src/constants/demo.ts:1",
+      "summary": "The default scale factor.",
+      "examples": [],
+      "variableType": "number",
+      "defaultValue": "2"
+    }
+  ]
+}
