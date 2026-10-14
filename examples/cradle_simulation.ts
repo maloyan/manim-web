@@ -36,9 +36,9 @@ const scene = new Scene(container, {
 });
 
 /** Scene units per model meter. */
-const S = 1.5;
+const S = 2.25;
 /** Scene position of the cradle pivot. */
-const PIVOT: [number, number] = [0, 1.2];
+const PIVOT: [number, number] = [0, 2.0];
 /** Simulation seconds per scene updater substep. */
 const SUBSTEP = 0.002;
 const RUN_SECONDS = 24;
@@ -48,7 +48,7 @@ const PARAMS = {
   outerRadius: 1.3,
   halfOpening: 1.0,
   cradleMass: 2,
-  disk: { mass: 0.5, radius: 0.25 },
+  disk: { mass: 0.5, radius: 0.42 },
   springStiffness: 40,
   springAnchorOffset: 1.8,
   groundDrop: 2.2,
@@ -260,8 +260,8 @@ async function buildScene(sim: CradleSystem) {
       setPose(disk, c[0], c[1], d.spin);
       const sx = Math.cos(d.spin);
       const sy = Math.sin(d.spin);
-      lR.moveTo([c[0] + sx * rd * 0.5 - sy * 0.22, c[1] + sy * rd * 0.5 + sx * 0.22, 0]);
-      lMr.moveTo([c[0] - rd - 0.32, c[1] + 0.05, 0]);
+      lR.moveTo([c[0] + sx * rd * 0.5 - sy * 0.2, c[1] + sy * rd * 0.5 + sx * 0.2, 0]);
+      lMr.moveTo([c[0] + rd + 0.34, c[1] + rd * 0.7, 0]);
     }
 
     // Springs, theta marker and label.
@@ -300,9 +300,8 @@ async function buildScene(sim: CradleSystem) {
           color: ORANGE,
         }),
       );
-      const tip = widthBrace.getTip();
-      lWp.moveTo([tip[0] + dir[0] * 0.3, tip[1] + dir[1] * 0.3, 0]);
-      lMp.moveTo([m0[0] + 0.32, m0[1] + 0.05, 0]);
+      lWp.moveTo([Math.min(m0[0], m1[0]) - 0.42, (m0[1] + m1[1]) / 2 - 0.05, 0]);
+      lMp.moveTo([Math.max(m0[0], m1[0]) + 0.4, m0[1] + 0.05, 0]);
     }
   };
   sync();
