@@ -15,7 +15,7 @@ import { VGroup } from '../../core/VGroup';
 import { VMobject } from '../../core/VMobject';
 import type { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { hasStyleRecord } from './glyphStyle';
-import { WHITE } from '../../constants/colors';
+import { getActiveTheme } from '../../utils/ThemeManager';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
 import typia from 'typia';
 import { renderLatexToSVG } from './MathJaxRenderer';
@@ -27,7 +27,7 @@ const MATHJAX_SVG_UNITS_PER_EM = 1000;
 export interface MathTexOptions {
   /** LaTeX string or array of strings for multi-part expressions. */
   latex: string | string[];
-  /** Color as CSS color string. Default: WHITE ('#ffffff') */
+  /** Color as CSS color string. Default: the active theme's fill color (WHITE under the default theme) */
   color?: string;
   /** Scale factor (1 = standard math size). Default: 1 */
   fontSize?: number;
@@ -78,7 +78,7 @@ export class MathTex extends VGroup {
     const latex = options.latex;
 
     const {
-      color = WHITE,
+      color = getActiveTheme().fillColor,
       fontSize = DEFAULT_FONT_SIZE_PT,
       displayMode = true,
       position = [0, 0, 0],
@@ -523,7 +523,7 @@ export class MathTex extends VGroup {
    */
   private static _PartGroup = class extends VGroup {
     _latex: string = '';
-    _color: string = WHITE;
+    _color: string = getActiveTheme().fillColor;
     constructor(_parent: MathTex) {
       super();
     }

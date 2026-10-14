@@ -19,6 +19,7 @@ import {
   getTextResolutionScale,
   reallocateTextureIfResized,
 } from './textTexture';
+import { getActiveTheme } from '../../utils/ThemeManager';
 
 /** Scale factor from Canvas 2D output to point units.
  * At 72 DPI, 1pt = 4/3 canvas pixels. */
@@ -38,7 +39,7 @@ export interface TextOptions {
   fontWeight?: string | number;
   /** Font style ('normal' | 'italic'). Default: 'normal' */
   fontStyle?: string;
-  /** Text color as CSS color string. Default: '#ffffff' */
+  /** Text color as CSS color string. Default: the active theme's fill color (white under the default theme) */
   color?: string;
   /** Fill opacity from 0 to 1. Default: 1 */
   fillOpacity?: number;
@@ -191,7 +192,7 @@ export class Text extends TexturedMobject {
       fontFamily = 'CMU Serif, Georgia, Times New Roman, serif',
       fontWeight = 'normal',
       fontStyle = 'normal',
-      color = '#ffffff',
+      color = getActiveTheme().fillColor,
       fillOpacity = 1,
       strokeWidth = 0,
       lineHeight = 1.2,
