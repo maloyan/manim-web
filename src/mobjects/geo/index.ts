@@ -46,9 +46,20 @@ export {
 export {
   equirectangular,
   mercator,
+  orthographic,
+  albers,
+  albersUsa,
+  robinson,
+  mollweide,
+  isProjectedPointVisible,
   type GeoProjection,
   type EquirectangularOptions,
   type MercatorOptions,
+  type OrthographicOptions,
+  type AlbersOptions,
+  type AlbersUsaOptions,
+  type RobinsonOptions,
+  type MollweideOptions,
 } from './projections';
 
 // Color scale
