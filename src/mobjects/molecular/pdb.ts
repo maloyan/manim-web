@@ -29,6 +29,10 @@ export interface ResidueCA {
   code: string;
   /** The CA atom position `[x, y, z]`. */
   ca: Vector3Tuple;
+  /** The backbone amide nitrogen (N) position, if the PDB carries it. */
+  n?: Vector3Tuple;
+  /** The backbone carbonyl carbon (C) position, if the PDB carries it. */
+  c?: Vector3Tuple;
   /** The chain identifier, if present. */
   chain?: string;
   /** The residue sequence number, if present. */
@@ -331,10 +335,43 @@ function buildBonds(conectRecords: number[][], serialToIndex: Map<number, number
   return bonds;
 }
 
+/** The backbone N and C positions for one residue, keyed by chain + resSeq. */
+interface BackboneAtoms {
+  n?: Vector3Tuple;
+  c?: Vector3Tuple;
+}
+
+/**
+ * Collect the backbone amide N and carbonyl C positions per residue.
+ *
+ * A Ramachandran analysis needs N, CA and C of consecutive residues, but a
+ * {@link ResidueCA} anchors on CA alone. This map adds the N and C positions so
+ * downstream code (for example a Ramachandran plot) can compute the backbone
+ * dihedral angles. The first N and first C seen for a residue key win.
+ */
+function collectBackboneAtoms(atomRecords: ParsedAtom[]): Map<string, BackboneAtoms> {
+  const backbone = new Map<string, BackboneAtoms>();
+  for (const a of atomRecords) {
+    if (a.atomName !== 'N' && a.atomName !== 'C') {
+      continue;
+    }
+    const key = `${a.chain}:${a.resSeq}`;
+    const entry = backbone.get(key) ?? {};
+    if (a.atomName === 'N' && entry.n === undefined) {
+      entry.n = a.spec.position;
+    } else if (a.atomName === 'C' && entry.c === undefined) {
+      entry.c = a.spec.position;
+    }
+    backbone.set(key, entry);
+  }
+  return backbone;
+}
+
 /** Build one residue per CA atom (ATOM records), deduped by chain + resSeq. */
 function buildResidues(atomRecords: ParsedAtom[], ssRanges: SSRange[]): ResidueCA[] {
   const residues: ResidueCA[] = [];
   const seen = new Set<string>();
+  const backbone = collectBackboneAtoms(atomRecords);
   for (const a of atomRecords) {
     if (a.atomName !== 'CA') {
       continue;
@@ -344,9 +381,12 @@ function buildResidues(atomRecords: ParsedAtom[], ssRanges: SSRange[]): ResidueC
       continue;
     }
     seen.add(key);
+    const bb = backbone.get(key);
     residues.push({
       code: threeToOneLetter(a.resName),
       ca: a.spec.position,
+      n: bb?.n,
+      c: bb?.c,
       chain: a.chain === '' ? undefined : a.chain,
       resSeq: a.resSeq >= 0 ? a.resSeq : undefined,
       ss: secondaryStructureFor(a.chain, a.resSeq, ssRanges),
