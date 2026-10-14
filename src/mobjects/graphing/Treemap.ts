@@ -17,7 +17,13 @@ import { computeTreemapLayout, type TreemapNode, type TreemapTile } from './tree
 /** Default color cycle for treemap tiles. */
 const DEFAULT_TREEMAP_COLORS = [BLUE, GREEN, RED, YELLOW, ORANGE, PURPLE, TEAL, GOLD];
 
-/** How a tile picks its color. */
+/**
+ * How a tile picks its color.
+ * - 'category': each tile gets its own palette slot in layout order, so every
+ *   tile (and every sibling leaf of a branch) is distinct until the palette
+ *   wraps.
+ * - 'depth': tiles share a color per tree depth.
+ */
 export type TreemapColorBy = 'category' | 'depth';
 
 /**
@@ -34,7 +40,7 @@ export interface TreemapOptions {
   padding?: number;
   /** Tile colors. Single color applies to all, array cycles. Default: Manim palette. */
   colors?: string | string[];
-  /** Whether a color is chosen by top-level category or by depth. Default: 'category'. */
+  /** Whether each tile gets a distinct color ('category') or one per depth. Default: 'category'. */
   colorBy?: TreemapColorBy;
   /** Fill opacity of the tiles. Default: 0.85. */
   fillOpacity?: number;
@@ -95,6 +101,8 @@ export class Treemap extends VGroup {
   protected _labelFontSize: number;
   protected _minLabelSize: number;
   protected _tileByPath = new Map<string, Rectangle>();
+  /** Palette slot per node path, assigned once in layout order (root excluded). */
+  protected _colorIndexByPath = new Map<string, number>();
 
   constructor(options: TreemapOptions) {
     super();
@@ -130,6 +138,7 @@ export class Treemap extends VGroup {
 
     const region = { x: -width / 2, y: -height / 2, width, height };
     this._layout = computeTreemapLayout(data, region, padding);
+    this._assignColorIndices();
 
     this.tiles = new VGroup();
     this.labelGroup = new VGroup();
@@ -143,6 +152,21 @@ export class Treemap extends VGroup {
     }
   }
 
+  /**
+   * Assign one palette slot per node in layout order so that adjacent tiles and
+   * sibling leaves of one branch never collide. Coloring by the top ancestor
+   * (path[0]) alone gave every descendant of a branch the same color (e.g.
+   * 'ml' and 'web' under 'Python' both read as one block).
+   */
+  protected _assignColorIndices(): void {
+    let colorOrdinal = 0;
+    for (const tile of this._layout) {
+      if (tile.path.length === 0) continue;
+      this._colorIndexByPath.set(tile.path.join('/'), colorOrdinal);
+      colorOrdinal += 1;
+    }
+  }
+
   /** Whether a tile has a non-leaf (it has a deeper descendant). */
   protected _isLeaf(tile: TreemapTile): boolean {
     return !this._layout.some(
@@ -152,9 +176,17 @@ export class Treemap extends VGroup {
     );
   }
 
-  /** The color for a tile, by category (top ancestor) or by depth. */
+  /**
+   * The color for a tile. 'depth' colors by tree depth (all tiles on one level
+   * share a color). 'category' gives each tile its own palette slot in layout
+   * order, so every tile, including sibling leaves of one branch, is distinct
+   * until the palette wraps.
+   */
   protected _colorForTile(tile: TreemapTile): string {
-    const key = this._colorBy === 'depth' ? tile.depth : (tile.path[0] ?? 0);
+    const key =
+      this._colorBy === 'depth'
+        ? tile.depth
+        : (this._colorIndexByPath.get(tile.path.join('/')) ?? 0);
     return this._colors[key % this._colors.length];
   }
 
