@@ -38,11 +38,13 @@ import { Vector3Tuple } from '../../core/Mobject';
 import { Line } from '../geometry/Line';
 import { Circle } from '../geometry/Circle';
 import { Sphere } from '../three-d/Sphere';
+import { TubeFromPoints } from '../three-d/TubeFromPoints';
+import { Bond3D } from '../three-d/Bond3D';
 import { ParametricFunction } from '../graphing/ParametricFunction';
 import { DEFAULT_STROKE_WIDTH } from '../../constants';
 import { logger } from '../../utils/logger';
 import { baseColor, complementOf, normalizeBase } from './biologyColors';
-import { BaseSymbol, DNAHelixOptions, BasePairRender, StrandPair } from './biologyTypes';
+import { BaseSymbol, DNAHelixOptions, BasePairRender, StrandPair, Strand } from './biologyTypes';
 
 /** Default order the bases repeat in when no sequence is given. */
 const DEFAULT_SEQUENCE: readonly BaseSymbol[] = ['A', 'T', 'G', 'C'];
@@ -87,6 +89,10 @@ export class DNAHelix extends VGroup {
   protected _nucleotideRadius: number;
   protected _backboneStrokeWidth: number;
   protected _rungStrokeWidth: number;
+  /** Tube radius of each backbone strand in 3D mode. */
+  protected _backboneRadius3D: number;
+  /** Cylinder radius of each base-pair rung in 3D mode. */
+  protected _rungRadius3D: number;
 
   /** The two strand functions, built once and shared by strands and rungs. */
   protected _strandFuncs: [(t: number) => Vector3Tuple, (t: number) => Vector3Tuple];
@@ -142,6 +148,10 @@ export class DNAHelix extends VGroup {
     this._backboneStrokeWidth = backboneStrokeWidth ?? strokeWidth;
     // Rungs read as a cleaner ladder when a little thinner than the backbone.
     this._rungStrokeWidth = 0.8 * strokeWidth;
+    // In 3D the backbone is a solid tube and each rung a solid cylinder, sized
+    // relative to the nucleotide beads so the model reads as one molecule.
+    this._backboneRadius3D = 0.55 * this._nucleotideRadius;
+    this._rungRadius3D = 0.4 * this._nucleotideRadius;
 
     this._strandFuncs = [this._makeStrandFunc(0), this._makeStrandFunc(Math.PI)];
 
@@ -179,22 +189,47 @@ export class DNAHelix extends VGroup {
     };
   }
 
-  /** Build the two backbone strands as parametric curves and add them. */
+  /** Build the two backbone strands and add them. */
   protected _buildStrands(): StrandPair {
-    const numSamples = Math.max(2, Math.ceil(this._turns * this._numSamplesPerTurn));
-    const tRange: [number, number] = [0, this._turns];
-    const strands = this._strandFuncs.map((func, i) => {
-      const strand = new ParametricFunction({
-        func,
-        tRange,
-        numSamples,
-        color: this._backboneColors[i],
-        strokeWidth: this._backboneStrokeWidth,
-      });
-      this.strandsGroup.add(strand);
-      return strand;
-    });
+    const strands = this._strandFuncs.map((func, i) =>
+      this._threeD ? this._buildStrand3D(func, i) : this._buildStrand2D(func, i),
+    );
     return [strands[0], strands[1]];
+  }
+
+  /** Build one backbone strand as a flat parametric curve (2D schematic mode). */
+  protected _buildStrand2D(func: (t: number) => Vector3Tuple, index: number): ParametricFunction {
+    const numSamples = Math.max(2, Math.ceil(this._turns * this._numSamplesPerTurn));
+    const strand = new ParametricFunction({
+      func,
+      tRange: [0, this._turns],
+      numSamples,
+      color: this._backboneColors[index],
+      strokeWidth: this._backboneStrokeWidth,
+    });
+    this.strandsGroup.add(strand);
+    return strand;
+  }
+
+  /**
+   * Build one backbone strand as a solid 3D tube (3D mode). A screen-width
+   * stroke looks like flat tape next to the spherical nucleotide beads, so the
+   * 3D strand is a real swept tube that catches the light like the beads.
+   */
+  protected _buildStrand3D(func: (t: number) => Vector3Tuple, index: number): TubeFromPoints {
+    const numSamples = Math.max(2, Math.ceil(this._turns * this._numSamplesPerTurn));
+    const points: Vector3Tuple[] = [];
+    for (let s = 0; s < numSamples; s++) {
+      const t = (this._turns * s) / (numSamples - 1);
+      points.push(func(t));
+    }
+    const strand = new TubeFromPoints({
+      points,
+      radius: this._backboneRadius3D,
+      color: this._backboneColors[index],
+    });
+    this.strandsGroup.add(strand);
+    return strand;
   }
 
   /** The base on the first strand at a base-pair index (sequence or default). */
@@ -262,13 +297,26 @@ export class DNAHelix extends VGroup {
     }
   }
 
-  /** Build one rung line, dimmed and thinned by its frontness. */
+  /**
+   * Build one base-pair rung. In 3D it is a solid {@link Bond3D} cylinder with
+   * no fake depth cue: real depth testing sorts it, so the sine-of-angle
+   * thinning used in 2D would fight the camera instead of helping it. In 2D it
+   * is a flat line, dimmed and thinned by its frontness.
+   */
   protected _buildRung(
     start: Vector3Tuple,
     end: Vector3Tuple,
     color: string,
     frontness: number,
-  ): Line {
+  ): Line | Bond3D {
+    if (this._threeD) {
+      return new Bond3D({
+        start,
+        end,
+        color,
+        radius: this._rungRadius3D,
+      });
+    }
     const widthScale = lerp(BACK_RUNG_WIDTH_SCALE, FRONT_RUNG_WIDTH_SCALE, frontness);
     const line = new Line({
       start,
@@ -325,7 +373,7 @@ export class DNAHelix extends VGroup {
   }
 
   /** Get one backbone strand by index (0 or 1), or undefined. */
-  getStrand(index: number): ParametricFunction | undefined {
+  getStrand(index: number): Strand | undefined {
     return this._strands[index];
   }
 

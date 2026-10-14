@@ -5,6 +5,8 @@ import { VGroup } from '../../core/VGroup';
 import { Line } from '../geometry/Line';
 import { Circle } from '../geometry/Circle';
 import { Sphere } from '../three-d/Sphere';
+import { TubeFromPoints } from '../three-d/TubeFromPoints';
+import { Bond3D } from '../three-d/Bond3D';
 import { ParametricFunction } from '../graphing/ParametricFunction';
 import { baseColor, complementOf } from './biologyColors';
 import type { Vector3Tuple } from '../../core/Mobject';
@@ -200,6 +202,23 @@ describe('DNAHelix', () => {
     expect(pair?.endBead).toBeInstanceOf(Sphere);
   });
 
+  it('in 3D the backbone strands are solid tubes, not flat curves', () => {
+    const dna = new DNAHelix({ turns: 2, basePairs: 6, threeD: true });
+    const strands = dna.getStrands();
+    expect(strands[0]).toBeInstanceOf(TubeFromPoints);
+    expect(strands[1]).toBeInstanceOf(TubeFromPoints);
+    // A flat ParametricFunction stroke would read as tape next to the spheres.
+    expect(strands[0]).not.toBeInstanceOf(ParametricFunction);
+  });
+
+  it('in 3D the base-pair rungs are solid cylinders, not flat lines', () => {
+    const dna = new DNAHelix({ turns: 2, basePairs: 6, threeD: true });
+    for (const pair of dna.getBasePairs()) {
+      expect(pair.line).toBeInstanceOf(Bond3D);
+      expect(pair.line).not.toBeInstanceOf(Line);
+    }
+  });
+
   it('places each bead on its backbone strand', () => {
     const dna = new DNAHelix({ turns: 2, basePairs: 6, threeD: true });
     for (const pair of dna.getBasePairs()) {
@@ -240,8 +259,13 @@ describe('DNAHelix', () => {
     const front = pairs.reduce((a, b) => (b.frontness > a.frontness ? b : a));
     const back = pairs.reduce((a, b) => (b.frontness < a.frontness ? b : a));
     expect(front.frontness).toBeGreaterThan(back.frontness);
-    expect(front.line.strokeWidth).toBeGreaterThan(back.line.strokeWidth);
-    expect(front.line.opacity).toBeGreaterThan(back.line.opacity);
+    // 2D rungs are flat Lines carrying the depth cue in stroke width + opacity.
+    expect(front.line).toBeInstanceOf(Line);
+    expect(back.line).toBeInstanceOf(Line);
+    const frontLine = front.line as Line;
+    const backLine = back.line as Line;
+    expect(frontLine.strokeWidth).toBeGreaterThan(backLine.strokeWidth);
+    expect(frontLine.opacity).toBeGreaterThan(backLine.opacity);
   });
 
   it('draws a bead at the front larger than its paired bead at the back', () => {
@@ -254,10 +278,10 @@ describe('DNAHelix', () => {
 
   it('applies no depth variation when depthCue is false', () => {
     const dna = new DNAHelix({ turns: 3, basePairs: 12, depthCue: false });
-    const widths = dna.getBasePairs().map((p) => p.line.strokeWidth);
+    const widths = dna.getBasePairs().map((p) => (p.line as Line).strokeWidth);
     for (const pair of dna.getBasePairs()) {
       expect(pair.frontness).toBe(0.5);
-      expect(pair.line.opacity).toBe(1);
+      expect((pair.line as Line).opacity).toBe(1);
     }
     expect(Math.max(...widths) - Math.min(...widths)).toBeLessThan(1e-9);
   });

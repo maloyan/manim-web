@@ -18,6 +18,8 @@ import type { Line } from '../geometry/Line';
 import type { Circle } from '../geometry/Circle';
 import type { Sphere } from '../three-d/Sphere';
 import type { ParametricFunction } from '../graphing/ParametricFunction';
+import type { TubeFromPoints } from '../three-d/TubeFromPoints';
+import type { Bond3D } from '../three-d/Bond3D';
 
 /** A DNA base symbol. */
 export type BaseSymbol = 'A' | 'T' | 'G' | 'C';
@@ -82,8 +84,11 @@ export interface BasePairRender {
   start: Vector3Tuple;
   /** The rung endpoint on the second strand. */
   end: Vector3Tuple;
-  /** The line mobject that draws the rung. */
-  line: Line;
+  /**
+   * The mobject that draws the rung. A flat {@link Line} in 2D schematic mode;
+   * a solid 3D {@link Bond3D} cylinder in 3D mode.
+   */
+  line: Line | Bond3D;
   /** The resolved rung color. */
   color: string;
   /**
@@ -204,5 +209,11 @@ export interface ResidueRender {
   position: Vector3Tuple;
 }
 
+/**
+ * One backbone strand. A flat {@link ParametricFunction} curve in 2D schematic
+ * mode; a solid 3D {@link TubeFromPoints} in 3D mode.
+ */
+export type Strand = ParametricFunction | TubeFromPoints;
+
 /** A resolved pair of backbone strands, first and second. */
-export type StrandPair = [ParametricFunction, ParametricFunction];
+export type StrandPair = [Strand, Strand];
