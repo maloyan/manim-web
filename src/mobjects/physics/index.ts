@@ -23,4 +23,15 @@ export {
 } from './constraints';
 export { type Bounds, resolveBounds, resolveCircleCircle } from './collisions';
 export { pendulum, type PendulumOptions, springChain, type SpringChainOptions } from './builders';
+export {
+  CradleSystem,
+  createCradleSystem,
+  type CradleParams,
+  type CradleInitial,
+  type CradleDiskParams,
+  type CradlePendulumParams,
+  type CradlePose,
+  type DiskPose,
+  type SpringEnds,
+} from './cradleSystem';
 export type { Vec2 } from './vec2';
