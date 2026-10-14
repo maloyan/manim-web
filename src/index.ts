@@ -172,6 +172,29 @@ export {
 export { MediaElementSource, BufferSource } from './audio/spatialAudioSources';
 // --- end spatial / positional audio ---
 
+// --- data sonification (Web Audio playback) ---
+export {
+  Sonifier,
+  isSonificationSupported,
+  dataToFrequency,
+  dataToGain,
+  dataToPan,
+  dataDomain,
+  type SonifierOptions,
+  type SonifierMappingOptions,
+  type SonifierPlayOptions,
+  type SonifierPlayback,
+  type SonifierBinding,
+  type SonifierWaveform,
+  type SonifierContextLike,
+  type SonifierScale,
+  type DataDomain,
+  type FrequencyMapOptions,
+  type GainMapOptions,
+  type PanMapOptions,
+} from './audio/sonifier';
+// --- end data sonification ---
+
 // --- accessibility (a11y) layer (browser-unique) ---
 // Three opt-in capabilities: WebVTT captions from voiceover timings,
 // prefers-reduced-motion respect, and ARIA live-region narration. All are
