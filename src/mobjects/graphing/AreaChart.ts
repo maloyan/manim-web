@@ -1,6 +1,8 @@
 import { Group } from '../../core/Group';
 import { VGroup } from '../../core/VGroup';
 import { Polygon } from '../geometry/Polygon';
+import { Rectangle } from '../geometry/Rectangle';
+import { Text } from '../text/Text';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Axes } from './Axes';
 import { niceAxisRange, extent } from './stats';
@@ -21,6 +23,10 @@ export interface AreaChartOptions {
   seriesColors?: string | string[];
   /** Series names for the legend. Default: [] */
   seriesNames?: string[];
+  /** Show a legend of the series names. Default: true when seriesNames is given. */
+  showLegend?: boolean;
+  /** Font size for the legend labels. Default: 18 */
+  legendFontSize?: number;
   /** Fill opacity for the areas. Default: 0.4 */
   fillOpacity?: number;
   /** Stroke width for the top line. Default: 3 */
@@ -70,6 +76,8 @@ export class AreaChart extends Group {
   areas: VGroup;
   /** The top boundary lines, one per series. */
   lines: VGroup;
+  /** The legend of series names, or null when no legend is drawn. */
+  legend: VGroup | null = null;
 
   protected _values: number[][];
   protected _x: number[];
@@ -78,6 +86,9 @@ export class AreaChart extends Group {
   protected _colors: string[];
   protected _fillOpacity: number;
   protected _lineWidth: number;
+  protected _seriesNames: string[];
+  protected _showLegend: boolean;
+  protected _legendFontSize: number;
   protected _parts: SeriesParts[];
 
   constructor(options: AreaChartOptions) {
@@ -89,6 +100,9 @@ export class AreaChart extends Group {
       stacked = false,
       baseline = 0,
       seriesColors,
+      seriesNames = [],
+      showLegend,
+      legendFontSize = 18,
       fillOpacity = 0.4,
       lineWidth = 3,
       axes,
@@ -105,6 +119,9 @@ export class AreaChart extends Group {
     this._colors = toColorList(seriesColors);
     this._fillOpacity = fillOpacity;
     this._lineWidth = lineWidth;
+    this._seriesNames = seriesNames;
+    this._showLegend = showLegend ?? seriesNames.length > 0;
+    this._legendFontSize = legendFontSize;
     this._parts = [];
 
     const pointCount = this._values.reduce((m, s) => Math.max(m, s.length), 0);
@@ -120,6 +137,60 @@ export class AreaChart extends Group {
     this.add(this.axes);
     this.add(this.areas);
     this.add(this.lines);
+
+    if (this._showLegend && this._seriesNames.length > 0) {
+      this.legend = this._createLegend();
+      this.add(this.legend);
+    }
+  }
+
+  /**
+   * Build the legend: one color swatch and series-name label per series,
+   * stacked at the top-left corner of the plot area.
+   */
+  private _createLegend(): VGroup {
+    const legend = new VGroup();
+    const [xMin] = this.axes.getXRange();
+    const [, yMax] = this.axes.getYRange();
+    const topLeft = this.axes.coordsToPoint(xMin, yMax);
+    const rowHeight = 0.42;
+    const swatchSize = 0.26;
+    const startX = topLeft[0] + 0.35;
+    const startY = topLeft[1] - 0.3;
+
+    const count = Math.min(this._seriesNames.length, this._values.length);
+    for (let s = 0; s < count; s++) {
+      const name = this._seriesNames[s];
+      if (name === undefined || name === '') continue;
+      const color = cycleColor(this._colors, s);
+      const y = startY - s * rowHeight;
+
+      const swatch = new Rectangle({
+        width: swatchSize,
+        height: swatchSize,
+        center: [startX, y, 0],
+        color,
+        fillOpacity: Math.max(this._fillOpacity, 0.6),
+        strokeWidth: 1,
+      });
+      const label = new Text({
+        text: name,
+        fontSize: this._legendFontSize,
+        color: '#ffffff',
+        textAlign: 'left',
+      });
+      label.moveTo([startX + swatchSize / 2 + 0.3, y, 0]);
+
+      legend.add(swatch);
+      legend.add(label);
+    }
+
+    return legend;
+  }
+
+  /** The legend group, or null when no legend is drawn. */
+  getLegend(): VGroup | null {
+    return this.legend;
   }
 
   private _normalize(values: number[][] | number[]): number[][] {
@@ -260,6 +331,9 @@ export class AreaChart extends Group {
       stacked: this._stacked,
       baseline: this._baseline,
       seriesColors: [...this._colors],
+      seriesNames: [...this._seriesNames],
+      showLegend: this._showLegend,
+      legendFontSize: this._legendFontSize,
       fillOpacity: this._fillOpacity,
       lineWidth: this._lineWidth,
     });
