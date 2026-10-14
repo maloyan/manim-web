@@ -24,6 +24,7 @@ import { ensureKatexStyles, waitForKatexStyles } from './katexStyles';
 import { renderLatexToSVG, katexCanRender } from './MathJaxRenderer';
 import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../constants/fontRender';
 import { logger } from '../../utils/logger';
+import { applyTextTextureFilters } from './textTexture';
 
 const DEFAULT_CANVAS_SCALE = 16;
 
@@ -593,9 +594,7 @@ export class MathTexImage extends TexturedMobject {
       this._renderState.texture.dispose();
     }
     this._renderState.texture = new THREE.CanvasTexture(canvas);
-    this._renderState.texture.colorSpace = THREE.SRGBColorSpace;
-    this._renderState.texture.minFilter = THREE.LinearFilter;
-    this._renderState.texture.magFilter = THREE.LinearFilter;
+    applyTextTextureFilters(this._renderState.texture);
     this._renderState.texture.needsUpdate = true;
 
     // Convert measured pixel dimensions to world units using shared font baseline.
@@ -727,9 +726,7 @@ export class MathTexImage extends TexturedMobject {
         this._renderState.texture.dispose();
       }
       this._renderState.texture = new THREE.CanvasTexture(canvas);
-      this._renderState.texture.colorSpace = THREE.SRGBColorSpace;
-      this._renderState.texture.minFilter = THREE.LinearFilter;
-      this._renderState.texture.magFilter = THREE.LinearFilter;
+      applyTextTextureFilters(this._renderState.texture);
       this._renderState.texture.needsUpdate = true;
 
       // Convert measured CSS pixels to world units using the shared 48pt baseline.

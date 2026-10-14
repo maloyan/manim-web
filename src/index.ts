@@ -2159,6 +2159,7 @@ export {
   robinson,
   mollweide,
   isProjectedPointVisible,
+  clipRingToCircle,
   exteriorRings,
   polygonRings,
   topojsonToGeojson,

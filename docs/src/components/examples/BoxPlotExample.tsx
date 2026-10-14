@@ -19,7 +19,9 @@ async function animate(scene: any) {
     yLength: 4.6,
   });
 
-  await scene.play(new Create(box, { duration: 1.5 }));
+  // lagRatio 0 reveals the axes, boxes and whiskers together for a coherent
+  // draw-on instead of staggering the parts.
+  await scene.play(new Create(box, { duration: 1.5, lagRatio: 0 }));
 }
 
 export default function BoxPlotExample() {

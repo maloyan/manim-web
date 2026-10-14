@@ -130,6 +130,10 @@ export class CandlestickChart extends VGroup {
   protected _xLabelFontSize: number;
   protected _showVolume: boolean;
   protected _volumeHeight: number;
+  /** Horizontal shift applied by _recenter(), folded into x coordinates. */
+  protected _xShift = 0;
+  /** Vertical shift applied by _recenter(), folded into priceToY. */
+  protected _yShift = 0;
 
   constructor(options: CandlestickChartOptions) {
     super();
@@ -198,6 +202,27 @@ export class CandlestickChart extends VGroup {
       this._createVolumeBars();
       this.add(this.volumeBars);
     }
+
+    // Center the whole chart on the origin. The parts are built in a
+    // bottom-left-origin local frame (x in [0, width], price area in
+    // [0, height]), so without this the chart sits in the top-right quadrant
+    // and runs off the right/top of the default 14.22 x 8 frame (#candlestick
+    // off-screen). priceToY and the x-column helper fold the same shift in, so
+    // every accessor still reports a candle's real on-screen position.
+    this._recenter();
+  }
+
+  /**
+   * Shift the built geometry so the chart's bounding box is centered on the
+   * origin, and record the shift so priceToY / candle-column coordinates stay
+   * consistent with the on-screen positions.
+   */
+  private _recenter(): void {
+    if (this.children.length === 0) return;
+    const center = this.getCenter();
+    this._xShift -= center[0];
+    this._yShift -= center[1];
+    this.shift([-center[0], -center[1], 0]);
   }
 
   /** Whether a period is bullish (close at or above open). */
@@ -241,8 +266,8 @@ export class CandlestickChart extends VGroup {
   priceToY(price: number): number {
     const [yMin, yMax] = this._yRange;
     const range = yMax - yMin;
-    if (range === 0) return 0;
-    return ((price - yMin) / range) * this._height;
+    if (range === 0) return this._yShift;
+    return ((price - yMin) / range) * this._height + this._yShift;
   }
 
   /**
@@ -254,7 +279,7 @@ export class CandlestickChart extends VGroup {
     const totalWidth =
       count > 0 ? count * this._candleWidth + (count - 1) * this._candleSpacing : 0;
     const startX = (this._width - totalWidth) / 2 + this._candleWidth / 2;
-    return startX + index * slot;
+    return startX + index * slot + this._xShift;
   }
 
   /**

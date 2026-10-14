@@ -2,9 +2,15 @@
  * DNAHelix - a double helix of DNA.
  *
  * The helix is two phosphate backbone strands (parametric helices, half a turn
- * out of phase) plus base-pair "rungs" that connect them at even intervals.
- * The rungs can be colored by base with the A/T/G/C palette, and a nucleotide
- * bead sits where each rung meets a backbone.
+ * out of phase) plus base pairs that join them at even intervals. Each base
+ * pair is two nucleobase halves, not one solid rung: the strand-A base runs
+ * from the strand-A backbone inward toward the axis, the complementary strand-B
+ * base runs inward from the strand-B backbone, and the two meet in the center
+ * across a small hydrogen-bond gap. The two halves are colored by their own
+ * base with the A/T/G/C palette (strand-A half = base, strand-B half =
+ * complement), so a pair reads as, for example, an A-base plus a T-base joined
+ * by hydrogen bonds. The gap holds 3 hydrogen-bond markers for a G-C pair and 2
+ * for an A-T pair. A nucleotide bead sits where each base meets its backbone.
  *
  * The helix axis is vertical. A full turn rises by `pitch`, so a helix of
  * `turns` turns has height `turns * pitch`. In 2D schematic mode the axis is Y
@@ -36,6 +42,7 @@
 import { VGroup } from '../../core/VGroup';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Line } from '../geometry/Line';
+import { DashedLine } from '../geometry/DashedLine';
 import { Circle } from '../geometry/Circle';
 import { Sphere } from '../three-d/Sphere';
 import { TubeFromPoints } from '../three-d/TubeFromPoints';
@@ -55,6 +62,13 @@ const DEFAULT_BACKBONE_COLORS: [string, string] = ['#29B6F6', '#FF7043'];
 /** Default rung color used when colorByBase is false. */
 const DEFAULT_RUNG_COLOR = '#CCCCCC';
 
+/** Default color of the hydrogen-bond markers in the center of a base pair. */
+const DEFAULT_HBOND_COLOR = '#B0BEC5';
+
+/** Hydrogen-bond count for a G-C pair (three bonds) and an A-T pair (two). */
+const GC_HBONDS = 3;
+const AT_HBONDS = 2;
+
 /** Opacity of a rung or bead at the back of a turn (frontness 0). */
 const BACK_OPACITY = 0.4;
 /** Stroke-width multiplier of a rung at the back of a turn (frontness 0). */
@@ -71,6 +85,26 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
+/** Linear interpolation between two points, component-wise. */
+function lerpVec(a: Vector3Tuple, b: Vector3Tuple, t: number): Vector3Tuple {
+  return [lerp(a[0], b[0], t), lerp(a[1], b[1], t), lerp(a[2], b[2], t)];
+}
+
+/** The midpoint of two points. */
+function midpoint(a: Vector3Tuple, b: Vector3Tuple): Vector3Tuple {
+  return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
+}
+
+/** The Euclidean distance between two points. */
+function distance(a: Vector3Tuple, b: Vector3Tuple): number {
+  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+}
+
+/** A point plus a scaled direction: a + dir * s. */
+function addScaled(a: Vector3Tuple, dir: Vector3Tuple, s: number): Vector3Tuple {
+  return [a[0] + dir[0] * s, a[1] + dir[1] * s, a[2] + dir[2] * s];
+}
+
 export class DNAHelix extends VGroup {
   protected _turns: number;
   protected _radius: number;
@@ -82,6 +116,8 @@ export class DNAHelix extends VGroup {
   protected _backboneColors: [string, string];
   protected _baseColors: Partial<Record<BaseSymbol, string>>;
   protected _rungColor: string;
+  protected _hBondColor: string;
+  protected _baseGap: number;
   protected _strokeWidth: number;
   protected _numSamplesPerTurn: number;
   protected _depthCue: boolean;
@@ -93,6 +129,12 @@ export class DNAHelix extends VGroup {
   protected _backboneRadius3D: number;
   /** Cylinder radius of each base-pair rung in 3D mode. */
   protected _rungRadius3D: number;
+  /** Stroke width of each hydrogen-bond marker in 2D mode. */
+  protected _hBondStrokeWidth: number;
+  /** Cylinder radius of each hydrogen-bond marker in 3D mode. */
+  protected _hBondRadius3D: number;
+  /** Center-to-center spacing of the stacked hydrogen-bond markers. */
+  protected _hBondSpacing: number;
 
   /** The two strand functions, built once and shared by strands and rungs. */
   protected _strandFuncs: [(t: number) => Vector3Tuple, (t: number) => Vector3Tuple];
@@ -101,7 +143,10 @@ export class DNAHelix extends VGroup {
   /** The resolved base pairs, from bottom to top. */
   protected _pairs: BasePairRender[] = [];
 
-  /** The base-pair rung mobjects, drawn behind the strands. */
+  /**
+   * The base-pair mobjects, drawn behind the strands: the two nucleobase halves
+   * and the hydrogen-bond marker of every pair.
+   */
   readonly rungsGroup: VGroup;
   /** The backbone strand mobjects, drawn in front of the rungs. */
   readonly strandsGroup: VGroup;
@@ -122,6 +167,8 @@ export class DNAHelix extends VGroup {
       backboneColors = DEFAULT_BACKBONE_COLORS,
       baseColors = {},
       rungColor = DEFAULT_RUNG_COLOR,
+      hBondColor = DEFAULT_HBOND_COLOR,
+      baseGap = 0.3,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       numSamplesPerTurn = 48,
       depthCue = true,
@@ -140,6 +187,9 @@ export class DNAHelix extends VGroup {
     this._backboneColors = [backboneColors[0], backboneColors[1]];
     this._baseColors = { ...baseColors };
     this._rungColor = rungColor;
+    this._hBondColor = hBondColor;
+    // A gap of the whole rung would leave no base to draw; clamp to [0, 0.9).
+    this._baseGap = Math.min(0.9, Math.max(0, baseGap));
     this._strokeWidth = strokeWidth;
     this._numSamplesPerTurn = Math.max(2, numSamplesPerTurn);
     this._depthCue = depthCue;
@@ -152,6 +202,11 @@ export class DNAHelix extends VGroup {
     // relative to the nucleotide beads so the model reads as one molecule.
     this._backboneRadius3D = 0.55 * this._nucleotideRadius;
     this._rungRadius3D = 0.4 * this._nucleotideRadius;
+    // Hydrogen bonds read as thin dashes/cylinders next to the solid bases, and
+    // the few of them stack along the helix axis inside the base width.
+    this._hBondStrokeWidth = 0.5 * this._rungStrokeWidth;
+    this._hBondRadius3D = 0.3 * this._rungRadius3D;
+    this._hBondSpacing = 0.7 * this._nucleotideRadius;
 
     this._strandFuncs = [this._makeStrandFunc(0), this._makeStrandFunc(Math.PI)];
 
@@ -260,7 +315,7 @@ export class DNAHelix extends VGroup {
     return (Math.sin(2 * Math.PI * t) + 1) / 2;
   }
 
-  /** Build every base-pair rung and bead, and add them to their groups. */
+  /** Build every base pair (two nucleobase halves, hydrogen bonds, beads). */
   protected _buildBasePairs(): void {
     for (let i = 0; i < this._basePairs; i++) {
       const t = this._paramAt(i);
@@ -268,16 +323,34 @@ export class DNAHelix extends VGroup {
       const complement = complementOf(base);
       const start = this._strandFuncs[0](t);
       const end = this._strandFuncs[1](t);
-      const color = this._colorByBase ? baseColor(base, this._baseColors) : this._rungColor;
+      const center = midpoint(start, end);
       const frontness = this._frontnessAt(t);
 
-      const line = this._buildRung(start, end, color, frontness);
-      this.rungsGroup.add(line);
+      // The strand-A half is colored by the base, the strand-B half by its
+      // complement, so a pair reads as two colored bases meeting in the center.
+      const startColor = this._colorByBase ? baseColor(base, this._baseColors) : this._rungColor;
+      const endColor = this._colorByBase
+        ? baseColor(complement, this._baseColors)
+        : this._rungColor;
 
-      // The first strand's end has the rung's frontness; the second strand's
-      // end is half a turn away, so it has the opposite frontness.
-      const startColor = this._colorByBase ? baseColor(base, this._baseColors) : color;
-      const endColor = this._colorByBase ? baseColor(complement, this._baseColors) : color;
+      // Each half spans from its backbone inward, leaving the central baseGap
+      // open for the hydrogen bonds. innerStart and innerEnd flank that gap.
+      const inward = (1 - this._baseGap) / 2;
+      const innerStart = lerpVec(start, end, inward);
+      const innerEnd = lerpVec(end, start, inward);
+
+      // The strand-A half carries the rung's frontness; the strand-B half is
+      // half a turn away, so it carries the opposite frontness (like the beads).
+      const startBase = this._buildBaseHalf(start, innerStart, startColor, frontness);
+      const endBase = this._buildBaseHalf(end, innerEnd, endColor, 1 - frontness);
+      this.rungsGroup.add(startBase);
+      this.rungsGroup.add(endBase);
+
+      const hBond = this._buildHBond(innerStart, innerEnd, base, frontness);
+      if (hBond) {
+        this.rungsGroup.add(hBond);
+      }
+
       const startBead = this._buildBead(start, startColor, frontness);
       const endBead = this._buildBead(end, endColor, 1 - frontness);
 
@@ -288,8 +361,11 @@ export class DNAHelix extends VGroup {
         complement,
         start,
         end,
-        line,
-        color,
+        center,
+        startBase,
+        endBase,
+        hBond,
+        color: startColor,
         frontness,
         startBead,
         endBead,
@@ -298,31 +374,95 @@ export class DNAHelix extends VGroup {
   }
 
   /**
-   * Build one base-pair rung. In 3D it is a solid {@link Bond3D} cylinder with
-   * no fake depth cue: real depth testing sorts it, so the sine-of-angle
-   * thinning used in 2D would fight the camera instead of helping it. In 2D it
-   * is a flat line, dimmed and thinned by its frontness.
+   * Build one nucleobase half, from its backbone point `from` inward to `to`.
+   * In 3D it is a solid {@link Bond3D} cylinder with no fake depth cue: real
+   * depth testing sorts it, so the sine-of-angle thinning used in 2D would fight
+   * the camera instead of helping it. In 2D it is a flat line, dimmed and
+   * thinned by its frontness.
    */
-  protected _buildRung(
-    start: Vector3Tuple,
-    end: Vector3Tuple,
+  protected _buildBaseHalf(
+    from: Vector3Tuple,
+    to: Vector3Tuple,
     color: string,
     frontness: number,
   ): Line | Bond3D {
     if (this._threeD) {
       return new Bond3D({
-        start,
-        end,
+        start: from,
+        end: to,
         color,
         radius: this._rungRadius3D,
       });
     }
     const widthScale = lerp(BACK_RUNG_WIDTH_SCALE, FRONT_RUNG_WIDTH_SCALE, frontness);
     const line = new Line({
-      start,
-      end,
+      start: from,
+      end: to,
       color,
       strokeWidth: this._rungStrokeWidth * widthScale,
+    });
+    if (this._depthCue) {
+      line.setStrokeOpacity(lerp(BACK_OPACITY, 1, frontness));
+    }
+    return line;
+  }
+
+  /**
+   * Build the hydrogen-bond marker that joins the two nucleobase halves across
+   * the central gap. A G-C pair gets 3 bonds, an A-T pair gets 2, matching the
+   * Watson-Crick count. The bonds are stacked along the helix axis so they read
+   * as short parallel connectors. Dashed {@link Line}s in 2D; thin
+   * {@link Bond3D} cylinders in 3D. Returns null when the gap is closed or the
+   * two inner points coincide (so there is nothing to bridge).
+   */
+  protected _buildHBond(
+    innerStart: Vector3Tuple,
+    innerEnd: Vector3Tuple,
+    base: BaseSymbol,
+    frontness: number,
+  ): VGroup | null {
+    if (this._baseGap <= 0) {
+      return null;
+    }
+    const gapLength = distance(innerStart, innerEnd);
+    if (gapLength < 1e-9) {
+      return null;
+    }
+    const count = base === 'G' || base === 'C' ? GC_HBONDS : AT_HBONDS;
+    // Stack the bonds along the helix axis (Y in 2D, Z in 3D), centered on the
+    // rung, so a G-C pair shows three rungs and an A-T pair two.
+    const axis: Vector3Tuple = this._threeD ? [0, 0, 1] : [0, 1, 0];
+    const group = new VGroup();
+    for (let i = 0; i < count; i++) {
+      const offset = (i - (count - 1) / 2) * this._hBondSpacing;
+      const a = addScaled(innerStart, axis, offset);
+      const b = addScaled(innerEnd, axis, offset);
+      group.add(this._buildHBondSegment(a, b, frontness));
+    }
+    return group;
+  }
+
+  /** Build one hydrogen-bond segment between two inner points. */
+  protected _buildHBondSegment(
+    a: Vector3Tuple,
+    b: Vector3Tuple,
+    frontness: number,
+  ): DashedLine | Bond3D {
+    if (this._threeD) {
+      return new Bond3D({
+        start: a,
+        end: b,
+        color: this._hBondColor,
+        radius: this._hBondRadius3D,
+      });
+    }
+    const line = new DashedLine({
+      start: a,
+      end: b,
+      color: this._hBondColor,
+      strokeWidth: this._hBondStrokeWidth,
+      dashLength: 0.06,
+      dashRatio: 0.5,
     });
     if (this._depthCue) {
       line.setStrokeOpacity(lerp(BACK_OPACITY, 1, frontness));
@@ -427,6 +567,8 @@ export class DNAHelix extends VGroup {
       backboneColors: [this._backboneColors[0], this._backboneColors[1]],
       baseColors: { ...this._baseColors },
       rungColor: this._rungColor,
+      hBondColor: this._hBondColor,
+      baseGap: this._baseGap,
       strokeWidth: this._strokeWidth,
       numSamplesPerTurn: this._numSamplesPerTurn,
       depthCue: this._depthCue,

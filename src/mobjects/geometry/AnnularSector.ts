@@ -59,9 +59,15 @@ export class AnnularSector extends VMobject {
       Math.ceil((Math.abs(this._angle) / (Math.PI / 2)) * (this._numComponents / 4)),
     );
     const segmentAngle = this._angle / numSegments;
-    const kappa = (4 / 3) * Math.tan(segmentAngle / 4);
 
     const addArcSegment = (radius: number, theta1: number, theta2: number, isFirst: boolean) => {
+      // kappa must follow the SIGNED sweep of this segment. The inner arc is
+      // traced from the end angle back to the start angle (theta2 < theta1), so
+      // its sweep is negative; deriving kappa from a positive segmentAngle then
+      // points the Bezier handles the wrong way and the inner boundary bulges
+      // off the hole circle (a faceted donut hole). tan() of the signed sweep
+      // gives the correct sign for both arc directions.
+      const kappa = (4 / 3) * Math.tan((theta2 - theta1) / 4);
       const x0 = radius * Math.cos(theta1);
       const y0 = radius * Math.sin(theta1);
       const x3 = radius * Math.cos(theta2);
