@@ -424,4 +424,12 @@ describe('Globe', () => {
     const r = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     expect(r).toBeCloseTo(RADIUS, 6);
   });
+
+  it('rejects a non-positive graticule step instead of looping forever', () => {
+    const globe = new Globe({ radius: RADIUS });
+    // A zero or negative step makes the lon/lat for-loop never advance, so it
+    // would hang the renderer. The step must be positive.
+    expect(() => globe.graticule({ lonStep: 0 })).toThrow(/lonStep/);
+    expect(() => globe.graticule({ latStep: -30 })).toThrow(/latStep/);
+  });
 });

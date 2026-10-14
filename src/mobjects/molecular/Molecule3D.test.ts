@@ -158,3 +158,38 @@ describe('Molecule3D copy', () => {
     expect(clone.getAtom(0)?.radius).toBeCloseTo(mol.getAtom(0)?.radius ?? -1, 6);
   });
 });
+
+describe('Molecule3D bond rebuild frees GPU resources', () => {
+  // A moving conformation rebuilds the bond sticks every frame. Group.clear only
+  // detaches children, so without an explicit dispose each rebuilt Bond3D leaks
+  // its CylinderGeometry and MeshStandardMaterial on the GPU.
+  it('disposes the previous bond sticks when the atoms move', () => {
+    const mol = new Molecule3D(WATER);
+    const oldSticks = mol.getBonds().flatMap((b) => b.sticks);
+    expect(oldSticks.length).toBeGreaterThan(0);
+    const spies = oldSticks.map((stick) => vi.spyOn(stick, 'dispose'));
+
+    mol.setAtomPositions([
+      [0, 0, 0],
+      [0.8, 0.6, 0],
+      [-0.8, 0.6, 0],
+    ]);
+
+    for (const spy of spies) {
+      expect(spy).toHaveBeenCalledTimes(1);
+    }
+  });
+
+  it('keeps the live bond-stick count bounded across many rebuilds', () => {
+    const mol = new Molecule3D(WATER);
+    const before = mol.bondsGroup.length;
+    for (let k = 0; k < 50; k++) {
+      mol.setAtomPositions([
+        [0, 0, 0],
+        [0.76 + k * 1e-3, 0.59, 0],
+        [-0.76, 0.59, 0],
+      ]);
+    }
+    expect(mol.bondsGroup.length).toBe(before);
+  });
+});

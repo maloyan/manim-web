@@ -195,3 +195,22 @@ describe('moleculeFromMolfile', () => {
     expect(mol.numAtoms).toBe(4);
   });
 });
+
+describe('parseMolfile V3000', () => {
+  it('rejects a V3000 counts line instead of returning an empty molecule', () => {
+    // The V3000 extended format stores atoms/bonds in `M V30` blocks, so the
+    // fixed-column counts line reads zero. The parser must flag it, not return
+    // a silently empty molecule.
+    const v3000 = [
+      'v3000-molecule',
+      '  manim-web',
+      '',
+      '  0  0  0  0  0  0  0  0  0999 V3000',
+      'M  V30 BEGIN CTAB',
+      'M  V30 COUNTS 2 1 0 0 0',
+      'M  V30 END CTAB',
+      'M  END',
+    ].join('\n');
+    expect(() => parseMolfile(v3000)).toThrow(/V3000/);
+  });
+});

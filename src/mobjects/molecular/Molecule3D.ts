@@ -408,6 +408,12 @@ export class Molecule3D extends Group {
 
   /** Clear the bond sticks and rebuild them from the current atom positions. */
   private _rebuildBonds(): void {
+    // Dispose each old stick first. Group.clear only detaches children, so
+    // without this the per-frame rebuild leaks every stick's GPU geometry and
+    // material.
+    for (const stick of this.bondsGroup.children) {
+      stick.dispose();
+    }
     this.bondsGroup.clear();
     this._bonds.length = 0;
     this._buildBonds();

@@ -68,6 +68,25 @@ import type { Atom3DSpec } from './Molecule3D';
 /** The kind of molecular surface to build. */
 export type MolecularSurfaceKind = 'vdw' | 'sas';
 
+/**
+ * The maximum of a numeric list, computed with a loop.
+ *
+ * `Math.max(...values)` spreads the whole array as function arguments, which
+ * overflows the call stack at roughly 1e5 elements. A loop has no such limit,
+ * so bounds for a large structure (hundreds of thousands of atoms) still work.
+ *
+ * @param values - The numbers. An empty list yields `-Infinity`, as `Math.max`.
+ */
+export function maxValue(values: ReadonlyArray<number>): number {
+  let max = -Infinity;
+  for (const value of values) {
+    if (value > max) {
+      max = value;
+    }
+  }
+  return max;
+}
+
 /** Options for a {@link MolecularSurface}. */
 export interface MolecularSurfaceOptions {
   /** The atoms the surface wraps. */
@@ -241,7 +260,7 @@ export class MolecularSurface extends Group {
         [0, 0, 0],
       ];
     }
-    const maxRadius = Math.max(...radii);
+    const maxRadius = maxValue(radii);
     const padding = this._padding ?? maxRadius;
     const min: [number, number, number] = [Infinity, Infinity, Infinity];
     const max: [number, number, number] = [-Infinity, -Infinity, -Infinity];

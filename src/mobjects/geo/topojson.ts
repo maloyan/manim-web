@@ -157,10 +157,12 @@ export function topojsonToGeojson(topology: Topology, objectName?: string): GeoF
   const decodePt = (coordinates: number[]): GeoPosition =>
     decodePoint(coordinates, topology.transform);
 
-  const features: GeoFeature[] =
-    object.type === 'GeometryCollection'
-      ? object.geometries.map((geometry) => geometryToFeature(geometry, arcs, decodePt))
-      : [geometryToFeature(object, arcs, decodePt)];
+  // A TopoJSON null geometry ({type:null}) carries no shape. Skip it so one null
+  // member does not abort the decode of the whole collection.
+  const members = object.type === 'GeometryCollection' ? object.geometries : [object];
+  const features: GeoFeature[] = members
+    .filter((geometry) => geometry.type !== null)
+    .map((geometry) => geometryToFeature(geometry, arcs, decodePt));
 
   return { type: 'FeatureCollection', features };
 }

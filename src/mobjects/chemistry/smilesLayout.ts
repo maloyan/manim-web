@@ -169,16 +169,41 @@ export function layoutGraph(
     ringLaid[ri] = true;
   };
 
-  const placeChildren = (atom: number): void => {
+  // Iterative depth-first placement. The recursive version overflowed the call
+  // stack on a long chain, so an explicit stack replaces it. A VisitFrame is one
+  // in-progress placeChildren(atom) call; an enter task is a not-yet-entered
+  // placeChildren(atom). Entering a frame reads and may flip state.sign, and a
+  // child is fully placed before the parent resumes, exactly as the recursion
+  // did, so the layout output is unchanged.
+  interface VisitFrame {
+    atom: number;
+    kids: number[];
+    turns: number[];
+    parentDir: number;
+    j: number;
+  }
+  type VisitTask = { kind: 'enter'; atom: number } | { kind: 'frame'; frame: VisitFrame };
+
+  const stack: VisitTask[] = [];
+
+  const enter = (atom: number): VisitFrame => {
     const kids = adjacency[atom].filter((nb) => !placed[nb]);
     const parentDir = incoming[atom] + Math.PI;
     const turns = childTurns(kids.length, state.sign);
     if (kids.length <= 1) {
       state.sign = -state.sign;
     }
-    kids.forEach((nb, j) => {
+    return { atom, kids, turns, parentDir, j: 0 };
+  };
+
+  const stepFrame = (frame: VisitFrame): void => {
+    const { atom, kids, turns, parentDir } = frame;
+    while (frame.j < kids.length) {
+      const j = frame.j;
+      const nb = kids[j];
+      frame.j += 1;
       if (placed[nb]) {
-        return;
+        continue;
       }
       const dir = parentDir + turns[j] * ZIGZAG_TURN;
       const ri = ringOf[nb];
@@ -189,8 +214,9 @@ export function layoutGraph(
         const cx = atoms[atom].x + (BOND_LENGTH + radius) * Math.cos(dir);
         const cy = atoms[atom].y + (BOND_LENGTH + radius) * Math.sin(dir);
         placeRing(ri, cx, cy);
-        for (const member of rings[ri]) {
-          placeChildren(member);
+        // Visit each ring member in order; push in reverse so member 0 is on top.
+        for (let m = rings[ri].length - 1; m >= 0; m--) {
+          stack.push({ kind: 'enter', atom: rings[ri][m] });
         }
         return;
       }
@@ -198,8 +224,27 @@ export function layoutGraph(
       atoms[nb].y = atoms[atom].y + BOND_LENGTH * Math.sin(dir);
       placed[nb] = true;
       incoming[nb] = dir;
-      placeChildren(nb);
-    });
+      stack.push({ kind: 'enter', atom: nb });
+      return;
+    }
+    // No child pushed this call, so this frame is still the top: drop it.
+    stack.pop();
+  };
+
+  const runVisits = (seed: number[]): void => {
+    // Seed in reverse so the first atom is entered first (depth-first order).
+    for (let s = seed.length - 1; s >= 0; s--) {
+      stack.push({ kind: 'enter', atom: seed[s] });
+    }
+    while (stack.length > 0) {
+      const task = stack[stack.length - 1];
+      if (task.kind === 'enter') {
+        stack.pop();
+        stack.push({ kind: 'frame', frame: enter(task.atom) });
+      } else {
+        stepFrame(task.frame);
+      }
+    }
   };
 
   let offsetX = 0;
@@ -210,16 +255,14 @@ export function layoutGraph(
     const ri = ringOf[start];
     if (ri !== -1 && !ringLaid[ri]) {
       placeRing(ri, offsetX + ringRadius(rings[ri].length), 0);
-      for (const member of rings[ri]) {
-        placeChildren(member);
-      }
+      runVisits(rings[ri]);
     } else {
       atoms[start].x = offsetX;
       atoms[start].y = 0;
       placed[start] = true;
       incoming[start] = Math.PI / 2;
       state.sign = -1;
-      placeChildren(start);
+      runVisits([start]);
     }
     // Offset the next component past the rightmost atom placed so far.
     let maxX = -Infinity;
