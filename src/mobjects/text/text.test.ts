@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as THREE from 'three';
 import { Text } from './Text';
+import { getTextResolutionScale, TEXT_BASE_RESOLUTION_SCALE } from './textTexture';
 
 /** Type-safe access to private members in tests */
 interface TextInternal {
@@ -257,7 +258,8 @@ describe('Text', () => {
     it('should produce correct font string with defaults', () => {
       const t = new Text({ text: 'Test' });
       const fs = (t as unknown as TextInternal)._buildFontString();
-      // RESOLUTION_SCALE = 2, so 48 * 2 = 96
+      // The supersampling scale is base(2) * clamp(devicePixelRatio, 1, 2).
+      // happy-dom reports devicePixelRatio 1, so the scale is 2 and 48 * 2 = 96.
       expect(fs).toBe('normal normal 96pt CMU Serif, Georgia, Times New Roman, serif');
     });
 
@@ -279,10 +281,10 @@ describe('Text', () => {
       expect(fs).toContain(' 700 ');
     });
 
-    it('should scale font size by RESOLUTION_SCALE', () => {
+    it('should scale font size by the resolution scale', () => {
       const t = new Text({ text: 'Test', fontSize: 24 });
       const fs = (t as unknown as TextInternal)._buildFontString();
-      // 24 * 2 = 48
+      // At devicePixelRatio 1 the scale is 2, so 24 * 2 = 48.
       expect(fs).toContain('48pt');
     });
 
@@ -290,6 +292,123 @@ describe('Text', () => {
       const t = new Text({ text: 'Test', fontFamily: 'Helvetica' });
       const fs = (t as unknown as TextInternal)._buildFontString();
       expect(fs).toContain('Helvetica');
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Device-pixel-ratio-aware resolution scale
+  // ---------------------------------------------------------------------------
+
+  describe('resolution scale (device pixel ratio)', () => {
+    /**
+     * Set window.devicePixelRatio for one test and return a restore function.
+     * happy-dom reports a plain number, so define a configurable property.
+     */
+    function withDevicePixelRatio(value: number): () => void {
+      const descriptor = Object.getOwnPropertyDescriptor(window, 'devicePixelRatio');
+      Object.defineProperty(window, 'devicePixelRatio', { value, configurable: true });
+      return () => {
+        if (descriptor) {
+          Object.defineProperty(window, 'devicePixelRatio', descriptor);
+        } else {
+          Object.defineProperty(window, 'devicePixelRatio', { value: 1, configurable: true });
+        }
+      };
+    }
+
+    /**
+     * A mock 2D context whose measured width scales with the font size, like a
+     * real canvas. The constant-width mock used elsewhere cannot show world-size
+     * invariance, because real invariance relies on measureText scaling with the
+     * font size so the division by the scale cancels.
+     */
+    function createFontAwareMockCtx(): CanvasRenderingContext2D {
+      const ctx = {
+        font: '',
+        textBaseline: 'top',
+        textAlign: 'center',
+        fillStyle: '',
+        strokeStyle: '',
+        globalAlpha: 1,
+        lineWidth: 1,
+        measureText: vi.fn(function (this: { font: string }, text: string) {
+          const match = /(\d+)pt/.exec(this.font);
+          const size = match ? Number(match[1]) : 10;
+          return { width: text.length * size } as TextMetrics;
+        }),
+        fillText: vi.fn(),
+        strokeText: vi.fn(),
+        clearRect: vi.fn(),
+        save: vi.fn(),
+        restore: vi.fn(),
+        beginPath: vi.fn(),
+        moveTo: vi.fn(),
+        lineTo: vi.fn(),
+        stroke: vi.fn(),
+        fillRect: vi.fn(),
+      };
+      // measureText reads `this.font`, so bind the object as its receiver.
+      ctx.measureText = ctx.measureText.bind(ctx) as typeof ctx.measureText;
+      return ctx as unknown as CanvasRenderingContext2D;
+    }
+
+    let restoreDpr: (() => void) | null = null;
+
+    afterEach(() => {
+      restoreDpr?.();
+      restoreDpr = null;
+    });
+
+    it('returns base scale (2) at devicePixelRatio 1', () => {
+      restoreDpr = withDevicePixelRatio(1);
+      expect(getTextResolutionScale()).toBe(TEXT_BASE_RESOLUTION_SCALE);
+      expect(getTextResolutionScale()).toBe(2);
+    });
+
+    it('returns 4 on a retina display (devicePixelRatio 2)', () => {
+      restoreDpr = withDevicePixelRatio(2);
+      expect(getTextResolutionScale()).toBe(4);
+    });
+
+    it('clamps devicePixelRatio to the 1..2 range', () => {
+      restoreDpr = withDevicePixelRatio(3);
+      expect(getTextResolutionScale()).toBe(4); // clamp 3 -> 2, times base 2
+    });
+
+    it('scales between the bounds (devicePixelRatio 1.5)', () => {
+      restoreDpr = withDevicePixelRatio(1.5);
+      expect(getTextResolutionScale()).toBe(3);
+    });
+
+    it('builds a higher-resolution font string on retina', () => {
+      restoreDpr = withDevicePixelRatio(2);
+      const t = new Text({ text: 'Test', fontSize: 48 });
+      const fs = (t as unknown as TextInternal)._buildFontString();
+      // scale 4, so 48 * 4 = 192
+      expect(fs).toContain('192pt');
+    });
+
+    it('keeps the world size unchanged regardless of devicePixelRatio', () => {
+      vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((contextId: string) =>
+        contextId === '2d' ? createFontAwareMockCtx() : null,
+      );
+
+      restoreDpr = withDevicePixelRatio(1);
+      const atDpr1 = new Text({ text: 'Hydrophobicity', fontSize: 50 });
+      const width1 = atDpr1.getWidth();
+      const height1 = atDpr1.getHeight();
+      restoreDpr();
+
+      restoreDpr = withDevicePixelRatio(2);
+      const atDpr2 = new Text({ text: 'Hydrophobicity', fontSize: 50 });
+      const width2 = atDpr2.getWidth();
+      const height2 = atDpr2.getHeight();
+
+      // The texture resolution doubles, but the on-screen size must not change.
+      expect(width2).toBeCloseTo(width1, 6);
+      expect(height2).toBeCloseTo(height1, 6);
+      expect(width1).toBeGreaterThan(0);
+      expect(height1).toBeGreaterThan(0);
     });
   });
 

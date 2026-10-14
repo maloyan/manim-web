@@ -62,22 +62,44 @@ function appendArc(points: number[][], radius: number, startAngle: number, endAn
   }
 }
 
+/**
+ * A cubic control point that bends a connecting curve toward the circle center.
+ *
+ * Placing both control points on the exact center made every ribbon pinch to
+ * one point: the two connecting curves of a ribbon then crossed at the origin,
+ * so the shape self-intersected and the overlap of all ribbons read as a bright
+ * tangle. One-third of the way from the endpoint toward the center reproduces
+ * the standard quadratic-to-center ribbon bow (a quadratic with the center as
+ * its control equals a cubic with handles at 1/3 of each endpoint) without
+ * routing the curve through the center.
+ */
+function towardCenter(endpointAngle: number, radius: number): number[] {
+  return [(radius * Math.cos(endpointAngle)) / 3, (radius * Math.sin(endpointAngle)) / 3, 0];
+}
+
 /** Build the closed ribbon control points for a chord at the given radius. */
 function buildChordPoints(ribbon: ChordRibbonSpan, radius: number): number[][] {
   const { sourceStart, sourceEnd, targetStart, targetEnd } = ribbon;
   const points: number[][] = [];
-  const center = [0, 0, 0];
 
   // Start anchor at the source span start.
   points.push(polar(radius, sourceStart));
   // Arc along the source span.
   appendArc(points, radius, sourceStart, sourceEnd);
-  // Bezier across the circle to the target span start (bows through the center).
-  points.push([...center], [...center], polar(radius, targetStart));
+  // Bezier across the circle to the target span start (bows toward the center).
+  points.push(
+    towardCenter(sourceEnd, radius),
+    towardCenter(targetStart, radius),
+    polar(radius, targetStart),
+  );
   // Arc along the target span.
   appendArc(points, radius, targetStart, targetEnd);
   // Bezier back to the source span start, closing the ribbon.
-  points.push([...center], [...center], polar(radius, sourceStart));
+  points.push(
+    towardCenter(targetEnd, radius),
+    towardCenter(sourceStart, radius),
+    polar(radius, sourceStart),
+  );
 
   return points;
 }

@@ -19,7 +19,7 @@
 import { Animation, AnimationOptions } from '../Animation';
 import { Code } from '../../mobjects/text/Code';
 import { CodeToken } from '../../mobjects/text/CodeTokenLayout';
-import { Vector3Tuple } from '../../core/Mobject';
+import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { lerp, lerpPoint } from '../../utils/math';
 
 /** Which unit the matcher pairs: whole lines, or individual tokens. */
@@ -100,6 +100,22 @@ export class TransformMatchingCode extends Animation<Code> {
   private readonly _mismatchedParts: CodeMatchedPart[] = [];
   private readonly _fadeOutParts: CodeFadingPart[] = [];
   private readonly _fadeInParts: CodeFadingPart[] = [];
+
+  /**
+   * The mobject the generated token mobjects attach to. When the source block
+   * sits inside a group, the tokens become siblings in that group; when the
+   * block was added straight to the scene (no Mobject parent), they attach to
+   * the block itself so they still enter the scene graph and render.
+   */
+  private _container: Mobject | null = null;
+
+  /**
+   * World offset of the container frame. Token positions from
+   * {@link Code.getCodeTokens} are in the block's parent frame, so a token that
+   * attaches to the block itself must subtract the block's own position to land
+   * in the right place.
+   */
+  private _origin: Vector3Tuple = [0, 0, 0];
 
   constructor(source: Code, target: Code, options: TransformMatchingCodeOptions = {}) {
     super(source, options);
@@ -229,16 +245,36 @@ export class TransformMatchingCode extends Animation<Code> {
     }
   }
 
+  /**
+   * Pick the container the token mobjects attach to and the world offset of its
+   * frame. Called once at the start of {@link begin}.
+   */
+  private _initContainer(): void {
+    const parent = this.mobject.parent;
+    if (parent) {
+      // Tokens become siblings of the block; token positions are already in the
+      // parent frame, so no offset is needed.
+      this._container = parent;
+      this._origin = [0, 0, 0];
+    } else {
+      // No Mobject parent (the block was added straight to the scene). Attach
+      // the tokens to the block itself and shift them into its local frame.
+      this._container = this.mobject;
+      this._origin = [this.mobject.position.x, this.mobject.position.y, this.mobject.position.z];
+    }
+  }
+
   private _place(mobject: Code, position: Vector3Tuple): void {
-    mobject.position.set(position[0], position[1], position[2]);
+    mobject.position.set(
+      position[0] - this._origin[0],
+      position[1] - this._origin[1],
+      position[2] - this._origin[2],
+    );
     mobject._markDirty();
   }
 
   private _parentAdd(mobject: Code): void {
-    const parent = this.mobject.parent;
-    if (parent) {
-      parent.add(mobject);
-    }
+    this._container?.add(mobject);
   }
 
   private _addMatchedPart(source: CodeToken, target: CodeToken, into: CodeMatchedPart[]): void {
@@ -283,6 +319,7 @@ export class TransformMatchingCode extends Animation<Code> {
 
   override begin(): void {
     super.begin();
+    this._initContainer();
     this._matchUnits(this._units(this.mobject), this._units(this.target));
     // Hide the original blocks; the token mobjects carry the animation.
     this.mobject.opacity = 0;
@@ -291,7 +328,11 @@ export class TransformMatchingCode extends Animation<Code> {
 
   private _moveTo(part: CodeMatchedPart, alpha: number): void {
     const point = lerpPoint(part.startPosition, part.targetPosition, alpha);
-    part.mobject.position.set(point[0], point[1], point[2]);
+    part.mobject.position.set(
+      point[0] - this._origin[0],
+      point[1] - this._origin[1],
+      point[2] - this._origin[2],
+    );
     part.mobject._markDirty();
   }
 
@@ -331,9 +372,9 @@ export class TransformMatchingCode extends Animation<Code> {
   override finish(): void {
     for (const part of [...this._matchedParts, ...this._mismatchedParts]) {
       part.mobject.position.set(
-        part.targetPosition[0],
-        part.targetPosition[1],
-        part.targetPosition[2],
+        part.targetPosition[0] - this._origin[0],
+        part.targetPosition[1] - this._origin[1],
+        part.targetPosition[2] - this._origin[2],
       );
       part.mobject._markDirty();
       part.mobject.opacity = part.targetOpacity;

@@ -1,4 +1,5 @@
 import { Text, TextOptions } from './Text';
+import { getTextResolutionScale } from './textTexture';
 
 /**
  * Options for creating a MarkupText mobject
@@ -108,9 +109,6 @@ interface StyleContext {
 
 /** Scale factor: pixels to world units (100 pixels = 1 world unit) */
 const PIXEL_TO_WORLD = 1 / 100;
-
-/** Resolution multiplier for crisp text on retina displays */
-const RESOLUTION_SCALE = 2;
 
 /** Default superscript vertical offset (negative = up) */
 const SUPERSCRIPT_SHIFT = -0.35;
@@ -840,6 +838,7 @@ export class MarkupText extends Text {
    * Build a CSS font string for a styled segment.
    */
   protected _buildStyledFontString(seg: StyledTextSegment): string {
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const style = seg.fontStyle || this._fontStyle || 'normal';
     const weightRaw = seg.fontWeight ?? this._fontWeight;
     const weight = typeof weightRaw === 'number' ? weightRaw.toString() : weightRaw || 'normal';
@@ -897,6 +896,7 @@ export class MarkupText extends Text {
   protected _measureStyledLineWidth(segments: StyledTextSegment[]): number {
     if (!this._ctx) return 0;
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     let totalWidth = 0;
     for (const seg of segments) {
       this._ctx.font = this._buildStyledFontString(seg);
@@ -927,6 +927,7 @@ export class MarkupText extends Text {
       return { lines: [], width: 0, height: 0 };
     }
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const lineSegments = this._splitStyledSegmentsByLine();
     const scaledBaseFontSize = this._fontSize * RESOLUTION_SCALE;
 
@@ -965,6 +966,7 @@ export class MarkupText extends Text {
       return;
     }
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const { width, height } = this._measureText();
     const lineSegments = this._splitStyledSegmentsByLine();
 

@@ -5,18 +5,23 @@ import ManimExample from '../ManimExample';
 async function animate(scene: any) {
   const { Circle, GrowFromCenter, RED, GREEN, BLUE } = await import('manim-web');
 
-  const red = new Circle({ radius: 1.4, color: RED, fillOpacity: 0.9 });
+  // No stroke, so each circle reads as a solid disc. A stroked outline beads
+  // into dots under a brightening blend, because the thick-line segments
+  // double-count where they meet.
+  const red = new Circle({ radius: 1.4, color: RED, fillOpacity: 0.9, strokeWidth: 0 });
   red.moveTo([-0.8, 0.5, 0]);
 
-  const green = new Circle({ radius: 1.4, color: GREEN, fillOpacity: 0.9 });
+  const green = new Circle({ radius: 1.4, color: GREEN, fillOpacity: 0.9, strokeWidth: 0 });
   green.moveTo([0.8, 0.5, 0]);
 
-  const blue = new Circle({ radius: 1.4, color: BLUE, fillOpacity: 0.9 });
+  const blue = new Circle({ radius: 1.4, color: BLUE, fillOpacity: 0.9, strokeWidth: 0 });
   blue.moveTo([0, -0.8, 0]);
 
-  // Additive blending makes the overlaps glow, the way light mixes.
+  // Screen blending lightens where colors overlap, so each pair blends to a
+  // clear new tint (red+green to yellow, green+blue to cyan) instead of washing
+  // out to flat white.
   for (const circle of [red, green, blue]) {
-    circle.setBlendMode('additive');
+    circle.setBlendMode('screen');
   }
 
   await scene.play(new GrowFromCenter(red, { duration: 0.8 }));

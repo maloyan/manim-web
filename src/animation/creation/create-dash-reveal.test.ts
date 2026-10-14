@@ -17,6 +17,7 @@ import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { Circle } from '../../mobjects/geometry/Circle';
 import { DashedLine } from '../../mobjects/geometry/DashedLine';
+import { ContourPlot } from '../../mobjects/graphing/ContourPlot';
 import { Create, setLine2RevealLength, Uncreate, DrawBorderThenFill } from './Create';
 
 function allLine2(mob: { getThreeObject(): import('three').Object3D }): Line2[] {
@@ -156,6 +157,70 @@ describe('Uncreate() hides the stroke once fully erased', () => {
     anim.begin();
     for (const line of allLine2(dashed)) {
       expect(line.visible).toBe(true);
+    }
+  });
+});
+
+describe('Create() reveals a multi-subpath VMobject without shared-material flicker (issue #700 follow-up)', () => {
+  // A ContourPlot is ONE VMobject whose stroke has many disjoint subpaths
+  // (one Line2 each). The saddle field x^2 - y^2 at these levels yields >10
+  // subpaths, matching the flickering docs example.
+  function makeSaddlePlot(): ContourPlot {
+    return new ContourPlot({
+      func: (x, y) => x * x - y * y,
+      levels: [-4, -2, -1, 0, 1, 2, 4],
+      xRange: [-4, 4],
+      yRange: [-4, 4],
+      resolution: 64,
+    });
+  }
+
+  it('gives every subpath its own LineMaterial, never one shared instance', () => {
+    const plot = makeSaddlePlot();
+    const lines = allLine2(plot);
+    expect(lines.length).toBeGreaterThan(1);
+    // Shared material (the bug) collapses this set to size 1.
+    const materials = new Set(lines.map((l) => l.material));
+    expect(materials.size).toBe(lines.length);
+  });
+
+  it('keeps each subpath dash window independent — the direct cause of the flicker', () => {
+    // The flicker came from every subpath sharing one LineMaterial: Create()'s
+    // per-subpath dashSize/gapSize writes clobbered each other, so all subpaths
+    // rendered the LAST subpath's dash window, which jumps around frame to
+    // frame. Writing two different reveal windows must now stick independently.
+    const plot = makeSaddlePlot();
+    const lines = allLine2(plot);
+    expect(lines.length).toBeGreaterThan(2);
+
+    setLine2RevealLength(lines[0], 2, 5);
+    setLine2RevealLength(lines[1], 4, 5);
+
+    expect((lines[0].material as LineMaterial).dashSize).toBe(2);
+    expect((lines[1].material as LineMaterial).dashSize).toBe(4);
+  });
+
+  it('reveals subpaths cumulatively: some drawn, some not yet, at mid-animation', () => {
+    const plot = makeSaddlePlot();
+    const anim = new Create(plot, { duration: 1 });
+    anim.begin();
+    anim.interpolate(0.5);
+
+    const lines = allLine2(plot);
+    const visible = lines.filter((l) => l.visible);
+    expect(visible.length).toBeGreaterThan(1);
+    expect(visible.length).toBeLessThan(lines.length);
+  });
+
+  it('shows every subpath at full stroke once Create() finishes', () => {
+    const plot = makeSaddlePlot();
+    const anim = new Create(plot, { duration: 1 });
+    anim.begin();
+    anim.interpolate(1);
+    anim.finish();
+    for (const line of allLine2(plot)) {
+      expect(line.visible).toBe(true);
+      expect((line.material as LineMaterial).dashed).toBe(false);
     }
   });
 });

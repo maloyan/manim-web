@@ -98,6 +98,8 @@ export class DiGraph extends GenericGraph {
       layout: { ...this._layoutConfig },
       vertexStyle: { ...this._vertexStyle },
       edgeStyle: { ...this._edgeStyle },
+      showLabels: this._showLabels,
+      labelFontSize: this._labelFontSize,
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;

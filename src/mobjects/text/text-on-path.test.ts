@@ -260,6 +260,47 @@ describe('TextOnPath (synchronous glyph mode)', () => {
     expect(t.children).toHaveLength(0);
   });
 
+  it('lands the given anchor on the path, not the bounding-box center', () => {
+    // A square whose bounding-box center sits at local (1, 0.5), far from its
+    // anchor at the origin. The anchor must land on the path; the box rides the
+    // offset. This models a glyph ('i') whose ink box differs from its advance
+    // box: without the anchor it would be misplaced along and across the path.
+    const glyph = new VMobject();
+    glyph.setPoints3D([
+      [0.5, 0, 0],
+      [1.5, 0, 0],
+      [1.5, 1, 0],
+      [0.5, 1, 0],
+    ]);
+    const t = new TextOnPath({
+      glyphs: [{ mobject: glyph, width: 2, anchor: [0, 0, 0] }],
+      path: horizontalLine(0, 10),
+    });
+    // Single glyph of width 2 -> anchor target is at x = width/2 = 1.
+    // The box center is offset (1, 0.5) from the anchor, so it ends at (2, 0.5).
+    const center = t.children[0].getCenter();
+    expect(center[0]).toBeCloseTo(2, 5);
+    expect(center[1]).toBeCloseTo(0.5, 5);
+  });
+
+  it('keeps bounding-box placement when no anchor is given', () => {
+    const glyph = new VMobject();
+    glyph.setPoints3D([
+      [0.5, 0, 0],
+      [1.5, 0, 0],
+      [1.5, 1, 0],
+      [0.5, 1, 0],
+    ]);
+    const t = new TextOnPath({
+      glyphs: [{ mobject: glyph, width: 2 }],
+      path: horizontalLine(0, 10),
+    });
+    // No anchor: the bounding-box center lands on the path point (x = 1, y = 0).
+    const center = t.children[0].getCenter();
+    expect(center[0]).toBeCloseTo(1, 5);
+    expect(center[1]).toBeCloseTo(0, 5);
+  });
+
   it('shifts the run by startOffset', () => {
     const base = new TextOnPath({
       glyphs: [{ mobject: makeGlyph(0.3), width: 0.3 }],
