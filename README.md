@@ -2,9 +2,11 @@
 
 # manim-web
 
-**Mathematical animations for the web.**
+**Manim in the browser. No Python.**
 
-The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the browser, no Python required.
+A TypeScript port of [3Blue1Brown's Manim](https://github.com/3b1b/manim) that
+runs client-side, plus native modules for molecular and drug-binding, chemistry,
+biology, and maps.
 
 <img src="assets/demo_square_to_circle.gif" width="600" alt="Square to Circle demo">
 
@@ -13,18 +15,40 @@ The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the bro
 [![codecov](https://codecov.io/gh/maloyan/manim-web/branch/main/graph/badge.svg)](https://codecov.io/gh/maloyan/manim-web)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-[Quick Start](#quick-start) · [Examples](https://maloyan.github.io/manim-web/) · [Docs](https://maloyan.github.io/manim-web/) · [npm](https://www.npmjs.com/package/manim-web)
+[Quick Start](#quick-start) · [Docs & Examples](https://maloyan.github.io/manim-web/) · [Parity](PARITY.md) · [Comparison](COMPARISON.md) · [npm](https://www.npmjs.com/package/manim-web)
 
 </div>
 
 ---
 
+## Why manim-web
+
+Three open-source libraries expose the Manim API: ManimCE, ManimGL, and
+manim-web. manim-web is the only one that runs client-side in the browser, and
+the only one that ships chemistry, biology, molecular, and geographic modules.
+Every claim below links to the module or document that proves it.
+
+| Capability                   | What you get                                                                                                                 | Source                                              |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| **Browser runtime**          | Import from a CDN module script and render in a `<canvas>`. No Python, no install.                                           | [Quick start](#quick-start)                         |
+| **ManimCE API parity**       | 429 of 429 feasible ManimCE 0.22.0 public symbols ported (100% of the feasible surface).                                     | [PARITY.md](PARITY.md)                              |
+| **Molecular / drug-binding** | 3D molecules from PDB, MOL/SDF, and SMILES; `Protein`, `BindingPocket`, docking, van der Waals / solvent / density surfaces. | [`src/mobjects/molecular/`](src/mobjects/molecular) |
+| **Chemistry**                | Reaction arrows and schemes, electron-pushing arrows, Bohr diagrams, CPK colors.                                             | [`src/mobjects/chemistry/`](src/mobjects/chemistry) |
+| **Biology**                  | `DNAHelix`, `Cell`, `AminoAcidChain`.                                                                                        | [`src/mobjects/biology/`](src/mobjects/biology)     |
+| **Maps / geo**               | `Globe`, `ChoroplethMap`, `FlowArc`, map projections, GeoJSON and TopoJSON.                                                  | [`src/mobjects/geo/`](src/mobjects/geo)             |
+| **Interactive player**       | A built-in player with play/pause, scrub, and segment navigation.                                                            | [`src/player/`](src/player)                         |
+| **Export**                   | GIF and video (WebCodecs/MP4/WebM) straight from the browser.                                                                | [`src/export/`](src/export)                         |
+| **Framework integrations**   | React, Vue, a web component, and a notebook entry point.                                                                     | [Framework integrations](#framework-integrations)   |
+
+The chemistry, biology, molecular, and geo modules do not exist in the ManimCE
+or ManimGL reference APIs. See [COMPARISON.md](COMPARISON.md) for the full,
+source-backed comparison.
+
 ## Quick Start
 
-### Browser
+### Browser (30 seconds, no install)
 
 ```html
-<h1>Manim-web demo</h1>
 <div id="container"></div>
 <script type="module">
   import {
@@ -33,8 +57,10 @@ The power of [3Blue1Brown's Manim](https://github.com/3b1b/manim) — in the bro
     Create,
   } from 'https://cdn.jsdelivr.net/npm/manim-web@latest/dist/manim-web.browser.js';
 
-  const options = { width: 500, height: 300 };
-  const scene = new Scene(document.getElementById('container'), options);
+  const scene = new Scene(document.getElementById('container'), {
+    width: 500,
+    height: 300,
+  });
   const circle = new Circle({ radius: 1.5 });
   await scene.play(new Create(circle));
 </script>
@@ -59,7 +85,8 @@ async function squareToCircle(scene: Scene) {
 }
 ```
 
-See the [examples](https://maloyan.github.io/manim-web/) for more.
+See the [docs and examples](https://maloyan.github.io/manim-web/) for more, including a
+[molecular and maps gallery](https://maloyan.github.io/manim-web/examples/molecular).
 
 ## What You Can Build
 
@@ -77,12 +104,13 @@ See the [examples](https://maloyan.github.io/manim-web/) for more.
 ## Features
 
 - **Geometry** — Circle, Rectangle, Polygon, Arrow, Arc, Star, Brace, and more
-- **Text & LaTeX** — Text, MathTex, Tex, Paragraph via KaTeX
+- **Text & LaTeX** — Text, MathTex, Tex, Paragraph via KaTeX; Typst via an opt-in WASM compiler
 - **Graphing** — Axes, NumberPlane, FunctionGraph, ParametricFunction, VectorField, BarChart
 - **3D** — Sphere, Cube, Cylinder, Torus, Surface3D, ThreeDAxes with orbit controls
 - **Animations** — FadeIn/Out, Create, Transform, Write, GrowFromCenter, AnimationGroup, LaggedStart
-- **Interaction** — Draggable, Hoverable, Clickable mobjects
-- **Export** — GIF and video export
+- **Interaction** — Draggable, Hoverable, Clickable mobjects, plus a scrub player
+- **Export** — GIF and video (MP4/WebM via WebCodecs)
+- **Science modules** — molecular/drug-binding, chemistry, biology, and maps (see [Why manim-web](#why-manim-web))
 - **Graphs & Tables** — Network graphs, Matrix, Table
 
 ## Framework Integrations
@@ -129,6 +157,23 @@ const onReady = async (scene: Scene) => {
   <ManimScene :width="800" :height="450" @ready="onReady" />
 </template>
 ```
+
+A `manim-web/element` web component and a `manim-web/notebook` entry point are
+also published.
+
+## When to use ManimCE or ManimGL instead
+
+manim-web is young and trades ecosystem size for a browser runtime. Reach for the
+Python libraries when they fit better:
+
+- **ManimCE** — the reference API, a mature ecosystem, far more tutorials and
+  examples, and the full LaTeX package set (manim-web uses KaTeX, a large but
+  incomplete LaTeX subset).
+- **ManimGL** — native OpenGL rendering with the architectural edge on heavy
+  scenes, plus 3Blue1Brown's own interactive playback window.
+
+manim-web trails both on stars, age, and downloads. The exact numbers, with
+sources, are in [COMPARISON.md](COMPARISON.md).
 
 ## Python to TypeScript
 
