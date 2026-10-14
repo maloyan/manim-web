@@ -26,6 +26,7 @@ const sidebars: SidebarsConfig = {
         'examples/molecular',
         'examples/molecular-and-maps-0-38',
         'examples/molecular-and-maps-0-39',
+        'examples/bubbles-pen-sonifier-table',
       ],
     },
     {

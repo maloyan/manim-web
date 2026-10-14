@@ -1,0 +1,127 @@
+---
+title: Bubbles, writing pen, sonifier and table lines
+sidebar_label: Bubbles, pen, sonifier, table
+---
+
+import BubblesExample from '@site/src/components/examples/BubblesExample';
+import WritingPenExample from '@site/src/components/examples/WritingPenExample';
+import SonifierExample from '@site/src/components/examples/SonifierExample';
+import TableInnerLinesExample from '@site/src/components/examples/TableInnerLinesExample';
+
+Four features added after the 0.38 release. Each section shows a live example and
+a short snippet of the public API.
+
+## SpeechBubble and ThoughtBubble
+
+`SpeechBubble` draws a rounded box around a mobject and adds a tail. `ThoughtBubble`
+draws a cloud with a trail of small circles. Both share one base class.
+
+The bubble wraps the `content` mobject. Move the content to the place you want
+before you build the bubble. Use `pointAt` to aim the tail tip at a point. Use
+`tailDirection` to aim the tail in a direction when there is no target.
+
+<BubblesExample />
+
+```typescript
+import { SpeechBubble, ThoughtBubble, Text } from 'manim-web';
+
+const text = new Text({ text: 'Hello, world!' });
+text.moveTo([-2.6, 1.1, 0]);
+
+const bubble = new SpeechBubble({ content: text, pointAt: [-4, -1.6, 0] });
+bubble.pointTailAt([-3, -1, 0]); // aim the tail again
+bubble.setContent(new Text({ text: 'Bye!' })); // the bubble resizes
+bubble.getTailTip(); // the tail tip in world coordinates
+
+const thought = new ThoughtBubble({ content: text, trailCount: 3 });
+```
+
+Shared options are `padding`, `color`, `fillColor`, `fillOpacity` and `strokeWidth`.
+`SpeechBubble` also takes `cornerRadius`, `tailLength` and `tailWidth`.
+`ThoughtBubble` also takes `bumpCount`, `trailCount`, `trailRadius` and `trailLength`.
+
+## WritingPen and writeWithPen
+
+`writeWithPen(target, options)` plays a `Write` or a `Create` and moves a pen so
+that the nib stays on the tip of the stroke. The reveal and the pen share one
+duration and one rate function. The default pen is a vector nib, so no image is
+needed.
+
+`scene.play()` adds the pen to the scene. The pen leaves the scene at the end
+unless you set `removePen: false`. The target must be a `VMobject`.
+
+<WritingPenExample />
+
+```typescript
+import { Circle, WritingPen, writeWithPen } from 'manim-web';
+
+const circle = new Circle({ radius: 1.2 });
+
+// Default pen and the Write animation.
+await scene.play(writeWithPen(circle, { duration: 2.5 }));
+
+// Your own pen and the Create animation.
+const pen = new WritingPen({ color: '#ffff00', length: 1 });
+await scene.play(writeWithPen(circle, { animation: 'create', pen }));
+```
+
+For a custom pen body, pass `tip` (any mobject) and `tipOffset` (the nib point of
+that mobject) to `WritingPen`. A pen also has `getNibPosition()` and
+`placeNibAt(point)`.
+
+## Sonifier
+
+`Sonifier` maps data to sound with the Web Audio API. `play(series, options)`
+plays a series as stepped pitch on one oscillator. `bindToTracker(tracker, options)`
+adds an updater to a `ValueTracker`, so the tracker value drives the pitch every
+frame. Both return a handle with a `stop()` method.
+
+Sound plays in the browser only. This release has no audio in exported video.
+Without an `AudioContext` (Node, SSR) the `Sonifier` does nothing and does not
+throw. Browsers also need a user click before they play sound, so the example has
+buttons.
+
+<SonifierExample />
+
+```typescript
+import { Sonifier, ValueTracker } from 'manim-web';
+
+const sonifier = new Sonifier({ minFrequency: 220, maxFrequency: 880 });
+
+// A whole series, 8 seconds in total.
+const playback = sonifier.play(series, { totalDuration: 8 });
+playback.stop();
+
+// A live tracker. Add the tracker to the scene so that its updaters run.
+const t = new ValueTracker(0);
+scene.add(t);
+const binding = sonifier.bindToTracker(t, { domain: [0, 10] });
+await scene.play(t.animateTo(10, { duration: 6 }));
+binding.stop();
+```
+
+Mapping options are `domain`, `minFrequency`, `maxFrequency`, `scale` (`linear` or
+`log`), `waveform`, `gain`, `gainRange` and `pan`. `play` also takes
+`durationPerStep`. Call `sonifier.dispose()` to close the audio context.
+
+## Table without inner lines
+
+`Table` has an `includeInnerLines` option, as in ManimCE 0.21. Set it to `false`
+to draw no lines between cells. The default is `true`. The option
+`includeOuterLines` controls the frame in the same way. The left table below uses
+the default. The right table sets `includeInnerLines: false`.
+
+<TableInnerLinesExample />
+
+```typescript
+import { Table, Text } from 'manim-web';
+
+const cell = (s: string) => new Text({ text: s, fontSize: 32 });
+const table = new Table({
+  data: [
+    [cell('12'), cell('7')],
+    [cell('4'), cell('19')],
+  ],
+  includeInnerLines: false,
+});
+```
