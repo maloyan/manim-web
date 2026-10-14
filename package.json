@@ -87,7 +87,7 @@
     "gif.js": "^0.2.0",
     "gifuct-js": "^2.1.2",
     "jspdf": "^4.2.1",
-    "katex": "^0.18.1",
+    "katex": "^0.19.0",
     "lottie-web": "^5.12.2",
     "mp4-muxer": "^5.2.2",
     "opentype.js": "^2.0.0",
