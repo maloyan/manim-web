@@ -67,6 +67,12 @@ export interface Atom3DSpec {
    * Optional and ignored by rendering; it exists for property-based coloring.
    */
   tempFactor?: number;
+  /**
+   * The partial charge of this atom (elementary charge units), if known.
+   * Optional and ignored by rendering; a {@link MolecularSurface} uses it for
+   * `colorBy: 'charge'` and `colorBy: 'electrostatic'`.
+   */
+  charge?: number;
 }
 
 /** A single bond between two atoms, by their index in the atoms array. */

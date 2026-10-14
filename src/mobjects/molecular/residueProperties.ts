@@ -57,6 +57,17 @@ export const DEFAULT_CHARGE_COLORS: Readonly<Record<'positive' | 'negative' | 'n
     neutral: '#cbd5e0',
   };
 
+/**
+ * Default diverging ramp for a continuous charge or electrostatic surface, low
+ * to high: negative blue, neutral white, positive red. This is the convention
+ * {@link MolecularSurface} uses for `colorBy: 'charge' | 'electrostatic'`.
+ *
+ * Note: this matches the task convention (red is positive). Some molecular
+ * viewers (PyMOL, APBS) use the opposite hue for potential; pass a custom
+ * `colorRamp` to flip it.
+ */
+export const DEFAULT_ELECTROSTATIC_COLORS = ['#2166ac', '#f7f7f7', '#b2182b'];
+
 /** 1-letter residue codes that carry a positive side-chain charge. */
 const POSITIVE_RESIDUES = new Set(['R', 'K', 'H']);
 /** 1-letter residue codes that carry a negative side-chain charge. */

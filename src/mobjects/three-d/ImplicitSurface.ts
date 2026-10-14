@@ -30,6 +30,13 @@ export interface ImplicitSurfaceOptions {
   doubleSided?: boolean;
   /** Center position [x, y, z]. Default: [0, 0, 0] */
   center?: Vector3Tuple;
+  /**
+   * Optional per-vertex RGB colors (0..1), flat `[r, g, b, …]` parallel to the
+   * surface vertices (one triple per vertex, so three values per position). When
+   * set and its length equals the position array length, the mesh uses vertex
+   * colors instead of the single {@link color}. A mismatched length is ignored.
+   */
+  vertexColors?: Float32Array;
 }
 
 /**
@@ -73,6 +80,7 @@ export class ImplicitSurface extends Mobject3D {
   private _centerPoint: Vector3Tuple;
   private _positions: Float32Array;
   private _triangleCount: number;
+  private _vertexColors: Float32Array | null;
 
   constructor(options: ImplicitSurfaceOptions) {
     super();
@@ -89,6 +97,7 @@ export class ImplicitSurface extends Mobject3D {
       wireframe = false,
       doubleSided = true,
       center = [0, 0, 0],
+      vertexColors,
     } = options;
 
     this._func = func;
@@ -102,6 +111,7 @@ export class ImplicitSurface extends Mobject3D {
     this._centerPoint = [...center];
     this._positions = new Float32Array(0);
     this._triangleCount = 0;
+    this._vertexColors = vertexColors ?? null;
 
     this.color = color;
     this._opacity = opacity;
@@ -130,7 +140,18 @@ export class ImplicitSurface extends Mobject3D {
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(this._positions, 3));
     geometry.computeVertexNormals();
+    // Per-vertex colors, when supplied and aligned with the positions. A
+    // mismatched length is ignored so a stale color buffer never corrupts a
+    // rebuilt (re-meshed) geometry.
+    if (this._vertexColors && this._vertexColors.length === this._positions.length) {
+      geometry.setAttribute('color', new THREE.BufferAttribute(this._vertexColors, 3));
+    }
     return geometry;
+  }
+
+  /** Whether the surface currently renders with per-vertex colors. */
+  private _usesVertexColors(): boolean {
+    return !!this._vertexColors && this._vertexColors.length === this._positions.length;
   }
 
   /**
@@ -180,8 +201,12 @@ export class ImplicitSurface extends Mobject3D {
     const prepassMesh = new THREE.Mesh(geometry, prepassMaterial);
     prepassMesh.raycast = () => {}; // depth-only helper; picking sees the color mesh only
 
+    // With vertex colors, three.js multiplies each vertex color by the material
+    // color, so the base color is white to show the ramp colors unchanged.
+    const usesVertexColors = this._usesVertexColors();
     const material = new THREE.MeshStandardMaterial({
-      color: this.color,
+      color: usesVertexColors ? '#ffffff' : this.color,
+      vertexColors: usesVertexColors,
       opacity: this._opacity,
       transparent: this._opacity < 1,
       depthWrite: this._opacity >= 1,
@@ -198,7 +223,9 @@ export class ImplicitSurface extends Mobject3D {
   protected override _syncMaterialToThree(): void {
     const material = this.getMeshMaterial<THREE.MeshStandardMaterial>();
     if (material) {
-      material.color.set(this.color);
+      const usesVertexColors = this._usesVertexColors();
+      material.vertexColors = usesVertexColors;
+      material.color.set(usesVertexColors ? '#ffffff' : this.color);
       material.opacity = this._opacity;
       material.transparent = this._opacity < 1;
       material.depthWrite = this._opacity >= 1;
@@ -236,6 +263,31 @@ export class ImplicitSurface extends Mobject3D {
   /** The number of triangles in the surface. */
   getTriangleCount(): number {
     return this._triangleCount;
+  }
+
+  /** The per-vertex RGB colors (0..1), or null when the surface is uniform. */
+  getVertexColors(): Float32Array | null {
+    return this._vertexColors;
+  }
+
+  /**
+   * Set per-vertex RGB colors (0..1), flat `[r, g, b, …]` parallel to the
+   * vertices, or null to return to the uniform {@link color}. The mesh rebuilds
+   * its color attribute and material in place; the scalar field is not re-meshed.
+   */
+  setVertexColors(colors: Float32Array | null): this {
+    this._vertexColors = colors;
+    if (this._threeObject instanceof THREE.Mesh) {
+      const geometry = this._buildGeometry();
+      const old = this._threeObject.geometry;
+      this._threeObject.geometry = geometry;
+      const prepass = this._getPrepassMesh();
+      if (prepass) prepass.geometry = geometry;
+      old.dispose();
+      this._syncMaterialToThree();
+    }
+    this._markDirty();
+    return this;
   }
 
   /** Get the scalar field. */
@@ -299,6 +351,7 @@ export class ImplicitSurface extends Mobject3D {
       wireframe: this._wireframe,
       doubleSided: this._doubleSided,
       center: [...this._centerPoint],
+      vertexColors: this._vertexColors ? new Float32Array(this._vertexColors) : undefined,
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
