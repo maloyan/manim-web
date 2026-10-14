@@ -15,6 +15,13 @@ export {
   type ArrowElectrons,
 } from './ElectronPushingArrow';
 export { ReactionArrow, type ReactionArrowOptions, type ReactionArrowKind } from './ReactionArrow';
+export { ReactionScheme, type ReactionSchemeOptions, type ReactionStep } from './ReactionScheme';
+export {
+  BohrDiagram,
+  fillShells,
+  DEFAULT_NUCLEUS_COLOR,
+  type BohrDiagramOptions,
+} from './BohrDiagram';
 export { water, methane, benzene, ethanol, type MoleculeBuilderOptions } from './molecules';
 export { parseMolfile, parseSdf, moleculeFromMolfile, type ParsedMolfile } from './molfile';
 export {

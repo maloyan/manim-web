@@ -48,6 +48,9 @@ export type { MolecularSurfaceOptions, MolecularSurfaceKind } from './MolecularS
 export { OrbitalSurface } from './OrbitalSurface';
 export type { OrbitalSurfaceOptions, OrbitalType } from './OrbitalSurface';
 
+export { DensitySurface } from './DensitySurface';
+export type { DensitySurfaceOptions, DensityGrid } from './DensitySurface';
+
 export { hydrogenBond, contact, distanceLabel, residueLabel } from './annotations';
 export type {
   DashedAnnotationOptions,
