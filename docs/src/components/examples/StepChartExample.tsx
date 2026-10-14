@@ -19,7 +19,8 @@ async function animate(scene: any) {
   });
   chart.center();
 
-  await scene.play(new Create(chart, { duration: 1.5 }));
+  // lagRatio 0 reveals the axes and steps together for a coherent draw-on.
+  await scene.play(new Create(chart, { duration: 1.5, lagRatio: 0 }));
   await scene.wait(999999);
 }
 

@@ -17,7 +17,9 @@ async function animate(scene: any) {
     seriesColors: ['#58c4dd', '#fc6255'],
   });
 
-  await scene.play(new Create(chart, { duration: 1.5 }));
+  // lagRatio 0 draws the grid, spokes and series together, so the chart reveals
+  // coherently instead of tracing the rings one-by-one before the data.
+  await scene.play(new Create(chart, { duration: 1.5, lagRatio: 0 }));
   await scene.wait(999999);
 }
 

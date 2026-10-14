@@ -21,7 +21,9 @@ async function animate(scene: any) {
     height: 4.2,
   });
 
-  await scene.play(new Create(chart, { duration: 2 }));
+  // lagRatio 0 reveals every part together, so the chart draws on coherently
+  // instead of tracing the axis ticks first and the candles afterwards.
+  await scene.play(new Create(chart, { duration: 2, lagRatio: 0 }));
 }
 
 export default function CandlestickChartExample() {

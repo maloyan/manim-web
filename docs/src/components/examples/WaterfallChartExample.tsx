@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { WaterfallChart, FadeIn } = await import('manim-web');
+  const { WaterfallChart, Create } = await import('manim-web');
 
   // Sequential contributions, left to right. Each bar starts at the running
   // total of the bars before it. A final total bar spans 0 to the sum.
@@ -17,7 +17,9 @@ async function animate(scene: any) {
   });
   chart.center();
 
-  await scene.play(new FadeIn(chart, { duration: 1 }));
+  // lagRatio 0 draws the axis, bars and connectors together for a coherent
+  // reveal instead of a staggered one.
+  await scene.play(new Create(chart, { duration: 1, lagRatio: 0 }));
   await scene.wait(999999);
 }
 

@@ -149,4 +149,30 @@ describe('CandlestickChart', () => {
     const chart = new CandlestickChart({ data: SAMPLE });
     expect(chart).toBeInstanceOf(VGroup);
   });
+
+  it('centers the chart on the origin so it stays inside the frame', () => {
+    // Default frame is 14.222 wide by 8 tall (half-extents 7.111 and 4).
+    // The chart is built in a bottom-left-origin frame, so without centering it
+    // runs off the right/top edge. After centering its bbox sits on the origin.
+    const chart = new CandlestickChart({ data: SAMPLE, showVolume: true, width: 8, height: 4.2 });
+    const center = chart.getCenter();
+    expect(center[0]).toBeCloseTo(0, 6);
+    expect(center[1]).toBeCloseTo(0, 6);
+
+    const { width, height } = chart.getBoundingBox();
+    expect(width / 2).toBeLessThan(7.111);
+    expect(height / 2).toBeLessThan(4);
+  });
+
+  it('keeps body positions consistent with priceToY after centering', () => {
+    // Regression: centering must fold its shift into priceToY so accessors
+    // still report the real on-screen y of each candle.
+    const chart = new CandlestickChart({ data: SAMPLE, showVolume: true });
+    for (let i = 0; i < SAMPLE.length; i++) {
+      const { open, close } = SAMPLE[i];
+      const body = chart.getBody(i)!;
+      expect(body.getTop()[1]).toBeCloseTo(chart.priceToY(Math.max(open, close)), 6);
+      expect(body.getBottom()[1]).toBeCloseTo(chart.priceToY(Math.min(open, close)), 6);
+    }
+  });
 });
