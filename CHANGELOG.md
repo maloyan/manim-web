@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.39.0](https://github.com/maloyan/manim-web/compare/v0.38.0...v0.39.0) (2026-10-14)
+
+
+### Features
+
+* **biology:** lipid-bilayer Membrane mobject + Electron Transport Chain scene ([#825](https://github.com/maloyan/manim-web/issues/825)) ([d99c30b](https://github.com/maloyan/manim-web/commit/d99c30b49279116d3b36cab54a2d22d25083ea18))
+* **physics:** exact Lagrangian cradle-disk-spring-pendulum sim + Spring mobject ([#826](https://github.com/maloyan/manim-web/issues/826)) ([e6463e9](https://github.com/maloyan/manim-web/commit/e6463e9a5e655f55d60512601457c8c9f9d3aa2a))
+* **render:** real linear/radial gradient fills via per-vertex colors ([#829](https://github.com/maloyan/manim-web/issues/829)) ([463d795](https://github.com/maloyan/manim-web/commit/463d795bbd647b56cf2b17c55a501771cb41d96b))
+* **sonifier:** data-to-audio sonification (Web Audio playback) ([#823](https://github.com/maloyan/manim-web/issues/823)) ([59cdb35](https://github.com/maloyan/manim-web/commit/59cdb35bf85b6eab1d3b2e5bd4be9e2b46ef1274))
+
+
+### Bug Fixes
+
+* **examples:** scale up cradle schematic and spread its labels ([#827](https://github.com/maloyan/manim-web/issues/827)) ([a4d213e](https://github.com/maloyan/manim-web/commit/a4d213ef4ac9f85081b3c48ee54728180e645a9f))
+
+
+### Documentation
+
+* examples for bubbles, writing-pen, sonifier, table inner-lines ([#824](https://github.com/maloyan/manim-web/issues/824)) ([1799d06](https://github.com/maloyan/manim-web/commit/1799d06290081883cbc1d9047c9df640ae961b32))
+
 ## [0.38.0](https://github.com/maloyan/manim-web/compare/v0.37.0...v0.38.0) (2026-10-14)
 
 
