@@ -333,3 +333,81 @@ export interface PhyloBranchRender {
    */
   lines: Line[];
 }
+
+/** Which row of a {@link Membrane} bilayer a lipid belongs to. */
+export type MembraneRow = 'upper' | 'lower';
+
+/** An x range `[xMin, xMax]` in membrane coordinates (the membrane center is x = 0). */
+export type MembraneGap = [number, number];
+
+/** Options for a {@link Membrane}. */
+export interface MembraneOptions {
+  /** Length of the bilayer along x. Default: 8 */
+  length?: number;
+  /** Lipids per row. When set, it wins over spacing. Default: derived from spacing */
+  numLipids?: number;
+  /** Distance between neighbor lipids in a row, used when numLipids is not set. Default: 0.3 */
+  spacing?: number;
+  /** Radius of each round head. Default: 0.1 */
+  headRadius?: number;
+  /** Length of each tail. Default: 0.3 */
+  tailLength?: number;
+  /** Distance between the two inner tail ends of the two rows. Default: 0.1 */
+  coreGap?: number;
+  /** Head fill color. Default: '#F4B942' */
+  headColor?: string;
+  /** Tail stroke color. Default: '#F4B942' */
+  tailColor?: string;
+  /** Tail stroke width. Default: 2 */
+  tailStrokeWidth?: number;
+  /** x ranges (membrane coordinates) to leave empty, for embedded proteins. Default: none */
+  gaps?: MembraneGap[];
+  /** Center of the membrane. Default: [0, 0, 0] */
+  center?: Vector3Tuple;
+}
+
+/** One phospholipid of a {@link Membrane}: a round head and two tails. */
+export interface LipidRender {
+  /** The row the lipid belongs to. */
+  row: MembraneRow;
+  /** The lipid x in membrane coordinates (the membrane center is x = 0). */
+  x: number;
+  /** The round head. */
+  head: Circle;
+  /** The two tail lines. */
+  tails: [Line, Line];
+  /** The group that holds the head and the tails. */
+  group: VGroup;
+}
+
+/** Body shape of a {@link ComplexBlob}. */
+export type ComplexBlobShape = 'rounded' | 'ellipse';
+
+/** Where a {@link ComplexBlob} puts its label. */
+export type ComplexBlobLabelPosition = 'inside' | 'below' | 'above';
+
+/** Options for a {@link ComplexBlob}. */
+export interface ComplexBlobOptions {
+  /** The label text. */
+  label: string;
+  /** Body width. Default: 1.2 */
+  width?: number;
+  /** Body height. Default: 1 */
+  height?: number;
+  /** Body shape. Default: 'rounded' */
+  shape?: ComplexBlobShape;
+  /** Base (edge) color of the gradient. Default: '#E57373' */
+  color?: string;
+  /** Number of concentric layers that fake the radial gradient. Default: 6 */
+  layers?: number;
+  /** Draw a soft glow behind the body. Default: true */
+  glow?: boolean;
+  /** Label font size. Default: 24 */
+  fontSize?: number;
+  /** Label color. Default: '#FFFFFF' */
+  labelColor?: string;
+  /** Label position. Default: 'inside' */
+  labelPosition?: ComplexBlobLabelPosition;
+  /** Center of the body. Default: [0, 0, 0] */
+  center?: Vector3Tuple;
+}

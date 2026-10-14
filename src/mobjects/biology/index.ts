@@ -11,6 +11,8 @@ export { DNAHelix } from './DNAHelix';
 export { Cell } from './Cell';
 export { AminoAcidChain } from './AminoAcidChain';
 export { PhylogeneticTree } from './PhylogeneticTree';
+export { Membrane } from './Membrane';
+export { ComplexBlob } from './ComplexBlob';
 export { parseNewick, type PhyloNode } from './newick';
 export {
   baseColor,
@@ -41,4 +43,11 @@ export {
   type PhyloNodeRender,
   type PhyloLeafRender,
   type PhyloBranchRender,
+  type MembraneRow,
+  type MembraneGap,
+  type MembraneOptions,
+  type LipidRender,
+  type ComplexBlobShape,
+  type ComplexBlobLabelPosition,
+  type ComplexBlobOptions,
 } from './biologyTypes';
