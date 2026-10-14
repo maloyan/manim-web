@@ -10,7 +10,7 @@ import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Dot } from '../geometry/Dot';
 import { Line } from '../geometry/Line';
 import { Arrow } from '../geometry/Arrow';
-import { BLUE, WHITE, RED, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { BLUE, WHITE, BLACK, RED, DEFAULT_STROKE_WIDTH } from '../../constants';
 import {
   VertexId,
   EdgeTuple,
@@ -56,6 +56,15 @@ export class GenericGraph extends Mobject {
   /** Map of edge key to its weight/label Text mobject */
   protected _edgeLabelMobjects: Map<string, Text> = new Map();
 
+  /** Map of vertex id to its label Text mobject (only when showLabels is on) */
+  protected _vertexLabelMobjects: Map<VertexId, Text> = new Map();
+
+  /** Whether to render a label (the vertex id) on each vertex */
+  protected _showLabels: boolean = false;
+
+  /** Font size for vertex labels */
+  protected _labelFontSize: number = 24;
+
   /** Layout configuration */
   protected _layoutConfig: LayoutConfig;
 
@@ -88,7 +97,12 @@ export class GenericGraph extends Mobject {
       edgeStyle = {},
       vertexConfig,
       edgeConfig,
+      showLabels = false,
+      labelFontSize = 24,
     } = options;
+
+    this._showLabels = showLabels;
+    this._labelFontSize = labelFontSize;
 
     // Store configuration
     this._vertexStyle = {
@@ -188,9 +202,13 @@ export class GenericGraph extends Mobject {
     for (const m of this._edgeLabelMobjects.values()) {
       this.remove(m);
     }
+    for (const m of this._vertexLabelMobjects.values()) {
+      this.remove(m);
+    }
     this._vertexMobjects.clear();
     this._edgeMobjects.clear();
     this._edgeLabelMobjects.clear();
+    this._vertexLabelMobjects.clear();
 
     // Create edges first (so they render behind vertices)
     for (const [source, target] of this._edges) {
@@ -227,6 +245,21 @@ export class GenericGraph extends Mobject {
 
     this._vertexMobjects.set(v, dot);
     this.add(dot);
+
+    // Render the vertex label (its id, or an explicit per-vertex label) on top
+    // of the dot when labels are enabled.
+    if (this._showLabels) {
+      const text = cfg?.label ?? String(v);
+      const label = new Text({
+        text,
+        fontSize: this._labelFontSize,
+        color: BLACK,
+      });
+      // Position via shift (parent-local) to match the vertex position.
+      label.shift(pos);
+      this._vertexLabelMobjects.set(v, label);
+      this.add(label);
+    }
   }
 
   /**
@@ -246,8 +279,11 @@ export class GenericGraph extends Mobject {
 
     if (source === target) {
       // Self-loop: render a loop arc (with a tip when directed), not a line.
-      edge = createSelfLoopEdge(sourcePos, vertexRadius, style, this._directed);
-      labelPoint = selfLoopLabelPoint(sourcePos, vertexRadius, style);
+      // Bulge the loop outward, away from the graph center, so it never crosses
+      // the incident edges.
+      const direction = this._selfLoopDirection(source);
+      edge = createSelfLoopEdge(sourcePos, vertexRadius, style, this._directed, direction);
+      labelPoint = selfLoopLabelPoint(sourcePos, vertexRadius, style, direction);
     } else {
       // Shorten edge to not overlap with vertex circles
       const [startPos, endPos] = this._shortenEdge(sourcePos, targetPos, vertexRadius);
@@ -290,6 +326,34 @@ export class GenericGraph extends Mobject {
       this._edgeLabelMobjects.set(key, label);
       this.add(label);
     }
+  }
+
+  /**
+   * Outward unit direction for a vertex's self-loop: from the graph centroid
+   * toward the vertex. A lone vertex (at the centroid) returns [0, 1, 0] so its
+   * loop sits above it.
+   */
+  protected _selfLoopDirection(v: VertexId): Vector3Tuple {
+    const pos = this._positions.get(v) ?? [0, 0, 0];
+    let cx = 0;
+    let cy = 0;
+    let n = 0;
+    for (const p of this._positions.values()) {
+      cx += p[0];
+      cy += p[1];
+      n += 1;
+    }
+    if (n > 0) {
+      cx /= n;
+      cy /= n;
+    }
+    const dx = pos[0] - cx;
+    const dy = pos[1] - cy;
+    const len = Math.hypot(dx, dy);
+    if (len < 1e-6) {
+      return [0, 1, 0];
+    }
+    return [dx / len, dy / len, 0];
   }
 
   /**
@@ -439,6 +503,10 @@ export class GenericGraph extends Mobject {
     const dot = this._vertexMobjects.get(v);
     if (dot) {
       dot.moveTo(position);
+    }
+    const label = this._vertexLabelMobjects.get(v);
+    if (label) {
+      label.moveTo(position);
     }
 
     // Update connected edges
@@ -608,6 +676,13 @@ export class GenericGraph extends Mobject {
   }
 
   /**
+   * Get the label Text mobject for a vertex, if the graph shows vertex labels.
+   */
+  getVertexLabelMobject(v: VertexId): Text | undefined {
+    return this._vertexLabelMobjects.get(v);
+  }
+
+  /**
    * Check whether an edge is a self-loop (connects a vertex to itself).
    */
   isSelfLoop(source: VertexId, target: VertexId): boolean {
@@ -636,6 +711,10 @@ export class GenericGraph extends Mobject {
       const dot = this._vertexMobjects.get(v);
       if (pos && dot) {
         dot.moveTo(pos);
+      }
+      const label = this._vertexLabelMobjects.get(v);
+      if (pos && label) {
+        label.moveTo(pos);
       }
     }
 

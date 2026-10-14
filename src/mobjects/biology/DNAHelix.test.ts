@@ -32,12 +32,86 @@ describe('DNAHelix', () => {
     expect(dna.strandsGroup.children).toHaveLength(2);
   });
 
-  it('builds the requested number of base-pair rungs', () => {
+  it('builds the requested number of base pairs, each as two halves', () => {
     const dna = new DNAHelix({ turns: 3, basePairs: 10 });
     expect(dna.numBasePairs).toBe(10);
     expect(dna.getBasePairs()).toHaveLength(10);
-    expect(dna.rungsGroup.children).toHaveLength(10);
-    expect(dna.getBasePair(0)?.line).toBeInstanceOf(Line);
+    expect(dna.getBasePair(0)?.startBase).toBeInstanceOf(Line);
+    expect(dna.getBasePair(0)?.endBase).toBeInstanceOf(Line);
+    expect(dna.getBasePair(0)?.hBond).toBeInstanceOf(VGroup);
+  });
+
+  it('adds two halves and a hydrogen-bond group per pair (3D full-length rungs)', () => {
+    // In 3D every rung is full length, so each pair contributes its two halves
+    // plus one hydrogen-bond group: 3 children per pair.
+    const dna = new DNAHelix({ turns: 3, basePairs: 10, threeD: true });
+    expect(dna.rungsGroup.children).toHaveLength(30);
+    for (const pair of dna.getBasePairs()) {
+      expect(pair.hBond).toBeInstanceOf(VGroup);
+    }
+  });
+
+  it('draws each base pair as two halves meeting at the axis center', () => {
+    const dna = new DNAHelix({ turns: 3, radius: 0.6, pitch: 1.2, basePairs: 9, threeD: true });
+    for (const pair of dna.getBasePairs()) {
+      // The two halves start on their own backbone and run inward.
+      expectClose(pair.startBase.getStart(), pair.start, 1e-6);
+      expectClose(pair.endBase.getStart(), pair.end, 1e-6);
+      // Their inner ends flank the center; the center is the start/end midpoint
+      // and sits on the helix axis (x = y = 0 in 3D).
+      const inner = [
+        (pair.startBase.getEnd()[0] + pair.endBase.getEnd()[0]) / 2,
+        (pair.startBase.getEnd()[1] + pair.endBase.getEnd()[1]) / 2,
+        (pair.startBase.getEnd()[2] + pair.endBase.getEnd()[2]) / 2,
+      ] as Vector3Tuple;
+      expectClose(inner, pair.center, 1e-6);
+      expect(Math.hypot(pair.center[0], pair.center[1])).toBeLessThan(1e-9);
+    }
+  });
+
+  it('colors the two halves of a pair by complementary bases', () => {
+    const dna = new DNAHelix({ basePairs: 4, sequence: ['A', 'T', 'G', 'C'] });
+    const pair = dna.getBasePair(0)!;
+    // A-half uses baseColor(A), the complementary T-half uses baseColor(T).
+    expect(pair.base).toBe('A');
+    expect(pair.complement).toBe('T');
+    expect(pair.startBase.color).toBe(baseColor('A'));
+    expect(pair.endBase.color).toBe(baseColor('T'));
+    expect(pair.startBase.color).not.toBe(pair.endBase.color);
+  });
+
+  it('produces valid complementary pairs for the default sequence', () => {
+    const dna = new DNAHelix({ basePairs: 8 });
+    const valid = new Set(['A-T', 'T-A', 'G-C', 'C-G']);
+    for (const pair of dna.getBasePairs()) {
+      expect(pair.complement).toBe(complementOf(pair.base));
+      expect(valid.has(`${pair.base}-${pair.complement}`)).toBe(true);
+    }
+  });
+
+  it('gives a G-C pair three hydrogen bonds and an A-T pair two', () => {
+    const dna = new DNAHelix({ basePairs: 4, sequence: ['A', 'T', 'G', 'C'] });
+    const pairs = dna.getBasePairs();
+    expect(pairs[0].base).toBe('A');
+    expect(pairs[0].hBond?.children).toHaveLength(2);
+    expect(pairs[2].base).toBe('G');
+    expect(pairs[2].hBond?.children).toHaveLength(3);
+    expect(pairs[3].base).toBe('C');
+    expect(pairs[3].hBond?.children).toHaveLength(3);
+  });
+
+  it('omits the hydrogen-bond gap when baseGap is 0', () => {
+    const dna = new DNAHelix({ basePairs: 4, baseGap: 0 });
+    for (const pair of dna.getBasePairs()) {
+      expect(pair.hBond).toBeNull();
+    }
+    // Only the two halves remain in the group, no hydrogen bonds.
+    expect(dna.rungsGroup.children).toHaveLength(8);
+  });
+
+  it('builds both 2D and 3D base pairs without throwing', () => {
+    expect(() => new DNAHelix({ basePairs: 6, threeD: false })).not.toThrow();
+    expect(() => new DNAHelix({ basePairs: 6, threeD: true })).not.toThrow();
   });
 
   it('rung endpoints lie on the two helices', () => {
@@ -211,11 +285,16 @@ describe('DNAHelix', () => {
     expect(strands[0]).not.toBeInstanceOf(ParametricFunction);
   });
 
-  it('in 3D the base-pair rungs are solid cylinders, not flat lines', () => {
+  it('in 3D the nucleobase halves are solid cylinders, not flat lines', () => {
     const dna = new DNAHelix({ turns: 2, basePairs: 6, threeD: true });
     for (const pair of dna.getBasePairs()) {
-      expect(pair.line).toBeInstanceOf(Bond3D);
-      expect(pair.line).not.toBeInstanceOf(Line);
+      expect(pair.startBase).toBeInstanceOf(Bond3D);
+      expect(pair.endBase).toBeInstanceOf(Bond3D);
+      expect(pair.startBase).not.toBeInstanceOf(Line);
+      // The hydrogen bonds in 3D are thin cylinders too.
+      for (const bond of pair.hBond!.children) {
+        expect(bond).toBeInstanceOf(Bond3D);
+      }
     }
   });
 
@@ -259,11 +338,11 @@ describe('DNAHelix', () => {
     const front = pairs.reduce((a, b) => (b.frontness > a.frontness ? b : a));
     const back = pairs.reduce((a, b) => (b.frontness < a.frontness ? b : a));
     expect(front.frontness).toBeGreaterThan(back.frontness);
-    // 2D rungs are flat Lines carrying the depth cue in stroke width + opacity.
-    expect(front.line).toBeInstanceOf(Line);
-    expect(back.line).toBeInstanceOf(Line);
-    const frontLine = front.line as Line;
-    const backLine = back.line as Line;
+    // 2D halves are flat Lines carrying the depth cue in stroke width + opacity.
+    expect(front.startBase).toBeInstanceOf(Line);
+    expect(back.startBase).toBeInstanceOf(Line);
+    const frontLine = front.startBase as Line;
+    const backLine = back.startBase as Line;
     expect(frontLine.strokeWidth).toBeGreaterThan(backLine.strokeWidth);
     expect(frontLine.opacity).toBeGreaterThan(backLine.opacity);
   });
@@ -278,10 +357,10 @@ describe('DNAHelix', () => {
 
   it('applies no depth variation when depthCue is false', () => {
     const dna = new DNAHelix({ turns: 3, basePairs: 12, depthCue: false });
-    const widths = dna.getBasePairs().map((p) => (p.line as Line).strokeWidth);
+    const widths = dna.getBasePairs().map((p) => (p.startBase as Line).strokeWidth);
     for (const pair of dna.getBasePairs()) {
       expect(pair.frontness).toBe(0.5);
-      expect((pair.line as Line).opacity).toBe(1);
+      expect((pair.startBase as Line).opacity).toBe(1);
     }
     expect(Math.max(...widths) - Math.min(...widths)).toBeLessThan(1e-9);
   });

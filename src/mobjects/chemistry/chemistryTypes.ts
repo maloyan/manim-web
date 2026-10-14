@@ -59,7 +59,10 @@ export interface MoleculeOptions {
   labelFontSize?: number;
   /** Color of the bond lines. Default: white. */
   bondColor?: string;
-  /** Distance between the parallel lines of a double or triple bond. Default: 0.08. */
+  /**
+   * Separation between the parallel lines of a double or triple bond, as a
+   * fraction of the bond length (so it scales with `bondLength`). Default: 0.15.
+   */
   bondSpacing?: number;
 }
 

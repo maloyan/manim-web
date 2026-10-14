@@ -87,6 +87,46 @@ describe('AreaChart', () => {
     expect(chart.getArea(0)).toBeInstanceOf(Polygon);
   });
 
+  it('renders a legend when seriesNames are given', () => {
+    const chart = new AreaChart({
+      values: [
+        [1, 3, 2],
+        [2, 1, 4],
+      ],
+      seriesNames: ['Reads', 'Writes'],
+    });
+    expect(chart.getLegend()).not.toBeNull();
+    // one swatch + one label per named series
+    expect(chart.legend!.children).toHaveLength(4);
+  });
+
+  it('omits the legend when no seriesNames are given', () => {
+    const chart = new AreaChart({ values: [[1, 2, 3]] });
+    expect(chart.getLegend()).toBeNull();
+  });
+
+  it('suppresses the legend when showLegend is false', () => {
+    const chart = new AreaChart({
+      values: [[1, 2, 3]],
+      seriesNames: ['A'],
+      showLegend: false,
+    });
+    expect(chart.getLegend()).toBeNull();
+  });
+
+  it('copies the legend options', () => {
+    const chart = new AreaChart({
+      values: [
+        [1, 2],
+        [3, 4],
+      ],
+      seriesNames: ['A', 'B'],
+    });
+    const clone = chart.copy();
+    expect(clone.getLegend()).not.toBeNull();
+    expect(clone.legend!.children).toHaveLength(4);
+  });
+
   it('copies independently', () => {
     const chart = new AreaChart({
       values: [

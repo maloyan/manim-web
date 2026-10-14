@@ -187,6 +187,105 @@ describe('Self-loop edges', () => {
   });
 });
 
+describe('Self-loop placement points away from the graph', () => {
+  /** Two vertices on the x-axis; 'a' (left) carries the self-loop. */
+  function loopWithNeighbor(directed = false): Graph | DiGraph {
+    const positions = new Map<string | number, Vector3Tuple>();
+    positions.set('a', [-2, 0, 0]);
+    positions.set('b', [2, 0, 0]);
+    const options = {
+      vertices: ['a', 'b'],
+      edges: [
+        ['a', 'a'],
+        ['a', 'b'],
+      ] as [string, string][],
+      layout: { type: 'custom' as const, positions },
+    };
+    return directed ? new DiGraph(options) : new Graph(options);
+  }
+
+  it('places the loop on the far side of the vertex from the graph center', () => {
+    const g = loopWithNeighbor();
+    const loop = g.getEdgeMobject('a', 'a')!;
+    // Graph centroid is the origin; vertex 'a' sits on the left, so the loop
+    // must bulge further LEFT (x < -2), not back toward the other vertex.
+    expect(loop.getCenter()[0]).toBeLessThan(-2);
+  });
+
+  it('keeps the whole loop clear of the far neighbor', () => {
+    const g = loopWithNeighbor();
+    const loop = g.getEdgeMobject('a', 'a')!;
+    // The loop's rightmost extent stays left of the vertex, so it never reaches
+    // back toward the neighbor 'b'.
+    const rightEdge = loop.getCenter()[0] + loop.getBoundingBox().width / 2;
+    expect(rightEdge).toBeLessThan(-2);
+  });
+
+  it('places the self-loop label beyond the loop, away from the center', () => {
+    const positions = new Map<string | number, Vector3Tuple>();
+    positions.set('a', [-2, 0, 0]);
+    positions.set('b', [2, 0, 0]);
+    const g = new Graph({
+      vertices: ['a', 'b'],
+      edges: [
+        ['a', 'a'],
+        ['a', 'b'],
+      ] as [string, string][],
+      layout: { type: 'custom' as const, positions },
+      edgeConfig: { 'a--a': { weight: 3 } },
+    });
+    const label = g.getEdgeLabelMobject('a', 'a')!;
+    expect(label.getText()).toBe('3');
+    expect(label.position.x).toBeLessThan(-2);
+  });
+});
+
+// ============================================================================
+// Vertex labels (showLabels)
+// ============================================================================
+
+describe('Vertex labels', () => {
+  it('renders a label with the vertex id when showLabels is true', () => {
+    const g = new Graph({ vertices: ['A', 'B'], showLabels: true });
+    const label = g.getVertexLabelMobject('A');
+    expect(label).toBeDefined();
+    expect(label!.getText()).toBe('A');
+  });
+
+  it('uses the vertex id verbatim, not its numeric index', () => {
+    const g = new Graph({ vertices: ['A', 'B', 'C'], showLabels: true });
+    expect(g.getVertexLabelMobject('B')!.getText()).toBe('B');
+    expect(g.getVertexLabelMobject('C')!.getText()).toBe('C');
+  });
+
+  it('shows no vertex labels by default', () => {
+    const g = new Graph({ vertices: ['A', 'B'] });
+    expect(g.getVertexLabelMobject('A')).toBeUndefined();
+  });
+
+  it('positions the label at the vertex', () => {
+    const positions = new Map<string | number, Vector3Tuple>();
+    positions.set('A', [1, 2, 0]);
+    const g = new Graph({
+      vertices: ['A'],
+      layout: { type: 'custom' as const, positions },
+      showLabels: true,
+    });
+    const label = g.getVertexLabelMobject('A')!;
+    expect(label.position.x).toBeCloseTo(1, 5);
+    expect(label.position.y).toBeCloseTo(2, 5);
+  });
+
+  it('lets a per-vertex config label override the id', () => {
+    const g = new Graph({
+      vertices: ['A'],
+      showLabels: true,
+      vertexConfig: { A: { label: 'start' } },
+    });
+    expect(g.getVertexLabelMobject('A')!.getText()).toBe('start');
+  });
+});
+
 // ============================================================================
 // No regression on the default (unlabeled, non-loop) path
 // ============================================================================

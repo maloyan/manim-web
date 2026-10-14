@@ -1,4 +1,5 @@
 import { Text, TextOptions } from './Text';
+import { getTextResolutionScale } from './textTexture';
 
 /**
  * Options for creating a Paragraph mobject
@@ -12,9 +13,6 @@ export interface ParagraphOptions extends TextOptions {
 
 /** Scale factor: pixels to world units (100 pixels = 1 world unit) */
 const PIXEL_TO_WORLD = 1 / 100;
-
-/** Resolution multiplier for crisp text on retina displays */
-const RESOLUTION_SCALE = 2;
 
 /**
  * Paragraph - A text mobject with automatic word wrapping
@@ -107,6 +105,7 @@ export class Paragraph extends Text {
       return this._text.split('\n');
     }
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     this._ctx.font = this._buildFontString();
 
     // Convert world units to pixels for comparison
@@ -155,6 +154,7 @@ export class Paragraph extends Text {
       return { lines: [], width: 0, height: 0 };
     }
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     this._ctx.font = this._buildFontString();
     const lines = this._wrapText();
     this._wrappedLines = lines;
@@ -195,6 +195,7 @@ export class Paragraph extends Text {
       return;
     }
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const { lines, width, height } = this._measureText();
 
     // Resize canvas
@@ -279,6 +280,7 @@ export class Paragraph extends Text {
   protected _drawJustifiedLine(line: string, startX: number, endX: number, y: number): void {
     if (!this._ctx) return;
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const words = line.trim().split(/\s+/);
     if (words.length <= 1) {
       // Single word, draw normally

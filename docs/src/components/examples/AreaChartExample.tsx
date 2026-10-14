@@ -19,6 +19,9 @@ async function animate(scene: any) {
   });
   chart.center();
 
+  // FadeIn brings the axes, stacked areas and legend up together, so the chart
+  // reveals coherently (Create would pop the large area fills instead of
+  // fading them, since its stroke-reveal does not drive polygon fill opacity).
   await scene.play(new FadeIn(chart, { duration: 1 }));
   await scene.wait(999999);
 }

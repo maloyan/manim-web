@@ -16,6 +16,14 @@ async function animate(scene: any) {
   if (!glyphs) return;
   glyphs.center();
 
+  // Add the centered glyph group before animating. fadeInByLetter animates the
+  // glyph children, and play() reparents each animated mobject to the scene
+  // root when its group is not yet in the scene graph — which drops the
+  // group's center() offset, so the first animation would play off-center and
+  // the text would jump to center when the next play adds the group. Adding
+  // the group first keeps the glyphs under it, so they stay centered throughout.
+  scene.add(glyphs);
+
   // fade each glyph in with an overlapping stagger, then a per-glyph wave emphasis.
   await scene.play(fadeInByLetter(glyphs, { lagRatio: 0.15 }));
   await scene.play(waveLetters(glyphs, { amplitude: 0.3, waves: 2, duration: 2 }));

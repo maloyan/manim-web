@@ -42,6 +42,14 @@ async function animate(scene: any) {
   // here. Without this the example shows neither control (see issue #602).
   scene.add(point, slider);
   scene.render();
+
+  // Hold the scene open so the reader can drag the point and the slider. The
+  // ManimExample harness runs `animate` in a loop: without a wait it returns
+  // at once, so the harness clears the scene and rebuilds the controls every
+  // ~2s, resetting the dragged point and slider value before the reader can
+  // move them. A "forever" wait keeps the controls alive; it adds no render
+  // loop (no updaters), and each drag renders through its own onChange.
+  await scene.wait(999999);
 }
 
 export default function MovablePointSliderExample() {
