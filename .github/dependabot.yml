@@ -7,3 +7,21 @@ updates:
     open-pull-requests-limit: 10
     labels:
       - "dependencies"
+    # Major bumps blocked by the build toolchain. Minor/patch updates for these
+    # packages still open normally; only the breaking major is held back until
+    # its blocker clears. Re-evaluate and drop an entry when the note no longer holds.
+    ignore:
+      # typescript 7.x is the new (Go-port) compiler with breaking changes the
+      # typia transform toolchain does not yet support. Stay on 5.x.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # @vitest/ui major must match the vitest core major; vitest is pinned at 4.x.
+      # Lift together with a vitest core major bump.
+      - dependency-name: "@vitest/ui"
+        update-types: ["version-update:semver-major"]
+      # typia and @typia/unplugin majors must move together; @typia/unplugin
+      # stable is capped at 12.x, so typia is held at 12 until it ships a newer major.
+      - dependency-name: "typia"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@typia/unplugin"
+        update-types: ["version-update:semver-major"]
