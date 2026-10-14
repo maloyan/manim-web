@@ -3,7 +3,7 @@
   "project": ["src/**/*.ts", "src/**/*.tsx", "examples/playground/**/*.ts"],
   "entry": ["examples/playground/playground.ts"],
   "ignore": ["src/core/SceneExtensions.ts"],
-  "ignoreDependencies": ["@types/katex", "typedoc"],
+  "ignoreDependencies": ["@types/katex", "typedoc", "vue"],
   "ignoreExportsUsedInFile": {
     "interface": true,
     "type": true
