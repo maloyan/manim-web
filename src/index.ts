@@ -1162,6 +1162,12 @@ export {
   DEFAULT_BFACTOR_COLORS,
   DEFAULT_CHARGE_COLORS,
   DEFAULT_ELECTROSTATIC_COLORS,
+  dihedralDegrees,
+  computeRamachandran,
+  pointInPolygon,
+  regionFor,
+  RAMACHANDRAN_REGIONS,
+  RamachandranPlot,
 } from './mobjects/molecular';
 export type {
   Atom3DSpec,
@@ -1200,6 +1206,10 @@ export type {
   MorphMoleculeOptions,
   PdbTrajectory,
   PlayTrajectoryOptions,
+  RamachandranPoint,
+  RamachandranRegion,
+  RamachandranPlotOptions,
+  RamachandranColorBy,
 } from './mobjects/molecular';
 
 // Biology mobjects
