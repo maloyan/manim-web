@@ -10,6 +10,8 @@
 export { DNAHelix } from './DNAHelix';
 export { Cell } from './Cell';
 export { AminoAcidChain } from './AminoAcidChain';
+export { PhylogeneticTree } from './PhylogeneticTree';
+export { parseNewick, type PhyloNode } from './newick';
 export {
   baseColor,
   complementOf,
@@ -33,4 +35,10 @@ export {
   type AminoAcidChainOptions,
   type ResidueRender,
   type StrandPair,
+  type PhyloLayout,
+  type PhyloOrientation,
+  type PhylogeneticTreeOptions,
+  type PhyloNodeRender,
+  type PhyloLeafRender,
+  type PhyloBranchRender,
 } from './biologyTypes';

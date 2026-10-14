@@ -16,6 +16,8 @@ import type { VMobject } from '../../core/VMobject';
 import type { Text } from '../text/Text';
 import type { Line } from '../geometry/Line';
 import type { Circle } from '../geometry/Circle';
+import type { Dot } from '../geometry/Dot';
+import type { PhyloNode } from './newick';
 import type { Sphere } from '../three-d/Sphere';
 import type { ParametricFunction } from '../graphing/ParametricFunction';
 import type { TubeFromPoints } from '../three-d/TubeFromPoints';
@@ -217,3 +219,89 @@ export type Strand = ParametricFunction | TubeFromPoints;
 
 /** A resolved pair of backbone strands, first and second. */
 export type StrandPair = [Strand, Strand];
+
+/** The drawing style of a {@link PhylogeneticTree}. */
+export type PhyloLayout = 'rectangular' | 'radial';
+
+/**
+ * The reading direction of a rectangular {@link PhylogeneticTree}. The root
+ * sits on the opposite side from the leaves.
+ */
+export type PhyloOrientation = 'left-to-right' | 'right-to-left';
+
+/** Options for a {@link PhylogeneticTree}. Supply `newick` or `root`. */
+export interface PhylogeneticTreeOptions {
+  /** A Newick string, parsed into the tree. Supply this or `root`. */
+  newick?: string;
+  /** An already-parsed tree. Supply this or `newick`. */
+  root?: PhyloNode;
+  /** Drawing style. Default: 'rectangular'. */
+  layout?: PhyloLayout;
+  /**
+   * Use branch lengths to place nodes along the depth axis (a phylogram). When
+   * false, or when the tree has no branch lengths, node depth (the number of
+   * edges from the root) is used instead (a cladogram). Default: true.
+   */
+  useBranchLengths?: boolean;
+  /** Width of the drawing along the depth axis. Default: 6. */
+  width?: number;
+  /** Height of the drawing along the leaf axis. Default: 4. */
+  height?: number;
+  /** Font size of the leaf labels. Default: 20. */
+  labelFontSize?: number;
+  /** Draw leaf labels. Default: true. */
+  labels?: boolean;
+  /** Color of the branch lines. Default: white. */
+  lineColor?: string;
+  /** Color of the leaf dots. Default: a blue. */
+  leafColor?: string;
+  /** Draw a dot at each leaf. Default: true. */
+  showLeafDots?: boolean;
+  /** Radius of each leaf dot. Default: 0.06. */
+  leafDotRadius?: number;
+  /** Stroke width of the branch lines. Default: 3. */
+  strokeWidth?: number;
+  /** Reading direction (rectangular layout only). Default: 'left-to-right'. */
+  orientation?: PhyloOrientation;
+}
+
+/** A resolved node of a {@link PhylogeneticTree} after layout. */
+export interface PhyloNodeRender {
+  /** The source node from the parsed tree. */
+  node: PhyloNode;
+  /** The node name, or undefined for an unnamed internal node. */
+  name?: string;
+  /** The laid-out center of the node. */
+  position: Vector3Tuple;
+  /** The number of edges from the root (the root is depth 0). */
+  depth: number;
+  /** The summed branch length from the root to this node. */
+  cumulativeLength: number;
+  /** True when the node has no children. */
+  isLeaf: boolean;
+}
+
+/** A resolved leaf of a {@link PhylogeneticTree}. */
+export interface PhyloLeafRender {
+  /** The leaf name, or an empty string for an unnamed leaf. */
+  name: string;
+  /** The leaf center. */
+  position: Vector3Tuple;
+  /** The leaf dot, or null when dots are off. */
+  dot: Dot | null;
+  /** The leaf label, or null when labels are off or the name is empty. */
+  label: Text | null;
+}
+
+/** A resolved branch (a parent-to-child edge) of a {@link PhylogeneticTree}. */
+export interface PhyloBranchRender {
+  /** The parent node center. */
+  start: Vector3Tuple;
+  /** The child node center. */
+  end: Vector3Tuple;
+  /**
+   * The line mobjects that draw the branch. A rectangular branch is an elbow of
+   * a vertical then a horizontal {@link Line}; a radial branch is one line.
+   */
+  lines: Line[];
+}

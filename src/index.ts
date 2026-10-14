@@ -1207,6 +1207,8 @@ export {
   DNAHelix,
   Cell,
   AminoAcidChain,
+  PhylogeneticTree,
+  parseNewick,
   baseColor,
   complementOf,
   normalizeBase,
@@ -1227,6 +1229,13 @@ export {
   type AminoAcidChainOptions,
   type ResidueRender,
   type StrandPair,
+  type PhyloNode,
+  type PhyloLayout,
+  type PhyloOrientation,
+  type PhylogeneticTreeOptions,
+  type PhyloNodeRender,
+  type PhyloLeafRender,
+  type PhyloBranchRender,
 } from './mobjects/biology';
 
 // Animations
