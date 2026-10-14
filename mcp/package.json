@@ -1,0 +1,37 @@
+{
+  "name": "manim-web-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Model Context Protocol server that exposes manim-web's real, generated API to LLMs so an assistant writing manim-web code gets grounded signatures instead of hallucinating.",
+  "type": "module",
+  "bin": {
+    "manim-web-mcp": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "api-model.json"
+  ],
+  "scripts": {
+    "build:model": "node scripts/build-api-model.mjs",
+    "build": "tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "format:check": "prettier --check \"src/**/*.ts\" \"scripts/**/*.mjs\""
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "prettier": "^3.8.1",
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
