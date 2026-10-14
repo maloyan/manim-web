@@ -4,6 +4,7 @@ import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { VDict } from '../../core/VDict';
 import { NumberLine, NumberLineOptions } from './NumberLine';
+import { getActiveTheme } from '../../utils/ThemeManager';
 import { CoordinateSystem } from './CoordinateSystem';
 import { FunctionGraph, FunctionGraphOptions } from './FunctionGraph';
 import { MathTexImage } from '../../mobjects/text/MathTexImage';
@@ -31,7 +32,7 @@ export interface AxesOptions {
   xLength?: number;
   /** Visual length of the y-axis. Default: 6 */
   yLength?: number;
-  /** Stroke color for axes. Default: '#ffffff' */
+  /** Stroke color for axes. Default: the active theme's fill color */
   color?: string;
   /** Common configuration for both axes */
   axisConfig?: Partial<NumberLineOptions>;
@@ -47,7 +48,7 @@ export interface AxesOptions {
 
 /** Styling options for the reference lines drawn to a point (vertical/horizontal). */
 interface AxisLineOptions {
-  /** Stroke color. Default: '#ffffff' */
+  /** Stroke color. Default: the active theme's fill color */
   color?: string;
   /** Stroke width in pixels. Default: 2 */
   strokeWidth?: number;
@@ -103,7 +104,7 @@ export class Axes extends Group implements CoordinateSystem {
       yRange: yRangeRaw = [-3, 3, 1],
       xLength = 10,
       yLength = 6,
-      color = '#ffffff',
+      color = getActiveTheme().fillColor,
       axisConfig = {},
       xAxisConfig = {},
       yAxisConfig = {},
@@ -512,7 +513,7 @@ export class Axes extends Group implements CoordinateSystem {
    * @returns A Line from the x-axis to the point
    */
   getVerticalLine(point: Vector3Tuple, options: AxisLineOptions = {}): VMobject {
-    const { color = '#ffffff', strokeWidth = 2, lineFunc = DashedLine } = options;
+    const { color = getActiveTheme().fillColor, strokeWidth = 2, lineFunc = DashedLine } = options;
     const xAxisY = this.coordsToPoint(0, 0)[1];
     return new lineFunc({
       start: [point[0], xAxisY, point[2]],
@@ -530,7 +531,7 @@ export class Axes extends Group implements CoordinateSystem {
    * @returns A Line from the y-axis to the point
    */
   getHorizontalLine(point: Vector3Tuple, options: AxisLineOptions = {}): VMobject {
-    const { color = '#ffffff', strokeWidth = 2, lineFunc = DashedLine } = options;
+    const { color = getActiveTheme().fillColor, strokeWidth = 2, lineFunc = DashedLine } = options;
     const yAxisX = this.coordsToPoint(0, 0)[0];
     return new lineFunc({
       start: [yAxisX, point[1], point[2]],

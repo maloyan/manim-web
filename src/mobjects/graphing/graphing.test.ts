@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { NumberLine, UnitInterval } from './NumberLine';
 import { FunctionGraph } from './FunctionGraph';
 import { Axes } from './Axes';
+import { WHITE } from '../../constants/colors';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -44,7 +45,9 @@ describe('NumberLine', () => {
 
     it('should have default color #ffffff', () => {
       const nl = new NumberLine();
-      expect(nl.color).toBe('#ffffff');
+      // The default is seeded from the active theme's fill color; under
+      // the default theme that is WHITE ('#FFFFFF').
+      expect(nl.color).toBe(WHITE);
     });
 
     it('should have default strokeWidth 2', () => {
