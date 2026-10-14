@@ -42,6 +42,10 @@ export class VGroup extends VMobject {
   constructor(...mobjects: Mobject[]) {
     super();
 
+    // A VGroup stores no geometry of its own: its points live entirely
+    // in its children (getLocalPoints aggregates, setPoints partitions).
+    this._delegatesPointsToChildren = true;
+
     // VGroup should not have its own fill by default
     this.fillOpacity = 0;
     this._style.fillOpacity = 0;

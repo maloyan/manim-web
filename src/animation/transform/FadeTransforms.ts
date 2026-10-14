@@ -7,7 +7,7 @@ import { VMobject } from '../../core/VMobject';
 import { Animation, AnimationOptions } from '../Animation';
 import { Transform } from './Transform';
 import { lerpPoint } from '../../utils/math';
-import { alignVmobjectPair } from './TransformPairing';
+import { alignVmobjectPair, needsLeafPairing } from './TransformPairing';
 
 // ============================================================================
 // FadeTransform
@@ -55,10 +55,36 @@ export class FadeTransform extends Animation<VMobject> {
 
     const vmobject = this.mobject;
 
-    const aligned = alignVmobjectPair(vmobject, this.target);
-    this._startPoints = aligned.startPoints;
-    this._targetPoints = aligned.targetPoints;
-    this._alignedSubpathLengths = aligned.alignedSubpathLengths;
+    if (needsLeafPairing(vmobject) && needsLeafPairing(this.target)) {
+      // Container (VGroup, MathTex, ...): the flat arrays produced from
+      // aligned copies cannot be setPoints()'d onto the live mobject —
+      // a VGroup partitions a flat array across its children by their
+      // CURRENT point counts, which are the unaligned ones. Align the
+      // live mobject against a copy of the target instead (what Manim
+      // CE's Transform.begin does with align_points): alignPoints pads
+      // and resamples the live children, so the interpolated arrays
+      // partition exactly at every interpolate() call.
+      const targetCopy = this.target.copy();
+      vmobject.alignPoints(targetCopy);
+      this._startPoints = vmobject.getLocalPoints();
+      this._targetPoints = targetCopy.getLocalPoints();
+      this._alignedSubpathLengths = undefined;
+      if (this._startPoints.length !== this._targetPoints.length) {
+        // A subgroup empty on one side has nothing to pair, so
+        // alignPoints left the totals diverged. Fail here, at setup,
+        // with the descriptive shape alignVmobjectPair uses — never
+        // mid-animation, where interpolate() would index past the
+        // shorter array and throw a raw TypeError.
+        throw new Error(
+          `FadeTransform: alignPoints produced mismatched point counts (${this._startPoints.length} vs ${this._targetPoints.length})`,
+        );
+      }
+    } else {
+      const aligned = alignVmobjectPair(vmobject, this.target);
+      this._startPoints = aligned.startPoints;
+      this._targetPoints = aligned.targetPoints;
+      this._alignedSubpathLengths = aligned.alignedSubpathLengths;
+    }
     this._startOpacity = vmobject.opacity;
     this._targetOpacity = this.target.opacity;
 
@@ -140,6 +166,7 @@ export class FadeTransformPieces extends Animation<VMobject> {
 
   override begin(): void {
     super.begin();
+    this._pieceStates = [];
 
     const source = this.mobject;
     // cast: fade pieces are always VMobjects; base `children` is Mobject[].
@@ -148,11 +175,64 @@ export class FadeTransformPieces extends Animation<VMobject> {
 
     // Handle case where we have submobjects
     if (sourceChildren.length > 0 && targetChildren.length > 0) {
-      const maxLen = Math.max(sourceChildren.length, targetChildren.length);
+      // Make the pairing well-defined BEFORE any per-piece alignment:
+      // Manim CE's FadeTransformPieces.begin() first calls
+      // mobject.align_submobjects(target), which pads the shorter
+      // side's submobject structure (add_n_more_submobjects) so the
+      // pieces pair by index over EQUAL lists. Mirror that: pad the
+      // live source in place (a padded duplicate is a real piece,
+      // pruned again by reset's begin() bookkeeping); pad a COPY of
+      // the target, never the caller's mobject. The previous code
+      // instead clamped indices (Math.min(i, len - 1)), so with
+      // differing counts one live child served two pieces and was
+      // aligned a second time — invalidating the first piece's stored
+      // partition ("VGroup.setPoints: expected 134, got 98").
+      let srcList = sourceChildren;
+      let tgtList = targetChildren;
+      const count = Math.max(sourceChildren.length, targetChildren.length);
+      if (sourceChildren.length < count) {
+        srcList = source._padVmobjectChildrenToCount(count);
+      }
+      if (targetChildren.length < count) {
+        tgtList = this.target.copy()._padVmobjectChildrenToCount(count);
+      }
+      if (srcList.length !== tgtList.length) {
+        throw new Error(
+          `FadeTransformPieces: cannot pair ${sourceChildren.length} source pieces with ` +
+            `${targetChildren.length} target pieces.`,
+        );
+      }
 
-      for (let i = 0; i < maxLen; i++) {
-        const srcChild = sourceChildren[Math.min(i, sourceChildren.length - 1)];
-        const tgtChild = targetChildren[Math.min(i, targetChildren.length - 1)];
+      for (let i = 0; i < count; i++) {
+        const srcChild = srcList[i];
+        const tgtChild = tgtList[i];
+
+        if (needsLeafPairing(srcChild) && needsLeafPairing(tgtChild)) {
+          // Container child (e.g. a multi-part MathTex part group): the
+          // arrays are applied to the LIVE child via setPoints, which
+          // partitions across the child's CURRENT counts — but
+          // alignVmobjectPair aligns only its internal copies, leaving
+          // the live counts untouched and the partition broken. Align
+          // the live child against a copy of the target child instead,
+          // exactly as FadeTransform.begin does for its root.
+          const tgtCopy = tgtChild.copy();
+          srcChild.alignPoints(tgtCopy);
+          const startPoints = srcChild.getLocalPoints();
+          const targetPoints = tgtCopy.getLocalPoints();
+          if (startPoints.length !== targetPoints.length) {
+            throw new Error(
+              `FadeTransformPieces: alignPoints produced mismatched point counts for piece ${i} (${startPoints.length} vs ${targetPoints.length})`,
+            );
+          }
+          this._pieceStates.push({
+            startPoints,
+            targetPoints,
+            startOpacity: srcChild.opacity,
+            targetOpacity: tgtChild.opacity,
+            alignedSubpathLengths: undefined,
+          });
+          continue;
+        }
 
         const aligned = alignVmobjectPair(srcChild, tgtChild);
         this._pieceStates.push({
@@ -183,7 +263,7 @@ export class FadeTransformPieces extends Animation<VMobject> {
     if (sourceChildren.length > 0 && this._pieceStates.length > 0) {
       for (let i = 0; i < sourceChildren.length; i++) {
         const child = sourceChildren[i];
-        const state = this._pieceStates[Math.min(i, this._pieceStates.length - 1)];
+        const state = this._pieceStates[i];
 
         const points: number[][] = [];
         for (let j = 0; j < state.startPoints.length; j++) {
@@ -224,7 +304,7 @@ export class FadeTransformPieces extends Animation<VMobject> {
     if (sourceChildren.length > 0 && this._pieceStates.length > 0) {
       for (let i = 0; i < sourceChildren.length; i++) {
         const child = sourceChildren[i];
-        const state = this._pieceStates[Math.min(i, this._pieceStates.length - 1)];
+        const state = this._pieceStates[i];
         child.setPoints(state.targetPoints);
         child.setTransformSubpathLengths(undefined);
         child.opacity = state.targetOpacity;
