@@ -28,6 +28,9 @@ export type {
 export { parsePdb } from './pdb';
 export type { ParsedStructure, ResidueCA, SecondaryStructure, ParsePdbOptions } from './pdb';
 
+export { fetchPdb, setPdbFetcher, pdbUrl } from './pdbFetch';
+export type { PdbTextFetcher, PdbSource, FetchPdbOptions } from './pdbFetch';
+
 export { selectAtoms, bindingSiteSelection, DEFAULT_BINDING_SITE_RADIUS } from './selection';
 export type { AtomSelectionOptions } from './selection';
 
