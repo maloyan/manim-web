@@ -9,6 +9,7 @@ import {
   tokenizeLine,
 } from './CodeHighlighting';
 import { type CodeToken, computeCodeTokens } from './CodeTokenLayout';
+import { applyTextTextureFilters, getTextResolutionScale } from './textTexture';
 
 // Re-export all highlighting types and constants so existing imports from './Code' still work
 export {
@@ -49,9 +50,6 @@ export interface CodeOptions {
 
 /** Scale factor: pixels to world units (100 pixels = 1 world unit) */
 const PIXEL_TO_WORLD = 1 / 100;
-
-/** Resolution multiplier for crisp text on retina displays */
-const RESOLUTION_SCALE = 2;
 
 /**
  * Code - A syntax-highlighted code block mobject
@@ -267,6 +265,7 @@ export class Code extends VMobject {
       return null;
     }
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const scaledFontSize = this._fontSize * RESOLUTION_SCALE;
     const scaledLineHeight = scaledFontSize * this._lineHeight;
     const scaledPadding = this._backgroundPadding * RESOLUTION_SCALE;
@@ -356,6 +355,7 @@ export class Code extends VMobject {
     // Clear existing highlights
     this.clearHighlights();
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const scaledFontSize = this._fontSize * RESOLUTION_SCALE;
     const scaledLineHeight = scaledFontSize * this._lineHeight;
     const scaledPadding = this._backgroundPadding * RESOLUTION_SCALE;
@@ -429,6 +429,7 @@ export class Code extends VMobject {
    * Build the CSS font string
    */
   protected _buildFontString(): string {
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const size = Math.round(this._fontSize * RESOLUTION_SCALE);
     return `${size}px ${this._fontFamily}`;
   }
@@ -439,6 +440,7 @@ export class Code extends VMobject {
   protected _getLineNumberWidth(): number {
     if (!this._lineNumbers || !this._ctx) return 0;
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     this._ctx.font = this._buildFontString();
     const maxLineNum = this._lines.length.toString();
     const metrics = this._ctx.measureText(maxLineNum);
@@ -453,6 +455,7 @@ export class Code extends VMobject {
       return { width: 0, height: 0 };
     }
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     this._ctx.font = this._buildFontString();
 
     const scaledFontSize = this._fontSize * RESOLUTION_SCALE;
@@ -482,6 +485,7 @@ export class Code extends VMobject {
       return;
     }
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const { width, height } = this._measureCode();
 
     // Resize canvas
@@ -589,9 +593,8 @@ export class Code extends VMobject {
 
     // Create texture from canvas
     this._texture = new THREE.CanvasTexture(this._canvas);
-    this._texture.colorSpace = THREE.SRGBColorSpace;
-    this._texture.minFilter = THREE.LinearFilter;
-    this._texture.magFilter = THREE.LinearFilter;
+    applyTextTextureFilters(this._texture);
+    this._texture.needsUpdate = true;
 
     // Create material with transparency
     const material = new THREE.MeshBasicMaterial({

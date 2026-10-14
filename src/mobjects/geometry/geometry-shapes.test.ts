@@ -171,6 +171,45 @@ describe('AnnularSector', () => {
     const as = new AnnularSector();
     expect(as.numPoints).toBeGreaterThan(0);
   });
+
+  // Regression: the inner arc is traced from the end angle back to the start
+  // angle (reversed direction). Its cubic-Bezier handles must use a signed
+  // sweep, or the handles point the wrong way and the inner boundary bulges
+  // off the hole circle, so the donut hole renders as a faceted polygon.
+  it('keeps every sampled boundary point inside [innerRadius, outerRadius]', () => {
+    const innerRadius = 0.6;
+    const outerRadius = 2;
+    const as = new AnnularSector({
+      innerRadius,
+      outerRadius,
+      startAngle: Math.PI / 2,
+      angle: 0.6 * Math.PI * 2,
+    });
+
+    const control = as.getLocalPoints();
+    const evalCubic = (p0: number[], p1: number[], p2: number[], p3: number[], t: number) => {
+      const u = 1 - t;
+      return [0, 1].map(
+        (i) =>
+          u * u * u * p0[i] + 3 * u * u * t * p1[i] + 3 * u * t * t * p2[i] + t * t * t * p3[i],
+      );
+    };
+
+    let minRadius = Infinity;
+    let maxRadius = 0;
+    for (let i = 0; i + 3 < control.length; i += 3) {
+      for (let s = 0; s <= 24; s++) {
+        const pt = evalCubic(control[i], control[i + 1], control[i + 2], control[i + 3], s / 24);
+        const r = Math.hypot(pt[0], pt[1]);
+        minRadius = Math.min(minRadius, r);
+        maxRadius = Math.max(maxRadius, r);
+      }
+    }
+
+    const tol = 0.01;
+    expect(minRadius).toBeGreaterThanOrEqual(innerRadius - tol);
+    expect(maxRadius).toBeLessThanOrEqual(outerRadius + tol);
+  });
 });
 
 // ---------------------------------------------------------------------------

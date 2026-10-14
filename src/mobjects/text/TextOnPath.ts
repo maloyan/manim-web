@@ -18,6 +18,7 @@
 import opentype from 'opentype.js';
 import { VGroup } from '../../core/VGroup';
 import { VMobject } from '../../core/VMobject';
+import { Vector3Tuple } from '../../core/Mobject';
 import { GlyphVMobject } from './GlyphVMobject';
 import {
   alignmentToOffset,
@@ -34,6 +35,24 @@ import {
 /** Scale factor matching GlyphVMobject: 100 pixels = 1 world unit. */
 const PIXEL_TO_WORLD = 1 / 100;
 
+/**
+ * Half the x-height in font units, from the 'x' glyph's vertical extent
+ * (`yMax - yMin`). Used as the shared vertical layout datum so every glyph sits
+ * on the same line. Falls back to a quarter of the em when the extent is unknown
+ * (`yMax`/`yMin` missing) or non-positive. The `top`/`bottom` inputs are typed
+ * `unknown` because opentype.js' glyph metric fields reach here loosely typed.
+ *
+ * @param top - The 'x' glyph `yMax` in font units (a number when present).
+ * @param bottom - The 'x' glyph `yMin` in font units (a number when present).
+ * @param unitsPerEm - The font's units per em, for the fallback.
+ */
+function halfXHeightFontUnits(top: unknown, bottom: unknown, unitsPerEm: number): number {
+  const t = typeof top === 'number' ? top : 0;
+  const b = typeof bottom === 'number' ? bottom : 0;
+  const height = t - b;
+  return height > 0 ? height / 2 : unitsPerEm * 0.25;
+}
+
 /** A path the text can follow: a VMobject, a raw point chain, or a function. */
 export type TextOnPathSource = VMobject | number[][] | ((t: number) => number[]);
 
@@ -45,6 +64,15 @@ export interface TextOnPathGlyph {
   width?: number;
   /** Extra gap before this glyph (world units). Default 0. */
   leadingGap?: number;
+  /**
+   * Point in the glyph's own local frame that lands on the path, and about
+   * which the glyph rotates to the tangent. Defaults to the glyph's bounding-box
+   * center. Font mode sets it to the advance-box center (advance width / 2, half
+   * the x-height) so the x-height midline sits on the path. Without it, a glyph
+   * whose ink box differs from its advance box (a narrow glyph, or one with a
+   * dot such as 'i') is misplaced along and across the path.
+   */
+  anchor?: Vector3Tuple;
 }
 
 /** Options for {@link TextOnPath}. */
@@ -108,6 +136,7 @@ export class TextOnPath extends VGroup {
           mobject: g.mobject,
           width: g.width ?? g.mobject.getWidth(),
           leadingGap: g.leadingGap ?? 0,
+          anchor: g.anchor,
         })),
       );
       this._readyPromise = Promise.resolve();
@@ -142,7 +171,12 @@ export class TextOnPath extends VGroup {
    * act in world space, then added to the group.
    */
   private _layoutGlyphs(
-    glyphs: Array<{ mobject: VMobject; width: number; leadingGap: number }>,
+    glyphs: Array<{
+      mobject: VMobject;
+      width: number;
+      leadingGap: number;
+      anchor?: Vector3Tuple;
+    }>,
   ): void {
     const glyphHeightWorld = this._fontSize * PIXEL_TO_WORLD;
     const alignmentOffset = alignmentToOffset(
@@ -166,11 +200,22 @@ export class TextOnPath extends VGroup {
     for (let i = 0; i < glyphs.length; i++) {
       const glyph = glyphs[i].mobject;
       const placement = placements[i];
+      // The reference point that lands on the path. Default: the bounding-box
+      // center (`getCenter()`), which keeps the synchronous behavior. Font mode
+      // passes the advance-box center so narrow or dotted glyphs ('i') stay on
+      // the path line instead of riding low under their own bounding box.
+      const ref = glyphs[i].anchor ?? glyph.getCenter();
       if (placement.angle !== 0) {
-        // Rotate about the glyph's own center, then move the center onto the path.
-        glyph.rotate(placement.angle);
+        // Rotate about the reference point, so the glyph pivots on the path.
+        glyph.rotate(placement.angle, { aboutPoint: ref });
       }
-      glyph.moveTo(placement.center);
+      // Move the reference point onto the path. The reference is fixed under the
+      // rotation above, so it still sits at `ref` and this shift lands it exactly.
+      glyph.shift([
+        placement.center[0] - ref[0],
+        placement.center[1] - ref[1],
+        placement.center[2] - ref[2],
+      ]);
       this.add(glyph);
     }
   }
@@ -185,7 +230,21 @@ export class TextOnPath extends VGroup {
     const font = opentype.parse(buffer);
 
     const scale = this._fontSize / font.unitsPerEm;
-    const glyphs: Array<{ mobject: VMobject; width: number; leadingGap: number }> = [];
+    // Vertical reference shared by every glyph: half the x-height, in world
+    // units. Placing this point on the path puts the x-height midline on the
+    // curve for all glyphs, so a dot or an ascender no longer shifts a glyph off
+    // the line (the bounding-box center does, because the dot inflates it).
+    // Measure the x-height from the 'x' glyph (baseline to its top); fall back to
+    // a quarter of the em when the font has no usable 'x'.
+    const xGlyph = font.charToGlyph('x');
+    const verticalAnchor =
+      halfXHeightFontUnits(xGlyph.yMax, xGlyph.yMin, font.unitsPerEm) * scale * PIXEL_TO_WORLD;
+    const glyphs: Array<{
+      mobject: VMobject;
+      width: number;
+      leadingGap: number;
+      anchor: Vector3Tuple;
+    }> = [];
     let pendingGap = 0;
 
     const chars = Array.from(text);
@@ -217,10 +276,14 @@ export class TextOnPath extends VGroup {
         color: this._glyphColor,
       });
 
+      const width = (glyph.advanceWidth ?? 0) * scale * PIXEL_TO_WORLD;
       glyphs.push({
         mobject,
-        width: (glyph.advanceWidth ?? 0) * scale * PIXEL_TO_WORLD,
+        width,
         leadingGap: pendingGap,
+        // Advance-box center in the glyph's local frame: the glyph is built with
+        // its pen origin at x = 0, so the advance center is at width / 2.
+        anchor: [width / 2, verticalAnchor, 0],
       });
       pendingGap = 0;
     }
