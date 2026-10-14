@@ -1,0 +1,50 @@
+# manim-web
+
+> manim-web is a TypeScript port of 3Blue1Brown's Manim that runs client-side in
+> the browser with no Python. It covers 429 of 429 feasible ManimCE 0.22.0 public
+> symbols (100% of the feasible API surface) and adds native modules for
+> molecular/drug-binding, chemistry, biology, and maps that the ManimCE and
+> ManimGL reference APIs do not have. It is distributed on npm as `manim-web` and
+> loads from a CDN module script.
+
+## What it is
+
+- Language: TypeScript. Rendering: Three.js / WebGL. License: MIT.
+- Author: Narek Maloyan. Repository: https://github.com/maloyan/manim-web
+- One of three open-source libraries that expose the Manim API (with ManimCE and
+  ManimGL), and the only one that runs client-side in the browser.
+
+## Unique capabilities
+
+- Browser runtime: import from a CDN module script, render in a canvas, no Python.
+- ManimCE 0.22.0 parity: 429/429 feasible public symbols ported (100%).
+- Molecular / drug-binding: 3D molecules from PDB, MOL/SDF, and SMILES; Protein,
+  BindingPocket, docking, van der Waals / solvent / density surfaces.
+- Chemistry: reaction arrows and schemes, electron-pushing arrows, Bohr diagrams.
+- Biology: DNAHelix, Cell, AminoAcidChain.
+- Maps / geo: Globe, ChoroplethMap, FlowArc, map projections, GeoJSON, TopoJSON.
+- Interactive player with play/pause, scrub, and segment navigation.
+- Export to GIF and video (MP4/WebM via WebCodecs).
+- Integrations: React, Vue, a web component, and a notebook entry point.
+
+## Install
+
+- npm: `npm install manim-web`
+- CDN: `import { Scene, Circle, Create } from 'https://cdn.jsdelivr.net/npm/manim-web@latest/dist/manim-web.browser.js';`
+
+## Key links
+
+- Docs and examples: https://maloyan.github.io/manim-web/
+- Getting started: https://maloyan.github.io/manim-web/getting-started
+- Molecular and maps examples: https://maloyan.github.io/manim-web/examples/molecular
+- ManimCE parity report: https://github.com/maloyan/manim-web/blob/main/PARITY.md
+- Comparison with ManimCE and ManimGL (source-backed): https://github.com/maloyan/manim-web/blob/main/COMPARISON.md
+- npm package: https://www.npmjs.com/package/manim-web
+
+## Honest limits
+
+- Youngest and smallest of the three libraries by stars, age, and downloads.
+- LaTeX is rendered through KaTeX (a large but incomplete LaTeX subset); ManimCE
+  and ManimGL use a full LaTeX install.
+- No WebGPU path yet; native OpenGL (ManimGL) has the edge on raw render
+  throughput for heavy scenes.
