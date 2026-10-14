@@ -14,7 +14,11 @@ import {
   measureStyledText,
   renderStyledTextToCanvas,
 } from './textStyleRuns';
-import { createTextCanvasTexture, reallocateTextureIfResized } from './textTexture';
+import {
+  createTextCanvasTexture,
+  getTextResolutionScale,
+  reallocateTextureIfResized,
+} from './textTexture';
 
 /** Scale factor from Canvas 2D output to point units.
  * At 72 DPI, 1pt = 4/3 canvas pixels. */
@@ -64,9 +68,6 @@ export interface TextOptions {
    */
   gradient?: string[];
 }
-
-/** Resolution multiplier for crisp text on retina displays */
-const RESOLUTION_SCALE = 2;
 
 /**
  * Text - A text mobject rendered using Canvas 2D to a texture
@@ -347,6 +348,7 @@ export class Text extends TexturedMobject {
    * Build the CSS font string
    */
   protected _buildFontString(): string {
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const style = this._fontStyle === 'italic' ? 'italic' : 'normal';
     const weight =
       typeof this._fontWeight === 'number' ? this._fontWeight.toString() : this._fontWeight;
@@ -367,6 +369,7 @@ export class Text extends TexturedMobject {
       return this._measureStyledText();
     }
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     this._ctx.font = this._buildFontString();
     const lines = this._text.split('\n');
     const scaledFontSize = this._fontSize * RESOLUTION_SCALE;
@@ -404,6 +407,7 @@ export class Text extends TexturedMobject {
       return;
     }
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const { lines, width, height } = this._measureText();
 
     // Resize canvas
@@ -492,6 +496,7 @@ export class Text extends TexturedMobject {
   ): void {
     if (!this._ctx) return;
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const scaledSpacing = this._letterSpacing * RESOLUTION_SCALE;
     let currentX = startX;
 
