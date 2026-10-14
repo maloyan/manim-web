@@ -18,6 +18,13 @@ const WATER_BONDS: BondSpec[] = [
   { from: 0, to: 2 },
 ];
 
+/** Perpendicular distance between two parallel bond lines (their start points). */
+function lineSeparation(a: Line, b: Line): number {
+  const s1 = a.getStart();
+  const s2 = b.getStart();
+  return Math.hypot(s1[0] - s2[0], s1[1] - s2[1], s1[2] - s2[2]);
+}
+
 describe('MoleculeMobject', () => {
   it('is a VGroup so animations apply directly', () => {
     const mol = new MoleculeMobject({ atoms: WATER_ATOMS, bonds: WATER_BONDS });
@@ -90,6 +97,41 @@ describe('MoleculeMobject', () => {
     const a = bond?.lines[0] as Line;
     const b = bond?.lines[1] as Line;
     expect(a.getStart()).not.toEqual(b.getStart());
+  });
+
+  it('separates the two lines of a double bond by bondSpacing', () => {
+    const spacing = 0.2;
+    const mol = new MoleculeMobject({
+      atoms: [
+        { element: 'C', x: 0, y: 0 },
+        { element: 'C', x: 1, y: 0 },
+      ],
+      bonds: [{ from: 0, to: 1, order: 2 }],
+      bondSpacing: spacing,
+    });
+    const [a, b] = mol.getBond(0)?.lines as [Line, Line];
+    expect(lineSeparation(a, b)).toBeCloseTo(spacing, 6);
+  });
+
+  it('scales the double-bond separation with bondLength', () => {
+    const makeDouble = (bondLength: number): [Line, Line] => {
+      const mol = new MoleculeMobject({
+        atoms: [
+          { element: 'C', x: 0, y: 0 },
+          { element: 'C', x: 1, y: 0 },
+        ],
+        bonds: [{ from: 0, to: 1, order: 2 }],
+        bondSpacing: 0.15,
+        bondLength,
+      });
+      return mol.getBond(0)?.lines as [Line, Line];
+    };
+    const sepShort = lineSeparation(...makeDouble(1));
+    const sepLong = lineSeparation(...makeDouble(2));
+    // A bond twice as long keeps the same relative gap, so twice the world gap.
+    expect(sepLong).toBeCloseTo(sepShort * 2, 6);
+    // The default gap must be clearly visible, not a hairline.
+    expect(sepShort).toBeGreaterThan(0.1);
   });
 
   it('draws a triple bond as three parallel lines', () => {

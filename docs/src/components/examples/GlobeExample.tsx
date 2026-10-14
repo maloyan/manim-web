@@ -11,7 +11,9 @@ async function animate(scene: any) {
   globe.graticule({ latStep: 30, lonStep: 30, color: '#8d99ae' });
   globe.plotPoint(48.85, 2.35, { color: '#ffd166' }); // Paris (lat, lon)
   globe.plotPoint(40.71, -74.0, { color: '#ffd166' }); // New York
-  globe.arc([48.85, 2.35], [40.71, -74.0], { color: '#ef476f', altitude: 0.3 });
+  // altitude 0 keeps the arc on the sphere surface so it connects the two dots
+  // (Line3D carries a depth bias that stops it z-fighting the surface it lies on).
+  globe.arc([48.85, 2.35], [40.71, -74.0], { color: '#ef476f' });
 
   scene.add(globe);
   await scene.play(new Rotate(globe, { angle: Math.PI * 2, duration: 8 }));
