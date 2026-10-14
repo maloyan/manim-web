@@ -299,8 +299,15 @@ describe('ParametricSurface.copy (latent bug found in #416 review)', () => {
 describe('three.js transparent-sort tiebreak (upstream invariant the fix relies on)', () => {
   // The prepass draws before the color mesh only because, with equal
   // groupOrder/renderOrder/z, reversePainterSortStable falls back to
-  // ascending object id. Verified against three r0.184; this test fails
+  // ascending object id. Verified against three r0.186; this test fails
   // loudly if a three.js upgrade changes that comparator.
+  //
+  // r0.186 note: WebGLRenderList.push() gained a 7th `camera` parameter and
+  // runs `if ( camera.reversedDepth === true ) z = -z;` before enqueueing the
+  // item. The fake items must carry a camera (reversedDepth=false, the Camera
+  // default) or push() dereferences `undefined`. The z sign flip applies
+  // equally to both items, so the equal-z id tiebreak the prepass relies on is
+  // unchanged.
   it('orders equal-z transparent render items by ascending object id', async () => {
     const { WebGLRenderList } = await import('three/src/renderers/webgl/WebGLRenderLists.js');
 
@@ -310,33 +317,58 @@ describe('three.js transparent-sort tiebreak (upstream invariant the fix relies 
     });
     const a = makeItem(1, 200);
     const b = makeItem(2, 100);
+    const camera = { reversedDepth: false } as unknown as THREE.Camera;
 
     // Insert in reverse id order so a stable no-op sort cannot pass.
     const list = new (
       WebGLRenderList as unknown as new () => InstanceType<typeof WebGLRenderList>
     )();
-    list.push(
+
+    // @types/three 0.186.0 lags the 0.186.1 runtime: its push() is declared with
+    // 6 args and its sort() with a 3rd reversedDepth boolean, but the real
+    // 0.186.1 render list takes a 7th `camera` on push() and two comparators on
+    // sort(). Call through a precise interface cast (keeps the `list` receiver so
+    // `this` still binds) that matches the runtime, not the stale declaration.
+    interface RenderListLike {
+      push(
+        object: THREE.Object3D,
+        geometry: THREE.BufferGeometry | null,
+        material: THREE.Material,
+        groupOrder: number,
+        z: number,
+        group: THREE.Group | null,
+        camera: THREE.Camera,
+      ): void;
+      sort(
+        opaqueSort: (a: unknown, b: unknown) => number,
+        transparentSort: (a: unknown, b: unknown) => number,
+      ): void;
+      transparent: { id: number }[];
+    }
+    const typedList = list as unknown as RenderListLike;
+    typedList.push(
       b.object as unknown as THREE.Object3D,
       null,
       b.material as unknown as THREE.Material,
       0,
       5,
       null,
+      camera,
     );
-    list.push(
+    typedList.push(
       a.object as unknown as THREE.Object3D,
       null,
       a.material as unknown as THREE.Material,
       0,
       5,
       null,
+      camera,
     );
-    list.sort(
+    typedList.sort(
       null as unknown as (a: unknown, b: unknown) => number,
       null as unknown as (a: unknown, b: unknown) => number,
-      false,
     );
 
-    expect(list.transparent.map((item: { id: number }) => item.id)).toEqual([1, 2]);
+    expect(typedList.transparent.map((item: { id: number }) => item.id)).toEqual([1, 2]);
   });
 });
