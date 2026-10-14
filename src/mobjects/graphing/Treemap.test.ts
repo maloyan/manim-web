@@ -244,3 +244,38 @@ describe('Treemap', () => {
     expect(() => zero.getTiles()).not.toThrow();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Distinct colors (default 'category' coloring)
+// ---------------------------------------------------------------------------
+describe('Treemap colors', () => {
+  const nested: TreemapNode = {
+    name: 'root',
+    children: [
+      { name: 'TypeScript', value: 42 },
+      { name: 'Rust', value: 23 },
+      {
+        name: 'Python',
+        children: [
+          { name: 'ml', value: 10 },
+          { name: 'web', value: 7 },
+        ],
+      },
+      { name: 'Go', value: 9 },
+      { name: 'Other', value: 6 },
+    ],
+  };
+
+  it('gives sibling leaves of one branch distinct colors', () => {
+    const tree = new Treemap({ data: nested, showLabels: false });
+    const ml = tree.getTile([2, 0])!;
+    const web = tree.getTile([2, 1])!;
+    expect(ml.color).not.toBe(web.color);
+  });
+
+  it('gives every drawn leaf a distinct color when leaves fit the palette', () => {
+    const tree = new Treemap({ data: nested, showInternalNodes: false, showLabels: false });
+    const colors = tree.getTiles().map((tile) => tile.color);
+    expect(new Set(colors).size).toBe(colors.length);
+  });
+});

@@ -123,6 +123,21 @@ describe('ChordDiagram', () => {
     expect(r01.getSourceSpanAngle() / r02.getSourceSpanAngle()).toBeCloseTo(2, 5);
   });
 
+  it('does not route ribbon curves through the exact center', () => {
+    // Regression: when both connecting-curve control points sat at the origin,
+    // every ribbon pinched to the exact center, so all ribbons self-intersected
+    // at one point and rendered as bright slivers. The control points must bend
+    // toward center without landing on it.
+    const radius = 2.5;
+    const chord = new ChordDiagram({ matrix: SYMMETRIC, radius });
+    for (const ribbon of chord.getChords()) {
+      for (const point of ribbon.getLocalPoints()) {
+        const distance = Math.hypot(point[0], point[1]);
+        expect(distance).toBeGreaterThan(radius * 0.05);
+      }
+    }
+  });
+
   it('accepts a link list with a group count', () => {
     const chord = new ChordDiagram({
       flows: [
