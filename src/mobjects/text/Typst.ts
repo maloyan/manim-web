@@ -76,6 +76,12 @@ export class Typst extends VGroup {
 
     typia.assert<TypstOptions>(options);
 
+    if (options.typst.trim().length === 0) {
+      throw new Error(
+        'Typst source is empty. Pass non-empty Typst markup (for MathTypst, non-empty math content).',
+      );
+    }
+
     const {
       typst,
       color = WHITE,
