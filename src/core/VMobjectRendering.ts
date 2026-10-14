@@ -415,6 +415,7 @@ export abstract class VMobjectRendering extends Mobject {
     while (this._cachedLine2Array.length > subpathPointArrays.length) {
       const old = this._cachedLine2Array.pop()!;
       old.geometry.dispose();
+      if (old.material !== this._strokeMaterial) old.material.dispose();
       group.remove(old);
     }
 
@@ -434,7 +435,12 @@ export abstract class VMobjectRendering extends Mobject {
         } else {
           const geometry = new LineGeometry();
           geometry.setPositions(positions);
-          const line = new Line2(geometry, this._strokeMaterial!);
+          // Each subpath gets its OWN material clone, not the shared template.
+          // Create()'s dash reveal writes dashSize/gapSize per subpath; a
+          // shared material would let every write clobber the previous one, so
+          // all subpaths would render the last subpath's dash window and the
+          // revealed stroke would jump around frame to frame (severe flicker).
+          const line = new Line2(geometry, this._strokeMaterial!.clone());
           line.computeLineDistances();
           line.frustumCulled = false;
           group.add(line);
@@ -526,6 +532,9 @@ export abstract class VMobjectRendering extends Mobject {
   private _clearCachedLine2Array(group: THREE.Group): void {
     for (const line of this._cachedLine2Array) {
       line.geometry.dispose();
+      // Each subpath owns a cloned material; dispose it (never the shared
+      // template, which _disposeRenderingResources handles once).
+      if (line.material !== this._strokeMaterial) line.material.dispose();
       group.remove(line);
     }
     this._cachedLine2Array = [];
@@ -594,25 +603,45 @@ export abstract class VMobjectRendering extends Mobject {
   // Material sync
   // -----------------------------------------------------------------------
 
+  /**
+   * Apply this VMobject's current visual stroke state (color, opacity,
+   * line width, resolution, stencil) to one LineMaterial.
+   *
+   * Dash state (`dashed`/`dashSize`/`gapSize`) is deliberately left untouched:
+   * a running Create() reveal owns those per subpath, so a material sync must
+   * not reset them. Called for the shared template material and for each
+   * per-subpath clone (see {@link _updateLine2StrokeMulti}).
+   */
+  private _applyStrokeMaterialVisual(mat: LineMaterial): void {
+    mat.color.set(this.color);
+    mat.opacity = this._opacity;
+    mat.transparent = this._opacity < 1;
+    mat.depthWrite = this._opacity >= 1;
+    mat.linewidth = this._computeLinewidth(this.strokeWidth);
+    mat.resolution.set(this._getRendererWidth(), this._getRendererHeight());
+
+    if (this._opacity < 1) {
+      mat.stencilWrite = true;
+      mat.stencilFunc = THREE.NotEqualStencilFunc;
+      mat.stencilRef = this._stencilRef;
+      mat.stencilFuncMask = 0xff;
+      mat.stencilFail = THREE.KeepStencilOp;
+      mat.stencilZFail = THREE.KeepStencilOp;
+      mat.stencilZPass = THREE.ReplaceStencilOp;
+    } else {
+      mat.stencilWrite = false;
+    }
+  }
+
   protected override _syncMaterialToThree(): void {
     if (this._strokeMaterial) {
-      this._strokeMaterial.color.set(this.color);
-      this._strokeMaterial.opacity = this._opacity;
-      this._strokeMaterial.transparent = this._opacity < 1;
-      this._strokeMaterial.depthWrite = this._opacity >= 1;
-      this._strokeMaterial.linewidth = this._computeLinewidth(this.strokeWidth);
-      this._strokeMaterial.resolution.set(this._getRendererWidth(), this._getRendererHeight());
-
-      if (this._opacity < 1) {
-        this._strokeMaterial.stencilWrite = true;
-        this._strokeMaterial.stencilFunc = THREE.NotEqualStencilFunc;
-        this._strokeMaterial.stencilRef = this._stencilRef;
-        this._strokeMaterial.stencilFuncMask = 0xff;
-        this._strokeMaterial.stencilFail = THREE.KeepStencilOp;
-        this._strokeMaterial.stencilZFail = THREE.KeepStencilOp;
-        this._strokeMaterial.stencilZPass = THREE.ReplaceStencilOp;
-      } else {
-        this._strokeMaterial.stencilWrite = false;
+      this._applyStrokeMaterialVisual(this._strokeMaterial);
+      // Each subpath owns a cloned material (so Create()'s dash reveal is
+      // independent per subpath); keep every clone's visual state in sync.
+      for (const line of this._cachedLine2Array) {
+        if (line.material !== this._strokeMaterial) {
+          this._applyStrokeMaterialVisual(line.material);
+        }
       }
     }
 
@@ -662,6 +691,9 @@ export abstract class VMobjectRendering extends Mobject {
     this._wasOpaque = isOpaque;
 
     if (this._strokeMaterial) this._strokeMaterial.needsUpdate = true;
+    for (const line of this._cachedLine2Array) {
+      if (line.material !== this._strokeMaterial) line.material.needsUpdate = true;
+    }
     if (this._strokeMeshMaterial) this._strokeMeshMaterial.needsUpdate = true;
 
     if (this._threeObject instanceof THREE.Group && this._strokeGeometryDependsOnOpacity()) {
@@ -696,6 +728,7 @@ export abstract class VMobjectRendering extends Mobject {
     }
     for (const line of this._cachedLine2Array) {
       line.geometry.dispose();
+      if (line.material !== this._strokeMaterial) line.material.dispose();
     }
     this._cachedLine2Array = [];
     this._cachedFillMesh = null;
