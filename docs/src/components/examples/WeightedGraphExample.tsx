@@ -30,7 +30,9 @@ async function animate(scene: any) {
       'A--A': { weight: 1, style: { selfLoopRadius: 0.4 } },
     },
   });
-  graph.scale(1.4);
+  // 1.25 keeps the whole figure in frame, including the self-loop that hangs
+  // below vertex A and its weight label.
+  graph.scale(1.25);
 
   await scene.play(new Create(graph, { duration: 2 }));
 }
