@@ -15,9 +15,14 @@ updates:
       # typia transform toolchain does not yet support. Stay on 5.x.
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
-      # @vitest/ui major must match the vitest core major; vitest is pinned at 4.x.
-      # Lift together with a vitest core major bump.
+      # The vitest toolchain (core + ui + coverage) must upgrade together as a
+      # deliberate major bump; vitest is pinned at 4.x and the 5.x bumps fail CI.
+      # Lift all three together when doing the vitest 5 migration.
+      - dependency-name: "vitest"
+        update-types: ["version-update:semver-major"]
       - dependency-name: "@vitest/ui"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitest/coverage-v8"
         update-types: ["version-update:semver-major"]
       # typia and @typia/unplugin majors must move together; @typia/unplugin
       # stable is capped at 12.x, so typia is held at 12 until it ships a newer major.
