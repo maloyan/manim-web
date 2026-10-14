@@ -2,7 +2,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { MathTex, Text, Write, FadeIn, FadeOut, Indicate, WHITE, BLUE, YELLOW } =
+  const { MathTex, Write, FadeIn, FadeOut, Indicate, WHITE, BLUE, YELLOW } =
     await import('manim-web');
 
   const FONT_SIZE = 54;
@@ -32,8 +32,11 @@ async function animate(scene: any) {
     eq.moveTo([0, 0, 0]);
   }
 
-  // Title.
-  const title = new Text({ text: 'Expand (a + b)²', fontSize: 30, color: BLUE });
+  // Title. Rendered as MathTex so the exponent is a true typeset superscript,
+  // not a font-dependent Unicode glyph (U+00B2) that can fall back to a
+  // baseline "2" on fonts that lack it. This also matches the derivation below.
+  const title = new MathTex({ latex: '\\text{Expand } (a+b)^{2}', color: BLUE, fontSize: 38 });
+  await title.waitForRender();
   title.moveTo([0, 2.3, 0]);
   scene.add(title);
   await scene.play(new FadeIn(title, { duration: 0.6 }));
