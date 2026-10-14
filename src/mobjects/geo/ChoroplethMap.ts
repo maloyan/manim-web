@@ -26,7 +26,7 @@ import {
   type GeoLinearRing,
   type PolygonRings,
 } from './geojson';
-import { equirectangular, type GeoProjection } from './projections';
+import { equirectangular, isProjectedPointVisible, type GeoProjection } from './projections';
 import { ColorScale } from './colorScale';
 
 /**
@@ -206,11 +206,18 @@ export class ChoroplethMap extends Group {
   ): Polygon | null {
     // Drop a trailing point that duplicates the first (GeoJSON rings are
     // closed); Polygon closes each ring itself. Then project lon/lat to 2D.
-    const projectRing = (ring: GeoLinearRing): [number, number, number][] =>
-      dropClosingPoint(ring).map((position) => {
-        const [x, y] = this._projection(position);
-        return [x, y, 0];
-      });
+    // Back-facing points (e.g. the far hemisphere of an orthographic
+    // projection) come back as [NaN, NaN]; drop them so NaN never enters the
+    // polygon geometry. A ring left with fewer than 3 points is skipped below.
+    const projectRing = (ring: GeoLinearRing): [number, number, number][] => {
+      const vertices: [number, number, number][] = [];
+      for (const position of dropClosingPoint(ring)) {
+        const projected = this._projection(position);
+        if (!isProjectedPointVisible(projected)) continue;
+        vertices.push([projected[0], projected[1], 0]);
+      }
+      return vertices;
+    };
 
     const vertices = projectRing(rings.exterior);
     if (vertices.length < 3) return null;

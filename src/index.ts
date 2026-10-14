@@ -2119,8 +2119,9 @@ export {
 
 // --- geo maps (best-manim) ---
 // 2D choropleth maps + 3D globe from GeoJSON. ChoroplethMap projects lon/lat
-// (equirectangular by default, mercator available) and fills regions by value;
-// Globe plots lat/long points, great-circle arcs and a graticule on a sphere.
+// (equirectangular by default; mercator, orthographic, albers, albersUsa,
+// robinson and mollweide available) and fills regions by value; Globe plots
+// lat/long points, great-circle arcs and a graticule on a sphere.
 export {
   ChoroplethMap,
   GeoMap,
@@ -2131,6 +2132,12 @@ export {
   ColorScale,
   equirectangular,
   mercator,
+  orthographic,
+  albers,
+  albersUsa,
+  robinson,
+  mollweide,
+  isProjectedPointVisible,
   exteriorRings,
   polygonRings,
   topojsonToGeojson,
@@ -2149,6 +2156,11 @@ export {
   type GeoProjection,
   type EquirectangularOptions,
   type MercatorOptions,
+  type OrthographicOptions,
+  type AlbersOptions,
+  type AlbersUsaOptions,
+  type RobinsonOptions,
+  type MollweideOptions,
   type GeoPosition,
   type GeoLinearRing,
   type GeoPolygon,
