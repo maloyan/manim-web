@@ -2268,3 +2268,12 @@ export {
   resolveEdgeStyle,
 } from './mobjects/ml';
 // --- end neural-network toolkit ---
+
+// Speech and thought bubbles
+export {
+  SpeechBubble,
+  ThoughtBubble,
+  type SpeechBubbleOptions,
+  type ThoughtBubbleOptions,
+  type BubbleOptions,
+} from './mobjects/bubble';

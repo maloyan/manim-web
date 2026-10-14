@@ -26,6 +26,8 @@ export interface TableOptions {
   topLeftEntry?: Mobject;
   /** Whether to include outer lines around the table. Default: true */
   includeOuterLines?: boolean;
+  /** Whether to include inner grid lines between cells. Default: true */
+  includeInnerLines?: boolean;
   /** Vertical buffer between cells. Default: 0.3 */
   vBuff?: number;
   /** Horizontal buffer between cells. Default: 0.5 */
@@ -77,6 +79,7 @@ export class Table extends VGroup {
   protected _colLabels: Mobject[];
   protected _topLeftEntry: Mobject | null;
   protected _includeOuterLines: boolean;
+  protected _includeInnerLines: boolean;
   protected _vBuff: number;
   protected _hBuff: number;
   protected _lineColor: string;
@@ -115,6 +118,7 @@ export class Table extends VGroup {
       colLabels = [],
       topLeftEntry,
       includeOuterLines = true,
+      includeInnerLines = true,
       vBuff = 0.3,
       hBuff = 0.5,
       lineColor = WHITE,
@@ -128,6 +132,7 @@ export class Table extends VGroup {
     this._colLabels = colLabels;
     this._topLeftEntry = topLeftEntry || null;
     this._includeOuterLines = includeOuterLines;
+    this._includeInnerLines = includeInnerLines;
     this._vBuff = vBuff;
     this._hBuff = hBuff;
     this._lineColor = lineColor;
@@ -321,6 +326,12 @@ export class Table extends VGroup {
     }
   }
 
+  /** Whether the grid line at index i (of total cells) should be drawn */
+  private _shouldDrawLine(i: number, total: number): boolean {
+    const isOuter = i === 0 || i === total;
+    return isOuter ? this._includeOuterLines : this._includeInnerLines;
+  }
+
   /**
    * Create grid lines
    */
@@ -344,7 +355,7 @@ export class Table extends VGroup {
     let yPos = top;
     for (let i = 0; i <= totalRows; i++) {
       // Skip outer lines if not included
-      if (!this._includeOuterLines && (i === 0 || i === totalRows)) {
+      if (!this._shouldDrawLine(i, totalRows)) {
         if (i < totalRows) {
           yPos -= this._rowHeights[i];
         }
@@ -368,7 +379,7 @@ export class Table extends VGroup {
     let xPos = left;
     for (let i = 0; i <= totalCols; i++) {
       // Skip outer lines if not included
-      if (!this._includeOuterLines && (i === 0 || i === totalCols)) {
+      if (!this._shouldDrawLine(i, totalCols)) {
         if (i < totalCols) {
           xPos += this._colWidths[i];
         }
@@ -716,6 +727,7 @@ export class Table extends VGroup {
       colLabels: colLabelsCopy,
       topLeftEntry: this._topLeftEntry?.copy(),
       includeOuterLines: this._includeOuterLines,
+      includeInnerLines: this._includeInnerLines,
       vBuff: this._vBuff,
       hBuff: this._hBuff,
       lineColor: this._lineColor,
