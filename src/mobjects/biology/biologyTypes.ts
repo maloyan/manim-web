@@ -13,6 +13,7 @@
 
 import type { Vector3Tuple } from '../../core/Mobject';
 import type { VMobject } from '../../core/VMobject';
+import type { VGroup } from '../../core/VGroup';
 import type { Text } from '../text/Text';
 import type { Line } from '../geometry/Line';
 import type { Circle } from '../geometry/Circle';
@@ -55,6 +56,14 @@ export interface DNAHelixOptions {
   baseColors?: Partial<Record<BaseSymbol, string>>;
   /** Rung color used when colorByBase is false. Default: a light gray. */
   rungColor?: string;
+  /** Color of the hydrogen-bond markers in the center. Default: a neutral gray. */
+  hBondColor?: string;
+  /**
+   * Fraction of the rung length left open in the center for the hydrogen bonds,
+   * in [0, 1). The two nucleobase halves leave this gap between them. Default:
+   * 0.3.
+   */
+  baseGap?: number;
   /** Stroke width of the strands and rungs. Default: 4. */
   strokeWidth?: number;
   /** Samples taken per turn for each strand curve. Default: 48. */
@@ -82,16 +91,35 @@ export interface BasePairRender {
   base: BaseSymbol;
   /** The base on the second strand (the complement). */
   complement: BaseSymbol;
-  /** The rung endpoint on the first strand. */
+  /** The base-pair endpoint on the first strand (strand-A backbone join). */
   start: Vector3Tuple;
-  /** The rung endpoint on the second strand. */
+  /** The base-pair endpoint on the second strand (strand-B backbone join). */
   end: Vector3Tuple;
   /**
-   * The mobject that draws the rung. A flat {@link Line} in 2D schematic mode;
-   * a solid 3D {@link Bond3D} cylinder in 3D mode.
+   * The center of the base pair, on the helix axis: the midpoint of start and
+   * end. The two nucleobase halves meet here across the hydrogen-bond gap.
    */
-  line: Line | Bond3D;
-  /** The resolved rung color. */
+  center: Vector3Tuple;
+  /**
+   * The strand-A nucleobase half. It runs from the strand-A backbone (`start`)
+   * inward toward `center` and is colored by {@link base}. A flat {@link Line}
+   * in 2D schematic mode; a solid 3D {@link Bond3D} cylinder in 3D mode.
+   */
+  startBase: Line | Bond3D;
+  /**
+   * The strand-B (complementary) nucleobase half. It runs from the strand-B
+   * backbone (`end`) inward toward `center` and is colored by
+   * {@link complement}. A flat {@link Line} in 2D; a {@link Bond3D} in 3D.
+   */
+  endBase: Line | Bond3D;
+  /**
+   * The hydrogen-bond marker in the central gap: a {@link VGroup} of 3 thin
+   * connectors for a G-C pair, or 2 for an A-T pair. Dashed {@link Line}s in
+   * 2D; thin {@link Bond3D} cylinders in 3D. Null when the central gap is
+   * closed (baseGap is 0) or the rung has no length.
+   */
+  hBond: VGroup | null;
+  /** The resolved color of the strand-A half (the pair's primary color). */
   color: string;
   /**
    * How far the rung sits toward the viewer, from 0 (back of a turn) to 1
