@@ -392,6 +392,54 @@ describe('Table', () => {
     expect(vLines.children.length).toBe(1); // only middle
   });
 
+  const grid2x2 = () => [
+    [entry(), entry()],
+    [entry(), entry()],
+  ];
+
+  it('includeInnerLines=false keeps only the outer border', () => {
+    const t = new Table({ data: grid2x2(), includeInnerLines: false });
+    expect(t.getHorizontalLines().children.length).toBe(2); // top, bottom
+    expect(t.getVerticalLines().children.length).toBe(2); // left, right
+  });
+
+  it('includeInnerLines=false and includeOuterLines=false draws no lines', () => {
+    const t = new Table({
+      data: grid2x2(),
+      includeInnerLines: false,
+      includeOuterLines: false,
+    });
+    expect(t.getHorizontalLines().children.length).toBe(0);
+    expect(t.getVerticalLines().children.length).toBe(0);
+  });
+
+  it('includeInnerLines defaults to true (unchanged behavior)', () => {
+    const t = new Table({ data: grid2x2() });
+    expect(t.getHorizontalLines().children.length).toBe(3);
+    expect(t.getVerticalLines().children.length).toBe(3);
+    const explicit = new Table({ data: grid2x2(), includeInnerLines: true });
+    expect(explicit.getHorizontalLines().children.length).toBe(3);
+    expect(explicit.getVerticalLines().children.length).toBe(3);
+  });
+
+  it('includeInnerLines=false works with labels', () => {
+    const t = new Table({
+      data: grid2x2(),
+      rowLabels: [entry(), entry()],
+      colLabels: [entry(), entry()],
+      includeInnerLines: false,
+    });
+    expect(t.getHorizontalLines().children.length).toBe(2);
+    expect(t.getVerticalLines().children.length).toBe(2);
+  });
+
+  it('copy preserves includeInnerLines', () => {
+    const t = new Table({ data: grid2x2(), includeInnerLines: false });
+    const c = t.copy();
+    expect(c.getHorizontalLines().children.length).toBe(2);
+    expect(c.getVerticalLines().children.length).toBe(2);
+  });
+
   it('generates lines with row and column labels', () => {
     const t = new Table({
       data: [
