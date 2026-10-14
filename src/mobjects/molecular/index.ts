@@ -25,8 +25,14 @@ export type {
   Bond3DRender,
 } from './Molecule3D';
 
-export { parsePdb } from './pdb';
-export type { ParsedStructure, ResidueCA, SecondaryStructure, ParsePdbOptions } from './pdb';
+export { parsePdb, parsePdbTrajectory } from './pdb';
+export type {
+  ParsedStructure,
+  ResidueCA,
+  SecondaryStructure,
+  ParsePdbOptions,
+  PdbTrajectory,
+} from './pdb';
 
 export { fetchPdb, setPdbFetcher, pdbUrl } from './pdbFetch';
 export type { PdbTextFetcher, PdbSource, FetchPdbOptions } from './pdbFetch';
@@ -63,5 +69,16 @@ export type {
 export { dockLigand } from './dock';
 export type { DockLigandOptions } from './dock';
 
-export { morphMolecule, MorphMolecule } from './MorphMolecule';
-export type { Conformation, MorphMoleculeOptions } from './MorphMolecule';
+export { morphMolecule, MorphMolecule, playTrajectory, MoleculeTrajectory } from './MorphMolecule';
+export type { Conformation, MorphMoleculeOptions, PlayTrajectoryOptions } from './MorphMolecule';
+
+export {
+  residueHydropathy,
+  residueCharge,
+  KYTE_DOOLITTLE_HYDROPATHY,
+  HYDROPATHY_MIN,
+  HYDROPATHY_MAX,
+  DEFAULT_HYDROPATHY_COLORS,
+  DEFAULT_BFACTOR_COLORS,
+  DEFAULT_CHARGE_COLORS,
+} from './residueProperties';

@@ -57,6 +57,16 @@ export interface Atom3DSpec {
    * Optional and ignored by rendering; it exists for selection and grouping.
    */
   resName?: string;
+  /**
+   * The occupancy, if known (from a PDB parse, cols 55-60).
+   * Optional and ignored by rendering; it exists for property-based coloring.
+   */
+  occupancy?: number;
+  /**
+   * The temperature factor (B-factor), if known (from a PDB parse, cols 61-66).
+   * Optional and ignored by rendering; it exists for property-based coloring.
+   */
+  tempFactor?: number;
 }
 
 /** A single bond between two atoms, by their index in the atoms array. */

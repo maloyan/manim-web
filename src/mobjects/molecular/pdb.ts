@@ -35,6 +35,8 @@ export interface ResidueCA {
   resSeq?: number;
   /** The secondary structure class (default 'coil'). */
   ss?: SecondaryStructure;
+  /** The CA atom's temperature factor (B-factor), if present. */
+  tempFactor?: number;
 }
 
 /** The result of {@link parsePdb}. */
@@ -160,6 +162,18 @@ function elementFromAtomName(nameField: string): string {
   return c14.trim();
 }
 
+/**
+ * Read an optional fixed-column float, or undefined when the field is absent or
+ * blank. Used for the occupancy and temperature-factor columns.
+ */
+function optionalFloat(line: string, start: number, end: number): number | undefined {
+  if (line.length < end) {
+    return undefined;
+  }
+  const value = Number.parseFloat(line.slice(start, end));
+  return Number.isNaN(value) ? undefined : value;
+}
+
 /** Parse one ATOM / HETATM line into a {@link ParsedAtom}, or null if malformed. */
 function parseAtomLine(line: string, isHet: boolean): ParsedAtom | null {
   // Coordinates end at col 54; a shorter line cannot hold a full atom.
@@ -192,6 +206,9 @@ function parseAtomLine(line: string, isHet: boolean): ParsedAtom | null {
       chain: chain === '' ? undefined : chain,
       resSeq: Number.isNaN(resSeq) ? undefined : resSeq,
       resName: resName === '' ? undefined : resName,
+      // Occupancy (cols 55-60) and temperature factor / B-factor (cols 61-66).
+      occupancy: optionalFloat(line, 54, 60),
+      tempFactor: optionalFloat(line, 60, 66),
     },
     serial: Number.isNaN(serial) ? -1 : serial,
     isHet,
@@ -333,9 +350,57 @@ function buildResidues(atomRecords: ParsedAtom[], ssRanges: SSRange[]): ResidueC
       chain: a.chain === '' ? undefined : a.chain,
       resSeq: a.resSeq >= 0 ? a.resSeq : undefined,
       ss: secondaryStructureFor(a.chain, a.resSeq, ssRanges),
+      tempFactor: a.spec.tempFactor,
     });
   }
   return residues;
+}
+
+/** ATOM atoms, HETATM atoms and the combined order, after water filtering. */
+interface PartitionedAtoms {
+  atomRecords: ParsedAtom[];
+  hetRecords: ParsedAtom[];
+  /** ATOM atoms first, then HETATM atoms. */
+  combined: ParsedAtom[];
+}
+
+/**
+ * Split parsed atoms into ATOM and HETATM records, dropping water unless
+ * {@link includeWater}. The combined order is ATOM atoms first, then HETATM, the
+ * order CONECT indices and trajectory frames both use.
+ */
+function partitionAtoms(parsedAtoms: ParsedAtom[], includeWater: boolean): PartitionedAtoms {
+  const kept = parsedAtoms.filter(
+    (a) => !a.isHet || includeWater || !WATER_RESIDUES.has(a.resName.toUpperCase()),
+  );
+  const atomRecords = kept.filter((a) => !a.isHet);
+  const hetRecords = kept.filter((a) => a.isHet);
+  return { atomRecords, hetRecords, combined: [...atomRecords, ...hetRecords] };
+}
+
+/** Map each atom serial to its index in the combined order. */
+function indexBySerial(combined: ParsedAtom[]): Map<number, number> {
+  const serialToIndex = new Map<number, number>();
+  combined.forEach((a, index) => {
+    if (a.serial >= 0) {
+      serialToIndex.set(a.serial, index);
+    }
+  });
+  return serialToIndex;
+}
+
+/** Build the {@link ParsedStructure} for one model's atoms, with global bonds. */
+function buildStructure(
+  partition: PartitionedAtoms,
+  ssRanges: SSRange[],
+  conectRecords: number[][],
+): ParsedStructure {
+  return {
+    atoms: partition.atomRecords.map((a) => a.spec),
+    hetatms: partition.hetRecords.map((a) => a.spec),
+    bonds: buildBonds(conectRecords, indexBySerial(partition.combined)),
+    residues: buildResidues(partition.atomRecords, ssRanges),
+  };
 }
 
 /**
@@ -348,27 +413,114 @@ function buildResidues(atomRecords: ParsedAtom[], ssRanges: SSRange[]): ResidueC
 export function parsePdb(text: string, options: ParsePdbOptions = {}): ParsedStructure {
   const includeWater = options.includeWater ?? false;
   const { parsedAtoms, ssRanges, conectRecords } = scanRecords(text.split(/\r?\n/));
+  const partition = partitionAtoms(parsedAtoms, includeWater);
+  return buildStructure(partition, ssRanges, conectRecords);
+}
 
-  // Keep ATOM atoms, and HETATM atoms that are not water (unless includeWater).
-  const kept = parsedAtoms.filter(
-    (a) => !a.isHet || includeWater || !WATER_RESIDUES.has(a.resName.toUpperCase()),
-  );
-  const atomRecords = kept.filter((a) => !a.isHet);
-  const hetRecords = kept.filter((a) => a.isHet);
+/** A multi-frame trajectory parsed from a multi-MODEL PDB. */
+export interface PdbTrajectory {
+  /** The structure of the first model (atoms, hetatms, bonds, residues). */
+  structure: ParsedStructure;
+  /**
+   * One conformation per MODEL, in combined atom order (ATOM atoms first, then
+   * HETATM). Every frame has the same length and order as `structure`'s atoms.
+   */
+  frames: Vector3Tuple[][];
+  /** The number of models (frames). */
+  numModels: number;
+}
 
-  // Combined order = ATOM atoms first, then HETATM atoms. Map serial -> index.
-  const serialToIndex = new Map<number, number>();
-  const combined = [...atomRecords, ...hetRecords];
-  combined.forEach((a, index) => {
-    if (a.serial >= 0) {
-      serialToIndex.set(a.serial, index);
+/** The atoms split by MODEL, plus global SS ranges and CONECT records. */
+interface ScannedModels {
+  models: ParsedAtom[][];
+  ssRanges: SSRange[];
+  conectRecords: number[][];
+}
+
+/**
+ * Scan every line once, splitting ATOM / HETATM records by MODEL block. HELIX,
+ * SHEET and CONECT records are global (they sit outside MODEL blocks). A file
+ * with no MODEL records yields a single model from its atoms.
+ */
+function scanModels(lines: string[]): ScannedModels {
+  const models: ParsedAtom[][] = [];
+  const ssRanges: SSRange[] = [];
+  const conectRecords: number[][] = [];
+  let current: ParsedAtom[] | null = null;
+  const ensureModel = (): ParsedAtom[] => {
+    if (current === null) {
+      current = [];
+      models.push(current);
     }
+    return current;
+  };
+
+  for (const line of lines) {
+    const record = line.slice(0, 6).trim();
+    if (record === 'MODEL') {
+      current = [];
+      models.push(current);
+    } else if (record === 'ENDMDL') {
+      current = null;
+    } else if (record === 'ATOM' || record === 'HETATM') {
+      const atom = parseAtomLine(line, record === 'HETATM');
+      if (atom) {
+        ensureModel().push(atom);
+      }
+    } else if (record === 'HELIX' || record === 'SHEET') {
+      const range = record === 'HELIX' ? parseHelix(line) : parseSheet(line);
+      if (range) {
+        ssRanges.push(range);
+      }
+    } else if (record === 'CONECT') {
+      const serials = parseConect(line);
+      if (serials.length >= 2) {
+        conectRecords.push(serials);
+      }
+    }
+  }
+
+  return { models, ssRanges, conectRecords };
+}
+
+/**
+ * Parse a multi-MODEL PDB into an MD-style trajectory.
+ *
+ * Each MODEL...ENDMDL block is one frame; a PDB with no MODEL records parses to
+ * a single-frame trajectory (backward compatible with {@link parsePdb}). The
+ * frames share the atom ordering of the first model, so a {@link Molecule3D}
+ * built from `structure.atoms` can be driven across `frames`.
+ *
+ * @param text - The PDB file contents.
+ * @param options - Parse options (e.g. {@link ParsePdbOptions.includeWater}).
+ * @returns The parsed trajectory.
+ * @throws If no model has any atoms, or if two models have different atom counts.
+ */
+export function parsePdbTrajectory(text: string, options: ParsePdbOptions = {}): PdbTrajectory {
+  const includeWater = options.includeWater ?? false;
+  const { models, ssRanges, conectRecords } = scanModels(text.split(/\r?\n/));
+  const nonEmpty = models.filter((m) => m.length > 0);
+  if (nonEmpty.length < 1) {
+    throw new Error(
+      'parsePdbTrajectory: found no ATOM / HETATM records; a trajectory needs at least one model.',
+    );
+  }
+
+  const partitions = nonEmpty.map((model) => partitionAtoms(model, includeWater));
+  const expected = partitions[0].combined.length;
+  const frames = partitions.map((partition, i) => {
+    if (partition.combined.length !== expected) {
+      throw new Error(
+        `parsePdbTrajectory: model ${i + 1} has ${partition.combined.length} atoms but model 1 ` +
+          `has ${expected}; every model must hold the same atoms in the same order.`,
+      );
+    }
+    return partition.combined.map((a): Vector3Tuple => [...a.spec.position]);
   });
 
   return {
-    atoms: atomRecords.map((a) => a.spec),
-    hetatms: hetRecords.map((a) => a.spec),
-    bonds: buildBonds(conectRecords, serialToIndex),
-    residues: buildResidues(atomRecords, ssRanges),
+    structure: buildStructure(partitions[0], ssRanges, conectRecords),
+    frames,
+    numModels: frames.length,
   };
 }

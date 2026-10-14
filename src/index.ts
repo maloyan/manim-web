@@ -1150,6 +1150,17 @@ export {
   DEFAULT_BINDING_SITE_RADIUS,
   morphMolecule,
   MorphMolecule,
+  parsePdbTrajectory,
+  playTrajectory,
+  MoleculeTrajectory,
+  residueHydropathy,
+  residueCharge,
+  KYTE_DOOLITTLE_HYDROPATHY,
+  HYDROPATHY_MIN,
+  HYDROPATHY_MAX,
+  DEFAULT_HYDROPATHY_COLORS,
+  DEFAULT_BFACTOR_COLORS,
+  DEFAULT_CHARGE_COLORS,
 } from './mobjects/molecular';
 export type {
   Atom3DSpec,
@@ -1185,6 +1196,8 @@ export type {
   AtomSelectionOptions,
   Conformation,
   MorphMoleculeOptions,
+  PdbTrajectory,
+  PlayTrajectoryOptions,
 } from './mobjects/molecular';
 
 // Biology mobjects
