@@ -41,6 +41,7 @@ export { ArcBetweenPoints, type ArcBetweenPointsOptions } from './ArcBetweenPoin
 export { Ellipse, type EllipseOptions } from './Ellipse';
 export { Annulus, type AnnulusOptions } from './Annulus';
 export { AnnularSector, type AnnularSectorOptions } from './AnnularSector';
+export { Spring, type SpringMobjectOptions } from './Spring';
 export { Sector, type SectorOptions } from './Sector';
 export {
   ArcPolygon,
