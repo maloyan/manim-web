@@ -14,12 +14,10 @@
 
 import { Vector3Tuple } from '../../core/Mobject';
 import { Token, TokenType } from './CodeHighlighting';
+import { getTextResolutionScale } from './textTexture';
 
 /** Scale factor: pixels to world units (mirrors Code.ts PIXEL_TO_WORLD). */
 const PIXEL_TO_WORLD = 1 / 100;
-
-/** Resolution multiplier for crisp text (mirrors Code.ts RESOLUTION_SCALE). */
-const RESOLUTION_SCALE = 2;
 
 /** Monospace advance as a fraction of the scaled font size. */
 const CHAR_WIDTH_RATIO = 0.6;
@@ -70,6 +68,10 @@ export function computeCodeTokens(params: CodeTokenLayoutParams): CodeToken[] {
   const { lines, tokenizedLines, fontSize, lineHeight, backgroundPadding, lineNumbers, position } =
     params;
 
+  // The scale cancels in every world-space position below, so the output is the
+  // same for any value. It is read here so this layout stays identical to the
+  // Code mobject render, which uses the same device-pixel-ratio-aware scale.
+  const RESOLUTION_SCALE = getTextResolutionScale();
   const scaledFontSize = fontSize * RESOLUTION_SCALE;
   const scaledLineHeight = scaledFontSize * lineHeight;
   const scaledPadding = backgroundPadding * RESOLUTION_SCALE;

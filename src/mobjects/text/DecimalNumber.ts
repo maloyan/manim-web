@@ -8,6 +8,7 @@
 import * as THREE from 'three';
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
+import { applyTextTextureFilters, getTextResolutionScale } from './textTexture';
 
 /**
  * Options for creating a DecimalNumber mobject
@@ -43,9 +44,6 @@ export interface DecimalNumberOptions {
 
 /** Scale factor: pixels to world units (100 pixels = 1 world unit) */
 const PIXEL_TO_WORLD = 1 / 100;
-
-/** Resolution multiplier for crisp text on retina displays */
-const RESOLUTION_SCALE = 2;
 
 /**
  * DecimalNumber - A text mobject that displays a configurable number
@@ -277,6 +275,7 @@ export class DecimalNumber extends VMobject {
    * Build the CSS font string
    */
   protected _buildFontString(): string {
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const weight =
       typeof this._fontWeight === 'number' ? this._fontWeight.toString() : this._fontWeight;
     const size = Math.round(this._fontSize * RESOLUTION_SCALE);
@@ -291,6 +290,7 @@ export class DecimalNumber extends VMobject {
       return { text: '', width: 0, height: 0 };
     }
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     this._ctx.font = this._buildFontString();
     const text = this._formatNumber();
     const scaledFontSize = this._fontSize * RESOLUTION_SCALE;
@@ -316,6 +316,7 @@ export class DecimalNumber extends VMobject {
       return;
     }
 
+    const RESOLUTION_SCALE = getTextResolutionScale();
     const { text, width, height } = this._measureText();
 
     // Resize canvas
@@ -374,9 +375,8 @@ export class DecimalNumber extends VMobject {
 
     // Create texture from canvas
     this._texture = new THREE.CanvasTexture(this._canvas);
-    this._texture.colorSpace = THREE.SRGBColorSpace;
-    this._texture.minFilter = THREE.LinearFilter;
-    this._texture.magFilter = THREE.LinearFilter;
+    applyTextTextureFilters(this._texture);
+    this._texture.needsUpdate = true;
 
     // Create material with transparency
     const material = new THREE.MeshBasicMaterial({

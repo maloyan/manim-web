@@ -8,6 +8,8 @@
  * canvas renderer draws each run with its own font and color.
  */
 
+import { getTextResolutionScale } from './textTexture';
+
 /** Per-substring style maps, as in Manim CE `Text`. */
 export interface TextStyleMaps {
   /** Map from a substring to a CSS color. Colors every occurrence. */
@@ -174,9 +176,6 @@ function buildLinearGradientFill(
 // Canvas measure + render for styled text
 // ---------------------------------------------------------------------------
 
-/** Resolution multiplier for crisp text on retina displays (mirrors Text). */
-const RESOLUTION_SCALE = 2;
-
 /** Canvas pixels per point at 72 DPI (mirrors Text). */
 const SVG_UNITS_PER_PT = 4 / 3;
 
@@ -209,6 +208,7 @@ interface StyledLayout {
 }
 
 function styledLayout(params: StyledTextParams): StyledLayout {
+  const RESOLUTION_SCALE = getTextResolutionScale();
   const scaledFontSize = params.fontSize * RESOLUTION_SCALE;
   return {
     scaledFontSize,
@@ -276,6 +276,7 @@ export function renderStyledTextToCanvas(
   params: StyledTextParams,
   worldPerPt: { defaultFontSizePt: number; defaultFontSizeInWorld: number },
 ): { width: number; height: number } {
+  const RESOLUTION_SCALE = getTextResolutionScale();
   const { scaledLineHeight, padding, base } = styledLayout(params);
   const { width, height } = measureStyledText(ctx, styledLines, params);
 
