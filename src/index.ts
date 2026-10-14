@@ -1161,6 +1161,7 @@ export {
   DEFAULT_HYDROPATHY_COLORS,
   DEFAULT_BFACTOR_COLORS,
   DEFAULT_CHARGE_COLORS,
+  DEFAULT_ELECTROSTATIC_COLORS,
 } from './mobjects/molecular';
 export type {
   Atom3DSpec,
@@ -1183,6 +1184,7 @@ export type {
   BindingPocketStyle,
   MolecularSurfaceOptions,
   MolecularSurfaceKind,
+  SurfaceColorBy,
   OrbitalSurfaceOptions,
   OrbitalType,
   DensitySurfaceOptions,

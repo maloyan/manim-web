@@ -49,7 +49,11 @@ export { BindingPocket } from './BindingPocket';
 export type { BindingPocketOptions, BindingPocketStyle } from './BindingPocket';
 
 export { MolecularSurface } from './MolecularSurface';
-export type { MolecularSurfaceOptions, MolecularSurfaceKind } from './MolecularSurface';
+export type {
+  MolecularSurfaceOptions,
+  MolecularSurfaceKind,
+  SurfaceColorBy,
+} from './MolecularSurface';
 
 export { OrbitalSurface } from './OrbitalSurface';
 export type { OrbitalSurfaceOptions, OrbitalType } from './OrbitalSurface';
@@ -81,4 +85,5 @@ export {
   DEFAULT_HYDROPATHY_COLORS,
   DEFAULT_BFACTOR_COLORS,
   DEFAULT_CHARGE_COLORS,
+  DEFAULT_ELECTROSTATIC_COLORS,
 } from './residueProperties';
