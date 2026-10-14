@@ -170,6 +170,17 @@ describe('randomColor / randomBrightColor', () => {
     expect(g).toBeGreaterThanOrEqual(minChannel);
     expect(b).toBeGreaterThanOrEqual(minChannel);
   });
+
+  it('a seed makes randomColor deterministic (same seed -> same color)', () => {
+    expect(randomColor(42)).toBe(randomColor(42));
+    expect(randomColor(7)).toMatch(/^#[0-9A-Fa-f]{6}$/);
+    // Different seeds generally differ; check a pair that does.
+    expect(randomColor(1)).not.toBe(randomColor(123456));
+  });
+
+  it('a seed makes randomBrightColor deterministic', () => {
+    expect(randomBrightColor(99)).toBe(randomBrightColor(99));
+  });
 });
 
 describe('hsvToRgb / rgbToHsv', () => {
