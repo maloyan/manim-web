@@ -19,6 +19,7 @@ import { Mobject } from '../../core/Mobject';
 import { Polygon } from '../geometry/Polygon';
 import { GRAY } from '../../constants/colors';
 import {
+  exteriorRings,
   polygonRings,
   type GeoFeature,
   type GeoFeatureCollection,
@@ -36,6 +37,21 @@ export type ChoroplethValueAccessor = (
   feature: GeoFeature,
   index: number,
 ) => number | null | undefined;
+
+/**
+ * An axis-aligned bounding box in the map's local projected coordinate space
+ * (scene units before any Mobject transform).
+ */
+export interface GeoBounds {
+  /** Minimum projected x. */
+  minX: number;
+  /** Minimum projected y. */
+  minY: number;
+  /** Maximum projected x. */
+  maxX: number;
+  /** Maximum projected y. */
+  maxY: number;
+}
 
 /** Options for a {@link ChoroplethMap}. */
 export interface ChoroplethMapOptions {
@@ -252,6 +268,94 @@ export class ChoroplethMap extends Group {
   /** Get the color scale mapping values to fill colors. */
   getColorScale(): ColorScale {
     return this._colorScale;
+  }
+
+  /**
+   * Get the projected bounding box of one region.
+   *
+   * The box is computed by projecting the region's exterior ring vertices with
+   * the map's projection. It is in the map's local projected coordinate space,
+   * before any Mobject transform (scale or shift). Use it to frame a region with
+   * a 2D camera; see {@link focusOnRegion}.
+   *
+   * @param index - The region index, from 0 to {@link getRegionCount} minus 1.
+   * @returns The bounds, or `undefined` if the index is out of range or the
+   *   region has no areal geometry (for example a point or line feature).
+   */
+  getRegionBounds(index: number): GeoBounds | undefined {
+    const feature = this._features[index];
+    if (!feature) return undefined;
+    return this._boundsOfFeatures([feature]);
+  }
+
+  /**
+   * Get the projected bounding box that encloses several regions (their union).
+   *
+   * @param indices - The region indices to union. Out-of-range indices are
+   *   ignored.
+   * @returns The union bounds, or `undefined` if no index selects an areal
+   *   region.
+   */
+  boundsOfRegions(indices: number[]): GeoBounds | undefined {
+    const features: GeoFeature[] = [];
+    for (const index of indices) {
+      const feature = this._features[index];
+      if (feature) features.push(feature);
+    }
+    if (features.length === 0) return undefined;
+    return this._boundsOfFeatures(features);
+  }
+
+  /**
+   * Get a camera target that frames one region or a group of regions.
+   *
+   * The result is the center and size of the region bounds in the map's local
+   * projected coordinate space, ready for a `MovingCameraScene` or a 2D camera.
+   * `padding` grows the frame by a fraction of each dimension on every side, so
+   * the region does not touch the frame edge.
+   *
+   * @param index - A single region index, or an array of indices to frame their
+   *   union.
+   * @param options - Optional `padding` as a fraction of each dimension (0.1
+   *   adds 10 percent on each side). Default 0.
+   * @returns `{ center, width, height }`, or `undefined` when no region matches.
+   */
+  focusOnRegion(
+    index: number | number[],
+    options: { padding?: number } = {},
+  ): { center: [number, number]; width: number; height: number } | undefined {
+    const bounds = Array.isArray(index) ? this.boundsOfRegions(index) : this.getRegionBounds(index);
+    if (!bounds) return undefined;
+    const padding = options.padding ?? 0;
+    const rawWidth = bounds.maxX - bounds.minX;
+    const rawHeight = bounds.maxY - bounds.minY;
+    return {
+      center: [(bounds.minX + bounds.maxX) / 2, (bounds.minY + bounds.maxY) / 2],
+      width: rawWidth * (1 + padding * 2),
+      height: rawHeight * (1 + padding * 2),
+    };
+  }
+
+  /** Compute the projected bounds over a set of features' exterior rings. */
+  private _boundsOfFeatures(features: GeoFeature[]): GeoBounds | undefined {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const feature of features) {
+      for (const ring of exteriorRings(feature.geometry)) {
+        for (const position of ring) {
+          const [x, y] = this._projection(position);
+          if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+    if (minX > maxX || minY > maxY) return undefined;
+    return { minX, minY, maxX, maxY };
   }
 }
 
