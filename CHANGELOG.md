@@ -2,6 +2,85 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.38.0](https://github.com/maloyan/manim-web/compare/v0.37.0...v0.38.0) (2026-10-14)
+
+
+### Features
+
+* **biology:** add PhylogeneticTree + Newick parser ([#806](https://github.com/maloyan/manim-web/issues/806)) ([183aa5d](https://github.com/maloyan/manim-web/commit/183aa5d3fa01545a989e6e87d65e5ccf4b07885c))
+* **bubble:** SpeechBubble + ThoughtBubble ([#820](https://github.com/maloyan/manim-web/issues/820)) ([71bbe20](https://github.com/maloyan/manim-web/commit/71bbe2016cc61ddf6eb7ae8de96408c2f987160a))
+* **chemistry:** add BohrDiagram electron-shell atom diagram ([#770](https://github.com/maloyan/manim-web/issues/770)) ([ac37ad8](https://github.com/maloyan/manim-web/commit/ac37ad8232d1eb517193fa88a0cbc7205e7de7fd))
+* **chemistry:** add ElectronPushingArrow for reaction mechanisms ([c65afc7](https://github.com/maloyan/manim-web/commit/c65afc7d1ae292d9396164d0a55045ec7bff65b4))
+* **chemistry:** add ReactionArrow for reaction schemes ([f93aca2](https://github.com/maloyan/manim-web/commit/f93aca2a66025718a078e7aa99d1f2bad48c8a61)), closes [#91-95](https://github.com/maloyan/manim-web/issues/91-95)
+* **chemistry:** add ReactionScheme (multistep reaction layout) ([c98784a](https://github.com/maloyan/manim-web/commit/c98784ae36e7220ea31da727151bf4a65f358069))
+* **chemistry:** parse MOL/SDF files into 2D skeletal structures ([2aadaf4](https://github.com/maloyan/manim-web/commit/2aadaf4d25efa37855f06f9eb967742bb61d762f))
+* **chemistry:** SMILES parser with 2D skeletal layout ([de6ce17](https://github.com/maloyan/manim-web/commit/de6ce17b0cd7639fedd3de0b83a4a05776493d35))
+* **color:** seeded deterministic randomColor / randomBrightColor ([#817](https://github.com/maloyan/manim-web/issues/817)) ([78a5912](https://github.com/maloyan/manim-web/commit/78a591267fceff9715f7fcacfd6c2ec65d312ab2))
+* **geo:** add FlowArc and animated choropleth ([441baae](https://github.com/maloyan/manim-web/commit/441baae799edaebb1c63107e4cb7f6b3f2a38cf8))
+* **geo:** add orthographic/albers/albersUsa/robinson/mollweide projections ([#799](https://github.com/maloyan/manim-web/issues/799)) ([d104488](https://github.com/maloyan/manim-web/commit/d104488830adc0ab3866a35d98bbd8be834f9b9f))
+* **geo:** punch GeoJSON polygon holes in choropleth regions ([6b8e4d5](https://github.com/maloyan/manim-web/commit/6b8e4d51c4fa47d96a7dd858271c34decefcd74b))
+* **geo:** TopoJSON import + zoom-to-region framing ([#771](https://github.com/maloyan/manim-web/issues/771)) ([9ea1286](https://github.com/maloyan/manim-web/commit/9ea1286c8cf755bef5d828e20c1b9ce4c4945ec9))
+* **mcp:** add manim-web MCP server for grounded API discovery ([#804](https://github.com/maloyan/manim-web/issues/804)) ([293a5ab](https://github.com/maloyan/manim-web/commit/293a5ab19c11067a3d6ba57e63785a0ab34a3317))
+* **molecular:** add DensitySurface (EM / electron-density isosurface) ([5f38d56](https://github.com/maloyan/manim-web/commit/5f38d56a57327017be489a4c59051dae609965e0))
+* **molecular:** add MolecularSurface (van der Waals / solvent-accessible surface) ([0d3c3db](https://github.com/maloyan/manim-web/commit/0d3c3dbc59fdf82a12036a08f014e6b1334d4f54))
+* **molecular:** add Molecule3D renderer and parsePdb structure parser ([968ffdd](https://github.com/maloyan/manim-web/commit/968ffdd8a86f14d36a14ddb2d6306685900cd32d))
+* **molecular:** add morphMolecule (conformational morph / MD trajectory) ([a33d030](https://github.com/maloyan/manim-web/commit/a33d03076ec2e6c9400c28c016f5bad11f0f6972))
+* **molecular:** add OrbitalSurface (s/p/d orbital isosurfaces) ([9552524](https://github.com/maloyan/manim-web/commit/9552524281d0996757678add050a09552e200689))
+* **molecular:** add Protein, BindingPocket, dockLigand, and binding annotations ([c238634](https://github.com/maloyan/manim-web/commit/c238634e89b4714e03f4c4b01ce1c9aee6f6407b))
+* **molecular:** add RamachandranPlot (phi/psi backbone torsion) ([#805](https://github.com/maloyan/manim-web/issues/805)) ([2d5435e](https://github.com/maloyan/manim-web/commit/2d5435ebd97425b2acbd6fe55c05263f4a1157f9))
+* **molecular:** add structure selection language (binding-site isolation) ([02cf6cb](https://github.com/maloyan/manim-web/commit/02cf6cbf718c27eef4707b8d56b7e50bda249cad))
+* **molecular:** automatic protein-ligand interaction detection ([#818](https://github.com/maloyan/manim-web/issues/818)) ([8ba70d5](https://github.com/maloyan/manim-web/commit/8ba70d5515b1751b9a911be2cf04e80ffc7d7f49))
+* **molecular:** electrostatic/property coloring of MolecularSurface ([#803](https://github.com/maloyan/manim-web/issues/803)) ([d316a44](https://github.com/maloyan/manim-web/commit/d316a44ee7d330186b76e22cc7c61549f65547de))
+* **molecular:** MD trajectory playback + property-based coloring ([#800](https://github.com/maloyan/manim-web/issues/800)) ([e408873](https://github.com/maloyan/manim-web/commit/e4088733a385fb307d08332a15c9fb57c2f5af46))
+* **molecular:** opt-in PDB fetch-by-id helper (no built-in network) ([090682e](https://github.com/maloyan/manim-web/commit/090682e1087866c0b730923f051f89cd1a092229))
+* **table:** includeInnerLines toggle (ManimCE 0.21 parity) ([#819](https://github.com/maloyan/manim-web/issues/819)) ([9a84ada](https://github.com/maloyan/manim-web/commit/9a84ada90fffde2842b8900168b603c22f131670))
+* **three-d:** add Bond3D, TubeFromPoints, orientMeshAlong + molecular element radii ([2724dcf](https://github.com/maloyan/manim-web/commit/2724dcf524009b260e03df195cc047ac447956ed))
+* **writing-pen:** pen follows Write stroke tip ([#821](https://github.com/maloyan/manim-web/issues/821)) ([2ef5a42](https://github.com/maloyan/manim-web/commit/2ef5a429947f52fe342715713e627cb91f1268e2))
+
+
+### Bug Fixes
+
+* 9 production-readiness bugs across molecular/chemistry/geo/matrix ([#796](https://github.com/maloyan/manim-web/issues/796)) ([3a3e0dc](https://github.com/maloyan/manim-web/commit/3a3e0dcafee9b72b18471fb76b35817b5ab39c03))
+* **biology:** DNA base pairs as two complementary nucleobases + H-bonds ([#807](https://github.com/maloyan/manim-web/issues/807)) ([66d164f](https://github.com/maloyan/manim-web/commit/66d164f8a860b93ed0a378cf729449e745b3322d))
+* **biology:** render 3D DNA as solid tubes and cylinders ([#802](https://github.com/maloyan/manim-web/issues/802)) ([087ed68](https://github.com/maloyan/manim-web/commit/087ed6830e164285dc8601699a2f065e2825e986))
+* **biology:** upright 3D DNA helix with sphere nucleotides, balanced Cell layout ([72ba24f](https://github.com/maloyan/manim-web/commit/72ba24f7e6257cb68d7733817f3c33036d5fa5d4))
+* **biology:** warn on out-of-range DNAHelix.pointOnStrand index ([06096a5](https://github.com/maloyan/manim-web/commit/06096a58d38976ffa972be88baf37afed9c3d952))
+* **charts:** center candlestick, area legend, coherent load order ([#814](https://github.com/maloyan/manim-web/issues/814)) ([31725b6](https://github.com/maloyan/manim-web/commit/31725b6c2f32947f3267d4cf6c21d3588e4a62fd))
+* **charts:** donut hole, chord ribbons, treemap colors ([#808](https://github.com/maloyan/manim-web/issues/808)) ([0cef4be](https://github.com/maloyan/manim-web/commit/0cef4be586b7303ce2f3d2ab494e2d451eaa6ac3))
+* **chem,bio:** surface invalid color/atom inputs instead of failing silently ([0920efa](https://github.com/maloyan/manim-web/commit/0920efa6888a259ced20f37f1bf53dee03203a74))
+* **docs:** make ExportAnimation example auto-play instead of crashing ([58b323e](https://github.com/maloyan/manim-web/commit/58b323e86c8d087aa0e4d6ad569a18e7363a9a5b))
+* **docs:** render formula-transform title as MathTex superscript ([#816](https://github.com/maloyan/manim-web/issues/816)) ([d53bf30](https://github.com/maloyan/manim-web/commit/d53bf30ad850154922dedb5ed1b8b89ef3ae758e))
+* **geo:** render Globe arcs and graticule with Line3D, not 2D polygons ([adc1f23](https://github.com/maloyan/manim-web/commit/adc1f23c47d34848e89d80d9d85a21d111ccbbec))
+* **geo:** sharper world maps (higher-res coastline + globe clip) ([#815](https://github.com/maloyan/manim-web/issues/815)) ([bdb4535](https://github.com/maloyan/manim-web/commit/bdb45354f20b8925a235df3d22d8ea04878aee6e))
+* **graph:** render vertex labels + outward self-loops; fix blend example ([#813](https://github.com/maloyan/manim-web/issues/813)) ([5ac920c](https://github.com/maloyan/manim-web/commit/5ac920c7d61cdab0a015c0551f3ecd08bf14f75c))
+* harden new feature code (silent returns, NaN guards, stale docs) ([719a3ba](https://github.com/maloyan/manim-web/commit/719a3ba3fd92604b6ddb8c1e53112ed1cdf7e46e))
+* interactive slider reset, TransformMatchingCode blank, kinetic jump ([#811](https://github.com/maloyan/manim-web/issues/811)) ([826793c](https://github.com/maloyan/manim-web/commit/826793c94b56eb78afe366aa508d286c7c701340))
+* **matrix:** render Matrix entries (fix double-parenting that hid all cells) ([877b34f](https://github.com/maloyan/manim-web/commit/877b34ffef5dd1948bf3dee71eceafe387f5a31f))
+* **molecular:** add chain/resSeq/resName to Atom3DSpec (used by selection) ([9c2b05b](https://github.com/maloyan/manim-web/commit/9c2b05b985c5cfd286d383e09396ae5fd5875be2))
+* **render:** per-subpath stroke material so Create reveal doesn't flicker ([#810](https://github.com/maloyan/manim-web/issues/810)) ([50d2a0a](https://github.com/maloyan/manim-web/commit/50d2a0af0fe1836a9abaf551856af1e6d04469eb))
+* **text:** device-pixel-ratio-aware text textures + mipmaps/anisotropy ([#812](https://github.com/maloyan/manim-web/issues/812)) ([2f2c3d5](https://github.com/maloyan/manim-web/commit/2f2c3d5c6b425068dc286a59a0cb3e087c517aeb))
+* TextOnPath glyph anchor, sketch double-stroke, double-bond spacing, globe arc ([#809](https://github.com/maloyan/manim-web/issues/809)) ([9cf5855](https://github.com/maloyan/manim-web/commit/9cf5855f6ce804239bc4735aed33da83e6e18df1))
+* **three-d:** rebuild Arrow3D geometry in place so scene re-renders after setStart/setEnd ([930994c](https://github.com/maloyan/manim-web/commit/930994cc6a6ffeef663721d5ba9d05f52fa3d2c2))
+* **typst:** guard empty source, make WASM compiler opt-in ([#794](https://github.com/maloyan/manim-web/issues/794)) ([b672819](https://github.com/maloyan/manim-web/commit/b672819076081f796f2bfbb58dae96284b651598))
+
+
+### Documentation
+
+* add COMPARISON.md — manim-web vs other manim libraries ([#783](https://github.com/maloyan/manim-web/issues/783)) ([4ea2144](https://github.com/maloyan/manim-web/commit/4ea21445f98cc6589637e38c1115e01b6be9632f))
+* **examples:** add 'New in 0.13-0.15' examples page ([8e7f7cf](https://github.com/maloyan/manim-web/commit/8e7f7cfbd45d2f5da75193e09c0837ec12ebfbbc))
+* **examples:** add 'New in 0.38' page with MolecularSurface, FlowArc, animated choropleth ([78a3ae6](https://github.com/maloyan/manim-web/commit/78a3ae6ad557fad10034e203378ecebed93159ab))
+* **examples:** add MOL/SDF import and binding-site selection examples ([22bf981](https://github.com/maloyan/manim-web/commit/22bf981ea0bf5fa924ff2b2c6acf5a48c3956b93))
+* **examples:** add reaction-mechanism (ElectronPushingArrow) example ([0d9e1d3](https://github.com/maloyan/manim-web/commit/0d9e1d3efe0d6a20e481ccb217698c7743125836))
+* **examples:** add ReactionArrow and OrbitalSurface examples ([39492e9](https://github.com/maloyan/manim-web/commit/39492e9b81dd196c4577cc1a0c194449ca8582e7))
+* **examples:** add SMILES example (moleculeFromSmiles) ([6beadfd](https://github.com/maloyan/manim-web/commit/6beadfd067a889d7a101ad4d67471bae60f27dd9))
+* **examples:** clarity fixes across legacy examples (snippet/comment drift) ([fa987d1](https://github.com/maloyan/manim-web/commit/fa987d1c7403f89ec96d1f5484dd00ef9baa6956))
+* **examples:** make new.mdx examples call their documented APIs ([1ca74f0](https://github.com/maloyan/manim-web/commit/1ca74f008e2ff6d01ec9c1763dc654532d130502))
+* **examples:** render DNAHelix as a 3D double helix so both strands show ([4cea47f](https://github.com/maloyan/manim-web/commit/4cea47fc7335e9c41ccfe2eb0f02465190a65ac6))
+* ground COMPARISON.md in external, verifiable sources ([#797](https://github.com/maloyan/manim-web/issues/797)) ([7650380](https://github.com/maloyan/manim-web/commit/7650380c7a5f1e95ba4000cf93c48b159acb74ff))
+* live examples for rotating globe, MD trajectory, B-factor coloring ([#801](https://github.com/maloyan/manim-web/issues/801)) ([3177745](https://github.com/maloyan/manim-web/commit/3177745a2b2b006d85613833887cd6e3137d9a89))
+* **molecular:** add '3D molecules & drug binding' examples page ([f965509](https://github.com/maloyan/manim-web/commit/f965509ef10f53e1d63340924b7f73e3a001d085))
+* sharpen README front door, add Sponsors + llms.txt ([#798](https://github.com/maloyan/manim-web/issues/798)) ([471d8cb](https://github.com/maloyan/manim-web/commit/471d8cba60bea0aab869b3c0b2f4bbbcf7e4eb00))
+
 ## [0.37.0](https://github.com/maloyan/manim-web/compare/v0.15.0...v0.37.0) (2026-10-13)
 
 
