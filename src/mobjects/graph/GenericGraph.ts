@@ -497,6 +497,19 @@ export class GenericGraph extends Mobject {
   }
 
   /**
+   * Move a child (a vertex dot or its label) to a point in this graph's own
+   * local frame. The edges are built in that frame, so the dots and labels must
+   * live there too. A world-space moveTo would leave the local frame when the
+   * graph is scaled or rotated, so the dots drift off the edges and the labels.
+   * Both a vertex Dot and a Text keep their center in `position`, so a
+   * parent-local shift re-anchors them exactly.
+   */
+  protected _moveChildToLocalPoint(child: Mobject, point: Vector3Tuple): void {
+    const cur = child.position;
+    child.shift([point[0] - cur.x, point[1] - cur.y, point[2] - cur.z]);
+  }
+
+  /**
    * Set the position of a vertex
    */
   setVertexPosition(v: VertexId, position: Vector3Tuple): this {
@@ -507,11 +520,11 @@ export class GenericGraph extends Mobject {
     this._positions.set(v, position);
     const dot = this._vertexMobjects.get(v);
     if (dot) {
-      dot.moveTo(position);
+      this._moveChildToLocalPoint(dot, position);
     }
     const label = this._vertexLabelMobjects.get(v);
     if (label) {
-      label.moveTo(position);
+      this._moveChildToLocalPoint(label, position);
     }
 
     // Update connected edges
@@ -710,16 +723,18 @@ export class GenericGraph extends Mobject {
 
     this._computeLayout();
 
-    // Update mobject positions
+    // Update mobject positions in the graph's local frame (see
+    // _moveChildToLocalPoint) so dots and labels track the edges under a scaled
+    // or rotated graph.
     for (const v of this._vertices) {
       const pos = this._positions.get(v);
       const dot = this._vertexMobjects.get(v);
       if (pos && dot) {
-        dot.moveTo(pos);
+        this._moveChildToLocalPoint(dot, pos);
       }
       const label = this._vertexLabelMobjects.get(v);
       if (pos && label) {
-        label.moveTo(pos);
+        this._moveChildToLocalPoint(label, pos);
       }
     }
 

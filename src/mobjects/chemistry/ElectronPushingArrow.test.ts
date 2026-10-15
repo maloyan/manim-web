@@ -172,5 +172,31 @@ describe('ElectronPushingArrow', () => {
     it('throws on an out-of-range atom index', () => {
       expect(() => arrowBetweenAtoms(molecule, 0, 9)).toThrow();
     });
+
+    it('keeps the atom positions when no gap is given', () => {
+      const arrow = arrowBetweenAtoms(molecule, 0, 1);
+      expect(arrow.getStart()).toEqual(molecule.getAtom(0)!.position);
+      expect(arrow.getEnd()).toEqual(molecule.getAtom(1)!.position);
+    });
+
+    it('trims both ends inward by the gap so the arrow clears the labels', () => {
+      const gap = 0.3;
+      const arrow = arrowBetweenAtoms(molecule, 0, 1, { gap });
+      const a = molecule.getAtom(0)!.position;
+      const b = molecule.getAtom(1)!.position;
+      // The atoms sit on the x axis 1.5 apart, so the gap shifts each end along x.
+      expect(arrow.getStart()[0]).toBeCloseTo(a[0] + gap);
+      expect(arrow.getEnd()[0]).toBeCloseTo(b[0] - gap);
+      // The arrow must stay strictly inside the atom-to-atom span.
+      expect(arrow.getStart()[0]).toBeGreaterThan(a[0]);
+      expect(arrow.getEnd()[0]).toBeLessThan(b[0]);
+    });
+
+    it('ignores a gap that would invert the arrow', () => {
+      // Twice the gap exceeds the 1.5 distance, so the endpoints stay put.
+      const arrow = arrowBetweenAtoms(molecule, 0, 1, { gap: 1 });
+      expect(arrow.getStart()).toEqual(molecule.getAtom(0)!.position);
+      expect(arrow.getEnd()).toEqual(molecule.getAtom(1)!.position);
+    });
   });
 });

@@ -2,7 +2,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Text, Circle, Dot, Rectangle, SafeArea, BLUE, YELLOW, GREEN, WHITE } =
+  const { Circle, Dot, Rectangle, SafeArea, BLUE, YELLOW, GREEN, WHITE } =
     await import('manim-web');
 
   // The rectangle visible in BOTH 16:9 and 9:16 at a shared reference height.
@@ -18,10 +18,6 @@ async function animate(scene: any) {
   });
   safeBox.moveTo([0, 0, 0]);
 
-  const title = new Text({ text: 'Safe area', color: WHITE });
-  title.scale(0.6);
-  safe.place(title, 'top', 0.3);
-
   const badge = new Circle({ radius: 1, color: BLUE, fillOpacity: 0.8 });
   safe.place(badge, 'center');
 
@@ -30,7 +26,7 @@ async function animate(scene: any) {
   const dotBR = new Dot({ color: GREEN, radius: 0.12 });
   safe.place(dotBR, 'bottomRight', 0.25);
 
-  scene.add(safeBox, title, badge, dotTL, dotBR);
+  scene.add(safeBox, badge, dotTL, dotBR);
 
   // Switch the frame aspect back and forth. Content anchored to the safe area
   // stays on screen in both — portrait reflows instead of clipping.

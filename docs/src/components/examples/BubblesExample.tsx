@@ -3,7 +3,7 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { SpeechBubble, ThoughtBubble, Text, Dot, FadeIn, BLUE, YELLOW, GREEN, WHITE } =
+  const { SpeechBubble, ThoughtBubble, Text, Dot, GrowFromPoint, BLUE, YELLOW, GREEN, WHITE } =
     await import('manim-web');
 
   // Two speakers, drawn as dots.
@@ -27,9 +27,14 @@ async function animate(scene: any) {
     tailDirection: [0.6, -1, 0], // no target, so the tail follows a direction
   });
 
+  // Grow each bubble out of its speaker. GrowFromPoint animates scale only, so
+  // the bubble keeps full opacity the whole time. A FadeIn ramps opacity from 0,
+  // which looks broken here: the speech bubble reads as a color shift, and the
+  // thought cloud's inner mask is still see-through mid-fade, so the raw bump
+  // circles show before they resolve into the scalloped outline.
   scene.add(alice, bob);
-  await scene.play(new FadeIn(speech));
-  await scene.play(new FadeIn(thought));
+  await scene.play(new GrowFromPoint(speech, { point: [-4, -1.8, 0] }));
+  await scene.play(new GrowFromPoint(thought, { point: [4, -1.8, 0] }));
   await scene.wait(999999);
 }
 

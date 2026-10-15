@@ -161,6 +161,30 @@ describe('MoleculeMobject', () => {
     expect(bond?.lines[0]).toBeInstanceOf(Polygon);
   });
 
+  it('draws the wedge as a thin stereo triangle, not a fat one', () => {
+    const bondLength = 1.8;
+    const mol = new MoleculeMobject({
+      // A plain C-C wedge, no labels, so the drawn bond keeps the full length.
+      atoms: [
+        { element: 'C', x: 0, y: 0 },
+        { element: 'C', x: 1, y: 0 },
+      ],
+      bonds: [{ from: 0, to: 1, type: 'wedge' }],
+      bondLength,
+    });
+    const wedge = mol.getBond(0)?.lines[0] as Polygon;
+    const [point, baseA, baseB] = wedge.getVertices();
+    // Base width = distance between the two wide-end vertices.
+    const baseWidth = Math.hypot(baseA[0] - baseB[0], baseA[1] - baseB[1]);
+    // Wedge length = distance from the point to the base midpoint.
+    const midBase: [number, number] = [(baseA[0] + baseB[0]) / 2, (baseA[1] + baseB[1]) / 2];
+    const wedgeLength = Math.hypot(point[0] - midBase[0], point[1] - midBase[1]);
+    // The wedge must be clearly longer than it is wide. The old width tied to
+    // bondSpacing gave baseWidth ~= 0.86 * bondLength, nearly as wide as long.
+    expect(baseWidth).toBeLessThan(0.3 * wedgeLength);
+    expect(wedgeLength).toBeCloseTo(bondLength);
+  });
+
   it('draws a dash bond as one dashed line', () => {
     const mol = new MoleculeMobject({
       atoms: [

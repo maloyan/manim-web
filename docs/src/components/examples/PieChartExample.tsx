@@ -12,6 +12,7 @@ async function animate(scene: any) {
     labels: ['Rust', 'TS', 'Python', 'Go', 'Other'],
     showPercentages: true,
     radius: 2.1,
+    labelFontSize: 34,
   });
 
   scene.add(pie);

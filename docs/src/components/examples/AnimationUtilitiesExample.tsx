@@ -2,23 +2,8 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const {
-    Circle,
-    Square,
-    Create,
-    Transform,
-    FadeIn,
-    Text,
-    prepareAnimation,
-    WHITE,
-    BLUE,
-    RED,
-    GREEN,
-  } = await import('manim-web');
-
-  const title = new Text({ text: 'prepareAnimation()', fontSize: 28, color: WHITE });
-  title.moveTo([0, 2.5, 0]);
-  await scene.play(new FadeIn(title, { duration: 0.5 }));
+  const { Circle, Square, Create, Transform, prepareAnimation, BLUE, RED, GREEN } =
+    await import('manim-web');
 
   // Use prepareAnimation with a direct Animation
   const circle = new Circle({ radius: 1, color: BLUE });

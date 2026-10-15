@@ -187,6 +187,27 @@ describe('PlayerUI', () => {
       expect(exportBtn.title).toBe('Export animation');
     });
 
+    it('centers the play glyph inside the slides-mode monitor icon', () => {
+      // The icon is a monitor screen (rect y=2..12, so vertical center 7) with
+      // a play triangle inside. The triangle used to sit at the bottom edge
+      // (centroid y≈9, overflowing the screen); it must be centered.
+      ui = new PlayerUI(container, callbacks);
+      const slidesBtn = findButton(container, 'Slides mode');
+      const triangle = slidesBtn.querySelector('path:not([stroke])') as SVGPathElement | null;
+      expect(triangle, 'slides icon should have a filled play triangle').not.toBeNull();
+      const ys = (triangle!.getAttribute('d') ?? '')
+        .match(/-?\d*\.?\d+/g)!
+        .map(Number)
+        .filter((_, i) => i % 2 === 1); // y is every second number in the coord pairs
+      const centroidY = ys.reduce((a, b) => a + b, 0) / ys.length;
+      // Screen rect is y=2..12 (center 7). Require the glyph to be centered
+      // there, and to stay within the screen so it never touches the edge.
+      expect(centroidY).toBeGreaterThan(6);
+      expect(centroidY).toBeLessThan(8);
+      expect(Math.min(...ys)).toBeGreaterThanOrEqual(2);
+      expect(Math.max(...ys)).toBeLessThanOrEqual(12);
+    });
+
     it('creates speed select with 7 options including 1x', () => {
       ui = new PlayerUI(container, callbacks);
       const select = findSpeedSelect(container);

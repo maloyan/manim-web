@@ -22,11 +22,13 @@ async function animate(scene: any) {
     }
   };
 
-  buildRow(1.1, interpolateColor);
-  buildRow(-0.5, interpolateColorOklab);
+  buildRow(1.4, interpolateColor);
+  buildRow(-1.0, interpolateColorOklab);
 
-  scene.add(new Text({ text: 'sRGB', fontSize: 22, color: WHITE }).moveTo([0, 2.1, 0]));
-  scene.add(new Text({ text: 'Oklab', fontSize: 22, color: WHITE }).moveTo([0, 0.5, 0]));
+  // Each caption sits above its own bar with a clear gap, so neither caption
+  // touches a bar. sRGB bar spans y=[0.85,1.95]; Oklab bar spans y=[-1.55,-0.45].
+  scene.add(new Text({ text: 'sRGB', fontSize: 22, color: WHITE }).moveTo([0, 2.35, 0]));
+  scene.add(new Text({ text: 'Oklab', fontSize: 22, color: WHITE }).moveTo([0, 0.1, 0]));
   scene.render();
   await scene.wait(999999);
 }

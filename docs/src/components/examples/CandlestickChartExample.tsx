@@ -6,19 +6,20 @@ async function animate(scene: any) {
   const { CandlestickChart, Create } = await import('manim-web');
 
   // Each period is one open/high/low/close bar. Bullish periods (close >= open)
-  // and bearish periods (close < open) use separate colors. Volume bars render
-  // below when showVolume is set.
+  // and bearish periods (close < open) use separate colors. The date on each
+  // period becomes an x-axis tick label under its candle.
   const chart = new CandlestickChart({
     data: [
-      { open: 10, high: 15, low: 8, close: 14, date: 'Mon', volume: 120 },
-      { open: 14, high: 16, low: 11, close: 12, date: 'Tue', volume: 90 },
-      { open: 12, high: 13, low: 9, close: 13, date: 'Wed', volume: 140 },
-      { open: 13, high: 18, low: 12, close: 17, date: 'Thu', volume: 200 },
-      { open: 17, high: 17, low: 13, close: 14, date: 'Fri', volume: 110 },
+      { open: 10, high: 15, low: 8, close: 14, date: 'Mon' },
+      { open: 14, high: 16, low: 11, close: 12, date: 'Tue' },
+      { open: 12, high: 13, low: 9, close: 13, date: 'Wed' },
+      { open: 13, high: 18, low: 12, close: 17, date: 'Thu' },
+      { open: 17, high: 17, low: 13, close: 14, date: 'Fri' },
     ],
-    showVolume: true,
     width: 8,
     height: 4.2,
+    xLabelFontSize: 30,
+    yLabelFontSize: 30,
   });
 
   // lagRatio 0 reveals every part together, so the chart draws on coherently

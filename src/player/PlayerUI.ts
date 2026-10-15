@@ -733,6 +733,10 @@ const NEXT_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="current
 
 const EXPORT_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L8 10M8 10L5 7M8 10L11 7" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 12v1h10v-1" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`;
 
-const SLIDES_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 14h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6 6l5 3-5 3V6z"/></svg>`;
+// The play triangle is centered inside the monitor screen (rect spans y=2..12,
+// so its center is y=7). The glyph points span y=4.5..9.5 (center 7) and
+// x=6.5..11 (centroid x=8) so it sits dead-center, not pushed to the lower
+// edge as it did before (the old M6 6l5 3-5 3V6z centroid was at y≈9).
+const SLIDES_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M5 14h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M6.5 4.5L11 7 6.5 9.5Z"/></svg>`;
 
 const FULLSCREEN_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h4v2H4v2H2V2zm8 0h4v4h-2V4h-2V2zM2 10h2v2h2v2H2v-4zm10 2h-2v2h4v-4h-2v2z"/></svg>`;

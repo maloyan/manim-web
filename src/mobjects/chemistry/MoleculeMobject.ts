@@ -49,6 +49,15 @@ import {
 /** Fraction of the bond length trimmed at a labeled atom so the line clears the label. */
 const LABEL_GAP = 0.22;
 
+/**
+ * Half-width of a stereo wedge's wide end, as a fraction of the drawn bond
+ * length. A stereo wedge is a thin triangle: a point at one atom that widens to
+ * a narrow base at the other. Tying the width to the bond length keeps the wedge
+ * thin at any `bondLength`. A fraction near `bondSpacing` would make the base
+ * almost as wide as the bond is long, so the wedge reads as a fat triangle.
+ */
+const WEDGE_HALF_WIDTH = 0.07;
+
 export class MoleculeMobject extends VGroup {
   /** The atom specs as given, scaled to world coordinates. */
   protected _atomSpecs: AtomSpec[];
@@ -270,7 +279,11 @@ export class MoleculeMobject extends VGroup {
   /** Build a filled triangle wedge from `start` (point) to `end` (wide base). */
   protected _buildWedge(start: Vector3Tuple, end: Vector3Tuple): Mobject {
     const perp = this._perpendicular(start, end);
-    const half = this._lineSeparation() * 1.6;
+    // The base half-width scales with the drawn bond length, so the wedge stays
+    // a thin stereo triangle instead of the fat triangle a bondSpacing-based
+    // width produced.
+    const segLength = Math.hypot(end[0] - start[0], end[1] - start[1]);
+    const half = WEDGE_HALF_WIDTH * segLength;
     const baseA: Vector3Tuple = [end[0] + perp[0] * half, end[1] + perp[1] * half, 0];
     const baseB: Vector3Tuple = [end[0] - perp[0] * half, end[1] - perp[1] * half, 0];
     return new Polygon({

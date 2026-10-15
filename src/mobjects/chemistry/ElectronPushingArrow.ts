@@ -259,11 +259,24 @@ export class ElectronPushingArrow extends VMobject {
   }
 }
 
+/** Options for {@link arrowBetweenAtoms}: the arrow options plus an endpoint gap. */
+export interface ArrowBetweenAtomsOptions extends Omit<ElectronPushingArrowOptions, 'from' | 'to'> {
+  /**
+   * World-unit gap kept clear at each end, so the arrow leaves the source atom
+   * label and stops before covering the destination atom label. The tail moves
+   * `gap` toward the destination; the head stops `gap` short of it. Ignored when
+   * twice the gap is not shorter than the atom-to-atom distance. Default: 0.
+   */
+  gap?: number;
+}
+
 /**
  * Build an {@link ElectronPushingArrow} between two atoms of a molecule.
  *
  * A convenience that reads the world positions of atoms `i` and `j` from a
- * {@link MoleculeMobject} and returns an arrow from atom `i` to atom `j`.
+ * {@link MoleculeMobject} and returns an arrow from atom `i` to atom `j`. A
+ * positive `gap` trims both ends inward so the arrow clears the atom labels
+ * instead of landing on top of them.
  *
  * @throws Error when either atom index is out of range.
  */
@@ -271,7 +284,7 @@ export function arrowBetweenAtoms(
   molecule: MoleculeMobject,
   i: number,
   j: number,
-  opts: Omit<ElectronPushingArrowOptions, 'from' | 'to'> = {},
+  opts: ArrowBetweenAtomsOptions = {},
 ): ElectronPushingArrow {
   const a = molecule.getAtom(i);
   const b = molecule.getAtom(j);
@@ -280,5 +293,35 @@ export function arrowBetweenAtoms(
       `arrowBetweenAtoms: atom index out of range (i=${i}, j=${j}, atom count=${molecule.numAtoms}).`,
     );
   }
-  return new ElectronPushingArrow({ ...opts, from: a.position, to: b.position });
+  const { gap = 0, ...arrowOpts } = opts;
+  const [from, to] = trimEndpoints(a.position, b.position, gap);
+  return new ElectronPushingArrow({ ...arrowOpts, from, to });
+}
+
+/**
+ * Move `from` and `to` inward toward each other by `gap` world units each.
+ *
+ * Returns the endpoints unchanged when `gap` is not positive, or when twice the
+ * gap is not shorter than the distance (so the arrow never inverts).
+ */
+function trimEndpoints(
+  from: Vector3Tuple,
+  to: Vector3Tuple,
+  gap: number,
+): [Vector3Tuple, Vector3Tuple] {
+  if (gap <= 0) {
+    return [[...from], [...to]];
+  }
+  const dx = to[0] - from[0];
+  const dy = to[1] - from[1];
+  const len = Math.hypot(dx, dy);
+  if (len < MIN_CHORD || 2 * gap >= len) {
+    return [[...from], [...to]];
+  }
+  const ux = dx / len;
+  const uy = dy / len;
+  return [
+    [from[0] + ux * gap, from[1] + uy * gap, from[2]],
+    [to[0] - ux * gap, to[1] - uy * gap, to[2]],
+  ];
 }
