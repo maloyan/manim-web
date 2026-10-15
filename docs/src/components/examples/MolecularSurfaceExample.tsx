@@ -44,13 +44,14 @@ async function animate(scene: any) {
   scene.add(benzene);
   await scene.play(new Create(benzene, { duration: 2 }));
 
-  // A translucent van der Waals skin over the SAME atoms (same world coords), so
-  // the sticks read through it. Opacity 0.4 keeps the sticks visible.
+  // A translucent van der Waals envelope over the SAME atoms (same world
+  // coords). The ball-and-stick model is drawn first, then the skin fades in
+  // over it, so the viewer reads the structure first and then its vdW surface.
   const surface = new MolecularSurface({
     atoms,
     kind: 'vdw',
     color: '#6fa8dc',
-    opacity: 0.4,
+    opacity: 0.3,
   });
   scene.add(surface);
   await scene.play(new FadeIn(surface, { duration: 1.5 }));

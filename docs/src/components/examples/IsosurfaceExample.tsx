@@ -36,7 +36,9 @@ function createScene(container: HTMLElement, manim: any) {
     width: 800,
     height: 450,
     backgroundColor: '#000000',
-    phi: 70 * (Math.PI / 180),
+    // A higher vantage (smaller phi = more top-down) so the torus hole reads
+    // instead of collapsing to a filled disk edge-on.
+    phi: 52 * (Math.PI / 180),
     theta: -45 * (Math.PI / 180),
     distance: 12,
     fov: 40,
