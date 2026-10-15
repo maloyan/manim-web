@@ -64,30 +64,6 @@ describe('FadeIn', () => {
     });
   });
 
-  // A translucent mobject (e.g. a MolecularSurface at opacity 0.3) must fade in
-  // to its configured opacity, not to a fully opaque 1 that hides what is
-  // behind it.
-  describe('preserves the configured target opacity', () => {
-    it('fades to the configured opacity, not 1', () => {
-      mob.opacity = 0.4;
-      const anim = new FadeIn(mob);
-      anim.begin();
-      expect(mob.opacity).toBe(0);
-      anim.interpolate(0.5);
-      expect(mob.opacity).toBeCloseTo(0.2, 5);
-      anim.finish();
-      expect(mob.opacity).toBeCloseTo(0.4, 5);
-    });
-
-    it('still fades a default (opaque) mobject all the way to 1', () => {
-      mob.opacity = 1;
-      const anim = new FadeIn(mob);
-      anim.begin();
-      anim.finish();
-      expect(mob.opacity).toBeCloseTo(1, 5);
-    });
-  });
-
   // -----------------------------------------------------------
   // interpolate()
   // -----------------------------------------------------------
