@@ -15,6 +15,8 @@ export class FadeIn extends Animation {
   private _targetX: number = 0;
   private _targetY: number = 0;
   private _targetZ: number = 0;
+  /** The opacity the mobject should reach, captured before fading from 0. */
+  private _targetOpacity: number = 1;
 
   constructor(mobject: Mobject, options: AnimationOptions = {}) {
     super(mobject, options);
@@ -31,6 +33,10 @@ export class FadeIn extends Animation {
     this._targetX = this.mobject.position.x;
     this._targetY = this.mobject.position.y;
     this._targetZ = this.mobject.position.z;
+
+    // Fade in TO the mobject's configured opacity, not to a blanket 1: a
+    // translucent mobject (e.g. a MolecularSurface at 0.3) must stay see-through.
+    this._targetOpacity = this.mobject.opacity;
 
     // Start fully transparent
     this.mobject.opacity = 0;
@@ -49,7 +55,7 @@ export class FadeIn extends Animation {
    * Interpolate opacity from 0 to 1 and position from start to target
    */
   interpolate(alpha: number): void {
-    this.mobject.opacity = alpha;
+    this.mobject.opacity = this._targetOpacity * alpha;
 
     if (this._shift) {
       this.mobject.position.set(
@@ -64,7 +70,7 @@ export class FadeIn extends Animation {
    * Ensure the mobject is fully visible and at target position
    */
   override finish(): void {
-    this.mobject.opacity = 1;
+    this.mobject.opacity = this._targetOpacity;
     if (this._shift) {
       this.mobject.position.set(this._targetX, this._targetY, this._targetZ);
     }
