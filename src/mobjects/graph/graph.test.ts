@@ -154,6 +154,39 @@ describe('Vertex operations', () => {
     expect(g.getVertexPosition(1)).toEqual([5, 5, 0]);
   });
 
+  it('setVertexPosition keeps the dot, its label and the edges co-located under a scaled graph', () => {
+    // Regression: animateSpringLayout / setLayout move vertices through
+    // setVertexPosition while the graph is scaled. A world-space moveTo pulled
+    // the dot out of the graph's local frame, so the dot drifted off its label
+    // and off the edge endpoints. The dot and label must share one local anchor,
+    // and the dot's world center must track the scaled frame (same as the edges).
+    const g = new Graph({
+      vertices: [1, 2],
+      edges: [[1, 2]],
+      layout: 'circular',
+      showLabels: true,
+    });
+    const scale = 2;
+    g.scale(scale); // the 2-vertex circular layout is centered on the origin
+    const target: [number, number, number] = [1, 0.5, 0];
+    g.setVertexPosition(1, target);
+
+    const dot = g.getVertexMobject(1)!;
+    const label = g.getVertexLabelMobject(1)!;
+
+    // Dot and label share the same parent-local anchor, so they render together.
+    expect(dot.position.x).toBeCloseTo(label.position.x, 6);
+    expect(dot.position.y).toBeCloseTo(label.position.y, 6);
+    // Both anchor on the stored layout point, in the graph's local frame.
+    expect(dot.position.x).toBeCloseTo(target[0], 6);
+    expect(dot.position.y).toBeCloseTo(target[1], 6);
+    // The dot's world center is the local point through the graph's scale,
+    // which is where the edge endpoint is drawn.
+    const dotWorld = dot.getCenter();
+    expect(dotWorld[0]).toBeCloseTo(target[0] * scale, 6);
+    expect(dotWorld[1]).toBeCloseTo(target[1] * scale, 6);
+  });
+
   it('setVertexPosition on non-existent vertex is a no-op', () => {
     const g = new Graph();
     expect(g.setVertexPosition(999, [1, 1, 0])).toBe(g);
