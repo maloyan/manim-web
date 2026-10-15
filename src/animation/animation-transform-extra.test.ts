@@ -737,6 +737,38 @@ describe('TransformMatchingShapes', () => {
     expect(anim).toBeInstanceOf(TransformMatchingShapes);
     expect(anim.matchThreshold).toBe(0.7);
   });
+
+  it('moves a matched part to its target position', () => {
+    const src = vgroup(new Circle({ radius: 0.5 }));
+    const tgt = vgroup(new Circle({ radius: 0.5 }));
+    (tgt.children[0] as VMobject).moveTo([2, 0.5, 0]);
+
+    const anim = new TransformMatchingShapes(src, tgt);
+    anim.begin();
+    anim.interpolate(1);
+    anim.finish();
+
+    const srcCircle = src.children[0] as VMobject;
+    const center = srcCircle.getCenter();
+    expect(center[0]).toBeCloseTo(2, 5);
+    expect(center[1]).toBeCloseTo(0.5, 5);
+    expect(center[2]).toBeCloseTo(0, 5);
+  });
+
+  it('matches a target part scale on the matched source part', () => {
+    const src = vgroup(new Circle({ radius: 0.5 }));
+    const tgt = vgroup(new Circle({ radius: 0.5 }));
+    (tgt.children[0] as VMobject).scale(2);
+
+    const anim = new TransformMatchingShapes(src, tgt);
+    anim.begin();
+    anim.interpolate(1);
+    anim.finish();
+
+    const srcCircle = src.children[0] as VMobject;
+    expect(srcCircle.scaleVector.x).toBeCloseTo(2, 5);
+    expect(srcCircle.scaleVector.y).toBeCloseTo(2, 5);
+  });
 });
 
 // ── TransformMatchingTex ───────────────────────────────────────────────────

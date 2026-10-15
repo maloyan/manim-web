@@ -10,7 +10,7 @@ import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Dot } from '../geometry/Dot';
 import { Line } from '../geometry/Line';
 import { Arrow } from '../geometry/Arrow';
-import { BLUE, WHITE, BLACK, RED, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { BLUE, WHITE, RED, DEFAULT_STROKE_WIDTH } from '../../constants';
 import {
   VertexId,
   EdgeTuple,
@@ -65,6 +65,9 @@ export class GenericGraph extends Mobject {
   /** Font size for vertex labels */
   protected _labelFontSize: number = 24;
 
+  /** Color for vertex labels. Default: WHITE, so labels show on a dark scene. */
+  protected _labelColor: string = WHITE;
+
   /** Layout configuration */
   protected _layoutConfig: LayoutConfig;
 
@@ -99,10 +102,12 @@ export class GenericGraph extends Mobject {
       edgeConfig,
       showLabels = false,
       labelFontSize = 24,
+      labelColor = WHITE,
     } = options;
 
     this._showLabels = showLabels;
     this._labelFontSize = labelFontSize;
+    this._labelColor = labelColor;
 
     // Store configuration
     this._vertexStyle = {
@@ -253,7 +258,7 @@ export class GenericGraph extends Mobject {
       const label = new Text({
         text,
         fontSize: this._labelFontSize,
-        color: BLACK,
+        color: this._labelColor,
       });
       // Position via shift (parent-local) to match the vertex position.
       label.shift(pos);

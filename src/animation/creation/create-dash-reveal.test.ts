@@ -18,6 +18,7 @@ import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { Circle } from '../../mobjects/geometry/Circle';
 import { DashedLine } from '../../mobjects/geometry/DashedLine';
 import { ContourPlot } from '../../mobjects/graphing/ContourPlot';
+import { Scene } from '../../core/Scene';
 import { Create, setLine2RevealLength, Uncreate, DrawBorderThenFill } from './Create';
 
 function allLine2(mob: { getThreeObject(): import('three').Object3D }): Line2[] {
@@ -222,6 +223,35 @@ describe('Create() reveals a multi-subpath VMobject without shared-material flic
       expect(line.visible).toBe(true);
       expect((line.material as LineMaterial).dashed).toBe(false);
     }
+  });
+});
+
+describe('play(Create) + a static wait() leaves every Line2 solid (phantom frozen-frame guard)', () => {
+  // The SmilesExample path is `await scene.play(new Create(mob))` then a static
+  // `await scene.wait(...)`. The static wait renders the settled scene once into
+  // the preserved drawing buffer, so after it every stroke must be solid and
+  // fully revealed -- never left in the dashSize~=0 dashed reveal state that
+  // produces the LineMaterial discard artifact. The begin/interpolate/finish
+  // cases above drive the animation by hand; this drives the REAL Scene
+  // orchestration (timeline -> finish -> the wait()'s render) end to end.
+  it('settles the stroke solid after the whole play + static wait cycle', async () => {
+    const scene = Scene.createHeadless({ width: 200, height: 200 });
+    const circle = new Circle({ radius: 1 });
+
+    const lines = allLine2(circle);
+    expect(lines.length).toBeGreaterThan(0);
+
+    await scene.play(new Create(circle, { duration: 0.05 }));
+    // A static wait (no updaters) takes the render-once fast path, exactly like
+    // the example's trailing wait().
+    await scene.wait(0.02);
+
+    for (const line of allLine2(circle)) {
+      const material = line.material as LineMaterial;
+      expect(material.dashed).toBe(false);
+      expect(line.visible).toBe(true);
+    }
+    scene.dispose();
   });
 });
 

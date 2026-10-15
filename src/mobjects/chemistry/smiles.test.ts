@@ -363,3 +363,45 @@ describe('parseSmiles: two-letter lowercase aromatic bracket atoms', () => {
     expect(parseSmiles('[as]').atoms[0].element).toBe('As');
   });
 });
+
+describe('parseSmiles: structural integrity (no phantom bonds)', () => {
+  // Guards the invariant behind the reported "phantom bond" on acetic acid:
+  // every emitted bond must join two atoms that exist in the atom list, and
+  // every atom must get a finite coordinate inside the molecule's own span.
+  // A bond to a missing/implicit atom index, or an atom stranded far from the
+  // structure, is what would draw a line to nowhere. The parser already holds
+  // this invariant; the test locks it in.
+  const cases = ['CC(=O)O', 'CCO', 'c1ccccc1', 'CC(C(C)C)C', 'C1CCCCC1', 'OCC.O'];
+
+  for (const smiles of cases) {
+    it(`"${smiles}": every bond joins two existing atoms`, () => {
+      const { atoms, bonds } = parseSmiles(smiles);
+      expect(atoms.length).toBeGreaterThan(0);
+      for (const b of bonds) {
+        // Indices are in range and distinct (no self-bond, no missing atom).
+        expect(Number.isInteger(b.from)).toBe(true);
+        expect(Number.isInteger(b.to)).toBe(true);
+        expect(b.from).toBeGreaterThanOrEqual(0);
+        expect(b.to).toBeGreaterThanOrEqual(0);
+        expect(b.from).toBeLessThan(atoms.length);
+        expect(b.to).toBeLessThan(atoms.length);
+        expect(b.from).not.toBe(b.to);
+      }
+    });
+
+    it(`"${smiles}": every atom has a finite, bounded coordinate`, () => {
+      const { atoms } = parseSmiles(smiles);
+      for (const a of atoms) {
+        expect(Number.isFinite(a.x)).toBe(true);
+        expect(Number.isFinite(a.y)).toBe(true);
+      }
+      // No atom strays outside the structure's own extent. The layout uses a
+      // unit bond length, so the span scales with the atom count; a stray atom
+      // parked at the origin or far off the layout breaks this bound.
+      const xs = atoms.map((a) => a.x);
+      const ys = atoms.map((a) => a.y);
+      const span = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+      expect(span).toBeLessThanOrEqual(atoms.length + 1);
+    });
+  }
+});
