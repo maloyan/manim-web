@@ -4,12 +4,18 @@
  * Ensures the KaTeX stylesheet is loaded for proper LaTeX rendering.
  */
 
+import katex from 'katex';
 import { logger } from '../../utils/logger';
 
+// Pin the stylesheet to the SAME version as the bundled KaTeX engine. KaTeX
+// renames layout classes between releases (e.g. `sizing` -> `katex-sizing` in
+// 0.16 -> 0.18), so a mismatched stylesheet silently fails to scale scripts:
+// subscripts and superscripts then render at full size. Deriving the version
+// from `katex.version` keeps the CSS in lockstep with the engine across bumps.
 let stylesPromise: Promise<void> | null = null;
 let fontOverrideInjected = false;
 let katexStylesheetUrl: string | null =
-  'https://cdn.jsdelivr.net/npm/katex@0.16.0/dist/katex.min.css';
+  `https://cdn.jsdelivr.net/npm/katex@${katex.version}/dist/katex.min.css`;
 
 /**
  * Configure the stylesheet loaded by {@link ensureKatexStyles}.
