@@ -1307,6 +1307,77 @@ describe('resamplePointList3D – corner-tangent regression', () => {
       expect(Math.abs(cross2)).toBeCloseTo(0, 10);
     }
   });
+
+  // A triangle (3 straight edges, closed) in 3n+1 cubic format = 10 points.
+  // Transform aligns it up to a circle's anchor count (13 = 4 arcs). 13 is NOT a
+  // multiple of the triangle's 3 corners, so a plain arc-length-uniform resample
+  // lands only 1 corner on an anchor; the other 2 become bezier interior points
+  // and round off — the circle→triangle morph then passes through a cone/teardrop
+  // shape mid-animation. The fix pins every corner to an anchor.
+  it('resampling a triangle 10→13 keeps all 3 corners as anchors', () => {
+    const V0 = [0, 2, 0], // top
+      V1 = [-1.8, -1, 0], // bottom-left
+      V2 = [1.8, -1, 0]; // bottom-right
+    function seg(p0: number[], p1: number[]): number[][] {
+      return [
+        [p0[0] + (p1[0] - p0[0]) / 3, p0[1] + (p1[1] - p0[1]) / 3, 0],
+        [p0[0] + (2 * (p1[0] - p0[0])) / 3, p0[1] + (2 * (p1[1] - p0[1])) / 3, 0],
+        [...p1],
+      ];
+    }
+    const tri10 = [V0, ...seg(V0, V1), ...seg(V1, V2), ...seg(V2, V0)];
+    expect(tri10.length).toBe(10);
+
+    const v = new VMobject();
+    v.setPoints(tri10);
+    const target = new VMobject();
+    target.setPoints(Array.from({ length: 13 }, (_, i) => [i, 0, 0]));
+
+    v.alignPoints(target);
+    const pts = v.getLocalPoints();
+    expect(pts.length).toBe(13);
+
+    // Anchors live at indices 0, 3, 6, 9, 12. Each corner must coincide with one.
+    const anchors = [0, 3, 6, 9, 12].map((i) => pts[i]);
+    for (const corner of [V0, V1, V2]) {
+      const survived = anchors.some((a) => Math.hypot(a[0] - corner[0], a[1] - corner[1]) < 1e-6);
+      expect(survived, `corner (${corner[0]}, ${corner[1]}) must survive as an anchor`).toBe(true);
+    }
+  });
+
+  // Smooth shapes have no corners, so corner-pinning must not perturb them: the
+  // schedule stays arc-length-uniform. A regular octagon-arc circle resampled to
+  // the same curve count returns an arc-length-uniform set (first/last identical,
+  // interior anchors monotonically spaced), i.e. the smooth path is unchanged.
+  it('resampling a corner-free circle stays arc-length-uniform (no spurious pinning)', () => {
+    const circle = new VMobject();
+    // Unit circle as 4 cubic arcs (13 points) — the standard Circle tessellation.
+    const k = 0.5522847498307936; // 4/3*(sqrt(2)-1)
+    circle.setPoints([
+      [1, 0, 0],
+      [1, k, 0],
+      [k, 1, 0],
+      [0, 1, 0],
+      [-k, 1, 0],
+      [-1, k, 0],
+      [-1, 0, 0],
+      [-1, -k, 0],
+      [-k, -1, 0],
+      [0, -1, 0],
+      [k, -1, 0],
+      [1, -k, 0],
+      [1, 0, 0],
+    ]);
+    const target = new VMobject();
+    target.setPoints(Array.from({ length: 25 }, (_, i) => [i, 0, 0]));
+    circle.alignPoints(target);
+    const pts = circle.getLocalPoints();
+    expect(pts.length).toBe(25);
+    // Every anchor must sit on the unit circle (radius 1) — no corner artifacts.
+    for (let i = 0; i < pts.length; i += 3) {
+      expect(Math.hypot(pts[i][0], pts[i][1])).toBeCloseTo(1, 4);
+    }
+  });
 });
 
 describe('VMobject style optimization (no-op dirty checks)', () => {
