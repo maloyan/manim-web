@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.39.3](https://github.com/maloyan/manim-web/compare/v0.39.0...v0.39.3) (2026-10-15)
+
+
+### Bug Fixes
+
+* **anim:** FadeIn fades to the configured opacity, not full opaque ([eaad481](https://github.com/maloyan/manim-web/commit/eaad4811edae621ac2a8bdf04bd1a95b00b9400b))
+* **chemistry:** thin stereo wedge and clear electron-pushing arrows ([214eba8](https://github.com/maloyan/manim-web/commit/214eba86b9f855665f3fe4a0315c6a2d81a90599))
+* **docs:** make example scenes render their point clearly ([fd12194](https://github.com/maloyan/manim-web/commit/fd121944203ae67af898c8bcdab28ca0e68be00b))
+* **examples:** polish docs example visuals ([b528509](https://github.com/maloyan/manim-web/commit/b528509072bd87b9815449c483ef47e44c8d7eb4))
+* **graph:** keep vertex dot, label and edges co-located under scale ([048d7f9](https://github.com/maloyan/manim-web/commit/048d7f94b8ab25b0931081b8fdc0e50fbe437389))
+* **mobjects:** correct rendering bugs found in docs examples ([1b82eda](https://github.com/maloyan/manim-web/commit/1b82edaf9033a0f1a265352fd054085807152f4e))
+* **player:** center the play glyph in the slides-mode icon ([07b2fe8](https://github.com/maloyan/manim-web/commit/07b2fe8115b1dcf539ad795c6ad21c266672be87))
+* **tex:** render MathTexImage sub/superscripts at correct size ([c07bde1](https://github.com/maloyan/manim-web/commit/c07bde152c11cbc4b3b50850b3f19beed2a40c85))
+* **transform:** preserve sharp corners when morphing to low-vertex shapes ([eb63786](https://github.com/maloyan/manim-web/commit/eb637867f2bf4472ef568841f79cc50a865e52c7))
+
+
+### Tests
+
+* **e2e:** make the example render sweep robust under parallel load ([dac4732](https://github.com/maloyan/manim-web/commit/dac473241aec630aca6d8aee2cc0371bdaf55147))
+* **e2e:** render-check every docs example in a real browser ([5db201e](https://github.com/maloyan/manim-web/commit/5db201ec2f59eb0f8c23ce2f223e636a31f3991e))
+
 ### [0.39.2](https://github.com/maloyan/manim-web/compare/v0.39.0...v0.39.2) (2026-10-15)
 
 
