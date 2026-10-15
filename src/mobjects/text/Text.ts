@@ -310,6 +310,29 @@ export class Text extends TexturedMobject {
   }
 
   /**
+   * Set the fill color and re-render.
+   *
+   * The base `setColor` only updates `_color`, which leaves the off-screen
+   * canvas painted in the previous color. Text draws its fill onto that canvas,
+   * so a color change must mark the canvas dirty and repaint. Without this, a
+   * post-construction color change (for example `Table.setRowColors`) never
+   * reaches the texture and the text keeps its old color.
+   *
+   * @param color - New CSS color string
+   * @returns this for chaining
+   */
+  override setColor(color: string): this {
+    if (this.color !== color) {
+      this.color = color;
+      this._canvasDirty = true;
+      this._renderToCanvas();
+      this._updateMesh();
+      this._markDirty();
+    }
+    return this;
+  }
+
+  /**
    * Get the current font family
    */
   getFontFamily(): string {

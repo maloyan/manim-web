@@ -87,6 +87,13 @@ export class ThoughtBubble extends BubbleBase {
     const inner = new Ellipse({ width: rx * 2, height: ry * 2, center });
     this._styleShape(inner, false);
     const body = new VGroup(...bumps, inner);
+    // Keep the cloud shapes coplanar. Otherwise _syncToThree layers each body
+    // child by its index (idx*0.01 in z): the inner ellipse (last of ~12 bumps)
+    // lands in front of the content, which sits only a few indices deep in the
+    // bubble, so the opaque ellipse hides the content. The inner-over-bump draw
+    // order still holds from child order. SpeechBubble has a flat body, so it is
+    // unaffected.
+    body.disableChildZLayering();
 
     // Point on the cloud edge in the tail direction, past the bumps.
     const [dx, dy] = direction;

@@ -144,4 +144,43 @@ describe('sketch', () => {
     const anchors = anchorsFromPoints(rough.getLocalPoints());
     expect(anchors.length).toBe(5);
   });
+
+  it('keeps a sketched circle round, not a concave star', () => {
+    // A Circle is 4 cubic quarter-arcs. Connecting only the 4 anchors with
+    // straight chords caves the diagonals to radius cos(45deg) ~= 0.707,
+    // which renders as a 4-point concave star. Sampling the true arc keeps
+    // every point near radius 1.
+    const circle = new Circle({ radius: 1 });
+    const rough = sketch(circle, { seed: 4, roughness: 0.5 });
+    const points = rough.getLocalPoints();
+    let minRadius = Infinity;
+    let maxRadius = -Infinity;
+    for (const p of points) {
+      const r = Math.hypot(p[0], p[1]);
+      if (r < minRadius) minRadius = r;
+      if (r > maxRadius) maxRadius = r;
+    }
+    expect(minRadius).toBeGreaterThan(0.85);
+    expect(maxRadius).toBeLessThan(1.15);
+  });
+
+  it('keeps the straight sides of a sketched square straight', () => {
+    // A Square is 4 straight cubic sides. The hand-drawn bow must not inflate
+    // a side into a smooth outward arc (the "blob"). With segments sub-points
+    // per side, the interior points of each side stay near the side's line.
+    const sideLength = 2;
+    const segments = 8;
+    const square = new Square({ sideLength });
+    const rough = sketch(square, { seed: 11, roughness: 1, bowing: 3, segments });
+    const anchors = anchorsFromPoints(rough.getLocalPoints());
+    // 4 sides * 8 segments + start corner => 33 anchors, corners every 8th.
+    expect(anchors.length).toBe(4 * segments + 1);
+    for (let side = 0; side < 4; side++) {
+      const a = anchors[side * segments];
+      const b = anchors[side * segments + segments];
+      const interior = anchors.slice(side * segments + 1, side * segments + segments);
+      // Each side stays close to a straight line between its two corners.
+      expect(maxDeviationFromLine(interior, a, b)).toBeLessThan(sideLength * 0.1);
+    }
+  });
 });

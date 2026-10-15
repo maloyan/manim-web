@@ -531,7 +531,18 @@ export class ThreeDScene extends Scene {
       }
 
       if (!this.mobjects.has(mob)) {
+        // Record the fixed-in-frame intent, then add the mobject so it
+        // actually lands on stage. add() resolves the pending intent and
+        // reparents it into the HUD. This mirrors real Manim's
+        // add_fixed_in_frame_mobjects(), which calls self.add(*mobjects):
+        // the pin alone must put the mobject on screen, with no separate
+        // scene.add() or intro animation required. Recording the intent
+        // first keeps the deferral that prevents a pre-reveal flash when an
+        // intro animation does follow (#505): add()'s scheduled render is
+        // cancelled by a same-tick play(), so a Create() still begins from a
+        // reset state.
         this._pendingFixedMode.set(mob, 'frame');
+        this.add(mob);
         continue;
       }
 

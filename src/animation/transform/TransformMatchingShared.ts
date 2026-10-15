@@ -2,6 +2,7 @@
  * Shared types and utilities for matching-based Transform animations.
  */
 
+import * as THREE from 'three';
 import { Vector3Tuple } from '../../core/Mobject';
 import { VMobject } from '../../core/VMobject';
 
@@ -17,6 +18,18 @@ export interface MatchedPart {
   startOpacity: number;
   targetOpacity: number;
   alignedSubpathLengths?: number[];
+  /**
+   * Source/target node transforms, captured at match time. The matched part's
+   * points only hold local geometry, so the owning transform (position, scale,
+   * rotation) must interpolate separately for the part to land at the target's
+   * world location. See PointMorphStrategy for the same convention.
+   */
+  startPosition?: THREE.Vector3;
+  targetPosition?: THREE.Vector3;
+  startScale?: THREE.Vector3;
+  targetScale?: THREE.Vector3;
+  startRotation?: THREE.Euler;
+  targetRotation?: THREE.Euler;
 }
 
 export interface FadingPart {

@@ -102,14 +102,14 @@ async function animate(scene: any) {
   // the camera.
   const energy = residueLabel([target[0], target[1] - 4, target[2] + 0.5], 'ΔG = -9.2 kcal/mol', {
     color: '#ffe066',
-    fontSize: 26,
+    fontSize: 38,
   });
   scene.add(energy);
   scene.addFixedOrientationMobjects(energy);
 
   const tag = residueLabel([target[0], target[1], target[2] + 3.4], 'LYS-128', {
     color: '#ffffff',
-    fontSize: 24,
+    fontSize: 34,
   });
   scene.add(tag);
   scene.addFixedOrientationMobjects(tag);
@@ -124,7 +124,8 @@ function createScene(container: HTMLElement, manim: any, dims: { width: number; 
     backgroundColor: '#000000',
     phi: 78 * (Math.PI / 180),
     theta: -40 * (Math.PI / 180),
-    distance: 26,
+    // Closer in than the original 26 so the docking labels are readable.
+    distance: 21,
     fov: 45,
     orbitControlsUp: 'z',
   });

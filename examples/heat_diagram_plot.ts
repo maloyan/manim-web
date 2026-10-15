@@ -30,8 +30,8 @@ document.getElementById('playBtn').addEventListener('click', async () => {
   });
 
   // Create Tex labels and wait for rendering
-  const xLabel = new Tex({ latex: '$\\Delta Q$', fontSize: 0.4 });
-  const yLabel = new Tex({ latex: 'T[$^\\circ C$]', fontSize: 0.4 });
+  const xLabel = new Tex({ latex: '$\\Delta Q$', fontSize: 32 });
+  const yLabel = new Tex({ latex: 'T[$^\\circ C$]', fontSize: 32 });
   await xLabel.waitForRender();
   await yLabel.waitForRender();
 

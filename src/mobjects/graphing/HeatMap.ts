@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Mobject3D } from '../three-d/Mobject3D';
-import { hexToRgb } from '../../utils/color';
 import { VIRIDIS, valueToColor } from './colormap';
 
 /** A 2D scalar field g(x, y). */
@@ -136,6 +135,10 @@ export class HeatMap extends Mobject3D {
     const positions = new Float32Array(vertexCount * 3);
     const colors = new Float32Array(vertexCount * 3);
     const [dMin, dMax] = this._domain;
+    // The palette color is sRGB. Convert it to the renderer's working space, so
+    // three.js color management does not show the sRGB value too bright. Writing
+    // the sRGB value raw turns the dark viridis low end into bright magenta.
+    const work = new THREE.Color();
 
     for (let iy = 0; iy < rows; iy++) {
       const y = this._coordY(iy);
@@ -146,10 +149,10 @@ export class HeatMap extends Mobject3D {
         positions[idx * 3 + 1] = y;
         positions[idx * 3 + 2] = 0;
         const hex = valueToColor(this._func(x, y), dMin, dMax, this._palette, this._useOklab);
-        const [r, g, b] = hexToRgb(hex);
-        colors[idx * 3] = r;
-        colors[idx * 3 + 1] = g;
-        colors[idx * 3 + 2] = b;
+        work.set(hex);
+        colors[idx * 3] = work.r;
+        colors[idx * 3 + 1] = work.g;
+        colors[idx * 3 + 2] = work.b;
       }
     }
 

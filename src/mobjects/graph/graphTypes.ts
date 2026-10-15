@@ -133,6 +133,8 @@ export interface GenericGraphOptions {
   showLabels?: boolean;
   /** Label font size. Default: 24 */
   labelFontSize?: number;
+  /** Vertex label color. Default: WHITE (visible on the default dark scene). */
+  labelColor?: string;
 }
 
 /**

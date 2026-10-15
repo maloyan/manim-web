@@ -37,23 +37,25 @@ const bonds = [
 ];
 
 async function animate(scene: any) {
-  const { Molecule3D, MolecularSurface, Create, FadeIn } = await import('manim-web');
+  const { Molecule3D, MolecularSurface, Create, GrowFromCenter } = await import('manim-web');
 
   // The ball-and-stick structure, drawn progressively.
   const benzene = new Molecule3D({ atoms, bonds, style: 'ball-and-stick' });
   scene.add(benzene);
   await scene.play(new Create(benzene, { duration: 2 }));
 
-  // A translucent van der Waals skin over the SAME atoms (same world coords), so
-  // the sticks read through it. Opacity 0.4 keeps the sticks visible.
+  // A faint van der Waals envelope over the SAME atoms (same world coords). The
+  // low opacity keeps the ball-and-stick structure readable through the skin.
+  // GrowFromCenter scales the surface in without touching its opacity (FadeIn
+  // would drive the whole surface to fully opaque and hide the structure).
   const surface = new MolecularSurface({
     atoms,
     kind: 'vdw',
     color: '#6fa8dc',
-    opacity: 0.4,
+    opacity: 0.14,
   });
   scene.add(surface);
-  await scene.play(new FadeIn(surface, { duration: 1.5 }));
+  await scene.play(new GrowFromCenter(surface, { duration: 1.5 }));
 
   // Spin around the vertical axis so the surface reads as a real 3D object.
   scene.beginAmbientCameraRotation(0.3);

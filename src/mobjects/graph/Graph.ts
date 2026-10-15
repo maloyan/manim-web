@@ -41,6 +41,7 @@ export class Graph extends GenericGraph {
       edgeStyle: { ...this._edgeStyle },
       showLabels: this._showLabels,
       labelFontSize: this._labelFontSize,
+      labelColor: this._labelColor,
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;

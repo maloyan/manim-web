@@ -255,13 +255,20 @@ export class ChoroplethMap extends Group {
     if (clipRadius !== undefined) {
       return clipRingToCircle(open, this._projection, clipRadius);
     }
-    const vertices: [number, number, number][] = [];
-    for (const position of open) {
-      const projected = this._projection(position);
-      if (!isProjectedPointVisible(projected)) continue;
-      vertices.push([projected[0], projected[1], 0]);
-    }
-    return [vertices];
+    // A whole-world projection (mollweide, robinson, equirectangular) is
+    // point-wise, so a ring that crosses the antimeridian (lon +/-180) would
+    // project two consecutive vertices to opposite map edges and draw one edge
+    // straight across the whole map. Split the ring at each crossing so no edge
+    // spans the map. A ring that does not cross stays a single piece.
+    return splitRingAtAntimeridian(open).map((piece) => {
+      const vertices: [number, number, number][] = [];
+      for (const position of piece) {
+        const projected = this._projection(position);
+        if (!isProjectedPointVisible(projected)) continue;
+        vertices.push([projected[0], projected[1], 0]);
+      }
+      return vertices;
+    });
   }
 
   /** Get the per-feature region mobjects (one entry per feature). */
@@ -394,6 +401,51 @@ export class ChoroplethMap extends Group {
 
 /** Alias: some callers prefer the shorter `GeoMap` name. */
 export const GeoMap = ChoroplethMap;
+
+/** Longitude jump that marks an antimeridian crossing between two vertices. */
+const ANTIMERIDIAN_LON_JUMP = 180;
+
+/**
+ * Split an open ring (no closing vertex) into pieces at every antimeridian
+ * crossing. Two consecutive vertices cross when their longitudes differ by more
+ * than {@link ANTIMERIDIAN_LON_JUMP}. The ring is cyclic, so the edge from the
+ * last vertex back to the first is tested too. A ring with no crossing returns
+ * unchanged as one piece. Returns new arrays; the input is not mutated.
+ */
+function splitRingAtAntimeridian(open: GeoLinearRing): GeoLinearRing[] {
+  const n = open.length;
+  if (n < 2) return [open];
+
+  const crosses = (i: number): boolean =>
+    Math.abs(open[(i + 1) % n][0] - open[i][0]) > ANTIMERIDIAN_LON_JUMP;
+
+  let firstCrossing = -1;
+  for (let i = 0; i < n; i++) {
+    if (crosses(i)) {
+      firstCrossing = i;
+      break;
+    }
+  }
+  if (firstCrossing === -1) return [open];
+
+  // Rotate so a piece begins right after the first crossing. The cyclic wrap
+  // (last -> first) then becomes an ordinary internal edge, split like any other.
+  const start = (firstCrossing + 1) % n;
+  const rotated: GeoLinearRing = [...open.slice(start), ...open.slice(0, start)];
+
+  const pieces: GeoLinearRing[] = [];
+  let piece: GeoLinearRing = [rotated[0]];
+  for (let i = 0; i < rotated.length - 1; i++) {
+    if (Math.abs(rotated[i + 1][0] - rotated[i][0]) > ANTIMERIDIAN_LON_JUMP) {
+      pieces.push(piece);
+      piece = [rotated[i + 1]];
+    } else {
+      piece.push(rotated[i + 1]);
+    }
+  }
+  pieces.push(piece);
+  return pieces;
+}
 
 /**
  * Drop a ring's final vertex when it duplicates the first (a closed GeoJSON

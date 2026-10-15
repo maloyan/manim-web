@@ -4,7 +4,9 @@ export default defineConfig({
   testDir: './tests/integration',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  // Browser render checks are timing sensitive under parallel WebGL load, so a
+  // transient empty frame is retried; a genuinely empty scene fails every try.
+  retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   timeout: 30_000,

@@ -3,6 +3,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { Table } from './Table';
 import { MathTable, MobjectTable, IntegerTable, DecimalTable } from './TableVariants';
 import { Rectangle } from '../geometry/Rectangle';
+import { Text } from '../text/Text';
 import { VGroup } from '../../core/VGroup';
 
 /**
@@ -832,6 +833,33 @@ describe('Table', () => {
     expect(e2.color).toBe('#ff0000');
     expect(e3.color).toBe('#00ff00');
     expect(e4.color).toBe('#00ff00');
+  });
+
+  it('setRowColors repaints Text entries so the color actually renders', () => {
+    // Regression: Text entries kept their white canvas because setColor never
+    // invalidated the canvas. The color must reach the rendered fill, not just
+    // the _color field.
+    const ctxOf = (txt: Text) => (txt as unknown as { _ctx: { fillStyle: string } })._ctx;
+
+    const t1 = new Text({ text: '1', fontSize: 40 });
+    const t2 = new Text({ text: '2', fontSize: 40 });
+    const t3 = new Text({ text: '3', fontSize: 40 });
+    const t4 = new Text({ text: '4', fontSize: 40 });
+    const table = new Table({
+      data: [
+        [t1, t2],
+        [t3, t4],
+      ],
+    });
+
+    table.setRowColors('#58c4dd', '#f5a623');
+
+    expect(t1.color).toBe('#58c4dd');
+    expect(t2.color).toBe('#58c4dd');
+    expect(ctxOf(t1).fillStyle).toBe('#58c4dd');
+    expect(ctxOf(t2).fillStyle).toBe('#58c4dd');
+    expect(ctxOf(t3).fillStyle).toBe('#f5a623');
+    expect(ctxOf(t4).fillStyle).toBe('#f5a623');
   });
 
   it('setRowColors leaves extra rows unchanged when fewer colors given', () => {

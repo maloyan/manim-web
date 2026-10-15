@@ -199,6 +199,12 @@ export class TransformMatchingShapes extends Animation<VMobject> {
       targetPoints: tgtCopy.getLocalPoints(),
       startOpacity: source.opacity,
       targetOpacity: target.opacity,
+      startPosition: source.position.clone(),
+      targetPosition: target.position.clone(),
+      startScale: source.scaleVector.clone(),
+      targetScale: target.scaleVector.clone(),
+      startRotation: source.rotation.clone(),
+      targetRotation: target.rotation.clone(),
     });
 
     // Set source to have aligned points
@@ -220,6 +226,7 @@ export class TransformMatchingShapes extends Animation<VMobject> {
       part.source.setPoints(points);
       part.source.setTransformSubpathLengths(part.alignedSubpathLengths);
       part.source.opacity = lerp(part.startOpacity, part.targetOpacity, alpha);
+      this._interpolateTransform(part, alpha);
     }
 
     // Handle fading parts with adjusted timing
@@ -237,6 +244,30 @@ export class TransformMatchingShapes extends Animation<VMobject> {
     }
   }
 
+  /**
+   * Interpolate the matched source node's own transform toward the target's.
+   *
+   * The aligned points only carry local geometry. Without this step the matched
+   * part keeps its source position, scale and rotation, so it morphs in place
+   * instead of translating to the target's world location.
+   */
+  private _interpolateTransform(part: MatchedPart, alpha: number): void {
+    if (part.startPosition && part.targetPosition) {
+      part.source.position.lerpVectors(part.startPosition, part.targetPosition, alpha);
+    }
+    if (part.startScale && part.targetScale) {
+      part.source.scaleVector.lerpVectors(part.startScale, part.targetScale, alpha);
+    }
+    if (part.startRotation && part.targetRotation) {
+      part.source.rotation.set(
+        lerp(part.startRotation.x, part.targetRotation.x, alpha),
+        lerp(part.startRotation.y, part.targetRotation.y, alpha),
+        lerp(part.startRotation.z, part.targetRotation.z, alpha),
+      );
+    }
+    part.source._markDirty();
+  }
+
   override finish(): void {
     // Finalize matched parts
     for (const part of this._matchedParts) {
@@ -244,6 +275,10 @@ export class TransformMatchingShapes extends Animation<VMobject> {
       part.source.setTransformSubpathLengths(undefined);
       part.source.opacity = part.targetOpacity;
       part.source.color = part.target.color;
+      if (part.targetPosition) part.source.position.copy(part.targetPosition);
+      if (part.targetScale) part.source.scaleVector.copy(part.targetScale);
+      if (part.targetRotation) part.source.rotation.copy(part.targetRotation);
+      part.source._markDirty();
     }
 
     // Finalize fading parts

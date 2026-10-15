@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import * as THREE from 'three';
 import { SpeechBubble, ThoughtBubble } from './index';
 import { Rectangle } from '../geometry/Rectangle';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
@@ -9,6 +10,23 @@ function box(w: number, h: number, center: Vector3Tuple = [0, 0, 0]) {
 
 function dist(a: Vector3Tuple, b: Vector3Tuple): number {
   return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+}
+
+/**
+ * The 2D draw-order z (set by _syncToThree's idx*0.01 per-sibling layering).
+ * A larger value draws nearer the camera, so it covers smaller ones.
+ */
+function drawZ(m: Mobject): number {
+  const t = m.getThreeObject();
+  t.updateWorldMatrix(true, false);
+  return new THREE.Vector3().setFromMatrixPosition(t.matrixWorld).z;
+}
+
+/** The largest draw-order z over a mobject and all its descendants. */
+function maxSubtreeDrawZ(m: Mobject): number {
+  let z = drawZ(m);
+  for (const c of m.children) z = Math.max(z, maxSubtreeDrawZ(c));
+  return z;
 }
 
 function contains(outer: Mobject, inner: Mobject, eps = 1e-6): boolean {
@@ -186,5 +204,16 @@ describe('ThoughtBubble', () => {
     const bubble = new ThoughtBubble({ content: box(2, 1) });
     bubble.pointTailAt([0, 6, 0]);
     expect(dist(bubble.getTailTip(), [0, 6, 0])).toBeLessThan(1e-6);
+  });
+
+  it('draws the content on top of the cloud body', () => {
+    const content = box(2, 1, [2.6, 1.1, 0]);
+    const bubble = new ThoughtBubble({ content, tailDirection: [0.6, -1, 0] });
+    bubble.getThreeObject(); // build the Three subtree, applying z-layering
+    // The content is a descendant of the bubble.
+    expect(bubble.children).toContain(content);
+    // The opaque inner cloud ellipse must not sit in front of the content, or
+    // it hides it. Every body shape must draw at or behind the content.
+    expect(drawZ(content)).toBeGreaterThanOrEqual(maxSubtreeDrawZ(bubble.getBody()));
   });
 });

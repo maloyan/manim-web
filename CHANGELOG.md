@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.39.1](https://github.com/maloyan/manim-web/compare/v0.39.0...v0.39.1) (2026-10-15)
+
+
+### Bug Fixes
+
+* **docs:** make example scenes render their point clearly ([fd12194](https://github.com/maloyan/manim-web/commit/fd121944203ae67af898c8bcdab28ca0e68be00b))
+* **mobjects:** correct rendering bugs found in docs examples ([1b82eda](https://github.com/maloyan/manim-web/commit/1b82edaf9033a0f1a265352fd054085807152f4e))
+
+
+### Tests
+
+* **e2e:** render-check every docs example in a real browser ([5db201e](https://github.com/maloyan/manim-web/commit/5db201ec2f59eb0f8c23ce2f223e636a31f3991e))
+
 ## [0.39.0](https://github.com/maloyan/manim-web/compare/v0.38.0...v0.39.0) (2026-10-14)
 
 

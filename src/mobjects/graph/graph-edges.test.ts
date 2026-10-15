@@ -284,6 +284,28 @@ describe('Vertex labels', () => {
     });
     expect(g.getVertexLabelMobject('A')!.getText()).toBe('start');
   });
+
+  it('draws the label in a visible color, not the black scene background', () => {
+    // A label the same color as the default dark scene background renders
+    // invisibly (issue: Graph showLabels drew nothing). The default must
+    // contrast with the background.
+    const g = new Graph({ vertices: ['A'], showLabels: true });
+    const label = g.getVertexLabelMobject('A')!;
+    expect(label.color.toLowerCase()).not.toBe('#000000');
+    expect(label.color.toLowerCase()).toBe('#ffffff');
+  });
+
+  it('applies a labelColor option to the vertex labels', () => {
+    const g = new Graph({ vertices: ['A', 'B'], showLabels: true, labelColor: '#ff0000' });
+    expect(g.getVertexLabelMobject('A')!.color.toLowerCase()).toBe('#ff0000');
+    expect(g.getVertexLabelMobject('B')!.color.toLowerCase()).toBe('#ff0000');
+  });
+
+  it('keeps the labelColor through a copy', () => {
+    const g = new Graph({ vertices: ['A'], showLabels: true, labelColor: '#22cc88' });
+    const c = g.copy();
+    expect(c.getVertexLabelMobject('A')!.color.toLowerCase()).toBe('#22cc88');
+  });
 });
 
 // ============================================================================
