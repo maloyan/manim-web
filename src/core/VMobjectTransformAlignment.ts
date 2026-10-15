@@ -291,6 +291,88 @@ function buildSubCubic(
   };
 }
 
+// A join is a sharp corner (not a smooth G1 anchor) when the turn between the
+// arriving and departing unit tangents exceeds this angle. 15° is well below
+// any real corner (square 90°, equilateral triangle 120°) and well above the
+// sub-degree wobble between adjacent control-point tangents on a smooth curve.
+const CORNER_TURN_COS = Math.cos((15 * Math.PI) / 180);
+
+/**
+ * Arc-length positions of interior anchors where the path turns sharply.
+ *
+ * "Interior" excludes the shared start/end seam: a corner at the seam is already
+ * preserved because anchor 0 and anchor `newCurveCount` are always emitted, and
+ * their outgoing/incoming tangents are read from the first/last curve.
+ *
+ * Corners must stay anchors after resampling. If a corner lands inside a
+ * resampled sub-cubic instead of on an anchor, it renders as a bezier interior
+ * point and rounds off — a triangle resampled to a corner-misaligned anchor
+ * count then morphs through a cone/teardrop shape mid-`Transform`.
+ */
+function detectInteriorCornerArcs(info: ChainArcInfo): number[] {
+  const corners: number[] = [];
+  for (let j = 1; j < info.curves.length; j++) {
+    const incoming = unitTangentAt(info.curves[j - 1], 1); // arriving at anchor j
+    const outgoing = unitTangentAt(info.curves[j], 0); // departing from anchor j
+    const dot =
+      (incoming[0] ?? 0) * (outgoing[0] ?? 0) +
+      (incoming[1] ?? 0) * (outgoing[1] ?? 0) +
+      (incoming[2] ?? 0) * (outgoing[2] ?? 0);
+    if (dot < CORNER_TURN_COS) corners.push(info.cumulative[j]);
+  }
+  return corners;
+}
+
+/**
+ * Arc-length of each of the `newCurveCount + 1` resampled anchors.
+ *
+ * Corners are pinned to anchor positions; the remaining sub-cubic budget is
+ * spread arc-length-uniformly within each span between pinned points (the seam
+ * endpoints and the corners), proportional to span length. With no corners —
+ * or too small a budget to give every span one sub-cubic — this is the plain
+ * uniform schedule, so smooth shapes (circles, glyph bowls) are unchanged.
+ */
+function computeAnchorArcs(info: ChainArcInfo, newCurveCount: number): number[] {
+  const total = info.totalLen;
+  const uniform = (): number[] =>
+    Array.from({ length: newCurveCount + 1 }, (_, i) => (i / newCurveCount) * total);
+
+  const corners = detectInteriorCornerArcs(info);
+  if (corners.length === 0) return uniform();
+
+  const bounds = [0, ...corners, total];
+  const spanCount = bounds.length - 1;
+  if (newCurveCount < spanCount) return uniform(); // too few sub-cubics to pin every corner
+
+  const spanLens = Array.from({ length: spanCount }, (_, k) => bounds[k + 1] - bounds[k]);
+  const alloc = spanLens.map((len) => Math.max(1, Math.round((newCurveCount * len) / total)));
+  let diff = newCurveCount - alloc.reduce((a, b) => a + b, 0);
+  // Reconcile rounding drift against the longest spans, never dropping below 1.
+  while (diff !== 0) {
+    let idx = -1;
+    let best = -Infinity;
+    for (let k = 0; k < spanCount; k++) {
+      if (diff < 0 && alloc[k] <= 1) continue;
+      if (spanLens[k] > best) {
+        best = spanLens[k];
+        idx = k;
+      }
+    }
+    if (idx < 0) break;
+    alloc[idx] += diff > 0 ? 1 : -1;
+    diff += diff > 0 ? -1 : 1;
+  }
+
+  const arcs: number[] = [];
+  for (let k = 0; k < spanCount; k++) {
+    const a = bounds[k];
+    const b = bounds[k + 1];
+    for (let j = 0; j < alloc[k]; j++) arcs.push(a + ((b - a) * j) / alloc[k]);
+  }
+  arcs.push(total);
+  return arcs;
+}
+
 function arcLengthResampleCubicChain(points: number[][], newCurveCount: number): number[][] {
   const currentCurveCount = (points.length - 1) / 3;
   if (!Number.isInteger(currentCurveCount) || currentCurveCount <= 0 || newCurveCount <= 0) {
@@ -299,6 +381,9 @@ function arcLengthResampleCubicChain(points: number[][], newCurveCount: number):
 
   const info = buildChainArcInfo(points);
   if (info.totalLen <= 0) return makeDegenerateChain(points[0], newCurveCount);
+
+  // Anchor arc-lengths: uniform for smooth shapes, corner-pinned otherwise.
+  const anchorArcs = computeAnchorArcs(info, newCurveCount);
 
   // For each new anchor compute:
   //   - its position on the original chain
@@ -312,7 +397,7 @@ function arcLengthResampleCubicChain(points: number[][], newCurveCount: number):
   const outgoingTangents: number[][] = []; // h1 of sub-cubic i  (departure direction)
   const incomingTangents: number[][] = []; // h2 of sub-cubic i-1 (arrival direction)
   for (let i = 0; i <= newCurveCount; i++) {
-    const arcAt = (i / newCurveCount) * info.totalLen;
+    const arcAt = anchorArcs[i];
     const locIn = locateOnChain(info, arcAt); // t≈1 stays on current curve → incoming
     const locOut = locateOnChainSnapped(info, arcAt); // t≈1 snaps to next curve  → outgoing
     const c = info.curves[locOut.curveIdx];
@@ -323,8 +408,8 @@ function arcLengthResampleCubicChain(points: number[][], newCurveCount: number):
 
   const out: number[][] = [[...anchors[0]]];
   for (let i = 0; i < newCurveCount; i++) {
-    const sLoc = locateOnChainSnapped(info, (i / newCurveCount) * info.totalLen);
-    const eLoc = locateOnChainSnapped(info, ((i + 1) / newCurveCount) * info.totalLen);
+    const sLoc = locateOnChainSnapped(info, anchorArcs[i]);
+    const eLoc = locateOnChainSnapped(info, anchorArcs[i + 1]);
     const { h1, h2 } = buildSubCubic(
       info,
       anchors[i],
