@@ -13,6 +13,7 @@ async function animate(scene: any) {
     innerRadius: 0.55,
     showPercentages: true,
     radius: 2.1,
+    labelFontSize: 34,
   });
 
   scene.add(donut);

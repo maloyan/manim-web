@@ -31,11 +31,13 @@ async function animate(scene: any) {
   await scene.play(new Create(molecule, { duration: 1.5 }));
 
   // Nucleophilic attack: an electron pair moves from O (atom 0) to C (atom 1).
-  // bulge/direction bow the arrow up and clear of the atom labels.
+  // `gap` keeps each end clear of the atom labels, so the head stops before the
+  // C instead of covering it. bulge/direction bow the arrow up and clear.
   const attack = arrowBetweenAtoms(molecule, 0, 1, {
     electrons: 'pair',
     bulge: 0.35,
     direction: 'ccw',
+    gap: 0.4,
     color: '#e84393',
     strokeWidth: 6,
   });
@@ -43,10 +45,11 @@ async function animate(scene: any) {
   await scene.play(new Create(attack, { duration: 1 }));
 
   // Bond breaking: the C-Br bonding pair leaves onto Br. Start near the middle
-  // of the C-Br bond and end near Br; direction 'cw' bows it clear of the label.
+  // of the C-Br bond and end just short of Br, so the head sits off the Br
+  // label; direction 'cw' bows it clear of the bond.
   const breaking = new ElectronPushingArrow({
-    from: [1.5, -0.3, 0],
-    to: [2.4, -0.9, 0],
+    from: [1.4, -0.25, 0],
+    to: [2.05, -0.75, 0],
     electrons: 'pair',
     bulge: 0.3,
     direction: 'cw',
