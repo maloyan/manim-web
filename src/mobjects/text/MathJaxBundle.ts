@@ -37,4 +37,71 @@ import '@mathjax/src/js/input/tex/ams/AmsConfiguration.js';
 import '@mathjax/src/js/input/tex/newcommand/NewcommandConfiguration.js';
 import '@mathjax/src/js/input/tex/configmacros/ConfigMacrosConfiguration.js';
 
+// ---------------------------------------------------------------------------
+// NewCM font dynamic character data.
+//
+// The SVG output's font (MathJaxNewcmFont) splits most of its character
+// data into per-range "dynamic" files that MathJax normally loads on
+// demand through `mathjax.asyncLoad`. A bundled library provides no
+// asyncLoad, so the first glyph from an unloaded range -- e.g. the
+// double-struck capitals behind `\mathbb`, the fraktur letters behind
+// `\mathfrak`, the script letters behind `\mathcal` -- makes the
+// conversion throw "MathJax retry" and the render fails.
+//
+// Each dynamic file registers its data with the font class on import
+// (it calls `MathJaxNewcmFont.dynamicSetup`), so importing the font's
+// full declared set here -- the same side-effect registration pattern
+// as the TeX configurations above -- makes every glyph the font knows
+// available at render time. Registration is only half of the
+// mechanism: `loadMathJax` in MathJaxRenderer also installs a no-op
+// `asyncLoad` (the files are already here) and conversions run through
+// `mathjax.handleRetriesFor`, so the first glyph from a range pauses,
+// applies the registered data, and retries instead of throwing.
+// The list mirrors the font's own declaration
+// (`MathJaxNewcmFont.dynamicFiles`); it is deliberately the complete
+// set, not a subset picked for today's commands, so no glyph family
+// is special-cased. Keep these imports in this module only, like every
+// other `@mathjax` surface, so the font class stays a single instance.
+// ---------------------------------------------------------------------------
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/PUA.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/accents.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/accents-b-i.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/arabic.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/arrows.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/braille.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/braille-d.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/calligraphic.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/cherokee.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/cyrillic.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/cyrillic-ss.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/devanagari.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/double-struck.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/fraktur.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/greek.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/greek-ss.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/hebrew.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/latin.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/latin-b.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/latin-bi.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/latin-i.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/marrows.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/math.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/monospace.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/monospace-ex.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/monospace-l.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/mshapes.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/phonetics.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/phonetics-ss.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/sans-serif.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/sans-serif-b.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/sans-serif-bi.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/sans-serif-ex.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/sans-serif-i.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/sans-serif-r.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/script.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/shapes.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/symbols.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/symbols-b-i.js';
+import '@mathjax/mathjax-newcm-font/js/svg/dynamic/variants.js';
+
 export { mathjax, TeX, SVG, liteAdaptor, RegisterHTMLHandler };

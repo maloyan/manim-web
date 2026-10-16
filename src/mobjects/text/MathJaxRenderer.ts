@@ -94,6 +94,10 @@ interface MathJaxSingleton {
   };
   /** Internal registry the npm path uses to assert handler registration. */
   handlers?: { [Symbol.iterator]?: () => Iterator<unknown> };
+  /** File loader for MathJax's dynamic data (see loadMathJax). */
+  asyncLoad?: ((file: string) => unknown) | null;
+  /** Runs fn, absorbing MathJax "retry" signals until it completes. */
+  handleRetriesFor: <T>(fn: () => T) => Promise<T>;
 }
 
 interface MathJaxModuleNpm {
@@ -194,6 +198,17 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
       if (!hasRegisteredHandler(mathjax)) {
         throw new MathJaxSingletonMismatchError();
       }
+
+      // The NewCM font's dynamic character files are statically imported
+      // by MathJaxBundle (each registers its char data with the font class
+      // on import), so the loader has nothing left to fetch. Conversions
+      // run through `handleRetriesFor` (see renderLatexToSVG): the first
+      // glyph from a dynamic range makes FontData request the file, this
+      // loader resolves immediately, FontData applies the registered
+      // data to the font, and the conversion retries and succeeds.
+      // Without a loader the request throws "MathJax retry" out of the
+      // conversion and the render fails (e.g. every \mathbb).
+      mathjax.asyncLoad = () => undefined;
 
       const result: MathJaxModuleNpm = {
         mathjax,
@@ -371,7 +386,13 @@ export async function renderLatexToSVG(
     const svg = new SVG({ fontCache: 'none' });
     const html = MathJax.document('', { InputJax: tex, OutputJax: svg });
 
-    const node = html.convert(texString, { display: displayMode });
+    // Absorb MathJax "retry" signals: the first glyph from one of the
+    // NewCM font's dynamic ranges pauses the conversion while FontData
+    // applies that range's (statically registered) char data, then the
+    // conversion restarts and completes. See loadMathJax.
+    const node = await MathJax.handleRetriesFor(() =>
+      html.convert(texString, { display: displayMode }),
+    );
     svgString = adaptor.outerHTML(node as LiteElement);
 
     // Parse the string into a real SVGElement for downstream use
