@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.39.4](https://github.com/maloyan/manim-web/compare/v0.39.3...v0.39.4) (2026-10-16)
+
+
+### Bug Fixes
+
+* **text:** seed text-mobject default colors from the active theme ([5f9c80e](https://github.com/maloyan/manim-web/commit/5f9c80efa2431e63360b81492e509b514ba289d4))
+
 ### [0.39.3](https://github.com/maloyan/manim-web/compare/v0.39.0...v0.39.3) (2026-10-15)
 
 
