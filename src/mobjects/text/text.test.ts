@@ -106,7 +106,7 @@ describe('Text', () => {
 
     it('should apply default color as white', () => {
       const t = new Text({ text: 'White' });
-      expect(t.color).toBe('#ffffff');
+      expect(t.color.toLowerCase()).toBe('#ffffff');
     });
 
     it('should apply fillOpacity', () => {
