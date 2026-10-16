@@ -1,4 +1,5 @@
 import { VMobject } from '../../core/VMobject';
+import { getActiveTheme } from '../../utils/ThemeManager';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { MathTexImage } from '../../mobjects/text/MathTexImage';
 
@@ -10,7 +11,7 @@ export interface NumberLineOptions {
   xRange?: [number, number, number];
   /** Visual length of the number line. Default: 10 */
   length?: number;
-  /** Stroke color as CSS color string. Default: '#ffffff' */
+  /** Stroke color as CSS color string. Default: the active theme's fill color */
   color?: string;
   /** Stroke width in pixels. Default: 2 */
   strokeWidth?: number;
@@ -71,7 +72,7 @@ export class NumberLine extends VMobject {
     const {
       xRange = [-5, 5, 1],
       length = 10,
-      color = '#ffffff',
+      color = getActiveTheme().fillColor,
       strokeWidth = 2,
       includeTicks = true,
       tickSize = 0.2,
@@ -362,7 +363,7 @@ export class NumberLine extends VMobject {
 export interface UnitIntervalOptions {
   /** Visual length of the unit interval. Default: 5 */
   length?: number;
-  /** Stroke color as CSS color string. Default: '#ffffff' */
+  /** Stroke color as CSS color string. Default: the active theme's fill color */
   color?: string;
   /** Stroke width in pixels. Default: 2 */
   strokeWidth?: number;
@@ -401,7 +402,7 @@ export class UnitInterval extends NumberLine {
   constructor(options: UnitIntervalOptions = {}) {
     const {
       length = 5,
-      color = '#ffffff',
+      color = getActiveTheme().fillColor,
       strokeWidth = 2,
       includeTicks = true,
       tickSize = 0.2,
