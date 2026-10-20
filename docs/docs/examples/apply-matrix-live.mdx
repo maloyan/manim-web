@@ -1,0 +1,94 @@
+---
+title: Live matrix transforms in 2D and 3D
+sidebar_label: applyMatrixLive in 2D and 3D
+---
+
+import ApplyMatrixLive2DExample from '@site/src/components/examples/ApplyMatrixLive2DExample';
+import ApplyMatrixLive3DExample from '@site/src/components/examples/ApplyMatrixLive3DExample';
+
+`applyMatrixLive(target, matrix, options)` binds a mobject to a live matrix. Each
+frame, the binding re-maps the mobject from its pristine geometry, so the map is
+absolute and never drifts. The target can be any mobject, not only a
+`NumberPlane`.
+
+- A **2x2 matrix** maps x and y and keeps z. Use it in a 2D `Scene`.
+- A **3x3 matrix** maps x, y and z. Use it in a `ThreeDScene`.
+
+The columns of the matrix are the images of the basis vectors. For a 3x3 matrix
+the columns are the images of `i`, `j` and `k`.
+
+## 2D: shapes under a live 2x2 matrix
+
+One `MatrixTracker` drives three shapes. The square, the circle and the arrow
+shear, squash and come back. The dot is a dependent point: it moves to the image
+of its base position, but it keeps its round shape.
+
+<ApplyMatrixLive2DExample />
+
+```typescript
+import { Square, Circle, Arrow, Dot, makeMatrixTracker, applyMatrixLive } from 'manim-web';
+
+const square = new Square({ sideLength: 2 }).moveTo([-3, 0, 0]);
+const circle = new Circle({ radius: 1 });
+const arrow = new Arrow({ start: [2, -1, 0], end: [4, 1, 0] });
+const dot = new Dot({ point: [0, 2, 0] });
+scene.add(square, circle, arrow, dot);
+
+const tracker = makeMatrixTracker();
+const bindings = [square, circle, arrow].map((m) => applyMatrixLive(m, tracker));
+bindings[0].addDependentPoint(dot, [0, 2, 0]);
+
+// A shear: (x, y) -> (x + y, y).
+tracker.setMatrix([
+  [1, 1],
+  [0, 1],
+]);
+bindings.forEach((b) => b.update());
+scene.render();
+```
+
+## 3D: meshes under a live 3x3 matrix
+
+A 3x3 matrix also maps 3D meshes such as `Cube`, `Sphere` and `Surface3D`. The
+binding maps the vertices in scene space and computes the normals again, so the
+lighting follows the new shape. Below, a cube and a sphere lean over (z shears
+into x), stretch along z, and then come back.
+
+<ApplyMatrixLive3DExample />
+
+```typescript
+import { ThreeDScene, Cube, Sphere, Group, MatrixTracker, applyMatrixLive } from 'manim-web';
+
+const scene = new ThreeDScene(container);
+const cube = new Cube({ sideLength: 1.5, center: [-1.5, 0, 0.75] });
+const sphere = new Sphere({ radius: 0.8, center: [1.5, 0, 0.8] });
+const shapes = new Group();
+shapes.add(cube);
+shapes.add(sphere);
+scene.add(shapes);
+
+const tracker = new MatrixTracker([
+  [1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1],
+]);
+const binding = applyMatrixLive(shapes, tracker);
+
+// Shear z into x and stretch z: (x, y, z) -> (x + z, y, 2z).
+tracker.setMatrix([
+  [1, 0, 1],
+  [0, 1, 0],
+  [0, 0, 2],
+]);
+binding.update();
+scene.render();
+```
+
+`MatrixTracker.fromBasisVectors(i, j, k)` builds a live 3x3 matrix from three
+basis-vector sources, for example three draggable points. With two sources it
+builds a 2x2 matrix, as before.
+
+A mesh that rebuilds its geometry after you bind it (for example after
+`Sphere.setRadius`) stops following the matrix. Call `applyMatrixLive` again
+after such a change. Fat 3D lines (`Line3D`, the lines of `ThreeDAxes`) keep
+their shape.

@@ -1,9 +1,18 @@
+import * as THREE from 'three';
 import { describe, it, expect, vi } from 'vitest';
-import { MatrixTracker, makeMatrixTracker, applyMatrixLive, type Matrix2x2 } from './DynamicMatrix';
+import {
+  MatrixTracker,
+  makeMatrixTracker,
+  applyMatrixLive,
+  type Matrix2x2,
+  type Matrix3x3,
+} from './DynamicMatrix';
 import { Line } from '../mobjects/geometry/Line';
 import { Group } from '../core/Group';
 import { Dot } from '../mobjects/geometry/Dot';
 import { NumberPlane } from '../mobjects/graphing/NumberPlane';
+import { Sphere } from '../mobjects/three-d/Sphere';
+import { Cube } from '../mobjects/three-d/Cube';
 import { transformPointByMatrix } from '../utils/math';
 
 const IDENTITY: Matrix2x2 = [
@@ -20,6 +29,33 @@ const SHEAR: Matrix2x2 = [
   [1, 1],
   [0, 1],
 ];
+
+// 3D shear that tilts z into x and stretches y: (x, y, z) -> (x + z, 2y, z).
+const SHEAR3D: Matrix3x3 = [
+  [1, 0, 1],
+  [0, 2, 0],
+  [0, 0, 1],
+];
+// 90-degree rotation about the x axis: (x, y, z) -> (x, -z, y).
+const ROTATE_X90: Matrix3x3 = [
+  [1, 0, 0],
+  [0, 0, -1],
+  [0, 1, 0],
+];
+
+/** World-space vertex positions of a single-mesh 3D mobject. */
+function meshWorldVertices(mob: Sphere | Cube): number[][] {
+  const mesh = mob.getThreeObject() as THREE.Mesh;
+  const pos = mesh.geometry.getAttribute('position');
+  const world = mob._worldMatrix();
+  const v = new THREE.Vector3();
+  const out: number[][] = [];
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i).applyMatrix4(world);
+    out.push([v.x, v.y, v.z]);
+  }
+  return out;
+}
 
 /** Assert that two point arrays match element-wise within tolerance. */
 function expectPointsClose(actual: number[][], expected: number[][]): void {
@@ -275,5 +311,153 @@ describe('applyMatrixLive', () => {
     expect(onChange).toHaveBeenCalledTimes(1);
     binding.update();
     expect(onChange).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('MatrixTracker (3x3)', () => {
+  it('exposes the three columns of a 3x3 matrix as basis vectors', () => {
+    const t = new MatrixTracker(SHEAR3D);
+    expect(t.getColumns()).toEqual([
+      [1, 0, 0],
+      [0, 2, 0],
+      [1, 0, 1],
+    ]);
+  });
+
+  it('setColumns and transformPoint work in 3D', () => {
+    const t = new MatrixTracker<Matrix3x3>(SHEAR3D);
+    t.setColumns([1, 0, 0], [0, 0, 1], [0, -1, 0]);
+    expect(t.getMatrix()).toEqual(ROTATE_X90);
+    expect(t.transformPoint([0, 1, 0])).toEqual([0, 0, 1]);
+  });
+
+  it('fromBasisVectors with three sources builds a live 3x3 matrix', () => {
+    let k: [number, number, number] = [0, 0, 1];
+    const t = MatrixTracker.fromBasisVectors(
+      () => [1, 0, 0] as const,
+      { getPoint: () => [0, 1, 0] as [number, number, number] },
+      () => k,
+    );
+    expect(t.getMatrix()).toEqual([
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+    ]);
+    // Move the k basis vector; the third column follows live.
+    k = [1, 0, 1];
+    expect(t.getMatrix()).toEqual([
+      [1, 0, 1],
+      [0, 1, 0],
+      [0, 0, 1],
+    ]);
+  });
+});
+
+describe('applyMatrixLive (3D)', () => {
+  // MIGRATION: examples for the property
+  //   ∀ 3x3 M, ∀ VMobject v, applyMatrixLive(v, M) maps every control point p
+  //   to transformPointByMatrix(p, M), including its z component.
+  // Replace with a property test once the suite lands.
+  it('maps a 3D VMobject by a 3x3 matrix, z included', () => {
+    const line = new Line({ start: [1, 2, 3], end: [-1, 0, 2] });
+    const original = line.getLocalPoints();
+    applyMatrixLive(line, SHEAR3D);
+    expectPointsClose(
+      line.getLocalPoints(),
+      original.map((p) => transformPointByMatrix(p, SHEAR3D)),
+    );
+  });
+
+  // MIGRATION: examples for the property
+  //   ∀ 3x3 M, ∀ mesh mobject s with world vertices W, after applyMatrixLive(s, M)
+  //   the world vertices equal W.map(w => transformPointByMatrix(w, M)), and each
+  //   later frame maps from W again (absolute, never cumulative).
+  // Replace with a property test once the suite lands.
+  it('re-maps the vertices of a mesh (Sphere) in world space', () => {
+    const sphere = new Sphere({ radius: 1, center: [2, 0, 1], resolution: 8 });
+    const original = meshWorldVertices(sphere);
+    const tracker = new MatrixTracker<Matrix3x3>(SHEAR3D);
+    applyMatrixLive(sphere, tracker);
+    expectPointsClose(
+      meshWorldVertices(sphere),
+      original.map((p) => transformPointByMatrix(p, SHEAR3D)),
+    );
+
+    // The next frame re-maps from the pristine snapshot, not cumulatively.
+    tracker.setMatrix(ROTATE_X90);
+    sphere.update(0.016);
+    expectPointsClose(
+      meshWorldVertices(sphere),
+      original.map((p) => transformPointByMatrix(p, ROTATE_X90)),
+    );
+  });
+
+  it('flags the mesh geometry for upload and refreshes its normals', () => {
+    const cube = new Cube({ sideLength: 2 });
+    const mesh = cube.getThreeObject() as THREE.Mesh;
+    const pos = mesh.geometry.getAttribute('position') as THREE.BufferAttribute;
+    const versionBefore = pos.version;
+    applyMatrixLive(cube, ROTATE_X90);
+    expect(pos.version).toBeGreaterThan(versionBefore);
+    // The +y face normal rotates onto +z under a 90-degree turn about x.
+    const normals = mesh.geometry.getAttribute('normal');
+    const n = new THREE.Vector3();
+    let found = false;
+    for (let i = 0; i < normals.count; i++) {
+      n.fromBufferAttribute(normals, i);
+      if (Math.abs(n.z - 1) < 1e-6) found = true;
+    }
+    expect(found).toBe(true);
+  });
+
+  it('a singular 3x3 matrix flattens a mesh and it recovers on the next frame', () => {
+    const cube = new Cube({ sideLength: 2 });
+    const original = meshWorldVertices(cube);
+    const tracker = new MatrixTracker<Matrix3x3>([
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 0],
+    ]);
+    applyMatrixLive(cube, tracker);
+    for (const p of meshWorldVertices(cube)) {
+      expect(p[2]).toBeCloseTo(0, 9);
+      expect(Number.isFinite(p[0])).toBe(true);
+    }
+    tracker.setMatrix([
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+    ]);
+    cube.update(0);
+    expectPointsClose(meshWorldVertices(cube), original);
+  });
+
+  it('a 2x2 matrix on a mesh maps x and y and leaves z alone', () => {
+    const cube = new Cube({ sideLength: 2 });
+    const original = meshWorldVertices(cube);
+    applyMatrixLive(cube, ROTATE90);
+    expectPointsClose(
+      meshWorldVertices(cube),
+      original.map((p) => transformPointByMatrix(p, ROTATE90)),
+    );
+  });
+
+  it('maps each mesh in a Group exactly once', () => {
+    const cube = new Cube({ sideLength: 1, center: [-2, 0, 0] });
+    const sphere = new Sphere({ radius: 0.5, center: [2, 0, 1], resolution: 8 });
+    const group = new Group();
+    group.add(cube);
+    group.add(sphere);
+    const cubeOriginal = meshWorldVertices(cube);
+    const sphereOriginal = meshWorldVertices(sphere);
+    applyMatrixLive(group, SHEAR3D);
+    expectPointsClose(
+      meshWorldVertices(cube),
+      cubeOriginal.map((p) => transformPointByMatrix(p, SHEAR3D)),
+    );
+    expectPointsClose(
+      meshWorldVertices(sphere),
+      sphereOriginal.map((p) => transformPointByMatrix(p, SHEAR3D)),
+    );
   });
 });
