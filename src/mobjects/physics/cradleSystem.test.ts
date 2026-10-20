@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { createCradleSystem, type CradleParams, type CradleInitial } from './cradleSystem';
 
+// Tests that integrate tens of thousands of RK4 steps run ~3 s locally and
+// exceed vitest's 5 s default on slow CI runners (issue #828).
+const LONG_RUN_TIMEOUT_MS = 30_000;
+
 const baseParams: CradleParams = {
   innerRadius: 1,
   outerRadius: 1.3,
@@ -184,21 +188,29 @@ describe('cradle system correctness gates', () => {
     return { worst, e0, excitation: e0 - eRest, thetaMax, steps };
   }
 
-  it('conserves total energy without damping over 40000 RK4 steps', () => {
-    const r = energyDrift(0.0005, 20);
-    expect(r.steps).toBe(40000);
-    expect(r.excitation).toBeGreaterThan(0.5);
-    expect(r.worst / Math.abs(r.e0)).toBeLessThan(1e-6);
-    expect(r.worst / r.excitation).toBeLessThan(1e-5);
-    // Motion must be real, not a frozen state.
-    expect(r.thetaMax).toBeGreaterThan(0.1);
-  });
+  it(
+    'conserves total energy without damping over 40000 RK4 steps',
+    () => {
+      const r = energyDrift(0.0005, 20);
+      expect(r.steps).toBe(40000);
+      expect(r.excitation).toBeGreaterThan(0.5);
+      expect(r.worst / Math.abs(r.e0)).toBeLessThan(1e-6);
+      expect(r.worst / r.excitation).toBeLessThan(1e-5);
+      // Motion must be real, not a frozen state.
+      expect(r.thetaMax).toBeGreaterThan(0.1);
+    },
+    LONG_RUN_TIMEOUT_MS,
+  );
 
-  it('energy drift shrinks with the step size, so it is integrator error and not a model error', () => {
-    const coarse = energyDrift(0.001, 10);
-    const fine = energyDrift(0.0005, 10);
-    expect(coarse.worst / fine.worst).toBeGreaterThan(8);
-  });
+  it(
+    'energy drift shrinks with the step size, so it is integrator error and not a model error',
+    () => {
+      const coarse = energyDrift(0.001, 10);
+      const fine = energyDrift(0.0005, 10);
+      expect(coarse.worst / fine.worst).toBeGreaterThan(8);
+    },
+    LONG_RUN_TIMEOUT_MS,
+  );
 
   it('loses energy when damping is on', () => {
     const sys = createCradleSystem({ ...baseParams, damping: 0.5 }, excited);
@@ -227,32 +239,36 @@ describe('cradle system correctness gates', () => {
     expect(peak).toBeLessThan(0.01);
   });
 
-  it('reduces to a spring and gravity oscillator when disk and pendulum are removed', () => {
-    const p: CradleParams = { ...baseParams, disk: null, pendulum: null };
-    const { innerRadius: ri, outerRadius: ro, halfOpening: b, cradleMass: m } = p;
-    const d = p.springAnchorOffset;
-    const h = p.groundDrop;
-    const s0 = Math.hypot(ro * Math.sin(b) - d, h - ro * Math.cos(b));
-    // Torsional stiffness of the two springs at theta = 0 (rest length equals s0).
-    const kSpring =
-      (2 * p.springStiffness * ro * ro * (d * Math.cos(b) - h * Math.sin(b)) ** 2) / (s0 * s0);
-    // Centroid distance of the annular sector and its moment about the pivot.
-    const rho = (2 * Math.sin(b) * (ro ** 3 - ri ** 3)) / (3 * b * (ro ** 2 - ri ** 2));
-    const inertia = (m * (ro * ro + ri * ri)) / 2;
-    const kEff = kSpring + m * p.gravity * rho;
-    const expected = (2 * Math.PI) / Math.sqrt(kEff / inertia);
+  it(
+    'reduces to a spring and gravity oscillator when disk and pendulum are removed',
+    () => {
+      const p: CradleParams = { ...baseParams, disk: null, pendulum: null };
+      const { innerRadius: ri, outerRadius: ro, halfOpening: b, cradleMass: m } = p;
+      const d = p.springAnchorOffset;
+      const h = p.groundDrop;
+      const s0 = Math.hypot(ro * Math.sin(b) - d, h - ro * Math.cos(b));
+      // Torsional stiffness of the two springs at theta = 0 (rest length equals s0).
+      const kSpring =
+        (2 * p.springStiffness * ro * ro * (d * Math.cos(b) - h * Math.sin(b)) ** 2) / (s0 * s0);
+      // Centroid distance of the annular sector and its moment about the pivot.
+      const rho = (2 * Math.sin(b) * (ro ** 3 - ri ** 3)) / (3 * b * (ro ** 2 - ri ** 2));
+      const inertia = (m * (ro * ro + ri * ri)) / 2;
+      const kEff = kSpring + m * p.gravity * rho;
+      const expected = (2 * Math.PI) / Math.sqrt(kEff / inertia);
 
-    const sys = createCradleSystem(p, { theta: 0.01 });
-    const dt = 0.0005;
-    const measured = measurePeriod(
-      () => sys.getTheta(),
-      () => sys.step(dt),
-      dt,
-      40000,
-    );
-    const relErr = Math.abs(measured - expected) / expected;
-    expect(relErr).toBeLessThan(1e-3);
-  });
+      const sys = createCradleSystem(p, { theta: 0.01 });
+      const dt = 0.0005;
+      const measured = measurePeriod(
+        () => sys.getTheta(),
+        () => sys.step(dt),
+        dt,
+        40000,
+      );
+      const relErr = Math.abs(measured - expected) / expected;
+      expect(relErr).toBeLessThan(1e-3);
+    },
+    LONG_RUN_TIMEOUT_MS,
+  );
 
   it('reduces to a disk rolling in a fixed bowl when the springs are very stiff', () => {
     const p: CradleParams = {
