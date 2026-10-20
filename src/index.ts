@@ -287,6 +287,8 @@ export {
   type ThreeDCameraOptions,
   type CameraViewport,
   type CameraEntry,
+  type CameraFilterTarget,
+  type CameraMobjectFilter,
   type MultiCameraOptions,
   type MappingCameraOptions,
   type MappingFunction,

@@ -31,6 +31,7 @@ import PointMovingOnShapesExample from '@site/src/components/examples/PointMovin
 import PointWithTraceExample from '@site/src/components/examples/PointWithTraceExample';
 import PolygonOnAxesExample from '@site/src/components/examples/PolygonOnAxesExample';
 import QuadViewCameraExample from '@site/src/components/examples/QuadViewCameraExample';
+import RelativityFramesCameraExample from '@site/src/components/examples/RelativityFramesCameraExample';
 import RateFunctionsComparisonExample from '@site/src/components/examples/RateFunctionsComparisonExample';
 import RotationUpdaterExample from '@site/src/components/examples/RotationUpdaterExample';
 import SinCosPlotExample from '@site/src/components/examples/SinCosPlotExample';
@@ -2837,6 +2838,127 @@ if (new URLSearchParams(window.location.search).has('embed')) {
 </details>
 
 **Learn More:** [**Scene**](/api/classes/Scene) · [**Camera2D**](/api/classes/Camera2D) · [**MultiCamera**](/api/classes/MultiCamera) · [**ValueTracker**](/api/classes/ValueTracker)
+
+---
+
+## Relativity Frames Camera
+
+Special relativity in two reference frames. Both panes of a SplitScreenCamera look at the same region, but per-camera mobject filters (leftExcludeMobjects / rightExcludeMobjects) decide which objects each pane renders. Left: the rod at rest while the ship flies past at 0.8c. Right: the ship at rest while the Lorentz-contracted rod flies past.
+
+<RelativityFramesCameraExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  BLUE,
+  Camera2D,
+  Circle,
+  Line,
+  Rectangle,
+  Scene,
+  Shift,
+  SplitScreenCamera,
+  Text,
+  WHITE,
+  YELLOW,
+  linear,
+} from 'manim-web';
+
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#1a1a2e',
+});
+
+// Special relativity in two reference frames. Both cameras look at the
+// same region of the scene; per-camera mobject filters decide which
+// version of each object a pane shows. Left pane: the rod's rest frame,
+// the ship flies past at v = 0.8c. Right pane: the ship's rest frame,
+// the rod flies past Lorentz-contracted to L / gamma.
+const v = 0.8;
+const gamma = 1 / Math.sqrt(1 - v * v);
+const restLength = 4;
+
+const makeCamera = () =>
+  new Camera2D({ frameWidth: 8, frameHeight: 9, position: [0, 0, 10], aspectMode: 'contain' });
+
+// Shared by both frames.
+const axis = new Line({ start: [-4, 0, 0], end: [4, 0, 0], color: WHITE, strokeWidth: 2 });
+
+// Rod rest frame.
+const rodAtRest = new Rectangle({
+  width: restLength,
+  height: 0.6,
+  color: BLUE,
+  fillOpacity: 0.6,
+});
+const shipMoving = new Circle({ radius: 0.25, color: YELLOW, fillOpacity: 1 });
+shipMoving.shift([-3.5, 1, 0]);
+const restLabel = new Text({ text: 'Rod frame', fontSize: 36, color: WHITE });
+restLabel.shift([0, 3, 0]);
+
+// Ship rest frame.
+const rodMoving = new Rectangle({
+  width: restLength / gamma,
+  height: 0.6,
+  color: BLUE,
+  fillOpacity: 0.6,
+});
+rodMoving.shift([3.5, 0, 0]);
+const shipAtRest = new Circle({ radius: 0.25, color: YELLOW, fillOpacity: 1 });
+shipAtRest.shift([0, 1, 0]);
+const shipLabel = new Text({ text: 'Ship frame', fontSize: 36, color: WHITE });
+shipLabel.shift([0, 3, 0]);
+
+const split = new SplitScreenCamera({
+  leftCamera: makeCamera(),
+  rightCamera: makeCamera(),
+  leftExcludeMobjects: [rodMoving, shipAtRest, shipLabel],
+  rightExcludeMobjects: [rodAtRest, shipMoving, restLabel],
+});
+const mc = split.getMultiCamera();
+mc.setViewportBorder(0, { borderColor: '#888888', borderWidth: 2 });
+mc.setViewportBorder(1, { borderColor: '#888888', borderWidth: 2 });
+scene.useMultiCamera(mc);
+
+scene.add(axis, rodAtRest, shipMoving, restLabel, rodMoving, shipAtRest, shipLabel);
+await scene.wait(0.5);
+await scene.play(
+  new Shift(shipMoving, { direction: [7, 0, 0], duration: 3, rateFunc: linear }),
+  new Shift(rodMoving, { direction: [-7, 0, 0], duration: 3, rateFunc: linear }),
+);
+await scene.wait(0.8);
+
+scene.useMultiCamera(null);
+
+if (new URLSearchParams(window.location.search).has('embed')) {
+  document
+    .querySelectorAll('.controls, .buttons, h1, #status')
+    .forEach((el) => (el.style.display = 'none'));
+  document.documentElement.style.cssText =
+    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000';
+  document.body.style.cssText =
+    'margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#000;display:flex;justify-content:center;align-items:center';
+  const cont = document.getElementById('container');
+  if (cont) {
+    cont.style.cssText =
+      'border:none;border-radius:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center';
+  }
+  const playBtn = document.getElementById('playBtn');
+  if (playBtn) {
+    setTimeout(() => playBtn.click(), 500);
+    new MutationObserver(() => {
+      if (!playBtn.disabled) setTimeout(() => playBtn.click(), 2000);
+    }).observe(playBtn, { attributes: true, attributeFilter: ['disabled'] });
+  }
+}
+```
+
+</details>
+
+**Learn More:** [**Scene**](/api/classes/Scene) · [**SplitScreenCamera**](/api/classes/SplitScreenCamera) · [**MultiCamera**](/api/classes/MultiCamera) · [**Shift**](/api/classes/Shift)
 
 ---
 

@@ -63,6 +63,7 @@ const CATEGORIES = {
     'split_screen_camera',
     'picture_in_picture_camera',
     'quad_view_camera',
+    'relativity_frames_camera',
   ],
   'Advanced Projects': ['opening_manim', 'export_animation'],
 };
@@ -295,6 +296,11 @@ const EXAMPLE_META = {
     description:
       'Four simultaneous viewports of the same scene — one overview plus three close-ups — composed with MultiCamera.setupQuadView(). A ball animates between regions, visible at full detail in whichever quadrant currently frames it.',
     learnMore: ['Scene', 'Camera2D', 'MultiCamera', 'ValueTracker'],
+  },
+  relativity_frames_camera: {
+    description:
+      'Special relativity in two reference frames. Both panes of a SplitScreenCamera look at the same region, but per-camera mobject filters (leftExcludeMobjects / rightExcludeMobjects) decide which objects each pane renders. Left: the rod at rest while the ship flies past at 0.8c. Right: the ship at rest while the Lorentz-contracted rod flies past.',
+    learnMore: ['Scene', 'SplitScreenCamera', 'MultiCamera', 'Shift'],
   },
 };
 

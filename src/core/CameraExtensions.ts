@@ -530,6 +530,27 @@ export interface CameraViewport {
 }
 
 /**
+ * Something a camera can filter out of its render: a Mobject (its whole
+ * subtree, so excluding a Group excludes its children) or a raw three.js
+ * object.
+ */
+export type CameraFilterTarget = Mobject | THREE.Object3D;
+
+/**
+ * Per-camera mobject filter. Lets different cameras in one scene show
+ * different objects (e.g. the same body in two reference frames).
+ */
+export interface CameraMobjectFilter {
+  /** Mobjects this camera never renders. Wins over `includeMobjects`. */
+  excludeMobjects?: Iterable<CameraFilterTarget>;
+  /**
+   * When non-empty, this camera renders only these mobjects (and their
+   * children). Scene lights stay on so 3D shading is unchanged.
+   */
+  includeMobjects?: Iterable<CameraFilterTarget>;
+}
+
+/**
  * Camera entry in the multi-camera system.
  */
 export interface CameraEntry {
@@ -541,6 +562,10 @@ export interface CameraEntry {
   enabled: boolean;
   /** Optional label for the camera. */
   label?: string;
+  /** Mobjects hidden from this camera. */
+  excludeMobjects: Set<CameraFilterTarget>;
+  /** If non-empty, the only mobjects this camera renders. */
+  includeMobjects: Set<CameraFilterTarget>;
 }
 
 /**
@@ -548,11 +573,13 @@ export interface CameraEntry {
  */
 export interface MultiCameraOptions {
   /** Initial set of cameras with viewports. */
-  cameras?: Array<{
-    camera: Camera2D | Camera3D | MovingCamera | ThreeDCamera;
-    viewport: CameraViewport;
-    label?: string;
-  }>;
+  cameras?: Array<
+    {
+      camera: Camera2D | Camera3D | MovingCamera | ThreeDCamera;
+      viewport: CameraViewport;
+      label?: string;
+    } & CameraMobjectFilter
+  >;
 }
 
 /**
@@ -570,7 +597,7 @@ export class MultiCamera {
   constructor(options: MultiCameraOptions = {}) {
     if (options.cameras) {
       for (const entry of options.cameras) {
-        this.addCamera(entry.camera, entry.viewport, entry.label);
+        this.addCamera(entry.camera, entry.viewport, entry.label, entry);
       }
     }
   }
@@ -608,12 +635,14 @@ export class MultiCamera {
    * @param camera - Camera instance to add
    * @param viewport - Viewport rectangle for this camera
    * @param label - Optional label for identification
+   * @param filter - Optional mobjects to exclude from / restrict this camera to
    * @returns Index of the added camera
    */
   addCamera(
     camera: Camera2D | Camera3D | MovingCamera | ThreeDCamera,
     viewport: CameraViewport,
     label?: string,
+    filter: CameraMobjectFilter = {},
   ): number {
     // Shallow clone preserves optional borderColor / borderWidth fields.
     const entry: CameraEntry = {
@@ -621,6 +650,8 @@ export class MultiCamera {
       viewport: { ...viewport },
       enabled: true,
       label,
+      excludeMobjects: new Set(filter.excludeMobjects),
+      includeMobjects: new Set(filter.includeMobjects),
     };
     this._cameras.push(entry);
     return this._cameras.length - 1;
@@ -644,6 +675,71 @@ export class MultiCamera {
     else if (style.borderColor !== undefined) entry.viewport.borderColor = style.borderColor;
     if (style.borderWidth === null) delete entry.viewport.borderWidth;
     else if (style.borderWidth !== undefined) entry.viewport.borderWidth = style.borderWidth;
+    return this;
+  }
+
+  /**
+   * Hide mobjects from one camera. Children of an excluded mobject are
+   * hidden too. Other cameras are unaffected.
+   * @param index - Camera index
+   * @param mobjects - Mobjects (or three.js objects) to hide
+   * @returns this for chaining
+   */
+  excludeMobjects(index: number, ...mobjects: CameraFilterTarget[]): this {
+    const entry = this._cameras[index];
+    if (entry) for (const m of mobjects) entry.excludeMobjects.add(m);
+    return this;
+  }
+
+  /**
+   * Stop hiding mobjects previously passed to {@link excludeMobjects}.
+   * @param index - Camera index
+   * @param mobjects - Mobjects to show again
+   * @returns this for chaining
+   */
+  removeExcludedMobjects(index: number, ...mobjects: CameraFilterTarget[]): this {
+    const entry = this._cameras[index];
+    if (entry) for (const m of mobjects) entry.excludeMobjects.delete(m);
+    return this;
+  }
+
+  /**
+   * Restrict one camera to the given mobjects. While the include list is
+   * non-empty, the camera renders only those mobjects (and their children).
+   * @param index - Camera index
+   * @param mobjects - Mobjects (or three.js objects) to render
+   * @returns this for chaining
+   */
+  includeMobjects(index: number, ...mobjects: CameraFilterTarget[]): this {
+    const entry = this._cameras[index];
+    if (entry) for (const m of mobjects) entry.includeMobjects.add(m);
+    return this;
+  }
+
+  /**
+   * Remove mobjects from a camera's include list. An empty include list
+   * means the camera renders everything again.
+   * @param index - Camera index
+   * @param mobjects - Mobjects to drop from the include list
+   * @returns this for chaining
+   */
+  removeIncludedMobjects(index: number, ...mobjects: CameraFilterTarget[]): this {
+    const entry = this._cameras[index];
+    if (entry) for (const m of mobjects) entry.includeMobjects.delete(m);
+    return this;
+  }
+
+  /**
+   * Remove all exclude and include filters from a camera.
+   * @param index - Camera index
+   * @returns this for chaining
+   */
+  clearMobjectFilters(index: number): this {
+    const entry = this._cameras[index];
+    if (entry) {
+      entry.excludeMobjects.clear();
+      entry.includeMobjects.clear();
+    }
     return this;
   }
 
@@ -865,9 +961,15 @@ export class MultiCamera {
       // All camera types have setAspectRatio method
       entry.camera.setAspectRatio(aspectRatio);
 
-      // Render with this camera
+      // Render with this camera. Filtered objects are hidden only for the
+      // duration of this camera's render and restored even if it throws.
       const threeCamera = entry.camera.getCamera();
-      renderer.render(scene, threeCamera);
+      const hidden = MultiCamera._applyMobjectFilter(scene, entry);
+      try {
+        renderer.render(scene, threeCamera);
+      } finally {
+        for (const [obj, visible] of hidden) obj.visible = visible;
+      }
     }
 
     // Disable scissor test after rendering
@@ -880,6 +982,60 @@ export class MultiCamera {
     // Done after the main render so borders sit on top of all panes and
     // can't be clipped by the next viewport's clear.
     this._renderBorders(renderer, canvasWidth, canvasHeight);
+  }
+
+  /**
+   * Hide the objects a camera entry filters out by setting `visible = false`
+   * (three.js skips the whole subtree of an invisible object).
+   * @returns Original visibility of every object touched, for restoring
+   */
+  private static _applyMobjectFilter(
+    scene: THREE.Scene,
+    entry: CameraEntry,
+  ): Map<THREE.Object3D, boolean> {
+    const saved = new Map<THREE.Object3D, boolean>();
+    if (entry.excludeMobjects.size === 0 && entry.includeMobjects.size === 0) return saved;
+
+    const hide = (obj: THREE.Object3D): void => {
+      if (!saved.has(obj)) saved.set(obj, obj.visible);
+      obj.visible = false;
+    };
+
+    if (entry.includeMobjects.size > 0) {
+      // Keep the included subtrees and the path from them up to the scene;
+      // hide every other branch. Lights and cameras are never hidden.
+      const kept = new Set<THREE.Object3D>();
+      const onPath = new Set<THREE.Object3D>();
+      for (const target of entry.includeMobjects) {
+        const obj = MultiCamera._resolveTarget(target);
+        if (!obj) continue;
+        kept.add(obj);
+        for (let p = obj.parent; p && p !== scene; p = p.parent) onPath.add(p);
+      }
+      const walk = (node: THREE.Object3D): void => {
+        for (const child of node.children) {
+          if (kept.has(child)) continue;
+          if (child instanceof THREE.Light || child instanceof THREE.Camera) continue;
+          if (onPath.has(child)) walk(child);
+          else hide(child);
+        }
+      };
+      walk(scene);
+    }
+
+    for (const target of entry.excludeMobjects) {
+      const obj = MultiCamera._resolveTarget(target);
+      if (obj) hide(obj);
+    }
+    return saved;
+  }
+
+  /**
+   * Map a filter target to its three.js object without creating one (a
+   * mobject that was never rendered has nothing to hide).
+   */
+  private static _resolveTarget(target: CameraFilterTarget): THREE.Object3D | null {
+    return target instanceof THREE.Object3D ? target : target._threeObject;
   }
 
   /**
@@ -1070,6 +1226,14 @@ export interface SplitScreenCameraOptions {
   split?: 'horizontal' | 'vertical';
   /** Split ratio (0-1). Defaults to 0.5. */
   splitRatio?: number;
+  /** Mobjects the left (or top) camera does not render. */
+  leftExcludeMobjects?: Iterable<CameraFilterTarget>;
+  /** If non-empty, the only mobjects the left (or top) camera renders. */
+  leftIncludeMobjects?: Iterable<CameraFilterTarget>;
+  /** Mobjects the right (or bottom) camera does not render. */
+  rightExcludeMobjects?: Iterable<CameraFilterTarget>;
+  /** If non-empty, the only mobjects the right (or bottom) camera renders. */
+  rightIncludeMobjects?: Iterable<CameraFilterTarget>;
 }
 
 /**
@@ -1097,7 +1261,16 @@ export class SplitScreenCamera {
     this._splitDirection = options.split ?? 'horizontal';
     this._splitRatio = SplitScreenCamera._clampRatio(options.splitRatio ?? 0.5);
     this._multiCamera = new MultiCamera();
-    this._rebuildViewports();
+    this._rebuildViewports([
+      {
+        excludeMobjects: options.leftExcludeMobjects,
+        includeMobjects: options.leftIncludeMobjects,
+      },
+      {
+        excludeMobjects: options.rightExcludeMobjects,
+        includeMobjects: options.rightIncludeMobjects,
+      },
+    ]);
   }
 
   /**
@@ -1109,22 +1282,46 @@ export class SplitScreenCamera {
 
   /**
    * Rebuild the MultiCamera viewports based on current split settings.
+   * @param filters - Per-side mobject filters; defaults to the current ones
+   *   so a direction or ratio change keeps them
    */
-  private _rebuildViewports(): void {
+  private _rebuildViewports(
+    filters: [CameraMobjectFilter, CameraMobjectFilter] = [
+      this._multiCamera.getCamera(0) ?? {},
+      this._multiCamera.getCamera(1) ?? {},
+    ],
+  ): void {
     this._multiCamera.clear();
     const r = this._splitRatio;
+    const [left, right] = filters;
 
     if (this._splitDirection === 'horizontal') {
-      this._multiCamera.addCamera(this._leftCamera, { x: 0, y: 0, width: r, height: 1 }, 'left');
+      this._multiCamera.addCamera(
+        this._leftCamera,
+        { x: 0, y: 0, width: r, height: 1 },
+        'left',
+        left,
+      );
       this._multiCamera.addCamera(
         this._rightCamera,
         { x: r, y: 0, width: 1 - r, height: 1 },
         'right',
+        right,
       );
     } else {
       // Vertical: left camera on top, right camera on bottom
-      this._multiCamera.addCamera(this._leftCamera, { x: 0, y: r, width: 1, height: 1 - r }, 'top');
-      this._multiCamera.addCamera(this._rightCamera, { x: 0, y: 0, width: 1, height: r }, 'bottom');
+      this._multiCamera.addCamera(
+        this._leftCamera,
+        { x: 0, y: r, width: 1, height: 1 - r },
+        'top',
+        left,
+      );
+      this._multiCamera.addCamera(
+        this._rightCamera,
+        { x: 0, y: 0, width: 1, height: r },
+        'bottom',
+        right,
+      );
     }
   }
 
