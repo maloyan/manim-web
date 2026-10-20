@@ -1,0 +1,132 @@
+---
+title: Live matrix transforms in 2D and 3D
+sidebar_label: applyMatrixLive in 2D and 3D
+---
+
+import ApplyMatrixLive2DExample from '@site/src/components/examples/ApplyMatrixLive2DExample';
+import ApplyMatrixLive3DExample from '@site/src/components/examples/ApplyMatrixLive3DExample';
+
+`applyMatrixLive(target, matrix, options)` binds a mobject to a live matrix. Each
+frame, the binding re-maps the mobject from its pristine geometry, so the map is
+absolute and never drifts. The target can be any mobject, not only a
+`NumberPlane`.
+
+- A **2x2 matrix** maps x and y and keeps z. Use it in a 2D `Scene`.
+- A **3x3 matrix** maps x, y and z. Use it in a `ThreeDScene`.
+
+The columns of the matrix are the images of the basis vectors. For a 3x3 matrix
+the columns are the images of `i`, `j` and `k`.
+
+## The frame rule
+
+The binding maps every shape in **its own local frame**. VMobjects and 3D meshes
+follow the same rule, so a `Group` that mixes them stays together. The
+`aboutPoint` option is a point in that frame (default: its origin).
+
+- An offset **in the points** is mapped. Examples: a `Polygon` built from its
+  vertices, a `Line` built from `start` and `end`.
+- An offset **in the transform** is not mapped. Examples: `moveTo`, `shift`,
+  and the `center` option of `Cube` or `Sphere`. The shape deforms about its own
+  center and stays where it is.
+- A shape whose parts carry their own transforms follows the rule part by part.
+  For example, the tip of an `Arrow` keeps its offset in its transform, so under
+  a shear the tip leaves the shaft. Build the arrow from a `Line` and a
+  `Polygon` head instead.
+
+To map several shapes about one shared scene point, keep their transforms at
+the identity: build VMobjects from coordinates and leave meshes at the origin.
+
+## 2D: shapes under a live 2x2 matrix
+
+One `MatrixTracker` drives four shapes. The square is a `Polygon` built from
+its corners. The arrow is a `Line` built from its end points plus a `Polygon`
+head. So all the shapes use the scene origin as the pivot, and they shear and
+squash together like one plane. The dot is a dependent point: it moves to the image of its base position,
+but it keeps its round shape.
+
+<ApplyMatrixLive2DExample />
+
+```typescript
+import { Polygon, Circle, Line, Dot, makeMatrixTracker, applyMatrixLive } from 'manim-web';
+
+// Offsets in the points, not in moveTo: the shapes share the scene origin.
+const square = new Polygon({
+  vertices: [
+    [-4, -1, 0],
+    [-2, -1, 0],
+    [-2, 1, 0],
+    [-4, 1, 0],
+  ],
+});
+const circle = new Circle({ radius: 1 });
+const line = new Line({ start: [2, -1, 0], end: [4, 1, 0] });
+const head = new Polygon({
+  vertices: [
+    [4, 1, 0],
+    [3.4, 0.9, 0],
+    [3.9, 0.4, 0],
+  ],
+});
+const dot = new Dot({ point: [0, 2, 0] });
+scene.add(square, circle, line, head, dot);
+
+const tracker = makeMatrixTracker();
+const bindings = [square, circle, line, head].map((m) => applyMatrixLive(m, tracker));
+bindings[0].addDependentPoint(dot, [0, 2, 0]);
+
+// A shear: (x, y) -> (x + y, y).
+tracker.setMatrix([
+  [1, 1],
+  [0, 1],
+]);
+bindings.forEach((b) => b.update());
+scene.render();
+```
+
+## 3D: meshes under a live 3x3 matrix
+
+A 3x3 matrix also maps 3D meshes such as `Cube`, `Sphere` and `Surface3D`. The
+binding maps the vertices, and it maps the normals by the inverse transpose of
+the matrix, so the lighting follows the new shape. Below, the `center` option
+puts each offset in the transform. So the cube and the sphere each lean over (z
+shears into x) and stretch along z about their own centers, and then come back.
+
+<ApplyMatrixLive3DExample />
+
+```typescript
+import { ThreeDScene, Cube, Sphere, Group, MatrixTracker, applyMatrixLive } from 'manim-web';
+
+const scene = new ThreeDScene(container);
+// `center` is an offset in the transform: each mesh deforms about its own center.
+const cube = new Cube({ sideLength: 1.5, center: [-1.5, 0, 0.75] });
+const sphere = new Sphere({ radius: 0.8, center: [1.5, 0, 0.8] });
+const shapes = new Group();
+shapes.add(cube);
+shapes.add(sphere);
+scene.add(shapes);
+
+const tracker = new MatrixTracker([
+  [1, 0, 0],
+  [0, 1, 0],
+  [0, 0, 1],
+]);
+const binding = applyMatrixLive(shapes, tracker);
+
+// Shear z into x and stretch z: (x, y, z) -> (x + z, y, 2z).
+tracker.setMatrix([
+  [1, 0, 1],
+  [0, 1, 0],
+  [0, 0, 2],
+]);
+binding.update();
+scene.render();
+```
+
+`MatrixTracker.fromBasisVectors(i, j, k)` builds a live 3x3 matrix from three
+basis-vector sources, for example three draggable points. With two sources it
+builds a 2x2 matrix, as before.
+
+A mesh that rebuilds its geometry after you bind it (for example after
+`Sphere.setRadius`) stops following the matrix. Call `applyMatrixLive` again
+after such a change. Instanced meshes and fat 3D lines (`Line3D`, the lines of
+`ThreeDAxes`) keep their shape.

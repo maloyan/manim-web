@@ -1856,6 +1856,8 @@ export {
   makeMatrixTracker,
   applyMatrixLive,
   type Matrix2x2,
+  type Matrix3x3,
+  type LiveMatrix,
   type MatrixSource,
   type BasisVectorSource,
   type DependentPoint,
