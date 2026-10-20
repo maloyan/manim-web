@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
 import BrowserOnly from '@docusaurus/BrowserOnly';
+import { createExampleScene } from './createExampleScene';
 
 type AnimationFn = (scene: any) => Promise<void>;
 type SceneFactory = (
@@ -144,14 +145,10 @@ function ManimExampleInner({ animationFn, createScene }: ManimExampleProps) {
         const height = Math.round(width / ASPECT_RATIO);
 
         // Create scene ONCE — reuse across loop iterations to avoid
-        // WebGL context churn that causes GPU OOM.
-        const scene = createScene
-          ? await createScene(container, manim, { width, height })
-          : new manim.Scene(container, {
-              width,
-              height,
-              backgroundColor: '#000000',
-            });
+        // WebGL context churn that causes GPU OOM.  createExampleScene also
+        // resizes factories that pin 800x450 to the box size, so the canvas
+        // is not clipped off-center on narrow (mobile) screens (#838).
+        const scene = await createExampleScene(container, manim, { width, height }, createScene);
 
         if (cancelled) {
           const c = container.querySelector('canvas') as HTMLCanvasElement | null;
