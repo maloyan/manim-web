@@ -3,19 +3,38 @@ import React from 'react';
 import ManimExample from '../ManimExample';
 
 async function animate(scene: any) {
-  const { Square, Circle, Arrow, Dot, makeMatrixTracker, applyMatrixLive, BLUE, GREEN, YELLOW } =
+  const { Polygon, Circle, Line, Dot, makeMatrixTracker, applyMatrixLive, BLUE, GREEN, YELLOW } =
     await import('manim-web');
 
-  const square = new Square({ sideLength: 2, color: BLUE }).moveTo([-3, 0, 0]);
+  // Each shape is mapped in its own local frame. The offsets are in the points
+  // (polygon vertices, line start and end), not in moveTo, so all the shapes
+  // share the scene origin as the pivot and move together like one plane.
+  const square = new Polygon({
+    vertices: [
+      [-4, -1, 0],
+      [-2, -1, 0],
+      [-2, 1, 0],
+      [-4, 1, 0],
+    ],
+    color: BLUE,
+  });
   const circle = new Circle({ radius: 1, color: GREEN });
-  const arrow = new Arrow({ start: [2, -1, 0], end: [4, 1, 0], color: YELLOW });
+  const line = new Line({ start: [2, -1, 0], end: [4, 1, 0], color: YELLOW });
+  const head = new Polygon({
+    vertices: [
+      [4, 1, 0],
+      [3.4, 0.9, 0],
+      [3.9, 0.4, 0],
+    ],
+    color: YELLOW,
+  });
   const dot = new Dot({ point: [0, 2, 0] });
-  scene.add(square, circle, arrow, dot);
+  scene.add(square, circle, line, head, dot);
 
-  // Bind one tracker to three shapes. The dot is a dependent point: it moves
+  // Bind one tracker to all the shapes. The dot is a dependent point: it moves
   // to the image of its base position but keeps its round shape.
   const tracker = makeMatrixTracker();
-  const bindings = [square, circle, arrow].map((m) => applyMatrixLive(m, tracker));
+  const bindings = [square, circle, line, head].map((m) => applyMatrixLive(m, tracker));
   bindings[0].addDependentPoint(dot, [0, 2, 0]);
 
   // Sweep a shear, then a squash, and back to the identity.

@@ -6,6 +6,9 @@ async function animate(scene: any) {
   const { ThreeDAxes, Cube, Sphere, Group, MatrixTracker, applyMatrixLive, BLUE, RED } =
     await import('manim-web');
 
+  // Each mesh is mapped in its own local frame. The `center` option puts the
+  // offset in the mesh's transform, so each shape deforms about its own center
+  // and stays in place.
   const axes = new ThreeDAxes({ xRange: [-4, 4, 1], yRange: [-4, 4, 1], zRange: [-3, 3, 1] });
   const cube = new Cube({ sideLength: 1.5, center: [-1.5, 0, 0.75], color: BLUE, opacity: 0.8 });
   const sphere = new Sphere({ radius: 0.8, center: [1.5, 0, 0.8], color: RED, opacity: 0.8 });
@@ -22,7 +25,7 @@ async function animate(scene: any) {
   ]);
   const binding = applyMatrixLive(shapes, tracker);
 
-  // Shear z into x (the shapes lean over), then stretch z, then go back.
+  // Shear z into x (each shape leans over), then stretch z, then go back.
   const frames = 60;
   const step = async (matrixAt: (t: number) => number[][]) => {
     for (let i = 1; i <= frames; i++) {

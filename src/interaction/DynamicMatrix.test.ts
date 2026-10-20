@@ -13,6 +13,8 @@ import { Dot } from '../mobjects/geometry/Dot';
 import { NumberPlane } from '../mobjects/graphing/NumberPlane';
 import { Sphere } from '../mobjects/three-d/Sphere';
 import { Cube } from '../mobjects/three-d/Cube';
+import { InstancedMobject } from '../mobjects/three-d/InstancedMobject';
+import { Square } from '../mobjects/geometry/Rectangle';
 import { transformPointByMatrix } from '../utils/math';
 
 const IDENTITY: Matrix2x2 = [
@@ -43,18 +45,42 @@ const ROTATE_X90: Matrix3x3 = [
   [0, 1, 0],
 ];
 
-/** World-space vertex positions of a single-mesh 3D mobject. */
-function meshWorldVertices(mob: Sphere | Cube): number[][] {
+/** Read a 3-component attribute of a single-mesh 3D mobject, optionally transformed. */
+function meshAttribute(
+  mob: Sphere | Cube,
+  name: 'position' | 'normal',
+  matrix?: THREE.Matrix4,
+): number[][] {
   const mesh = mob.getThreeObject() as THREE.Mesh;
-  const pos = mesh.geometry.getAttribute('position');
-  const world = mob._worldMatrix();
+  const attr = mesh.geometry.getAttribute(name);
   const v = new THREE.Vector3();
   const out: number[][] = [];
-  for (let i = 0; i < pos.count; i++) {
-    v.fromBufferAttribute(pos, i).applyMatrix4(world);
+  for (let i = 0; i < attr.count; i++) {
+    v.fromBufferAttribute(attr, i);
+    if (matrix) v.applyMatrix4(matrix);
     out.push([v.x, v.y, v.z]);
   }
   return out;
+}
+
+/** Vertex positions of a single-mesh 3D mobject in its own (local) frame. */
+const meshLocalVertices = (mob: Sphere | Cube): number[][] => meshAttribute(mob, 'position');
+/** World-space vertex positions of a single-mesh 3D mobject. */
+const meshWorldVertices = (mob: Sphere | Cube): number[][] =>
+  meshAttribute(mob, 'position', mob._worldMatrix());
+/** Vertex normals of a single-mesh 3D mobject. */
+const meshNormals = (mob: Sphere | Cube): number[][] => meshAttribute(mob, 'normal');
+
+/** True when some vertex normal of `mob` equals `expected` within 1e-6. */
+function hasNormal(mob: Sphere | Cube, expected: number[]): boolean {
+  return meshNormals(mob).some((n) => n.every((c, k) => Math.abs(c - expected[k]) < 1e-6));
+}
+
+/** `[minX, maxX, minY, maxY]` of a point set. */
+function xyBounds(points: number[][]): [number, number, number, number] {
+  const xs = points.map((p) => p[0]);
+  const ys = points.map((p) => p[1]);
+  return [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
 }
 
 /** Assert that two point arrays match element-wise within tolerance. */
@@ -369,30 +395,32 @@ describe('applyMatrixLive (3D)', () => {
   });
 
   // MIGRATION: examples for the property
-  //   ∀ 3x3 M, ∀ mesh mobject s with world vertices W, after applyMatrixLive(s, M)
-  //   the world vertices equal W.map(w => transformPointByMatrix(w, M)), and each
-  //   later frame maps from W again (absolute, never cumulative).
+  //   ∀ 3x3 M, ∀ mesh mobject s with local vertices L, after applyMatrixLive(s, M)
+  //   the local vertices equal L.map(p => transformPointByMatrix(p, M)), and each
+  //   later frame maps from L again (absolute, never cumulative).
   // Replace with a property test once the suite lands.
-  it('re-maps the vertices of a mesh (Sphere) in world space', () => {
+  it('re-maps the vertices of a moved mesh (Sphere) in its local frame', () => {
     const sphere = new Sphere({ radius: 1, center: [2, 0, 1], resolution: 8 });
-    const original = meshWorldVertices(sphere);
+    const original = meshLocalVertices(sphere);
     const tracker = new MatrixTracker<Matrix3x3>(SHEAR3D);
     applyMatrixLive(sphere, tracker);
     expectPointsClose(
-      meshWorldVertices(sphere),
+      meshLocalVertices(sphere),
       original.map((p) => transformPointByMatrix(p, SHEAR3D)),
     );
+    // The mobject's own transform is left alone.
+    expect(sphere.position.toArray()).toEqual([2, 0, 1]);
 
     // The next frame re-maps from the pristine snapshot, not cumulatively.
     tracker.setMatrix(ROTATE_X90);
     sphere.update(0.016);
     expectPointsClose(
-      meshWorldVertices(sphere),
+      meshLocalVertices(sphere),
       original.map((p) => transformPointByMatrix(p, ROTATE_X90)),
     );
   });
 
-  it('flags the mesh geometry for upload and refreshes its normals', () => {
+  it('flags the mesh geometry for upload and rotates its normals', () => {
     const cube = new Cube({ sideLength: 2 });
     const mesh = cube.getThreeObject() as THREE.Mesh;
     const pos = mesh.geometry.getAttribute('position') as THREE.BufferAttribute;
@@ -400,44 +428,67 @@ describe('applyMatrixLive (3D)', () => {
     applyMatrixLive(cube, ROTATE_X90);
     expect(pos.version).toBeGreaterThan(versionBefore);
     // The +y face normal rotates onto +z under a 90-degree turn about x.
-    const normals = mesh.geometry.getAttribute('normal');
-    const n = new THREE.Vector3();
-    let found = false;
-    for (let i = 0; i < normals.count; i++) {
-      n.fromBufferAttribute(normals, i);
-      if (Math.abs(n.z - 1) < 1e-6) found = true;
+    expect(hasNormal(cube, [0, 0, 1])).toBe(true);
+  });
+
+  // MIGRATION: example for the property
+  //   ∀ mesh s with normals N, applyMatrixLive(s, I) leaves N unchanged.
+  // Replace with a property test once the suite lands.
+  it('the identity leaves sphere normals unchanged (no seam artefacts)', () => {
+    const sphere = new Sphere({ radius: 1, resolution: 32 });
+    const before = meshNormals(sphere);
+    applyMatrixLive(sphere, [
+      [1, 0, 0],
+      [0, 1, 0],
+      [0, 0, 1],
+    ] as Matrix3x3);
+    const after = meshNormals(sphere);
+    expect(after.length).toBe(before.length);
+    for (let i = 0; i < before.length; i++) {
+      for (let c = 0; c < 3; c++) expect(Math.abs(after[i][c] - before[i][c])).toBeLessThan(1e-6);
     }
-    expect(found).toBe(true);
+  });
+
+  it('maps normals by the inverse transpose under a shear', () => {
+    const cube = new Cube({ sideLength: 2 });
+    applyMatrixLive(cube, SHEAR3D);
+    // (x, y, z) -> (x + z, 2y, z) tilts the +x face: its normal is (1, 0, -1)/sqrt(2).
+    expect(hasNormal(cube, [Math.SQRT1_2, 0, -Math.SQRT1_2])).toBe(true);
+    // The +z face stays flat.
+    expect(hasNormal(cube, [0, 0, 1])).toBe(true);
   });
 
   it('a singular 3x3 matrix flattens a mesh and it recovers on the next frame', () => {
     const cube = new Cube({ sideLength: 2 });
-    const original = meshWorldVertices(cube);
+    const original = meshLocalVertices(cube);
+    const originalNormals = meshNormals(cube);
     const tracker = new MatrixTracker<Matrix3x3>([
       [1, 0, 0],
       [0, 1, 0],
       [0, 0, 0],
     ]);
     applyMatrixLive(cube, tracker);
-    for (const p of meshWorldVertices(cube)) {
+    for (const p of meshLocalVertices(cube)) {
       expect(p[2]).toBeCloseTo(0, 9);
       expect(Number.isFinite(p[0])).toBe(true);
     }
+    for (const n of meshNormals(cube)) expect(n.every(Number.isFinite)).toBe(true);
     tracker.setMatrix([
       [1, 0, 0],
       [0, 1, 0],
       [0, 0, 1],
     ]);
     cube.update(0);
-    expectPointsClose(meshWorldVertices(cube), original);
+    expectPointsClose(meshLocalVertices(cube), original);
+    expectPointsClose(meshNormals(cube), originalNormals);
   });
 
   it('a 2x2 matrix on a mesh maps x and y and leaves z alone', () => {
     const cube = new Cube({ sideLength: 2 });
-    const original = meshWorldVertices(cube);
+    const original = meshLocalVertices(cube);
     applyMatrixLive(cube, ROTATE90);
     expectPointsClose(
-      meshWorldVertices(cube),
+      meshLocalVertices(cube),
       original.map((p) => transformPointByMatrix(p, ROTATE90)),
     );
   });
@@ -448,16 +499,49 @@ describe('applyMatrixLive (3D)', () => {
     const group = new Group();
     group.add(cube);
     group.add(sphere);
-    const cubeOriginal = meshWorldVertices(cube);
-    const sphereOriginal = meshWorldVertices(sphere);
+    const cubeOriginal = meshLocalVertices(cube);
+    const sphereOriginal = meshLocalVertices(sphere);
     applyMatrixLive(group, SHEAR3D);
     expectPointsClose(
-      meshWorldVertices(cube),
+      meshLocalVertices(cube),
       cubeOriginal.map((p) => transformPointByMatrix(p, SHEAR3D)),
     );
     expectPointsClose(
-      meshWorldVertices(sphere),
+      meshLocalVertices(sphere),
       sphereOriginal.map((p) => transformPointByMatrix(p, SHEAR3D)),
     );
+  });
+
+  // MIGRATION: example for the property
+  //   ∀ M, ∀ offset o, a VMobject and a mesh with the same local shape, both
+  //   moved by o, have the same world footprint after applyMatrixLive(group, M).
+  // Replace with a property test once the suite lands.
+  it('a moved Square and a moved Cube in one Group stay together', () => {
+    const square = new Square({ sideLength: 2 }).moveTo([3, 1, 0]);
+    const cube = new Cube({ sideLength: 2 }).moveTo([3, 1, 0]);
+    const group = new Group();
+    group.add(square);
+    group.add(cube);
+    applyMatrixLive(group, SHEAR);
+    const squareBox = xyBounds(square.getPoints());
+    const cubeBox = xyBounds(meshWorldVertices(cube));
+    for (let i = 0; i < 4; i++) expect(cubeBox[i]).toBeCloseTo(squareBox[i], 6);
+  });
+
+  it('skips an InstancedMesh: the shared template and instance matrices stay put', () => {
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const template = Array.from(geometry.getAttribute('position').array);
+    const mob = new InstancedMobject({
+      geometry,
+      material: new THREE.MeshStandardMaterial(),
+      instances: [{ position: [1, 0, 0] }, { position: [0, 2, 0] }],
+    });
+    const before = new THREE.Matrix4();
+    mob.getInstancedMesh().getMatrixAt(1, before);
+    applyMatrixLive(mob, SHEAR3D);
+    expect(Array.from(geometry.getAttribute('position').array)).toEqual(template);
+    const after = new THREE.Matrix4();
+    mob.getInstancedMesh().getMatrixAt(1, after);
+    expect(after.equals(before)).toBe(true);
   });
 });

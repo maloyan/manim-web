@@ -10,7 +10,8 @@
  * A 2x2 matrix maps x and y and leaves z alone, as in a 2D scene. A 3x3 matrix
  * maps all three axes (issue #837), so a `ThreeDScene` can shear, stretch or
  * rotate 3D mobjects live. VMobjects (control points) and 3D meshes such as
- * `Sphere`, `Cube` or `Surface3D` (Three.js vertex buffers) both follow the map.
+ * `Sphere`, `Cube` or `Surface3D` (Three.js vertex buffers) both follow the map,
+ * each in its own local frame (see {@link applyMatrixLive} for the frame rule).
  *
  * The matrix can be driven by draggable basis vectors (for example the
  * {@link MovablePoint} shipped for explorable explanations), by a
@@ -31,6 +32,7 @@ import { Mobject, Vector3Tuple, type UpdaterFunction } from '../core/Mobject';
 import { VMobject } from '../core/VMobject';
 import { Mobject3D } from '../mobjects/three-d/Mobject3D';
 import { transformPointByMatrix } from '../utils/math';
+import { crossVec } from '../utils/vectors';
 
 /**
  * A 2x2 linear map written row-major as `[[a, b], [c, d]]`, i.e.
@@ -310,15 +312,20 @@ interface PointSnapshot {
 }
 
 /**
- * A vertex buffer of a 3D mesh mobject and its pristine (identity) positions.
- * The positions are local to `object`. `toOwner` maps them into the local
- * space of `owner`, whose world matrix then maps them into scene space.
+ * A vertex buffer of a 3D mesh mobject and its pristine (identity) positions
+ * and normals. The data is local to the THREE object that holds the buffer.
+ * `toOwner` maps it into the local frame of the owning mobject, the frame the
+ * matrix acts in; `fromOwner` maps it back.
  */
 interface MeshSnapshot {
-  owner: Mobject3D;
   toOwner: THREE.Matrix4;
+  fromOwner: THREE.Matrix4;
   geometry: THREE.BufferGeometry;
   positions: Float32Array;
+  /** Pristine normals, or null when the buffer had none. */
+  normals: Float32Array | null;
+  /** True for a triangle mesh, which needs normals for lighting. */
+  isMesh: boolean;
 }
 
 /** The matrix that maps `object`'s local space into `root`'s local space. */
@@ -331,13 +338,39 @@ function matrixToRoot(object: THREE.Object3D, root: THREE.Object3D): THREE.Matri
   return matrix;
 }
 
+/** Snapshot one buffer, or return null when it holds no plain 3D positions. */
+function snapshotGeometry(
+  object: THREE.Object3D,
+  root: THREE.Object3D,
+  geometry: THREE.BufferGeometry,
+): MeshSnapshot | null {
+  const position = geometry.getAttribute('position');
+  if (!position || position.itemSize !== 3 || !(position.array instanceof Float32Array)) {
+    return null;
+  }
+  const normal = geometry.getAttribute('normal');
+  const toOwner = matrixToRoot(object, root);
+  return {
+    toOwner,
+    fromOwner: toOwner.clone().invert(),
+    geometry,
+    positions: position.array.slice(),
+    normals:
+      normal && normal.itemSize === 3 && normal.array instanceof Float32Array
+        ? normal.array.slice()
+        : null,
+    isMesh: object instanceof THREE.Mesh,
+  };
+}
+
 /**
  * Snapshot the vertex buffers of every 3D mesh mobject in `target`'s family.
  *
  * Each mesh mobject's THREE subtree is walked, but a subtree that belongs to
  * another family member is skipped, so every buffer has exactly one owner.
- * Instanced geometry (fat `Line2` lines, instanced meshes) is skipped: its
- * `position` attribute is a shared template, not the drawn points.
+ * Instanced drawing is skipped: an `InstancedMesh` places copies through its
+ * `instanceMatrix`, and fat `Line2` lines use `InstancedBufferGeometry`. In
+ * both, the `position` attribute is a shared template, not the drawn points.
  */
 function snapshotMeshes(target: Mobject): MeshSnapshot[] {
   const family = target.getFamily();
@@ -352,21 +385,17 @@ function snapshotMeshes(target: Mobject): MeshSnapshot[] {
     const root = owner.getThreeObject();
     const visit = (object: THREE.Object3D): void => {
       if (object !== root && familyRoots.has(object)) return;
+      if (object instanceof THREE.InstancedMesh) return;
       const geometry = (object as { geometry?: unknown }).geometry;
       if (
         geometry instanceof THREE.BufferGeometry &&
         !(geometry instanceof THREE.InstancedBufferGeometry) &&
         !seen.has(geometry)
       ) {
-        const position = geometry.getAttribute('position');
-        if (position && position.itemSize === 3 && position.array instanceof Float32Array) {
+        const snap = snapshotGeometry(object, root, geometry);
+        if (snap) {
           seen.add(geometry);
-          snapshots.push({
-            owner,
-            toOwner: matrixToRoot(object, root),
-            geometry,
-            positions: position.array.slice(),
-          });
+          snapshots.push(snap);
         }
       }
       for (const child of object.children) visit(child);
@@ -376,25 +405,73 @@ function snapshotMeshes(target: Mobject): MeshSnapshot[] {
   return snapshots;
 }
 
+/** Embed a 2x2 or 3x3 live matrix as a THREE 4x4 linear map (a 2x2 keeps z). */
+function toMatrix4(matrix: LiveMatrix): THREE.Matrix4 {
+  const m: number[][] = matrix;
+  const at = (r: number, c: number): number =>
+    r < m.length && c < m.length ? m[r][c] : +(r === c);
+  // fromArray reads column-major.
+  const columns = [0, 1, 2].flatMap((c) => [at(0, c), at(1, c), at(2, c)]);
+  return new THREE.Matrix4().setFromMatrix3(new THREE.Matrix3().fromArray(columns));
+}
+
 /**
- * Re-map one mesh buffer from its snapshot. Each vertex goes to scene space,
- * through the matrix about `aboutPoint`, and back to the buffer's local space.
+ * The normal matrix of a linear map `A`: its cofactor matrix, sign-corrected so
+ * it points the same way as the inverse transpose `A^-T`. The columns are
+ * `a1 × a2`, `a2 × a0` and `a0 × a1` (equal to `det(A) · A^-T`), so no inverse
+ * is taken and a singular `A` still gives finite normals.
+ */
+function normalMatrix(linear: THREE.Matrix4): THREE.Matrix3 {
+  const e = new THREE.Matrix3().setFromMatrix4(linear).elements;
+  const a0 = [e[0], e[1], e[2]];
+  const a1 = [e[3], e[4], e[5]];
+  const a2 = [e[6], e[7], e[8]];
+  const sign = linear.determinant() < 0 ? -1 : 1;
+  const columns = [crossVec(a1, a2), crossVec(a2, a0), crossVec(a0, a1)].flat();
+  return new THREE.Matrix3().fromArray(columns.map((x) => x * sign));
+}
+
+/** Write the snapshot's normals, mapped by `nm` and normalized, into the buffer. */
+function remapNormals(snap: MeshSnapshot, nm: THREE.Matrix3): void {
+  const src = snap.normals;
+  if (!src) {
+    // No normals to follow: a triangle mesh still needs some for lighting.
+    if (snap.isMesh) snap.geometry.computeVertexNormals();
+    return;
+  }
+  const normal = snap.geometry.getAttribute('normal') as THREE.BufferAttribute;
+  const n = new THREE.Vector3();
+  for (let i = 0; i < src.length; i += 3) {
+    n.set(src[i], src[i + 1], src[i + 2])
+      .applyMatrix3(nm)
+      .normalize();
+    normal.setXYZ(i / 3, n.x, n.y, n.z);
+  }
+  normal.needsUpdate = true;
+}
+
+/**
+ * Re-map one mesh buffer from its snapshot. Each vertex goes into the owning
+ * mobject's local frame (the frame a VMobject's points live in), through the
+ * matrix about `aboutPoint`, and back to the buffer's own space. Normals are
+ * mapped by the inverse transpose of the same linear map, so shared seam and
+ * pole vertices keep their exact normals.
  */
 function remapMesh(snap: MeshSnapshot, matrix: LiveMatrix, aboutPoint: Vector3Tuple): void {
-  const toWorld = snap.owner._worldMatrix().multiply(snap.toOwner);
-  const toLocal = toWorld.clone().invert();
   const position = snap.geometry.getAttribute('position') as THREE.BufferAttribute;
   const src = snap.positions;
   const v = new THREE.Vector3();
   for (let i = 0; i < src.length; i += 3) {
-    v.set(src[i], src[i + 1], src[i + 2]).applyMatrix4(toWorld);
+    v.set(src[i], src[i + 1], src[i + 2]).applyMatrix4(snap.toOwner);
     const mapped = transformPointByMatrix([v.x, v.y, v.z], matrix, aboutPoint);
-    v.set(mapped[0], mapped[1], mapped[2]).applyMatrix4(toLocal);
+    v.set(mapped[0], mapped[1], mapped[2]).applyMatrix4(snap.fromOwner);
     position.setXYZ(i / 3, v.x, v.y, v.z);
   }
   position.needsUpdate = true;
-  // Normals follow the new shape so lighting stays right under shear/stretch.
-  if (snap.geometry.getAttribute('normal')) snap.geometry.computeVertexNormals();
+
+  // The linear part of fromOwner · M · toOwner; translations drop out of normals.
+  const linear = snap.fromOwner.clone().multiply(toMatrix4(matrix)).multiply(snap.toOwner);
+  remapNormals(snap, normalMatrix(linear));
   snap.geometry.computeBoundingSphere();
   snap.geometry.boundingBox = null;
 }
@@ -411,10 +488,24 @@ function remapMesh(snap: MeshSnapshot, matrix: LiveMatrix, aboutPoint: Vector3Tu
  * (singular) matrix is just a flat shape, with full recovery on the next frame.
  *
  * A 2x2 matrix maps x and y and keeps z, for a 2D scene. A 3x3 matrix maps all
- * three axes, for a `ThreeDScene`. Mesh vertices are mapped in scene space, so
- * a mesh away from the origin moves as the matrix says. Geometry that a mesh
- * rebuilds after binding (for example `Sphere.setRadius`) is not tracked; bind
- * again after such a change.
+ * three axes, for a `ThreeDScene`.
+ *
+ * Frame rule: every leaf is mapped in its own local frame, VMobject and mesh
+ * alike. `aboutPoint` is a point in that frame. An offset from `moveTo`,
+ * `shift` or a mesh's `center` option lives in the shape's own transform, so
+ * the shape deforms about its own center and stays where it is. An offset
+ * baked into the points (a `Line` from `start` to `end`, a `Polygon` from its
+ * vertices) is part of the local frame, so it is mapped too. A part with its
+ * own transform follows the rule on its own: an `Arrow` tip keeps its offset
+ * in its transform, so a shear moves it off the shaft. To map several
+ * shapes about one shared scene point, keep their transforms at the identity:
+ * build VMobjects from coordinates and leave meshes at the origin. Mesh normals
+ * follow the inverse transpose of the map, so lighting stays right under a
+ * shear.
+ *
+ * Geometry that a mesh rebuilds after binding (for example `Sphere.setRadius`)
+ * is not tracked; bind again after such a change. Instanced meshes and fat 3D
+ * lines (`Line3D`) are skipped.
  *
  * The one-shot `applyMatrix` is untouched; this is the additive live mode.
  *
