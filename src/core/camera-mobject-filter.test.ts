@@ -124,6 +124,44 @@ describe('MultiCamera mobject filters (#836)', () => {
     expect(sibling.getThreeObject().visible).toBe(true);
   });
 
+  it('include-only mode keeps the clip mask of an included mobject', () => {
+    const masked = new Circle();
+    const mask = new Circle({ radius: 0.5 });
+    const other = new Circle();
+    const scene = makeScene(masked, other);
+    masked.setMask(mask);
+    masked._applyMaskToThree();
+    // The mask draws as a sibling of the masked mobject, not a child.
+    expect(mask.getThreeObject().parent).toBe(scene);
+    const mc = new MultiCamera();
+    mc.addCamera(new Camera2D(), fullVp, undefined, { includeMobjects: [masked] });
+    const { renderer, frames } = makeRecordingRenderer({
+      masked: masked.getThreeObject(),
+      mask: mask.getThreeObject(),
+      other: other.getThreeObject(),
+    });
+
+    mc.render(renderer, scene, 800, 450);
+
+    expect(frames).toEqual([{ masked: true, mask: true, other: false }]);
+  });
+
+  it('include-only mode keeps clip masks of children of an included group', () => {
+    const masked = new Circle();
+    const mask = new Circle({ radius: 0.5 });
+    const group = new Group(masked);
+    const scene = makeScene(group);
+    masked.setMask(mask);
+    masked._applyMaskToThree();
+    const mc = new MultiCamera();
+    mc.addCamera(new Camera2D(), fullVp, undefined, { includeMobjects: [group] });
+    const { renderer, frames } = makeRecordingRenderer({ mask: mask.getThreeObject() });
+
+    mc.render(renderer, scene, 800, 450);
+
+    expect(frames).toEqual([{ mask: true }]);
+  });
+
   it('include-only mode keeps scene lights on', () => {
     const a = new Circle();
     const light = new THREE.AmbientLight();

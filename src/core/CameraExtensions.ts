@@ -1006,11 +1006,21 @@ export class MultiCamera {
       // hide every other branch. Lights and cameras are never hidden.
       const kept = new Set<THREE.Object3D>();
       const onPath = new Set<THREE.Object3D>();
+      const keep = (obj: THREE.Object3D): void => {
+        kept.add(obj);
+        for (let p = obj.parent; p && p !== scene; p = p.parent) onPath.add(p);
+      };
       for (const target of entry.includeMobjects) {
         const obj = MultiCamera._resolveTarget(target);
         if (!obj) continue;
-        kept.add(obj);
-        for (let p = obj.parent; p && p !== scene; p = p.parent) onPath.add(p);
+        keep(obj);
+        if (target instanceof THREE.Object3D) continue;
+        // A clip mask draws as a sibling of the masked mobject, outside its
+        // subtree. Keep it too, or the masked content loses its stencil.
+        for (const m of target.getFamily()) {
+          const maskObject = m.getMask()?._threeObject;
+          if (maskObject) keep(maskObject);
+        }
       }
       const walk = (node: THREE.Object3D): void => {
         for (const child of node.children) {
