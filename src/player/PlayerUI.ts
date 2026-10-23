@@ -31,6 +31,10 @@ export interface PlayerUIOptions {
    * the export menu is unchanged unless opted in.
    */
   exportControls?: boolean;
+  /** Show the fullscreen button. Default true. */
+  allowFullscreen?: boolean;
+  /** Show the export button and its format menu. Default true. */
+  allowExport?: boolean;
 }
 
 export class PlayerUI {
@@ -44,10 +48,11 @@ export class PlayerUI {
   private _segmentMarkers: HTMLElement;
   private _timeDisplay: HTMLElement;
   private _speedSelect: HTMLSelectElement;
-  private _fullscreenBtn: HTMLButtonElement;
+  private _fullscreenBtn: HTMLButtonElement | null;
   private _slidesBtn: HTMLButtonElement;
   private _slidesActive: boolean = false;
-  private _exportBtn: HTMLButtonElement;
+  /** Null when the export button is hidden (`allowExport: false`). */
+  private _exportBtn: HTMLButtonElement | null;
   private _exportMenu: HTMLElement | null = null;
   private _exportMenuBackdrop: HTMLElement | null = null;
   private _exportBtnWrapper: HTMLElement | null = null;
@@ -64,8 +69,8 @@ export class PlayerUI {
   // Bound handlers for cleanup
   private _onMouseMove: () => void;
   private _onMouseLeave: () => void;
-  private _onProgressDown: (e: MouseEvent) => void;
-  private _onProgressMove: (e: MouseEvent) => void;
+  private _onProgressDown: (e: PointerEvent) => void;
+  private _onProgressMove: (e: PointerEvent) => void;
   private _onProgressUp: () => void;
 
   constructor(container: HTMLElement, callbacks: PlayerUICallbacks, options: PlayerUIOptions = {}) {
@@ -92,9 +97,9 @@ export class PlayerUI {
     this._segmentMarkers = progressResult.markers;
     this._timeDisplay = this._createTimeDisplay();
     this._speedSelect = this._createSpeedSelect();
-    this._fullscreenBtn = this._createFullscreenBtn();
+    this._fullscreenBtn = (options.allowFullscreen ?? true) ? this._createFullscreenBtn() : null;
     this._slidesBtn = this._createSlidesBtn();
-    this._exportBtn = this._createExportBtn();
+    this._exportBtn = (options.allowExport ?? true) ? this._createExportBtn() : null;
 
     // Assemble
     const leftGroup = el('div', {
@@ -115,8 +120,8 @@ export class PlayerUI {
     rightGroup.appendChild(this._speedSelect);
     rightGroup.appendChild(this._slidesBtn);
     // Export button is wrapped in a positioned container for the dropdown menu
-    rightGroup.appendChild(this._exportBtnWrapper!);
-    rightGroup.appendChild(this._fullscreenBtn);
+    if (this._exportBtnWrapper) rightGroup.appendChild(this._exportBtnWrapper);
+    if (this._fullscreenBtn) rightGroup.appendChild(this._fullscreenBtn);
 
     // Top row: progress bar spanning full width
     this._bar.appendChild(this._progressWrap);
@@ -148,14 +153,18 @@ export class PlayerUI {
       this._callbacks.onPlayPause();
     });
 
-    // Progress bar drag
+    // Progress bar drag. Pointer events cover mouse, touch and pen (#859).
+    // The bar captures the pointer, so moves outside it still reach it.
+    // Document listeners stay as a fallback where capture is not supported:
+    // captured events still bubble up to the document.
     this._onProgressDown = (e) => this._startDrag(e);
     this._onProgressMove = (e) => this._moveDrag(e);
     this._onProgressUp = () => this._endDrag();
 
-    this._progressWrap.addEventListener('mousedown', this._onProgressDown);
-    document.addEventListener('mousemove', this._onProgressMove);
-    document.addEventListener('mouseup', this._onProgressUp);
+    this._progressWrap.addEventListener('pointerdown', this._onProgressDown);
+    document.addEventListener('pointermove', this._onProgressMove);
+    document.addEventListener('pointerup', this._onProgressUp);
+    document.addEventListener('pointercancel', this._onProgressUp);
   }
 
   // ---------------------------------------------------------------------------
@@ -268,6 +277,8 @@ export class PlayerUI {
       height: '16px',
       padding: '6px 12px',
       cursor: 'pointer',
+      // A touch drag on the bar scrubs; the browser must not pan or zoom.
+      touchAction: 'none',
     });
 
     const track = el('div', {
@@ -422,6 +433,7 @@ export class PlayerUI {
   }
 
   private _showExportMenu(): void {
+    if (!this._exportBtn) return;
     const btnRect = this._exportBtn.getBoundingClientRect();
 
     // Invisible backdrop that catches all clicks outside the menu
@@ -522,6 +534,7 @@ export class PlayerUI {
 
   /** Update the export button to show progress. */
   setExportProgress(progress: number | null): void {
+    if (!this._exportBtn) return;
     if (progress === null) {
       this._exportBtn.innerHTML = EXPORT_ICON;
       this._exportBtn.disabled = false;
@@ -596,21 +609,32 @@ export class PlayerUI {
   // Drag-to-scrub on progress bar
   // ---------------------------------------------------------------------------
 
-  private _startDrag(e: MouseEvent): void {
+  private _startDrag(e: PointerEvent): void {
     this._isDragging = true;
-    this._seekFromMouse(e);
+    // Capture keeps a touch drag on the bar even when the finger leaves it.
+    // happy-dom and old engines may lack setPointerCapture; the document
+    // listeners still track the drag there.
+    if (typeof this._progressWrap.setPointerCapture === 'function') {
+      try {
+        this._progressWrap.setPointerCapture(e.pointerId);
+      } catch {
+        // An unknown pointerId throws NotFoundError; the drag still works
+        // through the document listeners.
+      }
+    }
+    this._seekFromPointer(e);
   }
 
-  private _moveDrag(e: MouseEvent): void {
+  private _moveDrag(e: PointerEvent): void {
     if (!this._isDragging) return;
-    this._seekFromMouse(e);
+    this._seekFromPointer(e);
   }
 
   private _endDrag(): void {
     this._isDragging = false;
   }
 
-  private _seekFromMouse(e: MouseEvent): void {
+  private _seekFromPointer(e: MouseEvent): void {
     // The track is inside progressWrap with 12px padding on each side
     const track = this._progressWrap.firstElementChild as HTMLElement;
     if (!track) return;
@@ -670,9 +694,10 @@ export class PlayerUI {
     if (this._hideTimeout) clearTimeout(this._hideTimeout);
     this._container.removeEventListener('mousemove', this._onMouseMove);
     this._container.removeEventListener('mouseleave', this._onMouseLeave);
-    this._progressWrap.removeEventListener('mousedown', this._onProgressDown);
-    document.removeEventListener('mousemove', this._onProgressMove);
-    document.removeEventListener('mouseup', this._onProgressUp);
+    this._progressWrap.removeEventListener('pointerdown', this._onProgressDown);
+    document.removeEventListener('pointermove', this._onProgressMove);
+    document.removeEventListener('pointerup', this._onProgressUp);
+    document.removeEventListener('pointercancel', this._onProgressUp);
     this._bar.remove();
   }
 }

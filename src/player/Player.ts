@@ -22,7 +22,8 @@
  * ```
  */
 
-import { Scene, SceneOptions, SceneExportOptions } from '../core/Scene';
+import { Scene, SceneExportOptions } from '../core/Scene';
+import { ThreeDScene, type ThreeDSceneOptions } from '../core/ThreeDScene';
 import { MasterTimeline } from '../animation/MasterTimeline';
 import { PlayerUI } from './PlayerUI';
 import { PlayerController } from './PlayerController';
@@ -34,7 +35,26 @@ import { chooseVideoExporterStrategy } from '../export/chooseExporter';
 import { downloadBlob } from '../export/FrameExporter';
 import { qualityToBitrate, type ExportSettings } from './ExportSettingsUI';
 
-export interface PlayerOptions extends SceneOptions {
+export interface PlayerOptions extends ThreeDSceneOptions {
+  /**
+   * Render 3D content (Molecule3D, Protein, Surface3D, ...). When true, the
+   * Player creates a ThreeDScene: perspective camera, depth testing and
+   * default lighting. The ThreeDScene options (`phi`, `theta`, `distance`,
+   * `fov`, `setupLighting`, ...) apply only in this mode. Orbit controls are
+   * off unless `enableOrbitControls: true`, because a canvas drag would also
+   * toggle play/pause. Default false (a 2D Scene).
+   */
+  threeD?: boolean;
+  /**
+   * Show the fullscreen button and enable the F shortcut. Set false for
+   * sandboxed embeds without fullscreen permission. Default true.
+   */
+  allowFullscreen?: boolean;
+  /**
+   * Show the export (GIF / WebM / MP4) button. Set false for embeds that
+   * cannot download files. `exportAs()` still works from code. Default true.
+   */
+  allowExport?: boolean;
   /** Auto-hide controls after this many ms. 0 = never. Default 2500. */
   autoHideMs?: number;
   /** Auto-play after sequence() finishes recording. Default false. */
@@ -100,7 +120,13 @@ export class Player {
     this._exportFps = options.targetFps ?? 60;
 
     // Create the underlying scene
-    this._scene = new Scene(container, options);
+    this._scene = options.threeD
+      ? new ThreeDScene(container, {
+          ...options,
+          enableOrbitControls: options.enableOrbitControls ?? false,
+        })
+      : new Scene(container, options);
+    const allowFullscreen = options.allowFullscreen ?? true;
 
     // Create master timeline
     this._masterTimeline = new MasterTimeline();
@@ -126,6 +152,8 @@ export class Player {
       {
         autoHideMs: options.autoHideMs,
         exportControls: this._exportControls,
+        allowFullscreen,
+        allowExport: options.allowExport ?? true,
       },
     );
 
@@ -141,7 +169,9 @@ export class Player {
       onPrev: () => this.prevSegment(),
       onNext: () => this.nextSegment(),
       onSeek: (t) => this.seek(t),
-      onFullscreen: () => this.toggleFullscreen(),
+      onFullscreen: () => {
+        if (allowFullscreen) this.toggleFullscreen();
+      },
       onSlidesToggle: () => this.setSlidesMode(!this._slidesMode),
       getCurrentTime: () => this._masterTimeline.getCurrentTime(),
       getDuration: () => this._masterTimeline.getDuration(),
