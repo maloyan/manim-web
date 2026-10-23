@@ -50,6 +50,32 @@ export interface ScrubbableOptions {
 const cursorOwners = new WeakMap<HTMLCanvasElement, Set<Scrubbable>>();
 
 /**
+ * Live Scrubbables per canvas, and the canvas touch-action before the first
+ * one. On touch, the browser pans the page and sends pointercancel unless
+ * the canvas has `touch-action: none`, so a scrub would end at once. The
+ * last dispose() restores the old value.
+ */
+const touchClaims = new WeakMap<HTMLCanvasElement, { count: number; previous: string }>();
+
+function claimTouch(canvas: HTMLCanvasElement): void {
+  const claim = touchClaims.get(canvas);
+  if (claim) {
+    claim.count++;
+    return;
+  }
+  touchClaims.set(canvas, { count: 1, previous: canvas.style.touchAction });
+  canvas.style.touchAction = 'none';
+}
+
+function releaseTouch(canvas: HTMLCanvasElement): void {
+  const claim = touchClaims.get(canvas);
+  if (!claim) return;
+  if (--claim.count > 0) return;
+  canvas.style.touchAction = claim.previous;
+  touchClaims.delete(canvas);
+}
+
+/**
  * Scrubbable: drag a {@link DecimalNumber} to change its value, in place.
  *
  * Like a Tangle / wigglystuff `TangleLatex` number: the number does not move;
@@ -74,6 +100,7 @@ export class Scrubbable {
   private _sensitivity: number;
   private _cursor: string;
   private _enabled = true;
+  private _disposed = false;
   private _isScrubbing = false;
   private _pointerId: number | null = null;
   private _startClient = 0;
@@ -105,6 +132,7 @@ export class Scrubbable {
     this._onPointerLeave = this._handlePointerLeave.bind(this);
 
     const canvas = scene.getCanvas();
+    claimTouch(canvas);
     canvas.addEventListener('pointerdown', this._onPointerDown);
     canvas.addEventListener('pointermove', this._onHoverMove);
     canvas.addEventListener('pointerleave', this._onPointerLeave);
@@ -142,7 +170,10 @@ export class Scrubbable {
 
   /** Remove all event listeners and release the cursor. */
   dispose(): void {
+    if (this._disposed) return;
+    this._disposed = true;
     const canvas = this._scene.getCanvas();
+    releaseTouch(canvas);
     canvas.removeEventListener('pointerdown', this._onPointerDown);
     canvas.removeEventListener('pointermove', this._onHoverMove);
     canvas.removeEventListener('pointerleave', this._onPointerLeave);

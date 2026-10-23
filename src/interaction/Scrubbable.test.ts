@@ -130,6 +130,21 @@ describe('Scrubbable', () => {
   });
 
   // MIGRATION: example for the property
+  //   ∀ canvas c, c.style.touchAction === 'none' while ≥ 1 Scrubbable on c is
+  //   live, and the old value comes back after the last dispose().
+  it('claims touch-action on the canvas until the last dispose', () => {
+    scene._canvas.style.touchAction = 'pan-y';
+    const a = makeScrubbable(new DecimalNumber({ value: 0 }), asScene());
+    const b = makeScrubbable(new DecimalNumber({ value: 1 }), asScene());
+    expect(scene._canvas.style.touchAction).toBe('none');
+    a.dispose();
+    a.dispose();
+    expect(scene._canvas.style.touchAction).toBe('none');
+    b.dispose();
+    expect(scene._canvas.style.touchAction).toBe('pan-y');
+  });
+
+  // MIGRATION: example for the property
   //   ∀ container c, makeScrubbableEntries(c) scrubs exactly the DecimalNumbers
   //   of c, hit-tested at their world positions.
   it('makeScrubbableEntries scrubs one DecimalTable cell in place', () => {
