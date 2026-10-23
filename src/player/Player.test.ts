@@ -4,6 +4,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Player, PlayerOptions } from './Player';
 import { PlayerController, PlayerControllerCallbacks } from './PlayerController';
+import { ThreeDScene } from '../core/ThreeDScene';
 
 // ---------------------------------------------------------------------------
 // Helper: create a container and Player (headless Scene, no WebGL needed)
@@ -1831,5 +1832,36 @@ describe('Player interactive slides', () => {
 
     // Re-create so afterEach has a live player/container to tear down.
     create({ interactiveSlides: true });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 3D content and embed options (issue #859)
+// ---------------------------------------------------------------------------
+
+describe('Player 3D and embed options (issue #859)', () => {
+  it('threeD: true creates a ThreeDScene with default lighting', () => {
+    const { player, container } = createPlayer({ threeD: true });
+    expect(player.scene).toBeInstanceOf(ThreeDScene);
+    expect((player.scene as ThreeDScene).lighting.getLights().length).toBeGreaterThan(0);
+    player.dispose();
+    container.remove();
+  });
+
+  it('keeps a plain 2D Scene by default', () => {
+    const { player, container } = createPlayer();
+    expect(player.scene).not.toBeInstanceOf(ThreeDScene);
+    player.dispose();
+    container.remove();
+  });
+
+  it('allowFullscreen: false makes the F key a no-op', () => {
+    const { player, container } = createPlayer({ allowFullscreen: false });
+    const requestSpy = vi.fn(() => Promise.resolve());
+    container.requestFullscreen = requestSpy;
+    container.dispatchEvent(new KeyboardEvent('keydown', { key: 'f', bubbles: true }));
+    expect(requestSpy).not.toHaveBeenCalled();
+    player.dispose();
+    container.remove();
   });
 });

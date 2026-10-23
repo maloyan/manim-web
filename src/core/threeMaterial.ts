@@ -23,3 +23,40 @@ export function meshMaterial<T extends THREE.Material = THREE.Material>(mesh: TH
   const material = mesh.material;
   return (Array.isArray(material) ? material[0] : material) as T;
 }
+
+type LitFlag =
+  'isMeshStandardMaterial' | 'isMeshPhongMaterial' | 'isMeshLambertMaterial' | 'isMeshToonMaterial';
+
+/**
+ * Whether a material reacts to scene lights (a 3D shaded surface).
+ * MeshPhysicalMaterial extends MeshStandardMaterial, so it is covered too.
+ */
+function isLitMaterial(material: THREE.Material): boolean {
+  const flags = material as Partial<Record<LitFlag, boolean>>;
+  return !!(
+    flags.isMeshStandardMaterial ||
+    flags.isMeshPhongMaterial ||
+    flags.isMeshLambertMaterial ||
+    flags.isMeshToonMaterial
+  );
+}
+
+/**
+ * Apply the 2D Scene depth policy to one material.
+ *
+ * A 2D Scene draws in add order (renderOrder), so flat materials turn depth
+ * testing off and do not write depth. Lit 3D materials and depth-prepass
+ * materials keep their depth settings, so a sphere or a molecule hides its
+ * own far side (issue #859). Flat layers write no depth, so they never clip
+ * a lit mesh that is drawn after them.
+ *
+ * @post (isLitMaterial(material) || material.userData.depthPrepass) =>
+ *         material.depthTest === old.depthTest && material.depthWrite === old.depthWrite
+ * @post !(isLitMaterial(material) || material.userData.depthPrepass) =>
+ *         material.depthTest === false && material.depthWrite === false
+ */
+export function applyFlatSceneDepth(material: THREE.Material): void {
+  if (isLitMaterial(material) || material.userData.depthPrepass) return;
+  material.depthTest = false;
+  material.depthWrite = false;
+}

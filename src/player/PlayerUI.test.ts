@@ -626,16 +626,16 @@ describe('PlayerUI', () => {
       expect(hasMouseLeave).toBe(true);
     });
 
-    it('removes document-level mousemove and mouseup listeners', () => {
+    it('removes document-level pointermove and pointerup listeners', () => {
       ui = new PlayerUI(container, callbacks);
       const removeSpy = vi.spyOn(document, 'removeEventListener');
       ui.dispose();
 
       const removeCalls = removeSpy.mock.calls;
-      const hasMouseMove = removeCalls.some((c) => c[0] === 'mousemove');
-      const hasMouseUp = removeCalls.some((c) => c[0] === 'mouseup');
-      expect(hasMouseMove).toBe(true);
-      expect(hasMouseUp).toBe(true);
+      const hasPointerMove = removeCalls.some((c) => c[0] === 'pointermove');
+      const hasPointerUp = removeCalls.some((c) => c[0] === 'pointerup');
+      expect(hasPointerMove).toBe(true);
+      expect(hasPointerUp).toBe(true);
     });
 
     it('clears hide timeout', () => {
@@ -731,7 +731,7 @@ describe('PlayerUI', () => {
   // -------------------------------------------------------------------------
 
   describe('drag scrubbing', () => {
-    it('calls onSeek on mousedown on progress bar', () => {
+    it('calls onSeek on pointerdown on progress bar', () => {
       ui = new PlayerUI(container, callbacks);
       ui.updateTime(0, 10);
 
@@ -753,14 +753,14 @@ describe('PlayerUI', () => {
         }),
       });
 
-      progressWrap.dispatchEvent(new MouseEvent('mousedown', { clientX: 100, bubbles: true }));
+      progressWrap.dispatchEvent(new PointerEvent('pointerdown', { clientX: 100, bubbles: true }));
 
       expect(callbacks.onSeek).toHaveBeenCalled();
       // clientX=100 out of width=200 => ratio=0.5, time=5
       expect(callbacks.onSeek).toHaveBeenCalledWith(5);
     });
 
-    it('continues to seek on mousemove during drag', () => {
+    it('continues to seek on pointermove during drag', () => {
       ui = new PlayerUI(container, callbacks);
       ui.updateTime(0, 10);
 
@@ -782,17 +782,17 @@ describe('PlayerUI', () => {
       });
 
       // Start drag
-      progressWrap.dispatchEvent(new MouseEvent('mousedown', { clientX: 50, bubbles: true }));
+      progressWrap.dispatchEvent(new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
 
       // Move during drag
-      document.dispatchEvent(new MouseEvent('mousemove', { clientX: 150, bubbles: true }));
+      document.dispatchEvent(new PointerEvent('pointermove', { clientX: 150, bubbles: true }));
 
       // Should have been called twice (mousedown + mousemove)
       expect(callbacks.onSeek).toHaveBeenCalledTimes(2);
       expect(callbacks.onSeek).toHaveBeenLastCalledWith(7.5);
     });
 
-    it('stops seeking on mouseup', () => {
+    it('stops seeking on pointerup', () => {
       ui = new PlayerUI(container, callbacks);
       ui.updateTime(0, 10);
 
@@ -814,13 +814,13 @@ describe('PlayerUI', () => {
       });
 
       // Start drag
-      progressWrap.dispatchEvent(new MouseEvent('mousedown', { clientX: 50, bubbles: true }));
+      progressWrap.dispatchEvent(new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
 
       // End drag
-      document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
 
       // Move after drag ended - should NOT trigger seek
-      document.dispatchEvent(new MouseEvent('mousemove', { clientX: 150, bubbles: true }));
+      document.dispatchEvent(new PointerEvent('pointermove', { clientX: 150, bubbles: true }));
 
       // Only 1 call from the initial mousedown
       expect(callbacks.onSeek).toHaveBeenCalledTimes(1);
@@ -847,7 +847,7 @@ describe('PlayerUI', () => {
         }),
       });
 
-      progressWrap.dispatchEvent(new MouseEvent('mousedown', { clientX: 0, bubbles: true }));
+      progressWrap.dispatchEvent(new PointerEvent('pointerdown', { clientX: 0, bubbles: true }));
 
       expect(callbacks.onSeek).toHaveBeenCalledWith(0);
     });
@@ -873,7 +873,7 @@ describe('PlayerUI', () => {
         }),
       });
 
-      progressWrap.dispatchEvent(new MouseEvent('mousedown', { clientX: 500, bubbles: true }));
+      progressWrap.dispatchEvent(new PointerEvent('pointerdown', { clientX: 500, bubbles: true }));
 
       expect(callbacks.onSeek).toHaveBeenCalledWith(10);
     });
@@ -900,7 +900,7 @@ describe('PlayerUI', () => {
       });
 
       // Start drag
-      progressWrap.dispatchEvent(new MouseEvent('mousedown', { clientX: 50, bubbles: true }));
+      progressWrap.dispatchEvent(new PointerEvent('pointerdown', { clientX: 50, bubbles: true }));
 
       // Now updateTime should not change the fill since we're dragging
       ui.updateTime(8, 10);
@@ -1252,6 +1252,67 @@ describe('PlayerUI', () => {
       item.dispatchEvent(new MouseEvent('mouseenter'));
       item.dispatchEvent(new MouseEvent('mouseleave'));
       expect(item.style.background).toContain('none');
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Touch / pointer scrubbing and optional buttons (issue #859)
+  // -------------------------------------------------------------------------
+
+  describe('pointer scrubbing (issue #859)', () => {
+    // MIGRATION: example for the property
+    //   ∀ pointer drag (pointerdown at x0, pointermove at x1..xn) on the bar,
+    //   onSeek receives clamp((xi - left) / width) * duration for each xi,
+    //   whatever the pointerType (mouse, touch, pen).
+    // Replace with a property test once the suite lands.
+    it('follows a touch drag and captures the pointer', () => {
+      ui = new PlayerUI(container, callbacks);
+      ui.updateTime(0, 10);
+
+      const progressWrap = findProgressWrap(container);
+      const track = progressWrap.children[0] as HTMLElement;
+      Object.defineProperty(track, 'getBoundingClientRect', {
+        value: () => ({
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 4,
+          top: 0,
+          left: 0,
+          right: 200,
+          bottom: 4,
+          toJSON: () => {},
+        }),
+      });
+      const capture = vi.fn();
+      Object.defineProperty(progressWrap, 'setPointerCapture', { value: capture });
+
+      // The browser must not turn a horizontal touch drag into a page pan.
+      expect(progressWrap.style.touchAction).toBe('none');
+
+      const init = { pointerId: 7, pointerType: 'touch', bubbles: true };
+      progressWrap.dispatchEvent(new PointerEvent('pointerdown', { ...init, clientX: 50 }));
+      expect(capture).toHaveBeenCalledWith(7);
+      progressWrap.dispatchEvent(new PointerEvent('pointermove', { ...init, clientX: 150 }));
+      progressWrap.dispatchEvent(new PointerEvent('pointerup', { ...init, clientX: 150 }));
+      progressWrap.dispatchEvent(new PointerEvent('pointermove', { ...init, clientX: 200 }));
+
+      expect(callbacks.onSeek).toHaveBeenCalledTimes(2);
+      expect(callbacks.onSeek).toHaveBeenLastCalledWith(7.5);
+    });
+  });
+
+  describe('optional fullscreen / export buttons (issue #859)', () => {
+    it('shows both buttons by default', () => {
+      ui = new PlayerUI(container, callbacks);
+      expect(findButton(container, 'Fullscreen')).toBeTruthy();
+      expect(findButton(container, 'Export')).toBeTruthy();
+    });
+
+    it('omits both buttons when disabled', () => {
+      ui = new PlayerUI(container, callbacks, { allowFullscreen: false, allowExport: false });
+      expect(() => findButton(container, 'Fullscreen')).toThrow();
+      expect(() => findButton(container, 'Export')).toThrow();
     });
   });
 });

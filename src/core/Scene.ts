@@ -14,6 +14,7 @@ import { ensureAnimateProxyRegistered } from './AnimateProxy';
 import type { MultiCamera } from './CameraExtensions';
 import type { PostProcessingPipeline } from './PostProcessing';
 import { logger } from '../utils/logger';
+import { applyFlatSceneDepth } from './threeMaterial';
 import { applyReducedMotion } from '../a11y/reducedMotion';
 
 // AnimateProxy self-registers with Mobject via a top-level side effect
@@ -520,15 +521,12 @@ export class Scene {
         // Also disable depth test so renderOrder controls draw order (2D scene).
         threeObj.traverse((child) => {
           child.renderOrder = ro;
-          // Any child with a material (Mesh, Line, Points) gets depthTest off;
+          // Any child with a material (Mesh, Line, Points) gets 2D layering;
           // the optional property lets plain Object3D nodes fall through.
           const mesh: THREE.Object3D & { material?: THREE.Material | THREE.Material[] } = child;
           if (mesh.material) {
-            if (Array.isArray(mesh.material)) {
-              for (const m of mesh.material) m.depthTest = false;
-            } else {
-              mesh.material.depthTest = false;
-            }
+            const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+            for (const m of mats) applyFlatSceneDepth(m);
           }
         });
         // Only add to THREE scene root if not already in the scene graph
