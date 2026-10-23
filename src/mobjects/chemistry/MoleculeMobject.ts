@@ -141,8 +141,17 @@ export class MoleculeMobject extends VGroup {
 
   /** Create a label Text for every atom that needs one, and add it to atomsGroup. */
   protected _buildAtomLabels(): void {
-    for (const atom of this._atoms) {
-      if (!this._hasLabel(atom.element)) {
+    // An implicit carbon with no bond would draw nothing at all (methane 'C'
+    // would be an empty group), so an atom without a bond always gets a label.
+    const bonded = new Set<number>();
+    for (const bond of this._bonds) {
+      if (bond.lines.length > 0) {
+        bonded.add(bond.from);
+        bonded.add(bond.to);
+      }
+    }
+    for (const [index, atom] of this._atoms.entries()) {
+      if (!this._hasLabel(atom.element) && bonded.has(index)) {
         continue;
       }
       const label = new Text({

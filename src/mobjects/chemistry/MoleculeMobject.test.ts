@@ -206,9 +206,26 @@ describe('MoleculeMobject', () => {
     expect(mol.getAtom(0)?.position).toEqual([3, 1.5, 0]);
   });
 
-  it('leaves carbons implicit (unlabeled) by default', () => {
-    const mol = new MoleculeMobject({ atoms: [{ element: 'C', x: 0, y: 0 }] });
+  it('leaves bonded carbons implicit (unlabeled) by default', () => {
+    const mol = new MoleculeMobject({
+      atoms: [
+        { element: 'C', x: 0, y: 0 },
+        { element: 'C', x: 1, y: 0 },
+      ],
+      bonds: [{ from: 0, to: 1 }],
+    });
     expect(mol.getAtom(0)?.label).toBeNull();
+    expect(mol.getAtom(1)?.label).toBeNull();
+  });
+
+  it('labels a carbon with no bonds, so the molecule is not empty (#857)', () => {
+    // MIGRATION: example for the property
+    //   ∀ atom a with no bond, a.label !== null (an implicit atom with nothing
+    //   drawn would leave the group empty).
+    // Replace with a property test once the suite lands.
+    const mol = new MoleculeMobject({ atoms: [{ element: 'C', x: 0, y: 0 }] });
+    expect(mol.getAtom(0)?.label?.getText()).toBe('C');
+    expect(mol.isEmpty()).toBe(false);
   });
 
   it('labels carbons when showCarbonLabels is true', () => {
