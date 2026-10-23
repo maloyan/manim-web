@@ -750,6 +750,13 @@ export class VMobject extends VMobjectRendering {
     super._copyBaseAttributesInto(clone, options);
     clone._points3D = this._points3D.map((p) => [...p]);
     clone._visiblePointCount = this._visiblePointCount;
+    // The points above are copied verbatim, so the contour partition that
+    // describes them must travel with them. Without it a copied glyph (outer
+    // contour + hole) reads as one open path: the renderer bridges the
+    // contours with a stray segment and fills the hole (#853).
+    if (this._baseSubpathLengths !== undefined) {
+      clone._baseSubpathLengths = [...this._baseSubpathLengths];
+    }
     if (this._transformSubpathLengths !== undefined) {
       clone._transformSubpathLengths = [...this._transformSubpathLengths];
     }
