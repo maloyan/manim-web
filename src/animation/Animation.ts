@@ -210,7 +210,7 @@ export abstract class Animation<M extends Mobject = Mobject> {
       this.mobject.position.copy(saved.position);
       this.mobject.rotation.copy(saved.rotation);
       this.mobject.scaleVector.copy(saved.scaleVector);
-      this.mobject.color = saved.color;
+      this._restoreFamilyColors(saved);
       this.mobject.opacity = saved.opacity;
       this.mobject.strokeWidth = saved.strokeWidth;
       this.mobject.fillOpacity = saved.fillOpacity;
@@ -228,6 +228,30 @@ export abstract class Animation<M extends Mobject = Mobject> {
     this._startTime = null;
     this._isFinished = false;
     this._hasBegun = false;
+  }
+
+  /**
+   * Restore the colors of the mobject and of every descendant from the
+   * snapshot. Each node gets its own color back, without the cascade of
+   * `setColor()` on a group, which would recolor every child to the group
+   * color (#856).
+   */
+  private _restoreFamilyColors(saved: Mobject): void {
+    if (typeof (saved as { getFamily?: unknown }).getFamily !== 'function') {
+      // Minimal snapshot (see _captureMinimalState): own color only.
+      this.mobject.color = saved.color;
+      return;
+    }
+    const live = this.mobject.getFamily();
+    const snap = saved.getFamily();
+    if (live.length !== snap.length) {
+      // The family changed after the snapshot: restore the root node only.
+      this.mobject._setColorState(saved._getColorState());
+      return;
+    }
+    for (let i = 0; i < live.length; i++) {
+      live[i]._setColorState(snap[i]._getColorState());
+    }
   }
 
   /**

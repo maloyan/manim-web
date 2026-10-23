@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import {
   type Vector3Tuple,
   type MobjectStyle,
+  type MobjectColorState,
   type MobjectOptions,
   type AxisOrOptions,
   UP,
@@ -236,6 +237,53 @@ export abstract class Mobject {
       this._markDirty();
     }
     return this;
+  }
+
+  /**
+   * Own color fields of this node only (no children). Pair with
+   * {@link _setColorState} to save and restore a color without the
+   * cascade of `setColor()` on groups.
+   * @internal
+   */
+  _getColorState(): MobjectColorState {
+    return {
+      color: this._color,
+      strokeColor: this._style.strokeColor,
+      fillColor: this._style.fillColor,
+    };
+  }
+
+  /**
+   * Restore own color fields saved by {@link _getColorState}. Children keep
+   * their colors, unlike `setColor()` on a group.
+   * @post this.color === state.color
+   * @post this.style.strokeColor === state.strokeColor && this.style.fillColor === state.fillColor
+   * @internal
+   */
+  _setColorState(state: MobjectColorState): void {
+    // A leaf goes through its own setColor() first: Text overrides it to
+    // redraw its canvas texture, which a plain field write would skip.
+    if (this.children.length === 0) this.setColor(state.color);
+    this._color = state.color;
+    this._style.strokeColor = state.strokeColor;
+    this._style.fillColor = state.fillColor;
+    this._markDirty();
+  }
+
+  /**
+   * Set the color of this node only. A leaf uses its own `setColor()` (so
+   * Text redraws its texture); a node with children sets its own fields and
+   * leaves the children alone, unlike `setColor()` on a group.
+   * @post this.color === color
+   * @internal
+   */
+  _setOwnColor(color: string): void {
+    if (this.children.length === 0) {
+      this.setColor(color);
+      return;
+    }
+    this.color = color;
+    this._markDirty();
   }
 
   // ── Blend mode ───────────────────────────────────────────────────

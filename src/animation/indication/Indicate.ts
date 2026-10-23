@@ -9,6 +9,7 @@
 
 import * as THREE from 'three';
 import { Mobject } from '../../core/Mobject';
+import type { MobjectColorState } from '../../core/MobjectTypes';
 import { Animation, AnimationOptions } from '../Animation';
 import { thereAndBack } from '../../rate-functions';
 import { YELLOW } from '../../constants';
@@ -30,8 +31,8 @@ export class Indicate extends Animation {
   /** Original scale */
   private _originalScale: THREE.Vector3 = new THREE.Vector3();
 
-  /** Original color */
-  private _originalColor: string = '';
+  /** Original color state of each family member, in getFamily() order */
+  private _originalColors: { member: Mobject; state: MobjectColorState }[] = [];
 
   constructor(mobject: Mobject, options: IndicateOptions = {}) {
     // Use thereAndBack rate function by default for smooth there-and-back motion
@@ -46,7 +47,11 @@ export class Indicate extends Animation {
   override begin(): void {
     super.begin();
     this._originalScale.copy(this.mobject.scaleVector);
-    this._originalColor = this.mobject.color;
+    // Per member, so a group of differently colored children keeps each
+    // child's own color at the end (#856), as in Manim CE.
+    this._originalColors = this.mobject
+      .getFamily()
+      .map((member) => ({ member, state: member._getColorState() }));
   }
 
   interpolate(alpha: number): void {
@@ -58,11 +63,13 @@ export class Indicate extends Animation {
       this._originalScale.z * currentScaleFactor,
     );
 
-    // Color interpolation using THREE.Color for proper blending
-    const originalColor = new THREE.Color(this._originalColor);
+    // Color interpolation using THREE.Color for proper blending. Set each
+    // member's own color: setColor() on a group would cascade one color.
     const targetColor = new THREE.Color(this.indicateColor);
-    const lerpedColor = originalColor.clone().lerp(targetColor, alpha);
-    this.mobject.setColor('#' + lerpedColor.getHexString());
+    for (const { member, state } of this._originalColors) {
+      const lerpedColor = new THREE.Color(state.color).lerp(targetColor, alpha);
+      member._setOwnColor('#' + lerpedColor.getHexString());
+    }
 
     this.mobject._markDirty();
   }
@@ -70,7 +77,9 @@ export class Indicate extends Animation {
   override finish(): void {
     // Restore original state
     this.mobject.scaleVector.copy(this._originalScale);
-    this.mobject.setColor(this._originalColor);
+    for (const { member, state } of this._originalColors) {
+      member._setColorState(state);
+    }
     this.mobject._markDirty();
     super.finish();
   }
