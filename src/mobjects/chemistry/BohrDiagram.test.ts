@@ -38,6 +38,21 @@ describe('BohrDiagram', () => {
       expect(d.getProtons()).toBe(36);
     });
 
+    // MIGRATION: example for the property
+    //   ∀ z ∈ [1, 20]: fillShells(z) is the 2, 8, 8, 2 school filling
+    //   (sum === z, shell 3 <= 8, shell 4 non-empty only when z > 18), and
+    //   ∀ z: fillShells(z, 'capacity')[n-1] <= 2n^2 with sum === z.
+    // Replace with a property test once the suite lands.
+    it('fills potassium and calcium by the 2, 8, 8, 2 school rule (#860)', () => {
+      expect(new BohrDiagram({ element: 'K' }).getShellCounts()).toEqual([2, 8, 8, 1]);
+      expect(new BohrDiagram({ element: 'Ca' }).getShellCounts()).toEqual([2, 8, 8, 2]);
+    });
+
+    it('keeps the 2n^2 capacity rule as an option', () => {
+      const d = new BohrDiagram({ element: 'K', shellRule: 'capacity' });
+      expect(d.getShellCounts()).toEqual([2, 8, 9]);
+    });
+
     it('normalizes the element case', () => {
       expect(new BohrDiagram({ element: 'na' }).getShellCounts()).toEqual([2, 8, 1]);
       expect(new BohrDiagram({ element: 'NA' }).getProtons()).toBe(11);

@@ -1162,6 +1162,7 @@ export {
   type ReactionSchemeOptions,
   type ReactionStep,
   type BohrDiagramOptions,
+  type BohrShellRule,
   type MoleculeBuilderOptions,
   type AtomSpec,
   type BondSpec,

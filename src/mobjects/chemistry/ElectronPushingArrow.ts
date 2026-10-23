@@ -242,6 +242,32 @@ export class ElectronPushingArrow extends VMobject {
     return this._tip;
   }
 
+  /**
+   * Set the stroke opacity of the shaft and the head.
+   *
+   * The head is a child, and VMobject opacity does not reach children. The
+   * `opacity` property, FadeIn/FadeOut, Create and the Player's seek all go
+   * through this setter, so the head follows it here (#855).
+   *
+   * @post this.getTip() !== null => this.getTip().opacity === this.opacity
+   */
+  override setStrokeOpacity(opacity: number): this {
+    super.setStrokeOpacity(opacity);
+    this._tip?.setStrokeOpacity(opacity);
+    return this;
+  }
+
+  /**
+   * Set the fill opacity of the shaft and the head.
+   *
+   * @post this.getTip() !== null => this.getTip().fillOpacity === this.fillOpacity
+   */
+  override setFillOpacity(opacity: number): this {
+    super.setFillOpacity(opacity);
+    this._tip?.setFillOpacity(opacity);
+    return this;
+  }
+
   override copy(): ElectronPushingArrow {
     const clone = new ElectronPushingArrow({
       from: this._from,
@@ -255,6 +281,11 @@ export class ElectronPushingArrow extends VMobject {
     // copyChildren: false keeps the freshly built head; copyPosition: false
     // matches the geometry primitives' copy convention.
     this._copyBaseAttributesInto(clone, { copyChildren: false, copyPosition: false });
+    // The rebuilt head starts opaque; carry the source head's opacities over.
+    if (this._tip && clone._tip) {
+      clone._tip.setStrokeOpacity(this._tip.opacity);
+      clone._tip.setFillOpacity(this._tip.fillOpacity);
+    }
     return clone;
   }
 }
