@@ -6,14 +6,19 @@
  * diagrams place in it. The nucleus shows the element symbol and the proton
  * count.
  *
- * Shell filling uses the simple 2n^2 shell-capacity rule: shell 1 holds up to
- * 2, shell 2 up to 8, shell 3 up to 18, shell 4 up to 32, and each shell is
- * filled before the next begins. This is a deliberate simplification. Real
- * Bohr diagrams follow the "2, 8, 8, 18" convention, so from potassium
- * (Z = 19) onward the two rules differ (for example this rule gives potassium
- * [2, 8, 9], while the textbook 2-8-8 rule gives [2, 8, 8, 1]). Pass the
- * `shells` option to set the per-shell counts directly when the exact textbook
- * filling is needed.
+ * Shell filling has two rules, picked with the `shellRule` option:
+ *
+ * - `'school'` (the default): the 2, 8, 8, 2 rule that school textbooks draw
+ *   for Z <= 20. Shell 3 takes 8 electrons before shell 4 starts, so potassium
+ *   is [2, 8, 8, 1] and calcium is [2, 8, 8, 2]. For Z > 20 the school rule
+ *   has no single convention, so it uses the `'capacity'` filling.
+ * - `'capacity'`: the 2n^2 shell-capacity rule. Shell n holds up to 2n^2
+ *   electrons (2, 8, 18, 32) and each shell fills before the next begins, so
+ *   potassium is [2, 8, 9].
+ *
+ * Neither rule is the real (Aufbau) configuration of every element. Pass the
+ * `shells` option to set the per-shell counts directly when an exact filling
+ * is needed (for example scandium as [2, 8, 9, 2]).
  *
  * The diagram is a VGroup, so Create and FadeIn animate it directly.
  *
@@ -21,6 +26,7 @@
  * ```typescript
  * const carbon = new BohrDiagram({ element: 'C' });   // shells [2, 4]
  * const sodium = new BohrDiagram({ element: 'Na' });  // shells [2, 8, 1]
+ * const potassium = new BohrDiagram({ element: 'K' }); // shells [2, 8, 8, 1]
  * scene.play(new Create(carbon));
  * ```
  */
@@ -34,6 +40,13 @@ import { WHITE, YELLOW, RED } from '../../constants/colors';
 import { DEFAULT_STROKE_WIDTH } from '../../constants';
 import { normalizeElement } from './cpkColors';
 
+/**
+ * How a {@link BohrDiagram} fills its shells from the atomic number.
+ * `'school'` is the 2, 8, 8, 2 textbook rule for Z <= 20; `'capacity'` is the
+ * 2n^2 shell-capacity rule. See the {@link BohrDiagram} class doc.
+ */
+export type BohrShellRule = 'school' | 'capacity';
+
 /** Options for a {@link BohrDiagram}. */
 export interface BohrDiagramOptions {
   /** Element symbol, e.g. 'C', 'Na', 'O'. Derives the proton count and filling. */
@@ -42,6 +55,8 @@ export interface BohrDiagramOptions {
   protons?: number;
   /** Explicit per-shell electron counts. Overrides the computed filling. */
   shells?: number[];
+  /** Rule that computes the filling when `shells` is not given. Default: 'school'. */
+  shellRule?: BohrShellRule;
   /** Whether to label the nucleus with the symbol and proton count. Default: true. */
   showNucleusLabel?: boolean;
   /** Radius of the nucleus circle. Default: 0.4. */
@@ -111,21 +126,32 @@ const Z_TO_SYMBOL: Readonly<Record<number, string>> = Object.fromEntries(
 /** Default nucleus fill color (warm red, so it reads against a dark scene). */
 export const DEFAULT_NUCLEUS_COLOR = RED;
 
+/** Highest atomic number that the 2, 8, 8, 2 school rule covers (calcium). */
+const SCHOOL_RULE_MAX_Z = 20;
+
+/** Shell capacities of the school rule, innermost first. */
+const SCHOOL_RULE_CAPACITIES: readonly number[] = [2, 8, 8, 2];
+
 /**
- * Fill the electron shells for an atomic number by the 2n^2 capacity rule.
+ * Fill the electron shells for an atomic number.
  *
- * Shell n holds up to 2n^2 electrons. Each shell fills before the next one
- * starts. See the class doc for why this is a simplification of real Bohr
- * diagrams.
+ * With `'school'` (the default) and z <= 20, shells fill to 2, 8, 8, 2 in
+ * order. Otherwise shell n holds up to 2n^2 electrons, and each shell fills
+ * before the next one starts. See the class doc for why both rules simplify
+ * real electron configurations.
  * @param z - The atomic number (a positive integer).
+ * @param rule - The filling rule. Default: 'school'.
  * @returns The electron count per shell, innermost first.
+ * @post result.reduce((a, b) => a + b, 0) === z
+ * @post rule === 'school' && z <= 20 => result.every((c, i) => c <= [2, 8, 8, 2][i])
  */
-export function fillShells(z: number): number[] {
+export function fillShells(z: number, rule: BohrShellRule = 'school'): number[] {
+  const useSchool = rule === 'school' && z <= SCHOOL_RULE_MAX_Z;
   const shells: number[] = [];
   let remaining = z;
   let n = 1;
   while (remaining > 0) {
-    const capacity = 2 * n * n;
+    const capacity = useSchool ? SCHOOL_RULE_CAPACITIES[n - 1] : 2 * n * n;
     const inShell = Math.min(capacity, remaining);
     shells.push(inShell);
     remaining -= inShell;
@@ -164,6 +190,7 @@ export class BohrDiagram extends VGroup {
       element,
       protons,
       shells,
+      shellRule = 'school',
       showNucleusLabel = true,
       nucleusRadius = 0.4,
       shellSpacing = 0.6,
@@ -176,7 +203,7 @@ export class BohrDiagram extends VGroup {
     const resolved = BohrDiagram._resolveProtons(element, protons);
     this._protons = resolved.protons;
     this._symbol = resolved.symbol;
-    this._shellCounts = shells ? [...shells] : fillShells(this._protons);
+    this._shellCounts = shells ? [...shells] : fillShells(this._protons, shellRule);
 
     this._showNucleusLabel = showNucleusLabel;
     this._nucleusRadius = nucleusRadius;

@@ -96,7 +96,7 @@ export interface Atom3DRender {
   position: Vector3Tuple;
   /** The resolved CPK color. */
   color: string;
-  /** The resolved sphere radius in scene units. */
+  /** The resolved sphere radius in scene units (after the world scale). */
   radius: number;
   /** The sphere mobject for this atom. */
   sphere: Sphere;
@@ -139,7 +139,10 @@ export interface Molecule3DOptions {
   bondColor?: string;
   /** Sphere mesh resolution. Default: 24. */
   sphereResolution?: number;
-  /** World scale applied to every atom coordinate. Default: 1. */
+  /**
+   * World scale applied to every atom coordinate, atom radius and bond radius,
+   * so the whole molecule scales uniformly. Default: 1.
+   */
   scale?: number;
 }
 
@@ -242,8 +245,17 @@ export class Molecule3D extends Group {
     this.add(this.atomsGroup);
   }
 
-  /** The resolved radius for an element, per the active radius scheme. */
+  /**
+   * The world radius for an element, per the active radius scheme.
+   *
+   * @post result === this._tableRadiusFor(element) * this._worldScale
+   */
   private _atomRadiusFor(element: string): number {
+    return this._tableRadiusFor(element) * this._worldScale;
+  }
+
+  /** The radius for an element in molecule units (before the world scale). */
+  private _tableRadiusFor(element: string): number {
     switch (this._radiusScheme) {
       case 'uniform':
         return this._atomRadius;
@@ -318,7 +330,9 @@ export class Molecule3D extends Group {
   ): Bond3D[] {
     const start = fromAtom.position;
     const end = toAtom.position;
-    const spacing = this._bondRadius * 2.5;
+    // Bond radii are in molecule units, like atom positions: apply the world scale.
+    const radius = this._bondRadius * this._worldScale;
+    const spacing = radius * 2.5;
     let offsets: number[];
     if (order === 2) {
       offsets = [-spacing / 2, spacing / 2];
@@ -341,12 +355,12 @@ export class Molecule3D extends Group {
         end[2] + perp[2] * offset,
       ];
       if (this._bondColor !== undefined) {
-        return new Bond3D({ start: s, end: e, radius: this._bondRadius, color: this._bondColor });
+        return new Bond3D({ start: s, end: e, radius, color: this._bondColor });
       }
       return new Bond3D({
         start: s,
         end: e,
-        radius: this._bondRadius,
+        radius,
         split: true,
         color: fromAtom.color,
         endColor: toAtom.color,

@@ -21,6 +21,7 @@ export {
   fillShells,
   DEFAULT_NUCLEUS_COLOR,
   type BohrDiagramOptions,
+  type BohrShellRule,
 } from './BohrDiagram';
 export { water, methane, benzene, ethanol, type MoleculeBuilderOptions } from './molecules';
 export { parseMolfile, parseSdf, moleculeFromMolfile, type ParsedMolfile } from './molfile';

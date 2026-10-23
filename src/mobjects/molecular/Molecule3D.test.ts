@@ -141,6 +141,22 @@ describe('Molecule3D colors and scale', () => {
     const mol = new Molecule3D({ ...WATER, scale: 2 });
     expect(mol.getAtom(1)?.position).toEqual([0.76 * 2, 0.59 * 2, 0]);
   });
+
+  // MIGRATION: example for the property
+  //   ∀ molecule options o, ∀ s > 0, with m1 = new Molecule3D(o) and
+  //   ms = new Molecule3D({ ...o, scale: s }):
+  //   ms.getAtom(i).radius === s * m1.getAtom(i).radius and
+  //   ms.getBond(j).sticks[k].getRadius() === s * m1.getBond(j).sticks[k].getRadius().
+  // Replace with a property test once the suite lands.
+  it('applies the world scale to atom and bond radii (#858)', () => {
+    const base = new Molecule3D({ ...WATER, style: 'space-filling' });
+    const half = new Molecule3D({ ...WATER, style: 'space-filling', scale: 0.5 });
+    expect(half.getAtom(0)!.radius).toBeCloseTo(base.getAtom(0)!.radius * 0.5, 10);
+
+    const stick1 = new Molecule3D({ ...WATER }).getBond(0)!.sticks[0];
+    const stick2 = new Molecule3D({ ...WATER, scale: 2 }).getBond(0)!.sticks[0];
+    expect(stick2.getRadius()).toBeCloseTo(stick1.getRadius() * 2, 10);
+  });
 });
 
 describe('Molecule3D copy', () => {
