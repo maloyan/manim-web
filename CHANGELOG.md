@@ -2,6 +2,35 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.40.0](https://github.com/maloyan/manim-web/compare/v0.39.4...v0.40.0) (2026-10-23)
+
+
+### Features
+
+* **#836:** per-camera mobject filters for MultiCamera and SplitScreenCamera ([1358949](https://github.com/maloyan/manim-web/commit/1358949ec466883c0c3bbfd09c9abaa3a513e46d)), closes [#836](https://github.com/maloyan/manim-web/issues/836)
+* **#852:** drag a DecimalNumber to scrub its value ([#864](https://github.com/maloyan/manim-web/issues/864)) ([d3c7386](https://github.com/maloyan/manim-web/commit/d3c738616fd4586c03fa6b8782abd3aea238eecd)), closes [#852](https://github.com/maloyan/manim-web/issues/852) [#852](https://github.com/maloyan/manim-web/issues/852) [#852](https://github.com/maloyan/manim-web/issues/852)
+* **interaction:** 3D applyMatrixLive with 3x3 matrices on meshes ([#837](https://github.com/maloyan/manim-web/issues/837)) ([22328b5](https://github.com/maloyan/manim-web/commit/22328b53cb938f5f9ae096e6310ffbe0abf199f8))
+
+
+### Bug Fixes
+
+* **#836:** keep clip masks of included mobjects in include-only mode ([353740d](https://github.com/maloyan/manim-web/commit/353740db92d2721edc339aef97d45a06d4cab49c)), closes [#836](https://github.com/maloyan/manim-web/issues/836)
+* **#853:** keep compound glyph contours when a VMobject is copied ([#867](https://github.com/maloyan/manim-web/issues/867)) ([96411a8](https://github.com/maloyan/manim-web/commit/96411a8578864e1f2cd1d573072ab6110693aadd)), closes [#853](https://github.com/maloyan/manim-web/issues/853)
+* **#857:** lay out SMILES with 120-degree chains and non-overlapping fused rings ([#865](https://github.com/maloyan/manim-web/issues/865)) ([cd78f5d](https://github.com/maloyan/manim-web/commit/cd78f5db3ff6a4e7bb08afacbea545a1fe944e8f)), closes [#857](https://github.com/maloyan/manim-web/issues/857)
+* **#859:** depth-test lit 3D meshes, add Player threeD and touch scrubbing ([#862](https://github.com/maloyan/manim-web/issues/862)) ([8bd173b](https://github.com/maloyan/manim-web/commit/8bd173ba13fe0e64f945a853076e65323d9eaea3)), closes [#859](https://github.com/maloyan/manim-web/issues/859)
+* **animation:** GrowArrow captures its end state on the first begin() ([#851](https://github.com/maloyan/manim-web/issues/851)) ([34421b7](https://github.com/maloyan/manim-web/commit/34421b740ad51f1d283c43e4c74c3268e4a73ee5))
+* **chemistry:** arrowhead opacity, Molecule3D radius scale, school Bohr shells ([#863](https://github.com/maloyan/manim-web/issues/863)) ([6132bcd](https://github.com/maloyan/manim-web/commit/6132bcdbc10b45ff1c3c8539b293bdab87675c21)), closes [#855](https://github.com/maloyan/manim-web/issues/855) [#858](https://github.com/maloyan/manim-web/issues/858) [#860](https://github.com/maloyan/manim-web/issues/860)
+* **docs:** fit example scenes to the box so 3D examples are centered on mobile ([#838](https://github.com/maloyan/manim-web/issues/838)) ([f9b6d4a](https://github.com/maloyan/manim-web/commit/f9b6d4a62b5b672afd98f2a1905cc827ab62bc53))
+* **graphing:** seed Axes/NumberLine default color from the active theme ([c65dfb8](https://github.com/maloyan/manim-web/commit/c65dfb86900c6ee571c14d5a624907c03e27d727))
+* **interaction:** exact mesh normals, skip InstancedMesh, one frame rule in applyMatrixLive ([#837](https://github.com/maloyan/manim-web/issues/837)) ([2dfcfb6](https://github.com/maloyan/manim-web/commit/2dfcfb6ae72b94b1a0188b97b5b2c3935c3be899))
+* **player:** keep scrubbed state equal to playback for grow, group colors and nested groups ([#866](https://github.com/maloyan/manim-web/issues/866)) ([bd50357](https://github.com/maloyan/manim-web/commit/bd50357c6e93efee352c103b8f108d2dc7b19bc0)), closes [#854](https://github.com/maloyan/manim-web/issues/854) [#856](https://github.com/maloyan/manim-web/issues/856) [#861](https://github.com/maloyan/manim-web/issues/861)
+* **text:** register NewCM dynamic font data so the mathbb family renders ([12509d8](https://github.com/maloyan/manim-web/commit/12509d81793be35b325cbbe37a06e4fd487dd5b3))
+
+
+### Tests
+
+* **physics:** give long RK4 cradle tests a 30s timeout ([22c3b1d](https://github.com/maloyan/manim-web/commit/22c3b1dc402b3e17d5751bf510317d008856c05f)), closes [#828](https://github.com/maloyan/manim-web/issues/828)
+
 ### [0.39.4](https://github.com/maloyan/manim-web/compare/v0.39.3...v0.39.4) (2026-10-16)
 
 
