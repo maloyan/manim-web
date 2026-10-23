@@ -1779,6 +1779,10 @@ export {
   Clickable,
   makeClickable,
   type ClickableOptions,
+  Scrubbable,
+  makeScrubbable,
+  makeScrubbableEntries,
+  type ScrubbableOptions,
 } from './interaction';
 
 // Interaction - Selection

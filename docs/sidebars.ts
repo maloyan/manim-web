@@ -28,6 +28,7 @@ const sidebars: SidebarsConfig = {
         'examples/molecular-and-maps-0-39',
         'examples/bubbles-pen-sonifier-table',
         'examples/apply-matrix-live',
+        'examples/scrubbable-number',
       ],
     },
     {

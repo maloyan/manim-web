@@ -1,0 +1,78 @@
+---
+title: Scrubbable numbers
+sidebar_label: Scrubbable numbers
+---
+
+import ScrubbableNumberExample from '@site/src/components/examples/ScrubbableNumberExample';
+
+`makeScrubbable(decimal, scene, options)` lets the reader drag a `DecimalNumber`
+to change its value. The number does not move. The drag distance along one axis
+maps to a value change, like a Tangle number or wigglystuff `TangleLatex`.
+
+<ScrubbableNumberExample />
+
+## Usage
+
+```typescript
+import { DecimalNumber, makeScrubbable } from 'manim-web';
+
+const a = new DecimalNumber({ value: 1, numDecimalPlaces: 1 });
+scene.add(a);
+
+makeScrubbable(a, scene, {
+  direction: 'horizontal', // default; 'vertical' = drag up to increase
+  step: 0.1, // snap increment; default 10^-numDecimalPlaces, 0 = continuous
+  sensitivity: 0.02, // value change per screen pixel; default = step
+  min: -5,
+  max: 5,
+  onChange: (value) => redraw(value),
+});
+```
+
+## Options
+
+| Option        | Default                          | Meaning                                                         |
+| ------------- | -------------------------------- | --------------------------------------------------------------- |
+| `direction`   | `'horizontal'`                   | Drag axis. `'vertical'`: drag up to increase.                   |
+| `step`        | `10^-numDecimalPlaces`           | Snap increment for the value. `0` means continuous.             |
+| `sensitivity` | `step` (`0.01` if `step` is `0`) | Value change per screen pixel.                                  |
+| `min`, `max`  | `-Infinity`, `+Infinity`         | Clamp bounds.                                                   |
+| `tracker`     | none                             | A `ValueTracker` that receives each new value.                  |
+| `onChange`    | none                             | `(value, decimal) => void`, called on each change.              |
+| `onScrubEnd`  | none                             | `(value, decimal) => void`, called once when the drag ends.     |
+| `cursor`      | `ew-resize` / `ns-resize`        | CSS cursor on hover and while dragging.                         |
+| `hitPadding`  | `0.1`                            | Extra world-unit margin around the number that starts a drag.   |
+| `autoRender`  | `true`                           | Render after each change. Set `false` if a render loop is live. |
+
+The returned `Scrubbable` has `enable()`, `disable()` and `dispose()`.
+
+## Tables and matrices
+
+`makeScrubbableEntries(container, scene, options)` makes every `DecimalNumber`
+inside a mobject scrubbable and returns one `Scrubbable` per number. Use it on
+a `DecimalTable`, or on a `MobjectMatrix` built from `DecimalNumber` entries.
+The `decimal` argument of `onChange` tells the cells apart.
+
+```typescript
+import { DecimalTable, MobjectMatrix, DecimalNumber, makeScrubbableEntries } from 'manim-web';
+
+const table = new DecimalTable({
+  data: [
+    [1, 2],
+    [3, 4],
+  ],
+  numDecimalPlaces: 0,
+});
+makeScrubbableEntries(table, scene, { direction: 'vertical', step: 1, sensitivity: 0.1 });
+
+const matrix = new MobjectMatrix(
+  [
+    [1, 0],
+    [0, 1],
+  ].map((row) => row.map((value) => new DecimalNumber({ value }))),
+);
+makeScrubbableEntries(matrix, scene, { step: 0.05 });
+```
+
+`DecimalMatrix` draws its entries as text, not as `DecimalNumber`, so use
+`MobjectMatrix` with `DecimalNumber` entries for a scrubbable matrix.
