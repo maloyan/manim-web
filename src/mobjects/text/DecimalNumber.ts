@@ -8,7 +8,11 @@
 import * as THREE from 'three';
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { applyTextTextureFilters, getTextResolutionScale } from './textTexture';
+import {
+  createTextCanvasTexture,
+  getTextResolutionScale,
+  reallocateTextureIfResized,
+} from './textTexture';
 
 /**
  * Options for creating a DecimalNumber mobject
@@ -358,6 +362,11 @@ export class DecimalNumber extends VMobject {
     // Create new geometry with updated dimensions
     const geometry = new THREE.PlaneGeometry(this._worldWidth, this._worldHeight);
     this._mesh.geometry = geometry;
+
+    // Recreate the texture if the backing canvas changed size (issues #869,
+    // #870: a minus sign widens it); see `textTexture.ts` for why.
+    const next = reallocateTextureIfResized(this._mesh, this._canvas, this._texture);
+    if (next) this._texture = next;
   }
 
   /**
@@ -373,10 +382,9 @@ export class DecimalNumber extends VMobject {
       return group;
     }
 
-    // Create texture from canvas
-    this._texture = new THREE.CanvasTexture(this._canvas);
-    applyTextTextureFilters(this._texture);
-    this._texture.needsUpdate = true;
+    // Create texture from canvas (its allocated size is tracked so a later
+    // resize can recreate it).
+    this._texture = createTextCanvasTexture(this._canvas);
 
     // Create material with transparency
     const material = new THREE.MeshBasicMaterial({
