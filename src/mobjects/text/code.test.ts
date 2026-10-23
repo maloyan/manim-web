@@ -1,5 +1,6 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+import * as THREE from 'three';
 import { Code, DEFAULT_COLOR_SCHEME, MONOKAI_COLOR_SCHEME, TokenType } from './Code';
 
 /** Stub canvas 2D context (happy-dom lacks canvas support) */
@@ -843,5 +844,27 @@ describe('Code', () => {
       const cp = c.copy() as Code;
       expect(cp.getCode()).toBe('hello');
     });
+  });
+});
+
+describe('Code texture reallocation on resize', () => {
+  it('recreates the texture when setCode widens the canvas', () => {
+    const c = new Code({ code: 'x = 1' });
+    c.getThreeObject();
+    const internal = c as unknown as {
+      _texture: THREE.CanvasTexture | null;
+      _canvas: HTMLCanvasElement | null;
+      _mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> | null;
+    };
+    const tex0 = internal._texture!;
+    const widthBefore = internal._canvas!.width;
+    const disposeSpy = vi.spyOn(tex0, 'dispose');
+
+    c.setCode('a much longer line of code that should be wider');
+
+    expect(internal._canvas!.width).toBeGreaterThan(widthBefore);
+    expect(internal._texture).not.toBe(tex0);
+    expect(disposeSpy).toHaveBeenCalled();
+    expect(internal._mesh!.material.map).toBe(internal._texture);
   });
 });

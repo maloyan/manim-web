@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import * as THREE from 'three';
 import { DecimalNumber, Integer } from './DecimalNumber';
 
@@ -483,5 +483,56 @@ describe('Integer', () => {
       const int = new Integer({ value: 42 });
       expect(() => int.dispose()).not.toThrow();
     });
+  });
+});
+
+/**
+ * Issues #869 / #870: a scrubbed number froze at "0.00" past zero. The minus
+ * sign widens the canvas, and three.js keeps the GPU texture at its first
+ * allocated size, so the wider upload failed and the old "0.00" stayed on a
+ * stretched plane. A resize must recreate the texture (same contract as #607).
+ */
+describe('texture reallocation on resize (issues #869, #870)', () => {
+  type Internal = {
+    _texture: THREE.CanvasTexture | null;
+    _canvas: HTMLCanvasElement | null;
+    _mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> | null;
+  };
+
+  it('recreates the texture when a negative value widens the canvas', () => {
+    const n = new DecimalNumber({ value: 0 });
+    n.getThreeObject();
+    const internal = n as unknown as Internal;
+    const tex0 = internal._texture!;
+    const widthBefore = internal._canvas!.width;
+    const disposeSpy = vi.spyOn(tex0, 'dispose');
+
+    n.setValue(-0.4);
+
+    expect(internal._canvas!.width).toBeGreaterThan(widthBefore);
+    expect(internal._texture).not.toBe(tex0);
+    expect(disposeSpy).toHaveBeenCalled();
+    expect(internal._mesh!.material.map).toBe(internal._texture);
+  });
+
+  it('keeps the texture when the width does not change', () => {
+    const n = new DecimalNumber({ value: 0.5 });
+    n.getThreeObject();
+    const internal = n as unknown as Internal;
+    const tex0 = internal._texture!;
+
+    n.setValue(0.25);
+
+    expect(internal._texture).toBe(tex0);
+  });
+
+  it('dispose releases the current texture after a resize', () => {
+    const n = new DecimalNumber({ value: 1 });
+    n.getThreeObject();
+    n.setValue(-1000);
+    const internal = n as unknown as Internal;
+    const spy = vi.spyOn(internal._texture!, 'dispose');
+    n.dispose();
+    expect(spy).toHaveBeenCalled();
   });
 });
