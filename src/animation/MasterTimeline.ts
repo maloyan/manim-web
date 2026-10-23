@@ -13,6 +13,7 @@
  */
 
 import { Animation } from './Animation';
+import { AnimationGroup } from './AnimationGroup';
 import { Timeline } from './Timeline';
 import { logger } from '../utils/logger';
 
@@ -88,10 +89,15 @@ export class MasterTimeline extends Timeline {
    * (e.g. a FadeOut'd mobject stays invisible when scrubbing back).
    */
   override seek(time: number): this {
-    // Reset every segment's animations to pristine state
-    for (const seg of this._segments) {
-      for (const anim of seg.animations) {
-        anim.reset();
+    // Reset every segment's animations to pristine state, last to first.
+    // RecordingScene.play() calls begin() at record time, so a later
+    // animation's snapshot holds the state that an earlier animation's
+    // begin() left behind (e.g. scale 0 after GrowFromCenter.begin()).
+    // Resetting in reverse order lets the earliest snapshot win (#854).
+    for (let s = this._segments.length - 1; s >= 0; s--) {
+      const anims = this._segments[s].animations;
+      for (let a = anims.length - 1; a >= 0; a--) {
+        anims[a].reset();
       }
     }
 
@@ -105,13 +111,19 @@ export class MasterTimeline extends Timeline {
       mobject.opacity = opacity;
     }
 
+    // Every animation is already reset, so the timeline is in its t = 0
+    // state. Rewind the clock to match: otherwise, on a backward seek,
+    // Timeline.seek() resets future animations a second time in forward
+    // order, and a later animation's snapshot overwrites the state that
+    // the reverse reset above restored (#854).
+    this._currentTime = 0;
+
     // Delegate to parent which re-applies animations at target time
     super.seek(time);
 
     // Hide mobjects whose introducing segment hasn't started yet.
-    // This must run AFTER super.seek() because Timeline.seek() calls
-    // reset() again on future animations (for backward seeks), which
-    // would restore their opacity and undo our hiding.
+    // This runs after super.seek(), which re-applies the animations that
+    // have started and so may restore the opacity of a mobject.
     for (const [mobject, segIndex] of this._mobjectFirstSegment) {
       const seg = this._segments[segIndex];
       if (seg && time < seg.startTime) {
@@ -186,15 +198,29 @@ export class MasterTimeline extends Timeline {
     this._segments.push(segment);
 
     // Track which segment first introduces each mobject and save its
-    // original opacity before any seek() hides it.
-    for (const anim of animations) {
-      if (!this._mobjectFirstSegment.has(anim.mobject)) {
+    // original opacity before any seek() hides it. Nested animations
+    // (AnimationGroup, LaggedStart, Succession) introduce their own
+    // mobjects (#861).
+    for (const anim of flattenAnimations(animations)) {
+      if (!this._isAlreadyShown(anim.mobject)) {
         this._mobjectFirstSegment.set(anim.mobject, segmentIndex);
         this._savedMobjectOpacities.set(anim.mobject, anim.mobject.opacity);
       }
     }
 
     return segment;
+  }
+
+  /**
+   * A mobject is already on screen when it, or an ancestor, was introduced
+   * by an earlier segment or was added with `scene.add()`. Such a mobject
+   * must not be hidden before a later segment that animates it (#861).
+   */
+  private _isAlreadyShown(mobject: Mobject): boolean {
+    for (let m: Mobject | null = mobject; m; m = m.parent) {
+      if (this._mobjectFirstSegment.has(m) || m.createdAtBeginning) return true;
+    }
+    return false;
   }
 
   /**
@@ -437,6 +463,18 @@ export class MasterTimeline extends Timeline {
   get segmentCount(): number {
     return this._segments.length;
   }
+}
+
+/** Depth-first list of `animations` and every animation nested in a group. */
+function flattenAnimations(animations: readonly Animation[]): Animation[] {
+  const result: Animation[] = [];
+  for (const anim of animations) {
+    result.push(anim);
+    if (anim instanceof AnimationGroup) {
+      result.push(...flattenAnimations(anim.animations));
+    }
+  }
+  return result;
 }
 
 /**

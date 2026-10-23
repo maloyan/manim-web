@@ -56,6 +56,13 @@ export interface MobjectStyle {
   strokeWidth?: number;
 }
 
+/** Own color fields of one mobject node (see Mobject._getColorState). */
+export interface MobjectColorState {
+  color: string;
+  strokeColor?: string;
+  fillColor?: string;
+}
+
 /**
  * Duck-type interface for Mobject, used to avoid circular imports.
  * MobjectPositioning, MobjectState, and other helper modules use this
