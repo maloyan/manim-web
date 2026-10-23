@@ -92,12 +92,19 @@ See the [docs and examples](https://maloyan.github.io/manim-web/) for more, incl
 
 <table>
 <tr>
-<td align="center"><img src="assets/demo_function_graph.gif" width="350" alt="Function Graphs"><br><b>Function Graphs</b></td>
-<td align="center"><img src="assets/demo_math_equations.gif" width="350" alt="LaTeX Equations"><br><b>LaTeX Equations</b></td>
+<td align="center"><img src="assets/demo_molecular.gif" width="280" alt="Caffeine molecule morphing from ball-and-stick to space-filling"><br><b>3D Molecules</b></td>
+<td align="center"><img src="assets/demo_drug_binding.gif" width="280" alt="A ligand docking into a protein pocket with hydrogen bonds"><br><b>Drug Binding</b></td>
+<td align="center"><img src="assets/demo_function_graph.gif" width="280" alt="Function Graphs"><br><b>Function Graphs</b></td>
 </tr>
 <tr>
-<td align="center"><img src="assets/demo_text.gif" width="350" alt="Text Animations"><br><b>Text Animations</b></td>
-<td align="center"><img src="assets/demo_square_to_circle.gif" width="350" alt="Geometry Transforms"><br><b>Geometry Transforms</b></td>
+<td align="center"><img src="assets/demo_math_equations.gif" width="280" alt="LaTeX Equations"><br><b>LaTeX Equations</b></td>
+<td align="center"><img src="assets/demo_chemistry.gif" width="280" alt="SN2 reaction mechanism with electron-pushing arrows"><br><b>Reaction Mechanisms</b></td>
+<td align="center"><img src="assets/demo_biology.gif" width="280" alt="DNA double helix zipping and unzipping its base pairs"><br><b>DNA and Biology</b></td>
+</tr>
+<tr>
+<td align="center"><img src="assets/demo_maps.gif" width="280" alt="Flight routes from Yerevan on a Robinson world map"><br><b>Maps and Routes</b></td>
+<td align="center"><img src="assets/demo_text.gif" width="280" alt="Text Animations"><br><b>Text Animations</b></td>
+<td align="center"><img src="assets/demo_square_to_circle.gif" width="280" alt="Geometry Transforms"><br><b>Geometry Transforms</b></td>
 </tr>
 </table>
 
