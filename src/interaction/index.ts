@@ -28,6 +28,12 @@ export { Clickable, makeClickable, type ClickableOptions } from './Clickable';
 // Explorable interactivity
 export { MovablePoint, makeMovablePoint, type MovablePointOptions } from './MovablePoint';
 export { Slider, makeSlider, type SliderOptions } from './Slider';
+export {
+  Scrubbable,
+  makeScrubbable,
+  makeScrubbableEntries,
+  type ScrubbableOptions,
+} from './Scrubbable';
 
 // Dynamic (continuous) matrix transformations
 export {
