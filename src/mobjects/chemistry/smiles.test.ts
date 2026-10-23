@@ -301,50 +301,72 @@ describe('parseSmiles: long chains (iterative layout)', () => {
     expect(atoms.every((a) => Number.isFinite(a.x) && Number.isFinite(a.y))).toBe(true);
   });
 
-  it('keeps the layout of short structures unchanged (regression)', () => {
-    // Golden coordinates captured from the recursive layout before the rewrite.
-    const cases: Array<[string, number[][]]> = [
-      [
-        'CCCC',
-        [
-          [0, 0],
-          [-0.866025, -0.5],
-          [-0.866025, 0.5],
-          [-1.732051, 0],
-        ],
-      ],
-      [
-        'CC(C)CC',
-        [
-          [0, 0],
-          [-0.866025, -0.5],
-          [-0.866025, 0.5],
-          [0, -1],
-          [0, 0],
-        ],
-      ],
-      [
-        'C1CCC(CC)CC1',
-        [
-          [1, 1],
-          [1.866025, 0.5],
-          [1.866025, -0.5],
-          [1, -1],
-          [0.133975, -0.5],
-          [0.133975, -1.5],
-          [0.133975, -0.5],
-          [0.133975, 0.5],
-        ],
-      ],
-    ];
-    for (const [smiles, expected] of cases) {
-      const { atoms } = parseSmiles(smiles);
-      expect(atoms).toHaveLength(expected.length);
-      atoms.forEach((atom, i) => {
-        expect(atom.x).toBeCloseTo(expected[i][0], 5);
-        expect(atom.y).toBeCloseTo(expected[i][1], 5);
-      });
+  it('lays a long chain without two atoms on the same point', () => {
+    const { atoms } = parseSmiles('C'.repeat(200));
+    expect(minAtomDistance(atoms)).toBeGreaterThan(0.9);
+  });
+});
+
+/** Smallest distance between any two atoms of a layout. */
+function minAtomDistance(atoms: ReadonlyArray<{ x: number; y: number }>): number {
+  let m = Infinity;
+  for (let i = 0; i < atoms.length; i++) {
+    for (let j = i + 1; j < atoms.length; j++) {
+      m = Math.min(m, dist(atoms[i], atoms[j]));
     }
+  }
+  return m;
+}
+
+/** Angle, in degrees, at vertex b of the path a-b-c. */
+function angleAt(
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+  c: { x: number; y: number },
+): number {
+  const u = Math.atan2(a.y - b.y, a.x - b.x);
+  const v = Math.atan2(c.y - b.y, c.x - b.x);
+  let d = Math.abs(u - v) % (2 * Math.PI);
+  if (d > Math.PI) {
+    d = 2 * Math.PI - d;
+  }
+  return (d * 180) / Math.PI;
+}
+
+describe('parseSmiles: layout quality (#857)', () => {
+  // MIGRATION: examples for the properties
+  //   ∀ SMILES s, ∀ atoms i !== j of parseSmiles(s): dist(i, j) >= 0.9 (no overlap),
+  //   ∀ bond b of parseSmiles(s): dist(b.from, b.to) === 1,
+  //   ∀ acyclic atom with 2 bonds: the bond angle === 120 degrees.
+  // Replace with a property test over generated SMILES once the suite lands.
+  const molecules = [
+    'CCO',
+    'CC(C)C',
+    'c1ccccc1',
+    'c1ccc2ccccc2c1',
+    'CN1C=NC2=C1C(=O)N(C(=O)N2C)C',
+    'CC(=O)OC1=CC=CC=C1C(=O)O',
+  ];
+  for (const smiles of molecules) {
+    it(`"${smiles}": no two atoms overlap and every bond is one unit long`, () => {
+      const { atoms, bonds } = parseSmiles(smiles);
+      expect(minAtomDistance(atoms)).toBeGreaterThanOrEqual(0.9);
+      for (const b of bonds) {
+        expect(dist(atoms[b.from], atoms[b.to])).toBeCloseTo(1, 5);
+      }
+    });
+  }
+
+  it('draws the C-C-O angle of ethanol at 120 degrees', () => {
+    const { atoms } = parseSmiles('CCO');
+    expect(angleAt(atoms[0], atoms[1], atoms[2])).toBeCloseTo(120, 5);
+  });
+
+  it('builds a single-atom SMILES C as one labelled atom', () => {
+    const mol = moleculeFromSmiles('C');
+    expect(mol.numAtoms).toBe(1);
+    expect(mol.getAtom(0)?.label?.getText()).toBe('C');
+    expect(() => mol.moveTo([0, 0, 0])).not.toThrow();
   });
 });
 
