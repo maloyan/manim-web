@@ -27,6 +27,22 @@ export class GrowArrow extends Animation<Arrow> {
   private _endShaftCenter = new THREE.Vector3();
   private _endTipCenter = new THREE.Vector3();
 
+  /**
+   * Whether the end state above has been captured. The capture happens
+   * on the FIRST begin() only — the same once-only contract as the
+   * base class's pre-animation snapshot. The recording Player resets
+   * every animation and re-begins it on each seek (MasterTimeline.seek),
+   * and Animation.reset() restores points and the ROOT transform but
+   * not child transforms — so after a reset the shaft/tip still sit
+   * in the collapsed interpolate(0) state this begin() installed.
+   * Re-capturing there would take that collapsed state as the target
+   * and the arrow could never grow again. Sibling grow animations can
+   * safely re-capture in begin() because they animate the mobject's
+   * own transform, which reset() does restore; GrowArrow animates its
+   * children's transforms, so it must capture once.
+   */
+  private _endStateCaptured = false;
+
   constructor(mobject: Arrow, options: GrowArrowOptions = {}) {
     super(mobject, options);
   }
@@ -39,20 +55,23 @@ export class GrowArrow extends Animation<Arrow> {
     const tip = arrow.children[1];
     if (!shaft || !tip) throw new Error('GrowArrow requires Arrow to have shaft and tip children');
 
-    const [sx, sy, sz] = arrow.getStart();
-    this._start.set(sx, sy, sz);
-    this._endShaftPos.copy(shaft.position);
-    this._endTipPos.copy(tip.position);
-    this._endShaftScale.copy(shaft.scaleVector);
-    this._endTipScale.copy(tip.scaleVector);
+    if (!this._endStateCaptured) {
+      const [sx, sy, sz] = arrow.getStart();
+      this._start.set(sx, sy, sz);
+      this._endShaftPos.copy(shaft.position);
+      this._endTipPos.copy(tip.position);
+      this._endShaftScale.copy(shaft.scaleVector);
+      this._endTipScale.copy(tip.scaleVector);
 
-    {
-      const c = shaft.getCenter();
-      this._endShaftCenter.set(c[0], c[1], c[2]);
-    }
-    {
-      const c = tip.getCenter();
-      this._endTipCenter.set(c[0], c[1], c[2]);
+      {
+        const c = shaft.getCenter();
+        this._endShaftCenter.set(c[0], c[1], c[2]);
+      }
+      {
+        const c = tip.getCenter();
+        this._endTipCenter.set(c[0], c[1], c[2]);
+      }
+      this._endStateCaptured = true;
     }
 
     this.interpolate(0);
