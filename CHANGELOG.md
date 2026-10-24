@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.40.1](https://github.com/maloyan/manim-web/compare/v0.40.0...v0.40.1) (2026-10-24)
+
+
+### Bug Fixes
+
+* **#869, #870:** recreate DecimalNumber/Code texture when the canvas resizes ([5fc58c4](https://github.com/maloyan/manim-web/commit/5fc58c4253358ce9ad9d5a90b99078eb01872033)), closes [#869](https://github.com/maloyan/manim-web/issues/869) [#870](https://github.com/maloyan/manim-web/issues/870) [#607](https://github.com/maloyan/manim-web/issues/607) [#869](https://github.com/maloyan/manim-web/issues/869) [#870](https://github.com/maloyan/manim-web/issues/870)
+* **text:** MathTex.copy() no longer duplicates glyphs or loses parts ([50d993f](https://github.com/maloyan/manim-web/commit/50d993fa343fc0035bf7d784608c3e4a5ec5335f))
+
+
+### Documentation
+
+* **readme:** add molecular, drug binding, chemistry, biology and map demo GIFs ([#872](https://github.com/maloyan/manim-web/issues/872)) ([dd36942](https://github.com/maloyan/manim-web/commit/dd36942ceb00f3c2097fe3632f58211fbcb0452e))
+
 ## [0.40.0](https://github.com/maloyan/manim-web/compare/v0.39.4...v0.40.0) (2026-10-23)
 
 
