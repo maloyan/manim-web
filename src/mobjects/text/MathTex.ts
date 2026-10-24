@@ -50,6 +50,19 @@ function hasGetLatex(m: object): m is { getLatex(): string } {
   return 'getLatex' in m && typeof m.getLatex === 'function';
 }
 
+/**
+ * Internal construction token: when set as a symbol-keyed property on the
+ * options object, the constructor does not start a render. Only copy()
+ * sets it — for a copy of an already-rendered MathTex, whose geometry
+ * arrives via the deep copy in copy() instead of a render. A module-private
+ * symbol key keeps the token out of the public {@link MathTexOptions} type
+ * (and out of the built typings); only code in this module can set it.
+ */
+const SKIP_RENDER: unique symbol = Symbol('MathTex.skipRender');
+
+/** {@link MathTexOptions} plus the internal {@link SKIP_RENDER} token. */
+type MathTexOptionsWithSkip = MathTexOptions & { [SKIP_RENDER]?: boolean };
+
 export class MathTex extends VGroup {
   protected _latex: string;
   protected _fontSize: number;
@@ -69,6 +82,22 @@ export class MathTex extends VGroup {
   protected _renderPromise: Promise<void> | null = null;
   /** Error from rendering, if any */
   protected _renderError: Error | null = null;
+  /**
+   * The original per-part LaTeX strings (multi-part only), retained from
+   * construction. copy() reconstructs a multi-part copy from this list —
+   * NOT from `_parts`, which is empty until the first render lands (a
+   * pre-render copy built from `_parts` got `latex: []` and stayed empty).
+   */
+  protected _latexParts: string[] | null = null;
+  /**
+   * True once this instance's geometry is settled: either a render's
+   * result has actually been applied here, or copy() set it on a copy
+   * whose deep-copied children ARE the geometry (such a copy starts no
+   * render of its own). copy() keys its no-render decision for the copy
+   * on this flag rather than on `children.length > 0`: children are the
+   * geometry, this is the event that produced them.
+   */
+  protected _renderCompleted: boolean = false;
 
   constructor(options: MathTexOptions) {
     super();
@@ -76,6 +105,10 @@ export class MathTex extends VGroup {
     // Validate options via typia and read required latex field
     typia.assert<MathTexOptions>(options);
     const latex = options.latex;
+
+    // Internal (copy() only): the instance's geometry comes from a deep
+    // copy, so no render starts. See SKIP_RENDER.
+    const skipRender = (options as MathTexOptionsWithSkip)[SKIP_RENDER] === true;
 
     const {
       color = getActiveTheme().fillColor,
@@ -105,12 +138,26 @@ export class MathTex extends VGroup {
       // Multi-part mode: render the FULL expression as one MathJax call
       // for correct layout, then split VMobjects into parts by glyph count.
       this._isMultiPart = true;
+      this._latexParts = [...latex];
       this._latex = latex.join('');
-      this._renderPromise = this._renderMultiPart(latex);
+      if (!skipRender) {
+        this._renderPromise = this._renderMultiPart(latex)
+          .then(() => {
+            this._markDirty();
+          })
+          .catch((error) => {
+            // Mirror _startRender's catch: a render failure is recorded
+            // and surfaces via waitForRender(), as on the single-part path.
+            logger.error('MathTex rendering error:', error);
+            this._renderError = error instanceof Error ? error : new Error(String(error));
+          });
+      }
     } else {
       this._isMultiPart = false;
       this._latex = latex;
-      this._startRender();
+      if (!skipRender) {
+        this._startRender();
+      }
     }
   }
 
@@ -311,6 +358,8 @@ export class MathTex extends VGroup {
     // Set fillOpacity on this VGroup so Create animation detects it has fill
     // and properly hides it during the stroke-draw phase before fading it in.
     this.fillOpacity = this._svgFillOpacity;
+
+    this._renderCompleted = true;
   }
 
   /**
@@ -446,6 +495,7 @@ export class MathTex extends VGroup {
       color: this._color,
       macros: this._macros,
     });
+
     const viewBox = fullResult.svgElement.getAttribute?.('viewBox');
     if (viewBox) {
       const parts = viewBox.split(/\s+/).map(Number);
@@ -515,6 +565,8 @@ export class MathTex extends VGroup {
 
     // Set fillOpacity on the parent VGroup for Create animation
     this.fillOpacity = this._svgFillOpacity;
+
+    this._renderCompleted = true;
   }
 
   /**
@@ -524,7 +576,7 @@ export class MathTex extends VGroup {
   private static _PartGroup = class extends VGroup {
     _latex: string = '';
     _color: string = getActiveTheme().fillColor;
-    constructor(_parent: MathTex) {
+    constructor(_parent?: MathTex) {
       super();
     }
 
@@ -542,11 +594,24 @@ export class MathTex extends VGroup {
     getLatex(): string {
       return this._latex;
     }
+
+    override copy(): VGroup {
+      const copy = new MathTex._PartGroup();
+      copy._latex = this._latex;
+      copy._color = this._color;
+      this._copyBaseAttributesInto(copy);
+      return copy;
+    }
   };
 
   override copy(): MathTex {
-    const latexValue = this._isMultiPart ? this._parts.map((p) => p._latex) : this._latex;
-    const copy = new MathTex({
+    // Multi-part: rebuild from the parts retained at construction. (This
+    // used to read `this._parts`, which is empty until the render lands —
+    // a copy made before that got `latex: []` and stayed empty forever.)
+    // _latexParts is non-null exactly when _isMultiPart: the constructor
+    // sets both in the same branch, and nothing else sets either.
+    const latexValue = this._isMultiPart ? [...(this._latexParts as string[])] : this._latex;
+    const options: MathTexOptionsWithSkip = {
       latex: latexValue,
       color: this._color,
       fontSize: this._fontSize,
@@ -556,8 +621,31 @@ export class MathTex extends VGroup {
       fillOpacity: this._svgFillOpacity,
       height: this._targetHeight,
       macros: this._macros,
-    });
+    };
+    // If the source had completed its render, the deep copy below is the
+    // copy's complete geometry: mark the options so the constructor does
+    // not start a redundant render at all (a second set of glyphs landing
+    // on top of the deep copy is what broke VGroup.setPoints' partition
+    // invariant for animation state snapshots: "expected N points, got
+    // 2N"). The copy presents as rendered too, so a copy OF this copy
+    // starts no render either. If the source had not rendered yet, the
+    // copy starts its own render: it is the only source of glyphs the
+    // copy gets.
+    if (this._renderCompleted) {
+      options[SKIP_RENDER] = true;
+    }
+    const copy = new MathTex(options);
     this._copyBaseAttributesInto(copy, { copyChildren: true });
+    if (this._renderCompleted) {
+      copy._renderCompleted = true;
+      if (this._isMultiPart) {
+        // No render will rebuild _parts; point it at the copied part
+        // groups (children were copied in part order).
+        copy._parts = copy.children.filter(
+          (c): c is VGroup & { _latex: string } => c instanceof MathTex._PartGroup,
+        );
+      }
+    }
     return copy;
   }
 }
