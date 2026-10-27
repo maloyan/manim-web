@@ -11,6 +11,7 @@
  * Uses renderLatexToSVG() -> svgToVMobjects() pipeline.
  */
 
+import * as THREE from 'three';
 import { VGroup } from '../../core/VGroup';
 import { VMobject } from '../../core/VMobject';
 import type { Mobject, Vector3Tuple } from '../../core/Mobject';
@@ -20,6 +21,7 @@ import { DEFAULT_FONT_SIZE_IN_WORLD_SPACE, DEFAULT_FONT_SIZE_PT } from '../../co
 import typia from 'typia';
 import { renderLatexToSVG } from './MathJaxRenderer';
 import { logger } from '../../utils/logger';
+import { collectGlyphs, firstMaterial, inheritLayering, placeGlyphs } from './mathTexLayout';
 
 /** MathJax SVG uses ~1000 font units per em. */
 const MATHJAX_SVG_UNITS_PER_EM = 1000;
@@ -43,7 +45,16 @@ export interface MathTexOptions {
   height?: number;
   /** Custom LaTeX macros as { name: expansion }. */
   macros?: Record<string, string>;
+  /**
+   * Which horizontal point stays fixed when {@link MathTex.setLatex} changes
+   * the width: `'center'`, the `'left'` edge, or the `'right'` edge. The
+   * vertical center always stays fixed. Default: `'center'`.
+   */
+  anchor?: MathTexAnchor;
 }
+
+/** Horizontal point held fixed when a re-render changes a MathTex's width. */
+export type MathTexAnchor = 'center' | 'left' | 'right';
 
 /** True when `m` exposes a `getLatex()` method. */
 function hasGetLatex(m: object): m is { getLatex(): string } {
@@ -98,6 +109,28 @@ export class MathTex extends VGroup {
    * geometry, this is the event that produced them.
    */
   protected _renderCompleted: boolean = false;
+  /** Horizontal point held fixed across re-renders. See {@link MathTexOptions.anchor}. */
+  protected _anchor: MathTexAnchor = 'center';
+  /**
+   * Incremented by every {@link setLatex} call. A render applies its glyphs
+   * only if no newer render was requested since it started, so the latest
+   * request wins even when renders finish out of order.
+   */
+  protected _renderToken: number = 0;
+  /**
+   * The transform already baked into the glyph points, relative to a fresh
+   * render's layout frame: a pre-render scale() (see _consumePendingScale)
+   * and every normalizeTransform() (which Transform and Group/VGroup
+   * construction call). A re-render applies it to the new glyphs so they
+   * land where the old ones were.
+   */
+  protected _geometryMatrix: THREE.Matrix4 = new THREE.Matrix4();
+  /**
+   * The glyphs' horizontal extent [minX, maxX] in the layout frame (before
+   * _geometryMatrix), or null before the first render. The anchor point of
+   * the next render is placed where this extent's anchor point is.
+   */
+  protected _layoutExtent: [number, number] | null = null;
 
   constructor(options: MathTexOptions) {
     super();
@@ -119,8 +152,10 @@ export class MathTex extends VGroup {
       fillOpacity = 1,
       height,
       macros,
+      anchor = 'center',
     } = options;
 
+    this._anchor = anchor;
     this._fontSize = fontSize;
     this._displayMode = displayMode;
     this._color = color;
@@ -148,8 +183,7 @@ export class MathTex extends VGroup {
           .catch((error) => {
             // Mirror _startRender's catch: a render failure is recorded
             // and surfaces via waitForRender(), as on the single-part path.
-            logger.error('MathTex rendering error:', error);
-            this._renderError = error instanceof Error ? error : new Error(String(error));
+            this._recordRenderError(error);
           });
       }
     } else {
@@ -165,9 +199,13 @@ export class MathTex extends VGroup {
    * Wait for the LaTeX to finish rendering.
    */
   async waitForRender(): Promise<void> {
-    if (this._renderPromise) {
-      await this._renderPromise;
-    }
+    // Wait for the latest render, including any requested (setLatex) while
+    // waiting, so the glyphs are current when this resolves.
+    let pending: Promise<void> | null;
+    do {
+      pending = this._renderPromise;
+      if (pending) await pending;
+    } while (pending !== this._renderPromise);
     if (this._renderError) {
       throw this._renderError;
     }
@@ -200,6 +238,86 @@ export class MathTex extends VGroup {
    */
   getLatex(): string {
     return this._latex;
+  }
+
+  /**
+   * Add children, giving them the scene layering of the glyphs already here.
+   *
+   * Scene.add() stamps a renderOrder (and the 2D depth settings) on the
+   * Three.js subtree it finds at that moment. Glyphs added afterwards (the
+   * first render of a MathTex added before it rendered, every setLatex()
+   * swap) would otherwise keep renderOrder 0 and draw under anything added
+   * to the scene later. So each new child takes this MathTex's renderOrder,
+   * and the depth settings of an existing glyph material when there is one.
+   */
+  override add(...mobjects: Mobject[]): this {
+    const own = this._threeObject;
+    const reference = firstMaterial(own);
+    super.add(...mobjects);
+    if (own) inheritLayering(mobjects, own.renderOrder, reference);
+    return this;
+  }
+
+  /**
+   * Replace the LaTeX and re-render in place.
+   *
+   * The old glyphs stay on screen until the new ones are ready, then are
+   * swapped out in one step. The new glyphs keep this MathTex's color, its
+   * current opacity, and every transform applied so far (including ones
+   * baked into the glyphs by normalizeTransform(), e.g. by a Transform or by
+   * adding it to a Group). The point chosen by the `anchor` option stays
+   * fixed. For a multi-part MathTex with the same number of parts, each
+   * part keeps its color.
+   *
+   * Calls may overlap: only the latest one is applied, and earlier calls
+   * resolve without changing the glyphs. The returned promise rejects if
+   * this call's render fails (and it was not superseded). `getLatex()`
+   * reports the new LaTeX immediately.
+   *
+   * Do not call this while an animation is running on this MathTex: the
+   * glyphs the animation holds are replaced (and disposed).
+   *
+   * @param latex - New LaTeX: a string, or a string array for a multi-part
+   *   expression (see the `latex` option).
+   * @post getLatex() === (Array.isArray(latex) ? latex.join('') : latex)
+   */
+  setLatex(latex: string | string[]): Promise<void> {
+    typia.assert<string | string[]>(latex);
+    const token = ++this._renderToken;
+    this._isMultiPart = Array.isArray(latex);
+    this._latexParts = Array.isArray(latex) ? [...latex] : null;
+    this._latex = Array.isArray(latex) ? latex.join('') : latex;
+    this._renderError = null;
+
+    let failed: Error | null = null;
+    // One render at a time: start after the render in flight settles, and
+    // only if no newer call came in meanwhile. Calls made in one burst (e.g.
+    // several values set in one event) thus cost a single MathJax render.
+    const parts = Array.isArray(latex) ? [...latex] : null;
+    const render = (this._renderPromise ?? Promise.resolve())
+      .catch(() => undefined)
+      .then(() => {
+        if (token !== this._renderToken) return undefined;
+        return parts ? this._renderMultiPart(parts, token) : this._render(token);
+      });
+    this._renderPromise = render
+      .then(() => {
+        this._markDirty();
+      })
+      .catch((error) => {
+        if (token !== this._renderToken) return;
+        failed = this._recordRenderError(error);
+      });
+    return this._renderPromise.then(() => {
+      if (failed) throw failed;
+    });
+  }
+
+  /** Log a render failure and keep it for waitForRender(). */
+  protected _recordRenderError(error: unknown): Error {
+    logger.error('MathTex rendering error:', error);
+    this._renderError = error instanceof Error ? error : new Error(String(error));
+    return this._renderError;
   }
 
   /**
@@ -316,50 +434,116 @@ export class MathTex extends VGroup {
         this._markDirty();
       })
       .catch((error) => {
-        logger.error('MathTex rendering error:', error);
-        this._renderError = error instanceof Error ? error : new Error(String(error));
+        this._recordRenderError(error);
       });
   }
 
   /**
    * Render the LaTeX to VMobject paths.
+   *
+   * @param token - The {@link _renderToken} this render belongs to. If a newer
+   *   render was requested by the time MathJax finishes, this one is dropped
+   *   (its errors too).
    */
-  protected async _render(): Promise<void> {
-    const result = await renderLatexToSVG(this._latex, {
-      displayMode: this._displayMode,
-      color: this._color,
-      macros: this._macros,
-    });
-
-    const viewBox = result.svgElement.getAttribute?.('viewBox');
-    if (viewBox) {
-      const parts = viewBox.split(/\s+/).map(Number);
-      this._svgViewBoxWidth = parts[2] || 1000;
+  protected async _render(token: number = this._renderToken): Promise<void> {
+    let result;
+    try {
+      result = await renderLatexToSVG(this._latex, {
+        displayMode: this._displayMode,
+        color: this._color,
+        macros: this._macros,
+      });
+    } catch (error) {
+      if (token !== this._renderToken) return;
+      throw error;
     }
-
-    const vmobjectGroup = result.vmobjectGroup;
+    if (token !== this._renderToken) return;
 
     // Restyle children: MathJax glyphs should be filled with visible border
-    this._restyleChildren(vmobjectGroup);
+    this._restyleChildren(result.vmobjectGroup);
+    this._commitRender(result.vmobjectGroup, result.svgElement, []);
+  }
 
-    // Add the VMobject children from the group
-    for (const child of [...vmobjectGroup.children]) {
-      vmobjectGroup.remove(child);
-      this.add(child);
+  /**
+   * Lay out freshly rendered glyphs and swap them in for the current ones.
+   *
+   * The staging group's children become this MathTex's children. They are
+   * scaled and centered (_scaleToTarget), shifted so the anchor point lands
+   * where the previous render's did, and given every transform already
+   * baked into the old glyphs (_geometryMatrix). On a re-render they also
+   * take the old glyphs' opacity, and the old glyphs are disposed.
+   *
+   * @post this.children === old(staging.children)
+   * @post this._renderCompleted
+   */
+  protected _commitRender(
+    staging: VGroup,
+    svgElement: SVGElement,
+    parts: Array<VGroup & { _latex: string }>,
+  ): void {
+    const viewBox = svgElement.getAttribute?.('viewBox');
+    if (viewBox) {
+      const vb = viewBox.split(/\s+/).map(Number);
+      this._svgViewBoxWidth = vb[2] || 1000;
     }
 
     // Scale to target height if specified, otherwise use a sensible default
-    this._scaleToTarget();
+    this._scaleToTarget(staging);
+
+    // Hold the anchor point fixed, then apply the transforms already baked
+    // into the old glyphs.
+    const glyphs = collectGlyphs(staging);
+    this._layoutExtent = placeGlyphs(
+      glyphs,
+      this._layoutExtent,
+      this._anchor,
+      this._geometryMatrix,
+    );
+
+    const previous = [...this.children];
+    const previousGlyph = collectGlyphs(this)[0];
+    if (previousGlyph) {
+      for (const glyph of glyphs) {
+        glyph.setFillOpacity(previousGlyph.fillOpacity);
+        glyph.setStrokeOpacity(previousGlyph.opacity);
+      }
+    }
+    // Same number of parts: each new part keeps its old part's color.
+    if (parts.length > 0 && parts.length === this._parts.length) {
+      parts.forEach((part, i) => part.setColor(this._parts[i].color));
+    }
+
+    this.remove(...previous);
+    for (const child of previous) child.dispose();
+    for (const child of [...staging.children]) {
+      staging.remove(child);
+      this.add(child);
+    }
+    this._parts = parts;
 
     // Bake any pre-render scale() call into glyph geometry so subsequent
-    // transforms operate in a consistent coordinate frame (#324).
-    this._consumePendingScale();
-
-    // Set fillOpacity on this VGroup so Create animation detects it has fill
-    // and properly hides it during the stroke-draw phase before fading it in.
-    this.fillOpacity = this._svgFillOpacity;
+    // transforms operate in a consistent coordinate frame (#324). Only the
+    // first render does this: afterwards scale() is an ordinary deferred
+    // transform on this node, which the new glyphs inherit as they are.
+    if (!this._renderCompleted) {
+      this._consumePendingScale();
+      // Set fillOpacity on this VGroup so Create animation detects it has fill
+      // and properly hides it during the stroke-draw phase before fading it in.
+      this.fillOpacity = this._svgFillOpacity;
+    }
 
     this._renderCompleted = true;
+  }
+
+  /**
+   * Fold the flattened transform into _geometryMatrix so a later re-render
+   * can reproduce it. An empty (not yet rendered) MathTex has no glyphs to
+   * fold into, so nothing is recorded and the render lands untransformed,
+   * as before.
+   */
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    if (!this.isEmpty()) this._geometryMatrix.premultiply(worldMatrix);
+    return super.normalizeTransform(worldMatrix);
   }
 
   /**
@@ -397,20 +581,9 @@ export class MathTex extends VGroup {
    *
    * This keeps MathTex aligned with Text/MathTexImage behavior at 48pt.
    */
-  protected _scaleToTarget(): void {
+  protected _scaleToTarget(root: Mobject = this): void {
     // Collect all VMobject descendants (may be direct children or nested in part VGroups)
-    const vmobjects: VMobject[] = [];
-    const collect = (mob: Mobject) => {
-      if (mob instanceof VMobject && !(mob instanceof VGroup)) {
-        vmobjects.push(mob);
-      }
-      if ('children' in mob) {
-        for (const child of (mob as { children: Mobject[] }).children) {
-          collect(child);
-        }
-      }
-    };
-    collect(this);
+    const vmobjects = collectGlyphs(root);
 
     // Compute bounding box from raw point data
     let minX = Infinity,
@@ -476,6 +649,7 @@ export class MathTex extends VGroup {
       mob._markDirty();
     };
     for (const child of this.children) visit(child);
+    this._geometryMatrix.premultiply(new THREE.Matrix4().makeScale(sx, sy, sz));
     this.scaleVector.set(1, 1, 1);
     this._markDirty();
   }
@@ -485,8 +659,22 @@ export class MathTex extends VGroup {
    * 1. Rendering the FULL expression as one MathJax call (correct layout)
    * 2. Rendering each part separately to count its glyphs
    * 3. Splitting the full expression's VMobjects into part groups by glyph count
+   *
+   * @param token - As in {@link _render}: a superseded render is dropped.
    */
-  private async _renderMultiPart(latexParts: string[]): Promise<void> {
+  private async _renderMultiPart(
+    latexParts: string[],
+    token: number = this._renderToken,
+  ): Promise<void> {
+    try {
+      await this._buildMultiPart(latexParts, token);
+    } catch (error) {
+      if (token !== this._renderToken) return;
+      throw error;
+    }
+  }
+
+  private async _buildMultiPart(latexParts: string[], token: number): Promise<void> {
     const fullLatex = latexParts.join('');
 
     // Render the full expression as one unit (correct spacing & layout)
@@ -495,12 +683,6 @@ export class MathTex extends VGroup {
       color: this._color,
       macros: this._macros,
     });
-
-    const viewBox = fullResult.svgElement.getAttribute?.('viewBox');
-    if (viewBox) {
-      const parts = viewBox.split(/\s+/).map(Number);
-      this._svgViewBoxWidth = parts[2] || 1000;
-    }
 
     this._restyleChildren(fullResult.vmobjectGroup);
 
@@ -529,8 +711,11 @@ export class MathTex extends VGroup {
       }
       partGlyphCounts.push(count);
     }
+    if (token !== this._renderToken) return;
 
     // Assign glyphs from the full render to parts by count
+    const staging = new VGroup();
+    const parts: Array<VGroup & { _latex: string }> = [];
     let glyphIdx = 0;
     for (let i = 0; i < latexParts.length; i++) {
       const partGroup = new MathTex._PartGroup(this);
@@ -544,29 +729,18 @@ export class MathTex extends VGroup {
         partGroup.add(glyph);
       }
 
-      this._parts.push(partGroup);
-      this.add(partGroup);
+      parts.push(partGroup);
+      staging.add(partGroup);
     }
 
     // If there are leftover glyphs (spacing elements etc.), add to last part
-    while (glyphIdx < allGlyphs.length) {
-      const lastPart = this._parts[this._parts.length - 1];
+    while (glyphIdx < allGlyphs.length && parts.length > 0) {
       const glyph = allGlyphs[glyphIdx++];
       fullResult.vmobjectGroup.remove(glyph);
-      lastPart.add(glyph);
+      parts[parts.length - 1].add(glyph);
     }
 
-    // Scale and center the full expression
-    this._scaleToTarget();
-
-    // Bake any pre-render scale() call into glyph geometry so subsequent
-    // transforms operate in a consistent coordinate frame (#324).
-    this._consumePendingScale();
-
-    // Set fillOpacity on the parent VGroup for Create animation
-    this.fillOpacity = this._svgFillOpacity;
-
-    this._renderCompleted = true;
+    this._commitRender(staging, fullResult.svgElement, parts);
   }
 
   /**
@@ -605,6 +779,17 @@ export class MathTex extends VGroup {
   };
 
   override copy(): MathTex {
+    const copy = new MathTex(this._copyConstructorOptions());
+    this._copyRenderStateInto(copy);
+    return copy;
+  }
+
+  /**
+   * Constructor options that rebuild this MathTex, for copy(). A subclass's
+   * copy() spreads them into its own constructor options (the internal
+   * no-render token travels with the spread).
+   */
+  protected _copyConstructorOptions(): MathTexOptions {
     // Multi-part: rebuild from the parts retained at construction. (This
     // used to read `this._parts`, which is empty until the render lands —
     // a copy made before that got `latex: []` and stayed empty forever.)
@@ -621,23 +806,35 @@ export class MathTex extends VGroup {
       fillOpacity: this._svgFillOpacity,
       height: this._targetHeight,
       macros: this._macros,
+      anchor: this._anchor,
     };
-    // If the source had completed its render, the deep copy below is the
-    // copy's complete geometry: mark the options so the constructor does
-    // not start a redundant render at all (a second set of glyphs landing
-    // on top of the deep copy is what broke VGroup.setPoints' partition
-    // invariant for animation state snapshots: "expected N points, got
-    // 2N"). The copy presents as rendered too, so a copy OF this copy
-    // starts no render either. If the source had not rendered yet, the
-    // copy starts its own render: it is the only source of glyphs the
-    // copy gets.
+    // If the source had completed its render, the deep copy made by
+    // _copyRenderStateInto is the copy's complete geometry: mark the options
+    // so the constructor does not start a redundant render at all (a second
+    // set of glyphs landing on top of the deep copy is what broke
+    // VGroup.setPoints' partition invariant for animation state snapshots:
+    // "expected N points, got 2N"). The copy presents as rendered too, so a
+    // copy OF this copy starts no render either. If the source had not
+    // rendered yet, the copy starts its own render: it is the only source of
+    // glyphs the copy gets.
     if (this._renderCompleted) {
       options[SKIP_RENDER] = true;
     }
-    const copy = new MathTex(options);
+    return options;
+  }
+
+  /**
+   * Deep-copy the children and the render state into `copy`, a fresh
+   * instance built from {@link _copyConstructorOptions}.
+   */
+  protected _copyRenderStateInto(copy: MathTex): void {
     this._copyBaseAttributesInto(copy, { copyChildren: true });
     if (this._renderCompleted) {
       copy._renderCompleted = true;
+      // The copied glyphs carry the same baked transform and layout, so a
+      // setLatex() on the copy re-renders them in the same place.
+      copy._geometryMatrix.copy(this._geometryMatrix);
+      copy._layoutExtent = this._layoutExtent ? [...this._layoutExtent] : null;
       if (this._isMultiPart) {
         // No render will rebuild _parts; point it at the copied part
         // groups (children were copied in part order).
@@ -646,7 +843,6 @@ export class MathTex extends VGroup {
         );
       }
     }
-    return copy;
   }
 }
 

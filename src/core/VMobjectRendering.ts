@@ -274,6 +274,11 @@ export abstract class VMobjectRendering extends Mobject {
     });
 
     this._updateGeometry(group);
+    // The geometry was just built from the current points and opacity, so
+    // the first sync has nothing to rebuild. Without this, every new
+    // VMobject triangulated its fill twice (once here, once on first sync).
+    this._geometryDirty = false;
+    this._wasOpaque = this._opacity >= 1;
 
     return group;
   }

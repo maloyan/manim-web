@@ -3,6 +3,7 @@ import { Mobject, Vector3Tuple } from '../core/Mobject';
 import { Scene } from '../core/Scene';
 import { DecimalNumber } from '../mobjects/text/DecimalNumber';
 import { ValueTracker } from '../mobjects/value-tracker/ValueTracker';
+import { claimTouch, releaseTouch, screenToWorld, setCanvasCursor } from './pointerShared';
 
 /**
  * Options for {@link Scrubbable} / {@link makeScrubbable}.
@@ -39,40 +40,6 @@ export interface ScrubbableOptions {
    * render loop (play(), wait() with updaters) is already running.
    */
   autoRender?: boolean;
-}
-
-/**
- * Scrubbables that currently own the cursor, per canvas. Several numbers can
- * share one canvas (e.g. the cells of a DecimalTable); the cursor resets only
- * when none of them is hovered, so one number leaving cannot clear the cursor
- * another number just set.
- */
-const cursorOwners = new WeakMap<HTMLCanvasElement, Set<Scrubbable>>();
-
-/**
- * Live Scrubbables per canvas, and the canvas touch-action before the first
- * one. On touch, the browser pans the page and sends pointercancel unless
- * the canvas has `touch-action: none`, so a scrub would end at once. The
- * last dispose() restores the old value.
- */
-const touchClaims = new WeakMap<HTMLCanvasElement, { count: number; previous: string }>();
-
-function claimTouch(canvas: HTMLCanvasElement): void {
-  const claim = touchClaims.get(canvas);
-  if (claim) {
-    claim.count++;
-    return;
-  }
-  touchClaims.set(canvas, { count: 1, previous: canvas.style.touchAction });
-  canvas.style.touchAction = 'none';
-}
-
-function releaseTouch(canvas: HTMLCanvasElement): void {
-  const claim = touchClaims.get(canvas);
-  if (!claim) return;
-  if (--claim.count > 0) return;
-  canvas.style.touchAction = claim.previous;
-  touchClaims.delete(canvas);
 }
 
 /**
@@ -261,27 +228,7 @@ export class Scrubbable {
   }
 
   private _setHover(hovered: boolean): void {
-    const canvas = this._scene.getCanvas();
-    let owners = cursorOwners.get(canvas);
-    if (!owners) {
-      owners = new Set();
-      cursorOwners.set(canvas, owners);
-    }
-    if (hovered) {
-      owners.add(this);
-      canvas.style.cursor = this._cursor;
-    } else if (owners.delete(this) && owners.size === 0) {
-      canvas.style.cursor = '';
-    }
-  }
-
-  /** Canvas client point -> 2D world point (same mapping as Draggable). */
-  private _screenToWorld(clientX: number, clientY: number): [number, number] {
-    const rect = this._scene.getCanvas().getBoundingClientRect();
-    const ndcX = ((clientX - rect.left) / rect.width) * 2 - 1;
-    const ndcY = -((clientY - rect.top) / rect.height) * 2 + 1;
-    const camera = this._scene.camera;
-    return [(ndcX * camera.frameWidth) / 2, (ndcY * camera.frameHeight) / 2];
+    setCanvasCursor(this._scene.getCanvas(), this, hovered ? this._cursor : null);
   }
 
   /**
@@ -290,7 +237,7 @@ export class Scrubbable {
    * DecimalTable or MobjectMatrix is hit where it is drawn.
    */
   private _hitTest(clientX: number, clientY: number): boolean {
-    const [x, y] = this._screenToWorld(clientX, clientY);
+    const [x, y] = screenToWorld(this._scene, clientX, clientY);
     // The text size is measured when the backing object is built.
     if (this._decimal.getWidth() === 0) this._decimal.getThreeObject();
     const hw = this._decimal.getWidth() / 2;

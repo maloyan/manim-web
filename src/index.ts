@@ -620,6 +620,7 @@ export {
   // MathTex - SVG vector-based (default, like Python Manim)
   MathTex,
   type MathTexOptions,
+  type MathTexAnchor,
   // MathTexSVG - deprecated alias for MathTex (backwards compat)
   MathTexSVG,
   type MathTexSVGOptions,
@@ -629,6 +630,18 @@ export {
   type TexRenderer,
   Tex,
   type TexOptions,
+  TangleTex,
+  type TangleTexOptions,
+  TangleExpand,
+  TangleCollapse,
+  TangleMatrixMorph,
+  type TangleMorphOptions,
+  snapTangleValue,
+  type TangleParam,
+  type TangleMatrix,
+  type TangleMatrixBrackets,
+  type ResolvedTangleParam,
+  type ResolvedTangleMatrix,
   ensureKatexStyles,
   areKatexStylesLoaded,
   setKatexStylesheetUrl,
@@ -643,6 +656,7 @@ export {
   // SVG path parser
   parseSVGPathData,
   svgToVMobjects,
+  getGlyphClasses,
   type SVGToVMobjectOptions,
   DecimalNumber,
   Integer,
@@ -1784,6 +1798,9 @@ export {
   makeScrubbable,
   makeScrubbableEntries,
   type ScrubbableOptions,
+  Tangle,
+  makeTangle,
+  type TangleOptions,
 } from './interaction';
 
 // Interaction - Selection
