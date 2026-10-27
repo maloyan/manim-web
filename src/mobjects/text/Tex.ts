@@ -16,6 +16,16 @@ import { MathTex, MathTexOptions } from './MathTex';
 export type TexOptions = MathTexOptions;
 
 /**
+ * Wrap in \text{...} for text-mode rendering (upright serif, proper word spacing).
+ * Split on \\ to handle line breaks, wrap each segment separately.
+ */
+function wrapText(latex: string | string[]): string {
+  const latexStr = Array.isArray(latex) ? latex.join(' \\\\ ') : latex;
+  const parts = latexStr.split('\\\\');
+  return parts.map((p: string) => `\\text{${p.trim()}}`).join(' \\\\ ');
+}
+
+/**
  * Tex - LaTeX rendering for manimweb
  *
  * This is an alias for MathTex to provide Manim API compatibility.
@@ -38,13 +48,17 @@ export class Tex extends MathTex {
   private _originalLatex: string | string[];
 
   constructor(options: TexOptions) {
-    // Wrap in \text{...} for text-mode rendering (upright serif, proper word spacing)
-    // Split on \\ to handle line breaks, wrap each segment separately
-    const latexStr = Array.isArray(options.latex) ? options.latex.join(' \\\\ ') : options.latex;
-    const parts = latexStr.split('\\\\');
-    const wrapped = parts.map((p: string) => `\\text{${p.trim()}}`).join(' \\\\ ');
-    super({ ...options, latex: wrapped });
+    super({ ...options, latex: wrapText(options.latex) });
     this._originalLatex = options.latex;
+  }
+
+  /**
+   * Replace the text and re-render in place, wrapping it in `\text{...}`
+   * like the constructor does. See {@link MathTex.setLatex}.
+   */
+  override setLatex(latex: string | string[]): Promise<void> {
+    this._originalLatex = latex;
+    return super.setLatex(wrapText(latex));
   }
 
   override copy(): Tex {
@@ -58,6 +72,7 @@ export class Tex extends MathTex {
       fillOpacity: this._svgFillOpacity,
       height: this._targetHeight,
       macros: this._macros,
+      anchor: this._anchor,
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
