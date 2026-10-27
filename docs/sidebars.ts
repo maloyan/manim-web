@@ -29,6 +29,8 @@ const sidebars: SidebarsConfig = {
         'examples/bubbles-pen-sonifier-table',
         'examples/apply-matrix-live',
         'examples/scrubbable-number',
+        'examples/tangle-tex',
+        'examples/bivariate-normal',
       ],
     },
     {
