@@ -2,14 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { Circle } from './Circle';
 import { Arc } from './Arc';
 import { Rectangle, Square } from './Rectangle';
-import { BLUE } from '../../constants';
+import { RED } from '../../constants';
 
 describe('Circle', () => {
   it('constructs with default options', () => {
     const c = new Circle();
     expect(c.getRadius()).toBe(1);
     expect(c.getCenter()).toEqual([0, 0, 0]);
-    expect(c.color).toBe(BLUE);
+    expect(c.color).toBe(RED);
     expect(c.fillOpacity).toBe(0);
   });
 

@@ -118,7 +118,7 @@ export class LabeledLine extends VGroup {
       labelOffset = 0.2,
       labelFontSize = 36,
       labelColor,
-      color = BLUE,
+      color = WHITE,
       strokeWidth,
     } = options;
 
@@ -330,7 +330,7 @@ export class LabeledArrow extends VGroup {
       labelOffset = 0.25,
       labelFontSize = 36,
       labelColor,
-      color = BLUE,
+      color = WHITE,
       strokeWidth,
       tipLength,
       tipWidth,

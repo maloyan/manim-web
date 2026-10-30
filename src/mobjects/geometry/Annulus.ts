@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 
 export interface AnnulusOptions {
   innerRadius?: number;
@@ -22,8 +22,8 @@ export class Annulus extends VMobject {
     const {
       innerRadius = 0.5,
       outerRadius = 1,
-      color = BLUE,
-      fillOpacity = 0.5,
+      color = WHITE,
+      fillOpacity = 1,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       center = [0, 0, 0],
       numComponents = 8,

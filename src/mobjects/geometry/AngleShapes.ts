@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, WHITE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { WHITE, DEFAULT_STROKE_WIDTH } from '../../constants';
 import { Line } from './Line';
 import { crossVec, dotVec, lengthVec, normalizeVec } from '../../utils/vectors';
 
@@ -472,7 +472,7 @@ export class RightAngle extends VMobject {
   constructor(input: AngleInput, options: RightAngleOptions = {}) {
     super();
 
-    const { size = 0.3, color = BLUE, strokeWidth = DEFAULT_STROKE_WIDTH } = options;
+    const { size = 0.3, color = WHITE, strokeWidth = DEFAULT_STROKE_WIDTH } = options;
 
     this._size = size;
     this.color = color;
@@ -681,7 +681,7 @@ export class Elbow extends VMobject {
       width = 1,
       height = 1,
       angle = 0,
-      color = BLUE,
+      color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       position = [0, 0, 0],
     } = options;
@@ -865,7 +865,7 @@ export class TangentLine extends VMobject {
     const {
       t = 0.5,
       length = 2,
-      color = BLUE,
+      color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       dT = 0.001,
     } = options;
