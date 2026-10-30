@@ -124,6 +124,17 @@ export class ValueTracker extends Mobject {
   }
 
   /**
+   * Interpolate the tracked value between two snapshots. Called by
+   * `tracker.animate`, so `tracker.animate.setValue(x)` animates the value the
+   * way ManimCE's point-backed ValueTracker does.
+   * @post this.getValue() === start.getValue() + (end.getValue() - start.getValue()) * alpha
+   */
+  interpolateCustomState(start: Mobject, end: Mobject, alpha: number): void {
+    if (!(start instanceof ValueTracker) || !(end instanceof ValueTracker)) return;
+    this.setValue(start.getValue() + (end.getValue() - start.getValue()) * alpha);
+  }
+
+  /**
    * Create an animation that smoothly changes the value.
    * @param targetValue - The value to animate to
    * @param options - Animation options (duration, rateFunc, etc.)
