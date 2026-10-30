@@ -930,10 +930,10 @@ describe('VMobjectRendering.getOwnStrokeLines', () => {
 // =============================================================================
 
 describe('Create factory', () => {
-  it('default duration is 2', () => {
+  it('default duration is 1', () => {
     const m = new TestMobject();
     const anim = create(m);
-    expect(anim.duration).toBe(2);
+    expect(anim.duration).toBe(1);
   });
 });
 

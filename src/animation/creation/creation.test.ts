@@ -144,9 +144,9 @@ describe('Create', () => {
   });
 
   describe('constructor', () => {
-    it('sets default duration to 2', () => {
+    it('sets default duration to 1', () => {
       const anim = new Create(mob);
-      expect(anim.duration).toBe(2);
+      expect(anim.duration).toBe(1);
     });
 
     it('accepts custom duration', () => {
@@ -284,10 +284,10 @@ describe('create() factory', () => {
     expect(anim.rateFunc).toBe(linear);
   });
 
-  it('default duration is 2', () => {
+  it('default duration is 1', () => {
     const mob = new MockPlainMobject();
     const anim = create(mob);
-    expect(anim.duration).toBe(2);
+    expect(anim.duration).toBe(1);
   });
 });
 
@@ -384,9 +384,9 @@ describe('Uncreate', () => {
   });
 
   describe('constructor', () => {
-    it('sets default duration to 2', () => {
+    it('sets default duration to 1', () => {
       const anim = new Uncreate(mob);
-      expect(anim.duration).toBe(2);
+      expect(anim.duration).toBe(1);
     });
 
     it('accepts custom duration', () => {
