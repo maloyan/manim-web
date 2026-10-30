@@ -271,6 +271,9 @@ export abstract class VMobjectRendering extends Mobject {
       depthWrite: false,
       opacity: this._opacity * this.fillOpacity,
       side: THREE.DoubleSide,
+      // Flat mesh: draw both faces in one pass. Otherwise three.js renders a
+      // transparent DoubleSide material twice and re-resolves its program per frame.
+      forceSinglePass: true,
     });
 
     this._updateGeometry(group);
@@ -555,6 +558,9 @@ export abstract class VMobjectRendering extends Mobject {
         new THREE.MeshBasicMaterial({
           color: new THREE.Color(this.color),
           side: THREE.DoubleSide,
+          // Flat mesh: draw both faces in one pass. Otherwise three.js renders a
+          // transparent DoubleSide material twice and re-resolves its program per frame.
+          forceSinglePass: true,
           depthTest: false,
           transparent: this._opacity < 1,
           depthWrite: this._opacity >= 1,

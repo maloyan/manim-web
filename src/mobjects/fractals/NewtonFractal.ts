@@ -280,6 +280,9 @@ export class NewtonFractal extends Mobject {
       fragmentShader: FRAGMENT_SHADER,
       transparent: this._opacity < 1,
       side: THREE.DoubleSide,
+      // Flat mesh: draw both faces in one pass. Otherwise three.js renders a
+      // transparent DoubleSide material twice and re-resolves its program per frame.
+      forceSinglePass: true,
     });
 
     return new THREE.Mesh(geometry, this._material);

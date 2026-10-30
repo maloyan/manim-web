@@ -289,6 +289,9 @@ export class DomainColoring extends Mobject3D {
       opacity: this._opacity,
       transparent: this._opacity < 1,
       side: THREE.DoubleSide,
+      // Flat mesh: draw both faces in one pass. Otherwise three.js renders a
+      // transparent DoubleSide material twice and re-resolves its program per frame.
+      forceSinglePass: true,
     });
     return new THREE.Mesh(this._buildGeometry(), material);
   }

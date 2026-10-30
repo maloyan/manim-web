@@ -649,6 +649,9 @@ export class Text extends TexturedMobject {
       map: this._texture,
       transparent: true,
       side: THREE.DoubleSide,
+      // Flat mesh: draw both faces in one pass. Otherwise three.js renders a
+      // transparent DoubleSide material twice and re-resolves its program per frame.
+      forceSinglePass: true,
       depthWrite: false,
     });
 
