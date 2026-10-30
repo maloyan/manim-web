@@ -23,3 +23,5 @@ thoughts/
 .claude
 .desloppify/
 examples/.e2e/
+parity/results/
+parity/__pycache__/
