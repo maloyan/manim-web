@@ -369,6 +369,9 @@ export class AnimatedImageMobject extends TexturedMobject {
       transparent: true,
       opacity: this._opacity,
       side: this._doubleSided ? THREE.DoubleSide : THREE.FrontSide,
+      // Flat mesh: draw both faces in one pass. Otherwise three.js renders a
+      // transparent DoubleSide material twice and re-resolves its program per frame.
+      forceSinglePass: true,
     });
 
     const mesh = new THREE.Mesh(geometry, material);
