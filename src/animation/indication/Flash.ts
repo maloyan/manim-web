@@ -52,7 +52,8 @@ export class Flash extends Animation {
   private _center: Vector3Tuple = [0, 0, 0];
 
   constructor(mobject: Mobject, options: FlashOptions = {}) {
-    super(mobject, { duration: options.duration ?? 0.5, ...options });
+    // ManimCE: Flash(run_time=1.0).
+    super(mobject, { duration: options.duration ?? 1, ...options });
     this.flashColor = options.color ?? YELLOW;
     this.numLines = options.numLines ?? 8;
     this.flashRadius = options.flashRadius ?? 1;
