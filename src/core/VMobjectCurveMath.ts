@@ -110,6 +110,41 @@ export function pointFromProportionOnPath(
 }
 
 /**
+ * Curve-index proportion (the `a`/`b` of {@link partialPathPoints}) that ends
+ * at arc-length proportion `alpha`. Lets a partial path line up with a
+ * stroke revealed by arc length.
+ *
+ * @param points - Shared-anchor cubic Bezier point chain
+ * @param alpha - Arc-length proportion in [0, 1]
+ * @param samplesPerSegment - Samples per cubic segment for length estimation
+ * @returns Curve-index proportion in [0, 1]
+ */
+export function curveProportionFromArcLength(
+  points: number[][],
+  alpha: number,
+  samplesPerSegment = 10,
+): number {
+  if (alpha <= 0) return 0;
+  if (alpha >= 1) return 1;
+  const numCurves = getNumCurvesFromPoints(points);
+  if (numCurves === 0) return alpha;
+  const { lengths, total } = pathArcLengthTable(points, samplesPerSegment);
+  if (total === 0) return alpha;
+
+  const targetLength = alpha * total;
+  let accumulated = 0;
+  for (let c = 0; c < numCurves; c++) {
+    const segLen = lengths[c];
+    if (accumulated + segLen >= targetLength) {
+      const residue = segLen !== 0 ? (targetLength - accumulated) / segLen : 0;
+      return (c + residue) / numCurves;
+    }
+    accumulated += segLen;
+  }
+  return 1;
+}
+
+/**
  * Arc-length proportion of the point on the chain nearest to `point`.
  *
  * Samples the whole path, finds the nearest sample, and returns its cumulative
