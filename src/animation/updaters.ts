@@ -120,7 +120,7 @@ export function turnAnimationIntoUpdater(animation: Animation, cycle = false, de
 
       if (runTime <= 0) {
         // Zero/negative duration: snap to the final state once, then detach.
-        animation.interpolate(animation.rateFunc(1));
+        animation.interpolateAt(1);
         animation.finish();
         m.removeUpdater(update);
         return;
@@ -133,13 +133,13 @@ export function turnAnimationIntoUpdater(animation: Animation, cycle = false, de
       } else {
         alpha = Math.min(1, Math.max(0, timeRatio));
         if (alpha >= 1) {
-          animation.interpolate(animation.rateFunc(1));
+          animation.interpolateAt(1);
           animation.finish();
           m.removeUpdater(update);
           return;
         }
       }
-      animation.interpolate(animation.rateFunc(alpha));
+      animation.interpolateAt(alpha);
     }
     totalTime += dt;
   };

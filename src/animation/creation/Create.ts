@@ -308,7 +308,7 @@ export class Create extends Animation {
       } else {
         // No fill: stroke reveal with per-family-member stagger
         for (let i = 0; i < n; i++) {
-          const subAlpha = this.getSubAlpha(alpha, i, n, this._lagRatio);
+          const subAlpha = this.getRatedSubAlpha(alpha, i, n, this._lagRatio);
           this._revealMember(this._memberLines[i], this._memberLineLengths[i], subAlpha);
         }
       }
