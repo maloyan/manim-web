@@ -144,6 +144,11 @@ export class Create extends Animation {
   private _hasFill: boolean = false;
   /** Original fill opacity to restore */
   private _originalFillOpacity: number = 0;
+  /**
+   * Whether the fill grows with the stroke (Manim CE's partial-path Create)
+   * instead of the border-then-fill fallback. Needs single-outline fills.
+   */
+  private _partialFill: boolean = false;
   /** Lag ratio for staggered submobject animation */
   private _lagRatio: number = 0;
   /**
@@ -169,9 +174,10 @@ export class Create extends Animation {
 
   /**
    * Set up the animation - configure dashed lines for progressive reveal.
-   * For filled VMobjects (like Polygon with fillOpacity > 0), this behaves
-   * like Manim's DrawBorderThenFill: first half draws the border, second
-   * half fades in the fill.
+   * Filled VMobjects grow their fill with the stroke, like Manim CE's
+   * Create (pointwise_become_partial). Fills with several subpaths (holes,
+   * boolean results) fall back to border-then-fill: the first half draws the
+   * border, the second half fades in the fill.
    */
   override begin(): void {
     super.begin();
@@ -184,11 +190,6 @@ export class Create extends Animation {
       // Check if this VMobject has fill
       this._originalFillOpacity = vmob.fillOpacity;
       this._hasFill = this._originalFillOpacity > 0;
-
-      // Hide fill initially so it can fade in during second half
-      if (this._hasFill) {
-        vmob.setFillOpacity(0);
-      }
 
       // Stagger unit = family members with points (Manim CE semantics), not
       // raw Line2 primitives — a member with multiple subpaths must not be
@@ -216,6 +217,15 @@ export class Create extends Animation {
         }
         this._memberLines.push(lines);
         this._memberLineLengths.push(lengths);
+      }
+
+      this._partialFill =
+        this._hasFill && this._family.every((m) => m.fillOpacity <= 0 || m.supportsPartialFill());
+      if (this._partialFill) {
+        for (const member of this._family) member.setFillRevealProgress(0);
+      } else if (this._hasFill) {
+        // Hide fill initially so it can fade in during second half
+        vmob.setFillOpacity(0);
       }
     } else {
       // Non-line mobject (Text, etc.): use opacity
@@ -273,7 +283,8 @@ export class Create extends Animation {
 
   /**
    * Interpolate the dash size to progressively reveal the stroke.
-   * For filled VMobjects: first half draws border, second half fades in fill.
+   * Filled VMobjects grow their fill alongside the stroke; the multi-subpath
+   * fallback draws the border in the first half and fades in the fill after.
    * Staggering (lagRatio) applies across family members (this._family), never
    * across a single member's own subpaths.
    */
@@ -281,7 +292,13 @@ export class Create extends Animation {
     if (this._useDashReveal) {
       const n = this._family.length;
 
-      if (this._hasFill) {
+      if (this._partialFill) {
+        for (let i = 0; i < n; i++) {
+          const subAlpha = this.getSubAlpha(alpha, i, n, this._lagRatio);
+          this._revealMember(this._memberLines[i], this._memberLineLengths[i], subAlpha);
+          this._family[i].setFillRevealProgress(subAlpha);
+        }
+      } else if (this._hasFill) {
         // Two-phase animation: border then fill (like Manim's DrawBorderThenFill)
         const vmob = this.mobject as VMobject;
         if (alpha < 0.5) {
@@ -322,8 +339,10 @@ export class Create extends Animation {
    */
   override finish(): void {
     if (this._useDashReveal) {
-      // Restore fill opacity
-      if (this._hasFill) {
+      // Restore the full fill
+      if (this._partialFill) {
+        for (const member of this._family) member.setFillRevealProgress(null);
+      } else if (this._hasFill) {
         (this.mobject as VMobject).setFillOpacity(this._originalFillOpacity);
       }
 

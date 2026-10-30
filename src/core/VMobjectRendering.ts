@@ -22,6 +22,7 @@ import {
   pointsToCurvePath,
 } from './VMobjectGeometry';
 import { buildMeshStrokeGeometry } from './VMobjectStrokeGeometry';
+import { curveProportionFromArcLength, partialPathPoints } from './VMobjectCurveMath';
 import {
   buildGradientFillGeometry,
   normalizeFillGradient,
@@ -60,6 +61,9 @@ export abstract class VMobjectRendering extends Mobject {
 
   /** Cached fill mesh for in-place geometry updates */
   private _cachedFillMesh: THREE.Mesh | null = null;
+
+  /** Proportion of the path whose fill is shown (Create), or null for all of it. */
+  private _fillRevealProgress: number | null = null;
 
   /**
    * Per-instance stencil ref for preventing double-blending at Line2 joints
@@ -374,13 +378,64 @@ export abstract class VMobjectRendering extends Mobject {
     else mat.color.set(this._style.fillColor || this.color);
   }
 
+  /**
+   * True when the fill is one outline, so a partial fill (see
+   * {@link setFillRevealProgress}) covers the same region Manim CE fills.
+   * Multi-subpath fills (holes, boolean results) return false.
+   */
+  supportsPartialFill(): boolean {
+    // cast: see `_buildEarcutFillGeometry` — optional subclass method probe.
+    const lengths = (
+      this as unknown as { getEffectiveSubpathLengths?: () => number[] | undefined }
+    ).getEffectiveSubpathLengths?.();
+    return !lengths || lengths.length <= 1;
+  }
+
+  /**
+   * Fill only the path up to arc-length proportion `alpha`, closed back to its
+   * start, like Manim CE's Create (`pointwise_become_partial`). Arc length
+   * keeps the fill edge on the tip of a dash-revealed stroke. Pass null to
+   * fill the whole path again. Only the fill mesh is rebuilt; the stroke is
+   * left alone.
+   *
+   * @param alpha - Proportion in [0, 1], or null for the full fill
+   * @returns this for chaining
+   */
+  setFillRevealProgress(alpha: number | null): this {
+    this._fillRevealProgress = alpha === null ? null : Math.max(0, Math.min(1, alpha));
+    if (this._threeObject instanceof THREE.Group) {
+      this._updateFillGeometry(this._threeObject, this.getVisiblePoints3D());
+    }
+    return this;
+  }
+
+  /** Earcut fill for the first `alpha` of the path (partial Create fill). */
+  private _buildPartialFillGeometry(
+    points3D: number[][],
+    alpha: number,
+  ): THREE.BufferGeometry | null {
+    if (alpha <= 0) return null;
+    const partial = partialPathPoints(points3D, 0, curveProportionFromArcLength(points3D, alpha));
+    if (partial.length < 4) return null;
+    const visible = partial.map((p) => ({ x: p[0], y: p[1] }));
+    return buildEarcutFillGeometry(partial, visible);
+  }
+
   /** Rebuild or dispose the earcut fill mesh for the current points. */
   private _updateFillGeometry(group: THREE.Group, points3D: number[][]): void {
     if (this.fillOpacity > 0 && points3D.length >= 4) {
-      let fillGeom = this._buildEarcutFillGeometry(points3D);
+      const progress = this._fillRevealProgress;
+      let fillGeom =
+        progress !== null && progress < 1
+          ? this._buildPartialFillGeometry(points3D, progress)
+          : this._buildEarcutFillGeometry(points3D);
       if (fillGeom && this._fillGradient) {
         fillGeom = buildGradientFillGeometry(fillGeom, this._fillGradient);
       }
+      // An empty partial fill (start of Create) hides the mesh instead of
+      // leaving the previous frame's triangles on screen.
+      if (this._cachedFillMesh)
+        this._cachedFillMesh.visible = fillGeom !== null || progress === null;
       if (fillGeom) {
         if (this._cachedFillMesh) {
           this._cachedFillMesh.geometry.dispose();
