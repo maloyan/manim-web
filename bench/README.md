@@ -14,14 +14,17 @@ npm run bench -- --compare bench/results/before.json bench/results/after.json
 frames of every scene, so a performance change can show that it renders the
 same image.
 
-| Flag           | Meaning                                                        |
-| -------------- | -------------------------------------------------------------- |
-| `--label NAME` | Result file name. Default `current`.                           |
-| `--runs N`     | Timed runs per scene, after one warm-up. Medians are reported. |
-| `--throttle X` | CDP CPU throttling, e.g. `4` to approximate a low-end laptop.  |
-| `--scene NAME` | Run only this scene. Repeatable.                               |
-| `--profile`    | Print the top self-time functions from a CPU profile.          |
-| `--headed`     | Show the browser window.                                       |
+| Flag             | Meaning                                                               |
+| ---------------- | --------------------------------------------------------------------- |
+| `--label NAME`   | Result file name. Default `current`.                                  |
+| `--runs N`       | Timed runs per scene, after one warm-up. Medians are reported.        |
+| `--throttle X`   | CDP CPU throttling, e.g. `4` to approximate a low-end laptop.         |
+| `--scene NAME`   | Run only this scene. Repeatable.                                      |
+| `--profile`      | Print the top self-time functions from a CPU profile.                 |
+| `--headed`       | Show the browser window.                                              |
+| `--software-gpu` | Render with SwiftShader, a CPU rasterizer standing in for a weak GPU. |
+| `--dpr X`        | Device pixel ratio of the page, e.g. `2` for a high-DPI screen.       |
+| `--options JSON` | Extra `SceneOptions`, e.g. `'{"antialias":false}'`.                   |
 
 ## How it measures
 
@@ -29,8 +32,9 @@ same image.
   60 fps clock. Every run steps the same frames with the same `dt`, so frames
   are pixel-identical between runs of the same code.
 - Each frame is timed twice: `cpu` is the rAF callback (timeline update,
-  updaters, render submit); `total` adds `gl.finish()` so queued GPU work is
-  counted.
+  updaters, render submit); `total` adds a 1-pixel `readPixels`, which cannot
+  return until the GPU has finished the frame, so GPU work is counted.
+  (`gl.finish()` alone returns early on some drivers.)
 - Draw calls and triangles come from `renderer.info` and are the per-frame
   maximum. `heapDeltaMB` is the JS heap growth across the animation (GC
   pressure).

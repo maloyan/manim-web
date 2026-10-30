@@ -31,6 +31,9 @@ const { values, positionals } = parseArgs({
     compare: { type: 'boolean', default: false },
     profile: { type: 'boolean', default: false },
     headed: { type: 'boolean', default: false },
+    'software-gpu': { type: 'boolean', default: false },
+    dpr: { type: 'string', default: '1' },
+    options: { type: 'string', default: '{}' },
   },
   allowPositionals: true,
 });
@@ -116,18 +119,20 @@ async function main() {
   const browser = await chromium.launch({
     headless: !values.headed,
     // The full Chromium build (not headless-shell) can use the real GPU when headless.
+    // --software-gpu forces SwiftShader, a CPU rasterizer that stands in for a weak GPU.
     channel: 'chromium',
     args: [
       '--enable-precise-memory-info',
       '--js-flags=--expose-gc',
       '--ignore-gpu-blocklist',
-      '--enable-gpu',
-      ...(process.platform === 'win32' ? ['--use-angle=d3d11'] : []),
+      ...(values['software-gpu']
+        ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']
+        : ['--enable-gpu', ...(process.platform === 'win32' ? ['--use-angle=d3d11'] : [])]),
     ],
   });
   const page = await browser.newPage({
     viewport: { width: 1280, height: 720 },
-    deviceScaleFactor: 1,
+    deviceScaleFactor: Number(values.dpr),
   });
   page.on('pageerror', (e) => console.error('pageerror:', e.message));
   await page.goto(url);
@@ -154,6 +159,7 @@ async function main() {
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: throttle });
   }
 
+  await page.evaluate((o) => (window.benchSceneOptions = JSON.parse(o)), values.options);
   const gpu = await page.evaluate(() => window.glInfo());
   const all = await page.evaluate(() => window.benchScenes);
   const names = values.scene?.length ? values.scene : all;

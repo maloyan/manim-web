@@ -6,12 +6,13 @@
  * with a manual queue driven on a virtual 60 fps clock, so every run steps the
  * same frames regardless of how fast the machine is. Each frame is timed twice:
  * - `cpu`: the rAF callback (timeline update + updaters + scene render submit).
- * - `total`: `cpu` plus `gl.finish()`, so GPU work the frame queued is counted.
+ * - `total`: `cpu` plus a 1-pixel `readPixels`, so GPU work the frame queued is counted.
  */
 import { Scene } from '../src/index.ts';
 import { SCENES } from './scenes.ts';
 
 const FRAME_MS = 1000 / 60;
+const syncPixel = new Uint8Array(4);
 
 type RafCallback = (time: number) => void;
 let rafQueue: Array<{ id: number; cb: RafCallback }> = [];
@@ -58,7 +59,8 @@ async function runBench(name: string) {
 
   const container = document.getElementById('container')!;
   container.innerHTML = '';
-  const scene = new Scene(container, { width: 1280, height: 720 });
+  const extra = (window as unknown as { benchSceneOptions?: object }).benchSceneOptions ?? {};
+  const scene = new Scene(container, { width: 1280, height: 720, ...extra });
   const three = scene.renderer.getThreeRenderer();
   const gl = three.getContext();
 
@@ -102,7 +104,9 @@ async function runBench(name: string) {
     const t0 = realNow();
     for (const { cb } of queue) cb(virtual);
     const t1 = realNow();
-    gl.finish();
+    // A 1-pixel readback cannot return until the GPU has finished the frame
+    // (gl.finish() alone is a no-op on some drivers, e.g. SwiftShader).
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, syncPixel);
     const t2 = realNow();
     cpu.push(t1 - t0);
     total.push(t2 - t0);
