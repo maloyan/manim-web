@@ -8,6 +8,7 @@ import { describe, it, expect } from 'vitest';
 import * as THREE from 'three';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import { Square } from '../../mobjects/geometry/Rectangle';
+import { Arrow } from '../../mobjects/geometry/Arrow';
 import { curveProportionFromArcLength } from '../../core/VMobjectCurveMath';
 import { Create } from './Create';
 
@@ -65,6 +66,21 @@ describe('Create partial fill', () => {
 
     anim.finish();
     expect(visibleFillArea(square)).toBeCloseTo(4, 2);
+  });
+
+  it('keeps an arrow tip hidden until the shaft has been drawn', () => {
+    // Manim CE: Create(Arrow) with lag_ratio=1 draws the shaft, then the tip.
+    const arrow = new Arrow({ start: [-2, 0, 0], end: [2, 0, 0] });
+    const anim = new Create(arrow);
+    anim.begin();
+
+    anim.interpolate(0);
+    expect(visibleFillArea(arrow)).toBeCloseTo(0, 6);
+    anim.interpolate(0.4);
+    expect(visibleFillArea(arrow)).toBeCloseTo(0, 6);
+
+    anim.finish();
+    expect(visibleFillArea(arrow)).toBeGreaterThan(0);
   });
 
   it('falls back to border-then-fill for multi-subpath fills', () => {

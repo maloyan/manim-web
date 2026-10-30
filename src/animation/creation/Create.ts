@@ -219,8 +219,11 @@ export class Create extends Animation {
         this._memberLineLengths.push(lengths);
       }
 
+      // Any filled member counts, not just the root: an Arrow's root has no
+      // fill but its ArrowTip does, and the tip must grow in with the rest.
       this._partialFill =
-        this._hasFill && this._family.every((m) => m.fillOpacity <= 0 || m.supportsPartialFill());
+        this._family.some((m) => m.fillOpacity > 0) &&
+        this._family.every((m) => m.fillOpacity <= 0 || m.supportsPartialFill());
       if (this._partialFill) {
         for (const member of this._family) member.setFillRevealProgress(0);
       } else if (this._hasFill) {
