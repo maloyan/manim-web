@@ -13,6 +13,7 @@ import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { Mobject } from './Mobject';
 import { BezierRenderer } from '../rendering/BezierRenderer';
+import { copyGeometryInPlace, setLinePositionsInPlace } from '../rendering/geometryReuse';
 import type { Point } from './VMobjectCurves';
 import {
   sampleBezierPath,
@@ -383,8 +384,13 @@ export abstract class VMobjectRendering extends Mobject {
       }
       if (fillGeom) {
         if (this._cachedFillMesh) {
-          this._cachedFillMesh.geometry.dispose();
-          this._cachedFillMesh.geometry = fillGeom;
+          // The fresh geometry was never uploaded, so disposing it is free.
+          if (copyGeometryInPlace(this._cachedFillMesh.geometry, fillGeom)) {
+            fillGeom.dispose();
+          } else {
+            this._cachedFillMesh.geometry.dispose();
+            this._cachedFillMesh.geometry = fillGeom;
+          }
         } else {
           const fillMesh = new THREE.Mesh(fillGeom, this._fillMaterial!);
           fillMesh.position.z = -0.001;
@@ -422,11 +428,13 @@ export abstract class VMobjectRendering extends Mobject {
       const positions = this._buildLine2Positions(sampledPoints);
 
       if (this._cachedLine2) {
-        this._cachedLine2.geometry.dispose();
-        const geometry = new LineGeometry();
-        geometry.setPositions(positions);
-        this._cachedLine2.geometry = geometry;
-        this._cachedLine2.computeLineDistances();
+        if (!setLinePositionsInPlace(this._cachedLine2.geometry, positions)) {
+          this._cachedLine2.geometry.dispose();
+          const geometry = new LineGeometry();
+          geometry.setPositions(positions);
+          this._cachedLine2.geometry = geometry;
+          this._cachedLine2.computeLineDistances();
+        }
       } else {
         const geometry = new LineGeometry();
         geometry.setPositions(positions);
@@ -475,12 +483,15 @@ export abstract class VMobjectRendering extends Mobject {
       if (this.strokeWidth > 0 && sampledPoints.length >= 2) {
         const positions = this._buildLine2Positions(sampledPoints);
 
-        if (this._cachedLine2Array[i]) {
-          this._cachedLine2Array[i].geometry.dispose();
-          const geometry = new LineGeometry();
-          geometry.setPositions(positions);
-          this._cachedLine2Array[i].geometry = geometry;
-          this._cachedLine2Array[i].computeLineDistances();
+        const cached = this._cachedLine2Array[i];
+        if (cached) {
+          if (!setLinePositionsInPlace(cached.geometry, positions)) {
+            cached.geometry.dispose();
+            const geometry = new LineGeometry();
+            geometry.setPositions(positions);
+            cached.geometry = geometry;
+            cached.computeLineDistances();
+          }
         } else {
           const geometry = new LineGeometry();
           geometry.setPositions(positions);
