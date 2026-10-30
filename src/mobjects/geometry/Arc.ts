@@ -1,5 +1,5 @@
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 import { TipableVMobject, TipableVMobjectOptions } from './TipableVMobject';
 import { Matrix4 } from 'three';
 import * as THREE from 'three';
@@ -14,7 +14,7 @@ export interface ArcOptions extends TipableVMobjectOptions {
   startAngle?: number;
   /** Arc angle (span) in radians. Default: PI/2 */
   angle?: number;
-  /** Stroke color as CSS color string. Default: Manim's blue (#58C4DD) */
+  /** Stroke color as CSS color string. Default: WHITE (#FFFFFF) */
   color?: string;
   /** Stroke width in pixels. Default: 4 (Manim's default) */
   strokeWidth?: number;
@@ -54,7 +54,7 @@ export class Arc extends TipableVMobject {
       radius = 1,
       startAngle = 0,
       angle = Math.PI / 2,
-      color = BLUE,
+      color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       numComponents = 8,
       center = [0, 0, 0],

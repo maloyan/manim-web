@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { BLUE, DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 import { orientation2D } from '../../utils/vectors';
 import * as THREE from 'three';
 
@@ -51,7 +51,7 @@ export class RoundedRectangle extends VMobject {
       width = 2,
       height = 1,
       cornerRadius = 0.25,
-      color = BLUE,
+      color = WHITE,
       fillOpacity = 0,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       center = [0, 0, 0],

@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 import * as THREE from 'three';
 
 export interface SectorOptions {
@@ -27,8 +27,8 @@ export class Sector extends VMobject {
       radius = 1,
       startAngle = 0,
       angle = Math.PI / 2,
-      color = BLUE,
-      fillOpacity = 0.5,
+      color = WHITE,
+      fillOpacity = 1,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       center = [0, 0, 0],
       numComponents = 8,

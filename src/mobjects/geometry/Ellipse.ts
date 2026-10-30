@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, RED } from '../../constants';
 
 /**
  * Options for creating an Ellipse
@@ -10,7 +10,7 @@ export interface EllipseOptions {
   width?: number;
   /** Height (vertical diameter) of the ellipse. Default: 1 */
   height?: number;
-  /** Stroke color as CSS color string. Default: Manim's blue (#58C4DD) */
+  /** Stroke color as CSS color string. Default: RED (#FC6255) */
   color?: string;
   /** Fill opacity from 0 to 1. Default: 0 */
   fillOpacity?: number;
@@ -48,7 +48,7 @@ export class Ellipse extends VMobject {
     const {
       width = 2,
       height = 1,
-      color = BLUE,
+      color = RED,
       fillOpacity = 0,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       center = [0, 0, 0],

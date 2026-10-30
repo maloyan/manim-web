@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Polygon, Triangle, RegularPolygon, Hexagon, Pentagon } from './Polygon';
 import { RoundedRectangle, Star, RegularPolygram, Cutout, ConvexHull } from './PolygonExtensions';
 import { Circle } from './Circle';
-import { BLUE } from '../../constants';
+import { WHITE } from '../../constants';
 import type { Vector3Tuple } from '../../core/Mobject';
 
 // ---------------------------------------------------------------------------
@@ -375,7 +375,7 @@ describe('RoundedRectangle', () => {
     expect(rr.getHeight()).toBe(1);
     expect(rr.getCornerRadius()).toBe(0.25);
     expect(rr.getRoundedRectCenter()).toEqual([0, 0, 0]);
-    expect(rr.color).toBe(BLUE);
+    expect(rr.color).toBe(WHITE);
     expect(rr.fillOpacity).toBe(0);
   });
 
