@@ -185,11 +185,8 @@ export class ChangeSpeed extends Animation {
     // Map the adjusted alpha to the original animation's progress
     const originalAlpha = mapProgressToOriginal(alpha, this.speedFunc, this._numSamples);
 
-    // Apply the wrapped animation's rate function
-    const transformedAlpha = this.animation.rateFunc(originalAlpha);
-
-    // Interpolate the wrapped animation
-    this.animation.interpolate(transformedAlpha);
+    // Interpolate the wrapped animation (applies its rate function)
+    this.animation.interpolateAt(originalAlpha);
   }
 
   /**

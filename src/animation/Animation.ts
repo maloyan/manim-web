@@ -150,6 +150,24 @@ export abstract class Animation<M extends Mobject = Mobject> {
    */
   abstract interpolate(alpha: number): void;
 
+  /** Linear progress of the running {@link interpolateAt} call, else null. */
+  private _linearAlpha: number | null = null;
+
+  /**
+   * Apply the animation at linear progress `linearAlpha` (elapsed / duration).
+   * Applies the rate function like {@link update}, and lets staggered
+   * subclasses apply it per family member (see {@link getRatedSubAlpha}).
+   * @param linearAlpha Linear progress from 0 (start) to 1 (end)
+   */
+  interpolateAt(linearAlpha: number): void {
+    this._linearAlpha = linearAlpha;
+    try {
+      this.interpolate(this.rateFunc(linearAlpha));
+    } finally {
+      this._linearAlpha = null;
+    }
+  }
+
   /**
    * Manim CE's `get_sub_alpha`: remaps a global progress `alpha` into the
    * local progress of family member `index` (of `count`) under a `lagRatio`
@@ -164,6 +182,29 @@ export abstract class Animation<M extends Mobject = Mobject> {
     const value = alpha * fullLength;
     const lower = index * lagRatio;
     return Math.max(0, Math.min(1, value - lower));
+  }
+
+  /**
+   * Like {@link getSubAlpha}, but with the rate function applied inside each
+   * member's lag window, as Manim CE's `get_sub_alpha` does: the window is cut
+   * from linear progress and eased on its own. Applying the rate function to
+   * the whole animation and then splitting it linearly makes the first and
+   * last members crawl and the middle ones rush.
+   *
+   * Only an {@link interpolateAt} call knows the linear progress; a direct
+   * `interpolate(alpha)` call falls back to splitting `alpha` linearly.
+   */
+  protected getRatedSubAlpha(
+    alpha: number,
+    index: number,
+    count: number,
+    lagRatio: number,
+  ): number {
+    const linear = this._linearAlpha;
+    if (linear === null || lagRatio <= 0 || count <= 1) {
+      return this.getSubAlpha(alpha, index, count, lagRatio);
+    }
+    return this.rateFunc(this.getSubAlpha(linear, index, count, lagRatio));
   }
 
   /**
@@ -182,8 +223,7 @@ export abstract class Animation<M extends Mobject = Mobject> {
 
     const elapsed = currentTime - this._startTime;
     const rawAlpha = this.duration > 0 ? Math.min(1, Math.max(0, elapsed / this.duration)) : 1;
-    const alpha = this.rateFunc(rawAlpha);
-    this.interpolate(alpha);
+    this.interpolateAt(rawAlpha);
 
     // Check if finished
     if (rawAlpha >= 1 && !this._isFinished) {
