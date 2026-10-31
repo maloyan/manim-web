@@ -3,7 +3,7 @@ import { Vector3Tuple } from '../../core/Mobject';
 import { TexturedMobject } from '../../core/TexturedMobject';
 import { TextGlyphGroup } from './TextGlyphGroup';
 import type { SkeletonizeOptions } from '../../utils/skeletonize';
-import { DEFAULT_FONT_SIZE_PT, DEFAULT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
+import { DEFAULT_FONT_SIZE_PT, TEXT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
 import {
   type TextStyleMaps,
   type TextStyleRun,
@@ -492,11 +492,11 @@ export class Text extends TexturedMobject {
     // Conversion chain: canvas pixels → pt → EM → world space
     // At 72 DPI, 1pt = SVG_UNITS_PER_PT canvas pixels
     // 1 EM = DEFAULT_FONT_SIZE_PT at the reference size
-    // 1 EM = DEFAULT_FONT_SIZE_IN_WORLD_SPACE world units at reference
+    // 1 EM = TEXT_FONT_SIZE_IN_WORLD_SPACE world units at reference (Manim CE Text)
     const pxToWorld =
       (1 / SVG_UNITS_PER_PT) * // px → pt
       (1 / DEFAULT_FONT_SIZE_PT) * // pt → EM
-      DEFAULT_FONT_SIZE_IN_WORLD_SPACE; // EM → world
+      TEXT_FONT_SIZE_IN_WORLD_SPACE; // EM → world
     this._worldWidth = (width / RESOLUTION_SCALE) * pxToWorld;
     this._worldHeight = (height / RESOLUTION_SCALE) * pxToWorld;
 
@@ -598,7 +598,7 @@ export class Text extends TexturedMobject {
       this._styledTextParams(),
       {
         defaultFontSizePt: DEFAULT_FONT_SIZE_PT,
-        defaultFontSizeInWorld: DEFAULT_FONT_SIZE_IN_WORLD_SPACE,
+        defaultFontSizeInWorld: TEXT_FONT_SIZE_IN_WORLD_SPACE,
       },
     );
     this._worldWidth = size.width;
