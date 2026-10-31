@@ -138,7 +138,7 @@ describe('DashedLine', () => {
     const dl = new DashedLine();
     expect(dl.getStart()).toEqual([0, 0, 0]);
     expect(dl.getEnd()).toEqual([1, 0, 0]);
-    expect(dl.getDashLength()).toBe(0.1);
+    expect(dl.getDashLength()).toBe(0.05);
     expect(dl.getDashRatio()).toBe(0.5);
     expect(dl.color).toBe(BLUE);
   });
@@ -195,82 +195,52 @@ describe('DashedLine', () => {
     expect(dl.getDashes().length).toBe(0);
   });
 
-  describe('deterministic dash count (regression: floating-point extra-dash bug)', () => {
-    function dashLengths(dl: DashedLine): number[] {
+  describe('dash layout (Manim CE DashedLine)', () => {
+    function dashSpans(dl: DashedLine): Array<[number, number]> {
       return dl.getDashes().map((d) => {
         const pts = d.getLocalPoints();
-        const a = pts[0];
-        const b = pts[pts.length - 1];
-        return Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+        return [pts[0][0], pts[pts.length - 1][0]];
       });
     }
 
-    it('length exactly a multiple of the cycle produces no spurious extra dash', () => {
-      // The original repro: 6 / 0.3 = 20 full cycles exactly -- the old
-      // accumulated-addition loop produced a spurious 21st, near-zero dash.
-      const dl = new DashedLine({ start: [-3, 0, 0], end: [3, 0, 0], dashLength: 0.3 });
-      expect(dl.getDashes().length).toBe(20);
-      for (const len of dashLengths(dl)) {
-        expect(len).toBeCloseTo(0.15, 6); // every dash is a real, full-length dash
+    // MIGRATION: example for the property
+    //   ∀ length L > 0, dashLength d > 0, ratio r ∈ (0, 1):
+    //   DashedLine has n = max(2, ceil(L / d · r)) dashes of length r·L/n,
+    //   separated by equal gaps (1 − r)·L/(n − 1), the first starting at the
+    //   line's start and the last ending at its end.
+    // Replace with a property test once the suite lands.
+    it('matches Manim CE: 60 dashes of 0.05 on a 6-unit line', () => {
+      const dl = new DashedLine({ start: [-3, 0, 0], end: [3, 0, 0] });
+      const spans = dashSpans(dl);
+      expect(spans).toHaveLength(60); // DashedLine(LEFT*3, RIGHT*3) in Manim CE
+      expect(spans[0][0]).toBeCloseTo(-3, 9);
+      expect(spans[spans.length - 1][1]).toBeCloseTo(3, 9);
+      for (const [a, b] of spans) expect(b - a).toBeCloseTo(0.05, 9);
+      const gap = (0.5 * 6) / 59;
+      for (let i = 1; i < spans.length; i++) {
+        expect(spans[i][0] - spans[i - 1][1]).toBeCloseTo(gap, 9);
       }
     });
 
-    it('length exactly a multiple of a different cycle (0.1) also produces no spurious extra dash', () => {
-      const dl = new DashedLine({ start: [0, 0, 0], end: [6, 0, 0], dashLength: 0.1 });
-      expect(dl.getDashes().length).toBe(60);
-      for (const len of dashLengths(dl)) {
-        expect(len).toBeCloseTo(0.05, 6);
-      }
-    });
-
-    it('length with a genuine remainder produces one real (non-degenerate) final partial dash', () => {
-      const dl = new DashedLine({ start: [0, 0, 0], end: [4, 0, 0], dashLength: 0.3 });
-      // 4 / 0.3 = 13 full cycles (3.9) + remainder 0.1 -- the last dash is
-      // shorter than a full dash (0.15) but still a real, visible segment.
-      const dashes = dl.getDashes();
-      expect(dashes.length).toBe(14);
-      const lens = dashLengths(dl);
-      for (const len of lens.slice(0, -1)) expect(len).toBeCloseTo(0.15, 6);
-      expect(lens[lens.length - 1]).toBeCloseTo(0.1, 6);
-      expect(lens[lens.length - 1]).toBeGreaterThan(1e-6); // not a degenerate sliver
-    });
-
-    it('different dashLength values each produce the mathematically expected count', () => {
-      const cases: Array<{ length: number; dashLength: number; expected: number }> = [
-        { length: 10, dashLength: 0.5, expected: 20 }, // exact multiple
-        { length: 3, dashLength: 0.2, expected: 15 }, // exact multiple
-        { length: 5, dashLength: 0.3, expected: 17 }, // remainder
-        { length: 4, dashLength: 0.25, expected: 16 }, // exact multiple
-      ];
-      for (const c of cases) {
-        const dl = new DashedLine({
-          start: [0, 0, 0],
-          end: [c.length, 0, 0],
-          dashLength: c.dashLength,
-        });
-        expect(dl.getDashes().length).toBe(c.expected);
-      }
-    });
-
-    it('different dashRatio values do not change the dash count, only dash/gap proportions', () => {
-      for (const dashRatio of [0.1, 0.3, 0.5, 0.7, 0.9]) {
-        const dl = new DashedLine({ start: [0, 0, 0], end: [6, 0, 0], dashLength: 0.3, dashRatio });
-        expect(dl.getDashes().length).toBe(20);
-        const lens = dashLengths(dl);
-        for (const len of lens) expect(len).toBeCloseTo(0.3 * dashRatio, 6);
-      }
-    });
-
-    it('very small total length relative to dashLength still produces a correct, small dash count', () => {
+    it('uses at least two dashes, ending on the line end', () => {
       const dl = new DashedLine({ start: [0, 0, 0], end: [0.05, 0, 0], dashLength: 0.3 });
-      // 0.05 < dashLen (0.15) -- a single truncated dash covering the whole line.
-      expect(dl.getDashes().length).toBe(1);
-      expect(dashLengths(dl)[0]).toBeCloseTo(0.05, 6);
+      const spans = dashSpans(dl);
+      expect(spans).toHaveLength(2);
+      expect(spans[0][0]).toBeCloseTo(0, 9);
+      expect(spans[1][1]).toBeCloseTo(0.05, 9);
     });
 
-    it('very small dashLength relative to length still produces the correct (large) count, no infinite loop', () => {
-      const dl = new DashedLine({ start: [0, 0, 0], end: [1, 0, 0], dashLength: 0.01 });
-      expect(dl.getDashes().length).toBe(100);
+    it('dashRatio sets the dashed fraction of the line', () => {
+      const dl = new DashedLine({
+        start: [0, 0, 0],
+        end: [6, 0, 0],
+        dashLength: 0.3,
+        dashRatio: 0.25,
+      });
+      const spans = dashSpans(dl);
+      expect(spans).toHaveLength(Math.ceil((6 / 0.3) * 0.25));
+      const covered = spans.reduce((sum, [a, b]) => sum + (b - a), 0);
+      expect(covered).toBeCloseTo(6 * 0.25, 9);
     });
 
     it('dashLength effectively zero produces zero dashes instead of hanging or throwing', () => {
