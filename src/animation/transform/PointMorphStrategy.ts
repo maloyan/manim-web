@@ -59,6 +59,35 @@ function captureStyleFaded(m: VMobject): ChildStyle {
   };
 }
 
+/** True when two Euler rotations are equal to within float noise. */
+function rotationsEqual(a: THREE.Euler, b: THREE.Euler): boolean {
+  const eps = 1e-9;
+  return (
+    a.order === b.order &&
+    Math.abs(a.x - b.x) < eps &&
+    Math.abs(a.y - b.y) < eps &&
+    Math.abs(a.z - b.z) < eps
+  );
+}
+
+/** Points with a node's rotation and scale applied (position excluded). */
+function bakeRotationScale(
+  points: number[][],
+  rotation: THREE.Euler,
+  scale: THREE.Vector3,
+): number[][] {
+  const matrix = new THREE.Matrix4().compose(
+    new THREE.Vector3(),
+    new THREE.Quaternion().setFromEuler(rotation),
+    scale,
+  );
+  const v = new THREE.Vector3();
+  return points.map((p) => {
+    v.set(p[0], p[1], p[2] ?? 0).applyMatrix4(matrix);
+    return [v.x, v.y, v.z];
+  });
+}
+
 export class PointMorphStrategy implements MorphStrategy {
   private _startPoints: number[][] = [];
   private _targetPoints: number[][] = [];
@@ -84,6 +113,14 @@ export class PointMorphStrategy implements MorphStrategy {
   private _startScale = new THREE.Vector3(1, 1, 1);
   private _targetScale = new THREE.Vector3(1, 1, 1);
   private _isVGroupTransform = false;
+  /**
+   * True when source and target differ in rotation. The points are then
+   * interpolated with each side's rotation and scale baked in, and the node
+   * transform held at identity, so a rotation moves points along straight
+   * lines like Manim CE (where rotate() edits points) instead of turning
+   * the shape rigidly.
+   */
+  private _bakeRotation = false;
   private _vgroupLeafStates: VGroupLeafState[] = [];
 
   begin(_animation: Animation, source: Mobject, target: Mobject): void {
@@ -123,6 +160,23 @@ export class PointMorphStrategy implements MorphStrategy {
     this._targetRotation.copy(target.rotation);
     this._startScale.copy(source.scaleVector);
     this._targetScale.copy(target.scaleVector);
+    this._bakeRotation = !rotationsEqual(this._startRotation, this._targetRotation);
+    if (this._bakeRotation) {
+      // finish() falls back to _targetPoints; keep it unbaked for that.
+      if (this._finalTargetPoints.length === 0) this._finalTargetPoints = this._targetPoints;
+      this._startPoints = bakeRotationScale(
+        this._startPoints,
+        this._startRotation,
+        this._startScale,
+      );
+      this._targetPoints = bakeRotationScale(
+        this._targetPoints,
+        this._targetRotation,
+        this._targetScale,
+      );
+      source.rotation.set(0, 0, 0);
+      source.scaleVector.set(1, 1, 1);
+    }
     source.setPoints(this._startPoints);
     source.setTransformSubpathLengths(this._alignedSubpathLengths);
   }
@@ -271,12 +325,18 @@ export class PointMorphStrategy implements MorphStrategy {
           .lerpColors(this._startFillColor, this._targetFillColor, alpha)
           .getHexString();
     vmobject.position.lerpVectors(this._startPosition, this._targetPosition, alpha);
-    vmobject.rotation.set(
-      this._startRotation.x + (this._targetRotation.x - this._startRotation.x) * alpha,
-      this._startRotation.y + (this._targetRotation.y - this._startRotation.y) * alpha,
-      this._startRotation.z + (this._targetRotation.z - this._startRotation.z) * alpha,
-    );
-    vmobject.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
+    if (this._bakeRotation) {
+      // Rotation and scale are already in the interpolated points.
+      vmobject.rotation.set(0, 0, 0);
+      vmobject.scaleVector.set(1, 1, 1);
+    } else {
+      vmobject.rotation.set(
+        this._startRotation.x + (this._targetRotation.x - this._startRotation.x) * alpha,
+        this._startRotation.y + (this._targetRotation.y - this._startRotation.y) * alpha,
+        this._startRotation.z + (this._targetRotation.z - this._startRotation.z) * alpha,
+      );
+      vmobject.scaleVector.lerpVectors(this._startScale, this._targetScale, alpha);
+    }
     vmobject._markDirty();
   }
   /**

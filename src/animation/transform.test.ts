@@ -464,7 +464,13 @@ describe('Transform', () => {
   });
 
   describe('rotation and scale interpolation', () => {
-    it('euler angles lerp between source and target', () => {
+    // MIGRATION: example for the property
+    //   ∀ source s, target t with different rotations, alpha a: Transform
+    //   moves every point along the straight line between s's and t's world
+    //   points (Manim CE rotates points, then lerps them), and finish()
+    //   restores t's node rotation.
+    // Replace with a property test once the suite lands.
+    it('rotation is interpolated through the points, like Manim CE', () => {
       const c1 = new Circle({ radius: 1 });
       c1.rotation.set(0, 0, 0);
       const c2 = new Circle({ radius: 1 });
@@ -472,7 +478,11 @@ describe('Transform', () => {
       const t = new Transform(c1, c2);
       t.begin();
       t.interpolate(0.5);
-      expect(c1.rotation.x).toBeCloseTo(Math.PI / 2, 5);
+      // Halfway through a flip about x, every point's y is lerp(y, -y) = 0.
+      expect(c1.rotation.x).toBe(0);
+      for (const p of c1.getLocalPoints()) expect(p[1]).toBeCloseTo(0, 6);
+      t.finish();
+      expect(c1.rotation.x).toBeCloseTo(Math.PI, 6);
     });
 
     it('scaleVector lerps between source and target', () => {
