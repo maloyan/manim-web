@@ -95,6 +95,35 @@ describe('ValueTracker', () => {
     expect(vt.getValue()).toBe(10);
   });
 
+  // MIGRATION: example for the property
+  //   ∀ tracker animation a, a.reset(); a.begin() restores the pre-animation value,
+  //   so re-seeking replays the same range (#902).
+  // Replace with a property test once the suite lands.
+  it('animateTo reset rewinds the tracker and replays the same range', () => {
+    const vt = new ValueTracker(1);
+    const anim = vt.animateTo(5);
+    anim.begin();
+    anim.interpolate(1);
+    expect(vt.getValue()).toBe(5);
+    anim.reset();
+    expect(vt.getValue()).toBe(1);
+    anim.begin();
+    anim.interpolate(0.5);
+    expect(vt.getValue()).toBe(3);
+  });
+
+  it('ComplexValueTracker animateTo reset rewinds the tracker', () => {
+    const ct = new ComplexValueTracker({ re: 0, im: 0 });
+    const anim = ct.animateTo({ re: 2, im: 4 });
+    anim.begin();
+    anim.interpolate(1);
+    anim.reset();
+    expect(ct.getValue()).toEqual({ re: 0, im: 0 });
+    anim.begin();
+    anim.interpolate(0.5);
+    expect(ct.getValue()).toEqual({ re: 1, im: 2 });
+  });
+
   it('animateTo begin captures current value as start', () => {
     const vt = new ValueTracker(0);
     const anim = vt.animateTo(10);
