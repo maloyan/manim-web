@@ -11,6 +11,7 @@ import { Group } from '../../core/Group';
 import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Animation, AnimationOptions } from '../Animation';
+import { linear } from '../../rate-functions';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import type { TextGlyphGroup } from '../../mobjects/text/TextGlyphGroup';
 
@@ -42,6 +43,32 @@ interface TextAccessMobject {
  */
 interface SkeletonPathMobject {
   getSkeletonPath(): number[][] | null;
+}
+
+/**
+ * Interface for texture text that can fade each glyph on its own (e.g. Text).
+ */
+interface GlyphMaskMobject {
+  getGlyphRects(): Array<[number, number, number, number]> | null;
+  setGlyphRevealAlphas(alphas: number[] | null): void;
+}
+
+/** True when `m` can reveal its texture glyph by glyph. */
+function hasGlyphMask(m: Mobject): m is Mobject & GlyphMaskMobject {
+  return (
+    'getGlyphRects' in m &&
+    typeof m.getGlyphRects === 'function' &&
+    'setGlyphRevealAlphas' in m &&
+    typeof m.setGlyphRevealAlphas === 'function'
+  );
+}
+
+/**
+ * Opacity of one glyph at its Write progress `sub`. Manim CE draws a thin
+ * outline in the first half (little ink) and fills in the second half.
+ */
+function glyphWriteAlpha(sub: number): number {
+  return sub < 0.5 ? 0.3 * sub * 2 : 0.3 + 0.7 * (sub * 2 - 1);
 }
 
 /** True when `m` exposes a `getGlyphGroup()` method (glyph-stroke capable). */
@@ -572,6 +599,10 @@ export class Write extends Animation {
 
   // Rendering mode flags (mutually exclusive)
   private _useGlyphStroke: boolean = false;
+  private _glyphMaskMobject: GlyphMaskMobject | null = null;
+  private _glyphCount: number = 0;
+  private _glyphLagRatio: number = 0;
+  private _lagRatioOption: number | undefined;
   private _useDashReveal: boolean = false;
   private _useRevealProgress: boolean = false;
 
@@ -594,8 +625,13 @@ export class Write extends Animation {
   private _skeletonTotalLengths: number[] = [];
 
   constructor(mobject: Mobject, options: WriteOptions = {}) {
-    super(mobject, { duration: options.duration ?? 1, ...options });
+    super(mobject, {
+      ...options,
+      duration: options.duration ?? 1,
+      rateFunc: options.rateFunc ?? linear,
+    });
     this.lagRatio = options.lagRatio ?? 0.05;
+    this._lagRatioOption = options.lagRatio;
     this._reverse = options.reverse ?? false;
     this._remover = options.remover ?? false;
     this._strokeRatio = options.strokeRatio ?? 0.7;
@@ -616,7 +652,21 @@ export class Write extends Animation {
       }
     }
 
-    // Priority 2: Left-to-right reveal for mobjects with setRevealProgress (MathTex)
+    // Priority 2: Glyph-by-glyph reveal of texture text (Text without glyphs)
+    if (hasGlyphMask(this.mobject)) {
+      this.mobject.getThreeObject();
+      const rects = this.mobject.getGlyphRects();
+      if (rects && rects.length > 0) {
+        this._glyphMaskMobject = this.mobject;
+        this._glyphCount = rects.length;
+        // Manim CE: lag_ratio = min(4 / glyphs, 0.2).
+        this._glyphLagRatio = this._lagRatioOption ?? Math.min(4 / rects.length, 0.2);
+        this._applyGlyphMask(this._reverse ? 1 : 0);
+        return;
+      }
+    }
+
+    // Priority 3: Left-to-right reveal for mobjects with setRevealProgress (MathTex)
     if (hasRevealProgress(this.mobject)) {
       this._useRevealProgress = true;
       this._revealMobject = this.mobject;
@@ -624,7 +674,7 @@ export class Write extends Animation {
       return;
     }
 
-    // Priority 3: Dash reveal for VMobjects with Line2
+    // Priority 4: Dash reveal for VMobjects with Line2
     this._useDashReveal = this.mobject instanceof VMobject && hasLine2Children(this.mobject);
 
     if (this._useDashReveal) {
@@ -756,11 +806,23 @@ export class Write extends Animation {
     }
   }
 
+  /** Fade each texture glyph by its own lag window at overall progress `alpha`. */
+  private _applyGlyphMask(alpha: number): void {
+    const n = this._glyphCount;
+    const alphas = new Array<number>(n);
+    for (let i = 0; i < n; i++) {
+      alphas[i] = glyphWriteAlpha(this.getSubAlpha(alpha, i, n, this._glyphLagRatio));
+    }
+    this._glyphMaskMobject?.setGlyphRevealAlphas(alphas);
+  }
+
   interpolate(alpha: number): void {
     const effectiveAlpha = this._reverse ? 1 - alpha : alpha;
 
     if (this._useGlyphStroke) {
       this._interpolateGlyphStroke(effectiveAlpha);
+    } else if (this._glyphMaskMobject) {
+      this._applyGlyphMask(effectiveAlpha);
     } else if (this._useRevealProgress) {
       this._revealMobject?.setRevealProgress(effectiveAlpha);
     } else if (this._useDashReveal) {
@@ -886,6 +948,13 @@ export class Write extends Animation {
   override finish(): void {
     if (this._useGlyphStroke) {
       this._finishGlyphStroke();
+      super.finish();
+      return;
+    }
+
+    if (this._glyphMaskMobject) {
+      this._glyphMaskMobject.setGlyphRevealAlphas(null);
+      if (this._remover) this.mobject.setStrokeOpacity(0);
       super.finish();
       return;
     }

@@ -178,6 +178,10 @@ export class Text extends TexturedMobject {
 
   /** Plane mesh for displaying the texture */
   protected _mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> | null = null;
+  /** Per-glyph alpha mask used by Write (see setGlyphRevealAlphas). */
+  private _glyphMask: THREE.DataTexture | null = null;
+  /** Glyph rectangles cached for the mask while it is active. */
+  private _glyphRects: Array<[number, number, number, number]> | null = null;
 
   /** Cached dimensions in world units */
   protected _worldWidth: number = 0;
@@ -793,6 +797,106 @@ export class Text extends TexturedMobject {
     });
     await this._glyphGroup.waitForReady();
     return this._glyphGroup;
+  }
+
+  /**
+   * Canvas rectangles of the visible (non-whitespace) characters, in reading
+   * order, as `[x0, y0, x1, y1]` fractions of the texture (y down). Write uses
+   * them to reveal Text glyph by glyph like Manim CE. Returns null when the
+   * layout is not a plain run of lines (styled runs, letter spacing) or the
+   * canvas is unavailable.
+   */
+  getGlyphRects(): Array<[number, number, number, number]> | null {
+    if (!this._canvas || !this._ctx || this._usesStyledPath() || this._letterSpacing > 0) {
+      return null;
+    }
+    const RESOLUTION_SCALE = getTextResolutionScale();
+    const { lines, width, height } = this._measureText();
+    if (width <= 0 || height <= 0) return null;
+    const ctx = this._ctx;
+    ctx.font = this._buildFontString();
+    const scaledFontSize = this._fontSize * RESOLUTION_SCALE;
+    const lineHeight = scaledFontSize * this._lineHeight;
+    const padding = scaledFontSize * 0.2;
+
+    const rects: Array<[number, number, number, number]> = [];
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const lineWidth = ctx.measureText(line).width;
+      let startX: number;
+      if (this._textAlign === 'left') startX = padding;
+      else if (this._textAlign === 'right') startX = width - padding - lineWidth;
+      else startX = width / 2 - lineWidth / 2;
+      const y0 = padding + i * lineHeight;
+      for (let k = 0; k < line.length; k++) {
+        if (/\s/.test(line[k])) continue;
+        const x0 = startX + ctx.measureText(line.slice(0, k)).width;
+        const x1 = startX + ctx.measureText(line.slice(0, k + 1)).width;
+        rects.push([x0 / width, y0 / height, x1 / width, (y0 + lineHeight) / height]);
+      }
+    }
+    return rects;
+  }
+
+  /**
+   * Fade each visible character independently (see {@link getGlyphRects}),
+   * through a small alpha mask on the texture. Pass null to remove the mask.
+   *
+   * @param alphas - Opacity per visible character, in reading order, or null
+   */
+  setGlyphRevealAlphas(alphas: number[] | null): void {
+    const material = this._mesh?.material;
+    if (!material) return;
+    if (alphas === null) {
+      if (material.alphaMap) {
+        material.alphaMap = null;
+        material.needsUpdate = true;
+      }
+      this._glyphMask?.dispose();
+      this._glyphMask = null;
+      this._glyphRects = null;
+      return;
+    }
+    this._glyphRects ??= this.getGlyphRects();
+    const rects = this._glyphRects;
+    if (!rects || !this._canvas) return;
+    if (!this._glyphMask) {
+      const w = Math.max(1, Math.min(1024, Math.ceil(this._canvas.width / 4)));
+      const h = Math.max(1, Math.min(256, Math.ceil(this._canvas.height / 4)));
+      this._glyphMask = new THREE.DataTexture(new Uint8Array(w * h * 4), w, h);
+      this._glyphMask.magFilter = THREE.LinearFilter;
+      this._glyphMask.minFilter = THREE.LinearFilter;
+    }
+    const mask = this._glyphMask;
+    const { width: w, height: h } = mask.image;
+    const data = mask.image.data as Uint8Array;
+    data.fill(0);
+    for (let i = 0; i < rects.length; i++) {
+      const value = Math.round(255 * Math.max(0, Math.min(1, alphas[i] ?? 1)));
+      if (value === 0) continue;
+      const [x0, y0, x1, y1] = rects[i];
+      const c0 = Math.max(0, Math.floor(x0 * w));
+      const c1 = Math.min(w, Math.ceil(x1 * w));
+      // DataTexture row 0 is the bottom of the plane; canvas y runs down.
+      const r0 = Math.max(0, Math.floor((1 - y1) * h));
+      const r1 = Math.min(h, Math.ceil((1 - y0) * h));
+      for (let r = r0; r < r1; r++) {
+        for (let c = c0; c < c1; c++) {
+          const o = (r * w + c) * 4;
+          // Neighbouring glyphs can share an edge column: keep the brighter.
+          const v = Math.max(data[o], value);
+          data[o] = v;
+          data[o + 1] = v;
+          data[o + 2] = v;
+          data[o + 3] = 255;
+        }
+      }
+    }
+    mask.needsUpdate = true;
+    if (material.alphaMap !== mask) {
+      material.alphaMap = mask;
+      material.needsUpdate = true;
+    }
   }
 
   /**
