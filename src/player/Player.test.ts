@@ -5,6 +5,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Player, PlayerOptions } from './Player';
 import { PlayerController, PlayerControllerCallbacks } from './PlayerController';
 import { ThreeDScene } from '../core/ThreeDScene';
+import { ValueTracker } from '../mobjects/value-tracker/ValueTracker';
+import { Dot } from '../mobjects/geometry';
 
 // ---------------------------------------------------------------------------
 // Helper: create a container and Player (headless Scene, no WebGL needed)
@@ -28,6 +30,7 @@ function createMockAnimation(overrides: { dirty?: boolean; duration?: number } =
     _syncToThree: vi.fn(),
     opacity: 1,
     dispose: vi.fn(),
+    update: vi.fn(),
   };
   const mockAnimation = {
     mobject: mockMobject,
@@ -205,6 +208,28 @@ describe('Player', () => {
     player.seek(1.0);
     expect(player.timeline.getCurrentTime()).toBeCloseTo(1.0);
     expect(renderSpy).toHaveBeenCalled();
+  });
+
+  // MIGRATION: example for the property
+  //   ∀ time τ, after seek(τ) a mobject driven by an updater on a tracker matches
+  //   the tracker's value at τ, whatever was seeked before (#902).
+  // Replace with a property test once the suite lands.
+  it('seek rewinds tracker animations and re-runs updaters', async () => {
+    const t = new ValueTracker(0);
+    const dot = new Dot();
+    dot.addUpdater((m) => m.moveTo([t.getValue(), 0, 0]));
+    await player.sequence(async (scene) => {
+      scene.add(dot);
+      await scene.play(t.animateTo(4, { duration: 1, rateFunc: (x) => x }));
+    });
+
+    player.seek(1);
+    expect(t.getValue()).toBeCloseTo(4);
+    expect(dot.getCenter()[0]).toBeCloseTo(4);
+
+    player.seek(0.25);
+    expect(t.getValue()).toBeCloseTo(1);
+    expect(dot.getCenter()[0]).toBeCloseTo(1);
   });
 
   // ---- nextSegment / prevSegment ----
