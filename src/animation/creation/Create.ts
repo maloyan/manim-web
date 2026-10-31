@@ -11,6 +11,7 @@ import { Group } from '../../core/Group';
 import { VMobject } from '../../core/VMobject';
 import { VGroup } from '../../core/VGroup';
 import { Animation, AnimationOptions } from '../Animation';
+import { linear } from '../../rate-functions';
 import { Line2 } from 'three/examples/jsm/lines/Line2.js';
 import type { TextGlyphGroup } from '../../mobjects/text/TextGlyphGroup';
 
@@ -535,8 +536,25 @@ export function uncreate(mobject: Mobject, options?: AnimationOptions): Uncreate
 // Write Animations - specifically for Text mobjects
 // =============================================================================
 
+/** Outline stroke width Write draws before filling (Manim CE DrawBorderThenFill). */
+const WRITE_OUTLINE_WIDTH = 2;
+
+/** Per family member state for Write's border-then-fill mode. */
+interface WriteMemberState {
+  member: VMobject;
+  lines: Line2[];
+  lengths: number[];
+  strokeWidth: number;
+  fillOpacity: number;
+  /** True once the member is in its fill half (stroke no longer dashed). */
+  filling: boolean;
+}
+
 export interface WriteOptions extends AnimationOptions {
-  /** Stagger between characters, default 0.05 */
+  /**
+   * Stagger between family members. Default: Manim CE's
+   * `min(4 / members, 0.2)` for VMobjects, 0.05 for glyph-stroke Text.
+   */
   lagRatio?: number;
   /** Write in reverse (right to left), default false */
   reverse?: boolean;
@@ -560,8 +578,13 @@ export interface WriteOptions extends AnimationOptions {
  * Rendering paths:
  * 1. Glyph stroke mode — Text with loaded glyph group (via loadGlyphs()) gets stroke-draw
  *    of each character's outline, then cross-fades to the Canvas 2D texture.
- * 2. Dash-based reveal — for VMobjects that already have Line2 children.
- * 3. Opacity fallback.
+ * 2. Left-to-right reveal for mobjects with setRevealProgress().
+ * 3. Border then fill — VMobjects (MathTex, shapes) animate like Manim CE's
+ *    Write: each family member draws a thin outline in the first half of its
+ *    lag window, then fills in while the outline relaxes to its own stroke.
+ * 4. Opacity fallback.
+ *
+ * Like Manim CE, the default rate function is linear.
  */
 export class Write extends Animation {
   protected readonly lagRatio: number;
@@ -572,14 +595,16 @@ export class Write extends Animation {
 
   // Rendering mode flags (mutually exclusive)
   private _useGlyphStroke: boolean = false;
-  private _useDashReveal: boolean = false;
   private _useRevealProgress: boolean = false;
 
   // Narrowed reference to the mobject, cached when reveal-progress mode is active.
   private _revealMobject: RevealProgressMobject | null = null;
 
-  // Dash reveal state
-  private _totalLength: number = 0;
+  // Border-then-fill state
+  private _useBorderThenFill: boolean = false;
+  private _lagRatioOption: number | undefined;
+  private _members: WriteMemberState[] = [];
+  private _memberLagRatio: number = 0;
 
   // Glyph stroke state
   private _glyphGroup: TextGlyphGroup | null = null;
@@ -594,8 +619,13 @@ export class Write extends Animation {
   private _skeletonTotalLengths: number[] = [];
 
   constructor(mobject: Mobject, options: WriteOptions = {}) {
-    super(mobject, { duration: options.duration ?? 1, ...options });
+    super(mobject, {
+      ...options,
+      duration: options.duration ?? 1,
+      rateFunc: options.rateFunc ?? linear,
+    });
     this.lagRatio = options.lagRatio ?? 0.05;
+    this._lagRatioOption = options.lagRatio;
     this._reverse = options.reverse ?? false;
     this._remover = options.remover ?? false;
     this._strokeRatio = options.strokeRatio ?? 0.7;
@@ -624,25 +654,112 @@ export class Write extends Animation {
       return;
     }
 
-    // Priority 3: Dash reveal for VMobjects with Line2
-    this._useDashReveal = this.mobject instanceof VMobject && hasLine2Children(this.mobject);
+    // Priority 3: Manim CE border-then-fill for VMobjects
+    if (this.mobject instanceof VMobject && this.mobject.familyMembersWithPoints().length > 0) {
+      this._beginBorderThenFill(this.mobject);
+      return;
+    }
 
-    if (this._useDashReveal) {
-      const threeObj = this.mobject.getThreeObject();
-      threeObj.traverse((child) => {
-        if (child instanceof Line2) {
-          const material = child.material;
-          material.dashed = true;
-          material.dashScale = 1;
+    this.mobject.setStrokeOpacity(this._reverse ? this._originalOpacity : 0);
+  }
 
-          child.computeLineDistances();
-          this._totalLength = getLine2TotalLength(child);
+  /**
+   * Set up border-then-fill mode: every family member switches to a thin
+   * outline (Manim CE's `get_outline`: no fill, stroke width 2) whose stroke
+   * is hidden behind a dash reveal.
+   */
+  private _beginBorderThenFill(root: VMobject): void {
+    this._useBorderThenFill = true;
+    const family = root.familyMembersWithPoints();
+    this._memberLagRatio = this._lagRatioOption ?? Math.min(4 / Math.max(1, family.length), 0.2);
+    this._members = family.map((member) => ({
+      member,
+      lines: [],
+      lengths: [],
+      strokeWidth: member.strokeWidth,
+      fillOpacity: member.fillOpacity,
+      filling: true,
+    }));
+    for (const state of this._members) this._enterOutline(state);
+    // Sync once so every member's Line2 geometry exists at outline width.
+    root.getThreeObject();
+    for (const state of this._members) this._captureOutlineLines(state);
+  }
 
-          setLine2RevealLength(child, this._reverse ? this._totalLength : 0, this._totalLength);
+  /** Switch a member to its outline style (no fill, thin stroke). */
+  private _enterOutline(state: WriteMemberState): void {
+    state.member.setFillOpacity(0);
+    state.member.setStrokeWidth(WRITE_OUTLINE_WIDTH);
+    state.filling = false;
+  }
+
+  /** Dash-hide a member's current stroke lines so they can be revealed. */
+  private _captureOutlineLines(state: WriteMemberState): void {
+    state.lines = state.member.getOwnStrokeLines();
+    state.lengths = state.lines.map((line) => {
+      const material = line.material;
+      material.dashed = true;
+      material.dashScale = 1;
+      line.computeLineDistances();
+      const totalLen = getLine2TotalLength(line);
+      setLine2RevealLength(line, 0, totalLen);
+      return totalLen;
+    });
+  }
+
+  /** Show a member's stroke lines in full, without dashing. */
+  private _showFullStroke(state: WriteMemberState): void {
+    for (const line of state.lines) {
+      line.visible = true;
+      line.material.dashed = false;
+      line.material.needsUpdate = true;
+    }
+  }
+
+  /**
+   * Manim CE's DrawBorderThenFill.interpolate_submobject per family member:
+   * the first half reveals the outline, the second half interpolates from
+   * the outline to the member's own style (fill in, stroke back to width).
+   */
+  private _interpolateBorderThenFill(alpha: number): void {
+    const n = this._members.length;
+    for (let i = 0; i < n; i++) {
+      const state = this._members[i];
+      const sub = this.getSubAlpha(alpha, i, n, this._memberLagRatio);
+      if (sub < 0.5) {
+        if (state.filling) {
+          // Scrubbed back into the outline half: rebuild the outline.
+          this._enterOutline(state);
+          state.member.getThreeObject();
+          this._captureOutlineLines(state);
         }
-      });
-    } else {
-      this.mobject.setStrokeOpacity(this._reverse ? this._originalOpacity : 0);
+        const total = state.lengths.reduce((sum, len) => sum + len, 0);
+        let remaining = sub * 2 * total;
+        for (let j = 0; j < state.lines.length; j++) {
+          const len = state.lengths[j];
+          setLine2RevealLength(state.lines[j], Math.max(0, Math.min(len, remaining)), len);
+          remaining -= len;
+        }
+      } else {
+        if (!state.filling) {
+          this._showFullStroke(state);
+          state.filling = true;
+        }
+        const t = sub * 2 - 1;
+        state.member.setStrokeWidth(
+          WRITE_OUTLINE_WIDTH + (state.strokeWidth - WRITE_OUTLINE_WIDTH) * t,
+        );
+        state.member.setFillOpacity(state.fillOpacity * t);
+      }
+    }
+  }
+
+  /** Restore every member's own style and undashed stroke. */
+  private _finishBorderThenFill(): void {
+    for (const state of this._members) {
+      this._showFullStroke(state);
+      state.member.setStrokeWidth(state.strokeWidth);
+      state.member.setFillOpacity(state.fillOpacity);
     }
   }
 
@@ -763,14 +880,8 @@ export class Write extends Animation {
       this._interpolateGlyphStroke(effectiveAlpha);
     } else if (this._useRevealProgress) {
       this._revealMobject?.setRevealProgress(effectiveAlpha);
-    } else if (this._useDashReveal) {
-      const threeObj = this.mobject.getThreeObject();
-      threeObj.traverse((child) => {
-        if (child instanceof Line2) {
-          const visibleLength = effectiveAlpha * this._totalLength;
-          setLine2RevealLength(child, visibleLength, this._totalLength);
-        }
-      });
+    } else if (this._useBorderThenFill) {
+      this._interpolateBorderThenFill(effectiveAlpha);
     } else {
       this.mobject.setStrokeOpacity(this._originalOpacity * effectiveAlpha);
     }
@@ -900,30 +1011,14 @@ export class Write extends Animation {
       return;
     }
 
-    if (this._remover) {
-      if (this._useDashReveal) {
-        const threeObj = this.mobject.getThreeObject();
-        threeObj.traverse((child) => {
-          if (child instanceof Line2) {
-            setLine2RevealLength(child, 0, this._totalLength);
-          }
-        });
-      }
-      this.mobject.setStrokeOpacity(0);
-    } else {
-      if (this._useDashReveal) {
-        const threeObj = this.mobject.getThreeObject();
-        threeObj.traverse((child) => {
-          if (child instanceof Line2) {
-            child.visible = true;
-            const material = child.material;
-            material.dashed = false;
-            material.needsUpdate = true;
-          }
-        });
-      }
-      this.mobject.setStrokeOpacity(this._originalOpacity);
+    if (this._useBorderThenFill) {
+      this._finishBorderThenFill();
+      if (this._remover) this.mobject.setStrokeOpacity(0);
+      super.finish();
+      return;
     }
+
+    this.mobject.setStrokeOpacity(this._remover ? 0 : this._originalOpacity);
     super.finish();
   }
 
