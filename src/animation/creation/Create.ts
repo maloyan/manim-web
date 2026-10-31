@@ -132,6 +132,23 @@ export function hasLine2Children(mobject: Mobject): boolean {
   return found;
 }
 
+/**
+ * Manim CE's `family_members_with_points` for any mobject tree. Groups (such
+ * as Axes, which is not a VMobject) contribute their vector descendants, so
+ * Create draws them stroke by stroke instead of fading the whole group.
+ */
+function vectorFamily(mobject: Mobject): VMobject[] {
+  if (mobject instanceof VMobject) return mobject.familyMembersWithPoints();
+  return mobject.children.flatMap((child) => vectorFamily(child));
+}
+
+/** Leaves of a mobject tree that are not VMobjects (e.g. Text labels). */
+function nonVectorLeaves(mobject: Mobject): Mobject[] {
+  if (mobject instanceof VMobject) return [];
+  if (mobject.children.length === 0) return [mobject];
+  return mobject.children.flatMap((child) => nonVectorLeaves(child));
+}
+
 export interface CreateOptions extends AnimationOptions {
   /** Stagger ratio between submobjects (0 = simultaneous, 1 = fully sequential). Default: 1 (matches Manim CE/3b1b) */
   lagRatio?: number;
@@ -158,6 +175,8 @@ export class Create extends Animation {
   private _memberLineLengths: number[][] = [];
   /** Saved per-descendant opacities for proportional scaling (opacity fallback path) */
   private _savedOpacities: Array<[Mobject, number]> = [];
+  /** Non-vector parts of a group being drawn (faded in alongside the strokes). */
+  private _fadedParts: Array<[Mobject, number]> = [];
 
   constructor(mobject: Mobject, options: CreateOptions = {}) {
     // Manim default for Create is 2 seconds
@@ -176,26 +195,29 @@ export class Create extends Animation {
   override begin(): void {
     super.begin();
 
-    this._useDashReveal = this.mobject instanceof VMobject && hasLine2Children(this.mobject);
+    this._useDashReveal = vectorFamily(this.mobject).length > 0 && hasLine2Children(this.mobject);
 
     if (this._useDashReveal) {
-      const vmob = this.mobject as VMobject;
-
-      // Check if this VMobject has fill
-      this._originalFillOpacity = vmob.fillOpacity;
+      // Check if the root has fill (a plain Group root has none of its own)
+      const root = this.mobject instanceof VMobject ? this.mobject : null;
+      this._originalFillOpacity = root ? root.fillOpacity : 0;
       this._hasFill = this._originalFillOpacity > 0;
 
       // Hide fill initially so it can fade in during second half
-      if (this._hasFill) {
-        vmob.setFillOpacity(0);
+      if (root && this._hasFill) {
+        root.setFillOpacity(0);
       }
+
+      // Non-vector parts of a group (labels) fade in while the strokes draw.
+      this._fadedParts = nonVectorLeaves(this.mobject).map((m) => [m, m.opacity]);
+      for (const [part] of this._fadedParts) Mobject.prototype.setStrokeOpacity.call(part, 0);
 
       // Stagger unit = family members with points (Manim CE semantics), not
       // raw Line2 primitives — a member with multiple subpaths must not be
       // split into multiple stagger units. Ensure the whole subtree is
       // synced first so every member's rendering cache is up to date.
       this.mobject.getThreeObject();
-      this._family = vmob.familyMembersWithPoints();
+      this._family = vectorFamily(this.mobject);
       this._memberLines = [];
       this._memberLineLengths = [];
 
@@ -280,6 +302,9 @@ export class Create extends Animation {
   interpolate(alpha: number): void {
     if (this._useDashReveal) {
       const n = this._family.length;
+      for (const [part, opacity] of this._fadedParts) {
+        Mobject.prototype.setStrokeOpacity.call(part, opacity * alpha);
+      }
 
       if (this._hasFill) {
         // Two-phase animation: border then fill (like Manim's DrawBorderThenFill)
@@ -325,6 +350,10 @@ export class Create extends Animation {
       // Restore fill opacity
       if (this._hasFill) {
         (this.mobject as VMobject).setFillOpacity(this._originalFillOpacity);
+      }
+
+      for (const [part, opacity] of this._fadedParts) {
+        Mobject.prototype.setStrokeOpacity.call(part, opacity);
       }
 
       // Disable dashing, show full stroke
