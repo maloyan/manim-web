@@ -620,7 +620,8 @@ export class VMobject extends VMobjectRendering {
 
   /**
    * Align points between this VMobject and a target so they have the same
-   * count, consistent winding, and optimal rotation for smooth morphing.
+   * count. Closed paths also get consistent winding and the best cyclic
+   * rotation for smooth morphing; open paths keep their point order.
    * @param target - The target VMobject to align with
    */
   alignPoints(target: VMobject): void {
@@ -639,6 +640,12 @@ export class VMobject extends VMobjectRendering {
 
     // Need at least 4 points (one cubic bezier segment) to optimize
     if (this._points3D.length < 4) return;
+
+    // Winding and cyclic rotation are only defined for closed loops. On an
+    // open curve (a graph) they move the endpoints into the middle of the
+    // path and split it apart mid-Transform (#904). ManimCE keeps the point
+    // order of open curves as is.
+    if (!isClosedPath(this._points3D) || !isClosedPath(target._points3D)) return;
 
     // Ensure consistent winding direction between source and target.
     // Opposite winding causes collapsed/twisted intermediate shapes.
