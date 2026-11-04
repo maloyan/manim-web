@@ -249,7 +249,7 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
               ['$$', '$$'],
               ['\\[', '\\]'],
             ],
-            packages: { '[+]': ['ams', 'newcommand', 'configmacros'] },
+            packages: { '[+]': ['ams', 'newcommand', 'configmacros', 'html'] },
           },
           svg: {
             fontCache: 'global',
@@ -282,6 +282,55 @@ async function loadMathJax(): Promise<MathJaxModuleState> {
   })();
 
   return mathjaxLoadPromise;
+}
+
+// ---------------------------------------------------------------------------
+// MathJax document reuse (npm path)
+// ---------------------------------------------------------------------------
+
+type MathJaxDocument = ReturnType<MathJaxSingleton['document']>;
+
+/**
+ * One MathJax document per macro set. Building a document (TeX + SVG jax)
+ * costs far more than a conversion (about 13 ms against 2 ms), and a
+ * re-rendering MathTex converts on every change.
+ */
+const documentCache = new Map<string, MathJaxDocument>();
+
+/**
+ * LaTeX that leaves state behind in the TeX input jax: macro definitions
+ * (which would leak into later renders) and labels / tags (which would
+ * collide). Such input gets a document of its own.
+ */
+const STATEFUL_TEX =
+  /\\(?:newcommand|renewcommand|providecommand|def|gdef|edef|xdef|let|newenvironment|renewenvironment|DeclareMathOperator|label|tag|require)(?![a-zA-Z])/;
+
+function createMathDocument(mj: MathJaxModuleNpm, macros: Record<string, string>): MathJaxDocument {
+  const tex = new mj.TeX({
+    packages: ['base', 'ams', 'newcommand', 'configmacros', 'html'],
+    ...(Object.keys(macros).length > 0 ? { macros } : {}),
+  });
+  const svg = new mj.SVG({ fontCache: 'none' });
+  return mj.mathjax.document('', { InputJax: tex, OutputJax: svg });
+}
+
+/**
+ * The document to convert `texString` with: a cached one for its macro
+ * set, or a fresh one when the input defines macros or labels.
+ */
+function mathDocumentFor(
+  mj: MathJaxModuleNpm,
+  macros: Record<string, string>,
+  texString: string,
+): MathJaxDocument {
+  if (STATEFUL_TEX.test(texString)) return createMathDocument(mj, macros);
+  const key = JSON.stringify(Object.entries(macros).sort(([a], [b]) => a.localeCompare(b)));
+  let html = documentCache.get(key);
+  if (!html) {
+    html = createMathDocument(mj, macros);
+    documentCache.set(key, html);
+  }
+  return html;
 }
 
 // ---------------------------------------------------------------------------
@@ -377,14 +426,9 @@ export async function renderLatexToSVG(
     // ------------------------------------------------------------------
     // npm @mathjax/src
     // ------------------------------------------------------------------
-    const { mathjax: MathJax, TeX, SVG, adaptor } = mj;
+    const { mathjax: MathJax, adaptor } = mj;
 
-    const tex = new TeX({
-      packages: ['base', 'ams', 'newcommand', 'configmacros'],
-      ...(Object.keys(macros).length > 0 ? { macros } : {}),
-    });
-    const svg = new SVG({ fontCache: 'none' });
-    const html = MathJax.document('', { InputJax: tex, OutputJax: svg });
+    const html = mathDocumentFor(mj, macros, texString);
 
     // Absorb MathJax "retry" signals: the first glyph from one of the
     // NewCM font's dynamic ranges pauses the conversion while FontData

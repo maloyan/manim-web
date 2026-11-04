@@ -425,6 +425,130 @@ function vecAngle(ux: number, uy: number, vx: number, vy: number): number {
 // SVG Element -> VMobject conversion
 // ---------------------------------------------------------------------------
 
+/** Ancestor `class` tokens of each glyph built by {@link svgToVMobjects}. */
+const glyphClasses = new WeakMap<VMobject, readonly string[]>();
+
+/**
+ * The `class` tokens on the SVG elements that enclosed this glyph, outermost
+ * first. MathJax's `\class{name}{...}` puts `name` on the group around a
+ * sub-expression, so every glyph inside it reports `name` here. Nested
+ * `\class` groups report all their names.
+ *
+ * Only glyphs produced by {@link svgToVMobjects} carry classes; any other
+ * mobject (including a `copy()` of a glyph) returns an empty array.
+ */
+export function getGlyphClasses(glyph: VMobject): readonly string[] {
+  return glyphClasses.get(glyph) ?? [];
+}
+
+/** Axis-aligned box in SVG user units. */
+interface SvgBox {
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+}
+
+/**
+ * Accumulated axis-aligned SVG transform: a local point p maps to
+ * (tx + sx * p.x, ty + sy * p.y), clamped to `clip`.
+ */
+interface SvgFrame {
+  readonly tx: number;
+  readonly ty: number;
+  readonly sx: number;
+  readonly sy: number;
+  /** Viewport of the innermost nested `<svg>`, in mapped coordinates. */
+  readonly clip: SvgBox | null;
+}
+
+const IDENTITY_FRAME: SvgFrame = { tx: 0, ty: 0, sx: 1, sy: 1, clip: null };
+
+/** `frame` followed by `translate(x, y) scale(sx, sy)`. */
+function compose(frame: SvgFrame, x: number, y: number, sx: number, sy: number): SvgFrame {
+  return {
+    tx: frame.tx + frame.sx * x,
+    ty: frame.ty + frame.sy * y,
+    sx: frame.sx * sx,
+    sy: frame.sy * sy,
+    clip: frame.clip,
+  };
+}
+
+/**
+ * Apply the `translate` and `scale` items of a `transform` attribute, left
+ * to right. `scale(s)` scales both axes by s; `scale(sx, sy)` scales x by
+ * sx and y by sx * |sy / sx|.
+ *
+ * @note The sign of sy relative to sx is ignored: a y-reflection such as
+ * MathJax's root `scale(1,-1)` is not applied, and callers compensate
+ * with the `flipY` option (MathJax output is converted with flipY false).
+ * Only the stretch (|sy| != |sx|, as in a delimiter extender) is new.
+ */
+function applyTransformAttribute(frame: SvgFrame, transform: string | null): SvgFrame {
+  if (!transform) return frame;
+  let result = frame;
+  for (const m of transform.matchAll(/(translate|scale)\s*\(([^)]*)\)/g)) {
+    const args = m[2]
+      .split(/[\s,]+/)
+      .filter(Boolean)
+      .map(Number);
+    if (m[1] === 'translate') {
+      result = compose(result, args[0] || 0, args[1] || 0, 1, 1);
+    } else {
+      const sx = args[0] || 1;
+      const stretch = args.length > 1 ? Math.abs((args[1] || sx) / sx) : 1;
+      result = compose(result, 0, 0, sx, sx * stretch);
+    }
+  }
+  return result;
+}
+
+/**
+ * Frame for the content of a nested `<svg x y width height viewBox>`: the
+ * viewBox maps onto the viewport, and content outside the viewport is
+ * clipped.
+ *
+ * @note MathJax only nests `<svg>` around the rectangular extender of a
+ * stretched delimiter or radical, and its viewBox always has the
+ * viewport's aspect ratio, so clamping points to the viewport is an exact
+ * clip and preserveAspectRatio can be ignored.
+ */
+function enterViewport(frame: SvgFrame, el: Element): SvgFrame {
+  const attr = (name: string) => parseFloat(el.getAttribute(name) ?? '');
+  const x = attr('x') || 0;
+  const y = attr('y') || 0;
+  const width = attr('width');
+  const height = attr('height');
+  const viewBox = (el.getAttribute('viewBox') ?? '')
+    .split(/[\s,]+/)
+    .filter(Boolean)
+    .map(Number);
+  if (!(width > 0 && height > 0) || viewBox.length !== 4 || !(viewBox[2] > 0 && viewBox[3] > 0)) {
+    return compose(frame, x, y, 1, 1);
+  }
+  const [x0, y0] = mapPoint(frame, [x, y]);
+  const [x1, y1] = mapPoint(frame, [x + width, y + height]);
+  const clip = {
+    minX: Math.min(x0, x1),
+    maxX: Math.max(x0, x1),
+    minY: Math.min(y0, y1),
+    maxY: Math.max(y0, y1),
+  };
+  const sx = width / viewBox[2];
+  const sy = height / viewBox[3];
+  return { ...compose(frame, x - viewBox[0] * sx, y - viewBox[1] * sy, sx, sy), clip };
+}
+
+/** Map a local point through `frame`, clamped to its clip box. */
+function mapPoint(frame: SvgFrame, [px, py]: Vec2): Vec2 {
+  const x = frame.tx + frame.sx * px;
+  const y = frame.ty + frame.sy * py;
+  const clip = frame.clip;
+  if (!clip) return [x, y];
+  return [Math.min(clip.maxX, Math.max(clip.minX, x)), Math.min(clip.maxY, Math.max(clip.minY, y))];
+}
+
 /**
  * Walk an SVG element tree (as produced by MathJax) and convert every
  * `<path>` element into a VMobject.  Returns a VGroup containing one
@@ -433,7 +557,8 @@ function vecAngle(ux: number, uy: number, vx: number, vy: number): number {
  * Handles MathJax SVG specifics:
  * - `<defs>` blocks with glyph definitions referenced via `<use>`
  * - Nested `<g>` transforms
- * - `viewBox` → coordinate mapping
+ * - `viewBox` → coordinate mapping, including nested `<svg>` viewports
+ *   (stretched delimiters), which clip their content
  */
 export function svgToVMobjects(
   svgElement: SVGElement | Element,
@@ -467,7 +592,13 @@ export function svgToVMobjects(
   // Keep renderer units unchanged here. Caller controls world conversion.
   const worldScale = scaleFactor;
 
-  function walkElement(el: Element, accTx: number, accTy: number, accScale: number): void {
+  function addGlyph(vmob: VMobject | null, classes: readonly string[]): void {
+    if (!vmob) return;
+    if (classes.length > 0) glyphClasses.set(vmob, classes);
+    group.add(vmob);
+  }
+
+  function walkElement(el: Element, parent: SvgFrame, accClasses: readonly string[]): void {
     const tag = el.tagName.toLowerCase();
 
     // Skip <defs> — we collected them above
@@ -476,49 +607,25 @@ export function svgToVMobjects(
     // Skip MathJax error elements (merror produces a background rect)
     if (el.getAttribute('data-mml-node') === 'merror') return;
 
-    // Handle <g> transform: translate and scale
-    // SVG transforms apply left-to-right in the attribute string.
-    // For "translate(a,b) scale(s)": point p → (a + s*p.x, b + s*p.y)
-    // We accumulate into (accTx, accTy, accScale) so that:
-    //   worldPoint = (accTx + accScale * localPoint) * worldScale
-    let localTx = accTx;
-    let localTy = accTy;
-    let localScale = accScale;
-    const transform = el.getAttribute('transform');
-    if (transform) {
-      const regex = /(translate|scale)\s*\(([^)]*)\)/g;
-      let m;
-      while ((m = regex.exec(transform)) !== null) {
-        const type = m[1];
-        const args = m[2]
-          .split(/[\s,]+/)
-          .filter(Boolean)
-          .map(Number);
-        if (type === 'translate') {
-          localTx += localScale * (args[0] || 0);
-          localTy += localScale * (args[1] || 0);
-        } else if (type === 'scale') {
-          localScale *= args[0] || 1;
-        }
-      }
-    }
+    // Accumulate `class` tokens (from MathJax `\class{...}{...}`) so each
+    // glyph knows every tagged group it sits in. Arrays are shared, not
+    // copied, until a new class appears.
+    const ownClass = el.getAttribute('class');
+    const classes = ownClass
+      ? [...accClasses, ...ownClass.split(/\s+/).filter(Boolean)]
+      : accClasses;
+
+    // A nested <svg> (MathJax uses one to stretch the extender of a tall
+    // delimiter or radical) places its own viewport; then the element's
+    // transform applies, left to right.
+    const viewport = tag === 'svg' && el !== svgElement ? enterViewport(parent, el) : parent;
+    const frame = applyTransformAttribute(viewport, el.getAttribute('transform'));
+    const toVMobject = (d: string, at: SvgFrame) =>
+      pathDataToVMobject(d, at, worldScale, flipY, color, strokeWidth, fillOpacity);
 
     if (tag === 'path') {
       const d = el.getAttribute('d');
-      if (d) {
-        const vmob = pathDataToVMobject(
-          d,
-          localTx,
-          localTy,
-          localScale,
-          worldScale,
-          flipY,
-          color,
-          strokeWidth,
-          fillOpacity,
-        );
-        if (vmob) group.add(vmob);
-      }
+      if (d) addGlyph(toVMobject(d, frame), classes);
     } else if (tag === 'use') {
       // Resolve <use xlink:href="#id"> or <use href="#id">
       const href = el.getAttribute('xlink:href') || el.getAttribute('href') || '';
@@ -529,20 +636,7 @@ export function svgToVMobjects(
       const useX = parseFloat(el.getAttribute('x') || '0');
       const useY = parseFloat(el.getAttribute('y') || '0');
 
-      if (d) {
-        const vmob = pathDataToVMobject(
-          d,
-          localTx + localScale * useX,
-          localTy + localScale * useY,
-          localScale,
-          worldScale,
-          flipY,
-          color,
-          strokeWidth,
-          fillOpacity,
-        );
-        if (vmob) group.add(vmob);
-      }
+      if (d) addGlyph(toVMobject(d, compose(frame, useX, useY, 1, 1)), classes);
     } else if (tag === 'rect') {
       const rx = parseFloat(el.getAttribute('x') || '0');
       const ry = parseFloat(el.getAttribute('y') || '0');
@@ -550,47 +644,33 @@ export function svgToVMobjects(
       const rh = parseFloat(el.getAttribute('height') || '0');
       if (rw > 0 && rh > 0) {
         const d = `M${rx},${ry} L${rx + rw},${ry} L${rx + rw},${ry + rh} L${rx},${ry + rh} Z`;
-        const vmob = pathDataToVMobject(
-          d,
-          localTx,
-          localTy,
-          localScale,
-          worldScale,
-          flipY,
-          color,
-          strokeWidth,
-          fillOpacity,
-        );
-        if (vmob) group.add(vmob);
+        addGlyph(toVMobject(d, frame), classes);
       }
     }
 
     // Recurse into children
     for (const child of el.children) {
-      walkElement(child, localTx, localTy, localScale);
+      walkElement(child, frame, classes);
     }
   }
 
-  walkElement(svgElement, 0, 0, 1);
+  walkElement(svgElement, IDENTITY_FRAME, []);
 
   return group;
 }
 
 /**
  * Convert SVG path data string into a single VMobject (or null if empty).
- * Applies accumulated translation, element scale, world scale, and optional Y-flip.
+ * Applies the accumulated SVG frame, world scale, and optional Y-flip.
  *
  * The final position for each path point (px, py) is:
- *   worldX = (accTx + elementScale * px) * worldScale
- *   worldY = ±(accTy + elementScale * py) * worldScale   (sign depends on flipY)
- *
- * When elementScale=1, this reduces to (px + accTx) * worldScale (original behavior).
+ *   worldX = mapX(px) * worldScale
+ *   worldY = ±mapY(py) * worldScale   (sign depends on flipY)
+ * where (mapX, mapY) is {@link mapPoint} with `frame`.
  */
 function pathDataToVMobject(
   d: string,
-  accTx: number,
-  accTy: number,
-  elementScale: number,
+  frame: SvgFrame,
   worldScale: number,
   flipY: boolean,
   color: string,
@@ -608,12 +688,9 @@ function pathDataToVMobject(
 
   for (const sp of subPaths) {
     const startLen = allPoints.length;
-    for (const [px, py] of sp) {
-      const x = (accTx + elementScale * px) * worldScale;
-      const y = flipY
-        ? -(accTy + elementScale * py) * worldScale
-        : (accTy + elementScale * py) * worldScale;
-      allPoints.push([x, y, 0]);
+    for (const point of sp) {
+      const [mx, my] = mapPoint(frame, point);
+      allPoints.push([mx * worldScale, (flipY ? -my : my) * worldScale, 0]);
     }
     const count = allPoints.length - startLen;
     if (count > 0) {
