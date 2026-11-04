@@ -3,7 +3,7 @@ import { Angle, RightAngle, Elbow, TangentLine } from './AngleShapes';
 import { Line } from './Line';
 import { Circle } from './Circle';
 import { VMobject } from '../../core/VMobject';
-import { WHITE, BLUE } from '../../constants';
+import { WHITE } from '../../constants';
 
 // ---------------------------------------------------------------------------
 // Angle
@@ -520,10 +520,10 @@ describe('RightAngle', () => {
     expect(new RightAngle({ line1: l1, line2: l2 }).getLocalPoints().length).toBeGreaterThan(0);
   });
 
-  it('default size is 0.3 and color is BLUE', () => {
+  it('default size is 0.3 and color is WHITE (ManimCE)', () => {
     const ra = new RightAngle({ points: PTS_90 });
     expect(ra.getSize()).toBe(0.3);
-    expect(ra.color).toBe(BLUE);
+    expect(ra.color).toBe(WHITE);
   });
 
   it('custom size is applied', () => {
@@ -584,7 +584,7 @@ describe('Elbow', () => {
     expect(e.getWidth()).toBe(1);
     expect(e.getHeight()).toBe(1);
     expect(e.getAngle()).toBe(0);
-    expect(e.color).toBe(BLUE);
+    expect(e.color).toBe(WHITE);
   });
 
   it('custom width/height/angle are applied', () => {
