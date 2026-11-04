@@ -1,0 +1,67 @@
+---
+title: Bivariate normal in 3D
+sidebar_label: Bivariate normal (3D)
+---
+
+import BivariateNormalExample from '@site/src/components/examples/BivariateNormalExample';
+
+The density of a bivariate normal distribution in matrix form, as a `TangleTex`
+pinned to the screen of a `ThreeDScene`, above the surface it describes. Rest
+the mouse on the mean vector `μ` or the covariance matrix `Σ` to open it. Inside,
+each parameter (`μx`, `μy`, `σx`, `σy`, `ρ`) shows as its symbol and turns into
+its number while you drag it. Click a symbol to type a value, and drag empty
+space to orbit the camera.
+
+<BivariateNormalExample />
+
+## How it works
+
+- `μ` and `Σ` are `\tanglematrix` markers whose cells are LaTeX with
+  `\tangle` markers, so every copy of `σx` (in `det Σ` and in `Σ⁻¹`) is the
+  same parameter. Each marker opens on its own when you rest the mouse on it.
+- Pin the formula with `scene.addFixedInFrameMobjects(formula)`. `makeTangle`
+  sees that the formula is fixed in frame and maps the pointer with the screen
+  frame instead of the 3D camera.
+- A press on a parameter goes to `makeTangle` before the orbit controls, so
+  dragging a number never turns the camera. A press anywhere else still orbits.
+- `onChange` rebuilds the surface with `Surface3D.setFunc`. `onBeforeRender`
+  and an updater fit the backdrop to the formula as matrices open and close.
+
+```typescript
+const sigma = (p: string) => ({
+  value: 1,
+  min: 0.6,
+  max: 2,
+  step: 0.05,
+  display: 'symbol',
+  symbol: p,
+});
+const formula = new TangleTex({
+  latex: String.raw`f(\vec x) = \frac{1}{2\pi\sqrt{\det\tanglematrix{Sigma}}}\,e^{-\frac{1}{2}(\vec x-\tanglematrix{mu})^{\top}\tanglematrix{Sigma}^{-1}(\vec x-\tanglematrix{mu})}`,
+  anchor: 'left',
+  parameters: {
+    sx: sigma('\\sigma_x'),
+    sy: sigma('\\sigma_y'),
+    // ... rho, mx, my
+  },
+  matrices: {
+    mu: { symbol: '\\vec\\mu', entries: [[String.raw`\tangle{mx}`], [String.raw`\tangle{my}`]] },
+    Sigma: {
+      symbol: '\\Sigma',
+      entries: [
+        [String.raw`\tangle{sx}^2`, String.raw`\tangle{rho}\tangle{sx}\tangle{sy}`],
+        [String.raw`\tangle{rho}\tangle{sx}\tangle{sy}`, String.raw`\tangle{sy}^2`],
+      ],
+    },
+  },
+});
+await formula.waitForRender();
+scene.add(axes, surface);
+scene.addFixedInFrameMobjects(formula);
+makeTangle(formula, scene, { onChange: () => surface.setFunc(surfaceFunc()) });
+```
+
+Fixed-in-frame mobjects all draw at the same `renderOrder` in a 3D scene, which
+sorts them by distance. To keep the formula above a backdrop pinned next to it,
+the example sets the formula's `renderOrder` higher. Re-rendered glyphs take the
+formula's `renderOrder`, so it stays on top.
