@@ -9,9 +9,13 @@
 import { VMobject } from '../../core/VMobject';
 import type { Font, Glyph } from 'opentype.js';
 import { skeletonizeGlyph, type SkeletonizeOptions } from '../../utils/skeletonize';
+import { DEFAULT_FONT_SIZE_PT, TEXT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
 
-/** Scale factor: pixels to world units (100 pixels = 1 world unit) */
-const PIXEL_TO_WORLD = 1 / 100;
+/**
+ * Scale factor: font pixels (font-size units) to world units. Matches Manim
+ * CE's Text: one em at font size 48 is TEXT_FONT_SIZE_IN_WORLD_SPACE (2/3).
+ */
+const PIXEL_TO_WORLD = TEXT_FONT_SIZE_IN_WORLD_SPACE / DEFAULT_FONT_SIZE_PT;
 
 export interface GlyphVMobjectOptions {
   /** The opentype.js Glyph object */
