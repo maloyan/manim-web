@@ -80,6 +80,27 @@ export interface SceneOptions {
    * pinned canvas size, so auto-resize stays off. Defaults to true.
    */
   autoResize?: boolean;
+  /**
+   * Multisample antialiasing. Turning it off roughly halves GPU fill cost on
+   * low-end and mobile GPUs, at the price of slightly jagged edges.
+   * Defaults to true.
+   */
+  antialias?: boolean;
+  /**
+   * Canvas resolution multiplier. Defaults to `window.devicePixelRatio`,
+   * capped at 2. Pass 1 on high-DPI phones and low-end laptops to draw a
+   * quarter of the pixels at 2x DPR.
+   */
+  pixelRatio?: number;
+  /** GPU power hint passed to WebGL. Defaults to 'high-performance'. */
+  powerPreference?: 'default' | 'high-performance' | 'low-power';
+  /**
+   * Keep the drawing buffer after compositing. Exporters that read the canvas
+   * asynchronously (PNG export via `toBlob`, for example) need it, so leave
+   * it on for scenes you export. For playback-only scenes, turning it off
+   * saves a per-frame buffer copy on many GPUs. Defaults to true.
+   */
+  preserveDrawingBuffer?: boolean;
 }
 
 /**
@@ -205,7 +226,10 @@ export class Scene {
         height,
         backgroundColor,
         backgroundOpacity,
-        antialias: true,
+        antialias: options.antialias ?? true,
+        pixelRatio: options.pixelRatio,
+        powerPreference: options.powerPreference,
+        preserveDrawingBuffer: options.preserveDrawingBuffer,
       };
       this._renderer = new Renderer(container, rendererOptions);
       this._container = container;
