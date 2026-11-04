@@ -10,7 +10,7 @@ import {
   TangentialArc,
 } from './ArcShapes';
 import { Arc } from './Arc';
-import { BLUE } from '../../constants';
+import { RED } from '../../constants';
 
 // ---------------------------------------------------------------------------
 // Ellipse
@@ -21,7 +21,7 @@ describe('Ellipse', () => {
     expect(e.getWidth()).toBe(2);
     expect(e.getHeight()).toBe(1);
     expect(e.getEllipseCenter()).toEqual([0, 0, 0]);
-    expect(e.color).toBe(BLUE);
+    expect(e.color).toBe(RED);
     expect(e.fillOpacity).toBe(0);
   });
 
@@ -101,7 +101,7 @@ describe('Annulus', () => {
     expect(a.getInnerRadius()).toBe(0.5);
     expect(a.getOuterRadius()).toBe(1);
     expect(a.getAnnulusCenter()).toEqual([0, 0, 0]);
-    expect(a.fillOpacity).toBe(0.5);
+    expect(a.fillOpacity).toBe(1);
   });
 
   it('getArea = PI * (R^2 - r^2)', () => {
@@ -142,7 +142,7 @@ describe('AnnularSector', () => {
     // getSectorCenter() reports the construction center (annulus center), distinct
     // from the bbox getCenter() and the off-origin getCenterOfMass() centroid.
     expect(as.getSectorCenter()).toEqual([0, 0, 0]);
-    expect(as.fillOpacity).toBe(0.5);
+    expect(as.fillOpacity).toBe(1);
   });
 
   it('getArea = |angle|/2 * (R^2 - r^2)', () => {
@@ -224,7 +224,7 @@ describe('Sector', () => {
     // getSectorCenter() reports the construction center (apex), distinct from the
     // bbox getCenter() and the off-origin getCenterOfMass() centroid.
     expect(s.getSectorCenter()).toEqual([0, 0, 0]);
-    expect(s.fillOpacity).toBe(0.5);
+    expect(s.fillOpacity).toBe(1);
   });
 
   it('getArea = |angle|/2 * r^2', () => {

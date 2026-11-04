@@ -1,6 +1,6 @@
 import { Arc } from './Arc';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 
 /**
  * Options for creating an ArcBetweenPoints
@@ -12,7 +12,7 @@ export interface ArcBetweenPointsOptions {
   end: Vector3Tuple;
   /** Arc angle in radians. Default: PI/2 */
   angle?: number;
-  /** Stroke color as CSS color string. Default: Manim's blue (#58C4DD) */
+  /** Stroke color as CSS color string. Default: WHITE (#FFFFFF) */
   color?: string;
   /** Stroke width in pixels. Default: 4 (Manim's default) */
   strokeWidth?: number;
@@ -50,7 +50,7 @@ export class ArcBetweenPoints extends Arc {
       start,
       end,
       angle = Math.PI / 2,
-      color = BLUE,
+      color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
     } = options;
 
