@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.41.0](https://github.com/maloyan/manim-web/compare/v0.40.1...v0.41.0) (2026-11-04)
+
+
+### Features
+
+* **scene:** expose antialias, pixelRatio, powerPreference and preserveDrawingBuffer ([#891](https://github.com/maloyan/manim-web/issues/891)) ([c404129](https://github.com/maloyan/manim-web/commit/c40412941338ea06b2216c8258f75d3902596be5))
+* **text:** add TangleTex, interactive LaTeX with expandable matrices ([#886](https://github.com/maloyan/manim-web/issues/886)) ([467910a](https://github.com/maloyan/manim-web/commit/467910a848730d9601e9784d65172af8c755f87d))
+
+
+### Bug Fixes
+
+* **#902:** rewind ValueTracker animations and re-run updaters on Player seek ([#903](https://github.com/maloyan/manim-web/issues/903)) ([4e00603](https://github.com/maloyan/manim-web/commit/4e00603732f57bae3c05a98e7017a34ce335eeef)), closes [#902](https://github.com/maloyan/manim-web/issues/902)
+* **animate:** accept any mobject method on .animate, like ManimCE ([#893](https://github.com/maloyan/manim-web/issues/893)) ([27068d0](https://github.com/maloyan/manim-web/commit/27068d038d71ec1bec2571ff6dba100ce80fd0cc))
+* **animation:** apply rate function per submobject like ManimCE ([#898](https://github.com/maloyan/manim-web/issues/898)) ([413b1d2](https://github.com/maloyan/manim-web/commit/413b1d2247b739fc42e33bb4282763e37bc25e7c))
+* **animation:** match ManimCE default run times for Create, Uncreate, Write, Flash, FocusOn ([#892](https://github.com/maloyan/manim-web/issues/892)) ([22f9fbd](https://github.com/maloyan/manim-web/commit/22f9fbd8834579010818fcde262a280bbbed9c55))
+* **create:** draw Groups like Axes stroke by stroke ([#907](https://github.com/maloyan/manim-web/issues/907)) ([4661fae](https://github.com/maloyan/manim-web/commit/4661fae47492b5fb190e7d90aefe057d3917898a))
+* **create:** grow fill with the stroke like ManimCE's Create ([#896](https://github.com/maloyan/manim-web/issues/896)) ([38f1889](https://github.com/maloyan/manim-web/commit/38f1889dfc07f94b17cdde0485f4040307798467))
+* **create:** hide arrow tips until they are drawn ([#897](https://github.com/maloyan/manim-web/issues/897)) ([93e1577](https://github.com/maloyan/manim-web/commit/93e15770a88a72d65730c57e2be8bbc7fbfbadd4))
+* **geometry:** lay out DashedLine dashes like ManimCE ([#909](https://github.com/maloyan/manim-web/issues/909)) ([a166004](https://github.com/maloyan/manim-web/commit/a1660041d33da522dd43d1b58e57ae3550e027d6))
+* **geometry:** match ManimCE default colors and fill opacities ([#895](https://github.com/maloyan/manim-web/issues/895)) ([c0f6aaf](https://github.com/maloyan/manim-web/commit/c0f6aaf684b39d0481ee9ff87514bc87e62ff526))
+* **player:** keep DashedLine moving with .animate after a seek ([#906](https://github.com/maloyan/manim-web/issues/906)) ([#910](https://github.com/maloyan/manim-web/issues/910)) ([645b736](https://github.com/maloyan/manim-web/commit/645b7368d8f533fd394f5e9acf02bbee2370ebe3))
+* **text:** size Text like ManimCE (2/3 world unit per em at 48pt) ([#899](https://github.com/maloyan/manim-web/issues/899)) ([9b4ae9c](https://github.com/maloyan/manim-web/commit/9b4ae9c7fa910cb7f768bc29f3da85a391d66023))
+* **transform:** interpolate rotations through points like ManimCE ([#908](https://github.com/maloyan/manim-web/issues/908)) ([fabb320](https://github.com/maloyan/manim-web/commit/fabb3203dde90908feea4e31bd45eb73b36d4edd))
+* **transform:** keep open curves in order in alignPoints ([#904](https://github.com/maloyan/manim-web/issues/904)) ([#911](https://github.com/maloyan/manim-web/issues/911)) ([e39d734](https://github.com/maloyan/manim-web/commit/e39d734e4bf8ca32ab1a18016d88b9384a6c5678))
+* **write:** draw border then fill per member like ManimCE ([#900](https://github.com/maloyan/manim-web/issues/900)) ([9cb01c8](https://github.com/maloyan/manim-web/commit/9cb01c8599997915273d1d44d7057f8d08a30add)), closes [#905](https://github.com/maloyan/manim-web/issues/905)
+* **write:** reveal texture Text glyph by glyph like ManimCE ([#901](https://github.com/maloyan/manim-web/issues/901)) ([c39e754](https://github.com/maloyan/manim-web/commit/c39e75489baca916f5f820ea16d2f378a6ddef2e))
+
+
+### Tests
+
+* **parity:** add ManimCE visual parity harness ([#894](https://github.com/maloyan/manim-web/issues/894)) ([f2ab5ea](https://github.com/maloyan/manim-web/commit/f2ab5ea0ac845b3e7bc57b16db69aa41982e7a99))
+
+
+### Performance
+
+* **rendering:** draw flat transparent DoubleSide materials in one pass ([#888](https://github.com/maloyan/manim-web/issues/888)) ([c4523e8](https://github.com/maloyan/manim-web/commit/c4523e8bb84f5f8b1fd5a8d7c3ceae6ad313001c))
+* **rendering:** update stroke and fill buffers in place each frame ([#889](https://github.com/maloyan/manim-web/issues/889)) ([68a4383](https://github.com/maloyan/manim-web/commit/68a438307b7b275dcf5878a68f25134e834988ff))
+* **scene:** skip drawing animation frames while the canvas is hidden ([#890](https://github.com/maloyan/manim-web/issues/890)) ([02d8abe](https://github.com/maloyan/manim-web/commit/02d8abed9493597e2e874c70d48d68d705a947e3))
+
 ### [0.40.1](https://github.com/maloyan/manim-web/compare/v0.40.0...v0.40.1) (2026-10-24)
 
 
