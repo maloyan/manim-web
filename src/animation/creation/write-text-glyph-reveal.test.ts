@@ -7,6 +7,8 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import * as THREE from 'three';
 import { Text } from '../../mobjects/text/Text';
+import { Paragraph } from '../../mobjects/text/Paragraph';
+import { MarkupText } from '../../mobjects/text/MarkupText';
 import { Write } from './Create';
 
 function mockCtx(): CanvasRenderingContext2D {
@@ -72,5 +74,13 @@ describe('Write on texture Text', () => {
     anim.finish();
     expect(reveal).toHaveBeenLastCalledWith(null);
     expect(material.alphaMap).toBeNull();
+  });
+
+  it('has no glyph rects for subclasses with their own layout', () => {
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation((id: string) =>
+      id === '2d' ? mockCtx() : null,
+    );
+    expect(new Paragraph({ text: 'Hi there' }).getGlyphRects()).toBeNull();
+    expect(new MarkupText({ text: '<b>Hi</b> there' }).getGlyphRects()).toBeNull();
   });
 });

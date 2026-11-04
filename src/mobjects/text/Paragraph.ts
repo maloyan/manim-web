@@ -331,6 +331,14 @@ export class Paragraph extends Text {
   /**
    * Create a copy of this Paragraph mobject
    */
+  /**
+   * Returns null: Paragraph wraps and justifies lines with its own layout, so the plain-Text glyph
+   * rectangles would not match the canvas. Write falls back to the fade.
+   */
+  override getGlyphRects(): null {
+    return null;
+  }
+
   override copy(): Paragraph {
     const copy = new Paragraph({
       text: this._text,
