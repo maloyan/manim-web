@@ -6,7 +6,7 @@ import { Player, PlayerOptions } from './Player';
 import { PlayerController, PlayerControllerCallbacks } from './PlayerController';
 import { ThreeDScene } from '../core/ThreeDScene';
 import { ValueTracker } from '../mobjects/value-tracker/ValueTracker';
-import { Dot } from '../mobjects/geometry';
+import { DashedLine, Dot } from '../mobjects/geometry';
 
 // ---------------------------------------------------------------------------
 // Helper: create a container and Player (headless Scene, no WebGL needed)
@@ -230,6 +230,25 @@ describe('Player', () => {
     player.seek(0.25);
     expect(t.getValue()).toBeCloseTo(1);
     expect(dot.getCenter()[0]).toBeCloseTo(1);
+  });
+
+  it('seek moves a DashedLine animated with .animate after a backward seek (#906)', async () => {
+    const dl = new DashedLine({ start: [0, 0, 0], end: [3, -1, 0] });
+    const [x0, y0] = dl.getCenter();
+    await player.sequence(async (scene) => {
+      scene.add(dl);
+      await scene.play(dl.animate.shift([1, 2, 0]).withRateFunc((x) => x));
+    });
+
+    // MIGRATION: example for the property
+    //   ∀ seek sequence ending at τ, the DashedLine center is start + τ·delta.
+    // Replace with a property test once the suite lands.
+    for (const t of [1, 0, 0.5, 0.25, 1, 0.75]) {
+      player.seek(t);
+      const [x, y] = dl.getCenter();
+      expect(x - x0).toBeCloseTo(t, 2);
+      expect(y - y0).toBeCloseTo(2 * t, 2);
+    }
   });
 
   // ---- nextSegment / prevSegment ----
