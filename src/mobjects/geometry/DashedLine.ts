@@ -1,5 +1,6 @@
+import * as THREE from 'three';
 import { VMobject } from '../../core/VMobject';
-import { Vector3Tuple } from '../../core/Mobject';
+import type { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Line } from './Line';
 import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 
@@ -264,6 +265,43 @@ export class DashedLine extends VMobject {
     super.setStrokeOpacity(opacity);
     for (const dash of this._dashes) {
       dash.setStrokeOpacity(opacity);
+    }
+    return this;
+  }
+
+  /**
+   * Bake the transform into the dashes and into the endpoint params too.
+   * copy() rebuilds the dashes from `_start` and `_end`. Without this, a
+   * copy of a shifted DashedLine loses the shift, so `.animate` morphs the
+   * line to itself and it does not move until the animation ends (#906).
+   *
+   * @post getStart() === old.getStart() mapped through worldMatrix
+   * @post getEnd() === old.getEnd() mapped through worldMatrix
+   */
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    const v = new THREE.Vector3();
+    this._start = v.fromArray(this._start).applyMatrix4(worldMatrix).toArray();
+    this._end = v.fromArray(this._end).applyMatrix4(worldMatrix).toArray();
+    return super.normalizeTransform(worldMatrix);
+  }
+
+  /**
+   * Take the state of `other`. When `other` is a DashedLine, also take its
+   * endpoint and dash params and rebuild the dashes, since the dashes hold
+   * the geometry. AnimateProxy.finish() relies on this when it replays the
+   * recorded calls onto the pre-animation state (#906).
+   *
+   * @post other instanceof DashedLine => getStart() === other.getStart()
+   * @post other instanceof DashedLine => getEnd() === other.getEnd()
+   */
+  override become(other: Mobject): this {
+    super.become(other);
+    if (other instanceof DashedLine) {
+      this._start = other.getStart();
+      this._end = other.getEnd();
+      this._dashLength = other._dashLength;
+      this._dashRatio = other._dashRatio;
+      this._generateDashes();
     }
     return this;
   }
