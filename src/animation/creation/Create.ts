@@ -336,7 +336,7 @@ export class Create extends Animation {
 
       if (this._partialFill) {
         for (let i = 0; i < n; i++) {
-          const subAlpha = this.getSubAlpha(alpha, i, n, this._lagRatio);
+          const subAlpha = this.getRatedSubAlpha(alpha, i, n, this._lagRatio);
           this._revealMember(this._memberLines[i], this._memberLineLengths[i], subAlpha);
           this._family[i].setFillRevealProgress(subAlpha);
         }
@@ -367,7 +367,7 @@ export class Create extends Animation {
       } else {
         // No fill: stroke reveal with per-family-member stagger
         for (let i = 0; i < n; i++) {
-          const subAlpha = this.getSubAlpha(alpha, i, n, this._lagRatio);
+          const subAlpha = this.getRatedSubAlpha(alpha, i, n, this._lagRatio);
           this._revealMember(this._memberLines[i], this._memberLineLengths[i], subAlpha);
         }
       }
@@ -802,7 +802,7 @@ export class Write extends Animation {
     const n = this._members.length;
     for (let i = 0; i < n; i++) {
       const state = this._members[i];
-      const sub = this.getSubAlpha(alpha, i, n, this._memberLagRatio);
+      const sub = this.getRatedSubAlpha(alpha, i, n, this._memberLagRatio);
       if (sub < 0.5) {
         if (state.filling) {
           // Scrubbed back into the outline half: rebuild the outline.

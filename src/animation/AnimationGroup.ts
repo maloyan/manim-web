@@ -158,8 +158,7 @@ export class AnimationGroup extends Animation {
       }
 
       // Apply the animation's rate function
-      const transformedAlpha = anim.rateFunc(localAlpha);
-      anim.interpolate(transformedAlpha);
+      anim.interpolateAt(localAlpha);
     }
   }
 
