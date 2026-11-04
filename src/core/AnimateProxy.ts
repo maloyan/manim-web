@@ -5,6 +5,11 @@
  * creates a Transform from the original mobject to a copy with those
  * calls applied.
  *
+ * Like ManimCE's `_AnimationBuilder`, any method of the source mobject can be
+ * chained (`tracker.animate.setValue(5)`, `sq.animate.stretch(2, 0)`): the
+ * builder is wrapped in a JS Proxy that records calls to methods it does not
+ * define itself. The explicit methods below remain for documentation.
+ *
  * Supports animation overrides via `overrideAnimation` / `getAnimationOverride`.
  */
 
@@ -23,12 +28,43 @@ import { getAnimationOverride, hasAnimationOverride } from '../animation/Animati
 
 type RecordedCall = [string, unknown[]];
 
+// `animate` itself is excluded: its type is AnimateBuilder<this>, so reading
+// it here would make the type refer to itself.
+type BuilderKeys<T> = Exclude<keyof T, 'animate' | keyof AnimateProxy>;
+type MethodKeys<T> = {
+  [K in BuilderKeys<T>]: T[K] extends (...args: never[]) => unknown ? K : never;
+}[BuilderKeys<T>];
+
+/**
+ * The type of `mobject.animate`: an AnimateProxy on which every method of the
+ * mobject can also be chained, returning the builder.
+ */
+export type AnimateBuilder<T> = AnimateProxy & {
+  [K in MethodKeys<T>]: T[K] extends (...args: infer A) => unknown
+    ? (...args: A) => AnimateBuilder<T>
+    : never;
+};
+
+/**
+ * Optional hook for mobjects whose animatable state is not geometry, such as
+ * ValueTracker's number. ManimCE stores that state in points, so Transform
+ * interpolates it; here the mobject interpolates it itself.
+ */
+interface CustomStateInterpolatable {
+  interpolateCustomState(start: Mobject, end: Mobject, alpha: number): void;
+}
+
+function hasCustomState(m: Mobject): m is Mobject & CustomStateInterpolatable {
+  return typeof (m as Partial<CustomStateInterpolatable>).interpolateCustomState === 'function';
+}
+
 export class AnimateProxy extends Animation {
   private _source: Mobject;
   private _calls: RecordedCall[] = [];
   private _innerTransform: Transform | null = null;
   private _overrideAnimation: Animation | null = null;
   private _originalState: Mobject | null = null;
+  private _target: Mobject | null = null;
 
   constructor(mobject: Mobject, options: AnimationOptions = {}) {
     super(mobject, {
@@ -36,6 +72,24 @@ export class AnimateProxy extends Animation {
       rateFunc: options.rateFunc ?? smooth,
     });
     this._source = mobject;
+
+    // Record any other method of the source, like ManimCE's
+    // _AnimationBuilder.__getattr__. Members of the builder itself (its
+    // explicit methods and the Animation API) are never intercepted.
+    return new Proxy(this, {
+      get(target, prop, receiver) {
+        if (typeof prop === 'string' && !(prop in target)) {
+          const member = (mobject as unknown as Record<string, unknown>)[prop];
+          if (typeof member === 'function') {
+            return (...args: unknown[]) => {
+              target._calls.push([prop, args]);
+              return receiver;
+            };
+          }
+        }
+        return Reflect.get(target, prop, receiver);
+      },
+    });
   }
 
   // ── Builder methods (chainable, return this) ─────────────────────
@@ -187,6 +241,7 @@ export class AnimateProxy extends Animation {
       }
       method.apply(target, args);
     }
+    this._target = target;
 
     this._innerTransform = new Transform(this._source, target, {
       duration: this.duration,
@@ -202,6 +257,9 @@ export class AnimateProxy extends Animation {
     }
     if (this._innerTransform) {
       this._innerTransform.interpolate(alpha);
+    }
+    if (this._originalState && this._target && hasCustomState(this._source)) {
+      this._source.interpolateCustomState(this._originalState, this._target, alpha);
     }
   }
 

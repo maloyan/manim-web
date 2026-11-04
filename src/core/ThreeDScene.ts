@@ -295,6 +295,23 @@ export class ThreeDScene extends Scene {
     return this._orbitControls;
   }
 
+  /** Whether a mobject is pinned to the screen by {@link addFixedInFrameMobjects}. */
+  isFixedInFrame(mobject: Mobject): boolean {
+    return this._fixedMobjects.has(mobject) || this._pendingFixedMode.get(mobject) === 'frame';
+  }
+
+  /**
+   * The world-unit frame that fixed-in-frame mobjects are drawn in: the HUD
+   * camera's view, which spans the whole canvas. Map pointer positions with
+   * it (not with `camera`) to hit-test a fixed-in-frame mobject.
+   */
+  get fixedInFrameSize(): { width: number; height: number } {
+    return {
+      width: this._hudCamera.right - this._hudCamera.left,
+      height: this._hudCamera.top - this._hudCamera.bottom,
+    };
+  }
+
   /**
    * Set the camera orientation using spherical coordinates.
    * @param phi - Polar angle from Y axis (0 = top, PI = bottom)

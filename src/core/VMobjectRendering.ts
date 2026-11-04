@@ -13,6 +13,7 @@ import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
 import { Mobject } from './Mobject';
 import { BezierRenderer } from '../rendering/BezierRenderer';
+import { copyGeometryInPlace, setLinePositionsInPlace } from '../rendering/geometryReuse';
 import type { Point } from './VMobjectCurves';
 import {
   sampleBezierPath,
@@ -22,6 +23,7 @@ import {
   pointsToCurvePath,
 } from './VMobjectGeometry';
 import { buildMeshStrokeGeometry } from './VMobjectStrokeGeometry';
+import { curveProportionFromArcLength, partialPathPoints } from './VMobjectCurveMath';
 import {
   buildGradientFillGeometry,
   normalizeFillGradient,
@@ -60,6 +62,9 @@ export abstract class VMobjectRendering extends Mobject {
 
   /** Cached fill mesh for in-place geometry updates */
   private _cachedFillMesh: THREE.Mesh | null = null;
+
+  /** Proportion of the path whose fill is shown (Create), or null for all of it. */
+  private _fillRevealProgress: number | null = null;
 
   /**
    * Per-instance stencil ref for preventing double-blending at Line2 joints
@@ -271,9 +276,17 @@ export abstract class VMobjectRendering extends Mobject {
       depthWrite: false,
       opacity: this._opacity * this.fillOpacity,
       side: THREE.DoubleSide,
+      // Flat mesh: draw both faces in one pass. Otherwise three.js renders a
+      // transparent DoubleSide material twice and re-resolves its program per frame.
+      forceSinglePass: true,
     });
 
     this._updateGeometry(group);
+    // The geometry was just built from the current points and opacity, so
+    // the first sync has nothing to rebuild. Without this, every new
+    // VMobject triangulated its fill twice (once here, once on first sync).
+    this._geometryDirty = false;
+    this._wasOpaque = this._opacity >= 1;
 
     return group;
   }
@@ -374,17 +387,73 @@ export abstract class VMobjectRendering extends Mobject {
     else mat.color.set(this._style.fillColor || this.color);
   }
 
+  /**
+   * True when the fill is one outline, so a partial fill (see
+   * {@link setFillRevealProgress}) covers the same region Manim CE fills.
+   * Multi-subpath fills (holes, boolean results) return false.
+   */
+  supportsPartialFill(): boolean {
+    // cast: see `_buildEarcutFillGeometry` — optional subclass method probe.
+    const lengths = (
+      this as unknown as { getEffectiveSubpathLengths?: () => number[] | undefined }
+    ).getEffectiveSubpathLengths?.();
+    return !lengths || lengths.length <= 1;
+  }
+
+  /**
+   * Fill only the path up to arc-length proportion `alpha`, closed back to its
+   * start, like Manim CE's Create (`pointwise_become_partial`). Arc length
+   * keeps the fill edge on the tip of a dash-revealed stroke. Pass null to
+   * fill the whole path again. Only the fill mesh is rebuilt; the stroke is
+   * left alone.
+   *
+   * @param alpha - Proportion in [0, 1], or null for the full fill
+   * @returns this for chaining
+   */
+  setFillRevealProgress(alpha: number | null): this {
+    this._fillRevealProgress = alpha === null ? null : Math.max(0, Math.min(1, alpha));
+    if (this._threeObject instanceof THREE.Group) {
+      this._updateFillGeometry(this._threeObject, this.getVisiblePoints3D());
+    }
+    return this;
+  }
+
+  /** Earcut fill for the first `alpha` of the path (partial Create fill). */
+  private _buildPartialFillGeometry(
+    points3D: number[][],
+    alpha: number,
+  ): THREE.BufferGeometry | null {
+    if (alpha <= 0) return null;
+    const partial = partialPathPoints(points3D, 0, curveProportionFromArcLength(points3D, alpha));
+    if (partial.length < 4) return null;
+    const visible = partial.map((p) => ({ x: p[0], y: p[1] }));
+    return buildEarcutFillGeometry(partial, visible);
+  }
+
   /** Rebuild or dispose the earcut fill mesh for the current points. */
   private _updateFillGeometry(group: THREE.Group, points3D: number[][]): void {
     if (this.fillOpacity > 0 && points3D.length >= 4) {
-      let fillGeom = this._buildEarcutFillGeometry(points3D);
+      const progress = this._fillRevealProgress;
+      let fillGeom =
+        progress !== null && progress < 1
+          ? this._buildPartialFillGeometry(points3D, progress)
+          : this._buildEarcutFillGeometry(points3D);
       if (fillGeom && this._fillGradient) {
         fillGeom = buildGradientFillGeometry(fillGeom, this._fillGradient);
       }
+      // An empty partial fill (start of Create) hides the mesh instead of
+      // leaving the previous frame's triangles on screen.
+      if (this._cachedFillMesh)
+        this._cachedFillMesh.visible = fillGeom !== null || progress === null;
       if (fillGeom) {
         if (this._cachedFillMesh) {
-          this._cachedFillMesh.geometry.dispose();
-          this._cachedFillMesh.geometry = fillGeom;
+          // The fresh geometry was never uploaded, so disposing it is free.
+          if (copyGeometryInPlace(this._cachedFillMesh.geometry, fillGeom)) {
+            fillGeom.dispose();
+          } else {
+            this._cachedFillMesh.geometry.dispose();
+            this._cachedFillMesh.geometry = fillGeom;
+          }
         } else {
           const fillMesh = new THREE.Mesh(fillGeom, this._fillMaterial!);
           fillMesh.position.z = -0.001;
@@ -422,11 +491,13 @@ export abstract class VMobjectRendering extends Mobject {
       const positions = this._buildLine2Positions(sampledPoints);
 
       if (this._cachedLine2) {
-        this._cachedLine2.geometry.dispose();
-        const geometry = new LineGeometry();
-        geometry.setPositions(positions);
-        this._cachedLine2.geometry = geometry;
-        this._cachedLine2.computeLineDistances();
+        if (!setLinePositionsInPlace(this._cachedLine2.geometry, positions)) {
+          this._cachedLine2.geometry.dispose();
+          const geometry = new LineGeometry();
+          geometry.setPositions(positions);
+          this._cachedLine2.geometry = geometry;
+          this._cachedLine2.computeLineDistances();
+        }
       } else {
         const geometry = new LineGeometry();
         geometry.setPositions(positions);
@@ -475,12 +546,15 @@ export abstract class VMobjectRendering extends Mobject {
       if (this.strokeWidth > 0 && sampledPoints.length >= 2) {
         const positions = this._buildLine2Positions(sampledPoints);
 
-        if (this._cachedLine2Array[i]) {
-          this._cachedLine2Array[i].geometry.dispose();
-          const geometry = new LineGeometry();
-          geometry.setPositions(positions);
-          this._cachedLine2Array[i].geometry = geometry;
-          this._cachedLine2Array[i].computeLineDistances();
+        const cached = this._cachedLine2Array[i];
+        if (cached) {
+          if (!setLinePositionsInPlace(cached.geometry, positions)) {
+            cached.geometry.dispose();
+            const geometry = new LineGeometry();
+            geometry.setPositions(positions);
+            cached.geometry = geometry;
+            cached.computeLineDistances();
+          }
         } else {
           const geometry = new LineGeometry();
           geometry.setPositions(positions);
@@ -555,6 +629,9 @@ export abstract class VMobjectRendering extends Mobject {
         new THREE.MeshBasicMaterial({
           color: new THREE.Color(this.color),
           side: THREE.DoubleSide,
+          // Flat mesh: draw both faces in one pass. Otherwise three.js renders a
+          // transparent DoubleSide material twice and re-resolves its program per frame.
+          forceSinglePass: true,
           depthTest: false,
           transparent: this._opacity < 1,
           depthWrite: this._opacity >= 1,

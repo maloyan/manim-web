@@ -16,6 +16,7 @@ import type { PostProcessingPipeline } from './PostProcessing';
 import { logger } from '../utils/logger';
 import { applyFlatSceneDepth } from './threeMaterial';
 import { applyReducedMotion } from '../a11y/reducedMotion';
+import { VisibilityGate } from './VisibilityGate';
 
 // AnimateProxy self-registers with Mobject via a top-level side effect
 // (see AnimateProxy.ts) to avoid the Mobject -> AnimateProxy -> Transform ->
@@ -80,6 +81,34 @@ export interface SceneOptions {
    * pinned canvas size, so auto-resize stays off. Defaults to true.
    */
   autoResize?: boolean;
+  /**
+   * Multisample antialiasing. Turning it off roughly halves GPU fill cost on
+   * low-end and mobile GPUs, at the price of slightly jagged edges.
+   * Defaults to true.
+   */
+  antialias?: boolean;
+  /**
+   * Canvas resolution multiplier. Defaults to `window.devicePixelRatio`,
+   * capped at 2. Pass 1 on high-DPI phones and low-end laptops to draw a
+   * quarter of the pixels at 2x DPR.
+   */
+  pixelRatio?: number;
+  /** GPU power hint passed to WebGL. Defaults to 'high-performance'. */
+  powerPreference?: 'default' | 'high-performance' | 'low-power';
+  /**
+   * Keep the drawing buffer after compositing. Exporters that read the canvas
+   * asynchronously (PNG export via `toBlob`, for example) need it, so leave
+   * it on for scenes you export. For playback-only scenes, turning it off
+   * saves a per-frame buffer copy on many GPUs. Defaults to true.
+   */
+  preserveDrawingBuffer?: boolean;
+  /**
+   * Skip drawing animation frames while the canvas is scrolled out of view or
+   * its tab is hidden. Animations and updaters keep running, and the current
+   * frame is drawn as soon as the canvas is visible again. Explicit renders
+   * (`render()`, `seek()`, exports) always draw. Defaults to true.
+   */
+  pauseRenderingWhenHidden?: boolean;
 }
 
 /**
@@ -157,6 +186,9 @@ export class Scene {
   private _resizeRafId: number | null = null;
   private _onWindowResize: (() => void) | null = null;
 
+  // Skips animation-frame draws while the canvas cannot be seen. Detached in `dispose()`.
+  private _visibility: VisibilityGate | null = null;
+
   /**
    * Create a new Scene.
    * @param container - DOM element to render into, or null for headless mode
@@ -175,6 +207,7 @@ export class Scene {
       backgroundOpacity = 1,
       headless = false,
       autoResize = true,
+      pauseRenderingWhenHidden = true,
     } = options;
 
     // Initialize performance options
@@ -205,7 +238,10 @@ export class Scene {
         height,
         backgroundColor,
         backgroundOpacity,
-        antialias: true,
+        antialias: options.antialias ?? true,
+        pixelRatio: options.pixelRatio,
+        powerPreference: options.powerPreference,
+        preserveDrawingBuffer: options.preserveDrawingBuffer,
       };
       this._renderer = new Renderer(container, rendererOptions);
       this._container = container;
@@ -242,6 +278,14 @@ export class Scene {
     if (autoResize && !headless && this._container && width == null && height == null) {
       this._installAutoResize();
     }
+
+    if (pauseRenderingWhenHidden) this._installVisibilityGate();
+  }
+
+  /** Track canvas visibility so hidden animation frames skip the draw. */
+  private _installVisibilityGate(): void {
+    if (this.isHeadless || !this._container) return;
+    this._visibility = new VisibilityGate(this._container, () => this._renderSafely());
   }
 
   /**
@@ -1256,6 +1300,17 @@ export class Scene {
       this._multiCamera.update(dt);
     }
 
+    if (this._visibility && !this._visibility.isVisible) {
+      // Nobody can see this frame: keep the state current, skip the draw.
+      this._visibility.markStale();
+    } else {
+      this._renderSafely();
+    }
+    this._checkFinished();
+  }
+
+  /** Render, logging (once per play) instead of throwing on a render error. */
+  private _renderSafely(): void {
     try {
       this._render();
     } catch (err) {
@@ -1267,7 +1322,6 @@ export class Scene {
         this._renderErrorLogged = true;
       }
     }
-    this._checkFinished();
   }
 
   /**
@@ -1775,6 +1829,8 @@ export class Scene {
 
     // Detach auto-resize observer/listeners
     this._disposeAutoResize();
+    this._visibility?.dispose();
+    this._visibility = null;
 
     // Stop playback
     this._stopRenderLoop();

@@ -304,6 +304,9 @@ export function createBezierShaderMaterial(
     depthWrite,
     blending,
     side,
+    // Flat quads: draw both faces in one pass. Otherwise three.js renders a
+    // transparent DoubleSide material twice and re-resolves its program per frame.
+    forceSinglePass: true,
   });
 }
 
