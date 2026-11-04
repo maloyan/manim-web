@@ -1026,6 +1026,9 @@ export class MathTexImage extends TexturedMobject {
       map: texture,
       transparent: true,
       side: THREE.DoubleSide,
+      // Flat mesh: draw both faces in one pass. Otherwise three.js renders a
+      // transparent DoubleSide material twice and re-resolves its program per frame.
+      forceSinglePass: true,
       opacity: this._opacity,
       color: new THREE.Color(this.color),
     });

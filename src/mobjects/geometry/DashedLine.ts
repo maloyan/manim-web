@@ -1,7 +1,11 @@
+import * as THREE from 'three';
 import { VMobject } from '../../core/VMobject';
-import { Vector3Tuple } from '../../core/Mobject';
+import type { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Line } from './Line';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
+
+/** Manim CE's DEFAULT_DASH_LENGTH. */
+const DEFAULT_DASH_LENGTH = 0.05;
 
 /**
  * Options for creating a DashedLine
@@ -11,11 +15,16 @@ export interface DashedLineOptions {
   start?: Vector3Tuple;
   /** End point of the line. Default: [1, 0, 0] */
   end?: Vector3Tuple;
-  /** Length of each dash. Default: 0.1 */
+  /**
+   * Approximate length of each dash (Manim CE's `dash_length`). The dash count
+   * is `max(2, ceil(length / dashLength * dashRatio))`, and the dashes are
+   * stretched so the line starts and ends with one. Default: 0.05
+   * (Manim CE's DEFAULT_DASH_LENGTH).
+   */
   dashLength?: number;
-  /** Ratio of dash length to total (dash + gap). Default: 0.5 */
+  /** Fraction of the line covered by dashes (Manim CE's `dashed_ratio`). Default: 0.5 */
   dashRatio?: number;
-  /** Stroke color as CSS color string. Default: Manim's blue (#58C4DD) */
+  /** Stroke color as CSS color string. Default: WHITE (#FFFFFF) */
   color?: string;
   /** Stroke width in pixels. Default: 4 (Manim's default) */
   strokeWidth?: number;
@@ -54,9 +63,9 @@ export class DashedLine extends VMobject {
     const {
       start = [0, 0, 0],
       end = [1, 0, 0],
-      dashLength = 0.1,
+      dashLength = DEFAULT_DASH_LENGTH,
       dashRatio = 0.5,
-      color = BLUE,
+      color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
     } = options;
 
@@ -99,36 +108,24 @@ export class DashedLine extends VMobject {
     const dirY = dy / totalLength;
     const dirZ = dz / totalLength;
 
-    // Calculate dash and gap lengths
-    const dashLen = this._dashLength * this._dashRatio;
-    const gapLen = this._dashLength * (1 - this._dashRatio);
-    const cycleLen = dashLen + gapLen;
-
-    // Degenerate cycle (e.g. dashLength <= 0): nothing to draw. Also guards
-    // against a division below that would otherwise be Infinity/NaN.
-    if (cycleLen < 1e-10) {
+    // Manim CE's DashedLine: n = max(2, ceil(L / dash_length * ratio)) dashes
+    // covering `ratio` of the line, an open path that starts and ends with a
+    // dash, so the n - 1 gaps share the rest (DashedVMobject).
+    if (this._dashLength <= 0) {
       this.clearPoints();
       return;
     }
-
-    // Deterministic dash count: the number of full dash+gap cycles that fit,
-    // plus one final partial dash if a genuine (non-floating-point-noise)
-    // remainder is left over. A single division has at most one rounding
-    // step; the previous implementation accumulated `currentPos += cycleLen`
-    // across every iteration, and that repeated addition drifts under IEEE
-    // 754 double rounding (e.g. totalLength=6, cycleLen=0.3: after 20
-    // additions currentPos lands on 5.999999999999998, one ULP short of 6,
-    // so `while (currentPos < totalLength)` admits a spurious 21st,
-    // near-zero-length dash). Computing each dash's start as `i * cycleLen`
-    // instead never accumulates error across iterations.
+    const ratio = this._dashRatio;
+    const numDashes = Math.max(2, Math.ceil((totalLength / this._dashLength) * ratio));
+    const dashLen = (ratio * totalLength) / numDashes;
+    const gapLen = ((1 - ratio) * totalLength) / (numDashes - 1);
+    const cycleLen = dashLen + gapLen;
     const EPS = 1e-9;
-    const numFullCycles = Math.floor(totalLength / cycleLen);
-    const remainder = totalLength - numFullCycles * cycleLen;
-    const numDashes = remainder > EPS ? numFullCycles + 1 : numFullCycles;
 
     for (let i = 0; i < numDashes; i++) {
       const dashStart = i * cycleLen;
-      const dashEnd = Math.min(dashStart + dashLen, totalLength);
+      const dashEnd =
+        i === numDashes - 1 ? totalLength : Math.min(dashStart + dashLen, totalLength);
 
       if (dashEnd - dashStart > EPS) {
         const startPoint: Vector3Tuple = [
@@ -268,6 +265,43 @@ export class DashedLine extends VMobject {
     super.setStrokeOpacity(opacity);
     for (const dash of this._dashes) {
       dash.setStrokeOpacity(opacity);
+    }
+    return this;
+  }
+
+  /**
+   * Bake the transform into the dashes and into the endpoint params too.
+   * copy() rebuilds the dashes from `_start` and `_end`. Without this, a
+   * copy of a shifted DashedLine loses the shift, so `.animate` morphs the
+   * line to itself and it does not move until the animation ends (#906).
+   *
+   * @post getStart() === old.getStart() mapped through worldMatrix
+   * @post getEnd() === old.getEnd() mapped through worldMatrix
+   */
+  override normalizeTransform(worldMatrix: THREE.Matrix4 = this._ownMatrix()): this {
+    const v = new THREE.Vector3();
+    this._start = v.fromArray(this._start).applyMatrix4(worldMatrix).toArray();
+    this._end = v.fromArray(this._end).applyMatrix4(worldMatrix).toArray();
+    return super.normalizeTransform(worldMatrix);
+  }
+
+  /**
+   * Take the state of `other`. When `other` is a DashedLine, also take its
+   * endpoint and dash params and rebuild the dashes, since the dashes hold
+   * the geometry. AnimateProxy.finish() relies on this when it replays the
+   * recorded calls onto the pre-animation state (#906).
+   *
+   * @post other instanceof DashedLine => getStart() === other.getStart()
+   * @post other instanceof DashedLine => getEnd() === other.getEnd()
+   */
+  override become(other: Mobject): this {
+    super.become(other);
+    if (other instanceof DashedLine) {
+      this._start = other.getStart();
+      this._end = other.getEnd();
+      this._dashLength = other._dashLength;
+      this._dashRatio = other._dashRatio;
+      this._generateDashes();
     }
     return this;
   }

@@ -1096,6 +1096,14 @@ export class MarkupText extends Text {
   // Copy
   // -----------------------------------------------------------------------
 
+  /**
+   * Returns null: MarkupText lays out styled segments with their own fonts and sizes, so the plain-Text glyph
+   * rectangles would not match the canvas. Write falls back to the fade.
+   */
+  override getGlyphRects(): null {
+    return null;
+  }
+
   override copy(): MarkupText {
     const copy = new MarkupText({
       text: this._text,

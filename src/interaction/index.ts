@@ -34,6 +34,7 @@ export {
   makeScrubbableEntries,
   type ScrubbableOptions,
 } from './Scrubbable';
+export { Tangle, makeTangle, type TangleOptions } from './Tangle';
 
 // Dynamic (continuous) matrix transformations
 export {

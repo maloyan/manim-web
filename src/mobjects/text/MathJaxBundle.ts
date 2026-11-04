@@ -36,6 +36,9 @@ import { RegisterHTMLHandler } from '@mathjax/src/js/handlers/html.js';
 import '@mathjax/src/js/input/tex/ams/AmsConfiguration.js';
 import '@mathjax/src/js/input/tex/newcommand/NewcommandConfiguration.js';
 import '@mathjax/src/js/input/tex/configmacros/ConfigMacrosConfiguration.js';
+// `\class`, `\cssId`, `\data`, `\style`, `\href`: `\class` tags the SVG
+// group around a sub-expression, which svgToVMobjects records per glyph.
+import '@mathjax/src/js/input/tex/html/HtmlConfiguration.js';
 
 // ---------------------------------------------------------------------------
 // NewCM font dynamic character data.
