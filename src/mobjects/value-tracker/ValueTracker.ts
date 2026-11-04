@@ -32,6 +32,7 @@ class ValueTrackerAnimation extends Animation {
   private _tracker: ValueTracker;
   private _startValue: number;
   private _endValue: number;
+  private _preAnimationValue: number | null = null;
 
   constructor(tracker: ValueTracker, endValue: number, options?: AnimationOptions) {
     super(tracker, options);
@@ -42,8 +43,20 @@ class ValueTrackerAnimation extends Animation {
 
   override begin(): void {
     super.begin();
-    // Capture the current value as start value when animation begins
-    this._startValue = this._tracker.getValue();
+    // Capture the start value on the first begin() only. A seek re-begins
+    // the animation after reset(), and the tracker may then hold a later
+    // value (#902).
+    if (this._preAnimationValue === null) {
+      this._preAnimationValue = this._tracker.getValue();
+    }
+    this._startValue = this._preAnimationValue;
+  }
+
+  override reset(): void {
+    super.reset();
+    if (this._preAnimationValue !== null) {
+      this._tracker.setValue(this._preAnimationValue);
+    }
   }
 
   interpolate(alpha: number): void {
@@ -190,6 +203,7 @@ class ComplexValueTrackerAnimation extends Animation {
   private _tracker: ComplexValueTracker;
   private _startValue: Complex;
   private _endValue: Complex;
+  private _preAnimationValue: Complex | null = null;
 
   constructor(tracker: ComplexValueTracker, endValue: Complex, options?: AnimationOptions) {
     super(tracker, options);
@@ -200,8 +214,18 @@ class ComplexValueTrackerAnimation extends Animation {
 
   override begin(): void {
     super.begin();
-    // Capture the current value as start value when animation begins
-    this._startValue = { ...this._tracker.getValue() };
+    // Capture the start value on the first begin() only (see ValueTrackerAnimation).
+    if (this._preAnimationValue === null) {
+      this._preAnimationValue = { ...this._tracker.getValue() };
+    }
+    this._startValue = { ...this._preAnimationValue };
+  }
+
+  override reset(): void {
+    super.reset();
+    if (this._preAnimationValue !== null) {
+      this._tracker.setValue({ ...this._preAnimationValue });
+    }
   }
 
   interpolate(alpha: number): void {

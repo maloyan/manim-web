@@ -4,6 +4,7 @@
   "entry": ["examples/playground/playground.ts"],
   "ignore": ["src/core/SceneExtensions.ts"],
   "ignoreDependencies": ["@types/katex", "typedoc", "vue"],
+  "ignoreBinaries": ["ffmpeg"],
   "ignoreExportsUsedInFile": {
     "interface": true,
     "type": true

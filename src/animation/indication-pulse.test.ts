@@ -26,10 +26,10 @@ describe('FocusOn', () => {
       expect(anim.ringOpacity).toBe(0.5);
     });
 
-    it('has duration=0.5 and rateFunc=smooth', () => {
+    it('has duration=2 and rateFunc=smooth', () => {
       const m = new TestMobject();
       const anim = new FocusOn(m);
-      expect(anim.duration).toBe(0.5);
+      expect(anim.duration).toBe(2);
       expect(anim.rateFunc).toBe(smooth);
     });
   });

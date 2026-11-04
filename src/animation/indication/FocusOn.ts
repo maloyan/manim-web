@@ -59,7 +59,8 @@ export class FocusOn extends Animation {
 
   constructor(mobject: Mobject, options: FocusOnOptions = {}) {
     super(mobject, {
-      duration: options.duration ?? 0.5,
+      // ManimCE: FocusOn(run_time=2).
+      duration: options.duration ?? 2,
       rateFunc: options.rateFunc ?? smooth,
     });
     this.focusColor = options.color ?? GRAY;

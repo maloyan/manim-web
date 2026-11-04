@@ -63,6 +63,8 @@
     "circular": "madge --circular --extensions ts src/",
     "cpd": "jscpd src/",
     "test:integration": "npx playwright test",
+    "bench": "node bench/run.mjs",
+    "parity": "node parity/run.mjs",
     "format:check": "prettier --check src/",
     "knip": "knip",
     "release": "standard-version",
