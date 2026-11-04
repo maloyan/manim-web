@@ -220,6 +220,8 @@ export abstract class Animation<M extends Mobject = Mobject> {
         const pts = saved.getLocalPoints();
         if (pts && pts.length > 0) {
           this.mobject.setPoints(pts);
+        } else {
+          this._restoreLeafGeometry(saved);
         }
       }
 
@@ -228,6 +230,34 @@ export abstract class Animation<M extends Mobject = Mobject> {
     this._startTime = null;
     this._isFinished = false;
     this._hasBegun = false;
+  }
+
+  /**
+   * Restore the points and transforms of every descendant from the snapshot.
+   * Used for a VMobject that owns no points and draws through its children
+   * (DashedLine, a multi-part RegularPolygram). A Transform moves those
+   * children, and the root-only restore in reset() left them where the
+   * last seek put them (#906). Skipped when the family changed shape.
+   *
+   * @pre  saved.getLocalPoints().length === 0
+   * @post live.length === snap.length => live[i].getLocalPoints() === snap[i].getLocalPoints()  // for i >= 1
+   */
+  private _restoreLeafGeometry(saved: VMobject): void {
+    const live = this.mobject.getFamily();
+    const snap = saved.getFamily();
+    if (live.length !== snap.length) return;
+    for (let i = 1; i < live.length; i++) {
+      const m = live[i];
+      const s = snap[i];
+      m.position.copy(s.position);
+      m.rotation.copy(s.rotation);
+      m.scaleVector.copy(s.scaleVector);
+      if (m instanceof VMobject && s instanceof VMobject) {
+        const pts = s.getLocalPoints();
+        if (pts.length > 0) m.setPoints(pts);
+      }
+      m._markDirty();
+    }
   }
 
   /**
