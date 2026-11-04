@@ -1,0 +1,125 @@
+---
+title: TangleTex
+sidebar_label: TangleTex
+---
+
+import TangleTexExample from '@site/src/components/examples/TangleTexExample';
+
+`TangleTex` is a `MathTex` with numbers you can change in place, like
+wigglystuff's `TangleLatex`, rendered on the canvas. Mark numbers with
+`\tangle{name}` and matrices with `\tanglematrix{name}`. Every number is backed
+by a `ValueTracker`, so the formula follows animations and updaters. A matrix
+collapses to a symbol and animates open with `scene.play(tex.expand(name))`.
+`makeTangle(tex, scene)` adds the pointer and keyboard interaction.
+
+<TangleTexExample />
+
+The plane is transformed live by `R`, and the green arrow is `r = R x`. Rest the
+mouse on **R** or **x** to expand it. Drag any number left or right, or click it
+to type a value. With the keyboard, tab to a number and use the arrow keys. The
+entries of `r` are `readOnly` parameters: the example sets them from the other
+values, and the reader cannot drag them.
+
+## Usage
+
+```typescript
+import { TangleTex, makeTangle } from 'manim-web';
+
+const tex = new TangleTex({
+  latex: String.raw`\vec y = \tanglematrix{R}\,\vec x + \tangle{b}`,
+  anchor: 'left', // keep the left edge still while widths change
+  parameters: {
+    k: { value: 2, min: 0, max: 5, step: 0.1, color: '#ffcc33' },
+    t: { value: 0.5, step: 0.05, display: 'symbol', symbol: '\\theta' },
+    b: { value: 1, step: 0.5 },
+  },
+  matrices: {
+    R: {
+      entries: [
+        [String.raw`\tangle{k}\cos\tangle{t}`, String.raw`-\tangle{k}\sin\tangle{t}`],
+        [String.raw`\tangle{k}\sin\tangle{t}`, String.raw`\tangle{k}\cos\tangle{t}`],
+      ],
+    },
+  },
+});
+scene.add(tex);
+
+makeTangle(tex, scene, { onChange: (name, value) => redraw() });
+```
+
+A repeated marker (`k` above appears four times) is one value: dragging any copy
+changes them all.
+
+## Animating
+
+```typescript
+await scene.play(tex.expand('R')); // symbol morphs into the matrix
+await scene.play(tex.getTracker('k').animateTo(3)); // every k updates
+await scene.play(tex.collapse('R'), tex.getTracker('b').animateTo(2));
+```
+
+`tex.setValue(name, value)` (snapped to `step`, clamped to `[min, max]`),
+`tex.setExpanded(name, expanded)` and `tex.reset()` change the formula without
+animation. `tex.getValues()` returns every value, and `tex.getMatrix(name)`
+returns a matrix as numbers.
+
+## Parameters
+
+| Option          | Default                  | Meaning                                                                 |
+| --------------- | ------------------------ | ----------------------------------------------------------------------- |
+| `value`         | required                 | Initial value, in `[min, max]`.                                         |
+| `min`, `max`    | `-Infinity`, `+Infinity` | Bounds.                                                                 |
+| `step`          | `1`                      | Snap increment.                                                         |
+| `digits`        | decimals of `step`       | Decimal places shown.                                                   |
+| `display`       | `'number'`               | `'symbol'` shows `symbol` until dragged or edited.                      |
+| `symbol`        | the name                 | LaTeX shown for `display: 'symbol'`.                                    |
+| `color`         | the formula color        | Color of the number's glyphs.                                           |
+| `pixelsPerStep` | `7`                      | Drag distance for one step.                                             |
+| `label`         | `parameter <name>`       | Accessible name.                                                        |
+| `readOnly`      | `false`                  | Shown but not draggable, editable or focusable; set it with `setValue`. |
+
+## Matrices
+
+| Option     | Default     | Meaning                                                                 |
+| ---------- | ----------- | ----------------------------------------------------------------------- |
+| `entries`  | required    | Rows of cells: LaTeX strings with `\tangle` markers, or numbers.        |
+| `symbol`   | the name    | LaTeX shown while collapsed.                                            |
+| `brackets` | `'bmatrix'` | `'bmatrix'`, `'pmatrix'`, `'vmatrix'`, `'Bmatrix'` or `'Vmatrix'`.      |
+| `cell`     | none        | Parameter options for number cells.                                     |
+| `expanded` | `false`     | Start expanded.                                                         |
+| `color`    | none        | Color of the matrix glyphs (parameter colors still apply inside).       |
+| `evaluate` | none        | `(values) => number[][]`, for `getMatrix()` when cells are expressions. |
+
+A number cell becomes a parameter named `<matrix>_<row>_<col>`, counted from 1:
+`entries: [[1], [0.5]]` on matrix `X` creates `X_1_1` and `X_2_1`.
+
+## makeTangle options
+
+| Option            | Default     | Meaning                                                                                                     |
+| ----------------- | ----------- | ----------------------------------------------------------------------------------------------------------- |
+| `editor`          | `'popover'` | Click-to-type field: `'popover'`, `'inline'` or `'none'`.                                                   |
+| `revealAllOnDrag` | `false`     | Show every `'symbol'` parameter as a number while dragging.                                                 |
+| `expandOn`        | `'hover'`   | How the mouse expands a matrix: `'hover'`, `'click'` or `'none'`. Touch taps.                               |
+| `expandDuration`  | `0.4`       | Seconds for the expand / collapse animation; `0` switches instantly.                                        |
+| `openDelay`       | `150`       | Milliseconds of hovering before a matrix expands.                                                           |
+| `closeDelay`      | `400`       | Milliseconds after leaving before a hover-opened matrix collapses.                                          |
+| `hitPadding`      | `0.08`      | Extra world-unit margin around glyphs that still counts as a hit.                                           |
+| `keyboard`        | `true`      | Add hidden, focusable buttons for keyboard and screen-reader users.                                         |
+| `autoRender`      | `true`      | Render after each change. Set `false` if a render loop is live.                                             |
+| `onChange`        | none        | `(name, value, tex) => void`, on each change.                                                               |
+| `onScrubEnd`      | none        | `(name, value, tex) => void`, once when a drag or edit ends.                                                |
+| `onExpandChange`  | none        | `(name, occurrence, expanded) => void`.                                                                     |
+| `onExpandEnd`     | none        | `(name, occurrence, expanded) => void`, once the matrix has finished opening or closing.                    |
+| `onBeforeRender`  | none        | `(tex) => void`, right before each render Tangle makes; sync things that depend on the formula's size here. |
+
+Clicking a hover-opened matrix keeps it open. While another `scene.play()` is
+running, hover expands instantly instead of animating, because a second
+`play()` would replace the running timeline.
+
+## Keyboard
+
+Each parameter and each matrix marker gets a visually hidden button next to the
+canvas. On a parameter, the arrow keys change the value by one step (ten with
+Shift), Home and End jump to `min` and `max`, and Enter types a value. On a
+matrix, Enter or Space expands or collapses it. A ring outlines the focused
+item, or the matrix symbol when the parameter is inside a collapsed matrix.

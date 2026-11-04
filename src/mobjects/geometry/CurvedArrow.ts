@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 
 /**
  * Options for creating a CurvedArrow
@@ -12,7 +12,7 @@ export interface CurvedArrowOptions {
   endPoint?: Vector3Tuple;
   /** Arc angle in radians. Default: PI/4 */
   angle?: number;
-  /** Stroke color as CSS color string. Default: Manim's blue (#58C4DD) */
+  /** Stroke color as CSS color string. Default: WHITE (#FFFFFF) */
   color?: string;
   /** Stroke width in pixels. Default: 4 (Manim's default) */
   strokeWidth?: number;
@@ -61,7 +61,7 @@ export class CurvedArrow extends VMobject {
       startPoint = [-1, 0, 0],
       endPoint = [1, 0, 0],
       angle = Math.PI / 4,
-      color = BLUE,
+      color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       tipLength = 0.25,
       tipWidth = 0.15,

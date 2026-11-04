@@ -49,6 +49,18 @@ function hasGlyphGroup(m: Mobject): m is Mobject & GlyphStrokeMobject {
   return 'getGlyphGroup' in m && typeof m.getGlyphGroup === 'function';
 }
 
+/**
+ * ManimCE's default Write run time (`Write._set_default_config_from_length`):
+ * 1 s for fewer than 15 sub-paths, 2 s otherwise. Glyph-based text counts its
+ * glyphs; a VMobject counts its family members with points.
+ */
+function defaultWriteDuration(mobject: Mobject): number {
+  const glyphs = hasGlyphGroup(mobject) ? mobject.getGlyphGroup()?.length : undefined;
+  const length =
+    glyphs ?? (mobject instanceof VMobject ? mobject.familyMembersWithPoints().length : 1);
+  return length < 15 ? 1 : 2;
+}
+
 /** True when `m` exposes a `getTextureMesh()` method. */
 function hasTextureMesh(m: Mobject): m is Mobject & GlyphStrokeMobject {
   return 'getTextureMesh' in m && typeof m.getTextureMesh === 'function';
@@ -144,6 +156,11 @@ export class Create extends Animation {
   private _hasFill: boolean = false;
   /** Original fill opacity to restore */
   private _originalFillOpacity: number = 0;
+  /**
+   * Whether the fill grows with the stroke (Manim CE's partial-path Create)
+   * instead of the border-then-fill fallback. Needs single-outline fills.
+   */
+  private _partialFill: boolean = false;
   /** Lag ratio for staggered submobject animation */
   private _lagRatio: number = 0;
   /**
@@ -160,8 +177,8 @@ export class Create extends Animation {
   private _savedOpacities: Array<[Mobject, number]> = [];
 
   constructor(mobject: Mobject, options: CreateOptions = {}) {
-    // Manim default for Create is 2 seconds
-    super(mobject, { duration: options.duration ?? 2, ...options });
+    // ManimCE: Create inherits Animation's DEFAULT_ANIMATION_RUN_TIME = 1.
+    super(mobject, { duration: options.duration ?? 1, ...options });
     // Manim CE / 3b1b default: lag_ratio=1.0 — submobjects draw sequentially,
     // each completing before the next starts (#544).
     this._lagRatio = options.lagRatio ?? 1;
@@ -169,9 +186,10 @@ export class Create extends Animation {
 
   /**
    * Set up the animation - configure dashed lines for progressive reveal.
-   * For filled VMobjects (like Polygon with fillOpacity > 0), this behaves
-   * like Manim's DrawBorderThenFill: first half draws the border, second
-   * half fades in the fill.
+   * Filled VMobjects grow their fill with the stroke, like Manim CE's
+   * Create (pointwise_become_partial). Fills with several subpaths (holes,
+   * boolean results) fall back to border-then-fill: the first half draws the
+   * border, the second half fades in the fill.
    */
   override begin(): void {
     super.begin();
@@ -184,11 +202,6 @@ export class Create extends Animation {
       // Check if this VMobject has fill
       this._originalFillOpacity = vmob.fillOpacity;
       this._hasFill = this._originalFillOpacity > 0;
-
-      // Hide fill initially so it can fade in during second half
-      if (this._hasFill) {
-        vmob.setFillOpacity(0);
-      }
 
       // Stagger unit = family members with points (Manim CE semantics), not
       // raw Line2 primitives — a member with multiple subpaths must not be
@@ -216,6 +229,18 @@ export class Create extends Animation {
         }
         this._memberLines.push(lines);
         this._memberLineLengths.push(lengths);
+      }
+
+      // Any filled member counts, not just the root: an Arrow's root has no
+      // fill but its ArrowTip does, and the tip must grow in with the rest.
+      this._partialFill =
+        this._family.some((m) => m.fillOpacity > 0) &&
+        this._family.every((m) => m.fillOpacity <= 0 || m.supportsPartialFill());
+      if (this._partialFill) {
+        for (const member of this._family) member.setFillRevealProgress(0);
+      } else if (this._hasFill) {
+        // Hide fill initially so it can fade in during second half
+        vmob.setFillOpacity(0);
       }
     } else {
       // Non-line mobject (Text, etc.): use opacity
@@ -273,7 +298,8 @@ export class Create extends Animation {
 
   /**
    * Interpolate the dash size to progressively reveal the stroke.
-   * For filled VMobjects: first half draws border, second half fades in fill.
+   * Filled VMobjects grow their fill alongside the stroke; the multi-subpath
+   * fallback draws the border in the first half and fades in the fill after.
    * Staggering (lagRatio) applies across family members (this._family), never
    * across a single member's own subpaths.
    */
@@ -281,7 +307,13 @@ export class Create extends Animation {
     if (this._useDashReveal) {
       const n = this._family.length;
 
-      if (this._hasFill) {
+      if (this._partialFill) {
+        for (let i = 0; i < n; i++) {
+          const subAlpha = this.getSubAlpha(alpha, i, n, this._lagRatio);
+          this._revealMember(this._memberLines[i], this._memberLineLengths[i], subAlpha);
+          this._family[i].setFillRevealProgress(subAlpha);
+        }
+      } else if (this._hasFill) {
         // Two-phase animation: border then fill (like Manim's DrawBorderThenFill)
         const vmob = this.mobject as VMobject;
         if (alpha < 0.5) {
@@ -322,8 +354,10 @@ export class Create extends Animation {
    */
   override finish(): void {
     if (this._useDashReveal) {
-      // Restore fill opacity
-      if (this._hasFill) {
+      // Restore the full fill
+      if (this._partialFill) {
+        for (const member of this._family) member.setFillRevealProgress(null);
+      } else if (this._hasFill) {
         (this.mobject as VMobject).setFillOpacity(this._originalFillOpacity);
       }
 
@@ -470,8 +504,8 @@ export class Uncreate extends Animation {
   private _useDashReveal: boolean = false;
 
   constructor(mobject: Mobject, options: AnimationOptions = {}) {
-    // Manim default for Uncreate is 2 seconds
-    super(mobject, { duration: options.duration ?? 2, ...options });
+    // ManimCE: Uncreate subclasses Create, so its default run time is also 1.
+    super(mobject, { duration: options.duration ?? 1, ...options });
   }
 
   override begin(): void {
@@ -594,7 +628,7 @@ export class Write extends Animation {
   private _skeletonTotalLengths: number[] = [];
 
   constructor(mobject: Mobject, options: WriteOptions = {}) {
-    super(mobject, { duration: options.duration ?? 1, ...options });
+    super(mobject, { duration: options.duration ?? defaultWriteDuration(mobject), ...options });
     this.lagRatio = options.lagRatio ?? 0.05;
     this._reverse = options.reverse ?? false;
     this._remover = options.remover ?? false;

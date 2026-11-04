@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, RED } from '../../constants';
 
 /**
  * Options for creating a Circle
@@ -9,7 +9,7 @@ import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
 export interface CircleOptions {
   /** Radius of the circle. Default: 1 */
   radius?: number;
-  /** Stroke color as CSS color string. Default: Manim's blue (#58C4DD) */
+  /** Stroke color as CSS color string. Default: RED (#FC6255) */
   color?: string;
   /** Fill opacity from 0 to 1. Default: 0 */
   fillOpacity?: number;
@@ -49,7 +49,7 @@ export class Circle extends VMobject {
 
     const {
       radius = 1,
-      color = BLUE,
+      color = RED,
       fillOpacity = 0,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       numPoints = 64,

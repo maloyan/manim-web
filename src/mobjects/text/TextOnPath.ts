@@ -31,9 +31,10 @@ import {
   type TextOnPathAlignment,
   type TextOnPathOverflow,
 } from './textOnPathLayout';
+import { DEFAULT_FONT_SIZE_PT, TEXT_FONT_SIZE_IN_WORLD_SPACE } from '../../constants/fontRender';
 
-/** Scale factor matching GlyphVMobject: 100 pixels = 1 world unit. */
-const PIXEL_TO_WORLD = 1 / 100;
+/** Scale factor matching GlyphVMobject: Manim CE Text's em in world units. */
+const PIXEL_TO_WORLD = TEXT_FONT_SIZE_IN_WORLD_SPACE / DEFAULT_FONT_SIZE_PT;
 
 /**
  * Half the x-height in font units, from the 'x' glyph's vertical extent
