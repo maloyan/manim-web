@@ -8,7 +8,7 @@ import { Circle } from './Circle';
 import { Dot, SmallDot, LargeDot } from './Dot';
 import { Line } from './Line';
 import { RegularPolygram } from './PolygonExtensions';
-import { BLUE, WHITE } from '../../constants';
+import { WHITE } from '../../constants';
 
 // ---------------------------------------------------------------------------
 // Arrow
@@ -140,7 +140,7 @@ describe('DashedLine', () => {
     expect(dl.getEnd()).toEqual([1, 0, 0]);
     expect(dl.getDashLength()).toBe(0.1);
     expect(dl.getDashRatio()).toBe(0.5);
-    expect(dl.color).toBe(BLUE);
+    expect(dl.color).toBe(WHITE);
   });
 
   it('produces dashes for a line of length 1 with default options', () => {
@@ -371,7 +371,7 @@ describe('ArcBetweenPoints', () => {
       start: [0, 0, 0],
       end: [1, 0, 0],
     });
-    expect(abp.color).toBe(BLUE);
+    expect(abp.color).toBe(WHITE);
   });
 });
 
@@ -553,9 +553,9 @@ describe('CubicBezier', () => {
     expect(cb.getControlPoint(2)).toEqual([5, 5, 0]);
   });
 
-  it('defaults to BLUE color', () => {
+  it('defaults to WHITE color (ManimCE)', () => {
     const cb = new CubicBezier({ points: pts });
-    expect(cb.color).toBe(BLUE);
+    expect(cb.color).toBe(WHITE);
   });
 
   it('returns defensive copies of control points', () => {

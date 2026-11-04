@@ -1,7 +1,7 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Line } from './Line';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 
 /**
  * Options for creating a DashedLine
@@ -15,7 +15,7 @@ export interface DashedLineOptions {
   dashLength?: number;
   /** Ratio of dash length to total (dash + gap). Default: 0.5 */
   dashRatio?: number;
-  /** Stroke color as CSS color string. Default: Manim's blue (#58C4DD) */
+  /** Stroke color as CSS color string. Default: WHITE (#FFFFFF) */
   color?: string;
   /** Stroke width in pixels. Default: 4 (Manim's default) */
   strokeWidth?: number;
@@ -56,7 +56,7 @@ export class DashedLine extends VMobject {
       end = [1, 0, 0],
       dashLength = 0.1,
       dashRatio = 0.5,
-      color = BLUE,
+      color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
     } = options;
 

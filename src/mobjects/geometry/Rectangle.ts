@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 
 /**
  * Options for creating a Rectangle
@@ -10,7 +10,7 @@ export interface RectangleOptions {
   width?: number;
   /** Height of the rectangle. Default: 1 */
   height?: number;
-  /** Stroke color as CSS color string. Default: Manim's blue (#58C4DD) */
+  /** Stroke color as CSS color string. Default: WHITE (#FFFFFF) */
   color?: string;
   /** Fill opacity from 0 to 1. Default: 0 */
   fillOpacity?: number;
@@ -47,7 +47,7 @@ export class Rectangle extends VMobject {
     const {
       width = 2,
       height = 1,
-      color = BLUE,
+      color = WHITE,
       fillOpacity = 0,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       center = [0, 0, 0],

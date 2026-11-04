@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 import { CurvedArrowOptions } from './CurvedArrow';
 
 /**
@@ -33,7 +33,7 @@ export class CurvedDoubleArrow extends VMobject {
       startPoint = [-1, 0, 0],
       endPoint = [1, 0, 0],
       angle = Math.PI / 4,
-      color = BLUE,
+      color = WHITE,
       strokeWidth = DEFAULT_STROKE_WIDTH,
       tipLength = 0.25,
       tipWidth = 0.15,
