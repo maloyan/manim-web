@@ -49,6 +49,18 @@ function hasGlyphGroup(m: Mobject): m is Mobject & GlyphStrokeMobject {
   return 'getGlyphGroup' in m && typeof m.getGlyphGroup === 'function';
 }
 
+/**
+ * ManimCE's default Write run time (`Write._set_default_config_from_length`):
+ * 1 s for fewer than 15 sub-paths, 2 s otherwise. Glyph-based text counts its
+ * glyphs; a VMobject counts its family members with points.
+ */
+function defaultWriteDuration(mobject: Mobject): number {
+  const glyphs = hasGlyphGroup(mobject) ? mobject.getGlyphGroup()?.length : undefined;
+  const length =
+    glyphs ?? (mobject instanceof VMobject ? mobject.familyMembersWithPoints().length : 1);
+  return length < 15 ? 1 : 2;
+}
+
 /** True when `m` exposes a `getTextureMesh()` method. */
 function hasTextureMesh(m: Mobject): m is Mobject & GlyphStrokeMobject {
   return 'getTextureMesh' in m && typeof m.getTextureMesh === 'function';
@@ -160,8 +172,8 @@ export class Create extends Animation {
   private _savedOpacities: Array<[Mobject, number]> = [];
 
   constructor(mobject: Mobject, options: CreateOptions = {}) {
-    // Manim default for Create is 2 seconds
-    super(mobject, { duration: options.duration ?? 2, ...options });
+    // ManimCE: Create inherits Animation's DEFAULT_ANIMATION_RUN_TIME = 1.
+    super(mobject, { duration: options.duration ?? 1, ...options });
     // Manim CE / 3b1b default: lag_ratio=1.0 — submobjects draw sequentially,
     // each completing before the next starts (#544).
     this._lagRatio = options.lagRatio ?? 1;
@@ -470,8 +482,8 @@ export class Uncreate extends Animation {
   private _useDashReveal: boolean = false;
 
   constructor(mobject: Mobject, options: AnimationOptions = {}) {
-    // Manim default for Uncreate is 2 seconds
-    super(mobject, { duration: options.duration ?? 2, ...options });
+    // ManimCE: Uncreate subclasses Create, so its default run time is also 1.
+    super(mobject, { duration: options.duration ?? 1, ...options });
   }
 
   override begin(): void {
@@ -594,7 +606,7 @@ export class Write extends Animation {
   private _skeletonTotalLengths: number[] = [];
 
   constructor(mobject: Mobject, options: WriteOptions = {}) {
-    super(mobject, { duration: options.duration ?? 1, ...options });
+    super(mobject, { duration: options.duration ?? defaultWriteDuration(mobject), ...options });
     this.lagRatio = options.lagRatio ?? 0.05;
     this._reverse = options.reverse ?? false;
     this._remover = options.remover ?? false;

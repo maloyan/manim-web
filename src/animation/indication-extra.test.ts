@@ -412,10 +412,10 @@ describe('Flash', () => {
       expect(anim.innerRadius).toBe(0);
     });
 
-    it('has duration=0.5', () => {
+    it('has duration=1', () => {
       const m = new TestMobject();
       const anim = new Flash(m);
-      expect(anim.duration).toBe(0.5);
+      expect(anim.duration).toBe(1);
     });
   });
 
