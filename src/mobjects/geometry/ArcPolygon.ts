@@ -1,7 +1,7 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
 import { getNumCurvesFromPoints } from '../../core/VMobjectCurves';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 import { Arc } from './Arc';
 
 /**
@@ -22,7 +22,7 @@ export interface ArcPolygonOptions {
   vertices: Vector3Tuple[];
   /** Arc configurations for each edge. If not provided, straight lines are used. */
   arcConfigs?: ArcConfig[];
-  /** Stroke color as CSS color string. Default: Manim's blue (#58C4DD) */
+  /** Stroke color as CSS color string. Default: WHITE (#FFFFFF) */
   color?: string;
   /** Fill opacity from 0 to 1. Default: 0 */
   fillOpacity?: number;
@@ -62,7 +62,7 @@ export class ArcPolygon extends VMobject {
     const {
       vertices,
       arcConfigs = [],
-      color = BLUE,
+      color = WHITE,
       fillOpacity = 0,
       strokeWidth = DEFAULT_STROKE_WIDTH,
     } = options;
