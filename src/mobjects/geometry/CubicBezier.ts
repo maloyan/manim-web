@@ -1,6 +1,6 @@
 import { VMobject } from '../../core/VMobject';
 import { Vector3Tuple } from '../../core/Mobject';
-import { BLUE, DEFAULT_STROKE_WIDTH } from '../../constants';
+import { DEFAULT_STROKE_WIDTH, WHITE } from '../../constants';
 import { crossVec, lengthVec, normalizeVec } from '../../utils/vectors';
 
 /**
@@ -14,7 +14,7 @@ export type CubicBezierPoints = [Vector3Tuple, Vector3Tuple, Vector3Tuple, Vecto
 export interface CubicBezierOptions {
   /** The four control points [p0, p1, p2, p3] */
   points: CubicBezierPoints;
-  /** Stroke color as CSS color string. Default: Manim's blue (#58C4DD) */
+  /** Stroke color as CSS color string. Default: WHITE (#FFFFFF) */
   color?: string;
   /** Stroke width in pixels. Default: 4 (Manim's default) */
   strokeWidth?: number;
@@ -51,7 +51,7 @@ export class CubicBezier extends VMobject {
   constructor(options: CubicBezierOptions) {
     super();
 
-    const { points, color = BLUE, strokeWidth = DEFAULT_STROKE_WIDTH } = options;
+    const { points, color = WHITE, strokeWidth = DEFAULT_STROKE_WIDTH } = options;
 
     // Deep copy the control points
     this._controlPoints = [[...points[0]], [...points[1]], [...points[2]], [...points[3]]];

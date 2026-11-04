@@ -41,7 +41,7 @@ import {
 // Type-only import: erased at compile time, so it introduces no runtime
 // circular dependency (Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject).
 // Used solely to type `Mobject.animate` and the registered factory.
-import type { AnimateProxy } from './AnimateProxy';
+import type { AnimateBuilder, AnimateProxy } from './AnimateProxy';
 
 // AnimateProxy registers itself here to break the circular dependency:
 // Mobject -> AnimateProxy -> Transform -> VGroup -> Mobject
@@ -1144,11 +1144,11 @@ export abstract class Mobject {
    * scene.play(circle.animate.setColor('#ff0000').scale(2));
    * ```
    */
-  get animate(): AnimateProxy {
+  get animate(): AnimateBuilder<this> {
     if (!animateProxyFactory) {
       throw new Error('AnimateProxy not registered. Ensure AnimateProxy module is imported.');
     }
-    return animateProxyFactory(this);
+    return animateProxyFactory(this) as AnimateBuilder<this>;
   }
 
   toEdge(direction: Vector3Tuple, buff: number = 0.5, frameDimensions?: [number, number]): this {

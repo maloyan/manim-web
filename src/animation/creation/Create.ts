@@ -76,6 +76,18 @@ function hasGlyphGroup(m: Mobject): m is Mobject & GlyphStrokeMobject {
   return 'getGlyphGroup' in m && typeof m.getGlyphGroup === 'function';
 }
 
+/**
+ * ManimCE's default Write run time (`Write._set_default_config_from_length`):
+ * 1 s for fewer than 15 sub-paths, 2 s otherwise. Glyph-based text counts its
+ * glyphs; a VMobject counts its family members with points.
+ */
+function defaultWriteDuration(mobject: Mobject): number {
+  const glyphs = hasGlyphGroup(mobject) ? mobject.getGlyphGroup()?.length : undefined;
+  const length =
+    glyphs ?? (mobject instanceof VMobject ? mobject.familyMembersWithPoints().length : 1);
+  return length < 15 ? 1 : 2;
+}
+
 /** True when `m` exposes a `getTextureMesh()` method. */
 function hasTextureMesh(m: Mobject): m is Mobject & GlyphStrokeMobject {
   return 'getTextureMesh' in m && typeof m.getTextureMesh === 'function';
@@ -171,6 +183,11 @@ export class Create extends Animation {
   private _hasFill: boolean = false;
   /** Original fill opacity to restore */
   private _originalFillOpacity: number = 0;
+  /**
+   * Whether the fill grows with the stroke (Manim CE's partial-path Create)
+   * instead of the border-then-fill fallback. Needs single-outline fills.
+   */
+  private _partialFill: boolean = false;
   /** Lag ratio for staggered submobject animation */
   private _lagRatio: number = 0;
   /**
@@ -187,8 +204,8 @@ export class Create extends Animation {
   private _savedOpacities: Array<[Mobject, number]> = [];
 
   constructor(mobject: Mobject, options: CreateOptions = {}) {
-    // Manim default for Create is 2 seconds
-    super(mobject, { duration: options.duration ?? 2, ...options });
+    // ManimCE: Create inherits Animation's DEFAULT_ANIMATION_RUN_TIME = 1.
+    super(mobject, { duration: options.duration ?? 1, ...options });
     // Manim CE / 3b1b default: lag_ratio=1.0 — submobjects draw sequentially,
     // each completing before the next starts (#544).
     this._lagRatio = options.lagRatio ?? 1;
@@ -196,9 +213,10 @@ export class Create extends Animation {
 
   /**
    * Set up the animation - configure dashed lines for progressive reveal.
-   * For filled VMobjects (like Polygon with fillOpacity > 0), this behaves
-   * like Manim's DrawBorderThenFill: first half draws the border, second
-   * half fades in the fill.
+   * Filled VMobjects grow their fill with the stroke, like Manim CE's
+   * Create (pointwise_become_partial). Fills with several subpaths (holes,
+   * boolean results) fall back to border-then-fill: the first half draws the
+   * border, the second half fades in the fill.
    */
   override begin(): void {
     super.begin();
@@ -211,11 +229,6 @@ export class Create extends Animation {
       // Check if this VMobject has fill
       this._originalFillOpacity = vmob.fillOpacity;
       this._hasFill = this._originalFillOpacity > 0;
-
-      // Hide fill initially so it can fade in during second half
-      if (this._hasFill) {
-        vmob.setFillOpacity(0);
-      }
 
       // Stagger unit = family members with points (Manim CE semantics), not
       // raw Line2 primitives — a member with multiple subpaths must not be
@@ -243,6 +256,18 @@ export class Create extends Animation {
         }
         this._memberLines.push(lines);
         this._memberLineLengths.push(lengths);
+      }
+
+      // Any filled member counts, not just the root: an Arrow's root has no
+      // fill but its ArrowTip does, and the tip must grow in with the rest.
+      this._partialFill =
+        this._family.some((m) => m.fillOpacity > 0) &&
+        this._family.every((m) => m.fillOpacity <= 0 || m.supportsPartialFill());
+      if (this._partialFill) {
+        for (const member of this._family) member.setFillRevealProgress(0);
+      } else if (this._hasFill) {
+        // Hide fill initially so it can fade in during second half
+        vmob.setFillOpacity(0);
       }
     } else {
       // Non-line mobject (Text, etc.): use opacity
@@ -300,7 +325,8 @@ export class Create extends Animation {
 
   /**
    * Interpolate the dash size to progressively reveal the stroke.
-   * For filled VMobjects: first half draws border, second half fades in fill.
+   * Filled VMobjects grow their fill alongside the stroke; the multi-subpath
+   * fallback draws the border in the first half and fades in the fill after.
    * Staggering (lagRatio) applies across family members (this._family), never
    * across a single member's own subpaths.
    */
@@ -308,7 +334,13 @@ export class Create extends Animation {
     if (this._useDashReveal) {
       const n = this._family.length;
 
-      if (this._hasFill) {
+      if (this._partialFill) {
+        for (let i = 0; i < n; i++) {
+          const subAlpha = this.getSubAlpha(alpha, i, n, this._lagRatio);
+          this._revealMember(this._memberLines[i], this._memberLineLengths[i], subAlpha);
+          this._family[i].setFillRevealProgress(subAlpha);
+        }
+      } else if (this._hasFill) {
         // Two-phase animation: border then fill (like Manim's DrawBorderThenFill)
         const vmob = this.mobject as VMobject;
         if (alpha < 0.5) {
@@ -349,8 +381,10 @@ export class Create extends Animation {
    */
   override finish(): void {
     if (this._useDashReveal) {
-      // Restore fill opacity
-      if (this._hasFill) {
+      // Restore the full fill
+      if (this._partialFill) {
+        for (const member of this._family) member.setFillRevealProgress(null);
+      } else if (this._hasFill) {
         (this.mobject as VMobject).setFillOpacity(this._originalFillOpacity);
       }
 
@@ -497,8 +531,8 @@ export class Uncreate extends Animation {
   private _useDashReveal: boolean = false;
 
   constructor(mobject: Mobject, options: AnimationOptions = {}) {
-    // Manim default for Uncreate is 2 seconds
-    super(mobject, { duration: options.duration ?? 2, ...options });
+    // ManimCE: Uncreate subclasses Create, so its default run time is also 1.
+    super(mobject, { duration: options.duration ?? 1, ...options });
   }
 
   override begin(): void {
@@ -562,8 +596,25 @@ export function uncreate(mobject: Mobject, options?: AnimationOptions): Uncreate
 // Write Animations - specifically for Text mobjects
 // =============================================================================
 
+/** Outline stroke width Write draws before filling (Manim CE DrawBorderThenFill). */
+const WRITE_OUTLINE_WIDTH = 2;
+
+/** Per family member state for Write's border-then-fill mode. */
+interface WriteMemberState {
+  member: VMobject;
+  lines: Line2[];
+  lengths: number[];
+  strokeWidth: number;
+  fillOpacity: number;
+  /** True once the member is in its fill half (stroke no longer dashed). */
+  filling: boolean;
+}
+
 export interface WriteOptions extends AnimationOptions {
-  /** Stagger between characters, default 0.05 */
+  /**
+   * Stagger between family members. Default: Manim CE's
+   * `min(4 / members, 0.2)` for VMobjects, 0.05 for glyph-stroke Text.
+   */
   lagRatio?: number;
   /** Write in reverse (right to left), default false */
   reverse?: boolean;
@@ -587,8 +638,13 @@ export interface WriteOptions extends AnimationOptions {
  * Rendering paths:
  * 1. Glyph stroke mode — Text with loaded glyph group (via loadGlyphs()) gets stroke-draw
  *    of each character's outline, then cross-fades to the Canvas 2D texture.
- * 2. Dash-based reveal — for VMobjects that already have Line2 children.
- * 3. Opacity fallback.
+ * 2. Left-to-right reveal for mobjects with setRevealProgress().
+ * 3. Border then fill — VMobjects (MathTex, shapes) animate like Manim CE's
+ *    Write: each family member draws a thin outline in the first half of its
+ *    lag window, then fills in while the outline relaxes to its own stroke.
+ * 4. Opacity fallback.
+ *
+ * Like Manim CE, the default rate function is linear.
  */
 export class Write extends Animation {
   protected readonly lagRatio: number;
@@ -602,15 +658,16 @@ export class Write extends Animation {
   private _glyphMaskMobject: GlyphMaskMobject | null = null;
   private _glyphCount: number = 0;
   private _glyphLagRatio: number = 0;
-  private _lagRatioOption: number | undefined;
-  private _useDashReveal: boolean = false;
   private _useRevealProgress: boolean = false;
 
   // Narrowed reference to the mobject, cached when reveal-progress mode is active.
   private _revealMobject: RevealProgressMobject | null = null;
 
-  // Dash reveal state
-  private _totalLength: number = 0;
+  // Border-then-fill state
+  private _useBorderThenFill: boolean = false;
+  private _lagRatioOption: number | undefined;
+  private _members: WriteMemberState[] = [];
+  private _memberLagRatio: number = 0;
 
   // Glyph stroke state
   private _glyphGroup: TextGlyphGroup | null = null;
@@ -627,7 +684,7 @@ export class Write extends Animation {
   constructor(mobject: Mobject, options: WriteOptions = {}) {
     super(mobject, {
       ...options,
-      duration: options.duration ?? 1,
+      duration: options.duration ?? defaultWriteDuration(mobject),
       rateFunc: options.rateFunc ?? linear,
     });
     this.lagRatio = options.lagRatio ?? 0.05;
@@ -674,25 +731,112 @@ export class Write extends Animation {
       return;
     }
 
-    // Priority 4: Dash reveal for VMobjects with Line2
-    this._useDashReveal = this.mobject instanceof VMobject && hasLine2Children(this.mobject);
+    // Priority 4: Manim CE border-then-fill for VMobjects
+    if (this.mobject instanceof VMobject && this.mobject.familyMembersWithPoints().length > 0) {
+      this._beginBorderThenFill(this.mobject);
+      return;
+    }
 
-    if (this._useDashReveal) {
-      const threeObj = this.mobject.getThreeObject();
-      threeObj.traverse((child) => {
-        if (child instanceof Line2) {
-          const material = child.material;
-          material.dashed = true;
-          material.dashScale = 1;
+    this.mobject.setStrokeOpacity(this._reverse ? this._originalOpacity : 0);
+  }
 
-          child.computeLineDistances();
-          this._totalLength = getLine2TotalLength(child);
+  /**
+   * Set up border-then-fill mode: every family member switches to a thin
+   * outline (Manim CE's `get_outline`: no fill, stroke width 2) whose stroke
+   * is hidden behind a dash reveal.
+   */
+  private _beginBorderThenFill(root: VMobject): void {
+    this._useBorderThenFill = true;
+    const family = root.familyMembersWithPoints();
+    this._memberLagRatio = this._lagRatioOption ?? Math.min(4 / Math.max(1, family.length), 0.2);
+    this._members = family.map((member) => ({
+      member,
+      lines: [],
+      lengths: [],
+      strokeWidth: member.strokeWidth,
+      fillOpacity: member.fillOpacity,
+      filling: true,
+    }));
+    for (const state of this._members) this._enterOutline(state);
+    // Sync once so every member's Line2 geometry exists at outline width.
+    root.getThreeObject();
+    for (const state of this._members) this._captureOutlineLines(state);
+  }
 
-          setLine2RevealLength(child, this._reverse ? this._totalLength : 0, this._totalLength);
+  /** Switch a member to its outline style (no fill, thin stroke). */
+  private _enterOutline(state: WriteMemberState): void {
+    state.member.setFillOpacity(0);
+    state.member.setStrokeWidth(WRITE_OUTLINE_WIDTH);
+    state.filling = false;
+  }
+
+  /** Dash-hide a member's current stroke lines so they can be revealed. */
+  private _captureOutlineLines(state: WriteMemberState): void {
+    state.lines = state.member.getOwnStrokeLines();
+    state.lengths = state.lines.map((line) => {
+      const material = line.material;
+      material.dashed = true;
+      material.dashScale = 1;
+      line.computeLineDistances();
+      const totalLen = getLine2TotalLength(line);
+      setLine2RevealLength(line, 0, totalLen);
+      return totalLen;
+    });
+  }
+
+  /** Show a member's stroke lines in full, without dashing. */
+  private _showFullStroke(state: WriteMemberState): void {
+    for (const line of state.lines) {
+      line.visible = true;
+      line.material.dashed = false;
+      line.material.needsUpdate = true;
+    }
+  }
+
+  /**
+   * Manim CE's DrawBorderThenFill.interpolate_submobject per family member:
+   * the first half reveals the outline, the second half interpolates from
+   * the outline to the member's own style (fill in, stroke back to width).
+   */
+  private _interpolateBorderThenFill(alpha: number): void {
+    const n = this._members.length;
+    for (let i = 0; i < n; i++) {
+      const state = this._members[i];
+      const sub = this.getSubAlpha(alpha, i, n, this._memberLagRatio);
+      if (sub < 0.5) {
+        if (state.filling) {
+          // Scrubbed back into the outline half: rebuild the outline.
+          this._enterOutline(state);
+          state.member.getThreeObject();
+          this._captureOutlineLines(state);
         }
-      });
-    } else {
-      this.mobject.setStrokeOpacity(this._reverse ? this._originalOpacity : 0);
+        const total = state.lengths.reduce((sum, len) => sum + len, 0);
+        let remaining = sub * 2 * total;
+        for (let j = 0; j < state.lines.length; j++) {
+          const len = state.lengths[j];
+          setLine2RevealLength(state.lines[j], Math.max(0, Math.min(len, remaining)), len);
+          remaining -= len;
+        }
+      } else {
+        if (!state.filling) {
+          this._showFullStroke(state);
+          state.filling = true;
+        }
+        const t = sub * 2 - 1;
+        state.member.setStrokeWidth(
+          WRITE_OUTLINE_WIDTH + (state.strokeWidth - WRITE_OUTLINE_WIDTH) * t,
+        );
+        state.member.setFillOpacity(state.fillOpacity * t);
+      }
+    }
+  }
+
+  /** Restore every member's own style and undashed stroke. */
+  private _finishBorderThenFill(): void {
+    for (const state of this._members) {
+      this._showFullStroke(state);
+      state.member.setStrokeWidth(state.strokeWidth);
+      state.member.setFillOpacity(state.fillOpacity);
     }
   }
 
@@ -825,14 +969,8 @@ export class Write extends Animation {
       this._applyGlyphMask(effectiveAlpha);
     } else if (this._useRevealProgress) {
       this._revealMobject?.setRevealProgress(effectiveAlpha);
-    } else if (this._useDashReveal) {
-      const threeObj = this.mobject.getThreeObject();
-      threeObj.traverse((child) => {
-        if (child instanceof Line2) {
-          const visibleLength = effectiveAlpha * this._totalLength;
-          setLine2RevealLength(child, visibleLength, this._totalLength);
-        }
-      });
+    } else if (this._useBorderThenFill) {
+      this._interpolateBorderThenFill(effectiveAlpha);
     } else {
       this.mobject.setStrokeOpacity(this._originalOpacity * effectiveAlpha);
     }
@@ -969,30 +1107,14 @@ export class Write extends Animation {
       return;
     }
 
-    if (this._remover) {
-      if (this._useDashReveal) {
-        const threeObj = this.mobject.getThreeObject();
-        threeObj.traverse((child) => {
-          if (child instanceof Line2) {
-            setLine2RevealLength(child, 0, this._totalLength);
-          }
-        });
-      }
-      this.mobject.setStrokeOpacity(0);
-    } else {
-      if (this._useDashReveal) {
-        const threeObj = this.mobject.getThreeObject();
-        threeObj.traverse((child) => {
-          if (child instanceof Line2) {
-            child.visible = true;
-            const material = child.material;
-            material.dashed = false;
-            material.needsUpdate = true;
-          }
-        });
-      }
-      this.mobject.setStrokeOpacity(this._originalOpacity);
+    if (this._useBorderThenFill) {
+      this._finishBorderThenFill();
+      if (this._remover) this.mobject.setStrokeOpacity(0);
+      super.finish();
+      return;
     }
+
+    this.mobject.setStrokeOpacity(this._remover ? 0 : this._originalOpacity);
     super.finish();
   }
 

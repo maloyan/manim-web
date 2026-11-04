@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, it, expect } from 'vitest';
 import { parseSVGPathData, svgToVMobjects } from './svgPathParser';
+import { VMobject } from '../../core/VMobject';
 
 // Helper: check that a point is close to expected within tolerance
 function expectPointClose(actual: [number, number], expected: [number, number], _tol = 1e-6) {
@@ -1214,6 +1215,32 @@ describe('svgToVMobjects', () => {
       );
       const group = svgToVMobjects(svg);
       expect(group.submobjects.length).toBe(2);
+    });
+  });
+
+  // MIGRATION: example for the property
+  //   ∀ nested <svg x y width height viewBox> holding a path scaled by
+  //   scale(sx, sy): the path's points lie in the viewport, and a path that
+  //   covers the viewBox spans the whole viewport.
+  // Replace with a property test once the suite lands.
+  describe('stretched delimiter extenders (nested <svg>, scale(sx, sy))', () => {
+    it('stretches the extender to fill its viewport, clipped to it', () => {
+      // The extender of a tall MathJax radical, as MathJax emits it.
+      const svg = createSVG(
+        '<svg><g transform="translate(0,2370.8)">' +
+          '<svg width="1056" height="2060" y="-2435.6" x="0" viewBox="0 515 1056 2060">' +
+          '<path d="M695 0L742 0L742 640L695 640Z" transform="scale(1,4.828)"/>' +
+          '</svg></g></svg>',
+      );
+      const group = svgToVMobjects(svg, { flipY: false });
+      const pts = (group.submobjects[0] as VMobject).getPoints();
+      const xs = pts.map((p) => p[0]);
+      const ys = pts.map((p) => p[1]);
+
+      expect(Math.min(...xs)).toBeCloseTo(695, 5);
+      expect(Math.max(...xs)).toBeCloseTo(742, 5);
+      expect(Math.min(...ys)).toBeCloseTo(2370.8 - 2435.6, 5);
+      expect(Math.max(...ys)).toBeCloseTo(2370.8 - 2435.6 + 2060, 5);
     });
   });
 });

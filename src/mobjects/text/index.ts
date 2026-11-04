@@ -47,7 +47,13 @@ export { MarkupText, type MarkupTextOptions, type StyledTextSegment } from './Ma
 export { ensureKatexStyles, areKatexStylesLoaded, setKatexStylesheetUrl } from './katexStyles';
 
 // MathTex - SVG vector-based LaTeX rendering (default, like Python Manim)
-export { MathTex, type MathTexOptions, MathTexSVG, type MathTexSVGOptions } from './MathTex';
+export {
+  MathTex,
+  type MathTexOptions,
+  type MathTexAnchor,
+  MathTexSVG,
+  type MathTexSVGOptions,
+} from './MathTex';
 
 // MathTexImage - Rasterized LaTeX rendering (KaTeX default, MathJax fallback)
 export { MathTexImage, type MathTexImageOptions, type TexRenderer } from './MathTexImage';
@@ -64,10 +70,30 @@ export {
 } from './MathJaxRenderer';
 
 // SVG path parser (SVG d-attribute -> VMobject conversion)
-export { parseSVGPathData, svgToVMobjects, type SVGToVMobjectOptions } from './svgPathParser';
+export {
+  parseSVGPathData,
+  svgToVMobjects,
+  getGlyphClasses,
+  type SVGToVMobjectOptions,
+} from './svgPathParser';
 
 // Tex - Manim compatibility alias
 export { Tex, type TexOptions } from './Tex';
+export { TangleTex, type TangleTexOptions } from './tangle/TangleTex';
+export {
+  TangleExpand,
+  TangleCollapse,
+  TangleMatrixMorph,
+  type TangleMorphOptions,
+} from './tangle/TangleMorph';
+export {
+  snapTangleValue,
+  type TangleParam,
+  type TangleMatrix,
+  type TangleMatrixBrackets,
+  type ResolvedTangleParam,
+  type ResolvedTangleMatrix,
+} from './tangle/tangleSource';
 
 // --- typst parity ---
 // Typst - SVG vector-based Typst rendering via lazy-loaded WASM compiler

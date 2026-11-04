@@ -236,7 +236,7 @@ export class Player {
 
     // Seek to start to show initial state
     this._masterTimeline.seek(0);
-    this._scene.render();
+    this._renderAfterSeek();
 
     // Update UI with segment markers
     this._ui.setSegments(this._masterTimeline);
@@ -328,7 +328,7 @@ export class Player {
       this._slidesTargetSlideIndex = -1;
     }
     this._masterTimeline.seek(time);
-    this._scene.render();
+    this._renderAfterSeek();
     this._ui.updateTime(this._masterTimeline.getCurrentTime(), this._masterTimeline.getDuration());
   }
 
@@ -349,7 +349,7 @@ export class Player {
     if (this._isPlaying) this.pause();
     const seg = this._masterTimeline.nextSegment();
     if (seg) {
-      this._scene.render();
+      this._renderAfterSeek();
       this._ui.updateTime(
         this._masterTimeline.getCurrentTime(),
         this._masterTimeline.getDuration(),
@@ -376,7 +376,7 @@ export class Player {
     if (this._isPlaying) this.pause();
     const prev = this._masterTimeline.prevSegment();
     if (prev) {
-      this._scene.render();
+      this._renderAfterSeek();
       this._ui.updateTime(
         this._masterTimeline.getCurrentTime(),
         this._masterTimeline.getDuration(),
@@ -405,7 +405,7 @@ export class Player {
         this._masterTimeline.pause();
         this._ui.setPlaying(false);
         this._stopLoop();
-        this._scene.render();
+        this._renderAfterSeek();
         this._ui.updateTime(
           this._masterTimeline.getCurrentTime(),
           this._masterTimeline.getDuration(),
@@ -441,7 +441,7 @@ export class Player {
       const targetSlide = slides[Math.max(0, loopIdx - 1)] ?? slides[0];
       if (!targetSlide) return;
       this._masterTimeline.seek(targetSlide.startTime);
-      this._scene.render();
+      this._renderAfterSeek();
       this._ui.updateTime(
         this._masterTimeline.getCurrentTime(),
         this._masterTimeline.getDuration(),
@@ -455,7 +455,7 @@ export class Player {
     // Well into the current slide → restart it; otherwise step to previous.
     const target = elapsed > 0.5 ? current : (slides[current.index - 1] ?? current);
     this._masterTimeline.seek(target.startTime);
-    this._scene.render();
+    this._renderAfterSeek();
     this._ui.updateTime(this._masterTimeline.getCurrentTime(), this._masterTimeline.getDuration());
   }
 
@@ -677,7 +677,7 @@ export class Player {
             this._masterTimeline.seek(targetSlide.startTime);
             this._masterTimeline.play();
             this._activeLoopSlideIndex = targetSlide.index;
-            this._scene.render();
+            this._renderAfterSeek();
             this._ui.updateTime(
               this._masterTimeline.getCurrentTime(),
               this._masterTimeline.getDuration(),
@@ -691,7 +691,7 @@ export class Player {
             this._masterTimeline.seek(nextSlide.startTime);
             this._masterTimeline.play();
             this._slidesTargetSlideIndex = nextIdx;
-            this._scene.render();
+            this._renderAfterSeek();
             this._ui.updateTime(
               this._masterTimeline.getCurrentTime(),
               this._masterTimeline.getDuration(),
@@ -701,7 +701,7 @@ export class Player {
           // Default: pause at the slide boundary. (Final autoNext slide
           // also falls through here — there is nothing to advance to.)
           this._masterTimeline.seek(targetSlide.endTime);
-          this._scene.render();
+          this._renderAfterSeek();
           this._ui.updateTime(
             this._masterTimeline.getCurrentTime(),
             this._masterTimeline.getDuration(),
@@ -730,6 +730,17 @@ export class Player {
     };
 
     this._animFrameId = requestAnimationFrame(loop);
+  }
+
+  /**
+   * Render after a timeline jump. A seek moves animations but not
+   * updater-driven mobjects, so run every updater once (dt = 0) first (#902).
+   */
+  private _renderAfterSeek(): void {
+    for (const mob of this._scene.mobjects) {
+      mob.update(0);
+    }
+    this._scene.render();
   }
 
   private _stopLoop(): void {
