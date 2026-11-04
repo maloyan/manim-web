@@ -759,7 +759,7 @@ export class Write extends Animation {
     const n = this._members.length;
     for (let i = 0; i < n; i++) {
       const state = this._members[i];
-      const sub = this.getSubAlpha(alpha, i, n, this._memberLagRatio);
+      const sub = this.getRatedSubAlpha(alpha, i, n, this._memberLagRatio);
       if (sub < 0.5) {
         if (state.filling) {
           // Scrubbed back into the outline half: rebuild the outline.
