@@ -1,0 +1,95 @@
+{
+  "engine": "kokoro",
+  "voice": "af_heart",
+  "speed": 0.95,
+  "sayVoice": "Daniel",
+  "sayRate": 172,
+  "lines": [
+    {
+      "id": "intro",
+      "text": "This is one human cell.",
+      "speed": 0.9
+    },
+    {
+      "id": "scale",
+      "text": "It is very small. About five cells like it fit across the width of one hair.",
+      "speed": 0.9
+    },
+    {
+      "id": "open",
+      "text": "Let's open it. Inside are organelles: small parts, and each one has a job."
+    },
+    {
+      "id": "membrane",
+      "text": "The cell membrane is the outer skin: a double layer of fat molecules that decides what goes in and out."
+    },
+    {
+      "id": "nucleus",
+      "text": "The nucleus holds the DNA. It is the recipe book for every protein the cell makes."
+    },
+    {
+      "id": "pores",
+      "text": "Pores in the nuclear envelope are gates. A copy of one instruction, messenger RNA, leaves through them."
+    },
+    {
+      "id": "ribosome",
+      "text": "A ribosome reads the messenger RNA and links amino acids, one at a time, into a new protein chain."
+    },
+    {
+      "id": "rough_er",
+      "text": "Many ribosomes sit on the rough ER. Their proteins go into its sheets and fold into shape."
+    },
+    {
+      "id": "smooth_er",
+      "text": "The smooth ER has no ribosomes. It makes fats and stores calcium."
+    },
+    {
+      "id": "golgi",
+      "text": "The Golgi apparatus finishes and sorts proteins. Vesicles bring them in on one side and carry them out to the membrane."
+    },
+    {
+      "id": "mitochondria",
+      "text": "Mitochondria burn food with oxygen and store the energy as ATP, the fuel the cell runs on.",
+      "speak": "[Mitochondria](/mˌaɪtoʊkˈɑːndɹiə/) burn food with oxygen and store the energy as A-T-P, the fuel the cell runs on."
+    },
+    {
+      "id": "cristae",
+      "text": "Inside, the inner membrane is folded into cristae. The folds give more room to make ATP.",
+      "speak": "Inside, the inner membrane is folded into cristae. The folds give more room to make A-T-P."
+    },
+    {
+      "id": "lysosomes",
+      "text": "Lysosomes are small sacs full of acid and enzymes. They digest old parts and bacteria."
+    },
+    {
+      "id": "peroxisomes",
+      "text": "Peroxisomes break down fatty acids, and turn hydrogen peroxide into water and oxygen.",
+      "speak": "[Peroxisomes](/pəɹˈɑːksɪsˌoʊmz/) break down fatty acids, and turn hydrogen peroxide into water and oxygen."
+    },
+    {
+      "id": "centrosome",
+      "text": "Next to the nucleus is the centrosome: two centrioles at right angles."
+    },
+    {
+      "id": "microtubules",
+      "text": "Microtubules grow out from it. Motor proteins carry cargo along them, like trains on a track."
+    },
+    {
+      "id": "filaments",
+      "text": "Actin filaments form a mesh under the membrane. Intermediate filaments are tough cables that hold the cell together."
+    },
+    {
+      "id": "crowded",
+      "text": "The real cell is far more packed than this, with billions of proteins in every corner.",
+      "speed": 0.9
+    },
+    {
+      "id": "tissue",
+      "text": "Cells like this one join together to build tissues and organs."
+    },
+    {
+      "id": "closing",
+      "text": "An adult human body is made of about thirty trillion cells."
+    }
+  ]
+}

@@ -21,10 +21,21 @@
 - Molecular / drug-binding: 3D molecules from PDB, MOL/SDF, and SMILES; Protein,
   BindingPocket, docking, van der Waals / solvent / density surfaces.
 - Chemistry: reaction arrows and schemes, electron-pushing arrows, Bohr diagrams.
-- Biology: DNAHelix, Cell, AminoAcidChain.
+- Biology: DNAHelix, Cell, AminoAcidChain, and a 3D cell kit: Cell3D (cutaway
+  animal cell, `preset: 'animal'`), 12 organelle classes on Organelle3D with
+  named parts, anchors and captions (ORGANELLE_INFO), and seekable process
+  animations (exportMRNA, vesicleTransport, releaseATP, translateRibosome,
+  digestCargo, peroxisomeReaction), and CellTour for a narrated cell tour.
+- 3D explainer videos: organic shapes (Capsule3D, Blob3D, Shell3D, Extrude3D,
+  TubeNetwork3D), a manim 3D look with rim outline (applyManimStyle3D), 3D
+  build-up (Create3D, GrowAlongPath3D), seekable camera focus (scene.focusOn,
+  FocusDim), CaptionCard, Callout3D, InsetPanel, and an ExplainerTour runner.
 - Maps / geo: Globe, ChoroplethMap, FlowArc, map projections, GeoJSON, TopoJSON.
 - Interactive player with play/pause, scrub, and segment navigation.
-- Export to GIF and video (MP4/WebM via WebCodecs).
+- Export to GIF and video (MP4/WebM via WebCodecs), with an audio track:
+  `narrate(scene, url)` places a recorded clip at the current time, and
+  `npm run render -- <example> --out out.mp4` renders a page that calls
+  `registerRender(scene, { construct })` to mp4 from the command line.
 - Integrations: React, Vue, a web component, and a notebook entry point.
 
 ## Install
@@ -37,6 +48,9 @@
 - Docs and examples: https://maloyan.github.io/manim-web/
 - Getting started: https://maloyan.github.io/manim-web/getting-started
 - Molecular and maps examples: https://maloyan.github.io/manim-web/examples/molecular
+- 3D explainer videos guide: https://maloyan.github.io/manim-web/3d-explainer-videos
+- 3D cell guide: https://maloyan.github.io/manim-web/biology-3d-cell
+- Agent recipe for a narrated 3D explainer: https://github.com/maloyan/manim-web/blob/main/skills/manim-web/explainer-3d.md
 - ManimCE parity report: https://github.com/maloyan/manim-web/blob/main/PARITY.md
 - Comparison with ManimCE and ManimGL (source-backed): https://github.com/maloyan/manim-web/blob/main/COMPARISON.md
 - npm package: https://www.npmjs.com/package/manim-web

@@ -28,17 +28,18 @@ manim-web. manim-web is the only one that runs client-side in the browser, and
 the only one that ships chemistry, biology, molecular, and geographic modules.
 Every claim below links to the module or document that proves it.
 
-| Capability                   | What you get                                                                                                                 | Source                                              |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| **Browser runtime**          | Import from a CDN module script and render in a `<canvas>`. No Python, no install.                                           | [Quick start](#quick-start)                         |
-| **ManimCE API parity**       | 429 of 429 feasible ManimCE 0.22.0 public symbols ported (100% of the feasible surface).                                     | [PARITY.md](PARITY.md)                              |
-| **Molecular / drug-binding** | 3D molecules from PDB, MOL/SDF, and SMILES; `Protein`, `BindingPocket`, docking, van der Waals / solvent / density surfaces. | [`src/mobjects/molecular/`](src/mobjects/molecular) |
-| **Chemistry**                | Reaction arrows and schemes, electron-pushing arrows, Bohr diagrams, CPK colors.                                             | [`src/mobjects/chemistry/`](src/mobjects/chemistry) |
-| **Biology**                  | `DNAHelix`, `Cell`, `AminoAcidChain`.                                                                                        | [`src/mobjects/biology/`](src/mobjects/biology)     |
-| **Maps / geo**               | `Globe`, `ChoroplethMap`, `FlowArc`, map projections, GeoJSON and TopoJSON.                                                  | [`src/mobjects/geo/`](src/mobjects/geo)             |
-| **Interactive player**       | A built-in player with play/pause, scrub, and segment navigation.                                                            | [`src/player/`](src/player)                         |
-| **Export**                   | GIF and video (WebCodecs/MP4/WebM) straight from the browser.                                                                | [`src/export/`](src/export)                         |
-| **Framework integrations**   | React, Vue, a web component, and a notebook entry point.                                                                     | [Framework integrations](#framework-integrations)   |
+| Capability                   | What you get                                                                                                                 | Source                                                           |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **Browser runtime**          | Import from a CDN module script and render in a `<canvas>`. No Python, no install.                                           | [Quick start](#quick-start)                                      |
+| **ManimCE API parity**       | 429 of 429 feasible ManimCE 0.22.0 public symbols ported (100% of the feasible surface).                                     | [PARITY.md](PARITY.md)                                           |
+| **Molecular / drug-binding** | 3D molecules from PDB, MOL/SDF, and SMILES; `Protein`, `BindingPocket`, docking, van der Waals / solvent / density surfaces. | [`src/mobjects/molecular/`](src/mobjects/molecular)              |
+| **Chemistry**                | Reaction arrows and schemes, electron-pushing arrows, Bohr diagrams, CPK colors.                                             | [`src/mobjects/chemistry/`](src/mobjects/chemistry)              |
+| **Biology**                  | `DNAHelix`, `Cell`, `AminoAcidChain`, and a cutaway 3D cell (`Cell3D`) with 12 organelle classes and process animations.     | [`src/mobjects/biology/`](src/mobjects/biology)                  |
+| **Maps / geo**               | `Globe`, `ChoroplethMap`, `FlowArc`, map projections, GeoJSON and TopoJSON.                                                  | [`src/mobjects/geo/`](src/mobjects/geo)                          |
+| **Interactive player**       | A built-in player with play/pause, scrub, and segment navigation.                                                            | [`src/player/`](src/player)                                      |
+| **Export**                   | GIF and video (WebCodecs/MP4/WebM) with an audio track, in the browser or from the command line.                             | [`src/export/`](src/export)                                      |
+| **3D explainer videos**      | Manim look for 3D meshes, 3D build-up, camera focus, captions and callouts, a tour runner, narration, mp4 from the CLI.      | [Guide](https://maloyan.github.io/manim-web/3d-explainer-videos) |
+| **Framework integrations**   | React, Vue, a web component, and a notebook entry point.                                                                     | [Framework integrations](#framework-integrations)                |
 
 The chemistry, biology, molecular, and geo modules do not exist in the ManimCE
 or ManimGL reference APIs. See [COMPARISON.md](COMPARISON.md) for the full,
@@ -117,8 +118,16 @@ See the [docs and examples](https://maloyan.github.io/manim-web/) for more, incl
 - **Animations** — FadeIn/Out, Create, Transform, Write, GrowFromCenter, AnimationGroup, LaggedStart
 - **Interaction** — Draggable, Hoverable, Clickable mobjects, plus a scrub player
 - **Export** — GIF and video (MP4/WebM via WebCodecs)
+- **3D explainers** — `applyManimStyle3D`, `Create3D`, `scene.focusOn`, `CaptionCard`, `Callout3D`, `ExplainerTour`, `narrate`, and `Cell3D` for biology ([guide](https://maloyan.github.io/manim-web/3d-explainer-videos))
 - **Science modules** — molecular/drug-binding, chemistry, biology, and maps (see [Why manim-web](#why-manim-web))
 - **Graphs & Tables** — Network graphs, Matrix, Table
+
+Render an example page to mp4 (video and narration) from a checkout of this repo. The page
+opts in with `registerRender(scene, { construct })`:
+
+```bash
+npm run render -- cell_tour_3d --width 1080 --height 1080 --fps 30 --bitrate 6000000 --out cell_tour_3d.mp4
+```
 
 ## Framework Integrations
 

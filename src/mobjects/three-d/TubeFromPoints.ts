@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Mobject3D } from './Mobject3D';
+import { MeshBuilder, sweepCappedTube } from './organicMesh';
 
 /**
  * Options for creating a TubeFromPoints.
@@ -22,6 +23,14 @@ export interface TubeFromPointsOptions {
   radialSegments?: number;
   /** Segments per span used when tubularSegments is not given. Default: 6 */
   smoothing?: number;
+  /**
+   * Close an open tube with round (hemisphere) ends, so the mesh is watertight
+   * (needed by an inverted-hull outline). The capped mesh also carries the
+   * `reveal` attribute (arc-length fraction, 0 at the first point) and its
+   * triangles are sorted along the curve, so a draw-range reveal grows the
+   * tube from start to end. Ignored when `closed`. Default: false
+   */
+  capped?: boolean;
 }
 
 /**
@@ -47,6 +56,7 @@ export class TubeFromPoints extends Mobject3D {
   private _tubularSegments: number;
   private _radialSegments: number;
   private _smoothing: number;
+  private _capped: boolean;
   private _curve: THREE.CatmullRomCurve3;
 
   constructor(options: TubeFromPointsOptions) {
@@ -61,6 +71,7 @@ export class TubeFromPoints extends Mobject3D {
       tubularSegments,
       radialSegments = 12,
       smoothing = 6,
+      capped = false,
     } = options;
 
     if (points.length < 2) {
@@ -83,6 +94,7 @@ export class TubeFromPoints extends Mobject3D {
     this._closed = closed;
     this._radialSegments = radialSegments;
     this._smoothing = smoothing;
+    this._capped = capped && !closed;
     // Floor any value (including an explicit tubularSegments: 0) at 1 so
     // TubeGeometry never builds an empty mesh.
     this._tubularSegments = Math.max(1, tubularSegments ?? smoothing * (this._points.length - 1));
@@ -101,20 +113,38 @@ export class TubeFromPoints extends Mobject3D {
    * Create the Three.js tube mesh.
    */
   protected _createThreeObject(): THREE.Object3D {
-    const geometry = new THREE.TubeGeometry(
-      this._curve,
-      this._tubularSegments,
-      this._radius,
-      this._radialSegments,
-      this._closed,
-    );
+    const geometry = this._capped
+      ? this._buildCappedGeometry()
+      : new THREE.TubeGeometry(
+          this._curve,
+          this._tubularSegments,
+          this._radius,
+          this._radialSegments,
+          this._closed,
+        );
     const material = new THREE.MeshStandardMaterial({
       color: this.color,
       opacity: this._opacity,
       transparent: this._opacity < 1,
-      side: THREE.DoubleSide,
+      side: this._capped ? THREE.FrontSide : THREE.DoubleSide,
     });
     return new THREE.Mesh(geometry, material);
+  }
+
+  /** A closed tube with round ends, swept along evenly spaced curve points. */
+  private _buildCappedGeometry(): THREE.BufferGeometry {
+    const spine = this._curve
+      .getSpacedPoints(this._tubularSegments)
+      .map((p): Vector3Tuple => [p.x, p.y, p.z]);
+    const builder = new MeshBuilder();
+    sweepCappedTube(
+      builder,
+      spine,
+      this._radius,
+      this._radialSegments,
+      Math.max(2, Math.round(this._radialSegments / 4)),
+    );
+    return builder.build();
   }
 
   /**
@@ -165,6 +195,7 @@ export class TubeFromPoints extends Mobject3D {
       tubularSegments: this._tubularSegments,
       radialSegments: this._radialSegments,
       smoothing: this._smoothing,
+      capped: this._capped,
     });
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;

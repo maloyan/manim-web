@@ -1,0 +1,384 @@
+---
+title: 3D explainer videos
+sidebar_label: 3D explainer videos
+description: Build a narrated 3D explainer in manim style and render it to mp4 from the command line.
+---
+
+import ToonShadingExample from '@site/src/components/examples/ToonShadingExample';
+import ExplainerDirectionExample from '@site/src/components/examples/ExplainerDirectionExample';
+
+# 3D explainer videos
+
+A 3D explainer is a camera tour over a 3D model. A voice explains each part, a
+caption names it, and callouts point at its details. manim-web gives you the
+full stack for this kind of video, from the shapes to the mp4 file.
+
+Use the layers in this order. Each layer also works alone.
+
+| Step | Layer         | Main API                                                                                          |
+| ---- | ------------- | ------------------------------------------------------------------------------------------------- |
+| 1    | Shapes        | `Capsule3D`, `Blob3D`, `Shell3D`, `Extrude3D`, `TubeNetwork3D`, `TubeFromPoints`, `scatterOnMesh` |
+| 2    | Manim 3D look | `applyManimStyle3D`, `applyToonShading`, `Mobject3D.setToonShading`                               |
+| 3    | Build-up      | `Create3D`, `SweepReveal3D`, `GrowAlongPath3D`                                                    |
+| 4    | Camera        | `scene.focusOn`, `CameraFocus`, `FocusDim`, `restoreFocus`                                        |
+| 5    | Annotations   | `CaptionCard`, `Callout3D`, `InsetPanel`, `FocusRing`                                             |
+| 6    | Tour runner   | `ExplainerTour`, `TourTarget`                                                                     |
+| 7    | Narration     | `narrate`, `AudioManager.addSound`                                                                |
+| 8    | Video file    | `registerRender`, `npm run render`                                                                |
+
+Runnable examples for each layer:
+
+| Example                                                                                                             | Shows                                                                       |
+| ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| [`examples/organic_shapes.ts`](https://github.com/maloyan/manim-web/blob/main/examples/organic_shapes.ts)           | Every organic shape and the scatter helpers                                 |
+| [`examples/toon_shading.ts`](https://github.com/maloyan/manim-web/blob/main/examples/toon_shading.ts)               | The manim and cartoon looks, build-up animations                            |
+| [`examples/explainer_direction.ts`](https://github.com/maloyan/manim-web/blob/main/examples/explainer_direction.ts) | A full `ExplainerTour` over three solids                                    |
+| [`examples/narrated_export.ts`](https://github.com/maloyan/manim-web/blob/main/examples/narrated_export.ts)         | Narration clips, a music bed, command-line render                           |
+| [`examples/cell_tour_3d.ts`](https://github.com/maloyan/manim-web/blob/main/examples/cell_tour_3d.ts)               | The complete narrated cell tour (see [Biology: 3D cell](./biology-3d-cell)) |
+
+## 1. Scene and shapes
+
+A 3D explainer uses a `ThreeDScene`. Set the camera with `phi` (polar angle),
+`theta` (azimuth) and `distance`. Add an ambient light so the shadow side is
+not black.
+
+```ts
+import {
+  ThreeDScene,
+  Capsule3D,
+  Blob3D,
+  Shell3D,
+  TubeFromPoints,
+  RED_C,
+  MAROON_C,
+  GOLD_C,
+  GREEN_C,
+} from 'manim-web';
+
+const scene = new ThreeDScene(document.getElementById('container')!, {
+  width: 1080,
+  height: 1080,
+  backgroundColor: '#11131A',
+  phi: 1.1,
+  theta: -1.2,
+  distance: 14,
+  fov: 35,
+});
+scene.lighting.addAmbient({ intensity: 0.5 });
+
+const rod = new Capsule3D({
+  radius: 0.3,
+  length: 1.8,
+  bend: 0.8,
+  center: [-3, 0, 0],
+  color: RED_C,
+});
+const blob = new Blob3D({ radius: 0.7, lobes: 12, seed: 7, center: [0, 0, 0], color: MAROON_C });
+const bowl = new Shell3D({
+  outerRadius: 1.2,
+  thickness: 0.12,
+  cutOffset: 0.2,
+  center: [3, 0, 0],
+  color: GOLD_C,
+});
+const fiber = new TubeFromPoints({
+  points: [
+    [-3, -2, 0],
+    [-1, -2.4, 0.4],
+    [1, -2, 0],
+    [3, -2.4, 0.4],
+  ],
+  radius: 0.08,
+  capped: true,
+  color: GREEN_C,
+});
+scene.add(rod, blob, bowl, fiber);
+```
+
+The organic shapes:
+
+- `Capsule3D`: a rod with round ends, straight or bent.
+- `Blob3D`: a lumpy body made of lobes, deterministic for its `seed`.
+- `Shell3D`: a hollow shell with a plane cut (`cutOffset`) or a wedge cut (`cut: 'wedge'`).
+- `Extrude3D`: a 2D outline extruded into a slab, with holes, a bevel and an optional bend.
+- `TubeNetwork3D`: a net of tubes from a graph; `TubeNetwork3D.lattice(...)` makes a random lattice.
+- `TubeFromPoints` with `capped: true`: a closed tube along a path.
+- `scatterOnMesh`, `scatterOnEllipsoid`, `scatterInVolume` + `toInstances`: thousands of small
+  parts (ribosomes, pores) in one `InstancedMobject`.
+
+## 2. The manim 3D look
+
+The manim look gives each mesh flat color bands, a soft highlight and a bright
+rim outline. Apply it to a whole scene, a group, or one mobject.
+
+```ts
+import { applyManimStyle3D, applyToonShading } from 'manim-web';
+
+applyManimStyle3D(scene); // every 3D mobject the scene holds now
+rod.setToonShading('cartoon'); // one mobject: flat illustration, dark outline
+applyToonShading(bowl, { preset: 'manim', outline: { width: 3 } }); // tuned options
+blob.setToonShading(false); // back to plain shading
+rod.setToonMute(0.8); // fade the rim and the highlight of one mobject (0 = full, 1 = off)
+```
+
+`applyManimStyle3D(scene)` styles only the mobjects that are in the scene at
+the call. Call it again, or call `setToonShading()`, for mobjects you add later.
+
+<ToonShadingExample />
+
+## 3. Build-up animations
+
+Manim draws a 2D shape stroke first, then fills it. The 3D build-up does the
+same: the outline sweeps in, then the body appears.
+
+```ts
+import { LaggedStart, Create3D, GrowAlongPath3D, SweepReveal3D } from 'manim-web';
+
+await scene.play(
+  new LaggedStart(
+    [blob, bowl].map((m) => new Create3D(m, { duration: 1.6 })),
+    { lagRatio: 0.2 },
+  ),
+);
+await scene.play(new GrowAlongPath3D(fiber, { duration: 2 })); // a tube grows along its path
+await scene.play(new SweepReveal3D(rod, { axis: 'auto' })); // a clip plane sweeps along the long axis
+```
+
+- `Create3D` keeps the opacity of a translucent body. `FadeIn` ends at opacity 1,
+  so it makes a translucent body opaque. Use `Create3D` for translucent parts.
+- `GrowAlongPath3D` fits a `TubeFromPoints` or `TubeNetwork3D`.
+- `SweepReveal3D` fits a mesh whose triangles are not in order along its length.
+
+## 4. Camera focus and focus dim
+
+`scene.focusOn(target, options)` moves the camera to frame a mobject or a
+point. `fill` sets how much of the frame the target fills. `screenOffset`
+moves the target on screen, for example up, to leave room for a caption.
+
+```ts
+import { CameraFocus, FocusDim, restoreFocus } from 'manim-web';
+
+await scene.focusOn(blob, { fill: 0.5, phi: 1.0, screenOffset: [0, 0.8], runTime: 2 });
+
+// The same move in parallel with a dim of everything except the blob.
+await scene.play(new FocusDim(scene, [blob]), new CameraFocus(scene, bowl, { fill: 0.5 }));
+
+// Undo the dim and go back to the wide view.
+await scene.play(restoreFocus(scene), new CameraFocus(scene, [0, 0, 0], { distance: 14 }));
+```
+
+Use `focusOn` and `CameraFocus`, not `moveCamera`. `moveCamera` runs its own
+animation loop, so the `Player` cannot seek it and a video export does not
+show it. `CameraFocus` is a normal animation on the scene timeline.
+
+`FocusDim` washes every other mobject toward the background color. Its options:
+
+- `mute` (default `0.9`): the rim and the highlight of a washed 3D mobject fade with the wash.
+- `occlusion`: a washed mobject that stands between the camera and the target fades out fully.
+  `focusCamera(scene, target, framing)` gives the camera at the end of the focus move, for this test.
+- `leafOpacity(leaf)`: an opacity per mobject, for example a lower one for a crowd of small instances.
+
+```ts
+import { FocusDim, CameraFocus, focusCamera, type CameraFocusOptions } from 'manim-web';
+
+const framing: CameraFocusOptions = { fill: 0.5, phi: 1.0 };
+await scene.play(
+  new FocusDim(scene, [blob], {
+    mute: 0.9,
+    occlusion: { target: blob, camera: () => focusCamera(scene, blob, framing) },
+  }),
+  new CameraFocus(scene, blob, framing),
+);
+```
+
+## 5. Captions, callouts, insets and focus rings
+
+The annotations stay flat on screen (fixed in frame), while the camera moves.
+A callout and an inset follow their 3D anchor point.
+
+```ts
+import { CaptionCard, Callout3D, InsetPanel, FocusRing, Membrane, MAROON_C } from 'manim-web';
+
+const card = new CaptionCard({ scene });
+await scene.play(
+  card.show({ title: 'Nucleolus', swatch: MAROON_C, body: 'Builds the ribosome parts.' }),
+);
+await scene.play(card.revealNext()); // the body row
+
+const callout = new Callout3D({ scene, anchor: blob, label: 'lobe', direction: [1, 0.7] });
+const ring = new FocusRing({ scene, target: blob });
+await scene.play(callout.create(), ring.create());
+
+const inset = new InsetPanel({
+  scene,
+  anchor: bowl,
+  title: 'Close-up',
+  content: [new Membrane({ length: 6, spacing: 0.35 })],
+  position: [3, 2],
+  width: 3.2,
+  height: 2.2,
+});
+await scene.play(inset.create());
+
+await scene.play(callout.uncreate(), ring.uncreate(), inset.uncreate(), card.hide());
+callout.dispose();
+ring.dispose();
+inset.dispose();
+```
+
+- `Callout3D` takes `tex: true` for a LaTeX label and `leader: 'elbow'` for a bent leader line.
+- To mark a 3D mesh, use `FocusRing` or `Indicate`. `Circumscribe` and `Flash`
+  draw their shapes in world space, so they do not frame a 3D mesh.
+- Call `dispose()` when an annotation is gone for good. Until then it follows its anchor on every frame.
+
+## 6. The tour runner
+
+`ExplainerTour` runs a list of stops. Per stop it dims everything but the
+target, moves the camera and swaps the caption in one parallel `play()`. Then
+it reveals the caption rows, draws the callouts and the inset, runs your
+`onEnter` hook, waits for the narration and holds.
+
+```ts
+import { ExplainerTour, Rotate } from 'manim-web';
+
+const tour = new ExplainerTour(scene);
+await tour.run([
+  {
+    caption: { title: 'Three shapes', body: 'A short tour.', style: 'headline' },
+    reveal: 'all',
+    dim: false,
+  },
+  {
+    target: blob,
+    framing: { fill: 0.45, screenOffset: [0, 0.8] },
+    caption: { title: 'Blob', body: 'Twelve lobes around one centre.' },
+    callouts: [{ label: 'lobe', direction: [1, 0.7] }],
+    emphasis: 'ring',
+    hold: 1,
+  },
+  {
+    target: bowl,
+    caption: { title: 'Shell', body: 'A hollow body with a plane cut.' },
+    onEnter: async (_scene, _stop, player) => {
+      await player.play(new Rotate(bowl, { angle: 0.6, axis: [1, 0, 0] }));
+    },
+  },
+]);
+await tour.finish();
+tour.dispose();
+```
+
+A mobject can carry its own tour defaults: implement `TourTarget`
+(`getCaption()`, `getFocusFraming()`, `getAnchor(name)`). Then a stop needs
+only `{ target }`, and a callout can name an anchor: `{ anchor: 'pore' }`.
+Every organelle of the [3D cell kit](./biology-3d-cell) implements it.
+
+`emphasis` takes `'indicate'`, `'ring'`, `'none'`, or any `Animation` of your
+own, for example `emphasis: new Indicate(blob, { scaleFactor: 1.1 })`.
+
+<ExplainerDirectionExample />
+
+## 7. Narration
+
+Narration comes from audio files that you record or synthesize before the
+render. `narrate(scene, url)` places a clip on the scene's audio timeline at
+the current time and, by default, waits for its length.
+
+```ts
+import { narrate } from 'manim-web';
+
+await narrate(scene, './audio/intro.mp3'); // starts now, holds for the clip length
+
+// Over animations: start the clip, then play.
+await narrate(scene, './audio/blob.mp3', { wait: false });
+await scene.play(new Create3D(blob, { duration: 2 }));
+
+// In a tour: start the clip, give its length to the stop.
+const clip = await narrate(scene, './audio/shell.mp3', { wait: false });
+await tour.playStop({ target: bowl, narration: clip.duration, hold: 0.5 });
+
+// A quiet music bed under the whole scene.
+await scene.audioManager.addSound('./audio/music.mp3', {
+  time: scene.audioManager.timelineNow(),
+  gain: 0.2,
+  loop: true,
+  duration: 60,
+  fadeOut: 2,
+});
+```
+
+The browser text-to-speech voice (`Voiceover` with `speechSynthesis`) plays
+through the operating system, not through the scene's audio timeline. A video
+export cannot capture it. Use audio files for a video.
+
+## 8. Render to mp4 from the command line
+
+Opt in with one call after you create the scene. `construct` is the scene
+code to render.
+
+```ts
+import { registerRender } from 'manim-web';
+
+registerRender(scene, {
+  construct: async (s) => {
+    await s.play(new Create3D(blob));
+    await narrate(s, './audio/intro.mp3');
+  },
+});
+```
+
+Then render from a checkout of the repository:
+
+```bash
+npm run render -- my_scene --width 1080 --height 1080 --fps 30 --out my_scene.mp4
+```
+
+- The script serves `examples/my_scene.html` with Vite, opens it in headless
+  Chrome, and moves a paused clock one frame at a time. Updaters and camera
+  moves land in the video at the exact frame rate.
+- `--url http://localhost:5173/page.html` renders a page that you serve yourself.
+- Other options: `--duration <max seconds>`, `--bitrate`, `--no-audio`, `--headed`, `--browser chrome|chromium`.
+- The installed Google Chrome has H.264 and AAC encoders. Playwright's bundled
+  Chromium usually has no H.264 encoder: the script then writes WebM and
+  prints the `ffmpeg` command that converts it to mp4.
+- Without `construct`, the script clicks the page's `#playBtn` and stops when the button is enabled again.
+- The default bitrate is about 0.2 bits per pixel per frame: 1080x1080 at 30 fps
+  gives about 7 Mbit/s, so the 136 s cell tour is about 115 MB. Pass a lower
+  `--bitrate` (for example `6000000`) for a smaller file.
+
+The narrated cell tour is a complete worked case. Its narration text is in
+`examples/audio/cell_tour/lines.json`. A local script makes the clips and the
+music bed with a local text-to-speech engine and `ffmpeg`, then the render picks
+them up. No outside service gets the text:
+
+```bash
+# Default engine: Kokoro-82M (Apache-2.0), a local neural voice.
+KOKORO_PYTHON=~/.venvs/kokoro/bin/python node examples/audio/cell_tour/generate.mjs [--voice af_heart] [--speed 0.95] [--only <id>]
+# Or macOS `say`, which needs no setup:
+node examples/audio/cell_tour/generate.mjs --engine say [--voice "Daniel"] [--rate 172]
+npm run render -- cell_tour_3d --width 1080 --height 1080 --fps 30 --bitrate 6000000 --out cell_tour_3d.mp4
+```
+
+The comment block at the top of `generate.mjs` has the one-time Kokoro setup.
+A line in `lines.json` can carry a `speak` field: the display text stays in
+`text`, and `speak` is what the voice reads. Use it for abbreviations (write
+`A-T-P`, because the engine reads `ATP` as one word) and to pin the sound of a
+word with `[word](/IPA/)`. You can also replace the clips with your own
+recordings under the same file names. Each stop waits for its clip, so the
+timeline follows the new lengths.
+
+## Known limits
+
+- A translucent mesh inside another translucent mesh can vanish. Keep inner parts opaque inside a translucent shell.
+- A tube that crosses itself on screen can show a short inner contour line in its outline.
+- `ImplicitSurface` looks speckled under the toon look, because its geometry is not indexed.
+- `moveCamera` is not seekable and does not appear in a video export. Use `focusOn` or `CameraFocus`.
+- `Circumscribe` and `Flash` do not frame a 3D mesh. Use `FocusRing` or `Indicate`.
+- `InsetPanel` does not clip its content by default (`clip: false`). A stencil mask hides the Line2 strokes of masked content.
+- Browser text-to-speech cannot be captured into the export. Narration needs audio files.
+- The `Player` does not play audio. Narration plays in a live scene and in the exported video, but a timeline that you scrub in the `Player` is silent.
+- The exporter writes an edit list into the mp4 to hide the AAC encoder delay. A player that ignores edit lists plays the audio about 44 ms late.
+- `MathTex` `fontSize` is in points (default 48), like `Text`. Its doc comment calls it a scale factor; it is not.
+- `BraceLabel` with a `MathTex` label does not show in the fixed-in-frame layer, and it blanks an `InsetPanel`. Place a `Brace` and a `MathTex` by hand (`brace.getTip()` gives the point for the label).
+- `FadeOut` sets the opacity of the root mobject only. The ticks and number labels of a `NumberLine` stay on screen until you remove them. Fade each family member: `line.getFamily().map((m) => new FadeOut(m))`.
+- Build mobjects once, then move them in an updater. Mobjects that an updater creates and adds to a group do not render reliably.

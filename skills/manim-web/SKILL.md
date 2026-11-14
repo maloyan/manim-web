@@ -1,13 +1,13 @@
 ---
 name: manim-web
-description: Write manim-web scenes (the browser/TypeScript port of Manim). Use when creating, editing, or debugging manim-web animations in HTML or TS. Covers the API differences from Python Manim, snippet patterns (geometry, Tex, graphs, 3D, updaters, interactivity, export), and a live edit→reload dev loop via watch.js.
+description: Write manim-web scenes (the browser/TypeScript port of Manim). Use when creating, editing, or debugging manim-web animations in HTML or TS. Covers the API differences from Python Manim, snippet patterns (geometry, Tex, graphs, 3D, updaters, interactivity, export), narrated 3D explainer videos rendered to mp4 (see explainer-3d.md), and a live edit→reload dev loop via watch.js.
 ---
 
 # manim-web
 
 manim-web is a TypeScript + WebGL (Three.js) + KaTeX port of Manim that runs in
-the browser. There is no Python, no CLI, and no render-to-file step. A scene
-mounts into a DOM element and animates live.
+the browser. There is no Python. A scene mounts into a DOM element and
+animates live; in a repo checkout, `npm run render` writes it to mp4.
 
 This file is a snippet-dense quick-reference. For depth (build commands, the
 gauntlet, commit rules, geometry conventions) read **`AGENTS.md`** and
@@ -44,9 +44,10 @@ module-qualified access.
 6. **Tex/Text render asynchronously.** KaTeX/SVG and font-glyph extraction are
    async. Create the mobject, then `await mobject.waitForRender()` (Tex family)
    or `await mobject.loadGlyphs()` (Text stroke-draw) **before** you animate it.
-7. **No CLI, no `-pql`, no file written to disk by default.** Export is a
-   runtime call that produces a Blob / triggers a browser download
-   (`scene.export(...)`, `exportAndDownloadPNG(...)`).
+7. **No `-pql`, no file written to disk by default.** Export is a runtime
+   call that produces a Blob / triggers a browser download
+   (`scene.export(...)`, `exportAndDownloadPNG(...)`). For an mp4 with audio
+   from the command line, see the 3D explainer recipe below.
 8. **`.animate` is a proxy you chain, then pass to `play`.**
    `await scene.play(circle.animate.shift([3, 0, 0]).scale(1.5));`
    Set per-animation duration with `.withDuration(sec)`.
@@ -228,6 +229,15 @@ await scene.export('animation.webm', { fps: 30, duration: 3 });
 
 `exportFramePNG(scene, opts)` returns a `Blob` instead of downloading.
 `WebCodecsExporter`, `sceneToSVG`, and `exportSlidesToPDF` cover other targets.
+
+### 3D explainer video (narrated, rendered to mp4)
+
+Read **`explainer-3d.md`** (next to this file) before you write one. It has
+the call order (`ThreeDScene` → shapes or `Cell3D` → `applyManimStyle3D` →
+`Create3D` → `ExplainerTour` + `narrate` → `registerRender` →
+`npm run render`), the smallest working scene, and the traps (`focusOn`, not
+`moveCamera`; `Create3D`, not `FadeIn`, for translucent parts; audio files,
+not browser TTS).
 
 ## Live dev loop (edit → reload) with watch.js
 

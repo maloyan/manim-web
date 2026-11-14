@@ -102,3 +102,36 @@ export {
   type FontLoaderFactory,
   type TextGeometryFactory,
 } from './Text3D';
+
+// Organic shapes (rods, blobs, cut shells, extruded slabs, tube nets, scatter)
+export { Capsule3D, type Capsule3DOptions } from './Capsule3D';
+export { Blob3D, type Blob3DOptions } from './Blob3D';
+export { Shell3D, type Shell3DOptions, type Shell3DCut } from './Shell3D';
+export {
+  Extrude3D,
+  type Extrude3DOptions,
+  type Extrude3DBend,
+  type Outline2D,
+  type Point2D,
+} from './Extrude3D';
+export {
+  TubeNetwork3D,
+  type TubeNetwork3DOptions,
+  type TubeGraph,
+  type TubeLatticeOptions,
+} from './TubeNetwork3D';
+export {
+  scatterOnEllipsoid,
+  scatterOnMesh,
+  scatterInVolume,
+  toInstances,
+  beadRingGeometry,
+  type SurfacePoint,
+  type ScatterOptions,
+  type ScatterOnEllipsoidOptions,
+  type ScatterOnMeshOptions,
+  type ScatterInVolumeOptions,
+  type ToInstancesOptions,
+  type BeadRingOptions,
+} from './scatter';
+export { REVEAL_ATTRIBUTE, SMOOTH_NORMAL_ATTRIBUTE } from './organicMesh';

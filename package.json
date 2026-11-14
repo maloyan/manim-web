@@ -44,6 +44,7 @@
   ],
   "scripts": {
     "dev": "vite",
+    "render": "node scripts/render-example.mjs",
     "build": "tsc && vite build && vite build --config vite.browser.config.ts",
     "build:browser": "vite build --config vite.browser.config.ts",
     "preview": "vite preview",

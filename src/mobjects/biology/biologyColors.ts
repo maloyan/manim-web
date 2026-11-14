@@ -49,6 +49,28 @@ export const ORGANELLE_COLORS: Readonly<Record<string, string>> = {
   chloroplast: '#66BB6A',
   centrosome: '#FFCA28',
   peroxisome: '#AB47BC',
+  // 3D cell kit (cell3d). Chosen to read on a dark background and to stay
+  // distinct from each other and from the colors above.
+  'cell membrane': '#F4A261',
+  membrane: '#F4A261',
+  'plasma membrane': '#F4A261',
+  cytoplasm: '#3B4A63',
+  'rough er': '#4F8EF7',
+  'rough endoplasmic reticulum': '#4F8EF7',
+  'smooth er': '#4DD0E1',
+  'smooth endoplasmic reticulum': '#4DD0E1',
+  chromatin: '#C5B3F6',
+  'nuclear pore': '#E1D5FF',
+  vesicle: '#FFE082',
+  centriole: '#FFCA28',
+  microtubule: '#66BB6A',
+  actin: '#F06292',
+  'actin filament': '#F06292',
+  'intermediate filament': '#C8A27C',
+  mrna: '#1DE9B6',
+  'messenger rna': '#1DE9B6',
+  peptide: '#FF8A65',
+  atp: '#D4FF3A',
 };
 
 /**

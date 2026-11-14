@@ -66,6 +66,8 @@ const CATEGORIES = {
     'relativity_frames_camera',
   ],
   'Advanced Projects': ['opening_manim', 'export_animation'],
+  '3D Explainers': ['toon_shading', 'organic_shapes', 'explainer_direction', 'narrated_export'],
+  Biology: ['organelles_3d', 'cell_3d', 'cell_tour_3d'],
 };
 
 // Build reverse lookup: filename (no ext) -> category
@@ -82,7 +84,26 @@ for (const [category, files] of Object.entries(CATEGORIES)) {
 // auto-transform cannot turn its Play/Export handlers into a clean auto-playing
 // component (it left `getElementById(...).addEventListener` calls that crash in
 // the docs <ManimExample> wrapper), so the component is written by hand instead.
-const HAND_MAINTAINED_STEMS = new Set(['export_animation']);
+//
+// The 3D explainer examples read URL options, drive several scenes, or use
+// top-level await and type-only imports, which the auto-transform cannot turn
+// into a looping component either.
+const HAND_MAINTAINED_STEMS = new Set([
+  'export_animation',
+  'toon_shading',
+  'organic_shapes',
+  'explainer_direction',
+  'organelles_3d',
+  'cell_3d',
+]);
+
+// Stems with no live embed: they play narration files from `examples/audio/`
+// through relative `./audio/` URLs, which the docs site does not serve, and a
+// click-to-run loop would replay the sound on every pass. Their section links
+// to the source and gives the commands that run and render them instead.
+const LINK_ONLY_STEMS = new Set(['narrated_export', 'cell_tour_3d']);
+
+const REPO_BLOB_URL = 'https://github.com/maloyan/manim-web/blob/main';
 
 // Example metadata: descriptions and "Learn More" links
 // ---------------------------------------------------------------------------
@@ -302,6 +323,65 @@ const EXAMPLE_META = {
       'Special relativity in two reference frames. Both panes of a SplitScreenCamera look at the same region, but per-camera mobject filters (leftExcludeMobjects / rightExcludeMobjects) decide which objects each pane renders. Left: the rod at rest while the ship flies past at 0.8c. Right: the ship at rest while the Lorentz-contracted rod flies past.',
     learnMore: ['Scene', 'SplitScreenCamera', 'MultiCamera', 'Shift'],
   },
+  toon_shading: {
+    title: 'Manim 3D Look (Toon Shading)',
+    description:
+      'The manim look for 3D meshes: flat color bands, a soft highlight and a bright rim outline, applied to a whole scene with applyManimStyle3D. The top row builds up with Create3D (outline first, then body) and GrowAlongPath3D (a tube grows along its curve), including translucent parts with opaque cores. The bottom row shows the cartoon preset on a white page.',
+    learnMore: ['ThreeDScene', 'Create3D', 'GrowAlongPath3D', 'TubeFromPoints', 'InstancedMobject'],
+  },
+  organic_shapes: {
+    title: 'Organic 3D Shapes',
+    description:
+      'The general 3D building blocks of the cell kit, one of each: a bent rod (Capsule3D), a lumpy blob (Blob3D), cut shells with a plane cut and a wedge cut (Shell3D), extruded slabs with a bend or a hole (Extrude3D), a tube net (TubeNetwork3D), a capped filament (TubeFromPoints), and instances scattered on a surface (scatterOnMesh, scatterOnEllipsoid).',
+    learnMore: ['Capsule3D', 'Blob3D', 'Shell3D', 'Extrude3D', 'TubeNetwork3D', 'InstancedMobject'],
+  },
+  explainer_direction: {
+    title: 'Explainer Tour (Camera Focus, Captions, Callouts)',
+    description:
+      'The direction layer of a 3D explainer. ExplainerTour runs a list of stops; per stop it dims everything but the target (FocusDim), moves the camera (CameraFocus) and swaps the caption (CaptionCard) in one parallel play, then draws callouts (Callout3D), a close-up inset (InsetPanel) and a focus ring, and runs your own animations.',
+    learnMore: [
+      'ExplainerTour',
+      'CameraFocus',
+      'FocusDim',
+      'CaptionCard',
+      'Callout3D',
+      'InsetPanel',
+      'FocusRing',
+    ],
+  },
+  narrated_export: {
+    title: 'Narrated Video Export',
+    description:
+      'Two pre-recorded narration clips and a quiet music bed, placed on the audio timeline at the current scene time with narrate() and AudioManager.addSound(). registerRender() opts the page in to command-line rendering, so `npm run render` writes an mp4 with the audio in sync with the frames.',
+    learnMore: ['AudioManager', 'WebCodecsExporter'],
+  },
+  organelles_3d: {
+    title: '3D Organelles',
+    description:
+      'Every organelle class of the 3D cell kit, each one alone with its name: membrane, nucleus, nuclear pore, rough and smooth ER, Golgi apparatus, a cutaway mitochondrion, ribosome, lysosome, peroxisome, centrosome and cytoskeleton. Each one is a group of named parts in the manim look and plays its own staged build-up.',
+    learnMore: [
+      'Organelle3D',
+      'Nucleus3D',
+      'Mitochondrion3D',
+      'GolgiApparatus3D',
+      'RoughER3D',
+      'Ribosome3D',
+      'Vesicle3D',
+    ],
+  },
+  cell_3d: {
+    title: '3D Animal Cell',
+    description:
+      'A cutaway animal cell from one line, `new Cell3D({ preset: "animal" })`: the organelles are placed without overlap inside a cut-open membrane. The cell builds up one organelle at a time, then a CellTour (an ExplainerTour that also clears the free ribosomes in front of each focused organelle) visits the nucleus, the Golgi apparatus and a mitochondrion with their default captions and one named callout each.',
+    learnMore: ['Cell3D', 'CellTour', 'Organelle3D', 'ExplainerTour'],
+  },
+  cell_tour_3d: {
+    title: '3D Cell Tour (Narrated)',
+    description:
+      'The narrated showcase of the 3D cell kit: a full tour of a cutaway animal cell with a recorded voice track, captions, callouts, insets and the process animations (mRNA export, protein translation, the secretory route, ATP release, cargo on a microtubule). CellTour runs the stops; each stop starts its narration clip with narrate() and lasts at least as long as the clip.',
+    learnMore: ['Cell3D', 'CellTour', 'ExplainerTour', 'CameraFocus', 'CaptionCard'],
+    inlineSource: false,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -314,6 +394,27 @@ function toTitle(stem) {
     .split('_')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
+}
+
+/**
+ * The section body of a LINK_ONLY_STEMS example: a link to its source and the
+ * commands that run it with sound and render it to mp4.
+ */
+function linkOnlyNote(ex) {
+  const stem = ex.stem;
+  return [
+    ':::note[Runs locally]',
+    '',
+    `This example plays narration files from \`examples/audio/\`, so it has no live embed on this page. Source: [\`examples/${ex.relFile}\`](${REPO_BLOB_URL}/examples/${ex.relFile}).`,
+    '',
+    `Run it with sound: \`npm run dev\`, then open \`/examples/${ex.htmlFile}\`. Render it to a file:`,
+    '',
+    '```bash',
+    `npm run render -- ${stem} --width 1080 --height 1080 --fps 30 --bitrate 6000000 --out ${stem}.mp4`,
+    '```',
+    '',
+    ':::',
+  ];
 }
 
 // ---------------------------------------------------------------------------
@@ -1185,9 +1286,9 @@ function main() {
       continue;
     }
 
-    const title = toTitle(stem);
-    const tsContent = readFileSync(join(EXAMPLES_DIR, relFile), 'utf-8');
     const meta = EXAMPLE_META[stem] || {};
+    const title = meta.title || toTitle(stem);
+    const tsContent = readFileSync(join(EXAMPLES_DIR, relFile), 'utf-8');
     const description = meta.description || `Example demonstrating ${title}.`;
     const learnMore = meta.learnMore || [];
     const category = fileToCategory[stem] || 'Other';
@@ -1199,9 +1300,12 @@ function main() {
     // auto-transform cannot faithfully convert their button-driven, export, or
     // interactive source into an auto-playing component), so the generator
     // references them in the page but never overwrites their .tsx.
-    const componentName = toPascalCase(stem) + 'Example';
-    const componentPath = join(COMPONENTS_DIR, `${componentName}.tsx`);
-    if (!HAND_MAINTAINED_STEMS.has(stem)) {
+    const linkOnly = LINK_ONLY_STEMS.has(stem);
+    const componentName = linkOnly ? null : toPascalCase(stem) + 'Example';
+    const componentPath = linkOnly ? null : join(COMPONENTS_DIR, `${componentName}.tsx`);
+    if (linkOnly) {
+      console.log(`  No live component (link only): ${stem}`);
+    } else if (!HAND_MAINTAINED_STEMS.has(stem)) {
       const componentCode = generateComponentFile(stem, codeBlock);
       writeFileSync(componentPath, componentCode, 'utf-8');
       console.log(`  Generated component: ${componentName}.tsx`);
@@ -1218,6 +1322,8 @@ function main() {
       learnMore,
       codeBlock,
       componentName,
+      relFile,
+      inlineSource: meta.inlineSource !== false,
     });
   }
 
@@ -1315,6 +1421,7 @@ player.sequence(async (scene) => {
 
   // Add all auto-generated component imports
   for (const ex of examples) {
+    if (!ex.componentName) continue;
     lines.push(
       `import ${ex.componentName} from '@site/src/components/examples/${ex.componentName}';`,
     );
@@ -1377,17 +1484,23 @@ player.sequence(async (scene) => {
       lines.push('');
       lines.push(ex.description);
       lines.push('');
-      lines.push(`<${ex.componentName} />`);
+      if (ex.componentName) {
+        lines.push(`<${ex.componentName} />`);
+      } else {
+        lines.push(...linkOnlyNote(ex));
+      }
       lines.push('');
-      lines.push('<details>');
-      lines.push('<summary>Source Code</summary>');
-      lines.push('');
-      lines.push('```typescript');
-      lines.push(ex.codeBlock);
-      lines.push('```');
-      lines.push('');
-      lines.push('</details>');
-      lines.push('');
+      if (ex.inlineSource) {
+        lines.push('<details>');
+        lines.push('<summary>Source Code</summary>');
+        lines.push('');
+        lines.push('```typescript');
+        lines.push(ex.codeBlock);
+        lines.push('```');
+        lines.push('');
+        lines.push('</details>');
+        lines.push('');
+      }
 
       if (ex.learnMore.length > 0) {
         const learnMoreInline = ex.learnMore

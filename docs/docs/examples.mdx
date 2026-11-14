@@ -10,7 +10,9 @@ import ApplyMatrixMethodExample from '@site/src/components/examples/ApplyMatrixM
 import ArgMinExample from '@site/src/components/examples/ArgMinExample';
 import BooleanOperationsExample from '@site/src/components/examples/BooleanOperationsExample';
 import BraceAnnotationExample from '@site/src/components/examples/BraceAnnotationExample';
+import Cell3dExample from '@site/src/components/examples/Cell3dExample';
 import EasingFunctionsShowcaseExample from '@site/src/components/examples/EasingFunctionsShowcaseExample';
+import ExplainerDirectionExample from '@site/src/components/examples/ExplainerDirectionExample';
 import ExportAnimationExample from '@site/src/components/examples/ExportAnimationExample';
 import FixedInFrameMobjectTestExample from '@site/src/components/examples/FixedInFrameMobjectTestExample';
 import FixedOrientationMobjectsExample from '@site/src/components/examples/FixedOrientationMobjectsExample';
@@ -26,13 +28,15 @@ import MovingFrameBoxExample from '@site/src/components/examples/MovingFrameBoxE
 import MovingGroupToDestinationExample from '@site/src/components/examples/MovingGroupToDestinationExample';
 import MovingZoomedSceneAroundExample from '@site/src/components/examples/MovingZoomedSceneAroundExample';
 import OpeningManimExample from '@site/src/components/examples/OpeningManimExample';
+import Organelles3dExample from '@site/src/components/examples/Organelles3dExample';
+import OrganicShapesExample from '@site/src/components/examples/OrganicShapesExample';
 import PictureInPictureCameraExample from '@site/src/components/examples/PictureInPictureCameraExample';
 import PointMovingOnShapesExample from '@site/src/components/examples/PointMovingOnShapesExample';
 import PointWithTraceExample from '@site/src/components/examples/PointWithTraceExample';
 import PolygonOnAxesExample from '@site/src/components/examples/PolygonOnAxesExample';
 import QuadViewCameraExample from '@site/src/components/examples/QuadViewCameraExample';
-import RelativityFramesCameraExample from '@site/src/components/examples/RelativityFramesCameraExample';
 import RateFunctionsComparisonExample from '@site/src/components/examples/RateFunctionsComparisonExample';
+import RelativityFramesCameraExample from '@site/src/components/examples/RelativityFramesCameraExample';
 import RotationUpdaterExample from '@site/src/components/examples/RotationUpdaterExample';
 import SinCosPlotExample from '@site/src/components/examples/SinCosPlotExample';
 import SineCurveUnitCircleExample from '@site/src/components/examples/SineCurveUnitCircleExample';
@@ -42,6 +46,7 @@ import ThreeDCameraIllusionRotationExample from '@site/src/components/examples/T
 import ThreeDCameraRotationExample from '@site/src/components/examples/ThreeDCameraRotationExample';
 import ThreeDLightSourcePositionExample from '@site/src/components/examples/ThreeDLightSourcePositionExample';
 import ThreeDSurfacePlotExample from '@site/src/components/examples/ThreeDSurfacePlotExample';
+import ToonShadingExample from '@site/src/components/examples/ToonShadingExample';
 import VectorArrowExample from '@site/src/components/examples/VectorArrowExample';
 
 # Examples
@@ -257,6 +262,7 @@ Demonstrates the four boolean set operations (union, intersection, difference, e
 ```typescript
 import {
   BLUE,
+  BooleanResult,
   Difference,
   DOWN,
   Ellipse,
@@ -266,13 +272,13 @@ import {
   Group,
   Intersection,
   LEFT,
-  MoveToTarget,
   ORANGE,
   PINK,
   RED,
   RIGHT,
   Scene,
   Text,
+  TransformFromCopy,
   Underline,
   UP,
   Union,
@@ -313,52 +319,49 @@ await scene.play(new FadeIn(ellipse_group));
 //        Exclusion
 // Intersection, Union, Exclusion are vertically aligned on the right.
 // Difference is offset to the left at the same row as Union.
-// Positions and scales matching Python Manim reference exactly:
+// Scales matching Python Manim reference:
 // Intersection: scale(0.25), move_to(RIGHT*5 + UP*2.5)
 // Union: scale(0.3), next_to(i, DOWN, buff=text.height*3)
 // Exclusion: scale(0.3), next_to(u, DOWN, buff=text.height*3.5)
 // Difference: scale(0.3), next_to(u, LEFT, buff=text.height*3.5)
 const rightX = 5;
 
-const i = new Intersection(ellipse1, ellipse2, { color: GREEN, fillOpacity: 0.5 });
-i.generateTarget();
-i.targetCopy.scale(0.25).setStrokeWidth(1).moveTo([rightX, 2.5, 0]);
-await scene.play(new MoveToTarget(i));
-const intersection_text = new Text({ text: 'Intersection', fontSize: 23 }).nextTo(i, UP);
-await scene.play(new FadeIn(intersection_text));
+// Each result is placed in its slot first, then grows out of the two source
+// ellipses: copies of both circles peel off and morph into the result. This
+// shows every result originating from the circles instead of popping in.
+const emerge = async (result: BooleanResult, label: Text): Promise<void> => {
+  await scene.play(
+    new TransformFromCopy(ellipse1, result),
+    new TransformFromCopy(ellipse2, result),
+  );
+  label.nextTo(result, UP);
+  await scene.play(new FadeIn(label));
+};
 
-const u = new Union(ellipse1, ellipse2, { color: ORANGE, fillOpacity: 0.5 });
+const i = new Intersection(ellipse1, ellipse2, { color: GREEN, fillOpacity: 0.5 });
+i.scale(0.25).setStrokeWidth(1).moveTo([rightX, 2.5, 0]);
+await emerge(i, new Text({ text: 'Intersection', fontSize: 23 }));
+
 const union_text = new Text({ text: 'Union', fontSize: 23 });
-u.generateTarget();
-u.targetCopy
-  .scale(0.3)
+const u = new Union(ellipse1, ellipse2, { color: ORANGE, fillOpacity: 0.5 });
+u.scale(0.3)
   .setStrokeWidth(1.2)
   .nextTo(i, DOWN, union_text.getHeight() * 3);
-await scene.play(new MoveToTarget(u));
-union_text.nextTo(u, UP);
-await scene.play(new FadeIn(union_text));
+await emerge(u, union_text);
 
-const e = new Exclusion(ellipse1, ellipse2, { color: YELLOW, fillOpacity: 0.5 });
 const exclusion_text = new Text({ text: 'Exclusion', fontSize: 23 });
-e.generateTarget();
-e.targetCopy
-  .scale(0.3)
+const e = new Exclusion(ellipse1, ellipse2, { color: YELLOW, fillOpacity: 0.5 });
+e.scale(0.3)
   .setStrokeWidth(1.2)
   .nextTo(u, DOWN, exclusion_text.getHeight() * 3.5);
-await scene.play(new MoveToTarget(e));
-exclusion_text.nextTo(e, UP);
-await scene.play(new FadeIn(exclusion_text));
+await emerge(e, exclusion_text);
 
-const d = new Difference(ellipse1, ellipse2, { color: PINK, fillOpacity: 0.5 });
 const difference_text = new Text({ text: 'Difference', fontSize: 23 });
-d.generateTarget();
-d.targetCopy
-  .scale(0.3)
+const d = new Difference(ellipse1, ellipse2, { color: PINK, fillOpacity: 0.5 });
+d.scale(0.3)
   .setStrokeWidth(1.2)
   .nextTo(u, LEFT, difference_text.getHeight() * 3.5);
-await scene.play(new MoveToTarget(d));
-difference_text.nextTo(d, UP);
-await scene.play(new FadeIn(difference_text));
+await emerge(d, difference_text);
 ```
 
 </details>
@@ -3226,3 +3229,962 @@ document.getElementById('resetBtn')!.addEventListener('click', () => {
 </details>
 
 **Learn More:** [**Scene**](/api/classes/Scene) · [**Circle**](/api/classes/Circle) · [**Square**](/api/classes/Square) · [**Create**](/api/classes/Create) · [**Transform**](/api/classes/Transform) · [**FadeOut**](/api/classes/FadeOut)
+
+---
+
+## Manim 3D Look (Toon Shading)
+
+The manim look for 3D meshes: flat color bands, a soft highlight and a bright rim outline, applied to a whole scene with applyManimStyle3D. The top row builds up with Create3D (outline first, then body) and GrowAlongPath3D (a tube grows along its curve), including translucent parts with opaque cores. The bottom row shows the cartoon preset on a white page.
+
+<ToonShadingExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  ThreeDScene,
+  Sphere,
+  Cube,
+  Torus,
+  Cylinder,
+  TubeFromPoints,
+  ParametricSurface,
+  InstancedMobject,
+  Group,
+  LaggedStart,
+  Create3D,
+  GrowAlongPath3D,
+  applyManimStyle3D,
+  applyToonShading,
+  BLUE,
+  BLUE_B,
+  TEAL,
+  GOLD,
+  RED,
+  GREEN,
+  PURPLE,
+  YELLOW,
+  MAROON,
+} from 'manim-web';
+import type { Mobject } from 'manim-web';
+
+type Vec3 = [number, number, number];
+
+const CAMERA = {
+  width: 960,
+  height: 400,
+  phi: Math.PI / 2.4,
+  theta: -Math.PI / 2,
+  distance: 12,
+  fov: 40,
+  enableOrbitControls: true,
+};
+
+/** A wavy path for the tube, centred on `c`. */
+function wave(c: Vec3): Vec3[] {
+  const pts: Vec3[] = [];
+  for (let i = 0; i <= 24; i++) {
+    const t = i / 24;
+    pts.push([c[0] - 0.9 + 1.8 * t, c[1] + 0.6 * Math.sin(t * Math.PI * 2), c[2] - 0.8 + 1.6 * t]);
+  }
+  return pts;
+}
+
+/** The five opaque primitives of one row. */
+function primitives(z: number, colors: string[]): Mobject[] {
+  const cube = new Cube({ sideLength: 1.4, center: [-2.8, 0, z], color: colors[1] });
+  cube.rotation.set(0.5, 0.6, 0);
+  const torus = new Torus({ radius: 0.75, tubeRadius: 0.3, center: [0, 0, z], color: colors[2] });
+  torus.rotation.set(1.1, 0.3, 0);
+  const cylinder = new Cylinder({
+    radius: 0.6,
+    height: 1.6,
+    center: [2.8, 0, z],
+    color: colors[3],
+  });
+  cylinder.rotation.set(0.35, 0, 0.3);
+  return [
+    new Sphere({ radius: 0.85, center: [-5.6, 0, z], color: colors[0] }),
+    cube,
+    torus,
+    cylinder,
+    new TubeFromPoints({ points: wave([5.6, 0, z]), radius: 0.22, color: colors[4], capped: true }),
+  ];
+}
+
+// ── Manim preset, dark background ─────────────────────────────────────
+
+const manimScene = new ThreeDScene(document.getElementById('manim')!, CAMERA);
+const opaqueRow = primitives(1.3, [BLUE, TEAL, GOLD, RED, GREEN]);
+
+// A translucent sphere with an opaque core.
+const glass = new Sphere({ radius: 0.95, center: [-4.2, 0, -1.6], color: PURPLE, opacity: 0.4 });
+const core = new Sphere({ radius: 0.4, center: [-4.2, 0, -1.6], color: YELLOW });
+
+// A translucent cutaway shell (a sphere with a wedge removed) with a cube inside.
+const shell = new ParametricSurface({
+  func: (u: number, v: number): Vec3 => [
+    0.95 * Math.sin(v) * Math.cos(u),
+    0.95 * Math.sin(v) * Math.sin(u),
+    -1.6 + 0.95 * Math.cos(v),
+  ],
+  uRange: [-Math.PI / 2 + 0.6, (3 * Math.PI) / 2 - 0.6],
+  vRange: [0.05, Math.PI - 0.05],
+  uResolution: 48,
+  vResolution: 24,
+  color: MAROON,
+  opacity: 0.45,
+});
+shell.shift([-1.2, 0, 0]);
+const inner = new Cube({ sideLength: 0.6, center: [-1.2, 0, -1.6], color: TEAL });
+inner.rotation.set(0.4, 0.7, 0);
+
+// A ring of instanced beads.
+const beads = new InstancedMobject({
+  template: new Sphere({ radius: 0.2, color: BLUE_B }),
+  color: BLUE_B,
+  instances: Array.from({ length: 12 }, (_, i) => {
+    const a = (i / 12) * Math.PI * 2;
+    return { position: [1.8 + 0.9 * Math.cos(a), 0, -1.6 + 0.9 * Math.sin(a)] as Vec3 };
+  }),
+});
+
+const tube = new TubeFromPoints({
+  points: Array.from({ length: 40 }, (_, i): Vec3 => {
+    const t = i / 39;
+    return [4.2 + 0.9 * Math.cos(t * 5), 0.9 * Math.sin(t * 5), -2.5 + 1.8 * t];
+  }),
+  radius: 0.14,
+  color: YELLOW,
+  capped: true,
+});
+
+const translucentRow = [glass, core, shell, inner, beads, tube];
+manimScene.add(...opaqueRow, ...translucentRow);
+applyManimStyle3D(manimScene);
+
+async function buildUp(): Promise<void> {
+  const button = document.getElementById('buildBtn') as HTMLButtonElement;
+  button.disabled = true;
+  await manimScene.play(
+    new LaggedStart(
+      [...opaqueRow, glass, core, shell, inner, beads].map(
+        (m) => new Create3D(m, { duration: 1.6 }),
+      ),
+      { lagRatio: 0.15 },
+    ),
+    new GrowAlongPath3D(tube, { duration: 2.5 }),
+  );
+  button.disabled = false;
+}
+
+document.getElementById('buildBtn')!.addEventListener('click', () => void buildUp());
+
+// ── Cartoon preset, white page ────────────────────────────────────────
+
+const cartoonScene = new ThreeDScene(document.getElementById('cartoon')!, {
+  ...CAMERA,
+  height: 260,
+  backgroundColor: '#ffffff',
+});
+const cartoonRow = new Group(
+  ...primitives(0, ['#f2a36b', '#5b6ee1', '#e8603c', '#d94f8c', '#79c7e8']),
+);
+cartoonScene.add(cartoonRow);
+applyToonShading(cartoonRow, 'cartoon');
+
+manimScene.wait(Infinity);
+cartoonScene.wait(Infinity);
+```
+
+</details>
+
+**Learn More:** [**ThreeDScene**](/api/classes/ThreeDScene) · [**Create3D**](/api/classes/Create3D) · [**GrowAlongPath3D**](/api/classes/GrowAlongPath3D) · [**TubeFromPoints**](/api/classes/TubeFromPoints) · [**InstancedMobject**](/api/classes/InstancedMobject)
+
+---
+
+## Organic 3D Shapes
+
+The general 3D building blocks of the cell kit, one of each: a bent rod (Capsule3D), a lumpy blob (Blob3D), cut shells with a plane cut and a wedge cut (Shell3D), extruded slabs with a bend or a hole (Extrude3D), a tube net (TubeNetwork3D), a capped filament (TubeFromPoints), and instances scattered on a surface (scatterOnMesh, scatterOnEllipsoid).
+
+<OrganicShapesExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+/**
+ * Organic 3D shapes: the building blocks of a cutaway cell, one of each.
+ *
+ * Back row: a bent rod (Capsule3D), a lumpy nucleolus (Blob3D), a cut bowl
+ * with a blob inside (Shell3D, plane cut), and a nucleus with a wedge cut and
+ * bead-ring pores (Shell3D + InstancedMobject + beadRingGeometry).
+ * Front row: a curved ER sheet dotted with ribosomes (Extrude3D +
+ * scatterOnMesh), a golgi stack (Extrude3D with a sphere bend), a
+ * mitochondrion slice with cristae folds (Extrude3D with a hole), a tube net
+ * (TubeNetwork3D.lattice), and a capped filament (TubeFromPoints).
+ *
+ * URL options: `?opacity=0.4` makes every fill translucent, `?reveal=0.5`
+ * draws only the first half of every organic mesh (its build-up order).
+ */
+import * as THREE from 'three';
+import {
+  ThreeDScene,
+  Capsule3D,
+  Blob3D,
+  Shell3D,
+  Extrude3D,
+  TubeNetwork3D,
+  TubeFromPoints,
+  InstancedMobject,
+  scatterOnMesh,
+  scatterOnEllipsoid,
+  toInstances,
+  beadRingGeometry,
+  BLUE_B,
+  BLUE_D,
+  TEAL_C,
+  GREEN_C,
+  YELLOW_D,
+  GOLD_A,
+  GOLD_C,
+  GOLD_E,
+  RED_A,
+  RED_C,
+  RED_D,
+  MAROON_B,
+  MAROON_C,
+  PURPLE_A,
+  PURPLE_C,
+  PURPLE_E,
+  type Mobject,
+  type Point2D,
+  type Vector3Tuple,
+} from 'manim-web';
+
+const params = new URLSearchParams(location.search);
+const OPACITY = Number(params.get('opacity') ?? 1);
+const REVEAL = params.has('reveal') ? Number(params.get('reveal')) : null;
+
+const container = document.getElementById('container')!;
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 1200,
+  height: 675,
+  phi: 58 * (Math.PI / 180),
+  theta: -72 * (Math.PI / 180),
+  distance: 15.5,
+  fov: 32,
+});
+scene.lighting.addAmbient({ intensity: 0.5 });
+
+// ---- back row -------------------------------------------------------------
+
+const rod = new Capsule3D({
+  radius: 0.32,
+  length: 1.8,
+  bend: Math.PI / 2.5,
+  direction: [1, 0, 0.3],
+  center: [-6, 2.2, 0.4],
+  color: RED_C,
+  opacity: OPACITY,
+});
+
+const nucleolus = new Blob3D({
+  radius: 0.75,
+  lobes: 16,
+  lobeSize: 0.42,
+  lumpiness: 0.2,
+  seed: 7,
+  center: [-3, 2.2, 0.75],
+  color: MAROON_C,
+  opacity: OPACITY,
+});
+
+const bowl = new Shell3D({
+  outerRadius: 1.25,
+  thickness: 0.14,
+  scale: [1.2, 1, 0.75],
+  cutOffset: 0.25,
+  center: [0.2, 2.2, 0.8],
+  color: GOLD_C,
+  innerColor: GOLD_E,
+  rimColor: GOLD_A,
+  opacity: OPACITY,
+});
+const inside = new Blob3D({
+  radius: 0.35,
+  lobes: 3,
+  seed: 2,
+  center: [0.2, 2.2, 0.55],
+  color: TEAL_C,
+});
+
+const NUCLEUS_CENTER: Vector3Tuple = [3.6, 2.2, 1];
+const nucleus = new Shell3D({
+  outerRadius: 1.1,
+  thickness: 0.12,
+  cut: 'wedge',
+  wedgeStart: -Math.PI / 2 - 0.9,
+  wedgeAngle: 1.8,
+  center: NUCLEUS_CENTER,
+  color: PURPLE_C,
+  innerColor: PURPLE_E,
+  rimColor: PURPLE_A,
+  opacity: OPACITY,
+});
+const pores = new InstancedMobject({
+  geometry: beadRingGeometry({ beads: 8, radius: 0.07, beadRadius: 0.028 }),
+  material: new THREE.MeshStandardMaterial({ color: PURPLE_A }),
+  instances: toInstances(
+    scatterOnEllipsoid({
+      count: 70,
+      radii: 1.105,
+      center: NUCLEUS_CENTER,
+      seed: 5,
+      minDistance: 0.3,
+      // Skip the removed wedge: it opens toward -Y.
+      filter: (p) => p.normal[1] > -0.45 || Math.abs(p.normal[0]) > 0.75,
+    }),
+  ),
+});
+const innerNucleolus = new Blob3D({
+  radius: 0.4,
+  lobes: 12,
+  lobeSize: 0.4,
+  seed: 11,
+  center: NUCLEUS_CENTER,
+  color: MAROON_C,
+});
+
+// ---- front row ------------------------------------------------------------
+
+/** A rounded rectangle outline, centred on the origin. */
+function roundedRect(w: number, h: number, r: number, steps = 6): Point2D[] {
+  const pts: Point2D[] = [];
+  const corners: [number, number, number][] = [
+    [w / 2 - r, h / 2 - r, 0],
+    [-w / 2 + r, h / 2 - r, Math.PI / 2],
+    [-w / 2 + r, -h / 2 + r, Math.PI],
+    [w / 2 - r, -h / 2 + r, (3 * Math.PI) / 2],
+  ];
+  for (const [cx, cy, a0] of corners) {
+    for (let i = 0; i <= steps; i++) {
+      const a = a0 + (Math.PI / 2) * (i / steps);
+      pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
+    }
+  }
+  return pts;
+}
+
+/** An ellipse outline. */
+function ellipse(a: number, b: number, n = 48): Point2D[] {
+  return Array.from({ length: n }, (_, i): Point2D => {
+    const t = (2 * Math.PI * i) / n;
+    return [a * Math.cos(t), b * Math.sin(t)];
+  });
+}
+
+const erSheet = new Extrude3D({
+  outline: roundedRect(2.6, 0.9, 0.35),
+  depth: 0.16,
+  bevel: 0.06,
+  bend: { radius: 1.6 },
+  center: [-6, -1.6, 0.2],
+  color: BLUE_D,
+  opacity: OPACITY,
+});
+erSheet.rotate(Math.PI / 2, { axis: [1, 0, 0] });
+const ribosomes = new InstancedMobject({
+  geometry: new THREE.SphereGeometry(0.035, 10, 8),
+  material: new THREE.MeshStandardMaterial({ color: MAROON_B }),
+  instances: toInstances(scatterOnMesh(erSheet, { count: 300, seed: 3, minDistance: 0.07 }), {
+    scale: [0.8, 1.3],
+  }),
+});
+
+const golgi: Mobject[] = [0, 1, 2, 3].map(
+  (i) =>
+    new Extrude3D({
+      outline: ellipse(1.0 - 0.12 * i, 0.55 - 0.05 * i),
+      depth: 0.09,
+      bevel: 0.04,
+      bend: { radius: -2, mode: 'sphere' },
+      center: [-2.9, -1.6, 0.2 + 0.2 * i],
+      color: i % 2 === 0 ? YELLOW_D : GOLD_C,
+      opacity: OPACITY,
+    }),
+);
+
+/** Lumen of a mitochondrion: an inner stadium with cristae folds poking in. */
+function cristaeHole(a: number, b: number): Point2D[] {
+  const pts: Point2D[] = [];
+  const tooth = (x: number, y0: number, dir: 1 | -1, h: number, w: number) => {
+    // A thin U-shaped fold from the wall at y0 into the lumen.
+    const tipY = y0 + dir * h;
+    pts.push([x - (dir * w) / 2, y0], [x - (dir * w) / 2, tipY - dir * (w / 2)]);
+    for (let k = 1; k < 6; k++) {
+      const t = Math.PI - (Math.PI * k) / 6;
+      pts.push([
+        x + dir * (w / 2) * Math.cos(t),
+        tipY - dir * (w / 2) + dir * (w / 2) * Math.sin(t),
+      ]);
+    }
+    pts.push([x + (dir * w) / 2, tipY - dir * (w / 2)], [x + (dir * w) / 2, y0]);
+  };
+  for (const x of [-1.05, -0.25, 0.55]) tooth(x, -b, 1, 0.55, 0.14);
+  for (let k = 0; k <= 8; k++) {
+    const t = -Math.PI / 2 + (Math.PI * k) / 8;
+    pts.push([a + b * Math.cos(t), b * Math.sin(t)]);
+  }
+  for (const x of [0.95, 0.15, -0.65]) tooth(x, b, -1, 0.55, 0.14);
+  for (let k = 0; k <= 8; k++) {
+    const t = Math.PI / 2 + (Math.PI * k) / 8;
+    pts.push([-a + b * Math.cos(t), b * Math.sin(t)]);
+  }
+  return pts;
+}
+
+/** A stadium (rounded-end rod) outline. */
+function stadium(a: number, r: number): Point2D[] {
+  const pts: Point2D[] = [];
+  for (let k = 0; k <= 12; k++) {
+    const t = -Math.PI / 2 + (Math.PI * k) / 12;
+    pts.push([a + r * Math.cos(t), r * Math.sin(t)]);
+  }
+  for (let k = 0; k <= 12; k++) {
+    const t = Math.PI / 2 + (Math.PI * k) / 12;
+    pts.push([-a + r * Math.cos(t), r * Math.sin(t)]);
+  }
+  return pts;
+}
+
+const mitochondrion = new Extrude3D({
+  outline: stadium(1.35, 0.62),
+  holes: [cristaeHole(1.35, 0.42)],
+  depth: 0.45,
+  bevel: 0.05,
+  center: [0.4, -1.6, 0.3],
+  color: RED_D,
+  capColor: RED_A,
+  opacity: OPACITY,
+});
+
+const net = new TubeNetwork3D({
+  ...TubeNetwork3D.lattice({
+    size: [2.4, 2, 0.5],
+    spacing: 0.3,
+    seed: 4,
+    center: [3.6, -1.6, 0.3],
+  }),
+  radius: 0.04,
+  color: BLUE_B,
+  opacity: OPACITY,
+});
+
+const filament = new TubeFromPoints({
+  points: Array.from({ length: 9 }, (_, i): Vector3Tuple => [
+    5.6 + 0.2 * Math.sin(i),
+    -2.6 + 0.45 * i,
+    0.3 + 0.25 * Math.cos(1.3 * i),
+  ]),
+  radius: 0.05,
+  capped: true,
+  color: GREEN_C,
+  opacity: OPACITY,
+});
+
+const all: Mobject[] = [
+  rod,
+  nucleolus,
+  inside,
+  bowl,
+  innerNucleolus,
+  nucleus,
+  pores,
+  erSheet,
+  ribosomes,
+  ...golgi,
+  mitochondrion,
+  net,
+  filament,
+];
+scene.add(...all);
+
+// Draw-range reveal check: each organic mesh shows its first REVEAL fraction.
+if (REVEAL !== null) {
+  for (const m of all) {
+    m.getThreeObject().traverse((o) => {
+      if (!(o instanceof THREE.Mesh) || o instanceof THREE.InstancedMesh) return;
+      const index = o.geometry.getIndex();
+      if (!index || !o.geometry.getAttribute('reveal')) return;
+      o.geometry.setDrawRange(0, Math.floor((REVEAL * index.count) / 3) * 3);
+    });
+  }
+}
+
+scene.wait(Infinity);
+```
+
+</details>
+
+**Learn More:** [**Capsule3D**](/api/classes/Capsule3D) · [**Blob3D**](/api/classes/Blob3D) · [**Shell3D**](/api/classes/Shell3D) · [**Extrude3D**](/api/classes/Extrude3D) · [**TubeNetwork3D**](/api/classes/TubeNetwork3D) · [**InstancedMobject**](/api/classes/InstancedMobject)
+
+---
+
+## Explainer Tour (Camera Focus, Captions, Callouts)
+
+The direction layer of a 3D explainer. ExplainerTour runs a list of stops; per stop it dims everything but the target (FocusDim), moves the camera (CameraFocus) and swaps the caption (CaptionCard) in one parallel play, then draws callouts (Callout3D), a close-up inset (InsetPanel) and a focus ring, and runs your own animations.
+
+<ExplainerDirectionExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  BLUE,
+  Cube,
+  ExplainerTour,
+  GOLD,
+  Membrane,
+  Rotate,
+  RED,
+  Sphere,
+  ThreeDScene,
+  Torus,
+  type TourTarget,
+} from 'manim-web';
+
+// A narrated tour over three plain solids, built from the direction layer:
+// ExplainerTour composes FocusDim + CameraFocus + CaptionCard per stop, then
+// Callout3D / InsetPanel annotations and the author's own animations.
+
+const container = document.getElementById('container')!;
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 720,
+  height: 720,
+  frameWidth: 8,
+  frameHeight: 8,
+  backgroundColor: '#0F1115',
+  phi: 1.15,
+  theta: -Math.PI / 2,
+  distance: 14,
+  fov: 35,
+  enableOrbitControls: false,
+});
+scene.lighting.addAmbient({ intensity: 0.5 });
+
+const sphere = new Sphere({ radius: 1, color: BLUE, center: [-2.6, 0, 0] });
+const torus = new Torus({ radius: 0.9, tubeRadius: 0.3, color: GOLD, center: [0, 0.4, 0] });
+const cube = new Cube({ sideLength: 1.4, color: RED, center: [2.6, 0, 0] }) as Cube & TourTarget;
+cube.rotate(0.6, [0, 0, 1]);
+
+// A target can carry its own tour defaults (a 3D kit implements TourTarget).
+cube.getCaption = () => ({
+  title: 'Cube',
+  swatch: RED,
+  body: 'Six square faces. Its wall, seen up close, is a lipid bilayer in this toy model.',
+});
+cube.getFocusFraming = () => ({ fill: 0.38, phi: 1.0, theta: -1.2, screenOffset: [-1.3, 0.6] });
+
+scene.add(sphere, torus, cube);
+
+const tour = new ExplainerTour(scene);
+
+await scene.wait(0.3);
+await tour.run([
+  {
+    caption: { title: 'Three solids', body: 'A short tour in manim style.', style: 'headline' },
+    reveal: 'all',
+    dim: false,
+    hold: 0.8,
+  },
+  {
+    target: sphere,
+    framing: { fill: 0.42, screenOffset: [0.8, 0.9], phi: 1.05 },
+    caption: {
+      title: 'Sphere',
+      swatch: BLUE,
+      body: 'Every point on the surface is one radius from the centre.',
+      footnote: 'Drawn with 32 segments around.',
+    },
+    emphasis: 'ring',
+    hold: 0.6,
+  },
+  {
+    target: torus,
+    framing: { fill: 0.45, phi: 0.75, theta: -1.9, screenOffset: [0, 0.8] },
+    caption: { title: 'Torus', swatch: GOLD, body: 'A circle swept around an axis.' },
+    // The author hook: any animation of your own. The torus tilts, and the
+    // callouts, anchored to points on it, follow.
+    onEnter: async (_scene, _stop, player) => {
+      await player.play(new Rotate(torus, { angle: 0.7, axis: [1, 0, 0], duration: 1.5 }));
+    },
+    callouts: [
+      { label: 'tube', anchor: torus, anchorLocal: [0.9, 0, 0.3], direction: [1, 0.7] },
+      {
+        label: 'R = 0.9',
+        tex: true,
+        anchor: torus,
+        anchorLocal: [-0.9, 0, 0],
+        direction: [-1, 0.8],
+        leader: 'elbow',
+      },
+    ],
+    hold: 1,
+  },
+  {
+    target: cube,
+    inset: {
+      title: 'Close-up',
+      anchor: [2.6 + 0.7, 0, 0.3],
+      content: [new Membrane({ length: 6, spacing: 0.35 })],
+      position: [2.1, 1.6],
+      width: 3.2,
+      height: 2.2,
+    },
+    hold: 1.2,
+  },
+  {
+    target: [0, 0, 0],
+    framing: { distance: 13, phi: 1.15, theta: -Math.PI / 2 },
+    dim: false,
+    caption: {
+      title: 'Solids',
+      rows: [
+        { color: BLUE, text: 'Sphere: one radius' },
+        { color: GOLD, text: 'Torus: a swept circle' },
+        { color: RED, text: 'Cube: six faces' },
+      ],
+    },
+    hold: 1.2,
+  },
+]);
+await tour.finish();
+tour.dispose();
+```
+
+</details>
+
+**Learn More:** [**ExplainerTour**](/api/classes/ExplainerTour) · [**CameraFocus**](/api/classes/CameraFocus) · [**FocusDim**](/api/classes/FocusDim) · [**CaptionCard**](/api/classes/CaptionCard) · [**Callout3D**](/api/classes/Callout3D) · [**InsetPanel**](/api/classes/InsetPanel) · [**FocusRing**](/api/classes/FocusRing)
+
+---
+
+## Narrated Video Export
+
+Two pre-recorded narration clips and a quiet music bed, placed on the audio timeline at the current scene time with narrate() and AudioManager.addSound(). registerRender() opts the page in to command-line rendering, so `npm run render` writes an mp4 with the audio in sync with the frames.
+
+:::note[Runs locally]
+
+This example plays narration files from `examples/audio/`, so it has no live embed on this page. Source: [`examples/narrated_export.ts`](https://github.com/maloyan/manim-web/blob/main/examples/narrated_export.ts).
+
+Run it with sound: `npm run dev`, then open `/examples/narrated_export.html`. Render it to a file:
+
+```bash
+npm run render -- narrated_export --width 1080 --height 1080 --fps 30 --bitrate 6000000 --out narrated_export.mp4
+```
+
+:::
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+import {
+  Scene,
+  Circle,
+  Square,
+  Create,
+  Transform,
+  narrate,
+  registerRender,
+  BLUE,
+  GREEN,
+} from 'manim-web';
+
+// Narrated export: two narration clips and a quiet music bed, placed on the
+// audio timeline at "now", so a video export holds them in sync with the frames.
+// Render it to a file with:
+//   node scripts/render-example.mjs narrated_export --width 1080 --height 1080 --fps 30 --out out.mp4
+
+const LINE_1 = './audio/narrated_export_line1.mp3';
+const LINE_2 = './audio/narrated_export_line2.mp3';
+const MUSIC = './audio/narrated_export_music.mp3';
+
+const container = document.getElementById('container')!;
+const scene = new Scene(document.getElementById('container'), {
+  width: 800,
+  height: 450,
+  backgroundColor: '#000000',
+});
+// Opt in to command-line rendering (scripts/render-example.mjs).
+registerRender(scene, { construct: narratedExport });
+
+const playBtn = document.getElementById('playBtn') as HTMLButtonElement;
+
+playBtn.addEventListener('click', async () => {
+  if (isAnimating) return;
+  isAnimating = true;
+  playBtn.disabled = true;
+
+  isAnimating = false;
+  playBtn.disabled = false;
+});
+
+document.getElementById('resetBtn')!.addEventListener('click', () => {
+  scene.clear();
+  scene.audioManager.clearTracks();
+});
+```
+
+</details>
+
+**Learn More:** [**AudioManager**](/api/classes/AudioManager) · [**WebCodecsExporter**](/api/classes/WebCodecsExporter)
+
+---
+
+## 3D Organelles
+
+Every organelle class of the 3D cell kit, each one alone with its name: membrane, nucleus, nuclear pore, rough and smooth ER, Golgi apparatus, a cutaway mitochondrion, ribosome, lysosome, peroxisome, centrosome and cytoskeleton. Each one is a group of named parts in the manim look and plays its own staged build-up.
+
+<Organelles3dExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+/**
+ * The organelles of the 3D cell kit, each one alone with its name.
+ *
+ * Every class is a group of named parts in the manim look (bright rim stroke
+ * over a soft body), deterministic for its seed. Drag to orbit.
+ *
+ * URL options: `?only=<index>` shows one organelle at full size,
+ * `?detail=low|medium|high`, `?build` plays every build-up.
+ */
+import {
+  ThreeDScene,
+  Text,
+  LaggedStart,
+  CellMembrane3D,
+  Nucleus3D,
+  NuclearPore3D,
+  RoughER3D,
+  SmoothER3D,
+  GolgiApparatus3D,
+  Mitochondrion3D,
+  Ribosome3D,
+  Vesicle3D,
+  Centrosome3D,
+  Cytoskeleton3D,
+  type CellDetail,
+  type Organelle3D,
+  type Vector3Tuple,
+} from 'manim-web';
+
+const params = new URLSearchParams(location.search);
+const detail = (params.get('detail') ?? 'medium') as CellDetail;
+const only = params.has('only') ? Number(params.get('only')) : null;
+
+const container = document.getElementById('container')!;
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 1600,
+  height: 1000,
+  phi: 1.12,
+  theta: -Math.PI / 2,
+  distance: only === null ? 20 : 7,
+  fov: 34,
+  enableOrbitControls: true,
+});
+scene.lighting.addAmbient({ intensity: 0.55 });
+
+/** The gallery: a factory per organelle, so `?only` builds just one. */
+const entries: [string, (c: Vector3Tuple) => Organelle3D][] = [
+  ['Cell membrane', (c) => new CellMembrane3D({ radius: 1.2, center: c, detail })],
+  ['Nucleus', (c) => new Nucleus3D({ radius: 1.05, center: c, detail })],
+  ['Nuclear pore', (c) => new NuclearPore3D({ size: 0.36, center: c, detail })],
+  [
+    'Rough ER',
+    (c) => new RoughER3D({ innerRadius: 0.55, spacing: 0.24, height: 0.7, center: c, detail }),
+  ],
+  ['Smooth ER', (c) => new SmoothER3D({ size: [2.3, 1.5, 0.5], center: c, detail })],
+  [
+    'Golgi apparatus',
+    (c) => new GolgiApparatus3D({ size: 1.7, direction: [1, -0.45, 0], center: c, detail }),
+  ],
+  [
+    'Mitochondrion',
+    (c) => new Mitochondrion3D({ length: 2.1, radius: 0.42, cutaway: true, center: c, detail }),
+  ],
+  ['Ribosome', (c) => new Ribosome3D({ size: 0.8, center: c, detail })],
+  ['Lysosome', (c) => Vesicle3D.lysosome({ radius: 0.6, center: c, detail })],
+  ['Peroxisome', (c) => Vesicle3D.peroxisome({ radius: 0.55, center: c, detail })],
+  ['Centrosome', (c) => new Centrosome3D({ size: 0.9, center: c, detail })],
+  [
+    'Cytoskeleton',
+    (c) =>
+      new Cytoskeleton3D({ radii: [1.35, 1.15, 0.7], origin: [0.1, 0.1, 0], center: c, detail }),
+  ],
+];
+
+const COLS = 4;
+const shown = only === null ? entries : [entries[only]];
+const organelles: Organelle3D[] = [];
+shown.forEach(([name, make], i) => {
+  const col = i % COLS;
+  const row = Math.floor(i / COLS);
+  const center: Vector3Tuple = only === null ? [(col - 1.5) * 3.7, 0, (1 - row) * 3.5] : [0, 0, 0];
+  const organelle = make(center);
+  organelles.push(organelle);
+  scene.add(organelle);
+  const label = new Text({ text: name, fontSize: only === null ? 22 : 30, color: '#ECEFF4' });
+  label.moveTo([center[0], center[1], center[2] - (only === null ? 1.45 : 1.9)]);
+  scene.add(label);
+  scene.addFixedOrientationMobjects(label);
+});
+
+if (params.has('build')) {
+  await scene.play(
+    new LaggedStart(
+      organelles.map((o) => o.buildAnimation()),
+      { lagRatio: 0.15 },
+    ),
+  );
+}
+```
+
+</details>
+
+**Learn More:** [**Organelle3D**](/api/classes/Organelle3D) · [**Nucleus3D**](/api/classes/Nucleus3D) · [**Mitochondrion3D**](/api/classes/Mitochondrion3D) · [**GolgiApparatus3D**](/api/classes/GolgiApparatus3D) · [**RoughER3D**](/api/classes/RoughER3D) · [**Ribosome3D**](/api/classes/Ribosome3D) · [**Vesicle3D**](/api/classes/Vesicle3D)
+
+---
+
+## 3D Animal Cell
+
+A cutaway animal cell from one line, `new Cell3D({ preset: "animal" })`: the organelles are placed without overlap inside a cut-open membrane. The cell builds up one organelle at a time, then a CellTour (an ExplainerTour that also clears the free ribosomes in front of each focused organelle) visits the nucleus, the Golgi apparatus and a mitochondrion with their default captions and one named callout each.
+
+<Cell3dExample />
+
+<details>
+<summary>Source Code</summary>
+
+```typescript
+/**
+ * A cutaway animal cell from the 3D cell kit.
+ *
+ * `new Cell3D({ preset: 'animal' })` places the nucleus, rough and smooth ER,
+ * Golgi, centrosome, mitochondria, lysosomes, peroxisomes, vesicles and a
+ * crowd of free ribosomes inside a cut-open membrane. Drag to orbit.
+ * "Build the cell" plays `cell.buildAnimation()` (one organelle at a time),
+ * then a short CellTour (an ExplainerTour that clears the free ribosomes in
+ * front of each organelle) over three organelles with their default
+ * captions and one named callout each.
+ *
+ * URL options: `?detail=low|medium|high`, `?cutaway=bowl|wedge|none`,
+ * `?cytoskeleton`, `?auto` (play on load).
+ */
+import {
+  ThreeDScene,
+  Cell3D,
+  CellTour,
+  registerRender,
+  type CellCutaway,
+  type CellDetail,
+} from 'manim-web';
+
+const params = new URLSearchParams(location.search);
+const container = document.getElementById('container')!;
+const scene = new ThreeDScene(document.getElementById('container'), {
+  width: 1080,
+  height: 1080,
+  frameWidth: 14,
+  frameHeight: 14,
+  backgroundColor: '#11131A',
+  phi: 0.92,
+  theta: -1.2,
+  distance: 18.5,
+  fov: 30,
+  enableOrbitControls: true,
+});
+scene.lighting.addAmbient({ intensity: 0.55 });
+
+const cell = new Cell3D({
+  radius: 4,
+  preset: 'animal',
+  detail: (params.get('detail') ?? 'medium') as CellDetail,
+  cutaway: (params.get('cutaway') ?? 'bowl') as CellCutaway,
+  cytoskeleton: params.has('cytoskeleton'),
+  seed: 3,
+});
+scene.add(cell);
+
+const START = { phi: 0.92, theta: -1.2, distance: 18.5 };
+
+async function construct(s: ThreeDScene): Promise<void> {
+  s.setCameraOrientation(START.phi, START.theta, START.distance);
+  await s.play(cell.buildAnimation({ duration: 12 }));
+  await s.wait(0.5);
+
+  const tour = new CellTour(s, cell);
+  await tour.run([
+    {
+      target: cell.getOrganelle('nucleus'),
+      callouts: [{ label: 'nuclear pore', anchor: 'pore', direction: [1, 0.7] }],
+      hold: 1.5,
+    },
+    {
+      target: cell.getOrganelle('golgi apparatus'),
+      callouts: [{ label: 'entry side', anchor: 'entrySide', direction: [-1, 0.7] }],
+      hold: 1.5,
+    },
+    {
+      target: cell.getOrganelle('mitochondrion'),
+      callouts: [{ label: 'cristae', anchor: 'cristae', direction: [1, 0.8] }],
+      hold: 1.5,
+    },
+  ]);
+  await tour.finish();
+  await s.focusOn([0, 0, 0], {
+    phi: START.phi,
+    theta: START.theta,
+    distance: START.distance,
+    runTime: 2,
+  });
+}
+
+// Opt in to command-line rendering (scripts/render-example.mjs).
+registerRender(scene, { construct });
+
+const playBtn = document.getElementById('playBtn') as HTMLButtonElement;
+playBtn.addEventListener('click', async () => {
+  playBtn.disabled = true;
+  await construct(scene);
+  playBtn.disabled = false;
+});
+if (params.has('auto') || params.has('embed')) setTimeout(() => playBtn.click(), 300);
+```
+
+</details>
+
+**Learn More:** [**Cell3D**](/api/classes/Cell3D) · [**CellTour**](/api/classes/CellTour) · [**Organelle3D**](/api/classes/Organelle3D) · [**ExplainerTour**](/api/classes/ExplainerTour)
+
+---
+
+## 3D Cell Tour (Narrated)
+
+The narrated showcase of the 3D cell kit: a full tour of a cutaway animal cell with a recorded voice track, captions, callouts, insets and the process animations (mRNA export, protein translation, the secretory route, ATP release, cargo on a microtubule). CellTour runs the stops; each stop starts its narration clip with narrate() and lasts at least as long as the clip.
+
+:::note[Runs locally]
+
+This example plays narration files from `examples/audio/`, so it has no live embed on this page. Source: [`examples/cell_tour_3d.ts`](https://github.com/maloyan/manim-web/blob/main/examples/cell_tour_3d.ts).
+
+Run it with sound: `npm run dev`, then open `/examples/cell_tour_3d.html`. Render it to a file:
+
+```bash
+npm run render -- cell_tour_3d --width 1080 --height 1080 --fps 30 --bitrate 6000000 --out cell_tour_3d.mp4
+```
+
+:::
+
+**Learn More:** [**Cell3D**](/api/classes/Cell3D) · [**CellTour**](/api/classes/CellTour) · [**ExplainerTour**](/api/classes/ExplainerTour) · [**CameraFocus**](/api/classes/CameraFocus) · [**CaptionCard**](/api/classes/CaptionCard)

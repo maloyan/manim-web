@@ -7,6 +7,11 @@ const sidebars: SidebarsConfig = {
     'py2ts-converter',
     {
       type: 'category',
+      label: 'Guides',
+      items: ['3d-explainer-videos', 'biology-3d-cell'],
+    },
+    {
+      type: 'category',
       label: 'Examples',
       items: [
         'examples/animations',

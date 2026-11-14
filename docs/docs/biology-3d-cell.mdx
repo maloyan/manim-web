@@ -1,0 +1,414 @@
+---
+title: 'Biology: 3D cell'
+sidebar_label: 'Biology: 3D cell'
+description: A cutaway 3D animal cell with twelve organelle classes, captions, process animations and a tour, in manim style.
+---
+
+import Cell3dExample from '@site/src/components/examples/Cell3dExample';
+import Organelles3dExample from '@site/src/components/examples/Organelles3dExample';
+
+# Biology: 3D cell
+
+The 3D cell kit builds a cutaway animal cell in the manim look. Each organelle
+is a group of named parts with named anchor points, a default caption and a
+staged build-up. Each organelle is also a `TourTarget`, so a tour stop
+needs only `{ target: organelle }`. `CellTour` is the tour runner for a cell:
+an [`ExplainerTour`](./3d-explainer-videos#6-the-tour-runner) that also clears
+the free ribosomes in front of each focused organelle.
+
+The kit sits on the general [3D explainer stack](./3d-explainer-videos). Read
+that guide for the camera, the annotations, narration and the mp4 render.
+
+<Cell3dExample />
+
+Examples:
+[`examples/cell_3d.ts`](https://github.com/maloyan/manim-web/blob/main/examples/cell_3d.ts) (build-up and a three-stop tour),
+[`examples/organelles_3d.ts`](https://github.com/maloyan/manim-web/blob/main/examples/organelles_3d.ts) (every organelle class alone),
+[`examples/cell_tour_3d.ts`](https://github.com/maloyan/manim-web/blob/main/examples/cell_tour_3d.ts) (the full narrated tour; the stop captions, callouts and framing are in
+[`examples/cell_tour_3d.data.ts`](https://github.com/maloyan/manim-web/blob/main/examples/cell_tour_3d.data.ts), the clips in `examples/audio/cell_tour/`).
+The explainer guide shows how to [regenerate the clips and render the tour](./3d-explainer-videos#8-render-to-mp4-from-the-command-line).
+
+## Build the cell and tour three organelles
+
+```ts
+import { ThreeDScene, Cell3D, CellTour } from 'manim-web';
+
+const scene = new ThreeDScene(document.getElementById('container')!, {
+  width: 1080,
+  height: 1080,
+  frameWidth: 14,
+  frameHeight: 14,
+  backgroundColor: '#11131A',
+  phi: 0.92,
+  theta: -1.2,
+  distance: 18.5,
+  fov: 30,
+});
+scene.lighting.addAmbient({ intensity: 0.55 });
+
+const cell = new Cell3D({ radius: 4, preset: 'animal', detail: 'medium', seed: 3 });
+scene.add(cell);
+await scene.play(cell.buildAnimation({ duration: 12 }));
+
+const tour = new CellTour(scene, cell);
+await tour.run([
+  {
+    target: cell.getOrganelle('nucleus'),
+    callouts: [{ label: 'nuclear pore', anchor: 'pore', direction: [1, 0.7] }],
+  },
+  {
+    target: cell.getOrganelle('golgi apparatus'),
+    callouts: [{ label: 'entry side', anchor: 'entrySide', direction: [-1, 0.7] }],
+  },
+  {
+    target: cell.getOrganelle('mitochondrion'),
+    callouts: [{ label: 'cristae', anchor: 'cristae', direction: [1, 0.8] }],
+  },
+]);
+await tour.finish();
+```
+
+Each stop takes its caption from the organelle (`getCaption()`), its camera
+framing from the organelle (`getFocusFraming()`), and resolves the callout
+anchor by name (`getAnchor('pore')`).
+
+## Clear the ribosome crowd
+
+The free ribosomes fill the cytoplasm. In a close view they sit in front of
+the organelle as a curtain of dots. `CellTour` hides the ones inside a sphere
+around each stop target during the camera move, and shows them again for a
+whole-cell or point target and in `finish()`. The rest of the tour options:
+
+- `clear: { margin, radius, softness }` tunes the cleared sphere.
+- `crowdOpacity` (default `0.15`): the opacity of the rest of the crowd while a focus dim is on.
+- `hideOccluders` (default `true`): neighbours between the final camera and the stop target fade out fully.
+- The default focus dim of a `CellTour` is stronger than the one of `ExplainerTour`, and it mutes the rims of the neighbours.
+
+Without a tour, play the same seekable animation yourself:
+
+```ts
+// Hide the ribosomes around the Golgi apparatus, next to a camera move.
+const golgi = cell.getOrganelle('golgi apparatus')!;
+await scene.play(
+  cell.clearAround(golgi, { duration: 1.5, margin: 1.2 }),
+  new CameraFocus(scene, golgi),
+);
+
+// Show every ribosome again.
+await scene.play(cell.clearAround(null, { duration: 0.8 }));
+```
+
+- `margin` scales the target's half-diagonal (default `1.1`); `radius` sets the sphere radius directly.
+- `softness` is the width of the soft edge, as a fraction of the radius (default `0.25`).
+- `FreeRibosomes3D` (the crowd, kind `ribosome`) has the low-level API:
+  `clearAround(center, radius, options)`, `count`, `getVisibility()` and
+  `setVisibility(values)` (one value per ribosome, `0` hidden to `1` shown).
+
+## `Cell3D` options
+
+| Option         | Default           | Meaning                                                                |
+| -------------- | ----------------- | ---------------------------------------------------------------------- |
+| `radius`       | `4`               | Cell radius along Y, before `aspect`.                                  |
+| `aspect`       | `[1.15, 1, 0.62]` | Per-axis shape scale.                                                  |
+| `cutaway`      | `'bowl'`          | `'bowl'`, `'wedge'` or `'none'`.                                       |
+| `preset`       | `'animal'`        | The organelle list when `organelles` is not given.                     |
+| `organelles`   | the preset        | A list of `{ name, id?, position?, size?, count?, color?, options? }`. |
+| `cytoskeleton` | `false`           | Add microtubules, actin and intermediate filaments.                    |
+| `seed`         | `1`               | Seed for the layout and every organelle.                               |
+| `detail`       | `'medium'`        | `'low'`, `'medium'` or `'high'`: segment and instance counts.          |
+| `colors`       |                   | Per-name color overrides (organelle names or part names).              |
+| `style`        | `'manim'`         | `'manim'`, `'cartoon'`, toon options, or `false` for plain shading.    |
+| `center`       | `[0, 0, 0]`       | Centre of the cell.                                                    |
+
+The `animal` preset holds one nucleus, rough ER, smooth ER, Golgi apparatus
+and centrosome, 7 mitochondria, 3 lysosomes, 3 peroxisomes, 4 transport
+vesicles and a crowd of free ribosomes. The layout places them without
+overlap inside the membrane. The first mitochondrion is cut open and sits at
+the front. An organelle that finds no free spot is left out, so check
+`cell.organelleIds` for the ids that exist.
+
+Find organelles by id:
+
+- `cell.getOrganelle('mitochondrion')`, then `'mitochondrion 2'`, `'mitochondrion 3'` and so on.
+- `cell.getOrganellesOfKind('mitochondria')` returns all of one kind (aliases work: `golgi`, `er`, `mitochondria`).
+- `cell.organelleIds` lists every id. `cell.membrane` is the membrane.
+- `cell.getAnchor('golgi apparatus.entrySide')` returns an anchor of one organelle in world space.
+
+## Organelle classes
+
+Every class takes the shared options `center`, `color`, `colors`, `seed`,
+`detail`, `style` and `info`, plus its own size options. Parts are reachable
+with `organelle.getPart(name)`. Anchors are world points from
+`organelle.getAnchor(name)`, for callouts and insets.
+
+| Class              | Kind key                            | Parts                                                                                                            | Anchors                                                                               |
+| ------------------ | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `CellMembrane3D`   | `cell membrane`                     | `membrane`, `innerLeaflet` (not when closed)                                                                     | `rim`, `surface`, `inside`, `top`, `center`                                           |
+| `Nucleus3D`        | `nucleus`                           | `outerMembrane`, `innerMembrane` (not when closed), `pores`, `chromatin`, `nucleolus`                            | `pore`, `envelope`, `opening`, `chromatin`, `nucleolus`, `center`                     |
+| `NuclearPore3D`    | `nuclear pore`                      | `outerMembrane`, `innerMembrane`, `poreWall`, `cytoplasmicRing`, `nuclearRing`, `channel`, `filaments`, `basket` | `channel`, `cytoplasmicSide`, `nuclearSide`, `ring`, `basket`, `filament`, `envelope` |
+| `RoughER3D`        | `rough er`                          | `sheet0` ... `sheetN` (inner to outer), `ribosomes`                                                              | `sheet`, `lumen`, `ribosome`, `nucleusSide`, `outerSheet`                             |
+| `SmoothER3D`       | `smooth er`                         | `network`, `droplets` (when `droplets > 0`)                                                                      | `tube`, `droplet`, `center`, `edge`                                                   |
+| `GolgiApparatus3D` | `golgi apparatus`                   | `cisterna0` ... `cisternaN` (entry to exit), `vesicles`                                                          | `entrySide`, `exitSide`, `cisterna`, `vesicle`, `center`                              |
+| `Mitochondrion3D`  | `mitochondrion`                     | whole: `outerMembrane`; `cutaway: true`: `matrix`, `outerMembrane`, `innerMembrane`, and `lid` with `lid: true`  | `outerMembrane`, `end`, `center`; cutaway adds `cristae`, `innerMembrane`, `matrix`   |
+| `Ribosome3D`       | `ribosome`                          | `largeSubunit`, `smallSubunit`, `mRNA` (optional), `peptide` (optional)                                          | `largeSubunit`, `smallSubunit`, `decodingSite`, `exitTunnel`, `mRNA`, `peptide`       |
+| `Vesicle3D`        | `vesicle`, `lysosome`, `peroxisome` | `membrane`, `contents` (when shown)                                                                              | `membrane`, `lumen`, `center`                                                         |
+| `Centrosome3D`     | `centrosome`                        | `motherCentriole`, `daughterCentriole`, `pcm` (a haze of small particles, optional)                              | `mother`, `daughter`, `triplet`, `center`                                             |
+| `Cytoskeleton3D`   | `cytoskeleton`                      | `microtubules`, `actin`, `intermediateFilaments` (each optional)                                                 | `centrosome`, `microtubule`, `actin`, `intermediateFilament`                          |
+| `FreeRibosomes3D`  | `ribosome`                          | `ribosomes`                                                                                                      | `ribosome`, `center`                                                                  |
+
+`Vesicle3D.lysosome(options)` and `Vesicle3D.peroxisome(options)` make the two
+vesicle presets. `organelle.partNames` and `organelle.anchorNames` list the
+names at run time.
+
+<Organelles3dExample />
+
+## Captions
+
+`ORGANELLE_INFO` holds the default caption of each kind key: a title, one
+short sentence and an optional footnote. `organelle.getCaption()` adds the
+organelle color as the swatch. Override the text per organelle, or per tour stop.
+
+```ts
+import { ORGANELLE_INFO, Nucleus3D } from 'manim-web';
+
+console.log(ORGANELLE_INFO['golgi apparatus'].body);
+
+// Per organelle: merged over ORGANELLE_INFO.
+const nucleus = new Nucleus3D({ radius: 1.2, info: { footnote: 'About 6 micrometres across.' } });
+
+// Per tour stop: a stop caption wins over the organelle caption.
+await tour.playStop({
+  target: cell.getOrganelle('nucleus'),
+  caption: { title: 'Nucleus', body: 'The DNA lives here.', swatch: nucleus.getMainColor() },
+});
+```
+
+## Build-up
+
+`organelle.buildAnimation({ duration, lagRatio })` returns one staged
+animation: the parts appear in a meaningful order, outline first, then body.
+Long parts grow along their length. `cell.buildAnimation()` builds the
+membrane, then one organelle (or one crowd of a kind) at a time.
+
+```ts
+import { LaggedStart } from 'manim-web';
+
+await scene.play(cell.buildAnimation({ duration: 12 }));
+await scene.play(
+  new LaggedStart(
+    cell.getOrganellesOfKind('lysosome').map((o) => o.buildAnimation({ duration: 1.5 })),
+    { lagRatio: 0.3 },
+  ),
+);
+```
+
+## Process animations
+
+The kit has seven process animations. Each one is a pure function of the
+animation progress, so the `Player` and the video export can seek it. The
+moving things (an mRNA strand, vesicles, ATP, cargo, molecules) are built once
+when you create the process. Pass `scene` to add
+them, and create the process after the organelles are in place: the paths
+are read in world space at creation.
+
+```ts
+import {
+  exportMRNA,
+  releaseATP,
+  vesicleTransport,
+  moveCargoAlongMicrotubule,
+  translateRibosome,
+  digestCargo,
+  peroxisomeReaction,
+  Nucleus3D,
+  Vesicle3D,
+  Mitochondrion3D,
+  Cytoskeleton3D,
+  Ribosome3D,
+} from 'manim-web';
+
+// mRNA leaves the nucleus through a pore.
+await scene.play(exportMRNA(cell.getOrganelle('nucleus') as Nucleus3D, { scene, duration: 4 }));
+
+// ATP leaves a mitochondrion in a lagged stream.
+await scene.play(
+  releaseATP(cell.getOrganelle('mitochondrion') as Mitochondrion3D, { scene, duration: 3 }),
+);
+
+// The secretory route: ER -> Golgi entry, Golgi exit -> membrane.
+await scene.play(
+  vesicleTransport({
+    scene,
+    from: cell.getAnchor('rough er.sheet')!,
+    golgiEntry: cell.getAnchor('golgi apparatus.entrySide')!,
+    golgiExit: cell.getAnchor('golgi apparatus.exitSide')!,
+    membrane: cell.getAnchor('cell membrane.surface')!,
+    duration: 6,
+  }),
+);
+
+// A motor protein walks cargo along a microtubule (needs cytoskeleton: true).
+const cytoskeleton = cell.getOrganelle('cytoskeleton') as Cytoskeleton3D;
+await scene.play(moveCargoAlongMicrotubule(cytoskeleton, { scene, duration: 4 }));
+
+// A stand-alone ribosome reads its mRNA and grows the protein chain.
+const ribosome = new Ribosome3D({ size: 1.2, center: [0, 0, 0] });
+scene.add(ribosome);
+await scene.play(translateRibosome(ribosome, { duration: 5 }));
+
+// A lysosome meets a worn-out fragment, takes it in and digests it.
+await scene.play(digestCargo(cell.getOrganelle('lysosome') as Vesicle3D, { scene, duration: 5 }));
+
+// Catalase in a peroxisome: 2 H2O2 -> 2 H2O + O2. Its anchors place callouts.
+const reaction = peroxisomeReaction(cell.getOrganelle('peroxisome') as Vesicle3D, {
+  scene,
+  count: 4,
+});
+await scene.play(reaction);
+console.log(reaction.anchors.water, reaction.anchors.oxygen);
+```
+
+- `ProcessAnimation.anchors` holds named world points on the paths, for callouts:
+  `in`, `water` and `oxygen` for `peroxisomeReaction`, `fragment` for `digestCargo`.
+- `exportMRNA` takes `beadRadius` for the strand beads.
+- `digestCargo` moves the lysosome itself. Create it after the lysosome is in place.
+
+A cutaway mitochondrion can start closed and open on cue:
+
+```ts
+import { Mitochondrion3D } from 'manim-web';
+
+const mito = new Mitochondrion3D({ length: 2.1, radius: 0.42, cutaway: true, lid: true });
+scene.add(mito);
+await scene.play(mito.buildAnimation()); // looks like a whole mitochondrion
+await scene.play(mito.openAnimation({ duration: 1.6 })); // the lid sweeps away, the cristae show
+```
+
+## Restyle
+
+```ts
+import { Cell3D } from 'manim-web';
+
+// Colors by organelle name or by part name.
+const pastel = new Cell3D({
+  colors: { nucleus: '#7E57C2', mitochondrion: '#EF5350', cristae: '#FFCDD2' },
+});
+
+// The cartoon look: flat colors, dark ink outline. Use it on a light background.
+const cartoon = new Cell3D({ style: 'cartoon' });
+
+// Tuned toon options, or false for plain shading.
+const soft = new Cell3D({ style: { preset: 'manim', steps: 4, outline: { width: 2 } } });
+const plain = new Cell3D({ style: false, detail: 'low' });
+
+// A custom organelle list instead of the preset.
+const small = new Cell3D({
+  organelles: [{ name: 'nucleus' }, { name: 'mitochondrion', count: 3 }, { name: 'golgi' }],
+});
+```
+
+`detail: 'low'` builds fewer segments and instances. Use it for many cells in
+one scene or for a slow machine.
+
+## Write your own organelle
+
+Extend `Organelle3D` to model something new: a chloroplast or a cell wall for
+a plant cell, a capsule body with flagella for a bacterium, a capsid with
+spikes for a virus. The pattern:
+
+1. Call `super(kindKey, options)`. Pass the caption in `info`.
+2. Build each part in the organelle frame (centre at the origin) and register it with `_addPart(name, part)`.
+3. Register named points with `_setAnchor(name, point, part)`. An anchor follows its part.
+4. Call `_finish()`. It applies the look and moves the organelle to `center`.
+5. Return the build-up order from `_buildSteps()`: `'create'` (outline, then body), `'fade'` or `'grow'` (along a path).
+
+```ts
+import {
+  Organelle3D,
+  Capsule3D,
+  Cylinder,
+  Group,
+  GREEN_D,
+  GREEN_B,
+  type BuildStep,
+  type Organelle3DOptions,
+} from 'manim-web';
+
+export class Chloroplast3D extends Organelle3D {
+  constructor(options: Organelle3DOptions = {}) {
+    super('chloroplast', {
+      color: GREEN_D,
+      ...options,
+      info: { title: 'Chloroplast', body: 'Turns light into sugar.', ...options.info },
+    });
+    const envelope = this._addPart(
+      'envelope',
+      new Capsule3D({
+        radius: 0.55,
+        length: 1.6,
+        direction: [1, 0, 0],
+        color: this.getMainColor(),
+        opacity: 0.35, // a translucent envelope over opaque inner parts
+      }),
+    );
+    const grana = this._addPart(
+      'grana',
+      new Group(
+        ...[-0.5, 0, 0.5].map(
+          (x) =>
+            new Cylinder({
+              radius: 0.2,
+              height: 0.35,
+              center: [x, 0, 0.3],
+              color: this._partColor('granum', GREEN_B),
+            }),
+        ),
+      ),
+    );
+    this._setAnchor('envelope', [0, 0, 0.55], envelope);
+    this._setAnchor('granum', [0.5, 0, 0.5], grana);
+    this._finish();
+  }
+
+  protected _buildSteps(): BuildStep[] {
+    return [
+      { part: this.getPart('envelope')!, mode: 'create' },
+      { part: this.getPart('grana')!, mode: 'fade', weight: 0.6 },
+    ];
+  }
+}
+
+const chloroplast = new Chloroplast3D({ center: [2, 0, 0] });
+scene.add(chloroplast);
+await scene.play(chloroplast.buildAnimation());
+await tour.playStop({ target: chloroplast, callouts: [{ label: 'granum', anchor: 'granum' }] });
+```
+
+`Cell3D` places only its own kinds and leaves an unknown name out. Place your
+own organelle with `center`, and add it next to the cell or to the scene. Use
+`cell.containsSphere(center, radius)` and `cell.getLayout()` to find free space.
+
+### Copying
+
+`copy()` returns an organelle of your class. It does not run your constructor
+again. The children are deep copies, and every field that points to a part of
+the organelle points to the matching part of the copy. Your own fields are
+copied by these rules:
+
+- A mobject inside the organelle becomes its copy. A mobject outside it is shared.
+- Arrays, `Map`, `Set` and plain objects are copied value by value. Typed arrays are copied.
+- Any other object with a `clone()` method (three.js `Vector2`, `Vector3`, `Color`, `Matrix4`, `Quaternion`, `Euler`) is cloned. A three.js `Object3D` is the exception: it is shared.
+- An instance of your own class is shared.
+
+To copy such an instance, override `protected _copyState(source: this): void`.
+It runs on the new copy after the fields are copied, for example
+`this.log = source.log.clone();`.
+
+Invalid options throw an error that names the class and the option, for example
+a membrane thickness larger than the radius.
+
+## Known limits
+
+- The `Cell3D` layout is tuned for the `'bowl'` cutaway. With `'wedge'` some contents float in the open wedge.
+- Keep inner organelles opaque inside a translucent membrane or envelope. A translucent mesh inside another translucent mesh can vanish.
+- The general limits of the 3D stack apply too: see [3D explainer videos](./3d-explainer-videos#known-limits).
