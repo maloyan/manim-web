@@ -365,7 +365,7 @@ export class HSV extends ManimColor {
 }
 
 /** A `mulberry32` PRNG: a seed produces a deterministic stream of 0.0..1.0 floats. */
-function mulberry32(seed: number): () => number {
+export function mulberry32(seed: number): () => number {
   let state = seed >>> 0;
   return () => {
     state = (state + 0x6d2b79f5) | 0;

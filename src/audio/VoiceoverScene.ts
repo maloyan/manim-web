@@ -17,8 +17,11 @@
  */
 
 import { Scene, type SceneOptions } from '../core/Scene';
+import type { AudioTrack } from '../core/AudioManager';
 import {
   Voiceover,
+  narrate,
+  type NarrateOptions,
   type VoiceoverCallback,
   type VoiceoverOptions,
   type VoiceoverAudioOptions,
@@ -67,5 +70,13 @@ export class VoiceoverScene extends Scene {
     callback?: VoiceoverCallback,
   ): Promise<VoiceoverTracker> {
     return this.narrator.voiceoverAudio({ ...options, audioManager: this.audioManager }, callback);
+  }
+
+  /**
+   * Play a pre-recorded narration clip at the current timeline time ("now")
+   * and, by default, wait for its length. See {@link narrate}.
+   */
+  async narrate(url: string, options?: NarrateOptions): Promise<AudioTrack> {
+    return narrate(this, url, options);
   }
 }

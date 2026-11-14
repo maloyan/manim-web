@@ -51,3 +51,6 @@ export {
   type ComplexBlobLabelPosition,
   type ComplexBlobOptions,
 } from './biologyTypes';
+
+// 3D cell kit: organelles, an assembled cutaway cell, process animations.
+export * from './cell3d';

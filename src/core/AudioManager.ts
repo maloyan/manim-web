@@ -109,6 +109,15 @@ export class AudioManager {
   private _activeSources: Map<number, AudioBufferSourceNode> = new Map();
   private _activeGains: Map<number, GainNode> = new Map();
 
+  // -- Timeline clock (see timelineNow) ---------------------------------------
+  // `performance.now()` at clock time 0, or null when no clock runs.
+  private _clockOrigin: number | null = null;
+  // Clock time (seconds) while the clock is paused, else null.
+  private _clockPausedAt: number | null = null;
+  // Seconds of scene time so far, reported by the owning Scene (or null).
+  private _sceneElapsed: (() => number) | null = null;
+  private _pendingLoads: number = 0;
+
   // --------------------------------------------------------------------------
   // Lifecycle
   // --------------------------------------------------------------------------
@@ -151,14 +160,102 @@ export class AudioManager {
     if (cached) return cached;
 
     const ctx = this._ensureContext();
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`AudioManager: Failed to fetch ${url} (${response.status})`);
+    this._pendingLoads++;
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`AudioManager: Failed to fetch ${url} (${response.status})`);
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+      this._bufferCache.set(url, audioBuffer);
+      return audioBuffer;
+    } finally {
+      this._pendingLoads--;
     }
-    const arrayBuffer = await response.arrayBuffer();
-    const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-    this._bufferCache.set(url, audioBuffer);
-    return audioBuffer;
+  }
+
+  /**
+   * Number of audio files being fetched or decoded right now. A frame-by-frame
+   * renderer waits for 0 before it moves the clock, so a clip lands at the
+   * timeline time its author intended.
+   */
+  get pendingLoads(): number {
+    return this._pendingLoads;
+  }
+
+  // --------------------------------------------------------------------------
+  // Timeline clock
+  // --------------------------------------------------------------------------
+
+  /**
+   * Start the timeline clock at `origin` (a `performance.now()` value).
+   * After this call, {@link timelineNow} measures from `origin`, and the
+   * transport follows the clock (see {@link timelineNow}). A video renderer
+   * calls this at frame 0.
+   *
+   * @post this.hasTimelineClock
+   * @post this.timelineNow() >= 0
+   */
+  startTimelineClock(origin: number = performance.now()): void {
+    this._stopAllSources();
+    this._isPlaying = false;
+    this._clockOrigin = origin;
+    this._clockPausedAt = null;
+  }
+
+  /**
+   * Tell the manager how much scene time has passed (seconds since the scene's
+   * first `play()` / `wait()`). Only {@link timelineNow} reads it, when it
+   * starts the clock, so plain transport use is not affected.
+   */
+  setSceneElapsed(source: () => number): void {
+    this._sceneElapsed = source;
+  }
+
+  /** Whether a timeline clock exists (see {@link startTimelineClock}). */
+  get hasTimelineClock(): boolean {
+    return this._clockOrigin !== null;
+  }
+
+  /**
+   * The current timeline time in seconds, to place a clip at "now".
+   *
+   * When no clock runs yet, the first call starts one at the later of the
+   * transport position (`getCurrentTime()`) and the scene time (see
+   * {@link setSceneElapsed}): `seek(5)` then a narration places the clip at 5,
+   * and a narration 3 s into a live scene lands at 3. From then on the
+   * transport follows the clock:
+   * - a clip added while the clock runs plays at once;
+   * - `pause()` stops the clock and `play()` resumes it from the same time;
+   * - `seek(t)` moves the clock to `t` and reschedules every clip from `t`
+   *   (`Scene.play()` skips its restart `seek(0)` while a clock exists);
+   * - `stop()` removes the clock and restores plain transport behaviour.
+   *
+   * A scene reports the time since its first `play()` / `wait()` through
+   * {@link setSceneElapsed}, so a narration placed later lands at that time
+   * without a manual {@link startTimelineClock}.
+   *
+   * @post result >= 0
+   * @post old.hasTimelineClock === false => result >= old.getCurrentTime()
+   */
+  timelineNow(): number {
+    if (this._clockOrigin === null) {
+      this._setClock(Math.max(this.getCurrentTime(), this._sceneElapsed?.() ?? 0));
+    }
+    return this._clockTime();
+  }
+
+  /** The clock time in seconds. @pre this._clockOrigin !== null */
+  private _clockTime(): number {
+    if (this._clockPausedAt !== null) return this._clockPausedAt;
+    return Math.max(0, (performance.now() - (this._clockOrigin ?? 0)) / 1000);
+  }
+
+  /** Run the clock from `time` seconds on. */
+  private _setClock(time: number): void {
+    this._clockOrigin = performance.now() - Math.max(0, time) * 1000;
+    this._clockPausedAt = null;
   }
 
   // --------------------------------------------------------------------------
@@ -191,6 +288,17 @@ export class AudioManager {
     };
 
     this._tracks.push(track);
+    // With a running timeline clock, playback follows the clock: start it, or
+    // schedule the new clip on the running transport. A paused clock waits for
+    // play().
+    if (this._clockOrigin !== null && this._clockPausedAt === null) {
+      if (!this._isPlaying) {
+        this.play();
+      } else {
+        const ctx = this._ensureContext();
+        this._scheduleTrack(ctx, track, ctx.currentTime, this.timelineNow());
+      }
+    }
     return track;
   }
 
@@ -227,6 +335,11 @@ export class AudioManager {
 
     const ctx = this._ensureContext();
     this._isPlaying = true;
+    if (this._clockOrigin !== null) {
+      // Resume a paused clock from where it stopped.
+      if (this._clockPausedAt !== null) this._setClock(this._clockPausedAt);
+      this._pauseOffset = this._clockTime();
+    }
     this._startedAt = ctx.currentTime - this._pauseOffset;
 
     // Schedule all tracks that should be audible from current offset
@@ -237,11 +350,16 @@ export class AudioManager {
    * Pause audio playback, remembering the current position.
    */
   pause(): void {
+    // A running clock stops with the transport (and also when no clip plays).
+    if (this._clockOrigin !== null && this._clockPausedAt === null) {
+      this._clockPausedAt = this._clockTime();
+      if (!this._isPlaying) this._pauseOffset = this._clockPausedAt;
+    }
     if (!this._isPlaying) return;
 
     this._isPlaying = false;
     const ctx = this._ensureContext();
-    this._pauseOffset = ctx.currentTime - this._startedAt;
+    this._pauseOffset = this._clockPausedAt ?? ctx.currentTime - this._startedAt;
 
     // Stop all active sources
     this._stopAllSources();
@@ -252,6 +370,12 @@ export class AudioManager {
    * If currently playing, audio restarts from the new position.
    */
   seek(time: number): void {
+    // A timeline clock moves with the transport: running stays running, paused
+    // stays paused, and timelineNow() reads `time` right after this call.
+    if (this._clockOrigin !== null) {
+      if (this._clockPausedAt === null) this._setClock(time);
+      else this._clockPausedAt = Math.max(0, time);
+    }
     const wasPlaying = this._isPlaying;
 
     // Stop everything first
@@ -271,12 +395,16 @@ export class AudioManager {
     this._stopAllSources();
     this._isPlaying = false;
     this._pauseOffset = 0;
+    this._clockOrigin = null;
+    this._clockPausedAt = null;
   }
 
   /**
-   * Get the current playback position on the timeline (seconds).
+   * Get the current playback position on the timeline (seconds). With a
+   * timeline clock this is the clock time.
    */
   getCurrentTime(): number {
+    if (this._clockOrigin !== null) return this._clockTime();
     if (!this._isPlaying || !this._ctx) return this._pauseOffset;
     return this._ctx.currentTime - this._startedAt;
   }
@@ -334,7 +462,8 @@ export class AudioManager {
   }
 
   /**
-   * Remove all tracks and stop playback.
+   * Remove all tracks and stop playback. A running timeline clock keeps its
+   * origin, so a scene can reset its clips without moving frame 0.
    */
   clearTracks(): void {
     this._stopAllSources();
@@ -549,82 +678,99 @@ export class AudioManager {
    */
   private _scheduleAllTracks(): void {
     const ctx = this._ensureContext();
+    // One context-time / timeline-position pair for every track (as on main):
+    // currentTime may move while the loop runs.
     const now = ctx.currentTime;
     const timelinePos = this._pauseOffset;
-
     for (const track of this._tracks) {
-      if (!track.buffer) continue;
-
-      const trackEnd = track.startTime + track.duration;
-
-      // Skip tracks that have already finished
-      if (timelinePos >= trackEnd && !track.loop) continue;
-
-      const source = ctx.createBufferSource();
-      source.buffer = track.buffer;
-      source.loop = track.loop;
-
-      // Per-track gain
-      const gain = ctx.createGain();
-      gain.gain.value = track.gain;
-
-      // Fade-in envelope
-      if (track.fadeIn > 0) {
-        const fadeStartTimeline = track.startTime;
-        const fadeEndTimeline = track.startTime + track.fadeIn;
-
-        if (timelinePos < fadeEndTimeline) {
-          // We're within the fade-in region or before it
-          const contextFadeStart = now + Math.max(0, fadeStartTimeline - timelinePos);
-          const contextFadeEnd = now + (fadeEndTimeline - timelinePos);
-          gain.gain.setValueAtTime(0, contextFadeStart);
-          gain.gain.linearRampToValueAtTime(track.gain, contextFadeEnd);
-        }
-      }
-
-      // Fade-out envelope
-      if (track.fadeOut > 0) {
-        const fadeStartTimeline = track.startTime + track.duration - track.fadeOut;
-        const fadeEndTimeline = track.startTime + track.duration;
-
-        if (timelinePos < fadeEndTimeline) {
-          const contextFadeStart = now + Math.max(0, fadeStartTimeline - timelinePos);
-          const contextFadeEnd = now + (fadeEndTimeline - timelinePos);
-          gain.gain.setValueAtTime(track.gain, contextFadeStart);
-          gain.gain.linearRampToValueAtTime(0, contextFadeEnd);
-        }
-      }
-
-      source.connect(gain);
-      gain.connect(this._masterGain!);
-
-      // Calculate when & where to start in the buffer
-      const delayFromNow = Math.max(0, track.startTime - timelinePos);
-      const contextStart = now + delayFromNow;
-
-      let bufferOffset = track.offset;
-      if (timelinePos > track.startTime) {
-        // We're seeking into the middle of this track
-        bufferOffset += timelinePos - track.startTime;
-      }
-
-      const remaining = track.duration - (bufferOffset - track.offset);
-      if (remaining <= 0 && !track.loop) continue;
-
-      source.start(contextStart, bufferOffset, track.loop ? undefined : remaining);
-
-      // Track the active source so we can stop it later
-      source.onended = () => {
-        this._activeSources.delete(track.id);
-        this._activeGains.delete(track.id);
-        track.playing = false;
-      };
-      track.playing = true;
-      track.paused = false;
-
-      this._activeSources.set(track.id, source);
-      this._activeGains.set(track.id, gain);
+      this._scheduleTrack(ctx, track, now, timelinePos);
     }
+  }
+
+  /**
+   * Schedule one track on the live context.
+   * @param ctx - The live context (from one `_ensureContext()` call, as on main)
+   * @param track - The track to schedule
+   * @param now - The AudioContext time that matches `timelinePos`
+   * @param timelinePos - The timeline position (seconds) at `now`
+   */
+  private _scheduleTrack(
+    ctx: AudioContext,
+    track: AudioTrack,
+    now: number,
+    timelinePos: number,
+  ): void {
+    if (!track.buffer) return;
+
+    const trackEnd = track.startTime + track.duration;
+
+    // Skip tracks that have already finished
+    if (timelinePos >= trackEnd && !track.loop) return;
+
+    const source = ctx.createBufferSource();
+    source.buffer = track.buffer;
+    source.loop = track.loop;
+
+    // Per-track gain
+    const gain = ctx.createGain();
+    gain.gain.value = track.gain;
+
+    // Fade-in envelope
+    if (track.fadeIn > 0) {
+      const fadeStartTimeline = track.startTime;
+      const fadeEndTimeline = track.startTime + track.fadeIn;
+
+      if (timelinePos < fadeEndTimeline) {
+        // We're within the fade-in region or before it
+        const contextFadeStart = now + Math.max(0, fadeStartTimeline - timelinePos);
+        const contextFadeEnd = now + (fadeEndTimeline - timelinePos);
+        gain.gain.setValueAtTime(0, contextFadeStart);
+        gain.gain.linearRampToValueAtTime(track.gain, contextFadeEnd);
+      }
+    }
+
+    // Fade-out envelope
+    if (track.fadeOut > 0) {
+      const fadeStartTimeline = track.startTime + track.duration - track.fadeOut;
+      const fadeEndTimeline = track.startTime + track.duration;
+
+      if (timelinePos < fadeEndTimeline) {
+        const contextFadeStart = now + Math.max(0, fadeStartTimeline - timelinePos);
+        const contextFadeEnd = now + (fadeEndTimeline - timelinePos);
+        gain.gain.setValueAtTime(track.gain, contextFadeStart);
+        gain.gain.linearRampToValueAtTime(0, contextFadeEnd);
+      }
+    }
+
+    source.connect(gain);
+    gain.connect(this._masterGain!);
+
+    // Calculate when & where to start in the buffer
+    const delayFromNow = Math.max(0, track.startTime - timelinePos);
+    const contextStart = now + delayFromNow;
+
+    let bufferOffset = track.offset;
+    if (timelinePos > track.startTime) {
+      // We're seeking into the middle of this track
+      bufferOffset += timelinePos - track.startTime;
+    }
+
+    const remaining = track.duration - (bufferOffset - track.offset);
+    if (remaining <= 0 && !track.loop) return;
+
+    source.start(contextStart, bufferOffset, track.loop ? undefined : remaining);
+
+    // Track the active source so we can stop it later
+    source.onended = () => {
+      this._activeSources.delete(track.id);
+      this._activeGains.delete(track.id);
+      track.playing = false;
+    };
+    track.playing = true;
+    track.paused = false;
+
+    this._activeSources.set(track.id, source);
+    this._activeGains.set(track.id, gain);
   }
 
   /**

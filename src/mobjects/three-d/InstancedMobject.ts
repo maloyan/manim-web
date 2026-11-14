@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Mobject, Vector3Tuple } from '../../core/Mobject';
 import { Mobject3D } from './Mobject3D';
+import { detachOutlines } from '../../rendering/toon/toonOutline';
 
 /**
  * A single instance of the shared template geometry.
@@ -228,6 +229,9 @@ export class InstancedMobject extends Mobject3D {
     } else if (this._mesh && this._threeObject) {
       const group = this._threeObject;
       group.remove(this._mesh);
+      // The toon outline is a child of the old mesh: free it with the mesh.
+      // The next sync attaches a new one to the new mesh.
+      detachOutlines(this._mesh);
       this._mesh.dispose();
       this._mesh = this._buildMesh();
       group.add(this._mesh);

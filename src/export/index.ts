@@ -13,9 +13,21 @@ export {
 export {
   WebCodecsExporter,
   createWebCodecsExporter,
+  avcCodecString,
   type WebCodecsExportOptions,
   type WebCodecsVideoCodec,
+  type WebCodecsAudioCodec,
+  type WebCodecsCaptureSession,
+  type AudioMixdownSource,
 } from './WebCodecsExporter';
+export {
+  registerRender,
+  type RenderableScene,
+  type RenderRegistration,
+  type RenderStartOptions,
+  type RenderProbe,
+  type RenderHandle,
+} from './renderHarness';
 export { chooseVideoExporterStrategy, type VideoExporterStrategy } from './chooseExporter';
 export {
   sceneToSVG,

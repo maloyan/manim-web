@@ -165,6 +165,12 @@ export class Scene {
 
   // Audio manager (lazy – created on first access)
   private _audioManager: AudioManager | null = null;
+  // Scene time (seconds since the first play()/wait()), for the narration
+  // clock (AudioManager.setSceneElapsed). It follows pause, resume, seek and
+  // stop: `_sceneTimeBase` + time since `_sceneTimeRunSince` while running.
+  private _sceneTimeBase: number = 0;
+  private _sceneTimeRunSince: number | null = null;
+  private _segmentSceneTime: number = 0;
 
   // Optional multi-camera renderer. When set, `_render()` delegates to it
   // instead of the single-camera path. Default-camera object stays alive
@@ -470,7 +476,16 @@ export class Scene {
   get audioManager(): AudioManager {
     if (!this._audioManager) {
       this._audioManager = new AudioManager();
+      this._audioManager.setSceneElapsed(() => this._sceneTime());
     }
+    return this._audioManager;
+  }
+
+  /**
+   * The audio manager if one was created already, else null. Unlike
+   * {@link audioManager}, reading it never creates one.
+   */
+  get audioManagerIfCreated(): AudioManager | null {
     return this._audioManager;
   }
 
@@ -705,6 +720,8 @@ export class Scene {
     scheduleOnTimeline: (timeline: Timeline) => void,
   ): Promise<void> {
     const allAnimations = this._collectAllAnimations(topLevelAnimations);
+    this._runSceneTime();
+    this._segmentSceneTime = this._sceneTime();
 
     // Suppress any auto-render that `add()` (called by the user before play,
     // or by us below) might have scheduled. Otherwise the mobject would be
@@ -766,9 +783,10 @@ export class Scene {
       this._isPlaying = true;
       this._currentTime = 0;
 
-      // Start audio playback if audio has been loaded
+      // Start audio playback if audio has been loaded. A timeline clock
+      // (narration) spans many play() calls: do not restart its clips.
       if (this._audioManager) {
-        this._audioManager.seek(0);
+        if (!this._audioManager.hasTimelineClock) this._audioManager.seek(0);
         this._audioManager.play();
       }
 
@@ -885,6 +903,7 @@ export class Scene {
    */
   async wait(duration: number = 1): Promise<void> {
     if (this._disposed) return;
+    this._runSceneTime();
     // wait() will render the initial frame itself (either once or via its
     // own rAF loop); drop any pending add()-scheduled render so we don't
     // render twice on entry.
@@ -992,10 +1011,29 @@ export class Scene {
       this._currentTime = time;
       this._render();
     }
+    // Scene time for narration moves with or without an animation timeline.
+    this._setSceneTime(this._segmentSceneTime + time);
     if (this._audioManager) {
       this._audioManager.seek(time);
     }
     return this;
+  }
+
+  /** Scene time in seconds (see `_sceneTimeBase`). */
+  private _sceneTime(): number {
+    const running = this._sceneTimeRunSince;
+    return this._sceneTimeBase + (running === null ? 0 : (performance.now() - running) / 1000);
+  }
+
+  /** Let scene time run (the first play()/wait(), or resume()). */
+  private _runSceneTime(): void {
+    this._sceneTimeRunSince ??= performance.now();
+  }
+
+  /** Move scene time to `time`; a running scene time keeps running. */
+  private _setSceneTime(time: number): void {
+    this._sceneTimeBase = Math.max(0, time);
+    if (this._sceneTimeRunSince !== null) this._sceneTimeRunSince = performance.now();
   }
 
   /**
@@ -1003,6 +1041,8 @@ export class Scene {
    */
   pause(): this {
     this._isPlaying = false;
+    this._sceneTimeBase = this._sceneTime();
+    this._sceneTimeRunSince = null;
     if (this._timeline) {
       this._timeline.pause();
     }
@@ -1019,6 +1059,7 @@ export class Scene {
     if (this._timeline && !this._timeline.isFinished()) {
       this._isPlaying = true;
       this._timeline.play();
+      this._runSceneTime();
       this._startRenderLoop();
       if (this._audioManager) {
         this._audioManager.play();
@@ -1033,6 +1074,9 @@ export class Scene {
   stop(): this {
     this._isPlaying = false;
     this._currentTime = 0;
+    this._sceneTimeBase = 0;
+    this._sceneTimeRunSince = null;
+    this._segmentSceneTime = 0;
     if (this._timeline) {
       this._timeline.reset();
     }

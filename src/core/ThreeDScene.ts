@@ -4,6 +4,22 @@ import { Camera3D } from './Camera';
 import { Lighting } from './Lighting';
 import { OrbitControls, OrbitControlsOptions } from '../interaction/OrbitControls';
 import { Mobject, Vector3Tuple } from './Mobject';
+import { CameraFocus, type CameraFocusOptions } from '../animation/camera/CameraFocus';
+
+/**
+ * Full orbit-camera pose of a ThreeDScene: spherical angles and distance
+ * about the look-at point, plus the look-at point itself.
+ */
+export interface CameraState {
+  /** Polar angle from the Z axis (radians). */
+  phi: number;
+  /** Azimuthal angle around the Z axis (radians). */
+  theta: number;
+  /** Distance from the camera to the look-at point. */
+  distance: number;
+  /** The look-at point [x, y, z]. */
+  lookAt: Vector3Tuple;
+}
 
 /**
  * Create a configured 3D camera with initial orientation.
@@ -43,6 +59,35 @@ function createCamera3D(
 }
 
 const BILLBOARD_TMP = new THREE.Vector3();
+const PROJECT_TMP = new THREE.Vector3();
+
+/**
+ * Material -> the `transparent` value its depth settings were last applied
+ * for. A sync that runs outside the render loop (a `getCenter()` in an
+ * updater or a before-render hook) clears the dirty flag the loop uses to
+ * find changed mobjects; this record still shows which materials changed.
+ */
+const DEPTH_APPLIED = new WeakMap<THREE.Material, boolean>();
+
+/** The 3D depth rule for one material (see ThreeDScene._applyDepthSettings). */
+function applyMaterialDepth(m: THREE.Material): void {
+  m.depthTest = true;
+  // Depth-prepass materials (Surface3D self-occlusion, issue #416) manage
+  // their own depthWrite: they exist precisely to write depth while
+  // transparent.
+  if (!m.userData.depthPrepass) m.depthWrite = !m.transparent;
+  DEPTH_APPLIED.set(m, m.transparent);
+}
+
+/** Visit every material under a Three.js object. */
+function forEachMaterial(root: THREE.Object3D, fn: (m: THREE.Material) => void): void {
+  root.traverse((c) => {
+    const mat = (c as THREE.Object3D & { material?: THREE.Material | THREE.Material[] }).material;
+    if (!mat) return;
+    if (Array.isArray(mat)) mat.forEach(fn);
+    else fn(mat);
+  });
+}
 
 /**
  * Options for configuring a ThreeDScene.
@@ -107,6 +152,10 @@ export class ThreeDScene extends Scene {
   private _illusionThetaTracker: number = 0;
   private _illusionPhiTracker: number = 0;
   private _illusionActive: boolean = false;
+
+  // Callbacks run at the start of every frame, after the camera moved and
+  // before dirty mobjects sync (screen-space annotations re-project here).
+  private _beforeRenderHooks: Set<() => void> = new Set();
 
   /**
    * Create a new 3D scene.
@@ -259,18 +308,19 @@ export class ThreeDScene extends Scene {
    * Three.js sorts transparents by camera distance.
    */
   private static _applyDepthSettings(mob: Mobject, resetRenderOrder = false): void {
-    mob.getThreeObject().traverse((c) => {
-      if (resetRenderOrder) c.renderOrder = 0;
-      const matHolder: THREE.Object3D & { material?: THREE.Material | THREE.Material[] } = c;
-      const mat = matHolder.material;
-      if (!mat) return;
-      (Array.isArray(mat) ? mat : [mat]).forEach((m) => {
-        m.depthTest = true;
-        // Depth-prepass materials (Surface3D self-occlusion, issue #416)
-        // manage their own depthWrite — they exist precisely to write
-        // depth while transparent.
-        if (!m.userData.depthPrepass) m.depthWrite = !m.transparent;
-      });
+    const root = mob.getThreeObject();
+    if (resetRenderOrder) root.traverse((c) => (c.renderOrder = 0));
+    forEachMaterial(root, applyMaterialDepth);
+  }
+
+  /**
+   * Apply the depth rule to the materials of a clean mobject that are new or
+   * changed `transparent` since the rule last ran on them. Another caller
+   * synced the mobject (and cleared its dirty flag) before the render loop.
+   */
+  private static _refreshDepthSettings(mob: Mobject): void {
+    forEachMaterial(mob.getThreeObject(), (m) => {
+      if (DEPTH_APPLIED.get(m) !== m.transparent) applyMaterialDepth(m);
     });
   }
 
@@ -345,6 +395,93 @@ export class ThreeDScene extends Scene {
    */
   getCameraOrientation(): { phi: number; theta: number; distance: number } {
     return this._camera3D.getOrbitAngles();
+  }
+
+  /**
+   * Get the full camera pose: orbit angles, distance and look-at point.
+   * @returns The current {@link CameraState}
+   */
+  getCameraState(): CameraState {
+    const { phi, theta, distance } = this._camera3D.getOrbitAngles();
+    const t = this._camera3D.lookAtTarget;
+    return { phi, theta, distance, lookAt: [t.x, t.y, t.z] };
+  }
+
+  /**
+   * Set the full camera pose in one step. Keeps orbit controls in sync.
+   * Does not render: a play()/wait() loop or an explicit render() draws it.
+   * @post getCameraState().lookAt === state.lookAt
+   * @param state - Target pose
+   * @returns this for chaining
+   */
+  setCameraState(state: CameraState): this {
+    this._camera3D.setLookAt(state.lookAt);
+    this._camera3D.orbit(state.phi, state.theta, state.distance);
+    this._orbitControls?.setTarget(state.lookAt);
+    return this;
+  }
+
+  /**
+   * Project a world point into the fixed-in-frame (HUD) coordinates, where
+   * fixed-in-frame mobjects live. The result is [x, y, ndcZ]: x/y in frame
+   * units; ndcZ is in [-1, 1] for a point between the near and far planes.
+   * @param point - World-space point
+   * @returns Frame coordinates [x, y, ndcZ]
+   */
+  projectToFrame(point: Vector3Tuple): Vector3Tuple {
+    const cam = this._camera3D.getCamera();
+    cam.updateMatrixWorld();
+    PROJECT_TMP.set(point[0], point[1], point[2]).project(cam);
+    const { width, height } = this.fixedInFrameSize;
+    return [(PROJECT_TMP.x * width) / 2, (PROJECT_TMP.y * height) / 2, PROJECT_TMP.z];
+  }
+
+  /**
+   * Register a callback that runs at the start of every rendered frame
+   * (play, wait, seek, export and orbit-control frames), after the camera
+   * moved and before mobjects sync to three.js. Screen-space annotations use
+   * it to follow a projected 3D anchor.
+   * @param hook - Callback to run each frame
+   * @returns A function that unregisters the hook
+   */
+  addBeforeRenderHook(hook: () => void): () => void {
+    this._beforeRenderHooks.add(hook);
+    return () => {
+      this._beforeRenderHooks.delete(hook);
+    };
+  }
+
+  /**
+   * Mark mobjects as fixed in frame WITHOUT adding them to the scene. They
+   * land in the HUD the moment anything adds them, typically `play()` for
+   * the animation that introduces them (Write, FadeIn, Create). Unlike
+   * {@link addFixedInFrameMobjects}, the mobject stays off stage until then,
+   * so the Player timeline hides it before its introducing segment.
+   * @param mobjects - Mobjects to pin when they are added
+   * @returns this for chaining
+   */
+  markFixedInFrame(...mobjects: Mobject[]): this {
+    for (const mob of mobjects) {
+      if (this.mobjects.has(mob)) {
+        this.addFixedInFrameMobjects(mob);
+      } else {
+        this._pendingFixedMode.set(mob, 'frame');
+      }
+    }
+    return this;
+  }
+
+  /**
+   * Animate the camera so it frames a mobject or a point. Seekable: it runs
+   * as a {@link CameraFocus} animation on the scene timeline, so the Player
+   * scrubs it and video export renders it. For parallel use inside
+   * `play(...)`, create `new CameraFocus(scene, target, options)` instead.
+   * @param target - Mobject (framed by its bounds) or world point
+   * @param options - Framing and timing options
+   * @returns Promise that resolves when the camera arrives
+   */
+  focusOn(target: Mobject | Vector3Tuple, options: CameraFocusOptions = {}): Promise<void> {
+    return this.play(new CameraFocus(this, target, options));
   }
 
   /**
@@ -698,10 +835,19 @@ export class ThreeDScene extends Scene {
       this._lastRenderTime = now;
     }
 
+    // Screen-space annotations re-project their anchors for this camera.
+    if (this._beforeRenderHooks) {
+      for (const hook of this._beforeRenderHooks) hook();
+    }
+
     // Sync dirty mobjects (main + HUD): re-applying depth settings so
     // runtime opacity changes flip depthWrite correctly (issue #255).
     const syncDirty = (mob: Mobject): void => {
-      if (!mob._dirty) return;
+      if (!mob._dirty) {
+        // A hook or an updater may have synced it first (getCenter() syncs).
+        ThreeDScene._refreshDepthSettings(mob);
+        return;
+      }
       mob._syncToThree();
       ThreeDScene._applyDepthSettings(mob);
       mob._dirty = false;
@@ -755,6 +901,8 @@ export class ThreeDScene extends Scene {
     if (this._fixedMobjects && this._fixedMobjects.size > 0) {
       threeRenderer.autoClear = false;
       threeRenderer.clearDepth();
+      // Masks in the HUD (InsetPanel clip) need a stencil free of 3D-pass bits.
+      threeRenderer.clearStencil();
       threeRenderer.render(this._hudScene, this._hudCamera);
       threeRenderer.autoClear = true;
     }
@@ -901,6 +1049,7 @@ export class ThreeDScene extends Scene {
       cancelAnimationFrame(this._orbitRafId);
       this._orbitRafId = null;
     }
+    this._beforeRenderHooks.clear();
     this._lighting.dispose();
     if (this._orbitControls) {
       this._orbitControls.dispose();

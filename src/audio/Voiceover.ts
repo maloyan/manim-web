@@ -186,6 +186,10 @@ export interface VoiceoverAudioScheduler {
   addSound(url: string, options?: AddSoundOptions): Promise<AudioTrack>;
   /** Start playback of the scheduled timeline. */
   play(): void;
+  /** The current timeline time in seconds (see `AudioManager.timelineNow`). */
+  timelineNow?(): number;
+  /** Fetch and decode a clip without scheduling it. */
+  loadBuffer?(url: string): Promise<AudioBuffer>;
 }
 
 /** Options for a pre-recorded voiceover. */
@@ -196,7 +200,11 @@ export interface VoiceoverAudioOptions {
   audioManager: VoiceoverAudioScheduler;
   /** Map of bookmark name to time in seconds from the clip start. */
   bookmarks?: Record<string, number>;
-  /** When to start the clip on the scheduler timeline (seconds). Default 0. */
+  /**
+   * When to start the clip on the scheduler timeline (seconds). Defaults to
+   * "now" (`audioManager.timelineNow()`) when the scheduler has a timeline
+   * clock, else 0.
+   */
   time?: number;
   /** Narration length in seconds. Falls back to the scheduled track duration. */
   duration?: number;
@@ -271,7 +279,13 @@ export class Voiceover {
       controls.fail(message);
     }
 
-    if (callback) await callback(tracker);
+    try {
+      if (callback) await callback(tracker);
+    } catch (err) {
+      // The scene failed: stop speaking instead of narrating over the error.
+      this.cancel();
+      throw err;
+    }
     await tracker.finished;
     this._activeHandle = null;
     return tracker;
@@ -292,7 +306,12 @@ export class Voiceover {
     options: VoiceoverAudioOptions,
     callback?: VoiceoverCallback,
   ): Promise<VoiceoverTracker> {
-    const { url, audioManager, bookmarks = {}, time = 0, duration, gain } = options;
+    const { url, audioManager, bookmarks = {}, duration, gain } = options;
+    // Load first, so "now" is read after the fetch and the clip is not late.
+    if (options.time === undefined && audioManager.loadBuffer) {
+      await audioManager.loadBuffer(url);
+    }
+    const time = options.time ?? audioManager.timelineNow?.() ?? 0;
 
     // Bookmarks are reached by time on this path; charIndex only keeps order.
     const bookmarkList: Bookmark[] = Object.keys(bookmarks).map((mark, index) => ({
@@ -311,9 +330,13 @@ export class Voiceover {
     }
     timers.push(setTimeout(() => controls.notifyFinish(), Math.max(0, total) * 1000));
 
-    if (callback) await callback(tracker);
-    await tracker.finished;
-    for (const id of timers) clearTimeout(id);
+    try {
+      if (callback) await callback(tracker);
+      await tracker.finished;
+    } finally {
+      // Also when the callback throws: no bookmark timer fires after the segment.
+      for (const id of timers) clearTimeout(id);
+    }
     return tracker;
   }
 
@@ -324,4 +347,61 @@ export class Voiceover {
       this._activeHandle = null;
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// narrate (pre-recorded clip at "now")
+// ---------------------------------------------------------------------------
+
+/** The scene surface {@link narrate} needs. `Scene` satisfies it. */
+export interface NarrationHost {
+  /** The scene's audio timeline. */
+  readonly audioManager: Required<Pick<VoiceoverAudioScheduler, 'addSound' | 'timelineNow'>>;
+  /** Hold the scene for `duration` seconds. */
+  wait(duration: number): Promise<void>;
+}
+
+/** Options for {@link narrate}. */
+export interface NarrateOptions {
+  /** Playback gain in [0, 1]. Defaults to 1. */
+  gain?: number;
+  /**
+   * Wait for the clip to finish before the promise resolves. Defaults to true.
+   * Set false to run animations over the narration, then wait yourself.
+   */
+  wait?: boolean;
+  /** Extra seconds to hold after the clip ends (only when `wait`). Defaults to 0. */
+  tail?: number;
+}
+
+/**
+ * Place a pre-recorded narration clip at the current timeline time ("now")
+ * and, by default, hold the scene for the clip's length.
+ *
+ * The clip goes into the scene's AudioManager, so `AudioManager.mixdown` and a
+ * WebCodecs video export hold it at the same time offset as the frames that
+ * were on screen when it started.
+ *
+ * ```ts
+ * await scene.play(new Create(circle));
+ * await narrate(scene, '/narration/intro.mp3'); // starts now, waits its length
+ * ```
+ *
+ * @returns The scheduled track (its `startTime` is the "now" it was placed at)
+ * @post result.startTime >= 0
+ */
+export async function narrate(
+  host: NarrationHost,
+  url: string,
+  options: NarrateOptions = {},
+): Promise<AudioTrack> {
+  const audio = host.audioManager;
+  // Load first (addSound caches by URL), so "now" is read after the fetch.
+  const probe = audio as Partial<Pick<VoiceoverAudioScheduler, 'loadBuffer'>>;
+  if (probe.loadBuffer) await probe.loadBuffer(url);
+  const track = await audio.addSound(url, { time: audio.timelineNow(), gain: options.gain });
+  if (options.wait !== false) {
+    await host.wait(track.duration + (options.tail ?? 0));
+  }
+  return track;
 }

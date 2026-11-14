@@ -27,6 +27,7 @@ import * as THREE from 'three';
 import { Vector3Tuple } from '../../core/Mobject';
 import { Mobject3D } from './Mobject3D';
 import { applyObjMaterials, type MtlLoader } from './objMaterials';
+import { hasMaterialPatch } from '../../rendering/toon/toonMaterial';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -157,6 +158,41 @@ function wrapLoadError(error: unknown, url: string, format: ModelFormat): Error 
   return new Error(`Failed to load ${format} model from "${url}": ${message}`);
 }
 
+/** Model meshes, without the toon outline helpers (they belong to their source). */
+function forEachModelMesh(root: THREE.Object3D, fn: (mesh: THREE.Mesh) => void): void {
+  root.traverse((o) => {
+    if (o instanceof THREE.Mesh && !o.userData.toonOutline) fn(o);
+  });
+}
+
+/** Whether any model material carries the toon/reveal patch. */
+function modelHasPatch(root: THREE.Object3D): boolean {
+  let found = false;
+  forEachModelMesh(root, (mesh) => {
+    found ||= [mesh.material].flat().some(hasMaterialPatch);
+  });
+  return found;
+}
+
+/**
+ * Replace every model material with a clone. A material shared by several
+ * meshes stays shared among the cloned meshes.
+ */
+function ownMaterials(root: THREE.Object3D): void {
+  const clones = new Map<THREE.Material, THREE.Material>();
+  const own = (m: THREE.Material): THREE.Material => {
+    let c = clones.get(m);
+    if (!c) {
+      c = m.clone();
+      clones.set(m, c);
+    }
+    return c;
+  };
+  forEachModelMesh(root, (mesh) => {
+    mesh.material = Array.isArray(mesh.material) ? mesh.material.map(own) : own(mesh.material);
+  });
+}
+
 /** A material that carries a color (MeshStandardMaterial, MeshBasicMaterial, ...). */
 interface ColoredMaterial extends THREE.Material {
   color: THREE.Color;
@@ -178,6 +214,8 @@ export class ModelMobject extends Mobject3D {
   private readonly _format: ModelFormat | null;
   private readonly _options: ModelMobjectOptions;
   private _loadError: Error | null = null;
+  /** True while a copy (or the source of this copy) may share these materials. */
+  private _sharesMaterials = false;
 
   /**
    * Prefer {@link ModelMobject.fromUrl}. This constructor wraps an already
@@ -329,9 +367,35 @@ export class ModelMobject extends Mobject3D {
     return this._wrapper;
   }
 
+  /**
+   * Clone the model's materials if a copy may still share them, so toon or
+   * reveal state set on this model does not reach the other. Idempotent.
+   * @internal
+   */
+  override _ownSharedMaterials(): void {
+    if (!this._sharesMaterials) return;
+    this._sharesMaterials = false;
+    ownMaterials(this._model);
+    // The fresh materials have no toon patch yet: the next sync applies it.
+    this._markDirty();
+  }
+
   override copy(): ModelMobject {
     const clonedModel = this._loadError ? null : this._model.clone(true);
     const copy = new ModelMobject(clonedModel, { ...this._options }, this._format);
+    // Object3D.clone() shares materials, and a toon or reveal patch keeps one
+    // mobject's state on its material. A model with toon state (set, or
+    // already patched) gives its copy own materials now. Otherwise the two
+    // share, as before, and each side takes own materials the first time it
+    // gets toon or reveal state (_ownSharedMaterials).
+    if (clonedModel) {
+      if (this.getToonShading() !== null || modelHasPatch(this._model)) {
+        ownMaterials(clonedModel);
+      } else {
+        this._sharesMaterials = true;
+        copy._sharesMaterials = true;
+      }
+    }
     copy._loadError = this._loadError;
     this._copyBaseAttributesInto(copy, { copyChildren: false });
     return copy;
