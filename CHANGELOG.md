@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.42.0](https://github.com/maloyan/manim-web/compare/v0.41.0...v0.42.0) (2026-11-14)
+
+
+### Features
+
+* **3d:** add 3D explainer stack with manim look, cell kit, narration and CLI render ([#918](https://github.com/maloyan/manim-web/issues/918)) ([8109ca4](https://github.com/maloyan/manim-web/commit/8109ca401b2ae0eb19980380611005cced43877e))
+
 ## [0.41.0](https://github.com/maloyan/manim-web/compare/v0.40.1...v0.41.0) (2026-11-04)
 
 
