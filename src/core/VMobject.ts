@@ -55,6 +55,14 @@ export class VMobject extends VMobjectRendering {
   /** Transform-time override for subpath lengths (compound-path metadata). */
   protected _transformSubpathLengths?: number[];
 
+  /**
+   * True for VGroup and its subclasses: the node's geometry lives
+   * entirely in its children — getLocalPoints() aggregates them and
+   * setPoints() partitions across them — so the node itself must never
+   * be assigned raw points. Set in VGroup's constructor.
+   */
+  protected _delegatesPointsToChildren: boolean = false;
+
   constructor() {
     super();
     this._isVMobject = true;
@@ -625,6 +633,58 @@ export class VMobject extends VMobjectRendering {
    * @param target - The target VMobject to align with
    */
   alignPoints(target: VMobject): void {
+    // Container case: neither side owns points — both delegate their
+    // geometry to VMobject children (VGroup, MathTex, DashedLine, ...).
+    // The own-points logic below reads `_points3D`, which is empty on both
+    // sides, so it used to silently align nothing and callers combining the
+    // two sides' points (alignVmobjectPair, FadeTransform, ...) saw the raw,
+    // mismatched counts. Align the families recursively instead, Manim CE
+    // style: pad the shorter child list by duplicating its own children
+    // (add_n_more_submobjects), then align each pair. Afterwards both sides
+    // have equal child counts at every level and pairwise-equal leaf point
+    // counts, so their combined point arrays have the same length and
+    // partition identically across children.
+    if (!this._hasOwnPoints() && !target._hasOwnPoints()) {
+      const thisChildren = this._vmobjectChildren();
+      const targetChildren = target._vmobjectChildren();
+      if (thisChildren.length > 0 && targetChildren.length > 0) {
+        const count = Math.max(thisChildren.length, targetChildren.length);
+        if (VMobject._childClassesAlign(thisChildren, targetChildren, count)) {
+          const paddedThis = this._padVmobjectChildrenToCount(count);
+          const paddedTarget = target._padVmobjectChildrenToCount(count);
+          for (let i = 0; i < count; i++) {
+            paddedThis[i].alignPoints(paddedTarget[i]);
+          }
+        } else {
+          // The padded child sequences pair a leaf against a subgroup
+          // somewhere: the recursion above would align nothing for that
+          // pair (the container guard below) and leave the combined
+          // totals diverged. That shape arises legitimately when one
+          // side carries a previous morph's fabricated structure — e.g.
+          // Transform appended duplicate LEAVES at this root while the
+          // target still groups its glyphs in parts. Pair the two LEAF
+          // families instead (CE's add_n_more_submobjects operates over
+          // the whole family for the same reason): the flat point
+          // arrays then correspond leaf-by-leaf in family order.
+          VMobject._alignLeafFamilies(this, target);
+        }
+        return;
+      }
+    }
+
+    // Container-vs-leaf (or container-vs-empty-container): never write
+    // points into a container side. The resample below would fabricate
+    // interpolated ORIGIN points on a node that stores no geometry of
+    // its own, flipping its hasOwnPoints() to true and leaking a phantom
+    // member into familyMembersWithPoints() — permanently, since a
+    // container's setPoints never touches its own _points3D. Alignment
+    // across the divide is the caller's job (Transform flattens to
+    // leaves first); combined-array callers (alignVmobjectPair) see the
+    // unchanged totals and report the mismatch.
+    if (this._isPointContainer() || target._isPointContainer()) {
+      return;
+    }
+
     const thisCount = this._points3D.length;
     const targetCount = target._points3D.length;
 
@@ -660,6 +720,164 @@ export class VMobject extends VMobjectRendering {
     // squared distance to the source, so corresponding points are
     // geometrically close and the morph looks smooth.
     target._points3D = VMobject._bestRotation(this._points3D, target._points3D);
+  }
+
+  /** VMobject children in order — the units group alignment pairs up. */
+  private _vmobjectChildren(): VMobject[] {
+    return this.children.filter((c): c is VMobject => c instanceof VMobject);
+  }
+
+  /**
+   * True when this node delegates its geometry entirely to children and
+   * owns no points: a VGroup-class container (flagged via
+   * _delegatesPointsToChildren), or any point-less node that has
+   * VMobject children (DashedLine-style composites). Such a node must
+   * never gain own points from alignment.
+   */
+  private _isPointContainer(): boolean {
+    if (this._hasOwnPoints()) return false;
+    return this._delegatesPointsToChildren || this._vmobjectChildren().length > 0;
+  }
+
+  /**
+   * @internal Pad this node's VMobject child list to `targetCount` by
+   * duplicating its own children (see _padChildrenToCount) and return
+   * the padded list. The operation alignPoints applies to both sides —
+   * and FadeTransformPieces applies to equalize its piece lists before
+   * pairing (Manim CE's align_submobjects step).
+   */
+  _padVmobjectChildrenToCount(targetCount: number): VMobject[] {
+    return VMobject._padChildrenToCount(this, this._vmobjectChildren(), targetCount);
+  }
+
+  /**
+   * True when padding both child lists to `count` (repeat-index rule)
+   * pairs containers with containers and leaves with leaves at every
+   * index — the precondition for alignPoints' level-by-level recursion.
+   * A leaf paired against a subgroup aligns nothing (the container
+   * guard), leaving the two sides' combined totals diverged.
+   */
+  private static _childClassesAlign(a: VMobject[], b: VMobject[], count: number): boolean {
+    const classAt = (children: VMobject[], i: number): boolean =>
+      children[Math.floor((i * children.length) / count)]._isPointContainer();
+    for (let i = 0; i < count; i++) {
+      if (classAt(a, i) !== classAt(b, i)) return false;
+    }
+    return true;
+  }
+
+  /** The point-owning leaves of `root`'s subtree, in family (DFS) order. */
+  private static _pointLeaves(root: VMobject): VMobject[] {
+    const leaves: VMobject[] = [];
+    const walk = (node: VMobject): void => {
+      if (node._hasOwnPoints()) {
+        leaves.push(node);
+        return;
+      }
+      for (const child of node._vmobjectChildren()) walk(child);
+    };
+    walk(root);
+    return leaves;
+  }
+
+  /**
+   * Pad a leaf family to `targetCount` with the repeat-index rule,
+   * inserting each duplicate into its source's parent immediately after
+   * the source — so the family's DFS order IS the padded sequence, which
+   * is what flat point arrays partition by. Returns the padded family.
+   */
+  private static _padLeafFamily(leaves: VMobject[], targetCount: number): VMobject[] {
+    const n = leaves.length;
+    if (n === 0 || n >= targetCount) return leaves;
+    const repeatIndexOf = (i: number) => Math.floor((i * n) / targetCount);
+    const padded: VMobject[] = [];
+    const insertedAfter = new Map<VMobject, VMobject[]>();
+    for (let i = 0; i < targetCount; i++) {
+      const srcIdx = repeatIndexOf(i);
+      const isFirstOccurrence = i === 0 || repeatIndexOf(i - 1) !== srcIdx;
+      if (isFirstOccurrence) {
+        padded.push(leaves[srcIdx]);
+      } else {
+        const duplicate = leaves[srcIdx].copy();
+        padded.push(duplicate);
+        const siblings = insertedAfter.get(leaves[srcIdx]);
+        if (siblings) siblings.push(duplicate);
+        else insertedAfter.set(leaves[srcIdx], [duplicate]);
+      }
+    }
+    for (const [original, duplicates] of insertedAfter) {
+      const parent = original.parent;
+      if (!(parent instanceof VMobject)) continue;
+      const siblings = parent._vmobjectChildren();
+      const at = siblings.indexOf(original);
+      if (at < 0) continue;
+      parent.remove(...siblings);
+      parent.add(...[...siblings.slice(0, at + 1), ...duplicates, ...siblings.slice(at + 1)]);
+    }
+    return padded;
+  }
+
+  /**
+   * Align two containers through their LEAF families: pad the shorter
+   * family by duplicating its own leaves, then align pairwise. Used
+   * when the two child structures cannot pair level-by-level (a leaf
+   * would meet a subgroup). If either family is empty there is nothing
+   * sound to pair: leave both sides untouched, and combined-array
+   * callers report the diverged totals as before.
+   */
+  private static _alignLeafFamilies(a: VMobject, b: VMobject): void {
+    const aLeaves = VMobject._pointLeaves(a);
+    const bLeaves = VMobject._pointLeaves(b);
+    if (aLeaves.length === 0 || bLeaves.length === 0) return;
+    const count = Math.max(aLeaves.length, bLeaves.length);
+    const paddedA = VMobject._padLeafFamily(aLeaves, count);
+    const paddedB = VMobject._padLeafFamily(bLeaves, count);
+    for (let i = 0; i < count; i++) {
+      paddedA[i].alignPoints(paddedB[i]);
+    }
+  }
+
+  /**
+   * Pad `owner`'s VMobject child list to `targetCount` by duplicating its
+   * own children — Manim CE's `add_n_more_submobjects`. The padded
+   * sequence follows CE's repeat-index distribution over the FULL target
+   * range (`floor(i * n / targetCount)`): position `i` holds child
+   * `floor(i * n / targetCount)`, so each duplicate sits immediately
+   * after the child it copies (2 -> 4 pads [A, B] to [A, A', B, B']).
+   * The duplicates are inserted into the owner's child list at those
+   * positions — not appended at the end — because flat point arrays
+   * (getLocalPoints) partition across children in list order: the list
+   * itself must follow the pairing sequence, not just the returned
+   * array. The pre-existing children keep their order and identity.
+   * (This is the same distribution TransformPairing's padByDuplication
+   * applies to leaf snapshots, so Transform and FadeTransform pair the
+   * same glyphs for the same input.)
+   * No-op (returns `children` unchanged) when already long enough.
+   */
+  private static _padChildrenToCount(
+    owner: VMobject,
+    children: VMobject[],
+    targetCount: number,
+  ): VMobject[] {
+    const n = children.length;
+    if (n === 0 || n >= targetCount) return children;
+    const repeatIndexOf = (i: number) => Math.floor((i * n) / targetCount);
+    const padded: VMobject[] = [];
+    for (let i = 0; i < targetCount; i++) {
+      const srcIdx = repeatIndexOf(i);
+      const isFirstOccurrence = i === 0 || repeatIndexOf(i - 1) !== srcIdx;
+      if (isFirstOccurrence) {
+        padded.push(children[srcIdx]);
+      } else {
+        padded.push(children[srcIdx].copy());
+      }
+    }
+    // Rebuild the owner's VMobject child order to the padded sequence.
+    // (Non-VMobject children, if any, stay in place; the VMobject
+    // children move as one ordered block.)
+    owner.remove(...children);
+    owner.add(...padded);
+    return padded;
   }
 
   /**
