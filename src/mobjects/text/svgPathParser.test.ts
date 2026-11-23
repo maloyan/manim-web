@@ -416,6 +416,19 @@ describe('parseSVGPathData', () => {
       expectPointClose(result[0][0], [0.001, 0.002]);
       expectPointClose(result[0][3], [0.003, 0.004]);
     });
+
+    // MIGRATION: examples for the property
+    //   ∀ finite numbers xs, parsing the shortest SVG serialization of xs returns xs.
+    // Replace with a property test once the suite lands.
+    it('splits numbers that path data writes without separators', () => {
+      // MathJax's NewCM glyph for "p" contains "L44-118C35-151 34-155-5-155".
+      const minus = parseSVGPathData('M0 0L34-155-5-155');
+      expectPointClose(minus[0][3], [34, -155]);
+      expectPointClose(minus[0][6], [-5, -155]);
+      const compact = parseSVGPathData('M.5.5L1e2-2E-1');
+      expectPointClose(compact[0][0], [0.5, 0.5]);
+      expectPointClose(compact[0][3], [100, -0.2]);
+    });
   });
 
   // ─────────────────────────────────────────────────────────────────────────
