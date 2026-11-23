@@ -8,7 +8,7 @@
  */
 
 import { VMobject } from '../../core/VMobject';
-import { Animation, AnimationOptions } from '../Animation';
+import { Animation, AnimationOptions, AnimationScene } from '../Animation';
 import { hungarian, hungarianFromSimilarity } from '../../utils/hungarian';
 import { lerp, lerpPoint } from '../../utils/math';
 import { alignCompoundPathsForTransform } from '../../core/VMobjectTransformAlignment';
@@ -164,15 +164,10 @@ export class TransformMatchingShapes extends Animation<VMobject> {
     for (let i = 0; i < targetSubmobs.length; i++) {
       if (!usedTargetIndices.has(i)) {
         const vmob = targetSubmobs[i];
-        // Add to scene as copy, starting invisible
+        // Fade in a copy inside the source, which the scene renders
         const copy = vmob.copy();
         copy.opacity = 0;
-
-        // Add to parent of source mobject
-        const parent = this.mobject.parent;
-        if (parent) {
-          parent.add(copy);
-        }
+        this.mobject.add(copy);
 
         this._fadeInParts.push({
           mobject: copy,
@@ -291,6 +286,13 @@ export class TransformMatchingShapes extends Animation<VMobject> {
     }
 
     super.finish();
+  }
+
+  /** Swap the morphed source for the target, like ReplacementTransform. */
+  override cleanUpFromScene(scene: AnimationScene): void {
+    super.cleanUpFromScene(scene);
+    scene.remove(this.mobject);
+    scene.add(this.target);
   }
 }
 
@@ -646,11 +648,7 @@ export class TransformMatchingTex extends Animation<VMobject> {
   private _addFadeInPart(vmob: VMobject): void {
     const copy = vmob.copy();
     copy.opacity = 0;
-
-    const parent = this.mobject.parent;
-    if (parent) {
-      parent.add(copy);
-    }
+    this.mobject.add(copy);
 
     this._fadeInParts.push({
       mobject: copy,
@@ -735,6 +733,13 @@ export class TransformMatchingTex extends Animation<VMobject> {
     }
 
     super.finish();
+  }
+
+  /** Swap the morphed source for the target, like ReplacementTransform. */
+  override cleanUpFromScene(scene: AnimationScene): void {
+    super.cleanUpFromScene(scene);
+    scene.remove(this.mobject);
+    scene.add(this.target);
   }
 }
 
