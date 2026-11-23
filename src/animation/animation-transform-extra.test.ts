@@ -884,6 +884,38 @@ describe('TransformMatchingTex', () => {
     expect(anim).toBeInstanceOf(TransformMatchingTex);
     expect(anim.transformMismatches).toBe(true);
   });
+
+  // MIGRATION: examples for the property
+  //   ∀ source s, target t: after play the scene holds t and not s, and every
+  //   part of t is visible.
+  // Replace with a property test once the suite lands.
+  it('fades in unmatched target parts inside a parentless source', () => {
+    const keyFn = (v: VMobject) => `${v.getLocalPoints()[0]?.[0]}`;
+    const src = vgroup(sq());
+    const extra = vm([
+      [5, 0, 0],
+      [6, 0, 0],
+    ]);
+    const anim = new TransformMatchingTex(src, vgroup(sq(), extra), { keyFunc: keyFn });
+    anim.begin();
+    expect(src.children).toHaveLength(2);
+    anim.finish();
+    expect((src.children[1] as VMobject).opacity).toBe(extra.opacity);
+  });
+
+  it('swaps the source for the target in the scene', () => {
+    const src = vgroup(sq());
+    const tgt = vgroup(sq());
+    const members = new Set<unknown>([src]);
+    const anim = new TransformMatchingTex(src, tgt);
+    anim.begin();
+    anim.finish();
+    anim.cleanUpFromScene({
+      add: (...ms) => ms.forEach((m) => members.add(m)),
+      remove: (...ms) => ms.forEach((m) => members.delete(m)),
+    });
+    expect([...members]).toEqual([tgt]);
+  });
 });
 
 // ── ApplyMethod ────────────────────────────────────────────────────────────
@@ -1679,7 +1711,7 @@ describe('TransformAnimations', () => {
 // ── TransformMatchingShapes extra coverage ──────────────────────────────────
 
 describe('TransformMatchingShapes - fade-in with parent', () => {
-  it('adds fade-in copies to parent when source has a parent', () => {
+  it('adds fade-in copies to the source, not its parent', () => {
     // Source has 1 child, target has 2 children -> 1 unmatched target fades in
     const parentGroup = new VMobject();
     const srcChild = vm([
@@ -1702,8 +1734,8 @@ describe('TransformMatchingShapes - fade-in with parent', () => {
 
     const anim = new TransformMatchingShapes(src, tgt);
     anim.begin();
-    // parentGroup should now have extra child for fade-in
-    expect(parentGroup.children.length).toBeGreaterThan(1);
+    expect(parentGroup.children).toEqual([src]);
+    expect(src.children).toHaveLength(2);
     anim.interpolate(0.5);
     anim.finish();
     expect(anim.isFinished()).toBe(true);
@@ -1912,7 +1944,7 @@ describe('TransformMatchingTex - asymmetric transformMismatches', () => {
       return `k_${p[0]?.[0]}_${p[0]?.[1]}`;
     };
 
-    // Add parent so _addFadeInPart hits line 655 (parent.add)
+    // The parent must not receive the fade-in copies
     const parentGroup = new VMobject();
     const src = vgroup(s1);
     parentGroup.add(src);
@@ -1925,8 +1957,8 @@ describe('TransformMatchingTex - asymmetric transformMismatches', () => {
     });
     anim.begin();
 
-    // parentGroup should have fade-in copies added
-    expect(parentGroup.children.length).toBeGreaterThan(1);
+    expect(parentGroup.children).toEqual([src]);
+    expect(src.children).toHaveLength(3);
 
     anim.interpolate(0.5);
     anim.finish();

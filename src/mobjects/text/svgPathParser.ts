@@ -48,6 +48,10 @@ export interface SVGToVMobjectOptions {
 // SVG path tokenizer
 // ---------------------------------------------------------------------------
 
+// Compact path data runs numbers together ("34-155-5-155", "1.5.5"); a sign or
+// a second decimal point starts the next number.
+const PATH_NUMBER = /[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/g;
+
 /**
  * Tokenize an SVG path `d` attribute into (command, args[]) pairs.
  */
@@ -60,14 +64,7 @@ function tokenizePath(d: string): Array<{ cmd: string; args: number[] }> {
   for (const seg of segments) {
     const cmd = seg[0];
     const raw = seg.slice(1).trim();
-    const args =
-      raw.length > 0
-        ? raw
-            .replace(/([0-9])-([0-9])/g, '$1 -$2')
-            .split(/[\s,]+/)
-            .filter(Boolean)
-            .map(Number)
-        : [];
+    const args = (raw.match(PATH_NUMBER) ?? []).map(Number);
     tokens.push({ cmd, args });
   }
   return tokens;
